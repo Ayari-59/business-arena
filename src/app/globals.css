@@ -34,6 +34,16 @@
   --color-amber-700: #86641a;
   --color-amber-950: #241b06;
 
+  /* LES TROIS ESPACEMENTS DES CAPITALES. Les petites capitales espacées sont la
+     signature des pages, et chacune les espaçait à sa main : dix valeurs, de
+     0,1 à 0,3 em, si proches qu'elles ne hiérarchisaient rien et que deux
+     surtitres voisins ne s'alignaient pas. Trois rôles suffisent : l'ÉTIQUETTE
+     d'une donnée ou d'un bouton, le SURTITRE d'une section, l'ANNONCE d'une
+     page. Un test refuse désormais toute valeur écrite à la main. */
+  --tracking-etiquette: 0.12em;
+  --tracking-surtitre: 0.2em;
+  --tracking-annonce: 0.3em;
+
   /* Bleu nuit encré : les deux surfaces les plus sombres se teintent de bleu. */
   --color-slate-950: #070c1a;
   --color-slate-900: #0e1526;
@@ -430,6 +440,16 @@
   }
 }
 
+/* LE CHAMP FACULTATIF. « Pourquoi ce choix ? », sous les options d'une
+   décision, portait le creux plein d'un champ obligatoire : un aplat gris-bleu
+   plus lourd que les options qu'il accompagne, qui volait la vedette à la
+   décision elle-même. Le champ facultatif garde son trait, qui dit où écrire,
+   et prend le fond d'une carte. Hors couche et à deux classes, il passe devant
+   l'utilitaire. */
+.champ.champ-facultatif {
+  background-color: var(--color-slate-900);
+}
+
 /* À l'impression, une carte redevient plate : le voile et l'ombre ne sont que
    des artifices d'écran, et sur papier ils coûtent de l'encre pour un gris
    sale. Cette règle vit HORS de toute couche : elle l'emporte sur les
@@ -558,21 +578,15 @@ h1 {
 }
 
 
-/* Laiton du thème clair : pas sombres pour l'encre et les boutons, pas hauts
-   pour les fonds teintés — dans le sens inversé du thème clair généré. */
+/* Le laiton et les ombres d'une surface CLAIRE, la page du thème clair. Le
+   renversement mécanique ne suffit pas pour l'ambre : c'est la teinte la plus
+   lumineuse de l'échelle, et sur fond clair il lui faut des paliers choisis à
+   la main. */
 [data-theme="clair"] {
   /* Même remarque qu'au :root, dans l'autre sens : ce thème est celui que le
      site sert par défaut, et ses champs comme sa barre de défilement doivent
      être ceux d'une page claire. */
   color-scheme: light;
-}
-
-/* Le laiton et les ombres d'une surface CLAIRE — que ce soit la page entière,
-   ou le seul bloc posé à contre-jour sur une page sombre. Le renversement
-   mécanique ne suffit pas pour l'ambre : c'est la teinte la plus lumineuse de
-   l'échelle, et sur fond clair il lui faut des paliers choisis à la main. */
-[data-theme="clair"],
-[data-theme="sombre"] .contre-jour {
   /* Sur fond clair, l'ombre du thème sombre serait une salissure : moins
      d'opacité, et une teinte encrée plutôt que du noir pur. */
   --ombre-carte:
@@ -684,8 +698,8 @@ h1 {
 /*
  * ET DANS UN BLOC À CONTRE-JOUR, LA PRISE SE RETOURNE AVEC LE SOL.
  *
- * Le bloc renverse l'échelle pour lui seul : une page claire y devient nuit,
- * une page sombre y devient papier. La règle « la prise s'oppose au fond »
+ * Sur une page claire, le bloc renverse l'échelle pour lui seul : la page y
+ * devient nuit. La règle « la prise s'oppose au fond »
  * vaut pour ce sol-là et non pour celui de la page, sans quoi le haut de
  * l'accueil poserait trois captures sombres sur de l'encre — exactement le
  * rectangle d'encre dans de l'encre que la règle existe pour empêcher.
@@ -697,8 +711,17 @@ h1 {
   background-image: var(--ecran-sur-page-sombre);
 }
 
-[data-theme="sombre"] .contre-jour .capture-decran {
-  background-image: var(--ecran-sur-page-claire);
+/*
+ * SUR UNE PAGE SOMBRE, LE CONTRE-JOUR RESTE NUIT. Il renversait l'échelle et
+ * devenait une surface de papier : qui avait choisi le sombre ouvrait l'accueil
+ * sur un grand aplat clair, et les captures désaturées de l'en-tête y prenaient
+ * un gris sale. Il garde désormais l'échelle de la page et se distingue d'un
+ * cran de surface, comme une carte se distingue du fond : le thème choisi vaut
+ * pour toute la page. Ses captures sont donc celles de la page sombre (règle
+ * plus haut), sans exception.
+ */
+[data-theme="sombre"] .contre-jour {
+  background-color: var(--color-slate-900);
 }
 
 /* ---------------------------------------------------------------------------

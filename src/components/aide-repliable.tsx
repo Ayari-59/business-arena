@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { Tiroir } from "@/components/tiroir";
+import { Icone, type NomDIcone } from "@/components/icone";
 
 /**
  * LES TEXTES D'AIDE SE RANGENT SUR TÉLÉPHONE, PAS LES DÉCISIONS.
@@ -46,24 +47,30 @@ export function Aide({
  */
 export function PanneauConsulte({
   titre,
+  icone,
   resume,
   children,
 }: {
   titre: string;
+  /** Le repère dessiné du panneau, le même sur téléphone (dans le tiroir) qu'ailleurs. */
+  icone?: NomDIcone;
   resume: string;
   children: ReactNode;
 }) {
   const telephone = useContext(TelephoneContexte);
   if (telephone) {
     return (
-      <Tiroir titre={titre} quoi={resume} ferme>
+      <Tiroir titre={titre} {...(icone ? { icone } : {})} quoi={resume} ferme>
         {children}
       </Tiroir>
     );
   }
   return (
     <div className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titre}</p>
+      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-amber-400" /> : null}
+        {titre}
+      </p>
       {children}
     </div>
   );

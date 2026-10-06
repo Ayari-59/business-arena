@@ -21,7 +21,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Vos charges de structure, elles, ne baissent pas d'un centime : combien d'articles faut-il désormais vendre pour tenir ?",
     nature: "market",
     pli: "simple",
-    emoji: "🚧",
+    icone: "alerte",
     scope: "market",
   },
   {
@@ -36,7 +36,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Un pic ne profite qu'à celles qui ont du stock en réserve : l'anticipation vaut mieux que la chance.",
     nature: "market",
     pli: "simple",
-    emoji: "📱",
+    icone: "communication",
     scope: "market",
   },
   {
@@ -51,7 +51,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "La marchandise perdue est payée mais jamais vendue : elle s'ajoute au coût de ce que vous vendez.",
     nature: "internal",
     pli: "simple",
-    emoji: "🔍",
+    icone: "loupe",
     scope: "team",
   },
   {
@@ -65,7 +65,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Le rayon vide ne se rattrape pas : la vente manquée d'aujourd'hui ne revient pas demain.",
     nature: "internal",
     pli: "email",
-    emoji: "📦",
+    icone: "colis",
     scope: "team",
   },
   {
@@ -80,7 +80,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Quand le marché se contracte, on baisse les prix ou on soigne ce que le web ne sait pas vendre. Les deux coûtent.",
     nature: "competition",
     pli: "simple",
-    emoji: "💻",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -95,7 +95,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Le coefficient multiplicateur se comprime : répercuter sur le prix de vente, ou accepter de vendre moins cher que prévu ?",
     nature: "macro",
     pli: "email",
-    emoji: "🧵",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -109,7 +109,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Un découvert qui coûte cher transforme un problème de trésorerie en problème de résultat.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -124,7 +124,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "La fidélité se paie d'avance : les clientes qui reviennent sont celles qu'on a bien servies au tour précédent.",
     nature: "market",
     pli: "simple",
-    emoji: "💐",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -138,7 +138,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "C'est exactement le sinistre que couvre la multirisque commerce : la prime était-elle si chère ?",
     nature: "internal",
     pli: "simple",
-    emoji: "💧",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -152,7 +152,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Le soin apporté au point de vente est un investissement commercial : il se voit dans le flux client.",
     nature: "market",
     pli: "simple",
-    emoji: "🏆",
+    icone: "trophee",
     scope: "team",
   },
   {
@@ -166,7 +166,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "La confiance bancaire se gagne sur des trimestres de gestion saine, pas sur une promesse.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -182,7 +182,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "L'opportunité ne se saisit qu'avec de la marchandise en réserve : le stock a un coût, et parfois une valeur.",
     nature: "market",
     pli: "recommande",
-    emoji: "📋",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -196,7 +196,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "L'emplacement est le premier actif d'un commerce, et le seul qu'on ne trouve pas au bilan.",
     nature: "market",
     pli: "simple",
-    emoji: "🌳",
+    icone: "boutique",
     scope: "market",
   },
   {
@@ -210,7 +210,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & maintenance du mobilier commercial",
     nature: "internal",
     pli: "recommande",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -224,7 +224,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "email",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -238,7 +238,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -252,7 +252,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Face à un concurrent qui joue le volume, on ne gagne pas au prix : on gagne sur ce qu'il ne fait pas.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏬",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -267,7 +267,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Les clientes fidèles restent, les passants suivent l'affiche : votre chiffre dépend de la part de chacun.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏷️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -281,7 +281,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "La relation client est un actif qui ne figure à aucun bilan, et qui pèse sur le chiffre d'affaires.",
     nature: "internal",
     pli: "interne",
-    emoji: "🌟",
+    icone: "personne",
     scope: "team",
   },
   {
@@ -295,7 +295,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "La rupture ne vient pas toujours de la demande : la chaîne d'approvisionnement a ses propres pannes.",
     nature: "internal",
     pli: "email",
-    emoji: "🚚",
+    icone: "camion",
     scope: "team",
   },
   {
@@ -309,7 +309,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     enJeu: "Un pic de passage ne se sert qu'avec du stock : c'est au trimestre d'avant qu'il se prépare.",
     nature: "market",
     pli: "simple",
-    emoji: "🎄",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -324,7 +324,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "👀",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -339,7 +339,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Pouvez-vous servir ce volume ? Acheter plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
     nature: "market",
     pli: "simple",
-    emoji: "🛍️",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -354,7 +354,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "💶",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -369,7 +369,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "🧶",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -384,7 +384,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
     nature: "market",
     pli: "simple",
-    emoji: "🌤️",
+    icone: "baisse",
     scope: "market",
   },
 ];

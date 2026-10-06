@@ -72,7 +72,7 @@ export default async function JouerPage({
                 `order` réarrange ; au-delà de `lg`, c'est la colonne de texte d'avant, à l'identique. */}
             <div className="contents lg:block">
             <div className="order-1">
-              <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Partie solo</p>
+              <p className="text-xs uppercase tracking-annonce text-amber-400">Partie solo</p>
               <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
                 {enCours.length > 0 ? "Lancez une nouvelle partie" : "Lancez votre première partie"}
               </h1>
@@ -101,7 +101,7 @@ export default async function JouerPage({
             {reserve ? (
               <p
                 role="status"
-                className="order-2 mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200 lg:order-none"
+                className="order-2 mb-4 rounded-xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200 lg:order-none"
               >
                 {messageNiveauxReserves(config.vitrineSolo)} Choisissez un niveau plus bas, ou jouez
                 l&apos;entreprise vitrine à tous les niveaux.
@@ -110,7 +110,7 @@ export default async function JouerPage({
             {trop ? (
               <p
                 role="status"
-                className="order-2 mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200 lg:order-none"
+                className="order-2 mb-4 rounded-xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200 lg:order-none"
               >
                 Trop de parties lancées depuis cette connexion dans la dernière heure.
                 Réessayez tout à l&apos;heure. Si vous êtes en classe, les élèves n&apos;ont
@@ -119,7 +119,7 @@ export default async function JouerPage({
               </p>
             ) : null}
             {!config.allowPublicPlay ? (
-              <div className="order-2 rounded-2xl border border-white/10 bg-slate-900 p-6 text-sm text-slate-400 lg:order-none">
+              <div className="order-2 carte p-6 text-sm text-slate-400 lg:order-none">
                 Les parties publiques sont momentanément désactivées. Élèves : utilisez le code
                 donné par votre enseignant sur{" "}
                 <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
@@ -130,7 +130,7 @@ export default async function JouerPage({
             ) : (
               <form
                 action={startGameAction}
-                className="order-2 rounded-2xl border border-white/10 bg-slate-900/80 p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6 lg:order-none"
+                className="order-2 carte p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6 lg:order-none"
               >
                 <h2 className="text-sm font-semibold text-slate-100">Configurer la partie</h2>
                 <QuickConfigFields
@@ -138,7 +138,7 @@ export default async function JouerPage({
                     const famille = familyOf(s.code);
                     return {
                       code: s.code,
-                      icon: s.icon,
+                      secteur: s.sector,
                       label: s.shortName,
                       sector: SECTOR_LABELS[s.sector],
                       tagline: s.tagline,

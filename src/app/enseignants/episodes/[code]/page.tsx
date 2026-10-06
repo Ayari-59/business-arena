@@ -50,7 +50,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
       <main id="main" className="relative overflow-x-clip">
         <HaloDePage />
         <article className="mx-auto max-w-4xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+          <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/enseignants" className="hover:text-slate-300">
               Enseignants
             </Link>{" "}
@@ -59,7 +59,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               Épisodes en classe
             </Link>
           </p>
-          <p className="mt-6 text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
+          <p className="mt-6 text-sm font-semibold uppercase tracking-etiquette text-amber-300">
             Fiche enseignant · Épisode {ep.numero}
           </p>
           <h1 className="mt-2 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
@@ -150,7 +150,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
                 const etape = ep.etapes[r.decision]!;
                 return (
                   <li key={`${r.decision}-${r.option}`} className="border-l border-white/5 pl-4">
-                    <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-400">
+                    <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
                       Décision {r.decision + 1} · {etape.titre}
                     </p>
                     <p className="mt-1 font-semibold text-slate-100">

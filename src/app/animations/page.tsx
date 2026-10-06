@@ -64,7 +64,7 @@ export default function AteliersPage() {
         <HaloDePage />
 
         <section className="mx-auto max-w-4xl px-6 py-14">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+          <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/" className="hover:text-slate-300">
               Accueil
             </Link>{" "}
@@ -91,7 +91,7 @@ export default function AteliersPage() {
           {IMMERSIONS.map((a) => (
             <div
               key={a.code}
-              className="mt-6 rounded-2xl border border-amber-400/25 bg-amber-950/10 p-5"
+              className="mt-6 rounded-xl border border-amber-400/25 bg-amber-950/10 p-5"
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
                 Une fiche à part · {a.nature}
@@ -195,7 +195,7 @@ export default function AteliersPage() {
             {ATELIERS.map((a) => (
               <article
                 key={a.code}
-                className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/40"
+                className="carte p-5 transition hover:border-amber-400/40"
               >
                 {/*
                   LE SURTITRE NE PORTE PLUS LA FORMATION. Il disait « ATELIER

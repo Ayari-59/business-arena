@@ -29,7 +29,8 @@ export function SalesHistory({
 
   return (
     <Tiroir
-      titre="📈 Historique de vos ventes"
+      icone="resultats"
+      titre="Historique de vos ventes"
       quoi={`${history.rounds.length} tour${history.rounds.length > 1 ? "s" : ""}`}
       ferme
       groupe="comptes-du-tour"

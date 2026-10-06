@@ -146,7 +146,7 @@ export default async function ParcoursPage() {
           l'en-tête ouvre déjà.
         */}
         <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs uppercase tracking-annonce text-amber-400">
             Parcours par diplôme
           </p>
           <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
@@ -187,7 +187,7 @@ export default async function ParcoursPage() {
               key={f.id}
               id={f.id}
               data-diplome={f.sigle}
-              className="group scroll-mt-24 rounded-2xl border border-dashed border-white/15 bg-slate-900 open:border-solid open:border-white/10"
+              className="group scroll-mt-24 rounded-xl border border-dashed border-white/15 bg-slate-900 open:border-solid open:border-white/10"
             >
               {/*
                 LES TROIS SIGNAUX DU TIROIR MAISON, repris tels quels : le
@@ -205,7 +205,7 @@ export default async function ParcoursPage() {
                 une page sans structure dès que tout est replié.
               */}
               <summary className="grid cursor-pointer list-none grid-cols-[1fr_auto] items-start gap-x-4 p-6 [&::-webkit-details-marker]:hidden sm:p-8">
-                <span className="text-xs uppercase tracking-[0.2em] text-amber-400">
+                <span className="text-xs uppercase tracking-surtitre text-amber-400">
                   {f.sigle}
                 </span>
                 <span

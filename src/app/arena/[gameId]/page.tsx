@@ -42,6 +42,7 @@ import { CourrierDuTour } from "@/components/courrier-du-tour";
 import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
+import { Icone } from "@/components/icone";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
@@ -265,7 +266,10 @@ export default async function ArenaPage({
       ) : null}
       {view.courriersAnnonces.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-3 sm:p-5">
-          <p className="mb-2 text-sm font-semibold text-amber-400">📬 Le courrier, en détail</p>
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+            <Icone nom="courrier" className="h-4 w-4" />
+            Le courrier, en détail
+          </p>
           <div className={grilleDeCourriers(view.courriersAnnonces.length)}>
             {view.courriersAnnonces.map((courrier, i) => (
               <CourrierRecommande
@@ -276,7 +280,7 @@ export default async function ArenaPage({
                 destinataire={
                   courrier.teamId
                     ? courrier.isMyTeam
-                      ? "🎯 Votre entreprise"
+                      ? "Votre entreprise"
                       : `→ ${courrier.teamName ?? "Une autre entreprise"}`
                     : "Tout le marché"
                 }
@@ -298,8 +302,9 @@ export default async function ArenaPage({
         }));
         return encore.length > 0 ? (
           <section className="carte p-3 sm:p-5">
-            <p className="mb-2 text-sm font-semibold text-amber-400">
-              ⏳ Encore en vigueur ce tour
+            <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+              <Icone nom="duree" className="h-4 w-4" />
+              Encore en vigueur ce tour
             </p>
             <p className="mb-3 text-xs text-slate-400">
               {encore.length > 1 ? "Ces courriers sont arrivés" : "Ce courrier est arrivé"} à un tour
@@ -312,7 +317,7 @@ export default async function ArenaPage({
                   code={courrier.code}
                   delayMs={i * 450}
                   destinataire={`${
-                    courrier.teamId ? "🎯 Votre entreprise" : "Tout le marché"
+                    courrier.teamId ? "Votre entreprise" : "Tout le marché"
                   } · encore ${courrier.roundsLeft > 1 ? `${courrier.roundsLeft} tours` : "ce tour"}`}
                   surligne={courrier.isMyTeam}
                 />
@@ -410,7 +415,8 @@ export default async function ArenaPage({
     if (levers.length === 0) return null;
     return (
       <Tiroir
-        titre="💡 Leviers d'action"
+        icone="idee"
+        titre="Leviers d'action"
         quoi={`${levers.length} levier${levers.length > 1 ? "s" : ""}`}
       >
         <ul className="space-y-1.5">
@@ -444,7 +450,7 @@ export default async function ArenaPage({
               <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
                 ▸
               </span>
-              <span aria-hidden>🔍</span>
+              <Icone nom="loupe" className="h-4 w-4 text-amber-400" />
               <span className="min-w-0">{s.title}</span>
             </summary>
             <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
@@ -483,8 +489,9 @@ export default async function ArenaPage({
   const reponsesSection =
     reponses.length > 0 ? (
                         <section className="carte p-3 sm:p-5">
-                          <p className="mb-2 text-sm font-semibold text-amber-400">
-                            ↩️ En retour de vos décisions
+                          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+                            <Icone nom="courrier" className="h-4 w-4" />
+                            En retour de vos décisions
                           </p>
                           <p className="mb-3 text-xs text-slate-400">
                             {reponses.length > 1 ? "Ces courriers répondent" : "Ce courrier répond"}{" "}
@@ -565,9 +572,9 @@ export default async function ArenaPage({
         <SegmentedTabs
           defaultKey={isLatest ? "resultats" : "situation"}
           tabs={[
-            { key: "situation", label: "Situation", icon: "📋" },
-            { key: "decisions", label: "Décisions", icon: "✏️" },
-            { key: "resultats", label: "Résultats", icon: "📊" },
+            { key: "situation", label: "Situation", icon: "fiche" },
+            { key: "decisions", label: "Décisions", icon: "ecrire" },
+            { key: "resultats", label: "Résultats", icon: "resultats" },
           ]}
         >
           {{
@@ -589,7 +596,7 @@ export default async function ArenaPage({
   const toursPassesDe = (liste: typeof periods) => (
     <>
       {liste.length > 0 ? (
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
           {finished ? "Vos tours" : "Tours passés"}
         </p>
       ) : null}
@@ -608,10 +615,17 @@ export default async function ArenaPage({
             // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
             // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
             // à la file se lisaient comme une grille, pas comme quatre tours.
-            className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
-              netIncome >= 0
-                ? "border-l-emerald-400/60"
-                : "border-l-rose-400/60"
+            //
+            // UN CADRE PLEIN, ET LE SIGNE DANS UN FILET. Fermés, les tours
+            // passés portaient le pointillé des replis, et ce pointillé prenait
+            // la couleur du filet de gauche : une pile de cadres tiretés roses
+            // et verts, la seule chose de l'arène qui n'était pas dans la
+            // charte. Le cadre est désormais celui de toutes les cartes ; le
+            // gain ou la perte se lit au filet de 2 px et à la pastille du
+            // numéro, et l'état replié au chevron qui pivote.
+            data-tour-passe
+            className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&[open]]:border-white/20 ${
+              netIncome >= 0 ? "border-l-emerald-400/70" : "border-l-red-400/70"
             }`}
           >
             {/*
@@ -628,7 +642,7 @@ export default async function ArenaPage({
                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums ${
                   netIncome >= 0
                     ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
-                    : "border-rose-400/40 bg-rose-400/10 text-rose-300"
+                    : "border-red-400/40 bg-red-400/10 text-red-300"
                 }`}
               >
                 {p.round}
@@ -653,7 +667,7 @@ export default async function ArenaPage({
                     </span>
                   </span>
                   <span
-                    className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+                    className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-red-300"}`}
                   >
                     {netIncome >= 0 ? "+" : ""}
                     {formatEuro(netIncome)}
@@ -663,7 +677,7 @@ export default async function ArenaPage({
                     </span>
                   </span>
                   <span
-                    className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-rose-300"}`}
+                    className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-red-300"}`}
                   >
                     tréso {formatEuro(netTreasury)}
                   </span>
@@ -1074,7 +1088,12 @@ export default async function ArenaPage({
             <PictoSecteur secteur={view.sector} className="h-7 w-7" />
           </span>
           <div>
-            <p className={`text-xs uppercase tracking-[0.3em] ${SECTOR_COLORS[view.sector].accent}`}>
+            {/* Le surtitre en laiton, comme sur toutes les pages du site : la
+                couleur du secteur reste à la tuile et au pictogramme, qui sont
+                faits pour la porter. Écrit en bleu (pour l'industrie), le
+                surtitre ressemblait à un lien et parlait une autre langue que
+                l'accueil. */}
+            <p className="text-xs uppercase tracking-annonce text-amber-400">
               {surtitreDePartie(view.intro.title, view.playerTeamName)}
             </p>
             {/* L'emblème devant le nom de l'équipe : c'est son visage. */}
@@ -1103,13 +1122,15 @@ export default async function ArenaPage({
               href="#mon-profil"
               className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-white/25 hover:text-slate-100"
             >
-              <span aria-hidden>👤</span> {view.playerPseudo}
+              <Icone nom="personne" className="mr-1 h-3.5 w-3.5" />
+              {view.playerPseudo}
             </a>
           ) : null}
-          <p
-            className={`flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs max-sm:hidden ${SECTOR_COLORS[view.sector].accent}`}
-          >
-            <PictoSecteur secteur={view.sector} className="h-3.5 w-3.5" />
+          <p className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 max-sm:hidden">
+            <PictoSecteur
+              secteur={view.sector}
+              className={`h-3.5 w-3.5 ${SECTOR_COLORS[view.sector].accent}`}
+            />
             {SECTOR_LABELS[view.sector]}
           </p>
           <p
@@ -1139,7 +1160,7 @@ export default async function ArenaPage({
           })() : null}
           {/* La frise remplace la puce « Tour n / N » : le bandeau d'état
               juste dessous porte déjà ce chiffre, et la frise dit en plus d'où
-              l'on vient — un segment par tour, vert ou rose selon son résultat. */}
+              l'on vient — un segment par tour, vert ou rouge selon son résultat. */}
           {/* L'heure de fermeture du tour, quand l'enseignant en a posé une.
               Elle était calculée, appliquée, et jamais montrée tant que c'était
               jouable : on découvrait l'échéance en étant refusé. */}
@@ -1224,9 +1245,10 @@ export default async function ArenaPage({
               <BilanDePartie
                 titre={
                   moi?.rank === 1
-                    ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
+                    ? `Victoire ! ${view.playerTeamName} domine le marché.`
                     : "Partie terminée."
                 }
+                victoire={moi?.rank === 1}
                 bilan={bilan}
                 reussites={{
                   acquises: acquises.length,
@@ -1317,7 +1339,7 @@ export default async function ArenaPage({
                   pas, et c'est le bandeau retiré qui portait ce « / N ». Il est
                   ici, sur le tour qu'il compte. */}
               <span className="flex items-baseline gap-1.5 text-sm font-semibold text-amber-200 max-sm:hidden">
-                <span aria-hidden>✏️</span>
+                <Icone nom="ecrire" className="h-4 w-4 self-center" />
                 {periodLabel(view.roundDays, view.currentRound)}
                 <span className="text-xs font-normal tabular-nums text-amber-200/70">
                   / {view.roundsCount}
@@ -1388,7 +1410,7 @@ export default async function ArenaPage({
                 className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-3 py-2.5 text-sm transition hover:bg-emerald-400/10 sm:px-4"
               >
                 <span className="flex items-center gap-2 font-medium text-emerald-200">
-                  <span aria-hidden>📊</span>
+                  <Icone nom="resultats" className="h-4 w-4" />
                   {periodLabel(view.roundDays, latestRound)} {view.kind === "solo" ? "simulé" : "clos"} — voir les résultats
                 </span>
                 {/* La flèche descend : les tours clos sont passés SOUS le
@@ -1447,9 +1469,9 @@ export default async function ArenaPage({
                     guided
                     syncAnchors={["situation", "decisions"]}
                     tabs={[
-                      { key: "situation", label: "Situation", icon: "📋" },
-                      { key: "analyser", label: "Analyser", icon: "🔍" },
-                      { key: "decisions", label: "Décider", icon: "✏️" },
+                      { key: "situation", label: "Situation", icon: "fiche" },
+                      { key: "analyser", label: "Analyser", icon: "loupe" },
+                      { key: "decisions", label: "Décider", icon: "ecrire" },
                     ]}
                   >
                     {{

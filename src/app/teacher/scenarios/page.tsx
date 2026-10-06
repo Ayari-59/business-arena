@@ -12,6 +12,7 @@ import {
   importScenarioAction,
   publishScenarioAction,
 } from "./actions";
+import { PictoSecteur } from "@/components/picto-secteur";
 
 export const dynamic = "force-dynamic";
 
@@ -229,9 +230,9 @@ export default async function TeacherScenariosPage({
             >
               <span
                 aria-hidden
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg ${SECTOR_COLORS[d.sector].bg}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${SECTOR_COLORS[d.sector].bg} ${SECTOR_COLORS[d.sector].accent}`}
               >
-                {d.icon}
+                <PictoSecteur secteur={d.sector} className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-slate-100">{d.title}</p>

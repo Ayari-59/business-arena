@@ -44,6 +44,7 @@ import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { SimulationProgress } from "@/components/simulation-progress";
 import { NomReference } from "@/components/nom-reference";
 import { Aide, PanneauConsulte, TelephoneContexte } from "@/components/aide-repliable";
+import { Icone, type NomDIcone } from "@/components/icone";
 import { Tiroir } from "@/components/tiroir";
 import { useParcours } from "@/components/parcours-mobile";
 import {
@@ -156,9 +157,8 @@ function EquipmentPanel({
   return (
     <Family
       carte="investissement"
-      legend="🏭 Parc machines · investir ou céder"
-      tone="border-indigo-400/25 bg-indigo-950/20"
-      legendClass="text-xs font-semibold uppercase tracking-wide text-indigo-300"
+      icone="usine"
+      legend="Parc machines · investir ou céder"
     >
       <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm max-sm:mb-2">
         <span className="text-slate-400">Capacité en service</span>
@@ -430,7 +430,7 @@ function Field({
           inputRef={ref}
           {...(onValueChange ? { onValueChange } : {})}
         />
-        {hint ? <span className="mt-0.5 block text-[13px] text-slate-400 max-sm:text-sm">{hint}</span> : null}
+        {hint ? <span className="mt-0.5 block text-sm text-slate-400">{hint}</span> : null}
       </div>
     );
   }
@@ -456,7 +456,7 @@ function Field({
           inputRef={ref}
           {...(onValueChange ? { onValueChange } : {})}
         />
-        {hint ? <span className="mt-2 block text-[13px] text-slate-400 max-sm:text-base">{hint}</span> : null}
+        {hint ? <span className="mt-2 block text-sm text-slate-400 max-sm:text-base">{hint}</span> : null}
       </div>
     );
   }
@@ -486,7 +486,7 @@ function Field({
         />
         <span className="shrink-0 text-xs text-slate-400">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-sm text-slate-400">{hint}</span> : null}
     </label>
   );
 }
@@ -858,7 +858,7 @@ function ChampPlafonne({
             compact
           />
         ) : null}
-        {hint ? <span className="mt-0.5 block text-[13px] text-slate-400 max-sm:text-sm">{hint}</span> : null}
+        {hint ? <span className="mt-0.5 block text-sm text-slate-400">{hint}</span> : null}
       </div>
     );
   }
@@ -936,7 +936,7 @@ function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
 function EnDeveloppement() {
   return (
     <span className="ml-2 inline-block whitespace-nowrap rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 align-middle text-xs font-medium text-amber-300">
-      🔬 en développement
+      en développement
     </span>
   );
 }
@@ -1243,7 +1243,7 @@ function GammeReference({
                     onChange={(e) =>
                       setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
                     }
-                    className={`w-full champ text-slate-100 outline-none ${enCartes ? "px-3 py-2.5 text-base" : "px-2 py-1.5 text-[13px]"}`}
+                    className={`w-full champ text-slate-100 outline-none ${enCartes ? "px-3 py-2.5 text-base" : "px-2 py-1.5 text-sm"}`}
                   >
                     {suppliers.map((s) => {
                       // Le nom seul pour le façonnier de référence, l'écart
@@ -1610,6 +1610,7 @@ function GammeReference({
  */
 function Family({
   legend,
+  icone,
   children,
   defaultOpen = true,
   tone = "border-white/10 bg-slate-950",
@@ -1617,6 +1618,12 @@ function Family({
   carte,
 }: {
   legend: ReactNode;
+  /**
+   * Le repère de la famille, dessiné en laiton devant son titre. Il était écrit
+   * en emoji au début de la légende : une pastille de couleur étrangère au
+   * site, différente sur chaque téléphone de la classe.
+   */
+  icone?: NomDIcone;
   children: ReactNode;
   defaultOpen?: boolean;
   tone?: string;
@@ -1640,7 +1647,10 @@ function Family({
   return (
     <details open={defaultOpen} className={`group rounded-lg border [&:not([open])]:border-dashed ${tone}`}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 [&::-webkit-details-marker]:hidden">
-        <span className={legendClass}>{legend}</span>
+        <span className={`flex items-center gap-1.5 ${legendClass}`}>
+          {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-amber-400" /> : null}
+          {legend}
+        </span>
         <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
       </summary>
       <div className="border-t border-white/10 p-3 sm:p-4">{children}</div>
@@ -2163,18 +2173,18 @@ export function DecisionForm({
     assuranceVisible ? "assurance" : null,
     "prevoir",
   ].filter((x): x is string => x !== null);
-  const META: Record<string, { titre: string; icone: string }> = {
+  const META: Record<string, { titre: string; icone: NomDIcone }> = {
     // En gamme, la première étape ne se limite plus à vendre : elle porte TOUT
     // ce qui se décide sur une référence, budgets compris. L'appeler « Vendre »
     // ferait chercher ailleurs des champs qui sont là.
-    vendre: { titre: gamme ? "Vos références" : "Vendre", icone: "🎯" },
-    approvisionner: { titre: "S'approvisionner", icone: "🏭" },
-    budgets: { titre: "Budgéter", icone: "💸" },
-    equipe: { titre: "Équipe & RSE", icone: "👥" },
-    financer: { titre: "Financer & investir", icone: "💶" },
-    tresorerie: { titre: "Trésorerie", icone: "🏦" },
-    assurance: { titre: "Assurance", icone: "🛡️" },
-    prevoir: { titre: "S'informer & prévoir", icone: "📊" },
+    vendre: { titre: gamme ? "Vos références" : "Vendre", icone: "cible" },
+    approvisionner: { titre: "S'approvisionner", icone: "camion" },
+    budgets: { titre: "Budgéter", icone: "argent" },
+    equipe: { titre: "Équipe & RSE", icone: "equipes" },
+    financer: { titre: "Financer & investir", icone: "banque" },
+    tresorerie: { titre: "Trésorerie", icone: "tresorerie" },
+    assurance: { titre: "Assurance", icone: "assurance" },
+    prevoir: { titre: "S'informer & prévoir", icone: "loupe" },
   };
   const idx = (cle: string) => etapesVisibles.indexOf(cle);
   const total = etapesVisibles.length;
@@ -2605,16 +2615,15 @@ export function DecisionForm({
             // radio) : le replier cacherait une décision du tour.
             defaultOpen={!gamme}
             carte={gamme ? "references" : "fournisseur"}
+            icone="camion"
             legend={
               gamme
-                ? `🏭 ${v.supplierPanelLabel} · ${fiches.length} fiche${fiches.length > 1 ? "s" : ""}`
-                : `🏭 ${v.supplierPanelLabel}`
+                ? `${v.supplierPanelLabel} · ${fiches.length} fiche${fiches.length > 1 ? "s" : ""}`
+                : v.supplierPanelLabel
             }
-            tone="border-emerald-400/25 bg-emerald-950/20"
-            legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
           >
             {gamme ? (
-              <p className="mb-2 text-sm leading-relaxed text-emerald-200/80">
+              <p className="mb-2 text-sm leading-relaxed text-slate-400">
                 Chaque référence a ses façonniers ; le choix se fait ligne par ligne dans le
                 tableau de vos ventes. Voici ce que chacun propose, et à quel prix d&apos;achat
                 pour chaque référence qu&apos;il fournit.
@@ -2714,7 +2723,7 @@ export function DecisionForm({
           role="status"
           className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-sm text-amber-200"
         >
-          <span aria-hidden>🔒</span> {verrou}
+          <Icone nom="verrou" className="h-4 w-4" /> {verrou}
         </p>
       ) : null}
       {/*
@@ -2729,7 +2738,7 @@ export function DecisionForm({
           role="status"
           className="flex items-start gap-2 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-sm leading-relaxed text-red-200"
         >
-          <span aria-hidden className="mt-0.5">🚨</span>
+          <Icone nom="alerte" className="mt-0.5 h-4 w-4" />
           <span>
             <strong className="font-semibold">Financement de sauvetage exigé.</strong>{" "}
             {blocageSauvetage}
@@ -2759,7 +2768,11 @@ export function DecisionForm({
                       : "border-white/10 text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <span aria-hidden>{fait ? "✓" : META[cle]!.icone}</span>
+                {fait ? (
+                  <span aria-hidden>✓</span>
+                ) : (
+                  <Icone nom={META[cle]!.icone} className="h-4 w-4" />
+                )}
                 <span className="hidden truncate sm:inline">{META[cle]!.titre}</span>
                 <span className="sm:hidden">{i + 1}</span>
               </button>
@@ -2776,9 +2789,8 @@ export function DecisionForm({
       {orderOffer ? (
         <Family
           carte="commande"
-          legend={`📦 Commande exceptionnelle · ${orderOffer.title}`}
-          tone="border-sky-400/25 bg-sky-950/20"
-          legendClass="text-xs font-semibold uppercase tracking-wide text-sky-300"
+          icone="colis"
+          legend={`Commande exceptionnelle · ${orderOffer.title}`}
         >
           <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
           <p className="mt-2 text-xs text-slate-400">
@@ -2808,7 +2820,7 @@ export function DecisionForm({
               type="checkbox"
               name="acceptOrder"
               defaultChecked={defaults.acceptOrder ?? false}
-              className="mt-0.5 h-5 w-5 shrink-0 accent-sky-400"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
             />
             <span className="text-sm font-medium text-slate-200">
               Accepter la commande, à prendre ou à laisser : elle ne repassera pas.
@@ -2823,7 +2835,8 @@ export function DecisionForm({
         // deux étapes, alors que l'un commande l'autre.
         <Family
           carte={gamme.map((p) => `ref-${p.code}`)}
-          legend="🎯 Vos références · tout ce qui se décide pour chacune"
+          icone="cible"
+          legend="Vos références · tout ce qui se décide pour chacune"
           defaultOpen
         >
           <GammeReference
@@ -2842,7 +2855,8 @@ export function DecisionForm({
       ) : (
         <Family
           carte={["prix", "volume"]}
-          legend="🎯 Vos ventes · le prix et le volume du tour"
+          icone="cible"
+          legend="Vos ventes · le prix et le volume du tour"
           defaultOpen
         >
           <div className="grid grid-cols-2 gap-3">
@@ -2888,7 +2902,8 @@ export function DecisionForm({
       {capacityFacts ? (
         <Carte cle="volume">
         <PanneauConsulte
-          titre={`⚙️ ${v.capacityPanelTitle}`}
+          titre={v.capacityPanelTitle}
+          icone="usine"
           resume={`${Math.round(capacityFacts.availableMachineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel} · ${
             capacityFacts.bottleneck === "labor"
               ? v.laborLabel
@@ -3002,7 +3017,8 @@ export function DecisionForm({
         // et R&D.
         <Family
           carte="budgets"
-          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
+          icone="argent"
+          legend={`Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
           <Carte cle="budgets">
@@ -3045,7 +3061,8 @@ export function DecisionForm({
         // serveur ne dérive rien des références pour eux.
         <Family
           carte="maintenance"
-          legend={`💸 Les budgets de l'entreprise · ${[on.maintenance ? "entretien" : null, communicationOffer ? "marque" : null].filter(Boolean).join(", ")}`}
+          icone="argent"
+          legend={`Les budgets de l'entreprise · ${[on.maintenance ? "entretien" : null, communicationOffer ? "marque" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
           <p className="text-sm leading-relaxed text-slate-400">
@@ -3075,7 +3092,8 @@ export function DecisionForm({
         // un seul, lisible, dont le formulaire dit à qui il parle.
         <Family
           carte="communication"
-          legend={gamme ? "📣 Communication · la marque et l'axe" : "📣 Communication · l'axe"}
+          icone="communication"
+          legend={gamme ? "Communication · la marque et l'axe" : "Communication · l'axe"}
           defaultOpen
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -3103,7 +3121,7 @@ export function DecisionForm({
                   </option>
                 ))}
               </select>
-              <span className="mt-1 block text-[13px] text-slate-400">
+              <span className="mt-1 block text-sm text-slate-400">
                 {axe
                   ? COMMUNICATION_AXIS_LABELS[axe as keyof typeof COMMUNICATION_AXIS_LABELS].hint
                   : "Bien choisi, l'axe rend le même budget plus efficace ; mal choisi, il dessert."}
@@ -3123,7 +3141,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.hr ? (
-        <Family carte="rh" legend="👥 Ressources humaines">
+        <Family carte="rh" icone="equipes" legend="Ressources humaines">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
               hint="Arrivée au tour suivant, coût de recrutement immédiat." />
@@ -3137,7 +3155,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       {on.rse ? (
-        <Family carte="rse" legend="🌱 Engagement RSE">
+        <Family carte="rse" icone="feuille" legend="Engagement RSE">
           <p className="mb-2 text-xs text-slate-400">
             Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs tours
             à se construire, et à retomber si vous cessez.
@@ -3160,7 +3178,8 @@ export function DecisionForm({
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <Carte cle="financement">
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
-          🏦 Échéance d&apos;emprunt du tour :{" "}
+          <Icone nom="banque" className="mr-1.5 h-3.5 w-3.5" />
+          Échéance d&apos;emprunt du tour :{" "}
           <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
           de capital, prélevée automatiquement (+ intérêts). Dette restante{" "}
           {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €.
@@ -3169,7 +3188,7 @@ export function DecisionForm({
         </Carte>
       ) : null}
       {on.finance ? (
-      <Family carte="financement" legend="💶 Financer · emprunt, capital, investissement">
+      <Family carte="financement" icone="banque" legend="Financer · emprunt, capital, investissement">
         <div className="grid grid-cols-1 gap-3 max-sm:gap-1.5 sm:grid-cols-2">
             <>
               <div>
@@ -3297,7 +3316,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.dividend ? (
-        <Family carte="dividende" legend="💰 Affectation du résultat · dividende">
+        <Family carte="dividende" icone="argent" legend="Affectation du résultat · dividende">
           <ChampPlafonne
             name="dividend"
             label="Dividende versé aux associés"
@@ -3315,7 +3334,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       {on.creances && treasuryOffer ? (
-        <Family carte="mobilisation" legend="💶 Trésorerie · mobiliser le poste clients">
+        <Family carte="mobilisation" icone="tresorerie" legend="Trésorerie · mobiliser le poste clients">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Field
@@ -3391,7 +3410,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <Family carte="assurance" legend="🛡️ Assurance · choisissez votre couverture">
+        <Family carte="assurance" icone="assurance" legend="Assurance · choisissez votre couverture">
           <div className="space-y-2">
             <label className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12">
               <input
@@ -3463,7 +3482,8 @@ export function DecisionForm({
           />
           <span>
             <span className="text-sm font-medium text-slate-200">
-              🛡️ Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
+              <Icone nom="assurance" className="mr-1.5 h-4 w-4 text-amber-400" />
+              Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
             </span>
             <span className="mt-0.5 block text-xs text-slate-400">
               Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
@@ -3483,7 +3503,8 @@ export function DecisionForm({
       {studiesOffer ? (
         <Family
           carte="etudes"
-          legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}
+          icone="loupe"
+          legend={"Acheter de l'information · livrée avec les résultats du tour"}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
@@ -3587,7 +3608,8 @@ export function DecisionForm({
       */}
       <Family
         carte="justification"
-        legend="✍️ En quelques mots"
+        icone="ecrire"
+        legend="En quelques mots"
         tone="border-slate-700/60"
         legendClass="text-xs font-medium text-slate-400"
       >

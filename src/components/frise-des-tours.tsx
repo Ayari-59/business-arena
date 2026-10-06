@@ -5,7 +5,9 @@
  * ce qui reste. La frise le montre — un segment par tour, coloré par le SIGNE
  * du résultat pour les tours joués, en laiton pour celui en cours, éteint pour
  * ceux à venir. La même convention de couleur que le liseré de l'accordéon :
- * vert au-dessus de zéro, rose en dessous.
+ * vert au-dessus de zéro, rouge en dessous — le rouge sémantique de la
+ * charte, celui des pertes partout ailleurs (c'était un rose, seul de son
+ * espèce dans l'arène).
  *
  * Elle remplace la puce « Tour 1 / 6 » de l'en-tête, qui répétait le bandeau
  * d'état juste en dessous.
@@ -52,7 +54,7 @@ export function FriseDesTours({
               ? "bg-slate-300/70"
               : resultat >= 0
                 ? "bg-emerald-400/70"
-                : "bg-rose-400/70"
+                : "bg-red-400/70"
             : enCours
               ? "bg-amber-400"
               : "bg-white/10";

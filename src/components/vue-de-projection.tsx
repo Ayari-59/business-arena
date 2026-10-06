@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { echeanceDuTour, dateLisible, type Echeance } from "@/config/echeance";
+import { Icone, type NomDIcone } from "@/components/icone";
 
 /**
  * CE QUE LA CLASSE VOIT AU MUR.
@@ -37,16 +38,16 @@ export interface LigneClassement {
   defaillant: boolean;
 }
 
-const ONGLETS: { cle: Panneau; libelle: string; icone: string }[] = [
-  { cle: "code", libelle: "Code d'entrée", icone: "🎟️" },
-  { cle: "tour", libelle: "Ce tour", icone: "⏱️" },
-  { cle: "classement", libelle: "Classement", icone: "🏆" },
+const ONGLETS: { cle: Panneau; libelle: string; icone: NomDIcone }[] = [
+  { cle: "code", libelle: "Code d'entrée", icone: "cle" },
+  { cle: "tour", libelle: "Ce tour", icone: "duree" },
+  { cle: "classement", libelle: "Classement", icone: "trophee" },
 ];
 
 /** Le titre d'un panneau : petit par rapport au reste, il nomme sans occuper. */
 function Surtitre({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[clamp(0.8rem,1.6vw,1.4rem)] font-semibold uppercase tracking-[0.3em] text-slate-400">
+    <p className="text-[clamp(0.8rem,1.6vw,1.4rem)] font-semibold uppercase tracking-annonce text-slate-400">
       {children}
     </p>
   );
@@ -146,7 +147,8 @@ export function VueDeProjection({
                   : "border-white/10 text-slate-400 hover:text-slate-200"
               }`}
             >
-              <span aria-hidden>{o.icone}</span> {o.libelle}
+              <Icone nom={o.icone} className="mr-1.5 h-4 w-4" />
+              {o.libelle}
             </button>
           );
         })}
@@ -171,13 +173,13 @@ export function VueDeProjection({
                  n'est un repli de l'autre : c'est l'appareil de l'élève qui
                  décide, et il décide sans qu'on lui explique. */
               <div className="flex flex-col items-center gap-[clamp(0.75rem,3vw,3rem)] sm:flex-row sm:justify-center">
-                <p className="font-mono text-[clamp(3rem,13vw,9rem)] font-bold leading-none tracking-[0.12em] text-amber-300">
+                <p className="font-mono text-[clamp(3rem,13vw,9rem)] font-bold leading-none tracking-etiquette text-amber-300">
                   {joinCode}
                 </p>
                 {qr ? (
                   <span className="flex shrink-0 flex-col items-center gap-[clamp(0.25rem,1vh,0.75rem)]">
                     {qr}
-                    <span className="text-[clamp(0.8rem,1.4vw,1.2rem)] uppercase tracking-[0.2em] text-slate-400">
+                    <span className="text-[clamp(0.8rem,1.4vw,1.2rem)] uppercase tracking-surtitre text-slate-400">
                       ou scannez
                     </span>
                   </span>
@@ -278,11 +280,17 @@ export function VueDeProjection({
                       <span className="shrink-0 tabular-nums text-slate-400">#{row.rang}</span>
                       <span className="truncate">{row.nom}</span>
                       {row.defaillant ? (
+                        // Le triangle est seul : c'est l'étiquette, rôle d'image
+                        // compris, qui dit au lecteur d'écran ce qu'il signifie.
                         <span
+                          role="img"
                           aria-label="entreprise défaillante"
-                          className="shrink-0 text-[clamp(0.9rem,2vw,1.6rem)] text-red-400"
+                          className="shrink-0 self-center text-red-400"
                         >
-                          ⚠️
+                          <Icone
+                            nom="alerte"
+                            className="h-[clamp(0.9rem,2vw,1.6rem)] w-[clamp(0.9rem,2vw,1.6rem)]"
+                          />
                         </span>
                       ) : null}
                     </span>

@@ -103,8 +103,23 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
     const source = lire(fichier);
     const replis = source.match(/<details/g) ?? [];
     const pointilles = source.match(/\[&:not\(\[open\]\)\]:border-dashed/g) ?? [];
+    // UNE EXCEPTION, NOMMÉE : la liste des tours passés. Son pointillé prenait
+    // la couleur du filet de gain ou de perte, et la pile de cadres tiretés
+    // roses et verts était la seule chose de l'arène hors de la charte. Ses
+    // tours ont un cadre plein ; leur état replié se dit au chevron qui
+    // pivote, et leur signe au filet et à la pastille du numéro.
+    const toursPasses = source.match(/data-tour-passe/g) ?? [];
     expect(replis.length).toBeGreaterThan(0);
-    expect(pointilles.length).toBe(replis.length);
+    expect(pointilles.length).toBe(replis.length - toursPasses.length);
+  });
+
+  it("les tours passés gardent un signe de repli : le chevron qui pivote", () => {
+    const source = lire(join("src", "app", "arena", "[gameId]", "page.tsx"));
+    const debut = source.indexOf("data-tour-passe");
+    expect(debut).toBeGreaterThan(-1);
+    const tour = source.slice(debut, source.indexOf("</summary>", debut));
+    expect(tour).toContain("group-open:rotate-90");
+    expect(tour).not.toContain("border-dashed");
   });
 
   it.each(DOIVENT_PASSER_PAR_TIROIR)("%s : aucun repli écrit à la main", (fichier) => {

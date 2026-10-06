@@ -79,18 +79,6 @@ export const SECTOR_LABELS: Record<Sector, string> = {
   transport: "Transport",
 };
 
-export const SECTOR_ICONS: Record<Sector, string> = {
-  industrie: "🏭",
-  commerce: "🛍️",
-  ecommerce: "🛒",
-  hotellerie: "🏨",
-  restauration: "🍽️",
-  services: "💼",
-  abonnement: "🏋️",
-  batiment: "🏗️",
-  transport: "🚛",
-};
-
 export const SECTOR_COLORS: Record<Sector, { accent: string; bg: string }> = {
   industrie: { accent: "text-blue-400", bg: "bg-blue-400/10" },
   commerce: { accent: "text-pink-400", bg: "bg-pink-400/10" },
@@ -180,15 +168,14 @@ export interface ScenarioDefinition {
   code: string;
   title: string;
   sector: Sector;
-  /**
-   * Le pictogramme du scénario, distinct de celui du secteur quand deux
-   * scénarios partagent un secteur : NOVA se joue en un produit ou en gamme,
-   * et une tuile « 🏭 Industrie » deux fois ne dit pas laquelle est laquelle.
-   * C'est l'emblème que la vitrine (`presentation.ts`) affiche aussi : une
-   * seule source, sinon la page des entreprises et la tuile de la partie
-   * solo montreraient deux images du même scénario.
+  /*
+   * PAS DE PICTOGRAMME PROPRE AU SCÉNARIO. Chacun portait un emoji (🔊 pour
+   * NOVA, 🎚️ pour NOVA en gamme, 🧣, 🍷…), dessiné par le système, donc
+   * différent d'un appareil à l'autre et brouillé au vidéoprojecteur. Le
+   * visage d'une partie est le pictogramme de son SECTEUR (`PictoSecteur`),
+   * un par métier ; ce qui distingue NOVA de NOVA en gamme, c'est le nom
+   * court, qui le dit en toutes lettres là où l'emoji le laissait deviner.
    */
-  icon: string;
   /** Le nom court, pour une tuile ou une pastille (« NOVA · gamme »). */
   shortName: string;
   /** Une phrase : ce que l'élève dirige. */
@@ -238,7 +225,6 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   code: novaScenario.code,
   title: "NOVA · Prenez les commandes",
   sector: "industrie",
-  icon: "🔊",
   shortName: "NOVA",
   tagline: "Fabricant d'enceintes portables.",
   briefing:
@@ -298,7 +284,6 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
   code: novaGammeScenario.code,
   title: "NOVA · Composez la gamme",
   sector: "industrie",
-  icon: "🎚️",
   shortName: "NOVA · gamme",
   tagline: "Fabricant d'enceintes portables : trois références, un atelier.",
   briefing:
@@ -353,7 +338,6 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   code: boutiqueScenario.code,
   title: "MAILLE & CO · Habillez l'hiver",
   sector: "commerce",
-  icon: "👗",
   shortName: "MAILLE & CO",
   tagline: "Marque de vêtements en maille : cinq références, une boutique.",
   briefing:
@@ -408,7 +392,6 @@ export const BOUTIQUE_MONO_DEFINITION: ScenarioDefinition = {
   code: boutiqueMonoScenario.code,
   title: "MAILLE & CO · Tenez la boutique",
   sector: "commerce",
-  icon: "🧣",
   shortName: "MAILLE & CO · un article",
   tagline: "Concept store de prêt-à-porter en centre-ville : un article de mode, une boutique.",
   briefing:
@@ -463,7 +446,6 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   code: hotelScenario.code,
   title: "L'ESCALE · Remplissez l'hôtel",
   sector: "hotellerie",
-  icon: "🛎️",
   shortName: "L'ESCALE",
   tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
   briefing:
@@ -518,7 +500,6 @@ export const HOTEL_GAMME_DEFINITION: ScenarioDefinition = {
   code: hotelGammeScenario.code,
   title: "L'ESCALE · Vendez chaque chambre",
   sector: "hotellerie",
-  icon: "🏨",
   shortName: "L'ESCALE · gamme",
   tagline: "Hôtel 3 étoiles de 60 chambres : standard, supérieures et suites, un même bâtiment.",
   briefing:
@@ -573,7 +554,6 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   code: bistrotScenario.code,
   title: "LA TABLE D'AUGUSTIN · Tenez le service",
   sector: "restauration",
-  icon: "🍽️",
   shortName: "LA TABLE D'AUGUSTIN",
   tagline: "Bistrot de 70 couverts, midi et soir.",
   briefing:
@@ -628,7 +608,6 @@ export const BISTROT_GAMME_DEFINITION: ScenarioDefinition = {
   code: bistrotGammeScenario.code,
   title: "LA TABLE D'AUGUSTIN · Composez la carte",
   sector: "restauration",
-  icon: "🍷",
   shortName: "LA TABLE D'AUGUSTIN · gamme",
   tagline: "Bistrot de 70 couverts : la formule du midi, la carte du soir, les banquets, et un traiteur à bâtir.",
   briefing:
@@ -663,7 +642,6 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   code: conseilScenario.code,
   title: "ATLAS CONSEIL · Vendez le temps de vos équipes",
   sector: "services",
-  icon: "📊",
   shortName: "ATLAS CONSEIL",
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
   briefing:
@@ -720,7 +698,6 @@ export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
   code: conseilGammeScenario.code,
   title: "ATLAS CONSEIL · Composez l'offre",
   sector: "services",
-  icon: "🧭",
   shortName: "ATLAS CONSEIL · gamme",
   tagline: "Cabinet de conseil, 12 consultants : l'audit, la stratégie, et une pratique cyber-sécurité à bâtir.",
   briefing:
@@ -776,7 +753,6 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   code: ecommerceScenario.code,
   title: "PIXEL & CO · Achetez votre trafic",
   sector: "ecommerce",
-  icon: "📦",
   shortName: "PIXEL & CO",
   tagline: "Pure player de décoration et petit mobilier.",
   briefing:
@@ -831,7 +807,6 @@ export const ECOMMERCE_GAMME_DEFINITION: ScenarioDefinition = {
   code: ecommerceGammeScenario.code,
   title: "PIXEL & CO · Composez le catalogue",
   sector: "ecommerce",
-  icon: "🛋️",
   shortName: "PIXEL & CO · gamme",
   tagline: "Pure player de décoration : la déco, le petit mobilier, les luminaires, et une collection de créateurs à bâtir.",
   briefing:
@@ -866,7 +841,6 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
   code: fitnessScenario.code,
   title: "VOLT FITNESS · Gardez vos adhérents",
   sector: "abonnement",
-  icon: "🏋️",
   shortName: "VOLT FITNESS",
   tagline: "Salle de sport de 1 200 m² en périphérie.",
   briefing:
@@ -922,7 +896,6 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
   code: batimentScenario.code,
   title: "MARTEL & FILS · Tenez les chantiers",
   sector: "batiment",
-  icon: "🏗️",
   shortName: "MARTEL & FILS",
   tagline: "Entreprise de rénovation, quatorze compagnons.",
   briefing:
@@ -978,7 +951,6 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
   code: transportScenario.code,
   title: "ROUTE & CIE · Remplissez les camions",
   sector: "transport",
-  icon: "🚚",
   shortName: "ROUTE & CIE",
   tagline: "Transporteur routier régional, sept porteurs.",
   briefing:

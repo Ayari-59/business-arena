@@ -545,23 +545,24 @@ describe("registre des scénarios", () => {
   });
 });
 
-describe("le pictogramme et le nom court d'un scénario", () => {
+describe("le nom court d'un scénario", () => {
   it("deux scénarios du même secteur ne se ressemblent pas", () => {
-    // Le choix de l'entreprise se fait sur une tuile : un pictogramme et un
-    // nom court. NOVA se joue en un produit ou en gamme ; deux tuiles
-    // « 🏭 Industrie » ne disaient pas laquelle est laquelle.
+    // Le choix de l'entreprise se fait sur une tuile : le pictogramme du
+    // secteur et un nom court. NOVA se joue en un produit ou en gamme ; deux
+    // tuiles « Industrie » ne disaient pas laquelle est laquelle. Chaque
+    // scénario portait pour cela un emoji à lui, que le système dessinait à
+    // sa façon : c'est désormais le nom court qui distingue, en toutes
+    // lettres.
     for (const d of SCENARIOS) {
-      expect(d.icon.length, d.code).toBeGreaterThan(0);
       expect(d.shortName.length, d.code).toBeGreaterThan(0);
       expect(d.title.toUpperCase().startsWith(d.shortName.split(" · ")[0]!.toUpperCase()), `${d.code} : le nom court n'est pas la tête du titre`).toBe(true);
     }
     const parSecteur = new Map<string, typeof SCENARIOS[number][]>();
     for (const d of SCENARIOS) parSecteur.set(d.sector, [...(parSecteur.get(d.sector) ?? []), d]);
     for (const [secteur, defs] of parSecteur) {
-      expect(new Set(defs.map((d) => d.icon)).size, `${secteur} : deux scénarios avec le même pictogramme`).toBe(defs.length);
       expect(new Set(defs.map((d) => d.shortName)).size, `${secteur} : deux scénarios avec le même nom court`).toBe(defs.length);
     }
-    expect(scenarioByCode("nova").icon).not.toBe(scenarioByCode("nova-gamme").icon);
+    expect(scenarioByCode("nova").shortName).not.toBe(scenarioByCode("nova-gamme").shortName);
     expect(scenarioByCode("nova-gamme").shortName).toContain("gamme");
   });
 });

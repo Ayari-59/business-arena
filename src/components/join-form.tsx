@@ -35,7 +35,7 @@ export function JoinForm({
     <form
       ref={formRef}
       action={formAction}
-      className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6"
+      className="w-full max-w-sm space-y-4 carte p-6"
     >
       {equipeInitiale !== null ? (
         <input type="hidden" name="equipe" value={equipeInitiale} />
@@ -51,7 +51,7 @@ export function JoinForm({
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="EX : K7M2PR"
-          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-[0.3em] text-amber-300 outline-none"
+          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-annonce text-amber-300 outline-none"
         />
       </label>
       <label className="block">

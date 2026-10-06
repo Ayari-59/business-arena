@@ -153,7 +153,7 @@ function NomEtIncidents({
         </span>
       ) : null}
       {dev && dev.launchRound === tour ? (
-        <span className="ml-1 whitespace-nowrap text-xs text-emerald-300">🚀 lancée ce tour</span>
+        <span className="ml-1 whitespace-nowrap text-xs text-emerald-300">lancée ce tour</span>
       ) : null}
     </>
   );

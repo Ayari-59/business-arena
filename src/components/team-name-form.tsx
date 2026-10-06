@@ -7,6 +7,7 @@ import { EMBLEMES } from "@/config/emblemes";
 import { nommerEquipeAction, type NomEquipeState } from "@/app/arena/[gameId]/actions";
 import { NOM_EQUIPE_MAX } from "@/config/nom-equipe";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { Icone } from "@/components/icone";
 
 const initial: NomEquipeState = { error: null };
 
@@ -49,7 +50,8 @@ export function TeamNameForm({
       className="rounded-xl border border-amber-400/30 bg-amber-950/10 p-3 sm:p-5"
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
-        ✍️ {dejaNommee ? "Corrigez le nom de votre entreprise" : "Nommez votre entreprise"}
+        <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5" />
+        {dejaNommee ? "Corrigez le nom de votre entreprise" : "Nommez votre entreprise"}
       </p>
       <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
         {dejaNommee ? (

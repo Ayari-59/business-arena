@@ -21,7 +21,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Une hausse du coût variable remonte mécaniquement le seuil : combien de palettes en plus faut-il charger ?",
     nature: "macro",
     pli: "email",
-    emoji: "⛽",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -35,7 +35,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Un camion sans chauffeur ne roule pas : la contrainte n'est pas toujours celle qu'on amortit.",
     nature: "market",
     pli: "interne",
-    emoji: "🧑‍✈️",
+    icone: "equipes",
     scope: "market",
   },
   {
@@ -49,7 +49,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Un pic ne se sert qu'avec une flotte disponible : la capacité se décide un trimestre à l'avance.",
     nature: "market",
     pli: "simple",
-    emoji: "🎁",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -63,7 +63,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Le gazole a été brûlé, les chauffeurs payés, et rien n'a été livré : la perte est intégrale.",
     nature: "market",
     pli: "simple",
-    emoji: "🚧",
+    icone: "alerte",
     scope: "market",
   },
   {
@@ -77,7 +77,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Un contrat régulier vaut mieux qu'un beau prix ponctuel : il remplit les camions tous les jours.",
     nature: "market",
     pli: "simple",
-    emoji: "🏭",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -91,7 +91,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "S'aligner sur un prix qui ne couvre pas la structure remplit les camions et vide la trésorerie.",
     nature: "competition",
     pli: "simple",
-    emoji: "💸",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -105,7 +105,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Un métier qui immobilise un million en camions ressent chaque point de taux dans son résultat.",
     nature: "macro",
     pli: "recommande",
-    emoji: "📉",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -119,7 +119,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "C'est ce que couvre l'assurance marchandise transportée : la prime se juge le jour du sinistre.",
     nature: "internal",
     pli: "simple",
-    emoji: "🚨",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -133,7 +133,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "L'entretien différé coûte moins cher aujourd'hui et beaucoup plus cher le jour de la panne.",
     nature: "internal",
     pli: "email",
-    emoji: "🔧",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -147,7 +147,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Le préjudice dépasse la remorque : c'est la confiance d'un client qui fait un tiers du trafic.",
     nature: "internal",
     pli: "simple",
-    emoji: "🔒",
+    icone: "verrou",
     scope: "team",
   },
   {
@@ -161,7 +161,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Dans le transport, la ponctualité est le produit : elle se vend plus cher qu'un rabais ne rapporte.",
     nature: "market",
     pli: "simple",
-    emoji: "🏅",
+    icone: "trophee",
     scope: "team",
   },
   {
@@ -176,7 +176,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "La banque ne prête pas contre une promesse, elle lit vos comptes : c'est le rapport entre votre dette et vos capitaux propres qui décide de ce qu'elle consent.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -191,7 +191,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Une commande ferme se sert sur la capacité restante : elle n'a de valeur que si les camions sont libres.",
     nature: "market",
     pli: "email",
-    emoji: "📞",
+    icone: "telephone",
     scope: "team",
   },
   {
@@ -205,7 +205,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & maintenance préventive",
     nature: "internal",
     pli: "email",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -219,7 +219,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "simple",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -233,7 +233,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -248,7 +248,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Sur la bourse, seul le prix compte : c'est le segment le plus exposé, et celui qu'on ne peut pas défendre par la qualité.",
     nature: "competition",
     pli: "simple",
-    emoji: "🚛",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -263,7 +263,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Un client qui pèse un tiers du chiffre est un risque : le jour où il internalise, la flotte roule à vide.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏬",
+    icone: "baisse",
     scope: "market",
   },
   {
@@ -277,7 +277,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Un contrat-cadre lisse l'activité et sécurise la trésorerie : c'est ce qu'une banque aime lire.",
     nature: "market",
     pli: "recommande",
-    emoji: "📜",
+    icone: "accord",
     scope: "team",
   },
   {
@@ -291,7 +291,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "La maintenance qu'on n'a pas faite finit par se faire, au moment choisi par quelqu'un d'autre.",
     nature: "internal",
     pli: "recommande",
-    emoji: "👮",
+    icone: "balance",
     scope: "team",
   },
   {
@@ -306,7 +306,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Un coût variable qui monte se répercute sur le tarif, ou se paie sur la marge : la seule question est de savoir dans quel délai.",
     nature: "macro",
     pli: "simple",
-    emoji: "🛣️",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -320,7 +320,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "👀",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -335,7 +335,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
     nature: "market",
     pli: "simple",
-    emoji: "📦",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -350,7 +350,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -365,7 +365,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "📣",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -380,7 +380,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
     nature: "market",
     pli: "simple",
-    emoji: "📊",
+    icone: "baisse",
     scope: "market",
   },
 ];

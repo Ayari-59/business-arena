@@ -32,7 +32,7 @@ export default function EpisodesEnClassePage() {
       <main id="main" className="relative overflow-x-clip">
         <HaloDePage />
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+          <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/enseignants" className="hover:text-slate-300">
               Enseignants
             </Link>{" "}
@@ -77,7 +77,7 @@ function CarteFiche({ fiche }: { fiche: FicheEnseignant }) {
   return (
     <li className="carte flex flex-col gap-4 p-6">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
+        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
           Épisode {ep.numero} · {sigles}
         </p>
         <h3 className="mt-2 font-display text-2xl font-semibold text-slate-50">{ep.titre}</h3>

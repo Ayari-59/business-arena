@@ -53,7 +53,7 @@ export default async function DossierEnseignantPage({
       id="main"
       className="mx-auto max-w-3xl px-4 py-12 sm:px-6 print:max-w-none print:px-0 print:py-0 print:text-black"
     >
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
+      <p className="text-xs uppercase tracking-annonce text-slate-400 print:hidden">
         <Link
           href={`/animations/${atelier.code}`}
           className="hover:text-slate-300"
@@ -118,7 +118,7 @@ export default async function DossierEnseignantPage({
                   {situation.problem}
                 </p>
 
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400 print:text-black">
+                <p className="mt-4 text-xs font-semibold uppercase tracking-surtitre text-emerald-400 print:text-black">
                   Attendu au diagnostic
                 </p>
                 <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
@@ -127,7 +127,7 @@ export default async function DossierEnseignantPage({
                   ))}
                 </ul>
 
-                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-rose-400 print:text-black">
+                <p className="mt-3 text-xs font-semibold uppercase tracking-surtitre text-rose-400 print:text-black">
                   Ce que la classe proposera de travers
                 </p>
                 <ul className="mt-1 space-y-1 text-sm text-slate-400 print:text-black">

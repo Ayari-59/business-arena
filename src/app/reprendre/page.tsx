@@ -40,7 +40,7 @@ export default async function ReprendrePage({
   return (
     <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
+        <p className="text-xs uppercase tracking-annonce text-amber-400">Business Arena</p>
         <h1 className="mt-2 text-3xl font-bold">Reprendre ma partie</h1>
         <p className="mt-2 max-w-md text-base text-slate-400">
           {codeInitial

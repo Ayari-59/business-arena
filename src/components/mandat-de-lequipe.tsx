@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
 import { lettreDeMission } from "@/config/courriers/mission";
+import { Icone } from "@/components/icone";
 
 /**
  * LE MANDAT, ET SON RANGEMENT.
@@ -76,7 +77,10 @@ export function MandatDeLEquipe({
       >
         {/* L'objet commence déjà par « Votre mandat » : le préfixer d'un
             libellé le répétait mot pour mot. */}
-        <span className="text-slate-300">📜 {mandat.objet}</span>
+        <span className="text-slate-300">
+          <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+          {mandat.objet}
+        </span>
         <button
           type="button"
           onClick={() => memoire.retenir(cle, "1")}

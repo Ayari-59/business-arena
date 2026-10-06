@@ -1,4 +1,5 @@
 import { courrierParCode } from "@/config/courriers/registre";
+import { Icone } from "@/components/icone";
 
 /**
  * Le bandeau du courrier distribué.
@@ -49,21 +50,25 @@ export function BandeauCourriers({
       aria-label="Courrier distribué pour ce tour"
       className="rounded-xl border border-amber-400/40 bg-amber-950/20 px-4 py-3"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
-        📬 Votre enseignant vous adresse {visibles.length > 1 ? "des courriers" : "un courrier"} :
-        {visibles.length > 1 ? " ils s'appliquent" : " il s'applique"} à ce tour
+      <p className="flex items-start gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-300">
+        <Icone nom="courrier" className="h-4 w-4" />
+        <span>
+          Votre enseignant vous adresse {visibles.length > 1 ? "des courriers" : "un courrier"} :
+          {visibles.length > 1 ? " ils s'appliquent" : " il s'applique"} à ce tour
+        </span>
       </p>
       <ul className="mt-2 space-y-1.5">
         {visibles.map((courrier) => {
           const def = courrierParCode.get(courrier.code);
-          const cible = courrier.teamId === null ? "Tout le marché" : "🎯 Votre entreprise";
+          const cible = courrier.teamId === null ? "Tout le marché" : "Votre entreprise";
           return (
             <li
               key={`${courrier.code}-${courrier.teamId ?? "market"}`}
               className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm"
             >
-              <span className="font-semibold text-slate-100">
-                {def ? `${def.emoji} ${def.objet}` : `✉️ ${courrier.code}`}
+              <span className="inline-flex items-baseline gap-1.5 font-semibold text-slate-100">
+                <Icone nom={def ? def.icone : "courrier"} className="h-4 w-4 text-amber-300" />
+                {def ? def.objet : courrier.code}
               </span>
               {def ? <span className="text-xs text-slate-400">{def.expediteur}</span> : null}
               {def ? <span className="text-slate-300">{def.effet}</span> : null}

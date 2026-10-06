@@ -64,7 +64,7 @@ export function RevelationDuTour({
         positif ? "border-emerald-400/25" : "border-rose-400/25"
       } ${nouveau ? "revelation" : ""}`}
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+      <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
         {periode} · le verdict
       </p>
 

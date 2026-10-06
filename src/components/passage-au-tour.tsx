@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { bouton } from "@/components/bouton";
 
 /**
  * UNE ÉTAPE ENTRE LES RÉSULTATS ET LA DÉCISION SUIVANTE.
@@ -110,7 +111,11 @@ export function PassageAuTour({
           memoriser(gameId, tour);
           setOuvertMaintenant(true);
         }}
-        className="mt-4 inline-flex items-center gap-2 rounded-lg border border-amber-400/60 bg-amber-400/15 px-4 py-2.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/25"
+        // L'ACTION DE L'ÉCRAN, DONC LE BOUTON PLEIN. En contour laiton sur un
+        // fond à 15 %, il se lisait comme une étiquette beige, à côté de
+        // laquelle on cherchait le vrai bouton. C'est pourtant la seule chose
+        // que l'écran demande de faire : il prend la forme principale du site.
+        className={`mt-4 ${bouton({ taille: "l" })}`}
       >
         Passer au {labelTour.toLowerCase()}
         <span aria-hidden>→</span>

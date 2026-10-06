@@ -17,7 +17,7 @@ const EDITEUR = {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8">
+    <section className="carte p-6 sm:p-8">
       <h2 className="text-lg font-bold text-slate-50">{title}</h2>
       <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-400">{children}</div>
     </section>
@@ -34,7 +34,7 @@ export default function MentionsLegalesPage() {
         à l'accueil.
       */}
       <header className="mx-auto max-w-3xl px-6 pb-4 pt-10">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+        <p className="text-xs uppercase tracking-annonce text-amber-400">
           Mentions légales & données personnelles
         </p>
         <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50">
@@ -48,7 +48,7 @@ export default function MentionsLegalesPage() {
       </header>
 
       <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
-        <Section title="🎓 L'essentiel pour les établissements">
+        <Section title="L'essentiel pour les établissements">
           <ul className="list-disc space-y-2 pl-5">
             <li>
               <strong className="text-slate-200">Aucun compte élève.</strong> Les élèves
@@ -75,7 +75,7 @@ export default function MentionsLegalesPage() {
           </ul>
         </Section>
 
-        <Section title="📇 Éditeur du site">
+        <Section title="Éditeur du site">
           <p>
             Le site business-arena.fr est édité à titre pédagogique par{" "}
             <strong className="text-slate-200">{EDITEUR.nom}</strong> ({EDITEUR.statut}).
@@ -86,7 +86,7 @@ export default function MentionsLegalesPage() {
           <p>Directeur de la publication : l&apos;éditeur.</p>
         </Section>
 
-        <Section title="🖥️ Hébergement">
+        <Section title="Hébergement">
           <p>
             L&apos;application est hébergée par <strong className="text-slate-200">Vercel
             Inc.</strong> (440 N Barranca Ave #4133, Covina, CA 91723, États-Unis,
@@ -101,7 +101,7 @@ export default function MentionsLegalesPage() {
           </p>
         </Section>
 
-        <Section title="🔐 Données personnelles (RGPD)">
+        <Section title="Données personnelles (RGPD)">
           <p>Les données traitées, leur finalité et leur durée :</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -159,7 +159,7 @@ export default function MentionsLegalesPage() {
           </p>
         </Section>
 
-        <Section title="🍪 Cookies">
+        <Section title="Cookies">
           <p>Le site dépose uniquement deux cookies techniques, signés cryptographiquement :</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
@@ -179,7 +179,7 @@ export default function MentionsLegalesPage() {
           </p>
         </Section>
 
-        <Section title="⚖️ Propriété intellectuelle & responsabilité">
+        <Section title="Propriété intellectuelle & responsabilité">
           <p>
             La marque Business Arena, le logo, les contenus pédagogiques (situations, fiches
             notions, courriers) et le moteur de simulation sont la propriété de

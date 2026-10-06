@@ -20,6 +20,7 @@ import type { GameView } from "@/services/game-view.service";
 import type { RseIndex, RsePillar } from "@/scoring/rse";
 import { ReussitesDuTour } from "@/components/reussites-du-tour";
 import { Tiroir } from "@/components/tiroir";
+import { Icone, type NomDIcone } from "@/components/icone";
 import { RevelationDuTour } from "@/components/revelation-du-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { reussitesFranchies, lireLeTour } from "@/scoring/reussites";
@@ -40,6 +41,43 @@ function formatKpi(value: number, format: KpiFormat): string {
 }
 
 /**
+ * UNE LIGNE DE CONSTAT : ce que le tour a produit, en une phrase, derrière son
+ * pictogramme.
+ *
+ * L'onglet Finance empilait une dizaine de ces lignes, chacune dans sa
+ * couleur — ciel pour l'assurance, violet pour les RH, sarcelle pour la
+ * trésorerie, orange, rose, ambre — et un emoji en tête. Neuf teintes pour
+ * neuf sujets, c'était demander à l'élève d'apprendre un code que rien
+ * n'expliquait, et noyer les deux seules couleurs qui disent quelque chose :
+ * le rouge d'une perte et l'ambre d'une vigilance. Le sujet se dit désormais
+ * par le pictogramme, en laiton ; la couleur du cadre ne sert plus qu'à
+ * l'état, et une ligne sans histoire reste en encre neutre.
+ */
+const TONS_DE_CONSTAT = {
+  neutre: { cadre: "border-white/5 bg-slate-950 text-slate-300", picto: "text-amber-400" },
+  vigilance: { cadre: "border-amber-400/30 bg-amber-950/30 text-amber-200", picto: "" },
+  perte: { cadre: "border-red-400/30 bg-red-950/30 text-red-200", picto: "" },
+} as const;
+
+function Constat({
+  icone,
+  ton = "neutre",
+  children,
+}: {
+  icone: NomDIcone;
+  ton?: keyof typeof TONS_DE_CONSTAT;
+  children: React.ReactNode;
+}) {
+  const t = TONS_DE_CONSTAT[ton];
+  return (
+    <div className={`flex gap-2 rounded-lg border px-3 py-2 text-xs leading-relaxed ${t.cadre}`}>
+      <Icone nom={icone} className={`mt-0.5 h-3.5 w-3.5 ${t.picto}`} />
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+/**
  * Indice RSE du tour (Lot 1) : une MESURE, affichée mais sans effet sur la
  * partie. Trois piliers ESG dérivés du résultat ; un pilier « non évalué »
  * (aucun signal dans ce scénario) reste neutre et le dit.
@@ -57,7 +95,10 @@ function RseCard({ rse }: { rse: RseIndex }) {
       className="rounded-xl border border-emerald-400/20 bg-slate-900 p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold text-slate-200">🌱 Indice RSE</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Icone nom="feuille" className="h-4 w-4 text-amber-400" />
+          Indice RSE
+        </h2>
         <span className="tabular-nums text-lg font-semibold text-emerald-300">
           {rse.score}
           <span className="text-xs text-slate-400"> / 100</span>
@@ -193,7 +234,8 @@ export function PeriodDashboard({
                 aria-label="Courrier reçu ce tour"
                 className="text-sm leading-relaxed text-slate-400"
               >
-                <span aria-hidden>📬</span> Courrier du{" "}
+                <Icone nom="courrier" className="mr-1.5 h-4 w-4 text-amber-400" />
+                Courrier du{" "}
                 {periodLabel(view.roundDays, period.round).toLowerCase()} :{" "}
                 <span className="text-slate-300">
                   {period.events.map((code) => courrierParCode.get(code)?.objet ?? code).join(" · ")}
@@ -201,8 +243,9 @@ export function PeriodDashboard({
               </p>
             ) : period.events.length > 0 ? (
               <section aria-label="Courrier reçu ce tour">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-                  📬 Le courrier de ce tour
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                  <Icone nom="courrier" className="h-4 w-4" />
+                  Le courrier de ce tour
                 </p>
                 <div className={grilleDeCourriers(period.events.length)}>
                   {period.events.map((code, i) => (
@@ -251,8 +294,9 @@ export function PeriodDashboard({
                 data-testid="portefeuille-tour"
                 className="carte px-3 py-3 text-sm"
               >
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  🔁 Portefeuille d&apos;{view.vocabulary.units}
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <Icone nom="recommencer" className="h-3.5 w-3.5 text-amber-400" />
+                  Portefeuille d&apos;{view.vocabulary.units}
                 </p>
                 <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">
                   <span className="text-slate-400">En début de tour</span>
@@ -334,12 +378,12 @@ export function PeriodDashboard({
               // Le rideau est tiré : la vue ne contient pas le classement, elle
               // ne le cache pas. On dit qui l'ouvrira, pour que l'attente ait
               // un sens — et on rappelle ce qui, lui, ne dépend de personne.
-              <section className="rounded-xl border border-dashed border-amber-400/30 bg-slate-900 p-3 sm:p-5">
+              <section className="carte p-3 sm:p-5">
                 <h2 className="text-sm font-semibold text-slate-200">
                   Classement · Indice de performance globale
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  🎬 Votre enseignant le révélera. En attendant, vos résultats et votre indice
+                  Votre enseignant le révélera. En attendant, vos résultats et votre indice
                   de performance sont là : c&apos;est votre progression, pas votre place.
                 </p>
               </section>
@@ -367,7 +411,8 @@ export function PeriodDashboard({
                               className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300"
                               title="Entreprise défaillante : deux tours de cessation de paiements. Activité gelée jusqu'à recapitalisation."
                             >
-                              ⚠️ Défaillante
+                              <Icone nom="alerte" className="mr-1 h-3 w-3" />
+                              Défaillante
                             </span>
                           ) : null}
                         </span>
@@ -414,8 +459,9 @@ export function PeriodDashboard({
           <div className="space-y-3">
             {period.sectorKpis.length > 0 ? (
               <section aria-label="Indicateurs du métier">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
-                  📐 Indicateurs du métier
+                <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                  <Icone nom="resultats" className="h-3.5 w-3.5" />
+                  Indicateurs du métier
                 </h3>
                 {/*
                   SUR TÉLÉPHONE, UNE LIGNE PAR INDICATEUR : le nom à gauche, la valeur à droite, et
@@ -457,7 +503,8 @@ export function PeriodDashboard({
               </h3>
               {r.communication ? (
                 <p className="mb-2 text-xs text-slate-400">
-                  📣 Communication :{" "}
+                  <Icone nom="communication" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                  Communication :{" "}
                   {r.communication.axis
                     ? `axe « ${COMMUNICATION_AXIS_LABELS[r.communication.axis].label.toLowerCase()} »`
                     : "aucun axe"}
@@ -515,8 +562,8 @@ export function PeriodDashboard({
             ) : null}
 
             {r.extraOrders ? (
-              <p className="rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-300">
-                📋 Commande ferme à {formatEuro(r.extraOrders.unitPrice)}/{view.vocabulary.unit} :{" "}
+              <Constat icone="fiche">
+                Commande ferme à {formatEuro(r.extraOrders.unitPrice)}/{view.vocabulary.unit} :{" "}
                 {formatUnits(r.extraOrders.delivered)} {view.vocabulary.units} livrés
                 {r.extraOrders.subcontracted > 0
                   ? ` + ${formatUnits(r.extraOrders.subcontracted)} u sous-traitées`
@@ -526,13 +573,13 @@ export function PeriodDashboard({
                 r.extraOrders.requested
                   ? ", le reste est perdu. L'anticipation a un prix."
                   : ", réglées comptant."}
-              </p>
+              </Constat>
             ) : null}
 
             {r.orderOffer ? (
               r.orderOffer.accepted ? (
-                <p className="rounded-lg border border-sky-400/30 bg-sky-950/30 px-3 py-2 text-xs text-sky-300">
-                  📦 {r.orderOffer.title} acceptée :{" "}
+                <Constat icone="colis">
+                  {r.orderOffer.title} acceptée :{" "}
                   {formatUnits(r.orderOffer.delivered)} u livrées à{" "}
                   {formatEuro(r.orderOffer.unitPrice)}/u, soit{" "}
                   {formatEuro(r.orderOffer.revenue)} de CA
@@ -542,18 +589,19 @@ export function PeriodDashboard({
                   {r.orderOffer.delivered < 0.5
                     ? ` ${view.vocabulary.leftoverLabel} insuffisant : rien n'a pu être livré.`
                     : ""}
-                </p>
+                </Constat>
               ) : (
-                <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                  📦 {r.orderOffer.title} : commande déclinée. Un choix aussi.
-                </p>
+                <Constat icone="colis">
+                  {r.orderOffer.title} : commande déclinée. Un choix aussi.
+                </Constat>
               )
             ) : null}
 
             {period.forecastReview ? (
-              <div className="rounded-lg border border-sky-400/25 bg-sky-950/20 px-3 py-3 sm:p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
-                  🏦 Votre plan face au réalisé
+              <div className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:p-4">
+                <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                  <Icone nom="banque" className="h-3.5 w-3.5" />
+                  Votre plan face au réalisé
                 </h3>
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full text-sm">
@@ -649,23 +697,23 @@ export function PeriodDashboard({
             ) : null}
 
             {r.bank && r.bank.loanRequested > 0 && r.bank.loanGranted === 0 ? (
-              <p className="rounded-lg border border-rose-400/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">
-                🏦 Emprunt refusé : {formatEuro(r.bank.loanRequested)} demandés sans plan de
+              <Constat icone="banque" ton="perte">
+                Emprunt refusé : {formatEuro(r.bank.loanRequested)} demandés sans plan de
                 trésorerie. L&apos;argent n&apos;est jamais entré en caisse.
-              </p>
+              </Constat>
             ) : null}
 
             {r.capital && r.capital.applied < r.capital.requested - 0.5 ? (
-              <p className="rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
-                🤝 Apport plafonné : {formatEuro(r.capital.applied)} retenus sur{" "}
+              <Constat icone="accord" ton="vigilance">
+                Apport plafonné : {formatEuro(r.capital.applied)} retenus sur{" "}
                 {formatEuro(r.capital.requested)} demandés. L&apos;enveloppe des associés
                 est {r.capital.remainingAfter < 0.5 ? "épuisée" : `réduite à ${formatEuro(r.capital.remainingAfter)}`}.
-              </p>
+              </Constat>
             ) : null}
 
             {r.debt && (r.debt.mandatoryRepayment > 0.5 || r.debt.newLoan > 0.5 || r.debt.earlyRepayment > 0.5) ? (
-              <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-300">
-                🏦 Dette : échéance de {formatEuro(r.debt.mandatoryRepayment)} prélevée
+              <Constat icone="banque">
+                Dette : échéance de {formatEuro(r.debt.mandatoryRepayment)} prélevée
                 {r.debt.earlyRepayment > 0.5
                   ? ` + ${formatEuro(r.debt.earlyRepayment)} d'anticipé`
                   : ""}
@@ -675,42 +723,31 @@ export function PeriodDashboard({
                 {r.debt.nextMandatory > 0.5
                   ? ` (prochaine échéance ${formatEuro(r.debt.nextMandatory)})`
                   : ""}
-              </p>
+              </Constat>
             ) : null}
 
             {r.treasury ? (
-              <p
-                className={`rounded-lg border px-3 py-2 text-xs ${
-                  r.treasury.crisis
-                    ? "border-red-400/40 bg-red-950/40 text-red-300"
-                    : r.treasury.forcedFactored > 0
-                      ? "border-orange-400/40 bg-orange-950/30 text-orange-300"
-                      : "border-teal-400/30 bg-teal-950/30 text-teal-300"
-                }`}
+              <Constat
+                icone={r.treasury.crisis || r.treasury.forcedFactored > 0 ? "alerte" : "tresorerie"}
+                ton={r.treasury.crisis ? "perte" : r.treasury.forcedFactored > 0 ? "vigilance" : "neutre"}
               >
                 {ligneTresorerie(r.treasury)}
-              </p>
+              </Constat>
             ) : null}
 
             {(() => {
               const lecture = lectureBancaire(r.bank);
               return lecture ? (
-                <p
-                  className={`rounded-lg border px-3 py-2 text-xs ${
-                    lecture.ton === "baisse"
-                      ? "border-orange-400/40 bg-orange-950/30 text-orange-200"
-                      : "border-teal-400/30 bg-teal-950/30 text-teal-200"
-                  }`}
-                >
-                  🏦 {lecture.texte}
-                </p>
+                <Constat icone="banque" ton={lecture.ton === "baisse" ? "vigilance" : "neutre"}>
+                  {lecture.texte}
+                </Constat>
               ) : null;
             })()}
 
             {r.investment ? (
-              <div className="rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
+              <Constat icone="usine">
                 <p>
-                  🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de
+                  Investissement : +{formatUnits(r.investment.capacityUnits)} u de
                   capacité ({formatEuro(r.investment.outlay)}), en service au prochain tour.
                 </p>
                 {r.investment.bought && r.investment.bought.length > 0 ? (
@@ -730,43 +767,43 @@ export function PeriodDashboard({
                       : ""}
                   </p>
                 ) : null}
-              </div>
+              </Constat>
             ) : null}
 
             {r.qualityCosts &&
             (r.qualityCosts.internalFailure > 0.5 || r.qualityCosts.externalFailure > 0.5) ? (
-              <p className="rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-xs text-red-300">
-                🧪 Coûts de la non-qualité : {formatUnits(r.qualityCosts.defectUnits)} u de
+              <Constat icone="alerte" ton="perte">
+                Coûts de la non-qualité : {formatUnits(r.qualityCosts.defectUnits)} u de
                 rebuts ({formatEuro(r.qualityCosts.internalFailure)})
                 {r.qualityCosts.returnedUnits > 0.5
                   ? ` · ${formatUnits(r.qualityCosts.returnedUnits)} u retournées (${formatEuro(r.qualityCosts.externalFailure)})`
                   : ""}{" "}
                 , face à {formatEuro(r.qualityCosts.prevention)} de prévention. Le bon niveau
                 de qualité est un calcul, pas une vertu.
-              </p>
+              </Constat>
             ) : null}
 
             {r.hr ? (
-              <p className="rounded-lg border border-violet-400/30 bg-violet-950/30 px-3 py-2 text-xs text-violet-300">
-                👥 RH · effectif {r.hr.headcount}
+              <Constat icone="equipes">
+                RH · effectif {r.hr.headcount}
                 {r.hr.hired > 0 ? ` · +${r.hr.hired} embauche${r.hr.hired > 1 ? "s" : ""} (arrivée au prochain tour)` : ""}
                 {r.hr.fired > 0 ? ` · ${r.hr.fired} licenciement${r.hr.fired > 1 ? "s" : ""}` : ""}
                 {r.hr.departed > 0 ? " · 1 démission (salaires sous le marché !)" : ""}
                 {r.hr.trainingBudget > 0 ? ` · formation ${formatEuro(r.hr.trainingBudget)}` : ""}
                 {" · coût RH du tour : "}
                 {formatEuro(r.hr.cost)}
-              </p>
+              </Constat>
             ) : null}
 
             {r.insurance ? (
-              <p className="rounded-lg border border-sky-400/30 bg-sky-950/30 px-3 py-2 text-xs text-sky-300">
-                🛡️ Assurance souscrite ({formatEuro(r.insurance.premium)}).{" "}
+              <Constat icone="assurance">
+                Assurance souscrite ({formatEuro(r.insurance.premium)}).{" "}
                 {r.insurance.neutralizedEvents.length > 0
                   ? `Sinistre couvert ce tour : ${r.insurance.neutralizedEvents
                       .map((c) => courrierParCode.get(c)?.objet ?? c)
                       .join(", ")}. Effets neutralisés.`
                   : "Aucun sinistre couvert ce tour."}
-              </p>
+              </Constat>
             ) : null}
 
             {standing && view.salesHistory.rounds.length > 0 ? (

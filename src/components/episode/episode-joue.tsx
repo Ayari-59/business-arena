@@ -311,11 +311,17 @@ export function EpisodeJoue({ code }: { code: string }) {
   const maj = (f: (e: Etat) => Partial<Etat>) => setS((e) => ({ ...e, ...f(e) }));
 
   // Chaque nouvel écran se lit depuis son haut : sur téléphone, le bouton
-  // qu'on vient de toucher est en bas de l'écran précédent.
+  // qu'on vient de toucher est en bas de l'écran précédent. Le seuil est la
+  // marge de défilement de la scène, pas le bord de la fenêtre : l'en-tête
+  // collant couvre le haut de page, et un titre posé juste dessous en
+  // dépassait de quelques pixels sans que rien ne remonte — c'est ce qui
+  // arrivait après « Commencer l'épisode ».
   const repere = `${s.ecran}-${s.etape}-${s.phase}`;
   useEffect(() => {
     const el = scene.current;
-    if (!el || el.getBoundingClientRect().top >= 0) return;
+    if (!el) return;
+    const marge = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    if (el.getBoundingClientRect().top >= marge) return;
     const doux = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ block: "start", behavior: doux ? "smooth" : "auto" });
   }, [repere]);
@@ -388,7 +394,7 @@ export function EpisodeJoue({ code }: { code: string }) {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
       <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-3">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+        <p className="text-xs uppercase tracking-annonce text-slate-400">
           <Link href="/entreprises/episode" className="hover:text-slate-300">
             Épisodes manager
           </Link>{" "}
@@ -458,7 +464,7 @@ export function EpisodeJoue({ code }: { code: string }) {
           {s.ecran === "jeu" && (
             <>
               <header>
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
+                <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
                   Décision {s.etape + 1} sur {ep.etapes.length} · {etape.moment}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
@@ -546,7 +552,7 @@ function Intro({
   return (
     <section className="carte grid gap-5 p-5 sm:p-7">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
+        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
           Épisode {ep.numero} · {ep.domaine}
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
@@ -555,7 +561,7 @@ function Intro({
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{ep.persona}</p>
       </div>
       <div className="grid gap-3 border-y border-white/10 py-4">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+        <h2 className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">
           Votre mandat pour le trimestre
         </h2>
         <ul className="grid gap-x-6 gap-y-2 text-slate-200 sm:grid-cols-2">
@@ -660,7 +666,7 @@ function Scene({
               {Array.from({ length: Math.round(budget! * 2) }, (_, k) => (
                 <span
                   key={k}
-                  className={`h-2 rounded-sm border ${
+                  className={`h-2 rounded-md border ${
                     k < s.jours * 2
                       ? k >= ep.enquete.joursSansPerte * 2
                         ? "border-rose-400 bg-rose-400"
@@ -858,7 +864,7 @@ function Scene({
               });
             }}
             placeholder="Ce que vous attendez de cette décision"
-            className="champ w-full px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-400"
+            className="champ champ-facultatif w-full px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-400"
           />
         </label>
         {etape.prevision && (
@@ -974,7 +980,7 @@ function Scene({
         <section aria-labelledby="imprevus-titre" className="grid gap-2">
           <h2
             id="imprevus-titre"
-            className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400"
+            className="text-xs font-semibold uppercase tracking-etiquette text-slate-400"
           >
             Pendant ce temps, sans rapport avec vos décisions
           </h2>

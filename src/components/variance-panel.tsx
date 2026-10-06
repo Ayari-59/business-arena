@@ -1,5 +1,6 @@
 import { formatEuro, formatPercent } from "@/lib/format";
 import type { VarianceOutput } from "@/engine/costs/variance";
+import { Icone } from "@/components/icone";
 
 /**
  * LES ÉCARTS DE COÛTS, ET RIEN D'AUTRE.
@@ -45,7 +46,8 @@ export function VariancePanel({ variances }: { variances: VarianceOutput }) {
   return (
     <div className="rounded-lg border border-amber-400/25 bg-amber-950/20 px-3 py-3 sm:p-4">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-300">
-        📊 Décomposition des écarts de coûts
+        <Icone nom="resultats" className="mr-1.5 h-3.5 w-3.5" />
+        Décomposition des écarts de coûts
       </h3>
 
       {/* Cost Variance Breakdown */}

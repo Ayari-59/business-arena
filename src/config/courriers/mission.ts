@@ -54,7 +54,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
       "Trois leviers seulement, et ils suffisent à gagner ou à perdre : le prix fait la marge, le volume fait le risque, le marketing fait la demande.",
     nature: "internal",
     pli: "interne",
-    emoji: "📜",
+    icone: "document",
     scope: "team",
   },
   {
@@ -69,7 +69,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
       "Qualité et maintenance sont les deux premières dépenses qu'on sacrifie quand la trésorerie serre, et les deux premières qui se rappellent à vous.",
     nature: "internal",
     pli: "interne",
-    emoji: "📜",
+    icone: "document",
     scope: "team",
   },
   {
@@ -84,7 +84,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
       "Une entreprise ne meurt pas de perdre de l'argent, elle meurt de ne plus en avoir en caisse. Le financement se décide avant d'en avoir besoin.",
     nature: "internal",
     pli: "interne",
-    emoji: "📜",
+    icone: "document",
     scope: "team",
   },
   {
@@ -99,7 +99,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
       "Embaucher, investir, s'engager : trois décisions qui coûtent maintenant et ne rapportent que plus tard. C'est l'arbitrage du temps.",
     nature: "internal",
     pli: "interne",
-    emoji: "📜",
+    icone: "document",
     scope: "team",
   },
   {
@@ -114,7 +114,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
       "Placer trop, c'est payer un découvert à 9 % en détenant un placement à 2 %. L'excédent d'aujourd'hui est le besoin de demain.",
     nature: "internal",
     pli: "interne",
-    emoji: "📜",
+    icone: "document",
     scope: "team",
   },
   {
@@ -129,7 +129,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
       "Distribuer, c'est récompenser les associés ; mettre en réserve, c'est financer la suite sans emprunter. On ne peut pas faire les deux avec le même euro.",
     nature: "internal",
     pli: "interne",
-    emoji: "📜",
+    icone: "document",
     scope: "team",
   },
 ];

@@ -54,7 +54,7 @@ describe("la carte, définie une fois", () => {
     // reviendrait par ce seul mot.
     expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--lumiere-carte:[^;]*#fff/);
     expect(css).toMatch(
-      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--lumiere-carte:[^;]*#fff/,
+      /\[data-theme="clair"\]\s*\{[^}]*--lumiere-carte:[^;]*#fff/,
     );
     for (const bloc of css.matchAll(/--lumiere-carte:([^;]+);/g)) {
       expect(bloc[1], "le blanc du reflet passe par la variable du thème").not.toMatch(
@@ -63,16 +63,14 @@ describe("la carte, définie une fois", () => {
     }
   });
 
-  it("son ombre est propre à chaque thème, et à chaque bloc à contre-jour", () => {
+  it("son ombre est propre à chaque thème, et au bloc à contre-jour", () => {
     // Sur fond clair, l'ombre du thème sombre serait une salissure.
     //
-    // Les deux valeurs s'écrivent sous une LISTE de sélecteurs plutôt qu'une
-    // fois par surface : une surface claire est une surface claire, que ce
-    // soit la page entière ou le seul bloc posé à contre-jour sur une page
-    // sombre. Recopier l'ombre pour ce bloc, c'est la laisser diverger.
+    // Chaque sélecteur porte la sienne : la nuit (la page sombre, et le bloc à
+    // contre-jour d'une page claire, qui en reprend l'échelle) et le papier.
     expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--ombre-carte:/);
     expect(css).toMatch(
-      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--ombre-carte:/,
+      /\[data-theme="clair"\]\s*\{[^}]*--ombre-carte:/,
     );
   });
 
@@ -123,10 +121,10 @@ describe("le champ, défini une fois", () => {
     expect(bloc).toContain("var(--creux-champ)");
   });
 
-  it("son creux est propre à chaque thème, et à chaque bloc à contre-jour", () => {
+  it("son creux est propre à chaque thème, et au bloc à contre-jour", () => {
     expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--creux-champ:/);
     expect(css).toMatch(
-      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--creux-champ:/,
+      /\[data-theme="clair"\]\s*\{[^}]*--creux-champ:/,
     );
   });
 

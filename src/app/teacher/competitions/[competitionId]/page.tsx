@@ -10,6 +10,7 @@ import { StageSchedule } from "@/components/stage-schedule";
 import { PublicPageForm } from "@/components/public-page-form";
 import { SITE_URL } from "@/config/site";
 import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
+import { Icone } from "@/components/icone";
 
 export const dynamic = "force-dynamic";
 
@@ -48,9 +49,9 @@ export default async function TeacherCompetitionPage({
         tuile={
           <span
             aria-hidden
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400/10 text-2xl"
+            className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400/10 text-amber-400"
           >
-            🏆
+            <Icone nom="trophee" className="h-7 w-7" />
           </span>
         }
         description={
@@ -102,7 +103,10 @@ export default async function TeacherCompetitionPage({
 
       {view.status !== "finished" && view.stages.length > 0 ? (
         <section className="carte p-3 sm:p-5">
-          <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning des étapes</h2>
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+            <Icone nom="planning" className="h-4 w-4 text-amber-400" />
+            Planning des étapes
+          </h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Fenêtre pendant laquelle les équipes peuvent jouer les parties de chaque étape (heure
             de Paris). En dehors, l&apos;arène passe en lecture seule. Cette fenêtre s&apos;ajoute à
@@ -125,7 +129,10 @@ export default async function TeacherCompetitionPage({
       ) : null}
 
       <section className="carte p-3 sm:p-5">
-        <h2 className="text-sm font-semibold text-slate-200">🌐 Page publique d&apos;annonce</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Icone nom="monde" className="h-4 w-4 text-amber-400" />
+          Page publique d&apos;annonce
+        </h2>
         <p className="mt-1 max-w-3xl text-xs text-slate-400">
           Une page ouverte pour annoncer l&apos;événement, avec un bouton d&apos;inscription et des
           boutons de partage (LinkedIn, X, Facebook, WhatsApp). Les dates du programme reprennent

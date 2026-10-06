@@ -45,7 +45,7 @@ function Apercu({
       {bandesDeLaPage(page).map((b) => (
         <div
           key={b.id}
-          className={`h-6 rounded-sm ${etat[b.id] ? "bg-amber-400/80" : "border border-white/20"}`}
+          className={`h-6 rounded-md ${etat[b.id] ? "bg-amber-400/80" : "border border-white/20"}`}
         />
       ))}
     </div>

@@ -7,6 +7,7 @@ import {
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { sansMolette } from "@/components/sans-molette";
 import { formatEuro } from "@/lib/format";
+import { Icone } from "@/components/icone";
 
 const initial: DemandeSubventionState = { error: null };
 
@@ -47,7 +48,8 @@ export function DemandeSubvention({
       className="mt-3 rounded-lg border border-red-400/30 bg-slate-950/60 px-3 py-3"
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-red-300">
-        🆘 Demande de subvention exceptionnelle
+        <Icone nom="alerte" className="mr-1.5 h-3.5 w-3.5" />
+        Demande de subvention exceptionnelle
       </p>
       <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
         Votre banque ne prête plus et l&apos;enveloppe de vos associés est vide : même en les

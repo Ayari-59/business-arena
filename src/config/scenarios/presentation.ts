@@ -86,25 +86,14 @@ export const ACCENTS_SECTEUR: Record<Sector, AccentSecteur> = {
   },
 };
 
-export const EMBLEMES_SECTEUR: Record<Sector, string> = {
-  industrie: "🔊",
-  commerce: "👗",
-  ecommerce: "📦",
-  hotellerie: "🛎️",
-  restauration: "🍽️",
-  services: "📊",
-  abonnement: "🏋️",
-  batiment: "🏗️",
-  transport: "🚚",
-};
-
 /**
  * Deux scénarios peuvent partager un métier : NOVA existe en une référence
  * (les ateliers STMG) et en trois (les ateliers de gestion). Sur la vitrine,
  * chacun garde pourtant SA couleur, sans quoi deux vignettes voisines se
  * confondraient. La couleur se lit donc par scénario, et retombe sur celle du
- * métier quand le scénario n'en déclare pas ; l'emblème, lui, est porté par
- * le scénario dans le registre (`icon`).
+ * métier quand le scénario n'en déclare pas. Le pictogramme, lui, est celui
+ * du secteur, dessiné : un emblème par scénario existait ici en emoji, et il
+ * changeait d'aspect d'un téléphone à l'autre.
  */
 const IDENTITES_SCENARIO: Record<string, { accent: AccentSecteur }> = {
   "nova-gamme": {
@@ -165,11 +154,6 @@ const IDENTITES_SCENARIO: Record<string, { accent: AccentSecteur }> = {
 
 export function accentsDe(d: Pick<ScenarioDefinition, "code" | "sector">): AccentSecteur {
   return IDENTITES_SCENARIO[d.code]?.accent ?? ACCENTS_SECTEUR[d.sector];
-}
-
-/** L'emblème d'un scénario : celui qu'il déclare, sinon celui de son métier. */
-export function emblemeDe(d: Pick<ScenarioDefinition, "sector"> & { icon?: string }): string {
-  return d.icon ?? EMBLEMES_SECTEUR[d.sector];
 }
 
 /**

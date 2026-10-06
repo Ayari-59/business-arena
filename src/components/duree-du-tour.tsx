@@ -1,5 +1,6 @@
 import { compter } from "@/lib/format";
 import type { DureeDuTour } from "@/config/duree-du-tour";
+import { Icone } from "@/components/icone";
 
 /**
  * CE QUE CE TOUR VA COÛTER EN TEMPS.
@@ -49,7 +50,8 @@ export function DureeDuTourAffichee({
       {mesure !== null ? (
         <>
           <p className="text-slate-200">
-            <span aria-hidden>⏱️</span> Dans cette partie, un tour a pris{" "}
+            <Icone nom="duree" className="mr-1 h-3.5 w-3.5 text-amber-400" />
+            Dans cette partie, un tour a pris{" "}
             <strong className="font-semibold text-slate-100">{compter(mesure, "minute")}</strong>
             {libelleTourMesure ? ` au ${libelleTourMesure.toLowerCase()}` : null}, médiane des
             équipes entre l&apos;ouverture du tour et leur validation.
@@ -62,7 +64,8 @@ export function DureeDuTourAffichee({
       ) : (
         <>
           <p className="text-slate-200">
-            <span aria-hidden>⏱️</span> Comptez environ{" "}
+            <Icone nom="duree" className="mr-1 h-3.5 w-3.5 text-amber-400" />
+            Comptez environ{" "}
             <strong className="font-semibold text-slate-100">
               {compter(estimation.minutes, "minute")}
             </strong>{" "}

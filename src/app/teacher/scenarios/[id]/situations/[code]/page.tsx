@@ -37,7 +37,7 @@ export default async function SituationEditorPage({
     <main id="main" className="mx-auto max-w-3xl space-y-6 p-6">
       <header className="flex items-end justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Situation pédagogique</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Situation pédagogique</p>
           <h1 className="text-2xl font-bold">{situation.title}</h1>
           <p className="mt-1 text-sm text-slate-400">
             Édition du texte. La structure d&apos;analyse (modèles, notions, niveaux d&apos;indices)
@@ -69,7 +69,7 @@ export default async function SituationEditorPage({
       <GuardedForm
         action={updateSituationAction}
         label="enregistrement de la situation"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7"
+        className="space-y-5 carte p-4 sm:p-7"
       >
         <input type="hidden" name="scenarioId" value={id} />
         <input type="hidden" name="situationCode" value={situation.code} />

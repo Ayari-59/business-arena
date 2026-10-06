@@ -14,11 +14,17 @@
  * noir s'échangent, ce qui retourne du même coup les bordures « white/10 » en
  * bordures sombres discrètes.
  *
- * LE MÊME RENVERSEMENT SERT DEUX FOIS : à la page entière, et à un BLOC posé
- * à contre-jour au milieu d'elle. Une bande sombre sur une page claire, claire
- * sur une page sombre, attire l'œil sans rien ajouter au vocabulaire du site —
- * c'est le contraste d'une capture d'écran au milieu d'un texte. Le fichier
- * porte donc trois blocs : la page claire, et les deux contre-jour.
+ * LE MÊME RENVERSEMENT SERT AUSSI À UN BLOC posé à contre-jour au milieu
+ * d'une page claire : il y retrouve l'échelle d'origine, la nuit, et attire
+ * l'œil sans rien ajouter au vocabulaire du site — c'est le contraste d'une
+ * capture d'écran au milieu d'un texte. Le fichier porte donc deux blocs : la
+ * page claire, et son contre-jour.
+ *
+ * SUR UNE PAGE SOMBRE, LE CONTRE-JOUR NE SE RENVERSE PLUS. Il devenait une
+ * surface de papier : le visiteur qui avait choisi le sombre ouvrait l'accueil
+ * sur un grand aplat clair, et les captures désaturées de l'en-tête y
+ * prenaient un gris sale. Il reste désormais nuit, une nuit relevée d'un cran
+ * (voir globals.css) : le thème choisi est respecté sur toute la page.
  *
  * Ils sont engendrés plutôt qu'écrits, pour la raison qui a fait naître ce
  * script : un renversement recopié à la main s'oublie quelque part, et l'oubli
@@ -165,13 +171,12 @@ ${clair(renversees)}
 }
 
 /* ---------------------------------------------------------------------------
- * LE CONTRE-JOUR : un bloc dont le fond va à l'inverse de la page.
+ * LE CONTRE-JOUR : un bloc de nuit au milieu d'une page claire.
  *
- * Il ne se règle pas sur le thème mais CONTRE lui, donc il lui faut les deux
- * sens. Sur une page sombre, il pose l'échelle renversée — le bloc devient une
- * surface claire. Sur une page claire, il ramène l'échelle d'origine, ce qui
- * revient à DÉFAIRE, pour ce bloc seulement, ce que le thème de la page vient
- * de poser : d'où la reprise des mêmes clés avec leurs valeurs de départ.
+ * Sur une page claire, il ramène l'échelle d'origine, ce qui revient à
+ * DÉFAIRE, pour ce bloc seulement, ce que le thème de la page vient de poser :
+ * d'où la reprise des mêmes clés avec leurs valeurs de départ. Sur une page
+ * sombre, il ne renverse rien : il reste nuit (voir globals.css).
  *
  * Sa spécificité (deux sélecteurs) l'emporte sur celle du thème (un seul),
  * quel que soit l'ordre des règles dans la feuille.
@@ -180,10 +185,6 @@ ${clair(renversees)}
  * est unique sur la page, pas parce qu'il est joli. Deux, et aucun des deux ne
  * fonctionne.
  * ------------------------------------------------------------------------- */
-[data-theme="sombre"] .contre-jour {
-${decale(clair(renversees))}
-}
-
 [data-theme="clair"] .contre-jour {
 ${decale(sombre(origines))}
 }

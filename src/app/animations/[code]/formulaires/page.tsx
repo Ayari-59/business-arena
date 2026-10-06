@@ -72,7 +72,7 @@ export default async function FormulairesPage({
       id="main"
       className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black"
     >
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
+      <p className="text-xs uppercase tracking-annonce text-slate-400 print:hidden">
         <Link
           href={`/animations/${atelier.code}`}
           className="hover:text-slate-300"
@@ -176,7 +176,7 @@ export default async function FormulairesPage({
             </ol>
 
             <div className="mt-6 break-inside-avoid border-t border-white/10 pt-4 print:border-black/40">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400 print:text-black">
                 Avant de rendre, nous avons vérifié
               </p>
               <ul className="mt-2 space-y-1.5 text-sm text-slate-300 print:text-black">

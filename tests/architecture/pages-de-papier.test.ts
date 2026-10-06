@@ -82,10 +82,8 @@ function paletteClaire(): Map<string, number> {
     }
   };
   ajouter(bloc(readFileSync(join(SRC, "app", "theme-clair.css"), "utf8"), '[data-theme="clair"] {'));
-  // Le laiton s'écrit sous une LISTE de sélecteurs — la page claire, et le
-  // bloc à contre-jour d'une page sombre —, parce que les deux sont des
-  // surfaces claires et qu'une valeur recopiée est une valeur qui diverge.
-  ajouter(bloc(readFileSync(join(SRC, "app", "globals.css"), "utf8"), '[data-theme="clair"],'));
+  // Le laiton choisi à la main pour la page claire.
+  ajouter(bloc(readFileSync(join(SRC, "app", "globals.css"), "utf8"), '[data-theme="clair"] {'));
   return palette;
 }
 

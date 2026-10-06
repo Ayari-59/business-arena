@@ -119,7 +119,7 @@ export function CourbeDesSemaines({
                       <span
                         tabIndex={0}
                         aria-label={`Semaine ${w}`}
-                        className={`relative block w-full max-w-6 rounded-t outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                        className={`relative block w-full max-w-6 rounded-t-md outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
                           enAvant ? "bg-amber-400" : "bg-slate-500"
                         }`}
                         style={{ height: hauteur(valeur(s)) }}
@@ -156,7 +156,7 @@ export function CourbeDesSemaines({
                   ) : (
                     <span
                       aria-hidden="true"
-                      className="block h-1 w-full max-w-6 rounded-t bg-slate-800"
+                      className="block h-1 w-full max-w-6 rounded-t-md bg-slate-800"
                     />
                   )}
                 </li>
@@ -179,7 +179,7 @@ export function CourbeDesSemaines({
                   {w}
                 </span>
                 {repere && (
-                  <span className="rounded bg-slate-700 px-1 text-xs font-semibold text-slate-50">
+                  <span className="rounded-md bg-slate-700 px-1 text-xs font-semibold text-slate-50">
                     {repere.nom}
                   </span>
                 )}

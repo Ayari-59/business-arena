@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { coachRoundAction, tutorChatAction } from "@/app/arena/[gameId]/ai-actions";
+import { bouton } from "@/components/bouton";
+import { Icone } from "@/components/icone";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -21,10 +23,14 @@ export function AiAssistant({
 }) {
   if (!coach && !tutor) return null;
   return (
-    <section className="mt-6 rounded-xl border border-sky-400/25 bg-sky-950/10 p-4 sm:p-5">
+    // DANS LA CHARTE DE L'ARÈNE. L'assistant était le seul bloc bleu de la
+    // page, étincelle comprise : il se lisait comme une publicité incrustée.
+    // C'est une carte comme les autres, et ses deux gestes sont les boutons du
+    // site — le contour laiton pour demander un retour, le plein pour envoyer.
+    <section className="carte mt-6 p-4 sm:p-5">
       <div className="flex items-center gap-2">
-        <span aria-hidden>✨</span>
-        <h2 className="text-sm font-semibold text-sky-200">Assistant IA</h2>
+        <Icone nom="idee" className="h-4 w-4 text-amber-400" />
+        <h2 className="text-sm font-semibold text-slate-100">Assistant IA</h2>
       </div>
       {coach ? <Coach gameId={gameId} /> : null}
       {tutor ? <Tutor gameId={gameId} /> : null}
@@ -55,7 +61,7 @@ function Coach({ gameId }: { gameId: string }) {
         type="button"
         onClick={ask}
         disabled={pending}
-        className="rounded-lg border border-sky-400/40 bg-sky-400/10 px-4 py-2 text-sm font-medium text-sky-100 transition hover:bg-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+        className={bouton({ variante: "laiton" })}
       >
         {pending ? "Analyse en cours…" : text ? "Redemander un retour" : "Demander un retour sur mon tour"}
       </button>
@@ -104,7 +110,7 @@ function Tutor({ gameId }: { gameId: string }) {
               key={i}
               className={
                 m.role === "user"
-                  ? "ml-auto max-w-[85%] rounded-lg bg-sky-400/15 px-3 py-2 text-sm text-sky-50"
+                  ? "ml-auto max-w-[85%] rounded-lg bg-amber-400/10 px-3 py-2 text-sm text-slate-100"
                   : "mr-auto max-w-[85%] whitespace-pre-wrap rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-200"
               }
             >
@@ -126,13 +132,13 @@ function Tutor({ gameId }: { gameId: string }) {
             }
           }}
           placeholder="Ex : pourquoi ma trésorerie a baissé ce tour ?"
-          className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-400 [--focus-champ:var(--color-sky-400)]"
+          className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-400"
         />
         <button
           type="button"
           onClick={() => void send()}
           disabled={pending || input.trim().length === 0}
-          className="shrink-0 rounded-lg bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`shrink-0 ${bouton()}`}
         >
           Envoyer
         </button>

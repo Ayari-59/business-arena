@@ -51,7 +51,7 @@ export function PublicPageForm({
           type="checkbox"
           name="visible"
           defaultChecked={visible}
-          className="h-4 w-4 rounded border-white/20 bg-slate-950 accent-amber-500"
+          className="h-4 w-4 rounded-md border-white/20 bg-slate-950 accent-amber-500"
         />
         Rendre la page publique (visible par tous à l&apos;adresse ci-dessous)
       </label>

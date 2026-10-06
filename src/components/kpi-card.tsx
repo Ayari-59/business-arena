@@ -43,10 +43,13 @@ export function KpiCard({
     <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-900 p-3 sm:p-5`}>
       <div className={`absolute inset-y-0 left-0 w-1 ${stripe}`} />
       <p className="pl-2 text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <div className="mt-1 flex items-baseline gap-2 pl-2">
+      {/* La tendance passe à la ligne plutôt que de sortir du cadre : sur un
+          téléphone, deux tuiles côte à côte laissent 150 px à « −27 709 € ↓
+          225,9 % », et le pourcentage débordait de la tuile, coupé net. */}
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-2 pl-2">
         <p className={`text-2xl font-semibold tabular-nums ${valueColor}`}>{value}</p>
         {trend ? (
-          <span className={`text-xs font-medium ${trendColor}`}>
+          <span className={`whitespace-nowrap text-xs font-medium ${trendColor}`}>
             {trendArrow} {trend.label}
           </span>
         ) : null}

@@ -53,7 +53,7 @@ export function TrainingGallery({
             </p>
             <div className="flex items-center gap-2 justify-between">
               <span
-                className={`text-xs px-2 py-1 rounded ${
+                className={`text-xs px-2 py-1 rounded-md ${
                   difficultyColors[module.difficulty]
                 }`}
               >

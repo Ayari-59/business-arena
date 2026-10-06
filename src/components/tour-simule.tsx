@@ -4,6 +4,7 @@ import { SECTOR_COLORS, type Sector } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { formatEuro } from "@/lib/format";
+import { Icone } from "@/components/icone";
 
 /** Ce que le tour a donné, en trois chiffres : de quoi sentir la partie avant de la lire. */
 export interface BilanDuTour {
@@ -64,13 +65,13 @@ export function TourSimule({
       />
       <span
         {...entree(0)}
-        className={`relative flex h-14 w-14 items-center justify-center rounded-3xl shadow-lg ring-1 ring-white/10 sm:h-16 sm:w-16 ${SECTOR_COLORS[sector].bg} ${SECTOR_COLORS[sector].accent} ${entree(0).className}`}
+        className={`relative flex h-14 w-14 items-center justify-center rounded-xl shadow-lg ring-1 ring-white/10 sm:h-16 sm:w-16 ${SECTOR_COLORS[sector].bg} ${SECTOR_COLORS[sector].accent} ${entree(0).className}`}
       >
         <PictoSecteur secteur={sector} className="h-8 w-8 sm:h-9 sm:w-9" />
       </span>
       <p
         {...entree(1)}
-        className={`relative mt-4 flex items-center gap-2 rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300 sm:mt-6 ${entree(1).className}`}
+        className={`relative mt-4 flex items-center gap-2 rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold uppercase tracking-annonce text-emerald-300 sm:mt-6 ${entree(1).className}`}
       >
         <span aria-hidden>✓</span> Tour simulé
       </p>
@@ -97,14 +98,16 @@ export function TourSimule({
           href={`/arena/${gameId}#dernier-resultat`}
           className={`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]`}
         >
-          <span aria-hidden>📊</span> Voir les résultats
+          <Icone nom="resultats" className="h-4 w-4" />
+          Voir les résultats
         </Link>
         {finished ? (
           <Link
             href={`/arena/${gameId}`}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10 active:scale-[0.98]"
           >
-            <span aria-hidden>🏁</span> Bilan de la partie
+            <Icone nom="trophee" className="h-4 w-4" />
+            Bilan de la partie
           </Link>
         ) : (
           <Link
@@ -128,13 +131,13 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
     <dl className="relative mt-4 grid w-full max-w-md grid-cols-2 gap-3 text-left">
       <div
         {...entree(4)}
-        className={`col-span-2 rounded-2xl border bg-gradient-to-b p-4 ${entree(4).className} ${
+        className={`col-span-2 rounded-xl border bg-gradient-to-b p-4 ${entree(4).className} ${
           gain
             ? "border-emerald-400/30 from-emerald-400/15 to-emerald-400/[0.03] shadow-[0_14px_34px_-20px_rgb(16_185_129/0.6)]"
             : "border-red-400/30 from-red-400/15 to-red-400/[0.03] shadow-[0_14px_34px_-20px_rgb(239_68_68/0.55)]"
         }`}
       >
-        <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <dt className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
           Résultat net du tour
         </dt>
         <dd
@@ -153,7 +156,7 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
         ) : null}
       </div>
       <div {...entree(5)} className={`carte p-4 ${entree(5).className}`}>
-        <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <dt className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
           Trésorerie
         </dt>
         <dd
@@ -165,7 +168,7 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
         </dd>
       </div>
       <div {...entree(6)} className={`carte p-4 ${entree(6).className}`}>
-        <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <dt className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
           {bilan.rang ? "Classement" : "Chiffre d'affaires"}
         </dt>
         <dd

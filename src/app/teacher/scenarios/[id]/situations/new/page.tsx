@@ -63,7 +63,7 @@ export default async function NewSituationPage({
     <main id="main" className="mx-auto max-w-3xl space-y-6 p-6">
       <header className="flex items-end justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Nouvelle situation</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Nouvelle situation</p>
           <h1 className="text-2xl font-bold">{loaded.summary.title}</h1>
           <p className="mt-1 text-sm text-slate-400">
             Composez une situation : le récit, le diagnostic, le modèle d&apos;analyse attendu, les
@@ -90,7 +90,7 @@ export default async function NewSituationPage({
       <GuardedForm
         action={addSituationAction}
         label="création de la situation"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7"
+        className="space-y-5 carte p-4 sm:p-7"
       >
         <input type="hidden" name="scenarioId" value={id} />
 

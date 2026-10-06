@@ -2,6 +2,7 @@ import { formatEuro, formatPercent } from "@/lib/format";
 import { Embleme } from "@/components/embleme";
 import { Tiroir } from "@/components/tiroir";
 import type { GameView } from "@/services/game-view.service";
+import { Icone } from "@/components/icone";
 
 export function CompetitiveBenchmark({
   benchmark,
@@ -24,8 +25,9 @@ export function CompetitiveBenchmark({
 
   return (
     <section>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-fuchsia-300 sm:mb-3">
-        📊 Benchmark concurrentiel
+      <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400 sm:mb-3">
+        <Icone nom="concurrence" className="h-3.5 w-3.5" />
+        Benchmark concurrentiel
       </h3>
 
       {/*

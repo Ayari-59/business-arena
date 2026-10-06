@@ -39,7 +39,7 @@ export function CompetitionRecoveryForm({
           autoCapitalize="characters"
           autoComplete="off"
           placeholder={formaterCodeDeReprise("K7PD5M2X")}
-          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-[0.2em] text-amber-300 outline-none"
+          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-surtitre text-amber-300 outline-none"
         />
       </label>
       <p className="text-base leading-relaxed text-slate-400">

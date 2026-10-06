@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { Icone, type NomDIcone } from "@/components/icone";
 
 export type ArenaTab = {
   key: string;
   label: string;
-  icon: string;
+  icon: NomDIcone;
 };
 
 export function ArenaLayout({
@@ -68,7 +69,9 @@ export function ArenaLayout({
                   : "text-slate-400 hover:text-slate-300"
               }`}
             >
-              <span className="mr-1.5 hidden sm:inline">{tab.icon}</span>
+              <span className="mr-1.5 hidden sm:inline">
+                <Icone nom={tab.icon} className="h-4 w-4" />
+              </span>
               {tab.label}
               {current === tab.key ? (
                 <span

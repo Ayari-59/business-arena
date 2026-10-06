@@ -42,7 +42,7 @@ export default async function RendezVousPage() {
   }
   return (
     <main id="main" className="mx-auto max-w-5xl px-6 py-12">
-      <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena · rendez-vous</p>
+      <p className="text-xs uppercase tracking-annonce text-amber-400">Business Arena · rendez-vous</p>
       <h1 className="mt-2 text-3xl font-bold text-slate-50">Trente minutes au téléphone</h1>
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
         Le formulaire d&apos;orientation répond en quatre questions ; une conversation répond aux

@@ -25,7 +25,7 @@ export function CompetitionJoinForm({
     <form
       ref={formRef}
       action={formAction}
-      className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7"
+      className="w-full max-w-sm space-y-4 carte p-4 sm:p-7"
     >
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -38,7 +38,7 @@ export function CompetitionJoinForm({
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="EX : R4KT7B"
-          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-[0.3em] text-amber-300 outline-none"
+          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-annonce text-amber-300 outline-none"
         />
       </label>
       <label className="block">

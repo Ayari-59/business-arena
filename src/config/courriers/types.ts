@@ -1,3 +1,5 @@
+import type { NomDIcone } from "@/components/icone";
+
 /**
  * LE COURRIER DE L'ENTREPRISE.
  *
@@ -72,7 +74,14 @@ export interface CourrierDef {
   enJeu: string;
   nature: NatureDuCourrier;
   pli: TypeDePli;
-  emoji: string;
+  /**
+   * Le pictogramme du timbre et de la ligne de boîte de réception. C'était un
+   * emoji, différent sur chaque appareil et brouillé au vidéoprojecteur ; c'est
+   * désormais un nom de la liste fermée des pictogrammes du site, choisi pour
+   * ce que dit le courrier (la banque écrit, un concurrent s'installe, le
+   * temps tourne) et non pour son décor.
+   */
+  icone: NomDIcone;
   /** "market" : toute la classe · "team" : une entreprise destinataire. */
   scope: "market" | "team";
 }

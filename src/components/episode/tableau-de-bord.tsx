@@ -53,7 +53,7 @@ export function TableauDeBord({
     <section aria-labelledby="tableau-titre" className="carte p-4 sm:p-5">
       <h2
         id="tableau-titre"
-        className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400"
+        className="text-xs font-semibold uppercase tracking-etiquette text-slate-400"
       >
         {nom} · {semaine ? `fin de semaine ${semaine}` : "aujourd'hui"}
       </h2>

@@ -79,7 +79,7 @@ describe("le courrier du tour", () => {
 describe("l'écran « Tour simulé »", () => {
   const base = {
     gameId: "g", round: 3, currentRound: 4, roundDays: 90, finished: false,
-    sector: "industrie" as const, scenarioIcon: "🔊",
+    sector: "industrie" as const,
   };
   it("propose la suite : résultats, puis tour suivant ou bilan", () => {
     const enCours = renderToStaticMarkup(createElement(TourSimule, base));

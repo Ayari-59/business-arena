@@ -13,13 +13,13 @@ describe("la ligne trésorerie du tour", () => {
     // on ne le dit pas, on ne dit que ce qui s'est passé.
     const l = ligneTresorerie({ ...rien, crisis: true });
     expect(l).not.toContain("coût financier");
-    expect(l).toBe("💶 Trésorerie : 🚨 CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder.");
+    expect(l).toBe("Trésorerie : CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder.");
   });
 
   it("le dit quand il est réel, et ponctue entre les morceaux", () => {
     const l = ligneTresorerie({ ...rien, forcedFactored: 12000, financingCost: 1080, crisis: true });
     expect(l).toBe(
-      `💶 Trésorerie : ⚠️ affacturage FORCÉ par la banque ${e(12000)} (découvert au-delà du plafond) · coût financier ${e(1080)}. 🚨 CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder.`,
+      `Trésorerie : affacturage FORCÉ par la banque ${e(12000)} (découvert au-delà du plafond) · coût financier ${e(1080)}. CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder.`,
     );
     // pas de séparateur orphelin, jamais
     expect(l).not.toMatch(/·\s*\.|:\s*·|·\s*$/);
@@ -28,7 +28,7 @@ describe("la ligne trésorerie du tour", () => {
   it("enchaîne escompte, placement et coût dans l'ordre des mouvements", () => {
     const l = ligneTresorerie({ ...rien, discounted: 5000, financingCost: 112.5, placed: 20000 });
     expect(l).toBe(
-      `💶 Trésorerie : escompte ${e(5000)} · coût financier ${e(112.5)} · ${e(20000)} placés jusqu'au tour suivant`,
+      `Trésorerie : escompte ${e(5000)} · coût financier ${e(112.5)} · ${e(20000)} placés jusqu'au tour suivant`,
     );
   });
 });

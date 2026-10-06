@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Icone } from "@/components/icone";
 
 /**
  * Le moment de simulation, en solo. Valider résout le tour côté serveur puis
@@ -46,8 +47,8 @@ export function SimulationProgress({ periodName }: { periodName: string }) {
     >
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-2 text-sm font-semibold text-amber-200">
-          <span aria-hidden className="motion-safe:animate-pulse">
-            🚀
+          <span className="motion-safe:animate-pulse">
+            <Icone nom="resultats" className="h-4 w-4" />
           </span>
           Simulation en cours · {periodName}
         </p>

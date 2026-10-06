@@ -76,7 +76,7 @@ export function PiedDePage() {
           <div className="flex items-start gap-4">
             <BrandMark className="mt-0.5 h-10 w-10 shrink-0 text-amber-400" />
             <div>
-              <p className="font-display text-lg font-semibold tracking-[0.14em] text-slate-200">
+              <p className="font-display text-lg font-semibold tracking-etiquette text-slate-200">
                 BUSINESS <span className="accent-arena">ARENA</span>
               </p>
               <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-400">

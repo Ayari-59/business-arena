@@ -1,6 +1,7 @@
 "use client";
 
 import { bouton } from "@/components/bouton";
+import { Icone, type NomDIcone } from "@/components/icone";
 import {
   Fragment,
   useEffect,
@@ -12,7 +13,8 @@ import {
   type ReactNode,
 } from "react";
 
-export type SegmentedTab = { key: string; label: string; icon?: string };
+/** Un onglet : sa clé, son nom, et son pictogramme (un nom de la liste du site, pas un emoji). */
+export type SegmentedTab = { key: string; label: string; icon?: NomDIcone };
 
 /**
  * Un jeu d'onglets local et autonome : contrairement à `ArenaLayout`, il ne
@@ -226,7 +228,7 @@ export function SegmentedTabs({
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              {tab.icon ? <span className="mr-1.5">{tab.icon}</span> : null}
+              {tab.icon ? <Icone nom={tab.icon} className="mr-1.5 h-4 w-4" /> : null}
               {tab.label}
             </button>
           ))}
@@ -315,9 +317,17 @@ export function SegmentedTabs({
                         className="absolute inset-x-[24%] top-0 h-[3px] rounded-b-full bg-amber-400"
                       />
                     ) : null}
-                    <span aria-hidden className="text-xl leading-none">
-                      {estFait ? "✓" : (tab.icon ?? index + 1)}
-                    </span>
+                    {estFait ? (
+                      <span aria-hidden className="text-xl leading-none">
+                        ✓
+                      </span>
+                    ) : tab.icon ? (
+                      <Icone nom={tab.icon} className="h-5 w-5" />
+                    ) : (
+                      <span aria-hidden className="text-xl leading-none">
+                        {index + 1}
+                      </span>
+                    )}
                     {tab.label}
                   </button>
                 );

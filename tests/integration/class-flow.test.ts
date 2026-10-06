@@ -169,10 +169,10 @@ describe("partie de classe complète", () => {
     const summaries = await getTeacherGames(teacherId);
     const resume = summaries.find((s) => s.gameId === gameId);
     expect(resume?.status).toBe("finished");
-    // La liste des parties a un visage : le secteur joué, son icône, son titre.
+    // La liste des parties a un visage : le secteur joué (qui donne son
+    // pictogramme dessiné) et son titre.
     expect(resume?.scenarioCode).toBe("nova");
     expect(resume?.sector).toBe("industrie");
-    expect(resume?.scenarioIcon).toBeTruthy();
     expect(resume?.scenarioTitle).toContain("NOVA");
   });
 });

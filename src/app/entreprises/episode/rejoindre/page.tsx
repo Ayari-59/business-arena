@@ -34,7 +34,7 @@ export default async function RejoindrePage({
       <main id="main" className="relative overflow-x-clip">
         <HaloDePage />
         <div className="mx-auto grid max-w-2xl gap-6 px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+          <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/entreprises/episode" className="hover:text-slate-300">
               Épisodes manager
             </Link>{" "}

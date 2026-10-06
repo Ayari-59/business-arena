@@ -138,7 +138,8 @@ describe("l'écran de fin", () => {
 
   it("la première place se dit « 1re », pas « 1e »", () => {
     const html = rendu({
-      titre: "🏆 Victoire ! Volt domine le marché.",
+      titre: "Victoire ! Volt domine le marché.",
+      victoire: true,
       bilan,
       reussites: { acquises: 9, total: 10, derniere: "Pari tenu" },
       place: { rang: 1, total: 4 },

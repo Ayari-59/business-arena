@@ -74,7 +74,7 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
     >
       <h2
         id="roles"
-        className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400"
+        className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
       >
         <span aria-hidden className="h-px w-8 bg-amber-400/40" />
         Qui fait quoi

@@ -15,8 +15,10 @@ import {
  * en sombre, elles étaient sombres elles aussi et se fondaient dans la page ;
  * servies sur fond clair, elles sont devenues des ÉCRANS, des objets qui
  * s'allument au milieu du papier. La classe `contre-jour` rend ce contraste
- * disponible pour un bloc quelconque : elle retourne l'échelle des couleurs
- * pour lui seul, sombre sur une page claire, claire sur une page sombre.
+ * disponible pour un bloc quelconque : sur une page claire, elle retourne
+ * l'échelle des couleurs pour lui seul. Sur une page sombre, elle ne retourne
+ * plus rien : le bloc devenait du papier au milieu de la nuit que le visiteur
+ * avait choisie ; il reste nuit, relevé d'un cran de surface.
  *
  * DEUX CHOSES PEUVENT LE DÉFAIRE EN SILENCE, et ce sont elles qu'on garde.
  *
@@ -92,44 +94,44 @@ function blocs(code: string): number {
 const PORTEURS = SOURCES.filter(({ code }) => blocs(code) > 0);
 
 describe("le contre-jour", () => {
-  it("existe dans les deux sens, et il est engendré", () => {
+  it("est engendré sur une page claire, et reste nuit sur une page sombre", () => {
     // Un renversement recopié à la main s'oublie quelque part, et l'oubli ne
-    // se voit pas : il donne un bloc bleu pâle sur fond bleu pâle. Les deux
-    // sens viennent donc du script, qui les tire de la même table que le
-    // thème clair (tests/theme/themes.test.ts vérifie qu'il est à jour).
-    expect(GENERE, "le contre-jour d'une page sombre").toContain(
-      '[data-theme="sombre"] .contre-jour {',
-    );
+    // se voit pas : il donne un bloc bleu pâle sur fond bleu pâle. Le sens qui
+    // reste vient donc du script, qui le tire de la même table que le thème
+    // clair (tests/theme/themes.test.ts vérifie qu'il est à jour).
     expect(GENERE, "le contre-jour d'une page claire").toContain(
       '[data-theme="clair"] .contre-jour {',
     );
+    // Sur une page sombre, il renversait l'échelle et devenait du papier : qui
+    // avait choisi le sombre ouvrait l'accueil sur un aplat clair. Il garde
+    // désormais l'échelle de la page et se relève d'un cran de surface.
+    expect(GENERE, "plus de renversement sur une page sombre").not.toContain(
+      '[data-theme="sombre"] .contre-jour {',
+    );
+    expect(GLOBALS).toMatch(
+      /\[data-theme="sombre"\] \.contre-jour\s*\{\s*background-color: var\(--color-slate-900\);/,
+    );
   });
 
-  it("rend l'échelle d'origine sur une page claire, la renversée sur une page sombre", () => {
+  it("rend l'échelle d'origine sur une page claire", () => {
     const bloc = (selecteur: string) => {
       const debut = GENERE.indexOf(selecteur);
       return GENERE.slice(debut, GENERE.indexOf("}", debut));
     };
     // Le fond le plus sombre du site est presque noir. Sur une page claire, le
-    // bloc à contre-jour doit le retrouver ; sur une page sombre, il doit
-    // porter la valeur renversée, c'est-à-dire un presque-blanc.
+    // bloc à contre-jour doit le retrouver, quand la page porte la valeur
+    // renversée, un presque-blanc.
     const surPageClaire = bloc('[data-theme="clair"] .contre-jour {');
-    const surPageSombre = bloc('[data-theme="sombre"] .contre-jour {');
     const page = bloc('[data-theme="clair"] {');
     const slate950 = (css: string) =>
       css.match(/--color-slate-950: ([^;]+);/)?.[1];
-    expect(slate950(surPageSombre), "sur page sombre").toBe(slate950(page));
     expect(slate950(surPageClaire), "sur page claire").not.toBe(slate950(page));
   });
 
-  it("emporte l'ombre et le laiton avec lui", () => {
-    // Une surface claire est une surface claire : son ombre est encrée et
-    // discrète, son ambre est un laiton sombre. Si le bloc à contre-jour d'une
-    // page sombre gardait l'ombre du thème sombre, il serait une carte claire
-    // posée sur une tache noire.
-    expect(GLOBALS).toMatch(
-      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--color-amber-400:/,
-    );
+  it("emporte l'ombre et le laiton de la nuit sur une page claire", () => {
+    // Le bloc à contre-jour d'une page claire est une surface sombre : il
+    // reprend l'ombre et le laiton du thème sombre, sans quoi il serait une
+    // tache noire bordée d'une ombre de papier.
     expect(GLOBALS).toMatch(
       /:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--ombre-carte:/,
     );

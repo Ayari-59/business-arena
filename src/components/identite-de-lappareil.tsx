@@ -4,6 +4,7 @@ import { bouton } from "@/components/bouton";
 import { useState } from "react";
 import { libererLAppareilAction, type LibererState } from "@/app/join/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { Icone } from "@/components/icone";
 
 /**
  * QUI EST ASSIS DEVANT CET ÉCRAN.
@@ -54,7 +55,7 @@ export function IdentiteDeLAppareil({
       }`}
     >
       <p className={`text-sm leading-relaxed ${avertissement ? "text-amber-200" : "text-slate-400"}`}>
-        <span aria-hidden>👤</span>{" "}
+        <Icone nom="personne" className="mr-1 h-4 w-4" />
         {avertissement ? "Cet appareil est déjà utilisé par " : "Vous jouez sous le nom de "}
         <strong className={avertissement ? "font-semibold" : "font-semibold text-slate-200"}>
           {pseudo}
@@ -91,7 +92,7 @@ export function IdentiteDeLAppareil({
         <button
           type="button"
           onClick={() => setConfirmation(true)}
-          className="mt-1.5 rounded text-xs font-medium text-slate-300 underline underline-offset-4 transition hover:text-slate-100"
+          className="mt-1.5 rounded-md text-xs font-medium text-slate-300 underline underline-offset-4 transition hover:text-slate-100"
         >
           Ce n&apos;est pas moi
         </button>

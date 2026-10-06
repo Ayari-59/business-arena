@@ -1,4 +1,3 @@
-import { SECTOR_ICONS } from "./registry";
 import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import type { ScenarioDefinition, ScenarioVocabulary, Sector } from "./registry";
@@ -81,9 +80,8 @@ export function hydrateDefinition(stored: StoredScenarioDefinition): ScenarioDef
     code: stored.code,
     title: stored.title,
     sector: stored.sector,
-    // Un scénario publié par un enseignant n'a pas de pictogramme propre : il
-    // prend celui de son secteur, et son nom court est la tête de son titre.
-    icon: SECTOR_ICONS[stored.sector],
+    // Un scénario publié par un enseignant se dessine, comme tous les autres,
+    // au pictogramme de son secteur ; son nom court est la tête de son titre.
     shortName: stored.title.split(" · ")[0] || stored.title,
     tagline: stored.tagline,
     briefing: stored.briefing,

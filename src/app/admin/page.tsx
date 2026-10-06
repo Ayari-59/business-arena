@@ -29,6 +29,7 @@ import { SITE_URL } from "@/config/site";
 import { bouton } from "@/components/bouton";
 import { mesurerLAnalyseSolo } from "@/services/mesure-analyse.service";
 import { SEUIL_RENDU_TARDIF_MINUTES } from "@/pedagogy/mesure-analyse";
+import { Icone } from "@/components/icone";
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +103,7 @@ export default async function AdminPage({
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Administration générale</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Administration générale</p>
           <h1 className="text-2xl font-bold">Plateforme Business Arena</h1>
         </div>
         <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
@@ -179,7 +180,7 @@ export default async function AdminPage({
       </section>
 
       {/* Réglages du jeu */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="text-sm font-semibold text-slate-200">Réglages globaux du jeu</h2>
         <form action={updatePlatformConfigAction} className="mt-4 space-y-4">
           <label className="flex items-center gap-3 text-sm text-slate-300">
@@ -202,7 +203,8 @@ export default async function AdminPage({
           </label>
           <fieldset className="rounded-xl border border-white/10 p-4">
             <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-              ✍️ Format des réponses en partie solo
+              <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+              Format des réponses en partie solo
             </legend>
             <div className="space-y-2">
               {ANSWER_FORMATS.map((f) => (
@@ -229,7 +231,8 @@ export default async function AdminPage({
           {/* La vitrine du solo public : une entreprise complète, les autres jusqu'à un niveau. */}
           <fieldset className="rounded-xl border border-white/10 p-4">
             <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-              🎯 Vitrine du solo public
+              <Icone nom="cible" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+              Vitrine du solo public
             </legend>
             <label className="flex items-center gap-3 text-sm text-slate-300">
               <input
@@ -433,7 +436,7 @@ export default async function AdminPage({
       </section>
 
       {/* Monde démo */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="text-sm font-semibold text-slate-200">Monde de démonstration</h2>
         <p className="mt-1 text-xs text-slate-400">
           Un établissement complet pour présenter le produit : direction, enseignant, une
@@ -465,7 +468,7 @@ export default async function AdminPage({
       </section>
 
       {/* Nouvel établissement */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="text-sm font-semibold text-slate-200">Déployer un nouvel établissement</h2>
         <p className="mt-1 text-xs text-slate-400">
           Crée l&apos;établissement et génère un code d&apos;invitation administrateur : la
@@ -644,7 +647,7 @@ export default async function AdminPage({
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
               Dans la console Google, le client OAuth doit être de type « Application Web » avec,
               en URI de redirection autorisée, exactement :{" "}
-              <code className="rounded bg-slate-900 px-1 py-0.5 text-slate-300">{SITE_URL}/api/google/callback</code>
+              <code className="rounded-md bg-slate-900 px-1 py-0.5 text-slate-300">{SITE_URL}/api/google/callback</code>
             </p>
           ) : null}
         </div>
@@ -710,7 +713,7 @@ export default async function AdminPage({
       </section>
 
       {/* Établissements */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="mb-4 text-sm font-semibold text-slate-200">
           Établissements ({overview.organizations.length})
         </h2>
@@ -720,7 +723,7 @@ export default async function AdminPage({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-slate-100">
                   {org.name}
-                  <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
+                  <span className="ml-2 rounded-md bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
                     {org.kind === "public" ? "grand public" : org.kind === "school" ? "établissement" : org.kind}
                   </span>
                 </p>

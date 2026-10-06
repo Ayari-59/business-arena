@@ -41,6 +41,7 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { ATTENTES } from "@/config/cloture";
 import { bouton } from "@/components/bouton";
+import { Icone } from "@/components/icone";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +146,7 @@ export default async function TeacherDashboard({
       */}
       {aClore.length > 0 ? (
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-amber-400/35 bg-amber-400/5 px-3 py-2 text-sm text-amber-200">
-          <span aria-hidden>⏳</span>
+          <Icone nom="duree" className="h-4 w-4" />
           <span>
             {aClore.length === 1
               ? "Une partie attend sa clôture :"
@@ -228,11 +229,11 @@ export default async function TeacherDashboard({
                           ont rendu » est la seule chose qui appelle un geste,
                           et elle ne se lisait qu'en ouvrant la partie. */}
                       {finished ? (
-                        <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[0.7rem] text-slate-400">
+                        <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-xs text-slate-400">
                           terminée
                         </span>
                       ) : g.aClore ? (
-                        <span className="shrink-0 rounded-full border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 text-[0.7rem] font-medium text-amber-200">
+                        <span className="shrink-0 rounded-full border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 text-xs font-medium text-amber-200">
                           tour à clore
                         </span>
                       ) : null}
@@ -315,7 +316,7 @@ export default async function TeacherDashboard({
             scenarios={[
               ...SCENARIO_CHOICES.map((d) => ({
                 code: d.code,
-                label: `${d.icon} ${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
+                label: `${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
                 unit: d.vocabulary.unit,
                 defaults: economicDefaults(d),
               })),
@@ -414,7 +415,7 @@ export default async function TeacherDashboard({
             />
             <span>
               <span className="text-sm font-medium text-slate-200">
-                🌍 Monde variable · chaque partie diffère
+                Monde variable · chaque partie diffère
               </span>
               <span className="mt-0.5 block text-xs text-slate-400">
                 Croissance des segments, saisonnalité, événements et commandes exceptionnelles
@@ -434,7 +435,7 @@ export default async function TeacherDashboard({
             />
             <span>
               <span className="text-sm font-medium text-slate-200">
-                🏗️ Histoires d&apos;investissement · des courriers qui appellent la décision
+                Histoires d&apos;investissement · des courriers qui appellent la décision
               </span>
               <span className="mt-0.5 block text-xs text-slate-400">
                 Selon le niveau : un client qui annonce du volume, une banque qui baisse ses taux, un
@@ -446,7 +447,8 @@ export default async function TeacherDashboard({
 
           <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
             <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-              📝 Questions posées dans les situations
+              <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+              Questions posées dans les situations
             </legend>
             <div className="mt-1 space-y-2">
               {QUIZ_MODES.map((m) => (
@@ -467,7 +469,8 @@ export default async function TeacherDashboard({
             </div>
             <div className="mt-3 border-t border-white/5 pt-3">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                ✍️ Format des réponses
+                <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                Format des réponses
               </p>
               <div className="mt-1 space-y-2">
                 {ANSWER_FORMATS.map((f) => (

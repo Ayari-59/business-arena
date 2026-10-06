@@ -25,11 +25,11 @@ export function ReprendreMaPartie({
     <section
       aria-labelledby="reprendre-titre"
       data-reprendre-ma-partie
-      className={`rounded-2xl border border-amber-400/30 bg-slate-900/80 p-4 shadow-xl shadow-black/30 ring-1 ring-amber-400/10 sm:p-5 ${className}`}
+      className={`rounded-xl border border-amber-400/30 bg-slate-900/80 p-4 shadow-xl shadow-black/30 ring-1 ring-amber-400/10 sm:p-5 ${className}`}
     >
       <h2
         id="reprendre-titre"
-        className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300"
+        className="text-xs font-semibold uppercase tracking-surtitre text-amber-300"
       >
         {parties.length > 1 ? "Vos parties en cours" : "Votre partie en cours"}
       </h2>

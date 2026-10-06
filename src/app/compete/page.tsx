@@ -22,7 +22,7 @@ export default async function CompetePage({
     <>
       <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Business Arena</p>
           <h1 className="mt-2 text-3xl font-bold">Rejoindre un concours</h1>
           <p className="mt-2 max-w-md text-base text-slate-400">
             Entrez le code du concours et le nom de votre équipe. Rejoignez une équipe
@@ -31,7 +31,7 @@ export default async function CompetePage({
         </div>
         <section
           aria-labelledby="concours-explications"
-          className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-900/60 p-5"
+          className="w-full max-w-sm carte p-5"
         >
           <h2 id="concours-explications" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Un concours, c&apos;est quoi ?
@@ -53,7 +53,7 @@ export default async function CompetePage({
         <CompetitionJoinForm defaultCode={defaultCode} />
         <section
           aria-labelledby="reprise-titre"
-          className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-900/60 p-5"
+          className="w-full max-w-sm carte p-5"
         >
           <h2 id="reprise-titre" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Déjà inscrit, sur un autre appareil ?

@@ -386,7 +386,6 @@ export interface TeacherGameSummary {
   scenarioTitle: string;
   /** Le nom court (« NOVA · gamme ») : sur téléphone, le titre entier ne tient pas. */
   scenarioShortName: string;
-  scenarioIcon: string;
   sector: Sector;
 }
 
@@ -511,7 +510,6 @@ export async function getTeacherGames(
         scenarioCode: def.code,
         scenarioTitle: def.title,
         scenarioShortName: def.shortName,
-        scenarioIcon: def.icon,
         sector: def.sector,
       };
     }),
@@ -716,7 +714,6 @@ export interface TeacherGameView {
   /** Secteur joué : titre du scénario et codes d'événements de SA liasse. */
   scenarioCode: string;
   scenarioTitle: string;
-  scenarioIcon: string;
   sector: Sector;
   scenarioEventCodes: string[];
   /** Questions posées dans les situations de cette partie. */
@@ -863,7 +860,6 @@ export async function getTeacherGameView(
       })),
     scenarioCode: snapshotDefinition.code,
     scenarioTitle: snapshotDefinition.title,
-    scenarioIcon: snapshotDefinition.icon,
     sector: snapshotDefinition.sector,
     // La liasse vient du SNAPSHOT, pas de la version courante du scénario :
     // une partie lancée joue les règles avec lesquelles elle a commencé.

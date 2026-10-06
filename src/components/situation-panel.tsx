@@ -250,7 +250,7 @@ export function SituationCard({
     <article className={dansTiroir ? "" : "carte p-4 sm:p-6"}>
       <header className="mb-3">
         <div className="flex items-center gap-2">
-          <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
+          <p className="text-xs uppercase tracking-annonce text-amber-400">
             {CATEGORY_LABELS[situation.category]}
           </p>
           {situation.aboveGameLevel ? (
@@ -607,7 +607,7 @@ export function SituationDebrief({
     <article className="carte p-4 sm:p-6">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+          <p className="text-xs uppercase tracking-annonce text-slate-400">
             Débriefing
           </p>
           <h3 className="mt-1 text-base font-semibold text-slate-100">

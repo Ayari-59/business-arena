@@ -3,8 +3,8 @@ export default function ArenaLoading() {
     <main id="main" className="mx-auto max-w-[1400px] space-y-8 p-6 animate-pulse">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="h-3 w-32 rounded bg-slate-800" />
-          <div className="mt-2 h-7 w-48 rounded bg-slate-800" />
+          <div className="h-3 w-32 rounded-md bg-slate-800" />
+          <div className="mt-2 h-7 w-48 rounded-md bg-slate-800" />
         </div>
         <div className="flex items-center gap-3">
           <div className="h-7 w-24 rounded-full bg-slate-800" />

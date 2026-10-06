@@ -2,6 +2,7 @@ import { formatEuro } from "@/lib/format";
 import type { GameView } from "@/services/game-view.service";
 import { DemandeSubvention } from "@/components/demande-subvention";
 import { resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
+import { Icone } from "@/components/icone";
 
 /**
  * L'ALERTE QU'UNE ÉQUIPE EN CESSATION DE PAIEMENTS NE VOYAIT PAS.
@@ -57,7 +58,7 @@ export function AlerteTresorerie({
         className="rounded-lg border border-red-400/40 border-l-4 border-l-red-400 bg-red-950/40 px-3 py-3 sm:px-4"
       >
         <p className="text-sm font-semibold text-red-200">
-          <span aria-hidden className="mr-1.5">🛑</span>
+          <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
           Votre entreprise est en cessation de paiements
         </p>
         <p className="mt-1.5 text-sm leading-relaxed text-red-100/90">
@@ -82,7 +83,7 @@ export function AlerteTresorerie({
       className="rounded-lg border border-amber-400/40 border-l-4 border-l-amber-400 bg-amber-950/30 px-3 py-3 sm:px-4"
     >
       <p className="text-sm font-semibold text-amber-200">
-        <span aria-hidden className="mr-1.5">🚨</span>
+        <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
         Crise de trésorerie
       </p>
       <p className="mt-1.5 text-sm leading-relaxed text-amber-100/90">
@@ -127,7 +128,7 @@ function Recours({
     if (demande.statut === "pending") {
       return (
         <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
-          <span aria-hidden className="mr-1.5">📨</span>
+          <Icone nom="courrier" className="mr-1.5 h-4 w-4 text-slate-400" />
           Demande de subvention de{" "}
           <strong className="tabular-nums text-slate-100">{formatEuro(demande.montant)}</strong>{" "}
           déposée : votre animateur doit encore l&apos;instruire. Vous pouvez valider votre tour
@@ -138,7 +139,9 @@ function Recours({
     if (demande.statut === "granted") {
       return (
         <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-3 py-2 text-sm leading-relaxed text-emerald-100/90">
-          <span aria-hidden className="mr-1.5">✅</span>
+          <span aria-hidden className="mr-1.5 font-bold text-emerald-300">
+            ✓
+          </span>
           Subvention de{" "}
           <strong className="tabular-nums text-emerald-200">
             {formatEuro(demande.montantAccorde ?? 0)}
@@ -150,7 +153,6 @@ function Recours({
     }
     return (
       <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
-        <span aria-hidden className="mr-1.5">🚫</span>
         Votre demande de subvention a été refusée.
         {demande.note ? ` « ${demande.note} »` : ""} Il faudra faire sans.
       </p>

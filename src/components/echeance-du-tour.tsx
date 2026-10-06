@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { echeanceDuTour, dateLisible, heureLisible, type Echeance } from "@/config/echeance";
+import { Icone } from "@/components/icone";
 
 /**
  * L'HEURE À LAQUELLE LE TOUR FERME.
@@ -60,7 +61,8 @@ export function EcheanceDuTour({
     // formulaire la porte en toutes lettres.
     return (
       <p className={`rounded-full border px-3 py-1 text-xs ${teinte}`} title={`Ce tour ferme ${absolu}`}>
-        <span aria-hidden>⏳</span> {restant ? `Ferme ${restant}` : `Ferme à ${heureLisible(quand)}`}
+        <Icone nom="duree" className="mr-1 h-3.5 w-3.5" />
+        {restant ? `Ferme ${restant}` : `Ferme à ${heureLisible(quand)}`}
       </p>
     );
   }
@@ -71,7 +73,7 @@ export function EcheanceDuTour({
       aria-live={urgence ? "polite" : undefined}
       className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm leading-relaxed ${teinte}`}
     >
-      <span aria-hidden className="mt-0.5">⏳</span>
+      <Icone nom="duree" className="mt-0.5 h-4 w-4" />
       <span>
         Ce tour ferme <strong className="font-semibold">{absolu}</strong>
         {restant ? <>, {restant}</> : null}. Validez avant : après, la saisie n&apos;est plus

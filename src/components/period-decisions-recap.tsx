@@ -1,5 +1,6 @@
 import { formatEuro, formatUnits } from "@/lib/format";
 import { NomReference } from "@/components/nom-reference";
+import { Icone, type NomDIcone } from "@/components/icone";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
@@ -52,13 +53,15 @@ export function PeriodDecisionsRecap({
     core.push({ label: "Trésorerie prévue", value: formatEuro(d.forecast.expectedCash) });
 
   // Leviers optionnels réellement actionnés ce tour-là.
-  const chips: string[] = [];
-  if (d.communicationAxis) chips.push(`📣 Axe : ${COMMUNICATION_AXIS_LABELS[d.communicationAxis].label.toLowerCase()}`);
-  if ((d.brandMarketingBudget ?? 0) > 0) chips.push(`🏷️ Marque : ${formatEuro(d.brandMarketingBudget!)}`);
-  if (d.insurance) chips.push("🛡️ Assurance souscrite");
+  // Chaque levier porte son pictogramme, à part du texte : écrit dans la
+  // chaîne, l'emoji arrivait dans la clé React et ne prenait pas l'encre.
+  const chips: { icone: NomDIcone; texte: string }[] = [];
+  if (d.communicationAxis) chips.push({ icone: "communication", texte: `Axe : ${COMMUNICATION_AXIS_LABELS[d.communicationAxis].label.toLowerCase()}` });
+  if ((d.brandMarketingBudget ?? 0) > 0) chips.push({ icone: "etiquette", texte: `Marque : ${formatEuro(d.brandMarketingBudget!)}` });
+  if (d.insurance) chips.push({ icone: "assurance", texte: "Assurance souscrite" });
   // En gamme, le fournisseur se lit référence par référence dans le tableau.
-  if (d.supplierChoice && !avecFournisseur) chips.push(`🚚 Fournisseur : ${d.supplierChoice}`);
-  if (d.acceptOrder) chips.push("📦 Commande exceptionnelle acceptée");
+  if (d.supplierChoice && !avecFournisseur) chips.push({ icone: "camion", texte: `Fournisseur : ${d.supplierChoice}` });
+  if (d.acceptOrder) chips.push({ icone: "colis", texte: "Commande exceptionnelle acceptée" });
   if (d.studies) {
     const labels: Record<string, string> = {
       market: "marché",
@@ -69,37 +72,37 @@ export function PeriodDecisionsRecap({
     const bought = Object.entries(d.studies)
       .filter(([, v]) => v)
       .map(([k]) => labels[k] ?? k);
-    if (bought.length > 0) chips.push(`📚 Études : ${bought.join(", ")}`);
+    if (bought.length > 0) chips.push({ icone: "loupe", texte: `Études : ${bought.join(", ")}` });
   }
   if (d.hr) {
-    if (d.hr.hire) chips.push(`👥 +${d.hr.hire} embauche${d.hr.hire > 1 ? "s" : ""}`);
-    if (d.hr.fire) chips.push(`👥 −${d.hr.fire} licenciement${d.hr.fire > 1 ? "s" : ""}`);
-    if (d.hr.trainingBudget) chips.push(`🎓 Formation ${formatEuro(d.hr.trainingBudget)}`);
+    if (d.hr.hire) chips.push({ icone: "equipes", texte: `+${d.hr.hire} embauche${d.hr.hire > 1 ? "s" : ""}` });
+    if (d.hr.fire) chips.push({ icone: "equipes", texte: `−${d.hr.fire} licenciement${d.hr.fire > 1 ? "s" : ""}` });
+    if (d.hr.trainingBudget) chips.push({ icone: "formation", texte: `Formation ${formatEuro(d.hr.trainingBudget)}` });
   }
   if (d.investment) {
     if (d.investment.machineCapacityUnits)
-      chips.push(`🏗️ Investissement +${formatUnits(d.investment.machineCapacityUnits)} u`);
+      chips.push({ icone: "usine", texte: `Investissement +${formatUnits(d.investment.machineCapacityUnits)} u` });
     const bought = (d.investment.equipmentBuy ?? []).reduce((s, e) => s + e.quantity, 0);
     const sold = (d.investment.equipmentSell ?? []).reduce((s, e) => s + e.quantity, 0);
-    if (bought > 0) chips.push(`🏗️ Achat de ${bought} équipement${bought > 1 ? "s" : ""}`);
-    if (sold > 0) chips.push(`🏭 Cession de ${sold} équipement${sold > 1 ? "s" : ""}`);
+    if (bought > 0) chips.push({ icone: "usine", texte: `Achat de ${bought} équipement${bought > 1 ? "s" : ""}` });
+    if (sold > 0) chips.push({ icone: "usine", texte: `Cession de ${sold} équipement${sold > 1 ? "s" : ""}` });
   }
   if (d.finance) {
-    if (d.finance.newLoan) chips.push(`🏦 Emprunt ${formatEuro(d.finance.newLoan)}`);
+    if (d.finance.newLoan) chips.push({ icone: "banque", texte: `Emprunt ${formatEuro(d.finance.newLoan)}` });
     if (d.finance.loanRepayment)
-      chips.push(`🏦 Remboursement anticipé ${formatEuro(d.finance.loanRepayment)}`);
+      chips.push({ icone: "banque", texte: `Remboursement anticipé ${formatEuro(d.finance.loanRepayment)}` });
     if (d.finance.capitalIncrease)
-      chips.push(`🤝 Augmentation de capital ${formatEuro(d.finance.capitalIncrease)}`);
-    if (d.finance.dividend) chips.push(`💸 Dividende ${formatEuro(d.finance.dividend)}`);
+      chips.push({ icone: "accord", texte: `Augmentation de capital ${formatEuro(d.finance.capitalIncrease)}` });
+    if (d.finance.dividend) chips.push({ icone: "argent", texte: `Dividende ${formatEuro(d.finance.dividend)}` });
   }
   if (d.treasury) {
-    if (d.treasury.discount) chips.push(`💶 Escompte ${formatEuro(d.treasury.discount)}`);
-    if (d.treasury.factoring) chips.push(`💶 Affacturage ${formatEuro(d.treasury.factoring)}`);
-    if (d.treasury.placement) chips.push(`💶 Placement ${formatEuro(d.treasury.placement)}`);
+    if (d.treasury.discount) chips.push({ icone: "tresorerie", texte: `Escompte ${formatEuro(d.treasury.discount)}` });
+    if (d.treasury.factoring) chips.push({ icone: "tresorerie", texte: `Affacturage ${formatEuro(d.treasury.factoring)}` });
+    if (d.treasury.placement) chips.push({ icone: "tresorerie", texte: `Placement ${formatEuro(d.treasury.placement)}` });
   }
   if (d.rse) {
-    if (d.rse.budget) chips.push(`🌱 Budget RSE ${formatEuro(d.rse.budget)}`);
-    if (d.rse.investment) chips.push(`🌱 Investissement propre ${formatEuro(d.rse.investment)}`);
+    if (d.rse.budget) chips.push({ icone: "feuille", texte: `Budget RSE ${formatEuro(d.rse.budget)}` });
+    if (d.rse.investment) chips.push({ icone: "feuille", texte: `Investissement propre ${formatEuro(d.rse.investment)}` });
   }
 
   return (
@@ -167,10 +170,11 @@ export function PeriodDecisionsRecap({
           <div className="flex flex-wrap gap-2">
             {chips.map((c) => (
               <span
-                key={c}
-                className="rounded-full border border-white/10 bg-slate-900 px-3 py-1 text-xs text-slate-300"
+                key={c.texte}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900 px-3 py-1 text-xs text-slate-300"
               >
-                {c}
+                <Icone nom={c.icone} className="h-3.5 w-3.5 text-amber-400" />
+                {c.texte}
               </span>
             ))}
           </div>

@@ -84,7 +84,7 @@ export default function OrientationPage() {
   return (
     <>
       <main id="main" className="mx-auto max-w-5xl px-6 py-12">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+        <p className="text-xs uppercase tracking-annonce text-amber-400">
           Business Arena · orientation
         </p>
         <h1 className="mt-2 text-3xl font-bold text-slate-50">

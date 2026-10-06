@@ -21,7 +21,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Quand la demande dépasse la capacité, le prix devient le seul levier : c'est là que se gagne une saison.",
     nature: "market",
     pli: "simple",
-    emoji: "🎪",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -35,7 +35,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "En hôtellerie, la réputation est un actif : elle se dégrade vite et se reconstruit lentement.",
     nature: "internal",
     pli: "email",
-    emoji: "⭐",
+    icone: "etoile",
     scope: "team",
   },
   {
@@ -50,7 +50,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Chaque nuitée vendue par la plateforme rapporte moins : votre marge unitaire fond sans que le prix affiché bouge.",
     nature: "macro",
     pli: "email",
-    emoji: "💳",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -65,7 +65,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Un hôtel qui ne vit que d'une clientèle meurt avec elle : la diversification des segments est une assurance.",
     nature: "macro",
     pli: "simple",
-    emoji: "🚫",
+    icone: "alerte",
     scope: "market",
   },
   {
@@ -79,7 +79,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "La maintenance était-elle au niveau ? Les chambres condamnées ce soir ne se revendront jamais.",
     nature: "internal",
     pli: "email",
-    emoji: "🔥",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -94,7 +94,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "La demande de dernière minute se capte au prix fort, encore faut-il ne pas avoir tout bradé un mois plus tôt.",
     nature: "market",
     pli: "simple",
-    emoji: "☀️",
+    icone: "meteo",
     scope: "market",
   },
   {
@@ -108,7 +108,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Une charge variable qui grimpe déplace mécaniquement le taux d'occupation d'équilibre vers le haut.",
     nature: "macro",
     pli: "simple",
-    emoji: "⚡",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -122,7 +122,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Un hôtel est financé par de la dette longue : une hausse des taux se paie sur des années.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -137,7 +137,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "C'est le sinistre type de la multirisque hôtelière : la perte d'exploitation coûte plus cher que les travaux.",
     nature: "internal",
     pli: "simple",
-    emoji: "💧",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -151,7 +151,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Dépendre d'un outil unique, c'est lui confier son chiffre d'affaires : la formule tous risques le couvre.",
     nature: "internal",
     pli: "email",
-    emoji: "🔒",
+    icone: "verrou",
     scope: "team",
   },
   {
@@ -166,7 +166,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "L'entretien et la rénovation ne sont pas des charges subies : ils achètent du pouvoir de fixer les prix.",
     nature: "market",
     pli: "simple",
-    emoji: "✨",
+    icone: "etoile",
     scope: "team",
   },
   {
@@ -180,7 +180,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Un actif hôtelier bien exploité rassure : la garantie, c'est la trajectoire, pas seulement les murs.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -195,7 +195,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "L'aubaine ne profite qu'à ceux qui ont gardé des chambres disponibles : tout brader tôt a un coût caché.",
     nature: "market",
     pli: "email",
-    emoji: "🚌",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -209,7 +209,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Une nuit complète à prix fort vaut trois nuits bradées : le yield management se joue sur ces semaines-là.",
     nature: "market",
     pli: "simple",
-    emoji: "🎸",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -223,7 +223,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & maintenance préventive",
     nature: "internal",
     pli: "email",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -237,7 +237,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "email",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -251,7 +251,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -266,7 +266,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Une capacité nouvelle sur un marché stable se prend sur les voisins : le taux d'occupation d'équilibre remonte.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏨",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -281,7 +281,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Le segment le plus sensible au prix est le premier à partir : la clientèle affaires, elle, achète autre chose qu'un lit.",
     nature: "competition",
     pli: "simple",
-    emoji: "🔑",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -295,7 +295,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Quand la demande dépasse la capacité, la question n'est plus de remplir mais à quel prix.",
     nature: "market",
     pli: "simple",
-    emoji: "🩺",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -310,7 +310,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Une activité annexe peut tirer l'activité principale : la marge se lit sur l'ensemble, pas service par service.",
     nature: "internal",
     pli: "simple",
-    emoji: "👨‍🍳",
+    icone: "etoile",
     scope: "team",
   },
   {
@@ -325,7 +325,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Une chambre fermée coûte ses charges fixes sans rien rapporter : la disponibilité est la première ressource d'un hôtel.",
     nature: "internal",
     pli: "recommande",
-    emoji: "🧪",
+    icone: "alerte",
     scope: "team",
   },
   {
@@ -339,7 +339,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "🔭",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -354,7 +354,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Pouvez-vous loger ce volume ? Rouvrir des chambres, adresser le surplus à un confrère ou investir : lequel coûte le moins sur trois tours ?",
     nature: "market",
     pli: "simple",
-    emoji: "🧳",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -369,7 +369,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "💶",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -384,7 +384,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "🏗️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -399,7 +399,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les réservations.",
     nature: "market",
     pli: "simple",
-    emoji: "📉",
+    icone: "baisse",
     scope: "market",
   },
 ];

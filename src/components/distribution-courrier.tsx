@@ -5,6 +5,7 @@ import { distribuerCourrierAction, type DistributionState } from "@/app/teacher/
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { courriersPourCodes } from "@/config/courriers/registre";
 import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
+import { Icone } from "@/components/icone";
 
 const initial: DistributionState = { error: null, codeDistribue: null };
 
@@ -57,13 +58,17 @@ export function DistributionCourrier({
   return (
     <section className="rounded-xl border border-amber-400/20 bg-slate-900 p-4">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-sm font-semibold text-slate-200">📬 Le courrier à distribuer</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Icone nom="courrier" className="h-4 w-4 text-amber-400" />
+          Le courrier à distribuer
+        </h2>
         <a
           href={`/teacher/courriers/print?scenario=${encodeURIComponent(scenarioCode)}`}
           target="_blank"
-          className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
         >
-          🖨️ Imprimer la liasse
+          <Icone nom="imprimer" className="h-3.5 w-3.5" />
+          Imprimer la liasse
         </a>
       </div>
       <p className="mt-1 text-sm leading-relaxed text-slate-400">
@@ -114,11 +119,11 @@ export function DistributionCourrier({
               className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none"
             >
               <option value="" disabled={marchePlein}>
-                🌍 Tout le marché (toute la classe){marchePlein ? " · maximum atteint" : ""}
+                Tout le marché (toute la classe){marchePlein ? " · maximum atteint" : ""}
               </option>
               {teams.map((t) => (
                 <option key={t.teamId} value={t.teamId} disabled={dejaServies.has(t.teamId)}>
-                  🎯 {t.name} (pli adressé)
+                  {t.name} (pli adressé)
                   {dejaServies.has(t.teamId) ? " · déjà servie" : ""}
                 </option>
               ))}
@@ -155,7 +160,7 @@ export function DistributionCourrier({
               <option value="">Courrier au hasard</option>
               {distribuables.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.emoji} {c.objet}
+                  {c.objet}
                 </option>
               ))}
             </select>

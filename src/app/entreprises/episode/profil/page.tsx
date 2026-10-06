@@ -209,7 +209,7 @@ export default async function ProfilPage({
         <HaloDePage />
         <div className="mx-auto grid max-w-4xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
           <header>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+            <p className="text-xs uppercase tracking-annonce text-slate-400">
               <Link href="/entreprises" className="hover:text-slate-300">
                 Entreprises
               </Link>{" "}
@@ -479,7 +479,7 @@ export default async function ProfilPage({
             {codeDeReprise ? (
               <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
                 Votre code de reprise :{" "}
-                <span className="font-mono text-lg tracking-[0.2em] text-amber-300">
+                <span className="font-mono text-lg tracking-surtitre text-amber-300">
                   {formaterCodeDeReprise(codeDeReprise)}
                 </span>
                 . Notez-le : il vous rend ce profil sur{" "}

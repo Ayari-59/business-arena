@@ -41,7 +41,7 @@ export function HelpCard({ title, description, actions, dismissible }: HelpCardP
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="inline-block text-xs px-3 py-1 rounded bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 hover:bg-blue-300 dark:hover:bg-blue-700"
+                  className="inline-block text-xs px-3 py-1 rounded-md bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 hover:bg-blue-300 dark:hover:bg-blue-700"
                 >
                   {action.label}
                 </Link>

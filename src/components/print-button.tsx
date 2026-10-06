@@ -1,5 +1,7 @@
 "use client";
 
+import { Icone } from "@/components/icone";
+
 /**
  * Imprimer la page courante. Un atelier se lit à l'écran pour se décider, et
  * se pose sur la table pendant la séance : la version papier n'est pas un
@@ -10,9 +12,10 @@ export function PrintButton({ label }: { label: string }) {
     <button
       type="button"
       onClick={() => window.print()}
-      className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/50 print:hidden"
+      className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/50 print:hidden"
     >
-      🖨️ {label}
+      <Icone nom="imprimer" className="h-4 w-4" />
+      {label}
     </button>
   );
 }

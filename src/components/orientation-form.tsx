@@ -337,7 +337,7 @@ export function OrientationForm({
       </div>
 
       <div
-        className={`space-y-4 rounded-2xl border border-amber-400/25 bg-amber-950/10 p-6 ${
+        className={`space-y-4 rounded-xl border border-amber-400/25 bg-amber-950/10 p-6 ${
           // Sur téléphone, la recommandation passe AVANT les coordonnées : c'est ce
           // qu'on est venu chercher, et l'on ne donne son e-mail qu'après l'avoir lue.
           etape === ETAPE_RESULTAT ? "max-sm:order-first" : "max-sm:hidden"

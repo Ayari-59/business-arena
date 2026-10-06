@@ -1,3 +1,5 @@
+import { Icone } from "@/components/icone";
+
 /**
  * CE QUE VOUS AVIEZ ÉCRIT AVANT DE SAVOIR.
  *
@@ -26,7 +28,8 @@ export function NoteDuTourPrecedent({
   return (
     <div className="mt-3 border-l-2 border-slate-600 pl-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        ✍️ Ce que vous aviez écrit avant de valider {periode.toLowerCase()}
+        <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5" />
+        Ce que vous aviez écrit avant de valider {periode.toLowerCase()}
       </p>
       {/*
         La citation est en italique et dans la teinte du texte courant : c'est

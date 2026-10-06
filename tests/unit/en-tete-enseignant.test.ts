@@ -40,17 +40,19 @@ describe("l'en-tête enseignant", () => {
     expect(html).toContain('href="/admin"');
   });
 
-  it("porte la tuile et le surtitre du secteur, comme l'arène", () => {
+  it("porte la tuile du secteur, et le surtitre en laiton comme tout le site", () => {
+    // La couleur du secteur appartient à la tuile ; le surtitre est celui de
+    // toutes les pages, en laiton. Il n'y a plus de quoi le teinter.
     const html = renderToStaticMarkup(
       createElement(EnTeteEnseignant, {
         surtitre: "Pilotage de partie · Industrie",
-        accent: "text-blue-400",
         titre: "NOVA",
-        tuile: createElement("span", { "data-tuile": "" }, "🔊"),
+        tuile: createElement("span", { "data-tuile": "", className: "text-blue-400" }),
       }),
     );
     expect(html).toContain("data-tuile");
-    expect(html).toMatch(/text-blue-400[^>]*>Pilotage de partie · Industrie/);
+    expect(html).toMatch(/text-amber-400[^>]*>Pilotage de partie · Industrie/);
+    expect(html).not.toMatch(/text-blue-400[^>]*>Pilotage/);
   });
 
   it("une rubrique dit le mot et, s'il y a lieu, le compte", () => {
@@ -61,7 +63,7 @@ describe("l'en-tête enseignant", () => {
 });
 
 describe("la frise côté enseignant", () => {
-  it("un tour joué sans signe est plein, ni vert ni rose", () => {
+  it("un tour joué sans signe est plein, ni vert ni rouge", () => {
     const html = renderToStaticMarkup(
       createElement(FriseDesTours, {
         roundsCount: 4,
@@ -72,7 +74,7 @@ describe("la frise côté enseignant", () => {
     );
     expect(html).toContain("Tour 1 · joué");
     expect(html).not.toContain("bg-emerald-400/70");
-    expect(html).not.toContain("bg-rose-400/70");
+    expect(html).not.toContain("bg-red-400/70");
     expect(html).toContain("Tour 3 · en cours");
     expect(html).toContain("Tour 4 · à venir");
   });

@@ -96,7 +96,7 @@ export default async function FonctionnalitesPage() {
           contraste={c("fonctionnalites.accroche")}
           interieur="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center"
         >
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs uppercase tracking-annonce text-amber-400">
             Plateforme de simulation de gestion
           </p>
           <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">

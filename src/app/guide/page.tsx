@@ -14,6 +14,7 @@ import {
 import { DEFAULT_SCENARIO_CODE, scenarioByCode } from "@/config/scenarios/registry";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
+import { Icone } from "@/components/icone";
 
 /**
  * Ce que chaque dimension MESURE : de la prose pédagogique, que le moteur ne
@@ -92,7 +93,7 @@ function Section({
   ouvert?: boolean;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8">
+    <section id={id} className="scroll-mt-24 carte p-6 sm:p-8">
       <h2 className="text-xl font-bold text-slate-50">{title}</h2>
       {intro ? <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">{intro}</p> : null}
       {/*
@@ -137,7 +138,7 @@ export default async function GuidePage() {
           l'en-tête ouvre déjà.
         */}
         <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Guide de prise en main</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Guide de prise en main</p>
           <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
             Tout ce qu&apos;il faut pour votre première partie
           </h1>
@@ -337,7 +338,10 @@ export default async function GuidePage() {
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-amber-400/20 bg-slate-950 p-5">
-                <p className="text-sm font-semibold text-amber-300">🌍 Courrier de marché</p>
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-300">
+                  <Icone nom="monde" className="h-4 w-4" />
+                  Courrier de marché
+                </p>
                 <p className="mt-2 text-base leading-relaxed text-slate-400">
                   Adressé à toute la classe : revalorisation tarifaire du fournisseur, note de
                   conjoncture, révision des taux par la banque, arrêté de catastrophe naturelle…
@@ -345,7 +349,10 @@ export default async function GuidePage() {
                 </p>
               </div>
               <div className="rounded-xl border border-sky-400/20 bg-slate-950 p-5">
-                <p className="text-sm font-semibold text-sky-300">🎯 Pli adressé</p>
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-sky-300">
+                  <Icone nom="cible" className="h-4 w-4" />
+                  Pli adressé
+                </p>
                 <p className="mt-2 text-base leading-relaxed text-slate-400">
                   Adressé à une seule entreprise : rapport de panne, incident de sécurité, commande
                   ferme, mise en demeure de la banque… Un pli par entreprise et par tour.

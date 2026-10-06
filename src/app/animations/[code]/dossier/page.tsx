@@ -63,7 +63,7 @@ export default async function DossierElevePage({
       id="main"
       className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black"
     >
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
+      <p className="text-xs uppercase tracking-annonce text-slate-400 print:hidden">
         <Link
           href={`/animations/${atelier.code}`}
           className="hover:text-slate-300"
@@ -110,7 +110,7 @@ export default async function DossierElevePage({
       </header>
 
       <section className="mt-8 break-inside-avoid rounded-xl border-l-2 border-amber-400 bg-amber-950/10 px-5 py-4 print:border-black/40 print:bg-transparent">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
+        <h2 className="text-xs font-semibold uppercase tracking-surtitre text-amber-300 print:text-black">
           L&apos;entreprise que vous dirigez
         </h2>
         <p className="mt-2 text-lg font-bold text-slate-50 print:text-black">
@@ -260,7 +260,7 @@ export default async function DossierElevePage({
                 {s.objectif}
               </p>
 
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-surtitre text-slate-400 print:text-black">
                 À la fin, vous savez faire
               </p>
               <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
@@ -269,7 +269,7 @@ export default async function DossierElevePage({
                 ))}
               </ul>
 
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-surtitre text-slate-400 print:text-black">
                 Ce que vous rendez
               </p>
               <p className="mt-1 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -285,7 +285,7 @@ export default async function DossierElevePage({
                 </a>
               </p>
 
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-surtitre text-slate-400 print:text-black">
                 Ce qui sera regardé
               </p>
               <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
@@ -387,7 +387,7 @@ export default async function DossierElevePage({
                   </table>
                 </div>
               ) : null}
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-surtitre text-slate-400 print:text-black">
                 Avant de valider le tour
               </p>
               <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
@@ -444,7 +444,7 @@ export default async function DossierElevePage({
               <tr>
                 <td
                   colSpan={dossier.tableauDeBord.tours.length + 1}
-                  className="border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
+                  className="border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-surtitre text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
                 >
                   Ce que nous décidons
                 </td>
@@ -465,7 +465,7 @@ export default async function DossierElevePage({
               <tr>
                 <td
                   colSpan={dossier.tableauDeBord.tours.length + 1}
-                  className="border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
+                  className="border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-surtitre text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
                 >
                   Ce que cela a donné
                 </td>

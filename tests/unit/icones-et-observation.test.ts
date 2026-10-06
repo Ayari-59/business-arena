@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { Icone } from "@/components/icone";
+import { Icone, NOMS_D_ICONE } from "@/components/icone";
 
 /**
  * DES ICÔNES DESSINÉES, ET UNE DEUXIÈME MESURE SUR L'OBSERVATION.
@@ -22,23 +22,18 @@ import { Icone } from "@/components/icone";
 const lire = (c: string) => readFileSync(join(process.cwd(), c), "utf8");
 const EMOJI = /[\u{1F300}-\u{1FAFF}]/u;
 
-describe("les icônes de l'espace enseignant", () => {
-  const NOMS = [
-    "ranger",
-    "recommencer",
-    "supprimer",
-    "nommer",
-    "planning",
-    "duree",
-    "equipes",
-    "cle",
-    "courrier",
-    "projeter",
-    "imprimer",
-    "carton",
-    "questions",
-    "verrou",
-  ] as const;
+describe("les pictogrammes du site", () => {
+  // Partis de l'espace enseignant, ils sont devenus le jeu de pictogrammes de
+  // tout le site : la garde porte donc sur la liste entière, pas sur les
+  // quatorze du début.
+  const NOMS = NOMS_D_ICONE;
+
+  it("forment un jeu resserré : un dessin par sens, pas un par emoji", () => {
+    // Plus de quarante, et l'œil ne retrouve plus rien ; moins de vingt, et
+    // un même dessin finit par dire deux choses.
+    expect(NOMS.length).toBeGreaterThanOrEqual(20);
+    expect(NOMS.length).toBeLessThanOrEqual(48);
+  });
 
   it("existent, et aucune ne ressemble à une autre", () => {
     const dessins = NOMS.map((n) => renderToStaticMarkup(createElement(Icone, { nom: n })));

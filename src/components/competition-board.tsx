@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CompetitionView } from "@/services/competition.service";
 import { nomDeLaPhase } from "@/config/concours";
+import { Icone } from "@/components/icone";
 
 const STATUS_LABELS: Record<string, string> = {
   registration: "Inscriptions ouvertes",
@@ -21,11 +22,26 @@ export function CompetitionBoard({
     <div className="space-y-6">
       {view.podium && view.podium.length > 0 ? (
         <section className="rounded-xl border border-amber-400/40 bg-slate-900 p-4 sm:p-7 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Podium</p>
-          <p className="mt-3 text-2xl font-bold text-amber-300">🏆 {view.podium[0]}</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Podium</p>
+          <p className="mt-3 flex items-center justify-center gap-2 text-2xl font-bold text-amber-300">
+            <Icone nom="trophee" className="h-6 w-6" />
+            {view.podium[0]}
+          </p>
           <div className="mt-2 flex justify-center gap-6 text-sm text-slate-300">
-            {view.podium[1] ? <span>🥈 {view.podium[1]}</span> : null}
-            {view.podium[2] ? <span>🥉 {view.podium[2]}</span> : null}
+            {/* Les médailles étaient des emoji d'argent et de bronze : le rang,
+                écrit, dit la même chose sans dépendre du téléphone. */}
+            {view.podium[1] ? (
+              <span>
+                <span className="mr-1.5 text-slate-400">2e</span>
+                {view.podium[1]}
+              </span>
+            ) : null}
+            {view.podium[2] ? (
+              <span>
+                <span className="mr-1.5 text-slate-400">3e</span>
+                {view.podium[2]}
+              </span>
+            ) : null}
           </div>
         </section>
       ) : null}

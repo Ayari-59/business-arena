@@ -268,7 +268,7 @@ export function SiteHeader({
             dans son propre cadre : sans cela, les dernières entrées ne
             s'atteignent qu'en faisant défiler la page DERRIÈRE le menu. */}
         <div
-          className={`carte relative max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl p-4 ${
+          className={`carte relative max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-xl p-4 ${
             ouvert ? "motion-safe:animate-plan-ouvre" : ""
           }`}
         >
@@ -292,7 +292,7 @@ export function SiteHeader({
                     className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-white/5 pointer-coarse:min-h-11"
                   >
                     <span
-                      className={`shrink-0 text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
+                      className={`shrink-0 text-xs font-semibold uppercase tracking-surtitre transition-colors ${
                         ouvertGroupe
                           ? "text-amber-300/90"
                           : "text-slate-400 group-hover:text-slate-200"

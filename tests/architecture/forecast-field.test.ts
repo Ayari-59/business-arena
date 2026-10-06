@@ -45,7 +45,7 @@ describe("le plan de trésorerie a quitté l'arène", () => {
     // bloc « Financer ».
     const decouvert = FORMULAIRE.indexOf("Découvert autorisé");
     expect(decouvert, "le plafond de découvert n'est plus annoncé nulle part").toBeGreaterThan(-1);
-    const financer = FORMULAIRE.lastIndexOf("💶 Financer", decouvert);
+    const financer = FORMULAIRE.lastIndexOf('legend="Financer', decouvert);
     expect(financer, "le plafond a quitté le bloc où l'on décide d'emprunter").toBeGreaterThan(-1);
   });
 });

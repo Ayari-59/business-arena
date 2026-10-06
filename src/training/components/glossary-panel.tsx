@@ -41,12 +41,12 @@ export function GlossaryPanel({ entries, onClose }: GlossaryPanelProps) {
             placeholder="Rechercher..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
           />
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`text-xs px-2 py-1 rounded ${
+              className={`text-xs px-2 py-1 rounded-md ${
                 selectedCategory === null
                   ? "bg-blue-500 text-white"
                   : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
@@ -58,7 +58,7 @@ export function GlossaryPanel({ entries, onClose }: GlossaryPanelProps) {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`text-xs px-2 py-1 rounded ${
+                className={`text-xs px-2 py-1 rounded-md ${
                   selectedCategory === cat
                     ? "bg-blue-500 text-white"
                     : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"

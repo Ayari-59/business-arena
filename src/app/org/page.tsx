@@ -24,7 +24,7 @@ export default async function OrgAdminPage() {
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs uppercase tracking-annonce text-amber-400">
             Administration d&apos;établissement
           </p>
           <h1 className="text-2xl font-bold">{dashboard.name}</h1>
@@ -37,7 +37,7 @@ export default async function OrgAdminPage() {
 
       {dashboard.licence.state !== "libre" && dashboard.licence.licence ? (
         <section
-          className={`rounded-2xl border p-5 ${
+          className={`rounded-xl border p-5 ${
             dashboard.licence.blocking
               ? "border-red-400/30 bg-red-950/20"
               : dashboard.licence.state === "bientot_expiree"
@@ -99,7 +99,7 @@ export default async function OrgAdminPage() {
       </section>
 
       {/* Invitations enseignants */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="text-sm font-semibold text-slate-200">Inviter des enseignants</h2>
         <p className="mt-1 text-xs text-slate-400">
           Partagez un code : l&apos;enseignant s&apos;inscrit sur /teacher/login avec ce code et
@@ -132,7 +132,7 @@ export default async function OrgAdminPage() {
       </section>
 
       {/* Équipe pédagogique */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipe pédagogique ({dashboard.teachers.length})
         </h2>
@@ -153,7 +153,7 @@ export default async function OrgAdminPage() {
                   <td className="py-2 pr-3 text-slate-400">{t.email}</td>
                   <td className="py-2 pr-3">
                     {t.role === "org_admin" ? (
-                      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-xs text-amber-300">
+                      <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-xs text-amber-300">
                         admin
                       </span>
                     ) : (
@@ -170,7 +170,7 @@ export default async function OrgAdminPage() {
 
       {/* Activité */}
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <div className="carte p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Dernières parties</h2>
           {dashboard.games.length === 0 ? (
             <p className="text-sm text-slate-400">Aucune partie pour l&apos;instant.</p>
@@ -192,7 +192,7 @@ export default async function OrgAdminPage() {
             </ul>
           )}
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <div className="carte p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Concours</h2>
           {dashboard.competitions.length === 0 ? (
             <p className="text-sm text-slate-400">Aucun concours pour l&apos;instant.</p>

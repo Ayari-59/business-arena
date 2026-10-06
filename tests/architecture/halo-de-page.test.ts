@@ -43,9 +43,7 @@ describe("le halo de page", () => {
     // Sur fond sombre, le laiton est une lueur ; sur fond clair, c'est le
     // laiton CLAIR de l'échelle qu'il faut, et faiblement.
     expect(CSS).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--halo-de-page:/);
-    expect(CSS).toMatch(
-      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--halo-de-page:/,
-    );
+    expect(CSS).toMatch(/\[data-theme="clair"\]\s*\{[^}]*--halo-de-page:/);
     expect(CSS).toMatch(/\.halo-de-page\s*\{[^}]*var\(--halo-de-page\)/);
     // Le fond du corps de page lit la même teinte : deux halos qui divergent,
     // c'est une page à deux lumières.

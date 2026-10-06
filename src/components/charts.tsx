@@ -81,10 +81,10 @@ export function RevenueChart({
     <figure>
       <figcaption className="mb-2 flex items-center gap-4 text-xs text-slate-400">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-0.5 w-4 rounded" style={{ background: "#3987e5" }} /> Chiffre d&apos;affaires
+          <span className="h-0.5 w-4 rounded-md" style={{ background: "#3987e5" }} /> Chiffre d&apos;affaires
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-0.5 w-4 rounded" style={{ background: "#d95926" }} /> Résultat net
+          <span className="h-0.5 w-4 rounded-md" style={{ background: "#d95926" }} /> Résultat net
         </span>
       </figcaption>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Évolution du chiffre d'affaires et du résultat net par tour">

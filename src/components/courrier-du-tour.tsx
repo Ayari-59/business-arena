@@ -7,6 +7,7 @@ import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/c
 import { courrierParCode } from "@/config/courriers/registre";
 import { courrierDeRoutine } from "@/config/courriers/routine";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
+import { Icone } from "@/components/icone";
 
 /**
  * LE COURRIER DU TRIMESTRE, VÉCU.
@@ -94,7 +95,8 @@ export function CourrierDuTour({
         className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-slate-400"
       >
         <span>
-          📬 Courrier du {periodeLabel} :{" "}
+          <Icone nom="courrier" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+          Courrier du {periodeLabel} :{" "}
           <span className="text-slate-300">
             {vide
               ? routine.objet
@@ -116,7 +118,10 @@ export function CourrierDuTour({
     <section aria-label={`Le courrier du ${periodeLabel}`} className="carte p-3 sm:p-5">
       {ouvert && enParcours ? null : (
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold text-amber-400">📬 Le courrier du {periodeLabel}</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+          <Icone nom="courrier" className="h-4 w-4" />
+          Le courrier du {periodeLabel}
+        </h2>
         <p className="text-xs text-slate-400">
           {ouvert
             ? vide
@@ -167,7 +172,7 @@ export function CourrierDuTour({
                   key={`${p.code}-${p.teamId ?? "market"}`}
                   code={p.code}
                   delayMs={i * 500}
-                  destinataire={p.teamId ? "🎯 Votre entreprise" : "Tout le marché"}
+                  destinataire={p.teamId ? "Votre entreprise" : "Tout le marché"}
                   surligne={p.isMyTeam}
                 />
               ))

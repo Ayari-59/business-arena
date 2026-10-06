@@ -9,6 +9,7 @@ import { formatEuro } from "@/lib/format";
 import { ConfirmForm, GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { deleteSituationAction, updateEconomicsAction, updateNarrativeAction } from "../actions";
+import { Icone, type NomDIcone } from "@/components/icone";
 
 export const dynamic = "force-dynamic";
 
@@ -64,10 +65,10 @@ const BPI_FIELDS: { name: string; label: string }[] = [
   { name: "bpiDecisionMastery", label: "Maîtrise déc." },
 ];
 
-const VERDICT_UI: Record<string, { label: string; cls: string }> = {
-  jouable: { label: "✅ Jouable", cls: "border-emerald-400/40 bg-emerald-950/30 text-emerald-200" },
-  "a-surveiller": { label: "⚠️ À surveiller", cls: "border-amber-400/40 bg-amber-950/30 text-amber-200" },
-  injouable: { label: "🚫 Injouable", cls: "border-red-400/40 bg-red-950/30 text-red-200" },
+const VERDICT_UI: Record<string, { label: string; icone: NomDIcone | null; cls: string }> = {
+  jouable: { label: "Jouable", icone: null, cls: "border-emerald-400/40 bg-emerald-950/30 text-emerald-200" },
+  "a-surveiller": { label: "À surveiller", icone: "alerte", cls: "border-amber-400/40 bg-amber-950/30 text-amber-200" },
+  injouable: { label: "Injouable", icone: "alerte", cls: "border-red-400/40 bg-red-950/30 text-red-200" },
 };
 
 export default async function ScenarioEditorPage({
@@ -93,7 +94,7 @@ export default async function ScenarioEditorPage({
     <main id="main" className="mx-auto max-w-3xl space-y-6 p-6">
       <header className="flex items-end justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Éditeur de scénario</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Éditeur de scénario</p>
           <h1 className="text-2xl font-bold">{loaded.summary.title}</h1>
           <p className="mt-1 text-sm text-slate-400">{SECTOR_LABELS[def.sector]}</p>
         </div>
@@ -120,7 +121,7 @@ export default async function ScenarioEditorPage({
       ) : null}
 
       {/* Essai à blanc — filet de jouabilité, non bloquant. */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
+      <section className="carte p-4 sm:p-7">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-200">Essai à blanc</h2>
@@ -141,6 +142,13 @@ export default async function ScenarioEditorPage({
             <span
               className={`inline-block rounded-full border px-3 py-1 text-xs font-semibold ${VERDICT_UI[verdict.verdict]!.cls}`}
             >
+              {VERDICT_UI[verdict.verdict]!.icone ? (
+                <Icone nom={VERDICT_UI[verdict.verdict]!.icone!} className="mr-1.5 h-3.5 w-3.5" />
+              ) : (
+                <span aria-hidden className="mr-1.5">
+                  ✓
+                </span>
+              )}
               {VERDICT_UI[verdict.verdict]!.label}
             </span>
             <ul className="space-y-1 text-xs text-slate-400">
@@ -182,7 +190,7 @@ export default async function ScenarioEditorPage({
       <GuardedForm
         action={updateNarrativeAction}
         label="enregistrement de l'habillage"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7"
+        className="space-y-5 carte p-4 sm:p-7"
       >
         <h2 className="text-sm font-semibold text-slate-200">Habillage — ce que l&apos;élève lit</h2>
         <input type="hidden" name="scenarioId" value={id} />
@@ -239,7 +247,7 @@ export default async function ScenarioEditorPage({
       <GuardedForm
         action={updateEconomicsAction}
         label="enregistrement des paramètres moteur"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7"
+        className="space-y-5 carte p-4 sm:p-7"
       >
         <div>
           <h2 className="text-sm font-semibold text-slate-200">Paramètres moteur</h2>
@@ -352,7 +360,7 @@ export default async function ScenarioEditorPage({
       </GuardedForm>
 
       {/* Situations pédagogiques — édition du texte. */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
+      <section className="carte p-4 sm:p-7">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-slate-200">Situations pédagogiques</h2>
           <Link

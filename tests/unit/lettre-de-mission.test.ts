@@ -77,9 +77,11 @@ describe("un mandat n'est pas un événement", () => {
      * mandat n'en a aucune, et les élèves la chercheraient.
      */
     const html = lettre("mission_niveau_4");
-    expect(html).toContain("🗂️");
-    expect(html).not.toContain("⚡");
-    expect(html).toContain("Aucun effet sur les comptes");
+    // L'éclair et le classeur étaient des emoji ; partis avec les autres, il
+    // reste ce qui distingue vraiment un courrier sans effet : sa ligne
+    // d'effet en encre douce, et aucune pastille de durée.
+    expect(html).not.toContain("●");
+    expect(html).toMatch(/class="[^"]*\bdouce\b[^"]*">Aucun effet sur les comptes/);
   });
 
   it("son pied le nomme, il ne se fait pas passer pour un courrier de routine", () => {

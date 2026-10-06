@@ -344,17 +344,20 @@ describe("le formulaire en gamme", () => {
     // dépliées au-dessus des champs à remplir. Il arrive donc fermé, et son
     // titre annonce ce qu'il cache.
     const enGamme = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+    // Le panneau se reconnaît à son pictogramme, la camionnette du
+    // fournisseur, dessinée en tête de son titre (c'était un emoji 🏭).
+    const camion = /<summary[^>]*><span[^>]*><svg[^>]*><path d="M2\.5 6\.5h11v9\.5h-11z"/;
     // `<details>` SANS `open` : le panneau est replié.
-    expect(enGamme).toMatch(/<details class="[^"]*"><summary[^>]*><span[^>]*>🏭/);
+    expect(enGamme).toMatch(new RegExp(`<details class="[^"]*">${camion.source}`));
     // Son titre annonce ce qu'il cache. Le compte est celui des façonniers de
     // la GAMME (chaque référence a son catalogue, fusionnés par façonnier), pas
     // celui du scénario mono : le figer ici mentirait.
-    expect(enGamme).toMatch(/🏭[^<]* · \d+ fiches?</);
+    expect(enGamme).toMatch(/M2\.5 6\.5h11v9\.5h-11z"[\s\S]*?<\/svg>[^<]* · \d+ fiches?</);
 
     // EN MONO-PRODUIT, le choix EST dans ce panneau (les boutons radio) :
     // le replier cacherait une décision du tour.
     const enMono = rendu(null, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
-    expect(enMono).toMatch(/<details open="" class="[^"]*"><summary[^>]*><span[^>]*>🏭/);
+    expect(enMono).toMatch(new RegExp(`<details open="" class="[^"]*">${camion.source}`));
     expect(enMono).toContain('name="supplierChoice"');
   });
 

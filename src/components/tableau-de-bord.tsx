@@ -58,7 +58,7 @@ function Tuile({
       ? "text-amber-300"
       : positif
         ? "text-emerald-300"
-        : "text-rose-300";
+        : "text-red-300";
 
   // La courbe, en coordonnées 0→100 sur la largeur et 0→24 en hauteur. Une
   // échelle par tuile : ces trois grandeurs n'ont pas le même ordre de
@@ -75,14 +75,25 @@ function Tuile({
   const bout = points.at(-1)!;
 
   return (
-    <div className="min-w-0 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5">
+    <div className="min-w-0 rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2.5 sm:px-3">
       {/* Les intitulés sont ceux des lignes de résumé de l'application —
           « CA · résultat · tréso » — et non leur forme longue : à trois
-          colonnes sur un téléphone, « CHIFFRE D'AFFAIRES » se coupait. */}
-      <p className="truncate text-xs uppercase tracking-[0.1em] text-slate-400" title={titreLong}>
+          colonnes sur un téléphone, « CHIFFRE D'AFFAIRES » se coupait.
+          « TRÉSORERIE » se coupait encore en « TRÉSORE… » à 390 px : sur
+          téléphone, l'interlettrage de rubrique tombe et la tuile resserre
+          son retrait, ce qui rend au mot les quelques pixels qui lui
+          manquaient, sans l'abréger. */}
+      <p
+        className="truncate text-xs uppercase tracking-normal text-slate-400 sm:tracking-etiquette"
+        title={titreLong}
+      >
         {titre}
       </p>
-      <p className={`mt-0.5 font-mono text-base font-semibold tabular-nums ${couleur}`}>
+      {/* LES CHIFFRES DANS LA POLICE DU SITE, À CHASSE FIXE. Ils étaient en
+          monospace, la police des codes à recopier : un résultat n'est pas un
+          code, et la chasse monospace l'élargissait d'un tiers. Les chiffres
+          tabulaires d'Inter Tight s'alignent d'une tuile à l'autre tout autant. */}
+      <p className={`mt-0.5 text-base font-semibold tabular-nums ${couleur}`}>
         {formatEuro(derniere)}
       </p>
       {/* L'ÉCART, AVEC SON SIGNE ÉCRIT. La flèche seule serait un signal de
@@ -139,9 +150,8 @@ function Tuile({
           cx={bout.x}
           cy={bout.y}
           r="2.5"
-          className={couleur}
+          className={`${couleur} stroke-slate-950`}
           fill="currentColor"
-          stroke="#070c1a"
           strokeWidth="1.5"
           vectorEffect="non-scaling-stroke"
         />

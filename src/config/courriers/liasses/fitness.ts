@@ -21,7 +21,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Ces adhérents-là remplissent la salle et repartent au printemps : les inscrire coûte, les garder rapporte.",
     nature: "market",
     pli: "interne",
-    emoji: "🎯",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -35,7 +35,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Face à un concurrent qui casse les prix, s'aligner détruit la marge : reste ce qu'il ne sait pas offrir.",
     nature: "competition",
     pli: "simple",
-    emoji: "💸",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -49,7 +49,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Une machine à l'arrêt se voit tout de suite, et se retrouve dans les avis, puis dans les résiliations.",
     nature: "internal",
     pli: "email",
-    emoji: "🔧",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -64,7 +64,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Dans un modèle par abonnement, ce qui retient vaut plus que ce qui attire : un régulier paie tous les trimestres.",
     nature: "market",
     pli: "interne",
-    emoji: "🏋️",
+    icone: "personne",
     scope: "market",
   },
   {
@@ -79,7 +79,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.",
     nature: "macro",
     pli: "email",
-    emoji: "⚡",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -94,7 +94,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Perdre un contrat corporate, c'est perdre d'un coup ce que trente inscriptions individuelles rapportent.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏢",
+    icone: "baisse",
     scope: "market",
   },
   {
@@ -108,7 +108,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Un parc de machines financé à crédit se rembourse même les trimestres où la salle est vide.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -122,7 +122,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "L'été cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
     nature: "market",
     pli: "simple",
-    emoji: "🥵",
+    icone: "meteo",
     scope: "market",
   },
   {
@@ -136,7 +136,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "C'est exactement ce que couvre la responsabilité civile exploitant : la prime valait-elle son prix ?",
     nature: "internal",
     pli: "recommande",
-    emoji: "⚠️",
+    icone: "alerte",
     scope: "team",
   },
   {
@@ -150,7 +150,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "La perte d'exploitation dépasse largement le coût des travaux : c'est elle qu'il faut assurer.",
     nature: "internal",
     pli: "simple",
-    emoji: "💧",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -164,7 +164,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Ces adhérents-là arrivent sans budget d'acquisition, et ce sont souvent les plus fidèles.",
     nature: "market",
     pli: "simple",
-    emoji: "📰",
+    icone: "communication",
     scope: "team",
   },
   {
@@ -178,7 +178,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Un revenu récurrent est la meilleure garantie qui soit : il est prévisible, donc finançable.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -193,7 +193,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Encore faut-il pouvoir les accueillir : sur-vendre sans encadrement fait fuir les adhérents en place.",
     nature: "market",
     pli: "simple",
-    emoji: "📋",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -208,7 +208,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là en juin.",
     nature: "market",
     pli: "simple",
-    emoji: "🏃",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -222,7 +222,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & maintenance préventive",
     nature: "internal",
     pli: "recommande",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -236,7 +236,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "email",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -250,7 +250,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -264,7 +264,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Le concurrent premium ne prend que ceux qui en ont les moyens : reste à savoir s'il vous en laisse assez.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏊",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -278,7 +278,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Le concurrent le plus dangereux n'est pas toujours une salle : c'est celui qui remplace le besoin.",
     nature: "competition",
     pli: "simple",
-    emoji: "📱",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -292,7 +292,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Quand un tiers paie, le prix cesse d'être le frein : c'est la capacité d'accueil qui le devient.",
     nature: "market",
     pli: "simple",
-    emoji: "🩺",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -307,7 +307,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Une salle qui dépend d'une personne dépend de ses choix : la fidélité doit aller à l'enseigne, pas au coach.",
     nature: "competition",
     pli: "recommande",
-    emoji: "🏃",
+    icone: "personne",
     scope: "team",
   },
   {
@@ -321,7 +321,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu: "Un essai gratuit coûte une séance et rapporte un abonnement : c'est le coût d'acquisition le plus lisible.",
     nature: "market",
     pli: "interne",
-    emoji: "🎟️",
+    icone: "resultats",
     scope: "team",
   },
   {
@@ -336,7 +336,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "👀",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -351,7 +351,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Pouvez-vous accueillir ce volume aux heures de pointe ? Étendre les horaires, s'appuyer sur un partenaire ou investir dans des places : lequel coûte le moins sur trois trimestres ?",
     nature: "market",
     pli: "simple",
-    emoji: "📑",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -366,7 +366,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "💶",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -381,7 +381,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "🥊",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -396,7 +396,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les abonnements.",
     nature: "market",
     pli: "simple",
-    emoji: "📉",
+    icone: "baisse",
     scope: "market",
   },
 ];

@@ -40,7 +40,7 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
         <HaloDePage />
         <div className="mx-auto grid max-w-4xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
           <header className="grid gap-3">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+            <p className="text-xs uppercase tracking-annonce text-slate-400">
               Épisodes manager / Animation
             </p>
             <h1 className="text-4xl font-bold leading-tight tracking-tight text-slate-50">
@@ -198,9 +198,9 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
                                       className="grid grid-cols-[minmax(0,1fr)_7rem_3rem] items-center gap-3 text-sm"
                                     >
                                       <span className="text-slate-300">{o.texte}</span>
-                                      <span className="h-2.5 overflow-hidden rounded bg-slate-800">
+                                      <span className="h-2.5 overflow-hidden rounded-md bg-slate-800">
                                         <span
-                                          className="block h-full rounded bg-slate-400"
+                                          className="block h-full rounded-md bg-slate-400"
                                           style={{ width: `${Math.round(o.part * 100)}%` }}
                                         />
                                       </span>

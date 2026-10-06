@@ -32,7 +32,7 @@ export const COURRIERS_DE_ROUTINE: CourrierDef[] = [
       "Une situation intermédiaire ne se subit pas : c'est le moment de vérifier que les comptes disent ce que vous croyez avoir fait.",
     nature: "internal",
     pli: "simple",
-    emoji: "📊",
+    icone: "resultats",
     scope: "team",
   },
   {
@@ -47,7 +47,7 @@ export const COURRIERS_DE_ROUTINE: CourrierDef[] = [
       "Sans attestation de vigilance, pas de marché : être à jour de ses cotisations est aussi une condition commerciale.",
     nature: "macro",
     pli: "simple",
-    emoji: "📄",
+    icone: "document",
     scope: "team",
   },
   {
@@ -62,7 +62,7 @@ export const COURRIERS_DE_ROUTINE: CourrierDef[] = [
       "Vos comptes sont publics : vos concurrents, vos fournisseurs et vos clients peuvent les lire comme vous lisez les leurs.",
     nature: "macro",
     pli: "simple",
-    emoji: "🗂️",
+    icone: "ranger",
     scope: "team",
   },
   {
@@ -77,7 +77,7 @@ export const COURRIERS_DE_ROUTINE: CourrierDef[] = [
       "La prime se paie tous les ans, le sinistre arrive une fois : c'est cet écart-là que l'assurance vend, et qu'on juge trop cher jusqu'au jour où il sert.",
     nature: "internal",
     pli: "simple",
-    emoji: "🛡️",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -92,7 +92,7 @@ export const COURRIERS_DE_ROUTINE: CourrierDef[] = [
       "Un arrêté de compte non contesté devient définitif : les frais qu'on ne lit pas sont des frais qu'on accepte.",
     nature: "internal",
     pli: "simple",
-    emoji: "🏦",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -107,7 +107,7 @@ export const COURRIERS_DE_ROUTINE: CourrierDef[] = [
       "La TVA que vous encaissez ne vous appartient jamais : elle transite par votre trésorerie, et la confondre avec du résultat est l'erreur classique.",
     nature: "macro",
     pli: "simple",
-    emoji: "🧾",
+    icone: "document",
     scope: "team",
   },
 ];

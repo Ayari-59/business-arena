@@ -10,6 +10,7 @@ import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers
 import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mission";
 import { COURRIERS_EN_RETOUR, estUnCourrierEnRetour } from "@/config/courriers/reponses";
 import { BrandMark } from "@/components/brand-mark";
+import { Icone } from "@/components/icone";
 
 /**
  * LE COURRIER DE L'ENTREPRISE : une enveloppe, puis la lettre qu'elle contient.
@@ -104,7 +105,7 @@ export function Enveloppe({
         {/* tranche gauche : recommandé en rouge, note de service en ardoise */}
         {bande ? (
           <span
-            className="enveloppe-bande absolute inset-y-0 left-0 w-5 rounded-sm py-2 text-center text-xs font-bold uppercase text-white"
+            className="enveloppe-bande absolute inset-y-0 left-0 w-5 rounded-md py-2 text-center text-xs font-bold uppercase text-white"
             style={{ backgroundColor: c!.pli === "recommande" ? "#b91c1c" : "#475569" }}
           >
             {bande.mention}
@@ -119,7 +120,7 @@ export function Enveloppe({
             </span>
             {nature ? (
               <span
-                className="mt-1 inline-block -rotate-2 rounded-sm border border-dashed px-1.5 py-0.5 text-xs font-bold uppercase leading-none tracking-wide"
+                className="mt-1 inline-block -rotate-2 rounded-md border border-dashed px-1.5 py-0.5 text-xs font-bold uppercase leading-none tracking-wide"
                 style={{ borderColor: nature.encre, color: nature.encre }}
               >
                 {interne ? "Note de service" : nature.mention}
@@ -132,10 +133,13 @@ export function Enveloppe({
           */}
           {interne ? null : (
             <span
-              className="enveloppe-timbre flex h-10 w-9 shrink-0 items-center justify-center rounded-[2px] text-lg"
+              className="enveloppe-timbre flex h-10 w-9 shrink-0 items-center justify-center rounded-[2px]"
+              style={nature ? { color: nature.encre } : undefined}
               aria-hidden
             >
-              {c ? c.emoji : "✉️"}
+              {/* Le timbre prend l'encre du cachet : la nature du courrier se lit
+                  deux fois, au tampon et à la vignette. */}
+              <Icone nom={c ? c.icone : "courrier"} className="h-5 w-5" />
             </span>
           )}
         </div>
@@ -150,14 +154,14 @@ export function Enveloppe({
 
         {/* la fenêtre du destinataire */}
         <div className={`mt-auto ${bande ? "pl-7" : ""}`}>
-          <span className="creux filet inline-block rounded-sm border border-dashed px-2.5 py-1.5 text-sm leading-relaxed">
+          <span className="creux filet inline-block rounded-md border border-dashed px-2.5 py-1.5 text-sm leading-relaxed">
             <span className="tenue block text-xs uppercase tracking-widest">Destinataire</span>
             {destinataire ?? "L'entreprise"}
           </span>
         </div>
 
         <div className={`mt-2 flex items-end justify-between gap-2 ${bande ? "pl-7" : ""}`}>
-          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-[0.15em]">
+          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-etiquette">
             <BrandMark className="h-3.5 w-3.5" />
             {liasse ?? "Business Arena"}
           </span>
@@ -196,11 +200,14 @@ export function Lettre({
   const reference = referenceDuCourrier(code);
   const duree = dureeDuCourrier(c);
   /*
-   * SANS EFFET SUR LES COMPTES : l'éclair et les pastilles de durée promettent
-   * une conséquence mécanique. Les courriers de routine n'en ont pas, le
-   * mandat des associés non plus, et les réponses aux décisions pas davantage
-   * — le moteur a déjà chiffré la conséquence, elles la nomment — il dit qui confie quoi. Leur donner
-   * « ⚡ ... ● » aurait fait chercher aux élèves un effet qui n'arrive jamais.
+   * SANS EFFET SUR LES COMPTES : les pastilles de durée promettent une
+   * conséquence mécanique. Les courriers de routine n'en ont pas, le mandat
+   * des associés non plus, et les réponses aux décisions pas davantage — le
+   * moteur a déjà chiffré la conséquence, elles la nomment. Leur donner
+   * « ● ● » aurait fait chercher aux élèves un effet qui n'arrive jamais ;
+   * leur ligne d'effet s'écrit donc en encre douce, sans pastille. (Elle
+   * portait aussi un éclair ou un classeur en emoji, qui ne disaient rien de
+   * plus que l'encre et sont partis avec les autres.)
    */
   const sansEffet =
     estUnCourrierDeRoutine(code) || estUneLettreDeMission(code) || estUnCourrierEnRetour(code);
@@ -279,7 +286,7 @@ export function Lettre({
         <div className="creux filet mt-auto rounded-lg border px-3 py-2">
           <div className="flex items-start justify-between gap-2">
             <p className={`text-sm font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
-              {sansEffet ? "🗂️" : "⚡"} {c.effet}
+              {c.effet}
             </p>
             {sansEffet ? null : (
               <span
@@ -292,14 +299,17 @@ export function Lettre({
             )}
           </div>
         </div>
-        <p className="douce mt-2 text-sm leading-snug">💡 {c.enJeu}</p>
+        <p className="douce mt-2 flex gap-1.5 text-sm leading-snug">
+          <Icone nom="idee" className="mt-0.5 h-4 w-4" />
+          <span>{c.enJeu}</span>
+        </p>
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
-          <span className="tenue text-xs uppercase tracking-[0.15em]">
+          <span className="tenue text-xs uppercase tracking-etiquette">
             {pileDuCourrier(code)}
           </span>
-          <span className="text-base" aria-hidden>
-            {c.emoji}
+          <span style={{ color: nature.encre }}>
+            <Icone nom={c.icone} className="h-4 w-4" />
           </span>
         </div>
       </div>
@@ -333,7 +343,7 @@ export function Courriel({
     <div className={`ecran courriel rounded-md p-3 ${className}`}>
       <div className="flex h-full min-h-full flex-col">
         <div className="creux filet -mx-3 -mt-3 mb-3 flex items-center justify-between gap-2 border-b px-3 py-1.5">
-          <span className="tenue text-xs font-semibold uppercase tracking-[0.15em]">
+          <span className="tenue text-xs font-semibold uppercase tracking-etiquette">
             Boîte de réception
           </span>
           <span className="tenue text-xs tabular-nums">1 non lu</span>
@@ -350,8 +360,8 @@ export function Courriel({
             ) : null}
           </span>
           {c ? (
-            <span aria-hidden className="shrink-0 text-lg leading-none">
-              {c.emoji}
+            <span className="shrink-0" style={nature ? { color: nature.encre } : undefined}>
+              <Icone nom={c.icone} className="h-5 w-5" />
             </span>
           ) : null}
         </div>
@@ -389,7 +399,7 @@ export function Courriel({
         </div>
 
         <div className="filet mt-2 flex items-end justify-between gap-2 border-t pt-1.5">
-          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-[0.15em]">
+          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-etiquette">
             <BrandMark className="h-3.5 w-3.5" />
             Messagerie
           </span>
@@ -425,11 +435,14 @@ export function Message({
   const reference = referenceDuCourrier(code);
   const duree = dureeDuCourrier(c);
   /*
-   * SANS EFFET SUR LES COMPTES : l'éclair et les pastilles de durée promettent
-   * une conséquence mécanique. Les courriers de routine n'en ont pas, le
-   * mandat des associés non plus, et les réponses aux décisions pas davantage
-   * — le moteur a déjà chiffré la conséquence, elles la nomment — il dit qui confie quoi. Leur donner
-   * « ⚡ ... ● » aurait fait chercher aux élèves un effet qui n'arrive jamais.
+   * SANS EFFET SUR LES COMPTES : les pastilles de durée promettent une
+   * conséquence mécanique. Les courriers de routine n'en ont pas, le mandat
+   * des associés non plus, et les réponses aux décisions pas davantage — le
+   * moteur a déjà chiffré la conséquence, elles la nomment. Leur donner
+   * « ● ● » aurait fait chercher aux élèves un effet qui n'arrive jamais ;
+   * leur ligne d'effet s'écrit donc en encre douce, sans pastille. (Elle
+   * portait aussi un éclair ou un classeur en emoji, qui ne disaient rien de
+   * plus que l'encre et sont partis avec les autres.)
    */
   const sansEffet =
     estUnCourrierDeRoutine(code) || estUneLettreDeMission(code) || estUnCourrierEnRetour(code);
@@ -443,7 +456,7 @@ export function Message({
           bien plus que la couleur du fond. */}
       <div className="creux filet border-b px-3 py-2">
         <div className="flex items-start justify-between gap-2">
-          <span className="tenue text-xs font-semibold uppercase tracking-[0.15em]">Message</span>
+          <span className="tenue text-xs font-semibold uppercase tracking-etiquette">Message</span>
           <span
             className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide"
             style={{ borderColor: nature.encre, color: nature.encre }}
@@ -489,7 +502,7 @@ export function Message({
         <div className="creux filet mt-auto rounded-md border px-3 py-2">
           <div className="flex items-start justify-between gap-2">
             <p className={`text-sm font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
-              {sansEffet ? "🗂️" : "⚡"} {c.effet}
+              {c.effet}
             </p>
             {sansEffet ? null : (
               <span
@@ -502,10 +515,13 @@ export function Message({
             )}
           </div>
         </div>
-        <p className="douce mt-2 text-sm leading-snug">💡 {c.enJeu}</p>
+        <p className="douce mt-2 flex gap-1.5 text-sm leading-snug">
+          <Icone nom="idee" className="mt-0.5 h-4 w-4" />
+          <span>{c.enJeu}</span>
+        </p>
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
-          <span className="tenue text-xs uppercase tracking-[0.15em]">
+          <span className="tenue text-xs uppercase tracking-etiquette">
             {pileDuCourrier(code)}
           </span>
           {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
@@ -563,7 +579,8 @@ export function CourrierRecommande({
   if (!c) {
     return (
       <div className="rounded-lg border border-amber-400/20 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
-        ✉️ {code}
+        <Icone nom="courrier" className="mr-1.5 h-4 w-4" />
+        {code}
       </div>
     );
   }

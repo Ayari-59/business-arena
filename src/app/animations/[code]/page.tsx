@@ -116,7 +116,7 @@ export default async function AtelierPage({
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
       <main id="main" className="min-w-0">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
+        <p className="text-xs uppercase tracking-annonce text-slate-400 print:hidden">
           <Link href="/animations" className="hover:text-slate-300">
             Ateliers
           </Link>{" "}
@@ -185,7 +185,7 @@ export default async function AtelierPage({
 
         {/* À retenir : les faits que l'enseignant veut avant de lire le reste. */}
         <div className="mt-8 break-inside-avoid rounded-xl border-l-2 border-amber-400 bg-amber-950/10 px-5 py-4 print:border-black/40 print:bg-transparent">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
+          <p className="text-xs font-semibold uppercase tracking-surtitre text-amber-300 print:text-black">
             À retenir
           </p>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -447,7 +447,7 @@ export default async function AtelierPage({
                   <RepliableSurTelephone resume="Voir le déroulé de la séance" className="mt-2 sm:mt-0">
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-600">
                         Compétences travaillées
                       </h4>
                       <ul className="mt-1.5 space-y-1 text-sm text-slate-300 print:text-black">
@@ -457,7 +457,7 @@ export default async function AtelierPage({
                       </ul>
                     </div>
                     <div>
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-600">
                         Notions mobilisées
                       </h4>
                       <p className="mt-1.5 text-sm text-slate-400 print:text-black">
@@ -467,7 +467,7 @@ export default async function AtelierPage({
                   </div>
 
                   <div className="mt-4 rounded-lg border border-white/5 bg-slate-950/60 p-3 print:border-black/15 print:bg-transparent">
-                    <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
+                    <h4 className="text-xs uppercase tracking-surtitre text-slate-600">
                       Ce que vous préparez avant
                     </h4>
                     <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -475,7 +475,7 @@ export default async function AtelierPage({
                     </p>
                   </div>
 
-                  <h4 className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-600">
+                  <h4 className="mt-4 text-xs uppercase tracking-surtitre text-slate-600">
                     Minutage
                   </h4>
                   <ol className="mt-1.5 space-y-2">
@@ -498,7 +498,7 @@ export default async function AtelierPage({
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-lg border border-emerald-400/20 bg-emerald-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-emerald-300/80 print:text-black">
+                      <h4 className="text-xs uppercase tracking-surtitre text-emerald-300/80 print:text-black">
                         Livrable de la séance
                       </h4>
                       <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -506,7 +506,7 @@ export default async function AtelierPage({
                       </p>
                     </div>
                     <div className="rounded-lg border border-sky-400/20 bg-sky-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-sky-300/80 print:text-black">
+                      <h4 className="text-xs uppercase tracking-surtitre text-sky-300/80 print:text-black">
                         Trace pour le {atelier.traceLabel}
                       </h4>
                       <p className="mt-1.5 text-sm italic leading-relaxed text-slate-300 print:text-black">
@@ -515,7 +515,7 @@ export default async function AtelierPage({
                     </div>
                   </div>
 
-                  <h4 className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-600">
+                  <h4 className="mt-4 text-xs uppercase tracking-surtitre text-slate-600">
                     Ce qui est évalué
                   </h4>
                   <ul className="mt-1.5 space-y-1 text-sm text-slate-400 print:text-black">
@@ -615,7 +615,7 @@ export default async function AtelierPage({
 
       <aside className="hidden lg:block print:hidden">
         <nav className="sticky top-8 border-l border-white/10 pl-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-600">
             Sommaire
           </p>
           <ul className="mt-3 space-y-2 text-xs">

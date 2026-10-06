@@ -1,4 +1,5 @@
 import type { StudyReports } from "@/services/game.service";
+import { Icone } from "@/components/icone";
 
 /**
  * Rapports des études achetées au dernier tour résolu (doc 02 §8bis) :
@@ -66,8 +67,9 @@ function Table({
 export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
   return (
     <section className="mt-4">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-300">
-        📊 Vos études du tour {reports.round} · {euro(reports.cost)} d&apos;honoraires
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+        <Icone nom="loupe" className="h-3.5 w-3.5" />
+        Vos études du tour {reports.round} · {euro(reports.cost)} d&apos;honoraires
       </p>
       <div className="grid gap-3 lg:grid-cols-2">
         {reports.market ? (

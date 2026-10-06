@@ -21,7 +21,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
       "Un capital de marque se construit lentement — l'engagement RSE d'hier soutient la demande d'aujourd'hui.",
     nature: "market",
     pli: "simple",
-    emoji: "🏅",
+    icone: "trophee",
     scope: "team",
   },
   {
@@ -36,7 +36,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
       "On ne s'affiche pas responsable à moitié : un standing entre-deux expose plus qu'il ne protège.",
     nature: "market",
     pli: "recommande",
-    emoji: "📢",
+    icone: "communication",
     scope: "team",
   },
   {
@@ -51,7 +51,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
       "Le risque RSE n'est pas que d'image : la réglementation a un coût, comptabilisé hors exploitation.",
     nature: "macro",
     pli: "recommande",
-    emoji: "⚖️",
+    icone: "balance",
     scope: "team",
   },
   {
@@ -66,7 +66,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
       "L'investissement responsable peut être cofinancé : une subvention améliore le résultat hors exploitation.",
     nature: "macro",
     pli: "simple",
-    emoji: "💶",
+    icone: "argent",
     scope: "team",
   },
 ];

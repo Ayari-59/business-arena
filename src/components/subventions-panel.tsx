@@ -9,6 +9,7 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { sansMolette } from "@/components/sans-molette";
 import { formatEuro } from "@/lib/format";
 import type { TeacherGameView } from "@/services/game.service";
+import { Icone } from "@/components/icone";
 
 const initial: TrancherSubventionState = { error: null };
 
@@ -43,7 +44,7 @@ export function SubventionsPanel({
   return (
     <section className="carte p-3 sm:p-5">
       <h2 className="text-sm font-semibold text-slate-100">
-        <span aria-hidden className="mr-1.5">🆘</span>
+        <Icone nom="alerte" className="mr-1.5 h-4 w-4 text-amber-400" />
         Demandes de subvention exceptionnelle
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-slate-400">

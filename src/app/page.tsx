@@ -6,6 +6,7 @@ import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
+import { Icone } from "@/components/icone";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
 import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
@@ -152,7 +153,7 @@ function CarteEnMain({
 }) {
   return (
     <div
-      className={`absolute w-[52%] overflow-hidden rounded-2xl border bg-slate-900 shadow-2xl ${pose} ${
+      className={`absolute w-[52%] overflow-hidden rounded-xl border bg-slate-900 shadow-2xl ${pose} ${
         fond
           ? "border-white/5 opacity-60 shadow-slate-950/60"
           : "border-white/15 shadow-slate-950/70"
@@ -303,8 +304,9 @@ export default async function Home() {
       <DonneesStructurees />
       <main id="main" className="relative overflow-hidden">
         {config.announcement ? (
-          <div className="border-b border-amber-400/20 bg-amber-950/30 px-6 py-2 text-center text-sm text-amber-200">
-            📣 {config.announcement}
+          <div className="flex items-center justify-center gap-2 border-b border-amber-400/20 bg-amber-950/30 px-6 py-2 text-center text-sm text-amber-200">
+            <Icone nom="communication" className="h-4 w-4 shrink-0 text-amber-400" />
+            {config.announcement}
           </div>
         ) : null}
 
@@ -352,8 +354,13 @@ export default async function Home() {
               Le filet qui le précède est la seule décoration de la page : il
               reparaît en tête de chaque section.
             */}
-          <p className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-amber-400">
-            <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+          {/*
+              Sur téléphone, l'annonce espacée à 0,3 em se coupait en deux
+              lignes (« POUR LA / CLASSE ») : elle se resserre en étiquette et
+              laisse tomber son filet sous 640 pixels, et tient sur une ligne.
+            */}
+          <p className="flex items-center gap-3 text-xs uppercase tracking-etiquette text-amber-400 sm:tracking-annonce">
+            <span aria-hidden className="hidden h-px w-8 bg-amber-400/40 sm:block" />
             Simulation de gestion, pour la classe
           </p>
           {/*
@@ -477,7 +484,7 @@ export default async function Home() {
             <div>
               <h2
                 id="la-boucle"
-                className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400"
+                className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
               >
                 <span aria-hidden className="h-px w-8 bg-amber-400/40" />
                 Les six temps d&apos;un tour
@@ -502,7 +509,7 @@ export default async function Home() {
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="text-base leading-snug text-slate-400">
-                      <strong className="font-semibold uppercase tracking-[0.12em] text-slate-100">
+                      <strong className="font-semibold uppercase tracking-etiquette text-slate-100">
                         {t.nom}
                       </strong>
                       <span className="sr-only"> : </span>
@@ -519,7 +526,7 @@ export default async function Home() {
                         seul ne dit pas ce qui se passe à ce moment-là. */}
                     <span
                       title={t.quoi}
-                      className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300"
+                      className="text-xs font-semibold uppercase tracking-etiquette text-slate-300"
                     >
                       {t.nom}
                       <span className="sr-only"> : {t.quoi}</span>
@@ -562,7 +569,7 @@ export default async function Home() {
             <div>
               <h2
                 id="apprend"
-                className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400"
+                className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
               >
                 <span aria-hidden className="h-px w-8 bg-amber-400/40" />
                 Ce que l&apos;élève apprend
@@ -606,7 +613,7 @@ export default async function Home() {
           interieur="mx-auto max-w-6xl px-6 py-8"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-            <h2 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400">
+            <h2 className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400">
               <span aria-hidden className="h-px w-8 bg-amber-400/40" />
               {SCENARIO_CHOICES.length} métiers, {SCENARIO_CHOICES.length}{" "}
               économies
@@ -708,7 +715,7 @@ export default async function Home() {
                 key={quoi}
                 className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0"
               >
-                <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                <dt className="text-xs uppercase tracking-surtitre text-slate-400">
                   {libelle}
                 </dt>
                 <dd className="mt-2">
@@ -728,7 +735,7 @@ export default async function Home() {
           contraste={c("accueil.commencer")}
           interieur="mx-auto max-w-6xl px-6 py-12 sm:py-16"
         >
-          <h2 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400">
+          <h2 className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400">
             <span aria-hidden className="h-px w-8 bg-amber-400/40" />
             Par où commencer
           </h2>

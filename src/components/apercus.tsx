@@ -64,7 +64,7 @@ function Cadre({
 }) {
   return (
     <figure className={`m-0 flex h-full flex-col ${className}`}>
-      <div className="flex flex-1 overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40">
+      <div className="flex flex-1 overflow-hidden carte shadow-2xl shadow-slate-950/40">
         {children}
       </div>
       <figcaption className="mt-2 flex min-h-8 items-start justify-center text-center text-xs text-slate-400">
@@ -84,7 +84,7 @@ export function ApercuArene({ className = "" }: { className?: string }) {
   return (
     <Cadre legende="Ce que voit l'élève, sur son téléphone" className={className}>
       <div className="mx-auto flex w-full max-w-[330px] flex-col p-3">
-        <div className="flex items-center justify-between rounded-lg bg-slate-950/60 px-2.5 py-2 text-[0.8rem]">
+        <div className="flex items-center justify-between rounded-lg bg-slate-950/60 px-2.5 py-2 text-xs">
           <span className="font-semibold text-slate-100">Équipe 3 · NOVA</span>
           <span aria-hidden className="flex gap-0.5">
             <i className="block h-1 w-3 rounded-full bg-amber-400" />
@@ -97,7 +97,7 @@ export function ApercuArene({ className = "" }: { className?: string }) {
         </div>
 
         <div className="mt-2 overflow-hidden rounded-xl border border-amber-400/30 bg-gradient-to-b from-amber-400/10 to-transparent">
-          <p className="flex flex-wrap items-baseline justify-between gap-x-2 px-3 pt-2.5 text-[0.75rem] uppercase tracking-[0.1em] text-amber-300">
+          <p className="flex flex-wrap items-baseline justify-between gap-x-2 px-3 pt-2.5 text-xs uppercase tracking-etiquette text-amber-300">
             <span>Tour 4 · à jouer</span>
             <span>12 min restantes</span>
           </p>
@@ -112,24 +112,24 @@ export function ApercuArene({ className = "" }: { className?: string }) {
               ["IPG", "45", "text-slate-100"],
             ].map(([libelle, valeur, encre]) => (
               <div key={libelle} className="bg-slate-900 px-3 py-1.5">
-                <span className="block text-[0.75rem] uppercase tracking-[0.1em] text-slate-400">
+                <span className="block text-xs uppercase tracking-etiquette text-slate-400">
                   {libelle}
                 </span>
-                <span className={`block font-mono text-[0.8rem] tabular-nums ${encre}`}>
+                <span className={`block text-xs font-semibold tabular-nums ${encre}`}>
                   {valeur}
                 </span>
               </div>
             ))}
           </div>
-          <p className="m-2.5 rounded-lg bg-amber-400 py-1.5 text-center text-[0.8rem] font-semibold text-slate-950">
+          <p className="m-2.5 rounded-lg bg-amber-400 py-1.5 text-center text-xs font-semibold text-slate-950">
             Lire la situation et décider
           </p>
         </div>
 
-        {["↺ Tours passés · 3", "👤 Mon profil et ma clé"].map((ligne) => (
+        {["↺ Tours passés · 3", "Mon profil et ma clé"].map((ligne) => (
           <p
             key={ligne}
-            className="mt-1.5 flex items-center justify-between rounded-lg border border-dashed border-white/10 px-2.5 py-1.5 text-[0.75rem] text-slate-400"
+            className="mt-1.5 flex items-center justify-between rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-400"
           >
             <span>{ligne}</span>
             <span aria-hidden>▸</span>
@@ -151,7 +151,7 @@ export function ApercuProjection({ className = "" }: { className?: string }) {
   return (
     <Cadre legende="Ce que vous projetez à la classe" className={className}>
       <div className="flex aspect-[16/10] w-full flex-col items-center justify-center gap-2 px-4 py-5">
-        <p className="text-[0.75rem] uppercase tracking-[0.3em] text-slate-400">
+        <p className="text-xs uppercase tracking-annonce text-slate-400">
           Rejoindre la partie
         </p>
         <div className="flex items-center gap-4">
@@ -162,7 +162,7 @@ export function ApercuProjection({ className = "" }: { className?: string }) {
               faisait couper. Un écran projeté qui déborde de son cadre prouve
               l'inverse de ce qu'on veut montrer.
             */
-            className="font-mono text-[clamp(1.5rem,7vw,2.75rem)] font-bold leading-none tracking-[0.1em] text-amber-300">
+            className="font-mono text-[clamp(1.5rem,7vw,2.75rem)] font-bold leading-none tracking-etiquette text-amber-300">
             K7M2PR
           </p>
           <CodeQr
@@ -174,7 +174,7 @@ export function ApercuProjection({ className = "" }: { className?: string }) {
         <p className="text-xs font-semibold text-slate-200 sm:text-sm">
           {SITE_URL.replace(/^https?:\/\//, "")}/join
         </p>
-        <p className="text-[0.75rem] text-slate-400">24 élèves connectés · 6 équipes</p>
+        <p className="text-xs text-slate-400">24 élèves connectés · 6 équipes</p>
       </div>
     </Cadre>
   );
@@ -202,12 +202,12 @@ export function ApercuPilotage({ className = "" }: { className?: string }) {
   return (
     <Cadre legende="Ce que vous suivez pendant la séance" className={className}>
       <div className="flex w-full flex-col p-3 sm:p-4">
-        <p className="text-[0.75rem] uppercase tracking-[0.18em] text-slate-400">
+        <p className="text-xs uppercase tracking-surtitre text-slate-400">
           Ce tour · 4/6 équipes ont validé
         </p>
-        <table className="mt-2 w-full border-collapse text-left text-[0.8rem]">
+        <table className="mt-2 w-full border-collapse text-left text-xs">
           <thead>
-            <tr className="text-[0.75rem] uppercase tracking-[0.1em] text-slate-400">
+            <tr className="text-xs uppercase tracking-etiquette text-slate-400">
               <th className="pb-1 font-medium">Équipe</th>
               <th className="pb-1 font-medium">Décisions</th>
               <th className="pb-1 text-right font-medium">Trésorerie</th>
@@ -219,7 +219,7 @@ export function ApercuPilotage({ className = "" }: { className?: string }) {
                 <td className="py-1.5 text-slate-200">{e.nom}</td>
                 <td className="py-1.5">
                   <span
-                    className={`rounded-full border px-2 py-0.5 text-[0.75rem] ${
+                    className={`rounded-full border px-2 py-0.5 text-xs ${
                       e.etat === "validé"
                         ? "border-emerald-400/40 text-emerald-300"
                         : "border-white/15 text-slate-400"
@@ -229,7 +229,7 @@ export function ApercuPilotage({ className = "" }: { className?: string }) {
                   </span>
                 </td>
                 <td
-                  className={`py-1.5 text-right font-mono tabular-nums ${
+                  className={`py-1.5 text-right tabular-nums ${
                     e.bon ? "text-slate-200" : "text-rose-300"
                   }`}
                 >
@@ -244,7 +244,7 @@ export function ApercuPilotage({ className = "" }: { className?: string }) {
             son contenu, et `pt-3` garde l'écart minimal au tableau quand il ne
             l'est pas. */}
         <div className="mt-auto pt-3">
-          <p className="rounded-lg bg-amber-400 py-1.5 text-center text-[0.8rem] font-semibold text-slate-950">
+          <p className="rounded-lg bg-amber-400 py-1.5 text-center text-xs font-semibold text-slate-950">
             Clore le tour et simuler
           </p>
         </div>

@@ -21,7 +21,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Refuser du monde faute de places ou de brigade, c'est transformer un succès en clients perdus.",
     nature: "market",
     pli: "interne",
-    emoji: "📸",
+    icone: "communication",
     scope: "market",
   },
   {
@@ -35,7 +35,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "L'hygiène n'est pas une charge optionnelle : ce qu'on économise dessus se paie en fermeture.",
     nature: "internal",
     pli: "recommande",
-    emoji: "🧾",
+    icone: "balance",
     scope: "team",
   },
   {
@@ -49,7 +49,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "En restauration, la marchandise perdue est payée deux fois : à l'achat, puis en service annulé.",
     nature: "internal",
     pli: "email",
-    emoji: "❄️",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -63,7 +63,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Le midi paie le loyer, le soir fait la marge : perdre un service, c'est perdre l'équilibre du modèle.",
     nature: "market",
     pli: "simple",
-    emoji: "🏢",
+    icone: "baisse",
     scope: "market",
   },
   {
@@ -77,7 +77,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Un canal qui apporte du volume mais dévore la marge : le chiffre d'affaires n'est pas le résultat.",
     nature: "macro",
     pli: "email",
-    emoji: "🛵",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -92,7 +92,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Le ratio matières dérape : augmenter le ticket, réduire les portions ou changer la carte : il faut choisir.",
     nature: "macro",
     pli: "email",
-    emoji: "🥩",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -106,7 +106,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Les places en plus ne servent à rien sans la brigade pour les servir : la capacité est double.",
     nature: "market",
     pli: "simple",
-    emoji: "🌞",
+    icone: "meteo",
     scope: "market",
   },
   {
@@ -120,7 +120,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Un métier à faible marge supporte mal le coût du découvert : la trésorerie se pilote au jour le jour.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -134,7 +134,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "La perte d'exploitation est l'essentiel du dommage : c'est elle que couvre la formule étendue.",
     nature: "internal",
     pli: "simple",
-    emoji: "💧",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -148,7 +148,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Les salaires et le loyer continuent de courir : c'est la définition même d'une charge de structure.",
     nature: "internal",
     pli: "recommande",
-    emoji: "🚷",
+    icone: "alerte",
     scope: "team",
   },
   {
@@ -163,7 +163,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Le budget qualité paie avec retard, mais il paie : la réputation est un investissement à rendement différé.",
     nature: "market",
     pli: "simple",
-    emoji: "📕",
+    icone: "etoile",
     scope: "team",
   },
   {
@@ -177,7 +177,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Un ratio matières maîtrisé se lit dans les comptes : c'est ce que regarde d'abord un banquier.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -192,7 +192,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Dire oui suppose des denrées, une brigade et de la place : trois contraintes, une seule opportunité.",
     nature: "market",
     pli: "email",
-    emoji: "🥂",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -207,7 +207,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Sur-préparer coûte le prix des denrées jetées, sous-préparer coûte les clients refusés. Où placer le curseur ?",
     nature: "market",
     pli: "simple",
-    emoji: "🎉",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -221,7 +221,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & maintenance préventive",
     nature: "internal",
     pli: "email",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -235,7 +235,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "email",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -249,7 +249,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -263,7 +263,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "La formule du midi vend du temps autant que de la cuisine : c'est là que le concurrent frappe.",
     nature: "competition",
     pli: "simple",
-    emoji: "🚚",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -278,7 +278,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "On ne se bat pas sur le terrain d'un concurrent mieux armé : la fidélité se construit sur ce qu'il n'offre pas.",
     nature: "competition",
     pli: "simple",
-    emoji: "⭐",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -292,7 +292,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Le passage est une ressource gratuite : ce qu'on en tire dépend de la capacité à servir vite.",
     nature: "market",
     pli: "simple",
-    emoji: "🧺",
+    icone: "boutique",
     scope: "market",
   },
   {
@@ -307,7 +307,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Une entreprise qui tient sur une personne a une capacité fragile : le remplacement se prépare avant l'accident.",
     nature: "internal",
     pli: "simple",
-    emoji: "🩼",
+    icone: "personne",
     scope: "team",
   },
   {
@@ -322,7 +322,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "La réputation se gagne assiette par assiette et se perd en un service : la qualité est un investissement.",
     nature: "market",
     pli: "simple",
-    emoji: "📝",
+    icone: "communication",
     scope: "team",
   },
   {
@@ -336,7 +336,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "🔔",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -351,7 +351,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Pouvez-vous servir ce volume ? Étendre la capacité, confier une partie à un confrère ou investir : lequel coûte le moins sur trois tours ?",
     nature: "market",
     pli: "simple",
-    emoji: "🍽️",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -366,7 +366,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "💶",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -381,7 +381,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "🏪",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -396,7 +396,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
     nature: "market",
     pli: "simple",
-    emoji: "📉",
+    icone: "baisse",
     scope: "market",
   },
 ];

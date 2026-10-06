@@ -1,5 +1,6 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import type { RseReport, RseReportIndicator } from "@/scoring/rse-report";
+import { Icone } from "@/components/icone";
 
 /**
  * RAPPORT EXTRA-FINANCIER (Lot 3) — synthèse façon DPEF, INDICATIVE et non
@@ -62,7 +63,10 @@ export function RseReportPanel({ report }: { report: RseReport }) {
       className="rounded-xl border border-emerald-400/20 bg-slate-900 p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold text-slate-200">🌍 Rapport extra-financier</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Icone nom="feuille" className="h-4 w-4 text-amber-400" />
+          Rapport extra-financier
+        </h2>
         <span className="tabular-nums text-lg font-semibold text-emerald-300">
           {report.latestScore}
           <span className="text-xs text-slate-400"> / 100</span>

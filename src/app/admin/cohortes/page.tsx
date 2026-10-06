@@ -35,7 +35,7 @@ export default async function CohortesAdminPage({
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs uppercase tracking-annonce text-amber-400">
             Administration générale
           </p>
           <h1 className="text-2xl font-bold">Cohortes d&apos;épisodes manager</h1>

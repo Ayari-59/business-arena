@@ -30,7 +30,7 @@ export function FormulaireDeReprise({
     <form
       ref={formRef}
       action={formAction}
-      className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6"
+      className="w-full max-w-sm space-y-4 carte p-6"
     >
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -47,7 +47,7 @@ export function FormulaireDeReprise({
           autoCapitalize="characters"
           autoComplete="off"
           placeholder={formaterCodeDeReprise("K7PD5M2X")}
-          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-[0.2em] text-amber-300 outline-none"
+          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-surtitre text-amber-300 outline-none"
         />
       </label>
       {state.error ? (

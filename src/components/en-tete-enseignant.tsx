@@ -31,7 +31,6 @@ export function EnTeteEnseignant({
   description,
   actif,
   tuile,
-  accent = "text-amber-400",
   liens = {},
   droite,
   compte,
@@ -41,10 +40,13 @@ export function EnTeteEnseignant({
   description?: React.ReactNode;
   /** La page courante, mise en ambre dans la navigation. Absente : page hors navigation. */
   actif?: PageEnseignant;
-  /** Une tuile à gauche du titre (icône du secteur, comme dans l'arène). */
+  /**
+   * Une tuile à gauche du titre (pictogramme du secteur, comme dans l'arène).
+   * C'est ELLE qui porte la couleur du secteur, et elle seule : le surtitre
+   * prenait aussi cette couleur, et « PILOTAGE DE PARTIE · INDUSTRIE » en bleu
+   * parlait une autre langue que les surtitres en laiton du reste du site.
+   */
   tuile?: React.ReactNode;
-  /** Couleur du surtitre : celle du secteur quand la page en a un. */
-  accent?: string;
   liens?: { etablissement?: boolean; administration?: boolean };
   /** Pastilles et frise à droite du titre. */
   droite?: React.ReactNode;
@@ -57,7 +59,7 @@ export function EnTeteEnseignant({
         <div className="flex items-center gap-3">
           {tuile}
           <div>
-            <p className={`text-xs uppercase tracking-[0.3em] ${accent}`}>{surtitre}</p>
+            <p className="text-xs uppercase tracking-annonce text-amber-400">{surtitre}</p>
             <h1 className="text-2xl font-bold text-slate-50">{titre}</h1>
           </div>
         </div>
@@ -112,7 +114,7 @@ export function EnTeteEnseignant({
 export function Rubrique({ children, note }: { children: React.ReactNode; note?: string }) {
   return (
     <div className="flex items-baseline gap-3 pt-2">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">{children}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-surtitre text-amber-400">{children}</h2>
       {note ? <span className="text-xs text-slate-400">{note}</span> : null}
       <span aria-hidden className="h-px flex-1 bg-white/10" />
     </div>

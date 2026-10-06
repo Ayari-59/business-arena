@@ -68,7 +68,7 @@ export default async function ConceptsPage() {
     <>
       <main id="main" className="mx-auto max-w-3xl space-y-8 p-6">
         <header>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Business Arena</p>
           <h1 className="mt-1 text-2xl font-bold">Fiches notions</h1>
           <p className="mt-2 text-base text-slate-400">
             Les notions de gestion communes à tous les secteurs du jeu, de l&apos;atelier au
@@ -80,7 +80,7 @@ export default async function ConceptsPage() {
         </header>
         {domains.map((domain) => (
           <section key={domain}>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-annonce text-slate-400">
               {DOMAIN_LABELS[domain] ?? domain}
             </h2>
             <div className="space-y-3">

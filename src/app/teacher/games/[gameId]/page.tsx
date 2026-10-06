@@ -22,6 +22,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { Icone } from "@/components/icone";
+import { PictoSecteur } from "@/components/picto-secteur";
 import {
   archiverPartieAction,
   creerLesCodesManquantsAction,
@@ -132,13 +133,17 @@ export default async function TeacherGamePage({
     <main id="main" className="mx-auto max-w-4xl space-y-4 px-2 py-6 sm:space-y-6 sm:p-6">
       <EnTeteEnseignant
         surtitre={`Pilotage de partie · ${SECTOR_LABELS[view.sector]}`}
-        accent={SECTOR_COLORS[view.sector].accent}
         tuile={
+          // LA TUILE DE L'ARÈNE, TELLE QUELLE. Elle portait l'emoji du
+          // scénario (🔊 pour NOVA), dessiné par le système ; l'arène des
+          // élèves avait déjà son pictogramme de secteur. L'enseignant voit
+          // désormais la même tuile que ses élèves, et c'est elle seule qui
+          // porte la couleur du secteur : le surtitre reste en laiton.
           <span
             aria-hidden
-            className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${SECTOR_COLORS[view.sector].bg}`}
+            className={`flex h-12 w-12 items-center justify-center rounded-xl ${SECTOR_COLORS[view.sector].bg} ${SECTOR_COLORS[view.sector].accent}`}
           >
-            {view.scenarioIcon}
+            <PictoSecteur secteur={view.sector} className="h-7 w-7" />
           </span>
         }
         titre={view.scenarioTitle}
@@ -157,7 +162,7 @@ export default async function TeacherGamePage({
               Niveau {view.difficulty.level} · {view.difficulty.name}
             </p>
             <p className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
-              {view.variableWorld ? "🌍 Monde variable" : "Monde figé"}
+              {view.variableWorld ? "Monde variable" : "Monde figé"}
             </p>
             <FriseDesTours
               roundsCount={view.roundsCount}
@@ -171,12 +176,16 @@ export default async function TeacherGamePage({
 
       {/*
         LE TICKET. Le code d'invitation est la seule chose que l'enseignant
-        écrit au tableau : il a sa carte à lui, en pointillé comme un billet à
-        détacher, et il se lit de loin.
+        écrit au tableau : il a sa carte à lui, et il se lit de loin. Elle
+        était en pointillé, comme un billet à détacher ; le pointillé est,
+        partout ailleurs dans l'application, le signe d'un repli fermé, et la
+        carte la plus importante de la page passait pour un tiroir à ouvrir.
+        Son cadre est plein, en laiton : c'est le code, en chasse fixe, qui en
+        fait un billet.
       */}
       <section
         aria-label="Code d'invitation"
-        className="carte flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-dashed border-amber-400/40 px-4 py-4 sm:px-6"
+        className="carte flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-amber-400/40 px-4 py-4 sm:px-6"
       >
         {/* LE CODE ET SON QR, ENSEMBLE. Le QR encode la même entrée que le
             code — `/join?code=…` — mais la remplit d'avance : l'élève qui
@@ -185,10 +194,10 @@ export default async function TeacherGamePage({
             la page de projection qui l'affiche pour la salle. */}
         <div className="flex items-center gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Code d&apos;invitation</p>
+            <p className="text-xs uppercase tracking-annonce text-amber-400">Code d&apos;invitation</p>
             <p
               id="code-invitation"
-              className="mt-1 font-mono text-3xl font-bold tracking-[0.2em] text-amber-300"
+              className="mt-1 font-mono text-3xl font-bold tracking-surtitre text-amber-300"
             >
               {view.joinCode}
             </p>
@@ -197,7 +206,7 @@ export default async function TeacherGamePage({
             <CodeQr
               valeur={urlDeJonction(view.joinCode)}
               description={`QR code d'entrée dans la partie, code ${view.joinCode}`}
-              className="h-20 w-20 shrink-0 rounded"
+              className="h-20 w-20 shrink-0 rounded-md"
             />
           ) : null}
         </div>
@@ -217,7 +226,7 @@ export default async function TeacherGamePage({
               href={`/teacher/games/${gameId}/projection`}
               className="text-xs text-amber-300 underline-offset-4 hover:underline"
             >
-              <Icone nom="projeter" /> Projeter pour la classe →
+              <Icone nom="ecran" /> Projeter pour la classe →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/fiches`}
@@ -233,7 +242,7 @@ export default async function TeacherGamePage({
               href={`/teacher/games/${gameId}/cartons`}
               className="text-xs text-amber-300 underline-offset-4 hover:underline"
             >
-              <Icone nom="carton" /> Cartons de table →
+              <Icone nom="etiquette" /> Cartons de table →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/observation`}
@@ -248,7 +257,8 @@ export default async function TeacherGamePage({
       {view.planCapped ? (
         <section className="rounded-xl border border-amber-400/40 bg-amber-950/20 p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-amber-300">
-            🔒 Version gratuite — la partie s&apos;est arrêtée avant la fin
+            <Icone nom="verrou" className="mr-1.5 h-4 w-4" />
+            Version gratuite — la partie s&apos;est arrêtée avant la fin
           </h2>
           <p className="mt-1 max-w-3xl text-xs text-amber-200/80">
             Le palier gratuit s&apos;arrête au tour {view.currentRound} sur {view.roundsCount}.
@@ -261,7 +271,8 @@ export default async function TeacherGamePage({
       {defaillantes.length > 0 ? (
         <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-red-300">
-            ⚠️ {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
+            <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
+            {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
           </h2>
           <p className="mt-1 text-xs text-red-200/80">
             Deux tours consécutifs de cessation de paiements. L&apos;activité est gelée (ni
@@ -319,7 +330,7 @@ export default async function TeacherGamePage({
                   <td className="py-2 pr-3">
                     {t.name}
                     {t.controller === "bot" ? (
-                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
+                      <span className="ml-2 rounded-md bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
                         bot{t.botPersonality ? ` · ${t.botPersonality}` : ""}
                       </span>
                     ) : null}
@@ -336,7 +347,7 @@ export default async function TeacherGamePage({
                         {estParDefaut(t.decisionSource) ? (
                           <span
                             title="Prix et volume validés sans modification des valeurs proposées"
-                            className="ml-2 rounded bg-orange-950/60 px-1.5 py-0.5 text-xs text-orange-300"
+                            className="ml-2 rounded-md bg-orange-950/60 px-1.5 py-0.5 text-xs text-orange-300"
                           >
                             par défaut
                           </span>
@@ -454,8 +465,8 @@ export default async function TeacherGamePage({
           <div className="mb-3 mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-amber-400/25 bg-amber-950/10 px-3 py-2">
             <span className="text-xs text-slate-300">
               {dernierTourClos.rankingRevealed
-                ? `🎬 Classement du ${periodLabel(view.roundDays, dernierTourClos.index)} révélé aux élèves.`
-                : `🎬 Les élèves ne voient pas encore le classement du ${periodLabel(view.roundDays, dernierTourClos.index)}.`}
+                ? `Classement du ${periodLabel(view.roundDays, dernierTourClos.index)} révélé aux élèves.`
+                : `Les élèves ne voient pas encore le classement du ${periodLabel(view.roundDays, dernierTourClos.index)}.`}
             </span>
             <GuardedForm
               action={setRankingRevealedAction.bind(null, view.gameId)}
@@ -493,7 +504,8 @@ export default async function TeacherGamePage({
                   {row.name}
                   {row.defaillant ? (
                     <span className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
-                      ⚠️ Défaillante
+                      <Icone nom="alerte" className="mr-1 h-3 w-3" />
+                      Défaillante
                     </span>
                   ) : null}
                 </span>
@@ -635,7 +647,8 @@ export default async function TeacherGamePage({
                 className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400"
                 title="Réservé à l'offre établissement"
               >
-                🔒 Export tableur · offre établissement
+                <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+                Export tableur · offre établissement
               </span>
             )}
           </div>
@@ -716,7 +729,7 @@ export default async function TeacherGamePage({
           <Rubrique note="réglages à toucher une fois">Régler</Rubrique>
           <section className="carte space-y-2 p-3 sm:p-5">
       {!finished ? (
-        <Tiroir icone="questions"
+        <Tiroir icone="document"
         titre="Questions posées dans les situations" quoi={QUIZ_MODES.find((m) => m.code === view.quizMode)?.name}>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
@@ -757,7 +770,8 @@ export default async function TeacherGamePage({
           </div>
           {/* Le format des réponses : cocher, ou écrire. Indépendant du mode ci-dessus. */}
           <p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-400">
-            ✍️ Format des réponses
+            <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+            Format des réponses
           </p>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {ANSWER_FORMATS.map((f) => {
@@ -794,7 +808,7 @@ export default async function TeacherGamePage({
         </Tiroir>
       ) : null}
       {!finished ? (
-        <Tiroir icone="questions"
+        <Tiroir icone="document"
         titre="Situations manquées" quoi={MISSED_POLICY_LABELS[view.missedPolicy]}>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
@@ -908,7 +922,7 @@ export default async function TeacherGamePage({
                     <tr key={r.index} className="border-t border-white/5">
                       <td className="py-2 pr-3 align-middle whitespace-nowrap">
                         <span className="font-semibold text-slate-200">Tour {r.index}</span>
-                        <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
+                        <span className="ml-2 rounded-md bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
                           {ROUND_STATUS_LABEL[r.status] ?? r.status}
                         </span>
                       </td>
@@ -965,7 +979,7 @@ export default async function TeacherGamePage({
         champ vide. Personne d'autre ne le voit : ni les élèves, ni le
         classement, ni le relevé de notes.
       */}
-      <Tiroir icone="nommer"
+      <Tiroir icone="ecrire"
         titre="Nommer cette partie" quoi={view.label ?? "sans nom"}>
         <GuardedForm
           action={nommerLaPartieAction.bind(null, gameId)}

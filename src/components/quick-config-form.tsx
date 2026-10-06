@@ -8,6 +8,9 @@ import {
   VITRINE_SOLO_PAR_DEFAUT,
   type VitrineSolo,
 } from "@/config/vitrine-solo";
+import { Icone } from "@/components/icone";
+import { PictoSecteur } from "@/components/picto-secteur";
+import type { Sector } from "@/config/scenarios/registry";
 
 /**
  * Les champs de la configuration rapide, en version tactile : cartes de secteur,
@@ -26,8 +29,13 @@ import {
 
 export interface QuickScenario {
   code: string;
-  /** Le pictogramme du scénario (pas seulement celui du secteur : deux NOVA se ressemblent). */
-  icon: string;
+  /**
+   * Le secteur, pour son pictogramme dessiné. Il n'y a qu'une tuile par
+   * famille (NOVA en un produit ou en gamme se choisit au niveau) : le dessin
+   * du secteur suffit à les distinguer, là où un emoji par scénario changeait
+   * d'aspect d'un appareil à l'autre.
+   */
+  secteur: Sector;
   /** Le nom court du scénario (« NOVA · gamme »). */
   label: string;
   /** Le secteur, en légende de la tuile. */
@@ -145,7 +153,10 @@ export function QuickConfigFields({
                   : "border-white/10 bg-slate-950 hover:-translate-y-0.5 hover:border-white/25"
               }`}
             >
-              <span className="text-2xl leading-none">{s.icon}</span>
+              <PictoSecteur
+                secteur={s.secteur}
+                className={`h-7 w-7 ${on ? "text-amber-300" : "text-slate-300"}`}
+              />
               <span className="text-xs font-semibold leading-tight text-slate-100">{s.label}</span>
               <span className="text-xs leading-tight text-slate-400">{s.sector}</span>
               {regle.active ? (
@@ -205,7 +216,7 @@ export function QuickConfigFields({
               }`}
             >
               {l.level}
-              {reserve ? <span aria-hidden> 🔒</span> : null}
+              {reserve ? <Icone nom="verrou" className="ml-1 h-3 w-3" /> : null}
             </button>
           );
         })}
@@ -215,10 +226,10 @@ export function QuickConfigFields({
         // entreprise offre, et où s'adresser.
         <div
           data-niveaux-reserves
-          className="mt-2 rounded-lg border border-amber-400/25 bg-amber-950/20 px-3 py-2.5 text-[13px] leading-snug text-amber-100/90"
+          className="mt-2 rounded-lg border border-amber-400/25 bg-amber-950/20 px-3 py-2.5 text-sm leading-snug text-amber-100/90"
         >
           <p>
-            <span aria-hidden>🔒 </span>
+            <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
             <strong className="font-semibold text-amber-100">{messageNiveauxReserves(regle)}</strong>{" "}
             {scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "L'entreprise vitrine"} se
             joue à tous les niveaux.
@@ -235,11 +246,11 @@ export function QuickConfigFields({
           ) : null}
         </div>
       ) : null}
-      <p className="mt-2 min-h-[2.5em] text-[13px] leading-snug text-slate-300">{cur?.tagline}</p>
+      <p className="mt-2 min-h-[2.5em] text-sm leading-snug text-slate-300">{cur?.tagline}</p>
       {sec?.variante ? (
         // Le niveau décide de la variante jouée : on le dit à côté du curseur,
         // là où le choix se fait, avec ce que l'autre variante attend.
-        <p className="mt-1 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[13px] leading-snug text-amber-100/90" data-variante>
+        <p className="mt-1 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-sm leading-snug text-amber-100/90" data-variante>
           {level >= sec.variante.gammeFromLevel
             ? `À ce niveau, ${sec.label} se joue en gamme : ${sec.variante.gamme}. En dessous du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.mono}.`
             : `À ce niveau, ${sec.label} se joue avec ${sec.variante.mono}. À partir du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.gamme}.`}
@@ -322,10 +333,10 @@ export function QuickConfigFields({
       </div>
 
       {/* Récap vivant */}
-      <p className="mt-4 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2.5 text-[13px] text-slate-300">
+      <p className="mt-4 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2.5 text-sm text-slate-300">
         Vous lancez :{" "}
         <span className="font-semibold text-slate-100">
-          {sec?.icon} {sec?.label}
+          {sec?.label}
         </span>{" "}
         · {per.short} · <span className="font-semibold text-slate-100">{comp.value}</span> entreprises ·{" "}
         <span className="font-semibold text-slate-100">{round.label.toLowerCase()}</span> · Niveau{" "}

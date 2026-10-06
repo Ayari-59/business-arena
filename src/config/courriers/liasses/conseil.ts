@@ -21,7 +21,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Répondre suppose des consultants disponibles : un carnet plein est une bonne nouvelle qu'on ne peut pas toujours saisir.",
     nature: "market",
     pli: "simple",
-    emoji: "📑",
+    icone: "fiche",
     scope: "market",
   },
   {
@@ -36,7 +36,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Dans les services, la capacité part le soir avec les salariés : la politique salariale est une décision industrielle.",
     nature: "internal",
     pli: "recommande",
-    emoji: "🚪",
+    icone: "personne",
     scope: "team",
   },
   {
@@ -50,7 +50,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Les salaires tombent même quand le carnet est vide : c'est tout le risque d'une structure de coûts rigide.",
     nature: "macro",
     pli: "simple",
-    emoji: "🧊",
+    icone: "baisse",
     scope: "market",
   },
   {
@@ -65,7 +65,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "La qualité livrée est le premier canal commercial du conseil : elle rapporte au tour suivant, pas au tour même.",
     nature: "market",
     pli: "simple",
-    emoji: "🗣️",
+    icone: "communication",
     scope: "market",
   },
   {
@@ -80,7 +80,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Des frais refacturés au forfait qui dérapent, ce sont des points de marge perdus sur chaque journée vendue.",
     nature: "macro",
     pli: "email",
-    emoji: "🚄",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -95,7 +95,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Le marché s'ouvre pour tout le monde en même temps : le gagnant est celui qui a les consultants disponibles.",
     nature: "macro",
     pli: "simple",
-    emoji: "⚖️",
+    icone: "balance",
     scope: "market",
   },
   {
@@ -109,7 +109,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Un métier sans immobilisations finance son BFR par le découvert : le poste clients devient le vrai sujet.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -124,7 +124,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Face à un concurrent mieux armé, s'aligner sur les prix ou se différencier : les deux stratégies ne coûtent pas au même endroit.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏙️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -139,7 +139,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "C'est exactement le risque que couvre la responsabilité civile professionnelle : la prime valait-elle son prix ?",
     nature: "internal",
     pli: "recommande",
-    emoji: "⚠️",
+    icone: "balance",
     scope: "team",
   },
   {
@@ -153,7 +153,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Dans un métier dont tout l'actif est immatériel, la donnée EST l'outil de production.",
     nature: "internal",
     pli: "email",
-    emoji: "🔒",
+    icone: "verrou",
     scope: "team",
   },
   {
@@ -167,7 +167,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "L'investissement méthodologique n'apparaît nulle part au bilan : il se lit dans le taux d'occupation.",
     nature: "market",
     pli: "simple",
-    emoji: "🏆",
+    icone: "trophee",
     scope: "team",
   },
   {
@@ -181,7 +181,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Un carnet de commandes est une garantie : dans les services, on finance la confiance, pas les murs.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -196,7 +196,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Un cabinet à 100 % d'occupation ne peut pas dire oui : garder de la marge de manœuvre a une valeur.",
     nature: "market",
     pli: "email",
-    emoji: "🚨",
+    icone: "telephone",
     scope: "team",
   },
   {
@@ -210,7 +210,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "La prospection est une charge immédiate pour un chiffre d'affaires différé : c'est un pari, pas une dépense.",
     nature: "market",
     pli: "simple",
-    emoji: "🤝",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -224,7 +224,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & plan de continuité d'activité",
     nature: "internal",
     pli: "email",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -238,7 +238,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "email",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -252,7 +252,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -266,7 +266,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Face à un prix plus bas, on vend autre chose que du temps : la garantie, la continuité, l'équipe.",
     nature: "competition",
     pli: "simple",
-    emoji: "💻",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -281,7 +281,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Sur un marché à appel d'offres, la référence pèse plus que le prix : c'est un actif qui se construit mission après mission.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏛️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -295,7 +295,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Un canal d'apport d'affaires vaut un commercial : il coûte une commission ou une exclusivité, jamais rien.",
     nature: "market",
     pli: "simple",
-    emoji: "🤝",
+    icone: "accord",
     scope: "team",
   },
   {
@@ -309,7 +309,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     enJeu: "Dans les services, la capacité est humaine : elle part le vendredi soir, et la concurrence le sait.",
     nature: "competition",
     pli: "interne",
-    emoji: "🎣",
+    icone: "equipes",
     scope: "team",
   },
   {
@@ -324,7 +324,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Une subvention crée de la demande ; elle ne crée pas de consultants : la contrainte se déplace vers la capacité.",
     nature: "macro",
     pli: "simple",
-    emoji: "🏗️",
+    icone: "argent",
     scope: "market",
   },
   {
@@ -339,7 +339,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Un signe n'est pas une commande : recruter ou s'équiper à l'avance coûte, mais attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "🔭",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -354,7 +354,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Pouvez-vous servir ce volume ? Recruter, sous-traiter ou vous équiper : lequel coûte le moins sur trois tours ?",
     nature: "market",
     pli: "simple",
-    emoji: "🏢",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -369,7 +369,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -384,7 +384,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "📣",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -399,7 +399,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
     nature: "market",
     pli: "simple",
-    emoji: "📉",
+    icone: "baisse",
     scope: "market",
   },
 ];

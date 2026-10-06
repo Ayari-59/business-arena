@@ -7,6 +7,7 @@ import {
 import { Embleme } from "@/components/embleme";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import type { GameView } from "@/services/game-view.service";
+import { Icone } from "@/components/icone";
 
 const initial: ChoixEquipeState = { error: null };
 
@@ -48,7 +49,7 @@ export function ChoixEquipe({
   return (
     <section className="carte p-3 sm:p-5">
       <h2 className="text-sm font-semibold text-slate-100">
-        <span aria-hidden className="mr-1.5">👥</span>
+        <Icone nom="equipes" className="mr-1.5 h-4 w-4 text-amber-400" />
         Composition des équipes
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-slate-400">

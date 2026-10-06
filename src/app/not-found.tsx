@@ -24,7 +24,7 @@ export default function NotFound() {
       id="main"
       className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 py-12 text-center"
     >
-      <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-300">Erreur 404</p>
+      <p className="text-sm font-semibold uppercase tracking-annonce text-amber-300">Erreur 404</p>
       <h1 className="mt-3 text-3xl font-bold text-slate-50">Cette page n&apos;existe pas</h1>
       <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
         L&apos;adresse est peut-être erronée, ou la page a été déplacée. Si vous

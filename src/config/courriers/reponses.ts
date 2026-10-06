@@ -69,7 +69,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "Un licenciement n'est pas une ligne qu'on retire d'un tableau : il se motive, il se notifie, et il se conteste.",
     nature: "internal",
     pli: "recommande",
-    emoji: "⚖️",
+    icone: "balance",
     scope: "team",
   },
   {
@@ -84,7 +84,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "Embaucher coûte tout de suite et rapporte plus tard. C'est pour cela que le moteur ne met les nouveaux au travail qu'au tour suivant.",
     nature: "internal",
     pli: "interne",
-    emoji: "👥",
+    icone: "equipes",
     scope: "team",
   },
   {
@@ -99,7 +99,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "Une hausse de prix se voit toujours. La question n'est pas si le client la remarque, mais s'il a ailleurs où aller.",
     nature: "market",
     pli: "simple",
-    emoji: "📈",
+    icone: "hausse",
     scope: "team",
   },
   {
@@ -114,7 +114,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "Baisser le prix augmente presque toujours le volume. Cela n'augmente le résultat que si le volume gagné couvre la marge perdue.",
     nature: "internal",
     pli: "interne",
-    emoji: "📉",
+    icone: "baisse",
     scope: "team",
   },
   {
@@ -129,7 +129,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "L'entretien est la dépense la plus facile à supprimer et la plus chère à rattraper : elle ne se voit pas ce tour-ci, elle se paie au suivant.",
     nature: "internal",
     pli: "email",
-    emoji: "🔧",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -144,7 +144,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "La qualité se coupe en un tour et se reconstruit en plusieurs : la réputation met plus de temps à remonter qu'à descendre.",
     nature: "market",
     pli: "email",
-    emoji: "📮",
+    icone: "colis",
     scope: "team",
   },
   {
@@ -159,7 +159,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "Un emprunt soulage la trésorerie le jour où on le prend et la grève tous les trimestres suivants. L'échéance ne se négocie pas quand elle tombe.",
     nature: "internal",
     pli: "simple",
-    emoji: "🏦",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -174,7 +174,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "On ne distribue pas deux fois le même euro : ce qui part aux associés ne finance plus l'entreprise.",
     nature: "internal",
     pli: "interne",
-    emoji: "💶",
+    icone: "argent",
     scope: "team",
   },
   {
@@ -189,7 +189,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
       "Un engagement ne vaut que s'il tient dans la durée : celui qu'on abandonne coûte plus cher que celui qu'on n'a pas pris.",
     nature: "macro",
     pli: "simple",
-    emoji: "🌱",
+    icone: "feuille",
     scope: "team",
   },
 ];

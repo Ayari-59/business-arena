@@ -71,7 +71,7 @@ export function RetourDeLEpisode({
 
   return (
     <>
-      <section aria-labelledby="robustesse-titre" className="carte grid gap-3 p-5">
+      <section aria-labelledby="robustesse-titre" className="carte grid scroll-mt-24 gap-3 p-5">
         <h2 id="robustesse-titre" className="text-lg font-bold text-slate-50">
           Vos choix tenaient-ils ?
         </h2>
@@ -82,7 +82,7 @@ export function RetourDeLEpisode({
         </ul>
       </section>
 
-      <section aria-labelledby="observe-titre" className="carte grid gap-3 p-5">
+      <section aria-labelledby="observe-titre" className="carte grid scroll-mt-24 gap-3 p-5">
         <h2 id="observe-titre" className="text-lg font-bold text-slate-50">
           Ce que cet épisode a observé
         </h2>
@@ -100,7 +100,7 @@ export function RetourDeLEpisode({
         </p>
       </section>
 
-      <section aria-labelledby="ensuite-titre" className="carte grid gap-3 p-5">
+      <section aria-labelledby="ensuite-titre" className="carte grid scroll-mt-24 gap-3 p-5">
         <h2 id="ensuite-titre" className="text-lg font-bold text-slate-50">
           Ensuite
         </h2>

@@ -113,7 +113,7 @@ function CeQuOnYTravaille({ d }: { d: ScenarioDefinition }) {
   const arbitrages = arbitragesDe(d);
   return (
     <dl className="mt-4 grid gap-4 border-t border-white/10 pt-4 sm:grid-cols-[8.5rem_1fr] sm:gap-x-6 sm:gap-y-3">
-      <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">Notions</dt>
+      <dt className="text-xs uppercase tracking-surtitre text-slate-400">Notions</dt>
       <dd className="m-0 flex flex-wrap items-baseline gap-x-2 gap-y-1.5 text-sm text-slate-300">
         {notions.tetes.map((n, i) => (
           <span key={n.code}>
@@ -133,10 +133,10 @@ function CeQuOnYTravaille({ d }: { d: ScenarioDefinition }) {
         ) : null}
       </dd>
 
-      <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">Arbitrages</dt>
+      <dt className="text-xs uppercase tracking-surtitre text-slate-400">Arbitrages</dt>
       <dd className="m-0 text-sm text-slate-300">{arbitrages.join(" · ")}</dd>
 
-      <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">Indicateurs</dt>
+      <dt className="text-xs uppercase tracking-surtitre text-slate-400">Indicateurs</dt>
       <dd className="m-0 flex flex-wrap items-baseline gap-x-2 gap-y-1.5 text-sm text-slate-300">
         {d.kpis.map((k, i) => (
           // Ce que mesure l'indicateur reste accessible : l'infobulle pour la
@@ -158,7 +158,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
   return (
     <article
       id={d.code}
-      className={`group relative scroll-mt-24 overflow-hidden rounded-2xl border border-white/10 bg-slate-900 transition ${a.bord}`}
+      className={`group relative scroll-mt-24 overflow-hidden carte transition ${a.bord}`}
     >
       <div
         aria-hidden
@@ -235,14 +235,14 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
               défilement rendu au lecteur.
             */}
             <p className="mt-5 text-base leading-relaxed text-slate-300">
-              <span className="text-xs uppercase tracking-[0.25em] text-slate-400">
+              <span className="text-xs uppercase tracking-annonce text-slate-400">
                 En arrivant ·{" "}
               </span>
               {d.context}
             </p>
 
             <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+              <p className="text-xs uppercase tracking-annonce text-slate-400">
                 Le premier arbitrage
               </p>
               <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
@@ -298,7 +298,7 @@ export default async function EntreprisesPage() {
           contraste={c("entreprises.accroche")}
           interieur="mx-auto max-w-6xl px-6 py-14"
         >
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs uppercase tracking-annonce text-amber-400">
             {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
           </p>
           <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
@@ -319,13 +319,21 @@ export default async function EntreprisesPage() {
             maison, et deux représentations du même métier sur un seul écran.
           */}
           <div className="mt-8 flex flex-wrap gap-2">
+            {/*
+              DES PASTILLES NEUTRES, LA COULEUR AU SEUL PICTOGRAMME. Chacune
+              prenait le fond, le trait et l'encre de son secteur : neuf teintes
+              en rang faisaient un arc-en-ciel qui concurrençait le laiton dès
+              le haut de la page. La couleur du secteur reste sur le dessin, qui
+              suffit à la reconnaître. Et elles font 44 pixels de haut, la
+              taille d'un doigt : elles mènent chacune à une fiche.
+            */}
             {SCENARIO_CHOICES.map((d) => (
               <a
                 key={d.code}
                 href={`#${d.code}`}
-                className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
+                className="flex min-h-11 items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-500"
               >
-                <PictoSecteur secteur={d.sector} className="h-3.5 w-3.5" />
+                <PictoSecteur secteur={d.sector} className={`h-4 w-4 ${accentsDe(d).texte}`} />
                 {nomSeul(d)}
               </a>
             ))}
@@ -337,7 +345,7 @@ export default async function EntreprisesPage() {
           */}
           <div className="mt-8 flex max-w-3xl flex-col gap-4 rounded-lg border border-amber-400/30 bg-amber-400/5 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">
+              <p className="text-xs font-semibold uppercase tracking-etiquette text-amber-300">
                 Nouveau · Pour les entreprises
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">

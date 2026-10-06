@@ -21,7 +21,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Votre trafic dépend d'un intermédiaire qui fixe ses règles seul : la base de clients fidèles est la seule qui vous appartienne.",
     nature: "macro",
     pli: "email",
-    emoji: "📉",
+    icone: "communication",
     scope: "market",
   },
   {
@@ -36,7 +36,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Un retour coûte deux transports et une remise en stock, pour zéro chiffre d'affaires : c'est de la marge pure qui part.",
     nature: "internal",
     pli: "interne",
-    emoji: "📦",
+    icone: "colis",
     scope: "team",
   },
   {
@@ -50,7 +50,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Vous avez encaissé, mais vous n'avez pas livré : la promesse de délai fait partie du produit.",
     nature: "macro",
     pli: "email",
-    emoji: "🚚",
+    icone: "camion",
     scope: "market",
   },
   {
@@ -64,7 +64,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Un pic gratuit ne profite qu'à ceux qui ont le stock ET la capacité de préparer : l'aubaine se prépare.",
     nature: "market",
     pli: "simple",
-    emoji: "🎬",
+    icone: "communication",
     scope: "market",
   },
   {
@@ -78,7 +78,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Un canal qui apporte du volume mais dicte ses conditions : dépendre d'un seul intermédiaire a un prix.",
     nature: "competition",
     pli: "email",
-    emoji: "🏷️",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -93,7 +93,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "La marge par commande se comprime sans que le prix affiché bouge : offrir les frais de port n'est jamais gratuit.",
     nature: "macro",
     pli: "email",
-    emoji: "⛽",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -107,7 +107,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Un pure player finance son stock par le découvert : le coût de l'argent devient un coût d'exploitation.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -121,7 +121,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "L'import direct coûte moins cher à l'achat et beaucoup plus cher en délai : le prix n'est pas le seul critère.",
     nature: "internal",
     pli: "email",
-    emoji: "🚢",
+    icone: "colis",
     scope: "team",
   },
   {
@@ -135,7 +135,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Quand la boutique EST le site, l'assurance cyber n'est pas une option de confort.",
     nature: "internal",
     pli: "email",
-    emoji: "🔒",
+    icone: "verrou",
     scope: "team",
   },
   {
@@ -149,7 +149,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Le stock d'un pure player est son actif principal : ce que couvre la formule étendue.",
     nature: "internal",
     pli: "simple",
-    emoji: "💧",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -163,7 +163,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Un client qui vient sans publicité coûte zéro euro d'acquisition : c'est là que se trouve la vraie marge.",
     nature: "market",
     pli: "simple",
-    emoji: "📰",
+    icone: "communication",
     scope: "team",
   },
   {
@@ -177,7 +177,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Une base de clients qui revient est une garantie : elle vaut mieux qu'un entrepôt à l'actif.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -192,7 +192,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Une commande B2B ne coûte rien en acquisition : la marge y est mécaniquement supérieure.",
     nature: "market",
     pli: "recommande",
-    emoji: "📋",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -207,7 +207,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Tout le monde a la même hausse de demande : l'écart se fait sur le stock disponible et la capacité d'expédition.",
     nature: "market",
     pli: "simple",
-    emoji: "🛒",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -221,7 +221,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & maintenance préventive",
     nature: "internal",
     pli: "email",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -235,7 +235,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "email",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -249,7 +249,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -263,7 +263,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Un coût d'acquisition qui double le temps d'une promo concurrente : il vaut parfois mieux couper que suivre.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏷️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -277,7 +277,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "La livraison gratuite n'est pas gratuite : quelqu'un la paie, et ce n'est pas toujours le client.",
     nature: "competition",
     pli: "simple",
-    emoji: "📦",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -291,7 +291,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu: "Un client fidèle coûte dix fois moins qu'un client acquis : la rétention est la publicité la moins chère.",
     nature: "market",
     pli: "email",
-    emoji: "⭐",
+    icone: "etoile",
     scope: "team",
   },
   {
@@ -306,7 +306,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Une boutique en ligne dépend de prestataires qu'elle ne contrôle pas : le risque opérationnel se contractualise.",
     nature: "internal",
     pli: "email",
-    emoji: "💳",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -321,7 +321,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Une taxe sur les achats est un coût variable : elle remonte le seuil, et la question est de la répercuter ou non.",
     nature: "macro",
     pli: "simple",
-    emoji: "🛃",
+    icone: "balance",
     scope: "market",
   },
   {
@@ -336,7 +336,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "👀",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -351,7 +351,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
     nature: "market",
     pli: "simple",
-    emoji: "🛍️",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -366,7 +366,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -381,7 +381,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "🏭",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -396,7 +396,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
     nature: "market",
     pli: "simple",
-    emoji: "📉",
+    icone: "baisse",
     scope: "market",
   },
 ];

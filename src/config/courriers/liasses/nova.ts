@@ -21,7 +21,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Votre marge sur coût variable se comprime : où passe votre seuil de rentabilité ?",
     nature: "macro",
     pli: "email",
-    emoji: "📈",
+    icone: "hausse",
     scope: "market",
   },
   {
@@ -35,7 +35,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "La maintenance était-elle à la hauteur ? La capacité est une ressource fragile.",
     nature: "internal",
     pli: "interne",
-    emoji: "🔧",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -49,7 +49,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Un pic de demande ne profite qu'à ceux qui ont du stock : anticipation !",
     nature: "market",
     pli: "simple",
-    emoji: "🚀",
+    icone: "communication",
     scope: "market",
   },
   {
@@ -63,7 +63,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Une part de marché se prend au moment où elle se libère, pas après.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏳️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -77,7 +77,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Votre marge de sécurité absorbe-t-elle une baisse de 10 % des ventes ?",
     nature: "macro",
     pli: "simple",
-    emoji: "🌧️",
+    icone: "baisse",
     scope: "market",
   },
   {
@@ -91,7 +91,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Un segment élastique au prix : la bonne offre au bon moment.",
     nature: "market",
     pli: "simple",
-    emoji: "🎓",
+    icone: "planning",
     scope: "market",
   },
   {
@@ -105,7 +105,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Le premium se gagne par la qualité perçue, pas par le prix seul.",
     nature: "market",
     pli: "simple",
-    emoji: "💎",
+    icone: "communication",
     scope: "market",
   },
   {
@@ -119,7 +119,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "L'effet de levier joue dans les deux sens : dette chère, rentabilité fragile.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -133,7 +133,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Le bon moment pour financer par emprunt… si le projet crée de la valeur.",
     nature: "macro",
     pli: "simple",
-    emoji: "🕊️",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -147,7 +147,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Marge sur coût variable élargie : produire plus, ou marger plus ?",
     nature: "market",
     pli: "email",
-    emoji: "📦",
+    icone: "colis",
     scope: "market",
   },
   {
@@ -161,7 +161,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Dépendre d'un seul fournisseur est un risque qui se paie.",
     nature: "internal",
     pli: "recommande",
-    emoji: "⚖️",
+    icone: "balance",
     scope: "team",
   },
   {
@@ -175,7 +175,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Quand tout le monde produit moins, qui a du stock vend.",
     nature: "macro",
     pli: "simple",
-    emoji: "❄️",
+    icone: "meteo",
     scope: "market",
   },
   {
@@ -189,7 +189,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "La capacité n'est pas qu'une machine : c'est aussi un collectif.",
     nature: "internal",
     pli: "interne",
-    emoji: "💪",
+    icone: "equipes",
     scope: "team",
   },
   {
@@ -203,7 +203,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "La relation fournisseur est un actif : elle élargit la marge sur coût variable.",
     nature: "internal",
     pli: "email",
-    emoji: "🤝",
+    icone: "accord",
     scope: "team",
   },
   {
@@ -217,7 +217,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "La confiance bancaire se construit : elle se lit dans vos comptes.",
     nature: "internal",
     pli: "simple",
-    emoji: "🏛️",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -231,7 +231,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Une trésorerie mal pilotée coûte deux fois : le découvert, puis la sanction.",
     nature: "internal",
     pli: "recommande",
-    emoji: "🧾",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -245,7 +245,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Un nouveau marché se sert avec de la capacité : qui peut produire plus, vendra plus.",
     nature: "market",
     pli: "simple",
-    emoji: "✈️",
+    icone: "monde",
     scope: "market",
   },
   {
@@ -260,7 +260,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "L'assurance échange un coût certain (la prime) contre un risque incertain : c'est un arbitrage d'espérance.",
     nature: "macro",
     pli: "recommande",
-    emoji: "🌪️",
+    icone: "meteo",
     scope: "market",
   },
   {
@@ -274,7 +274,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "La continuité d'activité est un actif invisible, jusqu'au jour où elle manque.",
     nature: "internal",
     pli: "email",
-    emoji: "💻",
+    icone: "verrou",
     scope: "team",
   },
   {
@@ -288,7 +288,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "55 € couvre-t-il votre coût variable ? Les coûts pertinents décident, pas l'habitude.",
     nature: "market",
     pli: "recommande",
-    emoji: "🏷️",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -302,7 +302,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai.",
     nature: "market",
     pli: "recommande",
-    emoji: "🏗️",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -318,7 +318,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Une opportunité ne se saisit qu'avec du stock ou de la capacité disponible : l'anticipation paie.",
     nature: "market",
     pli: "recommande",
-    emoji: "📋",
+    icone: "fiche",
     scope: "team",
   },
   {
@@ -333,7 +333,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "La maintenance préventive coûte. Ne pas la faire coûte bien plus — en capacité perdue et en ventes manquées.",
     nature: "internal",
     pli: "email",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -347,7 +347,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "L'investissement ne sert pas qu'à produire plus : il sert aussi à ne pas produire moins.",
     nature: "internal",
     pli: "email",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -361,7 +361,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Racheter un actif d'occasion : un investissement rapide, mais quel effet sur la capacité réelle ?",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -376,7 +376,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "S'aligner coûte de la marge, tenir coûte du volume : chiffrez les deux avant de choisir, ne suivez pas par réflexe.",
     nature: "competition",
     pli: "simple",
-    emoji: "🥊",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -391,7 +391,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Un segment sensible au prix se détourne vite : ce que vaut votre marque se mesure au moment où on la copie.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏴‍☠️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -405,7 +405,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     enJeu: "Un canal partenaire prélève sa commission : le volume est là, la marge par unité, moins.",
     nature: "market",
     pli: "simple",
-    emoji: "📑",
+    icone: "fiche",
     scope: "market",
   },
   {
@@ -420,7 +420,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Une compétence clé est une capacité : quand elle part, l'atelier produit moins sans qu'aucune machine ne tombe.",
     nature: "internal",
     pli: "interne",
-    emoji: "🚪",
+    icone: "personne",
     scope: "team",
   },
   {
@@ -435,7 +435,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "La qualité perçue se paie d'avance et se récolte plus tard : c'est le rendement différé du budget qualité.",
     nature: "market",
     pli: "simple",
-    emoji: "🏆",
+    icone: "trophee",
     scope: "team",
   },
   {
@@ -450,7 +450,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "👀",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -465,7 +465,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
     nature: "market",
     pli: "simple",
-    emoji: "🏬",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -480,7 +480,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "💶",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -495,7 +495,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "📣",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -510,7 +510,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
     nature: "market",
     pli: "simple",
-    emoji: "📉",
+    icone: "baisse",
     scope: "market",
   },
 ];

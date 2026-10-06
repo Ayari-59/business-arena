@@ -20,7 +20,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Une demande qui gonfle d'un coup teste d'abord votre capacité, pas votre force commerciale.",
     nature: "macro",
     pli: "simple",
-    emoji: "🏠",
+    icone: "argent",
     scope: "market",
   },
   {
@@ -34,7 +34,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Les devis signés le sont à prix ferme : la hausse se prend entièrement sur votre marge.",
     nature: "macro",
     pli: "email",
-    emoji: "📦",
+    icone: "colis",
     scope: "market",
   },
   {
@@ -48,7 +48,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Les compagnons sont payés pendant l'arrêt : une journée d'intempérie coûte le salaire sans la recette.",
     nature: "market",
     pli: "simple",
-    emoji: "🌧️",
+    icone: "meteo",
     scope: "market",
   },
   {
@@ -62,7 +62,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Du volume à prix tiré, payé très tard : la question n'est pas de gagner, mais de savoir le financer.",
     nature: "market",
     pli: "simple",
-    emoji: "📋",
+    icone: "fiche",
     scope: "market",
   },
   {
@@ -77,7 +77,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Quand la demande recule, le seuil de rentabilité ne bouge pas : c'est la marge de sécurité qui s'évapore.",
     nature: "macro",
     pli: "simple",
-    emoji: "🏦",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -91,7 +91,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Reprendre le chantier d'un autre, c'est hériter de ses malfaçons : regardez avant de signer.",
     nature: "competition",
     pli: "simple",
-    emoji: "🚪",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -105,7 +105,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Un métier qui finance trois mois de clients paie chaque point de taux beaucoup plus cher qu'un autre.",
     nature: "macro",
     pli: "recommande",
-    emoji: "📉",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -119,7 +119,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "C'est exactement ce que couvre une responsabilité civile professionnelle : la prime se juge ici.",
     nature: "internal",
     pli: "simple",
-    emoji: "💧",
+    icone: "assurance",
     scope: "team",
   },
   {
@@ -134,7 +134,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Sans outillage, les compagnons sont payés à attendre : la capacité est plus fragile qu'elle n'en a l'air.",
     nature: "internal",
     pli: "simple",
-    emoji: "🔒",
+    icone: "verrou",
     scope: "team",
   },
   {
@@ -149,7 +149,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "La non-qualité se paie deux fois : la reprise, puis les chantiers que la réputation ne rapporte plus.",
     nature: "internal",
     pli: "recommande",
-    emoji: "🧱",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -163,7 +163,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Dans le bâtiment, la réputation se construit lentement et vaut plus qu'un budget de publicité.",
     nature: "market",
     pli: "simple",
-    emoji: "🏅",
+    icone: "communication",
     scope: "team",
   },
   {
@@ -178,7 +178,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Ce sont les capitaux propres qui portent la dette : tant qu'ils la couvrent, la banque suit. C'est exactement la limite qu'elle vous applique quand vous empruntez.",
     nature: "macro",
     pli: "simple",
-    emoji: "🤝",
+    icone: "banque",
     scope: "team",
   },
   {
@@ -192,7 +192,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Une commande ferme se sert sur la capacité restante : acceptez-la si les équipes suivent, pas avant.",
     nature: "market",
     pli: "simple",
-    emoji: "📞",
+    icone: "telephone",
     scope: "team",
   },
   {
@@ -206,7 +206,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Risque opérationnel & maintenance préventive",
     nature: "internal",
     pli: "email",
-    emoji: "🛑",
+    icone: "outil",
     scope: "team",
   },
   {
@@ -220,7 +220,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Cycle de vie des actifs & veille technologique",
     nature: "internal",
     pli: "simple",
-    emoji: "⏳",
+    icone: "duree",
     scope: "team",
   },
   {
@@ -234,7 +234,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Décision d'investissement & coût d'opportunité",
     nature: "internal",
     pli: "simple",
-    emoji: "🏭",
+    icone: "usine",
     scope: "team",
   },
   {
@@ -249,7 +249,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Un devis moins cher cache souvent une charge en moins : la vôtre se paie, et c'est ce qu'il faut savoir expliquer.",
     nature: "competition",
     pli: "simple",
-    emoji: "🔨",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -264,7 +264,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Sur appel d'offres, la taille rassure l'acheteur : la réponse d'une PME est la réactivité et la proximité.",
     nature: "competition",
     pli: "simple",
-    emoji: "🏢",
+    icone: "resultats",
     scope: "market",
   },
   {
@@ -278,7 +278,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     enJeu: "Un chantier bien fini est un commercial gratuit : la qualité se rentabilise sur le suivant.",
     nature: "market",
     pli: "simple",
-    emoji: "🗣️",
+    icone: "communication",
     scope: "team",
   },
   {
@@ -293,7 +293,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "La capacité d'une entreprise de bâtiment, c'est aussi celui qui organise : un goulot invisible sur le planning.",
     nature: "internal",
     pli: "recommande",
-    emoji: "🩹",
+    icone: "personne",
     scope: "team",
   },
   {
@@ -308,7 +308,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Une norme relève le coût variable de tous les concurrents à la fois : celui qui la répercute le premier perd des devis, le dernier perd de la marge.",
     nature: "macro",
     pli: "simple",
-    emoji: "📐",
+    icone: "balance",
     scope: "market",
   },
   {
@@ -323,7 +323,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
     nature: "market",
     pli: "email",
-    emoji: "🔭",
+    icone: "loupe",
     scope: "market",
   },
   {
@@ -338,7 +338,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Pouvez-vous tenir ce volume ? Mobiliser plus d'équipes, sous-traiter ou investir dans du matériel : lequel coûte le moins sur trois trimestres ?",
     nature: "market",
     pli: "simple",
-    emoji: "🏘️",
+    icone: "accord",
     scope: "market",
   },
   {
@@ -353,7 +353,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
     nature: "macro",
     pli: "simple",
-    emoji: "💶",
+    icone: "banque",
     scope: "market",
   },
   {
@@ -368,7 +368,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
     nature: "competition",
     pli: "simple",
-    emoji: "🏗️",
+    icone: "concurrence",
     scope: "market",
   },
   {
@@ -383,7 +383,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
       "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
     nature: "market",
     pli: "simple",
-    emoji: "🔻",
+    icone: "baisse",
     scope: "market",
   },
 ];

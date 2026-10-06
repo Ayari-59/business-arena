@@ -161,7 +161,7 @@ export function BarreDeJeu({
       {enTete ? (
         <div className="flex items-center justify-between gap-3 px-4 pb-1 text-sm">
           <p
-            className={`flex shrink-0 items-center gap-2 rounded-full py-0.5 pl-2 pr-3 font-semibold uppercase tracking-[0.14em] ${PHASES[enTete.phase].texte} ${PHASES[enTete.phase].teinte}`}
+            className={`flex shrink-0 items-center gap-2 rounded-full py-0.5 pl-2 pr-3 font-semibold uppercase tracking-etiquette ${PHASES[enTete.phase].texte} ${PHASES[enTete.phase].teinte}`}
           >
             <span
               aria-hidden
@@ -207,7 +207,7 @@ export function BarreDeJeu({
         id={id}
         className={`absolute inset-x-2 top-full mt-1 ${ouvert ? "block" : "hidden"}`}
       >
-        <div className="carte max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-2">
+        <div className="carte max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl p-2">
           <Link href={cockpit} className={lien}>
             Cockpit de prévision
           </Link>

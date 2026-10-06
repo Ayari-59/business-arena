@@ -7,6 +7,7 @@ import {
   lectureDuResultat,
   type Lecture,
 } from "@/components/lecture-des-comptes";
+import { Icone } from "@/components/icone";
 
 /**
  * Les comptes du tour, en clair et GRATUITS (doc 02 §7.3 : ce sont VOS
@@ -97,7 +98,8 @@ function LigneDeLecture({ lecture }: { lecture: Lecture }) {
       <span className="sr-only">
         {lecture.ton === "mauvais" ? "Point de vigilance. " : lecture.ton === "bon" ? "Lecture favorable. " : ""}
       </span>
-      🧭 {lecture.texte}
+      <Icone nom="idee" className="mr-1.5 h-4 w-4" />
+      {lecture.texte}
     </p>
   );
 }
@@ -176,8 +178,9 @@ export function FinancialStatements({
 
   return (
     <section className="mt-4 space-y-2" aria-label="Vos comptes du tour">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        🧾 Vos comptes du tour · lisez-les comme un dirigeant
+      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <Icone nom="document" className="h-3.5 w-3.5 text-amber-400" />
+        Vos comptes du tour · lisez-les comme un dirigeant
       </p>
 
       <Panel title="Compte de résultat" defaultOpen resume={`résultat net ${euro(cr.netIncome)}`}>

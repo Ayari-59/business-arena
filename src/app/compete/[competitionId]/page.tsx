@@ -25,7 +25,7 @@ export default async function PlayerCompetitionPage({
     <main id="main" className="mx-auto max-w-4xl space-y-6 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Concours</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Concours</p>
           <h1 className="text-2xl font-bold">{view.name}</h1>
           {myTeamLabel ? (
             <p className="mt-1 text-sm text-slate-400">

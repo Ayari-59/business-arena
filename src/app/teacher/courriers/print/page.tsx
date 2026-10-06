@@ -9,6 +9,7 @@ import { LETTRES_DE_MISSION } from "@/config/courriers/mission";
 import { COURRIERS_EN_RETOUR } from "@/config/courriers/reponses";
 import { SCENARIOS, scenarioByCode } from "@/config/scenarios/registry";
 import { Courriel, Enveloppe, Lettre, Message } from "@/components/courrier";
+import { Icone } from "@/components/icone";
 
 /**
  * LA LIASSE À IMPRIMER : chaque courrier est un pli — l'enveloppe d'un côté,
@@ -154,7 +155,8 @@ function PliVierge({ liasse, nomDeLaLiasse }: { liasse: Liasse; nomDeLaLiasse: s
                 Expéditeur
               </span>
               <span className="whitespace-nowrap rounded-full border border-slate-500/50 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-300">
-                ✍️ Lettre vierge
+                <Icone nom="ecrire" className="mr-1 h-3 w-3" />
+                Lettre vierge
               </span>
             </div>
             <div className="h-6 border-b border-white/20" />
@@ -168,12 +170,10 @@ function PliVierge({ liasse, nomDeLaLiasse }: { liasse: Liasse; nomDeLaLiasse: s
             </p>
             <div className="h-6 border-b border-white/20" />
             <div className="mt-auto flex items-end justify-between border-t border-white/5 pt-1.5">
-              <span className="text-xs uppercase tracking-[0.15em] text-slate-500">
+              <span className="text-xs uppercase tracking-etiquette text-slate-500">
                 {nomDeLaLiasse ?? "Business Arena"} · lettre vierge
               </span>
-              <span className="text-base" aria-hidden>
-                ✍️
-              </span>
+              <Icone nom="ecrire" className="h-4 w-4 text-slate-400" />
             </div>
           </div>
         </div>
@@ -273,7 +273,7 @@ function LiasseAImprimer() {
       <header className="print-header no-print">
         <div>
           <p className="print-kicker">Business Arena · Animation de classe · {titre}</p>
-          <h1>📬 Liasse de courrier à imprimer</h1>
+          <h1>Liasse de courrier à imprimer</h1>
           {/*
             LE CHOIX DE LA LIASSE, SUR LA PAGE.
             Il ne vivait que dans l'adresse. Le lien de la page de partie la
@@ -350,14 +350,15 @@ function LiasseAImprimer() {
           </p>
         </div>
         <button type="button" className="print-button" onClick={() => window.print()}>
-          🖨️ Imprimer
+          <Icone nom="imprimer" className="mr-1.5 h-4 w-4" />
+          Imprimer
         </button>
       </header>
 
       {duMarche.length > 0 ? (
         <section>
           <h2 className="print-liasse-title no-print">
-            🌍 Courrier de marché · {duMarche.length} plis (toute la classe)
+            Courrier de marché · {duMarche.length} plis (toute la classe)
             {avecVierge ? " + 1 lettre vierge" : ""}
           </h2>
           {feuilles(duMarche, "market")}
@@ -367,7 +368,7 @@ function LiasseAImprimer() {
       {adresses.length > 0 ? (
         <section className={duMarche.length > 0 ? "print-break" : undefined}>
           <h2 className="print-liasse-title no-print">
-            🎯 Plis adressés · {adresses.length} plis (une entreprise à la fois)
+            Plis adressés · {adresses.length} plis (une entreprise à la fois)
             {avecVierge ? " + 1 lettre vierge" : ""}
           </h2>
           <p className="print-help no-print">

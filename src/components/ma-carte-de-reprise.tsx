@@ -44,7 +44,7 @@ export function MaCarteDeReprise({
     >
       <div className="flex flex-col gap-4 px-3 pb-3 sm:flex-row sm:flex-wrap sm:items-start">
         <div className="min-w-0 flex-1">
-          <p className="whitespace-nowrap font-mono text-2xl tracking-[0.15em] text-amber-200">
+          <p className="whitespace-nowrap font-mono text-2xl tracking-etiquette text-amber-200">
             {formaterCodeDeReprise(code)}
           </p>
           <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-slate-300">
@@ -78,7 +78,7 @@ export function MaCarteDeReprise({
             description="QR code personnel : il vous rend votre place dans la partie"
             className="h-28 w-28"
           />
-          <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
+          <span className="text-xs uppercase tracking-surtitre text-slate-400">
             à garder
           </span>
         </div>

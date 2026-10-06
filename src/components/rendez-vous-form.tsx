@@ -216,7 +216,7 @@ export function RendezVousForm({
         )}
       </div>
 
-      <div className="min-w-0 space-y-4 rounded-2xl border border-amber-400/25 bg-amber-950/10 p-6">
+      <div className="min-w-0 space-y-4 rounded-xl border border-amber-400/25 bg-amber-950/10 p-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">Qui appeler</p>
         <p className="text-sm text-slate-300" aria-live="polite">
           {heureChoisie && jourChoisi ? (

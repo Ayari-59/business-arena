@@ -378,8 +378,6 @@ export interface GameView {
   /** Code du scénario joué : « rejouer » doit pouvoir rouvrir le MÊME métier. */
   scenarioCode: string;
   sector: import("@/config/scenarios/registry").Sector;
-  /** Le pictogramme du scénario joué (NOVA en un produit et NOVA · gamme n'ont pas le même). */
-  scenarioIcon: string;
   /**
    * Noms des segments du snapshot joué, par code. Sans cela le tableau du
    * marché retomberait sur les codes bruts dès qu'on quitte NOVA.
@@ -1734,7 +1732,6 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     vocabulary: scenarioDef.vocabulary,
     scenarioCode: snapshot.code,
     sector: scenarioDef.sector,
-    scenarioIcon: scenarioDef.icon,
     // Tous les segments que le moteur simule : en gamme, ceux de chaque
     // produit (le marché du scénario n'en est que le premier).
     segmentNames: Object.fromEntries(

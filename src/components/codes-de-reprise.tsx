@@ -45,7 +45,7 @@ export function CodesDeReprise({
               <span className="text-amber-200">{c.teamLabel}</span>
               {c.pseudo ? <span className="text-slate-400"> · {c.pseudo}</span> : null}
             </span>
-            <span className="font-mono tracking-[0.15em] text-slate-200">
+            <span className="font-mono tracking-etiquette text-slate-200">
               {formaterCodeDeReprise(c.code)}
             </span>
           </li>

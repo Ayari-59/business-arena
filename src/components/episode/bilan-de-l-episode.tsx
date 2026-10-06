@@ -165,6 +165,40 @@ function LEnchainement({ e, kE }: { e: Enchainement; kE: (v: number) => string }
   );
 }
 
+/**
+ * LE SOMMAIRE DU BILAN. Le bilan empile huit blocs, dont deux longues listes en
+ * prose, et rien ne disait où était quoi : on le lisait en faisant défiler. Le
+ * sommaire nomme les blocs dans leur ordre et y mène ; il se tient sur une
+ * ligne, en petits liens, pour ne pas peser plus que le titre qu'il suit.
+ */
+function Sommaire({ nombre }: { nombre: number }) {
+  const liens = [
+    ["#hasard-titre", "Le hasard"],
+    ["#manieres-titre", "D'autres manières de décider"],
+    ["#decisions-titre", `Vos ${EN_LETTRES[nombre]} décisions`],
+    ["#comportements-titre", "Comportements et axe de travail"],
+    ["#robustesse-titre", "Vos choix tenaient-ils ?"],
+    ["#observe-titre", "Ce que l'épisode a observé"],
+    ["#ensuite-titre", "Ensuite"],
+  ] as const;
+  return (
+    <nav aria-label="Sommaire du bilan" className="text-sm">
+      <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-400">
+        {liens.map(([href, nom]) => (
+          <li key={href}>
+            <a
+              href={href}
+              className="underline decoration-slate-600 underline-offset-4 hover:text-amber-300 hover:decoration-amber-400"
+            >
+              {nom}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 const EN_LETTRES = ["zéro", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit"];
 
 export function BilanDeLEpisode({
@@ -204,7 +238,7 @@ export function BilanDeLEpisode({
   return (
     <div className="grid gap-5">
       <header>
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
+        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
           Bilan de l&apos;épisode · niveau {niveauParCode(partie.niveau).nom} · hasard n°{" "}
           {partie.graine}
         </p>
@@ -217,6 +251,8 @@ export function BilanDeLEpisode({
           C&apos;est la qualité de vos décisions qui compte, pas ce hasard.
         </p>
       </header>
+
+      <Sommaire nombre={ep.etapes.length} />
 
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {tuiles.map((u) => (
@@ -252,10 +288,10 @@ export function BilanDeLEpisode({
         reperes={reperesDesDecisions(ep, ep.etapes.length)}
         imprevus={ep.imprevus(partie.graine)}
       />
-      <section aria-labelledby="hasard-titre" className="grid gap-2">
+      <section aria-labelledby="hasard-titre" className="grid scroll-mt-24 gap-2">
         <h2
           id="hasard-titre"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400"
+          className="text-xs font-semibold uppercase tracking-etiquette text-slate-400"
         >
           Ce que le hasard vous a réservé
         </h2>
@@ -268,8 +304,8 @@ export function BilanDeLEpisode({
         </ul>
       </section>
 
-      <section className="carte grid gap-4 p-5">
-        <h2 className="text-lg font-bold text-slate-50">
+      <section aria-labelledby="manieres-titre" className="carte grid scroll-mt-24 gap-4 p-5">
+        <h2 id="manieres-titre" className="text-lg font-bold text-slate-50">
           Le même trimestre, le même hasard, d&apos;autres manières de décider
         </h2>
         <ul className="grid gap-2.5">
@@ -283,9 +319,9 @@ export function BilanDeLEpisode({
               >
                 {b.nom}
               </span>
-              <span className="h-3.5 overflow-hidden rounded bg-slate-800">
+              <span className="h-3.5 overflow-hidden rounded-md bg-slate-800">
                 <span
-                  className={`block h-full rounded ${"vous" in b ? "bg-amber-400" : "bg-slate-500"}`}
+                  className={`block h-full rounded-md ${"vous" in b ? "bg-amber-400" : "bg-slate-500"}`}
                   style={{ width: `${largeur(b.valeur)}%` }}
                 />
               </span>
@@ -298,8 +334,8 @@ export function BilanDeLEpisode({
         <p className="max-w-2xl text-sm text-slate-400">{ep.bilan.noteDesBarres}</p>
       </section>
 
-      <section className="carte grid gap-4 p-5">
-        <h2 className="text-lg font-bold text-slate-50">
+      <section aria-labelledby="decisions-titre" className="carte grid scroll-mt-24 gap-4 p-5">
+        <h2 id="decisions-titre" className="text-lg font-bold text-slate-50">
           Vos {EN_LETTRES[ep.etapes.length]} décisions : ce qui relevait du choix, ce qui relevait
           du hasard
         </h2>
@@ -393,8 +429,10 @@ export function BilanDeLEpisode({
         </p>
       </section>
 
-      <section className="carte grid gap-3 p-5">
-        <h2 className="text-lg font-bold text-slate-50">Comportements observés</h2>
+      <section aria-labelledby="comportements-titre" className="carte grid scroll-mt-24 gap-3 p-5">
+        <h2 id="comportements-titre" className="text-lg font-bold text-slate-50">
+          Comportements observés
+        </h2>
         <ul className="grid gap-2">
           {constats.map((c) => (
             <li
@@ -415,7 +453,7 @@ export function BilanDeLEpisode({
           ))}
         </ul>
         <div className="rounded-lg border border-amber-400/40 bg-amber-400/10 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-300">
+          <p className="text-xs font-semibold uppercase tracking-etiquette text-amber-300">
             Votre axe de travail
           </p>
           <p className="mt-1 font-display text-lg font-semibold text-slate-50">{axe.titre}</p>

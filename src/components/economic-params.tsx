@@ -127,7 +127,7 @@ export function EconomicParams({
 
       <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
-          ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
+          Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
 
         <p className="mt-3 text-sm leading-relaxed text-slate-400">
@@ -177,7 +177,7 @@ export function EconomicParams({
 
       <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
-          📊 Pondérations de l&apos;IPG (avancé) · laissez vide pour les poids du scénario
+          Pondérations de l&apos;IPG (avancé) · laissez vide pour les poids du scénario
         </summary>
 
         <p className="mt-3 text-sm leading-relaxed text-slate-400">

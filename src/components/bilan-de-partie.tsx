@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { formatEuro } from "@/lib/format";
+import { Icone } from "@/components/icone";
 import type { Bilan } from "@/pedagogy/bilan-de-partie";
 
 /**
@@ -20,6 +21,7 @@ import type { Bilan } from "@/pedagogy/bilan-de-partie";
  */
 export function BilanDePartie({
   titre,
+  victoire = false,
   bilan,
   reussites,
   place,
@@ -27,8 +29,13 @@ export function BilanDePartie({
   record = null,
   children,
 }: {
-  /** « 🏆 Victoire ! … » ou « Partie terminée » : la phrase de tête. */
+  /** « Victoire ! … » ou « Partie terminée » : la phrase de tête. */
   titre: string;
+  /**
+   * La première place : la coupe se dessine au-dessus du titre. Elle était un
+   * emoji collé à la phrase, que chaque téléphone peignait à sa façon.
+   */
+  victoire?: boolean;
   bilan: Bilan;
   /** Ce que l'équipe a réussi, et la dernière en date pour la nommer. */
   reussites: { acquises: number; total: number; derniere: string | null };
@@ -48,6 +55,9 @@ export function BilanDePartie({
 }) {
   return (
     <section className="carte border-amber-400/30 p-4 sm:p-6">
+      {victoire ? (
+        <Icone nom="trophee" className="mx-auto mb-2 block h-8 w-8 text-amber-300" />
+      ) : null}
       <h2 className="text-center text-xl font-bold text-amber-300">{titre}</h2>
       <p className="mt-1 text-center text-sm text-slate-400">
         {bilan.tours} tours joués, de l&apos;ouverture à la clôture.
