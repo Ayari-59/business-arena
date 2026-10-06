@@ -49,7 +49,7 @@ describe("les refus", () => {
 
   it("trois bandes à contre-jour sur une page sont refusées", () => {
     const fautes = validerContrastes(
-      avec({ "accueil.boucle": true, "accueil.commencer": true }),
+      avec({ "accueil.hero": true, "accueil.boucle": true, "accueil.commencer": true }),
     );
     expect(fautes.join("\n")).toMatch(
       /Accueil : 4 bandes à contre-jour, 2 au plus/,
@@ -120,13 +120,13 @@ describe("la lecture d'un thème enregistré", () => {
   it("ne garde que ce qui désigne une bande réelle et diffère de l'origine", () => {
     const lu = normaliserTheme({
       contrastes: {
-        "accueil.hero": false, // diffère : gardé
+        "accueil.hero": true, // diffère : gardé
         "accueil.chiffres": true, // identique à l'origine : jeté
         "bande.disparue": true, // inconnue : jetée
         "accueil.boucle": "oui", // pas un booléen : jeté
       },
     });
-    expect(lu.contrastes).toEqual({ "accueil.hero": false });
+    expect(lu.contrastes).toEqual({ "accueil.hero": true });
   });
 
   it("survit à une valeur absente ou absurde", () => {
@@ -146,7 +146,7 @@ describe("la lecture d'un thème enregistré", () => {
   it("une bande ajoutée demain reçoit son état d'origine, pas un état figé", () => {
     // Le réglage stocke des ÉCARTS : une bande absente du réglage suit toujours
     // le registre. Une carte complète figerait l'état du jour d'enregistrement.
-    const theme = themeDepuisEtat(avec({ "accueil.hero": false }));
+    const theme = themeDepuisEtat(avec({ "accueil.hero": true }));
     for (const b of BANDES) {
       if (b.id === "accueil.hero") continue;
       expect(contrasteDeLaBande(theme, b.id), b.id).toBe(b.contrasteParDefaut);
@@ -254,10 +254,10 @@ describe("la palette d'accent", () => {
   });
 
   it("se règle sans toucher au thème d'ouverture ni aux bandes", () => {
-    const theme = themeDepuisEtat(avec({ "accueil.hero": false, "accueil.boucle": true }), "sombre", "lagune");
+    const theme = themeDepuisEtat(avec({ "accueil.hero": true, "accueil.chiffres": false }), "sombre", "lagune");
     expect(theme.parDefaut).toBe("sombre");
     expect(theme.palette).toBe("lagune");
-    expect(theme.contrastes).toEqual({ "accueil.hero": false, "accueil.boucle": true });
+    expect(theme.contrastes).toEqual({ "accueil.hero": true, "accueil.chiffres": false });
   });
 
   it("refuse un code qui n'est pas une palette du site", () => {

@@ -71,7 +71,11 @@ export const BANDES: readonly BandeDef[] = [
     id: "accueil.hero",
     page: "/",
     nom: "Le titre et la main de cartes",
-    contrasteParDefaut: true,
+    // Claire par défaut : le site s'ouvre en thème clair, et sa première page
+    // s'ouvrait pourtant sur un grand aplat de nuit. Le visiteur croyait être
+    // en thème sombre. Les captures sombres prennent le relais sur ce papier.
+    // L'administrateur peut toujours la remettre à contre-jour.
+    contrasteParDefaut: false,
     porteLeH1: true,
   },
   {

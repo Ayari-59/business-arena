@@ -520,20 +520,17 @@ describe("parcours enseignant et élève", () => {
       ).toBeLessThanOrEqual(Math.round(m.colonne));
     }
 
-    // Et le sol du premier écran est bien l'inverse de celui de la page : une
-    // marque qui s'appelle « Nuit & Laiton » ouvre sur sa nuit.
+    // Et le premier écran suit le thème de la page. Il était à contre-jour :
+    // le site s'ouvrait en thème clair sur un grand aplat de nuit, et le
+    // visiteur se croyait en thème sombre. L'administrateur peut toujours
+    // le remettre à contre-jour ; ce n'est plus l'état d'origine.
     const sols = await prof.evaluate(() => {
       const hero = document.querySelector("main section")!;
-      return {
-        hero: getComputedStyle(hero).backgroundColor,
-        contreJour: hero.classList.contains("contre-jour"),
-        page: getComputedStyle(document.body).backgroundColor,
-      };
+      return { contreJour: hero.classList.contains("contre-jour") };
     });
-    expect(sols.contreJour, "le premier écran n'est pas à contre-jour").toBe(
-      true,
+    expect(sols.contreJour, "le premier écran est encore à contre-jour").toBe(
+      false,
     );
-    expect(sols.hero).not.toBe(sols.page);
   });
 
   it("la liste des ateliers ne déborde pas sur un téléphone", async () => {
