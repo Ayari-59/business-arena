@@ -591,8 +591,10 @@ h1 {
   /* Sur le papier, une ombre noire serait une salissure : moins d'opacité,
      et la teinte de l'encre brune plutôt que du noir pur. */
   --ombre-carte:
-    0 1px 2px rgb(40 30 18 / 0.06),
-    0 10px 28px -16px rgb(40 30 18 / 0.18);
+    0 1px 1px rgb(40 30 18 / 0.07),
+    0 2px 4px rgb(40 30 18 / 0.06),
+    0 14px 30px -14px rgb(40 30 18 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
   --creux-champ: inset 0 1px 2px rgb(40 30 18 / 0.05);
   /* Voir le bloc des reliefs sombres : un reflet ne s'inverse pas. Il faut
      beaucoup plus de blanc pour éclairer une surface presque blanche. */
@@ -724,6 +726,130 @@ h1 {
 [data-theme="clair"] .contre-jour,
 [data-theme="clair"] .ardoise {
   color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------------------
+ * LE RELIEF : LE PAPIER A UN GRAIN, LE TABLEAU EST ENCASTRÉ.
+ *
+ * Un habillage tout en aplats se lit comme un écran, pas comme une salle de
+ * classe. Quatre gestes, tirés de cette salle :
+ *
+ *   · le GRAIN du papier, un bruit fractal très léger sur tout le fond ;
+ *   · les BANDES DE PAPIER : une section publique sur deux passe sur une
+ *     crème plus soutenue, bordée de filets de laiton — la page se lit en
+ *     chapitres plutôt qu'en un seul aplat ;
+ *   · le TABLEAU ENCASTRÉ : une ombre intérieure en haut et en bas, une lueur
+ *     venue d'en haut, la poussière de craie, et pour les bandes un cadre de
+ *     bois, plus épais en bas comme le rebord où l'on pose la craie ; les
+ *     écrans de chiffres de l'arène sont la même ardoise, enfoncée dans le
+ *     papier ;
+ *   · les CARTES et les BOUTONS PLEINS en relief (ombre de carte, plus haut,
+ *     et `.bouton-plein`).
+ *
+ * Les textures sont des SVG en ligne : aucun fichier de plus à charger. Elles
+ * restent sous le seuil où elles se verraient sous le texte — la mesure de
+ * contraste des parcours navigateur passe sur les mêmes pages, et lit les
+ * couleurs, pas les grains. À l'impression, tout redevient plat.
+ * ------------------------------------------------------------------------- */
+:root {
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0 0.12 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --craie: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
+  /* Le bois du cadre du tableau : le haut, puis le rebord de la craie. */
+  --bois: oklch(42% 0.05 65);
+  --bois-rebord: oklch(38% 0.05 65);
+  /* La crème des bandes de papier, et leur filet de laiton. */
+  --creme: oklch(95.8% 0.018 82);
+  --filet-laiton: oklch(80% 0.05 80 / 0.55);
+}
+
+[data-theme="clair"] body {
+  background-image: var(--grain);
+  background-size: 220px;
+  background-repeat: repeat;
+}
+
+/* Une bande de papier sur deux, parmi les sections d'une page publique. Une
+   bande qui pose déjà son propre fond le garde : la règle ne vise que celles
+   qui n'en ont pas. */
+[data-theme="clair"] main > section[data-bande]:not(.contre-jour):not([class*="bg-"]):nth-of-type(even) {
+  background-color: var(--creme);
+  background-image: var(--grain);
+  background-size: 220px;
+  background-repeat: repeat;
+  border-block: 1px solid var(--filet-laiton);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  background-image:
+    radial-gradient(ellipse 70% 90% at 50% 0%, rgb(255 255 255 / 0.07), transparent 70%),
+    var(--craie);
+  background-size: auto, 260px;
+  background-repeat: no-repeat, repeat;
+  box-shadow:
+    inset 0 18px 22px -16px rgb(0 0 0 / 0.65),
+    inset 0 -18px 22px -16px rgb(0 0 0 / 0.55);
+}
+
+/* La bande à contre-jour est un tableau mural : un cadre de bois. */
+[data-theme="clair"] main > section.contre-jour {
+  border-top: 6px solid var(--bois);
+  border-bottom: 10px solid var(--bois-rebord);
+  box-shadow:
+    inset 0 18px 22px -16px rgb(0 0 0 / 0.65),
+    inset 0 -18px 22px -16px rgb(0 0 0 / 0.55),
+    0 4px 10px -4px rgb(40 30 18 / 0.35);
+}
+
+/* L'écran de chiffres est une ardoise enfoncée dans le papier. */
+[data-theme="clair"] .ardoise {
+  box-shadow:
+    inset 0 2px 6px rgb(0 0 0 / 0.55),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06),
+    0 1px 0 rgb(255 255 255 / 0.8),
+    0 6px 14px -8px rgb(40 30 18 / 0.45);
+}
+
+/* La projection est l'ardoise entière : ni enfoncement, ni ombre portée. */
+[data-theme="clair"] main.ardoise {
+  box-shadow: none;
+}
+
+/* Le bouton plein, bombé. L'ombre portée de la grande taille (`shadow-lg`)
+   passe par `--tw-shadow` et se compose avec le reflet. */
+.bouton-plein {
+  background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.14), rgb(0 0 0 / 0.08));
+  box-shadow:
+    var(--tw-shadow, 0 0 #0000),
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 1px 0 rgb(40 30 18 / 0.2);
+}
+
+/* Les cartes cliquables se soulèvent d'un cran au survol. */
+@media (prefers-reduced-motion: no-preference) {
+  a.carte {
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+  a.carte:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@media print {
+  body,
+  section[data-bande],
+  .contre-jour,
+  .ardoise,
+  .bouton-plein {
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+  section[data-bande] {
+    border: 0 !important;
+  }
 }
 
 /* ---------------------------------------------------------------------------

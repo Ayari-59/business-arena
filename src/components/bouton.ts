@@ -40,7 +40,9 @@ const COMMUN =
   "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
 
 const VARIANTES: Record<VarianteDeBouton, string> = {
-  principal: "bg-amber-400 text-slate-950 hover:bg-amber-300",
+  // `bouton-plein` le bombe (voir globals.css) : un reflet en haut, une arête
+  // en bas, comme une touche qu'on enfonce.
+  principal: "bouton-plein bg-amber-400 text-slate-950 hover:bg-amber-300",
   secondaire: "border border-white/15 text-slate-200 hover:border-amber-400/50 hover:bg-white/5",
   laiton: "border border-amber-400/40 text-amber-300 hover:border-amber-400 hover:bg-amber-400/10",
 };
