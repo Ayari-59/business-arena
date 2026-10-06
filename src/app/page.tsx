@@ -257,18 +257,18 @@ function MainDeCartes() {
           nom="decider"
           fond
           pose="left-[2%] top-[11%] -rotate-[9deg]"
-          alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 4 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré, puis le choix du fournisseur."
+          alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 5 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
         />
         <CarteEnMain
           nom="resultats"
           fond
           pose="left-[46%] top-[11%] rotate-[9deg]"
-          alt="Le verdict du tour 3 : 58 188 € de bénéfice, 39 241 € de plus qu'au tour précédent, 1re sur 3 équipes, et deux réussites obtenues."
+          alt="Le verdict du tour 3 : 63 340 € de bénéfice, 36 061 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 80, et deux réussites obtenues."
         />
         <CarteEnMain
           nom="arene"
           pose="left-[24%] top-[4%]"
-          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
+          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 407 000 €, résultat 63 340 €, trésorerie 104 896 €, et le tour en cours à jouer."
         />
       </div>
       {/*

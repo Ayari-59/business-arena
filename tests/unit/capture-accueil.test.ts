@@ -142,9 +142,9 @@ describe("les captures de la page d'accueil", () => {
     for (const alt of alts) expect(alt.length).toBeGreaterThan(40);
     // Les chiffres des textes de remplacement sont ceux des captures : une
     // description qui ne correspond pas à l'image est pire qu'une absence.
-    expect(alts.join(" ")).toContain("399 919");
-    expect(alts.join(" ")).toContain("58 188");
-    expect(alts.join(" ")).toContain("4 500");
+    expect(alts.join(" ")).toContain("407 000");
+    expect(alts.join(" ")).toContain("63 340");
+    expect(alts.join(" ")).toContain("5 500");
   });
 
   it("racontent le même tour, et la légende le dit", () => {
