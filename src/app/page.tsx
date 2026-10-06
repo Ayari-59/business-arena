@@ -108,27 +108,24 @@ export const metadata: Metadata = {
  * les poser en main de cartes : trois images de hauteurs différentes ne
  * forment pas un éventail, elles forment un escalier. Les dimensions sont
  * écrites dans la page, sous forme de rapport — sans elles, la place n'est pas
- * réservée et le texte saute quand les fichiers arrivent. Les six fichiers
- * (trois écrans × deux thèmes) ont ce format.
+ * réservée et le texte saute quand les fichiers arrivent. Les trois fichiers
+ * ont ce format.
  */
 const CARTE = { largeur: 800, hauteur: 1120 };
 
 /**
  * UNE CARTE DE LA MAIN : la capture, posée et tournée.
  *
- * ELLE EXISTE EN DEUX EXEMPLAIRES, ET C'EST LA PAGE QUI CHOISIT. Une capture
- * sombre sur une page sombre est un rectangle d'encre dans de l'encre ; sur la
- * page claire qu'on sert maintenant, la même image est devenue un ÉCRAN, un
- * objet qui s'allume au milieu du papier. On a donc pris les trois écrans une
- * seconde fois, dans l'autre thème, sur la même partie et au même cadrage : la
- * page sombre montre les captures claires, et l'effet se retourne.
+ * UNE SEULE PRISE PAR ÉCRAN. Du temps des deux thèmes, chaque écran avait deux
+ * prises et la page choisissait celle qui s'opposait à son fond. Le site n'a
+ * plus qu'un habillage : la capture montre le papier et ses écrans d'ardoise,
+ * ce qu'un élève verra.
  *
  * Le fichier n'est pas une balise `img` mais un FOND (voir `.capture-decran`
- * dans globals.css) : c'est ce qui permet d'en avoir deux sans les charger
- * tous les deux. Le cadre annonce donc lui-même ce qu'il montre — `role="img"`
- * et son texte — puisqu'un fond n'a pas de texte de remplacement. Et sa forme
- * vient du rapport des deux dimensions, non d'une image qu'on attendrait :
- * la place est réservée avant que le fichier arrive.
+ * dans globals.css). Le cadre annonce donc lui-même ce qu'il montre —
+ * `role="img"` et son texte — puisqu'un fond n'a pas de texte de
+ * remplacement. Et sa forme vient du rapport des deux dimensions, non d'une
+ * image qu'on attendrait : la place est réservée avant que le fichier arrive.
  *
  * PAS DE DÉGRADÉ EN BAS, contrairement au cadrage qu'ont longtemps porté ces
  * captures : une carte a un bord franc, et un bas qui s'éteint laisserait voir
@@ -145,7 +142,7 @@ function CarteEnMain({
   pose,
   fond = false,
 }: {
-  /** Le nom de l'écran : `x.webp` est sa prise sombre, `x-clair.webp` sa claire. */
+  /** Le nom de l'écran : `public/apercus/x.webp`. */
   nom: string;
   alt: string;
   /** Position et angle dans le cadre de la main. */
@@ -167,8 +164,7 @@ function CarteEnMain({
         style={
           {
             aspectRatio: `${CARTE.largeur} / ${CARTE.hauteur}`,
-            "--ecran-sur-page-claire": `url(/apercus/${nom}.webp)`,
-            "--ecran-sur-page-sombre": `url(/apercus/${nom}-clair.webp)`,
+            "--ecran": `url(/apercus/${nom}.webp)`,
           } as React.CSSProperties
         }
       />
@@ -258,18 +254,18 @@ function MainDeCartes() {
           nom="decider"
           fond
           pose="left-[2%] top-[11%] -rotate-[9deg]"
-          alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 5 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
+          alt="L'écran de décision : prix de vente 76 € par enceinte, plan de production 5 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
         />
         <CarteEnMain
           nom="resultats"
           fond
           pose="left-[46%] top-[11%] rotate-[9deg]"
-          alt="Le verdict du tour 3 : 63 340 € de bénéfice, 36 061 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 80, et deux réussites obtenues."
+          alt="Le verdict du tour 3 : 78 149 € de bénéfice, 44 643 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 78, et deux réussites obtenues."
         />
         <CarteEnMain
           nom="arene"
           pose="left-[24%] top-[4%]"
-          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 407 000 €, résultat 63 340 €, trésorerie 104 896 €, et le tour en cours à jouer."
+          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 450 830 €, résultat 78 149 €, trésorerie 113 279 €, et le tour en cours à jouer."
         />
       </div>
       {/*

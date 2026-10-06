@@ -33,22 +33,14 @@ const ACCUEIL = readFileSync(join(RACINE, "src", "app", "page.tsx"), "utf8");
 const GLOBALS = readFileSync(join(RACINE, "src", "app", "globals.css"), "utf8");
 const ECRANS = ["arene", "decider", "resultats"];
 /**
- * Six fichiers : trois écrans, deux thèmes. Le fichier nu est la prise SOMBRE
- * — celle que montre la page claire — et le suffixe `-clair` la prise claire,
- * que montre la page sombre. Les captures vont à contre-courant de la page :
- * sur un fond de même teinte, un écran n'est qu'un rectangle qui s'y fond.
+ * Trois fichiers, un par écran. Il y en a eu six, du temps des deux thèmes :
+ * chaque écran avait une prise sombre et une claire, et la page montrait
+ * celle qui s'opposait à son fond. Le site n'a plus qu'un habillage.
  */
-const JEUX = [
-  { teinte: "sombre", suffixe: "" },
-  { teinte: "claire", suffixe: "-clair" },
-];
-const CAPTURES = JEUX.flatMap(({ teinte, suffixe }) =>
-  ECRANS.map((nom) => ({
-    nom: `${nom}${suffixe}`,
-    teinte,
-    chemin: join(RACINE, "public", "apercus", `${nom}${suffixe}.webp`),
-  })),
-);
+const CAPTURES = ECRANS.map((nom) => ({
+  nom,
+  chemin: join(RACINE, "public", "apercus", `${nom}.webp`),
+}));
 
 /**
  * La taille d'un WebP, lue dans l'image elle-même.
@@ -72,26 +64,17 @@ describe("les captures de la page d'accueil", () => {
       const ko = statSync(chemin).size / 1024;
       expect(ko, `${nom} : ${Math.round(ko)} Ko`).toBeLessThan(150);
     }
-    // Le budget se compte PAR THÈME, parce qu'une visite n'en charge qu'un :
-    // le fond CSS ne télécharge que le fichier retenu. Compter les six
-    // reviendrait à facturer au visiteur des images qu'il ne reçoit pas — et
-    // à interdire le second jeu pour une dépense imaginaire.
-    for (const { teinte, suffixe } of JEUX) {
-      const total =
-        ECRANS.reduce(
-          (s, nom) => s + statSync(join(RACINE, "public", "apercus", `${nom}${suffixe}.webp`)).size,
-          0,
-        ) / 1024;
-      expect(total, `prises ${teinte} : ${Math.round(total)} Ko`).toBeLessThan(300);
-    }
+    // Une visite charge les trois : c'est leur total qui compte.
+    const total = CAPTURES.reduce((s, { chemin }) => s + statSync(chemin).size, 0) / 1024;
+    expect(total, `les trois prises : ${Math.round(total)} Ko`).toBeLessThan(300);
   });
 
   it("sont posées avec leurs dimensions : sans elles, la page saute au chargement", () => {
-    // La page ne nomme plus les fichiers un par un : elle nomme l'écran, et
-    // compose les deux chemins. On vérifie donc les deux gabarits.
+    // La page ne nomme pas les fichiers un par un : elle nomme l'écran, et
+    // compose le chemin.
     for (const nom of ECRANS) expect(ACCUEIL, nom).toContain(`nom="${nom}"`);
     expect(ACCUEIL).toContain("`url(/apercus/${nom}.webp)`");
-    expect(ACCUEIL).toContain("`url(/apercus/${nom}-clair.webp)`");
+    expect(ACCUEIL, "le second jeu de prises est revenu").not.toContain("-clair.webp");
     // Les dimensions sont écrites une fois, dans `CARTE`. Elles l'ont été à
     // deux endroits, du temps où une section du corps de page reprenait les
     // mêmes images — et elles y étaient fausses, 800 déclarés contre 1120
@@ -142,8 +125,8 @@ describe("les captures de la page d'accueil", () => {
     for (const alt of alts) expect(alt.length).toBeGreaterThan(40);
     // Les chiffres des textes de remplacement sont ceux des captures : une
     // description qui ne correspond pas à l'image est pire qu'une absence.
-    expect(alts.join(" ")).toContain("407 000");
-    expect(alts.join(" ")).toContain("63 340");
+    expect(alts.join(" ")).toContain("450 830");
+    expect(alts.join(" ")).toContain("78 149");
     expect(alts.join(" ")).toContain("5 500");
   });
 
@@ -158,19 +141,9 @@ describe("les captures de la page d'accueil", () => {
     }
   });
 
-  it("la page choisit la prise qui s'oppose à son fond", () => {
-    // Une capture sombre sur une page sombre est un rectangle d'encre dans de
-    // l'encre. La règle tient dans les deux sens, et elle vit dans la feuille
-    // de style parce que c'est le seul endroit qui sait quel thème est posé.
-    expect(GLOBALS).toMatch(
-      /\.capture-decran\s*\{[^}]*background-image: var\(--ecran-sur-page-claire\)/,
-    );
-    // Sur le tableau (l'en-tête remis à contre-jour depuis l'admin), la prise
-    // claire : c'est le même renversement, porté par la bande et non plus par
-    // un thème de page.
-    expect(GLOBALS).toMatch(
-      /\[data-theme="clair"\] \.contre-jour \.capture-decran\s*\{[^}]*background-image: var\(--ecran-sur-page-sombre\)/,
-    );
+  it("une seule prise par écran, posée en fond et annoncée comme une image", () => {
+    expect(GLOBALS).toMatch(/\.capture-decran\s*\{[^}]*background-image: var\(--ecran\)/);
+    expect(GLOBALS, "une bascule de prise traîne encore").not.toContain("--ecran-sur-page");
     // Un fond n'a pas de texte de remplacement : sans ces deux attributs, les
     // trois écrans disparaîtraient pour qui ne voit pas la page.
     expect(ACCUEIL).toContain('role="img"');
