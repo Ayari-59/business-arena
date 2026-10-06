@@ -712,6 +712,25 @@ h1 {
 }
 
 /*
+ * LES CARTES DU FOND S'ASSOURDISSENT SELON LE SOL. Sur la nuit, une capture
+ * claire à 60 % recule sans s'éteindre. Sur le papier, la même opacité laisse
+ * passer le fond clair à travers une capture sombre, et la carte devient un
+ * gris sale. Elle y garde donc 85 % : la profondeur tient alors à l'ombre et
+ * à l'angle, plus qu'à la transparence.
+ */
+.carte-du-fond {
+  opacity: 0.6;
+}
+
+[data-theme="clair"] .carte-du-fond {
+  opacity: 0.85;
+}
+
+[data-theme="clair"] .contre-jour .carte-du-fond {
+  opacity: 0.6;
+}
+
+/*
  * SUR UNE PAGE SOMBRE, LE CONTRE-JOUR RESTE NUIT. Il renversait l'échelle et
  * devenait une surface de papier : qui avait choisi le sombre ouvrait l'accueil
  * sur un grand aplat clair, et les captures désaturées de l'en-tête y prenaient

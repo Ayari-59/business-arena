@@ -136,7 +136,8 @@ const CARTE = { largeur: 800, hauteur: 1120 };
  *
  * Les deux cartes du fond sont assourdies (bordure plus pâle, opacité) : c'est
  * ce qui fait une profondeur, sans quoi trois images de même contraste se
- * disputent l'œil.
+ * disputent l'œil. L'opacité dépend du sol, d'où `.carte-du-fond` dans
+ * globals.css plutôt qu'une classe fixe.
  */
 function CarteEnMain({
   nom,
@@ -155,7 +156,7 @@ function CarteEnMain({
     <div
       className={`absolute w-[52%] overflow-hidden rounded-xl border bg-slate-900 shadow-2xl ${pose} ${
         fond
-          ? "border-white/5 opacity-60 shadow-slate-950/60"
+          ? "carte-du-fond border-white/5 shadow-slate-950/60"
           : "border-white/15 shadow-slate-950/70"
       }`}
     >
