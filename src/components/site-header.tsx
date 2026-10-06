@@ -103,7 +103,7 @@ export function SiteHeader() {
   return (
     <header
       ref={cadre}
-      className={`sticky top-0 z-40 border-b border-white/10 bg-slate-950/97 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/92 print:static print:bg-transparent print:hidden ${
+      className={`sticky top-0 z-40 border-b border-white/10 bg-slate-950 print:static print:bg-transparent print:hidden ${
         // Dans l'arène, sur téléphone, la barre d'application de la partie prend
         // sa place (voir barre-de-jeu.tsx) : deux barres se doubleraient.
         enJeu ? "max-sm:hidden" : ""
