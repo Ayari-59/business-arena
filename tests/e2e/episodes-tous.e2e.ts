@@ -37,14 +37,21 @@ async function jouer(page: Page, placeholder: string) {
     }
     const prevision = page.getByRole("spinbutton");
     if ((await prevision.count()) > 0 && !(await prevision.inputValue())) {
-      await prevision.fill(placeholder.replace(",", ".").replace(/\s/g, ""));
+      // Le texte d'exemple s'écrit avec le vrai signe moins, que le champ refuse.
+      await prevision.fill(
+        placeholder.replace(",", ".").replace("−", "-").replace(/\s/g, ""),
+      );
     }
-    const source = page.locator("main button[aria-expanded=false]:not([disabled])").first();
+    const source = page
+      .locator("main button[aria-expanded=false]:not([disabled])")
+      .first();
     if ((await source.count()) > 0 && pas % 3 === 0) {
       await source.click();
       continue;
     }
-    const suite = page.locator("main button.bg-amber-400:not([disabled])").first();
+    const suite = page
+      .locator("main button.bg-amber-400:not([disabled])")
+      .first();
     await suite.click();
   }
   throw new Error("le bilan n'a pas été atteint");
@@ -53,13 +60,17 @@ async function jouer(page: Page, placeholder: string) {
 describe("tous les épisodes", () => {
   for (const ep of EPISODES) {
     it(`${ep.numero} · ${ep.titre}`, async () => {
-      const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
+      const page = await navigateur.newPage({
+        viewport: { width: 1280, height: 900 },
+      });
       const erreurs: string[] = [];
       page.on("pageerror", (e) => erreurs.push(e.message));
       await page.goto(`${BASE}/entreprises/episode/${ep.code}?hasard=7`);
       await page.getByRole("button", { name: "Commencer l'épisode" }).click();
       await jouer(page, ep.prevision.placeholder);
-      expect(await page.getByRole("heading", { level: 1 }).textContent()).toBeTruthy();
+      expect(
+        await page.getByRole("heading", { level: 1 }).textContent(),
+      ).toBeTruthy();
       expect(erreurs).toEqual([]);
       await page.close();
     }, 90_000);
