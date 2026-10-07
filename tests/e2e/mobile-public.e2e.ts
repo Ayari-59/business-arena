@@ -82,7 +82,7 @@ describe("le menu, rangé par public", () => {
     const { contexte, page } = await telephone();
     await ouvrir(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    for (const titre of ["Jouer", "BTS, prépa et DCG", "Écoles de commerce", "Ressources"]) {
+    for (const titre of ["Jouer", "Formations", "Écoles de commerce", "Ressources"]) {
       const groupe = page.locator("#plan-du-site button[aria-controls^='groupe-']", {
         hasText: titre,
       });
