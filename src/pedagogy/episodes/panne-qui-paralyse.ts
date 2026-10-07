@@ -186,7 +186,7 @@ const NATHALIE = { de: "Nathalie Brun", role: "Acheteuse, Ferrand Habitat" } as 
 
 export const EPISODE_CRISE: Episode<Trimestre> = {
   code: "panne-qui-paralyse",
-  numero: 13,
+  numero: 16,
   domaine: "Gestion de crise",
   titre: "La panne qui paralyse",
   resume:

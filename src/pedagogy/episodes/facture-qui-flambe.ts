@@ -178,7 +178,7 @@ export function axe([information, diagnostic, reflexe, calibrage, preuve]: reado
 
 export const EPISODE_ENERGIE: Episode<Trimestre> = {
   code: "facture-qui-flambe",
-  numero: 25,
+  numero: 11,
   domaine: "Énergie et responsabilité environnementale",
   titre: "La facture qui flambe",
   resume:

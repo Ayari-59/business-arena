@@ -197,7 +197,7 @@ const EDITEUR = { de: "Laure Vasseur", role: "Cheffe de projet, éditeur de l'ou
 
 export const EPISODE_CHANGEMENT: Episode<Trimestre> = {
   code: "reorganisation-qui-coince",
-  numero: 10,
+  numero: 28,
   domaine: "Conduite du changement",
   titre: "La réorganisation qui coince",
   resume:

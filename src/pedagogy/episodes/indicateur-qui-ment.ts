@@ -182,7 +182,7 @@ const SIEGE = {
 
 export const EPISODE_INDICATEURS: Episode<Trimestre> = {
   code: "indicateur-qui-ment",
-  numero: 15,
+  numero: 10,
   domaine: "Pilotage par les indicateurs",
   titre: "L'indicateur qui ment",
   resume:

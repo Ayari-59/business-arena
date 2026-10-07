@@ -178,7 +178,7 @@ export function axe([information, diagnostic, reflexe, calibrage, relation]: rea
 
 export const EPISODE_TRESORERIE: Episode<Trimestre> = {
   code: "tresorerie-qui-fond",
-  numero: 11,
+  numero: 9,
   domaine: "Trésorerie et besoin en fonds de roulement",
   titre: "La trésorerie qui fond",
   resume:

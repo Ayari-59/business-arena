@@ -176,7 +176,7 @@ export function axe([information, diagnostic, coupes, calibrage, domaine]: reado
 
 export const EPISODE_BUDGET: Episode<Trimestre> = {
   code: "budget-qui-ne-tient-pas",
-  numero: 4,
+  numero: 7,
   domaine: "Pilotage budgétaire",
   titre: "Le budget qui ne tient pas",
   resume:

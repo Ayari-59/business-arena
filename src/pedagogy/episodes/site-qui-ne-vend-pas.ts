@@ -186,7 +186,7 @@ const ANALYSTE = { de: "Clémence Jaubert", role: "Analyste web" } as const;
 
 export const EPISODE_NUMERIQUE: Episode<Trimestre> = {
   code: "site-qui-ne-vend-pas",
-  numero: 22,
+  numero: 6,
   domaine: "Commerce en ligne",
   titre: "Le site qui ne vend pas",
   resume:

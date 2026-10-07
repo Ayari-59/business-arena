@@ -10,6 +10,13 @@ describe("les familles d'épisodes", () => {
     expect(new Set(ranges).size).toBe(ranges.length);
   });
 
+  it("se lisent dans l'ordre des numéros, de haut en bas de la page", () => {
+    // Les numéros suivaient l'ordre d'écriture, et la page, rangée par
+    // famille, sautait de 1 à 12, puis 16, puis revenait à 4 : des lecteurs
+    // l'ont relevé. Le numéro est maintenant la place sur la page.
+    expect(FAMILLES.flatMap((f) => f.episodes)).toEqual(EPISODES.map((e) => e.code));
+  });
+
   it("ont chacune un code unique et au moins trois épisodes", () => {
     expect(new Set(FAMILLES.map((f) => f.code)).size).toBe(FAMILLES.length);
     for (const f of FAMILLES) expect(f.episodes.length).toBeGreaterThanOrEqual(3);

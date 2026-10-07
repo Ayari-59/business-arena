@@ -171,7 +171,7 @@ const BRUNO = { de: "Bruno Castel", role: "Directeur commercial" } as const;
 
 export const EPISODE_PROJET: Episode<Trimestre> = {
   code: "projet-qui-glisse",
-  numero: 5,
+  numero: 27,
   domaine: "Gestion de projet",
   titre: "Le projet qui glisse",
   resume:

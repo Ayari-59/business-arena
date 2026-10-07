@@ -183,7 +183,7 @@ const AGENCE = { de: "Julien Morel", role: "Chef d'agence, Vénissieux" } as con
 
 export const EPISODE_ACHATS: Episode<Trimestre> = {
   code: "fournisseur-qui-augmente",
-  numero: 6,
+  numero: 8,
   domaine: "Achats et négociation",
   titre: "Le fournisseur qui augmente",
   resume:

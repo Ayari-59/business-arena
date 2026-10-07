@@ -203,7 +203,7 @@ const CREDIT = { de: "Service crédit", role: "Siège" } as const;
 
 export const EPISODE_LANCEMENT: Episode<Trimestre> = {
   code: "agence-qui-demarre",
-  numero: 12,
+  numero: 2,
   domaine: "Développement d'activité",
   titre: "L'agence qui démarre",
   resume:

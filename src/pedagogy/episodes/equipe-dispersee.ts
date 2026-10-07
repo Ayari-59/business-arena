@@ -6,7 +6,8 @@
  * courbe trace, ce sur quoi le bilan le juge, et ce que ses décisions
  * révèlent de lui.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 3 à 7 :
+ * Deux contournements du contrat `Episode`, comme dans les cinq premiers écrits
+ * après l'équipe (dépôt, budget, projet, achats, recrutement) :
  * les suites qui dépendent d'un choix antérieur (le binôme sans entrain sous
  * le boîtier, la réponse d'Ambre, l'atelier sans elle) passent par
  * `evenements().lies`, et `lire` renvoie des clés non affichées (lien,
@@ -184,7 +185,7 @@ const OPHELIE = { de: "Albane Grangier", role: "Technico-commerciale, Rhône sud
 
 export const EPISODE_DISTANCE: Episode<Trimestre> = {
   code: "equipe-dispersee",
-  numero: 29,
+  numero: 21,
   domaine: "Management à distance",
   titre: "L'équipe dispersée",
   resume:

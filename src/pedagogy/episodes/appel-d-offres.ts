@@ -187,7 +187,7 @@ function attribution(t: Trimestre): string {
 
 export const EPISODE_APPEL_OFFRES: Episode<Trimestre> = {
   code: "appel-d-offres",
-  numero: 16,
+  numero: 3,
   domaine: "Réponse aux appels d'offres",
   titre: "L'appel d'offres",
   resume:

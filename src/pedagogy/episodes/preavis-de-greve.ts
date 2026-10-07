@@ -230,7 +230,7 @@ const INTERIM = { de: "Agence d'intérim", role: "Lyon Est" } as const;
 
 export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
   code: "preavis-de-greve",
-  numero: 19,
+  numero: 26,
   domaine: "Dialogue social",
   titre: "Le préavis de grève",
   resume:

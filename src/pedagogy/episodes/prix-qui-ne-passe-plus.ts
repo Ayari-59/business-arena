@@ -183,7 +183,7 @@ const DIRECTION = { de: "Régis Lachaux", role: "Directeur régional" } as const
 
 export const EPISODE_PRIX: Episode<Trimestre> = {
   code: "prix-qui-ne-passe-plus",
-  numero: 17,
+  numero: 4,
   domaine: "Politique tarifaire",
   titre: "Le prix qui ne passe plus",
   resume:

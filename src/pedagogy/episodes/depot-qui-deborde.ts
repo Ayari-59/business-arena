@@ -174,7 +174,7 @@ const MARC = { de: "Marc Perrin", role: "Directeur commercial, Visseries du Daup
 
 export const EPISODE_DEPOT: Episode<Trimestre> = {
   code: "depot-qui-deborde",
-  numero: 3,
+  numero: 13,
   domaine: "Opérations et stocks",
   titre: "Le dépôt qui déborde",
   resume:

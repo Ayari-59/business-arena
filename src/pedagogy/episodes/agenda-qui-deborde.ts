@@ -6,7 +6,8 @@
  * courbe trace, ce sur quoi le bilan le juge, et ce que ses décisions
  * révèlent de lui.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 3 à 7 :
+ * Deux contournements du contrat `Episode`, comme dans les cinq premiers écrits
+ * après l'équipe (dépôt, budget, projet, achats, recrutement) :
  * les suites qui dépendent d'un choix antérieur (le point d'étape de Tariq,
  * l'ouverture du drive, les entretiens menés par les adjoints, la réponse du
  * groupe scolaire) passent par `evenements().lies`, et `lire` renvoie des clés
@@ -189,7 +190,7 @@ const TARIQ = {
 
 export const EPISODE_AGENDA: Episode<Trimestre> = {
   code: "agenda-qui-deborde",
-  numero: 18,
+  numero: 20,
   domaine: "Organisation et délégation",
   titre: "L'agenda qui déborde",
   resume:

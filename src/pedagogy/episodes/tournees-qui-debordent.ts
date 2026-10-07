@@ -5,7 +5,7 @@
  * assemblés ici : ce que le tableau de bord de Farid montre, ce que la courbe
  * trace, ce sur quoi le bilan le juge, et ce que ses décisions révèlent de lui.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 4, 5 et 9 :
+ * Deux contournements du contrat `Episode`, comme dans le budget, le projet et le quai :
  * `lire` renvoie des clés que le tableau de bord n'affiche pas (les livraisons
  * sous-traitées, les livraisons ratées, le départ du grand compte) pour
  * nourrir les messages et les sources ; et ce qui arrive selon les choix
@@ -182,7 +182,7 @@ const DUMONTEL = {
 
 export const EPISODE_TRANSPORT: Episode<Trimestre> = {
   code: "tournees-qui-debordent",
-  numero: 21,
+  numero: 17,
   domaine: "Transport et livraisons",
   titre: "Les tournées qui débordent",
   resume:

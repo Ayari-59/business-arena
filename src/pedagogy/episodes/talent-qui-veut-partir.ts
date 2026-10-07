@@ -6,7 +6,8 @@
  * courbe trace, ce sur quoi le bilan le juge, et ce que ses décisions
  * révèlent de lui.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 3 à 7 :
+ * Deux contournements du contrat `Episode`, comme dans les cinq premiers écrits
+ * après l'équipe (dépôt, budget, projet, achats, recrutement) :
  * les réponses qui dépendent d'un choix antérieur (celle d'Héloïse à Valdane,
  * qui dépend aussi de l'entretien de la semaine 1 ; celle de Kofi) passent
  * par `evenements().lies`, et `lire` renvoie des clés non affichées (qui est
@@ -187,7 +188,7 @@ const SIDONIE = { de: "Sidonie Brisset", role: "Ressources humaines, région" } 
 
 export const EPISODE_TALENTS: Episode<Trimestre> = {
   code: "talent-qui-veut-partir",
-  numero: 23,
+  numero: 24,
   domaine: "Fidélisation des talents",
   titre: "Le talent qui veut partir",
   resume:

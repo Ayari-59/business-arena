@@ -180,7 +180,7 @@ const GREGORY = { de: "Grégory Tavares", role: "Chef des ventes" } as const;
 
 export const EPISODE_FIDELISATION: Episode<Trimestre> = {
   code: "client-qui-s-en-va",
-  numero: 20,
+  numero: 5,
   domaine: "Fidélisation client",
   titre: "Le client qui s'en va",
   resume:

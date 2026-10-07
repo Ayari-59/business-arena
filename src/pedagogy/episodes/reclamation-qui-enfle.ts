@@ -178,7 +178,7 @@ const ATELIER = { de: "Thibault Rousset", role: "Chef d'atelier SAV" } as const;
 
 export const EPISODE_QUALITE: Episode<Trimestre> = {
   code: "reclamation-qui-enfle",
-  numero: 8,
+  numero: 14,
   domaine: "Qualité et réclamations",
   titre: "La réclamation qui enfle",
   resume:

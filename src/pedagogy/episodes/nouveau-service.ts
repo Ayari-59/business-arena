@@ -216,7 +216,7 @@ const liste = (noms: readonly string[]) =>
 
 export const EPISODE_INNOVATION: Episode<Trimestre> = {
   code: "nouveau-service",
-  numero: 28,
+  numero: 30,
   domaine: "Innovation et lancement d'offre",
   titre: "Le nouveau service",
   resume:

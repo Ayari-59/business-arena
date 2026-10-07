@@ -206,7 +206,7 @@ const EMILIE = { de: "Axelle Peyrol", role: "Assistante commerciale" } as const;
 
 export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
   code: "cent-premiers-jours",
-  numero: 30,
+  numero: 22,
   domaine: "Prise de poste",
   titre: "Les cent premiers jours",
   resume:

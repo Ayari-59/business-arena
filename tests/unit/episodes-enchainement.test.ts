@@ -61,7 +61,14 @@ describe("l'enchaînement des réflexes", () => {
   it("se montre dans les épisodes où les réflexes s'appellent les uns les autres", () => {
     const montres = EPISODES.filter(
       (ep) => analyser(ep, partie(ep, cheminDesReflexes(ep).chemin)).enchainement !== null,
-    ).map((ep) => ep.numero);
-    for (const n of [10, 17, 33, 43]) expect(montres).toContain(n);
+    ).map((ep) => ep.code);
+    // Par leur code : un numéro suit la place sur la page et peut changer.
+    for (const code of [
+      "reorganisation-qui-coince",
+      "prix-qui-ne-passe-plus",
+      "faire-ou-faire-faire",
+      "marche-qui-s-ouvre",
+    ])
+      expect(montres).toContain(code);
   });
 });

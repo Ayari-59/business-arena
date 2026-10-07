@@ -188,7 +188,7 @@ export function axe([information, diagnostic, reflexe, calibrage, meilleur]: rea
 
 export const EPISODE_FUSION: Episode<Trimestre> = {
   code: "fusion-des-agences",
-  numero: 27,
+  numero: 29,
   domaine: "Intégration après un rachat",
   titre: "La fusion des agences",
   resume:

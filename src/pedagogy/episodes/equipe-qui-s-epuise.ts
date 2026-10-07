@@ -167,7 +167,7 @@ const MATHIEU = { de: "Mathieu Roche", role: "Conseiller" } as const;
 
 export const EPISODE_EQUIPE: Episode<Trimestre> = {
   code: "equipe-qui-s-epuise",
-  numero: 2,
+  numero: 18,
   domaine: "Management d'équipe",
   titre: "L'équipe qui s'épuise",
   resume:

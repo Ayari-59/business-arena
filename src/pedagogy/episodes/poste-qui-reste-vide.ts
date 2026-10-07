@@ -196,7 +196,7 @@ const recrueDe = (t: Trimestre) =>
 
 export const EPISODE_RECRUTEMENT: Episode<Trimestre> = {
   code: "poste-qui-reste-vide",
-  numero: 7,
+  numero: 23,
   domaine: "Recrutement et intégration",
   titre: "Le poste qui reste vide",
   resume:

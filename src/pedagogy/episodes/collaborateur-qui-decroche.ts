@@ -6,7 +6,8 @@
  * courbe trace, ce sur quoi le bilan la juge, et ce que ses décisions
  * révèlent d'elle.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 3 à 7 :
+ * Deux contournements du contrat `Episode`, comme dans les cinq premiers écrits
+ * après l'équipe (dépôt, budget, projet, achats, recrutement) :
  * les suites qui dépendent d'un choix antérieur (le point d'étape, la session
  * de Didier sur la gamme) passent par `evenements().lies`, et `lire` renvoie
  * des clés non affichées (maîtrise, engagement, absence) qui nourrissent les
@@ -175,7 +176,7 @@ const RH = { de: "Corinne Lemaire", role: "Ressources humaines" } as const;
 
 export const EPISODE_PERFORMANCE: Episode<Trimestre> = {
   code: "collaborateur-qui-decroche",
-  numero: 14,
+  numero: 19,
   domaine: "Management de la performance individuelle",
   titre: "Le collaborateur qui décroche",
   resume:

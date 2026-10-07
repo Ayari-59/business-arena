@@ -6,7 +6,8 @@
  * courbe trace, ce sur quoi le bilan la juge, et ce que ses décisions
  * révèlent d'elle.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 3 à 7 :
+ * Deux contournements du contrat `Episode`, comme dans les cinq premiers écrits
+ * après l'équipe (dépôt, budget, projet, achats, recrutement) :
  * les suites qui dépendent d'un choix antérieur (la réponse de René, le
  * verdict du cabinet, les pénalités de l'agenceur) passent par
  * `evenements().lies`, et `lire` renvoie des clés non affichées (demande,
@@ -187,7 +188,7 @@ const RH = { de: "Edwige Quéméner", role: "Ressources humaines" } as const;
 
 export const EPISODE_COMPETENCES: Episode<Trimestre> = {
   code: "competences-qui-manquent",
-  numero: 24,
+  numero: 25,
   domaine: "Compétences et formation",
   titre: "Les compétences qui manquent",
   resume:

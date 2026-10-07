@@ -5,7 +5,7 @@
  * assemblés ici : ce que le tableau de bord de Agathe montre, ce que la courbe
  * trace, ce sur quoi le bilan la juge, et ce que ses décisions révèlent d'elle.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 4 et 5 :
+ * Deux contournements du contrat `Episode`, comme dans le budget et le projet :
  * `lire` renvoie des clés que le tableau de bord n'affiche pas (le retard,
  * les fiches sur les camions) pour nourrir les messages et les sources ; et ce
  * qui suit une décision selon un choix antérieur (l'analyse des fiches, qui ne
@@ -182,7 +182,7 @@ const THIERRY = { de: "Thierry Gomez", role: "Chef d'équipe quais" } as const;
 
 export const EPISODE_SECURITE: Episode<Trimestre> = {
   code: "quai-dangereux",
-  numero: 9,
+  numero: 15,
   domaine: "Santé et sécurité au travail",
   titre: "Le quai dangereux",
   resume:

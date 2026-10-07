@@ -5,7 +5,7 @@
  * assemblés ici : ce que le tableau de bord d'Émilie montre, ce que la courbe
  * trace, ce sur quoi le bilan la juge, et ce que ses décisions révèlent d'elle.
  *
- * Deux contournements du contrat `Episode`, comme dans les épisodes 4, 5 et 9 :
+ * Deux contournements du contrat `Episode`, comme dans le budget, le projet et le quai :
  * `lire` renvoie des clés que le tableau de bord n'affiche pas (le taux relevé
  * par le contrôleur, les remises qu'il a relevées) pour nourrir les messages
  * et les sources ; et ce qui suit une décision selon un choix antérieur ou le
@@ -189,7 +189,7 @@ const PRESTATAIRE = { de: "Cyril Boissonnet", role: "Chef de projet chez le pres
 
 export const EPISODE_CONFORMITE: Episode<Trimestre> = {
   code: "controle-qui-s-annonce",
-  numero: 26,
+  numero: 12,
   domaine: "Conformité et contrôle interne",
   titre: "Le contrôle qui s'annonce",
   resume:
