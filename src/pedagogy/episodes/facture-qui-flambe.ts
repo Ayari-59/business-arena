@@ -184,7 +184,7 @@ export const EPISODE_ENERGIE: Episode<Trimestre> = {
   resume:
     "Un contrat d'énergie à renouveler en plein hiver, une facture qui pourrait presque doubler, un grand client qui exige un plan carbone. Mesurer avant de couper, prouver plutôt qu'afficher.",
   persona:
-    "Vous êtes Cyprien Lavergne, responsable RSE et énergie d'Arvel Distribution, au siège de Lyon. Vous avez la charge de l'énergie de la plateforme logistique de Saint-Priest et de sept agences, avec Killian Le Goff, technicien de maintenance, et les chefs de site.",
+    "Vous êtes Cyprien Lavergne, responsable RSE et énergie d'Arvel Distribution, au siège de Lyon. Vous avez la charge de l'énergie de la plateforme logistique de Saint-Priest et de sept agences, avec Killian Morisot, technicien de maintenance, et les chefs de site.",
   mandat: [
     { fort: kE(BUDGET), texte: "de budget énergie pour le trimestre, pas un euro de plus" },
     { fort: `${OBJECTIF_INDICE}`, texte: "d'indice de consommation au plus (100 : l'an dernier)" },
@@ -209,7 +209,7 @@ export const EPISODE_ENERGIE: Episode<Trimestre> = {
       const perdu = Math.max(0, j - JOURS_SANS_PERTE) * PERTE_PAR_JOUR;
       if (perdu <= 0) return null;
       return {
-        de: "Killian Le Goff",
+        de: "Killian Morisot",
         role: "Technicien de maintenance",
         alerte: true,
         texte: `Pendant ce temps, rien n'a changé dans les sites : des nuits de chauffage et d'éclairage pour personne, ${euros(perdu)}.`,

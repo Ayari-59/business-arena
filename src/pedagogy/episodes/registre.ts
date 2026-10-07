@@ -68,6 +68,21 @@ import { EPISODE_APPRENTIS } from "./apprentis-qui-decrochent";
 import { EPISODE_CUISINE_CENTRALE } from "./cuisine-centrale";
 import { EPISODE_SPA } from "./spa-a-financer";
 import { EPISODE_ENSEIGNE } from "./enseigne-a-la-porte";
+import { EPISODE_GO_NO_GO } from "./appels-d-offres-en-rafale";
+import { EPISODE_PERIMETRE } from "./client-qui-en-demande-plus";
+import { EPISODE_LIVRABLE } from "./livrable-refuse";
+import { EPISODE_REALISATION } from "./jours-non-factures";
+import { EPISODE_COUT_DU_JOUR } from "./forfait-trop-bas";
+import { EPISODE_EN_COURS } from "./factures-qui-dorment";
+import { EPISODE_STAFFING } from "./staffing-du-lundi";
+import { EPISODE_STAR } from "./consultant-star";
+import { EPISODE_EVALUATION } from "./promotion-refusee";
+import { EPISODE_TURNOVER } from "./departs-a-deux-ans";
+import { EPISODE_FREELANCES } from "./freelances-ou-embauches";
+import { EPISODE_RECONVERSION } from "./practice-a-reorienter";
+import { EPISODE_IA } from "./assistant-ia";
+import { EPISODE_SORTIE_ASSOCIE } from "./associe-qui-part";
+import { EPISODE_POSITIONNEMENT } from "./generaliste-ou-specialiste";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -133,6 +148,21 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_CUISINE_CENTRALE,
   EPISODE_SPA,
   EPISODE_ENSEIGNE,
+  EPISODE_GO_NO_GO,
+  EPISODE_PERIMETRE,
+  EPISODE_LIVRABLE,
+  EPISODE_REALISATION,
+  EPISODE_COUT_DU_JOUR,
+  EPISODE_EN_COURS,
+  EPISODE_STAFFING,
+  EPISODE_STAR,
+  EPISODE_EVALUATION,
+  EPISODE_TURNOVER,
+  EPISODE_FREELANCES,
+  EPISODE_RECONVERSION,
+  EPISODE_IA,
+  EPISODE_SORTIE_ASSOCIE,
+  EPISODE_POSITIONNEMENT,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>

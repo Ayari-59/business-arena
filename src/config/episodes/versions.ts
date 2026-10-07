@@ -82,6 +82,21 @@ export const VERSIONS_DES_MODELES: Readonly<Record<string, VersionDuModele>> = {
   "cuisine-centrale": { version: 1, empreinte: [4673, -83006, -28225] },
   "spa-a-financer": { version: 1, empreinte: [229187, -26075, 0] },
   "enseigne-a-la-porte": { version: 1, empreinte: [990102, -5118737, -298181] },
+  "appels-d-offres-en-rafale": { version: 1, empreinte: [262641, 23717, 22180] },
+  "client-qui-en-demande-plus": { version: 1, empreinte: [217461, 79916, 99476] },
+  "livrable-refuse": { version: 1, empreinte: [35290, -17220, 9381] },
+  "jours-non-factures": { version: 1, empreinte: [576905, 357254, 422178] },
+  "forfait-trop-bas": { version: 1, empreinte: [58620, -99886, -40459] },
+  "factures-qui-dorment": { version: 1, empreinte: [1389037, 53713, -205276] },
+  "staffing-du-lundi": { version: 1, empreinte: [1000294, 831743, 777233] },
+  "consultant-star": { version: 1, empreinte: [88301, -3923, 19175] },
+  "promotion-refusee": { version: 1, empreinte: [263978, 151361, 191012] },
+  "departs-a-deux-ans": { version: 1, empreinte: [364243, -548821, -358253] },
+  "freelances-ou-embauches": { version: 1, empreinte: [3034701, 2526209, 2697139] },
+  "practice-a-reorienter": { version: 1, empreinte: [106123, -190588, -39083] },
+  "assistant-ia": { version: 1, empreinte: [795054, 523670, 528941] },
+  "associe-qui-part": { version: 1, empreinte: [280762, -1306950, -188866] },
+  "generaliste-ou-specialiste": { version: 1, empreinte: [330737, -2373876, -957875] },
 };
 
 export const versionDuModele = (code: string): number => VERSIONS_DES_MODELES[code]?.version ?? 1;

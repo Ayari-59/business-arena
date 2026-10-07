@@ -345,7 +345,7 @@ export const ETAPES: readonly Etape[] = [
         {
           ...YAELLE,
           texte:
-            "On ferme le lundi et le samedi après-midi. Ruben part à l'agence de Caluire. La publicité s'arrête à la fin du mois.",
+            "On ferme le lundi et le samedi après-midi. Aurian part à l'agence de Caluire. La publicité s'arrête à la fin du mois.",
         },
       ],
     ],

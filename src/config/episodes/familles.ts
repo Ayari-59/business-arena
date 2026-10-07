@@ -1,7 +1,7 @@
 /**
  * LES SECTEURS ET LES FAMILLES D'ÉPISODES, pour la page de choix.
  *
- * Soixante-trois épisodes côte à côte ne se lisent plus : on les range d'abord
+ * Des dizaines d'épisodes côte à côte ne se lisent plus : on les range d'abord
  * par secteur, une entreprise par secteur, puis par grand pan du métier de
  * manager. Chaque épisode est dans une famille et une seule, et les familles
  * d'un même secteur se suivent ; un test le vérifie sur le registre. Un
@@ -214,6 +214,45 @@ export const FAMILLES: readonly Famille[] = [
       "Pour les directeurs : laboratoire central, spa, enseigne, les paris qui engagent le groupe.",
     direction: true,
     episodes: ["cuisine-centrale", "spa-a-financer", "enseigne-a-la-porte"],
+  },
+  {
+    code: "conseil-vendre",
+    titre: "Vendre et tenir une mission",
+    secteur: "conseil",
+    texte:
+      "Appels d'offres, périmètre, livrable : gagner la mission, puis la livrer sans la perdre.",
+    episodes: ["appels-d-offres-en-rafale", "client-qui-en-demande-plus", "livrable-refuse"],
+  },
+  {
+    code: "conseil-marge",
+    titre: "Piloter la marge et la trésorerie",
+    secteur: "conseil",
+    texte: "Jours non facturés, forfaits, en-cours : la marge d'un cabinet se perd jour par jour.",
+    episodes: ["jours-non-factures", "forfait-trop-bas", "factures-qui-dorment"],
+  },
+  {
+    code: "conseil-equipe",
+    titre: "Staffer et manager",
+    secteur: "conseil",
+    texte: "Staffing, consultant star, promotion : tenir une équipe dont le temps est le produit.",
+    episodes: ["staffing-du-lundi", "consultant-star", "promotion-refusee"],
+  },
+  {
+    code: "conseil-talents",
+    titre: "Recruter, garder, faire évoluer",
+    secteur: "conseil",
+    texte:
+      "Départs, freelances, reconversion : un cabinet ne vaut que ce que valent ses consultants.",
+    episodes: ["departs-a-deux-ans", "freelances-ou-embauches", "practice-a-reorienter"],
+  },
+  {
+    code: "conseil-strategie",
+    titre: "Décider pour le cabinet",
+    secteur: "conseil",
+    texte:
+      "Pour la direction : assistant d'IA, départ d'un associé, positionnement, les paris qui engagent le cabinet.",
+    direction: true,
+    episodes: ["assistant-ia", "associe-qui-part", "generaliste-ou-specialiste"],
   },
 ];
 

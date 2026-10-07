@@ -301,7 +301,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "credit",
     titre: "Les banques resserrent le crédit travaux",
-    de: "Hermance Kerhervé",
+    de: "Hermance Chaboud",
     role: "Chargée d'affaires entreprises, banque du groupe",
     texte:
       "Nos réseaux durcissent les prêts travaux des particuliers pour un mois : apport exigé, délais allongés. Vos showrooms vont le sentir sur les signatures.",

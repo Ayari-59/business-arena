@@ -274,7 +274,9 @@ describe("la recommandation", () => {
   });
 
   it("ne propose les épisodes de direction qu'à qui en a déjà joué un", () => {
-    const direction = FAMILLES.find((f) => f.direction)!.episodes;
+    // Toutes les familles de direction, de tous les secteurs : un épisode de
+    // direction d'un autre secteur peut passer devant ceux du premier.
+    const direction = FAMILLES.filter((f) => f.direction).flatMap((f) => f.episodes);
     expect(direction.length).toBeGreaterThan(0);
     // R3 est observé au premier plan par chacun d'eux : sans la règle, ils seraient proposés.
     const manager = construireProfil(

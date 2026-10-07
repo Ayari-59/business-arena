@@ -400,7 +400,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "subvention",
     titre: "La Région relève sa subvention",
-    de: "Philippine Bonnardel",
+    de: "Marjorie Bonnardel",
     role: "Chargée de mission économie circulaire, Région",
     texte:
       "La Région porte l'aide aux équipements de tri de 30 à 40 % pour les dossiers déposés avant le 31 décembre, toujours avant toute commande.",

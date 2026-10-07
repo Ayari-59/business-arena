@@ -76,6 +76,21 @@ import * as apprentisQuiDecrochent from "./apprentis-qui-decrochent";
 import * as cuisineCentrale from "./cuisine-centrale";
 import * as spaAFinancer from "./spa-a-financer";
 import * as enseigneALaPorte from "./enseigne-a-la-porte";
+import * as appelsDOffresEnRafale from "./appels-d-offres-en-rafale";
+import * as clientQuiEnDemandePlus from "./client-qui-en-demande-plus";
+import * as livrableRefuse from "./livrable-refuse";
+import * as joursNonFactures from "./jours-non-factures";
+import * as forfaitTropBas from "./forfait-trop-bas";
+import * as facturesQuiDorment from "./factures-qui-dorment";
+import * as staffingDuLundi from "./staffing-du-lundi";
+import * as consultantStar from "./consultant-star";
+import * as promotionRefusee from "./promotion-refusee";
+import * as departsADeuxAns from "./departs-a-deux-ans";
+import * as freelancesOuEmbauches from "./freelances-ou-embauches";
+import * as practiceAReorienter from "./practice-a-reorienter";
+import * as assistantIa from "./assistant-ia";
+import * as associeQuiPart from "./associe-qui-part";
+import * as generalisteOuSpecialiste from "./generaliste-ou-specialiste";
 
 export interface TracesDeLEpisode {
   diagnostic: { juste: string; proche: string };
@@ -398,5 +413,80 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "portefeuille", proche: "commissions" },
     reflexes: [...enseigneALaPorte.REFLEXES],
     prevision: { juste: 8, proche: 20 },
+  },
+  "appels-d-offres-en-rafale": {
+    diagnostic: { juste: "selection", proche: "seniors" },
+    reflexes: [...appelsDOffresEnRafale.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "client-qui-en-demande-plus": {
+    diagnostic: { juste: "perimetre", proche: "besoins" },
+    reflexes: [...clientQuiEnDemandePlus.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "livrable-refuse": {
+    diagnostic: { juste: "methode", proche: "validation" },
+    reflexes: [...livrableRefuse.REFLEXES],
+    prevision: { juste: 2, proche: 6 },
+  },
+  "jours-non-factures": {
+    diagnostic: { juste: "forfaits", proche: "kervalan" },
+    reflexes: [...joursNonFactures.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "forfait-trop-bas": {
+    diagnostic: { juste: "cout", proche: "depassements" },
+    reflexes: [...forfaitTropBas.REFLEXES],
+    prevision: { juste: 10, proche: 60 },
+  },
+  "factures-qui-dorment": {
+    diagnostic: { juste: "avantFacture", proche: "rejets" },
+    reflexes: [...facturesQuiDorment.REFLEXES],
+    prevision: { juste: 20, proche: 100 },
+  },
+  "staffing-du-lundi": {
+    diagnostic: { juste: "valeurRisque", proche: "reservations" },
+    reflexes: [...staffingDuLundi.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  "consultant-star": {
+    diagnostic: { juste: "comportement", proche: "delegation" },
+    reflexes: [...consultantStar.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  "promotion-refusee": {
+    diagnostic: { juste: "criteres", proche: "annonce" },
+    reflexes: [...promotionRefusee.REFLEXES],
+    prevision: { juste: 3, proche: 8 },
+  },
+  "departs-a-deux-ans": {
+    diagnostic: { juste: "segments", proche: "missions" },
+    reflexes: [...departsADeuxAns.REFLEXES],
+    prevision: { juste: 2.5, proche: 6 },
+  },
+  "freelances-ou-embauches": {
+    diagnostic: { juste: "durable", proche: "delai" },
+    reflexes: [...freelancesOuEmbauches.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "practice-a-reorienter": {
+    diagnostic: { juste: "reconversion", proche: "ventes" },
+    reflexes: [...practiceAReorienter.REFLEXES],
+    prevision: { juste: 20, proche: 60 },
+  },
+  "assistant-ia": {
+    diagnostic: { juste: "modele", proche: "usages" },
+    reflexes: [...assistantIa.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "associe-qui-part": {
+    diagnostic: { juste: "montage", proche: "prix" },
+    reflexes: [...associeQuiPart.REFLEXES],
+    prevision: { juste: 15, proche: 60 },
+  },
+  "generaliste-ou-specialiste": {
+    diagnostic: { juste: "specialisation", proche: "differenciation" },
+    reflexes: [...generalisteOuSpecialiste.REFLEXES],
+    prevision: { juste: 20, proche: 100 },
   },
 };

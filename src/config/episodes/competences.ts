@@ -1093,4 +1093,229 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La réponse d'Orméa
     { principale: "R5", secondaires: ["R4"] },
   ],
+  // 64. Les appels d'offres en rafale
+  "appels-d-offres-en-rafale": [
+    // D1 · Douze appels d'offres en six semaines
+    { principale: "R2", secondaires: ["R4", "R5"] },
+    // D2 · Le dossier de Vilaine Métropole
+    { principale: "R1", secondaires: ["R4"] },
+    // D3 · Qui écrit les mémoires ?
+    { principale: "R8", secondaires: ["R6"] },
+    // D4 · Halden casse les prix à Kermelin
+    { principale: "R5", secondaires: ["R4"] },
+    // D5 · Un treizième appel d'offres
+    { principale: "R5", secondaires: ["R6"] },
+    // D6 · Les premiers résultats
+    { principale: "R3", secondaires: ["R10"] },
+  ],
+  // 65. Le client qui en demande toujours plus
+  "client-qui-en-demande-plus": [
+    // D1 · Quatre petites choses
+    { principale: "R2", secondaires: ["R1", "R4"] },
+    // D2 · La ligne de surgelés démarre
+    { principale: "R5", secondaires: ["R4", "R6"] },
+    // D3 · Le comité de pilotage intermédiaire
+    { principale: "R10", secondaires: ["R9"] },
+    // D4 · Les coups de main
+    { principale: "R3", secondaires: ["R8", "R10"] },
+    // D5 · Préparer la suite
+    { principale: "R1", secondaires: ["R5", "R7"] },
+    // D6 · La dernière demande
+    { principale: "R6", secondaires: ["R9"] },
+  ],
+  // 66. Le livrable que le client refuse
+  "livrable-refuse": [
+    // D1 · Le rapport intermédiaire est refusé
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · La phase 2 doit démarrer
+    { principale: "R6", secondaires: ["R1", "R5"] },
+    // D3 · Les premières fiches partent
+    { principale: "R6", secondaires: ["R4"] },
+    // D4 · Deux erreurs dans les fiches
+    { principale: "R3", secondaires: ["R2", "R1"] },
+    // D5 · Basile part sur une avant-vente
+    { principale: "R5", secondaires: ["R8", "R10"] },
+    // D6 · Le comité de pilotage final
+    { principale: "R10", secondaires: ["R4", "R5"] },
+  ],
+  // 67. Les jours qu'on ne facture pas
+  "jours-non-factures": [
+    // D1 · Occupés comme jamais, et la marge baisse
+    { principale: "R1", secondaires: ["R2"] },
+    // D2 · Kervalan ne tiendra pas la date
+    { principale: "R5", secondaires: ["R6", "R1"] },
+    // D3 · Le TJM moyen monte
+    { principale: "R2", secondaires: ["R1"] },
+    // D4 · Des juniors sur le banc, une banque qui demande du monde
+    { principale: "R4", secondaires: ["R2"] },
+    // D5 · Talvenec veut déployer
+    { principale: "R1", secondaires: ["R6"] },
+    // D6 · La phase 2 de Kervalan
+    { principale: "R3", secondaires: ["R6"] },
+  ],
+  // 68. Le forfait vendu sous son coût
+  "forfait-trop-bas": [
+    // D1 · Les forfaits finissent en perte
+    { principale: "R2", secondaires: ["R1", "R4"] },
+    // D2 · Des propositions perdues au prix
+    { principale: "R4", secondaires: ["R3", "R5"] },
+    // D3 · Trois analystes sans mission
+    { principale: "R2", secondaires: ["R4", "R6"] },
+    // D4 · Le budget de Valmorin
+    { principale: "R5", secondaires: ["R2"] },
+    // D5 · L'accord-cadre des collectivités
+    { principale: "R5", secondaires: ["R1", "R4"] },
+    // D6 · La mutuelle veut reconduire
+    { principale: "R4", secondaires: ["R10", "R5"] },
+  ],
+  // 69. Le travail fait qu'on n'a pas facturé
+  "factures-qui-dorment": [
+    // D1 · Le DSO à 96 jours
+    { principale: "R2", secondaires: ["R1", "R4"] },
+    // D2 · Le portail rejette encore
+    { principale: "R2", secondaires: ["R4"] },
+    // D3 · Les jalons glissent encore
+    { principale: "R10", secondaires: ["R6"] },
+    // D4 · Ollivro conteste 240 k€
+    { principale: "R5", secondaires: ["R4", "R9"] },
+    // D5 · Le comité de crédit de la banque
+    { principale: "R10", secondaires: ["R5", "R4"] },
+    // D6 · Avant la clôture de décembre
+    { principale: "R6", secondaires: ["R4"] },
+  ],
+  // 70. Le staffing du lundi
+  "staffing-du-lundi": [
+    // D1 · Trois associés, deux seniors
+    { principale: "R4", secondaires: ["R2", "R6"] },
+    // D2 · Une mission signée, personne pour la faire
+    { principale: "R1", secondaires: ["R5", "R4"] },
+    // D3 · Le creux d'octobre
+    { principale: "R6", secondaires: ["R4"] },
+    // D4 · Un analyste seul au Pays de Retz
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · L'avenant des urgences
+    { principale: "R3", secondaires: ["R4"] },
+    // D6 · La restitution et le séminaire
+    { principale: "R4", secondaires: ["R5", "R9"] },
+  ],
+  // 71. Le consultant star
+  "consultant-star": [
+    // D1 · Le meilleur consultant de l'équipe
+    { principale: "R9", secondaires: ["R4", "R2"] },
+    // D2 · Ilham veut quitter la mission
+    { principale: "R8", secondaires: ["R9"] },
+    // D3 · La banque signe un deuxième lot
+    { principale: "R8", secondaires: ["R6", "R4"] },
+    // D4 · Qui forme les analystes ?
+    { principale: "R1", secondaires: ["R5"] },
+    // D5 · La nuit avant le comité Lagrave
+    { principale: "R3", secondaires: ["R4", "R10"] },
+    // D6 · Les comités de fin de trimestre
+    { principale: "R9", secondaires: ["R6"] },
+  ],
+  // 72. La promotion qu'il faudra refuser
+  "promotion-refusee": [
+    // D1 · Une place pour trois
+    { principale: "R1", secondaires: ["R10"] },
+    // D2 · Les entretiens annuels
+    { principale: "R10", secondaires: ["R9"] },
+    // D3 · La note au comité
+    { principale: "R4", secondaires: ["R10"] },
+    // D4 · Le comité a tranché
+    { principale: "R9", secondaires: ["R6"] },
+    // D5 · La demande de compensation
+    { principale: "R4", secondaires: ["R6"] },
+    // D6 · La prise de poste
+    { principale: "R5", secondaires: ["R8", "R6"] },
+  ],
+  // 73. Les consultants qui partent à deux ans
+  "departs-a-deux-ans": [
+    // D1 · 24 % de départs
+    { principale: "R4", secondaires: ["R2"] },
+    // D2 · Quatorze juniors en intercontrat
+    { principale: "R6", secondaires: ["R4", "R9"] },
+    // D3 · Les seniors ne voient pas la suite
+    { principale: "R1", secondaires: ["R9"] },
+    // D4 · Six consultants sans mission, une practice qui recrute
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Le plan de recrutement du printemps
+    { principale: "R3", secondaires: ["R10"] },
+    // D6 · Il manque six seniors
+    { principale: "R4", secondaires: ["R9"] },
+  ],
+  // 74. Embaucher ou louer des freelances
+  "freelances-ou-embauches": [
+    // D1 · Huit consultants de moins que la demande
+    { principale: "R2", secondaires: ["R4", "R5"] },
+    // D2 · Qui va chez Kervalis ?
+    { principale: "R5", secondaires: ["R6"] },
+    // D3 · Freelancia propose un accord-cadre
+    { principale: "R6", secondaires: ["R5"] },
+    // D4 · Kervalis étend son contrat-cadre
+    { principale: "R3", secondaires: ["R4"] },
+    // D5 · Quatre consultants de Kéroual
+    { principale: "R1", secondaires: ["R5", "R4"] },
+    // D6 · Le comité de mars
+    { principale: "R6", secondaires: ["R10", "R4"] },
+  ],
+  // 75. La practice dont le marché s'éteint
+  "practice-a-reorienter": [
+    // D1 · Le marché qui s'éteint
+    { principale: "R2", secondaires: ["R4", "R6"] },
+    // D2 · Des experts, ou pas
+    { principale: "R5", secondaires: ["R6", "R1"] },
+    // D3 · Qui part en binôme ?
+    { principale: "R6", secondaires: ["R4"] },
+    // D4 · Ceux qui ne veulent pas changer
+    { principale: "R9", secondaires: ["R5", "R4"] },
+    // D5 · Une commande d'audits tardive
+    { principale: "R6", secondaires: ["R4", "R1"] },
+    // D6 · Le plan de décembre à février
+    { principale: "R3", secondaires: ["R10", "R4"] },
+  ],
+  // 76. L'assistant d'IA qui change le métier
+  "assistant-ia": [
+    // D1 · L'assistant est déjà là
+    { principale: "R4", secondaires: ["R2", "R1"] },
+    // D2 · Les jours de régie qui disparaissent
+    { principale: "R5", secondaires: ["R2"] },
+    // D3 · Ceux qui n'y touchent pas
+    { principale: "R9", secondaires: ["R8"] },
+    // D4 · Ce que les relectures disent
+    { principale: "R3", secondaires: ["R2"] },
+    // D5 · Orvanne veut sa part
+    { principale: "R1", secondaires: ["R5"] },
+    // D6 · Le comité de juin
+    { principale: "R6", secondaires: ["R10"] },
+  ],
+  // 77. L'associé qui veut vendre ses parts
+  "associe-qui-part": [
+    // D1 · Wilfrid veut vendre
+    { principale: "R4", secondaires: ["R2", "R5"] },
+    // D2 · Ce qui retient ses trois comptes
+    { principale: "R1", secondaires: ["R6"] },
+    // D3 · L'offre
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · Protéger les comptes
+    { principale: "R6", secondaires: ["R9"] },
+    // D5 · Financer le rachat
+    { principale: "R10", secondaires: ["R5"] },
+    // D6 · Le protocole à signer
+    { principale: "R3", secondaires: ["R4"] },
+  ],
+  // 78. Rester généraliste ou se spécialiser
+  "generaliste-ou-specialiste": [
+    // D1 · Halden ouvre à Nantes
+    { principale: "R4", secondaires: ["R2", "R5"] },
+    // D2 · Le premier pas
+    { principale: "R1", secondaires: ["R5"] },
+    // D3 · Les clients historiques s'inquiètent
+    { principale: "R4", secondaires: ["R9"] },
+    // D4 · Des consultants sans mission
+    { principale: "R6", secondaires: ["R4", "R5"] },
+    // D5 · Les premiers chiffres
+    { principale: "R3", secondaires: ["R10", "R1"] },
+    // D6 · Le GHT veut 15 %
+    { principale: "R5", secondaires: ["R4", "R6"] },
+  ],
 };

@@ -25,7 +25,7 @@ const RACHID = {
   role: "Chef de la plateforme de Saint-Priest",
 } as const;
 const KILLIAN = {
-  de: "Killian Le Goff",
+  de: "Killian Morisot",
   role: "Technicien de maintenance",
 } as const;
 const CHLOE = {

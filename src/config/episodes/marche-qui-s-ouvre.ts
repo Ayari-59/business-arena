@@ -610,11 +610,11 @@ export const ETAPES: readonly Etape[] = [
       {
         id: "darrieux",
         titre:
-          "Croiser Florimond Darrieux, directeur du développement de Solvéane, au salon de l'habitat",
+          "Croiser Romaric Darrieux, directeur du développement de Solvéane, au salon de l'habitat",
         cout: 0.5,
         nature: "utile",
         resultat:
-          "Florimond Darrieux : « Nous regardons Lyon comme les autres régions : un marché qui se vend, des poseurs disponibles. Les prix des négociants ne nous font pas changer d'avis : nous ne vendons pas au même client, nous vendons une maison rénovée. »",
+          "Romaric Darrieux : « Nous regardons Lyon comme les autres régions : un marché qui se vend, des poseurs disponibles. Les prix des négociants ne nous font pas changer d'avis : nous ne vendons pas au même client, nous vendons une maison rénovée. »",
       },
     ],
     question: "Comment vous préparez-vous à Solvéane ?",

@@ -55,7 +55,7 @@ import type { Etape } from "./types";
 
 const BERTILLE = { de: "Bertille Charvet", role: "Directrice générale" } as const;
 const OCTAVIEN = { de: "Octavien Rouanet", role: "Directeur administratif et financier" } as const;
-const SOLENN = { de: "Solenn Le Goff", role: "Directrice du réseau d'agences" } as const;
+const SOLENN = { de: "Solenn Tixier", role: "Directrice du réseau d'agences" } as const;
 const TIDIANE = { de: "Tidiane Sarr", role: "Chef de projet réemploi" } as const;
 const GONZAGUE = { de: "Thadée Sartel", role: "Président, Sartel Déconstruction" } as const;
 const HENRIETTE = { de: "Henriette Grollier", role: "Gérante, Grollier Démolition" } as const;

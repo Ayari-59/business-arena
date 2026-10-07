@@ -7,7 +7,7 @@
  * meilleure. Un point par critère rempli, sur les six décisions : 0 ou 1
  * point, facile ; de 2 à 5, moyen ; 6 et plus, difficile. La règle et ses
  * seuils, ceux du bilan, sont dans `src/pedagogy/episodes/difficulte.ts`, et
- * s'appliquent aux soixante-trois épisodes ; un test vérifie le tableau.
+ * s'appliquent à tous les épisodes ; un test vérifie le tableau.
  *
  * Elle sert à recommander le prochain épisode : on ne propose pas un épisode
  * difficile à qui commence une compétence.
@@ -82,6 +82,21 @@ export const DIFFICULTES: Readonly<Record<string, Difficulte>> = {
   "cuisine-centrale": "difficile", // 61 (9 points)
   "spa-a-financer": "moyen", // 62 (4 points)
   "enseigne-a-la-porte": "difficile", // 63 (8 points)
+  "appels-d-offres-en-rafale": "moyen", // 64 (4 points)
+  "client-qui-en-demande-plus": "facile", // 65 (0 point)
+  "livrable-refuse": "difficile", // 66 (7 points)
+  "jours-non-factures": "moyen", // 67 (3 points)
+  "forfait-trop-bas": "moyen", // 68 (3 points)
+  "factures-qui-dorment": "moyen", // 69 (3 points)
+  "staffing-du-lundi": "moyen", // 70 (4 points)
+  "consultant-star": "moyen", // 71 (4 points)
+  "promotion-refusee": "facile", // 72 (1 point)
+  "departs-a-deux-ans": "moyen", // 73 (4 points)
+  "freelances-ou-embauches": "difficile", // 74 (7 points)
+  "practice-a-reorienter": "moyen", // 75 (2 points)
+  "assistant-ia": "facile", // 76 (1 point)
+  "associe-qui-part": "moyen", // 77 (4 points)
+  "generaliste-ou-specialiste": "moyen", // 78 (5 points)
 };
 
 export const PEU_DISCRIMINANTS: readonly string[] = [

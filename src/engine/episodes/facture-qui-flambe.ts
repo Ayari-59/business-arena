@@ -147,7 +147,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "chaudiere",
     titre: "Panne de chaudière dans une agence",
-    de: "Killian Le Goff",
+    de: "Killian Morisot",
     role: "Technicien de maintenance",
     texte:
       "La chaudière de l'agence de Vaulx a lâché : échangeur percé. Chauffage provisoire loué et réparation, 3 200 €.",
@@ -187,7 +187,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "compresseur",
     titre: "Fuite sur le réseau d'air comprimé",
-    de: "Killian Le Goff",
+    de: "Killian Morisot",
     role: "Technicien de maintenance",
     texte:
       "Un raccord a cédé sur le réseau d'air comprimé du quai 4 : le compresseur tourne en continu, le temps de trouver la pièce.",

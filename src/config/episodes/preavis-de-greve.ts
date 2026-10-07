@@ -44,7 +44,7 @@ const BENSAID = {
   role: "Délégué syndical, dépôt de Chassieu",
 } as const;
 const LE_GOFF = {
-  de: "Gwenaëlle Le Goff",
+  de: "Laurine Jacquier",
   role: "Élue du CSE, dépôt de Moirans",
 } as const;
 const KOUASSI = { de: "Emmanuel Kouassi", role: "Directeur régional" } as const;
@@ -96,7 +96,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 1,
         nature: "decisive",
         resultat:
-          "Walid Benkhaled et Gwenaëlle Le Goff parlent peu des 4,5 %. Ils parlent des samedis annoncés le jeudi pour le samedi, sept fois l'an dernier, et des départs à 5 heures. Et de l'étude sur la pénibilité des quais, promise il y a un an et jamais lancée : « Pourquoi on vous croirait cette fois ? »",
+          "Walid Benkhaled et Laurine Jacquier parlent peu des 4,5 %. Ils parlent des samedis annoncés le jeudi pour le samedi, sept fois l'an dernier, et des départs à 5 heures. Et de l'étude sur la pénibilité des quais, promise il y a un an et jamais lancée : « Pourquoi on vous croirait cette fois ? »",
       },
       {
         id: "pv",
@@ -479,9 +479,9 @@ export const ETAPES: readonly Etape[] = [
         nature: "decisive",
         resultat: (ctx) =>
           ctx.manque === "rien"
-            ? "Gwenaëlle Le Goff : « Ce qui est sur la table nous va, ou presque. Il nous faut une date pour faire le point, et pouvoir dire aux équipes que c'est un accord, pas une décision de la direction. »"
+            ? "Laurine Jacquier : « Ce qui est sur la table nous va, ou presque. Il nous faut une date pour faire le point, et pouvoir dire aux équipes que c'est un accord, pas une décision de la direction. »"
             : ctx.manque === "peu"
-              ? "Gwenaëlle Le Goff : « Il manque peu : un geste sur les premiers niveaux, et une date pour faire le point. Pas forcément du pourcentage. »"
+              ? "Laurine Jacquier : « Il manque peu : un geste sur les premiers niveaux, et une date pour faire le point. Pas forcément du pourcentage. »"
               : "Walid Benkhaled : « Il manque beaucoup. Les équipes parlent d'un point de plus pour tout le monde, et elles ne croient plus aux promesses. »",
       },
       {
@@ -578,7 +578,7 @@ export const ETAPES: readonly Etape[] = [
             ctx.paquet
               ? "Les samedis planifiés quinze jours avant figurent dans la proposition. "
               : ""
-          }Gwenaëlle Le Goff le rappelle à chaque réunion : l'an dernier, après la signature, plus rien n'avait bougé.`,
+          }Laurine Jacquier le rappelle à chaque réunion : l'an dernier, après la signature, plus rien n'avait bougé.`,
       },
     ],
     question: "Comment terminez-vous le trimestre ?",
