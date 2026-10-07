@@ -354,11 +354,13 @@ export function SiteHeader() {
 }
 
 /**
- * Une entrée du plan : son nom, et ce qu'on y trouve.
+ * Une entrée du plan : son nom, rien d'autre.
  *
- * L'aide n'est pas un ornement. « Parcours », « Guide » et « Notions » ne se
- * distinguent pas les uns des autres pour qui découvre le site, et c'est cette
- * phrase qui évite d'ouvrir les trois pour trouver la bonne.
+ * Chaque entrée portait sous son nom une phrase qui disait ce qu'on trouve
+ * sur la page. Le plan en devenait un texte à lire plutôt qu'une liste à
+ * parcourir : il est revenu aux seuls noms. La phrase reste dans le plan du
+ * site (config/navigation.ts) et s'affiche au survol, pour qui hésite entre
+ * deux entrées.
  */
 function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
   // L'action principale garde sa couleur : c'est la seule entrée du plan qui
@@ -367,6 +369,7 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
   return (
     <Link
       href={lien.href}
+      title={lien.aide}
       aria-current={courant ? "page" : undefined}
       className={`group block rounded-lg px-3 py-2 transition duration-200 motion-reduce:transition-none ${
         principale
@@ -391,7 +394,6 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
           </span>
         ) : null}
       </span>
-      <span className="mt-0.5 block text-sm leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>
   );
 }
