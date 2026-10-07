@@ -118,13 +118,18 @@ export const PAPIER: Record<number, string> = {
  * au milieu d'une page claire. Les paliers de texte (50 à 600) gardent la
  * clarté de l'échelle d'origine ; les fonds (700 à 950) sont relevés d'un cran
  * pour qu'on y reconnaisse une ardoise et non un écran éteint.
+ *
+ * Une exception, le 400 : c'est le texte secondaire, celui de la plupart des
+ * paragraphes du tableau. À la clarté d'origine (70,4 %), il tombait à 6,5
+ * pour 1 sur l'ardoise, quand son pendant du papier tient 9,9 : une craie à
+ * moitié effacée. Il est éclairci à 8,2 pour 1, toujours sous le 300.
  */
 export const TABLEAU: Record<number, string> = {
   50: "oklch(98.4% 0.006 150)",
   100: "oklch(96.8% 0.008 150)",
   200: "oklch(92.9% 0.012 152)",
   300: "oklch(86.9% 0.016 152)",
-  400: "oklch(70.4% 0.022 155)",
+  400: "oklch(77% 0.02 155)",
   500: "oklch(55.4% 0.024 158)",
   600: "oklch(44.6% 0.024 160)",
   700: "oklch(37.2% 0.022 160)",
