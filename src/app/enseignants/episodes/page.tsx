@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
-import { FAMILLES } from "@/config/episodes/familles";
+import { FAMILLES, SECTEURS } from "@/config/episodes/familles";
 import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 /**
  * LES ÉPISODES EN CLASSE.
  *
- * Les fiches enseignant, rangées par famille d'épisodes. Une fiche dit ce que
+ * Les fiches enseignant, rangées par secteur puis par famille d'épisodes,
+ * comme la page des épisodes ; un secteur sans fiche ne s'affiche pas. Une fiche dit ce que
  * l'épisode enseigne, comment conduire la séance de deux heures, le corrigé
  * du calcul et les questions du débrief.
  */
@@ -27,6 +28,10 @@ export default function EpisodesEnClassePage() {
     ...f,
     fiches: FICHES.filter((x) => f.episodes.includes(x.code)),
   })).filter((f) => f.fiches.length > 0);
+  const secteurs = SECTEURS.map((s) => ({
+    ...s,
+    familles: familles.filter((f) => f.secteur === s.code),
+  })).filter((s) => s.familles.length > 0);
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -48,19 +53,30 @@ export default function EpisodesEnClassePage() {
             hasard ; la séance tient en deux heures, débrief compris. Les épisodes se jouent sans
             compte, et aucun résultat n&apos;y est noté : le bilan juge les décisions.
           </p>
-          {familles.map((f) => (
-            <section key={f.code} aria-labelledby={`titre-${f.code}`} className="mt-14">
+          {secteurs.map((s) => (
+            <section key={s.code} aria-labelledby={`titre-secteur-${s.code}`} className="mt-16">
               <h2
-                id={`titre-${f.code}`}
-                className="font-display text-3xl font-semibold tracking-tight text-slate-50"
+                id={`titre-secteur-${s.code}`}
+                className="font-display text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl"
               >
-                {f.titre}
+                {s.nom}
               </h2>
-              <ul className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {f.fiches.map((fiche) => (
-                  <CarteFiche key={fiche.code} fiche={fiche} />
-                ))}
-              </ul>
+              <p className="mt-2 max-w-2xl text-lg leading-relaxed text-slate-400">{s.texte}</p>
+              {s.familles.map((f) => (
+                <section key={f.code} aria-labelledby={`titre-${f.code}`} className="mt-12">
+                  <h3
+                    id={`titre-${f.code}`}
+                    className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+                  >
+                    {f.titre}
+                  </h3>
+                  <ul className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    {f.fiches.map((fiche) => (
+                      <CarteFiche key={fiche.code} fiche={fiche} />
+                    ))}
+                  </ul>
+                </section>
+              ))}
             </section>
           ))}
         </div>
@@ -80,7 +96,7 @@ function CarteFiche({ fiche }: { fiche: FicheEnseignant }) {
         <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
           Épisode {ep.numero} · {sigles}
         </p>
-        <h3 className="mt-2 font-display text-2xl font-semibold text-slate-50">{ep.titre}</h3>
+        <h4 className="mt-2 font-display text-xl font-semibold text-slate-50">{ep.titre}</h4>
         <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
       </div>
       <p className="text-sm text-slate-400">

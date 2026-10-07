@@ -3,7 +3,7 @@
  *
  * Chaque épisode juge déjà, dans son bilan, le diagnostic de la semaine 1, sa
  * réévaluation, les options réflexes et la prévision chiffrée. On relève ici,
- * pour les trente, de quoi appliquer les mêmes règles partout :
+ * pour tous, de quoi appliquer les mêmes règles partout :
  *
  *   · le bon diagnostic, et celui qui s'en approche (une vraie cause, mais pas
  *     la principale) ;
@@ -61,6 +61,21 @@ import * as projetAArreter from "./projet-a-arreter";
 import * as reseauARedessiner from "./reseau-a-redessiner";
 import * as pariDuReemploi from "./pari-du-reemploi";
 import * as grandCompteExclusif from "./grand-compte-exclusif";
+import * as chambresBradees from "./chambres-bradees";
+import * as seminaireQuiEvince from "./seminaire-qui-evince";
+import * as surreservation from "./surreservation";
+import * as noteQuiChute from "./note-qui-chute";
+import * as ratioMatiere from "./ratio-matiere";
+import * as intersaison from "./intersaison";
+import * as chambresPasPretes from "./chambres-pas-pretes";
+import * as brigadeABout from "./brigade-a-bout";
+import * as renovationSansFermer from "./renovation-sans-fermer";
+import * as saisonniersDeJuillet from "./saisonniers-de-juillet";
+import * as postesIntrouvables from "./postes-introuvables";
+import * as apprentisQuiDecrochent from "./apprentis-qui-decrochent";
+import * as cuisineCentrale from "./cuisine-centrale";
+import * as spaAFinancer from "./spa-a-financer";
+import * as enseigneALaPorte from "./enseigne-a-la-porte";
 
 export interface TracesDeLEpisode {
   diagnostic: { juste: string; proche: string };
@@ -308,5 +323,80 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "dependance", proche: "marge" },
     reflexes: [...grandCompteExclusif.REFLEXES],
     prevision: { juste: 5, proche: 15 },
+  },
+  "chambres-bradees": {
+    diagnostic: { juste: "segments", proche: "semaine" },
+    reflexes: [...chambresBradees.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "seminaire-qui-evince": {
+    diagnostic: { juste: "deplacement", proche: "attrition" },
+    reflexes: [...seminaireQuiEvince.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  surreservation: {
+    diagnostic: { juste: "arbitrage", proche: "defections" },
+    reflexes: [...surreservation.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "note-qui-chute": {
+    diagnostic: { juste: "climatisation", proche: "petitDejeuner" },
+    reflexes: [...noteQuiChute.REFLEXES],
+    prevision: { juste: 300, proche: 1000 },
+  },
+  "ratio-matiere": {
+    diagnostic: { juste: "carte", proche: "grammages" },
+    reflexes: [...ratioMatiere.REFLEXES],
+    prevision: { juste: 0.3, proche: 1 },
+  },
+  intersaison: {
+    diagnostic: { juste: "cycle", proche: "travaux" },
+    reflexes: [...intersaison.REFLEXES],
+    prevision: { juste: 10, proche: 30 },
+  },
+  "chambres-pas-pretes": {
+    diagnostic: { juste: "flux", proche: "ordre" },
+    reflexes: [...chambresPasPretes.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "brigade-a-bout": {
+    diagnostic: { juste: "pics", proche: "effectif" },
+    reflexes: [...brigadeABout.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "renovation-sans-fermer": {
+    diagnostic: { juste: "nuisances", proche: "delai" },
+    reflexes: [...renovationSansFermer.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "saisonniers-de-juillet": {
+    diagnostic: { juste: "integration", proche: "departs" },
+    reflexes: [...saisonniersDeJuillet.REFLEXES],
+    prevision: { juste: 20, proche: 80 },
+  },
+  "postes-introuvables": {
+    diagnostic: { juste: "logement", proche: "coupures" },
+    reflexes: [...postesIntrouvables.REFLEXES],
+    prevision: { juste: 2, proche: 6 },
+  },
+  "apprentis-qui-decrochent": {
+    diagnostic: { juste: "tutorat", proche: "calendrier" },
+    reflexes: [...apprentisQuiDecrochent.REFLEXES],
+    prevision: { juste: 0.3, proche: 0.8 },
+  },
+  "cuisine-centrale": {
+    diagnostic: { juste: "identite", proche: "logistique" },
+    reflexes: [...cuisineCentrale.REFLEXES],
+    prevision: { juste: 5, proche: 20 },
+  },
+  "spa-a-financer": {
+    diagnostic: { juste: "differentiel", proche: "prix" },
+    reflexes: [...spaAFinancer.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "enseigne-a-la-porte": {
+    diagnostic: { juste: "portefeuille", proche: "commissions" },
+    reflexes: [...enseigneALaPorte.REFLEXES],
+    prevision: { juste: 8, proche: 20 },
   },
 };

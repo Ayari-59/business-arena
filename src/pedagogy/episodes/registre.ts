@@ -53,6 +53,21 @@ import { EPISODE_ESCALADE } from "./projet-a-arreter";
 import { EPISODE_RESEAU } from "./reseau-a-redessiner";
 import { EPISODE_REEMPLOI } from "./pari-du-reemploi";
 import { EPISODE_EXCLUSIVITE } from "./grand-compte-exclusif";
+import { EPISODE_YIELD } from "./chambres-bradees";
+import { EPISODE_SEMINAIRE } from "./seminaire-qui-evince";
+import { EPISODE_SURRESERVATION } from "./surreservation";
+import { EPISODE_NOTE_EN_LIGNE } from "./note-qui-chute";
+import { EPISODE_RATIO_MATIERE } from "./ratio-matiere";
+import { EPISODE_INTERSAISON } from "./intersaison";
+import { EPISODE_HEBERGEMENT } from "./chambres-pas-pretes";
+import { EPISODE_BRIGADE } from "./brigade-a-bout";
+import { EPISODE_RENOVATION } from "./renovation-sans-fermer";
+import { EPISODE_SAISONNIERS } from "./saisonniers-de-juillet";
+import { EPISODE_PENURIE } from "./postes-introuvables";
+import { EPISODE_APPRENTIS } from "./apprentis-qui-decrochent";
+import { EPISODE_CUISINE_CENTRALE } from "./cuisine-centrale";
+import { EPISODE_SPA } from "./spa-a-financer";
+import { EPISODE_ENSEIGNE } from "./enseigne-a-la-porte";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -103,6 +118,21 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_RESEAU,
   EPISODE_REEMPLOI,
   EPISODE_EXCLUSIVITE,
+  EPISODE_YIELD,
+  EPISODE_SEMINAIRE,
+  EPISODE_SURRESERVATION,
+  EPISODE_NOTE_EN_LIGNE,
+  EPISODE_RATIO_MATIERE,
+  EPISODE_INTERSAISON,
+  EPISODE_HEBERGEMENT,
+  EPISODE_BRIGADE,
+  EPISODE_RENOVATION,
+  EPISODE_SAISONNIERS,
+  EPISODE_PENURIE,
+  EPISODE_APPRENTIS,
+  EPISODE_CUISINE_CENTRALE,
+  EPISODE_SPA,
+  EPISODE_ENSEIGNE,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>

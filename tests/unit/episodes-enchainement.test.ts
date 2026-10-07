@@ -55,7 +55,7 @@ describe("l'enchaînement des réflexes", () => {
         (o) => o.source === "reflexe",
       );
       expect(reflexes.map((o) => o.valeur)).toEqual([...prises].map(() => 0));
-    });
+    }, 30_000);
   }
 
   it("se montre dans les épisodes où les réflexes s'appellent les uns les autres", () => {

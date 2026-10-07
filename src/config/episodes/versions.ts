@@ -67,6 +67,21 @@ export const VERSIONS_DES_MODELES: Readonly<Record<string, VersionDuModele>> = {
   "reseau-a-redessiner": { version: 1, empreinte: [360039, -190698, -51721] },
   "pari-du-reemploi": { version: 1, empreinte: [187237, -568746, -25919] },
   "grand-compte-exclusif": { version: 1, empreinte: [277116, -17165, -84313] },
+  "chambres-bradees": { version: 1, empreinte: [2151384, 1911616, 2063691] },
+  "seminaire-qui-evince": { version: 1, empreinte: [1154473, 1111879, 1121998] },
+  surreservation: { version: 1, empreinte: [912726, 833834, 841410] },
+  "note-qui-chute": { version: 1, empreinte: [465686, 379244, 374805] },
+  "ratio-matiere": { version: 1, empreinte: [302017, 250065, 285008] },
+  intersaison: { version: 1, empreinte: [-362928, -494449, -412696] },
+  "chambres-pas-pretes": { version: 1, empreinte: [7639, -67987, -38509] },
+  "brigade-a-bout": { version: 1, empreinte: [121636, 65839, 80414] },
+  "renovation-sans-fermer": { version: 1, empreinte: [369233, 244843, 262415] },
+  "saisonniers-de-juillet": { version: 1, empreinte: [28326, -36932, -22861] },
+  "postes-introuvables": { version: 1, empreinte: [966142, 343233, 530156] },
+  "apprentis-qui-decrochent": { version: 1, empreinte: [115321, 86602, 105497] },
+  "cuisine-centrale": { version: 1, empreinte: [4673, -83006, -28225] },
+  "spa-a-financer": { version: 1, empreinte: [229187, -26075, 0] },
+  "enseigne-a-la-porte": { version: 1, empreinte: [990102, -5118737, -298181] },
 };
 
 export const versionDuModele = (code: string): number => VERSIONS_DES_MODELES[code]?.version ?? 1;

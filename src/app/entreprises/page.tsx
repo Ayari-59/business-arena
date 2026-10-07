@@ -21,6 +21,7 @@ import { BandeFinale } from "@/components/bande-finale";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { Bande } from "@/components/bande";
+import { EPISODES } from "@/pedagogy/episodes/registre";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
 
@@ -349,10 +350,10 @@ export default async function EntreprisesPage() {
                 Nouveau · Pour les entreprises
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
-                Quarante-huit épisodes dans la peau d&apos;un manager : une agence qui dérape, une
-                équipe qui s&apos;épuise, une commande à prix cassé, un concurrent à racheter, un
-                projet qu&apos;on n&apos;ose pas arrêter… Jugé sur ses décisions plutôt que sur son
-                résultat.
+                {EPISODES.length} épisodes dans la peau d&apos;un manager : une agence qui dérape,
+                une équipe qui s&apos;épuise, une commande à prix cassé, des chambres qu&apos;on
+                brade, une brigade à bout, un concurrent à racheter… Jugé sur ses décisions plutôt
+                que sur son résultat.
               </p>
             </div>
             <Link

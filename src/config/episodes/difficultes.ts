@@ -7,12 +7,12 @@
  * meilleure. Un point par critère rempli, sur les six décisions : 0 ou 1
  * point, facile ; de 2 à 5, moyen ; 6 et plus, difficile. La règle et ses
  * seuils, ceux du bilan, sont dans `src/pedagogy/episodes/difficulte.ts`, et
- * s'appliquent aux quarante-huit épisodes ; un test vérifie le tableau.
+ * s'appliquent aux soixante-trois épisodes ; un test vérifie le tableau.
  *
  * Elle sert à recommander le prochain épisode : on ne propose pas un épisode
  * difficile à qui commence une compétence.
  *
- * Sept épisodes départagent mal : quatre de leurs décisions au moins sont si
+ * Quinze épisodes départagent mal : quatre de leurs décisions au moins sont si
  * serrées qu'un bon et un moins bon manager y obtiennent des qualités proches.
  * On ne les recommande qu'en dernier.
  */
@@ -67,6 +67,21 @@ export const DIFFICULTES: Readonly<Record<string, Difficulte>> = {
   "reseau-a-redessiner": "moyen", // 46 (5 points)
   "pari-du-reemploi": "facile", // 47 (1 point)
   "grand-compte-exclusif": "moyen", // 48 (2 points)
+  "chambres-bradees": "moyen", // 49 (5 points)
+  "seminaire-qui-evince": "difficile", // 50 (6 points)
+  surreservation: "facile", // 51 (1 point)
+  "note-qui-chute": "difficile", // 52 (6 points)
+  "ratio-matiere": "difficile", // 53 (6 points)
+  intersaison: "moyen", // 54 (3 points)
+  "chambres-pas-pretes": "difficile", // 55 (7 points)
+  "brigade-a-bout": "moyen", // 56 (4 points)
+  "renovation-sans-fermer": "moyen", // 57 (5 points)
+  "saisonniers-de-juillet": "difficile", // 58 (6 points)
+  "postes-introuvables": "moyen", // 59 (5 points)
+  "apprentis-qui-decrochent": "difficile", // 60 (7 points)
+  "cuisine-centrale": "difficile", // 61 (9 points)
+  "spa-a-financer": "moyen", // 62 (4 points)
+  "enseigne-a-la-porte": "difficile", // 63 (8 points)
 };
 
 export const PEU_DISCRIMINANTS: readonly string[] = [
@@ -77,4 +92,12 @@ export const PEU_DISCRIMINANTS: readonly string[] = [
   "seuil-qui-bouge",
   "ecarts-du-budget",
   "louer-ou-acheter",
+  "chambres-bradees",
+  "seminaire-qui-evince",
+  "ratio-matiere",
+  "chambres-pas-pretes",
+  "saisonniers-de-juillet",
+  "apprentis-qui-decrochent",
+  "cuisine-centrale",
+  "spa-a-financer",
 ];

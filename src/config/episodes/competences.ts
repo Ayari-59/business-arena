@@ -868,4 +868,229 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La revue annuelle des prix
     { principale: "R4", secondaires: ["R5"] },
   ],
+  // 49. Les chambres qu'on brade
+  "chambres-bradees": [
+    // D1 · Le pick-up est en retard
+    { principale: "R4", secondaires: ["R2"] },
+    // D2 · Un groupe sur le pont de l'Ascension
+    { principale: "R5", secondaires: ["R4"] },
+    // D3 · Bookalia propose son programme
+    { principale: "R6", secondaires: ["R4"] },
+    // D4 · Un allotement pour l'été
+    { principale: "R1", secondaires: ["R5"] },
+    // D5 · L'été se dessine
+    { principale: "R3", secondaires: ["R10"] },
+    // D6 · Le taux d'occupation de juin
+    { principale: "R10", secondaires: ["R4"] },
+  ],
+  // 50. Le séminaire qui chasse les clients
+  "seminaire-qui-evince": [
+    // D1 · Cinquante-cinq chambres en juin
+    { principale: "R4", secondaires: ["R5", "R2"] },
+    // D2 · Le contrat
+    { principale: "R6", secondaires: ["R5"] },
+    // D3 · La convention Mélizane
+    { principale: "R4", secondaires: ["R10"] },
+    // D4 · La série de Tavenne
+    { principale: "R1", secondaires: ["R5", "R7"] },
+    // D5 · Mélizane se réorganise
+    { principale: "R3", secondaires: ["R6"] },
+    // D6 · Les groupes de fin juillet
+    { principale: "R10", secondaires: ["R4"] },
+  ],
+  // 51. Les chambres vendues deux fois
+  surreservation: [
+    // D1 · Une politique avant le premier salon
+    { principale: "R5", secondaires: ["R2", "R4"] },
+    // D2 · Qui déloger ?
+    { principale: "R2", secondaires: ["R5"] },
+    // D3 · Faut-il garantir les réservations ?
+    { principale: "R5", secondaires: ["R6"] },
+    // D4 · Le congrès national d'Annecy
+    { principale: "R4", secondaires: ["R2"] },
+    // D5 · Novembre et ses salons
+    { principale: "R3", secondaires: ["R10"] },
+    // D6 · Les directeurs veulent arrêter
+    { principale: "R4", secondaires: ["R10"] },
+  ],
+  // 52. La note qui chute
+  "note-qui-chute": [
+    // D1 · La note qui chute
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le buffet vide de 8 h 40
+    { principale: "R2", secondaires: ["R6"] },
+    // D3 · Baisser les prix de l'été ?
+    { principale: "R10", secondaires: ["R5"] },
+    // D4 · Une agence promet de remonter la note
+    { principale: "R4", secondaires: ["R5"] },
+    // D5 · La canicule arrive
+    { principale: "R5", secondaires: ["R6"] },
+    // D6 · La note remonte trop lentement
+    { principale: "R6", secondaires: ["R4"] },
+  ],
+  // 53. Le ratio matière qui dérape
+  "ratio-matiere": [
+    // D1 · 36,4 % de ratio matière
+    { principale: "R2", secondaires: ["R1", "R4"] },
+    // D2 · La carte d'automne
+    { principale: "R5", secondaires: ["R2"] },
+    // D3 · Septembre clôturé, les assiettes au passe
+    { principale: "R10", secondaires: ["R3"] },
+    // D4 · Changer de grossiste ?
+    { principale: "R4", secondaires: ["R2"] },
+    // D5 · Novembre s'annonce creux
+    { principale: "R6", secondaires: ["R4"] },
+    // D6 · Avant la fermeture pour travaux
+    { principale: "R6", secondaires: ["R4"] },
+  ],
+  // 54. L'intersaison qui assèche la caisse
+  intersaison: [
+    // D1 · La saison se termine
+    { principale: "R5", secondaires: ["R2", "R4"] },
+    // D2 · Les acomptes de l'été et de l'hiver
+    { principale: "R5", secondaires: ["R6"] },
+    // D3 · Le programme de travaux
+    { principale: "R6", secondaires: ["R4"] },
+    // D4 · Les factures de l'hiver
+    { principale: "R4", secondaires: ["R6"] },
+    // D5 · La légionelle
+    { principale: "R3", secondaires: ["R10", "R1"] },
+    // D6 · Alpine Horizons et l'hiver prochain
+    { principale: "R5", secondaires: ["R6"] },
+  ],
+  // 55. Les chambres pas prêtes à 15 h
+  "chambres-pas-pretes": [
+    // D1 · Les chambres pas prêtes à 15 h
+    { principale: "R4", secondaires: ["R2", "R6"] },
+    // D2 · Les clients de 13 h attendent
+    { principale: "R2", secondaires: ["R10"] },
+    // D3 · La recouche de tous les jours
+    { principale: "R6", secondaires: ["R9"] },
+    // D4 · Le salon de février
+    { principale: "R5", secondaires: ["R8"] },
+    // D5 · Les oublis dans les avis
+    { principale: "R10", secondaires: ["R8"] },
+    // D6 · Un groupe à 12 h 30
+    { principale: "R5", secondaires: ["R6"] },
+  ],
+  // 56. La brigade à bout
+  "brigade-a-bout": [
+    // D1 · Une brigade à bout
+    { principale: "R8", secondaires: ["R2", "R4"] },
+    // D2 · La mise en place en double
+    { principale: "R8", secondaires: ["R4"] },
+    // D3 · Préparer décembre
+    { principale: "R5", secondaires: ["R6"] },
+    // D4 · Les repas de groupe de décembre
+    { principale: "R4", secondaires: ["R10"] },
+    // D5 · La carte de décembre
+    { principale: "R6", secondaires: ["R4"] },
+    // D6 · Les soirs de fêtes
+    { principale: "R8", secondaires: ["R4"] },
+  ],
+  // 57. La rénovation sans fermer
+  "renovation-sans-fermer": [
+    // D1 · Trois étages à refaire avant la rentrée
+    { principale: "R2", secondaires: ["R4", "R6"] },
+    // D2 · Que dire aux clients ?
+    { principale: "R6", secondaires: ["R4", "R10"] },
+    // D3 · Qui loger où ?
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · Suivre le chantier
+    { principale: "R1", secondaires: ["R10"] },
+    // D5 · Le chantier a du retard
+    { principale: "R3", secondaires: ["R5", "R6"] },
+    // D6 · Cimalp prépare la rentrée
+    { principale: "R9", secondaires: ["R10"] },
+  ],
+  // 58. Les saisonniers de juillet
+  "saisonniers-de-juillet": [
+    // D1 · Huit saisonniers dans quatre semaines
+    { principale: "R6", secondaires: ["R8", "R4"] },
+    // D2 · Trois saisonniers sans logement
+    { principale: "R5", secondaires: ["R9"] },
+    // D3 · La première semaine de rush
+    { principale: "R3", secondaires: ["R8", "R10"] },
+    // D4 · Elif s'en va
+    { principale: "R1", secondaires: ["R9", "R5"] },
+    // D5 · Les ventes additionnelles
+    { principale: "R4", secondaires: ["R10", "R6"] },
+    // D6 · Finir la saison
+    { principale: "R8", secondaires: ["R9", "R5"] },
+  ],
+  // 59. Les postes qu'on ne pourvoit plus
+  "postes-introuvables": [
+    // D1 · Soixante-quatre postes pour l'été
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Les directeurs veulent une prime
+    { principale: "R4", secondaires: ["R9", "R6"] },
+    // D3 · La coupure
+    { principale: "R5", secondaires: ["R8", "R6"] },
+    // D4 · Le vivier se tarit
+    { principale: "R9", secondaires: ["R4"] },
+    // D5 · Le pick-up de l'été
+    { principale: "R3", secondaires: ["R10", "R1"] },
+    // D6 · Les postes qui resteront vides
+    { principale: "R6", secondaires: ["R5", "R4"] },
+  ],
+  // 60. Les apprentis qui décrochent
+  "apprentis-qui-decrochent": [
+    // D1 · La rentrée des apprentis
+    { principale: "R4", secondaires: ["R6", "R8"] },
+    // D2 · Le calendrier du CFA
+    { principale: "R6", secondaires: ["R4"] },
+    // D3 · Clervie s'arrête
+    { principale: "R5", secondaires: ["R9"] },
+    // D4 · Sanaa décroche
+    { principale: "R9", secondaires: ["R1", "R2"] },
+    // D5 · Deux contrats de plus ?
+    { principale: "R4", secondaires: ["R6"] },
+    // D6 · Les repas de fin d'année
+    { principale: "R8", secondaires: ["R5"] },
+  ],
+  // 61. La cuisine centrale qu'on n'attendait pas
+  "cuisine-centrale": [
+    // D1 · Le laboratoire ouvre, les cuisines se ferment
+    { principale: "R9", secondaires: ["R2", "R4"] },
+    // D2 · La date du comité
+    { principale: "R5", secondaires: ["R1", "R6"] },
+    // D3 · Les premières livraisons
+    { principale: "R5", secondaires: ["R10", "R4"] },
+    // D4 · Ce que disent les assiettes
+    { principale: "R10", secondaires: ["R1", "R9"] },
+    // D5 · La suite de la bascule
+    { principale: "R3", secondaires: ["R9", "R6"] },
+    // D6 · Ce qu'on confie encore au laboratoire
+    { principale: "R4", secondaires: ["R2", "R6"] },
+  ],
+  // 62. Le spa qui ne se rentabilise pas seul
+  "spa-a-financer": [
+    // D1 · Trois usages pour le même argent
+    { principale: "R4", secondaires: ["R2"] },
+    // D2 · Combien vaut un spa sur le prix d'une chambre ?
+    { principale: "R1", secondaires: ["R5"] },
+    // D3 · Les séminaires d'Évian
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · Un spa « à l'équilibre »
+    { principale: "R4", secondaires: ["R6"] },
+    // D5 · Le dossier du conseil de famille
+    { principale: "R3", secondaires: ["R1"] },
+    // D6 · Le financement
+    { principale: "R4", secondaires: ["R5"] },
+  ],
+  // 63. L'enseigne qui frappe à la porte
+  "enseigne-a-la-porte": [
+    // D1 · Orméa frappe à la porte
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Un essai avant de signer
+    { principale: "R1", secondaires: ["R5"] },
+    // D3 · Les maisons de caractère
+    { principale: "R6", secondaires: ["R4"] },
+    // D4 · Le projet de contrat
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Les chiffres de l'essai
+    { principale: "R3", secondaires: ["R10"] },
+    // D6 · La réponse d'Orméa
+    { principale: "R5", secondaires: ["R4"] },
+  ],
 };

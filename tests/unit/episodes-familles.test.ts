@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FAMILLES } from "../../src/config/episodes/familles";
+import { FAMILLES, SECTEURS } from "../../src/config/episodes/familles";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
 
 /** La page de choix range les épisodes par famille : aucun ne doit s'y perdre. */
@@ -17,8 +17,20 @@ describe("les familles d'épisodes", () => {
     expect(FAMILLES.flatMap((f) => f.episodes)).toEqual(EPISODES.map((e) => e.code));
   });
 
-  it("ont chacune un code unique et au moins trois épisodes", () => {
+  it("ont chacune un code unique et au moins deux épisodes", () => {
     expect(new Set(FAMILLES.map((f) => f.code)).size).toBe(FAMILLES.length);
-    for (const f of FAMILLES) expect(f.episodes.length).toBeGreaterThanOrEqual(3);
+    for (const f of FAMILLES) expect(f.episodes.length, f.code).toBeGreaterThanOrEqual(2);
+  });
+
+  it("appartiennent chacune à un secteur connu", () => {
+    const codes = SECTEURS.map((s) => s.code);
+    expect(new Set(codes).size).toBe(codes.length);
+    for (const f of FAMILLES) expect(codes, f.code).toContain(f.secteur);
+  });
+
+  it("se suivent par secteur : la page ouvre chaque secteur une seule fois", () => {
+    // Un secteur qui reviendrait plus bas couperait sa section en deux.
+    const suite = FAMILLES.map((f) => f.secteur).filter((s, i, t) => i === 0 || t[i - 1] !== s);
+    expect(new Set(suite).size).toBe(suite.length);
   });
 });

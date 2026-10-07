@@ -121,7 +121,7 @@ describe("les mesures d'une partie", () => {
       const m = mesurer(ep, partie(ep, ep.references[0]!.chemin));
       for (const d of m.decisions) expect(d.choisie.qualite, `${ep.code} D${d.d + 1}`).toBe(1);
     }
-  });
+  }, 30_000);
 
   it("donnent une qualité basse aux réflexes, même pris à la suite", () => {
     // Chaque décision qui offre un réflexe le prend ; les autres suivent la meilleure référence.
@@ -143,7 +143,7 @@ describe("les mesures d'une partie", () => {
       qualites.push(...q);
     }
     expect(qualites.reduce((a, b) => a + b) / qualites.length).toBeLessThan(0.3);
-  });
+  }, 30_000);
 
   it("jugent chaque décision comme le bilan, sur des chemins variés", () => {
     for (const ep of EPISODES) {

@@ -164,10 +164,10 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         id: "economiste",
-        titre: "Appeler Ludmila Sabatier, économiste de la fédération du bâtiment",
+        titre: "Appeler Gersende Lhuillier, économiste de la fédération du bâtiment",
         cout: 0.5,
         nature: "utile",
-        resultat: `Ludmila Sabatier : « Trois avenirs pour l'an prochain. Aides maintenues et particuliers qui s'y mettent vraiment : une chance sur trois ; une agence moyenne signerait ${PORTEUR!.bouquets} bouquets par an. Aides maintenues mais adoption lente, faute d'artisans et de confiance : un peu moins d'une chance sur deux ; plutôt ${MOYEN!.bouquets}. Aides réduites au budget de l'automne : une sur quatre ; ${DIFFICILE!.bouquets}, pas plus. Le budget sera présenté dans six semaines. »`,
+        resultat: `Gersende Lhuillier : « Trois avenirs pour l'an prochain. Aides maintenues et particuliers qui s'y mettent vraiment : une chance sur trois ; une agence moyenne signerait ${PORTEUR!.bouquets} bouquets par an. Aides maintenues mais adoption lente, faute d'artisans et de confiance : un peu moins d'une chance sur deux ; plutôt ${MOYEN!.bouquets}. Aides réduites au budget de l'automne : une sur quatre ; ${DIFFICILE!.bouquets}, pas plus. Le budget sera présenté dans six semaines. »`,
       },
       {
         id: "conseil",
@@ -522,7 +522,7 @@ export const ETAPES: readonly Etape[] = [
         nature: "utile",
         resultat: (ctx) =>
           ctx.aides === 0
-            ? `Aides réduites d'un tiers à partir de mars. Ludmila Sabatier s'attend désormais au scénario difficile : ${DIFFICILE!.bouquets} bouquets par agence moyenne et par an, pas plus.`
+            ? `Aides réduites d'un tiers à partir de mars. Gersende Lhuillier s'attend désormais au scénario difficile : ${DIFFICILE!.bouquets} bouquets par agence moyenne et par an, pas plus.`
             : `Aides maintenues : le scénario difficile est écarté. Reste à savoir si les particuliers suivent vraiment (${PORTEUR!.bouquets} bouquets par agence moyenne et par an) ou lentement (${MOYEN!.bouquets}) : c'est ce que le test dit.`,
       },
     ],

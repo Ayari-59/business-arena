@@ -380,7 +380,7 @@ export const IMPREVUS: readonly Imprevu[] = [
     de: "Léandre Pélardy",
     role: "Directeur commercial régional",
     texte:
-      "Marceau Duteil, notre commercial PME de la zone sud, part chez Tarval à la fin du mois. Il connaît chacun de ses clients, et leurs prix palette.",
+      "Fulbert Duteil, notre commercial PME de la zone sud, part chez Tarval à la fin du mois. Il connaît chacun de ses clients, et leurs prix palette.",
     duree: 13,
   },
 ];

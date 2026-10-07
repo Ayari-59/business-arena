@@ -381,7 +381,7 @@ describe("la personnalisation du parcours", () => {
 describe("la difficulté des épisodes", () => {
   const decomptes = EPISODES.map((ep) => ({ ep, d: decompterLaDifficulte(ep) }));
 
-  it("suit une seule règle pour les quarante-huit épisodes", () => {
+  it("suit une seule règle pour tous les épisodes", () => {
     for (const { ep, d } of decomptes) {
       expect(DIFFICULTES[ep.code], ep.code).toBe(difficulteDesPoints(d.points));
     }

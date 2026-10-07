@@ -34,6 +34,10 @@ const AUTRES_HASARDS: Readonly<Record<string, number>> = {
   "projet-a-arreter": 18,
   "reseau-a-redessiner": 22,
   "grand-compte-exclusif": 2,
+  "saisonniers-de-juillet": 16,
+  "postes-introuvables": 21,
+  "spa-a-financer": 6,
+  "enseigne-a-la-porte": 2,
 };
 
 export const hasardDuDebrief = (code: string): number => AUTRES_HASARDS[code] ?? HASARD_HABITUEL;

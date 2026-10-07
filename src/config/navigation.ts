@@ -18,6 +18,7 @@
  * ateliers vivaient sous « Découvrir ». Enseignants, Élèves, Ressources :
  * chacun sait où regarder.
  */
+import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 
 export interface LienDeMenu {
   href: string;
@@ -172,7 +173,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/entreprises/episode",
         libelle: "Épisodes manager",
-        aide: "Quarante-huit trimestres dans la peau d'un manager, du terrain à la stratégie : six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
+        aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : six décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
       },
       {
         href: "/entreprises/episode/profil",
