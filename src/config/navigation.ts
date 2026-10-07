@@ -72,17 +72,18 @@ export const LIEN_CONTACT: LienDeMenu = {
 };
 
 /**
- * LES GROUPES DISENT CE QU'ON VEUT FAIRE, pas à qui la page s'adresse.
+ * LES GROUPES SONT LES PUBLICS DU SITE.
  *
- * Sur téléphone, le menu est la seule navigation : il est lu comme une
- * question — je veux jouer, je veux animer une classe, je représente un
- * établissement, je veux comprendre — et chaque groupe y répond par une à
- * cinq entrées. Le premier est déplié à l'ouverture : celui qui vient jouer
- * n'a rien à chercher.
+ * Le plan rangeait les pages par intention (jouer, découvrir) et par
+ * institution (enseignants, établissements), puis les écoles de commerce et
+ * les managers s'y sont ajoutés en groupes d'une seule entrée. Il se lit
+ * maintenant comme le site se vend : un groupe pour qui vient jouer, puis un
+ * par public — les lycées et le BTS, les écoles de commerce, les managers —,
+ * et ce qui sert à tous (les ressources, le contact) à la fin.
  *
- * Les libellés des entrées « à plat » sur grand écran (enTete) ne changent
- * pas : la barre du bureau n'avait pas à bouger pour que le menu du téléphone
- * s'organise autrement.
+ * Sur téléphone, le menu est la seule navigation : le premier groupe est
+ * déplié à l'ouverture, celui qui vient jouer n'a rien à chercher. Les
+ * libellés des entrées « à plat » sur grand écran (enTete) ne changent pas.
  */
 export const NAVIGATION: readonly GroupeDeMenu[] = [
   {
@@ -105,7 +106,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
   },
   {
     code: "enseignants",
-    titre: "Enseignants",
+    titre: "Lycées et BTS",
     liens: [
       {
         href: "/enseignants",
@@ -125,31 +126,20 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         aide: "Votre référentiel bloc par bloc, pour chaque diplôme qui a un atelier : où chacun se travaille, et ce qui n'est qu'effleuré.",
       },
       {
-        href: "/guide",
-        libelle: "Guide",
-        aide: "Comment on joue et comment on anime, réunis au même endroit.",
+        href: "/compete",
+        libelle: "Championship",
+        aide: "Les concours entre classes, leurs épreuves et leurs classements.",
       },
-      {
-        href: "/teacher/login",
-        libelle: "Espace enseignant",
-        aide: "Créer une partie, suivre les équipes, clôturer les tours et relire le carnet d'usage.",
-        acces: "enseignant",
-      },
-    ],
-  },
-  {
-    code: "etablissements",
-    titre: "Établissements",
-    liens: [
       {
         href: "/guide#etablissements",
         libelle: "Déploiement",
         aide: "Un espace d'administration par établissement : codes d'invitation pour les enseignants, suivi des parties et des concours.",
       },
       {
-        href: "/compete",
-        libelle: "Championship",
-        aide: "Les concours entre classes, leurs épreuves et leurs classements.",
+        href: "/teacher/login",
+        libelle: "Espace enseignant",
+        aide: "Créer une partie, suivre les équipes, clôturer les tours et relire le carnet d'usage.",
+        acces: "enseignant",
       },
     ],
   },
@@ -162,6 +152,16 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         libelle: "Écoles de commerce et universités",
         aide: "L'arène pour le bachelor, les épisodes manager pour le master et la formation continue, et dix compétences mesurées à montrer à un jury d'accréditation.",
       },
+      {
+        href: "/enseignants/episodes",
+        libelle: "Épisodes en classe",
+        aide: "Un coût marginal, une VAN ou un rachat joué comme une décision, en une séance de deux heures, avec la fiche de l'enseignant.",
+      },
+      {
+        href: "/fonctionnalites",
+        libelle: "Fonctionnalités",
+        aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
+      },
     ],
   },
   {
@@ -173,11 +173,16 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         libelle: "Épisodes manager",
         aide: "Quarante-huit trimestres dans la peau d'un manager, du terrain à la stratégie : six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
       },
+      {
+        href: "/entreprises/episode/profil",
+        libelle: "Mon profil décisionnel",
+        aide: "Ce que vos épisodes disent de votre façon de décider : dix compétences, leurs preuves, et les épisodes à jouer ensuite.",
+      },
     ],
   },
   {
-    code: "decouvrir",
-    titre: "Découvrir",
+    code: "ressources",
+    titre: "Ressources",
     liens: [
       {
         href: "/entreprises",
@@ -186,14 +191,14 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         enTete: true,
       },
       {
-        href: "/fonctionnalites",
-        libelle: "Fonctionnalités",
-        aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
-      },
-      {
         href: "/notions",
         libelle: "Fiches notions",
         aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
+      },
+      {
+        href: "/guide",
+        libelle: "Guide",
+        aide: "Comment on joue et comment on anime, réunis au même endroit.",
       },
     ],
   },

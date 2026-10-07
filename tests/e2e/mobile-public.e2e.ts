@@ -77,12 +77,12 @@ describe("aucun scroll horizontal, aux six largeurs", () => {
   }
 });
 
-describe("le menu, rangé par intention", () => {
-  it("quatre intentions, des groupes d'au moins 44 px", async () => {
+describe("le menu, rangé par public", () => {
+  it("les publics, des groupes d'au moins 44 px", async () => {
     const { contexte, page } = await telephone();
     await ouvrir(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    for (const titre of ["Jouer", "Enseignants", "Établissements", "Découvrir"]) {
+    for (const titre of ["Jouer", "Lycées et BTS", "Écoles de commerce", "Ressources"]) {
       const groupe = page.locator("#plan-du-site button[aria-controls^='groupe-']", {
         hasText: titre,
       });
