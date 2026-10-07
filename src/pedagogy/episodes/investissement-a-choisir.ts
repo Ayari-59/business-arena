@@ -62,7 +62,7 @@ const GAELLE = { de: "Gaëlle Robineau", role: "Responsable technique du site" }
 const SANDRO = { de: "Sandro Pinheiro", role: "Chef d'équipe préparation" } as const;
 const AIME = { de: "Aimé Margerie", role: "Ingénieur, bureau de contrôle" } as const;
 const RAMON = {
-  de: "Ramón Echeverría",
+  de: "Ramón Arrieta",
   role: "Négociant en matériel de stockage d'occasion",
 } as const;
 const FOURNISSEURS = {

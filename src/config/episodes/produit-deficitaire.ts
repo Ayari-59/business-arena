@@ -23,7 +23,7 @@ const EDOUARD = { de: "Édouard Vassal", role: "Directeur régional" } as const;
 const NINON = { de: "Ninon Ferracci", role: "Contrôleuse de gestion régionale" } as const;
 const ARMELLE = { de: "Armelle Kieffer", role: "Directrice de l'agence" } as const;
 const LILIAN = { de: "Lilian Guillaumin", role: "Vendeur-conseil plomberie-chauffage" } as const;
-const PRISCILLA = { de: "Priscilla Nogueira", role: "Vendeuse-conseil couleur" } as const;
+const AMARA = { de: "Amara Nogueira", role: "Vendeuse-conseil couleur" } as const;
 const BOUBACAR = { de: "Boubacar Camara", role: "Chef de parc" } as const;
 const RADU = { de: "Radu Ilescu", role: "Gérant d'Ilescu Chauffage" } as const;
 const HELENA = { de: "Héléna Moretti", role: "Déléguée commerciale, Peintures Orvalis" } as const;
@@ -202,7 +202,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "Visserie, fixation et serrurerie : 150 k€ de chiffre d'affaires, 60 k€ de marge sur coût variable, 14 k€ de coûts spécifiques. Corner peinture-décoration : 50 k€ de chiffre d'affaires à 24 % de taux de marge sur coût variable ; ses coûts spécifiques : Priscilla, vendeuse-conseil couleur, 11 k€ ; la machine à teinter louée, 4 k€ ; la détention du stock, 3 k€ ; la démarque (pots périmés, teintes refusées), 5 k€ ; l'animation, 2 k€ ; les présentoirs, 1 k€.",
+          "Visserie, fixation et serrurerie : 150 k€ de chiffre d'affaires, 60 k€ de marge sur coût variable, 14 k€ de coûts spécifiques. Corner peinture-décoration : 50 k€ de chiffre d'affaires à 24 % de taux de marge sur coût variable ; ses coûts spécifiques : Amara, vendeuse-conseil couleur, 11 k€ ; la machine à teinter louée, 4 k€ ; la détention du stock, 3 k€ ; la démarque (pots périmés, teintes refusées), 5 k€ ; l'animation, 2 k€ ; les présentoirs, 1 k€.",
       },
       {
         id: "references",
@@ -224,11 +224,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous du corner peinture ?",
     options: [
       {
-        t: "Le fermer : solder le stock, rendre la machine, mettre Priscilla au comptoir général",
-        d: "Soldes à −20 % en semaines 3 et 4. Priscilla remplace l'intérimaire du comptoir ; la machine se rend avec un mois de préavis.",
+        t: "Le fermer : solder le stock, rendre la machine, mettre Amara au comptoir général",
+        d: "Soldes à −20 % en semaines 3 et 4. Amara remplace l'intérimaire du comptoir ; la machine se rend avec un mois de préavis.",
       },
       {
-        t: "Le réorganiser : 250 références, la machine gardée, Priscilla à mi-temps au comptoir plomberie",
+        t: "Le réorganiser : 250 références, la machine gardée, Amara à mi-temps au comptoir plomberie",
         d: "Les références dormantes retournent au fournisseur. Un peu moins de choix pour les peintres.",
       },
       {
@@ -243,14 +243,14 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...PRISCILLA,
+          ...AMARA,
           texte:
             "Le comptoir général, d'accord. Je donnerai aux peintres l'adresse d'un confrère pour les teintes, ils ne m'en voudront pas.",
         },
       ],
       [
         {
-          ...PRISCILLA,
+          ...AMARA,
           texte:
             "Le comptoir plomberie le matin, je connais le sanitaire. Lilian va pouvoir chiffrer ses chaudières sans qu'on l'interrompe toutes les cinq minutes.",
         },
@@ -388,7 +388,7 @@ export const ETAPES: readonly Etape[] = [
         resultat: (ctx) =>
           `Lilian : « Je chiffrerais sur place les remplacements de chaudières, avant que Calorive passe. ${
             ctx.priscillaAuComptoir
-              ? "Avec Priscilla au comptoir le matin, je peux sortir sans laisser les clients attendre. »"
+              ? "Avec Amara au comptoir le matin, je peux sortir sans laisser les clients attendre. »"
               : "Mais tant que je suis seul au comptoir plomberie, chaque journée dehors, ce sont des clients qui attendent. »"
           }`,
       },

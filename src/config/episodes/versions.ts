@@ -97,6 +97,21 @@ export const VERSIONS_DES_MODELES: Readonly<Record<string, VersionDuModele>> = {
   "assistant-ia": { version: 1, empreinte: [795054, 523670, 528941] },
   "associe-qui-part": { version: 1, empreinte: [280762, -1306950, -188866] },
   "generaliste-ou-specialiste": { version: 1, empreinte: [330737, -2373876, -957875] },
+  "lits-vides": { version: 1, empreinte: [733855, 597920, 642141] },
+  "sorties-qui-bloquent": { version: 1, empreinte: [-35218, -216286, -129115] },
+  "famille-qui-ecrit": { version: 1, empreinte: [-18758, -48289, -38243] },
+  "interim-qui-flambe": { version: 1, empreinte: [22357, -602701, -631562] },
+  "section-en-deficit": { version: 1, empreinte: [-168950, -389265, -386739] },
+  "heure-a-domicile": { version: 1, empreinte: [-123102, -275531, -244396] },
+  "chutes-la-nuit": { version: 1, empreinte: [-56779, -155209, -83488] },
+  "dossier-de-soins": { version: 1, empreinte: [18215, -30250, -27608] },
+  "postes-de-douze-heures": { version: 1, empreinte: [9135, -138353, -18122] },
+  "absenteisme-qui-s-installe": { version: 1, empreinte: [29350, -132525, -87764] },
+  "former-ses-soignants": { version: 1, empreinte: [245756, -33314, -98142] },
+  "equipes-jour-et-nuit": { version: 1, empreinte: [8886, -31425, -13430] },
+  "reconstruire-ou-regrouper": { version: 1, empreinte: [797479, -1629800, -1794974] },
+  "association-a-reprendre": { version: 1, empreinte: [152667, -745233, -354980] },
+  "virage-domiciliaire": { version: 1, empreinte: [898716, -925944, -473012] },
 };
 
 export const versionDuModele = (code: string): number => VERSIONS_DES_MODELES[code]?.version ?? 1;

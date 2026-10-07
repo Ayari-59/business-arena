@@ -45,6 +45,14 @@ const AUTRES_HASARDS: Readonly<Record<string, number>> = {
   "assistant-ia": 30,
   "associe-qui-part": 30,
   "generaliste-ou-specialiste": 14,
+  "sorties-qui-bloquent": 8,
+  "famille-qui-ecrit": 13,
+  "interim-qui-flambe": 24,
+  "postes-de-douze-heures": 16,
+  "former-ses-soignants": 27,
+  "equipes-jour-et-nuit": 2,
+  "association-a-reprendre": 16,
+  "virage-domiciliaire": 17,
 };
 
 export const hasardDuDebrief = (code: string): number => AUTRES_HASARDS[code] ?? HASARD_HABITUEL;

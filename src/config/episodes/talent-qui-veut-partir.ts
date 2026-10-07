@@ -709,7 +709,7 @@ export const REPONSES = {
     "J'ai accepté l'offre de Valdane. Je partirai à la fin de la semaine 5, si vous acceptez de réduire mon préavis.",
   ],
   cabinetRapide:
-    "Le cabinet a trouvé : Corentin Vaudrey, huit ans de comptoir chez un concurrent, arrive à Givors en semaine 7 avec quelques-uns de ses clients.",
+    "Le cabinet a trouvé : Oscar Vaudrey, huit ans de comptoir chez un concurrent, arrive à Givors en semaine 7 avec quelques-uns de ses clients.",
   cabinetLent:
     "Les deux candidats ont décliné au dernier moment. Le cabinet relance sa recherche : pas d'arrivée avant la semaine 11.",
   reportingSupprime:

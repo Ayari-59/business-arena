@@ -38,6 +38,13 @@ export const SECTEURS: readonly Secteur[] = [
     texte:
       "Atlas Conseil, cabinet de conseil en management et bureau d'études né à Nantes, vend le temps de ses consultants, qui ne se stocke pas.",
   },
+  {
+    code: "sante",
+    nom: "Santé et médico-social",
+    entreprise: "Association Solvanne",
+    texte:
+      "L'Association Solvanne, association à but non lucratif née à Dijon, gère une clinique de réadaptation, des EHPAD, des services à domicile et un pôle handicap, avec l'argent public d'un tarif qu'elle ne fixe pas.",
+  },
 ];
 
 export interface Famille {
@@ -253,6 +260,46 @@ export const FAMILLES: readonly Famille[] = [
       "Pour la direction : assistant d'IA, départ d'un associé, positionnement, les paris qui engagent le cabinet.",
     direction: true,
     episodes: ["assistant-ia", "associe-qui-part", "generaliste-ou-specialiste"],
+  },
+  {
+    code: "sante-accueillir",
+    titre: "Accueillir et orienter",
+    secteur: "sante",
+    texte:
+      "Lits vides, sorties qui bloquent, familles : le parcours d'un patient, de l'entrée à la sortie.",
+    episodes: ["lits-vides", "sorties-qui-bloquent", "famille-qui-ecrit"],
+  },
+  {
+    code: "sante-budget",
+    titre: "Tenir le budget",
+    secteur: "sante",
+    texte:
+      "Intérim, sections tarifaires, heure à domicile : un budget fixé par d'autres, à tenir quand même.",
+    episodes: ["interim-qui-flambe", "section-en-deficit", "heure-a-domicile"],
+  },
+  {
+    code: "sante-soins",
+    titre: "Organiser les soins",
+    secteur: "sante",
+    texte:
+      "Chutes, dossier de soins, postes de douze heures : la qualité des soins tient à leur organisation.",
+    episodes: ["chutes-la-nuit", "dossier-de-soins", "postes-de-douze-heures"],
+  },
+  {
+    code: "sante-equipes",
+    titre: "Les équipes soignantes",
+    secteur: "sante",
+    texte: "Absentéisme, formation, jour et nuit : garder des soignants, c'est garder le soin.",
+    episodes: ["absenteisme-qui-s-installe", "former-ses-soignants", "equipes-jour-et-nuit"],
+  },
+  {
+    code: "sante-strategie",
+    titre: "Décider pour l'association",
+    secteur: "sante",
+    texte:
+      "Pour la direction : reconstruire, reprendre une association, virage domiciliaire, les paris qui engagent l'association.",
+    direction: true,
+    episodes: ["reconstruire-ou-regrouper", "association-a-reprendre", "virage-domiciliaire"],
   },
 ];
 

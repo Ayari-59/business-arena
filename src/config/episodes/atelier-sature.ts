@@ -27,8 +27,8 @@ const SOIZIC = { de: "Soizic Le Bihan", role: "Contrôleuse de gestion" } as con
 const ALEXANDRE = { de: "Alexandre Fourcade", role: "Directeur commercial" } as const;
 const SEKOU = { de: "Sékou Traoré", role: "Opérateur du centre d'usinage" } as const;
 const LUCIEN = { de: "Lucien Bouvard", role: "Chef d'équipe assemblage" } as const;
-const DELPHINE = {
-  de: "Delphine Arcand",
+const WARDA = {
+  de: "Warda Arcand",
   role: "Responsable des achats, Alvéole Habitat",
 } as const;
 const BOGDAN = { de: "Bogdan Ilie", role: "Technicien du constructeur de la machine" } as const;
@@ -211,7 +211,7 @@ export const ETAPES: readonly Etape[] = [
           "Alvéole Habitat nous demande 30 portes palières coupe-feu pour une résidence à Caluire, livrées des semaines 4 à 9, à 1 350 € la porte. Le coût variable est de 900 € : 450 € de marge par porte, 13 500 € sur la commande. Je leur dis oui ?",
       },
       {
-        ...DELPHINE,
+        ...WARDA,
         heure: "11:00",
         texte:
           "Monsieur Sauvageot, il nous faut votre réponse lundi. Notre prix est ferme, mais nous savons que vos délais sont tenus.",
@@ -259,7 +259,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...DELPHINE,
+          ...WARDA,
           texte: "Parfait, nous signons. Premières livraisons en semaine 4.",
         },
       ],

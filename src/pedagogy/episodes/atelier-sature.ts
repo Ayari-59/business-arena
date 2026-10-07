@@ -44,8 +44,8 @@ const ecartAuBudget = (v: number) =>
 /** Le repère de la tuile : la marge par heure de machine d'un planning bien classé. */
 export const REPERE_MARGE_HEURE = 620;
 
-const DELPHINE = {
-  de: "Delphine Arcand",
+const WARDA = {
+  de: "Warda Arcand",
   role: "Responsable des achats, Alvéole Habitat",
 } as const;
 
@@ -329,7 +329,7 @@ export const EPISODE_ATELIER_SATURE: Episode<Trimestre> = {
     if (etape === D.bailleur && choix === 1) {
       // Le bailleur répond à la contre-proposition selon le hasard du trimestre.
       const signe = hasard(graine).uBailleur < CHANCE_CONTRE;
-      return [{ ...DELPHINE, texte: signe ? REPONSES.contreAcceptee : REPONSES.contreRefusee }];
+      return [{ ...WARDA, texte: signe ? REPONSES.contreAcceptee : REPONSES.contreRefusee }];
     }
     return null;
   },

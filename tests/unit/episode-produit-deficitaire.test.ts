@@ -205,7 +205,7 @@ describe("ce que l'épisode enseigne, décision par décision", () => {
     expect(c.slice(0, 2)).toEqual([1, 0]);
     expect(c.at(-1)).toBe(2);
     expect(ecart(MEILLEUR, D.peinture, 0, 3)).toBeGreaterThan(3000);
-    // Priscilla au comptoir plomberie ne vaut que si la gamme reste ouverte.
+    // Amara au comptoir plomberie ne vaut que si la gamme reste ouverte.
     const sansPlomberie = [0, ...MEILLEUR.slice(1)];
     expect(ecart(MEILLEUR, D.peinture, 1, 0)).toBeGreaterThan(
       ecart(sansPlomberie, D.peinture, 1, 0) + 2000,

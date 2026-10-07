@@ -172,11 +172,11 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         id: "conseil",
-        titre: "Appeler Gratien Bouchet, ancien DRH d'un groupe hôtelier de stations",
+        titre: "Appeler Ansgar Bouchet, ancien DRH d'un groupe hôtelier de stations",
         cout: 0.5,
         nature: "aide",
         resultat:
-          "Gratien Bouchet : « Avant de parler salaire, demande-toi où tes saisonniers vont dormir, et à quelle heure ils finiront le soir. Et ne paie jamais un nouveau plus qu'un ancien : dans une brigade, ça se sait en trois jours. »",
+          "Ansgar Bouchet : « Avant de parler salaire, demande-toi où tes saisonniers vont dormir, et à quelle heure ils finiront le soir. Et ne paie jamais un nouveau plus qu'un ancien : dans une brigade, ça se sait en trois jours. »",
       },
     ],
     diagnostic: true,

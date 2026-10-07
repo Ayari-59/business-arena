@@ -97,6 +97,21 @@ export const DIFFICULTES: Readonly<Record<string, Difficulte>> = {
   "assistant-ia": "facile", // 76 (1 point)
   "associe-qui-part": "moyen", // 77 (4 points)
   "generaliste-ou-specialiste": "moyen", // 78 (5 points)
+  "lits-vides": "moyen", // 79 (3 points)
+  "sorties-qui-bloquent": "moyen", // 80 (5 points)
+  "famille-qui-ecrit": "moyen", // 81 (5 points)
+  "interim-qui-flambe": "moyen", // 82 (3 points)
+  "section-en-deficit": "moyen", // 83 (4 points)
+  "heure-a-domicile": "moyen", // 84 (2 points)
+  "chutes-la-nuit": "difficile", // 85 (7 points)
+  "dossier-de-soins": "moyen", // 86 (4 points)
+  "postes-de-douze-heures": "moyen", // 87 (4 points)
+  "absenteisme-qui-s-installe": "moyen", // 88 (3 points)
+  "former-ses-soignants": "moyen", // 89 (3 points)
+  "equipes-jour-et-nuit": "moyen", // 90 (4 points)
+  "reconstruire-ou-regrouper": "moyen", // 91 (5 points)
+  "association-a-reprendre": "moyen", // 92 (2 points)
+  "virage-domiciliaire": "moyen", // 93 (2 points)
 };
 
 export const PEU_DISCRIMINANTS: readonly string[] = [
@@ -115,4 +130,7 @@ export const PEU_DISCRIMINANTS: readonly string[] = [
   "apprentis-qui-decrochent",
   "cuisine-centrale",
   "spa-a-financer",
+  "famille-qui-ecrit",
+  "chutes-la-nuit",
+  "postes-de-douze-heures",
 ];

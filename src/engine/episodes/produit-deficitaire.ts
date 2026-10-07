@@ -492,7 +492,7 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
     if (d4 === 0 && w >= 8) cible *= 1 - h.perteVendeur;
     if (d4 === 2 && w >= 8) cible *= 1 - 0.4 * h.perteVendeur;
     if (d4 === 1 && w >= 7 && ouverte) {
-      // Les visites de chantier de Lilian : bien plus fructueuses quand Priscilla tient le comptoir.
+      // Les visites de chantier de Lilian : bien plus fructueuses quand Amara tient le comptoir.
       cible *= 1 + (d2 === 1 ? 0.07 : 0.025) * (0.4 + 1.2 * h.uVisites);
     }
     if (matinee && w >= 9) cible *= 1 + 0.3 * h.affluence * (d3 === 2 ? 0.5 : 1);
@@ -521,7 +521,7 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
         prixR *= 1 - SOLDES.remise;
         boost *= SOLDES.volume;
       }
-      // Priscilla au comptoir plomberie : Lilian chiffre plus de chaudières.
+      // Amara au comptoir plomberie : Lilian chiffre plus de chaudières.
       if (d2 === 1 && w >= 4) boost *= 1.03;
       if (matinee && w === 9) boost *= 1 + 0.6 * h.affluence * (d3 === 2 ? 0.5 : 1);
       if (d6 === 1 && w >= 12) boost *= 1 + 0.1 * h.transformation;
@@ -586,14 +586,14 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
       volP *= 1.6;
     }
     if (ferme) {
-      // Le corner fermé ne garde que la machine, le temps du préavis ; Priscilla passe au comptoir.
+      // Le corner fermé ne garde que la machine, le temps du préavis ; Amara passe au comptoir.
       volP = 0;
       csPeinture = w >= 7 ? 0 : parSemaine(SPECIFIQUES_PEINTURE.machine);
     }
     if (d2 === 1 && w >= 4) {
       volP *= 1 - h.perteReorganisation;
       const s = SPECIFIQUES_PEINTURE;
-      // Priscilla passe la moitié de son temps au comptoir plomberie : son coût change de gamme.
+      // Amara passe la moitié de son temps au comptoir plomberie : son coût change de gamme.
       csPeinture = parSemaine(
         s.vendeuse / 2 +
           s.machine +
@@ -624,7 +624,7 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
     if (d4 === 1 && w >= 7 && ouverte) ponctuel += COUTS.visites / 7;
     const csAutres = parSemaine(REFERENCE.go.cs + REFERENCE.out.cs + QUINCAILLERIE.cs);
 
-    // Les charges communes : seul l'intérim du comptoir disparaît, quand Priscilla le remplace.
+    // Les charges communes : seul l'intérim du comptoir disparaît, quand Amara le remplace.
     let communes = parSemaine(TOTAL_COMMUNES);
     if (ferme) communes += parSemaine(SPECIFIQUES_PEINTURE.vendeuse - INTERIM_COMPTOIR);
 

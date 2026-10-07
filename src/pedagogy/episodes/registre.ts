@@ -83,6 +83,21 @@ import { EPISODE_RECONVERSION } from "./practice-a-reorienter";
 import { EPISODE_IA } from "./assistant-ia";
 import { EPISODE_SORTIE_ASSOCIE } from "./associe-qui-part";
 import { EPISODE_POSITIONNEMENT } from "./generaliste-ou-specialiste";
+import { EPISODE_ADMISSIONS } from "./lits-vides";
+import { EPISODE_PARCOURS } from "./sorties-qui-bloquent";
+import { EPISODE_FAMILLES } from "./famille-qui-ecrit";
+import { EPISODE_INTERIM } from "./interim-qui-flambe";
+import { EPISODE_SECTIONS } from "./section-en-deficit";
+import { EPISODE_HEURE_DOMICILE } from "./heure-a-domicile";
+import { EPISODE_CHUTES } from "./chutes-la-nuit";
+import { EPISODE_DOSSIER_SOINS } from "./dossier-de-soins";
+import { EPISODE_DOUZE_HEURES } from "./postes-de-douze-heures";
+import { EPISODE_ABSENTEISME } from "./absenteisme-qui-s-installe";
+import { EPISODE_VAE } from "./former-ses-soignants";
+import { EPISODE_JOUR_NUIT } from "./equipes-jour-et-nuit";
+import { EPISODE_RECONSTRUCTION } from "./reconstruire-ou-regrouper";
+import { EPISODE_REPRISE } from "./association-a-reprendre";
+import { EPISODE_VIRAGE } from "./virage-domiciliaire";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -163,6 +178,21 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_IA,
   EPISODE_SORTIE_ASSOCIE,
   EPISODE_POSITIONNEMENT,
+  EPISODE_ADMISSIONS,
+  EPISODE_PARCOURS,
+  EPISODE_FAMILLES,
+  EPISODE_INTERIM,
+  EPISODE_SECTIONS,
+  EPISODE_HEURE_DOMICILE,
+  EPISODE_CHUTES,
+  EPISODE_DOSSIER_SOINS,
+  EPISODE_DOUZE_HEURES,
+  EPISODE_ABSENTEISME,
+  EPISODE_VAE,
+  EPISODE_JOUR_NUIT,
+  EPISODE_RECONSTRUCTION,
+  EPISODE_REPRISE,
+  EPISODE_VIRAGE,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>

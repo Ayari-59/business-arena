@@ -1318,4 +1318,229 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le GHT veut 15 %
     { principale: "R5", secondaires: ["R4", "R6"] },
   ],
+  // 79. Les lits qui restent vides
+  "lits-vides": [
+    // D1 · Huit lits vides
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Soixante noms sur la liste
+    { principale: "R1", secondaires: ["R10"] },
+    // D3 · Orchidia ouvre à Beaune
+    { principale: "R5", secondaires: ["R6"] },
+    // D4 · Sur dossier, comme Orchidia
+    { principale: "R4", secondaires: ["R5"] },
+    // D5 · La grippe aux Tilleuls
+    { principale: "R5", secondaires: ["R2"] },
+    // D6 · Préparer le printemps
+    { principale: "R10", secondaires: ["R6"] },
+  ],
+  // 80. Les sorties qui bloquent
+  "sorties-qui-bloquent": [
+    // D1 · Trente-quatre jours
+    { principale: "R4", secondaires: ["R2", "R6"] },
+    // D2 · Les dossiers en attente
+    { principale: "R2", secondaires: ["R6"] },
+    // D3 · Des places chez l'aval
+    { principale: "R5", secondaires: ["R1"] },
+    // D4 · Rentrer chez soi
+    { principale: "R6", secondaires: ["R4"] },
+    // D5 · L'épidémie
+    { principale: "R4", secondaires: ["R1"] },
+    // D6 · Les fêtes
+    { principale: "R6", secondaires: ["R8"] },
+  ],
+  // 81. La famille qui écrit à l'ARS
+  "famille-qui-ecrit": [
+    // D1 · La lettre de l'ARS
+    { principale: "R4", secondaires: ["R2", "R9"] },
+    // D2 · Mme Durupt demande des comptes
+    { principale: "R9", secondaires: ["R10"] },
+    // D3 · La réponse à l'ARS
+    { principale: "R10", secondaires: ["R4", "R5"] },
+    // D4 · Le matin du week-end
+    { principale: "R5", secondaires: ["R8", "R6"] },
+    // D5 · Le linge
+    { principale: "R2", secondaires: ["R5"] },
+    // D6 · Les familles
+    { principale: "R9", secondaires: ["R10", "R6"] },
+  ],
+  // 82. L'intérim qui flambe
+  "interim-qui-flambe": [
+    // D1 · La facture de l'intérim
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Un pool de remplacement ?
+    { principale: "R5", secondaires: ["R6"] },
+    // D3 · Les postes vacants
+    { principale: "R5", secondaires: ["R9"] },
+    // D4 · La grippe
+    { principale: "R8", secondaires: ["R4"] },
+    // D5 · Les congés de l'été
+    { principale: "R6", secondaires: ["R8"] },
+    // D6 · Le contrat-cadre de Soralis
+    { principale: "R1", secondaires: ["R4", "R3"] },
+  ],
+  // 83. La section qui plonge
+  "section-en-deficit": [
+    // D1 · Le conseil veut supprimer deux postes
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le personnel de nuit
+    { principale: "R10", secondaires: ["R2"] },
+    // D3 · Le GMP et le PMP
+    { principale: "R5", secondaires: ["R1", "R6"] },
+    // D4 · Le prix de journée
+    { principale: "R2", secondaires: ["R10"] },
+    // D5 · Les chambres vides
+    { principale: "R6", secondaires: ["R8"] },
+    // D6 · Boucler les propositions
+    { principale: "R5", secondaires: ["R2"] },
+  ],
+  // 84. L'heure d'aide à domicile
+  "heure-a-domicile": [
+    // D1 · Une heure à 26 €, une perte de 240 k€
+    { principale: "R2", secondaires: ["R4", "R6"] },
+    // D2 · Personne derrière la porte
+    { principale: "R2", secondaires: ["R1"] },
+    // D3 · Une association ferme
+    { principale: "R4", secondaires: ["R5"] },
+    // D4 · Couper dans le temps non facturé
+    { principale: "R8", secondaires: ["R6"] },
+    // D5 · Le dossier du CPOM
+    { principale: "R5", secondaires: ["R10"] },
+    // D6 · Préparer l'été
+    { principale: "R6", secondaires: ["R8"] },
+  ],
+  // 85. Les chutes de la nuit
+  "chutes-la-nuit": [
+    // D1 · Quarante et une chutes
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Les traitements du soir
+    { principale: "R6", secondaires: ["R2"] },
+    // D3 · Le fils de Mme Lamboley
+    { principale: "R9", secondaires: ["R1"] },
+    // D4 · Bouger, ou protéger
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Des capteurs pour la nuit
+    { principale: "R2", secondaires: ["R4"] },
+    // D6 · Les contentions avant l'hiver
+    { principale: "R4", secondaires: ["R10"] },
+  ],
+  // 86. Le dossier de soins que personne ne remplit
+  "dossier-de-soins": [
+    // D1 · La tablette de nuit dort dans un tiroir
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Des plans de soins qui ne disent pas ce qu'on fait
+    { principale: "R9", secondaires: ["R2"] },
+    // D3 · Qui accompagne les équipes ?
+    { principale: "R6", secondaires: ["R9", "R4"] },
+    // D4 · Un pansement non refait
+    { principale: "R5", secondaires: ["R4", "R3"] },
+    // D5 · La veille canicule commence
+    { principale: "R1", secondaires: ["R5"] },
+    // D6 · L'été et ses remplaçants
+    { principale: "R6", secondaires: ["R4"] },
+  ],
+  // 87. Passer en douze heures
+  "postes-de-douze-heures": [
+    // D1 · Une équipe coupée en deux
+    { principale: "R4", secondaires: ["R1", "R9"] },
+    // D2 · La trame des 12 heures
+    { principale: "R5", secondaires: ["R8"] },
+    // D3 · Le CSE
+    { principale: "R9", secondaires: ["R6"] },
+    // D4 · Les premiers chiffres
+    { principale: "R3", secondaires: ["R1", "R10"] },
+    // D5 · Deux rythmes dans une équipe
+    { principale: "R2", secondaires: ["R9"] },
+    // D6 · Ce que vous proposez pour janvier
+    { principale: "R10", secondaires: ["R6"] },
+  ],
+  // 88. L'absentéisme qui s'installe
+  "absenteisme-qui-s-installe": [
+    // D1 · Seize pour cent
+    { principale: "R2", secondaires: ["R1"] },
+    // D2 · Le planning de mai
+    { principale: "R6", secondaires: ["R8"] },
+    // D3 · Toujours les mêmes
+    { principale: "R1", secondaires: ["R8"] },
+    // D4 · Le retour de Fanta
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Les matins du premier étage
+    { principale: "R4", secondaires: ["R9"] },
+    // D6 · Ce qu'on garde
+    { principale: "R3", secondaires: ["R10"] },
+  ],
+  // 89. Former ses propres soignants
+  "former-ses-soignants": [
+    // D1 · Trente-quatre postes vacants à la rentrée
+    { principale: "R2", secondaires: ["R4", "R6"] },
+    // D2 · Qui va suivre les parcours ?
+    { principale: "R8", secondaires: ["R6"] },
+    // D3 · Une chute la nuit à Montbard
+    { principale: "R5", secondaires: ["R4", "R1"] },
+    // D4 · L'IFAS ouvre une rentrée en apprentissage
+    { principale: "R5", secondaires: ["R8"] },
+    // D5 · Orchidia ouvre à Chenôve
+    { principale: "R9", secondaires: ["R4"] },
+    // D6 · Le jury de la cohorte pilote
+    { principale: "R6", secondaires: ["R4", "R2"] },
+  ],
+  // 90. L'équipe de jour et l'équipe de nuit
+  "equipes-jour-et-nuit": [
+    // D1 · Deux équipes qui se renvoient la faute
+    { principale: "R4", secondaires: ["R9", "R6"] },
+    // D2 · Trois minutes à 6 h 45
+    { principale: "R6", secondaires: ["R10"] },
+    // D3 · Les deux demandes de mutation
+    { principale: "R9", secondaires: ["R5"] },
+    // D4 · Qui fait quoi, et à quelle heure
+    { principale: "R5", secondaires: ["R2", "R9"] },
+    // D5 · Une chute à 5 h 40
+    { principale: "R4", secondaires: ["R2", "R10"] },
+    // D6 · Le roulement du printemps
+    { principale: "R6", secondaires: ["R4", "R8"] },
+  ],
+  // 91. Reconstruire ou regrouper
+  "reconstruire-ou-regrouper": [
+    // D1 · Deux EHPAD à reprendre
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le dossier d'aide
+    { principale: "R1", secondaires: ["R6"] },
+    // D3 · Le plafond du département
+    { principale: "R5", secondaires: ["R6"] },
+    // D4 · Ce que dit le territoire
+    { principale: "R3", secondaires: ["R1"] },
+    // D5 · Le terrain de Montbard
+    { principale: "R5", secondaires: ["R4"] },
+    // D6 · Ce qu'on dit aux familles
+    { principale: "R10", secondaires: ["R9"] },
+  ],
+  // 92. L'association qui demande à être reprise
+  "association-a-reprendre": [
+    // D1 · L'ARS demande une reprise
+    { principale: "R2", secondaires: ["R4", "R5"] },
+    // D2 · Auditer, et jusqu'où
+    { principale: "R1", secondaires: ["R5"] },
+    // D3 · Le dossier pour l'ARS
+    { principale: "R10", secondaires: ["R5"] },
+    // D4 · Le budget commercial de l'ESAT
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Voter, rouvrir, ou se retirer
+    { principale: "R3", secondaires: ["R1", "R5"] },
+    // D6 · Les équipes des Primevères
+    { principale: "R9", secondaires: ["R8"] },
+  ],
+  // 93. Le virage vers le domicile
+  "virage-domiciliaire": [
+    // D1 · Le schéma gèle les places
+    { principale: "R5", secondaires: ["R4", "R6"] },
+    // D2 · Orchidia s'installe à Dijon
+    { principale: "R4", secondaires: ["R5"] },
+    // D3 · Un centre de ressources territorial
+    { principale: "R10", secondaires: ["R4"] },
+    // D4 · Les chiffres du dispositif renforcé
+    { principale: "R3", secondaires: ["R5"] },
+    // D5 · L'accueil de jour de Beaune
+    { principale: "R1", secondaires: ["R6"] },
+    // D6 · Le mandat de négociation du CPOM
+    { principale: "R5", secondaires: ["R6", "R4"] },
+  ],
 };

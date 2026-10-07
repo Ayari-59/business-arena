@@ -371,8 +371,8 @@ export const EPISODE_TALENTS: Episode<Trimestre> = {
         heure: `sem. ${arrive.renfort}`,
         texte:
           arrive.renfort === 7
-            ? "Corentin a pris son poste lundi. Deux de ses anciens clients sont déjà passés au comptoir, et j'ai eu mon premier samedi depuis Pâques."
-            : "Corentin est enfin arrivé. Il était temps.",
+            ? "Oscar a pris son poste lundi. Deux de ses anciens clients sont déjà passés au comptoir, et j'ai eu mon premier samedi depuis Pâques."
+            : "Oscar est enfin arrivé. Il était temps.",
       });
     }
     if (arrive.comite !== null) {

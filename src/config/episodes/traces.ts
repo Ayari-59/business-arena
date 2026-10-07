@@ -91,6 +91,21 @@ import * as practiceAReorienter from "./practice-a-reorienter";
 import * as assistantIa from "./assistant-ia";
 import * as associeQuiPart from "./associe-qui-part";
 import * as generalisteOuSpecialiste from "./generaliste-ou-specialiste";
+import * as litsVides from "./lits-vides";
+import * as sortiesQuiBloquent from "./sorties-qui-bloquent";
+import * as familleQuiEcrit from "./famille-qui-ecrit";
+import * as interimQuiFlambe from "./interim-qui-flambe";
+import * as sectionEnDeficit from "./section-en-deficit";
+import * as heureADomicile from "./heure-a-domicile";
+import * as chutesLaNuit from "./chutes-la-nuit";
+import * as dossierDeSoins from "./dossier-de-soins";
+import * as postesDeDouzeHeures from "./postes-de-douze-heures";
+import * as absenteismeQuiSInstalle from "./absenteisme-qui-s-installe";
+import * as formerSesSoignants from "./former-ses-soignants";
+import * as equipesJourEtNuit from "./equipes-jour-et-nuit";
+import * as reconstruireOuRegrouper from "./reconstruire-ou-regrouper";
+import * as associationAReprendre from "./association-a-reprendre";
+import * as virageDomiciliaire from "./virage-domiciliaire";
 
 export interface TracesDeLEpisode {
   diagnostic: { juste: string; proche: string };
@@ -488,5 +503,80 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "specialisation", proche: "differenciation" },
     reflexes: [...generalisteOuSpecialiste.REFLEXES],
     prevision: { juste: 20, proche: 100 },
+  },
+  "lits-vides": {
+    diagnostic: { juste: "circuit", proche: "prescripteurs" },
+    reflexes: [...litsVides.REFLEXES],
+    prevision: { juste: 3, proche: 15 },
+  },
+  "sorties-qui-bloquent": {
+    diagnostic: { juste: "aval", proche: "places" },
+    reflexes: [...sortiesQuiBloquent.REFLEXES],
+    prevision: { juste: 100, proche: 300 },
+  },
+  "famille-qui-ecrit": {
+    diagnostic: { juste: "organisation", proche: "matins" },
+    reflexes: [...familleQuiEcrit.REFLEXES],
+    prevision: { juste: 0.1, proche: 0.3 },
+  },
+  "interim-qui-flambe": {
+    diagnostic: { juste: "symptome", proche: "vacances" },
+    reflexes: [...interimQuiFlambe.REFLEXES],
+    prevision: { juste: 2, proche: 6 },
+  },
+  "section-en-deficit": {
+    diagnostic: { juste: "hebergement", proche: "repartition" },
+    reflexes: [...sectionEnDeficit.REFLEXES],
+    prevision: { juste: 5, proche: 20 },
+  },
+  "heure-a-domicile": {
+    diagnostic: { juste: "revient", proche: "trajets" },
+    reflexes: [...heureADomicile.REFLEXES],
+    prevision: { juste: 0.25, proche: 0.8 },
+  },
+  "chutes-la-nuit": {
+    diagnostic: { juste: "causes", proche: "psychotropes" },
+    reflexes: [...chutesLaNuit.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
+  },
+  "dossier-de-soins": {
+    diagnostic: { juste: "terrain", proche: "parametrage" },
+    reflexes: [...dossierDeSoins.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "postes-de-douze-heures": {
+    diagnostic: { juste: "effets", proche: "attractivite" },
+    reflexes: [...postesDeDouzeHeures.REFLEXES],
+    prevision: { juste: 1, proche: 4 },
+  },
+  "absenteisme-qui-s-installe": {
+    diagnostic: { juste: "causes", proche: "dos" },
+    reflexes: [...absenteismeQuiSInstalle.REFLEXES],
+    prevision: { juste: 10, proche: 30 },
+  },
+  "former-ses-soignants": {
+    diagnostic: { juste: "penurie", proche: "glissement" },
+    reflexes: [...formerSesSoignants.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "equipes-jour-et-nuit": {
+    diagnostic: { juste: "frontiere", proche: "matin" },
+    reflexes: [...equipesJourEtNuit.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "reconstruire-ou-regrouper": {
+    diagnostic: { juste: "differentiel", proche: "plafond" },
+    reflexes: [...reconstruireOuRegrouper.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "association-a-reprendre": {
+    diagnostic: { juste: "conditions", proche: "passifs" },
+    reflexes: [...associationAReprendre.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "virage-domiciliaire": {
+    diagnostic: { juste: "virage", proche: "transformer" },
+    reflexes: [...virageDomiciliaire.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
   },
 };
