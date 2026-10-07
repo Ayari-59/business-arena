@@ -15,6 +15,7 @@ const LARGEURS = [320, 360, 375, 390, 414, 430];
 const PAGES = [
   "/",
   "/enseignants",
+  "/ecoles",
   "/entreprises",
   "/fonctionnalites",
   "/animations",

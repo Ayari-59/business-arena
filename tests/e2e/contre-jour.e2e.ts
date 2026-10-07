@@ -18,7 +18,15 @@ import { aller, BASE, ouvrirNavigateur } from "./helpers/browser";
  * pas un filet.
  */
 const ENTRE_DEUX = 160;
-const PAGES = ["/", "/entreprises", "/fonctionnalites", "/parcours", "/guide", "/enseignants"];
+const PAGES = [
+  "/",
+  "/entreprises",
+  "/fonctionnalites",
+  "/parcours",
+  "/guide",
+  "/enseignants",
+  "/ecoles",
+];
 const HAUTEUR = 1000;
 
 let navigateur: Browser;

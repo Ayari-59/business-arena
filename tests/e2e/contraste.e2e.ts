@@ -28,6 +28,7 @@ const PAGES = [
   "/concepts",
   "/animations",
   "/enseignants",
+  "/ecoles",
   "/parcours",
   "/guide",
 ];

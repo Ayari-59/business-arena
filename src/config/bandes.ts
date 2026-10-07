@@ -58,6 +58,7 @@ export interface PageABandes {
 export const PAGES_A_BANDES: readonly PageABandes[] = [
   { page: "/", nom: "Accueil" },
   { page: "/enseignants", nom: "Pour les enseignants" },
+  { page: "/ecoles", nom: "Écoles de commerce et universités" },
   { page: "/entreprises", nom: "Entreprises" },
   { page: "/fonctionnalites", nom: "Fonctionnalités" },
   { page: "/guide", nom: "Guide", partielle: true },
@@ -149,6 +150,50 @@ export const BANDES: readonly BandeDef[] = [
   {
     id: "enseignants.finale",
     page: "/enseignants",
+    nom: "L'appel final",
+    contrasteParDefaut: true,
+  },
+  // ── Écoles de commerce et universités ──
+  {
+    id: "ecoles.accroche",
+    page: "/ecoles",
+    nom: "L'accroche",
+    contrasteParDefaut: false,
+    porteLeH1: true,
+  },
+  {
+    id: "ecoles.chiffres",
+    page: "/ecoles",
+    nom: "Les chiffres",
+    contrasteParDefaut: true,
+  },
+  {
+    id: "ecoles.formats",
+    page: "/ecoles",
+    nom: "Deux formats, un même cursus",
+    contrasteParDefaut: false,
+  },
+  {
+    id: "ecoles.accreditation",
+    page: "/ecoles",
+    nom: "Ce qu'on montre à un jury d'accréditation",
+    contrasteParDefaut: false,
+  },
+  {
+    id: "ecoles.parcours",
+    page: "/ecoles",
+    nom: "Le parcours de huit semaines",
+    contrasteParDefaut: true,
+  },
+  {
+    id: "ecoles.questions",
+    page: "/ecoles",
+    nom: "Les questions qu'on nous pose",
+    contrasteParDefaut: false,
+  },
+  {
+    id: "ecoles.finale",
+    page: "/ecoles",
     nom: "L'appel final",
     contrasteParDefaut: true,
   },

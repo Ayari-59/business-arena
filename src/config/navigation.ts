@@ -154,6 +154,17 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     ],
   },
   {
+    code: "ecoles",
+    titre: "Écoles de commerce",
+    liens: [
+      {
+        href: "/ecoles",
+        libelle: "Écoles de commerce et universités",
+        aide: "L'arène pour le bachelor, les épisodes manager pour le master et la formation continue, et dix compétences mesurées à montrer à un jury d'accréditation.",
+      },
+    ],
+  },
+  {
     code: "managers",
     titre: "Managers",
     liens: [
