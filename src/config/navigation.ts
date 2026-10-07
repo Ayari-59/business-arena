@@ -78,8 +78,8 @@ export const LIEN_CONTACT: LienDeMenu = {
  * institution (enseignants, établissements), puis les écoles de commerce et
  * les managers s'y sont ajoutés en groupes d'une seule entrée. Il se lit
  * maintenant comme le site se vend : un groupe pour qui vient jouer, puis un
- * par public — les lycées et le BTS, les écoles de commerce, les managers —,
- * et ce qui sert à tous (les ressources, le contact) à la fin.
+ * par public — le BTS, la prépa et le DCG, les écoles de commerce, les
+ * managers —, et ce qui sert à tous (les ressources, le contact) à la fin.
  *
  * Sur téléphone, le menu est la seule navigation : le premier groupe est
  * déplié à l'ouverture, celui qui vient jouer n'a rien à chercher. Les
@@ -106,7 +106,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
   },
   {
     code: "enseignants",
-    titre: "Lycées et BTS",
+    titre: "BTS, prépa et DCG",
     liens: [
       {
         href: "/enseignants",
