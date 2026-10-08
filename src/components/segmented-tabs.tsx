@@ -1,6 +1,7 @@
 "use client";
 
 import { bouton } from "@/components/bouton";
+import { allerAuDebutDEtape } from "@/lib/debut-d-etape";
 import { Icone, type NomDIcone } from "@/components/icone";
 import {
   Fragment,
@@ -36,14 +37,17 @@ export type SegmentedTab = { key: string; label: string; icon?: NomDIcone };
  * restent cliquables). Sur la dernière étape, pas de bouton « suivant » : c'est
  * l'action propre du panneau (valider et simuler) qui conclut.
  *
- * SUR TÉLÉPHONE, LES ÉTAPES DESCENDENT SOUS LE POUCE. Le fil d'étapes en haut de
- * la carte et le bouton « suivant » en bas de la page deviennent une BARRE FIXE
- * en bas de l'écran : trois onglets (icône et nom), et au-dessus l'action qui
- * mène à l'étape suivante. Le tour faisait près de trois écrans de haut et son
- * bouton d'avance se trouvait tout en bas : on faisait défiler jusqu'au bout
- * pour apprendre qu'on pouvait continuer. La barre reste, on sait où l'on est et
- * ce qui vient. Sur grand écran rien ne change : le fil et le bouton restent
- * dans la page.
+ * SUR TÉLÉPHONE, UNE SEULE BARRE FIXE : L'ACTION DE L'ÉTAPE. Le fil d'étapes
+ * reste EN HAUT, dans le flux, comme sur grand écran (seul le libellé de
+ * l'étape courante s'y écrit, les autres gardent leur numéro) ; en bas de
+ * l'écran, le seul bouton qui mène à l'étape suivante. Les onglets étaient
+ * descendus sous le pouce, dans une seconde barre fixe : avec le pied du
+ * formulaire et les tuiles du haut, il restait environ 200 px pour le champ à
+ * remplir, et le cadre de l'onglet actif débordait de la barre.
+ *
+ * UN SEUL APLAT ORANGE PAR ÉCRAN. Quand l'étape porte sa propre action
+ * (« Valider mon analyse », marquée `data-action-de-l-etape`), le bouton qui
+ * mène à la suivante passe en filet.
  *
  * `syncAnchors` : les clés d'onglets qui portent une ancre de page (un panneau
  * dont le contenu a un `id` cible d'un lien `href="#id"`). Comme seul le panneau
@@ -69,7 +73,6 @@ export function SegmentedTabs({
 }) {
   const baseId = useId();
   const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
-  const boutonsBas = useRef<Record<string, HTMLButtonElement | null>>({});
   const visible = tabs.filter((t) => children[t.key] != null);
   const [active, setActive] = useState(
     defaultKey && visible.some((t) => t.key === defaultKey)
@@ -77,6 +80,20 @@ export function SegmentedTabs({
       : visible[0]?.key ?? "",
   );
   const current = visible.find((t) => t.key === active) ? active : visible[0]?.key;
+
+  // Le cadre entier : on revient à son début d'une étape à l'autre, et l'on y
+  // guette l'action propre de l'étape.
+  const cadre = useRef<HTMLDivElement>(null);
+  const [actionPropre, setActionPropre] = useState(false);
+  useEffect(() => {
+    const el = cadre.current;
+    if (!el || !guided) return;
+    const relire = () => setActionPropre(el.querySelector("[data-action-de-l-etape]") !== null);
+    relire();
+    const veille = new MutationObserver(relire);
+    veille.observe(el, { childList: true, subtree: true });
+    return () => veille.disconnect();
+  }, [guided, current]);
 
   const visibleKeys = visible.map((t) => t.key).join(",");
   const anchorKeys = (syncAnchors ?? []).join(",");
@@ -109,10 +126,11 @@ export function SegmentedTabs({
     if (!k) return;
     setActive(k);
     if (depuisLaBarre) {
-      // Le contenu change sous les yeux : on repart du haut, sinon on arriverait
+      // Le contenu change sous les yeux : on repart du début des étapes (pas du
+      // haut de la page, où l'ardoise reprenait la place), sinon on arriverait
       // au milieu de l'étape suivante, à la hauteur où l'on avait défilé.
-      window.scrollTo({ top: 0 });
-      boutonsBas.current[k]?.focus({ preventScroll: true });
+      allerAuDebutDEtape(cadre.current);
+      boutons.current[k]?.focus({ preventScroll: true });
     } else {
       boutons.current[k]?.focus();
     }
@@ -132,16 +150,24 @@ export function SegmentedTabs({
     allerA(cible, depuisLaBarre);
   };
   const suivant = guided && currentIndex < visible.length - 1 ? visible[currentIndex + 1]! : null;
+  const varianteSuivant = actionPropre ? "secondaire" : "principal";
 
   return (
     <div
+      ref={cadre}
+      data-debut-d-etape=""
       className="space-y-4"
-      // La hauteur des onglets fixes : le pied du formulaire de décision s'y pose
-      // dessus au lieu de passer dessous (voir decision-form.tsx).
-      style={guided ? ({ "--barre-bas": "calc(3.5rem + env(safe-area-inset-bottom))" } as CSSProperties) : undefined}
+      // La hauteur de la barre fixe, quand il y en a une : le pied du formulaire
+      // de décision s'y pose dessus au lieu de passer dessous (voir
+      // decision-form.tsx). À la dernière étape, il n'y en a pas.
+      style={
+        guided && suivant
+          ? ({ "--barre-bas": "calc(4.5rem + env(safe-area-inset-bottom))" } as CSSProperties)
+          : undefined
+      }
     >
       {guided ? (
-        <nav className="hidden items-center gap-2 sm:flex" role="tablist" aria-label={label}>
+        <nav className="flex min-w-0 items-center gap-1.5 sm:gap-2" role="tablist" aria-label={label}>
           {visible.map((tab, index) => {
             const estCourant = current === tab.key;
             const estFait = index < currentIndex;
@@ -154,12 +180,17 @@ export function SegmentedTabs({
                   }}
                   type="button"
                   role="tab"
+                  // Sur téléphone, une étape non courante ne montre que son
+                  // numéro : son nom reste celui que lit un lecteur d'écran.
+                  aria-label={tab.label}
                   aria-selected={estCourant}
                   aria-controls={panelId(tab.key)}
                   tabIndex={estCourant ? 0 : -1}
                   onClick={() => setActive(tab.key)}
                   onKeyDown={(e) => auClavier(e, index)}
                   className={`flex min-h-11 min-w-11 items-center gap-2 rounded-lg border px-2 py-2 text-left transition sm:flex-1 sm:gap-2.5 sm:px-3 ${
+                    estCourant ? "min-w-0 flex-1" : "shrink-0"
+                  } ${
                     estCourant
                       ? "border-amber-400/50 bg-amber-400/10"
                       : estFait
@@ -261,7 +292,7 @@ export function SegmentedTabs({
           <button
             type="button"
             onClick={() => allerA(currentIndex + 1)}
-            className={bouton({ taille: "l" })}
+            className={bouton({ variante: varianteSuivant, taille: "l" })}
           >
             {visible[currentIndex + 1]!.label}
             <span aria-hidden>→</span>
@@ -269,71 +300,19 @@ export function SegmentedTabs({
         </div>
       ) : null}
 
-      {guided ? (
+      {guided && suivant ? (
         <>
           {/* La place de la barre : sans elle, la fin de l'étape passerait dessous. */}
-          <div aria-hidden className={suivant ? "h-36 sm:hidden" : "h-20 sm:hidden"} />
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/12 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden">
-            {suivant ? (
-              <div className="px-3.5 pb-2 pt-2.5">
-                <button
-                  type="button"
-                  onClick={() => allerA(currentIndex + 1, true)}
-                  className={`${bouton({ taille: "l" })} min-h-12 w-full`}
-                >
-                  {suivant.label}
-                  <span aria-hidden>→</span>
-                </button>
-              </div>
-            ) : null}
-            <div role="tablist" aria-label={label} className="flex">
-              {visible.map((tab, index) => {
-                const estCourant = current === tab.key;
-                const estFait = index < currentIndex;
-                return (
-                  <button
-                    key={tab.key}
-                    id={`${tabId(tab.key)}-bas`}
-                    ref={(el) => {
-                      boutonsBas.current[tab.key] = el;
-                    }}
-                    type="button"
-                    role="tab"
-                    aria-selected={estCourant}
-                    aria-controls={panelId(tab.key)}
-                    tabIndex={estCourant ? 0 : -1}
-                    onClick={() => allerA(index, true)}
-                    onKeyDown={(e) => auClavier(e, index, true)}
-                    className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-sm transition-colors ${
-                      estCourant
-                        ? "font-bold text-amber-300"
-                        : estFait
-                          ? "font-medium text-emerald-300"
-                          : "font-medium text-slate-400"
-                    }`}
-                  >
-                    {estCourant ? (
-                      <span
-                        aria-hidden
-                        className="absolute inset-x-[24%] top-0 h-[3px] rounded-b-full bg-amber-400"
-                      />
-                    ) : null}
-                    {estFait ? (
-                      <span aria-hidden className="text-xl leading-none">
-                        ✓
-                      </span>
-                    ) : tab.icon ? (
-                      <Icone nom={tab.icon} className="h-5 w-5" />
-                    ) : (
-                      <span aria-hidden className="text-xl leading-none">
-                        {index + 1}
-                      </span>
-                    )}
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
+          <div aria-hidden className="h-20 sm:hidden" />
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/12 bg-slate-950/95 px-3.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden">
+            <button
+              type="button"
+              onClick={() => allerA(currentIndex + 1, true)}
+              className={`${bouton({ variante: varianteSuivant, taille: "l" })} min-h-12 w-full`}
+            >
+              {suivant.label}
+              <span aria-hidden>→</span>
+            </button>
           </div>
         </>
       ) : null}

@@ -47,6 +47,7 @@ import { Aide, PanneauConsulte, TelephoneContexte } from "@/components/aide-repl
 import { Icone, type NomDIcone } from "@/components/icone";
 import { Tiroir } from "@/components/tiroir";
 import { useParcours } from "@/components/parcours-mobile";
+import { allerAuDebutDEtape } from "@/lib/debut-d-etape";
 import {
   Carte,
   CartesContexte,
@@ -1988,10 +1989,36 @@ export function DecisionForm({
     setEngagement(lireLEngagement(donnees, gamme?.map((p) => p.code) ?? []));
   };
 
+  /**
+   * UN SEUL APLAT ORANGE PAR ÉCRAN. Sur l'onglet « Décider », le courrier du
+   * tour se pose au-dessus du formulaire avec son bouton « Ouvrir le courrier »
+   * (marqué `data-action-de-l-etape`) : tant qu'il est là, le pied du
+   * formulaire passe en filet.
+   */
+  const [actionPropre, setActionPropre] = useState(false);
+  useEffect(() => {
+    const zone = formRef.current?.closest("#decisions");
+    if (!zone) return;
+    const relire = () =>
+      setActionPropre(
+        [...zone.querySelectorAll("[data-action-de-l-etape]")].some(
+          (el) => !formRef.current?.contains(el),
+        ),
+      );
+    relire();
+    const veille = new MutationObserver(relire);
+    veille.observe(zone, { childList: true, subtree: true });
+    return () => veille.disconnect();
+  }, [formRef]);
+  const aplat = (classes: string) =>
+    actionPropre ? bouton({ variante: "secondaire", taille: "l" }) : classes;
+
   /** Afficher une carte : on repart du haut de l'écran, et le récapitulatif se relit. */
   const allerALaCarte = (i: number) => {
     setCarte(i);
-    window.scrollTo({ top: 0 });
+    // Le début de la carte, sous la barre et l'ardoise repliée : pas le haut de
+    // la page, où l'ardoise reprenait la place du champ (voir debut-d-etape).
+    allerAuDebutDEtape(formRef.current);
     if (cartes[i]?.cle === "recap") relireLEngagement();
   };
 
@@ -2007,6 +2034,9 @@ export function DecisionForm({
     setEtape(brut);
     setVues((v) => (v.has(brut) ? v : new Set(v).add(brut)));
     if (brut === total - 1) relireLEngagement();
+    // L'étape suivante commence en haut du formulaire : si l'on a défilé plus
+    // bas, on y remonte, sous la barre et l'ardoise repliée.
+    allerAuDebutDEtape(formRef.current, { seulementSiDepasse: true });
   };
 
   // Un champ requis dans une famille repliée — OU sur une étape masquée — est
@@ -2715,6 +2745,7 @@ export function DecisionForm({
         if (derniere) relireLEngagement();
       }}
       onInvalidCapture={revelerFamilleInvalide}
+      data-debut-d-etape=""
       className="space-y-3"
       {...glisser}
     >
@@ -3734,7 +3765,9 @@ export function DecisionForm({
               ? // EN PARCOURS, LE PIED EST FIXÉ AU BAS DE L'ÉCRAN, quelle que soit la
                 // longueur de la carte : une carte courte ne laisse pas son bouton
                 // flotter au milieu, comme un site.
-                "fixed inset-x-0 bottom-0 z-40 border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden"
+                // `mb-0` : l'espacement du formulaire (space-y) donnait au pied une
+                // marge basse, qui le décollait de 12 px du bas de l'écran.
+                "fixed inset-x-0 bottom-0 z-40 mb-0 border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden"
               : "max-sm:sticky max-sm:bottom-[var(--barre-bas,0px)] max-sm:z-30 max-sm:-mx-4 max-sm:bg-slate-950/95 max-sm:px-4 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-sm:backdrop-blur-md"
           }`}
         >
@@ -3769,7 +3802,7 @@ export function DecisionForm({
                 key="valider"
                 type="submit"
                 disabled={pending || verrou != null || validationBloquee}
-                className={`${bouton({ taille: "l" })} ${"bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]"} order-3 max-sm:flex-1`}
+                className={`${aplat(`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25`)} active:scale-[0.98] order-3 max-sm:flex-1`}
               >
                 {pending
                   ? "Envoi en cours…"
@@ -3808,7 +3841,7 @@ export function DecisionForm({
                     carteSuivante();
                   } else allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1));
                 }}
-                className={`${bouton({ taille: "l" })} ${"bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]"} order-3 max-sm:flex-1`}
+                className={`${aplat(`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25`)} active:scale-[0.98] order-3 max-sm:flex-1`}
               >
                 {modeCartes ? "Continuer" : "Suivant"} →
               </button>

@@ -73,6 +73,8 @@ export function BarreDeJeu({
   return (
     <div
       ref={cadre}
+      // L'ardoise repliée se pose juste dessous (voir ardoise-repliee.tsx).
+      data-barre-collante=""
       // `mb-3` : la barre ne laisse que 12 px sous elle. Le conteneur de la page espace ses enfants de
       // 24 px, ce qui, avec le remplissage du parcours, faisait 22 px entre la barre et la première
       // carte de chaque étape. `ardoise` : elle remplace l'en-tête du site, marine, et en prend
@@ -150,9 +152,12 @@ export function BarreDeJeu({
       </div>
 
       {enTete ? (
-        <div className="flex items-center justify-between gap-3 px-4 pb-1 text-sm">
+        // Une ligne serrée (pb-0.5, pastille sans marge) : sur téléphone, chaque
+        // pixel de la barre est pris au champ de la décision, sous laquelle
+        // vient encore l'ardoise repliée.
+        <div className="flex items-center justify-between gap-3 px-4 pb-0.5 text-sm">
           <p
-            className={`flex shrink-0 items-center gap-2 rounded-full py-0.5 pl-2 pr-3 font-semibold uppercase tracking-etiquette ${PHASES[enTete.phase].texte} ${PHASES[enTete.phase].teinte}`}
+            className={`flex shrink-0 items-center gap-2 rounded-full pl-2 pr-3 font-semibold uppercase tracking-etiquette ${PHASES[enTete.phase].texte} ${PHASES[enTete.phase].teinte}`}
           >
             <span
               aria-hidden

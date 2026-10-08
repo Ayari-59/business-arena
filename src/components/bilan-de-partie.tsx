@@ -1,24 +1,37 @@
 import type { ReactNode } from "react";
-import { formatEuro } from "@/lib/format";
+import { formatEuro, formatDecimal, ordinal } from "@/lib/format";
 import { Icone } from "@/components/icone";
 import type { Bilan } from "@/pedagogy/bilan-de-partie";
-import { PastilleDeRang } from "@/components/rang";
+import { PastilleDeRang, metalDuRang } from "@/components/rang";
+import { euroSigne } from "@/components/tableau-de-bord";
+
+/** Une équipe du classement final, pour le podium. */
+export interface MarcheDuPodium {
+  nom: string;
+  rang: number;
+  /** L'équipe du joueur : le filet orange de « c'est vous ». */
+  moi: boolean;
+  ipg: number | null;
+}
 
 /**
- * LA FIN DE LA PARTIE, ENFIN RACONTÉE.
+ * LA CLÔTURE DE L'EXERCICE.
  *
- * L'écran de fin tenait en trois lignes : un titre, le résultat cumulé, deux
- * boutons pour rejouer. Six tours de travail, souvent deux heures de classe,
- * s'arrêtaient sans rien à regarder ensemble. Tout ce qu'il fallait était
- * pourtant déjà calculé et déjà à l'écran, mais éparpillé : la trajectoire dans
- * les tuiles, les tours dans l'accordéon, les réussites dans le profil.
+ * L'écran de fin tenait en trois lignes, puis en une carte blanche : « Partie
+ * terminée. » en 20 px, trois chiffres de 18 px, la place en fin de phrase, et
+ * aucun classement visible avant 2 000 px. Six tours de travail, souvent deux
+ * heures de classe, s'arrêtaient sans rien à regarder ensemble.
  *
- * Ce que le bilan dit, dans cet ordre : ce que l'entreprise a fait (trois
- * chiffres de toute la partie), QUAND elle l'a fait (le tour décisif), ce que
- * l'équipe a réussi, et où elle finit. C'est la page qu'un enseignant projette
- * pour clore la séance, et celle qu'une équipe relit avant de rejouer.
+ * C'est maintenant une ARDOISE DE CLÔTURE, en tête de la page : « Clôture de
+ * l'exercice · 6 tours », le podium des équipes (or, argent, bronze ; l'équipe
+ * du joueur marquée du filet orange), le rang du joueur en très grand, le
+ * résultat cumulé et la trésorerie finale en 40 px, le tour décisif et le
+ * meilleur tour en or (des distinctions), puis « Rejouer » en grand. Le reste
+ * du bilan (réussites, record, courbes, lettre, détail des tours) vient
+ * ensuite, sur le papier.
  *
- * Il ne calcule rien de neuf et ne stocke rien : voir `pedagogy/bilan-de-partie`.
+ * Il ne calcule rien de neuf et ne stocke rien : voir `pedagogy/bilan-de-partie`
+ * et le classement que la vue de la partie porte déjà.
  */
 export function BilanDePartie({
   titre,
@@ -28,14 +41,12 @@ export function BilanDePartie({
   place,
   motDeClassement,
   record = null,
+  podium = null,
   children,
 }: {
   /** « Victoire ! … » ou « Partie terminée » : la phrase de tête. */
   titre: string;
-  /**
-   * La première place : la coupe se dessine au-dessus du titre. Elle était un
-   * emoji collé à la phrase, que chaque téléphone peignait à sa façon.
-   */
+  /** La première place : la coupe d'or se dessine devant le titre. */
   victoire?: boolean;
   bilan: Bilan;
   /** Ce que l'équipe a réussi, et la dernière en date pour la nommer. */
@@ -46,74 +57,191 @@ export function BilanDePartie({
   motDeClassement: string | null;
   /**
    * L'IPG de cette partie et le meilleur des parties passées sur le même
-   * métier, en solo. Rejouer ne se comparait à rien : le bouton « Rejouer »
-   * existait, mais la deuxième partie ne savait pas qu'il y en avait eu une
-   * première. Absent en classe, où l'IPG appartient à l'enseignant.
+   * métier, en solo. Absent en classe, où l'IPG appartient à l'enseignant.
    */
   record?: { monIpg: number; meilleur: number | null } | null;
+  /** Le classement final, quand il est ouvert : le podium se dessine. */
+  podium?: readonly MarcheDuPodium[] | null;
   /** Les actions : rejouer, changer de métier. */
   children?: ReactNode;
 }) {
+  const metal = place ? metalDuRang(place.rang) : null;
+  const marches = (podium ?? []).filter((m) => m.rang <= 3).sort((a, b) => a.rang - b.rang);
+  const moiHorsPodium = (podium ?? []).find((m) => m.moi && m.rang > 3) ?? null;
+  const decisif = bilan.tourDecisif;
+  const meilleur =
+    bilan.meilleurTour && bilan.meilleurTour.round !== decisif?.tour.round
+      ? bilan.meilleurTour
+      : null;
   return (
-    <section className={`carte p-4 sm:p-6 ${victoire ? "filet-or border-2" : ""}`}>
-      {/* La victoire est une distinction : la coupe et le titre prennent l'or,
-          jamais l'orange de l'action. */}
-      {victoire ? (
-        <Icone nom="trophee" className="texte-or mx-auto mb-2 block h-8 w-8" />
-      ) : null}
-      <h2 className={`text-center text-xl font-bold texte-or`}>
-        {titre}
-      </h2>
-      <p className="mt-1 text-center text-sm text-slate-400">
-        {bilan.tours} tours joués, de l&apos;ouverture à la clôture.
-      </p>
+    <div className="space-y-4">
+      <section
+        aria-labelledby="cloture-titre"
+        data-cloture-de-l-exercice=""
+        className="ardoise rounded-xl bg-slate-950 px-4 py-6 text-slate-100 sm:px-8 sm:py-8"
+      >
+        <p className="text-xs font-semibold uppercase tracking-annonce text-slate-400">
+          Clôture de l&apos;exercice · {bilan.tours} tours
+        </p>
+        <h2
+          id="cloture-titre"
+          className="mt-2 flex items-center gap-3 font-display text-3xl font-semibold leading-tight text-slate-50 sm:text-4xl"
+        >
+          {/* La victoire est une distinction : la coupe prend l'or, jamais
+              l'orange de l'action. */}
+          {victoire ? <Icone nom="trophee" className="texte-or h-8 w-8 shrink-0" /> : null}
+          {titre}
+        </h2>
 
-      {/*
-        LES TROIS CHIFFRES DE TOUTE LA PARTIE, et non ceux du dernier tour :
-        c'est la différence entre « comment ça s'est terminé » et « ce que vous
-        avez fait ». La trésorerie, elle, est bien celle de la fin : c'est un
-        solde, pas un cumul, et l'additionner n'aurait aucun sens.
-      */}
-      <dl className="mx-auto mt-4 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
-        <Chiffre titre="Chiffre d'affaires" note="sur toute la partie" valeur={formatEuro(bilan.caCumule)} />
-        <Chiffre
-          titre="Résultat cumulé"
-          note={bilan.beneficiaire ? "vous finissez dans le vert" : "la partie se termine en perte"}
-          valeur={formatEuro(bilan.resultatCumule)}
-          teinte={bilan.beneficiaire ? "text-emerald-300" : "text-rose-300"}
-        />
-        <Chiffre
-          titre="Trésorerie finale"
-          note="ce qu'il reste en caisse"
-          valeur={formatEuro(bilan.tresorerieFinale)}
-          teinte={bilan.tresorerieFinale < 0 ? "text-rose-300" : undefined}
-        />
-      </dl>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:items-end">
+          {/* LE RANG DU JOUEUR, EN TRÈS GRAND. */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
+              Votre place
+            </p>
+            {place ? (
+              <p className="mt-2 flex items-center gap-4 font-display font-semibold leading-none tabular-nums">
+                <PastilleDeRang rang={place.rang} moi doublon className="text-5xl" />
+                <span className="texte-or text-7xl sm:text-8xl">{ordinal(place.rang)}</span>
+                <span className="text-2xl font-medium text-slate-300">
+                  sur {place.total}
+                  <span className="sr-only">
+                    {metal ? `, médaille ${metal === "or" ? "d'or" : `de ${metal}`}` : ""}
+                  </span>
+                </span>
+              </p>
+            ) : (
+              <p className="mt-2 text-base leading-relaxed text-slate-300">{motDeClassement}</p>
+            )}
+            {/* Le rang écrit en toutes lettres, comme partout dans l'arène. */}
+            {place ? (
+              <p className="mt-2 text-sm text-slate-400">
+                {ordinal(place.rang)} sur {place.total} au classement final de l&apos;IPG.
+              </p>
+            ) : null}
+          </div>
 
-      <div className="mx-auto mt-4 max-w-2xl space-y-2 border-t border-white/10 pt-4">
+          {/* LE PODIUM DES ÉQUIPES : l'or au centre, l'argent à gauche, le bronze
+              à droite ; l'équipe du joueur porte le filet orange. */}
+          {marches.length > 0 ? (
+            <ol
+              aria-label="Podium du classement final"
+              className="grid grid-cols-3 items-end gap-2 sm:gap-3"
+            >
+              {[marches[1], marches[0], marches[2]].map((m, i) =>
+                m ? (
+                  <li
+                    key={m.rang}
+                    className={`min-w-0 ${i === 1 ? "order-2" : i === 0 ? "order-1" : "order-3"}`}
+                  >
+                    <div
+                      className={`marche-de-podium marche-de-podium-${m.rang} rounded-b-lg bg-slate-900 px-2 pb-3 pt-2 text-center ${
+                        m.rang === 1 ? "min-h-40" : m.rang === 2 ? "min-h-32" : "min-h-28"
+                      } ${m.moi ? "ligne-moi" : ""}`}
+                    >
+                      <PastilleDeRang rang={m.rang} doublon className="text-xl" />
+                      <p
+                        className="mt-1.5 truncate text-sm font-semibold text-slate-50"
+                        title={m.nom}
+                      >
+                        {m.nom}
+                      </p>
+                      <p className="text-xs tabular-nums text-slate-400">
+                        {ordinal(m.rang)}
+                        {m.ipg !== null ? ` · IPG ${formatDecimal(m.ipg, 0)}` : ""}
+                        {m.moi ? (
+                          <span className="font-semibold text-slate-200"> · vous</span>
+                        ) : null}
+                      </p>
+                    </div>
+                  </li>
+                ) : (
+                  <li key={`vide-${i}`} aria-hidden className="order-3" />
+                ),
+              )}
+            </ol>
+          ) : null}
+        </div>
+        {moiHorsPodium ? (
+          <p className="mt-3 text-sm text-slate-300">
+            Votre équipe, {moiHorsPodium.nom}, finit {ordinal(moiHorsPodium.rang)}.
+          </p>
+        ) : null}
+
+        {/*
+          LES CHIFFRES DE TOUTE LA PARTIE, et non ceux du dernier tour : c'est
+          la différence entre « comment ça s'est terminé » et « ce que vous avez
+          fait ». La trésorerie, elle, est bien celle de la fin : un solde, pas
+          un cumul.
+        */}
+        <dl className="mt-8 grid gap-x-6 gap-y-5 border-t border-white/10 pt-6 sm:grid-cols-3">
+          <Chiffre
+            titre="Résultat cumulé"
+            note={
+              bilan.beneficiaire ? "vous finissez dans le vert" : "la partie se termine en perte"
+            }
+            valeur={euroSigne(bilan.resultatCumule)}
+            teinte={bilan.beneficiaire ? "text-emerald-300" : "text-red-300"}
+          />
+          <Chiffre
+            titre="Trésorerie finale"
+            note="ce qu'il reste en caisse"
+            valeur={formatEuro(bilan.tresorerieFinale)}
+            teinte={bilan.tresorerieFinale < 0 ? "text-red-300" : "text-slate-50"}
+          />
+          <Chiffre
+            titre="Chiffre d'affaires"
+            note="sur toute la partie"
+            valeur={formatEuro(bilan.caCumule)}
+            teinte="text-slate-50"
+          />
+        </dl>
+
         {/*
           LE TOUR DÉCISIF est la question que les équipes se posent en sortant :
           « c'est quand qu'on a redressé ? ». Elle n'a pas la même réponse que
           « quel tour a le plus rapporté », et les deux méritent d'être dites
-          quand elles diffèrent.
+          quand elles diffèrent. Ce sont des distinctions : l'or.
         */}
-        {bilan.tourDecisif ? (
-          <p className="text-base leading-relaxed text-slate-300">
-            <span className="font-semibold texte-or">Votre tour décisif : </span>
-            {bilan.tourDecisif.tour.libelle}, où le résultat a gagné{" "}
-            <span className="tabular-nums">{formatEuro(bilan.tourDecisif.gain)}</span> sur le tour
-            précédent.
-          </p>
+        {decisif || meilleur ? (
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+            {decisif ? (
+              <li className="filet-or rounded-lg border-l-2 bg-slate-900 px-4 py-3">
+                <p className="texte-or text-xs font-semibold uppercase tracking-surtitre">
+                  Votre tour décisif
+                </p>
+                <p className="mt-1 text-base leading-relaxed text-slate-200">
+                  <span className="font-semibold text-slate-50">{decisif.tour.libelle}</span>, où le
+                  résultat a gagné{" "}
+                  <span className="whitespace-nowrap tabular-nums">{formatEuro(decisif.gain)}</span>{" "}
+                  sur le tour précédent.
+                </p>
+              </li>
+            ) : null}
+            {meilleur ? (
+              <li className="filet-or rounded-lg border-l-2 bg-slate-900 px-4 py-3">
+                <p className="texte-or text-xs font-semibold uppercase tracking-surtitre">
+                  Votre meilleur tour
+                </p>
+                <p className="mt-1 text-base leading-relaxed text-slate-200">
+                  <span className="font-semibold text-slate-50">{meilleur.libelle}</span>, avec{" "}
+                  <span className="whitespace-nowrap tabular-nums">
+                    {euroSigne(meilleur.resultat)}
+                  </span>{" "}
+                  de résultat.
+                </p>
+              </li>
+            ) : null}
+          </ul>
         ) : null}
-        {bilan.meilleurTour &&
-        bilan.meilleurTour.round !== bilan.tourDecisif?.tour.round ? (
-          <p className="text-base leading-relaxed text-slate-300">
-            <span className="font-semibold texte-or">Votre meilleur tour : </span>
-            {bilan.meilleurTour.libelle}, avec{" "}
-            <span className="tabular-nums">{formatEuro(bilan.meilleurTour.resultat)}</span> de
-            résultat.
-          </p>
+
+        {children ? (
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">{children}</div>
         ) : null}
+      </section>
+
+      {/* LE RESTE DU BILAN, SUR LE PAPIER. */}
+      <section aria-label="Le reste du bilan" className="carte space-y-2 px-4 py-4 sm:px-6">
         <p className="text-base leading-relaxed text-slate-300">
           <span className="font-semibold texte-or">Vos réussites : </span>
           {reussites.acquises} sur {reussites.total}
@@ -130,7 +258,7 @@ export function BilanDePartie({
               className={`font-semibold ${
                 record.meilleur !== null && record.monIpg > record.meilleur
                   ? "texte-or"
-                  : "text-amber-300"
+                  : "text-slate-100"
               }`}
             >
               {record.meilleur === null
@@ -153,48 +281,38 @@ export function BilanDePartie({
             ) : (
               <>
                 votre meilleure partie sur ce métier reste à IPG{" "}
-                <span className="tabular-nums">{Math.round(record.meilleur)}</span> ; celle-ci
-                finit à <span className="tabular-nums">{Math.round(record.monIpg)}</span>.
+                <span className="tabular-nums">{Math.round(record.meilleur)}</span> ; celle-ci finit
+                à <span className="tabular-nums">{Math.round(record.monIpg)}</span>.
               </>
             )}
           </p>
         ) : null}
-        {place ? (
-          <p className="text-base leading-relaxed text-slate-300">
-            <PastilleDeRang rang={place.rang} moi doublon className="mr-2 align-middle" />
-            <span className="font-semibold texte-or">Votre place : </span>
-            {place.rang}
-            {place.rang === 1 ? "re" : "e"} sur {place.total}.
-          </p>
-        ) : motDeClassement ? (
-          <p className="text-base leading-relaxed text-slate-400">{motDeClassement}</p>
-        ) : null}
-      </div>
-
-      {children ? (
-        <div className="mt-5 flex flex-wrap justify-center gap-3">{children}</div>
-      ) : null}
-    </section>
+      </section>
+    </div>
   );
 }
 
-/** Un chiffre du bilan : son intitulé, sa valeur, et ce qu'elle veut dire. */
+/** Un chiffre de la clôture : son intitulé, sa valeur en 40 px, et ce qu'elle veut dire. */
 function Chiffre({
   titre,
   valeur,
   note,
-  teinte = "text-slate-100",
+  teinte,
 }: {
   titre: string;
   valeur: string;
   note: string;
-  teinte?: string;
+  teinte: string;
 }) {
   return (
-    <div className="rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2.5 text-center">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titre}</dt>
-      <dd className={`mt-1 text-lg font-semibold tabular-nums ${teinte}`}>{valeur}</dd>
-      <dd className="mt-0.5 text-sm leading-snug text-slate-400">{note}</dd>
+    <div className="min-w-0">
+      <dt className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">{titre}</dt>
+      <dd
+        className={`mt-1.5 whitespace-nowrap font-display text-[clamp(2rem,1.6rem_+_1.2vw,2.5rem)] font-semibold leading-none tabular-nums ${teinte}`}
+      >
+        {valeur}
+      </dd>
+      <dd className="mt-1.5 text-sm leading-snug text-slate-400">{note}</dd>
     </div>
   );
 }

@@ -2310,3 +2310,97 @@ a.carte,
 [data-theme="clair"] .ardoise .halo-de-page {
   display: block;
 }
+
+/* ===========================================================================
+ * LOT 3A : LES MOMENTS CLÉS DE L'ARÈNE ET DES ÉPISODES.
+ * Ardoise du dirigeant, rituel « le marché répond », clôture de l'exercice,
+ * distinctions sobres. Tout ce que ce lot ajoute à la feuille est ici.
+ * ======================================================================== */
+
+/* LE RITUEL EN TROIS TEMPS (components/verdict-du-marche.tsx).
+   Le tour, puis le chiffre, puis le rang et la phrase, puis les actions : les
+   délais sont ceux de la phrase qu'on prononcerait, et tout est en place à
+   1,3 s. Rien n'est AJOUTÉ par l'animation : chaque temps est déjà dans la
+   page, et `both` le garde visible une fois arrivé. Qui a demandé moins
+   d'animation voit l'écran entier d'un coup. */
+@keyframes rituel-entree {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rituel > [data-temps] {
+  animation: rituel-entree 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.rituel > [data-temps="2"] {
+  animation-delay: 0.3s;
+}
+.rituel > [data-temps="3"] {
+  animation-delay: 0.65s;
+}
+.rituel > [data-temps="4"] {
+  animation-delay: 0.9s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rituel > [data-temps] {
+    animation: none;
+  }
+}
+
+/* LA MÉDAILLE D'UNE DISTINCTION : un disque d'or plein, cerclé de son filet
+   (3,9 pour 1 sur le blanc : un repère graphique doit tenir 3). Une
+   distinction à viser n'a que le cercle, neutre : la forme dit l'état, pas
+   seulement la couleur. Ni étoile, ni carte pointillée. */
+.medaille {
+  display: inline-block;
+  width: 0.875em;
+  height: 0.875em;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  vertical-align: -0.1em;
+}
+.medaille-or {
+  background-color: var(--or-distinction);
+  box-shadow: inset 0 0 0 1.5px var(--or-filet);
+}
+.medaille-a-viser {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--color-slate-400);
+}
+
+/* LE PODIUM DE LA CLÔTURE (components/bilan-de-partie.tsx) : trois marches,
+   l'or au centre et plus haut, l'argent à gauche, le bronze à droite. Le
+   métal est le haut de la marche ; le chiffre du rang y reste écrit. */
+.marche-de-podium {
+  border-top: 4px solid var(--marche, var(--color-slate-400));
+}
+.marche-de-podium-1 {
+  --marche: var(--or-distinction);
+}
+.marche-de-podium-2 {
+  --marche: var(--argent);
+}
+.marche-de-podium-3 {
+  --marche: var(--bronze);
+}
+
+/* UNE ÉTAPE QU'ON FAIT DÉFILER JUSQU'À SON DÉBUT s'arrête sous ce qui colle en
+   haut de l'écran : la barre de la partie, et l'ardoise repliée
+   (`--haut-collant`, publié par components/ardoise-repliee.tsx). */
+[data-debut-d-etape],
+[data-ecran-de-jeu] [data-debut-d-etape] {
+  scroll-margin-top: var(--haut-collant, 4.5rem);
+}
+
+/* Sur téléphone, une ancre de l'écran de jeu (« #decisions », un champ qui
+   prend le focus) s'arrête sous la barre ET l'ardoise repliée, et non plus
+   sous la seule barre (4,5 rem) : la carte du courrier passait dessous. */
+@media (max-width: 639px) {
+  [data-ecran-de-jeu] [id] {
+    scroll-margin-top: var(--haut-collant, 4.5rem);
+  }
+}

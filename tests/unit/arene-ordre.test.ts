@@ -54,9 +54,9 @@ describe("l'ordre de l'arène", () => {
   it("le nom du joueur reste visible dans le bandeau de jeu", () => {
     // C'était le seul rôle que l'encadré descendu remplissait mieux qu'une
     // ligne : prévenir qu'on joue sous l'identité du poste précédent.
-    // L'en-tête de la page est le dernier `<header` du fichier : les cartes du
-    // téléphone, déclarées plus haut, en ont chacune un.
-    const entete = PAGE.slice(PAGE.lastIndexOf("<header"), PAGE.lastIndexOf("</header>"));
+    // Le bandeau de jeu est désormais l'ardoise du dirigeant, en tête de la
+    // page : c'est elle qui porte le nom sous lequel on joue.
+    const entete = PAGE.slice(PAGE.indexOf("const tableauNode"), PAGE.indexOf("</TableauDeBord>"));
     expect(entete).toContain("view.playerPseudo");
     expect(entete).toContain('href="#mon-profil"');
   });

@@ -82,7 +82,7 @@ describe("l'écran de fin", () => {
       place: { rang: 2, total: 6 },
       motDeClassement: null,
     });
-    expect(html).toContain("4 tours joués");
+    expect(html).toContain("Clôture de l'exercice · 4 tours");
     expect(html).toContain("4 800 €"); // le CA de toute la partie
     expect(html).toContain("Votre tour décisif");
     expect(html).toContain("Trimestre 2");

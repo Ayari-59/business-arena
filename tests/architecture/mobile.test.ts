@@ -296,3 +296,52 @@ describe("on sait toujours à quel temps du tour on est", () => {
     expect(lire("src/components/decision-form.tsx")).toContain("definirEntete");
   });
 });
+
+/**
+ * L'ARÈNE SUR TÉLÉPHONE : UNE SEULE BARRE FIXE, UN SEUL APLAT ORANGE.
+ *
+ * Mesuré dans le navigateur (390 × 844) : entre l'en-tête, les tuiles, le
+ * bandeau du tour clos et DEUX barres fixes en bas (l'action de l'étape, puis
+ * les onglets), il restait environ 200 px pour le champ à remplir, et
+ * « Valider mon analyse » côtoyait « Décider → », deux aplats orange.
+ */
+describe("l'arène sur téléphone", () => {
+  const ONGLETS = lire("src/components/segmented-tabs.tsx");
+
+  it("les onglets d'étape restent en haut : la seule barre fixe porte l'action de l'étape", () => {
+    // Deux listes d'onglets dans le fichier : le fil guidé et les onglets simples.
+    expect(ONGLETS.match(/role="tablist"/g) ?? []).toHaveLength(2);
+    const fixes = ONGLETS.match(/fixed inset-x-0 bottom-0/g) ?? [];
+    expect(fixes).toHaveLength(1);
+    expect(ONGLETS).toMatch(/\{guided && suivant \? \(/);
+  });
+
+  it("une étape qui porte sa propre action fait passer le bouton suivant en filet", () => {
+    expect(lire("src/components/situation-panel.tsx")).toContain("data-action-de-l-etape");
+    expect(lire("src/components/courrier-du-tour.tsx")).toContain("data-action-de-l-etape");
+    for (const chemin of [
+      "src/components/segmented-tabs.tsx",
+      "src/components/parcours-mobile.tsx",
+      "src/components/decision-form.tsx",
+    ]) {
+      const source = lire(chemin);
+      expect(source, chemin).toContain("querySelector");
+      expect(source, chemin).toContain("[data-action-de-l-etape]");
+      expect(source, chemin).toMatch(/actionPropre[\s\S]{0,80}"secondaire"/);
+    }
+  });
+
+  it("une étape remonte à son début, sous ce qui colle en haut, pas en haut de la page", () => {
+    for (const chemin of [
+      "src/components/segmented-tabs.tsx",
+      "src/components/parcours-mobile.tsx",
+      "src/components/decision-form.tsx",
+    ]) {
+      const source = lire(chemin);
+      expect(source, chemin).not.toContain("window.scrollTo({ top: 0 })");
+      expect(source, chemin).toContain("allerAuDebutDEtape(");
+      expect(source, chemin).toContain("data-debut-d-etape");
+    }
+    expect(GLOBALS).toMatch(/\[data-debut-d-etape\][^{]*\{\s*scroll-margin-top: var\(--haut-collant/);
+  });
+});

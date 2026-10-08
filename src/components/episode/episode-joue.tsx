@@ -9,12 +9,15 @@ import type {
   Lecture,
   Message,
   PartieJouee,
+  Resultat,
   Source,
 } from "@/config/episodes/types";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
-import { TableauDeBord } from "./tableau-de-bord";
+import { LigneDuTableau, TableauDeBord } from "./tableau-de-bord";
+import { hautDesBarres } from "@/components/ardoise-repliee";
+import { VerdictDuMarche, type SensDUnEcart } from "@/components/verdict-du-marche";
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 import { nombre } from "@/config/episodes/format";
@@ -386,12 +389,32 @@ export function EpisodeJoue({ code }: { code: string }) {
   }, [ep, s, graine, choisi]);
 
   const etape = ep.etapes[s.etape]!;
+  // L'EN-TÊTE SUIT L'ÉTAPE AFFICHÉE. À la conséquence, le tableau de bord dit
+  // « fin de semaine 2 » : l'en-tête disait encore « Semaine 1 · lundi », le
+  // moment de la décision qu'on vient de prendre.
+  const consequence = s.ecran === "jeu" && s.phase === "consequence";
   const moment =
     s.ecran === "intro"
       ? "Avant de commencer"
       : s.ecran === "bilan"
         ? "Fin du trimestre"
-        : etape.moment;
+        : consequence
+          ? `Fin de semaine ${etape.jusqua}`
+          : etape.moment;
+
+  // Où coller la ligne du tableau de bord sur téléphone : sous l'en-tête du
+  // site, dont la hauteur se mesure (elle change avec la largeur).
+  const [haut, setHaut] = useState(0);
+  useEffect(() => {
+    const mesurer = () => setHaut(hautDesBarres());
+    mesurer();
+    window.addEventListener("resize", mesurer);
+    window.addEventListener("scroll", mesurer, { passive: true });
+    return () => {
+      window.removeEventListener("resize", mesurer);
+      window.removeEventListener("scroll", mesurer);
+    };
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
@@ -440,9 +463,20 @@ export function EpisodeJoue({ code }: { code: string }) {
         </div>
       </div>
 
+      {/* Sur téléphone, le tableau de bord tient en une ligne collée sous
+          l'en-tête, et le récit passe en premier. */}
+      <LigneDuTableau
+        nom={ep.nomDuTableau}
+        indicateurs={ep.indicateurs}
+        semaine={s.semaine}
+        lecture={tableau}
+        avant={s.avant}
+        haut={haut}
+      />
+
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <aside
-          className="lg:sticky lg:top-24 lg:order-last"
+          className="max-lg:hidden lg:sticky lg:top-24 lg:order-last"
           aria-label={`Tableau de bord : ${ep.nomDuTableau.toLowerCase()}`}
         >
           <TableauDeBord
@@ -468,7 +502,7 @@ export function EpisodeJoue({ code }: { code: string }) {
             <>
               <header>
                 <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-                  Décision {s.etape + 1} sur {ep.etapes.length} · {etape.moment}
+                  Décision {s.etape + 1} sur {ep.etapes.length} · {moment}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
                   {etape.titre}
@@ -943,14 +977,29 @@ function Scene({
   const effet = niveau.retourImmediat ? effetDuChoix(ep, s.decisions, i, graine, s.jours) : null;
   const kE = ep.bilan.formatObjectif;
   const derniere = i === ep.etapes.length - 1;
+  const verdict = verdictDesSemaines(ep, t.semaines, de, etape.jusqua);
   return (
     <>
-      <p className="max-w-2xl text-base leading-relaxed text-slate-200">
-        <strong className="text-slate-50">
-          Semaines {de} à {etape.jusqua}.
-        </strong>{" "}
-        Vous avez choisi : {enMinuscule(etape.options[choix]!.t)}.
-      </p>
+      {/*
+        LA CONSÉQUENCE, DANS LA GRAMMAIRE DU « MARCHÉ RÉPOND ». Une bande marine
+        en tête de l'écran : le chiffre clé des semaines jouées (celui de la
+        courbe du trimestre), son écart à la cible que l'épisode déclare (le
+        budget, l'objectif), et ce qu'on a choisi. Les cartes de l'indicateur,
+        juste dessous, ne disaient pas qu'on était sous le budget.
+      */}
+      <section
+        aria-label="Conséquence de votre décision"
+        className="ardoise rounded-xl bg-slate-950 px-4 py-4 text-slate-100 sm:px-6 sm:py-5"
+      >
+        <VerdictDuMarche
+          forme="bande"
+          surtitre={`${ep.nomDuTableau} · conséquence`}
+          titre={`Semaines ${de} à ${etape.jusqua} · le verdict`}
+          chiffre={{ libelle: verdict.libelle, valeur: verdict.valeur, sens: null }}
+          ecart={verdict.ecart}
+          phrase={`Vous avez choisi : ${enMinuscule(etape.options[choix]!.t)}.`}
+        />
+      </section>
       {niveau.retourImmediat && (
         <p className="encadre-neutre max-w-2xl rounded-lg px-4 py-3 text-sm leading-relaxed text-slate-200">
           <strong className="font-semibold text-slate-100">Retour immédiat · </strong>
@@ -994,4 +1043,50 @@ function Scene({
       <Suite onClick={etapeSuivante}>{derniere ? "Voir le bilan" : "Continuer"}</Suite>
     </>
   );
+}
+
+/**
+ * LE CHIFFRE CLÉ DES SEMAINES JOUÉES, ET SON ÉCART À LA CIBLE.
+ *
+ * Tout vient de la définition de l'épisode, rien n'est inventé : la grandeur
+ * est celle de sa courbe (`courbe.cle`), moyennée sur les semaines que la
+ * décision a couvertes ; la cible est la cadence que la courbe trace déjà
+ * (`courbe.cible`, nommée par `courbe.libelleCible` : un budget, un objectif,
+ * un plafond). Le sens de l'écart (bon ou mauvais) est celui de l'indicateur
+ * du tableau de bord qui suit la même grandeur ; quand aucun ne la suit,
+ * l'écart reste écrit avec son signe, à l'encre, sans vert ni rouge.
+ */
+function verdictDesSemaines(
+  ep: Episode,
+  semaines: Resultat["semaines"],
+  de: number,
+  a: number,
+): {
+  libelle: string;
+  valeur: string;
+  ecart: { valeur: string; mention: string; sens: SensDUnEcart } | null;
+} {
+  const { courbe } = ep;
+  const valeurs = semaines
+    .slice(de, a + 1)
+    .map((w) => w?.[courbe.cle])
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+  const nom = courbe.titre.replace(/,?\s*semaine par semaine\s*$/i, "");
+  const periode = de === a ? `semaine ${de}` : `moyenne des semaines ${de} à ${a}`;
+  if (valeurs.length === 0) return { libelle: `${nom} · ${periode}`, valeur: "—", ecart: null };
+  const moyenne = valeurs.reduce((x, v) => x + v, 0) / valeurs.length;
+  const indicateur = ep.indicateurs.find((ind) => ind.cle === courbe.cle);
+  const d = moyenne - courbe.cible;
+  const formatEcart = indicateur?.formatEcart ?? courbe.format;
+  const ecart =
+    Math.abs(d) < 1e-9 || formatEcart(Math.abs(d)) === formatEcart(0)
+      ? null
+      : {
+          valeur: `${d > 0 ? "+" : "−"}${formatEcart(Math.abs(d))}`,
+          mention: `face à la cible (${courbe.libelleCible})`,
+          sens: indicateur
+            ? ((indicateur.sensBon * d > 0 ? "gain" : "perte") as SensDUnEcart)
+            : null,
+        };
+  return { libelle: `${nom} · ${periode}`, valeur: courbe.format(moyenne), ecart };
 }

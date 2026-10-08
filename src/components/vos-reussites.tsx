@@ -1,22 +1,25 @@
 import type { CaseDeReussite } from "@/scoring/reussites";
 
 /**
- * VOS RÉUSSITES : ce que l'équipe a réussi depuis le début, et ce qu'elle peut
- * encore viser.
+ * VOS RÉUSSITES, EN UNE LIGNE : « 3/9 distinctions ».
  *
- * Une réussite se disait au tour où il arrivait, puis disparaissait avec lui —
- * une ligne verte lue une fois, dans un accordéon qu'on replie. Au sixième
- * tour, plus rien ne rappelait qu'on avait sauvé la trésorerie au deuxième.
+ * Une réussite se disait au tour où elle arrivait, puis disparaissait avec
+ * lui. La liste qui l'a remplacée alignait ensuite neuf cartes, pointillées
+ * pour celles « à viser », semées d'étoiles : 1 200 px sur un téléphone, sous
+ * chaque partie, et le vocabulaire d'un jeu mobile là où l'on parle de
+ * gestion.
  *
- * LES CASES VIDES COMPTENT AUTANT QUE LES PLEINES. Une réussite qu'on ne
- * connaît pas ne se vise pas : montrer les quatre, franchis ou non, transforme
- * une récompense en objectif. C'est la seule chose de l'arène qui dise « voilà
- * ce qu'il est possible de réussir » — et elle le dit sans promettre un point,
- * parce qu'il n'y en a pas : ni score, ni monnaie, ni effet sur la partie.
+ * C'est maintenant une ligne : le compte, et une médaille d'or par
+ * distinction obtenue. Le détail (ce qui a été obtenu, à quel tour, et ce qui
+ * reste à viser) se déplie à la demande. Une distinction à viser n'est pas
+ * cachée : elle se connaît pour se viser. Mais elle ne prend plus la place
+ * d'une carte.
  *
- * LA FORME DIT L'ÉTAT, PAS SEULEMENT LA COULEUR. L'étoile est pleine ou creuse,
- * le trait plein ou pointillé : un daltonien, une impression en noir et blanc
- * et un écran mal réglé lisent la liste aussi bien qu'un autre.
+ * LA FORME DIT L'ÉTAT, PAS SEULEMENT LA COULEUR. La médaille est pleine (le
+ * disque d'or et son filet) ou vide (un cercle neutre) : un daltonien, une
+ * impression en noir et blanc et un écran mal réglé lisent la liste aussi bien
+ * qu'un autre. Elle ne promet aucun point : ni score, ni monnaie, ni effet sur
+ * la partie.
  */
 export function VosReussites({
   cases,
@@ -26,61 +29,65 @@ export function VosReussites({
   cases: readonly CaseDeReussite[];
   nommerLeTour: (round: number) => string;
 }) {
-  const acquis = cases.filter((c) => c.round !== null).length;
   if (cases.length === 0) return null;
+  const acquises = cases.filter((c) => c.round !== null);
 
   return (
-    <section aria-labelledby="reussites" className="carte px-4 py-4 sm:px-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 id="reussites" className="text-sm font-semibold text-slate-200">
-          <span aria-hidden>★</span> Vos réussites
-        </h2>
-        <p className="text-xs tabular-nums text-slate-400">
-          {acquis} sur {cases.length}
-        </p>
-      </div>
+    <section aria-labelledby="reussites" className="carte px-4 py-3 sm:px-5">
+      <details className="group">
+        <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 [&::-webkit-details-marker]:hidden">
+          <h2 id="reussites" className="text-sm font-semibold text-slate-200">
+            Vos réussites
+          </h2>
+          <span className="text-sm tabular-nums text-slate-300">
+            {acquises.length}/{cases.length} distinctions
+          </span>
+          {acquises.length > 0 ? (
+            <span aria-hidden className="flex items-center gap-1">
+              {acquises.map((c) => (
+                <span key={c.reussite.code} className="medaille medaille-or" />
+              ))}
+            </span>
+          ) : null}
+          <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
+            <span className="group-open:hidden">le détail</span>
+            <span className="hidden group-open:inline">replier</span>
+            <span aria-hidden className="transition-transform group-open:rotate-90">
+              ›
+            </span>
+          </span>
+        </summary>
 
-      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-        {cases.map(({ reussite, round }) => {
-          const acquise = round !== null;
-          return (
-            <li
-              key={reussite.code}
-              className={`rounded-lg border px-3 py-2 ${
-                // Une distinction obtenue : le filet d'or, sur le voile neutre.
-                acquise ? "encadre-distinction" : "border-dashed border-white/15 bg-slate-950/40"
-              }`}
-            >
-              <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span aria-hidden className={acquise ? "texte-or" : "text-slate-400"}>
-                  {acquise ? "★" : "☆"}
-                </span>
+        <ul className="mt-3 grid gap-x-6 gap-y-2.5 border-t border-white/10 pt-3 sm:grid-cols-2">
+          {cases.map(({ reussite, round }) => {
+            const acquise = round !== null;
+            return (
+              <li key={reussite.code} className="flex gap-2.5">
                 <span
-                  className={`text-sm font-semibold ${acquise ? "text-slate-100" : "text-slate-300"}`}
-                >
-                  {reussite.titre}
-                </span>
-                {acquise ? (
-                  <span className="filet-or texte-or rounded-full border px-2 py-0.5 text-xs">
-                    {nommerLeTour(round)}
+                  aria-hidden
+                  className={`medaille mt-1 ${acquise ? "medaille-or" : "medaille-a-viser"}`}
+                />
+                <p className="min-w-0 text-sm leading-relaxed">
+                  <span className="font-semibold text-slate-100">{reussite.titre}</span>
+                  <span className="text-slate-400">
+                    {" · "}
+                    {acquise ? (
+                      <span className="texte-or font-medium">{nommerLeTour(round)}</span>
+                    ) : (
+                      // « À viser » plutôt qu'un cadenas : rien n'est
+                      // verrouillé, c'est seulement à faire.
+                      "à viser"
+                    )}
                   </span>
-                ) : (
-                  // La MÊME pastille que le tour franchi, en pointillé : les
-                  // deux états se lisent au même endroit, dans la même forme.
-                  // « À viser » plutôt qu'un cadenas — rien n'est verrouillé,
-                  // c'est seulement à faire.
-                  <span className="rounded-full border border-dashed border-white/20 px-2 py-0.5 text-xs text-slate-400">
-                    à viser
+                  <span className="block text-slate-400">
+                    {acquise ? reussite.detail : reussite.viser}
                   </span>
-                )}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                {acquise ? reussite.detail : reussite.viser}
-              </p>
-            </li>
-          );
-        })}
-      </ul>
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </details>
     </section>
   );
 }

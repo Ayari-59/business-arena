@@ -46,7 +46,14 @@ import { Icone } from "@/components/icone";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
-import { TableauDeBord } from "@/components/tableau-de-bord";
+import {
+  LigneDeLArdoise,
+  TableauDeBord,
+  type EnTeteDeLArdoise,
+  type TourChiffre,
+} from "@/components/tableau-de-bord";
+import { ArdoiseRepliee } from "@/components/ardoise-repliee";
+import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
 import { BilanDePartie } from "@/components/bilan-de-partie";
 import { bilanDeLaPartie } from "@/pedagogy/bilan-de-partie";
 import { VosReussites } from "@/components/vos-reussites";
@@ -63,7 +70,6 @@ import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
 import { bouton } from "@/components/bouton";
-import { PastilleDeRang } from "@/components/rang";
 
 export const dynamic = "force-dynamic";
 
@@ -168,9 +174,15 @@ export default async function ArenaPage({
         roundDays={view.roundDays}
         finished={finished}
         sector={view.sector}
+        entreprise={view.intro.company}
+        roundsCount={view.roundsCount}
         bilan={(() => {
           const precedent = view.history.find((h) => h.round === tourJoue.round - 1);
           const moi = view.ranking.find((row) => row.isPlayer);
+          // LE VERDICT EN UNE PHRASE : celle que la révélation du tour écrit
+          // déjà, tirée des deux comptes de résultat. Rien n'est inventé ici.
+          const compteAvant =
+            periods.find((p) => p.round === tourJoue.round - 1)?.result.incomeStatement ?? null;
           return {
             resultatNet: tourJoue.result.incomeStatement.netIncome,
             resultatPrecedent: precedent?.netIncome ?? null,
@@ -178,6 +190,7 @@ export default async function ArenaPage({
             tresorerie: tourJoue.result.functionalBalance.netTreasury,
             rang: moi ? { place: moi.rank, sur: view.ranking.length } : null,
             ipg: view.playerBpi,
+            verdict: verdictDuTour(tourJoue.result.incomeStatement, compteAvant).phrase,
           };
         })()}
       />
@@ -731,16 +744,84 @@ export default async function ArenaPage({
   );
   const toursPasses = toursPassesDe(periods);
 
+  // L'ARDOISE DU DIRIGEANT : l'entreprise, le tour, et les quatre chiffres
+  // qu'on regarde en conseil. Elle est en tête de l'arène à chaque étape, sur
+  // téléphone comme sur grand écran ; la partie close prend l'ardoise de
+  // clôture (BilanDePartie).
+  const toursChiffres: TourChiffre[] = periods.map((p) => ({
+    round: p.round,
+    libelle: periodLabel(view.roundDays, p.round),
+    ca: p.result.incomeStatement.revenue,
+    resultat: p.result.incomeStatement.netIncome,
+    tresorerie: p.result.functionalBalance.netTreasury,
+  }));
+  const moiAuClassement = view.ranking.find((row) => row.isPlayer);
+  const enteteArdoise: EnTeteDeLArdoise = {
+    entreprise: view.intro.company,
+    tour: `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`,
+    sousTitre: [
+      porteUnNomParDefaut(view.playerTeamName) || view.playerTeamName === view.intro.company
+        ? null
+        : view.playerTeamName,
+      SECTOR_LABELS[view.sector],
+      `Niveau ${view.difficulty.level} · ${view.difficulty.name}`,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    rang:
+      latestRound !== null && moiAuClassement
+        ? { place: moiAuClassement.rank, sur: view.ranking.length }
+        : null,
+    rangVoile:
+      latestRound !== null && !moiAuClassement && view.classement.parLAnimateur
+        ? "Révélé par votre enseignant"
+        : null,
+    ipg: latestRound !== null ? view.playerBpi : null,
+  };
   const tableauNode = (
     <TableauDeBord
-      tours={periods.map((p) => ({
-        round: p.round,
-        libelle: periodLabel(view.roundDays, p.round),
-        ca: p.result.incomeStatement.revenue,
-        resultat: p.result.incomeStatement.netIncome,
-        tresorerie: p.result.functionalBalance.netTreasury,
-      }))}
-    />
+      tours={toursChiffres}
+      entete={enteteArdoise}
+      visage={
+        // LE VISAGE DU SECTEUR : neuf formes, neuf teintes, et une partie se
+        // reconnaît d'un coup d'œil (l'emoji du système changeait d'un
+        // appareil à l'autre).
+        <span
+          aria-hidden
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${SECTOR_COLORS[view.sector].bg} ${SECTOR_COLORS[view.sector].accent}`}
+        >
+          <PictoSecteur secteur={view.sector} className="h-5 w-5" />
+        </span>
+      }
+    >
+      {/* Sous quel nom on décide. En salle informatique le poste passe d'une
+          classe à l'autre : sans ce rappel, un élève joue sous l'identité du
+          précédent sans jamais l'apprendre. Il mène au bloc qui permet de
+          libérer l'appareil. */}
+      {view.kind !== "solo" && view.playerPseudo ? (
+        <a
+          href="#mon-profil"
+          className="rounded-full border border-white/15 px-3 py-1 text-xs text-slate-200 transition hover:border-white/30 hover:text-slate-50 max-sm:hidden"
+        >
+          <Icone nom="personne" className="mr-1 h-3.5 w-3.5" />
+          {view.playerPseudo}
+        </a>
+      ) : null}
+      {/* L'heure de fermeture du tour, quand l'enseignant en a posé une : on la
+          découvrait en étant refusé. */}
+      {!finished && view.playLock.playable && view.playLock.closesAt ? (
+        <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
+      ) : null}
+      {/* La frise : un segment par tour, au signe de son résultat. */}
+      <div className="max-sm:hidden">
+        <FriseDesTours
+          roundsCount={view.roundsCount}
+          currentRound={view.currentRound}
+          resultats={new Map(periods.map((p) => [p.round, p.result.incomeStatement.netIncome]))}
+          finished={finished}
+        />
+      </div>
+    </TableauDeBord>
   );
   const soumissionsNode = view.soumissions ? (
     <div className="border-b border-white/10 px-3 py-2 sm:px-4">
@@ -1097,117 +1178,32 @@ export default async function ArenaPage({
           ) : null
         }
       />
-      {/* ── Header ── */}
-      <header className="flex flex-wrap items-end justify-between gap-3 max-sm:sr-only">
-        {/* Sur téléphone, le nom de l'équipe est déjà dans la barre du haut : le
-            répéter en grand mangeait un tiers du premier écran. Il reste dans le
-            document, lisible par une synthèse vocale, et c'est le seul h1. */}
-        <div className="flex items-center gap-3 max-sm:sr-only">
-          {/* LE VISAGE DU SECTEUR. L'emoji du système laissait la tuile
-              différente sur chaque appareil et illisible au vidéoprojecteur.
-              Le pictogramme prend l'accent de son secteur : neuf formes, neuf
-              couleurs, et une partie se reconnaît d'un coup d'œil. */}
-          <span
-            className={`flex h-12 w-12 items-center justify-center rounded-xl ${SECTOR_COLORS[view.sector].bg} ${SECTOR_COLORS[view.sector].accent}`}
-          >
-            <PictoSecteur secteur={view.sector} className="h-7 w-7" />
-          </span>
-          <div>
-            {/* Le surtitre en laiton, comme sur toutes les pages du site : la
-                couleur du secteur reste à la tuile et au pictogramme, qui sont
-                faits pour la porter. Écrit en bleu (pour l'industrie), le
-                surtitre ressemblait à un lien et parlait une autre langue que
-                l'accueil. */}
-            <p className="text-xs uppercase tracking-annonce text-amber-400">
-              {surtitreDePartie(view.intro.title, view.playerTeamName)}
-            </p>
-            {/* L'emblème devant le nom de l'équipe : c'est son visage. */}
-            <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-50">
-              <Embleme
-                code={view.playerTeamEmbleme}
-                equipe={view.playerTeamName}
-                className="h-6 w-6 text-slate-400"
-              />
-              {view.playerTeamName}
-            </h1>
-          </div>
-        </div>
-        {/* LE BANDEAU DE JEU. Il ne porte plus que l'état de la partie : qui
-            joue, dans quel secteur, à quel niveau, où en est la frise, quel
-            IPG, et l'heure de fermeture. « Mon profil » et « Fiches notions »
-            sont de la navigation, pas du jeu : ils sont descendus avec le reste
-            de ce qui n'est pas le jeu, et restent dans le plan du site. */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Sous quel nom on décide. En salle informatique le poste passe
-              d'une classe à l'autre : sans ce rappel, un élève joue sous
-              l'identité du précédent sans jamais l'apprendre. Il mène au bloc
-              qui permet de libérer l'appareil. */}
-          {view.kind !== "solo" && view.playerPseudo ? (
-            <a
-              href="#mon-profil"
-              className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-white/25 hover:text-slate-100"
-            >
-              <Icone nom="personne" className="mr-1 h-3.5 w-3.5" />
-              {view.playerPseudo}
-            </a>
-          ) : null}
-          <p className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 max-sm:hidden">
-            <PictoSecteur
-              secteur={view.sector}
-              className={`h-3.5 w-3.5 ${SECTOR_COLORS[view.sector].accent}`}
-            />
-            {SECTOR_LABELS[view.sector]}
-          </p>
-          <p
-            className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-slate-300 max-sm:hidden"
-            title="Niveau de difficulté de la partie"
-          >
-            Niveau {view.difficulty.level} · {view.difficulty.name}
-          </p>
-          {/* L'IPG mesure la progression de l'équipe, le rang sa place parmi
-              les autres. Le premier lui appartient et s'affiche toujours ; le
-              second attend que l'animateur ouvre le rideau. */}
-          {latestRound !== null && view.playerBpi !== null ? (() => {
-            const me = view.ranking.find((row) => row.isPlayer);
-            return (
-              <p
-                className="inline-flex items-center gap-1 rounded-full border border-white/15 px-3 py-1 text-xs tabular-nums text-slate-100"
-                title={
-                  me
-                    ? "Votre position au classement IPG"
-                    : "Votre indice de performance. Le classement sera révélé par votre enseignant."
-                }
-              >
-                {me ? (
-                  <>
-                    <PastilleDeRang rang={me.rank} moi className="-my-1" />/
-                    {view.ranking.length} ·{" "}
-                  </>
-                ) : null}
-                IPG{" "}
-                {view.playerBpi.toFixed(0)}
-              </p>
-            );
-          })() : null}
-          {/* La frise remplace la puce « Tour n / N » : le bandeau d'état
-              juste dessous porte déjà ce chiffre, et la frise dit en plus d'où
-              l'on vient — un segment par tour, vert ou rouge selon son résultat. */}
-          {/* L'heure de fermeture du tour, quand l'enseignant en a posé une.
-              Elle était calculée, appliquée, et jamais montrée tant que c'était
-              jouable : on découvrait l'échéance en étant refusé. */}
-          {!finished && view.playLock.playable && view.playLock.closesAt ? (
-            <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
-          ) : null}
-          <div className="max-sm:hidden">
-            <FriseDesTours
-              roundsCount={view.roundsCount}
-              currentRound={view.currentRound}
-              resultats={new Map(periods.map((p) => [p.round, p.result.incomeStatement.netIncome]))}
-              finished={finished}
-            />
-          </div>
-        </div>
+      {/* ── L'en-tête du document ──
+          Le seul h1 de la page : le nom de l'équipe, précédé de son emblème. Il
+          ne s'affiche plus en grand : l'ardoise, juste dessous, porte
+          l'entreprise et le tour en tête de l'écran, et la barre de la partie
+          les porte sur téléphone. Il reste dans le document, lisible par une
+          synthèse vocale. */}
+      <header className="sr-only">
+        <p>{surtitreDePartie(view.intro.title, view.playerTeamName)}</p>
+        <h1>
+          <Embleme code={view.playerTeamEmbleme} equipe={view.playerTeamName} className="h-6 w-6" />
+          {view.playerTeamName}
+        </h1>
       </header>
+
+      {/* ── L'ARDOISE DU DIRIGEANT ──
+          En tête, à chaque étape du tour ; elle se replie en une ligne collée
+          sous la barre du haut dès qu'on défile. La partie close a son ardoise
+          de clôture, plus bas. */}
+      {finished ? null : (
+        <>
+          {tableauNode}
+          <ArdoiseRepliee>
+            <LigneDeLArdoise tours={toursChiffres} entete={enteteArdoise} />
+          </ArdoiseRepliee>
+        </>
+      )}
 
       {/* ── L'état du tour, pour qui n'a pas l'écran ──
           Le bandeau qui s'affichait ici disait ce que la frise, les onglets et
@@ -1226,7 +1222,8 @@ export default async function ArenaPage({
       {/* ── Crise de trésorerie : avant tout le reste, et sans rideau ──
           Cet état appartient à l'équipe : il ne dépend pas de la révélation du
           classement, seul endroit où la défaillance se disait jusqu'ici. */}
-      {telephone ? null : alerteTresorerieNode}
+      {/* La partie close n'a plus de tour à décider : l'alerte se tait. */}
+      {telephone || finished ? null : alerteTresorerieNode}
 
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
       {!telephone && !finished && view.courriersAnnonces.length > 0 ? (
@@ -1301,17 +1298,27 @@ export default async function ArenaPage({
                     ? { monIpg: view.playerBpi, meilleur: recordPrecedent?.bpi ?? null }
                     : null
                 }
+                podium={
+                  classementOuvert && view.ranking.length > 1
+                    ? view.ranking.map((row) => ({
+                        nom: row.name,
+                        rang: row.rank,
+                        moi: row.isPlayer,
+                        ipg: row.bpi,
+                      }))
+                    : null
+                }
               >
+                {/* « Rejouer » est l'action de la clôture : le grand bouton plein,
+                    le seul orange de l'ardoise. Changer de métier est l'autre
+                    chemin, en filet. */}
                 <Link
                   href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
-                  className={bouton()}
+                  className={`${bouton({ taille: "l" })} sm:min-w-56`}
                 >
                   Rejouer {view.intro.company}
                 </Link>
-                <Link
-                  href="/jouer"
-                  className="inline-block rounded-lg border border-white/15 px-6 py-2 text-sm font-semibold text-slate-200 hover:border-white/30 hover:bg-white/5"
-                >
+                <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
                   Un autre métier
                 </Link>
               </BilanDePartie>
@@ -1330,16 +1337,6 @@ export default async function ArenaPage({
         interne d'une carte (py-3), sans quoi l'œil ne sait plus où finit un
         tour et où commence le suivant.
       */}
-      {/*
-        OÙ EN EST L'ENTREPRISE, AVANT LE TOUR QU'ON JOUE.
-        Les chiffres existaient, un tour à la fois : pour savoir si la
-        trésorerie se redressait ou s'enfonçait, il fallait déplier trois tours
-        et comparer de tête. Trois tuiles le disent d'un coup, juste au-dessus
-        du tour à jouer — c'est le contexte de la décision, pas une décoration,
-        et il ne s'affiche qu'à partir du deuxième tour, quand il y a une
-        courbe à montrer.
-      */}
-      {telephone ? null : tableauNode}
 
       {/*
         LE TOUR À JOUER EN PREMIER.
@@ -1359,20 +1356,23 @@ export default async function ArenaPage({
         {hasActivePeriod ? (
           <section
             id="tour-en-cours"
-            className="scroll-mt-24 rounded-xl border border-amber-400/30 bg-slate-950/40 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent"
+            // UN FILET NEUTRE. Le cadre du tour portait un filet orange : c'est
+            // lui que l'œil voyait d'abord, avant les chiffres de l'entreprise.
+            // L'orange reste à l'action ; l'ardoise, au-dessus, porte le tour.
+            className="scroll-mt-24 rounded-xl border border-white/10 bg-slate-950/40 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent"
           >
             {/* Sur téléphone, le tour est annoncé par la barre du haut et le parcours
                 en cartes : ni cadre, ni « Tour 1 / 6 », ni « en cours » ici. Ne reste
                 de cette ligne que l'état des décisions, en classe. */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4 max-sm:border-0 max-sm:p-0 max-sm:empty:hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5 sm:px-4 max-sm:border-0 max-sm:p-0 max-sm:empty:hidden">
               {/* LE RANG SUR LE TOTAL. « Tour 2 » seul ne dit pas s'il en reste
                   six ou un : la frise le montre en segments, elle ne le chiffre
                   pas, et c'est le bandeau retiré qui portait ce « / N ». Il est
                   ici, sur le tour qu'il compte. */}
-              <span className="flex items-baseline gap-1.5 text-sm font-semibold text-amber-200 max-sm:hidden">
+              <span className="flex items-baseline gap-1.5 text-sm font-semibold text-slate-100 max-sm:hidden">
                 <Icone nom="ecrire" className="h-4 w-4 self-center" />
                 {periodLabel(view.roundDays, view.currentRound)}
-                <span className="text-xs font-normal tabular-nums text-amber-200/70">
+                <span className="text-xs font-normal tabular-nums text-slate-400">
                   / {view.roundsCount}
                 </span>
               </span>

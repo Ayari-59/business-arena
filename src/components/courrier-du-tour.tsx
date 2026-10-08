@@ -151,6 +151,9 @@ export function CourrierDuTour({
           <button
             type="button"
             onClick={ouvrir}
+            // L'action de l'étape : tant qu'elle est là, le bouton qui fait
+            // avancer passe en filet (un seul aplat orange par écran).
+            data-action-de-l-etape=""
             className={bouton({ taille: "l" })}
           >
             Ouvrir le courrier

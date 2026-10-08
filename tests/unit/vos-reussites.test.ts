@@ -20,9 +20,10 @@ import {
  * · LE TOUR DU FRANCHISSEMENT EST CELUI DE LA LIGNE VERTE, pas un second
  *   calcul : deux façons de décider « c'est arrivé » finissent par se
  *   contredire.
- * · LES CASES VIDES SONT MONTRÉES, avec ce qu'il faut faire pour les remplir.
- * · LA FORME DIT L'ÉTAT : étoile pleine ou creuse, trait plein ou pointillé —
- *   la couleur seule ne suffit pas.
+ * · LES CASES VIDES SONT MONTRÉES, avec ce qu'il faut faire pour les remplir,
+ *   dans le détail replié sous la ligne « 3/9 distinctions ».
+ * · LA FORME DIT L'ÉTAT : médaille pleine ou cercle vide (ni étoile, ni carte
+ *   pointillée) — la couleur seule ne suffit pas.
  */
 
 const tours = (...lignes: [number, number, number][]): TourJoue[] =>
@@ -46,7 +47,7 @@ describe("les réussites de la partie", () => {
     const html = rendu(cases);
     expect(html).toContain("Vos réussites");
     expect(html).not.toContain("hauts faits");
-    expect(html).toContain(`1 sur ${cases.length}`);
+    expect(html).toContain(`1/${cases.length} distinctions`);
   });
 
   it("garde le tour où chaque réussite a été franchie", () => {
@@ -66,7 +67,7 @@ describe("les réussites de la partie", () => {
     expect(cases).toHaveLength(CATALOGUE.length);
     expect(cases.every((c) => c.round === null)).toBe(true);
     const html = rendu(cases);
-    expect(html).toContain(`0 sur ${CATALOGUE.length}`);
+    expect(html).toContain(`0/${CATALOGUE.length} distinctions`);
     for (const f of CATALOGUE) {
       expect(html).toContain(f.titre);
       // La case vide dit ce qu'il faut faire, pas ce qui est arrivé.
@@ -77,12 +78,24 @@ describe("les réussites de la partie", () => {
   it("dit l'état par la forme autant que par la couleur", () => {
     const cases = reussitesDeLaPartie(tours([1, -500, -200], [2, 300, 100]));
     const html = rendu(cases);
-    expect(html).toContain("★"); // franchi
-    expect(html).toContain("☆"); // à viser
-    expect(html).toContain("border-dashed"); // à viser, sans la couleur
+    expect(html).toContain("medaille-or"); // obtenue : le disque plein
+    expect(html).toContain("medaille-a-viser"); // à viser : le cercle vide
     expect(html).toContain("à viser");
     expect(html).toContain("Trimestre 2");
-    expect(html).toContain(`2 sur ${cases.length}`);
+    expect(html).toContain(`2/${cases.length} distinctions`);
+  });
+
+  it("tient en une ligne sobre, le détail replié : ni étoile, ni carte pointillée", () => {
+    const cases = reussitesDeLaPartie(tours([1, -500, -200], [2, 300, 100]));
+    const html = rendu(cases);
+    // Une médaille d'or par distinction obtenue, dans la ligne elle-même.
+    const ligne = html.slice(html.indexOf("<summary"), html.indexOf("</summary>"));
+    const obtenues = cases.filter((c) => c.round !== null).length;
+    expect((ligne.match(/medaille-or/g) ?? []).length).toBe(obtenues);
+    // Le détail est replié par défaut.
+    expect(html).toMatch(/<details(?![^>]*\sopen)/);
+    expect(html).not.toMatch(/[★☆]/);
+    expect(html).not.toContain("border-dashed");
   });
 
   it("ne tient qu'un seul jeu de libellés", () => {

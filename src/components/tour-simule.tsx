@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { SECTOR_COLORS, type Sector } from "@/config/scenarios/registry";
-import { PictoSecteur } from "@/components/picto-secteur";
+import type { Sector } from "@/config/scenarios/registry";
 import { bouton } from "@/components/bouton";
-import { formatDecimal, formatEuro, ordinal } from "@/lib/format";
+import { formatEuro } from "@/lib/format";
 import { Icone } from "@/components/icone";
-import { PastilleDeRang } from "@/components/rang";
+import { VerdictDuMarche } from "@/components/verdict-du-marche";
+import { euroSigne } from "@/components/tableau-de-bord";
 
 /** Ce que le tour a donné, en trois chiffres : de quoi sentir la partie avant de la lire. */
 export interface BilanDuTour {
@@ -17,31 +17,34 @@ export interface BilanDuTour {
   /** Rang et IPG de l'équipe ; absents tant que le classement n'est pas ouvert. */
   rang: { place: number; sur: number } | null;
   ipg: number | null;
+  /**
+   * Le verdict en une phrase : celui que la révélation du tour écrit déjà
+   * (`verdictDuTour`). Absent, l'écran en construit une avec ses chiffres.
+   */
+  verdict?: string | null;
 }
 
 /**
- * L'ÉCRAN « TOUR SIMULÉ » (solo, juste après une validation).
+ * « LE MARCHÉ A RÉPONDU » : LA FIN D'UN TOUR, EN SOLO.
  *
  * Valider a résolu le tour à l'instant. Plutôt que de jeter le joueur sur les
- * résultats ou sur le tour suivant — deux boutons « simuler » d'allure
- * identique —, on marque l'étape et on laisse choisir. Un jeu récompense sur
- * l'instant : on donne ici l'essentiel en trois chiffres (résultat, trésorerie,
- * rang), et « voir les résultats » garde le détail. Le tirage, lui, se vit à
- * l'ouverture du tour suivant (voir `TirageDuTour`).
+ * résultats ou sur le tour suivant, on marque l'instant : un écran marine,
+ * plein, en trois temps (le tour, le résultat, le rang et le verdict), puis
+ * deux chemins. « Voir les résultats » est la seule action orange ; « Passer au
+ * tour suivant » est l'autre chemin, en filet. Voir `VerdictDuMarche` pour la
+ * grammaire, partagée avec la conséquence d'une décision dans un épisode.
+ *
+ * Le tirage du tour suivant, lui, se vit à son ouverture (`TirageDuTour`).
  */
-/** L'entrée d'un bloc, l'un après l'autre : le tour, le chiffre, la place, puis les boutons. */
-const entree = (rang: number) => ({
-  className: "motion-safe:animate-[revelation-entree_0.5s_cubic-bezier(0.2,0.7,0.2,1)_both]",
-  style: { animationDelay: `${rang * 110}ms` },
-});
-
 export function TourSimule({
   gameId,
   round,
   currentRound,
   roundDays,
   finished,
-  sector,
+  sector: _sector,
+  entreprise = null,
+  roundsCount = null,
   bilan = null,
 }: {
   gameId: string;
@@ -52,142 +55,115 @@ export function TourSimule({
   roundDays: number;
   finished: boolean;
   sector: Sector;
+  /** Le nom de l'entreprise, en surtitre : « NOVA ». */
+  entreprise?: string | null;
+  roundsCount?: number | null;
   bilan?: BilanDuTour | null;
 }) {
+  const tour = periodLabel(roundDays, round);
+  const surtitre = [entreprise, "Verdict du marché"].filter(Boolean).join(" · ");
+  const titre = `${tour}${roundsCount ? `/${roundsCount}` : ""} · le marché a répondu`;
+
+  const actions = (
+    <>
+      <Link
+        href={`/arena/${gameId}#dernier-resultat`}
+        className={`${bouton({ taille: "l" })} active:scale-[0.98]`}
+      >
+        <Icone nom="resultats" className="h-4 w-4" />
+        Voir les résultats
+      </Link>
+      {finished ? (
+        <Link
+          href={`/arena/${gameId}`}
+          className={`${bouton({ variante: "secondaire", taille: "l" })} active:scale-[0.98]`}
+        >
+          <Icone nom="trophee" className="h-4 w-4" />
+          Bilan de la partie
+        </Link>
+      ) : (
+        <Link
+          href={`/arena/${gameId}#tour-en-cours`}
+          className={`${bouton({ variante: "secondaire", taille: "l" })} active:scale-[0.98]`}
+        >
+          Passer au {periodLabel(roundDays, currentRound)}
+          <span aria-hidden>→</span>
+        </Link>
+      )}
+    </>
+  );
+
   return (
+    // L'ÉCRAN ENTIER EST L'ARDOISE. Plus de carte posée sur le papier, plus de
+    // halo : le marine pleine page, sous l'en-tête du site (qui est marine
+    // aussi), et rien d'autre à regarder.
     <main
       id="main"
-      className="relative mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center overflow-hidden px-6 py-8 text-center sm:py-12"
+      data-rituel-du-marche=""
+      className="ardoise flex min-h-[calc(100dvh-4rem)] items-center bg-slate-950 px-5 py-10 text-slate-100 sm:px-6 sm:py-14"
     >
-      {/* Plus de halo : posé sur le papier, l'orange dilué faisait une lueur
-          pêche et beige en haut de l'écran. La fin d'un tour aura son ardoise
-          marine ; d'ici là, l'écran reste net. */}
-      <span
-        {...entree(0)}
-        className={`relative flex h-14 w-14 items-center justify-center rounded-xl shadow-lg ring-1 ring-white/10 sm:h-16 sm:w-16 ${SECTOR_COLORS[sector].bg} ${SECTOR_COLORS[sector].accent} ${entree(0).className}`}
-      >
-        <PictoSecteur secteur={sector} className="h-8 w-8 sm:h-9 sm:w-9" />
-      </span>
-      <p
-        {...entree(1)}
-        className={`pastille-etat relative mt-4 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-annonce text-slate-200 sm:mt-6 ${entree(1).className}`}
-      >
-        Tour simulé
-      </p>
-      <h1
-        {...entree(2)}
-        className={`relative mt-3 font-display text-4xl font-semibold leading-tight text-slate-50 ${entree(2).className}`}
-      >
-        {periodLabel(roundDays, round)} joué
-      </h1>
-      <p
-        {...entree(3)}
-        className={`relative mt-2 max-w-md text-sm leading-relaxed text-slate-400 ${entree(3).className}`}
-      >
-        Vos décisions sont enregistrées.
-      </p>
-
-      {bilan ? <BilanEnTroisChiffres bilan={bilan} /> : null}
-
-      <div
-        {...entree(7)}
-        className={`relative mt-5 flex w-full flex-col gap-3 sm:mt-8 sm:flex-row sm:justify-center ${entree(7).className}`}
-      >
-        <Link
-          href={`/arena/${gameId}#dernier-resultat`}
-          className={`${bouton({ taille: "l" })} active:scale-[0.98]`}
-        >
-          <Icone nom="resultats" className="h-4 w-4" />
-          Voir les résultats
-        </Link>
-        {finished ? (
-          <Link
-            href={`/arena/${gameId}`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bouton-filet border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5 active:scale-[0.98]"
-          >
-            <Icone nom="trophee" className="h-4 w-4" />
-            Bilan de la partie
-          </Link>
-        ) : (
-          <Link
-            href={`/arena/${gameId}#tour-en-cours`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5 active:scale-[0.98]"
-          >
-            Passer au {periodLabel(roundDays, currentRound)}
-            <span aria-hidden>→</span>
-          </Link>
-        )}
-      </div>
+      {bilan ? (
+        <VerdictDuMarche
+          forme="ecran"
+          surtitre={surtitre}
+          titre={titre}
+          chiffre={{
+            libelle: "Résultat net du tour",
+            valeur: euroSigne(bilan.resultatNet),
+            sens: bilan.resultatNet >= 0 ? "gain" : "perte",
+          }}
+          ecart={
+            bilan.resultatPrecedent === null ||
+            Math.round(bilan.resultatNet - bilan.resultatPrecedent) === 0
+              ? null
+              : {
+                  valeur: euroSigne(bilan.resultatNet - bilan.resultatPrecedent),
+                  mention: "par rapport au tour précédent",
+                  sens: bilan.resultatNet >= bilan.resultatPrecedent ? "gain" : "perte",
+                }
+          }
+          rang={bilan.rang}
+          ipg={bilan.rang ? bilan.ipg : null}
+          phrase={bilan.verdict ?? null}
+          complement={
+            // LES DEUX AUTRES CHIFFRES DU TOUR, EN PETIT : ce qu'on a vendu, et
+            // ce qu'il reste en caisse (une crise de trésorerie se voit ici).
+            <p className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm tabular-nums text-slate-400">
+              <span>
+                Chiffre d&apos;affaires{" "}
+                <span className="font-semibold text-slate-200">
+                  {formatEuro(bilan.chiffreDAffaires)}
+                </span>
+              </span>
+              <span>
+                Trésorerie{" "}
+                <span
+                  className={`font-semibold ${bilan.tresorerie < 0 ? "text-red-300" : "text-slate-200"}`}
+                >
+                  {formatEuro(bilan.tresorerie)}
+                </span>
+              </span>
+            </p>
+          }
+          actions={actions}
+        />
+      ) : (
+        // Sans bilan fourni, aucun chiffre : l'écran reste une simple étape.
+        <div className="rituel mx-auto w-full max-w-3xl text-center">
+          <div data-temps="1">
+            <p className="text-xs font-semibold uppercase tracking-annonce text-slate-400">
+              {surtitre}
+            </p>
+            <h1 className="mt-2 font-display text-3xl font-semibold leading-tight text-slate-50 sm:text-4xl">
+              {titre}
+            </h1>
+            <p className="mt-3 text-base text-slate-300">Vos décisions sont enregistrées.</p>
+          </div>
+          <div data-temps="4" className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            {actions}
+          </div>
+        </div>
+      )}
     </main>
-  );
-}
-
-function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
-  const gain = bilan.resultatNet >= 0;
-  const ecart =
-    bilan.resultatPrecedent === null ? null : bilan.resultatNet - bilan.resultatPrecedent;
-  return (
-    <dl className="relative mt-4 grid w-full max-w-md grid-cols-2 gap-3 text-left">
-      <div
-        {...entree(4)}
-        // Le résultat se lit à son chiffre et à son filet plein, vert ou
-        // rouge, sur le voile neutre : il était sur un dégradé menthe ou rose.
-        className={`col-span-2 rounded-xl p-4 ${entree(4).className} ${
-          gain ? "encadre-gain" : "encadre-perte"
-        }`}
-      >
-        <dt className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
-          Résultat net du tour
-        </dt>
-        <dd
-          className={`mt-1 font-display text-5xl font-semibold tabular-nums ${
-            gain ? "text-emerald-300" : "text-red-300"
-          }`}
-        >
-          {gain ? "+" : ""}
-          {formatEuro(bilan.resultatNet)}
-        </dd>
-        {ecart !== null ? (
-          <dd className="mt-1 text-sm text-slate-300">
-            {ecart >= 0 ? "▲" : "▼"} {formatEuro(Math.abs(ecart))} {ecart >= 0 ? "de mieux" : "de moins"}{" "}
-            que le tour précédent
-          </dd>
-        ) : null}
-      </div>
-      <div {...entree(5)} className={`carte p-4 ${entree(5).className}`}>
-        <dt className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
-          Trésorerie
-        </dt>
-        <dd
-          className={`mt-1 text-xl font-semibold tabular-nums ${
-            bilan.tresorerie < 0 ? "text-red-300" : "text-slate-50"
-          }`}
-        >
-          {formatEuro(bilan.tresorerie)}
-        </dd>
-      </div>
-      <div {...entree(6)} className={`carte p-4 ${entree(6).className}`}>
-        <dt className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
-          {bilan.rang ? "Classement" : "Chiffre d'affaires"}
-        </dt>
-        <dd
-          className={`mt-1 flex items-center gap-2 text-xl font-semibold tabular-nums ${
-            bilan.rang?.place === 1 ? "texte-or" : "text-slate-50"
-          }`}
-        >
-          {bilan.rang ? (
-            <>
-              <PastilleDeRang rang={bilan.rang.place} moi doublon className="text-base" />
-              {`${ordinal(bilan.rang.place)} sur ${bilan.rang.sur}`}
-            </>
-          ) : (
-            formatEuro(bilan.chiffreDAffaires)
-          )}
-        </dd>
-        {bilan.rang && bilan.ipg !== null ? (
-          <dd className="text-sm text-slate-400">IPG {formatDecimal(bilan.ipg, 0)}</dd>
-        ) : null}
-      </div>
-    </dl>
   );
 }

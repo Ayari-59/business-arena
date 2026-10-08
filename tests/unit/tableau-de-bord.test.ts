@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { TableauDeBord, type TourChiffre } from "@/components/tableau-de-bord";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { LigneDeLArdoise, TableauDeBord, type TourChiffre } from "@/components/tableau-de-bord";
 
 /**
  * OÙ EN EST MON ENTREPRISE, ET DANS QUEL SENS ELLE VA.
@@ -76,5 +78,105 @@ describe("le tableau de bord de l'élève", () => {
     // Deux tuiles sur trois : le résultat et la trésorerie. Le chiffre
     // d'affaires ne passe pas sous zéro, une ligne de zéro n'y dirait rien.
     expect((html.match(/<line /g) ?? []).length).toBeLessThanOrEqual(2);
+  });
+});
+
+/**
+ * L'ARDOISE DU DIRIGEANT, GARDÉE. Les trois tuiles s'arrêtaient aux trois
+ * quarts de la largeur, en chiffres de 16 px, sous un cadre de tour orange.
+ * Ce qui doit tenir :
+ *   · un bandeau MARINE, en tête de l'arène, à chaque étape du tour ;
+ *   · l'entreprise et le tour (« NOVA · Tour 3/6 »), puis CA, résultat,
+ *     trésorerie et rang, en très grands chiffres tabulaires ;
+ *   · le rang en or (une distinction), l'écart signé en vert ou rouge francs,
+ *     la courbe en bleu donnée, jamais dans la couleur d'un résultat ;
+ *   · avant tout tour clos, une ligne, pas un tableau de tirets ;
+ *   · repliée, une ligne : CA · Rés. · Tréso. · Rang.
+ */
+describe("l'ardoise du dirigeant", () => {
+  const entete = {
+    entreprise: "NOVA",
+    tour: "Tour 4/6",
+    sousTitre: "Industrie · Niveau 3 · Pilotage",
+    rang: { place: 2, sur: 3 },
+    ipg: 61.4,
+  };
+  const ardoise = (t: TourChiffre[]) =>
+    renderToStaticMarkup(createElement(TableauDeBord, { tours: t, entete }));
+
+  it("est un bandeau marine qui dit l'entreprise, le tour et le rôle de l'écran", () => {
+    const html = ardoise(tours);
+    expect(html).toMatch(
+      /^<section id="ardoise-du-dirigeant"[^>]*class="ardoise [^"]*bg-slate-950/,
+    );
+    expect(html).toContain("Tableau de bord du dirigeant");
+    expect(html).toContain("NOVA");
+    expect(html).toContain("Tour 4/6");
+  });
+
+  it("porte quatre chiffres en très grand corps, tabulaires, le rang en or", () => {
+    const html = ardoise(tours);
+    for (const titre of ["CA", "Résultat", "Trésorerie", "Rang"])
+      expect(html).toContain(`>${titre}<`);
+    // De 32 px (téléphone) à 40 px (grand écran), en chiffres tabulaires.
+    expect((html.match(/text-\[clamp\(2rem,1\.6rem_\+_1\.2vw,2\.5rem\)\]/g) ?? []).length).toBe(4);
+    expect(html).toMatch(/font-display[^"]*tabular-nums|tabular-nums[^"]*font-display/);
+    expect(html).toMatch(/texte-or[^>]*>2e/);
+    expect(html).toContain("pastille-rang-2");
+    expect(html).toContain("IPG 61");
+  });
+
+  it("signe l'écart en vert ou en rouge francs, et trace les courbes en bleu donnée", () => {
+    const html = ardoise(tours);
+    // CA et résultat montent (vert) ; la trésorerie remonte aussi (vert).
+    expect(html).toMatch(/text-emerald-300[^>]*><span aria-hidden="true">▲/);
+    const baisse = ardoise([tours[0]!, { ...tours[1]!, ca: 100_000 }]);
+    expect(baisse).toMatch(/text-red-300[^>]*><span aria-hidden="true">▼/);
+    // Trois courbes, toutes en bleu donnée, aucune dans une couleur de résultat.
+    const courbes = html.match(/<polyline[^>]*>/g) ?? [];
+    expect(courbes.length).toBe(3);
+    for (const c of courbes) expect(c).toContain("text-[var(--donnee)]");
+    expect(html).not.toMatch(/<polyline[^>]*(emerald|red|sky)/);
+  });
+
+  it("au premier tour clos, la valeur seule et « premier tour », sans courbe", () => {
+    const html = ardoise(tours.slice(0, 1));
+    expect(html).toContain("premier tour");
+    expect(html).not.toContain("<polyline");
+  });
+
+  it("avant le premier verdict, l'entreprise et le tour, et une ligne plutôt que des tirets", () => {
+    const html = ardoise([]);
+    expect(html).toContain("NOVA");
+    expect(html).toContain("Tour 4/6");
+    expect(html).not.toContain("<dl");
+    expect(html).not.toMatch(/>—</);
+    expect(html).toContain("dès que le marché aura répondu");
+  });
+
+  it("se replie en une ligne : CA · Rés. · Tréso. · Rang", () => {
+    const ligne = renderToStaticMarkup(createElement(LigneDeLArdoise, { tours, entete }));
+    for (const mot of ["CA", "Rés.", "Tréso.", "2e/3"]) expect(ligne).toContain(mot);
+    expect(ligne).not.toContain("<svg");
+    expect(ligne).not.toContain("<polyline");
+  });
+
+  it("est posée en tête de l'arène, à chaque étape, avec sa ligne repliée", () => {
+    const page = readFileSync(join(process.cwd(), "src/app/arena/[gameId]/page.tsx"), "utf8");
+    const main = page.slice(page.indexOf('<main id="main"'));
+    const pose = main.indexOf("{tableauNode}");
+    expect(pose, "l'ardoise n'est plus posée").toBeGreaterThan(0);
+    // Avant le tour en cours et avant tout le reste du jeu, téléphone compris.
+    expect(pose).toBeLessThan(main.indexOf('id="tour-en-cours"'));
+    expect(pose).toBeLessThan(main.indexOf("<AnnonceDuTour"));
+    expect(main.slice(pose - 200, pose)).not.toContain("telephone ?");
+    expect(main).toContain("<ArdoiseRepliee>");
+    expect(page).toMatch(/<TableauDeBord\s+tours=\{toursChiffres\}\s+entete=\{enteteArdoise\}/);
+    // Le cadre du tour en cours n'a plus de filet orange.
+    const cadre = main.slice(
+      main.indexOf('id="tour-en-cours"'),
+      main.indexOf('id="tour-en-cours"') + 600,
+    );
+    expect(cadre).not.toMatch(/border-amber/);
   });
 });

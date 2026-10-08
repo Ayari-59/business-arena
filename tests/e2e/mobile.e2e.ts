@@ -57,6 +57,18 @@ async function hauteurUtile(p: Page): Promise<number> {
       }
       return false;
     };
+    // L'ARDOISE DU DIRIGEANT est au-dessus du parcours : chaque carte remonte à
+    // son début, sous la barre et l'ardoise repliée (`--haut-collant`), et
+    // l'ardoise sort de l'écran. Ce qui doit tenir sur l'écran, c'est donc la
+    // carte comptée depuis là, et non depuis le haut de la page.
+    const debut = document.querySelector("[data-debut-d-etape]");
+    const collant = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--haut-collant"),
+    );
+    const decalage =
+      debut && document.getElementById("ardoise-du-dirigeant") && collant > 0
+        ? Math.max(0, debut.getBoundingClientRect().top + window.scrollY - collant)
+        : 0;
     let bas = 0;
     for (const e of document.querySelectorAll("main *")) {
       if (!visible(e) || fixe(e)) continue;
@@ -67,7 +79,7 @@ async function hauteurUtile(p: Page): Promise<number> {
       if (feuille) bas = Math.max(bas, e.getBoundingClientRect().bottom + window.scrollY);
     }
     // Le pied fixe mesure environ 76 px (bouton de 48, marges) ; 8 px d'air en dessous du contenu.
-    return Math.round(bas + 84);
+    return Math.round(bas - decalage + 84);
   });
 }
 

@@ -487,6 +487,9 @@ export function SituationCard({
                 disabled={!complet || renduPending}
                 aria-disabled={!complet || renduPending}
                 title={complet ? undefined : messageIncomplet(manquants)}
+                // L'action de l'étape : le bouton « suivant » de l'arène passe en
+                // filet tant qu'elle est là (un seul aplat orange par écran).
+                data-action-de-l-etape=""
                 className={`${bouton()} pointer-coarse:min-h-11`}
               >
                 {renduPending ? "Envoi…" : "Valider mon analyse"}

@@ -6,9 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { allerAuDebutDEtape } from "@/lib/debut-d-etape";
 import { bouton } from "@/components/bouton";
 import { useGlisser, vibrer } from "@/lib/glisser";
 import { definirProgression, type SegmentDeProgression } from "@/lib/progression-parcours";
@@ -146,10 +148,27 @@ export function ParcoursMobile({
   const courante = etapes[Math.min(index, etapes.length - 1)]!;
   const derniere = etapes.length - 1;
 
+  // Le parcours lui-même : c'est à son début qu'on revient d'une carte à l'autre.
+  const cadre = useRef<HTMLDivElement>(null);
   const aller = useCallback((i: number) => {
     setIndex(i);
-    window.scrollTo({ top: 0 });
+    // Au début de la carte, sous la barre et l'ardoise repliée ; le haut de la
+    // page rendait l'écran à l'ardoise, et le champ passait sous le pouce.
+    allerAuDebutDEtape(cadre.current);
   }, []);
+  // UN SEUL BOUTON ORANGE PAR ÉCRAN. Quand la carte porte sa propre action
+  // (« Valider mon analyse »), le bouton du bas passe en filet : deux aplats
+  // orange côte à côte, c'est une hésitation affichée.
+  const [actionPropre, setActionPropre] = useState(false);
+  useEffect(() => {
+    const el = cadre.current;
+    if (!el) return;
+    const relire = () => setActionPropre(el.querySelector("[data-action-de-l-etape]") !== null);
+    relire();
+    const veille = new MutationObserver(relire);
+    veille.observe(el, { childList: true, subtree: true });
+    return () => veille.disconnect();
+  }, [index]);
   // Un geste de l'utilisateur (bouton ou glissement) se sent dans la main ; un lien « #decisions »
   // ne le doit pas, et le navigateur refuserait de vibrer sans toucher.
   const allerAuToucher = useCallback(
@@ -285,7 +304,14 @@ export function ParcoursMobile({
   return (
     <ParcoursContexte.Provider value={contexte}>
       {/* -mt-3 : la carte se rapproche de la barre, qui porte maintenant le titre de l'étape. */}
-      <div className="-mt-3 min-h-[calc(100dvh-14rem)] space-y-4" {...glisser}>
+      <div
+        ref={cadre}
+        data-debut-d-etape=""
+        // Assez haut pour que le début de la carte remonte sous ce qui colle en
+        // haut, l'ardoise passant au-dessus et se repliant.
+        className="-mt-3 min-h-[calc(100dvh-var(--haut-collant,8rem))] space-y-4"
+        {...glisser}
+      >
         {/* Pas de glissement sur les décisions : une transformation, même d'un
             instant, ferait du bloc le repère du pied fixe du formulaire. */}
         <div
@@ -313,7 +339,11 @@ export function ParcoursMobile({
             <button
               type="button"
               onClick={() => allerAuToucher(index + 1)}
-              className={`${bouton({ taille: "l" })} ${"bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]"} min-h-12 flex-1`}
+              className={`${
+                actionPropre
+                  ? bouton({ variante: "secondaire", taille: "l" })
+                  : `${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25`
+              } min-h-12 flex-1 active:scale-[0.98]`}
             >
               {libelleSuivant}
               <span aria-hidden>→</span>
