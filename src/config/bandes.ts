@@ -71,7 +71,7 @@ export const BANDES: readonly BandeDef[] = [
   {
     id: "accueil.hero",
     page: "/",
-    nom: "Le titre et la main de cartes",
+    nom: "Le titre et les deux boutons",
     // À contre-jour par défaut : l'habillage « L'arène » ouvre le site sur le
     // marine, comme la maquette, sous un en-tête marine lui aussi. Elle a été
     // claire du temps du papier ivoire, où un aplat de nuit en tête faisait
@@ -81,11 +81,27 @@ export const BANDES: readonly BandeDef[] = [
     porteLeH1: true,
   },
   {
+    id: "accueil.partie",
+    page: "/",
+    nom: "Les chiffres d'une partie d'exemple",
+    // Claire : c'est le bandeau blanc sur filet marine que la maquette pose
+    // juste sous le héros. Elle touche le haut de page, marine : deux bandes
+    // à contre-jour ne se touchent jamais.
+    contrasteParDefaut: false,
+  },
+  {
+    id: "accueil.episode",
+    page: "/",
+    nom: "Un épisode et le classement de la partie",
+    contrasteParDefaut: false,
+  },
+  {
     id: "accueil.boucle",
     page: "/",
-    nom: "La boucle d'un tour",
-    // Claire : elle suit le haut de page, désormais marine, et deux bandes à
-    // contre-jour ne se touchent jamais.
+    nom: "La boucle d'un tour et ses trois écrans",
+    // Claire : elle a longtemps suivi le haut de page, et deux bandes à
+    // contre-jour ne se touchent jamais. Elle porte aujourd'hui les trois
+    // captures, prises sur le papier.
     contrasteParDefaut: false,
   },
   {

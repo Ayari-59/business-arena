@@ -1,6 +1,9 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { EPISODE_DE_L_ACCUEIL, PARTIE_D_EXEMPLE } from "@/components/accueil-arene";
+import { formatEuro } from "@/lib/format";
+import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
 
 /**
  * LA COLONNE DE DROITE DE L'ACCUEIL MONTRE L'APPLICATION, SANS LA REJOUER.
@@ -131,6 +134,45 @@ describe("les captures de la page d'accueil", () => {
     expect(alts.join(" ")).toContain("319 914");
     expect(alts.join(" ")).toContain("32 942");
     expect(alts.join(" ")).toContain("3 800");
+  });
+
+  it("le bandeau et le classement sous le héros disent les chiffres des captures", () => {
+    // LA PARTIE D'EXEMPLE EST CELLE DES CAPTURES. Le bandeau des quatre
+    // chiffres et le classement (components/accueil-arene.tsx) reprennent la
+    // partie NOVA des trois écrans ; si l'on refait les captures sur une autre
+    // partie, ces montants doivent suivre, sans quoi la page affiche deux
+    // parties différentes à cinq cents pixels d'écart. On les confronte donc
+    // aux textes de remplacement, qui décrivent ce que les images montrent.
+    const alts = [...ACCUEIL.matchAll(/alt="([^"]+)"/g)].map((m) => m[1]!).join(" ");
+    const lu = (montant: number) => formatEuro(montant).replace(/[\u00a0\u202f]/g, " ");
+    const P = PARTIE_D_EXEMPLE;
+    expect(alts).toContain(lu(P.chiffreDAffaires.tour));
+    expect(alts).toContain(lu(P.resultat.tour));
+    // L'écart au tour précédent, tel que le verdict l'écrit.
+    expect(alts).toContain(`${lu(P.resultat.tour - P.resultat.precedent)} de plus`);
+    // Le rang, le nombre d'équipes et l'IPG du verdict.
+    const rang = P.classement.findIndex((l) => l.equipe === P.equipe) + 1;
+    const ipg = P.classement[rang - 1]!.ipg;
+    expect(alts).toContain(
+      `${rang}${rang === 1 ? "re" : "e"} sur ${P.classement.length} équipes avec un IPG de ${ipg}`,
+    );
+    // Le classement montre le même résultat que le bandeau pour l'équipe jouée,
+    // et il est rangé par IPG, pas par résultat.
+    expect(P.classement[rang - 1]!.resultat).toBe(P.resultat.tour);
+    const ipgs = P.classement.map((l) => l.ipg);
+    expect(ipgs).toEqual([...ipgs].sort((a, b) => b - a));
+    // Et la partie d'exemple est annoncée comme telle.
+    const composant = readFileSync(join(RACINE, "src", "components", "accueil-arene.tsx"), "utf8");
+    expect(composant).toContain("Partie d&apos;exemple : {P.equipe}, tour {P.tour}");
+  });
+
+  it("la carte d'épisode sous le héros mène à un vrai épisode, et compte les autres", () => {
+    expect(episodeParCode(EPISODE_DE_L_ACCUEIL), EPISODE_DE_L_ACCUEIL).toBeDefined();
+    const composant = readFileSync(join(RACINE, "src", "components", "accueil-arene.tsx"), "utf8");
+    // Le nombre d'épisodes se lit dans le registre : écrit à la main, il serait
+    // faux au prochain épisode ajouté.
+    expect(composant).toContain("{EPISODES.length} épisodes");
+    expect(composant).not.toContain(`${EPISODES.length} épisodes`);
   });
 
   it("racontent le même tour, et la légende le dit", () => {

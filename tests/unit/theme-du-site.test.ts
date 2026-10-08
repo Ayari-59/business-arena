@@ -75,6 +75,16 @@ describe("les refus", () => {
     );
   });
 
+  it("le bandeau de la partie d'exemple ne peut pas passer au marine sous le héros", () => {
+    // Il touche le héros, marine d'origine : à contre-jour tous deux, ils
+    // fusionneraient en un seul tableau. Le héros remis au clair, il le peut.
+    const fautes = validerContrastes(avec({ "accueil.partie": true }));
+    expect(fautes.join("\n")).toMatch(
+      /« Le titre et les deux boutons » et « Les chiffres d'une partie d'exemple » se suivent/,
+    );
+    expect(validerContrastes(avec({ "accueil.hero": false, "accueil.partie": true }))).toEqual([]);
+  });
+
   it("une bande qui n'ouvre pas la page avec son titre ne peut pas être en tête", () => {
     const fautes = validerContrastes(
       avec({ "entreprises.accroche": true, "entreprises.differences": false }),
