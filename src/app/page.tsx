@@ -103,11 +103,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * LE FORMAT DES TROIS CAPTURES — 800 × 1120, la forme d'une carte à jouer.
+ * LE FORMAT DES TROIS CAPTURES — 800 × 1120.
  *
  * Les trois écrans sont recadrés à la même taille, et c'est ce qui permet de
- * les poser en main de cartes : trois images de hauteurs différentes ne
- * forment pas un éventail, elles forment un escalier. Les dimensions sont
+ * les poser côte à côte : trois images de hauteurs différentes ne forment pas
+ * une rangée, elles forment un escalier. Les dimensions sont
  * écrites dans la page, sous forme de rapport — sans elles, la place n'est pas
  * réservée et le texte saute quand les fichiers arrivent. Les trois fichiers
  * ont ce format.
@@ -115,12 +115,10 @@ export const metadata: Metadata = {
 const CARTE = { largeur: 800, hauteur: 1120 };
 
 /**
- * UNE CARTE DE LA MAIN : la capture, posée et tournée.
+ * UN ÉCRAN DU TOUR : la capture, posée droite, sous son nom.
  *
- * UNE SEULE PRISE PAR ÉCRAN. Du temps des deux thèmes, chaque écran avait deux
- * prises et la page choisissait celle qui s'opposait à son fond. Le site n'a
- * plus qu'un habillage : la capture montre le papier et ses écrans d'ardoise,
- * ce qu'un élève verra.
+ * UNE SEULE PRISE PAR ÉCRAN. Le site n'a qu'un habillage : la capture montre
+ * le papier et ses écrans d'ardoise, ce qu'un élève verra.
  *
  * Le fichier n'est pas une balise `img` mais un FOND (voir `.capture-decran`
  * dans globals.css). Le cadre annonce donc lui-même ce qu'il montre —
@@ -128,83 +126,33 @@ const CARTE = { largeur: 800, hauteur: 1120 };
  * remplacement. Et sa forme vient du rapport des deux dimensions, non d'une
  * image qu'on attendrait : la place est réservée avant que le fichier arrive.
  *
- * PAS DE DÉGRADÉ EN BAS, contrairement au cadrage qu'ont longtemps porté ces
- * captures : une carte a un bord franc, et un bas qui s'éteint laisserait voir
- * la carte de derrière à travers celle de devant.
- *
- * Les deux cartes du fond sont assourdies (bordure plus pâle, opacité) : c'est
- * ce qui fait une profondeur, sans quoi trois images de même contraste se
- * disputent l'œil. L'opacité dépend du sol, d'où `.carte-du-fond` dans
- * globals.css plutôt qu'une classe fixe.
+ * LE NOM N'EST PAS NUMÉROTÉ. La chaîne des six temps, juste au-dessus, ne
+ * l'est pas non plus sur grand écran, et deux comptes qui ne disent pas la
+ * même chose sur un même écran se contrediraient.
  */
-function CarteEnMain({
-  nom,
-  alt,
-  pose,
-  fond = false,
-}: {
-  /** Le nom de l'écran : `public/apercus/x.webp`. */
-  nom: string;
-  alt: string;
-  /** Position et angle dans le cadre de la main. */
-  pose: string;
-  fond?: boolean;
-}) {
+function EcranDuTour({ nom, titre, alt }: { nom: string; titre: string; alt: string }) {
   return (
-    <div
-      // L'OMBRE EST MARINE, ET FIXE. Tirée de l'échelle (`shadow-slate-950`),
-      // elle prenait la teinte du sol : de l'encre sur le tableau, mais le
-      // fond même de la page sur le papier, donc rien. Posée sur une bande
-      // claire, la main a besoin d'une vraie ombre pour décoller ses cartes.
-      className={`absolute w-[52%] overflow-hidden rounded-xl border bg-slate-900 ${pose} ${
-        fond
-          ? "carte-du-fond border-white/5 shadow-[0_18px_36px_-16px_rgb(11_37_69/0.45)]"
-          : "border-white/15 shadow-[0_26px_50px_-18px_rgb(11_37_69/0.6)]"
-      }`}
-    >
-      <div
-        role="img"
-        aria-label={alt}
-        className="capture-decran w-full"
-        style={
-          {
-            aspectRatio: `${CARTE.largeur} / ${CARTE.hauteur}`,
-            "--ecran": `url(/apercus/${nom}.webp)`,
-          } as React.CSSProperties
-        }
-      />
-    </div>
+    <li className="flex shrink-0 snap-start flex-col gap-3 max-sm:w-[78%]">
+      <p className="font-display text-sm font-bold uppercase tracking-etiquette text-amber-300">
+        {titre}
+      </p>
+      <div className="overflow-hidden rounded-md border border-white/15 bg-slate-900">
+        <div
+          role="img"
+          aria-label={alt}
+          className="capture-decran w-full"
+          style={
+            {
+              aspectRatio: `${CARTE.largeur} / ${CARTE.hauteur}`,
+              "--ecran": `url(/apercus/${nom}.webp)`,
+            } as React.CSSProperties
+          }
+        />
+      </div>
+    </li>
   );
 }
 
-/**
- * LES TROIS ÉCRANS, TENUS COMME UNE MAIN DE CARTES.
- *
- * L'en-tête ne montrait qu'un écran, et très haut : une colonne d'image de
- * 560 pixels contre un bloc de texte de 380, le déséquilibre se voyait. Les
- * trois captures, désormais au même format, se posent en éventail — et la
- * hauteur de l'éventail se règle enfin sur le texte d'à côté.
- *
- * LE CADRE PORTE UN RAPPORT DE FORME (9/8) plutôt qu'une hauteur d'image : la
- * main occupe donc une hauteur connue d'avance, celle qu'on lui donne, et non
- * celle que voudrait la plus haute des trois images.
- *
- * L'ÉVENTAIL EST FIXE, PAS TIRÉ AU SORT. Un ordre aléatoire aurait deux
- * défauts, l'un technique et l'autre de fond : le serveur et le navigateur
- * tireraient deux mains différentes, et la page se repeindrait sous l'œil du
- * visiteur ; et le produit changerait de visage d'une visite à l'autre. La
- * main choisie dit d'ailleurs quelque chose — devant, l'écran où l'élève
- * passe son temps ; derrière, les deux moments d'un tour, dans l'ordre où on
- * les joue : on décide, puis on lit le verdict.
- *
- * LES TROIS CARTES SONT DÉCRITES. Elles ne l'étaient pas toutes : les deux du
- * fond portaient un texte de remplacement vide, parce qu'une section plus bas
- * montrait les mêmes écrans en grand avec leur description, et les faire lire
- * deux fois n'apprenait rien. Cette section n'existe plus. Qui ne voit pas la
- * page n'a donc plus que ces trois phrases pour savoir ce que montre
- * l'application : elles disent les chiffres qu'on y lit, pas « capture
- * d'écran ».
- */
 /**
  * CE QUE L'ÉLÈVE APPREND, ET COMMENT ON LE SAIT.
  *
@@ -241,52 +189,56 @@ const CE_QUE_L_ELEVE_APPREND = [
   },
 ];
 
-function MainDeCartes() {
+/**
+ * LES TROIS ÉCRANS D'UN TOUR, POSÉS DROITS SUR UNE ARDOISE.
+ *
+ * ILS ÉTAIENT TENUS EN MAIN DE CARTES : trois captures en éventail, tournées
+ * de neuf degrés, les deux du fond assourdies. C'était le dernier dessin de
+ * l'ancien habillage, et à côté des arêtes franches de « L'arène » il se
+ * lisait comme une pièce d'une autre page. Les écrans sont maintenant posés
+ * comme l'arène pose ses chiffres : droits, alignés, sur le marine.
+ *
+ * L'ARDOISE PREND TOUTE LA LARGEUR, sous les deux listes, au lieu d'une
+ * demi-colonne : trois écrans dans une colonne de cinq cents pixels ne se
+ * lisaient pas. Elle porte la classe `ardoise`, qui rend au marine son
+ * échelle sur une bande claire.
+ *
+ * L'ORDRE EST CELUI DE LA LÉGENDE : l'écran où l'élève passe son temps, puis
+ * les deux moments d'un tour dans l'ordre où on les joue — on décide, puis on
+ * lit le verdict. Sur téléphone, les trois écrans défilent de côté dans leur
+ * propre cadre, la page ne bouge pas.
+ *
+ * LES TROIS ÉCRANS SONT DÉCRITS. Qui ne voit pas la page n'a que ces trois
+ * phrases pour savoir ce que montre l'application : elles disent les chiffres
+ * qu'on y lit, pas « capture d'écran ».
+ */
+function TroisEcrans() {
   return (
-    /*
-      LA MAIN N'EST PLUS DÉCALÉE. Elle l'a été de dix-neuf pixels, le temps
-      que le titre vive dans la colonne d'à côté : il fallait alors que le haut
-      des cartes tombe sur le haut de « Dirigez une entreprise » plutôt que sur
-      le surtitre. Le titre est passé en pleine largeur au-dessus des deux
-      colonnes, et il n'y a plus rien à aligner.
-
-      ELLE GRANDIT, EN REVANCHE. Figée à 440 px, elle occupait un quart d'un
-      écran de 1728 et le reste était de la marge.
-
-      ELLE A QUITTÉ LE HÉROS pour la bande de la boucle, en face des six
-      temps d'un tour : la maquette « L'arène » garde le haut de page au
-      texte, et montre l'arène là où l'on explique comment on y joue.
-    */
-    <figure className="m-0">
-      <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px] lg:max-w-none">
-        <CarteEnMain
-          nom="decider"
-          fond
-          pose="left-[2%] top-[11%] -rotate-[9deg]"
-          alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 3 800 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
-        />
-        <CarteEnMain
-          nom="resultats"
-          fond
-          pose="left-[46%] top-[11%] rotate-[9deg]"
-          alt="Le verdict du tour 3 : 32 942 € de bénéfice, 11 977 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 58, et deux réussites obtenues."
-        />
-        <CarteEnMain
+    <figure className="ardoise m-0 mt-14 rounded-md border-t-[3px] border-amber-400 bg-slate-950 p-5 sm:p-8">
+      <ol className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0">
+        <EcranDuTour
           nom="arene"
-          pose="left-[24%] top-[4%]"
+          titre="L'arène"
           alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 319 914 €, résultat 32 942 €, trésorerie 89 869 €, et le tour en cours à jouer."
         />
-      </div>
+        <EcranDuTour
+          nom="decider"
+          titre="La décision"
+          alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 3 800 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
+        />
+        <EcranDuTour
+          nom="resultats"
+          titre="Le verdict"
+          alt="Le verdict du tour 3 : 32 942 € de bénéfice, 11 977 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 58, et deux réussites obtenues."
+        />
+      </ol>
       {/*
         LA LÉGENDE DIT CE QUE L'IMAGE NE PEUT PAS DIRE : que les trois écrans
         sont ceux d'UN MÊME TOUR. Le verdict montré est celui du tour qu'on
-        voit se décider sur la carte d'à côté, et c'est ce qui fait de trois
+        voit se décider sur l'écran d'à côté, et c'est ce qui fait de trois
         images une démonstration plutôt qu'une galerie.
-
-        Les six temps ont vécu quelques heures sous cette légende, dans le
-        premier écran ; c'est maintenant la main qui les a rejoints, plus bas.
       */}
-      <figcaption className="mt-6 text-center text-sm leading-relaxed text-slate-400">
+      <figcaption className="mt-5 text-sm leading-relaxed text-slate-300">
         Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision,
         le verdict.
       </figcaption>
@@ -479,13 +431,12 @@ export default async function Home() {
           {/*
             LES TROIS CAPTURES SONT ICI. Elles ouvraient la page, dans le héros ;
             la maquette « L'arène » garde le héros au texte et montre l'arène
-            plus bas, là où l'on explique ce qui se passe dans un tour. Elles
-            prennent la colonne de droite, et les deux listes s'empilent à
-            gauche : sur un téléphone, elles viennent juste après les six temps,
-            qu'elles illustrent.
+            plus bas, là où l'on explique ce qui se passe dans un tour. Les deux
+            listes se partagent la largeur, et l'ardoise des trois écrans passe
+            dessous, sur toute la largeur.
           */}
-          <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2 lg:items-center">
-            <div className="lg:col-start-1">
+          <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2">
+            <div>
               <h2
                 id="la-boucle"
                 className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
@@ -570,11 +521,7 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-              <MainDeCartes />
-            </div>
-
-            <div className="lg:col-start-1">
+            <div>
               <h2
                 id="apprend"
                 className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
@@ -604,6 +551,8 @@ export default async function Home() {
               </ul>
             </div>
           </div>
+
+          <TroisEcrans />
         </Bande>
 
         {/* ---------- Les métiers, montrés ---------- */}

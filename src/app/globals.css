@@ -977,30 +977,6 @@ body {
 }
 
 /*
- * LES CARTES DU FOND S'ASSOURDISSENT SELON LE SOL. Sur le tableau, une capture
- * à 60 % recule sans s'éteindre. Sur le papier, la même opacité laisse passer
- * le fond à travers la carte, qui devient un gris sale. Elle y garde donc
- * 85 % : la profondeur tient alors à l'ombre et à l'angle, plus qu'à la
- * transparence.
- */
-.carte-du-fond {
-  opacity: 0.6;
-}
-
-[data-theme="clair"] .carte-du-fond {
-  opacity: 0.85;
-  /* Une capture de papier posée sur le papier : sans un bord d'encre, la
-     carte se fond dans la page et l'éventail perd ses deux ailes. Le filet
-     à 5 % qui suffisait sur la nuit ne se voit pas ici. */
-  border-color: color-mix(in oklab, var(--color-slate-50) 22%, transparent);
-}
-
-[data-theme="clair"] .contre-jour .carte-du-fond {
-  opacity: 0.6;
-  border-color: color-mix(in oklab, var(--color-white) 5%, transparent);
-}
-
-/*
  * LE TABLEAU ATTEND LES CHAMPS ET LES BARRES D'UNE SURFACE SOMBRE. Ce que le
  * navigateur dessine lui-même (cases, sélecteurs, défilement) ne lit pas nos
  * variables : sans cette ligne, il peindrait des champs de papier sur

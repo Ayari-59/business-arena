@@ -104,17 +104,20 @@ describe("les captures de la page d'accueil", () => {
     expect(ACCUEIL).toContain(`largeur: ${largeur}, hauteur: ${hauteur}`);
   });
 
-  it("l'éventail est arrêté, pas tiré au sort à chaque rendu", () => {
-    // Un ordre aléatoire se tirerait deux fois — une fois sur le serveur, une
-    // fois dans le navigateur — et la page se repeindrait sous l'oeil du
-    // visiteur. Les angles et les places sont donc écrits.
+  it("les trois écrans sont posés droits, côte à côte, sur une ardoise", () => {
+    // L'éventail tourné de neuf degrés était le dernier dessin de l'ancien
+    // habillage ; « L'arène » pose ses écrans comme ses chiffres, droits et
+    // alignés. Rien n'est tiré au sort : le serveur et le navigateur
+    // tireraient deux ordres, et la page se repeindrait sous l'oeil.
     expect(ACCUEIL).not.toMatch(/Math\.random/);
-    expect(ACCUEIL).toMatch(/-rotate-\[9deg\]/);
-    expect(ACCUEIL).toMatch(/\brotate-\[9deg\]/);
-    // La hauteur de la main vient d'un rapport de forme, pas de l'image : sans
-    // lui, l'en-tête reprendrait la hauteur de la plus haute des captures et
-    // écraserait le bloc de texte d'à côté.
-    expect(ACCUEIL).toMatch(/aspect-\[9\/8\]/);
+    expect(ACCUEIL).not.toMatch(/rotate-\[/);
+    expect(ACCUEIL).not.toContain("carte-du-fond");
+    expect(GLOBALS).not.toContain(".carte-du-fond");
+    expect(ACCUEIL).toMatch(/className="ardoise [^"]*bg-slate-950/);
+    expect(ACCUEIL).toContain("sm:grid-cols-3");
+    // Sur téléphone, les écrans défilent dans leur propre cadre : la page,
+    // elle, ne déborde pas.
+    expect(ACCUEIL).toContain("overflow-x-auto");
   });
 
   it("disent ce qu'on y voit, pour qui ne les voit pas", () => {
