@@ -525,9 +525,10 @@
     0 10px 28px -14px rgb(0 0 0 / 0.5);
   --creux-champ: inset 0 1px 2px rgb(0 0 0 / 0.25);
   --lumiere-carte: color-mix(in oklab, #fff 4%, transparent);
-  /* L'anneau orange en filigrane du haut de page (voir `.halo-de-page`) :
-     sur le marine, il se devine à 18 % comme sur la maquette. */
-  --halo-de-page: color-mix(in oklab, var(--accent-plein) 18%, transparent);
+  /* L'anneau orange du haut de page (voir `.halo-de-page`) : 45 % d'orange
+     sur le marine, un orange brûlé franc. À 18 %, comme sur la maquette où
+     il ne mesurait que 220 px, il virait au brun violacé une fois agrandi. */
+  --halo-de-page: color-mix(in oklab, var(--accent-plein) 45%, transparent);
   /* Le filet d'une carte : un trait de lumière sur le marine. */
   --filet-carte: color-mix(in oklab, #fff 10%, transparent);
 }
@@ -915,7 +916,7 @@ body {
  * leur en-tête. Il est devenu un composant (HaloDePage), et l'arène en change
  * la forme : un ANNEAU orange en filigrane, qui déborde du coin haut droit,
  * comme sur la maquette du héros marine. Un cercle de piste plutôt qu'une
- * lueur. Sa teinte passe par `--halo-de-page` : 18 % d'orange sur le marine.
+ * lueur. Sa teinte passe par `--halo-de-page` : 45 % d'orange sur le marine.
  *
  * IL NE VIT QUE SUR LE MARINE. Posé sur une page claire, le même anneau, même
  * dilué à 10 %, faisait une grosse tache rose pâle en haut à droite de la page
@@ -924,12 +925,15 @@ body {
  * (le haut de l'accueil, ou toute bande que l'administrateur passe au marine) ;
  * ailleurs, le composant reste dans la page sans rien peindre.
  *
- * L'épaisseur suit la largeur de l'écran : un trait de 26 px sur la maquette
- * de 460 px, soit un vingtième de la carte ; le même rapport tient l'anneau
- * à sa place sur un téléphone comme sur un grand écran.
+ * L'ÉPAISSEUR SUIT LA LARGEUR DE L'ÉCRAN, en trait plus fin que la maquette :
+ * à 4 rem d'épaisseur et 18 % d'opacité, l'anneau faisait une large bande
+ * terne ; plus fin et plus franc, il se lit comme un cercle de piste orange.
+ * Le titre qui passe dessus garde son contraste : le blanc y est à plus de
+ * 8:1, l'orange clair de la seconde ligne à près de 4:1 (titre de grande
+ * taille, seuil 3:1).
  * ------------------------------------------------------------------------- */
 .halo-de-page {
-  border: clamp(1.75rem, 4.5vw, 4rem) solid var(--halo-de-page);
+  border: clamp(1rem, 2.4vw, 2.25rem) solid var(--halo-de-page);
   z-index: -1;
 }
 
