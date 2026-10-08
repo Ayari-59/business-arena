@@ -244,8 +244,8 @@ describe("thème graphique", () => {
     });
     const etat = {
       ...etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT),
-      "accueil.chiffres": false,
-      "accueil.roles": true,
+      "accueil.metiers": true,
+      "accueil.chiffres": true,
     };
     expect(validerContrastes(etat)).toEqual([]);
     await updatePlatformConfig(platformAdminId, {
@@ -253,8 +253,8 @@ describe("thème graphique", () => {
     });
 
     const relu = await getPlatformConfig();
-    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(false);
-    expect(contrasteDeLaBande(relu.theme, "accueil.roles")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.metiers")).toBe(true);
     // Une bande qu'on n'a pas touchée suit toujours son état d'origine.
     expect(contrasteDeLaBande(relu.theme, "enseignants.chiffres")).toBe(true);
     // Les autres réglages ne bougent pas : le thème s'écrit à côté, pas par-dessus.
@@ -266,16 +266,16 @@ describe("thème graphique", () => {
     const relu = await getPlatformConfig();
     expect(Object.keys(relu.theme.contrastes).sort()).toEqual([
       "accueil.chiffres",
-      "accueil.roles",
+      "accueil.metiers",
     ]);
   });
 
   it("un identifiant de bande disparu depuis est ignoré à la lecture, sans erreur", async () => {
     await updatePlatformConfig(platformAdminId, {
-      theme: { contrastes: { "bande.supprimee": true, "accueil.hero": true } },
+      theme: { contrastes: { "bande.supprimee": true, "accueil.hero": false } },
     });
     const relu = await getPlatformConfig();
-    expect(relu.theme.contrastes).toEqual({ "accueil.hero": true });
+    expect(relu.theme.contrastes).toEqual({ "accueil.hero": false });
   });
 
   it("rétablir l'état d'origine efface tous les écarts", async () => {
@@ -284,8 +284,8 @@ describe("thème graphique", () => {
     });
     const relu = await getPlatformConfig();
     expect(relu.theme.contrastes).toEqual({});
-    expect(contrasteDeLaBande(relu.theme, "accueil.hero")).toBe(false);
-    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.hero")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(false);
   });
 
   it("est refusé à qui n'est pas administrateur de la plateforme", async () => {
@@ -295,7 +295,7 @@ describe("thème graphique", () => {
       .returning({ id: users.id });
     await expect(
       updatePlatformConfig(intrus[0]!.id, {
-        theme: { contrastes: { "accueil.hero": true } },
+        theme: { contrastes: { "accueil.hero": false } },
       }),
     ).rejects.toThrow();
     const relu = await getPlatformConfig();
@@ -319,9 +319,9 @@ describe("thème graphique", () => {
     });
     const relu = await getPlatformConfig();
     expect(paletteDuSite(relu.theme)).toBe("cobalt");
-    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(false);
 
     await updatePlatformConfig(platformAdminId, { theme: THEME_DU_SITE_PAR_DEFAUT });
-    expect(paletteDuSite((await getPlatformConfig()).theme)).toBe("laiton");
+    expect(paletteDuSite((await getPlatformConfig()).theme)).toBe("arene");
   });
 });
