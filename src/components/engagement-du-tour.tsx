@@ -32,6 +32,27 @@ export interface Engagement {
   total: number;
   /** Les ventes annoncées dans le plan de trésorerie, quand il est demandé. */
   ventesPrevues: number | null;
+  /**
+   * LES OPTIONS PONCTUELLES RÉELLEMENT ENGAGÉES.
+   *
+   * Prix, volume et budgets se décident à chaque tour ; l'assurance, les études,
+   * la commande exceptionnelle, le dividende et les outils de trésorerie ne se
+   * touchent qu'un tour sur trois. Sur ordinateur, ils sont donc repliés — et un
+   * repli ne doit jamais cacher qu'on a engagé quelque chose. Chacun annonce ce
+   * qu'il porte, et le résumé en donne le compte.
+   *
+   * Lues sur le formulaire, comme le reste : `cle` désigne le repli qui la porte.
+   */
+  optionsPonctuelles: OptionPonctuelle[];
+}
+
+export interface OptionPonctuelle {
+  /** Le repli qui porte l'option : « commande », « assurance », « etudes »… */
+  cle: string;
+  /** Le nom de l'option, pour le résumé. */
+  label: string;
+  /** Ce qui est engagé, en clair : « acceptée », « 2 études », « 12 000 € ». */
+  valeur: string;
 }
 
 const nombre = (data: FormData, champ: string): number | null => {
@@ -42,11 +63,66 @@ const nombre = (data: FormData, champ: string): number | null => {
 };
 
 /**
+ * LES OPTIONS PONCTUELLES ENGAGÉES, lues sur le formulaire.
+ *
+ * Isolée de `lireLEngagement` pour que chaque repli puisse annoncer la sienne
+ * sans relire tout l'engagement, et pour se tester sans monter le formulaire.
+ * `nomDeLAssurance` traduit le code de la formule cochée : le formulaire ne
+ * porte que le code, et le catalogue vit dans la vue de partie.
+ */
+export function lireLesOptionsPonctuelles(
+  data: FormData,
+  nomDeLAssurance: (code: string) => string,
+): OptionPonctuelle[] {
+  const options: OptionPonctuelle[] = [];
+  const montant = (champ: string): number | null => {
+    const v = nombre(data, champ);
+    return v !== null && v > 0 ? v : null;
+  };
+  const euros = (cle: string, label: string, champ: string) => {
+    const v = montant(champ);
+    if (v !== null) options.push({ cle, label, valeur: formatEuro(v) });
+  };
+
+  if (data.get("acceptOrder")) {
+    options.push({ cle: "commande", label: "Commande exceptionnelle", valeur: "acceptée" });
+  }
+  const assurance = data.get("insurance");
+  if (assurance) {
+    options.push({
+      cle: "assurance",
+      label: "Assurance",
+      // Une case à cocher vaut « on » ; une formule porte son code.
+      valeur: assurance === "on" ? "souscrite" : nomDeLAssurance(String(assurance)),
+    });
+  }
+  const etudes = ["studyMarket", "studyPrice", "studyFinance", "studyProject"].filter((c) =>
+    data.get(c),
+  ).length;
+  if (etudes > 0) {
+    options.push({
+      cle: "etudes",
+      label: "Études",
+      valeur: `${etudes} étude${etudes > 1 ? "s" : ""}`,
+    });
+  }
+  euros("dividende", "Dividende", "dividend");
+  euros("mobilisation", "Escompte", "discount");
+  euros("mobilisation", "Affacturage", "factoring");
+  euros("mobilisation", "Placement", "placement");
+  return options;
+}
+
+/**
  * L'engagement, lu dans les champs du formulaire. `codesDesReferences` est
  * vide en mono-produit, et porte les références de la gamme sinon : le prix et
  * le volume s'y lisent référence par référence.
  */
-export function lireLEngagement(data: FormData, codesDesReferences: readonly string[]): Engagement {
+export function lireLEngagement(
+  data: FormData,
+  codesDesReferences: readonly string[],
+  nomDeLAssurance: (code: string) => string = (code) => code,
+): Engagement {
   const budgets: { label: string; montant: number }[] = [];
   const ajouter = (label: string, champ: string) => {
     const v = nombre(data, champ);
@@ -98,6 +174,7 @@ export function lireLEngagement(data: FormData, codesDesReferences: readonly str
     budgets,
     total: budgets.reduce((s, b) => s + b.montant, 0),
     ventesPrevues: nombre(data, "expectedUnits"),
+    optionsPonctuelles: lireLesOptionsPonctuelles(data, nomDeLAssurance),
   };
 }
 
@@ -112,9 +189,12 @@ export function EngagementDuTour({
   gamme: boolean;
 }) {
   const e = engagement;
+  const options = e.optionsPonctuelles;
   return (
-    <section className="rounded-lg border border-amber-400/25 bg-amber-400/5 px-3 py-3 sm:px-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+    // Un récapitulatif est une INFORMATION : il portait le voile et les chiffres
+    // orange de l'action, à côté du seul bouton qui, lui, agit.
+    <section className="encadre-neutre rounded-lg px-3 py-3 sm:px-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
         Ce que vous engagez
       </p>
       <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
@@ -126,13 +206,26 @@ export function EngagementDuTour({
           titre={vocabulary.productionLabel}
           valeur={`${formatUnits(e.volume)} ${vocabulary.units}`}
         />
-        <Ligne titre="Budgets du tour" valeur={formatEuro(e.total)} accent />
+        <Ligne titre="Budgets du tour" valeur={formatEuro(e.total)} />
         {e.ventesPrevues !== null ? (
           <Ligne
             titre="Ventes annoncées"
             valeur={`${formatUnits(e.ventesPrevues)} ${vocabulary.units}`}
           />
         ) : null}
+        {/*
+          LES OPTIONS PONCTUELLES SE COMPTENT ICI. Repliées pendant la saisie, elles
+          seraient invisibles au moment de valider : le résumé dit combien ont été
+          ouvertes, et lesquelles juste dessous.
+        */}
+        <Ligne
+          titre="Options ponctuelles"
+          valeur={
+            options.length === 0
+              ? "aucune"
+              : `${options.length} engagée${options.length > 1 ? "s" : ""}`
+          }
+        />
       </dl>
       {e.budgets.length > 0 ? (
         <p className="mt-2 text-sm leading-snug text-slate-400">
@@ -144,21 +237,25 @@ export function EngagementDuTour({
           ))}
         </p>
       ) : null}
+      {options.length > 0 ? (
+        <p className="mt-1 text-sm leading-snug text-slate-400">
+          {options.map((o, i) => (
+            <span key={`${o.cle}-${o.label}`}>
+              {i > 0 ? " · " : ""}
+              {o.label} <span className="tabular-nums text-slate-300">{o.valeur}</span>
+            </span>
+          ))}
+        </p>
+      ) : null}
     </section>
   );
 }
 
-function Ligne({ titre, valeur, accent = false }: { titre: string; valeur: string; accent?: boolean }) {
+function Ligne({ titre, valeur }: { titre: string; valeur: string }) {
   return (
     <div>
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{titre}</dt>
-      <dd
-        className={`mt-0.5 text-sm font-semibold tabular-nums ${
-          accent ? "text-amber-200" : "text-slate-100"
-        }`}
-      >
-        {valeur}
-      </dd>
+      <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-100">{valeur}</dd>
     </div>
   );
 }

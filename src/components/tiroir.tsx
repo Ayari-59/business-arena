@@ -83,6 +83,7 @@ export function Tiroir({
   const enParcours = useParcours() !== null;
   return (
     <details
+      data-tiroir
       open={ferme ? false : ouvert || enParcours}
       name={groupe}
       onToggle={onBasculer ? (e) => onBasculer(e.currentTarget.open) : undefined}

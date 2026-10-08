@@ -71,8 +71,14 @@ describe("Tiroir", () => {
   });
 
   it("`ouvert` déplie à l'affichage", () => {
-    expect(rendu({ titre: "Bilan", ouvert: true, children: "…" })).toContain("<details open");
-    expect(rendu({ titre: "Bilan", children: "…" })).not.toContain("<details open");
+    // Le `<details>` porte son marqueur (`data-tiroir`, lu par globals.css pour
+    // le fond de la colonne gelée d'un tableau) avant son `open`.
+    expect(rendu({ titre: "Bilan", ouvert: true, children: "…" })).toMatch(
+      /<details[^>]*\sopen(?:=""|\s|>)/,
+    );
+    expect(rendu({ titre: "Bilan", children: "…" })).not.toMatch(
+      /<details[^>]*\sopen(?:=""|\s|>)/,
+    );
   });
 });
 

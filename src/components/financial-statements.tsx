@@ -2,6 +2,7 @@ import type { CompanyRoundResult } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { Tiroir } from "@/components/tiroir";
 import {
+  ecartAuTourPrecedent,
   lectureDeLaTresorerie,
   lectureDuBilan,
   lectureDuResultat,
@@ -13,6 +14,18 @@ import { Icone } from "@/components/icone";
  * Les comptes du tour, en clair et GRATUITS (doc 02 §7.3 : ce sont VOS
  * comptes) : compte de résultat, bilan, analyse des coûts, budget de
  * trésorerie — dépliables sous les résultats. Composant serveur.
+ *
+ * LA FORME EST CELLE DE LA PRESSE ÉCONOMIQUE, pas celle d'un tableau de bord.
+ * C'étaient des suites de `<div>` en 12 px, avec des jauges et des pastilles
+ * « tenu / manqué » pour dire si c'était bon. Ce sont maintenant de vrais
+ * tableaux : en-têtes de colonne, intitulés à l'encre, chiffres tabulaires de
+ * 14 px alignés à droite, filets fins, totaux et soldes intermédiaires en gras,
+ * et une COLONNE D'ÉCART au tour précédent qui porte seule le vert et le rouge.
+ * C'est le chiffre et son écart qui disent si c'est bon ; une jauge le disait à
+ * sa place, et moins bien.
+ *
+ * La cascade du compte de résultat est conservée : chaque solde intermédiaire
+ * se lit sous les charges qu'il absorbe.
  */
 
 const euro = (v: number) => {
@@ -21,6 +34,11 @@ const euro = (v: number) => {
 };
 const units = (v: number) => Math.round(v).toLocaleString("fr-FR");
 const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
+/** Un écart s'écrit SIGNÉ, dans les deux sens : « + » est une information. */
+const euroSigne = (v: number) =>
+  `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(Math.round(v)).toLocaleString("fr-FR")} €`;
+const pctSigne = (v: number) =>
+  `${v > 0 ? "+" : v < 0 ? "−" : ""}${(Math.abs(v) * 100).toFixed(1).replace(".", ",")} %`;
 
 const CASH_LABELS: Record<string, string> = {
   encaissements_clients: "Encaissements clients",
@@ -75,7 +93,13 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <Tiroir titre={title} quoi={resume} ouvert={defaultOpen} ferme={!defaultOpen} groupe="comptes-du-tour">
+    <Tiroir
+      titre={title}
+      quoi={resume}
+      ouvert={defaultOpen}
+      ferme={!defaultOpen}
+      groupe="comptes-du-tour"
+    >
       {children}
     </Tiroir>
   );
@@ -99,7 +123,11 @@ function LigneDeLecture({ lecture }: { lecture: Lecture }) {
   return (
     <p className={`mb-2 rounded-lg px-3 py-2 text-sm leading-relaxed ${teinte}`}>
       <span className="sr-only">
-        {lecture.ton === "mauvais" ? "Point de vigilance. " : lecture.ton === "bon" ? "Lecture favorable. " : ""}
+        {lecture.ton === "mauvais"
+          ? "Point de vigilance. "
+          : lecture.ton === "bon"
+            ? "Lecture favorable. "
+            : ""}
       </span>
       <Icone nom="idee" className="mr-1.5 h-4 w-4" />
       {lecture.texte}
@@ -107,44 +135,161 @@ function LigneDeLecture({ lecture }: { lecture: Lecture }) {
   );
 }
 
-function Row({
-  label,
-  value,
-  strong,
-  indent,
-  tone,
+type Format = "euro" | "units" | "percent";
+
+const montre = (valeur: number, format: Format) =>
+  format === "euro" ? euro(valeur) : format === "units" ? units(valeur) : pct(valeur);
+
+/**
+ * UN TABLEAU D'ÉTAT : l'intitulé, le chiffre du tour, l'écart, le pourcentage.
+ *
+ * `avecEcart` est faux pour l'analyse des coûts, qui n'est pas un état daté
+ * mais une décomposition du tour : un écart y comparerait des grandeurs qui
+ * n'ont pas la même base d'un tour à l'autre.
+ */
+function Etat({
+  periode,
+  avecEcart = true,
+  legende,
+  children,
 }: {
-  label: string;
-  value: string;
-  strong?: boolean;
-  indent?: boolean;
-  tone?: "good" | "bad";
+  periode: string;
+  avecEcart?: boolean;
+  /** Ce que le tableau présente, pour un lecteur d'écran. */
+  legende: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`flex items-baseline justify-between gap-2 py-1 text-xs ${
-        strong ? "border-t border-white/10 font-semibold text-slate-100" : "text-slate-300"
-      } ${indent ? "pl-4 text-slate-400" : ""}`}
-    >
-      <span>{label}</span>
-      <span
-        className={`tabular-nums ${
-          tone === "good" ? "text-emerald-300" : tone === "bad" ? "text-red-400" : ""
+    <div className="tableau-financier">
+      <table className="text-sm">
+        <caption className="sr-only">
+          {legende}
+          {avecEcart
+            ? " La colonne d'écart compare au tour précédent ; elle reste vide quand il n'y a pas de référence."
+            : ""}
+        </caption>
+        <thead>
+          <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
+            <th scope="col" className="py-1 pr-3 text-left font-medium">
+              Poste
+            </th>
+            <th scope="col" className="py-1 pl-2 text-right sm:pl-3 font-medium">
+              {periode}
+            </th>
+            {avecEcart ? (
+              <>
+                <th scope="col" className="py-1 pl-2 text-right sm:pl-3 font-medium">
+                  Écart
+                </th>
+                <th scope="col" className="py-1 pl-2 text-right sm:pl-3 font-medium">
+                  %
+                </th>
+              </>
+            ) : null}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+/**
+ * Une ligne d'état. `valeur` et `avant` sont dans le sens où ils S'AFFICHENT :
+ * une charge montrée en négatif se compare en négatif.
+ *
+ * `fort` marque un TOTAL ou un SOLDE INTERMÉDIAIRE : filet au-dessus, gras.
+ * `tone` ne sert plus qu'aux lignes qui sont des RÉSULTATS (le résultat net, la
+ * trésorerie en découvert) ; un niveau s'écrit à l'encre, et c'est l'écart qui
+ * dit s'il est bon.
+ */
+function Ligne({
+  label,
+  valeur,
+  avant = null,
+  texte,
+  format = "euro",
+  fort,
+  decalee,
+  tone,
+  avecEcart = true,
+}: {
+  label: string;
+  valeur: number;
+  /** La même valeur au tour précédent. `null` : la colonne d'écart reste vide. */
+  avant?: number | null;
+  /** Le texte affiché quand il n'est pas le simple format de la valeur. */
+  texte?: string;
+  format?: Format;
+  fort?: boolean;
+  decalee?: boolean;
+  tone?: "good" | "bad";
+  avecEcart?: boolean;
+}) {
+  const ecart = avecEcart ? ecartAuTourPrecedent(valeur, avant) : null;
+  // Un écart EST un résultat : il porte le vert ou le rouge francs. Un écart nul
+  // ne dit ni gain ni perte — il reste à l'encre.
+  const teinteEcart =
+    ecart === null || Math.round(ecart.montant) === 0
+      ? "text-slate-400"
+      : ecart.montant > 0
+        ? "text-emerald-300"
+        : "text-red-400";
+  return (
+    <tr className={fort ? "border-t border-white/15" : ""}>
+      <th
+        scope="row"
+        className={`py-1 pr-3 text-left font-normal ${
+          fort ? "font-semibold text-slate-100" : decalee ? "pl-3 text-slate-400" : "text-slate-300"
         }`}
       >
-        {value}
-      </span>
-    </div>
+        {label}
+      </th>
+      <td
+        className={`whitespace-nowrap py-1 pl-2 text-right sm:pl-3 tabular-nums ${
+          fort ? "font-semibold" : ""
+        } ${tone === "good" ? "text-emerald-300" : tone === "bad" ? "text-red-400" : fort ? "text-slate-100" : "text-slate-200"}`}
+      >
+        {texte ?? montre(valeur, format)}
+      </td>
+      {avecEcart ? (
+        <>
+          <td
+            data-ecart
+            className={`whitespace-nowrap py-1 pl-2 text-right sm:pl-3 tabular-nums ${teinteEcart}`}
+          >
+            {/* Pas de référence au tour précédent : la cellule reste VIDE. « 0 »
+                dirait « rien n'a bougé », et c'est faux — on ne sait pas. */}
+            {ecart === null ? "" : euroSigne(ecart.montant)}
+          </td>
+          <td
+            data-ecart
+            className={`whitespace-nowrap py-1 pl-2 text-right sm:pl-3 tabular-nums ${teinteEcart}`}
+          >
+            {ecart === null || ecart.relatif === null ? "" : pctSigne(ecart.relatif)}
+          </td>
+        </>
+      ) : null}
+    </tr>
   );
 }
 
 export function FinancialStatements({
   result,
+  precedent = null,
+  periode,
   price,
   otherVariableCostPerUnit,
   vocabulary,
 }: {
   result: CompanyRoundResult;
+  /**
+   * Le tour précédent, pour la colonne d'écart. `null` au premier tour : les
+   * cellules d'écart restent vides, et c'est ce qu'il faut dire.
+   */
+  precedent?: CompanyRoundResult | null;
+  /** Le nom de la période affichée, en en-tête de colonne : « Trimestre 3 ». */
+  periode: string;
   /** Prix de vente du tour (analyse des coûts) — null si inconnu. */
   price: number | null;
   /** Autres coûts variables à l'unité (énergie, commission, ménage…) : la seule
@@ -156,28 +301,47 @@ export function FinancialStatements({
 }) {
   const cr = result.incomeStatement;
   const b = result.balanceSheet;
+  const pcr = precedent?.incomeStatement ?? null;
+  const pb = precedent?.balanceSheet ?? null;
   // Coût variable unitaire RÉEL du tour, tel que le moteur l'a employé pour le
   // seuil et la marge sur coût variable : il intègre le choix de fournisseur.
   // On en déduit la part matière (total − autres) plutôt que de réafficher un
   // coût standard qui contredirait les totaux ci-dessus.
   const cvu = result.breakeven.unitVariableCost;
   const materialCostPerUnit = cvu - otherVariableCostPerUnit;
-  const soldUnits = Object.values(result.market.bySegment).reduce((s, d) => s + d.sold, 0)
-    + (result.extraOrders?.delivered ?? 0)
-    + (result.extraOrders?.subcontracted ?? 0)
-    + (result.orderOffer?.delivered ?? 0)
-    + (result.subscription?.retained ?? 0);
-  const structure =
-    cr.fixedCosts +
-    cr.marketingCost +
-    cr.qualityCost +
-    cr.maintenanceCost +
-    (cr.rdCost ?? 0) +
-    cr.depreciation;
+  const vendues = (r: CompanyRoundResult) =>
+    Object.values(r.market.bySegment).reduce((s, d) => s + d.sold, 0) +
+    (r.extraOrders?.delivered ?? 0) +
+    (r.extraOrders?.subcontracted ?? 0) +
+    (r.orderOffer?.delivered ?? 0) +
+    (r.subscription?.retained ?? 0);
+  const soldUnits = vendues(result);
+  const structureDe = (c: typeof cr) =>
+    c.fixedCosts +
+    c.marketingCost +
+    c.qualityCost +
+    c.maintenanceCost +
+    (c.rdCost ?? 0) +
+    c.depreciation;
+  const structure = structureDe(cr);
   const placement = b.shortTermInvestment ?? 0;
-  const totalAssets =
-    b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash + placement;
+  const actifDe = (bilan: typeof b) =>
+    bilan.fixedAssetsNet +
+    bilan.inventoryValue +
+    bilan.receivables +
+    bilan.cash +
+    (bilan.shortTermInvestment ?? 0);
+  const totalAssets = actifDe(b);
   const vat = b.vatLiability ?? 0;
+  const passifDe = (bilan: typeof b) =>
+    bilan.equity +
+    bilan.financialDebt +
+    bilan.payables +
+    (bilan.vatLiability ?? 0) +
+    bilan.overdraft;
+  /** Une valeur optionnelle du tour précédent : absente, la colonne reste vide. */
+  const avant = <T,>(lire: (p: CompanyRoundResult) => T): T | null =>
+    precedent ? lire(precedent) : null;
 
   return (
     <section className="mt-4 space-y-2" aria-label="Vos comptes du tour">
@@ -188,107 +352,233 @@ export function FinancialStatements({
 
       <Panel title="Compte de résultat" defaultOpen resume={`résultat net ${euro(cr.netIncome)}`}>
         <LigneDeLecture lecture={lectureDuResultat(cr)} />
-        <Row label="Chiffre d'affaires" value={euro(cr.revenue)} />
-        {Math.abs(cr.productionStocked) > 0.5 ? (
-          <Row label="Production stockée (± Δ stock)" value={euro(cr.productionStocked)} indent />
-        ) : null}
-        <Row label="− Coût variable des ventes" value={euro(-cr.cogs)} indent />
-        {/* La commission d'un canal partenaire se retranche ici, avec les
-            autres charges de la vente : c'est la seule place d'où « la marge
-            après commission » se lit sans la recalculer. La ligne n'apparaît
-            que dans les secteurs qui vendent par un tiers. */}
-        {(cr.commissionCost ?? 0) > 0.5 ? (
-          <Row
-            label="− Commissions des canaux partenaires"
-            value={euro(-(cr.commissionCost ?? 0))}
-            indent
+        <Etat periode={periode} legende="Compte de résultat du tour, en cascade.">
+          <Ligne label="Chiffre d'affaires" valeur={cr.revenue} avant={pcr?.revenue ?? null} />
+          {Math.abs(cr.productionStocked) > 0.5 ? (
+            <Ligne
+              label="Production stockée (± Δ stock)"
+              valeur={cr.productionStocked}
+              avant={pcr?.productionStocked ?? null}
+              decalee
+            />
+          ) : null}
+          <Ligne
+            label="− Coût variable des ventes"
+            valeur={-cr.cogs}
+            avant={pcr ? -pcr.cogs : null}
+            decalee
           />
-        ) : null}
-        <Row label="= Marge sur coût variable" value={euro(cr.grossMargin)} strong />
-        <Row label="− Marketing" value={euro(-cr.marketingCost)} indent />
-        <Row label="− Qualité" value={euro(-cr.qualityCost)} indent />
-        <Row label="− Maintenance" value={euro(-cr.maintenanceCost)} indent />
-        {(cr.rdCost ?? 0) > 0.5 ? (
-          <Row label="− Recherche et développement" value={euro(-(cr.rdCost ?? 0))} indent />
-        ) : null}
-        {(cr.engagementRse ?? 0) > 0.5 ? (
-          <Row label="− Engagement RSE" value={euro(-(cr.engagementRse ?? 0))} indent />
-        ) : null}
-        <Row label="− Charges de structure" value={euro(-cr.fixedCosts)} indent />
-        <Row label="= Excédent brut d'exploitation (EBE)" value={euro(cr.ebitda)} strong />
-        <Row label="− Dotations aux amortissements" value={euro(-cr.depreciation)} indent />
-        <Row label="= Résultat d'exploitation" value={euro(cr.operatingIncome)} strong />
-        <Row label="− Charges financières (intérêts, agios, mobilisations)" value={euro(-cr.interest)} indent />
-        {(cr.financialIncome ?? 0) > 0.5 ? (
-          <Row
-            label="+ Produits financiers (placement)"
-            value={euro(cr.financialIncome ?? 0)}
-            indent
+          {/* La commission d'un canal partenaire se retranche ici, avec les
+              autres charges de la vente : c'est la seule place d'où « la marge
+              après commission » se lit sans la recalculer. La ligne n'apparaît
+              que dans les secteurs qui vendent par un tiers. */}
+          {(cr.commissionCost ?? 0) > 0.5 ? (
+            <Ligne
+              label="− Commissions des canaux partenaires"
+              valeur={-(cr.commissionCost ?? 0)}
+              avant={pcr?.commissionCost !== undefined ? -pcr.commissionCost : null}
+              decalee
+            />
+          ) : null}
+          <Ligne
+            label="= Marge sur coût variable"
+            valeur={cr.grossMargin}
+            avant={pcr?.grossMargin ?? null}
+            fort
           />
-        ) : null}
-        {(cr.exceptionalCharge ?? 0) > 0.5 ? (
-          <Row label="− Sanction RSE (exceptionnel)" value={euro(-(cr.exceptionalCharge ?? 0))} indent />
-        ) : null}
-        {(cr.exceptionalIncome ?? 0) > 0.5 ? (
-          <Row label="+ Éco-subvention RSE (exceptionnel)" value={euro(cr.exceptionalIncome ?? 0)} indent />
-        ) : null}
-        {(cr.rescueSubsidy ?? 0) > 0.5 ? (
-          <Row
-            label="+ Subvention exceptionnelle (sauvetage)"
-            value={euro(cr.rescueSubsidy ?? 0)}
-            indent
+          <Ligne
+            label="− Marketing"
+            valeur={-cr.marketingCost}
+            avant={pcr ? -pcr.marketingCost : null}
+            decalee
           />
-        ) : null}
-        {(cr.taxLossUsed ?? 0) > 0.5 ? (
-          <Row
-            label="dont déficit antérieur imputé (report)"
-            value={euro(cr.taxLossUsed ?? 0)}
-            indent
+          <Ligne
+            label="− Qualité"
+            valeur={-cr.qualityCost}
+            avant={pcr ? -pcr.qualityCost : null}
+            decalee
           />
-        ) : null}
-        <Row label="− Impôt sur les sociétés" value={euro(-cr.tax)} indent />
-        <Row
-          label="= RÉSULTAT NET"
-          value={euro(cr.netIncome)}
-          strong
-          tone={cr.netIncome >= 0 ? "good" : "bad"}
-        />
+          <Ligne
+            label="− Maintenance"
+            valeur={-cr.maintenanceCost}
+            avant={pcr ? -pcr.maintenanceCost : null}
+            decalee
+          />
+          {(cr.rdCost ?? 0) > 0.5 ? (
+            <Ligne
+              label="− Recherche et développement"
+              valeur={-(cr.rdCost ?? 0)}
+              avant={pcr?.rdCost !== undefined ? -pcr.rdCost : null}
+              decalee
+            />
+          ) : null}
+          {(cr.engagementRse ?? 0) > 0.5 ? (
+            <Ligne
+              label="− Engagement RSE"
+              valeur={-(cr.engagementRse ?? 0)}
+              avant={pcr?.engagementRse !== undefined ? -pcr.engagementRse : null}
+              decalee
+            />
+          ) : null}
+          <Ligne
+            label="− Charges de structure"
+            valeur={-cr.fixedCosts}
+            avant={pcr ? -pcr.fixedCosts : null}
+            decalee
+          />
+          <Ligne
+            label="= Excédent brut d'exploitation (EBE)"
+            valeur={cr.ebitda}
+            avant={pcr?.ebitda ?? null}
+            fort
+          />
+          <Ligne
+            label="− Dotations aux amortissements"
+            valeur={-cr.depreciation}
+            avant={pcr ? -pcr.depreciation : null}
+            decalee
+          />
+          <Ligne
+            label="= Résultat d'exploitation"
+            valeur={cr.operatingIncome}
+            avant={pcr?.operatingIncome ?? null}
+            fort
+          />
+          <Ligne
+            label="− Charges financières (intérêts, agios, mobilisations)"
+            valeur={-cr.interest}
+            avant={pcr ? -pcr.interest : null}
+            decalee
+          />
+          {(cr.financialIncome ?? 0) > 0.5 ? (
+            <Ligne
+              label="+ Produits financiers (placement)"
+              valeur={cr.financialIncome ?? 0}
+              avant={pcr?.financialIncome ?? null}
+              decalee
+            />
+          ) : null}
+          {(cr.exceptionalCharge ?? 0) > 0.5 ? (
+            <Ligne
+              label="− Sanction RSE (exceptionnel)"
+              valeur={-(cr.exceptionalCharge ?? 0)}
+              avant={pcr?.exceptionalCharge !== undefined ? -pcr.exceptionalCharge : null}
+              decalee
+            />
+          ) : null}
+          {(cr.exceptionalIncome ?? 0) > 0.5 ? (
+            <Ligne
+              label="+ Éco-subvention RSE (exceptionnel)"
+              valeur={cr.exceptionalIncome ?? 0}
+              avant={pcr?.exceptionalIncome ?? null}
+              decalee
+            />
+          ) : null}
+          {(cr.rescueSubsidy ?? 0) > 0.5 ? (
+            <Ligne
+              label="+ Subvention exceptionnelle (sauvetage)"
+              valeur={cr.rescueSubsidy ?? 0}
+              avant={pcr?.rescueSubsidy ?? null}
+              decalee
+            />
+          ) : null}
+          {(cr.taxLossUsed ?? 0) > 0.5 ? (
+            <Ligne
+              label="dont déficit antérieur imputé (report)"
+              valeur={cr.taxLossUsed ?? 0}
+              avant={pcr?.taxLossUsed ?? null}
+              decalee
+            />
+          ) : null}
+          <Ligne
+            label="− Impôt sur les sociétés"
+            valeur={-cr.tax}
+            avant={pcr ? -pcr.tax : null}
+            decalee
+          />
+          <Ligne
+            label="= RÉSULTAT NET"
+            valeur={cr.netIncome}
+            avant={pcr?.netIncome ?? null}
+            fort
+            tone={cr.netIncome >= 0 ? "good" : "bad"}
+          />
+        </Etat>
       </Panel>
 
       <Panel title="Bilan" resume={`total actif ${euro(totalAssets)}`}>
         <LigneDeLecture lecture={lectureDuBilan(b, result.functionalBalance)} />
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Actif
             </p>
-            <Row label="Immobilisations nettes" value={euro(b.fixedAssetsNet)} />
-            <Row label="Stocks de produits finis" value={euro(b.inventoryValue)} />
-            <Row label="Créances clients" value={euro(b.receivables)} />
-            {placement > 0.5 ? (
-              <Row label="Valeurs mobilières de placement" value={euro(placement)} />
-            ) : null}
-            <Row label="Disponibilités" value={euro(b.cash)} />
-            <Row label="TOTAL ACTIF" value={euro(totalAssets)} strong />
+            <Etat periode={periode} legende="Actif du bilan de clôture.">
+              <Ligne
+                label="Immobilisations nettes"
+                valeur={b.fixedAssetsNet}
+                avant={pb?.fixedAssetsNet ?? null}
+              />
+              <Ligne
+                label="Stocks de produits finis"
+                valeur={b.inventoryValue}
+                avant={pb?.inventoryValue ?? null}
+              />
+              <Ligne
+                label="Créances clients"
+                valeur={b.receivables}
+                avant={pb?.receivables ?? null}
+              />
+              {placement > 0.5 ? (
+                <Ligne
+                  label="Valeurs mobilières de placement"
+                  valeur={placement}
+                  avant={pb?.shortTermInvestment ?? null}
+                />
+              ) : null}
+              <Ligne label="Disponibilités" valeur={b.cash} avant={pb?.cash ?? null} />
+              <Ligne
+                label="TOTAL ACTIF"
+                valeur={totalAssets}
+                avant={pb ? actifDe(pb) : null}
+                fort
+              />
+            </Etat>
           </div>
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Passif
             </p>
-            <Row label="Capitaux propres" value={euro(b.equity)} />
-            <Row label="Dettes financières" value={euro(b.financialDebt)} />
-            <Row label="Dettes fournisseurs" value={euro(b.payables)} />
-            {Math.abs(vat) > 0.5 ? (
-              <Row label={vat >= 0 ? "TVA à décaisser" : "Crédit de TVA (−)"} value={euro(vat)} />
-            ) : null}
-            {b.overdraft > 0.5 ? (
-              <Row label="Concours bancaires (découvert)" value={euro(b.overdraft)} tone="bad" />
-            ) : null}
-            <Row
-              label="TOTAL PASSIF"
-              value={euro(b.equity + b.financialDebt + b.payables + vat + b.overdraft)}
-              strong
-            />
+            <Etat periode={periode} legende="Passif du bilan de clôture.">
+              <Ligne label="Capitaux propres" valeur={b.equity} avant={pb?.equity ?? null} />
+              <Ligne
+                label="Dettes financières"
+                valeur={b.financialDebt}
+                avant={pb?.financialDebt ?? null}
+              />
+              <Ligne label="Dettes fournisseurs" valeur={b.payables} avant={pb?.payables ?? null} />
+              {Math.abs(vat) > 0.5 ? (
+                <Ligne
+                  label={vat >= 0 ? "TVA à décaisser" : "Crédit de TVA (−)"}
+                  valeur={vat}
+                  avant={pb?.vatLiability ?? null}
+                />
+              ) : null}
+              {b.overdraft > 0.5 ? (
+                <Ligne
+                  label="Concours bancaires (découvert)"
+                  valeur={b.overdraft}
+                  avant={pb?.overdraft ?? null}
+                  tone="bad"
+                />
+              ) : null}
+              <Ligne
+                label="TOTAL PASSIF"
+                valeur={passifDe(b)}
+                avant={pb ? passifDe(pb) : null}
+                fort
+              />
+            </Etat>
           </div>
         </div>
         <p className="mt-2 text-xs text-slate-400">
@@ -303,90 +593,147 @@ export function FinancialStatements({
 
       <Panel
         title="Analyse des coûts"
-        resume={result.breakeven.breakEvenUnits != null ? `seuil ${Math.round(result.breakeven.breakEvenUnits).toLocaleString("fr-FR")} ${vocabulary.units}` : "seuil jamais atteint"}
+        resume={
+          result.breakeven.breakEvenUnits != null
+            ? `seuil ${Math.round(result.breakeven.breakEvenUnits).toLocaleString("fr-FR")} ${vocabulary.units}`
+            : "seuil jamais atteint"
+        }
       >
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               À l&apos;unité
             </p>
-            <Row label={vocabulary.materialLabel} value={euro(materialCostPerUnit)} indent />
-            <Row label={vocabulary.otherVariableLabel} value={euro(otherVariableCostPerUnit)} indent />
-            <Row label="= Coût variable unitaire" value={euro(cvu)} strong />
-            {price !== null ? (
-              <>
-                <Row label="Prix de vente" value={euro(price)} />
-                <Row
-                  label="= Marge sur coût variable / unité"
-                  value={euro(price - cvu)}
-                  strong
-                  tone={price - cvu > 0 ? "good" : "bad"}
-                />
-              </>
-            ) : null}
-            {soldUnits > 0.5 ? (
-              <Row
-                label="Coût complet unitaire (≈ variables + structure / vendues)"
-                value={euro(cr.cogs / Math.max(1, soldUnits) + structure / soldUnits)}
+            {/* Pas d'écart ici : une décomposition unitaire n'est pas un état
+                daté, et sa base change avec le mix d'un tour à l'autre. */}
+            <Etat periode="Par unité" avecEcart={false} legende="Coût et marge à l'unité.">
+              <Ligne
+                label={vocabulary.materialLabel}
+                valeur={materialCostPerUnit}
+                avecEcart={false}
+                decalee
               />
-            ) : null}
+              <Ligne
+                label={vocabulary.otherVariableLabel}
+                valeur={otherVariableCostPerUnit}
+                avecEcart={false}
+                decalee
+              />
+              <Ligne label="= Coût variable unitaire" valeur={cvu} avecEcart={false} fort />
+              {price !== null ? (
+                <>
+                  <Ligne label="Prix de vente" valeur={price} avecEcart={false} />
+                  {/* La marge unitaire est un NIVEAU : elle s'écrit à l'encre.
+                      Une marge négative reste visible — c'est le chiffre, signé,
+                      qui le dit, et non une pastille. */}
+                  <Ligne
+                    label="= Marge sur coût variable / unité"
+                    valeur={price - cvu}
+                    avecEcart={false}
+                    fort
+                  />
+                </>
+              ) : null}
+              {soldUnits > 0.5 ? (
+                <Ligne
+                  label="Coût complet unitaire (≈ variables + structure / vendues)"
+                  valeur={cr.cogs / Math.max(1, soldUnits) + structure / soldUnits}
+                  avecEcart={false}
+                />
+              ) : null}
+            </Etat>
           </div>
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Sur le tour
             </p>
-            <Row
-              label="Coûts variables"
-              value={`${euro(cr.cogs)} (${cr.revenue > 0 ? pct(cr.cogs / cr.revenue) : "—"} du CA)`}
-            />
-            <Row
-              label="Charges de structure (budgets et amortissements compris)"
-              value={`${euro(structure)} (${cr.revenue > 0 ? pct(structure / cr.revenue) : "—"} du CA)`}
-            />
-            <Row
-              label="Seuil de rentabilité"
-              value={
-                result.breakeven.breakEvenUnits != null && result.breakeven.breakEvenRevenue != null
-                  ? `${units(result.breakeven.breakEvenUnits)} u (${euro(result.breakeven.breakEvenRevenue)})`
-                  : "seuil jamais atteint (marge sur coût variable nulle ou négative)"
-              }
-              strong
-            />
-            <Row
-              label="Marge de sécurité"
-              value={result.breakeven.safetyMargin != null ? euro(result.breakeven.safetyMargin) : "—"}
-              tone={result.breakeven.safetyMargin != null && result.breakeven.safetyMargin >= 0 ? "good" : "bad"}
-            />
-            <Row
-              label="Indice de sécurité"
-              value={result.breakeven.safetyIndex != null ? pct(result.breakeven.safetyIndex) : "—"}
-            />
+            <Etat periode={periode} legende="Coûts du tour et seuil de rentabilité.">
+              <Ligne
+                label="Coûts variables"
+                valeur={cr.cogs}
+                avant={pcr?.cogs ?? null}
+                texte={`${euro(cr.cogs)} (${cr.revenue > 0 ? pct(cr.cogs / cr.revenue) : "—"} du CA)`}
+              />
+              <Ligne
+                label="Charges de structure (budgets et amortissements compris)"
+                valeur={structure}
+                avant={pcr ? structureDe(pcr) : null}
+                texte={`${euro(structure)} (${cr.revenue > 0 ? pct(structure / cr.revenue) : "—"} du CA)`}
+              />
+              <Ligne
+                label="Seuil de rentabilité"
+                valeur={result.breakeven.breakEvenUnits ?? 0}
+                avant={avant((p) => p.breakeven.breakEvenUnits) ?? null}
+                format="units"
+                texte={
+                  result.breakeven.breakEvenUnits != null &&
+                  result.breakeven.breakEvenRevenue != null
+                    ? `${units(result.breakeven.breakEvenUnits)} u (${euro(result.breakeven.breakEvenRevenue)})`
+                    : "seuil jamais atteint"
+                }
+                avecEcart={result.breakeven.breakEvenUnits != null}
+                fort
+              />
+              <Ligne
+                label="Marge de sécurité"
+                valeur={result.breakeven.safetyMargin ?? 0}
+                avant={avant((p) => p.breakeven.safetyMargin) ?? null}
+                texte={
+                  result.breakeven.safetyMargin != null ? euro(result.breakeven.safetyMargin) : "—"
+                }
+                avecEcart={result.breakeven.safetyMargin != null}
+              />
+              <Ligne
+                label="Indice de sécurité"
+                valeur={result.breakeven.safetyIndex ?? 0}
+                format="percent"
+                texte={
+                  result.breakeven.safetyIndex != null ? pct(result.breakeven.safetyIndex) : "—"
+                }
+                avecEcart={false}
+              />
+            </Etat>
           </div>
         </div>
         <p className="mt-2 text-xs text-slate-400">
-          Chaque unité vendue au-dessus de son coût variable éponge les charges de
-          structure ; le seuil dit combien il en faut.
+          Chaque unité vendue au-dessus de son coût variable éponge les charges de structure ; le
+          seuil dit combien il en faut.
         </p>
       </Panel>
 
       <Panel title="Budget de trésorerie" resume={`clôture ${euro(result.cashFlow.closing)}`}>
         <LigneDeLecture lecture={lectureDeLaTresorerie(result.cashFlow, CASH_LABELS)} />
-        <Row label="Trésorerie d'ouverture" value={euro(result.cashFlow.opening)} strong />
-        {result.cashFlow.items.map((item) => (
-          <Row
-            key={item.label}
-            label={CASH_LABELS[item.label] ?? item.label}
-            value={euro(item.amount)}
-            indent
-            tone={item.amount >= 0 ? undefined : undefined}
+        <Etat
+          periode={periode}
+          legende="Budget de trésorerie du tour, de l'ouverture à la clôture."
+        >
+          <Ligne
+            label="Trésorerie d'ouverture"
+            valeur={result.cashFlow.opening}
+            avant={precedent?.cashFlow.opening ?? null}
+            fort
           />
-        ))}
-        <Row
-          label="= Trésorerie de clôture"
-          value={euro(result.cashFlow.closing)}
-          strong
-          tone={result.cashFlow.closing >= 0 ? "good" : "bad"}
-        />
+          {result.cashFlow.items.map((item) => (
+            <Ligne
+              key={item.label}
+              label={CASH_LABELS[item.label] ?? item.label}
+              valeur={item.amount}
+              // Un poste que le tour précédent ne portait pas n'a pas de
+              // référence : sa cellule reste vide.
+              avant={precedent?.cashFlow.items.find((p) => p.label === item.label)?.amount ?? null}
+              decalee
+            />
+          ))}
+          <Ligne
+            label="= Trésorerie de clôture"
+            valeur={result.cashFlow.closing}
+            avant={precedent?.cashFlow.closing ?? null}
+            fort
+            // La trésorerie ne prend le rouge qu'en découvert (charte) : un
+            // niveau positif s'écrit à l'encre.
+            {...(result.cashFlow.closing < 0 ? ({ tone: "bad" } as const) : {})}
+          />
+        </Etat>
         <p className="mt-2 text-xs text-slate-400">
           Le résultat est une opinion, la trésorerie un fait.
         </p>

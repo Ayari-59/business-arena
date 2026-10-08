@@ -4,6 +4,7 @@ import { novaScenario, novaCompany } from "@/config/scenarios/nova";
 import { botDecisions } from "@/engine/bots";
 import type { RoundDecisions, SimulationInput } from "@/engine/types";
 import {
+  ecartAuTourPrecedent,
   lectureDeLaTresorerie,
   lectureDuBilan,
   lectureDuResultat,
@@ -123,5 +124,52 @@ describe("la lecture du budget de trésorerie", () => {
     expect(lecture.ton).toBe("mauvais");
     expect(lecture.texte).toContain("n'ont pas couvert");
     expect(lecture.texte).toContain("paiements");
+  });
+});
+
+/**
+ * LA COLONNE D'ÉCART DES ÉTATS FINANCIERS.
+ *
+ * Un niveau ne dit pas si c'est bon : 1 240 000 € de chiffre d'affaires est une
+ * bonne nouvelle après 980 000, une mauvaise après 1 400 000. C'est la colonne
+ * d'écart qui le dit — et c'est elle, seule, qui porte le vert et le rouge
+ * depuis qu'il n'y a plus de jauge ni de pastille « tenu / manqué ».
+ *
+ * Deux règles, et la première est celle qui s'oubliait : SANS RÉFÉRENCE AU TOUR
+ * PRÉCÉDENT, LA CELLULE RESTE VIDE. Écrire « 0 » dirait « rien n'a bougé », ce
+ * qui est faux — on ne sait pas.
+ */
+describe("l'écart au tour précédent", () => {
+  it("au premier tour, il n'y a pas d'écart : null, et non zéro", () => {
+    expect(ecartAuTourPrecedent(1_240_000, null)).toBeNull();
+    expect(ecartAuTourPrecedent(1_240_000, undefined)).toBeNull();
+  });
+
+  it("une ligne que le tour précédent ne portait pas n'a pas d'écart non plus", () => {
+    // Une charge de R&D, une subvention de sauvetage : la ligne apparaît ce
+    // tour-ci, et rien ne la précède.
+    expect(ecartAuTourPrecedent(-12_000, undefined)).toBeNull();
+  });
+
+  it("l'écart est signé dans le sens où la ligne s'affiche", () => {
+    expect(ecartAuTourPrecedent(1_240_000, 980_000)).toEqual({
+      montant: 260_000,
+      relatif: 260_000 / 980_000,
+    });
+    // Une charge s'affiche en négatif : elle s'aggrave en descendant.
+    expect(ecartAuTourPrecedent(-9_000, -6_000)?.montant).toBe(-3_000);
+  });
+
+  it("le pourcentage se taît quand il n'a pas de sens", () => {
+    // Référence nulle : division impossible.
+    expect(ecartAuTourPrecedent(4_000, 0)).toEqual({ montant: 4_000, relatif: null });
+    // Changement de signe : « +250 % » pour un passage de −2 000 à +3 000 ne
+    // veut rien dire ; le montant, lui, le dit.
+    expect(ecartAuTourPrecedent(3_000, -2_000)).toEqual({ montant: 5_000, relatif: null });
+    expect(ecartAuTourPrecedent(-2_000, 3_000)).toEqual({ montant: -5_000, relatif: null });
+  });
+
+  it("un écart nul se distingue d'un écart inconnu", () => {
+    expect(ecartAuTourPrecedent(5_000, 5_000)).toEqual({ montant: 0, relatif: 0 });
   });
 });

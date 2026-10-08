@@ -1026,35 +1026,72 @@ export default async function ArenaPage({
         ) : null
       }
       reperes={
-        telephone
-          ? {
-              prixUsuels: (() => {
-                const prix = view.intro.segments.map((seg) => seg.refPrice);
-                if (prix.length === 0) return null;
-                const bas = Math.min(...prix);
-                const haut = Math.max(...prix);
-                return bas === haut
-                  ? formatEuro(bas)
-                  : `${formatEuro(bas)} – ${formatEuro(haut)}`;
-              })(),
-              coutVariable: view.gamme ? null : view.intro.variableCostPerUnit,
-              // Le curseur de prix court de la moitié du plus bas prix usuel à
-              // près du double du plus haut : assez large pour essayer, pas au point
-              // de rendre un euro introuvable.
-              ...(view.intro.segments.length > 0
-                ? {
-                    plagePrix: {
-                      min: Math.floor(
-                        Math.min(...view.intro.segments.map((seg) => seg.refPrice)) / 2,
-                      ),
-                      max: Math.ceil(
-                        (Math.max(...view.intro.segments.map((seg) => seg.refPrice)) * 1.8) / 5,
-                      ) * 5,
-                    },
-                  }
-                : {}),
-            }
-          : null
+        // LES REPÈRES SERVENT AUSSI SUR ORDINATEUR. Ils n'étaient servis qu'au
+        // téléphone ; or c'est sur ordinateur que le prix avait exactement le
+        // champ d'une case facultative, sans rien à côté pour le situer.
+        {
+          prixUsuels: (() => {
+            const prix = view.intro.segments.map((seg) => seg.refPrice);
+            if (prix.length === 0) return null;
+            const bas = Math.min(...prix);
+            const haut = Math.max(...prix);
+            return bas === haut ? formatEuro(bas) : `${formatEuro(bas)} – ${formatEuro(haut)}`;
+          })(),
+          coutVariable: view.gamme ? null : view.intro.variableCostPerUnit,
+          // Le curseur de prix court de la moitié du plus bas prix usuel à
+          // près du double du plus haut : assez large pour essayer, pas au point
+          // de rendre un euro introuvable.
+          ...(view.intro.segments.length > 0
+            ? {
+                plagePrix: {
+                  min: Math.floor(Math.min(...view.intro.segments.map((seg) => seg.refPrice)) / 2),
+                  max:
+                    Math.ceil(
+                      (Math.max(...view.intro.segments.map((seg) => seg.refPrice)) * 1.8) / 5,
+                    ) * 5,
+                },
+              }
+            : {}),
+          // CE QUE LE TOUR PASSÉ A DONNÉ : le prix pratiqué et le volume vendu,
+          // lus de l'historique des ventes. Rien d'inventé, et rien au premier
+          // tour — la vue ne porte alors aucun tour résolu.
+          tourPasse: (() => {
+            const dernier = view.salesHistory.rounds.at(-1);
+            if (!dernier) return null;
+            return { tour: dernier.round, prix: dernier.price, volume: dernier.sold };
+          })(),
+          // En gamme, le même repère référence par référence : le résultat du
+          // dernier tour résolu porte le prix et le volume de chacune.
+          ...(view.gamme
+            ? {
+                tourPasseParReference: (() => {
+                  const dernier = view.periods.at(-1);
+                  const produits = dernier?.result.products;
+                  if (!dernier || !produits) return {};
+                  return Object.fromEntries(
+                    view.gamme
+                      // Une référence encore à bâtir n'a rien pratiqué : le moteur
+                      // force son plan à zéro, et le prix qu'elle porte est celui
+                      // du champ caché, que personne n'a choisi. Lui prêter un
+                      // « tour passé » serait inventer un repère.
+                      .filter((reference) => {
+                        const produit = produits[reference.code];
+                        const dev = produit?.rd?.development;
+                        return Boolean(produit) && !(dev && !dev.launched);
+                      })
+                      .map((reference) => [
+                        reference.code,
+                        {
+                          tour: dernier.round,
+                          prix: produits[reference.code]!.price,
+                          volume: produits[reference.code]!.sold,
+                        },
+                      ]),
+                  );
+                })(),
+              }
+            : {}),
+        }
       }
       gameId={view.gameId}
       roundIndex={view.currentRound}

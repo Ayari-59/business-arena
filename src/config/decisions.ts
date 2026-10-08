@@ -19,6 +19,12 @@ import type { EngineScenarioConfig } from "../engine/types";
  * formulaire : on vend, on achète, on décide ses budgets (marketing, qualité,
  * maintenance, R&D) puis sa communication, on paie ses équipes, on finance,
  * on se couvre, on s'informe, on prévoit.
+ *
+ * UNE SEULE EXCEPTION, ET ELLE EST VOULUE : la commande exceptionnelle vient
+ * APRÈS le prix et le volume. C'est une option ponctuelle, qu'on refuse neuf
+ * fois sur dix, et elle ouvrait la feuille de décision : la première chose
+ * qu'on lisait sur l'écran du tour n'était pas la décision n°1. Elle se range
+ * désormais derrière un repli, sous les deux décisions majeures.
  */
 export interface LevierDeDecision {
   /** Le `name` du champ dans le formulaire de décision. */
@@ -39,9 +45,9 @@ export interface LevierDeDecision {
 }
 
 export const LEVIERS: readonly LevierDeDecision[] = [
-  { champ: "acceptOrder", nom: "Commande exceptionnelle", ouvertPar: "secteur" },
   { champ: "price", nom: "Prix de vente", ouvertPar: "toujours" },
   { champ: "productionPlan", nom: "Volume du tour", ouvertPar: "toujours" },
+  { champ: "acceptOrder", nom: "Commande exceptionnelle", ouvertPar: "secteur" },
   { champ: "supplierChoice", nom: "Choix du fournisseur", ouvertPar: "secteur" },
   // Les budgets du tour : marketing, qualité, maintenance, R&D. En gamme, les
   // trois premiers se décident dans l'onglet de CHAQUE référence, avec son prix

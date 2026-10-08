@@ -929,6 +929,71 @@ describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
     // Le débriefing et les décisions du tour restent à la demande, dans un tiroir.
     expect(await petit.locator("summary", { hasText: "Débriefing et décisions de ce tour" }).count()).toBe(1);
   }, 60_000);
+
+  /**
+   * UN TABLEAU FINANCIER DÉFILE DANS SON CONTENEUR, LA PAGE JAMAIS.
+   *
+   * Les comptes se lisent en vrais tableaux : poste, chiffre du tour, écart au
+   * tour précédent, pourcentage. L'historique des ventes en compte neuf de
+   * front, et sur 375 px il ne tient pas — c'est le cas qui compte. La faute
+   * classique est alors de laisser partir la PAGE vers la droite : on perd la
+   * barre, les boutons sortent du champ, et on ne sait plus revenir. L'autre
+   * est de laisser filer l'intitulé de ligne avec les colonnes : il reste une
+   * grille de nombres dont on ne sait plus de quel tour ils viennent.
+   *
+   * Mesuré dans le navigateur : aucune lecture de source ne dit OÙ le
+   * débordement atterrit.
+   */
+  it("les comptes sont des tableaux, et c'est leur conteneur qui défile, pas la page", async () => {
+    await petit.getByRole("tab", { name: /^Finance/ }).click();
+    await petit.locator(".tableau-financier table").first().waitFor({ state: "visible", timeout: 30_000 });
+
+    // Un vrai tableau : des en-têtes de colonne, des en-têtes de ligne. Ils
+    // sont composés en capitales, d'où la lecture sans égard à la casse.
+    const entetes = await petit.locator('.tableau-financier thead th[scope="col"]').allInnerTexts();
+    expect(entetes.join(" | "), "en-têtes de colonne").toMatch(/poste/i);
+    expect(entetes.join(" | "), "la colonne d'écart").toMatch(/écart/i);
+    expect(await petit.locator('.tableau-financier tbody th[scope="row"]').count()).toBeGreaterThan(5);
+
+    // L'historique des ventes : neuf colonnes, qui ne tiennent pas sur 375 px.
+    const historique = petit.locator("summary", { hasText: "Historique de vos ventes" }).first();
+    await historique.click();
+    await petit.waitForTimeout(600);
+
+    const avant = await petit.evaluate(() => ({
+      racine: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      corps: document.body.scrollWidth - document.body.clientWidth,
+      // Un conteneur qui a VRAIMENT de quoi défiler : sans lui, cette garde ne
+      // garde rien (le compte de résultat, lui, tient dans la largeur).
+      aDefiler: [...document.querySelectorAll(".tableau-financier")].filter(
+        (t) => t.scrollWidth - t.clientWidth > 40,
+      ).length,
+    }));
+    expect(avant.aDefiler, "aucun tableau assez large : la garde ne garderait rien").toBeGreaterThan(0);
+    expect(avant.racine, "la page part à droite").toBe(0);
+    expect(avant.corps).toBe(0);
+
+    // On pousse chaque tableau à fond vers la droite : la page ne bouge
+    // toujours pas, et l'intitulé de ligne reste sous les yeux.
+    const apres = await petit.evaluate(() => {
+      const larges = [...document.querySelectorAll<HTMLElement>(".tableau-financier")].filter(
+        (t) => t.scrollWidth - t.clientWidth > 40,
+      );
+      for (const t of larges) t.scrollLeft = t.scrollWidth;
+      const tete = larges[0]!.querySelector<HTMLElement>('tbody th[scope="row"]');
+      const boite = tete?.getBoundingClientRect();
+      return {
+        racine: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        corps: document.body.scrollWidth - document.body.clientWidth,
+        intituleVisible: Boolean(boite && boite.left >= -1 && boite.right <= innerWidth + 1 && boite.width > 10),
+        intituleLu: tete?.textContent?.trim() ?? "",
+      };
+    });
+    expect(apres.racine, "la page part à droite après défilement du tableau").toBe(0);
+    expect(apres.corps).toBe(0);
+    expect(apres.intituleVisible, `intitulé emporté par le défilement : « ${apres.intituleLu} »`).toBe(true);
+    expect(apres.intituleLu.length).toBeGreaterThan(1);
+  }, 60_000);
 });
 
 describe("le lancement d'une partie, sur téléphone", () => {

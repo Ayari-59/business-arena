@@ -17,6 +17,39 @@ export interface Lecture {
   texte: string;
 }
 
+/**
+ * L'ÉCART AU TOUR PRÉCÉDENT, pour la colonne des états financiers.
+ *
+ * Un niveau ne dit pas si c'est bon : 1 240 000 € de chiffre d'affaires est une
+ * bonne nouvelle après 980 000, une mauvaise après 1 400 000. La colonne
+ * d'écart le dit, et c'est elle — pas une jauge, pas une pastille « tenu » —
+ * qui porte le vert et le rouge : un écart EST un résultat.
+ *
+ * Deux règles tiennent ici, et c'est pourquoi le calcul est isolé du composant :
+ *   · SANS RÉFÉRENCE, PAS DE COLONNE. Au premier tour, ou pour une ligne que le
+ *     tour précédent ne portait pas (une subvention, une charge de R&D qui
+ *     n'existait pas), la cellule reste VIDE. Écrire « 0 » dirait « rien n'a
+ *     bougé », ce qui est faux : on ne sait pas.
+ *   · LE POURCENTAGE N'A PAS TOUJOURS DE SENS. Il n'en a aucun quand la
+ *     référence est nulle (division impossible), et il en a peu quand elle
+ *     change de signe — passer de −2 000 € à +3 000 € n'est pas « +250 % ».
+ *
+ * `valeur` et `avant` sont dans le sens où ils S'AFFICHENT : une charge montrée
+ * en négatif se compare en négatif, sinon l'écart s'inverserait.
+ */
+export interface Ecart {
+  montant: number;
+  /** L'écart relatif, ou null quand il n'a pas de sens. */
+  relatif: number | null;
+}
+
+export function ecartAuTourPrecedent(valeur: number, avant: number | null | undefined): Ecart | null {
+  if (avant === null || avant === undefined || !Number.isFinite(avant)) return null;
+  const montant = valeur - avant;
+  const memeSigne = valeur === 0 || avant === 0 ? false : valeur > 0 === avant > 0;
+  return { montant, relatif: avant !== 0 && memeSigne ? montant / Math.abs(avant) : null };
+}
+
 const structureDuTour = (cr: IncomeStatement): number =>
   cr.marketingCost +
   cr.qualityCost +

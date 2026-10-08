@@ -2458,3 +2458,54 @@ a.carte,
     animation: none;
   }
 }
+
+/* ─────────────────────────────── LOT 4A ───────────────────────────────────
+   LA FEUILLE DE DÉCISION ET LES TABLEAUX FINANCIERS. */
+
+/* UNE OPTION PONCTUELLE REPLIÉE (components/decision-form.tsx, `Family repli`) :
+   assurance, études, commande exceptionnelle, dividende, trésorerie. Fermée,
+   son bord reste plein — le pointillé est réservé à ce qui est vide, et un
+   repli fermé n'est pas vide, il est rangé. Ouverte, son filet se marque : on
+   voit d'un coup d'œil laquelle a été ouverte. */
+.option-ponctuelle[open] {
+  border-color: var(--color-slate-400);
+}
+
+/* UN TABLEAU FINANCIER DÉFILE DANS SON CONTENEUR, JAMAIS LA PAGE.
+   Compte de résultat, bilan, flux, marché, ventes : quatre à neuf colonnes de
+   chiffres ne tiennent pas sur 390 px. Le conteneur prend le défilement
+   latéral — la page, jamais — et le tableau garde sa largeur naturelle, les
+   cellules chiffrées étant déjà en `whitespace-nowrap`. */
+.tableau-financier {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.tableau-financier table {
+  width: 100%;
+}
+
+/* ET L'INTITULÉ RESTE SOUS LES YEUX pendant qu'on fait glisser les colonnes :
+   un écart sans son libellé n'est qu'un nombre, et c'est exactement ce qu'on
+   lisait en poussant le tableau vers la gauche. La colonne gelée reprend le
+   fond de son conteneur (`--fond-du-tableau`, que l'accordéon des tours passés
+   redéfinit) et porte un filet à droite, pour qu'on voie qu'elle est gelée.
+   Seulement là où le défilement a lieu : sur un écran large, tout tient. */
+/* Les surfaces qui ne sont PAS celle de la page le disent, pour que la colonne
+   gelée ne laisse pas une bande d'une autre teinte : l'accordéon d'un tour
+   passé est une carte relevée, et un tiroir ouvert reprend le fond plein. */
+[data-tour-passe] {
+  --fond-du-tableau: color-mix(in srgb, var(--color-slate-900) 60%, var(--color-slate-950));
+}
+[data-tiroir][open] {
+  --fond-du-tableau: var(--color-slate-950);
+}
+
+@media (max-width: 1023px) {
+  .tableau-financier :is(th, td):first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--fond-du-tableau, var(--color-slate-950));
+    border-right: 1px solid color-mix(in srgb, var(--color-slate-400) 35%, transparent);
+  }
+}

@@ -256,7 +256,10 @@ describe("TableauDesReferences", () => {
     // un défilement latéral que personne ne devine. Les deux formes coexistent,
     // chacune sur sa largeur.
     expect(html).toContain("sm:hidden");
-    expect(html).toContain("hidden overflow-x-auto sm:block");
+    // Le défilement latéral vit dans le conteneur du tableau (`.tableau-financier`,
+    // globals.css), jamais sur la page, et le nom de la référence y reste collé
+    // à gauche pendant qu'on fait glisser les colonnes.
+    expect(html).toContain("tableau-financier hidden sm:block");
     // Et elles disent la même chose : le CA de la ligne est dans les deux.
     // (les milliers sont séparés par une espace fine insécable, d'où le \s)
     expect(html.match(/2\s700\s€/g)?.length).toBe(2);

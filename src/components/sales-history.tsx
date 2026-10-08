@@ -35,31 +35,57 @@ export function SalesHistory({
       ferme
       groupe="comptes-du-tour"
     >
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      {/* Le tableau défile DANS son conteneur, la page jamais ; l'intitulé de
+          ligne (le tour) reste collé à gauche pendant qu'on fait glisser les
+          clientèles, sinon on lit des chiffres sans savoir de quel tour. */}
+      <div className="tableau-financier">
+        <table className="text-sm">
+          <caption className="sr-only">
+            Vos ventes tour par tour et clientèle par clientèle : la demande du marché, vos
+            ventes et leur chiffre d&apos;affaires.
+          </caption>
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-              <th className="pb-1 pr-3 font-medium">Tour</th>
-              <th className="pb-1 pr-3 text-right font-medium">
+              <th scope="col" className="pb-1 pr-3 font-medium">
+                Tour
+              </th>
+              <th scope="col" className="pb-1 pr-3 text-right font-medium">
                 {priceLabel ?? vocabulary.priceLabel}
               </th>
               {history.segments.map((name) => (
-                <th key={name} className="pb-1 pr-3 text-right font-medium" colSpan={3}>
+                <th
+                  key={name}
+                  scope="colgroup"
+                  className="pb-1 pr-3 text-right font-medium"
+                  colSpan={3}
+                >
                   {name}
                 </th>
               ))}
-              <th className="pb-1 pr-3 text-right font-medium">Prévu</th>
-              <th className="pb-1 pr-3 text-right font-medium">Total vendu</th>
-              <th className="pb-1 text-right font-medium">Manquées</th>
+              <th scope="col" className="pb-1 pr-3 text-right font-medium">
+                Prévu
+              </th>
+              <th scope="col" className="pb-1 pr-3 text-right font-medium">
+                Total vendu
+              </th>
+              <th scope="col" className="pb-1 text-right font-medium">
+                Manquées
+              </th>
             </tr>
             <tr className="text-left text-xs text-slate-400">
               <th className="pb-1 pr-3" />
               <th className="pb-1 pr-3" />
               {history.segments.map((name) => (
                 <Fragment key={name}>
-                  <th className="pb-1 pr-3 text-right font-normal">demande</th>
-                  <th className="pb-1 pr-3 text-right font-normal">vos ventes</th>
-                  <th className="pb-1 pr-3 text-right font-normal">chiffre d&apos;affaires</th>
+                  <th scope="col" className="pb-1 pr-3 text-right font-normal">
+                    demande
+                  </th>
+                  <th scope="col" className="pb-1 pr-3 text-right font-normal">
+                    vos ventes
+                  </th>
+                  <th scope="col" className="pb-1 pr-3 text-right font-normal">
+                    chiffre d&apos;affaires
+                  </th>
                 </Fragment>
               ))}
               <th className="pb-1 pr-3" />
@@ -70,7 +96,9 @@ export function SalesHistory({
           <tbody className="text-slate-300">
             {history.rounds.map((row) => (
               <tr key={row.round} className="border-t border-white/5">
-                <td className="py-1.5 pr-3 text-slate-400">T{row.round}</td>
+                <th scope="row" className="py-1.5 pr-3 text-left font-normal text-slate-400">
+                  T{row.round}
+                </th>
                 <td className="py-1.5 pr-3 text-right tabular-nums">
                   {row.price === null ? "—" : formatEuro(row.price)}
                 </td>
@@ -89,7 +117,9 @@ export function SalesHistory({
                     </td>
                   </Fragment>
                 ))}
-                <td className="py-1.5 pr-3 text-right tabular-nums text-sky-300/80">
+                {/* Ce que vous aviez annoncé : une DONNÉE, donc le bleu donnée
+                    de la charte — le bleu ciel pâle n'est pas de la palette. */}
+                <td className="py-1.5 pr-3 text-right tabular-nums text-[var(--donnee)]">
                   {row.forecastUnits === null ? "—" : formatUnits(row.forecastUnits)}
                 </td>
                 <td className="py-1.5 pr-3 text-right font-medium tabular-nums text-slate-100">

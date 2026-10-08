@@ -244,26 +244,35 @@ export function TableauDesReferences({
         ))}
       </ul>
 
-      {/* ÉCRAN LARGE — le tableau, qui compare les références d'un coup d'œil. */}
-      <div className="hidden overflow-x-auto sm:block">
-        <table className="w-full text-sm">
+      {/* ÉCRAN LARGE — le tableau, qui compare les références d'un coup d'œil. Il
+          défile dans son conteneur, et le nom de la référence reste collé à
+          gauche : un « 4 200 » sans sa référence ne dit rien. */}
+      <div className="tableau-financier hidden sm:block">
+        <table className="text-sm">
+          <caption className="sr-only">
+            Ce qu&apos;a fait chaque référence sur le tour écoulé.
+          </caption>
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-              <th className={th}>Référence</th>
+              <th scope="col" className={th}>
+                Référence
+              </th>
               {entetes.map((c) => (
-                <th key={c.cle} className={`${th} text-right`}>
+                <th key={c.cle} scope="col" className={`${th} text-right`}>
                   {c.entete}
                 </th>
               ))}
-              <th className="whitespace-nowrap pb-2 text-right font-medium">CA</th>
+              <th scope="col" className="whitespace-nowrap pb-2 text-right font-medium">
+                CA
+              </th>
             </tr>
           </thead>
           <tbody className="text-slate-300">
             {rendues.map(({ g, p, cellules }) => (
               <tr key={g.code} className="border-t border-white/5">
-                <td className="py-2 pr-2 text-slate-100">
+                <th scope="row" className="py-2 pr-2 text-left font-normal text-slate-100">
                   <NomEtIncidents reference={g} produit={p} tour={tour} />
-                </td>
+                </th>
                 {cellules.map((c) => (
                   <td
                     key={c.cle}

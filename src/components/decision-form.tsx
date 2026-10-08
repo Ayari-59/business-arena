@@ -28,6 +28,7 @@ import {
   lireLEngagement,
   type Engagement,
 } from "@/components/engagement-du-tour";
+import { Repliable } from "@/components/repliable";
 import { aideDuBudgetEntretien } from "@/config/entretien";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
@@ -356,13 +357,15 @@ function Chiffrage({
     >
       {lignes.map((ligne) => (
         <div key={ligne.label} className="contents">
-          <dt className={ligne.alerte ? "text-rose-300" : "text-slate-400"}>{ligne.label}</dt>
+          <dt className={ligne.alerte ? "text-red-300" : "text-slate-400"}>{ligne.label}</dt>
           <dd
             className={`text-right tabular-nums sm:text-left ${
               ligne.alerte
-                ? "font-semibold text-rose-300"
+                ? "font-semibold text-red-300"
                 : ligne.fort
-                  ? "font-semibold text-amber-200"
+                  ? // Une valeur chiffrée est une information : l'encre, jamais l'orange
+                    // de l'action (charte).
+                    "font-semibold text-slate-50"
                   : "text-slate-200"
             }`}
           >
@@ -371,6 +374,112 @@ function Chiffrage({
         </div>
       ))}
     </dl>
+  );
+}
+
+/**
+ * CE QUE LES BUDGETS SORTENT DE LA CAISSE CE TOUR-CI, SOUS LES BUDGETS.
+ *
+ * Chaque montant se saisit dans son coin ; leur somme n'apparaissait qu'au
+ * récapitulatif de la dernière étape, c'est-à-dire après l'arbitrage. Elle est
+ * calculée par `engagement-du-tour.tsx`, lue sur le formulaire : un total qui
+ * tiendrait ses propres valeurs finirait par mentir.
+ */
+function TotalDesBudgets({ engagement }: { engagement: Engagement | null }) {
+  const { actif: enCarte } = useModeCartes();
+  // En parcours, les budgets sont une carte à eux et le récapitulatif vient
+  // juste après : un total de plus y prendrait la place d'un champ.
+  if (enCarte || !engagement || engagement.budgets.length === 0) return null;
+  return (
+    <p className="mt-3 flex items-baseline justify-between gap-3 border-t border-white/10 pt-3 text-sm">
+      <span className="text-slate-400">Total des budgets du tour</span>
+      <strong className="font-semibold tabular-nums text-slate-50">
+        {formatEuro(engagement.total)}
+      </strong>
+    </p>
+  );
+}
+
+/**
+ * LA DÉCISION N°1 N'A PAS LE MÊME CHAMP QU'UNE CASE FACULTATIVE.
+ *
+ * Sur ordinateur, le prix — la décision qui commande tout le tour — avait
+ * exactement la forme de « Budget RSE » : un intitulé de 12 px en capitales
+ * grises, un cadre de 14 px. L'écran était un formulaire d'administration, où
+ * rien ne disait ce qui pèse.
+ *
+ * Un champ MAJEUR porte donc son intitulé à l'encre, en lettres ordinaires, et
+ * son chiffre en 30 px tabulaires, l'unité posée à côté. Dessous, le repère du
+ * tour passé : le prix pratiqué, le volume vendu. C'est une DONNÉE (bleu
+ * donnée), pas un résultat : ni vert ni rouge sur un niveau, et jamais
+ * l'orange de l'action.
+ *
+ * Le repère ne s'invente pas — il vient de la vue de partie — et il manque au
+ * premier tour, où il n'y a rien à rappeler : la ligne ne paraît alors pas.
+ */
+function ChampMajeur({
+  name,
+  label,
+  defaultValue,
+  step,
+  max,
+  suffix,
+  hint,
+  repere,
+  onValueChange,
+  inputRef,
+}: {
+  name: string;
+  label: string;
+  defaultValue: number;
+  step: number;
+  max?: number;
+  suffix: string;
+  hint?: string;
+  /** Ce que le tour passé a donné, déjà formaté. Absent au premier tour. */
+  repere?: string;
+  onValueChange?: (valeur: number) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
+}) {
+  const interne = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? interne;
+  return (
+    <label className="block">
+      <span className="block text-base font-semibold text-slate-100">{label}</span>
+      <span className="mt-1.5 flex items-baseline gap-2 champ px-4 py-3">
+        <input
+          type="number"
+          onWheel={sansMolette}
+          inputMode="decimal"
+          {...(max !== undefined ? { max } : {})}
+          ref={ref}
+          name={name}
+          defaultValue={defaultValue}
+          step={step}
+          min={0}
+          required
+          onChange={
+            onValueChange
+              ? (e) => {
+                  const v = Number(e.currentTarget.value.replace(",", "."));
+                  onValueChange(Number.isFinite(v) ? v : 0);
+                }
+              : undefined
+          }
+          className="min-w-0 flex-1 bg-transparent text-3xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <span className="shrink-0 text-base text-slate-400">{suffix}</span>
+      </span>
+      {repere ? (
+        <span
+          data-repere-du-tour-passe
+          className="mt-1.5 block text-sm tabular-nums text-[var(--donnee)]"
+        >
+          {repere}
+        </span>
+      ) : null}
+      {hint ? <span className="mt-1 block text-sm text-slate-400">{hint}</span> : null}
+    </label>
   );
 }
 
@@ -387,9 +496,15 @@ function Field({
   plage,
   libelle,
   sansCurseur,
+  majeur = false,
+  repere,
 }: {
   /** L'étiquette courte d'une ligne compacte (plusieurs champs sur la même carte). Absente : le champ est en grand. */
   libelle?: string;
+  /** Une décision majeure : sur ordinateur, un champ large et un chiffre de 30 px. */
+  majeur?: boolean;
+  /** Le repère du tour passé, déjà formaté : lu sous un champ majeur. */
+  repere?: string;
   /** Pas de curseur : le montant se tape. */
   sansCurseur?: boolean;
   name: string;
@@ -461,6 +576,24 @@ function Field({
         />
         {hint ? <span className="mt-2 block text-sm text-slate-400 max-sm:text-base">{hint}</span> : null}
       </div>
+    );
+  }
+  // SUR ORDINATEUR, LA HIÉRARCHIE : une décision majeure a son champ large, les
+  // budgets et les options gardent le champ normal.
+  if (majeur) {
+    return (
+      <ChampMajeur
+        name={name}
+        label={label}
+        defaultValue={defaultValue}
+        step={step}
+        {...(max !== undefined ? { max } : {})}
+        suffix={suffix}
+        {...(hint ? { hint } : {})}
+        {...(repere ? { repere } : {})}
+        {...(onValueChange ? { onValueChange } : {})}
+        {...(inputRef ? { inputRef } : {})}
+      />
     );
   }
   return (
@@ -1080,9 +1213,16 @@ function GammeReference({
   rd,
   roundIndex,
   capacite,
+  tourPasse,
 }: {
   /** Ce que l'atelier peut produire ce tour, toutes références confondues : le haut du curseur de volume. */
   capacite?: number;
+  /**
+   * Ce que chaque référence a donné au tour passé : le prix pratiqué et le
+   * volume vendu, lus de la vue de partie. Absent au premier tour — la ligne
+   * de repère ne paraît alors pas.
+   */
+  tourPasse?: Record<string, { tour: number; prix: number | null; volume: number | null }>;
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
@@ -1144,6 +1284,9 @@ function GammeReference({
   /** Une cellule sans objet : la référence n'est pas encore vendable. */
   const rien = <span className="text-slate-400">—</span>;
 
+  /** Les deux décisions majeures d'une référence : son prix et son volume. */
+  const majeur = (nom: string) => nom === "price" || nom === "productionPlan";
+
   /** Un champ chiffré, dans sa cellule. */
   const champ = (
     p: Reference,
@@ -1174,7 +1317,13 @@ function GammeReference({
         {...(onChange ? { onValueChange: onChange } : {})}
       />
     ) : (
-    <span className={`flex items-center gap-1.5 champ ${enCartes ? "px-4 py-3" : "px-2 py-1.5"}`}>
+    // LE PRIX ET LE VOLUME SONT LES DÉCISIONS MAJEURES DE LA RÉFÉRENCE : leur
+    // chiffre se lit en 24 px, les budgets gardent le corps du tableau.
+    <span
+      className={`flex items-center gap-1.5 champ ${
+        enCartes ? "px-4 py-3" : majeur(nom) ? "px-2.5 py-2" : "px-2 py-1.5"
+      }`}
+    >
       <input
         type="number"
         onWheel={sansMolette}
@@ -1185,7 +1334,9 @@ function GammeReference({
         step={pas}
         min={0}
         required={visible(p.code)}
-        className={`min-w-0 flex-1 bg-transparent tabular-nums text-slate-100 outline-none ${enCartes ? "text-xl" : "text-sm"}`}
+        className={`min-w-0 flex-1 bg-transparent tabular-nums text-slate-100 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${
+          enCartes ? "text-xl" : majeur(nom) ? "text-2xl font-bold text-slate-50" : "text-sm"
+        }`}
       />
       <span className={`shrink-0 text-slate-400 ${enCartes ? "text-base" : "text-xs"}`}>{suffixe}</span>
     </span>
@@ -1196,13 +1347,42 @@ function GammeReference({
    * (pas de façonnier dans ce secteur, pas de qualité à ce niveau) n'est pas
    * une ligne vide : elle n'existe pas.
    */
-  const lignes: { cle: string; label: string; deduite?: boolean; cellule: (p: Reference) => ReactNode }[] = [
+  const lignes: {
+    cle: string;
+    label: string;
+    deduite?: boolean;
+    /** Une décision majeure de la référence : son intitulé se lit à l'encre. */
+    majeure?: boolean;
+    cellule: (p: Reference) => ReactNode;
+  }[] = [
     {
       cle: "refPrice",
       label: "Prix usuel",
       deduite: true,
       cellule: (p) => <span className="tabular-nums">{formatEuro(p.refPrice)}</span>,
     },
+    // LE REPÈRE DU TOUR PASSÉ, référence par référence : ce qui a été pratiqué
+    // et ce qui s'est vendu. C'est une DONNÉE (bleu donnée), pas un résultat ;
+    // la ligne n'existe pas au premier tour, où il n'y a rien à rappeler.
+    ...(tourPasse && gamme.some((p) => tourPasse[p.code]?.prix != null)
+      ? [
+          {
+            cle: "tour-passe",
+            label: "Tour passé",
+            deduite: true,
+            cellule: (p: Reference) => {
+              const avant = tourPasse[p.code];
+              if (!avant || avant.prix === null) return rien;
+              return (
+                <span data-repere-du-tour-passe className="tabular-nums text-[var(--donnee)]">
+                  {formatEuro(avant.prix)}
+                  {avant.volume !== null ? ` · ${formatUnits(avant.volume)} ${v.units}` : ""}
+                </span>
+              );
+            },
+          },
+        ]
+      : []),
     {
       cle: "stock",
       label: v.leftoverLabel,
@@ -1276,6 +1456,7 @@ function GammeReference({
     {
       cle: "price",
       label: v.priceLabel,
+      majeure: true,
       cellule: (p) =>
         enDeveloppement(p) ? (
           <>
@@ -1305,10 +1486,11 @@ function GammeReference({
       cellule: (p) => {
         if (enDeveloppement(p)) return rien;
         const marge = prixDe(p) - cvuDe(p);
+        // UNE MARGE UNITAIRE EST UN NIVEAU, pas un résultat : elle s'écrit à
+        // l'encre (charte). Le rouge reste pour celle qui passe sous zéro —
+        // vendre au-dessous du coût variable est, lui, un fait à signaler.
         return (
-          <span
-            className={`tabular-nums font-medium ${marge < 0 ? "text-red-400" : "text-emerald-300"}`}
-          >
+          <span className={`font-medium tabular-nums ${marge < 0 ? "text-red-400" : ""}`}>
             {formatEuroCents(marge)}
           </span>
         );
@@ -1331,6 +1513,7 @@ function GammeReference({
     {
       cle: "productionPlan",
       label: v.productionPlanLabel,
+      majeure: true,
       cellule: (p) =>
         enDeveloppement(p) ? (
           <>
@@ -1490,7 +1673,7 @@ function GammeReference({
               .map(({ dev }) => {
                 const reste = Math.max(0, dev.cost - dev.invested);
                 return (
-                  <p key={p.code} className="text-base leading-relaxed text-amber-200/80">
+                  <p key={p.code} className="text-base leading-relaxed text-slate-300">
                     {reste <= 0
                       ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
                       : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
@@ -1513,10 +1696,12 @@ function GammeReference({
             key={p.code}
             type="button"
             onClick={() => setActiveProduct(p.code)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeProduct === p.code
-                ? "bg-amber-400/20 border border-amber-400/60 text-amber-200"
-                : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
+                ? // La référence choisie est un ÉTAT CHOISI : voile neutre et filet
+                  // orange plein (charte), comme l'onglet d'étape.
+                  "voile-neutre border-amber-400 text-slate-100"
+                : "border-white/5 bg-slate-900 text-slate-400 hover:text-slate-200"
             }`}
           >
             <NomReference reference={p} />
@@ -1556,7 +1741,11 @@ function GammeReference({
               <tr key={l.cle} className="border-b border-white/5 last:border-0">
                 <th
                   scope="row"
-                  className="py-1.5 pr-2 text-left align-top text-xs font-medium uppercase leading-4 tracking-wide text-slate-400"
+                  className={
+                    l.majeure
+                      ? "py-1.5 pr-2 text-left align-middle text-sm font-semibold leading-5 text-slate-100"
+                      : "py-1.5 pr-2 text-left align-top text-xs font-medium uppercase leading-4 tracking-wide text-slate-400"
+                  }
                 >
                   {l.label}
                 </th>
@@ -1577,7 +1766,7 @@ function GammeReference({
       {chantiers.map(({ p, dev }) => {
         const reste = Math.max(0, dev.cost - dev.invested);
         return (
-          <p key={p.code} className="text-sm leading-relaxed text-amber-200/80">
+          <p key={p.code} className="text-sm leading-relaxed text-slate-300">
             <strong className="font-medium">{p.name}</strong> —{" "}
             {reste <= 0
               ? `financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
@@ -1619,6 +1808,8 @@ function Family({
   tone = "border-white/10 bg-slate-950",
   legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
   carte,
+  repli = false,
+  quoi,
 }: {
   legend: ReactNode;
   /**
@@ -1637,6 +1828,18 @@ function Family({
    * sa propre question. Sans cette indication, elle ne paraît sur aucune carte.
    */
   carte?: string | string[];
+  /**
+   * UNE OPTION PONCTUELLE, REPLIÉE PAR DÉFAUT (ordinateur).
+   *
+   * L'assurance, les études, la commande exceptionnelle, le dividende et les
+   * outils de trésorerie ne se touchent qu'un tour sur trois ; dépliés, ils
+   * poussaient le prix et le volume hors de l'écran. Ils prennent le repli du
+   * site (`Repliable` du lot 3B : un chevron, un bord plein), et `quoi` annonce
+   * ce qu'ils portent — un repli ne cache jamais qu'on a engagé quelque chose.
+   */
+  repli?: boolean;
+  /** Ce qui est engagé derrière le repli, compté depuis le formulaire. */
+  quoi?: string;
 }) {
   const contexte = useModeCartes();
   if (contexte.actif) {
@@ -1645,6 +1848,23 @@ function Family({
       <div data-carte={cles.join(" ")} hidden={!estMontre(contexte, cles)} className="space-y-3">
         {children}
       </div>
+    );
+  }
+  if (repli) {
+    return (
+      <Repliable
+        className={`option-ponctuelle rounded-lg border px-3 py-2 sm:px-3.5 sm:py-2.5 ${tone}`}
+        classeResume={legendClass}
+        {...(quoi ? { quoi } : {})}
+        resume={
+          <span className="flex items-center gap-1.5">
+            {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-amber-400" /> : null}
+            {legend}
+          </span>
+        }
+      >
+        <div className="mt-2 border-t border-white/10 pt-3">{children}</div>
+      </Repliable>
     );
   }
   return (
@@ -1710,6 +1930,18 @@ export function DecisionForm({
     coutVariable: number | null;
     /** La plage du curseur de prix : de la moitié du plus bas prix usuel à près du double du plus haut. */
     plagePrix?: { min: number; max: number };
+    /**
+     * CE QUE LE TOUR PASSÉ A DONNÉ : le prix pratiqué et le volume vendu, lus de
+     * la vue de partie (historique des ventes en mono-produit, résultat par
+     * référence en gamme). `null` au premier tour, où il n'y a rien à rappeler :
+     * la ligne de repère ne paraît alors pas, plutôt que d'annoncer un zéro.
+     */
+    tourPasse?: { tour: number; prix: number | null; volume: number | null } | null;
+    /** Le même repère, référence par référence, en gamme. */
+    tourPasseParReference?: Record<
+      string,
+      { tour: number; prix: number | null; volume: number | null }
+    >;
   } | null;
   /** Levier communication du scénario (marque et axe) ; null sans levier. */
   communicationOffer?: GameView["communicationOffer"];
@@ -1986,7 +2218,13 @@ export function DecisionForm({
     if (!f) return;
     const donnees = new FormData(f);
     setDonneesRecap(donnees);
-    setEngagement(lireLEngagement(donnees, gamme?.map((p) => p.code) ?? []));
+    setEngagement(
+      lireLEngagement(
+        donnees,
+        gamme?.map((p) => p.code) ?? [],
+        (code) => insuranceFormulas?.find((formule) => formule.code === code)?.name ?? "souscrite",
+      ),
+    );
   };
 
   /**
@@ -2464,6 +2702,45 @@ export function DecisionForm({
   const masquee = (cle: string) =>
     modeCartes ? carteCourante?.etape !== cle : courante !== idx(cle);
 
+  // ── LA HIÉRARCHIE DE LA FEUILLE ──────────────────────────────────────────
+  // Le repère du tour passé, à côté de la décision majeure qu'il éclaire. Il
+  // vient de la vue de partie et n'existe pas au premier tour : la ligne ne
+  // paraît alors pas, plutôt que d'annoncer « 0 € pratiqué ».
+  const tourPasse = reperes?.tourPasse ?? null;
+  const repereDuPrix =
+    tourPasse && tourPasse.prix !== null
+      ? `Tour ${tourPasse.tour} : ${formatEuro(tourPasse.prix)} pratiqué par ${v.unit}`
+      : undefined;
+  const repereDuVolume =
+    tourPasse && tourPasse.volume !== null
+      ? `Tour ${tourPasse.tour} : ${formatUnits(tourPasse.volume)} ${v.units} vendu${
+          tourPasse.volume > 1 ? "s" : ""
+        }`
+      : undefined;
+  /**
+   * Ce qu'un repli d'option ponctuelle annonce : les options engagées qu'il
+   * porte, lues sur le formulaire. « aucune » quand il n'y a rien derrière —
+   * un repli muet laisserait chercher.
+   */
+  const quoiDeLOption = (cle: string): string => {
+    const dedans = (engagement?.optionsPonctuelles ?? []).filter((o) => o.cle === cle);
+    if (dedans.length === 0) return "aucune";
+    return dedans.map((o) => `${o.label.toLowerCase()} ${o.valeur}`).join(" · ");
+  };
+
+  /**
+   * SUR ORDINATEUR, L'ENGAGEMENT EST LU DÈS L'ARRIVÉE. Le total des budgets et
+   * le compte des options repliées se lisent du formulaire ; sans cette
+   * première lecture, ils restaient vides jusqu'à la première frappe, et un
+   * repli annonçait « aucune » alors qu'une valeur reconduite l'habitait déjà.
+   * Après le montage, jamais pendant le rendu : le serveur n'a pas de formulaire.
+   */
+  useEffect(() => {
+    if (!modeCartes) relireLEngagement();
+    // Une seule fois : ensuite, c'est `onChange` qui suit la saisie.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modeCartes]);
+
   // En parcours, le formulaire dit où il en est à la barre de la partie (carte
   // courante, nombre de cartes) ; reculer depuis la première ramène à l'analyse.
   useEffect(() => {
@@ -2740,9 +3017,11 @@ export function DecisionForm({
       onSubmit={verifierPivots}
       onChange={() => {
         sauverBrouillon();
-        // Le récapitulatif suit la saisie tant qu'on est sur la dernière étape.
-        // Ailleurs, il ne sert à rien : il n'est pas affiché.
-        if (derniere) relireLEngagement();
+        // En parcours, le récapitulatif ne suit la saisie que sur la dernière
+        // carte : ailleurs, il n'est pas affiché. SUR ORDINATEUR, l'engagement
+        // est relu à chaque frappe : le total des budgets se lit sous les
+        // budgets, et chaque option ponctuelle repliée annonce ce qu'elle porte.
+        if (derniere || !modeCartes) relireLEngagement();
       }}
       onInvalidCapture={revelerFamilleInvalide}
       data-debut-d-etape=""
@@ -2795,7 +3074,9 @@ export function DecisionForm({
                 aria-current={actif ? "step" : undefined}
                 className={`flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border px-1 py-2 text-xs font-medium transition sm:gap-1.5 sm:px-2 ${
                   actif
-                    ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
+                    ? // L'étape courante est un ÉTAT CHOISI : voile neutre et filet
+                      // orange plein (charte), et non un aplat dilué d'orange.
+                      "voile-neutre border-amber-400 text-slate-100"
                     : fait
                       ? // Une étape faite est un ÉTAT, pas un résultat : neutre, et sa coche.
                         "voile-neutre border-white/10 text-slate-200 hover:text-slate-100"
@@ -2820,11 +3101,110 @@ export function DecisionForm({
         hidden={masquee("vendre")}
         className="space-y-3"
       >
+      {gamme ? (
+        // TOUT CE QUI SE DÉCIDE POUR UNE RÉFÉRENCE EST DANS SON ONGLET : prix,
+        // volume, façonnier, puis les budgets qui la soutiennent. Séparés, le
+        // prix et le budget marketing d'une même référence se décidaient sur
+        // deux étapes, alors que l'un commande l'autre.
+        <Family
+          carte={gamme.map((p) => `ref-${p.code}`)}
+          icone="cible"
+          legend="Vos références · tout ce qui se décide pour chacune"
+          defaultOpen
+        >
+          <GammeReference
+            gamme={gamme}
+            defaults={defaults}
+            vocabulary={v}
+            quality={on.quality}
+            rd={on.rd && !!rdOffer}
+            roundIndex={roundIndex}
+            {...(capaciteEffective ? { capacite: capaciteEffective } : {})}
+            {...(reperes?.tourPasseParReference
+              ? { tourPasse: reperes.tourPasseParReference }
+              : {})}
+          />
+        </Family>
+      ) : null}
+      {gamme ? (
+        <></>
+      ) : (
+        <Family
+          carte={["prix", "volume"]}
+          icone="cible"
+          legend="Vos ventes · le prix et le volume du tour"
+          defaultOpen
+        >
+          <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+            <Carte cle="prix">
+              {/* En parcours, les repères sont des pastilles au-dessus du champ de la
+                  carte ; sur ordinateur ils se lisent sous les deux champs majeurs. */}
+              {modeCartes && reperes ? (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {reperes.prixUsuels ? (
+                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                      Prix usuels {reperes.prixUsuels}
+                    </span>
+                  ) : null}
+                  {reperes.coutVariable !== null ? (
+                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                      Coût variable {formatEuro(reperes.coutVariable)}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+              <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
+                suffix={`€/${v.unit}`} onValueChange={setPrixSaisi} majeur
+                {...(repereDuPrix ? { repere: repereDuPrix } : {})}
+                {...(reperes?.plagePrix ? { plage: reperes.plagePrix } : {})}
+                hint="Attention aux seuils psychologiques…" />
+              {modeCartes && reperes && reperes.coutVariable !== null ? (
+                <p className="mt-3 flex items-baseline justify-between border-t border-white/10 px-1 pt-3 text-base text-slate-300">
+                  <span>Marge par {v.unit}</span>
+                  {/* Une valeur chiffrée est une information, jamais l'orange de l'action. */}
+                  <strong className="text-lg tabular-nums text-slate-50">
+                    {formatEuro((prixSaisi ?? defaults.price) - reperes.coutVariable)}
+                  </strong>
+                </p>
+              ) : null}
+            </Carte>
+            <Carte cle="volume">
+              <Field name="productionPlan" label={v.productionPlanLabel}
+                defaultValue={Math.round(defaults.productionPlan)} suffix={v.units} majeur
+                {...(repereDuVolume ? { repere: repereDuVolume } : {})}
+                {...(capaciteEffective
+                  ? { plage: { min: 0, max: Math.max(capaciteEffective, Math.round(defaults.productionPlan)) } }
+                  : {})}
+                hint="Le volume réel sera borné par vos capacités." />
+            </Carte>
+          </div>
+          {/* LES REPÈRES DU MARCHÉ, SUR ORDINATEUR : sous les deux champs majeurs, pas
+              au-dessus d'eux. Ce sont des données (bleu donnée), pas des résultats. */}
+          {!modeCartes && reperes && (reperes.prixUsuels || reperes.coutVariable !== null) ? (
+            <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-t border-white/10 pt-3 text-sm tabular-nums text-[var(--donnee)]">
+              {reperes.prixUsuels ? (
+                <span>
+                  <span className="text-slate-400">Prix usuels du marché</span>{" "}
+                  {reperes.prixUsuels}
+                </span>
+              ) : null}
+              {reperes.coutVariable !== null ? (
+                <span>
+                  <span className="text-slate-400">Coût variable</span>{" "}
+                  {formatEuro(reperes.coutVariable)}
+                </span>
+              ) : null}
+            </p>
+          ) : null}
+        </Family>
+      )}
       {orderOffer ? (
         <Family
           carte="commande"
           icone="colis"
           legend={`Commande exceptionnelle · ${orderOffer.title}`}
+          repli
+          quoi={quoiDeLOption("commande")}
         >
           <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
           <p className="mt-2 text-xs text-slate-400">
@@ -2862,77 +3242,6 @@ export function DecisionForm({
           </label>
         </Family>
       ) : null}
-      {gamme ? (
-        // TOUT CE QUI SE DÉCIDE POUR UNE RÉFÉRENCE EST DANS SON ONGLET : prix,
-        // volume, façonnier, puis les budgets qui la soutiennent. Séparés, le
-        // prix et le budget marketing d'une même référence se décidaient sur
-        // deux étapes, alors que l'un commande l'autre.
-        <Family
-          carte={gamme.map((p) => `ref-${p.code}`)}
-          icone="cible"
-          legend="Vos références · tout ce qui se décide pour chacune"
-          defaultOpen
-        >
-          <GammeReference
-            gamme={gamme}
-            defaults={defaults}
-            vocabulary={v}
-            quality={on.quality}
-            rd={on.rd && !!rdOffer}
-            roundIndex={roundIndex}
-            {...(capaciteEffective ? { capacite: capaciteEffective } : {})}
-          />
-        </Family>
-      ) : null}
-      {gamme ? (
-        <></>
-      ) : (
-        <Family
-          carte={["prix", "volume"]}
-          icone="cible"
-          legend="Vos ventes · le prix et le volume du tour"
-          defaultOpen
-        >
-          <div className="grid grid-cols-2 gap-3">
-            <Carte cle="prix">
-              {reperes ? (
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {reperes.prixUsuels ? (
-                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
-                      Prix usuels {reperes.prixUsuels}
-                    </span>
-                  ) : null}
-                  {reperes.coutVariable !== null ? (
-                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
-                      Coût variable {formatEuro(reperes.coutVariable)}
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
-              <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
-                suffix={`€/${v.unit}`} onValueChange={setPrixSaisi}
-                {...(reperes?.plagePrix ? { plage: reperes.plagePrix } : {})}
-                hint="Attention aux seuils psychologiques…" />
-              {modeCartes && reperes && reperes.coutVariable !== null ? (
-                <p className="mt-3 flex items-baseline justify-between border-t border-white/10 px-1 pt-3 text-base text-slate-300">
-                  <span>Marge par {v.unit}</span>
-                  <strong className="text-lg text-amber-300">
-                    {formatEuro((prixSaisi ?? defaults.price) - reperes.coutVariable)}
-                  </strong>
-                </p>
-              ) : null}
-            </Carte>
-            <Carte cle="volume">
-              <Field name="productionPlan" label={v.productionPlanLabel}
-                defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
-                {...(capaciteEffective
-                  ? { plage: { min: 0, max: Math.max(capaciteEffective, Math.round(defaults.productionPlan)) } }
-                  : {})}
-                hint="Le volume réel sera borné par vos capacités." />
-            </Carte>
-          </div>
-        </Family>
-      )}
       {capacityFacts ? (
         <Carte cle="volume">
         <PanneauConsulte
@@ -3080,6 +3389,7 @@ export function DecisionForm({
                 />
               ) : null}
             </div>
+            <TotalDesBudgets engagement={engagement} />
           </Carte>
         </Family>
       )}
@@ -3114,6 +3424,7 @@ export function DecisionForm({
           ) : (
             <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
           )}
+          <TotalDesBudgets engagement={engagement} />
         </Family>
       ) : null}
       {communicationOffer ? (
@@ -3348,7 +3659,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.dividend ? (
-        <Family carte="dividende" icone="argent" legend="Affectation du résultat · dividende">
+        <Family carte="dividende" icone="argent" legend="Affectation du résultat · dividende" repli quoi={quoiDeLOption("dividende")}>
           <ChampPlafonne
             name="dividend"
             label="Dividende versé aux associés"
@@ -3366,7 +3677,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       {on.creances && treasuryOffer ? (
-        <Family carte="mobilisation" icone="tresorerie" legend="Trésorerie · mobiliser le poste clients">
+        <Family carte="mobilisation" icone="tresorerie" legend="Trésorerie · mobiliser le poste clients" repli quoi={quoiDeLOption("mobilisation")}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Field
@@ -3442,7 +3753,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <Family carte="assurance" icone="assurance" legend="Assurance · choisissez votre couverture">
+        <Family carte="assurance" icone="assurance" legend="Assurance · choisissez votre couverture" repli quoi={quoiDeLOption("assurance")}>
           <div className="space-y-2">
             <label className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12">
               <input
@@ -3537,6 +3848,8 @@ export function DecisionForm({
           carte="etudes"
           icone="loupe"
           legend={"Acheter de l'information · livrée avec les résultats du tour"}
+          repli
+          quoi={quoiDeLOption("etudes")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(

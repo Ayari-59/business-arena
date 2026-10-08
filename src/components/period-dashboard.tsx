@@ -201,8 +201,9 @@ export function PeriodDashboard({
 
   // Le tour d'avant, pour dire d'où vient l'écart de résultat. Le tour 1 n'en a
   // pas : le verdict porte alors sur le niveau, pas sur la variation.
-  const precedent =
-    view.periods.find((p) => p.round === period.round - 1)?.result.incomeStatement ?? null;
+  const tourPrecedent = view.periods.find((p) => p.round === period.round - 1) ?? null;
+  const resultatPrecedent = tourPrecedent?.result ?? null;
+  const precedent = resultatPrecedent?.incomeStatement ?? null;
   const moi = view.ranking.find((row) => row.isPlayer);
 
   // Les trois temps de la synthèse : le verdict, les chiffres, l'évolution.
@@ -308,21 +309,21 @@ export function PeriodDashboard({
                     {formatUnits(r.subscription.opening)} {view.vocabulary.units}
                   </span>
                   <span className="text-slate-400">Partis (attrition)</span>
-                  <span
-                    className={`text-right ${r.subscription.churnRate > 0.2 ? "text-amber-400" : "text-slate-200"}`}
-                  >
+                  {/* Un taux d'attrition est un NIVEAU : il s'écrit à l'encre.
+                      L'orange est la couleur de l'action (charte). */}
+                  <span className="text-right tabular-nums text-slate-200">
                     − {formatUnits(r.subscription.churned)} ({formatPercent(r.subscription.churnRate)})
                   </span>
                   {r.subscription.unserved > 0.5 ? (
                     <>
                       <span className="text-slate-400">Restés sans place</span>
-                      <span className="text-right text-rose-400">
+                      <span className="text-right tabular-nums text-red-400">
                         − {formatUnits(r.subscription.unserved)}
                       </span>
                     </>
                   ) : null}
                   <span className="text-slate-400">Nouveaux venus du marché</span>
-                  <span className="text-right text-emerald-400">
+                  <span className="text-right tabular-nums text-emerald-400">
                     + {formatUnits(r.subscription.newMembers)}
                   </span>
                   <span className="text-slate-400">En fin de tour</span>
@@ -518,15 +519,18 @@ export function PeriodDashboard({
                   dessert (✗) le marketing selon ce que chaque clientèle regarde.
                 </p>
               ) : null}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="tableau-financier">
+                <table className="text-sm">
+                  <caption className="sr-only">
+                    Le marché du tour écoulé, clientèle par clientèle.
+                  </caption>
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                      <th className="pb-2 pr-2 font-medium">Segment</th>
-                      <th className="pb-2 pr-2 text-right font-medium">Demande</th>
-                      <th className="pb-2 pr-2 text-right font-medium">Vendu</th>
-                      <th className="pb-2 text-right font-medium">Manqué</th>
-                      {r.communication?.axis ? <th className="pb-2 pl-2 text-right font-medium">Axe</th> : null}
+                      <th scope="col" className="pb-2 pr-2 font-medium">Segment</th>
+                      <th scope="col" className="pb-2 pr-2 text-right font-medium">Demande</th>
+                      <th scope="col" className="pb-2 pr-2 text-right font-medium">Vendu</th>
+                      <th scope="col" className="pb-2 text-right font-medium">Manqué</th>
+                      {r.communication?.axis ? <th scope="col" className="pb-2 pl-2 text-right font-medium">Axe</th> : null}
                     </tr>
                   </thead>
                   <tbody className="text-slate-300">
@@ -534,7 +538,9 @@ export function PeriodDashboard({
                       .filter(([, d]) => d.potential > 0)
                       .map(([code, d]) => (
                         <tr key={code} className="border-t border-white/5">
-                          <td className="py-2 pr-2">{view.segmentNames[code] ?? code}</td>
+                          <th scope="row" className="py-2 pr-2 text-left font-normal">
+                            {view.segmentNames[code] ?? code}
+                          </th>
                           <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(d.demandForCompany)}</td>
                           <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(d.sold)}</td>
                           <td className={`py-2 text-right tabular-nums ${d.lost > 1 ? "text-red-400" : ""}`}>
@@ -607,15 +613,20 @@ export function PeriodDashboard({
                   <Icone nom="banque" className="h-3.5 w-3.5" />
                   Votre plan face au réalisé
                 </h3>
-                <div className="mt-2 overflow-x-auto">
-                  <table className="w-full text-sm">
+                <div className="tableau-financier mt-2">
+                  <table className="text-sm">
+                    <caption className="sr-only">
+                      Ce que vous aviez annoncé, face à ce que le tour a donné.
+                    </caption>
                     <thead>
                       <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                        <th className="pb-1 pr-2 font-medium" />
-                        <th className="pb-1 pr-2 text-right font-medium">Prévu</th>
-                        <th className="pb-1 pr-2 text-right font-medium">Réalisé</th>
-                        <th className="pb-1 pr-2 text-right font-medium">Écart</th>
-                        <th className="pb-1 text-right font-medium">Écart relatif</th>
+                        <th scope="col" className="pb-1 pr-2 font-medium">
+                          Poste
+                        </th>
+                        <th scope="col" className="pb-1 pr-2 text-right font-medium">Prévu</th>
+                        <th scope="col" className="pb-1 pr-2 text-right font-medium">Réalisé</th>
+                        <th scope="col" className="pb-1 pr-2 text-right font-medium">Écart</th>
+                        <th scope="col" className="pb-1 text-right font-medium">Écart relatif</th>
                       </tr>
                     </thead>
                     <tbody className="text-slate-300">
@@ -626,7 +637,9 @@ export function PeriodDashboard({
                         const severe = line.relative !== null && Math.abs(line.relative) > 0.1;
                         return (
                           <tr key={line.label} className="border-t border-white/5">
-                            <td className="py-1.5 pr-2">{line.label}</td>
+                            <th scope="row" className="py-1.5 pr-2 text-left font-normal">
+                              {line.label}
+                            </th>
                             <td className="py-1.5 pr-2 text-right tabular-nums text-slate-400">
                               {show(line.forecast)}
                             </td>
@@ -671,6 +684,10 @@ export function PeriodDashboard({
           <div className="space-y-3">
             <FinancialStatements
               result={r}
+              // La colonne d'écart des états : le tour d'avant, entier (compte
+              // de résultat, bilan et flux), ou `null` au premier tour.
+              precedent={resultatPrecedent}
+              periode={periodLabel(view.roundDays, period.round)}
               price={period.decisions?.price ?? null}
               // Gamme : la part « autres coûts variables » est la moyenne des
               // références, pondérée par ce que chacune a mis en rayon, pour
