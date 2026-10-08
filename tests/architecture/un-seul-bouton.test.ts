@@ -97,7 +97,25 @@ describe("un seul bouton", () => {
     for (const v of [principal, secondaire, laiton]) {
       expect(v).toContain("rounded-lg");
       expect(v).toContain("inline-flex");
-      expect(v).toContain("disabled:opacity-60");
+      expect(v).toContain("disabled:cursor-not-allowed");
+      // Désactivé, un bouton est NEUTRE : l'opacité faisait d'un aplat orange
+      // un pêche pâle. L'état passe par la feuille (« LE BOUTON DÉSACTIVÉ »).
+      expect(v).not.toMatch(/disabled:opacity/);
     }
+    expect(secondaire).toContain("bouton-filet");
+    expect(laiton).toContain("bouton-filet");
+  });
+
+  it("désactivé, le bouton plein prend le gris des filets, sans ombre ni opacité", () => {
+    const css = readFileSync(join(process.cwd(), "src", "app", "globals.css"), "utf8");
+    const debut = css.indexOf(".bouton-plein:disabled,");
+    expect(debut, "la règle du bouton désactivé a disparu").toBeGreaterThan(0);
+    const regle = css.slice(debut, css.indexOf("}", debut));
+    expect(regle).toContain("var(--bouton-inactif-fond)");
+    expect(regle).toContain("var(--bouton-inactif-texte)");
+    expect(regle).toMatch(/box-shadow:\s*none/);
+    expect(regle).toMatch(/opacity:\s*1/);
+    expect(css).toMatch(/--bouton-inactif-fond:\s*#dbe2ee/);
+    expect(css).toMatch(/--bouton-inactif-texte:\s*#4b5970/);
   });
 });

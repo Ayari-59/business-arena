@@ -163,11 +163,11 @@ export default function MentionsLegalesPage() {
           <p>Le site dépose uniquement deux cookies techniques, signés cryptographiquement :</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              <code className="text-amber-300">ba_session</code> : session des enseignants et
+              <code className="font-mono text-slate-100">ba_session</code> : session des enseignants et
               personnels connectés (30 jours) ;
             </li>
             <li>
-              <code className="text-amber-300">ba_guest</code> : identifiant technique des
+              <code className="font-mono text-slate-100">ba_guest</code> : identifiant technique des
               joueurs invités, pour retrouver leurs parties (12 mois).
             </li>
           </ul>

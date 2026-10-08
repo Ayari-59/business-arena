@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getGuestUserId } from "@/lib/guest";
 import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
@@ -65,6 +67,33 @@ import { PastilleDeRang } from "@/components/rang";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * La vue de la partie, calculée une fois par requête : le titre de l'onglet et
+ * la page la lisent tous deux.
+ */
+const vueDeLaPartie = cache((gameId: string, userId: string) => getGameView(gameId, userId));
+
+/**
+ * LE TITRE DE L'ONGLET DIT OÙ L'ON EN EST : « NOVA · Tour 3/6 · Business
+ * Arena ». Un élève qui garde l'arène ouverte à côté d'un tableur retrouvait
+ * un onglet générique, sans entreprise ni tour.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ gameId: string }>;
+}): Promise<Metadata> {
+  const { gameId } = await params;
+  const userId = await getGuestUserId();
+  const view = userId ? await vueDeLaPartie(gameId, userId) : null;
+  if (!view) return {};
+  const ou =
+    view.status === "finished"
+      ? "Partie terminée"
+      : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`;
+  return { title: `${view.intro.company} · ${ou}` };
+}
+
 export default async function ArenaPage({
   params,
   searchParams,
@@ -75,7 +104,7 @@ export default async function ArenaPage({
   const { gameId } = await params;
   const userId = await getGuestUserId();
   if (!userId) notFound();
-  const view = await getGameView(gameId, userId);
+  const view = await vueDeLaPartie(gameId, userId);
   if (!view) notFound();
   // Sur téléphone, ce qu'on consulte se range dans des tiroirs fermés (voir
   // decision-context.tsx et aide-repliable.tsx) ; ce qui décide reste ouvert.

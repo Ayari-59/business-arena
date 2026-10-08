@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { TeacherAuthForms } from "@/components/teacher-auth-forms";
-import { SiteLogo } from "@/components/site-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +11,7 @@ export default async function TeacherLoginPage() {
   return (
     <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="flex flex-col items-center text-center">
-        <SiteLogo />
-        <h1 className="mt-4 text-3xl font-bold">Espace enseignant</h1>
+        <h1 className="text-3xl font-bold">Espace enseignant</h1>
         <p className="mt-2 max-w-md text-sm text-slate-400">
           Créez des parties pour vos classes, suivez les décisions de chaque équipe et
           pilotez la clôture des tours.

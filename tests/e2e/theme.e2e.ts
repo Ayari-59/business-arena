@@ -109,8 +109,15 @@ describe("le papier et le tableau", () => {
         selecteur,
       );
     expect(await fichierDe("header .logo-arena"), "en-tête").toBe("logo.svg");
-    // La page de connexion de l'enseignant pose le logo sur le papier.
+    // Aucune page ne pose plus le logo sur le papier (la connexion enseignant
+    // le doublait sous l'en-tête) : on l'y pose, pour garder la règle qui
+    // choisirait l'encre si une page le faisait.
     await aller(page, "/teacher/login");
+    await page.evaluate(() =>
+      document
+        .querySelector("main")!
+        .insertAdjacentHTML("afterbegin", '<span class="logo-arena block h-8 w-40"></span>'),
+    );
     expect(await fichierDe("main .logo-arena"), "papier").toBe("logo-light.svg");
   });
 

@@ -1,4 +1,4 @@
-import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
+import { formatDecimal, formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
 import { lectureBancaire } from "@/components/lecture-bancaire";
@@ -401,7 +401,7 @@ export function PeriodDashboard({
                       <li
                         key={row.name}
                         className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
-                          row.isPlayer ? "text-amber-200" : "bg-slate-950 text-slate-300"
+                          row.isPlayer ? "text-slate-100" : "bg-slate-950 text-slate-300"
                         } ${classeLigneDeRang(row.rank, row.isPlayer)}`}
                       >
                         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -418,7 +418,7 @@ export function PeriodDashboard({
                           ) : null}
                         </span>
                         <span className="tabular-nums">
-                          <span className="font-semibold">{row.bpi.toFixed(1)}</span>
+                          <span className="font-semibold">{formatDecimal(row.bpi)}</span>
                           <span className="ml-2 text-xs text-slate-400">
                             {formatEuro(row.cumulativeNetIncome)} cumulés
                           </span>

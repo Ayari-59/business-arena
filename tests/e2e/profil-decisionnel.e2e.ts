@@ -124,7 +124,7 @@ describe("le profil décisionnel", () => {
     expect(await page.getByText(/Diagnostic de la semaine 1 juste \d fois sur 2/).count()).toBe(1);
     // Un clic ouvre les décisions qui fondent une ligne.
     await page
-      .getByText(/observations qui fondent cette ligne/)
+      .getByText(/observations? qui (?:fonde|fondent) cette ligne/)
       .first()
       .click();
     expect(await page.locator("details[open] table tbody tr").count()).toBeGreaterThan(0);

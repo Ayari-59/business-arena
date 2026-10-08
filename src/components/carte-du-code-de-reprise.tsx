@@ -21,7 +21,7 @@ export function CarteDuCodeDeReprise({ code }: { code: string }) {
       </h2>
       <p
         id="code-de-reprise"
-        className="mt-1.5 font-mono text-2xl tracking-surtitre text-amber-200"
+        className="mt-1.5 font-mono text-2xl tracking-surtitre text-slate-100"
       >
         {formaterCodeDeReprise(code)}
       </p>

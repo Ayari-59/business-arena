@@ -3,7 +3,7 @@ import { periodLabel } from "@/config/scenarios/periodicity";
 import { SECTOR_COLORS, type Sector } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
-import { formatEuro } from "@/lib/format";
+import { formatDecimal, formatEuro, ordinal } from "@/lib/format";
 import { Icone } from "@/components/icone";
 import { PastilleDeRang } from "@/components/rang";
 
@@ -180,14 +180,14 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
           {bilan.rang ? (
             <>
               <PastilleDeRang rang={bilan.rang.place} moi doublon className="text-base" />
-              {`${bilan.rang.place}ᵉ sur ${bilan.rang.sur}`}
+              {`${ordinal(bilan.rang.place)} sur ${bilan.rang.sur}`}
             </>
           ) : (
             formatEuro(bilan.chiffreDAffaires)
           )}
         </dd>
         {bilan.rang && bilan.ipg !== null ? (
-          <dd className="text-sm text-slate-400">IPG {bilan.ipg.toFixed(0)}</dd>
+          <dd className="text-sm text-slate-400">IPG {formatDecimal(bilan.ipg, 0)}</dd>
         ) : null}
       </div>
     </dl>

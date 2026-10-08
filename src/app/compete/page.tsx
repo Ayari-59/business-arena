@@ -39,7 +39,7 @@ export default async function CompetePage({
           <ol className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300">
             {EXPLICATIONS_CONCOURS.map((ligne, i) => (
               <li key={i} className="flex gap-2">
-                <span className="text-amber-400">{i + 1}.</span>
+                <span className="font-semibold tabular-nums text-slate-100">{i + 1}.</span>
                 <span>{ligne}</span>
               </li>
             ))}

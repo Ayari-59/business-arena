@@ -44,7 +44,7 @@ export function MaCarteDeReprise({
     >
       <div className="flex flex-col gap-4 px-3 pb-3 sm:flex-row sm:flex-wrap sm:items-start">
         <div className="min-w-0 flex-1">
-          <p className="whitespace-nowrap font-mono text-2xl tracking-etiquette text-amber-200">
+          <p className="whitespace-nowrap font-mono text-2xl tracking-etiquette text-slate-100">
             {formaterCodeDeReprise(code)}
           </p>
           <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-slate-300">

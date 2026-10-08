@@ -1574,6 +1574,44 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+ * LE BOUTON DÉSACTIVÉ : NEUTRE, NI PÊCHE NI DÉLAVÉ.
+ *
+ * Un bouton qu'on ne peut pas encore toucher s'éteignait par l'opacité
+ * (`disabled:opacity-60`) : sur l'aplat orange, cela donnait un pêche pâle,
+ * qui ressemblait à un bouton actif délavé. Désactivé, un bouton plein prend
+ * le gris bleuté des filets et une encre grise, sans ombre ni opacité ; un
+ * bouton à filet garde son contour, gris. La règle est hors couche, à
+ * dessein : elle l'emporte sur l'opacité qu'un appelant ajoute encore
+ * (`SubmitButton`, le formulaire de concours…) et sur le survol.
+ * ------------------------------------------------------------------------- */
+:root {
+  --bouton-inactif-fond: #dbe2ee;
+  --bouton-inactif-texte: #4b5970;
+}
+.bouton-plein:disabled,
+.bouton-plein:disabled:hover,
+[data-theme="clair"] :is(.bg-amber-400, .bg-amber-500):is(button, input):disabled,
+[data-theme="clair"] :is(.bg-amber-400, .bg-amber-500):is(button, input):disabled:hover {
+  background-color: var(--bouton-inactif-fond);
+  background-image: none;
+  color: var(--bouton-inactif-texte);
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+}
+.bouton-filet:disabled,
+.bouton-filet:disabled:hover {
+  border-color: var(--bouton-inactif-fond);
+  background-color: transparent;
+  color: var(--bouton-inactif-texte);
+  opacity: 1;
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) .bouton-filet:disabled {
+  border-color: #2d5385;
+  color: #c2bcb2;
+}
+
+/* ---------------------------------------------------------------------------
  * LA CARTE QUI MÈNE QUELQUE PART : un filet orange de six pixels à gauche.
  *
  * Sur la maquette, la carte d'un épisode porte ce filet ; le classement, qui
@@ -1749,7 +1787,7 @@ a.carte,
  * LE PAPIER, commun à l'enveloppe et à la lettre.
  *
  * Une enveloppe et la lettre qu'elle contient sont le même papier : il fallait
- * que l'écran le dise. Elles partagent donc l'ivoire, l'encre, le filet et
+ * que l'écran le dise. Elles partagent donc le blanc, l'encre, le filet et
  * l'ombre portée, et ne diffèrent que par ce qui les distingue vraiment — les
  * marques postales d'un côté, le texte de l'autre.
  *
@@ -1767,18 +1805,22 @@ a.carte,
  * du site (le thème clair inverserait un utilitaire Tailwind).
  */
 .papier {
-  --encre: #1f2937;
-  --encre-douce: #45505f;
-  --encre-tenue: #585f6b;
-  --papier: #f3ede1;
-  --papier-creux: #e7dfd0;
+  /* LE PAPIER EST BLANC. Il a été un ivoire (#f3ede1) au grain et aux
+     ombres de bureau : le crème que la charte interdit, revenu par l'objet.
+     Une lettre de la maison est une feuille blanche, cernée du filet gris
+     bleuté des cartes, à en-tête marine ; son cachet, quand elle en a un,
+     est d'or (voir `.lettre::before` et le cachet de l'enveloppe). */
+  --encre: #0e1a2b;
+  --encre-douce: #3d4a5e;
+  --encre-tenue: #4b5970;
+  --papier: #ffffff;
+  --papier-creux: #f0f2f4;
+  --cachet-or: #8a6400;
   color: var(--encre);
   background-color: var(--papier);
-  background-image:
-    linear-gradient(120deg, rgba(0, 0, 0, 0.045) 0%, transparent 35%),
-    radial-gradient(circle at 80% 15%, rgba(0, 0, 0, 0.045) 0%, transparent 45%);
-  border: 1px solid rgba(31, 41, 55, 0.45);
-  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.75);
+  background-image: none;
+  border: 1px solid #dbe2ee;
+  box-shadow: 0 10px 24px -16px rgb(11 37 69 / 0.28);
 }
 
 .papier .douce {
@@ -1794,19 +1836,19 @@ a.carte,
 }
 
 .papier .filet {
-  border-color: rgba(31, 41, 55, 0.22);
+  border-color: #dbe2ee;
 }
 
 /*
  * L'ÉCRAN, matière du courriel — et tout l'enjeu est qu'il ne soit PAS du
  * papier.
  *
- * Réutiliser `.papier` aurait donné une lettre déguisée : même ivoire, même
+ * Réutiliser `.papier` aurait donné une lettre déguisée : même feuille, même
  * ombre, et le canal cesserait de se voir, alors que c'est lui qui porte la
  * leçon. Le courriel a donc sa propre matière, et elle s'oppose au papier sur
  * ce qui se remarque sans se lire :
  *
- *   · un blanc FROID contre l'ivoire chaud — deux lumières, pas deux teintes ;
+ *   · un écran plat contre une feuille à en-tête marine et à cachet d'or ;
  *   · pas de grain, pas de rabat, pas de timbre : une surface plate ;
  *   · des angles courts là où la lettre en a de généreux ;
  *   · un en-tête à étiquettes (De, À, Objet) au lieu d'une formule d'appel.
@@ -1885,13 +1927,17 @@ a.carte,
   flex-direction: column;
 }
 
-/* Le filet de tête, dans l'encre de la nature : l'en-tête de la maison. */
+/* L'en-tête de la maison : un filet marine. Il a pris l'encre de la nature du
+   courrier, qui reste dite par la pastille de l'en-tête. */
 .lettre::before {
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
-  height: 3px;
-  background: var(--cachet, #b45309);
+  height: 4px;
+  border-radius: inherit;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: var(--marine);
 }
 
 /* Barre de progression indéterminée des actions longues (clôture, création). */

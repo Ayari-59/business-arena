@@ -84,17 +84,21 @@ export default async function FonctionnalitesPage() {
         <Bande
           id="fonctionnalites.intro"
           contraste={c("fonctionnalites.intro")}
-          interieur="mx-auto max-w-4xl px-6 pb-12"
+          interieur="mx-auto max-w-4xl px-6 pb-8 pt-10 sm:pt-12"
         >
+          {/* L'APERÇU OUVRE LA PAGE, IL DIT DONC CE QU'IL MONTRE. Collé à
+              l'en-tête, son bord haut était rogné et la page s'ouvrait sur un
+              écran sans titre : il prend une marge haute et sa légende passe
+              au-dessus, en intitulé. */}
           <div className="mx-auto max-w-sm">
-            <ApercuArene />
+            <ApercuArene legendeEnTete />
           </div>
         </Bande>
 
         <Bande
           id="fonctionnalites.accroche"
           contraste={c("fonctionnalites.accroche")}
-          interieur="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center"
+          interieur="mx-auto max-w-5xl px-6 pb-12 pt-10 text-center sm:pt-12"
         >
           <p className="text-xs uppercase tracking-annonce text-amber-400">
             Plateforme de simulation de gestion

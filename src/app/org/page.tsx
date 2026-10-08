@@ -180,7 +180,7 @@ export default async function OrgAdminPage() {
                 <li key={g.gameId} className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-slate-300">
                   <span>
                     {g.joinCode ? (
-                      <span className="mr-2 font-mono text-amber-300">{g.joinCode}</span>
+                      <span className="mr-2 font-mono text-slate-100">{g.joinCode}</span>
                     ) : null}
                     par {g.createdBy}
                   </span>

@@ -115,12 +115,10 @@ export function PiedDePage() {
             ) : null}
           </nav>
         </div>
-        {/* Le filet de laiton s'éteint vers la droite : il ferme la signature
-            sans poser une seconde barre en travers de la page. */}
-        <div
-          aria-hidden
-          className="mt-12 h-px bg-gradient-to-r from-amber-400/40 via-amber-400/15 to-transparent"
-        />
+        {/* Le filet ferme la signature : le gris bleuté des cartes, plein, le
+            même sur toutes les pages. Il a été un dégradé d'orange qui
+            s'éteignait vers la droite, et l'orange ne décore pas. */}
+        <div aria-hidden className="mt-12 h-px bg-[var(--filet-carte)]" />
         <div className="mt-5 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 text-xs text-slate-400">
           <p>© {annee} Business Arena</p>
           <div className="flex flex-wrap gap-x-8 gap-y-2">

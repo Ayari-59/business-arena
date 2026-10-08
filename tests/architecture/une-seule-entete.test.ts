@@ -34,10 +34,11 @@ function pages(racine: string): string[] {
 }
 
 /**
- * La page de connexion enseignant pose le logo au centre de sa carte, comme le
- * fait n'importe quel écran de connexion : ce n'est pas une barre refaite.
+ * La page de connexion enseignant a longtemps posé le logo au-dessus de son
+ * titre, comme un écran de connexion autonome. Sous l'en-tête du site, qui le
+ * porte déjà, il se lisait en double : elle n'est plus une exception.
  */
-const ACCEPTEES = ["/app/teacher/login/page.tsx"];
+const ACCEPTEES: string[] = [];
 
 describe("une seule entête", () => {
   it("aucune page ne repose le logo du site", () => {

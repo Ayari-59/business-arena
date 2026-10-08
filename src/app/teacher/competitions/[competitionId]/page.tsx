@@ -57,7 +57,7 @@ export default async function TeacherCompetitionPage({
         description={
           <>
             Code d&apos;inscription :{" "}
-            <span className="font-mono text-amber-300">{view.joinCode}</span>
+            <span className="font-mono text-slate-100">{view.joinCode}</span>
             {" · "}les équipes s&apos;inscrivent sur <span className="font-mono">/compete</span>.
           </>
         }

@@ -185,7 +185,7 @@ export function QuickConfigFields({
         </span>
       </div>
       <p className="mt-1 text-lg font-bold text-slate-50">
-        Niveau <span className="text-amber-400">{level}</span> · {cur?.name}
+        Niveau {level} · {cur?.name}
       </p>
       <input
         type="range"

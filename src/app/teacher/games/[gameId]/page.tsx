@@ -8,7 +8,7 @@ import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
-import { compter, formatEuro } from "@/lib/format";
+import { compter, formatDecimal, formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { setAnswerFormatAction, setMissedPolicyAction, setQuizModeAction } from "../../actions";
 import { ANSWER_FORMATS, QUIZ_MODES } from "@/config/difficulty";
@@ -198,7 +198,7 @@ export default async function TeacherGamePage({
             <p className="text-xs uppercase tracking-annonce text-amber-400">Code d&apos;invitation</p>
             <p
               id="code-invitation"
-              className="mt-1 font-mono text-3xl font-bold tracking-surtitre text-amber-300"
+              className="mt-1 font-mono text-3xl font-bold tracking-surtitre text-slate-100"
             >
               {view.joinCode}
             </p>
@@ -511,7 +511,7 @@ export default async function TeacherGamePage({
                   ) : null}
                 </span>
                 <span className="tabular-nums">
-                  <span className="font-semibold text-slate-100">IPG {row.bpi.toFixed(1)}</span>
+                  <span className="font-semibold text-slate-100">IPG {formatDecimal(row.bpi)}</span>
                   <span className="ml-2 text-xs text-slate-400">
                     {formatEuro(row.cumulativeNetIncome)} cumulés
                   </span>
@@ -714,7 +714,7 @@ export default async function TeacherGamePage({
                         "—"
                       ) : (
                         <span className="inline-flex items-center justify-end gap-2">
-                          {equipe.bpi.toFixed(1)}
+                          {formatDecimal(equipe.bpi)}
                           {equipe.rank !== null ? <PastilleDeRang rang={equipe.rank} /> : null}
                         </span>
                       )}

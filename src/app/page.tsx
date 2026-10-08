@@ -54,13 +54,11 @@ const RENVOIS: {
   title: string;
   href: string;
   aide: string;
-  accent?: boolean;
 }[] = [
   {
     title: "Choisir ma simulation",
     href: "/orientation",
     aide: "Quatre questions, et le réglage qui convient à votre classe s'écrit à mesure, avec ses raisons.",
-    accent: true,
   },
   {
     title: "Les entreprises",
@@ -699,19 +697,17 @@ export default async function Home() {
           {/*
             UN SOMMAIRE, PAS UNE GRILLE D'ICÔNES. Les cartes portaient un emoji en
             tête ; elles portent maintenant un filet qui s'allume au survol, un
-            titre en serif et sa phrase. La première — celle qui aide à choisir —
-            garde son filet laiton allumé : c'est la seule qu'on recommande.
+            titre en serif et sa phrase. Toutes ont le même filet gris : il ne
+            s'allume qu'au survol ou au focus. La première, celle qui aide à
+            choisir, n'est plus allumée d'office : un filet orange au repos se
+            lisait comme une carte déjà choisie.
           */}
           <div className="mt-8 grid gap-x-8 gap-y-px sm:grid-cols-2 lg:grid-cols-3">
             {RENVOIS.map((r) => (
               <Link
                 key={r.href}
                 href={r.href}
-                className={`group block border-t py-4 transition-colors sm:py-5 ${
-                  r.accent
-                    ? "border-amber-400/60"
-                    : "border-white/10 hover:border-amber-400/40"
-                }`}
+                className="group block border-t border-white/10 py-4 transition-colors hover:border-amber-400/40 focus-visible:border-amber-400/40 sm:py-5"
               >
                 <h3 className="flex items-baseline gap-2 font-display text-lg font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
                   {r.title}

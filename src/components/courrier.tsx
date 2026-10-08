@@ -18,7 +18,7 @@ import { Icone } from "@/components/icone";
  * L'animation d'ouverture est du pur théâtre CSS — le tirage réel est fait par
  * le PRNG seedé du moteur, ou décidé par l'enseignant.
  *
- * LE MÊME PAPIER DES DEUX CÔTÉS. L'enveloppe et sa lettre partagent l'ivoire,
+ * LE MÊME PAPIER DES DEUX CÔTÉS. L'enveloppe et sa lettre partagent le blanc,
  * l'encre, le filet et l'ombre (classe `papier`, globals.css) : ce qui sort de
  * l'enveloppe doit être de la même matière que l'enveloppe. Elles ne diffèrent
  * que par ce qui les distingue vraiment — les marques postales d'un côté, le
@@ -121,7 +121,7 @@ export function Enveloppe({
             {nature ? (
               <span
                 className="mt-1 inline-block -rotate-2 rounded-md border border-dashed px-1.5 py-0.5 text-xs font-bold uppercase leading-none tracking-wide"
-                style={{ borderColor: nature.encre, color: nature.encre }}
+                style={{ borderColor: "var(--cachet-or)", color: "var(--cachet-or)" }}
               >
                 {interne ? "Note de service" : nature.mention}
               </span>
@@ -134,11 +134,11 @@ export function Enveloppe({
           {interne ? null : (
             <span
               className="enveloppe-timbre flex h-10 w-9 shrink-0 items-center justify-center rounded-[2px]"
-              style={nature ? { color: nature.encre } : undefined}
+              style={nature ? { color: "var(--cachet-or)" } : undefined}
               aria-hidden
             >
-              {/* Le timbre prend l'encre du cachet : la nature du courrier se lit
-                  deux fois, au tampon et à la vignette. */}
+              {/* Le timbre prend l'or du cachet : la nature du courrier se lit
+                  au tampon, et la vignette en porte l'icône. */}
               <Icone nom={c ? c.icone : "courrier"} className="h-5 w-5" />
             </span>
           )}
@@ -218,7 +218,6 @@ export function Lettre({
       className="papier lettre rounded-lg p-3"
       style={
         {
-          "--cachet": nature.encre,
           // Le liseré du destinataire est écrit en dur : sur du papier, un
           // jeton de thème s'inverserait avec le site.
           ...(surligne ? { boxShadow: "0 0 0 2px #0369a1" } : {}),

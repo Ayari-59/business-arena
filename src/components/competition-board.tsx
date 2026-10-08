@@ -1,3 +1,4 @@
+import { formatDecimal } from "@/lib/format";
 import Link from "next/link";
 import type { CompetitionView } from "@/services/competition.service";
 import { nomDeLaPhase } from "@/config/concours";
@@ -113,7 +114,9 @@ export function CompetitionBoard({
                           <PastilleDeRang rang={rank + 1} />
                           {s.entryId}
                         </span>
-                        <span className="tabular-nums text-slate-400">IPG {s.bpi.toFixed(1)}</span>
+                        <span className="tabular-nums text-slate-400">
+                          IPG {formatDecimal(s.bpi)}
+                        </span>
                       </li>
                     ))}
                   </ol>

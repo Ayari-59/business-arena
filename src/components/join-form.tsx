@@ -51,7 +51,7 @@ export function JoinForm({
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="EX : K7M2PR"
-          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-annonce text-amber-300 outline-none"
+          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-annonce text-slate-100 outline-none"
         />
       </label>
       <label className="block">

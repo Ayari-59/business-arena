@@ -108,13 +108,13 @@ export default async function CohortesAdminPage({
                 </p>
                 <p className="text-sm text-slate-300">
                   Invitation :{" "}
-                  <span className="break-all font-mono text-xs text-amber-300">{invitation}</span>
+                  <span className="break-all font-mono text-xs text-slate-100">{invitation}</span>
                 </p>
                 <details className="text-sm" open={creee === c.code}>
                   <summary className="cursor-pointer text-slate-400 hover:text-slate-200">
                     Lien de l&apos;animateur, à ne transmettre qu&apos;à lui
                   </summary>
-                  <p className="mt-1 break-all font-mono text-xs text-amber-300">{animation}</p>
+                  <p className="mt-1 break-all font-mono text-xs text-slate-100">{animation}</p>
                   <GuardedForm
                     action={renouvelerCleAnimateurAction.bind(null, c.id)}
                     label="renouvellement du lien d'animateur"

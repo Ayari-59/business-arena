@@ -76,7 +76,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
 
           <div className="carte mt-8 p-6">
             <p className="text-sm font-semibold text-slate-200">Le lien à donner à la classe</p>
-            <p className="mt-2 break-all font-mono text-base text-amber-200">{lien}</p>
+            <p className="mt-2 break-all font-mono text-base text-slate-100">{lien}</p>
             <p className="mt-2 text-sm text-slate-400">
               Tout le groupe joue le même trimestre, sous le même hasard (n°{" "}
               {hasardDeLaClasse(code)}). Les élèves jouent sans compte ; jouez l&apos;épisode une

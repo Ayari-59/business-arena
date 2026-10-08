@@ -166,9 +166,11 @@ function Tuile({
             tableau du tour, plus bas. */}
         {points.map((p, i) => (
           <circle key={i} cx={p.x} cy={p.y} r="6" fill="transparent">
-            <title>
-              {libelles[i]} : {Math.round(valeurs[i]!).toLocaleString("fr-FR")}
-            </title>
+            {/* UNE SEULE CHAÎNE dans un <title> : React rend vide, côté
+                serveur, un titre à plusieurs enfants, et le navigateur
+                réécrivait ensuite le texte. C'était l'erreur d'hydratation
+                (#418) de chaque arène à partir du deuxième tour. */}
+            <title>{`${libelles[i]} : ${formatEuro(valeurs[i]!)}`}</title>
           </circle>
         ))}
       </svg>

@@ -81,7 +81,7 @@ describe("un panneau à la fois", () => {
     const html = rendre({ defaut: "classement" });
     // Le rang est écrit dans sa pastille : l'or pour la tête du classement.
     expect(html).toMatch(/pastille-rang-1[^>]*>1</);
-    expect(html).toContain("62.4");
+    expect(html).toContain("62,4");
     expect(html).toContain("Trimestre 2");
     // Sans cette ligne, la colonne de droite est une suite de décimales sans
     // unité : le sigle n'apparaît nulle part ailleurs sur le mur.

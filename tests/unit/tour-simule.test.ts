@@ -109,7 +109,7 @@ describe("l'écran « Tour simulé »", () => {
     expect(html).toContain("+");
     expect(html).toContain("de mieux");
     expect(html).toContain("Trésorerie");
-    expect(html).toContain("2ᵉ sur 3");
+    expect(html).toContain("2e sur 3");
     expect(html).toContain("IPG 61");
   });
 

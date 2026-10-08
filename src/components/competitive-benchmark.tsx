@@ -66,16 +66,16 @@ export function CompetitiveBenchmark({
             {benchmark.competitors.map((c) => (
               <tr
                 key={c.name}
-                className={`border-t border-white/5 ${c.isPlayer ? "ligne-moi text-amber-100" : ""}`}
+                className={`border-t border-white/5 ${c.isPlayer ? "ligne-moi font-semibold text-slate-100" : ""}`}
               >
                 <td className="py-2 pr-3">
                   <Embleme
                     code={c.embleme}
-                    className={`mr-1.5 h-3.5 w-3.5 ${c.isPlayer ? "text-amber-300" : "text-slate-400"}`}
+                    className={`mr-1.5 h-3.5 w-3.5 ${c.isPlayer ? "text-slate-100" : "text-slate-400"}`}
                   />
                   {c.name}
                   {c.isPlayer ? (
-                    <span className="ml-1.5 text-xs text-amber-400/70">vous</span>
+                    <span className="ml-1.5 text-xs font-normal text-slate-400">vous</span>
                   ) : null}
                   {/*
                     LE CARACTÈRE DU CONCURRENT, sous son nom. Le moteur donne à

@@ -4,6 +4,8 @@ import { getPlayerProfile } from "@/services/profile.service";
 import type { SkillAxis } from "@/config/pedagogy/concepts";
 import { bouton } from "@/components/bouton";
 import { PastilleDeRang } from "@/components/rang";
+import { partiesDe } from "@/services/episode-parties.service";
+import { compter, formatDecimal } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +19,43 @@ const AXIS_LABELS: Record<SkillAxis, string> = {
   risk: "Risque",
 };
 
+/**
+ * LE PROFIL DÉCISIONNEL DES ÉPISODES vit sur sa propre page. Celle-ci ne
+ * mesure que les parties de l'arène : après un épisode, elle restait vide et
+ * laissait croire que rien n'avait été retenu. Elle y renvoie donc toujours,
+ * et dit combien d'épisodes l'alimentent dès qu'il y en a.
+ */
+function EncartProfilDecisionnel({ episodes }: { episodes: number }) {
+  return (
+    <section className="carte flex flex-wrap items-center justify-between gap-3 p-5">
+      <p className="text-sm text-slate-300">
+        {episodes > 0 ? (
+          <>
+            <span className="font-semibold text-slate-100">Profil décisionnel :</span>{" "}
+            {compter(episodes, "épisode joué", "épisodes joués")}
+          </>
+        ) : (
+          "Les épisodes manager ont leur propre profil, décision par décision."
+        )}
+      </p>
+      <Link
+        href="/entreprises/episode/profil"
+        className="text-sm font-semibold text-amber-400 underline decoration-1 underline-offset-4"
+      >
+        Voir mon profil décisionnel →
+      </Link>
+    </section>
+  );
+}
+
 const masteryTone = (v: number) =>
   v < 40 ? "bg-red-400" : v < 70 ? "bg-amber-400" : "bg-emerald-400";
 
 export default async function ProfilePage() {
   const userId = await getGuestUserId();
-  const profile = userId ? await getPlayerProfile(userId) : null;
+  const [profile, parties] = userId
+    ? await Promise.all([getPlayerProfile(userId), partiesDe(userId)])
+    : [null, []];
 
   if (!profile) {
     return (
@@ -35,6 +68,7 @@ export default async function ProfilePage() {
         <Link href="/" className={bouton()}>
           Jouer une partie
         </Link>
+        <EncartProfilDecisionnel episodes={parties.length} />
       </main>
     );
   }
@@ -53,8 +87,10 @@ export default async function ProfilePage() {
         </Link>
       </header>
 
+      <EncartProfilDecisionnel episodes={parties.length} />
+
       <section className="carte p-5">
-        <h2 className="mb-3 text-sm font-semibold text-slate-200">Compétences par axe (§28)</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-200">Compétences par axe</h2>
         {profile.skills.length === 0 ? (
           <p className="text-sm text-slate-400">
             Encore aucune mesure : traitez les situations proposées pendant vos parties.
@@ -119,7 +155,7 @@ export default async function ProfilePage() {
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2 tabular-nums text-slate-400">
-                    {g.bpi !== null ? `IPG ${g.bpi.toFixed(1)}` : "—"}
+                    {g.bpi !== null ? `IPG ${formatDecimal(g.bpi)}` : "—"}
                     {g.rank !== null ? <PastilleDeRang rang={g.rank} /> : null}
                   </span>
                 </Link>

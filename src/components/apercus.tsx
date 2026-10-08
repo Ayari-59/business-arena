@@ -57,19 +57,32 @@ function Cadre({
   legende,
   children,
   className = "",
+  legendeEnTete = false,
 }: {
   legende: string;
   children: React.ReactNode;
   className?: string;
+  /**
+   * La légende AU-DESSUS de l'écran, en intitulé : quand l'aperçu ouvre une
+   * page, il doit dire ce qu'il montre avant qu'on le lise.
+   */
+  legendeEnTete?: boolean;
 }) {
   return (
     <figure className={`m-0 flex h-full flex-col ${className}`}>
+      {legendeEnTete ? (
+        <figcaption className="mb-3 text-center text-xs font-semibold uppercase tracking-surtitre text-slate-400">
+          {legende}
+        </figcaption>
+      ) : null}
       <div className="flex flex-1 overflow-hidden carte shadow-2xl shadow-slate-950/40">
         {children}
       </div>
-      <figcaption className="mt-2 flex min-h-8 items-start justify-center text-center text-xs text-slate-400">
-        {legende}
-      </figcaption>
+      {legendeEnTete ? null : (
+        <figcaption className="mt-2 flex min-h-8 items-start justify-center text-center text-xs text-slate-400">
+          {legende}
+        </figcaption>
+      )}
     </figure>
   );
 }
@@ -80,9 +93,19 @@ function Cadre({
  * Le tour à jouer, ses chiffres, son bouton. C'est l'écran réel depuis qu'il
  * s'ouvre sur le jeu et non sur l'administration.
  */
-export function ApercuArene({ className = "" }: { className?: string }) {
+export function ApercuArene({
+  className = "",
+  legendeEnTete = false,
+}: {
+  className?: string;
+  legendeEnTete?: boolean;
+}) {
   return (
-    <Cadre legende="Ce que voit l'élève, sur son téléphone" className={className}>
+    <Cadre
+      legende="Ce que voit l'élève, sur son téléphone"
+      className={className}
+      legendeEnTete={legendeEnTete}
+    >
       <div className="mx-auto flex w-full max-w-[330px] flex-col p-3">
         <div className="flex items-center justify-between rounded-lg bg-slate-950/60 px-2.5 py-2 text-xs">
           <span className="font-semibold text-slate-100">Équipe 3 · NOVA</span>
@@ -162,7 +185,7 @@ export function ApercuProjection({ className = "" }: { className?: string }) {
               faisait couper. Un écran projeté qui déborde de son cadre prouve
               l'inverse de ce qu'on veut montrer.
             */
-            className="font-mono text-[clamp(1.5rem,7vw,2.75rem)] font-bold leading-none tracking-etiquette text-amber-300">
+            className="font-mono text-[clamp(1.5rem,7vw,2.75rem)] font-bold leading-none tracking-etiquette text-slate-100">
             K7M2PR
           </p>
           <CodeQr

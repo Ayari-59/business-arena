@@ -35,7 +35,7 @@ export function CompetitionSettings({
         {lignes.map(([nom, valeur]) => (
           <div key={nom} className="contents">
             <dt className="text-slate-400">{nom}</dt>
-            <dd className={nom === "Code d'inscription" ? "font-mono text-amber-300" : "text-slate-300"}>
+            <dd className={nom === "Code d'inscription" ? "font-mono text-slate-100" : "text-slate-300"}>
               {valeur}
             </dd>
           </div>

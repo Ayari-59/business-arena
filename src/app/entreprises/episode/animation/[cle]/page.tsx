@@ -65,7 +65,7 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
             <p className="text-sm text-slate-300">
               À envoyer aux managers de la cohorte. Code : <span className="font-mono">{code}</span>
             </p>
-            <p className="break-all font-mono text-sm text-amber-300">{invitation}</p>
+            <p className="break-all font-mono text-sm text-slate-100">{invitation}</p>
           </section>
 
           {!vue.detail ? (
@@ -174,7 +174,7 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
                         </summary>
                         <p className="mt-2 break-all text-sm text-slate-400">
                           Lien de débrief :{" "}
-                          <span className="font-mono text-amber-300">{lienDuDebrief(e.code)}</span>
+                          <span className="font-mono text-slate-100">{lienDuDebrief(e.code)}</span>
                         </p>
                         {e.decisions == null ? (
                           <p className="mt-2 text-sm text-slate-300">

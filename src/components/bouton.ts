@@ -39,17 +39,28 @@
 export type VarianteDeBouton = "principal" | "secondaire" | "laiton";
 export type TailleDeBouton = "s" | "m" | "l";
 
-/** Ce que tous les boutons partagent : la forme, l'alignement, l'état désactivé. */
+/**
+ * Ce que tous les boutons partagent : la forme, l'alignement, l'état désactivé.
+ *
+ * DÉSACTIVÉ, UN BOUTON EST NEUTRE. Il s'éteignait par l'opacité : un aplat
+ * orange à 60 % donnait un pêche pâle, le pastel que la charte chasse, et qui
+ * se lisait comme un bouton actif délavé. Il prend désormais un fond gris
+ * bleuté (#dbe2ee) et une encre grise (#4b5970), sans ombre ni opacité : voir
+ * « LE BOUTON DÉSACTIVÉ » dans globals.css, qui l'emporte sur toute opacité
+ * qu'un appelant ajouterait.
+ */
 const COMMUN =
-  "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition disabled:cursor-not-allowed";
 
 const VARIANTES: Record<VarianteDeBouton, string> = {
   // `bouton-plein` en fait le bouton de l'arène (voir globals.css) : l'orange
   // vif, un texte marine en capitales condensées, une ombre pleine dessous.
   // Les classes d'échelle restent pour ce qui ne lit pas la feuille.
   principal: "bouton-plein bg-amber-400 text-slate-950 hover:bg-amber-300",
-  secondaire: "border border-white/15 text-slate-200 hover:border-amber-400/50 hover:bg-white/5",
-  laiton: "border border-amber-400/40 text-amber-300 hover:border-amber-400 hover:bg-amber-400/10",
+  secondaire:
+    "bouton-filet border border-white/15 text-slate-200 hover:border-amber-400/50 hover:bg-white/5",
+  laiton:
+    "bouton-filet border border-amber-400/40 text-amber-300 hover:border-amber-400 hover:bg-amber-400/10",
 };
 
 const TAILLES: Record<TailleDeBouton, string> = {

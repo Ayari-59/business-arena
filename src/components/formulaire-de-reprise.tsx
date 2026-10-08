@@ -47,7 +47,7 @@ export function FormulaireDeReprise({
           autoCapitalize="characters"
           autoComplete="off"
           placeholder={formaterCodeDeReprise("K7PD5M2X")}
-          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-surtitre text-amber-300 outline-none"
+          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-surtitre text-slate-100 outline-none"
         />
       </label>
       {state.error ? (

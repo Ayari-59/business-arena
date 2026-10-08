@@ -269,7 +269,7 @@ export default async function EcolesPage() {
               <ol className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
                 {COMPETENCES.map((c, i) => (
                   <li key={c.code} className="flex gap-3 text-base leading-snug text-slate-200">
-                    <span className="w-5 shrink-0 text-right tabular-nums text-amber-300">
+                    <span className="w-5 shrink-0 text-right font-semibold tabular-nums text-slate-100">
                       {i + 1}
                     </span>
                     {c.nom}

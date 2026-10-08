@@ -23,6 +23,7 @@ import { codeDeRepriseDuProfil, cohorteDe } from "@/services/cohortes.service";
 import { objectifDe } from "@/services/episode-objectifs.service";
 import { competenceParCode } from "@/config/episodes/competences";
 import { bouton } from "@/components/bouton";
+import { compter } from "@/lib/format";
 import {
   choisirObjectifAction,
   effacerMesPartiesAction,
@@ -99,9 +100,8 @@ function Ligne({ l }: { l: LigneDeCompetence }) {
         </span>
       </div>
       <p className="text-xs text-slate-400">
-        {l.episodes} épisode{l.episodes > 1 ? "s" : ""} · {l.familles} famille
-        {l.familles > 1 ? "s" : ""} · {l.observations.length} observation
-        {l.observations.length > 1 ? "s" : ""}
+        {compter(l.episodes, "épisode")} · {compter(l.familles, "famille")} ·{" "}
+        {compter(l.observations.length, "observation")}
         {l.confiance === "indicatif" && " · à confirmer"}
       </p>
       <p className="max-w-3xl text-sm leading-relaxed text-slate-300">{l.preuve}</p>
@@ -125,7 +125,9 @@ function Ligne({ l }: { l: LigneDeCompetence }) {
       {l.observations.length > 0 && (
         <details className="text-sm">
           <summary className="cursor-pointer text-slate-300 hover:text-slate-50">
-            Les {l.observations.length} observations qui fondent cette ligne
+            {l.observations.length === 1
+              ? "L'observation qui fonde cette ligne"
+              : `Les ${compter(l.observations.length, "observation")} qui fondent cette ligne`}
           </summary>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
@@ -225,7 +227,10 @@ export default async function ProfilPage({
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300">
               {n === 0
                 ? "Aucun épisode ne compte encore dans votre profil. Il se construit à partir de vos premières parties, jouées en Standard ou en Expert."
-                : `Établi sur ${n} épisode${n > 1 ? "s" : ""} joué${n > 1 ? "s" : ""} en Standard ou en Expert, ${profil.competences.reduce((s, l) => s + l.observations.length, 0)} observations au total.`}
+                : `Établi sur ${n} épisode${n > 1 ? "s" : ""} joué${n > 1 ? "s" : ""} en Standard ou en Expert, ${compter(
+                    profil.competences.reduce((s, l) => s + l.observations.length, 0),
+                    "observation",
+                  )} au total.`}
             </p>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">{MENTION}</p>
             {bienvenue != null && cohorte && (
@@ -479,7 +484,7 @@ export default async function ProfilPage({
             {codeDeReprise ? (
               <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
                 Votre code de reprise :{" "}
-                <span className="font-mono text-lg tracking-surtitre text-amber-300">
+                <span className="font-mono text-lg tracking-surtitre text-slate-100">
                   {formaterCodeDeReprise(codeDeReprise)}
                 </span>
                 . Notez-le : il vous rend ce profil sur{" "}

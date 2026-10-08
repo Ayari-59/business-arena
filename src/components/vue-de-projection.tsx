@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDecimal } from "@/lib/format";
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { echeanceDuTour, dateLisible, type Echeance } from "@/config/echeance";
@@ -174,7 +175,7 @@ export function VueDeProjection({
                  n'est un repli de l'autre : c'est l'appareil de l'élève qui
                  décide, et il décide sans qu'on lui explique. */
               <div className="flex flex-col items-center gap-[clamp(0.75rem,3vw,3rem)] sm:flex-row sm:justify-center">
-                <p className="font-mono text-[clamp(3rem,13vw,9rem)] font-bold leading-none tracking-etiquette text-amber-300">
+                <p className="font-mono text-[clamp(3rem,13vw,9rem)] font-bold leading-none tracking-etiquette text-slate-100">
                   {joinCode}
                 </p>
                 {qr ? (
@@ -224,13 +225,24 @@ export function VueDeProjection({
                   {equipes.map((e) => (
                     <li
                       key={e.nom}
-                      className={`rounded-xl border px-[clamp(0.6rem,1.6vw,1.6rem)] py-[clamp(0.3rem,0.9vw,0.9rem)] text-[clamp(1rem,2.4vw,2rem)] font-semibold ${
+                      // UN ÉTAT, PAS UN RÉSULTAT NI UNE ACTION. Valider n'est
+                      // pas gagner, attendre n'est pas un bouton : le blanc
+                      // cassé pour toutes, une pastille PLEINE pour celles qui
+                      // ont validé, un simple cercle pour celles qu'on attend.
+                      className={`inline-flex items-center gap-[0.5em] rounded-xl border px-[clamp(0.6rem,1.6vw,1.6rem)] py-[clamp(0.3rem,0.9vw,0.9rem)] text-[clamp(1rem,2.4vw,2rem)] font-semibold ${
                         e.aValide
-                          ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
-                          : "border-amber-400/40 text-amber-200"
+                          ? "border-white/25 text-slate-50"
+                          : "border-white/10 text-slate-300"
                       }`}
                     >
-                      <span aria-hidden>{e.aValide ? "✓" : "…"}</span> {e.nom}
+                      <span
+                        aria-hidden
+                        className={`inline-block h-[0.55em] w-[0.55em] shrink-0 rounded-full ${
+                          e.aValide ? "bg-slate-50" : "border-2 border-slate-400"
+                        }`}
+                      />
+                      <span className="sr-only">{e.aValide ? "a validé : " : "en attente : "}</span>
+                      {e.nom}
                     </li>
                   ))}
                 </ul>
@@ -296,7 +308,7 @@ export function VueDeProjection({
                       ) : null}
                     </span>
                     <span className="shrink-0 text-[clamp(1.2rem,3.4vw,2.8rem)] font-bold tabular-nums text-slate-50">
-                      {row.ipg.toFixed(1)}
+                      {formatDecimal(row.ipg)}
                     </span>
                   </li>
                 ))}

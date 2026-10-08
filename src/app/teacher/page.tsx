@@ -264,7 +264,7 @@ export default async function TeacherDashboard({
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="block text-xs uppercase tracking-wide text-slate-400">Code</span>
-                    <span className="block font-mono text-base font-semibold text-amber-300">
+                    <span className="block font-mono text-base font-semibold text-slate-100">
                       {g.joinCode}
                     </span>
                   </span>
@@ -524,7 +524,7 @@ export default async function TeacherDashboard({
                   className="flex items-center justify-between rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 text-sm transition hover:border-amber-400/40 sm:px-4 sm:py-3"
                 >
                   <span>
-                    <span className="font-mono text-amber-300">{c.joinCode}</span>
+                    <span className="font-mono text-slate-100">{c.joinCode}</span>
                     <span className="ml-3 text-slate-300">{c.name}</span>
                   </span>
                   <span className="text-slate-400">
