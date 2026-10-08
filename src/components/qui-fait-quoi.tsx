@@ -68,7 +68,7 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
       id="accueil.roles"
       contraste={contraste}
       fond="bande-soutenue"
-      interieur="mx-auto max-w-6xl px-6 py-14"
+      interieur="mx-auto max-w-6xl px-6 py-10 sm:py-14"
       labelledby="roles"
     >
       <h2
@@ -78,26 +78,41 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
         <span aria-hidden className="h-px w-8 bg-amber-400/40" />
         Qui fait quoi
       </h2>
-      <div className="mt-8 grid gap-x-10 gap-y-10 md:grid-cols-3">
+      {/*
+        SUR TÉLÉPHONE, CHAQUE RÔLE TIENT EN TROIS LIGNES SERRÉES : le rôle et
+        son lien sur la même ligne, la phrase, puis « En savoir plus ». Le lien
+        vivait sous le repli, chacun sur sa ligne avec sa marge de doigt, et un
+        rôle prenait un demi-écran pour deux phrases. Au-delà de `sm`, la grille
+        se défait et chaque colonne se lit de haut en bas, lien en dernier.
+      */}
+      <div className="mt-6 grid gap-x-10 gap-y-3 sm:mt-8 sm:gap-y-10 md:grid-cols-3">
         {ROLES.map((r) => (
-          <div key={r.role} className="border-t border-white/10 pt-5">
+          <div
+            key={r.role}
+            className="grid grid-cols-[1fr_auto] items-center gap-x-4 border-t border-white/10 pt-3 sm:block sm:pt-5"
+          >
             <h3 className="font-display text-xl font-semibold text-slate-100">{r.role}</h3>
-            <p className="mt-1 text-base leading-relaxed text-slate-300">{r.resume}</p>
-            {/* Sur téléphone, chaque rôle tient en deux lignes et ses trois faits
-                s'ouvrent à la demande ; au-delà de `sm`, tout est affiché. */}
-            <RepliableSurTelephone resume="En savoir plus" className="mt-2 sm:mt-0">
-            <ul className="mt-2 sm:mt-4 space-y-2.5">
-              {r.faits.map((f) => (
-                <li key={f} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
-                  <span aria-hidden className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-400" />
-                  {f}
-                </li>
-              ))}
-            </ul>
+            <p className="col-span-2 text-base leading-relaxed text-slate-300 sm:mt-1">
+              {r.resume}
+            </p>
+            {/* Sur téléphone, les trois faits s'ouvrent à la demande ; au-delà
+                de `sm`, tout est affiché. */}
+            <RepliableSurTelephone resume="En savoir plus" className="col-span-2">
+              <ul className="mt-1 space-y-2.5 sm:mt-4">
+                {r.faits.map((f) => (
+                  <li key={f} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
+                    <span
+                      aria-hidden
+                      className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-400"
+                    />
+                    {f}
+                  </li>
+                ))}
+              </ul>
             </RepliableSurTelephone>
             <Link
               href={r.lien.href}
-              className="group mt-3 inline-flex text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300 pointer-coarse:min-h-11 pointer-coarse:items-center sm:mt-5"
+              className="group col-start-2 row-start-1 inline-flex text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300 pointer-coarse:min-h-11 pointer-coarse:items-center sm:mt-5"
             >
               {r.lien.libelle}
               <span

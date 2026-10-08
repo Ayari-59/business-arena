@@ -652,37 +652,34 @@ export default async function Home() {
           fond="bandeau-chiffres"
           interieur="mx-auto max-w-6xl px-6 py-12 sm:py-16"
         >
-          <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
+          {/*
+            LE CHIFFRE D'ABORD, puis ce qu'il compte. Le libellé passait devant,
+            en capitales espacées : sur téléphone il prenait une ou deux lignes
+            selon sa longueur, et les quatre chiffres tombaient à des hauteurs
+            différentes. Posés en tête, ils s'alignent quoi qu'il arrive au
+            texte dessous. Le `dt` reste avant le `dd` dans le code (l'ordre
+            d'une liste de définitions) ; c'est l'affichage qui les retourne.
+          */}
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
             {[
               [
-                "par tour, selon le niveau",
                 `${decisions.minimum} à ${decisions.maximum}`,
                 "décisions",
+                "par tour, selon le niveau",
               ],
-              [
-                "du CA au FRNG et au BFR",
-                `${CONCEPTS.length}`,
-                "fiches notions",
-              ],
-              ["d'aide à la décision", `${DECISION_MODELS.length}`, "modèles"],
-              [
-                "de performance, l'indice IPG",
-                `${BPI_V2_DIMENSIONS.length}`,
-                "dimensions",
-              ],
-            ].map(([libelle, nombre, quoi]) => (
+              [`${CONCEPTS.length}`, "fiches notions", "du CA au FRNG et au BFR"],
+              [`${DECISION_MODELS.length}`, "modèles", "d'aide à la décision"],
+              [`${BPI_V2_DIMENSIONS.length}`, "dimensions", "de performance, l'indice IPG"],
+            ].map(([nombre, quoi, libelle]) => (
               <div
                 key={quoi}
-                className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0"
+                className="flex flex-col-reverse justify-end gap-2 sm:border-l sm:border-white/10 sm:pl-6 sm:first:border-l-0 sm:first:pl-0"
               >
-                <dt className="text-xs uppercase tracking-surtitre text-slate-400">
-                  {libelle}
+                <dt className="text-sm leading-snug text-slate-400">
+                  <span className="font-semibold text-slate-100">{quoi}</span> {libelle}
                 </dt>
-                <dd className="mt-2">
-                  <span className="font-display text-4xl font-extrabold text-amber-400">
-                    {nombre}
-                  </span>{" "}
-                  <span className="text-base text-slate-200">{quoi}</span>
+                <dd className="whitespace-nowrap font-display text-4xl font-extrabold leading-none text-amber-400">
+                  {nombre}
                 </dd>
               </div>
             ))}
