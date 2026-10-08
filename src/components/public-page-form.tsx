@@ -120,7 +120,7 @@ export function PublicPageForm({
           href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-amber-300 underline-offset-4 hover:underline"
+          className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           Prévisualiser / ouvrir la page →
         </a>

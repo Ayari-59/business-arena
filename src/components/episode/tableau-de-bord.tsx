@@ -30,8 +30,9 @@ function Ecart({
   const bon = sensBon * d > 0;
   return (
     <span
-      className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-        bon ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"
+      // L'écart dit un résultat : son signe et sa couleur, francs, sans voile.
+      className={`ml-2 text-xs font-semibold tabular-nums ${
+        bon ? "text-emerald-300" : "text-rose-300"
       }`}
     >
       {d > 0 ? "+" : "−"}
@@ -86,7 +87,10 @@ export function TableauDeBord({
                   aria-label={jauge.enRetard ? "en retard sur l'objectif" : "à l'objectif"}
                 >
                   <span
-                    className={`block h-full rounded-full ${jauge.enRetard ? "bg-amber-400" : "bg-emerald-400"}`}
+                    // La jauge est une donnée (bleu donnée) ; seul le retard sur
+                    // l'objectif, un écart, prend le rouge. L'orange était celui
+                    // de l'action, et le vert ne dit pas « à l'objectif ».
+                    className={`block h-full rounded-full ${jauge.enRetard ? "bg-red-400" : "bg-[var(--donnee)]"}`}
                     style={{ width: `${100 * jauge.part}%` }}
                   />
                 </dd>

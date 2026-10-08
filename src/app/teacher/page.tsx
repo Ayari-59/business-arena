@@ -121,7 +121,7 @@ export default async function TeacherDashboard({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           La partie n&apos;a pas été créée. {echec}
         </p>
@@ -145,7 +145,7 @@ export default async function TeacherDashboard({
         dit « rien à faire » est une ligne de plus à lire chaque fois.
       */}
       {aClore.length > 0 ? (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-amber-400/35 bg-amber-400/5 px-3 py-2 text-sm text-amber-200">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200">
           <Icone nom="duree" className="h-4 w-4" />
           <span>
             {aClore.length === 1
@@ -233,7 +233,7 @@ export default async function TeacherDashboard({
                           terminée
                         </span>
                       ) : g.aClore ? (
-                        <span className="shrink-0 rounded-full border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 text-xs font-medium text-amber-200">
+                        <span className="shrink-0 rounded-full pastille-etat px-2 py-0.5 text-xs font-medium text-slate-200">
                           tour à clore
                         </span>
                       ) : null}
@@ -301,7 +301,7 @@ export default async function TeacherDashboard({
         <h2 className="text-sm font-semibold text-slate-200">Nouvelle partie de classe</h2>
         <p className="mt-1 text-xs text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
-          <Link href="/animations" className="text-amber-300 underline-offset-4 hover:underline">
+          <Link href="/animations" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
             Les ateliers professionnels
           </Link>{" "}
           donnent un déroulé de plusieurs séances avec les réglages qui vont avec.

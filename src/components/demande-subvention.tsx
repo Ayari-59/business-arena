@@ -45,7 +45,7 @@ export function DemandeSubvention({
     <form
       ref={formRef}
       action={formAction}
-      className="mt-3 rounded-lg border border-red-400/30 bg-slate-950/60 px-3 py-3"
+      className="mt-3 rounded-lg border border-red-400 bg-slate-950/60 px-3 py-3"
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-red-300">
         <Icone nom="alerte" className="mr-1.5 h-3.5 w-3.5" />

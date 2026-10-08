@@ -84,7 +84,7 @@ export function MandatDeLEquipe({
         <button
           type="button"
           onClick={() => memoire.retenir(cle, "1")}
-          className="text-amber-300 underline-offset-4 hover:underline pointer-coarse:-my-2 pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:px-2"
+          className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2 pointer-coarse:-my-2 pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:px-2"
         >
           {retenu === "2" ? "Relire" : "Lire"}
         </button>

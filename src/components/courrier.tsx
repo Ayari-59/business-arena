@@ -577,7 +577,7 @@ export function CourrierRecommande({
   const c = courrier(code);
   if (!c) {
     return (
-      <div className="rounded-lg border border-amber-400/20 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
+      <div className="rounded-lg encadre-neutre px-3 py-2 text-xs text-slate-200">
         <Icone nom="courrier" className="mr-1.5 h-4 w-4" />
         {code}
       </div>

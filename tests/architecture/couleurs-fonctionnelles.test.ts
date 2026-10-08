@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PAPIER, TABLEAU } from "../../scripts/generer-theme-clair";
@@ -140,5 +140,145 @@ describe("les métiers se distinguent par des teintes désaturées", () => {
         expect(contraste(clair, fond), `${nom} (${clair}) sur ${fond}`).toBeGreaterThanOrEqual(4.5);
       }
     }
+  });
+});
+
+/** Les sources de l'application, pour les gardes qui lisent les classes. */
+function sourcesDe(racine: string): string[] {
+  const trouves: string[] = [];
+  for (const entree of readdirSync(racine)) {
+    const chemin = join(racine, entree);
+    if (statSync(chemin).isDirectory()) trouves.push(...sourcesDe(chemin));
+    else if (/\.(ts|tsx)$/.test(entree)) trouves.push(chemin);
+  }
+  return trouves;
+}
+const SOURCES = sourcesDe(join(process.cwd(), "src")).map((chemin) => ({
+  chemin: chemin.slice(process.cwd().length + 1),
+  texte: readFileSync(chemin, "utf8"),
+}));
+
+/** Les familles de résultat, de statut et de bleu vif : jamais en voile. */
+const FAMILLES = "emerald|red|rose|sky|teal|green|cyan|lime|pink|fuchsia|violet|purple|blue|indigo";
+/**
+ * Un voile de couleur : une dilution (`bg-emerald-400/10`, `bg-red-950/40`), un
+ * dégradé (`from-red-400/15`), ou un palier pâle posé en fond (`bg-green-100`,
+ * `bg-red-950`), avec ses variantes d'état (`hover:`, `has-[:checked]:`…).
+ */
+const VOILE = new RegExp(
+  `(?<![\\w-])(?:[\\w[\\]:-]+:)?(?:bg-(?:${FAMILLES})-\\d{2,3}/[\\d.\\[\\]]+|(?:from|via|to)-(?:${FAMILLES})-\\d{2,3}|bg-(?:${FAMILLES})-(?:50|100|200|800|900|950)(?![\\d/]))`,
+  "g",
+);
+
+describe("le vert, le rouge et le bleu ciel ne se diluent pas non plus", () => {
+  it("le détecteur reconnaît un voile, et laisse un aplat plein", () => {
+    for (const voile of [
+      "bg-emerald-400/10",
+      "bg-red-950/40",
+      "hover:bg-emerald-950/30",
+      "from-red-400/15",
+      "to-emerald-400/[0.03]",
+      "bg-sky-950/10",
+      "bg-green-100",
+      "bg-red-950",
+    ]) {
+      expect(`<p className="x ${voile} y">`.match(VOILE), voile).not.toBeNull();
+    }
+    for (const plein of ["bg-emerald-400", "bg-red-400", "text-emerald-300", "border-red-400"]) {
+      expect(`<p className="x ${plein} y">`.match(VOILE), plein).toBeNull();
+    }
+  });
+
+  it("aucun composant ne pose un voile de couleur de résultat ou de statut", () => {
+    expect(SOURCES.length).toBeGreaterThan(300);
+    const fautes = SOURCES.flatMap(({ chemin, texte }) =>
+      (texte.match(VOILE) ?? []).map((v) => `${chemin} : ${v}`),
+    );
+    expect(
+      fautes,
+      `voiles pastel : un voile neutre (voile-neutre, encadre-*, pastille-*) et un trait plein\n${fautes.join("\n")}`,
+    ).toEqual([]);
+  });
+
+  it("le voile neutre est le gris froid de la charte, et le sens passe par un trait plein", () => {
+    const papier = CSS.slice(CSS.indexOf("LE VERT ET LE ROUGE NE SE DILUENT PAS NON PLUS"));
+    expect(jeton(papier, "voile-neutre")).toBe("#f0f2f4");
+    for (const [classe, couleur] of [
+      ["encadre-gain", "--color-emerald-400"],
+      ["encadre-perte", "--color-red-400"],
+      ["pastille-gain::before", "--color-emerald-400"],
+      ["pastille-perte::before", "--color-red-400"],
+    ] as const) {
+      const debut = papier.lastIndexOf(`\n.${classe} {`);
+      expect(debut, `.${classe} absente`).toBeGreaterThan(0);
+      expect(papier.slice(debut, papier.indexOf("}", debut))).toContain(`var(${couleur})`);
+    }
+  });
+});
+
+describe("une seule palette de données", () => {
+  const donnees = CSS.slice(CSS.indexOf("LA DONNÉE : UNE SEULE PALETTE"));
+  const surMarine = donnees.slice(0, donnees.indexOf('[data-theme="clair"] {'));
+  const surPapier = donnees.slice(donnees.indexOf('[data-theme="clair"] {'));
+
+  it("la série principale est le bleu donnée, la seconde un gris ardoise, lisibles comme un trait", () => {
+    expect(jeton(surMarine, "donnee")).toBe("#8fb0dc");
+    for (const nom of ["donnee", "donnee-2"]) {
+      for (const fond of [MARINE, RELEVE]) {
+        expect(contraste(jeton(surMarine, nom), fond), `${nom} sur ${fond}`).toBeGreaterThanOrEqual(
+          3,
+        );
+      }
+      for (const fond of [PAPIER[900]!, PAPIER[950]!]) {
+        expect(contraste(jeton(surPapier, nom), fond), `${nom} sur ${fond}`).toBeGreaterThanOrEqual(
+          3,
+        );
+      }
+      // Un bleu ou un gris DÉSATURÉ, pas un bleu vif.
+      expect(tsl(jeton(surPapier, nom)).s, nom).toBeLessThan(0.45);
+    }
+  });
+
+  it("les graphiques ne prennent ni l'orange, ni le violet, ni le rose, ni le bleu vif", () => {
+    const GRAPHIQUES = [
+      "src/components/charts.tsx",
+      "src/components/bpi-panel.tsx",
+      "src/components/episode/courbe-des-semaines.tsx",
+      "src/components/episode/tableau-de-bord.tsx",
+    ];
+    for (const chemin of GRAPHIQUES) {
+      const source = SOURCES.find((s) => s.chemin === chemin);
+      expect(source, `${chemin} introuvable`).toBeDefined();
+      // Le code seul : les commentaires racontent les couleurs d'avant.
+      const code = source!.texte.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+      expect(code.match(/#[0-9a-f]{6}\b/gi) ?? [], `${chemin} : couleur écrite en dur`).toEqual([]);
+      expect(
+        code.match(/\bbg-(?:amber|violet|fuchsia|pink|purple|blue|cyan|indigo|orange)-\d/g) ?? [],
+        `${chemin} : couleur hors de la palette des données`,
+      ).toEqual([]);
+    }
+  });
+});
+
+describe("un seul mot orange dans un grand titre : celui de l'accueil", () => {
+  /** Les titres h1 d'une source, balise comprise. */
+  const titres = (texte: string) => texte.match(/<h1\b[\s\S]*?<\/h1>/g) ?? [];
+  const pages = SOURCES.filter(({ chemin }) => /^src\/app\/.*page\.tsx$/.test(chemin));
+
+  it("le héros de l'accueil garde l'orange de la marque", () => {
+    const accueil = pages.find((p) => p.chemin === "src/app/page.tsx")!;
+    expect(titres(accueil.texte).join("\n")).toMatch(/text-amber-\d{3}/);
+  });
+
+  it("dans les pages intérieures, le mot d'appui d'un titre est à l'encre", () => {
+    expect(pages.length).toBeGreaterThan(30);
+    const fautes = pages
+      .filter((p) => p.chemin !== "src/app/page.tsx")
+      .flatMap((p) =>
+        titres(p.texte)
+          .filter((t) => /text-amber-\d{3}/.test(t))
+          .map((t) => `${p.chemin} : ${t.replace(/\s+/g, " ").slice(0, 120)}`),
+      );
+    expect(fautes, `titres intérieurs en orange :\n${fautes.join("\n")}`).toEqual([]);
   });
 });

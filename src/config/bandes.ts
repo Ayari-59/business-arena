@@ -246,17 +246,17 @@ export const BANDES: readonly BandeDef[] = [
   },
   // ── Fonctionnalités ──
   {
-    id: "fonctionnalites.intro",
-    page: "/fonctionnalites",
-    nom: "L'introduction",
-    contrasteParDefaut: false,
-  },
-  {
     id: "fonctionnalites.accroche",
     page: "/fonctionnalites",
     nom: "L'accroche",
     contrasteParDefaut: false,
     porteLeH1: true,
+  },
+  {
+    id: "fonctionnalites.intro",
+    page: "/fonctionnalites",
+    nom: "L'introduction",
+    contrasteParDefaut: false,
   },
   {
     id: "fonctionnalites.chiffres",

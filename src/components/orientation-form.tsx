@@ -366,7 +366,7 @@ export function OrientationForm({
                 {reco.atelierCode ? (
                   <Link
                     href={`/animations/${reco.atelierCode}`}
-                    className="text-amber-300 underline-offset-4 hover:underline"
+                    className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                   >
                     Voir le déroulé prêt à animer
                   </Link>
@@ -393,7 +393,7 @@ export function OrientationForm({
         {state.ok ? (
           <p
             role="status"
-            className="rounded-lg border border-teal-400/30 bg-teal-950/30 px-3 py-2 text-sm text-teal-200"
+            className="rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-100"
           >
             ✓ Demande envoyée. Nous vous répondons à {state.ok.email}, avec ce
             profil et cette recommandation sous les yeux.
@@ -402,7 +402,7 @@ export function OrientationForm({
         {state.error ? (
           <p
             role="alert"
-            className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300"
+            className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300"
           >
             {state.error}
           </p>

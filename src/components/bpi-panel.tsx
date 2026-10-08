@@ -21,7 +21,7 @@ export function BpiPanel({
               </div>
               <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
                 <div
-                  className="h-1.5 rounded-full bg-[#3987e5]"
+                  className="h-1.5 rounded-full bg-[var(--donnee)]"
                   style={{ width: `${Math.max(2, Math.min(100, value))}%` }}
                 />
               </div>

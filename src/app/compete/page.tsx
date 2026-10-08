@@ -45,7 +45,7 @@ export default async function CompetePage({
             ))}
           </ol>
           <p className="mt-3 text-xs text-slate-400">
-            <Link href="/guide#concours" className="text-amber-300 underline-offset-4 hover:underline">
+            <Link href="/guide#concours" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
               Tout savoir sur les concours dans le guide →
             </Link>
           </p>

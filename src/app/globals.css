@@ -1574,6 +1574,166 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+ * LE VERT ET LE ROUGE NE SE DILUENT PAS NON PLUS : LE VOILE EST NEUTRE.
+ *
+ * La règle « l'accent ne se dilue pas » ne couvrait que l'orange. Le vert, le
+ * rouge, le rose, le bleu ciel et le turquoise restaient dilués en voiles
+ * pâles (`bg-emerald-400/10`, `bg-red-950/40`, des dégradés menthe ou rose) :
+ * des pastilles « en cours » ou « validées » vert d'eau, des encadrés d'erreur
+ * saumon, un bandeau turquoise, une matrice « Mérité / Leçon » en dragées.
+ * C'est l'appli douce que la charte chasse.
+ *
+ * Un encadré ou une pastille prend donc le VOILE NEUTRE : #f0f2f4 sur le
+ * papier (le marine à 6 % dans le blanc, celui d'un état choisi), et sur le
+ * marine un voile tiré du marine lui-même. Le sens passe par un trait PLEIN :
+ *   · un RÉSULTAT (gain, perte, alerte, tenu, manqué) garde son vert ou son
+ *     rouge francs, en filet de 2 px à gauche (`encadre-gain`,
+ *     `encadre-perte`) ou en point plein (`pastille-gain`, `pastille-perte`) ;
+ *   · un ÉTAT qui n'est pas un résultat (en cours, validé, livré, fait) est
+ *     neutre : l'encre, et un point plein marine (`pastille-etat`) ; ce qu'on
+ *     attend encore, le même point vide (`pastille-attente`) ;
+ *   · une DISTINCTION prend le filet d'or (`encadre-distinction`).
+ * Le texte reste à l'encre du contexte, sauf quand il dit lui-même le résultat.
+ *
+ * Les classes de couleur diluées de ces familles sont refusées dans les
+ * composants par tests/architecture/couleurs-fonctionnelles.test.ts.
+ * ------------------------------------------------------------------------- */
+:root,
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  --voile-neutre: color-mix(in srgb, var(--marine) 50%, transparent);
+  --point-etat: #c2bcb2;
+}
+[data-theme="clair"] {
+  --voile-neutre: #f0f2f4;
+  --point-etat: var(--marine);
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) {
+  --voile-neutre: color-mix(in srgb, var(--marine) 50%, transparent);
+  --point-etat: #c2bcb2;
+}
+.voile-neutre {
+  background-color: var(--voile-neutre);
+}
+.encadre-neutre,
+.encadre-gain,
+.encadre-perte,
+.encadre-distinction {
+  background-color: var(--voile-neutre);
+  border: 1px solid var(--filet-carte);
+}
+.encadre-gain {
+  border-left: 2px solid var(--color-emerald-400);
+}
+.encadre-perte {
+  border-left: 2px solid var(--color-red-400);
+}
+.encadre-distinction {
+  border-left: 2px solid var(--or-filet);
+}
+.pastille-etat,
+.pastille-attente,
+.pastille-gain,
+.pastille-perte {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375em;
+  background-color: var(--voile-neutre);
+  border: 1px solid var(--filet-carte);
+}
+.pastille-etat::before,
+.pastille-attente::before,
+.pastille-gain::before,
+.pastille-perte::before {
+  content: "";
+  width: 0.5em;
+  height: 0.5em;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: var(--point-etat);
+}
+/* Un état qu'on attend encore (« en attente ») : le même point, vide. */
+.pastille-attente::before {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--point-etat);
+}
+.pastille-gain::before {
+  background-color: var(--color-emerald-400);
+}
+.pastille-perte::before {
+  background-color: var(--color-red-400);
+}
+@media print {
+  .voile-neutre,
+  .encadre-neutre,
+  .encadre-gain,
+  .encadre-perte,
+  .encadre-distinction,
+  .pastille-etat,
+  .pastille-attente,
+  .pastille-gain,
+  .pastille-perte {
+    background-color: transparent;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * LA DONNÉE : UNE SEULE PALETTE, POUR TOUS LES GRAPHIQUES.
+ *
+ * Les graphiques puisaient chacun dans sa boîte : le CA en bleu vif #3987e5,
+ * le résultat en orange #d95926 (la couleur de l'action), des parts de marché
+ * en violet, rose et cyan, des histogrammes d'épisode en orange, des jauges
+ * de budget en orange. Une seule grammaire désormais, celle d'une presse
+ * économique :
+ *   · la SÉRIE PRINCIPALE en bleu donnée, #8fb0dc sur le marine (5,5 pour 1
+ *     sur la surface relevée), #4f73a3 sur le papier (4,9 sur le blanc, 4,5
+ *     sur la page : un trait ou un aplat y tient largement 3 pour 1) ;
+ *   · la SECONDE SÉRIE en gris ardoise, #9aa3b0 sur le marine, #7b8799 sur le
+ *     papier (3,6 sur le blanc) ;
+ *   · le vert et le rouge pour le SEUL signe d'un écart (une barre négative,
+ *     une tendance) ;
+ *   · des CATÉGORIES (segments, références d'une gamme) dans les teintes
+ *     désaturées des métiers, `--secteur-*`.
+ * Plus d'orange, de violet, de rose ni de bleu vif dans un graphique.
+ * ------------------------------------------------------------------------- */
+:root,
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  --donnee: #8fb0dc;
+  --donnee-2: #9aa3b0;
+}
+[data-theme="clair"] {
+  --donnee: #4f73a3;
+  --donnee-2: #7b8799;
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) {
+  --donnee: #8fb0dc;
+  --donnee-2: #9aa3b0;
+}
+
+/* ---------------------------------------------------------------------------
+ * LE TITRE D'UNE CARTE : UNE ÉCHELLE, PAS UNE INVENTION PAR PAGE.
+ *
+ * Dans les cartes, la hiérarchie s'inversait : un titre d'atelier en 14 px
+ * au-dessus d'une description en 16 px, « Configurer la partie » en 14 px.
+ * Un titre de carte est en Barlow Condensed 600, de 18 à 20 px, au-dessus de
+ * paragraphes de 15 à 16 px. La classe est hors couche : elle l'emporte sur
+ * une taille de texte qu'un appelant aurait laissée.
+ * ------------------------------------------------------------------------- */
+.titre-carte {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+@media (min-width: 640px) {
+  .titre-carte {
+    font-size: 1.25rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * LE BOUTON DÉSACTIVÉ : NEUTRE, NI PÊCHE NI DÉLAVÉ.
  *
  * Un bouton qu'on ne peut pas encore toucher s'éteignait par l'opacité

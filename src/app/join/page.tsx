@@ -58,7 +58,7 @@ export default async function JoinPage({
           promesse que l'entrée ne tiendra pas — et mieux que le silence, qui
           laisserait l'élève croire qu'il a mal scanné. */}
       {carton?.deplacera ? (
-        <p className="rounded-xl border border-amber-400/40 bg-amber-950/30 px-4 py-3 text-center text-sm text-amber-200">
+        <p className="rounded-xl encadre-neutre px-4 py-3 text-center text-sm text-slate-200">
           {carton.sienne === carton.equipe ? "Vous êtes dans l'équipe " : "Vous rejoignez l'équipe "}
           <span className="font-semibold text-amber-100">{carton.equipe}</span>
         </p>

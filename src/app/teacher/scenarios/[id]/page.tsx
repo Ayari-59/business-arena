@@ -66,9 +66,11 @@ const BPI_FIELDS: { name: string; label: string }[] = [
 ];
 
 const VERDICT_UI: Record<string, { label: string; icone: NomDIcone | null; cls: string }> = {
-  jouable: { label: "Jouable", icone: null, cls: "border-emerald-400/40 bg-emerald-950/30 text-emerald-200" },
-  "a-surveiller": { label: "À surveiller", icone: "alerte", cls: "border-amber-400/40 bg-amber-950/30 text-amber-200" },
-  injouable: { label: "Injouable", icone: "alerte", cls: "border-red-400/40 bg-red-950/30 text-red-200" },
+  // Un verdict de calibrage se lit au point plein (vert, rouge) sur un voile
+  // neutre ; « à surveiller » reste à l'encre, avec son pictogramme.
+  jouable: { label: "Jouable", icone: null, cls: "pastille-gain text-slate-100" },
+  "a-surveiller": { label: "À surveiller", icone: "alerte", cls: "encadre-neutre text-slate-100" },
+  injouable: { label: "Injouable", icone: "alerte", cls: "pastille-perte text-red-200" },
 };
 
 export default async function ScenarioEditorPage({
@@ -100,21 +102,21 @@ export default async function ScenarioEditorPage({
         </div>
         <Link
           href="/teacher/scenarios"
-          className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           ← Mes scénarios
         </Link>
       </header>
 
       {ok ? (
-        <p className="rounded-xl border border-emerald-400/30 bg-emerald-950/30 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-emerald-200">
+        <p className="rounded-xl encadre-neutre px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-100">
           {ok === "eco" ? "Paramètres moteur enregistrés." : "Habillage enregistré."}
         </p>
       ) : null}
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>

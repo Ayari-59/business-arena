@@ -13,14 +13,18 @@ type Gamme = NonNullable<GameView["gamme"]>;
  * gamme », ce qui reste vrai après n'importe quel réglage.
  */
 
-/** Couleurs de repère, dans l'ordre de la gamme. Au-delà, on boucle. */
+/**
+ * Couleurs de repère, dans l'ordre de la gamme. Au-delà, on boucle. Ce sont
+ * des CATÉGORIES : elles prennent les teintes désaturées des métiers, et non
+ * le vert et le rouge des résultats ni l'orange de l'action.
+ */
 const REPERES = [
-  "bg-emerald-400",
-  "bg-sky-400",
-  "bg-amber-400",
-  "bg-fuchsia-400",
-  "bg-rose-400",
-  "bg-teal-400",
+  "bg-[var(--secteur-hotellerie)]",
+  "bg-[var(--secteur-industrie)]",
+  "bg-[var(--secteur-ecommerce)]",
+  "bg-[var(--secteur-services)]",
+  "bg-[var(--secteur-commerce)]",
+  "bg-[var(--secteur-abonnement)]",
 ] as const;
 
 /** Situe une valeur dans sa gamme : haut, milieu, bas. */

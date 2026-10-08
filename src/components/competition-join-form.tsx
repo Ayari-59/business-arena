@@ -65,14 +65,14 @@ export function CompetitionJoinForm({
         />
       </label>
       {state.error ? (
-        <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+        <p className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
       ) : null}
       {state.dejaInscrit ? (
         <div
           role="status"
-          className="space-y-2 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-200"
+          className="space-y-2 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
         >
           <p>{messageDejaInscrit(state.dejaInscrit.teamLabel)}</p>
           <a

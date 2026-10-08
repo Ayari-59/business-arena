@@ -165,7 +165,7 @@ function Instruction({ gameId, demande }: { gameId: string; demande: Demande }) 
           value="0"
           disabled={pending}
           aria-busy={pending}
-          className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-rose-400/50 hover:text-rose-200 disabled:cursor-progress disabled:opacity-70"
+          className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-red-400 hover:text-rose-200 disabled:cursor-progress disabled:opacity-70"
         >
           Refuser
         </button>

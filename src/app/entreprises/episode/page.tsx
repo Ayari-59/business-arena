@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
-import { bouton } from "@/components/bouton";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 import { famillesDuSecteur, secteursJoues, type Famille } from "@/config/episodes/familles";
 import type { Episode } from "@/config/episodes/types";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
@@ -22,7 +22,24 @@ export const metadata: Metadata = {
  * secteur. La page les range par secteur, puis par famille (vendre, piloter
  * les chiffres, les opérations, l'équipe…), avec en tête un sommaire par
  * secteur pour sauter à l'une d'elles. Les ancres des familles ne changent pas.
+ *
+ * PAS UN MUR D'ORANGE. Chacune des cartes portait un filet, un surtitre et un
+ * bouton plein orange : avec plus de cent boutons primaires sur une page,
+ * l'orange ne signalait plus rien. La carte entière est maintenant le lien ;
+ * elle finit par « Jouer l'épisode N → » à l'encre d'action, qui ne devient un
+ * aplat orange qu'au survol ou au focus. Son filet gauche prend la teinte du
+ * secteur. Sur téléphone, chaque famille se replie derrière son titre : la
+ * page faisait 46 700 px de haut, le sommaire mène à la famille voulue.
  */
+
+/** La teinte de chaque secteur d'épisodes, parmi celles des métiers. */
+const TEINTE_DU_SECTEUR: Record<string, string> = {
+  negoce: "var(--secteur-commerce)",
+  hotellerie: "var(--secteur-hotellerie)",
+  conseil: "var(--secteur-services)",
+  sante: "var(--secteur-transport)",
+  agroalimentaire: "var(--secteur-industrie)",
+};
 export default function EpisodesPage() {
   const secteurs = secteursJoues();
   const nombre = (familles: readonly Famille[]) =>
@@ -55,7 +72,7 @@ export default function EpisodesPage() {
           <p className="mt-4">
             <Link
               href="/entreprises/episode/profil"
-              className="text-sm font-semibold text-amber-300 underline-offset-2 hover:underline"
+              className="text-sm font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               Mon profil décisionnel
             </Link>
@@ -126,14 +143,23 @@ export default function EpisodesPage() {
                   <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
                     {f.texte}
                   </p>
-                  <ul className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    {f.episodes
-                      .map((code) => episodeParCode(code))
-                      .filter((ep): ep is Episode => ep !== undefined)
-                      .map((ep) => (
-                        <CarteEpisode key={ep.code} ep={ep} />
-                      ))}
-                  </ul>
+                  <RepliableSurTelephone
+                    resume={`Voir les ${f.episodes.length} épisodes`}
+                    className="mt-4 sm:mt-0"
+                  >
+                    <ul className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                      {f.episodes
+                        .map((code) => episodeParCode(code))
+                        .filter((ep): ep is Episode => ep !== undefined)
+                        .map((ep) => (
+                          <CarteEpisode
+                            key={ep.code}
+                            ep={ep}
+                            teinte={TEINTE_DU_SECTEUR[s.code] ?? "var(--filet-carte)"}
+                          />
+                        ))}
+                    </ul>
+                  </RepliableSurTelephone>
                 </section>
               ))}
             </section>
@@ -145,24 +171,28 @@ export default function EpisodesPage() {
   );
 }
 
-function CarteEpisode({ ep }: { ep: Episode }) {
+function CarteEpisode({ ep, teinte }: { ep: Episode; teinte: string }) {
   return (
-    <li className="carte flex flex-col gap-4 p-6">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-          Épisode {ep.numero} · {ep.domaine}
-        </p>
-        <h4 className="mt-2 font-display text-xl font-semibold text-slate-50">{ep.titre}</h4>
-        <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
-      </div>
-      <p className="text-sm text-slate-400">
-        {ep.etapes.length} décisions · {ep.duree}
-      </p>
+    <li className="flex">
       <Link
         href={`/entreprises/episode/${ep.code}`}
-        className={`${bouton({ taille: "l" })} mt-auto self-start`}
+        className="carte group flex w-full flex-col gap-4 p-6 hover:border-[var(--filet-carte)] focus-visible:outline-offset-4"
+        style={{ borderLeftColor: teinte }}
       >
-        Jouer l&apos;épisode {ep.numero}
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
+            Épisode {ep.numero} · {ep.domaine}
+          </p>
+          <h4 className="mt-2 font-display text-xl font-semibold text-slate-50">{ep.titre}</h4>
+          <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
+        </div>
+        <p className="text-sm text-slate-400">
+          {ep.etapes.length} décisions · {ep.duree}
+        </p>
+        <span className="mt-auto inline-flex items-center gap-1.5 self-start rounded-lg py-1.5 text-sm font-semibold text-amber-300 transition group-hover:bg-[var(--accent-plein)] group-hover:px-3 group-hover:text-[var(--accent-plein-texte)] group-focus-visible:bg-[var(--accent-plein)] group-focus-visible:px-3 group-focus-visible:text-[var(--accent-plein-texte)]">
+          Jouer l&apos;épisode {ep.numero}
+          <span aria-hidden>→</span>
+        </span>
       </Link>
     </li>
   );

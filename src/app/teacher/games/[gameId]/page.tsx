@@ -159,7 +159,7 @@ export default async function TeacherGamePage({
             {/* Le niveau et le monde variable se choisissent à la création puis
                 disparaissaient : une partie doit pouvoir dire sous quelles
                 règles elle tourne. */}
-            <p className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300">
+            <p className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-slate-300">
               Niveau {view.difficulty.level} · {view.difficulty.name}
             </p>
             <p className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
@@ -225,13 +225,13 @@ export default async function TeacherGamePage({
                 ouvre en branchant le vidéoprojecteur. */}
             <Link
               href={`/teacher/games/${gameId}/projection`}
-              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               <Icone nom="ecran" /> Projeter pour la classe →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/fiches`}
-              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               <Icone nom="imprimer" /> Fiches à imprimer →
             </Link>
@@ -241,13 +241,13 @@ export default async function TeacherGamePage({
                 annoncer ni répartir à la main. */}
             <Link
               href={`/teacher/games/${gameId}/cartons`}
-              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               <Icone nom="etiquette" /> Cartons de table →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/observation`}
-              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               Observation de séance →
             </Link>
@@ -270,7 +270,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {defaillantes.length > 0 ? (
-        <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-3 sm:p-5">
+        <section className="rounded-xl encadre-perte p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-red-300">
             <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
             {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
@@ -284,7 +284,7 @@ export default async function TeacherGamePage({
             {defaillantes.map((row) => (
               <li
                 key={row.name}
-                className="rounded-full border border-red-400/40 bg-red-950/40 px-3 py-1 text-xs font-semibold text-red-200"
+                className="rounded-full encadre-perte px-3 py-1 text-xs font-semibold text-red-200"
               >
                 {row.name}
               </li>
@@ -344,7 +344,7 @@ export default async function TeacherGamePage({
                       "—"
                     ) : t.hasSubmitted ? (
                       <>
-                        <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-semibold text-emerald-300">✓ validées</span>
+                        <span className="pastille-etat whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-slate-200">✓ validées</span>
                         {estParDefaut(t.decisionSource) ? (
                           <span
                             title="Prix et volume validés sans modification des valeurs proposées"
@@ -369,7 +369,7 @@ export default async function TeacherGamePage({
                         ) : null}
                       </>
                     ) : (
-                      <span className="rounded-full border border-amber-400/30 px-2 py-0.5 text-xs font-semibold text-amber-300">en attente</span>
+                      <span className="pastille-attente whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-slate-200">en attente</span>
                     )}
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
@@ -443,7 +443,7 @@ export default async function TeacherGamePage({
             label="création des codes de reprise manquants"
           >
             <SubmitButton
-              className="rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-400/10"
+              className="rounded-lg bouton-filet border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/5"
               pendingLabel="Création…"
             >
               <Icone nom="cle" /> Donner sa clé aux {compter(sansCode.length, "élève")} qui n&apos;en ont pas
@@ -504,7 +504,7 @@ export default async function TeacherGamePage({
                   <PastilleDeRang rang={row.rank} />
                   {row.name}
                   {row.defaillant ? (
-                    <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
+                    <span className="rounded-full encadre-perte px-2 py-0.5 text-xs font-semibold text-red-300">
                       <Icone nom="alerte" className="mr-1 h-3 w-3" />
                       Défaillante
                     </span>
@@ -639,7 +639,7 @@ export default async function TeacherGamePage({
             {view.canExportGradebook ? (
               <a
                 href={`/teacher/games/${view.gameId}/releve`}
-                className="shrink-0 rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10"
+                className="shrink-0 rounded-lg bouton-filet border border-white/15 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-white/5"
               >
                 ⬇ Tableur (une ligne par élève)
               </a>
@@ -1060,7 +1060,7 @@ export default async function TeacherGamePage({
         {recommencer === "fait" ? (
           <p
             role="status"
-            className="mt-1 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200"
+            className="encadre-neutre mt-1 rounded-lg px-3 py-2 text-sm text-slate-100"
           >
             C&apos;est fait : la partie est repartie au tour 1, avec les mêmes équipes et le
             même code.
@@ -1069,7 +1069,7 @@ export default async function TeacherGamePage({
         {recommencer === "mot" ? (
           <p
             role="status"
-            className="mt-1 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-200"
+            className="mt-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
           >
             Rien n&apos;a été fait : le mot recopié ne correspondait pas.
           </p>
@@ -1100,7 +1100,7 @@ export default async function TeacherGamePage({
               className="mt-1 w-56 champ px-3 py-2 text-sm text-slate-100 outline-none"
             />
           </label>
-          <SubmitButton className="rounded-lg border border-red-400/30 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400/60 hover:text-red-100">
+          <SubmitButton className="rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400 hover:text-red-100">
             Recommencer la partie
           </SubmitButton>
         </GuardedForm>
@@ -1118,7 +1118,7 @@ export default async function TeacherGamePage({
           {supprimer === "mot" ? (
             <p
               role="status"
-              className="mt-1 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-200"
+              className="mt-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
             >
               Rien n&apos;a été fait : le mot recopié ne correspondait pas.
             </p>
@@ -1126,7 +1126,7 @@ export default async function TeacherGamePage({
           {supprimer === "jouee" || supprimer === "eleves" ? (
             <p
               role="status"
-              className="mt-1 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-200"
+              className="mt-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
             >
               {supprimer === "jouee"
                 ? "Cette partie a été jouée entre-temps : elle ne se supprime plus. Rangez-la, rien ne sera perdu."
@@ -1154,7 +1154,7 @@ export default async function TeacherGamePage({
                 className="mt-1 w-56 champ px-3 py-2 text-sm text-slate-100 outline-none"
               />
             </label>
-            <SubmitButton className="rounded-lg border border-red-400/30 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400/60 hover:text-red-100">
+            <SubmitButton className="rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400 hover:text-red-100">
               Supprimer définitivement
             </SubmitButton>
           </GuardedForm>

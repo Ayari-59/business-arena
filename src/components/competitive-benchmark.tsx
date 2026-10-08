@@ -20,8 +20,10 @@ export function CompetitiveBenchmark({
         .map((st) => [st.label, st] as const),
     ).values(),
   ];
-  const idxTone =
-    playerIdx >= 1.05 ? "text-emerald-400" : playerIdx < 0.95 ? "text-red-400" : "text-slate-100";
+  // L'INDICE EST UNE INFORMATION, PAS UN RÉSULTAT : un prix sous le marché
+  // n'est ni un gain ni une perte. Il s'écrit à l'encre ; la phrase dessous
+  // dit ce qu'il veut dire. (Il passait au vert au-dessus de 105.)
+  const idxTone = "text-slate-100";
 
   return (
     <section>
@@ -34,7 +36,7 @@ export function CompetitiveBenchmark({
         SUR TÉLÉPHONE, LE NOM ET LE CHIFFRE SUR UNE LIGNE, la phrase dessous. Côte à côte, le libellé
         tenait en trois lignes dans une colonne étroite, et le chiffre tombait sous lui.
       */}
-      <div className="mb-3 rounded-lg border border-fuchsia-400/20 bg-fuchsia-950/20 px-3 py-2.5 sm:mb-4 sm:flex sm:items-baseline sm:gap-3 sm:px-4 sm:py-3">
+      <div className="encadre-neutre mb-3 rounded-lg px-3 py-2.5 sm:mb-4 sm:flex sm:items-baseline sm:gap-3 sm:px-4 sm:py-3">
         <div className="flex items-baseline justify-between gap-3 sm:block">
           <p className="text-xs uppercase tracking-wide text-slate-400">
             Indice de compétitivité-prix

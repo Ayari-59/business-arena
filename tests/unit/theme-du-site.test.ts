@@ -7,6 +7,7 @@ import {
   THEME_DU_SITE_PAR_DEFAUT,
   contrasteDeLaBande,
   etatDesContrastes,
+  fautesDeLaPage,
   normaliserTheme,
   paletteDuSite,
   themeDepuisEtat,
@@ -91,15 +92,27 @@ describe("les refus", () => {
     );
     // L'accroche porte le titre : elle PEUT ouvrir la page en contre-jour.
     expect(fautes.join("\n")).not.toMatch(/sans porter le titre/);
-    const sans = validerContrastes(
-      avec({
-        "fonctionnalites.intro": true,
-        "fonctionnalites.chiffres": false,
-      }),
+    // Plus aucune page réelle n'ouvre sur une bande sans titre depuis que
+    // /fonctionnalites pose son accroche avant l'aperçu : la règle se vérifie
+    // donc sur cette page telle qu'elle était, l'aperçu en tête.
+    const [accroche, intro, ...suite] = BANDES.filter(
+      (b) => b.page === "/fonctionnalites",
     );
+    expect(accroche!.porteLeH1, "l'accroche ouvre /fonctionnalites").toBe(true);
+    const sans = fautesDeLaPage("Fonctionnalités", [intro!, accroche!, ...suite], {
+      ...ORIGINE,
+      "fonctionnalites.intro": true,
+      "fonctionnalites.chiffres": false,
+    });
     expect(sans.join("\n")).toMatch(
       /« L'introduction » ouvre la page sans porter le titre/,
     );
+    // Et dans l'ordre réel, la même mise à contre-jour ne fait plus de faute.
+    expect(
+      validerContrastes(
+        avec({ "fonctionnalites.intro": true, "fonctionnalites.chiffres": false }),
+      ).join("\n"),
+    ).not.toMatch(/sans porter le titre/);
   });
 
   it("une page d'article, listée en partie, ne subit pas les règles de voisinage", () => {

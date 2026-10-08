@@ -1,4 +1,4 @@
-import { BANDES, PAGES_A_BANDES, bandeParId, bandesDeLaPage } from "./bandes";
+import { BANDES, PAGES_A_BANDES, bandeParId, bandesDeLaPage, type BandeDef } from "./bandes";
 import {
   PALETTE_PAR_DEFAUT,
   estCodePalette,
@@ -150,39 +150,55 @@ export function validerContrastes(etat: Record<string, boolean>): string[] {
   }
 
   for (const { page, nom, partielle } of PAGES_A_BANDES) {
-    const bandes = bandesDeLaPage(page);
-    const actives = bandes.filter((b) => etat[b.id] ?? b.contrasteParDefaut);
+    fautes.push(...fautesDeLaPage(nom, bandesDeLaPage(page), etat, partielle));
+  }
+  return fautes;
+}
 
-    if (actives.length === 0) {
-      fautes.push(
-        `${nom} : aucune bande à contre-jour. Une page sans coupure déroule d'un seul tenant du haut au pied ; gardez-en au moins une.`,
-      );
-    }
-    // Une page listée en partie ne dit rien de ce qui précède ou suit ses bandes :
-    // ni le voisinage ni la tête de page n'ont d'objet.
-    if (partielle) continue;
-    for (let i = 1; i < bandes.length; i += 1) {
-      const a = bandes[i - 1]!;
-      const b = bandes[i]!;
-      if (
-        (etat[a.id] ?? a.contrasteParDefaut) &&
-        (etat[b.id] ?? b.contrasteParDefaut)
-      ) {
-        fautes.push(
-          `${nom} : « ${a.nom} » et « ${b.nom} » se suivent. Mettez une bande claire entre deux bandes à contre-jour.`,
-        );
-      }
-    }
-    const premiere = bandes[0];
+/**
+ * Les fautes d'UNE page, ses bandes données dans l'ordre où elles se suivent.
+ * Séparée de `validerContrastes` pour qu'une règle se vérifie aussi sur une
+ * page qui n'existe pas (encore) : quand plus aucune page réelle n'ouvre sur
+ * une bande sans titre, la règle doit continuer de mordre.
+ */
+export function fautesDeLaPage(
+  nom: string,
+  bandes: readonly BandeDef[],
+  etat: Record<string, boolean>,
+  partielle = false,
+): string[] {
+  const fautes: string[] = [];
+  const actives = bandes.filter((b) => etat[b.id] ?? b.contrasteParDefaut);
+
+  if (actives.length === 0) {
+    fautes.push(
+      `${nom} : aucune bande à contre-jour. Une page sans coupure déroule d'un seul tenant du haut au pied ; gardez-en au moins une.`,
+    );
+  }
+  // Une page listée en partie ne dit rien de ce qui précède ou suit ses bandes :
+  // ni le voisinage ni la tête de page n'ont d'objet.
+  if (partielle) return fautes;
+  for (let i = 1; i < bandes.length; i += 1) {
+    const a = bandes[i - 1]!;
+    const b = bandes[i]!;
     if (
-      premiere &&
-      (etat[premiere.id] ?? premiere.contrasteParDefaut) &&
-      !premiere.porteLeH1
+      (etat[a.id] ?? a.contrasteParDefaut) &&
+      (etat[b.id] ?? b.contrasteParDefaut)
     ) {
       fautes.push(
-        `${nom} : « ${premiere.nom} » ouvre la page sans porter le titre. Un contre-jour en tête doit contenir le titre de la page.`,
+        `${nom} : « ${a.nom} » et « ${b.nom} » se suivent. Mettez une bande claire entre deux bandes à contre-jour.`,
       );
     }
+  }
+  const premiere = bandes[0];
+  if (
+    premiere &&
+    (etat[premiere.id] ?? premiere.contrasteParDefaut) &&
+    !premiere.porteLeH1
+  ) {
+    fautes.push(
+      `${nom} : « ${premiere.nom} » ouvre la page sans porter le titre. Un contre-jour en tête doit contenir le titre de la page.`,
+    );
   }
   return fautes;
 }

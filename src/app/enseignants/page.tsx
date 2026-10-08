@@ -189,7 +189,7 @@ export default async function EnseignantsPage() {
           </p>
           <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
             Vos élèves apprennent à{" "}
-            <span className="text-amber-400">décider</span>, pas à cliquer
+            <span>décider</span>, pas à cliquer
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
             Un business game qui mesure une vraie décision, fait identifier le
@@ -217,7 +217,7 @@ export default async function EnseignantsPage() {
           <p className="mt-4 text-base text-slate-400">
             <Link
               href="/manuel"
-              className="text-amber-300 underline-offset-4 hover:underline"
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               Lire le manuel de l&apos;enseignant
             </Link>{" "}
@@ -282,7 +282,7 @@ export default async function EnseignantsPage() {
           <dl className="grid gap-x-10 gap-y-px sm:grid-cols-2">
             {PEDAGOGIE.map((p) => (
               <div key={p.title} className="border-t border-white/10 py-4">
-                <dt className="text-sm font-semibold text-slate-100">
+                <dt className="titre-carte text-slate-100">
                   {p.title}
                 </dt>
                 <dd className="mt-1 text-base leading-relaxed text-slate-400">
@@ -338,11 +338,11 @@ export default async function EnseignantsPage() {
                   atelier peut servir plusieurs formations, la pastille ne peut
                   plus tenir lieu de nom.
                 */}
-                <h3 className="text-sm font-semibold text-slate-100 group-hover:text-amber-200">
+                <h3 className="titre-carte text-slate-100 group-hover:text-amber-200">
                   {a.titre}
                 </h3>
                 <div className="mt-2 flex items-baseline justify-between gap-3">
-                  <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-2 py-0.5 text-xs font-semibold text-amber-300">
+                  <span className="rounded-full pastille-etat px-2 py-0.5 text-xs font-semibold text-slate-200">
                     {publicDeLAtelier(a)}
                   </span>
                   <span className="text-xs text-slate-400">{a.format}</span>
@@ -359,7 +359,7 @@ export default async function EnseignantsPage() {
           <p className="mt-6 text-center">
             <Link
               href="/animations"
-              className="inline-block rounded-lg border border-amber-400/40 px-5 py-2.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/10"
+              className="inline-block rounded-lg bouton-filet border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/5"
             >
               Voir les {ATELIERS.length} ateliers →
             </Link>
@@ -368,7 +368,7 @@ export default async function EnseignantsPage() {
             Une séance de deux heures plutôt qu&apos;un atelier ? Les{" "}
             <Link
               href="/enseignants/episodes"
-              className="font-semibold text-amber-300 underline-offset-2 hover:underline"
+              className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               épisodes en classe
             </Link>{" "}
@@ -449,7 +449,7 @@ export default async function EnseignantsPage() {
             le{" "}
             <Link
               href="/guide"
-              className="text-amber-300 underline-offset-4 hover:underline"
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               guide de prise en main
             </Link>

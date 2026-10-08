@@ -148,7 +148,7 @@ export function RetourDeLEpisode({
                     href={`/entreprises/episode/${r.code}${
                       suite.conseil ? `?niveau=${suite.conseil.niveau}` : ""
                     }`}
-                    className="font-semibold text-amber-300 underline-offset-2 hover:underline"
+                    className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                   >
                     {r.numero} · {r.titre}
                   </Link>

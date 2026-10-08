@@ -102,7 +102,7 @@ export default async function DossierElevePage({
           </a>
           <a
             href={`/animations/${atelier.code}/cockpit`}
-            className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+            className="rounded-lg bouton-filet border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5"
           >
             Cockpit de prévision (Excel)
           </a>
@@ -279,7 +279,7 @@ export default async function DossierElevePage({
               <p className="mt-1 text-xs text-slate-400 print:hidden">
                 <a
                   href={`/animations/${atelier.code}/formulaires`}
-                  className="text-amber-300 underline-offset-4 hover:underline"
+                  className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
                   La feuille à remplir pour ce livrable
                 </a>
@@ -318,7 +318,7 @@ export default async function DossierElevePage({
           à avoir posées avant de valider le tour. Le{" "}
           <a
             href={`/animations/${atelier.code}/cockpit`}
-            className="text-amber-300 underline-offset-4 hover:underline print:text-black print:no-underline"
+            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2 print:text-black print:no-underline"
           >
             cockpit de prévision
           </a>{" "}
@@ -415,7 +415,7 @@ export default async function DossierElevePage({
         <p className="mt-2 text-sm leading-relaxed text-slate-400 print:hidden">
           <a
             href={`/animations/${atelier.code}/tableau-de-bord`}
-            className="text-amber-300 underline-offset-4 hover:underline"
+            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
           >
             La même chose en tableur
           </a>{" "}

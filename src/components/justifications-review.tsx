@@ -37,7 +37,7 @@ export function JustificationsReview({
         type="button"
         onClick={ask}
         disabled={pending}
-        className={bouton({ variante: "laiton" })}
+        className={bouton({ variante: "lien" })}
       >
         {pending ? null : <Icone nom="idee" className="h-4 w-4" />}
         {pending ? "Synthèse en cours…" : "Synthèse IA des justifications"}

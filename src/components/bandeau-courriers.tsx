@@ -75,7 +75,7 @@ export function BandeauCourriers({
               <span
                 className={`rounded-full border px-2 py-0.5 text-xs ${
                   courrier.isMyTeam
-                    ? "border-sky-400/60 bg-sky-400/10 text-sky-300"
+                    ? "pastille-etat font-semibold text-slate-100"
                     : "border-white/10 bg-white/5 text-slate-400"
                 }`}
               >
@@ -87,7 +87,7 @@ export function BandeauCourriers({
       </ul>
       <a
         href={detailHref}
-        className="mt-2 inline-block text-xs text-amber-300 underline-offset-4 hover:underline"
+        className="mt-2 inline-block text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
       >
         Lire la lettre dans la situation
       </a>

@@ -14,12 +14,12 @@ export function ReussitesDuTour({ reussites }: { reussites: readonly Reussite[] 
       {reussites.map((f) => (
         <li
           key={f.code}
-          className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-lg border border-emerald-400/25 bg-emerald-950/20 px-3 py-2"
+          className="encadre-distinction flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-lg px-3 py-2"
         >
-          <span aria-hidden className="text-sm">
+          <span aria-hidden className="texte-or text-sm">
             ★
           </span>
-          <span className="text-sm font-semibold text-emerald-200">{f.titre}</span>
+          <span className="text-sm font-semibold text-slate-100">{f.titre}</span>
           <span className="text-xs text-slate-400">{f.detail}</span>
         </li>
       ))}

@@ -105,7 +105,7 @@ export default function AteliersPage() {
               </p>
               <Link
                 href={`/animations/${a.code}`}
-                className="mt-3 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
+                className="mt-3 inline-block text-sm font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
               >
                 Voir le déroulé de l&apos;immersion →
               </Link>
@@ -257,7 +257,7 @@ export default function AteliersPage() {
                 </RepliableSurTelephone>
                 <Link
                   href={`/animations/${a.code}`}
-                  className="mt-4 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+                  className="mt-4 inline-block text-sm font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2 pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
                 >
                   Voir le déroulé →
                 </Link>

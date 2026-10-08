@@ -122,7 +122,7 @@ function CeQuOnYTravaille({ d }: { d: ScenarioDefinition }) {
                 que de laisser chercher dans une page de cinquante-deux. */}
             <Link
               href={`/notions#${n.code}`}
-              className="underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-200 hover:decoration-amber-400/60"
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               {n.nom}
             </Link>
@@ -254,11 +254,12 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
                     className="rounded-lg border border-white/5 bg-slate-900/70 p-3"
                   >
                     <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-emerald-300">
-                      <Signe sens="gain" /> {r.gain}
+                    {/* La phrase à l'encre ; seul le signe dit le gain ou le coût. */}
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+                      <Signe sens="gain" className="text-emerald-400" /> {r.gain}
                     </p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-rose-300">
-                      <Signe sens="cout" /> {r.risque}
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+                      <Signe sens="cout" className="text-red-400" /> {r.risque}
                     </p>
                   </div>
                 ))}
@@ -271,7 +272,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
           <div className="order-1 mt-5 flex flex-wrap items-center gap-4 sm:order-none">
             <Link
               href={`/jouer?secteur=${d.code}`}
-              className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white pointer-coarse:min-h-11 pointer-coarse:py-3"
+              className={`${bouton({ variante: "secondaire", taille: "m" })} px-5 pointer-coarse:min-h-11`}
             >
               Diriger {nomSeul(d)}
             </Link>
@@ -305,7 +306,7 @@ export default async function EntreprisesPage() {
           <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
             Toutes les entreprises gagnent de l&apos;argent de la même façon.
             <br />
-            <span className="text-amber-400">Aucune ne le perd pareil.</span>
+            <span>Aucune ne le perd pareil.</span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
             Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
@@ -359,7 +360,7 @@ export default async function EntreprisesPage() {
             </div>
             <Link
               href="/entreprises/episode"
-              className={`${bouton({ variante: "laiton", taille: "l" })} shrink-0`}
+              className={`${bouton({ variante: "lien", taille: "l" })} shrink-0`}
             >
               Jouer la démonstration
             </Link>
@@ -421,7 +422,7 @@ export default async function EntreprisesPage() {
                       <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
                       <td className="py-2.5 pr-4 text-slate-400">
                         {d.scenario.perishable ? (
-                          <span className="text-rose-300">
+                          <span className="font-medium text-slate-200">
                             {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
                           </span>
                         ) : (

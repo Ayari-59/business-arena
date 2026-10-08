@@ -53,8 +53,8 @@ export function FriseDesTours({
             ? resultat === null
               ? "bg-slate-300/70"
               : resultat >= 0
-                ? "bg-emerald-400/70"
-                : "bg-red-400/70"
+                ? "bg-emerald-400"
+                : "bg-red-400"
             : enCours
               ? "bg-amber-400"
               : "bg-white/10";

@@ -39,7 +39,7 @@ export default async function OrgAdminPage() {
         <section
           className={`rounded-xl border p-5 ${
             dashboard.licence.blocking
-              ? "border-red-400/30 bg-red-950/20"
+              ? "encadre-perte"
               : dashboard.licence.state === "bientot_expiree"
                 ? "border-amber-400/30 bg-amber-950/20"
                 : "border-white/10 bg-slate-900"

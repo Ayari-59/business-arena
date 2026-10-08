@@ -210,14 +210,16 @@ function EquipmentPanel({
                   </>
                 )}
               </div>
+              {/* ACHETER ET VENDRE NE SONT NI UN GAIN NI UNE PERTE : l'encre et
+                  un signe, plus le vert et le rouge des résultats. */}
               <div className="mt-2 grid grid-cols-2 gap-3 max-sm:mt-1">
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-emerald-400 max-sm:hidden">
-                    Acheter
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-300 max-sm:hidden">
+                    <span aria-hidden>+ </span>Acheter
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-emerald-400)] max-sm:mt-0">
-                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-emerald-400 sm:hidden">
-                      Acheter
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 max-sm:mt-0">
+                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-300 sm:hidden">
+                      <span aria-hidden>+ </span>Acheter
                     </span>
                     <input
                       type="number"
@@ -237,18 +239,18 @@ function EquipmentPanel({
                     <span className="shrink-0 text-xs text-slate-400">max {t.maxPerRound}</span>
                   </span>
                   {buy > 0 ? (
-                    <span className="mt-0.5 block text-xs text-emerald-300">
+                    <span className="mt-0.5 block text-xs text-slate-300">
                       = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
                     </span>
                   ) : null}
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-red-400 max-sm:hidden">
-                    Vendre
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-300 max-sm:hidden">
+                    <span aria-hidden>− </span>Vendre
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-red-400)] max-sm:mt-0">
-                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-red-400 sm:hidden">
-                      Vendre
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 max-sm:mt-0">
+                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-300 sm:hidden">
+                      <span aria-hidden>− </span>Vendre
                     </span>
                     <input
                       type="number"
@@ -268,7 +270,7 @@ function EquipmentPanel({
                     <span className="shrink-0 text-xs text-slate-400">max {owned}</span>
                   </span>
                   {sell > 0 ? (
-                    <span className="mt-0.5 block text-xs text-red-300">
+                    <span className="mt-0.5 block text-xs text-slate-300">
                       = {Math.round(sell * avgBook * t.resaleRatio).toLocaleString("fr-FR")} € (VNC {Math.round(sell * avgBook).toLocaleString("fr-FR")} €)
                     </span>
                   ) : null}
@@ -935,7 +937,7 @@ function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
 /** La pastille d'une référence en développement, à côté de son nom. */
 function EnDeveloppement() {
   return (
-    <span className="ml-2 inline-block whitespace-nowrap rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 align-middle text-xs font-medium text-amber-300">
+    <span className="pastille-etat ml-2 whitespace-nowrap rounded-full px-2 py-0.5 align-middle text-xs font-medium text-slate-200">
       en développement
     </span>
   );
@@ -2721,7 +2723,7 @@ export function DecisionForm({
       {verrou ? (
         <p
           role="status"
-          className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-sm text-amber-200"
+          className="encadre-neutre flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-100"
         >
           <Icone nom="verrou" className="h-4 w-4" /> {verrou}
         </p>
@@ -2736,7 +2738,7 @@ export function DecisionForm({
       {blocageSauvetage ? (
         <p
           role="status"
-          className="flex items-start gap-2 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-sm leading-relaxed text-red-200"
+          className="flex items-start gap-2 rounded-lg encadre-perte px-3 py-2 text-sm leading-relaxed text-red-200"
         >
           <Icone nom="alerte" className="mt-0.5 h-4 w-4" />
           <span>
@@ -2764,7 +2766,8 @@ export function DecisionForm({
                   actif
                     ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
                     : fait
-                      ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300 hover:text-emerald-200"
+                      ? // Une étape faite est un ÉTAT, pas un résultat : neutre, et sa coche.
+                        "voile-neutre border-white/10 text-slate-200 hover:text-slate-100"
                       : "border-white/10 text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -2959,17 +2962,14 @@ export function DecisionForm({
                     ? v.capacityBottleneckLabel
                     : "Équilibré"
               }
-              couleur={
-                capacityFacts.bottleneck === "labor"
-                  ? "text-amber-400"
-                  : capacityFacts.bottleneck === "machine"
-                    ? "text-sky-400"
-                    : "text-emerald-400"
-              }
+              // Le goulot est un CONSTAT, ni une action ni un résultat :
+              // l'encre, quel qu'il soit (« Équilibré » passait au vert, la
+              // main-d'œuvre à l'orange de l'action, la machine au bleu ciel).
+              couleur="text-slate-100"
             />
           </dl>
           {capacityFacts.bottleneck === "labor" ? (
-            <p className="mt-2 text-xs text-amber-300/80">{v.laborBottleneckHint}</p>
+            <p className="mt-2 text-xs text-slate-300">{v.laborBottleneckHint}</p>
           ) : capacityFacts.bottleneck === "machine" ? (
             <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
           ) : null}
@@ -3177,7 +3177,8 @@ export function DecisionForm({
       >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <Carte cle="financement">
-        <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
+        {/* Une information, pas une action : l'encre sur le voile neutre. */}
+        <p className="encadre-neutre rounded-lg px-3 py-2 text-xs text-slate-200">
           <Icone nom="banque" className="mr-1.5 h-3.5 w-3.5" />
           Échéance d&apos;emprunt du tour :{" "}
           <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
@@ -3645,7 +3646,7 @@ export function DecisionForm({
         <p
           role="alert"
           aria-live="assertive"
-          className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300"
+          className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300"
         >
           {state.error}
         </p>

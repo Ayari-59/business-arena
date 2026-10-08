@@ -163,7 +163,8 @@ export function SegmentedTabs({
                     estCourant
                       ? "border-amber-400/50 bg-amber-400/10"
                       : estFait
-                        ? "border-emerald-400/30 bg-emerald-950/20 hover:bg-emerald-950/30"
+                        ? // Une étape faite est un état : neutre, pas menthe.
+                          "voile-neutre border-white/10 hover:border-white/20"
                         : "border-white/10 bg-slate-900 hover:border-white/20"
                   }`}
                 >
@@ -173,7 +174,7 @@ export function SegmentedTabs({
                       estCourant
                         ? "bg-amber-400 text-slate-950"
                         : estFait
-                          ? "bg-emerald-400 text-slate-950"
+                          ? "bg-[var(--point-etat)] text-[var(--voile-neutre)]"
                           : "bg-slate-700 text-slate-300"
                     }`}
                   >
@@ -187,7 +188,7 @@ export function SegmentedTabs({
                     className={`min-w-0 truncate text-sm font-medium ${
                       estCourant
                         ? "text-amber-100"
-                        : `hidden sm:inline ${estFait ? "text-emerald-200" : "text-slate-300"}`
+                        : `hidden sm:inline ${estFait ? "text-slate-200" : "text-slate-300"}`
                     }`}
                   >
                     {tab.label}

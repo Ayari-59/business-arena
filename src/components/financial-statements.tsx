@@ -87,14 +87,17 @@ function Panel({
  * d'écran n'a pas la couleur).
  */
 function LigneDeLecture({ lecture }: { lecture: Lecture }) {
+  // Le ton se lit au filet plein, vert ou rouge, sur un voile neutre : la
+  // vigilance était un cadre orange (la couleur de l'action) et la lecture
+  // favorable un voile turquoise.
   const teinte =
     lecture.ton === "mauvais"
-      ? "border-orange-400 bg-slate-950 text-orange-200"
+      ? "encadre-perte text-slate-100"
       : lecture.ton === "bon"
-        ? "border-teal-400/30 bg-teal-950/30 text-teal-200"
-        : "border-white/10 bg-slate-950 text-slate-300";
+        ? "encadre-gain text-slate-100"
+        : "encadre-neutre text-slate-300";
   return (
-    <p className={`mb-2 rounded-lg border px-3 py-2 text-sm leading-relaxed ${teinte}`}>
+    <p className={`mb-2 rounded-lg px-3 py-2 text-sm leading-relaxed ${teinte}`}>
       <span className="sr-only">
         {lecture.ton === "mauvais" ? "Point de vigilance. " : lecture.ton === "bon" ? "Lecture favorable. " : ""}
       </span>
@@ -179,7 +182,7 @@ export function FinancialStatements({
   return (
     <section className="mt-4 space-y-2" aria-label="Vos comptes du tour">
       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        <Icone nom="document" className="h-3.5 w-3.5 text-amber-400" />
+        <Icone nom="document" className="h-3.5 w-3.5 text-slate-400" />
         Vos comptes du tour · lisez-les comme un dirigeant
       </p>
 

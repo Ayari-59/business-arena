@@ -160,7 +160,9 @@ function Boite({ messages }: { messages: readonly Message[] }) {
         <li
           key={m.de + m.texte}
           className={`grid gap-1 border-l-2 px-4 py-3.5 ${
-            m.alerte ? "border-l-amber-400 bg-amber-400/5" : "border-l-transparent"
+            // Un message d'alerte : le filet rouge franc sur le voile neutre
+            // (il était orange, la couleur de l'action).
+            m.alerte ? "voile-neutre border-l-red-400" : "border-l-transparent"
           }`}
         >
           <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5 text-sm">
@@ -178,8 +180,8 @@ function Boite({ messages }: { messages: readonly Message[] }) {
 /** Un repère de méthode, au niveau Découverte. */
 function Repere({ temps }: { temps: TempsDeDecision }) {
   return (
-    <p className="max-w-2xl rounded-lg border border-sky-400/25 bg-sky-400/5 px-4 py-3 text-sm leading-relaxed text-slate-200">
-      <strong className="font-semibold text-sky-200">Repère · </strong>
+    <p className="encadre-neutre max-w-2xl rounded-lg px-4 py-3 text-sm leading-relaxed text-slate-200">
+      <strong className="font-semibold text-slate-100">Repère · </strong>
       {REPERES[temps]}
     </p>
   );
@@ -216,7 +218,7 @@ function CarteSource({
           {source.titre}
         </span>
         <span
-          className={`whitespace-nowrap text-sm tabular-nums ${vue ? "font-semibold text-emerald-300" : "text-slate-400"}`}
+          className={`whitespace-nowrap text-sm tabular-nums ${vue ? "font-semibold text-slate-200" : "text-slate-400"}`}
         >
           {vue
             ? "consulté"
@@ -404,7 +406,7 @@ export function EpisodeJoue({ code }: { code: string }) {
           Démonstration · données fictives
         </span>
         {s.ecran !== "intro" && (
-          <span className="rounded-full border border-amber-400/30 px-2.5 py-0.5 text-xs text-amber-200">
+          <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs font-semibold text-slate-300">
             Niveau {niveau.nom}
           </span>
         )}
@@ -419,7 +421,8 @@ export function EpisodeJoue({ code }: { code: string }) {
                   key={e.moment}
                   aria-label={`Décision ${i + 1}${fait ? ", prise" : enCours ? ", en cours" : ""}`}
                   className={`h-1.5 w-5 rounded-full ${
-                    fait ? "bg-amber-400" : enCours ? "bg-amber-400/45" : "bg-slate-700"
+                    // L'avancement est un état : l'encre, pas l'orange de l'action.
+                    fait ? "bg-slate-200" : enCours ? "bg-slate-500" : "bg-slate-700"
                   }`}
                 />
               );
@@ -523,7 +526,7 @@ function Fil({ etape, phase }: { etape: number; phase: Phase }) {
             aria-hidden="true"
             className={`inline-grid size-5 place-items-center rounded-full border text-xs ${
               j === k
-                ? "border-amber-400 bg-amber-400 text-slate-950"
+                ? "border-slate-200 bg-slate-200 text-slate-900"
                 : j < k
                   ? "border-white/15 bg-slate-800"
                   : "border-white/15"
@@ -670,8 +673,8 @@ function Scene({
                   className={`h-2 rounded-md border ${
                     k < s.jours * 2
                       ? k >= ep.enquete.joursSansPerte * 2
-                        ? "border-rose-400 bg-rose-400"
-                        : "border-amber-400 bg-amber-400"
+                        ? "border-red-400 bg-red-400"
+                        : "border-[var(--donnee)] bg-[var(--donnee)]"
                       : "border-white/10 bg-slate-800"
                   }`}
                 />
@@ -949,8 +952,8 @@ function Scene({
         Vous avez choisi : {enMinuscule(etape.options[choix]!.t)}.
       </p>
       {niveau.retourImmediat && (
-        <p className="max-w-2xl rounded-lg border border-sky-400/25 bg-sky-400/5 px-4 py-3 text-sm leading-relaxed text-slate-200">
-          <strong className="font-semibold text-sky-200">Retour immédiat · </strong>
+        <p className="encadre-neutre max-w-2xl rounded-lg px-4 py-3 text-sm leading-relaxed text-slate-200">
+          <strong className="font-semibold text-slate-100">Retour immédiat · </strong>
           {effet
             ? `Sur ce trimestre-ci, ce choix ${effet.ecart >= 0 ? "rapporte" : "coûte"} ${kE(
                 Math.abs(effet.ecart),

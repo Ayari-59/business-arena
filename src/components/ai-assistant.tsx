@@ -61,7 +61,7 @@ function Coach({ gameId }: { gameId: string }) {
         type="button"
         onClick={ask}
         disabled={pending}
-        className={bouton({ variante: "laiton" })}
+        className={bouton({ variante: "lien" })}
       >
         {pending ? "Analyse en cours…" : text ? "Redemander un retour" : "Demander un retour sur mon tour"}
       </button>

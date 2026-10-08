@@ -83,7 +83,7 @@ function Barre({
         {/* Un tour encore ouvert reçoit des décisions : sa barre est pâle, elle
             n'est pas finie. Un point médian en bout de ligne ne se voyait pas. */}
         <span
-          className={`block h-full rounded-full ${tour.clos ? "bg-amber-400/70" : "bg-amber-400/25"}`}
+          className={`block h-full rounded-full ${tour.clos ? "bg-[var(--donnee)]" : "bg-[var(--donnee-2)]"}`}
           style={{ width: `${pct}%` }}
         />
       </span>
@@ -93,7 +93,7 @@ function Barre({
       <span className="h-1.5 min-w-0 overflow-hidden rounded-full bg-white/5">
         {pctMinutes !== null ? (
           <span
-            className="block h-full rounded-full bg-cyan-400/60"
+            className="block h-full rounded-full bg-[var(--donnee-2)]"
             style={{ width: `${pctMinutes}%` }}
           />
         ) : null}
@@ -203,11 +203,11 @@ export default async function ObservationPage({
                 bloc ne se distinguent pas par leur seule couleur. */}
             <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
-                <span aria-hidden className="h-2.5 w-4 rounded-full bg-amber-400/70" />
+                <span aria-hidden className="h-2.5 w-4 rounded-full bg-[var(--donnee)]" />
                 équipes ayant validé
               </span>
               <span className="flex items-center gap-1.5">
-                <span aria-hidden className="h-1.5 w-4 rounded-full bg-cyan-400/60" />
+                <span aria-hidden className="h-1.5 w-4 rounded-full bg-[var(--donnee-2)]" />
                 minutes médianes du tour
               </span>
             </p>

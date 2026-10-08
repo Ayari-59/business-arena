@@ -72,7 +72,7 @@ export default async function NewSituationPage({
         </div>
         <Link
           href={`/teacher/scenarios/${id}`}
-          className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           ← Le scénario
         </Link>
@@ -81,7 +81,7 @@ export default async function NewSituationPage({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>

@@ -21,11 +21,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
 
 function ErrorBox({ error }: { error: string | null }) {
   if (!error) return null;
-  return (
-    <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-      {error}
-    </p>
-  );
+  return <p className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">{error}</p>;
 }
 
 export function TeacherAuthForms() {
@@ -49,10 +45,13 @@ export function TeacherAuthForms() {
             key={value}
             type="button"
             onClick={() => setTab(value)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+            // L'ONGLET ACTIF N'EST PAS UN BOUTON D'ACTION : le voile neutre et
+            // le filet orange d'un état choisi. En aplat orange, il ressemblait
+            // trait pour trait au bouton « Se connecter » du formulaire.
+            className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
               tab === value
-                ? "bg-amber-400 text-slate-950"
-                : "bg-slate-950 text-slate-400 hover:text-slate-200"
+                ? "voile-neutre border-amber-400 font-semibold text-slate-100"
+                : "border-transparent bg-slate-950 text-slate-400 hover:text-slate-200"
             }`}
           >
             {label}

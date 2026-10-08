@@ -97,7 +97,7 @@ export function CompetitionBoard({
                   {gameLinkBase ? (
                     <Link
                       href={`${gameLinkBase}/${game.gameId}`}
-                      className="text-amber-300 underline-offset-4 hover:underline"
+                      className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                     >
                       Piloter →
                     </Link>

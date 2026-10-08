@@ -244,7 +244,7 @@ export function ApercuPilotage({ className = "" }: { className?: string }) {
                   <span
                     className={`rounded-full border px-2 py-0.5 text-xs ${
                       e.etat === "validé"
-                        ? "border-emerald-400/40 text-emerald-300"
+                        ? "border-emerald-400 text-emerald-300"
                         : "border-white/15 text-slate-400"
                     }`}
                   >

@@ -106,7 +106,7 @@ export function CourrierDuTour({
         <button
           type="button"
           onClick={relire}
-          className="text-amber-300 underline-offset-4 hover:underline"
+          className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           Relire
         </button>

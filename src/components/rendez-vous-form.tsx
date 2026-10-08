@@ -98,7 +98,7 @@ export function RendezVousForm({
       <div className="carte space-y-4 p-6">
         <p
           role="status"
-          className="rounded-lg border border-teal-400/30 bg-teal-950/30 px-3 py-3 text-sm leading-relaxed text-teal-200"
+          className="rounded-lg encadre-neutre px-3 py-3 text-sm leading-relaxed text-slate-100"
         >
           ✓ Rendez-vous confirmé : <strong className="font-semibold">{state.ok.quand}</strong>. Nous vous
           appelons au numéro indiqué ; une confirmation part à {state.ok.email}
@@ -107,7 +107,7 @@ export function RendezVousForm({
         <p className="text-sm text-slate-400">
           Un empêchement ? Répondez à la confirmation, le créneau se déplace sans façon.
         </p>
-        <Link href="/orientation" className="text-sm text-amber-300 underline-offset-4 hover:underline">
+        <Link href="/orientation" className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
           En attendant, voir quelle simulation conviendrait à votre classe
         </Link>
       </div>
@@ -122,7 +122,7 @@ export function RendezVousForm({
         {jours.length === 0 ? (
           <p className="text-base leading-relaxed text-slate-400">
             Aucun créneau libre dans les trois prochaines semaines. Écrivez-nous depuis la{" "}
-            <Link href="/orientation" className="text-amber-300 underline-offset-4 hover:underline">
+            <Link href="/orientation" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
               page d&apos;orientation
             </Link>
             , nous vous proposerons un moment.
@@ -289,7 +289,7 @@ export function RendezVousForm({
         </div>
 
         {state.error ? (
-          <p role="alert" className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+          <p role="alert" className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">
             {state.error}
           </p>
         ) : null}

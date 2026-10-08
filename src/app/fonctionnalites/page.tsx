@@ -74,44 +74,41 @@ export default async function FonctionnalitesPage() {
       <main id="main" className="relative overflow-hidden">
         <HaloDePage />
 
-        {/* Hero */}
-        {/*
-          MONTRER, PUIS ÉNUMÉRER.
-          Quinze cartes de fonctionnalités et zéro image : on lisait une liste de
-          promesses sans jamais voir l'outil. L'écran de l'élève passe devant la
-          liste — un repère suffit, la galerie est sur « Pour les enseignants ».
-        */}
-        <Bande
-          id="fonctionnalites.intro"
-          contraste={c("fonctionnalites.intro")}
-          interieur="mx-auto max-w-4xl px-6 pb-8 pt-10 sm:pt-12"
-        >
-          {/* L'APERÇU OUVRE LA PAGE, IL DIT DONC CE QU'IL MONTRE. Collé à
-              l'en-tête, son bord haut était rogné et la page s'ouvrait sur un
-              écran sans titre : il prend une marge haute et sa légende passe
-              au-dessus, en intitulé. */}
-          <div className="mx-auto max-w-sm">
-            <ApercuArene legendeEnTete />
-          </div>
-        </Bande>
-
         <Bande
           id="fonctionnalites.accroche"
           contraste={c("fonctionnalites.accroche")}
-          interieur="mx-auto max-w-5xl px-6 pb-12 pt-10 text-center sm:pt-12"
+          interieur="mx-auto max-w-5xl px-6 pb-10 pt-12 text-center sm:pt-16"
         >
           <p className="text-xs uppercase tracking-annonce text-amber-400">
             Plateforme de simulation de gestion
           </p>
           <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
             Tout ce qu&apos;il faut pour{" "}
-            <span className="text-amber-400">apprendre à décider</span>
+            <span>apprendre à décider</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
             Un moteur économique réaliste, des situations pédagogiques contextuelles,
             des modèles d&apos;analyse à mobiliser : Business Arena met la gestion
             d&apos;entreprise entre les mains de vos étudiants.
           </p>
+        </Bande>
+
+        {/*
+          LE TITRE D'ABORD, PUIS L'ÉCRAN.
+          Quinze cartes de fonctionnalités et zéro image : on lisait une liste de
+          promesses sans jamais voir l'outil. L'écran de l'élève vient donc sous
+          l'accroche, avant la liste : un repère suffit, la galerie est sur
+          « Pour les enseignants ». Il a ouvert la page, collé à l'en-tête, et le
+          titre n'arrivait qu'à 600 px : une page s'ouvre sur ce qu'elle est.
+        */}
+        <Bande
+          id="fonctionnalites.intro"
+          contraste={c("fonctionnalites.intro")}
+          interieur="mx-auto max-w-4xl px-6 pb-12 pt-10"
+        >
+          <div className="mx-auto max-w-sm">
+            <ApercuArene />
+          </div>
         </Bande>
 
         {/* La coupure de la page : voir components/bande-de-chiffres.tsx. */}
@@ -201,7 +198,7 @@ export default async function FonctionnalitesPage() {
           <dl className="grid gap-x-10 gap-y-px sm:grid-cols-2">
             {PILLARS.map((p) => (
               <div key={p.title} className="border-t border-white/10 py-4">
-                <dt className="text-sm font-semibold text-slate-100">{p.title}</dt>
+                <dt className="titre-carte text-slate-100">{p.title}</dt>
                 <dd className="mt-1 text-base leading-relaxed text-slate-400">{p.text}</dd>
               </div>
             ))}
@@ -223,7 +220,7 @@ export default async function FonctionnalitesPage() {
             emploient ont chacune{" "}
             <Link
               href="/notions"
-              className="text-amber-300 underline-offset-4 hover:underline"
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               leur fiche
             </Link>
@@ -238,7 +235,7 @@ export default async function FonctionnalitesPage() {
                 key={m.code}
                 className="flex items-start gap-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5"
               >
-                <span className="mt-0.5 text-xs text-amber-400">●</span>
+                <span className="mt-0.5 text-xs text-slate-400">●</span>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-200">{m.name}</p>
                   {/* La description d'un modèle est une phrase, pas une

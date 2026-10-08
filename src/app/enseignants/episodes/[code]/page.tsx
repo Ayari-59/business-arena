@@ -81,7 +81,10 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               Tout le groupe joue le même trimestre, sous le même hasard (n°{" "}
               {hasardDeLaClasse(code)}). Les élèves jouent sans compte ; jouez l&apos;épisode une
               fois avant la séance.{" "}
-              <Link href={lien} className="text-amber-300 underline-offset-2 hover:underline">
+              <Link
+                href={lien}
+                className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
                 Ouvrir l&apos;épisode
               </Link>
             </p>

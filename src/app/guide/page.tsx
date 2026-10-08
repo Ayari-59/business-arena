@@ -171,7 +171,7 @@ export default async function GuidePage() {
               <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
                 <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
                 <p className="mt-2 text-base leading-relaxed text-slate-400">
-                  Depuis la page <Link href="/jouer" className="text-amber-300 underline-offset-4 hover:underline">Jouer</Link>,
+                  Depuis la page <Link href="/jouer" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">Jouer</Link>,
                   choisissez votre secteur, la périodicité et le nombre de concurrents, puis{" "}
                   <strong className="text-slate-200">Lancer la partie</strong>. Au choix :
                   atelier, boutique, hôtel, restaurant, cabinet de conseil, boutique en ligne ou
@@ -182,7 +182,7 @@ export default async function GuidePage() {
               <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
                 <p className="text-sm font-semibold text-amber-300">Je suis élève, j&apos;ai un code</p>
                 <p className="mt-2 text-base leading-relaxed text-slate-400">
-                  Rendez-vous sur <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">/join</Link>,
+                  Rendez-vous sur <Link href="/join" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">/join</Link>,
                   saisissez le code à 6 caractères donné par votre enseignant et un pseudo :
                   vous rejoignez l&apos;équipe de votre classe. Pas de mot de passe à retenir.
                 </p>
@@ -249,7 +249,7 @@ export default async function GuidePage() {
           >
             <ol className="space-y-5">
               <Step n={1} title="Créez votre compte">
-                Sur <Link href="/teacher/login" className="text-amber-300 underline-offset-4 hover:underline">l&apos;espace enseignant</Link>,
+                Sur <Link href="/teacher/login" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">l&apos;espace enseignant</Link>,
                 inscrivez-vous avec votre e-mail, directement ou avec le code d&apos;invitation
                 fourni par votre établissement s&apos;il est déployé sur la plateforme.
               </Step>
@@ -289,7 +289,7 @@ export default async function GuidePage() {
                 auditable), parties en mode compétition : décisions verrouillées après validation,
                 indices limités au niveau 3, aucune distribution manuelle de courrier. Qualification à l&apos;IPG,
                 finale, podium. Le déroulé complet est{" "}
-                <a href="#concours" className="text-amber-300 underline-offset-4 hover:underline">
+                <a href="#concours" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
                   décrit ci-dessous
                 </a>
                 .
@@ -321,7 +321,7 @@ export default async function GuidePage() {
               </Step>
               <Step n={3} title="Finale">
                 Quand toutes les parties de qualification sont terminées, les meilleures équipes de
-                chaque groupe au <Link href="#bpi" className="text-amber-300 underline-offset-4 hover:underline">score IPG</Link>{" "}
+                chaque groupe au <Link href="#bpi" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">score IPG</Link>{" "}
                 se qualifient. Elles jouent une seule partie, aux mêmes règles.
               </Step>
               <Step n={4} title="Podium">
@@ -348,7 +348,7 @@ export default async function GuidePage() {
                   Maximum 2 par tour.
                 </p>
               </div>
-              <div className="rounded-xl border border-sky-400/20 bg-slate-950 p-5">
+              <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
                 <p className="flex items-center gap-1.5 text-sm font-semibold text-sky-300">
                   <Icone nom="cible" className="h-4 w-4" />
                   Pli adressé
@@ -363,7 +363,7 @@ export default async function GuidePage() {
               Pour une vraie distribution en classe,{" "}
               <Link
                 href="/teacher/courriers/print"
-                className="text-amber-300 underline-offset-4 hover:underline"
+                className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
               >
                 imprimez la liasse
               </Link>{" "}

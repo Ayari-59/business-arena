@@ -62,7 +62,9 @@ export function RevelationDuTour({
       // à la voix mieux qu'un article qu'il faudrait accorder au scénario.
       aria-label={`Verdict, ${periode.toLowerCase()}`}
       className={`carte overflow-hidden px-4 py-3 sm:px-5 sm:py-4 ${
-        positif ? "border-emerald-400/25" : "border-rose-400/25"
+        // Le signe du tour en filet plein à gauche ; le reste du cadre reste
+        // le filet gris des cartes (il était rose ou vert d'eau, dilué).
+        positif ? "border-l-2 border-l-emerald-400" : "border-l-2 border-l-red-400"
       } ${nouveau ? "revelation" : ""}`}
     >
       {/* L'OR DIT LE VERDICT : ce que le marché a tranché (globals.css, « LE PODIUM »). */}

@@ -44,8 +44,12 @@ function Tuile({
   titreLong: string;
   valeurs: number[];
   libelles: string[];
-  /** L'encre de la courbe : la donnée pour une grandeur, l'état pour un signe. */
-  teinte: "accent" | "signe";
+  /**
+   * L'encre de la courbe : la donnée pour une grandeur, l'état pour un signe.
+   * Un `niveau` (la trésorerie) n'est pas un résultat : il reste à l'encre tant
+   * qu'il est positif, et ne prend le rouge qu'en découvert.
+   */
+  teinte: "accent" | "signe" | "niveau";
   /** Tracer la ligne de zéro : elle ne veut dire quelque chose que si le signe compte. */
   avecZero: boolean;
 }) {
@@ -59,9 +63,17 @@ function Tuile({
   // vert et le rouge restent aux grandeurs qui ont un signe, le résultat et la
   // trésorerie.
   const couleur =
-    teinte === "accent" ? "text-slate-50" : positif ? "text-emerald-300" : "text-red-300";
+    teinte === "accent" || (teinte === "niveau" && positif)
+      ? "text-slate-50"
+      : positif
+        ? "text-emerald-300"
+        : "text-red-300";
   const trait =
-    teinte === "accent" ? "text-sky-300" : positif ? "text-emerald-300" : "text-red-300";
+    teinte === "accent" || (teinte === "niveau" && positif)
+      ? "text-sky-300"
+      : positif
+        ? "text-emerald-300"
+        : "text-red-300";
 
   // La courbe, en coordonnées 0→100 sur la largeur et 0→24 en hauteur. Une
   // échelle par tuile : ces trois grandeurs n'ont pas le même ordre de
@@ -215,7 +227,7 @@ export function TableauDeBord({ tours }: { tours: TourChiffre[] }) {
         titreLong="Trésorerie nette"
         valeurs={tours.map((t) => t.tresorerie)}
         libelles={libelles}
-        teinte="signe"
+        teinte="niveau"
         avecZero
       />
     </section>

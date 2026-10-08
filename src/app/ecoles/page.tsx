@@ -146,7 +146,7 @@ export default async function EcolesPage() {
             Écoles de commerce et universités
           </p>
           <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-            Former des managers qui <span className="text-amber-400">décident</span>, et le prouver
+            Former des managers qui <span>décident</span>, et le prouver
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
             Une partie d&apos;entreprise en équipes pour le bachelor, des épisodes manager pour le
@@ -222,7 +222,7 @@ export default async function EcolesPage() {
                 </ul>
                 <Link
                   href={f.lien.href}
-                  className="mt-5 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
+                  className="mt-5 inline-block text-sm font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
                   {f.lien.libelle} →
                 </Link>
@@ -256,7 +256,7 @@ export default async function EcolesPage() {
               <dl className="mt-6">
                 {PREUVES.map((p) => (
                   <div key={p.titre} className="border-t border-white/10 py-4">
-                    <dt className="text-sm font-semibold text-slate-100">{p.titre}</dt>
+                    <dt className="titre-carte text-slate-100">{p.titre}</dt>
                     <dd className="mt-1 text-base leading-relaxed text-slate-400">{p.texte}</dd>
                   </div>
                 ))}
@@ -297,7 +297,7 @@ export default async function EcolesPage() {
             {PARCOURS.map((e) => (
               <li key={e.quand} className="border-t border-white/15 pt-4">
                 <p className="text-xs uppercase tracking-etiquette text-amber-300">{e.quand}</p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-100">{e.quoi}</h3>
+                <h3 className="titre-carte mt-2 text-slate-100">{e.quoi}</h3>
                 <p className="mt-1 text-base leading-relaxed text-slate-400">{e.texte}</p>
               </li>
             ))}
@@ -316,7 +316,7 @@ export default async function EcolesPage() {
           <dl className="grid gap-x-10 gap-y-px sm:grid-cols-2">
             {QUESTIONS.map((x) => (
               <div key={x.q} className="border-t border-white/10 py-4">
-                <dt className="text-sm font-semibold text-slate-100">{x.q}</dt>
+                <dt className="titre-carte text-slate-100">{x.q}</dt>
                 <dd className="mt-1 text-base leading-relaxed text-slate-400">{x.r}</dd>
               </div>
             ))}

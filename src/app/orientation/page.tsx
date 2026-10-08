@@ -166,7 +166,7 @@ export default function OrientationPage() {
                 <p className="mt-1.5 text-sm text-slate-300">
                   <Link
                     href="/entreprises"
-                    className="font-semibold text-amber-400 underline-offset-4 transition-colors hover:text-amber-300 hover:underline"
+                    className="font-semibold text-amber-400 underline decoration-1 underline-offset-4 transition-colors hover:decoration-2"
                   >
                     {o.entreprise}
                   </Link>
@@ -192,7 +192,7 @@ export default function OrientationPage() {
                           {i > 0 ? ", " : ""}
                           <Link
                             href={`/animations/${d.atelier}`}
-                            className="underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-200 hover:decoration-amber-400/60"
+                            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                           >
                             {d.diplome}
                           </Link>
@@ -214,7 +214,7 @@ export default function OrientationPage() {
           Vous préférez en parler de vive voix ?{" "}
           <Link
             href="/rendez-vous"
-            className="text-slate-400 underline-offset-4 hover:underline"
+            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
           >
             Prenez un rendez-vous téléphonique
           </Link>
@@ -223,14 +223,14 @@ export default function OrientationPage() {
           trente secondes. Voir{" "}
           <Link
             href="/entreprises"
-            className="text-slate-400 underline-offset-4 hover:underline"
+            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
           >
             les fiches des entreprises
           </Link>{" "}
           ou{" "}
           <Link
             href="/animations"
-            className="text-slate-400 underline-offset-4 hover:underline"
+            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
           >
             les ateliers publiés
           </Link>

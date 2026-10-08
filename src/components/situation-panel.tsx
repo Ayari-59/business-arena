@@ -55,7 +55,7 @@ function ErrorBox({ error }: { error: string | null }) {
     <p
       role="alert"
       aria-live="assertive"
-      className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-xs text-red-300"
+      className="rounded-lg encadre-perte px-3 py-2 text-xs text-red-300"
     >
       {error}
     </p>
@@ -214,7 +214,7 @@ export function SituationCard({
           <button
             type="submit"
             disabled={hintPending}
-            className="rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10 disabled:opacity-60"
+            className="rounded-lg bouton-filet border border-white/15 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-white/5"
           >
             {hintPending
               ? "Déblocage…"
@@ -237,8 +237,8 @@ export function SituationCard({
   // répondu. Elle confirme, et dit ce qui vient — le corrigé n'arrive qu'après la simulation.
   if (rendue && dansTiroir) {
     return (
-      <article className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
-        <p className="text-base font-semibold text-emerald-300">✓ Analyse rendue</p>
+      <article className="encadre-neutre rounded-lg p-4">
+        <p className="text-base font-semibold text-slate-100">✓ Analyse rendue</p>
         <p className="mt-1 text-sm text-slate-300">
           Votre correction vous attend au débriefing, une fois le tour simulé.
         </p>
@@ -255,7 +255,7 @@ export function SituationCard({
           </p>
           {situation.aboveGameLevel ? (
             <span
-              className="rounded-full border border-sky-400/30 bg-sky-400/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-sky-300"
+              className="pastille-etat rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-200"
               title="Cette situation mobilise des notions au-dessus du niveau choisi pour la partie."
             >
               Au-dessus du niveau
@@ -619,7 +619,7 @@ export function SituationDebrief({
             situation.missed
               ? "border-amber-400/40 text-amber-300"
               : situation.retaken
-                ? "border-sky-400/40 text-sky-300"
+                ? "border-white/10 text-sky-300"
                 : "border-white/10 text-slate-300"
           }`}
         >
@@ -682,8 +682,8 @@ export function SituationDebrief({
           {/* Aux premiers niveaux, la situation ne propose qu'une partie des bonnes causes :
               le reste se lit ici, pour que la leçon soit entière — sans être comptée « manquée ». */}
           {debrief.autresCauses.length > 0 ? (
-            <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-950/10 px-3 py-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
+            <div className="encadre-neutre mt-2 rounded-lg px-3 py-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-200">
                 {debrief.autresCauses.length > 1
                   ? "À retenir aussi : d'autres bonnes causes, non proposées à votre niveau"
                   : "À retenir aussi : une autre bonne cause, non proposée à votre niveau"}
@@ -898,9 +898,9 @@ function SituationRetake({
     <form
       ref={rendu.formRef}
       action={formAction}
-      className="mt-4 space-y-3 rounded-lg border border-sky-400/30 bg-sky-950/10 p-3 sm:p-5"
+      className="encadre-neutre mt-4 space-y-3 rounded-lg p-3 sm:p-5"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-200">
         Rattrapage · score compté pour moitié
       </p>
       <input
@@ -1020,7 +1020,7 @@ function SituationRetake({
         disabled={!complet || pending}
         aria-disabled={!complet || pending}
         title={complet ? undefined : messageIncomplet(manquants)}
-        className="rounded-lg bg-sky-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
+        className={bouton()}
       >
         {pending ? "Envoi…" : "Rattraper cette situation"}
       </button>

@@ -22,8 +22,9 @@ const STATUT_LABEL: Record<string, string> = {
   archived: "Retiré",
 };
 const STATUT_CLASS: Record<string, string> = {
-  draft: "border-amber-400/40 bg-amber-400/10 text-amber-300",
-  published: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+  // Des états, pas des actions ni des résultats : l'encre et un point plein.
+  draft: "pastille-etat text-slate-200",
+  published: "pastille-etat font-semibold text-slate-100",
   archived: "border-white/10 bg-slate-800 text-slate-400",
 };
 
@@ -33,7 +34,7 @@ function StatutForm({ id, to, label }: { id: string; to: string; label: string }
     <GuardedForm action={publishScenarioAction} label="statut du scénario">
       <input type="hidden" name="scenarioId" value={id} />
       <input type="hidden" name="status" value={to} />
-      <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-emerald-400/50">
+      <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-emerald-400">
         {label}
       </button>
     </GuardedForm>
@@ -62,7 +63,7 @@ export default async function TeacherScenariosPage({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>

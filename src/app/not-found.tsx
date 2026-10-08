@@ -30,22 +30,26 @@ export default function NotFound() {
         L&apos;adresse est peut-être erronée, ou la page a été déplacée. Si vous
         suiviez un lien de partie, votre session a pu expirer sur cet appareil.
       </p>
+      {/* Trois boutons de la même hauteur, libellés sur une ligne : le
+          principal, et deux secondaires à filet. Ils étaient de trois
+          dessins (plein, contour orange, contour gris), et « Retour à
+          l'accueil » passait sur deux lignes. */}
       <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
           href="/"
-          className={bouton({ taille: "l" })}
+          className={`${bouton({ taille: "m" })} min-h-11 whitespace-nowrap px-5`}
         >
           Retour à l&apos;accueil
         </Link>
         <Link
           href="/jouer"
-          className="inline-flex items-center justify-center rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+          className={`${bouton({ variante: "secondaire", taille: "m" })} min-h-11 whitespace-nowrap px-5`}
         >
           Lancer une partie
         </Link>
         <Link
           href="/join"
-          className="inline-flex items-center justify-center rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
+          className={`${bouton({ variante: "secondaire", taille: "m" })} min-h-11 whitespace-nowrap px-5`}
         >
           Rejoindre par code
         </Link>

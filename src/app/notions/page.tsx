@@ -95,8 +95,8 @@ export default async function ConceptsPage() {
                     <span className="ml-2 text-xs text-slate-400">{c.definition}</span>
                   </summary>
                   <div className="space-y-2 border-t border-white/5 px-4 py-3 text-sm text-slate-300">
-                    <p><span className="font-semibold text-amber-300">L&apos;intuition.</span> {c.intuition}</p>
-                    <p><span className="font-semibold text-amber-300">La méthode.</span> {c.method}</p>
+                    <p><span className="font-semibold text-slate-100">L&apos;intuition.</span> {c.intuition}</p>
+                    <p><span className="font-semibold text-slate-100">La méthode.</span> {c.method}</p>
                     {c.formula ? (
                       <p className="rounded-lg bg-slate-950 px-3 py-2 font-mono text-xs text-slate-200">
                         {c.formula}

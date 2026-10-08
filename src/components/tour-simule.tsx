@@ -59,11 +59,9 @@ export function TourSimule({
       id="main"
       className="relative mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center overflow-hidden px-6 py-8 text-center sm:py-12"
     >
-      {/* Un halo laiton derrière le tour qui vient de se jouer : la fin d'un tour est un moment. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(60%_70%_at_50%_0%,color-mix(in_oklab,var(--color-amber-400)_24%,transparent),transparent)]"
-      />
+      {/* Plus de halo : posé sur le papier, l'orange dilué faisait une lueur
+          pêche et beige en haut de l'écran. La fin d'un tour aura son ardoise
+          marine ; d'ici là, l'écran reste net. */}
       <span
         {...entree(0)}
         className={`relative flex h-14 w-14 items-center justify-center rounded-xl shadow-lg ring-1 ring-white/10 sm:h-16 sm:w-16 ${SECTOR_COLORS[sector].bg} ${SECTOR_COLORS[sector].accent} ${entree(0).className}`}
@@ -72,9 +70,9 @@ export function TourSimule({
       </span>
       <p
         {...entree(1)}
-        className={`relative mt-4 flex items-center gap-2 rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold uppercase tracking-annonce text-emerald-300 sm:mt-6 ${entree(1).className}`}
+        className={`pastille-etat relative mt-4 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-annonce text-slate-200 sm:mt-6 ${entree(1).className}`}
       >
-        <span aria-hidden>✓</span> Tour simulé
+        Tour simulé
       </p>
       <h1
         {...entree(2)}
@@ -97,7 +95,7 @@ export function TourSimule({
       >
         <Link
           href={`/arena/${gameId}#dernier-resultat`}
-          className={`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]`}
+          className={`${bouton({ taille: "l" })} active:scale-[0.98]`}
         >
           <Icone nom="resultats" className="h-4 w-4" />
           Voir les résultats
@@ -105,7 +103,7 @@ export function TourSimule({
         {finished ? (
           <Link
             href={`/arena/${gameId}`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10 active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bouton-filet border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5 active:scale-[0.98]"
           >
             <Icone nom="trophee" className="h-4 w-4" />
             Bilan de la partie
@@ -132,10 +130,10 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
     <dl className="relative mt-4 grid w-full max-w-md grid-cols-2 gap-3 text-left">
       <div
         {...entree(4)}
-        className={`col-span-2 rounded-xl border bg-gradient-to-b p-4 ${entree(4).className} ${
-          gain
-            ? "border-emerald-400/30 from-emerald-400/15 to-emerald-400/[0.03] shadow-[0_14px_34px_-20px_rgb(16_185_129/0.6)]"
-            : "border-red-400/30 from-red-400/15 to-red-400/[0.03] shadow-[0_14px_34px_-20px_rgb(239_68_68/0.55)]"
+        // Le résultat se lit à son chiffre et à son filet plein, vert ou
+        // rouge, sur le voile neutre : il était sur un dégradé menthe ou rose.
+        className={`col-span-2 rounded-xl p-4 ${entree(4).className} ${
+          gain ? "encadre-gain" : "encadre-perte"
         }`}
       >
         <dt className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">

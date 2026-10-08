@@ -21,9 +21,9 @@ export interface TeinteDePhase {
 }
 
 export const PHASES: Record<PhaseDuTour, TeinteDePhase> = {
-  resultats: { libelle: "Résultats", texte: "text-emerald-300", fond: "bg-emerald-400", teinte: "bg-emerald-400/15" },
-  briefing: { libelle: "Briefing", texte: "text-sky-300", fond: "bg-sky-400", teinte: "bg-sky-400/15" },
-  analyse: { libelle: "Analyse", texte: "text-violet-300", fond: "bg-violet-400", teinte: "bg-violet-400/15" },
-  courrier: { libelle: "Courrier", texte: "text-teal-300", fond: "bg-teal-400", teinte: "bg-teal-400/15" },
-  decision: { libelle: "Décision", texte: "text-amber-300", fond: "bg-amber-400", teinte: "bg-amber-400/15" },
+  resultats: { libelle: "Résultats", texte: "text-emerald-300", fond: "bg-emerald-400", teinte: "voile-neutre" },
+  briefing: { libelle: "Briefing", texte: "text-sky-300", fond: "bg-sky-400", teinte: "voile-neutre" },
+  analyse: { libelle: "Analyse", texte: "text-violet-300", fond: "bg-violet-400", teinte: "voile-neutre" },
+  courrier: { libelle: "Courrier", texte: "text-teal-300", fond: "bg-teal-400", teinte: "voile-neutre" },
+  decision: { libelle: "Décision", texte: "text-amber-300", fond: "bg-amber-400", teinte: "voile-neutre" },
 };

@@ -29,7 +29,7 @@ export default async function PlayerCompetitionPage({
           <h1 className="text-2xl font-bold">{view.name}</h1>
           {myTeamLabel ? (
             <p className="mt-1 text-sm text-slate-400">
-              Votre équipe : <span className="text-amber-200">{myTeamLabel}</span>
+              Votre équipe : <span className="font-semibold text-slate-100">{myTeamLabel}</span>
             </p>
           ) : null}
         </div>

@@ -60,7 +60,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
   return (
     <section
       aria-label="Rapport extra-financier"
-      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-3 sm:p-5"
+      className="carte p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
@@ -90,7 +90,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
         </div>
       ) : null}
 
-      <div className="mt-3 rounded-lg border border-emerald-400/10 bg-slate-950 p-3 sm:p-4">
+      <div className="encadre-neutre mt-3 rounded-lg p-3 sm:p-4">
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Empreinte carbone (indice indicatif)

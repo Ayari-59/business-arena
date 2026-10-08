@@ -8,10 +8,12 @@ interface TrainingGalleryProps {
   onSelectModule: (module: TrainingModule) => void;
 }
 
+// La difficulté est un repère, pas un résultat : ni vert ni rouge, l'encre
+// sur le voile neutre, le mot dit le degré.
 const difficultyColors = {
-  beginner: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
-  intermediate: "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300",
-  advanced: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
+  beginner: "pastille-etat text-slate-300",
+  intermediate: "pastille-etat text-slate-200",
+  advanced: "pastille-etat font-semibold text-slate-100",
 };
 
 const difficultyLabels = {

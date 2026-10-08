@@ -70,7 +70,7 @@ export default async function RendezVousPage() {
           <p className="carte p-6 text-base leading-relaxed text-slate-400">
             La prise de rendez-vous en ligne est momentanément indisponible. Écrivez-nous depuis
             la{" "}
-            <Link href="/orientation" className="text-amber-300 underline-offset-4 hover:underline">
+            <Link href="/orientation" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
               page d&apos;orientation
             </Link>{" "}
             : nous vous proposerons un moment par courriel.

@@ -16,12 +16,9 @@ export function KpiCard({
   trend?: { direction: "up" | "down" | "flat"; label: string };
   sparklineData?: number[];
 }) {
-  const border =
-    tone === "good"
-      ? "border-emerald-500/40"
-      : tone === "critical"
-        ? "border-red-500/40"
-        : "border-white/10";
+  // Le sens est porté par la bande pleine de gauche : le cadre reste neutre
+  // (il était vert ou rouge dilués, des pastels).
+  const border = "border-white/10";
   const valueColor =
     tone === "good" ? "text-emerald-400" : tone === "critical" ? "text-red-400" : "text-slate-50";
   const stripe =

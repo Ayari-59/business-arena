@@ -114,7 +114,7 @@ function LigneDEquipe({
           <Embleme code={equipe.embleme} equipe={equipe.nom} className="h-4 w-4 text-amber-300" />
           {equipe.nom}
           {mienne ? (
-            <span className="rounded-full border border-amber-400/40 px-2 py-0.5 text-xs font-medium text-amber-300">
+            <span className="rounded-full pastille-etat px-2 py-0.5 text-xs font-medium text-slate-200">
               votre équipe
             </span>
           ) : null}
@@ -130,7 +130,7 @@ function LigneDEquipe({
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="shrink-0 rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-400/10 disabled:opacity-60"
+          className="shrink-0 rounded-lg bouton-filet border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/5"
         >
           {pending ? "Changement…" : "Rejoindre"}
         </button>

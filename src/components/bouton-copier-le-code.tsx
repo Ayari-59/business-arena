@@ -32,7 +32,7 @@ export function BoutonCopierLeCode({ code }: { code: string }) {
     <button
       type="button"
       onClick={agir}
-      className="mt-2 mr-2 rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-400/10 pointer-coarse:min-h-11"
+      className="mt-2 mr-2 rounded-lg bouton-filet border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/5 pointer-coarse:min-h-11"
     >
       {fait ? "✓ Copié" : "Copier le code"}
     </button>

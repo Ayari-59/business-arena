@@ -47,22 +47,21 @@ export function VosReussites({
             <li
               key={reussite.code}
               className={`rounded-lg border px-3 py-2 ${
-                acquise
-                  ? "border-emerald-400/30 bg-emerald-950/20"
-                  : "border-dashed border-white/15 bg-slate-950/40"
+                // Une distinction obtenue : le filet d'or, sur le voile neutre.
+                acquise ? "encadre-distinction" : "border-dashed border-white/15 bg-slate-950/40"
               }`}
             >
               <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span aria-hidden className={acquise ? "text-emerald-300" : "text-slate-400"}>
+                <span aria-hidden className={acquise ? "texte-or" : "text-slate-400"}>
                   {acquise ? "★" : "☆"}
                 </span>
                 <span
-                  className={`text-sm font-semibold ${acquise ? "text-emerald-200" : "text-slate-300"}`}
+                  className={`text-sm font-semibold ${acquise ? "text-slate-100" : "text-slate-300"}`}
                 >
                   {reussite.titre}
                 </span>
                 {acquise ? (
-                  <span className="rounded-full border border-emerald-400/25 px-2 py-0.5 text-xs text-emerald-300">
+                  <span className="filet-or texte-or rounded-full border px-2 py-0.5 text-xs">
                     {nommerLeTour(round)}
                   </span>
                 ) : (

@@ -54,8 +54,10 @@ export const dynamic = "force-dynamic";
  */
 
 const TEINTES: Record<NiveauDeConfiance, string> = {
-  solide: "bg-emerald-400/10 text-emerald-300 border-emerald-400/30",
-  etabli: "bg-sky-400/10 text-sky-300 border-sky-400/30",
+  // La confiance est un ÉTAT de la mesure, pas un résultat : ni vert ni bleu
+  // ciel, le voile neutre et son point plein ; le mot dit le degré.
+  solide: "pastille-etat text-slate-100",
+  etabli: "pastille-etat text-slate-200",
   indicatif: "bg-slate-700/40 text-slate-300 border-slate-500/40",
   aucun: "bg-slate-900 text-slate-400 border-white/10",
 };
@@ -411,7 +413,7 @@ export default async function ProfilPage({
                 <li key={r.code} className="carte max-w-3xl p-4">
                   <Link
                     href={`/entreprises/episode/${r.code}?niveau=${profil.conseil.niveau}`}
-                    className="font-semibold text-amber-300 underline-offset-2 hover:underline"
+                    className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                   >
                     {r.numero} · {r.titre}
                   </Link>

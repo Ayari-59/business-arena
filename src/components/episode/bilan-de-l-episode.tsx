@@ -18,11 +18,14 @@ import { RetourDeLEpisode } from "./retour-de-l-episode";
  * séparer les deux, décision par décision.
  */
 
+// La matrice se lit au filet plein, pas à une dragée : le mérité porte le
+// filet vert, la leçon le filet rouge, les deux cases du hasard restent
+// neutres. Toutes sur le même voile.
 const FOND_DES_CAS: Record<Cas, string> = {
-  "bonne-fav": "bg-emerald-400/10 border-emerald-400/25",
-  "bonne-defav": "bg-slate-950 border-white/10",
-  "faible-fav": "bg-amber-400/10 border-amber-400/25",
-  "faible-defav": "bg-rose-400/10 border-rose-400/25",
+  "bonne-fav": "encadre-gain",
+  "bonne-defav": "encadre-neutre",
+  "faible-fav": "encadre-neutre",
+  "faible-defav": "encadre-perte",
 };
 
 function Jeton({ d, titre }: { d: number; titre?: string }) {
@@ -98,7 +101,7 @@ function Comparaison({
                     {change && (
                       <span
                         aria-hidden="true"
-                        className="ml-2 text-xs font-semibold text-amber-300"
+                        className="ml-2 text-xs font-semibold text-slate-400"
                       >
                         changé
                       </span>
@@ -140,7 +143,7 @@ function Comparaison({
 function LEnchainement({ e, kE }: { e: Enchainement; kE: (v: number) => string }) {
   const signe = (v: number) => `${v >= 0 ? "+" : "−"}${kE(Math.abs(v))}`;
   return (
-    <div className="rounded-lg border border-amber-400/30 bg-amber-400/5 p-4">
+    <div className="encadre-neutre rounded-lg p-4">
       <h3 className="font-semibold text-slate-50">Vos décisions s&apos;enchaînent</h3>
       <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-300">
         Chaque décision est jugée dans la situation que les précédentes ont créée, et plusieurs des
@@ -188,7 +191,7 @@ function Sommaire({ nombre }: { nombre: number }) {
           <li key={href}>
             <a
               href={href}
-              className="underline decoration-slate-600 underline-offset-4 hover:text-amber-300 hover:decoration-amber-400"
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               {nom}
             </a>
@@ -266,8 +269,8 @@ export function BilanDeLEpisode({
             </p>
             <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
               <span
-                className={`rounded-full px-2 font-semibold ${
-                  u.tenu ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"
+                className={`rounded-full px-2 font-semibold text-slate-200 ${
+                  u.tenu ? "pastille-gain" : "pastille-perte"
                 }`}
               >
                 {u.tenu ? "tenu" : "manqué"}
@@ -312,7 +315,12 @@ export function BilanDeLEpisode({
           {barres.map((b) => (
             <li
               key={b.nom}
-              className="grid grid-cols-[7rem_minmax(0,1fr)_4rem] items-center gap-3 sm:grid-cols-[10rem_minmax(0,1fr)_4.5rem]"
+              // LA LIGNE DU JOUEUR : le filet orange et le voile neutre de la
+              // charte, et une barre en bleu donnée comme les autres sont en
+              // gris ardoise. L'orange plein de la barre était l'action.
+              className={`grid grid-cols-[7rem_minmax(0,1fr)_4rem] items-center gap-3 sm:grid-cols-[10rem_minmax(0,1fr)_4.5rem] ${
+                "vous" in b ? "ligne-moi -mx-2 rounded-md px-2 py-1" : ""
+              }`}
             >
               <span
                 className={`text-sm ${"vous" in b ? "font-semibold text-slate-50" : "text-slate-300"}`}
@@ -321,7 +329,7 @@ export function BilanDeLEpisode({
               </span>
               <span className="h-3.5 overflow-hidden rounded-md bg-slate-800">
                 <span
-                  className={`block h-full rounded-md ${"vous" in b ? "bg-amber-400" : "bg-slate-500"}`}
+                  className={`block h-full rounded-md ${"vous" in b ? "bg-[var(--donnee)]" : "bg-[var(--donnee-2)]"}`}
                   style={{ width: `${largeur(b.valeur)}%` }}
                 />
               </span>

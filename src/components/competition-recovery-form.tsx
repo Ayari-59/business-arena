@@ -47,9 +47,7 @@ export function CompetitionRecoveryForm({
         même une fois les inscriptions closes. Votre enseignant peut vous le relire.
       </p>
       {state.error ? (
-        <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-          {state.error}
-        </p>
+        <p className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">{state.error}</p>
       ) : null}
       <GuardError message={guardError} />
       <button

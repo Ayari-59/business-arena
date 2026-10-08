@@ -113,9 +113,9 @@ const FILIERES = (() => {
 const ADEQUATION: Record<string, { label: string; className: string }> = {
   coeur: {
     label: "cœur du jeu",
-    className: "border-emerald-400/40 text-emerald-300",
+    className: "border-emerald-400 text-emerald-300",
   },
-  couvert: { label: "couvert", className: "border-sky-400/40 text-sky-300" },
+  couvert: { label: "couvert", className: "border-white/10 text-sky-300" },
   partiel: {
     label: "partiel",
     className: "border-slate-400/40 text-slate-400",

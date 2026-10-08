@@ -2,11 +2,19 @@ import { formatEuro, formatPercent } from "@/lib/format";
 
 /**
  * Graphiques SVG serveur, sobres et accessibles (skill dataviz) :
- * - palette validée mode sombre : série 1 bleu #3987e5, série 2 orange #d95926,
- *   négatif rouge #e66767 (pôle divergent), encre secondaire #c3c2b7 ;
+ * - la palette de la DONNÉE (globals.css, « LA DONNÉE ») : série principale en
+ *   bleu donnée `--donnee`, seconde série en gris ardoise `--donnee-2`, le
+ *   rouge pour le seul signe négatif, les catégories en `--secteur-*`. Elle
+ *   suit le fond : foncée sur le papier, claire sur le marine. Le bleu vif
+ *   #3987e5 et l'orange #d95926 (la couleur de l'action) sont partis ;
  * - un seul axe (tout est en €), légende dès 2 séries, labels directs sur le
  *   dernier point, grille discrète, <title> natifs comme couche de survol.
  */
+const SERIE_1 = "var(--donnee)";
+const SERIE_2 = "var(--donnee-2)";
+const NEGATIF = "var(--color-red-400)";
+const POSITIF = "var(--color-emerald-400)";
+const FILET = "var(--filet-carte)";
 
 /**
  * Sparkline SVG miniature pour les KPI cards : un trait fin de 48×16,
@@ -25,7 +33,7 @@ export function Sparkline({ data, width = 48, height = 16 }: { data: number[]; w
       <polyline
         points={points.join(" ")}
         fill="none"
-        stroke={trending ? "#34d399" : "#f87171"}
+        style={{ stroke: trending ? POSITIF : NEGATIF }}
         strokeWidth="1.5"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -34,15 +42,17 @@ export function Sparkline({ data, width = 48, height = 16 }: { data: number[]; w
         cx={((data.length - 1) * step).toFixed(1)}
         cy={(height - ((data[data.length - 1]! - min) / range) * height).toFixed(1)}
         r="2"
-        fill={trending ? "#34d399" : "#f87171"}
+        style={{ fill: trending ? POSITIF : NEGATIF }}
       />
     </svg>
   );
 }
 
+/** Les catégories (segments de marché) : les teintes désaturées des métiers. */
 const SEGMENT_COLORS = [
-  "#3987e5", "#d95926", "#7c3aed", "#10b981", "#f59e0b",
-  "#ec4899", "#06b6d4", "#84cc16",
+  "var(--secteur-hotellerie)", "var(--secteur-industrie)", "var(--secteur-ecommerce)",
+  "var(--secteur-services)", "var(--secteur-restauration)", "var(--secteur-commerce)",
+  "var(--secteur-abonnement)", "var(--secteur-transport)",
 ];
 
 const W = 560;
@@ -81,37 +91,37 @@ export function RevenueChart({
     <figure>
       <figcaption className="mb-2 flex items-center gap-4 text-xs text-slate-400">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-0.5 w-4 rounded-md" style={{ background: "#3987e5" }} /> Chiffre d&apos;affaires
+          <span className="h-0.5 w-4 rounded-md" style={{ background: SERIE_1 }} /> Chiffre d&apos;affaires
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-0.5 w-4 rounded-md" style={{ background: "#d95926" }} /> Résultat net
+          <span className="h-0.5 w-4 rounded-md" style={{ background: SERIE_2 }} /> Résultat net
         </span>
       </figcaption>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Évolution du chiffre d'affaires et du résultat net par tour">
-        <line x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} stroke="#383835" strokeWidth="1" />
+        <line x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} style={{ stroke: FILET }} strokeWidth="1" />
         {history.map((h) => (
           <g key={h.round}>
-            <text x={x(h.round)} y={H - 6} textAnchor="middle" fontSize="10" fill="#898781">
+            <text x={x(h.round)} y={H - 6} textAnchor="middle" fontSize="10" fill="currentColor" className="text-slate-400">
               T{h.round}
             </text>
           </g>
         ))}
-        <path d={path("revenue")} fill="none" stroke="#3987e5" strokeWidth="2" strokeLinejoin="round" />
-        <path d={path("netIncome")} fill="none" stroke="#d95926" strokeWidth="2" strokeLinejoin="round" />
+        <path d={path("revenue")} fill="none" style={{ stroke: SERIE_1 }} strokeWidth="2" strokeLinejoin="round" />
+        <path d={path("netIncome")} fill="none" style={{ stroke: SERIE_2 }} strokeWidth="2" strokeLinejoin="round" />
         {history.map((h) => (
           <g key={h.round}>
-            <circle cx={x(h.round)} cy={y(h.revenue)} r="3.5" fill="#3987e5">
+            <circle cx={x(h.round)} cy={y(h.revenue)} r="3.5" style={{ fill: SERIE_1 }}>
               <title>{`T${h.round} · CA : ${formatEuro(h.revenue)}`}</title>
             </circle>
-            <circle cx={x(h.round)} cy={y(h.netIncome)} r="3.5" fill="#d95926">
+            <circle cx={x(h.round)} cy={y(h.netIncome)} r="3.5" style={{ fill: SERIE_2 }}>
               <title>{`T${h.round} · Résultat : ${formatEuro(h.netIncome)}`}</title>
             </circle>
           </g>
         ))}
-        <text x={x(last.round) + 8} y={y(last.revenue) + 3} fontSize="10" fill="#c3c2b7">
+        <text x={x(last.round) + 8} y={y(last.revenue) + 3} fontSize="10" fill="currentColor" className="text-slate-300">
           {formatEuro(last.revenue)}
         </text>
-        <text x={x(last.round) + 8} y={y(last.netIncome) + 3} fontSize="10" fill="#c3c2b7">
+        <text x={x(last.round) + 8} y={y(last.netIncome) + 3} fontSize="10" fill="currentColor" className="text-slate-300">
           {formatEuro(last.netIncome)}
         </text>
       </svg>
@@ -142,7 +152,7 @@ export function TreasuryChart({
         Trésorerie nette par tour (négatif = découvert bancaire)
       </figcaption>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Trésorerie nette par tour">
-        <line x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} stroke="#383835" strokeWidth="1" />
+        <line x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} style={{ stroke: FILET }} strokeWidth="1" />
         {history.map((h) => {
           const cx = PAD.left + (h.round - 0.5) * slot;
           const top = Math.min(y(0), y(h.netTreasury));
@@ -156,11 +166,11 @@ export function TreasuryChart({
                 width={barW}
                 height={height}
                 rx="3"
-                fill={negative ? "#e66767" : "#3987e5"}
+                style={{ fill: negative ? NEGATIF : SERIE_1 }}
               >
                 <title>{`T${h.round} · Trésorerie nette : ${formatEuro(h.netTreasury)}`}</title>
               </rect>
-              <text x={cx} y={H - 6} textAnchor="middle" fontSize="10" fill="#898781">
+              <text x={cx} y={H - 6} textAnchor="middle" fontSize="10" fill="currentColor" className="text-slate-400">
                 T{h.round}
               </text>
             </g>
@@ -193,13 +203,13 @@ export function MarketShareChart({
             <li key={seg.name} className="text-sm">
               <div className="flex items-baseline justify-between gap-3 text-slate-300">
                 <span className="min-w-0">{seg.name}</span>
-                <span className="shrink-0 font-semibold tabular-nums" style={{ color }}>
+                <span className="shrink-0 font-semibold tabular-nums text-slate-100">
                   {formatPercent(seg.share)}
                 </span>
               </div>
               <div className="mt-0.5 h-2 rounded-full bg-slate-800">
                 <div
-                  className="h-2 rounded-full opacity-85"
+                  className="h-2 rounded-full"
                   style={{ width: `${Math.max(2, Math.min(100, seg.share * 100))}%`, backgroundColor: color }}
                 />
               </div>

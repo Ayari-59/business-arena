@@ -104,7 +104,7 @@ function CarteFiche({ fiche }: { fiche: FicheEnseignant }) {
       </p>
       <Link
         href={`/enseignants/episodes/${fiche.code}`}
-        className="mt-auto self-start text-sm font-semibold text-amber-300 underline-offset-2 hover:underline"
+        className="mt-auto self-start text-sm font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
       >
         Lire la fiche de l&apos;épisode {ep.numero}
       </Link>

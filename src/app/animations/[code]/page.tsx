@@ -169,13 +169,13 @@ export default async function AtelierPage({
             </a>
             <Link
               href={`/teacher/animations/${atelier.code}/dossier`}
-              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+              className="rounded-lg bouton-filet border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5"
             >
               Corrigés des situations
             </Link>
             <a
               href={`/teacher/animations/${atelier.code}/grille`}
-              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+              className="rounded-lg bouton-filet border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5"
             >
               Grille de correction
             </a>
@@ -497,16 +497,16 @@ export default async function AtelierPage({
                   </ol>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg border border-emerald-400/20 bg-emerald-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-xs uppercase tracking-surtitre text-emerald-300 print:text-black">
+                    <div className="encadre-neutre rounded-lg p-3 print:border-black/15">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-200 print:text-black">
                         Livrable de la séance
                       </h4>
                       <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
                         {s.livrable}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-sky-400/20 bg-sky-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-xs uppercase tracking-surtitre text-sky-300/80 print:text-black">
+                    <div className="encadre-neutre rounded-lg p-3 print:border-black/15">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-200 print:text-black">
                         Trace pour le {atelier.traceLabel}
                       </h4>
                       <p className="mt-1.5 text-sm italic leading-relaxed text-slate-300 print:text-black">

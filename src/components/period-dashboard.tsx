@@ -51,13 +51,15 @@ function formatKpi(value: number, format: KpiFormat): string {
  * neuf sujets, c'était demander à l'élève d'apprendre un code que rien
  * n'expliquait, et noyer les deux seules couleurs qui disent quelque chose :
  * le rouge d'une perte et l'ambre d'une vigilance. Le sujet se dit désormais
- * par le pictogramme, en laiton ; la couleur du cadre ne sert plus qu'à
- * l'état, et une ligne sans histoire reste en encre neutre.
+ * par le pictogramme ; la couleur du cadre ne sert plus qu'à l'état, et une
+ * ligne sans histoire reste en encre neutre. L'ambre de la vigilance était la
+ * couleur de l'action, sur un voile : la vigilance prend le voile neutre et
+ * l'encre pleine, la perte le filet rouge franc.
  */
 const TONS_DE_CONSTAT = {
-  neutre: { cadre: "border-white/5 bg-slate-950 text-slate-300", picto: "text-amber-400" },
-  vigilance: { cadre: "border-amber-400/30 bg-amber-950/30 text-amber-200", picto: "" },
-  perte: { cadre: "border-red-400/30 bg-red-950/30 text-red-200", picto: "" },
+  neutre: { cadre: "border-white/5 bg-slate-950 text-slate-300", picto: "text-slate-400" },
+  vigilance: { cadre: "encadre-neutre font-medium text-slate-100", picto: "" },
+  perte: { cadre: "encadre-perte text-red-200", picto: "" },
 } as const;
 
 function Constat({
@@ -83,24 +85,25 @@ function Constat({
  * partie. Trois piliers ESG dérivés du résultat ; un pilier « non évalué »
  * (aucun signal dans ce scénario) reste neutre et le dit.
  */
+// Trois mesures d'une même grandeur : une seule teinte, le bleu donnée.
 const RSE_PILLARS = [
-  { key: "environment", label: "Environnement", bar: "bg-emerald-400" },
-  { key: "social", label: "Social", bar: "bg-fuchsia-400" },
-  { key: "governance", label: "Gouvernance", bar: "bg-sky-400" },
+  { key: "environment", label: "Environnement", bar: "bg-[var(--donnee)]" },
+  { key: "social", label: "Social", bar: "bg-[var(--donnee)]" },
+  { key: "governance", label: "Gouvernance", bar: "bg-[var(--donnee)]" },
 ] as const;
 
 function RseCard({ rse }: { rse: RseIndex }) {
   return (
     <section
       aria-label="Indice RSE du tour"
-      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-3 sm:p-5"
+      className="carte p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
           <Icone nom="feuille" className="h-4 w-4 text-amber-400" />
           Indice RSE
         </h2>
-        <span className="tabular-nums text-lg font-semibold text-emerald-300">
+        <span className="tabular-nums text-lg font-semibold text-slate-100">
           {rse.score}
           <span className="text-xs text-slate-400"> / 100</span>
         </span>
@@ -409,7 +412,7 @@ export function PeriodDashboard({
                           {row.name}
                           {row.defaillant ? (
                             <span
-                              className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300"
+                              className="rounded-full encadre-perte px-2 py-0.5 text-xs font-semibold text-red-300"
                               title="Entreprise défaillante : deux tours de cessation de paiements. Activité gelée jusqu'à recapitalisation."
                             >
                               <Icone nom="alerte" className="mr-1 h-3 w-3" />
@@ -632,7 +635,7 @@ export function PeriodDashboard({
                             </td>
                             <td
                               className={`py-1.5 pr-2 text-right tabular-nums ${
-                                severe ? "text-amber-300" : "text-emerald-300"
+                                severe ? "text-red-300" : "text-slate-300"
                               }`}
                             >
                               {gap >= 0 ? "+" : ""}
@@ -640,7 +643,7 @@ export function PeriodDashboard({
                             </td>
                             <td
                               className={`py-1.5 text-right tabular-nums ${
-                                severe ? "text-amber-300" : "text-emerald-300"
+                                severe ? "text-red-300" : "text-slate-300"
                               }`}
                             >
                               {line.relative === null

@@ -293,7 +293,7 @@ export default async function ArenaPage({
       ) : null}
       {view.courriersAnnonces.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-3 sm:p-5">
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
             <Icone nom="courrier" className="h-4 w-4" />
             Le courrier, en détail
           </p>
@@ -329,7 +329,7 @@ export default async function ArenaPage({
         }));
         return encore.length > 0 ? (
           <section className="carte p-3 sm:p-5">
-            <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+            <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
               <Icone nom="duree" className="h-4 w-4" />
               Encore en vigueur ce tour
             </p>
@@ -449,7 +449,7 @@ export default async function ArenaPage({
         <ul className="space-y-1.5">
           {levers.map((l) => (
             <li key={l.field} className="flex gap-2 text-sm leading-snug text-slate-300">
-              <span className="mt-px leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
+              <span className="mt-px leading-none text-slate-400">{DIRECTION_ICONS[l.direction]}</span>
               <span>
                 <span className="font-medium text-slate-200">{l.label}</span> — {l.hint}
               </span>
@@ -516,7 +516,7 @@ export default async function ArenaPage({
   const reponsesSection =
     reponses.length > 0 ? (
                         <section className="carte p-3 sm:p-5">
-                          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+                          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
                             <Icone nom="courrier" className="h-4 w-4" />
                             En retour de vos décisions
                           </p>
@@ -652,7 +652,7 @@ export default async function ArenaPage({
             // numéro, et l'état replié au chevron qui pivote.
             data-tour-passe
             className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&[open]]:border-white/20 ${
-              netIncome >= 0 ? "border-l-emerald-400/70" : "border-l-red-400/70"
+              netIncome >= 0 ? "border-l-emerald-400" : "border-l-red-400"
             }`}
           >
             {/*
@@ -666,10 +666,10 @@ export default async function ArenaPage({
             <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
               <span
                 aria-hidden
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums ${
-                  netIncome >= 0
-                    ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
-                    : "border-red-400/40 bg-red-400/10 text-red-300"
+                // Le cercle dit le signe du tour par son trait PLEIN, vert ou
+                // rouge, sur le voile neutre : il était une dragée rose ou menthe.
+                className={`voile-neutre flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold tabular-nums text-slate-100 ${
+                  netIncome >= 0 ? "border-emerald-400" : "border-red-400"
                 }`}
               >
                 {p.round}
@@ -678,7 +678,7 @@ export default async function ArenaPage({
                 <span className="block text-sm font-semibold text-slate-100">
                   {periodLabel(view.roundDays, p.round)}
                   {isLatest && !finished ? (
-                    <span className="ml-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
+                    <span className="pastille-etat ml-2 rounded-full px-2 py-0.5 text-xs font-medium text-slate-200">
                       résultats livrés
                     </span>
                   ) : null}
@@ -913,8 +913,8 @@ export default async function ArenaPage({
                   </div>
                 ) : null;
   const etatDesDecisions = view.pendingDecisionsPar ? (
-                    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-emerald-300">
-                      <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 font-semibold">
+                    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                      <span className="pastille-etat rounded-full px-2 py-0.5 font-semibold text-slate-100">
                         ✓{" "}
                         {mentionDeValidation(
                           view.pendingDecisionsPar.nom,
@@ -1049,7 +1049,7 @@ export default async function ArenaPage({
                   <p className="mt-1 text-sm leading-relaxed text-slate-400">
                     <a
                       href={`/arena/${view.gameId}/cockpit`}
-                      className="text-amber-300 underline-offset-4 hover:underline"
+                      className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                     >
                       Cockpit de prévision (Excel)
                     </a>
@@ -1126,7 +1126,7 @@ export default async function ArenaPage({
               <Embleme
                 code={view.playerTeamEmbleme}
                 equipe={view.playerTeamName}
-                className="h-6 w-6 text-amber-300"
+                className="h-6 w-6 text-slate-400"
               />
               {view.playerTeamName}
             </h1>
@@ -1159,7 +1159,7 @@ export default async function ArenaPage({
             {SECTOR_LABELS[view.sector]}
           </p>
           <p
-            className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300 max-sm:hidden"
+            className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-slate-300 max-sm:hidden"
             title="Niveau de difficulté de la partie"
           >
             Niveau {view.difficulty.level} · {view.difficulty.name}
@@ -1405,16 +1405,12 @@ export default async function ArenaPage({
                     qualifie la ligne comme « résultats livrés » qualifie celle
                     d'un tour clos. Même place, même forme, sens inverse.
 
-                    VERT ET LUMINEUX, avec sa diode. En ambre, il se fondait
-                    dans le cadre ambre de la section : une pastille de la
-                    couleur de son contenant ne se voit pas. Le vert le détache,
-                    et le point allumé dit « ça tourne » — c'est le seul endroit
-                    de la ligne qui parle du présent. */}
-                <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-200 max-sm:hidden">
-                  <span
-                    aria-hidden
-                    className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_6px_1px] shadow-emerald-400/70"
-                  />
+                    UN ÉTAT, PAS UN RÉSULTAT : neutre, avec son point plein.
+                    Il a été ambre (fondu dans le cadre ambre de la section),
+                    puis vert lumineux avec sa diode : mais « en cours » n'est
+                    pas un gain, et le vert ne dit que des résultats. Le point
+                    marine suffit à dire « ça tourne ». */}
+                <span className="pastille-etat rounded-full px-2.5 py-0.5 text-xs font-semibold text-slate-100 max-sm:hidden">
                   en cours
                 </span>
               </span>
@@ -1438,16 +1434,16 @@ export default async function ArenaPage({
             {!telephone && latestRound !== null ? (
               <a
                 href="#dernier-resultat"
-                className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-3 py-2.5 text-sm transition hover:bg-emerald-400/10 sm:px-4"
+                className="voile-neutre flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 text-sm transition hover:underline sm:px-4"
               >
-                <span className="flex items-center gap-2 font-medium text-emerald-200">
+                <span className="flex items-center gap-2 font-medium text-amber-300">
                   <Icone nom="resultats" className="h-4 w-4" />
                   {periodLabel(view.roundDays, latestRound)} {view.kind === "solo" ? "simulé" : "clos"} — voir les résultats
                 </span>
                 {/* La flèche descend : les tours clos sont passés SOUS le
                     tour en cours, pour que l'élève ouvre sa partie sur ce
                     qu'il a à faire. */}
-                <span aria-hidden className="text-emerald-300">
+                <span aria-hidden className="text-amber-300">
                   ↓
                 </span>
               </a>

@@ -387,8 +387,8 @@ export default async function AdminPage({
             </div>
           </fieldset>
 
-          <fieldset className="rounded-xl border border-sky-400/25 bg-sky-950/10 p-4">
-            <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-sky-300">
+          <fieldset className="encadre-neutre rounded-xl p-4">
+            <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
               Assistant IA
             </legend>
             <p className="mb-3 text-xs text-slate-400">
@@ -502,7 +502,7 @@ export default async function AdminPage({
         <h2 className="text-sm font-semibold text-slate-200">
           Demandes de simulation
           {aRepondre.length > 0 ? (
-            <span className="ml-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-xs text-amber-300">
+            <span className="ml-2 rounded-full pastille-etat px-2 py-0.5 text-xs text-slate-200">
               {aRepondre.length} à répondre
             </span>
           ) : null}
@@ -526,7 +526,7 @@ export default async function AdminPage({
                       {d.name} · <span className="font-normal text-slate-300">{d.school}</span>
                     </p>
                     <p className="mt-0.5 text-xs text-slate-400">
-                      <a href={`mailto:${d.email}`} className="text-amber-300 underline-offset-4 hover:underline">
+                      <a href={`mailto:${d.email}`} className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
                         {d.email}
                       </a>
                       {" · "}
@@ -542,7 +542,7 @@ export default async function AdminPage({
                   ) : (
                     <GuardedForm action={marquerDemandeOrientationTraiteeAction} label="demande traitée">
                       <input type="hidden" name="id" value={d.id} />
-                      <SubmitButton className="rounded-lg border border-amber-400/40 px-3 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-400/10">
+                      <SubmitButton className="rounded-lg bouton-filet border border-white/15 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-white/5">
                         Traitée
                       </SubmitButton>
                     </GuardedForm>
@@ -582,7 +582,7 @@ export default async function AdminPage({
         <h2 className="text-sm font-semibold text-slate-200">
           Rendez-vous téléphoniques
           {aVenir.length > 0 ? (
-            <span className="ml-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-xs text-amber-300">
+            <span className="ml-2 rounded-full pastille-etat px-2 py-0.5 text-xs text-slate-200">
               {aVenir.length} à venir
             </span>
           ) : null}
@@ -634,10 +634,10 @@ export default async function AdminPage({
           {messageAgenda ? (
             <p
               role={messageAgenda.ton === "bon" ? "status" : "alert"}
-              className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+              className={`mt-3 rounded-lg px-3 py-2 text-xs ${
                 messageAgenda.ton === "bon"
-                  ? "border-teal-400/30 bg-teal-950/30 text-teal-200"
-                  : "border-red-400/30 bg-red-950/40 text-red-300"
+                  ? "encadre-neutre text-slate-100"
+                  : "encadre-perte text-red-300"
               }`}
             >
               {messageAgenda.texte}
@@ -670,11 +670,11 @@ export default async function AdminPage({
                     </p>
                     <p className="mt-0.5 text-xs text-slate-300">
                       {r.name} · {r.school} ·{" "}
-                      <a href={`tel:${r.phone.replace(/\s/g, "")}`} className="text-amber-300 underline-offset-4 hover:underline">
+                      <a href={`tel:${r.phone.replace(/\s/g, "")}`} className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
                         {r.phone}
                       </a>
                       {" · "}
-                      <a href={`mailto:${r.email}`} className="text-amber-300 underline-offset-4 hover:underline">
+                      <a href={`mailto:${r.email}`} className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
                         {r.email}
                       </a>
                     </p>
@@ -697,7 +697,7 @@ export default async function AdminPage({
                   {r.aVenir ? (
                     <GuardedForm action={annulerRendezVousAction} label="annulation du rendez-vous">
                       <input type="hidden" name="id" value={r.id} />
-                      <SubmitButton className="rounded-lg border border-red-400/40 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-red-400/10">
+                      <SubmitButton className="rounded-lg border border-red-400 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-white/5">
                         Annuler
                       </SubmitButton>
                     </GuardedForm>
@@ -785,7 +785,7 @@ export default async function AdminPage({
                   </summary>
 
                   {org.licence.blocking ? (
-                    <p className="mt-3 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-xs text-red-200">
+                    <p className="mt-3 rounded-lg encadre-perte px-3 py-2 text-xs text-red-200">
                       {org.licence.blocking}
                     </p>
                   ) : null}

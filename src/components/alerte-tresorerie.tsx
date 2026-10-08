@@ -55,7 +55,7 @@ export function AlerteTresorerie({
       <section
         role="alert"
         aria-label="Entreprise défaillante"
-        className="rounded-lg border border-red-400/40 border-l-4 border-l-red-400 bg-red-950/40 px-3 py-3 sm:px-4"
+        className="encadre-perte rounded-lg px-3 py-3 sm:px-4"
       >
         <p className="text-sm font-semibold text-red-200">
           <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
@@ -138,7 +138,7 @@ function Recours({
     }
     if (demande.statut === "granted") {
       return (
-        <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-3 py-2 text-sm leading-relaxed text-slate-200">
+        <p className="encadre-gain mt-3 rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-200">
           <span aria-hidden className="mr-1.5 font-bold text-emerald-300">
             ✓
           </span>

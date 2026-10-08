@@ -120,7 +120,10 @@ export function CourbeDesSemaines({
                         tabIndex={0}
                         aria-label={`Semaine ${w}`}
                         className={`relative block w-full max-w-6 rounded-t-md outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-                          enAvant ? "bg-amber-400" : "bg-slate-500"
+                          // La palette de la donnée : la semaine qu'on regarde en
+                          // bleu donnée, les autres en gris ardoise. L'orange
+                          // était celui de l'action.
+                          enAvant ? "bg-[var(--donnee)]" : "bg-[var(--donnee-2)]"
                         }`}
                         style={{ height: hauteur(valeur(s)) }}
                       >

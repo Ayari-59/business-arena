@@ -164,7 +164,7 @@ export function QuickConfigFields({
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-xs leading-none ${
                     s.code === regle.entrepriseOuverte
-                      ? "bg-amber-400/15 text-amber-200"
+                      ? "bg-white/5 font-semibold text-slate-100"
                       : "bg-white/5 text-slate-400"
                   }`}
                 >
@@ -226,20 +226,20 @@ export function QuickConfigFields({
         // entreprise offre, et où s'adresser.
         <div
           data-niveaux-reserves
-          className="mt-2 rounded-lg border border-amber-400/25 bg-amber-950/20 px-3 py-2.5 text-sm leading-snug text-amber-100/90"
+          className="encadre-neutre mt-2 rounded-lg px-3 py-2.5 text-sm leading-snug text-slate-200"
         >
           <p>
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-            <strong className="font-semibold text-amber-100">{messageNiveauxReserves(regle)}</strong>{" "}
+            <strong className="font-semibold text-slate-100">{messageNiveauxReserves(regle)}</strong>{" "}
             {scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "L'entreprise vitrine"} se
             joue à tous les niveaux.
           </p>
           {liens ? (
             <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-              <a href={liens.contact.href} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+              <a href={liens.contact.href} className="font-semibold text-amber-300 underline decoration-1 underline-offset-4">
                 {liens.contact.libelle} →
               </a>
-              <a href={liens.enseignant.href} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+              <a href={liens.enseignant.href} className="font-semibold text-amber-300 underline decoration-1 underline-offset-4">
                 {liens.enseignant.libelle} →
               </a>
             </p>
@@ -250,7 +250,7 @@ export function QuickConfigFields({
       {sec?.variante ? (
         // Le niveau décide de la variante jouée : on le dit à côté du curseur,
         // là où le choix se fait, avec ce que l'autre variante attend.
-        <p className="mt-1 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-sm leading-snug text-amber-100/90" data-variante>
+        <p className="encadre-neutre mt-1 rounded-lg px-3 py-2 text-sm leading-snug text-slate-200" data-variante>
           {level >= sec.variante.gammeFromLevel
             ? `À ce niveau, ${sec.label} se joue en gamme : ${sec.variante.gamme}. En dessous du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.mono}.`
             : `À ce niveau, ${sec.label} se joue avec ${sec.variante.mono}. À partir du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.gamme}.`}

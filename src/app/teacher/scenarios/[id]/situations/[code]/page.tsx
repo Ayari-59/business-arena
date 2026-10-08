@@ -46,21 +46,21 @@ export default async function SituationEditorPage({
         </div>
         <Link
           href={`/teacher/scenarios/${id}`}
-          className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           ← Le scénario
         </Link>
       </header>
 
       {ok ? (
-        <p className="rounded-xl border border-emerald-400/30 bg-emerald-950/30 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-emerald-200">
+        <p className="rounded-xl encadre-neutre px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-100">
           Situation enregistrée.
         </p>
       ) : null}
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
@@ -97,7 +97,7 @@ export default async function SituationEditorPage({
               <span className="text-xs text-slate-400">
                 Option {i + 1}
                 {o.correct ? (
-                  <span className="ml-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-emerald-300">
+                  <span className="pastille-gain ml-2 rounded-full px-2 py-0.5 text-slate-200">
                     bonne réponse
                   </span>
                 ) : null}

@@ -82,19 +82,22 @@ describe("un seul bouton", () => {
     expect(bouton({ taille: "l" })).toContain("shadow-lg");
     expect(bouton({ taille: "m" })).not.toContain("shadow");
     expect(bouton({ variante: "secondaire", taille: "l" })).not.toContain("shadow");
-    expect(bouton({ variante: "laiton", taille: "l" })).not.toContain("shadow");
+    expect(bouton({ variante: "lien", taille: "l" })).not.toContain("shadow");
   });
 
   it("chaque variante dit une intention différente", () => {
     const principal = bouton();
     const secondaire = bouton({ variante: "secondaire" });
-    const laiton = bouton({ variante: "laiton" });
+    const lien = bouton({ variante: "lien" });
     expect(principal).toContain("bg-amber-400");
     expect(secondaire).toContain("border-white/15");
-    expect(laiton).toContain("border-amber-400/40");
+    // Le lien : l'encre d'action soulignée d'un pixel, sans cadre ni fond.
+    expect(lien).toContain("underline");
+    expect(lien).toContain("decoration-1");
+    expect(lien).not.toMatch(/\bborder\b|\bbg-/);
     // Et toutes partagent la même forme : c'est ce qui les fait lire comme une
     // famille plutôt que comme trois inventions.
-    for (const v of [principal, secondaire, laiton]) {
+    for (const v of [principal, secondaire, lien]) {
       expect(v).toContain("rounded-lg");
       expect(v).toContain("inline-flex");
       expect(v).toContain("disabled:cursor-not-allowed");
@@ -103,7 +106,6 @@ describe("un seul bouton", () => {
       expect(v).not.toMatch(/disabled:opacity/);
     }
     expect(secondaire).toContain("bouton-filet");
-    expect(laiton).toContain("bouton-filet");
   });
 
   it("désactivé, le bouton plein prend le gris des filets, sans ombre ni opacité", () => {

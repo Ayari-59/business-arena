@@ -354,6 +354,12 @@ export default async function Home() {
             <h1 className="whitespace-nowrap text-[clamp(1.75rem,10cqw,7rem)] font-extrabold leading-[0.95] text-slate-50">
               Dirigez une entreprise.
               <br />
+              {/* LE SEUL MOT ORANGE D'UN GRAND TITRE. Décision du
+                  propriétaire : la seconde ligne du héros de l'accueil garde
+                  l'orange de la marque ; dans les titres des pages
+                  intérieures, le mot d'appui passe à l'encre, de même graisse,
+                  et l'emphase vient de l'italique condensé, pas de la couleur
+                  (garde : couleurs-fonctionnelles.test.ts). */}
               <span className="text-amber-500">Apprenez à décider.</span>
             </h1>
           </div>

@@ -26,13 +26,13 @@ export function HelpCard({ title, description, actions, dismissible }: HelpCardP
   if (isDismissed) return null;
 
   return (
-    <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4">
+    <div className="encadre-neutre rounded-lg p-4">
       <div className="flex gap-3">
         <div className="flex-1">
-          <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100">
+          <h3 className="font-semibold text-sm text-slate-100">
             💡 {title}
           </h3>
-          <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+          <p className="text-sm text-slate-300 mt-1">
             {description}
           </p>
           {actions && actions.length > 0 && (
@@ -41,7 +41,7 @@ export function HelpCard({ title, description, actions, dismissible }: HelpCardP
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="inline-block text-xs px-3 py-1 rounded-md bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 hover:bg-blue-300 dark:hover:bg-blue-700"
+                  className="inline-block text-xs px-3 py-1 rounded-md border border-white/15 text-slate-200 hover:bg-white/5"
                 >
                   {action.label}
                 </Link>

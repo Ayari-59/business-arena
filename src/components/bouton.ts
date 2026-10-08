@@ -18,11 +18,13 @@
  * TROIS VARIANTES, ET ELLES VEULENT DIRE QUELQUE CHOSE :
  * · `principal` — ce qu'on attend de vous sur cet écran. Un par écran, en
  *   principe : deux boutons pleins côte à côte, c'est une hésitation affichée.
- * · `secondaire` — l'autre chemin, celui qu'on prend sans être poussé.
- * · `laiton` — une action de second rang dans une page dense, qui doit se
- *   distinguer d'un texte sans peser comme un bouton plein. Le nom vient de
- *   l'habillage d'avant, dont l'accent était un laiton ; il porte aujourd'hui
- *   l'orange, comme tout l'accent.
+ * · `secondaire` — l'autre chemin, celui qu'on prend sans être poussé : un
+ *   filet gris, l'encre.
+ * · `lien` — une action de troisième rang, dans une page dense : l'encre
+ *   d'action soulignée d'un pixel, sans cadre. Il a été un « laiton », un
+ *   contour orange : une quatrième forme de bouton, entre les deux autres,
+ *   qui faisait lire l'orange partout. Le site dessinait ses boutons de cinq
+ *   façons ; il n'en a plus que trois.
  *
  * TROIS TAILLES, ET LA PLUS GRANDE PORTE L'OMBRE. Le bouton plein de l'arène
  * a une ombre pleine, orange foncé, décalée vers le bas : six pixels sur
@@ -36,7 +38,7 @@
  * remplissage, soit 28 px.
  */
 
-export type VarianteDeBouton = "principal" | "secondaire" | "laiton";
+export type VarianteDeBouton = "principal" | "secondaire" | "lien";
 export type TailleDeBouton = "s" | "m" | "l";
 
 /**
@@ -59,14 +61,20 @@ const VARIANTES: Record<VarianteDeBouton, string> = {
   principal: "bouton-plein bg-amber-400 text-slate-950 hover:bg-amber-300",
   secondaire:
     "bouton-filet border border-white/15 text-slate-200 hover:border-amber-400/50 hover:bg-white/5",
-  laiton:
-    "bouton-filet border border-amber-400/40 text-amber-300 hover:border-amber-400 hover:bg-amber-400/10",
+  lien: "text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2",
 };
 
 const TAILLES: Record<TailleDeBouton, string> = {
   s: "px-3 py-1.5 text-xs",
   m: "px-4 py-2 text-sm",
   l: "px-6 py-3 text-sm",
+};
+
+/** Un lien n'a pas de cadre : il garde la hauteur de sa taille, pas le retrait. */
+const TAILLES_DU_LIEN: Record<TailleDeBouton, string> = {
+  s: "py-1.5 text-xs",
+  m: "py-2 text-sm",
+  l: "py-3 text-sm",
 };
 
 /** Le grand relief n'est porté que par la grande taille, et seulement par le plein. */
@@ -80,5 +88,6 @@ export function bouton({
   taille?: TailleDeBouton;
 } = {}): string {
   const relief = variante === "principal" && taille === "l" ? ` ${RELIEF}` : "";
-  return `${COMMUN} ${VARIANTES[variante]} ${TAILLES[taille]}${relief}`;
+  const tailles = variante === "lien" ? TAILLES_DU_LIEN : TAILLES;
+  return `${COMMUN} ${VARIANTES[variante]} ${tailles[taille]}${relief}`;
 }

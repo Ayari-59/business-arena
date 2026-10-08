@@ -48,8 +48,12 @@ function EncartProfilDecisionnel({ episodes }: { episodes: number }) {
   );
 }
 
-const masteryTone = (v: number) =>
-  v < 40 ? "bg-red-400" : v < 70 ? "bg-amber-400" : "bg-emerald-400";
+/**
+ * Une maîtrise est un NIVEAU, pas un écart : la barre prend le bleu donnée,
+ * sa longueur dit le degré. Le rouge, l'orange et le vert en faisaient un
+ * feu tricolore, et l'orange y était la couleur de l'action.
+ */
+const masteryTone = (_v: number) => "bg-[var(--donnee)]";
 
 export default async function ProfilePage() {
   const userId = await getGuestUserId();
