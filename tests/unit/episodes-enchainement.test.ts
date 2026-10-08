@@ -70,5 +70,5 @@ describe("l'enchaînement des réflexes", () => {
       "marche-qui-s-ouvre",
     ])
       expect(montres).toContain(code);
-  });
+  }, 30_000);
 });

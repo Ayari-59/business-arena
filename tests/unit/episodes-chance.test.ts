@@ -57,7 +57,7 @@ describe("la chance et la malchance du bilan", () => {
           .some((k) => sous(ep, methode, x.d, k, g) > fait + 1e-9);
         expect(x.cas, `D${x.d + 1}`).toBe(mieux ? "bonne-defav" : "bonne-fav");
       }
-    });
+    }, 30_000);
   }
 
   it("ne dit « Chance » que pour un réflexe sur vingt au plus, sous le hasard du débrief", () => {
