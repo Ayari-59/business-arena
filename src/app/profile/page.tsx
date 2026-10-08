@@ -3,6 +3,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { getPlayerProfile } from "@/services/profile.service";
 import type { SkillAxis } from "@/config/pedagogy/concepts";
 import { bouton } from "@/components/bouton";
+import { PastilleDeRang } from "@/components/rang";
 
 export const dynamic = "force-dynamic";
 
@@ -117,9 +118,9 @@ export default async function ProfilePage() {
                       {g.status === "finished" ? "terminée" : `tour ${g.currentRound}/${g.roundsCount}`}
                     </span>
                   </span>
-                  <span className="tabular-nums text-slate-400">
+                  <span className="flex shrink-0 items-center gap-2 tabular-nums text-slate-400">
                     {g.bpi !== null ? `IPG ${g.bpi.toFixed(1)}` : "—"}
-                    {g.rank !== null ? ` · #${g.rank}` : ""}
+                    {g.rank !== null ? <PastilleDeRang rang={g.rank} /> : null}
                   </span>
                 </Link>
               </li>

@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { echeanceDuTour, dateLisible, type Echeance } from "@/config/echeance";
 import { Icone, type NomDIcone } from "@/components/icone";
+import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 
 /**
  * CE QUE LA CLASSE VOIT AU MUR.
@@ -274,10 +275,10 @@ export function VueDeProjection({
                 {classement.map((row) => (
                   <li
                     key={row.nom}
-                    className="flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-slate-950 px-[clamp(0.8rem,2vw,2rem)] py-[clamp(0.4rem,1.2vh,1rem)]"
+                    className={`flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-slate-950 px-[clamp(0.8rem,2vw,2rem)] py-[clamp(0.4rem,1.2vh,1rem)] ${classeLigneDeRang(row.rang)}`}
                   >
-                    <span className="flex min-w-0 items-baseline gap-[clamp(0.5rem,1.5vw,1.5rem)] text-[clamp(1.2rem,3.4vw,2.8rem)] font-semibold text-slate-100">
-                      <span className="shrink-0 tabular-nums text-slate-400">#{row.rang}</span>
+                    <span className="flex min-w-0 items-center gap-[clamp(0.5rem,1.5vw,1.5rem)] text-[clamp(1.2rem,3.4vw,2.8rem)] font-semibold text-slate-100">
+                      <PastilleDeRang rang={row.rang} className="pastille-rang-reduite" />
                       <span className="truncate">{row.nom}</span>
                       {row.defaillant ? (
                         // Le triangle est seul : c'est l'étiquette, rôle d'image

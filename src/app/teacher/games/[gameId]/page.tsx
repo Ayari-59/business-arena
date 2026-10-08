@@ -47,6 +47,7 @@ import { resolveAiSurface } from "@/services/ai.service";
 import { CodeQr } from "@/components/code-qr";
 import { urlDeJonction } from "@/lib/qr";
 import { bouton } from "@/components/bouton";
+import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -497,13 +498,13 @@ export default async function TeacherGamePage({
             {view.ranking.map((row) => (
               <li
                 key={row.name}
-                className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-300"
+                className={`flex items-center justify-between gap-2 rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-300 ${classeLigneDeRang(row.rank)}`}
               >
-                <span>
-                  <span className="mr-2 text-slate-400">#{row.rank}</span>
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <PastilleDeRang rang={row.rank} />
                   {row.name}
                   {row.defaillant ? (
-                    <span className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
+                    <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
                       <Icone nom="alerte" className="mr-1 h-3 w-3" />
                       Défaillante
                     </span>
@@ -709,7 +710,14 @@ export default async function TeacherGamePage({
                         : `${equipe.note.toString().replace(".", ",")} / 20`}
                     </td>
                     <td className="py-2 text-right tabular-nums text-slate-400">
-                      {equipe.bpi === null ? "—" : `${equipe.bpi.toFixed(1)} · ${equipe.rank}ᵉ`}
+                      {equipe.bpi === null ? (
+                        "—"
+                      ) : (
+                        <span className="inline-flex items-center justify-end gap-2">
+                          {equipe.bpi.toFixed(1)}
+                          {equipe.rank !== null ? <PastilleDeRang rang={equipe.rank} /> : null}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

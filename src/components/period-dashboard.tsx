@@ -22,6 +22,7 @@ import { ReussitesDuTour } from "@/components/reussites-du-tour";
 import { Tiroir } from "@/components/tiroir";
 import { Icone, type NomDIcone } from "@/components/icone";
 import { RevelationDuTour } from "@/components/revelation-du-tour";
+import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { reussitesFranchies, lireLeTour } from "@/scoring/reussites";
 
@@ -399,16 +400,16 @@ export function PeriodDashboard({
                     {view.ranking.map((row) => (
                       <li
                         key={row.name}
-                        className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                        className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
                           row.isPlayer ? "bg-amber-400/10 text-amber-200" : "bg-slate-950 text-slate-300"
-                        }`}
+                        } ${classeLigneDeRang(row.rank)}`}
                       >
-                        <span>
-                          <span className="mr-2 text-slate-400">#{row.rank}</span>
+                        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <PastilleDeRang rang={row.rank} moi={row.isPlayer} />
                           {row.name}
                           {row.defaillant ? (
                             <span
-                              className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300"
+                              className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300"
                               title="Entreprise défaillante : deux tours de cessation de paiements. Activité gelée jusqu'à recapitalisation."
                             >
                               <Icone nom="alerte" className="mr-1 h-3 w-3" />

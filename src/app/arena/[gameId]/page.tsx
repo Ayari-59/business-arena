@@ -61,6 +61,7 @@ import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
 import { bouton } from "@/components/bouton";
+import { PastilleDeRang } from "@/components/rang";
 
 export const dynamic = "force-dynamic";
 
@@ -1141,14 +1142,20 @@ export default async function ArenaPage({
             const me = view.ranking.find((row) => row.isPlayer);
             return (
               <p
-                className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300"
+                className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300"
                 title={
                   me
                     ? "Votre position au classement IPG"
                     : "Votre indice de performance. Le classement sera révélé par votre enseignant."
                 }
               >
-                {me ? `#${me.rank}/${view.ranking.length} · ` : ""}IPG{" "}
+                {me ? (
+                  <>
+                    <PastilleDeRang rang={me.rank} moi className="-my-1" />/
+                    {view.ranking.length} ·{" "}
+                  </>
+                ) : null}
+                IPG{" "}
                 {view.playerBpi.toFixed(0)}
               </p>
             );

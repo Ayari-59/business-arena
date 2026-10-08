@@ -79,7 +79,8 @@ describe("un panneau à la fois", () => {
 
   it("le classement montre le rang, le nom et l'IPG", () => {
     const html = rendre({ defaut: "classement" });
-    expect(html).toContain("#1");
+    // Le rang est écrit dans sa pastille : l'or pour la tête du classement.
+    expect(html).toMatch(/pastille-rang-1[^>]*>1</);
     expect(html).toContain("62.4");
     expect(html).toContain("Trimestre 2");
     // Sans cette ligne, la colonne de droite est une suite de décimales sans
@@ -102,7 +103,7 @@ describe("le rideau tient jusque sur le mur", () => {
     expect(html).toContain("sous embargo");
     // Aucun chiffre ne fuit : c'est tout l'objet du rideau.
     expect(html).not.toContain("62.4");
-    expect(html).not.toContain("#1");
+    expect(html).not.toContain("pastille-rang");
   });
 
   it("sans tour clos, il annonce l'attente plutôt qu'un vide", () => {

@@ -94,8 +94,99 @@
   --accent-plein-survol: #ff7f3a;
   --accent-plein-texte: #0b2545;
   --accent-plein-ombre: #b8460a;
-  /* L'or des distinctions : le podium, le meilleur score. Jamais l'action. */
+  /* L'or des distinctions : le podium, le meilleur score. Jamais l'action.
+     Ses compagnons (or en texte, argent, bronze) sont juste dessous. */
   --or-distinction: #f4b400;
+}
+
+/* ---------------------------------------------------------------------------
+ * LE PODIUM : L'OR, L'ARGENT ET LE BRONZE.
+ *
+ * L'or se gagne, l'orange se touche : aucun bouton, aucun lien ne prend ces
+ * teintes (un test le garde). Elles ne servent qu'aux trois premières places
+ * d'un classement, à la victoire et au record.
+ *
+ * CHAQUE MÉTAL EST UNE PAIRE : un REMPLISSAGE clair, qui porte le chiffre du
+ * rang en marine et ressort sur le marine, et un FILET plus soutenu, qui
+ * détache la pastille du blanc. Mesuré :
+ *   · or      #f4b400, chiffre marine 8,3 pour 1, 8,3 sur le marine ;
+ *             filet #a07c00, 3,9 sur le blanc, 3,6 sur la page, 3,9 sur le marine ;
+ *   · argent  #d5dbe4, chiffre marine 11,1 pour 1, 11,1 sur le marine ;
+ *             filet #6b7a8f, 4,4 sur le blanc, 4,1 sur la page, 3,5 sur le marine ;
+ *   · bronze  #e8b48a, chiffre marine 8,3 pour 1, 8,3 sur le marine ;
+ *             filet #b06a33, 4,2 sur le blanc, 4,0 sur la page, 3,6 sur le marine.
+ *
+ * L'OR EN TEXTE N'EST PAS L'OR VIF. #f4b400 ne tient que 1,9 pour 1 sur le
+ * blanc : un mot doré posé sur le papier prend l'or foncé, #8a6400 (5,4 sur
+ * le blanc, 5,0 sur la page, 4,9 sur le voile orangé d'une ligne choisie).
+ * Sur le marine, l'or vif se lit (8,3 pour 1, 6,7 sur une carte relevée).
+ *
+ * La couleur n'est jamais seule : le rang reste écrit dans la pastille.
+ * ------------------------------------------------------------------------- */
+:root,
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  --or-texte: #f4b400;
+  --or-filet: #f4b400;
+  --argent: #d5dbe4;
+  --argent-filet: #6b7a8f;
+  --bronze: #e8b48a;
+  --bronze-filet: #b06a33;
+}
+
+/* Sur le papier, l'or foncé pour le texte et le filet : voir le bloc du
+   papier, plus bas (« L'OR QUI SE LIT SUR LE BLANC »). */
+
+/* Le rang écrit dans une pastille ronde, aux chiffres condensés du site. */
+.pastille-rang {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75em;
+  height: 1.75em;
+  padding-inline: 0.3em;
+  border-radius: 9999px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  flex-shrink: 0;
+}
+/* Dans un grand corps (le mur de projection), la pastille d'un cran plus petite
+   que le nom qu'elle précède. */
+.pastille-rang-reduite {
+  font-size: 0.8em;
+}
+.pastille-rang-1,
+.pastille-rang-2,
+.pastille-rang-3 {
+  color: var(--marine);
+}
+.pastille-rang-1 {
+  background-color: var(--or-distinction);
+  box-shadow: inset 0 0 0 1.5px var(--or-filet);
+}
+.pastille-rang-2 {
+  background-color: var(--argent);
+  box-shadow: inset 0 0 0 1.5px var(--argent-filet);
+}
+.pastille-rang-3 {
+  background-color: var(--bronze);
+  box-shadow: inset 0 0 0 1.5px var(--bronze-filet);
+}
+
+/* La ligne de tête d'un classement : un filet d'or à gauche. La ligne de
+   l'équipe du joueur garde son voile orangé ; les deux se cumulent. */
+.ligne-rang-1 {
+  box-shadow: inset 3px 0 0 var(--or-filet);
+}
+
+/* Un mot doré (la coupe, « Victoire », le record) et un cadre doré. */
+.texte-or {
+  color: var(--or-texte);
+}
+.filet-or {
+  border-color: var(--or-filet);
 }
 
 /* L'entrée d'une carte du parcours : elle glisse de douze pixels en se révélant,
@@ -720,6 +811,11 @@ body {
   --color-amber-800: #ffd2b5;
   --color-amber-900: #ffe6d6;
   --color-amber-950: #fff1e6;
+  /* L'OR QUI SE LIT SUR LE BLANC (voir « LE PODIUM ») : l'or vif ne tient que
+     1,9 pour 1 sur la page, le texte doré prend l'or foncé, le filet un or
+     moyen qui tient 3 pour 1 sur le blanc comme sur le marine. */
+  --or-texte: #8a6400;
+  --or-filet: #a07c00;
 }
 
 /* ---------------------------------------------------------------------------

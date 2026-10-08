@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CompetitionView } from "@/services/competition.service";
 import { nomDeLaPhase } from "@/config/concours";
 import { Icone } from "@/components/icone";
+import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 
 const STATUS_LABELS: Record<string, string> = {
   registration: "Inscriptions ouvertes",
@@ -21,24 +22,26 @@ export function CompetitionBoard({
   return (
     <div className="space-y-6">
       {view.podium && view.podium.length > 0 ? (
-        <section className="rounded-xl border border-amber-400/40 bg-slate-900 p-4 sm:p-7 text-center">
-          <p className="text-xs uppercase tracking-annonce text-amber-400">Podium</p>
-          <p className="mt-3 flex items-center justify-center gap-2 text-2xl font-bold text-amber-300">
-            <Icone nom="trophee" className="h-6 w-6" />
+        <section className="filet-or rounded-xl border-2 bg-slate-900 p-4 sm:p-7 text-center">
+          <p className="text-xs uppercase tracking-annonce texte-or">Podium</p>
+          <p className="mt-3 flex items-center justify-center gap-2 text-2xl font-bold text-slate-100">
+            <Icone nom="trophee" className="texte-or h-6 w-6" />
+            <PastilleDeRang rang={1} className="text-base" />
             {view.podium[0]}
           </p>
-          <div className="mt-2 flex justify-center gap-6 text-sm text-slate-300">
+          <div className="mt-3 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-300">
             {/* Les médailles étaient des emoji d'argent et de bronze : le rang,
-                écrit, dit la même chose sans dépendre du téléphone. */}
+                écrit dans sa pastille de métal, dit la même chose sans
+                dépendre du téléphone. */}
             {view.podium[1] ? (
-              <span>
-                <span className="mr-1.5 text-slate-400">2e</span>
+              <span className="flex items-center gap-2">
+                <PastilleDeRang rang={2} />
                 {view.podium[1]}
               </span>
             ) : null}
             {view.podium[2] ? (
-              <span>
-                <span className="mr-1.5 text-slate-400">3e</span>
+              <span className="flex items-center gap-2">
+                <PastilleDeRang rang={3} />
                 {view.podium[2]}
               </span>
             ) : null}
@@ -56,7 +59,7 @@ export function CompetitionBoard({
               key={e.teamLabel}
               className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
                 e.status === "winner"
-                  ? "bg-amber-400/10 text-amber-200"
+                  ? "ligne-rang-1 bg-slate-950 font-semibold texte-or"
                   : e.status === "eliminated"
                     ? "bg-slate-950 text-slate-400 line-through"
                     : "bg-slate-950 text-slate-300"
@@ -104,10 +107,10 @@ export function CompetitionBoard({
                     {game.standings.map((s, rank) => (
                       <li
                         key={s.entryId}
-                        className="flex items-center justify-between text-sm text-slate-300"
+                        className={`flex items-center justify-between rounded-md py-0.5 pl-2 text-sm text-slate-300 ${classeLigneDeRang(rank + 1)}`}
                       >
-                        <span>
-                          <span className="mr-2 text-slate-400">#{rank + 1}</span>
+                        <span className="flex items-center gap-2">
+                          <PastilleDeRang rang={rank + 1} />
                           {s.entryId}
                         </span>
                         <span className="tabular-nums text-slate-400">IPG {s.bpi.toFixed(1)}</span>

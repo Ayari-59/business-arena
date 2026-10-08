@@ -122,8 +122,8 @@ export default function Image() {
               display: "flex",
               flexDirection: "column",
               marginTop: 18,
-              background: "rgba(217,119,6,0.10)",
-              border: `1px solid rgba(217,119,6,0.35)`,
+              background: "rgba(255,106,26,0.12)",
+              border: `1px solid rgba(255,106,26,0.40)`,
               borderRadius: 14,
               padding: "16px 20px",
             }}

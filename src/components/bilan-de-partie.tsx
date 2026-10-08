@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { formatEuro } from "@/lib/format";
 import { Icone } from "@/components/icone";
 import type { Bilan } from "@/pedagogy/bilan-de-partie";
+import { PastilleDeRang } from "@/components/rang";
 
 /**
  * LA FIN DE LA PARTIE, ENFIN RACONTÉE.
@@ -54,11 +55,15 @@ export function BilanDePartie({
   children?: ReactNode;
 }) {
   return (
-    <section className="carte border-amber-400/30 p-4 sm:p-6">
+    <section className={`carte p-4 sm:p-6 ${victoire ? "filet-or border-2" : "border-amber-400/30"}`}>
+      {/* La victoire est une distinction : la coupe et le titre prennent l'or,
+          jamais l'orange de l'action. */}
       {victoire ? (
-        <Icone nom="trophee" className="mx-auto mb-2 block h-8 w-8 text-amber-300" />
+        <Icone nom="trophee" className="texte-or mx-auto mb-2 block h-8 w-8" />
       ) : null}
-      <h2 className="text-center text-xl font-bold text-amber-300">{titre}</h2>
+      <h2 className={`text-center text-xl font-bold ${victoire ? "texte-or" : "text-amber-300"}`}>
+        {titre}
+      </h2>
       <p className="mt-1 text-center text-sm text-slate-400">
         {bilan.tours} tours joués, de l&apos;ouverture à la clôture.
       </p>
@@ -121,7 +126,13 @@ export function BilanDePartie({
         */}
         {record ? (
           <p className="text-base leading-relaxed text-slate-300">
-            <span className="font-semibold text-amber-300">
+            <span
+              className={`font-semibold ${
+                record.meilleur !== null && record.monIpg > record.meilleur
+                  ? "texte-or"
+                  : "text-amber-300"
+              }`}
+            >
               {record.meilleur === null
                 ? "Votre première sur ce métier : "
                 : record.monIpg > record.meilleur
@@ -150,6 +161,7 @@ export function BilanDePartie({
         ) : null}
         {place ? (
           <p className="text-base leading-relaxed text-slate-300">
+            <PastilleDeRang rang={place.rang} moi doublon className="mr-2 align-middle" />
             <span className="font-semibold text-amber-300">Votre place : </span>
             {place.rang}
             {place.rang === 1 ? "re" : "e"} sur {place.total}.

@@ -5,6 +5,7 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { formatEuro } from "@/lib/format";
 import { Icone } from "@/components/icone";
+import { PastilleDeRang } from "@/components/rang";
 
 /** Ce que le tour a donné, en trois chiffres : de quoi sentir la partie avant de la lire. */
 export interface BilanDuTour {
@@ -172,11 +173,18 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
           {bilan.rang ? "Classement" : "Chiffre d'affaires"}
         </dt>
         <dd
-          className={`mt-1 text-xl font-semibold tabular-nums ${
-            bilan.rang?.place === 1 ? "text-amber-300" : "text-slate-50"
+          className={`mt-1 flex items-center gap-2 text-xl font-semibold tabular-nums ${
+            bilan.rang?.place === 1 ? "texte-or" : "text-slate-50"
           }`}
         >
-          {bilan.rang ? `${bilan.rang.place}ᵉ sur ${bilan.rang.sur}` : formatEuro(bilan.chiffreDAffaires)}
+          {bilan.rang ? (
+            <>
+              <PastilleDeRang rang={bilan.rang.place} moi doublon className="text-base" />
+              {`${bilan.rang.place}ᵉ sur ${bilan.rang.sur}`}
+            </>
+          ) : (
+            formatEuro(bilan.chiffreDAffaires)
+          )}
         </dd>
         {bilan.rang && bilan.ipg !== null ? (
           <dd className="text-sm text-slate-400">IPG {bilan.ipg.toFixed(0)}</dd>
