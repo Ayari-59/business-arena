@@ -21,6 +21,7 @@ import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
+import { SignalDeSeance } from "@/components/signal-de-seance";
 import { Icone } from "@/components/icone";
 import { PictoSecteur } from "@/components/picto-secteur";
 import {
@@ -175,6 +176,17 @@ export default async function TeacherGamePage({
         }
       />
 
+
+      {/* LE PILOTAGE PARLE AU MUR. Clore le tour et révéler le classement se
+          font ici ; ce qu'on en attend se passe LÀ-BAS, sur l'écran que la
+          classe regarde. Ce signal le prévient, sans serveur ni délai, quand
+          les deux onglets sont dans le même navigateur : la projection se
+          recharge et joue la révélation du classement. */}
+      <SignalDeSeance
+        gameId={gameId}
+        tourClos={dernierTourClos?.index ?? null}
+        revele={dernierTourClos?.rankingRevealed ?? false}
+      />
 
       {/*
         LE BANDEAU « CE TOUR », SUR LE MARINE (audit P2-15). La projection était

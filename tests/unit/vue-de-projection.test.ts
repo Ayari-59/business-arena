@@ -29,6 +29,7 @@ const CLASSEMENT = [
 ];
 
 const base: Omit<Parameters<typeof VueDeProjection>[0], "defaut"> = {
+  gameId: "g1",
   joinCode: "K7M2PR",
   qr: createElement(CodeQr, {
     valeur: urlDeJonction("K7M2PR"),
@@ -42,6 +43,7 @@ const base: Omit<Parameters<typeof VueDeProjection>[0], "defaut"> = {
   classement: CLASSEMENT,
   classementRevele: true,
   libelleTourClos: "Trimestre 2",
+  tourRevele: 2,
   finished: false,
   retour: "/teacher/games/g1",
 };

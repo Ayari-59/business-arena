@@ -765,6 +765,13 @@ export interface TeacherGameView {
     lastNetTreasury: number | null;
   }[];
   ranking: {
+    /**
+     * L'équipe classée. Le nom suffisait à l'afficher ; il ne suffit pas à
+     * RELIER cette ligne aux chiffres du tour que `teams` porte (deux équipes
+     * peuvent se renommer pareil), et la projection de classe a besoin des
+     * deux ensemble pour dévoiler le classement avec les résultats.
+     */
+    teamId: string;
     name: string;
     cumulativeNetIncome: number;
     rank: number;
@@ -913,6 +920,7 @@ export async function getTeacherGameView(
     }),
     ranking: rankingRows
       .map((r) => ({
+        teamId: r.teamId,
         name: teamDisplayName(teamRows.find((t) => t.id === r.teamId)?.name ?? "?"),
         cumulativeNetIncome: Number(
           (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,

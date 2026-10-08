@@ -1,11 +1,14 @@
 "use client";
 
-import { formatDecimal } from "@/lib/format";
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { echeanceDuTour, dateLisible, type Echeance } from "@/config/echeance";
 import { Icone, type NomDIcone } from "@/components/icone";
-import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
+import {
+  RevelationDuMarche,
+  rythmeDeRevelation,
+  type LigneDeRevelation,
+} from "@/components/revelation-du-marche";
 
 /**
  * CE QUE LA CLASSE VOIT AU MUR.
@@ -21,6 +24,20 @@ import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
  * validations pendant le tour, le classement après la clôture. Le panneau
  * d'ouverture est choisi par le serveur d'après l'état réel de la partie ;
  * l'enseignant en change d'un clic.
+ *
+ * ET LE CLASSEMENT SE DÉVOILE (lot 4B). Le tour clos et son classement
+ * révélé, le mur ne se contente pas d'afficher le tableau : il joue le rituel
+ * « le marché a répondu », le même qu'en solo à la fin d'un tour, de la
+ * dernière équipe à la première, podium en or à la fin
+ * (`components/revelation-du-marche.tsx`). C'est le moment de la séance où
+ * toute la classe regarde l'écran ensemble.
+ *
+ * L'ENSEIGNANT GARDE LA MAIN, ET LE MUR NE RESTE JAMAIS COINCÉ. La révélation
+ * se passe (touche Échap ou bouton de la barre de commande) et se rejoue ; elle
+ * s'arrête d'elle-même au bout de son temps ; l'onglet qui perd le focus la
+ * termine ; une page rechargée montre l'état FINAL, complet, sans la rejouer —
+ * le tour déjà dévoilé est noté dans ce navigateur. Et le classement reste
+ * lisible sans aucune animation : elle ne fait qu'apparaître ce qui est là.
  *
  * Les tailles sont en `clamp()` sur la largeur : le même écran sert un
  * vidéoprojecteur de salle et un écran de portable en table ronde.
@@ -38,6 +55,18 @@ export interface LigneClassement {
   nom: string;
   ipg: number;
   defaillant: boolean;
+  /**
+   * CE QUE LE TOUR A DONNÉ À CETTE ÉQUIPE, déjà formaté par le serveur, qui le
+   * tient des résultats réellement simulés : le résultat net signé
+   * (« +12 000 € », « −294 € ») et la trésorerie de fin de tour. Absents tant
+   * qu'aucun tour n'est clos — le classement se projette alors sans eux.
+   */
+  resultat?: string | null;
+  /** Gain ou perte : le vert ou le rouge francs. */
+  sens?: "gain" | "perte" | null;
+  tresorerie?: string | null;
+  /** Trésorerie en découvert : une alerte, donc le rouge. */
+  decouvert?: boolean;
 }
 
 const ONGLETS: { cle: Panneau; libelle: string; icone: NomDIcone }[] = [
@@ -90,6 +119,7 @@ function Decompte({ closesAt }: { closesAt: string }) {
 
 export function VueDeProjection({
   defaut,
+  gameId,
   joinCode,
   qr,
   adresse,
@@ -100,11 +130,14 @@ export function VueDeProjection({
   classement,
   classementRevele,
   libelleTourClos,
+  tourRevele,
   finished,
   retour,
 }: {
   /** Le panneau d'ouverture, choisi d'après l'état de la partie. */
   defaut: Panneau;
+  /** La partie : de quoi retenir, dans CE navigateur, le tour déjà dévoilé. */
+  gameId: string;
   joinCode: string | null;
   /**
    * Le QR de la partie, déjà dessiné. Il arrive tout fait parce qu'il se
@@ -123,12 +156,102 @@ export function VueDeProjection({
   /** Le classement du dernier tour clos est-il révélé aux élèves ? */
   classementRevele: boolean;
   libelleTourClos: string | null;
+  /**
+   * L'index du dernier tour clos dont le classement est révélé, ou null. C'est
+   * lui qui déclenche la révélation : un tour plus récent que celui que ce
+   * navigateur a déjà dévoilé, et le mur le joue.
+   */
+  tourRevele: number | null;
   finished: boolean;
   /** Retour vers le pilotage de la partie. */
   retour: string;
 }) {
   const [panneau, setPanneau] = useState<Panneau>(defaut);
   const valides = equipes.filter((e) => e.aValide).length;
+  const classementProjetable = classementRevele && classement.length > 0;
+
+  // LA RÉVÉLATION : JOUÉE UNE FOIS, ET JAMAIS BLOQUANTE.
+  // `cle` remonte la pendule des animations (un remontage les rejoue) ;
+  // `enCours` dit si elles sont posées. À faux, l'écran est à son état FINAL :
+  // c'est ce que montrent une page rechargée, un onglet revenu au premier plan
+  // et une capture.
+  const [cle, setCle] = useState(0);
+  const [enCours, setEnCours] = useState(false);
+  const duree = rythmeDeRevelation(classement.length).duree;
+
+  // LE PANNEAU SUIT LA FENÊTRE, PAS LA SESSION. Recharger la projection — un
+  // vidéoprojecteur rebranché, un écran qui s'est mis en veille, une touche
+  // F5 — ramenait au panneau que le serveur choisit, et la classe perdait le
+  // classement qu'elle regardait. Cet onglet se souvient du sien ; un nouvel
+  // onglet, lui, ouvre bien sur le moment de la partie.
+  const montrer = (p: Panneau) => {
+    setPanneau(p);
+    try {
+      window.sessionStorage.setItem(`ba-panneau:${gameId}`, p);
+    } catch {
+      /* stockage refusé : le panneau ne survit pas au rechargement, rien de plus */
+    }
+  };
+
+  const jouer = () => {
+    montrer("classement");
+    setCle((k) => k + 1);
+    setEnCours(true);
+  };
+
+  useEffect(() => {
+    try {
+      const garde = window.sessionStorage.getItem(`ba-panneau:${gameId}`);
+      if (garde && ONGLETS.some((o) => o.cle === garde)) setPanneau(garde as Panneau);
+    } catch {
+      /* rien à faire */
+    }
+  }, [gameId]);
+
+  // AU PREMIER REGARD SUR UN TOUR NON ENCORE DÉVOILÉ, on le joue — et on le
+  // note tout de suite : rechargée en pleine révélation, la page revient à
+  // l'état final au lieu de repartir du début.
+  useEffect(() => {
+    if (tourRevele === null) return;
+    const memoire = `ba-revelation:${gameId}`;
+    let dejaVu = 0;
+    try {
+      dejaVu = Number(window.localStorage.getItem(memoire) ?? "0") || 0;
+    } catch {
+      // Navigation privée, stockage refusé : on ne rejouera pas en boucle,
+      // parce que l'effet ne se relance qu'au changement de tour.
+    }
+    if (tourRevele <= dejaVu) return;
+    try {
+      window.localStorage.setItem(memoire, String(tourRevele));
+    } catch {
+      /* rien à faire */
+    }
+    jouer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameId, tourRevele]);
+
+  // TROIS FAÇONS D'EN SORTIR, toutes vers l'état final : le temps qui passe,
+  // la touche d'échappement, et l'onglet qu'on quitte (une animation en
+  // arrière-plan est suspendue par le navigateur : au retour, le mur
+  // resterait figé sur une liste à moitié écrite).
+  useEffect(() => {
+    if (!enCours) return;
+    const fin = setTimeout(() => setEnCours(false), Math.ceil(duree * 1000) + 120);
+    const auClavier = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEnCours(false);
+    };
+    const auMasquage = () => {
+      if (document.hidden) setEnCours(false);
+    };
+    window.addEventListener("keydown", auClavier);
+    document.addEventListener("visibilitychange", auMasquage);
+    return () => {
+      clearTimeout(fin);
+      window.removeEventListener("keydown", auClavier);
+      document.removeEventListener("visibilitychange", auMasquage);
+    };
+  }, [enCours, duree]);
 
   return (
     <div className="flex min-h-screen flex-col px-4 py-4 sm:px-8">
@@ -141,7 +264,7 @@ export function VueDeProjection({
             <button
               key={o.cle}
               type="button"
-              onClick={() => setPanneau(o.cle)}
+              onClick={() => montrer(o.cle)}
               aria-pressed={actif}
               className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
                 actif
@@ -154,17 +277,36 @@ export function VueDeProjection({
             </button>
           );
         })}
+        {/* LA MAIN DE L'ENSEIGNANT SUR LA RÉVÉLATION. Discrète, dans la barre
+            de commande et non au milieu du message : passer (ou Échap, qui
+            fait la même chose depuis le fond de la salle, télécommande en
+            main) et rejouer. Un filet, jamais un aplat : le mur n'a pas de
+            geste orange. */}
+        {classementProjetable && panneau === "classement" ? (
+          <button
+            type="button"
+            onClick={() => (enCours ? setEnCours(false) : jouer())}
+            className="ml-auto rounded-lg border border-white/10 px-3 py-2 text-sm font-medium text-slate-400 transition hover:text-slate-200"
+          >
+            {enCours ? null : <Icone nom="recommencer" className="mr-1.5 h-4 w-4" />}
+            {enCours ? "Passer la révélation (Échap)" : "Rejouer la révélation"}
+          </button>
+        ) : null}
         <Link
           href={retour}
-          className="ml-auto rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-400 transition hover:text-slate-200"
+          className={`rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-400 transition hover:text-slate-200 ${
+            classementProjetable && panneau === "classement" ? "" : "ml-auto"
+          }`}
         >
           ← Pilotage
         </Link>
       </nav>
 
       {/* Le message. Il prend toute la place qui reste et se centre : c'est la
-          seule chose que la classe regarde. */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-[clamp(0.5rem,2vh,2rem)] py-[clamp(1rem,4vh,4rem)] text-center">
+          seule chose que la classe regarde. Sa respiration suit la HAUTEUR de
+          l'écran : sur un portable de 800 px, la révélation entière — titre,
+          six équipes, podium — doit tenir sans qu'on fasse défiler un mur. */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-[clamp(0.4rem,1.2vh,2rem)] py-[clamp(0.6rem,1.8vh,4rem)] text-center">
         {panneau === "code" ? (
           <>
             <Surtitre>Rejoindre la partie</Surtitre>
@@ -252,69 +394,61 @@ export function VueDeProjection({
         ) : null}
 
         {panneau === "classement" ? (
-          <>
-            <Surtitre>
-              {libelleTourClos ? `Classement · ${libelleTourClos}` : "Classement"}
-            </Surtitre>
-            {/* Ce que le nombre mesure. Sans cette ligne, la colonne de droite
-                est une suite de décimales sans unité : le sigle IPG n'apparaît
-                nulle part ailleurs sur le mur. */}
-            {classement.length > 0 && classementRevele ? (
-              <p className="text-[clamp(0.9rem,1.8vw,1.5rem)] text-slate-400">
-                Indice de performance globale (IPG)
-              </p>
-            ) : null}
-            {classement.length === 0 ? (
+          classement.length === 0 ? (
+            <>
+              <Surtitre>Classement</Surtitre>
               <p className="text-[clamp(1.3rem,3.5vw,2.6rem)] text-slate-400">
                 Disponible après le premier tour clos.
               </p>
-            ) : !classementRevele ? (
-              // LE RIDEAU. Les élèves ne voient pas encore ce classement :
-              // le projeter par mégarde le révélerait à leur place, et l'écran
-              // de pilotage perdrait le seul geste qui fait de la révélation un
-              // moment.
-              <>
-                <p className="text-[clamp(1.6rem,4.5vw,3.2rem)] font-bold text-slate-100">
-                  Classement sous embargo
-                </p>
-                <p className="max-w-3xl text-[clamp(1rem,2.2vw,1.6rem)] leading-relaxed text-slate-400">
-                  Les élèves ne l&apos;ont pas encore vu. Révélez-le depuis le pilotage de la
-                  partie, puis revenez ici.
-                </p>
-              </>
-            ) : (
-              <ol className="w-full max-w-5xl space-y-[clamp(0.3rem,1vh,0.9rem)]">
-                {classement.map((row) => (
-                  <li
-                    key={row.nom}
-                    className={`flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-slate-950 px-[clamp(0.8rem,2vw,2rem)] py-[clamp(0.4rem,1.2vh,1rem)] ${classeLigneDeRang(row.rang)}`}
-                  >
-                    <span className="flex min-w-0 items-center gap-[clamp(0.5rem,1.5vw,1.5rem)] text-[clamp(1.2rem,3.4vw,2.8rem)] font-semibold text-slate-100">
-                      <PastilleDeRang rang={row.rang} className="pastille-rang-reduite" />
-                      <span className="truncate">{row.nom}</span>
-                      {row.defaillant ? (
-                        // Le triangle est seul : c'est l'étiquette, rôle d'image
-                        // compris, qui dit au lecteur d'écran ce qu'il signifie.
-                        <span
-                          role="img"
-                          aria-label="entreprise défaillante"
-                          className="shrink-0 self-center text-red-400"
-                        >
-                          <Icone
-                            nom="alerte"
-                            className="h-[clamp(0.9rem,2vw,1.6rem)] w-[clamp(0.9rem,2vw,1.6rem)]"
-                          />
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="shrink-0 text-[clamp(1.2rem,3.4vw,2.8rem)] font-bold tabular-nums text-slate-50">
-                      {formatDecimal(row.ipg)}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </>
+            </>
+          ) : !classementRevele ? (
+            // LE RIDEAU. Les élèves ne voient pas encore ce classement : le
+            // projeter par mégarde le révélerait à leur place, et l'écran de
+            // pilotage perdrait le seul geste qui fait de la révélation un
+            // moment. Rien ne fuit, pas même un rang.
+            <>
+              <Surtitre>
+                {libelleTourClos ? `Classement · ${libelleTourClos}` : "Classement"}
+              </Surtitre>
+              <p className="text-[clamp(1.6rem,4.5vw,3.2rem)] font-bold text-slate-100">
+                Classement sous embargo
+              </p>
+              <p className="max-w-3xl text-[clamp(1rem,2.2vw,1.6rem)] leading-relaxed text-slate-400">
+                Les élèves ne l&apos;ont pas encore vu. Révélez-le depuis le pilotage de la partie,
+                puis revenez ici.
+              </p>
+            </>
+          ) : (
+            // LE MARCHÉ A RÉPONDU. Le même rituel qu'en solo, à l'échelle du
+            // mur : le tour, les équipes de la dernière à la première, le
+            // podium. `cle` le rejoue, `animer` dit s'il se joue — à faux,
+            // c'est le tableau final, complet et capturable.
+            <RevelationDuMarche
+              key={cle}
+              animer={enCours}
+              // Le même surtitre qu'en solo : c'est le même rituel.
+              surtitre="Verdict du marché"
+              titre={
+                libelleTourClos ? `${libelleTourClos} · le marché a répondu` : "Le marché a répondu"
+              }
+              // Ce que le nombre mesure. Sans cette ligne, la colonne de
+              // droite est une suite de décimales sans unité : le sigle IPG
+              // n'apparaît nulle part ailleurs sur le mur.
+              mention="Indice de performance globale (IPG)"
+              lignes={classement.map(
+                (row): LigneDeRevelation => ({
+                  rang: row.rang,
+                  nom: row.nom,
+                  ipg: row.ipg,
+                  defaillant: row.defaillant,
+                  resultat: row.resultat ?? null,
+                  sens: row.sens ?? null,
+                  tresorerie: row.tresorerie ?? null,
+                  decouvert: row.decouvert ?? false,
+                }),
+              )}
+            />
+          )
         ) : null}
       </div>
     </div>

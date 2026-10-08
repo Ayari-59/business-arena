@@ -18,6 +18,14 @@ interface Props {
   roundStatus: string;
   endpoint: "round-status" | "submissions";
   submittedCount?: number;
+  /**
+   * LE MUR DE LA CLASSE NE CESSE PAS DE REGARDER. Quand toutes les équipes ont
+   * rendu, le sondeur s'arrête : c'est juste, pour l'écran de pilotage, qui se
+   * recharge de lui-même en clôturant le tour. La projection, elle, est un
+   * autre onglet : elle resterait sur « 4 / 4 équipes ont validé » alors que le
+   * classement est tombé. Elle continue donc à sonder, en ralentissant.
+   */
+  insistant?: boolean;
 }
 
 export function RoundStatusPoller({
@@ -26,6 +34,7 @@ export function RoundStatusPoller({
   roundStatus,
   endpoint,
   submittedCount,
+  insistant = false,
 }: Props) {
   const router = useRouter();
   const stateRef = useRef({ currentRound, roundStatus, submittedCount });
@@ -81,6 +90,7 @@ export function RoundStatusPoller({
           // (ce qui recharge la page et remonte le poller). Inutile de continuer
           // à sonder — on arrête. Le retour sur l'onglet relancera un sondage.
           if (
+            !insistant &&
             endpoint === "submissions" &&
             typeof data.submittedCount === "number" &&
             typeof data.totalHumanTeams === "number" &&
@@ -116,7 +126,7 @@ export function RoundStatusPoller({
       if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [gameId, endpoint, router]);
+  }, [gameId, endpoint, router, insistant]);
 
   return null;
 }

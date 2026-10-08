@@ -2404,3 +2404,57 @@ a.carte,
     scroll-margin-top: var(--haut-collant, 4.5rem);
   }
 }
+
+/* ==========================================================================
+ * LOT 4B : « LE MARCHÉ A RÉPONDU » DEVANT LA CLASSE.
+ * La révélation du classement en projection — mêmes trois temps que le rituel
+ * solo du lot 3A, même échelle de chiffres, même podium. Tout ce que ce lot
+ * ajoute à la feuille est ici.
+ * ======================================================================== */
+
+/* LE DÉVOILEMENT DU CLASSEMENT (components/revelation-du-marche.tsx).
+   Le titre, puis les équipes de la DERNIÈRE à la PREMIÈRE (une par une, du bas
+   de la liste vers le haut), puis le podium. Rien n'est AJOUTÉ par l'animation :
+   chaque ligne est déjà rendue par le serveur, et `both` la garde visible une
+   fois arrivée — l'état final est complet, il se
+   capture, et un lecteur d'écran lit la liste entière sans attendre.
+
+   Le rythme vient du composant, qui connaît le nombre d'équipes : `--i` est le
+   rang d'apparition d'une ligne (0 pour la dernière place), `--revelation-pas`
+   le temps entre deux équipes (il se resserre quand la classe est nombreuse) et
+   `--revelation-fin` le moment du podium, le dernier temps. Les durées ne
+   s'écrivent qu'en jetons : la garde de
+   tests/unit/revelation-de-projection.test.ts borne la révélation entière. */
+@keyframes revelation-entree {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+[data-revelation-du-marche] {
+  --revelation-debut: 0.4s;
+  --revelation-pas: 0.5s;
+  --revelation-entree: 0.4s;
+  --revelation-fin: 2.9s;
+}
+.revelation > [data-temps="1"],
+.revelation > [data-temps="3"],
+.revelation [data-revelation-rang] {
+  animation: revelation-entree var(--revelation-entree) cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.revelation [data-revelation-rang] {
+  animation-delay: calc(var(--revelation-debut) + var(--i) * var(--revelation-pas));
+}
+.revelation > [data-temps="3"] {
+  animation-delay: var(--revelation-fin);
+}
+@media (prefers-reduced-motion: reduce) {
+  .revelation > [data-temps],
+  .revelation [data-revelation-rang] {
+    animation: none;
+  }
+}

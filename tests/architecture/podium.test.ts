@@ -192,7 +192,10 @@ describe("le rang prend le métal, l'action jamais", () => {
     for (const attendu of [
       "components/competition-board.tsx",
       "components/period-dashboard.tsx",
-      "components/vue-de-projection.tsx",
+      // La projection dévoile son classement par la révélation du marché,
+      // qui pose les rangs ; le podium, lui, sert aux deux (lot 4B).
+      "components/revelation-du-marche.tsx",
+      "components/podium.tsx",
       "components/bilan-de-partie.tsx",
       "app/teacher/games/[gameId]/page.tsx",
     ]) {

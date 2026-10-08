@@ -1,18 +1,17 @@
 import type { ReactNode } from "react";
-import { formatEuro, formatDecimal, ordinal } from "@/lib/format";
+import { formatEuro, ordinal } from "@/lib/format";
 import { Icone } from "@/components/icone";
 import type { Bilan } from "@/pedagogy/bilan-de-partie";
 import { PastilleDeRang, metalDuRang } from "@/components/rang";
 import { euroSigne } from "@/components/tableau-de-bord";
+import { PodiumDesEquipes, type MarcheDuPodium } from "@/components/podium";
 
-/** Une équipe du classement final, pour le podium. */
-export interface MarcheDuPodium {
-  nom: string;
-  rang: number;
-  /** L'équipe du joueur : le filet orange de « c'est vous ». */
-  moi: boolean;
-  ipg: number | null;
-}
+/**
+ * Une équipe du classement final, pour le podium. Les marches se dessinent
+ * dans `components/podium.tsx` : la projection de classe montre les mêmes, à
+ * l'échelle d'un mur.
+ */
+export type { MarcheDuPodium };
 
 /**
  * LA CLÔTURE DE L'EXERCICE.
@@ -66,7 +65,6 @@ export function BilanDePartie({
   children?: ReactNode;
 }) {
   const metal = place ? metalDuRang(place.rang) : null;
-  const marches = (podium ?? []).filter((m) => m.rang <= 3).sort((a, b) => a.rang - b.rang);
   const moiHorsPodium = (podium ?? []).find((m) => m.moi && m.rang > 3) ?? null;
   const decisif = bilan.tourDecisif;
   const meilleur =
@@ -122,45 +120,9 @@ export function BilanDePartie({
           </div>
 
           {/* LE PODIUM DES ÉQUIPES : l'or au centre, l'argent à gauche, le bronze
-              à droite ; l'équipe du joueur porte le filet orange. */}
-          {marches.length > 0 ? (
-            <ol
-              aria-label="Podium du classement final"
-              className="grid grid-cols-3 items-end gap-2 sm:gap-3"
-            >
-              {[marches[1], marches[0], marches[2]].map((m, i) =>
-                m ? (
-                  <li
-                    key={m.rang}
-                    className={`min-w-0 ${i === 1 ? "order-2" : i === 0 ? "order-1" : "order-3"}`}
-                  >
-                    <div
-                      className={`marche-de-podium marche-de-podium-${m.rang} rounded-b-lg bg-slate-900 px-2 pb-3 pt-2 text-center ${
-                        m.rang === 1 ? "min-h-40" : m.rang === 2 ? "min-h-32" : "min-h-28"
-                      } ${m.moi ? "ligne-moi" : ""}`}
-                    >
-                      <PastilleDeRang rang={m.rang} doublon className="text-xl" />
-                      <p
-                        className="mt-1.5 truncate text-sm font-semibold text-slate-50"
-                        title={m.nom}
-                      >
-                        {m.nom}
-                      </p>
-                      <p className="text-xs tabular-nums text-slate-400">
-                        {ordinal(m.rang)}
-                        {m.ipg !== null ? ` · IPG ${formatDecimal(m.ipg, 0)}` : ""}
-                        {m.moi ? (
-                          <span className="font-semibold text-slate-200"> · vous</span>
-                        ) : null}
-                      </p>
-                    </div>
-                  </li>
-                ) : (
-                  <li key={`vide-${i}`} aria-hidden className="order-3" />
-                ),
-              )}
-            </ol>
-          ) : null}
+              à droite ; l'équipe du joueur porte le filet orange. Les mêmes
+              marches qu'au mur de la classe, à l'échelle d'une carte. */}
+          <PodiumDesEquipes marches={podium ?? []} etiquette="Podium du classement final" />
         </div>
         {moiHorsPodium ? (
           <p className="mt-3 text-sm text-slate-300">
