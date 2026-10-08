@@ -104,11 +104,37 @@ export function SiteHeader() {
     };
   }, [ouvert]);
 
+  // L'EN-TÊTE SE RETIRE QUAND ON DESCEND, SUR TÉLÉPHONE (audit P3-09). Il
+  // prenait 58 px de l'écran pendant toute la lecture, la barre d'action 60 de
+  // plus. On note le sens du défilement sur la racine (`data-defile`), et la
+  // feuille (« LOT 3B », globals.css) le fait glisser hors de l'écran ; il
+  // revient au premier geste vers le haut, et ne part jamais menu ouvert ni
+  // près du haut de la page.
+  useEffect(() => {
+    const racine = document.documentElement;
+    const telephone = window.matchMedia("(max-width: 639px)");
+    let dernier = window.scrollY;
+    const auDefilement = () => {
+      const y = window.scrollY;
+      const ecart = y - dernier;
+      if (Math.abs(ecart) < 8) return;
+      if (telephone.matches && !ouvert && ecart > 0 && y > 120) racine.dataset.defile = "bas";
+      else delete racine.dataset.defile;
+      dernier = y;
+    };
+    window.addEventListener("scroll", auDefilement, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", auDefilement);
+      delete racine.dataset.defile;
+    };
+  }, [ouvert]);
+
   const estCourant = (href: string) => chemin === href || chemin.startsWith(`${href}/`);
 
   return (
     <header
       ref={cadre}
+      data-en-tete-du-site
       className={`ardoise sticky top-0 z-40 border-b border-white/10 bg-slate-950 print:static print:bg-transparent print:hidden ${
         // Dans l'arène, sur téléphone, la barre d'application de la partie prend
         // sa place (voir barre-de-jeu.tsx) : deux barres se doubleraient.

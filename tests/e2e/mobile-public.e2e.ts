@@ -91,7 +91,11 @@ describe("le menu, rangé par public", () => {
       expect(boite.height, `groupe « ${titre} » trop bas`).toBeGreaterThanOrEqual(43); // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7)
     }
     // « Jouer » est ouvert d'office : on joue sans chercher.
-    await page.getByRole("link", { name: /Jouer maintenant/ }).waitFor({ state: "visible" });
+    // Dans le menu : la barre d'action basse porte aussi « Jouer maintenant ».
+    await page
+      .locator("#plan-du-site")
+      .getByRole("link", { name: /Jouer maintenant/ })
+      .waitFor({ state: "visible" });
     await contexte.close();
   });
 });
@@ -108,14 +112,19 @@ describe("les fiches se replient sur téléphone, restent à plat ailleurs", () 
     await contexte.close();
   });
 
-  it("entreprises : sur grand écran, tout est ouvert et le bouton a disparu", async () => {
+  it("entreprises : sur grand écran aussi, la fiche est une carte et le détail s'ouvre à la demande", async () => {
+    // LE REPLI VAUT SUR TOUS LES ÉCRANS (audit P3-07) : neuf fiches ouvertes
+    // faisaient neuf mille pixels sur un ordinateur. Le détail reste fermé
+    // après l'hydratation, et le résumé l'ouvre.
     const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
     const page = await ctx.newPage();
     await ouvrir(page, "/entreprises");
-    const detail = page.locator("article").first().locator("details");
-    await page.waitForFunction(() => document.querySelector("article details")?.hasAttribute("open"));
+    const fiche = page.locator("article").first();
+    const detail = fiche.locator("details");
+    await page.waitForLoadState("networkidle");
+    expect(await detail.evaluate((d: HTMLDetailsElement) => d.open)).toBe(false);
+    await fiche.getByText("Voir le détail de l'entreprise").click();
     expect(await detail.evaluate((d: HTMLDetailsElement) => d.open)).toBe(true);
-    expect(await page.locator("article").first().getByText("Voir le détail de l'entreprise").isVisible()).toBe(false);
     await ctx.close();
   });
 
@@ -185,17 +194,37 @@ describe("la barre d'action basse", () => {
     await page.waitForFunction(() => document.querySelector("[data-barre-action]")?.hasAttribute("inert"));
     await page.evaluate(() => window.scrollTo(0, 1400));
     await page.waitForFunction(() => !document.querySelector("[data-barre-action]")?.hasAttribute("inert"));
-    await barre.getByRole("link", { name: "Choisir ma simulation" }).waitFor({ state: "visible" });
-    expect(await barre.getByRole("link", { name: "Jouer" }).isVisible()).toBe(true);
+    // UN SEUL BOUTON, DE 48 PX (audit P3-09) : l'appel de la page, jouer.
+    await barre.getByRole("link", { name: "Jouer maintenant" }).waitFor({ state: "visible" });
+    expect(await barre.getByRole("link").count(), "un seul lien dans la barre").toBe(1);
+    const hauteur = (await barre.getByRole("link").boundingBox())!.height;
+    expect(hauteur, `bouton de ${hauteur} px`).toBeGreaterThanOrEqual(48);
     await contexte.close();
   });
 
-  it("côté enseignant, elle propose l'espace enseignant", async () => {
+  it("côté enseignants, elle propose de choisir sa simulation", async () => {
     const { contexte, page } = await telephone();
     await ouvrir(page, "/animations");
     await page.evaluate(() => window.scrollTo(0, 1200));
     const barre = page.locator("[data-barre-action]");
-    await barre.getByRole("link", { name: "Enseignant" }).waitFor({ state: "visible" });
+    await barre.getByRole("link", { name: "Choisir ma simulation" }).waitFor({ state: "visible" });
+    expect(await barre.getByRole("link").count(), "un seul lien dans la barre").toBe(1);
+    await contexte.close();
+  });
+
+  it("l'en-tête se retire quand on descend, et revient quand on remonte", async () => {
+    const { contexte, page } = await telephone();
+    await ouvrir(page, "/entreprises");
+    const enTete = page.locator("[data-en-tete-du-site]");
+    const haut = async () => (await enTete.boundingBox())!.y;
+    await page.evaluate(() => window.scrollTo(0, 900));
+    await page.waitForFunction(() => document.documentElement.dataset.defile === "bas");
+    await page.waitForTimeout(400);
+    expect(await haut(), "l'en-tête est sorti par le haut").toBeLessThan(-40);
+    await page.evaluate(() => window.scrollTo(0, 600));
+    await page.waitForFunction(() => document.documentElement.dataset.defile === undefined);
+    await page.waitForTimeout(400);
+    expect(Math.round(await haut()), "l'en-tête est revenu").toBe(0);
     await contexte.close();
   });
 

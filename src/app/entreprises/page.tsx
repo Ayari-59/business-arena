@@ -16,9 +16,10 @@ import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { LEVIERS } from "@/config/decisions";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+import { Repliable } from "@/components/repliable";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
-import { HaloDePage } from "@/components/halo-de-page";
+import { BandeOuverture } from "@/components/bande-ouverture";
 import { PiedDePage } from "@/components/pied-de-page";
 import { Bande } from "@/components/bande";
 import { EPISODES } from "@/pedagogy/episodes/registre";
@@ -191,14 +192,15 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         <p className={`text-sm font-medium ${a.texte}`}>{promesse(d) ?? d.tagline}</p>
         <p className="mt-3 text-base leading-relaxed text-slate-400">{d.briefing}</p>
         {/*
-          SUR TÉLÉPHONE, LA FICHE EST UNE CARTE : le métier, sa promesse, ses
-          indicateurs, le nombre de situations, et le bouton pour jouer. Le
-          reste — le contexte d'arrivée, le premier arbitrage, ce que la classe
-          y travaille — s'ouvre à la demande. Toutes les fiches dépliées faisaient
-          seize mille pixels de défilement. Au-delà de `sm`, la fiche est celle
-          d'avant : tout est ouvert, rien ne se replie (voir RepliableSurTelephone).
+          LA FICHE EST UNE CARTE, SUR TOUS LES ÉCRANS (audit P3-07) : le métier,
+          sa promesse, ses indicateurs, le nombre de situations, et le bouton
+          pour jouer. Le reste (le contexte d'arrivée, le premier arbitrage, ce
+          que la classe y travaille) s'ouvre à la demande. Le repli ne valait
+          que sur téléphone, où les fiches dépliées faisaient seize mille pixels ;
+          sur ordinateur, toutes ouvertes, elles en faisaient encore plusieurs
+          milliers, et le lecteur venu en comparer deux les perdait de vue.
         */}
-        <ul aria-label="Indicateurs suivis" className="mt-3 flex flex-wrap gap-1.5 sm:hidden">
+        <ul aria-label="Indicateurs suivis" className="mt-3 flex flex-wrap gap-1.5">
           {d.kpis.slice(0, 3).map((k) => (
             <li
               key={k.key}
@@ -210,10 +212,10 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         </ul>
 
         <div className="flex flex-col">
-          <RepliableSurTelephone
+          <Repliable
             resume="Voir le détail de l'entreprise"
-            className="order-2 sm:order-none"
-            resumeClassName="mt-1"
+            className="order-2 mt-3"
+            classeResume="text-sm font-semibold text-amber-300 group-hover:text-amber-200"
           >
             {famille ? (
               // Le même métier en un produit ou en gamme : c'est le niveau de
@@ -267,9 +269,9 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             </div>
 
             <CeQuOnYTravaille d={d} />
-          </RepliableSurTelephone>
+          </Repliable>
 
-          <div className="order-1 mt-5 flex flex-wrap items-center gap-4 sm:order-none">
+          <div className="order-1 mt-5 flex flex-wrap items-center gap-4">
             <Link
               href={`/jouer?secteur=${d.code}`}
               className={`${bouton({ variante: "secondaire", taille: "m" })} px-5 pointer-coarse:min-h-11`}
@@ -293,33 +295,36 @@ export default async function EntreprisesPage() {
   return (
     <>
       <main id="main" className="relative overflow-hidden">
-        <HaloDePage />
-
-        <Bande
+        {/* L'OUVERTURE MARINE, comme l'accueil (components/bande-ouverture) :
+            le chiffre-preuve est le nombre de métiers jouables, lu dans le
+            registre des scénarios. */}
+        <BandeOuverture
           id="entreprises.accroche"
           contraste={c("entreprises.accroche")}
-          interieur="mx-auto max-w-6xl px-6 py-14"
+          surtitre={`${SCENARIO_CHOICES.length} métiers · ${SCENARIO_CHOICES.length} contraintes`}
+          titre={
+            <>
+              Toutes les entreprises gagnent de l&apos;argent de la même façon.{" "}
+              <span>Aucune ne le perd pareil.</span>
+            </>
+          }
+          chapeau={
+            <>
+              Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
+              réserve, mais elle a déjà coûté sa trésorerie. Une journée de conseil facturée à
+              quatre-vingt-dix jours est un bénéfice qu&apos;on ne peut pas dépenser. Le compte de
+              résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
+            </>
+          }
+          preuve={{ valeur: `${SCENARIO_CHOICES.length}`, libelle: "métiers jouables" }}
+          actions={
+            <>
+              <Link href="/jouer" className={bouton({ taille: "l" })}>
+                Tester le simulateur
+              </Link>
+            </>
+          }
         >
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
-            {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
-          </p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-            Toutes les entreprises gagnent de l&apos;argent de la même façon.
-            <br />
-            <span>Aucune ne le perd pareil.</span>
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
-            réserve, mais elle a déjà coûté sa trésorerie. Une journée de conseil facturée à
-            quatre-vingt-dix jours est un bénéfice qu&apos;on ne peut pas dépenser. Le compte de
-            résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
-          </p>
-          {/*
-            LE MÊME PICTOGRAMME QUE LES FICHES. Cette rangée a gardé ses emblèmes
-            en emoji quand les fiches sont passées au pictogramme, et le défaut
-            se voyait deux fois : un emoji système au-dessus d'un dessin de la
-            maison, et deux représentations du même métier sur un seul écran.
-          */}
           <div className="mt-8 flex flex-wrap gap-2">
             {/*
               DES PASTILLES NEUTRES, LA COULEUR AU SEUL PICTOGRAMME. Chacune
@@ -345,9 +350,9 @@ export default async function EntreprisesPage() {
             pastilles passait inaperçue : c'est un autre public, il lui faut un
             bloc à lui et un bouton, dans le premier écran.
           */}
-          <div className="mt-8 flex max-w-3xl flex-col gap-4 rounded-lg border border-amber-400/30 bg-amber-400/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-8 flex max-w-3xl flex-col gap-4 rounded-lg border border-white/15 bg-slate-900 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-etiquette text-amber-300">
+              <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-300">
                 Nouveau · Pour les entreprises
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
@@ -365,7 +370,7 @@ export default async function EntreprisesPage() {
               Jouer la démonstration
             </Link>
           </div>
-        </Bande>
+        </BandeOuverture>
 
         {/*
           LE TABLEAU QUI MET TOUS LES MÉTIERS CÔTE À CÔTE — EN TÊTE, PLUS EN

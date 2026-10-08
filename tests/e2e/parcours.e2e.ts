@@ -76,6 +76,17 @@ afterAll(async () => {
   await navigateur?.close();
 });
 
+/**
+ * Le formulaire de création attend derrière « Nouvelle partie » dès qu'une
+ * partie existe : on l'ouvre s'il ne l'est pas déjà (il l'est d'office pour un
+ * compte sans partie, ou après un échec de création).
+ */
+async function ouvrirLaCreation(p: Page): Promise<void> {
+  if ((await p.locator("#nouvelle-partie[open]").count()) === 0) {
+    await p.locator("#nouvelle-partie > summary").click();
+  }
+}
+
 describe("parcours enseignant et élève", () => {
   it("un enseignant crée son compte et arrive sur ses parties", async () => {
     await aller(prof, "/teacher/login");
@@ -289,6 +300,7 @@ describe("parcours enseignant et élève", () => {
     // jusqu'à l'écran : un champ ouvert côté service mais absent du formulaire
     // n'existe pas.
     await aller(prof, "/teacher");
+    await ouvrirLaCreation(prof);
     await prof.selectOption('select[name="scenarioCode"]', "nova");
     await prof.selectOption('select[name="humanTeamsCount"]', "1");
     await prof.selectOption('select[name="botCount"]', "1");
@@ -372,6 +384,7 @@ describe("parcours enseignant et élève", () => {
       );
 
       await aller(prof, "/teacher");
+      await ouvrirLaCreation(prof);
       await prof.selectOption('select[name="scenarioCode"]', "nova");
       await prof.getByRole("button", { name: /Créer la partie/ }).click();
       // On attend le BANDEAU, pas l'URL : la page était déjà /teacher avant le

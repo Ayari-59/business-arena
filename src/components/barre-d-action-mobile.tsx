@@ -3,19 +3,19 @@
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { ACTION_PRINCIPALE, NAVIGATION, liensDAcces } from "@/config/navigation";
+import { ACTION_PRINCIPALE, NAVIGATION } from "@/config/navigation";
 import { bouton } from "@/components/bouton";
 
 /**
  * LA BARRE D'ACTION DU BAS, SUR TÉLÉPHONE SEULEMENT.
  *
  * Sur une page longue, le bouton qu'on veut est en haut, à trois écrans. Cette
- * barre garde deux gestes sous le pouce : trouver sa simulation, et jouer —
- * ou, côté enseignant, entrer dans son espace. Elle s'efface dès que la page
+ * barre garde le geste de la page sous le pouce : jouer, ou côté enseignants,
+ * choisir sa simulation. Elle s'efface dès que la page
  * montre déjà ce bouton (le héros, la bande finale : tout bloc marqué
  * `data-cta-principal`), pour ne jamais doubler un appel à l'action visible.
  *
- * DISCRÈTE. Une ligne de 56 px, fermable pour la session, absente des écrans
+ * DISCRÈTE. Une ligne de 60 px, un seul bouton, fermable pour la session, absente des écrans
  * où l'on joue, où l'on remplit un formulaire ou où l'on administre. Elle
  * respecte l'encoche du bas (`safe-area-inset-bottom`) et cède la place à
  * l'invitation d'installation, qui occupe le même bord. Un espace de même
@@ -91,10 +91,11 @@ export function BarreDActionMobile() {
   if (!quoi) return null;
 
   const actif = !fermee && !boutonVisible;
+  // L'appel de la page : jouer, sur les pages générales (c'est celui de leur
+  // héros et de leur bande finale) ; choisir sa simulation, côté enseignants.
   const jouer = NAVIGATION.flatMap((g) => g.liens).find((l) => l.href === "/jouer");
-  const enseignant = liensDAcces().find((l) => l.acces === "enseignant");
-  const droite = quoi === "enseignant" ? enseignant : jouer;
-  if (!droite) return null;
+  const appel = quoi === "enseignant" ? ACTION_PRINCIPALE : jouer;
+  if (!appel) return null;
 
   const fermer = () => {
     try {
@@ -109,7 +110,7 @@ export function BarreDActionMobile() {
     <>
       {/* Un espace de la hauteur de la barre, en bas de page : le pied de page ne passe pas dessous. */}
       {!fermee ? (
-        <div aria-hidden className="h-[calc(3.5rem+env(safe-area-inset-bottom))] sm:hidden" />
+        <div aria-hidden className="h-[calc(3.75rem+env(safe-area-inset-bottom))] sm:hidden" />
       ) : null}
       <div
         role="region"
@@ -121,18 +122,16 @@ export function BarreDActionMobile() {
         // Une barre repliée sous l'écran ne doit être ni lue ni atteinte au clavier.
         inert={!actif}
       >
-        <div className="mx-auto flex max-w-md items-center gap-2 px-3 py-2">
+        {/* UN SEUL BOUTON, DE 48 PX (audit P3-09). « Choisir ma simulation »
+            et « Jouer » se doublaient, côte à côte, sur 60 px de haut : la
+            barre redit maintenant l'appel principal de la page qu'on lit, et
+            lui seul, avec de quoi la fermer. */}
+        <div className="mx-auto flex max-w-md items-center gap-2 px-3 py-1.5">
           <Link
-            href={ACTION_PRINCIPALE.href}
-            className={`${bouton({ variante: "principal", taille: "m" })} min-h-11 flex-1`}
+            href={appel.href}
+            className={`${bouton({ variante: "principal", taille: "m" })} min-h-12 flex-1`}
           >
-            {ACTION_PRINCIPALE.libelle}
-          </Link>
-          <Link
-            href={droite.href}
-            className={`${bouton({ variante: "secondaire", taille: "m" })} min-h-11 shrink-0 px-4`}
-          >
-            {quoi === "enseignant" ? "Enseignant" : "Jouer"}
+            {appel.libelle}
           </Link>
           <button
             type="button"

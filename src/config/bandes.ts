@@ -135,14 +135,19 @@ export const BANDES: readonly BandeDef[] = [
     id: "enseignants.accroche",
     page: "/enseignants",
     nom: "L'accroche",
-    contrasteParDefaut: false,
+    // À contre-jour : l'ouverture marine des pages vitrines, comme l'accueil
+    // (components/bande-ouverture). Elle porte le titre, et le chiffre-preuve.
+    contrasteParDefaut: true,
     porteLeH1: true,
   },
   {
     id: "enseignants.chiffres",
     page: "/enseignants",
     nom: "Les chiffres d'usage",
-    contrasteParDefaut: true,
+    // Claire : elle suit l'ouverture marine, et deux bandes à contre-jour ne
+    // se touchent jamais. Elle a été la coupure du haut de page tant que
+    // l'accroche était claire.
+    contrasteParDefaut: false,
   },
   {
     id: "enseignants.ecrans",
@@ -179,14 +184,19 @@ export const BANDES: readonly BandeDef[] = [
     id: "ecoles.accroche",
     page: "/ecoles",
     nom: "L'accroche",
-    contrasteParDefaut: false,
+    // À contre-jour : l'ouverture marine des pages vitrines, comme l'accueil
+    // (components/bande-ouverture). Elle porte le titre, et le chiffre-preuve.
+    contrasteParDefaut: true,
     porteLeH1: true,
   },
   {
     id: "ecoles.chiffres",
     page: "/ecoles",
     nom: "Les chiffres",
-    contrasteParDefaut: true,
+    // Claire : elle suit l'ouverture marine, et deux bandes à contre-jour ne
+    // se touchent jamais. Elle a été la coupure du haut de page tant que
+    // l'accroche était claire.
+    contrasteParDefaut: false,
   },
   {
     id: "ecoles.formats",
@@ -223,14 +233,19 @@ export const BANDES: readonly BandeDef[] = [
     id: "entreprises.accroche",
     page: "/entreprises",
     nom: "L'accroche",
-    contrasteParDefaut: false,
+    // À contre-jour : l'ouverture marine des pages vitrines, comme l'accueil
+    // (components/bande-ouverture). Elle porte le titre, et le chiffre-preuve.
+    contrasteParDefaut: true,
     porteLeH1: true,
   },
   {
     id: "entreprises.differences",
     page: "/entreprises",
     nom: "Ce qui change d'un métier à l'autre",
-    contrasteParDefaut: true,
+    // Claire : elle suit l'ouverture marine, et deux bandes à contre-jour ne
+    // se touchent jamais. Elle a été la coupure du haut de page tant que
+    // l'accroche était claire.
+    contrasteParDefaut: false,
   },
   {
     id: "entreprises.fiches",

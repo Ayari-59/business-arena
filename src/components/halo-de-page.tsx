@@ -14,11 +14,19 @@
  * titres qu'il accompagne. Son parent le rogne (overflow), sans quoi il
  * élargirait la page sur un téléphone.
  */
+/*
+ * IL SORT DU COIN SANS TRAVERSER LE TITRE (audit P3-03). Sur ordinateur, le
+ * titre du héros de l'accueil prend toute la largeur de sa colonne, et
+ * l'anneau, posé à 7 rem du bord, passait sur « ENTREPRISE. » et « DÉCIDER. ».
+ * Au-delà de `lg`, il est poussé de moitié hors de l'écran et remonté : son
+ * arc gauche reste à droite de la première ligne du titre, et la seconde,
+ * plus courte, passe sous lui sans le toucher.
+ */
 export function HaloDePage() {
   return (
     <div
       aria-hidden
-      className="halo-de-page pointer-events-none absolute -right-20 -top-24 aspect-square w-[18rem] rounded-full sm:-right-28 sm:-top-36 sm:w-[30rem] lg:w-[34rem]"
+      className="halo-de-page pointer-events-none absolute -right-20 -top-24 aspect-square w-[18rem] rounded-full sm:-right-28 sm:-top-36 sm:w-[30rem] lg:-right-[22rem] lg:-top-48 lg:w-[34rem]"
     />
   );
 }

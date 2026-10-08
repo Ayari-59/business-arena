@@ -10,6 +10,8 @@ import { FORMATIONS } from "@/config/formations";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
+import { EnTeteDePage } from "@/components/en-tete-de-page";
+import { LIEN_CONTACT } from "@/config/navigation";
 import { TiroirsDesDiplomes } from "@/components/tiroirs-de-diplomes";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -145,19 +147,17 @@ export default async function ParcoursPage() {
           320). Les liens qu'elle portait sont tous dans le plan du site, que
           l'en-tête ouvre déjà.
         */}
-        <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
-            Parcours par diplôme
-          </p>
-          <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
-            Votre référentiel, vécu dans l&apos;arène
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-            Business Arena a été construit par un enseignant. Pour chaque
-            diplôme : les blocs de son référentiel, ce qui s&apos;y joue, et ce
-            qui n&apos;est qu&apos;effleuré. Les blocs portent les mots de leur
-            référentiel.
-          </p>
+        <EnTeteDePage
+          surtitre="Parcours par diplôme"
+          titre={<>Votre référentiel, vécu dans l&apos;arène</>}
+          chapeau={
+            <>
+              Business Arena a été construit par un enseignant. Pour chaque diplôme : les blocs de
+              son référentiel, ce qui s&apos;y joue, et ce qui n&apos;est qu&apos;effleuré. Les
+              blocs portent les mots de leur référentiel.
+            </>
+          }
+        >
           {/* « Tout déplier » tient compagnie à l'index : c'est le même
               geste — choisir où regarder — et le seul moyen de retrouver un
               mot par Ctrl+F, que les tiroirs fermés soustraient au
@@ -179,7 +179,7 @@ export default async function ParcoursPage() {
             </nav>
             <TiroirsDesDiplomes />
           </div>
-        </header>
+        </EnTeteDePage>
 
         <div className="mx-auto max-w-4xl space-y-8 px-6 py-8">
           {FILIERES.map((f) => (
@@ -187,12 +187,14 @@ export default async function ParcoursPage() {
               key={f.id}
               id={f.id}
               data-diplome={f.sigle}
-              className="group scroll-mt-24 rounded-xl border border-dashed border-white/15 bg-slate-900 open:border-solid open:border-white/10"
+              className="group carte scroll-mt-24 transition-colors hover:border-white/25"
             >
               {/*
-                LES TROIS SIGNAUX DU TIROIR MAISON, repris tels quels : le
-                chevron ambre qui pivote, le trait pointillé qui devient plein,
-                et le compte de ce qui attend derrière. Le composant Tiroir
+                LES SIGNAUX DU TIROIR MAISON : le chevron ambre qui pivote et le
+                compte de ce qui attend derrière. Le trait pointillé du tiroir
+                fermé est tombé ici : sur le site, le pointillé dit une zone vide
+                ou en attente, et une carte de diplôme fermée n'est pas vide.
+                Le bord est plein, ouvert comme fermé (audit P2-16). Le composant Tiroir
                 lui-même est taillé pour l'arène — titre en petites capitales,
                 marges serrées — et écraserait le nom du diplôme, qui est le
                 seul repère cherché ici ; ce sont donc ses signaux qu'on
@@ -372,10 +374,15 @@ export default async function ParcoursPage() {
           id="parcours.finale"
           contraste={c("parcours.finale")}
           titre="Votre diplôme n'est pas dans cette liste ?"
-          texte="Les mêmes mécaniques servent d'autres référentiels : écrivez-nous, et nous regardons ensemble ce que votre programme demande."
+          texte="Les mêmes mécaniques servent d'autres référentiels : prenons rendez-vous, et regardons ensemble ce que votre programme demande."
         >
-          <Link href="/teacher/login" className={bouton({ taille: "l" })}>
-            Créer ma première partie
+          {/* LE BOUTON FAIT CE QUE LE TEXTE DEMANDE. La bande disait
+              « écrivez-nous » et proposait de créer une partie : celui dont le
+              diplôme manque n'a justement pas de quoi la régler. Le texte et le
+              bouton disent maintenant le même geste, le rendez-vous du menu
+              (audit P2-16). */}
+          <Link href={LIEN_CONTACT.href} className={bouton({ taille: "l" })}>
+            {LIEN_CONTACT.libelle}
           </Link>
           <Link
             href="/guide"

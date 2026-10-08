@@ -128,10 +128,21 @@ const CARTE = { largeur: 800, hauteur: 1120 };
  * l'est pas non plus sur grand écran, et deux comptes qui ne disent pas la
  * même chose sur un même écran se contrediraient.
  */
-function EcranDuTour({ nom, titre, alt }: { nom: string; titre: string; alt: string }) {
+function EcranDuTour({
+  nom,
+  titre,
+  alt,
+  surTelephone = false,
+}: {
+  nom: string;
+  titre: string;
+  alt: string;
+  /** Le seul écran montré sur un téléphone, en pleine largeur. */
+  surTelephone?: boolean;
+}) {
   return (
-    <li className="flex shrink-0 snap-start flex-col gap-3 max-sm:w-[78%]">
-      <p className="font-display text-sm font-bold uppercase tracking-etiquette text-amber-300">
+    <li className={`flex flex-col gap-3 ${surTelephone ? "" : "max-sm:hidden"}`}>
+      <p className="font-display text-sm font-bold uppercase tracking-etiquette text-slate-200">
         {titre}
       </p>
       <div className="overflow-hidden rounded-md border border-white/15 bg-slate-900">
@@ -213,7 +224,13 @@ const CE_QUE_L_ELEVE_APPREND = [
 function TroisEcrans() {
   return (
     <figure className="ardoise m-0 mt-14 rounded-md border-t-[3px] border-amber-400 bg-slate-950 p-5 sm:p-8">
-      <ol className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0">
+      {/* SUR TÉLÉPHONE, UN SEUL ÉCRAN, AGRANDI (audit P2-09). Les trois
+          défilaient de côté dans leur cadre, à 78 % de la largeur : le texte des
+          captures y tombait à six pixels, illisible, et le geste de côté n'était
+          pas deviné. Le téléphone montre le verdict seul, en pleine largeur :
+          c'est l'écran qui dit ce que le jeu fait, et le seul qui se lise à
+          cette taille. Au-delà, les trois écrans se posent côte à côte. */}
+      <ol className="grid gap-5 sm:grid-cols-3 sm:gap-6">
         <EcranDuTour
           nom="arene"
           titre="L'arène"
@@ -227,6 +244,7 @@ function TroisEcrans() {
         <EcranDuTour
           nom="resultats"
           titre="Le verdict"
+          surTelephone
           alt="Le verdict du tour 3 : 32 942 € de bénéfice, 11 977 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 58, et deux réussites obtenues."
         />
       </ol>
@@ -237,8 +255,12 @@ function TroisEcrans() {
         images une démonstration plutôt qu'une galerie.
       */}
       <figcaption className="mt-5 text-sm leading-relaxed text-slate-300">
-        Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision,
-        le verdict.
+        <span className="max-sm:hidden">
+          Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.
+        </span>
+        <span className="sm:hidden">
+          Le verdict d&apos;un tour : ce que le marché a répondu aux décisions de l&apos;équipe.
+        </span>
       </figcaption>
     </figure>
   );

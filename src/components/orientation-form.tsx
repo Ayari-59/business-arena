@@ -108,7 +108,11 @@ export function OrientationForm({
     <form
       ref={formRef}
       action={formAction}
-      className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-start"
+      // L'ÉTAPE S'ARRÊTE SOUS L'EN-TÊTE, PAS DESSOUS. Le défilement vers la
+      // question suivante posait le haut du formulaire au ras de l'écran, et
+      // l'en-tête collant du site (58 px) masquait « 2 / 4 » : la marge de
+      // défilement réserve sa hauteur, et un peu d'air (audit P2-18).
+      className="grid scroll-mt-24 gap-6 lg:grid-cols-[1fr_1fr] lg:items-start"
     >
       <div className="carte space-y-4 p-6">
         {/* La progression : « Étape 2 sur 4 » et quatre points. */}

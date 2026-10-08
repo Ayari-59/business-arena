@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
+import { EnTeteDePage } from "@/components/en-tete-de-page";
 import { OuvreLaSectionVisee } from "@/components/ouvre-la-section-visee";
 import {
   BPI_V2_DIMENSIONS,
@@ -137,28 +138,29 @@ export default async function GuidePage() {
           320). Les liens qu'elle portait sont tous dans le plan du site, que
           l'en-tête ouvre déjà.
         */}
-        <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
-          <p className="text-xs uppercase tracking-annonce text-amber-400">Guide de prise en main</p>
-          <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
-            Tout ce qu&apos;il faut pour votre première partie
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-            Business Arena ne vous demande jamais « calculez le BFR ». Vous vivez une situation,
-            vous décidez, la simulation répond. Les notions arrivent quand vous en avez besoin.
-            Trois façons d&apos;entrer dans l&apos;arène : en solo, en classe, en établissement.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2">
+        <EnTeteDePage
+          surtitre="Guide de prise en main"
+          titre={<>Tout ce qu&apos;il faut pour votre première partie</>}
+          chapeau={
+            <>
+              Business Arena ne vous demande jamais « calculez le BFR ». Vous vivez une situation,
+              vous décidez, la simulation répond. Les notions arrivent quand vous en avez besoin.
+              Trois façons d&apos;entrer dans l&apos;arène : en solo, en classe, en établissement.
+            </>
+          }
+        >
+          <nav aria-label="Sommaire du guide" className="mt-6 flex flex-wrap gap-2">
             {SECTIONS.map((s) => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
-                className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
+                className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-sm text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
               >
                 {s.label}
               </a>
             ))}
-          </div>
-        </header>
+          </nav>
+        </EnTeteDePage>
 
         <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
           <Section

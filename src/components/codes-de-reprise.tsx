@@ -1,4 +1,5 @@
 import { formaterCodeDeReprise } from "@/config/reprise";
+import { Repliable } from "@/components/repliable";
 
 /**
  * LES CODES DE REPRISE, CÔTÉ ORGANISATEUR.
@@ -25,14 +26,17 @@ export function CodesDeReprise({
 }) {
   if (codes.length === 0 && !children) return null;
   return (
-    <details className="carte p-3 sm:p-5">
-      <summary className="cursor-pointer text-sm font-semibold text-slate-200">
-        Codes de reprise des joueurs ({codes.length})
-      </summary>
+    // Le repli maison, chevron compris, à la place du triangle du navigateur
+    // (audit P2-08). Il reste fermé par défaut, pour la raison dite plus haut.
+    <Repliable
+      className="carte p-3 sm:p-5"
+      resume="Codes de reprise des joueurs"
+      quoi={`(${codes.length})`}
+    >
       <p className="mt-2 text-sm leading-relaxed text-slate-400">
-        Le code personnel de chaque joueur : il lui rend son équipe depuis un autre appareil,
-        même après la clôture des inscriptions. Relisez-le à qui l&apos;a perdu. Ne le projetez
-        pas devant la classe : celui qui le lit peut jouer à la place de son propriétaire.
+        Le code personnel de chaque joueur : il lui rend son équipe depuis un autre appareil, même
+        après la clôture des inscriptions. Relisez-le à qui l&apos;a perdu. Ne le projetez pas
+        devant la classe : celui qui le lit peut jouer à la place de son propriétaire.
       </p>
       {children ? <div className="mt-3">{children}</div> : null}
       <ul className="mt-3 space-y-1.5">
@@ -42,7 +46,7 @@ export function CodesDeReprise({
             className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
           >
             <span className="text-slate-300">
-              <span className="text-amber-200">{c.teamLabel}</span>
+              <span className="font-medium text-slate-100">{c.teamLabel}</span>
               {c.pseudo ? <span className="text-slate-400"> · {c.pseudo}</span> : null}
             </span>
             <span className="font-mono tracking-etiquette text-slate-200">
@@ -51,6 +55,6 @@ export function CodesDeReprise({
           </li>
         ))}
       </ul>
-    </details>
+    </Repliable>
   );
 }

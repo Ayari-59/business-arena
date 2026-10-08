@@ -255,8 +255,10 @@ describe("thème graphique", () => {
     const relu = await getPlatformConfig();
     expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(true);
     expect(contrasteDeLaBande(relu.theme, "accueil.metiers")).toBe(true);
-    // Une bande qu'on n'a pas touchée suit toujours son état d'origine.
-    expect(contrasteDeLaBande(relu.theme, "enseignants.chiffres")).toBe(true);
+    // Une bande qu'on n'a pas touchée suit toujours son état d'origine :
+    // l'ouverture marine des enseignants à contre-jour, ses chiffres au clair.
+    expect(contrasteDeLaBande(relu.theme, "enseignants.accroche")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "enseignants.chiffres")).toBe(false);
     // Les autres réglages ne bougent pas : le thème s'écrit à côté, pas par-dessus.
     expect(relu.announcement).toBe("Maintenance ce soir");
     expect(relu.allowPublicPlay).toBe(true);

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { TeacherAuthForms } from "@/components/teacher-auth-forms";
+import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 
 export const dynamic = "force-dynamic";
 
@@ -9,18 +10,31 @@ export default async function TeacherLoginPage() {
   const session = await getSession();
   if (session) redirect("/teacher");
   return (
-    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="flex flex-col items-center text-center">
-        <h1 className="text-3xl font-bold">Espace enseignant</h1>
-        <p className="mt-2 max-w-md text-sm text-slate-400">
-          Créez des parties pour vos classes, suivez les décisions de chaque équipe et
-          pilotez la clôture des tours.
+    <main id="main">
+      {/* L'en-tête des pages intérieures : la connexion n'est plus une boîte
+          centrée au milieu d'un écran vide, mais une page du site, alignée sur
+          la même colonne que les autres. */}
+      <EnTeteDePage
+        surtitre="Pour les enseignants"
+        titre="Espace enseignant"
+        chapeau={
+          <>
+            Créez des parties pour vos classes, suivez les décisions de chaque équipe et pilotez la
+            clôture des tours.
+          </>
+        }
+      />
+      <div className={`${COLONNE_DE_PAGE} space-y-4 pb-16`}>
+        <TeacherAuthForms />
+        <p className="text-sm text-slate-400">
+          <Link
+            href="/guide#enseignants"
+            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+          >
+            Première fois ? Consultez le guide de prise en main
+          </Link>
         </p>
       </div>
-      <TeacherAuthForms />
-      <Link href="/guide#enseignants" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-        Première fois ? Consultez le guide de prise en main
-      </Link>
     </main>
   );
 }

@@ -56,10 +56,10 @@ export function DistributionCourrier({
   );
 
   return (
-    <section className="rounded-xl border border-amber-400/20 bg-slate-900 p-4">
+    <section className="carte p-4">
       <div className="flex items-start justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-          <Icone nom="courrier" className="h-4 w-4 text-amber-400" />
+          <Icone nom="courrier" className="h-4 w-4 text-slate-400" />
           Le courrier à distribuer
         </h2>
         <a
@@ -81,7 +81,7 @@ export function DistributionCourrier({
 
       {courriersEnAttente.length > 0 ? (
         <div className="mt-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Courriers distribués ce tour
           </p>
           <div className={`${grilleDeCourriers(courriersEnAttente.length)} lg:max-w-xl`}>

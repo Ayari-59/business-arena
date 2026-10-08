@@ -134,7 +134,10 @@ export function QuickConfigFields({
 
       {/* 1 · Entreprise */}
       <p className={`mt-4 ${label}`}>Votre entreprise</p>
-      <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+      {/* LES NEUF MÉTIERS EN TUILES FRANCHES (audit P2-21) : trois par rang,
+          le pictogramme et le nom assez grands pour se reconnaître d'un coup
+          d'œil, sur téléphone comme sur ordinateur. */}
+      <div className="mt-2 grid grid-cols-3 gap-2 sm:gap-3">
         {scenarios.map((s) => {
           const on = s.code === scenario;
           return (
@@ -147,7 +150,7 @@ export function QuickConfigFields({
                 setLevel((n) => Math.min(n, niveauMaxPour(regle, s.code)));
               }}
               aria-pressed={on}
-              className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center transition ${
+              className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center transition sm:gap-1.5 sm:px-3 sm:py-5 ${
                 on
                   ? "border-amber-400 bg-amber-400/10 ring-1 ring-amber-400/40"
                   : "border-white/10 bg-slate-950 hover:-translate-y-0.5 hover:border-white/25"
@@ -155,10 +158,12 @@ export function QuickConfigFields({
             >
               <PictoSecteur
                 secteur={s.secteur}
-                className={`h-7 w-7 ${on ? "text-amber-300" : "text-slate-300"}`}
+                className={`h-7 w-7 sm:h-10 sm:w-10 ${on ? "text-amber-300" : "text-slate-300"}`}
               />
-              <span className="text-xs font-semibold leading-tight text-slate-100">{s.label}</span>
-              <span className="text-xs leading-tight text-slate-400">{s.sector}</span>
+              <span className="text-xs font-semibold leading-tight text-slate-100 sm:font-display sm:text-lg sm:font-bold">
+                {s.label}
+              </span>
+              <span className="text-xs leading-tight text-slate-400 sm:text-sm">{s.sector}</span>
               {regle.active ? (
                 // Vitrine allumée : chaque tuile dit jusqu'où elle se joue.
                 <span
@@ -333,8 +338,15 @@ export function QuickConfigFields({
       </div>
 
       {/* Récap vivant */}
-      <p className="mt-4 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2.5 text-sm text-slate-300">
-        Vous lancez :{" "}
+      {/* LE RÉCAPITULATIF EN ARDOISE : ce qu'on lance, écrit sur le marine de
+          l'arène, juste au-dessus du bouton qui le lance. */}
+      <p
+        data-vous-lancez
+        className="ardoise mt-5 rounded-lg bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-300"
+      >
+        <span className="mr-1 text-xs font-semibold uppercase tracking-annonce text-slate-400">
+          Vous lancez
+        </span>{" "}
         <span className="font-semibold text-slate-100">
           {sec?.label}
         </span>{" "}

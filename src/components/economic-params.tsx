@@ -118,7 +118,7 @@ export function EconomicParams({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-slate-400">
+        <span className="mt-1 block text-sm text-slate-400">
           Chaque secteur enseigne ce que les autres ne peuvent pas : le stock et le coefficient
           multiplicateur dans le commerce, le taux d&apos;occupation en hôtellerie, le ratio
           matières en restauration, le poste clients dans les services.
@@ -201,7 +201,7 @@ export function EconomicParams({
                 />
                 <span className="whitespace-nowrap text-xs text-slate-400">%</span>
               </span>
-              <span className="mt-1 block text-xs text-slate-400">{field.hint}</span>
+              <span className="mt-1 block text-sm text-slate-400">{field.hint}</span>
             </label>
           ))}
         </div>

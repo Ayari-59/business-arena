@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GuardedForm } from "@/components/guarded-action";
 import { HaloDePage } from "@/components/halo-de-page";
+import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
+import { Repliable } from "@/components/repliable";
 import { PiedDePage } from "@/components/pied-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { niveauParCode } from "@/config/episodes/niveaux";
@@ -74,48 +76,73 @@ const SOURCES: Record<Observation["source"], string> = {
 
 const pct = (v: number) => `${Math.round(v * 100)} %`;
 
+/**
+ * L'ÉCHELLE D'UNE COMPÉTENCE : où tombe le score, sur cent, et avec quelle
+ * marge (audit P2-20).
+ *
+ * Dix cartes de texte dense disaient la même chose sans qu'on la voie : on
+ * lisait « 62/100 (entre 48 et 71) » dix fois, sans repère pour comparer une
+ * ligne à la suivante. La barre est en bleu donnée (la série principale de
+ * tout graphique du site), l'intervalle en gris par-dessous, et une
+ * compétence sans score n'a qu'un filet pointillé : la zone est vide, et le
+ * pointillé est justement le signe du vide sur le site.
+ */
+function Echelle({ l }: { l: LigneDeCompetence }) {
+  const borne = (v: number) => Math.max(0, Math.min(100, v));
+  if (l.score == null) {
+    // La pastille de la ligne dit déjà « Pas encore de score » : le filet
+    // seul suffit ici.
+    return <div aria-hidden className="echelle echelle-vide" />;
+  }
+  const [bas, haut] = l.intervalle ?? [l.score, l.score];
+  return (
+    <div
+      role="img"
+      aria-label={`Score ${l.score} sur 100${l.intervalle ? `, entre ${bas} et ${haut}` : ""}`}
+      className="grid gap-1"
+    >
+      <div className="echelle">
+        {l.intervalle ? (
+          <span
+            className="echelle-intervalle"
+            style={{ left: `${borne(bas)}%`, width: `${borne(haut) - borne(bas)}%` }}
+          />
+        ) : null}
+        <span className="echelle-barre" style={{ width: `${borne(l.score)}%` }} />
+        <span className="echelle-repere" style={{ left: `${borne(l.score)}%` }} />
+      </div>
+      <div aria-hidden className="flex justify-between text-xs tabular-nums text-slate-400">
+        <span>0</span>
+        <span>50</span>
+        <span>100</span>
+      </div>
+    </div>
+  );
+}
+
 function Ligne({ l }: { l: LigneDeCompetence }) {
   const ref = (o: Observation) => {
     const ep = episodeParCode(o.code);
     return `${o.numero}${o.decision != null ? `-D${o.decision + 1}` : ""} · ${ep?.titre ?? o.code}`;
   };
-  return (
-    <li className="carte grid gap-2 p-4 sm:p-5">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h3 className="font-display text-lg font-semibold text-slate-50">{l.competence.nom}</h3>
-        <span
-          className={`font-display text-xl font-semibold tabular-nums ${
-            l.confiance === "indicatif" ? "text-slate-400" : "text-slate-50"
-          }`}
-        >
-          {l.score != null ? `${l.score}/100` : "—"}
-          {l.intervalle && (
-            <span className="ml-1.5 text-sm font-normal text-slate-400">
-              (entre {l.intervalle[0]} et {l.intervalle[1]})
-            </span>
-          )}
-        </span>
-        <span
-          className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${TEINTES[l.confiance]}`}
-        >
-          {l.competence.score ? CONFIANCES[l.confiance].nom : "Pas encore noté"}
-        </span>
-      </div>
-      <p className="text-xs text-slate-400">
-        {compter(l.episodes, "épisode")} · {compter(l.familles, "famille")} ·{" "}
-        {compter(l.observations.length, "observation")}
-        {l.confiance === "indicatif" && " · à confirmer"}
-      </p>
-      <p className="max-w-3xl text-sm leading-relaxed text-slate-300">{l.preuve}</p>
+  // Ce qui justifie le score, en clair : la preuve, et où l'observer. Replié
+  // avec les observations quand il y en a ; à plat sinon, puisque c'est alors
+  // la seule chose que la ligne a à dire.
+  const preuve = (
+    <>
+      <p className="max-w-3xl text-base leading-relaxed text-slate-300">{l.preuve}</p>
       {l.ouLObserver.length > 0 && (
-        <p className="text-sm text-slate-400">
+        <p className="text-sm leading-relaxed text-slate-400">
           Ces épisodes l&apos;observent :{" "}
           {l.ouLObserver.map((code, i) => {
             const ep = episodeParCode(code)!;
             return (
               <span key={code}>
                 {i > 0 && ", "}
-                <Link href={`/entreprises/episode/${code}`} className="text-amber-300 underline">
+                <Link
+                  href={`/entreprises/episode/${code}`}
+                  className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
                   {ep.numero} · {ep.titre}
                 </Link>
               </span>
@@ -124,49 +151,88 @@ function Ligne({ l }: { l: LigneDeCompetence }) {
           .
         </p>
       )}
-      {l.observations.length > 0 && (
-        <details className="text-sm">
-          <summary className="cursor-pointer text-slate-300 hover:text-slate-50">
-            {l.observations.length === 1
+    </>
+  );
+  return (
+    <li className="carte grid gap-3 p-4 sm:p-5">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h3 className="font-display text-lg font-semibold text-slate-50">{l.competence.nom}</h3>
+        {l.score != null ? (
+          <span
+            className={`font-display text-xl font-semibold tabular-nums ${
+              l.confiance === "indicatif" ? "text-slate-400" : "text-slate-50"
+            }`}
+          >
+            {l.score}/100
+            {l.intervalle && (
+              <span className="ml-1.5 text-sm font-normal text-slate-400">
+                (entre {l.intervalle[0]} et {l.intervalle[1]})
+              </span>
+            )}
+          </span>
+        ) : null}
+        <span
+          className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${TEINTES[l.confiance]}`}
+        >
+          {l.competence.score ? CONFIANCES[l.confiance].nom : "Pas encore noté"}
+        </span>
+      </div>
+      <Echelle l={l} />
+      <p className="text-sm text-slate-400">
+        {compter(l.episodes, "épisode")} · {compter(l.familles, "famille")} ·{" "}
+        {compter(l.observations.length, "observation")}
+        {l.confiance === "indicatif" && " · à confirmer"}
+      </p>
+      {l.observations.length > 0 ? (
+        <Repliable
+          resume={
+            l.observations.length === 1
               ? "L'observation qui fonde cette ligne"
-              : `Les ${compter(l.observations.length, "observation")} qui fondent cette ligne`}
-          </summary>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead>
-                <tr className="text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-3 font-medium">Où</th>
-                  <th className="pb-2 pr-3 font-medium">Quoi</th>
-                  <th className="pb-2 pr-3 font-medium">Votre choix</th>
-                  <th className="pb-2 pr-3 font-medium">Meilleure option, en moyenne</th>
-                  <th className="pb-2 text-right font-medium">Valeur</th>
-                </tr>
-              </thead>
-              <tbody>
-                {l.observations.map((o, i) => (
-                  <tr key={i} className="border-t border-white/5 align-top">
-                    <td className="py-2 pr-3 text-slate-300">{ref(o)}</td>
-                    <td className="py-2 pr-3 text-slate-400">{SOURCES[o.source]}</td>
-                    <td className="py-2 pr-3 text-slate-200">
-                      {o.choix?.prise ??
-                        (o.sources ? `${o.sources.vues} sur ${o.sources.sur} consultées` : "—")}
-                    </td>
-                    <td className="py-2 pr-3 text-slate-300">
-                      {o.choix?.meilleure
-                        ? o.choix.ecartBrut < 1000
-                          ? "votre choix, ou à égalité"
-                          : `${o.choix.meilleure} (${o.choix.ecart} de plus)`
-                        : "—"}
-                    </td>
-                    <td className="whitespace-nowrap py-2 text-right tabular-nums text-slate-200">
-                      {pct(o.valeur)}
-                    </td>
+              : `Les ${compter(l.observations.length, "observation")} qui fondent cette ligne`
+          }
+          classeResume="text-sm font-medium text-slate-300 group-hover:text-slate-50"
+        >
+          <div className="mt-3 grid gap-3">
+            {preuve}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <thead>
+                  <tr className="text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-3 font-medium">Où</th>
+                    <th className="pb-2 pr-3 font-medium">Quoi</th>
+                    <th className="pb-2 pr-3 font-medium">Votre choix</th>
+                    <th className="pb-2 pr-3 font-medium">Meilleure option, en moyenne</th>
+                    <th className="pb-2 text-right font-medium">Valeur</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {l.observations.map((o, i) => (
+                    <tr key={i} className="border-t border-white/5 align-top">
+                      <td className="py-2 pr-3 text-slate-300">{ref(o)}</td>
+                      <td className="py-2 pr-3 text-slate-400">{SOURCES[o.source]}</td>
+                      <td className="py-2 pr-3 text-slate-200">
+                        {o.choix?.prise ??
+                          (o.sources ? `${o.sources.vues} sur ${o.sources.sur} consultées` : "—")}
+                      </td>
+                      <td className="py-2 pr-3 text-slate-300">
+                        {o.choix?.meilleure
+                          ? o.choix.ecartBrut < 1000
+                            ? "votre choix, ou à égalité"
+                            : `${o.choix.meilleure} (${o.choix.ecart} de plus)`
+                          : "—"}
+                      </td>
+                      <td className="whitespace-nowrap py-2 text-right tabular-nums text-slate-200">
+                        {pct(o.valeur)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </details>
+        </Repliable>
+      ) : (
+        preuve
       )}
     </li>
   );
@@ -211,50 +277,59 @@ export default async function ProfilPage({
     <>
       <main id="main" className="relative overflow-x-clip">
         <HaloDePage />
-        <div className="mx-auto grid max-w-4xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
-          <header>
-            <p className="text-xs uppercase tracking-annonce text-slate-400">
-              <Link href="/entreprises" className="hover:text-slate-300">
+        <EnTeteDePage
+          surtitre={
+            <>
+              <Link href="/entreprises" className="hover:underline">
                 Entreprises
               </Link>{" "}
               /{" "}
-              <Link href="/entreprises/episode" className="hover:text-slate-300">
+              <Link href="/entreprises/episode" className="hover:underline">
                 Épisodes manager
               </Link>{" "}
               / Mon profil
+            </>
+          }
+          titre="Mon profil décisionnel"
+          chapeau={
+            n === 0
+              ? "Aucun épisode ne compte encore dans votre profil. Il se construit à partir de vos premières parties, jouées en Standard ou en Expert."
+              : `Établi sur ${n} épisode${n > 1 ? "s" : ""} joué${n > 1 ? "s" : ""} en Standard ou en Expert, ${compter(
+                  profil.competences.reduce((s, l) => s + l.observations.length, 0),
+                  "observation",
+                )} au total.`
+          }
+        >
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">{MENTION}</p>
+          {bienvenue != null && cohorte && (
+            <p
+              role="status"
+              className="mt-4 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
+            >
+              Vous avez rejoint la cohorte « {cohorte.nom} ». Notez votre code de reprise, plus bas
+              : il vous rend ce profil depuis un autre appareil.
             </p>
-            <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-              Mon profil décisionnel
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300">
-              {n === 0
-                ? "Aucun épisode ne compte encore dans votre profil. Il se construit à partir de vos premières parties, jouées en Standard ou en Expert."
-                : `Établi sur ${n} épisode${n > 1 ? "s" : ""} joué${n > 1 ? "s" : ""} en Standard ou en Expert, ${compter(
-                    profil.competences.reduce((s, l) => s + l.observations.length, 0),
-                    "observation",
-                  )} au total.`}
+          )}
+          {repris != null && (
+            <p
+              role="status"
+              className="mt-4 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
+            >
+              Votre profil est de retour sur cet appareil.
             </p>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">{MENTION}</p>
-            {bienvenue != null && cohorte && (
-              <p role="status" className="mt-4 text-sm text-amber-200">
-                Vous avez rejoint la cohorte « {cohorte.nom} ». Notez votre code de reprise, plus
-                bas : il vous rend ce profil depuis un autre appareil.
-              </p>
-            )}
-            {repris != null && (
-              <p role="status" className="mt-4 text-sm text-amber-200">
-                Votre profil est de retour sur cet appareil.
-              </p>
-            )}
-            {efface != null && (
-              <p role="status" className="mt-4 text-sm text-amber-200">
-                {Number(efface) > 0
-                  ? `${efface} partie${Number(efface) > 1 ? "s" : ""} effacée${Number(efface) > 1 ? "s" : ""}. Votre profil repart de zéro.`
-                  : "Aucune partie à effacer."}
-              </p>
-            )}
-          </header>
-
+          )}
+          {efface != null && (
+            <p
+              role="status"
+              className="mt-4 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
+            >
+              {Number(efface) > 0
+                ? `${efface} partie${Number(efface) > 1 ? "s" : ""} effacée${Number(efface) > 1 ? "s" : ""}. Votre profil repart de zéro.`
+                : "Aucune partie à effacer."}
+            </p>
+          )}
+        </EnTeteDePage>
+        <div className={`${COLONNE_DE_PAGE} grid gap-10 pb-16`}>
           <section aria-labelledby="competences-titre" className="grid gap-4">
             <h2
               id="competences-titre"
@@ -391,7 +466,10 @@ export default async function ProfilPage({
               </div>
             </GuardedForm>
             {objectifModifie != null && (
-              <p role="status" className="text-sm text-amber-200">
+              <p
+                role="status"
+                className="rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
+              >
                 {objectif
                   ? `C'est noté : les épisodes proposés travaillent maintenant « ${competenceParCode(objectif).nom} ».`
                   : "C'est noté : votre profil choisit de nouveau la compétence à travailler."}

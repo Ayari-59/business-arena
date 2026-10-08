@@ -115,9 +115,14 @@ describe("les captures de la page d'accueil", () => {
     expect(GLOBALS).not.toContain(".carte-du-fond");
     expect(ACCUEIL).toMatch(/className="ardoise [^"]*bg-slate-950/);
     expect(ACCUEIL).toContain("sm:grid-cols-3");
-    // Sur téléphone, les écrans défilent dans leur propre cadre : la page,
-    // elle, ne déborde pas.
-    expect(ACCUEIL).toContain("overflow-x-auto");
+    // SUR TÉLÉPHONE, UN SEUL ÉCRAN, AGRANDI (audit P2-09). Les trois défilaient
+    // de côté dans leur cadre, le texte des captures à six pixels : le verdict
+    // reste seul, en pleine largeur, les deux autres se retirent sous `sm`.
+    expect(ACCUEIL).not.toContain("snap-x");
+    expect(ACCUEIL).toContain('surTelephone ? "" : "max-sm:hidden"');
+    expect(ACCUEIL.match(/^\s*surTelephone$/gm) ?? [], "un seul écran sur téléphone").toHaveLength(
+      1,
+    );
   });
 
   it("disent ce qu'on y voit, pour qui ne les voit pas", () => {

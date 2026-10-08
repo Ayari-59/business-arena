@@ -175,6 +175,68 @@ export default async function TeacherGamePage({
         }
       />
 
+
+      {/*
+        LE BANDEAU « CE TOUR », SUR LE MARINE (audit P2-15). La projection était
+        réussie et le pilotage n'avait pas d'ardoise : où en est le tour se
+        lisait dans une ligne grise de 12 px, entre deux rubriques. Le bandeau
+        dit, en chiffres qu'on lit de loin, le tour, qui a validé et combien de
+        temps le tour prend, et il porte le seul geste orange de l'écran :
+        clore le tour et simuler. C'est une ardoise, pas une bande de page :
+        elle prend la matière du tableau sans compter parmi les contre-jours.
+      */}
+      <section
+        aria-labelledby="ce-tour-titre"
+        className="ardoise rounded-xl border border-white/10 bg-slate-950 p-4 text-slate-100 sm:p-6"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+          <div>
+            <h2
+              id="ce-tour-titre"
+              className="text-xs font-semibold uppercase tracking-annonce text-slate-300"
+            >
+              {finished ? "Fin de partie" : "Ce tour"}
+            </h2>
+            <p className="mt-1 font-display text-4xl font-extrabold italic leading-none text-slate-50 tabular-nums sm:text-5xl">
+              {finished
+                ? compter(view.roundsCount, "tour joué", "tours joués")
+                : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`}
+            </p>
+          </div>
+          {!finished ? (
+            <dl className="flex flex-wrap gap-x-8 gap-y-3">
+              {/* Le chiffre d'abord, son libellé dessous : « 0/4 · équipes
+                  ont validé ». L'ordre du document garde le libellé en tête. */}
+              <div className="flex flex-col-reverse">
+                <dt className="text-sm text-slate-300">
+                  {humanTeams.length > 1 ? "équipes ont validé" : "équipe a validé"}
+                </dt>
+                <dd className="m-0 font-display text-3xl font-bold leading-tight text-slate-50 tabular-nums">
+                  {submittedCount}/{humanTeams.length}
+                </dd>
+              </div>
+              <div className="flex flex-col-reverse">
+                <dt className="text-sm text-slate-300">durée du tour</dt>
+                <dd className="m-0 font-display text-3xl font-bold leading-tight text-slate-50 tabular-nums">
+                  ≈ {tourMesure ? tourMesure.minutesMedianes : dureeEstimee.minutes} min{" "}
+                  <span className="font-sans text-sm font-normal text-slate-300">
+                    {tourMesure ? "(mesuré)" : "(estimé)"}
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          ) : null}
+        </div>
+        {!finished ? (
+          <CloseRoundForm
+            gameId={view.gameId}
+            tour={view.currentRound}
+            validees={submittedCount}
+            total={humanTeams.length}
+          />
+        ) : null}
+      </section>
+
       {/*
         LE TICKET. Le code d'invitation est la seule chose que l'enseignant
         écrit au tableau : il a sa carte à lui, et il se lit de loin. Elle
@@ -225,13 +287,13 @@ export default async function TeacherGamePage({
                 ouvre en branchant le vidéoprojecteur. */}
             <Link
               href={`/teacher/games/${gameId}/projection`}
-              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               <Icone nom="ecran" /> Projeter pour la classe →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/fiches`}
-              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               <Icone nom="imprimer" /> Fiches à imprimer →
             </Link>
@@ -241,13 +303,13 @@ export default async function TeacherGamePage({
                 annoncer ni répartir à la main. */}
             <Link
               href={`/teacher/games/${gameId}/cartons`}
-              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               <Icone nom="etiquette" /> Cartons de table →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/observation`}
-              className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               Observation de séance →
             </Link>
@@ -299,17 +361,7 @@ export default async function TeacherGamePage({
         Puis ce qu'il lit (classement, notions, relevé). Les réglages, qu'on
         touche une fois, ferment la page dans des tiroirs.
       */}
-      <Rubrique
-        note={
-          finished
-            ? `${view.roundsCount} tours joués`
-            : `${periodLabel(view.roundDays, view.currentRound)} · ${submittedCount}/${humanTeams.length} ${humanTeams.length > 1 ? "équipes ont validé" : "équipe a validé"} · ${
-                tourMesure ? `≈ ${tourMesure.minutesMedianes} min (mesuré)` : `≈ ${dureeEstimee.minutes} min (estimé)`
-              }`
-        }
-      >
-        {finished ? "Fin de partie" : "Ce tour"}
-      </Rubrique>
+      {/* Le tableau des équipes : le détail de ce que le bandeau compte. */}
       <section className="carte p-3 sm:p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes · état des décisions du {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
@@ -319,24 +371,37 @@ export default async function TeacherGamePage({
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-2 pr-3 font-medium">Équipe</th>
-                <th className="pb-2 pr-3 font-medium">Joueurs</th>
+                <th className="hidden pb-2 pr-3 font-medium sm:table-cell">Joueurs</th>
                 <th className="pb-2 pr-3 font-medium">Décisions</th>
-                <th className="pb-2 pr-3 text-right font-medium">Dernier résultat</th>
-                <th className="pb-2 text-right font-medium">Trésorerie</th>
+                <th className="pb-2 pr-3 text-right font-medium">
+                  <span className="sm:hidden">Résultat</span>
+                  <span className="hidden sm:inline">Dernier résultat</span>
+                </th>
+                <th className="pb-2 text-right font-medium">
+                  <span className="sm:hidden">Tréso.</span>
+                  <span className="hidden sm:inline">Trésorerie</span>
+                </th>
               </tr>
             </thead>
             <tbody className="text-slate-300">
               {view.teams.map((t) => (
                 <tr key={t.teamId} className="border-t border-white/5">
                   <td className="py-2 pr-3">
-                    {t.name}
+                    <span className="whitespace-nowrap">{t.name}</span>
                     {t.controller === "bot" ? (
-                      <span className="ml-2 rounded-md bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
+                      <span className="mt-0.5 block w-fit whitespace-nowrap rounded-md bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400 sm:ml-2 sm:mt-0 sm:inline">
                         bot{t.botPersonality ? ` · ${t.botPersonality}` : ""}
                       </span>
                     ) : null}
+                    {/* Sur téléphone, les joueurs passent sous le nom : leur
+                        colonne poussait la trésorerie hors de l'écran. */}
+                    {t.controller === "human" ? (
+                      <span className="block text-sm text-slate-400 sm:hidden">
+                        {t.playerNames.join(", ") || "aucun joueur"}
+                      </span>
+                    ) : null}
                   </td>
-                  <td className="py-2 pr-3 text-slate-400">
+                  <td className="hidden py-2 pr-3 text-slate-400 sm:table-cell">
                     {t.controller === "bot" ? "—" : t.playerNames.join(", ") || "aucun joueur"}
                   </td>
                   <td className="py-2 pr-3">
@@ -348,7 +413,7 @@ export default async function TeacherGamePage({
                         {estParDefaut(t.decisionSource) ? (
                           <span
                             title="Prix et volume validés sans modification des valeurs proposées"
-                            className="ml-2 rounded-md border border-orange-400 px-1.5 py-0.5 text-xs text-orange-300"
+                            className="ml-2 whitespace-nowrap rounded-md border border-white/20 px-1.5 py-0.5 text-xs text-slate-300"
                           >
                             par défaut
                           </span>
@@ -358,7 +423,7 @@ export default async function TeacherGamePage({
                             qui voit un élève inactif sait maintenant si son
                             équipe a validé sans lui. */}
                         {t.validation ? (
-                          <p className="mt-1 text-xs text-slate-400">
+                          <p className="mt-1 text-sm text-slate-400">
                             {mentionDeValidation(t.validation.nom, new Date(t.validation.quand))}
                           </p>
                         ) : null}
@@ -372,12 +437,26 @@ export default async function TeacherGamePage({
                       <span className="pastille-attente whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-slate-200">en attente</span>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-right tabular-nums">
-                    {t.lastNetIncome === null ? "—" : formatEuro(t.lastNetIncome)}
+                  {/* LE RÉSULTAT EST SIGNÉ, VERT OU ROUGE FRANCS, comme dans
+                      l'arène : une perte en noir se lisait comme un niveau.
+                      La trésorerie, elle, est un niveau : à l'encre, sauf en
+                      découvert. */}
+                  <td
+                    className={`whitespace-nowrap py-2 pr-3 text-right font-semibold tabular-nums ${
+                      t.lastNetIncome === null || t.lastNetIncome === 0
+                        ? ""
+                        : t.lastNetIncome > 0
+                          ? "text-emerald-300"
+                          : "text-red-300"
+                    }`}
+                  >
+                    {t.lastNetIncome === null
+                      ? "—"
+                      : `${t.lastNetIncome > 0 ? "+" : ""}${formatEuro(t.lastNetIncome)}`}
                   </td>
                   <td
-                    className={`py-2 text-right tabular-nums ${
-                      (t.lastNetTreasury ?? 0) < 0 ? "text-red-400" : ""
+                    className={`whitespace-nowrap py-2 text-right tabular-nums ${
+                      (t.lastNetTreasury ?? 0) < 0 ? "text-red-300" : ""
                     }`}
                   >
                     {t.lastNetTreasury === null ? "—" : formatEuro(t.lastNetTreasury)}
@@ -387,14 +466,6 @@ export default async function TeacherGamePage({
             </tbody>
           </table>
         </div>
-        {!finished ? (
-          <CloseRoundForm
-            gameId={view.gameId}
-            tour={view.currentRound}
-            validees={submittedCount}
-            total={humanTeams.length}
-          />
-        ) : null}
         <JustificationsReview gameId={gameId} available={aiReview} />
       </section>
 
@@ -463,8 +534,8 @@ export default async function TeacherGamePage({
           leur progression, pas leur place.
         */}
         {dernierTourClos ? (
-          <div className="mb-3 mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-amber-400/25 bg-amber-950/10 px-3 py-2">
-            <span className="text-xs text-slate-300">
+          <div className="encadre-neutre mb-3 mt-2 flex flex-wrap items-center gap-3 rounded-lg px-3 py-2">
+            <span className="text-sm text-slate-200">
               {dernierTourClos.rankingRevealed
                 ? `Classement du ${periodLabel(view.roundDays, dernierTourClos.index)} révélé aux élèves.`
                 : `Les élèves ne voient pas encore le classement du ${periodLabel(view.roundDays, dernierTourClos.index)}.`}
@@ -479,13 +550,9 @@ export default async function TeacherGamePage({
                 name="revealed"
                 value={dernierTourClos.rankingRevealed ? "0" : "1"}
               />
-              <SubmitButton
-                className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition ${
-                  dernierTourClos.rankingRevealed
-                    ? "border border-white/15 text-slate-300 hover:border-white/30"
-                    : "bg-amber-400 text-slate-950 hover:bg-amber-300"
-                }`}
-              >
+              {/* Un bouton à filet : le seul geste orange de l'écran est la
+                  clôture du tour, dans le bandeau. */}
+              <SubmitButton className={bouton({ variante: "secondaire", taille: "s" })}>
                 {dernierTourClos.rankingRevealed ? "Masquer" : "Révéler le classement"}
               </SubmitButton>
             </GuardedForm>
@@ -532,7 +599,7 @@ export default async function TeacherGamePage({
                   Notions exposées ce tour
                 </h3>
                 {pedagogy.conceptsExposed.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-400">Aucune situation ouverte ce tour.</p>
+                  <p className="mt-2 text-sm text-slate-400">Aucune situation ouverte ce tour.</p>
                 ) : (
                   <ul className="mt-2 flex flex-wrap gap-1.5">
                     {pedagogy.conceptsExposed.map((c) => (
@@ -551,7 +618,7 @@ export default async function TeacherGamePage({
                   Maîtrise mesurée (de la plus fragile à la plus solide)
                 </h3>
                 {pedagogy.conceptMastery.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-sm text-slate-400">
                     Aucune situation rendue : rien n&apos;est mesuré pour l&apos;instant.
                   </p>
                 ) : (
@@ -570,7 +637,7 @@ export default async function TeacherGamePage({
                         {/* 0 = barre vide : un zéro mesuré se voit comme un zéro. */}
                         <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
                           <div
-                            className={`h-1.5 rounded-full ${c.average < 40 ? "bg-red-400" : c.average < 70 ? "bg-amber-400" : "bg-emerald-400"}`}
+                            className="h-1.5 rounded-full bg-[var(--donnee)]"
                             style={{ width: `${Math.max(0, Math.min(100, c.average))}%` }}
                           />
                         </div>
@@ -611,7 +678,7 @@ export default async function TeacherGamePage({
                   </span>
                 </li>
               </ul>
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 text-sm text-slate-400">
                 {view.quizMode === "off"
                   ? "Aucune question n'est posée dans cette partie : ces chiffres portent sur les tours joués sous un autre réglage."
                   : view.quizMode === "model"
@@ -696,13 +763,7 @@ export default async function TeacherGamePage({
                     </td>
                     <td
                       className={`py-2 pr-3 text-right font-semibold tabular-nums ${
-                        equipe.note === null
-                          ? "text-slate-400"
-                          : equipe.note < 8
-                            ? "text-red-300"
-                            : equipe.note < 13
-                              ? "text-amber-300"
-                              : "text-emerald-300"
+                        equipe.note === null ? "text-slate-400" : "text-slate-100"
                       }`}
                     >
                       {equipe.note === null
@@ -725,7 +786,7 @@ export default async function TeacherGamePage({
             </table>
           </div>
           {releve.roundsResolved === 0 ? (
-            <p className="mt-3 text-xs text-slate-400">
+            <p className="mt-3 text-sm text-slate-400">
               Aucun tour clôturé : le relevé se remplit à la première clôture.
             </p>
           ) : null}
@@ -739,7 +800,7 @@ export default async function TeacherGamePage({
       {!finished ? (
         <Tiroir icone="document"
         titre="Questions posées dans les situations" quoi={QUIZ_MODES.find((m) => m.code === view.quizMode)?.name}>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
             Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
             porte que sur les questions qui le suivent. Les situations déjà débriefées gardent
             le score obtenu sous l&apos;ancien réglage.
@@ -763,14 +824,12 @@ export default async function TeacherGamePage({
                     }`}
                   >
                     <span
-                      className={`text-sm font-medium ${
-                        active ? "text-amber-300" : "text-slate-200"
-                      }`}
+                      className="text-sm font-medium text-slate-100"
                     >
                       {active ? "✓ " : ""}
                       {m.name}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-400">{m.help}</span>
+                    <span className="mt-1 block text-sm text-slate-400">{m.help}</span>
                   </SubmitButton>
                 </GuardedForm>
               );
@@ -800,14 +859,12 @@ export default async function TeacherGamePage({
                     }`}
                   >
                     <span
-                      className={`text-sm font-medium ${
-                        active ? "text-amber-300" : "text-slate-200"
-                      }`}
+                      className="text-sm font-medium text-slate-100"
                     >
                       {active ? "✓ " : ""}
                       {f.name}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-400">{f.help}</span>
+                    <span className="mt-1 block text-sm text-slate-400">{f.help}</span>
                   </SubmitButton>
                 </GuardedForm>
               );
@@ -818,7 +875,7 @@ export default async function TeacherGamePage({
       {!finished ? (
         <Tiroir icone="document"
         titre="Situations manquées" quoi={MISSED_POLICY_LABELS[view.missedPolicy]}>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
             Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
             Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
             situations déjà rattrapées gardent leur score.
@@ -841,11 +898,11 @@ export default async function TeacherGamePage({
                         : "border-white/10 bg-slate-950 hover:border-amber-400/40"
                     }`}
                   >
-                    <span className={`text-sm font-medium ${active ? "text-amber-300" : "text-slate-200"}`}>
+                    <span className="text-sm font-medium text-slate-100">
                       {active ? "✓ " : ""}
                       {MISSED_POLICY_LABELS[p]}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-400">{MISSED_POLICY_HELP[p]}</span>
+                    <span className="mt-1 block text-sm text-slate-400">{MISSED_POLICY_HELP[p]}</span>
                   </SubmitButton>
                 </GuardedForm>
               );
@@ -856,7 +913,7 @@ export default async function TeacherGamePage({
       {!finished ? (
         <Tiroir icone="planning"
         titre="Planning de la partie" quoi={view.opensAt || view.closesAt ? "fenêtre posée" : "sans borne"}>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
             Fenêtre pendant laquelle les élèves peuvent jouer (heure de Paris). En dehors,
             l&apos;arène passe en lecture seule et « Valider » est grisé. Laissez un champ vide pour
             ne pas poser de borne ; sans fenêtre, la partie suit le pilotage manuel des tours.
@@ -886,7 +943,7 @@ export default async function TeacherGamePage({
                 />
               </label>
             </div>
-            <SubmitButton className={`${bouton()} mt-3`}>
+            <SubmitButton className={`${bouton({ variante: "secondaire" })} mt-3`}>
               Enregistrer le planning
             </SubmitButton>
           </GuardedForm>
@@ -895,7 +952,7 @@ export default async function TeacherGamePage({
       {!finished ? (
         <Tiroir icone="duree"
         titre="Planning des tours" quoi={toursBornes > 0 ? compter(toursBornes, "tour borné") : "aucune borne"}>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
             Ouverture et échéance de chaque tour (heure de Paris). Ces bornes s&apos;ajoutent à
             la fenêtre globale : un tour n&apos;est jouable que pendant l&apos;intersection des
             deux. Laissez un couple vide pour laisser le tour suivre le pilotage manuel.
@@ -961,7 +1018,7 @@ export default async function TeacherGamePage({
                 </tbody>
               </table>
             </div>
-            <SubmitButton className={`${bouton()} mt-3`}>
+            <SubmitButton className={`${bouton({ variante: "secondaire" })} mt-3`}>
               Enregistrer le planning des tours
             </SubmitButton>
           </GuardedForm>
@@ -995,7 +1052,7 @@ export default async function TeacherGamePage({
           className="flex flex-wrap items-end gap-2 px-3 pb-3"
         >
           <label className="min-w-0 flex-1">
-            <span className="block text-xs text-slate-400">
+            <span className="block text-sm text-slate-400">
               Le nom sous lequel vous la retrouverez, par exemple « Seconde 3 » ou « BTS MCO
               groupe B ». Videz le champ pour revenir au nom du scénario.
             </span>
@@ -1032,7 +1089,7 @@ export default async function TeacherGamePage({
           décisions. <strong>Rien n&apos;est supprimé</strong> : les équipes, les tours joués,
           les résultats et les traces restent intacts.
         </p>
-        <p className="mt-2 max-w-3xl text-xs text-slate-400">
+        <p className="mt-2 max-w-3xl text-sm text-slate-400">
           {finished
             ? "Cette partie est terminée : la ranger ne change rien pour personne."
             : "Cette partie est EN COURS. La ranger interrompt le jeu pour vos élèves, jusqu'à ce que vous la ressortiez."}{" "}

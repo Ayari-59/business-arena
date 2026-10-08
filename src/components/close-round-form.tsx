@@ -47,10 +47,7 @@ export function CloseRoundForm({
     <form ref={formRef} action={formAction} className="mt-4 space-y-3">
       <input type="hidden" name="roundIndex" value={tour} />
       {state.error ? (
-        <p
-          role="alert"
-          className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300"
-        >
+        <p role="alert" className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
       ) : null}
@@ -63,18 +60,15 @@ export function CloseRoundForm({
           role="dialog"
           aria-modal="true"
           aria-labelledby="cloture-titre"
-          className="space-y-3 rounded-lg border border-amber-400/40 bg-slate-950 p-4"
+          className="space-y-3 rounded-lg border border-white/15 bg-slate-900 p-4"
         >
-          <p id="cloture-titre" className="text-base font-semibold text-amber-200">
+          <p id="cloture-titre" className="text-base font-semibold text-slate-50">
             {texte.titre}
           </p>
           <p className="text-sm text-slate-300">{texte.detail}</p>
-          <p className="text-sm text-amber-300">{texte.irreversible}</p>
+          <p className="text-sm font-medium text-slate-200">{texte.irreversible}</p>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="submit"
-              className={bouton()}
-            >
+            <button type="submit" className={bouton()}>
               {texte.confirmer}
             </button>
             <button

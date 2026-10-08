@@ -68,40 +68,65 @@ export function EnTeteEnseignant({
       {description ? (
         <p className="max-w-2xl text-sm leading-relaxed text-slate-400">{description}</p>
       ) : null}
-      <nav aria-label="Espace enseignant" className="flex flex-wrap items-center gap-2">
-        {NAVIGATION.map((n) => (
-          <Link
-            key={n.code}
-            href={n.href}
-            aria-current={n.code === actif ? "page" : undefined}
-            className={`rounded-full border px-3 py-1 text-xs transition ${
-              n.code === actif
-                ? "border-amber-400/40 bg-amber-400/10 text-amber-300"
-                : "border-white/10 text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
-            }`}
-          >
-            {n.label}
-          </Link>
-        ))}
-        {liens.etablissement ? (
-          <Link
-            href="/org"
-            className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-          >
-            Mon établissement
-          </Link>
-        ) : null}
-        {liens.administration ? (
-          <Link
-            href="/admin"
-            className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-          >
-            Administration
-          </Link>
-        ) : null}
-        {compte ? <span className="ml-auto flex items-center gap-3">{compte}</span> : null}
-      </nav>
+      <NavigationEnseignant actif={actif} liens={liens} compte={compte} />
     </header>
+  );
+}
+
+/**
+ * La navigation de l'espace, seule : la rangée de pastilles, la page courante
+ * mise en avant. Une page qui pose l'en-tête commun des pages intérieures
+ * (« Mes parties ») la place sous son chapeau ; les autres la reçoivent avec
+ * l'en-tête enseignant.
+ */
+export function NavigationEnseignant({
+  actif,
+  liens = {},
+  compte,
+  className = "",
+}: {
+  actif?: PageEnseignant;
+  liens?: { etablissement?: boolean; administration?: boolean };
+  compte?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <nav
+      aria-label="Espace enseignant"
+      className={`flex flex-wrap items-center gap-2 ${className}`}
+    >
+      {NAVIGATION.map((n) => (
+        <Link
+          key={n.code}
+          href={n.href}
+          aria-current={n.code === actif ? "page" : undefined}
+          className={`rounded-full border px-3 py-1 text-xs transition ${
+            n.code === actif
+              ? "border-amber-400/40 bg-amber-400/10 text-amber-300"
+              : "border-white/10 text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
+          }`}
+        >
+          {n.label}
+        </Link>
+      ))}
+      {liens.etablissement ? (
+        <Link
+          href="/org"
+          className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
+        >
+          Mon établissement
+        </Link>
+      ) : null}
+      {liens.administration ? (
+        <Link
+          href="/admin"
+          className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
+        >
+          Administration
+        </Link>
+      ) : null}
+      {compte ? <span className="ml-auto flex items-center gap-3">{compte}</span> : null}
+    </nav>
   );
 }
 
@@ -114,7 +139,9 @@ export function EnTeteEnseignant({
 export function Rubrique({ children, note }: { children: React.ReactNode; note?: string }) {
   return (
     <div className="flex items-baseline gap-3 pt-2">
-      <h2 className="text-xs font-semibold uppercase tracking-surtitre text-amber-400">{children}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-surtitre text-amber-400">
+        {children}
+      </h2>
       {note ? <span className="text-xs text-slate-400">{note}</span> : null}
       <span aria-hidden className="h-px flex-1 bg-white/10" />
     </div>

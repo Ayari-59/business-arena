@@ -35,7 +35,8 @@ import { GuardedForm } from "@/components/guarded-action";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
 import { FormPendingProgress } from "@/components/long-action-progress";
-import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
+import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
+import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { Tiroir } from "@/components/tiroir";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { FriseDesTours } from "@/components/frise-des-tours";
@@ -94,29 +95,35 @@ export default async function TeacherDashboard({
   );
 
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
-      <EnTeteEnseignant
-        titre="Mes parties"
-        actif="parties"
-        liens={{ etablissement: isOrgAdmin, administration: staff?.isPlatformAdmin ?? false }}
-        compte={
-          <>
-            <form action={logoutAction}>
-              <button className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-                Se déconnecter
-              </button>
-            </form>
-            <form action={logoutEverywhereAction}>
-              <button
-                className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
-                title="Ferme aussi les sessions ouvertes sur d'autres appareils"
-              >
-                Se déconnecter partout
-              </button>
-            </form>
-          </>
-        }
-      />
+    <main id="main" className="pb-16">
+      {/* L'EN-TÊTE DES PAGES INTÉRIEURES, la navigation de l'espace sous le
+          chapeau : « Mes parties » avait un titre de 24 px, le plus petit du
+          site, pour la page qu'un enseignant ouvre le plus souvent. */}
+      <EnTeteDePage surtitre="Espace enseignant" titre="Mes parties">
+        <NavigationEnseignant
+          className="mt-6"
+          actif="parties"
+          liens={{ etablissement: isOrgAdmin, administration: staff?.isPlatformAdmin ?? false }}
+          compte={
+            <>
+              <form action={logoutAction}>
+                <button className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
+                  Se déconnecter
+                </button>
+              </form>
+              <form action={logoutEverywhereAction}>
+                <button
+                  className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
+                  title="Ferme aussi les sessions ouvertes sur d'autres appareils"
+                >
+                  Se déconnecter partout
+                </button>
+              </form>
+            </>
+          }
+        />
+      </EnTeteDePage>
+      <div className={`${COLONNE_DE_PAGE} space-y-8`}>
 
       {echec ? (
         <p
@@ -163,13 +170,257 @@ export default async function TeacherDashboard({
           ))}
         </p>
       ) : null}
+      {/*
+        LA CRÉATION, REPLIÉE DERRIÈRE SON BOUTON (audit P2-15). Le tableau de
+        bord était un long formulaire de création, ouvert en permanence sous la
+        liste : on vient ici retrouver sa classe, et l'on crée une partie
+        quelques fois par an. Le formulaire attend derrière « Nouvelle
+        partie », le geste principal de la page. Il s'ouvre de lui-même pour
+        qui n'a encore aucune partie, et après un échec de création, pour
+        qu'on retrouve ses réglages. C'est un <details> : clavier, lecteur
+        d'écran et état ouvert viennent du navigateur, sans script.
+      */}
+      <details
+        id="nouvelle-partie"
+        className="group"
+        open={games.length === 0 || Boolean(echec) || undefined}
+      >
+        <summary className="inline-flex cursor-pointer list-none rounded-lg [&::-webkit-details-marker]:hidden">
+          {/* Deux visages, un seul affiché : le bouton plein quand c'est fermé,
+              un filet pour replier quand c'est ouvert. L'enveloppe porte le
+              masquage, le bouton garde son `inline-flex`. */}
+          <span className="group-open:hidden">
+            <span className={bouton({ taille: "l" })}>
+              <span aria-hidden>+</span> Nouvelle partie
+            </span>
+          </span>
+          <span className="hidden group-open:inline">
+            <span className={bouton({ variante: "secondaire" })}>Replier le formulaire</span>
+          </span>
+        </summary>
+        <section aria-labelledby="nouvelle-partie-titre" className="carte mt-4 p-4 sm:p-7">
+        <h2 id="nouvelle-partie-titre" className="titre-carte text-slate-100">
+          Nouvelle partie de classe
+        </h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Vous ne savez pas quels réglages prendre ?{" "}
+          <Link href="/animations" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
+            Les ateliers professionnels
+          </Link>{" "}
+          donnent un déroulé de plusieurs séances avec les réglages qui vont avec.
+        </p>
+        <GuardedForm
+          action={createClassGameAction}
+          label="création de partie"
+          timeoutMs={30_000}
+          className="mt-4 grid gap-4 sm:grid-cols-3"
+        >
+          <EconomicParams
+            scenarios={[
+              ...SCENARIO_CHOICES.map((d) => ({
+                code: d.code,
+                label: `${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
+                unit: d.vocabulary.unit,
+                defaults: economicDefaults(d),
+              })),
+              ...scenariosPublies,
+            ]}
+            defaultCode={DEFAULT_SCENARIO_CODE}
+          />
+
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Équipes (élèves)
+            </span>
+            <select
+              name="humanTeamsCount"
+              defaultValue={4}
+              className="mt-1 w-full champ px-3 py-2 text-sm"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Concurrents bots
+            </span>
+            <select
+              name="botCount"
+              defaultValue={1}
+              className="mt-1 w-full champ px-3 py-2 text-sm"
+            >
+              {[0, 1, 2, 3, 4].map((n) => (
+                <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Périodicité
+            </span>
+            <select
+              name="periodicity"
+              defaultValue="quarter"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
+            >
+              <option value="month">Un mois par tour</option>
+              <option value="quarter">Un trimestre par tour</option>
+              <option value="year">Une année par tour</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Tours joués
+            </span>
+            <select
+              name="roundsCount"
+              defaultValue=""
+              className="mt-1 w-full champ px-3 py-2 text-sm"
+            >
+              <option value="">Toute la partie</option>
+              {[3, 4, 5].map((n) => (
+                <option key={n} value={n}>
+                  {n} tours
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-sm text-slate-400">
+              Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
+              s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
+              pour un nombre de tours, au-delà, les équipes joueraient sans matière.
+            </span>
+          </label>
+          <label className="block sm:col-span-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Niveau de difficulté
+            </span>
+            <select
+              name="level"
+              defaultValue={3}
+              className="mt-1 w-full champ px-3 py-2 text-sm"
+            >
+              {DIFFICULTY_PRESETS.map((p) => (
+                <option key={p.level} value={p.level}>
+                  {p.level} · {p.name} : {p.tagline}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="variableWorld"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                Monde variable · chaque partie diffère
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-400">
+                Croissance des segments, saisonnalité, événements et commandes exceptionnelles
+                varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
+                équipes jouent le même monde). Décochez pour le scénario classique, identique
+                à vos supports imprimés.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="investmentStories"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                Histoires d&apos;investissement · des courriers qui appellent la décision
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-400">
+                Selon le niveau : un client qui annonce du volume, une banque qui baisse ses taux, un
+                concurrent qui investit, puis une demande qui retombe. Décochez pour un atelier au
+                déroulé calibré, où chaque séance n&apos;ouvre qu&apos;un levier.
+              </span>
+            </span>
+          </label>
+
+          <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+              Questions posées dans les situations
+            </legend>
+            <div className="mt-1 space-y-2">
+              {QUIZ_MODES.map((m) => (
+                <label key={m.code} className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="quizMode"
+                    value={m.code}
+                    defaultChecked={m.code === DEFAULT_QUIZ_MODE}
+                    className="mt-0.5 h-4 w-4 accent-amber-400"
+                  />
+                  <span>
+                    <span className="text-sm font-medium text-slate-200">{m.name}</span>
+                    <span className="mt-0.5 block text-sm text-slate-400">{m.help}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 border-t border-white/5 pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                Format des réponses
+              </p>
+              <div className="mt-1 space-y-2">
+                {ANSWER_FORMATS.map((f) => (
+                  <label key={f.code} className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="answerFormat"
+                      value={f.code}
+                      defaultChecked={f.code === DEFAULT_ANSWER_FORMAT}
+                      className="mt-0.5 h-4 w-4 accent-amber-400"
+                    />
+                    <span>
+                      <span className="text-sm font-medium text-slate-200">{f.name}</span>
+                      <span className="mt-0.5 block text-sm text-slate-400">{f.help}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
+              débriefées gardent le score obtenu sous l&apos;ancien réglage.
+            </p>
+          </fieldset>
+
+          <FormPendingProgress label={ATTENTES.creationPartie} className="sm:col-span-3" />
+          <SubmitButton
+            pendingLabel="Création de la partie et des équipes…"
+            className={`${bouton()} sm:col-span-3`}
+          >
+            Créer la partie et obtenir le code d&apos;invitation
+          </SubmitButton>
+        </GuardedForm>
+        <p className="mt-2 text-sm text-slate-400">
+          Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
+          rejoignent avec le code, répartis automatiquement dans les équipes. Le niveau règle
+          les décisions ouvertes, le plafond d&apos;indices et la fréquence des événements.
+        </p>
+        </section>
+      </details>
       {games.length === 0 ? (
         <p className="rounded-lg border border-dashed border-white/15 px-4 py-5 text-center text-sm text-slate-400">
-          Aucune partie pour l&apos;instant. Créez la première ci-dessous : vous obtiendrez un
-          code d&apos;invitation à donner à vos élèves.
+          Aucune partie pour l&apos;instant. Créez la première avec le formulaire ci-dessus : vous
+          obtiendrez un code d&apos;invitation à donner à vos élèves.
         </p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid gap-3">
           {games.map((g) => {
             const finished = g.status === "finished";
             const joues = new Map<number, null>();
@@ -296,220 +547,7 @@ export default async function TeacherDashboard({
         </ul>
       )}
 
-      <Rubrique>Créer une partie</Rubrique>
-      <section className="carte p-4 sm:p-7">
-        <h2 className="text-sm font-semibold text-slate-200">Nouvelle partie de classe</h2>
-        <p className="mt-1 text-xs text-slate-400">
-          Vous ne savez pas quels réglages prendre ?{" "}
-          <Link href="/animations" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
-            Les ateliers professionnels
-          </Link>{" "}
-          donnent un déroulé de plusieurs séances avec les réglages qui vont avec.
-        </p>
-        <GuardedForm
-          action={createClassGameAction}
-          label="création de partie"
-          timeoutMs={30_000}
-          className="mt-4 grid gap-4 sm:grid-cols-3"
-        >
-          <EconomicParams
-            scenarios={[
-              ...SCENARIO_CHOICES.map((d) => ({
-                code: d.code,
-                label: `${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
-                unit: d.vocabulary.unit,
-                defaults: economicDefaults(d),
-              })),
-              ...scenariosPublies,
-            ]}
-            defaultCode={DEFAULT_SCENARIO_CODE}
-          />
 
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Équipes (élèves)
-            </span>
-            <select
-              name="humanTeamsCount"
-              defaultValue={4}
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Concurrents bots
-            </span>
-            <select
-              name="botCount"
-              defaultValue={1}
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              {[0, 1, 2, 3, 4].map((n) => (
-                <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Périodicité
-            </span>
-            <select
-              name="periodicity"
-              defaultValue="quarter"
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              <option value="month">Un mois par tour</option>
-              <option value="quarter">Un trimestre par tour</option>
-              <option value="year">Une année par tour</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Tours joués
-            </span>
-            <select
-              name="roundsCount"
-              defaultValue=""
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              <option value="">Toute la partie</option>
-              {[3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n} tours
-                </option>
-              ))}
-            </select>
-            <span className="mt-1 block text-xs text-slate-400">
-              Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
-              s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
-              pour un nombre de tours, au-delà, les équipes joueraient sans matière.
-            </span>
-          </label>
-          <label className="block sm:col-span-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Niveau de difficulté
-            </span>
-            <select
-              name="level"
-              defaultValue={3}
-              className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              {DIFFICULTY_PRESETS.map((p) => (
-                <option key={p.level} value={p.level}>
-                  {p.level} · {p.name} : {p.tagline}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <input
-              type="checkbox"
-              name="variableWorld"
-              defaultChecked
-              className="mt-0.5 h-4 w-4 accent-amber-400"
-            />
-            <span>
-              <span className="text-sm font-medium text-slate-200">
-                Monde variable · chaque partie diffère
-              </span>
-              <span className="mt-0.5 block text-xs text-slate-400">
-                Croissance des segments, saisonnalité, événements et commandes exceptionnelles
-                varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
-                équipes jouent le même monde). Décochez pour le scénario classique, identique
-                à vos supports imprimés.
-              </span>
-            </span>
-          </label>
-
-          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <input
-              type="checkbox"
-              name="investmentStories"
-              defaultChecked
-              className="mt-0.5 h-4 w-4 accent-amber-400"
-            />
-            <span>
-              <span className="text-sm font-medium text-slate-200">
-                Histoires d&apos;investissement · des courriers qui appellent la décision
-              </span>
-              <span className="mt-0.5 block text-xs text-slate-400">
-                Selon le niveau : un client qui annonce du volume, une banque qui baisse ses taux, un
-                concurrent qui investit, puis une demande qui retombe. Décochez pour un atelier au
-                déroulé calibré, où chaque séance n&apos;ouvre qu&apos;un levier.
-              </span>
-            </span>
-          </label>
-
-          <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-              <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
-              Questions posées dans les situations
-            </legend>
-            <div className="mt-1 space-y-2">
-              {QUIZ_MODES.map((m) => (
-                <label key={m.code} className="flex items-start gap-3">
-                  <input
-                    type="radio"
-                    name="quizMode"
-                    value={m.code}
-                    defaultChecked={m.code === DEFAULT_QUIZ_MODE}
-                    className="mt-0.5 h-4 w-4 accent-amber-400"
-                  />
-                  <span>
-                    <span className="text-sm font-medium text-slate-200">{m.name}</span>
-                    <span className="mt-0.5 block text-xs text-slate-400">{m.help}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            <div className="mt-3 border-t border-white/5 pt-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
-                Format des réponses
-              </p>
-              <div className="mt-1 space-y-2">
-                {ANSWER_FORMATS.map((f) => (
-                  <label key={f.code} className="flex items-start gap-3">
-                    <input
-                      type="radio"
-                      name="answerFormat"
-                      value={f.code}
-                      defaultChecked={f.code === DEFAULT_ANSWER_FORMAT}
-                      className="mt-0.5 h-4 w-4 accent-amber-400"
-                    />
-                    <span>
-                      <span className="text-sm font-medium text-slate-200">{f.name}</span>
-                      <span className="mt-0.5 block text-xs text-slate-400">{f.help}</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
-              débriefées gardent le score obtenu sous l&apos;ancien réglage.
-            </p>
-          </fieldset>
-
-          <FormPendingProgress label={ATTENTES.creationPartie} className="sm:col-span-3" />
-          <SubmitButton
-            pendingLabel="Création de la partie et des équipes…"
-            className={`${bouton()} sm:col-span-3`}
-          >
-            Créer la partie et obtenir le code d&apos;invitation
-          </SubmitButton>
-        </GuardedForm>
-        <p className="mt-2 text-xs text-slate-400">
-          Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
-          rejoignent avec le code, répartis automatiquement dans les équipes. Le niveau règle
-          les décisions ouvertes, le plafond d&apos;indices et la fréquence des événements.
-        </p>
-      </section>
 
       <Rubrique note={competitions.length > 0 ? compter(competitions.length, "concours") : undefined}>
         Concours
@@ -572,7 +610,7 @@ export default async function TeacherDashboard({
                     >
                       {g.scenarioTitle}
                     </Link>
-                    <span className="mt-0.5 block text-xs text-slate-400">
+                    <span className="mt-0.5 block text-sm text-slate-400">
                       {compter(g.teamsCount, "équipe")} · tour {g.currentRound} / {g.roundsCount} ·
                       rangée le{" "}
                       {g.archivedAt?.toLocaleDateString("fr-FR", {
@@ -600,12 +638,13 @@ export default async function TeacherDashboard({
           ouvert={competitions.length === 0 && games.length === 0}
         >
           <CompetitionCreateForm />
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="mt-2 text-sm text-slate-400">
             Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
             décisions verrouillées après validation, indices limités.
           </p>
         </Tiroir>
       </section>
+      </div>
     </main>
   );
 }

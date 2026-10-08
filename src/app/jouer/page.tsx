@@ -54,54 +54,60 @@ export default async function JouerPage({
 
   return (
     <>
-      <main id="main" className="relative overflow-hidden">
-        <HaloDePage />
+      <main id="main">
+        {/*
+          L'OUVERTURE MARINE DE L'ARÈNE (audit P2-21). L'entrée dans le jeu était
+          une page claire : une colonne de texte centrée avec trois cents pixels
+          de vide au-dessus du titre, et sur téléphone l'introduction arrivait
+          APRÈS le formulaire. Elle s'ouvre désormais sur le marine, comme
+          l'accueil : on entre dans l'arène. C'est une ardoise et non une bande
+          de page (la page n'est pas au registre des bandes) : elle prend la
+          matière du tableau et son anneau, sans compter parmi les contre-jours.
+          Sur téléphone, elle reste courte, pour que le premier métier tienne
+          dans le premier écran (tests/e2e/mobile.e2e.ts).
+        */}
+        <section className="ardoise relative overflow-hidden bg-slate-950 text-slate-100">
+          <HaloDePage />
+          <div className="relative mx-auto max-w-6xl px-6 pb-6 pt-6 sm:pb-12 sm:pt-12">
+            <p>
+              <span className="surtitre-arene">Partie solo</span>
+            </p>
+            <h1 className="mt-4 max-w-4xl text-3xl font-extrabold leading-none text-slate-50 sm:mt-6 sm:text-5xl lg:text-6xl">
+              Choisissez votre entreprise.{" "}
+              <br className="hidden sm:block" />
+              Le marché vous attend.
+            </h1>
+            {/* UNE LIGNE, PAS UN DISCOURS. Celui qui est ici veut jouer : il
+                choisit son métier et son niveau. */}
+            <p className="mt-3 max-w-xl text-base leading-snug text-slate-300 sm:mt-5 sm:text-lg sm:leading-relaxed">
+              Choisissez un métier et un niveau. Premier contact ? Commencez au niveau 1.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm sm:mt-5">
+              <Link
+                href="/join"
+                className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                J&apos;ai un code (élève)
+              </Link>
+              <Link
+                href="/reprendre"
+                className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Reprendre avec mon code
+              </Link>
+              <Link href="/profile" className="text-slate-300 underline-offset-4 hover:underline">
+                Mon profil
+              </Link>
+            </div>
+          </div>
+        </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-8 sm:py-16">
-          {/*
-            Colonnes centrées l'une sur l'autre : le texte est bien plus court que
-            le formulaire, et les aligner par le haut laissait un vide sous lui.
-            La colonne de droite est large (540 px) : le formulaire y respire, ses
-            cartes de secteur s'étalent, sa hauteur se rapproche de celle du texte.
-            Le texte, lui, reste borné par son max-w-lg et ne s'étire pas.
-          */}
-          <div className="grid items-start gap-6 sm:gap-8 lg:grid-cols-[1fr_540px] lg:items-center">
-            <ReprendreMaPartie parties={enCours} className="order-0 lg:col-span-2" />
-            {/* SUR TÉLÉPHONE, le choix du métier vient tout de suite : un titre, puis le formulaire,
-                puis ce qui se lit à loisir. `contents` défait cette colonne en deux blocs que
-                `order` réarrange ; au-delà de `lg`, c'est la colonne de texte d'avant, à l'identique. */}
-            <div className="contents lg:block">
-            <div className="order-1">
-              <p className="text-xs uppercase tracking-annonce text-amber-400">Partie solo</p>
-              <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
-                {enCours.length > 0 ? "Lancez une nouvelle partie" : "Lancez votre première partie"}
-              </h1>
-            </div>
-            <div className="order-3">
-              {/* UNE LIGNE, PAS UN DISCOURS. Le paragraphe, les trois puces et les cinq liens
-                  qui entouraient le formulaire disaient ce que la page d'accueil et le menu disent
-                  déjà : celui qui est ici veut jouer, il choisit son métier et son niveau. */}
-              <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-400">
-                Choisissez un métier et un niveau. Premier contact ? Commencez au niveau 1.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-                <Link href="/join" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
-                  J&apos;ai un code (élève)
-                </Link>
-                <Link href="/reprendre" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
-                  Reprendre avec mon code
-                </Link>
-                <Link href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
-                  Mon profil
-                </Link>
-              </div>
-            </div>
-            </div>
-
+        <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-12">
+          <ReprendreMaPartie parties={enCours} className="mb-6" />
             {reserve ? (
               <p
                 role="status"
-                className="order-2 mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200 lg:order-none"
+                className="mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200"
               >
                 {messageNiveauxReserves(config.vitrineSolo)} Choisissez un niveau plus bas, ou jouez
                 l&apos;entreprise vitrine à tous les niveaux.
@@ -110,7 +116,7 @@ export default async function JouerPage({
             {trop ? (
               <p
                 role="status"
-                className="order-2 mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200 lg:order-none"
+                className="mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200"
               >
                 Trop de parties lancées depuis cette connexion dans la dernière heure.
                 Réessayez tout à l&apos;heure. Si vous êtes en classe, les élèves n&apos;ont
@@ -119,7 +125,7 @@ export default async function JouerPage({
               </p>
             ) : null}
             {!config.allowPublicPlay ? (
-              <div className="order-2 carte p-6 text-sm text-slate-400 lg:order-none">
+              <div className="carte p-6 text-sm text-slate-400">
                 Les parties publiques sont momentanément désactivées. Élèves : utilisez le code
                 donné par votre enseignant sur{" "}
                 <Link href="/join" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
@@ -130,9 +136,13 @@ export default async function JouerPage({
             ) : (
               <form
                 action={startGameAction}
-                className="order-2 carte p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6 lg:order-none"
+                className="carte p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6"
               >
-                <h2 className="titre-carte text-slate-100">Configurer la partie</h2>
+                {/* Le titre de la carte dit le geste, et s'il y a déjà une partie à
+                    reprendre au-dessus : « une nouvelle », ou « votre première ». */}
+                <h2 className="titre-carte text-slate-100">
+                  {enCours.length > 0 ? "Lancez une nouvelle partie" : "Lancez votre première partie"}
+                </h2>
                 <QuickConfigFields
                   scenarios={SCENARIO_CHOICES.map((s) => {
                     const famille = familyOf(s.code);
@@ -171,7 +181,6 @@ export default async function JouerPage({
                 </SubmitButton>
               </form>
             )}
-          </div>
         </section>
       </main>
       <PiedDePage />

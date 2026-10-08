@@ -7,7 +7,7 @@ import { bouton } from "@/components/bouton";
 import { Bande } from "@/components/bande";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
 import { BandeFinale } from "@/components/bande-finale";
-import { HaloDePage } from "@/components/halo-de-page";
+import { BandeOuverture, PORTE_SECONDAIRE } from "@/components/bande-ouverture";
 import { PiedDePage } from "@/components/pied-de-page";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -135,40 +135,38 @@ export default async function EcolesPage() {
   return (
     <>
       <main id="main" className="relative overflow-hidden">
-        <HaloDePage />
-
-        <Bande
+        {/* L'OUVERTURE MARINE, comme l'accueil (components/bande-ouverture) :
+            le chiffre-preuve est le nombre d'épisodes manager, lu dans leur
+            registre. */}
+        <BandeOuverture
           id="ecoles.accroche"
           contraste={c("ecoles.accroche")}
-          interieur="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center"
-        >
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
-            Écoles de commerce et universités
-          </p>
-          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-            Former des managers qui <span>décident</span>, et le prouver
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            Une partie d&apos;entreprise en équipes pour le bachelor, des épisodes manager pour le
-            master et la formation continue. Chaque décision est rejouée sous trente tirages du
-            hasard, et chaque étudiant repart avec un profil de dix compétences, preuves à
-            l&apos;appui.
-          </p>
-          <div
-            data-cta-principal
-            className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
-          >
-            <Link href="/rendez-vous" className={bouton({ taille: "l" })}>
-              Organiser un essai avec une promotion
-            </Link>
-            <Link
-              href="/entreprises/episode"
-              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
-            >
-              Jouer un épisode
-            </Link>
-          </div>
-        </Bande>
+          surtitre="Écoles de commerce et universités"
+          titre={
+            <>
+              Former des managers qui <span>décident</span>, et le prouver
+            </>
+          }
+          chapeau={
+            <>
+              Une partie d&apos;entreprise en équipes pour le bachelor, des épisodes manager pour le
+              master et la formation continue. Chaque décision est rejouée sous trente tirages du
+              hasard, et chaque étudiant repart avec un profil de {COMPETENCES.length} compétences,
+              preuves à l&apos;appui.
+            </>
+          }
+          preuve={{ valeur: `${EPISODES.length}`, libelle: "épisodes manager" }}
+          actions={
+            <>
+              <Link href="/rendez-vous" className={bouton({ taille: "l" })}>
+                Organiser un essai avec une promotion
+              </Link>
+              <Link href="/entreprises/episode" className={PORTE_SECONDAIRE}>
+                Jouer un épisode
+              </Link>
+            </>
+          }
+        />
 
         <BandeDeChiffres
           id="ecoles.chiffres"

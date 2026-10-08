@@ -15,7 +15,7 @@ import { getPlatformConfig } from "@/services/admin.service";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
-import { HaloDePage } from "@/components/halo-de-page";
+import { BandeOuverture, PORTE_SECONDAIRE } from "@/components/bande-ouverture";
 import { PiedDePage } from "@/components/pied-de-page";
 import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
@@ -176,55 +176,52 @@ export default async function EnseignantsPage() {
   return (
     <>
       <main id="main" className="relative overflow-hidden">
-        <HaloDePage />
-
-        {/* Hero */}
-        <Bande
+        {/* L'OUVERTURE MARINE, comme l'accueil (components/bande-ouverture) :
+            le chiffre-preuve est le nombre d'ateliers, lu dans leur registre. */}
+        <BandeOuverture
           id="enseignants.accroche"
           contraste={c("enseignants.accroche")}
-          interieur="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center"
+          surtitre="Pour les enseignants"
+          titre={
+            <>
+              Vos élèves apprennent à <span>décider</span>, pas à cliquer
+            </>
+          }
+          chapeau={
+            <>
+              Un business game qui mesure une vraie décision, fait identifier le bon modèle
+              d&apos;analyse avant de trancher, et rend compte au référentiel sans rien
+              surpromettre. Des ateliers clés en main, une partie créée en trente secondes.
+            </>
+          }
+          preuve={{ valeur: `${ATELIERS.length}`, libelle: "ateliers clés en main" }}
+          actions={
+            <>
+              <Link href="/orientation" className={bouton({ taille: "l" })}>
+                Choisir ma simulation
+              </Link>
+              <Link href="/animations" className={PORTE_SECONDAIRE}>
+                Voir les ateliers
+              </Link>
+            </>
+          }
         >
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
-            Pour les enseignants
-          </p>
-          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-            Vos élèves apprennent à{" "}
-            <span>décider</span>, pas à cliquer
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            Un business game qui mesure une vraie décision, fait identifier le
-            bon modèle d&apos;analyse avant de trancher, et rend compte au
-            référentiel sans rien surpromettre. Des ateliers clés en main, une
-            partie créée en trente secondes.
-          </p>
-          <div data-cta-principal className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link href="/orientation" className={bouton({ taille: "l" })}>
-              Choisir ma simulation
-            </Link>
-            <Link
-              href="/animations"
-              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
-            >
-              Voir les ateliers
-            </Link>
-          </div>
           {/*
             Le manuel se lit SANS COMPTE. Qui veut savoir comment l'outil évalue
             avant d'y exposer une classe doit pouvoir le lire tout de suite : un
             enseignant qui hésite, un collègue à qui l'on envoie un lien, un corps
             d'inspection à qui on l'a présenté.
           */}
-          <p className="mt-4 text-base text-slate-400">
+          <p className="mt-5 text-base text-slate-300">
             <Link
               href="/manuel"
               className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
               Lire le manuel de l&apos;enseignant
             </Link>{" "}
-            · sans compte : ce que mesure l&apos;indice IPG, les niveaux, les
-            barèmes.
+            · sans compte : ce que mesure l&apos;indice IPG, les niveaux, les barèmes.
           </p>
-        </Bande>
+        </BandeOuverture>
 
         {/* La coupure de la page : voir components/bande-de-chiffres.tsx. */}
         <BandeDeChiffres

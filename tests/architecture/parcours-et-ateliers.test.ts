@@ -127,10 +127,12 @@ describe("les parcours et les ateliers", () => {
     // gabarit d'arène écraserait le nom du diplôme — donc elle doit au moins
     // en reprendre les signaux, sinon le site parle deux langues du repli.
     expect(resume, "le chevron qui pivote").toContain("group-open:rotate-90");
-    expect(PAGE, "le trait pointillé tant que c'est fermé").toContain(
-      "border-dashed",
-    );
-    expect(PAGE, "plein une fois ouvert").toContain("open:border-solid");
+    // LE BORD EST PLEIN, OUVERT COMME FERMÉ (audit P2-16). Le pointillé du
+    // tiroir fermé était, sur cette page, le seul bord pointillé du site hors
+    // d'une zone vide : il faisait passer douze diplômes pour des brouillons.
+    // Le pointillé reste réservé à ce qui est vide ou en attente.
+    expect(PAGE, "une carte de diplôme a un bord plein").not.toContain("border-dashed");
+    expect(PAGE, "la carte du site, à bord plein").toMatch(/data-diplome[\s\S]{0,120}\bcarte\b/);
 
     // Le compte est LU de la donnée. Écrit à la main, il mentirait dès qu'une
     // séance est ajoutée, et c'est le seul contenu du tiroir fermé.

@@ -22,11 +22,7 @@ export function CompetitionJoinForm({
     { label: "inscription à un concours" },
   );
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      className="w-full max-w-sm space-y-4 carte p-4 sm:p-7"
-    >
+    <form ref={formRef} action={formAction} className="w-full space-y-4 carte p-4 sm:p-7">
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
           Code du concours
@@ -65,9 +61,7 @@ export function CompetitionJoinForm({
         />
       </label>
       {state.error ? (
-        <p className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">
-          {state.error}
-        </p>
+        <p className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">{state.error}</p>
       ) : null}
       {state.dejaInscrit ? (
         <div
@@ -75,20 +69,13 @@ export function CompetitionJoinForm({
           className="space-y-2 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
         >
           <p>{messageDejaInscrit(state.dejaInscrit.teamLabel)}</p>
-          <a
-            href={`/compete/${state.dejaInscrit.competitionId}`}
-            className={bouton()}
-          >
+          <a href={`/compete/${state.dejaInscrit.competitionId}`} className={bouton()}>
             Ouvrir mon équipe →
           </a>
         </div>
       ) : null}
       <GuardError message={guardError} />
-      <button
-        type="submit"
-        disabled={pending}
-        className={`${bouton({ taille: "l" })} w-full`}
-      >
+      <button type="submit" disabled={pending} className={`${bouton({ taille: "l" })} w-full`}>
         {pending ? "Inscription…" : "S'inscrire au concours"}
       </button>
     </form>

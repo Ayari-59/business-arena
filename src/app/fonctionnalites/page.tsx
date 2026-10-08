@@ -8,6 +8,7 @@ import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
+import { EnTeteDePage } from "@/components/en-tete-de-page";
 import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -77,20 +78,23 @@ export default async function FonctionnalitesPage() {
         <Bande
           id="fonctionnalites.accroche"
           contraste={c("fonctionnalites.accroche")}
-          interieur="mx-auto max-w-5xl px-6 pb-10 pt-12 text-center sm:pt-16"
+          interieur="pb-2"
         >
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
-            Plateforme de simulation de gestion
-          </p>
-          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-            Tout ce qu&apos;il faut pour{" "}
-            <span>apprendre à décider</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            Un moteur économique réaliste, des situations pédagogiques contextuelles,
-            des modèles d&apos;analyse à mobiliser : Business Arena met la gestion
-            d&apos;entreprise entre les mains de vos étudiants.
-          </p>
+          <EnTeteDePage
+            surtitre="Plateforme de simulation de gestion"
+            titre={
+              <>
+                Tout ce qu&apos;il faut pour <span>apprendre à décider</span>
+              </>
+            }
+            chapeau={
+              <>
+                Un moteur économique réaliste, des situations pédagogiques contextuelles, des
+                modèles d&apos;analyse à mobiliser : Business Arena met la gestion d&apos;entreprise
+                entre les mains de vos étudiants.
+              </>
+            }
+          />
         </Bande>
 
         {/*

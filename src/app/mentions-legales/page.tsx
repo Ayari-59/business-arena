@@ -1,3 +1,4 @@
+import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -33,21 +34,19 @@ export default function MentionsLegalesPage() {
         « Retour au site » qui doublait le logo de l'en-tête, lequel ramène déjà
         à l'accueil.
       */}
-      <header className="mx-auto max-w-3xl px-6 pb-4 pt-10">
-        <p className="text-xs uppercase tracking-annonce text-amber-400">
-          Mentions légales & données personnelles
-        </p>
-        <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50">
-          Vos élèves jouent sans compte, sans e-mail, sans traceur
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-          Business Arena est conçu pour la classe : la protection des données n&apos;y est pas
-          une case à cocher, c&apos;est un choix d&apos;architecture. Cette page dit exactement
-          ce que la plateforme collecte, et surtout ce qu&apos;elle ne collecte pas.
-        </p>
-      </header>
+      <EnTeteDePage
+        surtitre="Mentions légales & données personnelles"
+        titre="Vos élèves jouent sans compte, sans e-mail, sans traceur"
+        chapeau={
+          <>
+            Business Arena est conçu pour la classe : la protection des données n&apos;y est pas une
+            case à cocher, c&apos;est un choix d&apos;architecture. Cette page dit exactement ce
+            que la plateforme collecte, et surtout ce qu&apos;elle ne collecte pas.
+          </>
+        }
+      />
 
-      <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+      <div className={`${COLONNE_DE_PAGE} space-y-6 pb-12 pt-2`}>
         <Section title="L'essentiel pour les établissements">
           <ul className="list-disc space-y-2 pl-5">
             <li>
