@@ -151,6 +151,7 @@ describe("les captures de la page d'accueil", () => {
     const P = PARTIE_D_EXEMPLE;
     expect(alts).toContain(lu(P.chiffreDAffaires.tour));
     expect(alts).toContain(lu(P.resultat.tour));
+    expect(alts).toContain(`trésorerie ${lu(P.tresorerie.tour)}`);
     // L'écart au tour précédent, tel que le verdict l'écrit.
     expect(alts).toContain(`${lu(P.resultat.tour - P.resultat.precedent)} de plus`);
     // Le rang, le nombre d'équipes et l'IPG du verdict.

@@ -29,10 +29,13 @@ import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
  * base de cette partie, tables `round_results` (tours 2 et 3) et
  * `game_rankings` (classement à l'IPG après le tour 3), arrondis à l'euro et
  * au point d'IPG. Le chiffre d'affaires, le résultat, son écart au tour 2 et
- * le rang sont aussi lisibles sur les captures elles-mêmes.
+ * le rang sont aussi lisibles sur les captures elles-mêmes, comme la
+ * trésorerie et sa hausse (89 869 €, +10 123 € sur l'écran de l'arène).
  *
- * Rien n'est retouché pour flatter : la part de marché de NOVA a reculé au
- * tour 3, et le bandeau le montre ; Auris gagne plus que NOVA mais la suit au
+ * LA TRÉSORERIE ET NON LA PART DE MARCHÉ, au troisième chiffre : celle de
+ * NOVA a reculé au tour 3 (13,6 % contre 18,5 %), et le propriétaire a
+ * préféré un chiffre que la page montre déjà sur ses captures. Rien n'est
+ * retouché pour autant : Auris gagne plus que NOVA mais la suit au
  * classement, parce que l'IPG ne se réduit pas au résultat.
  *
  * Le classement du tour 2 n'est pas conservé par la base : le bandeau ne dit
@@ -43,7 +46,7 @@ export const PARTIE_D_EXEMPLE = {
   tour: 3,
   chiffreDAffaires: { tour: 319_914, precedent: 286_725 },
   resultat: { tour: 32_942, precedent: 20_965 },
-  partDeMarche: { tour: 0.135805, precedent: 0.184736 },
+  tresorerie: { tour: 89_869, precedent: 79_746 },
   classement: [
     { equipe: "NOVA", resultat: 32_942, ipg: 58 },
     { equipe: "Auris", resultat: 48_960, ipg: 56 },
@@ -93,8 +96,7 @@ function Variation({ hausse, children }: { hausse: boolean; children: React.Reac
  */
 export function BandeauDeLaPartie({ contraste }: { contraste: boolean }) {
   const ca = P.chiffreDAffaires;
-  const pdm = P.partDeMarche;
-  const ecartPdm = (pdm.tour - pdm.precedent) * 100;
+  const tresorerie = P.tresorerie;
   const cases: {
     libelle: string;
     valeur: React.ReactNode;
@@ -122,9 +124,13 @@ export function BandeauDeLaPartie({ contraste }: { contraste: boolean }) {
       classe: "border-l",
     },
     {
-      libelle: "Part de marché",
-      valeur: `${pourcent(pdm.tour * 100)} %`,
-      variation: <Variation hausse={ecartPdm >= 0}>{pourcent(Math.abs(ecartPdm))} pts</Variation>,
+      libelle: "Trésorerie",
+      valeur: formatEuro(tresorerie.tour),
+      variation: (
+        <Variation hausse={tresorerie.tour >= tresorerie.precedent}>
+          {formatEuro(Math.abs(tresorerie.tour - tresorerie.precedent))}
+        </Variation>
+      ),
       classe: "max-sm:border-t sm:border-l",
     },
     {
