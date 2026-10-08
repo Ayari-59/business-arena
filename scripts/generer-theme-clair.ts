@@ -122,24 +122,26 @@ export const PAPIER: Record<number, string> = {
 };
 
 /**
- * LE TABLEAU : le marine de l'arène et ses blancs, là où la classe regarde
- * ensemble : l'en-tête, le haut de l'accueil, les bandes à contre-jour, les
- * écrans de chiffres de la partie, la projection. Il remplace l'ardoise
- * vert-noir de l'habillage « Papier & Tableau ».
+ * LE TABLEAU : le marine de l'arène et ses blancs cassés, là où la classe
+ * regarde ensemble : l'en-tête, le haut de l'accueil, les bandes à
+ * contre-jour, les écrans de chiffres de la partie, la projection. Il
+ * remplace l'ardoise vert-noir de l'habillage « Papier & Tableau ».
  *
  *   · 950, le marine #0b2545 ; 900, sa surface relevée #13355f (une carte
  *     posée sur le marine) ; 800 et 700, le fond d'un champ et les filets ;
  *   · 600 et 500, des gris bleutés pour ce qui n'est pas du texte : le trait
  *     d'un champ (500) tient 3 pour 1 sur un champ comme sur une carte ;
- *   · 400, le texte secondaire #c7d4e8 : 8,2 pour 1 sur la surface relevée ;
- *   · 300 à 50, les blancs, jusqu'au blanc pur des titres.
+ *   · 400, le texte secondaire, un gris chaud-neutre #c2bcb2 : 6,5 pour 1 sur
+ *     la surface relevée ;
+ *   · 300 à 50, l'INFORMATION : des blancs cassés (#f1ede4 pour le texte
+ *     courant, 10,6 pour 1 sur la surface relevée), ni blanc pur ni bleu pâle.
  */
 export const TABLEAU: Record<number, string> = {
-  50: "#ffffff",
-  100: "#f4f7fb",
-  200: "#eaf0f8",
-  300: "#dce5f2",
-  400: "#c7d4e8",
+  50: "#f6f3ec",
+  100: "#f1ede4",
+  200: "#ece8df",
+  300: "#e2ddd3",
+  400: "#c2bcb2",
   500: "#8aa0c0",
   600: "#6f86aa",
   700: "#2d5385",
@@ -234,7 +236,7 @@ ${clair(renversees)}
  * Il ramène l'échelle d'origine, celle pour laquelle les classes ont été
  * écrites, ce qui revient à DÉFAIRE, pour ce bloc seulement, ce que le papier
  * vient de poser : d'où la reprise des mêmes clés avec leurs valeurs de
- * départ. Seul le neutre diffère, qui devient le marine et ses blancs.
+ * départ. Seul le neutre diffère, qui devient le marine et ses blancs cassés.
  *
  * Sa spécificité (deux sélecteurs) l'emporte sur celle du thème (un seul),
  * quel que soit l'ordre des règles dans la feuille.

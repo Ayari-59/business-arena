@@ -275,7 +275,7 @@ export default async function TeacherGamePage({
             <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
             {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
           </h2>
-          <p className="mt-1 text-xs text-red-200/80">
+          <p className="mt-1 text-xs text-red-200">
             Deux tours consécutifs de cessation de paiements. L&apos;activité est gelée (ni
             production, ni charges) et la note financière tombe à zéro. Seule une augmentation de
             capital qui ramène le découvert sous le plafond fait repartir l&apos;entreprise.
@@ -348,7 +348,7 @@ export default async function TeacherGamePage({
                         {estParDefaut(t.decisionSource) ? (
                           <span
                             title="Prix et volume validés sans modification des valeurs proposées"
-                            className="ml-2 rounded-md bg-orange-950/60 px-1.5 py-0.5 text-xs text-orange-300"
+                            className="ml-2 rounded-md border border-orange-400 px-1.5 py-0.5 text-xs text-orange-300"
                           >
                             par défaut
                           </span>

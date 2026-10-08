@@ -102,8 +102,8 @@ describe("le registre des palettes", () => {
     // bénéfice. On mesure la teinte du palier 400 en OKLCH grossier : les
     // teintes du rouge (≈ 345-40°) et du vert (≈ 110-175°) sont celles du
     // sens. Le rouge de la perte, sur le site, est à 22-29° ; l'orange de
-    // l'arène, choisi pour l'action, est à 43° (aplat) et 50° (texte) : il
-    // reste à vingt degrés de la perte, et cette garde l'y tient. La borne
+    // l'arène, l'orange ambré choisi pour l'action, est à 55° : il reste à
+    // plus de vingt degrés de la perte, et cette garde l'y tient. La borne
     // était à 50° du temps du laiton (≈ 85°), qui n'en approchait pas.
     for (const p of PALETTES) {
       const hex = p.sombre[400]!;

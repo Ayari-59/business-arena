@@ -254,10 +254,10 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
                     className="rounded-lg border border-white/5 bg-slate-900/70 p-3"
                   >
                     <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-emerald-300/80">
+                    <p className="mt-1.5 text-sm leading-relaxed text-emerald-300">
                       <Signe sens="gain" /> {r.gain}
                     </p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-rose-300/80">
+                    <p className="mt-1.5 text-sm leading-relaxed text-rose-300">
                       <Signe sens="cout" /> {r.risque}
                     </p>
                   </div>
@@ -421,7 +421,7 @@ export default async function EntreprisesPage() {
                       <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
                       <td className="py-2.5 pr-4 text-slate-400">
                         {d.scenario.perishable ? (
-                          <span className="text-rose-300/90">
+                          <span className="text-rose-300">
                             {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
                           </span>
                         ) : (

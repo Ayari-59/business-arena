@@ -24,8 +24,11 @@ const MARINE = "#0b2545";
 const MARINE_RELEVE = "#13355f";
 const BLANC = "#ffffff";
 const PAGE = "#f5f7fb";
-/** Le voile orangé d'une ligne choisie (l'équipe du joueur), sur le clair. */
-const VOILE = "#fff3ea";
+/**
+ * Le fond d'une ligne choisie (l'équipe du joueur), sur le clair : le voile
+ * neutre, marine à 6 % dans le blanc. Il a été un voile pêche, #fff3ea.
+ */
+const VOILE = "#f0f2f4";
 
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((i) => {
@@ -85,6 +88,20 @@ describe("les jetons du podium", () => {
       // Et la pastille ressort du marine d'une projection ou d'une bande.
       expect(contraste(fond, MARINE), `${fond} sur le marine`).toBeGreaterThanOrEqual(3);
     }
+  });
+
+  it("le bronze est un métal saturé, plus un abricot pâle", () => {
+    // Il a été #e8b48a, que l'œil prenait pour une pêche à côté de l'or :
+    // la clarté (HSL) d'un métal reste sous 60 %, sa saturation au-dessus de
+    // 50 %, et le chiffre marine y tient toujours (mesuré plus haut).
+    const [r, g, b] = [1, 3, 5].map(
+      (i) => parseInt(jeton(SOMBRE, "bronze").slice(i, i + 2), 16) / 255,
+    );
+    const [max, min] = [Math.max(r!, g!, b!), Math.min(r!, g!, b!)];
+    const clarte = (max + min) / 2;
+    const saturation = (max - min) / (1 - Math.abs(2 * clarte - 1));
+    expect(clarte, "clarté du bronze").toBeLessThan(0.6);
+    expect(saturation, "saturation du bronze").toBeGreaterThan(0.5);
   });
 
   it("chaque filet détache sa pastille du blanc et de la page", () => {

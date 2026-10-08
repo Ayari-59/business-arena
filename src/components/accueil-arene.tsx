@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Bande } from "@/components/bande";
+import { classeLigneDeRang } from "@/components/rang";
 import { DIFFICULTES, type Difficulte } from "@/config/episodes/difficultes";
 import { formatEuro } from "@/lib/format";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
@@ -92,7 +93,10 @@ function Variation({ hausse, children }: { hausse: boolean; children: React.Reac
  * Blanc, posé sur un filet marine de trois pixels : c'est `bandeau-chiffres`
  * (globals.css), la classe que la bande des chiffres de la maison porte déjà.
  * Le chiffre en condensé gras, sa variation dessous ; la case du classement
- * sur le voile orangé, le rang en orange.
+ * en ARDOISE marine, le rang dans l'or des distinctions et son libellé en
+ * clair : la seule case sombre du bandeau, celle qu'on regarde. Elle a été
+ * sur un voile pêche, une mise en avant trop douce pour un tableau des
+ * scores.
  */
 export function BandeauDeLaPartie({ contraste }: { contraste: boolean }) {
   const ca = P.chiffreDAffaires;
@@ -136,12 +140,13 @@ export function BandeauDeLaPartie({ contraste }: { contraste: boolean }) {
     {
       libelle: "Classement",
       valeur: (
-        <span className="text-amber-400">
+        // Le rang est une distinction, pas une action : l'or du podium.
+        <span className="texte-or">
           <Rang n={RANG} />/{P.classement.length}
         </span>
       ),
       variation: <span className="text-sm font-bold text-slate-400">IPG {IPG}</span>,
-      classe: "border-l max-sm:border-t bg-amber-400/10",
+      classe: "ardoise border-l max-sm:border-t bg-slate-950",
     },
   ];
   return (
@@ -188,12 +193,13 @@ export function BandeauDeLaPartie({ contraste }: { contraste: boolean }) {
  * `--argent`, `--bronze` et leurs filets) : l'accueil ne choisit pas ses
  * métaux, il les lit. Les valeurs de repli sont celles des jetons, pour que la
  * pastille reste un métal si la feuille ne les porte pas encore. Le chiffre
- * marine tient au moins 8 pour 1 sur chacun des trois.
+ * marine tient au moins 4,8 pour 1 sur chacun des trois (8,3 sur l'or, 11,1
+ * sur l'argent, 4,9 sur le bronze).
  */
 const METAL: readonly string[] = [
   "bg-[color:var(--or-distinction)] text-[color:var(--marine)] shadow-[inset_0_0_0_1.5px_var(--or-filet,#a07c00)]",
   "bg-[color:var(--argent,#d5dbe4)] text-[color:var(--marine)] shadow-[inset_0_0_0_1.5px_var(--argent-filet,#6b7a8f)]",
-  "bg-[color:var(--bronze,#e8b48a)] text-[color:var(--marine)] shadow-[inset_0_0_0_1.5px_var(--bronze-filet,#b06a33)]",
+  "bg-[color:var(--bronze,#cd7f32)] text-[color:var(--marine)] shadow-[inset_0_0_0_1.5px_var(--bronze-filet,#a8622a)]",
 ];
 
 const DIFFICULTE: Record<Difficulte, { barres: number; nom: string }> = {
@@ -207,8 +213,10 @@ const DIFFICULTE: Record<Difficulte, { barres: number; nom: string }> = {
  *
  * La carte mène à un vrai épisode, et son lien couvre toute la carte ; le
  * classement n'est qu'à lire, il ne porte donc pas le filet orange des cartes
- * qui mènent quelque part. La ligne de l'équipe jouée est sur le voile orangé,
- * et le premier rang prend l'or des distinctions : jamais l'action.
+ * qui mènent quelque part. La ligne de l'équipe jouée porte le filet orange
+ * plein et le fond neutre des lignes choisies (`classeLigneDeRang`, comme les
+ * classements de l'arène), et le premier rang prend l'or des distinctions :
+ * jamais l'action.
  */
 export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
   const ep = episodeParCode(EPISODE_DE_L_ACCUEIL)!;
@@ -303,9 +311,7 @@ export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
                 return (
                   <tr
                     key={l.equipe}
-                    className={`border-t border-[color:var(--filet-carte)] ${
-                      joueur ? "bg-amber-400/10" : ""
-                    } ${i === 0 ? "shadow-[inset_3px_0_0_var(--or-filet,var(--or-distinction))]" : ""}`}
+                    className={`border-t border-[color:var(--filet-carte)] ${classeLigneDeRang(i + 1, joueur)}`}
                   >
                     <td className="py-2 pl-1">
                       <span

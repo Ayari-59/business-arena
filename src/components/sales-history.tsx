@@ -95,7 +95,7 @@ export function SalesHistory({
                 <td className="py-1.5 pr-3 text-right font-medium tabular-nums text-slate-100">
                   {formatUnits(row.sold)}
                 </td>
-                <td className="py-1.5 text-right tabular-nums text-red-300/80">
+                <td className="py-1.5 text-right tabular-nums text-red-300">
                   {row.lost > 0 ? formatUnits(row.lost) : "—"}
                 </td>
               </tr>

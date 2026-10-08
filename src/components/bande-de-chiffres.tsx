@@ -47,7 +47,7 @@ export function BandeDeChiffres({
                 un nombre seul ne veut rien dire, d'où le terme d'abord. */}
             <dt className="sr-only">{c.libelle}</dt>
             <dd className="m-0">
-              <p className="font-display text-4xl font-semibold tabular-nums text-amber-400">
+              <p className="font-display text-4xl font-semibold tabular-nums text-slate-50">
                 {c.valeur}
               </p>
               <p className="mt-2 text-sm font-semibold text-slate-100">{c.libelle}</p>

@@ -498,7 +498,7 @@ export default async function AtelierPage({
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-lg border border-emerald-400/20 bg-emerald-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-xs uppercase tracking-surtitre text-emerald-300/80 print:text-black">
+                      <h4 className="text-xs uppercase tracking-surtitre text-emerald-300 print:text-black">
                         Livrable de la séance
                       </h4>
                       <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">

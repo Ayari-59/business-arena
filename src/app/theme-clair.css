@@ -300,7 +300,7 @@
  * Il ramène l'échelle d'origine, celle pour laquelle les classes ont été
  * écrites, ce qui revient à DÉFAIRE, pour ce bloc seulement, ce que le papier
  * vient de poser : d'où la reprise des mêmes clés avec leurs valeurs de
- * départ. Seul le neutre diffère, qui devient le marine et ses blancs.
+ * départ. Seul le neutre diffère, qui devient le marine et ses blancs cassés.
  *
  * Sa spécificité (deux sélecteurs) l'emporte sur celle du thème (un seul),
  * quel que soit l'ordre des règles dans la feuille.
@@ -315,9 +315,9 @@
     --color-black: #000;
     --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
-    --color-red-200: oklch(88.5% 0.062 18.334);
-    --color-red-300: oklch(80.8% 0.114 19.571);
-    --color-red-400: oklch(70.4% 0.191 22.216);
+    --color-red-200: #ff7070;
+    --color-red-300: #ff7070;
+    --color-red-400: #ff7070;
     --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-red-700: oklch(50.5% 0.213 27.518);
@@ -335,17 +335,17 @@
     --color-orange-800: oklch(47% 0.157 37.304);
     --color-orange-900: oklch(40.8% 0.123 38.172);
     --color-orange-950: oklch(26.6% 0.079 36.259);
-    --color-amber-50: #fff4ec;
-    --color-amber-100: #ffe6d5;
-    --color-amber-200: #ffd3b8;
-    --color-amber-300: #ffb488;
-    --color-amber-400: #ff9455;
-    --color-amber-500: #ff6a1a;
-    --color-amber-600: #e8590c;
-    --color-amber-700: #b8460a;
-    --color-amber-800: #8a3407;
-    --color-amber-900: #5c2405;
-    --color-amber-950: #2e1607;
+    --color-amber-50: #ff8a1f;
+    --color-amber-100: #ff8a1f;
+    --color-amber-200: #ff8a1f;
+    --color-amber-300: #ff8a1f;
+    --color-amber-400: #ff8a1f;
+    --color-amber-500: #ff8a1f;
+    --color-amber-600: #e67300;
+    --color-amber-700: #b35c00;
+    --color-amber-800: #8a4400;
+    --color-amber-900: #5c2d00;
+    --color-amber-950: #2b1600;
     --color-yellow-50: oklch(98.7% 0.026 102.212);
     --color-yellow-100: oklch(97.3% 0.071 103.193);
     --color-yellow-200: oklch(94.5% 0.129 101.54);
@@ -381,9 +381,9 @@
     --color-green-950: oklch(26.6% 0.065 152.934);
     --color-emerald-50: oklch(97.9% 0.021 166.113);
     --color-emerald-100: oklch(95% 0.052 163.051);
-    --color-emerald-200: oklch(90.5% 0.093 164.15);
-    --color-emerald-300: oklch(84.5% 0.143 164.978);
-    --color-emerald-400: oklch(76.5% 0.177 163.223);
+    --color-emerald-200: #3ccf7e;
+    --color-emerald-300: #3ccf7e;
+    --color-emerald-400: #3ccf7e;
     --color-emerald-500: oklch(69.6% 0.17 162.48);
     --color-emerald-600: oklch(59.6% 0.145 163.225);
     --color-emerald-700: oklch(50.8% 0.118 165.612);
@@ -414,9 +414,9 @@
     --color-cyan-950: oklch(30.2% 0.056 229.695);
     --color-sky-50: oklch(97.7% 0.013 236.62);
     --color-sky-100: oklch(95.1% 0.026 236.824);
-    --color-sky-200: oklch(90.1% 0.058 230.902);
-    --color-sky-300: oklch(82.8% 0.111 230.318);
-    --color-sky-400: oklch(74.6% 0.16 232.661);
+    --color-sky-200: #8fb0dc;
+    --color-sky-300: #8fb0dc;
+    --color-sky-400: #8fb0dc;
     --color-sky-500: oklch(68.5% 0.169 237.323);
     --color-sky-600: oklch(58.8% 0.158 241.966);
     --color-sky-700: oklch(50% 0.134 242.749);
@@ -491,20 +491,20 @@
     --color-pink-950: oklch(28.4% 0.109 3.907);
     --color-rose-50: oklch(96.9% 0.015 12.422);
     --color-rose-100: oklch(94.1% 0.03 12.58);
-    --color-rose-200: oklch(89.2% 0.058 10.001);
-    --color-rose-300: oklch(81% 0.117 11.638);
-    --color-rose-400: oklch(71.2% 0.194 13.428);
+    --color-rose-200: #ff7070;
+    --color-rose-300: #ff7070;
+    --color-rose-400: #ff7070;
     --color-rose-500: oklch(64.5% 0.246 16.439);
     --color-rose-600: oklch(58.6% 0.253 17.585);
     --color-rose-700: oklch(51.4% 0.222 16.935);
     --color-rose-800: oklch(45.5% 0.188 13.697);
     --color-rose-900: oklch(41% 0.159 10.272);
     --color-rose-950: oklch(27.1% 0.105 12.094);
-    --color-slate-50: #ffffff;
-    --color-slate-100: #f4f7fb;
-    --color-slate-200: #eaf0f8;
-    --color-slate-300: #dce5f2;
-    --color-slate-400: #c7d4e8;
+    --color-slate-50: #f6f3ec;
+    --color-slate-100: #f1ede4;
+    --color-slate-200: #ece8df;
+    --color-slate-300: #e2ddd3;
+    --color-slate-400: #c2bcb2;
     --color-slate-500: #8aa0c0;
     --color-slate-600: #6f86aa;
     --color-slate-700: #2d5385;

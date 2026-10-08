@@ -121,7 +121,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               <span className="font-semibold text-slate-100">La question :</span>{" "}
               {ep.prevision.libelle}.
             </p>
-            <p className="mt-3 text-2xl font-semibold tabular-nums text-amber-200">
+            <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-50">
               {nombre(fiche.calcul.reponse)} {ep.prevision.unite}
             </p>
             <ol className="mt-4 list-decimal space-y-1 pl-6 text-base text-slate-300">

@@ -412,7 +412,7 @@ export default async function GuidePage() {
                   {DIMENSIONS_DE_L_INDICE.map((d) => (
                     <tr key={d.code} className="border-t border-white/5">
                       <td className="py-2 pr-3">{d.nom}</td>
-                      <td className="py-2 pr-3 text-right tabular-nums text-amber-300">
+                      <td className="py-2 pr-3 text-right tabular-nums text-slate-100">
                         {d.poids} %
                       </td>
                       <td className="py-2 text-slate-400">{d.mesure}</td>

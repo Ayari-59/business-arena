@@ -356,7 +356,7 @@ export default async function Home() {
             <h1 className="whitespace-nowrap text-[clamp(1.75rem,10cqw,7rem)] font-extrabold leading-[0.95] text-slate-50">
               Dirigez une entreprise.
               <br />
-              <span className="text-amber-400">Apprenez à décider.</span>
+              <span className="text-amber-500">Apprenez à décider.</span>
             </h1>
           </div>
           {/*
@@ -678,7 +678,7 @@ export default async function Home() {
                 <dt className="text-sm leading-snug text-slate-400">
                   <span className="font-semibold text-slate-100">{quoi}</span> {libelle}
                 </dt>
-                <dd className="whitespace-nowrap font-display text-4xl font-extrabold leading-none text-amber-400">
+                <dd className="whitespace-nowrap font-display text-4xl font-extrabold leading-none text-slate-50">
                   {nombre}
                 </dd>
               </div>

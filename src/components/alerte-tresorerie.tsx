@@ -61,12 +61,12 @@ export function AlerteTresorerie({
           <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
           Votre entreprise est en cessation de paiements
         </p>
-        <p className="mt-1.5 text-sm leading-relaxed text-red-100/90">
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
           Elle est à l&apos;arrêt : elle ne produit plus, ne vend plus, et ses décisions ne
           sont plus simulées. {alerte.toursConsecutifs} tours de suite sous le plafond de
           découvert sans plus une créance à céder.
         </p>
-        <p className="mt-1.5 text-sm leading-relaxed text-red-100/90">
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
           Une seule chose la relève : un apport qui ramène la trésorerie au-dessus de{" "}
           <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
           Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
@@ -138,7 +138,7 @@ function Recours({
     }
     if (demande.statut === "granted") {
       return (
-        <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-3 py-2 text-sm leading-relaxed text-emerald-100/90">
+        <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-3 py-2 text-sm leading-relaxed text-slate-200">
           <span aria-hidden className="mr-1.5 font-bold text-emerald-300">
             ✓
           </span>

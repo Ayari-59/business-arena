@@ -89,7 +89,7 @@ function Panel({
 function LigneDeLecture({ lecture }: { lecture: Lecture }) {
   const teinte =
     lecture.ton === "mauvais"
-      ? "border-orange-400/40 bg-orange-950/30 text-orange-200"
+      ? "border-orange-400 bg-slate-950 text-orange-200"
       : lecture.ton === "bon"
         ? "border-teal-400/30 bg-teal-950/30 text-teal-200"
         : "border-white/10 bg-slate-950 text-slate-300";

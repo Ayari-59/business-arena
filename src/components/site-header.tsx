@@ -197,7 +197,7 @@ export function SiteHeader() {
                 aria-current={estCourant(lien.href) ? "page" : undefined}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium shadow-sm transition duration-200 hover:-translate-y-px motion-reduce:transform-none motion-reduce:transition-none ${
                   lien.acces === "enseignant"
-                    ? "border-amber-400/45 bg-gradient-to-b from-amber-400/15 to-amber-400/5 text-amber-200 shadow-amber-950/40 hover:border-amber-400 hover:from-amber-400/25 hover:to-amber-400/10"
+                    ? "border-amber-400 text-amber-200 hover:bg-amber-400 hover:text-slate-950"
                     : "border-white/15 bg-gradient-to-b from-white/8 to-transparent text-slate-200 hover:border-white/35 hover:from-white/12"
                 }`}
               >
@@ -288,9 +288,7 @@ export function SiteHeader() {
                   >
                     <span
                       className={`shrink-0 text-xs font-semibold uppercase tracking-surtitre transition-colors ${
-                        ouvertGroupe
-                          ? "text-amber-300/90"
-                          : "text-slate-400 group-hover:text-slate-200"
+                        ouvertGroupe ? "text-slate-50" : "text-slate-400 group-hover:text-slate-200"
                       }`}
                     >
                       {groupe.titre}
@@ -299,7 +297,7 @@ export function SiteHeader() {
                         distingue une rubrique d'un lien, sans l'écrire. */}
                     <span
                       aria-hidden
-                      className={`h-px flex-1 transition-colors ${ouvertGroupe ? "bg-amber-400/25" : "bg-white/10"}`}
+                      className={`h-px flex-1 transition-colors ${ouvertGroupe ? "bg-amber-400" : "bg-white/10"}`}
                     />
                     <svg
                       aria-hidden
@@ -379,7 +377,7 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
       aria-current={courant ? "page" : undefined}
       className={`group block rounded-lg px-3 py-2 transition duration-200 motion-reduce:transition-none ${
         principale
-          ? "border border-amber-400/40 bg-gradient-to-b from-amber-400/12 to-amber-950/20 shadow-[0_6px_20px_-12px] shadow-amber-400/60 hover:border-amber-400 hover:from-amber-400/20"
+          ? "border border-amber-400 hover:bg-white/5"
           : `border-l-2 hover:bg-white/5 ${
               courant ? "border-amber-400/70 bg-white/5" : "border-transparent hover:border-amber-400/50"
             }`

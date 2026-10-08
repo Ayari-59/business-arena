@@ -21,9 +21,14 @@ export function placeEnToutesLettres(rang: number): string {
   return rang === 1 ? "1re place" : `${rang}e place`;
 }
 
-/** La classe d'une ligne de classement : un filet d'or pour la tête. */
-export function classeLigneDeRang(rang: number): string {
-  return rang === 1 ? "ligne-rang-1" : "";
+/**
+ * La classe d'une ligne de classement : un filet d'or pour la tête, et pour la
+ * ligne de l'équipe du joueur (`moi`) un filet ORANGE plein sur un fond neutre
+ * (`ligne-moi`, globals.css). Elle était sur un voile pêche : la ligne choisie
+ * se signale par le filet, pas par une teinte douce.
+ */
+export function classeLigneDeRang(rang: number, moi = false): string {
+  return [rang === 1 ? "ligne-rang-1" : "", moi ? "ligne-moi" : ""].filter(Boolean).join(" ");
 }
 
 /**

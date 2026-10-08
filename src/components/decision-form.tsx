@@ -237,7 +237,7 @@ function EquipmentPanel({
                     <span className="shrink-0 text-xs text-slate-400">max {t.maxPerRound}</span>
                   </span>
                   {buy > 0 ? (
-                    <span className="mt-0.5 block text-xs text-emerald-300/80">
+                    <span className="mt-0.5 block text-xs text-emerald-300">
                       = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
                     </span>
                   ) : null}
@@ -268,7 +268,7 @@ function EquipmentPanel({
                     <span className="shrink-0 text-xs text-slate-400">max {owned}</span>
                   </span>
                   {sell > 0 ? (
-                    <span className="mt-0.5 block text-xs text-red-300/80">
+                    <span className="mt-0.5 block text-xs text-red-300">
                       = {Math.round(sell * avgBook * t.resaleRatio).toLocaleString("fr-FR")} € (VNC {Math.round(sell * avgBook).toLocaleString("fr-FR")} €)
                     </span>
                   ) : null}
@@ -2676,7 +2676,7 @@ export function DecisionForm({
                           Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
                         </span>
                       ) : (
-                        <span className="text-emerald-400/60">Approvisionnement fiable</span>
+                        <span className="text-emerald-400">Approvisionnement fiable</span>
                       )}
                     </span>
                   </span>
@@ -2764,7 +2764,7 @@ export function DecisionForm({
                   actif
                     ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
                     : fait
-                      ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300/80 hover:text-emerald-200"
+                      ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300 hover:text-emerald-200"
                       : "border-white/10 text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -3686,7 +3686,7 @@ export function DecisionForm({
         // seule action est offerte à la fois.
         <div
           role="alert"
-          className={`border-t border-orange-400/30 pt-3 ${
+          className={`border-t border-orange-400 pt-3 ${
             modeCartes
               ? // EN PARCOURS, la question prend la place du pied fixe : posée sous un long
                 // récapitulatif, elle restait hors de l'écran.
@@ -3709,7 +3709,7 @@ export function DecisionForm({
             <button
               type="button"
               onClick={lesModifier}
-              className="min-h-11 rounded-lg border border-orange-400/50 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-orange-400/10"
+              className="min-h-11 rounded-lg border border-orange-400 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-white/5"
             >
               Non, je les modifie
             </button>

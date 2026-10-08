@@ -295,7 +295,7 @@ export function VueDeProjection({
                         </span>
                       ) : null}
                     </span>
-                    <span className="shrink-0 text-[clamp(1.2rem,3.4vw,2.8rem)] font-bold tabular-nums text-amber-300">
+                    <span className="shrink-0 text-[clamp(1.2rem,3.4vw,2.8rem)] font-bold tabular-nums text-slate-50">
                       {row.ipg.toFixed(1)}
                     </span>
                   </li>

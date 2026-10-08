@@ -401,8 +401,8 @@ export function PeriodDashboard({
                       <li
                         key={row.name}
                         className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
-                          row.isPlayer ? "bg-amber-400/10 text-amber-200" : "bg-slate-950 text-slate-300"
-                        } ${classeLigneDeRang(row.rank)}`}
+                          row.isPlayer ? "text-amber-200" : "bg-slate-950 text-slate-300"
+                        } ${classeLigneDeRang(row.rank, row.isPlayer)}`}
                       >
                         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <PastilleDeRang rang={row.rank} moi={row.isPlayer} />

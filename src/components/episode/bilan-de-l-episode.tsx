@@ -438,11 +438,7 @@ export function BilanDeLEpisode({
             <li
               key={c.texte}
               className={`max-w-3xl rounded-r-lg border-l-2 bg-slate-950 py-2.5 pl-3.5 pr-3 text-sm leading-relaxed text-slate-200 ${
-                c.score >= 1
-                  ? "border-emerald-400"
-                  : c.score > 0
-                    ? "border-amber-400"
-                    : "border-rose-400"
+                c.score >= 1 ? "border-emerald-400" : c.score > 0 ? "filet-or" : "border-rose-400"
               }`}
             >
               <span className="sr-only">
@@ -452,8 +448,10 @@ export function BilanDeLEpisode({
             </li>
           ))}
         </ul>
-        <div className="rounded-lg border border-amber-400/40 bg-amber-400/10 p-4">
-          <p className="text-xs font-semibold uppercase tracking-etiquette text-amber-300">
+        {/* L'ENSEIGNEMENT DU BILAN, EN OR : un filet et un surtitre dorés, sans
+            fond pâle. L'or dit ce qu'on retient ; l'orange reste à l'action. */}
+        <div className="filet-or rounded-r-lg border-l-4 bg-slate-950 p-4">
+          <p className="texte-or text-xs font-semibold uppercase tracking-etiquette">
             Votre axe de travail
           </p>
           <p className="mt-1 font-display text-lg font-semibold text-slate-50">{axe.titre}</p>

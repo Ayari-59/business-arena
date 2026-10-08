@@ -80,15 +80,15 @@ export const SECTOR_LABELS: Record<Sector, string> = {
 };
 
 export const SECTOR_COLORS: Record<Sector, { accent: string; bg: string }> = {
-  industrie: { accent: "text-blue-400", bg: "bg-blue-400/10" },
-  commerce: { accent: "text-pink-400", bg: "bg-pink-400/10" },
-  ecommerce: { accent: "text-violet-400", bg: "bg-violet-400/10" },
-  hotellerie: { accent: "text-amber-400", bg: "bg-amber-400/10" },
-  restauration: { accent: "text-orange-400", bg: "bg-orange-400/10" },
-  services: { accent: "text-cyan-400", bg: "bg-cyan-400/10" },
-  abonnement: { accent: "text-lime-400", bg: "bg-lime-400/10" },
-  batiment: { accent: "text-yellow-400", bg: "bg-yellow-400/10" },
-  transport: { accent: "text-teal-400", bg: "bg-teal-400/10" },
+  industrie: { accent: "text-[color:var(--secteur-industrie)]", bg: "bg-slate-800" },
+  commerce: { accent: "text-[color:var(--secteur-commerce)]", bg: "bg-slate-800" },
+  ecommerce: { accent: "text-[color:var(--secteur-ecommerce)]", bg: "bg-slate-800" },
+  hotellerie: { accent: "text-[color:var(--secteur-hotellerie)]", bg: "bg-slate-800" },
+  restauration: { accent: "text-[color:var(--secteur-restauration)]", bg: "bg-slate-800" },
+  services: { accent: "text-[color:var(--secteur-services)]", bg: "bg-slate-800" },
+  abonnement: { accent: "text-[color:var(--secteur-abonnement)]", bg: "bg-slate-800" },
+  batiment: { accent: "text-[color:var(--secteur-batiment)]", bg: "bg-slate-800" },
+  transport: { accent: "text-[color:var(--secteur-transport)]", bg: "bg-slate-800" },
 };
 
 export interface ScenarioVocabulary {

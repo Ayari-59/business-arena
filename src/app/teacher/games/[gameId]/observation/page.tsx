@@ -187,7 +187,7 @@ export default async function ObservationPage({
           </section>
 
           {seance.decrochage ? (
-            <p className="rounded-lg border border-white/10 border-l-2 border-l-amber-400/70 bg-slate-900 px-3 py-2.5 text-sm leading-snug text-slate-300">
+            <p className="rounded-lg border border-white/10 border-l-2 border-l-amber-400 bg-slate-900 px-3 py-2.5 text-sm leading-snug text-slate-300">
               <span className="text-amber-300">Décrochage au tour {seance.decrochage.tour}</span>{" "}
               : {seance.decrochage.equipesPerdues} équipe
               {seance.decrochage.equipesPerdues > 1 ? "s" : ""} de moins qu&apos;au tour

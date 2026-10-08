@@ -66,7 +66,7 @@ export function CompetitiveBenchmark({
             {benchmark.competitors.map((c) => (
               <tr
                 key={c.name}
-                className={`border-t border-white/5 ${c.isPlayer ? "bg-amber-400/5 text-amber-100" : ""}`}
+                className={`border-t border-white/5 ${c.isPlayer ? "ligne-moi text-amber-100" : ""}`}
               >
                 <td className="py-2 pr-3">
                   <Embleme

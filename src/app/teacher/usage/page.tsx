@@ -49,7 +49,7 @@ export default async function UsagePage() {
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {totals.map((t) => (
           <div key={t.label} className="carte p-3 sm:p-5">
-            <p className="text-2xl font-bold tabular-nums text-amber-400">{t.value}</p>
+            <p className="text-2xl font-bold tabular-nums text-slate-50">{t.value}</p>
             <p className="mt-1 text-xs leading-tight text-slate-400">{t.label}</p>
           </div>
         ))}

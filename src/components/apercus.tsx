@@ -96,7 +96,7 @@ export function ApercuArene({ className = "" }: { className?: string }) {
           </span>
         </div>
 
-        <div className="mt-2 overflow-hidden rounded-xl border border-amber-400/30 bg-gradient-to-b from-amber-400/10 to-transparent">
+        <div className="mt-2 overflow-hidden rounded-xl border border-amber-400/30 bg-amber-400/10">
           <p className="flex flex-wrap items-baseline justify-between gap-x-2 px-3 pt-2.5 text-xs uppercase tracking-etiquette text-amber-300">
             <span>Tour 4 · à jouer</span>
             <span>12 min restantes</span>

@@ -67,21 +67,21 @@ export const PALETTES: Palette[] = [
   {
     code: "arene",
     nom: "Orange arène",
-    description: "Un orange d'action sur le marine. L'habillage d'origine.",
+    description: "Un orange ambré d'action sur le marine. L'habillage d'origine.",
     sombre: {
-      50: "#fff4ec",
-      100: "#ffe6d5",
-      200: "#ffd3b8",
-      300: "#ffb488",
-      400: "#ff9455",
-      500: "#ff6a1a",
-      600: "#e8590c",
-      700: "#b8460a",
-      800: "#8a3407",
-      900: "#5c2405",
-      950: "#2e1607",
+      50: "#ff8a1f",
+      100: "#ff8a1f",
+      200: "#ff8a1f",
+      300: "#ff8a1f",
+      400: "#ff8a1f",
+      500: "#ff8a1f",
+      600: "#e67300",
+      700: "#b35c00",
+      800: "#8a4400",
+      900: "#5c2d00",
+      950: "#2b1600",
     },
-    clair: { encre: "#b8460a", remplissage: "#b8460a", voile: "#fff1e6" },
+    clair: { encre: "#a35200", remplissage: "#a35200", voile: "#f0f2f4" },
   },
   {
     code: "cobalt",
@@ -194,8 +194,20 @@ export function feuilleDePalette(code: CodePalette): string {
   const aplat =
     "--accent-plein:var(--color-amber-500);--accent-plein-survol:var(--color-amber-500);" +
     "--accent-plein-texte:var(--color-slate-950);--accent-plein-ombre:var(--color-amber-700);";
+  // CE QUI N'APPARTIENT QU'À L'ORANGE DE L'ARÈNE. Ses voiles d'état neutres
+  // (sur le papier comme sur le marine), son accent toujours plein et son
+  // anneau ton sur ton (globals.css) sont des choix de l'arène, pas du site :
+  // une autre palette les remet à `initial`, et les règles retombent sur
+  // l'accent de la palette, dilué comme la classe le demande, et sur
+  // l'anneau teinté de son accent.
+  const propresALArene =
+    "--accent-sans-dilution:initial;--voile-choisi-leger:initial;" +
+    "--voile-choisi:initial;--voile-choisi-fort:initial;";
+  const propresAuTableau =
+    "--halo-de-page:color-mix(in oklab,var(--accent-plein) 45%,transparent);" +
+    "--voile-choisi-marine-leger:initial;--voile-choisi-marine:initial;--voile-choisi-marine-fort:initial;";
   return (
-    `html[data-theme="clair"]{${lignes(echelleClaire(palette))}${aplat}}` +
-    `html[data-theme="clair"] .contre-jour,html[data-theme="clair"] .ardoise{${lignes(palette.sombre)}${aplat}}`
+    `html[data-theme="clair"]{${lignes(echelleClaire(palette))}${aplat}${propresALArene}}` +
+    `html[data-theme="clair"] .contre-jour,html[data-theme="clair"] .ardoise{${lignes(palette.sombre)}${aplat}${propresAuTableau}}`
   );
 }

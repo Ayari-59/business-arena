@@ -683,7 +683,7 @@ export function SituationDebrief({
               le reste se lit ici, pour que la leçon soit entière — sans être comptée « manquée ». */}
           {debrief.autresCauses.length > 0 ? (
             <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-950/10 px-3 py-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300/80">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
                 {debrief.autresCauses.length > 1
                   ? "À retenir aussi : d'autres bonnes causes, non proposées à votre niveau"
                   : "À retenir aussi : une autre bonne cause, non proposée à votre niveau"}

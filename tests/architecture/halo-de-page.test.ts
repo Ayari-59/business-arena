@@ -67,6 +67,38 @@ describe("le halo de page", () => {
     );
   });
 
+  it("est un bleu plein de la gamme sur le marine, et le titre s'y lit encore", () => {
+    // Orange dilué, à 18 puis à 45 %, l'anneau sortait cuivré : le
+    // propriétaire ne voulait plus de ces teintes chaudes. C'est désormais un
+    // bleu PLEIN, plus clair que le marine, ton sur ton, sans transparence.
+    const bloc = CSS.match(
+      /:root,\s*\[data-theme="clair"\] \.contre-jour,\s*\[data-theme="clair"\] \.ardoise\s*\{[^}]*--halo-de-page:\s*([^;]+);/,
+    );
+    expect(bloc, "teinte de l'anneau sur le marine introuvable").not.toBeNull();
+    const teinte = bloc![1]!.trim();
+    expect(teinte, "l'anneau redevient une couleur diluée").toMatch(/^#[0-9a-f]{6}$/i);
+    const [r, , b] = [1, 3, 5].map((i) => parseInt(teinte.slice(i, i + 2), 16));
+    expect(b!, `${teinte} n'est plus un bleu`).toBeGreaterThan(r! + 40);
+    const lum = (hex: string) => {
+      const [x, y, z] = [1, 3, 5].map((i) => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * x! + 0.7152 * y! + 0.0722 * z!;
+    };
+    const ratio = (a: string, c: string) => {
+      const [la, lc] = [lum(a), lum(c)];
+      return (Math.max(la, lc) + 0.05) / (Math.min(la, lc) + 0.05);
+    };
+    expect(lum(teinte), "l'anneau doit être plus clair que le marine").toBeGreaterThan(
+      lum("#0b2545"),
+    );
+    // Le titre du héros passe dessus : le blanc cassé de la première ligne et
+    // l'orange ambré de la seconde (titre de grande taille, seuil 3:1).
+    expect(ratio("#f6f3ec", teinte)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio("#ff8a1f", teinte)).toBeGreaterThanOrEqual(3);
+  });
+
   it("n'est redessiné à la main nulle part", () => {
     const fautes = TSX.filter(
       ({ chemin, source }) =>

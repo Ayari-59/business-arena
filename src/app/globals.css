@@ -32,21 +32,51 @@
 
   --animate-plan-ouvre: plan-ouvre 0.18s ease-out;
 
-  /* L'orange d'action, sur le marine du tableau. Le 400 est l'orange CLAIR
-     (texte et liens sur le marine, 5,6 pour 1 sur sa surface relevée), le 500
-     l'orange vif des aplats, le 700 l'orange foncé de l'ombre portée du
-     bouton. L'échelle va du pâle au profond sans s'inverser. */
-  --color-amber-50: #fff4ec;
-  --color-amber-100: #ffe6d5;
-  --color-amber-200: #ffd3b8;
-  --color-amber-300: #ffb488;
-  --color-amber-400: #ff9455;
-  --color-amber-500: #ff6a1a;
-  --color-amber-600: #e8590c;
-  --color-amber-700: #b8460a;
-  --color-amber-800: #8a3407;
-  --color-amber-900: #5c2405;
-  --color-amber-950: #2e1607;
+  /* L'ORANGE AMBRÉ DE L'ACTION, sur le marine du tableau. Pas de pastel : du
+     50 au 500, un seul orange, #ff8a1f, pour tout ce qui se touche ou se
+     décide : texte, lien, filet, aplat (jamais une valeur chiffrée, qui est
+     une information). Il tient 6,5 pour 1 sur le marine #0b2545, 5,2 sur sa
+     surface relevée #13355f. Le 700 est
+     l'orange brûlé de l'ombre portée du bouton. Les paliers clairs ont été
+     des pêches et des saumons (#ff9455, #ffb488, #ffd3b8…), puis un orange
+     rouge #ff6a1a : une couleur d'accent est franche, et c'est celle-ci.
+     L'échelle ne s'inverse pas, elle est à plat jusqu'au 500, comme l'encre
+     du papier. */
+  --color-amber-50: #ff8a1f;
+  --color-amber-100: #ff8a1f;
+  --color-amber-200: #ff8a1f;
+  --color-amber-300: #ff8a1f;
+  --color-amber-400: #ff8a1f;
+  --color-amber-500: #ff8a1f;
+  --color-amber-600: #e67300;
+  --color-amber-700: #b35c00;
+  --color-amber-800: #8a4400;
+  --color-amber-900: #5c2d00;
+  --color-amber-950: #2b1600;
+
+  /* LE GAIN ET LA PERTE, FRANCS. Le vert et le rouge ne disent que des
+     résultats (variations, gains, pertes, alertes), jamais un décor. Sur le
+     marine, les paliers clairs de Tailwind étaient des pastels (#fca5a5,
+     #fda4af, #6ee7b7) : le rouge #ff7070 et le vert #3ccf7e tiennent 4,6 et
+     6,1 pour 1 sur la surface relevée #13355f. Le rose, au site, dit aussi la
+     perte : il prend le même rouge. Le papier, lui, renverse l'échelle de
+     Tailwind (theme-clair.css) et garde ses rouges et verts foncés. */
+  --color-red-200: #ff7070;
+  --color-red-300: #ff7070;
+  --color-red-400: #ff7070;
+  --color-rose-200: #ff7070;
+  --color-rose-300: #ff7070;
+  --color-rose-400: #ff7070;
+  --color-emerald-200: #3ccf7e;
+  --color-emerald-300: #3ccf7e;
+  --color-emerald-400: #3ccf7e;
+
+  /* LA DONNÉE, EN BLEU DÉSATURÉ. Le bleu dit le marché et la donnée de
+     contexte, très ponctuellement : un bleu franc et désaturé, #8fb0dc
+     (5,5 pour 1 sur #13355f), plutôt que le bleu ciel pastel de Tailwind. */
+  --color-sky-200: #8fb0dc;
+  --color-sky-300: #8fb0dc;
+  --color-sky-400: #8fb0dc;
 
   /* LES PETITS RAYONS. Un tableau des scores a des angles, pas des galets :
      trois à quatre pixels partout où le site arrondissait de huit à douze. Les
@@ -79,10 +109,10 @@
 /* LES COULEURS DE LA MAISON QUI NE SONT PAS DES ÉCHELLES.
  *
  * L'aplat d'action (bouton principal, barre de progression, pastille active)
- * est l'orange VIF partout, sur le papier comme sur le marine, et le texte
- * qu'on y pose est MARINE : le blanc sur cet orange ne tient que 3 pour 1, le
- * marine en tient 5,4. C'est ce qui permet de garder l'orange de la maquette
- * au lieu d'un orange brûlé.
+ * est l'orange AMBRÉ partout, sur le papier comme sur le marine, et le texte
+ * qu'on y pose est MARINE : le blanc sur cet orange ne tient que 2,4 pour 1,
+ * le marine en tient 6,5. C'est ce qui permet de garder un orange franc au
+ * lieu d'un orange brûlé.
  *
  * Elles passent par des variables pour qu'une palette d'accent choisie par
  * l'administrateur (config/palettes.ts) puisse les reprendre : la feuille
@@ -90,10 +120,12 @@
 :root {
   --marine: #0b2545;
   --marine-releve: #13355f;
-  --accent-plein: #ff6a1a;
-  --accent-plein-survol: #ff7f3a;
+  --accent-plein: #ff8a1f;
+  --accent-plein-survol: #ffa24d;
   --accent-plein-texte: #0b2545;
-  --accent-plein-ombre: #b8460a;
+  --accent-plein-ombre: #b35c00;
+  /* L'accent se pose plein, jamais dilué (voir « L'ACCENT NE SE DILUE PAS »). */
+  --accent-sans-dilution: 100%;
   /* L'or des distinctions : le podium, le meilleur score. Jamais l'action.
      Ses compagnons (or en texte, argent, bronze) sont juste dessous. */
   --or-distinction: #f4b400;
@@ -113,13 +145,23 @@
  *             filet #a07c00, 3,9 sur le blanc, 3,6 sur la page, 3,9 sur le marine ;
  *   · argent  #d5dbe4, chiffre marine 11,1 pour 1, 11,1 sur le marine ;
  *             filet #6b7a8f, 4,4 sur le blanc, 4,1 sur la page, 3,5 sur le marine ;
- *   · bronze  #e8b48a, chiffre marine 8,3 pour 1, 8,3 sur le marine ;
- *             filet #b06a33, 4,2 sur le blanc, 4,0 sur la page, 3,6 sur le marine.
+ *   · bronze  #cd7f32, chiffre marine 4,9 pour 1, 4,9 sur le marine ;
+ *             filet #a8622a, 4,7 sur le blanc, 4,4 sur la page, 3,3 sur le marine.
+ *
+ * LE BRONZE EST UN MÉTAL, PAS UN SAUMON. Il a été #e8b48a, un abricot pâle
+ * qui se lisait comme une pêche à côté de l'or : il est passé au bronze
+ * saturé, #cd7f32. Le chiffre y reste marine (4,9 pour 1) : le blanc n'y
+ * tiendrait que 3,1.
  *
  * L'OR EN TEXTE N'EST PAS L'OR VIF. #f4b400 ne tient que 1,9 pour 1 sur le
  * blanc : un mot doré posé sur le papier prend l'or foncé, #8a6400 (5,4 sur
  * le blanc, 5,0 sur la page, 4,9 sur le voile orangé d'une ligne choisie).
  * Sur le marine, l'or vif se lit (8,3 pour 1, 6,7 sur une carte relevée).
+ *
+ * L'OR DIT AUSSI LE VERDICT. Au-delà du podium, il marque ce que le marché
+ * a tranché et ce qu'on en retient : le verdict du tour, le constat d'un
+ * bilan, la meilleure option révélée, le record (`texte-or`, `filet-or`).
+ * Un titre ou un filet, jamais un fond pâle, et jamais l'action.
  *
  * La couleur n'est jamais seule : le rang reste écrit dans la pastille.
  * ------------------------------------------------------------------------- */
@@ -130,8 +172,8 @@
   --or-filet: #f4b400;
   --argent: #d5dbe4;
   --argent-filet: #6b7a8f;
-  --bronze: #e8b48a;
-  --bronze-filet: #b06a33;
+  --bronze: #cd7f32;
+  --bronze-filet: #a8622a;
 }
 
 /* Sur le papier, l'or foncé pour le texte et le filet : voir le bloc du
@@ -175,10 +217,30 @@
   box-shadow: inset 0 0 0 1.5px var(--bronze-filet);
 }
 
-/* La ligne de tête d'un classement : un filet d'or à gauche. La ligne de
-   l'équipe du joueur garde son voile orangé ; les deux se cumulent. */
+/* La ligne de tête d'un classement : un filet d'or à gauche. */
 .ligne-rang-1 {
   box-shadow: inset 3px 0 0 var(--or-filet);
+}
+
+/* LA LIGNE DE L'ÉQUIPE DU JOUEUR : un filet ORANGE plein à gauche, sur un fond
+   neutre. Elle a été sur un voile pêche : la ligne qu'on cherche des yeux se
+   signale par le filet de l'action, pas par une teinte douce. Le fond est le
+   voile d'un état choisi (gris froid tiré du marine, voir « LE VOILE D'UN
+   ÉTAT CHOISI ») : l'encre orange y tient 5,0 pour 1. Sur le marine, c'est
+   le marine lui-même, posé sur la carte, qui assombrit la ligne d'un cran
+   (l'orange ambré y tient 5,9 pour 1, un blanc léger l'aurait fait tomber).
+
+   Quand l'équipe du joueur mène, le filet orange prend la place du filet
+   d'or : l'or reste dit par la pastille du rang, la ligne dit « c'est vous ». */
+:root,
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  --fond-ligne-moi: color-mix(in srgb, var(--marine) 50%, transparent);
+}
+.ligne-moi,
+.ligne-rang-1.ligne-moi {
+  background-color: var(--fond-ligne-moi);
+  box-shadow: inset 4px 0 0 var(--accent-plein);
 }
 
 /* Un mot doré (la coupe, « Victoire », le record) et un cadre doré. */
@@ -525,12 +587,46 @@
     0 10px 28px -14px rgb(0 0 0 / 0.5);
   --creux-champ: inset 0 1px 2px rgb(0 0 0 / 0.25);
   --lumiere-carte: color-mix(in oklab, #fff 4%, transparent);
-  /* L'anneau orange du haut de page (voir `.halo-de-page`) : 45 % d'orange
-     sur le marine, un orange brûlé franc. À 18 %, comme sur la maquette où
-     il ne mesurait que 220 px, il virait au brun violacé une fois agrandi. */
-  --halo-de-page: color-mix(in oklab, var(--accent-plein) 45%, transparent);
+  /* L'anneau du haut de page (voir `.halo-de-page`) : un bleu PLEIN de la
+     gamme du tableau, #1b416f, ton sur ton sur le marine. Il a été un orange
+     dilué, à 18 puis à 45 % : sur le marine, un orange dilué sort cuivré. */
+  --halo-de-page: #1b416f;
   /* Le filet d'une carte : un trait de lumière sur le marine. */
   --filet-carte: color-mix(in oklab, #fff 10%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+ * LES MÉTIERS : DES TEINTES DÉSATURÉES, FONCTIONNELLES.
+ *
+ * Une couleur distingue un métier (sa puce, son nom, sa barre), très
+ * ponctuellement. Elle était tirée des paliers clairs de Tailwind : des
+ * pastels sur le marine, et pour deux métiers le rouge et le vert, qui ne
+ * disent que la perte et le gain. Ce sont désormais des teintes DÉSATURÉES,
+ * ni pastel ni franches : sable, vieux rose, lavande grise, bleu acier, terre
+ * cuite, vert-de-gris, olive, ocre, bleu-vert gris. Les variantes d'un
+ * scénario reprennent la teinte de leur métier, un cran plus claire. Toutes
+ * tiennent 4,6 pour 1 au moins sur le fond d'un champ du marine (#1b416f) ;
+ * sur le papier, leur version foncée (posée avec le papier, plus bas) tient
+ * 4,8 sur la page.
+ * ------------------------------------------------------------------------- */
+:root,
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  --secteur-industrie: #cba871;
+  --secteur-commerce: #d2a0ad;
+  --secteur-ecommerce: #b4a7d1;
+  --secteur-hotellerie: #95b1cc;
+  --secteur-restauration: #cfa687;
+  --secteur-services: #88b7ab;
+  --secteur-abonnement: #a9b673;
+  --secteur-batiment: #c2b067;
+  --secteur-transport: #88b6c0;
+  --secteur-nova-gamme: #d4b88c;
+  --secteur-hotel-gamme: #a4bbd0;
+  --secteur-conseil-gamme: #9fc3b7;
+  --secteur-bistrot-gamme: #d4b196;
+  --secteur-ecommerce-gamme: #baaed3;
+  --secteur-boutique-mono: #d4a6b2;
 }
 
 @utility carte {
@@ -792,31 +888,57 @@ body {
   --halo-de-page: transparent;
   /* Le filet des cartes blanches : le gris bleuté de la maquette. */
   --filet-carte: #dbe2ee;
-  /* L'ORANGE QUI SE LIT SUR LE BLANC. L'orange vif ne tient que 2,9 pour 1
-     sur le fond clair : bon pour un aplat, illisible pour un mot. Tout ce qui
-     est TEXTE sur le papier (liens, surtitres, chiffres accentués, filets) prend
-     donc l'orange foncé de l'ombre du bouton, #b8460a : 5,0 pour 1 sur la page,
-     5,4 sur une carte blanche, 4,7 sur un champ. Le palier 500 sert de
-     remplissage quand un texte CLAIR doit s'y poser (5,0 pour 1) ; l'aplat
-     d'action, lui, garde l'orange vif avec un texte marine (plus bas,
-     « L'APLAT D'ACTION »). Les paliers 800 à 950 sont des voiles, pas des
-     encres. */
-  --color-amber-50: #8a3407;
-  --color-amber-100: #9c3b08;
-  --color-amber-200: #b8460a;
-  --color-amber-300: #b8460a;
-  --color-amber-400: #b8460a;
-  --color-amber-500: #b8460a;
-  --color-amber-600: #b8460a;
-  --color-amber-700: #b8460a;
-  --color-amber-800: #ffd2b5;
-  --color-amber-900: #ffe6d6;
-  --color-amber-950: #fff1e6;
+  /* L'ORANGE QUI SE LIT SUR LE BLANC. L'orange ambré ne tient que 2,4 pour
+     1 sur le fond clair : bon pour un aplat, illisible pour un mot. Tout ce
+     qui est TEXTE sur le papier (liens, surtitres, chiffres accentués,
+     filets) prend donc un orange brûlé de même teinte, #a35200 : 5,2 pour 1
+     sur la page, 5,6 sur une carte blanche, 4,9 sur un champ. Le palier 500
+     sert de remplissage quand un texte CLAIR doit s'y poser (5,6 pour 1) ;
+     l'aplat d'action, lui, garde l'orange ambré avec un texte marine (plus
+     bas, « L'APLAT D'ACTION »). Les paliers 800 à 950 sont des fonds, pas
+     des encres, et ces fonds sont NEUTRES : ils ont été des pêches (#ffd2b5,
+     #ffe6d6, #fff1e6), qui donnaient à chaque encadré d'alerte et à chaque
+     état choisi un air de saumon. Ils sont tirés du marine : le gris bleuté
+     des filets (800) et deux voiles froids (900 et 950, ceux d'une ligne
+     choisie, plus bas). L'encre orange y tient 4,8 et 5,0 pour 1. */
+  --color-amber-50: #7a3c00;
+  --color-amber-100: #8a4400;
+  --color-amber-200: #a35200;
+  --color-amber-300: #a35200;
+  --color-amber-400: #a35200;
+  --color-amber-500: #a35200;
+  --color-amber-600: #a35200;
+  --color-amber-700: #a35200;
+  --color-amber-800: #dbe2ee;
+  --color-amber-900: #ebeef0;
+  --color-amber-950: #f0f2f4;
   /* L'OR QUI SE LIT SUR LE BLANC (voir « LE PODIUM ») : l'or vif ne tient que
      1,9 pour 1 sur la page, le texte doré prend l'or foncé, le filet un or
      moyen qui tient 3 pour 1 sur le blanc comme sur le marine. */
   --or-texte: #8a6400;
   --or-filet: #a07c00;
+  /* Les voiles d'un état choisi, neutres (voir « LE VOILE D'UN ÉTAT
+     CHOISI »), et le fond de la ligne du joueur (« ligne-moi »). */
+  --voile-choisi-leger: color-mix(in srgb, var(--marine) 4%, #fff);
+  --voile-choisi: color-mix(in srgb, var(--marine) 6%, #fff);
+  --voile-choisi-fort: color-mix(in srgb, var(--marine) 8%, #fff);
+  --fond-ligne-moi: var(--voile-choisi, color-mix(in srgb, var(--accent-plein) 9%, #fff));
+  /* Les teintes des métiers, foncées pour le papier (voir « LES MÉTIERS »). */
+  --secteur-industrie: #7f6a49;
+  --secteur-commerce: #8a636f;
+  --secteur-ecommerce: #72698b;
+  --secteur-hotellerie: #5c7083;
+  --secteur-restauration: #846854;
+  --secteur-services: #56736c;
+  --secteur-abonnement: #6a714d;
+  --secteur-batiment: #776e46;
+  --secteur-transport: #52737c;
+  --secteur-nova-gamme: #7a6c56;
+  --secteur-hotel-gamme: #636f7a;
+  --secteur-conseil-gamme: #5f716b;
+  --secteur-bistrot-gamme: #7c6a5c;
+  --secteur-ecommerce-gamme: #706a7d;
+  --secteur-boutique-mono: #7f676d;
 }
 
 /* ---------------------------------------------------------------------------
@@ -828,7 +950,7 @@ body {
  * main, cette encre donne un orange brûlé, sans l'élan de la maquette. Les
  * deux usages partagent la même classe ; seul le fond se distingue ici : un
  * aplat d'accent est l'orange vif, et le texte qu'on y pose (`text-slate-950`,
- * le fond de la page sur le papier) devient marine, 5,4 pour 1, là où un blanc
+ * le fond de la page sur le papier) devient marine, 6,5 pour 1, là où un blanc
  * ne tiendrait que 3.
  * ------------------------------------------------------------------------- */
 [data-theme="clair"] :is(.bg-amber-400, .bg-amber-500) {
@@ -842,17 +964,30 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
- * LE VOILE D'UN ÉTAT CHOISI : ORANGÉ, PAS ROSE.
+ * LE VOILE D'UN ÉTAT CHOISI : NEUTRE, ET LE FILET ORANGE.
  *
- * Une option cochée, l'étape en cours, le niveau retenu se signalent par un
- * fond d'accent très dilué (`bg-amber-400/10`) et un filet d'accent. Sur le
- * clair, l'accent est l'ENCRE orange foncé, #b8460a : diluée dans la
- * transparence et posée sur un fond bleuté, elle donne un rose sale. Le voile
- * se tire donc de l'orange VIF, mélangé à du BLANC plutôt qu'à la
- * transparence : neuf pour cent font #fff3ea, un orangé franc et clair qui ne
- * dépend plus du fond dessous. L'encre orange y tient 4,9 pour 1, le texte
- * secondaire 6,2. Les dilutions fortes (40 % et plus) sont des barres et des
- * points, pas des fonds de texte : elles gardent la transparence.
+ * Une option cochée, l'étape en cours, le niveau retenu, la ligne du joueur
+ * se signalent par un fond (`bg-amber-400/10`) et un filet d'accent. Sur le
+ * clair, l'accent est l'ENCRE orange brûlé, #a35200 : diluée dans la
+ * transparence et posée sur un fond bleuté, elle donnait un rose sale ; tirée
+ * de l'orange vif mélangé au blanc, elle donnait une pêche (#fff3ea, #ffe7d6).
+ * Ni l'un ni l'autre ne fait « business ». Le fond d'un état choisi est donc
+ * NEUTRE, un gris froid tiré du marine, mélangé au blanc pour ne pas dépendre
+ * du fond dessous : six pour cent font #f0f2f4, huit #ebeef0. L'orange ne
+ * tient plus que dans le filet, plein (`border-amber-400`). Mesuré : l'encre
+ * orange y tient 5,0 et 4,8 pour 1, le texte secondaire 6,3 et 6,1, l'or
+ * foncé 4,8 et 4,6.
+ *
+ * Les dilutions fortes (40 % et plus) sont des barres et des points, pas des
+ * fonds de texte : elles prennent l'aplat d'accent, l'orange vif, PLEIN (le
+ * taux passe par `--accent-sans-dilution`, voir le bloc suivant).
+ *
+ * LES AUTRES PALETTES GARDENT LEUR VOILE. Le fond neutre est celui de
+ * l'orange de l'arène : il passe par `--voile-choisi` (et ses variantes
+ * légère et forte, posées avec le papier plus haut), que la feuille d'une
+ * autre palette remet à `initial`
+ * (config/palettes.ts) ; la règle retombe alors sur l'accent mélangé au
+ * blanc, comme avant.
  *
  * Sur le marine (bande à contre-jour, écran de chiffres), le voile reste celui
  * de l'échelle du tableau : un fond presque blanc y serait une tache.
@@ -861,36 +996,338 @@ body {
  * variantes d'état (survol, case cochée) : Tailwind compose la couleur de la
  * classe à partir de l'échelle, sans prise pour un autre palier. Le test
  * tests/architecture/voile-d-etat.test.ts refuse une dilution employée dans
- * une page et absente d'ici. Le filet, lui, reste l'encre (`border-amber-400`).
+ * une page et absente d'ici.
  * ------------------------------------------------------------------------- */
 [data-theme="clair"] .bg-amber-400\/5:not(:is(.contre-jour, .ardoise) *) {
-  background-color: color-mix(in srgb, var(--accent-plein) 5%, #fff);
+  background-color: var(--voile-choisi-leger, color-mix(in srgb, var(--accent-plein) 5%, #fff));
 }
 [data-theme="clair"] .bg-amber-400\/10:not(:is(.contre-jour, .ardoise) *),
 [data-theme="clair"] .bg-amber-400\/15:not(:is(.contre-jour, .ardoise) *),
 [data-theme="clair"] .hover\:bg-amber-400\/10:hover:not(:is(.contre-jour, .ardoise) *),
 [data-theme="clair"] .has-\[\:checked\]\:bg-amber-400\/10:has(:checked):not(:is(.contre-jour, .ardoise) *) {
-  background-color: color-mix(in srgb, var(--accent-plein) 9%, #fff);
+  background-color: var(--voile-choisi, color-mix(in srgb, var(--accent-plein) 9%, #fff));
 }
 [data-theme="clair"] .bg-amber-400\/20:not(:is(.contre-jour, .ardoise) *),
 [data-theme="clair"] .bg-amber-400\/25:not(:is(.contre-jour, .ardoise) *),
 [data-theme="clair"] .hover\:bg-amber-400\/20:hover:not(:is(.contre-jour, .ardoise) *) {
-  background-color: color-mix(in srgb, var(--accent-plein) 16%, #fff);
+  background-color: var(--voile-choisi-fort, color-mix(in srgb, var(--accent-plein) 16%, #fff));
+}
+/* SUR LE MARINE, LE MÊME VOILE NEUTRE. Un orange dilué sur le marine ne
+   donne pas une pêche mais un cuivre (#303242 à 15 %) : le fond d'un état
+   choisi y est donc tiré du marine lui-même, de 30 à 70 %. Il assombrit
+   d'un cran la carte qui le porte, sans rien teinter, et l'orange vif y
+   tient 5,6 à 6,1 pour 1 ; un blanc léger, à l'inverse, éclaircissait la
+   carte et faisait tomber l'orange sous 4,5. Sur le marine nu, le voile se
+   confond avec le fond : l'état choisi se lit alors au filet orange, plein.
+   Mêmes variables, même remise à `initial` par une autre palette. */
+:root,
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  --voile-choisi-marine-leger: color-mix(in srgb, var(--marine) 30%, transparent);
+  --voile-choisi-marine: color-mix(in srgb, var(--marine) 50%, transparent);
+  --voile-choisi-marine-fort: color-mix(in srgb, var(--marine) 70%, transparent);
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) .bg-amber-400\/5 {
+  background-color: var(
+    --voile-choisi-marine-leger,
+    color-mix(in oklab, var(--color-amber-400) 5%, transparent)
+  );
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) .bg-amber-400\/10,
+[data-theme="clair"] :is(.contre-jour, .ardoise) .hover\:bg-amber-400\/10:hover,
+[data-theme="clair"]
+  :is(.contre-jour, .ardoise)
+  .has-\[\:checked\]\:bg-amber-400\/10:has(:checked) {
+  background-color: var(
+    --voile-choisi-marine,
+    color-mix(in oklab, var(--color-amber-400) 10%, transparent)
+  );
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) .bg-amber-400\/15 {
+  background-color: var(
+    --voile-choisi-marine,
+    color-mix(in oklab, var(--color-amber-400) 15%, transparent)
+  );
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) .bg-amber-400\/20,
+[data-theme="clair"] :is(.contre-jour, .ardoise) .hover\:bg-amber-400\/20:hover {
+  background-color: var(
+    --voile-choisi-marine-fort,
+    color-mix(in oklab, var(--color-amber-400) 20%, transparent)
+  );
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) .bg-amber-400\/25 {
+  background-color: var(
+    --voile-choisi-marine-fort,
+    color-mix(in oklab, var(--color-amber-400) 25%, transparent)
+  );
 }
 [data-theme="clair"] .bg-amber-400\/40:not(:is(.contre-jour, .ardoise) *) {
-  background-color: color-mix(in srgb, var(--accent-plein) 40%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--accent-plein) var(--accent-sans-dilution, 40%),
+    transparent
+  );
 }
 [data-theme="clair"] .bg-amber-400\/45:not(:is(.contre-jour, .ardoise) *) {
-  background-color: color-mix(in srgb, var(--accent-plein) 45%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--accent-plein) var(--accent-sans-dilution, 45%),
+    transparent
+  );
 }
 [data-theme="clair"] .bg-amber-400\/70:not(:is(.contre-jour, .ardoise) *) {
-  background-color: color-mix(in srgb, var(--accent-plein) 70%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--accent-plein) var(--accent-sans-dilution, 70%),
+    transparent
+  );
 }
 [data-theme="clair"] .bg-amber-400\/80:not(:is(.contre-jour, .ardoise) *) {
-  background-color: color-mix(in srgb, var(--accent-plein) 80%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--accent-plein) var(--accent-sans-dilution, 80%),
+    transparent
+  );
 }
 [data-theme="clair"] .before\:bg-amber-400\/70:not(:is(.contre-jour, .ardoise) *)::before {
-  background-color: color-mix(in srgb, var(--accent-plein) 70%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--accent-plein) var(--accent-sans-dilution, 70%),
+    transparent
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * L'ACCENT NE SE DILUE PAS.
+ *
+ * Un filet d'orange à 40 %, une flèche à 60 %, un cadre à 30 % : sur le blanc,
+ * l'orange dilué devient un saumon ; sur le marine, un cuivre. C'étaient les
+ * teintes douces que le propriétaire ne voulait plus voir. Une couleur
+ * décorative se met donc PLEINE ou pas du tout : chaque dilution d'accent que
+ * le site emploie (texte, cadre, filet, soulignement, anneau, point) est
+ * rendue ici à l'accent plein, l'encre #a35200 sur le papier, l'orange
+ * ambré #ff8a1f sur le marine. Les fonds de 5 à 25 % ne sont pas ici : ce sont des
+ * voiles d'état, rendus NEUTRES au bloc précédent.
+ *
+ * LE TAUX PASSE PAR `--accent-sans-dilution` (100 %, au :root). La feuille
+ * d'une autre palette le remet à `initial` (config/palettes.ts) : chaque règle
+ * retombe alors sur le taux écrit dans la classe, et ces palettes gardent le
+ * dessin qu'elles avaient.
+ *
+ * La liste suit les classes, une à une, comme celle des voiles : Tailwind
+ * compose chaque dilution sans prise pour un autre taux. Le test
+ * tests/architecture/accent-sans-dilution.test.ts refuse une dilution employée
+ * dans une page et absente d'ici.
+ * ------------------------------------------------------------------------- */
+.before\:bg-amber-400\/70::before,
+.bg-amber-400\/70 {
+  background-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 70%),
+    transparent
+  );
+}
+.bg-amber-400\/40 {
+  background-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 40%),
+    transparent
+  );
+}
+.bg-amber-400\/45 {
+  background-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 45%),
+    transparent
+  );
+}
+.bg-amber-400\/80 {
+  background-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 80%),
+    transparent
+  );
+}
+.border-amber-400\/20 {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 20%),
+    transparent
+  );
+}
+.border-amber-400\/25 {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 25%),
+    transparent
+  );
+}
+.border-amber-400\/30,
+.open\:border-amber-400\/30[open] {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 30%),
+    transparent
+  );
+}
+.border-amber-400\/35,
+.hover\:border-amber-400\/35:hover {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 35%),
+    transparent
+  );
+}
+.border-amber-400\/40,
+.hover\:border-amber-400\/40:hover {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 40%),
+    transparent
+  );
+}
+.border-amber-400\/45 {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 45%),
+    transparent
+  );
+}
+.border-amber-400\/50,
+.hover\:border-amber-400\/50:hover {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 50%),
+    transparent
+  );
+}
+.border-amber-400\/60,
+.hover\:border-amber-400\/60:hover {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 60%),
+    transparent
+  );
+}
+.border-amber-400\/70,
+.has-\[\:checked\]\:border-amber-400\/70:has(:checked) {
+  border-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 70%),
+    transparent
+  );
+}
+.decoration-amber-400\/40 {
+  text-decoration-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 40%),
+    transparent
+  );
+}
+.decoration-amber-400\/50 {
+  text-decoration-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 50%),
+    transparent
+  );
+}
+.hover\:decoration-amber-400\/60:hover {
+  text-decoration-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 60%),
+    transparent
+  );
+}
+.from-amber-400\/40 {
+  --tw-gradient-from: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 40%),
+    transparent
+  );
+}
+.ring-amber-300\/60 {
+  --tw-ring-color: color-mix(
+    in oklab,
+    var(--color-amber-300) var(--accent-sans-dilution, 60%),
+    transparent
+  );
+}
+.ring-amber-400\/10 {
+  --tw-ring-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 10%),
+    transparent
+  );
+}
+.ring-amber-400\/30 {
+  --tw-ring-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 30%),
+    transparent
+  );
+}
+.ring-amber-400\/40 {
+  --tw-ring-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 40%),
+    transparent
+  );
+}
+.ring-amber-400\/50 {
+  --tw-ring-color: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 50%),
+    transparent
+  );
+}
+.text-amber-100\/90 {
+  color: color-mix(in oklab, var(--color-amber-100) var(--accent-sans-dilution, 90%), transparent);
+}
+.text-amber-200\/70 {
+  color: color-mix(in oklab, var(--color-amber-200) var(--accent-sans-dilution, 70%), transparent);
+}
+.text-amber-200\/80 {
+  color: color-mix(in oklab, var(--color-amber-200) var(--accent-sans-dilution, 80%), transparent);
+}
+.text-amber-300\/80 {
+  color: color-mix(in oklab, var(--color-amber-300) var(--accent-sans-dilution, 80%), transparent);
+}
+.text-amber-300\/90 {
+  color: color-mix(in oklab, var(--color-amber-300) var(--accent-sans-dilution, 90%), transparent);
+}
+.text-amber-400\/60 {
+  color: color-mix(in oklab, var(--color-amber-400) var(--accent-sans-dilution, 60%), transparent);
+}
+.text-amber-400\/70 {
+  color: color-mix(in oklab, var(--color-amber-400) var(--accent-sans-dilution, 70%), transparent);
+}
+.text-amber-400\/80 {
+  color: color-mix(in oklab, var(--color-amber-400) var(--accent-sans-dilution, 80%), transparent);
+}
+.text-amber-400\/90 {
+  color: color-mix(in oklab, var(--color-amber-400) var(--accent-sans-dilution, 90%), transparent);
+}
+.via-amber-400\/15 {
+  --tw-gradient-via: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 15%),
+    transparent
+  );
+}
+.via-amber-400\/35 {
+  --tw-gradient-via: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 35%),
+    transparent
+  );
+}
+.via-amber-400\/55 {
+  --tw-gradient-via: color-mix(
+    in oklab,
+    var(--color-amber-400) var(--accent-sans-dilution, 55%),
+    transparent
+  );
 }
 
 /* ---------------------------------------------------------------------------
@@ -914,9 +1351,10 @@ body {
  *
  * Six pages publiques dessinaient à la main un disque de laiton flou derrière
  * leur en-tête. Il est devenu un composant (HaloDePage), et l'arène en change
- * la forme : un ANNEAU orange en filigrane, qui déborde du coin haut droit,
- * comme sur la maquette du héros marine. Un cercle de piste plutôt qu'une
- * lueur. Sa teinte passe par `--halo-de-page` : 45 % d'orange sur le marine.
+ * la forme : un ANNEAU en filigrane, qui déborde du coin haut droit, comme sur
+ * la maquette du héros marine. Un cercle de piste plutôt qu'une lueur. Sa
+ * teinte passe par `--halo-de-page` : un bleu plein de la gamme, #1b416f, ton
+ * sur ton sur le marine. Orange dilué, il sortait cuivré.
  *
  * IL NE VIT QUE SUR LE MARINE. Posé sur une page claire, le même anneau, même
  * dilué à 10 %, faisait une grosse tache rose pâle en haut à droite de la page
@@ -926,11 +1364,11 @@ body {
  * ailleurs, le composant reste dans la page sans rien peindre.
  *
  * L'ÉPAISSEUR SUIT LA LARGEUR DE L'ÉCRAN, en trait plus fin que la maquette :
- * à 4 rem d'épaisseur et 18 % d'opacité, l'anneau faisait une large bande
- * terne ; plus fin et plus franc, il se lit comme un cercle de piste orange.
- * Le titre qui passe dessus garde son contraste : le blanc y est à plus de
- * 8:1, l'orange clair de la seconde ligne à près de 4:1 (titre de grande
- * taille, seuil 3:1).
+ * à 4 rem d'épaisseur, l'anneau faisait une large bande terne ; plus fin, il
+ * se lit comme un cercle de piste. Le titre qui passe dessus garde son
+ * contraste, mesuré sur #1b416f : le blanc cassé y est à 8,8:1, l'orange
+ * ambré de la seconde ligne à 4,4:1 (titre de grande taille, seuil 3:1), le
+ * chapeau à 7,6:1.
  * ------------------------------------------------------------------------- */
 .halo-de-page {
   border: clamp(1rem, 2.4vw, 2.25rem) solid var(--halo-de-page);

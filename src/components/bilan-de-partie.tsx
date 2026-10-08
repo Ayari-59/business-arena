@@ -55,13 +55,13 @@ export function BilanDePartie({
   children?: ReactNode;
 }) {
   return (
-    <section className={`carte p-4 sm:p-6 ${victoire ? "filet-or border-2" : "border-amber-400/30"}`}>
+    <section className={`carte p-4 sm:p-6 ${victoire ? "filet-or border-2" : ""}`}>
       {/* La victoire est une distinction : la coupe et le titre prennent l'or,
           jamais l'orange de l'action. */}
       {victoire ? (
         <Icone nom="trophee" className="texte-or mx-auto mb-2 block h-8 w-8" />
       ) : null}
-      <h2 className={`text-center text-xl font-bold ${victoire ? "texte-or" : "text-amber-300"}`}>
+      <h2 className={`text-center text-xl font-bold texte-or`}>
         {titre}
       </h2>
       <p className="mt-1 text-center text-sm text-slate-400">
@@ -99,7 +99,7 @@ export function BilanDePartie({
         */}
         {bilan.tourDecisif ? (
           <p className="text-base leading-relaxed text-slate-300">
-            <span className="font-semibold text-amber-300">Votre tour décisif : </span>
+            <span className="font-semibold texte-or">Votre tour décisif : </span>
             {bilan.tourDecisif.tour.libelle}, où le résultat a gagné{" "}
             <span className="tabular-nums">{formatEuro(bilan.tourDecisif.gain)}</span> sur le tour
             précédent.
@@ -108,14 +108,14 @@ export function BilanDePartie({
         {bilan.meilleurTour &&
         bilan.meilleurTour.round !== bilan.tourDecisif?.tour.round ? (
           <p className="text-base leading-relaxed text-slate-300">
-            <span className="font-semibold text-amber-300">Votre meilleur tour : </span>
+            <span className="font-semibold texte-or">Votre meilleur tour : </span>
             {bilan.meilleurTour.libelle}, avec{" "}
             <span className="tabular-nums">{formatEuro(bilan.meilleurTour.resultat)}</span> de
             résultat.
           </p>
         ) : null}
         <p className="text-base leading-relaxed text-slate-300">
-          <span className="font-semibold text-amber-300">Vos réussites : </span>
+          <span className="font-semibold texte-or">Vos réussites : </span>
           {reussites.acquises} sur {reussites.total}
           {reussites.derniere ? `, la dernière étant « ${reussites.derniere} »` : null}.
         </p>
@@ -162,7 +162,7 @@ export function BilanDePartie({
         {place ? (
           <p className="text-base leading-relaxed text-slate-300">
             <PastilleDeRang rang={place.rang} moi doublon className="mr-2 align-middle" />
-            <span className="font-semibold text-amber-300">Votre place : </span>
+            <span className="font-semibold texte-or">Votre place : </span>
             {place.rang}
             {place.rang === 1 ? "re" : "e"} sur {place.total}.
           </p>

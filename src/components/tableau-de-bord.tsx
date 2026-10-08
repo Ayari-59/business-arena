@@ -44,7 +44,7 @@ function Tuile({
   titreLong: string;
   valeurs: number[];
   libelles: string[];
-  /** L'encre de la courbe : l'accent pour une grandeur, l'état pour un signe. */
+  /** L'encre de la courbe : la donnée pour une grandeur, l'état pour un signe. */
   teinte: "accent" | "signe";
   /** Tracer la ligne de zéro : elle ne veut dire quelque chose que si le signe compte. */
   avecZero: boolean;
@@ -53,12 +53,15 @@ function Tuile({
   const avant = valeurs.length > 1 ? valeurs.at(-2)! : null;
   const ecart = avant === null ? null : derniere - avant;
   const positif = derniere >= 0;
+  // LA VALEUR EST UNE INFORMATION, PAS UNE ACTION. Le chiffre d'affaires
+  // s'écrivait dans l'orange des boutons : il prend le blanc cassé de
+  // l'information, et sa courbe le bleu désaturé des données de marché. Le
+  // vert et le rouge restent aux grandeurs qui ont un signe, le résultat et la
+  // trésorerie.
   const couleur =
-    teinte === "accent"
-      ? "text-amber-300"
-      : positif
-        ? "text-emerald-300"
-        : "text-red-300";
+    teinte === "accent" ? "text-slate-50" : positif ? "text-emerald-300" : "text-red-300";
+  const trait =
+    teinte === "accent" ? "text-sky-300" : positif ? "text-emerald-300" : "text-red-300";
 
   // La courbe, en coordonnées 0→100 sur la largeur et 0→24 en hauteur. Une
   // échelle par tuile : ces trois grandeurs n'ont pas le même ordre de
@@ -145,7 +148,7 @@ function Tuile({
           strokeLinecap="round"
           strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
-          className={couleur}
+          className={trait}
         />
         {/* Le bout de la courbe, cerclé de la couleur du fond pour rester
             lisible là où il croise la ligne de zéro. */}
@@ -153,7 +156,7 @@ function Tuile({
           cx={bout.x}
           cy={bout.y}
           r="2.5"
-          className={`${couleur} stroke-slate-950`}
+          className={`${trait} stroke-slate-950`}
           fill="currentColor"
           strokeWidth="1.5"
           vectorEffect="non-scaling-stroke"

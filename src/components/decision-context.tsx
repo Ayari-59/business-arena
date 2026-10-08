@@ -35,7 +35,7 @@ export function DilemmaCard({
       entière teintée en ambre criait plus fort que la question qu'elle porte, et
       passait devant les panneaux qui servent à y répondre.
     */
-    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400/70 bg-slate-900 p-3 max-sm:rounded-xl max-sm:border-l max-sm:border-l-white/10 max-sm:bg-gradient-to-b max-sm:from-amber-400/[0.08] max-sm:to-transparent max-sm:p-4 sm:p-5">
+    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400 bg-slate-900 p-3 max-sm:rounded-xl max-sm:border-l max-sm:border-l-white/10 max-sm:p-4 sm:p-5">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90">{title}</h3>
       {/* La question est le point d'arrivée de l'écran : elle se lit avant tout
           le reste de la carte. */}
@@ -59,7 +59,7 @@ export function DilemmaCard({
               </span>
             </p>
             <p className="mt-1 flex gap-1.5 text-sm leading-snug text-slate-400">
-              <Signe sens="cout" className="mt-0.5 text-rose-400/80" />
+              <Signe sens="cout" className="mt-0.5 text-rose-400" />
               <span>
                 <span className="sr-only">Ce que cela coûte : </span>
                 {route.risque}
@@ -201,7 +201,7 @@ export function DetailParClientele({
                           <dt className="text-xs uppercase tracking-wide text-slate-400">
                             Votre part
                           </dt>
-                          <dd className="tabular-nums text-amber-300">
+                          <dd className="tabular-nums text-slate-100">
                             {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
                           </dd>
                         </div>
@@ -244,7 +244,7 @@ export function DetailParClientele({
                         {formatEuro(seg.refPrice)}
                       </td>
                       {showShare ? (
-                        <td className="py-1.5 pr-3 text-right tabular-nums text-amber-300">
+                        <td className="py-1.5 pr-3 text-right tabular-nums text-slate-100">
                           {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
                         </td>
                       ) : null}

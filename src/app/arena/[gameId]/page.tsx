@@ -1142,7 +1142,7 @@ export default async function ArenaPage({
             const me = view.ranking.find((row) => row.isPlayer);
             return (
               <p
-                className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300"
+                className="inline-flex items-center gap-1 rounded-full border border-white/15 px-3 py-1 text-xs tabular-nums text-slate-100"
                 title={
                   me
                     ? "Votre position au classement IPG"

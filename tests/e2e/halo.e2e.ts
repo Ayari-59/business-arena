@@ -63,6 +63,52 @@ async function encreDuTitre(page: Page, theme: string): Promise<number> {
   );
 }
 
+/** Le rapport de contraste WCAG de deux couleurs `rgb(r, g, b)` opaques. */
+function rapport(a: string, b: string): number {
+  const lum = (rgb: string) => {
+    const [r, g, bl] = (rgb.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map((v) => {
+      const c = Number(v) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * bl!;
+  };
+  const [x, y] = [lum(a), lum(b)];
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+
+describe("l'anneau du héros, sur le marine de l'accueil", () => {
+  it("est un bleu plein, et le titre qui passe dessus garde son contraste", async () => {
+    const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 800 } });
+    const page = await contexte.newPage();
+    await aller(page, "/");
+    const mesure = await page.evaluate(() => {
+      const anneau = document.querySelector(".halo-de-page");
+      const titre = document.querySelector("main h1");
+      if (!anneau || !titre) return null;
+      const s = getComputedStyle(anneau);
+      return {
+        visible: s.display !== "none",
+        anneau: s.borderTopColor,
+        lignes: [titre, ...titre.querySelectorAll("span")].map((e) => getComputedStyle(e).color),
+      };
+    });
+    expect(mesure, "l'accueil n'a plus d'anneau ou de titre").not.toBeNull();
+    expect(mesure!.visible, "l'anneau doit se voir sur le marine du héros").toBe(true);
+    // Plein : pas de transparence, donc pas de teinte mêlée au marine.
+    expect(mesure!.anneau, "l'anneau est redevenu translucide").toMatch(/^rgb\(/);
+    const [r, , b] = (mesure!.anneau.match(/\d+/g) ?? []).map(Number);
+    expect(b!, `${mesure!.anneau} n'est plus un bleu`).toBeGreaterThan(r!);
+    for (const couleur of mesure!.lignes) {
+      // Titre de grande taille : seuil 3:1.
+      expect(
+        rapport(couleur, mesure!.anneau),
+        `${couleur} sur ${mesure!.anneau}`,
+      ).toBeGreaterThanOrEqual(3);
+    }
+    await contexte.close();
+  }, 60_000);
+});
+
 describe("le halo des en-têtes", () => {
   // Le site n'a plus qu'un habillage, le papier : le thème sombre, où l'encre
   // était la plus claire de l'image, n'existe plus.

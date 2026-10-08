@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Business Arena">
-  <path d="M 69.72 12.92 A 42 42 0 1 1 30.28 12.92" fill="none" stroke="#ff6a1a" stroke-width="7" stroke-linecap="round"/>
-  <rect x="22.00" y="43.00" width="16" height="30" rx="3" fill="#ff9455"/>
-  <rect x="42.00" y="27.00" width="16" height="46" rx="3" fill="#e8590c"/>
-  <rect x="62.00" y="51.00" width="16" height="22" rx="3" fill="#ff6a1a"/>
+  <path d="M 69.72 12.92 A 42 42 0 1 1 30.28 12.92" fill="none" stroke="#ff8a1f" stroke-width="7" stroke-linecap="round"/>
+  <rect x="22.00" y="43.00" width="16" height="30" rx="3" fill="#ff8a1f"/>
+  <rect x="42.00" y="27.00" width="16" height="46" rx="3" fill="#a35200"/>
+  <rect x="62.00" y="51.00" width="16" height="22" rx="3" fill="#ff8a1f"/>
 </svg>
