@@ -1,22 +1,24 @@
 /**
- * LE DISQUE DE LAITON QUI FLOTTE DERRIÈRE UN EN-TÊTE DE PAGE.
+ * L'ANNEAU ORANGE QUI DÉBORDE DU COIN D'UN HAUT DE PAGE.
  *
- * Six pages publiques le dessinaient à la main, à l'identique. Six copies
- * d'une décoration, ce sont six décorations qui dérivent — l'une change de
- * hauteur, l'autre d'opacité — et surtout six endroits où corriger le jour où
- * l'on s'aperçoit d'un défaut. Ce jour est arrivé : le laiton du thème clair
- * est un brun foncé, donc la lueur y était une tache (voir `--halo-de-page`
- * dans globals.css, qui porte la mesure).
+ * Six pages publiques dessinaient à la main un disque de laiton flou derrière
+ * leur en-tête. Six copies d'une décoration, ce sont six décorations qui
+ * dérivent, et six endroits où corriger le jour où l'on s'aperçoit d'un
+ * défaut. Le composant est resté quand l'habillage a changé : le disque est
+ * devenu l'anneau de la maquette « L'arène », un cercle de piste en filigrane
+ * qui sort du coin haut droit (voir `.halo-de-page` dans globals.css, qui
+ * porte son épaisseur et sa teinte).
  *
  * Purement décoratif, donc retiré de l'arbre d'accessibilité, et sans prise
- * aux clics. Il se peint SOUS le contenu (voir `.halo-de-page` dans
- * globals.css) : posé par-dessus, il voilait les titres qu'il devait éclairer.
+ * aux clics. Il se peint SOUS le contenu : posé par-dessus, il voilerait les
+ * titres qu'il accompagne. Son parent le rogne (overflow), sans quoi il
+ * élargirait la page sur un téléphone.
  */
 export function HaloDePage() {
   return (
     <div
       aria-hidden
-      className="halo-de-page pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full blur-3xl"
+      className="halo-de-page pointer-events-none absolute -right-20 -top-24 aspect-square w-[18rem] rounded-full sm:-right-28 sm:-top-36 sm:w-[30rem] lg:w-[34rem]"
     />
   );
 }

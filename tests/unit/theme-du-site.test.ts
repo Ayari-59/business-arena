@@ -51,14 +51,19 @@ describe("les refus", () => {
     // qu'on le veut, pourvu que deux bandes ne fusionnent pas.
     expect(
       validerContrastes(
-        avec({ "accueil.hero": true, "accueil.boucle": false, "accueil.metiers": true }),
+        avec({
+          "accueil.hero": true,
+          "accueil.boucle": false,
+          "accueil.metiers": true,
+          "accueil.chiffres": true,
+        }),
       ),
     ).toEqual([]);
   });
 
   it("deux bandes qui se suivent sont refusées, nommées dans les mots de l'admin", () => {
     const fautes = validerContrastes(
-      avec({ "accueil.commencer": true, "accueil.hero": false }),
+      avec({ "accueil.chiffres": true, "accueil.commencer": true }),
     );
     // Les chiffres et « Par où commencer » se suivent : le message les nomme.
     const texte = fautes.join("\n");
@@ -120,13 +125,13 @@ describe("la lecture d'un thème enregistré", () => {
   it("ne garde que ce qui désigne une bande réelle et diffère de l'origine", () => {
     const lu = normaliserTheme({
       contrastes: {
-        "accueil.hero": true, // diffère : gardé
-        "accueil.chiffres": true, // identique à l'origine : jeté
+        "accueil.hero": false, // diffère : gardé
+        "accueil.chiffres": false, // identique à l'origine : jeté
         "bande.disparue": true, // inconnue : jetée
         "accueil.boucle": "oui", // pas un booléen : jeté
       },
     });
-    expect(lu.contrastes).toEqual({ "accueil.hero": true });
+    expect(lu.contrastes).toEqual({ "accueil.hero": false });
   });
 
   it("survit à une valeur absente ou absurde", () => {
@@ -146,7 +151,7 @@ describe("la lecture d'un thème enregistré", () => {
   it("une bande ajoutée demain reçoit son état d'origine, pas un état figé", () => {
     // Le réglage stocke des ÉCARTS : une bande absente du réglage suit toujours
     // le registre. Une carte complète figerait l'état du jour d'enregistrement.
-    const theme = themeDepuisEtat(avec({ "accueil.hero": true }));
+    const theme = themeDepuisEtat(avec({ "accueil.hero": false }));
     for (const b of BANDES) {
       if (b.id === "accueil.hero") continue;
       expect(contrasteDeLaBande(theme, b.id), b.id).toBe(b.contrasteParDefaut);
@@ -239,9 +244,9 @@ describe("la palette d'accent", () => {
   });
 
   it("se règle sans toucher aux bandes", () => {
-    const theme = themeDepuisEtat(avec({ "accueil.hero": true, "accueil.chiffres": false }), "lagune");
+    const theme = themeDepuisEtat(avec({ "accueil.hero": false, "accueil.chiffres": true }), "lagune");
     expect(theme.palette).toBe("lagune");
-    expect(theme.contrastes).toEqual({ "accueil.hero": true, "accueil.chiffres": false });
+    expect(theme.contrastes).toEqual({ "accueil.hero": false, "accueil.chiffres": true });
   });
 
   it("refuse un code qui n'est pas une palette du site", () => {

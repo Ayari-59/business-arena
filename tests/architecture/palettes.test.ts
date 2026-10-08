@@ -10,7 +10,7 @@ import {
   paletteParCode,
   type Palette,
 } from "../../src/config/palettes";
-import { identiteDeLaMaison } from "../../scripts/generer-theme-clair";
+import { PAPIER, TABLEAU, identiteDeLaMaison } from "../../scripts/generer-theme-clair";
 
 /**
  * « VALIDÉ », ICI, SE MESURE.
@@ -23,18 +23,19 @@ import { identiteDeLaMaison } from "../../scripts/generer-theme-clair";
  *
  * Les fonds sont ceux du site, pas des valeurs de convenance : les deux
  * surfaces du tableau et les deux du papier sont les paliers 950 et 900 des
- * échelles TABLEAU et PAPIER de scripts/generer-theme-clair.ts, convertis
- * d'oklch en hexadécimal. Un test plus bas vérifie qu'ils n'ont pas bougé.
+ * échelles TABLEAU et PAPIER de scripts/generer-theme-clair.ts, plus le fond
+ * d'un champ sur le papier (800). Un test plus bas vérifie qu'ils n'ont pas
+ * bougé.
  */
 
 const ROOT = join(__dirname, "..", "..");
 const GLOBALS = readFileSync(join(ROOT, "src/app/globals.css"), "utf8");
 
-// L'ardoise du tableau (950, 900) : là où l'échelle « sombre » d'une palette se pose.
-const SOMBRES = ["#161f1b", "#1d2823"];
-// Le papier (950, 900), et le blanc : les fonds sur lesquels l'encre se pose
-// (page, carte, champ).
-const CLAIRS = ["#fcf9f3", "#f7f3e9", "#ffffff"];
+// Le marine du tableau (950, 900) : là où l'échelle « sombre » d'une palette se pose.
+const SOMBRES = ["#0b2545", "#13355f"];
+// Le papier (950, 900 la carte blanche, 800 le champ) : les fonds sur lesquels
+// l'encre se pose (page, carte, champ).
+const CLAIRS = ["#f5f7fb", "#ffffff", "#edf1f7"];
 
 const lineaire = (c: number) =>
   c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
@@ -51,6 +52,16 @@ function contraste(a: string, b: string): number {
 
 const HEX = /^#[0-9a-f]{6}$/;
 const SEUIL = 4.5;
+
+describe("les fonds de la mesure", () => {
+  it("sont ceux des échelles du site, et non des valeurs de convenance", () => {
+    // Une palette mesurée sur des fonds qui ne sont plus ceux du site passerait
+    // la mesure sans rien prouver : c'est arrivé au passage de l'ardoise au
+    // marine, que ces deux listes ont dû suivre.
+    expect(SOMBRES).toEqual([TABLEAU[950], TABLEAU[900]]);
+    expect(CLAIRS).toEqual([PAPIER[950], PAPIER[900], PAPIER[800]]);
+  });
+});
 
 describe("le registre des palettes", () => {
   it("a une palette d'origine, et chaque code est unique", () => {
@@ -72,22 +83,28 @@ describe("le registre des palettes", () => {
     }
   });
 
-  it("le laiton reste exactement ce que globals.css pose", () => {
+  it("l'orange d'origine reste exactement ce que globals.css pose", () => {
     // La palette d'origine n'émet rien : si sa copie dérivait de la feuille,
-    // la liste d'admin montrerait un laiton que le site ne porte plus.
+    // la liste d'admin montrerait un orange que le site ne porte plus.
     const identite = identiteDeLaMaison(GLOBALS);
-    const laiton = paletteParCode("laiton");
-    for (const [palier, valeur] of Object.entries(laiton.sombre)) {
+    const origine = paletteParCode(PALETTE_D_ORIGINE);
+    for (const [palier, valeur] of Object.entries(origine.sombre)) {
       expect(identite.get(`amber-${palier}`), `amber-${palier}`).toBe(valeur);
     }
-    expect(laiton.clair.encre).toBe("#5c470f");
+    // Et sur le papier, l'encre et le voile sont ceux du bloc clair.
+    const papier = GLOBALS.slice(GLOBALS.indexOf('[data-theme="clair"] {'));
+    expect(papier).toContain(`--color-amber-400: ${origine.clair.encre};`);
+    expect(papier).toContain(`--color-amber-950: ${origine.clair.voile};`);
   });
 
   it("aucune palette n'est un rouge ni un vert : ces teintes portent un sens", () => {
     // Un accent rouge se lirait comme une perte, un accent vert comme un
     // bénéfice. On mesure la teinte du palier 400 en OKLCH grossier : les
-    // teintes comprises entre le rouge (≈ 0-45°) et le vert (≈ 110-175°)
-    // sont celles du sens, le laiton (≈ 85°) étant la limite basse admise.
+    // teintes du rouge (≈ 345-40°) et du vert (≈ 110-175°) sont celles du
+    // sens. Le rouge de la perte, sur le site, est à 22-29° ; l'orange de
+    // l'arène, choisi pour l'action, est à 43° (aplat) et 50° (texte) : il
+    // reste à vingt degrés de la perte, et cette garde l'y tient. La borne
+    // était à 50° du temps du laiton (≈ 85°), qui n'en approchait pas.
     for (const p of PALETTES) {
       const hex = p.sombre[400]!;
       const [r, g, b] = [1, 3, 5].map((i) =>
@@ -105,7 +122,7 @@ describe("le registre des palettes", () => {
       const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
       const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
       const teinte = ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360;
-      const dansLeRouge = teinte < 50 || teinte > 345;
+      const dansLeRouge = teinte < 40 || teinte > 345;
       const dansLeVert = teinte > 110 && teinte < 175;
       expect(
         dansLeRouge || dansLeVert,

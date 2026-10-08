@@ -55,12 +55,13 @@ describe("le papier et le tableau", () => {
     expect(proches(fond, rgb(COULEUR_DU_PAPIER)), `fond de page ${fond}`).toBe(true);
   });
 
-  it("le grain du papier se pose sur le halo, sans l'effacer", async () => {
-    // Le relief a un temps remplacé le halo laiton du fond par le grain : les
-    // deux images se disputaient la même propriété, et rien ne l'a signalé.
+  it("le fond de page est un aplat : ni grain, ni halo", async () => {
+    // L'habillage « Papier & Tableau » posait un grain de papier sur un halo
+    // de laiton, et une règle en avait un temps effacé l'un par l'autre sans
+    // que rien le signale. L'arène n'en garde aucun : un tableau des scores
+    // est net, et sa seule touche de lumière est l'anneau des hauts de page.
     const fond: string = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
-    expect(fond, "grain").toMatch(/^url\(/);
-    expect(fond, "halo").toContain("radial-gradient");
+    expect(fond, "fond de page").toBe("none");
   });
 
   it("aucun interrupteur de thème ne reste dans la barre", async () => {
@@ -75,7 +76,7 @@ describe("le papier et le tableau", () => {
     await page.evaluate(() => localStorage.removeItem("arena-theme"));
   });
 
-  it("une bande à contre-jour est un tableau : l'ardoise, et sa craie", async () => {
+  it("une bande à contre-jour est un tableau : le marine, et ses blancs", async () => {
     await aller(page, "/enseignants");
     const bande: { fond: number[]; texte: number[] } = await page.evaluate(`(() => {
       const peinte = ${PEINTE};
@@ -88,23 +89,29 @@ describe("le papier et le tableau", () => {
     expect(proches(bande.fond, rgb(COULEUR_DU_TABLEAU)), `fond du tableau ${bande.fond}`).toBe(
       true,
     );
-    // La craie, ou le laiton clair : un texte lumineux sur l'ardoise, pas
-    // l'encre brune du papier.
+    // Le blanc, ou l'orange clair : un texte lumineux sur le marine, pas
+    // l'encre du papier.
     const [r, g, b] = bande.texte.map((v) => v / 255);
     const lumiere = 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
     expect(lumiere, `texte du tableau ${bande.texte}`).toBeGreaterThan(0.4);
   });
 
-  it("le logo prend l'encre sur le papier", async () => {
-    // Le logo est une image : son nom, écrit en craie, disparaîtrait sur le
-    // papier. Seule la feuille de style peut choisir le bon fichier.
-    const fichier = await page.evaluate(
-      () =>
-        getComputedStyle(document.querySelector(".logo-arena")!).backgroundImage.match(
-          /logo[-a-z]*\.svg/,
-        )?.[0] ?? "aucun",
-    );
-    expect(fichier).toBe("logo-light.svg");
+  it("le logo prend le blanc sur l'en-tête marine, et l'encre sur le papier", async () => {
+    // Le logo est une image : son nom, écrit en blanc, disparaîtrait sur le
+    // papier, et l'encre marine sur l'en-tête. Seule la feuille de style peut
+    // choisir le bon fichier.
+    const fichierDe = (selecteur: string) =>
+      page.evaluate(
+        (s) =>
+          getComputedStyle(document.querySelector(s)!).backgroundImage.match(
+            /logo[-a-z]*\.svg/,
+          )?.[0] ?? "aucun",
+        selecteur,
+      );
+    expect(await fichierDe("header .logo-arena"), "en-tête").toBe("logo.svg");
+    // La page de connexion de l'enseignant pose le logo sur le papier.
+    await aller(page, "/teacher/login");
+    expect(await fichierDe("main .logo-arena"), "papier").toBe("logo-light.svg");
   });
 
   it("aucune amorce ne relit un thème avant l'affichage : il n'y a plus rien à relire", async () => {

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter_Tight } from "next/font/google";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -7,19 +7,30 @@ import { BarreDActionMobile } from "@/components/barre-d-action-mobile";
 
 /**
  * Les deux voix typographiques de la maison, auto-hébergées par next/font
- * (aucune requête au chargement). Fraunces, un serif de caractère, ne sert
- * qu'aux grands titres (règle h1 dans globals.css) ; Inter Tight, une
- * grotesque nette et un peu resserrée, porte tout le reste. Chacune expose une
- * variable CSS que le thème (@theme) branche sur --font-display et --font-sans,
- * si bien qu'aucun composant n'a à nommer une police.
+ * (aucune requête au chargement). L'habillage « L'arène » parle comme un
+ * tableau des scores :
+ *
+ *   · Barlow Condensed, une grotesque étroite et dense, porte les titres, les
+ *     étiquettes en capitales, les boutons d'action et les chiffres qu'on
+ *     affiche en grand. Les grands titres la prennent en italique capitale
+ *     (règles h1 et h2 dans globals.css) : l'élan d'une compétition ;
+ *   · Barlow, sa version de lecture, porte tout le reste.
+ *
+ * Barlow n'est pas une police variable : on ne charge que les graisses
+ * employées. Chacune expose une variable CSS que le thème (@theme) branche sur
+ * --font-display et --font-sans, si bien qu'aucun composant n'a à nommer une
+ * police.
  */
-const policeTitre = Fraunces({
+const policeTitre = Barlow_Condensed({
   subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  style: ["normal", "italic"],
   variable: "--font-brand-display",
   display: "swap",
 });
-const policeTexte = Inter_Tight({
+const policeTexte = Barlow({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-brand-sans",
   display: "swap",
 });

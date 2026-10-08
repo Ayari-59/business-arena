@@ -40,6 +40,12 @@ import {
  * plein : une carte de menu se lit par-dessus n'importe quoi. Le flou et le
  * voile de lumière suffisent à la décoller du fond.
  *
+ * LA BARRE EST MARINE, ET OPAQUE. L'habillage « L'arène » pose le marine là où
+ * l'œil se repère : l'en-tête en est le premier endroit, sur toutes les pages.
+ * Elle prend donc la matière du tableau (`ardoise`), qui retourne l'échelle
+ * pour elle seule : ses classes, écrites pour un fond sombre, s'y lisent
+ * telles quelles, et le logo y prend sa version blanche.
+ *
  * Les liens à plat sont ceux de l'enseignant qui découvre : présentation,
  * ateliers, entreprises. Les fiches notions n'y sont plus, elles sont une
  * ressource, pas une vitrine. À droite, deux boutons, un par public : l'espace
@@ -103,13 +109,13 @@ export function SiteHeader() {
   return (
     <header
       ref={cadre}
-      className={`sticky top-0 z-40 border-b border-white/10 bg-slate-950 print:static print:bg-transparent print:hidden ${
+      className={`ardoise sticky top-0 z-40 border-b border-white/10 bg-slate-950 print:static print:bg-transparent print:hidden ${
         // Dans l'arène, sur téléphone, la barre d'application de la partie prend
         // sa place (voir barre-de-jeu.tsx) : deux barres se doubleraient.
         enJeu ? "max-sm:hidden" : ""
       } ${enProjection ? "hidden" : ""}`}
     >
-      {/* Un filet de laiton posé sur le bord bas de la barre, éteint aux deux
+      {/* Un filet orange posé sur le bord bas de la barre, éteint aux deux
           extrémités. C'est le même geste que le liseré d'une carte : ce qui
           sépare deux surfaces se voit, mais ne se remarque pas. */}
       <span
@@ -158,7 +164,7 @@ export function SiteHeader() {
                   }`}
                 >
                   {lien.libelle}
-                  {/* La page courante porte un trait de laiton plein ; les
+                  {/* La page courante porte un trait orange plein ; les
                       autres le font naître du centre au survol. Une pastille
                       pleine alourdissait une barre qui en compte trois. */}
                   <span
@@ -175,7 +181,7 @@ export function SiteHeader() {
           </ul>
           )}
 
-          {/* Les deux portes d'entrée, une par public. L'enseignant en ambre,
+          {/* Les deux portes d'entrée, une par public. L'enseignant en orange,
               comme l'action principale du plan ; l'élève en clair. Un filet les
               sépare de ce qui ne fait qu'informer. */}
           {enJeu ? null : (

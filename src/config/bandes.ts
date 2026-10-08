@@ -72,18 +72,21 @@ export const BANDES: readonly BandeDef[] = [
     id: "accueil.hero",
     page: "/",
     nom: "Le titre et la main de cartes",
-    // Claire par défaut : le site s'ouvre en thème clair, et sa première page
-    // s'ouvrait pourtant sur un grand aplat de nuit. Le visiteur croyait être
-    // en thème sombre. Les captures sombres prennent le relais sur ce papier.
-    // L'administrateur peut toujours la remettre à contre-jour.
-    contrasteParDefaut: false,
+    // À contre-jour par défaut : l'habillage « L'arène » ouvre le site sur le
+    // marine, comme la maquette, sous un en-tête marine lui aussi. Elle a été
+    // claire du temps du papier ivoire, où un aplat de nuit en tête faisait
+    // croire au thème sombre ; le marine est ici la couleur de la maison,
+    // pas un mode. L'administrateur peut toujours la remettre au clair.
+    contrasteParDefaut: true,
     porteLeH1: true,
   },
   {
     id: "accueil.boucle",
     page: "/",
     nom: "La boucle d'un tour",
-    contrasteParDefaut: true,
+    // Claire : elle suit le haut de page, désormais marine, et deux bandes à
+    // contre-jour ne se touchent jamais.
+    contrasteParDefaut: false,
   },
   {
     id: "accueil.metiers",
@@ -101,7 +104,9 @@ export const BANDES: readonly BandeDef[] = [
     id: "accueil.chiffres",
     page: "/",
     nom: "Les chiffres",
-    contrasteParDefaut: true,
+    // Claire : c'est le bandeau de chiffres-clés de la maquette, blanc sur un
+    // filet marine. Le marine est déjà en tête de page.
+    contrasteParDefaut: false,
   },
   {
     id: "accueil.commencer",

@@ -125,9 +125,12 @@ describe("les captures de la page d'accueil", () => {
     for (const alt of alts) expect(alt.length).toBeGreaterThan(40);
     // Les chiffres des textes de remplacement sont ceux des captures : une
     // description qui ne correspond pas à l'image est pire qu'une absence.
-    expect(alts.join(" ")).toContain("450 830");
-    expect(alts.join(" ")).toContain("78 149");
-    expect(alts.join(" ")).toContain("5 500");
+    // Partie NOVA de niveau 3 rejouée pour l'habillage « L'arène » : au tour 3,
+    // 319 914 € de chiffre d'affaires et 32 942 € de résultat ; au tour 4, la
+    // feuille de décision porte un plan de production de 3 800 enceintes.
+    expect(alts.join(" ")).toContain("319 914");
+    expect(alts.join(" ")).toContain("32 942");
+    expect(alts.join(" ")).toContain("3 800");
   });
 
   it("racontent le même tour, et la légende le dit", () => {

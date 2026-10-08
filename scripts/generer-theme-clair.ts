@@ -13,12 +13,12 @@
  * valeur du 50, le 900 celle du 100, et ainsi de suite ; le blanc et le noir
  * s'échangent. Les couleurs de sens (rouge, vert) et de secteur suivent ce
  * renversement. L'échelle neutre, elle, ne se renverse plus : elle est écrite
- * (PAPIER, plus bas), un ivoire et une encre brune.
+ * (PAPIER, plus bas), un fond clair à peine bleuté et une encre marine.
  *
  * LE TABLEAU. Un bloc à contre-jour, ou une `ardoise` (les écrans de chiffres
  * de l'arène, la projection), retrouve l'échelle d'origine — celle pour
- * laquelle les classes ont été écrites —, sauf son neutre, qui devient une
- * ardoise vert-noir et sa craie (TABLEAU, plus bas). Le fichier porte donc
+ * laquelle les classes ont été écrites —, sauf son neutre, qui devient le
+ * marine de l'arène et ses blancs (TABLEAU, plus bas). Le fichier porte donc
  * deux blocs : le papier, et le tableau.
  *
  * Usage : npx tsx scripts/generer-theme-clair.ts
@@ -32,9 +32,9 @@ export const SOURCE_TAILWIND = "node_modules/tailwindcss/theme.css";
  * L'IDENTITÉ DE LA MAISON, QUI RECOUVRE L'ÉCHELLE DE TAILWIND.
  *
  * Le site ne se sert pas de l'amber de Tailwind : son `@theme` le remplace par
- * un or patiné, et encre de bleu ses deux surfaces les plus sombres. Ces
- * valeurs-là SONT l'échelle du site ; celle de Tailwind n'en est que le point
- * de départ.
+ * l'orange d'action de l'arène, et passe au marine ses deux surfaces les plus
+ * sombres. Ces valeurs-là SONT l'échelle du site ; celle de Tailwind n'en est
+ * que le point de départ.
  *
  * Le bloc à contre-jour les a ignorées pendant une journée, et le défaut se
  * voyait : une bande sombre posée sur une page claire y ramenait l'amber brut,
@@ -88,54 +88,64 @@ const SURCHARGES: Record<string, number> = {
 /**
  * LE PAPIER : l'échelle neutre de la page, écrite et non plus renversée.
  *
- * Le renversement de l'ardoise de Tailwind donnait un blanc bleuté et un gris
- * d'usine : le site ne choisissait pas son papier, il le subissait, et le
- * laiton se posait sur un blanc froid. Chaque palier garde ici la CLARTÉ
- * (le L d'oklch) que le renversement lui donnait, et ne change que de teinte,
- * vers un ivoire et une encre brune : les contrastes mesurés tiennent donc
- * tels quels. Seules les surfaces (700 à 950) prennent un peu plus de chaleur.
+ * Le fond clair de l'arène, ses cartes blanches et son encre. Les valeurs sont
+ * celles de la maquette « L'arène », écrites en hexadécimal pour qu'on les
+ * reconnaisse : le fond #f5f7fb, la carte #ffffff, le filet #dbe2ee, l'encre
+ * #0e1a2b, le gris de texte #5a6880.
  *
- * Les clés sont celles des classes (`bg-slate-950` est le fond de la page).
+ * Les clés sont celles des classes (`bg-slate-950` est le fond de la page,
+ * `bg-slate-900` la carte, `text-slate-100` le texte), et chaque palier garde
+ * le RÔLE et à peu près la clarté que le renversement lui donnait, pour que
+ * les contrastes mesurés tiennent :
+ *
+ *   · 50 à 300, l'encre : 16 pour 1 sur le fond ;
+ *   · 400, le texte secondaire, celui de la plupart des paragraphes : 6,6 pour
+ *     1 sur le fond, 5,9 sur un champ ;
+ *   · 500, le gris de la maquette, pour les mentions et le trait des champs :
+ *     5,3 pour 1 sur le fond ;
+ *   · 600, le gris le plus clair qui se lise encore sur une carte (4,7) ;
+ *   · 700 et 800, le filet appuyé et le fond d'un champ ;
+ *   · 900 et 950, la carte et la page.
  */
 export const PAPIER: Record<number, string> = {
-  50: "oklch(12.9% 0.02 60)",
-  100: "oklch(20.8% 0.022 60)",
-  200: "oklch(20.8% 0.022 60)",
-  300: "oklch(20.8% 0.022 60)",
-  400: "oklch(37.2% 0.03 65)",
-  500: "oklch(44.6% 0.032 68)",
-  600: "oklch(55.4% 0.034 70)",
-  700: "oklch(86.9% 0.028 82)",
-  800: "oklch(92.9% 0.022 84)",
-  900: "oklch(96.4% 0.014 85)",
-  950: "oklch(98.3% 0.009 88)",
+  50: "#0a1422",
+  100: "#0e1a2b",
+  200: "#0e1a2b",
+  300: "#0e1a2b",
+  400: "#4b5970",
+  500: "#5a6880",
+  600: "#66748b",
+  700: "#d3dbe8",
+  800: "#edf1f7",
+  900: "#ffffff",
+  950: "#f5f7fb",
 };
 
 /**
- * LE TABLEAU : une ardoise vert-noir et sa craie, là où la classe regarde
- * ensemble — les bandes à contre-jour, les écrans de chiffres de l'arène, la
- * projection. Il remplace la nuit bleue, qui n'était que le thème sombre posé
- * au milieu d'une page claire. Les paliers de texte (50 à 600) gardent la
- * clarté de l'échelle d'origine ; les fonds (700 à 950) sont relevés d'un cran
- * pour qu'on y reconnaisse une ardoise et non un écran éteint.
+ * LE TABLEAU : le marine de l'arène et ses blancs, là où la classe regarde
+ * ensemble : l'en-tête, le haut de l'accueil, les bandes à contre-jour, les
+ * écrans de chiffres de la partie, la projection. Il remplace l'ardoise
+ * vert-noir de l'habillage « Papier & Tableau ».
  *
- * Une exception, le 400 : c'est le texte secondaire, celui de la plupart des
- * paragraphes du tableau. À la clarté d'origine (70,4 %), il tombait à 6,5
- * pour 1 sur l'ardoise, quand son pendant du papier tient 9,9 : une craie à
- * moitié effacée. Il est éclairci à 8,2 pour 1, toujours sous le 300.
+ *   · 950, le marine #0b2545 ; 900, sa surface relevée #13355f (une carte
+ *     posée sur le marine) ; 800 et 700, le fond d'un champ et les filets ;
+ *   · 600 et 500, des gris bleutés pour ce qui n'est pas du texte : le trait
+ *     d'un champ (500) tient 3 pour 1 sur un champ comme sur une carte ;
+ *   · 400, le texte secondaire #c7d4e8 : 8,2 pour 1 sur la surface relevée ;
+ *   · 300 à 50, les blancs, jusqu'au blanc pur des titres.
  */
 export const TABLEAU: Record<number, string> = {
-  50: "oklch(98.4% 0.006 150)",
-  100: "oklch(96.8% 0.008 150)",
-  200: "oklch(92.9% 0.012 152)",
-  300: "oklch(86.9% 0.016 152)",
-  400: "oklch(77% 0.02 155)",
-  500: "oklch(55.4% 0.024 158)",
-  600: "oklch(44.6% 0.024 160)",
-  700: "oklch(37.2% 0.022 160)",
-  800: "oklch(31% 0.02 160)",
-  900: "oklch(26.5% 0.018 162)",
-  950: "oklch(23% 0.016 162)",
+  50: "#ffffff",
+  100: "#f4f7fb",
+  200: "#eaf0f8",
+  300: "#dce5f2",
+  400: "#c7d4e8",
+  500: "#8aa0c0",
+  600: "#6f86aa",
+  700: "#2d5385",
+  800: "#1b416f",
+  900: "#13355f",
+  950: "#0b2545",
 };
 
 /** Les couleurs que le `@theme` du site pose par-dessus celles de Tailwind. */
@@ -181,8 +191,8 @@ export function genererThemeClair(sourceTailwind: string, sourceGlobals: string)
       `  --color-${teinte}-${palier}: ${teinte === "slate" ? PAPIER[palier] : jumelle};`,
     );
     // L'ORIGINE, C'EST L'ÉCHELLE DU SITE, pas celle de Tailwind. Un bloc à
-    // contre-jour sur page claire doit retrouver l'or patiné et le bleu encré,
-    // pas l'amber d'autocar et le gris d'usine.
+    // contre-jour sur page claire doit retrouver l'orange de l'arène, pas
+    // l'amber d'autocar de Tailwind.
     origines.push(
       `  --color-${teinte}-${palier}: ${teinte === "slate" ? TABLEAU[palier] : (identite.get(cle) ?? valeur)};`,
     );
@@ -218,13 +228,13 @@ ${clair(renversees)}
 }
 
 /* ---------------------------------------------------------------------------
- * LE TABLEAU : une ardoise au milieu du papier — une bande à contre-jour, un
- * écran de chiffres, la projection.
+ * LE TABLEAU : le marine au milieu du clair : l'en-tête, une bande à
+ * contre-jour, un écran de chiffres, la projection.
  *
  * Il ramène l'échelle d'origine, celle pour laquelle les classes ont été
  * écrites, ce qui revient à DÉFAIRE, pour ce bloc seulement, ce que le papier
  * vient de poser : d'où la reprise des mêmes clés avec leurs valeurs de
- * départ. Seul le neutre diffère, qui devient l'ardoise et sa craie.
+ * départ. Seul le neutre diffère, qui devient le marine et ses blancs.
  *
  * Sa spécificité (deux sélecteurs) l'emporte sur celle du thème (un seul),
  * quel que soit l'ordre des règles dans la feuille.

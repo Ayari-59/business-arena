@@ -520,16 +520,17 @@ describe("parcours enseignant et élève", () => {
       ).toBeLessThanOrEqual(Math.round(m.colonne));
     }
 
-    // Et le premier écran suit le thème de la page. Il était à contre-jour :
-    // le site s'ouvrait en thème clair sur un grand aplat de nuit, et le
-    // visiteur se croyait en thème sombre. L'administrateur peut toujours
-    // le remettre à contre-jour ; ce n'est plus l'état d'origine.
+    // Et le premier écran porte le sol que le registre lui donne. Il a été
+    // clair du temps du papier ivoire, où un aplat de nuit en tête faisait
+    // croire au thème sombre ; l'habillage « L'arène » l'ouvre sur le marine,
+    // comme sa maquette, sous un en-tête marine lui aussi. L'administrateur
+    // peut toujours le remettre au clair ; ce n'est plus l'état d'origine.
     const sols = await prof.evaluate(() => {
       const hero = document.querySelector("main section")!;
       return { contreJour: hero.classList.contains("contre-jour") };
     });
-    expect(sols.contreJour, "le premier écran est encore à contre-jour").toBe(
-      false,
+    expect(sols.contreJour, "le premier écran n'est pas sur le marine").toBe(
+      true,
     );
   });
 

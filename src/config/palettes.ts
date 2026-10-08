@@ -9,12 +9,17 @@
  * UNE PALETTE DIT DEUX CHOSES, parce que l'accent ne s'écrit pas pareil sur un
  * fond sombre et sur un fond clair :
  *
- *   · `sombre` : l'échelle posée sur le tableau (l'ardoise), du pâle (50) au
+ *   · `sombre` : l'échelle posée sur le tableau (le marine), du pâle (50) au
  *     profond (950). Les paliers 200 à 400 servent de texte, le 500 de fond de
  *     bouton, le 950 de voile ;
  *   · `clair` : sur le papier, l'accent n'est plus une lueur mais une ENCRE.
  *     Trois valeurs suffisent, celles du site d'origine : une encre pour les
  *     liens et les filets, un remplissage pour le bouton, un voile de fond.
+ *
+ * L'APLAT D'ACTION SUIT LA PALETTE. La palette d'origine, l'orange de
+ * l'arène, pose ses aplats en orange vif avec un texte marine (variables
+ * `--accent-plein*` de globals.css). Une autre palette les rebranche sur son
+ * propre remplissage et sur le texte clair qu'il a été mesuré pour porter.
  *
  * LES COULEURS QUI PORTENT UN SENS NE BOUGENT PAS. Aucune palette n'est rouge
  * ni verte : le rouge est une perte, le vert un bénéfice, et un accent qui
@@ -25,11 +30,12 @@
  * calcule, pour CHAQUE palette, le contraste de chaque rôle sur les fonds du
  * site, dans les deux thèmes, et refuse la palette qui passe sous 4,5 pour 1.
  * Une palette ajoutée à cette liste n'entre donc pas sans avoir été mesurée.
- * Les valeurs ont été tirées d'une même courbe de clarté — celle du laiton —
- * dont on n'a changé que la teinte, ce qui garde à chaque palette le même
- * rapport de contraste que l'original.
+ * Les valeurs ont été tirées d'une même courbe de clarté, celle de l'ancien
+ * laiton, dont on n'a changé que la teinte ; le palier 600 a été relevé d'un
+ * cran quand le tableau est passé du vert-noir au marine, plus clair, pour
+ * tenir encore 4,5 pour 1.
  */
-export type CodePalette = "laiton" | "cobalt" | "prune" | "lagune";
+export type CodePalette = "arene" | "cobalt" | "prune" | "lagune";
 
 /** Les paliers de l'échelle d'accent, tels que Tailwind les nomme. */
 export const PALIERS = [
@@ -43,8 +49,8 @@ export interface Palette {
   /** Ce que la palette change, en une phrase, pour la liste. */
   description: string;
   /**
-   * L'échelle sur surface sombre. Pour le laiton, seuls les paliers que
-   * globals.css recouvre : c'est la palette d'origine, elle n'émet rien.
+   * L'échelle sur surface sombre. Pour la palette d'origine, la copie exacte
+   * de ce que globals.css pose : elle n'émet rien.
    */
   sombre: Partial<Record<Palier, string>>;
   /** L'encre, le remplissage et le voile, sur surface claire. */
@@ -52,26 +58,30 @@ export interface Palette {
 }
 
 /** LA PALETTE D'ORIGINE : celle que globals.css pose. Elle n'ajoute aucune règle. */
-export const PALETTE_D_ORIGINE: CodePalette = "laiton";
+export const PALETTE_D_ORIGINE: CodePalette = "arene";
 
 /** La palette servie tant que personne n'en a choisi une autre. */
 export const PALETTE_PAR_DEFAUT: CodePalette = PALETTE_D_ORIGINE;
 
 export const PALETTES: Palette[] = [
   {
-    code: "laiton",
-    nom: "Laiton",
-    description: "Un or patiné sur une nuit encrée. L'habillage d'origine.",
+    code: "arene",
+    nom: "Orange arène",
+    description: "Un orange d'action sur le marine. L'habillage d'origine.",
     sombre: {
-      200: "#f0dca8",
-      300: "#e7cd8b",
-      400: "#d8b45c",
-      500: "#c39a34",
-      600: "#a67f22",
-      700: "#86641a",
-      950: "#241b06",
+      50: "#fff4ec",
+      100: "#ffe6d5",
+      200: "#ffd3b8",
+      300: "#ffb488",
+      400: "#ff9455",
+      500: "#ff6a1a",
+      600: "#e8590c",
+      700: "#b8460a",
+      800: "#8a3407",
+      900: "#5c2405",
+      950: "#2e1607",
     },
-    clair: { encre: "#5c470f", remplissage: "#7a5f14", voile: "#f6efdb" },
+    clair: { encre: "#b8460a", remplissage: "#b8460a", voile: "#fff1e6" },
   },
   {
     code: "cobalt",
@@ -85,7 +95,7 @@ export const PALETTES: Palette[] = [
       300: "#b1d2fe",
       400: "#87bcff",
       500: "#68a3ed",
-      600: "#5488ca",
+      600: "#5a8fd4",
       700: "#426ca1",
       800: "#395d8b",
       900: "#304d71",
@@ -105,7 +115,7 @@ export const PALETTES: Palette[] = [
       300: "#e6bef8",
       400: "#d5a2eb",
       500: "#be87d6",
-      600: "#a676bb",
+      600: "#b07bc8",
       700: "#7f5891",
       800: "#6e4c7c",
       900: "#5a3f66",
@@ -125,7 +135,7 @@ export const PALETTES: Palette[] = [
       300: "#85e1eb",
       400: "#47cedc",
       500: "#05b5c4",
-      600: "#0598a4",
+      600: "#049fac",
       700: "#037983",
       800: "#006871",
       900: "#02565d",
@@ -167,10 +177,10 @@ const lignes = (echelle: Partial<Record<Palier, string>>) =>
  * La feuille qui pose une palette, ou rien si c'est celle d'origine.
  *
  * DEUX CONTEXTES : le papier, qui prend l'encre de la palette, et le tableau
- * (une bande à contre-jour, ou une `ardoise`), qui prend son échelle « sombre » — la craie d'une
- * ardoise se lit comme une lueur sur fond sombre, pas comme une encre. Recolorer
- * le seul papier laisserait chaque tableau dans le laiton, une seconde palette
- * peinte au milieu de la première.
+ * (une bande à contre-jour, ou une `ardoise`), qui prend son échelle « sombre » : l'accent se
+ * lit comme une lueur sur le marine, pas comme une encre. Recolorer le seul
+ * papier laisserait chaque tableau dans l'orange, une seconde palette peinte
+ * au milieu de la première.
  *
  * La spécificité est celle du thème PLUS l'élément (`html[...]`) : la règle
  * l'emporte sur celles de theme-clair.css quel que soit l'ordre des feuilles.
@@ -178,8 +188,14 @@ const lignes = (echelle: Partial<Record<Palier, string>>) =>
 export function feuilleDePalette(code: CodePalette): string {
   if (code === PALETTE_D_ORIGINE) return "";
   const palette = paletteParCode(code);
+  // L'aplat d'action reprend le remplissage de la palette et le texte clair
+  // qu'il porte, sur chaque sol : une variable qui lit une autre variable se
+  // résout là où elle est posée, d'où sa reprise dans les deux règles.
+  const aplat =
+    "--accent-plein:var(--color-amber-500);--accent-plein-survol:var(--color-amber-500);" +
+    "--accent-plein-texte:var(--color-slate-950);--accent-plein-ombre:var(--color-amber-700);";
   return (
-    `html[data-theme="clair"]{${lignes(echelleClaire(palette))}}` +
-    `html[data-theme="clair"] .contre-jour,html[data-theme="clair"] .ardoise{${lignes(palette.sombre)}}`
+    `html[data-theme="clair"]{${lignes(echelleClaire(palette))}${aplat}}` +
+    `html[data-theme="clair"] .contre-jour,html[data-theme="clair"] .ardoise{${lignes(palette.sombre)}${aplat}}`
   );
 }

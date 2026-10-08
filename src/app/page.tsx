@@ -254,18 +254,18 @@ function MainDeCartes() {
           nom="decider"
           fond
           pose="left-[2%] top-[11%] -rotate-[9deg]"
-          alt="L'écran de décision : prix de vente 76 € par enceinte, plan de production 5 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
+          alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 3 800 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
         />
         <CarteEnMain
           nom="resultats"
           fond
           pose="left-[46%] top-[11%] rotate-[9deg]"
-          alt="Le verdict du tour 3 : 78 149 € de bénéfice, 44 643 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 78, et deux réussites obtenues."
+          alt="Le verdict du tour 3 : 32 942 € de bénéfice, 11 977 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 58, et deux réussites obtenues."
         />
         <CarteEnMain
           nom="arene"
           pose="left-[24%] top-[4%]"
-          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 450 830 €, résultat 78 149 €, trésorerie 113 279 €, et le tour en cours à jouer."
+          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 319 914 €, résultat 32 942 €, trésorerie 89 869 €, et le tour en cours à jouer."
         />
       </div>
       {/*
@@ -356,9 +356,11 @@ export default async function Home() {
               lignes (« POUR LA / CLASSE ») : elle se resserre en étiquette et
               laisse tomber son filet sous 640 pixels, et tient sur une ligne.
             */}
-          <p className="flex items-center gap-3 text-xs uppercase tracking-etiquette text-amber-400 sm:tracking-annonce">
-            <span aria-hidden className="hidden h-px w-8 bg-amber-400/40 sm:block" />
-            Simulation de gestion, pour la classe
+          {/* LA PASTILLE PENCHÉE. Sur le marine, le surtitre devient l'étiquette
+              orange de la maquette, inclinée comme un dossard : c'est la
+              première chose orange qu'on voit, et elle dit ce qu'est le jeu. */}
+          <p>
+            <span className="surtitre-arene">Simulation de gestion, pour la classe</span>
           </p>
           {/*
               LE TITRE ET LA MAIN PARTENT DE LA MÊME LIGNE.
@@ -383,17 +385,19 @@ export default async function Home() {
               (`cqw`), la taille suit la place : 30 px sur un téléphone, 48 sur
               un grand écran, une ligne par phrase partout.
 
-              Le coefficient n'est pas choisi au jugé : la plus longue phrase
-              mesure 0,465 em par caractère dans cette graisse, soit 10,7 fois
-              la taille pour ses vingt-trois signes. 8,8 cqw laisse donc six pour
-              cent de marge. tests/e2e/parcours.e2e.ts mesure la largeur RÉELLE
+              Le coefficient n'est pas choisi au jugé : en Barlow Condensed
+              extra-grasse, italique et capitale, la plus longue phrase mesure
+              environ 0,36 em par caractère, soit 8,3 fois la taille pour ses
+              vingt-trois signes. 11 cqw laisse donc près de dix pour cent de
+              marge, pour l'italique qui déborde à droite. (Il était de 8,8 cqw
+              avec le serif d'avant, plus large.) tests/e2e/parcours.e2e.ts mesure la largeur RÉELLE
               du texte contre celle de sa colonne, à 390 px comme à 1728 —
               c'est cette mesure à 390 qui manquait, et c'est par là que le
               défaut est passé.
             */}
           <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
             <div style={{ containerType: "inline-size" }}>
-              <h1 className="whitespace-nowrap text-[clamp(1.5rem,8.8cqw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50">
+              <h1 className="whitespace-nowrap text-[clamp(1.75rem,11cqw,4rem)] font-bold leading-[1.04] tracking-tight text-slate-50">
                 Dirigez une entreprise.
                 <br />
                 <span className="text-amber-400">Apprenez à décider.</span>
@@ -605,7 +609,6 @@ export default async function Home() {
         <Bande
           id="accueil.metiers"
           contraste={c("accueil.metiers")}
-          fond="bande-soutenue"
           interieur="mx-auto max-w-6xl px-6 py-8"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
@@ -683,9 +686,14 @@ export default async function Home() {
           Pas de filet sur ses arêtes : un changement de sol se voit tout seul, et
           la bande des métiers en porte déjà un juste au-dessus.
         */}
+        {/* LE BANDEAU DE CHIFFRES-CLÉS. Dans l'arène, la bande est blanche et
+            posée sur un filet marine de trois pixels, comme le bandeau de la
+            maquette : le marine est déjà en tête de page. Remise à contre-jour
+            par l'administrateur, elle redevient le tableau. */}
         <Bande
           id="accueil.chiffres"
           contraste={c("accueil.chiffres")}
+          fond="bandeau-chiffres"
           interieur="mx-auto max-w-6xl px-6 py-12 sm:py-16"
         >
           <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
@@ -715,7 +723,7 @@ export default async function Home() {
                   {libelle}
                 </dt>
                 <dd className="mt-2">
-                  <span className="font-display text-3xl font-semibold text-amber-400">
+                  <span className="font-display text-4xl font-extrabold text-amber-400">
                     {nombre}
                   </span>{" "}
                   <span className="text-base text-slate-200">{quoi}</span>

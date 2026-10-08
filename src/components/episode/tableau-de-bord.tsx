@@ -8,6 +8,10 @@ import type { Indicateur, Lecture } from "@/config/episodes/types";
  * le sens qui est bon : un délai qui MONTE est une mauvaise nouvelle, un
  * chiffre d'affaires qui monte une bonne. Le signe dit le sens ; la couleur
  * ne fait que le confirmer.
+ *
+ * C'est un ÉCRAN DE CHIFFRES : il prend la matière du tableau (`ardoise`), le
+ * marine de l'arène, à côté du récit qui reste sur le clair. L'œil sait ainsi
+ * où regarder pour savoir où l'on en est.
  */
 function Ecart({
   apres,
@@ -50,7 +54,7 @@ export function TableauDeBord({
   avant: Lecture | null;
 }) {
   return (
-    <section aria-labelledby="tableau-titre" className="carte p-4 sm:p-5">
+    <section aria-labelledby="tableau-titre" className="ardoise carte p-4 sm:p-5">
       <h2
         id="tableau-titre"
         className="text-xs font-semibold uppercase tracking-etiquette text-slate-400"
@@ -65,7 +69,7 @@ export function TableauDeBord({
             <div key={ind.cle} className="min-w-0">
               <dt className="text-sm text-slate-400">{ind.nom}</dt>
               <dd className="mt-0.5 flex flex-wrap items-baseline">
-                <span className="font-display text-xl font-semibold tabular-nums text-slate-50">
+                <span className="font-display text-2xl font-bold tabular-nums text-slate-50">
                   {v == null ? "—" : ind.format(v)}
                 </span>
                 <Ecart

@@ -3,7 +3,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * LE HALO DE LAITON S'ÉCRIT UNE FOIS.
+ * L'ANNEAU DU HAUT DE PAGE S'ÉCRIT UNE FOIS.
+ *
+ * Il a été un disque de laiton flou ; l'habillage « L'arène » en a fait
+ * l'anneau orange en filigrane de sa maquette. La forme a changé, la règle
+ * non : une décoration, un composant, une teinte par fond.
  *
  * Six pages publiques dessinaient à la main le même disque flou derrière leur
  * en-tête : `bg-amber-400/10 blur-3xl`, à la hauteur près. Six copies d'une
@@ -39,17 +43,28 @@ const CSS = readFileSync(join(SRC, "app", "globals.css"), "utf8");
 const TSX = fichiers(SRC).map((chemin) => ({ chemin, source: readFileSync(chemin, "utf8") }));
 
 describe("le halo de page", () => {
-  it("a sa teinte par thème, et le disque la lit", () => {
-    // Sur fond sombre, le laiton est une lueur ; sur fond clair, c'est le
-    // laiton CLAIR de l'échelle qu'il faut, et faiblement.
+  it("a sa teinte sur le marine, ne se pose pas sur le clair, et l'anneau la lit", () => {
+    // Sur le marine, l'orange dilué est un filigrane ; sur le clair, le même
+    // anneau est une tache. La teinte est déclarée pour chaque sol.
     expect(CSS).toMatch(
       /:root,\s*\[data-theme="clair"\] \.contre-jour,\s*\[data-theme="clair"\] \.ardoise\s*\{[^}]*--halo-de-page:/,
     );
     expect(CSS).toMatch(/\[data-theme="clair"\]\s*\{[^}]*--halo-de-page:/);
+    // L'anneau ne se pose que sur le marine : sur le clair, il faisait une
+    // tache rose pâle en haut à droite des pages d'épisode. Caché sur le
+    // clair, rendu à un bloc à contre-jour.
+    expect(CSS).toMatch(/\[data-theme="clair"\] \.halo-de-page\s*\{\s*display: none;/);
+    expect(CSS).toMatch(
+      /\[data-theme="clair"\] \.contre-jour \.halo-de-page\s*\{\s*display: block;/,
+    );
     expect(CSS).toMatch(/\.halo-de-page\s*\{[^}]*var\(--halo-de-page\)/);
-    // Le fond du corps de page lit la même teinte : deux halos qui divergent,
-    // c'est une page à deux lumières.
-    expect(CSS).toMatch(/body\s*\{[^}]*var\(--halo-de-page\)/);
+    // Le corps de page ne porte plus de halo : l'anneau est la seule lumière
+    // de la page, et il vit dans son bloc. Deux décors qui divergent, c'est une
+    // page à deux lumières ; le corps est donc un aplat déclaré.
+    expect(CSS).toMatch(/body\s*\{[^}]*background-image:\s*none;/);
+    expect(CSS, "un halo revient sous toute la page").not.toMatch(
+      /body\s*\{[^}]*var\(--halo-de-page\)/,
+    );
   });
 
   it("n'est redessiné à la main nulle part", () => {

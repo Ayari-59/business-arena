@@ -20,12 +20,16 @@
  *   principe : deux boutons pleins côte à côte, c'est une hésitation affichée.
  * · `secondaire` — l'autre chemin, celui qu'on prend sans être poussé.
  * · `laiton` — une action de second rang dans une page dense, qui doit se
- *   distinguer d'un texte sans peser comme un bouton plein.
+ *   distinguer d'un texte sans peser comme un bouton plein. Le nom vient de
+ *   l'habillage d'avant, dont l'accent était un laiton ; il porte aujourd'hui
+ *   l'orange, comme tout l'accent.
  *
- * TROIS TAILLES, ET LA PLUS GRANDE PORTE L'OMBRE. Une ombre laiton donne de la
- * présence à l'appel d'une page publique ; posée sur les huit boutons d'un
- * écran de pilotage, elle devient du bruit. La règle est donc simple à suivre :
- * grand bouton = appel de page = un peu de relief.
+ * TROIS TAILLES, ET LA PLUS GRANDE PORTE L'OMBRE. Le bouton plein de l'arène
+ * a une ombre pleine, orange foncé, décalée vers le bas : six pixels sur
+ * l'appel d'une page publique, trois sur les autres (voir `.bouton-plein`
+ * dans globals.css, qui porte aussi sa couleur et ses capitales condensées).
+ * La règle est donc simple à suivre : grand bouton = appel de page = plus de
+ * relief.
  *
  * Toutes les tailles passent le plancher de 24 px de haut (règle WCAG 2.5.8) :
  * la plus petite fait 12 px de texte, 16 px d'interligne et 2 × 6 px de
@@ -40,8 +44,9 @@ const COMMUN =
   "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
 
 const VARIANTES: Record<VarianteDeBouton, string> = {
-  // `bouton-plein` le bombe (voir globals.css) : un reflet en haut, une arête
-  // en bas, comme une touche qu'on enfonce.
+  // `bouton-plein` en fait le bouton de l'arène (voir globals.css) : l'orange
+  // vif, un texte marine en capitales condensées, une ombre pleine dessous.
+  // Les classes d'échelle restent pour ce qui ne lit pas la feuille.
   principal: "bouton-plein bg-amber-400 text-slate-950 hover:bg-amber-300",
   secondaire: "border border-white/15 text-slate-200 hover:border-amber-400/50 hover:bg-white/5",
   laiton: "border border-amber-400/40 text-amber-300 hover:border-amber-400 hover:bg-amber-400/10",
@@ -53,7 +58,7 @@ const TAILLES: Record<TailleDeBouton, string> = {
   l: "px-6 py-3 text-sm",
 };
 
-/** L'ombre n'est portée que par la grande taille, et seulement par le plein. */
+/** Le grand relief n'est porté que par la grande taille, et seulement par le plein. */
 const RELIEF = "shadow-lg shadow-amber-400/20";
 
 export function bouton({

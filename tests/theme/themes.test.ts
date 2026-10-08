@@ -31,8 +31,12 @@ const declaresEnCss = [...(GLOBALS + CLAIR).matchAll(/\[data-theme="([a-z]+)"\]\
   (m) => m[1]!,
 );
 
-/** oklch(L% C H) en #rrggbb, pour comparer aux couleurs écrites en clair. */
+/**
+ * Une valeur d'échelle en #rrggbb, pour comparer aux couleurs écrites en
+ * clair : l'hexadécimal tel quel, l'oklch(L% C H) converti.
+ */
 function oklchEnHex(valeur: string): string {
+  if (/^#[0-9a-f]{6}$/i.test(valeur)) return valeur.toLowerCase();
   const [l, c, h] = valeur.match(/[\d.]+/g)!.map(Number) as [number, number, number];
   const L = l / 100;
   const a = c * Math.cos((h * Math.PI) / 180);
@@ -103,19 +107,19 @@ describe("le fichier engendré", () => {
     ).toBe(attendu);
   });
 
-  it("le neutre du papier est l'ivoire écrit, pas le gris renversé de Tailwind", () => {
+  it("le neutre du papier est celui de l'arène, écrit, pas le gris renversé de Tailwind", () => {
     const papier = CLAIR.slice(0, CLAIR.indexOf(".contre-jour"));
     for (const [palier, valeur] of Object.entries(PAPIER)) {
       expect(papier, `slate-${palier}`).toContain(`--color-slate-${palier}: ${valeur};`);
     }
   });
 
-  it("le tableau rend l'échelle DU SITE, avec l'ardoise pour neutre", () => {
+  it("le tableau rend l'échelle DU SITE, avec le marine pour neutre", () => {
     // Le site ne se sert pas de l'amber de Tailwind : son `@theme` le remplace
-    // par un or patiné. Le bloc à contre-jour l'a ignoré pendant une journée,
-    // et une bande sombre y ramenait l'amber brut, un jaune d'autocar qu'on ne
-    // trouve nulle part ailleurs. Seul le neutre fait exception : l'ardoise
-    // remplace le bleu nuit que le `@theme` pose sur l'échelle d'origine.
+    // par l'orange de l'arène. Le bloc à contre-jour l'a ignoré pendant une
+    // journée, du temps de l'or patiné, et une bande sombre y ramenait l'amber
+    // brut, un jaune d'autocar qu'on ne trouve nulle part ailleurs. Seul le
+    // neutre fait exception : il est écrit dans TABLEAU.
     const identite = identiteDeLaMaison(readFileSync(SOURCE_IDENTITE, "utf-8"));
     const debut = CLAIR.indexOf('[data-theme="clair"] .contre-jour,');
     const bloc = CLAIR.slice(debut, CLAIR.indexOf("\n}", debut));

@@ -18,15 +18,14 @@ export const contentType = "image/png";
 /**
  * LES COULEURS DE LA MAISON, PAS CELLES DE TAILWIND.
  *
- * Cette image portait l'amber brut (#d97706) et le gris d'usine (#020617) :
- * un orange à 58° de teinte et un fond sans bleu, quand l'identité du site
- * est un or patiné à 87° sur une nuit encrée. Une image de partage est
- * pourtant le premier contact qu'un lien crée, souvent le seul, et elle était
- * la seule surface du produit à ne pas ressembler au produit.
+ * Cette image a porté l'amber brut (#d97706) et le gris d'usine (#020617),
+ * puis l'or patiné de l'habillage d'avant. Une image de partage est le
+ * premier contact qu'un lien crée, souvent le seul : elle prend donc le
+ * marine et l'orange de l'arène, ceux du haut de l'accueil.
  */
-const AMBRE = "#d8b45c";
-const FOND = "#070c1a";
-const CARTE = "#0e1526";
+const AMBRE = "#ff9455";
+const FOND = "#0b2545";
+const CARTE = "#13355f";
 const BORDURE = "rgba(255,255,255,0.10)";
 
 function Tuile({ label, value, color }: { label: string; value: string; color: string }) {
@@ -42,7 +41,7 @@ function Tuile({ label, value, color }: { label: string; value: string; color: s
         padding: "18px 22px",
       }}
     >
-      <span style={{ fontSize: 18, letterSpacing: 2, color: "#94a3b8", textTransform: "uppercase" }}>
+      <span style={{ fontSize: 18, letterSpacing: 2, color: "#c7d4e8", textTransform: "uppercase" }}>
         {label}
       </span>
       <span style={{ fontSize: 34, fontWeight: 700, color, marginTop: 6 }}>{value}</span>
@@ -59,7 +58,7 @@ export default function Image() {
           height: "100%",
           display: "flex",
           background: FOND,
-          color: "#e2e8f0",
+          color: "#ffffff",
           padding: 56,
           fontFamily: "sans-serif",
         }}
@@ -75,7 +74,7 @@ export default function Image() {
           <span style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.05, color: AMBRE }}>
             Apprenez à décider.
           </span>
-          <span style={{ fontSize: 24, color: "#94a3b8", marginTop: 28, lineHeight: 1.4 }}>
+          <span style={{ fontSize: 24, color: "#c7d4e8", marginTop: 28, lineHeight: 1.4 }}>
             {SCENARIO_CHOICES.length} secteurs, {ALL_SITUATIONS.length} situations, {DECISION_MODELS.length} modèles
             d&apos;analyse. Essai gratuit, sans compte élève.
           </span>
@@ -132,7 +131,7 @@ export default function Image() {
             <span style={{ fontSize: 16, letterSpacing: 3, color: AMBRE, textTransform: "uppercase" }}>
               Alerte comptable
             </span>
-            <span style={{ fontSize: 21, color: "#e2e8f0", marginTop: 6, lineHeight: 1.35 }}>
+            <span style={{ fontSize: 21, color: "#ffffff", marginTop: 6, lineHeight: 1.35 }}>
               Votre entreprise gagne de l&apos;argent mais n&apos;en a plus en caisse. Identifiez les
               causes possibles.
             </span>

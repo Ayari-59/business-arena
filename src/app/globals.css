@@ -2,17 +2,24 @@
 @import "./theme-clair.css";
 
 /* ---------------------------------------------------------------------------
- * Identité « Nuit & Laiton ».
+ * Identité « L'arène ».
  *
- * Deux voix typographiques — un serif de caractère pour les grands titres, une
- * grotesque nette pour le reste — et un accent LAITON qui prend la place de
- * l'amber par défaut de Tailwind. Comme les utilitaires lisent ces variables,
- * l'accent change sur TOUT le site (boutons, liens actifs, halos, chiffres)
- * sans qu'aucune page soit touchée. Le fond sombre vire au bleu nuit encré.
+ * Un tableau des scores plutôt qu'un cahier : un MARINE pour les surfaces où
+ * la classe regarde ensemble (l'en-tête, le haut de l'accueil, les écrans de
+ * chiffres de la partie), un ORANGE pour l'action, et un fond clair à peine
+ * bleuté pour lire. Deux voix typographiques, une grotesque étroite pour les
+ * titres et les chiffres (Barlow Condensed), sa version de lecture pour le
+ * reste (Barlow).
  *
- * Le thème clair (theme-clair.css) est GÉNÉRÉ et porte l'amber d'origine : on
- * recouvre ici ses quelques pas de laiton, pour que l'accent reste cohérent
- * d'un thème à l'autre sans avoir à régénérer le fichier.
+ * L'orange prend la place de l'amber de Tailwind : comme les utilitaires
+ * lisent ces variables, l'accent change sur TOUT le site (boutons, liens
+ * actifs, filets, chiffres) sans qu'aucune page soit touchée. L'échelle posée
+ * ici est celle du TABLEAU (fond marine) ; le papier recouvre ses paliers plus
+ * bas, parce qu'un orange qui se lit sur du marine ne se lit pas sur du blanc.
+ *
+ * L'OR N'EST PAS L'ACTION. Il ne sert qu'aux distinctions (le podium, le
+ * meilleur score), jamais à un bouton ni à un lien : l'œil doit pouvoir
+ * apprendre que l'orange se touche et que l'or se gagne.
  * ------------------------------------------------------------------------- */
 @theme {
   --animate-carte-entre: carte-entre 0.2s ease-out;
@@ -21,18 +28,33 @@
     var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, sans-serif;
   --font-display:
-    var(--font-brand-display), ui-serif, Georgia, "Times New Roman", serif;
+    var(--font-brand-display), "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
 
   --animate-plan-ouvre: plan-ouvre 0.18s ease-out;
 
-  /* Accent laiton (thème sombre) : l'amber devient un or patiné. */
-  --color-amber-200: #f0dca8;
-  --color-amber-300: #e7cd8b;
-  --color-amber-400: #d8b45c;
-  --color-amber-500: #c39a34;
-  --color-amber-600: #a67f22;
-  --color-amber-700: #86641a;
-  --color-amber-950: #241b06;
+  /* L'orange d'action, sur le marine du tableau. Le 400 est l'orange CLAIR
+     (texte et liens sur le marine, 5,6 pour 1 sur sa surface relevée), le 500
+     l'orange vif des aplats, le 700 l'orange foncé de l'ombre portée du
+     bouton. L'échelle va du pâle au profond sans s'inverser. */
+  --color-amber-50: #fff4ec;
+  --color-amber-100: #ffe6d5;
+  --color-amber-200: #ffd3b8;
+  --color-amber-300: #ffb488;
+  --color-amber-400: #ff9455;
+  --color-amber-500: #ff6a1a;
+  --color-amber-600: #e8590c;
+  --color-amber-700: #b8460a;
+  --color-amber-800: #8a3407;
+  --color-amber-900: #5c2405;
+  --color-amber-950: #2e1607;
+
+  /* LES PETITS RAYONS. Un tableau des scores a des angles, pas des galets :
+     trois à quatre pixels partout où le site arrondissait de huit à douze. Les
+     composants gardent leurs classes (rounded-md, -lg, -xl) ; seule la
+     mesure change, ici. `rounded-full` reste rond : une pastille, un point. */
+  --radius-md: 3px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
 
   /* LES TROIS ESPACEMENTS DES CAPITALES. Les petites capitales espacées sont la
      signature des pages, et chacune les espaçait à sa main : dix valeurs, de
@@ -40,13 +62,40 @@
      surtitres voisins ne s'alignaient pas. Trois rôles suffisent : l'ÉTIQUETTE
      d'une donnée ou d'un bouton, le SURTITRE d'une section, l'ANNONCE d'une
      page. Un test refuse désormais toute valeur écrite à la main. */
-  --tracking-etiquette: 0.12em;
-  --tracking-surtitre: 0.2em;
-  --tracking-annonce: 0.3em;
+  /* Resserrés d'un cran avec le passage au condensé : une capitale étroite
+     espacée de 0,3 em se lit lettre à lettre, plus en mot. */
+  --tracking-etiquette: 0.08em;
+  --tracking-surtitre: 0.14em;
+  --tracking-annonce: 0.2em;
 
-  /* Bleu nuit encré : les deux surfaces les plus sombres se teintent de bleu. */
-  --color-slate-950: #070c1a;
-  --color-slate-900: #0e1526;
+  /* Le marine : les deux surfaces les plus sombres de l'échelle d'origine. Le
+     tableau les recouvre de son neutre (scripts/generer-theme-clair.ts) ; elles
+     disent ici la même chose, pour qu'aucune nuit d'une autre teinte ne
+     survive quelque part. */
+  --color-slate-950: #0b2545;
+  --color-slate-900: #13355f;
+}
+
+/* LES COULEURS DE LA MAISON QUI NE SONT PAS DES ÉCHELLES.
+ *
+ * L'aplat d'action (bouton principal, barre de progression, pastille active)
+ * est l'orange VIF partout, sur le papier comme sur le marine, et le texte
+ * qu'on y pose est MARINE : le blanc sur cet orange ne tient que 3 pour 1, le
+ * marine en tient 5,4. C'est ce qui permet de garder l'orange de la maquette
+ * au lieu d'un orange brûlé.
+ *
+ * Elles passent par des variables pour qu'une palette d'accent choisie par
+ * l'administrateur (config/palettes.ts) puisse les reprendre : la feuille
+ * d'une palette les rebranche sur son propre remplissage. */
+:root {
+  --marine: #0b2545;
+  --marine-releve: #13355f;
+  --accent-plein: #ff6a1a;
+  --accent-plein-survol: #ff7f3a;
+  --accent-plein-texte: #0b2545;
+  --accent-plein-ombre: #b8460a;
+  /* L'or des distinctions : le podium, le meilleur score. Jamais l'action. */
+  --or-distinction: #f4b400;
 }
 
 /* L'entrée d'une carte du parcours : elle glisse de douze pixels en se révélant,
@@ -190,7 +239,7 @@
 }
 
 /* ---------------------------------------------------------------------------
- * LE CURSEUR DE LA PARTIE, SUR TÉLÉPHONE : une piste fine, la part parcourue en laiton, un
+ * LE CURSEUR DE LA PARTIE, SUR TÉLÉPHONE : une piste fine, la part parcourue en orange, un
  * pouce rond qu'on attrape. Le natif donnait un trait gris et une pastille de 16 px.
  *
  * La part parcourue ne se peint pas toute seule sur une piste redessinée (seul Gecko la
@@ -210,7 +259,7 @@
   border-radius: 999px;
   background: linear-gradient(
     to right,
-    var(--color-amber-400) var(--part),
+    var(--accent-plein) var(--part),
     color-mix(in oklab, var(--color-slate-500) 40%, transparent) var(--part)
   );
 }
@@ -221,10 +270,10 @@
   height: 28px;
   margin-top: -11px;
   border-radius: 999px;
-  background: var(--color-amber-400);
+  background: var(--accent-plein);
   border: 4px solid var(--color-slate-950);
   box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-amber-400) 70%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--accent-plein) 70%, transparent),
     0 3px 8px rgb(0 0 0 / 0.3);
 }
 .curseur-jeu::-moz-range-track {
@@ -235,26 +284,26 @@
 .curseur-jeu::-moz-range-progress {
   height: 6px;
   border-radius: 999px;
-  background: var(--color-amber-400);
+  background: var(--accent-plein);
 }
 .curseur-jeu::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  background: var(--color-amber-400);
+  background: var(--accent-plein);
   border: 4px solid var(--color-slate-950);
   box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-amber-400) 70%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--accent-plein) 70%, transparent),
     0 3px 8px rgb(0 0 0 / 0.3);
 }
 .curseur-jeu:focus-visible::-webkit-slider-thumb {
   box-shadow:
-    0 0 0 3px color-mix(in oklab, var(--color-amber-400) 40%, transparent),
+    0 0 0 3px color-mix(in oklab, var(--accent-plein) 40%, transparent),
     0 3px 8px rgb(0 0 0 / 0.3);
 }
 
 /* ---------------------------------------------------------------------------
- * LES CHAMPS DE LA PARTIE, SUR TÉLÉPHONE : plus ronds, un trait plus doux, et un halo laiton
+ * LES CHAMPS DE LA PARTIE, SUR TÉLÉPHONE : plus ronds, un trait plus doux, et un halo orange
  * à la saisie au lieu du seul filet. Hors couche, comme les règles de geste plus bas, et
  * limité à l'écran de jeu : la vitrine et l'espace enseignant gardent leurs champs.
  * ------------------------------------------------------------------------- */
@@ -385,12 +434,16 @@
     0 10px 28px -14px rgb(0 0 0 / 0.5);
   --creux-champ: inset 0 1px 2px rgb(0 0 0 / 0.25);
   --lumiere-carte: color-mix(in oklab, #fff 4%, transparent);
-  --halo-de-page: color-mix(in oklab, var(--color-amber-500) 12%, transparent);
+  /* L'anneau orange en filigrane du haut de page (voir `.halo-de-page`) :
+     sur le marine, il se devine à 18 % comme sur la maquette. */
+  --halo-de-page: color-mix(in oklab, var(--accent-plein) 18%, transparent);
+  /* Le filet d'une carte : un trait de lumière sur le marine. */
+  --filet-carte: color-mix(in oklab, #fff 10%, transparent);
 }
 
 @utility carte {
   border-radius: var(--radius-xl);
-  border: 1px solid color-mix(in oklab, white 10%, transparent);
+  border: 1px solid var(--filet-carte);
   background-color: var(--color-slate-900);
   background-image: linear-gradient(
     to bottom,
@@ -421,7 +474,7 @@
  *     étant renversée, la même classe donne le bon écart des deux côtés ;
  *   · un CREUX d'un pixel, pour que le champ s'enfonce au lieu de flotter.
  *
- * Le laiton du focus vit ici aussi, pour les deux formes que prend un champ :
+ * L'orange du focus vit ici aussi, pour les deux formes que prend un champ :
  * le contrôle nu (`:focus`) et le contrôle glissé dans une enveloppe qui porte
  * l'unité et le suffixe (`:focus-within`).
  * ------------------------------------------------------------------------- */
@@ -431,7 +484,7 @@
   background-color: var(--color-slate-800);
   box-shadow: var(--creux-champ);
 
-  /* Le laiton passe par une variable, pour qu'un champ qui a une raison d'en
+  /* L'orange passe par une variable, pour qu'un champ qui a une raison d'en
      changer — la demande de subvention, en crise, se signale en rouge — le
      dise sur place au lieu de rejouer la bordure et de se battre avec
      l'utilitaire dans la cascade. */
@@ -467,16 +520,19 @@
   }
 }
 
-/* Les grands titres parlent avec le serif ; le corps reste en grotesque, et
-   un halo laiton fixe pose une profondeur discrète sous toute la page. Le
-   halo est nommé : le grain du papier (plus bas) se pose par-dessus sans
-   l'effacer. */
+/* LE FOND EST UN APLAT. Le papier avait un grain et un halo de laiton fixé
+   sous l'en-tête : deux matières qui disaient la salle de classe. L'arène
+   n'en garde aucune, un tableau des scores est net. La seule touche de
+   lumière est l'anneau orange des hauts de page (`.halo-de-page`), qui vit
+   dans son bloc et non sous toute la page.
+
+   LES CHIFFRES SONT TABULAIRES PARTOUT. Un jeu de gestion aligne des montants
+   d'une ligne à l'autre ; des chiffres à chasse variable font danser les
+   colonnes d'un tour sur l'autre. */
 body {
-  --fond-halo: radial-gradient(60rem 40rem at 50% -12rem, var(--halo-de-page), transparent 70%);
   font-family: var(--font-sans);
-  background-image: var(--fond-halo);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  background-image: none;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------------------------
@@ -552,16 +608,59 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-h1 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.015em;
+/* ---------------------------------------------------------------------------
+ * LES TITRES PARLENT COMME UN TABLEAU DES SCORES.
+ *
+ * Le titre d'une page est en Barlow Condensed, extra-gras, en italique
+ * capitale : l'élan d'un départ. Les grands titres de section (ceux qu'une
+ * page écrit en 2xl et au-delà) prennent la même voix. Les titres de carte et
+ * les petits intertitres gardent la casse du texte, en condensé droit : une
+ * page entière en capitales penchées crierait.
+ *
+ * Ces règles vivent dans la couche de base : un titre qui a une raison de s'en
+ * écarter le dit par ses propres classes (`normal-case`, `not-italic`), et
+ * l'utilitaire l'emporte.
+ *
+ * LES CAPITALES ESPACÉES PRENNENT LE CONDENSÉ. Surtitres, étiquettes de
+ * données, libellés de boutons : tout ce que le site écrit en capitales est
+ * en Barlow Condensed sur la maquette, et c'est ce qui donne le ton d'un
+ * marquoir. Une capitale en grotesque large, espacée de 0,3 em, prend deux
+ * fois la place pour dire la même chose.
+ * ------------------------------------------------------------------------- */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+  }
+  h1 {
+    font-weight: 800;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  h2:is([class*="text-2xl"], [class*="text-3xl"], [class*="text-4xl"], [class*="text-5xl"]) {
+    font-weight: 800;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+  }
+  h3,
+  h4 {
+    letter-spacing: 0.005em;
+  }
+  .uppercase {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
 }
 
 /* ---------------------------------------------------------------------------
  * Le focus clavier, partout.
  *
- * Les champs se signalaient déjà — leur bordure passe au laiton — mais les
+ * Les champs se signalaient déjà, leur bordure passant à l'orange, mais les
  * BOUTONS, les liens et les onglets n'avaient rien : au clavier, on ne savait
  * plus où l'on était. Les composants posent `outline-none` en une trentaine
  * d'endroits pour maîtriser leur propre style de focus ; cette règle vit HORS
@@ -578,8 +677,8 @@ h1 {
 }
 
 
-/* Le laiton et les ombres d'une surface CLAIRE, la page du thème clair. Le
-   renversement mécanique ne suffit pas pour l'ambre : c'est la teinte la plus
+/* L'orange et les ombres d'une surface CLAIRE, la page du site. Le
+   renversement mécanique ne suffit pas pour l'accent : c'est la teinte la plus
    lumineuse de l'échelle, et sur fond clair il lui faut des paliers choisis à
    la main. */
 [data-theme="clair"] {
@@ -587,54 +686,125 @@ h1 {
      site sert par défaut, et ses champs comme sa barre de défilement doivent
      être ceux d'une page claire. */
   color-scheme: light;
-  /* Sur le papier, une ombre noire serait une salissure : moins d'opacité,
-     et la teinte de l'encre brune plutôt que du noir pur. */
+  /* Sur le fond clair, une ombre noire serait une salissure : peu d'opacité,
+     et la teinte du marine plutôt que du noir pur. */
   --ombre-carte:
-    0 1px 1px rgb(40 30 18 / 0.07),
-    0 2px 4px rgb(40 30 18 / 0.06),
-    0 14px 30px -14px rgb(40 30 18 / 0.28),
-    inset 0 1px 0 rgb(255 255 255 / 0.9);
-  --creux-champ: inset 0 1px 2px rgb(40 30 18 / 0.05);
+    0 1px 2px rgb(11 37 69 / 0.06),
+    0 10px 24px -16px rgb(11 37 69 / 0.28);
+  --creux-champ: inset 0 1px 2px rgb(11 37 69 / 0.06);
   /* Voir le bloc des reliefs sombres : un reflet ne s'inverse pas. Il faut
      beaucoup plus de blanc pour éclairer une surface presque blanche. */
   --lumiere-carte: color-mix(in oklab, #fff 60%, transparent);
-  /* LE HALO A ÉTÉ DESSINÉ POUR LE FOND SOMBRE, où le laiton est une lueur
-     chaude. Sur le papier, le même laiton est un brun foncé : mesuré au pixel
-     en haut de l'accueil, le centre tombait à #e2e0da quand le reste de la
-     page est à #f8fafc — un tiers de page en gris chaud, vingt pour cent plus
-     sombre que le reste et de teinte opposée au fond, qui est bleuté. Une
-     lueur était devenue une tache.
-     Sur fond clair on prend donc le laiton CLAIR de l'échelle, et faiblement :
-     le haut de page se réchauffe au lieu de se salir. */
-  --halo-de-page: color-mix(in oklab, var(--color-amber-950) 30%, transparent);
-  /* DEUX LAITONS, PAS QUATRE. Le relevé des couleurs réellement peintes a
-     compté quatre bruns d'encre sur une page claire — #8a6a16, #6b5312,
-     #5c470f et un quatrième à l'opacité — tenant dans seize points de clarté,
-     pour un travail que deux font. Quatre valeurs si proches ne hiérarchisent
-     rien : elles se lisent comme une seule couleur mal imprimée, et elles
-     encombrent la palette.
-     Ce qui reste est ce qui a un rôle : une ENCRE, pour les liens, les titres
-     accentués et les filets ; un REMPLISSAGE, pour le fond du bouton d'action,
-     choisi pour porter l'encre la plus sombre du site à plus de 4,5 ; et un
-     laiton CLAIR, qui n'est pas une encre mais un voile de fond. */
-  --color-amber-200: #5c470f;
-  --color-amber-300: #5c470f;
-  --color-amber-400: #5c470f;
-  --color-amber-500: #7a5f14;
-  --color-amber-600: #5c470f;
-  --color-amber-700: #5c470f;
-  --color-amber-950: #f6efdb;
+  /* L'anneau ne se pose pas sur le clair (voir `.halo-de-page`) : il n'a
+     donc pas de teinte ici. */
+  --halo-de-page: transparent;
+  /* Le filet des cartes blanches : le gris bleuté de la maquette. */
+  --filet-carte: #dbe2ee;
+  /* L'ORANGE QUI SE LIT SUR LE BLANC. L'orange vif ne tient que 2,9 pour 1
+     sur le fond clair : bon pour un aplat, illisible pour un mot. Tout ce qui
+     est TEXTE sur le papier (liens, surtitres, chiffres accentués, filets) prend
+     donc l'orange foncé de l'ombre du bouton, #b8460a : 5,0 pour 1 sur la page,
+     5,4 sur une carte blanche, 4,7 sur un champ. Le palier 500 sert de
+     remplissage quand un texte CLAIR doit s'y poser (5,0 pour 1) ; l'aplat
+     d'action, lui, garde l'orange vif avec un texte marine (plus bas,
+     « L'APLAT D'ACTION »). Les paliers 800 à 950 sont des voiles, pas des
+     encres. */
+  --color-amber-50: #8a3407;
+  --color-amber-100: #9c3b08;
+  --color-amber-200: #b8460a;
+  --color-amber-300: #b8460a;
+  --color-amber-400: #b8460a;
+  --color-amber-500: #b8460a;
+  --color-amber-600: #b8460a;
+  --color-amber-700: #b8460a;
+  --color-amber-800: #ffd2b5;
+  --color-amber-900: #ffe6d6;
+  --color-amber-950: #fff1e6;
+}
+
+/* ---------------------------------------------------------------------------
+ * L'APLAT D'ACTION : L'ORANGE VIF, ET SON TEXTE MARINE.
+ *
+ * Sur le papier, `amber-400` est une ENCRE (l'orange foncé) : c'est ce que
+ * lisent les centaines de liens et de surtitres du site. Mais posée en FOND,
+ * une pastille active, une barre de progression, un bouton plein écrit à la
+ * main, cette encre donne un orange brûlé, sans l'élan de la maquette. Les
+ * deux usages partagent la même classe ; seul le fond se distingue ici : un
+ * aplat d'accent est l'orange vif, et le texte qu'on y pose (`text-slate-950`,
+ * le fond de la page sur le papier) devient marine, 5,4 pour 1, là où un blanc
+ * ne tiendrait que 3.
+ * ------------------------------------------------------------------------- */
+[data-theme="clair"] :is(.bg-amber-400, .bg-amber-500) {
+  background-color: var(--accent-plein);
+}
+[data-theme="clair"] :is(.bg-amber-400, .bg-amber-500):is(.text-slate-950, .text-slate-900) {
+  color: var(--accent-plein-texte);
+}
+[data-theme="clair"] :is(.bg-amber-400, .bg-amber-500):is(.hover\:bg-amber-300, .hover\:bg-amber-400):hover {
+  background-color: var(--accent-plein-survol);
+}
+
+/* ---------------------------------------------------------------------------
+ * LE VOILE D'UN ÉTAT CHOISI : ORANGÉ, PAS ROSE.
+ *
+ * Une option cochée, l'étape en cours, le niveau retenu se signalent par un
+ * fond d'accent très dilué (`bg-amber-400/10`) et un filet d'accent. Sur le
+ * clair, l'accent est l'ENCRE orange foncé, #b8460a : diluée dans la
+ * transparence et posée sur un fond bleuté, elle donne un rose sale. Le voile
+ * se tire donc de l'orange VIF, mélangé à du BLANC plutôt qu'à la
+ * transparence : neuf pour cent font #fff3ea, un orangé franc et clair qui ne
+ * dépend plus du fond dessous. L'encre orange y tient 4,9 pour 1, le texte
+ * secondaire 6,2. Les dilutions fortes (40 % et plus) sont des barres et des
+ * points, pas des fonds de texte : elles gardent la transparence.
+ *
+ * Sur le marine (bande à contre-jour, écran de chiffres), le voile reste celui
+ * de l'échelle du tableau : un fond presque blanc y serait une tache.
+ *
+ * La règle reprend une à une les dilutions que le site emploie, avec leurs
+ * variantes d'état (survol, case cochée) : Tailwind compose la couleur de la
+ * classe à partir de l'échelle, sans prise pour un autre palier. Le test
+ * tests/architecture/voile-d-etat.test.ts refuse une dilution employée dans
+ * une page et absente d'ici. Le filet, lui, reste l'encre (`border-amber-400`).
+ * ------------------------------------------------------------------------- */
+[data-theme="clair"] .bg-amber-400\/5:not(:is(.contre-jour, .ardoise) *) {
+  background-color: color-mix(in srgb, var(--accent-plein) 5%, #fff);
+}
+[data-theme="clair"] .bg-amber-400\/10:not(:is(.contre-jour, .ardoise) *),
+[data-theme="clair"] .bg-amber-400\/15:not(:is(.contre-jour, .ardoise) *),
+[data-theme="clair"] .hover\:bg-amber-400\/10:hover:not(:is(.contre-jour, .ardoise) *),
+[data-theme="clair"] .has-\[\:checked\]\:bg-amber-400\/10:has(:checked):not(:is(.contre-jour, .ardoise) *) {
+  background-color: color-mix(in srgb, var(--accent-plein) 9%, #fff);
+}
+[data-theme="clair"] .bg-amber-400\/20:not(:is(.contre-jour, .ardoise) *),
+[data-theme="clair"] .bg-amber-400\/25:not(:is(.contre-jour, .ardoise) *),
+[data-theme="clair"] .hover\:bg-amber-400\/20:hover:not(:is(.contre-jour, .ardoise) *) {
+  background-color: color-mix(in srgb, var(--accent-plein) 16%, #fff);
+}
+[data-theme="clair"] .bg-amber-400\/40:not(:is(.contre-jour, .ardoise) *) {
+  background-color: color-mix(in srgb, var(--accent-plein) 40%, transparent);
+}
+[data-theme="clair"] .bg-amber-400\/45:not(:is(.contre-jour, .ardoise) *) {
+  background-color: color-mix(in srgb, var(--accent-plein) 45%, transparent);
+}
+[data-theme="clair"] .bg-amber-400\/70:not(:is(.contre-jour, .ardoise) *) {
+  background-color: color-mix(in srgb, var(--accent-plein) 70%, transparent);
+}
+[data-theme="clair"] .bg-amber-400\/80:not(:is(.contre-jour, .ardoise) *) {
+  background-color: color-mix(in srgb, var(--accent-plein) 80%, transparent);
+}
+[data-theme="clair"] .before\:bg-amber-400\/70:not(:is(.contre-jour, .ardoise) *)::before {
+  background-color: color-mix(in srgb, var(--accent-plein) 70%, transparent);
 }
 
 /* ---------------------------------------------------------------------------
  * UN SEUL HABILLAGE : LE PAPIER, ET LE TABLEAU.
  *
  * Le site proposait deux thèmes, un sombre et un clair qui le renversait. Il
- * n'en a plus qu'un, qui ne se choisit pas : un papier ivoire à l'encre brune
- * pour lire et jouer, et une ardoise vert-noir — le tableau — là où la classe
- * regarde ensemble (bandes à contre-jour, écrans de chiffres, projection).
- * Le sombre ne disparaît pas, il devient une matière posée à dessein au lieu
- * d'un mode qu'on bascule.
+ * n'en a plus qu'un, qui ne se choisit pas : un fond clair à peine bleuté et
+ * son encre pour lire et jouer (le PAPIER), et le marine (le TABLEAU) là où
+ * la classe regarde ensemble : l'en-tête, le haut de l'accueil, les bandes à
+ * contre-jour, les écrans de chiffres, la projection. Le sombre ne disparaît
+ * pas, il devient une matière posée à dessein au lieu d'un mode qu'on bascule.
  *
  * L'attribut `data-theme="clair"` reste posé sur la racine : toutes les
  * règles du papier s'y accrochent, et le nom du fichier engendré aussi
@@ -643,18 +813,36 @@ h1 {
  * ------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------
- * LE DISQUE DE LAITON DE L'EN-TÊTE.
+ * L'ANNEAU DU HAUT DE PAGE.
  *
- * Six pages publiques le dessinaient à la main, à l'identique :
- * `bg-amber-400/10 blur-3xl`. Six copies d'une décoration, c'est six
- * décorations qui dérivent — et surtout six endroits où corriger le jour où
- * l'on s'aperçoit que le laiton du thème clair est un brun foncé, donc que la
- * lueur y est une tache. Il lit maintenant la même variable que le halo du
- * corps de page, et change donc de teinte avec le thème.
+ * Six pages publiques dessinaient à la main un disque de laiton flou derrière
+ * leur en-tête. Il est devenu un composant (HaloDePage), et l'arène en change
+ * la forme : un ANNEAU orange en filigrane, qui déborde du coin haut droit,
+ * comme sur la maquette du héros marine. Un cercle de piste plutôt qu'une
+ * lueur. Sa teinte passe par `--halo-de-page` : 18 % d'orange sur le marine.
+ *
+ * IL NE VIT QUE SUR LE MARINE. Posé sur une page claire, le même anneau, même
+ * dilué à 10 %, faisait une grosse tache rose pâle en haut à droite de la page
+ * d'un épisode ou de la liste des épisodes : un filigrane devient une salissure
+ * sur un fond presque blanc. Il n'apparaît donc que dans un bloc à contre-jour
+ * (le haut de l'accueil, ou toute bande que l'administrateur passe au marine) ;
+ * ailleurs, le composant reste dans la page sans rien peindre.
+ *
+ * L'épaisseur suit la largeur de l'écran : un trait de 26 px sur la maquette
+ * de 460 px, soit un vingtième de la carte ; le même rapport tient l'anneau
+ * à sa place sur un téléphone comme sur un grand écran.
  * ------------------------------------------------------------------------- */
 .halo-de-page {
-  background-color: var(--halo-de-page);
+  border: clamp(1.75rem, 4.5vw, 4rem) solid var(--halo-de-page);
   z-index: -1;
+}
+
+[data-theme="clair"] .halo-de-page {
+  display: none;
+}
+
+[data-theme="clair"] .contre-jour .halo-de-page {
+  display: block;
 }
 
 /* LE HALO PASSE DERRIÈRE LE TEXTE. Posé en position absolue sans profondeur,
@@ -728,106 +916,160 @@ h1 {
 }
 
 /* ---------------------------------------------------------------------------
- * LE RELIEF : LE PAPIER A UN GRAIN, LE TABLEAU EST ENCASTRÉ.
+ * LA MATIÈRE : DES APLATS NETS, ET L'ÉLAN DE L'ACTION.
  *
- * Un habillage tout en aplats se lit comme un écran, pas comme une salle de
- * classe. Quatre gestes, tirés de cette salle :
+ * L'habillage « Papier & Tableau » avait un grain de papier, une poussière de
+ * craie et un cadre de bois : une salle de classe. L'arène est un tableau des
+ * scores, et un tableau des scores est net. Il ne reste que des aplats, et
+ * trois gestes tirés de la maquette :
  *
- *   · le GRAIN du papier, un bruit fractal très léger sur tout le fond ;
- *   · les BANDES DE PAPIER : une section publique sur deux passe sur le
- *     papier plus soutenu, de la même teinte : deux matières seulement, le
- *     papier et le tableau, et la page se lit en chapitres plutôt qu'en un
- *     seul aplat ;
- *   · le TABLEAU ENCASTRÉ : une ombre intérieure en haut et en bas, une lueur
- *     venue d'en haut, la poussière de craie, et pour les bandes un cadre de
- *     bois, plus épais en bas comme le rebord où l'on pose la craie ; les
- *     écrans de chiffres de l'arène sont la même ardoise, enfoncée dans le
- *     papier ;
- *   · les CARTES et les BOUTONS PLEINS en relief (ombre de carte, plus haut,
- *     et `.bouton-plein`).
+ *   · les BANDES CLAIRES alternent le fond de la page et le blanc des cartes,
+ *     sans texture : la page se lit en chapitres plutôt qu'en un seul aplat ;
+ *   · le TABLEAU (bande à contre-jour, écran de chiffres, en-tête) est un
+ *     marine plein, sans lueur ni ombre intérieure ;
+ *   · le BOUTON D'ACTION porte une ombre pleine, décalée vers le bas, comme
+ *     une touche qu'on va enfoncer ; les CARTES qui mènent quelque part
+ *     portent un filet orange à gauche.
  *
- * Les textures sont des SVG en ligne : aucun fichier de plus à charger. Elles
- * restent sous le seuil où elles se verraient sous le texte — la mesure de
- * contraste des parcours navigateur passe sur les mêmes pages, et lit les
- * couleurs, pas les grains. À l'impression, tout redevient plat.
+ * À l'impression, tout redevient plat.
  * ------------------------------------------------------------------------- */
 :root {
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0 0.12 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  --craie: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .22 -.07'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
-  /* Le bois du cadre du tableau : le haut, puis le rebord de la craie. */
-  --bois: oklch(42% 0.05 65);
-  --bois-rebord: oklch(38% 0.05 65);
-  /* Le papier des bandes : le même ivoire, un ton plus bas. Pas une couleur
-     de plus — le site n'a que deux matières, le papier et le tableau. */
-  --papier-soutenu: oklch(95% 0.014 86);
+  /* La bande claire : le blanc des cartes, posé sur le fond de la page. Pas
+     une couleur de plus, l'arène n'a que ses deux sols, le clair et le
+     marine. */
+  --bande-claire: #ffffff;
 }
 
-/* Le grain par-dessus le halo, pas à sa place. Le grain défile avec la page
-   comme une feuille ; le halo reste fixe sous l'en-tête. */
-[data-theme="clair"] body {
-  background-image: var(--grain), var(--fond-halo);
-  background-size: 220px, auto;
-  background-repeat: repeat, no-repeat;
-  background-attachment: scroll, fixed;
-}
-
-/* Une bande de papier sur deux, parmi les sections d'une page publique. Une
+/* Une bande claire sur deux, parmi les sections d'une page publique. Une
    bande qui pose déjà son propre fond le garde : la règle ne vise que celles
    qui n'en ont pas. Une bande peut aussi le demander par son nom,
-   `bande-soutenue`, quand le rang pair ne tombe pas sur elle. */
-[data-theme="clair"] main > section[data-bande]:not(.contre-jour):not([class*="bg-"]):nth-of-type(even),
+   `bande-soutenue`, quand le rang pair ne tombe pas sur elle. Le filet du
+   haut et du bas la détache du fond sans ombre. */
+[data-theme="clair"] main > section[data-bande]:not(.contre-jour):not(.bandeau-chiffres):not([class*="bg-"]):nth-of-type(even),
 [data-theme="clair"] main > section.bande-soutenue {
-  background-color: var(--papier-soutenu);
-  background-image: var(--grain);
-  background-size: 220px;
-  background-repeat: repeat;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  background-color: var(--bande-claire);
+  box-shadow:
+    inset 0 1px 0 var(--filet-carte),
+    inset 0 -1px 0 var(--filet-carte);
 }
 
+/* LE BANDEAU DE CHIFFRES-CLÉS : blanc, posé sur un filet marine de trois
+   pixels, comme le bandeau de la maquette sous le héros. Une bande peut le
+   porter quand elle n'est pas à contre-jour ; à contre-jour, elle redevient
+   le tableau. */
+[data-theme="clair"] main > section.bandeau-chiffres:not(.contre-jour) {
+  background-color: var(--bande-claire);
+  border-bottom: 3px solid var(--marine);
+  box-shadow: inset 0 1px 0 var(--filet-carte);
+}
+
+/* LA PASTILLE PENCHÉE : le surtitre d'un haut de page marine. L'orange vif,
+   un texte marine (5,4 pour 1, quand le blanc n'en tiendrait que 3), des
+   capitales condensées, et une inclinaison de huit degrés : un dossard plutôt
+   qu'une étiquette. */
+.surtitre-arene {
+  display: inline-block;
+  background-color: var(--accent-plein);
+  color: var(--accent-plein-texte);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.125rem 0.625rem;
+  transform: skewX(-8deg);
+}
+
+/* L'AIR APRÈS UN TABLEAU. Une bande claire qui n'a qu'une marge basse tenait
+   son haut du cadre de bois du tableau qui la précédait. Le bois parti, son
+   titre venait buter contre le marine : elle reçoit la marge haute qui lui
+   manquait, et seulement quand elle n'en a pas. */
+[data-theme="clair"]
+  main
+  > section.contre-jour
+  + section[data-bande]:not(.contre-jour):has(> div[class*="pb-"]:not([class*="py-"]):not([class*="pt-"])) {
+  padding-top: 3.5rem;
+}
+
+/* Le tableau est un aplat de marine : ni craie, ni lueur, ni ombre
+   intérieure. La bande à contre-jour s'arrête net sur la page claire. */
 [data-theme="clair"] .contre-jour,
 [data-theme="clair"] .ardoise {
-  background-image:
-    radial-gradient(ellipse 70% 90% at 50% 0%, rgb(255 255 255 / 0.07), transparent 70%),
-    var(--craie);
-  background-size: auto, 260px;
-  background-repeat: no-repeat, repeat;
-  box-shadow:
-    inset 0 18px 22px -16px rgb(0 0 0 / 0.65),
-    inset 0 -18px 22px -16px rgb(0 0 0 / 0.55);
+  background-image: none;
 }
 
-/* La bande à contre-jour est un tableau mural : un cadre de bois. */
-[data-theme="clair"] main > section.contre-jour {
-  border-top: 6px solid var(--bois);
-  border-bottom: 10px solid var(--bois-rebord);
-  box-shadow:
-    inset 0 18px 22px -16px rgb(0 0 0 / 0.65),
-    inset 0 -18px 22px -16px rgb(0 0 0 / 0.55),
-    0 4px 10px -4px rgb(40 30 18 / 0.35);
-}
-
-/* L'écran de chiffres est une ardoise enfoncée dans le papier. */
+/* L'écran de chiffres est une tuile de marine posée sur le clair : une ombre
+   courte la décolle, rien de plus. */
 [data-theme="clair"] .ardoise {
-  box-shadow:
-    inset 0 2px 6px rgb(0 0 0 / 0.55),
-    inset 0 -1px 0 rgb(255 255 255 / 0.06),
-    0 1px 0 rgb(255 255 255 / 0.8),
-    0 6px 14px -8px rgb(40 30 18 / 0.45);
+  box-shadow: 0 6px 14px -10px rgb(11 37 69 / 0.55);
 }
 
-/* La projection est l'ardoise entière : ni enfoncement, ni ombre portée. */
-[data-theme="clair"] main.ardoise {
+/* La projection est le marine entier, et l'en-tête une barre : ni l'une ni
+   l'autre ne flotte. */
+[data-theme="clair"] main.ardoise,
+[data-theme="clair"] header.ardoise {
   box-shadow: none;
 }
 
-/* Le bouton plein, bombé. L'ombre portée de la grande taille (`shadow-lg`)
-   passe par `--tw-shadow` et se compose avec le reflet. */
+/* ---------------------------------------------------------------------------
+ * LE BOUTON D'ACTION.
+ *
+ * L'orange vif, un texte marine en capitales condensées, et une ombre PLEINE
+ * d'un orange foncé décalée vers le bas, sans flou : la touche d'une borne
+ * d'arcade plutôt qu'un bouton bombé. L'ombre fait six pixels sur le grand
+ * bouton d'une page publique, trois sur les autres : sur un écran de pilotage
+ * qui en compte huit, six pixels seraient du bruit. Au survol l'orange
+ * s'éclaire ; à l'appui, le bouton descend sur son ombre.
+ *
+ * Hors couche, et à dessein : la règle l'emporte sur `bg-amber-400` et
+ * `text-slate-950` que la fonction `bouton()` pose encore, pour les pages qui
+ * liraient ses classes, et qui sur le papier donneraient l'orange brûlé.
+ * ------------------------------------------------------------------------- */
 .bouton-plein {
-  background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.14), rgb(0 0 0 / 0.08));
-  box-shadow:
-    var(--tw-shadow, 0 0 #0000),
-    inset 0 1px 0 rgb(255 255 255 / 0.22),
-    0 1px 0 rgb(40 30 18 / 0.2);
+  background-color: var(--accent-plein);
+  background-image: none;
+  color: var(--accent-plein-texte);
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 3px 0 var(--accent-plein-ombre);
+}
+.bouton-plein.shadow-lg {
+  font-size: 1rem;
+  box-shadow: 0 6px 0 var(--accent-plein-ombre);
+}
+@media (min-width: 640px) {
+  .bouton-plein.shadow-lg {
+    font-size: 1.0625rem;
+  }
+}
+.bouton-plein:hover:not(:disabled) {
+  background-color: var(--accent-plein-survol);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bouton-plein:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--accent-plein-ombre);
+  }
+  .bouton-plein.shadow-lg:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--accent-plein-ombre);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * LA CARTE QUI MÈNE QUELQUE PART : un filet orange de six pixels à gauche.
+ *
+ * Sur la maquette, la carte d'un épisode porte ce filet ; le classement, qui
+ * n'est qu'à lire, ne le porte pas. La règle tient cette différence : une
+ * carte cliquable, ou qui porte le bouton d'action, prend le filet ; une carte
+ * qui ne fait que contenir reste blanche, cernée de gris.
+ * ------------------------------------------------------------------------- */
+a.carte,
+.carte:has(.bouton-plein) {
+  border-left: 6px solid var(--accent-plein);
 }
 
 /* Les cartes cliquables se soulèvent d'un cran au survol. */
@@ -858,9 +1100,13 @@ h1 {
 
 /* ---------------------------------------------------------------------------
  * Le logo est un fichier, pas du texte : aucune feuille de style ne peut en
- * changer l'encre. Sur fond clair, son nom écrit en gris pâle disparaîtrait,
- * d'où un second fichier et cette bascule. Le fond n'appelle QUE le fichier
- * retenu, là où deux balises d'image chargeraient les deux.
+ * changer l'encre. Il en existe deux, sans rien changer à la marque que ses
+ * couleurs : le nom en BLANC et « ARENA » en orange pour le marine, le nom en
+ * MARINE et « ARENA » en orange foncé pour le clair. Le fond n'appelle QUE le
+ * fichier retenu, là où deux balises d'image chargeraient les deux.
+ *
+ * L'en-tête est marine (voir site-header.tsx) : il porte la version blanche,
+ * comme toute bande à contre-jour et tout écran de chiffres.
  * ------------------------------------------------------------------------- */
 .logo-arena {
   background: url("/brand/logo.svg") center / contain no-repeat;
@@ -871,14 +1117,14 @@ h1 {
   background-image: url("/brand/logo-light.svg");
 }
 
-/* Sur le tableau, le logo reprend sa craie : l'encre brune y disparaîtrait. */
+/* Sur le marine, le logo reprend son blanc : l'encre y disparaîtrait. */
 [data-theme="clair"] .contre-jour .logo-arena,
 [data-theme="clair"] .ardoise .logo-arena {
   background-image: url("/brand/logo.svg");
 }
 
 /* ---------------------------------------------------------------------------
- * « ARENA » EN PIED DE PAGE : le nom de la marque, à l'or de la marque.
+ * « ARENA » EN PIED DE PAGE : le nom de la marque, à l'accent de la marque.
  *
  * Il s'est longtemps écrit en ambre BRUT de Tailwind, atténué à 70 %. Trois
  * défauts dans une ligne. L'ambre brut n'est pas la couleur du site, qui
