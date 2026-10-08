@@ -222,7 +222,7 @@ export const EPISODE_COMPETENCES: Episode<Trimestre> = {
       const perdu = Math.max(0, j - JOURS_SANS_PERTE) * PERTE_PAR_JOUR;
       if (perdu <= 0) return null;
       return {
-        de: "Erwan Arnoux",
+        de: "Enguerrand Arnoux",
         role: "Chargé d'affaires sur-mesure",
         alerte: true,
         texte: `Pendant ce temps, trois menuisiers attendaient un devis sur mesure ; deux sont allés voir ailleurs : ${euros(perdu)} de marge perdue.`,

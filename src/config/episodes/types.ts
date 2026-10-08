@@ -145,6 +145,11 @@ export interface Episode<R extends Resultat = Resultat> {
     /** Au-delà de ce nombre de jours d'enquête, l'attente coûte. */
     joursSansPerte: number;
     consigne: string;
+    /**
+     * Ce qui clôt l'enquête de la première décision, dit après « avant » :
+     * « le point de vendredi » si l'épisode ne dit rien.
+     */
+    echeance?: string;
     /** Le message qui dit ce que l'attente a coûté. */
     perte(jours: number): Message | null;
   };

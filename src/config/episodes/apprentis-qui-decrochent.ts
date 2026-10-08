@@ -49,7 +49,7 @@ import { euros, nombre, taux } from "./format";
 import type { Etape } from "./types";
 
 const LISANDRO = { de: "Lisandro Esquerré", role: "Chef de rang" } as const;
-const CLERVIE = { de: "Clervie Ballandras", role: "Cheffe de rang" } as const;
+const ZENOBIE = { de: "Zénobie Ballandras", role: "Cheffe de rang" } as const;
 const THEO = { de: "Théo Garrigues", role: "Directeur des restaurants du groupe" } as const;
 const NOELINE = {
   de: "Noéline Garrouste",
@@ -161,7 +161,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment organisez-vous la rentrée des apprentis ?",
     options: [
       {
-        t: "Nommer Lisandro et Clervie tuteurs, avec trois heures par semaine chacun pendant la mise en place, et un parcours en trois étapes pour chaque apprenti : commis, rang à deux, rang seul",
+        t: "Nommer Lisandro et Zénobie tuteurs, avec trois heures par semaine chacun pendant la mise en place, et un parcours en trois étapes pour chaque apprenti : commis, rang à deux, rang seul",
         d: `${nombre(2 * HEURES_TUTORAT)} heures de tutorat par semaine, ${euros(2 * COUT_TUTEUR)} en heures supplémentaires. Les nouveaux commencent en commis : un peu moins de bras au début.`,
       },
       {
@@ -180,7 +180,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...CLERVIE,
+          ...ZENOBIE,
           texte:
             "Trois heures le mardi et le jeudi pendant la mise en place, c'est faisable. J'ai écrit le parcours d'Iliana : commis jusqu'à ce qu'elle sache prendre une table seule, pas avant.",
         },
@@ -224,7 +224,7 @@ export const ETAPES: readonly Etape[] = [
       {
         ...LISANDRO,
         heure: "11:40",
-        texte: `La semaine 8, c'est la Toussaint : on attend ${nombre(COUVERTS * SAISON[8], 0)} couverts dans la semaine. À quatre, avec Clervie, Melchior et toi, on ne les tiendra pas.`,
+        texte: `La semaine 8, c'est la Toussaint : on attend ${nombre(COUVERTS * SAISON[8], 0)} couverts dans la semaine. À quatre, avec Zénobie, Melchior et toi, on ne les tiendra pas.`,
       },
       {
         de: "Tableau de bord de la salle",
@@ -296,7 +296,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...CLERVIE,
+          ...ZENOBIE,
           texte: "Les semaines de cours, on fera ce qu'on peut. On fermera peut-être des tables.",
         },
       ],
@@ -304,11 +304,11 @@ export const ETAPES: readonly Etape[] = [
   },
   {
     moment: "Semaine 4 · vendredi",
-    titre: "Clervie s'arrête",
+    titre: "Zénobie s'arrête",
     jusqua: 6,
     messages: (ctx) => [
       {
-        ...CLERVIE,
+        ...ZENOBIE,
         heure: "09:20",
         alerte: true,
         texte: `Garance, la clinique m'a donné une date pour mon genou : lundi. Arrêt de deux semaines, les semaines ${ARRET_CLERVIE[0]} et ${ARRET_CLERVIE[1]}. Désolée de te prévenir si tard.`,
@@ -334,7 +334,7 @@ export const ETAPES: readonly Etape[] = [
         nature: "decisive",
         resultat: (ctx) =>
           ctx.tutore
-            ? "Lisandro : « Depuis la rentrée, je la fais tenir un rang à deux avec moi pendant le tutorat. Elle connaît la carte, les vins, elle anticipe. Je la vois tenir celui de Clervie, avec Nolhan en commis. Un premier samedi seule, il y a toujours un risque : mais plus de huit fois sur dix, ça passe. »"
+            ? "Lisandro : « Depuis la rentrée, je la fais tenir un rang à deux avec moi pendant le tutorat. Elle connaît la carte, les vins, elle anticipe. Je la vois tenir celui de Zénobie, avec Nolhan en commis. Un premier samedi seule, il y a toujours un risque : mais plus de huit fois sur dix, ça passe. »"
             : "Lisandro : « Bintou sait servir, mais elle n'a jamais tenu un rang seule un samedi, et personne ne l'y a préparée. Une fois sur trois, ça passe. Sinon, c'est elle qui en sortira cassée. »",
       },
       {
@@ -345,7 +345,7 @@ export const ETAPES: readonly Etape[] = [
         resultat: `Fin septembre, les extras confirmés sont pris par les mariages. Il en reste un, au dernier moment : ${euros(COUT_EXTRA_DERNIERE_MINUTE / SERVICES_PAR_SEMAINE)} le service, ${nombre(SERVICES_PAR_SEMAINE)} services par semaine, ${euros(2 * COUT_EXTRA_DERNIERE_MINUTE)} pour les deux semaines. Il connaît le métier, pas la maison.`,
       },
     ],
-    question: "Qui tient le rang de Clervie ?",
+    question: "Qui tient le rang de Zénobie ?",
     options: [
       {
         t: "Prendre un extra confirmé pour tenir son rang les deux semaines",
@@ -527,7 +527,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat: (ctx) =>
-          `Un maître d'apprentissage peut accueillir deux apprentis au plus : avec Lisandro, Clervie et vous, la salle peut en former six. Vous en avez ${ctx.apprentis}. ${
+          `Un maître d'apprentissage peut accueillir deux apprentis au plus : avec Lisandro, Zénobie et vous, la salle peut en former six. Vous en avez ${ctx.apprentis}. ${
             ctx.tutore
               ? `Les ${nombre(2 * HEURES_TUTORAT)} heures de tutorat de la semaine se partageraient entre ${Number(ctx.apprentis) + 2} apprentis.`
               : "Personne n'a d'heures de tutorat : deux recrues apprendraient en servant."
@@ -566,7 +566,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...CLERVIE,
+          ...ZENOBIE,
           texte: "Je prends le nouveau en commis avec moi. Il écoute, il apprendra.",
         },
       ],
@@ -640,7 +640,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...CLERVIE,
+          ...ZENOBIE,
           texte:
             "Iliana a tenu son rang seule mardi midi. J'étais au bar, je n'ai rien eu à reprendre.",
         },

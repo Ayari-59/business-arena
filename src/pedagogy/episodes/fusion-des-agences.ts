@@ -49,14 +49,14 @@ const partis = (t: Trimestre) =>
   [
     t.sebastienPart ? "Sébastien" : null,
     t.joelPart ? "Pierrick" : null,
-    t.naimaPart ? "Naïma" : null,
+    t.naimaPart ? "Taous" : null,
   ].filter((x): x is string => x !== null);
 
 const enumeration = (noms: readonly string[]) =>
   noms.length <= 1 ? (noms[0] ?? "") : `${noms.slice(0, -1).join(", ")} et ${noms.at(-1)}`;
-/** « Sébastien est parti », « Naïma est partie », « Sébastien et Naïma sont partis ». */
+/** « Sébastien est parti », « Taous est partie », « Sébastien et Taous sont partis ». */
 const sontPartis = (noms: readonly string[]) =>
-  `${enumeration(noms)} ${noms.length > 1 ? "sont partis" : noms[0] === "Naïma" ? "est partie" : "est parti"}`;
+  `${enumeration(noms)} ${noms.length > 1 ? "sont partis" : noms[0] === "Taous" ? "est partie" : "est parti"}`;
 
 /** Ce que les décisions révèlent, dans l'ordre où un directeur d'agence les apprend. */
 export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
@@ -364,7 +364,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
     }
     if (arrive.naimaPart) {
       lies.push({
-        de: "Naïma Tahiri",
+        de: "Taous Tahiri",
         role: "Vendeuse comptoir, Combelle",
         heure: "sem. 11",
         alerte: true,
@@ -410,7 +410,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
         {
           nom: "Vendeurs clés",
           valeur: `${3 - perdus.length} sur 3`,
-          aide: perdus.length ? sontPartis(perdus) : "Sébastien, Naïma et Pierrick sont restés",
+          aide: perdus.length ? sontPartis(perdus) : "Sébastien, Taous et Pierrick sont restés",
           tenu: perdus.length === 0,
         },
         {
@@ -431,7 +431,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
       const equipe = [
         t.sebastienPart ? "Sébastien est parti en semaine 6 au Comptoir Rhodanien" : null,
         t.joelPart ? "Pierrick est parti en semaine 7" : null,
-        t.naimaPart ? "Naïma est partie en semaine 11" : null,
+        t.naimaPart ? "Taous est partie en semaine 11" : null,
       ].filter(Boolean);
       return [
         ...hasard(graine).imprevus.map(({ imprevu, semaine }) => ({
@@ -442,7 +442,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
           titre: "L'équipe du négoce",
           texte: equipe.length
             ? `${equipe.join(", ")}, avec une partie de ${equipe.length > 1 ? "leurs" : "ses"} clients.`
-            : "Sébastien, Naïma et Pierrick sont restés jusqu'au bout du trimestre.",
+            : "Sébastien, Taous et Pierrick sont restés jusqu'au bout du trimestre.",
         },
         ...(t.raymondVexe
           ? [

@@ -61,7 +61,7 @@ const rebutFin = (t: Trimestre) => {
 };
 
 const DJAMEL = { de: "Djamel Amrouche", role: "Chef d'équipe" } as const;
-const IVAN = { de: "Ivan Petrovic", role: "Technicien, fabricant de la presse" } as const;
+const RADOMIR = { de: "Radomir Petrovic", role: "Technicien, fabricant de la presse" } as const;
 const YOLANDE = { de: "Yolande Perrichon", role: "Chargée de clientèle, cimenterie" } as const;
 const AGENCE = { de: "Agence d'intérim", role: "Saint-Priest" } as const;
 const ANATOLE = { de: "Anatole Brugère", role: "Chargé d'opérations, ZAC des Tuileries" } as const;
@@ -340,7 +340,7 @@ export const EPISODE_ECARTS: Episode<Trimestre> = {
   reactions(etape, choix, graine) {
     if (etape === D.ecart && choix === 1) {
       return [
-        { ...IVAN, texte: roulementUse(graine) ? REPONSES.roulementUse : REPONSES.vibreurSain },
+        { ...RADOMIR, texte: roulementUse(graine) ? REPONSES.roulementUse : REPONSES.vibreurSain },
       ];
     }
     if (etape === D.ciment && choix === 1) {
@@ -372,7 +372,7 @@ export const EPISODE_ECARTS: Episode<Trimestre> = {
       lies.push({ ...DJAMEL, heure: "sem. 2", alerte: true, texte: REPONSES.noteDeService });
     }
     if (arrive.roulement) {
-      lies.push({ ...IVAN, heure: "sem. 5", texte: REPONSES.roulementPose });
+      lies.push({ ...RADOMIR, heure: "sem. 5", texte: REPONSES.roulementPose });
     }
     if (chemin[D.dosage] === 0 && dans(4) && defautPresse(chemin, graine, 4) >= 0.5) {
       lies.push({ ...DJAMEL, heure: "sem. 4", alerte: true, texte: REPONSES.sansDemiSac });

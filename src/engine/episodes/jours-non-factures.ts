@@ -351,7 +351,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "greve",
     titre: "Grève des trains",
-    de: "Lénaïg Quilliec",
+    de: "Évangéline Quilliec",
     role: "Manager, mission Kervalan",
     texte:
       "Grève des trains toute la semaine : les équipes partent en voiture de location, arrivent tard, et deux ateliers chez les clients sont décalés.",

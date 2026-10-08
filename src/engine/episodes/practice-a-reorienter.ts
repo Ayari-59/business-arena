@@ -152,7 +152,7 @@ export const RETICENTS = [
   { id: "marcelin", nom: "Maodez Peyrade" },
   { id: "gwenola", nom: "Gwenola Toullec" },
   { id: "esteban", nom: "Esteban Calvez" },
-  { id: "baptistine", nom: "Baptistine Thépaut" },
+  { id: "baptistine", nom: "Niamh Thépaut" },
 ] as const;
 
 /* ---------------------------------------------------------------------------
@@ -579,7 +579,7 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
     });
   }
   const inquieteEnBinome = dReticents === 3 && h.uInquiets < 0.35 && prevus > 0;
-  // Baptistine, rassurée au cas par cas, rejoint les binômes.
+  // Niamh, rassurée au cas par cas, rejoint les binômes.
   const binomesTotal = prevus + (dReticents === 1 && prevus > 0 ? 1 : 0);
 
   const semaines: (Semaine | null)[] = [null];

@@ -49,7 +49,7 @@ export const ETAPES: readonly Etape[] = [
           "Camille, le comité de direction veut savoir jeudi si la date tient. Les agences ont déjà commandé les affiches du lancement.",
       },
       {
-        de: "Yannick Meunier",
+        de: "Dieudonné Meunier",
         role: "Développeur principal",
         heure: "09:15",
         texte:
@@ -123,7 +123,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          de: "Yannick Meunier",
+          de: "Dieudonné Meunier",
           role: "Développeur principal",
           texte:
             "Les deux renforts sont arrivés lundi. Je passe mes journées à leur expliquer le code : j'ai écrit dix lignes cette semaine.",
@@ -224,7 +224,7 @@ export const ETAPES: readonly Etape[] = [
       null,
       [
         {
-          de: "Yannick Meunier",
+          de: "Dieudonné Meunier",
           role: "Développeur principal",
           texte: "Très bien, on avance sans s'arrêter. On verra les défauts en semaine 10.",
         },
@@ -252,7 +252,7 @@ export const ETAPES: readonly Etape[] = [
           "Camille, mes commerciaux sont formels : sans devis en ligne, les gros artisans ne passeront pas sur Arvel Pro. Je le veux pour l'ouverture. Je compte sur toi.",
       },
       {
-        de: "Yannick Meunier",
+        de: "Dieudonné Meunier",
         role: "Développeur principal",
         heure: "10:45",
         texte:
@@ -361,11 +361,11 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         id: "dsi",
-        titre: "Demander à Yannick ce que changeraient trois renforts",
+        titre: "Demander à Dieudonné ce que changeraient trois renforts",
         cout: 0.5,
         nature: "utile",
         resultat:
-          "Yannick : « Ils ne connaissent ni le code ni le négoce. Sur le projet de l'entrepôt, les renforts ont mis trois semaines à devenir utiles, et je passerais la moitié de mon temps à les former et à relire leur code. »",
+          "Dieudonné : « Ils ne connaissent ni le code ni le négoce. Sur le projet de l'entrepôt, les renforts ont mis trois semaines à devenir utiles, et je passerais la moitié de mon temps à les former et à relire leur code. »",
       },
     ],
     question: "Que proposez-vous au comité de pilotage ?",
@@ -390,7 +390,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          de: "Yannick Meunier",
+          de: "Dieudonné Meunier",
           role: "Développeur principal",
           texte:
             "Les trois renforts sont là. Il faut leur ouvrir les accès, leur expliquer l'architecture, relire leur code. Pour l'instant, on avance moins vite qu'avant.",
@@ -427,7 +427,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 11,
     messages: (ctx) => [
       {
-        de: "Yannick Meunier",
+        de: "Dieudonné Meunier",
         role: "Développeur principal",
         heure: "14:00",
         alerte: true,
@@ -481,7 +481,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          de: "Yannick Meunier",
+          de: "Dieudonné Meunier",
           role: "Développeur principal",
           texte:
             "Deux semaines de corrections. Le tableau des défauts n'a jamais été aussi propre, et Nathalie a enfin testé les remises chantier.",

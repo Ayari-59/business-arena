@@ -181,7 +181,7 @@ export function axe([information, diagnostic, reflexe, calibrage, duree]: readon
   };
 }
 
-const YANNICK = { de: "Yannick Ferreira", role: "Responsable informatique" } as const;
+const AGRICOL = { de: "Agricol Ferreira", role: "Responsable informatique" } as const;
 const NATHALIE = { de: "Nathalie Brun", role: "Acheteuse, Ferrand Habitat" } as const;
 
 export const EPISODE_CRISE: Episode<Trimestre> = {
@@ -322,7 +322,7 @@ export const EPISODE_CRISE: Episode<Trimestre> = {
   reactions(etape, choix, graine) {
     if (etape === D.redemarrage && choix === 1) {
       // Seul le choix de payer compte : la clé fonctionne ou non selon le hasard du trimestre.
-      return [{ ...YANNICK, texte: redemarrage(1, graine).cle ? REPONSES.cleOk : REPONSES.cleKo }];
+      return [{ ...AGRICOL, texte: redemarrage(1, graine).cle ? REPONSES.cleOk : REPONSES.cleKo }];
     }
     return null;
   },
@@ -341,14 +341,14 @@ export const EPISODE_CRISE: Episode<Trimestre> = {
     }
     if (arrive.reinfection) {
       lies.push({
-        ...YANNICK,
+        ...AGRICOL,
         heure: `sem. ${arrive.semaineReinfection}`,
         alerte: true,
         texte: chemin[D.redemarrage] === 2 ? REPONSES.reinfectionEtape : REPONSES.reinfection,
       });
     }
     if (arrive.retabli) {
-      lies.push({ ...YANNICK, heure: `sem. ${t.retabli}`, texte: REPONSES.retabli });
+      lies.push({ ...AGRICOL, heure: `sem. ${t.retabli}`, texte: REPONSES.retabli });
     }
     // L'engagement écrit contre la remise est déjà dans la réaction : il tient à coup sûr.
     if (chemin[D.ferrand] !== 1 && (arrive.ferrandReste || arrive.ferrandPart)) {

@@ -106,6 +106,21 @@ import * as equipesJourEtNuit from "./equipes-jour-et-nuit";
 import * as reconstruireOuRegrouper from "./reconstruire-ou-regrouper";
 import * as associationAReprendre from "./association-a-reprendre";
 import * as virageDomiciliaire from "./virage-domiciliaire";
+import * as changementsDeFormat from "./changements-de-format";
+import * as dlcQuiTombe from "./dlc-qui-tombe";
+import * as lotARappeler from "./lot-a-rappeler";
+import * as negociationsAnnuelles from "./negociations-annuelles";
+import * as promotionQuiCoute from "./promotion-qui-coute";
+import * as appelDOffresMdd from "./appel-d-offres-mdd";
+import * as producteursQuiArretent from "./producteurs-qui-arretent";
+import * as potARemplacer from "./pot-a-remplacer";
+import * as energieDeLUsine from "./energie-de-l-usine";
+import * as polyvalenceDesOperateurs from "./polyvalence-des-operateurs";
+import * as maintenanceQuiCourt from "./maintenance-qui-court";
+import * as picDesFetes from "./pic-des-fetes";
+import * as exportAOuvrir from "./export-a-ouvrir";
+import * as gammeVegetale from "./gamme-vegetale";
+import * as offreDeRachat from "./offre-de-rachat";
 
 export interface TracesDeLEpisode {
   diagnostic: { juste: string; proche: string };
@@ -578,5 +593,80 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "virage", proche: "transformer" },
     reflexes: [...virageDomiciliaire.REFLEXES],
     prevision: { juste: 10, proche: 40 },
+  },
+  "changements-de-format": {
+    diagnostic: { juste: "changements", proche: "doseur" },
+    reflexes: [...changementsDeFormat.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "dlc-qui-tombe": {
+    diagnostic: { juste: "plan", proche: "promotions" },
+    reflexes: [...dlcQuiTombe.REFLEXES],
+    prevision: { juste: 6, proche: 20 },
+  },
+  "lot-a-rappeler": {
+    diagnostic: { juste: "perimetre", proche: "lot" },
+    reflexes: [...lotARappeler.REFLEXES],
+    prevision: { juste: 1, proche: 5 },
+  },
+  "negociations-annuelles": {
+    diagnostic: { juste: "preparation", proche: "contreparties" },
+    reflexes: [...negociationsAnnuelles.REFLEXES],
+    prevision: { juste: 25, proche: 120 },
+  },
+  "promotion-qui-coute": {
+    diagnostic: { juste: "decomposition", proche: "remise" },
+    reflexes: [...promotionQuiCoute.REFLEXES],
+    prevision: { juste: 3, proche: 8 },
+  },
+  "appel-d-offres-mdd": {
+    diagnostic: { juste: "marge", proche: "capacite" },
+    reflexes: [...appelDOffresMdd.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "producteurs-qui-arretent": {
+    diagnostic: { juste: "transmission", proche: "tournees" },
+    reflexes: [...producteursQuiArretent.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "pot-a-remplacer": {
+    diagnostic: { juste: "qualifier", proche: "cout" },
+    reflexes: [...potARemplacer.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "energie-de-l-usine": {
+    diagnostic: { juste: "usages", proche: "prix" },
+    reflexes: [...energieDeLUsine.REFLEXES],
+    prevision: { juste: 50, proche: 150 },
+  },
+  "polyvalence-des-operateurs": {
+    diagnostic: { juste: "dependance", proche: "absences" },
+    reflexes: [...polyvalenceDesOperateurs.REFLEXES],
+    prevision: { juste: 6, proche: 20 },
+  },
+  "maintenance-qui-court": {
+    diagnostic: { juste: "pareto", proche: "pieces" },
+    reflexes: [...maintenanceQuiCourt.REFLEXES],
+    prevision: { juste: 3, proche: 10 },
+  },
+  "pic-des-fetes": {
+    diagnostic: { juste: "heures", proche: "interim" },
+    reflexes: [...picDesFetes.REFLEXES],
+    prevision: { juste: 5, proche: 20 },
+  },
+  "export-a-ouvrir": {
+    diagnostic: { juste: "etapes", proche: "dlc" },
+    reflexes: [...exportAOuvrir.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "gamme-vegetale": {
+    diagnostic: { juste: "test", proche: "allergenes" },
+    reflexes: [...gammeVegetale.REFLEXES],
+    prevision: { juste: 100, proche: 300 },
+  },
+  "offre-de-rachat": {
+    diagnostic: { juste: "trois-reperes", proche: "sous-le-marche" },
+    reflexes: [...offreDeRachat.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
   },
 };

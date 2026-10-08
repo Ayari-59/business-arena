@@ -137,7 +137,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "chantier",
     titre: "Démarrage d'un grand chantier",
-    de: "Bilal Ouédraogo",
+    de: "Bilal Kaboré",
     role: "Technico-commercial",
     texte:
       "Le chantier du nouveau groupe scolaire de Genas démarre : ses artisans demandent des devis par dizaines pendant deux semaines.",

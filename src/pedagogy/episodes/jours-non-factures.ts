@@ -47,7 +47,7 @@ const FANCH = {
   de: "Fañch Kerros",
   role: "Acheteur, centre hospitalier de Kervalan",
 } as const;
-const LENAIG = { de: "Lénaïg Quilliec", role: "Manager, mission Kervalan" } as const;
+const EVANGELINE = { de: "Évangéline Quilliec", role: "Manager, mission Kervalan" } as const;
 const TANGI = { de: "Tangi Benedetti", role: "Manager, mission Montlouvel" } as const;
 const OIHANA = { de: "Oïhana Larralde", role: "Manager, mission Talvenec" } as const;
 const WIEBKE = { de: "Wiebke Hansel", role: "Achats de prestations, Banque de l'Erdre" } as const;
@@ -381,7 +381,7 @@ export const EPISODE_REALISATION: Episode<Trimestre> = {
       const echeance = avenantSigne(chemin, graine) ? KERVALAN.echeanceAvenant : KERVALAN.echeance;
       const enRetard = t.fin.kervalan > echeance;
       lies.push({
-        ...LENAIG,
+        ...EVANGELINE,
         heure: `sem. ${Math.ceil(t.fin.kervalan)}`,
         alerte: enRetard,
         texte: enRetard

@@ -53,8 +53,8 @@ const GHISLAINE = {
   de: "Ghislaine Pradal",
   role: "Directrice du site",
 } as const;
-const ERWAN = {
-  de: "Erwan Arnoux",
+const ENGUERRAND = {
+  de: "Enguerrand Arnoux",
   role: "Chargé d'affaires sur-mesure",
 } as const;
 const RH = { de: "Edwige Quéméner", role: "Ressources humaines" } as const;
@@ -368,7 +368,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 7,
     messages: (ctx) => [
       {
-        ...ERWAN,
+        ...ENGUERRAND,
         heure: "11:30",
         alerte: true,
         texte:
@@ -420,21 +420,21 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...ERWAN,
+          ...ENGUERRAND,
           texte:
             "Signé ! Ferlay est ravi. Les premières commandes arrivent en semaine 8, je t'envoie le planning.",
         },
       ],
       [
         {
-          ...ERWAN,
+          ...ENGUERRAND,
           texte:
             "Ferlay a accepté le plafond. Il aurait préféré tout nous confier, mais il comprend. Cinq commandes par semaine à partir de la semaine 8.",
         },
       ],
       [
         {
-          ...ERWAN,
+          ...ENGUERRAND,
           texte:
             "J'ai prévenu Ferlay. Il est déçu, et il va consulter un atelier de Villeurbanne. Je ne suis pas sûr qu'il revienne.",
         },

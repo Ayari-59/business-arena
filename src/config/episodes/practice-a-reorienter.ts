@@ -132,7 +132,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "utile",
         resultat:
-          "Six consultants demandent à faire de la décarbonation, dont Ayoub Ferrec. Quatre ne veulent pas changer de métier : Maodez Peyrade, 61 ans, à la retraite dans dix-huit mois ; Gwenola Toullec, qui parle de monter son propre bureau d'études ; Esteban Calvez, ingénieur process, attiré par la practice Performance opérationnelle ; Baptistine Thépaut, « pas sûre d'y arriver ». Les huit autres attendent de voir.",
+          "Six consultants demandent à faire de la décarbonation, dont Ayoub Ferrec. Quatre ne veulent pas changer de métier : Maodez Peyrade, 61 ans, à la retraite dans dix-huit mois ; Gwenola Toullec, qui parle de monter son propre bureau d'études ; Esteban Calvez, ingénieur process, attiré par la practice Performance opérationnelle ; Niamh Thépaut, « pas sûre d'y arriver ». Les huit autres attendent de voir.",
       },
       {
         id: "certification",
@@ -421,7 +421,7 @@ export const ETAPES: readonly Etape[] = [
         ...MYLENE,
         heure: "17:40",
         texte:
-          "Esteban et Baptistine m'ont posé la même question cette semaine : « Et nous, on devient quoi en janvier ? » L'équipe attend une réponse.",
+          "Esteban et Niamh m'ont posé la même question cette semaine : « Et nous, on devient quoi en janvier ? » L'équipe attend une réponse.",
       },
     ],
     sources: [
@@ -431,7 +431,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "Maodez accepterait de finir les audits, puis de reprendre deux marchés d'AMO jusqu'à sa retraite : il en connaît tous les clients publics. Gwenola partirait volontiers pour monter son bureau d'études si on l'aide à démarrer ; sinon, elle écoutera Kéroual, et un de ses clients la suivrait. La practice Performance opérationnelle cherche un ingénieur process au 1er décembre : Esteban est partant. Baptistine essaiera la décarbonation si elle est encadrée, pas jetée dans le bain.",
+          "Maodez accepterait de finir les audits, puis de reprendre deux marchés d'AMO jusqu'à sa retraite : il en connaît tous les clients publics. Gwenola partirait volontiers pour monter son bureau d'études si on l'aide à démarrer ; sinon, elle écoutera Kéroual, et un de ses clients la suivrait. La practice Performance opérationnelle cherche un ingénieur process au 1er décembre : Esteban est partant. Niamh essaiera la décarbonation si elle est encadrée, pas jetée dans le bain.",
       },
       {
         id: "couts",
@@ -456,7 +456,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Annoncé en réunion d'équipe. Pas d'exception, pas de coût.",
       },
       {
-        t: "Au cas par cas : Maodez finit les audits puis reprend l'AMO, Gwenola part accompagnée, Esteban rejoint la Performance opérationnelle, Baptistine en binôme",
+        t: "Au cas par cas : Maodez finit les audits puis reprend l'AMO, Gwenola part accompagnée, Esteban rejoint la Performance opérationnelle, Niamh en binôme",
         d: `${euros(COUTS.departAccompagne)} pour Gwenola. Départ et mobilité au 1er décembre : chacun finit ses audits d'abord.`,
       },
       {

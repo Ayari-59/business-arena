@@ -98,6 +98,21 @@ import { EPISODE_JOUR_NUIT } from "./equipes-jour-et-nuit";
 import { EPISODE_RECONSTRUCTION } from "./reconstruire-ou-regrouper";
 import { EPISODE_REPRISE } from "./association-a-reprendre";
 import { EPISODE_VIRAGE } from "./virage-domiciliaire";
+import { EPISODE_CHANGEMENTS_FORMAT } from "./changements-de-format";
+import { EPISODE_DLC } from "./dlc-qui-tombe";
+import { EPISODE_RAPPEL } from "./lot-a-rappeler";
+import { EPISODE_NEGOCIATIONS } from "./negociations-annuelles";
+import { EPISODE_PROMOTION } from "./promotion-qui-coute";
+import { EPISODE_MDD } from "./appel-d-offres-mdd";
+import { EPISODE_COLLECTE } from "./producteurs-qui-arretent";
+import { EPISODE_EMBALLAGE } from "./pot-a-remplacer";
+import { EPISODE_ENERGIE_USINE } from "./energie-de-l-usine";
+import { EPISODE_POLYVALENCE } from "./polyvalence-des-operateurs";
+import { EPISODE_MAINTENANCE } from "./maintenance-qui-court";
+import { EPISODE_PIC_FETES } from "./pic-des-fetes";
+import { EPISODE_EXPORT } from "./export-a-ouvrir";
+import { EPISODE_VEGETAL } from "./gamme-vegetale";
+import { EPISODE_OFFRE_RACHAT } from "./offre-de-rachat";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -193,6 +208,21 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_RECONSTRUCTION,
   EPISODE_REPRISE,
   EPISODE_VIRAGE,
+  EPISODE_CHANGEMENTS_FORMAT,
+  EPISODE_DLC,
+  EPISODE_RAPPEL,
+  EPISODE_NEGOCIATIONS,
+  EPISODE_PROMOTION,
+  EPISODE_MDD,
+  EPISODE_COLLECTE,
+  EPISODE_EMBALLAGE,
+  EPISODE_ENERGIE_USINE,
+  EPISODE_POLYVALENCE,
+  EPISODE_MAINTENANCE,
+  EPISODE_PIC_FETES,
+  EPISODE_EXPORT,
+  EPISODE_VEGETAL,
+  EPISODE_OFFRE_RACHAT,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>

@@ -112,6 +112,21 @@ export const DIFFICULTES: Readonly<Record<string, Difficulte>> = {
   "reconstruire-ou-regrouper": "moyen", // 91 (5 points)
   "association-a-reprendre": "moyen", // 92 (2 points)
   "virage-domiciliaire": "moyen", // 93 (2 points)
+  "changements-de-format": "facile", // 94 (1 point)
+  "dlc-qui-tombe": "moyen", // 95 (2 points)
+  "lot-a-rappeler": "moyen", // 96 (2 points)
+  "negociations-annuelles": "facile", // 97 (1 point)
+  "promotion-qui-coute": "facile", // 98 (1 point)
+  "appel-d-offres-mdd": "moyen", // 99 (2 points)
+  "producteurs-qui-arretent": "moyen", // 100 (4 points)
+  "pot-a-remplacer": "facile", // 101 (1 point)
+  "energie-de-l-usine": "facile", // 102 (0 point)
+  "polyvalence-des-operateurs": "moyen", // 103 (4 points)
+  "maintenance-qui-court": "moyen", // 104 (3 points)
+  "pic-des-fetes": "moyen", // 105 (3 points)
+  "export-a-ouvrir": "difficile", // 106 (7 points)
+  "gamme-vegetale": "moyen", // 107 (3 points)
+  "offre-de-rachat": "difficile", // 108 (6 points)
 };
 
 export const PEU_DISCRIMINANTS: readonly string[] = [

@@ -49,7 +49,7 @@ const HORTENSE = {
 const MAELLE = { de: "Coralie Courtois", role: "Assistante d'agence" } as const;
 const NAWEL = { de: "Nawel Hamidi", role: "Vendeuse comptoir" } as const;
 const RODRIGUE = { de: "Rodrigue Ekambi", role: "Chef de cour" } as const;
-const BILAL = { de: "Bilal Ouédraogo", role: "Technico-commercial" } as const;
+const BILAL = { de: "Bilal Kaboré", role: "Technico-commercial" } as const;
 const GASPARD = {
   de: "Gaspard Lhermitte",
   role: "Contrôleur de gestion régional",

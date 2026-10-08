@@ -78,7 +78,7 @@ export const VENTES_ADD = 8;
 export const MARGE_VENTES_ADD = 0.75;
 /** Les couverts qu'un serveur confirmé tient dans une semaine. */
 export const COUVERTS_PAR_SERVEUR = 130;
-/** Garance au passe (0,6), Lisandro et Clervie au rang (1 chacun), Melchior au bar (0,5). */
+/** Garance au passe (0,6), Lisandro et Zénobie au rang (1 chacun), Melchior au bar (0,5). */
 export const CAPACITE_CONFIRMES = 3.1;
 /** La paie des quatre confirmés de la salle, charges comprises, par semaine. */
 export const COUT_CONFIRMES = 3450;
@@ -222,7 +222,7 @@ export const ECOLE_CAP_DECALEE = [4, 9, 13] as const;
 /** Une fois sur quatre, le CFA accepte de décaler une session pour un employeur. */
 export const CHANCE_CFA = 0.25;
 
-/** Clervie, cheffe de rang, est opérée du genou : arrêt des semaines 5 et 6. */
+/** Zénobie, cheffe de rang, est opérée du genou : arrêt des semaines 5 et 6. */
 export const ARRET_CLERVIE = [5, 6] as const;
 /** La prime de Bintou pour deux semaines comme cheffe de rang. */
 export const PRIME_BINTOU = 150;
@@ -327,7 +327,7 @@ export interface Hasard {
   rupture: readonly (readonly number[])[];
   /** Par place, par semaine : les hauts et les bas d'un apprenti. */
   humeur: readonly (readonly number[])[];
-  /** Bintou tient-elle le rang de Clervie ? */
+  /** Bintou tient-elle le rang de Zénobie ? */
   uBintou: number;
   /** Après un samedi raté, Bintou s'en va-t-elle ? */
   uBintouPart: number;
@@ -383,7 +383,7 @@ export const cfaDecale = (chemin: readonly number[], graine: number) =>
   chemin[D.calendrier] === 1 && hasard(graine).uCFA < CHANCE_CFA;
 
 /**
- * BINTOU TIENT-ELLE LE RANG DE CLERVIE ?
+ * BINTOU TIENT-ELLE LE RANG DE ZENOBIE ?
  *
  * Elle n'a jamais tenu un rang seule un samedi. Préparée par un tuteur qui l'a
  * fait passer par le rang à deux, elle le tient plus de huit fois sur dix ; jetée
@@ -727,7 +727,7 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
     });
     if (bintouCheffe && !tient) incidents += 25;
     incidents += 0.5 * (extras + remplacants);
-    // L'extra pris au dernier moment pour le rang de Clervie ne connaît ni la carte ni la terrasse.
+    // L'extra pris au dernier moment pour le rang de Zénobie ne connaît ni la carte ni la terrasse.
     if (d3 === 0 && clervieArretee) incidents += 2;
     // Deux apprentis pour six tables : des plats qui attendent, des tables qu'on oublie.
     const rangAuxNouveaux = d3 === 2 && clervieArretee;
@@ -765,7 +765,7 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
     }
 
     // La main-d'œuvre, les aides, les gestes.
-    // L'extra qui tient le rang de Clervie est pris au dernier moment : 140 € le service.
+    // L'extra qui tient le rang de Zénobie est pris au dernier moment : 140 € le service.
     const extraDeDerniereMinute =
       (d3 === 0 && clervieArretee) || (d3 === 1 && !tient && w === ARRET_CLERVIE[1]) ? 1 : 0;
     let salaires =

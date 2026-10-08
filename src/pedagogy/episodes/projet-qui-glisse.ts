@@ -202,7 +202,7 @@ export const EPISODE_PROJET: Episode<Trimestre> = {
       const perdu = Math.max(0, j - JOURS_SANS_PERTE) * PERTE_PAR_JOUR;
       if (perdu <= 0) return null;
       return {
-        de: "Yannick Meunier",
+        de: "Dieudonné Meunier",
         role: "Développeur principal",
         alerte: true,
         texte: `Pendant ce temps, on a développé deux demandes d'agence qu'il faudra sans doute défaire : ${euros(perdu)} de travail perdu.`,

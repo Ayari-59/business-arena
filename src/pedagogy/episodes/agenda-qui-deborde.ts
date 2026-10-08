@@ -436,7 +436,7 @@ export const EPISODE_AGENDA: Episode<Trimestre> = {
     }
     if (arrive.offre !== null) {
       lies.push({
-        de: "Bilal Ouédraogo",
+        de: "Bilal Kaboré",
         role: "Technico-commercial",
         heure: "sem. 12",
         alerte: !arrive.offre,

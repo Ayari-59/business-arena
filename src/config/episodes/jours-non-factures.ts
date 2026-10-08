@@ -23,7 +23,7 @@ import type { Etape } from "./types";
 const VICTOIRE = { de: "Victoire Lanoë", role: "Présidente d'Atlas Conseil" } as const;
 const PRUNE = { de: "Prune Lecoeur", role: "Contrôleuse de gestion" } as const;
 const DARIUSH = { de: "Dariush Vahidi", role: "Associé, directeur commercial" } as const;
-const LENAIG = { de: "Lénaïg Quilliec", role: "Manager, mission Kervalan" } as const;
+const EVANGELINE = { de: "Évangéline Quilliec", role: "Manager, mission Kervalan" } as const;
 const OIHANA = { de: "Oïhana Larralde", role: "Manager, mission Talvenec" } as const;
 const FANCH = {
   de: "Fañch Kerros",
@@ -66,7 +66,7 @@ export const ETAPES: readonly Etape[] = [
           "Clélia, je ne comprends pas : tout le monde court et la marge recule. Et on a encore une douzaine de consultants sur le banc. Je veux 80 % d'occupation en juin. Dis-moi vendredi comment tu y vas.",
       },
       {
-        ...LENAIG,
+        ...EVANGELINE,
         heure: "09:20",
         texte:
           "Sur Kervalan, on ne s'en sort pas : le CHU nous demande toujours plus d'entretiens. Si tu peux me donner trois juniors du banc, je les prends tout de suite.",
@@ -104,7 +104,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "utile",
         resultat:
-          "Lénaïg (Kervalan) : « Le CHU a ajouté deux établissements et une série d'entretiens au comité de février. Rien n'est écrit, mais on ne peut pas dire non. » Tangi (Montlouvel) : « Les élus veulent des ateliers en plus dans chaque commune. » Oïhana (Talvenec) : « On a refait le diagnostic deux fois, le client changeait d'interlocuteur. » Tous demandent du monde.",
+          "Évangéline (Kervalan) : « Le CHU a ajouté deux établissements et une série d'entretiens au comité de février. Rien n'est écrit, mais on ne peut pas dire non. » Tangi (Montlouvel) : « Les élus veulent des ateliers en plus dans chaque commune. » Oïhana (Talvenec) : « On a refait le diagnostic deux fois, le client changeait d'interlocuteur. » Tous demandent du monde.",
       },
       {
         id: "leocadie",
@@ -129,7 +129,7 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         t: "Reprendre le seul dossier Kervalan, la plus grosse dérive",
-        d: "Deux jours avec Lénaïg et le directeur de la practice Data.",
+        d: "Deux jours avec Évangéline et le directeur de la practice Data.",
       },
       {
         t: "Attendre la clôture d'avril pour y voir clair",
@@ -141,7 +141,7 @@ export const ETAPES: readonly Etape[] = [
         {
           ...NELL,
           texte:
-            "On est arrivés à trois sur Kervalan lundi. Lénaïg n'a pas eu le temps de nous briefer avant mercredi ; on relit des comptes rendus d'entretiens.",
+            "On est arrivés à trois sur Kervalan lundi. Évangéline n'a pas eu le temps de nous briefer avant mercredi ; on relit des comptes rendus d'entretiens.",
         },
       ],
       [
@@ -153,7 +153,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte:
             "On a repris Kervalan ligne à ligne : on arrête ce qui ne sert pas le livrable, et les demandes du CHU sont maintenant écrites. Les deux autres missions, on n'y a pas touché.",
         },
@@ -172,7 +172,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 5,
     messages: (ctx) => [
       {
-        ...LENAIG,
+        ...EVANGELINE,
         heure: "10:10",
         alerte: true,
         texte: `Reste à faire de Kervalan : ${ctx.rafKervalan}. Le schéma directeur doit être remis au comité de pilotage de la fin de la semaine 10, et le CCAP prévoit 400 € de pénalités par jour calendaire de retard. Avec trois consultants de plus, je tiens la date.`,
@@ -228,28 +228,28 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte:
             "Merci pour les renforts. Il me faut deux jours pour les mettre dans le bain, et ils partent lundi à Kervalan.",
         },
       ],
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte:
             "Le projet d'avenant est parti à l'acheteur du CHU avec les comptes rendus. Il répond la semaine prochaine.",
         },
       ],
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte:
             "La lettre est partie. Le directeur des systèmes d'information du CHU a pris acte, sèchement. On livre le cahier des charges, rien que lui.",
         },
       ],
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte: "D'accord. On fait au mieux, et on verra au comité de la semaine 10.",
         },
       ],
@@ -363,7 +363,7 @@ export const ETAPES: readonly Etape[] = [
           "Nous cherchons trois consultants juniors en régie, des semaines 8 à 13, pour le pilotage de notre projet de conformité. Notre budget est de 650 € par jour et par consultant. Vous pouvez répondre lundi ?",
       },
       {
-        ...LENAIG,
+        ...EVANGELINE,
         heure: "11:15",
         texte: `Kervalan entre dans la dernière ligne droite : ${ctx.rafKervalan} de reste à faire. Avec quatre juniors de plus, je tiens le comité sans y passer mes nuits. Le banc en a, non ?`,
       },
@@ -384,11 +384,11 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         id: "renforts",
-        titre: "Demander à Lénaïg ce que changeraient quatre renforts",
+        titre: "Demander à Évangéline ce que changeraient quatre renforts",
         cout: 0.5,
         nature: "utile",
         resultat:
-          "Lénaïg : « Ils reprendraient les comptes rendus et la mise en page. Mais il faudrait que je les forme, à deux ou trois semaines de la fin, et ce qui reste, ce sont les arbitrages avec le directeur du CHU : ça, c'est moi, et son agenda. » Leur train et leur hôtel seraient à la charge du cabinet.",
+          "Évangéline : « Ils reprendraient les comptes rendus et la mise en page. Mais il faudrait que je les forme, à deux ou trois semaines de la fin, et ce qui reste, ce sont les arbitrages avec le directeur du CHU : ça, c'est moi, et son agenda. » Leur train et leur hôtel seraient à la charge du cabinet.",
       },
       {
         id: "erdre",
@@ -421,7 +421,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte:
             "Les quatre renforts sont arrivés à Kervalan. Je leur confie les comptes rendus ; je les relirai le soir.",
         },
@@ -532,7 +532,7 @@ export const ETAPES: readonly Etape[] = [
           "Le CHU souhaite une phase 2 : l'accompagnement à la mise en œuvre du schéma directeur dans ses quatre établissements, à partir de la semaine 12. Notre budget est de 60 k€ HT au forfait.",
       },
       {
-        ...LENAIG,
+        ...EVANGELINE,
         heure: "11:40",
         texte: `${ctx.kervalanEtat} Sur ce que la phase 1 nous a coûté, l'accompagnement des quatre établissements, c'est 130 jours. L'équipe pourrait enchaîner, quatre juniors et deux seniors.`,
       },
@@ -587,13 +587,13 @@ export const ETAPES: readonly Etape[] = [
       [{ ...FANCH, texte: "Entendu : 60 k€, quatre établissements. Bon de démarrage lundi." }],
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte: "La proposition en régie est partie. Fañch répond en début de semaine.",
         },
       ],
       [
         {
-          ...LENAIG,
+          ...EVANGELINE,
           texte:
             "La proposition en deux tranches est partie, avec le chiffrage établissement par établissement. Fañch répond en début de semaine.",
         },

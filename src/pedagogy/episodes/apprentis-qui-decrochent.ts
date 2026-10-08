@@ -229,7 +229,7 @@ export const EPISODE_APPRENTIS: Episode<Trimestre> = {
   resume:
     "Une salle de restaurant où les apprentis rompent leur contrat. Leur donner un tuteur et un parcours avant de compter sur eux.",
   persona:
-    "Vous êtes Garance Royet, directrice de salle de La Table d'Augustin d'Aix-les-Bains, le restaurant de bistronomie du Groupe Escale : soixante-dix places et une terrasse, dix services par semaine. Votre salle compte huit personnes : Lisandro Esquerré et Clervie Ballandras, chefs de rang, Melchior Guichard au bar, et cinq apprentis, dont deux arrivent ce lundi. Deux contrats d'apprentissage ont été rompus l'an dernier.",
+    "Vous êtes Garance Royet, directrice de salle de La Table d'Augustin d'Aix-les-Bains, le restaurant de bistronomie du Groupe Escale : soixante-dix places et une terrasse, dix services par semaine. Votre salle compte huit personnes : Lisandro Esquerré et Zénobie Ballandras, chefs de rang, Melchior Guichard au bar, et cinq apprentis, dont deux arrivent ce lundi. Deux contrats d'apprentissage ont été rompus l'an dernier.",
   mandat: [
     { fort: kE(BUDGET), texte: "de contribution de la salle sur le trimestre" },
     { fort: "Aucune rupture", texte: "de contrat d'apprentissage, après deux l'an dernier" },
@@ -480,7 +480,7 @@ export const EPISODE_APPRENTIS: Episode<Trimestre> = {
               {
                 titre: "Bintou",
                 texte: t.bintouTient
-                  ? "a tenu le rang de Clervie deux semaines."
+                  ? "a tenu le rang de Zénobie deux semaines."
                   : "a perdu pied son premier samedi comme cheffe de rang.",
               },
             ]),

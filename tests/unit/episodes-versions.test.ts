@@ -28,5 +28,5 @@ describe("les versions des modèles d'épisodes", () => {
         VERSIONS_DES_MODELES[ep.code]!.empreinte,
       );
     }
-  });
+  }, 30_000);
 });

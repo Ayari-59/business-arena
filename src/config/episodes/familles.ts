@@ -45,6 +45,13 @@ export const SECTEURS: readonly Secteur[] = [
     texte:
       "L'Association Solvanne, association à but non lucratif née à Dijon, gère une clinique de réadaptation, des EHPAD, des services à domicile et un pôle handicap, avec l'argent public d'un tarif qu'elle ne fixe pas.",
   },
+  {
+    code: "agroalimentaire",
+    nom: "Industrie agroalimentaire",
+    entreprise: "Laiterie de Kerbrélan",
+    texte:
+      "La Laiterie de Kerbrélan, laiterie familiale bretonne, fabrique dans ses usines de Loudéac et de Pontivy des yaourts, du fromage blanc et des desserts, sous sa marque et pour les marques des distributeurs, qu'elle vend à la grande distribution.",
+  },
 ];
 
 export interface Famille {
@@ -300,6 +307,47 @@ export const FAMILLES: readonly Famille[] = [
       "Pour la direction : reconstruire, reprendre une association, virage domiciliaire, les paris qui engagent l'association.",
     direction: true,
     episodes: ["reconstruire-ou-regrouper", "association-a-reprendre", "virage-domiciliaire"],
+  },
+  {
+    code: "agro-produire",
+    titre: "Produire et livrer",
+    secteur: "agroalimentaire",
+    texte:
+      "Changements de format, DLC, rappel d'un lot : produire juste ce qui se vend, avant que ça ne périme.",
+    episodes: ["changements-de-format", "dlc-qui-tombe", "lot-a-rappeler"],
+  },
+  {
+    code: "agro-distribution",
+    titre: "Vendre à la grande distribution",
+    secteur: "agroalimentaire",
+    texte:
+      "Négociations annuelles, promotions, appels d'offres MDD : des clients concentrés, des règles fixées par la loi.",
+    episodes: ["negociations-annuelles", "promotion-qui-coute", "appel-d-offres-mdd"],
+  },
+  {
+    code: "agro-amont",
+    titre: "Le lait, l'énergie, les emballages",
+    secteur: "agroalimentaire",
+    texte:
+      "Producteurs, pots, énergie : une matière première qu'on ne choisit pas au jour le jour, et ce qui l'entoure.",
+    episodes: ["producteurs-qui-arretent", "pot-a-remplacer", "energie-de-l-usine"],
+  },
+  {
+    code: "agro-equipes",
+    titre: "Les équipes de l'usine",
+    secteur: "agroalimentaire",
+    texte:
+      "Polyvalence, maintenance, pic des fêtes : une usine tient par ceux qui la conduisent et l'entretiennent.",
+    episodes: ["polyvalence-des-operateurs", "maintenance-qui-court", "pic-des-fetes"],
+  },
+  {
+    code: "agro-strategie",
+    titre: "Décider pour la laiterie",
+    secteur: "agroalimentaire",
+    texte:
+      "Pour la direction : ouvrir l'export, lancer une gamme végétale, répondre à une offre de rachat, les paris qui engagent la laiterie.",
+    direction: true,
+    episodes: ["export-a-ouvrir", "gamme-vegetale", "offre-de-rachat"],
   },
 ];
 

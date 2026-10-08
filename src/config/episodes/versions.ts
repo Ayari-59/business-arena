@@ -112,6 +112,21 @@ export const VERSIONS_DES_MODELES: Readonly<Record<string, VersionDuModele>> = {
   "reconstruire-ou-regrouper": { version: 1, empreinte: [797479, -1629800, -1794974] },
   "association-a-reprendre": { version: 1, empreinte: [152667, -745233, -354980] },
   "virage-domiciliaire": { version: 1, empreinte: [898716, -925944, -473012] },
+  "changements-de-format": { version: 1, empreinte: [630590, 414038, 353636] },
+  "dlc-qui-tombe": { version: 1, empreinte: [2338507, 2051794, 2192040] },
+  "lot-a-rappeler": { version: 1, empreinte: [-172848, -301963, -266862] },
+  "negociations-annuelles": { version: 1, empreinte: [5895164, 4844570, 4862099] },
+  "promotion-qui-coute": { version: 1, empreinte: [-41067, -203795, -228978] },
+  "appel-d-offres-mdd": { version: 1, empreinte: [279578, -1077678, -332852] },
+  "producteurs-qui-arretent": { version: 1, empreinte: [130243, -704603, -356066] },
+  "pot-a-remplacer": { version: 1, empreinte: [-178843, -544247, -335781] },
+  "energie-de-l-usine": { version: 1, empreinte: [268962, -632692, -197499] },
+  "polyvalence-des-operateurs": { version: 1, empreinte: [-31984, -149388, -133635] },
+  "maintenance-qui-court": { version: 1, empreinte: [-168397, -266610, -269103] },
+  "pic-des-fetes": { version: 1, empreinte: [581518, 331426, 265105] },
+  "export-a-ouvrir": { version: 1, empreinte: [209000, -470066, -77793] },
+  "gamme-vegetale": { version: 1, empreinte: [123059, -758956, -210161] },
+  "offre-de-rachat": { version: 1, empreinte: [85065000, 70640833, 78243333] },
 };
 
 export const versionDuModele = (code: string): number => VERSIONS_DES_MODELES[code]?.version ?? 1;

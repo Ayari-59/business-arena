@@ -352,9 +352,9 @@ export default async function EntreprisesPage() {
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
                 {EPISODES.length} épisodes dans la peau d&apos;un manager : une agence qui dérape,
                 une équipe qui s&apos;épuise, des chambres qu&apos;on brade, un forfait vendu sous
-                son coût, un consultant star, des lits d&apos;EHPAD qui restent vides,
-                l&apos;intérim qui flambe, un concurrent à racheter… Jugé sur ses décisions plutôt
-                que sur son résultat.
+                son coût, un consultant star, des lits d&apos;EHPAD qui restent vides, des yaourts
+                qui périment, un lot à rappeler, un concurrent à racheter… Jugé sur ses décisions
+                plutôt que sur son résultat.
               </p>
             </div>
             <Link

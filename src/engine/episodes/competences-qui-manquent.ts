@@ -143,7 +143,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "promoteur",
     titre: "Une grosse commande d'un promoteur",
-    de: "Erwan Arnoux",
+    de: "Enguerrand Arnoux",
     role: "Chargé d'affaires sur-mesure",
     texte:
       "Un promoteur de Gerland nous confie les caissons de quarante cuisines de résidence, à livrer en deux semaines.",

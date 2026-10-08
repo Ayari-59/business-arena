@@ -111,11 +111,11 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         id: "conseil",
-        titre: "Appeler Maïwenn Derrien, responsable des gammes à Bourg-en-Bresse",
+        titre: "Appeler Ambroisine Derrien, responsable des gammes à Bourg-en-Bresse",
         cout: 0.5,
         nature: "aide",
         resultat:
-          "Maïwenn : « Avant d'arrêter une gamme, demande-toi ce qui disparaît vraiment avec elle. Ses ventes, oui. Le loyer du bâtiment, non. »",
+          "Ambroisine : « Avant d'arrêter une gamme, demande-toi ce qui disparaît vraiment avec elle. Ses ventes, oui. Le loyer du bâtiment, non. »",
       },
     ],
     diagnostic: true,

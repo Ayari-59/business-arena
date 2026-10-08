@@ -647,6 +647,7 @@ function Scene({
     const compte = i === 0 && budget != null;
     const reste = compte ? budget! - s.jours : 0;
     const perte = ep.enquete.perte(s.jours);
+    const echeance = ep.enquete.echeance ?? "le point de vendredi";
     return (
       <>
         {repere("enquete")}
@@ -654,7 +655,7 @@ function Scene({
           <div className="grid gap-2.5">
             <p className="max-w-2xl text-base leading-relaxed text-slate-200">
               <strong className="text-slate-50">
-                Il vous reste {nombre(reste)} jour{reste > 1 ? "s" : ""} avant le point de vendredi.
+                Il vous reste {nombre(reste)} jour{reste > 1 ? "s" : ""} avant {echeance}.
               </strong>{" "}
               {ep.enquete.consigne}
             </p>

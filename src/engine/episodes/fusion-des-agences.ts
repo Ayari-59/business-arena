@@ -10,7 +10,7 @@
  * joueur doit les découvrir :
  *
  *   · LES CLIENTS SUIVENT LES PERSONNES. Les artisans du négoce n'ont pas
- *     choisi une enseigne : ils ont choisi Sébastien, Naïma, Pierrick, Raymond.
+ *     choisi une enseigne : ils ont choisi Sébastien, Taous, Pierrick, Raymond.
  *     Quand l'un d'eux part, une grande partie de son portefeuille part avec
  *     lui chez le concurrent. Et quand le service qu'ils connaissent se
  *     dégrade (le devis dans l'heure, la palette du matin), ils s'en vont
@@ -210,7 +210,7 @@ export interface Hasard {
   uSebastien: number;
   /** Pierrick s'en va-t-il ? */
   uJoel: number;
-  /** Naïma s'en va-t-elle ? */
+  /** Taous s'en va-t-elle ? */
   uNaima: number;
   /** Raymond, mis à l'écart, le prend-il mal ? */
   uRaymond: number;
@@ -258,7 +258,7 @@ const borne = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
 /** Le risque que Sébastien accepte l'offre du concurrent, lu en fin de semaine 5. */
 export const risqueSebastien = (inquietude: number, choc: number) =>
   borne(1.2 * (inquietude - 0.25) + 0.9 * choc, 0, 0.85);
-/** Le risque que Naïma s'en aille, lu en fin de semaine 10. */
+/** Le risque que Taous s'en aille, lu en fin de semaine 10. */
 export const risqueNaima = (inquietude: number, choc: number) =>
   borne(0.9 * (inquietude - 0.25) + 0.9 * choc, 0, 0.75);
 

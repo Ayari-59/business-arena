@@ -1039,7 +1039,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     { principale: "R4", secondaires: ["R6", "R8"] },
     // D2 · Le calendrier du CFA
     { principale: "R6", secondaires: ["R4"] },
-    // D3 · Clervie s'arrête
+    // D3 · Zénobie s'arrête
     { principale: "R5", secondaires: ["R9"] },
     // D4 · Sanaa décroche
     { principale: "R9", secondaires: ["R1", "R2"] },
@@ -1542,5 +1542,230 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     { principale: "R1", secondaires: ["R6"] },
     // D6 · Le mandat de négociation du CPOM
     { principale: "R5", secondaires: ["R6", "R4"] },
+  ],
+  // 94. Les changements qui mangent la ligne
+  "changements-de-format": [
+    // D1 · Une ligne à 57 %
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le chantier des changements
+    { principale: "R9", secondaires: ["R6"] },
+    // D3 · L'ordre des recettes
+    { principale: "R6", secondaires: ["R5"] },
+    // D4 · Juin arrive
+    { principale: "R4", secondaires: ["R5"] },
+    // D5 · Les pots mal scellés
+    { principale: "R5", secondaires: [] },
+    // D6 · Avant l'été
+    { principale: "R6", secondaires: ["R8"] },
+  ],
+  // 95. Les palettes qui périment
+  "dlc-qui-tombe": [
+    // D1 · La casse à 2,8 %
+    { principale: "R2", secondaires: ["R7"] },
+    // D2 · Les volumes de Celtis arrivent trop tard
+    { principale: "R1", secondaires: ["R6"] },
+    // D3 · Les palettes refusées
+    { principale: "R10", secondaires: ["R6", "R4"] },
+    // D4 · Celtis facture les ruptures
+    { principale: "R5", secondaires: ["R2"] },
+    // D5 · L'opération de rentrée
+    { principale: "R6", secondaires: ["R1"] },
+    // D6 · La règle de l'automne
+    { principale: "R9", secondaires: ["R10"] },
+  ],
+  // 96. Le lot qu'il faut peut-être rappeler
+  "lot-a-rappeler": [
+    // D1 · Présomptif positif
+    { principale: "R4", secondaires: ["R1", "R6"] },
+    // D2 · La ligne 3 doit-elle redémarrer ?
+    { principale: "R5", secondaires: ["R1"] },
+    // D3 · Jusqu'où va le rappel ?
+    { principale: "R1", secondaires: ["R3", "R10"] },
+    // D4 · Trouver la source
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Celtis veut comprendre
+    { principale: "R10", secondaires: ["R9"] },
+    // D6 · Que retenir de l'alerte ?
+    { principale: "R6", secondaires: ["R10"] },
+  ],
+  // 97. Les négociations du 1er mars
+  "negociations-annuelles": [
+    // D1 · Moins 2 %, ou douze références en moins
+    { principale: "R6", secondaires: ["R1"] },
+    // D2 · La part agricole contestée
+    { principale: "R4", secondaires: ["R2"] },
+    // D3 · Le reste se négocie
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · La pression monte
+    { principale: "R1", secondaires: ["R10"] },
+    // D5 · Le dernier rendez-vous
+    { principale: "R5", secondaires: ["R4"] },
+    // D6 · Avant le 1er mars
+    { principale: "R6", secondaires: ["R5"] },
+  ],
+  // 98. La promotion qui remplit les caddies
+  "promotion-qui-coute": [
+    // D1 · Doubler les opérations de l'été ?
+    { principale: "R4", secondaires: ["R2", "R5"] },
+    // D2 · Mesurer avant de généraliser
+    { principale: "R1", secondaires: ["R5"] },
+    // D3 · Les volumes annoncés à l'usine
+    { principale: "R10", secondaires: ["R6"] },
+    // D4 · Les opérations de juillet
+    { principale: "R3", secondaires: ["R4", "R6"] },
+    // D5 · Nordal attaque
+    { principale: "R4", secondaires: ["R5", "R6"] },
+    // D6 · La proposition de Celtis
+    { principale: "R6", secondaires: ["R4"] },
+  ],
+  // 99. La marque du distributeur
+  "appel-d-offres-mdd": [
+    // D1 · Opaline lance son appel d'offres
+    { principale: "R4", secondaires: ["R2", "R5"] },
+    // D2 · Le second tour
+    { principale: "R5", secondaires: ["R4"] },
+    // D3 · L'audit de Pontivy et le plan de décembre
+    { principale: "R3", secondaires: ["R6"] },
+    // D4 · Les emballages aux couleurs d'Opaline
+    { principale: "R6", secondaires: ["R5"] },
+    // D5 · Kerbrélan face à la MDD
+    { principale: "R1", secondaires: ["R5"] },
+    // D6 · Celtis veut sa MDD
+    { principale: "R4", secondaires: ["R2"] },
+  ],
+  // 100. Les producteurs qui arrêtent
+  "producteurs-qui-arretent": [
+    // D1 · Le lait qui part
+    { principale: "R4", secondaires: ["R1", "R6"] },
+    // D2 · Les tournées s'étirent
+    { principale: "R6", secondaires: ["R5"] },
+    // D3 · Le dispositif d'installation
+    { principale: "R6", secondaires: ["R5", "R2"] },
+    // D4 · Nordal chez les Guillouzic
+    { principale: "R9", secondaires: ["R4"] },
+    // D5 · Le pic de Noël
+    { principale: "R5", secondaires: ["R4"] },
+    // D6 · Les terres qui se libèrent
+    { principale: "R2", secondaires: ["R1", "R6"] },
+  ],
+  // 101. Le pot en plastique qu'il faut remplacer
+  "pot-a-remplacer": [
+    // D1 · Le carton pour le salon
+    { principale: "R1", secondaires: ["R4", "R2"] },
+    // D2 · Les bobines de polystyrène
+    { principale: "R6", secondaires: ["R5"] },
+    // D3 · Choisir la matière
+    { principale: "R10", secondaires: ["R4", "R3"] },
+    // D4 · Le dossier pour Celtis
+    { principale: "R5", secondaires: ["R10"] },
+    // D5 · La bascule des lignes
+    { principale: "R6", secondaires: ["R4", "R8"] },
+    // D6 · Le salon
+    { principale: "R10", secondaires: ["R4"] },
+  ],
+  // 102. La facture d'énergie de l'usine
+  "energie-de-l-usine": [
+    // D1 · La facture a presque doublé
+    { principale: "R1", secondaires: ["R4", "R2"] },
+    // D2 · Les premiers relevés
+    { principale: "R2", secondaires: ["R1"] },
+    // D3 · Une canicule s'annonce
+    { principale: "R5", secondaires: ["R4", "R6"] },
+    // D4 · La chaleur des groupes froids
+    { principale: "R6", secondaires: ["R5"] },
+    // D5 · Le contrat d'électricité
+    { principale: "R5", secondaires: ["R4"] },
+    // D6 · La rentrée
+    { principale: "R10", secondaires: ["R6", "R4"] },
+  ],
+  // 103. La ligne qui s'arrête quand il manque quelqu'un
+  "polyvalence-des-operateurs": [
+    // D1 · Trois personnes pour une ligne
+    { principale: "R4", secondaires: ["R6", "R2"] },
+    // D2 · Les réglages qui ne sont écrits nulle part
+    { principale: "R6", secondaires: ["R1"] },
+    // D3 · Plus de responsabilités, même paie
+    { principale: "R9", secondaires: ["R8"] },
+    // D4 · Ursuline s'arrête trois semaines
+    { principale: "R5", secondaires: ["R4"] },
+    // D5 · Cinq semaines de mars
+    { principale: "R8", secondaires: ["R4"] },
+    // D6 · Préparer l'été sans Yvonnick
+    { principale: "R6", secondaires: ["R10"] },
+  ],
+  // 104. La maintenance qui court après les pannes
+  "maintenance-qui-court": [
+    // D1 · Dix-neuf heures par mois
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Neuf heures pour un vérin
+    { principale: "R5", secondaires: ["R1"] },
+    // D3 · Ce que les conducteurs voient
+    { principale: "R9", secondaires: ["R5", "R8"] },
+    // D4 · Un morceau de joint
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Produire d'avance
+    { principale: "R6", secondaires: ["R4"] },
+    // D6 · Le dispositif de décembre
+    { principale: "R4", secondaires: ["R6", "R10"] },
+  ],
+  // 105. Le pic des fêtes
+  "pic-des-fetes": [
+    // D1 · Le double en décembre
+    { principale: "R6", secondaires: ["R4", "R1"] },
+    // D2 · Les congés de Noël
+    { principale: "R8", secondaires: ["R9", "R4"] },
+    // D3 · Ouvrir le week-end
+    { principale: "R5", secondaires: ["R9"] },
+    // D4 · Deux semaines avant le pic
+    { principale: "R4", secondaires: ["R1"] },
+    // D5 · Le pic commence
+    { principale: "R8", secondaires: ["R6"] },
+    // D6 · Les deux semaines de Noël
+    { principale: "R4", secondaires: ["R2"] },
+  ],
+  // 106. Les desserts qui plaisent à l'export
+  "export-a-ouvrir": [
+    // D1 · Six cents supermarchés, cinq ans d'exclusivité
+    { principale: "R1", secondaires: ["R5"] },
+    // D2 · Ce qui passe les Pyrénées
+    { principale: "R2", secondaires: ["R5"] },
+    // D3 · L'étiquette en espagnol
+    { principale: "R6", secondaires: ["R5"] },
+    // D4 · Un drapeau à Madrid ?
+    { principale: "R5", secondaires: ["R4"] },
+    // D5 · Les chiffres du test
+    { principale: "R3", secondaires: ["R10"] },
+    // D6 · Le contrat
+    { principale: "R5", secondaires: ["R4"] },
+  ],
+  // 107. La gamme végétale
+  "gamme-vegetale": [
+    // D1 · Le rayon qui monte
+    { principale: "R5", secondaires: ["R1", "R4"] },
+    // D2 · Ce que le test mesurera
+    { principale: "R1", secondaires: ["R10"] },
+    // D3 · Le lancement
+    { principale: "R6", secondaires: ["R4"] },
+    // D4 · Les créneaux du façonnier
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Ce que dit le test
+    { principale: "R3", secondaires: ["R10", "R4"] },
+    // D6 · Produire après le test
+    { principale: "R6", secondaires: ["R5"] },
+  ],
+  // 108. L'offre de rachat
+  "offre-de-rachat": [
+    // D1 · L'offre de Nordal
+    { principale: "R4", secondaires: ["R2", "R5"] },
+    // D2 · Ouvrir les comptes à un concurrent
+    { principale: "R1", secondaires: ["R6"] },
+    // D3 · L'offre expire dans deux semaines
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · Le rapport d'audit
+    { principale: "R4", secondaires: ["R10"] },
+    // D5 · Le protocole de cession
+    { principale: "R5", secondaires: ["R6"] },
+    // D6 · Les producteurs du Méné
+    { principale: "R3", secondaires: ["R6"] },
   ],
 };

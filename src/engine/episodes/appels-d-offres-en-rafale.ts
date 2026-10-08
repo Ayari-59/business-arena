@@ -440,7 +440,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "urgence",
     titre: "Une mission privée signée en urgence",
-    de: "Anaïg Trévidic",
+    de: "Fortunée Trévidic",
     role: "Associée, Performance opérationnelle, Nantes",
     texte:
       "Un industriel de Lorient signe une mission de six semaines qui démarre lundi. Je te prends trois consultants de Rennes en intercontrat : quinze jours de moins pour tes réponses.",

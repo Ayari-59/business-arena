@@ -46,8 +46,8 @@ const SEBASTIEN = {
   de: "Sébastien Ponsard",
   role: "Commercial terrain, Combelle",
 } as const;
-const NAIMA = {
-  de: "Naïma Tahiri",
+const TAOUS = {
+  de: "Taous Tahiri",
   role: "Vendeuse comptoir, Combelle",
 } as const;
 const JOEL = {
@@ -122,15 +122,15 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "620 artisans actifs. 76 % de la marge passe par quatre personnes : Sébastien (32 %), Naïma (18 %), Pierrick (14 %) et Raymond lui-même, pour ses quarante clients historiques (12 %). Sept artisans sur dix ne commandent qu'à leur interlocuteur. En 2019, quand un vendeur est parti chez un concurrent, près de la moitié de ses clients l'ont suivi. Les prix des deux agences sont à 1 % près : la centrale d'achat les avait déjà alignés.",
+          "620 artisans actifs. 76 % de la marge passe par quatre personnes : Sébastien (32 %), Taous (18 %), Pierrick (14 %) et Raymond lui-même, pour ses quarante clients historiques (12 %). Sept artisans sur dix ne commandent qu'à leur interlocuteur. En 2019, quand un vendeur est parti chez un concurrent, près de la moitié de ses clients l'ont suivi. Les prix des deux agences sont à 1 % près : la centrale d'achat les avait déjà alignés.",
       },
       {
         id: "dejeuner",
-        titre: "Déjeuner avec Sébastien, Naïma et Pierrick",
+        titre: "Déjeuner avec Sébastien, Taous et Pierrick",
         cout: 1,
         nature: "decisive",
         resultat:
-          "Personne ne leur a dit ce qu'ils deviennent. Sébastien a reçu deux appels du Comptoir Rhodanien depuis l'annonce. Naïma : « Ici, un maçon appelle à 7 h, il a son devis à 8 h et sa palette à 10 h. On nous dit que chez Arvel il faut 48 heures et la signature du chef des ventes : nos clients ne l'accepteront pas. » Pierrick : « Vos procédures, on peut les apprendre. Mais dites-nous d'abord où on sera. »",
+          "Personne ne leur a dit ce qu'ils deviennent. Sébastien a reçu deux appels du Comptoir Rhodanien depuis l'annonce. Taous : « Ici, un maçon appelle à 7 h, il a son devis à 8 h et sa palette à 10 h. On nous dit que chez Arvel il faut 48 heures et la signature du chef des ventes : nos clients ne l'accepteront pas. » Pierrick : « Vos procédures, on peut les apprendre. Mais dites-nous d'abord où on sera. »",
       },
       {
         id: "doublons",
@@ -181,7 +181,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...NAIMA,
+          ...TAOUS,
           texte:
             "Vous êtes le premier à nous demander comment on travaille. On a parlé de nos clients pendant une heure. On attend la suite, mais on respire.",
         },
@@ -300,7 +300,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...NAIMA,
+          ...TAOUS,
           texte: "Personne ne sait qui décide au comptoir. Les clients non plus.",
         },
       ],
@@ -410,7 +410,7 @@ export const ETAPES: readonly Etape[] = [
         texte: `La ressaisie des commandes du négoce et les deux licences coûtent 2,8 k€ par semaine. Doublons de la semaine 7, tout compris : ${ctx.doublons}.`,
       },
       {
-        ...(ctx.naimaLa ? NAIMA : ELODIE),
+        ...(ctx.naimaLa ? TAOUS : ELODIE),
         heure: "15:10",
         texte:
           "Dans le logiciel d'Arvel, je ne trouve pas où mettre les prix négociés avec chaque artisan. Au négoce, il y en a 1 900.",
@@ -511,7 +511,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "utile",
         resultat:
-          "Deux erreurs par an, toutes rattrapées par Pierrick ou Naïma, qui relisent les gros devis. Chez Arvel, personne au comptoir n'a jamais chiffré seul un devis de plus de 2 000 € : le premier mois, une erreur est probable, et un gros chantier mal chiffré coûte cher.",
+          "Deux erreurs par an, toutes rattrapées par Pierrick ou Taous, qui relisent les gros devis. Chez Arvel, personne au comptoir n'a jamais chiffré seul un devis de plus de 2 000 € : le premier mois, une erreur est probable, et un gros chantier mal chiffré coûte cher.",
       },
     ],
     question: "Que faites-vous de la réactivité du négoce ?",
@@ -599,7 +599,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat: (ctx) =>
-          `Trente artisans, tous du négoce, choisis portefeuille par portefeuille : ceux de Sébastien d'abord, puis ceux de Raymond et de Naïma. Ceux que vous avez déjà perdus étaient partis après le départ de leur vendeur ou un service raté ; aucun n'est parti pour le prix seul.${
+          `Trente artisans, tous du négoce, choisis portefeuille par portefeuille : ceux de Sébastien d'abord, puis ceux de Raymond et de Taous. Ceux que vous avez déjà perdus étaient partis après le départ de leur vendeur ou un service raté ; aucun n'est parti pour le prix seul.${
             ctx.sebastienLa
               ? " Sébastien a déjà rappelé quatre de ses clients démarchés : « Ils attendent qu'on vienne les voir. »"
               : ""

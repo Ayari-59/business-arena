@@ -29,7 +29,7 @@ export const DIAGNOSTICS = [
   { id: "fideles", t: "Les artisans sont fidèles : ils patienteront quelques jours" },
 ] as const;
 
-const YANNICK = { de: "Yannick Ferreira", role: "Responsable informatique" } as const;
+const AGRICOL = { de: "Agricol Ferreira", role: "Responsable informatique" } as const;
 const SABRINA = { de: "Sabrina Haddou", role: "Directrice commerciale" } as const;
 const DG = { de: "Marc-Antoine Vidal", role: "Directeur général" } as const;
 const KARIM = { de: "Karim Belkacem", role: "Chef d'agence, Villeurbanne" } as const;
@@ -45,7 +45,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 1,
     messages: () => [
       {
-        ...YANNICK,
+        ...AGRICOL,
         heure: "06:50",
         alerte: true,
         texte:
@@ -74,7 +74,7 @@ export const ETAPES: readonly Etape[] = [
     sources: [
       {
         id: "informatique",
-        titre: "Faire le point avec Yannick Ferreira",
+        titre: "Faire le point avec Agricol Ferreira",
         cout: 1,
         nature: "decisive",
         resultat:
@@ -267,7 +267,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 4,
     messages: (ctx) => [
       {
-        ...YANNICK,
+        ...AGRICOL,
         heure: "10:00",
         alerte: true,
         texte:
@@ -331,7 +331,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...YANNICK,
+          ...AGRICOL,
           texte:
             "C'est relancé : les agences retrouvent leurs écrans. Je reste inquiet de tout ce qu'on n'a pas vérifié.",
         },
@@ -339,14 +339,14 @@ export const ETAPES: readonly Etape[] = [
       null,
       [
         {
-          ...YANNICK,
+          ...AGRICOL,
           texte:
             "Le prestataire a commencé par les serveurs de commandes et de facturation. Premiers contrôles concluants.",
         },
       ],
       [
         {
-          ...YANNICK,
+          ...AGRICOL,
           texte:
             "Le nettoyage avance poste par poste. Rien ne redémarre avant la fin, comme convenu.",
         },

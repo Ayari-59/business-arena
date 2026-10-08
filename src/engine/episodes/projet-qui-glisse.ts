@@ -143,7 +143,7 @@ export const IMPREVUS: readonly Imprevu[] = [
   {
     id: "grippe",
     titre: "Grippe dans l'équipe",
-    de: "Yannick Meunier",
+    de: "Dieudonné Meunier",
     role: "Développeur principal",
     texte:
       "Sarah et Hugo sont cloués au lit, et Léna tousse. On tourne à moitié pendant quinze jours.",

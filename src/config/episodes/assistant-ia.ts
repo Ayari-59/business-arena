@@ -82,8 +82,8 @@ const DRAGAN = {
 } as const;
 const GWILHERM = { de: "Gwilherm Le Nevez", role: "Directeur des achats, groupe Orvanne" } as const;
 const HOCINE = { de: "Hocine Cassagne", role: "Directeur de mission, compte Orvanne" } as const;
-const ERVAN = {
-  de: "Ervan Hamon",
+const FULGENCE = {
+  de: "Fulgence Hamon",
   role: "Consultant senior, référent de la practice Énergie et bâtiment",
 } as const;
 const CHIAMAKA = {
@@ -406,7 +406,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...ERVAN,
+          ...FULGENCE,
           texte:
             "Première heure de pratiques partagées : on a montré comment on fait une synthèse d'audit énergétique à partir des notes de visite. Trois collègues de Soazig sont venus « pour voir ».",
         },

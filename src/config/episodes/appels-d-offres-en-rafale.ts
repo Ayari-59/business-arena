@@ -41,7 +41,7 @@ const VICTOIRE = { de: "Victoire Lanoë", role: "Présidente d'Atlas Conseil" } 
 const KATELL = { de: "Katell Jaouen", role: "Manager, Organisation et transformation" } as const;
 const GOULVEN = { de: "Goulven Prigent", role: "Directeur de mission" } as const;
 const SEFORA = { de: "Sefora Abergel", role: "Manager, Organisation et transformation" } as const;
-const AZILIZ = { de: "Aziliz Coadou", role: "Consultante senior" } as const;
+const ROSELINE = { de: "Roseline Coadou", role: "Consultante senior" } as const;
 const PRUNE = { de: "Prune Lecoeur", role: "Contrôleuse de gestion" } as const;
 const KONAN = {
   de: "Konan Bodiguel",
@@ -141,11 +141,11 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         id: "eulalie",
-        titre: "Demander conseil à Anaïg Trévidic, associée à Nantes",
+        titre: "Demander conseil à Fortunée Trévidic, associée à Nantes",
         cout: 0.5,
         nature: "aide",
         resultat:
-          "Anaïg : « À Nantes, on a cessé de répondre à tout il y a deux ans. Avant de lancer une réponse, regarde ce qu'elle t'a coûté l'an dernier, et ce qui fait gagner les autres. »",
+          "Fortunée : « À Nantes, on a cessé de répondre à tout il y a deux ans. Avant de lancer une réponse, regarde ce qu'elle t'a coûté l'an dernier, et ce qui fait gagner les autres. »",
       },
     ],
     diagnostic: true,
@@ -172,7 +172,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...AZILIZ,
+          ...ROSELINE,
           texte:
             "On a ouvert douze dossiers dans la bibliothèque de mémoires. On adapte le nom du client et le contexte, et on enchaîne.",
         },
@@ -276,7 +276,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...AZILIZ,
+          ...ROSELINE,
           texte: "Le mémoire type de la Métropole est en route. Il sera déposé en semaine 6.",
         },
       ],
@@ -295,7 +295,7 @@ export const ETAPES: readonly Etape[] = [
         texte: `${ctx.nbReponses} réponses en cours, et les remises s'enchaînent de la semaine 5 à la semaine 11. Les consultants en intercontrat peuvent tout écrire à partir de la bibliothèque ; on relira la veille de chaque remise. Ou alors l'un de nous pilote chaque réponse, mais il faudra le prendre quelque part.`,
       },
       {
-        ...AZILIZ,
+        ...ROSELINE,
         heure: "16:40",
         texte:
           "Pour le CCAS de Pontcallec, la directrice nous avait parlé de ses difficultés en novembre. Le mémoire type n'en dit rien. Quelqu'un peut m'aider à le réécrire ?",
@@ -347,7 +347,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...AZILIZ,
+          ...ROSELINE,
           texte:
             "On reprend les mémoires de l'an dernier. Pour Pontcallec, j'ai mis ce que je savais, sans savoir si c'est ce qu'ils attendent.",
         },
@@ -526,7 +526,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...AZILIZ,
+          ...ROSELINE,
           texte:
             "Je pars du mémoire de Saint-Brieuc sur la propreté urbaine, et je l'adapte. Ce sera prêt pour la semaine 10.",
         },
