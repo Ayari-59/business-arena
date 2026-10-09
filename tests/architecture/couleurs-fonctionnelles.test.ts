@@ -122,7 +122,9 @@ describe("le vert et le rouge disent les résultats, francs", () => {
 });
 
 describe("les métiers se distinguent par des teintes franches", () => {
-  const sombre = CSS.slice(CSS.indexOf("LES MÉTIERS : NEUF TEINTES FRANCHES"));
+  const sombre = CSS.slice(
+    CSS.indexOf("LES MÉTIERS : NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS"),
+  );
   const papier = CSS.slice(CSS.indexOf('[data-theme="clair"] {\n  /* Même remarque'));
   const noms = new Set<string>();
   for (const a of Object.values(ACCENTS_SECTEUR)) {

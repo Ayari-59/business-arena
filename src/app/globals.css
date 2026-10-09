@@ -598,7 +598,7 @@
 }
 
 /* ---------------------------------------------------------------------------
- * LES MÉTIERS : NEUF TEINTES FRANCHES, ET SIX NUANCES VOISINES.
+ * LES MÉTIERS : NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS.
  *
  * Une couleur distingue un métier (sa puce, son nom, sa barre, sa tuile, le
  * filet de tête de ses cartes). Le lot 5A avait posé la mécanique, mais avec
@@ -650,9 +650,12 @@
  *     couleur délavée s'en éloignait. La série du joueur porte pour cela une
  *     étiquette directe et un trait plus épais (charts.tsx).
  *
- * Les variantes de scénario ne sont donc plus « un cran plus claires » au
- * hasard : chacune est la nuance de sa famille qui la sépare le mieux des
- * HUIT AUTRES familles.
+ * NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS. Le joueur choisit parmi NEUF
+ * entreprises (`SCENARIO_CHOICES` du registre) ; les six autres codes de
+ * scénario ne sont pas des entreprises de plus, mais la MÊME entreprise jouée
+ * en gamme à partir d'un certain niveau. Elles reprennent donc la couleur de
+ * leur entreprise, à l'identique : NOVA reste NOVA quand sa gamme s'ouvre au
+ * niveau 4, et un élève ne change pas d'univers en changeant de niveau.
  * ------------------------------------------------------------------------- */
 :root,
 [data-theme="clair"] .contre-jour,
@@ -666,12 +669,13 @@
   --secteur-abonnement: #b1e566;
   --secteur-batiment: #acd048;
   --secteur-transport: #7fbaff;
-  --secteur-nova-gamme: #99a8f2;
-  --secteur-hotel-gamme: #c39de9;
-  --secteur-conseil-gamme: #cafc7c;
-  --secteur-bistrot-gamme: #ffabce;
-  --secteur-ecommerce-gamme: #ffc1fe;
-  --secteur-boutique-mono: #ed8ad0;
+  /* La gamme d'une entreprise, c'est la même entreprise. */
+  --secteur-nova-gamme: var(--secteur-industrie);
+  --secteur-hotel-gamme: var(--secteur-hotellerie);
+  --secteur-conseil-gamme: var(--secteur-services);
+  --secteur-bistrot-gamme: var(--secteur-restauration);
+  --secteur-ecommerce-gamme: var(--secteur-ecommerce);
+  --secteur-boutique-mono: var(--secteur-commerce);
 }
 
 @utility carte {
@@ -980,12 +984,13 @@ body {
   --secteur-abonnement: #567d01;
   --secteur-batiment: #4c6100;
   --secteur-transport: #003d75;
-  --secteur-nova-gamme: #120372;
-  --secteur-hotel-gamme: #46006d;
-  --secteur-conseil-gamme: #2f5700;
-  --secteur-bistrot-gamme: #890041;
-  --secteur-ecommerce-gamme: #6a0065;
-  --secteur-boutique-mono: #46002c;
+  /* La gamme d'une entreprise, c'est la même entreprise. */
+  --secteur-nova-gamme: var(--secteur-industrie);
+  --secteur-hotel-gamme: var(--secteur-hotellerie);
+  --secteur-conseil-gamme: var(--secteur-services);
+  --secteur-bistrot-gamme: var(--secteur-restauration);
+  --secteur-ecommerce-gamme: var(--secteur-ecommerce);
+  --secteur-boutique-mono: var(--secteur-commerce);
 }
 
 /* ---------------------------------------------------------------------------

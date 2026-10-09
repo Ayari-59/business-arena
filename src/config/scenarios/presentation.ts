@@ -19,10 +19,12 @@ import type { ScenarioDefinition, Sector } from "./registry";
  * dilués, l'ambre, le rose et l'orange donnaient des taches pêche et rose
  * pâle. La puce est un filet plein et un mot dans la couleur du métier.
  *
- * Les six entrées de `IDENTITES_SCENARIO` sont des VARIANTES de scénario, pas
- * des métiers de plus : chacune porte la nuance voisine de sa famille (même
- * teinte, un cran de clarté d'écart). Neuf teintes à séparer, pas quinze —
- * c'est ce qui permet qu'elles soient franches.
+ * NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS. Six entrées de
+ * `IDENTITES_SCENARIO` sont des VARIANTES de scénario, pas des entreprises de
+ * plus : c'est la même entreprise jouée en gamme à partir d'un certain niveau.
+ * Chacune reprend donc la couleur de son entreprise, à l'identique — on ne
+ * change pas d'univers en changeant de niveau. Neuf teintes à séparer, pas
+ * quinze : c'est ce qui permet qu'elles soient franches.
  */
 export interface AccentSecteur {
   bord: string;

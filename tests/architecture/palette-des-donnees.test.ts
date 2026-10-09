@@ -31,8 +31,9 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  * délavées (chroma 0,023 à 0,096, sous le plancher où une couleur se voit
  * encore) : l'arène virait au sépia et les quinze se ressemblaient. Elles sont
  * refaites, et la règle qui les tient tient en quatre lignes :
- *   - NEUF FAMILLES, pas quinze : six jetons sont des VARIANTES de scénario
- *     d'un métier déjà là, et portent une nuance voisine de leur famille.
+ *   - NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS : six jetons sont des
+ *     VARIANTES de scénario — la même entreprise jouée en gamme — et
+ *     reprennent la couleur de leur entreprise, à l'identique.
  *   - franches : chroma dans [0,105 ; 0,166[, au-dessus du plancher de
  *     `dataviz` et sous l'or, le moins coloré des quatre accents réservés.
  *   - hors des teintes prises : plus de 20° et plus de 10 d'écart perçu de
@@ -101,10 +102,24 @@ function contraste(a: string, b: string): number {
   const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
   return (x! + 0.05) / (y! + 0.05);
 }
-function jeton(source: string, nom: string): string {
-  const trouve = source.match(new RegExp(`--${nom}:\\s*(#[0-9a-f]{6})\\s*;`, "i"));
+/** La valeur DÉCLARÉE d'un jeton, telle qu'elle est écrite : une couleur, ou un renvoi. */
+function brut(source: string, nom: string): string {
+  const trouve = source.match(new RegExp(`--${nom}:\\s*([^;]+);`, "i"));
   expect(trouve, `--${nom} absent`).not.toBeNull();
-  return trouve![1]!.toLowerCase();
+  return trouve![1]!.trim().toLowerCase();
+}
+
+/**
+ * La couleur d'un jeton. La gamme d'une entreprise renvoie au jeton de son
+ * entreprise (`var(--secteur-…)`) : on suit le renvoi, une fois, pour que
+ * chaque mesure porte sur la couleur réellement affichée.
+ */
+function jeton(source: string, nom: string): string {
+  const valeur = brut(source, nom);
+  const renvoi = valeur.match(/^var\(\s*--([a-z0-9-]+)\s*\)$/);
+  const couleur = renvoi ? brut(source, renvoi[1]!) : valeur;
+  expect(couleur, `--${nom} n'est pas une couleur : ${couleur}`).toMatch(/^#[0-9a-f]{6}$/);
+  return couleur;
 }
 
 // --- les seuils de la méthode dataviz ------------------------------------
@@ -120,7 +135,9 @@ const SURFACES = {
 };
 
 /** Les deux tables des teintes de métier, de chaque côté de la composition. */
-const SUR_MARINE_METIERS = CSS.slice(CSS.indexOf("LES MÉTIERS : NEUF TEINTES FRANCHES"));
+const SUR_MARINE_METIERS = CSS.slice(
+  CSS.indexOf("LES MÉTIERS : NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS"),
+);
 const SUR_PAPIER_METIERS = CSS.slice(CSS.indexOf('[data-theme="clair"] {\n  /* Même remarque'));
 /** Les quatre accents que la charte réserve, par côté (le papier a ses encres). */
 const ACCENTS_RESERVES = {
@@ -420,37 +437,26 @@ describe("la teinte du métier est le fil d'une partie", () => {
     );
   });
 
-  it("une variante de scénario est la NUANCE VOISINE de sa famille, pas un métier de plus", () => {
-    // Six des quinze jetons sont des variantes : même teinte que leur famille
-    // (à quelques degrés près), un cran de clarté d'écart. C'est ce qui ramène
-    // quinze teintes à neuf, et c'est ce qui rend « franc » tenable.
+  it("une variante de scénario EST la couleur de son entreprise, pas une dixième", () => {
+    // NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS. Le joueur choisit parmi
+    // neuf entreprises ; les six autres codes sont la MÊME entreprise jouée en
+    // gamme à partir d'un certain niveau. Changer de niveau ne doit pas changer
+    // d'univers : la variante renvoie au jeton de son entreprise, au caractère
+    // près, et ne porte donc aucune couleur à elle.
     for (const [source, mode] of [
       [SUR_PAPIER_METIERS, "clair"],
       [SUR_MARINE_METIERS, "marine"],
     ] as const) {
       void mode;
       for (const [variante, famille] of Object.entries(VARIANTES)) {
-        const v = jeton(source, `secteur-${variante}`);
-        const f = jeton(source, `secteur-${famille}`);
-        const e = ecart(v, f);
-        // Visible (sinon la variante ne servirait à rien) et voisine (sinon
-        // c'est un dixième métier).
-        expect(e.normal, `${variante} et ${famille} : nuance invisible`).toBeGreaterThanOrEqual(2);
         expect(
-          e.normal,
-          `${variante} et ${famille} : ce n'est plus une nuance`,
-        ).toBeLessThanOrEqual(14);
-        const brut = Math.abs(oklch(v).h - oklch(f).h) % 360;
-        const dteinte = brut > 180 ? 360 - brut : brut;
-        expect(dteinte, `${variante} : teinte trop loin de ${famille}`).toBeLessThanOrEqual(8);
-        // Et elle se distingue des HUIT AUTRES familles, pas de la sienne.
-        for (const autre of ORDRE_DES_FAMILLES) {
-          if (autre === famille) continue;
-          expect(
-            ecart(v, jeton(source, `secteur-${autre}`)).normal,
-            `${variante} se confond avec ${autre}`,
-          ).toBeGreaterThanOrEqual(5);
-        }
+          brut(source, `secteur-${variante}`),
+          `${variante} doit renvoyer à var(--secteur-${famille}), sans recopier de couleur`,
+        ).toBe(`var(--secteur-${famille})`);
+        expect(
+          jeton(source, `secteur-${variante}`),
+          `${variante} ne se résout pas sur la couleur de ${famille}`,
+        ).toBe(jeton(source, `secteur-${famille}`));
       }
     }
   });
