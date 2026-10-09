@@ -48,7 +48,9 @@ export const SCENES_DES_ENTREPRISES: Record<string, { lieu: string; Dessin: Comp
  * du métier. Le traitement est cuit dans le fichier : une photo n'appartient
  * qu'à une entreprise, elle n'a pas à changer de teinte. Aucune ne porte de
  * texte, de logo ni de marque — c'est la condition pour entrer ici (les mots
- * écrits au feutre sur le tableau d'ATLAS ont été effacés à la retouche).
+ * écrits au feutre sur le tableau d'ATLAS, les marques des tapis de VOLT, le
+ * panneau de chantier et les sacs d'enduit de MARTEL ont été effacés à la
+ * retouche).
  *
  * `cadrage` est la position verticale du cadre (`background-position`), réglée
  * pour garder les visages dans le bandeau, sur ordinateur comme au téléphone.
@@ -59,6 +61,9 @@ export const PHOTOS_DES_ENTREPRISES: Record<string, { cadrage: number }> = {
   bistrot: { cadrage: 34 },
   conseil: { cadrage: 49 },
   ecommerce: { cadrage: 44 },
+  fitness: { cadrage: 69 },
+  batiment: { cadrage: 45 },
+  transport: { cadrage: 70 },
 };
 
 /** Le fichier d'une photo de lieu, pleine taille ou réduite pour le téléphone. */
