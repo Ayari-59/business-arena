@@ -11,6 +11,10 @@ import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mi
 import { COURRIERS_EN_RETOUR, estUnCourrierEnRetour } from "@/config/courriers/reponses";
 import { BrandMark } from "@/components/brand-mark";
 import { Icone } from "@/components/icone";
+import {
+  PortraitDInterlocuteur,
+  interlocuteurDe,
+} from "@/components/illustrations/portrait-d-interlocuteur";
 
 /**
  * LE COURRIER DE L'ENTREPRISE : une enveloppe, puis la lettre qu'elle contient.
@@ -72,6 +76,25 @@ function pileDuCourrier(code: string): string {
   if (estUneLettreDeMission(code)) return "Lettre de mission";
   if (estUnCourrierEnRetour(code)) return "Courrier en retour";
   return "Courrier de routine";
+}
+
+/**
+ * LOT 6B : LE VISAGE DE QUI ÉCRIT. Une lettre ouverte montre, à côté de
+ * l'expéditeur, la figure qui la signe (la banque, un fournisseur, un client,
+ * l'administration…) : l'élève apprend à reconnaître QUI lui écrit avant de
+ * lire ce qu'on lui écrit. Décoratif (le nom est écrit à côté), carré de 56 à
+ * 64 px, et absent à l'impression, où un aplat marine ne dirait rien de plus
+ * que le nom et coûterait de l'encre.
+ */
+function VisageDeLExpediteur({ expediteur, className }: { expediteur: string; className: string }) {
+  const qui = interlocuteurDe(expediteur);
+  if (!qui) return null;
+  return (
+    <PortraitDInterlocuteur
+      qui={qui}
+      className={`portrait-d-interlocuteur shrink-0 rounded-md print:hidden ${className}`}
+    />
+  );
 }
 
 /**
@@ -233,8 +256,11 @@ export function Lettre({
       <div className="flex min-h-full flex-col">
         {/* en-tête : qui écrit, et sous quelle forme */}
         <div className="flex items-start justify-between gap-2">
-          <span className="min-w-0 font-display text-xs font-semibold uppercase leading-snug tracking-wide">
-            {c.expediteur}
+          <span className="flex min-w-0 items-center gap-3">
+            <VisageDeLExpediteur expediteur={c.expediteur} className="h-16 w-16" />
+            <span className="min-w-0 font-display text-xs font-semibold uppercase leading-snug tracking-wide">
+              {c.expediteur}
+            </span>
           </span>
           <span
             className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide"
@@ -463,19 +489,22 @@ export function Message({
             {annonce ? "annoncé" : nature.label}
           </span>
         </div>
-        <dl className="mt-1.5 grid grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1 text-xs leading-snug">
-          <dt className="tenue uppercase tracking-widest">De</dt>
-          <dd className="min-w-0 font-semibold">{c.expediteur}</dd>
-          <dt className="tenue uppercase tracking-widest">À</dt>
-          <dd
-            className={`min-w-0 ${surligne ? "font-semibold" : "douce"}`}
-            style={surligne ? { color: "#0369a1" } : undefined}
-          >
-            {destinataire ?? "L'entreprise"}
-          </dd>
-          <dt className="tenue uppercase tracking-widest">Objet</dt>
-          <dd className="min-w-0 font-semibold">{c.objet}</dd>
-        </dl>
+        <div className="mt-1.5 flex items-start gap-3">
+          <VisageDeLExpediteur expediteur={c.expediteur} className="h-14 w-14" />
+          <dl className="grid min-w-0 flex-1 grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1 text-xs leading-snug">
+            <dt className="tenue uppercase tracking-widest">De</dt>
+            <dd className="min-w-0 font-semibold">{c.expediteur}</dd>
+            <dt className="tenue uppercase tracking-widest">À</dt>
+            <dd
+              className={`min-w-0 ${surligne ? "font-semibold" : "douce"}`}
+              style={surligne ? { color: "#0369a1" } : undefined}
+            >
+              {destinataire ?? "L'entreprise"}
+            </dd>
+            <dt className="tenue uppercase tracking-widest">Objet</dt>
+            <dd className="min-w-0 font-semibold">{c.objet}</dd>
+          </dl>
+        </div>
       </div>
 
       {/*
