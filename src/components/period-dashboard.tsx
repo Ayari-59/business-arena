@@ -12,6 +12,7 @@ import { FinancialStatements } from "@/components/financial-statements";
 import { RatioGauges } from "@/components/ratio-gauges";
 import { TableauDesReferences } from "@/components/tableau-des-references";
 import { SalesHistory } from "@/components/sales-history";
+import { TableauEstimeReel } from "@/components/ecart-d-estimation";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { RseReportPanel } from "@/components/rse-report";
 import { DashboardTabs } from "@/components/dashboard-tabs";
@@ -455,6 +456,19 @@ export function PeriodDashboard({
         synthese: (
           <div className="space-y-3">
             {verdict}
+            {/*
+              CE QUE L'ÉQUIPE AVAIT ESTIMÉ, FACE À CE QUE LE MARCHÉ A DONNÉ.
+              Dans la SYNTHÈSE, et non dans « Marché » : c'est un verdict, pas
+              une donnée de marché — « alors, ça a marché ? » commence par
+              « est-ce que je l'avais vu venir ? ». Rien ne paraît quand rien
+              n'a été estimé : on ne reproche pas ce qui n'a pas été dit.
+            */}
+            <TableauEstimeReel
+              estimation={period.decisions?.salesEstimate ?? null}
+              result={r}
+              vocabulary={view.vocabulary}
+              periode={periodLabel(view.roundDays, period.round)}
+            />
             {chiffres}
             {evolution}
           </div>

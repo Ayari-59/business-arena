@@ -30,6 +30,13 @@ import {
 } from "@/components/engagement-du-tour";
 import { Repliable } from "@/components/repliable";
 import { ValeurRafraichie } from "@/components/chiffre-qui-arrive";
+import {
+  EncartResultatEstime,
+  LigneEstimeeCompacte,
+  aideDesVentesEstimees,
+  useResultatEstime,
+} from "@/components/resultat-estime";
+import { champDesVentesEstimees, PREFIXE_VENTES_ESTIMEES } from "@/config/ventes-estimees";
 import { aideDuBudgetEntretien } from "@/config/entretien";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
@@ -533,7 +540,7 @@ function Field({
   const ref = inputRef ?? interne;
   // PLUSIEURS CHAMPS SUR UNE CARTE : la ligne compacte. Le grand bloc est pour le champ qui est la
   // question de sa carte ; une carte doit tenir sur un écran, et à trois champs il n'y tient plus.
-  const compact = enCarte && (libelle !== undefined || !CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name));
+  const compact = enCarte && (libelle !== undefined || !seulSurSaCarte(name));
   if (compact) {
     return (
       <div className="block">
@@ -562,7 +569,7 @@ function Field({
     return (
       <div className="block">
         {/* Seul sur sa carte, le chiffre est celui de la question ; parmi d'autres, il se nomme. */}
-        {CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name) ? null : (
+        {seulSurSaCarte(name) ? null : (
           <span className="mb-1.5 block text-base font-medium text-slate-200">{label}</span>
         )}
         <SaisieDeCarte
@@ -576,7 +583,7 @@ function Field({
           // Un champ plafonné porte déjà son curseur (voir ChampPlafonne).
           sansCurseur={inputRef !== undefined}
           // Un champ seul sur sa carte se lit en grand ; plusieurs sur la même, plus serré.
-          grand={CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name)}
+          grand={seulSurSaCarte(name)}
           inputRef={ref}
           {...(onValueChange ? { onValueChange } : {})}
         />
@@ -669,6 +676,15 @@ const CHAMPS_SEULS_SUR_LEUR_CARTE = [
   "qualityBudget",
   "maintenanceBudget",
 ];
+
+/**
+ * Les ventes estimées ont aussi leur carte : c'est la première question du
+ * tour. Leur nom est construit (`ventesEstimees.<référence>`), d'où ce test de
+ * préfixe plutôt qu'une entrée dans la liste ci-dessus.
+ */
+function seulSurSaCarte(name: string): boolean {
+  return CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name) || name.startsWith(PREFIXE_VENTES_ESTIMEES);
+}
 
 /**
  * LA PLAGE D'UN CURSEUR QUAND PERSONNE NE LA DONNE : jusqu'au double de la valeur
@@ -1220,7 +1236,16 @@ function GammeReference({
   roundIndex,
   capacite,
   tourPasse,
+  reperesEstimes,
+  ventesDeposees,
 }: {
+  /**
+   * Ce que le tour passé a vendu et ce qui a manqué, référence par référence :
+   * l'aide courte du champ des ventes estimées. Absent au premier tour.
+   */
+  reperesEstimes?: Record<string, { tour: number; vendu: number; manque: number }>;
+  /** Les ventes estimées déjà validées ce tour (mode classe), pour les reprendre. */
+  ventesDeposees?: Record<string, number>;
   /** Ce que l'atelier peut produire ce tour, toutes références confondues : le haut du curseur de volume. */
   capacite?: number;
   /**
@@ -1360,6 +1385,8 @@ function GammeReference({
     /** Une décision majeure de la référence : son intitulé se lit à l'encre. */
     majeure?: boolean;
     cellule: (p: Reference) => ReactNode;
+    /** Une aide courte sous la cellule : le repère du tour passé, référence par référence. */
+    aide?: (p: Reference) => string | undefined;
   }[] = [
     {
       cle: "refPrice",
@@ -1458,6 +1485,45 @@ function GammeReference({
       label: "Coût variable",
       deduite: true,
       cellule: (p) => <span className="tabular-nums">{formatEuroCents(cvuDe(p))}</span>,
+    },
+    // LES VENTES ESTIMÉES VIENNENT EN PREMIER, avant le prix et le volume : la
+    // question du tour n'est pas « combien produire » mais « combien pense-t-on
+    // vendre ». Elle est MAJEURE, dans la même grammaire que le prix et le
+    // volume (intitulé à l'encre, chiffre en grand), et son aide rappelle ce
+    // que le tour passé a vendu et ce qui a manqué.
+    //
+    // EN PARCOURS, elle n'est PAS dans la matrice : elle a sa propre carte, une
+    // ligne par référence (voir plus bas). Un septième champ sur la carte d'une
+    // référence et la carte débordait de l'écran (mesuré : 872 px pour 664).
+    {
+      cle: "ventesEstimees",
+      label: "Ventes estimées",
+      majeure: true,
+      cellule: (p: Reference) => {
+        if (enCartes || enDeveloppement(p)) return rien;
+        return (
+          <span className="flex items-center gap-1.5 champ px-2.5 py-2">
+            <input
+              type="number"
+              onWheel={sansMolette}
+              name={champDesVentesEstimees(p.code)}
+              aria-label={`Ventes estimées · ${p.name}`}
+              defaultValue={Math.round(
+                ventesDeposees?.[p.code] ?? reperesEstimes?.[p.code]?.vendu ?? 0,
+              )}
+              step={1}
+              min={0}
+              required={visible(p.code)}
+              className="min-w-0 flex-1 bg-transparent text-2xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="shrink-0 text-xs text-slate-400">{v.units}</span>
+          </span>
+        );
+      },
+      aide: (p: Reference) =>
+        enCartes || enDeveloppement(p)
+          ? undefined
+          : aideDesVentesEstimees(reperesEstimes?.[p.code], v),
     },
     {
       cle: "price",
@@ -1641,7 +1707,7 @@ function GammeReference({
             })()}
             {enDeveloppement(p) ? <EnDeveloppement /> : null}
             {lignes
-              .filter((l) => !l.deduite)
+              .filter((l) => !l.deduite && l.cle !== "ventesEstimees")
               .map((l) => {
                 // Un champ chiffré porte son étiquette sur sa propre ligne (compacte) ; une cellule
                 // sans objet (référence à bâtir) ou le choix du fournisseur gardent la leur au-dessus.
@@ -1755,14 +1821,25 @@ function GammeReference({
                 >
                   {l.label}
                 </th>
-                {gamme.map((p) => (
-                  <td
-                    key={p.code}
-                    className={`${colonne(p.code)} ${l.deduite ? "text-xs text-slate-300" : ""}`}
-                  >
-                    {l.cellule(p)}
-                  </td>
-                ))}
+                {gamme.map((p) => {
+                  const aide = l.aide?.(p);
+                  return (
+                    <td
+                      key={p.code}
+                      className={`${colonne(p.code)} ${l.deduite ? "text-xs text-slate-300" : ""}`}
+                    >
+                      {l.cellule(p)}
+                      {aide ? (
+                        <span
+                          data-repere-du-tour-passe
+                          className="mt-1 block text-xs tabular-nums text-[var(--donnee)]"
+                        >
+                          {aide}
+                        </span>
+                      ) : null}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -1921,7 +1998,15 @@ export function DecisionForm({
   gamme = null,
   rdOffer = null,
   communicationOffer = null,
+  estimation = null,
 }: {
+  /**
+   * LE DOSSIER D'ESTIMATION, préparé par le serveur : de quoi calculer dans le
+   * navigateur, à la frappe, le résultat que ces décisions donneraient si les
+   * ventes estimées se réalisaient. Expurgé du marché, sans graine (voir
+   * `services/game-view.service.ts`). `null` : l'encart ne paraît pas.
+   */
+  estimation?: GameView["estimation"];
   gameId: string;
   /** Sur téléphone, les textes d'aide se rangent dans un tiroir (voir aide-repliable.tsx). */
   telephone?: boolean;
@@ -2219,6 +2304,9 @@ export function DecisionForm({
   const [donneesRecap, setDonneesRecap] = useState<FormData | null>(null);
   const [commandeAcceptee, setCommandeAcceptee] = useState<boolean | null>(null);
   const [prixSaisi, setPrixSaisi] = useState<number | null>(null);
+  // LE RÉSULTAT ESTIMÉ, RECALCULÉ À LA FRAPPE. Le calcul est celui du moteur,
+  // dans le navigateur, derrière un anti-rebond (voir `resultat-estime.tsx`).
+  const { estime, relire: relireLEstimation } = useResultatEstime(estimation ?? null, formRef);
   const relireLEngagement = () => {
     const f = formRef.current;
     if (!f) return;
@@ -2418,6 +2506,20 @@ export function DecisionForm({
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
 
+  // ── LES VENTES ESTIMÉES ──────────────────────────────────────────────────
+  // En mono-produit, la référence est le produit du scénario ; le point de
+  // départ du champ est ce que l'équipe a VENDU au tour passé (son propre
+  // chiffre, qu'elle a sous les yeux), ou ce qu'elle a déjà validé ce tour-ci.
+  // Au premier tour il n'y a rien à reprendre : le champ part à zéro, et tant
+  // qu'il y reste, rien n'est annoncé.
+  const codeMonoProduit = estimation?.scenario.product.code ?? "";
+  const reperesEstimes = Object.fromEntries((estimation?.reperes ?? []).map((r) => [r.code, r]));
+  const repereEstimeMono = reperesEstimes[codeMonoProduit];
+  const ventesEstimeesParDefaut = Math.round(
+    estimation?.deposees?.[codeMonoProduit] ?? repereEstimeMono?.vendu ?? 0,
+  );
+  const aideEstimee = aideDesVentesEstimees(repereEstimeMono, v);
+
   // Répartition des leviers en étapes courtes (anti-scroll) : plutôt qu'un long
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
   // aucun contenu au niveau de difficulté courant est retirée ; l'index
@@ -2485,6 +2587,26 @@ export function DecisionForm({
                 nom: "Commande exceptionnelle",
                 question: "Une commande exceptionnelle",
                 resume: (d: FormData) => (d.get("acceptOrder") ? "Acceptée" : "Refusée"),
+              },
+            ]
+          : []),
+        // CE QU'ON PENSE VENDRE, AVANT LE PRIX ET LE VOLUME : c'est la question
+        // qui donne un sens aux deux. Elle vient après la commande
+        // exceptionnelle, qui ouvre le tour depuis le lot 3A (à prendre ou à
+        // laisser, et elle ne repassera pas).
+        ...(estimation
+          ? [
+              {
+                cle: "ventes-estimees",
+                etape: "vendre",
+                nom: "Ventes estimées",
+                question: "Combien pensez-vous vendre ?",
+                // SANS RÉSUMÉ : le récapitulatif liste les DÉCISIONS du tour, et
+                // une estimation n'en est pas une (le moteur ne la lit pas,
+                // c'est pourquoi elle ne figure pas non plus au registre des
+                // leviers). Une ligne de plus y coûtait 49 px, et la carte du
+                // récapitulatif tenait déjà tout juste sur un écran. Le chiffre
+                // estimé y est rappelé autrement, en une ligne.
               },
             ]
           : []),
@@ -3023,6 +3145,9 @@ export function DecisionForm({
       onSubmit={verifierPivots}
       onChange={() => {
         sauverBrouillon();
+        // L'encart « Résultat estimé » suit la saisie, à toutes les étapes :
+        // on décide en voyant ce que la décision donnerait.
+        relireLEstimation();
         // En parcours, le récapitulatif ne suit la saisie que sur la dernière
         // carte : ailleurs, il n'est pas affiché. SUR ORDINATEUR, l'engagement
         // est relu à chaque frappe : le total des budgets se lit sous les
@@ -3107,6 +3232,38 @@ export function DecisionForm({
         hidden={masquee("vendre")}
         className="space-y-3"
       >
+      {/*
+        EN PARCOURS, LES VENTES ESTIMÉES D'UNE GAMME ONT LEUR CARTE : une ligne
+        compacte par référence, avant les cartes des références elles-mêmes.
+        Posées sur la carte de chaque référence, elles en faisaient un septième
+        champ et la carte débordait de l'écran. Sur grand écran, elles restent
+        une ligne de la matrice, à leur place.
+      */}
+      {gamme && estimation && modeCartes ? (
+        <Carte cle="ventes-estimees">
+          <div className="space-y-2">
+            {gamme.map((p) =>
+              enDeveloppement(p) ? null : (
+                <SaisieDeCarte
+                  key={p.code}
+                  name={champDesVentesEstimees(p.code)}
+                  label={`Ventes estimées · ${p.name}`}
+                  libelle={p.name}
+                  defaultValue={Math.round(
+                    estimation.deposees?.[p.code] ?? reperesEstimes[p.code]?.vendu ?? 0,
+                  )}
+                  step={1}
+                  suffixe={v.units}
+                  grand={false}
+                  compact
+                  {...(capaciteEffective ? { plage: { min: 0, max: capaciteEffective } } : {})}
+                />
+              ),
+            )}
+          </div>
+          <LigneEstimeeCompacte estime={estime} vocabulary={v} />
+        </Carte>
+      ) : null}
       {gamme ? (
         // TOUT CE QUI SE DÉCIDE POUR UNE RÉFÉRENCE EST DANS SON ONGLET : prix,
         // volume, façonnier, puis les budgets qui la soutiennent. Séparés, le
@@ -3129,6 +3286,8 @@ export function DecisionForm({
             {...(reperes?.tourPasseParReference
               ? { tourPasse: reperes.tourPasseParReference }
               : {})}
+            {...(estimation ? { reperesEstimes } : {})}
+            {...(estimation?.deposees ? { ventesDeposees: estimation.deposees } : {})}
           />
         </Family>
       ) : null}
@@ -3136,11 +3295,50 @@ export function DecisionForm({
         <></>
       ) : (
         <Family
-          carte={["prix", "volume"]}
+          carte={["ventes-estimees", "prix", "volume"]}
           icone="cible"
-          legend="Vos ventes · le prix et le volume du tour"
+          legend="Vos ventes · ce que vous pensez vendre, le prix et le volume"
           defaultOpen
         >
+          {/*
+            LA PREMIÈRE QUESTION DU TOUR : combien pensez-vous vendre ? Elle
+            vient AVANT le prix et le volume — c'est elle qui donne un sens aux
+            deux — et elle prend la même grammaire qu'eux (champ majeur, chiffre
+            en grand, repère du tour passé dessous). Elle ne décide rien : le
+            moteur ne la lit pas.
+          */}
+          {estimation ? (
+            <Carte cle="ventes-estimees">
+              {/* EN PARCOURS, le repère du tour passé est une pastille au-dessus
+                  du champ, comme pour le prix : `Field` ne le pose sous le
+                  chiffre que sur grand écran. */}
+              {modeCartes && aideEstimee ? (
+                <p className="mb-3">
+                  <span
+                    data-repere-du-tour-passe
+                    className="inline-block rounded-full border border-white/15 px-3 py-1.5 text-sm tabular-nums text-[var(--donnee)]"
+                  >
+                    {aideEstimee}
+                  </span>
+                </p>
+              ) : null}
+              <Field
+                name={champDesVentesEstimees(codeMonoProduit)}
+                label="Ventes estimées"
+                defaultValue={ventesEstimeesParDefaut}
+                suffix={v.units}
+                majeur
+                {...(capaciteEffective
+                  ? {
+                      plage: { min: 0, max: Math.max(capaciteEffective, ventesEstimeesParDefaut) },
+                    }
+                  : {})}
+                {...(aideEstimee ? { repere: aideEstimee } : {})}
+                hint="Ce que vous pensez vendre ce tour. Cela ne change rien au marché : c'est ce qui fait apparaître le résultat estimé."
+              />
+              {modeCartes ? <LigneEstimeeCompacte estime={estime} vocabulary={v} /> : null}
+            </Carte>
+          ) : null}
           <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
             <Carte cle="prix">
               {/* En parcours, les repères sont des pastilles au-dessus du champ de la
@@ -3978,6 +4176,30 @@ export function DecisionForm({
         </p>
       </Family>
       </section>
+
+      {/*
+        L'ENCART « RÉSULTAT ESTIMÉ », HORS DES ÉTAPES ET DONC TOUJOURS SOUS LES
+        YEUX. Il était tentant de le poser dans l'étape où les ventes estimées
+        se saisissent : on aurait alors réglé le prix, les budgets et l'emprunt
+        sans plus rien voir de ce qu'ils donnent, alors que c'est précisément
+        là que la question se pose. Un seul exemplaire, pour qu'aucune annonce
+        ne se dise deux fois.
+        En parcours (téléphone), il cède la place à la ligne compacte du pied
+        fixe : une carte doit tenir sur un écran.
+      */}
+      {!modeCartes && estimation ? (
+        <EncartResultatEstime estime={estime} vocabulary={v} />
+      ) : null}
+      {/*
+        SUR TÉLÉPHONE, L'ESTIMÉ SE LIT SUR LA CARTE OÙ IL SE DÉCIDE, et là
+        seulement. Posé dans la barre fixe du parcours, il coûtait 65 px à
+        CHAQUE carte, et quatre cartes déjà serrées passaient sous le pied
+        (mesuré : s'approvisionner 688 px, financer 676, investir 720, études
+        686, pour un écran de 664). Posé sur le récapitulatif, fût-ce en une
+        ligne figée, il lui coûtait 36 px — et cette carte-là tenait DÉJÀ tout
+        juste. La règle du lot 3A, une carte tient sur un écran, passe devant :
+        l'estimation se lit là où on la saisit, et « Retour » y ramène.
+      */}
       {modeCartes && carteCourante?.cle === "recap" ? enTeteDuRecapitulatif : null}
       {modeCartes && carteCourante?.cle === "recap" && donneesRecap ? (
         <RecapDesDecisions

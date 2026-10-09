@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import type { Sector } from "@/config/scenarios/registry";
 import { bouton } from "@/components/bouton";
@@ -46,7 +47,15 @@ export function TourSimule({
   entreprise = null,
   roundsCount = null,
   bilan = null,
+  ecartEstime = null,
 }: {
+  /**
+   * « VOUS AVIEZ ESTIMÉ … LE MARCHÉ A DONNÉ … », quand l'équipe a déposé une
+   * estimation. L'écran ne la calcule pas : la page de l'arène a déjà les
+   * décisions du tour et son résultat (voir `ecart-d-estimation.tsx`). `null`
+   * sans estimation : on ne reproche pas ce qui n'a pas été dit.
+   */
+  ecartEstime?: ReactNode;
   gameId: string;
   /** Le tour qui vient d'être joué. */
   round: number;
@@ -133,9 +142,11 @@ export function TourSimule({
           ipg={bilan.rang ? bilan.ipg : null}
           phrase={bilan.verdict ?? null}
           complement={
-            // LES DEUX AUTRES CHIFFRES DU TOUR, EN PETIT : ce qu'on a vendu, et
-            // ce qu'il reste en caisse (une crise de trésorerie se voit ici).
-            <p className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm tabular-nums text-slate-400">
+            <>
+              {/* LES DEUX AUTRES CHIFFRES DU TOUR, EN PETIT : ce qu'on a vendu,
+                  et ce qu'il reste en caisse (une crise de trésorerie se voit
+                  ici). */}
+              <p className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm tabular-nums text-slate-400">
               <span>
                 Chiffre d&apos;affaires{" "}
                 <span className="font-semibold text-slate-200">
@@ -150,7 +161,12 @@ export function TourSimule({
                   {formatEuro(bilan.tresorerie)}
                 </span>
               </span>
-            </p>
+              </p>
+              {/* CE QU'ON AVAIT CRU, SOUS CE QUI EST ARRIVÉ : c'est l'écart
+                  qui s'apprend, et le moment où toute la classe regarde est le
+                  seul où il se retient. */}
+              {ecartEstime}
+            </>
           }
           actions={actions}
         />

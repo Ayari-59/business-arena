@@ -36,18 +36,52 @@ const codeDe = (source: string) =>
   source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
 describe("les décisions majeures passent devant", () => {
-  it("le prix et le volume sont des champs majeurs, le reste non", () => {
+  it("les ventes estimées, le prix et le volume sont majeurs, le reste non", () => {
     // `majeur` n'est pas un réglage d'apparence qu'on saupoudre : s'il est sur
-    // tout, il n'est sur rien. Deux champs en mono-produit, pas plus.
+    // tout, il n'est sur rien. TROIS champs en mono-produit, pas plus — les
+    // ventes estimées ont rejoint le prix et le volume, parce qu'elles sont la
+    // PREMIÈRE question du tour (« combien pensez-vous vendre ? ») et qu'elles
+    // commandent la lecture des deux autres. Elles prennent donc leur
+    // grammaire, sans la diluer.
     expect(FORMULAIRE).toContain("function ChampMajeur(");
     const majeurs = FORMULAIRE.match(/\bmajeur$/gm) ?? [];
-    expect(majeurs.length, "deux champs majeurs : le prix et le volume").toBe(2);
+    expect(
+      majeurs.length,
+      "trois champs majeurs : les ventes estimées, le prix et le volume",
+    ).toBe(3);
     for (const champ of ['name="price"', 'name="productionPlan"']) {
       const i = FORMULAIRE.indexOf(`<Field ${champ}`);
       expect(i, `${champ} introuvable`).toBeGreaterThan(-1);
       const balise = FORMULAIRE.slice(i, FORMULAIRE.indexOf("/>", i));
       expect(balise, `${champ} n'est pas un champ majeur`).toContain("majeur");
     }
+    // Le champ des ventes estimées porte un nom CONSTRUIT (la référence) : on
+    // le reconnaît à son helper, et il est majeur comme les deux autres. La
+    // recherche part du nom et REMONTE à sa balise : l'indentation du fichier
+    // ne doit pas décider si la garde tient.
+    const nom = FORMULAIRE.indexOf("name={champDesVentesEstimees(codeMonoProduit)}");
+    expect(nom, "le champ mono des ventes estimées introuvable").toBeGreaterThan(-1);
+    const balise = FORMULAIRE.lastIndexOf("<Field", nom);
+    expect(FORMULAIRE.slice(balise, FORMULAIRE.indexOf("/>", nom))).toContain("majeur");
+  });
+
+  it("les ventes estimées viennent AVANT le prix et le volume", () => {
+    // L'ordre de la feuille est l'ordre du raisonnement : ce qu'on croit
+    // vendre, puis le prix et le volume qui s'y accordent. L'inverse — poser le
+    // volume puis demander ce qu'on vendra — faisait de l'estimation un
+    // contrôle après coup.
+    const estime = FORMULAIRE.indexOf("name={champDesVentesEstimees(codeMonoProduit)}");
+    const prix = FORMULAIRE.indexOf('<Field name="price"');
+    const volume = FORMULAIRE.indexOf('<Field name="productionPlan"');
+    expect(estime).toBeGreaterThan(-1);
+    expect(estime).toBeLessThan(prix);
+    expect(estime).toBeLessThan(volume);
+    // En gamme, la ligne « Ventes estimées » précède celle du prix dans la
+    // matrice des références.
+    const ligneEstimee = FORMULAIRE.indexOf('cle: "ventesEstimees"');
+    const lignePrix = FORMULAIRE.indexOf('cle: "price"');
+    expect(ligneEstimee).toBeGreaterThan(-1);
+    expect(ligneEstimee).toBeLessThan(lignePrix);
   });
 
   it("le chiffre d'un champ majeur est entre 24 et 32 px, et tabulaire", () => {

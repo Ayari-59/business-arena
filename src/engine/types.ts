@@ -1165,6 +1165,42 @@ export interface RoundDecisions {
     /** Trésorerie nette attendue en fin de tour (le budget de trésorerie). */
     expectedCash?: number;
   };
+  /**
+   * LES VENTES ESTIMÉES PAR L'ÉQUIPE, et le résultat qu'elles donnaient.
+   *
+   * Ce que l'équipe croyait vendre au marché ce tour-ci, saisi en tête de la
+   * feuille de décision, et le compte estimé que l'estimateur en a tiré à la
+   * validation (`engine/estimation`). Rien de tout cela n'entre dans le calcul
+   * du tour : le moteur ne lit pas ce champ. Il sert à confronter, au rituel
+   * de fin de tour et dans les résultats, ce qu'on croyait à ce qui est arrivé.
+   *
+   * Distinct de `forecast` : `forecast.expectedUnits` nourrit le jugement de la
+   * banque (fiabilité du plan) dans les scénarios à dossier bancaire. L'arène
+   * ne demande plus ce plan ; y verser l'estimation changerait la confiance
+   * bancaire de toutes les parties sans qu'on l'ait décidé.
+   */
+  salesEstimate?: SalesEstimate;
+}
+
+/** Ventes estimées d'un tour et résultat estimé correspondant (voir `RoundDecisions.salesEstimate`). */
+export interface SalesEstimate {
+  /** Ventes au marché estimées, par référence (code produit ; mono : le code du produit). */
+  byProduct: Record<ProductCode, number>;
+  /** Leur total, toutes références confondues. */
+  units: number;
+  /**
+   * Le résultat estimé, calculé par le serveur à la validation, sur l'état
+   * d'ouverture et les décisions du tour. Absent si le calcul n'a pas pu se
+   * faire (une estimation sans résultat reste une estimation de ventes).
+   */
+  estimate?: {
+    revenue: number;
+    netIncome: number;
+    /** Trésorerie nette de fin de tour (trésorerie active − concours bancaires). */
+    netTreasury: number;
+    /** Ce que l'équipe pouvait réellement livrer au marché, toutes références. */
+    deliverableUnits: number;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1648,6 +1684,25 @@ export interface SimulationInput {
    * émis, ni au compte de résultat ni au tableau de flux.
    */
   rescueSubsidies?: Record<CompanyId, number>;
+  /**
+   * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
+   *
+   * Présent, le marché n'est pas joué : chaque entreprise reçoit, segment par
+   * segment, la demande qu'on lui impose ici, et la vend dans la limite de son
+   * stock, exactement comme le marché la lui aurait adressée. Et rien n'est
+   * tiré : ni nouvel événement, ni carte RSE, ni rupture d'approvisionnement.
+   * Les événements qui comptent sont ceux que l'appelant passe en
+   * `activeEvents`, ceux que l'équipe connaît. La commande exceptionnelle est
+   * celle qui lui a été annoncée (la graine n'est pas connue du navigateur).
+   * Tout le reste (production, stocks au CUMP, charges, financement, impôt)
+   * suit le chemin du tour réel, sans une ligne de comptabilité à part.
+   */
+  estimation?: {
+    /** Demande imposée, par entreprise puis par segment (unités). */
+    demand: Record<CompanyId, Record<SegmentCode, number>>;
+    /** La commande exceptionnelle du tour, telle qu'annoncée ; null s'il n'y en a pas. */
+    orderOffer: OrderOfferDef | null;
+  };
 }
 
 export interface SimulationOutput {

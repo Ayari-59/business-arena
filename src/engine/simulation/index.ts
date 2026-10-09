@@ -4,6 +4,7 @@ import type {
   EngineScenarioConfig,
   EquipmentItem,
   EquipmentTypeDef,
+  EventInstance,
   OrderOfferDef,
   SegmentSalesDetail,
   SimulationInput,
@@ -257,14 +258,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     journalByCompany.set(company.id, new JournalBuilder());
   }
 
+  // Résultat estimé (`input.estimation`) : rien n'est tiré, ni événement, ni
+  // carte RSE, ni rupture. Le tour se joue sur ce que l'équipe sait.
+  const estimation = input.estimation;
   // 1. Événements : tirage + poursuite des événements actifs (doc 02 §7).
-  const { active, drawn } = drawEvents(
-    scenario,
-    roundIndex,
-    input.companies,
-    input.activeEvents,
-    rng,
-  );
+  const { active, drawn } = estimation
+    ? { active: [...input.activeEvents], drawn: [] as EventInstance[] }
+    : drawEvents(scenario, roundIndex, input.companies, input.activeEvents, rng);
   // 1bis. Cartes événement RSE (Lot 2C) : company-scope, tirées sur le
   // capital-image d'OUVERTURE de chaque entreprise. Elles n'entrent PAS dans
   // marketMods (scope company) et leur effet demande est appliqué via
@@ -274,7 +274,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const rseCardsConfig = scenario.rse?.cards ?? DEFAULT_RSE_CONFIG.cards;
   const rseCardRng = createRng(deriveRoundSeed(input.seed ^ 0x52534332, roundIndex));
   for (const state of input.companies) {
-    if (state.status === "defaillant") continue;
+    if (state.status === "defaillant" || estimation) continue;
     const draws = evaluateRseCards({
       imageCapital: Math.max(0, state.rseImageCapital ?? 0),
       cleanCapital: Math.max(0, state.rseCleanCapital ?? 0),
@@ -572,7 +572,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       if (!s || disruptionBySupplier.has(s.code)) continue;
       disruptionBySupplier.set(
         s.code,
-        s.supplyRiskProbability > 0 ? rng.next() < s.supplyRiskProbability : false,
+        s.supplyRiskProbability > 0 && !estimation ? rng.next() < s.supplyRiskProbability : false,
       );
     }
     const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
@@ -989,11 +989,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       const potential = potentialBySegment[segment.code] ?? 0;
       salesBySegment.set(
         segment.code,
-        working.map((_, i) => ({
+        working.map((w, i) => ({
           potential,
           attraction: attractions[i] ?? 0,
           share: shares[i] ?? 0,
-          demandForCompany: potential * (shares[i] ?? 0),
+          // Estimation : la demande que l'équipe s'attend à recevoir, à la
+          // place de celle que le marché lui aurait adressée. Une entreprise
+          // hors marché (défaillante, référence en développement) n'en reçoit
+          // pas plus que du marché réel.
+          demandForCompany: estimation
+            ? w.state.status === "defaillant" || !w.productAvailable[k]
+              ? 0
+              : Math.max(0, estimation.demand[w.state.id]?.[segment.code] ?? 0)
+            : potential * (shares[i] ?? 0),
           sold: 0,
           lost: 0,
           revenue: 0,
@@ -1044,7 +1052,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const totalPotential = Object.values(potentialBySegment).reduce((a, b) => a + b, 0);
   // Commande exceptionnelle du tour (doc 02 §5.1) : la même pour tous,
   // tirée à la graine de la partie (alternance crédit / comptant garantie).
-  const roundOffer = orderOfferForRound(scenario, roundIndex, input.seed);
+  const roundOffer = estimation
+    ? estimation.orderOffer
+    : orderOfferForRound(scenario, roundIndex, input.seed);
 
   working.forEach((w, i) => {
     // Faillite (V2 couche 2, #5) : une entreprise défaillante est dormante — elle

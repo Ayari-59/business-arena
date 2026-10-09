@@ -38,6 +38,7 @@ import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
 import { TourSimule } from "@/components/tour-simule";
+import { LigneEstimeEtReel } from "@/components/ecart-d-estimation";
 import { CourrierDuTour } from "@/components/courrier-du-tour";
 import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
@@ -176,6 +177,16 @@ export default async function ArenaPage({
         sector={view.sector}
         entreprise={view.intro.company}
         roundsCount={view.roundsCount}
+        ecartEstime={
+          // « LE MARCHÉ RÉPOND » : ce que l'équipe avait estimé, en face de ce
+          // qui est arrivé. Les deux chiffres sont déjà là — l'estimation est
+          // dans les décisions du tour, le réel dans son résultat.
+          <LigneEstimeEtReel
+            estimation={tourJoue.decisions?.salesEstimate ?? null}
+            result={tourJoue.result}
+            vocabulary={view.vocabulary}
+          />
+        }
         bilan={(() => {
           const precedent = view.history.find((h) => h.round === tourJoue.round - 1);
           const moi = view.ranking.find((row) => row.isPlayer);
@@ -1096,6 +1107,7 @@ export default async function ArenaPage({
       }
       gameId={view.gameId}
       roundIndex={view.currentRound}
+      estimation={view.estimation}
       vocabulary={view.vocabulary}
       periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
       defaults={

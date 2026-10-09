@@ -43,8 +43,18 @@ const COMPTES = [
   "components/sales-history.tsx",
   "components/tableau-des-references.tsx",
 ];
-/** Tous les tableaux de chiffres que l'élève lit sur ses résultats. */
-const TABLEAUX = [...COMPTES, "components/period-dashboard.tsx"];
+/**
+ * Tous les tableaux de chiffres que l'élève lit sur ses résultats — le compte
+ * de résultat ESTIMÉ de la feuille de décision et le tableau estimé / réel d'un
+ * tour passé compris : ce sont des colonnes de comptes, ils suivent la même
+ * grammaire que les autres.
+ */
+const TABLEAUX = [
+  ...COMPTES,
+  "components/period-dashboard.tsx",
+  "components/resultat-estime.tsx",
+  "components/ecart-d-estimation.tsx",
+];
 
 /** Un tour de NOVA, et le tour suivant : de quoi avoir un écart réel. */
 function deuxTours(): { premier: CompanyRoundResult; second: CompanyRoundResult } {

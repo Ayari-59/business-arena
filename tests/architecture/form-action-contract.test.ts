@@ -33,6 +33,18 @@ interface FormContract {
    * (bouton de soumission nommé, champ caché construit ailleurs…).
    */
   tolerated?: string[];
+  /**
+   * Modules de LECTURE PARTAGÉE que l'action délègue : leurs `formData.get`
+   * comptent comme les siens.
+   *
+   * La feuille de décision est lue par la même fonction côté serveur et côté
+   * navigateur (`config/decisions-saisies`), pour que l'encart « Résultat
+   * estimé » et le moteur ne puissent pas lire deux choses différentes. Sans
+   * cette ligne, sortir la lecture du corps de l'action aurait VIDÉ ce
+   * contrat : l'action ne lisant plus rien en propre, aucun champ n'aurait
+   * plus été vérifié, et la panne d'août serait redevenue possible.
+   */
+  lecteurs?: string[];
 }
 
 const CONTRACTS: FormContract[] = [
@@ -59,7 +71,17 @@ const CONTRACTS: FormContract[] = [
   {
     nom: "décisions du tour",
     action: { file: "src/app/arena/[gameId]/actions.ts", fn: "playRoundAction" },
-    sources: ["src/components/decision-form.tsx"],
+    sources: [
+      "src/components/decision-form.tsx",
+      "src/components/resultat-estime.tsx",
+    ],
+    lecteurs: ["src/config/decisions-saisies.ts", "src/config/ventes-estimees.ts"],
+    // LE PLAN DE TRÉSORERIE N'EST PLUS DEMANDÉ PAR L'ARÈNE (voir
+    // forecast-field.test.ts) : la lecture partagée sait encore l'accueillir,
+    // pour un écran d'atelier qui le rouvrirait, mais la feuille de décision
+    // ne pose pas ces deux champs — et c'est l'ESTIMATION qui donnerait alors
+    // les ventes annoncées, jamais une seconde saisie.
+    tolerated: ["expectedUnits", "expectedCash"],
   },
   {
     nom: "réglage des questions en cours de partie",
@@ -99,11 +121,21 @@ function actionBody(file: string, fn: string): string {
   return source.slice(start, next === -1 ? undefined : next);
 }
 
-/** Champs lus dans le corps de l'action : formData.get / formData.has. */
+/**
+ * Champs lus : `formData.get("x")` / `.has("x")`, et le même accès passé par un
+ * petit lecteur nommé — `nombre(formData, "newLoan")`, `montant(data, "hire")`.
+ * Une lecture partagée range ses champs ainsi ; les ignorer rendrait le contrat
+ * aveugle à tout ce qu'elle lit.
+ */
 function fieldsRead(body: string): Set<string> {
-  return new Set(
-    [...body.matchAll(/formData\.(?:get|has)\(\s*"([^"]+)"\s*\)/g)].map((m) => m[1]!),
-  );
+  const noms = new Set<string>();
+  for (const m of body.matchAll(/\b(?:formData|data)\.(?:get|has)\(\s*"([^"]+)"\s*\)/g)) {
+    noms.add(m[1]!);
+  }
+  for (const m of body.matchAll(/\(\s*(?:formData|data)\s*,\s*"([^"]+)"\s*\)/g)) {
+    noms.add(m[1]!);
+  }
+  return noms;
 }
 
 /** Champs offerts par le formulaire : attributs name= littéraux. */
@@ -117,6 +149,13 @@ function fieldsOffered(sources: string[]): Set<string> {
     // Champs engendrés par une boucle sur une liste de définitions :
     // { name: "taxRate", label: … } dans le panneau économique.
     for (const m of source.matchAll(/\{\s*name:\s*"([^"]+)"/g)) names.add(m[1]!);
+    // Champs dont le NOM est construit par un helper partagé : une décision par
+    // référence (`product.<code>.price`) et les ventes estimées
+    // (`ventesEstimees.<code>`). Le préfixe suffit : le lecteur ne lit pas ces
+    // champs un à un, il balaie le préfixe.
+    for (const m of source.matchAll(/\b(productFieldName|champDesVentesEstimees)\s*\(/g)) {
+      names.add(m[1] === "productFieldName" ? "product." : "ventesEstimees.");
+    }
   }
   return names;
 }
@@ -124,7 +163,12 @@ function fieldsOffered(sources: string[]): Set<string> {
 describe("accord entre les formulaires et leurs actions serveur", () => {
   for (const contract of CONTRACTS) {
     it(`${contract.nom} : l'action ne lit aucun champ absent du formulaire`, () => {
-      const read = fieldsRead(actionBody(contract.action.file, contract.action.fn));
+      const read = fieldsRead(
+        [
+          actionBody(contract.action.file, contract.action.fn),
+          ...(contract.lecteurs ?? []).map((f) => readFileSync(f, "utf8")),
+        ].join("\n"),
+      );
       const offered = fieldsOffered(contract.sources);
       const tolerated = new Set(contract.tolerated ?? []);
 

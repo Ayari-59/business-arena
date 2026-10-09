@@ -24,6 +24,7 @@ import { peekEventDraw } from "@/engine/events";
 import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
+import { expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
 import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
@@ -41,6 +42,7 @@ import type {
   CompanyRoundResult,
   CompanyState,
   EngineScenarioConfig,
+  OrderOfferDef,
   RoundDecisions,
   CommunicationAxis,
   AccountingEntry,
@@ -469,6 +471,39 @@ export interface GameView {
     receivables: number;
     payables: number;
   };
+  /**
+   * LE DOSSIER D'ESTIMATION : de quoi calculer, DANS LE NAVIGATEUR et à la
+   * frappe, le résultat que les décisions du tour donneraient si les ventes
+   * estimées par l'équipe se réalisaient (`engine/estimation`).
+   *
+   * Le scénario y est EXPURGÉ de tout ce qui fait la demande (taille des
+   * clientèles, élasticité, sensibilités, paquet d'événements, pool des
+   * commandes, concurrents) : l'estimation n'en a pas besoin, et ce qui n'est
+   * pas envoyé ne peut pas fuir. La GRAINE n'y est jamais : rien ne permet de
+   * rejouer le hasard du tour. Les événements sont ceux que l'équipe connaît
+   * déjà à l'ouverture, le tirage du tour compris (il est retourné face
+   * visible dans « le courrier du tour »), et la commande exceptionnelle est
+   * celle qui lui a été annoncée.
+   *
+   * `null` quand il n'y a rien à estimer : partie finie, ou état d'ouverture
+   * introuvable.
+   */
+  estimation: {
+    scenario: EngineScenarioConfig;
+    state: CompanyState;
+    roundIndex: number;
+    events: EventInstance[];
+    orderOffer: OrderOfferDef | null;
+    /** Comment les ventes d'une référence se répartissent entre ses clientèles. */
+    repartition: Record<string, number>;
+    /**
+     * Ce que le tour passé a donné, référence par référence : vendu et manqué.
+     * C'est l'aide courte posée sous le champ. Vide au premier tour.
+     */
+    reperes: { code: string; tour: number; vendu: number; manque: number }[];
+    /** Les ventes estimées déjà validées pour CE tour (mode classe) ; null sinon. */
+    deposees: Record<string, number> | null;
+  } | null;
   /**
    * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
    * restauration…), déjà calculés : l'arène ne fait que les mettre en forme.
@@ -1460,6 +1495,89 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         }
       : null;
 
+  // ── LE DOSSIER D'ESTIMATION ──────────────────────────────────────────────
+  // Préparé ICI, côté serveur, pour que le navigateur puisse estimer à la
+  // frappe sans rien apprendre du marché : scénario expurgé, état d'ouverture,
+  // événements déjà connus, commande annoncée, répartition constatée. Aucune
+  // graine ne traverse.
+  const dossierDEstimation: GameView["estimation"] = await (async () => {
+    if (game.status === "finished") return null;
+    const ouvertureRound = game.currentRound - 1;
+    const etatsDuTour = await db
+      .select()
+      .from(companyStates)
+      .where(
+        and(
+          eq(companyStates.roundIndex, ouvertureRound),
+          inArray(companyStates.teamId, teamRows.map((t) => t.id)),
+        ),
+      );
+    const moi = etatsDuTour.find((r) => r.teamId === playerTeam.id);
+    if (!moi) return null;
+    // Les entreprises telles que la CLÔTURE les passera au moteur : triées par
+    // identifiant (round-resolution). C'est la condition pour que le tirage lu
+    // d'avance soit celui qui tombera.
+    const compagnies = etatsDuTour
+      .map((r) => ({ id: r.teamId }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const actifs = activeEventsOf(game.difficultyProfile);
+    const annonces = readPendingEvents(game.difficultyProfile);
+    const entrants = [...actifs, ...injectedEvents(snapshot, annonces, actifs)];
+    const tires =
+      compagnies.length === teamRows.length
+        ? peekEventDraw({
+            scenario: snapshot,
+            roundIndex: game.currentRound,
+            companies: compagnies,
+            activeEvents: entrants,
+            seed: game.seed,
+          })
+        : [];
+    // Une carte ciblée sur une AUTRE équipe ne concerne pas ce tour estimé, et
+    // n'a donc rien à faire dans ce que le navigateur reçoit.
+    const miens = [...entrants, ...tires].filter(
+      (e) => e.scope === "market" || e.companyId === playerTeam.id,
+    );
+    const manquesDuDernier = lastResult
+      ? (() => {
+          const reperes: NonNullable<GameView["estimation"]>["reperes"] = [];
+          const tour = resolved.length;
+          const produits = lastResult.products;
+          for (const p of toGamme(snapshot)) {
+            const parReference = produits?.[p.code];
+            if (parReference) {
+              reperes.push({
+                code: p.code,
+                tour,
+                vendu: parReference.sold,
+                manque: parReference.lost,
+              });
+              continue;
+            }
+            const segments = p.market.segments.map((seg) => lastResult!.market.bySegment[seg.code]);
+            reperes.push({
+              code: p.code,
+              tour,
+              vendu: segments.reduce((x, d) => x + (d?.sold ?? 0), 0),
+              manque: segments.reduce((x, d) => x + (d?.lost ?? 0), 0),
+            });
+          }
+          return reperes;
+        })()
+      : [];
+    return {
+      scenario: expurgerLeScenario(snapshot),
+      state: moi.state as CompanyState,
+      roundIndex: game.currentRound,
+      events: miens,
+      orderOffer: (orderOfferForRound(snapshot, game.currentRound, game.seed) ??
+        null) as OrderOfferDef | null,
+      repartition: repartitionDesVentes(snapshot, game.currentRound, lastResult),
+      reperes: manquesDuDernier,
+      deposees: pendingDecisions?.salesEstimate?.byProduct ?? null,
+    };
+  })();
+
   return {
     gameId,
     kind: kindDeLaPartie,
@@ -1827,6 +1945,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         lastAxis: state?.lastCommunicationAxis ?? null,
       };
     })(),
+    estimation: dossierDEstimation,
     sectorKpis: (() => {
       if (!lastResult) return [];
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;

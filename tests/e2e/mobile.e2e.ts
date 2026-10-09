@@ -78,8 +78,19 @@ async function hauteurUtile(p: Page): Promise<number> {
         ["INPUT", "SELECT", "TEXTAREA", "svg"].includes(e.tagName);
       if (feuille) bas = Math.max(bas, e.getBoundingClientRect().bottom + window.scrollY);
     }
-    // Le pied fixe mesure environ 76 px (bouton de 48, marges) ; 8 px d'air en dessous du contenu.
-    return Math.round(bas - decalage + 84);
+    // LE PIED FIXE SE MESURE, il ne se suppose pas : il valait « environ
+    // 76 px » tant qu'il ne portait que ses boutons, et une constante jugerait
+    // qu'une carte tient alors qu'elle passe sous un pied devenu plus haut.
+    // Repli sur 84 px quand aucun pied n'est trouvé (8 px d'air compris).
+    let pied = 0;
+    for (const e of document.querySelectorAll("body *")) {
+      if (getComputedStyle(e).position !== "fixed") continue;
+      const r = e.getBoundingClientRect();
+      if (r.height < 8 || r.width < 200) continue;
+      if (r.bottom < innerHeight - 24 || r.top < innerHeight / 2) continue;
+      pied = Math.max(pied, r.height);
+    }
+    return Math.round(bas - decalage + (pied > 0 ? pied + 8 : 84));
   });
 }
 
@@ -563,16 +574,26 @@ describe("pendant une partie", () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
     await page.waitForTimeout(400);
-    expect(await titreDeLaCarte()).toMatch(/Décision · 2 sur \d+ À quel prix/i);
+    // La décision 2 est « combien pensez-vous vendre ? » : l'estimation vient
+    // AVANT le prix et le volume, c'est elle qui leur donne un sens. Le prix
+    // suit, et c'est la décision 3.
+    expect(await titreDeLaCarte()).toMatch(/Décision · 2 sur \d+ Combien pensez-vous vendre/i);
+    await page.locator('input[name^="ventesEstimees."]:visible').waitFor();
+    await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    await page.waitForTimeout(400);
+    expect(await titreDeLaCarte()).toMatch(/Décision · 3 sur \d+ À quel prix/i);
     await page.locator('input[name="price"]:visible').waitFor();
     await page.getByRole("button", { name: "Retour" }).click();
     await page.waitForTimeout(400);
-    expect(await titreDeLaCarte()).toMatch(/Décision · 1 sur/i);
+    expect(await titreDeLaCarte()).toMatch(/Décision · 2 sur/i);
   });
 
   it("le prix a ses repères, un curseur, et sa marge en direct", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    await page.waitForTimeout(400);
+    // Passer la carte des ventes estimées, qui précède désormais le prix.
+    await page.getByRole("button", { name: /^Continuer/ }).last().click();
     await page.waitForTimeout(400);
     await page.getByText(/Prix usuels/).waitFor({ state: "visible" });
     await page.getByText(/Coût variable/).waitFor({ state: "visible" });
@@ -1032,6 +1053,11 @@ describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
       await p.locator("[data-titre-etape]").waitFor({ state: "visible" });
       const accepter = p.getByRole("button", { name: "Accepter", exact: true });
       if (await accepter.count()) await accepter.click();
+      // Les ventes estimées ouvrent la série, avant les cartes des références.
+      await p.waitForTimeout(350);
+      if (/pensez-vous vendre/i.test(await p.locator("[data-titre-etape]").innerText())) {
+        await p.getByRole("button", { name: /^Continuer/ }).last().click();
+      }
       const ecran = p.viewportSize()!.height;
       const cartes: string[] = [];
       const hautes: string[] = [];

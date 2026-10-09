@@ -2793,9 +2793,14 @@ a.carte,
      · chiffre — un compteur qui monte : 400 à 700 ms, amorti.
      · trace   — une courbe qui se dessine pendant que ses chiffres montent :
                  jamais plus longue qu'eux, sinon elle finirait toute seule.
-     · éclat   — le signal bref d'une valeur qui vient de se recalculer. */
+     · éclat   — le signal bref d'une valeur qui vient de se recalculer.
+     · saisie  — l'anti-rebond d'un chiffre qui se recalcule PENDANT la frappe
+                 (le résultat estimé de la feuille de décision) : assez long
+                 pour qu'une touche de plus n'engendre pas un calcul, assez
+                 court pour qu'on ne l'attende pas. */
   --duree-geste: 0.12s;
   --duree-passage: 0.2s;
+  --duree-saisie: 0.22s;
   --duree-chiffre: 0.6s;
   --duree-trace: 0.55s;
   --duree-eclat: 0.45s;

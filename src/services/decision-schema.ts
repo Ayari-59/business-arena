@@ -95,6 +95,26 @@ export const roundDecisionsSchema = z.object({
       investment: z.coerce.number().min(0).max(500000).optional(),
     })
     .optional(),
+  /**
+   * LES VENTES ESTIMÉES PAR L'ÉQUIPE, et le compte estimé que le serveur en a
+   * tiré. Stocké dans le JSON des décisions, jamais lu par le moteur : la fin
+   * de tour le met en face du réel. Bornes techniques seulement, comme le
+   * reste.
+   */
+  salesEstimate: z
+    .object({
+      byProduct: z.record(z.string().min(1), z.coerce.number().min(0).max(10_000_000)),
+      units: z.coerce.number().min(0).max(10_000_000),
+      estimate: z
+        .object({
+          revenue: z.coerce.number(),
+          netIncome: z.coerce.number(),
+          netTreasury: z.coerce.number(),
+          deliverableUnits: z.coerce.number().min(0).max(10_000_000),
+        })
+        .optional(),
+    })
+    .optional(),
   forecast: z
     .object({
       expectedUnits: z.coerce.number().min(0).max(10_000_000).optional(),

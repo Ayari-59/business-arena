@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
-import { readProductFields } from "@/config/decision-source";
-import { scalarsOfGamme } from "@/engine/gamme";
+import { decisionsSaisies } from "@/config/decisions-saisies";
+import { estimationAConserver, estimerLeTour } from "@/engine/estimation";
+import type { RoundDecisions } from "@/engine/types";
+import { ventesEstimeesSaisies } from "@/config/ventes-estimees";
 import { formatEuro } from "@/lib/format";
 import {
   bloqueLaValidation,
@@ -45,143 +47,37 @@ export async function playRoundAction(
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée : relancez une partie depuis l'accueil." };
 
-  // GAMME : le formulaire envoie un prix, un plan, un marketing — et, selon le
-  // niveau et le scénario, une qualité et un fournisseur — PAR RÉFÉRENCE
-  // (`product.<code>.*`). Les scalaires historiques en sont dérivés ici — plan
-  // = somme, prix = moyenne pondérée, marketing et qualité = somme, fournisseur
-  // = celui de la référence au plan le plus fort —, du même calcul que le
-  // formulaire et que la proposition, pour que la comparaison des pivots reste
-  // juste. Mono-produit : les champs scalaires font foi.
-  const products = readProductFields(formData.entries());
-  const scalars = products ? scalarsOfGamme(products) : null;
+  // LE FORMULAIRE EST LU UNE SEULE FOIS, PAR LA MÊME FONCTION QUE LE
+  // NAVIGATEUR (`config/decisions-saisies`). L'encart « Résultat estimé »
+  // estime à la frappe avec cette lecture ; l'action résout le tour avec
+  // elle. Deux lectures écrites séparément auraient fini par diverger, et
+  // l'élève aurait vu annoncer autre chose que ce que le moteur applique.
+  const saisie = decisionsSaisies(formData);
 
   // Le volume est un pivot : vide ou nul, ce n'est pas une décision, c'est une
   // absence. Le schéma acceptait 0 sans un mot ; on le refuse ici, dans la
   // langue du secteur.
-  const volumeBrut = String(formData.get("productionPlan") ?? "").trim().replace(",", ".");
-  const volume = scalars ? scalars.productionPlan : volumeBrut === "" ? NaN : Number(volumeBrut);
-  if (!Number.isFinite(volume) || volume < 1) {
+  if (!Number.isFinite(saisie.volume) || saisie.volume < 1) {
     const v = await getGameVocabulary(gameId);
     return { error: `${v.productionPlanLabel} : le volume doit être ≥ 1 (en ${v.units}).` };
   }
 
+  // LES VENTES ESTIMÉES PAR L'ÉQUIPE, et le résultat estimé qu'elles donnaient.
+  // Le moteur ne les lit pas ; la fin de tour les confronte au réel.
+  const estimation = ventesEstimeesSaisies(formData);
+
   const parsed = roundDecisionsSchema.safeParse({
-    price: scalars ? scalars.price : formData.get("price"),
-    productionPlan: scalars ? scalars.productionPlan : formData.get("productionPlan"),
-    marketingBudget: scalars ? scalars.marketingBudget : formData.get("marketingBudget"),
-    ...(products ? { products } : {}),
-    // Gamme : la qualité et le fournisseur se décident par référence quand le
-    // formulaire les y porte ; les scalaires en sont dérivés (somme, et
-    // fournisseur de la référence au plan le plus fort).
-    qualityBudget: scalars?.qualityBudget ?? formData.get("qualityBudget"),
-    maintenanceBudget: formData.get("maintenanceBudget"),
-    // R&D : par référence en gamme (scalaire = somme), scalaire en mono ;
-    // absent quand le formulaire ne porte pas le levier.
-    ...(() => {
-      const rd = scalars?.rdBudget ?? formData.get("rdBudget");
-      return rd !== undefined && rd !== null && rd !== "" ? { rdBudget: rd } : {};
-    })(),
-    // Communication : marque et axe, absents quand le formulaire ne les porte pas.
-    ...(() => {
-      const brand = formData.get("brandMarketingBudget");
-      const axis = formData.get("communicationAxis");
-      return {
-        ...(brand !== null && brand !== "" ? { brandMarketingBudget: brand } : {}),
-        ...(typeof axis === "string" && axis !== "" ? { communicationAxis: axis } : {}),
-      };
-    })(),
-    insurance: (() => {
-      const raw = formData.get("insurance");
-      if (raw === "on" || raw === "true") return true;
-      if (typeof raw === "string" && raw.length > 0) return raw;
-      return false;
-    })(),
-    supplierChoice: scalars?.supplierChoice ?? (formData.get("supplierChoice") || undefined),
-    acceptOrder: formData.get("acceptOrder") === "on",
-    studies: (() => {
-      const picked = {
-        market: formData.get("studyMarket") === "on",
-        price: formData.get("studyPrice") === "on",
-        finance: formData.get("studyFinance") === "on",
-        project: formData.get("studyProject") === "on",
-      };
-      return Object.values(picked).some(Boolean) ? picked : undefined;
-    })(),
-    hr: formData.has("salaryPercent")
+    ...saisie.decisions,
+    ...(estimation ? { salesEstimate: estimation } : {}),
+    // LE PLAN DE TRÉSORERIE N'EST PLUS DEMANDÉ DEUX FOIS. L'arène ne le
+    // réclame plus (voir `tests/architecture/forecast-field.test.ts`) ; si un
+    // écran le rouvre un jour, c'est l'ESTIMATION qui donne les ventes
+    // annoncées — jamais une seconde saisie de la même chose.
+    ...(estimation && saisie.decisions.forecast?.expectedCash !== undefined
       ? {
-          hire: formData.get("hire") || 0,
-          fire: formData.get("fire") || 0,
-          trainingBudget: formData.get("trainingBudget") || 0,
-          salaryIndex: Number(formData.get("salaryPercent") || 100) / 100,
+          forecast: { ...saisie.decisions.forecast, expectedUnits: estimation.units },
         }
-      : undefined,
-    investment: (() => {
-      const hasMachine = formData.has("machineCapacityUnits");
-      const buyRaw = formData.get("equipmentBuyJson");
-      const sellRaw = formData.get("equipmentSellJson");
-      // Champs cachés alimentés par l'îlot d'équipement : un formulaire forgé
-      // (ou une page périmée) peut envoyer un JSON invalide. On parse en sûreté
-      // — un contenu illisible devient « pas d'équipement » plutôt qu'un 500,
-      // et Zod valide ensuite la forme du tableau retenu.
-      const parseEquip = (raw: FormDataEntryValue | null): unknown[] | undefined => {
-        if (!raw) return undefined;
-        try {
-          const v = JSON.parse(String(raw));
-          return Array.isArray(v) ? v : undefined;
-        } catch {
-          return undefined;
-        }
-      };
-      const equipBuy = parseEquip(buyRaw);
-      const equipSell = parseEquip(sellRaw);
-      const hasEquip = (equipBuy && equipBuy.length > 0) || (equipSell && equipSell.length > 0);
-      if (!hasMachine && !hasEquip) return undefined;
-      return {
-        machineCapacityUnits: hasMachine ? (formData.get("machineCapacityUnits") || 0) : undefined,
-        equipmentBuy: equipBuy && equipBuy.length > 0 ? equipBuy : undefined,
-        equipmentSell: equipSell && equipSell.length > 0 ? equipSell : undefined,
-      };
-    })(),
-    finance: {
-      newLoan: formData.get("newLoan") || 0,
-      loanRepayment: formData.get("loanRepayment") || 0,
-      capitalIncrease: formData.get("capitalIncrease") || 0,
-      // Le dividende n'est ouvert qu'au niveau 6 : son champ peut être absent.
-      dividend: formData.get("dividend") || 0,
-    },
-    // Prévisions : facultatives, et sans effet sur le calcul du tour. Deux
-    // champs vides ne doivent pas devenir deux zéros prévus.
-    forecast: (() => {
-      const num = (name: string) => {
-        const raw = String(formData.get(name) ?? "").trim().replace(",", ".");
-        if (raw === "") return undefined;
-        const n = Number(raw);
-        return Number.isFinite(n) ? n : undefined;
-      };
-      const expectedUnits = num("expectedUnits");
-      const expectedCash = num("expectedCash");
-      return expectedUnits === undefined && expectedCash === undefined
-        ? undefined
-        : { expectedUnits, expectedCash };
-    })(),
-    treasury: formData.has("discount")
-      ? {
-          discount: formData.get("discount") || 0,
-          factoring: formData.get("factoring") || 0,
-          // Le placement n'est servi qu'aux niveaux qui l'ouvrent : son champ
-          // peut donc être absent du formulaire.
-          placement: formData.get("placement") || 0,
-        }
-      : undefined,
-    // Engagement RSE (Lot 2) : ouvert dès Arbitrage ; les champs sont absents
-    // aux niveaux qui ne l'exposent pas.
-    rse:
-      formData.has("rseBudget") || formData.has("rseInvestment")
-        ? {
-            budget: formData.get("rseBudget") || 0,
-            investment: formData.get("rseInvestment") || 0,
-          }
-        : undefined,
+      : {}),
   });
   if (!parsed.success) {
     return { error: "Décisions invalides : vérifiez les montants saisis." };
@@ -203,6 +99,22 @@ export async function playRoundAction(
     }
   }
 
+  // LE RÉSULTAT ESTIMÉ, CALCULÉ PAR LE SERVEUR. L'encart l'a déjà affiché dans
+  // le navigateur, mais ce qui est CONSERVÉ avec les décisions est recalculé
+  // ici, du même moteur, sur l'état d'ouverture : un chiffre venu de la page
+  // serait un chiffre qu'on n'a pas vérifié. Si le calcul échoue, l'estimation
+  // de ventes reste déposée sans son compte : jamais un tour perdu pour ça.
+  const payload: RoundDecisions = (() => {
+    const ventes = parsed.data.salesEstimate?.byProduct;
+    if (!ventes || !vue?.estimation) return parsed.data;
+    try {
+      const estime = estimerLeTour(vue.estimation, parsed.data, ventes);
+      return { ...parsed.data, salesEstimate: estimationAConserver(ventes, estime) };
+    } catch {
+      return parsed.data;
+    }
+  })();
+
   // LA NOTE D'AVANT EST FACULTATIVE : enregistrée quand elle est écrite, jamais exigée.
   const note = String(formData.get("justification") ?? "").trim();
 
@@ -211,9 +123,9 @@ export async function playRoundAction(
     const justification = note || undefined;
     kind = await getGameKind(gameId);
     if (kind === "solo") {
-      await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data, justification });
+      await resolveCurrentRound({ gameId, userId, playerDecisions: payload, justification });
     } else {
-      await submitTeamDecisions({ gameId, userId, payload: parsed.data, justification });
+      await submitTeamDecisions({ gameId, userId, payload, justification });
     }
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
