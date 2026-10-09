@@ -62,8 +62,8 @@ import { recordPersonnel } from "@/services/profile.service";
 import { attribuerCodeDeReprise, codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
-import { surtitreDePartie } from "@/config/scenarios/presentation";
-import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { surtitreDePartie, teinteDuMetier } from "@/config/scenarios/presentation";
+import { SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { statutDesSituations } from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
@@ -783,12 +783,13 @@ export default async function ArenaPage({
       tours={toursChiffres}
       entete={enteteArdoise}
       visage={
-        // LE VISAGE DU SECTEUR : neuf formes, neuf teintes, et une partie se
+        // LE VISAGE DU SECTEUR : neuf formes, quinze teintes, et une partie se
         // reconnaît d'un coup d'œil (l'emoji du système changeait d'un
-        // appareil à l'autre).
+        // appareil à l'autre). La tuile PORTE la teinte du métier (lot 5A) :
+        // elle était un carré gris et un pictogramme teinté.
         <span
           aria-hidden
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${SECTOR_COLORS[view.sector].bg} ${SECTOR_COLORS[view.sector].accent}`}
+          className="tuile-metier flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
         >
           <PictoSecteur secteur={view.sector} className="h-5 w-5" />
         </span>
@@ -1195,7 +1196,10 @@ export default async function ArenaPage({
 
 
   return (
-    <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-6 sm:space-y-8 sm:px-6 sm:pb-16" data-ecran-de-jeu="">
+    // LA TEINTE DU MÉTIER, POUR TOUTE LA PARTIE (lot 5A) : `data-metier`
+    // publie `--metier`, que l'ardoise, les cartes, le fil des étapes et les
+    // courbes de l'entreprise lisent. Une seule source : le registre.
+    <main id="main" data-ecran-de-jeu="" data-metier={teinteDuMetier({ code: view.scenarioCode, sector: view.sector })} className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-6 sm:space-y-8 sm:px-6 sm:pb-16">
       {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
           dans l'arène (voir site-header.tsx) et celle-ci porte la partie et le tour. */}
       <StockageDurable />

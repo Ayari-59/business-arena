@@ -41,8 +41,8 @@ export function SalesHistory({
       <div className="tableau-financier">
         <table className="text-sm">
           <caption className="sr-only">
-            Vos ventes tour par tour et clientèle par clientèle : la demande du marché, vos
-            ventes et leur chiffre d&apos;affaires.
+            Vos ventes tour par tour et clientèle par clientèle : la demande du marché, vos ventes
+            et leur chiffre d&apos;affaires.
           </caption>
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
@@ -107,9 +107,7 @@ export function SalesHistory({
                     <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
                       {formatUnits(seg.potential)}
                     </td>
-                    <td className="py-1.5 pr-3 text-right tabular-nums">
-                      {formatUnits(seg.sold)}
-                    </td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">{formatUnits(seg.sold)}</td>
                     {/* Une part en unités ne dit pas la dépendance à un canal
                         quand les canaux ne rapportent pas la même chose. */}
                     <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
@@ -117,9 +115,11 @@ export function SalesHistory({
                     </td>
                   </Fragment>
                 ))}
-                {/* Ce que vous aviez annoncé : une DONNÉE, donc le bleu donnée
-                    de la charte — le bleu ciel pâle n'est pas de la palette. */}
-                <td className="py-1.5 pr-3 text-right tabular-nums text-[var(--donnee)]">
+                {/* Ce que VOUS aviez annoncé : la teinte de votre métier (lot
+                    5A), qui tient 4,8 pour 1 au moins sur le papier comme sur
+                    le marine, mesuré sur les quinze. Hors d'une partie, l'encre
+                    de la donnée. */}
+                <td className="py-1.5 pr-3 text-right tabular-nums text-[color:var(--metier,var(--donnee))]">
                   {row.forecastUnits === null ? "—" : formatUnits(row.forecastUnits)}
                 </td>
                 <td className="py-1.5 pr-3 text-right font-medium tabular-nums text-slate-100">
@@ -135,12 +135,12 @@ export function SalesHistory({
       </div>
 
       <p className="mt-3 text-sm leading-relaxed text-slate-400">
-        La colonne « prévu » est ce que vous aviez annoncé avant de jouer le tour.
-        De quoi construire une prévision plutôt que de deviner : moyenne des tours passés,
-        tendance d&apos;un tour à l&apos;autre, coefficient de saison en rapportant chaque tour
-        à la moyenne. La colonne « demande » porte la saison du marché, la vôtre porte l&apos;effet
-        de votre prix. Comparez ensuite votre prévision au réalisé : l&apos;écart est plus
-        instructif que la prévision.
+        La colonne « prévu » est ce que vous aviez annoncé avant de jouer le tour. De quoi
+        construire une prévision plutôt que de deviner : moyenne des tours passés, tendance
+        d&apos;un tour à l&apos;autre, coefficient de saison en rapportant chaque tour à la moyenne.
+        La colonne « demande » porte la saison du marché, la vôtre porte l&apos;effet de votre prix.
+        Comparez ensuite votre prévision au réalisé : l&apos;écart est plus instructif que la
+        prévision.
       </p>
       {/* Le taux, à côté des chiffres qu'il ampute. La commission se lit au
           compte de résultat en un seul montant : sans ce rappel, l'équipe ne
@@ -150,9 +150,9 @@ export function SalesHistory({
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
           {history.commissions.map((c) => (
             <span key={c.segment} className="block">
-              {c.segment} : le canal prélève {Math.round(c.rate * 100)} % du prix de vente.
-              Le chiffre d&apos;affaires ci-dessus est celui que paie le client ; ce qui vous
-              reste est diminué d&apos;autant, et se lit au compte de résultat.
+              {c.segment} : le canal prélève {Math.round(c.rate * 100)} % du prix de vente. Le
+              chiffre d&apos;affaires ci-dessus est celui que paie le client ; ce qui vous reste est
+              diminué d&apos;autant, et se lit au compte de résultat.
             </span>
           ))}
         </p>

@@ -4,6 +4,7 @@ import { EpisodeJoue } from "@/components/episode/episode-joue";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
+import { teinteDuMetierDeLEpisode } from "@/config/episodes/familles";
 
 /** Les épisodes sont une donnée figée : leurs pages se rendent à la construction. */
 export function generateStaticParams() {
@@ -41,7 +42,11 @@ export default async function EpisodePage({ params }: { params: Promise<{ code: 
   if (!episodeParCode(code)) notFound();
   return (
     <>
-      <main id="main" className="relative overflow-x-clip">
+      {/* LA TEINTE DU MÉTIER DE L'ÉPISODE (lot 5A) : `data-metier` publie
+          `--metier`, que le filet de tête des cartes, le tableau de bord, la
+          courbe des semaines et le bilan lisent. Un épisode sans famille
+          déclarée garde l'encre de la donnée. */}
+      <main id="main" data-metier={teinteDuMetierDeLEpisode(code)} className="relative overflow-x-clip">
         <HaloDePage />
         <EpisodeJoue code={code} />
       </main>

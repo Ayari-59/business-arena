@@ -315,9 +315,12 @@ export function BilanDeLEpisode({
           {barres.map((b) => (
             <li
               key={b.nom}
-              // LA LIGNE DU JOUEUR : le filet orange et le voile neutre de la
-              // charte, et une barre en bleu donnée comme les autres sont en
-              // gris ardoise. L'orange plein de la barre était l'action.
+              // LA LIGNE DU JOUEUR : le repère d'appartenance (la teinte du
+              // métier, voir `.ligne-moi` dans globals.css, bloc « LOT 5A »)
+              // et le voile neutre de la charte ; sa barre prend la même
+              // teinte, les manières de décider auxquelles on la compare
+              // restant au neutre de référence. L'orange plein de la barre
+              // était l'action, et le bleu donnée ne disait pas « vous ».
               className={`grid grid-cols-[7rem_minmax(0,1fr)_4rem] items-center gap-3 sm:grid-cols-[10rem_minmax(0,1fr)_4.5rem] ${
                 "vous" in b ? "ligne-moi -mx-2 rounded-md px-2 py-1" : ""
               }`}
@@ -329,7 +332,7 @@ export function BilanDeLEpisode({
               </span>
               <span className="h-3.5 overflow-hidden rounded-md bg-slate-800">
                 <span
-                  className={`block h-full rounded-md ${"vous" in b ? "bg-[var(--donnee)]" : "bg-[var(--donnee-2)]"}`}
+                  className={`block h-full rounded-md ${"vous" in b ? "bg-[color:var(--metier,var(--donnee))]" : "bg-[var(--donnee-2)]"}`}
                   style={{ width: `${largeur(b.valeur)}%` }}
                 />
               </span>

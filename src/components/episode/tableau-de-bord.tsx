@@ -101,10 +101,11 @@ export function TableauDeBord({
                   aria-label={jauge.enRetard ? "en retard sur l'objectif" : "à l'objectif"}
                 >
                   <span
-                    // La jauge est une donnée (bleu donnée) ; seul le retard sur
-                    // l'objectif, un écart, prend le rouge. L'orange était celui
-                    // de l'action, et le vert ne dit pas « à l'objectif ».
-                    className={`block h-full rounded-full ${jauge.enRetard ? "bg-red-400" : "bg-[var(--donnee)]"}`}
+                    // La jauge est l'avancement de CETTE entreprise : elle
+                    // prend la teinte de son métier (lot 5A) ; seul le retard
+                    // sur l'objectif, un écart, prend le rouge. L'orange était
+                    // celui de l'action, et le vert ne dit pas « à l'objectif ».
+                    className={`block h-full rounded-full ${jauge.enRetard ? "bg-red-400" : "bg-[color:var(--metier,var(--donnee))]"}`}
                     style={{ width: `${100 * jauge.part}%` }}
                   />
                 </dd>

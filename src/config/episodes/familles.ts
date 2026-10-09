@@ -14,11 +14,22 @@ export interface Secteur {
   entreprise: string;
   /** Une phrase sur l'entreprise. */
   texte: string;
+  /**
+   * LA TEINTE DU MÉTIER (lot 5A), empruntée aux jetons `--secteur-*` de
+   * `globals.css`. Un épisode se joue dans une entreprise : la couleur qui dit
+   * laquelle l'accompagne du premier message au bilan, comme dans l'arène. Les
+   * cinq secteurs des épisodes ne sont pas ceux des scénarios de l'arène
+   * (négoce, hôtellerie-restauration, conseil, santé, agroalimentaire) : chacun
+   * emprunte donc le jeton dont la teinte le distingue le mieux des quatre
+   * autres, et c'est ce nom, ici, qui en est la seule source.
+   */
+  teinte: string;
 }
 
 export const SECTEURS: readonly Secteur[] = [
   {
     code: "negoce",
+    teinte: "commerce",
     nom: "Négoce et distribution",
     entreprise: "Arvel Distribution",
     texte:
@@ -26,6 +37,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "hotellerie",
+    teinte: "hotellerie",
     nom: "Hôtellerie-restauration",
     entreprise: "Groupe Escale",
     texte:
@@ -33,6 +45,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "conseil",
+    teinte: "services",
     nom: "Conseil",
     entreprise: "Atlas Conseil",
     texte:
@@ -40,6 +53,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "sante",
+    teinte: "ecommerce",
     nom: "Santé et médico-social",
     entreprise: "Association Solvanne",
     texte:
@@ -47,6 +61,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "agroalimentaire",
+    teinte: "industrie",
     nom: "Industrie agroalimentaire",
     entreprise: "Laiterie de Kerbrélan",
     texte:
@@ -365,6 +380,12 @@ export const NOMBRE_D_EPISODES = FAMILLES.reduce((n, f) => n + f.episodes.length
 /** Les familles d'un secteur, dans l'ordre de la page. */
 export const famillesDuSecteur = (code: string): readonly Famille[] =>
   FAMILLES.filter((f) => f.secteur === code);
+
+/** La teinte à publier pour un épisode (`data-metier`, globals.css « LOT 5A »). */
+export function teinteDuMetierDeLEpisode(codeEpisode: string): string | undefined {
+  const famille = FAMILLES.find((f) => f.episodes.includes(codeEpisode));
+  return famille ? SECTEURS.find((s) => s.code === famille.secteur)?.teinte : undefined;
+}
 
 /** Les secteurs qui ont au moins une famille, dans l'ordre de la page. */
 export const secteursJoues = (): readonly Secteur[] =>

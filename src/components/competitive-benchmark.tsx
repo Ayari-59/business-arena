@@ -71,9 +71,17 @@ export function CompetitiveBenchmark({
                 className={`border-t border-white/5 ${c.isPlayer ? "ligne-moi font-semibold text-slate-100" : ""}`}
               >
                 <td className="py-2 pr-3">
+                  {/* LE REPÈRE D'APPARTENANCE : votre emblème prend la teinte
+                      de votre métier (lot 5A), comme le filet de la ligne
+                      (`.ligne-moi`). La ligne portait un filet orange, et
+                      l'orange est la couleur de l'action. */}
                   <Embleme
                     code={c.embleme}
-                    className={`mr-1.5 h-3.5 w-3.5 ${c.isPlayer ? "text-slate-100" : "text-slate-400"}`}
+                    className={`mr-1.5 h-3.5 w-3.5 ${
+                      c.isPlayer
+                        ? "text-[color:var(--metier,var(--color-slate-100))]"
+                        : "text-slate-400"
+                    }`}
                   />
                   {c.name}
                   {c.isPlayer ? (
@@ -144,9 +152,9 @@ export function CompetitiveBenchmark({
             </ul>
           ) : null}
           <p className="text-sm leading-relaxed text-slate-400">
-            L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de
-            100, vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier
-            parmi d&apos;autres : marketing, qualité et stock font le reste.
+            L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de 100,
+            vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier parmi
+            d&apos;autres : marketing, qualité et stock font le reste.
           </p>
         </Tiroir>
       </div>

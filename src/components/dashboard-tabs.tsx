@@ -65,9 +65,12 @@ export function DashboardTabs({
             tabIndex={active === tab.key ? 0 : -1}
             onClick={() => setActive(tab.key)}
             onKeyDown={(e) => auClavier(e, index)}
+            // LE RAIL : l'onglet actif garde son relief neutre et porte, sous
+            // lui, un filet de 2 px à la teinte du métier de la partie (lot
+            // 5A). Hors d'une partie, l'orange d'origine.
             className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               active === tab.key
-                ? "bg-slate-700 text-slate-50"
+                ? "bg-slate-700 text-slate-50 shadow-[inset_0_-2px_0_0_var(--metier,var(--accent-plein))]"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >

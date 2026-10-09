@@ -5,8 +5,9 @@ import type { Episode, Semaine } from "@/config/episodes/types";
  *
  * Une colonne par semaine, de zéro, et la cadence de l'objectif en trait
  * fin : c'est ce que le manager regarderait chaque lundi. Les semaines que la
- * dernière décision a jouées sont en laiton, les autres en gris ; celles qui
- * ne sont pas encore jouées restent vides. Sous l'axe, les repères des
+ * dernière décision a jouées portent la teinte du métier de l'épisode, les
+ * autres le neutre de référence ; celles qui ne sont pas encore jouées restent
+ * vides. Sous l'axe, les repères des
  * décisions ; au-dessus d'une colonne, un point d'exclamation dit qu'un
  * imprévu l'a frappée.
  *
@@ -120,10 +121,14 @@ export function CourbeDesSemaines({
                         tabIndex={0}
                         aria-label={`Semaine ${w}`}
                         className={`relative block w-full max-w-6 rounded-t-md outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-                          // La palette de la donnée : la semaine qu'on regarde en
-                          // bleu donnée, les autres en gris ardoise. L'orange
-                          // était celui de l'action.
-                          enAvant ? "bg-[var(--donnee)]" : "bg-[var(--donnee-2)]"
+                          // La palette de la donnée : les semaines que la
+                          // dernière décision a jouées prennent la teinte du
+                          // métier de l'épisode (lot 5A), les autres le neutre
+                          // de référence. L'orange était celui de l'action, et
+                          // le bleu donnée ne disait pas de qui il parlait.
+                          enAvant
+                            ? "bg-[color:var(--metier,var(--donnee))]"
+                            : "bg-[var(--donnee-2)]"
                         }`}
                         style={{ height: hauteur(valeur(s)) }}
                       >

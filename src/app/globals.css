@@ -1684,31 +1684,77 @@ body {
  * le résultat en orange #d95926 (la couleur de l'action), des parts de marché
  * en violet, rose et cyan, des histogrammes d'épisode en orange, des jauges
  * de budget en orange. Une seule grammaire désormais, celle d'une presse
- * économique :
- *   · la SÉRIE PRINCIPALE en bleu donnée, #8fb0dc sur le marine (5,5 pour 1
- *     sur la surface relevée), #4f73a3 sur le papier (4,9 sur le blanc, 4,5
- *     sur la page : un trait ou un aplat y tient largement 3 pour 1) ;
- *   · la SECONDE SÉRIE en gris ardoise, #9aa3b0 sur le marine, #7b8799 sur le
- *     papier (3,6 sur le blanc) ;
- *   · le vert et le rouge pour le SEUL signe d'un écart (une barre négative,
- *     une tendance) ;
- *   · des CATÉGORIES (segments, références d'une gamme) dans les teintes
- *     désaturées des métiers, `--secteur-*`.
- * Plus d'orange, de violet, de rose ni de bleu vif dans un graphique.
+ * économique.
+ *
+ * DEUX RÔLES, PUIS CINQ CRÉNEAUX (lot 5A).
+ *
+ * `--donnee` est l'ENCRE DE LA DONNÉE : un chiffre annoncé dans un tableau,
+ * une série unique, une jauge, une barre de niveau. Elle se lit comme du
+ * texte, et tient donc 4,5 pour 1 (#4f73a3 : 4,9 sur le blanc ; #8fb0dc :
+ * 5,5 sur la surface relevée du marine). `--donnee-2` est le NEUTRE DE
+ * RÉFÉRENCE, un gris ardoise : l'intervalle d'une échelle, un tour pas encore
+ * joué, la moyenne du marché. Ces deux valeurs ne changent pas.
+ *
+ * Mais deux couleurs ne font pas une palette : dès trois séries, un graphique
+ * devenait illisible. Cinq CRÉNEAUX D'IDENTITÉ s'ajoutent, `--serie-1` à
+ * `--serie-5`, dans un ORDRE FIXE qui ne se cycle jamais (une sixième série
+ * se replie en « Autres », elle ne reprend pas la première teinte) :
+ *
+ *   1 bleu donnée · 2 prune · 3 bleu-vert · 4 indigo · 5 bleu acier
+ *
+ * Les teintes sont prises dans les zones LIBRES de la charte : ni le rouge
+ * (23° en OKLCH), ni l'orange de l'action (55°), ni l'or du verdict (83°), ni
+ * le vert d'un résultat (154°), ni le rose, qui dit la perte au site. Sur le
+ * papier, les cinq sont au PLANCHER de chroma de la méthode dataviz (0,100 à
+ * 0,105) : la série la plus désaturée qui puisse encore porter une identité.
+ * Sur le marine, où le fond mange la couleur, elles montent de 0,100 à 0,155,
+ * toujours SOUS la chroma de l'orange (0,176), de l'or (0,166), du vert
+ * (0,169) et du rouge (0,175) de la charte : un graphique ne rivalise jamais
+ * avec un bouton.
+ *
+ * Le validateur de la compétence dataviz (`scripts/validate_palette.js`)
+ * passe les cinq contrôles calculables en mode clair (fond #ffffff et
+ * #f5f7fb) comme en mode sombre (fond #13355f et #0b2545) : bande de clarté,
+ * plancher de chroma, écart en protanopie et deutéranopie (le pire voisinage
+ * tient 9,7 sur le papier et 8,2 sur le marine, pour une cible de 8), plancher
+ * en vision normale (15,2 et 15,1, pour un plancher de 15) et contraste (les
+ * cinq tiennent 3 pour 1 sur chaque fond).
+ *
+ * La SÉRIE DE L'ENTREPRISE DU JOUEUR ne prend aucun de ces créneaux : elle
+ * prend la teinte de son métier, `--metier` (voir « LOT 5A » plus bas).
+ *
+ * Le vert et le rouge restent au SEUL signe d'un écart (une barre négative,
+ * une tendance). Plus d'orange, de violet vif, de rose ni de bleu vif dans un
+ * graphique, et aucun dégradé.
  * ------------------------------------------------------------------------- */
 :root,
 [data-theme="clair"] .contre-jour,
 [data-theme="clair"] .ardoise {
   --donnee: #8fb0dc;
   --donnee-2: #9aa3b0;
+  --serie-1: #4694ee;
+  --serie-2: #a565b9;
+  --serie-3: #33a6a0;
+  --serie-4: #8f81e5;
+  --serie-5: #2689aa;
 }
 [data-theme="clair"] {
   --donnee: #4f73a3;
   --donnee-2: #7b8799;
+  --serie-1: #6192ce;
+  --serie-2: #885a96;
+  --serie-3: #169d97;
+  --serie-4: #59508f;
+  --serie-5: #2286a7;
 }
 [data-theme="clair"] :is(.contre-jour, .ardoise) {
   --donnee: #8fb0dc;
   --donnee-2: #9aa3b0;
+  --serie-1: #4694ee;
+  --serie-2: #a565b9;
+  --serie-3: #33a6a0;
+  --serie-4: #8f81e5;
+  --serie-5: #2689aa;
 }
 
 /* ---------------------------------------------------------------------------
@@ -2508,4 +2554,154 @@ a.carte,
     background: var(--fond-du-tableau, var(--color-slate-950));
     border-right: 1px solid color-mix(in srgb, var(--color-slate-400) 35%, transparent);
   }
+}
+
+/* ===========================================================================
+ * LOT 5A : LA COULEUR DU MÉTIER, FIL CONDUCTEUR D'UNE PARTIE.
+ *
+ * « L'arène manque de dynamisme et de couleurs. » Après quatre lots de
+ * nettoyage, une partie était blanche : une ardoise marine, des cartes
+ * blanches, un bouton orange. Les quinze teintes des métiers existaient déjà
+ * (voir « LES MÉTIERS »), mais elles ne servaient qu'au catalogue : on
+ * choisissait son entreprise en couleur, puis on jouait en gris.
+ *
+ * UNE COULEUR QUI DIT « QUELLE ENTREPRISE VOUS ÊTES » EST FONCTIONNELLE. Elle
+ * ne décore pas : elle identifie. Chaque partie prend donc la teinte de son
+ * métier, du premier tour au bilan, sous un seul nom : `--metier`.
+ *
+ * UNE SEULE SOURCE. La teinte n'est pas recopiée ici : chaque règle renvoie à
+ * la variable du métier que le registre des scénarios déclare déjà
+ * (`accentsDe()`, src/config/scenarios/presentation.ts, d'où `teinteDuMetier`
+ * lit le nom du jeton). La page pose `data-metier="<nom du jeton>"`, et rien
+ * d'autre ; c'est aussi ce marqueur que lisent les règles d'application.
+ *
+ * ELLE SUIT LE FOND, comme `--donnee`. Les jetons `--secteur-*` valent la
+ * version CLAIRE sur le marine et la version FONCÉE sur le papier ; en
+ * déclarant `--metier` une fois sur l'écran et une fois sur chaque ardoise ou
+ * bande à contre-jour qu'il contient, la teinte se retourne d'elle-même. Un
+ * second jeton « sur le papier » serait une seconde table à tenir à jour.
+ *
+ * CE QU'ELLE NE PREND JAMAIS : l'orange reste à l'action seule (aucun bouton
+ * n'est en teinte de métier), l'or au verdict, au rang et aux distinctions, le
+ * vert et le rouge francs aux résultats. Elle ne colore aucun chiffre dont le
+ * signe porte déjà le sens.
+ * ======================================================================== */
+[data-metier="industrie"],
+[data-metier="industrie"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-industrie);
+}
+[data-metier="commerce"],
+[data-metier="commerce"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-commerce);
+}
+[data-metier="ecommerce"],
+[data-metier="ecommerce"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-ecommerce);
+}
+[data-metier="hotellerie"],
+[data-metier="hotellerie"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-hotellerie);
+}
+[data-metier="restauration"],
+[data-metier="restauration"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-restauration);
+}
+[data-metier="services"],
+[data-metier="services"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-services);
+}
+[data-metier="abonnement"],
+[data-metier="abonnement"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-abonnement);
+}
+[data-metier="batiment"],
+[data-metier="batiment"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-batiment);
+}
+[data-metier="transport"],
+[data-metier="transport"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-transport);
+}
+[data-metier="nova-gamme"],
+[data-metier="nova-gamme"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-nova-gamme);
+}
+[data-metier="hotel-gamme"],
+[data-metier="hotel-gamme"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-hotel-gamme);
+}
+[data-metier="conseil-gamme"],
+[data-metier="conseil-gamme"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-conseil-gamme);
+}
+[data-metier="bistrot-gamme"],
+[data-metier="bistrot-gamme"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-bistrot-gamme);
+}
+[data-metier="ecommerce-gamme"],
+[data-metier="ecommerce-gamme"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-ecommerce-gamme);
+}
+[data-metier="boutique-mono"],
+[data-metier="boutique-mono"] :is(.ardoise, .contre-jour) {
+  --metier: var(--secteur-boutique-mono);
+}
+
+/* L'ENCRE QUI SE LIT SUR UN APLAT DE MÉTIER. Les teintes claires du marine
+   portent le marine (6,9 pour 1 au moins) ; les teintes foncées du papier
+   portent le blanc (4,8 au moins, mesuré sur les quinze). */
+:root {
+  --metier-texte: #0b2545;
+}
+[data-theme="clair"] {
+  --metier-texte: #ffffff;
+}
+[data-theme="clair"] :is(.contre-jour, .ardoise) {
+  --metier-texte: #0b2545;
+}
+
+/* LE FILET DE TÊTE DES CARTES DE L'ARÈNE. Une carte de l'arène se coiffe d'un
+   filet de 2 px à la teinte du métier : la partie se reconnaît d'un coup
+   d'œil, et le filet tient 3 pour 1 au moins sur le blanc comme sur le
+   marine. L'ardoise, qui est un écran de chiffres et non une carte, garde son
+   bord ; une carte imbriquée ne redit pas le filet de celle qui la porte. Les
+   épisodes, qui portent aussi `data-metier`, en profitent. */
+/* Le filet est une OMBRE INTÉRIEURE, pas une bordure : une bordure de 2 px
+   ajouterait un pixel à chaque carte, et le lot 4A a réglé la feuille de
+   décision au pixel près pour qu'une carte tienne sur un écran de téléphone.
+   L'ombre suit en prime l'arrondi de la carte. */
+[data-metier] .carte:not(.ardoise):not(.carte .carte) {
+  box-shadow:
+    inset 0 2px 0 0 var(--metier, transparent),
+    var(--ombre-carte);
+}
+/* Et le cadre du TOUR EN COURS, qui n'est pas une carte mais le grand cadre de
+   l'écran : le lot 4A lui avait retiré son filet orange, qui disait une action
+   là où il n'y en a pas. Il reprend un filet, celui du métier. Sur téléphone
+   le cadre n'existe pas (la barre du haut annonce le tour) : rien à coiffer. */
+@media (min-width: 640px) {
+  [data-ecran-de-jeu] #tour-en-cours {
+    box-shadow: inset 0 2px 0 0 var(--metier, transparent);
+  }
+}
+
+/* LA TUILE DU MÉTIER : le pictogramme du secteur, en tête de l'ardoise du
+   dirigeant. Elle était un carré gris (`bg-slate-800`) avec un
+   pictogramme teinté ; elle porte maintenant la teinte, en aplat léger cerné
+   d'un filet plein, qui est la seule dilution admise parce qu'elle ne dit ni
+   une action, ni un résultat, ni un état : une identité. */
+.tuile-metier {
+  background-color: color-mix(in srgb, var(--metier, var(--donnee)) 20%, transparent);
+  box-shadow: inset 0 0 0 1px var(--metier, var(--donnee));
+  color: var(--metier, var(--donnee));
+}
+
+/* LE REPÈRE D'APPARTENANCE. La ligne du joueur dans un comparatif portait un
+   filet orange de 4 px : l'orange est l'action, et une ligne qui dit « c'est
+   vous » n'est pas une action. Dans une partie, elle prend la teinte du
+   métier ; ailleurs (les classements de l'enseignant, l'accueil), le filet
+   d'origine reste. */
+.ligne-moi,
+.ligne-rang-1.ligne-moi {
+  box-shadow: inset 4px 0 0 var(--metier, var(--accent-plein));
 }

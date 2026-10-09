@@ -19,6 +19,9 @@ export function KpiCard({
   // Le sens est porté par la bande pleine de gauche : le cadre reste neutre
   // (il était vert ou rouge dilués, des pastels).
   const border = "border-white/10";
+  // UNE TUILE SANS SENS DE RÉSULTAT APPARTIENT À L'ENTREPRISE : sa bande prend
+  // la teinte du métier (lot 5A) plutôt qu'un gris, qui ne disait rien. Le
+  // vert et le rouge restent aux tuiles dont le chiffre est un résultat.
   const valueColor =
     tone === "good" ? "text-emerald-400" : tone === "critical" ? "text-red-400" : "text-slate-50";
   const stripe =
@@ -26,15 +29,14 @@ export function KpiCard({
       ? "bg-emerald-500"
       : tone === "critical"
         ? "bg-red-500"
-        : "bg-slate-600";
+        : "bg-[color:var(--metier,var(--color-slate-600))]";
   const trendColor =
     trend?.direction === "up"
       ? "text-emerald-400"
       : trend?.direction === "down"
         ? "text-red-400"
         : "text-slate-400";
-  const trendArrow =
-    trend?.direction === "up" ? "↑" : trend?.direction === "down" ? "↓" : "→";
+  const trendArrow = trend?.direction === "up" ? "↑" : trend?.direction === "down" ? "↓" : "→";
 
   return (
     <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-900 p-3 sm:p-5`}>
@@ -50,9 +52,7 @@ export function KpiCard({
             {trendArrow} {trend.label}
           </span>
         ) : null}
-        {sparklineData && sparklineData.length >= 2 ? (
-          <Sparkline data={sparklineData} />
-        ) : null}
+        {sparklineData && sparklineData.length >= 2 ? <Sparkline data={sparklineData} /> : null}
       </div>
       {hint ? <p className="mt-1 pl-2 text-xs text-slate-400">{hint}</p> : null}
     </div>

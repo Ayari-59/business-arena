@@ -240,11 +240,17 @@ describe("une seule palette de données", () => {
   });
 
   it("les graphiques ne prennent ni l'orange, ni le violet, ni le rose, ni le bleu vif", () => {
+    // La palette des données, ses créneaux et la teinte du métier ont leur
+    // propre garde (palette-des-donnees.test.ts) ; celle-ci refuse les
+    // couleurs HORS palette, et couvre tout ce qui dessine une donnée.
     const GRAPHIQUES = [
       "src/components/charts.tsx",
       "src/components/bpi-panel.tsx",
+      "src/components/tableau-de-bord.tsx",
+      "src/components/sales-history.tsx",
       "src/components/episode/courbe-des-semaines.tsx",
       "src/components/episode/tableau-de-bord.tsx",
+      "src/components/episode/bilan-de-l-episode.tsx",
     ];
     for (const chemin of GRAPHIQUES) {
       const source = SOURCES.find((s) => s.chemin === chemin);

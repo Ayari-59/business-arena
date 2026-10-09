@@ -164,6 +164,27 @@ export function accentsDe(d: Pick<ScenarioDefinition, "code" | "sector">): Accen
 }
 
 /**
+ * LA TEINTE DU MÉTIER, POUR TOUTE LA PARTIE (lot 5A).
+ *
+ * Une couleur qui dit « quelle entreprise vous êtes » identifie : elle a donc
+ * sa place du premier tour au bilan, et pas seulement au catalogue. L'arène
+ * expose la teinte du scénario joué sous un seul nom, `--metier`, en posant
+ * l'attribut `data-metier` que `globals.css` (bloc « LOT 5A ») associe au
+ * jeton du métier.
+ *
+ * ON NE RECOPIE PAS LA TABLE. Le nom du jeton se LIT de l'accent que le
+ * registre déclare déjà : une entrée de plus dans `ACCENTS_SECTEUR` ou dans
+ * `IDENTITES_SCENARIO`, et la teinte de la partie suit sans rien d'autre à
+ * écrire. Un test vérifie que chaque scénario du registre trouve sa teinte et
+ * que `globals.css` la déclare.
+ */
+export function teinteDuMetier(d: Pick<ScenarioDefinition, "code" | "sector">): string {
+  const trouve = accentsDe(d).texte.match(/--secteur-([a-z-]+)/);
+  if (!trouve) throw new Error(`Aucune teinte de métier pour le scénario ${d.code}`);
+  return trouve[1]!;
+}
+
+/**
  * Les titres du registre s'écrivent « NOVA · Prenez les commandes » : le nom
  * de l'entreprise, puis ce qu'on y fait. Les deux ne se lisent pas au même
  * endroit, d'où ces deux lectures.

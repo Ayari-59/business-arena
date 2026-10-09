@@ -49,6 +49,13 @@ export type SegmentedTab = { key: string; label: string; icon?: NomDIcone };
  * (« Valider mon analyse », marquée `data-action-de-l-etape`), le bouton qui
  * mène à la suivante passe en filet.
  *
+ * LA TEINTE DU MÉTIER MARQUE OÙ L'ON EN EST (lot 5A). Le fil des étapes
+ * cerclait l'étape courante d'orange et numérotait sa pastille en orange : la
+ * couleur de l'ACTION servait à dire une POSITION, et l'orange du bouton
+ * « étape suivante », juste dessous, n'en ressortait plus. L'étape courante
+ * prend donc la teinte du métier de la partie, le bouton garde l'orange, et
+ * les étapes faites restent neutres : un état n'est pas une identité.
+ *
  * `syncAnchors` : les clés d'onglets qui portent une ancre de page (un panneau
  * dont le contenu a un `id` cible d'un lien `href="#id"`). Comme seul le panneau
  * actif est monté, un lien vers un onglet inactif ne trouverait pas sa cible ;
@@ -75,9 +82,7 @@ export function SegmentedTabs({
   const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
   const visible = tabs.filter((t) => children[t.key] != null);
   const [active, setActive] = useState(
-    defaultKey && visible.some((t) => t.key === defaultKey)
-      ? defaultKey
-      : visible[0]?.key ?? "",
+    defaultKey && visible.some((t) => t.key === defaultKey) ? defaultKey : (visible[0]?.key ?? ""),
   );
   const current = visible.find((t) => t.key === active) ? active : visible[0]?.key;
 
@@ -119,7 +124,10 @@ export function SegmentedTabs({
 
   const tabId = (key: string) => `${baseId}-tab-${key}`;
   const panelId = (key: string) => `${baseId}-panel-${key}`;
-  const currentIndex = Math.max(0, visible.findIndex((t) => t.key === current));
+  const currentIndex = Math.max(
+    0,
+    visible.findIndex((t) => t.key === current),
+  );
 
   const allerA = (index: number, depuisLaBarre = false) => {
     const k = visible[index]?.key;
@@ -167,7 +175,11 @@ export function SegmentedTabs({
       }
     >
       {guided ? (
-        <nav className="flex min-w-0 items-center gap-1.5 sm:gap-2" role="tablist" aria-label={label}>
+        <nav
+          className="flex min-w-0 items-center gap-1.5 sm:gap-2"
+          role="tablist"
+          aria-label={label}
+        >
           {visible.map((tab, index) => {
             const estCourant = current === tab.key;
             const estFait = index < currentIndex;
@@ -192,7 +204,13 @@ export function SegmentedTabs({
                     estCourant ? "min-w-0 flex-1" : "shrink-0"
                   } ${
                     estCourant
-                      ? "border-amber-400/50 bg-amber-400/10"
+                      ? // L'ÉTAPE COURANTE EST À LA TEINTE DU MÉTIER (lot 5A) :
+                        // l'orange, qui la cerclait, reste à l'ACTION seule, et
+                        // la barre du bas la porte toujours.
+                        // L'anneau double le filet sans décaler la rangée
+                        // d'un pixel : une bordure de 2 px sur la seule étape
+                        // courante ferait sauter les autres.
+                        "voile-neutre border-[color:var(--metier,var(--accent-plein))] ring-1 ring-[color:var(--metier,var(--accent-plein))]"
                       : estFait
                         ? // Une étape faite est un état : neutre, pas menthe.
                           "voile-neutre border-white/10 hover:border-white/20"
@@ -203,7 +221,7 @@ export function SegmentedTabs({
                     aria-hidden
                     className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${
                       estCourant
-                        ? "bg-amber-400 text-slate-950"
+                        ? "bg-[color:var(--metier,var(--accent-plein))] text-[color:var(--metier-texte,var(--accent-plein-texte))]"
                         : estFait
                           ? "bg-[var(--point-etat)] text-[var(--voile-neutre)]"
                           : "bg-slate-700 text-slate-300"
@@ -218,7 +236,7 @@ export function SegmentedTabs({
                   <span
                     className={`min-w-0 truncate text-sm font-medium ${
                       estCourant
-                        ? "text-amber-100"
+                        ? "text-slate-50"
                         : `hidden sm:inline ${estFait ? "text-slate-200" : "text-slate-300"}`
                     }`}
                   >
@@ -254,9 +272,11 @@ export function SegmentedTabs({
               tabIndex={current === tab.key ? 0 : -1}
               onClick={() => setActive(tab.key)}
               onKeyDown={(e) => auClavier(e, index)}
+              // LE RAIL : l'onglet actif garde son relief neutre et porte, sous
+              // lui, un filet de 2 px à la teinte du métier (lot 5A).
               className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 current === tab.key
-                  ? "bg-slate-700 text-slate-50"
+                  ? "bg-slate-700 text-slate-50 shadow-[inset_0_-2px_0_0_var(--metier,var(--accent-plein))]"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >

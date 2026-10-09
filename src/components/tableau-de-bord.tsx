@@ -76,7 +76,13 @@ export function euroSigne(v: number): string {
   return `${Math.round(v) > 0 ? "+" : ""}${formatEuro(v)}`;
 }
 
-/** La courbe d'une grandeur, en bleu donnée, avec un point par tour. */
+/**
+ * La courbe d'une grandeur, à la teinte du métier, avec un point par tour.
+ *
+ * C'est la courbe de CETTE entreprise : la teinte de son métier l'identifie
+ * (lot 5A), là où le bleu donnée disait seulement « une donnée ». Hors d'une
+ * partie, elle retombe sur l'encre de la donnée.
+ */
 function Courbe({
   valeurs,
   libelles,
@@ -131,8 +137,10 @@ function Courbe({
           vectorEffect="non-scaling-stroke"
         />
       ) : null}
-      {/* LA DONNÉE EST EN BLEU DONNÉE. La courbe était verte ou rouge selon le
-          signe du dernier point : elle disait un résultat avec une donnée. */}
+      {/* LA COURBE EST CELLE DE L'ENTREPRISE, À LA TEINTE DE SON MÉTIER. Elle
+          était verte ou rouge selon le signe du dernier point (elle disait un
+          résultat avec une donnée), puis en bleu donnée (elle ne disait plus
+          de qui elle parlait). */}
       <polyline
         points={ligne}
         fill="none"
@@ -141,13 +149,13 @@ function Courbe({
         strokeLinecap="round"
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
-        className="text-[var(--donnee)]"
+        className="text-[color:var(--metier,var(--donnee))]"
       />
       <circle
         cx={bout.x}
         cy={bout.y}
         r="2.5"
-        className="stroke-slate-950 text-[var(--donnee)]"
+        className="stroke-slate-950 text-[color:var(--metier,var(--donnee))]"
         fill="currentColor"
         strokeWidth="1.5"
         vectorEffect="non-scaling-stroke"
@@ -381,7 +389,12 @@ export function LigneDeLArdoise({
   const etiquette = "text-xs font-semibold text-slate-400";
   return (
     <p className="flex min-w-0 items-center gap-x-3 overflow-hidden text-sm tabular-nums sm:gap-x-5">
-      <span className="hidden shrink-0 font-display text-base font-semibold text-slate-50 sm:inline">
+      <span className="hidden shrink-0 items-baseline gap-1.5 font-display text-base font-semibold text-slate-50 sm:inline-flex">
+        {/* Le repère d'appartenance : la teinte du métier, devant le nom. */}
+        <span
+          aria-hidden
+          className="h-2 w-2 shrink-0 rounded-full bg-[color:var(--metier,var(--donnee))]"
+        />
         {entete.entreprise} · {entete.tour}
       </span>
       {dernier ? (

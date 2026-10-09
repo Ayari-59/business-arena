@@ -126,16 +126,18 @@ describe("l'ardoise du dirigeant", () => {
     expect(html).toContain("IPG 61");
   });
 
-  it("signe l'écart en vert ou en rouge francs, et trace les courbes en bleu donnée", () => {
+  it("signe l'écart en vert ou en rouge francs, et trace les courbes à la teinte du métier", () => {
     const html = ardoise(tours);
     // CA et résultat montent (vert) ; la trésorerie remonte aussi (vert).
     expect(html).toMatch(/text-emerald-300[^>]*><span aria-hidden="true">▲/);
     const baisse = ardoise([tours[0]!, { ...tours[1]!, ca: 100_000 }]);
     expect(baisse).toMatch(/text-red-300[^>]*><span aria-hidden="true">▼/);
-    // Trois courbes, toutes en bleu donnée, aucune dans une couleur de résultat.
+    // Trois courbes, toutes à la teinte du métier de la partie (lot 5A),
+    // aucune dans une couleur de résultat. Hors d'une partie, l'encre de la
+    // donnée reste la valeur de repli.
     const courbes = html.match(/<polyline[^>]*>/g) ?? [];
     expect(courbes.length).toBe(3);
-    for (const c of courbes) expect(c).toContain("text-[var(--donnee)]");
+    for (const c of courbes) expect(c).toContain("text-[color:var(--metier,var(--donnee))]");
     expect(html).not.toMatch(/<polyline[^>]*(emerald|red|sky)/);
   });
 
