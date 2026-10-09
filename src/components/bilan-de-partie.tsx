@@ -207,53 +207,75 @@ export function BilanDePartie({
         ) : null}
       </section>
 
-      {/* LE RESTE DU BILAN, SUR LE PAPIER. */}
-      <section aria-label="Le reste du bilan" className="carte space-y-2 px-4 py-4 sm:px-6">
-        <p className="text-base leading-relaxed text-slate-300">
-          <span className="font-semibold texte-or">Vos réussites : </span>
-          {reussites.acquises} sur {reussites.total}
-          {reussites.derniere ? `, la dernière étant « ${reussites.derniere} »` : null}.
-        </p>
-        {/*
+      {/*
+        LE RESTE DU BILAN, SUR LE PAPIER (lot 6D). L'ouverture est un tableau
+        des scores et reste du cockpit ; ce qui suit est de la PROSE (ce que
+        l'équipe a réussi, ce que dit son record) et se lit comme un document :
+        une feuille blanche (`papier`) posée sous l'ardoise de clôture, avec son
+        en-tête, son filet et son ombre. Les deux sols se voient ensemble.
+        Il portait `carte`, que le cockpit rend marine : le commentaire disait
+        « papier », l'écran ne l'était pas.
+      */}
+      <section
+        aria-label="Le reste du bilan"
+        data-bilan-lecture=""
+        className="papier rounded-xl px-4 py-5 sm:px-8 sm:py-6"
+      >
+        <header className="filet mb-3 border-b pb-3">
+          <p className="tenue text-xs font-semibold uppercase tracking-annonce">
+            Bilan de la partie
+          </p>
+          <h3 className="mt-1 font-display text-xl font-semibold leading-tight">
+            Ce que la partie vous laisse
+          </h3>
+        </header>
+        <div className="max-w-3xl space-y-2">
+          <p className="text-base leading-relaxed text-slate-300">
+            <span className="font-semibold texte-or">Vos réussites : </span>
+            {reussites.acquises} sur {reussites.total}
+            {reussites.derniere ? `, la dernière étant « ${reussites.derniere} »` : null}.
+          </p>
+          {/*
           LE RECORD NE COMPARE QU'À SOI. C'est la seule comparaison continue que
           le dépôt s'autorise : le classement entre équipes reste la décision de
           l'enseignant.
         */}
-        {record ? (
-          <p className="text-base leading-relaxed text-slate-300">
-            <span
-              className={`font-semibold ${
-                record.meilleur !== null && record.monIpg > record.meilleur
-                  ? "texte-or"
-                  : "text-slate-100"
-              }`}
-            >
-              {record.meilleur === null
-                ? "Votre première sur ce métier : "
-                : record.monIpg > record.meilleur
-                  ? "Nouveau record : "
-                  : "Votre record tient : "}
-            </span>
-            {record.meilleur === null ? (
-              <>
-                IPG <span className="tabular-nums">{Math.round(record.monIpg)}</span>. C&apos;est
-                votre référence à battre au prochain essai.
-              </>
-            ) : record.monIpg > record.meilleur ? (
-              <>
-                IPG <span className="tabular-nums">{Math.round(record.monIpg)}</span>, contre{" "}
-                <span className="tabular-nums">{Math.round(record.meilleur)}</span> à votre
-                meilleure partie précédente.
-              </>
-            ) : (
-              <>
-                votre meilleure partie sur ce métier reste à IPG{" "}
-                <span className="tabular-nums">{Math.round(record.meilleur)}</span> ; celle-ci finit
-                à <span className="tabular-nums">{Math.round(record.monIpg)}</span>.
-              </>
-            )}
-          </p>
-        ) : null}
+          {record ? (
+            <p className="text-base leading-relaxed text-slate-300">
+              <span
+                className={`font-semibold ${
+                  record.meilleur !== null && record.monIpg > record.meilleur
+                    ? "texte-or"
+                    : "text-slate-100"
+                }`}
+              >
+                {record.meilleur === null
+                  ? "Votre première sur ce métier : "
+                  : record.monIpg > record.meilleur
+                    ? "Nouveau record : "
+                    : "Votre record tient : "}
+              </span>
+              {record.meilleur === null ? (
+                <>
+                  IPG <span className="tabular-nums">{Math.round(record.monIpg)}</span>. C&apos;est
+                  votre référence à battre au prochain essai.
+                </>
+              ) : record.monIpg > record.meilleur ? (
+                <>
+                  IPG <span className="tabular-nums">{Math.round(record.monIpg)}</span>, contre{" "}
+                  <span className="tabular-nums">{Math.round(record.meilleur)}</span> à votre
+                  meilleure partie précédente.
+                </>
+              ) : (
+                <>
+                  votre meilleure partie sur ce métier reste à IPG{" "}
+                  <span className="tabular-nums">{Math.round(record.meilleur)}</span> ; celle-ci
+                  finit à <span className="tabular-nums">{Math.round(record.monIpg)}</span>.
+                </>
+              )}
+            </p>
+          ) : null}
+        </div>
       </section>
     </div>
   );

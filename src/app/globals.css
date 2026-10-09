@@ -1742,14 +1742,20 @@ body {
 [data-theme="clair"] .ardoise {
   --voile-neutre: color-mix(in srgb, var(--marine) 50%, transparent);
   --point-etat: #c2bcb2;
+  --point-etat-texte: #0b2545;
 }
 [data-theme="clair"] {
   --voile-neutre: #f0f2f4;
   --point-etat: var(--marine);
+  --point-etat-texte: #f0f2f4;
 }
 [data-theme="clair"] :is(.contre-jour, .ardoise) {
   --voile-neutre: color-mix(in srgb, var(--marine) 50%, transparent);
   --point-etat: #c2bcb2;
+  /* LOT 6D : la coche d'une étape faite (« ✓ Situation ») s'écrivait dans le
+     voile, translucide sur le marine : 2,6 pour 1 mesuré sur son point gris.
+     Elle prend le marine plein, 8,2 pour 1. */
+  --point-etat-texte: #0b2545;
 }
 .voile-neutre {
   background-color: var(--voile-neutre);
@@ -2241,6 +2247,100 @@ a.carte,
 }
 .papier .champ::placeholder {
   color: var(--encre-tenue);
+}
+
+/* ---------------------------------------------------------------------------
+ * LOT 6D : LE PAPIER DIT AUSSI SON OR, SES COMMANDES ET SES RÉSULTATS.
+ *
+ * Mesuré dans le navigateur sur les documents du cockpit : trois fuites que le
+ * filet de sécurité du lot 6A ne voyait pas.
+ *   · L'OR. `.texte-or` lit `--or-texte`, que `.ardoise` règle sur l'or vif
+ *     (#f4b400) : un mot doré posé sur une feuille blanche DANS le cockpit
+ *     tombait à 1,9 pour 1. Le papier reprend l'or foncé de la charte :
+ *     #8a6400 pour le texte (5,4 sur le blanc, 4,8 sur le creux), #a07c00
+ *     pour le filet.
+ *   · LES COMMANDES NATIVES. Le cockpit déclare `color-scheme: dark` : sur la
+ *     feuille, cases à cocher et boutons radio restaient des carrés gris
+ *     sombre. Un document est clair, ses commandes aussi.
+ *   · LE FOCUS. L'anneau du site est `--color-amber-400`, l'orange ambré dans
+ *     le cockpit : 2,4 pour 1 sur le blanc. Sur le papier, l'encre d'action
+ *     #a35200 (5,6 pour 1), toujours plus marquée que le survol.
+ *   · LES RÉSULTATS au palier 400 (`text-emerald-400`, `text-red-400`, les
+ *     faits d'une situation) rejoignent les encres foncées du 200-300 :
+ *     #0f7a46 et #c0392b, 4,8 pour 1 au moins sur le creux.
+ * ------------------------------------------------------------------------- */
+.papier {
+  color-scheme: light;
+  --or-texte: #8a6400;
+  --or-filet: #a07c00;
+  /* Les voiles d'un encadré ou d'une pastille d'état (« Au-dessus du
+     niveau », « Analyse rendue ») : ceux du papier, et non le marine à 50 %
+     du cockpit, qui faisait une tache sombre sous l'encre de la feuille. */
+  --voile-neutre: #f0f2f4;
+  --point-etat: var(--marine, #0b2545);
+  --point-etat-texte: #f0f2f4;
+  --filet-carte: #dbe2ee;
+}
+.papier .encadre-gain {
+  border-left-color: #0f7a46;
+}
+.papier .encadre-perte {
+  border-left-color: #c0392b;
+}
+.papier :focus-visible {
+  outline-color: #a35200;
+}
+.papier .text-emerald-400 {
+  color: #0f7a46;
+}
+.papier .text-red-400 {
+  color: #c0392b;
+}
+
+/* ---------------------------------------------------------------------------
+ * LOT 6D : UN REPLI QUI EST UN DOCUMENT (`<Tiroir surface="papier">`,
+ * `<Repliable surface="papier">`).
+ *
+ * Le tiroir et le repli servent les deux sols ; leur aspect par défaut reste
+ * celui du cockpit. Une instance déclarée `papier` prend la matière `.papier`
+ * (posée par le composant) et, ici, la grammaire du tiroir : le pointillé
+ * tant qu'il est fermé, le trait plein une fois ouvert. Posée DANS un document
+ * déjà papier (les faits d'une situation), elle n'est pas une seconde feuille
+ * avec sa propre ombre : c'est une section creusée du document, comme son
+ * diagnostic et son modèle d'analyse.
+ *
+ * Le survol éclaircit l'en-tête d'un cran ; le focus clavier garde l'anneau
+ * d'encre d'action (plus haut), plus marqué que le survol, posé dans la feuille.
+ * ------------------------------------------------------------------------- */
+.tiroir-papier:not([open]) {
+  border-style: dashed;
+  border-color: #b4bfd0;
+}
+.papier .tiroir-papier {
+  background-color: var(--papier-creux);
+  box-shadow: none;
+}
+.tiroir-papier > summary,
+.repli-papier > summary {
+  border-radius: 0.5rem;
+}
+/* Le survol, sur un pointeur qui survole seulement : au doigt, l'en-tête
+   touché restait grisé après coup, comme une commande enfoncée. */
+@media (hover: hover) {
+  .tiroir-papier > summary:hover,
+  .repli-papier > summary:hover {
+    background-color: var(--papier-creux);
+  }
+  .papier .tiroir-papier > summary:hover {
+    background-color: var(--papier);
+  }
+}
+/* L'anneau de focus d'un en-tête papier se pose DANS la feuille : décalé
+   au-dehors, il tombait sur le marine, où l'encre d'action ne tient que 2,8
+   pour 1. Dedans, il tient 5,6 sur le blanc et 5,0 sur le creux. */
+.tiroir-papier > summary:focus-visible,
+.repli-papier > summary:focus-visible {
+  outline-offset: -3px;
 }
 
 /*

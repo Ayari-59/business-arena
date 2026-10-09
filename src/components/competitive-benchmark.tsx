@@ -164,7 +164,7 @@ export function CompetitiveBenchmark({
         et le tableau, lui, reste à l'écran.
       */}
       <div className="mt-2">
-        <Tiroir titre="Comment lire ce tableau" ferme>
+        <Tiroir titre="Comment lire ce tableau" ferme surface="papier">
           {styles.length > 0 ? (
             <ul className="mb-2 space-y-1">
               {styles.map((st) => (

@@ -322,7 +322,7 @@ function EquipmentPanel({
       ) : null}
       {enCarte ? (
         <div className="mt-2">
-          <Tiroir titre="Mise en service et revente" ferme>
+          <Tiroir titre="Mise en service et revente" ferme surface="papier">
             <p className="text-sm leading-relaxed text-slate-400">
               Les machines achetées entrent en service au tour suivant. La revente se fait à la
               valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
@@ -1892,6 +1892,7 @@ function Family({
   legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
   carte,
   repli = false,
+  deplie = false,
   quoi,
 }: {
   legend: ReactNode;
@@ -1921,6 +1922,18 @@ function Family({
    * ce qu'ils portent — un repli ne cache jamais qu'on a engagé quelque chose.
    */
   repli?: boolean;
+  /**
+   * LE REPLI S'OUVRE QUAND L'ÉTAPE N'A QUE LUI (lot 6D). Le repli ci-dessus
+   * date d'une feuille d'un seul tenant, où ces options poussaient le prix et le
+   * volume hors de l'écran. Depuis que la feuille est en étapes, la trésorerie,
+   * l'assurance et l'information ont chacune la leur : fermé, leur volet laissait
+   * un écran presque vide, et il fallait cliquer pour voir ce qu'on pouvait
+   * décider. Sur une étape dont il est le contenu décisionnel, il arrive donc
+   * ouvert ; il garde son chevron et son compte, et se referme d'un geste. La
+   * commande exceptionnelle, posée sur l'étape « Vendre » à côté du prix et du
+   * volume, reste repliée : la raison du repli y vaut toujours.
+   */
+  deplie?: boolean;
   /** Ce qui est engagé derrière le repli, compté depuis le formulaire. */
   quoi?: string;
 }) {
@@ -1936,6 +1949,7 @@ function Family({
   if (repli) {
     return (
       <Repliable
+        ouvert={deplie}
         className={`option-ponctuelle rounded-lg border px-3 py-2 sm:px-3.5 sm:py-2.5 ${tone}`}
         classeResume={legendClass}
         {...(quoi ? { quoi } : {})}
@@ -3863,7 +3877,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.dividend ? (
-        <Family carte="dividende" icone="argent" legend="Affectation du résultat · dividende" repli quoi={quoiDeLOption("dividende")}>
+        <Family carte="dividende" icone="argent" legend="Affectation du résultat · dividende" repli deplie quoi={quoiDeLOption("dividende")}>
           <ChampPlafonne
             name="dividend"
             label="Dividende versé aux associés"
@@ -3881,7 +3895,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       {on.creances && treasuryOffer ? (
-        <Family carte="mobilisation" icone="tresorerie" legend="Trésorerie · mobiliser le poste clients" repli quoi={quoiDeLOption("mobilisation")}>
+        <Family carte="mobilisation" icone="tresorerie" legend="Trésorerie · mobiliser le poste clients" repli deplie quoi={quoiDeLOption("mobilisation")}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Field
@@ -3957,7 +3971,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <Family carte="assurance" icone="assurance" legend="Assurance · choisissez votre couverture" repli quoi={quoiDeLOption("assurance")}>
+        <Family carte="assurance" icone="assurance" legend="Assurance · choisissez votre couverture" repli deplie quoi={quoiDeLOption("assurance")}>
           <div className="space-y-2">
             <label className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12">
               <input
@@ -3998,7 +4012,7 @@ export function DecisionForm({
           </div>
           {modeCartes ? (
             <div className="mt-2">
-              <Tiroir titre="Ce que couvre chaque formule" ferme>
+              <Tiroir titre="Ce que couvre chaque formule" ferme surface="papier">
                 <ul className="space-y-2 text-sm text-slate-300">
                   {insuranceFormulas.map((f) => (
                     <li key={f.code}>
@@ -4053,6 +4067,7 @@ export function DecisionForm({
           icone="loupe"
           legend={"Acheter de l'information · livrée avec les résultats du tour"}
           repli
+          deplie
           quoi={quoiDeLOption("etudes")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -4132,7 +4147,7 @@ export function DecisionForm({
           />
           {modeCartes ? (
             <div className="mt-2">
-              <Tiroir titre="Pourquoi payer l'information ?" ferme>
+              <Tiroir titre="Pourquoi payer l'information ?" ferme surface="papier">
                 <p className="text-sm leading-relaxed text-slate-400">
                   L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
                   de rentabilité. Décider sans données coûte souvent plus cher.

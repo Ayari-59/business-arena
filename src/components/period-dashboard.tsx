@@ -432,7 +432,7 @@ export function PeriodDashboard({
                     ))}
                   </ol>
                   <div className="mt-3">
-                    <Tiroir titre="Comment l'IPG se calcule" ferme>
+                    <Tiroir titre="Comment l'IPG se calcule" ferme surface="papier">
                       <p className="text-sm leading-relaxed text-slate-400">
                         IPG sur 100 : économique 30 %, financière 20 %, pilotage 20 %,
                         commerciale 15 %, responsabilité sociétale 10 %, maîtrise décisionnelle

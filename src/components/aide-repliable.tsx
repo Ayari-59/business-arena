@@ -33,8 +33,9 @@ export function Aide({
   const telephone = useContext(TelephoneContexte);
   if (!telephone) return <>{children}</>;
   // Fermé aussi en parcours : l'aide se consulte, elle ne prend pas l'écran d'une carte de décision.
+  // LOT 6D : une aide est de la prose à lire, une feuille de papier posée sur la carte.
   return (
-    <Tiroir titre={titre} ferme>
+    <Tiroir titre={titre} ferme surface="papier">
       {children}
     </Tiroir>
   );

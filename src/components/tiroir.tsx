@@ -2,6 +2,7 @@
 
 import { Icone, type NomDIcone } from "@/components/icone";
 import { useParcours } from "@/components/parcours-mobile";
+import type { SurfaceDuRepli } from "@/config/surfaces-de-lecture";
 
 /**
  * Un tiroir : un titre, ce qu'il cache, et son contenu replié.
@@ -35,6 +36,7 @@ export function Tiroir({
   groupe,
   phrase = false,
   onBasculer,
+  surface = "cockpit",
   children,
 }: {
   titre: string;
@@ -75,19 +77,39 @@ export function Tiroir({
   phrase?: boolean;
   /** Prévenu quand le tiroir s'ouvre ou se ferme, par un geste comme par un changement de `ouvert`. */
   onBasculer?: (ouvert: boolean) => void;
+  /**
+   * LE SOL DU TIROIR (lot 6D). Le tiroir sert les deux sols de l'arène, et son
+   * aspect par défaut reste celui du COCKPIT : un repli sombre, posé sur le
+   * marine. Une instance dont le contenu est un DOCUMENT (de la prose à lire :
+   * une situation, une aide, une explication) le dit ici, et devient une
+   * feuille de la matière `.papier` : blanche, à l'encre, filet et ombre courte.
+   * Posée dans un document déjà papier, elle en devient une section creusée.
+   * Jamais par défaut : chaque instance papier est déclarée, et la garde
+   * `surfaces-de-lecture.test.ts` les énumère toutes.
+   */
+  surface?: SurfaceDuRepli;
   children: React.ReactNode;
 }) {
   // DANS LE PARCOURS DU TÉLÉPHONE, chaque carte a son écran à elle : replier ce qu'elle
   // contient laissait un écran à moitié vide et une information à deux touchers. Le
   // tiroir s'y ouvre ; on peut toujours le refermer.
   const enParcours = useParcours() !== null;
+  const papier = surface === "papier";
+  // Sur le papier, le chevron et l'icône prennent l'encre douce du document :
+  // l'ambre vif du cockpit n'y tiendrait que 2,4 pour 1.
+  const teinteDuRepere = papier ? "douce" : "text-amber-400/80";
   return (
     <details
       data-tiroir
       open={ferme ? false : ouvert || enParcours}
       name={groupe}
       onToggle={onBasculer ? (e) => onBasculer(e.currentTarget.open) : undefined}
-      className="group rounded-lg border border-dashed border-white/15 bg-slate-950/60 open:border-solid open:bg-slate-950"
+      data-surface={papier ? "papier" : undefined}
+      className={
+        papier
+          ? "papier tiroir-papier group rounded-lg"
+          : "group rounded-lg border border-dashed border-white/15 bg-slate-950/60 open:border-solid open:bg-slate-950"
+      }
     >
       {/*
         L'EN-TÊTE PASSE À LA LIGNE PLUTÔT QUE D'ÉCRASER SON TITRE. Sur un
@@ -105,11 +127,11 @@ export function Tiroir({
         <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <span
             aria-hidden
-            className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
+            className={`shrink-0 text-xs ${teinteDuRepere} transition-transform group-open:rotate-90`}
           >
             ▸
           </span>
-          {icone ? <Icone nom={icone} className="h-4 w-4 shrink-0 text-amber-400/80" /> : null}
+          {icone ? <Icone nom={icone} className={`h-4 w-4 shrink-0 ${teinteDuRepere}`} /> : null}
           <span
             className={
               phrase

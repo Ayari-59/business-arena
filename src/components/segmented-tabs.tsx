@@ -223,7 +223,7 @@ export function SegmentedTabs({
                       estCourant
                         ? "bg-[color:var(--metier,var(--accent-plein))] text-[color:var(--metier-texte,var(--accent-plein-texte))]"
                         : estFait
-                          ? "bg-[var(--point-etat)] text-[var(--voile-neutre)]"
+                          ? "bg-[var(--point-etat)] text-[var(--point-etat-texte)]"
                           : "bg-slate-700 text-slate-300"
                     }`}
                   >

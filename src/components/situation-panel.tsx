@@ -288,6 +288,11 @@ export function SituationCard({
         */}
           <Tiroir
             titre="Pourquoi cette situation ?"
+            // LOT 6D : les faits qui ont déclenché la situation font partie du
+            // document. Un tiroir de cockpit encastré dans la feuille posait un
+            // gris d'encre sur un aplat marine (1,7 pour 1 mesuré) : c'est une
+            // section creusée de la feuille, comme le diagnostic.
+            surface="papier"
             quoi={`${situation.triggerFacts.length} fait${situation.triggerFacts.length > 1 ? "s" : ""}`}
             ouvert={situation.origin === "detected"}
           >
@@ -564,6 +569,9 @@ export function AnalyseDuTour({
               key={x.instanceId}
               titre={x.title}
               phrase
+              // LOT 6D : sur téléphone, la situation à analyser est le même
+              // DOCUMENT que sur grand écran : sa feuille vient du tiroir.
+              surface="papier"
               groupe={`analyses-${gameId}`}
               ouvert={estOuverte}
               ferme={!estOuverte}

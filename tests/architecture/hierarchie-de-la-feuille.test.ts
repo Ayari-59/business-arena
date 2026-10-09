@@ -174,8 +174,15 @@ describe("les options ponctuelles sont repliées, et elles le disent", () => {
       FORMULAIRE.indexOf("export function DecisionForm("),
     );
     expect(famille).toContain("<Repliable");
-    // `Repliable` est fermé par défaut : aucun `ouvert` n'est passé.
-    expect(famille).not.toMatch(/<Repliable[\s\S]{0,400}ouvert/);
+    // `Repliable` est fermé par défaut. LOT 6D, décision du propriétaire : un
+    // volet qui est le seul contenu décisionnel de son étape (trésorerie,
+    // assurance, information, dividende) arrive ouvert, par `deplie`, faux par
+    // défaut ; aucune autre ouverture n'est passée (voir volets-deplies.test.ts).
+    expect(famille).toMatch(/deplie = false,/);
+    const ouvertures = [...famille.matchAll(/<Repliable[\s\S]{0,400}?ouvert=\{([^}]*)\}/g)].map(
+      (m) => m[1],
+    );
+    expect(ouvertures).toEqual(["deplie"]);
     for (const cle of OPTIONS) {
       expect(FORMULAIRE, `option « ${cle} » non repliée`).toContain(`quoiDeLOption("${cle}")`);
     }
