@@ -42,7 +42,8 @@ describe("les champs chiffrés restent dans leur cadre", () => {
     // Le suffixe garde sa taille fixe ; en cartes (téléphone), la taille suit le mode.
     const suffixes =
       form.match(
-        /<span className=(?:"shrink-0 text-xs text-slate-400"|"shrink-0 text-base text-slate-400"|\{`shrink-0 text-slate-400 \$\{[^}]*\}`\})>/g,
+        // LOT 6E : l'unité passe de #c2bcb2 à #e2ddd3 (« unité lisible »), même règle.
+        /<span className=(?:"shrink-0 text-xs text-slate-300"|"shrink-0 text-base text-slate-300"|\{`shrink-0 text-slate-300 \$\{[^}]*\}`\})>/g,
       ) ?? [];
     expect(champs.length).toBeGreaterThan(0);
     expect(suffixes.length).toBe(champs.length);
@@ -51,16 +52,18 @@ describe("les champs chiffrés restent dans leur cadre", () => {
 
 describe("les intitulés réservent deux lignes, pour que les valeurs s'alignent", () => {
   it("formulaire : tous les intitulés de champ", () => {
-    // `font-medium uppercase … text-slate-400` est la signature d'un intitulé
-    // de champ. On écarte deux voisins qui lui ressemblent :
-    //   · les titres de section (`font-semibold`), seuls sur leur ligne, qui
+    // `font-semibold uppercase … text-slate-100` est la signature d'un intitulé
+    // de champ (lot 6E : il était `font-medium … text-slate-400`, un gris que
+    // le libellé d'un champ modifiable ne doit plus avoir). On écarte deux
+    // voisins qui lui ressemblent :
+    //   · les titres de section (`text-slate-200`), seuls sur leur ligne, qui
     //     n'ont rien à aligner ;
     //   · « Acheter » / « Vendre » du parc machines (emerald et red), deux mots
     //     d'une seule ligne côte à côte dans un cadre compact : ils s'alignent
     //     déjà, et leur réserver deux lignes n'ajouterait que du vide.
     const intitules =
       source(FORM).match(
-        /className="[^"]*font-medium uppercase tracking-wide text-slate-400"/g,
+        /className="[^"]*font-semibold uppercase tracking-wide text-slate-100"/g,
       ) ?? [];
     expect(intitules.length).toBeGreaterThan(0);
     for (const i of intitules) {

@@ -95,7 +95,7 @@ export function CourrierDuTour({
         className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-slate-400"
       >
         <span>
-          <Icone nom="courrier" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+          <Icone nom="courrier" className="mr-1.5 h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
           Courrier du {periodeLabel} :{" "}
           <span className="text-slate-300">
             {vide
@@ -118,7 +118,9 @@ export function CourrierDuTour({
     <section aria-label={`Le courrier du ${periodeLabel}`} className="carte p-3 sm:p-5">
       {ouvert && enParcours ? null : (
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+        {/* LOT 6E : un titre n'est pas une action. Il était à l'orange, à côté
+            du bouton orange qu'il annonce : il prend la teinte du métier. */}
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--metier,var(--color-slate-300))]">
           <Icone nom="courrier" className="h-4 w-4" />
           Le courrier du {periodeLabel}
         </h2>

@@ -47,7 +47,7 @@ export function DashboardTabs({
     // d'un demi-écran sous une barre qui en prend déjà une bonne part.
     <div className="space-y-3 sm:space-y-6">
       <nav
-        className="flex gap-1 rounded-lg border border-white/10 bg-slate-900 p-1"
+        className="flex gap-1 rounded-lg bg-slate-950/50 p-1"
         role="tablist"
         aria-label="Tableau de bord"
       >
@@ -67,10 +67,11 @@ export function DashboardTabs({
             onKeyDown={(e) => auClavier(e, index)}
             // LE RAIL : l'onglet actif garde son relief neutre et porte, sous
             // lui, un filet de 2 px à la teinte du métier de la partie (lot
-            // 5A). Hors d'une partie, l'orange d'origine.
+            // 5A). Hors d'une partie, un gris clair (lot 6E : la navigation ne
+            // lit plus l'orange de l'action).
             className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               active === tab.key
-                ? "bg-slate-700 text-slate-50 shadow-[inset_0_-2px_0_0_var(--metier,var(--accent-plein))]"
+                ? "bg-slate-700 text-slate-50 shadow-[inset_0_-2px_0_0_var(--metier,var(--color-slate-300))]"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >

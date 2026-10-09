@@ -194,7 +194,7 @@ function EquipmentPanel({
           const sell = sellQty[t.code] ?? 0;
           const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
           return (
-            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2 max-sm:py-1.5">
+            <div key={t.code} className="rounded-lg bg-slate-950/40 px-2.5 py-2 max-sm:py-1.5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-slate-200">{t.name}</span>
@@ -246,7 +246,7 @@ function EquipmentPanel({
                       }
                       className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="shrink-0 text-xs text-slate-400">max {t.maxPerRound}</span>
+                    <span className="shrink-0 text-xs text-slate-300">max {t.maxPerRound}</span>
                   </span>
                   {buy > 0 ? (
                     <span className="mt-0.5 block text-xs text-slate-300">
@@ -277,7 +277,7 @@ function EquipmentPanel({
                       }
                       className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="shrink-0 text-xs text-slate-400">max {owned}</span>
+                    <span className="shrink-0 text-xs text-slate-300">max {owned}</span>
                   </span>
                   {sell > 0 ? (
                     <span className="mt-0.5 block text-xs text-slate-300">
@@ -291,7 +291,7 @@ function EquipmentPanel({
         })}
       </div>
       {(buyImpact > 0 || sellImpact > 0) ? (
-        <div className="mt-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs">
+        <div className="mt-3 rounded-lg bg-slate-950/40 px-3 py-2 text-xs">
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
             {buyImpact > 0 ? (
               <>
@@ -361,7 +361,7 @@ function Chiffrage({
   return (
     <dl
       role="status"
-      className="mt-2 grid gap-x-4 gap-y-1 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-xs sm:grid-cols-[auto_1fr]"
+      className="mt-2 grid gap-x-4 gap-y-1 rounded-lg bg-slate-950/40 px-3 py-2 text-xs sm:grid-cols-[auto_1fr]"
     >
       {lignes.map((ligne) => (
         <div key={ligne.label} className="contents">
@@ -458,7 +458,7 @@ function ChampMajeur({
   const ref = inputRef ?? interne;
   return (
     <label className="block">
-      <span className="block text-base font-semibold text-slate-100">{label}</span>
+      <span className="block text-base font-semibold text-slate-50">{label}</span>
       <span className="mt-1.5 flex items-baseline gap-2 champ px-4 py-3">
         <input
           type="number"
@@ -481,7 +481,7 @@ function ChampMajeur({
           }
           className="min-w-0 flex-1 bg-transparent text-3xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
         />
-        <span className="shrink-0 text-base text-slate-400">{suffix}</span>
+        <span className="shrink-0 text-base text-slate-300">{suffix}</span>
       </span>
       {repere ? (
         <span
@@ -611,7 +611,7 @@ function Field({
   }
   return (
     <label className="block">
-      <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
+      <span className="block min-h-8 leading-4 text-xs font-semibold uppercase tracking-wide text-slate-100">{label}</span>
       <span className="mt-1 flex items-center gap-2 champ px-3 py-2">
         <input
           type="number"
@@ -631,9 +631,9 @@ function Field({
                 }
               : undefined
           }
-          className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm font-semibold tabular-nums text-slate-50 outline-none"
         />
-        <span className="shrink-0 text-xs text-slate-400">{suffix}</span>
+        <span className="shrink-0 text-xs text-slate-300">{suffix}</span>
       </span>
       {hint ? <span className="mt-1 block text-sm text-slate-400">{hint}</span> : null}
     </label>
@@ -878,7 +878,7 @@ function SaisieDeCarte({
               }
               className="min-w-0 flex-1 bg-transparent text-right text-xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
             />
-            <span className="shrink-0 text-base text-slate-400">{suffixe}</span>
+            <span className="shrink-0 text-base text-slate-300">{suffixe}</span>
           </span>
         </label>
         {sansCurseur ? null : (
@@ -1369,7 +1369,7 @@ function GammeReference({
           enCartes ? "text-xl" : majeur(nom) ? "text-2xl font-bold text-slate-50" : "text-sm"
         }`}
       />
-      <span className={`shrink-0 text-slate-400 ${enCartes ? "text-base" : "text-xs"}`}>{suffixe}</span>
+      <span className={`shrink-0 text-slate-300 ${enCartes ? "text-base" : "text-xs"}`}>{suffixe}</span>
     </span>
     );
 
@@ -1516,7 +1516,7 @@ function GammeReference({
               required={visible(p.code)}
               className="min-w-0 flex-1 bg-transparent text-2xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
             />
-            <span className="shrink-0 text-xs text-slate-400">{v.units}</span>
+            <span className="shrink-0 text-xs text-slate-300">{v.units}</span>
           </span>
         );
       },
@@ -1686,7 +1686,7 @@ function GammeReference({
               const pastille = (l: (typeof lignes)[number]) => (
                 <li
                   key={l.cle}
-                  className="rounded-full border border-white/15 px-2.5 py-1 text-sm text-slate-200"
+                  className="voile-neutre rounded-full px-2.5 py-1 text-sm text-slate-200"
                 >
                   <span className="text-slate-400">{l.label}</span> {l.cellule(p)}
                 </li>
@@ -1770,9 +1770,10 @@ function GammeReference({
             onClick={() => setActiveProduct(p.code)}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeProduct === p.code
-                ? // La référence choisie est un ÉTAT CHOISI : voile neutre et filet
-                  // orange plein (charte), comme l'onglet d'étape.
-                  "voile-neutre border-amber-400 text-slate-100"
+                ? // La référence affichée est une POSITION (lot 6E) : voile neutre et
+                  // filet à la teinte du métier, comme l'étape en cours. L'orange
+                  // reste à l'action.
+                  "voile-neutre border-[color:var(--metier,var(--color-slate-300))] text-slate-100"
                 : "border-white/5 bg-slate-900 text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -1888,8 +1889,10 @@ function Family({
   icone,
   children,
   defaultOpen = true,
-  tone = "border-white/10 bg-slate-950",
-  legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
+  // LE PANNEAU (lot 6E) : son sol et son arête de lumière, pas un cadre. Il
+  // était un cadre à 10 % de blanc sur un fond… de la couleur de la page.
+  tone = "panneau",
+  legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-200",
   carte,
   repli = false,
   deplie = false,
@@ -1950,30 +1953,38 @@ function Family({
     return (
       <Repliable
         ouvert={deplie}
-        className={`option-ponctuelle rounded-lg border px-3 py-2 sm:px-3.5 sm:py-2.5 ${tone}`}
+        className={`option-ponctuelle px-3 py-2 sm:px-3.5 sm:py-2.5 ${tone}`}
         classeResume={legendClass}
         {...(quoi ? { quoi } : {})}
         resume={
           <span className="flex items-center gap-1.5">
-            {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-amber-400" /> : null}
+            {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" /> : null}
             {legend}
           </span>
         }
       >
-        <div className="mt-2 border-t border-white/10 pt-3">{children}</div>
+        <div className="mt-2 pt-1">{children}</div>
       </Repliable>
     );
   }
   return (
-    <details open={defaultOpen} className={`group rounded-lg border [&:not([open])]:border-dashed ${tone}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 [&::-webkit-details-marker]:hidden">
+    // UN PANNEAU, PAS UN CADRE (lot 6E) : le sol relevé, l'arête de lumière, la
+    // teinte du métier en tête et sur le repère. Plus de pointillé quand il est
+    // fermé (un repli fermé est rangé, pas vide), plus de filet sous le titre.
+    <details open={defaultOpen} className={`group ${tone}`}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-[var(--rayon-panneau)] px-3 py-2 sm:px-4 sm:py-2.5 [&::-webkit-details-marker]:hidden">
         <span className={`flex items-center gap-1.5 ${legendClass}`}>
-          {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-amber-400" /> : null}
+          {icone ? (
+            <Icone
+              nom={icone}
+              className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]"
+            />
+          ) : null}
           {legend}
         </span>
         <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
       </summary>
-      <div className="border-t border-white/10 p-3 sm:p-4">{children}</div>
+      <div className="px-3 pb-3 pt-1 sm:px-4 sm:pb-4">{children}</div>
     </details>
   );
 }
@@ -2356,8 +2367,10 @@ export function DecisionForm({
     veille.observe(zone, { childList: true, subtree: true });
     return () => veille.disconnect();
   }, [formRef]);
+  // Tant que le courrier attend, « Valider » ne s'éteint pas en fantôme : il
+  // prend la forme pleine et neutre de « Suivant » (lot 6E).
   const aplat = (classes: string) =>
-    actionPropre ? bouton({ variante: "secondaire", taille: "l" }) : classes;
+    actionPropre ? `${bouton({ variante: "secondaire", taille: "l" })} bouton-suite` : classes;
 
   /** Afficher une carte : on repart du haut de l'écran, et le récapitulatif se relit. */
   const allerALaCarte = (i: number) => {
@@ -3092,7 +3105,7 @@ export function DecisionForm({
                       name="supplierChoice"
                       value={s.code}
                       defaultChecked={(defaults.supplierChoice ?? fiches[0]?.code) === s.code}
-                      className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-400"
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                     />
                   )}
                   <span>
@@ -3202,44 +3215,100 @@ export function DecisionForm({
           </span>
         </p>
       ) : null}
-      {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
-          replient en simples numéros sur petit écran. */}
-      <ol
-        className={`flex flex-wrap gap-1 sm:gap-1.5 ${modeCartes ? "hidden" : ""}`}
+      {/*
+        LA PISTE DES ÉTAPES (lot 6E). Les familles de décision se lisaient comme
+        une seconde rangée d'onglets, au même rang que Situation / Analyser /
+        Décider, avec l'orange de l'action sur l'étape en cours. Elles deviennent
+        une PISTE, au second rang : un segment par étape, qui s'allume dans la
+        teinte du métier quand on y est passé, et un compteur HONNÊTE. Toutes
+        les décisions ont une valeur proposée : « 5 / 7 décidées » mentirait.
+        Ce que le code sait vraiment, c'est ce qui a été AFFICHÉ (`vues`) : on
+        compte donc les étapes parcourues. Au bout de la piste, la validation,
+        qui est la fin du parcours. Saut direct toujours possible.
+      */}
+      <nav
         aria-label="Étapes de décision"
+        className={`space-y-2 ${modeCartes ? "hidden" : ""}`}
+        data-piste-des-etapes=""
       >
-        {etapesVisibles.map((cle, i) => {
-          const actif = i === courante;
-          const fait = !actif && vues.has(i);
-          return (
-            <li key={cle} className="min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={() => allerALEtape(i)}
-                aria-current={actif ? "step" : undefined}
-                className={`flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border px-1 py-2 text-xs font-medium transition sm:gap-1.5 sm:px-2 ${
-                  actif
-                    ? // L'étape courante est un ÉTAT CHOISI : voile neutre et filet
-                      // orange plein (charte), et non un aplat dilué d'orange.
-                      "voile-neutre border-amber-400 text-slate-100"
-                    : fait
-                      ? // Une étape faite est un ÉTAT, pas un résultat : neutre, et sa coche.
-                        "voile-neutre border-white/10 text-slate-200 hover:text-slate-100"
-                      : "border-white/10 text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                {fait ? (
-                  <span aria-hidden>✓</span>
-                ) : (
-                  <Icone nom={META[cle]!.icone} className="h-4 w-4" />
-                )}
-                <span className="hidden truncate sm:inline">{META[cle]!.titre}</span>
-                <span className="sm:hidden">{i + 1}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+        <p className="flex items-baseline justify-between gap-3 text-xs">
+          <span className="font-semibold uppercase tracking-etiquette text-slate-300">
+            Votre feuille de décision
+          </span>
+          <span className="tabular-nums text-slate-300" data-compteur-de-la-piste="">
+            <strong className="font-semibold text-slate-50">{vues.size}</strong> / {total}{" "}
+            parcourue{vues.size > 1 ? "s" : ""}
+          </span>
+        </p>
+        <ol className="flex gap-1.5 sm:gap-2">
+          {etapesVisibles.map((cle, i) => {
+            const actif = i === courante;
+            const fait = !actif && vues.has(i);
+            return (
+              <li key={cle} className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={() => allerALEtape(i)}
+                  aria-current={actif ? "step" : undefined}
+                  aria-label={`${META[cle]!.titre}${fait ? ", parcourue" : ""}`}
+                  className="group flex min-h-11 w-full flex-col justify-start gap-1.5 rounded-md px-0.5 pb-1 pt-1.5 text-left"
+                >
+                  <span
+                    aria-hidden
+                    className="piste-segment w-full"
+                    data-etat={actif ? "courante" : fait ? "parcourue" : "a-venir"}
+                  />
+                  <span
+                    className={`flex min-w-0 items-center gap-1 text-xs ${
+                      actif
+                        ? // L'ÉTAPE EN COURS EST À LA TEINTE DU MÉTIER (lot 6E) : la
+                          // navigation dit où l'on est ; l'orange reste à l'action.
+                          "font-semibold text-slate-50"
+                        : fait
+                          ? "text-slate-200 group-hover:text-slate-50"
+                          : "text-slate-400 group-hover:text-slate-200"
+                    }`}
+                  >
+                    {fait ? (
+                      <span aria-hidden className="text-[color:var(--metier,var(--color-slate-300))]">
+                        ✓
+                      </span>
+                    ) : (
+                      <Icone
+                        nom={META[cle]!.icone}
+                        className={`h-3.5 w-3.5 shrink-0 ${
+                          actif ? "text-[color:var(--metier,var(--color-slate-300))]" : ""
+                        }`}
+                      />
+                    )}
+                    <span className="hidden truncate sm:inline">{META[cle]!.titre}</span>
+                    <span className="sm:hidden">{i + 1}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          {/* LA FIN DU PARCOURS : la validation, qui envoie tout au marché. */}
+          <li aria-hidden className="hidden shrink-0 flex-col gap-1.5 px-0.5 pb-1 pt-1.5 lg:flex">
+            <span className="piste-segment w-8" />
+            <span className="flex items-center gap-1 text-xs text-slate-400">
+              <Icone nom="resultats" className="h-3.5 w-3.5" />
+              Valider
+            </span>
+          </li>
+        </ol>
+      </nav>
+
+      {/*
+        LOT 6E : L'ENCART MONTE SOUS LA PISTE. Il était posé après toutes les
+        étapes : sur un portable (1366 × 768), on ne voyait jamais en même temps
+        le premier champ et ce qu'il donne. Placé en tête de la feuille, au-dessus
+        des étapes (et donc toujours sous les yeux, à toutes), il est le cadran
+        du cockpit : les commandes en dessous, leur effet au-dessus.
+      */}
+      {!modeCartes && estimation ? (
+        <EncartResultatEstime estime={estime} vocabulary={v} />
+      ) : null}
 
       <section
         data-etape={idx("vendre")}
@@ -3330,7 +3399,7 @@ export function DecisionForm({
                 <p className="mb-3">
                   <span
                     data-repere-du-tour-passe
-                    className="inline-block rounded-full border border-white/15 px-3 py-1.5 text-sm tabular-nums text-[var(--donnee)]"
+                    className="voile-neutre inline-block rounded-full px-3 py-1.5 text-sm tabular-nums text-[var(--donnee)]"
                   >
                     {aideEstimee}
                   </span>
@@ -3360,12 +3429,12 @@ export function DecisionForm({
               {modeCartes && reperes ? (
                 <div className="mb-3 flex flex-wrap gap-2">
                   {reperes.prixUsuels ? (
-                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                    <span className="voile-neutre rounded-full px-3 py-1.5 text-sm text-slate-200">
                       Prix usuels {reperes.prixUsuels}
                     </span>
                   ) : null}
                   {reperes.coutVariable !== null ? (
-                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                    <span className="voile-neutre rounded-full px-3 py-1.5 text-sm text-slate-200">
                       Coût variable {formatEuro(reperes.coutVariable)}
                     </span>
                   ) : null}
@@ -3377,7 +3446,7 @@ export function DecisionForm({
                 {...(reperes?.plagePrix ? { plage: reperes.plagePrix } : {})}
                 hint="Attention aux seuils psychologiques…" />
               {modeCartes && reperes && reperes.coutVariable !== null ? (
-                <p className="mt-3 flex items-baseline justify-between border-t border-white/10 px-1 pt-3 text-base text-slate-300">
+                <p className="mt-3 flex items-baseline justify-between px-1 pt-1 text-base text-slate-300">
                   <span>Marge par {v.unit}</span>
                   {/* Une valeur chiffrée est une information, jamais l'orange de l'action. */}
                   <strong className="text-lg tabular-nums text-slate-50">
@@ -3399,7 +3468,7 @@ export function DecisionForm({
           {/* LES REPÈRES DU MARCHÉ, SUR ORDINATEUR : sous les deux champs majeurs, pas
               au-dessus d'eux. Ce sont des données (bleu donnée), pas des résultats. */}
           {!modeCartes && reperes && (reperes.prixUsuels || reperes.coutVariable !== null) ? (
-            <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-t border-white/10 pt-3 text-sm tabular-nums text-[var(--donnee)]">
+            <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm tabular-nums text-[var(--donnee)]">
               {reperes.prixUsuels ? (
                 <span>
                   <span className="text-slate-400">Prix usuels du marché</span>{" "}
@@ -3667,7 +3736,7 @@ export function DecisionForm({
               />
             ) : null}
             <label className="block">
-              <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Axe de communication</span>
+              <span className="block min-h-8 leading-4 text-xs font-semibold uppercase tracking-wide text-slate-100">Axe de communication</span>
               <select
                 name="communicationAxis"
                 value={axe}
@@ -4174,8 +4243,7 @@ export function DecisionForm({
         carte="justification"
         icone="ecrire"
         legend="En quelques mots"
-        tone="border-slate-700/60"
-        legendClass="text-xs font-medium text-slate-400"
+        legendClass="text-xs font-medium text-slate-300"
       >
         <textarea
           name="justification"
@@ -4200,11 +4268,9 @@ export function DecisionForm({
         là que la question se pose. Un seul exemplaire, pour qu'aucune annonce
         ne se dise deux fois.
         En parcours (téléphone), il cède la place à la ligne compacte du pied
-        fixe : une carte doit tenir sur un écran.
+        fixe : une carte doit tenir sur un écran. (Lot 6E : il est rendu plus
+        haut, sous la piste des étapes.)
       */}
-      {!modeCartes && estimation ? (
-        <EncartResultatEstime estime={estime} vocabulary={v} />
-      ) : null}
       {/*
         SUR TÉLÉPHONE, L'ESTIMÉ SE LIT SUR LA CARTE OÙ IL SE DÉCIDE, et là
         seulement. Posé dans la barre fixe du parcours, il coûtait 65 px à
@@ -4316,15 +4382,18 @@ export function DecisionForm({
         // Sur grand écran, tout reste sur une rangée : Précédent · Étape · action
         // (poussée à droite par le `sm:mr-auto` du compteur).
         <div
-          className={`space-y-3 border-t border-white/10 pt-3 ${
+          className={`space-y-3 pt-3 ${
             modeCartes
               ? // EN PARCOURS, LE PIED EST FIXÉ AU BAS DE L'ÉCRAN, quelle que soit la
                 // longueur de la carte : une carte courte ne laisse pas son bouton
                 // flotter au milieu, comme un site.
                 // `mb-0` : l'espacement du formulaire (space-y) donnait au pied une
                 // marge basse, qui le décollait de 12 px du bas de l'écran.
-                "fixed inset-x-0 bottom-0 z-40 mb-0 border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden"
-              : "max-sm:sticky max-sm:bottom-[var(--barre-bas,0px)] max-sm:z-30 max-sm:-mx-4 max-sm:bg-slate-950/95 max-sm:px-4 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-sm:backdrop-blur-md"
+                "fixed inset-x-0 bottom-0 z-40 mb-0 border-t border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden"
+              : // Sur grand écran, plus de filet au-dessus du pied (lot 6E) : les
+                // boutons se suffisent ; collé au bas d'une fenêtre étroite, il
+                // garde son bord.
+                "max-sm:sticky max-sm:bottom-[var(--barre-bas,0px)] max-sm:z-30 max-sm:-mx-4 max-sm:border-t max-sm:border-white/10 max-sm:bg-slate-950/95 max-sm:px-4 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-sm:backdrop-blur-md"
           }`}
         >
           {/* L'échéance se rappelle ici, contre le bouton : c'est le moment où
@@ -4341,12 +4410,20 @@ export function DecisionForm({
               }}
               disabled={!modeCartes && courante === 0}
               aria-label={modeCartes ? "Retour" : "Précédent"}
-              className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30"
+              // « PRÉCÉDENT » EST DISCRET (lot 6E) : un retour, pas un chemin
+              // qu'on vous propose. Sur téléphone, « Retour » garde son cadre :
+              // c'est une cible tactile dans une barre fixe.
+              className={
+                modeCartes
+                  ? "order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 active:scale-[0.98] disabled:cursor-not-allowed"
+                  : "bouton-retour order-1 min-h-11 shrink-0 px-1 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed"
+              }
             >
               {modeCartes ? "Retour" : "← Précédent"}
             </button>
+            {/* La position se lit sur la piste, au-dessus : ici, ce qui reste. */}
             <span className="order-2 hidden shrink-0 text-xs tabular-nums text-slate-400 sm:mr-auto sm:block">
-              Étape {courante + 1} / {total}
+              {derniere ? "Fin du parcours" : `Étape ${courante + 1} / ${total}`}
             </span>
             {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
                 bascule : sans cela, React réutilisait le même <button> en passant
@@ -4363,7 +4440,10 @@ export function DecisionForm({
                 // bouton entière au lieu de l'éteindre, et lui pose la barre
                 // indéterminée des actions longues (bloc « LOT 5B »).
                 aria-busy={pending}
-                className={`${aplat(`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25`)} active:scale-[0.98] order-3 max-sm:flex-1`}
+                // LE GESTE QUI FAIT RÉPONDRE LE MARCHÉ (lot 6E) : le grand bouton
+                // orange plein, le seul aplat orange de son écran — sauf tant que
+                // le courrier attend d'être ouvert, où c'est lui l'orange (`aplat`).
+                className={`${aplat(`${bouton({ taille: "l" })} bouton-valider`)} active:scale-[0.98] order-3 max-sm:flex-1`}
               >
                 {pending
                   ? "Envoi en cours…"
@@ -4402,9 +4482,14 @@ export function DecisionForm({
                     carteSuivante();
                   } else allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1));
                 }}
-                className={`${aplat(`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25`)} active:scale-[0.98] order-3 max-sm:flex-1`}
+                // CE QUI FAIT AVANCER N'EST PAS CE QUI DÉCLENCHE LE MARCHÉ (lot 6E) :
+                // « Suivant » est plein mais neutre, et il dit où il mène.
+                className={`${bouton({ variante: "secondaire", taille: "l" })} bouton-suite active:scale-[0.98] order-3 max-sm:flex-1`}
               >
-                {modeCartes ? "Continuer" : "Suivant"} →
+                {modeCartes
+                  ? "Continuer"
+                  : `Suivant${etapesVisibles[courante + 1] ? ` : ${META[etapesVisibles[courante + 1]!]!.titre}` : ""}`}{" "}
+                →
               </button>
             )}
           </div>

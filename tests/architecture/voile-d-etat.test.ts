@@ -5,6 +5,13 @@ import { describe, expect, it } from "vitest";
 /**
  * LE VOILE D'UN ÉTAT CHOISI EST NEUTRE, ET LE FILET EST ORANGE.
  *
+ * LOT 6E : « ÉTAT CHOISI » VEUT DIRE « OPTION COCHÉE ». L'étape en cours et
+ * l'onglet actif disaient aussi « où je suis » en orange : ils sont passés à la
+ * teinte du métier (`navigation-au-metier.test.ts`). Une option COCHÉE garde
+ * l'orange : c'est une décision, la réponse qu'on envoie au marché, et la
+ * charte range la décision avec l'action. La dernière garde de ce fichier le
+ * vérifie.
+ *
  * Sur le clair, l'accent est une encre orange foncé : diluée à dix pour cent,
  * elle donnait un rose sale sous l'option cochée, l'étape en cours, le niveau
  * retenu ; tirée de l'orange vif mélangé au blanc, elle donnait une pêche
@@ -132,5 +139,18 @@ describe("le voile d'un état choisi", () => {
         new RegExp(`--${nom}: color-mix\\(in srgb, var\\(--marine\\) \\d+%, transparent\\);`),
       );
     }
+  });
+});
+
+describe("une option cochée est une décision : elle garde l'orange (lot 6E)", () => {
+  it("l'option cochée de la feuille prend le filet orange, et son radio l'orange plein", () => {
+    const formulaire = readFileSync(join(SRC, "components", "decision-form.tsx"), "utf8");
+    const options = formulaire.match(/has-\[:checked\]:border-amber-400[^\s"`]*/g) ?? [];
+    expect(options.length, "plus aucune option cochée en orange").toBeGreaterThan(3);
+    // Et jamais la teinte du métier, qui dit une position, pas une décision.
+    expect(formulaire).not.toMatch(/has-\[:checked\]:[^\s"`]*metier/);
+    expect(CSS).toMatch(
+      /\[data-ecran-de-jeu\] :is\(input\[type="radio"\], input\[type="checkbox"\]\):checked[^{]*\{\s*border-color: var\(--accent-plein\)/,
+    );
   });
 });

@@ -67,9 +67,13 @@ export function PanneauConsulte({
     );
   }
   return (
-    <div className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5">
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-amber-400" /> : null}
+    // LOT 6E : un panneau du cockpit (son sol, son arête), pas un cadre ; et son
+    // repère à la teinte du métier : un titre n'est pas une action.
+    <div className="panneau px-3 py-2.5 sm:px-4 sm:py-3">
+      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-200">
+        {icone ? (
+          <Icone nom={icone} className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
+        ) : null}
         {titre}
       </p>
       {children}

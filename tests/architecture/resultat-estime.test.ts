@@ -180,9 +180,23 @@ describe("une estimation n'est pas un résultat : la charte le dit", () => {
     expect(bloc).toMatch(/text-emerald-300[\s\S]{0,40}text-red-300/);
   });
 
-  it("le mouvement est celui du lot 5B : l'éclat, pas un compteur qui défile", () => {
+  /*
+   * LOT 6E : LE PROPRIÉTAIRE A VOULU DES CHIFFRES VIVANTS. Cette garde refusait
+   * tout compteur dans l'encart (« l'éclat, pas un compteur qui défile »). Le
+   * lot 6E fait des quatre chiffres de grands chiffres qui réagissent à chaque
+   * saisie « avec la grammaire du lot 5B (ValeurRafraichie / ChiffreQuiArrive) ».
+   * La garde est déplacée, pas levée : le compteur est permis, mais il ne bouge
+   * QUE quand la valeur change sous les yeux — ni mémoire d'onglet (`memoire`),
+   * ni départ imposé (`depuis`), donc rien au chargement d'une page qu'on relit.
+   */
+  it("le mouvement est celui du lot 5B : l'éclat, et le compteur seulement quand la saisie change le chiffre", () => {
     expect(ENCART).toContain("ValeurRafraichie");
-    expect(ENCART).not.toContain("ChiffreQuiArrive");
+    const compteurs = ENCART.match(/<ChiffreQuiArrive[^>]*\/>/g) ?? [];
+    expect(compteurs.length).toBeGreaterThan(0);
+    for (const c of compteurs) {
+      expect(c).not.toMatch(/\bmemoire=|\bdepuis=/);
+      expect(c).toContain("format=");
+    }
     // L'anti-rebond prend sa durée au jeton, jamais à une constante.
     expect(ENCART).toContain('dureeDuJeton("--duree-saisie")');
     expect(ENCART).not.toMatch(/setTimeout\([^,]+,\s*\d+\s*\)/);

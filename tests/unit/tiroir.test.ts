@@ -87,7 +87,15 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
    * Les trois seuls `<details>` écrits à la main dans l'arène. Ils ont un
    * RÉSUMÉ PROPRE que `Tiroir` ne saurait porter — le titre d'une situation,
    * les KPI d'un tour clos, la famille de leviers — mais ils doivent afficher
-   * le même trait pointillé quand ils sont fermés.
+   * le même signe quand ils sont fermés.
+   *
+   * LOT 6E : LE SIGNE A CHANGÉ, LA GARDE AUSSI. Le pointillé d'un repli fermé
+   * était un cadre de plus, tireté, dans un écran qui en comptait déjà trop ;
+   * la règle des bordures du lot 6E (globals.css, « LOT 6E ») retire les cadres
+   * des panneaux. Un repli de l'arène est désormais un PANNEAU (`panneau`), et
+   * son état replié se dit au chevron qui pivote — le signe que les tours
+   * passés portaient déjà. La garde vérifie la même chose qu'avant : CHAQUE
+   * repli porte le signe commun, et aucun ne le porte à moitié.
    */
   const AVEC_RESUME_PROPRE = [
     join("src", "app", "arena", "[gameId]", "page.tsx"),
@@ -105,19 +113,24 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
 
   const lire = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
-  it.each(AVEC_RESUME_PROPRE)("%s : chaque repli est pointillé quand il est fermé", (fichier) => {
-    const source = lire(fichier);
-    const replis = source.match(/<details/g) ?? [];
-    const pointilles = source.match(/\[&:not\(\[open\]\)\]:border-dashed/g) ?? [];
-    // UNE EXCEPTION, NOMMÉE : la liste des tours passés. Son pointillé prenait
-    // la couleur du filet de gain ou de perte, et la pile de cadres tiretés
-    // roses et verts était la seule chose de l'arène hors de la charte. Ses
-    // tours ont un cadre plein ; leur état replié se dit au chevron qui
-    // pivote, et leur signe au filet et à la pastille du numéro.
-    const toursPasses = source.match(/data-tour-passe/g) ?? [];
-    expect(replis.length).toBeGreaterThan(0);
-    expect(pointilles.length).toBe(replis.length - toursPasses.length);
-  });
+  it.each(AVEC_RESUME_PROPRE)(
+    "%s : chaque repli est un panneau, et son chevron pivote quand il s'ouvre",
+    (fichier) => {
+      const source = lire(fichier);
+      const replis = [...source.matchAll(/<details[\s\S]*?<\/summary>/g)].map((m) => m[0]);
+      expect(replis.length).toBeGreaterThan(0);
+      for (const repli of replis) {
+        // Le signe commun : un chevron qui pivote à l'ouverture.
+        expect(repli, repli.slice(0, 120)).toContain("group-open:rotate-90");
+        // Plus de pointillé : un repli fermé est rangé, pas vide.
+        expect(repli, repli.slice(0, 120)).not.toContain("border-dashed");
+        // Et c'est un panneau (le sol et l'arête), pas un cadre.
+        expect(repli, repli.slice(0, 120)).toMatch(/panneau|\$\{tone\}/);
+      }
+      // Le panneau par défaut de la famille de décision est bien `panneau`.
+      if (fichier.endsWith("decision-form.tsx")) expect(source).toContain('tone = "panneau"');
+    },
+  );
 
   it("les tours passés gardent un signe de repli : le chevron qui pivote", () => {
     const source = lire(join("src", "app", "arena", "[gameId]", "page.tsx"));

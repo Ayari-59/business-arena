@@ -48,7 +48,14 @@ export function TourSimule({
   roundsCount = null,
   bilan = null,
   ecartEstime = null,
+  explication = null,
 }: {
+  /**
+   * CE QUI A FAIT LE RÉSULTAT (lot 6E) : la cascade du compte et les causes
+   * chiffrées du tour, déjà lues par la page (`lecture-du-resultat.ts`). Null
+   * sans bilan : l'écran ne calcule rien.
+   */
+  explication?: ReactNode;
   /**
    * « VOUS AVIEZ ESTIMÉ … LE MARCHÉ A DONNÉ … », quand l'équipe a déposé une
    * estimation. L'écran ne la calcule pas : la page de l'arène a déjà les
@@ -109,7 +116,7 @@ export function TourSimule({
     <main
       id="main"
       data-rituel-du-marche=""
-      className="ardoise flex min-h-[calc(100dvh-4rem)] items-center bg-slate-950 px-5 py-10 text-slate-100 sm:px-6 sm:py-14"
+      className="ardoise flex min-h-[calc(100dvh-4rem)] items-center bg-slate-950 px-5 py-6 text-slate-100 sm:px-6 sm:py-8"
     >
       {bilan ? (
         <VerdictDuMarche
@@ -141,6 +148,7 @@ export function TourSimule({
           rang={bilan.rang}
           ipg={bilan.rang ? bilan.ipg : null}
           phrase={bilan.verdict ?? null}
+          explication={explication}
           complement={
             <>
               {/* LES DEUX AUTRES CHIFFRES DU TOUR, EN PETIT : ce qu'on a vendu,
@@ -172,7 +180,7 @@ export function TourSimule({
         />
       ) : (
         // Sans bilan fourni, aucun chiffre : l'écran reste une simple étape.
-        <div className="rituel mx-auto w-full max-w-3xl text-center">
+        <div className="rituel mx-auto w-full max-w-4xl text-center">
           <div data-temps="1">
             <p className="text-xs font-semibold uppercase tracking-annonce text-slate-400">
               {surtitre}

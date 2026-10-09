@@ -25,5 +25,13 @@ export const PHASES: Record<PhaseDuTour, TeinteDePhase> = {
   briefing: { libelle: "Briefing", texte: "text-sky-300", fond: "bg-sky-400", teinte: "voile-neutre" },
   analyse: { libelle: "Analyse", texte: "text-violet-300", fond: "bg-violet-400", teinte: "voile-neutre" },
   courrier: { libelle: "Courrier", texte: "text-teal-300", fond: "bg-teal-400", teinte: "voile-neutre" },
-  decision: { libelle: "Décision", texte: "text-amber-300", fond: "bg-amber-400", teinte: "voile-neutre" },
+  // LOT 6E : le temps « Décision » était à l'orange de l'action. Un temps du
+  // tour dit OÙ l'on est : il prend la teinte du métier, comme l'étape en cours
+  // sur grand écran ; l'orange ne dit plus que le geste (« Valider et simuler »).
+  decision: {
+    libelle: "Décision",
+    texte: "text-[color:var(--metier,var(--color-slate-300))]",
+    fond: "bg-[color:var(--metier,var(--color-slate-300))]",
+    teinte: "voile-neutre",
+  },
 };

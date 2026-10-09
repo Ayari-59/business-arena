@@ -18,7 +18,7 @@ export function KpiCard({
 }) {
   // Le sens est porté par la bande pleine de gauche : le cadre reste neutre
   // (il était vert ou rouge dilués, des pastels).
-  const border = "border-white/10";
+  const border = "border-transparent";
   // UNE TUILE SANS SENS DE RÉSULTAT APPARTIENT À L'ENTREPRISE : sa bande prend
   // la teinte du métier (lot 5A) plutôt qu'un gris, qui ne disait rien. Le
   // vert et le rouge restent aux tuiles dont le chiffre est un résultat.
@@ -39,7 +39,11 @@ export function KpiCard({
   const trendArrow = trend?.direction === "up" ? "↑" : trend?.direction === "down" ? "↓" : "→";
 
   return (
-    <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-900 p-3 sm:p-5`}>
+    // LOT 6E : UNE TUILE, PAS UN CADRE. Elle est posée dans le panneau d'un tour
+    // clos : son filet faisait un cadre dans un cadre. Elle se lit à son voile
+    // et à sa bande de couleur ; le filet reste transparent (la largeur, elle,
+    // ne bouge pas d'un pixel).
+    <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-950/40 p-3 sm:p-5`}>
       <div className={`absolute inset-y-0 left-0 w-1 ${stripe}`} />
       <p className="pl-2 text-xs uppercase tracking-wide text-slate-400">{label}</p>
       {/* La tendance passe à la ligne plutôt que de sortir du cadre : sur un

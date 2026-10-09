@@ -57,6 +57,8 @@ import { ArdoiseRepliee } from "@/components/ardoise-repliee";
 import { BandeDeMarche } from "@/components/bande-de-marche";
 import { faitsDuMarche } from "@/lib/faits-du-marche";
 import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
+import { causesDuResultat, decompositionDuResultat } from "@/components/lecture-du-resultat";
+import { CeQuiAFaitLeResultat } from "@/components/ce-qui-a-fait-le-resultat";
 import { BilanDePartie } from "@/components/bilan-de-partie";
 import { bilanDeLaPartie } from "@/pedagogy/bilan-de-partie";
 import { VosReussites } from "@/components/vos-reussites";
@@ -179,6 +181,22 @@ export default async function ArenaPage({
         sector={view.sector}
         entreprise={view.intro.company}
         roundsCount={view.roundsCount}
+        explication={
+          // CE QUI A FAIT LE RÉSULTAT (lot 6E) : la cascade et les causes,
+          // lues dans les comptes du tour joué, son benchmark et l'estimation
+          // déposée avec ses décisions. Rien d'inventé : voir lecture-du-resultat.ts.
+          <CeQuiAFaitLeResultat
+            decomposition={decompositionDuResultat(tourJoue.result.incomeStatement)}
+            causes={causesDuResultat({
+              result: tourJoue.result,
+              prixPratique:
+                tourJoue.competitiveBenchmark?.competitors.find((c) => c.isPlayer)?.avgPrice ?? null,
+              prixDuMarche: tourJoue.competitiveBenchmark?.marketAvgPrice ?? null,
+              estimation: tourJoue.decisions?.salesEstimate ?? null,
+              unites: view.vocabulary.units,
+            })}
+          />
+        }
         ecartEstime={
           // « LE MARCHÉ RÉPOND » : ce que l'équipe avait estimé, en face de ce
           // qui est arrivé. Les deux chiffres sont déjà là — l'estimation est
@@ -336,9 +354,10 @@ export default async function ArenaPage({
         </section>
       ) : null}
       {view.courriersAnnonces.length > 0 ? (
-        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-3 sm:p-5">
+        // UN PANNEAU, PAS UN CADRE ORANGE (lot 6E) : ce n'est pas une action.
+        <section className="panneau p-3 sm:p-5">
           <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
-            <Icone nom="courrier" className="h-4 w-4" />
+            <Icone nom="courrier" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
             Le courrier, en détail
           </p>
           <div className={grilleDeCourriers(view.courriersAnnonces.length)}>
@@ -515,16 +534,18 @@ export default async function ArenaPage({
           <details
             key={s.instanceId}
             open={i === 0}
-            className="group rounded-xl border border-white/10 bg-slate-950/40 [&:not([open])]:border-dashed [&[open]]:border-white/20"
+            // UN PANNEAU (lot 6E) : ni cadre, ni pointillé quand il est fermé,
+            // ni filet sous le titre ; le repère à la teinte du métier.
+            className="group panneau"
           >
-            <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
+            <summary className="flex cursor-pointer items-center gap-2 rounded-[var(--rayon-panneau)] px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
               <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
                 ▸
               </span>
-              <Icone nom="loupe" className="h-4 w-4 text-amber-400" />
+              <Icone nom="loupe" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
               <span className="min-w-0">{s.title}</span>
             </summary>
-            <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
+            <div className="px-2 pb-2.5 sm:px-4 sm:pb-4">
               <SituationCard gameId={view.gameId} situation={s} />
             </div>
           </details>
@@ -695,7 +716,11 @@ export default async function ArenaPage({
             // gain ou la perte se lit au filet de 2 px et à la pastille du
             // numéro, et l'état replié au chevron qui pivote.
             data-tour-passe
-            className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&[open]]:border-white/20 ${
+            //
+            // LOT 6E : UN PANNEAU, ET LE SIGNE DANS SON FILET. Le cadre plein
+            // tombe (le sol et l'arête du panneau détachent le tour de la
+            // page) ; le filet de 2 px du signe reste : c'est un résultat.
+            className={`group scroll-mt-24 panneau border-l-2 ${
               netIncome >= 0 ? "border-l-emerald-400" : "border-l-red-400"
             }`}
           >
@@ -756,12 +781,12 @@ export default async function ArenaPage({
               </span>
               <span
                 aria-hidden
-                className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
+                className="shrink-0 text-xs text-slate-400 transition-transform group-open:rotate-90"
               >
                 ▸
               </span>
             </summary>
-            <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
+            <div className="px-2 pb-2.5 sm:px-4 sm:pb-4">
               {/* Les trois facettes d'une période close : ce qu'on a analysé
                   (Situation + correction), ce qu'on a décidé, ce qui en est
                   ressorti. Les onglets ne s'opposent pas à l'accordéon — il
@@ -856,7 +881,7 @@ export default async function ArenaPage({
     </TableauDeBord>
   );
   const soumissionsNode = view.soumissions ? (
-    <div className="border-b border-white/10 px-3 py-2 sm:px-4">
+    <div className="px-0.5 py-2">
       <QuiARendu
         validees={view.soumissions.validees}
         total={view.soumissions.total}
@@ -1187,7 +1212,7 @@ export default async function ArenaPage({
                 */}
                 {courrierBloc}
                 {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
-                <div className="mb-4 border-b border-white/10 pb-3">
+                <div className="mb-4">
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                   </h2>
@@ -1444,12 +1469,17 @@ export default async function ArenaPage({
             // UN FILET NEUTRE. Le cadre du tour portait un filet orange : c'est
             // lui que l'œil voyait d'abord, avant les chiffres de l'entreprise.
             // L'orange reste à l'action ; l'ardoise, au-dessus, porte le tour.
-            className="scroll-mt-24 rounded-xl border border-white/10 bg-slate-950/40 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent"
+            // LOT 6E : PLUS DE CADRE AUTOUR DU TOUR. Il enfermait tout l'écran
+            // de décision dans un rectangle de la couleur de la page, et chaque
+            // panneau devenait un cadre dans un cadre. Le tour se pose
+            // directement sur le sol de la page, coiffé du filet du métier
+            // (« LOT 5A ») ; ses panneaux s'en détachent par leur propre sol.
+            className="scroll-mt-24"
           >
             {/* Sur téléphone, le tour est annoncé par la barre du haut et le parcours
                 en cartes : ni cadre, ni « Tour 1 / 6 », ni « en cours » ici. Ne reste
                 de cette ligne que l'état des décisions, en classe. */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5 sm:px-4 max-sm:border-0 max-sm:p-0 max-sm:empty:hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 pb-2 pt-3 max-sm:p-0 max-sm:empty:hidden">
               {/* LE RANG SUR LE TOTAL. « Tour 2 » seul ne dit pas s'il en reste
                   six ou un : la frise le montre en segments, elle ne le chiffre
                   pas, et c'est le bandeau retiré qui portait ce « / N ». Il est
@@ -1519,7 +1549,7 @@ export default async function ArenaPage({
             {!telephone && latestRound !== null ? (
               <a
                 href="#dernier-resultat"
-                className="voile-neutre flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2.5 text-sm transition hover:underline sm:px-4"
+                className="voile-neutre flex items-center justify-between gap-3 rounded-[var(--rayon-panneau)] px-3 py-2.5 text-sm transition hover:underline sm:px-4"
               >
                 <span className="flex items-center gap-2 font-medium text-amber-300">
                   <Icone nom="resultats" className="h-4 w-4" />
@@ -1534,7 +1564,7 @@ export default async function ArenaPage({
               </a>
             ) : null}
 
-            <div className="px-2 py-2.5 sm:p-4 max-sm:px-0">
+            <div className="py-2 sm:py-3">
               {/*
                 UNE ÉTAPE ENTRE LES RÉSULTATS ET LA SAISIE SUIVANTE. Tant que
                 l'élève n'a pas dit qu'il passait au tour suivant, le formulaire

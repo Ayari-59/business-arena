@@ -94,7 +94,8 @@ describe("les décisions majeures passent devant", () => {
     expect(bloc).toContain("tabular-nums");
     // L'intitulé passe à l'encre, en lettres ordinaires : plus de capitales
     // grises de 12 px au-dessus de la décision n°1.
-    expect(bloc).toMatch(/text-base font-semibold text-slate-100/);
+    // (Lot 6E : un cran plus fort encore, slate-50, pour un champ modifiable.)
+    expect(bloc).toMatch(/text-base font-semibold text-slate-50/);
     expect(bloc).not.toMatch(/uppercase/);
   });
 
@@ -214,12 +215,48 @@ describe("les options ponctuelles sont repliées, et elles le disent", () => {
 });
 
 describe("sur la feuille, l'orange est au bouton de l'étape", () => {
-  it("l'étape courante est un état choisi : voile neutre et filet orange plein", () => {
+  /*
+   * LOT 6E, CHANGEMENT DE CHARTE. Cette garde vérifiait que l'étape courante
+   * portait un « filet orange plein » : l'orange disait alors aussi « où je
+   * suis ». Il ne dit plus que l'action ; la navigation passe à la teinte du
+   * métier. La garde est DÉPLACÉE, pas desserrée : elle exige la piste à la
+   * teinte du métier, et refuse tout orange sur l'étape en cours.
+   */
+  it("l'étape courante est une position : la piste s'allume à la teinte du métier, jamais à l'orange", () => {
     const code = codeDe(FORMULAIRE);
-    expect(code).toContain('"voile-neutre border-amber-400 text-slate-100"');
+    const piste = code.slice(
+      code.indexOf('aria-label="Étapes de décision"'),
+      code.indexOf('data-etape={idx("vendre")}'),
+    );
+    expect(piste).toContain("piste-segment");
+    expect(piste).toMatch(/data-etat=\{actif \? "courante" : fait \? "parcourue" : "a-venir"\}/);
+    expect(piste).toContain("var(--metier");
+    expect(piste, "l'étape en cours ne lit plus l'orange").not.toMatch(/amber|accent-plein|orange/);
     expect(code, "plus d'aplat dilué d'orange sur l'onglet d'étape").not.toContain(
       "bg-amber-400/10 text-amber-200",
     );
+    // La piste s'allume au métier, dans la feuille : « parcourue » et « courante ».
+    expect(CSS).toMatch(/\.piste-segment\[data-etat="parcourue"\] \{\s*background-color: var\(--metier/);
+    expect(CSS).toMatch(/\.piste-segment\[data-etat="courante"\] \{[^}]*var\(--metier/);
+  });
+
+  it("le compteur de la piste compte les étapes PARCOURUES, pas des étapes « décidées »", () => {
+    // Toutes les décisions ont une valeur proposée : « 5 / 7 décidées » mentirait.
+    const code = codeDe(FORMULAIRE);
+    expect(code).toMatch(/\{vues\.size\}<\/strong> \/ \{total\}/);
+    expect(code).toContain("parcourue{vues.size > 1");
+    expect(code).not.toMatch(/décidées?\b[^"]*\/ ?\{total\}/);
+  });
+
+  it("« Suivant » dit où il mène, et « Valider et simuler » est le grand bouton orange", () => {
+    const code = codeDe(FORMULAIRE);
+    expect(code).toMatch(/`Suivant\$\{etapesVisibles\[courante \+ 1\] \? ` : \$\{META\[etapesVisibles\[courante \+ 1\]!\]!\.titre\}` : ""\}`/);
+    // Avancer : plein mais neutre, jamais l'aplat orange.
+    const suivant = code.slice(code.indexOf('key="suivant"'), code.indexOf('key="suivant"') + 900);
+    expect(code).toMatch(/bouton\(\{ variante: "secondaire", taille: "l" \}\)\} bouton-suite active:scale/);
+    // Valider : le grand bouton plein.
+    expect(code).toMatch(/aplat\(`\$\{bouton\(\{ taille: "l" \}\)\} bouton-valider`\)/);
+    expect(suivant).not.toContain("bouton-valider");
   });
 
   it("aucune valeur chiffrée de la feuille n'est en orange", () => {

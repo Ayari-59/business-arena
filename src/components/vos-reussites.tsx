@@ -58,7 +58,7 @@ export function VosReussites({
           </span>
         </summary>
 
-        <ul className="mt-3 grid gap-x-6 gap-y-2.5 border-t border-white/10 pt-3 sm:grid-cols-2">
+        <ul className="mt-3 grid gap-x-6 gap-y-2.5 pt-1 sm:grid-cols-2">
           {cases.map(({ reussite, round }) => {
             const acquise = round !== null;
             return (

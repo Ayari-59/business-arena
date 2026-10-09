@@ -6,7 +6,7 @@ import { ventesEstimeesParReference } from "@/config/ventes-estimees";
 import { estimerLeTour, type DossierDEstimation, type ResultatEstime } from "@/engine/estimation";
 import { lignesDuCompte } from "@/components/lecture-des-comptes";
 import { Repliable } from "@/components/repliable";
-import { ValeurRafraichie } from "@/components/chiffre-qui-arrive";
+import { ChiffreQuiArrive, ValeurRafraichie } from "@/components/chiffre-qui-arrive";
 import { dureeDuJeton } from "@/lib/mouvement";
 import { formatEuro, formatUnits } from "@/lib/format";
 import { Icone } from "@/components/icone";
@@ -117,26 +117,55 @@ export function aideDesVentesEstimees(
     : `${vendu}, rien n'a manqué`;
 }
 
-/** Une valeur de l'encart : à l'encre, avec l'éclat du recalcul. */
+/**
+ * UNE VALEUR DE L'ENCART : UN GRAND CHIFFRE QUI VIT (lot 6E).
+ *
+ * Ce sont les chiffres qui bougent pendant qu'on décide, et ils étaient en
+ * 16 px : on réglait un prix sans voir le résultat bouger. Ils passent en
+ * grands chiffres condensés (`.chiffre-estime`, 28 à 40 px), avec la lueur
+ * NEUTRE du cockpit (`.chiffre-cle`), et réagissent à chaque saisie dans la
+ * grammaire du lot 5B : le chiffre MONTE ou DESCEND de l'ancienne valeur à la
+ * nouvelle (`ChiffreQuiArrive`, durée `--duree-chiffre`), et l'anneau bref du
+ * recalcul le signale (`ValeurRafraichie`). Le premier rendu ne bouge pas : rien
+ * n'a encore changé. Toujours à l'encre : une estimation n'est pas un résultat.
+ */
 function Chiffre({
   titre,
-  texte,
+  valeur,
+  ecrire,
+  unite,
   alerte = false,
 }: {
   titre: string;
-  texte: string;
-  /** Un chiffre qui demande à être lu (une trésorerie sous zéro) : sa pastille neutre. */
+  valeur: number;
+  ecrire: (n: number) => string;
+  /** L'unité posée après le chiffre, en petit (le stock en unités du métier). */
+  unite?: string;
+  /** Un chiffre qui demande à être lu (une trésorerie sous zéro) : il le dit en toutes lettres. */
   alerte?: boolean;
 }) {
+  const texte = ecrire(valeur);
   return (
-    <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{titre}</dt>
-      <dd
-        className={`mt-0.5 text-base font-semibold tabular-nums text-slate-100 ${
-          alerte ? "pastille-etat rounded-full px-2.5 py-0.5" : ""
-        }`}
-      >
-        <ValeurRafraichie valeur={texte}>{texte}</ValeurRafraichie>
+    <div className="min-w-0">
+      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-300">{titre}</dt>
+      <dd className="mt-1 text-slate-50">
+        <ValeurRafraichie valeur={texte} className="chiffre-cle">
+          <ChiffreQuiArrive valeur={valeur} format={ecrire} className="chiffre-estime" />
+          {unite ? (
+            <>
+              {" "}
+              <span className="text-base font-medium text-slate-300">{unite}</span>
+            </>
+          ) : null}
+        </ValeurRafraichie>
+        {alerte ? (
+          <span className="mt-1.5 flex">
+            {" "}
+            <span className="pastille-etat rounded-full px-2 py-0.5 text-xs font-medium text-slate-100">
+              sous zéro
+            </span>
+          </span>
+        ) : null}
       </dd>
     </div>
   );
@@ -166,22 +195,27 @@ export function EncartResultatEstime({
     <section
       data-resultat-estime
       aria-label={`${TITRE_ESTIME} · ${SOUS_TITRE_ESTIME}`}
-      className="encadre-neutre rounded-lg px-3 py-3 sm:px-4"
+      // UN PANNEAU DU COCKPIT (lot 6E) : son sol et son arête, pas un encadré.
+      className="panneau px-4 py-3.5 sm:px-5 sm:py-4"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-        {TITRE_ESTIME} <span className="font-normal text-slate-400">· {SOUS_TITRE_ESTIME}</span>
+      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-200">
+        <Icone nom="resultats" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
+        {TITRE_ESTIME} <span className="font-normal text-slate-300">· {SOUS_TITRE_ESTIME}</span>
       </p>
-      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
-        <Chiffre titre="Chiffre d'affaires" texte={formatEuro(estime.chiffreDAffaires)} />
-        <Chiffre titre="Résultat net" texte={formatEuro(estime.resultatNet)} />
+      <dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
+        <Chiffre titre="Chiffre d'affaires" valeur={estime.chiffreDAffaires} ecrire={formatEuro} />
+        <Chiffre titre="Résultat net" valeur={estime.resultatNet} ecrire={formatEuro} />
         <Chiffre
           titre="Trésorerie fin de tour"
-          texte={formatEuro(estime.tresorerieNette)}
+          valeur={estime.tresorerieNette}
+          ecrire={formatEuro}
           alerte={tresorerieNegative}
         />
         <Chiffre
           titre="Stock final"
-          texte={`${formatUnits(estime.stockFinal.unites)} ${v.units}`}
+          valeur={estime.stockFinal.unites}
+          ecrire={formatUnits}
+          unite={v.units}
         />
       </dl>
       {/*

@@ -602,11 +602,23 @@
      mieux il tient le 3:1 du 1.4.11 — la montée ne fait que servir. */
   --filet-carte: color-mix(in oklab, #fff 16%, transparent);
   /* LOT 6A — TROIS PROFONDEURS DE SOL, ET NON UNE. La page du cockpit est le
-     plus profond (#0b2545), le panneau relevé (#13355f), le champ creusé
-     (#1b416f). Nommées ici pour que le relief se règle d'un endroit. */
-  --sol-page: #0b2545;
+     plus profond, le panneau relevé, le champ creusé. Nommées ici pour que le
+     relief se règle d'un endroit.
+     LOT 6E — ÉCARTÉES, ET ENFIN LUES. Le lot 6A les avait nommées sans que
+     rien ne s'en serve : la page restait #0b2545 et les panneaux de la feuille
+     prenaient… #0b2545 aussi (`bg-slate-950`), d'où « tout se fond dans un même
+     bleu ». Les trois niveaux sont maintenant consommés (bloc « LOT 6E ») et
+     écartés là où le texte le permet :
+       · la page DESCEND (#0b2545 → #061529) : page / panneau passe de 1,25 à
+         1,48 pour 1, et tous les textes posés sur la page y gagnent ;
+       · le panneau RESTE #13355f : c'est le sol sur lequel le rouge de
+         résultat tient tout juste (4,58 pour 1) ; l'éclaircir d'un cran le
+         ferait passer sous 4,5 ;
+       · le champ MONTE (#1b416f → #234c80) : champ / panneau passe de 1,19 à
+         1,42, et le gris des unités (#c2bcb2) y tient encore 4,6 pour 1. */
+  --sol-page: #061529;
   --sol-panneau: #13355f;
-  --sol-champ: #1b416f;
+  --sol-champ: #234c80;
   /* LA LUEUR D'UN CHIFFRE CLÉ. Un halo doux, NEUTRE (blanc cassé à 15 %) :
      la charte interdit un halo coloré (un résultat vert ou rouge garde sa
      couleur pleine, sans dilution). La lueur ne colore donc jamais — elle
@@ -807,7 +819,10 @@
    lecture qu'il contient restent du papier (`.papier`, un objet aux couleurs
    en dur), posés sur ce bureau marine. */
 body:has(main[data-ecran-de-jeu]) {
-  background-color: var(--marine, #0b2545);
+  /* LOT 6E : le sol de la page, le plus profond des trois (voir « TROIS
+     PROFONDEURS DE SOL »). Il était le marine des bandes, #0b2545 : celui-là
+     même des panneaux de la feuille, d'où un écran d'un seul bleu. */
+  background-color: var(--sol-page, #061529);
 }
 
 .chiffre-cle {
@@ -1110,6 +1125,12 @@ body {
  * tient plus que dans le filet, plein (`border-amber-400`). Mesuré : l'encre
  * orange y tient 5,0 et 4,8 pour 1, le texte secondaire 6,3 et 6,1, l'or
  * foncé 4,8 et 4,6.
+ *
+ * LOT 6E : LE FILET ORANGE N'EST PLUS QU'À LA DÉCISION. L'étape en cours,
+ * l'onglet actif et la ligne du joueur sont des POSITIONS : ils ont quitté
+ * l'orange pour la teinte du métier (voir « LOT 6E » en fin de feuille). Une
+ * option COCHÉE et le niveau retenu sont des DÉCISIONS : ils gardent ce voile
+ * et ce filet orange, plein.
  *
  * Les dilutions fortes (40 % et plus) sont des barres et des points, pas des
  * fonds de texte : elles prennent l'aplat d'accent, l'orange vif, PLEIN (le
@@ -3419,4 +3440,308 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-display) {
   :is(.bouton-plein, .bouton-filet):active:not(:disabled) {
     transform: none;
   }
+}
+
+/* ===========================================================================
+ * LOT 6E : L'ÉNERGIE DE L'ARÈNE.
+ *
+ * Le cockpit (lot 6A) avait le fond, le relief et les chiffres qui vivent ;
+ * le propriétaire y voyait encore quatre freins : un bouton « Valider et
+ * simuler » fantôme, un fond et des panneaux du même bleu, des chiffres
+ * estimés en 16 px, une teinte d'entreprise réduite à un filet. Ce bloc porte
+ * les règles qui en sortent ; les jetons de sol ont été changés à LEUR place
+ * (« TROIS PROFONDEURS DE SOL », bloc « LOT 6A »).
+ *
+ * CE QUI CHANGE DANS LA CHARTE, EXPLICITEMENT. L'orange disait deux choses :
+ * l'action (un bouton) et la position (l'étape en cours, l'onglet actif, « où
+ * je suis »). Il ne dit plus que l'action. LA NAVIGATION PREND LA TEINTE DU
+ * MÉTIER (`--metier`) : l'étape du tour, l'étape de la feuille, l'onglet actif,
+ * le temps « Décision » du parcours sur téléphone. Une OPTION COCHÉE garde
+ * l'orange : c'est une DÉCISION, la réponse qu'on donne, ce que « Valider »
+ * enverra au marché — la charte range la décision avec l'action depuis le
+ * début (« Action / décision »). La position dit où l'on est ; la décision dit
+ * ce qu'on fait. Les gardes : `tests/architecture/navigation-au-metier.test.ts`
+ * (la navigation ne lit plus l'orange) et `voile-d-etat.test.ts` (l'option
+ * cochée garde son filet orange plein).
+ *
+ * LA RÈGLE DES BORDURES, UNE SEULE (point 6) :
+ *   · un PANNEAU se détache par son SOL et son ARÊTE DE LUMIÈRE, pas par un
+ *     cadre (`.panneau`, et `.carte` dans le cockpit) ;
+ *   · un CADRE ne sert qu'à un CHAMP, ou à un élément CLIQUABLE qui en a
+ *     besoin (une option, un bouton à filet, l'action d'une carte) ;
+ *   · un rayon pour les panneaux (`--rayon-panneau`), un pour les champs
+ *     (`--rayon-champ`) ;
+ *   · jamais de cadre dans un cadre ; plus de pointillés (un repli fermé
+ *     n'est pas vide, il est rangé — lot 4A).
+ * Les tableaux financiers (lot 4A) et la matière `.papier` n'en relèvent pas.
+ * ======================================================================== */
+
+:root {
+  /* L'ARÊTE DE LUMIÈRE d'un panneau du cockpit : un pixel clair en tête, la
+     lumière vient d'en haut. Un blanc écrit en clair (#fff), hors du jeu des
+     variables qui s'inversent (voir « UNE OMBRE S'INVERSE, UN REFLET NON »). */
+  --arete-lumiere: color-mix(in oklab, #fff 18%, transparent);
+  /* Un rayon par famille de surface, et pas un de plus. */
+  --rayon-panneau: var(--radius-xl);
+  --rayon-champ: var(--radius-lg);
+  /* LE LISERÉ D'UN CHAMP MODIFIABLE : 7,1 pour 1 sur le panneau (#13355f),
+     6,1 sur la page, 5,0 sur le fond du champ lui-même. Le contour d'un
+     contrôle demande 3 pour 1 (WCAG 1.4.11) : il est franchi deux fois. */
+  --filet-champ: #b4c6e0;
+}
+
+/* ─────────────────────── LE PANNEAU : SOL ET ARÊTE ──────────────────────── */
+
+/* Un panneau du cockpit (les familles de la feuille de décision, la bande de
+   marché, le résultat estimé) : le sol relevé, la lumière d'en haut, l'ombre
+   qui le décolle de la page — et la teinte du métier en tête, dans une partie.
+   Aucun cadre. */
+.panneau {
+  border-radius: var(--rayon-panneau);
+  background-color: var(--sol-panneau, #13355f);
+  background-image: linear-gradient(to bottom, var(--lumiere-carte), transparent 55%);
+  box-shadow:
+    inset 0 1px 0 var(--arete-lumiere),
+    var(--ombre-carte);
+}
+[data-metier] .panneau {
+  box-shadow:
+    inset 0 2px 0 var(--metier, var(--arete-lumiere)),
+    var(--ombre-carte);
+}
+/* Un panneau posé dans un panneau ne redit ni le sol ni l'ombre : il n'y a
+   pas de cadre dans un cadre, et pas de relief dans un relief. */
+.panneau .panneau {
+  background: none;
+  box-shadow: none;
+}
+
+/* LES CARTES DU COCKPIT PERDENT LEUR CADRE. Le filet d'une carte (lot 6A, 16 %)
+   doublait sur le marine ce que le sol et l'arête disent déjà : il devient
+   transparent (sa largeur reste, rien ne bouge d'un pixel). Ce qui garde son
+   trait : la carte CLIQUABLE et celle qui porte l'action (le filet orange de
+   six pixels, « LA CARTE QUI MÈNE QUELQUE PART »), et le papier, qui est un
+   objet. L'arête, elle, est déjà là : le filet du métier en tête (« LOT 5A »).
+   Une carte dans une carte s'aplatit. */
+[data-ecran-de-jeu] .carte:not(.papier, a, :has(.bouton-plein)) {
+  border-color: transparent;
+}
+[data-ecran-de-jeu] .carte .carte:not(.papier) {
+  background-image: none;
+  box-shadow: none;
+}
+
+/* ──────────────── LE CHAMP MODIFIABLE SAUTE AUX YEUX (point 5) ───────────── */
+
+/* Un champ qu'on peut modifier se voit AVANT qu'on y touche : un fond nettement
+   plus clair que le panneau (le sol du champ, #234c80 : 1,42 pour 1 contre le
+   panneau, 2,1 contre la page), un liseré clair (7,1 pour 1), le rayon des
+   champs. Le chiffre y tient 7,8 pour 1, l'unité 6,4 (#e2ddd3) ou 4,6
+   (#c2bcb2). Une information CONSULTABLE reste plate et sans cadre : c'est la
+   différence qui doit se voir d'un coup d'œil. Garde :
+   `tests/architecture/champ-modifiable.test.ts`. Le papier garde sa case
+   claire (`.papier .champ`), et le champ facultatif son fond de panneau. */
+[data-ecran-de-jeu] .champ:not(.papier .champ) {
+  border-color: var(--filet-champ);
+  border-radius: var(--rayon-champ);
+}
+[data-ecran-de-jeu] .champ:not(.papier .champ):not(.champ-facultatif) {
+  background-color: var(--sol-champ, #234c80);
+}
+/* LE FOCUS S'ALLUME : le liseré passe à l'orange du focus, doublé d'un anneau
+   plein d'un pixel (l'accent ne se dilue pas), par-dessus le halo du lot 5B. */
+[data-ecran-de-jeu] .champ:not(.papier .champ):is(:focus, :focus-within) {
+  border-color: var(--focus-champ, var(--color-amber-400));
+  box-shadow:
+    var(--creux-champ),
+    0 0 0 1px var(--focus-champ, var(--color-amber-400)),
+    0 0 0 5px color-mix(in oklab, var(--focus-champ, var(--color-amber-400)) 22%, transparent);
+}
+
+/* ─────────────── LES TROIS BOUTONS DU PIED DE LA FEUILLE (point 1) ─────────── */
+
+/* « VALIDER ET SIMULER » : le geste qui fait répondre le marché. Le grand
+   bouton plein (`.bouton-plein.shadow-lg`), un cran plus grand encore : c'est
+   la fin du parcours, le seul aplat orange de son écran. */
+/* Sur téléphone, il garde la hauteur du pied fixe : une carte de décision
+   tient sur un écran (lot 3A), et la dernière, le récapitulatif, n'a pas un
+   pixel à céder. Il est déjà le seul aplat de l'écran, en pleine largeur. */
+@media (min-width: 640px) {
+  .bouton-valider {
+    min-height: 3.5rem;
+    padding-inline: 2rem;
+  }
+  .bouton-valider.bouton-plein.shadow-lg {
+    font-size: 1.25rem;
+  }
+}
+
+/* « SUIVANT : TRÉSORERIE » : ce qui fait AVANCER, sans déclencher le marché.
+   Plein mais neutre : le bleu de la gamme du tableau (#2d5385), un liseré
+   clair, l'encre blanc cassé (7,0 pour 1). Il se voit, il ne crie pas. */
+.bouton-suite {
+  border: 1px solid var(--filet-champ);
+  background-color: var(--color-slate-700);
+  color: var(--color-slate-50);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.bouton-suite:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--color-slate-700) 85%, #fff);
+}
+
+/* « PRÉCÉDENT » : discret, un lien de retour, sans cadre ni fond. */
+.bouton-retour {
+  color: var(--color-slate-300);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+}
+.bouton-retour:hover:not(:disabled) {
+  color: var(--color-slate-50);
+  text-decoration-color: currentColor;
+}
+.bouton-retour:disabled {
+  color: var(--color-slate-500);
+  text-decoration-line: none;
+}
+
+/* ─────────── LA PISTE DES ÉTAPES DE LA FEUILLE (points 3 et 4) ──────────── */
+
+/* Les sept familles de décision se lisaient comme une seconde rangée
+   d'onglets, au même rang que Situation / Analyser / Décider. Elles deviennent
+   une PISTE, au second rang : un segment par étape, qui s'allume dans la
+   teinte du métier quand on y est passé. Le segment de l'étape en cours est
+   plus haut ; ceux qui restent sont le bleu de la gamme. */
+.piste-segment {
+  display: block;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background-color: var(--color-slate-700);
+}
+.piste-segment[data-etat="parcourue"] {
+  background-color: var(--metier, var(--color-slate-400));
+}
+.piste-segment[data-etat="courante"] {
+  height: 0.5rem;
+  background-color: var(--metier, var(--color-slate-400));
+  box-shadow: 0 0 0 2px var(--sol-page, #061529), 0 0 0 3px var(--metier, var(--color-slate-400));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .piste-segment {
+    transition:
+      background-color var(--duree-passage) var(--courbe-passage),
+      height var(--duree-passage) var(--courbe-passage);
+  }
+}
+
+/* ───────────── LES GRANDS CHIFFRES DU RÉSULTAT ESTIMÉ (point 2) ──────────── */
+
+/* Les quatre chiffres qui bougent pendant qu'on décide : le condensé du site,
+   de 32 à 40 px sur ordinateur, à l'encre, avec la lueur NEUTRE du cockpit.
+   Une estimation n'est pas un résultat : ni vert, ni rouge, ni orange. */
+.chiffre-estime {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 1.2rem + 1.4vw, 2.5rem);
+  line-height: 1;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ──────────────── CE QUI A FAIT LE RÉSULTAT (point 7) ────────────────────── */
+
+/* La cascade du verdict : une barre par marche, posée à partir de là où la
+   précédente s'arrête. Bleu donnée pour le chiffre d'affaires, gris ardoise
+   pour ce qui s'en retranche, et le résultat dans sa couleur de résultat. */
+.cascade-barre {
+  display: block;
+  height: 0.625rem;
+  border-radius: 2px;
+}
+
+@media print {
+  .panneau {
+    background-image: none;
+    box-shadow: none;
+  }
+}
+
+/* L'accordéon d'un tour passé est désormais un panneau (lot 6E) : la colonne
+   gelée de ses tableaux reprend exactement son sol. */
+[data-tour-passe] {
+  --fond-du-tableau: var(--sol-panneau, #13355f);
+}
+
+/* LES ENCADRÉS DU COCKPIT NE SONT PLUS DES CADRES (lot 6E). Le voile neutre
+   suffit à poser un encadré sur son panneau ; le filet gris tout autour
+   doublait ce que le voile disait déjà. Reste le seul trait qui a un SENS : le
+   filet de gauche d'un résultat (vert, rouge) ou d'une distinction (or). Une
+   pastille se lit à son voile et à son point plein, pas à un liseré. Le
+   papier garde sa matière. */
+[data-ecran-de-jeu] :is(.encadre-neutre, .encadre-gain, .encadre-perte, .encadre-distinction):not(.papier *) {
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+[data-ecran-de-jeu] .encadre-neutre:not(.papier *),
+[data-ecran-de-jeu] :is(.pastille-etat, .pastille-attente, .pastille-gain, .pastille-perte):not(.papier *) {
+  border-color: transparent;
+}
+
+/* ─────────── LES CHOIX DE LA FEUILLE : RADIOS ET CASES (point 5) ─────────── */
+
+/* Le rond natif d'un bouton radio, et la case native, se dessinaient en gris
+   sombre sur le marine (`color-scheme: dark`) : presque invisibles, alors que
+   ce sont des variables modifiables comme les autres. Ils prennent la
+   grammaire du champ : le fond du champ (#234c80), le liseré clair (7,1 pour 1
+   sur le panneau), le rayon des champs pour la case, le rond pour le radio.
+   COCHÉS, ILS PRENNENT L'ORANGE PLEIN : une option cochée est une DÉCISION
+   (règle du lot 6E, en tête de ce bloc), comme le filet de l'option qui la
+   porte. Le rond se remplit d'un point orange, la case d'un aplat orange et
+   d'une coche marine (6,5 pour 1). Les contrôles masqués (`sr-only`, `hidden`,
+   les cases que le parcours sur téléphone remplace par deux boutons) et le
+   papier gardent leur forme. Le focus clavier reste l'anneau du site. */
+[data-ecran-de-jeu] :is(input[type="radio"], input[type="checkbox"]):not(.papier *):not(.sr-only):not([hidden]) {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  flex-shrink: 0;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border: 2px solid var(--filet-champ);
+  background-color: var(--sol-champ, #234c80);
+  cursor: pointer;
+}
+[data-ecran-de-jeu] input[type="radio"]:not(.papier *):not(.sr-only):not([hidden]) {
+  border-radius: 9999px;
+}
+[data-ecran-de-jeu] input[type="checkbox"]:not(.papier *):not(.sr-only):not([hidden]) {
+  border-radius: var(--rayon-champ);
+}
+[data-ecran-de-jeu] :is(input[type="radio"], input[type="checkbox"]):checked:not(.papier *):not(.sr-only):not([hidden]) {
+  border-color: var(--accent-plein);
+}
+[data-ecran-de-jeu] input[type="radio"]:checked:not(.papier *):not(.sr-only):not([hidden]) {
+  background-image: radial-gradient(circle, var(--accent-plein) 0 42%, transparent 46%);
+}
+[data-ecran-de-jeu] input[type="checkbox"]:checked:not(.papier *):not(.sr-only):not([hidden]) {
+  background-color: var(--accent-plein);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%230b2545' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+}
+[data-ecran-de-jeu] :is(input[type="radio"], input[type="checkbox"]):disabled:not(.papier *):not(.sr-only):not([hidden]) {
+  border-color: var(--color-slate-600);
+  background-color: transparent;
+  cursor: not-allowed;
+}
+
+/* UN SEUL ANNEAU AU FOCUS D'UN CHAMP. Le liseré allumé et l'anneau plein sont
+   portés par l'enveloppe du champ (`.champ:focus-within`) ; le contrôle nu
+   qu'elle contient y ajoutait l'anneau général du site, un second cadre orange
+   DANS le premier. Le contrôle s'en passe, l'enveloppe le dit pour lui. */
+[data-ecran-de-jeu] .champ:not(.papier .champ) :is(input, select, textarea):focus-visible {
+  outline: none;
 }

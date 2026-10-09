@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { formatEuro } from "@/lib/format";
 import { Signe } from "@/components/signe";
 import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
@@ -36,7 +37,14 @@ export function RevelationDuTour({
   nouveau,
   rang,
   ipg,
+  explication = null,
 }: {
+  /**
+   * CE QUI A FAIT LE RÉSULTAT (lot 6E) : la cascade du compte et les causes
+   * chiffrées, sous la phrase du verdict. Fournie par l'appelant, qui a le
+   * tour entier ; ce bloc ne lit que le compte de résultat.
+   */
+  explication?: ReactNode;
   /** Le tour révélé, nommé dans la langue du scénario (« Trimestre 3 »). */
   periode: string;
   tour: IncomeStatement;
@@ -108,6 +116,8 @@ export function RevelationDuTour({
       <p className="mt-2 max-w-prose text-sm leading-relaxed text-slate-200 sm:mt-3">
         {v.phrase}
       </p>
+
+      {explication ? <div className="mt-3 sm:mt-4">{explication}</div> : null}
 
       {rang || (ipg !== null && ipg !== undefined) ? (
         <p className="mt-1.5 text-xs text-slate-400">

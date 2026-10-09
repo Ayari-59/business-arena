@@ -13,7 +13,8 @@ export function ArenaLayout({
   tabs,
   children,
   defaultTab,
-  accentClass = "bg-amber-400",
+  // LOT 6E : l'onglet actif dit où l'on est, à la teinte du métier ; plus l'orange.
+  accentClass = "bg-[color:var(--metier,var(--color-slate-300))]",
 }: {
   tabs: ArenaTab[];
   children: Record<string, ReactNode>;

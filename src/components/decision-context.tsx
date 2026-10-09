@@ -36,14 +36,21 @@ export function DilemmaCard({
       entière teintée en ambre criait plus fort que la question qu'elle porte, et
       passait devant les panneaux qui servent à y répondre.
     */
-    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400 bg-slate-900 p-3 max-sm:rounded-xl max-sm:border-l max-sm:border-l-white/10 max-sm:p-4 sm:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90">{title}</h3>
+    /*
+      LOT 6E : l'arbitrage n'est pas un bouton. Son liseré et son titre étaient à
+      l'orange de l'action ; ils passent à la teinte du métier, en tête d'un
+      panneau sans cadre, comme les autres panneaux du cockpit.
+    */
+    <div className="panneau p-3 max-sm:p-4 sm:p-5">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--metier,var(--color-slate-300))]">
+        {title}
+      </h3>
       {/* La question est le point d'arrivée de l'écran : elle se lit avant tout
           le reste de la carte. */}
       <p className="mt-1.5 text-base font-semibold leading-snug text-slate-50">{question}</p>
       <div className={`mt-3 grid gap-2 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {routes.map((route) => (
-          <div key={route.label} className="rounded-lg border border-white/5 bg-slate-950 p-3 max-sm:rounded-xl max-sm:border-white/10 sm:p-4">
+          <div key={route.label} className="rounded-lg bg-slate-950/50 p-3 sm:p-4">
             <p className="text-sm font-medium text-slate-100">{route.label}</p>
             {/*
               La COULEUR EST DANS LA FLÈCHE, pas dans la phrase. Deux blocs de
@@ -170,8 +177,8 @@ function Panneau({
       {children}
     </Tiroir>
   ) : (
-    <div className="rounded-lg border border-white/5 bg-slate-950 p-3 max-sm:rounded-xl max-sm:border-white/10 max-sm:p-4 sm:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 max-sm:text-sm max-sm:tracking-etiquette">
+    <div className="panneau p-3 max-sm:p-4 sm:p-5">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300 max-sm:text-sm max-sm:tracking-etiquette">
         {titre}
       </h3>
       {children}
@@ -226,7 +233,7 @@ export function DetailParClientele({
                 return (
                   <li
                     key={seg.name}
-                    className="rounded-lg border border-white/5 bg-slate-900/60 p-3 sm:p-4"
+                    className="rounded-lg bg-slate-950/50 p-3 sm:p-4"
                   >
                     <p className="text-sm font-semibold text-slate-100">{nom}</p>
                     {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}

@@ -17,7 +17,8 @@ import type { NomDePlume } from "@/lib/plumes";
  *   1. ce qu'on révèle (« Tour 3 · le marché a répondu ») ;
  *   2. LE chiffre, en très grand, blanc cassé, avec sa flèche et son écart
  *      signé en vert ou en rouge francs ; pas de fond teinté ;
- *   3. le rang en or avec sa médaille, et le verdict en une phrase.
+ *   3. la cause (le verdict en une phrase, et ce qui a fait le résultat :
+ *      lot 6E), puis la place (le rang en or avec sa médaille).
  * Puis les actions.
  *
  * LA MÊME GRAMMAIRE SERT DEUX FOIS. En plein écran à la fin d'un tour de
@@ -33,6 +34,11 @@ import type { NomDePlume } from "@/lib/plumes";
  * montrée : un écran rouvert ou rechargé reste immobile. Il faut pour cela que
  * l'appelant donne le NOMBRE à côté de sa mise en forme (`nombre`) ; sans lui,
  * le chiffre s'affiche posé, comme avant.
+ *
+ * LOT 6E : LA CAUSE S'EST ÉTOFFÉE (la cascade et les causes chiffrées) ; pour
+ * que l'action reste dans la fenêtre d'un écran de 1280 × 800, le chiffre se
+ * pose à 72 px (le bas de la fourchette 72 à 96 du lot 3A), le rang à 36 px, et
+ * l'IPG se lit sur la ligne du rang.
  *
  * LE CONTENU EST COMPLET À L'ÉTAT FINAL, MÊME SANS ANIMATION. Les trois temps
  * ne font qu'apparaître ce qui est déjà dans la page (1,3 s en tout, voir
@@ -121,6 +127,7 @@ export function VerdictDuMarche({
   ipg = null,
   phrase = null,
   complement = null,
+  explication = null,
   actions = null,
   animer = true,
 }: {
@@ -137,6 +144,12 @@ export function VerdictDuMarche({
   phrase?: string | null;
   /** Sous le chiffre, en petit : les autres chiffres du moment (CA, trésorerie). */
   complement?: ReactNode;
+  /**
+   * CE QUI A FAIT LE RÉSULTAT (lot 6E) : la cascade et les causes chiffrées,
+   * lues dans les comptes du tour. Elle vient avec la phrase du verdict, APRÈS
+   * le chiffre et AVANT la place : le chiffre, puis la cause, puis le rang.
+   */
+  explication?: ReactNode;
   actions?: ReactNode;
   /** Les trois temps se jouent ; faux, tout s'affiche d'un coup. */
   animer?: boolean;
@@ -148,7 +161,7 @@ export function VerdictDuMarche({
       data-verdict-du-marche={forme}
       className={`${animer ? "rituel" : ""} ${
         ecran
-          ? "mx-auto w-full max-w-3xl text-center"
+          ? "mx-auto w-full max-w-4xl text-center"
           : "grid gap-x-8 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto]"
       }`}
     >
@@ -169,14 +182,14 @@ export function VerdictDuMarche({
       </div>
 
       {/* DEUXIÈME TEMPS : le chiffre, et d'où il vient. */}
-      <div data-temps="2" role="status" aria-live="polite" className={ecran ? "mt-8 sm:mt-10" : ""}>
+      <div data-temps="2" role="status" aria-live="polite" className={ecran ? "mt-4 sm:mt-5" : ""}>
         <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
           {chiffre.libelle}
         </p>
         <p
           className={`flex items-center gap-3 font-display font-semibold leading-none tabular-nums text-slate-50 ${
             ecran
-              ? "mt-2 justify-center text-7xl sm:text-8xl"
+              ? "mt-2 justify-center text-7xl"
               : "mt-1 text-[clamp(2rem,1.6rem_+_1.2vw,2.5rem)]"
           }`}
         >
@@ -206,27 +219,39 @@ export function VerdictDuMarche({
         {complement}
       </div>
 
-      {/* TROISIÈME TEMPS : le rang en or, et le verdict en une phrase. */}
-      {rang || phrase ? (
+      {/* TROISIÈME TEMPS : la cause, puis la place. Le verdict en une phrase et ce
+          qui a fait le résultat (lot 6E) viennent AVANT le rang en or : le
+          chiffre, puis la cause, puis la place. */}
+      {rang || phrase || explication ? (
         <div
           data-temps="3"
           className={
             ecran
-              ? "mx-auto mt-8 max-w-xl border-t border-white/10 pt-6 sm:mt-10"
+              ? "mx-auto mt-5 max-w-4xl border-t border-white/10 pt-4 sm:mt-6"
               : "self-end sm:max-w-sm"
           }
         >
+          {phrase ? (
+            <p
+              className={`${
+                ecran ? "mx-auto max-w-3xl text-base leading-relaxed sm:text-lg" : "text-sm leading-relaxed"
+              } text-slate-200`}
+            >
+              {phrase}
+            </p>
+          ) : null}
+          {explication ? <div className={phrase ? "mt-5" : ""}>{explication}</div> : null}
           {rang ? (
             <p
-              className={`flex items-center gap-3 font-display font-semibold leading-none tabular-nums ${
-                ecran ? "justify-center text-4xl sm:text-5xl" : "text-2xl"
+              className={`${phrase || explication ? (ecran ? "mt-5" : "mt-4") : ""} flex items-center gap-3 font-display font-semibold leading-none tabular-nums ${
+                ecran ? "justify-center text-4xl" : "text-2xl"
               }`}
             >
               <PastilleDeRang
                 rang={rang.place}
                 moi
                 doublon
-                className={ecran ? "text-3xl sm:text-4xl" : "text-xl"}
+                className={ecran ? "text-3xl" : "text-xl"}
               />
               <span className="texte-or">
                 {ordinal(rang.place)} sur {rang.sur}
@@ -234,19 +259,17 @@ export function VerdictDuMarche({
               <span className="sr-only">
                 {metal ? `, médaille ${metal === "or" ? "d'or" : `de ${metal}`}` : ""}
               </span>
+              {/* Sur l'écran du rituel, l'IPG se lit sur la ligne du rang (lot 6E) :
+                  une ligne de moins, pour que l'action reste dans la fenêtre. */}
+              {ecran && ipg !== null ? (
+                <span className="self-end pb-1 font-sans text-sm font-normal text-slate-400">
+                  IPG {formatDecimal(ipg, 0)}
+                </span>
+              ) : null}
             </p>
           ) : null}
-          {rang && ipg !== null ? (
+          {rang && ipg !== null && !ecran ? (
             <p className="mt-2 text-sm tabular-nums text-slate-400">IPG {formatDecimal(ipg, 0)}</p>
-          ) : null}
-          {phrase ? (
-            <p
-              className={`${rang ? "mt-4" : ""} ${
-                ecran ? "text-base leading-relaxed sm:text-lg" : "text-sm leading-relaxed"
-              } text-slate-200`}
-            >
-              {phrase}
-            </p>
           ) : null}
         </div>
       ) : null}
@@ -256,7 +279,7 @@ export function VerdictDuMarche({
           data-temps="4"
           className={
             ecran
-              ? "mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center"
+              ? "mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center"
               : "flex flex-wrap gap-3 sm:col-span-2"
           }
         >
