@@ -25,6 +25,13 @@ export function CompetitiveBenchmark({
   // dit ce qu'il veut dire. (Il passait au vert au-dessus de 105.)
   const idxTone = "text-slate-100";
 
+  // BARRES DE COMPARAISON DE LA PART DE MARCHÉ. La donnée posée en chiffre ne
+  // dit pas d'un coup d'œil qui pèse : une barre à côté le montre. Charte : la
+  // barre du joueur est en bleu donnée (série principale), celle des autres en
+  // gris ardoise neutre (seconde série) ; aucune teinte de métier ni d'accent.
+  // L'échelle est relative à la plus grande part, pour que les écarts se lisent.
+  const maxShare = Math.max(0.0001, ...benchmark.competitors.map((c) => c.marketShare));
+
   return (
     <section>
       <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400 sm:mb-3">
@@ -110,7 +117,23 @@ export function CompetitiveBenchmark({
                   {c.avgPrice !== null ? formatEuro(c.avgPrice) : "—"}
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">
-                  {formatPercent(c.marketShare)}
+                  <span className="block">{formatPercent(c.marketShare)}</span>
+                  {/* La barre, sous le chiffre : bleu donnée pour vous, gris
+                      ardoise neutre pour les autres (charte). La valeur reste
+                      écrite au-dessus — la couleur ne dit rien seule. */}
+                  <span
+                    aria-hidden
+                    className="mt-1 ml-auto block h-1 w-16 rounded-full bg-slate-800"
+                  >
+                    <span
+                      className="block h-1 rounded-full"
+                      style={{
+                        width: `${Math.max(2, Math.min(100, (c.marketShare / maxShare) * 100))}%`,
+                        marginLeft: "auto",
+                        background: c.isPlayer ? "var(--donnee)" : "var(--donnee-2)",
+                      }}
+                    />
+                  </span>
                 </td>
                 <td className="py-2 text-right tabular-nums">{formatEuro(c.revenue)}</td>
               </tr>

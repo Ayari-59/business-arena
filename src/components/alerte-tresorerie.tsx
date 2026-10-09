@@ -1,6 +1,7 @@
 import { formatEuro } from "@/lib/format";
 import type { GameView } from "@/services/game-view.service";
 import { DemandeSubvention } from "@/components/demande-subvention";
+import { Jauge } from "@/components/jauge";
 import { resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
 import { Icone } from "@/components/icone";
 
@@ -94,6 +95,34 @@ export function AlerteTresorerie({
         <strong className="tabular-nums">{formatEuro(alerte.plafondDecouvert)}</strong> :{" "}
         <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong> à trouver.
       </p>
+      {/* ── LA TRÉSORERIE EN DÉCOUVERT, EN JAUGE ──
+          Le découvert creusé au-delà de ce que la banque consent : la barre le
+          montre, les chiffres le disent (jauge.tsx). Le rouge est ici celui
+          d'un résultat franc — un vrai découvert —, pas d'un niveau à juger. */}
+      <div className="mt-2.5">
+        <Jauge
+          libelle="Trésorerie nette"
+          valeur={formatEuro(alerte.tresorerieNette)}
+          borne={`autorisé jusqu'à ${formatEuro(-alerte.plafondDecouvert)}`}
+          fraction={
+            alerte.plafondDecouvert > 0
+              ? Math.abs(alerte.tresorerieNette) /
+                Math.max(Math.abs(alerte.tresorerieNette), alerte.plafondDecouvert)
+              : 1
+          }
+          ton="alerte"
+          repere={
+            alerte.plafondDecouvert > 0
+              ? {
+                  fraction:
+                    alerte.plafondDecouvert /
+                    Math.max(Math.abs(alerte.tresorerieNette), alerte.plafondDecouvert),
+                  label: "découvert autorisé",
+                }
+              : undefined
+          }
+        />
+      </div>
       <p className="mt-1.5 text-sm leading-relaxed text-amber-100/90">
         {restants <= 1
           ? "Encore un tour dans cet état et votre entreprise sera à l'arrêt."

@@ -1,5 +1,6 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { Signe } from "@/components/signe";
+import { Jauge } from "@/components/jauge";
 import { Tiroir } from "@/components/tiroir";
 import type { GameView } from "@/services/game.service";
 
@@ -104,6 +105,50 @@ function Chiffre({
         {valeur}
       </p>
       {note ? <p className="text-sm leading-snug text-slate-400">{note}</p> : null}
+    </div>
+  );
+}
+
+/**
+ * LE GOULOT, EN DEUX BARRES SUR LA MÊME ÉCHELLE.
+ *
+ * Machine et main-d'œuvre partagent l'échelle de la plus haute des deux : la
+ * plus courte est, littéralement, celle qui vous arrête. Chaque barre porte sa
+ * valeur et l'unité (la couleur ne dit rien seule, charte) ; la barre du goulot
+ * prend la teinte du métier — c'est la limite de VOTRE entreprise —, l'autre le
+ * bleu donnée. « À l'équilibre » quand les deux se valent.
+ */
+function GoulotEnJauge({
+  capacityFacts,
+  vocabulary,
+}: {
+  capacityFacts: NonNullable<GameView["capacityFacts"]>;
+  vocabulary: GameView["vocabulary"];
+}) {
+  const machine = capacityFacts.availableMachineCapacity;
+  const labor = capacityFacts.laborCapacity;
+  const echelle = Math.max(1, machine, labor);
+  const unite = vocabulary.perRoundLabel;
+  const machineGoulot = capacityFacts.bottleneck === "machine";
+  const laborGoulot = capacityFacts.bottleneck === "labor";
+  return (
+    <div className="mt-3 space-y-2.5">
+      <Jauge
+        libelle={vocabulary.capacityLabel}
+        valeur={formatUnits(machine)}
+        borne={unite}
+        fraction={machine / echelle}
+        ton={machineGoulot ? "metier" : "donnee"}
+        note={machineGoulot ? "le goulot : c'est elle qui plafonne" : undefined}
+      />
+      <Jauge
+        libelle={vocabulary.laborLabel}
+        valeur={formatUnits(labor)}
+        borne={unite}
+        fraction={labor / echelle}
+        ton={laborGoulot ? "metier" : "donnee"}
+        note={laborGoulot ? "le goulot : c'est elle qui plafonne" : undefined}
+      />
     </div>
   );
 }
@@ -362,6 +407,13 @@ export function ParametersPanels({
           )}
           <Chiffre label="Trésorerie d'ouverture" valeur={formatEuro(intro.cash)} />
         </div>
+        {/* ── LE GOULOT, EN JAUGE ──
+            Machine et main-d'œuvre sur la même échelle : la plus courte est
+            celle qui vous arrête. La valeur et la borne restent écrites ; la
+            barre ne fait que montrer laquelle plafonne (jauge.tsx). */}
+        {capacityFacts ? (
+          <GoulotEnJauge capacityFacts={capacityFacts} vocabulary={vocabulary} />
+        ) : null}
         {/* Une gamme a un coût variable par référence : un seul chiffre mentirait. */}
         {gamme ? (
           <p className="mt-3 text-sm leading-relaxed text-slate-400">

@@ -54,6 +54,8 @@ import {
   type TourChiffre,
 } from "@/components/tableau-de-bord";
 import { ArdoiseRepliee } from "@/components/ardoise-repliee";
+import { BandeDeMarche } from "@/components/bande-de-marche";
+import { faitsDuMarche } from "@/lib/faits-du-marche";
 import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
 import { BilanDePartie } from "@/components/bilan-de-partie";
 import { bilanDeLaPartie } from "@/pedagogy/bilan-de-partie";
@@ -253,12 +255,24 @@ export default async function ArenaPage({
       )}
       {/*
         Le contexte n'oriente pas la décision du tour, il l'éclaire : qui est
-        parti, depuis quand la concurrence est installée. Replié, il reste à un
-        clic sans s'imposer avant la question à trancher.
+        parti, depuis quand la concurrence est installée. LOT 6C : sur grand
+        écran, il est une SECTION DE LA FEUILLE, au même niveau et sur le même
+        papier que « Situation » — et non un tiroir gris de cockpit encastré
+        dans le document (le propriétaire l'a repéré sur la feuille blanche).
+        Sur téléphone, la présentation vit sur une carte de cockpit, pas sur
+        papier : « Situation » et « Contexte » y restent deux tiroirs de même
+        niveau, ce qui est cohérent avec leur sol.
       */}
-      <Tiroir titre="Contexte">
-        <p className="text-sm leading-relaxed">{view.intro.context}</p>
-      </Tiroir>
+      {telephone ? (
+        <Tiroir titre="Contexte">
+          <p className="text-sm leading-relaxed">{view.intro.context}</p>
+        </Tiroir>
+      ) : (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Contexte</h3>
+          <p className="mt-1 text-sm leading-relaxed">{view.intro.context}</p>
+        </div>
+      )}
     </>
   ) : null;
   const chiffres = (
@@ -1267,6 +1281,12 @@ export default async function ArenaPage({
           <ArdoiseRepliee>
             <LigneDeLArdoise tours={toursChiffres} entete={enteteArdoise} />
           </ArdoiseRepliee>
+          {/* ── LA BANDE DE MARCHÉ ──
+              Sous l'ardoise, à chaque étape : les faits du tour et leur écart au
+              tour passé (lib/faits-du-marche.ts : rien d'inventé). Elle ne défile
+              pas. Pas rendue du tout sur téléphone (parcours en cartes : voir
+              bande-de-marche.tsx), et masquée sous `sm` sur une fenêtre étroite. */}
+          {telephone ? null : <BandeDeMarche faits={faitsDuMarche(view)} />}
         </>
       )}
 
