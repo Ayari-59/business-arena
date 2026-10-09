@@ -217,7 +217,7 @@ function Chiffre({
       >
         {titre}
       </dt>
-      <dd className={`mt-1.5 whitespace-nowrap ${GRAND_CHIFFRE} ${couleur}`}>
+      <dd className={`chiffre-cle mt-1.5 whitespace-nowrap ${GRAND_CHIFFRE} ${couleur}`}>
         {/* Le chiffre MONTE quand il vient de changer (lot 5B). */}
         <ChiffreQuiArrive
           valeur={derniere}
@@ -302,7 +302,10 @@ export function TableauDeBord({
       // UN ÉCRAN DE CHIFFRES, EN TÊTE DU PAPIER, sur toute la largeur de
       // l'arène : la rangée de tuiles s'arrêtait aux trois quarts et se lisait
       // comme une section parmi d'autres.
-      className="ardoise rounded-xl bg-slate-950 px-4 py-4 text-slate-100 sm:px-6 sm:py-5"
+      // LOT 6A : l'ardoise porte l'arête du métier (un filet de 2 px dans sa
+      // teinte, « neuf entreprises, neuf lumières ») et une lumière de scène
+      // retenue, au lieu de l'aplat plat d'avant.
+      className="ardoise arete-metier lumiere-de-scene rounded-xl bg-slate-950 px-4 py-4 text-slate-100 sm:px-6 sm:py-5"
     >
       <div
         className={`grid gap-x-6 gap-y-4 ${entete ? "lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:items-start" : ""}`}

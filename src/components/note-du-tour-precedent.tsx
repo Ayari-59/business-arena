@@ -26,7 +26,9 @@ export function NoteDuTourPrecedent({
   const note = texte?.trim();
   if (!note) return null;
   return (
-    <div className="mt-3 border-l-2 border-slate-600 pl-3">
+    // LOT 6A : la note de l'équipe est de la prose à relire — une petite
+    // feuille (`papier`) posée sur le cockpit, et non du texte clair sur marine.
+    <div className="papier mt-3 rounded-lg border-l-2 border-slate-600 p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
         <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5" />
         Ce que vous aviez écrit avant de valider {periode.toLowerCase()}

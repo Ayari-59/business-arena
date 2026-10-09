@@ -247,7 +247,10 @@ export function SituationCard({
   }
 
   return (
-    <article className={dansTiroir ? "" : "carte p-4 sm:p-6"}>
+    // LOT 6A : la situation du tour est un DOCUMENT de lecture — une feuille
+    // blanche (`papier`) posée sur le bureau marine du cockpit, en-tête et
+    // ombre compris, et non une tuile d'ardoise.
+    <article className={dansTiroir ? "" : "papier rounded-xl p-4 sm:p-6"}>
       <header className="mb-3">
         <div className="flex items-center gap-2">
           <p className="text-xs uppercase tracking-annonce text-amber-400">
@@ -607,7 +610,8 @@ export function SituationDebrief({
   const answers = situation.quizAnswers ?? {};
   const scoreSur100 = Math.round(debrief.finalScore * 100);
   return (
-    <article className="carte p-4 sm:p-6">
+    // LOT 6A : le débrief est un texte d'enseignement — un document papier.
+    <article className="papier rounded-xl p-4 sm:p-6">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-annonce text-slate-400">

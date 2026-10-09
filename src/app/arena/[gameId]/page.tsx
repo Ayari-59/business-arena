@@ -279,8 +279,13 @@ export default async function ArenaPage({
     />
   );
   const donneesSection = premierTour ? (
-    <section className="space-y-4 carte p-3 sm:p-5 text-slate-300">
-      {presentation}
+    // LOT 6A — DEUX SOLS, ENSEMBLE. La présentation de l'entreprise (nom,
+    // situation, contexte) est de la PROSE : une feuille blanche (`papier`)
+    // posée sur le cockpit. Les paramètres et la capacité (`chiffres`) sont des
+    // informations consultables : ils restent sur le marine du cockpit, juste
+    // dessous. Les deux se voient dans la même fenêtre.
+    <section className="space-y-4">
+      <div className="papier space-y-4 rounded-xl p-4 sm:p-6">{presentation}</div>
       {chiffres}
     </section>
   ) : (
@@ -297,7 +302,8 @@ export default async function ArenaPage({
   const alertesSansSaison = (
     <>
       {view.roundBriefing ? (
-        <section className="space-y-2 carte p-3 sm:p-5 text-slate-300">
+        // LOT 6A : « où vous en êtes » est un texte de situation à lire — papier.
+        <section className="space-y-2 papier rounded-xl p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-100">
             {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
           </h2>
@@ -1211,7 +1217,13 @@ export default async function ArenaPage({
     // LA TEINTE DU MÉTIER, POUR TOUTE LA PARTIE (lot 5A) : `data-metier`
     // publie `--metier`, que l'ardoise, les cartes, le fil des étapes et les
     // courbes de l'entreprise lisent. Une seule source : le registre.
-    <main id="main" data-ecran-de-jeu="" data-metier={teinteDuMetier({ code: view.scenarioCode, sector: view.sector })} className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-6 sm:space-y-8 sm:px-6 sm:pb-16">
+    // LOT 6A — LE COCKPIT. Le sol de l'écran de jeu bascule sur le marine
+    // profond : `ardoise` rend à tout l'écran de jeu ses jetons sombres (le thème
+    // clair les inverse ailleurs), et `lumiere-de-scene` pose dessus le dégradé
+    // radial retenu dans la teinte du métier. Les documents de lecture (courrier,
+    // situation, textes pédagogiques) restent du papier, posés sur ce bureau.
+    // Le bord-à-bord vient de `body:has(main[data-ecran-de-jeu])` (globals.css).
+    <main id="main" data-ecran-de-jeu="" data-metier={teinteDuMetier({ code: view.scenarioCode, sector: view.sector })} className="ardoise lumiere-de-scene mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-6 sm:space-y-8 sm:px-6 sm:pb-16">
       {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
           dans l'arène (voir site-header.tsx) et celle-ci porte la partie et le tour. */}
       <StockageDurable />

@@ -588,13 +588,30 @@
     0 1px 2px rgb(0 0 0 / 0.3),
     0 10px 28px -14px rgb(0 0 0 / 0.5);
   --creux-champ: inset 0 1px 2px rgb(0 0 0 / 0.25);
-  --lumiere-carte: color-mix(in oklab, #fff 4%, transparent);
+  /* LOT 6A : l'arête claire du haut d'un panneau du cockpit. 4 % ne se voyait
+     pas à trois mètres sur une projection ; montée à 9 %, elle dessine un
+     filet de lumière net sans virer au laiteux (le marine reste marine). */
+  --lumiere-carte: color-mix(in oklab, #fff 9%, transparent);
   /* L'anneau du haut de page (voir `.halo-de-page`) : un bleu PLEIN de la
      gamme du tableau, #1b416f, ton sur ton sur le marine. Il a été un orange
      dilué, à 18 puis à 45 % : sur le marine, un orange dilué sort cuivré. */
   --halo-de-page: #1b416f;
-  /* Le filet d'une carte : un trait de lumière sur le marine. */
-  --filet-carte: color-mix(in oklab, #fff 10%, transparent);
+  /* Le filet d'une carte : un trait de lumière sur le marine. LOT 6A : 10 %
+     se perdait sur le marine d'une projection ; monté à 16 %, un panneau se
+     détache de son sol à trois mètres. Trait non textuel : plus il est clair,
+     mieux il tient le 3:1 du 1.4.11 — la montée ne fait que servir. */
+  --filet-carte: color-mix(in oklab, #fff 16%, transparent);
+  /* LOT 6A — TROIS PROFONDEURS DE SOL, ET NON UNE. La page du cockpit est le
+     plus profond (#0b2545), le panneau relevé (#13355f), le champ creusé
+     (#1b416f). Nommées ici pour que le relief se règle d'un endroit. */
+  --sol-page: #0b2545;
+  --sol-panneau: #13355f;
+  --sol-champ: #1b416f;
+  /* LA LUEUR D'UN CHIFFRE CLÉ. Un halo doux, NEUTRE (blanc cassé à 15 %) :
+     la charte interdit un halo coloré (un résultat vert ou rouge garde sa
+     couleur pleine, sans dilution). La lueur ne colore donc jamais — elle
+     décolle le chiffre de son sol, rien de plus. */
+  --lueur-chiffre: 0 0 14px color-mix(in oklab, #f1ede4 15%, transparent);
 }
 
 /* ---------------------------------------------------------------------------
@@ -754,6 +771,70 @@
      reste : c'est ce qui dit où écrire à la main. */
   .champ {
     box-shadow: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * LOT 6A — LE RELIEF ET LA LUMIÈRE DU COCKPIT.
+ *
+ * Après cinq lots de nettoyage, l'arène était « propre mais sage, froide ».
+ * Le propriétaire veut un COCKPIT : des panneaux qui se détachent du fond, des
+ * chiffres qui luisent, des arêtes lumineuses, et — « neuf entreprises, neuf
+ * lumières » — la couleur du métier dans l'arête et dans la lumière de scène.
+ * L'énergie vient de LÀ, du relief et de la teinte du métier, jamais d'un fond
+ * pâle teinté (la charte l'interdit).
+ *
+ * Trois gestes, en jetons (ci-dessus) et en classes (ici) :
+ *   · LA LUEUR DU CHIFFRE CLÉ — `.chiffre-cle` : un halo NEUTRE, jamais coloré.
+ *     Réservé aux deux encres que la charte autorise à luire, le blanc cassé
+ *     et le bleu donnée ; une garde borne la lueur à ces deux encres
+ *     (`tests/architecture/lueur-des-chiffres.test.ts`).
+ *   · L'ARÊTE DU MÉTIER — `.arete-metier` : un filet de 2 px en tête du
+ *     panneau, dans la teinte du métier (`--metier`), au lieu d'une barre
+ *     grise. Neuf entreprises, neuf arêtes.
+ *   · LA LUMIÈRE DE SCÈNE — `.lumiere-de-scene` : un dégradé radial très
+ *     retenu (≤ 6 %, en `oklab`) depuis le haut, qui fait un volume de ce qui
+ *     était un aplat. Il prend la teinte du métier quand elle est publiée.
+ *
+ * À l'impression, tout redevient plat.
+ * ------------------------------------------------------------------------- */
+
+/* LE COCKPIT BORD À BORD. Le sol de l'arène est le marine, du bas de l'en-tête
+   (déjà marine) au pied : pas de rectangle marine flottant dans des marges
+   claires. Le `:has` ne porte QUE sur la page qui contient l'écran de jeu, donc
+   aucune autre page n'est touchée. Le `<main data-ecran-de-jeu>` lui-même prend
+   `.ardoise` (il bascule ses jetons sur l'échelle sombre). Les documents de
+   lecture qu'il contient restent du papier (`.papier`, un objet aux couleurs
+   en dur), posés sur ce bureau marine. */
+body:has(main[data-ecran-de-jeu]) {
+  background-color: var(--marine, #0b2545);
+}
+
+.chiffre-cle {
+  text-shadow: var(--lueur-chiffre);
+}
+
+.arete-metier {
+  border-top: 2px solid var(--metier, var(--filet-carte));
+}
+
+.lumiere-de-scene {
+  background-image: radial-gradient(
+    120% 80% at 50% -10%,
+    color-mix(in oklab, var(--metier, #fff) 6%, transparent),
+    transparent 60%
+  );
+}
+
+@media print {
+  .chiffre-cle {
+    text-shadow: none;
+  }
+  .lumiere-de-scene {
+    background-image: none;
+  }
+  .arete-metier {
+    border-top-color: var(--filet-carte);
   }
 }
 
@@ -1559,9 +1640,15 @@ body {
 }
 
 /* Le tableau est un aplat de marine : ni craie, ni lueur, ni ombre
-   intérieure. La bande à contre-jour s'arrête net sur la page claire. */
-[data-theme="clair"] .contre-jour,
-[data-theme="clair"] .ardoise {
+   intérieure. La bande à contre-jour s'arrête net sur la page claire.
+   LOT 6A : cette règle valait pour les bandes des pages publiques et
+   l'ardoise d'alors ; elle reste vraie HORS de l'arène. DANS le cockpit
+   (`[data-ecran-de-jeu]`), elle est LEVÉE au profit du relief et de la
+   lumière de scène (voir « LOT 6A — LE RELIEF ET LA LUMIÈRE DU COCKPIT ») :
+   un panneau du cockpit a le droit d'avoir du volume. L'exclusion porte sur
+   le sol de l'arène et ses descendants. */
+[data-theme="clair"] .contre-jour:not([data-ecran-de-jeu]):not([data-ecran-de-jeu] *),
+[data-theme="clair"] .ardoise:not([data-ecran-de-jeu]):not([data-ecran-de-jeu] *) {
   background-image: none;
 }
 
@@ -2095,6 +2182,65 @@ a.carte,
 
 .papier .filet {
   border-color: #dbe2ee;
+}
+
+/* ---------------------------------------------------------------------------
+ * LOT 6A — UN DOCUMENT POSÉ SUR LE COCKPIT RESTE LISIBLE.
+ *
+ * Les surfaces de lecture (situation, analyse, débrief, note, mandat, aides,
+ * bilan) sont des composants nés SOMBRES : ils portent des utilitaires
+ * `text-slate-*`, `bg-slate-*`, `text-amber-*`, `border-white/*`. Posés en
+ * `.papier` DANS le cockpit (`.ardoise`), ces utilitaires retomberaient à
+ * l'échelle claire inversée — une encre claire sur une feuille blanche,
+ * illisible. On les RAMÈNE aux encres du papier, pour qu'un document reste une
+ * feuille blanche quels que soient les utilitaires qu'il porte. Une seule
+ * matière de document, et aucune prose claire-sur-blanc qui échappe.
+ *
+ * (Le courrier et le courriel, eux, n'ont aucun utilitaire Tailwind à
+ * l'intérieur : cette coercition ne les touche pas.)
+ * ------------------------------------------------------------------------- */
+.papier :is(.text-slate-50, .text-slate-100, .text-slate-200) {
+  color: var(--encre);
+}
+.papier :is(.text-slate-300, .text-slate-400) {
+  color: var(--encre-douce);
+}
+.papier :is(.text-slate-500, .text-slate-600) {
+  color: var(--encre-tenue);
+}
+/* Les emeraudes et rouges d'un résultat gardent leur SENS : on les rend aux
+   encres foncées du papier (l'échelle renversée du thème clair), pas à l'encre
+   neutre — un gain reste vert, une perte reste rouge, lisibles sur le blanc. */
+.papier :is(.text-emerald-200, .text-emerald-300) {
+  color: #0f7a46;
+}
+.papier :is(.text-red-200, .text-red-300) {
+  color: #c0392b;
+}
+/* L'orange d'action sur le papier est l'encre brûlée #a35200 (5,6:1 sur blanc) :
+   l'ambre vif ne tiendrait que 2,4:1. */
+.papier :is(.text-amber-200, .text-amber-300, .text-amber-400, .text-amber-500) {
+  color: #a35200;
+}
+/* Les fonds sombres d'un sous-bloc deviennent le creux du papier. */
+.papier :is(.bg-slate-950, .bg-slate-900, .bg-slate-800) {
+  background-color: var(--papier-creux);
+}
+/* Les filets blancs translucides deviennent le filet gris bleuté du papier. */
+.papier :is([class*="border-white/"]) {
+  border-color: #dbe2ee;
+}
+/* Un champ de saisie POSÉ DANS UN DOCUMENT (la zone de réponse d'une analyse)
+   est une case claire et creusée, pas un puits marine : fond creux, encre
+   foncée, filet net, et l'orange du focus. */
+.papier .champ {
+  background-color: var(--papier-creux);
+  border-color: #c3ccdb;
+  color: var(--encre);
+  box-shadow: inset 0 1px 2px rgb(11 37 69 / 0.08);
+}
+.papier .champ::placeholder {
+  color: var(--encre-tenue);
 }
 
 /*
