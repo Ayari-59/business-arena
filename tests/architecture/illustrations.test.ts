@@ -3,6 +3,16 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import sharp from "sharp";
+import { existsSync, statSync } from "node:fs";
+import {
+  PHOTOS_DES_ENTREPRISES,
+  SCENES_DES_ENTREPRISES,
+  SCENES_DES_SECTEURS,
+  SceneDEntreprise,
+  entrepriseDeLaScene,
+  fichierDeLaPhoto,
+} from "@/components/illustrations/scene-d-entreprise";
 import {
   PORTRAITS,
   PortraitDInterlocuteur,
@@ -10,17 +20,27 @@ import {
   type Interlocuteur,
 } from "@/components/illustrations/portrait-d-interlocuteur";
 import { Lettre, Message } from "@/components/courrier";
+import {
+  SCENARIOS,
+  SCENARIO_CHOICES,
+  SECTOR_LABELS,
+  familyOf,
+  type Sector,
+} from "@/config/scenarios/registry";
 import { COURRIERS } from "@/config/courriers/registre";
 import { COURRIERS_DE_ROUTINE } from "@/config/courriers/routine";
 import { LETTRES_DE_MISSION } from "@/config/courriers/mission";
 import { COURRIERS_EN_RETOUR } from "@/config/courriers/reponses";
 
 /**
- * LES ILLUSTRATIONS DE L'ARÈNE (lot 6B) : des visages pour ceux qui écrivent
- * aux entreprises, dessinés en SVG inline dans une palette FERMÉE. (Les scènes
- * des entreprises viendront en photographies traitées, à part.)
+ * LES ILLUSTRATIONS DE L'ARÈNE (lot 6B) : des scènes pour les entreprises,
+ * des visages pour ceux qui leur écrivent, dessinés en SVG inline dans une
+ * palette FERMÉE — et, pour les entreprises qui en ont une, une PHOTOGRAPHIE
+ * traitée (virée au marine, teintée du métier) à la place de la scène.
  *
  * Ce que la garde tient :
+ *   · chaque entreprise jouable a sa scène, chaque variante celle de son
+ *     entreprise, chaque secteur un lieu de repli ;
  *   · chaque expéditeur du courrier est reconnu par une figure ;
  *   · aucune couleur hors de la palette : ni l'orange de l'action, ni l'or du
  *     verdict, ni le vert ou le rouge des résultats ;
@@ -46,11 +66,18 @@ const REPLI_DE_LA_TEINTE = /var\(--metier,\s*#9fabff\)/g;
 
 const DOSSIER = join(process.cwd(), "src", "components", "illustrations");
 
+// Les scènes DESSINÉES : une entreprise qui a sa photo ne montre plus son dessin.
+const scenes = Object.keys(SCENES_DES_ENTREPRISES)
+  .filter((code) => !PHOTOS_DES_ENTREPRISES[code])
+  .map((code) => ({
+    nom: `scène ${code}`,
+    html: renderToStaticMarkup(createElement(SceneDEntreprise, { scenario: code })),
+  }));
 const portraits = (Object.keys(PORTRAITS) as Interlocuteur[]).map((qui) => ({
   nom: `portrait ${qui}`,
   html: renderToStaticMarkup(createElement(PortraitDInterlocuteur, { qui })),
 }));
-const dessins = portraits;
+const dessins = [...scenes, ...portraits];
 
 /** Les couleurs écrites dans un rendu ou un source, le repli de la teinte retiré. */
 function couleurs(texte: string): string[] {
@@ -67,6 +94,35 @@ const TOUS_LES_COURRIERS = [
   ...LETTRES_DE_MISSION,
   ...COURRIERS_EN_RETOUR,
 ];
+
+describe("une scène par entreprise", () => {
+  it("chaque entreprise jouable a la sienne, et il n'y en a pas de plus", () => {
+    for (const d of SCENARIO_CHOICES) {
+      expect(SCENES_DES_ENTREPRISES[d.code], `${d.code} n'a pas de scène`).toBeDefined();
+    }
+    expect(Object.keys(SCENES_DES_ENTREPRISES).sort()).toEqual(
+      SCENARIO_CHOICES.map((d) => d.code).sort(),
+    );
+  });
+
+  it("une variante de gamme montre le lieu de son entreprise", () => {
+    for (const d of SCENARIOS) {
+      const tete = familyOf(d.code)?.head ?? d.code;
+      expect(entrepriseDeLaScene(d.code), d.code).toBe(tete);
+    }
+  });
+
+  it("un scénario d'enseignant retombe sur le lieu de son secteur", () => {
+    for (const secteur of Object.keys(SECTOR_LABELS) as Sector[]) {
+      const lieu = SCENES_DES_SECTEURS[secteur];
+      expect(SCENES_DES_ENTREPRISES[lieu], secteur).toBeDefined();
+      // Le lieu de repli est celui d'une entreprise de ce secteur.
+      const duSecteur = SCENARIO_CHOICES.filter((d) => d.sector === secteur).map((d) => d.code);
+      expect(duSecteur, secteur).toContain(lieu);
+      expect(entrepriseDeLaScene("scenario-d-enseignant", secteur)).toBe(lieu);
+    }
+  });
+});
 
 describe("un visage pour chaque expéditeur", () => {
   it("chaque expéditeur du courrier est reconnu par une figure", () => {
@@ -160,5 +216,61 @@ describe("un dessin, rien qu'un dessin", () => {
     );
     expect(html).toMatch(/^<svg[^>]*role="img"[^>]*aria-label="La banque"/);
     expect(html).not.toContain("aria-hidden");
+  });
+});
+
+describe("les lieux en photographie", () => {
+  const PUBLIC = join(process.cwd(), "public");
+  const photos = Object.keys(PHOTOS_DES_ENTREPRISES);
+
+  it("une photo n'est donnée qu'à une entreprise qui a sa scène", () => {
+    for (const code of photos) expect(SCENES_DES_ENTREPRISES[code], code).toBeDefined();
+  });
+
+  it("chaque photo existe en deux tailles, et chacune reste légère", () => {
+    for (const code of photos) {
+      for (const petit of [false, true]) {
+        const fichier = join(PUBLIC, fichierDeLaPhoto(code, petit));
+        expect(existsSync(fichier), fichier).toBe(true);
+        expect(statSync(fichier).size, fichier).toBeLessThan(200 * 1024);
+      }
+    }
+  });
+
+  it("aucun fichier de lieu n'est orphelin", () => {
+    const attendus = new Set(
+      photos.flatMap((c) => [false, true].map((p) => fichierDeLaPhoto(c, p).split("/").pop())),
+    );
+    for (const f of readdirSync(join(PUBLIC, "scenes"))) expect(attendus, f).toContain(f);
+  });
+
+  // UNE PHOTO TRAITÉE EST FROIDE. Le virage au marine fait passer le bleu
+  // moyen largement devant le rouge ; une photo brute, aux lampes chaudes, a
+  // l'inverse (mesuré : l'hôtel brut a 60 points de rouge de plus que de bleu,
+  // traité 59 de bleu de plus que de rouge). Une photo déposée sans
+  // traitement, avec ses jaunes et ses oranges, ne passe pas.
+  it.each(photos)("%s : la photo est virée au marine", async (code) => {
+    for (const petit of [false, true]) {
+      const { channels } = await sharp(join(PUBLIC, fichierDeLaPhoto(code, petit))).stats();
+      const [r, , b] = channels.map((c) => c.mean);
+      expect(b! - r!, fichierDeLaPhoto(code, petit)).toBeGreaterThanOrEqual(25);
+    }
+  });
+
+  it.each(photos)("%s : décorative, sans balise d'image ni texte", (code) => {
+    const html = renderToStaticMarkup(createElement(SceneDEntreprise, { scenario: code }));
+    expect(html).toMatch(/^<div[^>]*aria-hidden="true"/);
+    expect(html).toContain(`data-lieu-photo="${code}"`);
+    expect(html).toContain(fichierDeLaPhoto(code));
+    expect(html).not.toMatch(/<(?:img|svg|text)\b/);
+  });
+
+  it("au téléphone, la photo réduite", () => {
+    for (const code of photos) {
+      const html = renderToStaticMarkup(
+        createElement(SceneDEntreprise, { scenario: code, petit: true }),
+      );
+      expect(html).toContain(fichierDeLaPhoto(code, true));
+    }
   });
 });

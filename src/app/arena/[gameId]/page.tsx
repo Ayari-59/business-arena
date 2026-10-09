@@ -68,6 +68,7 @@ import { attribuerCodeDeReprise, codeDeRepriseDuJoueur } from "@/services/repris
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
 import { surtitreDePartie, teinteDuMetier } from "@/config/scenarios/presentation";
+import { SceneDEntreprise } from "@/components/illustrations/scene-d-entreprise";
 import { SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -243,6 +244,38 @@ export default async function ArenaPage({
   // sur grand écran elle ouvre la carte des données.
   const presentation = premierTour ? (
     <>
+      {/*
+        LOT 6B : L'EN-TÊTE ILLUSTRÉ. La feuille s'ouvre sur le lieu de
+        l'entreprise, en bandeau marine, comme l'en-tête d'une lettre de la
+        maison. Il déborde du padding de la feuille (ou de la carte, sur
+        téléphone) pour en prendre toute la largeur et l'arrondi du haut ; sur
+        la carte, il laisse voir les 2 px du filet de tête à la teinte du métier.
+        Sur téléphone, la scène remplit la largeur et se recadre en hauteur
+        (`slice`) : sa bande du milieu, qui porte les personnes, reste
+        visible. Sur la feuille large, elle se pose entière (`meet`) et son
+        mur et son sol se prolongent de part et d'autre : un 16:9 agrandi à
+        toute la largeur ne montrait plus que des bustes coupés. Décorative :
+        le nom et le métier sont écrits juste dessous. À l'impression, elle
+        s'efface. Une entreprise qui a sa PHOTO (voir `PHOTOS_DES_ENTREPRISES`)
+        la montre à la place du dessin, dans un bandeau plus haut sur
+        ordinateur : une photo recadrée trop bas ne montre plus que des bustes.
+      */}
+      <div
+        data-en-tete-illustre=""
+        className={`overflow-hidden print:hidden ${
+          telephone ? "-mx-3 -mt-2.5" : "-mx-4 -mt-4 sm:-mx-6 sm:-mt-6"
+        }`}
+        style={{ borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit" }}
+      >
+        <SceneDEntreprise
+          scenario={view.scenarioCode}
+          secteur={view.sector}
+          cadrage={telephone ? "xMidYMid slice" : "xMidYMid meet"}
+          className="block h-36 w-full sm:h-48 lg:h-56"
+          classePhoto="block h-36 w-full sm:h-64 lg:h-[22rem]"
+          petit={telephone}
+        />
+      </div>
       <div>
         <h3 className="text-xl font-bold text-slate-100 max-sm:font-display max-sm:text-3xl max-sm:font-semibold">
           {view.intro.company}
