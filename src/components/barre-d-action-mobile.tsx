@@ -116,7 +116,7 @@ export function BarreDActionMobile() {
         role="region"
         aria-label="Actions rapides"
         data-barre-action
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur transition-transform duration-200 motion-reduce:transition-none sm:hidden [:root[data-install-prompt]_&]:hidden ${
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none sm:hidden [:root[data-install-prompt]_&]:hidden ${
           actif ? "translate-y-0" : "pointer-events-none translate-y-full"
         }`}
         // Une barre repliée sous l'écran ne doit être ni lue ni atteinte au clavier.

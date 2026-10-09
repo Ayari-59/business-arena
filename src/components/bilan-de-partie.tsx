@@ -5,6 +5,8 @@ import type { Bilan } from "@/pedagogy/bilan-de-partie";
 import { PastilleDeRang, metalDuRang } from "@/components/rang";
 import { euroSigne } from "@/components/tableau-de-bord";
 import { PodiumDesEquipes, type MarcheDuPodium } from "@/components/podium";
+import { ChiffreQuiArrive } from "@/components/chiffre-qui-arrive";
+import type { NomDePlume } from "@/lib/plumes";
 
 /**
  * Une équipe du classement final, pour le podium. Les marches se dessinent
@@ -142,19 +144,22 @@ export function BilanDePartie({
             note={
               bilan.beneficiaire ? "vous finissez dans le vert" : "la partie se termine en perte"
             }
-            valeur={euroSigne(bilan.resultatCumule)}
+            valeur={bilan.resultatCumule}
+            plume="euro-signe"
             teinte={bilan.beneficiaire ? "text-emerald-300" : "text-red-300"}
           />
           <Chiffre
             titre="Trésorerie finale"
             note="ce qu'il reste en caisse"
-            valeur={formatEuro(bilan.tresorerieFinale)}
+            valeur={bilan.tresorerieFinale}
+            plume="euro"
             teinte={bilan.tresorerieFinale < 0 ? "text-red-300" : "text-slate-50"}
           />
           <Chiffre
             titre="Chiffre d'affaires"
             note="sur toute la partie"
-            valeur={formatEuro(bilan.caCumule)}
+            valeur={bilan.caCumule}
+            plume="euro"
             teinte="text-slate-50"
           />
         </dl>
@@ -254,15 +259,23 @@ export function BilanDePartie({
   );
 }
 
-/** Un chiffre de la clôture : son intitulé, sa valeur en 40 px, et ce qu'elle veut dire. */
+/**
+ * Un chiffre de la clôture : son intitulé, sa valeur en 40 px, et ce qu'elle
+ * veut dire. Le RÉSULTAT CUMULÉ d'une partie n'est pas un chiffre qu'on
+ * consulte, c'est le score final : il monte depuis zéro quand l'écran arrive,
+ * et se pose d'un coup quand on revient le relire (voir
+ * `components/chiffre-qui-arrive.tsx`).
+ */
 function Chiffre({
   titre,
   valeur,
+  plume,
   note,
   teinte,
 }: {
   titre: string;
-  valeur: string;
+  valeur: number;
+  plume: NomDePlume;
   note: string;
   teinte: string;
 }) {
@@ -272,7 +285,7 @@ function Chiffre({
       <dd
         className={`mt-1.5 whitespace-nowrap font-display text-[clamp(2rem,1.6rem_+_1.2vw,2.5rem)] font-semibold leading-none tabular-nums ${teinte}`}
       >
-        {valeur}
+        <ChiffreQuiArrive valeur={valeur} plume={plume} depuis={0} memoire={`cloture:${titre}`} />
       </dd>
       <dd className="mt-1.5 text-sm leading-snug text-slate-400">{note}</dd>
     </div>

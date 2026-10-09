@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { formatDecimal, formatEuro, ordinal } from "@/lib/format";
 import { PastilleDeRang } from "@/components/rang";
+import { ChiffreQuiArrive } from "@/components/chiffre-qui-arrive";
 
 /**
  * L'ARDOISE DU DIRIGEANT : OÙ EN EST MON ENTREPRISE, ET DANS QUEL SENS ELLE VA.
@@ -217,7 +218,12 @@ function Chiffre({
         {titre}
       </dt>
       <dd className={`mt-1.5 whitespace-nowrap ${GRAND_CHIFFRE} ${couleur}`}>
-        {teinte === "signe" ? euroSigne(derniere) : formatEuro(derniere)}
+        {/* Le chiffre MONTE quand il vient de changer (lot 5B). */}
+        <ChiffreQuiArrive
+          valeur={derniere}
+          plume={teinte === "signe" ? "euro-signe" : "euro"}
+          memoire={`ardoise:${titre}`}
+        />
       </dd>
       {/* L'ÉCART, AVEC SON SIGNE ÉCRIT. La flèche seule serait un signal de
           couleur et de forme ; le signe le dit en toutes lettres, et « stable »

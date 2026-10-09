@@ -195,7 +195,7 @@ export function SiteHeader() {
                       pleine alourdissait une barre qui en compte trois. */}
                   <span
                     aria-hidden
-                    className={`absolute inset-x-3 bottom-0.5 h-px origin-center bg-amber-400/70 transition-transform duration-200 motion-reduce:transition-none ${
+                    className={`absolute inset-x-3 bottom-0.5 h-px origin-center bg-amber-400/70 transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
                       estCourant(lien.href)
                         ? "scale-x-100"
                         : "scale-x-0 group-hover:scale-x-100"
@@ -221,7 +221,7 @@ export function SiteHeader() {
                 href={lien.href}
                 title={lien.aide}
                 aria-current={estCourant(lien.href) ? "page" : undefined}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium shadow-sm transition duration-200 hover:-translate-y-px motion-reduce:transform-none motion-reduce:transition-none ${
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium shadow-sm transition duration-[var(--duree-passage)] hover:-translate-y-px motion-reduce:transform-none motion-reduce:transition-none ${
                   lien.acces === "enseignant"
                     ? "border-amber-400 text-amber-200 hover:bg-amber-400 hover:text-slate-950"
                     : "border-white/15 bg-gradient-to-b from-white/8 to-transparent text-slate-200 hover:border-white/35 hover:from-white/12"
@@ -238,7 +238,7 @@ export function SiteHeader() {
             onClick={() => setOuvert((v) => !v)}
             aria-expanded={ouvert}
             aria-controls="plan-du-site"
-            className={`flex items-center gap-2 rounded-lg border bg-slate-900 px-2.5 py-1.5 text-xs transition duration-200 motion-reduce:transition-none pointer-coarse:min-h-11 pointer-coarse:px-3.5 pointer-coarse:text-sm ${
+            className={`flex items-center gap-2 rounded-lg border bg-slate-900 px-2.5 py-1.5 text-xs transition duration-[var(--duree-passage)] motion-reduce:transition-none pointer-coarse:min-h-11 pointer-coarse:px-3.5 pointer-coarse:text-sm ${
               ouvert
                 ? "border-amber-400/45 text-amber-200"
                 : "border-white/10 text-slate-300 hover:border-amber-400/35 hover:text-slate-100"
@@ -248,17 +248,17 @@ export function SiteHeader() {
                 dit alors qu'il referme, sans changer de mot. */}
             <span aria-hidden className="relative block h-[9px] w-3.5">
               <span
-                className={`absolute left-0 block h-px w-3.5 bg-current transition-transform duration-200 motion-reduce:transition-none ${
+                className={`absolute left-0 block h-px w-3.5 bg-current transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
                   ouvert ? "top-1/2 rotate-45" : "top-0"
                 }`}
               />
               <span
-                className={`absolute left-0 top-1/2 block h-px w-3.5 bg-current transition-opacity duration-200 motion-reduce:transition-none ${
+                className={`absolute left-0 top-1/2 block h-px w-3.5 bg-current transition-opacity duration-[var(--duree-passage)] motion-reduce:transition-none ${
                   ouvert ? "opacity-0" : "opacity-100"
                 }`}
               />
               <span
-                className={`absolute left-0 block h-px w-3.5 bg-current transition-transform duration-200 motion-reduce:transition-none ${
+                className={`absolute left-0 block h-px w-3.5 bg-current transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
                   ouvert ? "top-1/2 -rotate-45" : "top-full"
                 }`}
               />
@@ -328,7 +328,7 @@ export function SiteHeader() {
                     <svg
                       aria-hidden
                       viewBox="0 0 10 6"
-                      className={`h-1.5 w-2.5 shrink-0 transition-transform duration-200 motion-reduce:transition-none ${
+                      className={`h-1.5 w-2.5 shrink-0 transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
                         ouvertGroupe ? "rotate-180 text-amber-300/90" : "text-slate-400"
                       }`}
                     >
@@ -401,7 +401,7 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
       href={lien.href}
       title={lien.aide}
       aria-current={courant ? "page" : undefined}
-      className={`group block rounded-lg px-3 py-2 transition duration-200 motion-reduce:transition-none ${
+      className={`group block rounded-lg px-3 py-2 transition duration-[var(--duree-passage)] motion-reduce:transition-none ${
         principale
           ? "border border-amber-400 hover:bg-white/5"
           : `border-l-2 hover:bg-white/5 ${
@@ -418,7 +418,7 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
         {principale ? (
           <span
             aria-hidden
-            className="translate-x-0 text-amber-300 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+            className="translate-x-0 text-amber-300 transition-transform duration-[var(--duree-passage)] group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none"
           >
             →
           </span>

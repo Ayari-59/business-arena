@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { ordinal, formatDecimal } from "@/lib/format";
 import { PastilleDeRang, metalDuRang } from "@/components/rang";
+import { ChiffreQuiArrive } from "@/components/chiffre-qui-arrive";
+import type { NomDePlume } from "@/lib/plumes";
 
 /**
  * « LE MARCHÉ RÉPOND » : UN RITUEL, UNE GRAMMAIRE.
@@ -24,6 +26,14 @@ import { PastilleDeRang, metalDuRang } from "@/components/rang";
  * budget, une phrase. Le composant ne calcule rien : les chiffres et la phrase
  * lui viennent des écrans qui les ont déjà (aucune donnée inventée).
  *
+ * LE CHIFFRE ARRIVE, IL NE SE TROUVE PAS LÀ. C'est le moment où le marché
+ * répond : le résultat monte depuis celui du tour précédent, et l'écart signé
+ * depuis zéro (voir `components/chiffre-qui-arrive.tsx`). Le mouvement ne se
+ * joue que si la valeur a changé depuis la dernière fois que cet onglet l'a
+ * montrée : un écran rouvert ou rechargé reste immobile. Il faut pour cela que
+ * l'appelant donne le NOMBRE à côté de sa mise en forme (`nombre`) ; sans lui,
+ * le chiffre s'affiche posé, comme avant.
+ *
  * LE CONTENU EST COMPLET À L'ÉTAT FINAL, MÊME SANS ANIMATION. Les trois temps
  * ne font qu'apparaître ce qui est déjà dans la page (1,3 s en tout, voir
  * « LOT 3A » dans globals.css) : un lecteur d'écran les lit sans attendre, une
@@ -41,11 +51,26 @@ export interface ChiffreDuVerdict {
   valeur: string;
   /** Le sens de la flèche : un gain monte, une perte descend ; null, pas de flèche. */
   sens: SensDUnEcart;
+  /**
+   * Le nombre derrière la valeur, et de quoi l'écrire : le NOM d'une plume de
+   * la maison (`plume`) depuis un écran de serveur, ou la mise en forme
+   * elle-même (`ecrire`) depuis un écran déjà client. Fournis, le chiffre
+   * MONTE jusqu'à lui quand il vient de changer ; absents, il se pose.
+   */
+  nombre?: number;
+  plume?: NomDePlume;
+  ecrire?: (n: number) => string;
+  /** D'où il monte : le même chiffre au tour précédent, zéro par défaut. */
+  depuis?: number;
 }
 
 export interface EcartDuVerdict {
   /** L'écart signé, déjà formaté : « +4 000 € ». */
   valeur: string;
+  /** Le nombre derrière l'écart, et de quoi l'écrire : il monte depuis zéro. */
+  nombre?: number;
+  plume?: NomDePlume;
+  ecrire?: (n: number) => string;
   /** Ce à quoi il se compare : « par rapport au tour précédent », « sur le budget ». */
   mention: string;
   /** Bon ou mauvais : le vert ou le rouge ; null quand le sens n'est pas connu. */
@@ -67,7 +92,19 @@ function Ecart({ ecart, grand }: { ecart: EcartDuVerdict; grand: boolean }) {
     >
       <span className="whitespace-nowrap">
         {ecart.sens ? <span aria-hidden>{FLECHE[ecart.sens]} </span> : null}
-        {ecart.valeur}
+        {/* L'ÉCART MONTE DEPUIS ZÉRO : un écart est une distance parcourue, et
+            c'est elle qu'on regarde se parcourir. */}
+        {ecart.nombre !== undefined && (ecart.plume || ecart.ecrire) ? (
+          <ChiffreQuiArrive
+            valeur={ecart.nombre}
+            plume={ecart.plume}
+            format={ecart.ecrire}
+            depuis={0}
+            memoire="verdict:ecart"
+          />
+        ) : (
+          ecart.valeur
+        )}
       </span>{" "}
       <span className="font-normal text-slate-300">{ecart.mention}</span>
     </p>
@@ -151,7 +188,19 @@ export function VerdictDuMarche({
               {FLECHE[chiffre.sens]}
             </span>
           ) : null}
-          <span className="whitespace-nowrap">{chiffre.valeur}</span>
+          <span className="whitespace-nowrap">
+            {chiffre.nombre !== undefined && (chiffre.plume || chiffre.ecrire) ? (
+              <ChiffreQuiArrive
+                valeur={chiffre.nombre}
+                plume={chiffre.plume}
+                format={chiffre.ecrire}
+                depuis={chiffre.depuis ?? 0}
+                memoire="verdict:chiffre"
+              />
+            ) : (
+              chiffre.valeur
+            )}
+          </span>
         </p>
         {ecart ? <Ecart ecart={ecart} grand={ecran} /> : null}
         {complement}

@@ -191,7 +191,7 @@ export function BarreDeJeu({
               style={{ flexGrow: segment.poids, flexBasis: 0 }}
             >
               <div
-                className={`h-1.5 rounded-full ${PHASES[segment.phase].fond} ${PHASES[segment.phase].texte} shadow-[0_0_8px_0_currentColor] transition-[width] duration-300 motion-reduce:transition-none`}
+                className={`h-1.5 rounded-full ${PHASES[segment.phase].fond} ${PHASES[segment.phase].texte} shadow-[0_0_8px_0_currentColor] transition-[width] duration-[var(--duree-passage)] motion-reduce:transition-none`}
                 style={{ width: `${Math.round(segment.fait * 100)}%` }}
               />
             </div>

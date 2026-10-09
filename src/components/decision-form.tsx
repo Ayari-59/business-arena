@@ -29,6 +29,7 @@ import {
   type Engagement,
 } from "@/components/engagement-du-tour";
 import { Repliable } from "@/components/repliable";
+import { ValeurRafraichie } from "@/components/chiffre-qui-arrive";
 import { aideDuBudgetEntretien } from "@/config/entretien";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
@@ -384,6 +385,11 @@ function Chiffrage({
  * récapitulatif de la dernière étape, c'est-à-dire après l'arbitrage. Elle est
  * calculée par `engagement-du-tour.tsx`, lue sur le formulaire : un total qui
  * tiendrait ses propres valeurs finirait par mentir.
+ *
+ * ET ON LE VOIT SE METTRE À JOUR. Il suivait déjà la frappe, mais sans qu'un
+ * pixel ne le dise : on arbitrait en regardant un nombre qu'on croyait figé.
+ * `ValeurRafraichie` ouvre et referme l'anneau d'accent autour de lui à chaque
+ * recalcul (voir `components/chiffre-qui-arrive.tsx`).
  */
 function TotalDesBudgets({ engagement }: { engagement: Engagement | null }) {
   const { actif: enCarte } = useModeCartes();
@@ -394,7 +400,7 @@ function TotalDesBudgets({ engagement }: { engagement: Engagement | null }) {
     <p className="mt-3 flex items-baseline justify-between gap-3 border-t border-white/10 pt-3 text-sm">
       <span className="text-slate-400">Total des budgets du tour</span>
       <strong className="font-semibold tabular-nums text-slate-50">
-        {formatEuro(engagement.total)}
+        <ValeurRafraichie valeur={engagement.total}>{formatEuro(engagement.total)}</ValeurRafraichie>
       </strong>
     </p>
   );
@@ -4115,6 +4121,11 @@ export function DecisionForm({
                 key="valider"
                 type="submit"
                 disabled={pending || verrou != null || validationBloquee}
+                // « Envoi en cours… » se lit déjà dans le libellé ; `aria-busy`
+                // le dit aussi aux technologies d'assistance, garde l'encre du
+                // bouton entière au lieu de l'éteindre, et lui pose la barre
+                // indéterminée des actions longues (bloc « LOT 5B »).
+                aria-busy={pending}
                 className={`${aplat(`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25`)} active:scale-[0.98] order-3 max-sm:flex-1`}
               >
                 {pending

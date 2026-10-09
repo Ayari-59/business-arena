@@ -153,7 +153,14 @@ describe("de la dernière place à la première", () => {
     // L'animation ne joue que sur l'opacité et un décalage : une ligne qui
     // apparaîtrait en poussant les autres serait illisible sur un mur.
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-    const bloc = css.slice(css.indexOf("LOT 4B"));
+    // LE BLOC DU LOT 4B, ET LUI SEUL. La tranche allait jusqu'au bas du
+    // fichier : chaque lot écrit à la suite (4A, puis 5B et ses jetons de
+    // mouvement) tombait sous cette garde, qui ne parle que de la révélation
+    // de classe. Elle s'arrête donc au titre du bloc suivant. Ce que la garde
+    // vérifie ne change pas ; seul son périmètre redevient le sien.
+    const debut = css.indexOf("LOT 4B");
+    const suite = css.indexOf("LOT 4A", debut);
+    const bloc = css.slice(debut, suite > 0 ? suite : undefined);
     const image = bloc.slice(bloc.indexOf("@keyframes revelation-entree"), bloc.indexOf("}\n}"));
     expect(image).toMatch(/opacity: 0/);
     expect(image).toMatch(/transform: translateY/);
@@ -200,7 +207,10 @@ describe("la révélation est bornée, et s'efface pour qui en demande moins", (
 
   it("les durées ne s'écrivent qu'en jetons, et la feuille les coupe sur demande", () => {
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-    const bloc = css.slice(css.indexOf("LOT 4B"));
+    // Le bloc du lot 4B, et lui seul : voir plus haut.
+    const debut = css.indexOf("LOT 4B");
+    const suite = css.indexOf("LOT 4A", debut);
+    const bloc = css.slice(debut, suite > 0 ? suite : undefined);
     const jetons = bloc.slice(bloc.indexOf("[data-revelation-du-marche] {"));
     for (const nom of ["debut", "pas", "entree", "fin"]) {
       expect(jetons, `--revelation-${nom}`).toMatch(new RegExp(`--revelation-${nom}: [\\d.]+s`));

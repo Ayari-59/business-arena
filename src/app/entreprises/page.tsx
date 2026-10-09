@@ -164,7 +164,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
     >
       <div
         aria-hidden
-        className={`pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full blur-3xl transition-opacity duration-500 ${a.halo} opacity-60 group-hover:opacity-100`}
+        className={`pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full blur-3xl transition-opacity duration-[var(--duree-chiffre)] ${a.halo} opacity-60 group-hover:opacity-100`}
       />
       <div className={`h-1 w-full ${a.barre}`} />
       <div className="relative p-6">

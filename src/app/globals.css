@@ -22,15 +22,17 @@
  * apprendre que l'orange se touche et que l'or se gagne.
  * ------------------------------------------------------------------------- */
 @theme {
-  --animate-carte-entre: carte-entre 0.2s ease-out;
-  --animate-carte-fondu: carte-fondu 0.18s ease-out;
+  /* Les entrées de carte prennent les jetons de passage du lot 5B (plus bas) :
+     une seule durée et une seule courbe pour tout ce qui remplace un écran. */
+  --animate-carte-entre: carte-entre var(--duree-passage) var(--courbe-passage);
+  --animate-carte-fondu: carte-fondu var(--duree-passage) var(--courbe-passage);
   --font-sans:
     var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, sans-serif;
   --font-display:
     var(--font-brand-display), "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
 
-  --animate-plan-ouvre: plan-ouvre 0.18s ease-out;
+  --animate-plan-ouvre: plan-ouvre var(--duree-passage) var(--courbe-passage);
 
   /* L'ORANGE AMBRÉ DE L'ACTION, sur le marine du tableau. Pas de pastel : du
      50 au 500, un seul orange, #ff8a1f, pour tout ce qui se touche ou se
@@ -2704,4 +2706,411 @@ a.carte,
 .ligne-moi,
 .ligne-rang-1.ligne-moi {
   box-shadow: inset 4px 0 0 var(--metier, var(--accent-plein));
+}
+
+/* ==========================================================================
+ * LOT 5B : L'ARÈNE PREND VIE.
+ *
+ * Quatre choses, et une seule grammaire pour les quatre : les chiffres qui
+ * arrivent, les passages d'un écran à l'autre, la densité, et la réaction au
+ * geste. Tout ce que ce lot ajoute est ici, et TOUTES ses durées sont des
+ * jetons : aucun composant n'écrit de milliseconde, pas même en JavaScript
+ * (voir `lib/mouvement.ts`, qui lit ces mêmes jetons).
+ *
+ * LA RÈGLE QUI LES TIENT TOUS : le mouvement raconte un fait. Un chiffre monte
+ * parce qu'il a changé, un écran se renouvelle parce qu'on en change, un filet
+ * apparaît parce que le pointeur est dessus. Rien ne bouge pour décorer, rien
+ * ne retarde une action, et `prefers-reduced-motion` coupe l'ensemble : le
+ * dernier bloc de ce fichier le fait en une fois, pour que rien n'y échappe.
+ *
+ * AUCUNE COULEUR N'EST INTRODUITE ICI. L'anneau du geste reprend très
+ * exactement le jeton du focus du site (`--color-amber-400`), qui suit déjà le
+ * thème et la palette choisie ; le reste n'est que de la géométrie et du temps.
+ * ======================================================================== */
+
+:root {
+  /* LES TEMPS DU PRODUIT.
+     · geste   — ce qui répond au doigt ou au pointeur : survol, focus, appui.
+                 Plus lent, la main sent un retard ; plus vif, elle ne voit rien.
+     · passage — un écran qui en remplace un autre, un repli qui s'ouvre, une
+                 carte qui entre. Le propriétaire a fixé la fourchette : 150 à
+                 250 ms.
+     · chiffre — un compteur qui monte : 400 à 700 ms, amorti.
+     · trace   — une courbe qui se dessine pendant que ses chiffres montent :
+                 jamais plus longue qu'eux, sinon elle finirait toute seule.
+     · éclat   — le signal bref d'une valeur qui vient de se recalculer. */
+  --duree-geste: 0.12s;
+  --duree-passage: 0.2s;
+  --duree-chiffre: 0.6s;
+  --duree-trace: 0.55s;
+  --duree-eclat: 0.45s;
+  /* Le retard de la médaille : elle se pose AVEC le temps du rituel qui annonce
+     le rang (« LOT 3A » : troisième temps à 0,65 s, long de 0,4 s), pas avant. */
+  --retard-de-la-medaille: 0.75s;
+  /* Une seule courbe pour tout le produit : départ franc, arrivée posée.
+     C'est déjà celle du rituel et de la révélation du classement. */
+  --courbe-passage: cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* L'anneau du geste : le jeton de focus du site, ni plus clair ni plus
+     sombre. Seules son épaisseur et sa distance changent d'un état à l'autre,
+     jamais sa teinte : l'accent se pose plein (charte). */
+  --anneau-du-geste: var(--color-amber-400);
+}
+
+/* ─────────────────────── 1. LES CHIFFRES PRENNENT VIE ────────────────────── */
+
+/* LE CHIFFRE QUI ARRIVE (components/chiffre-qui-arrive.tsx).
+   Le composant anime l'AFFICHAGE, pas la donnée : la valeur finale est rendue
+   par le serveur et reste dans le DOM du premier octet à la dernière image. Il
+   ne reste à la feuille qu'à garantir que les images intermédiaires ne font pas
+   danser la ligne : la chasse tabulaire, et rien d'autre. */
+.chiffre-qui-arrive {
+  font-variant-numeric: tabular-nums;
+}
+
+/* LA COURBE SE TRACE PENDANT QUE SES CHIFFRES MONTENT.
+   Les courbes de l'ardoise (components/tableau-de-bord.tsx) apparaissaient d'un
+   bloc, exactement comme au rechargement d'une page qu'on relit : rien ne
+   distinguait « voici l'historique » de « voici le point qui vient de
+   s'ajouter ». Elles se dessinent maintenant de gauche à droite, mais SEULEMENT
+   quand un chiffre arrive — la racine porte alors `data-chiffres-arrivent`,
+   posé par le composant ci-dessus. Une page rouverte sans rien de neuf reste
+   immobile.
+
+   Le tiret couvre largement la longueur du tracé (cent unités de large au plus,
+   plus la pente) : au-delà, le reste du tiret est hors du dessin. */
+@keyframes courbe-se-trace {
+  from {
+    stroke-dashoffset: 400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+:root[data-chiffres-arrivent] .ardoise svg polyline {
+  stroke-dasharray: 400;
+  animation: courbe-se-trace var(--duree-trace) var(--courbe-passage) both;
+}
+
+/* LA MÉDAILLE SE POSE. Au rituel, la pastille du rang tombe d'un cinquième de
+   cadratin en grandissant d'un rien : le geste d'un jeton qu'on pose sur la
+   table. Elle ne se joue QUE dans le troisième temps, c'est-à-dire au moment
+   où le rang est annoncé ; ailleurs, la pastille est posée. Le retard est celui
+   du temps qui la porte (voir « LOT 3A ») : elle arrive avec lui, pas avant. */
+@keyframes medaille-se-pose {
+  from {
+    opacity: 0;
+    transform: translateY(-0.2em) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rituel > [data-temps="3"] .pastille-rang {
+  animation: medaille-se-pose var(--duree-passage) var(--courbe-passage) both;
+  animation-delay: var(--retard-de-la-medaille);
+}
+
+/* ───────────────────── 2. LES PASSAGES D'UN ÉCRAN À L'AUTRE ───────────────── */
+
+/* L'ÉCRAN QUI EN REMPLACE UN AUTRE : SEULE L'OPACITÉ BOUGE.
+   Situation → Analyser → Décider : le panneau changeait de contenu sans que
+   rien ne dise qu'on avait changé d'étape. Son contenu entre maintenant en
+   fondu.
+
+   PAS DE TRANSFORMATION SUR CE BLOC. Le formulaire de décision pose un pied
+   FIXE en bas de l'écran du téléphone : une transformation, même d'un dixième
+   de seconde, ferait du panneau le repère de ce pied, et la barre sauterait au
+   milieu de la page. L'opacité, elle, ne crée aucun repère, et la mise en page
+   est exactement la même avant et après. */
+@keyframes etape-entre {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+[role="tabpanel"] > * {
+  animation: etape-entre var(--duree-passage) var(--courbe-passage) both;
+}
+
+/* UN REPLI QUI S'OUVRE : son contenu se déplie au lieu d'apparaître.
+   Le navigateur fait passer le contenu d'un `<details>` de `display: none` à sa
+   boîte : l'animation repart donc à chaque ouverture, sans une ligne de script,
+   et la fermeture reste instantanée (il n'y a rien à regarder partir). */
+@keyframes repli-se-deplie {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+details[open] > :not(summary) {
+  animation: repli-se-deplie var(--duree-passage) var(--courbe-passage) both;
+}
+/* Sauf là où le contenu porte une colonne gelée ou un pied fixe : une
+   transformation en ferait le repère (même raison que le panneau d'étapes). */
+details[open][data-tour-passe] > :not(summary),
+details[open][data-tiroir] > :not(summary),
+details[open].option-ponctuelle > :not(summary) {
+  animation-name: etape-entre;
+}
+
+/* ───────────────────────────── 3. PLUS DE DENSITÉ ────────────────────────── */
+
+/* L'ARÈNE MONTRAIT TROP DE BLANC.
+   Mesuré sur la page d'arène, en 1280 × 800 : 32 px entre chaque grand bloc,
+   16 px entre les éléments d'une pile, 24 px de marge intérieure dans chaque
+   carte, 64 px de blanc sous le dernier bloc, et 1,25 d'interligne sur des
+   titres condensés. Les espacements passent par des JETONS, posés une fois sur
+   l'écran de jeu, et non carte par carte : une valeur à changer, pas quarante.
+
+   CE QUI NE BOUGE PAS : aucune taille de texte, aucun plancher de lisibilité
+   (14 px sur l'écran de jeu), aucune cible tactile (44 px), la hiérarchie du
+   lot 4A (prix et volume en grand, titres de carte) et les tableaux financiers,
+   dont les cellules gardent leur air. */
+[data-ecran-de-jeu] {
+  --pas-de-bloc: 1.25rem;
+  --marge-de-carte: 1rem;
+  --pas-de-pile: 0.75rem;
+  --interligne-de-tete: 1.15;
+  --interligne-de-sous-titre: 1.3;
+}
+
+/* CE QUI GARDE SON ÉCART. Une ligne d'accessibilité (`sr-only`) n'est pas un
+   bloc à lire, et un bloc qui a déjà réglé sa marge à la main (la barre
+   collante de la partie, posée en négatif sur le haut de la page) sait mieux
+   que ce jeton ce qu'il lui faut. */
+main[data-ecran-de-jeu] > :not(:last-child):not(.sr-only, [class*="-mt-"], [class*="mb-"]) {
+  margin-block-end: var(--pas-de-bloc);
+}
+main[data-ecran-de-jeu] {
+  padding-block: var(--pas-de-bloc);
+}
+
+/* LES CRANS DE L'ARÈNE, REBRANCHÉS SUR LES TROIS JETONS. L'écart se dit de
+   quatre façons dans une feuille d'utilitaires — une pile (`space-y`), une
+   marge haute (`mt`), une marge intérieure (`py`), une gouttière de grille
+   (`gap`) — et c'est le même écart. Seuls les crans de MISE EN PAGE sont
+   repris ; les crans fins (1, 1.5, 2, 3), qui calent une ligne sous son
+   intitulé, ne sont pas du blanc entre blocs, et `space-y-3` comme
+   `space-y-2` valent déjà le jeton visé : on resserre, on n'écarte jamais. */
+[data-ecran-de-jeu] .space-y-6 > :not(:last-child):not(.sr-only, [class*="-mt-"], [class*="mb-"]) {
+  margin-block-end: var(--pas-de-bloc);
+}
+[data-ecran-de-jeu] .space-y-4 > :not(:last-child):not(.sr-only, [class*="-mt-"], [class*="mb-"]) {
+  margin-block-end: var(--pas-de-pile);
+}
+[data-ecran-de-jeu] :is(.mt-8, .mt-10) {
+  margin-top: var(--pas-de-bloc);
+}
+[data-ecran-de-jeu] :is(.mt-5, .mt-6) {
+  margin-top: var(--marge-de-carte);
+}
+[data-ecran-de-jeu] .mt-4 {
+  margin-top: var(--pas-de-pile);
+}
+[data-ecran-de-jeu] :is(.py-5, .py-6) {
+  padding-block: var(--marge-de-carte);
+}
+/* Dans une grille, seules les RANGÉES se resserrent : les colonnes gardent
+   leur gouttière, qui sépare des chiffres. */
+[data-ecran-de-jeu] :is(.gap-6, .gap-y-6) {
+  row-gap: var(--pas-de-bloc);
+}
+[data-ecran-de-jeu] :is(.gap-4, .gap-y-4) {
+  row-gap: var(--pas-de-pile);
+}
+
+/* AU-DESSUS DE 640 PX, LA VARIANTE `sm:` L'EMPORTE, comme chez Tailwind : ces
+   règles viennent après, dans leur media query, sans quoi un `space-y-3
+   sm:space-y-6` aurait pris le petit cran sur un grand écran. C'est aussi là
+   que la marge intérieure des cartes se resserre : sur un téléphone, les mêmes
+   cartes sont déjà à 16 px, et le jeton les aurait écartées. */
+@media (min-width: 640px) {
+  [data-ecran-de-jeu]
+    :is(.sm\:space-y-6, .sm\:space-y-8)
+    > :not(:last-child):not(.sr-only, [class*="-mt-"], [class*="mb-"]) {
+    margin-block-end: var(--pas-de-bloc);
+  }
+  [data-ecran-de-jeu] .sm\:mt-10 {
+    margin-top: var(--pas-de-bloc);
+  }
+  [data-ecran-de-jeu] .sm\:mt-6 {
+    margin-top: var(--marge-de-carte);
+  }
+  [data-ecran-de-jeu] :is(.sm\:py-5, .sm\:py-6) {
+    padding-block: var(--marge-de-carte);
+  }
+  [data-ecran-de-jeu] .sm\:gap-6 {
+    row-gap: var(--pas-de-bloc);
+  }
+  /* Les cartes du FLUX (`article`, `section` ; les panneaux déroulants de la
+     barre du haut sont des `div`) qui portaient la plus grande marge, 24 px. */
+  main[data-ecran-de-jeu] :is(article, section).carte:is([class~="p-6"], [class~="sm:p-6"]) {
+    padding: var(--marge-de-carte);
+  }
+}
+
+/* LES INTERLIGNES DE TÊTE. Un grand titre condensé à 1,25 d'interligne laisse,
+   sur deux lignes, un couloir de blanc au milieu du titre. 1,15 suffit à la
+   grotesque étroite de la maison, et rend une ligne entière sur un titre de
+   trois. Les paragraphes gardent le leur : c'est du texte à lire, pas une
+   enseigne. */
+main[data-ecran-de-jeu] :is(h1, h2, h3).font-display {
+  line-height: var(--interligne-de-tete);
+}
+/* Et un sous-titre de carte, qui n'est pas de la prose, n'a pas l'interligne
+   d'un paragraphe : il était à 1,5, celui d'un texte qu'on lit au long. */
+main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-display) {
+  line-height: var(--interligne-de-sous-titre);
+}
+
+/* ──────────────────── 4. DE LA RÉACTION AU GESTE ─────────────────────────── */
+
+/* UNE SEULE GRAMMAIRE : UN ANNEAU, EN DEUX INTENSITÉS.
+   Ce qui est cliquable le disait de quarante façons (une bordure qui s'éclaire,
+   un fond qui se lève, un soulignement, et très souvent rien du tout, sauf le
+   curseur). L'anneau d'accent est désormais le signe commun :
+     · SURVOL — un filet d'UN pixel, à deux pixels de l'élément ;
+     · FOCUS  — le même anneau, DEUX pixels : au clavier, on voit au moins
+                autant qu'à la souris. C'est le `:focus-visible` du site, plus
+                haut dans ce fichier, inchangé ; l'anneau de survol se cale
+                dessus et non l'inverse.
+   Le survol ne vit que là où il y a un vrai pointeur : sur un écran tactile, un
+   survol reste collé après le doigt. Et aucune information ne dépend de lui :
+   il ne fait que redire ce qui est déjà écrit. */
+@media (hover: hover) and (pointer: fine) {
+  :is(
+      a[href],
+      button,
+      summary,
+      [role="tab"],
+      [role="button"],
+      label:has(> input[type="radio"]),
+      label:has(> input[type="checkbox"])
+    ):hover:not(:disabled, [aria-disabled="true"]) {
+    outline: 1px solid var(--anneau-du-geste);
+    outline-offset: 2px;
+  }
+}
+
+/* La transition de ces états : la même durée de geste partout. */
+@media (prefers-reduced-motion: no-preference) {
+  a[href],
+  button,
+  summary,
+  [role="tab"],
+  [role="button"] {
+    transition:
+      outline-color var(--duree-geste) linear,
+      background-color var(--duree-geste) linear,
+      border-color var(--duree-geste) linear,
+      color var(--duree-geste) linear,
+      box-shadow var(--duree-geste) linear,
+      transform var(--duree-geste) var(--courbe-passage);
+  }
+}
+
+/* LE BOUTON RÉPOND À L'APPUI : un enfoncement d'un pixel, le geste d'une
+   touche et non celui d'un lien. */
+:is(.bouton-plein, .bouton-filet):active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* « EN COURS D'ENVOI » SE LIT. Le bouton d'une action serveur s'éteignait à
+   70 % d'opacité : un orange délavé, c'est-à-dire exactement l'accent dilué que
+   la charte chasse, au moment précis où l'on cherche à savoir si le clic est
+   parti. Le bouton occupé garde donc son encre entière, prend le curseur
+   d'attente, et porte au ras de son bord bas la barre indéterminée des actions
+   longues : on voit que ça tourne. */
+[aria-busy="true"] {
+  opacity: 1;
+  cursor: progress;
+}
+:is(.bouton-plein, .bouton-filet)[aria-busy="true"] {
+  position: relative;
+  overflow: hidden;
+}
+:is(.bouton-plein, .bouton-filet)[aria-busy="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  width: 40%;
+  background: currentColor;
+  animation: barre-indeterminee 1.4s ease-in-out infinite;
+}
+
+/* LE CHAMP ACTIF SE DISTINGUE NETTEMENT, À TOUTES LES LARGEURS. Le halo du
+   champ en saisie n'existait que sous 640 px : sur un grand écran, une feuille
+   de quinze champs ne disait que par un filet d'un pixel lequel recevait la
+   frappe. C'est le halo du téléphone, étendu, sans une valeur de plus. */
+[data-ecran-de-jeu] .champ:focus,
+[data-ecran-de-jeu] .champ:focus-within {
+  box-shadow:
+    var(--creux-champ),
+    0 0 0 4px color-mix(in oklab, var(--focus-champ, var(--color-amber-400)) 22%, transparent);
+}
+
+/* CE QUI DÉPEND D'UNE SAISIE SE VOIT SE METTRE À JOUR
+   (components/chiffre-qui-arrive.tsx, `ValeurRafraichie`). Le total des budgets
+   se recalculait déjà à la frappe ; il le faisait sans qu'on le voie. L'anneau
+   d'accent s'ouvre autour de la valeur et se referme : c'est son ÉPAISSEUR qui
+   s'anime, jamais sa teinte, pour que l'accent reste plein du début à la fin. */
+@keyframes valeur-rafraichie {
+  0% {
+    outline-width: 0;
+    outline-offset: 0.5em;
+  }
+  35% {
+    outline-width: 2px;
+    outline-offset: 0.15em;
+  }
+  100% {
+    outline-width: 0;
+    outline-offset: 0.15em;
+  }
+}
+.valeur-rafraichie {
+  border-radius: var(--radius-md);
+  outline: 0 solid var(--anneau-du-geste);
+}
+.valeur-rafraichie[data-valeur-rafraichie="eclat"] {
+  animation: valeur-rafraichie var(--duree-eclat) var(--courbe-passage) both;
+}
+
+/* ───────── CE QUE « MOINS DE MOUVEMENT » VEUT DIRE, EN UNE FOIS ──────────── */
+
+/* Une demande de moins de mouvement n'est pas un réglage de confort : c'est une
+   demande médicale. Tout ce que ce lot ajoute s'arrête ici, d'un bloc, pour
+   qu'aucune règle ne puisse lui échapper par oubli. L'écran change NET : même
+   contenu, mêmes chiffres, même anneau de focus, aucun déplacement.
+   (Le compteur, lui, se coupe côté script : voir `lib/mouvement.ts`.) */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-chiffres-arrivent] .ardoise svg polyline,
+  .rituel > [data-temps="3"] .pastille-rang,
+  [role="tabpanel"] > *,
+  details[open] > :not(summary),
+  .valeur-rafraichie[data-valeur-rafraichie="eclat"],
+  :is(.bouton-plein, .bouton-filet)[aria-busy="true"]::after {
+    animation: none;
+  }
+  :root[data-chiffres-arrivent] .ardoise svg polyline {
+    stroke-dasharray: none;
+  }
+  a[href],
+  button,
+  summary,
+  [role="tab"],
+  [role="button"] {
+    transition: none;
+  }
+  :is(.bouton-plein, .bouton-filet):active:not(:disabled) {
+    transform: none;
+  }
 }

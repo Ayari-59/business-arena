@@ -111,6 +111,11 @@ export function TourSimule({
             libelle: "Résultat net du tour",
             valeur: euroSigne(bilan.resultatNet),
             sens: bilan.resultatNet >= 0 ? "gain" : "perte",
+            // LE RÉSULTAT MONTE DEPUIS CELUI DU TOUR PRÉCÉDENT : c'est la
+            // distance parcourue que la classe regarde, pas le nombre seul.
+            nombre: bilan.resultatNet,
+            plume: "euro-signe",
+            depuis: bilan.resultatPrecedent ?? 0,
           }}
           ecart={
             bilan.resultatPrecedent === null ||
@@ -120,6 +125,8 @@ export function TourSimule({
                   valeur: euroSigne(bilan.resultatNet - bilan.resultatPrecedent),
                   mention: "par rapport au tour précédent",
                   sens: bilan.resultatNet >= bilan.resultatPrecedent ? "gain" : "perte",
+                  nombre: bilan.resultatNet - bilan.resultatPrecedent,
+                  plume: "euro-signe" as const,
                 }
           }
           rang={bilan.rang}

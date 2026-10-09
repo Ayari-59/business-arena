@@ -995,7 +995,12 @@ function Scene({
           forme="bande"
           surtitre={`${ep.nomDuTableau} · conséquence`}
           titre={`Semaines ${de} à ${etape.jusqua} · le verdict`}
-          chiffre={{ libelle: verdict.libelle, valeur: verdict.valeur, sens: null }}
+          chiffre={{
+            libelle: verdict.libelle,
+            valeur: verdict.valeur,
+            sens: null,
+            ...(verdict.nombre === null ? {} : { nombre: verdict.nombre, ecrire: verdict.ecrire }),
+          }}
           ecart={verdict.ecart}
           phrase={`Vous avez choisi : ${enMinuscule(etape.options[choix]!.t)}.`}
         />
@@ -1064,7 +1069,16 @@ function verdictDesSemaines(
 ): {
   libelle: string;
   valeur: string;
-  ecart: { valeur: string; mention: string; sens: SensDUnEcart } | null;
+  /** Le nombre derrière la valeur, pour qu'elle MONTE au lieu de s'imprimer. */
+  nombre: number | null;
+  ecrire: (n: number) => string;
+  ecart: {
+    valeur: string;
+    mention: string;
+    sens: SensDUnEcart;
+    nombre: number;
+    ecrire: (n: number) => string;
+  } | null;
 } {
   const { courbe } = ep;
   const valeurs = semaines
@@ -1073,20 +1087,39 @@ function verdictDesSemaines(
     .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
   const nom = courbe.titre.replace(/,?\s*semaine par semaine\s*$/i, "");
   const periode = de === a ? `semaine ${de}` : `moyenne des semaines ${de} à ${a}`;
-  if (valeurs.length === 0) return { libelle: `${nom} · ${periode}`, valeur: "—", ecart: null };
+  if (valeurs.length === 0)
+    return {
+      libelle: `${nom} · ${periode}`,
+      valeur: "—",
+      nombre: null,
+      ecrire: courbe.format,
+      ecart: null,
+    };
   const moyenne = valeurs.reduce((x, v) => x + v, 0) / valeurs.length;
   const indicateur = ep.indicateurs.find((ind) => ind.cle === courbe.cle);
   const d = moyenne - courbe.cible;
   const formatEcart = indicateur?.formatEcart ?? courbe.format;
+  // La même plume pour la valeur finale et pour chaque image du compteur :
+  // l'écart s'écrit signé, et le zéro de départ n'invente pas de signe.
+  const ecrireEcart = (n: number) =>
+    `${n > 1e-9 ? "+" : n < -1e-9 ? "−" : ""}${formatEcart(Math.abs(n))}`;
   const ecart =
     Math.abs(d) < 1e-9 || formatEcart(Math.abs(d)) === formatEcart(0)
       ? null
       : {
-          valeur: `${d > 0 ? "+" : "−"}${formatEcart(Math.abs(d))}`,
+          valeur: ecrireEcart(d),
           mention: `face à la cible (${courbe.libelleCible})`,
           sens: indicateur
             ? ((indicateur.sensBon * d > 0 ? "gain" : "perte") as SensDUnEcart)
             : null,
+          nombre: d,
+          ecrire: ecrireEcart,
         };
-  return { libelle: `${nom} · ${periode}`, valeur: courbe.format(moyenne), ecart };
+  return {
+    libelle: `${nom} · ${periode}`,
+    valeur: courbe.format(moyenne),
+    nombre: moyenne,
+    ecrire: courbe.format,
+    ecart,
+  };
 }
