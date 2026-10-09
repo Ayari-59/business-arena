@@ -40,7 +40,8 @@ export const SCENES_DES_ENTREPRISES: Record<string, { lieu: string; Dessin: Comp
 
 /**
  * LES LIEUX EN PHOTOGRAPHIE. Une entreprise qui a sa photo la montre à la place
- * du dessin ; les autres gardent leur scène dessinée en attendant la leur.
+ * du dessin. Les neuf en ont une ; les scènes dessinées restent le repli d'une
+ * entreprise qui viendrait s'ajouter sans photo.
  *
  * Ce sont des images générées par IA, fournies par le propriétaire, puis
  * TRAITÉES une fois pour toutes (scratchpad, lot 6B) : passées en niveaux de
@@ -49,13 +50,14 @@ export const SCENES_DES_ENTREPRISES: Record<string, { lieu: string; Dessin: Comp
  * qu'à une entreprise, elle n'a pas à changer de teinte. Aucune ne porte de
  * texte, de logo ni de marque — c'est la condition pour entrer ici (les mots
  * écrits au feutre sur le tableau d'ATLAS, les marques des tapis de VOLT, le
- * panneau de chantier et les sacs d'enduit de MARTEL ont été effacés à la
- * retouche).
+ * panneau de chantier et les sacs d'enduit de MARTEL, les étiquettes d'étagères
+ * et les logos d'enceintes de NOVA ont été effacés à la retouche).
  *
  * `cadrage` est la position verticale du cadre (`background-position`), réglée
  * pour garder les visages dans le bandeau, sur ordinateur comme au téléphone.
  */
 export const PHOTOS_DES_ENTREPRISES: Record<string, { cadrage: number }> = {
+  nova: { cadrage: 52 },
   boutique: { cadrage: 27 },
   hotel: { cadrage: 37 },
   bistrot: { cadrage: 34 },

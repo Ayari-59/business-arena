@@ -20,6 +20,7 @@ import {
   type Interlocuteur,
 } from "@/components/illustrations/portrait-d-interlocuteur";
 import { Lettre, Message } from "@/components/courrier";
+import { Dessin } from "@/components/illustrations/trait";
 import {
   SCENARIOS,
   SCENARIO_CHOICES,
@@ -66,13 +67,20 @@ const REPLI_DE_LA_TEINTE = /var\(--metier,\s*#9fabff\)/g;
 
 const DOSSIER = join(process.cwd(), "src", "components", "illustrations");
 
-// Les scènes DESSINÉES : une entreprise qui a sa photo ne montre plus son dessin.
-const scenes = Object.keys(SCENES_DES_ENTREPRISES)
-  .filter((code) => !PHOTOS_DES_ENTREPRISES[code])
-  .map((code) => ({
-    nom: `scène ${code}`,
-    html: renderToStaticMarkup(createElement(SceneDEntreprise, { scenario: code })),
-  }));
+// Les scènes DESSINÉES, contrôlées même quand une photo les remplace à l'écran :
+// elles restent le repli d'une entreprise sans photo, et un repli doit tenir la
+// palette comme le reste.
+const scenes = Object.entries(SCENES_DES_ENTREPRISES).map(([code, { Dessin: Scene }]) => ({
+  nom: `scène ${code}`,
+  html: renderToStaticMarkup(
+    createElement(
+      Dessin,
+      // `children` passe en troisième argument : les props sans lui, typées comme Dessin les attend.
+      { largeur: 480, hauteur: 270 } as Parameters<typeof Dessin>[0],
+      createElement(Scene),
+    ),
+  ),
+}));
 const portraits = (Object.keys(PORTRAITS) as Interlocuteur[]).map((qui) => ({
   nom: `portrait ${qui}`,
   html: renderToStaticMarkup(createElement(PortraitDInterlocuteur, { qui })),
