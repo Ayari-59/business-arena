@@ -13,11 +13,16 @@ import type { ScenarioDefinition, Sector } from "./registry";
  */
 
 /*
- * LES TEINTES DES MÉTIERS SONT DÉSATURÉES ET FONCTIONNELLES (globals.css,
+ * LES TEINTES DES MÉTIERS SONT FRANCHES ET FONCTIONNELLES (globals.css,
  * « LES MÉTIERS ») : une variable par métier et par variante de scénario,
  * claire sur la nuit, foncée sur le papier. Plus de halo ni de fond de puce :
  * dilués, l'ambre, le rose et l'orange donnaient des taches pêche et rose
  * pâle. La puce est un filet plein et un mot dans la couleur du métier.
+ *
+ * Les six entrées de `IDENTITES_SCENARIO` sont des VARIANTES de scénario, pas
+ * des métiers de plus : chacune porte la nuance voisine de sa famille (même
+ * teinte, un cran de clarté d'écart). Neuf teintes à séparer, pas quinze —
+ * c'est ce qui permet qu'elles soient franches.
  */
 export interface AccentSecteur {
   bord: string;

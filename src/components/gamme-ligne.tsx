@@ -15,7 +15,7 @@ type Gamme = NonNullable<GameView["gamme"]>;
 
 /**
  * Couleurs de repère, dans l'ordre de la gamme. Au-delà, on boucle. Ce sont
- * des CATÉGORIES : elles prennent les teintes désaturées des métiers, et non
+ * des CATÉGORIES : elles prennent les teintes franches des métiers, et non
  * le vert et le rouge des résultats ni l'orange de l'action.
  */
 const REPERES = [

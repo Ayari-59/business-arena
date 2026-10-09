@@ -598,37 +598,80 @@
 }
 
 /* ---------------------------------------------------------------------------
- * LES MÉTIERS : DES TEINTES DÉSATURÉES, FONCTIONNELLES.
+ * LES MÉTIERS : NEUF TEINTES FRANCHES, ET SIX NUANCES VOISINES.
  *
- * Une couleur distingue un métier (sa puce, son nom, sa barre), très
- * ponctuellement. Elle était tirée des paliers clairs de Tailwind : des
- * pastels sur le marine, et pour deux métiers le rouge et le vert, qui ne
- * disent que la perte et le gain. Ce sont désormais des teintes DÉSATURÉES,
- * ni pastel ni franches : sable, vieux rose, lavande grise, bleu acier, terre
- * cuite, vert-de-gris, olive, ocre, bleu-vert gris. Les variantes d'un
- * scénario reprennent la teinte de leur métier, un cran plus claire. Toutes
- * tiennent 4,6 pour 1 au moins sur le fond d'un champ du marine (#1b416f) ;
- * sur le papier, leur version foncée (posée avec le papier, plus bas) tient
- * 4,8 sur la page.
+ * Une couleur distingue un métier (sa puce, son nom, sa barre, sa tuile, le
+ * filet de tête de ses cartes). Le lot 5A avait posé la mécanique, mais avec
+ * des teintes DÉLAVÉES (chroma OKLCH 0,023 à 0,096, sous le plancher où une
+ * couleur se voit encore) : l'arène a viré au sépia et les quinze métiers se
+ * ressemblaient tous. Elles sont refaites FRANCHES.
+ *
+ * NEUF FAMILLES, PAS QUINZE. Six des quinze jetons sont des variantes de
+ * scénario d'un métier déjà là : `nova-gamme` est l'industrie, `hotel-gamme`
+ * l'hôtellerie, `bistrot-gamme` la restauration, `ecommerce-gamme`
+ * l'e-commerce, `conseil-gamme` les services, `boutique-mono` le commerce.
+ * Chacune prend une NUANCE VOISINE de sa famille (même teinte à quelques
+ * degrés près, un cran de clarté d'écart) et non un créneau à elle. Il ne
+ * reste que neuf teintes à vraiment séparer, et c'est ce qui rend « franc »
+ * tenable : quinze ne l'était pas, et c'est pourquoi elles avaient été
+ * délavées.
+ *
+ * CE QUE « FRANC » VEUT DIRE, EN MESURES (les quinze jetons, les deux côtés) :
+ *   - chroma OKLCH dans [0,105 ; 0,166[ : AU-DESSUS du plancher de la
+ *     compétence `dataviz` (0,10, en dessous duquel une teinte lit comme un
+ *     gris) et SOUS l'accent le moins coloré de la charte — l'or (0,166),
+ *     devant le vert de résultat (0,169), le rouge (0,175) et l'orange
+ *     d'action (0,176). Un métier se voit ; il ne crie pas plus fort qu'un
+ *     bouton.
+ *   - teinte à plus de 20° des quatre teintes réservées (rouge 23°, orange
+ *     d'action 55°, or 83°, vert de résultat 154°) ET à 10 d'écart perçu au
+ *     moins de chacun de ces accents : un métier ne se confond ni avec une
+ *     action, ni avec un verdict, ni avec un résultat.
+ *   - 4,5 pour 1 au moins sur les surfaces réelles (carte #ffffff, page
+ *     #f5f7fb, champ du marine #1b416f, relevé #13355f, ardoise #0b2545) et
+ *     sous l'encre qui se pose dessus.
+ *   - LES NEUF FAMILLES, DANS UN ORDRE FIXE (hôtellerie, bâtiment,
+ *     e-commerce, services, transport, commerce, abonnement, restauration,
+ *     industrie), tiennent la porte de la compétence entre voisins : 15
+ *     d'écart en vision normale et 8 en protanopie comme en deutéranopie
+ *     (mesuré : 16,1 et 8,4 sur le marine, 18,2 et 11,2 sur le papier). Le lot
+ *     5A n'atteignait pas cette porte du tout.
+ *   - deux à deux, les neuf sont à 5,1 au moins sur le marine et 7,0 sur le
+ *     papier (lot 5A : 3,0 et 1,9). Quinze couleurs franches ne peuvent pas
+ *     être deux à deux à 15 — c'est le plafond de séries que la compétence
+ *     décrit — d'où l'ordre fixe, et d'où le fait qu'un métier porte TOUJOURS
+ *     son nom et son pictogramme : l'identité ne tient jamais à la couleur
+ *     seule.
+ *   - chaque teinte reste à 10 au moins (6,5 en déficience) de chacun des
+ *     CINQ créneaux de la palette des données, à côté desquels elle sert de
+ *     série du joueur. C'est le prix mesuré de teintes franches : les cinq
+ *     créneaux occupent déjà le bleu, le prune, le bleu-vert, l'indigo et le
+ *     bleu acier, et une couleur franche s'en approche fatalement là où une
+ *     couleur délavée s'en éloignait. La série du joueur porte pour cela une
+ *     étiquette directe et un trait plus épais (charts.tsx).
+ *
+ * Les variantes de scénario ne sont donc plus « un cran plus claires » au
+ * hasard : chacune est la nuance de sa famille qui la sépare le mieux des
+ * HUIT AUTRES familles.
  * ------------------------------------------------------------------------- */
 :root,
 [data-theme="clair"] .contre-jour,
 [data-theme="clair"] .ardoise {
-  --secteur-industrie: #cba871;
-  --secteur-commerce: #d2a0ad;
-  --secteur-ecommerce: #b4a7d1;
-  --secteur-hotellerie: #95b1cc;
-  --secteur-restauration: #cfa687;
-  --secteur-services: #88b7ab;
-  --secteur-abonnement: #a9b673;
-  --secteur-batiment: #c2b067;
-  --secteur-transport: #88b6c0;
-  --secteur-nova-gamme: #d4b88c;
-  --secteur-hotel-gamme: #a4bbd0;
-  --secteur-conseil-gamme: #9fc3b7;
-  --secteur-bistrot-gamme: #d4b196;
-  --secteur-ecommerce-gamme: #baaed3;
-  --secteur-boutique-mono: #d4a6b2;
+  --secteur-industrie: #9fabff;
+  --secteur-commerce: #fe89d3;
+  --secteur-ecommerce: #fcb9ff;
+  --secteur-hotellerie: #cbabff;
+  --secteur-restauration: #ffa2c3;
+  --secteur-services: #b8fc85;
+  --secteur-abonnement: #b1e566;
+  --secteur-batiment: #acd048;
+  --secteur-transport: #7fbaff;
+  --secteur-nova-gamme: #99a8f2;
+  --secteur-hotel-gamme: #c39de9;
+  --secteur-conseil-gamme: #cafc7c;
+  --secteur-bistrot-gamme: #ffabce;
+  --secteur-ecommerce-gamme: #ffc1fe;
+  --secteur-boutique-mono: #ed8ad0;
 }
 
 @utility carte {
@@ -925,22 +968,24 @@ body {
   --voile-choisi: color-mix(in srgb, var(--marine) 6%, #fff);
   --voile-choisi-fort: color-mix(in srgb, var(--marine) 8%, #fff);
   --fond-ligne-moi: var(--voile-choisi, color-mix(in srgb, var(--accent-plein) 9%, #fff));
-  /* Les teintes des métiers, foncées pour le papier (voir « LES MÉTIERS »). */
-  --secteur-industrie: #7f6a49;
-  --secteur-commerce: #8a636f;
-  --secteur-ecommerce: #72698b;
-  --secteur-hotellerie: #5c7083;
-  --secteur-restauration: #846854;
-  --secteur-services: #56736c;
-  --secteur-abonnement: #6a714d;
-  --secteur-batiment: #776e46;
-  --secteur-transport: #52737c;
-  --secteur-nova-gamme: #7a6c56;
-  --secteur-hotel-gamme: #636f7a;
-  --secteur-conseil-gamme: #5f716b;
-  --secteur-bistrot-gamme: #7c6a5c;
-  --secteur-ecommerce-gamme: #706a7d;
-  --secteur-boutique-mono: #7f676d;
+  /* Les teintes des métiers, foncées pour le papier (voir « LES MÉTIERS »).
+     Même teinte qu'en face, à quelques degrés près : c'est la CLARTÉ qui se
+     retourne, parce que les quatre surfaces n'ont pas la même. */
+  --secteur-industrie: #1f0677;
+  --secteur-commerce: #4d0038;
+  --secteur-ecommerce: #6c1072;
+  --secteur-hotellerie: #46097a;
+  --secteur-restauration: #8c094e;
+  --secteur-services: #2c5100;
+  --secteur-abonnement: #567d01;
+  --secteur-batiment: #4c6100;
+  --secteur-transport: #003d75;
+  --secteur-nova-gamme: #120372;
+  --secteur-hotel-gamme: #46006d;
+  --secteur-conseil-gamme: #2f5700;
+  --secteur-bistrot-gamme: #890041;
+  --secteur-ecommerce-gamme: #6a0065;
+  --secteur-boutique-mono: #46002c;
 }
 
 /* ---------------------------------------------------------------------------
@@ -2586,7 +2631,9 @@ a.carte,
  * CE QU'ELLE NE PREND JAMAIS : l'orange reste à l'action seule (aucun bouton
  * n'est en teinte de métier), l'or au verdict, au rang et aux distinctions, le
  * vert et le rouge francs aux résultats. Elle ne colore aucun chiffre dont le
- * signe porte déjà le sens.
+ * signe porte déjà le sens. Les quinze teintes sont tenues à 10 d'écart perçu
+ * au moins de chacun de ces quatre accents (voir « LES MÉTIERS »), pour qu'un
+ * métier franc ne se lise jamais comme un verdict ou un résultat.
  * ======================================================================== */
 [data-metier="industrie"],
 [data-metier="industrie"] :is(.ardoise, .contre-jour) {
@@ -2650,8 +2697,8 @@ a.carte,
 }
 
 /* L'ENCRE QUI SE LIT SUR UN APLAT DE MÉTIER. Les teintes claires du marine
-   portent le marine (6,9 pour 1 au moins) ; les teintes foncées du papier
-   portent le blanc (4,8 au moins, mesuré sur les quinze). */
+   portent le marine (6,7 pour 1 au moins) ; les teintes foncées du papier
+   portent le blanc (4,8 au moins, mesuré sur les quinze teintes franches). */
 :root {
   --metier-texte: #0b2545;
 }
@@ -2692,8 +2739,11 @@ a.carte,
    pictogramme teinté ; elle porte maintenant la teinte, en aplat léger cerné
    d'un filet plein, qui est la seule dilution admise parce qu'elle ne dit ni
    une action, ni un résultat, ni un état : une identité. */
+/* L'aplat descend de 20 à 12 % : les teintes sont franches maintenant, et
+   un aplat de 20 % d'une couleur franche se met à rivaliser avec le
+   pictogramme qu'il porte. On baisse l'opacité de l'APLAT, pas la teinte. */
 .tuile-metier {
-  background-color: color-mix(in srgb, var(--metier, var(--donnee)) 20%, transparent);
+  background-color: color-mix(in srgb, var(--metier, var(--donnee)) 12%, transparent);
   box-shadow: inset 0 0 0 1px var(--metier, var(--donnee));
   color: var(--metier, var(--donnee));
 }

@@ -22,6 +22,13 @@ export interface Secteur {
    * (négoce, hôtellerie-restauration, conseil, santé, agroalimentaire) : chacun
    * emprunte donc le jeton dont la teinte le distingue le mieux des quatre
    * autres, et c'est ce nom, ici, qui en est la seule source.
+   *
+   * Les emprunts ont été REFAITS avec les teintes franches : les neuf familles
+   * ne se répartissent plus sur la roue comme les teintes délavées du lot 5A,
+   * et le meilleur cinq a changé. L'hôtellerie-restauration prend le jeton
+   * `restauration` et l'agroalimentaire le jeton `transport` : ce choix fait
+   * passer le plus petit écart entre les cinq de 3,3 à 6,9 (mesuré, les deux
+   * côtés de la composition, déficience de vision comprise).
    */
   teinte: string;
 }
@@ -37,7 +44,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "hotellerie",
-    teinte: "hotellerie",
+    teinte: "restauration",
     nom: "Hôtellerie-restauration",
     entreprise: "Groupe Escale",
     texte:
@@ -61,7 +68,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "agroalimentaire",
-    teinte: "industrie",
+    teinte: "transport",
     nom: "Industrie agroalimentaire",
     entreprise: "Laiterie de Kerbrélan",
     texte:

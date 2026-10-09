@@ -26,6 +26,19 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  * Elle vérifie aussi ce que la charte ajoute : les créneaux restent SOUS la
  * chroma de l'orange de l'action, de l'or du verdict, du vert et du rouge des
  * résultats, et aucun graphique n'écrit une couleur en dur.
+ *
+ * LES QUINZE TEINTES DE MÉTIER, FRANCHES. Le lot 5A les avait laissées
+ * délavées (chroma 0,023 à 0,096, sous le plancher où une couleur se voit
+ * encore) : l'arène virait au sépia et les quinze se ressemblaient. Elles sont
+ * refaites, et la règle qui les tient tient en quatre lignes :
+ *   - NEUF FAMILLES, pas quinze : six jetons sont des VARIANTES de scénario
+ *     d'un métier déjà là, et portent une nuance voisine de leur famille.
+ *   - franches : chroma dans [0,105 ; 0,166[, au-dessus du plancher de
+ *     `dataviz` et sous l'or, le moins coloré des quatre accents réservés.
+ *   - hors des teintes prises : plus de 20° et plus de 10 d'écart perçu de
+ *     chacun de ces accents.
+ *   - les neuf familles, dans un ORDRE FIXE, tiennent la porte de la
+ *     compétence entre voisins : 15 en vision normale, 8 en déficience.
  */
 
 const CSS = readFileSync(join(process.cwd(), "src", "app", "globals.css"), "utf8");
@@ -47,9 +60,10 @@ function oklab([r, g, b]: number[]): number[] {
     0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
   ];
 }
-function oklch(hex: string): { L: number; C: number } {
+function oklch(hex: string): { L: number; C: number; h: number } {
   const [L, a, b] = oklab(lineaire(hex));
-  return { L: L!, C: Math.hypot(a!, b!) };
+  const h = (Math.atan2(b!, a!) * 180) / Math.PI;
+  return { L: L!, C: Math.hypot(a!, b!), h: h < 0 ? h + 360 : h };
 }
 const MACHADO: Record<string, number[][]> = {
   protanopie: [
@@ -103,6 +117,37 @@ const CONTRASTE_MARQUE = 3;
 const SURFACES = {
   clair: [PAPIER[900]!, PAPIER[950]!],
   marine: [TABLEAU[900]!, TABLEAU[950]!],
+};
+
+/** Les deux tables des teintes de métier, de chaque côté de la composition. */
+const SUR_MARINE_METIERS = CSS.slice(CSS.indexOf("LES MÉTIERS : NEUF TEINTES FRANCHES"));
+const SUR_PAPIER_METIERS = CSS.slice(CSS.indexOf('[data-theme="clair"] {\n  /* Même remarque'));
+/** Les quatre accents que la charte réserve, par côté (le papier a ses encres). */
+const ACCENTS_RESERVES = {
+  marine: ["#ff8a1f", "#f4b400", "#3ccf7e", "#ff7070"],
+  clair: ["#a35200", "#8a6400", "#a07c00"],
+};
+/** L'or, le moins coloré des quatre accents : le plafond de la charte. */
+const PLAFOND_CHROMA = 0.166;
+/** L'ordre fixe des neuf familles, et les six variantes avec leur famille. */
+const ORDRE_DES_FAMILLES = [
+  "hotellerie",
+  "batiment",
+  "ecommerce",
+  "services",
+  "transport",
+  "commerce",
+  "abonnement",
+  "restauration",
+  "industrie",
+];
+const VARIANTES: Record<string, string> = {
+  "nova-gamme": "industrie",
+  "hotel-gamme": "hotellerie",
+  "conseil-gamme": "services",
+  "bistrot-gamme": "restauration",
+  "ecommerce-gamme": "ecommerce",
+  "boutique-mono": "commerce",
 };
 
 const BLOC = CSS.slice(CSS.indexOf("LA DONNÉE : UNE SEULE PALETTE"));
@@ -294,12 +339,10 @@ describe("la teinte du métier est le fil d'une partie", () => {
     expect(new Set(SECTEURS.map((s) => s.teinte)).size).toBe(SECTEURS.length);
   });
 
-  it("la teinte du métier se lit comme du texte, et se distingue du premier créneau", () => {
-    const sombre = CSS.slice(CSS.indexOf("LES MÉTIERS : DES TEINTES DÉSATURÉES"));
-    const papier = CSS.slice(CSS.indexOf('[data-theme="clair"] {\n  /* Même remarque'));
-    for (const [source, fonds, creneau] of [
-      [papier, SURFACES.clair, PALETTE.clair[0]!],
-      [sombre, SURFACES.marine, PALETTE.marine[0]!],
+  it("la teinte du métier se lit comme du texte, et reste FRANCHE sans rivaliser", () => {
+    for (const [source, fonds, mode] of [
+      [SUR_PAPIER_METIERS, SURFACES.clair, "clair"],
+      [SUR_MARINE_METIERS, SURFACES.marine, "marine"],
     ] as const) {
       for (const nom of DECLAREES) {
         const teinte = jeton(source, `secteur-${nom}`);
@@ -308,28 +351,117 @@ describe("la teinte du métier est le fil d'une partie", () => {
             4.5,
           );
         }
-        // La série du joueur côtoie le premier créneau. Les teintes des
-        // métiers sont très désaturées : elles ne tiennent pas le plancher de
-        // 15 de dataviz, et c'est pourquoi la série du joueur porte TOUJOURS
-        // une étiquette directe et un trait plus épais (charts.tsx). On tient
-        // ici le seuil atteignable, pour qu'il ne se dégrade pas.
-        expect(ecart(teinte, creneau).normal, `${nom} et ${creneau}`).toBeGreaterThanOrEqual(13);
-        expect(ecart(teinte, creneau).dvc, `${nom} et ${creneau}, en DVC`).toBeGreaterThanOrEqual(
-          10,
-        );
+        // FRANCHE : au-dessus du plancher de dataviz, sous le moins coloré des
+        // quatre accents que la charte réserve. C'est la correction du lot 5A,
+        // dont les quinze teintes étaient toutes SOUS le plancher.
+        // Le PLAFOND est celui de la charte : la chroma du moins coloré des
+        // quatre accents, l'or (0,166), devant le vert de résultat (0,169), le
+        // rouge (0,175) et l'orange d'action (0,176). Il vaut des DEUX côtés :
+        // les encres du papier sont moins colorées parce qu'elles sont
+        // foncées, et s'en servir de plafond rendrait les métiers grisâtres —
+        // l'erreur même du lot 5A.
+        const { C } = oklch(teinte);
+        expect(C, `${nom} (${teinte}) lit comme un gris`).toBeGreaterThanOrEqual(PLANCHER_CHROMA);
+        expect(C, `${nom} (${teinte}) est plus coloré que l'or`).toBeLessThan(PLAFOND_CHROMA);
+        // HORS DES TEINTES PRISES : l'orange de l'action, l'or du verdict, le
+        // vert et le rouge des résultats. Un métier franc ne doit pas pouvoir
+        // se lire comme un verdict ou un résultat.
+        for (const accent of ACCENTS_RESERVES[mode]) {
+          expect(
+            ecart(teinte, accent).normal,
+            `${nom} (${teinte}) trop près de l'accent ${accent}`,
+          ).toBeGreaterThanOrEqual(10);
+        }
+        // DISTINCTE DES CINQ CRÉNEAUX DE DONNÉES, à côté desquels elle sert de
+        // série du joueur. Le lot 5A ne mesurait que le PREMIER créneau, et à
+        // 13 : des teintes délavées sont loin d'un bleu franc dans le plan
+        // a-b, ce seuil ne coûtait rien. Des teintes FRANCHES s'en approchent
+        // fatalement — les cinq créneaux occupent déjà le bleu, le prune, le
+        // bleu-vert, l'indigo et le bleu acier. La garde couvre donc
+        // maintenant les CINQ créneaux, au seuil réellement atteint, et la
+        // série du joueur porte TOUJOURS une étiquette directe et un trait
+        // plus épais (charts.tsx) : l'encodage secondaire que la compétence
+        // dataviz exige dans la bande plancher.
+        for (const creneau of PALETTE[mode]) {
+          const e = ecart(teinte, creneau);
+          expect(e.normal, `${nom} et le créneau ${creneau}`).toBeGreaterThanOrEqual(10);
+          expect(e.dvc, `${nom} et le créneau ${creneau}, en DVC`).toBeGreaterThanOrEqual(6.5);
+        }
+      }
+    }
+  });
+
+  it("les neuf familles, dans leur ordre fixe, tiennent la porte de la compétence", () => {
+    // Quinze couleurs franches ne peuvent pas être deux à deux à 15 d'écart :
+    // c'est le PLAFOND DE SÉRIES que la compétence dataviz décrit, et le lot 5A
+    // n'avait même pas tenté la porte. On la tient là où elle a un sens : les
+    // NEUF familles, rangées dans un ordre fixe, deux voisins à 15 en vision
+    // normale et 8 en protanopie comme en deutéranopie.
+    expect(ORDRE_DES_FAMILLES).toHaveLength(9);
+    expect(new Set(ORDRE_DES_FAMILLES).size).toBe(9);
+    for (const nom of ORDRE_DES_FAMILLES) expect(DECLAREES).toContain(nom);
+    for (const [source, mode] of [
+      [SUR_PAPIER_METIERS, "clair"],
+      [SUR_MARINE_METIERS, "marine"],
+    ] as const) {
+      void mode;
+      for (let i = 0; i + 1 < ORDRE_DES_FAMILLES.length; i += 1) {
+        const a = jeton(source, `secteur-${ORDRE_DES_FAMILLES[i]}`);
+        const b = jeton(source, `secteur-${ORDRE_DES_FAMILLES[i + 1]}`);
+        const e = ecart(a, b);
+        const quoi = `${ORDRE_DES_FAMILLES[i]} et ${ORDRE_DES_FAMILLES[i + 1]}`;
+        expect(e.normal, `${quoi}, en vision normale`).toBeGreaterThanOrEqual(PLANCHER_NORMAL);
+        expect(e.dvc, `${quoi}, en protanopie ou deutéranopie`).toBeGreaterThanOrEqual(CIBLE_DVC);
+      }
+    }
+    // Et l'ordre est écrit dans la feuille, pour qu'il ne se reperde pas.
+    expect(CSS, "globals.css ne dit pas l'ordre fixe des neuf familles").toContain(
+      "LES NEUF FAMILLES, DANS UN ORDRE FIXE",
+    );
+  });
+
+  it("une variante de scénario est la NUANCE VOISINE de sa famille, pas un métier de plus", () => {
+    // Six des quinze jetons sont des variantes : même teinte que leur famille
+    // (à quelques degrés près), un cran de clarté d'écart. C'est ce qui ramène
+    // quinze teintes à neuf, et c'est ce qui rend « franc » tenable.
+    for (const [source, mode] of [
+      [SUR_PAPIER_METIERS, "clair"],
+      [SUR_MARINE_METIERS, "marine"],
+    ] as const) {
+      void mode;
+      for (const [variante, famille] of Object.entries(VARIANTES)) {
+        const v = jeton(source, `secteur-${variante}`);
+        const f = jeton(source, `secteur-${famille}`);
+        const e = ecart(v, f);
+        // Visible (sinon la variante ne servirait à rien) et voisine (sinon
+        // c'est un dixième métier).
+        expect(e.normal, `${variante} et ${famille} : nuance invisible`).toBeGreaterThanOrEqual(2);
+        expect(
+          e.normal,
+          `${variante} et ${famille} : ce n'est plus une nuance`,
+        ).toBeLessThanOrEqual(14);
+        const brut = Math.abs(oklch(v).h - oklch(f).h) % 360;
+        const dteinte = brut > 180 ? 360 - brut : brut;
+        expect(dteinte, `${variante} : teinte trop loin de ${famille}`).toBeLessThanOrEqual(8);
+        // Et elle se distingue des HUIT AUTRES familles, pas de la sienne.
+        for (const autre of ORDRE_DES_FAMILLES) {
+          if (autre === famille) continue;
+          expect(
+            ecart(v, jeton(source, `secteur-${autre}`)).normal,
+            `${variante} se confond avec ${autre}`,
+          ).toBeGreaterThanOrEqual(5);
+        }
       }
     }
   });
 
   it("l'encre posée sur un aplat de métier se lit, des deux côtés", () => {
-    const sombre = CSS.slice(CSS.indexOf("LES MÉTIERS : DES TEINTES DÉSATURÉES"));
-    const papier = CSS.slice(CSS.indexOf('[data-theme="clair"] {\n  /* Même remarque'));
     const bloc = CSS.slice(CSS.indexOf("LOT 5A : LA COULEUR DU MÉTIER"));
     expect(bloc).toContain("--metier-texte: #0b2545");
     expect(bloc).toContain("--metier-texte: #ffffff");
     for (const [source, encre] of [
-      [papier, "#ffffff"],
-      [sombre, "#0b2545"],
+      [SUR_PAPIER_METIERS, "#ffffff"],
+      [SUR_MARINE_METIERS, "#0b2545"],
     ] as const) {
       for (const nom of DECLAREES) {
         expect(

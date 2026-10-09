@@ -11,7 +11,7 @@ import { SECTOR_COLORS } from "../../src/config/scenarios/registry";
  * Le propriétaire a fixé un rôle à chaque couleur : l'orange ambré pour
  * l'action, l'or pour le verdict, le blanc cassé pour l'information, le vert
  * et le rouge pour les seuls résultats, un bleu désaturé pour la donnée, des
- * teintes désaturées pour distinguer les métiers. Chaque rôle a une valeur,
+ * teintes FRANCHES pour distinguer les métiers. Chaque rôle a une valeur,
  * et chaque valeur une lisibilité mesurée : cette garde les tient ensemble.
  */
 
@@ -38,6 +38,20 @@ function tsl(hex: string): { s: number; l: number } {
   const [max, min] = [Math.max(r!, g!, b!), Math.min(r!, g!, b!)];
   const l = (max + min) / 2;
   return { l, s: max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1)) };
+}
+/** La chroma OKLCH : « assez colorée pour se voir » se mesure là, pas en HSL. */
+function chroma(hex: string): number {
+  const [r, g, b] = rvb(hex).map((v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const l = Math.cbrt(0.4122214708 * r! + 0.5363325363 * g! + 0.0514459929 * b!);
+  const m = Math.cbrt(0.2119034982 * r! + 0.6806995451 * g! + 0.1073969566 * b!);
+  const n = Math.cbrt(0.0883024619 * r! + 0.2817188376 * g! + 0.6299787005 * b!);
+  return Math.hypot(
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * n,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * n,
+  );
 }
 function jeton(source: string, nom: string): string {
   const m = source.match(new RegExp(`--${nom}:\\s*(#[0-9a-f]{6})\\s*;`, "i"));
@@ -107,8 +121,8 @@ describe("le vert et le rouge disent les résultats, francs", () => {
   });
 });
 
-describe("les métiers se distinguent par des teintes désaturées", () => {
-  const sombre = CSS.slice(CSS.indexOf("LES MÉTIERS : DES TEINTES DÉSATURÉES"));
+describe("les métiers se distinguent par des teintes franches", () => {
+  const sombre = CSS.slice(CSS.indexOf("LES MÉTIERS : NEUF TEINTES FRANCHES"));
   const papier = CSS.slice(CSS.indexOf('[data-theme="clair"] {\n  /* Même remarque'));
   const noms = new Set<string>();
   for (const a of Object.values(ACCENTS_SECTEUR)) {
@@ -127,15 +141,27 @@ describe("les métiers se distinguent par des teintes désaturées", () => {
     expect(classes).not.toMatch(/\b(?:text|bg|border)-(?:red|rose|emerald|green)-\d/);
   });
 
-  it("chaque teinte est désaturée, lisible sur le marine et, foncée, sur le papier", () => {
+  it("chaque teinte est FRANCHE sans rivaliser avec un accent, et lisible des deux côtés", () => {
+    // Le lot 5A tenait ici un PLAFOND de saturation (« désaturée ») : c'est
+    // lui qui avait délavé les quinze métiers jusqu'au sépia. Le plafond
+    // reste, mais exprimé là où il veut dire quelque chose — la chroma OKLCH,
+    // bornée par l'accent le MOINS coloré de la charte (l'or, 0,166) — et il
+    // s'accompagne désormais d'un PLANCHER, celui de la compétence `dataviz`
+    // (0,10), en dessous duquel une teinte lit comme un gris. Un pastel est
+    // dès lors impossible : un pastel, c'est une chroma basse sur une clarté
+    // haute, et la chroma ne peut plus descendre.
+    expect(noms.size, "il faut les neuf métiers au moins").toBeGreaterThanOrEqual(9);
     for (const nom of noms) {
       const surMarine = jeton(sombre, `secteur-${nom}`);
-      const { s, l } = tsl(surMarine);
-      expect(s, `${nom} (${surMarine}) trop saturé`).toBeLessThan(0.6);
-      expect(l, `${nom} (${surMarine}) est un pastel`).toBeLessThan(0.85);
+      const cm = chroma(surMarine);
+      expect(cm, `${nom} (${surMarine}) lit comme un gris`).toBeGreaterThanOrEqual(0.1);
+      expect(cm, `${nom} (${surMarine}) est plus coloré que l'or`).toBeLessThan(0.166);
       // Jusque sur le fond d'un champ, la surface la plus claire du marine.
       expect(contraste(surMarine, CHAMP), `${nom} sur ${CHAMP}`).toBeGreaterThanOrEqual(4.5);
       const clair = jeton(papier, `secteur-${nom}`);
+      const cp = chroma(clair);
+      expect(cp, `${nom} (${clair}) lit comme un gris`).toBeGreaterThanOrEqual(0.1);
+      expect(cp, `${nom} (${clair}) est plus coloré que l'or`).toBeLessThan(0.166);
       for (const fond of [PAPIER[950]!, PAPIER[900]!]) {
         expect(contraste(clair, fond), `${nom} (${clair}) sur ${fond}`).toBeGreaterThanOrEqual(4.5);
       }
