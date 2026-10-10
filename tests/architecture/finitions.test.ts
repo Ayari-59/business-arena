@@ -209,3 +209,19 @@ describe("l'anneau décoratif n'existe plus (après P5)", () => {
     expect(fautes).toEqual([]);
   });
 });
+
+describe("pendant la décision, sur téléphone, un seul résultat à l'écran (après P7)", () => {
+  // La barre montre le résultat ESTIMÉ ; la ligne repliée de l'ardoise, dessous,
+  // redisait le résultat RÉEL du tour passé. Décision du propriétaire : elle se
+  // tait pendant la décision quand l'estimation est affichée.
+  it("la ligne repliée se masque quand la barre montre l'estimation", () => {
+    const repliee = lire("src/components/ardoise-repliee.tsx");
+    expect(repliee).toMatch(/useEstimationEnCours\(\)/);
+    expect(repliee).toMatch(/progression\?\.phase === "decision" && estimation !== null/);
+    expect(repliee).toMatch(/ardoise && !tue\s*\?/);
+    // Et la barre garde la même condition pour montrer l'estimation.
+    expect(lire("src/components/barre-de-jeu.tsx")).toMatch(
+      /enTete\?\.phase === "decision" && estimation !== null/,
+    );
+  });
+});

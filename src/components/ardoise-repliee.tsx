@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { useEstimationEnCours } from "@/lib/estimation-en-cours";
+import { useProgression } from "@/lib/progression-parcours";
 
 /**
  * La hauteur de ce qui reste collé en haut de l'écran : l'en-tête du site sur
@@ -44,6 +46,16 @@ export const HAUTEUR_REPLIEE = 33;
  */
 export function ArdoiseRepliee({ children }: { children: ReactNode }) {
   const [etat, setEtat] = useState({ visible: false, haut: 0 });
+  // PENDANT LA DÉCISION, SUR TÉLÉPHONE, ELLE SE TAIT. La barre du haut y montre
+  // le résultat ESTIMÉ du tour en cours (lot P7) ; la ligne repliée, juste
+  // dessous, redisait le résultat RÉEL du tour passé (« Rés. −7 191 € » sous
+  // « Rés. estimé −6 761 € ») : deux résultats l'un sur l'autre, qu'on
+  // confondait. Le propriétaire a tranché : pendant la décision, seule
+  // l'estimation reste. Hors décision (briefing, analyse) et sur grand écran
+  // (pas de parcours en cartes), rien ne change.
+  const progression = useProgression();
+  const estimation = useEstimationEnCours();
+  const tue = progression?.phase === "decision" && estimation !== null;
 
   useEffect(() => {
     let attente = 0;
@@ -53,13 +65,14 @@ export function ArdoiseRepliee({ children }: { children: ReactNode }) {
       const haut = hautDesBarres();
       document.documentElement.style.setProperty(
         "--haut-collant",
-        `${haut + (ardoise ? HAUTEUR_REPLIEE : 0) + 2}px`,
+        `${haut + (ardoise && !tue ? HAUTEUR_REPLIEE : 0) + 2}px`,
       );
       // Repliée dès qu'il ne reste de l'ardoise qu'une lisière : la ligne la
       // couvre, et l'on ne voit jamais deux fois les mêmes chiffres.
-      const visible = ardoise
-        ? ardoise.getBoundingClientRect().bottom < haut + HAUTEUR_REPLIEE + 12
-        : false;
+      const visible =
+        ardoise && !tue
+          ? ardoise.getBoundingClientRect().bottom < haut + HAUTEUR_REPLIEE + 12
+          : false;
       setEtat((e) => (e.visible === visible && e.haut === haut ? e : { visible, haut }));
     };
     const planifier = () => {
@@ -74,7 +87,7 @@ export function ArdoiseRepliee({ children }: { children: ReactNode }) {
       window.removeEventListener("resize", planifier);
       document.documentElement.style.removeProperty("--haut-collant");
     };
-  }, []);
+  }, [tue]);
 
   return (
     <div
