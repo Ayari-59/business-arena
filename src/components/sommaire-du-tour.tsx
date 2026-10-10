@@ -102,7 +102,11 @@ export function SommaireDuTour({
             id={`${idBase}-${f.cle}`}
             aria-labelledby={`${idBase}-${f.cle}-titre`}
             data-face-du-tour={f.cle}
-            className="scroll-mt-28 space-y-3"
+            // LOT P4 : l'ancre s'arrête SOUS ce qui colle en haut (la barre, la
+            // ligne de l'ardoise repliée), mesuré par `--haut-collant`, plus
+            // un souffle : le titre de la face reste lisible, sur ordinateur
+            // comme sur téléphone, où la barre est plus haute.
+            className="scroll-mt-[calc(var(--haut-collant,6rem)+1rem)] space-y-3"
           >
             <h3
               id={`${idBase}-${f.cle}-titre`}

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -12,6 +14,7 @@ import {
 } from "@/components/lecture-du-resultat";
 import {
   CeQuiAFaitLeResultat,
+  SEUIL_DU_MARQUEUR,
   geometrieDeLaCascade,
 } from "@/components/ce-qui-a-fait-le-resultat";
 
@@ -155,6 +158,67 @@ describe("la cascade du résultat : sa géométrie", () => {
     expect(der.sens).toBe("baisse");
     expect(der.haut).toBeCloseTo(zero, 9);
     expect(der.bas).toBeCloseTo(0, 9);
+  });
+});
+
+/** Le tour du verdict des captures de P3 : +878 € pour 297 124 € de chiffre d'affaires. */
+function petitGain(): DecompositionDuResultat {
+  const lignes: [MarcheDuResultat["cle"], string, number][] = [
+    ["ca", "Chiffre d'affaires", 297_124],
+    ["variables", "Coûts variables", -186_394],
+    ["structure", "Charges de structure", -103_990],
+    ["sous-ebe", "Amortissements, intérêts, impôt", -5_862],
+  ];
+  const marches: MarcheDuResultat[] = [];
+  let niveau = 0;
+  for (const [cle, libelle, montant] of lignes) {
+    marches.push({ cle, libelle, montant, debut: niveau, fin: niveau + montant });
+    niveau += montant;
+  }
+  marches.push({ cle: "resultat", libelle: "Résultat net", montant: niveau, debut: 0, fin: niveau });
+  return {
+    chiffreDAffaires: 297_124,
+    coutsVariables: 186_394,
+    marge: 110_730,
+    structure: 103_990,
+    sousLExcedent: 5_862,
+    resultat: niveau,
+    marches,
+  };
+}
+
+describe("un petit résultat reste lisible, sans barre faussement haute (lot P4)", () => {
+  it("+878 € pour 297 124 € : la marche du résultat devient un marqueur au niveau du zéro", () => {
+    const d = petitGain();
+    expect(d.resultat).toBe(878);
+    const { g, zero } = verifierLaGeometrie(d, "petit gain");
+    const der = g.at(-1)!;
+    expect(der.marqueur).toBe(true);
+    // La géométrie reste VRAIE : la marche fait ce qu'elle vaut, posée sur le zéro.
+    expect(der.haut - der.bas).toBeLessThan(SEUIL_DU_MARQUEUR);
+    expect(der.bas).toBeCloseTo(zero, 9);
+    // Seul le résultat peut devenir un marqueur.
+    expect(g.slice(0, -1).every((m) => !m.marqueur)).toBe(true);
+    const html = renderToStaticMarkup(
+      createElement(CeQuiAFaitLeResultat, { decomposition: d, causes: [] }),
+    );
+    expect(html).toMatch(/data-marche="resultat"[^>]*data-marqueur=""/);
+    expect(html).toContain("+878");
+  });
+
+  it("un résultat franc garde sa barre", () => {
+    expect(geometrieDeLaCascade(enPerte().marches).at(-1)!.marqueur).toBe(false);
+  });
+
+  it("le marqueur est un trait épais centré sur le zéro, pas une barre allongée", () => {
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+    const debout = css.slice(css.indexOf("@media (min-width: 640px) {\n  .cascade {"));
+    const regle = debout.match(
+      /\.cascade-marche\[data-marche="resultat"\]\[data-marqueur\] \.cascade-barre \{([^}]*)\}/,
+    )?.[1];
+    expect(regle).toBeDefined();
+    expect(regle).toMatch(/height: 4px;/);
+    expect(regle).toMatch(/var\(--zero\) \* var\(--cascade-trace\) - 2px\)/);
   });
 });
 

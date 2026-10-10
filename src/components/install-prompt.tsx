@@ -2,7 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { bouton } from "@/components/bouton";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { unePartieAEteJouee } from "@/lib/partie-jouee";
 import { estEcranDeJeu } from "@/config/ecrans-de-jeu";
 import { Icone } from "@/components/icone";
 
@@ -26,6 +27,14 @@ import { Icone } from "@/components/icone";
  * tient maintenant sur une barre d'une ligne, et se tait sur les écrans de jeu
  * (voir src/config/ecrans-de-jeu.ts), où l'élève décide et n'a pas à être
  * sollicité.
+ *
+ * LOT P4 : PAS AVANT D'AVOIR JOUÉ, JAMAIS SUR UNE ACTION. Elle recouvrait encore
+ * le bas de la vitrine dès l'arrivée : on proposait d'installer un produit
+ * qu'on n'avait pas essayé. Elle attend maintenant qu'une partie ait été jouée
+ * sur l'appareil (un tour résolu ou une partie terminée : le témoin que pose
+ * l'arène, `lib/partie-jouee.ts`), et elle s'efface — glissée sous le bord —
+ * tant qu'un bouton d'action passe sous elle : elle ne se pose jamais
+ * par-dessus « Commencer une partie » ni sur aucun autre bouton.
  */
 
 type BeforeInstallPromptEvent = Event & {
@@ -45,6 +54,23 @@ function ferméRécemment(): boolean {
   }
 }
 
+/** Les commandes qu'elle ne doit jamais recouvrir : tout bouton, et les liens habillés en bouton. */
+const ACTIONS = "button, [role='button'], input[type='submit'], .bouton-plein, .bouton-filet";
+
+/** Un bouton d'action visible passe-t-il sous la bande `haut`–bas de l'écran ? */
+function uneActionDessous(haut: number, barre: HTMLElement | null): boolean {
+  for (const el of document.querySelectorAll<HTMLElement>(ACTIONS)) {
+    if (barre?.contains(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) continue;
+    if (r.bottom > haut && r.top < window.innerHeight) {
+      const s = getComputedStyle(el);
+      if (s.visibility !== "hidden" && s.display !== "none") return true;
+    }
+  }
+  return false;
+}
+
 export function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [canPrompt, setCanPrompt] = useState(false);
@@ -60,7 +86,8 @@ export function InstallPrompt() {
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone ===
         true;
-    if (standalone || ferméRécemment()) return;
+    // Pas avant une première partie jouée sur cet appareil (lot P4).
+    if (standalone || ferméRécemment() || !unePartieAEteJouee()) return;
 
     const ua = navigator.userAgent;
     const iosLike =
@@ -120,6 +147,34 @@ export function InstallPrompt() {
   // La barre d'action du bas (BarreDActionMobile) cède la place tant que cette
   // invitation est affichée : elles occupent le même bord de l'écran.
   const affichee = visible && !enJeu;
+
+  // JAMAIS PAR-DESSUS UN BOUTON (lot P4) : tant qu'une commande passe sous la
+  // bande qu'elle occupe, l'invitation glisse sous le bord de l'écran. Relu au
+  // défilement et au redimensionnement, une fois par image au plus.
+  const barre = useRef<HTMLDivElement>(null);
+  const [cede, setCede] = useState(true);
+  useEffect(() => {
+    if (!affichee) return;
+    let image = 0;
+    const relire = () => {
+      image = 0;
+      const el = barre.current;
+      if (!el) return;
+      const haut = window.innerHeight - el.offsetHeight;
+      setCede(uneActionDessous(haut, el));
+    };
+    const planifier = () => {
+      if (!image) image = requestAnimationFrame(relire);
+    };
+    relire();
+    window.addEventListener("scroll", planifier, { passive: true });
+    window.addEventListener("resize", planifier);
+    return () => {
+      if (image) cancelAnimationFrame(image);
+      window.removeEventListener("scroll", planifier);
+      window.removeEventListener("resize", planifier);
+    };
+  }, [affichee, chemin]);
   useEffect(() => {
     document.documentElement.toggleAttribute("data-install-prompt", affichee);
     return () => document.documentElement.removeAttribute("data-install-prompt");
@@ -131,9 +186,14 @@ export function InstallPrompt() {
   // Partager de Safari. On le dit en une ligne, on n'en fait pas un tutoriel.
   return (
     <div
+      ref={barre}
       role="dialog"
       aria-label="Installer l'application"
-      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:hidden"
+      inert={cede}
+      data-cede={cede ? "" : undefined}
+      className={`fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none sm:hidden ${
+        cede ? "pointer-events-none translate-y-[calc(100%+1rem)]" : ""
+      }`}
     >
       <div className="mx-auto flex max-w-md items-center gap-2 rounded-xl border border-white/15 bg-slate-900/95 py-1.5 pl-3 pr-1.5 shadow-2xl backdrop-blur">
         <Icone nom="telephone" className="h-5 w-5 text-slate-300" />

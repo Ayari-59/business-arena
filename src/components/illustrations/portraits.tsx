@@ -6,14 +6,29 @@ import { ACCENT, ACCENT_TRAIT, BLANC, MARINE as M, OMBRE } from "./trait";
  * l'âge, la coupe et la silhouette font la personne, l'attribut fait le rôle.
  * Ils se lisent entre 56 et 72 px, dans l'en-tête d'une lettre : rien de ce
  * qui compte n'y est plus fin que quelques pixels.
+ *
+ * LOT P4 : LA BANQUE ET LA PRESSE NE SE CONFONDENT PLUS. À 64 px, elles avaient
+ * la même coupe sombre qui encadre le visage et le même buste : on les
+ * distinguait au seul objet tenu. Elles se distinguent maintenant d'abord par
+ * la SILHOUETTE et par le SOL DU MÉDAILLON, dans la palette fermée :
+ *   · la banque, sur le sol le plus CLAIR des marines (`releve`) : une femme
+ *     d'âge mûr, carré court et net au ras de la mâchoire, grandes lunettes,
+ *     veste sombre aux épaules larges et carrées ;
+ *   · la presse, sur le sol le plus SOMBRE (`nuit`) : un jeune homme mince, la
+ *     casquette gavroche claire à visière, le cou dégagé, les épaules étroites,
+ *     l'écharpe et le journal plié.
+ * Les six autres gardent le sol du milieu (`mur`).
  */
 
-/** Le fond commun : le halo derrière la tête, légèrement teinté du métier. */
-function Fond() {
+/**
+ * Le fond : le sol du médaillon et le halo derrière la tête, légèrement teinté
+ * du métier. Par défaut, le sol du milieu ; la banque et la presse ont le leur.
+ */
+function Fond({ sol = M.mur, halo = M.champ }: { sol?: string; halo?: string } = {}) {
   return (
     <>
-      <rect width={240} height={240} fill={M.mur} />
-      <circle cx={120} cy={104} r={80} fill={M.champ} />
+      <rect width={240} height={240} fill={sol} />
+      <circle cx={120} cy={104} r={80} fill={halo} />
       <circle cx={120} cy={104} r={80} style={ACCENT} opacity={0.08} />
     </>
   );
@@ -44,40 +59,37 @@ function Epaules({ fill, largeur = 82 }: { fill: string; largeur?: number }) {
   return <path d={`M${g} 240C${g} 186 74 164 120 164C166 164 ${d} 186 ${d} 240Z`} fill={fill} />;
 }
 
-/** LA BANQUE : la chargée d'affaires, ses lunettes et le dossier de crédit. */
+/**
+ * LA BANQUE : la chargée d'affaires, d'âge mûr, son carré net, ses grandes
+ * lunettes et le dossier de crédit. Sol clair, veste sombre aux épaules carrées.
+ */
 export function PortraitBanque() {
   return (
     <>
-      <Fond />
-      <Epaules fill={M.fond} />
-      <path d="M101 165L120 204L139 165Z" fill={BLANC} />
-      <path d="M101 165L120 204L94 240L70 240L84 176Z" fill={M.creux} />
-      <path d="M139 165L120 204L146 240L170 240L156 176Z" fill={M.creux} />
+      <Fond sol={M.releve} halo={M.filet} />
+      {/* la veste structurée : épaules larges et carrées */}
+      <path d="M26 240L30 196Q34 172 72 166L168 166Q206 172 210 196L214 240Z" fill={M.fond} />
+      <path d="M101 166L120 204L139 166Z" fill={BLANC} />
+      <path d="M101 166L120 204L98 240L76 240L86 172Z" fill={M.nuit} />
+      <path d="M139 166L120 204L142 240L164 240L154 172Z" fill={M.nuit} />
+      {/* le carré court, net, au ras de la mâchoire : derrière le visage */}
+      <path d="M84 112C82 78 98 64 120 64C142 64 158 78 156 112L158 140Q140 146 130 140L110 140Q100 146 82 140Z" fill={M.nuit} />
       <Visage />
-      <path
-        d="M90 116C86 82 100 70 121 70C144 70 156 84 151 116C150 130 151 142 157 150L140 150C146 134 146 108 137 98C125 106 108 108 99 105C97 122 97 136 103 150L84 150C90 140 91 128 90 116Z"
-        fill={M.nuit}
-      />
-      <g fill="none" strokeWidth={2.6} style={ACCENT_TRAIT}>
-        <rect x={100} y={108} width={16} height={11} rx={4} />
-        <rect x={124} y={108} width={16} height={11} rx={4} />
+      {/* la frange droite, coupée net */}
+      <path d="M90 104C90 82 102 72 120 72C138 72 150 82 150 104L150 96Q120 88 90 96Z" fill={M.nuit} />
+      {/* les grandes lunettes */}
+      <g fill="none" strokeWidth={3.4} style={ACCENT_TRAIT}>
+        <rect x={97} y={106} width={19} height={14} rx={3} />
+        <rect x={124} y={106} width={19} height={14} rx={3} />
         <path d="M116 112L124 112" />
       </g>
-      <rect x={0} y={214} width={240} height={26} fill={M.releve} />
-      <rect x={0} y={214} width={240} height={3} fill={BLANC} opacity={0.14} />
-      <g transform="rotate(-6 170 210)">
-        <rect x={140} y={198} width={60} height={15} rx={1.5} style={ACCENT} />
-        <rect x={140} y={198} width={60} height={3} fill={BLANC} opacity={0.3} />
+      {/* le dossier de crédit, posé sur le bureau */}
+      <rect x={0} y={218} width={240} height={22} fill={M.creux} />
+      <rect x={0} y={218} width={240} height={3} fill={BLANC} opacity={0.14} />
+      <g transform="rotate(-6 170 214)">
+        <rect x={140} y={202} width={62} height={16} rx={1.5} style={ACCENT} />
+        <rect x={140} y={202} width={62} height={3} fill={BLANC} opacity={0.3} />
       </g>
-      <rect
-        x={52}
-        y={208}
-        width={46}
-        height={3.5}
-        rx={1.75}
-        fill={BLANC}
-        transform="rotate(8 75 210)"
-      />
     </>
   );
 }
@@ -249,20 +261,31 @@ export function PortraitSalarie() {
   );
 }
 
-/** LA PRESSE ET LES OBSERVATEURS : le journaliste et son journal plié. */
+/**
+ * LA PRESSE ET LES OBSERVATEURS : le jeune journaliste, mince, la casquette
+ * gavroche claire à visière, l'écharpe, et le journal plié. Sol sombre.
+ */
 export function PortraitPresse() {
   return (
     <>
-      <Fond />
-      <Epaules fill={M.filet} largeur={76} />
-      <path d="M100 166L120 190L140 166Z" fill={M.nuit} />
-      <Visage />
-      {/* la mèche longue, sur le côté */}
-      <path
-        d="M90 118C84 82 100 70 122 70C146 70 158 86 150 122C148 104 144 96 138 92C126 102 106 100 96 96C92 104 91 110 90 118Z"
-        fill={M.nuit}
-      />
-      <path d="M96 96C110 92 126 84 138 92C130 82 112 80 96 96Z" fill={M.nuit} />
+      <Fond sol={M.nuit} halo={M.sol} />
+      {/* les épaules étroites */}
+      <Epaules fill={M.champ} largeur={68} />
+      <path d="M104 166L120 186L136 166Z" fill={M.nuit} />
+      {/* le cou long et dégagé, le visage plus étroit */}
+      <rect x={110} y={134} width={20} height={36} fill={OMBRE} />
+      <ellipse cx={120} cy={114} rx={26} ry={33} fill={BLANC} />
+      {/* l'écharpe, nouée */}
+      <path d="M96 164Q120 178 144 164L146 174Q120 190 94 174Z" fill={M.filet} />
+      <path d="M128 176L138 214L126 214L120 180Z" fill={M.filet} />
+      {/* les cheveux courts qui dépassent aux tempes */}
+      <path d="M94 96L102 96L100 116L94 112Z" fill={M.nuit} />
+      <path d="M146 96L138 96L140 116L146 112Z" fill={M.nuit} />
+      {/* la casquette gavroche : une calotte PLATE et large, tirée vers
+          l'avant, et sa visière courte qui déborde à gauche — rien d'un casque */}
+      <path d="M92 100Q86 84 104 78Q126 70 152 78Q170 84 162 98Q150 102 128 100L100 102Q92 104 92 100Z" fill={OMBRE} />
+      <path d="M108 80Q128 74 150 80" fill="none" stroke={BLANC} strokeWidth={2.5} opacity={0.7} />
+      <path d="M94 98Q80 98 70 106Q84 112 112 104Z" fill={BLANC} />
       {/* le journal plié, sous le bras */}
       <g transform="rotate(-14 160 206)">
         <rect x={120} y={182} width={84} height={50} fill={BLANC} />
@@ -275,7 +298,7 @@ export function PortraitPresse() {
         </g>
         <rect x={120} y={226} width={84} height={6} fill={OMBRE} />
       </g>
-      <ellipse cx={116} cy={222} rx={10} ry={12} fill={BLANC} />
+      <ellipse cx={112} cy={224} rx={10} ry={12} fill={BLANC} />
     </>
   );
 }

@@ -117,8 +117,10 @@ export function BarreDeJeu({
           <div className="min-w-0 flex-1 text-center leading-tight">
             <p className="truncate text-base font-bold text-slate-50">{nom}</p>
             <p className="truncate text-sm text-slate-400">
+              {/* LOT P4 : le bilan s'ouvre sur « Partie terminée. » en titre ;
+                  la barre ne le redit pas, elle dit ce qu'on lit dessous. */}
               {termine
-                ? "Partie terminée"
+                ? `Bilan des ${tours} tours`
                 : progression
                   ? `Tour ${tour} sur ${tours}`
                   : `Tour ${tour} sur ${tours} · en cours`}

@@ -36,7 +36,11 @@ import {
   aideDesVentesEstimees,
   useResultatEstime,
 } from "@/components/resultat-estime";
-import { champDesVentesEstimees, PREFIXE_VENTES_ESTIMEES } from "@/config/ventes-estimees";
+import {
+  champDesVentesEstimees,
+  PREFIXE_VENTES_ESTIMEES,
+  ventesEstimeesParDefaut as defautDesVentesEstimees,
+} from "@/config/ventes-estimees";
 import { aideDuBudgetEntretien } from "@/config/entretien";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
@@ -430,6 +434,25 @@ function TotalDesBudgets({ engagement }: { engagement: Engagement | null }) {
  * Le repère ne s'invente pas — il vient de la vue de partie — et il manque au
  * premier tour, où il n'y a rien à rappeler : la ligne ne paraît alors pas.
  */
+/**
+ * « PROPOSITION — À AJUSTER » (lot P4). Au premier tour, les ventes estimées
+ * partent du plan de production proposé : la feuille le dit, pour que personne
+ * ne prenne ce chiffre pour une prévision du marché. Le marqueur disparaît à
+ * la première saisie. Une pastille d'ÉTAT, neutre : ni l'orange de l'action,
+ * ni une couleur de résultat.
+ */
+function MarqueDeProposition({ source }: { source: string }) {
+  return (
+    <span
+      data-proposition-de-ventes=""
+      className="pastille-attente inline-flex flex-wrap items-baseline gap-x-1.5 rounded-full px-2.5 py-0.5 text-sm text-slate-100"
+    >
+      <span className="font-semibold">Proposition — à ajuster</span>
+      <span className="text-slate-300">{source}</span>
+    </span>
+  );
+}
+
 function ChampMajeur({
   name,
   label,
@@ -439,6 +462,7 @@ function ChampMajeur({
   suffix,
   hint,
   repere,
+  proposition,
   onValueChange,
   inputRef,
 }: {
@@ -451,6 +475,8 @@ function ChampMajeur({
   hint?: string;
   /** Ce que le tour passé a donné, déjà formaté. Absent au premier tour. */
   repere?: string;
+  /** Le marqueur d'une valeur proposée par la feuille (lot P4), posé à côté de l'intitulé. */
+  proposition?: ReactNode;
   onValueChange?: (valeur: number) => void;
   inputRef?: RefObject<HTMLInputElement | null>;
 }) {
@@ -458,7 +484,14 @@ function ChampMajeur({
   const ref = inputRef ?? interne;
   return (
     <label className="block">
-      <span className="block text-base font-semibold text-slate-50">{label}</span>
+      {proposition ? (
+        <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <span className="text-base font-semibold text-slate-50">{label}</span>
+          {proposition}
+        </span>
+      ) : (
+        <span className="block text-base font-semibold text-slate-50">{label}</span>
+      )}
       <span className="mt-1.5 flex items-baseline gap-2 champ px-4 py-3">
         <input
           type="number"
@@ -511,7 +544,10 @@ function Field({
   sansCurseur,
   majeur = false,
   repere,
+  proposition,
 }: {
+  /** Le marqueur d'une valeur proposée par la feuille (lot P4) : sur ordinateur, à côté de l'intitulé d'un champ majeur. */
+  proposition?: ReactNode;
   /** L'étiquette courte d'une ligne compacte (plusieurs champs sur la même carte). Absente : le champ est en grand. */
   libelle?: string;
   /** Une décision majeure : sur ordinateur, un champ large et un chiffre de 30 px. */
@@ -604,6 +640,7 @@ function Field({
         suffix={suffix}
         {...(hint ? { hint } : {})}
         {...(repere ? { repere } : {})}
+        {...(proposition ? { proposition } : {})}
         {...(onValueChange ? { onValueChange } : {})}
         {...(inputRef ? { inputRef } : {})}
       />
@@ -1237,15 +1274,22 @@ function GammeReference({
   capacite,
   tourPasse,
   reperesEstimes,
-  ventesDeposees,
+  ventesParDefaut,
+  proposition = false,
 }: {
   /**
    * Ce que le tour passé a vendu et ce qui a manqué, référence par référence :
    * l'aide courte du champ des ventes estimées. Absent au premier tour.
    */
   reperesEstimes?: Record<string, { tour: number; vendu: number; manque: number }>;
-  /** Les ventes estimées déjà validées ce tour (mode classe), pour les reprendre. */
-  ventesDeposees?: Record<string, number>;
+  /**
+   * Le point de départ du champ des ventes estimées, référence par référence
+   * (`ventesEstimeesParDefaut` : déjà validé, vendu au tour passé, ou au
+   * premier tour le plan de production proposé).
+   */
+  ventesParDefaut?: Record<string, number>;
+  /** Les ventes estimées sont-elles encore la proposition de la feuille (lot P4) ? */
+  proposition?: boolean;
   /** Ce que l'atelier peut produire ce tour, toutes références confondues : le haut du curseur de volume. */
   capacite?: number;
   /**
@@ -1508,9 +1552,7 @@ function GammeReference({
               onWheel={sansMolette}
               name={champDesVentesEstimees(p.code)}
               aria-label={`Ventes estimées · ${p.name}`}
-              defaultValue={Math.round(
-                ventesDeposees?.[p.code] ?? reperesEstimes?.[p.code]?.vendu ?? 0,
-              )}
+              defaultValue={ventesParDefaut?.[p.code] ?? 0}
               step={1}
               min={0}
               required={visible(p.code)}
@@ -1781,6 +1823,14 @@ function GammeReference({
           </button>
         ))}
       </div>
+
+      {/* LOT P4 : au premier tour, les ventes estimées de chaque référence
+          partent de son plan de production. La feuille le dit, une fois. */}
+      {proposition ? (
+        <p>
+          <MarqueDeProposition source="vos plans de production" />
+        </p>
+      ) : null}
 
       <div className="overflow-x-auto">
         {/* `table-fixed` : les colonnes se partagent la largeur également, au
@@ -2540,17 +2590,46 @@ export function DecisionForm({
 
   // ── LES VENTES ESTIMÉES ──────────────────────────────────────────────────
   // En mono-produit, la référence est le produit du scénario ; le point de
-  // départ du champ est ce que l'équipe a VENDU au tour passé (son propre
-  // chiffre, qu'elle a sous les yeux), ou ce qu'elle a déjà validé ce tour-ci.
-  // Au premier tour il n'y a rien à reprendre : le champ part à zéro, et tant
-  // qu'il y reste, rien n'est annoncé.
+  // départ du champ est ce que l'équipe a déjà validé ce tour-ci, ou ce qu'elle
+  // a VENDU au tour passé (son propre chiffre, qu'elle a sous les yeux).
+  // LOT P4 : au premier tour, où il n'y a rien à reprendre, le champ partait à
+  // zéro et le résultat estimé restait muet. Il part du PLAN DE PRODUCTION
+  // proposé, le volume que le joueur voit déjà dans le champ d'à côté : rien
+  // de caché du moteur. C'est une proposition, marquée « Proposition — à
+  // ajuster » tant que le joueur n'y a pas touché, et la validation ne la
+  // compte pas comme une estimation (`ventesEstimeesSaisies`). Le calcul est
+  // celui de `config/ventes-estimees.ts`, le même pour la gamme.
   const codeMonoProduit = estimation?.scenario.product.code ?? "";
   const reperesEstimes = Object.fromEntries((estimation?.reperes ?? []).map((r) => [r.code, r]));
   const repereEstimeMono = reperesEstimes[codeMonoProduit];
-  const ventesEstimeesParDefaut = Math.round(
-    estimation?.deposees?.[codeMonoProduit] ?? repereEstimeMono?.vendu ?? 0,
+  const premierTourDEstimation = roundIndex === 1;
+  const defautDeLaReference = (code: string, planDeProduction: number | undefined) =>
+    defautDesVentesEstimees({
+      deposee: estimation?.deposees?.[code],
+      venduAuTourPasse: reperesEstimes[code]?.vendu,
+      planDeProduction,
+      premierTour: premierTourDEstimation,
+    });
+  const defautMono = defautDeLaReference(codeMonoProduit, defaults.productionPlan);
+  const ventesEstimeesParDefaut = defautMono.valeur;
+  const defautsGamme = Object.fromEntries(
+    (gamme ?? []).map((p) => [
+      p.code,
+      defautDeLaReference(p.code, defaults.products?.[p.code]?.productionPlan),
+    ]),
   );
+  // La proposition est-elle à l'écran, et le joueur l'a-t-il laissée telle
+  // quelle ? Une seule saisie dans un champ des ventes estimées suffit à en
+  // faire SON estimation : le marqueur et le témoin caché disparaissent.
+  const propositionPresente =
+    !!estimation &&
+    (gamme
+      ? Object.values(defautsGamme).some((d) => d.proposition)
+      : defautMono.proposition);
+  const [propositionTouchee, setPropositionTouchee] = useState(false);
+  const propositionEnCours = propositionPresente && !propositionTouchee;
   const aideEstimee = aideDesVentesEstimees(repereEstimeMono, v);
+  const marqueMono = <MarqueDeProposition source="votre plan de production" />;
 
   // Répartition des leviers en étapes courtes (anti-scroll) : plutôt qu'un long
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
@@ -3166,6 +3245,14 @@ export function DecisionForm({
         );
       })();
 
+  // LOT P4 : la première saisie dans un champ des ventes estimées fait de la
+  // proposition l'estimation du joueur (frappe, curseur ou brouillon restauré :
+  // tous passent par un événement `input`).
+  const noterLaSaisie = (cible: EventTarget) => {
+    const nom = cible instanceof HTMLInputElement ? cible.name : "";
+    if (propositionEnCours && nom.startsWith(PREFIXE_VENTES_ESTIMEES)) setPropositionTouchee(true);
+  };
+
   return (
     <TelephoneContexte.Provider value={telephone}>
     <CartesContexte.Provider
@@ -3175,7 +3262,8 @@ export function DecisionForm({
       ref={formRef}
       action={formAction}
       onSubmit={verifierPivots}
-      onChange={() => {
+      onChange={(e) => {
+        noterLaSaisie(e.target);
         sauverBrouillon();
         // L'encart « Résultat estimé » suit la saisie, à toutes les étapes :
         // on décide en voyant ce que la décision donnerait.
@@ -3191,6 +3279,10 @@ export function DecisionForm({
       className="space-y-3"
       {...glisser}
     >
+      {/* LE TÉMOIN DE LA PROPOSITION (lot P4) : tant qu'il part, les ventes
+          estimées sont celles que la feuille a proposées, pas celles de
+          l'équipe, et la validation ne les garde pas. */}
+      {propositionEnCours ? <input type="hidden" name="propositionDeVentes" value="1" /> : null}
       {/* Verrou de planning : hors de la fenêtre, on l'annonce et « Valider »
           est grisé (le serveur refuse de toute façon). La page reste lisible. */}
       {verrou ? (
@@ -3329,6 +3421,11 @@ export function DecisionForm({
       */}
       {gamme && estimation && modeCartes ? (
         <Carte cle="ventes-estimees">
+          {propositionEnCours ? (
+            <p className="mb-3">
+              <MarqueDeProposition source="vos plans de production" />
+            </p>
+          ) : null}
           <div className="space-y-2">
             {gamme.map((p) =>
               enDeveloppement(p) ? null : (
@@ -3337,9 +3434,7 @@ export function DecisionForm({
                   name={champDesVentesEstimees(p.code)}
                   label={`Ventes estimées · ${p.name}`}
                   libelle={p.name}
-                  defaultValue={Math.round(
-                    estimation.deposees?.[p.code] ?? reperesEstimes[p.code]?.vendu ?? 0,
-                  )}
+                  defaultValue={defautsGamme[p.code]?.valeur ?? 0}
                   step={1}
                   suffixe={v.units}
                   grand={false}
@@ -3374,8 +3469,15 @@ export function DecisionForm({
             {...(reperes?.tourPasseParReference
               ? { tourPasse: reperes.tourPasseParReference }
               : {})}
+            {...(estimation
+              ? {
+                  ventesParDefaut: Object.fromEntries(
+                    Object.entries(defautsGamme).map(([code, d]) => [code, d.valeur]),
+                  ),
+                }
+              : {})}
             {...(estimation ? { reperesEstimes } : {})}
-            {...(estimation?.deposees ? { ventesDeposees: estimation.deposees } : {})}
+            proposition={propositionEnCours}
           />
         </Family>
       ) : null}
@@ -3410,10 +3512,15 @@ export function DecisionForm({
                   </span>
                 </p>
               ) : null}
+              {/* Au premier tour, la même place : la proposition, marquée. */}
+              {modeCartes && propositionEnCours ? (
+                <p className="mb-3">{marqueMono}</p>
+              ) : null}
               <Field
                 name={champDesVentesEstimees(codeMonoProduit)}
                 label="Ventes estimées"
                 defaultValue={ventesEstimeesParDefaut}
+                {...(!modeCartes && propositionEnCours ? { proposition: marqueMono } : {})}
                 suffix={v.units}
                 majeur
                 {...(capaciteEffective
@@ -3449,7 +3556,7 @@ export function DecisionForm({
                 suffix={`€/${v.unit}`} onValueChange={setPrixSaisi} majeur
                 {...(repereDuPrix ? { repere: repereDuPrix } : {})}
                 {...(reperes?.plagePrix ? { plage: reperes.plagePrix } : {})}
-                hint="Attention aux seuils psychologiques…" />
+                hint="Passer au-dessus d'un prix rond fait perdre des clients d'un coup." />
               {modeCartes && reperes && reperes.coutVariable !== null ? (
                 <p className="mt-3 flex items-baseline justify-between px-1 pt-1 text-base text-slate-300">
                   <span>Marge par {v.unit}</span>

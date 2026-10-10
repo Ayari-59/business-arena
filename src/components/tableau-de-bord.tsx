@@ -316,7 +316,10 @@ export function TableauDeBord({
             <p className="surtitre">
               Tableau de bord du dirigeant
             </p>
-            <p className="mt-1 flex items-center gap-2.5 font-display text-2xl font-semibold leading-tight text-slate-50 sm:text-3xl">
+            {/* LOT P4 : sur le téléphone de l'arène, la barre de la partie dit
+                déjà « L'ESCALE · Tour 2/6 » ; l'ardoise ne le redit pas
+                (`.ardoise-nom-et-tour`, globals.css). */}
+            <p className="ardoise-nom-et-tour mt-1 flex items-center gap-2.5 font-display text-2xl font-semibold leading-tight text-slate-50 sm:text-3xl">
               {visage}
               <span className="min-w-0">
                 {entete.entreprise}

@@ -38,6 +38,7 @@ import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
 import { TourSimule } from "@/components/tour-simule";
+import { TemoinDePartieJouee } from "@/components/temoin-de-partie-jouee";
 import { LigneEstimeEtReel } from "@/components/ecart-d-estimation";
 import { CourrierDuTour } from "@/components/courrier-du-tour";
 import { GammeLigne } from "@/components/gamme-ligne";
@@ -173,6 +174,10 @@ export default async function ArenaPage({
   const tourJoue = periods.at(-1) ?? null;
   if (simule != null && view.kind === "solo" && tourJoue !== null) {
     return (
+      <>
+      {/* LOT P4 : un tour validé et résolu, c'est une partie jouée sur cet
+          appareil ; l'invitation à installer peut, ailleurs, se proposer. */}
+      <TemoinDePartieJouee />
       <TourSimule
         gameId={gameId}
         round={tourJoue.round}
@@ -226,6 +231,7 @@ export default async function ArenaPage({
           };
         })()}
       />
+      </>
     );
   }
 
@@ -759,7 +765,12 @@ export default async function ArenaPage({
             // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
             // la hauteur de l'en-tête collant pour que le titre reste visible.
             id={isLatest ? "dernier-resultat" : undefined}
-            open={isLatest}
+            // LOT P4 : AU BILAN, TOUS LES TOURS SONT REPLIÉS. La partie close
+            // dit son rang une fois, en grand, en tête du bilan ; le dernier
+            // tour déplié le redisait (« Au classement révélé : 3e sur 3 »,
+            // puis le classement IPG) sous la cérémonie. En cours de partie,
+            // le plus récent reste ouvert : c'est lui qu'on vient lire.
+            open={isLatest && !finished}
             // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
             // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
             // à la file se lisaient comme une grille, pas comme quatre tours.
@@ -1355,6 +1366,9 @@ export default async function ArenaPage({
       {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
           dans l'arène (voir site-header.tsx) et celle-ci porte la partie et le tour. */}
       <StockageDurable />
+      {/* LOT P4 : dès qu'un tour est résolu (ou la partie terminée), l'appareil
+          a joué une partie : l'invitation à installer peut se proposer hors jeu. */}
+      {periods.length > 0 || finished ? <TemoinDePartieJouee /> : null}
       <BarreDeJeu
         nom={view.playerTeamName}
         tour={view.currentRound}

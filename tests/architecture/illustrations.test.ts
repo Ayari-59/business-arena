@@ -282,3 +282,56 @@ describe("les lieux en photographie", () => {
     }
   });
 });
+
+/**
+ * LOT P4 : LA BANQUE ET LA PRESSE NE SE CONFONDENT PLUS. À 64 px, l'audit les
+ * trouvait identiques (même coupe sombre, même buste). Le premier signe qui
+ * les sépare, avant la silhouette et l'objet tenu, est le SOL du médaillon :
+ * le plus clair des marines pour la banque, le plus sombre pour la presse,
+ * et ni l'un ni l'autre n'est le sol commun des six autres figures.
+ */
+describe("les figures qu'on confondait", () => {
+  const sol = (qui: Interlocuteur) =>
+    renderToStaticMarkup(createElement(PortraitDInterlocuteur, { qui })).match(
+      /<rect width="240" height="240" fill="(#[0-9a-f]{6})"/,
+    )?.[1];
+  const luminance = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    }) as [number, number, number];
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ecart = (a: string, b: string) => {
+    const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m) as [number, number];
+    return (x + 0.05) / (y + 0.05);
+  };
+
+  it("chaque portrait pose son sol, et il est de la palette", () => {
+    for (const qui of Object.keys(PORTRAITS) as Interlocuteur[]) {
+      expect(sol(qui), qui).toBeDefined();
+      expect(PALETTE.has(sol(qui)!), qui).toBe(true);
+    }
+  });
+
+  it("la banque et la presse ont des sols franchement différents, et différents des autres", () => {
+    const banque = sol("banque")!;
+    const presse = sol("presse")!;
+    expect(ecart(banque, presse)).toBeGreaterThanOrEqual(2);
+    const autres = (Object.keys(PORTRAITS) as Interlocuteur[])
+      .filter((q) => q !== "banque" && q !== "presse")
+      .map(sol);
+    expect(autres).not.toContain(banque);
+    expect(autres).not.toContain(presse);
+  });
+
+  it("la presse ne porte plus la coupe sombre de la banque : sa coiffe est claire", () => {
+    const presse = renderToStaticMarkup(createElement(PortraitDInterlocuteur, { qui: "presse" }));
+    // La casquette gavroche, en blanc cassé et son ombre, au-dessus du visage.
+    expect(presse).toMatch(/<path d="M92 100[^"]*" fill="#d9d2c3"/);
+    const banque = renderToStaticMarkup(createElement(PortraitDInterlocuteur, { qui: "banque" }));
+    // Les lunettes de la banque, et seulement d'elle.
+    expect(banque).toMatch(/stroke-width="3.4"/);
+    expect(presse).not.toMatch(/stroke-width="3.4"/);
+  });
+});

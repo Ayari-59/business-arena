@@ -598,35 +598,6 @@ export function grilleDeCourriers(nombre: number, mise: "rangee" | "posee" = "ra
     : "grid gap-3 sm:auto-rows-fr sm:grid-cols-2";
 }
 
-/**
- * L'ENVELOPPE OUVERTE, POSÉE À CÔTÉ DE SA LETTRE (lot P3). La lettre lue se
- * pose sur le bureau ; l'enveloppe dont elle sort reste à côté, son rabat
- * relevé (globals.css, « LE COURRIER POSÉ »). Décor pur : tout ce qu'elle dit,
- * la lettre le dit aussi. Un courriel n'a pas d'enveloppe : rien ne se pose.
- */
-export function EnveloppeOuverte({
-  code,
-  destinataire,
-  className = "",
-}: {
-  code: string;
-  destinataire?: string;
-  className?: string;
-}) {
-  const c = courrier(code);
-  if (!c || c.pli === "email") return null;
-  return (
-    <div aria-hidden className={`enveloppe-ouverte ${className}`}>
-      <Enveloppe
-        code={code}
-        liasse={positionDuCourrier(code)?.liasse}
-        destinataire={destinataire}
-        className="h-52 w-full"
-      />
-    </div>
-  );
-}
-
 /** Le pli distribué : l'enveloppe, puis la lettre qui en sort. */
 export function CourrierRecommande({
   code,

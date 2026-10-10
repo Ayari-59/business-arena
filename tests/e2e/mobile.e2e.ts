@@ -133,19 +133,71 @@ async function commandesTropPetites(p: Page) {
 }
 
 describe("sur la vitrine, au toucher", () => {
-  it("l'invitation à installer tient sur une ligne et reste sous le pouce", async () => {
+  // LOT P4 : l'invitation recouvrait la vitrine dès l'arrivée. Elle attend
+  // qu'une partie ait été jouée sur l'appareil (le témoin que pose l'arène).
+  it("à la première visite, aucune invitation à installer", async () => {
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      localStorage.removeItem("partie-jouee-le");
+      localStorage.removeItem("install-prompt-ferme-le");
+    });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1_200);
+    expect(
+      await page.locator("[role=dialog][aria-label=\"Installer l'application\"]").count(),
+      "l'invitation est rendue avant toute partie jouée",
+    ).toBe(0);
+  });
+
+  it("après une partie, elle tient sur une ligne et ne couvre jamais un bouton", async () => {
+    await page.evaluate(() => {
+      localStorage.setItem("partie-jouee-le", String(Date.now()));
+      localStorage.removeItem("install-prompt-ferme-le");
+    });
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
-    const barre = page.getByRole("dialog", { name: "Installer l'application" });
-    await barre.waitFor({ state: "visible", timeout: 10_000 });
-    const boite = (await barre.boundingBox())!;
+    const barre = page.locator("[role=dialog][aria-label=\"Installer l'application\"]");
+    await barre.waitFor({ state: "attached", timeout: 10_000 });
     const hauteurEcran = page.viewportSize()!.height;
-    // Une ligne : bien moins d'un huitième de l'écran. Elle en couvrait 40 %.
-    expect(
-      boite.height,
-      `barre d'installation de ${boite.height} px`,
-    ).toBeLessThan(hauteurEcran / 8);
-  });
+    const hauteurPage = await page.evaluate(() => document.body.scrollHeight);
+    let montree = 0;
+    for (let y = 0; y < hauteurPage; y += 300) {
+      await page.evaluate((y) => window.scrollTo(0, y), y);
+      await page.waitForTimeout(450);
+      const etat = await page.evaluate(() => {
+        const b = document.querySelector<HTMLElement>(
+          "[role=dialog][aria-label=\"Installer l'application\"]",
+        )!;
+        const r = b.getBoundingClientRect();
+        if (b.hasAttribute("data-cede") || r.top >= innerHeight) return { montree: false, hauteur: 0, sous: [] };
+        const sous = [
+          ...document.querySelectorAll<HTMLElement>(
+            "button, [role=button], .bouton-plein, .bouton-filet",
+          ),
+        ]
+          .filter((e) => !b.contains(e))
+          .filter((e) => {
+            const q = e.getBoundingClientRect();
+            const s = getComputedStyle(e);
+            return (
+              q.width > 1 && q.height > 1 && s.visibility !== "hidden" &&
+              q.bottom > r.top && q.top < r.bottom && q.right > r.left && q.left < r.right
+            );
+          })
+          .map((e) => (e.innerText || e.getAttribute("aria-label") || e.tagName).trim().slice(0, 30));
+        return { montree: true, hauteur: r.height, sous };
+      });
+      if (!etat.montree) continue;
+      montree += 1;
+      // Une ligne : bien moins d'un huitième de l'écran. Elle en couvrait 40 %.
+      expect(etat.hauteur, `barre d'installation de ${etat.hauteur} px`).toBeLessThan(
+        hauteurEcran / 8,
+      );
+      expect(etat.sous, `à ${y} px, l'invitation couvre : ${etat.sous.join(", ")}`).toEqual([]);
+    }
+    expect(montree, "l'invitation ne se montre jamais, même après une partie").toBeGreaterThan(0);
+  }, 120_000);
 
   it("la barre du haut se touche du premier coup", async () => {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });

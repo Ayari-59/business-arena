@@ -23,7 +23,10 @@ const champsDuFormulaire = new Set(
     .map((m) => m[1]!)
     // Ces deux là ne sont pas des décisions de gestion : l'un porte le choix du
     // modèle d'analyse, l'autre le champ technique du bouton de validation.
-    .filter((n) => !["quiz_model_choice", "options", "justification", "equipmentBuyJson", "equipmentSellJson"].includes(n)),
+    // LOT P4 : `propositionDeVentes` non plus — c'est le témoin caché d'une
+    // proposition de ventes estimées que le joueur n'a pas touchée ; le moteur
+    // ne le lit pas, pas plus que les ventes estimées elles-mêmes.
+    .filter((n) => !["quiz_model_choice", "options", "justification", "equipmentBuyJson", "equipmentSellJson", "propositionDeVentes"].includes(n)),
 );
 
 describe("leviers de décision", () => {

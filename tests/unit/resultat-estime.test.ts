@@ -14,6 +14,8 @@ import {
 } from "@/components/ecart-d-estimation";
 import {
   champDesVentesEstimees,
+  propositionIntacte,
+  ventesEstimeesParDefaut,
   ventesEstimeesParReference,
   ventesEstimeesSaisies,
 } from "@/config/ventes-estimees";
@@ -173,6 +175,22 @@ describe("les ventes estimées, lues sur le formulaire", () => {
     expect(saisie?.byProduct).toEqual({ A: 40, B: 0 });
   });
 
+  it("une proposition laissée telle quelle n'est pas une estimation (lot P4)", () => {
+    // Le témoin caché part tant que le joueur n'a pas touché aux ventes
+    // estimées : la validation ne garde rien, la fin de tour n'oppose rien.
+    const intacte = form({ "ventesEstimees.A": "1800", propositionDeVentes: "1" });
+    expect(propositionIntacte(intacte)).toBe(true);
+    expect(ventesEstimeesSaisies(intacte)).toBeNull();
+    // L'encart, lui, lit bien la proposition : c'est ce qui le fait parler.
+    expect(ventesEstimeesParReference(intacte.entries())).toEqual({ A: 1800 });
+    // Touchée (le témoin ne part plus), la même valeur devient l'estimation.
+    const touchee = form({ "ventesEstimees.A": "1800" });
+    expect(propositionIntacte(touchee)).toBe(false);
+    expect(ventesEstimeesSaisies(touchee)?.units).toBe(1800);
+    // Un témoin à une autre valeur ne vaut rien.
+    expect(ventesEstimeesSaisies(form({ "ventesEstimees.A": "1800", propositionDeVentes: "0" }))?.units).toBe(1800);
+  });
+
   it("une saisie négative ou illisible vaut zéro, jamais NaN", () => {
     expect(
       ventesEstimeesParReference(
@@ -318,5 +336,62 @@ describe("« le marché répond » : l'écart entre l'estimation et la réalité
     expect(html).toContain("−100");
     // Un écart EST un résultat : il porte le rouge.
     expect(html).toMatch(/data-ecart="true"[^>]*text-red-400/);
+  });
+});
+
+describe("la valeur de départ des ventes estimées (lot P4)", () => {
+  it("au premier tour, le plan de production proposé, marqué comme une proposition", () => {
+    expect(ventesEstimeesParDefaut({ planDeProduction: 2_000.4, premierTour: true })).toEqual({
+      valeur: 2_000,
+      proposition: true,
+    });
+  });
+
+  it("ce qui est déjà déposé ce tour-ci l'emporte, et n'est pas une proposition", () => {
+    expect(
+      ventesEstimeesParDefaut({ deposee: 1_250, planDeProduction: 2_000, premierTour: true }),
+    ).toEqual({ valeur: 1_250, proposition: false });
+  });
+
+  it("à partir du deuxième tour, la règle d'avant : les ventes du tour passé", () => {
+    expect(
+      ventesEstimeesParDefaut({ venduAuTourPasse: 900, planDeProduction: 2_000, premierTour: false }),
+    ).toEqual({ valeur: 900, proposition: false });
+    // Déposé l'emporte sur vendu.
+    expect(
+      ventesEstimeesParDefaut({ deposee: 950, venduAuTourPasse: 900, premierTour: false }),
+    ).toEqual({ valeur: 950, proposition: false });
+    // Une référence sans repère après le premier tour (lancée en cours de
+    // partie) part à zéro : on ne lui propose pas son plan.
+    expect(ventesEstimeesParDefaut({ planDeProduction: 2_000, premierTour: false })).toEqual({
+      valeur: 0,
+      proposition: false,
+    });
+  });
+
+  it("sans plan de production, rien n'est proposé", () => {
+    expect(ventesEstimeesParDefaut({ premierTour: true })).toEqual({ valeur: 0, proposition: false });
+    expect(ventesEstimeesParDefaut({ planDeProduction: 0, premierTour: true })).toEqual({
+      valeur: 0,
+      proposition: false,
+    });
+  });
+
+  it("la proposition ne touche pas le marché : l'estimation ne descend pas dans les décisions", () => {
+    // Le plan de production proposé, repris en ventes estimées, laisse les
+    // décisions lues IDENTIQUES à ce qu'elles sont sans lui.
+    const sans = new FormData();
+    for (const [k, x] of Object.entries({ price: "59", productionPlan: "2000", marketingBudget: "0", qualityBudget: "0", maintenanceBudget: "0" })) sans.append(k, x);
+    const avec = new FormData();
+    for (const [k, x] of sans.entries()) avec.append(k, x);
+    avec.append(`ventesEstimees.${CODE}`, "2000");
+    avec.append("propositionDeVentes", "1");
+    expect(JSON.stringify(decisionsSaisies(avec).decisions)).toBe(
+      JSON.stringify(decisionsSaisies(sans).decisions),
+    );
+    // Et l'estimation que la proposition fait parler est un compte, pas un vide.
+    const estime = estimerLeTour(dossier, decisions, { [CODE]: decisions.productionPlan });
+    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    expect(html).toContain("data-resultat-estime");
   });
 });

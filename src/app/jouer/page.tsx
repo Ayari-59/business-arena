@@ -96,7 +96,12 @@ export default async function JouerPage({
               >
                 Reprendre avec mon code
               </Link>
-              <Link href="/profile" className="text-slate-300 underline-offset-4 hover:underline">
+              {/* LOT P4 : trois liens sur une ligne, une seule forme (le troisième
+                  n'était souligné qu'au survol : on le prenait pour du texte). */}
+              <Link
+                href="/profile"
+                className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
                 Mon profil
               </Link>
             </div>

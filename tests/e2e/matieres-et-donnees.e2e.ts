@@ -153,6 +153,11 @@ describe("le courrier posé", () => {
         angles: scenes.map(angle),
         dansUnPanneau: Boolean(section.closest(".panneau-info, .panneau-decision, .carte")),
         basDesLettres: Math.max(...lettres.map((l) => l.getBoundingClientRect().bottom)),
+        // LOT P4 : plus d'enveloppe ouverte posée à côté de la lettre.
+        enveloppes: [...section.querySelectorAll<HTMLElement>(".enveloppe")].filter((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 1 && r.height > 1 && getComputedStyle(e).opacity !== "0";
+        }).length,
         note: note.getBoundingClientRect().toJSON() as DOMRect,
         droiteDeLaGrille: grille.getBoundingClientRect().right,
       };
@@ -164,6 +169,7 @@ describe("le courrier posé", () => {
       expect(Math.abs(a), "la lettre penche de plus d'un degré").toBeLessThanOrEqual(1);
     }
     expect(m.note.top, "« J'ai pris note » n'est pas au pied de la lettre").toBeGreaterThan(m.basDesLettres);
+    expect(m.enveloppes, "une enveloppe est encore posée à côté de la lettre").toBe(0);
     expect(m.note.top - m.basDesLettres).toBeLessThan(60);
     expect(Math.abs(m.note.right - m.droiteDeLaGrille)).toBeLessThanOrEqual(2);
   }, 60_000);

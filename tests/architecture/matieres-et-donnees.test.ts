@@ -281,13 +281,17 @@ describe("4. un tour clos : une seule navigation d'onglets", () => {
 });
 
 describe("5. le courrier posé, le verdict sans grand triangle", () => {
-  it("le courrier du tour n'est plus dans un panneau ; la lettre se pose, l'enveloppe ouverte à côté, la note au pied", () => {
+  it("le courrier du tour n'est plus dans un panneau ; la lettre se pose seule, la note au pied", () => {
     const courrier = code(lire("src/components/courrier-du-tour.tsx"));
     const section = courrier.slice(courrier.indexOf("data-courrier-du-tour"));
     expect(section).not.toMatch(/className="[^"]*\b(?:carte|panneau-info|panneau-decision)\b/);
     expect(section).toContain('grilleDeCourriers(vide ? 1 : plis.length, "posee")');
-    expect(section).toContain("<EnveloppeOuverte");
-    expect(section).toContain("sm:max-w-[40rem]");
+    // LOT P4 : l'enveloppe ouverte posée à côté est retirée (rabat flottant,
+    // tampon serré, et une redite de l'expéditeur) : la lettre est l'objet.
+    expect(courrier).not.toContain("EnveloppeOuverte");
+    expect(code(lire("src/components/courrier.tsx"))).not.toContain("EnveloppeOuverte");
+    expect(CSS).not.toContain(".enveloppe-ouverte");
+    expect(section).toContain('"mx-auto w-full sm:max-w-[40rem]"');
     // « J'ai pris note » vient APRÈS les lettres, au pied de la colonne de la lettre.
     expect(section.indexOf("pris note")).toBeGreaterThan(section.indexOf("<CourrierRecommande"));
     expect(lire("src/components/courrier.tsx")).toMatch(/"courriers-poses grid"/);
@@ -298,7 +302,7 @@ describe("5. le courrier posé, le verdict sans grand triangle", () => {
     const bloc = CSS.slice(i, CSS.indexOf("@media print", i));
     const rotations = [...bloc.matchAll(/rotate\((-?[\d.]+)deg\)/g)].map((m) => Number(m[1]));
     expect(rotations.length).toBeGreaterThan(0);
-    // L'enveloppe ouverte, à côté, peut pencher davantage : c'est un objet posé de biais.
+    // Les seules rotations du bloc sont celles des lettres posées.
     const lettres = [...bloc.matchAll(/\.courriers-poses[^{]*\{\s*transform: rotate\((-?[\d.]+)deg\)/g)].map(
       (m) => Number(m[1]),
     );

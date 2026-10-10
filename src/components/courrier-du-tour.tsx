@@ -6,7 +6,6 @@ import { useSyncExternalStore } from "react";
 import {
   CourrierRecommande,
   Enveloppe,
-  EnveloppeOuverte,
   grilleDeCourriers,
 } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
@@ -119,23 +118,22 @@ export function CourrierDuTour({
     );
   }
 
-  // UN PLI SEUL se pose à côté de son enveloppe ouverte ; plusieurs plis se
-  // posent côte à côte, deux par rangée.
+  // UN PLI SEUL se pose seul, au milieu ; plusieurs plis se posent côte à
+  // côte, deux par rangée.
+  // LOT P4 : l'enveloppe ouverte qui attendait à côté d'un pli seul est
+  // retirée. Son rabat en triangle flottait au-dessus d'elle, son tampon
+  // serré se lisait mal, et elle ne disait rien que la lettre ne dise déjà
+  // (l'expéditeur, la nature du pli) : une redite posée à côté de l'objet
+  // principal. La lettre reste seule, posée sur le bureau.
   const seul = vide || plis.length === 1;
-  const premier = vide ? routine.code : plis[0]!.code;
-  const destinatairePremier = vide
-    ? "L'entreprise"
-    : plis[0]!.teamId
-      ? "Votre entreprise"
-      : "Tout le marché";
 
   return (
     // LOT P3 : LE COURRIER EST POSÉ SUR LE BUREAU, PAS DANS UN PANNEAU. La
     // lettre faisait 440 px au milieu d'un panneau marine de 1 230 px vide : on
     // aurait dit une fenêtre surgissante. Le panneau disparaît ; la lettre,
     // plus large (40 rem), se pose sur le sol du cockpit avec son ombre et une
-    // très légère rotation (globals.css, « LE COURRIER POSÉ »), l'enveloppe
-    // ouverte à côté sur ordinateur, et « J'ai pris note » à son pied.
+    // très légère rotation (globals.css, « LE COURRIER POSÉ »), et « J'ai pris
+    // note » à son pied.
     <section aria-label={`Le courrier du ${periodeLabel}`} data-courrier-du-tour="">
       {ouvert && enParcours ? null : (
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -183,23 +181,7 @@ export function CourrierDuTour({
           </button>
         </div>
       ) : (
-        <div
-          aria-live="polite"
-          className={`${enParcours ? "" : "mt-5"} ${
-            seul && !enParcours
-              ? "lg:grid lg:grid-cols-[13rem_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-12"
-              : ""
-          }`}
-        >
-          {/* L'ENVELOPPE OUVERTE, à côté de la lettre, sur ordinateur et pour
-              un pli seul : deux plis côte à côte prennent déjà la largeur. */}
-          {seul && !enParcours ? (
-            <EnveloppeOuverte
-              code={premier}
-              destinataire={destinatairePremier}
-              className="max-lg:hidden"
-            />
-          ) : null}
+        <div aria-live="polite" className={enParcours ? "" : "mt-5"}>
           <div className={seul ? "mx-auto w-full sm:max-w-[40rem]" : ""}>
             {/*
               Le courrier de routine s'ouvre comme les autres : c'est le geste

@@ -4115,6 +4115,14 @@ main[data-ecran-de-jeu] {
   .cascade-marche[data-marche="resultat"] {
     margin-top: 0.25rem;
   }
+  /* LOT P4 : le résultat trop petit pour une barre est un marqueur, un trait
+     épais posé en travers de la ligne du zéro (voir SEUIL_DU_MARQUEUR). */
+  .cascade-marche[data-marche="resultat"][data-marqueur] .cascade-barre {
+    left: calc(var(--zero) * 100% - 2px);
+    width: 4px;
+    height: 1.25rem;
+    border-radius: 2px;
+  }
 }
 
 /* DEBOUT (ordinateur) : une colonne par marche, sans espace entre elles pour
@@ -4202,6 +4210,22 @@ main[data-ecran-de-jeu] {
     right: 0;
     bottom: calc(var(--cascade-marge) + var(--fin) * var(--cascade-trace));
   }
+  /* LOT P4 : LE RÉSULTAT TROP PETIT POUR UNE BARRE. Un trait de 4 px, plus
+     large que les barres, centré SUR la ligne du zéro : il ne monte ni ne
+     descend plus qu'un pixel au-delà de ce qu'il vaut, il se voit. Son
+     montant se pose juste au-dessus (un gain) ou juste dessous (une perte). */
+  .cascade-marche[data-marche="resultat"][data-marqueur] .cascade-barre {
+    width: min(2.25rem, 80%);
+    height: 4px;
+    bottom: calc(var(--cascade-marge) + var(--zero) * var(--cascade-trace) - 2px);
+    border-radius: 2px;
+  }
+  .cascade-marche[data-marche="resultat"][data-marqueur] .cascade-valeur {
+    margin-bottom: calc(var(--cascade-marge) + var(--zero) * var(--cascade-trace) + 2px + 0.25rem);
+  }
+  .cascade-marche[data-marche="resultat"][data-marqueur][data-sens="baisse"] .cascade-valeur {
+    margin-bottom: calc(var(--cascade-marge) + var(--zero) * var(--cascade-trace) - 2px - 1.5rem);
+  }
 }
 
 /* ───────────────────────────── LE COURRIER POSÉ ─────────────────────────── */
@@ -4210,8 +4234,9 @@ main[data-ecran-de-jeu] {
    marine vide : elle est POSÉE sur le bureau, plus large (40 rem, environ
    640 px), avec l'ombre portée d'une feuille sur une table (un contact net,
    puis une pénombre large et basse) et une très légère rotation, moins d'un
-   degré. L'enveloppe ouverte attend à côté. Sur téléphone, ni rotation ni
-   enveloppe : la lettre prend toute la largeur utile. Rien ne bouge (la
+   degré. LOT P4 : l'enveloppe ouverte qui attendait à côté est retirée (son
+   rabat flottait, et elle redisait l'expéditeur) ; la lettre est l'objet.
+   Sur téléphone, pas de rotation : la lettre prend toute la largeur utile. Rien ne bouge (la
    rotation est statique) : la coupure « moins de mouvement » ne la concerne
    pas. */
 .courriers-poses :is(.lettre, .message) {
@@ -4228,29 +4253,33 @@ main[data-ecran-de-jeu] {
     transform: rotate(0.5deg);
   }
 }
-/* L'enveloppe ouverte, à côté de la lettre : son rabat relevé au-dessus du
-   pli. Décor pur (`aria-hidden`) : tout ce qu'elle disait, la lettre le dit. */
-.enveloppe-ouverte {
-  position: relative;
-  margin-top: 3.25rem;
-  transform: rotate(2.2deg);
-}
-.enveloppe-ouverte::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  height: 3.25rem;
-  background: #f0f2f4;
-  clip-path: polygon(0 100%, 50% 0, 100% 100%);
-}
-.enveloppe-ouverte .enveloppe::before {
-  display: none;
-}
 @media print {
-  .courriers-poses > *,
-  .enveloppe-ouverte {
+  .courriers-poses > * {
     transform: none;
   }
+}
+
+/* ─────────────────────────────── LOT P4 — FINITIONS ─────────────────────── */
+
+/* UNE SEULE LIGNE D'EN-TÊTE SUR TÉLÉPHONE. Dans l'arène, sous 640 px, la barre
+   de la partie (`barre-de-jeu.tsx`) porte « L'ESCALE · Tour 2/6 » ; l'ardoise
+   du dirigeant le redisait juste dessous dès le deuxième tour. Elle garde son
+   surtitre, son métier et ses chiffres ; le nom et le tour sont dans la barre. */
+@media (max-width: 639.98px) {
+  [data-ecran-de-jeu] .ardoise-nom-et-tour {
+    display: none;
+  }
+}
+
+
+/* LA MARCHE DU JOUEUR, SUR LE PODIUM DE LA CLÔTURE. Elle prenait la règle d'une
+   LIGNE de classement (`.ligne-moi`) : un rail de 4 px à gauche, le seul bord
+   coloré de la marche, et un voile translucide où la photo du lieu passait au
+   travers. Une marche pas finie à côté de deux pleines. Elle garde le sol de
+   ses voisines, et le repère du joueur (la teinte du métier, jamais l'orange)
+   devient un filet fin tout autour, sous le métal de tête ; « vous » est écrit
+   au-dessus. */
+.marche-de-podium.ligne-moi {
+  background-color: var(--color-slate-900);
+  box-shadow: inset 0 0 0 1px var(--metier, var(--color-slate-300));
 }

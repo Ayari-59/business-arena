@@ -89,9 +89,34 @@ describe("le résultat estimé, de la saisie au verdict", () => {
         : "apres";
     });
     expect(ordre, "les ventes estimées doivent précéder le prix").toBe("avant");
-    // Rien d'estimé au premier tour : pas d'encart de zéros.
-    expect(await encart(page)).toBeNull();
+    // LOT P4 : AU PREMIER TOUR, UNE PROPOSITION PLAUSIBLE, MARQUÉE. Le champ part
+    // du plan de production que la feuille propose déjà (un chiffre sous les
+    // yeux du joueur, rien du moteur), il est marqué « Proposition — à
+    // ajuster », et le résultat estimé parle d'emblée.
+    await page.waitForTimeout(900);
+    const plan = Number(await page.locator('input[name="productionPlan"]').first().inputValue());
+    expect(plan, "le plan de production proposé").toBeGreaterThan(0);
+    expect(Number(await champ.inputValue())).toBe(Math.round(plan));
+    const marque = page.locator("[data-proposition-de-ventes]:visible");
+    expect(await marque.count()).toBe(1);
+    expect(await marque.innerText()).toMatch(/Proposition — à ajuster/);
+    expect(await page.locator('input[name="propositionDeVentes"]').count()).toBe(1);
+    const propose = await encart(page);
+    expect(propose, "le résultat estimé reste muet au premier tour").not.toBeNull();
+    expect(Object.keys(propose!)).toContain("Résultat net");
   }, 180_000);
+
+  it("zéro vente estimée : l'encart se tait ; une saisie efface la proposition", async () => {
+    const champ = page.locator('input[name^="ventesEstimees."]').first();
+    await champ.fill("0");
+    await page.waitForTimeout(900);
+    // Un encart de zéros à côté d'un champ vide est un meuble, pas une information.
+    expect(await encart(page)).toBeNull();
+    // La saisie a fait de la proposition l'estimation du joueur : plus de
+    // marqueur, plus de témoin caché.
+    expect(await page.locator("[data-proposition-de-ventes]").count()).toBe(0);
+    expect(await page.locator('input[name="propositionDeVentes"]').count()).toBe(0);
+  }, 60_000);
 
   it("l'encart apparaît à la frappe, et change quand l'estimation change", async () => {
     const champ = page.locator('input[name^="ventesEstimees."]').first();

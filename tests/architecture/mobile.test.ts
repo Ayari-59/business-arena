@@ -70,6 +70,28 @@ describe("l'invitation à installer", () => {
   it("garde des commandes à la taille du pouce", () => {
     expect(SOURCE.match(/min-h-11/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
+
+  // LOT P4 : elle recouvrait la vitrine dès l'arrivée.
+  it("attend une première partie jouée sur l'appareil, et sans elle se tait", () => {
+    expect(SOURCE).toMatch(
+      /if \(standalone \|\| ferméRécemment\(\) \|\| !unePartieAEteJouee\(\)\) return;/,
+    );
+    const temoin = lire("src/lib/partie-jouee.ts");
+    // Chaque accès au stockage est protégé, et sans stockage on répond « non ».
+    expect(temoin.match(/try \{/g)?.length ?? 0).toBe(2);
+    expect(temoin).toMatch(/catch \{\s*return false;/);
+    // L'arène pose le témoin au verdict d'un tour et dès qu'un tour est résolu.
+    const arene = lire("src/app/arena/[gameId]/page.tsx");
+    expect(arene.match(/<TemoinDePartieJouee \/>/g)?.length ?? 0).toBe(2);
+    expect(arene).toMatch(/periods\.length > 0 \|\| finished \? <TemoinDePartieJouee \/>/);
+  });
+
+  it("ne se pose jamais par-dessus un bouton : elle glisse sous le bord", () => {
+    expect(SOURCE).toContain("uneActionDessous");
+    expect(SOURCE).toMatch(/const ACTIONS = "button, \[role='button'\]/);
+    expect(SOURCE).toMatch(/cede \? "pointer-events-none translate-y-/);
+    expect(SOURCE).toContain("inert={cede}");
+  });
 });
 
 describe("les réglages d'installation", () => {

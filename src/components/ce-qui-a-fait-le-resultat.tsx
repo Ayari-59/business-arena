@@ -53,6 +53,17 @@ function signe(montant: number): string {
  * reçoit de la précédente (`entree`), et la ligne du zéro. Exporté pour la
  * garde (`tests/unit/cascade-du-resultat.test.ts`).
  */
+/**
+ * LOT P4 : UN PETIT RÉSULTAT RESTE LISIBLE, SANS MENTIR SUR SA TAILLE. Quand le
+ * résultat net est petit devant le chiffre d'affaires (+878 € pour 297 124 €),
+ * sa marche faisait un pixel, couchée sur la ligne du zéro : invisible. Sous
+ * ce seuil (5 % de l'échelle, soit 4 px sur la cascade du rituel), elle ne
+ * devient pas une barre faussement haute : c'est un MARQUEUR, un trait épais
+ * et plus large que les barres, posé AU NIVEAU DU ZÉRO — il dit « presque
+ * rien », et le montant écrit dit combien.
+ */
+export const SEUIL_DU_MARQUEUR = 0.05;
+
 export function geometrieDeLaCascade(marches: readonly MarcheDuResultat[]) {
   const bornes = marches.flatMap((m) => [m.debut, m.fin]);
   const bas = Math.min(0, ...bornes);
@@ -70,6 +81,8 @@ export function geometrieDeLaCascade(marches: readonly MarcheDuResultat[]) {
     sens: m.fin >= m.debut ? ("hausse" as const) : ("baisse" as const),
     /** Elle part de zéro (le chiffre d'affaires, le résultat) ou flotte au niveau atteint. */
     ancree: m.debut === 0,
+    /** Le résultat, trop petit pour une barre : un marqueur au niveau du zéro. */
+    marqueur: m.cle === "resultat" && f(Math.max(m.debut, m.fin)) - f(Math.min(m.debut, m.fin)) < SEUIL_DU_MARQUEUR,
   }));
 }
 
@@ -123,6 +136,7 @@ export function CeQuiAFaitLeResultat({
                 data-marche={m.cle}
                 data-sens={g.sens}
                 data-ancree={g.ancree ? "" : undefined}
+                data-marqueur={g.marqueur ? "" : undefined}
                 className={`cascade-marche ${rituel ? "text-sm" : "text-xs sm:text-sm"}`}
                 style={
                   {
