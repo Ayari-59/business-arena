@@ -33,7 +33,7 @@ export function VosReussites({
   const acquises = cases.filter((c) => c.round !== null);
 
   return (
-    <section aria-labelledby="reussites" className="carte px-4 py-3 sm:px-5">
+    <section aria-labelledby="reussites" className="panneau-info px-4 py-3 sm:px-5">
       <details className="group">
         <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 [&::-webkit-details-marker]:hidden">
           <h2 id="reussites" className="text-sm font-semibold text-slate-200">

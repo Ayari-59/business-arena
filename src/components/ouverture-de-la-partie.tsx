@@ -63,7 +63,7 @@ export function OuvertureDeLaPartie({
     <section
       aria-labelledby="ouverture-de-la-partie"
       data-ouverture-de-la-partie={forme}
-      className={`ardoise arete-metier relative isolate overflow-hidden bg-slate-950 text-slate-100 ${
+      className={`ardoise relative isolate overflow-hidden bg-slate-950 text-slate-100 ${
         carte ? "" : "rounded-xl"
       }`}
     >

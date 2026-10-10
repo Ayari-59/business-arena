@@ -15,8 +15,12 @@ import type { NomDePlume } from "@/lib/plumes";
  *
  * Trois temps, sur le marine, et rien d'autre :
  *   1. ce qu'on révèle (« Tour 3 · le marché a répondu ») ;
- *   2. LE chiffre, en très grand, blanc cassé, avec sa flèche et son écart
- *      signé en vert ou en rouge francs ; pas de fond teinté ;
+ *   2. LE chiffre, en très grand, son signe écrit, et son écart signé au tour
+ *      précédent ; pas de fond teinté. Lot P3 : le grand triangle qui le
+ *      précédait sur l'écran du rituel faisait pictogramme d'alerte ; il est
+ *      parti. Le signe suffit (« −3 480 € »), la couleur porte le sens (le
+ *      chiffre en vert ou en rouge francs, sans halo), et une FLÈCHE FINE, d'un
+ *      trait, reste devant l'écart ;
  *   3. la cause (le verdict en une phrase, et ce qui a fait le résultat :
  *      lot 6E), puis la place (le rang en or avec sa médaille).
  * Puis les actions.
@@ -89,6 +93,32 @@ const TEINTE: Record<"gain" | "perte", string> = {
 };
 const FLECHE: Record<"gain" | "perte", string> = { gain: "▲", perte: "▼" };
 
+/**
+ * LA FLÈCHE FINE DE L'ÉCART (lot P3) : un trait d'un pixel et demi, qui prend
+ * l'encre de l'écart. Le triangle plein (▲ ▼) pesait autant que le chiffre ;
+ * une flèche dit le sens et s'efface derrière le montant. Décorative : le
+ * montant signé dit tout.
+ */
+function FlecheFine({ sens }: { sens: "gain" | "perte" }) {
+  return (
+    <svg
+      aria-hidden
+      data-fleche-fine={sens}
+      viewBox="0 0 12 16"
+      width="0.75em"
+      height="1em"
+      className="mr-1 inline-block h-[1em] w-[0.75em] align-[-0.125em]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={sens === "gain" ? "M6 14V2.5M2 6.5l4-4 4 4" : "M6 2v11.5M2 9.5l4 4 4-4"} />
+    </svg>
+  );
+}
+
 function Ecart({ ecart, grand }: { ecart: EcartDuVerdict; grand: boolean }) {
   return (
     <p
@@ -97,7 +127,7 @@ function Ecart({ ecart, grand }: { ecart: EcartDuVerdict; grand: boolean }) {
       }`}
     >
       <span className="whitespace-nowrap">
-        {ecart.sens ? <span aria-hidden>{FLECHE[ecart.sens]} </span> : null}
+        {ecart.sens ? <FlecheFine sens={ecart.sens} /> : null}
         {/* L'ÉCART MONTE DEPUIS ZÉRO : un écart est une distance parcourue, et
             c'est elle qu'on regarde se parcourir. */}
         {ecart.nombre !== undefined && (ecart.plume || ecart.ecrire) ? (
@@ -187,16 +217,20 @@ export function VerdictDuMarche({
           {chiffre.libelle}
         </p>
         <p
-          className={`flex items-center gap-3 font-display font-semibold leading-none tabular-nums text-slate-50 ${
+          data-chiffre-du-verdict=""
+          className={`flex items-center gap-3 font-display font-semibold leading-none tabular-nums ${
             ecran
-              ? "mt-2 justify-center text-7xl"
-              : "mt-1 text-[clamp(2rem,1.6rem_+_1.2vw,2.5rem)]"
+              ? `mt-2 justify-center text-7xl ${chiffre.sens ? TEINTE[chiffre.sens] : "text-slate-50"}`
+              : "mt-1 text-[clamp(2rem,1.6rem_+_1.2vw,2.5rem)] text-slate-50"
           }`}
         >
-          {chiffre.sens ? (
+          {/* LE GRAND TRIANGLE N'EST PLUS SUR L'ÉCRAN DU RITUEL (lot P3) : le
+              signe et la couleur du chiffre disent le sens. La bande d'un
+              épisode garde son petit repère, à la taille du texte. */}
+          {chiffre.sens && !ecran ? (
             <span
               aria-hidden
-              className={`${ecran ? "text-4xl sm:text-5xl" : "text-xl"} ${TEINTE[chiffre.sens]}`}
+              className={`text-xl ${TEINTE[chiffre.sens]}`}
             >
               {FLECHE[chiffre.sens]}
             </span>

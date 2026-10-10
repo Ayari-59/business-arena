@@ -41,7 +41,7 @@ export function DilemmaCard({
       l'orange de l'action ; ils passent à la teinte du métier, en tête d'un
       panneau sans cadre, comme les autres panneaux du cockpit.
     */
-    <div className="panneau p-3 max-sm:p-4 sm:p-5">
+    <div className="panneau-info p-3 max-sm:p-4 sm:p-5">
       <h3 className="surtitre text-[color:var(--metier,var(--color-slate-300))]">
         {title}
       </h3>
@@ -177,7 +177,7 @@ function Panneau({
       {children}
     </Tiroir>
   ) : (
-    <div className="panneau p-3 max-sm:p-4 sm:p-5">
+    <div className="panneau-info p-3 max-sm:p-4 sm:p-5">
       <h3 className="surtitre text-slate-300">
         {titre}
       </h3>

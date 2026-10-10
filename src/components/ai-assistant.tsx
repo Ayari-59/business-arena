@@ -27,7 +27,7 @@ export function AiAssistant({
     // page, étincelle comprise : il se lisait comme une publicité incrustée.
     // C'est une carte comme les autres, et ses deux gestes sont les boutons du
     // site — le contour laiton pour demander un retour, le plein pour envoyer.
-    <section className="carte mt-6 p-4 sm:p-5">
+    <section className="panneau-info mt-6 p-4 sm:p-5">
       <div className="flex items-center gap-2">
         <Icone nom="idee" className="h-4 w-4 text-slate-300" />
         <h2 className="text-sm font-semibold text-slate-100">Assistant IA</h2>

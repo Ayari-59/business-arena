@@ -14,7 +14,9 @@ const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
 
 function Report({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <article className="rounded-xl border border-indigo-400/20 bg-slate-900 p-3 sm:p-5">
+    // LOT P3 : un rapport d'étude se CONSULTE : le panneau d'information plat du
+    // cockpit (il était cerné d'un filet indigo, une couleur hors charte).
+    <article className="panneau-info p-3 sm:p-5">
       <h4 className="text-sm font-semibold text-slate-200">{title}</h4>
       <div className="mt-2 space-y-2 text-xs text-slate-300">{children}</div>
     </article>

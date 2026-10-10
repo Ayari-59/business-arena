@@ -23,14 +23,17 @@ function rendu(props: Parameters<typeof Tiroir>[0]): string {
 }
 
 describe("Tiroir", () => {
-  it("porte ses trois signaux : chevron qui pivote, trait pointillé, et ce qu'il cache", () => {
+  it("porte ses trois signaux : chevron qui pivote, filet plein et discret, et ce qu'il cache", () => {
     const html = rendu({ titre: "Détail par clientèle", quoi: "4 clientèles", children: "…" });
     // 1. le chevron, et sa rotation à l'ouverture
     expect(html).toContain("▸");
     expect(html).toContain("group-open:rotate-90");
-    // 2. pointillé fermé, plein ouvert
-    expect(html).toContain("border-dashed");
-    expect(html).toContain("open:border-solid");
+    // 2. LOT P3 : le filet plein et discret du panneau d'information, fermé
+    //    comme ouvert. Le pointillé du repli fermé disait « vide » ; un repli
+    //    fermé n'est que rangé, et le chevron dit seul qu'il est replié.
+    expect(html).toContain("panneau-info");
+    expect(html).not.toContain("border-dashed");
+    expect(html).not.toMatch(/open:(?:border|bg)-/);
     // 3. ce qui attend derrière
     expect(html).toContain("4 clientèles");
     expect(html).toContain("déplier");
@@ -96,6 +99,11 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
    * son état replié se dit au chevron qui pivote — le signe que les tours
    * passés portaient déjà. La garde vérifie la même chose qu'avant : CHAQUE
    * repli porte le signe commun, et aucun ne le porte à moitié.
+   *
+   * LOT P3 : DEUX RÔLES DE PANNEAU. La famille de décision est un panneau de
+   * DÉCISION (`panneau-decision`), un repli qu'on consulte un panneau
+   * d'INFORMATION (`panneau-info`) ; un tour clos est une LIGNE de la liste
+   * des tours, elle-même un panneau d'information (`data-liste-des-tours`).
    */
   const AVEC_RESUME_PROPRE = [
     join("src", "app", "arena", "[gameId]", "page.tsx"),
@@ -124,11 +132,21 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
         expect(repli, repli.slice(0, 120)).toContain("group-open:rotate-90");
         // Plus de pointillé : un repli fermé est rangé, pas vide.
         expect(repli, repli.slice(0, 120)).not.toContain("border-dashed");
-        // Et c'est un panneau (le sol et l'arête), pas un cadre.
-        expect(repli, repli.slice(0, 120)).toMatch(/panneau|\$\{tone\}/);
+        // Et c'est un panneau d'un des deux rôles, ou une ligne de la liste des
+        // tours clos : jamais un cadre écrit à la main.
+        expect(repli, repli.slice(0, 120)).toMatch(
+          /panneau-(?:decision|info)\b|\$\{tone\}|data-tour-passe/,
+        );
+        if (repli.includes("data-tour-passe")) {
+          expect(source).toMatch(
+            /data-liste-des-tours=""\s+className="panneau-info divide-y/,
+          );
+        }
       }
-      // Le panneau par défaut de la famille de décision est bien `panneau`.
-      if (fichier.endsWith("decision-form.tsx")) expect(source).toContain('tone = "panneau"');
+      // La famille de décision est, par défaut, le panneau de DÉCISION.
+      if (fichier.endsWith("decision-form.tsx")) {
+        expect(source).toContain('tone = "panneau-decision"');
+      }
     },
   );
 

@@ -11,7 +11,7 @@ import { DIMENSION_DISPLAY_ORDER, DIMENSION_LABEL_BY_NAME } from "@/scoring/bpi"
  */
 export function BpiPanel({ dimensions }: { dimensions: Partial<Record<string, number>> }) {
   return (
-    <div className="carte p-3 sm:p-5">
+    <div className="panneau-info p-3 sm:p-5">
       <h2 className="mb-2 text-sm font-semibold text-slate-200 sm:mb-3">
         Votre profil de performance
       </h2>

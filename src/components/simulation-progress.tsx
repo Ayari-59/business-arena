@@ -43,7 +43,7 @@ export function SimulationProgress({ periodName }: { periodName: string }) {
   return (
     <section
       aria-live="polite"
-      className="carte p-5"
+      className="panneau-info p-5"
     >
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-2 text-sm font-semibold text-slate-100">

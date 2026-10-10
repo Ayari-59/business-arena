@@ -582,10 +582,49 @@ export function Message({
  * téléphone, personne n'est côte à côte et imposer la hauteur du plus long à
  * tous ne ferait qu'allonger le défilement.
  */
-export function grilleDeCourriers(nombre: number): string {
+export function grilleDeCourriers(nombre: number, mise: "rangee" | "posee" = "rangee"): string {
+  // LOT P3 : LE COURRIER DU TOUR SE POSE. Ouvert à l'étape Décider, il n'est
+  // plus rangé dans un panneau : les lettres se posent sur le bureau, plus
+  // larges (le parent les borne à 40 rem quand il n'y en a qu'une), avec leur
+  // ombre et leur légère rotation (`courriers-poses`, globals.css). Plus
+  // d'écart entre deux lettres inclinées, pour qu'elles ne se touchent pas.
+  if (mise === "posee") {
+    return nombre <= 1
+      ? "courriers-poses grid"
+      : "courriers-poses grid gap-5 sm:auto-rows-fr sm:grid-cols-2 sm:gap-8";
+  }
   return nombre <= 1
     ? "grid gap-3 sm:mx-auto sm:max-w-md"
     : "grid gap-3 sm:auto-rows-fr sm:grid-cols-2";
+}
+
+/**
+ * L'ENVELOPPE OUVERTE, POSÉE À CÔTÉ DE SA LETTRE (lot P3). La lettre lue se
+ * pose sur le bureau ; l'enveloppe dont elle sort reste à côté, son rabat
+ * relevé (globals.css, « LE COURRIER POSÉ »). Décor pur : tout ce qu'elle dit,
+ * la lettre le dit aussi. Un courriel n'a pas d'enveloppe : rien ne se pose.
+ */
+export function EnveloppeOuverte({
+  code,
+  destinataire,
+  className = "",
+}: {
+  code: string;
+  destinataire?: string;
+  className?: string;
+}) {
+  const c = courrier(code);
+  if (!c || c.pli === "email") return null;
+  return (
+    <div aria-hidden className={`enveloppe-ouverte ${className}`}>
+      <Enveloppe
+        code={code}
+        liasse={positionDuCourrier(code)?.liasse}
+        destinataire={destinataire}
+        className="h-52 w-full"
+      />
+    </div>
+  );
 }
 
 /** Le pli distribué : l'enveloppe, puis la lettre qui en sort. */

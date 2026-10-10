@@ -316,7 +316,8 @@ describe("l'ouverture sur téléphone : le lieu ouvre le briefing", () => {
       return {
         largeur: r ? Math.round(r.width) : 0,
         // Plein cadre : la photo va d'un bord à l'autre de sa carte (filet compris exclu).
-        cadre: carte?.closest(".carte")?.clientWidth ?? 0,
+        // Lot P3 : la carte « Votre entreprise » est un panneau d'information.
+        cadre: carte?.closest(".panneau-info")?.clientWidth ?? 0,
         haut: r ? Math.round(r.top) : null,
         hauteur: r ? Math.round(r.height) : 0,
         nom: carte ? (carte.querySelector("h2") as HTMLElement)?.innerText : null,

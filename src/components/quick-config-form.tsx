@@ -316,7 +316,9 @@ export function QuickConfigFields({
           ne reçoit pas l'inversion des variables de thème (fond resté sombre,
           texte inversé) et devenait illisible. Fermé = hors du DOM ; ouvert =
           rendu normal, contraste correct. */}
-      <div className="mt-4 rounded-lg border border-dashed border-white/15 px-3">
+      {/* Lot P3 : un filet plein et discret ; le pointillé disait « vide », et
+          ce repli n'est que rangé (règle des replis du lot 6E). */}
+      <div className="mt-4 rounded-lg border border-white/15 px-3">
         <button
           type="button"
           onClick={() => setOptionsOuvertes((o) => !o)}
@@ -394,10 +396,15 @@ export function QuickConfigFields({
           on y arrive. Une entreprise est toujours choisie (celle du lien, ou
           NOVA) : la barre est donc toujours là, et il n'y a jamais qu'UN
           bouton de lancement à l'écran. Elle est en ardoise : le marine de
-          l'arène, sous le pouce. */}
+          l'arène, sous le pouce.
+          LOT P3 : ELLE S'ALIGNE SUR LA GRILLE DES ENTREPRISES. Elle sortait de
+          la marge intérieure de la carte (`-mx-6`) et débordait ainsi la
+          grille de part et d'autre ; elle en prend désormais les bords exacts,
+          coins arrondis, et se pose au pied du formulaire dans la même marge
+          que tout le reste. */}
       <div
         data-resume-de-lancement=""
-        className="ardoise sticky bottom-0 z-20 -mx-4 -mb-4 mt-5 flex flex-col gap-3 rounded-b-xl border-t border-white/10 bg-slate-950 px-4 py-3 shadow-[0_-10px_24px_-14px_rgb(6_21_41/0.55)] sm:-mx-6 sm:-mb-6 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+        className="ardoise sticky bottom-0 z-20 mt-5 flex flex-col gap-3 rounded-xl border-t border-white/10 bg-slate-950 px-4 py-3 shadow-[0_-10px_24px_-14px_rgb(6_21_41/0.55)] sm:flex-row sm:items-center sm:justify-between sm:px-5"
       >
         <p data-vous-lancez className="min-w-0 text-sm leading-snug text-slate-300" aria-live="polite">
           <span className="block text-base font-semibold text-slate-50">

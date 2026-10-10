@@ -16,6 +16,7 @@ import { TableauEstimeReel } from "@/components/ecart-d-estimation";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { RseReportPanel } from "@/components/rse-report";
 import { DashboardTabs } from "@/components/dashboard-tabs";
+import { SommaireDuTour } from "@/components/sommaire-du-tour";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
 import type { RseIndex, RsePillar } from "@/scoring/rse";
@@ -99,7 +100,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
   return (
     <section
       aria-label="Indice RSE du tour"
-      className="carte p-3 sm:p-5"
+      className="panneau-info p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
@@ -165,10 +166,20 @@ export function PeriodDashboard({
   period,
   standing,
   courrierResume = false,
+  navigation = "sommaire",
 }: {
   view: GameView;
   period: Period;
   standing: boolean;
+  /**
+   * LOT P3 : UNE SEULE NAVIGATION D'ONGLETS PAR ÉCRAN. Dans un tour clos, le
+   * tableau de bord est posé sous les onglets du tour (Situation / Décisions /
+   * Résultats) : ses trois faces se lisent alors à la suite, avec un sommaire
+   * d'ancres (`sommaire`, par défaut). Sur la carte « Résultats » du parcours
+   * sur téléphone, il est la seule navigation de l'écran et garde ses onglets
+   * (`onglets`).
+   */
+  navigation?: "sommaire" | "onglets";
   /**
    * Le courrier du tour en une ligne, sans les lettres. Sur téléphone, le parcours a déjà fait
    * lire ces lettres, en entier, au tour où elles sont tombées : les revoir en grand, au moment
@@ -317,7 +328,7 @@ export function PeriodDashboard({
             {r.subscription ? (
               <section
                 data-testid="portefeuille-tour"
-                className="carte px-3 py-3 text-sm"
+                className="panneau-info px-3 py-3 text-sm"
               >
                 <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-200">
                   <Icone nom="recommencer" className="h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
@@ -375,17 +386,17 @@ export function PeriodDashboard({
             {history.length > 0 ? (
               <section className={history.length > 1 ? "grid gap-3 lg:grid-cols-3" : "grid gap-3"}>
                 {history.length > 1 ? (
-                  <div className="carte p-3 sm:p-5 lg:col-span-2">
+                  <div className="panneau-info p-3 sm:p-5 lg:col-span-2">
                     <RevenueChart history={history} roundsCount={view.roundsCount} />
                   </div>
                 ) : null}
                 <div className="space-y-3">
                   {history.length > 1 ? (
-                    <div className="carte p-3 sm:p-5">
+                    <div className="panneau-info p-3 sm:p-5">
                       <TreasuryChart history={history} roundsCount={view.roundsCount} />
                     </div>
                   ) : null}
-                  <div className="carte p-3 sm:p-5">
+                  <div className="panneau-info p-3 sm:p-5">
                     <MarketShareChart
                       segments={Object.entries(r.market.bySegment)
                         .filter(([, d]) => d.potential > 0)
@@ -403,7 +414,7 @@ export function PeriodDashboard({
               // Le rideau est tiré : la vue ne contient pas le classement, elle
               // ne le cache pas. On dit qui l'ouvrira, pour que l'attente ait
               // un sens — et on rappelle ce qui, lui, ne dépend de personne.
-              <section className="carte p-3 sm:p-5">
+              <section className="panneau-info p-3 sm:p-5">
                 <h2 className="text-sm font-semibold text-slate-200">
                   Classement · Indice de performance globale
                 </h2>
@@ -416,7 +427,7 @@ export function PeriodDashboard({
 
             {standing && view.ranking.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-2">
-                <div className="carte p-3 sm:p-5">
+                <div className="panneau-info p-3 sm:p-5">
                   <h2 className="mb-2 text-sm font-semibold text-slate-200">
                     Classement · Indice de performance globale
                   </h2>
@@ -469,10 +480,7 @@ export function PeriodDashboard({
             )}
     </>
   );
-  return (
-    <DashboardTabs>
-      {{
-        synthese: (
+  const synthese = (
           <div className="space-y-3">
             {verdict}
             {/*
@@ -491,9 +499,8 @@ export function PeriodDashboard({
             {chiffres}
             {evolution}
           </div>
-        ),
-
-        marche: (
+  );
+  const marche = (
           <div className="space-y-3">
             {period.sectorKpis.length > 0 ? (
               <section aria-label="Indicateurs du métier">
@@ -711,9 +718,8 @@ export function PeriodDashboard({
 
             {standing && view.studyReports ? <StudyReportsPanel reports={view.studyReports} /> : null}
           </div>
-        ),
-
-        finance: (
+  );
+  const finance = (
           <div className="space-y-3">
             <FinancialStatements
               result={r}
@@ -868,8 +874,23 @@ export function PeriodDashboard({
               />
             ) : null}
           </div>
-        ),
-      }}
-    </DashboardTabs>
+  );
+
+  if (navigation === "onglets") {
+    return <DashboardTabs>{{ synthese, marche, finance }}</DashboardTabs>;
+  }
+  // LE SECOND NIVEAU DEVIENT UN SOMMAIRE (lot P3) : les trois faces à la
+  // suite, et des ancres pour y aller ; plus de seconde rangée d'onglets sous
+  // celle du tour.
+  return (
+    <SommaireDuTour
+      idBase={`tour-${period.round}`}
+      etiquette={`Résultats du ${periodLabel(view.roundDays, period.round).toLowerCase()}`}
+      faces={[
+        { cle: "synthese", titre: "Synthèse", contenu: synthese },
+        { cle: "marche", titre: "Marché", contenu: marche },
+        { cle: "finance", titre: "Finance", contenu: finance },
+      ]}
+    />
   );
 }

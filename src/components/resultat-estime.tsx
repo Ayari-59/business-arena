@@ -196,7 +196,7 @@ export function EncartResultatEstime({
       data-resultat-estime
       aria-label={`${TITRE_ESTIME} · ${SOUS_TITRE_ESTIME}`}
       // UN PANNEAU DU COCKPIT (lot 6E) : son sol et son arête, pas un encadré.
-      className="panneau px-4 py-3.5 sm:px-5 sm:py-4"
+      className="panneau-info px-4 py-3.5 sm:px-5 sm:py-4"
     >
       <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-100">
         <Icone nom="resultats" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />

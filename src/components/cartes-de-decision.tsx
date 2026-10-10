@@ -100,7 +100,7 @@ export function RecapDesDecisions({
   surModifier: (cle: string) => void;
 }) {
   return (
-    <ul className="carte divide-y divide-white/10 overflow-hidden">
+    <ul className="panneau-info divide-y divide-white/10 overflow-hidden">
       {lignes.map((l) => (
         <li key={l.cle}>
           <button

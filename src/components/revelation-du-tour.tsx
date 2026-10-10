@@ -69,11 +69,12 @@ export function RevelationDuTour({
       // « Le verdict de trimestre 3 » ne se dit pas : la virgule fait la liaison
       // à la voix mieux qu'un article qu'il faudrait accorder au scénario.
       aria-label={`Verdict, ${periode.toLowerCase()}`}
-      className={`carte overflow-hidden px-4 py-3 sm:px-5 sm:py-4 ${
-        // Le signe du tour en filet plein à gauche ; le reste du cadre reste
-        // le filet gris des cartes (il était rose ou vert d'eau, dilué).
-        positif ? "border-l-2 border-l-emerald-400" : "border-l-2 border-l-red-400"
-      } ${nouveau ? "revelation" : ""}`}
+      // LOT P3 : UNE INFORMATION, ET LE ROUGE SUR LE CHIFFRE SEUL. Le verdict
+      // portait le signe du tour en filet plein à gauche (il avait été rose ou
+      // vert d'eau, dilué) : un tour en perte se lisait cerné de rouge, comme
+      // une erreur. Le chiffre, juste dessous, dit le signe en vert ou en rouge
+      // francs ; le panneau, lui, est l'information plate du cockpit.
+      className={`panneau-info overflow-hidden px-4 py-3 sm:px-5 sm:py-4 ${nouveau ? "revelation" : ""}`}
     >
       {/* L'OR DIT LE VERDICT : ce que le marché a tranché (globals.css, « LE PODIUM »). */}
       <p className="surtitre texte-or">

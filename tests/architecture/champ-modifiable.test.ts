@@ -79,7 +79,10 @@ describe("les trois sols du cockpit se distinguent", () => {
 
   it("le cockpit pose ces sols : la page, le panneau, le champ hors du papier", () => {
     expect(CSS).toMatch(/body:has\(main\[data-ecran-de-jeu\]\) \{[^}]*var\(--sol-page/);
-    expect(CSS).toMatch(/\.panneau \{[^}]*background-color: var\(--sol-panneau/);
+    // Lot P3 : le sol relevé est celui du PANNEAU DE DÉCISION (le panneau
+    // d'information est plat, posé sur la page).
+    expect(CSS).toMatch(/\.panneau-decision \{[^}]*background-color: var\(--sol-panneau/);
+    expect(CSS).toMatch(/\.panneau-info \{[^}]*background-color: transparent/);
     expect(CSS).toMatch(
       /\[data-ecran-de-jeu\] \.champ:not\(\.papier \.champ\):not\(\.champ-facultatif\) \{\s*background-color: var\(--sol-champ/,
     );

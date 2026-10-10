@@ -74,7 +74,13 @@ describe("la révélation du tour", () => {
   });
 
   it("ne met en scène que le tour qu'on vient d'ouvrir", () => {
-    expect(rendu({ nouveau: true })).toContain('class="carte');
+    // Lot P3 : le verdict d'un tour clos est un panneau d'INFORMATION (plat,
+    // sans arête ni filet de signe) ; c'était une carte cernée de vert ou de rouge.
+    expect(rendu({ nouveau: true })).toContain('class="panneau-info');
+    expect(rendu({ nouveau: true })).not.toMatch(/border-l-(?:emerald|red|rose)/);
+    expect(rendu({ tour: compte(40_000, 60_000, 10_000), nouveau: true })).not.toMatch(
+      /border-l-(?:emerald|red|rose)/,
+    );
     expect(rendu({ nouveau: true })).toMatch(/class="[^"]*\brevelation\b/);
     expect(rendu({ nouveau: false })).not.toMatch(/class="[^"]*\brevelation\b/);
   });

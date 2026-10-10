@@ -236,11 +236,16 @@ describe("parcours enseignant et élève", () => {
     // conseil n'achète pas de matières : il paie des frais de mission.
     await aller(eleve, new URL(eleve.url()).pathname);
     // Les résultats d'une période vivent dans sa carte, dépliée par défaut pour
-    // le tour le plus récent ; les états financiers sont dans le sous-onglet
-    // « Finance ». On y navigue, puis on ouvre les comptes dépliables.
-    await eleve
-      .getByRole("tab", { name: /Finance/ })
-      .click({ timeout: 30_000 });
+    // le tour le plus récent ; les états financiers sont dans la face
+    // « Finance ». Lot P3 : plus de seconde rangée d'onglets sous ceux du
+    // tour, un sommaire d'ancres ; on y navigue par son lien, puis on ouvre les
+    // comptes dépliables.
+    const versFinance = eleve
+      .getByRole("navigation", { name: /^Résultats du / })
+      .first()
+      .getByRole("link", { name: "Finance", exact: true });
+    await versFinance.click({ timeout: 30_000 });
+    expect(await versFinance.getAttribute("href")).toMatch(/^#tour-\d+-finance$/);
     // Les comptes forment un accordéon : en ouvrir un ferme les autres, donc on ouvre CELUI de
     // l'analyse des coûts, comme le ferait l'élève, plutôt que de tout forcer ouvert.
     await eleve

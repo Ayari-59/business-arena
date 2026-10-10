@@ -97,7 +97,7 @@ function Fait({ fait }: { fait: FaitDuMarche }) {
 function Rangee({ faits }: { faits: FaitDuMarche[] }) {
   return (
     <div
-      className="panneau flex gap-x-1 gap-y-2 overflow-x-auto py-1 [scrollbar-width:thin] max-sm:snap-x sm:flex-wrap sm:overflow-visible"
+      className="panneau-info flex gap-x-1 gap-y-2 overflow-x-auto py-1 [scrollbar-width:thin] max-sm:snap-x sm:flex-wrap sm:overflow-visible"
       role="list"
       aria-label="Faits du marché ce tour, avec leur écart au tour passé"
     >

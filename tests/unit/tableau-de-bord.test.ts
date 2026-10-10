@@ -106,9 +106,11 @@ describe("l'ardoise du dirigeant", () => {
 
   it("est un bandeau marine qui dit l'entreprise, le tour et le rôle de l'écran", () => {
     const html = ardoise(tours);
-    expect(html).toMatch(
-      /^<section id="ardoise-du-dirigeant"[^>]*class="ardoise [^"]*bg-slate-950/,
-    );
+    // Lot P3 : l'ardoise est un panneau d'INFORMATION, posé à plat sur le sol
+    // marine du cockpit (elle ne vit que dans l'arène), sans l'arête du métier
+    // ni la lumière de scène : l'arête est au seul panneau de décision en cours.
+    expect(html).toMatch(/^<section id="ardoise-du-dirigeant"[^>]*class="ardoise panneau-info /);
+    expect(html).not.toMatch(/arete-metier|lumiere-de-scene/);
     expect(html).toContain("Tableau de bord du dirigeant");
     expect(html).toContain("NOVA");
     expect(html).toContain("Tour 4/6");

@@ -14,10 +14,11 @@ import type { SurfaceDuRepli } from "@/config/surfaces-de-lecture";
  * partagent désormais trois signaux, et un seul endroit à corriger.
  *
  * Les trois signaux :
- *   1. le chevron, en ambre comme les autres commandes, qui PIVOTE à l'ouverture
- *      — c'est lui qui dit « ceci s'ouvre » ;
- *   2. le trait POINTILLÉ tant que le tiroir est fermé, plein une fois ouvert :
- *      visible du coin de l'œil, sans rien ajouter à lire ;
+ *   1. le chevron, à la teinte du métier (lot P1), qui PIVOTE à l'ouverture
+ *      — c'est lui qui dit « ceci s'ouvre », et, fermé, « ceci est replié » ;
+ *   2. le FILET PLEIN et discret du panneau d'information (lot P3) : il était
+ *      pointillé tant que le tiroir était fermé ; le pointillé disait « vide »,
+ *      et un repli fermé n'est que rangé (règle des replis du lot 6E) ;
  *   3. `quoi`, qui annonce le CONTENU par son compte (« 5 clientèles »). Un
  *      titre seul dit le sujet, pas qu'il y a matière derrière. Compté depuis la
  *      donnée affichée, jamais écrit à la main : un nombre en dur mentirait dès
@@ -110,7 +111,11 @@ export function Tiroir({
       className={
         papier
           ? "papier tiroir-papier group rounded-lg"
-          : "group rounded-lg border border-dashed border-white/15 bg-slate-950/60 open:border-solid open:bg-slate-950"
+          : // LOT P3 : une INFORMATION rangée. Fermé, il portait un pointillé ;
+            // ouvert, un fond marine plein. C'est le panneau plat du cockpit,
+            // son filet plein et discret, ouvert comme fermé : le chevron qui
+            // pivote dit seul s'il est replié.
+            "panneau-info group"
       }
     >
       {/*

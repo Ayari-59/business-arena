@@ -3,7 +3,12 @@
 import { bouton } from "@/components/bouton";
 import { useParcours } from "@/components/parcours-mobile";
 import { useSyncExternalStore } from "react";
-import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
+import {
+  CourrierRecommande,
+  Enveloppe,
+  EnveloppeOuverte,
+  grilleDeCourriers,
+} from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { courrierDeRoutine } from "@/config/courriers/routine";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
@@ -114,8 +119,24 @@ export function CourrierDuTour({
     );
   }
 
+  // UN PLI SEUL se pose à côté de son enveloppe ouverte ; plusieurs plis se
+  // posent côte à côte, deux par rangée.
+  const seul = vide || plis.length === 1;
+  const premier = vide ? routine.code : plis[0]!.code;
+  const destinatairePremier = vide
+    ? "L'entreprise"
+    : plis[0]!.teamId
+      ? "Votre entreprise"
+      : "Tout le marché";
+
   return (
-    <section aria-label={`Le courrier du ${periodeLabel}`} className="carte p-3 sm:p-5">
+    // LOT P3 : LE COURRIER EST POSÉ SUR LE BUREAU, PAS DANS UN PANNEAU. La
+    // lettre faisait 440 px au milieu d'un panneau marine de 1 230 px vide : on
+    // aurait dit une fenêtre surgissante. Le panneau disparaît ; la lettre,
+    // plus large (40 rem), se pose sur le sol du cockpit avec son ombre et une
+    // très légère rotation (globals.css, « LE COURRIER POSÉ »), l'enveloppe
+    // ouverte à côté sur ordinateur, et « J'ai pris note » à son pied.
+    <section aria-label={`Le courrier du ${periodeLabel}`} data-courrier-du-tour="">
       {ouvert && enParcours ? null : (
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         {/* LOT 6E : un titre n'est pas une action. Il était à l'orange, à côté
@@ -162,36 +183,56 @@ export function CourrierDuTour({
           </button>
         </div>
       ) : (
-        <div aria-live="polite">
-          {/*
-            Le courrier de routine s'ouvre comme les autres : c'est le geste
-            qui compte, et il doit être le même que le trimestre soit calme
-            ou non.
-          */}
-          <div className={`${enParcours ? "" : "mt-4"} ${grilleDeCourriers(vide ? 1 : plis.length)}`}>
-            {vide ? (
-              <CourrierRecommande code={routine.code} destinataire="L'entreprise" />
-            ) : (
-              plis.map((p, i) => (
-                <CourrierRecommande
-                  key={`${p.code}-${p.teamId ?? "market"}`}
-                  code={p.code}
-                  delayMs={i * 500}
-                  destinataire={p.teamId ? "Votre entreprise" : "Tout le marché"}
-                  surligne={p.isMyTeam}
-                />
-              ))
-            )}
-          </div>
-          {/* Lu, le courrier se classe : la décision reprend la place. */}
-          <div className="mt-4 flex justify-center">
-            <button
-              type="button"
-              onClick={prendreNote}
-              className={`${bouton({ variante: "secondaire", taille: "m" })} pointer-coarse:min-h-11`}
-            >
-              J&apos;ai pris note
-            </button>
+        <div
+          aria-live="polite"
+          className={`${enParcours ? "" : "mt-5"} ${
+            seul && !enParcours
+              ? "lg:grid lg:grid-cols-[13rem_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-12"
+              : ""
+          }`}
+        >
+          {/* L'ENVELOPPE OUVERTE, à côté de la lettre, sur ordinateur et pour
+              un pli seul : deux plis côte à côte prennent déjà la largeur. */}
+          {seul && !enParcours ? (
+            <EnveloppeOuverte
+              code={premier}
+              destinataire={destinatairePremier}
+              className="max-lg:hidden"
+            />
+          ) : null}
+          <div className={seul ? "mx-auto w-full sm:max-w-[40rem]" : ""}>
+            {/*
+              Le courrier de routine s'ouvre comme les autres : c'est le geste
+              qui compte, et il doit être le même que le trimestre soit calme
+              ou non.
+            */}
+            <div className={grilleDeCourriers(vide ? 1 : plis.length, "posee")}>
+              {vide ? (
+                <CourrierRecommande code={routine.code} destinataire="L'entreprise" />
+              ) : (
+                plis.map((p, i) => (
+                  <CourrierRecommande
+                    key={`${p.code}-${p.teamId ?? "market"}`}
+                    code={p.code}
+                    delayMs={i * 500}
+                    destinataire={p.teamId ? "Votre entreprise" : "Tout le marché"}
+                    surligne={p.isMyTeam}
+                  />
+                ))
+              )}
+            </div>
+            {/* AU PIED DE LA LETTRE, comme un geste de lecture : lu, le
+                courrier se classe et la décision reprend la place. Un bouton
+                secondaire : l'orange de l'écran reste à l'action qui engage. */}
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={prendreNote}
+                className={`${bouton({ variante: "secondaire", taille: "m" })} pointer-coarse:min-h-11 max-sm:w-full`}
+              >
+                J&apos;ai pris note
+              </button>
+            </div>
           </div>
         </div>
       )}

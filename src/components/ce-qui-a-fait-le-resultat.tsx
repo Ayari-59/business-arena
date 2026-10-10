@@ -1,5 +1,10 @@
+import type { CSSProperties } from "react";
 import { formatEuro } from "@/lib/format";
-import type { CauseDuResultat, DecompositionDuResultat } from "@/components/lecture-du-resultat";
+import type {
+  CauseDuResultat,
+  DecompositionDuResultat,
+  MarcheDuResultat,
+} from "@/components/lecture-du-resultat";
 
 /**
  * « CE QUI A FAIT LE RÉSULTAT » : LA CASCADE ET LES CAUSES, EN UN COUP D'ŒIL.
@@ -16,7 +21,58 @@ import type { CauseDuResultat, DecompositionDuResultat } from "@/components/lect
  *
  * Le composant ne calcule rien : la cascade et les causes viennent de
  * `lecture-du-resultat.ts`, qui les lit dans les comptes du tour.
+ *
+ * LOT P3 : UNE VRAIE CASCADE. C'étaient cinq barres indépendantes, chacune sur
+ * son rail : on ne voyait pas le chiffre d'affaires « fondre » jusqu'au
+ * résultat. C'est désormais un graphique en cascade, sur UNE échelle :
+ *   · le chiffre d'affaires est la première marche, pleine, depuis zéro ;
+ *   · chaque charge DESCEND depuis le niveau atteint par la précédente, et un
+ *     filet fin relie le bas d'une marche au haut de la suivante ;
+ *   · le résultat net est la dernière marche, ancrée à la ligne de base ;
+ *   · la ligne du zéro est toujours tracée : quand le résultat est négatif,
+ *     elle passe au-dessus de la dernière marche, qui plonge dessous.
+ * Les marques suivent la compétence `dataviz` : barres de 24 px au plus,
+ * coin arrondi à l'extrémité de la donnée et carré sur la ligne de base,
+ * filets d'un pixel, pleins. Le texte est à l'ENCRE, jamais à la couleur de
+ * la série, et chaque montant porte son signe ; la couleur ne dit que le rôle
+ * (bleu donnée pour ce qui entre, un gris NEUTRE pour ce qui sort, vert ou
+ * rouge francs pour le résultat). Sur ordinateur, des colonnes ; sous 640 px, la
+ * même cascade couchée (barres horizontales, filets verticaux), pour rester
+ * lisible à 390 px. La liste elle-même est lisible au lecteur d'écran (un
+ * libellé et un montant par marche) : le dessin, lui, est `aria-hidden`.
  */
+/** Un montant de la cascade, son signe toujours écrit (le moins typographique). */
+function signe(montant: number): string {
+  const arrondi = Math.round(montant);
+  return `${arrondi > 0 ? "+" : arrondi < 0 ? "\u2212" : ""}${formatEuro(Math.abs(montant))}`;
+}
+
+/**
+ * Où une marche se pose sur l'échelle commune, en fractions de 0 à 1 : son bas
+ * et son haut, le niveau qu'elle laisse à la suivante (`fin`), celui qu'elle
+ * reçoit de la précédente (`entree`), et la ligne du zéro. Exporté pour la
+ * garde (`tests/unit/cascade-du-resultat.test.ts`).
+ */
+export function geometrieDeLaCascade(marches: readonly MarcheDuResultat[]) {
+  const bornes = marches.flatMap((m) => [m.debut, m.fin]);
+  const bas = Math.min(0, ...bornes);
+  const haut = Math.max(0, ...bornes);
+  const echelle = haut - bas || 1;
+  const f = (v: number) => (v - bas) / echelle;
+  return marches.map((m, i) => ({
+    cle: m.cle,
+    bas: f(Math.min(m.debut, m.fin)),
+    haut: f(Math.max(m.debut, m.fin)),
+    fin: f(m.fin),
+    entree: i > 0 ? f(marches[i - 1]!.fin) : null,
+    zero: f(0),
+    /** La marche monte (un produit, un résultat positif) ou descend (une charge, une perte). */
+    sens: m.fin >= m.debut ? ("hausse" as const) : ("baisse" as const),
+    /** Elle part de zéro (le chiffre d'affaires, le résultat) ou flotte au niveau atteint. */
+    ancree: m.debut === 0,
+  }));
+}
+
 export function CeQuiAFaitLeResultat({
   decomposition,
   causes,
@@ -28,11 +84,7 @@ export function CeQuiAFaitLeResultat({
   forme?: "rituel" | "synthese";
 }) {
   const { marches } = decomposition;
-  // L'axe : de la plus basse à la plus haute des bornes, zéro compris.
-  const bornes = marches.flatMap((m) => [m.debut, m.fin]);
-  const bas = Math.min(0, ...bornes);
-  const haut = Math.max(0, ...bornes);
-  const echelle = haut - bas || 1;
+  const geometrie = geometrieDeLaCascade(marches);
   const rituel = forme === "rituel";
   // Au rituel, les DEUX causes les plus fortes : l'écran du marché qui répond
   // doit garder son action dans la fenêtre. La synthèse d'un tour clos, qu'on
@@ -49,10 +101,14 @@ export function CeQuiAFaitLeResultat({
         <p className="libelle font-semibold text-slate-200">
           Ce qui a fait le résultat
         </p>
-        <ol className="mt-2 space-y-1">
-          {marches.map((m) => {
-            const gauche = ((Math.min(m.debut, m.fin) - bas) / echelle) * 100;
-            const largeur = Math.max(0.6, (Math.abs(m.fin - m.debut) / echelle) * 100);
+        <ol
+          aria-label="La cascade du résultat, du chiffre d'affaires au résultat net"
+          data-cascade={forme}
+          className="cascade mt-2"
+          style={{ "--marches": marches.length } as CSSProperties}
+        >
+          {marches.map((m, i) => {
+            const g = geometrie[i]!;
             const resultat = m.cle === "resultat";
             const teinte = resultat
               ? m.montant >= 0
@@ -60,37 +116,44 @@ export function CeQuiAFaitLeResultat({
                 : "bg-red-400"
               : m.cle === "ca"
                 ? "bg-[var(--donnee)]"
-                : "bg-[var(--donnee-2)]";
+                : "bg-[var(--cascade-charge)]";
             return (
               <li
                 key={m.cle}
                 data-marche={m.cle}
-                // Trois colonnes de largeur FIXE pour le libellé et le montant :
-                // toutes les barres partagent le même rail, donc la même échelle.
-                className={`grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_6rem] items-center gap-x-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_6.25rem] ${
-                  rituel ? "text-sm" : "text-xs sm:text-sm"
-                } ${resultat ? "pt-1.5" : ""}`}
+                data-sens={g.sens}
+                data-ancree={g.ancree ? "" : undefined}
+                className={`cascade-marche ${rituel ? "text-sm" : "text-xs sm:text-sm"}`}
+                style={
+                  {
+                    "--bas": g.bas,
+                    "--haut": g.haut,
+                    "--fin": g.fin,
+                    "--entree": g.entree ?? g.fin,
+                    "--zero": g.zero,
+                  } as CSSProperties
+                }
               >
                 <span
-                  className={`leading-tight ${resultat ? "font-semibold text-slate-50" : "text-slate-300"}`}
+                  className={`cascade-libelle leading-tight ${resultat ? "font-semibold text-slate-50" : "text-slate-300"}`}
                 >
                   {m.libelle}
                 </span>
-                <span aria-hidden className="relative h-2.5 rounded-md bg-white/[0.06]">
-                  <span
-                    className={`cascade-barre absolute top-0 ${teinte}`}
-                    style={{ left: `${gauche}%`, width: `${largeur}%` }}
-                  />
+                <span aria-hidden className="cascade-piste">
+                  <span className="cascade-zero" />
+                  {i > 0 ? <span className="cascade-lien cascade-lien-entrant" /> : null}
+                  {i < marches.length - 1 ? (
+                    <span className="cascade-lien cascade-lien-sortant" />
+                  ) : null}
+                  <span className={`cascade-barre ${teinte}`} />
                 </span>
+                {/* Le montant à l'encre, son signe écrit : la couleur ne le dit pas seule. */}
                 <span
-                  className={`whitespace-nowrap text-right tabular-nums ${
-                    resultat
-                      ? `font-semibold ${m.montant >= 0 ? "text-emerald-300" : "text-red-300"}`
-                      : "text-slate-100"
+                  className={`cascade-valeur whitespace-nowrap tabular-nums ${
+                    resultat ? "font-semibold text-slate-50" : "text-slate-100"
                   }`}
                 >
-                  {m.cle === "ca" || resultat ? "" : "− "}
-                  {formatEuro(m.cle === "ca" || resultat ? m.montant : Math.abs(m.montant))}
+                  {signe(m.montant)}
                 </span>
               </li>
             );

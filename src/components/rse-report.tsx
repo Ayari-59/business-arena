@@ -60,7 +60,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
   return (
     <section
       aria-label="Rapport extra-financier"
-      className="carte p-3 sm:p-5"
+      className="panneau-info p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">

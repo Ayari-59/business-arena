@@ -47,7 +47,7 @@ export function ChoixEquipe({
   const mienne = equipes.find((e) => e.teamId === monEquipeId);
 
   return (
-    <section className="carte p-3 sm:p-5">
+    <section className="panneau-info p-3 sm:p-5">
       <h2 className="text-sm font-semibold text-slate-100">
         <Icone nom="equipes" className="mr-1.5 h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
         Composition des équipes

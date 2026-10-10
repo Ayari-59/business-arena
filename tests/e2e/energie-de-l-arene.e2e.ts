@@ -180,7 +180,8 @@ describe("un champ modifiable saute aux yeux, une information reste plate", () =
         return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
       };
       const champ = document.querySelector('input[name="price"]')!.closest(".champ")!;
-      const panneau = champ.closest(".panneau")!;
+      // Lot P3 : le champ est posé dans le PANNEAU DE DÉCISION (le sol relevé).
+      const panneau = champ.closest(".panneau-decision")!;
       const sc = getComputedStyle(champ);
       const sp = getComputedStyle(panneau);
       const info = [...document.querySelectorAll("p")].find((p) =>

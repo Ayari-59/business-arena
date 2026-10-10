@@ -1891,7 +1891,9 @@ function Family({
   defaultOpen = true,
   // LE PANNEAU (lot 6E) : son sol et son arête de lumière, pas un cadre. Il
   // était un cadre à 10 % de blanc sur un fond… de la couleur de la page.
-  tone = "panneau",
+  // Lot P3 : c'est LE PANNEAU DE DÉCISION, celui où l'on saisit ; le premier
+  // de l'étape porte l'arête du métier (globals.css, « LOT P3 »).
+  tone = "panneau-decision",
   // Le titre d'un volet : en casse de phrase, à l'encre (lot P1). Il était en
   // petites capitales espacées, comme tous les intitulés de la feuille, si bien
   // que plus rien n'y était un surtitre.

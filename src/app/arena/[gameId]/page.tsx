@@ -397,7 +397,7 @@ export default async function ArenaPage({
       ) : null}
       {view.courriersAnnonces.length > 0 ? (
         // UN PANNEAU, PAS UN CADRE ORANGE (lot 6E) : ce n'est pas une action.
-        <section className="panneau p-3 sm:p-5">
+        <section className="panneau-info p-3 sm:p-5">
           <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
             <Icone nom="courrier" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
             Le courrier, en détail
@@ -433,7 +433,7 @@ export default async function ArenaPage({
           )!.roundsLeft,
         }));
         return encore.length > 0 ? (
-          <section className="carte p-3 sm:p-5">
+          <section className="panneau-info p-3 sm:p-5">
             <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
               <Icone nom="duree" className="h-4 w-4" />
               Encore en vigueur ce tour
@@ -578,7 +578,7 @@ export default async function ArenaPage({
             open={i === 0}
             // UN PANNEAU (lot 6E) : ni cadre, ni pointillé quand il est fermé,
             // ni filet sous le titre ; le repère à la teinte du métier.
-            className="group panneau"
+            className="group panneau-info"
           >
             <summary className="flex cursor-pointer items-center gap-2 rounded-[var(--rayon-panneau)] px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
               <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
@@ -622,7 +622,7 @@ export default async function ArenaPage({
   // comme au parcours en cartes.
   const reponsesSection =
     reponses.length > 0 ? (
-                        <section className="carte p-3 sm:p-5">
+                        <section className="panneau-info p-3 sm:p-5">
                           <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
                             <Icone nom="courrier" className="h-4 w-4" />
                             En retour de vos décisions
@@ -734,6 +734,20 @@ export default async function ArenaPage({
           {finished ? "Vos tours" : "Tours passés"}
         </p>
       ) : null}
+      {/*
+        LOT P3 : UNE LISTE, PAS UNE PILE DE CADRES. Chaque tour clos était un
+        panneau à lui, cerné d'un filet de gauche vert ou rouge, son numéro dans
+        un cercle de la même couleur : six cadres à la file, et un tour en perte
+        cerné de rouge comme une erreur. Les tours sont désormais les lignes
+        d'UN objet d'information (`panneau-info`), séparées d'un filet ; le gain
+        ou la perte se lit sur le chiffre seul, en vert ou en rouge francs. Un
+        tour perdant n'est pas une erreur.
+      */}
+      {liste.length > 0 ? (
+      <div
+        data-liste-des-tours=""
+        className="panneau-info divide-y divide-[color:var(--filet-information)]"
+      >
       {liste.map((p) => {
         const isLatest = p.round === latestRound;
         const netIncome = p.result.incomeStatement.netIncome;
@@ -759,29 +773,24 @@ export default async function ArenaPage({
             // numéro, et l'état replié au chevron qui pivote.
             data-tour-passe
             //
-            // LOT 6E : UN PANNEAU, ET LE SIGNE DANS SON FILET. Le cadre plein
-            // tombe (le sol et l'arête du panneau détachent le tour de la
-            // page) ; le filet de 2 px du signe reste : c'est un résultat.
-            className={`group scroll-mt-24 panneau border-l-2 ${
-              netIncome >= 0 ? "border-l-emerald-400" : "border-l-red-400"
-            }`}
+            // LOT 6E : UN PANNEAU, ET LE SIGNE DANS SON FILET. Lot P3 : ni
+            // panneau ni filet de signe, une ligne de la liste (voir plus haut).
+            className="group scroll-mt-24"
           >
             {/*
               LE NUMÉRO FAIT LA SÉPARATION. Il était noyé derrière un 📊
               répété — l'œil tombait sur une icône identique d'un tour à
               l'autre au lieu de trouver 1, 2, 3. En pastille à gauche, les
               numéros font colonne et donnent une colonne vertébrale à la
-              liste ; leur couleur dit du même coup si le tour a été gagné ou
-              perdu, sans ajouter un signal de plus.
+              liste. Lot P3 : le cercle est neutre ; le résultat du tour, juste
+              à côté, porte seul le vert ou le rouge.
             */}
             <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
               <span
                 aria-hidden
-                // Le cercle dit le signe du tour par son trait PLEIN, vert ou
-                // rouge, sur le voile neutre : il était une dragée rose ou menthe.
-                className={`voile-neutre flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold tabular-nums text-slate-100 ${
-                  netIncome >= 0 ? "border-emerald-400" : "border-red-400"
-                }`}
+                // Un numéro sur le voile neutre : il portait le signe du tour
+                // en trait plein vert ou rouge (lot P3 : le chiffre suffit).
+                className="voile-neutre flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums text-slate-100"
               >
                 {p.round}
               </span>
@@ -838,6 +847,8 @@ export default async function ArenaPage({
           </details>
         );
       })}
+      </div>
+      ) : null}
     </>
   );
   const toursPasses = toursPassesDe(periods);
@@ -1023,11 +1034,15 @@ export default async function ArenaPage({
               {/* LES RÉSULTATS ET SEULEMENT EUX, avec leurs trois onglets de détail (Synthèse, Marché,
                   Finance). Le menu Situation / Décisions / Résultats n'a pas sa place ici : le
                   débriefing et les décisions du tour se lisent à la demande, dans un tiroir. */}
+              {/* La carte « Résultats » du téléphone n'a pas les onglets du tour
+                  au-dessus d'elle : le tableau de bord y garde les siens, seule
+                  navigation de l'écran (lot P3). */}
               <PeriodDashboard
                 view={view}
                 period={periodeRecente}
                 standing
                 courrierResume={telephone}
+                navigation="onglets"
               />
               {situationsDuTour(periodeRecente) || decisionsDuTour(periodeRecente) ? (
                 <Tiroir titre="Débriefing et décisions de ce tour" ferme>
@@ -1062,7 +1077,7 @@ export default async function ArenaPage({
             cle: "presentation",
             titre: "Votre entreprise",
             noeud: (
-              <section className="space-y-4 carte p-3 text-slate-300">
+              <section className="space-y-4 panneau-info p-3 text-slate-300">
                 {presentation}
               </section>
             ),
