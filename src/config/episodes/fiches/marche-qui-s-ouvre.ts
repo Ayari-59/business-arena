@@ -34,13 +34,13 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/marche-qui-s-ouvre?hasard=1 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien du test ni des options réelles : vous demandez seulement de noter, à chaque décision, le chiffre qui l'a emportée.",
+        "Vous envoyez le lien /entreprises/episode/marche-qui-s-ouvre?hasard=1 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien du test ni des options réelles : vous demandez seulement de noter, à chaque décision, le chiffre qui l'a emportée.",
     },
     {
       minutes: 40,
       titre: "Jeu",
       detail:
-        "Les élèves jouent les six décisions, de la semaine 1 à la semaine 10. Vous circulez sans donner de réponse et relevez au tableau, sans commentaire, le marché estimé en semaine 1 et l'option choisie aux décisions 1 (l'entrée), 2 (le test) et 5 (le plan de janvier). Ceux qui finissent tôt rejouent les mêmes décisions sous un autre aléa et notent l'écart.",
+        "Les élèves jouent les six décisions, de la semaine 1 à la semaine 10. Vous circulez sans donner de réponse et relevez au tableau, sans commentaire, le marché estimé en semaine 1 et l'option choisie aux décisions 1 (l'entrée), 2 (le test) et 5 (le plan de janvier). Ceux qui finissent tôt rejouent les mêmes décisions avec d'autres aléas et notent l'écart.",
     },
     {
       minutes: 15,
@@ -52,13 +52,13 @@ export const FICHE: FicheEnseignant = {
       minutes: 25,
       titre: "Les décisions qui ont partagé la classe",
       detail:
-        "Vous prenez d'abord la décision 1 : chaque camp (les trente agences, les dix grandes, le test, l'attente) défend son choix, puis vous posez au tableau la valeur de chaque option dans les trois scénarios. Vous enchaînez sur la décision 2, ce que le test devait mesurer, et sur la décision 5, réviser ou tenir le plan. Vous terminez par les artisans, où « ne rien signer » a gagné sous l'aléa de la classe.",
+        "Vous prenez d'abord la décision 1 : chaque camp (les trente agences, les dix grandes, le test, l'attente) défend son choix, puis vous posez au tableau la valeur de chaque option dans les trois scénarios. Vous enchaînez sur la décision 2, ce que le test devait mesurer, et sur la décision 5, réviser ou tenir le plan. Vous terminez par les artisans, où « ne rien signer » a gagné sous le tirage de la classe.",
     },
     {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous prévenez la classe : les aléas pèsent lourd dans cet épisode, mais l'aléa n° 1 est un tirage ordinaire, où aucun réflexe pris seul ne bat la méthode. Le marché y suit le scénario moyen et Solvéane ne vient pas ; la méthode y fait 153 k€, au milieu de ses 30 tirages, et « être les premiers partout » perd 149 k€, quand sur les 30 tirages il fait 3 k€ contre 259 k€ et perd de l'argent 22 fois. Vous faites ouvrir le bilan et comparer, décision par décision, le résultat obtenu au résultat moyen ; chez qui a lancé partout puis tout signé, le bloc « Vos décisions s'enchaînent » montre ce que ce détail ne dit pas.",
+        "Vous prévenez la classe : le hasard pèse lourd dans cet épisode, mais le tirage n° 1 est un cas ordinaire, où aucun réflexe pris seul ne bat la méthode. Le marché y suit le scénario moyen et Solvéane ne vient pas ; la méthode y fait 153 k€, au milieu de ses 30 tirages, et « être les premiers partout » perd 149 k€, quand sur les 30 tirages il fait 3 k€ contre 259 k€ et perd de l'argent 22 fois. Vous faites ouvrir le bilan et comparer, décision par décision, le résultat obtenu au résultat moyen ; chez qui a lancé partout puis tout signé, le bloc « Vos décisions s'enchaînent » montre ce que ce détail ne dit pas.",
     },
     {
       minutes: 15,
@@ -72,7 +72,7 @@ export const FICHE: FicheEnseignant = {
     etapes: [
       "« Extraire les données de logement de la zone des agences » : 400 000 maisons individuelles dans la zone de chalandise des trente agences, dont 3 % engagent chaque année des travaux de rénovation énergétique aidés, soit 400 000 × 0,03 = 12 000 chantiers par an.",
       "« Interroger trente artisans RGE clients » : 4 chantiers sur 10 se vendent en bouquet coordonné, soit 12 000 × 0,4 = 4 800 bouquets par an ; les autres sont vendus lot par lot par l'artisan seul et ne sont pas à la portée de l'offre.",
-      "Même source : un bouquet coûte en moyenne 15 k€ hors taxes, pose comprise. Marché accessible = 4 800 × 15 000 € = 72 000 000 €, soit 72 M€ de chiffre d'affaires par an. Il ne dépend pas des aléas : toute la classe doit trouver 72 ; l'épisode juge juste à 4 M€ près, proche à 12 M€.",
+      "Même source : un bouquet coûte en moyenne 15 k€ hors taxes, pose comprise. Marché accessible = 4 800 × 15 000 € = 72 000 000 €, soit 72 M€ de chiffre d'affaires par an. Il ne dépend pas du hasard : toute la classe doit trouver 72 ; l'épisode juge juste à 4 M€ près, proche à 12 M€.",
       "Contraste avec « Lire l'étude de Varenge Conseil » : 650 M€ couvrent tous les logements de la région, maisons et immeubles, dans le seul scénario où les aides augmentent ; les 15 % qu'Arvel « peut viser », soit 97,5 M€, sont une part postulée, pas un calcul.",
       "Ce que le chiffre ne dit pas : selon l'économiste de la fédération, une agence moyenne signera 20, 13 ou 7 bouquets par an, soit 600, 390 ou 210 pour le réseau, 12,5 %, 8,1 % ou 4,4 % des 4 800 bouquets accessibles. La taille du marché n'est pas l'inconnue ; le rythme de captation l'est, et c'est lui que le test doit mesurer.",
     ],
@@ -157,16 +157,16 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Si Solvéane voit qu'Arvel casse ses prix, il ne viendra pas : une baisse de commission dissuade avant qu'il soit trop tard.",
       ceQuiLeDejoue:
-        "« Chiffrer les deux ripostes » : la baisse coûte 150 € sur chaque bouquet de la première année, que Solvéane vienne ou non, plus 5 k€ de campagne, soit 29,8 k€ avec le plan de dix grandes agences de l'aléa n° 1, pour une chance sur dix de moins qu'il vienne. La riposte ciblée ne coûte 5 k€ que s'il arrive ; la baisse préventive fait 30 k€ de moins en moyenne.",
+        "« Chiffrer les deux ripostes » : la baisse coûte 150 € sur chaque bouquet de la première année, que Solvéane vienne ou non, plus 5 k€ de campagne, soit 29,8 k€ avec le plan de dix grandes agences du tirage n° 1, pour une chance sur dix de moins qu'il vienne. La riposte ciblée ne coûte 5 k€ que s'il arrive ; la baisse préventive fait 30 k€ de moins en moyenne.",
     },
   ],
   debrief: [
     "En semaine 1, qu'est-ce qui sépare les 72 M€ du marché accessible des 97,5 M€ du cabinet ? Faites nommer les trois différences (périmètre, scénario, part postulée), puis demandez pourquoi aucun de ces deux chiffres ne suffisait à décider l'entrée : à 20, 13 ou 7 bouquets par agence et par an, le réseau prend 12,5 %, 8,1 % ou 4,4 % du marché.",
     "Le test coûtait 18 k€ d'ouvertures, 8 k€ de protocole et l'avance du premier entrant : qu'achetait-il ? Posez au tableau la valeur moyenne de chaque entrée par scénario : face aux dix grandes agences d'emblée, le test perd 19 k€ dans le porteur, gagne 19 k€ dans le moyen et 166 k€ dans le difficile, soit 43 k€ de plus sur les 30 tirages, et 244 k€ de plus que les trente agences. Pourquoi dit-on que l'information a changé la réponse, et pas seulement le résultat ?",
     "Ceux qui ont testé dans les trois plus grosses agences ont-ils mesuré le marché ? Le test en vitrine bat le test représentatif 15 fois sur 30, de 10 à 15 k€, et perd les 15 autres de 171 à 199 k€ : retrouvez lesquelles (le scénario moyen, où la moyenne passe le seuil et les petites agences non). Qu'aurait-il fallu fixer avant de voir les chiffres ?",
-    "En semaine 8, le président voulait tenir le plan, le cabinet accélérer : qu'est-ce qui justifiait de réviser ? Sous l'aléa n° 1, les chiffres du test donnent 17,7 bouquets par an à la grande agence et 10,2 aux autres : seule la grande passe le seuil de 12,6, et la révision retombe sur le plan validé, les dix grandes agences ; tenir le plan fait cette fois exactement autant. Sur les 30 tirages, aucune autre option ne fait jamais mieux que la révision, et tenir le plan fait 90 k€ de moins en moyenne ; mais derrière un test en vitrine, suivre ses chiffres fait moins bien que tenir le plan (174 k€ contre 200 k€). Que vaut un signal qui ne mesure pas la bonne chose ?",
-    "« Ne rien signer pour l'instant : on recrutera les artisans au moment d'étendre » bat la charte 17 fois sur 30, et sous l'aléa de la classe elle fait 20 k€ de mieux, les 20 k€ exacts de la charte. Les 13 autres fois, quand Solvéane s'implante, elle perd de 25 à 452 k€, si bien qu'elle fait 67 k€ de moins en moyenne. Ceux qui l'ont choisie ont-ils bien décidé, ou eu de la chance ? Qu'achète-t-on en payant une assurance qui ne sert pas, la plupart du temps ?",
-    "Sous l'aléa n° 1, le marché a suivi le scénario moyen et Solvéane n'est pas venu : la méthode fait 153 k€, sa 16e place sur les 30 tirages, et « être les premiers partout » perd 149 k€. Le meilleur résultat possible, 205 k€, revient à qui a testé dans les trois plus grosses agences, n'a rien signé avec les artisans et a tenu le plan : deux réflexes qui se compensent sous cet aléa, pour 156 k€ en moyenne sur les 30 tirages, contre 259 k€ pour la méthode. Un binôme qui a fini premier de la classe a-t-il pris les meilleures décisions ? Sur quoi juge-t-on une décision stratégique dont le résultat d'un trimestre dépend autant des aléas ?",
+    "En semaine 8, le président voulait tenir le plan, le cabinet accélérer : qu'est-ce qui justifiait de réviser ? Sous le tirage n° 1, les chiffres du test donnent 17,7 bouquets par an à la grande agence et 10,2 aux autres : seule la grande passe le seuil de 12,6, et la révision retombe sur le plan validé, les dix grandes agences ; tenir le plan fait cette fois exactement autant. Sur les 30 tirages, aucune autre option ne fait jamais mieux que la révision, et tenir le plan fait 90 k€ de moins en moyenne ; mais derrière un test en vitrine, suivre ses chiffres fait moins bien que tenir le plan (174 k€ contre 200 k€). Que vaut un signal qui ne mesure pas la bonne chose ?",
+    "« Ne rien signer pour l'instant : on recrutera les artisans au moment d'étendre » bat la charte 17 fois sur 30, et sous le tirage de la classe elle fait 20 k€ de mieux, les 20 k€ exacts de la charte. Les 13 autres fois, quand Solvéane s'implante, elle perd de 25 à 452 k€, si bien qu'elle fait 67 k€ de moins en moyenne. Ceux qui l'ont choisie ont-ils bien décidé, ou eu de la chance ? Qu'achète-t-on en payant une assurance qui ne sert pas, la plupart du temps ?",
+    "Sous le tirage n° 1, le marché a suivi le scénario moyen et Solvéane n'est pas venu : la méthode fait 153 k€, sa 16e place sur les 30 tirages, et « être les premiers partout » perd 149 k€. Le meilleur résultat possible, 205 k€, revient à qui a testé dans les trois plus grosses agences, n'a rien signé avec les artisans et a tenu le plan : deux réflexes qui se compensent sous ce tirage, pour 156 k€ en moyenne sur les 30 tirages, contre 259 k€ pour la méthode. Un binôme qui a fini premier de la classe a-t-il pris les meilleures décisions ? Sur quoi juge-t-on une décision stratégique dont le résultat d'un trimestre dépend autant du hasard ?",
   ],
   prolongement: {
     enonce:
@@ -179,7 +179,7 @@ export const FICHE: FicheEnseignant = {
     "Le choix de l'entrée est justifié par une comparaison scénario par scénario et par ce que le test permet de décider ensuite, non par la taille du marché ni par la vitesse.",
     "Le test est conçu avant d'en voir les chiffres : agences représentatives, bouquets signés par agence, seuil de rentabilité de 11 bouquets par an (12,6 avec l'ouverture) comme critère.",
     "Le plan de janvier suit les chiffres du test, à la hausse comme à la baisse, et les engagements de volume (artisans, fabricant) sont rapportés aux bouquets que chaque scénario permet.",
-    "L'élève distingue la qualité de ses décisions de leur résultat sous l'aléa n° 1, à l'aide du bilan des 30 tirages, et identifie au moins une décision où il a eu de la chance.",
+    "L'élève distingue la qualité de ses décisions de leur résultat sous le tirage n° 1, à l'aide du bilan des 30 tirages, et identifie au moins une décision où il a eu de la chance.",
   ],
   vigilance:
     "L'épisode donne les probabilités des trois scénarios et de l'arrivée de Solvéane, et un test bien conduit y révèle le scénario sans erreur, alors que ces probabilités sont des jugements et qu'un test de six semaines sur trois agences est bruité. La valeur est calculée sur trois ans au taux de 10 %, sans valeur terminale, et l'attente ne vaut que zéro moins ce que Solvéane coûte au négoce, l'entrée plus tardive n'étant pas comptée : un enseignant de stratégie pourra faire remarquer que l'option d'attendre a aussi une valeur, que le modèle ne donne pas, et que l'avantage du premier entrant s'y réduit à 3 % de bouquets en plus.",

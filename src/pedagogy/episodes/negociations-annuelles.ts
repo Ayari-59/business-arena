@@ -215,7 +215,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : une autre réponse de Celtis au 1er mars, une mise en sommeil en janvier ou non, d'autres imprévus. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions : une autre réponse de Celtis au 1er mars, une mise en sommeil en janvier ou non, d'autres imprévus. Si le résultat tient, votre méthode tient.",
   };
 }
 

@@ -32,7 +32,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/faire-ou-faire-faire?hasard=8 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous annoncez qu'en semaine 1 chacun devra déposer une estimation chiffrée, et qu'elle sera corrigée au tableau.",
+        "Vous envoyez le lien /entreprises/episode/faire-ou-faire-faire?hasard=8 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous annoncez qu'en semaine 1 chacun devra déposer une estimation chiffrée, et qu'elle sera corrigée au tableau.",
     },
     {
       minutes: 40,
@@ -50,7 +50,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 35,
       titre: "Débrief des décisions et du bilan",
       detail:
-        "Vous partez de la décision où la classe s'est le plus partagée, en général la première ou celle de la semaine 10, et vous faites défendre chaque option par un élève qui l'a choisie avant de chiffrer. Vous posez les questions du débrief dans l'ordre, puis vous projetez le bilan sur trente tirages pour séparer la qualité d'une décision du résultat obtenu sous l'aléa n° 8.",
+        "Vous partez de la décision où la classe s'est le plus partagée, en général la première ou celle de la semaine 10, et vous faites défendre chaque option par un élève qui l'a choisie avant de chiffrer. Vous posez les questions du débrief dans l'ordre, puis vous projetez le bilan sur trente tirages pour séparer la qualité d'une décision du résultat obtenu sous le tirage n° 8.",
     },
     {
       minutes: 15,
@@ -140,8 +140,8 @@ export const FICHE: FicheEnseignant = {
     "Ceux qui ont tout confié et ceux qui n'ont confié que les tournées lointaines lisaient le même coût complet : quel chiffre les sépare, par livraison et par semaine ?",
     "En semaine 4, rien n'avait changé dans les porteurs loués, et pourtant la décision n'était plus la même qu'en semaine 1 : qu'est-ce qui avait changé ? Les 27 000 € de grues devaient-ils peser ?",
     "En semaine 8, le coût complet de l'agglomération a monté : qu'est-ce qui coûtait plus cher dans une livraison ? Qu'aurait-il fallu répondre au directeur ?",
-    "Sous notre aléa, la mise en demeure a payé : Ventajol s'est redressé en semaine 12 et Sirand n'a pas appliqué sa pénalité de 6 000 € ; confier la moitié des tournées lointaines, dont Sirand, à un second transporteur aurait fait environ 3,7 k€ de moins. Sur trente tirages, ce second transporteur bat pourtant la mise en demeure 11 fois et ne perd que 1,3 k€ en moyenne. La mise en demeure était-elle la meilleure décision, ou un bon tirage ? Qu'apporte le second transporteur dans les mauvais trimestres ?",
-    "Votre résultat est-il dû à vos décisions ou aux aléas ? Comparez-le à la moyenne de votre chemin sur trente tirages : la méthode des coûts évitables finit en moyenne 13,7 k€ sous le budget, celle du coût complet 85 k€ au-delà, et le coût complet ne la bat sur aucun des trente tirages.",
+    "Sous notre tirage, la mise en demeure a payé : Ventajol s'est redressé en semaine 12 et Sirand n'a pas appliqué sa pénalité de 6 000 € ; confier la moitié des tournées lointaines, dont Sirand, à un second transporteur aurait fait environ 3,7 k€ de moins. Sur trente tirages, ce second transporteur bat pourtant la mise en demeure 11 fois et ne perd que 1,3 k€ en moyenne. La mise en demeure était-elle la meilleure décision, ou un bon tirage ? Qu'apporte le second transporteur dans les mauvais trimestres ?",
+    "Votre résultat est-il dû à vos décisions ou au hasard ? Comparez-le à la moyenne de votre chemin sur trente tirages : la méthode des coûts évitables finit en moyenne 13,7 k€ sous le budget, celle du coût complet 85 k€ au-delà, et le coût complet ne la bat sur aucun des trente tirages.",
     "Si la direction autorisait des départs l'an prochain, ou si le bail du garage arrivait à échéance, quelle conclusion de l'épisode changerait ? Qu'est-ce que cela dit de l'horizon d'une décision ?",
   ],
   prolongement: {
@@ -154,7 +154,7 @@ export const FICHE: FicheEnseignant = {
     "Le coût évitable est calculé ligne par ligne, et chaque ligne est classée en citant le contrat, le préavis ou l'échéance qui la rend évitable ou non.",
     "Les coûts irrécupérables (aménagements payés à la signature, amortissement des matériels achetés) sont nommés et écartés explicitement de la comparaison.",
     "L'horizon est explicite : l'élève date le moment où chaque coût devient évitable et refait la comparaison à cette date.",
-    "Les décisions sont justifiées par leur moyenne sur les trente tirages, et l'élève distingue une bonne décision d'un résultat favorable sous un aléa donné.",
+    "Les décisions sont justifiées par leur moyenne sur les trente tirages, et l'élève distingue une bonne décision d'un résultat favorable sous un tirage donné.",
     "Le risque de dépendance au prestataire est chiffré (pénalité de 6 000 € au-delà de 15 % de retards chez Sirand) et mis en regard du coût de la protection.",
   ],
   vigilance:

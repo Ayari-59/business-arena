@@ -265,7 +265,7 @@ export function axe([information, diagnostic, reflexe, calibrage, segment]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un Tarval qui vise la part de marché, ou qui suit vos baisses, met une riposte à l'épreuve.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions : un Tarval qui vise la part de marché, ou qui suit vos baisses, met une riposte à l'épreuve.",
   };
 }
 

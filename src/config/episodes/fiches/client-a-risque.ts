@@ -55,7 +55,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Chance ou méthode",
       detail:
-        "Faites ouvrir le bilan des 30 tirages. Sous l'aléa 15, Corvelle reste solide et l'assureur refuse tout agrément : le compte ouvert et l'assurance font jeu égal, à 150 € de frais d'étude près ; sur les trente tirages, le compte ouvert perd 17 k€ en moyenne. Vous faites dire pourquoi : deux défauts de Corvelle, sur les tirages 11 et 21, coûtent chacun près de 300 k€ de plus sans assurance. Une bonne décision se juge sur sa moyenne et sur ses pires cas, pas sur le tirage qu'on a vécu.",
+        "Faites ouvrir le bilan des 30 tirages. Sous le tirage 15, Corvelle reste solide et l'assureur refuse tout agrément : le compte ouvert et l'assurance font jeu égal, à 150 € de frais d'étude près ; sur les trente tirages, le compte ouvert perd 17 k€ en moyenne. Vous faites dire pourquoi : deux défauts de Corvelle, sur les tirages 11 et 21, coûtent chacun près de 300 k€ de plus sans assurance. Une bonne décision se juge sur sa moyenne et sur ses pires cas, pas sur le tirage qu'on a vécu.",
     },
     {
       minutes: 15,
@@ -70,7 +70,7 @@ export const FICHE: FicheEnseignant = {
       "Probabilité de défaut : la source « Analyser le dossier financier de Corvelle » donne la cote 7 de l'assureur-crédit, soit 10 % de probabilité de défaut dans le trimestre.",
       "Taux de récupération : la source « Relire les procédures collectives des cinq dernières années » indique qu'Arvel a récupéré en moyenne 15 % du hors-taxe de ses créances chirographaires ; la perte en cas de défaut est donc de 85 %.",
       "Exposition : l'encours demandé, 500 k€, que la limite autorise à atteindre. (La source « Chiffrer le chantier avec l'agence » annonce un encours de croisière de 480 k€ dès la semaine 9 ; le calcul sur 480 k€ donne 40,8 k€, que l'épisode accepte, l'écart restant sous 2 k€.)",
-      "Perte attendue = 0,10 × 500 k€ × (1 − 0,15) = 42,5 k€. Le chiffre ne dépend pas des aléas : il est le même pour toute la classe.",
+      "Perte attendue = 0,10 × 500 k€ × (1 − 0,15) = 42,5 k€. Le chiffre ne dépend pas du hasard : il est le même pour toute la classe.",
       "Mise en regard : le chantier fait 540 k€ de livraisons au prix chantier, à 10 % de marge sur coût variable, soit 54 k€. Une fois le risque payé, il reste 11,5 k€ : le chantier ne vaut d'être livré que si une garantie réduit la perte attendue pour moins cher qu'elle ne la réduit.",
     ],
     erreurs: [
@@ -143,7 +143,7 @@ export const FICHE: FicheEnseignant = {
   ],
   debrief: [
     "En semaine 1, certains ont retenu que Corvelle était fragile, d'autres qu'il fallait chiffrer la perte attendue. Les deux sont vrais : lequel permet de décider, et pourquoi la fragilité seule ne dit pas s'il faut livrer ?",
-    "Sous l'aléa de la classe, le compte ouvert à 500 k€ a fait jeu égal avec l'assurance-crédit, l'assureur ayant refusé tout agrément, et il bat la meilleure option sur 28 tirages sur 30. Pourquoi perd-il pourtant 17 k€ en moyenne ? Que se passe-t-il sur les tirages 11 et 21 ?",
+    "Sous le tirage de la classe, le compte ouvert à 500 k€ a fait jeu égal avec l'assurance-crédit, l'assureur ayant refusé tout agrément, et il bat la meilleure option sur 28 tirages sur 30. Pourquoi perd-il pourtant 17 k€ en moyenne ? Que se passe-t-il sur les tirages 11 et 21 ?",
     "Ceux qui ont accordé en compte ouvert ont-ils pris une mauvaise décision, alors que leur résultat vaut celui des assurés ? Qu'est-ce qui distingue la qualité d'une décision de son résultat, et à quoi sert le bilan des 30 tirages pour le dire ?",
     "L'acompte sur Corvelle, la caution bancaire de Guénard et la police sur tout le portefeuille ont protégé, et pourtant coûté de l'argent. Pour chacun, que coûtait la garantie, et quelle perte attendue retirait-elle ?",
     "En semaine 6, Corvelle paie avec douze jours de retard et demande 150 k€ de plus. Qu'est-ce qui distingue un signal d'un incident, et pourquoi la surveillance réagit-elle deux semaines plus tôt chez ceux qui avaient assuré l'encours ?",
@@ -160,7 +160,7 @@ export const FICHE: FicheEnseignant = {
     "La perte attendue est calculée avec ses trois termes, chacun tiré d'une source nommée, et l'écart entre la prévision déposée et 42,5 k€ est expliqué.",
     "Chaque garantie retenue ou écartée est justifiée par la comparaison chiffrée de son coût et de la perte attendue qu'elle retire.",
     "Les décisions de limite (Guénard, hausse de Corvelle, comptes en retard) s'appuient sur l'accumulation des signaux et sur la marge perdue, pas sur un retard isolé.",
-    "L'élève distingue, sur une de ses décisions, la qualité du choix mesurée sur les 30 tirages et le résultat obtenu sous l'aléa 15.",
+    "L'élève distingue, sur une de ses décisions, la qualité du choix mesurée sur les 30 tirages et le résultat obtenu sous le tirage 15.",
     "Le traitement de la créance Brondel est juste : déclaration au mandataire, compte 416, dépréciation sur le hors-taxe, perte au compte 654 seulement à la clôture de la procédure.",
   ],
   vigilance:

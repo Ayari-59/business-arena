@@ -173,7 +173,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/entreprises/episode",
         libelle: "Épisodes manager",
-        aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : six décisions, et un bilan qui sépare la qualité des décisions des aléas.`,
+        aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : six décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
       },
       {
         href: "/entreprises/episode/profil",

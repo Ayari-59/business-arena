@@ -243,7 +243,7 @@ export function axe([information, diagnostic, reflexe, calibrage, carte]: readon
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un vote repoussé ou une Talvère installée peuvent faire perdre une bonne carte, sans la rendre mauvaise.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions : un vote repoussé ou une Talvère installée peuvent faire perdre une bonne carte, sans la rendre mauvaise.",
   };
 }
 

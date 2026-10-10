@@ -76,7 +76,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
             <p className="text-sm font-semibold text-slate-200">Le lien à donner à la classe</p>
             <p className="mt-2 break-all font-mono text-base text-slate-100">{lien}</p>
             <p className="mt-2 text-sm text-slate-400">
-              Tout le groupe joue le même trimestre, sous le même aléa (n°{" "}
+              Tout le groupe joue le même trimestre, sous le même tirage (n°{" "}
               {hasardDeLaClasse(code)}). Les élèves jouent sans compte ; jouez l&apos;épisode une
               fois avant la séance.{" "}
               <Link
@@ -198,7 +198,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               ))}
             </ul>
             <p className="mt-3 text-sm text-slate-400">
-              Jamais le résultat obtenu dans le jeu : il dépend des aléas, et c&apos;est toute la
+              Jamais le résultat obtenu dans le jeu : il dépend du hasard, et c&apos;est toute la
               leçon du bilan.
             </p>
           </Section>

@@ -30,7 +30,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Envoyez le lien /entreprises/episode/produit-deficitaire?hasard=12 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Annoncez seulement qu'une gamme est en déficit et que la direction veut l'arrêter, sans rien dire des coûts partiels.",
+        "Envoyez le lien /entreprises/episode/produit-deficitaire?hasard=12 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme, au niveau Standard. Annoncez seulement qu'une gamme est en déficit et que la direction veut l'arrêter, sans rien dire des coûts partiels.",
     },
     {
       minutes: 40,
@@ -54,7 +54,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Le bilan des trente tirages",
       detail:
-        "Projetez le bilan d'un élève qui a attendu en décision 1 : sous l'aléa 12, la direction n'a pas tranché, et son résultat égale celui du meilleur chemin. Montrez ensuite les trente tirages, où attendre coûte près de 18 k€ en moyenne. Faites formuler la différence entre une décision bien prise et un trimestre bien fini.",
+        "Projetez le bilan d'un élève qui a attendu en décision 1 : sous le tirage 12, la direction n'a pas tranché, et son résultat égale celui du meilleur chemin. Montrez ensuite les trente tirages, où attendre coûte près de 18 k€ en moyenne. Faites formuler la différence entre une décision bien prise et un trimestre bien fini.",
     },
     {
       minutes: 15,
@@ -68,7 +68,7 @@ export const FICHE: FicheEnseignant = {
     etapes: [
       "Source « Décomposer le compte de la plomberie-chauffage avec Ninon » : chiffre d'affaires 500 k€, coûts variables 390 k€, d'où une marge sur coût variable de 110 k€, soit un taux de 22 %.",
       "Coûts spécifiques de la gamme, même source : 14 + 6 + 8 + 7 + 9 + 5 + 8 + 9 = 66 k€ (vendeur-conseil, magasinier, local annexe, showroom, détention du stock, démarque, SAV, porteur).",
-      "Marge sur coûts spécifiques : 110 − 66 = 44 k€. La valeur porte sur le trimestre dernier : elle ne dépend ni des aléas ni des décisions, et vaut 44 k€ sous la graine 12 comme sous toutes les autres.",
+      "Marge sur coûts spécifiques : 110 − 66 = 44 k€. La valeur porte sur le trimestre dernier : elle ne dépend ni du hasard ni des décisions, et vaut 44 k€ sous la graine 12 comme sous toutes les autres.",
       "Rapprochement avec le tableau, source « Lister les charges communes, et ce qui partirait avec la gamme » : 216 k€ de charges communes réparties à 12 % du chiffre d'affaires, soit 60 k€ pour la gamme ; 44 − 60 = −16 k€, le déficit affiché.",
       "Pour la décision, même source : seuls la détention du stock, la démarque et le showroom disparaîtraient ce trimestre, soit 9 + 5 + 7 = 21 k€ de coûts évitables sur 66 k€.",
     ],
@@ -152,8 +152,8 @@ export const FICHE: FicheEnseignant = {
     "En semaine 1, qu'est-ce qui disparaîtrait vraiment avec la plomberie-chauffage, et qu'est-ce qui resterait ? Classez les 66 k€ de coûts spécifiques et les 216 k€ de charges communes en deux colonnes.",
     "Si l'on arrête la gamme, les 216 k€ de charges communes se répartissent sur les trois autres : que devient le gros œuvre au tableau de la direction, et quelle gamme faudrait-il alors arrêter au trimestre suivant ?",
     "La quincaillerie de finition est à +8 k€ au tableau. Comment le corner peinture, à −14 k€ de marge sur coûts spécifiques, pouvait-il y passer inaperçu, et pourquoi le relancer par une remise aggrave-t-il sa situation ?",
-    "En décision 5, la tête de gondole outillage sans remise bat la matinée chauffagistes sur 9 tirages sur 30 et rapporte 3 k€ de moins en moyenne ; sous l'aléa 12, elle fait 5 k€ de moins. Ceux qui l'ont choisie se sont-ils trompés de calcul, ou ont-ils préféré une option plus sûre ? Dans quelle situation auraient-ils eu raison ?",
-    "Sous l'aléa de la classe, la direction n'a pas tranché, et ceux qui ont demandé un trimestre de plus finissent exactement au même résultat que le meilleur chemin. Leur décision était-elle bonne ? Que disent les trente tirages, où attendre coûte près de 18 k€ en moyenne ?",
+    "En décision 5, la tête de gondole outillage sans remise bat la matinée chauffagistes sur 9 tirages sur 30 et rapporte 3 k€ de moins en moyenne ; sous le tirage 12, elle fait 5 k€ de moins. Ceux qui l'ont choisie se sont-ils trompés de calcul, ou ont-ils préféré une option plus sûre ? Dans quelle situation auraient-ils eu raison ?",
+    "Sous le tirage de la classe, la direction n'a pas tranché, et ceux qui ont demandé un trimestre de plus finissent exactement au même résultat que le meilleur chemin. Leur décision était-elle bonne ? Que disent les trente tirages, où attendre coûte près de 18 k€ en moyenne ?",
     "Puisque le coût complet trompe ici, à quoi sert-il ? Pour quelles décisions la direction a-t-elle raison de vouloir que chaque gamme couvre, à terme, sa part des charges communes ?",
   ],
   prolongement: {
@@ -167,7 +167,7 @@ export const FICHE: FicheEnseignant = {
     "Le déficit de −16 k€ est expliqué par la part de charges communes réparties, chiffrée à 60 k€, et non par une gamme qui vendrait trop bas.",
     "La décision d'arrêt est jugée sur les coûts réellement évitables dans l'horizon, 21 k€, et non sur l'ensemble des coûts spécifiques.",
     "Le corner peinture est identifié comme la seule activité dont la marge ne couvre pas ses coûts spécifiques, chiffre à l'appui.",
-    "Chaque choix est justifié par ses effets attendus, et non par le résultat obtenu sous l'aléa de la classe.",
+    "Chaque choix est justifié par ses effets attendus, et non par le résultat obtenu sous le tirage de la classe.",
   ],
   vigilance:
     "L'épisode distingue coûts spécifiques (66 k€, ceux que la gamme seule fait exister) et coûts évitables dans le trimestre (21 k€), en classant le bail du local annexe, la location du porteur, le SAV et les salaires reclassés comme spécifiques mais non évitables : une convention que tous les manuels ne posent pas ainsi. Les coûts variables se limitent aux achats consommés et au transport sur achats, et la répartition des charges communes au prorata du chiffre d'affaires est une clé volontairement simple.",

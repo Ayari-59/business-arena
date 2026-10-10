@@ -31,8 +31,8 @@ export function lectureDuTirage(place: number, sur: number): string {
           ? "vous avez eu de la malchance"
           : place > Math.round(sur * 0.6)
             ? "vous avez eu un peu de malchance"
-            : "des aléas ordinaires";
-  return `Avec vos choix, votre trimestre est ${rang} sur ${sur} tirages des aléas : ${mot}.`;
+            : "un hasard ordinaire";
+  return `Avec vos choix, votre trimestre est ${rang} sur ${sur} tirages au hasard : ${mot}.`;
 }
 
 /** « Vos choix tenaient-ils ? » : robustesse, options trompeuses, plus fort regret, place du tirage. */
@@ -42,7 +42,7 @@ export function phrasesDeRobustesse(ep: Episode, m: MesuresDeLaPartie): string[]
   const n = m.decisions.length;
   const tiennent = m.decisions.filter((x) => x.choisie.robustesse >= SEUIL_ROBUSTESSE).length;
   const phrases = [
-    `${tiennent} de vos ${n} choix tiennent quand les aléas tournent mal : leur pire cas reste proche du meilleur pire cas possible.`,
+    `${tiennent} de vos ${n} choix tiennent quand le hasard tourne mal : leur pire cas reste proche du meilleur pire cas possible.`,
   ];
   const exposes = m.decisions
     .filter((x) => x.choisie.robustesse < SEUIL_ROBUSTESSE && x.plusSure.p10 - x.choisie.p10 >= 500)

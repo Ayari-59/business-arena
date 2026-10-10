@@ -187,7 +187,7 @@ export function axe([information, diagnostic, reflexe, calibrage, methode]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un faux positif, une contamination ponctuelle, une souche installée. Si le résultat tient dans les trois cas, votre méthode tient.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions : un faux positif, une contamination ponctuelle, une souche installée. Si le résultat tient dans les trois cas, votre méthode tient.",
   };
 }
 

@@ -63,7 +63,7 @@ export type FamilleDOption = "robuste" | "fragile" | "prudente" | "faible";
 
 export const FAMILLES_D_OPTION: Record<FamilleDOption, { nom: string; aide: string }> = {
   robuste: { nom: "Robuste", aide: "bonne en moyenne, et tient dans les mauvais tirages" },
-  fragile: { nom: "Fragile", aide: "bonne en moyenne, mais exposée quand les aléas tournent mal" },
+  fragile: { nom: "Fragile", aide: "bonne en moyenne, mais exposée quand le hasard tourne mal" },
   prudente: { nom: "Prudente", aide: "protège des mauvais tirages, mais rapporte moins" },
   faible: { nom: "Faible", aide: "ni bonne en moyenne, ni protectrice" },
 };

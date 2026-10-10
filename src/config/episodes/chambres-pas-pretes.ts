@@ -486,7 +486,7 @@ export const ETAPES: readonly Etape[] = [
             ctx.interim
               ? "Ce mois-ci, plus de la moitié des oublis viennent des chambres faites par les intérimaires et de celles finies dans la course de l'après-midi."
               : "Ce mois-ci, les oublis viennent surtout des chambres finies dans la course de l'après-midi et des chambres d'une nouvelle recrue."
-          } Aujourd'hui, Rosine contrôle une chambre sur dix, par tirage au sort.`,
+          } Aujourd'hui, Rosine contrôle une chambre sur dix, au hasard.`,
       },
       {
         id: "controle",

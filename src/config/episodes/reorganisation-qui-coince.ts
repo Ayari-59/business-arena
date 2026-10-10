@@ -271,7 +271,7 @@ export const ETAPES: readonly Etape[] = [
     sources: [
       {
         id: "fiches",
-        titre: "Ouvrir vingt fiches tirées au sort dans l'outil",
+        titre: "Ouvrir vingt fiches au hasard dans l'outil",
         cout: 0.5,
         nature: "decisive",
         resultat:

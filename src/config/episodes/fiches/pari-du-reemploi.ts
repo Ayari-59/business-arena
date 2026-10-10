@@ -32,7 +32,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/pari-du-reemploi?hasard=12 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien de l'avantage du premier entrant : vous demandez seulement de noter, à chaque décision, ce qu'un concurrent pourrait encore faire si l'on attendait.",
+        "Vous envoyez le lien /entreprises/episode/pari-du-reemploi?hasard=12 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien de l'avantage du premier entrant : vous demandez seulement de noter, à chaque décision, ce qu'un concurrent pourrait encore faire si l'on attendait.",
     },
     {
       minutes: 40,
@@ -56,7 +56,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Le bilan des trente tirages",
       detail:
-        "Vous prévenez la classe que le résultat de cet épisode est très bruité : sur les trente tirages, la bonne méthode va de −257 k€ à +439 k€, et elle détruit de la valeur dans les cinq tirages où le décret est repoussé. Sous l'aléa 12, plutôt favorable (décret maintenu, et Vercoran resté à Grenoble derrière elle), elle fait 399 k€, troisième des trente, pour 187 k€ en moyenne. Vous faites distinguer ce que la classe a obtenu de ce que ses décisions valaient en moyenne, décision par décision.",
+        "Vous prévenez la classe que le résultat de cet épisode est très bruité : sur les trente tirages, la bonne méthode va de −257 k€ à +439 k€, et elle détruit de la valeur dans les cinq tirages où le décret est repoussé. Sous le tirage 12, plutôt favorable (décret maintenu, et Vercoran resté à Grenoble derrière elle), elle fait 399 k€, troisième des trente, pour 187 k€ en moyenne. Vous faites distinguer ce que la classe a obtenu de ce que ses décisions valaient en moyenne, décision par décision.",
     },
     {
       minutes: 15,
@@ -70,7 +70,7 @@ export const FICHE: FicheEnseignant = {
     etapes: [
       "« Lire l'étude de l'observatoire régional des déchets » : la métropole produit 400 000 t de déchets du bâtiment par an, travaux publics non compris.",
       "Premier filtre : 15 % de ce tonnage sont des produits et équipements déposables selon les diagnostics avant démolition, soit 400 000 × 0,15 = 60 000 t. C'est le « gisement » de la consultante du salon, réemployable ou non.",
-      "Second filtre : 15 % des déposables sont en état d'être réemployés, soit 60 000 × 0,15 = 9 000 t de matériaux réemployables par an (400 000 × 0,0225). Le chiffre ne dépend pas des aléas : toute la classe doit trouver la même valeur ; l'épisode juge juste à 300 t près, proche à 1 000 t.",
+      "Second filtre : 15 % des déposables sont en état d'être réemployés, soit 60 000 × 0,15 = 9 000 t de matériaux réemployables par an (400 000 × 0,0225). Le chiffre ne dépend pas du hasard : toute la classe doit trouver la même valeur ; l'épisode juge juste à 300 t près, proche à 1 000 t.",
       "Contrôle par les acteurs : les six démolisseurs tiennent 60 % du gisement, soit 5 400 t, et la même étude les cite un par un : 1 400 t pour Sartel, 1 000 t pour Grollier, quatre moyens de 750 t, 1 400 + 1 000 + 3 000 = 5 400 t.",
       "Lecture stratégique : les deux grands font 2 400 t, 27 % du gisement et 44 % de ce que tiennent les six ; dispersés sur une quarantaine de chantiers, les quatre moyens ne paient pas le transport jusqu'à Grenoble. C'est ce qui fait des deux conventions la ressource rare.",
     ],
@@ -138,7 +138,7 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Le plan a été présenté avec six comptoirs ; reculer, dit la directrice générale, serait un mauvais signal pour les agences et les partenaires.",
       ceQuiLeDejoue:
-        "« Lire le bilan des premières semaines » : sous l'aléa 12, 48 % d'écoulement au lieu de 55 %, soit 1 298 t à vendre sur 2 700 t collectées, moins que les 1 350 t que deux comptoirs et la vente directe écoulent au plein prix. Les quatre autres comptoirs ajoutent 240 t pour 48 k€ d'aménagement et 40 k€ de vendeurs par an : 85 k€ de moins en moyenne.",
+        "« Lire le bilan des premières semaines » : sous le tirage 12, 48 % d'écoulement au lieu de 55 %, soit 1 298 t à vendre sur 2 700 t collectées, moins que les 1 350 t que deux comptoirs et la vente directe écoulent au plein prix. Les quatre autres comptoirs ajoutent 240 t pour 48 k€ d'aménagement et 40 k€ de vendeurs par an : 85 k€ de moins en moyenne.",
     },
     {
       decision: 4,
@@ -146,7 +146,7 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "22 € la tonne, zéro souci, la conformité garantie : un négoce n'est pas un recycleur, dit le directeur financier.",
       ceQuiLeDejoue:
-        "« Lire l'offre d'Orréa en détail » : la variante, au même prix sur les seules 2 700 t non réemployables, laisse à Arvel 300 t réemployables par an, qui rapportent 72 € la tonne sous l'aléa 12 (environ 22 k€ par an), grossissent les volumes de la ligne de tri et comptent pour l'objectif du décret durci. Tout céder coûte 94 k€ en moyenne.",
+        "« Lire l'offre d'Orréa en détail » : la variante, au même prix sur les seules 2 700 t non réemployables, laisse à Arvel 300 t réemployables par an, qui rapportent 72 € la tonne sous le tirage 12 (environ 22 k€ par an), grossissent les volumes de la ligne de tri et comptent pour l'objectif du décret durci. Tout céder coûte 94 k€ en moyenne.",
     },
     {
       decision: 4,
@@ -154,7 +154,7 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Le décret paraît dans un mois et la fédération dit que la plupart des adhérents attendent le texte : rien ne presse.",
       ceQuiLeDejoue:
-        "L'offre le dit : les contrats ne prennent effet qu'avec l'obligation, attendre ne protège donc de rien. Il reste une place sur trois, prise une fois sur deux, et c'est alors 26 € la tonne sur 3 000 t, flux réemployables perdus : 47 k€ de moins en moyenne. Sous l'aléa 12, la place était encore libre et l'attente n'a rien coûté.",
+        "L'offre le dit : les contrats ne prennent effet qu'avec l'obligation, attendre ne protège donc de rien. Il reste une place sur trois, prise une fois sur deux, et c'est alors 26 € la tonne sur 3 000 t, flux réemployables perdus : 47 k€ de moins en moyenne. Sous le tirage 12, la place était encore libre et l'attente n'a rien coûté.",
     },
     {
       decision: 5,
@@ -168,10 +168,10 @@ export const FICHE: FicheEnseignant = {
   debrief: [
     "Dans un an, qu'est-ce qu'un suiveur pourra encore acheter, et qu'est-ce qu'il ne pourra plus prendre ? Classez les six décisions de l'épisode dans l'une ou l'autre colonne, puis comparez : les conventions de cinq ans battent l'essai d'un an de 152 k€ en moyenne, alors que la plateforme commandée et annoncée en semaine 1 fait 145 k€ de moins que la posture qui attend décembre pour acheter une ligne à la taille des gisements.",
     "Vercoran entre à Lyon 4 fois sur 30 derrière la bonne méthode, 12 fois si l'on annonce la plateforme au salon, 20 fois derrière le premier visible et 23 fois derrière l'attentiste. Qu'est-ce qui, dans vos choix, décidait de sa venue ? Pourquoi une annonce bruyante sans gisement l'attire-t-elle au lieu de le dissuader ?",
-    "Faire caractériser trois bâtiments coûte 15 k€ et ne change rien au dossier, sauf le prix : sous l'aléa 12, la mesure donne 49 % de réemploi, 95 € de coût net, et l'offre part à 120 € au lieu de 94 €. Sur les trente tirages, cette information rapporte 96 k€ de plus que l'offre du plan. Quand une information vaut-elle son prix ? Qui, parmi vous, a remis l'offre du plan, et sur quelle hypothèse ?",
-    "L'offre prudente à 214 € la tonne bat la caractérisation sur 17 tirages sur 30, et fait pourtant 39 k€ de moins en moyenne ; sous l'aléa 12, elle fait 122 k€ de moins. Elle ne gagne l'accord-cadre que deux fois : dans quinze tirages, elle l'emporte seulement parce qu'elle n'a pas payé les 15 k€ d'études d'une offre perdue ou déclarée sans suite ; dans treize, elle perd de 82 à 160 k€. Qu'a-t-on choisi en remettant une offre que personne ne retiendra ? Un manager jugé sur son résultat aurait-il appris la bonne leçon ?",
+    "Faire caractériser trois bâtiments coûte 15 k€ et ne change rien au dossier, sauf le prix : sous le tirage 12, la mesure donne 49 % de réemploi, 95 € de coût net, et l'offre part à 120 € au lieu de 94 €. Sur les trente tirages, cette information rapporte 96 k€ de plus que l'offre du plan. Quand une information vaut-elle son prix ? Qui, parmi vous, a remis l'offre du plan, et sur quelle hypothèse ?",
+    "L'offre prudente à 214 € la tonne bat la caractérisation sur 17 tirages sur 30, et fait pourtant 39 k€ de moins en moyenne ; sous le tirage 12, elle fait 122 k€ de moins. Elle ne gagne l'accord-cadre que deux fois : dans quinze tirages, elle l'emporte seulement parce qu'elle n'a pas payé les 15 k€ d'études d'une offre perdue ou déclarée sans suite ; dans treize, elle perd de 82 à 160 k€. Qu'a-t-on choisi en remettant une offre que personne ne retiendra ? Un manager jugé sur son résultat aurait-il appris la bonne leçon ?",
     "En semaine 6, le premier bilan mesure 48 % d'écoulement au lieu des 55 % du plan, et la valeur estimée tombe de 420 k€ à 139 k€ en une semaine. La directrice générale dit que reculer est un mauvais signal. Qu'est-ce qui, dans le bilan, disait combien de comptoirs ouvrir ? Que coûte de réviser un plan, et que coûte de le tenir (85 k€ en moyenne) ?",
-    "Sous l'aléa 12, la bonne méthode a créé 399 k€ ; sur les trente tirages, 187 k€ en moyenne, avec un pire cas à −148 k€ au 10e centile et une valeur négative dans les cinq tirages où le décret est repoussé. L'attentiste fait 46 k€ sous l'aléa 12, −26 k€ en moyenne. Que conclure d'un binôme qui a fait 300 k€ ? La qualité d'une décision stratégique peut-elle se juger au résultat d'un trimestre ?",
+    "Sous le tirage 12, la bonne méthode a créé 399 k€ ; sur les trente tirages, 187 k€ en moyenne, avec un pire cas à −148 k€ au 10e centile et une valeur négative dans les cinq tirages où le décret est repoussé. L'attentiste fait 46 k€ sous le tirage 12, −26 k€ en moyenne. Que conclure d'un binôme qui a fait 300 k€ ? La qualité d'une décision stratégique peut-elle se juger au résultat d'un trimestre ?",
   ],
   prolongement: {
     enonce:
@@ -184,7 +184,7 @@ export const FICHE: FicheEnseignant = {
     "L'élève sépare explicitement ce qui se préempte (les conventions, la référence publique) de ce qui s'achète plus tard (l'équipement, les comptoirs), et justifie ainsi ses décisions des semaines 1, 2 et 11.",
     "La décision sur les démolisseurs tient compte de la réaction de Vercoran à ce qu'on lui laisse, chiffrée par ce que montrent les sources sur Grenoble et sur ses besoins de volume.",
     "Le nombre de comptoirs est révisé sur le taux d'écoulement mesuré en semaine 6, et l'offre à la Métropole est chiffrée sur un taux de réemploi mesuré ou explicitement supposé.",
-    "L'élève distingue, sur le bilan des trente tirages, la qualité d'une décision de son résultat sous l'aléa de la classe.",
+    "L'élève distingue, sur le bilan des trente tirages, la qualité d'une décision de son résultat sous le tirage de la classe.",
   ],
   vigilance:
     "L'épisode tient pour sûres les probabilités que donnent les sources (le décret, la venue de Vercoran, calculée par une règle fixe à partir des choix) et arrête la valeur à l'horizon des conventions, cinq ans au taux de 9 %, sans impôt, sans valeur au-delà pour la filière ni pour la position acquise, l'équipement seul gardant 40 % de son prix. Un enseignant de stratégie voudra rappeler que les probabilités d'un dossier réel ne sont jamais annoncées, qu'un concurrent raisonne au lieu de tirer au sort, et que l'avantage du premier entrant se mesure souvent au-delà de la durée de ses premiers contrats.",

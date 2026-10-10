@@ -216,7 +216,7 @@ export const ETAPES: readonly Etape[] = [
     sources: [
       {
         id: "plans",
-        titre: "Ouvrir vingt plans de soins tirés au sort à Beaune et à Chalon",
+        titre: "Ouvrir vingt plans de soins au hasard à Beaune et à Chalon",
         cout: 0.5,
         nature: "decisive",
         resultat: (ctx) =>

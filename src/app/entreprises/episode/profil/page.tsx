@@ -352,7 +352,7 @@ export default async function ProfilPage({
               id="hasard-titre"
               className="text-2xl font-semibold tracking-tight text-slate-50"
             >
-              Face aux aléas
+              Face au hasard
             </h2>
             <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
               <span className="font-semibold text-slate-100">Robustesse de vos choix</span>

@@ -35,13 +35,13 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/fabricant-en-direct?hasard=12 : toute la classe joue le même trimestre, sous le même aléa. Les étudiants jouent seuls ou en binôme, au niveau Standard. Vous précisez que le trimestre est jugé sur une valeur estimée en semaine 13 (la marge du trimestre plus deux ans de la marge que la riposte installe, actualisés à 9 %), et vous demandez de noter, à chaque décision, le chiffre qui l'a emportée.",
+        "Vous envoyez le lien /entreprises/episode/fabricant-en-direct?hasard=12 : toute la classe joue le même trimestre, sous les mêmes aléas. Les étudiants jouent seuls ou en binôme, au niveau Standard. Vous précisez que le trimestre est jugé sur une valeur estimée en semaine 13 (la marge du trimestre plus deux ans de la marge que la riposte installe, actualisés à 9 %), et vous demandez de noter, à chaque décision, le chiffre qui l'a emportée.",
     },
     {
       minutes: 40,
       titre: "Jeu",
       detail:
-        "Les étudiants jouent les six décisions. Vous circulez sans répondre et relevez au tableau, sans commentaire, l'estimation de la marge exposée saisie en semaine 1 et les options retenues en semaine 1 (la posture), en semaine 4 (Solvane), en semaine 9 (les chiffres du test) et en semaine 11 (l'accord). Vous rappelez qu'au-delà de deux jours d'enquête, chaque jour coûte 5 k€. Ceux qui finissent tôt rejouent les mêmes décisions sous un autre aléa et notent l'écart.",
+        "Les étudiants jouent les six décisions. Vous circulez sans répondre et relevez au tableau, sans commentaire, l'estimation de la marge exposée saisie en semaine 1 et les options retenues en semaine 1 (la posture), en semaine 4 (Solvane), en semaine 9 (les chiffres du test) et en semaine 11 (l'accord). Vous rappelez qu'au-delà de deux jours d'enquête, chaque jour coûte 5 k€. Ceux qui finissent tôt rejouent les mêmes décisions avec d'autres aléas et notent l'écart.",
     },
     {
       minutes: 15,
@@ -59,7 +59,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous prévenez la classe que les aléas pèsent lourd dans cet épisode : le succès de la plateforme, la réaction de Mérindal et sa réponse à l'accord se jouent sur un tirage, et la même méthode finit entre −518 et +188 k€ selon le trimestre. Sous l'aléa 12, la plateforme connaît un succès limité et Mérindal signe l'accord complet : « chiffrer, défendre, négocier » fait +41 k€, 11e des 30 tirages, pour une moyenne de −93 k€. Vous faites ouvrir le bilan et comparer, décision par décision, le résultat obtenu au résultat moyen.",
+        "Vous prévenez la classe que le hasard pèse lourd dans cet épisode : le succès de la plateforme, la réaction de Mérindal et sa réponse à l'accord se jouent sur un tirage, et la même méthode finit entre −518 et +188 k€ selon le trimestre. Sous le tirage 12, la plateforme connaît un succès limité et Mérindal signe l'accord complet : « chiffrer, défendre, négocier » fait +41 k€, 11e des 30 tirages, pour une moyenne de −93 k€. Vous faites ouvrir le bilan et comparer, décision par décision, le résultat obtenu au résultat moyen.",
     },
     {
       minutes: 15,
@@ -73,7 +73,7 @@ export const FICHE: FicheEnseignant = {
     etapes: [
       "Marge par segment, d'après « Décomposer les ventes Mérindal par type de client et de commande » : grands comptes 5 M€ × 13 % = 650 k€ ; PME du bâtiment 4 M€ × 20 % = 800 k€ ; artisans 5 M€ × 27 % = 1 350 k€ ; soit 2,8 M€ de marge pour 14 M€ de ventes.",
       "Ce que la plateforme sait servir, d'après la même source : des semi-remorques complètes livrées depuis l'usine, payées à trente jours, sans stock de proximité, livraison fractionnée, crédit long ni conseil. 60 % de la marge des grands comptes et 20 % de celle des PME sont faites sur de telles commandes, aucune chez les artisans.",
-      "Marge exposée : 650 × 60 % + 800 × 20 % + 1 350 × 0 = 390 + 160 + 0 = 550 k€ par an, soit 19,6 % de la marge réalisée sur Mérindal. Le chiffre ne dépend pas des aléas : toute la classe doit trouver la même valeur ; l'épisode juge juste à 15 k€ près, proche à 60 k€.",
+      "Marge exposée : 650 × 60 % + 800 × 20 % + 1 350 × 0 = 390 + 160 + 0 = 550 k€ par an, soit 19,6 % de la marge réalisée sur Mérindal. Le chiffre ne dépend pas du hasard : toute la classe doit trouver la même valeur ; l'épisode juge juste à 15 k€ près, proche à 60 k€.",
       "C'est un plafond, pas une perte annoncée. « Chiffrer la dépendance des deux côtés » donne les précédents (un cinquième des commandes complètes en Belgique, près de la moitié aux Pays-Bas, plus des deux tiers en Suisse) et leurs chances, environ une sur trois, une sur deux et une sur cinq ; le modèle retient 20, 45 et 70 % avec 35, 45 et 20 % de chances, soit une prise attendue de 41,25 % et 226,9 k€ de marge par an.",
       "Pour le comité : s'aligner sur la plateforme coûterait 5 % × (5 M€ + 4 M€ × 20 %) = 290 k€ de marge par an, plus que ce que la plateforme devrait prendre en espérance.",
     ],
@@ -142,7 +142,7 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Toute la gamme a été annoncée au comité, et le directeur commercial refuse de se déjuger.",
       ceQuiLeDejoue:
-        "« Lire les chiffres de Solvane, famille par famille » montre, sous l'aléa 12, 19 % de bascule sur la série, au-dessus du seuil de 12 % (39 k€ de marge par an pour 45 k€ de déploiement), et 5 % sur le sur-mesure, 8 k€ de marge par an pour 80 k€ de déploiement et 25 k€ de service après-vente. Attaquer le sur-mesure, cœur de Mérindal, ôte en plus 15 points aux chances qu'il signe l'accord : 178 k€ de moins en moyenne, 550 k€ sous l'aléa 12, où il refuse.",
+        "« Lire les chiffres de Solvane, famille par famille » montre, sous le tirage 12, 19 % de bascule sur la série, au-dessus du seuil de 12 % (39 k€ de marge par an pour 45 k€ de déploiement), et 5 % sur le sur-mesure, 8 k€ de marge par an pour 80 k€ de déploiement et 25 k€ de service après-vente. Attaquer le sur-mesure, cœur de Mérindal, ôte en plus 15 points aux chances qu'il signe l'accord : 178 k€ de moins en moyenne, 550 k€ sous le tirage 12, où il refuse.",
     },
     {
       decision: 5,
@@ -157,10 +157,10 @@ export const FICHE: FicheEnseignant = {
     "La plateforme ne peut prendre que 550 k€ sur 2,8 M€ de marge, et devrait en prendre 227 k€ par an en espérance. Que pensez-vous alors d'un alignement qui coûte 290 k€ par an, ou d'une remise de 105 k€ par an qui garde deux commandes complètes sur dix ? Pourquoi faire payer les services, qui rapporte 16 k€ par an net et en garde quatre sur dix, protège-t-il mieux la marge que baisser les prix ?",
     "Mérindal pèse 10 % des achats d'Arvel ; Arvel pèse 35 % des ventes de Mérindal en négoce dans la région, moins de 3 % de ses ventes en France. Qui dépend de qui, et sur quels clients ? Pourquoi ni le punir ni l'ignorer ne tient, et que fallait-il avoir en main pour qu'il accepte un partage des grands comptes ?",
     "En semaine 4, le test de Solvane coûtait 25 k€ et ne rapportait presque rien pendant le trimestre. Que valait cette information ? Distinguez ce qu'elle apprenait (le sur-mesure ne paie pas son déploiement, la série ne se déploie qu'au-dessus de 12 % de bascule) et ce qu'elle montrait à Mérindal, dont les chances de proposer un partage en semaine 8 passaient de 55 à 85 % avec une seconde marque en test. Pourquoi tout référencer à l'aveugle fait-il 117 k€ de moins en moyenne ?",
-    "Ne pas référencer de seconde marque bat le test sur 24 tirages sur 30, le plus souvent d'environ 24 k€, à peu près le prix du test économisé ; il fait pourtant 48 k€ de moins en moyenne et, sous l'aléa 12, 429 k€ de moins. D'où vient un écart aussi grand ? Faites retrouver l'enchaînement : le tirage de la classe tombe entre 55 et 85 % de chances d'accord, Mérindal choisit le conflit au lieu du partage, retire un point et demi de remise (168 k€ par an), puis refuse l'accord complet, qu'il signait 85 fois sur 100 en accord et 55 fois sur 100 en conflit ; 245 k€ de marge annuelle installée en moins, multipliés par 1,76, font les 429 k€. Qu'est-ce qu'une option qui gagne souvent un peu et perd rarement beaucoup ?",
-    "En semaine 9, le plan annoncé au comité disait « toute la gamme » ; les chiffres du test disaient la série oui, le sur-mesure non. Qui a révisé, qui a tenu le plan, et pourquoi ? Tout déployer fait 178 k€ de moins en moyenne, et 550 k€ sous l'aléa 12 ; prolonger le test ne coûte que 26 k€ en moyenne : est-ce une révision prudente ou une décision repoussée ?",
+    "Ne pas référencer de seconde marque bat le test sur 24 tirages sur 30, le plus souvent d'environ 24 k€, à peu près le prix du test économisé ; il fait pourtant 48 k€ de moins en moyenne et, sous le tirage 12, 429 k€ de moins. D'où vient un écart aussi grand ? Faites retrouver l'enchaînement : le tirage de la classe tombe entre 55 et 85 % de chances d'accord, Mérindal choisit le conflit au lieu du partage, retire un point et demi de remise (168 k€ par an), puis refuse l'accord complet, qu'il signait 85 fois sur 100 en accord et 55 fois sur 100 en conflit ; 245 k€ de marge annuelle installée en moins, multipliés par 1,76, font les 429 k€. Qu'est-ce qu'une option qui gagne souvent un peu et perd rarement beaucoup ?",
+    "En semaine 9, le plan annoncé au comité disait « toute la gamme » ; les chiffres du test disaient la série oui, le sur-mesure non. Qui a révisé, qui a tenu le plan, et pourquoi ? Tout déployer fait 178 k€ de moins en moyenne, et 550 k€ sous le tirage 12 ; prolonger le test ne coûte que 26 k€ en moyenne : est-ce une révision prudente ou une décision repoussée ?",
     "En semaine 11, l'accord complet fait 17 k€ de mieux en moyenne que l'accord limité, mais l'accord limité a le meilleur pire cas : sur 30 tirages, il fait 78 k€ de moins 26 fois et de 361 à 435 k€ de mieux 4 fois, quand Mérindal refuse l'engagement sur les artisans. Lequel auriez-vous présenté au comité, et sur quel critère ?",
-    "Sous l'aléa 12, « chiffrer, défendre, négocier » fait +41 k€, 11e des 30 tirages, pour une moyenne de −93 k€ ; il ne tient le seuil de −150 k€ du comité que 20 fois sur 30, quand punir le fabricant finit entre −1 976 et −1 428 k€. Un binôme qui a fini à +41 k€ a-t-il bien décidé ? La qualité d'une riposte stratégique se juge-t-elle au résultat d'un trimestre ?",
+    "Sous le tirage 12, « chiffrer, défendre, négocier » fait +41 k€, 11e des 30 tirages, pour une moyenne de −93 k€ ; il ne tient le seuil de −150 k€ du comité que 20 fois sur 30, quand punir le fabricant finit entre −1 976 et −1 428 k€. Un binôme qui a fini à +41 k€ a-t-il bien décidé ? La qualité d'une riposte stratégique se juge-t-elle au résultat d'un trimestre ?",
   ],
   prolongement: {
     enonce:
@@ -173,7 +173,7 @@ export const FICHE: FicheEnseignant = {
     "La dépendance est chiffrée des deux côtés (10 % des achats d'Arvel ; 35 % des ventes régionales de Mérindal, moins de 3 % en France) et l'étudiant en tire sur quels clients chacun détient le pouvoir de négociation.",
     "La riposte commerciale est justifiée en comparant son coût annuel à la marge qu'elle protège : séparer le prix et les services contre une remise ou un alignement.",
     "La décision de la semaine 9 s'appuie sur les chiffres du test, famille par famille, et sur le seuil de 12 %, non sur le plan annoncé au comité.",
-    "L'étudiant juge ses décisions sur la moyenne des 30 tirages et dit ce que son résultat doit aux aléas : le succès de la plateforme, la réaction de Mérindal et sa réponse à l'accord.",
+    "L'étudiant juge ses décisions sur la moyenne des 30 tirages et dit ce que son résultat doit au hasard : le succès de la plateforme, la réaction de Mérindal et sa réponse à l'accord.",
   ],
   vigilance:
     "La réaction de Mérindal et sa réponse à l'accord sont des tirages dont les chances, presque toutes données par les sources, varient de façon additive avec les choix d'Arvel (une seconde marque en rayon ou en test ajoute 30 points aux chances d'un partage) : un enseignant de stratégie y verra une négociation réduite à une table de probabilités, et c'est elle qui produit les écarts de plusieurs centaines de k€ d'un tirage à l'autre. La valeur des positions est tronquée à deux ans de marge actualisés à 9 % (1,76 année), et la rupture brutale d'une relation établie (article L. 442-1, II du code de commerce) se réduit à une chance sur deux d'une transaction de 250 k€ : des conventions de modèle à présenter comme telles.",

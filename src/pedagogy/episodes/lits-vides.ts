@@ -190,7 +190,7 @@ export function axe([information, diagnostic, reflexe, calibrage, circuit]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : d'autres sorties, une autre réponse de l'hôpital, une grippe qui s'étend ou non. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions : d'autres sorties, une autre réponse de l'hôpital, une grippe qui s'étend ou non. Si le résultat tient, votre méthode tient.",
   };
 }
 

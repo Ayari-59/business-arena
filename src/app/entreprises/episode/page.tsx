@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/entreprises/episode" },
   title: "Épisodes manager",
   description:
-    "Démonstration de la version pour les entreprises : un manager, un trimestre, six décisions, et un bilan qui sépare la qualité des décisions des aléas.",
+    "Démonstration de la version pour les entreprises : un manager, un trimestre, six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
   robots: { index: false, follow: false },
 };
 
@@ -62,9 +62,9 @@ export default function EpisodesPage() {
               .map((s) => `${s.nom.charAt(0).toLowerCase()}${s.nom.slice(1)} (${s.entreprise})`)
               .join(", ")}
             . Six décisions, une vingtaine de minutes, trois niveaux de difficulté. À la fin, le
-            bilan rejoue chacune de vos décisions sous trente tirages des mêmes aléas, pour séparer
-            ce qui relevait du choix de ce qui relevait de la chance. Démonstration : données
-            fictives ; vos choix sont gardés sur cet appareil pour construire votre profil
+            bilan rejoue chacune de vos décisions sous les mêmes trente tirages au hasard, pour
+            séparer ce qui relevait du choix de ce qui relevait de la chance. Démonstration :
+            données fictives ; vos choix sont gardés sur cet appareil pour construire votre profil
             décisionnel.
           </p>
           <p className="mt-4">

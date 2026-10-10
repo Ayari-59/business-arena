@@ -50,7 +50,7 @@ const FORMATS = [
     resume: "Chacun tient un poste de manager pendant un trimestre.",
     faits: [
       "Six décisions, des imprévus, une vingtaine de minutes, trois niveaux de difficulté.",
-      "Le bilan rejoue chaque choix sous trente tirages des mêmes aléas : ce qui relevait du choix, ce qui relevait de la chance.",
+      "Le bilan rejoue chaque choix sous les mêmes trente tirages au hasard : ce qui relevait du choix, ce qui relevait de la chance.",
       "Un profil décisionnel qui se construit d'épisode en épisode, et recommande les suivants.",
       "En autonomie, ou en cohorte avec des débriefs collectifs.",
     ],
@@ -99,7 +99,7 @@ const PARCOURS = [
     quand: "Toutes les deux semaines",
     quoi: "Un débrief d'une heure",
     texte:
-      "Tout le groupe a joué le même trimestre sous le même aléa : on discute des deux décisions qui l'ont le plus partagé.",
+      "Tout le groupe a joué le même trimestre sous les mêmes aléas : on discute des deux décisions qui l'ont le plus partagé.",
   },
   {
     quand: "Semaine 8",
@@ -150,8 +150,8 @@ export default async function EcolesPage() {
           chapeau={
             <>
               Une partie d&apos;entreprise en équipes pour le bachelor, des épisodes manager pour le
-              master et la formation continue. Chaque décision est rejouée sous trente tirages des
-              aléas, et chaque étudiant repart avec un profil de {COMPETENCES.length} compétences,
+              master et la formation continue. Chaque décision est rejouée sous trente tirages au
+              hasard, et chaque étudiant repart avec un profil de {COMPETENCES.length} compétences,
               preuves à l&apos;appui.
             </>
           }

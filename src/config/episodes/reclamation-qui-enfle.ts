@@ -194,7 +194,7 @@ export const ETAPES: readonly Etape[] = [
           `Ses dix MX-160 sont tous du lot L-2607. ${
             ctx.lotTrace
               ? "Le lot étant bloqué en réserve, un échange se ferait avec des appareils des autres lots, qui tiennent."
-              : "Le même lot fait encore 60 % du stock des agences : un échange pris aléatoirement en rayon a plus d'une chance sur deux de lui rendre le même problème."
+              : "Le même lot fait encore 60 % du stock des agences : un échange pris au hasard en rayon a plus d'une chance sur deux de lui rendre le même problème."
           }`,
       },
       {

@@ -47,9 +47,9 @@ export default function EpisodesEnClassePage() {
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
             Chaque épisode met l&apos;élève à la place d&apos;un responsable qui doit décider, et la
             notion du cours y est le piège de la décision : on retient mieux le coût marginal après
-            avoir refusé une commande rentable. Toute la classe joue le même trimestre, sous le même
-            aléa ; la séance tient en deux heures, débrief compris. Les épisodes se jouent sans
-            compte, et aucun résultat n&apos;y est noté : le bilan juge les décisions.
+            avoir refusé une commande rentable. Toute la classe joue le même trimestre, sous les
+            mêmes aléas ; la séance tient en deux heures, débrief compris. Les épisodes se jouent
+            sans compte, et aucun résultat n&apos;y est noté : le bilan juge les décisions.
           </p>
           {secteurs.map((s) => (
             <section key={s.code} aria-labelledby={`titre-secteur-${s.code}`} className="mt-16">

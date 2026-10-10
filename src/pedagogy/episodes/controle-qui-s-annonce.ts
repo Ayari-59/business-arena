@@ -180,7 +180,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Un échantillon clément ou un prestataire à l'heure peuvent flatter un trimestre : si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions. Un échantillon clément ou un prestataire à l'heure peuvent flatter un trimestre : si le résultat tient, votre méthode tient.",
   };
 }
 

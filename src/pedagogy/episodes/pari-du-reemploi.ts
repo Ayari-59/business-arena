@@ -225,7 +225,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un décret repoussé ou un concurrent qui entre quand même. Si la valeur tient en moyenne, votre méthode tient.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions : un décret repoussé ou un concurrent qui entre quand même. Si la valeur tient en moyenne, votre méthode tient.",
   };
 }
 

@@ -224,7 +224,7 @@ export function axe([information, diagnostic, reflexe, calibrage, strategie]: re
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un plan régional gelé, ou un test qui se trompe, met une spécialisation à l'épreuve.",
+      "Rejouez l'épisode avec d'autres aléas et les mêmes décisions : un plan régional gelé, ou un test qui se trompe, met une spécialisation à l'épreuve.",
   };
 }
 
