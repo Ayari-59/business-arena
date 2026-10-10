@@ -79,7 +79,7 @@ export default function Image() {
           </span>
           <span style={{ fontSize: 24, color: "#c2bcb2", marginTop: 28, lineHeight: 1.4 }}>
             {SCENARIO_CHOICES.length} secteurs, {ALL_SITUATIONS.length} situations, {DECISION_MODELS.length} modèles
-            d&apos;analyse. Essai gratuit, sans compte élève.
+            d&apos;analyse. Découverte gratuite en solo, sans compte.
           </span>
           <span style={{ fontSize: 26, fontWeight: 700, marginTop: "auto", color: "#f1ede4" }}>
             business-arena.fr

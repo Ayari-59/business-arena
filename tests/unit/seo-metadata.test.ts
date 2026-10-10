@@ -70,6 +70,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/fonctionnalites/page", "Fonctionnalités", "/fonctionnalites"],
     ["/orientation/page", "Choisir sa simulation", "/orientation"],
     ["/mentions-legales/page", "Mentions légales", "/mentions-legales"],
+    ["/tarifs/page", "Tarifs", "/tarifs"],
   ];
 
   for (const [module, attendu, canonique] of PUBLIQUES) {

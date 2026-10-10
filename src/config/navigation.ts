@@ -205,9 +205,19 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     ],
   },
   {
+    // LES TARIFS VIVENT AVEC LE CONTACT : la grille dit ce qui est gratuit et
+    // ce qui se commande, et commander passe par un rendez-vous (le site
+    // n'encaisse rien). Les deux entrées servent le même moment.
     code: "contact",
-    titre: "Nous joindre",
-    liens: [LIEN_CONTACT],
+    titre: "Tarifs et contact",
+    liens: [
+      {
+        href: "/tarifs",
+        libelle: "Tarifs",
+        aide: "Gratuit pour découvrir en solo, un abonnement pour faire cours : les offres Enseignant et Établissement, et les formules des entreprises.",
+      },
+      LIEN_CONTACT,
+    ],
   },
 ];
 

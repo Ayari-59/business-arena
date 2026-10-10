@@ -61,7 +61,9 @@ const PILLARS = [
 const DIFFERENTIATORS = [
   { label: "Sans compte", desc: "Aucune inscription requise pour les étudiants" },
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
-  { label: "Essai gratuit", desc: "Découvrez tous les scénarios et fonctionnalités sans engagement" },
+  // « Essai gratuit » promettait tous les scénarios et toutes les fonctionnalités
+  // sans engagement : la grille (config/tarifs.ts) ouvre le solo, pas la classe.
+  { label: "Découverte gratuite", desc: "Le simulateur en solo, sans compte ; l'usage en classe avec l'abonnement" },
   { label: "Testé", desc: "Moteur déterministe, tenu par sa suite de tests" },
 ];
 

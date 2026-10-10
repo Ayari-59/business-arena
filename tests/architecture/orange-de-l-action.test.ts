@@ -65,6 +65,8 @@ function perimetre(): string[] {
     join(SRC, "app/page.tsx"),
     ...tous(join(SRC, "app/jouer")),
     join(SRC, "app/layout.tsx"),
+    // La page des tarifs : un seul bouton plein, celui de l'offre Établissement.
+    join(SRC, "app/tarifs/page.tsx"),
   ];
   const vus = new Set<string>();
   const pile = [...departs];

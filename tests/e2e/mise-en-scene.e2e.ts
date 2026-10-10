@@ -216,9 +216,10 @@ describe("la vitrine", () => {
       expect(Math.abs(a.x - b.x), "bords gauches").toBeLessThanOrEqual(1);
       expect(Math.abs(a.x + a.width - (b.x + b.width)), "bords droits").toBeLessThanOrEqual(1);
       expect(Math.abs(a.height - b.height), "hauteurs").toBeLessThanOrEqual(1);
-      // La ligne sous les boutons ne promet plus la gratuité, et mène à l'offre.
+      // La ligne sous les boutons ne promet plus la gratuité, et mène à l'offre :
+      // la grille tarifaire (/tarifs), plus la prise de rendez-vous.
       const licence = page.getByRole("link", { name: "licence établissement" });
-      expect(await licence.getAttribute("href")).toBe("/rendez-vous");
+      expect(await licence.getAttribute("href")).toBe("/tarifs");
       expect(await page.locator("main").innerText()).not.toContain("Sans compte, sans installation");
       // Les neuf lieux, en 3 × 3 sous les boutons, sans défilement de côté.
       const grille = page.locator("[data-grille-des-lieux]");

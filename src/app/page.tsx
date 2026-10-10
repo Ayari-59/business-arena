@@ -448,14 +448,15 @@ export default async function Home() {
           {/* LOT P6 : LA LIGNE NE PROMET PLUS LA GRATUITÉ. « Sans compte, sans
               installation » laissait croire que tout était offert. Elle dit
               ce qui l'est (une partie d'essai, en solo) et comment l'arène se
-              prend pour une classe : en licence d'établissement, dont on
-              parle de vive voix (/rendez-vous : trente minutes au téléphone ;
-              aucune page du site ne publie de prix, et celle-ci n'en invente
-              aucun). Le lien est à l'encre, souligné (variante `lien`). */}
+              prend pour une classe : en licence d'établissement. Le lien
+              menait à la prise de rendez-vous tant qu'aucune page ne publiait
+              de prix ; il mène désormais à la grille (/tarifs), qui les lit
+              dans config/tarifs.ts. Celle-ci n'en écrit aucun. Le lien est à
+              l'encre, souligné (variante `lien`). */}
           <p className="mt-5 text-sm leading-relaxed text-slate-400">
             Une partie d&apos;essai en solo, sans compte ni installation. Pour vos classes,
             l&apos;arène se prend en{" "}
-            <Link href="/rendez-vous" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
+            <Link href="/tarifs" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
               licence établissement
             </Link>
             .

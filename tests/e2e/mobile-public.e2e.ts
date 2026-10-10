@@ -23,6 +23,7 @@ const PAGES = [
   "/orientation",
   "/parcours",
   "/notions",
+  "/tarifs",
 ];
 
 let navigateur: Browser;

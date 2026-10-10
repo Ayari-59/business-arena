@@ -31,6 +31,7 @@ const PAGES = [
   "/ecoles",
   "/parcours",
   "/guide",
+  "/tarifs",
 ];
 
 /**

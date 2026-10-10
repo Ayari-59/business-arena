@@ -74,6 +74,7 @@ const ZONES: { nom: string; racines: string[]; plafond: number }[] = [
       "app/page.tsx", "app/enseignants", "app/entreprises", "app/fonctionnalites",
       "app/guide", "app/notions", "app/parcours", "app/animations", "app/orientation",
       "app/compete", "app/jouer", "app/join", "app/reprendre", "app/mentions-legales",
+      "app/tarifs",
     ],
     plafond: 0,
   },

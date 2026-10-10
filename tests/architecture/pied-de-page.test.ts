@@ -48,6 +48,7 @@ const PAGES_PUBLIQUES = [
   "app/notions/page.tsx",
   "app/orientation/page.tsx",
   "app/parcours/page.tsx",
+  "app/tarifs/page.tsx",
 ];
 
 /**

@@ -148,8 +148,11 @@ const CONFIANCE = [
     desc: "Rien à installer, sur ordinateur comme sur téléphone",
   },
   {
-    label: "Essai gratuit",
-    desc: "Prenez en main les secteurs, ateliers et concours sans engagement",
+    // « Essai gratuit » promettait de prendre en main ateliers et concours
+    // sans engagement : la grille (config/tarifs.ts) n'a pas d'essai en
+    // classe. Ce qui est gratuit, c'est le simulateur en solo.
+    label: "Découverte gratuite",
+    desc: "Le simulateur en solo, sans compte ; l'usage en classe avec l'abonnement",
   },
   {
     // LA PROMESSE SUIVAIT LA PHRASE QU'ON A RETIRÉE, et elle est devenue

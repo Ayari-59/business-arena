@@ -33,6 +33,7 @@ const EN_TETES_PUBLICS = [
   "/enseignants/episodes",
   "/entreprises/episode/reprendre",
   "/entreprises/episode/rejoindre",
+  "/tarifs",
 ];
 
 let navigateur: Browser;

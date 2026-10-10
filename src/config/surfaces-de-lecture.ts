@@ -426,6 +426,13 @@ export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
     raison: `De la prose, mais sur une carte blanche. ${PAGE_CLAIRE}`,
   },
   {
+    fichier: "app/tarifs/page.tsx",
+    composant: "Repliable",
+    repere: 'resume="Conditions de vente"',
+    surface: "cockpit",
+    raison: `Les conditions de vente, sur une carte blanche. ${PAGE_CLAIRE}`,
+  },
+  {
     fichier: "app/entreprises/episode/profil/page.tsx",
     composant: "Repliable",
     repere: "qui fondent cette ligne",
