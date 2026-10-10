@@ -215,7 +215,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions : une autre réponse de Celtis au 1er mars, une mise en sommeil en janvier ou non, d'autres imprévus. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : une autre réponse de Celtis au 1er mars, une mise en sommeil en janvier ou non, d'autres imprévus. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -493,7 +493,7 @@ export const EPISODE_NEGOCIATIONS: Episode<Trimestre> = {
       `${kE(t.objectif)} de marge annuelle attendue sur Celtis : ${ISSUES[t.issue]}, à ${pct(t.hausse)}`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge annuelle attendue sur la marque Kerbrélan chez Celtis, au prix obtenu et avec les contreparties, moins la marge perdue pendant les déréférencements et les frais de la négociation, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge annuelle attendue sur la marque Kerbrélan chez Celtis, au prix obtenu et avec les contreparties, moins la marge perdue pendant les déréférencements et les frais de la négociation, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

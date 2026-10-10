@@ -612,7 +612,7 @@ function Intro({
       </div>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
         {ep.etapes.length} décisions, {ep.duree}. Les chiffres bougent avec vos choix ; à la fin, le
-        bilan rejoue chacune de vos décisions sous trente tirages du même hasard. À la fin, vos
+        bilan rejoue chacune de vos décisions sous trente tirages des mêmes aléas. À la fin, vos
         choix sont gardés sur cet appareil pour votre profil décisionnel, sans votre nom ni aucun
         texte saisi ; vous pouvez les effacer depuis le profil.
       </p>
@@ -1011,7 +1011,7 @@ function Scene({
           {effet
             ? `Sur ce trimestre-ci, ce choix ${effet.ecart >= 0 ? "rapporte" : "coûte"} ${kE(
                 Math.abs(effet.ecart),
-              )} par rapport à « ${enMinuscule(etape.options[effet.reference]!.t)} ». C'est un seul tirage du hasard : le bilan dira ce que ce choix vaut en moyenne.`
+              )} par rapport à « ${enMinuscule(etape.options[effet.reference]!.t)} ». C'est un seul tirage des aléas : le bilan dira ce que ce choix vaut en moyenne.`
             : "Vous avez choisi de ne rien changer : le trimestre suit son cours. Le bilan dira si c'était le bon choix."}
         </p>
       )}

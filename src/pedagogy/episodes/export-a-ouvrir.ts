@@ -272,7 +272,7 @@ export function axe([information, diagnostic, reflexe, calibrage, etapes]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -565,7 +565,7 @@ export const EPISODE_EXPORT: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur détruite, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur créée par les décisions du trimestre : le résultat du trimestre en Espagne plus la VAN, à 9 % sur cinq ans, de la position prise, recalculée avec ce que le trimestre a appris, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur créée par les décisions du trimestre : le résultat du trimestre en Espagne plus la VAN, à 9 % sur cinq ans, de la position prise, recalculée avec ce que le trimestre a appris, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const vend = t.packs > 0;
       return [

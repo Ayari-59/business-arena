@@ -167,7 +167,7 @@ export function axe([information, diagnostic, reflexe, calibrage, grille]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -409,7 +409,7 @@ export const EPISODE_APPEL_OFFRES: Episode<Trimestre> = {
     titre: (t) => `${ecartObjectif(t.objectif)}, pertes comprises`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart à l'objectif de la direction — marge des marchés gagnés sur leur durée, actualisée, moins le coût des réponses et ce que la surcharge a coûté aux clients en place — sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart à l'objectif de la direction — marge des marchés gagnés sur leur durée, actualisée, moins le coût des réponses et ce que la surcharge a coûté aux clients en place — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const b = t.balmes;
       const net = t.signe - t.prepa - t.pertes;

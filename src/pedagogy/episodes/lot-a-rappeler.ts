@@ -187,7 +187,7 @@ export function axe([information, diagnostic, reflexe, calibrage, methode]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions : un faux positif, une contamination ponctuelle, une souche installée. Si le résultat tient dans les trois cas, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un faux positif, une contamination ponctuelle, une souche installée. Si le résultat tient dans les trois cas, votre méthode tient.",
   };
 }
 
@@ -521,7 +521,7 @@ export const EPISODE_RAPPEL: Episode<Trimestre> = {
     titre: (t) => `Coût de l'alerte : ${kE(t.coutTotal)}, dont ${kE(t.suites)} de suites attendues`,
     formatObjectif: kE,
     noteDesBarres:
-      "L'opposé du coût de l'alerte, suites attendues comprises, sous le hasard que vous avez joué : plus la barre est longue (moins l'alerte a coûté), mieux c'est. L'échelle ne part pas de zéro.",
+      "L'opposé du coût de l'alerte, suites attendues comprises, sous les aléas que vous avez joués : plus la barre est longue (moins l'alerte a coûté), mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

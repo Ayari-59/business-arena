@@ -181,7 +181,7 @@ export function axe([information, diagnostic, reflexe, calibrage, segmenter]: re
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions : un autre été, d'autres imprévus. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un autre été, d'autres imprévus. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -409,7 +409,7 @@ export const EPISODE_YIELD: Episode<Trimestre> = {
       `${kE(t.objectif)} de revenu hébergement net, été compris : ${kESigne(t.objectif - BUDGET)} sur le budget`,
     formatObjectif: kE,
     noteDesBarres:
-      "Revenu hébergement net de commissions — séjours d'avril à juin, plus l'été estimé fin juin, frais des actions déduits — sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Revenu hébergement net de commissions — séjours d'avril à juin, plus l'été estimé fin juin, frais des actions déduits — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

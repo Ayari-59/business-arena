@@ -167,7 +167,7 @@ export function axe([information, diagnostic, reflexe, calibrage, equipe]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -422,7 +422,7 @@ export const EPISODE_PERFORMANCE: Episode<Trimestre> = {
     titre: (t) => `Marge nette ${ecartAuBudget(t.objectif)}`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge nette du comptoir en écart au budget, erreurs reprises, formation, intérim et départs compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge nette du comptoir en écart au budget, erreurs reprises, formation, intérim et départs compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const enArret = t.arret.includes(13);
       return [

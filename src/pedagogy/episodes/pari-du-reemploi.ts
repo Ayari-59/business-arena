@@ -225,7 +225,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions : un décret repoussé ou un concurrent qui entre quand même. Si la valeur tient en moyenne, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un décret repoussé ou un concurrent qui entre quand même. Si la valeur tient en moyenne, votre méthode tient.",
   };
 }
 
@@ -492,7 +492,7 @@ export const EPISODE_REEMPLOI: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur détruite, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur créée par les décisions du trimestre : le résultat du trimestre et la VAN sur cinq ans des positions prises, recalculés avec le décret publié, la réaction de Vercoran et les taux mesurés, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur créée par les décisions du trimestre : le résultat du trimestre et la VAN sur cinq ans des positions prises, recalculés avec le décret publié, la réaction de Vercoran et les taux mesurés, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const eq = t.equipement;
       const aLaTaille = eq === null ? t.volume < LIGNE.capacite / 2 : eq.capacite <= 2 * t.volume;

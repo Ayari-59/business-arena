@@ -31,7 +31,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/commande-a-prix-casse?hasard=12 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien du coût marginal : vous demandez seulement de noter, à chaque décision, l'argument qui l'a emporté.",
+        "Vous envoyez le lien /entreprises/episode/commande-a-prix-casse?hasard=12 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien du coût marginal : vous demandez seulement de noter, à chaque décision, l'argument qui l'a emporté.",
     },
     {
       minutes: 40,
@@ -55,7 +55,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des trente tirages",
       detail:
-        "Vous faites ouvrir le bilan et comparer le résultat obtenu sous le hasard n° 12 au résultat moyen sur trente tirages. Vous prenez la révision de la scie comme cas d'école : l'option qui semble la plus économe gagne presque toujours, et perd beaucoup quand elle perd. Vous faites dire à la classe ce qu'on juge alors, la décision ou son résultat.",
+        "Vous faites ouvrir le bilan et comparer le résultat obtenu sous l'aléa n° 12 au résultat moyen sur trente tirages. Vous prenez la révision de la scie comme cas d'école : l'option qui semble la plus économe gagne presque toujours, et perd beaucoup quand elle perd. Vous faites dire à la classe ce qu'on juge alors, la décision ou son résultat.",
     },
     {
       minutes: 10,
@@ -107,7 +107,7 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Contre-proposer le coût complet paraît prudent : on ne perd rien, et le promoteur peut accepter.",
       ceQuiLeDejoue:
-        "Le plancher de la décision est le coût variable de 26 €, pas les 46 € du coût complet, et Thaïs Ventura annonce un prix, pas une base de négociation : « Notre prix : 39 € ». Le promoteur ne l'accepte qu'une fois sur cinq, et pas sous le hasard n° 12 : sur trente tirages, l'option fait 10,6 k€ de moins en moyenne que l'acceptation à nos conditions.",
+        "Le plancher de la décision est le coût variable de 26 €, pas les 46 € du coût complet, et Thaïs Ventura annonce un prix, pas une base de négociation : « Notre prix : 39 € ». Le promoteur ne l'accepte qu'une fois sur cinq, et pas sous l'aléa n° 12 : sur trente tirages, l'option fait 10,6 k€ de moins en moyenne que l'acceptation à nos conditions.",
     },
     {
       decision: 2,
@@ -139,16 +139,16 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Le tarif est fixé au coût complet plus 26 % ; si le coût complet a changé, il paraît logique de le répercuter.",
       ceQuiLeDejoue:
-        "La décomposition de la semaine 10 montre que ni le coût variable (26 €) ni les charges fixes (16 000 € par semaine) n'ont bougé : seul le volume a changé, et au trimestre suivant la quote-part reviendra à 20 €. Sur le meilleur chemin sous le hasard n° 12, le coût complet recalculé tombe à 43,07 € et le tarif à 54,30 € : la baisse cède de la marge sur un volume qui ne réagit qu'à 0,8 % pour 1 % de baisse, 7,9 k€ de moins en moyenne.",
+        "La décomposition de la semaine 10 montre que ni le coût variable (26 €) ni les charges fixes (16 000 € par semaine) n'ont bougé : seul le volume a changé, et au trimestre suivant la quote-part reviendra à 20 €. Sur le meilleur chemin sous l'aléa n° 12, le coût complet recalculé tombe à 43,07 € et le tarif à 54,30 € : la baisse cède de la marge sur un volume qui ne réagit qu'à 0,8 % pour 1 % de baisse, 7,9 k€ de moins en moyenne.",
     },
   ],
   debrief: [
     "En semaine 1, qu'est-ce que la commande de Cévral changeait réellement dans les 46 € de la fiche de coût, et qu'est-ce qu'elle laissait tel quel ? Faites justifier la réponse par la fiche de coût et le plan de charge.",
-    "Ceux qui ont contre-proposé 46 € ont-ils pris moins de risque que ceux qui ont accepté 39 € à leurs conditions ? Sous le hasard n° 12, le promoteur a refusé : qu'est-ce qui a été perdu, et qu'aurait-on gagné dans le cas favorable, une fois sur cinq ?",
-    "Pourquoi le même prix de 39 €, qui enrichissait l'atelier en semaine 4, l'appauvrit-il en semaine 10 ? Sous le hasard n° 12, Cévral a accepté 48 € en pleine saison : est-ce que cela fait de 48 € un bon prix, ou le promoteur n'acceptait-il qu'une fois sur quatre ?",
+    "Ceux qui ont contre-proposé 46 € ont-ils pris moins de risque que ceux qui ont accepté 39 € à leurs conditions ? Sous l'aléa n° 12, le promoteur a refusé : qu'est-ce qui a été perdu, et qu'aurait-on gagné dans le cas favorable, une fois sur cinq ?",
+    "Pourquoi le même prix de 39 €, qui enrichissait l'atelier en semaine 4, l'appauvrit-il en semaine 10 ? Sous l'aléa n° 12, Cévral a accepté 48 € en pleine saison : est-ce que cela fait de 48 € un bon prix, ou le promoteur n'acceptait-il qu'une fois sur quatre ?",
     "Accorder 39 € à Rioult, est-ce appliquer le raisonnement marginal de la semaine 1 ? À quelle condition un prix inférieur au tarif reste-t-il un prix marginal, et non une remise ?",
-    "Ceux qui ont reporté la révision de la scie au trimestre prochain, sans rien changer, ont fait sous le hasard n° 12 à peu près aussi bien que ceux qui l'ont reportée sous contrôle vibratoire, à moins de 1 k€ près ; sur trente tirages, ils font mieux 26 fois. Pourquoi l'option est-elle pourtant moins bonne, avec 1,6 k€ de moins en moyenne ? Faites retrouver ce qui se passe les quatre fois où la scie casse sans surveillance : entre 12,8 et 18,3 k€ de perte, en pleine saison.",
-    "La méthode « raisonner à la marge, capacité comprise » finit en moyenne 19,3 k€ au-dessus du budget sur trente tirages, l'attentisme 7,9 k€ en dessous ; sous le hasard n° 12, l'attentisme finit pourtant 4,9 k€ au-dessus. Un élève qui a terminé au-dessus du budget a-t-il bien décidé ? Sur quoi faut-il juger une décision prise sous incertitude ?",
+    "Ceux qui ont reporté la révision de la scie au trimestre prochain, sans rien changer, ont fait sous l'aléa n° 12 à peu près aussi bien que ceux qui l'ont reportée sous contrôle vibratoire, à moins de 1 k€ près ; sur trente tirages, ils font mieux 26 fois. Pourquoi l'option est-elle pourtant moins bonne, avec 1,6 k€ de moins en moyenne ? Faites retrouver ce qui se passe les quatre fois où la scie casse sans surveillance : entre 12,8 et 18,3 k€ de perte, en pleine saison.",
+    "La méthode « raisonner à la marge, capacité comprise » finit en moyenne 19,3 k€ au-dessus du budget sur trente tirages, l'attentisme 7,9 k€ en dessous ; sous l'aléa n° 12, l'attentisme finit pourtant 4,9 k€ au-dessus. Un élève qui a terminé au-dessus du budget a-t-il bien décidé ? Sur quoi faut-il juger une décision prise sous incertitude ?",
     "En semaine 10, le coût complet recalculé avait baissé : à quoi le coût complet sert-il encore dans l'atelier, et pour quelles décisions ne faut-il pas s'en servir ?",
   ],
   prolongement: {
@@ -162,7 +162,7 @@ export const FICHE: FicheEnseignant = {
     "La marge sur coût variable de la commande est calculée juste (20,8 k€) et l'écart avec la perte en coût complet est expliqué par les charges fixes imputées.",
     "En pleine saison, le coût marginal intègre les heures supplémentaires et la marge des clients évincés, chiffrées à partir des sources.",
     "L'élève distingue un prix marginal, attaché à un volume en plus et à des conditions, d'une remise sur un volume acquis.",
-    "Une décision est justifiée par l'information disponible au moment de la prendre et par le résultat moyen sur trente tirages, pas par le résultat obtenu sous le hasard n° 12.",
+    "Une décision est justifiée par l'information disponible au moment de la prendre et par le résultat moyen sur trente tirages, pas par le résultat obtenu sous l'aléa n° 12.",
   ],
   vigilance:
     "La fiche de coût répartit les charges fixes sur une activité normale de 800 panneaux, à la manière d'une imputation rationnelle, alors que le tableau de bord et le recalcul de la semaine 10 les rapportent au volume réel ; les deux conventions coexistent sans être nommées. Les salaires de l'équipe sont traités comme intégralement fixes, seules les heures supplémentaires étant variables, et un panneau d'habitué en retard est réputé perdu une fois sur deux : des hypothèses de modèle à présenter comme telles.",

@@ -294,7 +294,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -589,7 +589,7 @@ export const EPISODE_ENSEIGNE: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur détruite, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur créée estimée en semaine 13, par rapport au statu quo : le résultat du trimestre, plus cinq ans de l'effet net de la marque sur les hôtels affiliés et des choix faits pour les maisons de caractère, actualisés à 8 %, travaux compris, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur créée estimée en semaine 13, par rapport au statu quo : le résultat du trimestre, plus cinq ans de l'effet net de la marque sur les hôtels affiliés et des choix faits pour les maisons de caractère, actualisés à 8 %, travaux compris, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const signes = t.signe.hotels;
       const caractere = signes.some((id) => CARACTERE.includes(id));

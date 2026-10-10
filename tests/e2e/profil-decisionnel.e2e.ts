@@ -81,7 +81,7 @@ describe("le profil décisionnel", () => {
 
     const robustesse = section(page, "Vos choix tenaient-ils ?");
     await expect.poll(() => robustesse.innerText()).toMatch(/\d de vos 6 choix tiennent/);
-    expect(await robustesse.innerText()).toMatch(/sur 30 tirages du hasard/);
+    expect(await robustesse.innerText()).toMatch(/sur 30 tirages des aléas/);
     const observe = section(page, "Ce que cet épisode a observé");
     expect(await observe.innerText()).toMatch(/Diagnostiquer la cause :/);
 

@@ -172,7 +172,7 @@ export function axe([information, diagnostic, reflexe, calibrage, chantier]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -377,7 +377,7 @@ export const EPISODE_RENOVATION: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de chiffre d'affaires net, rentrée comprise`,
     formatObjectif: kE,
     noteDesBarres:
-      "Chiffre d'affaires hébergement de juin à août, moins gestes, clients délogés et surcoûts de chantier, plus l'effet attendu sur la rentrée, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Chiffre d'affaires hébergement de juin à août, moins gestes, clients délogés et surcoûts de chantier, plus l'effet attendu sur la rentrée, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

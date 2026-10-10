@@ -179,7 +179,7 @@ export function axe([information, diagnostic, reflexe, calibrage, soir]: readonl
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -407,7 +407,7 @@ export const EPISODE_SURRESERVATION: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif - BUDGET)}, délogements et clients perdus déduits`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge hébergement des soirs complets, nette des délogements, des clients perdus et des avis, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge hébergement des soirs complets, nette des délogements, des clients perdus et des avis, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

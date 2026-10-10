@@ -263,7 +263,7 @@ export function axe([information, diagnostic, reflexe, calibrage, prix]: readonl
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -518,7 +518,7 @@ export const EPISODE_RECONSTRUCTION: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur détruite pour l'association, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur créée pour l'association : la VAN sur vingt ans, au taux de 4 %, des flux différentiels de la voie engagée, déficit d'hébergement compris, recalculée avec ce que le trimestre a appris, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur créée pour l'association : la VAN sur vingt ans, au taux de 4 %, des flux différentiels de la voie engagée, déficit d'hébergement compris, recalculée avec ce que le trimestre a appris, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const voie = t.refus ? 3 : t.voie;
       return [

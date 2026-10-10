@@ -239,7 +239,7 @@ export function axe([information, diagnostic, reflexe, calibrage, montage]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -508,7 +508,7 @@ export const EPISODE_SORTIE_ASSOCIE: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur détruite pour les associés restants, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur créée pour les associés restants : ce qu'ils détiendront après l'opération, comptes perdus déduits, moins ce qu'ils détenaient le jour de l'annonce, le prix et les coûts, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur créée pour les associés restants : ce qu'ils détiendront après l'opération, comptes perdus déduits, moins ce qu'ils détenaient le jour de l'annonce, le prix et les coûts, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const gardes = t.partis.filter((x) => !x).length;
       return [

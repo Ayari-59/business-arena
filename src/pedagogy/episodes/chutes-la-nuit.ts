@@ -200,7 +200,7 @@ export function axe([information, diagnostic, reflexe, calibrage, causes]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -411,7 +411,7 @@ export const EPISODE_CHUTES: Episode<Trimestre> = {
     titre: coutDesChutes,
     formatObjectif: kE,
     noteDesBarres:
-      "L'opposé du coût des chutes, risque laissé à janvier compris, sous le hasard que vous avez joué : plus la barre est longue (moins le trimestre a coûté), mieux c'est. L'échelle ne part pas de zéro.",
+      "L'opposé du coût des chutes, risque laissé à janvier compris, sous les aléas que vous avez joués : plus la barre est longue (moins le trimestre a coûté), mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

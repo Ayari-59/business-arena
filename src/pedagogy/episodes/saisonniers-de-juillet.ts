@@ -179,7 +179,7 @@ export function axe([information, diagnostic, reflexe, calibrage, accueil]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -418,7 +418,7 @@ export const EPISODE_SAISONNIERS: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de contribution de la réception sur l'été`,
     formatObjectif: kE,
     noteDesBarres:
-      "Contribution de la réception sur l'été, ventes additionnelles moins les erreurs, les gestes, la note, les heures et les remplacements, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Contribution de la réception sur l'été, ventes additionnelles moins les erreurs, les gestes, la note, les heures et les remplacements, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

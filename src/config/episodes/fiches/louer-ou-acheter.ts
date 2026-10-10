@@ -32,7 +32,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/louer-ou-acheter?hasard=12 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous demandez de noter sur papier le calcul déposé en semaine 1 et la raison de chaque décision, en une ligne.",
+        "Vous envoyez le lien /entreprises/episode/louer-ou-acheter?hasard=12 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous demandez de noter sur papier le calcul déposé en semaine 1 et la raison de chaque décision, en une ligne.",
     },
     {
       minutes: 40,
@@ -56,7 +56,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des trente tirages",
       detail:
-        "Vous projetez le bilan d'un élève qui accepte de le montrer : sous le hasard 12, la saison tient et Ganivet mène sa phase 2, si bien que des décisions risquées n'ont pas été punies. Vous comparez ce résultat à la moyenne sur trente tirages et vous rappelez que le résultat de l'épisode est bruité : le retournement de saison, une fois sur trois environ, déplace à lui seul des dizaines de milliers d'euros. On juge une décision sur sa moyenne et sur son mauvais cas, pas sur un trimestre.",
+        "Vous projetez le bilan d'un élève qui accepte de le montrer : sous l'aléa 12, la saison tient et Ganivet mène sa phase 2, si bien que des décisions risquées n'ont pas été punies. Vous comparez ce résultat à la moyenne sur trente tirages et vous rappelez que le résultat de l'épisode est bruité : le retournement de saison, une fois sur trois environ, déplace à lui seul des dizaines de milliers d'euros. On juge une décision sur sa moyenne et sur son mauvais cas, pas sur un trimestre.",
     },
     {
       minutes: 15,
@@ -72,7 +72,7 @@ export const FICHE: FicheEnseignant = {
       "Consommation de valeur sur trois ans : 45 000 − 22 000 = 23 000 €, la différence entre le prix d'acquisition et la valeur de revente.",
       "Coût du financement : 36 × 1 345 = 48 420 € remboursés, soit 48 420 − 45 000 = 3 420 € d'intérêts ; avec la mensualité exacte (1 344,65 €), 3 408 €.",
       "Entretien sur la durée : 3 × 2 400 = 7 200 €.",
-      "Coût total : 23 000 + 3 408 + 7 200 = 33 608 €, soit 33,6 k€ (33,62 k€ avec la mensualité arrondie, sans incidence). Le calcul ne dépend pas du hasard : la valeur est la même sous toutes les graines.",
+      "Coût total : 23 000 + 3 408 + 7 200 = 33 608 €, soit 33,6 k€ (33,62 k€ avec la mensualité arrondie, sans incidence). Le calcul ne dépend pas des aléas : la valeur est la même sous toutes les graines.",
       "Ramené au mois : 33 608 / 36 = 934 €, contre 1 290 € de loyer en location longue durée (46 440 € sur trois ans) ; au tarif du partenaire de 115 € la journée, posséder coûte moins dès 934 / 115 = 8,1 jours de location par mois.",
     ],
     erreurs: [
@@ -147,9 +147,9 @@ export const FICHE: FicheEnseignant = {
     "Le commercial de Valtrac compare une mensualité de 1 345 € à un loyer de 1 290 €. Qu'est-ce que chacun de ces deux montants contient, et qu'est-ce qu'il laisse de côté ? Combien coûte réellement chaque formule par mois ?",
     "Combien de jours par mois une mini-pelle doit-elle tourner pour qu'il vaille mieux la posséder que la louer chez Sillon ? Avec le planning de l'an dernier, combien de machines fallait-il posséder, et pourquoi pas six ?",
     "Pour Elvatec, le crédit-bail coûte 22,6 k€ sur trois ans, la location longue durée 33,1 k€. Pourquoi l'écart est-il si grand, et que vous apprend le fait que le taux implicite du crédit-bail soit à peu près celui de l'emprunt ?",
-    "Pour Sorlin, contre-proposer 157 € la journée a fait mieux que signer à 131 € dans 14 tirages sur 30, chaque fois que Sorlin a accepté, mais seulement de 624 € ; sous le hasard 12, Sorlin a refusé et l'écart n'est que de 384 €. Pourquoi l'option coûte-t-elle pourtant près de 3 k€ en moyenne ? Que se passe-t-il quand Sorlin refuse et que la saison se retourne, et que valaient alors quatre jours garantis par semaine ?",
-    "Pour Ganivet, sous le hasard 12, ceux qui ont acheté les tout-terrain ont fait 11 k€ de mieux que ceux qui les ont louées chez Sillon. Sur trente tirages, l'écart moyen n'est plus que de 1,4 k€, et dans les 10 % de tirages les plus défavorables l'achat finit 27 k€ sous le budget, la location 2,4 k€ seulement. Lequel des deux choix était le bon ? Les deux se défendent-ils ?",
-    "La méthode « coût total et souplesse » fait en moyenne +6,7 k€ sur trente tirages, la méthode « mensualités et trésorerie » −45,9 k€. Sous le hasard 12, où la saison a tenu, l'écart est-il plus grand ou plus petit ? Que retenir d'un bon résultat obtenu sous un seul trimestre ?",
+    "Pour Sorlin, contre-proposer 157 € la journée a fait mieux que signer à 131 € dans 14 tirages sur 30, chaque fois que Sorlin a accepté, mais seulement de 624 € ; sous l'aléa 12, Sorlin a refusé et l'écart n'est que de 384 €. Pourquoi l'option coûte-t-elle pourtant près de 3 k€ en moyenne ? Que se passe-t-il quand Sorlin refuse et que la saison se retourne, et que valaient alors quatre jours garantis par semaine ?",
+    "Pour Ganivet, sous l'aléa 12, ceux qui ont acheté les tout-terrain ont fait 11 k€ de mieux que ceux qui les ont louées chez Sillon. Sur trente tirages, l'écart moyen n'est plus que de 1,4 k€, et dans les 10 % de tirages les plus défavorables l'achat finit 27 k€ sous le budget, la location 2,4 k€ seulement. Lequel des deux choix était le bon ? Les deux se défendent-ils ?",
+    "La méthode « coût total et souplesse » fait en moyenne +6,7 k€ sur trente tirages, la méthode « mensualités et trésorerie » −45,9 k€. Sous l'aléa 12, où la saison a tenu, l'écart est-il plus grand ou plus petit ? Que retenir d'un bon résultat obtenu sous un seul trimestre ?",
     "Pourquoi la vieille nacelle « amortie » n'était-elle pas gratuite ? Quels coûts fallait-il comparer le vendredi de la semaine 8 ?",
   ],
   prolongement: {

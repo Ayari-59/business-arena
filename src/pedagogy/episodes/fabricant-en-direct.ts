@@ -215,7 +215,7 @@ export function axe([information, diagnostic, reflexe, calibrage, relation]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -495,7 +495,7 @@ export const EPISODE_DESINTERMEDIATION: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur perdue, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur estimée en semaine 13, par rapport au plan d'avant l'annonce : la marge du trimestre, plus deux ans de la marge que la riposte installe, actualisés à 9 %, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur estimée en semaine 13, par rapport au plan d'avant l'annonce : la marge du trimestre, plus deux ans de la marge que la riposte installe, actualisés à 9 %, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const captee = t.semaines[13]!.captee;
       const dependance = t.semaines[13]!.dependance;

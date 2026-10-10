@@ -198,7 +198,7 @@ export function axe([information, diagnostic, reflexe, calibrage, marge]: readon
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -402,7 +402,7 @@ export const EPISODE_SEUIL: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, pour ${kE(t.resultat)} de résultat`,
     formatObjectif: kE,
     noteDesBarres:
-      "Résultat du drive sur le trimestre, en écart à son budget, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Résultat du drive sur le trimestre, en écart à son budget, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const s = t.structure;
       const parSemaine = t.retraits / SEMAINES;

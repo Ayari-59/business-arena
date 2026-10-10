@@ -174,7 +174,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -408,7 +408,7 @@ export const EPISODE_CHANGEMENTS_FORMAT: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de contribution, capacité de juillet comprise`,
     formatObjectif: kE,
     noteDesBarres:
-      "Contribution de la ligne 3 : marge sur coût variable des pots livrés, moins pénalités, rebuts, casse, heures majorées et coût des mesures, plus la capacité gagnée pour juillet, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Contribution de la ligne 3 : marge sur coût variable des pots livrés, moins pénalités, rebuts, casse, heures majorées et coût des mesures, plus la capacité gagnée pour juillet, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

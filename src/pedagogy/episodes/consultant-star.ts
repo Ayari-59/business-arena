@@ -174,7 +174,7 @@ export function axe([information, diagnostic, reflexe, calibrage, recadrage]: re
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -393,7 +393,7 @@ export const EPISODE_STAR: Episode<Trimestre> = {
     titre: (t) => `Marge de l'équipe ${ecartAuBudget(t.objectif - BUDGET)}, départs déduits`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge de l'équipe sur le trimestre, moins le coût des départs (recrutement, intercontrat, clients perdus), sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge de l'équipe sur le trimestre, moins le coût des départs (recrutement, intercontrat, clients perdus), sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const analystes = 3 - [t.ilham, t.gaetane, t.ylan].filter((x) => x !== null).length;
       return [

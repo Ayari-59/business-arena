@@ -35,7 +35,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/discounter-qui-arrive?hasard=9 : toute la classe joue le même trimestre, sous le même hasard. Les étudiants jouent seuls ou en binôme, au niveau Standard. Vous présentez le cadre en une minute (une enseigne en libre-service ouvre deux dépôts aux portes de la région) et vous demandez de noter, à chaque décision, le chiffre qui l'a emportée.",
+        "Vous envoyez le lien /entreprises/episode/discounter-qui-arrive?hasard=9 : toute la classe joue le même trimestre, sous le même aléa. Les étudiants jouent seuls ou en binôme, au niveau Standard. Vous présentez le cadre en une minute (une enseigne en libre-service ouvre deux dépôts aux portes de la région) et vous demandez de noter, à chaque décision, le chiffre qui l'a emportée.",
     },
     {
       minutes: 40,
@@ -53,13 +53,13 @@ export const FICHE: FicheEnseignant = {
       minutes: 25,
       titre: "Les décisions qui ont partagé la classe",
       detail:
-        "Vous partez de la décision où la classe s'est le plus divisée, en général la livraison du lendemain (tout de suite ou en test) ou la carte comptoir de la semaine 6. Chaque camp défend son option, puis vous ressortez la source qui tranchait : le retour des régions qui livrent déjà, et l'extraction des achats par agence et par type de client. Vous finissez par l'opération d'hiver, où le réflexe de suivre a coûté cher sous le hasard de la classe, alors qu'il paie 7 fois sur 30.",
+        "Vous partez de la décision où la classe s'est le plus divisée, en général la livraison du lendemain (tout de suite ou en test) ou la carte comptoir de la semaine 6. Chaque camp défend son option, puis vous ressortez la source qui tranchait : le retour des régions qui livrent déjà, et l'extraction des achats par agence et par type de client. Vous finissez par l'opération d'hiver, où le réflexe de suivre a coûté cher sous l'aléa de la classe, alors qu'il paie 7 fois sur 30.",
     },
     {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous prévenez la classe que le résultat d'un trimestre est très bruité : sur les 30 tirages, les meilleures décisions vont de −1 050 k€ à −118 k€ de valeur. Sous le hasard 9, elles font −371 k€ et tiennent l'objectif de −600 k€, mieux que leur moyenne de −494 k€. Vous faites comparer, décision par décision, ce que la classe a obtenu et ce que chaque option valait en moyenne.",
+        "Vous prévenez la classe que le résultat d'un trimestre est très bruité : sur les 30 tirages, les meilleures décisions vont de −1 050 k€ à −118 k€ de valeur. Sous l'aléa 9, elles font −371 k€ et tiennent l'objectif de −600 k€, mieux que leur moyenne de −494 k€. Vous faites comparer, décision par décision, ce que la classe a obtenu et ce que chaque option valait en moyenne.",
     },
     {
       minutes: 15,
@@ -73,7 +73,7 @@ export const FICHE: FicheEnseignant = {
     etapes: [
       "« Faire extraire les ventes de la région par type de client » : les artisans au comptoir achètent 3,43 M€ de produits de base par an (3,432 M€ exactement), les PME qui enlèvent par palettes 4,68 M€. Les entreprises livrées sur chantier (5,74 M€ de base) achètent livré, à prix nets négociés à l'année : une baisse « à l'enlèvement » ne les touche pas.",
       "Assiette de la baisse : 3,432 + 4,68 = 8,112 M€ de produits de base enlevés par an, dans les huit agences.",
-      "À volumes constants, le coût d'achat ne bouge pas : chaque euro de prix rendu est un euro de marge commerciale perdu. Coût de la baisse : 8 % × 8,112 M€ = 648,96 k€ de marge par an (648,8 k€ avec les montants arrondis de la source). Le résultat ne dépend pas du hasard ; l'épisode le juge juste à 10 k€ près, proche à 40 k€.",
+      "À volumes constants, le coût d'achat ne bouge pas : chaque euro de prix rendu est un euro de marge commerciale perdu. Coût de la baisse : 8 % × 8,112 M€ = 648,96 k€ de marge par an (648,8 k€ avec les montants arrondis de la source). Le résultat ne dépend pas des aléas ; l'épisode le juge juste à 10 k€ près, proche à 40 k€.",
       "Pour mesurer le poids : la base enlevée dégage 21 % × 8,112 = 1,704 M€ de marge, et la baisse en emporte 8 / 21 = 38 %. L'alignement ciblé (8,3 % sur le panier du comptoir, 11,5 % sur les palettes, dans la zone) coûte 328 k€ par an, deux fois moins.",
       "Le chiffre qui compte pour la suite : la base enlevée dans les cinq agences de la zone ne pèse que 14,7 % du chiffre d'affaires de la région, et la source de la semaine 11 dira que 409 k€ des 649 k€ vont à des références que personne ne compare ou à des clients qui ne partent pas.",
     ],
@@ -140,7 +140,7 @@ export const FICHE: FicheEnseignant = {
       decision: 3,
       option: 0,
       pourquoi:
-        "Les artisans de la zone tiennent (98 % de leurs achats de base sous le hasard 9) : le plan marche, et le comité avait prévu la carte.",
+        "Les artisans de la zone tiennent (98 % de leurs achats de base sous l'aléa 9) : le plan marche, et le comité avait prévu la carte.",
       ceQuiLeDejoue:
         "L'extraction par agence et par type de client montre que ce sont les PME du nord qui partent (76 % de leurs achats de base en semaine 6), pas les artisans. La carte rend 3 % sur 3,43 M€ de base, environ 103 k€ par an, à des clients qui restaient : 144 k€ de moins en moyenne que le contrat proposé aux PME du nord.",
     },
@@ -165,10 +165,10 @@ export const FICHE: FicheEnseignant = {
     "Quelle part des 36 M€ de chiffre d'affaires Tarval menace-t-il vraiment ? Reconstituez les 14,7 % à partir de l'extraction des ventes, puis dites pourquoi la baisse générale coûte 649 k€ par an quand l'alignement ciblé en coûte 328 k€, et à qui va la différence.",
     "Pourquoi un concurrent qui a huit points de frais de structure de moins suit-il une baisse générale et pas un alignement sur une centaine de références près de ses dépôts ? Toutes autres décisions égales, sur les 30 tirages, Tarval suit la baisse générale 13 fois et l'alignement ciblé 2 fois : qu'est-ce qu'une guerre des prix fait gagner à celui qui l'a déclenchée ?",
     "En semaine 2, que valait l'information du test ? Le test coûte 17,2 k€ et dit en six semaines si les clients adoptent la livraison ; l'engagement immédiat coûte 320 k€ par an sur trois ans. Si vous saviez d'avance que les clients l'adopteraient, que choisiriez-vous ? Et s'ils ne l'adoptaient pas ?",
-    "Sous le hasard 9, les clients n'ont pas adopté la livraison : la livraison tout de suite, dans les huit agences, a fait 273 k€ de moins que le test, et « rien de plus » 16 k€ de mieux, à peu près le prix du test. Sur les 30 tirages, l'engagement immédiat bat le test 16 fois, chaque fois que les clients l'adoptent, de 15 à 21 k€, mais perd 262 k€ en moyenne les 14 fois où ils ne l'adoptent pas : il vaut 113 k€ de moins en moyenne. Ceux qui l'ont choisi ont-ils mal décidé, ou seulement manqué de chance ? Et ceux qui n'ont rien lancé ?",
-    "En semaine 6, sous le hasard 9, les artisans de la zone gardaient 98 % de leurs achats de base et les PME du nord 76 % : quel chiffre fallait-il regarder pour réviser la cible de la riposte ? Pourquoi le contrat d'un an proposé aux PME du nord bat-il la carte comptoir de 144 k€, et l'attente du comité de décembre de 53 k€, en moyenne ?",
-    "Sous le hasard 9, suivre l'opération d'hiver de Tarval a fait 249 k€ de moins que ne pas la suivre : il visait la rentabilité, son opération s'est arrêtée, mais le prix suivi n'est pas remonté. Sur les 30 tirages pourtant, suivre fait mieux 7 fois, et vaut 280 k€ de moins en moyenne. Que valait la garantie écrite aux PME de la zone, qui bat le meilleur choix 11 fois sur 30 pour 12 k€ de moins en moyenne et protège le mieux dans les mauvais tirages ?",
-    "Sous le hasard 9, les meilleures décisions font −371 k€ (le 16e tirage sur 30) et tiennent l'objectif de −600 k€ ; sur les 30 tirages, elles font −494 k€ en moyenne, entre −1 050 k€ et −118 k€, et ne le tiennent que 19 fois. L'attentisme fait −690 k€, et la baisse partout −1 643 k€. Que conclure d'un binôme qui a fait −550 k€ et tenu l'objectif ? Peut-on juger une décision stratégique au résultat d'un trimestre ?",
+    "Sous l'aléa 9, les clients n'ont pas adopté la livraison : la livraison tout de suite, dans les huit agences, a fait 273 k€ de moins que le test, et « rien de plus » 16 k€ de mieux, à peu près le prix du test. Sur les 30 tirages, l'engagement immédiat bat le test 16 fois, chaque fois que les clients l'adoptent, de 15 à 21 k€, mais perd 262 k€ en moyenne les 14 fois où ils ne l'adoptent pas : il vaut 113 k€ de moins en moyenne. Ceux qui l'ont choisi ont-ils mal décidé, ou seulement manqué de chance ? Et ceux qui n'ont rien lancé ?",
+    "En semaine 6, sous l'aléa 9, les artisans de la zone gardaient 98 % de leurs achats de base et les PME du nord 76 % : quel chiffre fallait-il regarder pour réviser la cible de la riposte ? Pourquoi le contrat d'un an proposé aux PME du nord bat-il la carte comptoir de 144 k€, et l'attente du comité de décembre de 53 k€, en moyenne ?",
+    "Sous l'aléa 9, suivre l'opération d'hiver de Tarval a fait 249 k€ de moins que ne pas la suivre : il visait la rentabilité, son opération s'est arrêtée, mais le prix suivi n'est pas remonté. Sur les 30 tirages pourtant, suivre fait mieux 7 fois, et vaut 280 k€ de moins en moyenne. Que valait la garantie écrite aux PME de la zone, qui bat le meilleur choix 11 fois sur 30 pour 12 k€ de moins en moyenne et protège le mieux dans les mauvais tirages ?",
+    "Sous l'aléa 9, les meilleures décisions font −371 k€ (le 16e tirage sur 30) et tiennent l'objectif de −600 k€ ; sur les 30 tirages, elles font −494 k€ en moyenne, entre −1 050 k€ et −118 k€, et ne le tiennent que 19 fois. L'attentisme fait −690 k€, et la baisse partout −1 643 k€. Que conclure d'un binôme qui a fait −550 k€ et tenu l'objectif ? Peut-on juger une décision stratégique au résultat d'un trimestre ?",
   ],
   prolongement: {
     enonce:
@@ -181,7 +181,7 @@ export const FICHE: FicheEnseignant = {
     "La riposte est justifiée par une mesure de l'exposition par segment, par gamme et par zone, et non par le chiffre d'affaires total ou par la menace affichée.",
     "La réaction probable du concurrent est prise en compte : l'étudiant explique pourquoi une baisse large et visible a plus de chances d'être suivie.",
     "Le choix entre engagement et test est argumenté par le coût de l'information et par la probabilité d'adoption, et la cible est révisée au vu des premiers chiffres par segment.",
-    "L'étudiant distingue, sur le bilan des 30 tirages, la qualité d'une décision de son résultat sous le hasard de la classe.",
+    "L'étudiant distingue, sur le bilan des 30 tirages, la qualité d'une décision de son résultat sous l'aléa de la classe.",
   ],
   vigilance:
     "Le trimestre est valorisé par sa marge plus une seule année au régime atteint en semaine 13, sans actualisation ni valeur au-delà, alors que la location des camions court sur trois ans et qu'une guerre des prix pèse plusieurs années : un enseignant de stratégie voudra le dire. Les probabilités (quatre chances sur dix que Tarval vise la part de marché, adoption une fois sur deux, suivi selon l'ampleur de la baisse) sont annoncées par les sources, ce qu'aucun directeur ne connaît aussi nettement, et la pression sur le fabricant est réduite à une plainte probable et une provision, sans l'analyse juridique de l'abus de dépendance économique.",

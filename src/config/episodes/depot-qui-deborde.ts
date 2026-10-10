@@ -189,7 +189,7 @@ export const ETAPES: readonly Etape[] = [
     sources: [
       {
         id: "compter",
-        titre: "Faire compter vingt références A au hasard",
+        titre: "Faire compter vingt références A tirées au sort",
         cout: 0.5,
         nature: "decisive",
         resultat: (ctx) =>

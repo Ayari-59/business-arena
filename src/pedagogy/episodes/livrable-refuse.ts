@@ -192,7 +192,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -419,7 +419,7 @@ export const EPISODE_LIVRABLE: Episode<Trimestre> = {
       `${kE(t.objectif)} : ${kE(t.marge)} de marge et ${kE(t.valeurTranche)} de tranche espérée`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge de la mission (jours pointés, samedis rachetés, pénalités de retard) plus la valeur espérée de la tranche optionnelle, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge de la mission (jours pointés, samedis rachetés, pénalités de retard) plus la valeur espérée de la tranche optionnelle, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const aLaDate = t.retard < 0.05;
       return [

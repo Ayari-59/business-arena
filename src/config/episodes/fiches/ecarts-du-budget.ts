@@ -31,7 +31,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/ecarts-du-budget?hasard=6 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien de la notion : rappelez seulement que le calcul demandé en semaine 1 sera corrigé au tableau, et qu'il faut le noter avant de le saisir.",
+        "Vous envoyez le lien /entreprises/episode/ecarts-du-budget?hasard=6 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien de la notion : rappelez seulement que le calcul demandé en semaine 1 sera corrigé au tableau, et qu'il faut le noter avant de le saisir.",
     },
     {
       minutes: 40,
@@ -49,7 +49,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 30,
       titre: "Débrief des décisions",
       detail:
-        "Vous partez de la décision où la classe s'est le plus partagée, souvent le ciment composé ou la revue trimestrielle, et faites défendre chaque option par ceux qui l'ont prise. Puis vous projetez le bilan des 30 tirages d'un élève et posez les questions du débrief dans l'ordre. Gardez pour la fin la revue trimestrielle : sous le hasard 6, ne rien changer a payé, et c'est la meilleure occasion de séparer la décision de son résultat.",
+        "Vous partez de la décision où la classe s'est le plus partagée, souvent le ciment composé ou la revue trimestrielle, et faites défendre chaque option par ceux qui l'ont prise. Puis vous projetez le bilan des 30 tirages d'un élève et posez les questions du débrief dans l'ordre. Gardez pour la fin la revue trimestrielle : sous l'aléa 6, ne rien changer a payé, et c'est la meilleure occasion de séparer la décision de son résultat.",
     },
     {
       minutes: 20,
@@ -65,7 +65,7 @@ export const FICHE: FicheEnseignant = {
       "Quantité préétablie pour la production réelle : 0,150 × 1 040 = 156 t de ciment, et non 150 t, qui correspondent au budget statique.",
       "Quantité réelle consommée : 178 t. Écart sur quantité = (178 − 156) × 150 = 22 × 150 = 3 300 €, soit 3,3 k€, positif donc défavorable dans la convention de l'épisode (réel − préétabli).",
       "Contrôle : écart sur prix = (156 − 150) × 178 = 1 068 € ; 3 300 + 1 068 = 4 368 €, soit le coût réel du ciment (178 × 156 = 27 768 €) moins son coût préétabli pour la production réelle (156 × 150 = 23 400 €).",
-      "La valeur porte sur le mois qui précède le trimestre : elle ne dépend ni du hasard ni des décisions, et vaut 3,3 k€ pour toute la classe.",
+      "La valeur porte sur le mois qui précède le trimestre : elle ne dépend ni des aléas ni des décisions, et vaut 3,3 k€ pour toute la classe.",
     ],
     erreurs: [
       {
@@ -140,8 +140,8 @@ export const FICHE: FicheEnseignant = {
     "En semaine 1, quel écart était le plus visible, et lequel était le plus lourd ? Classez l'écart sur prix du ciment, l'écart sur quantité de ciment et l'écart sur temps, et dites qui, de l'acheteur ou de l'atelier, peut agir sur chacun.",
     "Ceux qui ont recadré l'équipe sur le dosage en semaine 1 ont obtenu un meilleur écart sur quantité de ciment et vu les rebuts monter : pourquoi un écart sur quantité de matière peut-il se payer en écart sur temps ?",
     "Le ciment composé coûtait 22 €/t de moins. Que valait-il rapporté à la quantité qu'il fallait doser, et dans quel écart la différence est-elle réapparue ?",
-    "Sur les 30 tirages, « Ne rien changer jusqu'à la clôture » fait mieux que l'entretien préventif dans 21 cas, et coûte pourtant près de 2 k€ de plus en moyenne. Sous le hasard 6 de la classe, la presse n'a lâché chez personne, même chez ceux qui ne l'avaient jamais fait régler : ne rien changer a fait gagner à chacun les 1,8 k€ de l'entretien, et ceux qui avaient baissé le dosage pour la revue ont vu refuser leur lot de la semaine 13. Était-ce une bonne décision, ou de la chance ?",
-    "Comparez votre résultat sous le hasard 6 et votre moyenne sur les 30 tirages : qu'est-ce qui, dans votre trimestre, tenait à vos décisions, et qu'est-ce qui tenait au hasard (la cimenterie, l'intérim, le roulement du vibreur, la panne) ?",
+    "Sur les 30 tirages, « Ne rien changer jusqu'à la clôture » fait mieux que l'entretien préventif dans 21 cas, et coûte pourtant près de 2 k€ de plus en moyenne. Sous l'aléa 6 de la classe, la presse n'a lâché chez personne, même chez ceux qui ne l'avaient jamais fait régler : ne rien changer a fait gagner à chacun les 1,8 k€ de l'entretien, et ceux qui avaient baissé le dosage pour la revue ont vu refuser leur lot de la semaine 13. Était-ce une bonne décision, ou de la chance ?",
+    "Comparez votre résultat sous l'aléa 6 et votre moyenne sur les 30 tirages : qu'est-ce qui, dans votre trimestre, tenait à vos décisions, et qu'est-ce qui tenait aux aléas (la cimenterie, l'intérim, le roulement du vibreur, la panne) ?",
     "Si vous présentiez la revue trimestrielle au directeur, dans quel ordre présenteriez-vous les écarts, et lequel mettriez-vous en premier ?",
   ],
   prolongement: {

@@ -48,19 +48,19 @@ export const FICHE: FicheEnseignant = {
       minutes: 25,
       titre: "Débrief : la décision qui a partagé la classe",
       detail:
-        "Partez de la décision où les mains se sont le plus partagées, le plus souvent celle de Valcourt. Faites argumenter les deux camps sur les sources de la semaine 9 avant de dire ce qui s'est passé. Sous le hasard 28, Valcourt n'a pas toléré le dépassement : chantier arrêté en semaine 11, LCR rejetées en semaines 12 et 13, et ceux qui ont laissé faire finissent 30 k€ derrière la garantie de la holding. Faites-leur dire ce qu'ils auraient gagné s'il avait toléré : c'est cette asymétrie qu'il faut discuter.",
+        "Partez de la décision où les mains se sont le plus partagées, le plus souvent celle de Valcourt. Faites argumenter les deux camps sur les sources de la semaine 9 avant de dire ce qui s'est passé. Sous l'aléa 28, Valcourt n'a pas toléré le dépassement : chantier arrêté en semaine 11, LCR rejetées en semaines 12 et 13, et ceux qui ont laissé faire finissent 30 k€ derrière la garantie de la holding. Faites-leur dire ce qu'ils auraient gagné s'il avait toléré : c'est cette asymétrie qu'il faut discuter.",
     },
     {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Projetez le bilan d'un volontaire et lisez la comparaison aux trois manières de décider. Sur 30 tirages, la méthode qui chiffre et finance selon la nature du besoin finit en moyenne autour de 35 k€ au-dessus du budget, quand « tout au découvert » et l'attentisme finissent autour de 82 k€ et 91 k€ en dessous. Faites distinguer, décision par décision, le résultat obtenu sous le hasard 28 et la qualité du choix.",
+        "Projetez le bilan d'un volontaire et lisez la comparaison aux trois manières de décider. Sur 30 tirages, la méthode qui chiffre et finance selon la nature du besoin finit en moyenne autour de 35 k€ au-dessus du budget, quand « tout au découvert » et l'attentisme finissent autour de 82 k€ et 91 k€ en dessous. Faites distinguer, décision par décision, le résultat obtenu sous l'aléa 28 et la qualité du choix.",
     },
     {
       minutes: 10,
       titre: "Synthèse",
       detail:
-        "Vous écrivez au tableau trésorerie nette = FRNG − BFR, et les chiffres du meilleur chemin sous le hasard 28 : de la semaine 1 à la semaine 13, le résultat cumulé atteint 219 k€ et le FRNG passe de 170 k€ à 728 k€, mais le BFR passe de 268 k€ à 1 009 k€ et la trésorerie nette de −98 k€ à −281 k€. Vous concluez par la règle : un besoin structurel se finance par des ressources stables, un besoin conjoncturel par le court terme, et une croissance se prend à la mesure de ce qu'on peut financer.",
+        "Vous écrivez au tableau trésorerie nette = FRNG − BFR, et les chiffres du meilleur chemin sous l'aléa 28 : de la semaine 1 à la semaine 13, le résultat cumulé atteint 219 k€ et le FRNG passe de 170 k€ à 728 k€, mais le BFR passe de 268 k€ à 1 009 k€ et la trésorerie nette de −98 k€ à −281 k€. Vous concluez par la règle : un besoin structurel se finance par des ressources stables, un besoin conjoncturel par le court terme, et une croissance se prend à la mesure de ce qu'on peut financer.",
     },
   ],
   calcul: {
@@ -70,7 +70,7 @@ export const FICHE: FicheEnseignant = {
       "« Demander à Maëva le BFR normatif d'un chantier de bailleur » : les menuiseries font 50 % du prix de vente et arrivent 14 jours avant la pose, soit 14 × 50 % = 7 jours de chiffre d'affaires de stock.",
       "Même source : Valcourt est payé 56 jours après la livraison, soit 56 × 50 % = 28 jours de chiffre d'affaires de crédit fournisseur ; les poseurs, payés chaque semaine, ne créent pas de ressource notable.",
       "BFR normatif du marché : 77 + 7 − 28 = 56 jours de chiffre d'affaires hors taxes.",
-      "En euros : 56 × 10 k€ = 560 k€. Ce besoin est structurel : chaque situation encaissée est remplacée par une autre, il demeure tant que le marché tourne. L'épisode le tient pour fixe, quel que soit le hasard.",
+      "En euros : 56 × 10 k€ = 560 k€. Ce besoin est structurel : chaque situation encaissée est remplacée par une autre, il demeure tant que le marché tourne. L'épisode le tient pour fixe, quels que soient les aléas.",
     ],
     erreurs: [
       {
@@ -112,7 +112,7 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Le dividende est au budget, la holding l'attend, et il n'appartient pas à la filiale de le discuter.",
       ceQuiLeDejoue:
-        "Verser 250 k€ ampute d'autant le FRNG au moment où le BFR monte. La convention de trésorerie permet de le laisser en compte courant bloqué deux ans, qui compte parmi les ressources stables, pour environ 2,4 k€ d'intérêts sur le reste du trimestre ; sous le hasard 28, prêt accordé, la prévision fait passer le pic de 462 k€ à 211 k€ pour 300 k€ d'autorisation.",
+        "Verser 250 k€ ampute d'autant le FRNG au moment où le BFR monte. La convention de trésorerie permet de le laisser en compte courant bloqué deux ans, qui compte parmi les ressources stables, pour environ 2,4 k€ d'intérêts sur le reste du trimestre ; sous l'aléa 28, prêt accordé, la prévision fait passer le pic de 462 k€ à 211 k€ pour 300 k€ d'autorisation.",
     },
     {
       decision: 2,
@@ -135,7 +135,7 @@ export const FICHE: FicheEnseignant = {
       option: 0,
       pourquoi: "Le lot est rentable, et Clairval ne reviendra pas si l'on refuse la moitié.",
       ceQuiLeDejoue:
-        "Le lot complet ajoute à terme 56 jours × 80 k€ / 7 = 640 k€ de BFR, un gage-espèces de 104 k€ qui ampute le FRNG et deux semaines de rodage à 60 %. Sous le hasard 28, sur le meilleur chemin, la simulation donne un pic de 356 k€ avec les quatre bâtiments, 274 k€ avec deux, pour 300 k€ d'autorisation.",
+        "Le lot complet ajoute à terme 56 jours × 80 k€ / 7 = 640 k€ de BFR, un gage-espèces de 104 k€ qui ampute le FRNG et deux semaines de rodage à 60 %. Sous l'aléa 28, sur le meilleur chemin, la simulation donne un pic de 356 k€ avec les quatre bâtiments, 274 k€ avec deux, pour 300 k€ d'autorisation.",
     },
     {
       decision: 3,
@@ -143,7 +143,7 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Altaïr suffit pour cette année : un second marché, c'est un second trou de trésorerie.",
       ceQuiLeDejoue:
-        "Une fois le prêt et le compte courant en place, la moitié du lot tient sous l'autorisation (274 k€ de pic sous le hasard 28) et rapporte 7,2 k€ − 1,5 k€ = 5,7 k€ par semaine. Sans prêt, en revanche, refuser devient le bon choix : la prudence se juge au financement en place.",
+        "Une fois le prêt et le compte courant en place, la moitié du lot tient sous l'autorisation (274 k€ de pic sous l'aléa 28) et rapporte 7,2 k€ − 1,5 k€ = 5,7 k€ par semaine. Sans prêt, en revanche, refuser devient le bon choix : la prudence se juge au financement en place.",
     },
     {
       decision: 4,
@@ -157,17 +157,17 @@ export const FICHE: FicheEnseignant = {
       option: 0,
       pourquoi: "Reporter les LCR libère 70 k€ au moment du pic pour 600 € seulement.",
       ceQuiLeDejoue:
-        "Les primes sont un à-coup de deux semaines : sous le hasard 28, sur le meilleur chemin, la prévision donne un pic de 302 k€ en semaine 12, 2 k€ au-delà des 300 k€ d'autorisation et loin de la tolérance de 100 k€ ; le découvert réel plafonne à 299 k€, il suffit. Demander un report au fournisseur dont l'assureur vient de plafonner l'encours, c'est l'alerter : une fois sur deux, il suspend ses livraisons.",
+        "Les primes sont un à-coup de deux semaines : sous l'aléa 28, sur le meilleur chemin, la prévision donne un pic de 302 k€ en semaine 12, 2 k€ au-delà des 300 k€ d'autorisation et loin de la tolérance de 100 k€ ; le découvert réel plafonne à 299 k€, il suffit. Demander un report au fournisseur dont l'assureur vient de plafonner l'encours, c'est l'alerter : une fois sur deux, il suspend ses livraisons.",
     },
   ],
   debrief: [
     "En semaine 1, le marché Altaïr manquait-il de rentabilité ou d'argent ? Qu'est-ce qui, dans les sources, permettait de trancher avant de décider ?",
     "Le besoin créé par Altaïr disparaît-il quand Altaïr paie sa première situation, en semaine 13 ? Pourquoi « un décalage de quelques mois » est-il un diagnostic proche mais pas juste ?",
-    "Sous le hasard 28, la banque a accordé le relèvement du découvert à ceux qui l'ont demandé, et ils finissent presque au niveau du prêt (38,4 k€ contre 38,5 k€ au-dessus du budget). Sur 30 tirages, le relèvement finit pourtant 33 k€ en moyenne derrière le prêt : pourquoi la banque le refuse-t-elle le plus souvent, et que vaut une bonne issue obtenue par chance ?",
-    "Ceux qui ont continué à commander chez Valcourt « parce qu'il ne lâchera pas un client comme nous » finissent sous le hasard 28 à 30 k€ de la garantie de la holding : Valcourt a arrêté le chantier. Sur 30 tirages, cette option bat pourtant la garantie 13 fois, et rapporte 15 k€ de moins en moyenne : que gagne-t-on dans les 13 tirages favorables, que perd-on dans les 17 autres, et qu'est-ce que cette asymétrie dit de la décision ?",
+    "Sous l'aléa 28, la banque a accordé le relèvement du découvert à ceux qui l'ont demandé, et ils finissent presque au niveau du prêt (38,4 k€ contre 38,5 k€ au-dessus du budget). Sur 30 tirages, le relèvement finit pourtant 33 k€ en moyenne derrière le prêt : pourquoi la banque le refuse-t-elle le plus souvent, et que vaut une bonne issue obtenue par chance ?",
+    "Ceux qui ont continué à commander chez Valcourt « parce qu'il ne lâchera pas un client comme nous » finissent sous l'aléa 28 à 30 k€ de la garantie de la holding : Valcourt a arrêté le chantier. Sur 30 tirages, cette option bat pourtant la garantie 13 fois, et rapporte 15 k€ de moins en moyenne : que gagne-t-on dans les 13 tirages favorables, que perd-on dans les 17 autres, et qu'est-ce que cette asymétrie dit de la décision ?",
     "Pourquoi prendre la moitié du lot Clairval valait mieux que tout prendre, et pourquoi, sans prêt en semaine 1, le refuser devenait la meilleure réponse ?",
     "Le découvert était le mauvais outil en semaine 1 et le bon en semaine 11 : qu'est-ce qui a changé entre les deux besoins ?",
-    "Comparez votre résultat sous le hasard 28 à ce que vos décisions donnent en moyenne sur 30 tirages : avez-vous bien décidé, ou avez-vous eu de la chance ?",
+    "Comparez votre résultat sous l'aléa 28 à ce que vos décisions donnent en moyenne sur 30 tirages : avez-vous bien décidé, ou avez-vous eu de la chance ?",
   ],
   prolongement: {
     enonce:
@@ -179,7 +179,7 @@ export const FICHE: FicheEnseignant = {
     "Le BFR du marché est calculé en jours de chiffre d'affaires hors taxes, stock et crédit fournisseur pondérés par la part des achats dans le prix, puis converti en euros.",
     "La nature du besoin, structurel ou conjoncturel, est justifiée par sa durée et sa cause, pas par son montant.",
     "Chaque financement retenu est relié à la nature du besoin et à son effet sur le FRNG ou sur la trésorerie nette.",
-    "Les décisions sont justifiées par les sources consultées et par les chiffres, pas par le résultat obtenu sous le hasard 28.",
+    "Les décisions sont justifiées par les sources consultées et par les chiffres, pas par le résultat obtenu sous l'aléa 28.",
     "L'élève distingue, sur le bilan des 30 tirages, la qualité d'une décision de son issue.",
   ],
   vigilance:

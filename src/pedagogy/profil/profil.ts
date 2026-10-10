@@ -639,7 +639,7 @@ export function construireProfil(
     phrase:
       robMoy == null
         ? "Aucune décision encore observée."
-        : `${tiennent} de vos ${decisions.length} choix tiennent quand le hasard tourne mal.${
+        : `${tiennent} de vos ${decisions.length} choix tiennent quand les aléas tournent mal.${
             fragile && fragile.m.choisie.robustesse < 0.7
               ? ` Le plus exposé : ${fragile.numero}-D${fragile.m.d + 1}, « ${fragile.ep.etapes[fragile.m.d]!.options[fragile.m.choisie.option]!.t} ».`
               : ""

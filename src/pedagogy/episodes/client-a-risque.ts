@@ -180,7 +180,7 @@ export function axe([information, diagnostic, reflexe, calibrage, couvrir]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -448,7 +448,7 @@ export const EPISODE_CLIENT_A_RISQUE: Episode<Trimestre> = {
     titre: (t) => `Marge nette ${ecartAuBudget(t.objectif)}, risque payé`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge nette des ventes à crédit, pertes sur créances, dépréciations et coût des garanties déduits, en écart au budget, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge nette des ventes à crédit, pertes sur créances, dépréciations et coût des garanties déduits, en écart au budget, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const chantier = CHANTIER_HEBDO * SEMAINES_CHANTIER;
       return [

@@ -174,7 +174,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -394,7 +394,7 @@ export const EPISODE_ACHATS: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de marge, ${ecartAuBudget(t.objectif - BUDGET)}`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge de la famille sur le trimestre, livraisons non conformes, dépannages et ventes perdues compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge de la famille sur le trimestre, livraisons non conformes, dépannages et ventes perdues compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

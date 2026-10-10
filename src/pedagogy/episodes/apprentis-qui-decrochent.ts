@@ -217,7 +217,7 @@ export function axe([information, diagnostic, reflexe, calibrage, former]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -434,7 +434,7 @@ export const EPISODE_APPRENTIS: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de contribution, ${ecartAuBudget(t.objectif - BUDGET)}`,
     formatObjectif: kE,
     noteDesBarres:
-      "Contribution de la salle sur le trimestre, ruptures et remplacements compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Contribution de la salle sur le trimestre, ruptures et remplacements compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const ruptures = t.ruptures.length;
       return [
@@ -488,7 +488,7 @@ export const EPISODE_APPRENTIS: Episode<Trimestre> = {
           titre: "Les apprentis",
           texte:
             parties.length === 0
-              ? "Aucun n'a rompu son contrat au hasard du trimestre."
+              ? "Aucun n'a rompu son contrat au gré des aléas du trimestre."
               : `${majuscule(
                   parties
                     .map((r) => `${r.nom} en semaine ${r.semaine}`)

@@ -54,7 +54,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous projetez le bilan d'un élève et sa comparaison aux trente tirages. Vous faites constater que la bonne méthode bat les deux autres sur chacun des trente tirages, et que la broche est la seule décision où le hasard peut renverser le jugement. Vous posez la question de l'option qui trompe, absente ici, et faites chercher pourquoi.",
+        "Vous projetez le bilan d'un élève et sa comparaison aux trente tirages. Vous faites constater que la bonne méthode bat les deux autres sur chacun des trente tirages, et que la broche est la seule décision où les aléas peuvent renverser le jugement. Vous posez la question de l'option qui trompe, absente ici, et faites chercher pourquoi.",
     },
     {
       minutes: 15,
@@ -70,7 +70,7 @@ export const FICHE: FicheEnseignant = {
       "Marge sur coût variable unitaire de l'escalier : 5 600 − 2 800 = 2 800 € (taux de marge sur coût variable : 50 %).",
       "Source « Relever la charge de chaque poste de l'atelier » : seul le centre d'usinage est saturé, 48 heures demandées pour 38 disponibles ; c'est le facteur rare. La fiche de coût donne 7 heures de centre d'usinage par escalier (4 pour les limons, 3 pour les marches).",
       "Marge sur coût variable par heure de facteur rare : 2 800 / 7 = 400 € par heure de machine. Pour comparer : fenêtre 405 / 0,5 = 810 €, porte d'entrée 1 300 / 2 = 650 €.",
-      "Le résultat ne dépend pas du hasard : 400 € sous la graine 12 comme sous toutes les autres.",
+      "Le résultat ne dépend pas des aléas : 400 € sous la graine 12 comme sous toutes les autres.",
     ],
     erreurs: [
       {
@@ -153,7 +153,7 @@ export const FICHE: FicheEnseignant = {
     "L'escalier a la plus forte marge unitaire et le meilleur taux de marge : comment peut-il être la pièce qui paie le moins bien l'atelier ? Que mesure chacun des trois critères, et lequel convient quand une ressource est saturée ?",
     "Quel était le prix plancher de la porte palière ? Aurait-il été le même si le planning était resté au premier arrivé, premier servi (une heure de machine valait alors environ 591 €, soit un plancher d'environ 1 786 €) ?",
     "Le service comptable chiffre l'heure d'arrêt à 38 €, la contrôleuse de gestion à 400 € : qui a raison, et pourquoi le changement de broche un samedi, plus cher sur la facture, coûte-t-il moins que l'arrêt en semaine ?",
-    "Dans d'autres épisodes, une mauvaise option bat la meilleure un tirage sur trois. Ici, pour quatre décisions sur six, la meilleure option fait mieux que toutes les autres sur chacun des trente tirages : pourquoi le résultat récompense-t-il presque toujours la bonne décision ? Et à quelle décision le hasard pouvait-il encore renverser le jugement ?",
+    "Dans d'autres épisodes, une mauvaise option bat la meilleure un tirage sur trois. Ici, pour quatre décisions sur six, la meilleure option fait mieux que toutes les autres sur chacun des trente tirages : pourquoi le résultat récompense-t-il presque toujours la bonne décision ? Et à quelle décision les aléas pouvaient-ils encore renverser le jugement ?",
     "La méthode « raisonner par heure de machine » bat les deux autres sur les trente tirages, et finit pourtant une fois sous son budget. Sur le trimestre joué par la classe, le chemin de la marge par pièce portait 80 % de risque de voir partir l'artisan, qui est resté. Un bon résultat prouvait-il une bonne décision, et un résultat sous le budget une mauvaise ?",
     "Si la deuxième équipe avait porté la capacité au-delà des 48 heures demandées, le classement des produits et le prix plancher du bailleur auraient-ils changé ?",
   ],

@@ -184,7 +184,7 @@ export function axe([information, diagnostic, reflexe, calibrage, flux]: readonl
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -390,7 +390,7 @@ export const EPISODE_HEBERGEMENT: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, attentes et défauts compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de l'hébergement, attentes, défauts et effet de la note des avis compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de l'hébergement, attentes, défauts et effet de la note des avis compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

@@ -100,7 +100,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     expect(
       await page.getByRole("figure", { name: "Votre trimestre, semaine par semaine" }).count(),
     ).toBe(1);
-    expect(await page.getByText("Ce que le hasard vous a réservé").count()).toBe(1);
+    expect(await page.getByText("Ce que les aléas vous ont réservé").count()).toBe(1);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.close();
   }, 120_000);
@@ -146,7 +146,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     expect(await debordement(page)).toBeLessThanOrEqual(0);
 
     // Rejouer avec le même hasard ramène à la première décision…
-    await bouton(page, "Recommencer avec le même hasard").click();
+    await bouton(page, "Recommencer avec le même aléa").click();
     await expect
       .poll(() => page.getByRole("heading", { level: 1 }).textContent())
       .toBe("La transformation décroche");
@@ -173,7 +173,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
       await decider(page, option);
     }
     await expect.poll(() => page.getByText("Votre partie précédente, et celle-ci").count()).toBe(1);
-    expect(await page.getByText("Même hasard pour les deux parties").count()).toBe(1);
+    expect(await page.getByText("Même aléa pour les deux parties").count()).toBe(1);
     expect(await page.getByText("changé", { exact: true }).count()).toBe(6);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await contexte.close();
@@ -278,7 +278,7 @@ describe("les niveaux de difficulté", () => {
       await bouton(page, "Décider").click();
       await decider(page, option);
     }
-    await expect.poll(() => page.getByText(/niveau Expert · hasard n°/).count()).toBe(1);
+    await expect.poll(() => page.getByText(/niveau Expert · aléa n°/).count()).toBe(1);
     await page.close();
   }, 120_000);
 

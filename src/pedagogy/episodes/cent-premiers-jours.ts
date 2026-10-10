@@ -195,7 +195,7 @@ export function axe([information, diagnostic, reflexe, calibrage, adjoint]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -410,7 +410,7 @@ export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
   bilan: {
     titre: (t) => `${ecartAuBudget(t.objectif)}, dynamique laissée comprise`,
     formatObjectif: kE,
-    noteDesBarres: `Écart au budget de marge de l'agence, coûts, erreurs et départs compris, plus ce que la dynamique laissée rapporte ou coûte sur les ${SUITE} semaines suivantes, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.`,
+    noteDesBarres: `Écart au budget de marge de l'agence, coûts, erreurs et départs compris, plus ce que la dynamique laissée rapporte ou coûte sur les ${SUITE} semaines suivantes, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.`,
     tuiles(t) {
       const net = t.marge - t.couts;
       return [

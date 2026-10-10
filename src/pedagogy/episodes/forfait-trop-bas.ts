@@ -184,7 +184,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -388,7 +388,7 @@ export const EPISODE_COUT_DU_JOUR: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de marge des forfaits, ${auBudget(t.objectif)}`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge des forfaits : réalisée sur ceux en cours, à terminaison et au coût réel des jours sur ceux signés de janvier à mars, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge des forfaits : réalisée sur ceux en cours, à terminaison et au coût réel des jours sur ceux signés de janvier à mars, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

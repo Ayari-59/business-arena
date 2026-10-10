@@ -190,7 +190,7 @@ export function axe([information, diagnostic, reflexe, calibrage, circuit]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions : d'autres sorties, une autre réponse de l'hôpital, une grippe qui s'étend ou non. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : d'autres sorties, une autre réponse de l'hôpital, une grippe qui s'étend ou non. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -432,7 +432,7 @@ export const EPISODE_ADMISSIONS: Episode<Trimestre> = {
       `${kE(t.objectif)} de recettes, coûts déduits, printemps compris : ${kESigne(t.printemps)} sur un printemps à 91 %`,
     formatObjectif: kE,
     noteDesBarres:
-      "Recettes d'hébergement et de dépendance du trimestre, moins les mesures et les admissions inadaptées, plus l'effet estimé sur avril à juin, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Recettes d'hébergement et de dépendance du trimestre, moins les mesures et les admissions inadaptées, plus l'effet estimé sur avril à juin, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

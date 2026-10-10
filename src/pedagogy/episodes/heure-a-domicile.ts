@@ -174,7 +174,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -370,7 +370,7 @@ export const EPISODE_HEURE_DOMICILE: Episode<Trimestre> = {
       `Exercice projeté : ${kE(t.objectif)}, pour ${kE(RESULTAT_AN_DERNIER)} l'an dernier`,
     formatObjectif: kE,
     noteDesBarres:
-      "Résultat de l'exercice du service tel qu'on l'estime fin juin (premier trimestre, avril à juin, puis juillet à décembre au rythme de fin juin, majoration du CPOM et été compris), sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Résultat de l'exercice du service tel qu'on l'estime fin juin (premier trimestre, avril à juin, puis juillet à décembre au rythme de fin juin, majoration du CPOM et été compris), sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

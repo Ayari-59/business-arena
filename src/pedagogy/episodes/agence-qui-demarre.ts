@@ -193,7 +193,7 @@ export function axe([information, diagnostic, prix, calibrage, domaine]: readonl
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -426,7 +426,7 @@ export const EPISODE_LANCEMENT: Episode<Trimestre> = {
     titre: (t) => `${ecartAuPlan(t.objectif)}, acquisition et stock compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au plan d'affaires de l'agence, marge moins coûts d'acquisition, de service et de stock, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au plan d'affaires de l'agence, marge moins coûts d'acquisition, de service et de stock, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

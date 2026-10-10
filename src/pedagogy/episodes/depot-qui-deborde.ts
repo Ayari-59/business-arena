@@ -166,7 +166,7 @@ export function axe([information, diagnostic, reflexe, calibrage, stockReel]: re
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -372,7 +372,7 @@ export const EPISODE_DEPOT: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, ruptures et saturation comprises`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget du dépôt, possession du stock, marge perdue sur les ruptures, saturation et dépenses comprises, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget du dépôt, possession du stock, marge perdue sur les ruptures, saturation et dépenses comprises, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

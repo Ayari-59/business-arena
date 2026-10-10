@@ -214,7 +214,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -437,7 +437,7 @@ export const EPISODE_DLC: Episode<Trimestre> = {
       `${kE(t.trimestre)} de marge nette sur le trimestre, ${signe(t.suite)} attendus sur l'automne`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge sur coût variable du trimestre, moins la casse nette, les pénalités logistiques, les changements de série et les samedis, plus l'effet attendu sur l'automne, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge sur coût variable du trimestre, moins la casse nette, les pénalités logistiques, les changements de série et les samedis, plus l'effet attendu sur l'automne, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const septembre = serviceSeptembre(t);
       return [

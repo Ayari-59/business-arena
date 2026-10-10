@@ -193,7 +193,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -455,7 +455,7 @@ export const EPISODE_POLYVALENCE: Episode<Trimestre> = {
       `${kE(t.objectif)} : ${heures(t.perdues)} perdues faute de conducteur qualifié, ${nombre(t.qualifiesFinal)} conducteurs capables de régler la ligne 5`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur estimée à la semaine 13 : la polyvalence acquise pour le printemps, moins ce qu'ont coûté les heures perdues, les heures majorées, les mesures et les lots bloqués, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur estimée à la semaine 13 : la polyvalence acquise pour le printemps, moins ce qu'ont coûté les heures perdues, les heures majorées, les mesures et les lots bloqués, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

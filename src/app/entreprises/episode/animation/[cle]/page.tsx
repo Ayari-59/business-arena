@@ -153,7 +153,7 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
                 <p className="max-w-2xl text-sm text-slate-400">
                   Les premières parties seulement, hors Découverte. La répartition s&apos;affiche à
                   partir de {SEUIL_D_ANONYMAT} joueurs. Pour un débrief, faites jouer tout le groupe
-                  sous le même hasard avec le lien indiqué.
+                  sous le même aléa avec le lien indiqué.
                 </p>
                 {vue.episodes.length === 0 && (
                   <p className="text-sm text-slate-300">Aucun épisode joué pour l&apos;instant.</p>

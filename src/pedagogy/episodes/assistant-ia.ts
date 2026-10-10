@@ -186,7 +186,7 @@ export function axe([information, diagnostic, reflexe, calibrage, vente]: readon
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -424,7 +424,7 @@ export const EPISODE_IA: Episode<Trimestre> = {
       `${kE(t.objectif)} : marge du trimestre, incidents déduits, contrats repensés compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge du trimestre, moins les incidents, plus la valeur des contrats repensés pour leurs douze premiers mois, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge du trimestre, moins les incidents, plus la valeur des contrats repensés pour leurs douze premiers mois, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

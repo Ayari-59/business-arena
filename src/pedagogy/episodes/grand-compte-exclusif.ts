@@ -228,7 +228,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -486,7 +486,7 @@ export const EPISODE_EXCLUSIVITE: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur détruite, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur créée par les décisions du trimestre : la valeur actuelle, au taux du groupe, de tout ce qu'elles ont engagé, recalculée avec ce que le trimestre a révélé, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur créée par les décisions du trimestre : la valeur actuelle, au taux du groupe, de tout ce qu'elles ont engagé, recalculée avec ce que le trimestre a révélé, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const contrat = t.statut !== "lestrade";
       const d1 = t.chemin[D.reponse];

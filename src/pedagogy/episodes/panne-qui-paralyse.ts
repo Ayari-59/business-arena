@@ -177,7 +177,7 @@ export function axe([information, diagnostic, reflexe, calibrage, duree]: readon
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -387,7 +387,7 @@ export const EPISODE_CRISE: Episode<Trimestre> = {
     titre: (t) => `${impact(t.objectif)}, coûts de la crise compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart à la marge d'un trimestre normal, coûts de la crise compris (prestataires, heures, remises, ventes jamais facturées, clients partis), sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart à la marge d'un trimestre normal, coûts de la crise compris (prestataires, heures, remises, ventes jamais facturées, clients partis), sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

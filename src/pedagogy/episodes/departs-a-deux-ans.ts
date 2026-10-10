@@ -177,7 +177,7 @@ export function axe([information, diagnostic, reflexe, calibrage, segments]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -418,7 +418,7 @@ export const EPISODE_TURNOVER: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de surcoût net sur l'année, estimé en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Économie nette sur l'année : le coût des départs évités par rapport au rythme de l'an dernier, moins le coût des mesures et les pertes du trimestre, estimée en semaine 13 sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Économie nette sur l'année : le coût des départs évités par rapport au rythme de l'an dernier, moins le coût des mesures et les pertes du trimestre, estimée en semaine 13 sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const reference = departsDeReference(1, SEMAINES);
       return [

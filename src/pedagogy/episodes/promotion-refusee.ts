@@ -190,7 +190,7 @@ export function axe([information, diagnostic, reflexe, calibrage, decision]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -421,7 +421,7 @@ export const EPISODE_EVALUATION: Episode<Trimestre> = {
       }`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur de l'équipe : la contribution du trimestre, moins ce que les décisions engagent pour l'année suivante (démissions, compensations, promesses, manager mal préparé), sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur de l'équipe : la contribution du trimestre, moins ce que les décisions engagent pour l'année suivante (démissions, compensations, promesses, manager mal préparé), sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const compense = t.decouverte !== null;
       return [

@@ -191,7 +191,7 @@ export function axe([information, diagnostic, reflexe, calibrage, perimetre]: re
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -420,7 +420,7 @@ export const EPISODE_PERIMETRE: Episode<Trimestre> = {
       `${kE(t.objectif)} : ${kE(t.marge)} de marge à terminaison, ${kE(t.valeurSuite)} de suite espérée`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge à terminaison de la mission plus valeur espérée de la mission suivante, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge à terminaison de la mission plus valeur espérée de la mission suivante, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

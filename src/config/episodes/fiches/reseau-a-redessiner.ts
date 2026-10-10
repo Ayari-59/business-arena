@@ -32,13 +32,13 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/reseau-a-redessiner?hasard=22 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous précisez seulement que le comité juge le trimestre sur la valeur créée estimée, cinq ans de marge au taux du groupe, et vous demandez de noter, à chaque décision, le chiffre qui l'a emportée.",
+        "Vous envoyez le lien /entreprises/episode/reseau-a-redessiner?hasard=22 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous précisez seulement que le comité juge le trimestre sur la valeur créée estimée, cinq ans de marge au taux du groupe, et vous demandez de noter, à chaque décision, le chiffre qui l'a emportée.",
     },
     {
       minutes: 40,
       titre: "Jeu",
       detail:
-        "Les élèves jouent les six décisions, de la semaine 1 à la semaine 10. Vous circulez sans répondre et relevez au tableau, sans commentaire, la marge incrémentale saisie en semaine 1 et l'option retenue pour Mions, pour Bron et pour Villeurbanne-Nord. Ceux qui finissent tôt rejouent les mêmes décisions sous un autre hasard et notent l'écart.",
+        "Les élèves jouent les six décisions, de la semaine 1 à la semaine 10. Vous circulez sans répondre et relevez au tableau, sans commentaire, la marge incrémentale saisie en semaine 1 et l'option retenue pour Mions, pour Bron et pour Villeurbanne-Nord. Ceux qui finissent tôt rejouent les mêmes décisions sous un autre aléa et notent l'écart.",
     },
     {
       minutes: 15,
@@ -56,7 +56,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des trente tirages",
       detail:
-        "Prévenez la classe : le hasard pèse très lourd dans cet épisode. Sous le hasard n° 22, la zone est votée, mais Talvère s'installe malgré le comptoir (trois chances sur dix) et 41 % seulement des clients de Bron auraient suivi : la bonne méthode y crée 304 k€, 14e tirage sur 30, au-dessus de l'objectif de 150 k€, pour 360 en moyenne (689 k€ quand la zone est votée, 31 k€ quand elle ne l'est pas). Vous faites comparer, décision par décision, le résultat obtenu et ce que chaque option vaut sur les trente tirages, en commençant par Bron, puis par les contrats annuels, qui font 85 k€ de mieux sous ce hasard et 32 k€ de moins en moyenne.",
+        "Prévenez la classe : les aléas pèsent très lourd dans cet épisode. Sous l'aléa n° 22, la zone est votée, mais Talvère s'installe malgré le comptoir (trois chances sur dix) et 41 % seulement des clients de Bron auraient suivi : la bonne méthode y crée 304 k€, 14e tirage sur 30, au-dessus de l'objectif de 150 k€, pour 360 en moyenne (689 k€ quand la zone est votée, 31 k€ quand elle ne l'est pas). Vous faites comparer, décision par décision, le résultat obtenu et ce que chaque option vaut sur les trente tirages, en commençant par Bron, puis par les contrats annuels, qui font 85 k€ de mieux sous cet aléa et 32 k€ de moins en moyenne.",
     },
     {
       minutes: 15,
@@ -71,7 +71,7 @@ export const FICHE: FicheEnseignant = {
       "D'après « Lire l'étude de zone du cabinet », une agence complète à Mions ferait 2,6 M€ de chiffre d'affaires à maturité, pour 380 k€ de coûts fixes propres par an ; le taux de marge sur coûts variables du réseau est de 24 %.",
       "D'après « Croiser les adresses de livraison et les comptes clients de la zone », les clients de la zone font déjà 1,2 M€ chez Arvel (0,8 M€ à Saint-Priest, 0,4 M€ à Vénissieux), et une agence ouverte à proximité en reprend les trois quarts : 0,75 × 1,2 = 0,9 M€.",
       "Chiffre d'affaires vraiment nouveau pour le réseau : 2,6 − 0,9 = 1,7 M€ ; marge sur coûts variables incrémentale : 24 % × 1,7 M€ = 408 k€.",
-      "Marge incrémentale annuelle : 408 − 380 = 28 k€. Les 350 k€ de travaux sont un investissement, hors de la marge annuelle ; le calcul est fait hors zone d'aménagement et sans Talvère, et ne dépend pas du hasard. L'épisode le juge juste à 8 k€ près, proche à 25 k€.",
+      "Marge incrémentale annuelle : 408 − 380 = 28 k€. Les 350 k€ de travaux sont un investissement, hors de la marge annuelle ; le calcul est fait hors zone d'aménagement et sans Talvère, et ne dépend pas des aléas. L'épisode le juge juste à 8 k€ près, proche à 25 k€.",
       "Contrôle : le compte d'exploitation de l'étude affiche 24 % × 2,6 M€ − 380 = 244 k€ ; l'écart de 216 k€ est la marge des 0,9 M€ repris aux voisines (24 % × 0,9 M€). Le comptoir ajoute 24 % × (1,35 − 0,6) − 140 = 40 k€ par an, plus que l'agence, pour 80 k€ de travaux au lieu de 350.",
     ],
     erreurs: [
@@ -139,17 +139,17 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Chacun reste responsable de son compte ; neutraliser ou mutualiser, c'est payer des primes sur un chiffre qu'on n'a pas fait.",
       ceQuiLeDejoue:
-        "Sous le hasard n° 22, 1 145 k€ de chiffre passeront d'un site Arvel à un autre : jugés chacun sur son agence, les directeurs se le disputent pour 4,5 %, soit 52 k€, contre 0,6 % et 7 k€ avec une part de la prime sur le bassin. Sur les 30 tirages, 316 k€ contre 360 k€.",
+        "Sous l'aléa n° 22, 1 145 k€ de chiffre passeront d'un site Arvel à un autre : jugés chacun sur son agence, les directeurs se le disputent pour 4,5 %, soit 52 k€, contre 0,6 % et 7 k€ avec une part de la prime sur le bassin. Sur les 30 tirages, 316 k€ contre 360 k€.",
     },
   ],
   debrief: [
     "L'étude de zone affiche 244 k€ de résultat par an pour l'agence de Mions, le calcul en donne 28. Qu'est-ce que le compte d'exploitation d'un site compte comme nouveau qui ne l'est pas pour le réseau ? Pourquoi le comptoir, plus petit, ajoute-t-il davantage (40 k€ pour 80 k€ de travaux) ?",
     "Un comptoir de 80 k€ fait renoncer Talvère deux fois sur trois ; une baisse de prix de 100 k€ ne la détourne pas, et ne lui retire qu'un point de part si elle vient. Qu'est-ce qui rend un engagement crédible aux yeux d'un concurrent ? Pourquoi un format léger, qui pourra devenir l'agence de la zone si le vote est positif, vaut-il mieux qu'une agence complète sous une demande à une chance sur deux ?",
     "Bron est à −60 k€ dans le classement et contribue pour +120 k€ au réseau : que deviennent ses 180 k€ de frais de siège si elle ferme ? Qui, dans la classe, a fermé sur le classement, et quelle part du chiffre fallait-il voir suivre à Saint-Priest pour que la fermeture paie ?",
-    "Le test de Bron coûte 25 k€ et ne fait fermer l'agence que 9 fois sur 30 : garder Bron telle quelle le bat sur 23 tirages sur 30, et fait pourtant 27 k€ de moins en moyenne. Sous le hasard n° 22, 41 % seulement du chiffre aurait suivi, le test a conclu à garder l'agence, et garder d'emblée a fait 25 k€ de mieux. Le bilan juge les deux choix bons : garder est l'option la plus sûre (son pire cas est meilleur), et 27 k€ restent un prix défendable au regard de l'enjeu. Lequel préférer ? Qu'achète-t-on avec 25 k€ d'information, et que rapporte-t-elle les fois où elle fait fermer (de 97 à 318 k€, sauf deux fois où un concurrent a repris le local) ?",
+    "Le test de Bron coûte 25 k€ et ne fait fermer l'agence que 9 fois sur 30 : garder Bron telle quelle le bat sur 23 tirages sur 30, et fait pourtant 27 k€ de moins en moyenne. Sous l'aléa n° 22, 41 % seulement du chiffre aurait suivi, le test a conclu à garder l'agence, et garder d'emblée a fait 25 k€ de mieux. Le bilan juge les deux choix bons : garder est l'option la plus sûre (son pire cas est meilleur), et 27 k€ restent un prix défendable au regard de l'enjeu. Lequel préférer ? Qu'achète-t-on avec 25 k€ d'information, et que rapporte-t-elle les fois où elle fait fermer (de 97 à 318 k€, sauf deux fois où un concurrent a repris le local) ?",
     "À Villeurbanne-Nord, le point de retrait dépassait son plan d'environ 40 %. Pourquoi ce signal, lu seul, poussait-il à lancer l'agence, et pourquoi, croisé avec les comptes clients, poussait-il à y renoncer ? Qu'est-ce qui rend difficile de revenir sur une décision de juin, bail signé et permis obtenu ?",
     "Pourquoi la règle des primes des directeurs d'agence fait-elle partie de la stratégie du réseau ? Que se passe-t-il quand chaque directeur est jugé sur un compte que le nouveau site cannibalise ?",
-    "Sous le hasard n° 22, la bonne méthode a créé 304 k€, au-dessus de l'objectif de 150 k€ ; sur les 30 tirages, elle en crée 360 en moyenne, de −199 à 1 081 k€ selon le vote de la zone et la décision de Talvère. Le réflexe du comité a créé 124 k€ sous ce hasard, l'attentisme a détruit 65 k€. Que conclure d'un binôme qui a acheté le terrain et fait autant que la méthode parce que la zone a été votée, ou de celui qui a signé les contrats et gagné 85 k€ de plus parce que Talvère est venue ? Sur quoi juge-t-on une décision stratégique, si ce n'est sur le résultat d'un trimestre ?",
+    "Sous l'aléa n° 22, la bonne méthode a créé 304 k€, au-dessus de l'objectif de 150 k€ ; sur les 30 tirages, elle en crée 360 en moyenne, de −199 à 1 081 k€ selon le vote de la zone et la décision de Talvère. Le réflexe du comité a créé 124 k€ sous cet aléa, l'attentisme a détruit 65 k€. Que conclure d'un binôme qui a acheté le terrain et fait autant que la méthode parce que la zone a été votée, ou de celui qui a signé les contrats et gagné 85 k€ de plus parce que Talvère est venue ? Sur quoi juge-t-on une décision stratégique, si ce n'est sur le résultat d'un trimestre ?",
   ],
   prolongement: {
     enonce:
@@ -162,7 +162,7 @@ export const FICHE: FicheEnseignant = {
     "La décision sur Bron distingue les coûts fixes propres, qui disparaissent, des frais communs, qui restent, et s'appuie sur la part du chiffre qui doit suivre pour que la fermeture paie.",
     "Le choix du format à Mions et la réponse à Talvère sont justifiés par la demande incertaine et par la crédibilité de l'engagement, chiffres des sources à l'appui.",
     "L'élève dit ce que vaut l'information du test de Bron et pourquoi il a, ou non, révisé le plan de Villeurbanne-Nord au vu des comptes clients.",
-    "L'élève distingue, sur le bilan des trente tirages, la qualité d'une décision de son résultat sous le hasard de la classe.",
+    "L'élève distingue, sur le bilan des trente tirages, la qualité d'une décision de son résultat sous l'aléa de la classe.",
   ],
   vigilance:
     "La valeur d'une position est comptée sur cinq ans de marge actualisés à 8 %, sans valeur terminale, alors que le bail d'une agence court neuf ans et que la zone est donnée « pour dix ans » : un autre horizon changerait les montants, et peut-être certains écarts. Les fréquences de Talvère et la « chance sur deux » du vote sont traitées comme des probabilités connues, et l'entrée du concurrent comme un tirage qui dépend de la présence d'Arvel, non comme le choix d'un rival qui anticipe : un enseignant de stratégie voudra le signaler.",

@@ -174,7 +174,7 @@ export function axe([information, diagnostic, reflexe, calibrage, souplesse]: re
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -403,7 +403,7 @@ export const EPISODE_LOUER_ACHETER: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, valeur du parc comprise`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de marge d'Arvel Location, valeur du parc comprise, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de marge d'Arvel Location, valeur du parc comprise, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const excedentaires = t.excedentairesMP + t.excedentairesNA;
       return [

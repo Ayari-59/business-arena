@@ -178,7 +178,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -427,7 +427,7 @@ export const EPISODE_REALISATION: Episode<Trimestre> = {
       }`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge des missions du bureau, intercontrat, sous-traitance, frais et pénalités compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge des missions du bureau, intercontrat, sous-traitance, frais et pénalités compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const echeance = t.avenant === "signe" ? KERVALAN.echeanceAvenant : KERVALAN.echeance;
       return [

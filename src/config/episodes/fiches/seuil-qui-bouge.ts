@@ -21,7 +21,7 @@ export const FICHE: FicheEnseignant = {
     "Je sépare les charges d'un compte de résultat en charges variables et charges fixes, et j'en tire la marge sur coût variable et son taux.",
     "Je calcule un seuil de rentabilité en chiffre d'affaires et en volume, une marge de sécurité et un levier opérationnel.",
     "Je mesure ce qu'une charge fixe ajoutée ou une baisse de prix fait au seuil et au résultat dans le scénario de demande le plus bas.",
-    "Je distingue la qualité d'une décision du résultat qu'elle a obtenu sous un hasard donné.",
+    "Je distingue la qualité d'une décision du résultat qu'elle a obtenu sous un aléa donné.",
   ],
   prerequis:
     "La distinction entre charges variables et charges fixes, la marge sur coût variable et le calcul du seuil de rentabilité doivent avoir été vus en cours ; la marge de sécurité et le levier opérationnel peuvent être introduits pendant la séance.",
@@ -31,7 +31,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/seuil-qui-bouge?hasard=12 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous demandez de noter sur papier, avant de saisir la prévision de la semaine 1, le calcul du seuil de rentabilité mensuel, et le choix fait à chacune des six décisions.",
+        "Vous envoyez le lien /entreprises/episode/seuil-qui-bouge?hasard=12 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous demandez de noter sur papier, avant de saisir la prévision de la semaine 1, le calcul du seuil de rentabilité mensuel, et le choix fait à chacune des six décisions.",
     },
     {
       minutes: 40,
@@ -55,7 +55,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des trente tirages",
       detail:
-        "Vous projetez le bilan d'un élève qui accepte de le montrer, et vous lisez avec la classe le rejeu de chaque décision sous trente hasards. Vous prévenez : le résultat de cet épisode est très bruité, la trajectoire de la demande pèse plus que toutes les décisions réunies, et presque personne ne tient le budget de 31,5 k€. C'est le moment de séparer la qualité d'une décision de son résultat, en partant de la contre-proposition à −4 %.",
+        "Vous projetez le bilan d'un élève qui accepte de le montrer, et vous lisez avec la classe le rejeu de chaque décision sous trente aléas. Vous prévenez : le résultat de cet épisode est très bruité, la trajectoire de la demande pèse plus que toutes les décisions réunies, et presque personne ne tient le budget de 31,5 k€. C'est le moment de séparer la qualité d'une décision de son résultat, en partant de la contre-proposition à −4 %.",
     },
     {
       minutes: 10,
@@ -70,7 +70,7 @@ export const FICHE: FicheEnseignant = {
       "Charges variables du premier mois (source « Reprendre le compte de résultat du premier mois, charges fixes et variables séparées ») : achats des marchandises vendues 203 500 € + préparation par l'intérim au coup par coup 11 000 € + chariot loué à l'heure 2 750 € + encaissement, film et palettes perdues 2 750 € = 220 000 €, soit 200 € par retrait.",
       "Marge sur coût variable : 275 000 − 220 000 = 55 000 €, soit 50 € par retrait ; taux de marge sur coût variable : 55 000 / 275 000 = 20 %.",
       "Charges fixes du mois : convention d'occupation précaire 16 000 € + salaires de l'équipe permanente 21 000 € + énergie, informatique et assurances 4 500 € + amortissements 6 500 € = 48 000 €. Contrôle : 55 000 − 48 000 = 7 000 €, le résultat du compte.",
-      "Seuil de rentabilité mensuel : charges fixes / taux de marge sur coût variable = 48 000 / 0,20 = 240 000 € de chiffre d'affaires, soit 240 k€ ; en volume, 48 000 / 50 = 960 retraits par mois, environ 222 par semaine. Le calcul ne dépend pas du hasard.",
+      "Seuil de rentabilité mensuel : charges fixes / taux de marge sur coût variable = 48 000 / 0,20 = 240 000 € de chiffre d'affaires, soit 240 k€ ; en volume, 48 000 / 50 = 960 retraits par mois, environ 222 par semaine. Le calcul ne dépend pas des aléas.",
       "Pour la suite : marge de sécurité = 275 000 − 240 000 = 35 000 €, soit un indice de sécurité de 12,7 % ; levier opérationnel = 55 000 / 7 000 ≈ 7,9.",
     ],
     erreurs: [
@@ -152,8 +152,8 @@ export const FICHE: FicheEnseignant = {
     "En semaine 1, certains ont vu un problème de volume, d'autres un problème de structure. Lequel des deux Rachid pouvait-il décider ? Que reste-t-il à faire quand le volume ne se commande pas ?",
     "Le loyer fixe est le moins cher au volume du plan et donne pourtant le seuil le plus haut des trois. Comment un loyer indexé peut-il baisser le seuil alors qu'il réduit le taux de marge sur coût variable ?",
     "Ceux qui ont baissé tous leurs prix ont vu Brenaz répondre par une baisse plus forte. Sans cette réponse, la décision aurait-elle été bonne ? Combien de retraits en plus fallait-il pour garder la même marge ?",
-    "Sous le hasard de la classe, la contre-proposition à −4 % a été acceptée, et, toutes choses égales par ailleurs, ceux qui l'ont faite finissent environ 1,6 k€ au-dessus de ceux qui ont accepté −8 %. Sur les trente tirages, elle fait mieux 15 fois sur 30, et pourtant elle perd 1,4 k€ en moyenne : pourquoi ? (Avec la structure de la meilleure méthode, un retrait à −4 % laisse 47,24 € contre 35,48 € à −8 % ; mais une fois sur deux Bâtir part, et la moitié de 47,24 € ne vaut que 23,62 €.) Le bilan la classe en « Chance » : qu'est-ce que cela veut dire ?",
-    "La meilleure méthode finit à environ 4 k€ sous le budget sous le hasard 12, mais, en écart au budget, entre −54 k€ et +21 k€ selon les trente tirages, quand l'écart moyen avec la structure du plan est de 38 k€. Si l'on comparait deux directeurs de drive sur leur seul résultat, sous deux hasards différents, que jugerait-on ?",
+    "Sous l'aléa de la classe, la contre-proposition à −4 % a été acceptée, et, toutes choses égales par ailleurs, ceux qui l'ont faite finissent environ 1,6 k€ au-dessus de ceux qui ont accepté −8 %. Sur les trente tirages, elle fait mieux 15 fois sur 30, et pourtant elle perd 1,4 k€ en moyenne : pourquoi ? (Avec la structure de la meilleure méthode, un retrait à −4 % laisse 47,24 € contre 35,48 € à −8 % ; mais une fois sur deux Bâtir part, et la moitié de 47,24 € ne vaut que 23,62 €.) Le bilan la classe en « Chance » : qu'est-ce que cela veut dire ?",
+    "La meilleure méthode finit à environ 4 k€ sous le budget sous l'aléa 12, mais, en écart au budget, entre −54 k€ et +21 k€ selon les trente tirages, quand l'écart moyen avec la structure du plan est de 38 k€. Si l'on comparait deux directeurs de drive sur leur seul résultat, sous deux aléas différents, que jugerait-on ?",
     "Le budget de 31,5 k€ était bâti sur 270 retraits par semaine, et aucune des trois méthodes du bilan ne l'atteint en moyenne. Que dit cet écart du budget lui-même, et de la façon d'évaluer celui qui doit le tenir ?",
     "Quelle charge fixe gardez-vous, et à quelle condition ? Formulez la règle en une phrase, avec le scénario bas dedans.",
   ],
@@ -168,7 +168,7 @@ export const FICHE: FicheEnseignant = {
     "La marge de sécurité et le levier opérationnel sont calculés et traduits en risque : ce que coûte au résultat une baisse de 10 % du chiffre d'affaires.",
     "Chaque engagement d'une charge fixe est justifié par un calcul au volume probable et dans le scénario bas, pas seulement au volume du plan.",
     "Le volume supplémentaire de Bâtir Nord-Isère est jugé sur sa marge sur coût variable, en tenant compte de la structure déjà choisie.",
-    "L'élève sait dire si une décision était bonne indépendamment du résultat obtenu sous le hasard de la classe, en s'appuyant sur le rejeu des trente tirages.",
+    "L'élève sait dire si une décision était bonne indépendamment du résultat obtenu sous l'aléa de la classe, en s'appuyant sur le rejeu des trente tirages.",
   ],
   vigilance:
     "L'épisode appelle « marge de sécurité » le rapport (chiffre d'affaires − seuil) / chiffre d'affaires, que la plupart des manuels nomment indice de sécurité, la marge de sécurité s'exprimant en euros : à préciser aux élèves. Les redevances de crédit-bail et le loyer fixe y sont traités comme des charges fixes du compte de résultat, sans retraitement en immobilisation.",

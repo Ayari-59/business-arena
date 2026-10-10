@@ -220,7 +220,7 @@ export const ETAPES: readonly Etape[] = [
     sources: [
       {
         id: "echantillon",
-        titre: "Appeler soi-même cinq inscrits tirés au hasard",
+        titre: "Appeler soi-même cinq inscrits tirés au sort",
         cout: 0.5,
         nature: "decisive",
         resultat:

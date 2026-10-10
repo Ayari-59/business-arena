@@ -198,7 +198,7 @@ export function axe([information, diagnostic, reflexe, calibrage, etapes]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -485,7 +485,7 @@ export const EPISODE_RECONVERSION: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur perdue, trimestre suivant compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur du trimestre, en euros : le résultat de la practice de septembre à novembre, moins les départs, plus la marge du carnet de décarbonation constitué, moins l'intercontrat attendu de décembre à février, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur du trimestre, en euros : le résultat de la practice de septembre à novembre, moins les départs, plus la marge du carnet de décarbonation constitué, moins l'intercontrat attendu de décembre à février, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const subis = t.departs.filter((x) => x.nature === "subi").length;
       return [

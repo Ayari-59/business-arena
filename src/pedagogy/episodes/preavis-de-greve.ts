@@ -221,7 +221,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -490,7 +490,7 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
     titre: (t) => `${ecartALEnveloppe(t.objectif)}, grèves et climat laissé compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart à l'enveloppe de la négociation, mesures accordées sur l'année, grèves, clients perdus et climat laissé compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart à l'enveloppe de la négociation, mesures accordées sur l'année, grèves, clients perdus et climat laissé compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

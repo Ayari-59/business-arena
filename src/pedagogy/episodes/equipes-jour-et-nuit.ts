@@ -195,7 +195,7 @@ export function axe([information, diagnostic, reflexe, calibrage, communs]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -455,7 +455,7 @@ export const EPISODE_JOUR_NUIT: Episode<Trimestre> = {
     titre: (t) => `Coût du trimestre : ${kE(t.cout)}, ${ecartALEnveloppe(t.objectif)}`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart à l'enveloppe du trimestre, heures, nuits remplacées, départs et événements indésirables compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart à l'enveloppe du trimestre, heures, nuits remplacées, départs et événements indésirables compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

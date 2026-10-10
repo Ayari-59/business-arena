@@ -32,10 +32,10 @@ function partieAuHasard(i: number): PartieJouee {
 describe("la place du tirage", () => {
   it("dit le fait, puis le mot qui le résume", () => {
     expect(lectureDuTirage(1, 30)).toBe(
-      "Avec vos choix, votre trimestre est le meilleur sur 30 tirages du hasard : vous avez eu de la chance.",
+      "Avec vos choix, votre trimestre est le meilleur sur 30 tirages des aléas : vous avez eu de la chance.",
     );
     expect(lectureDuTirage(10, 30)).toMatch(/le 10e sur 30 .* un peu de chance/);
-    expect(lectureDuTirage(15, 30)).toMatch(/un hasard ordinaire/);
+    expect(lectureDuTirage(15, 30)).toMatch(/des aléas ordinaires/);
     expect(lectureDuTirage(22, 30)).toMatch(/un peu de malchance/);
     expect(lectureDuTirage(30, 30)).toMatch(/le 30e sur 30 .* de la malchance/);
   });
@@ -51,7 +51,7 @@ describe("les blocs du retour, sur des parties variées de tous les épisodes", 
       const { mesures } = observer(ep, partieAuHasard(i));
       const phrases = phrasesDeRobustesse(ep, mesures);
       expect(phrases[0], ep.code).toMatch(/^\d de vos 6 choix tiennent/);
-      expect(phrases.at(-1), ep.code).toMatch(/sur 30 tirages du hasard/);
+      expect(phrases.at(-1), ep.code).toMatch(/sur 30 tirages des aléas/);
       for (const p of phrases.slice(1, -1)) expect(p, ep.code).toMatch(/D\d|Le plus coûteux : D\d/);
       for (const p of phrases) expect(p).not.toMatch(interdits);
     }

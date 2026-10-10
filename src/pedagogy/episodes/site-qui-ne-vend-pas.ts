@@ -177,7 +177,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -433,7 +433,7 @@ export const EPISODE_NUMERIQUE: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, coûts compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de contribution du site — marge des ventes en ligne et des achats d'appoint au comptoir, moins publicité, développement, remises et primes — sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de contribution du site — marge des ventes en ligne et des achats d'appoint au comptoir, moins publicité, développement, remises et primes — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const conversionFinale = t.semaines[13]!.conversion;
       return [

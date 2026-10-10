@@ -197,7 +197,7 @@ export function axe([information, diagnostic, reflexe, calibrage, former]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -436,7 +436,7 @@ export const EPISODE_VAE: Episode<Trimestre> = {
       `${kE(t.objectif)} de valeur nette : ${nombre(t.diplomes, 0)} diplômés attendus, ${kE(t.coutVacance)} d'intérim et d'heures supplémentaires`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur estimée à la semaine 13 : diplômés attendus et soignants retenus, moins le coût des postes vacants, des parcours et des incidents, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur estimée à la semaine 13 : diplômés attendus et soignants retenus, moins le coût des postes vacants, des parcours et des incidents, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const graves = t.evenements.filter((w) => w >= 5).length;
       return [

@@ -186,7 +186,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -392,7 +392,7 @@ export const EPISODE_CUISINE_CENTRALE: Episode<Trimestre> = {
         : `${kE(t.objectif)} : le laboratoire a coûté plus qu'il n'a économisé`,
     formatObjectif: kES,
     noteDesBarres:
-      "Économie nette du laboratoire sur le trimestre — achats, heures et pertes économisés, moins les frais fixes, les produits livrés puis refaits, les incidents, la qualité perdue et les départs —, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Économie nette du laboratoire sur le trimestre — achats, heures et pertes économisés, moins les frais fixes, les produits livrés puis refaits, les incidents, la qualité perdue et les départs —, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

@@ -31,13 +31,13 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/grand-compte-exclusif?hasard=2 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard, dans le rôle du directeur commercial grands comptes qui porte la réponse au comité de direction. Vous demandez de noter, à chaque décision, le chiffre qui l'a emportée, et rien de plus.",
+        "Vous envoyez le lien /entreprises/episode/grand-compte-exclusif?hasard=2 : toute la classe joue le même trimestre, sous le même aléa. Les élèves jouent seuls ou en binôme, au niveau Standard, dans le rôle du directeur commercial grands comptes qui porte la réponse au comité de direction. Vous demandez de noter, à chaque décision, le chiffre qui l'a emportée, et rien de plus.",
     },
     {
       minutes: 40,
       titre: "Jeu",
       detail:
-        "Les élèves jouent les six décisions. Vous circulez sans donner de réponse et relevez au tableau, sans commentaire, la contribution annuelle saisie en semaine 1, la réponse à Sarlève (tel quel, clauses, sans exclusivité, décliner) et la réponse à l'extension. Ceux qui finissent tôt rejouent avec les mêmes décisions sous un autre hasard et notent l'écart.",
+        "Les élèves jouent les six décisions. Vous circulez sans donner de réponse et relevez au tableau, sans commentaire, la contribution annuelle saisie en semaine 1, la réponse à Sarlève (tel quel, clauses, sans exclusivité, décliner) et la réponse à l'extension. Ceux qui finissent tôt rejouent avec les mêmes décisions sous un autre aléa et notent l'écart.",
     },
     {
       minutes: 15,
@@ -55,7 +55,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous prévenez la classe que le hasard pèse lourd ici : la valeur d'un contrat de trois ans dépend du carnet de commandes du client, de sa réponse, d'une analyse qui peut se tromper et d'une résiliation possible. Le hasard 2 est ordinaire (clauses acceptées, activité en tassement, analyse défavorable, pas de résiliation) : la bonne méthode y fait 266 k€, 15e tirage sur 30, pour 277 k€ en moyenne, et « prendre le volume » −113 k€ pour −17 k€ en moyenne. Vous faites lire, décision par décision, ce que chaque choix valait en moyenne plutôt que ce qu'il a rapporté sous ce hasard.",
+        "Vous prévenez la classe que les aléas pèsent lourd ici : la valeur d'un contrat de trois ans dépend du carnet de commandes du client, de sa réponse, d'une analyse qui peut se tromper et d'une résiliation possible. L'aléa 2 est ordinaire (clauses acceptées, activité en tassement, analyse défavorable, pas de résiliation) : la bonne méthode y fait 266 k€, 15e tirage sur 30, pour 277 k€ en moyenne, et « prendre le volume » −113 k€ pour −17 k€ en moyenne. Vous faites lire, décision par décision, ce que chaque choix valait en moyenne plutôt que ce qu'il a rapporté sous cet aléa.",
     },
     {
       minutes: 15,
@@ -71,7 +71,7 @@ export const FICHE: FicheEnseignant = {
       "Remises de fin d'année des fabricants (« Demander à Rosalie Fontenay ce que le contrat coûterait à Arvel ») : +40 k€. Crédit client : trente jours de plus sur des créances toutes taxes comprises, 5 000 × 1,2 × 30 / 360 = 500 k€ de créances en plus, financés à 5 % : 25 k€.",
       "Portage du stock dédié : 400 k€ × 8 % = 32 k€ par an (financement, assurance, démarque).",
       "Marge perdue chez les clients que l'exclusivité oblige à cesser de livrer : 800 k€ × 11 % = 88 k€.",
-      "Contribution annuelle = 400 − 150 + 40 − 25 − 32 − 88 = 145 k€. Elle ne dépend pas du hasard : toute la classe doit trouver la même valeur ; l'épisode juge juste à 5 k€ près, proche à 15 k€.",
+      "Contribution annuelle = 400 − 150 + 40 − 25 − 32 − 88 = 145 k€. Elle ne dépend pas des aléas : toute la classe doit trouver la même valeur ; l'épisode juge juste à 5 k€ près, proche à 15 k€.",
     ],
     erreurs: [
       {
@@ -150,12 +150,12 @@ export const FICHE: FicheEnseignant = {
   ],
   debrief: [
     "Le contrat apporte 400 k€ de marge sur coût variable et la projection commerciale parle de 1,2 M€ : pourquoi n'en reste-t-il que 145 k€ par an ? Lequel des coûts déduits ne figure dans aucune ligne du contrat, et pourquoi est-ce celui qu'on oublie ?",
-    "Ni signer tel quel, ni décliner : dites, pour chacune des quatre clauses de la contre-proposition, le risque qu'elle borne (clients exclus, revue des prix, baisse d'activité, actifs spécifiques). Pourquoi décliner n'est-il pas « ne rien risquer » ? Sous le hasard 2, Sarlève a accepté les clauses ; sans exclusivité, il aurait signé aussi, mais, faute d'indexation, résilié à la revue des prix : qu'est-ce que la source sur Sarlève permettait d'anticiper ?",
-    "L'option qui trompe. « Accepter l'extension : plus de volume, plus de remises » bat « faire analyser le carnet » sur 19 tirages sur 30, pour 18 k€ de moins en moyenne ; sous le hasard 2, elle fait 45 k€ de moins, parce que l'activité s'est tassée et que l'analyse, défavorable, a fait renoncer. Ceux qui ont accepté sans analyse ont-ils mal décidé parce qu'ils ont perdu ? Montrez que l'analyse ne fait que coûter 6 k€ dans 17 tirages, évite une perte de 45 à 98 k€ dans 11 autres, et fait renoncer à tort à un groupe solide dans les 2 derniers.",
+    "Ni signer tel quel, ni décliner : dites, pour chacune des quatre clauses de la contre-proposition, le risque qu'elle borne (clients exclus, revue des prix, baisse d'activité, actifs spécifiques). Pourquoi décliner n'est-il pas « ne rien risquer » ? Sous l'aléa 2, Sarlève a accepté les clauses ; sans exclusivité, il aurait signé aussi, mais, faute d'indexation, résilié à la revue des prix : qu'est-ce que la source sur Sarlève permettait d'anticiper ?",
+    "L'option qui trompe. « Accepter l'extension : plus de volume, plus de remises » bat « faire analyser le carnet » sur 19 tirages sur 30, pour 18 k€ de moins en moyenne ; sous l'aléa 2, elle fait 45 k€ de moins, parce que l'activité s'est tassée et que l'analyse, défavorable, a fait renoncer. Ceux qui ont accepté sans analyse ont-ils mal décidé parce qu'ils ont perdu ? Montrez que l'analyse ne fait que coûter 6 k€ dans 17 tirages, évite une perte de 45 à 98 k€ dans 11 autres, et fait renoncer à tort à un groupe solide dans les 2 derniers.",
     "Que valait l'analyse à 6 k€ ? Une conclusion favorable porte la chance d'un carnet solide de 50 % à 83 %, une conclusion défavorable la ramène à 15 %. Comparez accepter (+13 k€ en espérance), refuser (0) et n'accepter qu'après une conclusion favorable (+29 k€) : à quelle condition une information vaut-elle son prix ?",
-    "Le chantier suspendu et la note dégradée devaient-ils changer l'engagement ? Sous le hasard 2, l'activité s'est tassée et tenir le cap a fait 61 k€ de moins que réviser ; sur les 30 tirages, il fait 32 k€ de moins en moyenne. Qu'est-ce qu'un signal change, une certitude ou des chances ? Pourquoi est-il moins coûteux de réviser une cellule dédiée qu'on peut regonfler que de la garder au complet ?",
-    "À la revue des prix, la rupture coûterait à Arvel 300 k€ de valeur sur le chemin de la bonne méthode, sous le hasard 2. D'où vient ce pouvoir de Sarlève ? Avec l'indexation, l'échange est la meilleure réponse ; sans elle, accorder le point redevient le moins mauvais choix (150 k€ en moyenne contre 130 k€ pour l'échange et 30 k€ pour tenir les prix) : que dit cet écart de la dépendance ?",
-    "Sous le hasard 2, le meilleur trimestre possible (272 k€) est celui de la bonne méthode à un choix près : refuser l'extension sans analyse, qui épargne 6 k€, mais perd 20 k€ en moyenne ; le bilan le classe en « Chance ». « Prendre le volume » y détruit 113 k€, pour −17 k€ en moyenne. Que conclure d'un directeur jugé sur ce trimestre ? Une décision stratégique se juge-t-elle à son résultat d'un trimestre ?",
+    "Le chantier suspendu et la note dégradée devaient-ils changer l'engagement ? Sous l'aléa 2, l'activité s'est tassée et tenir le cap a fait 61 k€ de moins que réviser ; sur les 30 tirages, il fait 32 k€ de moins en moyenne. Qu'est-ce qu'un signal change, une certitude ou des chances ? Pourquoi est-il moins coûteux de réviser une cellule dédiée qu'on peut regonfler que de la garder au complet ?",
+    "À la revue des prix, la rupture coûterait à Arvel 300 k€ de valeur sur le chemin de la bonne méthode, sous l'aléa 2. D'où vient ce pouvoir de Sarlève ? Avec l'indexation, l'échange est la meilleure réponse ; sans elle, accorder le point redevient le moins mauvais choix (150 k€ en moyenne contre 130 k€ pour l'échange et 30 k€ pour tenir les prix) : que dit cet écart de la dépendance ?",
+    "Sous l'aléa 2, le meilleur trimestre possible (272 k€) est celui de la bonne méthode à un choix près : refuser l'extension sans analyse, qui épargne 6 k€, mais perd 20 k€ en moyenne ; le bilan le classe en « Chance ». « Prendre le volume » y détruit 113 k€, pour −17 k€ en moyenne. Que conclure d'un directeur jugé sur ce trimestre ? Une décision stratégique se juge-t-elle à son résultat d'un trimestre ?",
   ],
   prolongement: {
     enonce:
@@ -168,7 +168,7 @@ export const FICHE: FicheEnseignant = {
     "La réponse à Sarlève est justifiée par ce que chaque clause borne, et le refus par principe est écarté pour ce qu'il coûte, pas seulement pour ce qu'il évite.",
     "La décision sur l'extension s'appuie sur une espérance chiffrée et sur ce que l'analyse peut changer à la réponse, pas sur le volume ni sur le résultat obtenu.",
     "Le signal de la semaine 7 conduit à réviser l'engagement, et l'élève explique pourquoi la revue des prix se négocie différemment avec et sans clause d'indexation.",
-    "L'élève distingue, sur le bilan des 30 tirages, la qualité d'une décision de son résultat sous le hasard de la classe.",
+    "L'élève distingue, sur le bilan des 30 tirages, la qualité d'une décision de son résultat sous l'aléa de la classe.",
   ],
   vigilance:
     "Les sources donnent des probabilités chiffrées (le carnet de Sarlève, la fiabilité de l'analyse, les chances de résiliation) qu'aucun directeur n'a sous cette forme : un enseignant de stratégie voudra discuter d'où elles viendraient. La valeur est en outre bornée aux trois ans du contrat, au taux de 8 % sans prime de risque, et ignore ce que la relation vaudrait au-delà (renouvellement, référence, position face à Lestrade).",

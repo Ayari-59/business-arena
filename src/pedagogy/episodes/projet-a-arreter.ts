@@ -274,7 +274,7 @@ export function axe([information, diagnostic, reflexe, calibrage, revision]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -594,7 +594,7 @@ export const EPISODE_ESCALADE: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur détruite, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur créée par les décisions du trimestre : le résultat des showrooms, plus la valeur sur trois ans de ce que chaque site est devenu, au taux du groupe, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur créée par les décisions du trimestre : le résultat des showrooms, plus la valeur sur trois ans de ce que chaque site est devenu, au taux du groupe, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const decide = SITES.every((s) => {
         const e = t.etats[s.id];

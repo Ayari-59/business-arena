@@ -265,7 +265,7 @@ export function axe([information, diagnostic, reflexe, calibrage, segment]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions : un Tarval qui vise la part de marché, ou qui suit vos baisses, met une riposte à l'épreuve.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions : un Tarval qui vise la part de marché, ou qui suit vos baisses, met une riposte à l'épreuve.",
   };
 }
 
@@ -576,7 +576,7 @@ export const EPISODE_DISCOUNTER: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de valeur perdue sur le plan, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur estimée en semaine 13, en écart au plan d'avant Tarval : la marge du trimestre, coûts des actions compris, plus une année pleine au régime atteint, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur estimée en semaine 13, en écart au plan d'avant Tarval : la marge du trimestre, coûts des actions compris, plus une année pleine au régime atteint, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const s = t.semaines[13]!;
       return [

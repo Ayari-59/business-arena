@@ -218,7 +218,7 @@ export function axe([information, diagnostic, reflexe, calibrage, metier]: reado
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -519,7 +519,7 @@ export const EPISODE_SEMINAIRE: Episode<Trimestre> = {
         : `${kE(t.objectif)} de contribution, ${kE(BUDGET - t.objectif)} sous le budget`,
     formatObjectif: kE,
     noteDesBarres:
-      "Contribution de L'Escale Évian de mai à juillet : la marge sur coûts variables de l'hébergement, de la restauration et des salles, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Contribution de L'Escale Évian de mai à juillet : la marge sur coûts variables de l'hébergement, de la restauration et des salles, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

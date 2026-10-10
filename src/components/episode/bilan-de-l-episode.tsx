@@ -70,8 +70,8 @@ function Comparaison({
       <h2 className="text-lg font-bold text-slate-50">Votre partie précédente, et celle-ci</h2>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-300">
         {memeHasard
-          ? "Même hasard pour les deux parties : l'écart de résultat vient entièrement de vos décisions."
-          : "Les deux parties n'ont pas eu le même hasard : comparez plutôt la moyenne sur trente tirages, qui ne dépend que de vos décisions."}
+          ? "Même aléa pour les deux parties : l'écart de résultat vient entièrement de vos décisions."
+          : "Les deux parties n'ont pas eu le même aléa : comparez plutôt la moyenne sur trente tirages, qui ne dépend que de vos décisions."}
         {(avant.niveau ?? "standard") !== (apres.niveau ?? "standard") &&
           ` Niveau ${niveauParCode(avant.niveau).nom} pour la précédente, ${niveauParCode(apres.niveau).nom} pour celle-ci : le niveau change ce que vous saviez, pas le jugement des décisions.`}
       </p>
@@ -113,7 +113,7 @@ function Comparaison({
             <tr className="border-t border-white/10">
               <td className="py-2.5 pr-3 font-semibold text-slate-200">Résultat</td>
               <td className="py-2.5 pr-3 tabular-nums text-slate-200">
-                {kE(x.resultat)} <span className="text-slate-400">· hasard n° {avant.graine}</span>
+                {kE(x.resultat)} <span className="text-slate-400">· aléa n° {avant.graine}</span>
               </td>
               <td className="py-2.5 tabular-nums text-slate-50">
                 {kE(y.resultat)}{" "}
@@ -176,7 +176,7 @@ function LEnchainement({ e, kE }: { e: Enchainement; kE: (v: number) => string }
  */
 function Sommaire({ nombre }: { nombre: number }) {
   const liens = [
-    ["#hasard-titre", "Le hasard"],
+    ["#hasard-titre", "Les aléas"],
     ["#manieres-titre", "D'autres manières de décider"],
     ["#decisions-titre", `Vos ${EN_LETTRES[nombre]} décisions`],
     ["#comportements-titre", "Comportements et axe de travail"],
@@ -242,16 +242,16 @@ export function BilanDeLEpisode({
     <div className="grid gap-5">
       <header>
         <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-          Bilan de l&apos;épisode · niveau {niveauParCode(partie.niveau).nom} · hasard n°{" "}
+          Bilan de l&apos;épisode · niveau {niveauParCode(partie.niveau).nom} · aléa n°{" "}
           {partie.graine}
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 tabular-nums sm:text-4xl">
           {ep.bilan.titre(t)}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300">
-          Avec vos choix, la moyenne sur trente tirages du hasard est de {kE(a.attendu)}. Ce
-          trimestre-ci, le hasard vous a {chance >= 0 ? "apporté" : "coûté"} {kE(Math.abs(chance))}.
-          C&apos;est la qualité de vos décisions qui compte, pas ce hasard.
+          Avec vos choix, la moyenne sur trente tirages des aléas est de {kE(a.attendu)}. Ce
+          trimestre-ci, les aléas vous ont {chance >= 0 ? "apporté" : "coûté"} {kE(Math.abs(chance))}.
+          C&apos;est la qualité de vos décisions qui compte, pas ces aléas.
         </p>
       </header>
 
@@ -296,7 +296,7 @@ export function BilanDeLEpisode({
           id="hasard-titre"
           className="text-xs font-semibold uppercase tracking-etiquette text-slate-400"
         >
-          Ce que le hasard vous a réservé
+          Ce que les aléas vous ont réservé
         </h2>
         <ul className="grid gap-1.5 text-sm text-slate-300">
           {hasard.map((h) => (
@@ -309,7 +309,7 @@ export function BilanDeLEpisode({
 
       <section aria-labelledby="manieres-titre" className="carte grid scroll-mt-24 gap-4 p-5">
         <h2 id="manieres-titre" className="text-lg font-bold text-slate-50">
-          Le même trimestre, le même hasard, d&apos;autres manières de décider
+          Le même trimestre, le même aléa, d&apos;autres manières de décider
         </h2>
         <ul className="grid gap-2.5">
           {barres.map((b) => (
@@ -348,7 +348,7 @@ export function BilanDeLEpisode({
       <section aria-labelledby="decisions-titre" className="carte grid scroll-mt-24 gap-4 p-5">
         <h2 id="decisions-titre" className="text-lg font-bold text-slate-50">
           Vos {EN_LETTRES[ep.etapes.length]} décisions : ce qui relevait du choix, ce qui relevait
-          du hasard
+          des aléas
         </h2>
         <div
           role="table"
@@ -434,7 +434,7 @@ export function BilanDeLEpisode({
           </table>
         </div>
         <p className="max-w-2xl text-sm text-slate-400">
-          Chaque décision est rejouée sous trente tirages du hasard, vos autres choix inchangés. «
+          Chaque décision est rejouée sous trente tirages des aléas, vos autres choix inchangés. «
           Pire cas » : le résultat du trimestre dans les 10 % de tirages les moins favorables,
           comparé à l&apos;option qui protège le mieux.
         </p>
@@ -479,14 +479,14 @@ export function BilanDeLEpisode({
       </p>
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={onAutreHasard} className={bouton({ taille: "l" })}>
-          Rejouer sous un autre hasard
+          Rejouer sous un autre aléa
         </button>
         <button
           type="button"
           onClick={onMemeHasard}
           className={bouton({ variante: "secondaire", taille: "l" })}
         >
-          Recommencer avec le même hasard
+          Recommencer avec le même aléa
         </button>
       </div>
     </div>

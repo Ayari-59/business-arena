@@ -183,7 +183,7 @@ export function axe([information, diagnostic, reflexe, calibrage, capacite]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -480,7 +480,7 @@ export const EPISODE_PIC_FETES: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de marge du pic, ruptures et renforts déduits`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge des desserts livrés pendant le pic, moins les pénalités et ventes perdues, la casse, les heures majorées, l'intérim, les accidents et les rebuts, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge des desserts livrés pendant le pic, moins les pénalités et ventes perdues, la casse, les heures majorées, l'intérim, les accidents et les rebuts, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const restes = t.arrives - t.partis;
       const nbAccidents = t.semainesAccidents.length;

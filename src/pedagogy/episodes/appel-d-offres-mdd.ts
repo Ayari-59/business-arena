@@ -198,7 +198,7 @@ export function axe([information, diagnostic, reflexe, calibrage, contrat]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -435,7 +435,7 @@ export const EPISODE_MDD: Episode<Trimestre> = {
     titre: (t) => `${valeurDite(t.objectif)} sur les deux ans, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur du dossier estimée en semaine 13 sur les deux ans du contrat — marge du contrat, lait, décembre, emballages, marge perdue par Kerbrélan, Celtis, dépenses du trimestre —, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur du dossier estimée en semaine 13 sur les deux ans du contrat — marge du contrat, lait, décembre, emballages, marge perdue par Kerbrélan, Celtis, dépenses du trimestre —, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

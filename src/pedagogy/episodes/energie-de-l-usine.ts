@@ -216,7 +216,7 @@ export function axe([information, diagnostic, reflexe, calibrage, methode]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -463,7 +463,7 @@ export const EPISODE_ENERGIE_USINE: Episode<Trimestre> = {
     titre: (t) => ecartAuxBudgets(t.objectif),
     formatObjectif: kE,
     noteDesBarres:
-      "Écart aux budgets énergie du trimestre et de l'an prochain, estimé en fin de trimestre : facture, mesures, ruptures et incidents, économies que l'usine garde, contrat engagé et investissements, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart aux budgets énergie du trimestre et de l'an prochain, estimé en fin de trimestre : facture, mesures, ruptures et incidents, économies que l'usine garde, contrat engagé et investissements, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

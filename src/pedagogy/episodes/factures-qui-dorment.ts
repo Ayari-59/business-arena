@@ -174,7 +174,7 @@ export function axe([information, diagnostic, reflexe, calibrage, facturer]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -400,7 +400,7 @@ export const EPISODE_EN_COURS: Episode<Trimestre> = {
         : `${kE(-t.objectif)} de trésorerie de plus immobilisée, coûts compris`,
     formatObjectif: signe,
     noteDesBarres:
-      "Trésorerie dégagée sur le trimestre : ce que les clients ont payé au-delà de la production, moins les frais financiers, l'affacturage, les majorations, les avoirs et la marge des missions perdues, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Trésorerie dégagée sur le trimestre : ce que les clients ont payé au-delà de la production, moins les frais financiers, l'affacturage, les majorations, les avoirs et la marge des missions perdues, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const fin = t.semaines[13]!;
       const perdues = t.missionsPerdues.length + (t.phase3Perdue ? 1 : 0);

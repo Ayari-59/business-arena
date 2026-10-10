@@ -197,7 +197,7 @@ export function axe([information, diagnostic, reflexe, calibrage, methode]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -465,7 +465,7 @@ export const EPISODE_DOUZE_HEURES: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, trimestre suivant compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de remplacement et d'intérim, surcoût des événements indésirables, heures de relève économisées et coûts du projet compris, sur le trimestre et projeté sur le suivant, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de remplacement et d'intérim, surcoût des événements indésirables, heures de relève économisées et coûts du projet compris, sur le trimestre et projeté sur le suivant, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const departs = [t.departOpposee, t.departVolontaire, t.mutation].filter(
         (w) => w !== null && w <= 13,

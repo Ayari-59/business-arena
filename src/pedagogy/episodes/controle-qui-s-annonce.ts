@@ -180,7 +180,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Un échantillon clément ou un prestataire à l'heure peuvent flatter un trimestre : si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Un échantillon clément ou un prestataire à l'heure peuvent flatter un trimestre : si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -425,7 +425,7 @@ export const EPISODE_CONFORMITE: Episode<Trimestre> = {
     titre: (t) => ecartAuBudget(t.objectif),
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de conformité de la filiale, pénalités, intérêts, amendes, mise en conformité et temps des équipes compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de conformité de la filiale, pénalités, intérêts, amendes, mise en conformité et temps des équipes compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

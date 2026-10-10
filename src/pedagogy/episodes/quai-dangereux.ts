@@ -174,7 +174,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Un trimestre sans accident grave peut être de la chance : si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Un trimestre sans accident grave peut être de la chance : si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -407,7 +407,7 @@ export const EPISODE_SECURITE: Episode<Trimestre> = {
     titre: (t) => ecartAuBudget(t.objectif),
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de marge d'exploitation de la plateforme, retards, casse, accidents et arrêts compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de marge d'exploitation de la plateforme, retards, casse, accidents et arrêts compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const legers = t.accidentsLegers.length;
       return [

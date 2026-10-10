@@ -171,7 +171,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -367,7 +367,7 @@ export const EPISODE_FIDELISATION: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, valeur des clients conservés comprise`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget — marge des artisans, plus la valeur des clients conservés en fin de trimestre, moins le coût des actions — sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget — marge des artisans, plus la valeur des clients conservés en fin de trimestre, moins le coût des actions — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

@@ -197,7 +197,7 @@ export function axe([information, diagnostic, reflexe, calibrage, preventif]: re
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -442,7 +442,7 @@ export const EPISODE_MAINTENANCE: Episode<Trimestre> = {
       `${kE(coutTotal(t))} de pannes et de maintenance, dont ${kE(t.coutDecembre)} attendus au pic de décembre`,
     formatObjectif: kE,
     noteDesBarres:
-      "Coût des pannes et de la maintenance de la ligne des desserts de septembre à novembre, plus le coût attendu du pic de décembre dans l'état du parc fin novembre, compté en négatif, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Coût des pannes et de la maintenance de la ligne des desserts de septembre à novembre, plus le coût attendu du pic de décembre dans l'état du parc fin novembre, compté en négatif, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const mois = pannesDuMois(t);
       const incidents = t.lotsBloques.length + (t.accident ? 1 : 0);

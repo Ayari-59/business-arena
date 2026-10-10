@@ -178,7 +178,7 @@ export function axeDeTravail([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -372,7 +372,7 @@ export const EPISODE_TRIMESTRE: Episode<Trimestre> = {
     titre: (t) => `${kE(t.objectif)} de marge, pénalités déduites`,
     formatObjectif: kE,
     noteDesBarres:
-      "Marge brute du trimestre moins la pénalité de délai de paiement, sous le hasard que vous avez joué. L'échelle ne part pas de zéro.",
+      "Marge brute du trimestre moins la pénalité de délai de paiement, sous les aléas que vous avez joués. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const tauxDeMarge = t.marge / t.ca;
       return [

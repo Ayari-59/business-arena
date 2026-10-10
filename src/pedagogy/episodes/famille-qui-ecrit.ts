@@ -177,7 +177,7 @@ export function axe([information, diagnostic, reflexe, calibrage, familles]: rea
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -416,7 +416,7 @@ export const EPISODE_FAMILLES: Episode<Trimestre> = {
     titre: (t) => `La réclamation a coûté ${cout(t.objectif)}, admissions comprises`,
     formatObjectif: kE,
     noteDesBarres:
-      "Ce que la réclamation et ses suites ont coûté à l'EHPAD — renforts, linge, remplacements, départs, inspection, temps de cadre — et l'effet attendu sur les admissions du trimestre suivant, compté en négatif, sous le hasard que vous avez joué : plus la barre est proche de zéro, mieux c'est. L'échelle ne part pas de zéro.",
+      "Ce que la réclamation et ses suites ont coûté à l'EHPAD — renforts, linge, remplacements, départs, inspection, temps de cadre — et l'effet attendu sur les admissions du trimestre suivant, compté en négatif, sous les aléas que vous avez joués : plus la barre est proche de zéro, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

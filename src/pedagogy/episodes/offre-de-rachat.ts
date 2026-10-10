@@ -241,7 +241,7 @@ export function axe([
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -636,7 +636,7 @@ export const EPISODE_OFFRE_RACHAT: Episode<Trimestre> = {
         : `${mE(t.objectif)} pour les titres : la laiterie est vendue à ${nomDe(t.voie === 2)}`,
     formatObjectif: mE,
     noteDesBarres:
-      "Valeur obtenue pour les titres de la famille, estimée en semaine 13 : le prix de cession, conditions et engagements compris, ou la valeur de la laiterie indépendante, sous le hasard que vous avez joué. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur obtenue pour les titres de la famille, estimée en semaine 13 : le prix de cession, conditions et engagements compris, ou la valeur de la laiterie indépendante, sous les aléas que vous avez joués. Plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const d = t.deroule;
       const multiple = t.voie !== 0 ? t.prix / EBE : null;

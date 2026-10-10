@@ -177,7 +177,7 @@ export function axe([information, diagnostic, reflexe, calibrage, ciblage]: read
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -431,7 +431,7 @@ export const EPISODE_PROMOTION: Episode<Trimestre> = {
     },
     formatObjectif: kE,
     noteDesBarres:
-      "Marge incrémentale du trimestre par rapport à un trimestre sans promotion, effets durables estimés compris, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Marge incrémentale du trimestre par rapport à un trimestre sans promotion, effets durables estimés compris, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const faites = t.ops.filter((b) => b.acceptee > 0);
       const rentables = faites.filter((b) => b.marge + b.recrues >= 0).length;

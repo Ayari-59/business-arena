@@ -178,7 +178,7 @@ export function axe([information, diagnostic, reflexe, calibrage, cycle]: readon
   return {
     titre: "Vérifier que ce n'était pas de la chance",
     texte:
-      "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
+      "Rejouez l'épisode sous un autre aléa avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
 
@@ -472,7 +472,7 @@ export const EPISODE_INTERSAISON: Episode<Trimestre> = {
       `${kE(t.objectif)} de trésorerie corrigée à mi-juillet, pour ${kE(PLAN_CORRIGE)} au plan d'avril`,
     formatObjectif: kE,
     noteDesBarres:
-      "Trésorerie nette de mi-juillet, corrigée — acomptes d'avance, paiements reportés et emprunts retirés, coûts et gains d'après le trimestre ajoutés —, sous le hasard que vous avez joué : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Trésorerie nette de mi-juillet, corrigée — acomptes d'avance, paiements reportés et emprunts retirés, coûts et gains d'après le trimestre ajoutés —, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const reportes = t.travauxReportes + (t.reseauReporte ? AVENANT : 0);
       return [
