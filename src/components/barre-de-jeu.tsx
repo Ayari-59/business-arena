@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { useProgression } from "@/lib/progression-parcours";
+import { allerAuChampDesVentes, useEstimationEnCours } from "@/lib/estimation-en-cours";
+import { LigneEstimeeCompacte } from "@/components/resultat-estime";
 import { PHASES } from "@/config/phases-du-tour";
 
 /**
@@ -47,6 +49,10 @@ export function BarreDeJeu({
   const cadre = useRef<HTMLDivElement>(null);
   const enTete = progression && progression.titre && !termine ? progression : null;
   const avecTitre = enTete !== null;
+  // PENDANT LA DÉCISION, LE RÉSULTAT ESTIMÉ (lot P7) : la feuille le publie, la
+  // barre le montre sur chaque carte, à la place du nom et du tour.
+  const estimation = useEstimationEnCours();
+  const estimeALaPlace = enTete?.phase === "decision" && estimation !== null;
 
   // Le menu se referme sur Échap et au toucher hors de la barre, comme le plan
   // du site : un panneau qu'on ne peut pas écarter couvre la partie.
@@ -167,11 +173,18 @@ export function BarreDeJeu({
             />
             <span data-amorce-etape="">{enTete.amorce}</span>
           </p>
-          {/* Le nom cède la place, jamais le temps du tour ni le rang. */}
-          <p className="flex min-w-0 text-slate-400">
-            <span className="truncate">{nom}</span>
-            <span className="shrink-0 font-medium tabular-nums text-slate-300">&nbsp;· Tour {tour}/{tours}</span>
-          </p>
+          {/* Le nom cède la place, jamais le temps du tour ni le rang. LOT P7 :
+              pendant la décision, le nom et le tour cèdent la place au résultat
+              estimé (ils sont dits par le briefing et l'ardoise) ; la ligne ne
+              grandit pas d'un pixel. */}
+          {estimeALaPlace ? (
+            <LigneEstimeeCompacte estimation={estimation} allerAuChamp={allerAuChampDesVentes} />
+          ) : (
+            <p className="flex min-w-0 text-slate-400">
+              <span className="truncate">{nom}</span>
+              <span className="shrink-0 font-medium tabular-nums text-slate-300">&nbsp;· Tour {tour}/{tours}</span>
+            </p>
+          )}
         </div>
       ) : null}
 

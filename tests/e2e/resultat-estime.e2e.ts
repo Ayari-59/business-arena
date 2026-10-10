@@ -106,12 +106,18 @@ describe("le résultat estimé, de la saisie au verdict", () => {
     expect(Object.keys(propose!)).toContain("Résultat net");
   }, 180_000);
 
-  it("zéro vente estimée : l'encart se tait ; une saisie efface la proposition", async () => {
+  it("zéro vente estimée : pas de zéros, une invitation ; une saisie efface la proposition", async () => {
     const champ = page.locator('input[name^="ventesEstimees."]').first();
     await champ.fill("0");
     await page.waitForTimeout(900);
     // Un encart de zéros à côté d'un champ vide est un meuble, pas une information.
-    expect(await encart(page)).toBeNull();
+    // LOT P7 : le cadran collant reste à sa place, mais n'écrit aucun chiffre ; il
+    // invite à estimer et mène au champ.
+    expect(await encart(page), "des chiffres sans ventes estimées").toEqual({});
+    const cadran = page.locator("[data-resultat-estime]");
+    expect(await cadran.innerText()).toContain("Estimez vos ventes pour voir le résultat");
+    expect(await cadran.innerText()).not.toMatch(/\d\s?€/);
+    expect(await cadran.getByRole("link", { name: /ventes estimées/ }).count()).toBe(1);
     // La saisie a fait de la proposition l'estimation du joueur : plus de
     // marqueur, plus de témoin caché.
     expect(await page.locator("[data-proposition-de-ventes]").count()).toBe(0);
@@ -273,7 +279,8 @@ describe("le résultat estimé, de la saisie au verdict", () => {
     await q.waitForTimeout(900);
     const ligne = q.locator("[data-ligne-estimee]:visible");
     expect(await ligne.count()).toBe(1);
-    expect(await ligne.innerText()).toContain("Estimé");
+    // LOT P7 : la ligne vit dans la barre du parcours, « Rés. estimé … ».
+    expect(await ligne.innerText()).toMatch(/Rés\. estimé\s+−?[\d\s\u202f\u00a0]+€/);
     // LOT 3A : une seule barre fixe au bas de l'écran, et la ligne n'en fait
     // pas une seconde — elle vit dans le flux de la carte (mesuré : posée dans
     // le pied fixe, elle coûtait 65 px à CHAQUE carte, et quatre cartes déjà
@@ -294,10 +301,12 @@ describe("le résultat estimé, de la saisie au verdict", () => {
     });
     expect(barres.n, "plus d'une barre fixe au bas de l'écran").toBeLessThanOrEqual(1);
     expect(barres.dansLaBarre, "la ligne estimée alourdit la barre fixe").toBe(false);
-    // Et la carte entière tient sur l'écran, ligne comprise.
+    // Et la carte entière tient sur l'écran, ligne comprise. LOT P7 : la ligne
+    // est dans la barre, hors du formulaire ; on mesure la feuille du champ (la
+    // garde ne se desserre pas : un formulaire introuvable la fait échouer).
     const debordement = await q.evaluate(() => {
-      const carte = document.querySelector("[data-ligne-estimee]")?.closest("form");
-      return carte ? Math.round(carte.getBoundingClientRect().height - innerHeight) : 0;
+      const carte = document.querySelector('input[name^="ventesEstimees."]')?.closest("form");
+      return carte ? Math.round(carte.getBoundingClientRect().height - innerHeight) : 1;
     });
     expect(debordement, "la carte des ventes estimées déborde de l'écran").toBeLessThan(0);
     await tel.close();

@@ -26,6 +26,10 @@ import { describe, expect, it } from "vitest";
  *   4. UNE SEULE NAVIGATION D'ONGLETS dans un tour clos : le tableau de bord y
  *      devient un sommaire d'ancres.
  *   5. LE COURRIER POSÉ, et le verdict sans grand triangle.
+ *   6. (lot P7) LE CADRAN DU RÉSULTAT ESTIMÉ, quatrième rôle : collant en tête
+ *      de la feuille, relevé, il porte l'arête de la feuille à la place du
+ *      panneau de décision ; et L'ENVELOPPE POSÉE, redessinée, rabat ancré,
+ *      sans étiquette en pointillé.
  * La cascade du verdict a sa propre garde : `tests/unit/cascade-du-resultat.test.ts`.
  */
 
@@ -174,7 +178,8 @@ describe("1. trois rôles, les seuls habillages de panneau de l'arène", () => {
     const info: [string, RegExp][] = [
       ["src/components/aide-repliable.tsx", /<div className="panneau-info /], // capacité de production, repères
       ["src/components/bande-de-marche.tsx", /className="panneau-info /],
-      ["src/components/resultat-estime.tsx", /className="panneau-info /],
+      // LOT P7 : le résultat estimé n'est plus un panneau d'information plat (il
+      // ne se voyait pas) ; il a son rôle, le cadran (voir le bloc 6).
       ["src/components/tableau-de-bord.tsx", /className="ardoise panneau-info /], // l'ardoise
       ["src/components/tiroir.tsx", /"panneau-info group"/],
       ["src/components/decision-context.tsx", /className="panneau-info /], // arbitrage, paramètres
@@ -201,6 +206,9 @@ describe("2. l'arête du métier : le panneau de décision en cours, une fois pa
       // Les épisodes, hors du cockpit : leurs cartes gardent leur filet (lot 5A).
       "[data-metier] .carte:not(.ardoise):not(.carte .carte):not([data-ecran-de-jeu] *)",
       "[data-metier] .panneau-decision",
+      // LOT P7 : le cadran du résultat estimé, qui la prend au panneau de
+      // décision quand il est là (voir le bloc 6).
+      "[data-metier] .cadran-estime",
     ]);
   });
 
@@ -286,11 +294,12 @@ describe("5. le courrier posé, le verdict sans grand triangle", () => {
     const section = courrier.slice(courrier.indexOf("data-courrier-du-tour"));
     expect(section).not.toMatch(/className="[^"]*\b(?:carte|panneau-info|panneau-decision)\b/);
     expect(section).toContain('grilleDeCourriers(vide ? 1 : plis.length, "posee")');
-    // LOT P4 : l'enveloppe ouverte posée à côté est retirée (rabat flottant,
-    // tampon serré, et une redite de l'expéditeur) : la lettre est l'objet.
-    expect(courrier).not.toContain("EnveloppeOuverte");
-    expect(code(lire("src/components/courrier.tsx"))).not.toContain("EnveloppeOuverte");
+    // LOT P4 avait retiré l'enveloppe ouverte (rabat flottant, étiquette en
+    // pointillé serrée). LOT P7 : elle revient REDESSINÉE (bloc 6), à côté d'un
+    // pli seul, hors du parcours du téléphone ; l'ancienne n'existe plus.
     expect(CSS).not.toContain(".enveloppe-ouverte");
+    expect(section).toMatch(/\{seul && !enParcours \? \(\s*<EnveloppeOuverte /);
+    expect(section.match(/<EnveloppeOuverte /g) ?? []).toHaveLength(1);
     expect(section).toContain('"mx-auto w-full sm:max-w-[40rem]"');
     // « J'ai pris note » vient APRÈS les lettres, au pied de la colonne de la lettre.
     expect(section.indexOf("pris note")).toBeGreaterThan(section.indexOf("<CourrierRecommande"));
@@ -322,6 +331,83 @@ describe("5. le courrier posé, le verdict sans grand triangle", () => {
     expect(verdict).not.toMatch(/text-4xl sm:text-5xl/);
     expect(verdict).toContain("<FlecheFine sens={ecart.sens} />");
     expect(verdict).toMatch(/strokeWidth="1\.5"/);
+  });
+});
+
+describe("6. lot P7 : le cadran du résultat estimé, l'enveloppe posée", () => {
+  it("le cadran est un rôle à lui : collant sous les barres, relevé, l'arête du métier", () => {
+    const cadran = regle(".cadran-estime");
+    expect(cadran).toContain("position: sticky");
+    expect(cadran).toContain("top: var(--haut-collant");
+    expect(cadran).toContain("background-color: var(--sol-panneau");
+    expect(cadran).toContain("inset 0 1px 0 var(--arete-lumiere)");
+    expect(cadran).toContain("var(--ombre-douce)");
+    expect(regle("[data-metier] .cadran-estime")).toContain("inset 0 2px 0 var(--metier");
+    // Ce n'est ni un panneau d'information, ni un panneau de décision.
+    const encart = lire("src/components/resultat-estime.tsx");
+    expect(encart).toMatch(/className="cadran-estime"/);
+    expect(code(encart)).not.toMatch(/panneau-info|panneau-decision/);
+    // Et il est seul à porter ce rôle.
+    const porteurs = ARENE.filter((f) => /cadran-estime/.test(f.code)).map((f) => f.nom);
+    expect(porteurs).toEqual(["components/resultat-estime.tsx"]);
+  });
+
+  it("une seule arête par écran : quand le cadran est là, le panneau de décision perd la sienne", () => {
+    const sans = regle("[data-metier] form:has(> .cadran-estime) .panneau-decision");
+    expect(sans).toContain("inset 0 1px 0 var(--arete-lumiere)");
+    expect(sans).not.toContain("--metier");
+    // Le cadran est le premier enfant de la feuille, avant la piste des étapes :
+    // il colle tant que la feuille est à l'écran, de la première étape à la
+    // validation.
+    const feuille = code(lire("src/components/decision-form.tsx"));
+    const debut = feuille.indexOf("onInvalidCapture={revelerFamilleInvalide}");
+    const cadran = feuille.indexOf("<EncartResultatEstime", debut);
+    expect(cadran).toBeGreaterThan(debut);
+    expect(cadran).toBeLessThan(feuille.indexOf("data-piste-des-etapes", debut));
+    expect(cadran).toBeLessThan(feuille.indexOf("propositionDeVentes", debut));
+    expect(feuille.match(/<EncartResultatEstime\b/g) ?? []).toHaveLength(1);
+  });
+
+  it("l'enveloppe, quand elle est là : rabat ancré, sans étiquette en pointillé, un décor", () => {
+    const source = lire("src/components/courrier.tsx");
+    const env = code(source.slice(source.indexOf("export function EnveloppeOuverte")));
+    const corpsDe = env.slice(0, env.indexOf("\nexport function"));
+    expect(corpsDe).toContain("aria-hidden");
+    expect(corpsDe).toContain('data-enveloppe-posee=""');
+    // Un courriel n'a pas d'enveloppe.
+    expect(corpsDe).toContain('c.pli === "email"');
+    // LE RABAT EST ANCRÉ : il est dans le MÊME dessin que le corps, et sa base
+    // est le bord haut du corps (même ordonnée, d'un bord à l'autre).
+    const rabat = corpsDe.match(/data-rabat="" d="M0 (\d+) L[^"]* L216 (\d+) Z"/);
+    const corps = corpsDe.match(/data-corps=""\s+d="M0 (\d+) H216 /);
+    expect(rabat, "le rabat n'est plus un chemin du dessin").not.toBeNull();
+    expect(corps, "le corps n'est plus un chemin du dessin").not.toBeNull();
+    expect(rabat![1]).toBe(corps![1]);
+    expect(rabat![2]).toBe(corps![1]);
+    expect(corpsDe.match(/<svg\b/g)?.length, "le corps et le rabat, un seul dessin").toBe(2); // la forme, et l'oblitération
+    // Pas d'étiquette : ni pointillé, ni capitales, ni la nature du pli (elle reste sur la lettre).
+    expect(corpsDe).not.toMatch(/dashed|dotted|uppercase|NATURES|nature\.|cachet-or/);
+    // Le papier, un cran plus foncé que la lettre ; l'ombre, sur la forme entière.
+    expect(regle(".enveloppe-posee-forme")).toMatch(/filter: drop-shadow/);
+    expect(corpsDe).toMatch(/data-corps=""[^>]*fill="#eef1f5"/);
+    expect(corpsDe).toMatch(/data-rabat="" d="[^"]*" fill="#dfe5ed"/);
+  });
+
+  it("l'enveloppe se pose si la place le permet, jamais sur téléphone, et sa rotation est statique", () => {
+    const p7 = CSS.slice(CSS.indexOf("LOT P7 — LE RÉSULTAT ESTIMÉ SOUS LES YEUX"));
+    // Cachée par défaut ; posée seulement quand la SECTION a la place de la
+    // lettre (40 rem) et de deux marges d'enveloppe.
+    expect(p7).toMatch(/\.enveloppe-posee \{\s*display: none;/);
+    expect(p7).toMatch(/@container \(min-width: 72\.5rem\) \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 40rem minmax\(0, 1fr\)/);
+    expect(p7).toMatch(/\.courrier-pose-seul-grille > \.enveloppe-posee \{\s*display: block;/);
+    // Une rotation, faible, et rien qui s'anime (pas de coupure de mouvement à prévoir).
+    const env = p7.slice(p7.indexOf("L'ENVELOPPE POSÉE ─"));
+    const rotations = [...env.matchAll(/\.enveloppe-posee \{[^}]*rotate\((-?[\d.]+)deg\)/g)].map((m) => Number(m[1]));
+    expect(rotations).toHaveLength(1);
+    expect(Math.abs(rotations[0]!)).toBeLessThanOrEqual(3);
+    expect(env).not.toMatch(/animation|transition/);
+    // Hors du parcours du téléphone (voir le bloc 5) : `enParcours` l'écarte.
+    expect(lire("src/components/courrier-du-tour.tsx")).toContain('className={seul && !enParcours ? "courrier-pose-seul" : ""}');
   });
 });
 

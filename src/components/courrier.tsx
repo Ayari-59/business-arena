@@ -598,6 +598,87 @@ export function grilleDeCourriers(nombre: number, mise: "rangee" | "posee" = "ra
     : "grid gap-3 sm:auto-rows-fr sm:grid-cols-2";
 }
 
+/**
+ * L'ENVELOPPE OUVERTE, POSÉE À CÔTÉ DE SA LETTRE (lot P7, redessinée).
+ *
+ * Le lot P3 en avait posé une, que le lot P4 a retirée : son rabat était un
+ * triangle blanc posé AU-DESSUS d'elle, sans le filet ni l'ombre du corps, et
+ * il flottait ; sa nature (« Environnement économique ») s'écrivait sur une
+ * étiquette jaune en pointillé, serrée. Le propriétaire la veut de retour,
+ * crédible et calme :
+ *   · UN SEUL DESSIN pour le corps et le rabat ouvert : la base du rabat EST le
+ *     bord haut du corps (y = 56), et l'ombre portée, celle de la lettre (le
+ *     contact net, puis la pénombre), tombe sur la forme entière. Le rabat ne
+ *     peut pas flotter : il n'a pas de bord à lui ;
+ *   · un papier un cran plus foncé que la lettre (#eef1f5 contre le blanc), le
+ *     rabat, vu de l'intérieur, un cran encore ;
+ *   · dessus, l'expéditeur et le destinataire à l'encre du courrier, et un
+ *     timbre oblitéré, sobre. Pas d'étiquette : la catégorie reste sur la
+ *     lettre, qui est l'objet principal ;
+ *   · décor pur (`aria-hidden`) : tout ce qu'elle porte, la lettre le dit.
+ * Un courriel n'a pas d'enveloppe, et la pochette interne n'est pas affranchie.
+ * Elle ne se pose que si la place le permet (globals.css, « LOT P7 ») : sur
+ * téléphone et à côté de deux plis, aucune.
+ */
+export function EnveloppeOuverte({ code, destinataire }: { code: string; destinataire?: string }) {
+  const c = courrier(code);
+  if (!c || c.pli === "email") return null;
+  const interne = c.pli === "interne";
+  return (
+    <div aria-hidden data-enveloppe-posee="" className="enveloppe-posee">
+      <svg
+        viewBox="0 0 216 196"
+        className="enveloppe-posee-forme"
+        focusable="false"
+        preserveAspectRatio="none"
+      >
+        {/* Le rabat ouvert, vu de l'intérieur : sa base est le bord du corps. */}
+        <path data-rabat="" d="M0 56 L101 8.5 Q108 5.2 115 8.5 L216 56 Z" fill="#dfe5ed" />
+        {/* La bande de gomme, le long des bords du rabat. */}
+        <path
+          d="M15 56 L103 14.6 Q108 12.4 113 14.6 L201 56"
+          fill="none"
+          stroke="#cdd5df"
+          strokeWidth="1"
+        />
+        {/* Le corps, coins arrondis en bas seulement : le haut est le pli. */}
+        <path
+          data-corps=""
+          d="M0 56 H216 V193 Q216 196 213 196 H3 Q0 196 0 193 Z"
+          fill="#eef1f5"
+        />
+        {/* Le pli, là où le papier tourne. */}
+        <path d="M0 56.5 H216" stroke="#c7cfda" strokeWidth="1" />
+      </svg>
+      <div className="enveloppe-posee-face">
+        <span className="enveloppe-posee-expediteur">{c.expediteur}</span>
+        {interne ? null : (
+          <span className="enveloppe-posee-timbre">
+            <span className="enveloppe-timbre flex h-10 w-[2.125rem] items-center justify-center rounded-[2px]">
+              <Icone nom={c.icone} className="h-[1.125rem] w-[1.125rem]" />
+            </span>
+            {/* L'oblitération : deux cercles et trois ondes, un trait plein. */}
+            <svg viewBox="0 0 64 30" className="enveloppe-posee-cachet" focusable="false">
+              <circle cx="15" cy="15" r="12.5" fill="none" stroke="currentColor" strokeWidth="1" />
+              <circle cx="15" cy="15" r="8.5" fill="none" stroke="currentColor" strokeWidth="0.75" />
+              <path
+                d="M30 9 q5 -3 10 0 t10 0 t10 0 M30 15 q5 -3 10 0 t10 0 t10 0 M30 21 q5 -3 10 0 t10 0 t10 0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+            </svg>
+          </span>
+        )}
+        <span className="enveloppe-posee-destinataire">
+          <span className="enveloppe-posee-a">À l&apos;attention de</span>
+          {destinataire ?? "L'entreprise"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /** Le pli distribué : l'enveloppe, puis la lettre qui en sort. */
 export function CourrierRecommande({
   code,

@@ -5,6 +5,7 @@ import {
   EncartResultatEstime,
   LigneEstimeeCompacte,
   aideDesVentesEstimees,
+  resumeDeLEstimation,
 } from "@/components/resultat-estime";
 import {
   LigneEstimeEtReel,
@@ -90,8 +91,11 @@ describe("l'encart « Résultat estimé »", () => {
       { ...decisions, productionPlan: 7_000, marketingBudget: 60_000 },
       { [CODE]: 0 },
     );
-    // Sans vente estimée, l'encart se taît : c'est la règle.
-    expect(rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }))).toBe("");
+    // Sans vente estimée, pas de zéros : le cadran invite à estimer (lot P7).
+    const sansVentes = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    expect(sansVentes).toContain("Estimez vos ventes pour voir le résultat");
+    expect(sansVentes).not.toContain("<dl");
+    expect(sansVentes).not.toContain("passe sous zéro");
     const avecVentes = estimerLeTour(
       dossier,
       { ...decisions, productionPlan: 7_000, marketingBudget: 60_000 },
@@ -104,21 +108,59 @@ describe("l'encart « Résultat estimé »", () => {
     expect(html).not.toMatch(/text-(?:red|emerald)-\d{3}/);
   });
 
-  it("rien n'est estimé : rien ne paraît", () => {
-    expect(rendu(createElement(EncartResultatEstime, { estime: null, vocabulary: v }))).toBe("");
+  /*
+   * LOT P7 : LE CADRAN NE DISPARAÎT PLUS, IL NE MONTRE JAMAIS DE ZÉROS. Cette
+   * garde disait « rien n'est estimé : rien ne paraît » — un encart de zéros
+   * est un meuble. Le cadran collant reste à sa place (il ne saute pas quand le
+   * compte arrive), mais la règle tient : aucun chiffre tant que rien n'est
+   * estimé ; une invitation et un lien vers le champ quand les ventes valent 0.
+   */
+  it("rien n'est estimé : aucun chiffre, et zéro vente invite à estimer", () => {
+    const attente = rendu(createElement(EncartResultatEstime, { estime: null, vocabulary: v }));
+    expect(attente).toContain("Résultat estimé");
+    expect(attente).not.toContain("<dl");
+    expect(attente).not.toMatch(/\d\s?€/);
     const zero = estimerLeTour(dossier, decisions, { [CODE]: 0 });
-    expect(rendu(createElement(EncartResultatEstime, { estime: zero, vocabulary: v }))).toBe("");
+    const html = rendu(createElement(EncartResultatEstime, { estime: zero, vocabulary: v }));
+    expect(html).toContain("Estimez vos ventes pour voir le résultat");
+    expect(html).toMatch(/<a [^>]*href="#decisions"/);
+    expect(html).not.toContain("<dl");
+    expect(html).not.toMatch(/\d\s?€/);
   });
 
-  it("sur téléphone, une ligne compacte dépliable : résultat et trésorerie", () => {
+  it("le cadran est collant, relevé, et porte le résultat net et la trésorerie en grand", () => {
     const estime = estimerLeTour(dossier, decisions, { [CODE]: 1_500 });
-    const html = rendu(createElement(LigneEstimeeCompacte, { estime, vocabulary: v }));
-    expect(html).toContain("Estimé");
-    expect(html).toContain("Rés.");
-    expect(html).toContain("Tréso.");
+    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    expect(html).toMatch(/^<section[^>]*class="cadran-estime"/);
+    // Le résultat net est le premier chiffre du bandeau, marqué pour l'e2e.
+    const bande = html.slice(html.indexOf("cadran-bande"), html.indexOf("cadran-detail"));
+    expect(bande.indexOf("Résultat net")).toBeLessThan(bande.indexOf("Trésorerie fin de tour"));
+    expect(bande).toContain("data-resultat-net-estime");
+    expect(bande.match(/chiffre-estime/g)?.length).toBe(3);
+    // Le stock final et le compte sont dans le repli, pas dans le bandeau.
+    expect(bande).not.toContain("Stock final");
+  });
+
+  it("sur téléphone, une ligne compacte pour la barre : le résultat, et le détail dans un tiroir", () => {
+    const estime = estimerLeTour(dossier, decisions, { [CODE]: 1_500 });
+    const resume = resumeDeLEstimation(estime, v.units);
+    const html = rendu(createElement(LigneEstimeeCompacte, { estimation: resume }));
+    expect(html).toContain("Rés. estimé");
+    expect(html).toContain("data-resultat-net-estime");
+    // Le détail : chiffre d'affaires, stock, trésorerie, dans un tiroir fermé.
     expect(html).toContain("<details");
     expect(html).not.toContain("<details open");
-    expect(rendu(createElement(LigneEstimeeCompacte, { estime: null, vocabulary: v }))).toBe("");
+    expect(html).toContain("tiroir-estime");
+    for (const titre of ["Chiffre d'affaires", "Stock final", "Trésorerie fin de tour"]) {
+      expect(html).toContain(titre);
+    }
+    expect(rendu(createElement(LigneEstimeeCompacte, { estimation: null }))).toBe("");
+    // Zéro vente estimée : une invitation, pas de zéros.
+    const zero = resumeDeLEstimation(estimerLeTour(dossier, decisions, { [CODE]: 0 }), v.units);
+    const vide = rendu(createElement(LigneEstimeeCompacte, { estimation: zero }));
+    expect(vide).toContain("Estimez vos ventes");
+    expect(vide).toContain('aria-label="Estimez vos ventes pour voir le résultat"');
+    expect(vide).not.toMatch(/\d\s?€/);
   });
 
   it("l'aide du champ rappelle les ventes ET les manques du tour passé", () => {

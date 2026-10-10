@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 import {
   CourrierRecommande,
   Enveloppe,
+  EnveloppeOuverte,
   grilleDeCourriers,
 } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
@@ -120,12 +121,20 @@ export function CourrierDuTour({
 
   // UN PLI SEUL se pose seul, au milieu ; plusieurs plis se posent côte à
   // côte, deux par rangée.
-  // LOT P4 : l'enveloppe ouverte qui attendait à côté d'un pli seul est
-  // retirée. Son rabat en triangle flottait au-dessus d'elle, son tampon
-  // serré se lisait mal, et elle ne disait rien que la lettre ne dise déjà
-  // (l'expéditeur, la nature du pli) : une redite posée à côté de l'objet
-  // principal. La lettre reste seule, posée sur le bureau.
+  // LOT P4 : l'enveloppe ouverte d'un pli seul avait été retirée (son rabat
+  // flottait, son étiquette en pointillé était serrée). LOT P7 : elle revient,
+  // REDESSINÉE (`EnveloppeOuverte`), à côté de la lettre qui reste l'objet
+  // principal et garde ses 40 rem. Une enveloppe par pli si la place le
+  // permet, sinon aucune : à deux plis, les lettres prennent déjà la largeur
+  // (2 × 40 rem et deux enveloppes demanderaient 112 rem) ; sur téléphone,
+  // aucune.
   const seul = vide || plis.length === 1;
+  const premier = vide ? routine.code : plis[0]!.code;
+  const destinatairePremier = vide
+    ? "L'entreprise"
+    : plis[0]!.teamId
+      ? "Votre entreprise"
+      : "Tout le marché";
 
   return (
     // LOT P3 : LE COURRIER EST POSÉ SUR LE BUREAU, PAS DANS UN PANNEAU. La
@@ -182,6 +191,14 @@ export function CourrierDuTour({
         </div>
       ) : (
         <div aria-live="polite" className={enParcours ? "" : "mt-5"}>
+          {/* La place de l'enveloppe : la mesure se fait sur la largeur de la
+              section (`courrier-pose-seul`, une requête de conteneur), pas sur
+              celle de l'écran. */}
+          <div className={seul && !enParcours ? "courrier-pose-seul" : ""}>
+          <div className={seul && !enParcours ? "courrier-pose-seul-grille" : ""}>
+          {seul && !enParcours ? (
+            <EnveloppeOuverte code={premier} destinataire={destinatairePremier} />
+          ) : null}
           <div className={seul ? "mx-auto w-full sm:max-w-[40rem]" : ""}>
             {/*
               Le courrier de routine s'ouvre comme les autres : c'est le geste
@@ -215,6 +232,8 @@ export function CourrierDuTour({
                 J&apos;ai pris note
               </button>
             </div>
+          </div>
+          </div>
           </div>
         </div>
       )}

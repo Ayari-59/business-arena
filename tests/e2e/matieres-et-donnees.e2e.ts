@@ -106,11 +106,12 @@ describe("une seule arête de métier par écran", () => {
       expect(pire.length, `étape ${i + 1} : ${pire.join(" + ")}`).toBeLessThanOrEqual(1);
       const toutes = await aretes(page, false);
       expect(toutes.length, `étape ${i + 1}, toute la page : ${toutes.join(" + ")}`).toBeLessThanOrEqual(1);
-      if (i === 0) {
-        // L'étape Vendre : l'arête est celle de « Vos ventes », le panneau de décision.
-        expect(toutes).toHaveLength(1);
-        expect(toutes[0]).toMatch(/panneau-decision/);
-      }
+      // LOT P7 : le cadran du résultat estimé colle en tête de la feuille, à
+      // chaque étape ; c'est LUI qui porte l'arête, jamais un panneau de décision
+      // en plus.
+      expect(toutes, `étape ${i + 1}`).toHaveLength(1);
+      expect(toutes[0]).toMatch(/cadran-estime/);
+      expect(pire[0] ?? "", `étape ${i + 1}, fenêtre`).toMatch(/cadran-estime/);
     }
     // Et les panneaux qu'on consulte sont plats : ni sol, ni ombre.
     await etapes(page).first().click();
@@ -153,11 +154,32 @@ describe("le courrier posé", () => {
         angles: scenes.map(angle),
         dansUnPanneau: Boolean(section.closest(".panneau-info, .panneau-decision, .carte")),
         basDesLettres: Math.max(...lettres.map((l) => l.getBoundingClientRect().bottom)),
-        // LOT P4 : plus d'enveloppe ouverte posée à côté de la lettre.
+        // L'enveloppe animée de l'ouverture ne reste pas à l'écran.
         enveloppes: [...section.querySelectorAll<HTMLElement>(".enveloppe")].filter((e) => {
           const r = e.getBoundingClientRect();
           return r.width > 1 && r.height > 1 && getComputedStyle(e).opacity !== "0";
         }).length,
+        // LOT P7 : L'ENVELOPPE POSÉE, quand elle est là.
+        courriel: lettres.length === 1 && lettres[0]!.classList.contains("message"),
+        largeurLettre: lettres[0]!.offsetWidth,
+        posee: (() => {
+          const e = section.querySelector<HTMLElement>("[data-enveloppe-posee]");
+          if (!e || e.getBoundingClientRect().width < 1) return null;
+          const rabat = e.querySelector<SVGGraphicsElement>("[data-rabat]")!.getBBox();
+          const corps = e.querySelector<SVGGraphicsElement>("[data-corps]")!.getBBox();
+          const re = e.getBoundingClientRect();
+          const rl = lettres[0]!.getBoundingClientRect();
+          return {
+            ecartDuRabat: Math.abs(rabat.y + rabat.height - corps.y),
+            bordsDuRabat: Math.abs(rabat.x - corps.x) + Math.abs(rabat.x + rabat.width - (corps.x + corps.width)),
+            chevauche: !(re.right <= rl.left || re.left >= rl.right || re.bottom <= rl.top || re.top >= rl.bottom),
+            pointilles: [...e.querySelectorAll<HTMLElement>("*")].filter((x) => {
+              const st = getComputedStyle(x);
+              return /dashed|dotted/.test(`${st.borderTopStyle} ${st.borderLeftStyle} ${st.outlineStyle}`);
+            }).length,
+            cache: e.getAttribute("aria-hidden"),
+          };
+        })(),
         note: note.getBoundingClientRect().toJSON() as DOMRect,
         droiteDeLaGrille: grille.getBoundingClientRect().right,
       };
@@ -169,7 +191,22 @@ describe("le courrier posé", () => {
       expect(Math.abs(a), "la lettre penche de plus d'un degré").toBeLessThanOrEqual(1);
     }
     expect(m.note.top, "« J'ai pris note » n'est pas au pied de la lettre").toBeGreaterThan(m.basDesLettres);
-    expect(m.enveloppes, "une enveloppe est encore posée à côté de la lettre").toBe(0);
+    expect(m.enveloppes, "l'enveloppe de l'ouverture reste à l'écran").toBe(0);
+    // LOT P7 (déplacé du lot P4, qui interdisait l'enveloppe) : à 1280 et pour un
+    // pli seul, l'enveloppe est posée à côté ; son rabat est ANCRÉ au corps (même
+    // bord, d'un côté à l'autre), elle ne porte aucune étiquette en pointillé, ne
+    // recouvre pas la lettre, et la lettre garde ses 40 rem. Un courriel n'en a pas.
+    expect(m.largeurLettre, "la lettre a perdu ses 40 rem").toBeGreaterThanOrEqual(640);
+    if (m.largeurs.length === 1 && !m.courriel) {
+      expect(m.posee, "pas d'enveloppe à côté du pli seul").not.toBeNull();
+      expect(m.posee!.ecartDuRabat, "le rabat flotte").toBeLessThanOrEqual(0.5);
+      expect(m.posee!.bordsDuRabat, "le rabat déborde du corps").toBeLessThanOrEqual(0.5);
+      expect(m.posee!.pointilles, "une étiquette en pointillé").toBe(0);
+      expect(m.posee!.chevauche, "l'enveloppe recouvre la lettre").toBe(false);
+      expect(m.posee!.cache).toBe("true");
+    } else {
+      expect(m.posee).toBeNull();
+    }
     expect(m.note.top - m.basDesLettres).toBeLessThan(60);
     expect(Math.abs(m.note.right - m.droiteDeLaGrille)).toBeLessThanOrEqual(2);
   }, 60_000);
@@ -204,11 +241,16 @@ describe("le courrier posé", () => {
         largeur: l.getBoundingClientRect().width,
         transform: getComputedStyle(scene).transform,
         debord: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        // LOT P7 : sur téléphone, aucune enveloppe.
+        enveloppes: [...document.querySelectorAll<HTMLElement>("[data-enveloppe-posee]")].filter(
+          (e) => e.getBoundingClientRect().width > 0,
+        ).length,
       };
     });
     expect(m.largeur).toBeGreaterThanOrEqual(340);
     expect(m.transform).toBe("none");
     expect(m.debord).toBe(0);
+    expect(m.enveloppes, "une enveloppe sur téléphone").toBe(0);
     await tel.close();
   }, 120_000);
 });

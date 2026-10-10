@@ -32,10 +32,11 @@ import { Chevron, Repliable } from "@/components/repliable";
 import { ValeurRafraichie } from "@/components/chiffre-qui-arrive";
 import {
   EncartResultatEstime,
-  LigneEstimeeCompacte,
   aideDesVentesEstimees,
+  resumeDeLEstimation,
   useResultatEstime,
 } from "@/components/resultat-estime";
+import { definirEstimationEnCours } from "@/lib/estimation-en-cours";
 import {
   champDesVentesEstimees,
   PREFIXE_VENTES_ESTIMEES,
@@ -2997,6 +2998,39 @@ export function DecisionForm({
     return () => definirEntete?.(null);
   }, [definirEntete, questionDeLaCarte]);
 
+  /**
+   * LE CHAMP DES VENTES ESTIMÉES, À PORTÉE DE LIEN (lot P7). Tant qu'aucune
+   * vente n'est estimée, le cadran (ordinateur) et la ligne de la barre
+   * (téléphone) invitent à estimer : le lien mène à l'étape ou à la carte du
+   * champ, puis y pose le focus.
+   */
+  const allerAuChampDesVentes = () => {
+    if (modeCartes) {
+      const i = cartes.findIndex((c) => c.cle === "ventes-estimees");
+      if (i >= 0) allerALaCarte(i);
+    } else {
+      allerALEtape(idx("vendre"));
+    }
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const champ = [
+          ...(formRef.current?.querySelectorAll<HTMLInputElement>(
+            `input[name^="${PREFIXE_VENTES_ESTIMEES}"]`,
+          ) ?? []),
+        ].find((c) => c.offsetParent !== null);
+        champ?.focus();
+      }),
+    );
+  };
+  // SUR TÉLÉPHONE, LE RÉSULTAT ESTIMÉ PASSE À LA BARRE (lot P7) : un résumé en
+  // nombres, publié à chaque rendu (le magasin ne prévient la barre que si un
+  // chiffre a changé), retiré quand la feuille s'en va.
+  const resumeEstime = modeCartes && estimation ? resumeDeLEstimation(estime, v.units) : null;
+  useEffect(() => {
+    definirEstimationEnCours(resumeEstime, allerAuChampDesVentes);
+  });
+  useEffect(() => () => definirEstimationEnCours(null), []);
+
   /** Avancer d'une carte, à condition que celle-ci soit remplie correctement. */
   const carteSuivante = () => {
     const f = formRef.current;
@@ -3282,6 +3316,21 @@ export function DecisionForm({
       className="space-y-3"
       {...glisser}
     >
+      {/*
+        LE CADRAN DU RÉSULTAT ESTIMÉ (lot P7), PREMIER ENFANT DE LA FEUILLE ET
+        COLLANT. Lot 6E, il était monté sous la piste, au-dessus des étapes :
+        il partait avec le défilement dès la première, et ne se voyait plus aux
+        étapes 2 à 7 ni au moment de valider. Il colle désormais sous la barre
+        du site et l'ardoise repliée tant que la feuille est à l'écran : les
+        commandes défilent dessous, leur effet reste au-dessus.
+      */}
+      {!modeCartes && estimation ? (
+        <EncartResultatEstime
+          estime={estime}
+          vocabulary={v}
+          allerAuChamp={allerAuChampDesVentes}
+        />
+      ) : null}
       {/* LE TÉMOIN DE LA PROPOSITION (lot P4) : tant qu'il part, les ventes
           estimées sont celles que la feuille a proposées, pas celles de
           l'équipe, et la validation ne les garde pas. */}
@@ -3399,16 +3448,6 @@ export function DecisionForm({
         </ol>
       </nav>
 
-      {/*
-        LOT 6E : L'ENCART MONTE SOUS LA PISTE. Il était posé après toutes les
-        étapes : sur un portable (1366 × 768), on ne voyait jamais en même temps
-        le premier champ et ce qu'il donne. Placé en tête de la feuille, au-dessus
-        des étapes (et donc toujours sous les yeux, à toutes), il est le cadran
-        du cockpit : les commandes en dessous, leur effet au-dessus.
-      */}
-      {!modeCartes && estimation ? (
-        <EncartResultatEstime estime={estime} vocabulary={v} />
-      ) : null}
 
       <section
         data-etape={idx("vendre")}
@@ -3447,7 +3486,6 @@ export function DecisionForm({
               ),
             )}
           </div>
-          <LigneEstimeeCompacte estime={estime} vocabulary={v} />
         </Carte>
       ) : null}
       {gamme ? (
@@ -3534,7 +3572,6 @@ export function DecisionForm({
                 {...(aideEstimee ? { repere: aideEstimee } : {})}
                 hint="Ce que vous pensez vendre ce tour. Cela ne change rien au marché : c'est ce qui fait apparaître le résultat estimé."
               />
-              {modeCartes ? <LigneEstimeeCompacte estime={estime} vocabulary={v} /> : null}
             </Carte>
           ) : null}
           <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
@@ -4378,25 +4415,14 @@ export function DecisionForm({
       </section>
 
       {/*
-        L'ENCART « RÉSULTAT ESTIMÉ », HORS DES ÉTAPES ET DONC TOUJOURS SOUS LES
-        YEUX. Il était tentant de le poser dans l'étape où les ventes estimées
-        se saisissent : on aurait alors réglé le prix, les budgets et l'emprunt
-        sans plus rien voir de ce qu'ils donnent, alors que c'est précisément
-        là que la question se pose. Un seul exemplaire, pour qu'aucune annonce
-        ne se dise deux fois.
-        En parcours (téléphone), il cède la place à la ligne compacte du pied
-        fixe : une carte doit tenir sur un écran. (Lot 6E : il est rendu plus
-        haut, sous la piste des étapes.)
-      */}
-      {/*
-        SUR TÉLÉPHONE, L'ESTIMÉ SE LIT SUR LA CARTE OÙ IL SE DÉCIDE, et là
-        seulement. Posé dans la barre fixe du parcours, il coûtait 65 px à
-        CHAQUE carte, et quatre cartes déjà serrées passaient sous le pied
-        (mesuré : s'approvisionner 688 px, financer 676, investir 720, études
-        686, pour un écran de 664). Posé sur le récapitulatif, fût-ce en une
-        ligne figée, il lui coûtait 36 px — et cette carte-là tenait DÉJÀ tout
-        juste. La règle du lot 3A, une carte tient sur un écran, passe devant :
-        l'estimation se lit là où on la saisit, et « Retour » y ramène.
+        LE RÉSULTAT ESTIMÉ EST HORS DES ÉTAPES, DONC SOUS LES YEUX À TOUTES. Il
+        était tentant de le poser dans l'étape où les ventes estimées se
+        saisissent : on aurait alors réglé le prix, les budgets et l'emprunt
+        sans plus rien voir de ce qu'ils donnent. Lot P7 : sur ordinateur, c'est
+        le cadran collant en tête de la feuille ; sur téléphone, la ligne de la
+        barre du parcours, sur CHAQUE carte (elle ne vivait que sur celle des
+        ventes estimées), sans un pixel de plus par carte : une carte tient sur
+        un écran (lot 3A). Un seul exemplaire par écran, une seule annonce.
       */}
       {modeCartes && carteCourante?.cle === "recap" ? enTeteDuRecapitulatif : null}
       {modeCartes && carteCourante?.cle === "recap" && donneesRecap ? (

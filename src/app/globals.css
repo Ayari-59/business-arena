@@ -4283,3 +4283,244 @@ details[open] > summary [data-chevron] {
 details[open] > summary [data-deplier] {
   display: none;
 }
+
+/* ==========================================================================
+ * LOT P7 — LE RÉSULTAT ESTIMÉ SOUS LES YEUX, L'ENVELOPPE POSÉE.
+ *
+ * « Je ne vois pas le résultat estimé » (ni sur téléphone, ni sur ordinateur),
+ * « je ne vois pas l'enveloppe à côté du courrier ».
+ *
+ *   · LE CADRAN DU RÉSULTAT ESTIMÉ (`.cadran-estime`, resultat-estime.tsx) : un
+ *     QUATRIÈME RÔLE dans l'arène, à côté des trois du lot P3. Ce n'est ni un
+ *     panneau d'information (plat, il ne se voyait pas), ni un panneau de
+ *     décision (on n'y saisit rien) : c'est le cadran du cockpit (lot 6E), qui
+ *     montre l'effet des commandes pendant qu'on les règle. Collant en tête de
+ *     la feuille, sous la barre du site et l'ardoise repliée (`--haut-collant`),
+ *     relevé (le sol du panneau), la lumière d'un pixel en tête et un reflet
+ *     doux, l'ARÊTE DU MÉTIER.
+ *   · UNE SEULE ARÊTE PAR ÉCRAN, RÈGLE DÉPLACÉE (P3) : le cadran est à l'écran
+ *     à chaque étape, c'est donc LUI qui porte l'arête de la feuille ; quand il
+ *     est là, les panneaux de décision gardent leur sol, leur lumière et leur
+ *     ombre, sans arête. Sans cadran (une feuille sans estimation), la règle du
+ *     lot P3 reste : le premier panneau de décision de l'étape la porte.
+ *   · SUR TÉLÉPHONE, la ligne de la barre du parcours et son tiroir
+ *     (`.tiroir-estime`) : aucune hauteur de plus par carte.
+ *   · L'ENVELOPPE POSÉE (`.enveloppe-posee`, courrier.tsx) : une vraie enveloppe
+ *     ouverte, rabat ANCRÉ (un seul dessin), à côté d'un pli seul quand la
+ *     section en a la place ; aucune sur téléphone ni à côté de deux plis.
+ * Gardes : `tests/architecture/matieres-et-donnees.test.ts`,
+ * `tests/e2e/matieres-et-donnees.e2e.ts`, `tests/e2e/resultat-estime-visible.e2e.ts`.
+ * ======================================================================== */
+
+/* ─────────────────────────── LE CADRAN DU RÉSULTAT ESTIMÉ ───────────────── */
+
+.cadran-estime {
+  position: sticky;
+  top: var(--haut-collant, 4.5rem);
+  z-index: 20;
+  padding: 0.5rem 1rem;
+  border-radius: var(--rayon-panneau);
+  background-color: var(--sol-panneau, #13355f);
+  /* LA LUMIÈRE DU CADRAN : un reflet doux qui tombe d'en haut, sur le sol
+     relevé. Le panneau de décision n'en a pas : c'est ce qui les distingue. */
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, #fff 6%, transparent),
+    transparent 70%
+  );
+  box-shadow:
+    inset 0 1px 0 var(--arete-lumiere),
+    var(--ombre-douce);
+  --fond-du-tableau: var(--sol-panneau, #13355f);
+}
+@media (min-width: 640px) {
+  .cadran-estime {
+    padding-inline: 1.25rem;
+  }
+}
+/* L'ARÊTE DU MÉTIER, celle de la feuille : deux pixels dans la teinte de
+   l'entreprise, en ombre intérieure. */
+[data-metier] .cadran-estime {
+  box-shadow:
+    inset 0 2px 0 var(--metier, var(--arete-lumiere)),
+    var(--ombre-douce);
+}
+/* UNE SEULE PAR ÉCRAN : le cadran la prend, les panneaux de décision de la
+   feuille qui le porte gardent leur relief sans elle. */
+[data-metier] form:has(> .cadran-estime) .panneau-decision {
+  box-shadow:
+    inset 0 1px 0 var(--arete-lumiere),
+    var(--ombre-douce);
+}
+/* Les chiffres du cadran : le condensé du lot 6E, un cran plus bas pour que
+   le bandeau reste un bandeau (30 px à 1280, 31 à 1366). */
+.cadran-estime .cadran-bande .chiffre-estime {
+  font-size: clamp(1.5rem, 0.9rem + 1.2vw, 2.125rem);
+}
+/* LE DÉTAIL, AU BOUT DU BANDEAU. Sur grand écran, le résumé du repli se pose à
+   droite, à la hauteur du bandeau ; le repli s'ouvre DANS le cadran, sous lui,
+   et défile en lui-même s'il est plus haut que la moitié de l'écran. */
+@media (min-width: 1024px) {
+  .cadran-estime .cadran-bande {
+    min-height: 4.25rem;
+    padding-right: 17rem;
+  }
+  .cadran-estime > .cadran-detail > summary {
+    position: absolute;
+    top: 0.5rem;
+    right: 1.25rem;
+    height: 4.25rem;
+  }
+}
+.cadran-estime > .cadran-detail[open] > .cadran-tiroir {
+  max-height: min(45vh, 26rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* UN CHAMP QUI PREND LE FOCUS s'arrête sous le cadran collant, pas dessous :
+   la hauteur du cadran est publiée sur la feuille (`--hauteur-du-cadran`). */
+@media (min-width: 640px) {
+  form:has(> .cadran-estime) :is(input, select, textarea, summary) {
+    scroll-margin-top: calc(
+      var(--haut-collant, 4.5rem) + var(--hauteur-du-cadran, 5.5rem) + 0.75rem
+    );
+  }
+}
+@media print {
+  .cadran-estime {
+    position: static;
+    background-image: none;
+    box-shadow: none;
+  }
+}
+
+/* ─────────────────── SUR TÉLÉPHONE : LA LIGNE ET SON TIROIR ─────────────── */
+
+/* Une cible tactile de 44 px dans une ligne de 20 : la ligne d'en-tête est
+   serrée, et chaque pixel de la barre est pris au champ de la carte. La cible
+   a sa vraie hauteur (2,75 rem, la règle des commandes du téléphone) et rend
+   12 px en haut et en bas par des marges négatives : elle déborde sur le
+   titre et la barre de progression, transparente, sans rien pousser. */
+.cible-etendue {
+  /* Un bloc, pas une boîte en ligne : posée sur la ligne de base, elle
+     ajoutait 3 px de jambage à la barre. */
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-block: -0.75rem;
+}
+/* Le tiroir du détail, posé sous la barre, par-dessus la carte : un objet
+   flottant, relevé, son ombre franche. La carte ne défile pas. */
+.tiroir-estime {
+  border-radius: var(--rayon-panneau);
+  background-color: var(--sol-panneau, #13355f);
+  box-shadow:
+    inset 0 1px 0 var(--arete-lumiere),
+    0 18px 36px -12px rgb(0 0 0 / 0.65);
+}
+
+/* ─────────────────────────────── L'ENVELOPPE POSÉE ──────────────────────── */
+
+/* La place se mesure sur la section du courrier, pas sur l'écran : la lettre
+   garde ses 40 rem, l'enveloppe (13,5 rem) et son écart (2,75 rem) doivent
+   tenir dans la marge. 40 + 2 × 16,25 = 72,5 rem : sous ce seuil, aucune. */
+.courrier-pose-seul {
+  container-type: inline-size;
+}
+.enveloppe-posee {
+  display: none;
+}
+@container (min-width: 72.5rem) {
+  .courrier-pose-seul-grille {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .courrier-pose-seul-grille > .enveloppe-posee {
+    display: block;
+    grid-column: 1;
+    justify-self: end;
+    margin: 2.5rem 2.75rem 0 0;
+  }
+  .courrier-pose-seul-grille > :last-child {
+    grid-column: 2;
+  }
+}
+/* L'OBJET. Ses couleurs sont écrites en dur, comme celles de la lettre : une
+   enveloppe posée sur le bureau ne suit pas le thème. Le papier est un cran
+   plus foncé que la lettre (#eef1f5 contre #fff), le rabat vu de l'intérieur
+   un cran encore. Une légère rotation, statique : rien ne s'anime. */
+.enveloppe-posee {
+  position: relative;
+  width: 13.5rem;
+  height: 12.25rem;
+  transform: rotate(-2.5deg);
+  --encre: #0e1a2b;
+  --encre-douce: #3d4a5e;
+  --encre-tenue: #4b5970;
+}
+/* L'OMBRE PORTÉE, celle de la lettre (le contact net, puis la pénombre large
+   et basse), sur la forme entière : corps et rabat ne font qu'un. */
+.enveloppe-posee-forme {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.28)) drop-shadow(0 3px 3px rgb(0 0 0 / 0.24))
+    drop-shadow(0 16px 16px rgb(0 0 0 / 0.42));
+}
+/* La face, posée sur le corps (sous le pli, à 3,5 rem du haut). */
+.enveloppe-posee-face {
+  position: absolute;
+  inset: 3.5rem 0 0;
+  padding: 0.75rem 0.875rem 0.875rem;
+  color: var(--encre);
+}
+.enveloppe-posee-expediteur {
+  display: block;
+  max-width: 7.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--encre-douce);
+}
+.enveloppe-posee-timbre {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.75rem;
+  color: var(--encre-tenue);
+}
+.enveloppe-posee-timbre .enveloppe-timbre {
+  box-shadow: 0 0 0 1px rgb(14 26 43 / 0.06);
+}
+.enveloppe-posee-cachet {
+  position: absolute;
+  top: 1.25rem;
+  right: 0.375rem;
+  width: 4rem;
+  height: 1.875rem;
+  color: rgb(75 89 112 / 0.6);
+  transform: rotate(-8deg);
+}
+.enveloppe-posee-destinataire {
+  position: absolute;
+  right: 0.875rem;
+  bottom: 0.875rem;
+  left: 3.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--encre);
+}
+.enveloppe-posee-a {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--encre-tenue);
+}
+@media print {
+  .enveloppe-posee {
+    display: none;
+  }
+}
