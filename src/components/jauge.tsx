@@ -56,7 +56,7 @@ export function Jauge({
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs uppercase tracking-wide text-slate-400">{libelle}</span>
+        <span className="libelle">{libelle}</span>
         <span className="tabular-nums text-sm text-slate-300">
           <span className="font-semibold text-slate-100">{valeur}</span>
           <span className="text-slate-400"> {borne}</span>

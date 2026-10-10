@@ -43,21 +43,21 @@ export function SimulationProgress({ periodName }: { periodName: string }) {
   return (
     <section
       aria-live="polite"
-      className="rounded-xl border border-amber-400/30 bg-slate-900 p-5"
+      className="carte p-5"
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="flex items-center gap-2 text-sm font-semibold text-amber-200">
+        <p className="flex items-center gap-2 text-sm font-semibold text-slate-100">
           <span className="motion-safe:animate-pulse">
             <Icone nom="resultats" className="h-4 w-4" />
           </span>
           Simulation en cours · {periodName}
         </p>
-        <span className="text-sm font-semibold tabular-nums text-amber-300">{pourcent}%</span>
+        <span className="text-sm font-semibold tabular-nums text-slate-200">{pourcent}%</span>
       </div>
 
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-800">
         <div
-          className="h-full rounded-full bg-amber-400 transition-[width] duration-[var(--duree-chiffre)] ease-out motion-reduce:transition-none"
+          className="h-full rounded-full bg-slate-300 transition-[width] duration-[var(--duree-chiffre)] ease-out motion-reduce:transition-none"
           style={{ width: `${pourcent}%` }}
         />
       </div>
@@ -74,7 +74,7 @@ export function SimulationProgress({ periodName }: { periodName: string }) {
                   fait
                     ? "bg-emerald-400 text-slate-950"
                     : courant
-                      ? "border border-amber-400 text-amber-300 motion-safe:animate-pulse"
+                      ? "border border-slate-300 text-slate-100 motion-safe:animate-pulse"
                       : "border border-white/10 text-slate-400"
                 }`}
               >

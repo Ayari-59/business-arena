@@ -156,7 +156,7 @@ function Ligne({ l }: { l: LigneDeCompetence }) {
   return (
     <li className="carte grid gap-3 p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h3 className="font-display text-lg font-semibold text-slate-50">{l.competence.nom}</h3>
+        <h3 className="text-lg font-semibold text-slate-50">{l.competence.nom}</h3>
         {l.score != null ? (
           <span
             className={`font-display text-xl font-semibold tabular-nums ${
@@ -333,7 +333,7 @@ export default async function ProfilPage({
           <section aria-labelledby="competences-titre" className="grid gap-4">
             <h2
               id="competences-titre"
-              className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+              className="text-2xl font-semibold tracking-tight text-slate-50"
             >
               Dix compétences de décision
             </h2>
@@ -352,7 +352,7 @@ export default async function ProfilPage({
           <section aria-labelledby="hasard-titre" className="grid gap-3">
             <h2
               id="hasard-titre"
-              className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+              className="text-2xl font-semibold tracking-tight text-slate-50"
             >
               Face au hasard
             </h2>
@@ -370,7 +370,7 @@ export default async function ProfilPage({
           <section aria-labelledby="progression-titre" className="grid gap-3">
             <h2
               id="progression-titre"
-              className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+              className="text-2xl font-semibold tracking-tight text-slate-50"
             >
               Progression
             </h2>
@@ -434,7 +434,7 @@ export default async function ProfilPage({
           <section aria-labelledby="suite-titre" id="suite" className="grid scroll-mt-6 gap-3">
             <h2
               id="suite-titre"
-              className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+              className="text-2xl font-semibold tracking-tight text-slate-50"
             >
               Prochain épisode
             </h2>
@@ -505,7 +505,7 @@ export default async function ProfilPage({
             <section aria-labelledby="parties-titre" className="grid gap-3">
               <h2
                 id="parties-titre"
-                className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+                className="text-2xl font-semibold tracking-tight text-slate-50"
               >
                 Vos parties
               </h2>
@@ -535,7 +535,7 @@ export default async function ProfilPage({
           <section aria-labelledby="reprise-titre" id="reprise" className="grid gap-3">
             <h2
               id="reprise-titre"
-              className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+              className="text-2xl font-semibold tracking-tight text-slate-50"
             >
               Cohorte et code de reprise
             </h2>
@@ -596,7 +596,7 @@ export default async function ProfilPage({
           <section aria-labelledby="donnees-titre" className="grid gap-3">
             <h2
               id="donnees-titre"
-              className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+              className="text-2xl font-semibold tracking-tight text-slate-50"
             >
               Vos données
             </h2>

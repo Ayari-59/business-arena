@@ -138,7 +138,7 @@ export function Enveloppe({
         <div className={`flex items-start justify-between gap-2 ${bande ? "pl-7" : ""}`}>
           {/* expéditeur et cachet, en haut à gauche */}
           <span className="min-w-0">
-            <span className="douce block text-sm font-semibold uppercase leading-snug tracking-wide">
+            <span className="douce block text-sm font-semibold leading-snug">
               {c ? c.expediteur : "Courrier à ouvrir"}
             </span>
             {nature ? (
@@ -170,7 +170,7 @@ export function Enveloppe({
         {/* la grille de circulation, propre à la pochette interne */}
         {interne ? (
           <div className={`mt-2 ${bande ? "pl-7" : ""}`}>
-            <span className="tenue block text-xs uppercase tracking-widest">Circulation</span>
+            <span className="tenue block text-xs">Circulation</span>
             <span className="enveloppe-circulation mt-1 block h-7 w-full max-w-[11rem]" aria-hidden />
           </div>
         ) : null}
@@ -178,13 +178,13 @@ export function Enveloppe({
         {/* la fenêtre du destinataire */}
         <div className={`mt-auto ${bande ? "pl-7" : ""}`}>
           <span className="creux filet inline-block rounded-md border border-dashed px-2.5 py-1.5 text-sm leading-relaxed">
-            <span className="tenue block text-xs uppercase tracking-widest">Destinataire</span>
+            <span className="tenue block text-xs">Destinataire</span>
             {destinataire ?? "L'entreprise"}
           </span>
         </div>
 
         <div className={`mt-2 flex items-end justify-between gap-2 ${bande ? "pl-7" : ""}`}>
-          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-etiquette">
+          <span className="tenue flex items-center gap-1.5 text-xs">
             <BrandMark className="h-3.5 w-3.5" />
             {liasse ?? "Business Arena"}
           </span>
@@ -258,12 +258,12 @@ export function Lettre({
         <div className="flex items-start justify-between gap-2">
           <span className="flex min-w-0 items-center gap-3">
             <VisageDeLExpediteur expediteur={c.expediteur} className="h-16 w-16" />
-            <span className="min-w-0 font-display text-xs font-semibold uppercase leading-snug tracking-wide">
+            <span className="min-w-0 text-sm font-semibold leading-snug">
               {c.expediteur}
             </span>
           </span>
           <span
-            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide"
+            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium"
             style={{ borderColor: nature.encre, color: nature.encre }}
           >
             {annonce ? "annoncé" : nature.label}
@@ -330,7 +330,7 @@ export function Lettre({
         </p>
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
-          <span className="tenue text-xs uppercase tracking-etiquette">
+          <span className="tenue text-xs">
             {pileDuCourrier(code)}
           </span>
           <span style={{ color: nature.encre }}>
@@ -368,7 +368,7 @@ export function Courriel({
     <div className={`ecran courriel rounded-md p-3 ${className}`}>
       <div className="flex h-full min-h-full flex-col">
         <div className="creux filet -mx-3 -mt-3 mb-3 flex items-center justify-between gap-2 border-b px-3 py-1.5">
-          <span className="tenue text-xs font-semibold uppercase tracking-etiquette">
+          <span className="tenue text-xs font-semibold">
             Boîte de réception
           </span>
           <span className="tenue text-xs tabular-nums">1 non lu</span>
@@ -399,7 +399,7 @@ export function Courriel({
 
         {nature ? (
           <span
-            className="mt-2.5 inline-flex w-fit border-l-2 pl-1.5 text-xs font-semibold uppercase leading-none tracking-wide"
+            className="mt-2.5 inline-flex w-fit border-l-2 pl-1.5 text-xs font-semibold leading-none"
             style={{ borderColor: nature.encre, color: nature.encre }}
           >
             {nature.mention}
@@ -424,7 +424,7 @@ export function Courriel({
         </div>
 
         <div className="filet mt-2 flex items-end justify-between gap-2 border-t pt-1.5">
-          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-etiquette">
+          <span className="tenue flex items-center gap-1.5 text-xs">
             <BrandMark className="h-3.5 w-3.5" />
             Messagerie
           </span>
@@ -481,9 +481,9 @@ export function Message({
           bien plus que la couleur du fond. */}
       <div className="creux filet border-b px-3 py-2">
         <div className="flex items-start justify-between gap-2">
-          <span className="tenue text-xs font-semibold uppercase tracking-etiquette">Message</span>
+          <span className="tenue text-xs font-semibold">Message</span>
           <span
-            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide"
+            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium"
             style={{ borderColor: nature.encre, color: nature.encre }}
           >
             {annonce ? "annoncé" : nature.label}
@@ -492,16 +492,16 @@ export function Message({
         <div className="mt-1.5 flex items-start gap-3">
           <VisageDeLExpediteur expediteur={c.expediteur} className="h-14 w-14" />
           <dl className="grid min-w-0 flex-1 grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1 text-xs leading-snug">
-            <dt className="tenue uppercase tracking-widest">De</dt>
+            <dt className="tenue">De</dt>
             <dd className="min-w-0 font-semibold">{c.expediteur}</dd>
-            <dt className="tenue uppercase tracking-widest">À</dt>
+            <dt className="tenue">À</dt>
             <dd
               className={`min-w-0 ${surligne ? "font-semibold" : "douce"}`}
               style={surligne ? { color: "#0369a1" } : undefined}
             >
               {destinataire ?? "L'entreprise"}
             </dd>
-            <dt className="tenue uppercase tracking-widest">Objet</dt>
+            <dt className="tenue">Objet</dt>
             <dd className="min-w-0 font-semibold">{c.objet}</dd>
           </dl>
         </div>
@@ -549,7 +549,7 @@ export function Message({
         </p>
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
-          <span className="tenue text-xs uppercase tracking-etiquette">
+          <span className="tenue text-xs">
             {pileDuCourrier(code)}
           </span>
           {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}

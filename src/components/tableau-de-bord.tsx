@@ -212,7 +212,7 @@ function Chiffre({
   return (
     <div className="min-w-0 border-white/10 sm:border-l sm:pl-4">
       <dt
-        className="truncate text-xs font-semibold uppercase tracking-etiquette text-slate-400"
+        className="libelle truncate"
         title={titreLong}
       >
         {titre}
@@ -257,7 +257,7 @@ function Rang({ entete }: { entete: EnTeteDeLArdoise }) {
   if (!rang && !rangVoile) return null;
   return (
     <div className="min-w-0 border-white/10 sm:border-l sm:pl-4">
-      <dt className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Rang</dt>
+      <dt className="libelle">Rang</dt>
       {rang ? (
         <dd className={`mt-1.5 flex items-center gap-2 whitespace-nowrap ${GRAND_CHIFFRE}`}>
           <PastilleDeRang rang={rang.place} moi doublon className="text-xl" />
@@ -312,7 +312,7 @@ export function TableauDeBord({
       >
         {entete ? (
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
+            <p className="surtitre">
               Tableau de bord du dirigeant
             </p>
             <p className="mt-1 flex items-center gap-2.5 font-display text-2xl font-semibold leading-tight text-slate-50 sm:text-3xl">

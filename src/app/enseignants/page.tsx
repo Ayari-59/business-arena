@@ -406,7 +406,7 @@ export default async function EnseignantsPage() {
           <div className="mt-10 grid gap-x-10 gap-y-10 md:grid-cols-3">
             {TROIS_TEMPS.map((t) => (
               <div key={t.temps} className="border-t border-white/10 pt-5">
-                <h3 className="font-display text-xl font-semibold text-slate-100">
+                <h3 className="text-xl font-semibold text-slate-100">
                   {t.temps}
                 </h3>
                 <p className="mt-1 text-base leading-relaxed text-slate-300">

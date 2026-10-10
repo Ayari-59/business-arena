@@ -45,7 +45,7 @@ export function SalesHistory({
             et leur chiffre d&apos;affaires.
           </caption>
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <tr className="libelle text-left">
               <th scope="col" className="pb-1 pr-3 font-medium">
                 Tour
               </th>

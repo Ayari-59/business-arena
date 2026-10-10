@@ -209,7 +209,7 @@ export default async function TeacherGamePage({
             >
               {finished ? "Fin de partie" : "Ce tour"}
             </h2>
-            <p className="mt-1 font-display text-4xl font-extrabold italic leading-none text-slate-50 tabular-nums sm:text-5xl">
+            <p className="mt-1 font-display text-4xl font-extrabold leading-none text-slate-50 tabular-nums sm:text-5xl">
               {finished
                 ? compter(view.roundsCount, "tour joué", "tours joués")
                 : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`}

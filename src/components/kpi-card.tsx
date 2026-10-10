@@ -45,7 +45,7 @@ export function KpiCard({
     // ne bouge pas d'un pixel).
     <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-950/40 p-3 sm:p-5`}>
       <div className={`absolute inset-y-0 left-0 w-1 ${stripe}`} />
-      <p className="pl-2 text-xs uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="pl-2 libelle">{label}</p>
       {/* La tendance passe à la ligne plutôt que de sortir du cadre : sur un
           téléphone, deux tuiles côte à côte laissent 150 px à « −27 709 € ↓
           225,9 % », et le pourcentage débordait de la tuile, coupé net. */}

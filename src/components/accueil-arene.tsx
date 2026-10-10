@@ -160,7 +160,7 @@ export function BandeauDeLaPartie({ contraste }: { contraste: boolean }) {
     >
       <p
         id="partie-d-exemple"
-        className="text-xs font-semibold uppercase tracking-etiquette text-slate-400"
+        className="surtitre"
       >
         Partie d&apos;exemple : {P.equipe}, tour {P.tour}
       </p>
@@ -170,7 +170,7 @@ export function BandeauDeLaPartie({ contraste }: { contraste: boolean }) {
             key={c.libelle}
             className={`border-[color:var(--filet-carte)] px-3 py-3 sm:px-5 ${c.classe}`}
           >
-            <dt className="text-sm font-bold uppercase tracking-etiquette text-slate-400">
+            <dt className="libelle text-sm">
               {c.libelle}
             </dt>
             <dd className="mt-1">
@@ -212,11 +212,10 @@ const DIFFICULTE: Record<Difficulte, { barres: number; nom: string }> = {
  * UNE CARTE D'ÉPISODE ET LE CLASSEMENT DE LA PARTIE, côte à côte.
  *
  * La carte mène à un vrai épisode, et son lien couvre toute la carte ; le
- * classement n'est qu'à lire, il ne porte donc pas le filet orange des cartes
- * qui mènent quelque part. La ligne de l'équipe jouée porte le filet orange
- * plein et le fond neutre des lignes choisies (`classeLigneDeRang`, comme les
- * classements de l'arène), et le premier rang prend l'or des distinctions :
- * jamais l'action.
+ * classement n'est qu'à lire. La ligne de l'équipe jouée porte un filet gris
+ * clair (lot P1 : une position n'est jamais orange) et le fond neutre des
+ * lignes choisies (`classeLigneDeRang`, comme les classements de l'arène), et
+ * le premier rang prend l'or des distinctions : jamais l'action.
  */
 export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
   const ep = episodeParCode(EPISODE_DE_L_ACCUEIL)!;
@@ -229,19 +228,18 @@ export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
     >
       <div className="grid items-start gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">
         <div>
-          <article
-            className="carte relative p-5 sm:p-6"
-            // Le filet orange des cartes qui mènent quelque part (globals.css le
-            // pose sur `a.carte`) : ici le lien est dans la carte, pas la carte.
-            style={{ borderLeft: "6px solid var(--accent-plein)" }}
-          >
-            <p className="flex flex-wrap items-center gap-2 text-sm font-bold uppercase tracking-etiquette text-slate-200">
+          {/* Lot P1 : plus de rail orange. Il disait « carte qui mène quelque
+              part », mais l'orange ne dit plus que l'action, et c'était le
+              cliché de la carte à barre d'accent : le lien qui couvre la carte
+              le dit déjà. */}
+          <article className="carte relative p-5 sm:p-6">
+            <p className="surtitre flex flex-wrap items-center gap-2 text-slate-300">
               <span className="rounded-md bg-[color:var(--marine)] px-2 py-0.5 text-[color:var(--bande-claire)]">
                 Ép. {ep.numero}
               </span>
               {ep.domaine}
             </p>
-            <h2 className="mt-2 font-display text-2xl font-extrabold not-italic normal-case leading-tight text-slate-50 sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-bold text-slate-50 sm:text-3xl">
               {ep.titre}
             </h2>
             <p className="mt-2 text-base leading-relaxed text-slate-400">{ep.resume}</p>
@@ -252,7 +250,7 @@ export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
                     <i
                       key={i}
                       className={`block h-1.5 w-5 rounded-md ${
-                        i <= difficulte.barres ? "bg-[color:var(--accent-plein)]" : "bg-slate-700"
+                        i <= difficulte.barres ? "bg-slate-400" : "bg-slate-700"
                       }`}
                     />
                   ))}
@@ -262,7 +260,7 @@ export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
               {/* Le lien s'étend à toute la carte : on clique où l'on veut. */}
               <Link
                 href={`/entreprises/episode/${ep.code}`}
-                className="font-display text-base font-extrabold uppercase tracking-etiquette text-amber-400 after:absolute after:inset-0 hover:text-amber-300"
+                className="text-base font-semibold text-slate-50 underline decoration-1 underline-offset-4 after:absolute after:inset-0 hover:decoration-2"
               >
                 Jouer l&apos;épisode
                 <span aria-hidden className="ml-1.5">
@@ -274,7 +272,7 @@ export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
           <p className="mt-4">
             <Link
               href="/entreprises/episode"
-              className="text-sm font-semibold text-slate-300 underline decoration-amber-400/50 decoration-2 underline-offset-4 transition hover:text-amber-300 hover:decoration-amber-400"
+              className="text-sm font-semibold text-slate-300 underline decoration-1 underline-offset-4 transition hover:text-slate-50 hover:decoration-2"
             >
               Les {EPISODES.length} épisodes
               <span aria-hidden className="ml-1.5">
@@ -285,12 +283,12 @@ export function EpisodeEtClassement({ contraste }: { contraste: boolean }) {
         </div>
 
         <div className="carte p-4 sm:p-5">
-          <h2 className="text-base font-extrabold uppercase tracking-etiquette text-slate-50">
+          <h2 className="text-lg font-semibold text-slate-50">
             Classement de la partie · tour {P.tour}
           </h2>
           <table className="mt-2 w-full border-collapse text-left tabular-nums">
             <thead>
-              <tr className="text-xs uppercase tracking-etiquette text-slate-400">
+              <tr className="libelle">
                 <th scope="col" className="w-9 py-1 font-semibold">
                   <span className="sr-only">Rang</span>
                 </th>

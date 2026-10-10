@@ -222,7 +222,7 @@ export function TableauDesReferences({
                 <NomEtIncidents reference={g} produit={p} tour={tour} />
               </span>
               <span className="shrink-0 whitespace-nowrap">
-                <span className="mr-1 text-xs uppercase tracking-wide text-slate-400">CA</span>
+                <span className="mr-1 libelle">CA</span>
                 <span className="font-semibold tabular-nums text-slate-100">
                   {formatEuro(p.revenue)}
                 </span>
@@ -253,7 +253,7 @@ export function TableauDesReferences({
             Ce qu&apos;a fait chaque référence sur le tour écoulé.
           </caption>
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <tr className="libelle text-left">
               <th scope="col" className={th}>
                 Référence
               </th>

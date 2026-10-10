@@ -52,19 +52,16 @@ describe("les champs chiffrés restent dans leur cadre", () => {
 
 describe("les intitulés réservent deux lignes, pour que les valeurs s'alignent", () => {
   it("formulaire : tous les intitulés de champ", () => {
-    // `font-semibold uppercase … text-slate-100` est la signature d'un intitulé
-    // de champ (lot 6E : il était `font-medium … text-slate-400`, un gris que
-    // le libellé d'un champ modifiable ne doit plus avoir). On écarte deux
-    // voisins qui lui ressemblent :
-    //   · les titres de section (`text-slate-200`), seuls sur leur ligne, qui
-    //     n'ont rien à aligner ;
-    //   · « Acheter » / « Vendre » du parc machines (emerald et red), deux mots
-    //     d'une seule ligne côte à côte dans un cadre compact : ils s'alignent
-    //     déjà, et leur réserver deux lignes n'ajouterait que du vide.
+    // `libelle … font-semibold` est la signature d'un intitulé de champ (lot
+    // P1 : il était `font-semibold uppercase tracking-wide text-slate-100`, en
+    // petites capitales ; il passe au libellé de la maison, en casse normale,
+    // un cran plus gras que le libellé d'une information consultable). On
+    // écarte « Acheter » / « Vendre » du parc machines, des libellés sans
+    // graisse : deux mots d'une seule ligne côte à côte dans un cadre
+    // compact, qui s'alignent déjà, et auxquels réserver deux lignes
+    // n'ajouterait que du vide.
     const intitules =
-      source(FORM).match(
-        /className="[^"]*font-semibold uppercase tracking-wide text-slate-100"/g,
-      ) ?? [];
+      source(FORM).match(/className="libelle [^"]*font-semibold[^"]*"/g) ?? [];
     expect(intitules.length).toBeGreaterThan(0);
     for (const i of intitules) {
       expect(i, `intitulé sans hauteur réservée : ${i}`).toContain("min-h-8");
@@ -74,6 +71,8 @@ describe("les intitulés réservent deux lignes, pour que les valeurs s'alignent
 
   it("panneaux de cadrage : l'intitulé d'un chiffre", () => {
     const s = source(CONTEXTE);
-    expect(s).toContain("min-h-8 text-xs uppercase leading-4");
+    // Lot P1 : le libellé de la maison, en casse normale (il était
+    // `min-h-8 text-xs uppercase leading-4`).
+    expect(s).toContain("libelle min-h-8 leading-4");
   });
 });

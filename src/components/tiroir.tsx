@@ -95,9 +95,11 @@ export function Tiroir({
   // tiroir s'y ouvre ; on peut toujours le refermer.
   const enParcours = useParcours() !== null;
   const papier = surface === "papier";
-  // Sur le papier, le chevron et l'icône prennent l'encre douce du document :
-  // l'ambre vif du cockpit n'y tiendrait que 2,4 pour 1.
-  const teinteDuRepere = papier ? "douce" : "text-amber-400/80";
+  // Sur le papier, le chevron et l'icône prennent l'encre douce du document.
+  // Dans le cockpit, la teinte du métier (lot P1) : un repli qu'on ouvre n'est
+  // pas une action qui engage, et l'orange ne dit plus que celle-là. Il était
+  // l'ambre vif, qui faisait lire chaque tiroir comme un bouton.
+  const teinteDuRepere = papier ? "douce" : "text-[color:var(--metier,var(--color-slate-400))]";
   return (
     <details
       data-tiroir
@@ -136,7 +138,7 @@ export function Tiroir({
             className={
               phrase
                 ? "min-w-0 text-base font-medium text-slate-100"
-                : "min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-300"
+                : "min-w-0 text-sm font-semibold text-slate-200"
             }
           >
             {titre}

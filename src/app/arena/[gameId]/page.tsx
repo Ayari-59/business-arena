@@ -277,7 +277,7 @@ export default async function ArenaPage({
         />
       </div>
       <div>
-        <h3 className="text-xl font-bold text-slate-100 max-sm:font-display max-sm:text-3xl max-sm:font-semibold">
+        <h3 className="text-xl font-bold text-slate-100 max-sm:text-2xl">
           {view.intro.company}
         </h3>
         <p className="text-sm text-slate-400 max-sm:text-base">{view.intro.tagline}</p>
@@ -300,7 +300,7 @@ export default async function ArenaPage({
         </Tiroir>
       ) : (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Situation</h3>
+          <h3 className="text-base font-semibold text-slate-100">Situation</h3>
           <p className="mt-1 text-sm leading-relaxed">{view.intro.briefing}</p>
         </div>
       )}
@@ -320,7 +320,7 @@ export default async function ArenaPage({
         </Tiroir>
       ) : (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Contexte</h3>
+          <h3 className="text-base font-semibold text-slate-100">Contexte</h3>
           <p className="mt-1 text-sm leading-relaxed">{view.intro.context}</p>
         </div>
       )}
@@ -721,7 +721,7 @@ export default async function ArenaPage({
   const toursPassesDe = (liste: typeof periods) => (
     <>
       {liste.length > 0 ? (
-        <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
+        <p className="surtitre">
           {finished ? "Vos tours" : "Tours passés"}
         </p>
       ) : null}
@@ -1258,7 +1258,7 @@ export default async function ArenaPage({
                   <p className="mt-1 text-sm leading-relaxed text-slate-400">
                     <a
                       href={`/arena/${view.gameId}/cockpit`}
-                      className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                      className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
                     >
                       Cockpit de prévision (Excel)
                     </a>
@@ -1584,14 +1584,14 @@ export default async function ArenaPage({
                 href="#dernier-resultat"
                 className="voile-neutre flex items-center justify-between gap-3 rounded-[var(--rayon-panneau)] px-3 py-2.5 text-sm transition hover:underline sm:px-4"
               >
-                <span className="flex items-center gap-2 font-medium text-amber-300">
+                <span className="flex items-center gap-2 font-medium text-slate-100">
                   <Icone nom="resultats" className="h-4 w-4" />
                   {periodLabel(view.roundDays, latestRound)} {view.kind === "solo" ? "simulé" : "clos"} — voir les résultats
                 </span>
                 {/* La flèche descend : les tours clos sont passés SOUS le
                     tour en cours, pour que l'élève ouvre sa partie sur ce
                     qu'il a à faire. */}
-                <span aria-hidden className="text-amber-300">
+                <span aria-hidden className="text-slate-300">
                   ↓
                 </span>
               </a>

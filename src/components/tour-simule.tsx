@@ -182,10 +182,10 @@ export function TourSimule({
         // Sans bilan fourni, aucun chiffre : l'écran reste une simple étape.
         <div className="rituel mx-auto w-full max-w-4xl text-center">
           <div data-temps="1">
-            <p className="text-xs font-semibold uppercase tracking-annonce text-slate-400">
+            <p className="surtitre">
               {surtitre}
             </p>
-            <h1 className="mt-2 font-display text-3xl font-semibold leading-tight text-slate-50 sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold leading-[1.1] text-slate-50 sm:text-4xl">
               {titre}
             </h1>
             <p className="mt-3 text-base text-slate-300">Vos décisions sont enregistrées.</p>

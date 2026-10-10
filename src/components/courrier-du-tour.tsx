@@ -106,7 +106,7 @@ export function CourrierDuTour({
         <button
           type="button"
           onClick={relire}
-          className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+          className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           Relire
         </button>
@@ -188,7 +188,7 @@ export function CourrierDuTour({
             <button
               type="button"
               onClick={prendreNote}
-              className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5 pointer-coarse:min-h-11"
+              className={`${bouton({ variante: "secondaire", taille: "m" })} pointer-coarse:min-h-11`}
             >
               J&apos;ai pris note
             </button>

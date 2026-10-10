@@ -123,7 +123,7 @@ export function RevelationDuMarche({
         <p className="text-[clamp(0.8rem,1.6vw,1.4rem)] font-semibold uppercase tracking-annonce text-slate-400">
           {surtitre}
         </p>
-        <h2 className="mt-1 font-display text-[clamp(1.5rem,min(4vw,5.3vh),3.2rem)] font-semibold leading-tight text-slate-50">
+        <h2 className="mt-1 text-[clamp(1.5rem,min(4vw,5.3vh),3.2rem)] font-semibold leading-tight text-slate-50">
           {titre}
         </h2>
         {mention ? (

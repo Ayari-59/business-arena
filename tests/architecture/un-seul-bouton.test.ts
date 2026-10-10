@@ -71,18 +71,50 @@ describe("un seul bouton", () => {
   it("les trois tailles passent le plancher de 24 px", () => {
     // 12 px de texte, 16 px d'interligne, et deux fois le remplissage vertical.
     // La plus petite fait 16 + 2 × 6 = 28 px : au-dessus du plancher WCAG 2.5.8.
+    // Lot P1 : la grande passe à 16 px de texte (24 d'interligne) et 2 × 10 px
+    // de remplissage, 44 px avant le bord : toujours au-dessus du plancher.
     expect(bouton({ taille: "s" })).toContain("py-1.5");
     expect(bouton({ taille: "m" })).toContain("py-2");
-    expect(bouton({ taille: "l" })).toContain("py-3");
+    expect(bouton({ taille: "l" })).toContain("py-2.5");
+    expect(bouton({ taille: "l" })).toContain("text-base");
   });
 
-  it("l'ombre n'est portée que par le grand bouton plein", () => {
-    // Une ombre laiton donne de la présence à l'appel d'une page publique ;
-    // posée sur les huit boutons d'un écran de pilotage, elle fait du bruit.
-    expect(bouton({ taille: "l" })).toContain("shadow-lg");
-    expect(bouton({ taille: "m" })).not.toContain("shadow");
-    expect(bouton({ variante: "secondaire", taille: "l" })).not.toContain("shadow");
-    expect(bouton({ variante: "lien", taille: "l" })).not.toContain("shadow");
+  it("aucun relief d'arcade : une ombre douce et courte, posée par la feuille", () => {
+    /*
+     * LOT P1, GARDE DÉPLACÉE. Elle exigeait l'ombre `shadow-lg` sur le grand
+     * plein : le relief d'une borne d'arcade (une ombre PLEINE d'orange foncé,
+     * décalée de trois à six pixels, sans flou), que le propriétaire a écarté
+     * pour un produit haut de gamme. Elle exige désormais l'inverse, et plus
+     * strictement : aucune ombre utilitaire dans aucune variante ni taille, et
+     * une seule ombre pour le plein, celle de la feuille, douce (floutée) et
+     * courte. Plus de capitales condensées non plus.
+     */
+    for (const variante of ["principal", "secondaire", "lien"] as const) {
+      for (const taille of ["s", "m", "l"] as const) {
+        expect(bouton({ variante, taille }), `${variante} ${taille}`).not.toMatch(/\bshadow/);
+      }
+    }
+    const css = readFileSync(join(process.cwd(), "src", "app", "globals.css"), "utf8").replace(
+      /\/\*[\s\S]*?\*\//g,
+      "",
+    );
+    const regle = css.match(/\n\.bouton-plein \{([^}]*)\}/)?.[1] ?? "";
+    expect(regle, "la règle du bouton plein a disparu").toContain("background-color");
+    expect(regle).toMatch(/box-shadow:\s*var\(--ombre-bouton\)/);
+    expect(regle, "le plein parle en casse de phrase").toMatch(/text-transform:\s*none/);
+    expect(regle, "le plein parle dans la grotesque de lecture").toMatch(/font-family:\s*var\(--font-sans\)/);
+    // Une ombre PLEINE est une ombre sans flou : « 0 3px 0 » ou « 0 6px 0 ».
+    for (const nom of ["--ombre-bouton", "--ombre-bouton-appui"]) {
+      const valeur = css.match(new RegExp(`${nom}:([^;]*);`))?.[1] ?? "";
+      expect(valeur, `${nom} absente`).not.toBe("");
+      expect(valeur, `${nom} : une ombre pleine décalée`).not.toMatch(/\b0 \d+px 0\b/);
+    }
+    // Aucune règle de bouton ne remet un socle : pas d'ombre « 0 Npx 0 ».
+    for (const m of css.matchAll(/([^{}]*\.bouton-[a-z]+[^{}]*)\{([^}]*)\}/g)) {
+      expect(m[2], `règle ${m[1]!.trim()}`).not.toMatch(/box-shadow:[^;]*\b0 \d+px 0\b/);
+    }
+    // À l'appui, un enfoncement d'un pixel, coupé pour qui demande moins de mouvement.
+    expect(css).toMatch(/:is\(\.bouton-plein, \.bouton-filet\):active:not\(:disabled\) \{\s*transform: translateY\(1px\)/);
   });
 
   it("chaque variante dit une intention différente", () => {
@@ -90,11 +122,14 @@ describe("un seul bouton", () => {
     const secondaire = bouton({ variante: "secondaire" });
     const lien = bouton({ variante: "lien" });
     expect(principal).toContain("bg-amber-400");
-    expect(secondaire).toContain("border-white/15");
-    // Le lien : l'encre d'action soulignée d'un pixel, sans cadre ni fond.
+    expect(secondaire).toContain("border-white/25");
+    // Le lien : le texte souligné d'un pixel, sans cadre ni fond, À L'ENCRE
+    // (lot P1 : l'orange n'est plus qu'au bouton principal).
     expect(lien).toContain("underline");
     expect(lien).toContain("decoration-1");
     expect(lien).not.toMatch(/\bborder\b|\bbg-/);
+    expect(lien, "le lien est à l'encre, pas à l'orange").not.toMatch(/amber|orange|accent/);
+    expect(secondaire, "le filet ne s'allume pas à l'orange").not.toMatch(/amber|orange|accent/);
     // Et toutes partagent la même forme : c'est ce qui les fait lire comme une
     // famille plutôt que comme trois inventions.
     for (const v of [principal, secondaire, lien]) {
@@ -106,6 +141,21 @@ describe("un seul bouton", () => {
       expect(v).not.toMatch(/disabled:opacity/);
     }
     expect(secondaire).toContain("bouton-filet");
+  });
+
+  it("une taille donne la même hauteur au plein et au filet (lot P1)", () => {
+    // « Voir les résultats » et « Passer au Tour 3 », côte à côte au rituel,
+    // n'avaient ni la même hauteur ni la même typographie. Le plein et le filet
+    // d'une même taille portent le même remplissage, le même corps et un bord
+    // d'un pixel (transparent pour le plein).
+    const remplissage = (c: string) =>
+      c.split(" ").filter((x) => /^(?:p[xy]-|text-(?:xs|sm|base|lg)$|border$)/.test(x)).sort();
+    for (const taille of ["s", "m", "l"] as const) {
+      expect(remplissage(bouton({ taille })), taille).toEqual(
+        remplissage(bouton({ variante: "secondaire", taille })),
+      );
+    }
+    expect(bouton({ taille: "l" })).toContain("border-transparent");
   });
 
   it("désactivé, le bouton plein prend le gris des filets, sans ombre ni opacité", () => {

@@ -63,7 +63,7 @@ export function BandeFinale({
       exterieur="border-t border-white/10"
       interieur="mx-auto max-w-3xl px-6 py-16 text-center"
     >
-      <h2 className="font-display text-3xl font-semibold text-slate-50">{titre}</h2>
+      <h2 className="text-3xl font-semibold text-slate-50">{titre}</h2>
       <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-slate-300">{texte}</p>
       <div data-cta-principal className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         {children}

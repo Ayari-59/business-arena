@@ -118,7 +118,9 @@ export function QuickConfigFields({
   const comp = COMPANIES.find((c) => c.value === companies)!;
   const round = ROUNDS.find((r) => r.value === rounds)!;
 
-  const label = "text-xs font-medium uppercase tracking-wide text-slate-400";
+  // Le nom d'un réglage : un libellé, en casse normale (lot P1 : il était en
+  // petites capitales espacées, comme tout le reste de la carte).
+  const label = "libelle";
   const tile =
     "cursor-pointer rounded-lg border border-white/5 bg-slate-950 px-2 py-2.5 text-center text-slate-100 transition hover:border-white/25";
   const tileOn = "border-amber-400/70 bg-amber-400/10 text-slate-100 ring-1 ring-amber-400/30";
@@ -158,9 +160,9 @@ export function QuickConfigFields({
             >
               <PictoSecteur
                 secteur={s.secteur}
-                className={`h-7 w-7 sm:h-10 sm:w-10 ${on ? "text-amber-300" : "text-slate-300"}`}
+                className={`h-7 w-7 sm:h-10 sm:w-10 ${on ? "text-slate-50" : "text-slate-300"}`}
               />
-              <span className="text-xs font-semibold leading-tight text-slate-100 sm:font-display sm:text-lg sm:font-bold">
+              <span className="text-xs font-semibold leading-tight text-slate-100 sm:text-base">
                 {s.label}
               </span>
               <span className="text-xs leading-tight text-slate-400 sm:text-sm">{s.sector}</span>
@@ -214,7 +216,7 @@ export function QuickConfigFields({
               aria-label={`Niveau ${l.level} · ${l.name}${reserve ? " · réservé aux établissements" : ""}`}
               className={`px-1 text-xs tabular-nums ${
                 l.level === level
-                  ? "font-bold text-amber-300"
+                  ? "font-bold text-slate-50"
                   : reserve
                     ? "text-slate-400 opacity-80 hover:opacity-100"
                     : "text-slate-400 hover:text-slate-300"
@@ -241,10 +243,10 @@ export function QuickConfigFields({
           </p>
           {liens ? (
             <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-              <a href={liens.contact.href} className="font-semibold text-amber-300 underline decoration-1 underline-offset-4">
+              <a href={liens.contact.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
                 {liens.contact.libelle} →
               </a>
-              <a href={liens.enseignant.href} className="font-semibold text-amber-300 underline decoration-1 underline-offset-4">
+              <a href={liens.enseignant.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
                 {liens.enseignant.libelle} →
               </a>
             </p>
@@ -344,7 +346,7 @@ export function QuickConfigFields({
         data-vous-lancez
         className="ardoise mt-5 rounded-lg bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-300"
       >
-        <span className="mr-1 text-xs font-semibold uppercase tracking-annonce text-slate-400">
+        <span className="surtitre mr-1">
           Vous lancez
         </span>{" "}
         <span className="font-semibold text-slate-100">

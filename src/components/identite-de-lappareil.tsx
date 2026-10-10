@@ -50,11 +50,11 @@ export function IdentiteDeLAppareil({
     <div
       className={`w-full max-w-sm rounded-lg border px-3 py-2 ${
         avertissement
-          ? "border-amber-400/30 bg-amber-400/5"
+          ? "encadre-perte"
           : "border-white/10"
       }`}
     >
-      <p className={`text-sm leading-relaxed ${avertissement ? "text-amber-200" : "text-slate-400"}`}>
+      <p className={`text-sm leading-relaxed ${avertissement ? "text-slate-100" : "text-slate-400"}`}>
         <Icone nom="personne" className="mr-1 h-4 w-4" />
         {avertissement ? "Cet appareil est déjà utilisé par " : "Vous jouez sous le nom de "}
         <strong className={avertissement ? "font-semibold" : "font-semibold text-slate-200"}>
@@ -82,7 +82,7 @@ export function IdentiteDeLAppareil({
             <button
               type="button"
               onClick={() => setConfirmation(false)}
-              className="rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-slate-300 transition hover:text-slate-100"
+              className={bouton({ variante: "secondaire", taille: "s" })}
             >
               Annuler
             </button>

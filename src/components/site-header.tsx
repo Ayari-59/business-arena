@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { InstallButton } from "@/components/install-button";
+import { bouton } from "@/components/bouton";
 import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
@@ -141,12 +142,13 @@ export function SiteHeader() {
         enJeu ? "max-sm:hidden" : ""
       } ${enProjection ? "hidden" : ""}`}
     >
-      {/* Un filet orange posé sur le bord bas de la barre, éteint aux deux
+      {/* Un filet clair posé sur le bord bas de la barre, éteint aux deux
           extrémités. C'est le même geste que le liseré d'une carte : ce qui
-          sépare deux surfaces se voit, mais ne se remarque pas. */}
+          sépare deux surfaces se voit, mais ne se remarque pas. Il a été
+          orange : lot P1, l'orange ne dit plus que l'action. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-400/35 to-transparent print:hidden"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent print:hidden"
       />
       {/* La rangée a le droit de passer à la ligne. Sans cela, un bouton qui
           apparaît (l'invite d'installation ne se montre que sur certains
@@ -185,17 +187,18 @@ export function SiteHeader() {
                   aria-current={estCourant(lien.href) ? "page" : undefined}
                   className={`group relative block px-3 py-1.5 text-sm font-medium transition-colors ${
                     estCourant(lien.href)
-                      ? "text-amber-200"
+                      ? "text-white"
                       : "text-slate-300 hover:text-white"
                   }`}
                 >
                   {lien.libelle}
-                  {/* La page courante porte un trait orange plein ; les
-                      autres le font naître du centre au survol. Une pastille
-                      pleine alourdissait une barre qui en compte trois. */}
+                  {/* La page courante porte un trait plein ; les autres le
+                      font naître du centre au survol. Une pastille pleine
+                      alourdissait une barre qui en compte trois. Le trait dit
+                      une POSITION : gris clair, jamais l'orange (lot P1). */}
                   <span
                     aria-hidden
-                    className={`absolute inset-x-3 bottom-0.5 h-px origin-center bg-amber-400/70 transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
+                    className={`absolute inset-x-3 bottom-0.5 h-px origin-center bg-slate-300 transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
                       estCourant(lien.href)
                         ? "scale-x-100"
                         : "scale-x-0 group-hover:scale-x-100"
@@ -207,9 +210,11 @@ export function SiteHeader() {
           </ul>
           )}
 
-          {/* Les deux portes d'entrée, une par public. L'enseignant en orange,
-              comme l'action principale du plan ; l'élève en clair. Un filet les
-              sépare de ce qui ne fait qu'informer. */}
+          {/* Les deux portes d'entrée, une par public : deux boutons
+              SECONDAIRES de la maison (lot P1). L'enseignant a été un contour
+              orange écrit à la main, l'élève un dégradé clair : deux formes de
+              plus, et un orange qui disputait l'œil à l'action de la page. Un
+              filet les sépare de ce qui ne fait qu'informer. */}
           {enJeu ? null : (
             <span aria-hidden className="mx-1 hidden h-5 w-px bg-white/10 lg:block" />
           )}
@@ -221,11 +226,7 @@ export function SiteHeader() {
                 href={lien.href}
                 title={lien.aide}
                 aria-current={estCourant(lien.href) ? "page" : undefined}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium shadow-sm transition duration-[var(--duree-passage)] hover:-translate-y-px motion-reduce:transform-none motion-reduce:transition-none ${
-                  lien.acces === "enseignant"
-                    ? "border-amber-400 text-amber-200 hover:bg-amber-400 hover:text-slate-950"
-                    : "border-white/15 bg-gradient-to-b from-white/8 to-transparent text-slate-200 hover:border-white/35 hover:from-white/12"
-                }`}
+                className={bouton({ variante: "secondaire", taille: "m" })}
               >
                 {lien.libelle}
               </Link>
@@ -240,8 +241,8 @@ export function SiteHeader() {
             aria-controls="plan-du-site"
             className={`flex items-center gap-2 rounded-lg border bg-slate-900 px-2.5 py-1.5 text-xs transition duration-[var(--duree-passage)] motion-reduce:transition-none pointer-coarse:min-h-11 pointer-coarse:px-3.5 pointer-coarse:text-sm ${
               ouvert
-                ? "border-amber-400/45 text-amber-200"
-                : "border-white/10 text-slate-300 hover:border-amber-400/35 hover:text-slate-100"
+                ? "border-white/40 text-white"
+                : "border-white/10 text-slate-300 hover:border-white/35 hover:text-slate-100"
             }`}
           >
             {/* Trois filets qui se croisent quand le plan s'ouvre : le bouton
@@ -298,7 +299,7 @@ export function SiteHeader() {
               superposer. */}
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/55 to-transparent"
+            className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent"
           />
           <div className="space-y-1">
             {NAVIGATION.map((groupe) => {
@@ -313,7 +314,7 @@ export function SiteHeader() {
                     className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-white/5 pointer-coarse:min-h-11"
                   >
                     <span
-                      className={`shrink-0 text-xs font-semibold uppercase tracking-surtitre transition-colors ${
+                      className={`shrink-0 text-sm font-semibold transition-colors ${
                         ouvertGroupe ? "text-slate-50" : "text-slate-400 group-hover:text-slate-200"
                       }`}
                     >
@@ -323,13 +324,13 @@ export function SiteHeader() {
                         distingue une rubrique d'un lien, sans l'écrire. */}
                     <span
                       aria-hidden
-                      className={`h-px flex-1 transition-colors ${ouvertGroupe ? "bg-amber-400" : "bg-white/10"}`}
+                      className={`h-px flex-1 transition-colors ${ouvertGroupe ? "bg-slate-300" : "bg-white/10"}`}
                     />
                     <svg
                       aria-hidden
                       viewBox="0 0 10 6"
                       className={`h-1.5 w-2.5 shrink-0 transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none ${
-                        ouvertGroupe ? "rotate-180 text-amber-300/90" : "text-slate-400"
+                        ouvertGroupe ? "rotate-180 text-slate-200" : "text-slate-400"
                       }`}
                     >
                       <path
@@ -393,8 +394,10 @@ export function SiteHeader() {
  * deux entrées.
  */
 function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
-  // L'action principale garde sa couleur : c'est la seule entrée du plan qui
-  // dit par où commencer, et elle doit se voir sans se lire.
+  // L'action principale se distingue : c'est la seule entrée du plan qui dit
+  // par où commencer, et elle doit se voir sans se lire. Lot P1 : par un filet
+  // franc et l'encre forte, comme un bouton secondaire, et non plus par
+  // l'orange ; l'entrée de la page courante, une position, prend le gris clair.
   const principale = lien.href === ACTION_PRINCIPALE.href;
   return (
     <Link
@@ -403,14 +406,14 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
       aria-current={courant ? "page" : undefined}
       className={`group block rounded-lg px-3 py-2 transition duration-[var(--duree-passage)] motion-reduce:transition-none ${
         principale
-          ? "border border-amber-400 hover:bg-white/5"
+          ? "border border-white/25 hover:border-white/50 hover:bg-white/5"
           : `border-l-2 hover:bg-white/5 ${
-              courant ? "border-amber-400/70 bg-white/5" : "border-transparent hover:border-amber-400/50"
+              courant ? "border-slate-300 bg-white/5" : "border-transparent hover:border-white/35"
             }`
       }`}
     >
       <span
-        className={`flex items-center justify-between gap-3 text-sm font-medium ${principale ? "text-amber-300" : "text-slate-100"}`}
+        className={`flex items-center justify-between gap-3 text-sm ${principale ? "font-semibold text-slate-50" : "font-medium text-slate-100"}`}
       >
         {lien.libelle}
         {/* La flèche de l'entrée principale avance d'un cheveu au survol :
@@ -418,7 +421,7 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
         {principale ? (
           <span
             aria-hidden
-            className="translate-x-0 text-amber-300 transition-transform duration-[var(--duree-passage)] group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+            className="translate-x-0 text-slate-200 transition-transform duration-[var(--duree-passage)] group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none"
           >
             →
           </span>

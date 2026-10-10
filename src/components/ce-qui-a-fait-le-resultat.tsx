@@ -46,7 +46,7 @@ export function CeQuiAFaitLeResultat({
       className={`grid gap-x-8 gap-y-4 text-left ${causes.length > 0 ? "md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]" : ""}`}
     >
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-300">
+        <p className="libelle font-semibold text-slate-200">
           Ce qui a fait le résultat
         </p>
         <ol className="mt-2 space-y-1">
@@ -99,7 +99,7 @@ export function CeQuiAFaitLeResultat({
       </div>
       {retenues.length > 0 ? (
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-300">
+          <p className="libelle font-semibold text-slate-200">
             Les causes les plus fortes
           </p>
           <ul

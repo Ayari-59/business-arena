@@ -220,7 +220,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
 function Section({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
     <section className="mt-12">
-      <h2 className="font-display text-2xl font-semibold tracking-tight text-slate-50">{titre}</h2>
+      <h2 className="text-2xl font-semibold tracking-tight text-slate-50">{titre}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );

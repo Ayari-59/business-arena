@@ -55,7 +55,7 @@ export function SaisonDuTour({
   // sont des clientèles ou des références particulières.
   const [tete, ...detail] = notes;
   const haute = tete!.coef > 1;
-  const teinte = haute ? "text-emerald-300" : "text-amber-300";
+  const teinte = haute ? "text-emerald-300" : "text-red-300";
 
   return (
     <Tiroir
@@ -77,7 +77,7 @@ export function SaisonDuTour({
           {coefficient(tete!.coef)}
         </span>
         <span className="text-sm text-slate-300">{tete!.name}</span>
-        <span className={`text-xs font-semibold uppercase tracking-wide ${teinte}`}>
+        <span className={`text-xs font-semibold ${teinte}`}>
           {haute ? "haute saison" : "basse saison"}
         </span>
       </p>
@@ -97,7 +97,7 @@ export function SaisonDuTour({
               </span>
               <span
                 className={`shrink-0 whitespace-nowrap tabular-nums ${
-                  n.coef > 1 ? "text-emerald-400" : "text-amber-400"
+                  n.coef > 1 ? "text-emerald-400" : "text-red-400"
                 }`}
               >
                 {ecartSaison(n.coef)}

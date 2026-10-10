@@ -51,7 +51,7 @@ export function EcheanceDuTour({
   const urgence = etat?.urgence ?? false;
 
   const teinte = urgence
-    ? "border-amber-400/50 bg-amber-400/10 text-amber-200"
+    ? "border-red-400 text-red-300"
     : "border-white/10 text-slate-400";
 
   if (compact) {

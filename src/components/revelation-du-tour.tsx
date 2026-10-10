@@ -76,7 +76,7 @@ export function RevelationDuTour({
       } ${nouveau ? "revelation" : ""}`}
     >
       {/* L'OR DIT LE VERDICT : ce que le marché a tranché (globals.css, « LE PODIUM »). */}
-      <p className="texte-or text-xs font-semibold uppercase tracking-surtitre">
+      <p className="surtitre texte-or">
         {periode} · le verdict
       </p>
 

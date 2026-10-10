@@ -189,7 +189,7 @@ export function SituationCard({
 
   const indices = (
     <section className="rounded-lg bg-slate-950 p-3 sm:p-5">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <h4 className="text-sm font-semibold text-slate-100">
         Besoin d&apos;aide ? Indices progressifs
       </h4>
       {situation.unlockedHints.length > 0 ? (
@@ -199,7 +199,7 @@ export function SituationCard({
               key={h.level}
               className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2 text-sm text-slate-300"
             >
-              <span className="mr-2 text-xs font-semibold text-amber-400">
+              <span className="mr-2 text-xs font-semibold text-slate-200">
                 Indice {h.level}
               </span>
               {h.text}
@@ -253,12 +253,12 @@ export function SituationCard({
     <article className={dansTiroir ? "" : "papier rounded-xl p-4 sm:p-6"}>
       <header className="mb-3">
         <div className="flex items-center gap-2">
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
+          <p className="surtitre">
             {CATEGORY_LABELS[situation.category]}
           </p>
           {situation.aboveGameLevel ? (
             <span
-              className="pastille-etat rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-200"
+              className="pastille-etat rounded-full px-2 py-0.5 text-xs font-semibold text-slate-200"
               title="Cette situation mobilise des notions au-dessus du niveau choisi pour la partie."
             >
               Au-dessus du niveau
@@ -273,7 +273,7 @@ export function SituationCard({
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
           {situation.narrative}
         </p>
-        <p className="mt-2 text-sm font-medium text-amber-200">
+        <p className="mt-2 text-sm font-semibold text-slate-100">
           {situation.problem}
         </p>
       </header>
@@ -341,7 +341,7 @@ export function SituationCard({
 
             {/* 1. Diagnostic */}
             <section className="rounded-lg bg-slate-950 p-3 sm:p-5">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <h4 className="text-sm font-semibold text-slate-100">
                 Votre diagnostic
               </h4>
               {/* Les cases forment un groupe : fieldset + legend le disent au
@@ -410,7 +410,7 @@ export function SituationCard({
             {/* 2. Questions : connaissances et/ou modèle d'analyse */}
             {situation.quizQuestions.length > 0 ? (
               <section className="rounded-lg bg-slate-950 p-3 sm:p-5">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <h4 className="text-sm font-semibold text-slate-100">
                   {quizHeading(situation.quizQuestions)}
                 </h4>
                 <p className="mt-1 text-xs text-slate-400">
@@ -622,7 +622,7 @@ export function SituationDebrief({
     <article className="papier rounded-xl p-4 sm:p-6">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-annonce text-slate-400">
+          <p className="surtitre">
             Débriefing
           </p>
           <h3 className="mt-1 text-base font-semibold text-slate-100">
@@ -632,7 +632,7 @@ export function SituationDebrief({
         <span
           className={`rounded-full border px-3 py-1 text-xs ${
             situation.missed
-              ? "border-amber-400/40 text-amber-300"
+              ? "pastille-perte text-slate-200"
               : situation.retaken
                 ? "border-white/10 text-sky-300"
                 : "border-white/10 text-slate-300"
@@ -646,8 +646,8 @@ export function SituationDebrief({
         </span>
       </header>
       {situation.missed ? (
-        <p className="mb-3 rounded-lg border border-amber-400/20 bg-amber-950/10 px-3 py-2 text-sm text-slate-300">
-          <span className="font-medium text-amber-200">
+        <p className="encadre-perte mb-3 rounded-lg px-3 py-2 text-sm text-slate-300">
+          <span className="font-medium text-slate-100">
             Situation non rendue.
           </span>{" "}
           {situation.narrative} {situation.problem} Modèle et correction
@@ -656,7 +656,7 @@ export function SituationDebrief({
       ) : null}
       <div className="space-y-3 text-sm">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-100">
             Diagnostic
           </p>
           {/* QUESTIONS OUVERTES : le texte de l'équipe, tel quel, avant la correction. Celle-ci
@@ -698,7 +698,7 @@ export function SituationDebrief({
               le reste se lit ici, pour que la leçon soit entière — sans être comptée « manquée ». */}
           {debrief.autresCauses.length > 0 ? (
             <div className="encadre-neutre mt-2 rounded-lg px-3 py-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-200">
+              <p className="text-sm font-semibold text-slate-100">
                 {debrief.autresCauses.length > 1
                   ? "À retenir aussi : d'autres bonnes causes, non proposées à votre niveau"
                   : "À retenir aussi : une autre bonne cause, non proposée à votre niveau"}
@@ -713,7 +713,7 @@ export function SituationDebrief({
         </div>
         {situation.quizQuestions.length > 0 ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-100">
               {quizHeading(situation.quizQuestions)}
               {debrief.quizScore !== null
                 ? ` · ${Math.round(debrief.quizScore * 100)} %`
@@ -748,7 +748,7 @@ export function SituationDebrief({
                         credit >= 1
                           ? "text-emerald-300"
                           : credit > 0
-                            ? "text-amber-300"
+                            ? "texte-or"
                             : "text-red-400"
                       }`}
                     >
@@ -777,7 +777,7 @@ export function SituationDebrief({
         ) : null}
         {debrief.modelInsight ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-100">
               Le bon outil ici
             </p>
             <div className="mt-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
@@ -793,7 +793,7 @@ export function SituationDebrief({
         ) : null}
         {debrief.consequenceFacts && debrief.consequenceFacts.length > 0 ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-100">
               Qu&apos;est-ce qui a évolué ?
             </p>
             <div className="mt-1 space-y-1.5">
@@ -826,7 +826,7 @@ export function SituationDebrief({
         ) : null}
         {debrief.interpretation ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-100">
               Comment interpréter cette évolution ?
             </p>
             <div className="mt-1 space-y-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
@@ -836,7 +836,7 @@ export function SituationDebrief({
               <p className="text-sm text-slate-300">
                 {debrief.interpretation.explanation}
               </p>
-              <p className="text-sm italic text-amber-200/80">
+              <p className="text-sm italic text-slate-200">
                 {debrief.interpretation.takeaway}
               </p>
             </div>
@@ -844,7 +844,7 @@ export function SituationDebrief({
         ) : null}
         {debrief.concepts.length > 0 ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-100">
               Notions mobilisées
             </p>
             <p className="mt-1 flex flex-wrap gap-2">
@@ -852,9 +852,9 @@ export function SituationDebrief({
                 <a
                   key={c.code}
                   href={`/notions#${c.code}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-amber-200 hover:border-amber-400/40"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-slate-100 hover:border-white/40"
                 >
-                  <span className="text-xs uppercase tracking-wider text-slate-400">
+                  <span className="libelle text-xs">
                     {c.domain}
                   </span>
                   {c.name}
@@ -915,7 +915,7 @@ function SituationRetake({
       action={formAction}
       className="encadre-neutre mt-4 space-y-3 rounded-lg p-3 sm:p-5"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-200">
+      <p className="text-sm font-semibold text-slate-100">
         Rattrapage · score compté pour moitié
       </p>
       <input

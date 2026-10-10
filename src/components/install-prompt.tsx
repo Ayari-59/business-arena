@@ -131,8 +131,8 @@ export function InstallPrompt() {
       aria-label="Installer l'application"
       className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:hidden"
     >
-      <div className="mx-auto flex max-w-md items-center gap-2 rounded-xl border border-amber-400/25 bg-slate-900/95 py-1.5 pl-3 pr-1.5 shadow-2xl backdrop-blur">
-        <Icone nom="telephone" className="h-5 w-5 text-amber-400" />
+      <div className="mx-auto flex max-w-md items-center gap-2 rounded-xl border border-white/15 bg-slate-900/95 py-1.5 pl-3 pr-1.5 shadow-2xl backdrop-blur">
+        <Icone nom="telephone" className="h-5 w-5 text-slate-300" />
         <p className="min-w-0 flex-1 text-sm leading-snug text-slate-200">
           {isIos ? (
             <>Partager, puis «&nbsp;Sur l&apos;écran d&apos;accueil&nbsp;».</>

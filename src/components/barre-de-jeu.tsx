@@ -109,7 +109,7 @@ export function BarreDeJeu({
         {avecTitre ? (
           <h2
             data-titre-etape=""
-            className="line-clamp-2 min-w-0 flex-1 font-display text-lg font-semibold leading-tight text-slate-50"
+            className="line-clamp-2 min-w-0 flex-1 text-lg font-semibold leading-tight text-slate-50"
           >
             {enTete?.titre}
           </h2>
@@ -133,7 +133,7 @@ export function BarreDeJeu({
           aria-controls={id}
           className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ring-1 transition active:scale-95 ${
             ouvert
-              ? "bg-amber-400/15 text-amber-300 ring-amber-400/40"
+              ? "bg-white/10 text-slate-50 ring-white/40"
               : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/10 hover:text-slate-50"
           }`}
         >

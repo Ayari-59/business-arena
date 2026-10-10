@@ -194,7 +194,7 @@ export function EngagementDuTour({
     // Un récapitulatif est une INFORMATION : il portait le voile et les chiffres
     // orange de l'action, à côté du seul bouton qui, lui, agit.
     <section className="encadre-neutre rounded-lg px-3 py-3 sm:px-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+      <p className="text-sm font-semibold text-slate-100">
         Ce que vous engagez
       </p>
       <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
@@ -254,7 +254,7 @@ export function EngagementDuTour({
 function Ligne({ titre, valeur }: { titre: string; valeur: string }) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{titre}</dt>
+      <dt className="libelle">{titre}</dt>
       <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-100">{valeur}</dd>
     </div>
   );

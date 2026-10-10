@@ -114,7 +114,7 @@ export function PeriodDecisionsRecap({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+              <tr className="libelle text-left">
                 <th className="pb-1 pr-3 font-medium">Référence</th>
                 <th className="pb-1 pr-3 text-right font-medium">{vocabulary.priceLabel}</th>
                 <th className="pb-1 pr-3 text-right font-medium">{vocabulary.productionPlanLabel}</th>
@@ -157,14 +157,14 @@ export function PeriodDecisionsRecap({
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {core.map((row) => (
           <div key={row.label} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5">
-            <dt className="text-xs uppercase tracking-wide text-slate-400">{row.label}</dt>
+            <dt className="libelle">{row.label}</dt>
             <dd className="mt-0.5 text-base font-semibold tabular-nums text-slate-100">{row.value}</dd>
           </div>
         ))}
       </dl>
       {chips.length > 0 ? (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="mb-2 text-sm font-semibold text-slate-200">
             Leviers actionnés
           </p>
           <div className="flex flex-wrap gap-2">
@@ -173,7 +173,7 @@ export function PeriodDecisionsRecap({
                 key={c.texte}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900 px-3 py-1 text-xs text-slate-300"
               >
-                <Icone nom={c.icone} className="h-3.5 w-3.5 text-amber-400" />
+                <Icone nom={c.icone} className="h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
                 {c.texte}
               </span>
             ))}

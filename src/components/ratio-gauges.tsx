@@ -36,7 +36,7 @@ function TableauDesRatios({ ratios }: { ratios: RatioDef[] }) {
           Ratios financiers du tour, avec le repère usuel de chacun.
         </caption>
         <thead>
-          <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
+          <tr className="libelle border-b border-white/10">
             <th scope="col" className="py-1 pr-3 text-left font-medium">
               Ratio
             </th>

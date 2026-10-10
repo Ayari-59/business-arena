@@ -23,9 +23,11 @@ export function placeEnToutesLettres(rang: number): string {
 
 /**
  * La classe d'une ligne de classement : un filet d'or pour la tête, et pour la
- * ligne de l'équipe du joueur (`moi`) un filet ORANGE plein sur un fond neutre
- * (`ligne-moi`, globals.css). Elle était sur un voile pêche : la ligne choisie
- * se signale par le filet, pas par une teinte douce.
+ * ligne de l'équipe du joueur (`moi`) un filet plein sur un fond neutre
+ * (`ligne-moi`, globals.css) : la teinte du métier dans une partie, le gris
+ * clair ailleurs (lot P1 : une position n'est jamais orange). Elle était sur un
+ * voile pêche : la ligne choisie se signale par le filet, pas par une teinte
+ * douce.
  */
 export function classeLigneDeRang(rang: number, moi = false): string {
   return [rang === 1 ? "ligne-rang-1" : "", moi ? "ligne-moi" : ""].filter(Boolean).join(" ");
@@ -43,8 +45,9 @@ export function PastilleDeRang({
 }: {
   rang: number;
   /**
-   * La ligne de l'équipe du joueur : hors podium, son chiffre prend l'orange
-   * de son repère, comme sur la maquette. Sur le podium, le métal prime.
+   * La ligne de l'équipe du joueur : hors podium, son chiffre prend la teinte
+   * de son repère (le métier, ou le gris clair hors partie). Sur le podium, le
+   * métal prime.
    */
   moi?: boolean;
   /**
@@ -58,7 +61,7 @@ export function PastilleDeRang({
   const metal = metalDuRang(rang);
   return (
     <span
-      className={`pastille-rang ${metal ? `pastille-rang-${rang}` : moi ? "text-amber-400" : "text-slate-400"} ${className}`.trim()}
+      className={`pastille-rang ${metal ? `pastille-rang-${rang}` : moi ? "text-[color:var(--metier,var(--color-slate-300))]" : "text-slate-400"} ${className}`.trim()}
       title={metal ? `${placeEnToutesLettres(rang)}, ${metal}` : placeEnToutesLettres(rang)}
       aria-hidden={doublon || undefined}
     >

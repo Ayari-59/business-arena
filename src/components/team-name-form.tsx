@@ -47,9 +47,9 @@ export function TeamNameForm({
     <form
       ref={formRef}
       action={formAction}
-      className="rounded-xl border border-amber-400/30 bg-amber-950/10 p-3 sm:p-5"
+      className="encadre-neutre rounded-xl p-3 sm:p-5"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+      <p className="text-sm font-semibold text-slate-100">
         <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5" />
         {dejaNommee ? "Corrigez le nom de votre entreprise" : "Nommez votre entreprise"}
       </p>
@@ -82,14 +82,14 @@ export function TeamNameForm({
         plutôt que d'être une absence de choix.
       */}
       <fieldset className="mt-3">
-        <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        <legend className="libelle">
           Votre emblème
         </legend>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           <label
             className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border text-xs transition ${
               choisi === ""
-                ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
+                ? "border-amber-400/60 bg-amber-400/10 text-slate-100"
                 : "border-white/10 text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -109,7 +109,7 @@ export function TeamNameForm({
               key={e.code}
               className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition ${
                 choisi === e.code
-                  ? "border-amber-400/60 bg-amber-400/10 text-amber-300"
+                  ? "border-amber-400/60 bg-amber-400/10 text-slate-100"
                   : "border-white/10 text-slate-400 hover:text-slate-200"
               }`}
             >

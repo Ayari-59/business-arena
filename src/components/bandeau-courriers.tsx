@@ -48,9 +48,9 @@ export function BandeauCourriers({
     <aside
       role="status"
       aria-label="Courrier distribué pour ce tour"
-      className="rounded-xl border border-amber-400/40 bg-amber-950/20 px-4 py-3"
+      className="encadre-neutre rounded-xl px-4 py-3"
     >
-      <p className="flex items-start gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-300">
+      <p className="flex items-start gap-1.5 text-sm font-semibold text-slate-100">
         <Icone nom="courrier" className="h-4 w-4" />
         <span>
           Votre enseignant vous adresse {visibles.length > 1 ? "des courriers" : "un courrier"} :
@@ -67,7 +67,7 @@ export function BandeauCourriers({
               className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm"
             >
               <span className="inline-flex items-baseline gap-1.5 font-semibold text-slate-100">
-                <Icone nom={def ? def.icone : "courrier"} className="h-4 w-4 text-amber-300" />
+                <Icone nom={def ? def.icone : "courrier"} className="h-4 w-4 text-slate-300" />
                 {def ? def.objet : courrier.code}
               </span>
               {def ? <span className="text-xs text-slate-400">{def.expediteur}</span> : null}
@@ -87,7 +87,7 @@ export function BandeauCourriers({
       </ul>
       <a
         href={detailHref}
-        className="mt-2 inline-block text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+        className="mt-2 inline-block text-xs text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
       >
         Lire la lettre dans la situation
       </a>

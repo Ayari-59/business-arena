@@ -61,7 +61,7 @@ export function BandeOuverture({
           <p>
             <span className="surtitre-arene">{surtitre}</span>
           </p>
-          <h1 className="mt-6 max-w-4xl text-[clamp(2.25rem,4.6vw,3.75rem)] font-extrabold leading-[0.98] text-slate-50">
+          <h1 className="mt-6 max-w-4xl text-[clamp(2rem,4.2vw,3.25rem)] font-bold leading-[1.06] text-slate-50">
             {titre}
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">{chapeau}</p>

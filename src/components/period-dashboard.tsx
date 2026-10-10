@@ -103,7 +103,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-          <Icone nom="feuille" className="h-4 w-4 text-amber-400" />
+          <Icone nom="feuille" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
           Indice RSE
         </h2>
         <span className="tabular-nums text-lg font-semibold text-slate-100">
@@ -259,7 +259,7 @@ export function PeriodDashboard({
                 aria-label="Courrier reçu ce tour"
                 className="text-sm leading-relaxed text-slate-400"
               >
-                <Icone nom="courrier" className="mr-1.5 h-4 w-4 text-amber-400" />
+                <Icone nom="courrier" className="mr-1.5 h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
                 Courrier du{" "}
                 {periodLabel(view.roundDays, period.round).toLowerCase()} :{" "}
                 <span className="text-slate-300">
@@ -268,7 +268,7 @@ export function PeriodDashboard({
               </p>
             ) : period.events.length > 0 ? (
               <section aria-label="Courrier reçu ce tour">
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                <p className="surtitre mb-2 flex items-center gap-1.5 text-slate-300">
                   <Icone nom="courrier" className="h-4 w-4" />
                   Le courrier de ce tour
                 </p>
@@ -319,8 +319,8 @@ export function PeriodDashboard({
                 data-testid="portefeuille-tour"
                 className="carte px-3 py-3 text-sm"
               >
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  <Icone nom="recommencer" className="h-3.5 w-3.5 text-amber-400" />
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-200">
+                  <Icone nom="recommencer" className="h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
                   Portefeuille d&apos;{view.vocabulary.units}
                 </p>
                 <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">
@@ -497,7 +497,7 @@ export function PeriodDashboard({
           <div className="space-y-3">
             {period.sectorKpis.length > 0 ? (
               <section aria-label="Indicateurs du métier">
-                <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                <h3 className="surtitre flex items-center gap-1.5 text-slate-300">
                   <Icone nom="resultats" className="h-3.5 w-3.5" />
                   Indicateurs du métier
                 </h3>
@@ -514,7 +514,7 @@ export function PeriodDashboard({
                       className="rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2"
                     >
                       <div className="flex items-baseline justify-between gap-3 sm:block">
-                        <p className="text-xs uppercase tracking-wide text-slate-400">{k.label}</p>
+                        <p className="libelle">{k.label}</p>
                         <p className="text-lg font-semibold tabular-nums text-slate-100 sm:mt-0.5">
                           {formatKpi(k.value, k.format)}
                         </p>
@@ -541,7 +541,7 @@ export function PeriodDashboard({
               </h3>
               {r.communication ? (
                 <p className="mb-2 text-xs text-slate-400">
-                  <Icone nom="communication" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                  <Icone nom="communication" className="mr-1.5 h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
                   Communication :{" "}
                   {r.communication.axis
                     ? `axe « ${COMMUNICATION_AXIS_LABELS[r.communication.axis].label.toLowerCase()} »`
@@ -558,7 +558,7 @@ export function PeriodDashboard({
                     Le marché du tour écoulé, clientèle par clientèle.
                   </caption>
                   <thead>
-                    <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <tr className="libelle text-left">
                       <th scope="col" className="pb-2 pr-2 font-medium">Segment</th>
                       <th scope="col" className="pb-2 pr-2 text-right font-medium">Demande</th>
                       <th scope="col" className="pb-2 pr-2 text-right font-medium">Vendu</th>
@@ -642,7 +642,7 @@ export function PeriodDashboard({
 
             {period.forecastReview ? (
               <div className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:p-4">
-                <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                <h3 className="surtitre flex items-center gap-1.5 text-slate-300">
                   <Icone nom="banque" className="h-3.5 w-3.5" />
                   Votre plan face au réalisé
                 </h3>
@@ -652,7 +652,7 @@ export function PeriodDashboard({
                       Ce que vous aviez annoncé, face à ce que le tour a donné.
                     </caption>
                     <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                      <tr className="libelle text-left">
                         <th scope="col" className="pb-1 pr-2 font-medium">
                           Poste
                         </th>

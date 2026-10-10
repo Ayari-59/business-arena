@@ -45,12 +45,17 @@ describe("SaisonDuTour", () => {
     expect(html).toContain("6 % de demande en moins ce tour");
   });
 
-  it("la couleur suit le vent : vert quand la demande gonfle, ambre quand elle se réduit", () => {
+  it("la couleur suit le vent : vert quand la demande gonfle, rouge quand elle se réduit", () => {
+    // Lot P1 : le vent contraire était à l'ambre, c'est-à-dire à l'orange de
+    // l'action. L'orange ne dit plus que l'action ; un écart de demande se dit
+    // par le vert et le rouge francs de la charte, comme tout écart.
     const favorable = rendu([{ name: "Marché", coef: 1.2 }]);
     expect(favorable).toContain("text-emerald-300");
-    expect(favorable).not.toContain("text-amber-300");
+    expect(favorable).not.toContain("text-red-300");
+    expect(favorable).not.toMatch(/amber|orange/);
     const contraire = rendu([{ name: "Marché", coef: 0.8 }]);
-    expect(contraire).toContain("text-amber-300");
+    expect(contraire).toContain("text-red-300");
+    expect(contraire).not.toMatch(/amber|orange/);
     expect(contraire).not.toContain("text-emerald-300");
   });
 
@@ -92,6 +97,6 @@ describe("SaisonDuTour", () => {
     // Le cas qui mentirait le plus facilement : une seule couleur pour tout
     // l'encart ferait passer une clientèle porteuse pour un vent contraire.
     expect(html).toContain("text-emerald-400");
-    expect(html).toContain("text-amber-300");
+    expect(html).toContain("text-red-300");
   });
 });

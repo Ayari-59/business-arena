@@ -7,24 +7,29 @@ import { BarreDActionMobile } from "@/components/barre-d-action-mobile";
 
 /**
  * Les deux voix typographiques de la maison, auto-hébergées par next/font
- * (aucune requête au chargement). L'habillage « L'arène » parle comme un
- * tableau des scores :
+ * (aucune requête au chargement).
  *
- *   · Barlow Condensed, une grotesque étroite et dense, porte les titres, les
- *     étiquettes en capitales, les boutons d'action et les chiffres qu'on
- *     affiche en grand. Les grands titres la prennent en italique capitale
- *     (règles h1 et h2 dans globals.css) : l'élan d'une compétition ;
- *   · Barlow, sa version de lecture, porte tout le reste.
+ *   · Barlow, la grotesque de lecture, porte le texte ET LES TITRES (jeton
+ *     `--font-titre`) : droits, en casse de phrase, de 600 à 700. Lot P1 : les
+ *     titres ont parlé comme un tableau des scores, en condensé extra-gras
+ *     italique capitale ; c'était la voix d'une affiche de compétition, et le
+ *     propriétaire vise un produit très haut de gamme. Un titre se pose, il ne
+ *     crie pas (règles h1 à h4 dans globals.css, « LES TITRES PARLENT D'UNE
+ *     VOIX POSÉE ») ;
+ *   · Barlow Condensed, sa version étroite et dense, ne porte plus que ce où
+ *     elle excelle : les CHIFFRES qu'on affiche en grand (ardoise, verdict,
+ *     podium, résultat estimé) et le surtitre en capitales espacées, le seul
+ *     niveau de capitales du site. Droite : l'italique n'est plus chargé.
  *
  * Barlow n'est pas une police variable : on ne charge que les graisses
  * employées. Chacune expose une variable CSS que le thème (@theme) branche sur
- * --font-display et --font-sans, si bien qu'aucun composant n'a à nommer une
- * police.
+ * --font-display, --font-sans et --font-titre, si bien qu'aucun composant n'a
+ * à nommer une police.
  */
-const policeTitre = Barlow_Condensed({
+const policeChiffres = Barlow_Condensed({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
-  style: ["normal", "italic"],
+  style: ["normal"],
   variable: "--font-brand-display",
   display: "swap",
 });
@@ -98,7 +103,7 @@ export default async function RootLayout({
     <html
       lang="fr"
       data-theme="clair"
-      className={`${policeTitre.variable} ${policeTexte.variable}`}
+      className={`${policeChiffres.variable} ${policeTexte.variable}`}
     >
       <head>
         {feuille ? (

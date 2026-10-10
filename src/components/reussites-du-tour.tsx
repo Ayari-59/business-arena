@@ -12,7 +12,7 @@ export function ReussitesDuTour({ reussites }: { reussites: readonly Reussite[] 
   if (reussites.length === 0) return null;
   return (
     <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-      <span className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
+      <span className="libelle">
         {reussites.length > 1 ? "Distinctions du tour" : "Distinction du tour"}
       </span>
       {reussites.map((f) => (

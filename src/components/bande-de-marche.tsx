@@ -69,7 +69,7 @@ function Fait({ fait }: { fait: FaitDuMarche }) {
 
   return (
     <div className="min-w-[8.5rem] shrink-0 px-3 py-2 sm:px-4">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{fait.libelle}</p>
+      <p className="libelle">{fait.libelle}</p>
       <p className="mt-0.5 flex items-baseline gap-2">
         <span className="text-lg font-semibold tabular-nums" style={{ color: "var(--donnee)" }}>
           {fait.valeur}

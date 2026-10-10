@@ -78,7 +78,7 @@ export function MaCarteDeReprise({
             description="QR code personnel : il vous rend votre place dans la partie"
             className="h-28 w-28"
           />
-          <span className="text-xs uppercase tracking-surtitre text-slate-400">
+          <span className="libelle">
             à garder
           </span>
         </div>

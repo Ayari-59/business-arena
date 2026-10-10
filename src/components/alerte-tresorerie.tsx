@@ -81,13 +81,13 @@ export function AlerteTresorerie({
     <section
       role="alert"
       aria-label="Crise de trésorerie"
-      className="rounded-lg border border-amber-400/40 border-l-4 border-l-amber-400 bg-amber-950/30 px-3 py-3 sm:px-4"
+      className="encadre-perte rounded-lg px-3 py-3 sm:px-4"
     >
-      <p className="text-sm font-semibold text-amber-200">
+      <p className="text-sm font-semibold text-red-300">
         <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
         Crise de trésorerie
       </p>
-      <p className="mt-1.5 text-sm leading-relaxed text-amber-100/90">
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
         Votre découvert dépasse ce que la banque consent — elle a déjà cédé toutes vos
         créances à votre place. Trésorerie nette{" "}
         <strong className="tabular-nums">{formatEuro(alerte.tresorerieNette)}</strong> pour un
@@ -123,7 +123,7 @@ export function AlerteTresorerie({
           }
         />
       </div>
-      <p className="mt-1.5 text-sm leading-relaxed text-amber-100/90">
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
         {restants <= 1
           ? "Encore un tour dans cet état et votre entreprise sera à l'arrêt."
           : `Encore ${restants} tours dans cet état et votre entreprise sera à l'arrêt.`}{" "}

@@ -34,7 +34,7 @@ export function CompetitiveBenchmark({
 
   return (
     <section>
-      <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400 sm:mb-3">
+      <h3 className="surtitre mb-2 flex items-center gap-1.5 text-slate-300 sm:mb-3">
         <Icone nom="concurrence" className="h-3.5 w-3.5" />
         Benchmark concurrentiel
       </h3>
@@ -45,7 +45,7 @@ export function CompetitiveBenchmark({
       */}
       <div className="encadre-neutre mb-3 rounded-lg px-3 py-2.5 sm:mb-4 sm:flex sm:items-baseline sm:gap-3 sm:px-4 sm:py-3">
         <div className="flex items-baseline justify-between gap-3 sm:block">
-          <p className="text-xs uppercase tracking-wide text-slate-400">
+          <p className="libelle">
             Indice de compétitivité-prix
           </p>
           <p className={`text-2xl font-semibold tabular-nums ${idxTone}`}>
@@ -64,7 +64,7 @@ export function CompetitiveBenchmark({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <tr className="libelle text-left">
               <th className="pb-2 pr-3 font-medium">Entreprise</th>
               <th className="pb-2 pr-3 text-right font-medium">Prix moyen</th>
               <th className="pb-2 pr-3 text-right font-medium">Part de marché</th>

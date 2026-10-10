@@ -178,7 +178,7 @@ export function TableauEstimeReel({
       className="mt-3"
       aria-label={`Ce que vous aviez estimé, et ce que le marché a donné · ${periode}`}
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <p className="libelle font-semibold text-slate-200">
         Votre estimation, et ce que le marché a donné
       </p>
       <div className="tableau-financier mt-1">
@@ -187,7 +187,7 @@ export function TableauEstimeReel({
             {`Comparaison, pour le ${periode.toLowerCase()}, entre ce que l'équipe avait estimé avant de valider et ce que le marché a donné. La colonne d'écart est signée : réel moins estimé.`}
           </caption>
           <thead>
-            <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
+            <tr className="libelle border-b border-white/10">
               <th scope="col" className="py-1 pr-3 text-left font-medium">
                 Poste
               </th>

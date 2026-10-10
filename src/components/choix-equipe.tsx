@@ -49,7 +49,7 @@ export function ChoixEquipe({
   return (
     <section className="carte p-3 sm:p-5">
       <h2 className="text-sm font-semibold text-slate-100">
-        <Icone nom="equipes" className="mr-1.5 h-4 w-4 text-amber-400" />
+        <Icone nom="equipes" className="mr-1.5 h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
         Composition des équipes
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-slate-400">
@@ -104,14 +104,14 @@ function LigneDEquipe({
       ref={formRef}
       action={formAction}
       className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2 ${
-        mienne ? "border-amber-400/40 bg-amber-950/10" : "border-white/5 bg-slate-950/60"
+        mienne ? "border-[color:var(--metier,var(--color-slate-300))] bg-slate-950/60" : "border-white/5 bg-slate-950/60"
       }`}
     >
       <input type="hidden" name="teamId" value={equipe.teamId} />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-slate-100">
           {/* L'emblème devant le nom : à distance, c'est lui qu'on reconnaît. */}
-          <Embleme code={equipe.embleme} equipe={equipe.nom} className="h-4 w-4 text-amber-300" />
+          <Embleme code={equipe.embleme} equipe={equipe.nom} className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
           {equipe.nom}
           {mienne ? (
             <span className="rounded-full pastille-etat px-2 py-0.5 text-xs font-medium text-slate-200">

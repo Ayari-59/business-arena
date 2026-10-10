@@ -206,7 +206,7 @@ export default async function EcolesPage() {
             {FORMATS.map((f) => (
               <div key={f.nom} className="border-t border-white/10 pt-5">
                 <p className="text-xs uppercase tracking-surtitre text-amber-300">{f.public}</p>
-                <h3 className="mt-2 font-display text-2xl font-semibold text-slate-100">{f.nom}</h3>
+                <h3 className="mt-2 text-2xl font-semibold text-slate-100">{f.nom}</h3>
                 <p className="mt-1 text-base leading-relaxed text-slate-300">{f.resume}</p>
                 <ul className="mt-4 space-y-2">
                   {f.faits.map((x) => (
@@ -242,7 +242,7 @@ export default async function EcolesPage() {
               </p>
               <h2
                 id="accreditation"
-                className="mt-2 font-display text-3xl font-semibold leading-tight text-slate-50"
+                className="mt-2 text-3xl font-semibold leading-tight text-slate-50"
               >
                 Ce que vous pourrez montrer à un jury d&apos;accréditation
               </h2>

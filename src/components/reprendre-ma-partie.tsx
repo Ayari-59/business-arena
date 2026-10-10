@@ -25,11 +25,11 @@ export function ReprendreMaPartie({
     <section
       aria-labelledby="reprendre-titre"
       data-reprendre-ma-partie
-      className={`rounded-xl border border-amber-400/30 bg-slate-900/80 p-4 shadow-xl shadow-black/30 ring-1 ring-amber-400/10 sm:p-5 ${className}`}
+      className={`carte p-4 shadow-xl shadow-black/30 sm:p-5 ${className}`}
     >
       <h2
         id="reprendre-titre"
-        className="text-xs font-semibold uppercase tracking-surtitre text-amber-300"
+        className="surtitre text-slate-300"
       >
         {parties.length > 1 ? "Vos parties en cours" : "Votre partie en cours"}
       </h2>
@@ -48,7 +48,7 @@ export function ReprendreMaPartie({
                 {Array.from({ length: p.tours }, (_, i) => (
                   <span
                     key={i}
-                    className={`h-1.5 w-5 rounded-full ${i < p.tour ? "bg-amber-400" : "bg-white/10"}`}
+                    className={`h-1.5 w-5 rounded-full ${i < p.tour ? "bg-slate-300" : "bg-white/10"}`}
                   />
                 ))}
               </div>

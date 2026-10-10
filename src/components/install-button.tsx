@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { bouton } from "@/components/bouton";
 
 /**
  * Bouton d'installation explicite : Chrome n'affiche sa bannière qu'après
@@ -21,8 +22,8 @@ declare global {
   }
 }
 
-const BTN =
-  "rounded-lg bouton-filet border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5 pointer-coarse:min-h-11";
+/** Le bouton secondaire de la maison, petite taille (lot P1 : il était écrit à la main). */
+const BTN = `${bouton({ variante: "secondaire", taille: "s" })} pointer-coarse:min-h-11`;
 
 export function InstallButton() {
   const [canPrompt, setCanPrompt] = useState(false);

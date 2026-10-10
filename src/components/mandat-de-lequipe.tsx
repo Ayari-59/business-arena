@@ -5,6 +5,7 @@ import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
 import { lettreDeMission } from "@/config/courriers/mission";
 import { Icone } from "@/components/icone";
+import { bouton } from "@/components/bouton";
 
 /**
  * LE MANDAT, ET SON RANGEMENT.
@@ -78,13 +79,13 @@ export function MandatDeLEquipe({
         {/* L'objet commence déjà par « Votre mandat » : le préfixer d'un
             libellé le répétait mot pour mot. */}
         <span className="text-slate-300">
-          <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+          <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
           {mandat.objet}
         </span>
         <button
           type="button"
           onClick={() => memoire.retenir(cle, "1")}
-          className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2 pointer-coarse:-my-2 pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:px-2"
+          className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2 pointer-coarse:-my-2 pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:px-2"
         >
           {retenu === "2" ? "Relire" : "Lire"}
         </button>
@@ -111,7 +112,7 @@ export function MandatDeLEquipe({
         <button
           type="button"
           onClick={() => memoire.retenir(cle, "2")}
-          className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5 pointer-coarse:min-h-11"
+          className={`${bouton({ variante: "secondaire", taille: "m" })} pointer-coarse:min-h-11`}
         >
           J&apos;ai pris note
         </button>

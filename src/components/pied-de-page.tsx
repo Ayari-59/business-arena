@@ -85,8 +85,11 @@ export function PiedDePage() {
             </div>
           </div>
           {/* Deux liens : celui qui aide à décider, et celui qui met quelqu'un
-              au bout du fil. Le premier porte l'accent, parce qu'un pied de
-              page où tout se ressemble ne propose rien. */}
+              au bout du fil. Le premier se distingue par son encre forte et
+              son soulignement, parce qu'un pied de page où tout se ressemble
+              ne propose rien ; il a porté l'orange, qui ne dit plus que
+              l'action d'un bouton (lot P1). Le logo, lui, garde l'orange de
+              la marque : c'est une marque, pas une couleur d'interface. */}
           <nav
             aria-label="Aller plus loin"
             className="flex flex-col gap-3 text-sm sm:items-end sm:text-right"
@@ -94,7 +97,7 @@ export function PiedDePage() {
             {ailleurs(ACTION_PRINCIPALE) ? (
               <Link
                 href={ACTION_PRINCIPALE.href}
-                className="group font-semibold text-amber-400 transition-colors hover:text-amber-300"
+                className="group font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
               >
                 {ACTION_PRINCIPALE.libelle}
                 <span

@@ -42,10 +42,10 @@ export function ReprendreALAccueil() {
     <div data-reprendre-ma-partie className="mt-5 max-w-sm">
       <Link
         href={`/arena/${derniere.gameId}`}
-        className="group flex min-h-12 items-center justify-between gap-3 rounded-xl border border-amber-400/30 bg-slate-900/60 px-4 py-2.5 transition hover:border-amber-400/60 hover:bg-slate-900"
+        className="group flex min-h-12 items-center justify-between gap-3 rounded-xl border border-white/25 bg-slate-900/60 px-4 py-2.5 transition hover:border-white/50 hover:bg-slate-900"
       >
         <span className="min-w-0">
-          <span className="block text-xs uppercase tracking-surtitre text-amber-300">
+          <span className="surtitre block text-slate-300">
             Reprendre ma partie
           </span>
           <span className="block truncate text-sm text-slate-200">
@@ -54,7 +54,7 @@ export function ReprendreALAccueil() {
         </span>
         <span
           aria-hidden
-          className="text-amber-300 transition-transform group-hover:translate-x-1"
+          className="text-slate-200 transition-transform group-hover:translate-x-1"
         >
           →
         </span>

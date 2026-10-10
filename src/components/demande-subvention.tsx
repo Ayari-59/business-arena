@@ -47,7 +47,7 @@ export function DemandeSubvention({
       action={formAction}
       className="mt-3 rounded-lg border border-red-400 bg-slate-950/60 px-3 py-3"
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-red-300">
+      <p className="surtitre text-red-300">
         <Icone nom="alerte" className="mr-1.5 h-3.5 w-3.5" />
         Demande de subvention exceptionnelle
       </p>
@@ -60,7 +60,7 @@ export function DemandeSubvention({
       </p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,180px)_1fr]">
         <label className="block">
-          <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
+          <span className="libelle block">
             Montant demandé
           </span>
           <span className="mt-1 flex items-center gap-2 champ px-2 py-2 [--focus-champ:var(--color-red-400)]">
@@ -79,7 +79,7 @@ export function DemandeSubvention({
           </span>
         </label>
         <label className="block">
-          <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
+          <span className="libelle block">
             Ce que cette aide permettrait
           </span>
           <textarea

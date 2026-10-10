@@ -29,7 +29,7 @@ export function AiAssistant({
     // site — le contour laiton pour demander un retour, le plein pour envoyer.
     <section className="carte mt-6 p-4 sm:p-5">
       <div className="flex items-center gap-2">
-        <Icone nom="idee" className="h-4 w-4 text-amber-400" />
+        <Icone nom="idee" className="h-4 w-4 text-slate-300" />
         <h2 className="text-sm font-semibold text-slate-100">Assistant IA</h2>
       </div>
       {coach ? <Coach gameId={gameId} /> : null}
@@ -102,7 +102,7 @@ function Tutor({ gameId }: { gameId: string }) {
 
   return (
     <div className="mt-4 border-t border-white/10 pt-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Poser une question</p>
+      <p className="libelle">Poser une question</p>
       {messages.length > 0 ? (
         <div ref={zone} className="mt-2 max-h-72 space-y-2 overflow-y-auto pr-1">
           {messages.map((m, i) => (
@@ -110,7 +110,7 @@ function Tutor({ gameId }: { gameId: string }) {
               key={i}
               className={
                 m.role === "user"
-                  ? "ml-auto max-w-[85%] rounded-lg bg-amber-400/10 px-3 py-2 text-sm text-slate-100"
+                  ? "voile-neutre ml-auto max-w-[85%] rounded-lg px-3 py-2 text-sm text-slate-100"
                   : "mr-auto max-w-[85%] whitespace-pre-wrap rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-200"
               }
             >

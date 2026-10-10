@@ -50,10 +50,10 @@ export function EnTeteDePage({
 }) {
   return (
     <header data-en-tete-de-page className={`${COLONNE_DE_PAGE} pb-6 pt-10 sm:pt-14 ${className}`}>
-      <p className="text-xs uppercase tracking-annonce text-amber-400">{surtitre}</p>
+      <p className="surtitre">{surtitre}</p>
       <h1
         id={id}
-        className="mt-3 text-[clamp(2.5rem,6vw,3rem)] font-extrabold leading-[1.02] text-slate-50"
+        className="mt-3 text-[clamp(2.5rem,6vw,3rem)] font-bold leading-[1.08] text-slate-50"
       >
         {titre}
       </h1>

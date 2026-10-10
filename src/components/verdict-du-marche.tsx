@@ -167,15 +167,15 @@ export function VerdictDuMarche({
     >
       {/* PREMIER TEMPS : ce qu'on révèle. */}
       <div data-temps="1" className={ecran ? "" : "sm:col-span-2"}>
-        <p className="text-xs font-semibold uppercase tracking-annonce text-slate-400">
+        <p className="surtitre">
           {surtitre}
         </p>
         {ecran ? (
-          <h1 className="mt-2 font-display text-3xl font-semibold leading-tight text-slate-50 sm:text-4xl">
+          <h1 className="mt-2 text-3xl font-bold leading-[1.1] text-slate-50 sm:text-4xl">
             {titre}
           </h1>
         ) : (
-          <h2 className="mt-1 font-display text-xl font-semibold leading-tight text-slate-50 sm:text-2xl">
+          <h2 className="mt-1 text-xl font-semibold leading-tight text-slate-50 sm:text-2xl">
             {titre}
           </h2>
         )}
@@ -183,7 +183,7 @@ export function VerdictDuMarche({
 
       {/* DEUXIÈME TEMPS : le chiffre, et d'où il vient. */}
       <div data-temps="2" role="status" aria-live="polite" className={ecran ? "mt-4 sm:mt-5" : ""}>
-        <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
+        <p className="libelle">
           {chiffre.libelle}
         </p>
         <p

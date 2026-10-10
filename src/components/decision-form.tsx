@@ -224,11 +224,11 @@ function EquipmentPanel({
                   un signe, plus le vert et le rouge des résultats. */}
               <div className="mt-2 grid grid-cols-2 gap-3 max-sm:mt-1">
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-300 max-sm:hidden">
+                  <span className="libelle text-slate-300 max-sm:hidden">
                     <span aria-hidden>+ </span>Acheter
                   </span>
                   <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 max-sm:mt-0">
-                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-300 sm:hidden">
+                    <span className="libelle shrink-0 text-slate-300 sm:hidden">
                       <span aria-hidden>+ </span>Acheter
                     </span>
                     <input
@@ -255,11 +255,11 @@ function EquipmentPanel({
                   ) : null}
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-300 max-sm:hidden">
+                  <span className="libelle text-slate-300 max-sm:hidden">
                     <span aria-hidden>− </span>Vendre
                   </span>
                   <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 max-sm:mt-0">
-                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-300 sm:hidden">
+                    <span className="libelle shrink-0 text-slate-300 sm:hidden">
                       <span aria-hidden>− </span>Vendre
                     </span>
                     <input
@@ -611,7 +611,7 @@ function Field({
   }
   return (
     <label className="block">
-      <span className="block min-h-8 leading-4 text-xs font-semibold uppercase tracking-wide text-slate-100">{label}</span>
+      <span className="libelle block min-h-8 font-semibold leading-4 text-slate-300">{label}</span>
       <span className="mt-1 flex items-center gap-2 champ px-3 py-2">
         <input
           type="number"
@@ -1151,7 +1151,7 @@ function FaitCapacite({
 }) {
   return (
     <div>
-      <dt className="text-xs uppercase leading-4 tracking-wide text-slate-400">{label}</dt>
+      <dt className="libelle leading-4">{label}</dt>
       <dd className={`text-sm font-medium tabular-nums ${couleur}`} data-testid={testId}>
         {valeur}
       </dd>
@@ -1817,7 +1817,7 @@ function GammeReference({
                   className={
                     l.majeure
                       ? "py-1.5 pr-2 text-left align-middle text-sm font-semibold leading-5 text-slate-100"
-                      : "py-1.5 pr-2 text-left align-top text-xs font-medium uppercase leading-4 tracking-wide text-slate-400"
+                      : "libelle py-1.5 pr-2 text-left align-top leading-4"
                   }
                 >
                   {l.label}
@@ -1892,7 +1892,10 @@ function Family({
   // LE PANNEAU (lot 6E) : son sol et son arête de lumière, pas un cadre. Il
   // était un cadre à 10 % de blanc sur un fond… de la couleur de la page.
   tone = "panneau",
-  legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-200",
+  // Le titre d'un volet : en casse de phrase, à l'encre (lot P1). Il était en
+  // petites capitales espacées, comme tous les intitulés de la feuille, si bien
+  // que plus rien n'y était un surtitre.
+  legendClass = "text-sm font-semibold text-slate-100",
   carte,
   repli = false,
   deplie = false,
@@ -3128,7 +3131,7 @@ export function DecisionForm({
                     ) : null}
                     <span className="mt-1 flex flex-wrap gap-x-3 gap-y-0 text-xs max-sm:mt-0.5">
                       {s.qualityBonus !== 0 ? (
-                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
+                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-red-400"}>
                           Qualité {s.qualityBonus > 0 ? "+" : "−"}{Math.abs(Math.round(s.qualityBonus * 100))} %
                         </span>
                       ) : null}
@@ -3232,7 +3235,7 @@ export function DecisionForm({
         data-piste-des-etapes=""
       >
         <p className="flex items-baseline justify-between gap-3 text-xs">
-          <span className="font-semibold uppercase tracking-etiquette text-slate-300">
+          <span className="surtitre text-slate-300">
             Votre feuille de décision
           </span>
           <span className="tabular-nums text-slate-300" data-compteur-de-la-piste="">
@@ -3736,7 +3739,7 @@ export function DecisionForm({
               />
             ) : null}
             <label className="block">
-              <span className="block min-h-8 leading-4 text-xs font-semibold uppercase tracking-wide text-slate-100">Axe de communication</span>
+              <span className="libelle block min-h-8 font-semibold leading-4 text-slate-300">Axe de communication</span>
               <select
                 name="communicationAxis"
                 value={axe}
@@ -4112,7 +4115,7 @@ export function DecisionForm({
           />
           <span>
             <span className="text-sm font-medium text-slate-200">
-              <Icone nom="assurance" className="mr-1.5 h-4 w-4 text-amber-400" />
+              <Icone nom="assurance" className="mr-1.5 h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
               Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
             </span>
             <span className="mt-0.5 block text-xs text-slate-400">
@@ -4340,7 +4343,7 @@ export function DecisionForm({
         // seule action est offerte à la fois.
         <div
           role="alert"
-          className={`border-t border-orange-400 pt-3 ${
+          className={`border-t border-white/15 pt-3 ${
             modeCartes
               ? // EN PARCOURS, la question prend la place du pied fixe : posée sous un long
                 // récapitulatif, elle restait hors de l'écran.
@@ -4348,7 +4351,7 @@ export function DecisionForm({
               : ""
           }`}
         >
-          <p className="text-sm text-orange-100">
+          <p className="text-sm text-slate-100">
             Vous validez avec les valeurs proposées pour :{" "}
             <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
           </p>
@@ -4356,14 +4359,14 @@ export function DecisionForm({
             <button
               type="button"
               onClick={garderLesValeurs}
-              className="min-h-11 rounded-lg bg-orange-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-orange-300"
+              className={`${bouton({ taille: "m" })} min-h-11`}
             >
               Oui, je garde ces valeurs
             </button>
             <button
               type="button"
               onClick={lesModifier}
-              className="min-h-11 rounded-lg border border-orange-400 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-white/5"
+              className={`${bouton({ variante: "secondaire", taille: "m" })} min-h-11`}
             >
               Non, je les modifie
             </button>

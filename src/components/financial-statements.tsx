@@ -169,7 +169,7 @@ function Etat({
             : ""}
         </caption>
         <thead>
-          <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
+          <tr className="libelle border-b border-white/10">
             <th scope="col" className="py-1 pr-3 text-left font-medium">
               Poste
             </th>
@@ -345,7 +345,7 @@ export function FinancialStatements({
 
   return (
     <section className="mt-4 space-y-2" aria-label="Vos comptes du tour">
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <p className="surtitre flex items-center gap-1.5">
         <Icone nom="document" className="h-3.5 w-3.5 text-slate-400" />
         Vos comptes du tour · lisez-les comme un dirigeant
       </p>
@@ -510,7 +510,7 @@ export function FinancialStatements({
         <LigneDeLecture lecture={lectureDuBilan(b, result.functionalBalance)} />
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="mb-1 text-sm font-semibold text-slate-200">
               Actif
             </p>
             <Etat periode={periode} legende="Actif du bilan de clôture.">
@@ -546,7 +546,7 @@ export function FinancialStatements({
             </Etat>
           </div>
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="mb-1 text-sm font-semibold text-slate-200">
               Passif
             </p>
             <Etat periode={periode} legende="Passif du bilan de clôture.">
@@ -601,7 +601,7 @@ export function FinancialStatements({
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="mb-1 text-sm font-semibold text-slate-200">
               À l&apos;unité
             </p>
             {/* Pas d'écart ici : une décomposition unitaire n'est pas un état
@@ -644,7 +644,7 @@ export function FinancialStatements({
             </Etat>
           </div>
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="mb-1 text-sm font-semibold text-slate-200">
               Sur le tour
             </p>
             <Etat periode={periode} legende="Coûts du tour et seuil de rentabilité.">

@@ -2,6 +2,7 @@
 
 import { unstable_rethrow } from "next/navigation";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { bouton } from "@/components/bouton";
 
 /**
  * Garde-fou client autour d'une action serveur.
@@ -270,7 +271,7 @@ export function ConfirmForm({
             <button
               type="button"
               onClick={() => setArmed(false)}
-              className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-300 hover:border-white/30"
+              className={bouton({ variante: "secondaire", taille: "s" })}
             >
               {cancelLabel}
             </button>

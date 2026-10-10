@@ -72,7 +72,7 @@ export default async function JouerPage({
             <p>
               <span className="surtitre-arene">Partie solo</span>
             </p>
-            <h1 className="mt-4 max-w-4xl text-3xl font-extrabold leading-none text-slate-50 sm:mt-6 sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 max-w-4xl text-3xl font-bold leading-[1.05] text-slate-50 sm:mt-6 sm:text-5xl lg:text-6xl">
               Choisissez votre entreprise.{" "}
               <br className="hidden sm:block" />
               Le marché vous attend.
@@ -85,13 +85,13 @@ export default async function JouerPage({
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm sm:mt-5">
               <Link
                 href="/join"
-                className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
               >
                 J&apos;ai un code (élève)
               </Link>
               <Link
                 href="/reprendre"
-                className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
               >
                 Reprendre avec mon code
               </Link>
@@ -128,7 +128,7 @@ export default async function JouerPage({
               <div className="carte p-6 text-sm text-slate-400">
                 Les parties publiques sont momentanément désactivées. Élèves : utilisez le code
                 donné par votre enseignant sur{" "}
-                <Link href="/join" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
+                <Link href="/join" className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2">
                   /join
                 </Link>
                 .

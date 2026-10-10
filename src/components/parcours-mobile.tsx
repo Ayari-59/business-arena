@@ -342,7 +342,7 @@ export function ParcoursMobile({
               className={`${
                 actionPropre
                   ? bouton({ variante: "secondaire", taille: "l" })
-                  : `${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25`
+                  : bouton({ taille: "l" })
               } min-h-12 flex-1 active:scale-[0.98]`}
             >
               {libelleSuivant}

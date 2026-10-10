@@ -70,7 +70,7 @@ export function RepliableSurTelephone({
   return (
     <details ref={ref} className={`repliable-tel group ${className}`}>
       <summary
-        className={`flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg text-sm font-semibold text-amber-300 hover:text-amber-200 group-data-[a-plat]:hidden [&::-webkit-details-marker]:hidden ${resumeClassName}`}
+        className={`flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg text-sm font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2 group-data-[a-plat]:hidden [&::-webkit-details-marker]:hidden ${resumeClassName}`}
       >
         <span
           aria-hidden

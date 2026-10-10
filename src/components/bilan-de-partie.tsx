@@ -80,12 +80,12 @@ export function BilanDePartie({
         data-cloture-de-l-exercice=""
         className="ardoise rounded-xl bg-slate-950 px-4 py-6 text-slate-100 sm:px-8 sm:py-8"
       >
-        <p className="text-xs font-semibold uppercase tracking-annonce text-slate-400">
+        <p className="surtitre">
           Clôture de l&apos;exercice · {bilan.tours} tours
         </p>
         <h2
           id="cloture-titre"
-          className="mt-2 flex items-center gap-3 font-display text-3xl font-semibold leading-tight text-slate-50 sm:text-4xl"
+          className="mt-2 flex items-center gap-3 text-3xl font-bold leading-[1.1] text-slate-50 sm:text-4xl"
         >
           {/* La victoire est une distinction : la coupe prend l'or, jamais
               l'orange de l'action. */}
@@ -96,7 +96,7 @@ export function BilanDePartie({
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:items-end">
           {/* LE RANG DU JOUEUR, EN TRÈS GRAND. */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-400">
+            <p className="libelle">
               Votre place
             </p>
             {place ? (
@@ -122,7 +122,8 @@ export function BilanDePartie({
           </div>
 
           {/* LE PODIUM DES ÉQUIPES : l'or au centre, l'argent à gauche, le bronze
-              à droite ; l'équipe du joueur porte le filet orange. Les mêmes
+              à droite ; l'équipe du joueur porte son repère (lot P1 : plus
+              l'orange, qui ne dit que l'action). Les mêmes
               marches qu'au mur de la classe, à l'échelle d'une carte. */}
           <PodiumDesEquipes marches={podium ?? []} etiquette="Podium du classement final" />
         </div>
@@ -174,7 +175,7 @@ export function BilanDePartie({
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {decisif ? (
               <li className="filet-or rounded-lg border-l-2 bg-slate-900 px-4 py-3">
-                <p className="texte-or text-xs font-semibold uppercase tracking-surtitre">
+                <p className="libelle texte-or font-semibold">
                   Votre tour décisif
                 </p>
                 <p className="mt-1 text-base leading-relaxed text-slate-200">
@@ -187,7 +188,7 @@ export function BilanDePartie({
             ) : null}
             {meilleur ? (
               <li className="filet-or rounded-lg border-l-2 bg-slate-900 px-4 py-3">
-                <p className="texte-or text-xs font-semibold uppercase tracking-surtitre">
+                <p className="libelle texte-or font-semibold">
                   Votre meilleur tour
                 </p>
                 <p className="mt-1 text-base leading-relaxed text-slate-200">
@@ -222,10 +223,10 @@ export function BilanDePartie({
         className="papier rounded-xl px-4 py-5 sm:px-8 sm:py-6"
       >
         <header className="filet mb-3 border-b pb-3">
-          <p className="tenue text-xs font-semibold uppercase tracking-annonce">
+          <p className="surtitre tenue">
             Bilan de la partie
           </p>
-          <h3 className="mt-1 font-display text-xl font-semibold leading-tight">
+          <h3 className="mt-1 text-xl font-semibold leading-tight">
             Ce que la partie vous laisse
           </h3>
         </header>
@@ -303,7 +304,7 @@ function Chiffre({
 }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">{titre}</dt>
+      <dt className="libelle">{titre}</dt>
       <dd
         className={`mt-1.5 whitespace-nowrap font-display text-[clamp(2rem,1.6rem_+_1.2vw,2.5rem)] font-semibold leading-none tabular-nums ${teinte}`}
       >

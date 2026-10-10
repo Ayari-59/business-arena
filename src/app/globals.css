@@ -7,9 +7,10 @@
  * Un tableau des scores plutôt qu'un cahier : un MARINE pour les surfaces où
  * la classe regarde ensemble (l'en-tête, le haut de l'accueil, les écrans de
  * chiffres de la partie), un ORANGE pour l'action, et un fond clair à peine
- * bleuté pour lire. Deux voix typographiques, une grotesque étroite pour les
- * titres et les chiffres (Barlow Condensed), sa version de lecture pour le
- * reste (Barlow).
+ * bleuté pour lire. Deux voix typographiques : la grotesque de lecture
+ * (Barlow) pour les titres et le texte, sa version étroite (Barlow Condensed)
+ * pour les chiffres qu'on affiche en grand et le seul surtitre en capitales
+ * (lot P1 : voir « LES TITRES PARLENT D'UNE VOIX POSÉE »).
  *
  * L'orange prend la place de l'amber de Tailwind : comme les utilitaires
  * lisent ces variables, l'accent change sur TOUT le site (boutons, liens
@@ -31,6 +32,15 @@
     Roboto, sans-serif;
   --font-display:
     var(--font-brand-display), "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  /* LA VOIX DES TITRES (lot P1). Les titres ont parlé en condensé extra-gras,
+     italique et capitales : une affiche de match. Ils passent à la grotesque de
+     lecture, droite, en casse de phrase (voir « LES TITRES PARLENT D'UNE VOIX
+     POSÉE ») ; le condensé (`--font-display`) reste aux CHIFFRES et au
+     surtitre. Un jeton à part, et non `--font-sans` directement : la voix des
+     titres se règle d'un endroit, sans toucher à celle du texte. */
+  --font-titre:
+    var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
 
   --animate-plan-ouvre: plan-ouvre var(--duree-passage) var(--courbe-passage);
 
@@ -232,8 +242,10 @@
    le marine lui-même, posé sur la carte, qui assombrit la ligne d'un cran
    (l'orange ambré y tient 5,9 pour 1, un blanc léger l'aurait fait tomber).
 
-   Quand l'équipe du joueur mène, le filet orange prend la place du filet
-   d'or : l'or reste dit par la pastille du rang, la ligne dit « c'est vous ». */
+   Quand l'équipe du joueur mène, son filet prend la place du filet d'or : l'or
+   reste dit par la pastille du rang, la ligne dit « c'est vous ».
+   Lot P1 : ce filet n'est plus orange nulle part (voir « LE REPÈRE
+   D'APPARTENANCE », bloc « LOT 5A ») ; ce bloc ne pose plus que le fond. */
 :root,
 [data-theme="clair"] .contre-jour,
 [data-theme="clair"] .ardoise {
@@ -242,7 +254,6 @@
 .ligne-moi,
 .ligne-rang-1.ligne-moi {
   background-color: var(--fond-ligne-moi);
-  box-shadow: inset 4px 0 0 var(--accent-plein);
 }
 
 /* Un mot doré (la coupe, « Victoire », le record) et un cadre doré. */
@@ -942,51 +953,110 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
- * LES TITRES PARLENT COMME UN TABLEAU DES SCORES.
+ * LES TITRES PARLENT D'UNE VOIX POSÉE (lot P1).
  *
- * Le titre d'une page est en Barlow Condensed, extra-gras, en italique
- * capitale : l'élan d'un départ. Les grands titres de section (ceux qu'une
- * page écrit en 2xl et au-delà) prennent la même voix. Les titres de carte et
- * les petits intertitres gardent la casse du texte, en condensé droit : une
- * page entière en capitales penchées crierait.
+ * Ils ont parlé comme un tableau des scores : Barlow Condensed extra-gras, en
+ * italique capitale, l'élan d'un départ. Efficace pour attirer un lycéen, mais
+ * c'était la voix d'une affiche de compétition ou d'une borne d'arcade, et le
+ * propriétaire vise un produit très haut de gamme, lu aussi par une école ou
+ * une direction de formation. Un titre haut de gamme ne crie pas : il se pose.
+ *
+ * LA RÈGLE. Tout titre (h1 à h4, `.titre-carte`) est en Barlow, la grotesque
+ * de lecture (`--font-titre`), DROIT et en CASSE DE PHRASE, de 600 à 700, un
+ * interlettrage légèrement serré sur les grands corps (−0,015 em) et un
+ * interligne de 1,05 à 1,15. L'énergie ne vient plus de l'italique ni des
+ * capitales : elle vient de la taille, du contraste du cockpit et des chiffres.
+ *
+ * LE CONDENSÉ RESTE AUX CHIFFRES, où il excelle : grands chiffres de
+ * l'ardoise, du verdict, du podium, du résultat estimé (`font-display`, par
+ * leurs propres classes), et au SURTITRE en capitales espacées, le seul niveau
+ * de capitales du site (`.surtitre`, plus bas). Un titre ne prend jamais
+ * `font-display`, `italic` ni `uppercase` : la garde
+ * `tests/architecture/orange-de-l-action.test.ts` le refuse dans le périmètre
+ * du lot (arène, vitrine, /jouer).
  *
  * Ces règles vivent dans la couche de base : un titre qui a une raison de s'en
- * écarter le dit par ses propres classes (`normal-case`, `not-italic`), et
- * l'utilitaire l'emporte.
- *
- * LES CAPITALES ESPACÉES PRENNENT LE CONDENSÉ. Surtitres, étiquettes de
- * données, libellés de boutons : tout ce que le site écrit en capitales est
- * en Barlow Condensed sur la maquette, et c'est ce qui donne le ton d'un
- * marquoir. Une capitale en grotesque large, espacée de 0,3 em, prend deux
- * fois la place pour dire la même chose.
+ * écarter le dit par ses propres classes, et l'utilitaire l'emporte.
  * ------------------------------------------------------------------------- */
 @layer base {
   h1,
   h2,
   h3,
   h4 {
-    font-family: var(--font-display);
+    font-family: var(--font-titre);
+    font-weight: 600;
+    letter-spacing: -0.005em;
   }
   h1 {
-    font-weight: 800;
-    font-style: italic;
-    text-transform: uppercase;
-    letter-spacing: 0;
-    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.08;
   }
   h2:is([class*="text-2xl"], [class*="text-3xl"], [class*="text-4xl"], [class*="text-5xl"]) {
-    font-weight: 800;
-    font-style: italic;
-    text-transform: uppercase;
-    letter-spacing: 0.005em;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.12;
   }
-  h3,
-  h4 {
-    letter-spacing: 0.005em;
-  }
+  /* Une capitale (le surtitre, une étiquette de tableau) prend le condensé :
+     une capitale en grotesque large, espacée, prend deux fois la place pour
+     dire la même chose. Seul ce qui reste en capitales le prend. */
   .uppercase {
     font-family: var(--font-display);
     font-weight: 600;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * UN SEUL NIVEAU DE CAPITALES : LE SURTITRE. LE RESTE EST UN LIBELLÉ (lot P1).
+ *
+ * L'arène comptait plus de cent libellés en capitales espacées : « CAPACITÉ
+ * MACHINE », « GOULOT », « CE QUE VOUS ENGAGEZ », l'en-tête de chaque volet,
+ * chaque colonne. Sur l'étape Vendre, une douzaine dans une seule fenêtre. Tout
+ * était surtitré, donc plus rien ne l'était, et l'écran faisait formulaire
+ * administratif.
+ *
+ *   · `.surtitre` : LE niveau de capitales. Le condensé, 12 px, espacé de
+ *     `--tracking-surtitre`, encre douce. Il ouvre une SECTION, une fois par
+ *     panneau au plus.
+ *   · `.libelle` : tout le reste, le nom d'un champ, d'une unité, d'une
+ *     colonne, d'une jauge. Casse NORMALE, la grotesque de lecture, 13 px,
+ *     graisse 500, encre douce (le gris secondaire, 6,5 pour 1 sur le panneau
+ *     du cockpit, 6,6 sur la page du papier, 5,9 sur le papier d'un document).
+ *
+ * Deux classes et non des utilitaires recopiés : c'est la recopie qui avait
+ * fabriqué la dérive. Elles vivent dans la couche des COMPOSANTS, si bien
+ * qu'un utilitaire posé à côté (une encre plus forte pour le libellé d'un
+ * champ modifiable, une teinte de métier) l'emporte sans bataille.
+ * ------------------------------------------------------------------------- */
+@layer components {
+  .surtitre {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: var(--tracking-surtitre);
+    text-transform: uppercase;
+    color: var(--color-slate-400);
+  }
+  .libelle {
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-slate-400);
+  }
+  .papier :is(.surtitre, .libelle) {
+    color: var(--encre-douce);
+  }
+}
+/* Sur l'écran de jeu d'un téléphone, rien sous 14 px (voir « LE GESTE D'UNE
+   APPLICATION ») : le libellé et le surtitre suivent la règle des `text-xs`. */
+@media (max-width: 639px) {
+  [data-ecran-de-jeu] :is(.libelle, .surtitre) {
+    font-size: 0.875rem;
+    line-height: 1.4;
   }
 }
 
@@ -1597,7 +1667,9 @@ body {
  *     marine plein, sans lueur ni ombre intérieure ;
  *   · le BOUTON D'ACTION porte une ombre pleine, décalée vers le bas, comme
  *     une touche qu'on va enfoncer ; les CARTES qui mènent quelque part
- *     portent un filet orange à gauche.
+ *     portent un filet orange à gauche. Lot P1 : le bouton a perdu ce socle
+ *     d'arcade pour une ombre douce et courte (« LE BOUTON D'ACTION »), et
+ *     seule la carte cliquable tout entière garde son filet.
  *
  * À l'impression, tout redevient plat.
  * ------------------------------------------------------------------------- */
@@ -1631,22 +1703,34 @@ body {
   box-shadow: inset 0 1px 0 var(--filet-carte);
 }
 
-/* LA PASTILLE PENCHÉE : le surtitre d'un haut de page marine. L'orange vif,
-   un texte marine (5,4 pour 1, quand le blanc n'en tiendrait que 3), des
-   capitales condensées, et une inclinaison de huit degrés : un dossard plutôt
-   qu'une étiquette. */
+/* LA PASTILLE DE CONTEXTE : le surtitre d'un haut de page.
+   Elle a été un DOSSARD : un aplat orange vif, un texte marine, des capitales
+   condensées et une inclinaison de huit degrés. Lot P1 : l'orange ne dit plus
+   que l'action, et une étiquette de contexte n'en est pas une ; l'inclinaison
+   était la voix d'une affiche sportive. Elle devient une pastille SOBRE :
+   droite, petite, des capitales espacées (c'est LE niveau de surtitre
+   légitime), l'encre claire du marine ou la teinte du métier dans l'arène, un
+   filet fin et un fond à peine teinté. Le fond se baisse en OPACITÉ (8 % de
+   l'encre), la teinte ne se délave pas : pas de pastel.
+   Contrastes (texte sur la pastille, mesurés dans le navigateur, voir le
+   rapport du lot) : l'encre claire du marine #e2ddd3 sur le voile posé sur
+   #0b2545, l'encre #0e1a2b sur le voile posé sur le papier, la teinte du
+   métier sur son voile posé sur le cockpit : tous au-dessus de 4,5 pour 1.
+   Le filet (la même encre à 45 %) dessine la forme ; il n'est pas du texte. */
 .surtitre-arene {
+  --pastille-encre: var(--metier, var(--color-slate-300));
   display: inline-block;
-  background-color: var(--accent-plein);
-  color: var(--accent-plein-texte);
+  color: var(--pastille-encre);
+  background-color: color-mix(in oklab, var(--pastille-encre) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--pastille-encre) 45%, transparent);
+  border-radius: 9999px;
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.875rem;
+  font-weight: 600;
+  font-size: 0.75rem;
   line-height: 1.4;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-surtitre);
   text-transform: uppercase;
-  padding: 0.125rem 0.625rem;
-  transform: skewX(-8deg);
+  padding: 0.1875rem 0.75rem;
 }
 
 /* L'AIR APRÈS UN TABLEAU. Une bande claire qui n'a qu'une marge basse tenait
@@ -1687,50 +1771,50 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
- * LE BOUTON D'ACTION.
+ * LE BOUTON D'ACTION (lot P1 : trois boutons, sans relief d'arcade).
  *
- * L'orange vif, un texte marine en capitales condensées, et une ombre PLEINE
- * d'un orange foncé décalée vers le bas, sans flou : la touche d'une borne
- * d'arcade plutôt qu'un bouton bombé. L'ombre fait six pixels sur le grand
- * bouton d'une page publique, trois sur les autres : sur un écran de pilotage
- * qui en compte huit, six pixels seraient du bruit. Au survol l'orange
- * s'éclaire ; à l'appui, le bouton descend sur son ombre.
+ * Il a été la touche d'une borne d'arcade : l'orange vif, un texte marine en
+ * CAPITALES condensées extra-grasses, et une ombre PLEINE d'orange foncé
+ * décalée de trois à six pixels, sans flou, sur laquelle il descendait à
+ * l'appui. Le relief « touche de jeu » et les capitales condensées
+ * vieillissaient l'interface ; le propriétaire vise le très haut de gamme.
+ *
+ * Il garde l'orange plein et le texte marine (6,5 pour 1), et prend la voix
+ * de tous les boutons : la grotesque de lecture, en CASSE DE PHRASE, graisse
+ * 600, le rayon et la hauteur de sa taille (`bouton()`). Son ombre est DOUCE
+ * et COURTE (`--ombre-bouton`) : un liseré d'un pixel qui le pose, et un halo
+ * d'orange foncé, flou, qui ne déborde pas. À l'appui, il s'enfonce d'un
+ * pixel et son halo se resserre ; qui a demandé moins de mouvement ne voit
+ * que le halo changer. Son poids vient de la taille et de l'orange, pas d'un
+ * socle : « Valider et simuler » est plus grand, pas plus haut perché.
  *
  * Hors couche, et à dessein : la règle l'emporte sur `bg-amber-400` et
  * `text-slate-950` que la fonction `bouton()` pose encore, pour les pages qui
  * liraient ses classes, et qui sur le papier donneraient l'orange brûlé.
  * ------------------------------------------------------------------------- */
+:root {
+  --ombre-bouton:
+    0 1px 2px rgb(0 0 0 / 0.25),
+    0 6px 16px -8px var(--accent-plein-ombre);
+  --ombre-bouton-appui:
+    0 1px 1px rgb(0 0 0 / 0.25),
+    0 3px 8px -6px var(--accent-plein-ombre);
+}
 .bouton-plein {
   background-color: var(--accent-plein);
   background-image: none;
   color: var(--accent-plein-texte);
-  font-family: var(--font-display);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  box-shadow: 0 3px 0 var(--accent-plein-ombre);
-}
-.bouton-plein.shadow-lg {
-  font-size: 1rem;
-  box-shadow: 0 6px 0 var(--accent-plein-ombre);
-}
-@media (min-width: 640px) {
-  .bouton-plein.shadow-lg {
-    font-size: 1.0625rem;
-  }
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: var(--ombre-bouton);
 }
 .bouton-plein:hover:not(:disabled) {
   background-color: var(--accent-plein-survol);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .bouton-plein:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--accent-plein-ombre);
-  }
-  .bouton-plein.shadow-lg:active:not(:disabled) {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 var(--accent-plein-ombre);
-  }
+.bouton-plein:active:not(:disabled) {
+  box-shadow: var(--ombre-bouton-appui);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1928,16 +2012,18 @@ body {
  *
  * Dans les cartes, la hiérarchie s'inversait : un titre d'atelier en 14 px
  * au-dessus d'une description en 16 px, « Configurer la partie » en 14 px.
- * Un titre de carte est en Barlow Condensed 600, de 18 à 20 px, au-dessus de
- * paragraphes de 15 à 16 px. La classe est hors couche : elle l'emporte sur
- * une taille de texte qu'un appelant aurait laissée.
+ * Un titre de carte est de 18 à 20 px, au-dessus de paragraphes de 15 à 16
+ * px. Lot P1 : il prend la voix des titres (Barlow 600, droit, casse de
+ * phrase) et non plus le condensé, réservé aux chiffres. La classe est hors
+ * couche : elle l'emporte sur une taille de texte qu'un appelant aurait
+ * laissée.
  * ------------------------------------------------------------------------- */
 .titre-carte {
-  font-family: var(--font-display);
+  font-family: var(--font-titre);
   font-weight: 600;
   font-size: 1.125rem;
-  line-height: 1.3;
-  letter-spacing: 0.01em;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
 }
 @media (min-width: 640px) {
   .titre-carte {
@@ -1988,11 +2074,14 @@ body {
  *
  * Sur la maquette, la carte d'un épisode porte ce filet ; le classement, qui
  * n'est qu'à lire, ne le porte pas. La règle tient cette différence : une
- * carte cliquable, ou qui porte le bouton d'action, prend le filet ; une carte
- * qui ne fait que contenir reste blanche, cernée de gris.
+ * carte CLIQUABLE tout entière prend le filet ; une carte qui ne fait que
+ * contenir reste blanche, cernée de gris.
+ *
+ * Lot P1 : la carte qui PORTE le bouton d'action ne le prend plus. Le bouton
+ * dit déjà l'action, en orange plein ; le rail le redisait, et c'était le
+ * cliché de la « carte à barre d'accent » (la carte de lancement de /jouer).
  * ------------------------------------------------------------------------- */
-a.carte,
-.carte:has(.bouton-plein) {
+a.carte {
   border-left: 6px solid var(--accent-plein);
 }
 
@@ -2639,11 +2728,11 @@ a.carte,
    L'OUVERTURE MARINE DES PAGES VITRINES (proposition forte 5, audit P2-21).
    Le chiffre-preuve : un nombre lu dans un registre, en très grand, à l'encre
    du marine (blanc cassé). C'est une information, pas une action : ni orange,
-   ni or. Son filet est le filet neutre du marine. */
+   ni or. Son filet est le filet neutre du marine. Lot P1 : le chiffre reste au
+   condensé, où il excelle, mais DROIT : l'italique était celui d'une affiche. */
 .chiffre-preuve {
   font-family: var(--font-display);
   font-weight: 800;
-  font-style: italic;
   font-variant-numeric: tabular-nums;
   line-height: 0.9;
   letter-spacing: -0.01em;
@@ -3023,11 +3112,12 @@ a.carte,
 /* LE REPÈRE D'APPARTENANCE. La ligne du joueur dans un comparatif portait un
    filet orange de 4 px : l'orange est l'action, et une ligne qui dit « c'est
    vous » n'est pas une action. Dans une partie, elle prend la teinte du
-   métier ; ailleurs (les classements de l'enseignant, l'accueil), le filet
-   d'origine reste. */
+   métier. Lot P1 : ailleurs (l'exemple de la vitrine, les classements de
+   l'enseignant), elle prend le gris clair de la navigation hors partie
+   (`--color-slate-300`, charte du lot 6E), et non plus l'orange. */
 .ligne-moi,
 .ligne-rang-1.ligne-moi {
-  box-shadow: inset 4px 0 0 var(--metier, var(--accent-plein));
+  box-shadow: inset 4px 0 0 var(--metier, var(--color-slate-300));
 }
 
 /* ==========================================================================
@@ -3283,17 +3373,17 @@ main[data-ecran-de-jeu] {
   }
 }
 
-/* LES INTERLIGNES DE TÊTE. Un grand titre condensé à 1,25 d'interligne laisse,
-   sur deux lignes, un couloir de blanc au milieu du titre. 1,15 suffit à la
-   grotesque étroite de la maison, et rend une ligne entière sur un titre de
-   trois. Les paragraphes gardent le leur : c'est du texte à lire, pas une
-   enseigne. */
-main[data-ecran-de-jeu] :is(h1, h2, h3).font-display {
+/* LES INTERLIGNES DE TÊTE. Un grand titre à 1,25 d'interligne laisse, sur
+   deux lignes, un couloir de blanc au milieu du titre. 1,15 suffit, et rend
+   une ligne entière sur un titre de trois. Les paragraphes gardent le leur :
+   c'est du texte à lire, pas une enseigne. Lot P1 : un grand titre porte la
+   voix des titres (`font-titre`) ; un chiffre en titre garde le condensé. */
+main[data-ecran-de-jeu] :is(h1, h2, h3):is(.font-titre, .font-display) {
   line-height: var(--interligne-de-tete);
 }
 /* Et un sous-titre de carte, qui n'est pas de la prose, n'a pas l'interligne
    d'un paragraphe : il était à 1,5, celui d'un texte qu'on lit au long. */
-main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-display) {
+main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
   line-height: var(--interligne-de-sous-titre);
 }
 
@@ -3519,11 +3609,12 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-display) {
 /* LES CARTES DU COCKPIT PERDENT LEUR CADRE. Le filet d'une carte (lot 6A, 16 %)
    doublait sur le marine ce que le sol et l'arête disent déjà : il devient
    transparent (sa largeur reste, rien ne bouge d'un pixel). Ce qui garde son
-   trait : la carte CLIQUABLE et celle qui porte l'action (le filet orange de
-   six pixels, « LA CARTE QUI MÈNE QUELQUE PART »), et le papier, qui est un
-   objet. L'arête, elle, est déjà là : le filet du métier en tête (« LOT 5A »).
+   trait : la carte CLIQUABLE (le filet orange de six pixels, « LA CARTE QUI
+   MÈNE QUELQUE PART ») et le papier, qui est un objet. Lot P1 : la carte qui
+   porte le bouton d'action n'a plus de rail, elle perd donc son cadre comme
+   les autres. L'arête, elle, est déjà là : le filet du métier en tête (« LOT 5A »).
    Une carte dans une carte s'aplatit. */
-[data-ecran-de-jeu] .carte:not(.papier, a, :has(.bouton-plein)) {
+[data-ecran-de-jeu] .carte:not(.papier, a) {
   border-color: transparent;
 }
 [data-ecran-de-jeu] .carte .carte:not(.papier) {
@@ -3560,9 +3651,11 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-display) {
 
 /* ─────────────── LES TROIS BOUTONS DU PIED DE LA FEUILLE (point 1) ─────────── */
 
-/* « VALIDER ET SIMULER » : le geste qui fait répondre le marché. Le grand
-   bouton plein (`.bouton-plein.shadow-lg`), un cran plus grand encore : c'est
-   la fin du parcours, le seul aplat orange de son écran. */
+/* « VALIDER ET SIMULER » : le geste qui fait répondre le marché. Le bouton
+   plein de la grande taille, un cran plus grand encore : c'est la fin du
+   parcours, le seul aplat orange de son écran, et LE PLUS GROS BOUTON DE
+   L'ARÈNE. Lot P1 : son poids vient de la taille et de l'orange, pas d'un
+   socle (plus d'ombre pleine décalée ; l'ombre douce de tous les pleins). */
 /* Sur téléphone, il garde la hauteur du pied fixe : une carte de décision
    tient sur un écran (lot 3A), et la dernière, le récapitulatif, n'a pas un
    pixel à céder. Il est déjà le seul aplat de l'écran, en pleine largeur. */
@@ -3571,21 +3664,21 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-display) {
     min-height: 3.5rem;
     padding-inline: 2rem;
   }
-  .bouton-valider.bouton-plein.shadow-lg {
-    font-size: 1.25rem;
+  .bouton-valider.bouton-plein {
+    font-size: 1.125rem;
   }
 }
 
 /* « SUIVANT : TRÉSORERIE » : ce qui fait AVANCER, sans déclencher le marché.
    Plein mais neutre : le bleu de la gamme du tableau (#2d5385), un liseré
-   clair, l'encre blanc cassé (7,0 pour 1). Il se voit, il ne crie pas. */
+   clair, l'encre blanc cassé (7,0 pour 1). Il se voit, il ne crie pas. Lot P1 :
+   la même forme que les deux autres boutons (la hauteur et le rayon de sa
+   taille, la grotesque de lecture en casse de phrase, graisse 600) ; il garde
+   le rôle que le lot 6E lui a donné, un secondaire FRANC, par son aplat. */
 .bouton-suite {
   border: 1px solid var(--filet-champ);
   background-color: var(--color-slate-700);
   color: var(--color-slate-50);
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.02em;
 }
 .bouton-suite:hover:not(:disabled) {
   background-color: color-mix(in oklab, var(--color-slate-700) 85%, #fff);

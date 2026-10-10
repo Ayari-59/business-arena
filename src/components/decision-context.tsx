@@ -42,7 +42,7 @@ export function DilemmaCard({
       panneau sans cadre, comme les autres panneaux du cockpit.
     */
     <div className="panneau p-3 max-sm:p-4 sm:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--metier,var(--color-slate-300))]">
+      <h3 className="surtitre text-[color:var(--metier,var(--color-slate-300))]">
         {title}
       </h3>
       {/* La question est le point d'arrivée de l'écran : elle se lit avant tout
@@ -103,11 +103,11 @@ function Chiffre({
       {/* Deux lignes réservées, comme dans le formulaire : « Trésorerie
           d'ouverture » se replie là où « Prix usuels » tient sur une ligne, et
           sans cette réserve les chiffres de la rangée ne s'alignaient plus. */}
-      <p className="min-h-8 text-xs uppercase leading-4 tracking-wide text-slate-400 max-sm:text-sm max-sm:tracking-etiquette">
+      <p className="libelle min-h-8 leading-4">
         {label}
       </p>
       <p
-        className={`tabular-nums text-base font-semibold max-sm:font-display max-sm:text-2xl ${accent ? "text-amber-300" : "text-slate-100"}`}
+        className={`tabular-nums text-base max-sm:font-display max-sm:text-2xl ${accent ? "font-bold text-slate-50" : "font-semibold text-slate-100"}`}
       >
         {valeur}
       </p>
@@ -178,7 +178,7 @@ function Panneau({
     </Tiroir>
   ) : (
     <div className="panneau p-3 max-sm:p-4 sm:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300 max-sm:text-sm max-sm:tracking-etiquette">
+      <h3 className="surtitre text-slate-300">
         {titre}
       </h3>
       {children}
@@ -239,18 +239,18 @@ export function DetailParClientele({
                     {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}
                     <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
                       <div>
-                        <dt className="text-xs uppercase tracking-wide text-slate-400">Taille</dt>
+                        <dt className="libelle">Taille</dt>
                         <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs uppercase tracking-wide text-slate-400">
+                        <dt className="libelle">
                           Prix usuel
                         </dt>
                         <dd className="tabular-nums text-slate-300">{formatEuro(seg.refPrice)}</dd>
                       </div>
                       {showShare ? (
                         <div>
-                          <dt className="text-xs uppercase tracking-wide text-slate-400">
+                          <dt className="libelle">
                             Votre part
                           </dt>
                           <dd className="tabular-nums text-slate-100">
@@ -259,7 +259,7 @@ export function DetailParClientele({
                         </div>
                       ) : null}
                       <div>
-                        <dt className="text-xs uppercase tracking-wide text-slate-400">
+                        <dt className="libelle">
                           Règlement
                         </dt>
                         <dd className="text-slate-400">
@@ -275,7 +275,7 @@ export function DetailParClientele({
             <div className="mt-2 hidden overflow-x-auto sm:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                  <tr className="libelle text-left">
                     <th className="pb-1 pr-3 font-medium">Clientèle</th>
                     <th className="pb-1 pr-3 text-right font-medium">Taille</th>
                     <th className="pb-1 pr-3 text-right font-medium">Prix usuel</th>

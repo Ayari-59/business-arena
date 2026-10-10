@@ -142,9 +142,7 @@ function EcranDuTour({
 }) {
   return (
     <li className={`flex flex-col gap-3 ${surTelephone ? "" : "max-sm:hidden"}`}>
-      <p className="font-display text-sm font-bold uppercase tracking-etiquette text-slate-200">
-        {titre}
-      </p>
+      <p className="text-sm font-semibold text-slate-200">{titre}</p>
       <div className="overflow-hidden rounded-md border border-white/15 bg-slate-900">
         <div
           role="img"
@@ -223,7 +221,7 @@ const CE_QUE_L_ELEVE_APPREND = [
  */
 function TroisEcrans() {
   return (
-    <figure className="ardoise m-0 mt-14 rounded-md border-t-[3px] border-amber-400 bg-slate-950 p-5 sm:p-8">
+    <figure className="ardoise m-0 mt-14 rounded-md border-t-[3px] border-slate-500 bg-slate-950 p-5 sm:p-8">
       {/* SUR TÉLÉPHONE, UN SEUL ÉCRAN, AGRANDI (audit P2-09). Les trois
           défilaient de côté dans leur cadre, à 78 % de la largeur : le texte des
           captures y tombait à six pixels, illisible, et le geste de côté n'était
@@ -281,8 +279,8 @@ export default async function Home() {
       <DonneesStructurees />
       <main id="main" className="relative overflow-hidden">
         {config.announcement ? (
-          <div className="flex items-center justify-center gap-2 border-b border-amber-400/20 bg-amber-950/30 px-6 py-2 text-center text-sm text-amber-200">
-            <Icone nom="communication" className="h-4 w-4 shrink-0 text-amber-400" />
+          <div className="voile-neutre flex items-center justify-center gap-2 border-b border-white/10 px-6 py-2 text-center text-sm text-slate-200">
+            <Icone nom="communication" className="h-4 w-4 shrink-0 text-slate-300" />
             {config.announcement}
           </div>
         ) : null}
@@ -340,9 +338,11 @@ export default async function Home() {
               lignes (« POUR LA / CLASSE ») : elle se resserre en étiquette et
               laisse tomber son filet sous 640 pixels, et tient sur une ligne.
             */}
-          {/* LA PASTILLE PENCHÉE. Sur le marine, le surtitre devient l'étiquette
-              orange de la maquette, inclinée comme un dossard : c'est la
-              première chose orange qu'on voit, et elle dit ce qu'est le jeu. */}
+          {/* LA PASTILLE DE CONTEXTE. Elle a été l'étiquette orange de la
+              maquette, inclinée comme un dossard. Lot P1 : une pastille sobre,
+              droite, à filet fin ; l'orange est réservé à l'action, et la
+              première chose orange qu'on voit est le bouton « Commencer une
+              partie ». */}
           <p>
             <span className="surtitre-arene">Simulation de gestion, pour la classe</span>
           </p>
@@ -363,26 +363,27 @@ export default async function Home() {
               la place : 34 px sur un téléphone, 112 sur un grand écran, une
               ligne par phrase partout.
 
-              Le coefficient n'est pas choisi au jugé : en Barlow Condensed
-              extra-grasse, italique et capitale, la plus longue phrase mesure
-              environ 0,36 em par caractère, soit 8,3 fois la taille pour ses
-              vingt-trois signes. 10 cqw laisse donc près de vingt pour cent de
-              marge, pour l'italique qui déborde à droite. tests/e2e/parcours.e2e.ts
+              Le coefficient n'est pas choisi au jugé. Lot P1 : le titre a quitté
+              le condensé italique capital pour la voix des titres (Barlow 700,
+              droit, casse de phrase), plus large : la plus longue phrase,
+              « Dirigez une entreprise. », mesure 9,7 fois la taille pour ses
+              vingt-trois signes (0,42 em par signe, mesuré dans le navigateur :
+              800 px pour 82,8 px de corps). À 7,5 cqw, elle occupe donc les trois
+              quarts de sa colonne, sans jamais la toucher. tests/e2e/parcours.e2e.ts
               mesure la largeur RÉELLE du texte contre celle de sa colonne, à 390
               px comme à 1728, et vérifie qu'il grandit de 1024 à 1728 : le
-              plafond (7 rem) n'est atteint qu'au-delà de 1150 px de colonne.
+              plafond (5,5 rem) n'est atteint qu'au-delà de 1170 px de colonne.
             */}
           <div className="mt-6" style={{ containerType: "inline-size" }}>
-            <h1 className="whitespace-nowrap text-[clamp(1.75rem,10cqw,7rem)] font-extrabold leading-[0.95] text-slate-50">
+            <h1 className="whitespace-nowrap text-[clamp(1.75rem,7.5cqw,5.5rem)] font-bold leading-[1.05] text-slate-50">
               Dirigez une entreprise.
               <br />
-              {/* LE SEUL MOT ORANGE D'UN GRAND TITRE. Décision du
-                  propriétaire : la seconde ligne du héros de l'accueil garde
-                  l'orange de la marque ; dans les titres des pages
-                  intérieures, le mot d'appui passe à l'encre, de même graisse,
-                  et l'emphase vient de l'italique condensé, pas de la couleur
-                  (garde : couleurs-fonctionnelles.test.ts). */}
-              <span className="text-amber-500">Apprenez à décider.</span>
+              {/* PLUS AUCUN MOT ORANGE DANS UN GRAND TITRE. La seconde ligne du
+                  héros a gardé l'orange de la marque jusqu'au lot P1 : l'orange
+                  ne dit plus que l'action, et elle passe à l'encre claire du
+                  marine, de même graisse. L'emphase vient de la rupture de
+                  ton, pas de la couleur (garde : couleurs-fonctionnelles.test.ts). */}
+              <span className="text-slate-400">Apprenez à décider.</span>
             </h1>
           </div>
           {/*
@@ -398,12 +399,11 @@ export default async function Home() {
           </p>
           {/*
               DEUX BOUTONS, ET UN SEUL PLEIN. « Commencer une partie » est
-              l'action de la page : l'orange vif et son ombre pleine. « Je suis
-              enseignant » redevient un bouton, mais ENCADRÉ, comme sur la
-              maquette : un trait blanc translucide de deux pixels, sans aplat.
-              Il a été un simple lien souligné, qui se perdait sous le titre ;
-              encadré, il se voit comme l'autre porte d'entrée sans disputer
-              l'œil au bouton plein.
+              l'action de la page : l'orange vif. « Je suis enseignant » est
+              l'autre porte d'entrée : le bouton SECONDAIRE, un filet fin, de la
+              même hauteur, du même rayon et de la même graisse que le plein
+              (lot P1). Il a été un simple lien souligné, qui se perdait sous le
+              titre, puis un contour blanc de deux pixels écrit à la main.
 
               Le libellé du bouton plein reste celui d'avant (la maquette dit
               « Entrer dans l'arène ») : tests/e2e/contraste.e2e.ts le cherche
@@ -413,10 +413,7 @@ export default async function Home() {
             <Link href="/jouer" className={bouton({ taille: "l" })}>
               Commencer une partie
             </Link>
-            <Link
-              href="/teacher/login"
-              className="inline-flex items-center justify-center rounded-md border-2 border-white/40 px-5 py-2.5 text-base font-semibold text-slate-50 transition hover:border-white/70 hover:bg-white/5"
-            >
+            <Link href="/teacher/login" className={bouton({ variante: "secondaire", taille: "l" })}>
               Je suis enseignant
             </Link>
           </div>
@@ -465,9 +462,9 @@ export default async function Home() {
             <div>
               <h2
                 id="la-boucle"
-                className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
+                className="surtitre flex items-center gap-3"
               >
-                <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+                <span aria-hidden className="h-px w-8 bg-slate-400" />
                 Les six temps d&apos;un tour
               </h2>
               {/*
@@ -486,11 +483,11 @@ export default async function Home() {
               <ol className="mt-5 divide-y divide-white/10 border-y border-white/10 sm:hidden">
                 {TEMPS_DU_TOUR.map((t, i) => (
                   <li key={t.nom} className="flex items-baseline gap-4 py-3">
-                    <span aria-hidden className="w-6 shrink-0 text-sm font-semibold tabular-nums text-amber-400">
+                    <span aria-hidden className="w-6 shrink-0 text-sm font-semibold tabular-nums text-slate-400">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="text-base leading-snug text-slate-400">
-                      <strong className="font-semibold uppercase tracking-etiquette text-slate-100">
+                      <strong className="font-semibold text-slate-100">
                         {t.nom}
                       </strong>
                       <span className="sr-only"> : </span>
@@ -507,7 +504,7 @@ export default async function Home() {
                         seul ne dit pas ce qui se passe à ce moment-là. */}
                     <span
                       title={t.quoi}
-                      className="text-xs font-semibold uppercase tracking-etiquette text-slate-300"
+                      className="libelle text-slate-200"
                     >
                       {t.nom}
                       <span className="sr-only"> : {t.quoi}</span>
@@ -517,7 +514,7 @@ export default async function Home() {
                         flèche posée avant se retrouvait seule en tête de
                         deuxième ligne. */}
                     {i < TEMPS_DU_TOUR.length - 1 ? (
-                      <span aria-hidden className="text-sm text-amber-400/60">
+                      <span aria-hidden className="text-sm text-slate-400">
                         →
                       </span>
                     ) : null}
@@ -534,7 +531,7 @@ export default async function Home() {
               <p className="mt-4">
                 <Link
                   href="/guide#eleves"
-                  className="group text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300"
+                  className="group text-sm font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
                   Comment se joue un tour
                   <span
@@ -550,9 +547,9 @@ export default async function Home() {
             <div>
               <h2
                 id="apprend"
-                className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
+                className="surtitre flex items-center gap-3"
               >
-                <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+                <span aria-hidden className="h-px w-8 bg-slate-400" />
                 Ce que l&apos;élève apprend
               </h2>
               <ul className="mt-6 space-y-4">
@@ -564,7 +561,7 @@ export default async function Home() {
                   >
                     <span
                       aria-hidden
-                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-400 max-sm:hidden"
+                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-slate-400 max-sm:hidden"
                     />
                     <p className="text-base leading-relaxed text-slate-400">
                       <span className="font-semibold text-slate-200 max-sm:block max-sm:text-lg">
@@ -594,14 +591,14 @@ export default async function Home() {
           interieur="mx-auto max-w-6xl px-6 py-8"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-            <h2 className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400">
-              <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+            <h2 className="surtitre flex items-center gap-3">
+              <span aria-hidden className="h-px w-8 bg-slate-400" />
               {SCENARIO_CHOICES.length} métiers, {SCENARIO_CHOICES.length}{" "}
               économies
             </h2>
             <Link
               href="/entreprises"
-              className="text-sm font-medium text-slate-300 underline decoration-white/20 underline-offset-4 transition hover:text-amber-200 hover:decoration-amber-400/60"
+              className="text-sm font-medium text-slate-300 underline decoration-white/20 underline-offset-4 transition hover:text-slate-50 hover:decoration-current"
             >
               Voir les entreprises
             </Link>
@@ -614,7 +611,7 @@ export default async function Home() {
               >
                 <PictoSecteur
                   secteur={s.sector}
-                  className="h-7 w-7 text-amber-400/80"
+                  className="h-7 w-7 text-slate-300"
                 />
                 <span className="text-xs leading-tight text-slate-300">
                   {s.shortName}
@@ -718,8 +715,8 @@ export default async function Home() {
           contraste={c("accueil.commencer")}
           interieur="mx-auto max-w-6xl px-6 py-12 sm:py-16"
         >
-          <h2 className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400">
-            <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+          <h2 className="surtitre flex items-center gap-3">
+            <span aria-hidden className="h-px w-8 bg-slate-400" />
             Par où commencer
           </h2>
           {/*
@@ -735,9 +732,9 @@ export default async function Home() {
               <Link
                 key={r.href}
                 href={r.href}
-                className="group block border-t border-white/10 py-4 transition-colors hover:border-amber-400/40 focus-visible:border-amber-400/40 sm:py-5"
+                className="group block border-t border-white/10 py-4 transition-colors hover:border-white/40 focus-visible:border-white/40 sm:py-5"
               >
-                <h3 className="flex items-baseline gap-2 font-display text-lg font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
+                <h3 className="flex items-baseline gap-2 text-lg font-semibold text-slate-100 transition-colors group-hover:text-slate-50">
                   {r.title}
                   <span
                     aria-hidden

@@ -56,7 +56,10 @@ export function FriseDesTours({
                 ? "bg-emerald-400"
                 : "bg-red-400"
             : enCours
-              ? "bg-amber-400"
+              ? // Le tour en cours est une POSITION : la teinte du métier, jamais
+                // l'orange de l'action (lot P1 ; c'était la première pastille
+                // orange de l'ardoise).
+                "bg-[color:var(--metier,var(--color-slate-300))]"
               : "bg-white/10";
         return (
           <li
@@ -72,7 +75,7 @@ export function FriseDesTours({
                   ? `Tour ${n} · en cours`
                   : `Tour ${n} · à venir`
             }
-            className={`h-1.5 w-5 rounded-full ${teinte} ${enCours ? "ring-1 ring-amber-300/60" : ""}`}
+            className={`h-1.5 w-5 rounded-full ${teinte} ${enCours ? "ring-1 ring-[color:var(--metier,var(--color-slate-300))]" : ""}`}
           />
         );
       })}

@@ -73,9 +73,9 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
     >
       <h2
         id="roles"
-        className="flex items-center gap-3 text-xs uppercase tracking-annonce text-slate-400"
+        className="surtitre flex items-center gap-3"
       >
-        <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+        <span aria-hidden className="h-px w-8 bg-slate-400" />
         Qui fait quoi
       </h2>
       {/*
@@ -91,7 +91,7 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
             key={r.role}
             className="grid grid-cols-[1fr_auto] items-center gap-x-4 border-t border-white/10 pt-3 sm:block sm:pt-5"
           >
-            <h3 className="font-display text-xl font-semibold text-slate-100">{r.role}</h3>
+            <h3 className="text-xl font-semibold text-slate-100">{r.role}</h3>
             <p className="col-span-2 text-base leading-relaxed text-slate-300 sm:mt-1">
               {r.resume}
             </p>
@@ -103,7 +103,7 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
                   <li key={f} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
                     <span
                       aria-hidden
-                      className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-400"
+                      className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-400"
                     />
                     {f}
                   </li>
@@ -112,7 +112,7 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
             </RepliableSurTelephone>
             <Link
               href={r.lien.href}
-              className="group col-start-2 row-start-1 inline-flex text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300 pointer-coarse:min-h-11 pointer-coarse:items-center sm:mt-5"
+              className="group col-start-2 row-start-1 inline-flex text-sm font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2 pointer-coarse:min-h-11 pointer-coarse:items-center sm:mt-5"
             >
               {r.lien.libelle}
               <span

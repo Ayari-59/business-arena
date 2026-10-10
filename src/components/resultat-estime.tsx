@@ -147,7 +147,7 @@ function Chiffre({
   const texte = ecrire(valeur);
   return (
     <div className="min-w-0">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-300">{titre}</dt>
+      <dt className="libelle text-slate-300">{titre}</dt>
       <dd className="mt-1 text-slate-50">
         <ValeurRafraichie valeur={texte} className="chiffre-cle">
           <ChiffreQuiArrive valeur={valeur} format={ecrire} className="chiffre-estime" />
@@ -198,7 +198,7 @@ export function EncartResultatEstime({
       // UN PANNEAU DU COCKPIT (lot 6E) : son sol et son arête, pas un encadré.
       className="panneau px-4 py-3.5 sm:px-5 sm:py-4"
     >
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-200">
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-100">
         <Icone nom="resultats" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
         {TITRE_ESTIME} <span className="font-normal text-slate-300">· {SOUS_TITRE_ESTIME}</span>
       </p>
@@ -286,7 +286,7 @@ function CompteEstime({ estime }: { estime: ResultatEstime }) {
           l&apos;équipe. Ce n&apos;est pas un résultat : le marché n&apos;a pas répondu.
         </caption>
         <thead>
-          <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
+          <tr className="libelle border-b border-white/10">
             <th scope="col" className="py-1 pr-3 text-left font-medium">
               Poste
             </th>

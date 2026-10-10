@@ -122,7 +122,7 @@ export default function EpisodesPage() {
             >
               <h2
                 id={`titre-secteur-${s.code}`}
-                className="font-display text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl"
+                className="text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl"
               >
                 {s.nom}
               </h2>
@@ -136,7 +136,7 @@ export default function EpisodesPage() {
                 >
                   <h3
                     id={`titre-${f.code}`}
-                    className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+                    className="text-2xl font-semibold tracking-tight text-slate-50"
                   >
                     {f.titre}
                   </h3>
@@ -183,7 +183,7 @@ function CarteEpisode({ ep, teinte }: { ep: Episode; teinte: string }) {
           <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
             Épisode {ep.numero} · {ep.domaine}
           </p>
-          <h4 className="mt-2 font-display text-xl font-semibold text-slate-50">{ep.titre}</h4>
+          <h4 className="mt-2 text-xl font-semibold text-slate-50">{ep.titre}</h4>
           <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
         </div>
         <p className="text-sm text-slate-400">

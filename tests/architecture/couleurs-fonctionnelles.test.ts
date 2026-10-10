@@ -294,20 +294,29 @@ describe("une seule palette de données", () => {
   });
 });
 
-describe("un seul mot orange dans un grand titre : celui de l'accueil", () => {
+describe("plus aucun mot orange dans un grand titre, l'accueil compris (lot P1)", () => {
+  /*
+   * GARDE DÉPLACÉE, ET RESSERRÉE. Elle tenait « un seul mot orange dans un
+   * grand titre : celui du héros de l'accueil ». Lot P1, décision du
+   * propriétaire : l'orange ne dit plus que l'action (le bouton principal, le
+   * focus, l'option cochée, le champ en saisie). La seconde ligne du héros
+   * passe à l'encre claire du marine ; plus aucun h1 du site ne prend l'orange.
+   */
   /** Les titres h1 d'une source, balise comprise. */
   const titres = (texte: string) => texte.match(/<h1\b[\s\S]*?<\/h1>/g) ?? [];
   const pages = SOURCES.filter(({ chemin }) => /^src\/app\/.*page\.tsx$/.test(chemin));
 
-  it("le héros de l'accueil garde l'orange de la marque", () => {
+  it("le héros de l'accueil n'a plus de mot orange : sa seconde ligne est à l'encre", () => {
     const accueil = pages.find((p) => p.chemin === "src/app/page.tsx")!;
-    expect(titres(accueil.texte).join("\n")).toMatch(/text-amber-\d{3}/);
+    const heros = titres(accueil.texte).join("\n");
+    expect(heros, "le h1 de l'accueil a disparu").toContain("Apprenez à décider.");
+    expect(heros).not.toMatch(/(?:text|bg|decoration)-(?:amber|orange)-\d{2,3}|accent-plein/);
+    expect(heros).toMatch(/text-slate-\d{2,3}">Apprenez à décider\./);
   });
 
-  it("dans les pages intérieures, le mot d'appui d'un titre est à l'encre", () => {
+  it("dans toutes les pages, le mot d'appui d'un titre est à l'encre", () => {
     expect(pages.length).toBeGreaterThan(30);
     const fautes = pages
-      .filter((p) => p.chemin !== "src/app/page.tsx")
       .flatMap((p) =>
         titres(p.texte)
           .filter((t) => /text-amber-\d{3}/.test(t))

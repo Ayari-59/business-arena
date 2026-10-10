@@ -29,14 +29,14 @@ function formatIndicator(i: RseReportIndicator): string {
 const TREND_LABEL: Record<RseReport["carbon"]["trend"], { text: string; className: string }> = {
   amélioration: { text: "↓ en amélioration", className: "text-emerald-300" },
   stable: { text: "→ stable", className: "text-slate-400" },
-  dégradation: { text: "↑ en dégradation", className: "text-amber-300" },
+  dégradation: { text: "↑ en dégradation", className: "text-red-300" },
 };
 
 function Pillar({ title, items }: { title: string; items: RseReportIndicator[] }) {
   if (items.length === 0) return null;
   return (
     <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-4">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
+      <h3 className="mb-2 text-sm font-semibold text-slate-200">{title}</h3>
       <dl className="space-y-1.5">
         {items.map((i) => (
           <div key={i.label} className="flex items-baseline justify-between gap-3 text-xs">
@@ -64,7 +64,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-          <Icone nom="feuille" className="h-4 w-4 text-amber-400" />
+          <Icone nom="feuille" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
           Rapport extra-financier
         </h2>
         <span className="tabular-nums text-lg font-semibold text-emerald-300">
@@ -92,7 +92,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
 
       <div className="encadre-neutre mt-3 rounded-lg p-3 sm:p-4">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <h3 className="text-sm font-semibold text-slate-200">
             Empreinte carbone (indice indicatif)
           </h3>
           <span className={`text-xs font-semibold ${trend.className}`}>{trend.text}</span>
