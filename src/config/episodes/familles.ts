@@ -6,6 +6,8 @@
  * manager. Chaque épisode est dans une famille et une seule, et les familles
  * d'un même secteur se suivent ; un test le vérifie sur le registre. Un
  * secteur sans famille n'a pas encore d'épisode : la page ne le montre pas.
+ * Comment la page les dessine (tiroirs de thème pour le secteur `parTheme`,
+ * un tiroir par métier pour les autres) : voir `catalogue.ts`.
  */
 export interface Secteur {
   code: string;
@@ -37,12 +39,22 @@ export interface Secteur {
    * 5,35, au-dessus des 4,2 d'avant le lot, mesurés de la même façon.
    */
   teinte: string;
+  /**
+   * LE CATALOGUE RANGE CE SECTEUR PAR THÈME (demande du propriétaire, octobre
+   * 2026 : « Arvel Distribution découpé par thème, et les autres par métier »).
+   * Le négoce porte à lui seul près de la moitié des épisodes : sur la page, ses
+   * familles deviennent chacune un tiroir. Un secteur sans ce drapeau tient dans
+   * UN tiroir, celui de son métier, où ses familles ne sont que des sous-titres.
+   * Lu par `catalogueDesEpisodes` (catalogue.ts), et par lui seul.
+   */
+  parTheme?: true;
 }
 
 export const SECTEURS: readonly Secteur[] = [
   {
     code: "negoce",
     teinte: "commerce",
+    parTheme: true,
     nom: "Négoce et distribution",
     entreprise: "Arvel Distribution",
     texte:
@@ -390,16 +402,8 @@ export const estUnEpisodeDeDirection = (code: string): boolean =>
  */
 export const NOMBRE_D_EPISODES = FAMILLES.reduce((n, f) => n + f.episodes.length, 0);
 
-/** Les familles d'un secteur, dans l'ordre de la page. */
-export const famillesDuSecteur = (code: string): readonly Famille[] =>
-  FAMILLES.filter((f) => f.secteur === code);
-
 /** La teinte à publier pour un épisode (`data-metier`, globals.css « LOT 5A »). */
 export function teinteDuMetierDeLEpisode(codeEpisode: string): string | undefined {
   const famille = FAMILLES.find((f) => f.episodes.includes(codeEpisode));
   return famille ? SECTEURS.find((s) => s.code === famille.secteur)?.teinte : undefined;
 }
-
-/** Les secteurs qui ont au moins une famille, dans l'ordre de la page. */
-export const secteursJoues = (): readonly Secteur[] =>
-  SECTEURS.filter((s) => FAMILLES.some((f) => f.secteur === s.code));

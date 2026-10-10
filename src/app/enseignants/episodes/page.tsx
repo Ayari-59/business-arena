@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PiedDePage } from "@/components/pied-de-page";
-import { FAMILLES, SECTEURS } from "@/config/episodes/familles";
+import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
+import { catalogueDesEpisodes } from "@/config/episodes/catalogue";
 import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
@@ -17,20 +18,16 @@ export const metadata: Metadata = {
 /**
  * LES ÉPISODES EN CLASSE.
  *
- * Les fiches enseignant, rangées par secteur puis par famille d'épisodes,
- * comme la page des épisodes ; un secteur sans fiche ne s'affiche pas. Une fiche dit ce que
+ * Les fiches enseignant, rangées comme la page des épisodes et par le même
+ * composant (`CatalogueDesEpisodes`) : Arvel Distribution en tiroirs de thème,
+ * les autres entreprises en un tiroir par métier ; une famille ou un secteur
+ * sans fiche ne s'affiche pas. Une fiche dit ce que
  * l'épisode enseigne, comment conduire la séance de deux heures, le corrigé
  * du calcul et les questions du débrief.
  */
 export default function EpisodesEnClassePage() {
-  const familles = FAMILLES.map((f) => ({
-    ...f,
-    fiches: FICHES.filter((x) => f.episodes.includes(x.code)),
-  })).filter((f) => f.fiches.length > 0);
-  const secteurs = SECTEURS.map((s) => ({
-    ...s,
-    familles: familles.filter((f) => f.secteur === s.code),
-  })).filter((s) => s.familles.length > 0);
+  const avecFiche = new Map(FICHES.map((f) => [f.code, f]));
+  const entreprises = catalogueDesEpisodes((code) => avecFiche.has(code));
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -51,32 +48,14 @@ export default function EpisodesEnClassePage() {
             mêmes aléas ; la séance tient en deux heures, débrief compris. Les épisodes se jouent
             sans compte, et aucun résultat n&apos;y est noté : le bilan juge les décisions.
           </p>
-          {secteurs.map((s) => (
-            <section key={s.code} aria-labelledby={`titre-secteur-${s.code}`} className="mt-16">
-              <h2
-                id={`titre-secteur-${s.code}`}
-                className="text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl"
-              >
-                {s.nom}
-              </h2>
-              <p className="mt-2 max-w-2xl text-lg leading-relaxed text-slate-400">{s.texte}</p>
-              {s.familles.map((f) => (
-                <section key={f.code} aria-labelledby={`titre-${f.code}`} className="mt-12">
-                  <h3
-                    id={`titre-${f.code}`}
-                    className="text-2xl font-semibold tracking-tight text-slate-50"
-                  >
-                    {f.titre}
-                  </h3>
-                  <ul className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    {f.fiches.map((fiche) => (
-                      <CarteFiche key={fiche.code} fiche={fiche} />
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </section>
-          ))}
+          <CatalogueDesEpisodes
+            entreprises={entreprises}
+            unite={{ un: "fiche", plusieurs: "fiches" }}
+            carte={(code, niveau) => {
+              const fiche = avecFiche.get(code);
+              return fiche ? <CarteFiche key={code} fiche={fiche} niveau={niveau} /> : null;
+            }}
+          />
         </div>
       </main>
       <PiedDePage />
@@ -84,9 +63,11 @@ export default function EpisodesEnClassePage() {
   );
 }
 
-function CarteFiche({ fiche }: { fiche: FicheEnseignant }) {
+function CarteFiche({ fiche, niveau }: { fiche: FicheEnseignant; niveau: 3 | 4 }) {
   const ep = episodeParCode(fiche.code);
   if (!ep) return null;
+  // Le niveau du titre suit le rangement (voir la page des épisodes).
+  const Titre = niveau === 3 ? "h3" : "h4";
   const sigles = fiche.formations.map((c) => formationParCode(c)?.sigle ?? c).join(" · ");
   return (
     <li className="carte flex flex-col gap-4 p-6">
@@ -94,7 +75,7 @@ function CarteFiche({ fiche }: { fiche: FicheEnseignant }) {
         <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
           Épisode {ep.numero} · {sigles}
         </p>
-        <h4 className="mt-2 text-xl font-semibold text-slate-50">{ep.titre}</h4>
+        <Titre className="mt-2 text-xl font-semibold text-slate-50">{ep.titre}</Titre>
         <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
       </div>
       <p className="text-sm text-slate-400">

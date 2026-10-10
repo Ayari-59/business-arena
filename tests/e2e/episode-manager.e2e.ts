@@ -186,13 +186,15 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     );
     const page = await contexte.newPage();
     await page.goto(`${BASE}/entreprises/episode`);
-    // Sur téléphone, chaque famille se replie derrière son titre : les cartes
+    // Les épisodes sont rangés dans des tiroirs fermés à l'arrivée (un par
+    // thème d'Arvel Distribution, un par métier pour les autres) : les cartes
     // sont dans la page, repliées. On compte donc aussi celles qu'on ne voit
-    // pas, puis on vérifie qu'une famille dépliée montre bien les siennes.
+    // pas, puis on vérifie qu'un tiroir déplié montre bien les siennes.
     expect(
       await page.getByRole("link", { name: /Jouer l'épisode/, includeHidden: true }).count(),
     ).toBe(EPISODES.length);
-    await page.locator("details.repliable-tel > summary").first().click();
+    expect(await page.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(0);
+    await page.locator("main details > summary").first().click();
     expect(await page.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBeGreaterThan(0);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
 

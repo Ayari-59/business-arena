@@ -432,6 +432,20 @@ export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
     surface: "cockpit",
     raison: `Un tableau d'observations. ${PAGE_CLAIRE}`,
   },
+  {
+    fichier: "components/catalogue-des-episodes.tsx",
+    composant: "Repliable",
+    repere: "{famille.texte}",
+    surface: "cockpit",
+    raison: `Un tiroir de thème du catalogue des épisodes : des cartes à choisir. ${PAGE_CLAIRE}`,
+  },
+  {
+    fichier: "components/catalogue-des-episodes.tsx",
+    composant: "Repliable",
+    repere: "{e.secteur.entreprise}",
+    surface: "cockpit",
+    raison: `Un tiroir de métier du catalogue des épisodes : des cartes à choisir. ${PAGE_CLAIRE}`,
+  },
   ...["Comment lire ces chiffres"].map((t) => ({
     fichier: "app/teacher/games/[gameId]/observation/page.tsx",
     composant: "Tiroir" as const,

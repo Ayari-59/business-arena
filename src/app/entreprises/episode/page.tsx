@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PiedDePage } from "@/components/pied-de-page";
-import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
-import { famillesDuSecteur, secteursJoues, type Famille } from "@/config/episodes/familles";
+import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
+import { catalogueDesEpisodes, teinteDuSecteur } from "@/config/episodes/catalogue";
 import type { Episode } from "@/config/episodes/types";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
 
@@ -18,31 +18,26 @@ export const metadata: Metadata = {
  * LES ÉPISODES MANAGER.
  *
  * Chaque épisode est un domaine du métier de manager, dans l'entreprise d'un
- * secteur. La page les range par secteur, puis par famille (vendre, piloter
- * les chiffres, les opérations, l'équipe…), avec en tête un sommaire par
- * secteur pour sauter à l'une d'elles. Les ancres des familles ne changent pas.
+ * secteur. Demande du propriétaire (octobre 2026) : « Arvel Distribution
+ * découpé par thème, et les autres par métier ». La page range donc les
+ * épisodes dans des TIROIRS fermés à l'arrivée (`CatalogueDesEpisodes`, le même
+ * composant que la page des fiches enseignant) : un tiroir par thème pour le
+ * négoce, qui porte près de la moitié des épisodes, un tiroir par métier pour
+ * les autres, leurs familles en sous-titres. Un sommaire en tête ouvre le bon
+ * tiroir ; les ancres de la page d'avant (`#secteur-…`, le code d'une famille)
+ * mènent toujours au bon endroit, tiroir ouvert.
  *
  * PAS UN MUR D'ORANGE. Chacune des cartes portait un filet, un surtitre et un
  * bouton plein orange : avec plus de cent boutons primaires sur une page,
  * l'orange ne signalait plus rien. La carte entière est maintenant le lien ;
  * elle finit par « Jouer l'épisode N → » à l'encre d'action, qui ne devient un
  * aplat orange qu'au survol ou au focus. Son filet gauche prend la teinte du
- * secteur. Sur téléphone, chaque famille se replie derrière son titre : la
- * page faisait 46 700 px de haut, le sommaire mène à la famille voulue.
+ * secteur, lue de `SECTEURS` (la page en tenait une table à elle, restée sur
+ * les emprunts du lot 5A : la santé, l'agroalimentaire et l'hôtellerie n'y
+ * avaient pas la teinte du reste du site).
  */
-
-/** La teinte de chaque secteur d'épisodes, parmi celles des métiers. */
-const TEINTE_DU_SECTEUR: Record<string, string> = {
-  negoce: "var(--secteur-commerce)",
-  hotellerie: "var(--secteur-hotellerie)",
-  conseil: "var(--secteur-services)",
-  sante: "var(--secteur-transport)",
-  agroalimentaire: "var(--secteur-industrie)",
-};
 export default function EpisodesPage() {
-  const secteurs = secteursJoues();
-  const nombre = (familles: readonly Famille[]) =>
-    familles.reduce((n, f) => n + f.episodes.length, 0);
+  const entreprises = catalogueDesEpisodes();
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -57,9 +52,13 @@ export default function EpisodesPage() {
             Un trimestre dans la peau d&apos;un manager
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            {EPISODES.length} épisodes, chacun sur un domaine du métier, rangés par secteur :{" "}
-            {secteurs
-              .map((s) => `${s.nom.charAt(0).toLowerCase()}${s.nom.slice(1)} (${s.entreprise})`)
+            {EPISODES.length} épisodes, chacun sur un domaine du métier, dans{" "}
+            {entreprises.length} entreprises :{" "}
+            {entreprises
+              .map(
+                ({ secteur: s }) =>
+                  `${s.entreprise} (${s.nom.charAt(0).toLowerCase()}${s.nom.slice(1)})`,
+              )
               .join(", ")}
             . Six décisions, une vingtaine de minutes, trois niveaux de difficulté. À la fin, le
             bilan rejoue chacune de vos décisions sous les mêmes trente tirages au hasard, pour
@@ -75,93 +74,25 @@ export default function EpisodesPage() {
               Mon profil décisionnel
             </Link>
           </p>
-          <nav aria-label="Secteurs et familles d'épisodes" className="mt-8">
-            <ul className="grid gap-6 lg:grid-cols-2">
-              {secteurs.map((s) => {
-                const familles = famillesDuSecteur(s.code);
-                return (
-                  <li key={s.code}>
-                    <p className="flex flex-wrap items-baseline gap-x-2">
-                      <a
-                        href={`#secteur-${s.code}`}
-                        className="font-semibold text-slate-100 hover:text-amber-300"
-                      >
-                        {s.nom}
-                      </a>
-                      <span className="text-sm text-slate-400">
-                        {s.entreprise} · <span className="tabular-nums">{nombre(familles)}</span>{" "}
-                        épisodes
-                      </span>
-                    </p>
-                    <ul className="mt-3 flex flex-wrap gap-2">
-                      {familles.map((f) => (
-                        <li key={f.code}>
-                          <a
-                            href={`#${f.code}`}
-                            className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3.5 py-1.5 text-sm text-slate-200 hover:border-amber-400/60 hover:text-slate-50"
-                          >
-                            {f.titre}
-                            <span className="tabular-nums text-slate-400">{f.episodes.length}</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-          {secteurs.map((s) => (
-            <section
-              key={s.code}
-              id={`secteur-${s.code}`}
-              aria-labelledby={`titre-secteur-${s.code}`}
-              className="mt-16 scroll-mt-6"
-            >
-              <h2
-                id={`titre-secteur-${s.code}`}
-                className="text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl"
-              >
-                {s.nom}
-              </h2>
-              <p className="mt-2 max-w-2xl text-lg leading-relaxed text-slate-400">{s.texte}</p>
-              {famillesDuSecteur(s.code).map((f) => (
-                <section
-                  key={f.code}
-                  id={f.code}
-                  aria-labelledby={`titre-${f.code}`}
-                  className="mt-12 scroll-mt-6"
-                >
-                  <h3
-                    id={`titre-${f.code}`}
-                    className="text-2xl font-semibold tracking-tight text-slate-50"
-                  >
-                    {f.titre}
-                  </h3>
-                  <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
-                    {f.texte}
-                  </p>
-                  <RepliableSurTelephone
-                    resume={`Voir les ${f.episodes.length} épisodes`}
-                    className="mt-4 sm:mt-0"
-                  >
-                    <ul className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                      {f.episodes
-                        .map((code) => episodeParCode(code))
-                        .filter((ep): ep is Episode => ep !== undefined)
-                        .map((ep) => (
-                          <CarteEpisode
-                            key={ep.code}
-                            ep={ep}
-                            teinte={TEINTE_DU_SECTEUR[s.code] ?? "var(--filet-carte)"}
-                          />
-                        ))}
-                    </ul>
-                  </RepliableSurTelephone>
-                </section>
-              ))}
-            </section>
-          ))}
+          <CatalogueDesEpisodes
+            entreprises={entreprises}
+            unite={{ un: "épisode", plusieurs: "épisodes" }}
+            carte={(code, niveau) => {
+              const ep = episodeParCode(code);
+              if (!ep) return null;
+              const secteur = entreprises.find((e) =>
+                e.familles.some((f) => f.episodes.includes(code)),
+              )?.secteur;
+              return (
+                <CarteEpisode
+                  key={code}
+                  ep={ep}
+                  niveau={niveau}
+                  teinte={secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)"}
+                />
+              );
+            }}
+          />
         </div>
       </main>
       <PiedDePage />
@@ -169,7 +100,18 @@ export default function EpisodesPage() {
   );
 }
 
-function CarteEpisode({ ep, teinte }: { ep: Episode; teinte: string }) {
+function CarteEpisode({
+  ep,
+  teinte,
+  niveau,
+}: {
+  ep: Episode;
+  teinte: string;
+  niveau: 3 | 4;
+}) {
+  // Le niveau du titre suit le rangement : sous un tiroir de thème (h2 de
+  // l'entreprise) ou sous le sous-titre d'une famille (h3).
+  const Titre = niveau === 3 ? "h3" : "h4";
   return (
     <li className="flex">
       <Link
@@ -181,7 +123,7 @@ function CarteEpisode({ ep, teinte }: { ep: Episode; teinte: string }) {
           <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
             Épisode {ep.numero} · {ep.domaine}
           </p>
-          <h4 className="mt-2 text-xl font-semibold text-slate-50">{ep.titre}</h4>
+          <Titre className="mt-2 text-xl font-semibold text-slate-50">{ep.titre}</Titre>
           <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
         </div>
         <p className="text-sm text-slate-400">
