@@ -19,7 +19,7 @@ import { PastilleDeRang } from "@/components/rang";
 export interface MarcheDuPodium {
   nom: string;
   rang: number;
-  /** L'équipe du joueur : le filet orange de « c'est vous ». */
+  /** L'équipe du joueur : « vous », et le repère de la ligne du joueur (jamais l'orange). */
   moi: boolean;
   ipg: number | null;
 }
@@ -75,6 +75,7 @@ export function PodiumDesEquipes({
   const e = ECHELLE[taille];
   const trois = marches.filter((m) => m.rang <= 3).sort((a, b) => a.rang - b.rang);
   if (trois.length === 0) return null;
+  if (taille === "carte") return <PodiumAMarches trois={trois} etiquette={etiquette} />;
   return (
     <ol
       aria-label={etiquette}
@@ -101,6 +102,65 @@ export function PodiumDesEquipes({
                 {m.ipg !== null ? ` · IPG ${formatDecimal(m.ipg, 0)}` : ""}
                 {m.moi ? <span className="font-semibold text-slate-200"> · vous</span> : null}
               </p>
+            </div>
+          </li>
+        ) : (
+          <li key={`vide-${i}`} aria-hidden className="order-3" />
+        ),
+      )}
+    </ol>
+  );
+}
+
+/**
+ * LE PODIUM DE LA CLÔTURE, À VRAIES MARCHES (lot P2).
+ *
+ * L'audit le voyait comme « trois blocs plats » : trois cartes de même allure,
+ * dont la hauteur ne venait que de leur contenu. C'est désormais un podium :
+ * le nom de l'équipe et son IPG posés AU-DESSUS de sa marche, et trois marches
+ * de hauteurs franchement différentes (la 1re la plus haute, au centre ; la
+ * 2e à gauche ; la 3e à droite), le métal en tête de marche et le chiffre de
+ * la place dessus. L'équipe du joueur est dite « vous », en toutes lettres,
+ * et sa marche porte le repère de la ligne du joueur. Le rang n'y est pas
+ * réécrit en toutes lettres (« 2e ») : la clôture le dit une fois, en grand.
+ *
+ * La projection garde sa forme (le mur de la classe a sa propre garde de
+ * hauteur) ; seule l'échelle « carte » prend ces marches.
+ */
+const MARCHES_EN_LETTRES = ["Première", "Deuxième", "Troisième"] as const;
+
+export const HAUTEURS_DES_MARCHES = ["h-32 sm:h-36", "h-24 sm:h-[6.5rem]", "h-16 sm:h-[4.5rem]"] as const;
+
+function PodiumAMarches({
+  trois,
+  etiquette,
+}: {
+  trois: readonly MarcheDuPodium[];
+  etiquette: string;
+}) {
+  return (
+    <ol aria-label={etiquette} data-podium="carte" className="grid grid-cols-3 items-end gap-2 sm:gap-3">
+      {[trois[1], trois[0], trois[2]].map((m, i) =>
+        m ? (
+          <li
+            key={m.rang}
+            data-marche={m.rang}
+            className={`min-w-0 text-center ${i === 1 ? "order-2" : i === 0 ? "order-1" : "order-3"}`}
+          >
+            <p className="truncate text-sm font-semibold text-slate-50 sm:text-base" title={m.nom}>
+              <span className="sr-only">{MARCHES_EN_LETTRES[m.rang - 1]} marche : </span>
+              {m.nom}
+            </p>
+            <p className="text-xs tabular-nums text-slate-300 sm:text-sm">
+              {m.ipg !== null ? `IPG ${formatDecimal(m.ipg, 0)}` : " "}
+              {m.moi ? <span className="font-semibold text-slate-50"> · vous</span> : null}
+            </p>
+            <div
+              className={`marche-de-podium marche-de-podium-${m.rang} mt-2 flex items-start justify-center rounded-t-md bg-slate-900 pt-3 ${
+                HAUTEURS_DES_MARCHES[m.rang - 1]
+              } ${m.moi ? "ligne-moi" : ""}`}
+            >
+              <PastilleDeRang rang={m.rang} doublon className="text-xl" />
             </div>
           </li>
         ) : (

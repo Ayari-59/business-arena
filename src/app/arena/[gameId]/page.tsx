@@ -67,8 +67,8 @@ import { recordPersonnel } from "@/services/profile.service";
 import { attribuerCodeDeReprise, codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
-import { surtitreDePartie, teinteDuMetier } from "@/config/scenarios/presentation";
-import { SceneDEntreprise } from "@/components/illustrations/scene-d-entreprise";
+import { couperTitre, surtitreDePartie, teinteDuMetier } from "@/config/scenarios/presentation";
+import { OuvertureDeLaPartie } from "@/components/ouverture-de-la-partie";
 import { SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -236,6 +236,14 @@ export default async function ArenaPage({
   // « Situation » réunit tout sur un seul écran. On extrait donc des blocs
   // plutôt que de les dupliquer d'un mode à l'autre.
   const premierTour = periods.length === 0;
+  // LA PHRASE DE PRISE DE POSTE (lot P2), posée sur le lieu au tour 1 : la
+  // promesse du registre (« Prenez les commandes »), puis la règle du jeu.
+  // Rien d'inventé : le nombre de tours est celui de la partie.
+  const promesseDuTitre = couperTitre(view.intro.title).promesse;
+  const phraseDePriseDePoste = `${promesseDuTitre ? `${promesseDuTitre}. ` : ""}${compter(
+    view.roundsCount,
+    "tour",
+  )} pour faire vos preuves : vous décidez, le marché répond.`;
 
   // DONNÉES : ce avec quoi on entre dans le tour — l'entreprise (au 1er tour),
   // les paramètres du secteur et la capacité de production.
@@ -245,42 +253,43 @@ export default async function ArenaPage({
   const presentation = premierTour ? (
     <>
       {/*
-        LOT 6B : L'EN-TÊTE ILLUSTRÉ. La feuille s'ouvre sur le lieu de
-        l'entreprise, en bandeau marine, comme l'en-tête d'une lettre de la
-        maison. Il déborde du padding de la feuille (ou de la carte, sur
-        téléphone) pour en prendre toute la largeur et l'arrondi du haut ; sur
-        la carte, il laisse voir les 2 px du filet de tête à la teinte du métier.
-        Sur téléphone, la scène remplit la largeur et se recadre en hauteur
-        (`slice`) : sa bande du milieu, qui porte les personnes, reste
-        visible. Sur la feuille large, elle se pose entière (`meet`) et son
-        mur et son sol se prolongent de part et d'autre : un 16:9 agrandi à
-        toute la largeur ne montrait plus que des bustes coupés. Décorative :
-        le nom et le métier sont écrits juste dessous. À l'impression, elle
-        s'efface. Une entreprise qui a sa PHOTO (voir `PHOTOS_DES_ENTREPRISES`)
-        la montre à la place du dessin, dans un bandeau plus haut sur
-        ordinateur : une photo recadrée trop bas ne montre plus que des bustes.
+        LOT 6B, PUIS P2 : LE LIEU EN TÊTE. La feuille de présentation s'ouvrait
+        sur la photo du lieu, en bandeau. Lot P2 : au tour 1, le lieu OUVRE la
+        partie, et il n'y a qu'une photo à l'écran.
+          · Sur ordinateur, il est en tête de l'arène, en pleine largeur
+            (`ouvertureNode`, au-dessus de la bande de marché et des étapes) :
+            la feuille de présentation ne le répète pas, elle commence au nom.
+          · Sur téléphone, c'est cette carte « Votre entreprise », devenue la
+            PREMIÈRE du briefing, qui s'ouvre sur le lieu en plein cadre, nom
+            posé dessus : le nom n'est donc pas réécrit dessous.
+        À l'impression, la photo s'efface.
       */}
-      <div
-        data-en-tete-illustre=""
-        className={`overflow-hidden print:hidden ${
-          telephone ? "-mx-3 -mt-2.5" : "-mx-4 -mt-4 sm:-mx-6 sm:-mt-6"
-        }`}
-        style={{ borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit" }}
-      >
-        <SceneDEntreprise
-          scenario={view.scenarioCode}
-          secteur={view.sector}
-          cadrage={telephone ? "xMidYMid slice" : "xMidYMid meet"}
-          className="block h-36 w-full sm:h-48 lg:h-56"
-          classePhoto="block h-36 w-full sm:h-64 lg:h-[22rem]"
-          petit={telephone}
-        />
-      </div>
+      {telephone ? (
+        <div
+          data-en-tete-illustre=""
+          className="-mx-3 -mt-3 overflow-hidden print:hidden"
+          style={{ borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit" }}
+        >
+          <OuvertureDeLaPartie
+            forme="carte"
+            scenario={view.scenarioCode}
+            secteur={view.sector}
+            entreprise={view.intro.company}
+            metier={`${SECTOR_LABELS[view.sector]} · Niveau ${view.difficulty.level} · ${view.difficulty.name}`}
+            description={view.intro.tagline}
+            phrase={phraseDePriseDePoste}
+          />
+        </div>
+      ) : null}
       <div>
-        <h3 className="text-xl font-bold text-slate-100 max-sm:text-2xl">
-          {view.intro.company}
-        </h3>
-        <p className="text-sm text-slate-400 max-sm:text-base">{view.intro.tagline}</p>
+        {telephone ? null : (
+          <>
+            <h3 className="text-xl font-bold text-slate-100 max-sm:text-2xl">
+              {view.intro.company}
+            </h3>
+            <p className="text-sm text-slate-400 max-sm:text-base">{view.intro.tagline}</p>
+          </>
+        )}
         <FaitsCles
           capacityFacts={view.capacityFacts}
           vocabulary={view.vocabulary}
@@ -867,7 +876,52 @@ export default async function ArenaPage({
         : null,
     ipg: latestRound !== null ? view.playerBpi : null,
   };
-  const tableauNode = (
+  // L'EN-TÊTE DE L'ARÈNE. Dès le 2ᵉ tour, l'ardoise du dirigeant et ses
+  // chiffres. AU TOUR 1 (lot P2), il n'y a encore aucun chiffre : l'ardoise
+  // vide (« … s'afficheront ici ») laisse la place à l'OUVERTURE, le lieu en
+  // pleine largeur avec le nom, le métier, le tour et la prise de poste. Sur
+  // téléphone, le lieu ouvre le parcours en cartes (carte « Votre
+  // entreprise ») : rien ne se pose ici, et la barre de la partie porte seule
+  // l'entreprise et le tour, une fois.
+  const tableauNode = (() => {
+    const coin = (
+      <>
+        {/* Sous quel nom on décide. En salle informatique le poste passe d'une
+            classe à l'autre : sans ce rappel, un élève joue sous l'identité du
+            précédent sans jamais l'apprendre. Il mène au bloc qui permet de
+            libérer l'appareil. */}
+        {view.kind !== "solo" && view.playerPseudo ? (
+          <a
+            href="#mon-profil"
+            className="rounded-full border border-white/15 px-3 py-1 text-xs text-slate-200 transition hover:border-white/30 hover:text-slate-50 max-sm:hidden"
+          >
+            <Icone nom="personne" className="mr-1 h-3.5 w-3.5" />
+            {view.playerPseudo}
+          </a>
+        ) : null}
+        {/* L'heure de fermeture du tour, quand l'enseignant en a posé une : on la
+            découvrait en étant refusé. */}
+        {!finished && view.playLock.playable && view.playLock.closesAt ? (
+          <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
+        ) : null}
+      </>
+    );
+    if (premierTour) {
+      return telephone ? null : (
+        <OuvertureDeLaPartie
+          scenario={view.scenarioCode}
+          secteur={view.sector}
+          entreprise={view.intro.company}
+          metier={enteteArdoise.sousTitre ?? SECTOR_LABELS[view.sector]}
+          description={view.intro.tagline}
+          tour={`${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
+          phrase={phraseDePriseDePoste}
+        >
+          {coin}
+        </OuvertureDeLaPartie>
+      );
+    }
+    return (
     <TableauDeBord
       tours={toursChiffres}
       entete={enteteArdoise}
@@ -884,24 +938,7 @@ export default async function ArenaPage({
         </span>
       }
     >
-      {/* Sous quel nom on décide. En salle informatique le poste passe d'une
-          classe à l'autre : sans ce rappel, un élève joue sous l'identité du
-          précédent sans jamais l'apprendre. Il mène au bloc qui permet de
-          libérer l'appareil. */}
-      {view.kind !== "solo" && view.playerPseudo ? (
-        <a
-          href="#mon-profil"
-          className="rounded-full border border-white/15 px-3 py-1 text-xs text-slate-200 transition hover:border-white/30 hover:text-slate-50 max-sm:hidden"
-        >
-          <Icone nom="personne" className="mr-1 h-3.5 w-3.5" />
-          {view.playerPseudo}
-        </a>
-      ) : null}
-      {/* L'heure de fermeture du tour, quand l'enseignant en a posé une : on la
-          découvrait en étant refusé. */}
-      {!finished && view.playLock.playable && view.playLock.closesAt ? (
-        <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
-      ) : null}
+      {coin}
       {/* La frise : un segment par tour, au signe de son résultat. */}
       <div className="max-sm:hidden">
         <FriseDesTours
@@ -912,7 +949,8 @@ export default async function ArenaPage({
         />
       </div>
     </TableauDeBord>
-  );
+    );
+  })();
   const soumissionsNode = view.soumissions ? (
     <div className="px-0.5 py-2">
       <QuiARendu
@@ -1016,6 +1054,20 @@ export default async function ArenaPage({
 
   const briefingCartes: CarteDuParcours[] = (
     [
+      // LE LIEU D'ABORD (lot P2). Au tour 1, la carte « Votre entreprise »
+      // ouvre le parcours : la photo en plein cadre, le nom posé dessus. Elle
+      // venait en deuxième, après le mandat.
+      presentation
+        ? {
+            cle: "presentation",
+            titre: "Votre entreprise",
+            noeud: (
+              <section className="space-y-4 carte p-3 text-slate-300">
+                {presentation}
+              </section>
+            ),
+          }
+        : null,
       alerteTresorerieNode
         ? { cle: "alerte-tresorerie", titre: "Alerte de trésorerie", noeud: alerteTresorerieNode }
         : null,
@@ -1036,17 +1088,6 @@ export default async function ArenaPage({
                 equipe={view.playerTeamName}
                 ouvert
               />
-            ),
-          }
-        : null,
-      presentation
-        ? {
-            cle: "presentation",
-            titre: "Votre entreprise",
-            noeud: (
-              <section className="space-y-4 carte p-3 text-slate-300">
-                {presentation}
-              </section>
             ),
           }
         : null,
@@ -1441,6 +1482,7 @@ export default async function ArenaPage({
                     ? { monIpg: view.playerBpi, meilleur: recordPrecedent?.bpi ?? null }
                     : null
                 }
+                lieu={{ scenario: view.scenarioCode, secteur: view.sector }}
                 podium={
                   classementOuvert && view.ranking.length > 1
                     ? view.ranking.map((row) => ({

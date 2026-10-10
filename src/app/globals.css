@@ -3501,6 +3501,30 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
   animation: valeur-rafraichie var(--duree-eclat) var(--courbe-passage) both;
 }
 
+/* ─────────────── LOT P2 : LE LIEU ENTRE, UNE FOIS ─────────────────────────
+   La photo du lieu qui ouvre la partie (et celle de la clôture) entre d'un
+   léger zoom et d'un fondu, une fois, au chargement : un écran qui s'ouvre,
+   pas une animation qui tourne. Il est discret (4 % de zoom), plus long qu'un
+   passage parce qu'il porte une image entière, et la photo est lisible dès la
+   première image (elle part à 55 % d'opacité, jamais de zéro). Coupé, comme
+   tout le reste, par « moins de mouvement ». */
+:root {
+  --duree-entree-du-lieu: 0.9s;
+}
+@keyframes entree-du-lieu {
+  from {
+    opacity: 0.55;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.entree-du-lieu {
+  animation: entree-du-lieu var(--duree-entree-du-lieu) var(--courbe-passage) both;
+}
+
 /* ───────── CE QUE « MOINS DE MOUVEMENT » VEUT DIRE, EN UNE FOIS ──────────── */
 
 /* Une demande de moins de mouvement n'est pas un réglage de confort : c'est une
@@ -3514,7 +3538,8 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
   [role="tabpanel"] > *,
   details[open] > :not(summary),
   .valeur-rafraichie[data-valeur-rafraichie="eclat"],
-  :is(.bouton-plein, .bouton-filet)[aria-busy="true"]::after {
+  :is(.bouton-plein, .bouton-filet)[aria-busy="true"]::after,
+  .entree-du-lieu {
     animation: none;
   }
   :root[data-chiffres-arrivent] .ardoise svg polyline {
@@ -3837,4 +3862,78 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
    DANS le premier. Le contrôle s'en passe, l'enveloppe le dit pour lui. */
 [data-ecran-de-jeu] .champ:not(.papier .champ) :is(input, select, textarea):focus-visible {
   outline: none;
+}
+
+/* ===========================================================================
+ * LOT P2 : LA MISE EN SCÈNE — LES LIEUX DEVIENNENT L'IMAGE DU PRODUIT.
+ *
+ * Les neuf photographies de lieux (duotone marine, teinte du métier à 16 %)
+ * ne se montraient qu'à l'étape Situation du premier tour. Elles sont
+ * désormais sur la vitrine (composition des lieux, bande de vignettes, les
+ * neuf métiers), sur /jouer (neuf cartes photo), en ouverture de la partie
+ * (tour 1) et en fond de la clôture. Ce bloc porte ce qui se pose SUR une
+ * photo : les voiles, et la coche d'une carte choisie.
+ *
+ * UN TEXTE SUR UNE PHOTO SE MESURE SUR SA ZONE LA PLUS CLAIRE. Les photos
+ * sont claires par endroits (le ciel blanc de ROUTE & CIE, la baie vitrée
+ * d'ATLAS) : le voile ne se règle pas « à l'œil » sur une photo sombre. Il a
+ * été réglé, puis mesuré, texte masqué, au pixel le plus clair sous chaque
+ * ligne de texte, sur les neuf photos : ≥ 4,5:1 partout (tests/e2e/
+ * mise-en-scene.e2e.ts, et le rapport du lot). Le marine du voile est le sol
+ * de la page du cockpit (#061529) ; il ne prend aucune teinte.
+ * ======================================================================== */
+
+/* L'OUVERTURE DE LA PARTIE (ordinateur) : le texte se pose en bas à gauche,
+   sur la moitié gauche du bandeau. Le voile est dense là (une bande de gauche
+   qui s'efface vers 80 % de la largeur, composée avec un dégradé qui monte du
+   bas), et la photo reste visible en haut à droite, là où rien n'est écrit. */
+.voile-de-scene {
+  background-image:
+    linear-gradient(
+      to right,
+      rgb(6 21 41 / 0.82) 0%,
+      rgb(6 21 41 / 0.74) 40%,
+      rgb(6 21 41 / 0.12) 80%,
+      rgb(6 21 41 / 0.08) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgb(6 21 41 / 0.5) 0%,
+      rgb(6 21 41 / 0.32) 70%,
+      rgb(6 21 41 / 0.08) 100%
+    );
+}
+/* Sur la carte du téléphone, le texte prend toute la largeur : le voile
+   monte du bas, dense sur les deux tiers où le texte se pose. */
+[data-ouverture-de-la-partie="carte"] .voile-de-scene {
+  background-image: linear-gradient(
+    to top,
+    rgb(6 21 41 / 0.95) 0%,
+    rgb(6 21 41 / 0.92) 68%,
+    rgb(6 21 41 / 0.6) 86%,
+    rgb(6 21 41 / 0.2) 100%
+  );
+}
+
+/* LA CLÔTURE : la photo derrière le titre, le rang et le podium, sous un voile
+   plus dense (ils sont plus nombreux et plus petits que le nom de
+   l'ouverture), qui fond dans le marine de l'ardoise : les chiffres et la
+   courbe, plus bas, sont sur le marine plein. */
+.voile-de-cloture {
+  background-image: linear-gradient(
+    to bottom,
+    rgb(11 37 69 / 0.8) 0%,
+    rgb(11 37 69 / 0.86) 55%,
+    var(--color-slate-950) 100%
+  );
+}
+
+/* LA COCHE D'UNE CARTE CHOISIE (/jouer) : l'option cochée, dite par une forme
+   et pas seulement par le filet. L'orange PLEIN d'action, texte marine
+   (6,5:1), comme la case cochée du cockpit ; un anneau marine la détache de
+   la photo. Garde : orange-de-l-action.test.ts. */
+.coche-de-l-option {
+  background-color: var(--accent-plein);
+  color: var(--accent-plein-texte);
+  box-shadow: 0 0 0 2px rgb(6 21 41 / 0.6);
 }

@@ -73,6 +73,95 @@ export function fichierDeLaPhoto(entreprise: string, petit = false): string {
   return `/scenes/${entreprise}${petit ? "-768" : ""}.webp`;
 }
 
+/**
+ * LA TAILLE DE CHAQUE FICHIER PLEINE TAILLE, en pixels. La réduite fait 768 de
+ * large, au même rapport. Elle sert aux attributs `width`/`height` d'une
+ * `<img>` (le navigateur réserve la place avant l'arrivée du fichier) et à
+ * son `srcset`. La garde `mise-en-scene.test.ts` la relit dans les fichiers.
+ */
+export const TAILLES_DES_PHOTOS: Record<string, { largeur: number; hauteur: number }> = {
+  nova: { largeur: 1376, hauteur: 768 },
+  boutique: { largeur: 1536, hauteur: 1024 },
+  hotel: { largeur: 1536, hauteur: 1024 },
+  bistrot: { largeur: 1536, hauteur: 1024 },
+  conseil: { largeur: 1408, hauteur: 768 },
+  ecommerce: { largeur: 1408, hauteur: 768 },
+  fitness: { largeur: 1408, hauteur: 768 },
+  batiment: { largeur: 1408, hauteur: 768 },
+  transport: { largeur: 1376, hauteur: 768 },
+};
+
+/**
+ * LE LIEU EN PHOTOGRAPHIE, MIS EN SCÈNE (lot P2).
+ *
+ * `SceneDEntreprise` pose la photo en FOND d'un bloc : c'est ce qu'il faut à
+ * un bandeau, mais un fond se charge dès que la page se peint, même à deux
+ * écrans sous la ligne de flottaison. Les lieux sont devenus l'image du
+ * produit (vitrine, choix de l'entreprise, ouverture de partie, bilan) : une
+ * vitrine en pose treize, /jouer neuf, et la plupart sont plus bas que le
+ * premier écran. Ici, une vraie `<img>` :
+ *
+ *   · `loading="lazy"` par défaut : le navigateur ne la demande qu'à
+ *     l'approche de l'écran. `prioritaire` la charge d'emblée et la demande
+ *     en premier (`fetchPriority="high"`), pour la photo du haut d'une page ;
+ *   · `width`/`height` du fichier : la place est réservée, rien ne saute ;
+ *   · `petit` : la réduite seule (vignette, carte, téléphone) ; sinon un
+ *     `srcset` des deux tailles, et `sizes` dit la largeur affichée ;
+ *   · le cadrage vertical du registre (`object-position`), le même que le
+ *     bandeau de l'arène : on recadre par la position, jamais par un fichier ;
+ *   · décorative : `alt=""` et `aria-hidden`. Le nom de l'entreprise et son
+ *     métier sont écrits à côté, en vrai texte.
+ */
+export function PhotoDuLieu({
+  scenario,
+  secteur,
+  petit = false,
+  prioritaire = false,
+  sizes = "100vw",
+  className = "",
+  cadrage,
+}: {
+  scenario: string;
+  secteur?: Sector;
+  /** La réduite seule (768 px) : vignette, carte, téléphone. */
+  petit?: boolean;
+  /** Au-dessus de la ligne de flottaison : chargée tout de suite, en premier. */
+  prioritaire?: boolean;
+  /** La largeur affichée, pour le choix du fichier dans le `srcset`. */
+  sizes?: string;
+  className?: string;
+  /** Une autre position verticale (en %) que celle du registre. */
+  cadrage?: number;
+}) {
+  const entreprise = entrepriseDeLaScene(scenario, secteur);
+  const photo = entreprise ? PHOTOS_DES_ENTREPRISES[entreprise] : undefined;
+  const taille = entreprise ? TAILLES_DES_PHOTOS[entreprise] : undefined;
+  if (!entreprise || !photo || !taille) return null;
+  const hauteurReduite = Math.round((taille.hauteur * 768) / taille.largeur);
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- photo déjà réduite et compressée (deux tailles, < 200 Ko) : l'optimiseur la recompresserait.
+    <img
+      src={fichierDeLaPhoto(entreprise, petit)}
+      {...(petit
+        ? {}
+        : {
+            srcSet: `${fichierDeLaPhoto(entreprise, true)} 768w, ${fichierDeLaPhoto(entreprise)} ${taille.largeur}w`,
+            sizes,
+          })}
+      width={petit ? 768 : taille.largeur}
+      height={petit ? hauteurReduite : taille.hauteur}
+      alt=""
+      aria-hidden
+      loading={prioritaire ? "eager" : "lazy"}
+      decoding="async"
+      {...(prioritaire ? { fetchPriority: "high" as const } : {})}
+      data-lieu-photo={entreprise}
+      className={`object-cover ${className}`}
+      style={{ objectPosition: `50% ${cadrage ?? photo.cadrage}%` }}
+    />
+  );
+}
+
 /** La même entreprise jouée en variante : elle garde son lieu. */
 export const VARIANTES_D_ENTREPRISE: Record<string, string> = {
   "nova-gamme": "nova",

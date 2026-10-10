@@ -76,34 +76,58 @@ function rapport(a: string, b: string): number {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
-describe("l'anneau du héros, sur le marine de l'accueil", () => {
-  it("est un bleu plein, et le titre qui passe dessus garde son contraste", async () => {
+describe("le héros de la vitrine : les lieux à la place de l'anneau (lot P2)", () => {
+  /*
+   * GARDE DÉPLACÉE. Elle vérifiait que l'anneau du coin haut droit se voyait
+   * sur le marine du héros, et que le titre gardait son contraste là où
+   * l'anneau passait dessous. Lot P2 : l'audit tenait cet anneau coupé pour
+   * « un ornement sans rôle » ; il est retiré de la vitrine, et la
+   * composition des lieux prend sa place. La garde vérifie donc qu'il n'y
+   * revient pas, que les lieux sont là, à droite du titre et sans le
+   * recouvrir, et que chaque ligne du titre tient son contraste sur le sol
+   * réel du héros (seuil des grands titres, 3:1 ; l'orange de la seconde
+   * ligne, exception nommée, y tient 6,5:1).
+   */
+  it("plus d'anneau ; la composition à droite du titre ; le titre lisible sur le marine", async () => {
     const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 800 } });
     const page = await contexte.newPage();
     await aller(page, "/");
     const mesure = await page.evaluate(() => {
-      const anneau = document.querySelector(".halo-de-page");
       const titre = document.querySelector("main h1");
-      if (!anneau || !titre) return null;
-      const s = getComputedStyle(anneau);
+      const lieux = document.querySelector("[data-composition-des-lieux]");
+      if (!titre || !lieux) return null;
+      // Le sol du héros : le premier fond opaque sous le titre.
+      let sol = "rgb(0, 0, 0)";
+      for (let e: Element | null = titre; e; e = e.parentElement) {
+        const c = getComputedStyle(e).backgroundColor;
+        if (c && !/rgba\(.*,\s*0\)$/.test(c) && c !== "transparent") {
+          sol = c;
+          break;
+        }
+      }
+      const r = titre.getBoundingClientRect();
+      const l = lieux.getBoundingClientRect();
       return {
-        visible: s.display !== "none",
-        anneau: s.borderTopColor,
+        anneaux: document.querySelectorAll("main section:first-of-type .halo-de-page").length,
+        lieuxVisibles: getComputedStyle(lieux).display !== "none" && l.width > 200,
+        aDroite: l.left >= r.left + 200,
+        dansLaPremiereFenetre: l.top < innerHeight,
+        sol,
         lignes: [titre, ...titre.querySelectorAll("span")].map((e) => getComputedStyle(e).color),
       };
     });
-    expect(mesure, "l'accueil n'a plus d'anneau ou de titre").not.toBeNull();
-    expect(mesure!.visible, "l'anneau doit se voir sur le marine du héros").toBe(true);
-    // Plein : pas de transparence, donc pas de teinte mêlée au marine.
-    expect(mesure!.anneau, "l'anneau est redevenu translucide").toMatch(/^rgb\(/);
-    const [r, , b] = (mesure!.anneau.match(/\d+/g) ?? []).map(Number);
-    expect(b!, `${mesure!.anneau} n'est plus un bleu`).toBeGreaterThan(r!);
+    expect(mesure, "l'accueil n'a plus de titre ou de composition des lieux").not.toBeNull();
+    expect(mesure!.anneaux, "l'anneau décoratif est revenu dans le héros").toBe(0);
+    expect(mesure!.lieuxVisibles, "la composition des lieux ne se voit pas à 1280").toBe(true);
+    expect(mesure!.aDroite, "la composition n'est pas à droite du titre").toBe(true);
+    expect(mesure!.dansLaPremiereFenetre).toBe(true);
+    // Le titre et la composition ne se chevauchent pas : le titre reste lu
+    // d'abord, en entier.
+    const boite = await page.locator("main h1").boundingBox();
+    const lieux = await page.locator("[data-composition-des-lieux]").boundingBox();
+    expect(boite!.x + boite!.width, "le titre passe sous les photos").toBeLessThanOrEqual(lieux!.x);
     for (const couleur of mesure!.lignes) {
-      // Titre de grande taille : seuil 3:1.
-      expect(
-        rapport(couleur, mesure!.anneau),
-        `${couleur} sur ${mesure!.anneau}`,
-      ).toBeGreaterThanOrEqual(3);
+      expect(rapport(couleur, mesure!.sol), `${couleur} sur ${mesure!.sol}`).toBeGreaterThanOrEqual(3);
     }
     await contexte.close();
   }, 60_000);

@@ -40,6 +40,14 @@ export interface Bilan {
   tourDecisif: { tour: TourDuBilan; gain: number } | null;
   /** La partie s'est-elle terminée au-dessus de zéro, cumul fait ? */
   beneficiaire: boolean;
+  /**
+   * TOUS LES TOURS SONT EN PERTE : le « meilleur » tour est alors le moins
+   * mauvais. Le bilan ne le célèbre pas (l'or est le verdict, pas la
+   * consolation) : il parle du « tour le plus maîtrisé », sans filet d'or.
+   */
+  toutEnPerte: boolean;
+  /** Les tours, dans l'ordre : la courbe du résultat, tour par tour. */
+  parTour: TourDuBilan[];
 }
 
 export function bilanDeLaPartie(tours: readonly TourDuBilan[]): Bilan | null {
@@ -66,5 +74,7 @@ export function bilanDeLaPartie(tours: readonly TourDuBilan[]): Bilan | null {
     meilleurTour,
     tourDecisif,
     beneficiaire: resultatCumule > 0,
+    toutEnPerte: meilleurTour.resultat < 0,
+    parTour: ordre,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { sansMolette } from "@/components/sans-molette";
 import {
   messageNiveauxReserves,
@@ -9,7 +9,7 @@ import {
   type VitrineSolo,
 } from "@/config/vitrine-solo";
 import { Icone } from "@/components/icone";
-import { PictoSecteur } from "@/components/picto-secteur";
+import { PhotoDuLieu } from "@/components/illustrations/scene-d-entreprise";
 import type { Sector } from "@/config/scenarios/registry";
 
 /**
@@ -41,6 +41,10 @@ export interface QuickScenario {
   /** Le secteur, en légende de la tuile. */
   sector: string;
   tagline: string;
+  /** Le jeton de la teinte du métier (`teinteDuMetier`) : `data-metier` sur la carte. */
+  teinte: string;
+  /** La promesse du registre (« Prenez les commandes »), l'accroche de la carte. */
+  promesse: string | null;
   /**
    * Un scénario à famille se joue en un produit ou en gamme selon le niveau :
    * ce que chaque variante fait jouer, et le niveau à partir duquel c'est la
@@ -77,6 +81,14 @@ const ROUNDS = [
   { value: "6", label: "6 tours" },
 ] as const;
 
+/**
+ * L'OPTION COCHÉE D'UNE CARTE D'ENTREPRISE (lot P2) : un filet orange plein de
+ * deux pixels (le bord et son anneau), sans voile. La garde
+ * `orange-de-l-action` ne laisse passer ces classes que sous ce nom, sur un
+ * bouton `aria-pressed`.
+ */
+const OPTION_COCHEE_CARTE = "border-amber-400 ring-1 ring-amber-400";
+
 /** Le niveau où l'on commence : 3 · Pilotage. */
 export const NIVEAU_PAR_DEFAUT = 3;
 
@@ -86,6 +98,7 @@ export function QuickConfigFields({
   defaultScenario,
   vitrine,
   liens,
+  lancement,
 }: {
   scenarios: QuickScenario[];
   levels: QuickLevel[];
@@ -97,6 +110,8 @@ export function QuickConfigFields({
   vitrine?: VitrineSolo;
   /** Où s'adresser pour les niveaux réservés : prendre rendez-vous, ou entrer côté enseignant. */
   liens?: { contact: { href: string; libelle: string }; enseignant: { href: string; libelle: string } };
+  /** Le bouton qui lance la partie, posé dans le résumé collant (un seul à l'écran). */
+  lancement?: ReactNode;
 }) {
   const [scenario, setScenario] = useState(defaultScenario);
   // On commence au niveau 3 · Pilotage ; les niveaux 1-2 (questions d'analyse entre deux
@@ -136,48 +151,79 @@ export function QuickConfigFields({
 
       {/* 1 · Entreprise */}
       <p className={`mt-4 ${label}`}>Votre entreprise</p>
-      {/* LES NEUF MÉTIERS EN TUILES FRANCHES (audit P2-21) : trois par rang,
-          le pictogramme et le nom assez grands pour se reconnaître d'un coup
-          d'œil, sur téléphone comme sur ordinateur. */}
-      <div className="mt-2 grid grid-cols-3 gap-2 sm:gap-3">
+      {/* LES NEUF ENTREPRISES EN CARTES PHOTO (lot P2). Elles ont été neuf
+          pictogrammes au trait dans des tuiles grises, alors que chacune a son
+          lieu en photographie : la carte montre le lieu (la réduite, chargée à
+          l'approche de l'écran), le nom de l'entreprise, son métier dans sa
+          teinte et sa promesse, celle du registre (« Prenez les commandes »).
+          Trois colonnes sur ordinateur, deux sur tablette et téléphone.
+
+          LA CARTE CHOISIE se reconnaît à un filet orange plein de deux pixels
+          et à une coche (la règle de « l'option cochée » : une décision, la
+          charte la range avec l'action), et non plus à un fond délavé. Elle
+          reste un vrai contrôle : un bouton `aria-pressed`, au clavier. */}
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3">
         {scenarios.map((s) => {
           const on = s.code === scenario;
           return (
             <button
               key={s.code}
               type="button"
+              data-carte-entreprise={s.code}
+              data-metier={s.teinte}
               onClick={() => {
                 setScenario(s.code);
                 // Passer à une entreprise dont le niveau choisi est réservé : on retombe au plus haut permis.
                 setLevel((n) => Math.min(n, niveauMaxPour(regle, s.code)));
               }}
               aria-pressed={on}
-              className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center transition sm:gap-1.5 sm:px-3 sm:py-5 ${
-                on
-                  ? "border-amber-400 bg-amber-400/10 ring-1 ring-amber-400/40"
-                  : "border-white/10 bg-slate-950 hover:-translate-y-0.5 hover:border-white/25"
+              className={`group relative flex flex-col overflow-hidden rounded-xl border text-left transition ${
+                on ? `${OPTION_COCHEE_CARTE} bg-slate-950` : "border-white/10 bg-slate-950 hover:border-white/30"
               }`}
             >
-              <PictoSecteur
-                secteur={s.secteur}
-                className={`h-7 w-7 sm:h-10 sm:w-10 ${on ? "text-slate-50" : "text-slate-300"}`}
-              />
-              <span className="text-xs font-semibold leading-tight text-slate-100 sm:text-base">
-                {s.label}
+              <span className="relative block overflow-hidden">
+                <PhotoDuLieu
+                  scenario={s.code}
+                  secteur={s.secteur}
+                  petit
+                  className="aspect-[3/2] w-full transition-transform duration-[var(--duree-passage)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                />
+                {on ? (
+                  // La coche : l'option cochée, dite autrement que par la couleur.
+                  <span
+                    aria-hidden
+                    data-coche=""
+                    className="coche-de-l-option absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12.5l4.5 4.5L19 7.5" />
+                    </svg>
+                  </span>
+                ) : null}
               </span>
-              <span className="text-xs leading-tight text-slate-400 sm:text-sm">{s.sector}</span>
-              {regle.active ? (
-                // Vitrine allumée : chaque tuile dit jusqu'où elle se joue.
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-xs leading-none ${
-                    s.code === regle.entrepriseOuverte
-                      ? "bg-white/5 font-semibold text-slate-100"
-                      : "bg-white/5 text-slate-400"
-                  }`}
-                >
-                  {s.code === regle.entrepriseOuverte ? "Tous niveaux" : `Niveaux 1-${niveauMaxPour(regle, s.code)}`}
+              <span className="flex flex-1 flex-col gap-0.5 px-3 pb-3 pt-2.5">
+                <span className="text-sm font-semibold leading-tight text-slate-100 sm:text-base">
+                  {s.label}
                 </span>
-              ) : null}
+                <span className="text-xs font-medium leading-tight text-[color:var(--metier,var(--color-slate-300))] sm:text-sm">
+                  {s.sector}
+                </span>
+                {s.promesse ? (
+                  <span className="mt-1 text-xs leading-snug text-slate-400 sm:text-sm">{s.promesse}</span>
+                ) : null}
+                {regle.active ? (
+                  // Vitrine allumée : chaque carte dit jusqu'où elle se joue.
+                  <span
+                    className={`mt-1.5 self-start rounded-full px-1.5 py-0.5 text-xs leading-none ${
+                      s.code === regle.entrepriseOuverte
+                        ? "bg-white/5 font-semibold text-slate-100"
+                        : "bg-white/5 text-slate-400"
+                    }`}
+                  >
+                    {s.code === regle.entrepriseOuverte ? "Tous niveaux" : `Niveaux 1-${niveauMaxPour(regle, s.code)}`}
+                  </span>
+                ) : null}
+              </span>
             </button>
           );
         })}
@@ -339,25 +385,30 @@ export function QuickConfigFields({
         )}
       </div>
 
-      {/* Récap vivant */}
-      {/* LE RÉCAPITULATIF EN ARDOISE : ce qu'on lance, écrit sur le marine de
-          l'arène, juste au-dessus du bouton qui le lance. */}
-      <p
-        data-vous-lancez
-        className="ardoise mt-5 rounded-lg bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-300"
+      {/* LE RÉSUMÉ COLLANT (lot P2). Le choix du niveau et le bouton de
+          lancement étaient sous la ligne de flottaison : on choisissait une
+          entreprise en haut de page, et rien ne disait où lancer. Le résumé
+          de ce qu'on lance et LE bouton de lancement sont désormais une seule
+          barre, collée au bas de l'écran tant que le formulaire est à
+          l'écran (`sticky`), qui reprend sa place au pied du formulaire quand
+          on y arrive. Une entreprise est toujours choisie (celle du lien, ou
+          NOVA) : la barre est donc toujours là, et il n'y a jamais qu'UN
+          bouton de lancement à l'écran. Elle est en ardoise : le marine de
+          l'arène, sous le pouce. */}
+      <div
+        data-resume-de-lancement=""
+        className="ardoise sticky bottom-0 z-20 -mx-4 -mb-4 mt-5 flex flex-col gap-3 rounded-b-xl border-t border-white/10 bg-slate-950 px-4 py-3 shadow-[0_-10px_24px_-14px_rgb(6_21_41/0.55)] sm:-mx-6 sm:-mb-6 sm:flex-row sm:items-center sm:justify-between sm:px-6"
       >
-        <span className="surtitre mr-1">
-          Vous lancez
-        </span>{" "}
-        <span className="font-semibold text-slate-100">
-          {sec?.label}
-        </span>{" "}
-        · {per.short} · <span className="font-semibold text-slate-100">{comp.value}</span> entreprises ·{" "}
-        <span className="font-semibold text-slate-100">{round.label.toLowerCase()}</span> · Niveau{" "}
-        <span className="font-semibold text-slate-100">
-          {level} {cur?.name}
-        </span>
-      </p>
+        <p data-vous-lancez className="min-w-0 text-sm leading-snug text-slate-300" aria-live="polite">
+          <span className="block text-base font-semibold text-slate-50">
+            {sec?.label} · Niveau {level} · {cur?.name}
+          </span>
+          <span className="block max-sm:hidden">
+            {per.short} · {comp.value} entreprises · {round.label.toLowerCase()}
+          </span>
+        </p>
+        {lancement ? <div className="shrink-0 sm:min-w-56">{lancement}</div> : null}
+      </div>
     </div>
   );
 }

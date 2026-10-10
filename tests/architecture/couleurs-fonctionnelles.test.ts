@@ -294,34 +294,53 @@ describe("une seule palette de données", () => {
   });
 });
 
-describe("plus aucun mot orange dans un grand titre, l'accueil compris (lot P1)", () => {
+describe("un seul mot orange dans un grand titre : l'exception nommée du héros de la vitrine (lot P2)", () => {
   /*
-   * GARDE DÉPLACÉE, ET RESSERRÉE. Elle tenait « un seul mot orange dans un
-   * grand titre : celui du héros de l'accueil ». Lot P1, décision du
-   * propriétaire : l'orange ne dit plus que l'action (le bouton principal, le
-   * focus, l'option cochée, le champ en saisie). La seconde ligne du héros
-   * passe à l'encre claire du marine ; plus aucun h1 du site ne prend l'orange.
+   * GARDE DÉPLACÉE, PAS DESSERRÉE. Lot P1 : plus aucun h1 du site ne prenait
+   * l'orange, la seconde ligne du héros passait à l'encre claire. Lot P2,
+   * décision du propriétaire : cette seconde ligne (« Apprenez à décider. »)
+   * RETROUVE l'orange de la marque. C'est une exception voulue à « l'orange
+   * n'est que l'action », et elle est NOMMÉE : un attribut
+   * `data-exception-orange="heros-de-la-vitrine"` la porte, sur ce seul
+   * élément du h1 de l'accueil. Tout autre mot orange dans un h1, sur
+   * n'importe quelle page (l'accueil compris), fait tomber la garde ; un
+   * second porteur de l'attribut aussi.
    */
   /** Les titres h1 d'une source, balise comprise. */
   const titres = (texte: string) => texte.match(/<h1\b[\s\S]*?<\/h1>/g) ?? [];
   const pages = SOURCES.filter(({ chemin }) => /^src\/app\/.*page\.tsx$/.test(chemin));
+  /** L'exception, balise ouvrante comprise, et son texte. */
+  const EXCEPTION =
+    /<span data-exception-orange="heros-de-la-vitrine" className="text-amber-400">\s*Apprenez à décider\.\s*<\/span>/;
+  /** Un titre sans commentaires : un commentaire qui raconte l'orange n'est pas une couleur. */
+  const sansCommentaires = (t: string) => t.replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, "");
 
-  it("le héros de l'accueil n'a plus de mot orange : sa seconde ligne est à l'encre", () => {
+  it("le héros de l'accueil porte l'exception, une fois, sur sa seconde ligne seulement", () => {
     const accueil = pages.find((p) => p.chemin === "src/app/page.tsx")!;
-    const heros = titres(accueil.texte).join("\n");
-    expect(heros, "le h1 de l'accueil a disparu").toContain("Apprenez à décider.");
-    expect(heros).not.toMatch(/(?:text|bg|decoration)-(?:amber|orange)-\d{2,3}|accent-plein/);
-    expect(heros).toMatch(/text-slate-\d{2,3}">Apprenez à décider\./);
+    const heros = sansCommentaires(titres(accueil.texte).join("\n"));
+    expect(heros, "le h1 de l'accueil a disparu").toContain("Dirigez une entreprise.");
+    expect(heros, "la seconde ligne n'est plus l'exception nommée").toMatch(EXCEPTION);
+    // Hors de l'exception, rien d'orange dans le titre : ni la première ligne,
+    // ni le h1 lui-même.
+    const reste = heros.replace(EXCEPTION, "");
+    expect(reste).not.toMatch(/(?:text|bg|decoration)-(?:amber|orange)-\d{2,3}|accent-plein/);
+  });
+
+  it("l'exception n'existe qu'une fois dans tout le site", () => {
+    const porteurs = SOURCES.flatMap(({ chemin, texte }) =>
+      (sansCommentaires(texte).match(/data-exception-orange=/g) ?? []).map(() => chemin),
+    );
+    expect(porteurs).toEqual(["src/app/page.tsx"]);
   });
 
   it("dans toutes les pages, le mot d'appui d'un titre est à l'encre", () => {
     expect(pages.length).toBeGreaterThan(30);
-    const fautes = pages
-      .flatMap((p) =>
-        titres(p.texte)
-          .filter((t) => /text-amber-\d{3}/.test(t))
-          .map((t) => `${p.chemin} : ${t.replace(/\s+/g, " ").slice(0, 120)}`),
-      );
-    expect(fautes, `titres intérieurs en orange :\n${fautes.join("\n")}`).toEqual([]);
+    const fautes = pages.flatMap((p) =>
+      titres(p.texte)
+        .map((t) => sansCommentaires(t).replace(EXCEPTION, ""))
+        .filter((t) => /(?:text|bg|decoration)-(?:amber|orange)-\d{2,3}|accent-plein/.test(t))
+        .map((t) => `${p.chemin} : ${t.replace(/\s+/g, " ").slice(0, 120)}`),
+    );
+    expect(fautes, `titres en orange :\n${fautes.join("\n")}`).toEqual([]);
   });
 });

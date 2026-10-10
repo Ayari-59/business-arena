@@ -49,7 +49,11 @@ export function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [canPrompt, setCanPrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
-  const enJeu = estEcranDeJeu(usePathname());
+  const chemin = usePathname();
+  // LOT P2 : /jouer garde le bas de l'écran pour son résumé collant (« NOVA ·
+  // Niveau 3 · Lancer la partie ») ; l'invitation s'y posait par-dessus le
+  // bouton de lancement. Elle s'y tait, comme dans une partie.
+  const enJeu = estEcranDeJeu(chemin) || chemin === "/jouer";
 
   useEffect(() => {
     const standalone =

@@ -866,10 +866,33 @@ describe("sur ordinateur, ce qui est consulté reste à plat", () => {
     const onglets = p.locator('[role="tablist"] button[role="tab"]:visible');
     expect(await onglets.count()).toBe(3);
     const box = (await onglets.first().boundingBox())!;
+    // LOT P2 : au tour 1, le lieu ouvre la partie en pleine largeur, AU-DESSUS
+    // de la bande de marché et des étapes ; les onglets descendent donc sous
+    // lui (à 686 px dans une fenêtre de 900, contre moins de 450 avec l'ardoise
+    // vide). Ce que la garde tient ne change pas : sur ordinateur, les onglets
+    // sont EN HAUT du tour, dans le flux de la page et dans le premier écran,
+    // jamais collés au bas de la fenêtre comme sur un téléphone.
+    const fenetre = p.viewportSize()!.height;
+    const tablist = p.locator('[role="tablist"]:visible').first();
+    const position = await tablist.evaluate((t) => {
+      for (let e: Element | null = t; e && e !== document.body; e = e.parentElement) {
+        const pos = getComputedStyle(e).position;
+        if (pos === "fixed" || pos === "sticky") return pos;
+      }
+      return "flux";
+    });
+    expect(position, "les onglets ne se collent au bas qu'au téléphone").toBe("flux");
+    expect(box.y + box.height, "les onglets sont sous le premier écran").toBeLessThanOrEqual(fenetre);
     expect(
-      box.y,
+      fenetre - (box.y + box.height),
       "les onglets ne se collent au bas qu'au téléphone",
-    ).toBeLessThan(450);
+    ).toBeGreaterThan(100);
+    // Et ils précèdent le contenu du tour.
+    const avant = await tablist.evaluate((t) => {
+      const panneau = document.querySelector('[role="tabpanel"]');
+      return panneau ? Boolean(t.compareDocumentPosition(panneau) & 4) : true;
+    });
+    expect(avant).toBe(true);
     expect(await p.locator("form header").count()).toBe(0);
   });
 });

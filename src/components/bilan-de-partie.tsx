@@ -2,11 +2,14 @@ import type { ReactNode } from "react";
 import { formatEuro, ordinal } from "@/lib/format";
 import { Icone } from "@/components/icone";
 import type { Bilan } from "@/pedagogy/bilan-de-partie";
-import { PastilleDeRang, metalDuRang } from "@/components/rang";
+import { metalDuRang } from "@/components/rang";
 import { euroSigne } from "@/components/tableau-de-bord";
 import { PodiumDesEquipes, type MarcheDuPodium } from "@/components/podium";
 import { ChiffreQuiArrive } from "@/components/chiffre-qui-arrive";
 import type { NomDePlume } from "@/lib/plumes";
+import type { Sector } from "@/config/scenarios/registry";
+import { PhotoDuLieu } from "@/components/illustrations/scene-d-entreprise";
+import { CourbeDesTours } from "@/components/courbe-des-tours";
 
 /**
  * Une équipe du classement final, pour le podium. Les marches se dessinent
@@ -23,13 +26,15 @@ export type { MarcheDuPodium };
  * aucun classement visible avant 2 000 px. Six tours de travail, souvent deux
  * heures de classe, s'arrêtaient sans rien à regarder ensemble.
  *
- * C'est maintenant une ARDOISE DE CLÔTURE, en tête de la page : « Clôture de
- * l'exercice · 6 tours », le podium des équipes (or, argent, bronze ; l'équipe
- * du joueur marquée du filet orange), le rang du joueur en très grand, le
- * résultat cumulé et la trésorerie finale en 40 px, le tour décisif et le
- * meilleur tour en or (des distinctions), puis « Rejouer » en grand. Le reste
- * du bilan (réussites, record, courbes, lettre, détail des tours) vient
- * ensuite, sur le papier.
+ * C'est maintenant une ARDOISE DE CLÔTURE, en tête de la page, mise en
+ * scène au lot P2 comme une cérémonie : le lieu de l'entreprise en fond, sous
+ * un voile marine ; « Partie terminée. » ; le rang dit UNE fois, en très
+ * grand et en or (« 2e sur 3 »), l'IPG en petit ; un vrai podium à trois
+ * marches de hauteurs différentes ; le résultat cumulé, la trésorerie finale
+ * et le chiffre d'affaires ; la courbe du résultat net, tour par tour ; le
+ * tour décisif et le meilleur tour (en or, des distinctions), sauf si tous
+ * les tours sont en perte : c'est alors « le tour le plus maîtrisé », sans or.
+ * Le reste du bilan (réussites, record) suit sur le papier, puis « Rejouer ».
  *
  * Il ne calcule rien de neuf et ne stocke rien : voir `pedagogy/bilan-de-partie`
  * et le classement que la vue de la partie porte déjà.
@@ -43,6 +48,7 @@ export function BilanDePartie({
   motDeClassement,
   record = null,
   podium = null,
+  lieu = null,
   children,
 }: {
   /** « Victoire ! … » ou « Partie terminée » : la phrase de tête. */
@@ -63,6 +69,8 @@ export function BilanDePartie({
   record?: { monIpg: number; meilleur: number | null } | null;
   /** Le classement final, quand il est ouvert : le podium se dessine. */
   podium?: readonly MarcheDuPodium[] | null;
+  /** Le lieu de l'entreprise, en fond de la clôture (lot P2). */
+  lieu?: { scenario: string; secteur: Sector } | null;
   /** Les actions : rejouer, changer de métier. */
   children?: ReactNode;
 }) {
@@ -73,13 +81,33 @@ export function BilanDePartie({
     bilan.meilleurTour && bilan.meilleurTour.round !== decisif?.tour.round
       ? bilan.meilleurTour
       : null;
+  const moi = (podium ?? []).find((m) => m.moi) ?? null;
+  const monIpg = moi?.ipg ?? record?.monIpg ?? null;
   return (
     <div className="space-y-4">
       <section
         aria-labelledby="cloture-titre"
         data-cloture-de-l-exercice=""
-        className="ardoise rounded-xl bg-slate-950 px-4 py-6 text-slate-100 sm:px-8 sm:py-8"
+        className="ardoise relative isolate overflow-hidden rounded-xl bg-slate-950 px-4 py-6 text-slate-100 sm:px-8 sm:py-8"
       >
+        {/* LA CLÔTURE EN CÉRÉMONIE (lot P2). L'audit : « c'est la fin de la
+            partie, et c'est l'écran le moins mis en scène ». Le lieu de
+            l'entreprise revient en fond, sous un voile marine qui fond dans
+            l'ardoise (`.voile-de-cloture`) : les chiffres, plus bas, sont
+            sur le marine plein. Décoratif, `aria-hidden`. */}
+        {lieu ? (
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[30rem] print:hidden">
+            <PhotoDuLieu
+              scenario={lieu.scenario}
+              secteur={lieu.secteur}
+              prioritaire
+              sizes="(min-width: 1400px) 1352px, 100vw"
+              className="entree-du-lieu h-full w-full"
+            />
+            <div className="voile-de-cloture absolute inset-0" />
+          </div>
+        ) : null}
+        <div data-texte-sur-photo="">
         <p className="surtitre">
           Clôture de l&apos;exercice · {bilan.tours} tours
         </p>
@@ -93,45 +121,54 @@ export function BilanDePartie({
           {titre}
         </h2>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:items-end">
-          {/* LE RANG DU JOUEUR, EN TRÈS GRAND. */}
+        <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:items-end">
+          {/* LE RANG, DIT UNE SEULE FOIS, EN TRÈS GRAND (lot P2). Il était
+              écrit quatre fois : la pastille « 2 », « 2e sur 3 », « 2e sur 3
+              au classement final de l'IPG », la marche du podium. Reste la
+              formulation la plus claire, « 2e sur 3 », en or (une
+              distinction), et en petit ce qu'elle mesure : le classement
+              final à l'IPG, et l'IPG de l'équipe. Le podium, à côté, montre
+              les places sans les réécrire. */}
           <div>
-            <p className="libelle">
-              Votre place
-            </p>
+            <p className="libelle">Votre place</p>
             {place ? (
-              <p className="mt-2 flex items-center gap-4 font-display font-semibold leading-none tabular-nums">
-                <PastilleDeRang rang={place.rang} moi doublon className="text-5xl" />
-                <span className="texte-or text-7xl sm:text-8xl">{ordinal(place.rang)}</span>
-                <span className="text-2xl font-medium text-slate-300">
-                  sur {place.total}
-                  <span className="sr-only">
-                    {metal ? `, médaille ${metal === "or" ? "d'or" : `de ${metal}`}` : ""}
+              <>
+                <p
+                  data-rang-final=""
+                  className="mt-1 flex items-baseline gap-3 font-display font-semibold leading-none tabular-nums"
+                >
+                  <span className="texte-or text-8xl sm:text-9xl">{ordinal(place.rang)}</span>
+                  <span className="text-3xl font-medium text-slate-200">
+                    sur {place.total}
+                    <span className="sr-only">
+                      {metal ? `, médaille ${metal === "or" ? "d'or" : `de ${metal}`}` : ""}
+                    </span>
                   </span>
-                </span>
-              </p>
+                </p>
+                <p className="mt-2 text-sm text-slate-300">
+                  Classement final à l&apos;IPG
+                  {monIpg !== null ? ` · IPG ${Math.round(monIpg)}` : ""}
+                </p>
+              </>
             ) : (
               <p className="mt-2 text-base leading-relaxed text-slate-300">{motDeClassement}</p>
             )}
-            {/* Le rang écrit en toutes lettres, comme partout dans l'arène. */}
-            {place ? (
-              <p className="mt-2 text-sm text-slate-400">
-                {ordinal(place.rang)} sur {place.total} au classement final de l&apos;IPG.
-              </p>
-            ) : null}
           </div>
 
-          {/* LE PODIUM DES ÉQUIPES : l'or au centre, l'argent à gauche, le bronze
-              à droite ; l'équipe du joueur porte son repère (lot P1 : plus
-              l'orange, qui ne dit que l'action). Les mêmes
-              marches qu'au mur de la classe, à l'échelle d'une carte. */}
+          {/* LE PODIUM : trois vraies marches, l'or au centre et plus haut,
+              l'argent à gauche, le bronze à droite ; le nom et l'IPG de
+              chaque équipe, « vous » écrit en toutes lettres. */}
           <PodiumDesEquipes marches={podium ?? []} etiquette="Podium du classement final" />
         </div>
         {moiHorsPodium ? (
-          <p className="mt-3 text-sm text-slate-300">
-            Votre équipe, {moiHorsPodium.nom}, finit {ordinal(moiHorsPodium.rang)}.
+          // Hors du podium : l'équipe est nommée sous les marches, son rang
+          // reste celui qui est écrit en grand, à gauche.
+          <p className="mt-3 text-sm text-slate-300 lg:text-right">
+            Vous, {moiHorsPodium.nom} : hors du podium
+            {moiHorsPodium.ipg !== null ? ` · IPG ${Math.round(moiHorsPodium.ipg)}` : ""}
           </p>
         ) : null}
+        </div>
 
         {/*
           LES CHIFFRES DE TOUTE LA PARTIE, et non ceux du dernier tour : c'est
@@ -165,6 +202,15 @@ export function BilanDePartie({
           />
         </dl>
 
+        {/* LA COURBE DES TOURS (lot P2) : le résultat net, tour par tour, sur
+            une seule échelle, la ligne du zéro, le dernier tour mis en avant. */}
+        {bilan.parTour.length > 1 ? (
+          <CourbeDesTours
+            tours={bilan.parTour.map((t) => ({ libelle: t.libelle, round: t.round, valeur: t.resultat }))}
+            className="mt-8 border-t border-white/10 pt-6"
+          />
+        ) : null}
+
         {/*
           LE TOUR DÉCISIF est la question que les équipes se posent en sortant :
           « c'est quand qu'on a redressé ? ». Elle n'a pas la même réponse que
@@ -187,25 +233,30 @@ export function BilanDePartie({
               </li>
             ) : null}
             {meilleur ? (
-              <li className="filet-or rounded-lg border-l-2 bg-slate-900 px-4 py-3">
-                <p className="libelle texte-or font-semibold">
-                  Votre meilleur tour
+              // TOUS LES TOURS EN PERTE : le meilleur est le moins mauvais.
+              // L'or est le verdict, pas la consolation : « le plus
+              // maîtrisé », sur un filet neutre (lot P2).
+              <li
+                data-meilleur-tour={bilan.toutEnPerte ? "le-plus-maitrise" : "meilleur"}
+                className={`rounded-lg border-l-2 bg-slate-900 px-4 py-3 ${
+                  bilan.toutEnPerte ? "border-slate-400" : "filet-or"
+                }`}
+              >
+                <p className={`libelle font-semibold ${bilan.toutEnPerte ? "" : "texte-or"}`}>
+                  {bilan.toutEnPerte ? "Votre tour le plus maîtrisé" : "Votre meilleur tour"}
                 </p>
                 <p className="mt-1 text-base leading-relaxed text-slate-200">
                   <span className="font-semibold text-slate-50">{meilleur.libelle}</span>, avec{" "}
                   <span className="whitespace-nowrap tabular-nums">
                     {euroSigne(meilleur.resultat)}
                   </span>{" "}
-                  de résultat.
+                  de résultat{bilan.toutEnPerte ? ", la perte la plus contenue de la partie" : ""}.
                 </p>
               </li>
             ) : null}
           </ul>
         ) : null}
 
-        {children ? (
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">{children}</div>
-        ) : null}
       </section>
 
       {/*
@@ -278,6 +329,16 @@ export function BilanDePartie({
           ) : null}
         </div>
       </section>
+
+      {/* LES ACTIONS, APRÈS LA LECTURE (lot P2) : « Rejouer » est l'action de
+          la clôture, le grand bouton plein ; changer de métier est l'autre
+          chemin, en filet. Ils viennent après les enseignements : on relit,
+          puis on repart. */}
+      {children ? (
+        <div data-actions-de-cloture="" className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }

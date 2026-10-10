@@ -15,6 +15,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
 import { LIEN_CONTACT, liensDAcces } from "@/config/navigation";
 import { messageNiveauxReserves } from "@/config/vitrine-solo";
+import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +153,8 @@ export default async function JouerPage({
                       label: s.shortName,
                       sector: SECTOR_LABELS[s.sector],
                       tagline: s.tagline,
+                      teinte: teinteDuMetier(s),
+                      promesse: promesseEntreprise(s),
                       ...(famille
                         ? { variante: { gammeFromLevel: famille.gammeFromLevel, mono: famille.monoLabel, gamme: famille.gammeLabel } }
                         : {}),
@@ -172,13 +175,16 @@ export default async function JouerPage({
                     decisions: leviersDuNiveau(p.level).length,
                   }))}
                   defaultScenario={scenarioChoisi}
+                  lancement={
+                    // LE SEUL BOUTON DE LANCEMENT, dans le résumé collant (lot P2).
+                    <SubmitButton
+                      pendingLabel="Création de la partie…"
+                      className={`${bouton({ taille: "l" })} w-full`}
+                    >
+                      Lancer la partie
+                    </SubmitButton>
+                  }
                 />
-                <SubmitButton
-                  pendingLabel="Création de la partie…"
-                  className={`${bouton({ taille: "l" })} mt-5 w-full`}
-                >
-                  Lancer la partie
-                </SubmitButton>
               </form>
             )}
         </section>

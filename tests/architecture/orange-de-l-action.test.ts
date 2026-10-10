@@ -128,6 +128,25 @@ const PERMIS: { nom: string; fichier?: RegExp; classe: RegExp; ligne?: RegExp }[
     ligne: /border-amber-400(?:\/\d+)? bg-amber-400\/10/,
   },
   {
+    // Lot P2 : la carte photo d'une entreprise sur /jouer. Plus de voile
+    // (`bg-amber-400/10`) : un filet orange plein (bord et anneau), sous ce
+    // seul nom, posé sur un bouton `aria-pressed` (voir plus bas).
+    nom: "l'option choisie d'une carte d'entreprise : son filet plein, sous un nom unique",
+    fichier: /^components\/quick-config-form\.tsx$/,
+    classe: /^(?:border-amber-400|ring-amber-400)$/,
+    ligne: /^const OPTION_COCHEE_CARTE = "border-amber-400 ring-1 ring-amber-400";$/,
+  },
+  {
+    // Lot P2, décision du propriétaire : la seconde ligne du héros de la
+    // vitrine (« Apprenez à décider. ») retrouve l'orange de la marque.
+    // EXCEPTION VOULUE ET NOMMÉE à « l'orange n'est que l'action » : un seul
+    // élément, identifié par son attribut, et une seule fois dans le site.
+    nom: "l'exception nommée : la seconde ligne du héros de la vitrine",
+    fichier: /^app\/page\.tsx$/,
+    classe: /^text-amber-400$/,
+    ligne: /<span data-exception-orange="heros-de-la-vitrine" className="text-amber-400">/,
+  },
+  {
     nom: "la marque : le pictogramme et « ARENA » du logo, au pied de page",
     fichier: /^components\/pied-de-page\.tsx$/,
     classe: /^(?:text-amber-400|accent-arena)$/,
@@ -176,6 +195,28 @@ describe("l'orange n'est que l'action (lot P1)", () => {
     expect(fautes, `orange hors de l'action :\n${fautes.join("\n")}`).toEqual([]);
     // La garde regarde vraiment quelque chose : le bouton, les cases, les tuiles.
     expect(permis).toBeGreaterThan(20);
+  });
+
+  it("l'exception orange du héros est unique, et la carte choisie est une option qu'on coche", () => {
+    // Un seul porteur de l'attribut dans tout le périmètre.
+    const exceptions = PERIMETRE.flatMap((f) =>
+      (f.code.match(/data-exception-orange="([^"]+)"/g) ?? []).map((m) => `${f.nom} ${m}`),
+    );
+    expect(exceptions).toEqual(['app/page.tsx data-exception-orange="heros-de-la-vitrine"']);
+    // Le filet plein de la carte choisie ne s'emploie que sur le bouton
+    // `aria-pressed` des cartes d'entreprise.
+    const config = PERIMETRE.find((f) => f.nom === "components/quick-config-form.tsx")!.code;
+    const usages = config.match(/OPTION_COCHEE_CARTE/g) ?? [];
+    expect(usages.length, "le filet de la carte choisie sert ailleurs").toBe(2);
+    const bouton = config.slice(config.indexOf("data-carte-entreprise"), config.indexOf("OPTION_COCHEE_CARTE} bg-slate-950"));
+    expect(bouton).toContain("aria-pressed={on}");
+    // La coche est l'orange plein d'action, texte marine : une classe de la
+    // feuille, qui ne sert qu'à elle.
+    const css = readFileSync(join(SRC, "app/globals.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const coche = css.slice(css.indexOf("\n.coche-de-l-option {"));
+    expect(coche.slice(0, coche.indexOf("}"))).toMatch(/background-color: var\(--accent-plein\);\s*color: var\(--accent-plein-texte\);/);
+    const porteurs = PERIMETRE.filter((f) => f.code.includes("coche-de-l-option")).map((f) => f.nom);
+    expect(porteurs).toEqual(["components/quick-config-form.tsx"]);
   });
 
   it("les tuiles qui gardent l'orange sont bien des options qu'on coche", () => {

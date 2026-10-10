@@ -5,7 +5,6 @@ import { etendueDesDecisions } from "@/config/decisions";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
-import { PictoSecteur } from "@/components/picto-secteur";
 import { Icone } from "@/components/icone";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
@@ -13,12 +12,12 @@ import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
 import { DonneesStructurees } from "@/components/donnees-structurees";
 import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
-import { HaloDePage } from "@/components/halo-de-page";
 import { QuiFaitQuoi } from "@/components/qui-fait-quoi";
 import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ReprendreALAccueil } from "@/components/reprendre-a-laccueil";
 import { BandeauDeLaPartie, EpisodeEtClassement } from "@/components/accueil-arene";
+import { BandeDesLieux, CompositionDesLieux, LesNeufLieux } from "@/components/lieux-de-la-vitrine";
 
 // La landing ne lit que la configuration de plateforme (rien par utilisateur) :
 // on la met en cache et on la régénère au plus toutes les 5 min (ISR) plutôt
@@ -324,66 +323,70 @@ export default async function Home() {
           exterieur="relative overflow-hidden"
           interieur="relative mx-auto max-w-6xl px-6 pb-12 pt-10 sm:pt-14 lg:pb-16"
           interieurContraste="relative mx-auto max-w-6xl px-6 pb-12 pt-10 sm:pt-14 lg:pb-16"
-          avant={<HaloDePage />}
         >
+          {/*
+            LOT P2 : LES LIEUX À DROITE DU TITRE. Le héros a été un titre seul,
+            avec le grand anneau décoratif coupé du coin haut droit
+            (`HaloDePage`) pour toute image : l'audit le relevait comme « un
+            ornement sans rôle », et aucune image du produit n'était visible
+            au-dessus de la ligne de flottaison. L'anneau est retiré ; à sa
+            place, sur ordinateur, la composition des lieux (une grande photo,
+            trois petites, chacune légendée). Le titre reste à gauche, premier
+            dans l'ordre du document et premier lu ; le héros garde sa hauteur
+            (pas de plein écran). Sur téléphone, les lieux passent sous les
+            boutons, en bande de vignettes.
+          */}
+          <div className="lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center lg:gap-12">
+            <div className="min-w-0">
           {/*
               LE SURTITRE DISAIT QUATRE MOTS-CLÉS — « Simulation · Apprentissage ·
               Décision · Compétition » — qui pouvaient coiffer n'importe quel
               produit. Il dit maintenant ce qu'est la chose et pour qui elle est.
-              Le filet qui le précède est la seule décoration de la page : il
-              reparaît en tête de chaque section.
-            */}
-          {/*
-              Sur téléphone, l'annonce espacée à 0,3 em se coupait en deux
-              lignes (« POUR LA / CLASSE ») : elle se resserre en étiquette et
-              laisse tomber son filet sous 640 pixels, et tient sur une ligne.
             */}
           {/* LA PASTILLE DE CONTEXTE. Elle a été l'étiquette orange de la
               maquette, inclinée comme un dossard. Lot P1 : une pastille sobre,
-              droite, à filet fin ; l'orange est réservé à l'action, et la
-              première chose orange qu'on voit est le bouton « Commencer une
-              partie ». */}
+              droite, à filet fin ; l'orange est réservé à l'action. */}
           <p>
             <span className="surtitre-arene">Simulation de gestion, pour la classe</span>
           </p>
           {/*
-              LE TITRE PREND TOUTE LA LARGEUR DU HÉROS.
+              LE TITRE SE DIMENSIONNE SUR SA COLONNE, ET NON SUR L'ÉCRAN. Sur
+              l'écran, la taille ne sait rien de la place disponible : à 390 px
+              de large, la colonne fait 342 px, et un titre trop grand y tombait
+              sur deux lignes par phrase. En unités de la colonne (`cqw`), la
+              taille suit la place : une ligne par phrase partout.
 
-              Le titre a partagé sa ligne avec la main de cartes, et retombait à
-              48 px pour lui laisser la moitié droite. La main est descendue dans
-              la bande de la boucle, comme sur la maquette « L'arène » où le
-              héros ne porte que du texte : le titre reprend donc toute la
-              largeur, et c'est lui qui remplit le marine sur un grand écran,
-              avec l'anneau orange qui déborde du coin.
-
-              IL SE DIMENSIONNE SUR SA COLONNE, ET NON SUR L'ÉCRAN. Sur l'écran,
-              la taille ne sait rien de la place disponible : à 390 px de large,
-              la colonne fait 342 px, et un titre trop grand y tombait sur deux
-              lignes par phrase. En unités de la colonne (`cqw`), la taille suit
-              la place : 34 px sur un téléphone, 112 sur un grand écran, une
-              ligne par phrase partout.
-
-              Le coefficient n'est pas choisi au jugé. Lot P1 : le titre a quitté
-              le condensé italique capital pour la voix des titres (Barlow 700,
-              droit, casse de phrase), plus large : la plus longue phrase,
+              Le coefficient n'est pas choisi au jugé. Lot P1 : le titre est en
+              Barlow 700, droit, casse de phrase ; la plus longue phrase,
               « Dirigez une entreprise. », mesure 9,7 fois la taille pour ses
-              vingt-trois signes (0,42 em par signe, mesuré dans le navigateur :
-              800 px pour 82,8 px de corps). À 7,5 cqw, elle occupe donc les trois
-              quarts de sa colonne, sans jamais la toucher. tests/e2e/parcours.e2e.ts
-              mesure la largeur RÉELLE du texte contre celle de sa colonne, à 390
-              px comme à 1728, et vérifie qu'il grandit de 1024 à 1728 : le
-              plafond (5,5 rem) n'est atteint qu'au-delà de 1170 px de colonne.
+              vingt-trois signes (0,42 em par signe, mesuré dans le navigateur).
+              Lot P2 : la colonne n'est plus toute la largeur du héros mais sa
+              moitié gauche (la composition des lieux prend la droite) ; à
+              9,5 cqw, la phrase occupe 92 % de sa colonne, sans jamais la
+              toucher : 33 px sur un téléphone, 48 px à 1024, 58 px au-delà de
+              1200. tests/e2e/parcours.e2e.ts mesure la largeur RÉELLE du texte
+              contre celle de sa colonne, à 390 px comme à 1728, et vérifie
+              qu'il grandit de 1024 à 1728.
             */}
           <div className="mt-6" style={{ containerType: "inline-size" }}>
-            <h1 className="whitespace-nowrap text-[clamp(1.75rem,7.5cqw,5.5rem)] font-bold leading-[1.05] text-slate-50">
+            <h1 className="whitespace-nowrap text-[clamp(1.75rem,9.5cqw,5.5rem)] font-bold leading-[1.05] text-slate-50">
               Dirigez une entreprise.
               <br />
-              {/* PLUS AUCUN MOT ORANGE DANS UN GRAND TITRE. La seconde ligne du
-                  héros a gardé l'orange de la marque jusqu'au lot P1 : l'orange
-                  ne dit plus que l'action, et elle passe à l'encre claire du
-                  marine, de même graisse. L'emphase vient de la rupture de
-                  ton, pas de la couleur (garde : couleurs-fonctionnelles.test.ts). */}
-              <span className="text-slate-400">Apprenez à décider.</span>
+              {/* L'ORANGE DU HÉROS, EXCEPTION NOMMÉE ET UNIQUE (lot P2, décision
+                  du propriétaire). La seconde ligne avait gardé l'orange de la
+                  marque jusqu'au lot P1, qui l'avait passée à l'encre claire :
+                  l'orange ne dit plus que l'action. Le propriétaire la rend à
+                  l'orange : c'est la signature de la marque, une fois, sur la
+                  vitrine. Elle reste en casse de phrase, droite, en Barlow.
+                  `text-amber-400` est l'orange d'action #ff8a1f sur le marine
+                  (6,5:1 sur #0b2545) et l'encre brûlée #a35200 sur le papier
+                  (5,2:1 sur la page), si l'administrateur remet le héros au
+                  clair. L'attribut la nomme : les gardes `orange-de-l-action`
+                  et `couleurs-fonctionnelles` ne la laissent passer qu'ici, et
+                  une seule fois dans tout le site. */}
+              <span data-exception-orange="heros-de-la-vitrine" className="text-amber-400">
+                Apprenez à décider.
+              </span>
             </h1>
           </div>
           {/*
@@ -402,8 +405,7 @@ export default async function Home() {
               l'action de la page : l'orange vif. « Je suis enseignant » est
               l'autre porte d'entrée : le bouton SECONDAIRE, un filet fin, de la
               même hauteur, du même rayon et de la même graisse que le plein
-              (lot P1). Il a été un simple lien souligné, qui se perdait sous le
-              titre, puis un contour blanc de deux pixels écrit à la main.
+              (lot P1).
 
               Le libellé du bouton plein reste celui d'avant (la maquette dit
               « Entrer dans l'arène ») : tests/e2e/contraste.e2e.ts le cherche
@@ -424,6 +426,11 @@ export default async function Home() {
           <p className="mt-5 text-sm text-slate-400">
             Sans compte, sans installation. Vos parties restent liées à ce navigateur.
           </p>
+          {/* Sous `lg`, les lieux en bande de vignettes, sous les boutons. */}
+          <BandeDesLieux className="mt-7 lg:hidden" />
+            </div>
+            <CompositionDesLieux className="hidden lg:grid" />
+          </div>
         </Bande>
 
         {/* ---------- La partie d'exemple, puis un épisode et le classement ---------- */}
@@ -582,8 +589,11 @@ export default async function Home() {
         {/*
           LE PRODUIT ANNONCE SES SECTEURS DEPUIS LE HAUT DE LA PAGE, et ne les
           montrait nulle part : il fallait cliquer pour savoir de quoi on parle.
-          Les voici, avec les pictogrammes que l'arène emploie déjà — dessinés
-          d'un seul trait, donc lisibles au timbre-poste comme au mur.
+          Ils ont été montrés en pictogrammes au trait ; lot P2, ce sont leurs
+          LIEUX, les neuf photographies traitées que l'arène pose au premier
+          tour, chacune avec le nom de l'entreprise et son métier dans sa teinte.
+          Sous la ligne de flottaison : les vignettes sont la réduite, chargée à
+          l'approche de l'écran.
         */}
         <Bande
           id="accueil.metiers"
@@ -603,22 +613,7 @@ export default async function Home() {
               Voir les entreprises
             </Link>
           </div>
-          <ul className="mt-6 grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-9">
-            {SCENARIO_CHOICES.map((s) => (
-              <li
-                key={s.code}
-                className="flex flex-col items-center gap-2 text-center"
-              >
-                <PictoSecteur
-                  secteur={s.sector}
-                  className="h-7 w-7 text-slate-300"
-                />
-                <span className="text-xs leading-tight text-slate-300">
-                  {s.shortName}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <LesNeufLieux />
         </Bande>
 
         {/* ---------- Qui fait quoi ---------- */}

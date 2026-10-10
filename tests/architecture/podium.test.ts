@@ -196,11 +196,17 @@ describe("le rang prend le métal, l'action jamais", () => {
       // qui pose les rangs ; le podium, lui, sert aux deux (lot 4B).
       "components/revelation-du-marche.tsx",
       "components/podium.tsx",
-      "components/bilan-de-partie.tsx",
       "app/teacher/games/[gameId]/page.tsx",
     ]) {
       expect(poses, `${attendu} n'affiche plus son rang en pastille`).toContain(attendu);
     }
+    // LE BILAN DE PARTIE (lot P2) dit le rang du joueur UNE fois, en toutes
+    // lettres et en or (« 2e sur 3 ») ; la pastille « 2 » posée à côté en
+    // était une redite. Ses pastilles de métal sont celles de son podium,
+    // qu'il pose toujours.
+    const bilan = SOURCES.find(({ f }) => f.endsWith(join("components", "bilan-de-partie.tsx")))!.s;
+    expect(bilan, "le bilan ne pose plus son podium").toContain("<PodiumDesEquipes");
+    expect(bilan).toMatch(/texte-or[^"]*"[^>]*>\{ordinal\(place\.rang\)\}/);
   });
 
   it("aucun bouton ni lien ne porte l'or, l'argent ou le bronze", () => {

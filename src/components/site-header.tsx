@@ -226,7 +226,18 @@ export function SiteHeader() {
                 href={lien.href}
                 title={lien.aide}
                 aria-current={estCourant(lien.href) ? "page" : undefined}
-                className={bouton({ variante: "secondaire", taille: "m" })}
+                className={
+                  // LOT P2 : UN SEUL CADRE D'ACTION DANS LA BARRE. Les deux
+                  // portes étaient deux boutons secondaires côte à côte, plus
+                  // le menu : trois cadres pour une barre. L'élève qui a un
+                  // code garde le filet (« Rejoindre une partie ») ; l'espace
+                  // enseignant devient un lien souligné, comme les rubriques à
+                  // sa gauche. Le seul bouton plein du premier écran reste
+                  // « Commencer une partie », dans le héros.
+                  lien.acces === "eleve"
+                    ? bouton({ variante: "secondaire", taille: "m" })
+                    : `${bouton({ variante: "lien", taille: "m" })} px-2`
+                }
               >
                 {lien.libelle}
               </Link>
