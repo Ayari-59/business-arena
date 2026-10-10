@@ -78,17 +78,33 @@ export function OuvertureDeLaPartie({
       <div aria-hidden className="voile-de-scene absolute inset-0 -z-10" />
       <div
         data-texte-sur-photo=""
-        className={`flex flex-col justify-end ${
+        // LE TITRE REMONTE (demande du propriétaire) : le bloc se centre dans
+        // la hauteur du lieu au lieu de reposer sur son bord bas. Sur
+        // ordinateur, le voile est horizontal (dense à gauche) et tient le
+        // texte à toute hauteur ; sur la carte du téléphone, il monte plus
+        // dense et plus haut (voir `.voile-de-scene` dans globals.css).
+        className={`flex flex-col justify-center ${
           carte
-            ? "min-h-[24rem] px-4 pb-5 pt-32"
-            : "min-h-[19rem] px-5 pb-6 pt-28 sm:min-h-[23rem] sm:px-8 sm:pb-8 lg:min-h-[26rem]"
+            ? "min-h-[24rem] px-4 py-10"
+            : "min-h-[19rem] px-5 py-10 sm:min-h-[23rem] sm:px-8 sm:py-12 lg:min-h-[26rem]"
         }`}
       >
         {tour ? (
-          <p className="mb-2 font-display text-xl font-semibold leading-none tabular-nums text-slate-100 sm:text-2xl">
+          <p className="mb-6 font-display text-xl font-semibold leading-none tabular-nums text-slate-100 sm:text-2xl">
             {tour}
           </p>
         ) : null}
+        {/* LE TRAIT DU MÉTIER AU-DESSUS DU NOM, comme sur les tuiles des lieux
+            (`TuileDuLieu`) : la même marque, à l'échelle du nom qu'elle
+            annonce. La teinte ne s'écrit jamais sur la photo, elle est dans ce
+            trait plein. */}
+        <span
+          aria-hidden
+          data-trait-du-metier=""
+          className={`mb-3 block rounded-full bg-[color:var(--metier,var(--color-slate-300))] ${
+            carte ? "h-1 w-10" : "h-1 w-10 sm:h-1.5 sm:w-14"
+          }`}
+        />
         <h2
           id="ouverture-de-la-partie"
           className={`font-bold leading-[1.05] text-slate-50 ${
@@ -99,12 +115,8 @@ export function OuvertureDeLaPartie({
         </h2>
         {/* Le métier à l'encre claire : une teinte de métier, moyenne, ne tient
             pas 4,5:1 sur toutes les photos voilées (mesuré : 2,6 sur la baie
-            vitrée d'ATLAS). La teinte est dans le trait qui le précède, et
-            dans l'arête du bandeau. */}
-        <p className="mt-2 flex items-center gap-2 text-base font-semibold text-slate-100 sm:text-lg">
-          <span aria-hidden className="h-0.5 w-5 shrink-0 rounded-full bg-[color:var(--metier,var(--color-slate-300))]" />
-          {metier}
-        </p>
+            vitrée d'ATLAS). La teinte est dans le trait posé au-dessus du nom. */}
+        <p className="mt-2 text-base font-semibold text-slate-100 sm:text-lg">{metier}</p>
         <p className="mt-0.5 max-w-2xl text-base text-slate-200 sm:text-lg">{description}</p>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-100 sm:text-lg">{phrase}</p>
         {children ? <div className="mt-4 flex flex-wrap items-center gap-2">{children}</div> : null}

@@ -283,6 +283,9 @@ describe("l'ouverture de la partie : le lieu, avant tout chiffre", () => {
       }),
     );
     expect(html).toMatch(/<h2[^>]*>NOVA<\/h2>/);
+    // Comme sur les tuiles des lieux : un seul trait du métier, juste au-dessus du nom.
+    expect(html.match(/data-trait-du-metier/g) ?? []).toHaveLength(1);
+    expect(html).toMatch(/data-trait-du-metier=""[^>]*bg-\[color:var\(--metier[^>]*><\/span><h2/);
     expect(html).toContain("Tour 1 / 6");
     expect(html).toMatch(/<img[^>]*aria-hidden="true"[^>]*data-lieu-photo="nova"/);
     expect(html).toContain('loading="eager"');

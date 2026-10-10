@@ -3842,12 +3842,14 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
 /* Sur la carte du téléphone, le texte prend toute la largeur : le voile
    monte du bas, dense sur les deux tiers où le texte se pose. */
 [data-ouverture-de-la-partie="carte"] .voile-de-scene {
+  /* Le texte est centré dans la carte : le voile reste dense jusqu'aux trois
+     quarts de la hauteur, puis s'ouvre sur le haut de la photo. */
   background-image: linear-gradient(
     to top,
     rgb(6 21 41 / 0.95) 0%,
-    rgb(6 21 41 / 0.92) 68%,
-    rgb(6 21 41 / 0.6) 86%,
-    rgb(6 21 41 / 0.2) 100%
+    rgb(6 21 41 / 0.9) 74%,
+    rgb(6 21 41 / 0.62) 90%,
+    rgb(6 21 41 / 0.35) 100%
   );
 }
 
