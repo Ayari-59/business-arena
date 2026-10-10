@@ -21,8 +21,9 @@ import { BASE, ouvrirNavigateur } from "./helpers/browser";
  *      l'information (« Prix usuels du marché ») n'a ni cadre ni fond.
  *   4. SUR TÉLÉPHONE : une seule barre fixe, au plus un aplat orange par
  *      carte, une zone utile d'au moins 520 px, et aucun défilement latéral.
- * Et le rituel porte « ce qui a fait le résultat », dont la dernière marche est
- * le résultat net annoncé en grand.
+ * Et le rituel porte « ce qui a fait le résultat » (où sont passées les
+ * ventes), dont la phrase dit le résultat net annoncé en grand, ses boutons
+ * dans la fenêtre.
  */
 
 let navigateur: Browser;
@@ -226,15 +227,28 @@ describe("le rituel dit ce qui a fait le résultat", () => {
     await page.waitForURL(/simule/, { timeout: 120_000 });
     await page.locator("[data-ce-qui-a-fait-le-resultat]").waitFor({ state: "visible" });
     await page.waitForTimeout(1_800);
+    await page.evaluate(() => window.scrollTo(0, 0));
     const chiffres = await page.evaluate(() => ({
       grand: document.querySelector('[data-temps="2"] .chiffre-qui-arrive')?.textContent ?? "",
-      cascade:
-        document.querySelector('[data-marche="resultat"] > span:last-child')?.textContent ?? "",
-      marches: document.querySelectorAll("[data-marche]").length,
+      // Lot P8, piste A : les ventes, puis les trois postes de coût dans leur
+      // teinte, et la phrase du résultat, avec son montant.
+      cascade: document.querySelector("[data-lecture-du-resultat] [data-montant]")?.textContent ?? "",
+      lecture: document.querySelector("[data-lecture-du-resultat] .partage-phrase")?.textContent ?? "",
+      postes: document.querySelectorAll("[data-legende] [data-poste]").length,
+      ventes: Boolean(document.querySelector("[data-barre-ventes]")),
+      // LES BOUTONS DU RITUEL RESTENT DANS LE PREMIER ÉCRAN d'un portable (1366 × 768).
+      boutons: [...document.querySelectorAll<HTMLElement>('[data-temps="4"] a')].map((a) =>
+        Math.round(a.getBoundingClientRect().bottom),
+      ),
+      H: innerHeight,
     }));
     const euros = (t: string) => Number(t.replace(/[^\d]/g, ""));
-    expect(chiffres.marches).toBe(5);
+    expect(chiffres.ventes).toBe(true);
+    expect(chiffres.postes).toBe(3);
     expect(euros(chiffres.cascade)).toBe(euros(chiffres.grand));
+    expect(chiffres.lecture).toMatch(/c'est (votre bénéfice|votre perte|l'équilibre)\.$/);
+    expect(chiffres.boutons.length).toBeGreaterThanOrEqual(2);
+    for (const b of chiffres.boutons) expect(b, "un bouton du rituel sous la fenêtre").toBeLessThanOrEqual(chiffres.H);
   }, 180_000);
 });
 

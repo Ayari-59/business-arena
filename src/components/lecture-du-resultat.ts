@@ -12,7 +12,8 @@ import { structureDuTour } from "@/pedagogy/verdict-du-tour";
  * COMPTES DU TOUR et de rien d'autre, ce qui a fait le chiffre :
  *
  *   · LA CASCADE DU RÉSULTAT — chiffre d'affaires, moins les coûts variables,
- *     moins les charges de structure, moins ce qui vient sous l'excédent brut
+ *     égale la marge sur coût variable (un sous-total, lot P8), moins les
+ *     charges de structure, moins ce qui vient sous l'excédent brut
  *     (amortissements, frais financiers, exceptionnel, impôt), égale le
  *     résultat net. Chaque marche est LUE dans le compte de résultat ; aucune
  *     n'est un reste calculé pour tomber juste. C'est précisément ce qui permet
@@ -35,7 +36,7 @@ import { structureDuTour } from "@/pedagogy/verdict-du-tour";
 
 /** Une marche de la cascade : ce qu'elle apporte au résultat, signe compris. */
 export interface MarcheDuResultat {
-  cle: "ca" | "variables" | "structure" | "sous-ebe" | "resultat";
+  cle: "ca" | "variables" | "marge" | "structure" | "sous-ebe" | "resultat";
   libelle: string;
   /** L'apport au résultat : positif pour le chiffre d'affaires, négatif pour une charge. */
   montant: number;
@@ -90,6 +91,18 @@ export function decompositionDuResultat(cr: IncomeStatement): DecompositionDuRes
   };
   poser("ca", "Chiffre d'affaires", chiffreDAffaires);
   poser("variables", "Coûts variables", -coutsVariables);
+  // LOT P8 : LA MARGE, LE SOUS-TOTAL QUE LE JEU ENSEIGNE. Le verdict dit « le
+  // tour s'est joué sur la marge » : elle a sa ligne, comme dans le compte de
+  // résultat du jeu (« = Marge sur coût variable »). C'est un SOLDE, une barre
+  // entière de zéro à elle-même ; elle ne déplace pas le niveau atteint, qui
+  // est déjà elle (chiffre d'affaires moins coûts variables).
+  marches.push({
+    cle: "marge",
+    libelle: "Marge sur coût variable",
+    montant: niveau,
+    debut: 0,
+    fin: niveau,
+  });
   poser("structure", "Charges de structure", -structure);
   poser("sous-ebe", "Amortissements, intérêts, impôt", -sous);
   // Le résultat est une barre ENTIÈRE, de zéro à lui-même : c'est la marche

@@ -192,7 +192,10 @@ export function VerdictDuMarche({
       data-verdict-du-marche={forme}
       className={`${animer ? "rituel" : ""} ${
         ecran
-          ? "mx-auto w-full max-w-4xl text-center"
+          ? // LOT P8 : 64 rem (au lieu de 56) pour que le relevé « ce qui a fait le
+            // résultat » ait une piste lisible à côté des causes ; les textes
+            // centrés gardent leurs propres largeurs.
+            "mx-auto w-full max-w-5xl text-center"
           : "grid gap-x-8 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto]"
       }`}
     >
@@ -262,7 +265,7 @@ export function VerdictDuMarche({
           data-temps="3"
           className={
             ecran
-              ? "mx-auto mt-5 max-w-4xl border-t border-white/10 pt-4 sm:mt-6"
+              ? "mx-auto mt-5 max-w-5xl border-t border-white/10 pt-4 sm:mt-6"
               : "self-end sm:max-w-sm"
           }
         >
@@ -275,10 +278,15 @@ export function VerdictDuMarche({
               {phrase}
             </p>
           ) : null}
-          {explication ? <div className={phrase ? "mt-5" : ""}>{explication}</div> : null}
+          {/* LOT P8 : un cran de moins autour du relevé à l'écran du rituel (sa
+              tête et ses six lignes de 28 px), pour que l'action reste là où
+              elle était dans la fenêtre. */}
+          {explication ? (
+            <div className={phrase ? (ecran ? "mt-4" : "mt-5") : ""}>{explication}</div>
+          ) : null}
           {rang ? (
             <p
-              className={`${phrase || explication ? (ecran ? "mt-5" : "mt-4") : ""} flex items-center gap-3 font-display font-semibold leading-none tabular-nums ${
+              className={`${phrase || explication ? "mt-4" : ""} flex items-center gap-3 font-display font-semibold leading-none tabular-nums ${
                 ecran ? "justify-center text-4xl" : "text-2xl"
               }`}
             >

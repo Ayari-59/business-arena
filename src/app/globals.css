@@ -4005,209 +4005,219 @@ main[data-ecran-de-jeu] {
 
 /* ─────────────────────── LA CASCADE DU RÉSULTAT ─────────────────────────── */
 
-/* Le verdict (rituel, synthèse d'un tour clos) dit « ce qui a fait le
-   résultat » par un vrai graphique en cascade, sur une seule échelle. Le
-   composant (`ce-qui-a-fait-le-resultat.tsx`) pose sur chaque marche sa
-   géométrie en fractions de l'échelle : `--bas`, `--haut` (la barre),
-   `--fin` (le niveau qu'elle laisse), `--entree` (celui qu'elle reçoit) et
-   `--zero` (la ligne du zéro). La feuille ne fait que les tracer, debout sur
-   ordinateur, couchées sous 640 px : la même logique, la même échelle.
-   Marques (compétence `dataviz`) : une barre de 24 px au plus, coin de 4 px à
-   l'extrémité de la donnée et carré sur la ligne de base, filets pleins d'un
-   pixel. Le texte reste à l'encre ; la barre seule porte la couleur. */
-/* LES CHARGES EN NEUTRE. Le gris ardoise des données (`--donnee-2`, #9aa3b0)
-   se tenait trop près du bleu donnée du chiffre d'affaires : 6,3 d'écart perçu
-   (OKLab × 100), sous le plancher de 15 du validateur de la compétence
-   `dataviz`, qu'aucun encodage secondaire n'excuse. Un gris neutre plus sombre,
-   #737b88, en est à 17,6 (17,1 en deutéranopie) et tient 4,3 pour 1 sur le
-   sol de la page, 3,6 sur le marine du rituel (marque non textuelle : 3). */
-.cascade {
-  --cascade-charge: #737b88;
-  --cascade-filet: color-mix(in oklab, var(--color-slate-400) 75%, transparent);
-  --cascade-zero: var(--color-slate-300);
-  list-style: none;
+/* LOT P8, PISTE A : « OÙ SONT PASSÉES VOS VENTES ? ». Le verdict (rituel,
+   synthèse d'un tour clos) dit ce qui a fait le résultat par DEUX BARRES À LA
+   MÊME ÉCHELLE : les ventes, et dessous ce qui les a « mangées » (les trois
+   postes de coût, chacun dans sa teinte), puis ce qui reste (vert franc, qui
+   finit pile sous la fin des ventes) — ou, en perte, ce qui manque (rouge
+   franc, dans le prolongement des ventes, au-delà du trait qui marque leur
+   fin). Le composant (`ce-qui-a-fait-le-resultat.tsx`) pose sur chaque tronçon
+   `--debut` et `--fin` en fractions de l'échelle, et `--fin-des-ventes` sur
+   le partage ; la feuille ne fait que les tracer.
+   Marques (compétence `dataviz`) : barres de 24 px, un espace de 2 px couleur
+   du sol entre deux tronçons voisins (aucun cadre), coin de 3 px, carré à
+   l'origine. Un tronçon garde 3 px au moins. Un montant n'est écrit dans une
+   barre que si elle le contient (requête de conteneur sur la barre) ; le texte
+   posé sur une barre est à l'encre marine #0b2545 (de 4,7 à 7,6 pour 1 sur
+   les teintes qui en portent ; le prune n'en porte jamais, 3,8). */
+/* LES TEINTES DES COÛTS : trois créneaux de données de la charte, dans un
+   ORDRE FIXE passé au validateur (voisins de la barre empilée, puis le vert ou
+   le rouge du résultat) : coûts variables `--serie-4` (indigo #8f81e5),
+   structure `--serie-3` (bleu-vert #33a6a0), bas du compte `--serie-2` (prune
+   #a565b9). Plus d'écart perçu que 8 en protanopie et en deutéranopie, plus
+   de 15 en vision normale, entre voisins ; 3,8 pour 1 au moins sur le marine. */
+.partage {
+  --partage-epaisseur: 1.5rem;
+  --partage-filet: color-mix(in oklab, var(--color-slate-400) 55%, transparent);
+  --partage-trait: var(--color-slate-300);
+  line-height: 1.3;
 }
-.cascade-piste {
+.partage-question {
+  margin-bottom: 0.375rem;
+}
+.partage-dessin {
   position: relative;
-  display: block;
+  display: grid;
+  row-gap: 4px;
+  /* La place de l'accolade de la marge, sous la barre des coûts. */
+  padding-bottom: 0.625rem;
 }
-.cascade-barre,
-.cascade-lien,
-.cascade-zero {
+.partage-rangee {
+  position: relative;
+  height: var(--partage-epaisseur);
+}
+.partage-troncon {
   position: absolute;
-  display: block;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--debut) * 100%);
+  width: max(3px, calc((var(--fin) - var(--debut)) * 100%));
+  display: flex;
+  align-items: center;
+  border-radius: 3px;
+  color: #0b2545;
+  container-type: inline-size;
 }
-.cascade-zero {
-  background-color: var(--cascade-zero);
+/* L'espace de 2 px entre deux tronçons voisins : pris sur le début du
+   suivant, si bien que chaque barre FINIT exactement où elle doit. */
+.partage-troncon + .partage-troncon {
+  left: calc(var(--debut) * 100% + 2px);
+  width: max(3px, calc((var(--fin) - var(--debut)) * 100% - 2px));
 }
-.cascade-lien {
-  background-color: var(--cascade-filet);
+/* Carré à l'origine (zéro), arrondi au bout. */
+.partage-rangee > .partage-troncon:first-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
-
-/* COUCHÉE (téléphone, et toute fenêtre étroite) : une ligne par marche, le
-   libellé, la piste, le montant. La barre va de `--bas` à `--haut` en
-   largeur ; les filets qui relient deux marches sont verticaux, au niveau
-   que l'une laisse à l'autre ; le zéro est un trait vertical continu. */
-@media (max-width: 639.98px) {
-  .cascade-marche {
-    display: grid;
-    grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) 6.25rem;
-    align-items: center;
-    column-gap: 0.75rem;
-    min-height: 2rem;
-  }
-  .cascade-piste {
-    align-self: stretch;
-  }
-  .cascade-barre {
-    top: 50%;
-    height: 0.75rem;
-    transform: translateY(-50%);
-    left: calc(var(--bas) * 100%);
-    width: max(2px, calc((var(--haut) - var(--bas)) * 100%));
-    border-radius: 2px;
-  }
-  /* Carré sur la ligne de base, arrondi à l'extrémité de la donnée. */
-  .cascade-marche[data-ancree][data-sens="hausse"] .cascade-barre {
-    border-radius: 0 4px 4px 0;
-  }
-  .cascade-marche[data-ancree][data-sens="baisse"] .cascade-barre {
-    border-radius: 4px 0 0 4px;
-  }
-  .cascade-zero {
-    inset-block: 0;
-    left: calc(var(--zero) * 100%);
-    width: 1px;
-  }
-  .cascade-lien {
-    width: 1px;
-  }
-  .cascade-lien-entrant {
-    top: 0;
-    height: 50%;
-    left: calc(var(--entree) * 100%);
-  }
-  .cascade-lien-sortant {
-    top: 50%;
-    bottom: 0;
-    left: calc(var(--fin) * 100%);
-  }
-  .cascade-valeur {
-    text-align: right;
-  }
-  .cascade-marche[data-marche="resultat"] {
-    margin-top: 0.25rem;
-  }
-  /* LOT P4 : le résultat trop petit pour une barre est un marqueur, un trait
-     épais posé en travers de la ligne du zéro (voir SEUIL_DU_MARQUEUR). */
-  .cascade-marche[data-marche="resultat"][data-marqueur] .cascade-barre {
-    left: calc(var(--zero) * 100% - 2px);
-    width: 4px;
-    height: 1.25rem;
-    border-radius: 2px;
+.partage-ventes,
+.partage-autres-produits {
+  background-color: var(--donnee);
+}
+.partage-cout {
+  background-color: var(--teinte);
+}
+.partage-reste {
+  background-color: var(--color-emerald-400);
+}
+.partage-manque {
+  background-color: var(--color-red-400);
+}
+/* Le montant DANS la barre : seulement si elle le contient, jamais tronqué. */
+.partage-etiquette {
+  display: none;
+  padding-inline: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@container (min-width: 5.5rem) {
+  .partage-etiquette {
+    display: block;
   }
 }
-
-/* DEBOUT (ordinateur) : une colonne par marche, sans espace entre elles pour
-   que les filets se rejoignent. La piste réserve 1,5 rem en haut et en bas
-   pour les montants posés à l'extrémité de chaque barre : au-dessus de ce qui
-   monte, sous ce qui descend. */
+/* Les montants des coûts et du reste, centrés dans leur barre. */
+.partage-cout,
+.partage-reste,
+.partage-manque {
+  justify-content: center;
+}
+/* « il manque » devant le montant, quand la barre rouge en a la place. */
+.partage-etiquette-mot {
+  display: none;
+}
+@container (min-width: 10rem) {
+  .partage-etiquette-mot {
+    display: inline;
+  }
+}
+/* Le prune (bas du compte) ne porte pas de texte : 3,8 pour 1 seulement. */
+.partage-cout[data-segment="sous-ebe"] .partage-etiquette {
+  display: none;
+}
+.partage-etiquette-ventes {
+  display: none;
+  width: 100%;
+  justify-content: space-between;
+  gap: 1rem;
+}
+@container (min-width: 8rem) {
+  .partage-etiquette-ventes {
+    display: flex;
+  }
+}
+.partage-etiquette-solde {
+  display: none;
+}
+@container (min-width: 18rem) {
+  .partage-etiquette-solde {
+    display: inline;
+  }
+}
+/* LE TRAIT DE FIN DES VENTES : vertical, 2 px, il traverse les deux barres. */
+.partage-fin-des-ventes {
+  position: absolute;
+  top: -4px;
+  bottom: calc(0.625rem - 4px);
+  left: calc(var(--fin-des-ventes) * 100% - 1px);
+  width: 2px;
+  background-color: var(--partage-trait);
+}
+/* LOT P4, repris : LE RESTE OU LE MANQUE TROP PETIT POUR UNE BARRE (voir
+   SEUIL_DU_MARQUEUR). Un trait de 4 px, plus haut que les barres, collé au
+   trait de fin des ventes : en deçà pour ce qui reste, au-delà pour ce qui
+   manque. Son montant s'écrit au bout de la barre des ventes. */
+.partage[data-marqueur] .partage-reste,
+.partage[data-marqueur] .partage-manque {
+  top: -4px;
+  bottom: -4px;
+  width: 4px;
+  border-radius: 2px;
+}
+.partage[data-marqueur] .partage-reste {
+  left: calc(var(--fin-des-ventes) * 100% - 5px);
+}
+.partage[data-marqueur] .partage-manque {
+  left: calc(var(--fin-des-ventes) * 100% + 1px);
+}
+/* L'ACCOLADE DE LA MARGE : sous la barre des coûts, de la fin des coûts
+   variables à la fin des ventes. */
+.partage-accolade {
+  position: absolute;
+  bottom: 0.125rem;
+  height: 0.375rem;
+  left: calc(var(--debut) * 100% + 2px);
+  width: calc((var(--fin) - var(--debut)) * 100% - 2px);
+  border: 1px solid var(--partage-trait);
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+}
+/* Son texte, aligné sur son début tant qu'il tient, sinon calé à droite. */
+.partage-marge {
+  padding-left: max(0px, min(calc(var(--debut) * 100%), calc(100% - 15rem)));
+}
+.partage-legende {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.125rem 1.5rem;
+}
+.partage-poste,
+.partage-conclusion {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.5rem;
+}
+.partage-montant {
+  text-align: right;
+  white-space: nowrap;
+}
+.partage-pastille {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 2px;
+  background-color: var(--teinte);
+}
+.partage-pastille-reste {
+  background-color: var(--color-emerald-400);
+}
+.partage-pastille-manque {
+  background-color: var(--color-red-400);
+}
+.partage-pastille-ventes {
+  background-color: var(--donnee);
+}
+.partage-conclusion {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--partage-filet);
+}
 @media (min-width: 640px) {
-  .cascade {
-    --cascade-trace: 7.5rem;
-    --cascade-marge: 1.5rem;
-    display: grid;
-    grid-template-columns: repeat(var(--marches, 5), minmax(0, 1fr));
-  }
-  [data-cascade="synthese"] {
-    --cascade-trace: 8.5rem;
-  }
-  /* Au rituel, l'action doit rester dans la fenêtre d'un écran de 1280 × 800
-     (lot 6E) : la cascade y est plus basse, la même échelle pour toutes ses
-     marches. */
-  [data-cascade="rituel"] {
-    --cascade-trace: 5rem;
-    --cascade-marge: 1.25rem;
-  }
-  .cascade-marche {
-    display: grid;
-    grid-template-rows: calc(var(--cascade-trace) + 2 * var(--cascade-marge)) auto;
-    min-width: 0;
-  }
-  .cascade-piste {
-    grid-row: 1;
-    grid-column: 1;
-  }
-  .cascade-libelle {
-    grid-row: 2;
-    padding: 0.375rem 0.25rem 0;
-    text-align: center;
-    /* Une colonne fait une centaine de pixels : à 12 px, « Amortissements, »
-       y tient sans se couper ni déborder sur sa voisine (le montant, lui,
-       garde la taille du texte). */
-    font-size: 0.75rem;
-    line-height: 1.25;
-    overflow-wrap: break-word;
-  }
-  .cascade-valeur {
-    grid-row: 1;
-    grid-column: 1;
-    align-self: end;
-    justify-self: center;
-    z-index: 1;
-    line-height: 1.25rem;
-    margin-bottom: calc(var(--cascade-marge) + var(--haut) * var(--cascade-trace) + 0.25rem);
-  }
-  .cascade-marche[data-sens="baisse"] .cascade-valeur {
-    margin-bottom: calc(var(--cascade-marge) + var(--bas) * var(--cascade-trace) - 1.5rem);
-  }
-  .cascade-barre {
-    left: 50%;
-    width: min(1.5rem, 60%);
-    transform: translateX(-50%);
-    bottom: calc(var(--cascade-marge) + var(--bas) * var(--cascade-trace));
-    height: max(2px, calc((var(--haut) - var(--bas)) * var(--cascade-trace)));
-    border-radius: 2px;
-  }
-  .cascade-marche[data-ancree][data-sens="hausse"] .cascade-barre {
-    border-radius: 4px 4px 0 0;
-  }
-  .cascade-marche[data-ancree][data-sens="baisse"] .cascade-barre {
-    border-radius: 0 0 4px 4px;
-  }
-  .cascade-zero {
-    inset-inline: 0;
-    height: 1px;
-    bottom: calc(var(--cascade-marge) + var(--zero) * var(--cascade-trace));
-  }
-  .cascade-lien {
-    height: 1px;
-  }
-  .cascade-lien-entrant {
-    left: 0;
-    right: calc(50% + min(0.75rem, 30%));
-    bottom: calc(var(--cascade-marge) + var(--entree) * var(--cascade-trace));
-  }
-  .cascade-lien-sortant {
-    left: calc(50% + min(0.75rem, 30%));
-    right: 0;
-    bottom: calc(var(--cascade-marge) + var(--fin) * var(--cascade-trace));
-  }
-  /* LOT P4 : LE RÉSULTAT TROP PETIT POUR UNE BARRE. Un trait de 4 px, plus
-     large que les barres, centré SUR la ligne du zéro : il ne monte ni ne
-     descend plus qu'un pixel au-delà de ce qu'il vaut, il se voit. Son
-     montant se pose juste au-dessus (un gain) ou juste dessous (une perte). */
-  .cascade-marche[data-marche="resultat"][data-marqueur] .cascade-barre {
-    width: min(2.25rem, 80%);
-    height: 4px;
-    bottom: calc(var(--cascade-marge) + var(--zero) * var(--cascade-trace) - 2px);
-    border-radius: 2px;
-  }
-  .cascade-marche[data-marche="resultat"][data-marqueur] .cascade-valeur {
-    margin-bottom: calc(var(--cascade-marge) + var(--zero) * var(--cascade-trace) + 2px + 0.25rem);
-  }
-  .cascade-marche[data-marche="resultat"][data-marqueur][data-sens="baisse"] .cascade-valeur {
-    margin-bottom: calc(var(--cascade-marge) + var(--zero) * var(--cascade-trace) - 2px - 1.5rem);
+  .partage-legende {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

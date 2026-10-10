@@ -74,10 +74,24 @@ describe("la cascade du résultat ferme sur le compte du tour", () => {
       expect(d.sousLExcedent).toBe(sousLExcedent(cr));
       expect(d.resultat).toBe(cr.netIncome);
       // Les marches s'enchaînent : chacune commence où la précédente s'arrête.
-      const [ca, variables, structure, sous, resultat] = d.marches;
+      // Lot P8 : la marge sur coût variable est un SOUS-TOTAL, entre les coûts
+      // variables et les charges de structure : une barre pleine de zéro au
+      // niveau atteint, qui ne déplace pas ce niveau.
+      expect(d.marches.map((m) => m.cle)).toEqual([
+        "ca",
+        "variables",
+        "marge",
+        "structure",
+        "sous-ebe",
+        "resultat",
+      ]);
+      const [ca, variables, marge, structure, sous, resultat] = d.marches;
       expect(ca!.debut).toBe(0);
       expect(variables!.debut).toBeCloseTo(ca!.fin, 6);
-      expect(structure!.debut).toBeCloseTo(variables!.fin, 6);
+      expect(marge!.debut).toBe(0);
+      expect(marge!.fin).toBeCloseTo(variables!.fin, 6);
+      expect(marge!.montant).toBeCloseTo(cr.grossMargin, 2);
+      expect(structure!.debut).toBeCloseTo(marge!.fin, 6);
       expect(sous!.debut).toBeCloseTo(structure!.fin, 6);
       // L'IDENTITÉ : la dernière marche s'arrête sur le résultat du compte.
       expect(sous!.fin, `${code} : la cascade ne ferme pas`).toBeCloseTo(cr.netIncome, 2);
