@@ -146,15 +146,22 @@ const ACCENTS_RESERVES = {
 };
 /** L'or, le moins coloré des quatre accents : le plafond de la charte. */
 const PLAFOND_CHROMA = 0.166;
-/** L'ordre fixe des neuf familles, et les six variantes avec leur famille. */
+/**
+ * L'ordre fixe des neuf familles, et les six variantes avec leur famille.
+ * Lot P6 : services et abonnement échangent leur place. Le glacier des
+ * services (#12f8fe) tombait à 1,5 d'écart du mauve de l'e-commerce en
+ * deutéranopie ; l'ordre a été ré-dérivé en énumérant les 9! ordres (méthode
+ * de la compétence dataviz), et c'est le plus proche de l'ancien qui tient
+ * la porte : 16,1 / 8,1 sur le marine, 18,2 / 10,5 sur le papier.
+ */
 const ORDRE_DES_FAMILLES = [
   "hotellerie",
   "batiment",
   "ecommerce",
-  "services",
+  "abonnement",
   "transport",
   "commerce",
-  "abonnement",
+  "services",
   "restauration",
   "industrie",
 ];
@@ -435,6 +442,65 @@ describe("la teinte du métier est le fil d'une partie", () => {
     expect(CSS, "globals.css ne dit pas l'ordre fixe des neuf familles").toContain(
       "LES NEUF FAMILLES, DANS UN ORDRE FIXE",
     );
+  });
+
+  it("lot P6 : les neuf teintes sont deux à deux distinctes, et les trois verts n'en font plus un", () => {
+    // LE RETOUR DU PROPRIÉTAIRE : « services, abonnement et bâtiment ont la
+    // même couleur ». Ils tenaient dans 12° de teinte (5,6 à 11,8 d'écart
+    // perçu sur le marine, 7,0 sur le papier). L'abonnement garde le vert,
+    // les services prennent un glacier, le bâtiment un sable. La garde
+    // calcule l'écart (OKLab ×100, comme le validateur de `dataviz`) sur les
+    // 36 paires, des deux côtés, avec des seuils RÉGLÉS SUR LA MESURE :
+    //   · les trois teintes refaites sont à 15 au moins (le plancher de
+    //     `dataviz` en vision normale) de chacune des huit autres sur le
+    //     marine — mesuré : 17,0 (glacier / transport) ;
+    //   · sur le papier, à 10,5 au moins — mesuré : 11,0 (sable / vert). 15
+    //     n'y est pas atteignable : avec les six encres foncées existantes et
+    //     les gardes de ce fichier, aucun trio de teintes nouvelles ne
+    //     dépasse 9,8 (recherche exhaustive du lot) ;
+    //   · entre elles trois, 10 au moins aussi en protanopie et en
+    //     deutéranopie, des deux côtés — mesuré : 16,2 et 10,1 ;
+    //   · et AUCUNE des 36 paires ne descend sous le plancher actuel : 5 sur le
+    //     marine (pervenche / bleu, 5,1, inchangés depuis le lot 5A) et 8 sur
+    //     le papier (8,4). Les paires des six teintes que ce lot ne touche
+    //     pas restent sous 15 (le plafond de séries de la charte) : le métier
+    //     porte toujours son nom écrit.
+    const REFAITES = ["services", "abonnement", "batiment"];
+    const SEUILS = {
+      marine: { refaites: 15, plancher: 5 },
+      clair: { refaites: 10.5, plancher: 8 },
+    } as const;
+    for (const [source, mode] of [
+      [SUR_MARINE_METIERS, "marine"],
+      [SUR_PAPIER_METIERS, "clair"],
+    ] as const) {
+      const teinte = (nom: string) => jeton(source, `secteur-${nom}`);
+      for (let i = 0; i < ORDRE_DES_FAMILLES.length; i += 1) {
+        for (let j = i + 1; j < ORDRE_DES_FAMILLES.length; j += 1) {
+          const [a, b] = [ORDRE_DES_FAMILLES[i]!, ORDRE_DES_FAMILLES[j]!];
+          const e = ecart(teinte(a), teinte(b));
+          const quoi = `${a} (${teinte(a)}) et ${b} (${teinte(b)}), sur le ${mode}`;
+          expect(e.normal, `${quoi} : sous le plancher`).toBeGreaterThanOrEqual(SEUILS[mode].plancher);
+          if (REFAITES.includes(a) || REFAITES.includes(b)) {
+            expect(e.normal, `${quoi} : une teinte refaite trop proche`).toBeGreaterThanOrEqual(
+              SEUILS[mode].refaites,
+            );
+          }
+          if (REFAITES.includes(a) && REFAITES.includes(b)) {
+            expect(e.dvc, `${quoi}, en protanopie ou deutéranopie`).toBeGreaterThanOrEqual(10);
+          }
+        }
+      }
+      // Un seul vert : des neuf, une seule teinte entre 120° et 150° (le vert
+      // de résultat est à 154° ; sous 120°, c'est l'olive et le sable : le
+      // bâtiment est à 106° sur le marine, 116° sur le papier), des deux côtés.
+      // Avant le lot : trois (123°, 128°, 133° sur le marine).
+      const verts = ORDRE_DES_FAMILLES.filter((nom) => {
+        const { h } = oklch(teinte(nom));
+        return h >= 120 && h <= 150;
+      });
+      expect(verts, `sur le ${mode}, plus d'un vert`).toEqual(["abonnement"]);
+    }
   });
 
   it("une variante de scénario EST la couleur de son entreprise, pas une dixième", () => {

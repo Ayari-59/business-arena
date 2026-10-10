@@ -111,7 +111,7 @@ export default async function JouerPage({
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-12">
+        <section className="mx-auto max-w-5xl px-3 py-6 sm:px-6 sm:py-12">
           <ReprendreMaPartie parties={enCours} className="mb-6" />
             {reserve ? (
               <p
@@ -145,7 +145,7 @@ export default async function JouerPage({
             ) : (
               <form
                 action={startGameAction}
-                className="carte p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6"
+                className="carte p-3 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6"
               >
                 {/* Le titre de la carte dit le geste, et s'il y a déjà une partie à
                     reprendre au-dessus : « une nouvelle », ou « votre première ». */}

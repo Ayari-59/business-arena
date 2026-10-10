@@ -14,6 +14,13 @@ import { PHOTOS_DES_ENTREPRISES, fichierDeLaPhoto } from "../../src/components/i
  * chaque ligne, le pixel le PLUS CLAIR de la photo voilée, et on compare la
  * couleur du texte à ce pixel-là. Les neuf photos passent dans le même cadre
  * (sa source et son cadrage sont remplacés), sans lancer neuf parties.
+ *
+ * LOT P6 « NEUF LIEUX QUI PARLENT » : le nom et le métier sont posés SUR les
+ * photos de /jouer et de la vitrine ; la même mesure passe sur chacune des
+ * neuf tuiles réelles (chaque tuile a sa photo), à 390 et à 1280. /jouer
+ * revient au 3 × 3 sur téléphone (mesuré : les neuf dans le premier écran
+ * après le titre de la carte), la vitrine pose ses lieux en 3 × 3 sous deux
+ * boutons alignés, et les trois écrans d'un tour reviennent en carrousel.
  */
 
 let navigateur: Browser;
@@ -76,12 +83,13 @@ async function contrastesSurPhoto(page: Page, bloc: string) {
   });
   const masque = await page.addStyleTag({
     content:
-      "[data-texte-sur-photo] * { color: transparent !important; text-shadow: none !important; } [data-texte-sur-photo] svg, [data-texte-sur-photo] [class*='pastille'], [data-texte-sur-photo] [class*='marche'], [data-texte-sur-photo] a, [data-texte-sur-photo] [role], [data-texte-sur-photo] [aria-hidden='true'] { visibility: hidden !important; } body > header, [data-en-tete-du-site], [data-barre-collante], [data-ardoise-repliee] { opacity: 0 !important; }",
+      "[data-texte-sur-photo] * { color: transparent !important; text-shadow: none !important; } [data-texte-sur-photo] svg, [data-texte-sur-photo] [class*='pastille'], [data-texte-sur-photo] [class*='marche'], [data-texte-sur-photo] a, [data-texte-sur-photo] [role], [data-texte-sur-photo] [aria-hidden='true'] { visibility: hidden !important; } body > header, [data-en-tete-du-site], [data-barre-collante], [data-ardoise-repliee], [data-resume-de-lancement], [data-barre-action] { opacity: 0 !important; }",
   });
   const png = (await cadre.screenshot({ animations: "disabled" })).toString("base64");
   await masque.evaluate((e) => (e as HTMLElement).remove());
+  const largeurDuBloc = await cadre.evaluate((r) => r.getBoundingClientRect().width);
   const clairs: number[][] = await page.evaluate(
-    async ({ png, lignes }) => {
+    async ({ png, lignes, largeurDuBloc }) => {
       const image = new Image();
       image.src = `data:image/png;base64,${png}`;
       await image.decode();
@@ -94,11 +102,15 @@ async function contrastesSurPhoto(page: Page, bloc: string) {
         const c = v / 255;
         return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
       };
+      // LOT P6 : la capture est en pixels de l'APPAREIL (3 par pixel CSS sur
+      // un iPhone 13), les boîtes en pixels CSS : on les met à la même
+      // échelle, sans quoi la mesure lisait le tiers haut-gauche du bloc.
+      const k = image.width / largeurDuBloc;
       return lignes.map((l) => {
-        const x0 = Math.max(0, Math.floor(l.x));
-        const y0 = Math.max(0, Math.floor(l.y));
-        const w = Math.max(1, Math.min(image.width - x0, Math.ceil(l.l)));
-        const h = Math.max(1, Math.min(image.height - y0, Math.ceil(l.h)));
+        const x0 = Math.max(0, Math.floor(l.x * k));
+        const y0 = Math.max(0, Math.floor(l.y * k));
+        const w = Math.max(1, Math.min(image.width - x0, Math.ceil(l.l * k)));
+        const h = Math.max(1, Math.min(image.height - y0, Math.ceil(l.h * k)));
         const { data } = ctx.getImageData(x0, y0, w, h);
         let meilleur = [0, 0, 0];
         let lmax = -1;
@@ -112,7 +124,7 @@ async function contrastesSurPhoto(page: Page, bloc: string) {
         return meilleur;
       });
     },
-    { png, lignes },
+    { png, lignes, largeurDuBloc },
   );
   return lignes.map((l, i) => ({
     texte: l.texte,
@@ -160,7 +172,8 @@ describe("la vitrine", () => {
       return {
         bas: r.bottom,
         photos: imgs.length,
-        legendes: [...compo.querySelectorAll("figcaption")].map((f) => (f as HTMLElement).innerText.trim()),
+        // Lot P6 : le nom et le métier sont posés sur la photo.
+        legendes: [...compo.querySelectorAll("[data-texte-sur-photo]")].map((f) => (f as HTMLElement).innerText.trim()),
         cachees: imgs.every((i) => i.getAttribute("aria-hidden") === "true" && i.alt === ""),
         chargees: imgs.every((i) => i.complete && i.naturalWidth > 0),
         differees: [...document.querySelectorAll("[data-lieu-de-la-vitrine] img")].map((i) =>
@@ -182,26 +195,166 @@ describe("la vitrine", () => {
     await ctx.close();
   }, 60_000);
 
-  it("sur téléphone, « Commencer une partie » reste dans le premier écran, et la bande défile seule", async () => {
-    const ctx = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+  for (const [largeur, hauteur] of [
+    [390, 844],
+    [360, 740],
+  ] as const) {
+    it(`à ${largeur} × ${hauteur}, « Tester le simulateur » reste dans le premier écran, aligné sur l'autre bouton ; les lieux en 3 × 3`, async () => {
+      const ctx = await navigateur.newContext({
+        ...devices["iPhone 13"],
+        viewport: { width: largeur, height: hauteur },
+        locale: "fr-FR",
+      });
+      const page = await ctx.newPage();
+      await aller(page, "/");
+      const essai = page.getByRole("link", { name: "Tester le simulateur" }).first();
+      expect(await essai.getAttribute("href")).toBe("/jouer");
+      const a = (await essai.boundingBox())!;
+      expect(a.y + a.height, "le bouton du héros sort du premier écran").toBeLessThanOrEqual(hauteur);
+      // LOT P6 : les deux boutons du héros, mêmes bords et même hauteur.
+      const b = (await page.getByRole("link", { name: "Je suis enseignant" }).first().boundingBox())!;
+      expect(Math.abs(a.x - b.x), "bords gauches").toBeLessThanOrEqual(1);
+      expect(Math.abs(a.x + a.width - (b.x + b.width)), "bords droits").toBeLessThanOrEqual(1);
+      expect(Math.abs(a.height - b.height), "hauteurs").toBeLessThanOrEqual(1);
+      // La ligne sous les boutons ne promet plus la gratuité, et mène à l'offre.
+      const licence = page.getByRole("link", { name: "licence établissement" });
+      expect(await licence.getAttribute("href")).toBe("/rendez-vous");
+      expect(await page.locator("main").innerText()).not.toContain("Sans compte, sans installation");
+      // Les neuf lieux, en 3 × 3 sous les boutons, sans défilement de côté.
+      const grille = page.locator("[data-grille-des-lieux]");
+      await grille.scrollIntoViewIfNeeded();
+      const m = await grille.evaluate((g) => {
+        const tuiles = [...g.querySelectorAll("li")].map((li) => li.getBoundingClientRect());
+        const colonnes = new Set(tuiles.map((r) => Math.round(r.left))).size;
+        const rangees = new Set(tuiles.map((r) => Math.round(r.top))).size;
+        return {
+          tuiles: tuiles.length,
+          colonnes,
+          rangees,
+          apresLeBouton: g.compareDocumentPosition(document.querySelector("[data-cta-principal]")!) & 2,
+          page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        };
+      });
+      expect(m.tuiles).toBe(9);
+      expect(m.colonnes).toBe(3);
+      expect(m.rangees).toBe(3);
+      expect(m.apresLeBouton, "la grille ne vient pas après les boutons").toBeTruthy();
+      expect(m.page, "la page défile de côté").toBeLessThanOrEqual(0);
+      await ctx.close();
+    }, 60_000);
+  }
+
+  it("sur téléphone, les trois écrans d'un tour en carrousel : un à la fois, en entier, et le geste se voit", async () => {
+    const ctx = await navigateur.newContext({ ...devices["iPhone 13"], viewport: { width: 390, height: 844 }, locale: "fr-FR" });
     const page = await ctx.newPage();
     await aller(page, "/");
-    const bouton = (await page.getByRole("link", { name: "Commencer une partie" }).first().boundingBox())!;
-    expect(bouton.y + bouton.height).toBeLessThanOrEqual(page.viewportSize()!.height);
-    const bande = page.locator("[data-bande-des-lieux]");
-    await bande.scrollIntoViewIfNeeded();
-    const m = await bande.evaluate((b) => ({
-      defile: b.scrollWidth > b.clientWidth,
-      page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      accroche: getComputedStyle(b).scrollSnapType,
-      barre: getComputedStyle(b).scrollbarWidth,
-    }));
-    expect(m.defile, "la bande ne défile pas").toBe(true);
-    expect(m.page, "la page défile de côté").toBeLessThanOrEqual(0);
+    const cadre = page.locator("[data-carrousel-des-ecrans]");
+    await cadre.scrollIntoViewIfNeeded();
+    const mesure = () =>
+      cadre.evaluate((c) => {
+        const r = c.getBoundingClientRect();
+        const ecrans = [...c.children].map((e) => e.getBoundingClientRect());
+        // Ce qu'on voit de chaque écran, dans le cadre.
+        const vus = ecrans.map((e) => Math.max(0, Math.min(e.right, r.right) - Math.max(e.left, r.left)));
+        const capture = c.querySelector(".capture-decran") as HTMLElement;
+        const s = getComputedStyle(capture);
+        return {
+          ecrans: ecrans.length,
+          largeurs: ecrans.map((e) => Math.round(e.width)),
+          cadre: Math.round(r.width),
+          vus: vus.map(Math.round),
+          accroche: getComputedStyle(c).scrollSnapType,
+          barre: getComputedStyle(c).scrollbarWidth,
+          page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          position: (document.querySelector("[data-position-du-carrousel]") as HTMLElement).innerText.trim(),
+          points: document.querySelectorAll("[data-point-du-carrousel]").length,
+          zoom: s.backgroundSize,
+          forme: capture.getBoundingClientRect().height / capture.getBoundingClientRect().width,
+          largeurCapture: capture.getBoundingClientRect().width,
+          titres: [...c.children].map((e) => (e.querySelector("p") as HTMLElement).innerText.trim()),
+        };
+      });
+    const m = await mesure();
+    expect(m.ecrans).toBe(3);
+    expect(m.titres).toEqual(["L'arène", "La décision", "Le verdict"]);
     expect(m.accroche).toContain("x");
+    expect(m.accroche).toContain("mandatory");
     expect(m.barre).toBe("none");
+    expect(m.page, "la page défile de côté").toBeLessThanOrEqual(0);
+    // Un écran à la fois, en entier : le premier occupe tout le cadre, et
+    // AUCUN pixel du suivant n'y paraît.
+    for (const l of m.largeurs) expect(l).toBe(m.cadre);
+    expect(m.vus).toEqual([m.cadre, 0, 0]);
+    // Le geste se voit : « 1 / 3 », trois points, deux flèches de 44 px.
+    expect(m.position).toBe("1 / 3");
+    expect(m.points).toBe(3);
+    const precedent = page.getByRole("button", { name: "Écran précédent" });
+    const suivant = page.getByRole("button", { name: "Écran suivant" });
+    expect(await precedent.isDisabled()).toBe(true);
+    expect(await suivant.isEnabled()).toBe(true);
+    for (const f of [precedent, suivant]) {
+      const r = (await f.boundingBox())!;
+      expect(Math.min(r.width, r.height)).toBeGreaterThanOrEqual(44);
+    }
+    // Le texte des captures se lit : recadrée, agrandie de 10 %, en 4:5. Son
+    // plus petit texte (24 px dans le fichier de 800) paraît à ≥ 9 px.
+    expect(m.zoom).toMatch(/^110%( auto)?$/);
+    expect(m.forme).toBeCloseTo(1.25, 2);
+    expect((24 * m.largeurCapture * 1.1) / 800, "texte des captures sous 9 px").toBeGreaterThanOrEqual(9);
+    // Écran suivant : le deuxième, seul et entier ; puis le dernier éteint la flèche.
+    await suivant.click();
+    await page.waitForFunction(
+      () => (document.querySelector("[data-position-du-carrousel]") as HTMLElement).innerText.trim() === "2 / 3",
+    );
+    await page.waitForTimeout(700);
+    const m2 = await mesure();
+    expect(m2.vus).toEqual([0, m2.cadre, 0]);
+    expect(await precedent.isEnabled()).toBe(true);
+    await suivant.click();
+    await page.waitForTimeout(700);
+    expect((await mesure()).vus).toEqual([0, 0, m.cadre]);
+    expect(await suivant.isDisabled()).toBe(true);
+    // Au clavier : le cadre prend le focus et défile aux flèches.
+    await cadre.focus();
+    await page.keyboard.press("ArrowLeft");
+    await page.waitForTimeout(700);
+    expect((await mesure()).position).toBe("2 / 3");
     await ctx.close();
   }, 60_000);
+
+  for (const [nom, largeur, bloc] of [
+    ["les neuf lieux du téléphone", 390, "[data-grille-des-lieux]"],
+    ["la composition des lieux", 1280, "[data-composition-des-lieux]"],
+    ["les neuf métiers, plus bas", 1280, "[data-lieu-de-la-vitrine]"],
+  ] as const) {
+    it(`${nom} (${largeur}) : le nom posé sur chaque photo tient 4,5:1 sur sa zone la plus claire`, async () => {
+      const ctx = await navigateur.newContext(
+        largeur === 390
+          ? { ...devices["iPhone 13"], viewport: { width: 390, height: 844 }, locale: "fr-FR" }
+          : { viewport: { width: 1280, height: 800 }, locale: "fr-FR" },
+      );
+      const page = await ctx.newPage();
+      await aller(page, "/");
+      const fautes: string[] = [];
+      const codes = await page.locator(`${bloc} [data-tuile-du-lieu]`).evaluateAll((t) =>
+        t.map((e) => e.getAttribute("data-tuile-du-lieu")!),
+      );
+      expect(codes.length).toBeGreaterThanOrEqual(nom.startsWith("la composition") ? 3 : 9);
+      for (const code of codes) {
+        const tuile = `${bloc} [data-tuile-du-lieu="${code}"]`;
+        await page.locator(`${tuile} img`).scrollIntoViewIfNeeded();
+        await page.waitForFunction((sel) => {
+          const i = document.querySelector(sel) as HTMLImageElement | null;
+          return !!i && i.complete && i.naturalWidth > 0;
+        }, `${tuile} img`);
+        for (const l of await contrastesSurPhoto(page, tuile)) {
+          if (l.rapport < 4.5) fautes.push(`${code} « ${l.texte} » : ${l.rapport}`);
+        }
+      }
+      expect(fautes, fautes.join("\n")).toEqual([]);
+      await ctx.close();
+    }, 120_000);
+  }
 });
 
 describe("choisir son entreprise", () => {
@@ -233,6 +386,94 @@ describe("choisir son entreprise", () => {
     expect(lancements, "plus d'un bouton de lancement").toBe(1);
     await ctx.close();
   }, 60_000);
+
+  for (const [largeur, hauteur] of [
+    [390, 844],
+    [360, 740],
+  ] as const) {
+    it(`à ${largeur} px, le 3 × 3 revient : les neuf tuiles dans le premier écran après le titre de la carte, noms entiers`, async () => {
+      const ctx = await navigateur.newContext({
+        ...devices["iPhone 13"],
+        viewport: { width: largeur, height: hauteur },
+        locale: "fr-FR",
+      });
+      const page = await ctx.newPage();
+      await aller(page, "/jouer");
+      await page.getByRole("button", { name: /VOLT/ }).first().click();
+      // Le titre de la carte en haut de l'écran.
+      await page.locator("form h2").first().evaluate((h) => window.scrollTo(0, h.getBoundingClientRect().top + scrollY - 4));
+      await page.waitForTimeout(300);
+      const m = await page.evaluate(() => {
+        const titre = document.querySelector("form h2")!.getBoundingClientRect();
+        const cartes = [...document.querySelectorAll("[data-carte-entreprise]")].map((c) => c.getBoundingClientRect());
+        const resume = document.querySelector("[data-resume-de-lancement]")!.getBoundingClientRect();
+        const noms = [...document.querySelectorAll("[data-carte-entreprise] [data-texte-sur-photo]")].map((t) => {
+          const nom = t.children[1] as HTMLElement;
+          const tuile = t.closest("[data-tuile-du-lieu]")!.getBoundingClientRect();
+          const r = t.getBoundingClientRect();
+          const ligne = parseFloat(getComputedStyle(nom).lineHeight);
+          return {
+            texte: nom.innerText,
+            deborde: nom.scrollWidth > nom.clientWidth + 0.5,
+            lignes: Math.round(nom.getBoundingClientRect().height / ligne),
+            dedans: r.top >= tuile.top - 0.5 && r.bottom <= tuile.bottom + 0.5,
+            taille: parseFloat(getComputedStyle(nom).fontSize),
+          };
+        });
+        return {
+          titre: titre.top,
+          colonnes: new Set(cartes.map((c) => Math.round(c.left))).size,
+          bas: Math.max(...cartes.map((c) => c.bottom)),
+          plusPetite: Math.min(...cartes.map((c) => Math.min(c.width, c.height))),
+          resume: resume.top,
+          noms,
+          page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        };
+      });
+      expect(m.colonnes, "pas trois colonnes").toBe(3);
+      expect(m.titre).toBeLessThan(20);
+      expect(m.bas, `les neuf tuiles ne tiennent pas dans le premier écran (${m.bas} > ${m.resume})`).toBeLessThanOrEqual(m.resume);
+      expect(m.plusPetite, "cible sous 44 px").toBeGreaterThanOrEqual(44);
+      expect(m.page).toBeLessThanOrEqual(0);
+      for (const n of m.noms) {
+        expect(n.deborde, `${n.texte} déborde`).toBe(false);
+        expect(n.lignes, `${n.texte} sur ${n.lignes} lignes`).toBeLessThanOrEqual(2);
+        expect(n.dedans, `${n.texte} sort de sa tuile`).toBe(true);
+        expect(n.taille).toBeGreaterThanOrEqual(12);
+      }
+      // La tuile choisie : filet orange plein et coche, sur la photo.
+      const volt = page.locator('[data-carte-entreprise="fitness"]');
+      expect(await volt.getAttribute("aria-pressed")).toBe("true");
+      expect(await volt.locator("[data-coche]").isVisible()).toBe(true);
+      await ctx.close();
+    }, 60_000);
+  }
+
+  for (const largeur of [390, 1280] as const) {
+    it(`à ${largeur} px, le nom posé sur chacune des neuf photos tient 4,5:1 sur sa zone la plus claire`, async () => {
+      const ctx = await navigateur.newContext(
+        largeur === 390
+          ? { ...devices["iPhone 13"], viewport: { width: 390, height: 844 }, locale: "fr-FR" }
+          : { viewport: { width: 1280, height: 800 }, locale: "fr-FR" },
+      );
+      const page = await ctx.newPage();
+      await aller(page, "/jouer");
+      const fautes: string[] = [];
+      for (const code of Object.keys(PHOTOS_DES_ENTREPRISES)) {
+        const tuile = `[data-carte-entreprise] [data-tuile-du-lieu="${code}"]`;
+        await page.locator(`${tuile} img`).scrollIntoViewIfNeeded();
+        await page.waitForFunction((sel) => {
+          const i = document.querySelector(sel) as HTMLImageElement | null;
+          return !!i && i.complete && i.naturalWidth > 0;
+        }, `${tuile} img`);
+        for (const l of await contrastesSurPhoto(page, tuile)) {
+          if (l.rapport < 4.5) fautes.push(`${code} « ${l.texte} » : ${l.rapport}`);
+        }
+      }
+      expect(fautes, fautes.join("\n")).toEqual([]);
+      await ctx.close();
+    }, 120_000);
+  }
 });
 
 describe("l'ouverture de la partie, au tour 1", () => {

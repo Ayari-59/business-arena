@@ -9,7 +9,7 @@ import {
   type VitrineSolo,
 } from "@/config/vitrine-solo";
 import { Icone } from "@/components/icone";
-import { PhotoDuLieu } from "@/components/illustrations/scene-d-entreprise";
+import { TuileDuLieu } from "@/components/tuile-du-lieu";
 import type { Sector } from "@/config/scenarios/registry";
 
 /**
@@ -154,15 +154,27 @@ export function QuickConfigFields({
       {/* LES NEUF ENTREPRISES EN CARTES PHOTO (lot P2). Elles ont été neuf
           pictogrammes au trait dans des tuiles grises, alors que chacune a son
           lieu en photographie : la carte montre le lieu (la réduite, chargée à
-          l'approche de l'écran), le nom de l'entreprise, son métier dans sa
-          teinte et sa promesse, celle du registre (« Prenez les commandes »).
-          Trois colonnes sur ordinateur, deux sur tablette et téléphone.
+          l'approche de l'écran), le nom de l'entreprise, son métier et sa
+          promesse, celle du registre (« Prenez les commandes »).
+
+          LOT P6 : LE NOM SUR LA PHOTO, ET LE 3 × 3 DU TÉLÉPHONE REVIENT.
+          « Avant c'était une grille de 3 × 3 sur mobile… c'est plus
+          esthétique » ; « les photos sans texte sont sans âme » (le
+          propriétaire). Les cartes en deux colonnes du lot P2 se faisaient
+          défiler sur trois écrans de téléphone. Le nom et le métier passent
+          SUR la photo (`TuileDuLieu`, voile mesuré), ce qui permet, sous
+          640 px, trois colonnes de tuiles 4:5 : les neuf entreprises se voient
+          d'un coup d'œil, dans le premier écran après le titre de la carte
+          (tests/e2e/mise-en-scene.e2e.ts). L'accroche, qui ne tient pas dans
+          une tuile de 95 px, ne s'y montre pas ; sur tablette et ordinateur,
+          les cartes photo du lot P2 restent (2 puis 3 colonnes), le nom sur
+          la photo, l'accroche dessous.
 
           LA CARTE CHOISIE se reconnaît à un filet orange plein de deux pixels
           et à une coche (la règle de « l'option cochée » : une décision, la
           charte la range avec l'action), et non plus à un fond délavé. Elle
           reste un vrai contrôle : un bouton `aria-pressed`, au clavier. */}
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3">
+      <div data-grille-des-entreprises="" className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
         {scenarios.map((s) => {
           const on = s.code === scenario;
           return (
@@ -177,53 +189,61 @@ export function QuickConfigFields({
                 setLevel((n) => Math.min(n, niveauMaxPour(regle, s.code)));
               }}
               aria-pressed={on}
-              className={`group relative flex flex-col overflow-hidden rounded-xl border text-left transition ${
+              className={`group relative flex min-w-0 flex-col overflow-hidden rounded-lg border text-left transition sm:rounded-xl ${
                 on ? `${OPTION_COCHEE_CARTE} bg-slate-950` : "border-white/10 bg-slate-950 hover:border-white/30"
               }`}
             >
-              <span className="relative block overflow-hidden">
-                <PhotoDuLieu
-                  scenario={s.code}
+              <span className="relative block">
+                <TuileDuLieu
+                  code={s.code}
                   secteur={s.secteur}
-                  petit
-                  className="aspect-[3/2] w-full transition-transform duration-[var(--duree-passage)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                  nom={s.label}
+                  metier={s.sector}
+                  className="aspect-[4/5] sm:aspect-[3/2]"
+                  classePhoto="transition-transform duration-[var(--duree-passage)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                  classeTexte="px-3 pb-2.5 pt-6 sm:pb-3"
+                  classeNom="text-xs sm:text-base"
+                  classeMetier="text-xs sm:text-sm"
                 />
                 {on ? (
                   // La coche : l'option cochée, dite autrement que par la couleur.
                   <span
                     aria-hidden
                     data-coche=""
-                    className="coche-de-l-option absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full"
+                    className="coche-de-l-option absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full sm:right-2 sm:top-2 sm:h-7 sm:w-7"
                   >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12.5l4.5 4.5L19 7.5" />
                     </svg>
                   </span>
                 ) : null}
               </span>
-              <span className="flex flex-1 flex-col gap-0.5 px-3 pb-3 pt-2.5">
-                <span className="text-sm font-semibold leading-tight text-slate-100 sm:text-base">
-                  {s.label}
+              {s.promesse || regle.active ? (
+                // Sous la photo : l'accroche (au-delà du téléphone), et, vitrine
+                // allumée, jusqu'où l'entreprise se joue (partout : c'est une
+                // règle du choix, pas une décoration).
+                <span
+                  className={`flex flex-1 flex-col gap-0.5 sm:px-3 sm:pb-3 sm:pt-2 ${
+                    regle.active ? "px-2 pb-2 pt-1.5" : "max-sm:hidden"
+                  }`}
+                >
+                  {s.promesse ? (
+                    <span className="text-sm leading-snug text-slate-400 max-sm:hidden">{s.promesse}</span>
+                  ) : null}
+                  {regle.active ? (
+                    // Vitrine allumée : chaque carte dit jusqu'où elle se joue.
+                    <span
+                      className={`self-start rounded-full px-1.5 py-0.5 text-xs leading-none sm:mt-1.5 ${
+                        s.code === regle.entrepriseOuverte
+                          ? "bg-white/5 font-semibold text-slate-100"
+                          : "bg-white/5 text-slate-400"
+                      }`}
+                    >
+                      {s.code === regle.entrepriseOuverte ? "Tous niveaux" : `Niveaux 1-${niveauMaxPour(regle, s.code)}`}
+                    </span>
+                  ) : null}
                 </span>
-                <span className="text-xs font-medium leading-tight text-[color:var(--metier,var(--color-slate-300))] sm:text-sm">
-                  {s.sector}
-                </span>
-                {s.promesse ? (
-                  <span className="mt-1 text-xs leading-snug text-slate-400 sm:text-sm">{s.promesse}</span>
-                ) : null}
-                {regle.active ? (
-                  // Vitrine allumée : chaque carte dit jusqu'où elle se joue.
-                  <span
-                    className={`mt-1.5 self-start rounded-full px-1.5 py-0.5 text-xs leading-none ${
-                      s.code === regle.entrepriseOuverte
-                        ? "bg-white/5 font-semibold text-slate-100"
-                        : "bg-white/5 text-slate-400"
-                    }`}
-                  >
-                    {s.code === regle.entrepriseOuverte ? "Tous niveaux" : `Niveaux 1-${niveauMaxPour(regle, s.code)}`}
-                  </span>
-                ) : null}
-              </span>
+              ) : null}
             </button>
           );
         })}

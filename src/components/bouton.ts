@@ -79,6 +79,13 @@ const VARIANTES: Record<VarianteDeBouton, string> = {
 };
 
 /**
+ * LE LIEN DANS UNE PHRASE (lot P6) : la variante `lien`, sans la forme d'un
+ * bouton (ni `inline-flex` ni remplissage), pour qu'il suive la ligne de texte
+ * qui le porte. Même encre, même soulignement.
+ */
+export const LIEN_A_L_ENCRE = VARIANTES.lien;
+
+/**
  * Une taille donne la même hauteur aux trois variantes. La grande parle en 16
  * px (le plein y était agrandi par la feuille, le filet non) : 24 px
  * d'interligne, 2 × 10 px de remplissage et le pixel du bord, 46 px. Le

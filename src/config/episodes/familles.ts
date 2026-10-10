@@ -29,6 +29,12 @@ export interface Secteur {
    * `restauration` et l'agroalimentaire le jeton `transport` : ce choix fait
    * passer le plus petit écart entre les cinq de 3,3 à 6,9 (mesuré, les deux
    * côtés de la composition, déficience de vision comprise).
+   *
+   * LOT P6 : le jeton `services` est devenu un glacier (#12f8fe sur le marine),
+   * qui se confond en deutéranopie avec le mauve de l'e-commerce (1,5 d'écart).
+   * La santé, qui l'empruntait, prend le vert de l'abonnement : le pire écart
+   * des cinq (vision normale et déficiences, les deux côtés) passe de 1,5 à
+   * 5,35, au-dessus des 4,2 d'avant le lot, mesurés de la même façon.
    */
   teinte: string;
 }
@@ -60,7 +66,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "sante",
-    teinte: "ecommerce",
+    teinte: "abonnement",
     nom: "Santé et médico-social",
     entreprise: "Association Solvanne",
     texte:

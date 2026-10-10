@@ -34,6 +34,7 @@ import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
 const RACINE = process.cwd();
 const ACCUEIL = readFileSync(join(RACINE, "src", "app", "page.tsx"), "utf8");
 const GLOBALS = readFileSync(join(RACINE, "src", "app", "globals.css"), "utf8");
+const CARROUSEL = readFileSync(join(RACINE, "src", "components", "carrousel-des-ecrans.tsx"), "utf8");
 const ECRANS = ["arene", "decider", "resultats"];
 /**
  * Trois fichiers, un par écran. Il y en a eu six, du temps des deux thèmes :
@@ -114,15 +115,45 @@ describe("les captures de la page d'accueil", () => {
     expect(ACCUEIL).not.toContain("carte-du-fond");
     expect(GLOBALS).not.toContain(".carte-du-fond");
     expect(ACCUEIL).toMatch(/className="ardoise [^"]*bg-slate-950/);
-    expect(ACCUEIL).toContain("sm:grid-cols-3");
-    // SUR TÉLÉPHONE, UN SEUL ÉCRAN, AGRANDI (audit P2-09). Les trois défilaient
-    // de côté dans leur cadre, le texte des captures à six pixels : le verdict
-    // reste seul, en pleine largeur, les deux autres se retirent sous `sm`.
-    expect(ACCUEIL).not.toContain("snap-x");
-    expect(ACCUEIL).toContain('surTelephone ? "" : "max-sm:hidden"');
-    expect(ACCUEIL.match(/^\s*surTelephone$/gm) ?? [], "un seul écran sur téléphone").toHaveLength(
-      1,
+    // Au-delà de `sm`, côte à côte : la grille de trois est celle du cadre
+    // (lot P6 : le cadre est le carrousel du téléphone, voir plus bas).
+    expect(CARROUSEL).toMatch(/className="[^"]*\bsm:grid sm:grid-cols-3\b/);
+  });
+
+  it("sur téléphone, les trois écrans en carrousel : un à la fois, en entier, et le geste se voit", () => {
+    // L'AUDIT P2-09 (lot 3B) avait réduit le téléphone au seul verdict : les
+    // trois défilaient à 78 % de la largeur, texte des captures à six pixels,
+    // et le geste de côté n'était pas deviné. LOT P6 : le propriétaire veut
+    // les trois. Les deux défauts sont traités, et c'est ce que la garde tient
+    // (la mesure, elle, est dans tests/e2e/mise-en-scene.e2e.ts, à 390) :
+    //   · les trois écrans sont dans le cadre, aucun ne se retire sous `sm` ;
+    expect(ACCUEIL).toContain("<CarrouselDesEcrans");
+    for (const nom of ECRANS) expect(ACCUEIL).toContain(`nom="${nom}"`);
+    expect(ACCUEIL).not.toContain("surTelephone");
+    expect(ACCUEIL).not.toMatch(/max-sm:hidden[^\n]*\n?[^\n]*EcranDuTour/);
+    //   · un écran à la fois, en entier : le cadre défile de côté cran par
+    //     cran, sans barre, et chaque écran en prend toute la largeur ;
+    expect(CARROUSEL).toMatch(/className="flex snap-x snap-mandatory [^"]*overflow-x-auto[^"]*\[scrollbar-width:none\]/);
+    expect(ACCUEIL).toMatch(/<li className="flex w-full shrink-0 snap-start/);
+    //   · le geste se voit : deux flèches nommées, trois points, « 1 / 3 » ;
+    expect(CARROUSEL).toContain('aria-label="Écran précédent"');
+    expect(CARROUSEL).toContain('aria-label="Écran suivant"');
+    expect(CARROUSEL).toContain("disabled={courant === 0}");
+    expect(CARROUSEL).toContain("disabled={courant === total - 1}");
+    expect(CARROUSEL).toContain("{courant + 1} / {total}");
+    expect(CARROUSEL).toMatch(/const fleche =\s*"grid h-11 w-11/);
+    //   · le cadre se lit au clavier ;
+    expect(CARROUSEL).toMatch(/<ol\s+ref=\{cadre\}[\s\S]*?tabIndex=\{0\}/);
+    //   · la capture est recadrée et agrandie sur téléphone ;
+    expect(GLOBALS).toMatch(
+      /@media \(max-width: 639\.98px\) \{\s*\.capture-decran\[data-recadrage\] \{[^}]*background-size: 110% auto/,
     );
+    expect(ACCUEIL.match(/cadrage="[^"]+"/g) ?? []).toHaveLength(3);
+    //   · et la légende dit les trois écrans, sur téléphone aussi.
+    expect(ACCUEIL).toContain(
+      "Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.",
+    );
+    expect(ACCUEIL).not.toContain("Le verdict d&apos;un tour : ce que le marché");
   });
 
   it("disent ce qu'on y voit, pour qui ne les voit pas", () => {

@@ -7,7 +7,7 @@ import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { Icone } from "@/components/icone";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
-import { bouton } from "@/components/bouton";
+import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
 import { DonneesStructurees } from "@/components/donnees-structurees";
 import { Bande } from "@/components/bande";
@@ -17,7 +17,8 @@ import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ReprendreALAccueil } from "@/components/reprendre-a-laccueil";
 import { BandeauDeLaPartie, EpisodeEtClassement } from "@/components/accueil-arene";
-import { BandeDesLieux, CompositionDesLieux, LesNeufLieux } from "@/components/lieux-de-la-vitrine";
+import { CompositionDesLieux, GrilleDesLieux, LesNeufLieux } from "@/components/lieux-de-la-vitrine";
+import { CarrouselDesEcrans } from "@/components/carrousel-des-ecrans";
 
 // La landing ne lit que la configuration de plateforme (rien par utilisateur) :
 // on la met en cache et on la régénère au plus toutes les 5 min (ISR) plutôt
@@ -126,31 +127,39 @@ const CARTE = { largeur: 800, hauteur: 1120 };
  * LE NOM N'EST PAS NUMÉROTÉ. La chaîne des six temps, juste au-dessus, ne
  * l'est pas non plus sur grand écran, et deux comptes qui ne disent pas la
  * même chose sur un même écran se contrediraient.
+ *
+ * SUR TÉLÉPHONE, LA CAPTURE EST RECADRÉE (lot P6). Entière, à la largeur d'un
+ * téléphone, son plus petit texte (12 px dans l'application, 24 px dans le
+ * fichier) tombait sous 9 px. Elle est agrandie de 10 % (`zoom`) dans un
+ * cadre 4:5, et cadrée sur sa zone la plus parlante (`cadrage`) : les trois
+ * chiffres de l'arène, la vente et la capacité de la décision, le verdict.
  */
 function EcranDuTour({
   nom,
   titre,
   alt,
-  surTelephone = false,
+  cadrage,
 }: {
   nom: string;
   titre: string;
   alt: string;
-  /** Le seul écran montré sur un téléphone, en pleine largeur. */
-  surTelephone?: boolean;
+  /** La position du fond sur téléphone (« 50% 0% » : le haut de la capture). */
+  cadrage: string;
 }) {
   return (
-    <li className={`flex flex-col gap-3 ${surTelephone ? "" : "max-sm:hidden"}`}>
+    <li className="flex w-full shrink-0 snap-start flex-col gap-3 sm:w-auto">
       <p className="text-sm font-semibold text-slate-200">{titre}</p>
       <div className="overflow-hidden rounded-md border border-white/15 bg-slate-900">
         <div
           role="img"
           aria-label={alt}
+          data-recadrage=""
           className="capture-decran w-full"
           style={
             {
               aspectRatio: `${CARTE.largeur} / ${CARTE.hauteur}`,
               "--ecran": `url(/apercus/${nom}.webp)`,
+              "--cadrage-telephone": cadrage,
             } as React.CSSProperties
           }
         />
@@ -212,7 +221,7 @@ const CE_QUE_L_ELEVE_APPREND = [
  * L'ORDRE EST CELUI DE LA LÉGENDE : l'écran où l'élève passe son temps, puis
  * les deux moments d'un tour dans l'ordre où on les joue — on décide, puis on
  * lit le verdict. Sur téléphone, les trois écrans défilent de côté dans leur
- * propre cadre, la page ne bouge pas.
+ * propre cadre, un à la fois, la page ne bouge pas (`CarrouselDesEcrans`).
  *
  * LES TROIS ÉCRANS SONT DÉCRITS. Qui ne voit pas la page n'a que ces trois
  * phrases pour savoir ce que montre l'application : elles disent les chiffres
@@ -220,31 +229,35 @@ const CE_QUE_L_ELEVE_APPREND = [
  */
 function TroisEcrans() {
   return (
-    <figure className="ardoise m-0 mt-14 rounded-md border-t-[3px] border-slate-500 bg-slate-950 p-5 sm:p-8">
-      {/* SUR TÉLÉPHONE, UN SEUL ÉCRAN, AGRANDI (audit P2-09). Les trois
-          défilaient de côté dans leur cadre, à 78 % de la largeur : le texte des
-          captures y tombait à six pixels, illisible, et le geste de côté n'était
-          pas deviné. Le téléphone montre le verdict seul, en pleine largeur :
-          c'est l'écran qui dit ce que le jeu fait, et le seul qui se lise à
-          cette taille. Au-delà, les trois écrans se posent côte à côte. */}
-      <ol className="grid gap-5 sm:grid-cols-3 sm:gap-6">
+    <figure className="ardoise m-0 mt-14 rounded-md border-t-[3px] border-slate-500 bg-slate-950 p-4 sm:p-8">
+      {/* SUR TÉLÉPHONE, LES TROIS ÉCRANS REVIENNENT, UN À LA FOIS (lot P6).
+          L'audit P2-09 les avait réduits au seul verdict : à 78 % de la
+          largeur, le texte des captures tombait à six pixels, et le geste de
+          côté n'était pas deviné. Le propriétaire veut les trois. Chaque
+          écran prend toute la largeur du cadre (rien du suivant ne dépasse),
+          recadré et agrandi pour que son texte se lise (≥ 9 px apparents),
+          et le geste se dit sous le cadre : flèches, points et « 1 / 3 ».
+          Au-delà, les trois écrans se posent côte à côte. */}
+      <CarrouselDesEcrans titres={["L'arène", "La décision", "Le verdict"]}>
         <EcranDuTour
           nom="arene"
           titre="L'arène"
+          cadrage="50% 0%"
           alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 319 914 €, résultat 32 942 €, trésorerie 89 869 €, et le tour en cours à jouer."
         />
         <EcranDuTour
           nom="decider"
           titre="La décision"
+          cadrage="50% 19%"
           alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 3 800 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré."
         />
         <EcranDuTour
           nom="resultats"
           titre="Le verdict"
-          surTelephone
+          cadrage="50% 100%"
           alt="Le verdict du tour 3 : 32 942 € de bénéfice, 11 977 € de plus qu'au tour précédent, 1re sur 3 équipes avec un IPG de 58, et deux réussites obtenues."
         />
-      </ol>
+      </CarrouselDesEcrans>
       {/*
         LA LÉGENDE DIT CE QUE L'IMAGE NE PEUT PAS DIRE : que les trois écrans
         sont ceux d'UN MÊME TOUR. Le verdict montré est celui du tour qu'on
@@ -252,12 +265,7 @@ function TroisEcrans() {
         images une démonstration plutôt qu'une galerie.
       */}
       <figcaption className="mt-5 text-sm leading-relaxed text-slate-300">
-        <span className="max-sm:hidden">
-          Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.
-        </span>
-        <span className="sm:hidden">
-          Le verdict d&apos;un tour : ce que le marché a répondu aux décisions de l&apos;équipe.
-        </span>
+        Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.
       </figcaption>
     </figure>
   );
@@ -401,21 +409,35 @@ export default async function Home() {
             valaient.
           </p>
           {/*
-              DEUX BOUTONS, ET UN SEUL PLEIN. « Commencer une partie » est
+              DEUX BOUTONS, ET UN SEUL PLEIN. « Tester le simulateur » est
               l'action de la page : l'orange vif. « Je suis enseignant » est
               l'autre porte d'entrée : le bouton SECONDAIRE, un filet fin, de la
               même hauteur, du même rayon et de la même graisse que le plein
               (lot P1).
 
-              Le libellé du bouton plein reste celui d'avant (la maquette dit
-              « Entrer dans l'arène ») : tests/e2e/contraste.e2e.ts le cherche
-              pour mesurer sa lisibilité.
+              Le libellé du bouton plein a été « Commencer une partie » (la
+              maquette disait « Entrer dans l'arène ») ; il est « Tester le
+              simulateur » depuis le lot P6 : tests/e2e/contraste.e2e.ts le
+              cherche pour mesurer sa lisibilité.
             */}
-          <div data-cta-principal className="mt-8 flex flex-wrap items-center gap-4">
-            <Link href="/jouer" className={bouton({ taille: "l" })}>
-              Commencer une partie
+          {/* LOT P6 : « TESTER LE SIMULATEUR », ET DEUX BOUTONS ALIGNÉS.
+              « Commencer une partie » donnait l'impression que tout était
+              gratuit (le propriétaire) : le bouton dit ce qu'on y fait, un
+              essai, et mène au même endroit (/jouer). Ses doubles de la
+              vitrine (la barre d'action du téléphone) disent la même chose.
+              Les deux boutons étaient empilés en largeurs inégales sur un
+              téléphone : ils prennent désormais la largeur de la colonne,
+              mêmes bords à gauche et à droite, même hauteur ; au-delà, côte à
+              côte, en deux colonnes égales (grille), même hauteur. Mesuré à
+              390 et 360 px (tests/e2e/mise-en-scene.e2e.ts). */}
+          <div
+            data-cta-principal
+            className="mt-8 grid grid-cols-1 gap-3 sm:inline-grid sm:grid-cols-2 sm:gap-4"
+          >
+            <Link href="/jouer" className={`${bouton({ taille: "l" })} w-full`}>
+              Tester le simulateur
             </Link>
-            <Link href="/teacher/login" className={bouton({ variante: "secondaire", taille: "l" })}>
+            <Link href="/teacher/login" className={`${bouton({ variante: "secondaire", taille: "l" })} w-full`}>
               Je suis enseignant
             </Link>
           </div>
@@ -423,11 +445,23 @@ export default async function Home() {
               boutons : l'accueil reste statique et celui de tout le monde ; l'îlot
               lit le cookie de l'appareil et ne rend rien s'il n'y a rien à reprendre. */}
           <ReprendreALAccueil />
-          <p className="mt-5 text-sm text-slate-400">
-            Sans compte, sans installation. Vos parties restent liées à ce navigateur.
+          {/* LOT P6 : LA LIGNE NE PROMET PLUS LA GRATUITÉ. « Sans compte, sans
+              installation » laissait croire que tout était offert. Elle dit
+              ce qui l'est (une partie d'essai, en solo) et comment l'arène se
+              prend pour une classe : en licence d'établissement, dont on
+              parle de vive voix (/rendez-vous : trente minutes au téléphone ;
+              aucune page du site ne publie de prix, et celle-ci n'en invente
+              aucun). Le lien est à l'encre, souligné (variante `lien`). */}
+          <p className="mt-5 text-sm leading-relaxed text-slate-400">
+            Une partie d&apos;essai en solo, sans compte ni installation. Pour vos classes,
+            l&apos;arène se prend en{" "}
+            <Link href="/rendez-vous" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
+              licence établissement
+            </Link>
+            .
           </p>
-          {/* Sous `lg`, les lieux en bande de vignettes, sous les boutons. */}
-          <BandeDesLieux className="mt-7 lg:hidden" />
+          {/* Sous `lg`, les neuf lieux en grille de 3 × 3, sous les boutons. */}
+          <GrilleDesLieux className="mt-7 lg:hidden" />
             </div>
             <CompositionDesLieux className="hidden lg:grid" />
           </div>

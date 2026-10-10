@@ -195,7 +195,11 @@ describe("la barre d'action basse", () => {
     await page.evaluate(() => window.scrollTo(0, 1400));
     await page.waitForFunction(() => !document.querySelector("[data-barre-action]")?.hasAttribute("inert"));
     // UN SEUL BOUTON, DE 48 PX (audit P3-09) : l'appel de la page, jouer.
-    await barre.getByRole("link", { name: "Jouer maintenant" }).waitFor({ state: "visible" });
+    // Lot P6 : sur la vitrine, il redit le bouton du héros, « Tester le
+    // simulateur », et mène au même endroit.
+    const appel = barre.getByRole("link", { name: "Tester le simulateur" });
+    await appel.waitFor({ state: "visible" });
+    expect(await appel.getAttribute("href")).toBe("/jouer");
     expect(await barre.getByRole("link").count(), "un seul lien dans la barre").toBe(1);
     const hauteur = (await barre.getByRole("link").boundingBox())!.height;
     expect(hauteur, `bouton de ${hauteur} px`).toBeGreaterThanOrEqual(48);

@@ -667,13 +667,16 @@
  *     #f5f7fb, champ du marine #1b416f, relevé #13355f, ardoise #0b2545) et
  *     sous l'encre qui se pose dessus.
  *   - LES NEUF FAMILLES, DANS UN ORDRE FIXE (hôtellerie, bâtiment,
- *     e-commerce, services, transport, commerce, abonnement, restauration,
- *     industrie), tiennent la porte de la compétence entre voisins : 15
- *     d'écart en vision normale et 8 en protanopie comme en deutéranopie
- *     (mesuré : 16,1 et 8,4 sur le marine, 18,2 et 11,2 sur le papier). Le lot
- *     5A n'atteignait pas cette porte du tout.
+ *     e-commerce, abonnement, transport, commerce, services, restauration,
+ *     industrie — lot P6 : services et abonnement ont échangé leur place,
+ *     ordre ré-dérivé par énumération des 9! ordres), tiennent la porte de
+ *     la compétence entre voisins : 15 d'écart en vision normale et 8 en
+ *     protanopie comme en deutéranopie (mesuré au lot P6 : 16,1 et 8,1 sur
+ *     le marine, 18,2 et 10,5 sur le papier). Le lot 5A n'atteignait pas
+ *     cette porte du tout.
  *   - deux à deux, les neuf sont à 5,1 au moins sur le marine et 7,0 sur le
- *     papier (lot 5A : 3,0 et 1,9). Quinze couleurs franches ne peuvent pas
+ *     papier (lot 5A : 3,0 et 1,9 ; lot P6 : 5,1 et 8,4, les trois teintes
+ *     refaites étant à 17 au moins de toutes les autres sur le marine). Quinze couleurs franches ne peuvent pas
  *     être deux à deux à 15 — c'est le plafond de séries que la compétence
  *     décrit — d'où l'ordre fixe, et d'où le fait qu'un métier porte TOUJOURS
  *     son nom et son pictogramme : l'identité ne tient jamais à la couleur
@@ -685,6 +688,29 @@
  *     bleu acier, et une couleur franche s'en approche fatalement là où une
  *     couleur délavée s'en éloignait. La série du joueur porte pour cela une
  *     étiquette directe et un trait plus épais (charts.tsx).
+ *
+ * LOT P6 : TROIS VERTS N'ÉTAIENT QU'UN. Services (#b8fc85), abonnement
+ * (#b1e566) et bâtiment (#acd048) tenaient dans 12° de teinte : 5,6 à 11,8
+ * d'écart perçu entre eux sur le marine, 7,0 sur le papier — « la même
+ * couleur », disait le propriétaire. Il n'en reste qu'un, l'abonnement (VOLT
+ * FITNESS : #b8fc85 sur le marine, #567d01 sur le papier). Les deux autres
+ * ont été CHERCHÉS PAR LA MESURE (grille OKLCH, toutes les gardes de ce bloc
+ * appliquées ; outils et journaux dans le scratchpad du lot) :
+ *   - services (ATLAS CONSEIL) : un GLACIER, #12f8fe sur le marine (198°),
+ *     #2a69cb sur le papier (259°). La sarcelle (175-190°) n'existe pas sur
+ *     le papier : à 4,5:1 sur le blanc, sa chroma plafonne à 0,100 vers 174°
+ *     et tombe dessous au-delà, et elle s'y lit à 4,6 d'écart du vert de
+ *     gain (#0f7a46). Le glacier tourne donc vers l'azur côté papier (même
+ *     famille froide) : c'est le seul écart de teinte entre les deux côtés.
+ *   - bâtiment (MARTEL & FILS) : un SABLE, #b6b262 sur le marine (106°,
+ *     chroma 0,103, au plancher), #505901 sur le papier (116°). Plus chaud et
+ *     plus sourd que le vert, à 23° de l'or : la teinte du chantier.
+ * Sur le marine, chacune des trois est à 17 d'écart au moins de chacun des
+ * huit autres métiers (vision normale). Sur le papier, la plus petite paire
+ * des trois est sable / vert, 11,0 : avec les six encres foncées existantes
+ * et ces gardes, AUCUN trio de teintes nouvelles n'y dépasse 9,8 (14,5 en
+ * renonçant aux 20° des accents) — 15 n'y est pas atteignable ; la garde
+ * « deux à deux » est réglée sur la mesure (palette-des-donnees.test.ts).
  *
  * NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS. Le joueur choisit parmi NEUF
  * entreprises (`SCENARIO_CHOICES` du registre) ; les six autres codes de
@@ -701,9 +727,11 @@
   --secteur-ecommerce: #fcb9ff;
   --secteur-hotellerie: #cbabff;
   --secteur-restauration: #ffa2c3;
-  --secteur-services: #b8fc85;
-  --secteur-abonnement: #b1e566;
-  --secteur-batiment: #acd048;
+  /* Lot P6 : services (ATLAS) passe au glacier, bâtiment (MARTEL) au sable,
+     l'abonnement (VOLT) garde LE vert (voir « LOT P6 » plus haut). */
+  --secteur-services: #12f8fe;
+  --secteur-abonnement: #b8fc85;
+  --secteur-batiment: #b6b262;
   --secteur-transport: #7fbaff;
   /* La gamme d'une entreprise, c'est la même entreprise. */
   --secteur-nova-gamme: var(--secteur-industrie);
@@ -1134,9 +1162,9 @@ body {
   --secteur-ecommerce: #6c1072;
   --secteur-hotellerie: #46097a;
   --secteur-restauration: #8c094e;
-  --secteur-services: #2c5100;
+  --secteur-services: #2a69cb;
   --secteur-abonnement: #567d01;
-  --secteur-batiment: #4c6100;
+  --secteur-batiment: #505901;
   --secteur-transport: #003d75;
   /* La gamme d'une entreprise, c'est la même entreprise. */
   --secteur-nova-gamme: var(--secteur-industrie);
@@ -1580,6 +1608,22 @@ body {
   background-position: top center;
   background-repeat: no-repeat;
   background-size: 100% auto;
+}
+
+/* LES TROIS ÉCRANS SUR TÉLÉPHONE (lot P6) : un à la fois, en carrousel, et
+   chacun RECADRÉ pour que son texte se lise. La capture entière, à la largeur
+   d'un téléphone (≈ 290 à 330 px), réduisait son plus petit texte (24 px dans
+   le fichier de 800) sous 9 px ; agrandie de 10 % dans un cadre 4:5 et cadrée
+   sur sa zone la plus parlante (`--cadrage-telephone`, posé par la page), il
+   passe à 9,2 px à 360 px de large et 10,2 px à 390 (mesuré). Le rapport de forme
+   écrit dans la page (celui des fichiers, pour réserver la place) cède ici
+   au cadre du téléphone. */
+@media (max-width: 639.98px) {
+  .capture-decran[data-recadrage] {
+    aspect-ratio: 4 / 5 !important;
+    background-size: 110% auto;
+    background-position: var(--cadrage-telephone, 50% 0%);
+  }
 }
 
 /*
@@ -3804,6 +3848,23 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
     rgb(6 21 41 / 0.92) 68%,
     rgb(6 21 41 / 0.6) 86%,
     rgb(6 21 41 / 0.2) 100%
+  );
+}
+
+/* LOT P6 : LE LIEU ET SON NOM (`TuileDuLieu` : /jouer, vitrine). Le nom et le
+   métier se posent en bas de la photo ; le voile monte du bas, dense sous le
+   texte (jusqu'à la moitié de la hauteur, là où tient le nom sur deux lignes
+   dans une tuile de téléphone), et laisse la photo libre en haut, où se pose
+   la coche d'une carte choisie. Mesuré, texte masqué, au pixel le plus clair
+   sous chaque ligne, sur les neuf photos (tests/e2e/mise-en-scene.e2e.ts). */
+.voile-du-lieu {
+  background-image: linear-gradient(
+    to top,
+    rgb(6 21 41 / 0.92) 0%,
+    rgb(6 21 41 / 0.84) 38%,
+    rgb(6 21 41 / 0.62) 56%,
+    rgb(6 21 41 / 0.18) 78%,
+    rgb(6 21 41 / 0) 100%
   );
 }
 

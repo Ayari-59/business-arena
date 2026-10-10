@@ -233,7 +233,7 @@ export function SiteHeader() {
                   // code garde le filet (« Rejoindre une partie ») ; l'espace
                   // enseignant devient un lien souligné, comme les rubriques à
                   // sa gauche. Le seul bouton plein du premier écran reste
-                  // « Commencer une partie », dans le héros.
+                  // « Tester le simulateur » (lot P6), dans le héros.
                   lien.acces === "eleve"
                     ? bouton({ variante: "secondaire", taille: "m" })
                     : `${bouton({ variante: "lien", taille: "m" })} px-2`

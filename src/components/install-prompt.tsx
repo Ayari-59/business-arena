@@ -34,7 +34,7 @@ import { Icone } from "@/components/icone";
  * sur l'appareil (un tour résolu ou une partie terminée : le témoin que pose
  * l'arène, `lib/partie-jouee.ts`), et elle s'efface — glissée sous le bord —
  * tant qu'un bouton d'action passe sous elle : elle ne se pose jamais
- * par-dessus « Commencer une partie » ni sur aucun autre bouton.
+ * par-dessus « Tester le simulateur » ni sur aucun autre bouton.
  */
 
 type BeforeInstallPromptEvent = Event & {

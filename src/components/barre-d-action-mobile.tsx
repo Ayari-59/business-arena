@@ -31,6 +31,9 @@ const PAGES_ENSEIGNANTS = ["/enseignants", "/animations", "/parcours"];
 
 const CLE_FERMEE = "barre-action-fermee";
 
+/** Le bouton du héros de la vitrine, que la barre redit sur cette page (lot P6). */
+export const LIBELLE_DE_LA_VITRINE = "Tester le simulateur";
+
 /** La fermeture vit dans sessionStorage ; ce petit abonnement la rend lisible sans état local. */
 const ECOUTEURS = new Set<() => void>();
 function lireFermee(): boolean {
@@ -94,7 +97,16 @@ export function BarreDActionMobile() {
   // L'appel de la page : jouer, sur les pages générales (c'est celui de leur
   // héros et de leur bande finale) ; choisir sa simulation, côté enseignants.
   const jouer = NAVIGATION.flatMap((g) => g.liens).find((l) => l.href === "/jouer");
-  const appel = quoi === "enseignant" ? ACTION_PRINCIPALE : jouer;
+  // LOT P6 : SUR LA VITRINE, LA BARRE REDIT LE BOUTON DU HÉROS. Elle prend le
+  // relais de « Tester le simulateur » quand il quitte l'écran ; elle le dit
+  // donc avec ses mots, pas avec ceux du menu (« Jouer maintenant », qui reste
+  // le libellé des autres pages générales).
+  const appel =
+    quoi === "enseignant"
+      ? ACTION_PRINCIPALE
+      : jouer && chemin === "/"
+        ? { ...jouer, libelle: LIBELLE_DE_LA_VITRINE }
+        : jouer;
   if (!appel) return null;
 
   const fermer = () => {

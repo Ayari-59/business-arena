@@ -12,7 +12,8 @@ import {
 } from "@/components/illustrations/scene-d-entreprise";
 import { QuickConfigFields } from "@/components/quick-config-form";
 import { OuvertureDeLaPartie } from "@/components/ouverture-de-la-partie";
-import { CompositionDesLieux, BandeDesLieux, LesNeufLieux } from "@/components/lieux-de-la-vitrine";
+import { CompositionDesLieux, GrilleDesLieux, LesNeufLieux } from "@/components/lieux-de-la-vitrine";
+import { TuileDuLieu } from "@/components/tuile-du-lieu";
 import { SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
 
@@ -36,6 +37,11 @@ import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentat
  *   · au tour 1, l'ouverture remplace l'ardoise vide, et il n'y a qu'une
  *     photo à l'écran ; sur téléphone, le lieu ouvre le briefing ;
  *   · l'entrée du lieu est coupée par « moins de mouvement ».
+ *
+ * LOT P6 « NEUF LIEUX QUI PARLENT » : le nom et le métier passent SUR la
+ * photo (`TuileDuLieu`, voile mesuré, teinte dans un trait), à /jouer comme
+ * sur la vitrine ; /jouer revient à la grille de 3 × 3 sur téléphone, et la
+ * bande des lieux de la vitrine devient une grille de 3 × 3.
  *
  * Le bilan (rang dit une fois, podium à trois hauteurs, « tour le plus
  * maîtrisé ») est gardé par tests/unit/bilan-de-partie.test.ts ; le contraste
@@ -118,15 +124,33 @@ describe("choisir son entreprise : neuf cartes photo", () => {
     }
   });
 
-  it("chaque carte dit le nom, le métier dans sa teinte, et la promesse du registre", () => {
+  it("chaque carte dit le nom et le métier SUR la photo, la teinte dans un trait, et la promesse du registre", () => {
     for (const s of SCENARIOS_DE_JOUER) {
       const carte = cartes.find((c) => c[1] === s.code)![0];
       expect(carte).toContain(`data-metier="${s.teinte}"`);
-      expect(carte).toContain(s.label.replace(/'/g, "&#x27;").replace(/&(?!#)/g, "&amp;"));
-      expect(carte).toContain(s.sector);
+      // Lot P6 : le nom et le métier sont dans le bloc posé sur la photo,
+      // et la photo est dans la même tuile.
+      const tuile = carte.slice(carte.indexOf("data-tuile-du-lieu"));
+      expect(tuile).toMatch(/<img[^>]*data-lieu-photo/);
+      const surPhoto = tuile.slice(tuile.indexOf("data-texte-sur-photo"));
+      expect(surPhoto).toContain(s.label.replace(/'/g, "&#x27;").replace(/&(?!#)/g, "&amp;"));
+      expect(surPhoto).toContain(s.sector);
+      // La teinte ne s'écrit pas sur la photo : elle est dans le trait.
+      expect(surPhoto).toContain("data-trait-du-metier");
+      expect(surPhoto).not.toMatch(/text-\[color:var\(--metier/);
       expect(s.promesse, s.code).toBeTruthy();
       expect(carte).toContain(s.promesse!.replace(/'/g, "&#x27;"));
     }
+  });
+
+  it("sur téléphone, trois colonnes de tuiles ; deux puis trois colonnes de cartes au-delà", () => {
+    const grille = CHOIX.match(/<div data-grille-des-entreprises=""[^>]*class="([^"]+)"/)?.[1] ?? "";
+    expect(grille.split(" ")).toEqual(expect.arrayContaining(["grid", "grid-cols-3", "sm:grid-cols-2", "lg:grid-cols-3"]));
+    // L'accroche ne se pose pas dans une tuile de téléphone.
+    const carte = cartes[0]![0];
+    const accroche = carte.slice(carte.lastIndexOf("<span", carte.indexOf(SCENARIOS_DE_JOUER[0]!.promesse!)));
+    expect(accroche).toMatch(/max-sm:hidden|^<span class="[^"]*"/);
+    expect(carte).toMatch(/class="[^"]*max-sm:hidden[^"]*"><span[^>]*>Prenez les commandes/);
   });
 
   it("la carte choisie : un filet plein et une coche, pas un fond délavé ; une seule à la fois", () => {
@@ -160,29 +184,52 @@ describe("la vitrine montre ses lieux", () => {
     expect(ACCUEIL).not.toContain("<HaloDePage");
     const heros = ACCUEIL.slice(ACCUEIL.indexOf('id="accueil.hero"'), ACCUEIL.indexOf("<BandeauDeLaPartie"));
     expect(heros).toContain("<CompositionDesLieux");
-    expect(heros).toContain("<BandeDesLieux");
+    expect(heros).toContain("<GrilleDesLieux");
     // Le titre vient avant les photos dans le document : il est lu d'abord.
     expect(heros.indexOf("<h1")).toBeLessThan(heros.indexOf("<CompositionDesLieux"));
-    // Et la bande du téléphone vient APRÈS « Commencer une partie ».
-    expect(heros.indexOf("Commencer une partie")).toBeLessThan(heros.indexOf("<BandeDesLieux"));
+    // Et la grille du téléphone vient APRÈS le bouton du héros (lot P6 :
+    // « Tester le simulateur », qui remplace « Commencer une partie »).
+    expect(heros).not.toMatch(/>\s*Commencer une partie\s*</);
+    expect(heros.indexOf("Tester le simulateur")).toBeGreaterThan(0);
+    expect(heros.indexOf("Tester le simulateur")).toBeLessThan(heros.indexOf("<GrilleDesLieux"));
   });
 
-  it("la composition : trois ou quatre lieux, légendés en vrai texte, chargés d'emblée", () => {
+  it("la composition : trois ou quatre lieux, nommés en vrai texte SUR la photo, chargés d'emblée", () => {
     const html = renderToStaticMarkup(createElement(CompositionDesLieux));
     const lieux = html.match(/<figure/g) ?? [];
     expect(lieux.length).toBeGreaterThanOrEqual(3);
     expect(lieux.length).toBeLessThanOrEqual(4);
-    expect(html.match(/<figcaption/g) ?? []).toHaveLength(lieux.length);
+    // Lot P6 : plus de légende sous la photo ; un texte sur la photo par lieu.
+    expect(html.match(/data-texte-sur-photo/g) ?? []).toHaveLength(lieux.length);
+    expect(html.match(/data-trait-du-metier/g) ?? []).toHaveLength(lieux.length);
     expect(html.match(/data-metier="/g) ?? []).toHaveLength(lieux.length);
     expect(html).not.toContain('loading="lazy"');
   });
 
-  it("la bande du téléphone défile seule, cran par cran, sans barre", () => {
-    const html = renderToStaticMarkup(createElement(BandeDesLieux));
-    expect(html).toMatch(/class="[^"]*\bsnap-x\b[^"]*\boverflow-x-auto\b/);
-    expect(html).toContain("[scrollbar-width:none]");
-    expect(html.match(/snap-start/g) ?? []).toHaveLength(SCENARIO_CHOICES.length);
+  it("sur téléphone, les neuf lieux en grille de 3 × 3, nommés sur la photo, la réduite seule", () => {
+    const html = renderToStaticMarkup(createElement(GrilleDesLieux));
+    expect(html).toMatch(/<ul data-grille-des-lieux=""[^>]*class="[^"]*\bgrid grid-cols-3\b/);
+    expect(html.match(/<li/g) ?? []).toHaveLength(SCENARIO_CHOICES.length);
+    expect(html.match(/data-texte-sur-photo/g) ?? []).toHaveLength(SCENARIO_CHOICES.length);
     expect(html).toContain(`src="${fichierDeLaPhoto("nova", true)}"`);
+    expect(html).not.toContain("srcSet");
+    // Sous la ligne de flottaison : elles attendent l'écran.
+    expect(html.match(/loading="lazy"/g) ?? []).toHaveLength(SCENARIO_CHOICES.length);
+  });
+
+  it("la tuile du lieu : photo décorative, voile, nom et métier en vrai texte, teinte dans un trait", () => {
+    const html = renderToStaticMarkup(
+      createElement(TuileDuLieu, { code: "fitness", nom: "VOLT FITNESS", metier: "Abonnement" }),
+    );
+    expect(html).toMatch(/^<span data-tuile-du-lieu="fitness" class="ardoise /);
+    expect(html).toMatch(/<img[^>]*alt=""[^>]*aria-hidden="true"/);
+    expect(html).toContain("voile-du-lieu");
+    const texte = html.slice(html.indexOf("data-texte-sur-photo"));
+    expect(texte).toContain(">VOLT FITNESS<");
+    expect(texte).toContain(">Abonnement<");
+    expect(texte).toMatch(/data-trait-du-metier=""[^>]*bg-\[color:var\(--metier/);
+    expect(texte).not.toMatch(/text-\[color:var\(--metier/);
+    expect(CSS).toMatch(/\n\.voile-du-lieu \{[^}]*linear-gradient\(\s*to top/);
   });
 
   it("les neuf métiers, plus bas, sont des photos et non plus des pictogrammes", () => {
@@ -192,6 +239,8 @@ describe("la vitrine montre ses lieux", () => {
     const html = renderToStaticMarkup(createElement(LesNeufLieux));
     expect(html.match(/<img /g) ?? []).toHaveLength(SCENARIO_CHOICES.length);
     expect(html.match(/loading="lazy"/g) ?? []).toHaveLength(SCENARIO_CHOICES.length);
+    // Lot P6 : même traitement, le nom sur la photo.
+    expect(html.match(/data-texte-sur-photo/g) ?? []).toHaveLength(SCENARIO_CHOICES.length);
   });
 });
 
