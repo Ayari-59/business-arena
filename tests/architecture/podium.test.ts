@@ -209,6 +209,41 @@ describe("le rang prend le métal, l'action jamais", () => {
     expect(bilan).toMatch(/texte-or[^"]*"[^>]*>\{ordinal\(place\.rang\)\}/);
   });
 
+  it("le rang est écrit une seule fois, sans médaille qui le double (lot P5)", () => {
+    // DÉCISION DU PROPRIÉTAIRE. Au verdict (rituel), sur le verdict d'un tour
+    // clos et sur l'ardoise, la pastille « 2 » était posée à côté de « 2e sur
+    // 3 » : le rang dit deux fois. Ces écrans l'écrivent en or, une fois ; ils
+    // ne posent plus de médaille. La médaille ne reste que là où elle est
+    // SEULE à dire le rang : le podium, les classements en liste.
+    const source = (fichier: string) =>
+      SOURCES.find(({ f }) => f.endsWith(join("components", fichier)))!.s;
+    for (const fichier of [
+      "verdict-du-marche.tsx",
+      "revelation-du-tour.tsx",
+      "tableau-de-bord.tsx",
+      "bilan-de-partie.tsx",
+      "barre-de-jeu.tsx",
+    ]) {
+      expect(source(fichier), `${fichier} pose une médaille à côté du rang écrit`).not.toContain(
+        "<PastilleDeRang",
+      );
+      // Ni le mot, pour le lecteur d'écran : il n'y a plus de médaille à annoncer.
+      if (fichier !== "bilan-de-partie.tsx")
+        expect(source(fichier), `${fichier} annonce une médaille`).not.toMatch(/médaille d'or|médaille de/);
+    }
+    // Le rang écrit, en or, reste sur chacun d'eux.
+    expect(source("verdict-du-marche.tsx")).toMatch(/texte-or[^>]*>\s*\{ordinal\(rang\.place\)\} sur \{rang\.sur\}/);
+    expect(source("tableau-de-bord.tsx")).toMatch(/texte-or[^>]*>\s*\{ordinal\(rang\.place\)\}/);
+    expect(source("revelation-du-tour.tsx")).toContain("Au classement révélé : {rang.place}");
+    // Le podium seul garde une pastille « doublon » (le lecteur d'écran y
+    // entend la marche en toutes lettres) ; il n'écrit plus la place à côté.
+    const doublons = SOURCES.filter(({ s }) => /<PastilleDeRang[^>]*\bdoublon\b/.test(s)).map(({ f }) =>
+      f.slice(SRC.length + 1),
+    );
+    expect(doublons).toEqual(["components/podium.tsx"]);
+    expect(source("podium.tsx"), "le podium réécrit la place sous sa médaille").not.toContain("ordinal(");
+  });
+
   it("aucun bouton ni lien ne porte l'or, l'argent ou le bronze", () => {
     const balises = SOURCES.flatMap(({ f, s }) =>
       balisesDAction(s).map((b) => ({ f: f.slice(SRC.length + 1), b })),

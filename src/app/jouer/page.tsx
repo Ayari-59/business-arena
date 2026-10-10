@@ -8,7 +8,6 @@ import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
 import { bouton } from "@/components/bouton";
-import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
 import { getGuestUserId } from "@/lib/guest";
@@ -63,12 +62,16 @@ export default async function JouerPage({
           APRÈS le formulaire. Elle s'ouvre désormais sur le marine, comme
           l'accueil : on entre dans l'arène. C'est une ardoise et non une bande
           de page (la page n'est pas au registre des bandes) : elle prend la
-          matière du tableau et son anneau, sans compter parmi les contre-jours.
+          matière du tableau, sans compter parmi les contre-jours.
           Sur téléphone, elle reste courte, pour que le premier métier tienne
           dans le premier écran (tests/e2e/mobile.e2e.ts).
+
+          PLUS D'ANNEAU (lot P5). Le grand anneau décoratif coupé en haut à
+          droite est parti, comme de la vitrine au lot P2 : un ornement sans
+          rôle, qui ne dit rien de l'entreprise qu'on va choisir. Garde : l'e2e
+          `halo` (aucun en-tête de page publique ne le porte).
         */}
         <section className="ardoise relative overflow-hidden bg-slate-950 text-slate-100">
-          <HaloDePage />
           <div className="relative mx-auto max-w-6xl px-6 pb-6 pt-6 sm:pb-12 sm:pt-12">
             <p>
               <span className="surtitre-arene">Partie solo</span>

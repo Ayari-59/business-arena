@@ -1,4 +1,4 @@
-import { formatDecimal, ordinal } from "@/lib/format";
+import { formatDecimal } from "@/lib/format";
 import { PastilleDeRang } from "@/components/rang";
 
 /**
@@ -57,6 +57,9 @@ const ECHELLE = {
   },
 } as const;
 
+/** La marche dite en toutes lettres, pour le lecteur d'écran. */
+const MARCHES_EN_LETTRES = ["Première", "Deuxième", "Troisième"] as const;
+
 /**
  * Les trois marches, dans l'ordre où on les regarde : l'argent, l'or, le
  * bronze. `marches` arrive du classement tel quel ; ce composant garde les
@@ -93,13 +96,18 @@ export function PodiumDesEquipes({
                 e.hauteur[m.rang - 1]
               } ${m.moi ? "ligne-moi" : ""}`}
             >
+              {/* LE RANG, DIT PAR LA MÉDAILLE SEULE (lot P5). La mention
+                  dessous le réécrivait (« 1re · IPG 62 ») : la médaille et la
+                  place disaient deux fois la même chose. La marche garde son
+                  métal et son chiffre, comme celle de la clôture ; le
+                  lecteur d'écran entend la marche en toutes lettres. */}
               <PastilleDeRang rang={m.rang} doublon className={e.pastille} />
               <p className={`truncate font-semibold text-slate-50 ${e.nom}`} title={m.nom}>
+                <span className="sr-only">{MARCHES_EN_LETTRES[m.rang - 1]} marche : </span>
                 {m.nom}
               </p>
               <p className={`tabular-nums text-slate-400 ${e.mention}`}>
-                {ordinal(m.rang)}
-                {m.ipg !== null ? ` · IPG ${formatDecimal(m.ipg, 0)}` : ""}
+                {m.ipg !== null ? `IPG ${formatDecimal(m.ipg, 0)}` : "\u00a0"}
                 {m.moi ? <span className="font-semibold text-slate-200"> · vous</span> : null}
               </p>
             </div>
@@ -127,7 +135,6 @@ export function PodiumDesEquipes({
  * La projection garde sa forme (le mur de la classe a sa propre garde de
  * hauteur) ; seule l'échelle « carte » prend ces marches.
  */
-const MARCHES_EN_LETTRES = ["Première", "Deuxième", "Troisième"] as const;
 
 export const HAUTEURS_DES_MARCHES = ["h-32 sm:h-36", "h-24 sm:h-[6.5rem]", "h-16 sm:h-[4.5rem]"] as const;
 

@@ -51,7 +51,11 @@ export function BilanDePartie({
   lieu = null,
   children,
 }: {
-  /** « Victoire ! … » ou « Partie terminée » : la phrase de tête. */
+  /**
+   * La phrase de tête, tirée de `titreDuBilan` (pedagogy/bilan-de-partie) :
+   * « Victoire ! … » seulement pour une 1re place qui finit dans le vert,
+   * sinon « En tête du classement, mais en perte. » ou « Partie terminée. ».
+   */
   titre: string;
   /** La première place : la coupe d'or se dessine devant le titre. */
   victoire?: boolean;
@@ -180,11 +184,21 @@ export function BilanDePartie({
           <Chiffre
             titre="Résultat cumulé"
             note={
-              bilan.beneficiaire ? "vous finissez dans le vert" : "la partie se termine en perte"
+              bilan.beneficiaire
+                ? "vous finissez dans le vert"
+                : bilan.resultatCumule < 0
+                  ? "la partie se termine en perte"
+                  : "la partie finit à l'équilibre"
             }
             valeur={bilan.resultatCumule}
             plume="euro-signe"
-            teinte={bilan.beneficiaire ? "text-emerald-300" : "text-red-300"}
+            teinte={
+              bilan.beneficiaire
+                ? "text-emerald-300"
+                : bilan.resultatCumule < 0
+                  ? "text-red-300"
+                  : "text-slate-50"
+            }
           />
           <Chiffre
             titre="Trésorerie finale"

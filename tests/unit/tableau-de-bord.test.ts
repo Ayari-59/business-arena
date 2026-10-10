@@ -124,7 +124,12 @@ describe("l'ardoise du dirigeant", () => {
     expect((html.match(/text-\[clamp\(2rem,1\.6rem_\+_1\.2vw,2\.5rem\)\]/g) ?? []).length).toBe(4);
     expect(html).toMatch(/font-display[^"]*tabular-nums|tabular-nums[^"]*font-display/);
     expect(html).toMatch(/texte-or[^>]*>2e/);
-    expect(html).toContain("pastille-rang-2");
+    // Le rang est écrit une seule fois, sans médaille qui le double (lot P5 :
+    // décision du propriétaire ; la pastille « 2 » posée devant « 2e sur 3 »
+    // le redisait).
+    expect(html).not.toContain("pastille-rang");
+    const rang = html.slice(html.indexOf(">Rang<"));
+    expect(rang.replace(/<[^>]+>/g, " ").match(/\b2e\b/g) ?? []).toHaveLength(1);
     expect(html).toContain("IPG 61");
   });
 

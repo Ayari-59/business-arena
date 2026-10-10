@@ -179,9 +179,15 @@ describe("le rituel du marché", () => {
     const resultat = html.slice(html.indexOf('data-temps="2"'));
     expect(resultat).toMatch(/^data-temps="2" role="status" aria-live="polite"/);
     expect(resultat).toContain("\u2212294");
-    // Le rang en or, avec la médaille du podium.
-    expect(html).toContain("pastille-rang-1");
+    // Le rang en or, écrit UNE fois, sans médaille qui le double (lot P5 :
+    // décision du propriétaire, la pastille « 1 » posée devant « 1re sur 3 »
+    // le disait deux fois). Ni pastille, ni mot de médaille pour le lecteur
+    // d'écran : la place écrite suffit.
     expect(html).toMatch(/texte-or[^>]*>1re sur 3/);
+    expect(html).not.toMatch(/pastille-rang|médaille/);
+    const lu = html.replace(/<[^>]+>/g, " ");
+    expect(lu.match(/1re sur 3/g) ?? []).toHaveLength(1);
+    expect(lu.match(/\b1re\b/g) ?? []).toHaveLength(1);
     // Les trois temps, et les actions, sont dans la page : l'animation ne fait
     // que les faire apparaître.
     for (const temps of ["1", "2", "3", "4"]) expect(html).toContain(`data-temps="${temps}"`);

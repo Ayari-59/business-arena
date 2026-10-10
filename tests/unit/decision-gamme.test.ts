@@ -345,8 +345,10 @@ describe("le formulaire en gamme", () => {
     // titre annonce ce qu'il cache.
     const enGamme = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
     // Le panneau se reconnaît à son pictogramme, la camionnette du
-    // fournisseur, dessinée en tête de son titre (c'était un emoji 🏭).
-    const camion = /<summary[^>]*><span[^>]*><svg[^>]*><path d="M2\.5 6\.5h11v9\.5h-11z"/;
+    // fournisseur, dessinée en tête de son titre (c'était un emoji 🏭). Lot
+    // P5 : le chevron commun des replis le précède, en tête du résumé.
+    const camion =
+      /<summary[^>]*><svg[^>]*data-chevron=""[^>]*><path d="M6 3\.5 10\.5 8 6 12\.5"><\/path><\/svg><span[^>]*><svg[^>]*><path d="M2\.5 6\.5h11v9\.5h-11z"/;
     // `<details>` SANS `open` : le panneau est replié.
     expect(enGamme).toMatch(new RegExp(`<details class="[^"]*">${camion.source}`));
     // Son titre annonce ce qu'il cache. Le compte est celui des façonniers de

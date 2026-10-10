@@ -13,6 +13,13 @@
  * aux clics. Il se peint SOUS le contenu : posé par-dessus, il voilerait les
  * titres qu'il accompagne. Son parent le rogne (overflow), sans quoi il
  * élargirait la page sur un téléphone.
+ *
+ * LOT P5 : IL NE SE PEINT PLUS NULLE PART. La vitrine l'a quitté au lot P2,
+ * /jouer et les ouvertures marines (`BandeOuverture` : enseignants, écoles,
+ * entreprises) au lot P5 : un ornement sans rôle. Il reste posé sur des pages
+ * claires, où le papier le masque (`display: none`, voir globals.css) ; le
+ * retirer d'elles ne changerait rien à l'écran. Garde : l'e2e `halo`, « aucun
+ * en-tête de page publique ne porte l'anneau ».
  */
 /*
  * IL SORT DU COIN SANS TRAVERSER LE TITRE (audit P3-03). Sur ordinateur, le

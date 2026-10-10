@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { formatDecimal, formatEuro, ordinal } from "@/lib/format";
-import { PastilleDeRang } from "@/components/rang";
 import { ChiffreQuiArrive } from "@/components/chiffre-qui-arrive";
 
 /**
@@ -251,7 +250,11 @@ function Chiffre({
   );
 }
 
-/** Le rang, en or : la pastille du métal et la place écrite. */
+/**
+ * Le rang, en or : la place écrite, une fois. Lot P5 : la pastille du métal
+ * posée devant (« 2 » à côté de « 2e sur 3 ») le disait deux fois ; elle ne
+ * reste que là où elle est seule à dire le rang (podium, classement en liste).
+ */
 function Rang({ entete }: { entete: EnTeteDeLArdoise }) {
   const { rang, rangVoile, ipg } = entete;
   if (!rang && !rangVoile) return null;
@@ -260,7 +263,6 @@ function Rang({ entete }: { entete: EnTeteDeLArdoise }) {
       <dt className="libelle">Rang</dt>
       {rang ? (
         <dd className={`mt-1.5 flex items-center gap-2 whitespace-nowrap ${GRAND_CHIFFRE}`}>
-          <PastilleDeRang rang={rang.place} moi doublon className="text-xl" />
           <span className="texte-or">
             {ordinal(rang.place)}
             <span className="text-lg font-medium text-slate-300"> sur {rang.sur}</span>

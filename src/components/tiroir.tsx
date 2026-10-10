@@ -1,6 +1,7 @@
 "use client";
 
 import { Icone, type NomDIcone } from "@/components/icone";
+import { Chevron } from "@/components/repliable";
 import { useParcours } from "@/components/parcours-mobile";
 import type { SurfaceDuRepli } from "@/config/surfaces-de-lecture";
 
@@ -15,7 +16,9 @@ import type { SurfaceDuRepli } from "@/config/surfaces-de-lecture";
  *
  * Les trois signaux :
  *   1. le chevron, à la teinte du métier (lot P1), qui PIVOTE à l'ouverture
- *      — c'est lui qui dit « ceci s'ouvre », et, fermé, « ceci est replié » ;
+ *      — c'est lui qui dit « ceci s'ouvre », et, fermé, « ceci est replié ».
+ *      C'est le `Chevron` de `repliable.tsx` (lot P5) : le même dessin, à la
+ *      même place et à la même taille dans tous les replis de l'arène ;
  *   2. le FILET PLEIN et discret du panneau d'information (lot P3) : il était
  *      pointillé tant que le tiroir était fermé ; le pointillé disait « vide »,
  *      et un repli fermé n'est que rangé (règle des replis du lot 6E) ;
@@ -132,12 +135,8 @@ export function Tiroir({
       */}
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <span
-            aria-hidden
-            className={`shrink-0 text-xs ${teinteDuRepere} transition-transform group-open:rotate-90`}
-          >
-            ▸
-          </span>
+          {/* Le chevron commun des replis (lot P5) : 16 px, en tête, qui pivote. */}
+          <Chevron className={teinteDuRepere} />
           {icone ? <Icone nom={icone} className={`h-4 w-4 shrink-0 ${teinteDuRepere}`} /> : null}
           <span
             className={
@@ -161,7 +160,9 @@ export function Tiroir({
             <span className="shrink-0 whitespace-nowrap text-xs text-slate-400">{quoi}</span>
           ) : null}
         </span>
-        <span className="ml-auto shrink-0 pl-2 text-xs text-slate-400 group-open:hidden">
+        {/* `data-deplier` : le mot se tait quand CE tiroir s'ouvre, et pas
+            quand un repli qui le contient s'ouvre (globals.css, « LOT P5 »). */}
+        <span data-deplier="" className="ml-auto shrink-0 pl-2 text-xs text-slate-400">
           déplier
         </span>
       </summary>

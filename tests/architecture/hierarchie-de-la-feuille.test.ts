@@ -169,7 +169,8 @@ describe("les options ponctuelles sont repliées, et elles le disent", () => {
   const OPTIONS = ["commande", "assurance", "etudes", "dividende", "mobilisation"];
 
   it("chacune prend le repli du lot 3B, fermé, avec ce qu'elle porte", () => {
-    expect(FORMULAIRE).toContain('import { Repliable } from "@/components/repliable"');
+    // Lot P5 : le formulaire importe aussi le chevron commun des replis.
+    expect(FORMULAIRE).toMatch(/import \{ Chevron, Repliable \} from "@\/components\/repliable"/);
     const famille = FORMULAIRE.slice(
       FORMULAIRE.indexOf("function Family("),
       FORMULAIRE.indexOf("export function DecisionForm("),

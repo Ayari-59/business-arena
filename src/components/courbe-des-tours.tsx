@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { euroSigne } from "@/components/tableau-de-bord";
 
 /**
@@ -21,6 +24,19 @@ import { euroSigne } from "@/components/tableau-de-bord";
  *     son infobulle (« Tour 3 : −2 127 € »), et un tableau caché donne les
  *     six valeurs à une synthèse vocale.
  * Une seule série : pas de légende, le titre dit ce qui est tracé.
+ *
+ * ELLE PREND TOUTE LA LARGEUR DE SA CLÔTURE (lot P5). Le dessin avait une
+ * largeur fixe (640 unités, plafonné à 768 px) : à 1280, il n'occupait que
+ * les deux tiers de la clôture et laissait un vide à droite. Une simple mise
+ * à l'échelle ne suffit pas (un SVG étiré grossit aussi son texte : à 1 168 px,
+ * une graduation de 14 px passait à 25) : la courbe MESURE sa boîte
+ * (`ResizeObserver`) et se dessine à sa largeur réelle, une unité pour un
+ * pixel. Le texte garde sa taille, le tracé occupe la largeur, la hauteur
+ * suit un peu (220 à 300 px). Les marges se règlent sur ce qu'elles portent :
+ * la droite sur l'étiquette du dernier point, la gauche sur la plus longue
+ * graduation, pour que l'une et l'autre restent dans le dessin, de 390 à
+ * 1 280 px. Avant la mesure (rendu serveur), deux dessins de repli,
+ * téléphone et ordinateur, tiennent la place.
  */
 
 export interface PointDeLaCourbe {
@@ -63,18 +79,39 @@ export function CourbeDesTours({
   tours: readonly PointDeLaCourbe[];
   className?: string;
 }) {
+  const boite = useRef<HTMLDivElement>(null);
+  const [largeur, setLargeur] = useState<number | null>(null);
+  useEffect(() => {
+    const el = boite.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observateur = new ResizeObserver(([entree]) => {
+      const l = Math.floor(entree?.contentRect.width ?? 0);
+      if (l > 0) setLargeur(l);
+    });
+    observateur.observe(el);
+    return () => observateur.disconnect();
+  }, []);
   if (tours.length < 2) return null;
   return (
     <figure data-courbe-des-tours="" className={`m-0 ${className}`}>
       <figcaption className="text-base font-semibold text-slate-100">
         Votre résultat net, tour par tour
       </figcaption>
-      {/* DEUX DESSINS, UNE TAILLE DE TEXTE. Un SVG mis à l'échelle de sa
-          boîte réduit aussi son texte : à 340 px de large, une graduation de
-          13 px tombait à 7. Le téléphone a donc son propre dessin, à sa
-          largeur réelle ; un seul des deux est affiché (et lu). */}
-      <Trace tours={tours} largeur={640} className="mt-3 hidden max-w-3xl sm:block" />
-      <Trace tours={tours} largeur={340} className="mt-3 sm:hidden" />
+      {/* UN DESSIN À LA LARGEUR DE SA BOÎTE. Un SVG mis à l'échelle de sa
+          boîte réduit ou grossit aussi son texte : la boîte est donc mesurée
+          et le dessin fait à sa largeur. Avant la mesure, le téléphone et
+          l'ordinateur ont chacun leur dessin de repli ; un seul des deux est
+          affiché (et lu). */}
+      <div ref={boite} data-boite-de-la-courbe="" className="mt-3 w-full">
+        {largeur ? (
+          <Trace tours={tours} largeur={largeur} className="block" />
+        ) : (
+          <>
+            <Trace tours={tours} largeur={1000} className="hidden sm:block" />
+            <Trace tours={tours} largeur={340} className="sm:hidden" />
+          </>
+        )}
+      </div>
       <table className="sr-only">
         <caption>Résultat net de chaque tour</caption>
         <thead>
@@ -105,11 +142,24 @@ function Trace({
   largeur: number;
   className: string;
 }) {
-  const H = 220;
+  // La hauteur suit un peu la largeur : 220 px sur un téléphone, 300 au plus.
+  const H = Math.round(Math.min(300, Math.max(220, L * 0.26)));
   const large = L > 400;
-  const marge = { haut: 16, droite: large ? 96 : 80, bas: 30, gauche: large ? 58 : 50 };
   const valeurs = tours.map((t) => t.valeur);
   const ticks = graduations(Math.min(0, ...valeurs), Math.max(0, ...valeurs));
+  const etiquette = euroSigne(tours.at(-1)!.valeur);
+  // Les marges se règlent sur leur texte (14 px, un chiffre fait au plus
+  // 8,4 px) : à droite l'étiquette du dernier point, posée 12 px après lui ;
+  // à gauche la plus longue graduation, posée 8 px avant l'axe.
+  const marge = {
+    haut: 16,
+    droite: Math.max(large ? 96 : 80, Math.ceil(etiquette.length * 8.4) + 12 + 8),
+    bas: 30,
+    gauche: Math.max(
+      large ? 58 : 50,
+      Math.ceil(Math.max(...ticks.map((v) => compact(v).length)) * 8.4) + 8 + 4,
+    ),
+  };
   const bas = ticks[0]!;
   const haut = ticks.at(-1)!;
   const x = (i: number) =>
@@ -187,9 +237,10 @@ function Trace({
         x={x(dernier) + 12}
         y={y(tours[dernier]!.valeur)}
         dy="0.32em"
+        data-etiquette-du-dernier-point=""
         className="fill-slate-50 text-sm font-semibold tabular-nums"
       >
-        {euroSigne(tours[dernier]!.valeur)}
+        {etiquette}
       </text>
     </svg>
   );

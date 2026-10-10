@@ -3,7 +3,6 @@ import { formatEuro } from "@/lib/format";
 import { Signe } from "@/components/signe";
 import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
 import type { IncomeStatement } from "@/engine/types";
-import { PastilleDeRang } from "@/components/rang";
 
 /**
  * LA RÉVÉLATION DU RÉSULTAT.
@@ -124,7 +123,8 @@ export function RevelationDuTour({
         <p className="mt-1.5 text-xs text-slate-400">
           {rang ? (
             <>
-              <PastilleDeRang rang={rang.place} moi doublon className="mr-1.5 align-middle" />
+              {/* Le rang, écrit une fois (lot P5) : la médaille posée devant
+                  « 2e sur 3 équipes » le redisait. */}
               Au classement révélé : {rang.place}
               <sup>{rang.place === 1 ? "re" : "e"}</sup> sur {rang.sur} équipes
             </>

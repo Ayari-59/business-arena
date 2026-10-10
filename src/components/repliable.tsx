@@ -16,14 +16,27 @@ import type { SurfaceDuRepli } from "@/config/surfaces-de-lecture";
  * recherche dans la page, sans une ligne de script. Le chevron n'est qu'un
  * dessin, retiré de l'arbre d'accessibilité ; le focus clavier du résumé est
  * celui de tout le site (`:focus-visible` dans globals.css).
+ *
+ * UNE RÈGLE POUR TOUS LES REPLIS DE L'ARÈNE (lot P5). La feuille de décision
+ * mêlait trois flèches : ce chevron à gauche, un triangle « ▸ » de 12 px à
+ * gauche (les tiroirs), le même triangle à DROITE (les volets « Vos ventes »,
+ * « En quelques mots », les tours clos), et un « › » à droite (le résultat
+ * estimé, vos réussites). Désormais, un seul dessin : ce chevron, 16 px, en
+ * TÊTE du résumé (à gauche, avant l'icône et le titre), qui pivote d'un quart
+ * de tour quand SON repli s'ouvre (règle `details[open] > summary
+ * [data-chevron]` de globals.css, « LOT P5 » : `group-open:` regardait aussi
+ * les replis ouverts autour de lui). Seule sa teinte suit le sol (encre douce sur le
+ * papier, gris ou teinte du métier dans le cockpit). Garde :
+ * `tests/architecture/finitions.test.ts` et l'e2e `finitions`.
  */
 export function Chevron({ className = "" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 16 16"
+      data-chevron=""
       aria-hidden
       focusable="false"
-      className={`h-4 w-4 shrink-0 transition-transform group-open:rotate-90 motion-reduce:transition-none ${className}`}
+      className={`h-4 w-4 shrink-0 transition-transform motion-reduce:transition-none ${className}`}
       fill="none"
       stroke="currentColor"
       strokeWidth="2"

@@ -128,6 +128,17 @@ describe("le classement et l'IPG se lisent sur une seule ligne de la carte", () 
     expect(html).toContain("Au classement révélé : 1re sur 3 équipes · IPG 65.");
   });
 
+  it("le rang est écrit une fois, sans médaille qui le double (lot P5)", () => {
+    // Décision du propriétaire : la pastille « 1 » posée devant « Au
+    // classement révélé : 1re sur 3 » disait le rang deux fois.
+    const brut = rendu({ rang: { place: 1, sur: 3 }, ipg: 65.4 });
+    expect(brut).not.toContain("pastille-rang");
+    const html = plat(brut);
+    // Rien avant la phrase : la ligne commence par ce qu'elle dit.
+    expect(html).toMatch(/(^|[.\s])Au classement révélé : 1re sur 3/);
+    expect(html.match(/\b1re\b/g) ?? []).toHaveLength(1);
+  });
+
   it("l'IPG seul, quand le classement n'est pas révélé", () => {
     const html = plat(rendu({ ipg: 54 }));
     expect(html).toContain("IPG 54.");

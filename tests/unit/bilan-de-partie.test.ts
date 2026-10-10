@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { BilanDePartie } from "@/components/bilan-de-partie";
-import { bilanDeLaPartie, type TourDuBilan } from "@/pedagogy/bilan-de-partie";
+import { bilanDeLaPartie, titreDuBilan, type TourDuBilan } from "@/pedagogy/bilan-de-partie";
 
 /**
  * SIX TOURS DE TRAVAIL MÉRITENT MIEUX QU'UNE LIGNE.
@@ -294,5 +294,107 @@ describe("la clôture en cérémonie", () => {
     });
     expect(html).toMatch(/<img[^>]*aria-hidden="true"[^>]*data-lieu-photo="nova"/);
     expect(html.indexOf("data-bilan-lecture")).toBeLessThan(html.indexOf("Rejouer NOVA"));
+  });
+});
+
+/**
+ * « VICTOIRE ! » NE CÉLÈBRE PAS UNE PERTE (lot P5).
+ *
+ * Le titre disait « Victoire ! NOVA domine le marché. » à toute 1re place, et
+ * on l'a vu au-dessus d'un résultat cumulé de −103 193 €. La 1re place reste
+ * vraie (le classement à l'IPG) et reste dite, en or, sous le titre ; le titre,
+ * lui, ne célèbre qu'une partie qui finit dans le vert. Toutes les
+ * combinaisons du rang et du résultat cumulé, et le classement non révélé.
+ */
+describe("le titre de la clôture, rang × résultat cumulé", () => {
+  const RANGS = [1, 2, 3, 5, null] as const;
+  const RESULTATS = [-103_193, -1, 0, 1, 48_210] as const;
+
+  it("chaque combinaison a son titre, et seule la 1re place dans le vert est une victoire", () => {
+    const vus: string[] = [];
+    for (const rang of RANGS) {
+      for (const resultatCumule of RESULTATS) {
+        const { titre, victoire } = titreDuBilan({ rang, resultatCumule, equipe: "NOVA" });
+        const cas = `rang ${rang ?? "non révélé"}, résultat ${resultatCumule}`;
+        vus.push(`${cas} → ${titre}`);
+        expect(victoire, cas).toBe(rang === 1 && resultatCumule > 0);
+        // « Victoire » n'est écrit que pour une victoire, jamais sur une perte.
+        expect(/Victoire/.test(titre), cas).toBe(victoire);
+        if (resultatCumule <= 0) expect(titre, cas).not.toMatch(/Victoire|domine/);
+        // Le titre ne réécrit pas le rang : la clôture le dit une fois, en or.
+        expect(titre, cas).not.toMatch(/\b\d+(re|er|e)\b/);
+        // Un classement non révélé ne se devine pas dans le titre.
+        if (rang === null) expect(titre, cas).toBe("Partie terminée.");
+        if (rang !== null && rang > 1) expect(titre, cas).toBe("Partie terminée.");
+      }
+    }
+    expect(vus.length).toBe(RANGS.length * RESULTATS.length);
+  });
+
+  it("la 1re place en perte est dite telle qu'elle est", () => {
+    expect(titreDuBilan({ rang: 1, resultatCumule: -103_193, equipe: "NOVA" })).toEqual({
+      titre: "En tête du classement, mais en perte.",
+      victoire: false,
+    });
+    expect(titreDuBilan({ rang: 1, resultatCumule: 0, equipe: "NOVA" })).toEqual({
+      titre: "En tête du classement, sans bénéfice.",
+      victoire: false,
+    });
+    expect(titreDuBilan({ rang: 1, resultatCumule: 12_000, equipe: "NOVA" })).toEqual({
+      titre: "Victoire ! NOVA domine le marché.",
+      victoire: true,
+    });
+  });
+
+  it("à l'écran : la 1re place en perte n'a ni coupe ni « Victoire », et le rang reste dit une fois", () => {
+    const enPerte = bilanDeLaPartie(
+      tours([1, 298_000, -2_587, 49_617], [2, 298_000, -40_000, 9_000], [3, 298_000, -60_606, -27_120]),
+    )!;
+    expect(enPerte.resultatCumule).toBe(-103_193);
+    const tete = titreDuBilan({ rang: 1, resultatCumule: enPerte.resultatCumule, equipe: "NOVA" });
+    const html = sansEspacesFines(
+      renderToStaticMarkup(
+        createElement(BilanDePartie, {
+          ...tete,
+          bilan: enPerte,
+          reussites: { acquises: 1, total: 9, derniere: null },
+          place: { rang: 1, total: 3 },
+          motDeClassement: null,
+          podium: [
+            { nom: "NOVA", rang: 1, moi: true, ipg: 46 },
+            { nom: "Auris", rang: 2, moi: false, ipg: 44 },
+            { nom: "SoundBox", rang: 3, moi: false, ipg: 39 },
+          ],
+        }),
+      ),
+    );
+    const texte = texteDe(html);
+    expect(texte).toContain("En tête du classement, mais en perte.");
+    expect(texte).not.toContain("Victoire");
+    // Pas de coupe d'or devant le titre : elle célébrait la victoire.
+    const titre = html.slice(html.indexOf('id="cloture-titre"'), html.indexOf("</h2>"));
+    expect(titre).not.toContain("<svg");
+    // La 1re place, elle, reste dite, une fois, en or.
+    expect(html).toMatch(/texte-or[^"]*"[^>]*>1re</);
+    expect(texte.match(/\b1re\b/g) ?? []).toHaveLength(1);
+    expect(texte).toContain("la partie se termine en perte");
+  });
+
+  it("un résultat cumulé nul n'est dit ni gain ni perte", () => {
+    const nul = bilanDeLaPartie(tours([1, 1000, -500, 100], [2, 1000, 500, 200]))!;
+    expect(nul.resultatCumule).toBe(0);
+    const html = sansEspacesFines(
+      renderToStaticMarkup(
+        createElement(BilanDePartie, {
+          ...titreDuBilan({ rang: 1, resultatCumule: 0, equipe: "NOVA" }),
+          bilan: nul,
+          reussites: { acquises: 0, total: 9, derniere: null },
+          place: { rang: 1, total: 3 },
+          motDeClassement: null,
+        }),
+      ),
+    );
+    expect(texteDe(html)).toContain("la partie finit à l'équilibre");
+    expect(texteDe(html)).not.toContain("en perte");
   });
 });

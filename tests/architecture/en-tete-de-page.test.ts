@@ -170,6 +170,12 @@ describe("les replis à chevron", () => {
     const repliable = lire("src/components/repliable.tsx");
     expect(repliable).toContain("list-none");
     expect(repliable).toContain("[&::-webkit-details-marker]:hidden");
-    expect(repliable).toContain("group-open:rotate-90");
+    // Le chevron pivote à l'ouverture de SON repli (lot P5 : la règle de
+    // globals.css lit le `<details>` parent du résumé ; `group-open:`
+    // regardait aussi les replis ouverts autour de lui).
+    expect(repliable).toContain('data-chevron=""');
+    expect(lire("src/app/globals.css")).toMatch(
+      /details\[open\] > summary \[data-chevron\] \{\s*rotate: 90deg;/,
+    );
   });
 });

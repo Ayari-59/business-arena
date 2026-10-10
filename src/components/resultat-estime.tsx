@@ -5,7 +5,7 @@ import { decisionsSaisies } from "@/config/decisions-saisies";
 import { ventesEstimeesParReference } from "@/config/ventes-estimees";
 import { estimerLeTour, type DossierDEstimation, type ResultatEstime } from "@/engine/estimation";
 import { lignesDuCompte } from "@/components/lecture-des-comptes";
-import { Repliable } from "@/components/repliable";
+import { Chevron, Repliable } from "@/components/repliable";
 import { ChiffreQuiArrive, ValeurRafraichie } from "@/components/chiffre-qui-arrive";
 import { dureeDuJeton } from "@/lib/mouvement";
 import { formatEuro, formatUnits } from "@/lib/format";
@@ -351,6 +351,8 @@ export function LigneEstimeeCompacte({
   return (
     <details data-ligne-estimee className="group border-b border-white/10 pb-2">
       <summary className="flex cursor-pointer list-none items-center gap-2 text-sm pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
+        {/* Le chevron commun, en tête (lot P5) : il était un « › » à droite. */}
+        <Chevron className="text-slate-400" />
         <span className="text-slate-400">Estimé</span>
         <span className="min-w-0 flex-1 truncate tabular-nums text-slate-100">
           Rés.{" "}
@@ -361,9 +363,6 @@ export function LigneEstimeeCompacte({
           <ValeurRafraichie valeur={formatEuro(estime.tresorerieNette)}>
             {formatEuro(estime.tresorerieNette)}
           </ValeurRafraichie>
-        </span>
-        <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
-          ›
         </span>
       </summary>
       <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

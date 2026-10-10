@@ -78,3 +78,41 @@ export function bilanDeLaPartie(tours: readonly TourDuBilan[]): Bilan | null {
     parTour: ordre,
   };
 }
+
+/**
+ * LE TITRE DE LA CLÔTURE : HONNÊTE SUR LE RÉSULTAT (lot P5).
+ *
+ * Il disait « Victoire ! NOVA domine le marché. » dès que l'équipe finissait
+ * 1re, quel que soit l'argent : on a vu le titre célébrer une partie qui
+ * finissait à −103 193 €. La 1re place est vraie (c'est le classement à
+ * l'IPG, qui pèse aussi la part de marché, la trésorerie, la qualité…), mais
+ * une partie en perte n'est pas une victoire, et c'est justement ce qu'un
+ * jeu d'apprentissage doit dire. Le rang, lui, reste dit une fois, en or,
+ * sous le titre (« 1re sur 3 ») : le titre ne le réécrit pas.
+ *
+ *   rang \ résultat cumulé   > 0                          = 0 ou < 0
+ *   1re                      « Victoire ! X domine… »     « En tête du classement, mais
+ *                            (la coupe d'or)               en perte. » / « …, sans
+ *                                                          bénéfice. » (pas de coupe)
+ *   2e et au-delà            « Partie terminée. »         « Partie terminée. »
+ *   classement non révélé    « Partie terminée. »         « Partie terminée. »
+ *
+ * Un classement que l'enseignant n'a pas encore révélé ne se devine pas dans
+ * le titre : sans rang, c'est « Partie terminée. », même pour la 1re équipe.
+ */
+export function titreDuBilan({
+  rang,
+  resultatCumule,
+  equipe,
+}: {
+  /** La place finale, ou null quand le classement n'est pas (encore) ouvert. */
+  rang: number | null;
+  resultatCumule: number;
+  /** Le nom de l'équipe, tel que la partie l'affiche. */
+  equipe: string;
+}): { titre: string; victoire: boolean } {
+  if (rang !== 1) return { titre: "Partie terminée.", victoire: false };
+  if (resultatCumule > 0) return { titre: `Victoire ! ${equipe} domine le marché.`, victoire: true };
+  if (resultatCumule < 0) return { titre: "En tête du classement, mais en perte.", victoire: false };
+  return { titre: "En tête du classement, sans bénéfice.", victoire: false };
+}

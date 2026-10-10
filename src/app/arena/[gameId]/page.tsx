@@ -45,6 +45,7 @@ import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
 import { Icone } from "@/components/icone";
+import { Chevron } from "@/components/repliable";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
@@ -61,7 +62,7 @@ import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
 import { causesDuResultat, decompositionDuResultat } from "@/components/lecture-du-resultat";
 import { CeQuiAFaitLeResultat } from "@/components/ce-qui-a-fait-le-resultat";
 import { BilanDePartie } from "@/components/bilan-de-partie";
-import { bilanDeLaPartie } from "@/pedagogy/bilan-de-partie";
+import { bilanDeLaPartie, titreDuBilan } from "@/pedagogy/bilan-de-partie";
 import { VosReussites } from "@/components/vos-reussites";
 import { reussitesDeLaPartie, lireLeTour } from "@/scoring/reussites";
 import { recordPersonnel } from "@/services/profile.service";
@@ -586,10 +587,8 @@ export default async function ArenaPage({
             // ni filet sous le titre ; le repère à la teinte du métier.
             className="group panneau-info"
           >
-            <summary className="flex cursor-pointer items-center gap-2 rounded-[var(--rayon-panneau)] px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
-              <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
-                ▸
-              </span>
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-[var(--rayon-panneau)] px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5 [&::-webkit-details-marker]:hidden">
+              <Chevron className="text-slate-400" />
               <Icone nom="loupe" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
               <span className="min-w-0">{s.title}</span>
             </summary>
@@ -797,6 +796,9 @@ export default async function ArenaPage({
               à côté, porte seul le vert ou le rouge.
             */}
             <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
+              {/* Le chevron commun, en tête (lot P5) : il était un « ▸ » au
+                  bord droit, à l'opposé de celui des tiroirs. */}
+              <Chevron className="-mr-1 text-slate-400" />
               <span
                 aria-hidden
                 // Un numéro sur le voile neutre : il portait le signe du tour
@@ -840,12 +842,6 @@ export default async function ArenaPage({
                     tréso {formatEuro(netTreasury)}
                   </span>
                 </span>
-              </span>
-              <span
-                aria-hidden
-                className="shrink-0 text-xs text-slate-400 transition-transform group-open:rotate-90"
-              >
-                ▸
               </span>
             </summary>
             <div className="px-2 pb-2.5 sm:px-4 sm:pb-4">
@@ -1482,14 +1478,18 @@ export default async function ArenaPage({
             );
             const moi = view.ranking.find((row) => row.isPlayer);
             const classementOuvert = !view.classement.parLAnimateur || view.classement.revele;
+            // LE TITRE NE CÉLÈBRE PAS UNE PERTE (lot P5) : la 1re place reste
+            // dite, en or, sous le titre ; « Victoire ! » attend un résultat
+            // cumulé positif. Un classement non révélé ne s'y devine pas.
+            const tete = titreDuBilan({
+              rang: classementOuvert && moi ? moi.rank : null,
+              resultatCumule: bilan.resultatCumule,
+              equipe: view.playerTeamName,
+            });
             return (
               <BilanDePartie
-                titre={
-                  moi?.rank === 1
-                    ? `Victoire ! ${view.playerTeamName} domine le marché.`
-                    : "Partie terminée."
-                }
-                victoire={moi?.rank === 1}
+                titre={tete.titre}
+                victoire={tete.victoire}
                 bilan={bilan}
                 reussites={{
                   acquises: acquises.length,

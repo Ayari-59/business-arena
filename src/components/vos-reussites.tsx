@@ -1,4 +1,5 @@
 import type { CaseDeReussite } from "@/scoring/reussites";
+import { Chevron } from "@/components/repliable";
 
 /**
  * VOS RÉUSSITES, EN UNE LIGNE : « 3/9 distinctions ».
@@ -36,6 +37,9 @@ export function VosReussites({
     <section aria-labelledby="reussites" className="panneau-info px-4 py-3 sm:px-5">
       <details className="group">
         <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 [&::-webkit-details-marker]:hidden">
+          {/* Le chevron commun, en tête (lot P5) : il était un « › » à droite,
+              derrière « le détail ». Le mot reste à droite, comme sur un tiroir. */}
+          <Chevron className="-mr-1 text-slate-400" />
           <h2 id="reussites" className="text-sm font-semibold text-slate-200">
             Vos réussites
           </h2>
@@ -52,9 +56,6 @@ export function VosReussites({
           <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
             <span className="group-open:hidden">le détail</span>
             <span className="hidden group-open:inline">replier</span>
-            <span aria-hidden className="transition-transform group-open:rotate-90">
-              ›
-            </span>
           </span>
         </summary>
 

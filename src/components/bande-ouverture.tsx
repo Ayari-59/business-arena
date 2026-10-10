@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Bande } from "@/components/bande";
-import { HaloDePage } from "@/components/halo-de-page";
 
 /**
  * L'OUVERTURE MARINE D'UNE PAGE VITRINE (proposition forte 5, audit P2-21).
@@ -10,7 +9,9 @@ import { HaloDePage } from "@/components/halo-de-page";
  * le visiteur qui cliquait « Pour les enseignants » quittait la maison pour
  * une page d'un autre site. Elles prennent désormais la même ouverture que
  * l'accueil : le surtitre en étiquette penchée, un grand titre à l'encre du
- * marine, le chapeau, les deux portes, et l'anneau qui sort du coin.
+ * marine, le chapeau, les deux portes. L'anneau qui sortait du coin est
+ * parti au lot P5, comme de l'accueil (lot P2) et de /jouer : un ornement
+ * sans rôle (garde : l'e2e `halo`).
  *
  * LE CHIFFRE-PREUVE. Chacune porte un chiffre, en très grand, et ce chiffre
  * est LU dans un registre (ateliers, épisodes, métiers) : jamais écrit à la
@@ -54,7 +55,6 @@ export function BandeOuverture({
       exterieur="relative overflow-hidden text-slate-100"
       interieur={cadre}
       interieurContraste={cadre}
-      avant={<HaloDePage />}
     >
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-end lg:gap-14">
         <div className="min-w-0">

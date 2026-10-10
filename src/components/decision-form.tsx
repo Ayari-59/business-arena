@@ -28,7 +28,7 @@ import {
   lireLEngagement,
   type Engagement,
 } from "@/components/engagement-du-tour";
-import { Repliable } from "@/components/repliable";
+import { Chevron, Repliable } from "@/components/repliable";
 import { ValeurRafraichie } from "@/components/chiffre-qui-arrive";
 import {
   EncartResultatEstime,
@@ -2026,8 +2026,12 @@ function Family({
     // UN PANNEAU, PAS UN CADRE (lot 6E) : le sol relevé, l'arête de lumière, la
     // teinte du métier en tête et sur le repère. Plus de pointillé quand il est
     // fermé (un repli fermé est rangé, pas vide), plus de filet sous le titre.
+    // LE CHEVRON EN TÊTE (lot P5) : il était un « ▸ » de 12 px collé au bord
+    // DROIT, quand les tiroirs et les options repliées le portent à gauche.
+    // Un seul chevron, le commun (`Chevron`), à gauche, avant l'icône.
     <details open={defaultOpen} className={`group ${tone}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-[var(--rayon-panneau)] px-3 py-2 sm:px-4 sm:py-2.5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-[var(--rayon-panneau)] px-3 py-2 sm:px-4 sm:py-2.5 [&::-webkit-details-marker]:hidden">
+        <Chevron className="text-slate-400" />
         <span className={`flex items-center gap-1.5 ${legendClass}`}>
           {icone ? (
             <Icone
@@ -2037,7 +2041,6 @@ function Family({
           ) : null}
           {legend}
         </span>
-        <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
       </summary>
       <div className="px-3 pb-3 pt-1 sm:px-4 sm:pb-4">{children}</div>
     </details>
@@ -4350,12 +4353,14 @@ export function DecisionForm({
         Elle est exigée au PREMIER TOUR, où personne n'a encore d'habitude à
         reconduire, puis laissée libre : une note arrachée chaque tour devient
         une formalité qu'on expédie, et une formalité n'apprend rien.
+
+        LOT P5 : son titre prend le gabarit des autres volets (il était un cran
+        plus petit, en `text-xs`), comme son chevron prend leur place.
       */}
       <Family
         carte="justification"
         icone="ecrire"
         legend="En quelques mots"
-        legendClass="text-xs font-medium text-slate-300"
       >
         <textarea
           name="justification"

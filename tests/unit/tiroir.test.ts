@@ -18,6 +18,8 @@ import { Tiroir } from "@/components/tiroir";
  * replis de l'arène passent par le même composant.
  */
 
+const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+
 function rendu(props: Parameters<typeof Tiroir>[0]): string {
   return renderToStaticMarkup(createElement(Tiroir, props));
 }
@@ -25,9 +27,14 @@ function rendu(props: Parameters<typeof Tiroir>[0]): string {
 describe("Tiroir", () => {
   it("porte ses trois signaux : chevron qui pivote, filet plein et discret, et ce qu'il cache", () => {
     const html = rendu({ titre: "Détail par clientèle", quoi: "4 clientèles", children: "…" });
-    // 1. le chevron, et sa rotation à l'ouverture
-    expect(html).toContain("▸");
-    expect(html).toContain("group-open:rotate-90");
+    // 1. le chevron, et sa rotation à l'ouverture. Lot P5 : c'est le chevron
+    //    commun des replis (`Chevron`, repliable.tsx), en tête du résumé ;
+    //    le triangle « ▸ » de 12 px est parti.
+    expect(html).toMatch(/<summary[^>]*><span[^>]*><svg[^>]*data-chevron=""/);
+    expect(html).not.toContain("▸");
+    // Sa rotation est celle de SON repli (globals.css, « LOT P5 ») : la règle
+    // lit le `<details>` parent direct du résumé, jamais un repli qui l'entoure.
+    expect(CSS).toMatch(/details\[open\] > summary \[data-chevron\] \{\s*rotate: 90deg;/);
     // 2. LOT P3 : le filet plein et discret du panneau d'information, fermé
     //    comme ouvert. Le pointillé du repli fermé disait « vide » ; un repli
     //    fermé n'est que rangé, et le chevron dit seul qu'il est replié.
@@ -37,6 +44,9 @@ describe("Tiroir", () => {
     // 3. ce qui attend derrière
     expect(html).toContain("4 clientèles");
     expect(html).toContain("déplier");
+    // « déplier » se tait quand CE tiroir s'ouvre (et non un repli autour).
+    expect(html).toMatch(/<span data-deplier=""[^>]*>déplier</);
+    expect(CSS).toMatch(/details\[open\] > summary \[data-deplier\] \{\s*display: none;/);
   });
 
   it("masque le triangle natif, sinon il double le nôtre", () => {
@@ -128,8 +138,12 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
       const replis = [...source.matchAll(/<details[\s\S]*?<\/summary>/g)].map((m) => m[0]);
       expect(replis.length).toBeGreaterThan(0);
       for (const repli of replis) {
-        // Le signe commun : un chevron qui pivote à l'ouverture.
-        expect(repli, repli.slice(0, 120)).toContain("group-open:rotate-90");
+        // Le signe commun : un chevron qui pivote à l'ouverture. Lot P5 :
+        // c'est le chevron commun (`Chevron`, qui porte la rotation : voir
+        // plus bas), et plus un glyphe écrit à côté.
+        expect(repli, repli.slice(0, 120)).toContain("<Chevron");
+        const code = repli.replace(/\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*/g, "");
+        expect(code, repli.slice(0, 120)).not.toMatch(/[▸›▾]/);
         // Plus de pointillé : un repli fermé est rangé, pas vide.
         expect(repli, repli.slice(0, 120)).not.toContain("border-dashed");
         // Et c'est un panneau d'un des deux rôles, ou une ligne de la liste des
@@ -155,8 +169,12 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
     const debut = source.indexOf("data-tour-passe");
     expect(debut).toBeGreaterThan(-1);
     const tour = source.slice(debut, source.indexOf("</summary>", debut));
-    expect(tour).toContain("group-open:rotate-90");
+    expect(tour).toContain("<Chevron");
     expect(tour).not.toContain("border-dashed");
+    // Et le chevron commun pivote, lui, à l'ouverture de son repli.
+    const chevron = lire(join("src", "components", "repliable.tsx"));
+    expect(chevron.slice(chevron.indexOf("export function Chevron"))).toContain('data-chevron=""');
+    expect(CSS).toMatch(/details\[open\] > summary \[data-chevron\] \{\s*rotate: 90deg;/);
   });
 
   it.each(DOIVENT_PASSER_PAR_TIROIR)("%s : aucun repli écrit à la main", (fichier) => {

@@ -2753,12 +2753,6 @@ a.carte {
   }
 }
 
-/* L'anneau de l'ouverture de /jouer : une ardoise, pas une bande, mais le
-   même marine. L'anneau s'y pose comme dans un bloc à contre-jour. */
-[data-theme="clair"] .ardoise .halo-de-page {
-  display: block;
-}
-
 /* ===========================================================================
  * LOT 3A : LES MOMENTS CLÉS DE L'ARÈNE ET DES ÉPISODES.
  * Ardoise du dirigeant, rituel « le marché répond », clôture de l'exercice,
@@ -3155,9 +3149,6 @@ a.carte {
   --duree-chiffre: 0.6s;
   --duree-trace: 0.55s;
   --duree-eclat: 0.45s;
-  /* Le retard de la médaille : elle se pose AVEC le temps du rituel qui annonce
-     le rang (« LOT 3A » : troisième temps à 0,65 s, long de 0,4 s), pas avant. */
-  --retard-de-la-medaille: 0.75s;
   /* Une seule courbe pour tout le produit : départ franc, arrivée posée.
      C'est déjà celle du rituel et de la révélation du classement. */
   --courbe-passage: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -3202,25 +3193,10 @@ a.carte {
   animation: courbe-se-trace var(--duree-trace) var(--courbe-passage) both;
 }
 
-/* LA MÉDAILLE SE POSE. Au rituel, la pastille du rang tombe d'un cinquième de
-   cadratin en grandissant d'un rien : le geste d'un jeton qu'on pose sur la
-   table. Elle ne se joue QUE dans le troisième temps, c'est-à-dire au moment
-   où le rang est annoncé ; ailleurs, la pastille est posée. Le retard est celui
-   du temps qui la porte (voir « LOT 3A ») : elle arrive avec lui, pas avant. */
-@keyframes medaille-se-pose {
-  from {
-    opacity: 0;
-    transform: translateY(-0.2em) scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.rituel > [data-temps="3"] .pastille-rang {
-  animation: medaille-se-pose var(--duree-passage) var(--courbe-passage) both;
-  animation-delay: var(--retard-de-la-medaille);
-}
+/* LA MÉDAILLE NE SE POSE PLUS AU RITUEL (lot P5). Elle tombait, au troisième
+   temps, à côté de « 2e sur 3 » qui disait déjà le rang : le rang s'écrit
+   une fois, en or, et la médaille ne reste que là où elle est seule à le dire
+   (podium, classement en liste). Son geste est parti avec elle. */
 
 /* ───────────────────── 2. LES PASSAGES D'UN ÉCRAN À L'AUTRE ───────────────── */
 
@@ -3528,7 +3504,6 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
    (Le compteur, lui, se coupe côté script : voir `lib/mouvement.ts`.) */
 @media (prefers-reduced-motion: reduce) {
   :root[data-chiffres-arrivent] .ardoise svg polyline,
-  .rituel > [data-temps="3"] .pastille-rang,
   [role="tabpanel"] > *,
   details[open] > :not(summary),
   .valeur-rafraichie[data-valeur-rafraichie="eclat"],
@@ -4282,4 +4257,21 @@ main[data-ecran-de-jeu] {
 .marche-de-podium.ligne-moi {
   background-color: var(--color-slate-900);
   box-shadow: inset 0 0 0 1px var(--metier, var(--color-slate-300));
+}
+
+/* ───────────────────────────── LOT P5 — LES CINQ RESTES ──────────────────── */
+
+/* LE CHEVRON DES REPLIS PIVOTE AVEC SON REPLI, ET AVEC LUI SEUL. Il pivotait
+   par `group-open:rotate-90`, qui regarde N'IMPORTE QUEL ancêtre `.group`
+   ouvert : un tiroir fermé posé dans un repli ouvert (« Comment l'IPG se
+   calcule », dans un tour clos déplié) montrait un chevron ouvert et cachait
+   son « déplier ». La règle lit désormais le `<details>` qui porte le résumé,
+   et lui seul (`>`) : le chevron commun (`Chevron`, repliable.tsx) pivote d'un
+   quart de tour quand SON repli s'ouvre. Le geste est coupé pour qui demande
+   moins de mouvement (`motion-reduce:transition-none` sur le chevron). */
+details[open] > summary [data-chevron] {
+  rotate: 90deg;
+}
+details[open] > summary [data-deplier] {
+  display: none;
 }

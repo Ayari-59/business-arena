@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { ordinal, formatDecimal } from "@/lib/format";
-import { PastilleDeRang, metalDuRang } from "@/components/rang";
 import { ChiffreQuiArrive } from "@/components/chiffre-qui-arrive";
 import type { NomDePlume } from "@/lib/plumes";
 
@@ -22,7 +21,10 @@ import type { NomDePlume } from "@/lib/plumes";
  *      chiffre en vert ou en rouge francs, sans halo), et une FLÈCHE FINE, d'un
  *      trait, reste devant l'écart ;
  *   3. la cause (le verdict en une phrase, et ce qui a fait le résultat :
- *      lot 6E), puis la place (le rang en or avec sa médaille).
+ *      lot 6E), puis la place : le rang écrit UNE fois, en or (« 2e sur 3 »).
+ *      Lot P5 : la médaille ronde « 2 » posée à côté le disait deux fois ; elle
+ *      est partie. Une médaille ne reste que là où elle est SEULE à dire le rang
+ *      (podium, classement en liste).
  * Puis les actions.
  *
  * LA MÊME GRAMMAIRE SERT DEUX FOIS. En plein écran à la fin d'un tour de
@@ -185,7 +187,6 @@ export function VerdictDuMarche({
   animer?: boolean;
 }) {
   const ecran = forme === "ecran";
-  const metal = rang ? metalDuRang(rang.place) : null;
   return (
     <div
       data-verdict-du-marche={forme}
@@ -281,17 +282,10 @@ export function VerdictDuMarche({
                 ecran ? "justify-center text-4xl" : "text-2xl"
               }`}
             >
-              <PastilleDeRang
-                rang={rang.place}
-                moi
-                doublon
-                className={ecran ? "text-3xl" : "text-xl"}
-              />
+              {/* LE RANG, DIT UNE FOIS (lot P5) : en or, en toutes lettres. La
+                  médaille du podium posée devant le redisait. */}
               <span className="texte-or">
                 {ordinal(rang.place)} sur {rang.sur}
-              </span>
-              <span className="sr-only">
-                {metal ? `, médaille ${metal === "or" ? "d'or" : `de ${metal}`}` : ""}
               </span>
               {/* Sur l'écran du rituel, l'IPG se lit sur la ligne du rang (lot 6E) :
                   une ligne de moins, pour que l'action reste dans la fenêtre. */}

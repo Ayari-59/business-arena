@@ -16,7 +16,30 @@ import { aller, ouvrirNavigateur } from "./helpers/browser";
  * ne bouge pas.
  */
 
-const PAGES = ["/enseignants", "/animations", "/entreprises", "/entreprises/episode", "/jouer"];
+/*
+ * GARDE DÉPLACÉE (lot P5). Elle mesurait l'encre du titre avec et sans
+ * l'anneau sur cinq en-têtes, dont /jouer, /enseignants et /entreprises. Le
+ * propriétaire a retiré l'anneau de /jouer, comme de la vitrine au lot P2, et
+ * il est parti avec lui des ouvertures marines (enseignants, écoles,
+ * entreprises) : c'est le même composant. La garde vérifie donc d'abord
+ * qu'AUCUN en-tête de page publique ne le porte (ni lui, ni un anneau redessiné
+ * à la main), et garde sa mesure d'encre sur les pages qui posent encore le
+ * composant (le papier le masque) : rien ne doit se peindre sur un titre.
+ */
+const PAGES = ["/animations", "/entreprises/episode"];
+
+/** Les pages publiques à en-tête : aucune ne porte l'anneau décoratif. */
+const EN_TETES_PUBLICS = [
+  "/",
+  "/jouer",
+  "/enseignants",
+  "/ecoles",
+  "/entreprises",
+  "/animations",
+  "/fonctionnalites",
+  "/entreprises/episode",
+  "/enseignants/episodes",
+];
 
 let navigateur: Browser;
 
@@ -131,6 +154,46 @@ describe("le héros de la vitrine : les lieux à la place de l'anneau (lot P2)",
     }
     await contexte.close();
   }, 60_000);
+});
+
+describe("aucun en-tête de page publique ne porte l'anneau décoratif (lot P5)", () => {
+  for (const chemin of EN_TETES_PUBLICS) {
+    for (const largeur of [1280, 390]) {
+      it(`${chemin}, à ${largeur} px : ni l'anneau, ni un anneau redessiné`, async () => {
+        const contexte = await navigateur.newContext({ viewport: { width: largeur, height: 800 } });
+        const page = await contexte.newPage();
+        await aller(page, chemin);
+        const m = await page.evaluate(() => {
+          const peint = (e: Element) => {
+            const s = getComputedStyle(e);
+            const r = e.getBoundingClientRect();
+            return s.display !== "none" && s.visibility !== "hidden" && r.width > 0 && r.height > 0;
+          };
+          // L'anneau du composant, s'il se peint encore quelque part.
+          const anneaux = [...document.querySelectorAll(".halo-de-page")].filter(peint).length;
+          // Un anneau redessiné à la main : un grand cercle décoratif (rayon
+          // plein, bordure ou fond peint, hors du flux) dans le premier écran.
+          const cercles = [...document.querySelectorAll<HTMLElement>("main *")]
+            .filter((e) => {
+              if (!peint(e)) return false;
+              const s = getComputedStyle(e);
+              const r = e.getBoundingClientRect();
+              if (s.position !== "absolute" && s.position !== "fixed") return false;
+              if (r.width < 160 || Math.abs(r.width - r.height) > 2 || r.top > innerHeight) return false;
+              if (!/(50%|9999px)/.test(s.borderTopLeftRadius) && parseFloat(s.borderTopLeftRadius) < r.width / 2 - 1)
+                return false;
+              const bord = parseFloat(s.borderTopWidth) > 0 && !/rgba\(.*,\s*0\)$/.test(s.borderTopColor);
+              return bord && e.closest("[aria-hidden='true']") !== null;
+            })
+            .map((e) => e.className.toString().slice(0, 60));
+          return { anneaux, cercles };
+        });
+        expect(m.anneaux, `${chemin} porte encore l'anneau décoratif`).toBe(0);
+        expect(m.cercles, `${chemin} : anneau redessiné`).toEqual([]);
+        await contexte.close();
+      }, 60_000);
+    }
+  }
 });
 
 describe("le halo des en-têtes", () => {
