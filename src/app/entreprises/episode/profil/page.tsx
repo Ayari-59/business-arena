@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GuardedForm } from "@/components/guarded-action";
-import { HaloDePage } from "@/components/halo-de-page";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { Repliable } from "@/components/repliable";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -276,7 +275,6 @@ export default async function ProfilPage({
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
-        <HaloDePage />
         <EnTeteDePage
           surtitre={
             <>

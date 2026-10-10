@@ -603,10 +603,6 @@
      pas à trois mètres sur une projection ; montée à 9 %, elle dessine un
      filet de lumière net sans virer au laiteux (le marine reste marine). */
   --lumiere-carte: color-mix(in oklab, #fff 9%, transparent);
-  /* L'anneau du haut de page (voir `.halo-de-page`) : un bleu PLEIN de la
-     gamme du tableau, #1b416f, ton sur ton sur le marine. Il a été un orange
-     dilué, à 18 puis à 45 % : sur le marine, un orange dilué sort cuivré. */
-  --halo-de-page: #1b416f;
   /* Le filet d'une carte : un trait de lumière sur le marine. LOT 6A : 10 %
      se perdait sur le marine d'une projection ; monté à 16 %, un panneau se
      détache de son sol à trois mètres. Trait non textuel : plus il est clair,
@@ -861,9 +857,9 @@ body:has(main[data-ecran-de-jeu]) {
 
 /* LE FOND EST UN APLAT. Le papier avait un grain et un halo de laiton fixé
    sous l'en-tête : deux matières qui disaient la salle de classe. L'arène
-   n'en garde aucune, un tableau des scores est net. La seule touche de
-   lumière est l'anneau orange des hauts de page (`.halo-de-page`), qui vit
-   dans son bloc et non sous toute la page.
+   n'en garde aucune, un tableau des scores est net. L'anneau décoratif des
+   hauts de page, qui fut sa seule touche de lumière, est parti lui aussi
+   (lots P2 et P5) : les photographies des lieux ont pris sa place.
 
    LES CHIFFRES SONT TABULAIRES PARTOUT. Un jeu de gestion aligne des montants
    d'une ligne à l'autre ; des chiffres à chasse variable font danser les
@@ -1093,9 +1089,6 @@ body {
   /* Voir le bloc des reliefs sombres : un reflet ne s'inverse pas. Il faut
      beaucoup plus de blanc pour éclairer une surface presque blanche. */
   --lumiere-carte: color-mix(in oklab, #fff 60%, transparent);
-  /* L'anneau ne se pose pas sur le clair (voir `.halo-de-page`) : il n'a
-     donc pas de teinte ici. */
-  --halo-de-page: transparent;
   /* Le filet des cartes blanches : le gris bleuté de la maquette. */
   --filet-carte: #dbe2ee;
   /* L'ORANGE QUI SE LIT SUR LE BLANC. L'orange ambré ne tient que 2,4 pour
@@ -1564,54 +1557,6 @@ body {
  * (theme-clair.css). L'échelle d'origine de Tailwind, sous le `@theme`, ne
  * s'affiche plus nulle part telle quelle.
  * ------------------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------------------
- * L'ANNEAU DU HAUT DE PAGE.
- *
- * Six pages publiques dessinaient à la main un disque de laiton flou derrière
- * leur en-tête. Il est devenu un composant (HaloDePage), et l'arène en change
- * la forme : un ANNEAU en filigrane, qui déborde du coin haut droit, comme sur
- * la maquette du héros marine. Un cercle de piste plutôt qu'une lueur. Sa
- * teinte passe par `--halo-de-page` : un bleu plein de la gamme, #1b416f, ton
- * sur ton sur le marine. Orange dilué, il sortait cuivré.
- *
- * IL NE VIT QUE SUR LE MARINE. Posé sur une page claire, le même anneau, même
- * dilué à 10 %, faisait une grosse tache rose pâle en haut à droite de la page
- * d'un épisode ou de la liste des épisodes : un filigrane devient une salissure
- * sur un fond presque blanc. Il n'apparaît donc que dans un bloc à contre-jour
- * (le haut de l'accueil, ou toute bande que l'administrateur passe au marine) ;
- * ailleurs, le composant reste dans la page sans rien peindre.
- *
- * L'ÉPAISSEUR SUIT LA LARGEUR DE L'ÉCRAN, en trait plus fin que la maquette :
- * à 4 rem d'épaisseur, l'anneau faisait une large bande terne ; plus fin, il
- * se lit comme un cercle de piste. Le titre qui passe dessus garde son
- * contraste, mesuré sur #1b416f : le blanc cassé y est à 8,8:1, l'orange
- * ambré de la seconde ligne à 4,4:1 (titre de grande taille, seuil 3:1), le
- * chapeau à 7,6:1.
- * ------------------------------------------------------------------------- */
-.halo-de-page {
-  border: clamp(1rem, 2.4vw, 2.25rem) solid var(--halo-de-page);
-  z-index: -1;
-}
-
-[data-theme="clair"] .halo-de-page {
-  display: none;
-}
-
-[data-theme="clair"] .contre-jour .halo-de-page {
-  display: block;
-}
-
-/* LE HALO PASSE DERRIÈRE LE TEXTE. Posé en position absolue sans profondeur,
-   il se peignait AU-DESSUS de tout ce qui le suit sans être positionné : les
-   titres et les chapeaux de quatorze pages. Le voile tombait sur l'encre, si
-   bien qu'un titre à 19,3:1 de contraste s'affichait à 8,1:1, et plus foncé au
-   bord du disque qu'en son centre. Une profondeur négative le met sous le
-   texte ; son parent devient un contexte d'empilement à part, sans quoi la
-   lueur passerait aussi sous le fond de la page et disparaîtrait. */
-:has(> .halo-de-page) {
-  isolation: isolate;
-}
 
 /* ---------------------------------------------------------------------------
  * LES CAPTURES D'ÉCRAN : UNE SEULE PRISE, CELLE DU SITE TEL QU'IL EST.

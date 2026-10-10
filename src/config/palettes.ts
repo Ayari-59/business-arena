@@ -195,16 +195,14 @@ export function feuilleDePalette(code: CodePalette): string {
     "--accent-plein:var(--color-amber-500);--accent-plein-survol:var(--color-amber-500);" +
     "--accent-plein-texte:var(--color-slate-950);--accent-plein-ombre:var(--color-amber-700);";
   // CE QUI N'APPARTIENT QU'À L'ORANGE DE L'ARÈNE. Ses voiles d'état neutres
-  // (sur le papier comme sur le marine), son accent toujours plein et son
-  // anneau ton sur ton (globals.css) sont des choix de l'arène, pas du site :
-  // une autre palette les remet à `initial`, et les règles retombent sur
-  // l'accent de la palette, dilué comme la classe le demande, et sur
-  // l'anneau teinté de son accent.
+  // (sur le papier comme sur le marine) et son accent toujours plein
+  // (globals.css) sont des choix de l'arène, pas du site : une autre palette
+  // les remet à `initial`, et les règles retombent sur l'accent de la
+  // palette, dilué comme la classe le demande.
   const propresALArene =
     "--accent-sans-dilution:initial;--voile-choisi-leger:initial;" +
     "--voile-choisi:initial;--voile-choisi-fort:initial;";
   const propresAuTableau =
-    "--halo-de-page:color-mix(in oklab,var(--accent-plein) 45%,transparent);" +
     "--voile-choisi-marine-leger:initial;--voile-choisi-marine:initial;--voile-choisi-marine-fort:initial;";
   return (
     `html[data-theme="clair"]{${lignes(echelleClaire(palette))}${aplat}${propresALArene}}` +

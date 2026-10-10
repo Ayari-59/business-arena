@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -189,5 +189,23 @@ describe("plus d'anneau décoratif dans les en-têtes publics (lot P5)", () => {
     }
     // La règle qui le rallumait sur l'ardoise de /jouer est partie avec lui.
     expect(CSS).not.toMatch(/\.ardoise \.halo-de-page/);
+  });
+});
+
+describe("l'anneau décoratif n'existe plus (après P5)", () => {
+  // Retiré de la vitrine (P2), de /jouer et des ouvertures marines (P5), puis
+  // de toutes les pages où il restait posé sans se peindre : le composant, sa
+  // règle, son jeton et sa teinte de palette sont partis avec lui.
+  const sources = (racine: string): string[] =>
+    readdirSync(racine).flatMap((e) => {
+      const c = join(racine, e);
+      return statSync(c).isDirectory() ? sources(c) : /\.(tsx?|css)$/.test(e) ? [c] : [];
+    });
+  it("ni composant, ni pose, ni règle, ni jeton", () => {
+    expect(existsSync(join(process.cwd(), "src/components/halo-de-page.tsx"))).toBe(false);
+    const fautes = sources(join(process.cwd(), "src")).filter((f) =>
+      /<HaloDePage|halo-de-page/.test(readFileSync(f, "utf8")),
+    );
+    expect(fautes).toEqual([]);
   });
 });

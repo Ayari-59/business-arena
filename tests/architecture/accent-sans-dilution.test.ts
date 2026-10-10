@@ -91,7 +91,8 @@ describe("l'accent ne se dilue pas", () => {
       ]) {
         expect(tableau, `${p.code} : --${nom}`).toContain(`--${nom}:initial;`);
       }
-      expect(tableau, `${p.code} : anneau`).toContain("--halo-de-page:color-mix(");
+      // L'anneau des hauts de page est retiré partout : plus de teinte à lui donner.
+      expect(tableau, `${p.code} : anneau`).not.toContain("--halo-de-page");
     }
   });
 });

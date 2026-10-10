@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GuardedForm } from "@/components/guarded-action";
-import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
@@ -32,7 +31,6 @@ export default async function RejoindrePage({
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
-        <HaloDePage />
         <div className="mx-auto grid max-w-2xl gap-6 px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
           <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/entreprises/episode" className="hover:text-slate-300">

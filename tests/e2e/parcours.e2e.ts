@@ -571,8 +571,6 @@ describe("parcours enseignant et élève", () => {
         const trop: string[] = [];
         for (const el of document.querySelectorAll("main *")) {
           const b = el.getBoundingClientRect();
-          // Le halo décoratif déborde volontairement : il ne porte rien à lire.
-          if (el.classList.contains("halo-de-page")) continue;
           if (b.width > 0 && (b.right > 391 || b.left < -1)) {
             trop.push(`${el.tagName}.${el.className.toString().slice(0, 40)}`);
           }

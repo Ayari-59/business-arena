@@ -3,7 +3,6 @@ import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { scenarioByCode } from "@/config/scenarios/registry";
-import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
@@ -61,8 +60,6 @@ export default function AteliersPage() {
   return (
     <>
       <main id="main" className="relative overflow-hidden">
-        <HaloDePage />
-
         <section className="mx-auto max-w-4xl px-6 py-14">
           <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/" className="hover:text-slate-300">

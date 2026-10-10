@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { FICHES, ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
@@ -48,7 +47,6 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
-        <HaloDePage />
         <article className="mx-auto max-w-4xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
           <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/enseignants" className="hover:text-slate-300">

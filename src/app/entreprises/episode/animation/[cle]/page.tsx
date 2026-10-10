@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { HaloDePage } from "@/components/halo-de-page";
 import { lienDuDebrief } from "@/config/episodes/debrief";
 import { PiedDePage } from "@/components/pied-de-page";
 import { SEUIL_D_ANONYMAT } from "@/pedagogy/profil/cohorte";
@@ -37,7 +36,6 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
-        <HaloDePage />
         <div className="mx-auto grid max-w-4xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
           <header className="grid gap-3">
             <p className="text-xs uppercase tracking-annonce text-slate-400">

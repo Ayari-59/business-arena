@@ -1,33 +1,25 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { Browser, Page } from "playwright-core";
+import type { Browser } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
 
 /**
- * LE HALO ÉCLAIRE LE TITRE, IL NE LE VOILE PAS.
+ * LES EN-TÊTES SANS ANNEAU.
  *
- * Le disque de laiton posé derrière les en-têtes se peignait en réalité
- * par-dessus le texte : sur « Pour les enseignants », le titre passait de
- * 19,3:1 à 8,1:1 de contraste, et ses mots n'avaient pas la même couleur.
- * La mesure de contraste du dépôt ne pouvait pas le voir : elle lit les fonds
- * empilés SOUS un texte, pas ce qui est peint dessus.
- *
- * On mesure donc le rendu lui-même : l'encre la plus sombre du titre, sur une
- * capture, avec le halo puis sans lui. Si le halo est bien derrière, l'encre
- * ne bouge pas.
+ * Le disque de laiton, puis l'anneau de piste, ont longtemps débordé du coin
+ * haut droit des en-têtes publics. Un ornement sans rôle, relevé par l'audit
+ * premium : retiré de la vitrine (lot P2), de /jouer et des ouvertures marines
+ * (lot P5), puis de tout le site. Cette garde mesure le rendu : aucun anneau,
+ * ni le composant d'hier, ni un cercle redessiné à la main.
  */
 
 /*
- * GARDE DÉPLACÉE (lot P5). Elle mesurait l'encre du titre avec et sans
- * l'anneau sur cinq en-têtes, dont /jouer, /enseignants et /entreprises. Le
- * propriétaire a retiré l'anneau de /jouer, comme de la vitrine au lot P2, et
- * il est parti avec lui des ouvertures marines (enseignants, écoles,
- * entreprises) : c'est le même composant. La garde vérifie donc d'abord
- * qu'AUCUN en-tête de page publique ne le porte (ni lui, ni un anneau redessiné
- * à la main), et garde sa mesure d'encre sur les pages qui posent encore le
- * composant (le papier le masque) : rien ne doit se peindre sur un titre.
+ * GARDE DÉPLACÉE (lot P5, puis retrait complet). Elle mesurait l'encre du
+ * titre avec et sans l'anneau, pour vérifier qu'il se peignait SOUS le texte.
+ * L'anneau est retiré de tout le site : la mesure n'a plus d'objet. La garde
+ * vérifie qu'AUCUN en-tête de page publique ne le porte, ni lui, ni un anneau
+ * redessiné à la main, y compris sur les pages qui le posaient encore sans le
+ * peindre (ateliers, fonctionnalités, épisodes).
  */
-const PAGES = ["/animations", "/entreprises/episode"];
-
 /** Les pages publiques à en-tête : aucune ne porte l'anneau décoratif. */
 const EN_TETES_PUBLICS = [
   "/",
@@ -39,6 +31,8 @@ const EN_TETES_PUBLICS = [
   "/fonctionnalites",
   "/entreprises/episode",
   "/enseignants/episodes",
+  "/entreprises/episode/reprendre",
+  "/entreprises/episode/rejoindre",
 ];
 
 let navigateur: Browser;
@@ -50,41 +44,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await navigateur?.close();
 });
-
-/** La clarté relative (0 noir, 1 blanc) de l'encre d'un titre, lue sur sa capture. */
-async function encreDuTitre(page: Page, theme: string): Promise<number> {
-  const titre = page.locator("main h1").first();
-  const png = (await titre.screenshot()).toString("base64");
-  return page.evaluate(
-    async ({ png, sombre }) => {
-      const image = new Image();
-      image.src = `data:image/png;base64,${png}`;
-      await image.decode();
-      const toile = document.createElement("canvas");
-      toile.width = image.width;
-      toile.height = image.height;
-      const ctx = toile.getContext("2d")!;
-      ctx.drawImage(image, 0, 0);
-      const { data } = ctx.getImageData(0, 0, image.width, image.height);
-      const lin = (c: number) => {
-        const v = c / 255;
-        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-      };
-      const clartes: number[] = [];
-      for (let i = 0; i < data.length; i += 4) {
-        clartes.push(
-          0.2126 * lin(data[i]!) + 0.7152 * lin(data[i + 1]!) + 0.0722 * lin(data[i + 2]!),
-        );
-      }
-      clartes.sort((a, b) => a - b);
-      // L'encre : les pixels les plus foncés en thème clair, les plus clairs en thème sombre.
-      return sombre
-        ? clartes[Math.floor(clartes.length * 0.98)]!
-        : clartes[Math.floor(clartes.length * 0.02)]!;
-    },
-    { png, sombre: theme === "sombre" },
-  );
-}
 
 /** Le rapport de contraste WCAG de deux couleurs `rgb(r, g, b)` opaques. */
 function rapport(a: string, b: string): number {
@@ -190,35 +149,6 @@ describe("aucun en-tête de page publique ne porte l'anneau décoratif (lot P5)"
         });
         expect(m.anneaux, `${chemin} porte encore l'anneau décoratif`).toBe(0);
         expect(m.cercles, `${chemin} : anneau redessiné`).toEqual([]);
-        await contexte.close();
-      }, 60_000);
-    }
-  }
-});
-
-describe("le halo des en-têtes", () => {
-  // Le site n'a plus qu'un habillage, le papier : le thème sombre, où l'encre
-  // était la plus claire de l'image, n'existe plus.
-  for (const theme of ["clair"]) {
-    for (const chemin of PAGES) {
-      it(`laisse son encre au titre de ${chemin}, thème ${theme}`, async () => {
-        const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 800 } });
-        await contexte.addInitScript((t) => {
-          try {
-            localStorage.setItem("arena-theme", t);
-          } catch {
-            /* rien */
-          }
-        }, theme);
-        const page = await contexte.newPage();
-        await aller(page, chemin);
-        expect(await page.locator(".halo-de-page").count(), "la page a un halo").toBe(1);
-        const avec = await encreDuTitre(page, theme);
-        await page.addStyleTag({ content: ".halo-de-page { display: none !important; }" });
-        const sans = await encreDuTitre(page, theme);
-        expect(Math.abs(avec - sans), `encre ${avec} avec le halo, ${sans} sans`).toBeLessThan(
-          0.005,
-        );
         await contexte.close();
       }, 60_000);
     }

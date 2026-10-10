@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { FAMILLES, SECTEURS } from "@/config/episodes/familles";
 import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
@@ -35,7 +34,6 @@ export default function EpisodesEnClassePage() {
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
-        <HaloDePage />
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
           <p className="text-xs uppercase tracking-annonce text-slate-400">
             <Link href="/enseignants" className="hover:text-slate-300">

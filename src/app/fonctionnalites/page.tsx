@@ -6,7 +6,6 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
-import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { EnTeteDePage } from "@/components/en-tete-de-page";
 import { Bande } from "@/components/bande";
@@ -73,8 +72,6 @@ export default async function FonctionnalitesPage() {
   return (
     <>
       <main id="main" className="relative overflow-hidden">
-        <HaloDePage />
-
         <Bande
           id="fonctionnalites.accroche"
           contraste={c("fonctionnalites.accroche")}

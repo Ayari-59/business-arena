@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EpisodeJoue } from "@/components/episode/episode-joue";
-import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
 import { teinteDuMetierDeLEpisode } from "@/config/episodes/familles";
@@ -47,7 +46,6 @@ export default async function EpisodePage({ params }: { params: Promise<{ code: 
           courbe des semaines et le bilan lisent. Un épisode sans famille
           déclarée garde l'encre de la donnée. */}
       <main id="main" data-metier={teinteDuMetierDeLEpisode(code)} className="relative overflow-x-clip">
-        <HaloDePage />
         <EpisodeJoue code={code} />
       </main>
       <PiedDePage />
