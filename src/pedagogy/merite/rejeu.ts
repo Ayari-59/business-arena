@@ -30,7 +30,7 @@
  *
  * Tout est pur : mêmes entrées, mêmes sorties.
  */
-import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile, type LeviersOuverts } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import type {
   CompanyRoundResult,
@@ -124,6 +124,17 @@ export interface PartieARejouer {
   pedagogie: readonly Readonly<Record<string, PedagogieDuTour>>[];
   /** Les événements actifs au départ (vide pour une partie ordinaire). */
   evenementsInitiaux?: readonly EventInstance[];
+  /**
+   * Le niveau ouvre l'investissement sans les embauches : les concurrents
+   * pilotés investissent sous le plafond, comme à la clôture.
+   */
+  investissementPlafonne?: boolean;
+  /**
+   * Les leviers figés de la partie : les concurrents pilotés et les valeurs
+   * proposées s'y tiennent, comme à la clôture. Absents (partie d'avant la
+   * répartition d'octobre 2026) : tout, comme alors.
+   */
+  leviers?: LeviersOuverts | null;
 }
 
 /** Qui décide pour le joueur : ses décisions jouées, ou une méthode. */
@@ -243,6 +254,8 @@ export function rejouer(
           lastSoldByProduct: venduParProduit[e.id],
           humanAvgPrice,
           personality: botPersonalityFromSeed(graine, profil),
+          investissementPlafonne: partie.investissementPlafonne === true,
+          leviers: partie.leviers ?? null,
         });
         continue;
       }
@@ -280,6 +293,7 @@ export function rejouer(
         state,
         roundIndex: tour,
         previousPayload: precedentes[e.id],
+        leviers: partie.leviers ?? null,
       });
       const source: DecisionSourceMap = reconduites.has(e.id)
         ? SOURCE_RECONDUITE

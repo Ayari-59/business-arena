@@ -11,7 +11,12 @@ import {
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
-import { presetFromProfile } from "@/config/difficulty";
+import { leviersFigesDuProfil, premierNiveauQuiOuvre, presetFromProfile } from "@/config/difficulty";
+import {
+  capaciteDeLAtelier,
+  plafondDInvestissement,
+  type PlafondDInvestissement,
+} from "@/engine/investment/plafond";
 import { teamDisplayName } from "@/config/nom-equipe";
 import {
   compositionDesEquipes,
@@ -587,6 +592,14 @@ export interface GameView {
   distributableReserves: number;
   /** Saison du tour courant : coefficients ≠ 1 (marché global et segments). */
   seasonNotes: { name: string; coef: number }[];
+  /**
+   * LE PLAFOND D'INVESTISSEMENT DU TOUR (`engine/investment/plafond`) : aux
+   * niveaux sans embauches, on n'achète pas plus de capacité que l'équipe ne
+   * fait tourner. Calculé à tous les niveaux qui ouvrent l'investissement (là
+   * où il ne s'applique pas, l'aide dit seulement d'où il faudra embaucher).
+   * `null` : pas d'investissement à ce niveau ou dans ce scénario.
+   */
+  plafondInvestissement: (PlafondDInvestissement & { niveauDesEmbauches: number | null }) | null;
   /** Investissement proposé par le scénario (échelle de la périodicité). */
   investmentOffer: { costPerCapacityUnit: number; maxPerRound: number } | null;
   /** Équipements typés : catalogue de machines et parc actuel. */
@@ -729,6 +742,14 @@ export interface GameView {
      * le réglage d'une séance courte, où personne ne doit rester bloqué.
      */
     financementObligatoire: boolean;
+    /**
+     * Le niveau ouvre-t-il l'emprunt et l'apport des associés ? Fermés (niveaux
+     * 1 à 3), la banque couvre seule par le découvert : l'alerte ne réclame pas
+     * un levier que l'écran ne propose pas.
+     */
+    financementOuvert: boolean;
+    /** Le niveau qui ouvre le financement, pour le dire ; `null` si aucun. */
+    niveauDuFinancement: number | null;
   } | null;
   /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
   studiesOffer: {
@@ -1454,6 +1475,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       plafondDecouvert: plafond,
       manque: Math.max(0, -tresorerie - plafond),
       financementObligatoire: snapshot.finance.rescueFinancingRequired ?? true,
+      financementOuvert: presetFromProfile(game.difficultyProfile).decisions.finance,
+      niveauDuFinancement: premierNiveauQuiOuvre(
+        "finance",
+        undefined,
+        presetFromProfile(game.difficultyProfile).level,
+      ),
     };
   })();
 
@@ -1486,8 +1513,14 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   const demandeSubvention = alerteView?.crise
     ? await demandeDuTour(playerTeam.id, game.currentRound)
     : null;
+  // SANS FINANCEMENT À CE NIVEAU, PAS DE VERROU. L'exigence réclame un emprunt
+  // ou un apport : là où le niveau ne les ouvre pas (1 à 3), elle bloquait la
+  // validation devant des leviers absents de l'écran. La banque y répond seule :
+  // le découvert couvre le manque, à son taux, et au-delà de son plafond elle
+  // cède les créances ; la crise et la défaillance suivent leur cours.
+  const financeOuverte = presetFromProfile(game.difficultyProfile).decisions.finance;
   const exigenceSauvetage =
-    alerteView?.crise && alerteView.financementObligatoire
+    alerteView?.crise && alerteView.financementObligatoire && financeOuverte
       ? {
           manque: alerteView.manque,
           capaciteEmprunt: loanCapacityView?.remaining ?? null,
@@ -1813,6 +1846,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       game.scenarioSnapshot as EngineScenarioConfig,
       stateRow?.state as CompanyState | undefined,
       game.currentRound,
+      leviersFigesDuProfil(game.difficultyProfile),
     ),
     proposedDecisions: (() => {
       return proposedDecisionsFor({
@@ -1820,6 +1854,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         state: stateRow?.state as CompanyState | undefined,
         roundIndex: game.currentRound,
         previousPayload: lastDecisions,
+        leviers: leviersFigesDuProfil(game.difficultyProfile),
       });
     })(),
     insuranceOffer: (() => {
@@ -2028,25 +2063,18 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const state = stateRow?.state as CompanyState | undefined;
       if (!state) return null;
-      let mc: number;
-      if (snapshot.equipment) {
-        const types = new Map(snapshot.equipment.types.map((t) => [t.code, t]));
-        const all = [...(state.fleet ?? []), ...(state.pendingFleet ?? [])];
-        mc = all.reduce((sum, item) => {
-          const typ = types.get(item.typeCode);
-          return sum + (typ ? item.count * typ.capacityPerUnit : 0);
-        }, 0);
-      } else {
-        mc = state.machineCapacity + (state.pendingCapacity ?? 0);
-      }
-      const lc = (state.headcount * state.hoursPerEmployee * state.productivity) /
-        snapshot.product.hoursPerUnit;
+      // LA CAPACITÉ DE L'ATELIER A UNE SEULE SOURCE (`engine/investment/plafond`) :
+      // celle que le plafond d'investissement lit aussi. Le goulot affiché et la
+      // phrase du refus parlent ainsi des mêmes chiffres.
+      const atelier = capaciteDeLAtelier(snapshot, state);
+      const mc = atelier.machine;
+      const lc = atelier.mainDOeuvre;
       // LE GOULOT SE COMPARE À CE QUE L'ATELIER REND, PAS À CE QU'IL RENDRAIT
       // NEUF. Le moteur produit sous `machineCapacity × availability` ; une
       // équipe descendue à 80 % de disponibilité était annoncée « équilibrée »
       // alors que la machine l'arrêtait déjà.
-      const dispo = state.availability ?? 1;
-      const mcDispo = mc * dispo;
+      const dispo = atelier.disponibilite;
+      const mcDispo = atelier.machineDisponible;
       const bottleneck: "machine" | "labor" | "balanced" =
         mcDispo < lc * 0.95 ? "machine" : lc < mcDispo * 0.95 ? "labor" : "balanced";
       const sub = snapshot.subscription;
@@ -2078,6 +2106,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
     })(),
     enabledDecisions: presetFromProfile(game.difficultyProfile).decisions,
+    plafondInvestissement: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const state = stateRow?.state as CompanyState | undefined;
+      const preset = presetFromProfile(game.difficultyProfile);
+      if (!state || !preset.decisions.investment) return null;
+      const plafond = plafondDInvestissement(snapshot, state, preset.decisions);
+      return plafond.unite
+        ? { ...plafond, niveauDesEmbauches: premierNiveauQuiOuvre("hr", undefined, preset.level) }
+        : null;
+    })(),
     distributableReserves: Math.max(
       0,
       (stateRow?.state as CompanyState | undefined)?.reserves ?? 0,

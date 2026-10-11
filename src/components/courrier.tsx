@@ -6,6 +6,7 @@ import {
   type CourrierDef,
 } from "@/config/courriers/types";
 import { courrierParCode, positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
+import { courrierSelonLAssurance } from "@/config/courriers/sans-assurance";
 import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers/routine";
 import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mission";
 import { COURRIERS_EN_RETOUR, estUnCourrierEnRetour } from "@/config/courriers/reponses";
@@ -56,12 +57,16 @@ const missionParCode = new Map(LETTRES_DE_MISSION.map((c) => [c.code, c]));
 /** Les réponses non plus : elles ne se tirent pas, elles se méritent. */
 const retourParCode = new Map(COURRIERS_EN_RETOUR.map((c) => [c.code, c]));
 
-function courrier(code: string): CourrierDef | undefined {
-  return (
+function courrier(code: string, assurance = true): CourrierDef | undefined {
+  // Une partie dont le niveau n'ouvre pas l'assurance lit la variante sans elle
+  // (`config/courriers/sans-assurance`) : même effet, sans parler d'un contrat
+  // que l'équipe ne peut pas souscrire.
+  return courrierSelonLAssurance(
     courrierParCode.get(code) ??
-    routineParCode.get(code) ??
-    missionParCode.get(code) ??
-    retourParCode.get(code)
+      routineParCode.get(code) ??
+      missionParCode.get(code) ??
+      retourParCode.get(code),
+    assurance,
   );
 }
 
@@ -109,7 +114,10 @@ export function Enveloppe({
   destinataire,
   adresse,
   className = "",
+  assurance = true,
 }: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
   /** Le courrier contenu, s'il est connu : il donne le timbre et le cachet. */
   code?: string;
   /** La liasse imprimée en pied d'enveloppe. */
@@ -124,7 +132,7 @@ export function Enveloppe({
   adresse?: DestinataireDuCourrier;
   className?: string;
 }) {
-  const c = code ? courrier(code) : undefined;
+  const c = code ? courrier(code, assurance) : undefined;
   const nature = c ? NATURES[c.nature] : null;
   const interne = c?.pli === "interne";
   const bande = c ? BANDE_DU_PLI[c.pli] : null;
@@ -234,7 +242,10 @@ export function Lettre({
   adresse,
   quand,
   surligne = false,
+  assurance = true,
 }: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
   code: string;
   /** Courrier annoncé par l'enseignant, pas encore appliqué. */
   annonce?: boolean;
@@ -246,7 +257,7 @@ export function Lettre({
   /** Vrai quand le courrier s'adresse à l'entreprise de celui qui le lit. */
   surligne?: boolean;
 }) {
-  const c = courrier(code);
+  const c = courrier(code, assurance);
   if (!c) return null;
   const nature = NATURES[c.nature];
   const reference = referenceDuCourrier(code);
@@ -407,14 +418,17 @@ export function Courriel({
   destinataire,
   adresse,
   className = "",
+  assurance = true,
 }: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
   code?: string;
   destinataire?: string;
   /** L'entreprise destinataire : la ligne « À » porte son nom. */
   adresse?: DestinataireDuCourrier;
   className?: string;
 }) {
-  const c = code ? courrier(code) : undefined;
+  const c = code ? courrier(code, assurance) : undefined;
   const nature = c ? NATURES[c.nature] : null;
   const reference = code ? referenceDuCourrier(code) : null;
 
@@ -503,7 +517,10 @@ export function Message({
   destinataire,
   adresse,
   surligne = false,
+  assurance = true,
 }: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
   code: string;
   annonce?: boolean;
   destinataire?: string;
@@ -511,7 +528,7 @@ export function Message({
   adresse?: DestinataireDuCourrier;
   surligne?: boolean;
 }) {
-  const c = courrier(code);
+  const c = courrier(code, assurance);
   if (!c) return null;
   const nature = NATURES[c.nature];
   const reference = referenceDuCourrier(code);
@@ -689,13 +706,16 @@ export function EnveloppeOuverte({
   code,
   destinataire,
   adresse,
+  assurance = true,
 }: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
   code: string;
   destinataire?: string;
   /** L'entreprise destinataire : son nom, puis le service visé. */
   adresse?: DestinataireDuCourrier;
 }) {
-  const c = courrier(code);
+  const c = courrier(code, assurance);
   if (!c || c.pli === "email") return null;
   const interne = c.pli === "interne";
   return (
@@ -772,7 +792,10 @@ export function CourrierRecommande({
   adresse,
   quand,
   surligne = false,
+  assurance = true,
 }: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
   code: string;
   delayMs?: number;
   annonce?: boolean;
@@ -787,7 +810,7 @@ export function CourrierRecommande({
   quand?: string;
   surligne?: boolean;
 }) {
-  const c = courrier(code);
+  const c = courrier(code, assurance);
   if (!c) {
     return (
       <div className="rounded-lg encadre-neutre px-3 py-2 text-xs text-slate-200">
@@ -807,6 +830,7 @@ export function CourrierRecommande({
         {parCourriel ? (
           <Courriel
             code={code}
+            assurance={assurance}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}
             className="h-full"
@@ -814,6 +838,7 @@ export function CourrierRecommande({
         ) : (
           <Enveloppe
             code={code}
+            assurance={assurance}
             liasse={position?.liasse}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}
@@ -823,6 +848,7 @@ export function CourrierRecommande({
         {parCourriel ? (
           <Message
             code={code}
+            assurance={assurance}
             annonce={annonce}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}
@@ -831,6 +857,7 @@ export function CourrierRecommande({
         ) : (
           <Lettre
             code={code}
+            assurance={assurance}
             annonce={annonce}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}

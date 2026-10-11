@@ -144,6 +144,27 @@ describe("contexte des tours suivants", () => {
     expect(sans.routes.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("sans financement au niveau joué, aucun emprunt n'est proposé : la banque couvre, et cela a un prix", () => {
+    // Niveaux 1 à 3 depuis octobre 2026 : l'emprunt n'est pas à l'écran.
+    const crise = {
+      balanceSheet: { ...result().balanceSheet, overdraft: 9_000 },
+      functionalBalance: { frng: 40_000, bfr: 49_000, netTreasury: -9_000 },
+    };
+    const ferme = roundBriefing(
+      input({
+        result: result(crise),
+        enabled: { finance: false, creances: false, investment: false, hr: false },
+      }),
+    );
+    expect(ferme.code).toBe("treasury_crisis");
+    expect(ferme.routes.some((r) => /financement|emprunt/i.test(r.label))).toBe(false);
+    expect(ferme.routes.some((r) => r.label === "Laisser la banque couvrir")).toBe(true);
+    expect(ferme.routes.length).toBeGreaterThanOrEqual(2);
+    const ouvert = roundBriefing(input({ result: result(crise) }));
+    expect(ouvert.routes.some((r) => r.label === "Aller chercher du financement")).toBe(true);
+    expect(ouvert.routes.some((r) => r.label === "Laisser la banque couvrir")).toBe(false);
+  });
+
   it("la demande refusée est repérée, avec le volume réellement perdu", () => {
     const b = roundBriefing(
       input({

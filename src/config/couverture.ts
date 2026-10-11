@@ -69,7 +69,7 @@ const COMMENTAIRES: Record<string, string> = {
   "Temps et risque · Première, sciences de gestion et numérique":
     "Tour 4 : la crise de trésorerie (clients qui paient à 60 j). Cartes événements et arbitrage de l'assurance catastrophe : un coût certain contre un risque incertain.",
   "De l'individu à l'acteur · Première, sciences de gestion et numérique":
-    "Le jeu se joue en équipe : chaque décision est un arbitrage collectif. La rémunération et la motivation se vivent au niveau Arbitrage (RH) pour les groupes avancés.",
+    "Le jeu se joue en équipe : chaque décision est un arbitrage collectif. La rémunération et la motivation se vivent dès le niveau Pilotage (RH).",
   "Numérique et intelligence collective · Première, sciences de gestion et numérique":
     "Les KPI, graphiques et classements de l'arène sont l'information de gestion : apprendre à les lire, c'est le cours.",
   "Bloc 2 · Animer et dynamiser l'offre commerciale":
@@ -77,7 +77,7 @@ const COMMENTAIRES: Record<string, string> = {
   "Bloc 3 · Assurer la gestion opérationnelle":
     "Le cœur du jeu : compte de résultat, stocks au CUMP, délais clients et fournisseurs, crise de trésorerie du tour 4, TVA à décaisser dans le BFR.",
   "Bloc 4 · Manager l'équipe commerciale":
-    "Niveau Arbitrage : embaucher (effet au tour suivant), former (productivité), fixer l'indice de salaire. Sous-payer démotive et fait démissionner.",
+    "Niveau Pilotage : embaucher (effet au tour suivant), former (productivité), fixer l'indice de salaire. Sous-payer démotive et fait démissionner.",
   "Bloc 1 · Développer la relation client et assurer la vente conseil":
     "La fidélité par segment (part de marché passée) et la qualité perçue récompensent la constance : la relation client comme actif, pas comme slogan.",
   "Bloc 1 · Relation client et négociation-vente":
@@ -188,7 +188,7 @@ export const AU_DELA_DES_SEANCES: Record<
   cg1: [
     {
       referentiel: "P4 · Gestion des relations sociales",
-      quoi: "Le bloc RH (niveau Arbitrage) : masse salariale, coût d'un recrutement, d'un licenciement, d'une politique salariale, côté gestion et non côté paie réglementaire. Aucune séance de l'atelier ne lui est consacrée.",
+      quoi: "Le bloc RH (niveau Pilotage) : masse salariale, coût d'un recrutement, d'un licenciement, d'une politique salariale, côté gestion et non côté paie réglementaire. Aucune séance de l'atelier ne lui est consacrée.",
     },
   ],
 };

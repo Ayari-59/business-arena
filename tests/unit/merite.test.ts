@@ -113,19 +113,28 @@ describe("la référence : une méthode déclarée, déterministe", () => {
       treasury: { discount: 0, factoring: 0, placement: 5000 },
       finance: { newLoan: 1000, loanRepayment: 0 },
     };
+    // Niveau 1 : la qualité et l'entretien partent à la valeur que porte le
+    // champ caché du formulaire, celle de la gestion neutre (ici, `d` lui-même) ;
+    // ni assurance, ni équipe, ni créances, ni emprunt.
     const n1 = selonLeNiveau(d, presetByLevel.get(1)!.decisions);
-    expect(n1.qualityBudget).toBe(0);
-    expect(n1.maintenanceBudget).toBe(0);
+    expect(n1.qualityBudget).toBe(3000);
+    expect(n1.maintenanceBudget).toBe(4000);
     expect(n1.insurance).toBe(false);
     expect(n1.hr).toBeUndefined();
     expect(n1.treasury).toBeUndefined();
-    expect(n1.finance).toEqual({ newLoan: 1000, loanRepayment: 0, capitalIncrease: 0, dividend: 0 });
+    expect(n1.finance).toEqual({ newLoan: 0, loanRepayment: 0, capitalIncrease: 0, dividend: 0 });
+    // Niveau 3 : l'équipe et les créances, sans placement ni emprunt.
     const n3 = selonLeNiveau(d, presetByLevel.get(3)!.decisions);
-    expect(n3.qualityBudget).toBe(3000);
+    expect(n3.hr).toEqual({ salaryIndex: 1 });
     expect(n3.treasury).toEqual({ discount: 0, factoring: 0, placement: 0 });
-    expect(n3.hr).toBeUndefined();
+    expect(n3.insurance).toBe(false);
+    expect(n3.finance).toEqual({ newLoan: 0, loanRepayment: 0, capitalIncrease: 0, dividend: 0 });
+    // Niveau 4 : l'emprunt et l'assurance ; l'apport et le dividende restent hors de la méthode.
+    const n4 = selonLeNiveau(d, presetByLevel.get(4)!.decisions);
+    expect(n4.insurance).toBe("base");
+    expect(n4.finance).toEqual({ newLoan: 1000, loanRepayment: 0, capitalIncrease: 0, dividend: 0 });
+    expect(n4.treasury?.placement).toBe(0);
     const n5 = selonLeNiveau(d, presetByLevel.get(5)!.decisions);
-    expect(n5.hr).toEqual({ salaryIndex: 1 });
     expect(n5.treasury?.placement).toBe(5000);
   });
 });

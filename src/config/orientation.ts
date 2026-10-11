@@ -90,7 +90,8 @@ export const OBJECTIFS: readonly Objectif[] = [
     code: "risques",
     libelle: "Les risques et leur couverture",
     secteur: "batiment",
-    niveauMinimum: 3,
+    // La couverture des risques se décide avec l'assurance, ouverte au niveau 4.
+    niveauMinimum: 4,
     raison:
       "Le bâtiment porte des chantiers en cours et leurs aléas. Les risques y ont un montant : on les arbitre au lieu de les qualifier.",
   },
@@ -214,8 +215,8 @@ export function recommander(demande: Demande): Recommandation {
   let niveau = Math.max(atelier?.reglages.niveau ?? 2, objectif.niveauMinimum);
   if (demande.semestre === "s1") {
     // Le plancher de l'objectif ne se franchit pas : proposer « la trésorerie et
-    // le BFR » sur un niveau qui n'ouvre pas le financement enverrait
-    // l'enseignant chercher une banque qui n'existe pas dans sa partie.
+    // le BFR » sur un niveau qui n'ouvre pas les créances clients enverrait
+    // l'enseignant chercher un levier qui n'existe pas dans sa partie.
     const abaisse = Math.max(objectif.niveauMinimum, 1, niveau - 1);
     if (abaisse !== niveau) {
       pourquoi.push(

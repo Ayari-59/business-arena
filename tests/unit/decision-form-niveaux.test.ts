@@ -55,35 +55,63 @@ const TITRE_AFFECTATION = "Affectation du résultat";
 const OUVERTURE_T2 = "à partir du tour 2";
 
 describe("encadrés du formulaire de décisions selon le niveau", () => {
-  it("niveau 1 : l'emprunt et l'apport sont à l'écran, l'escompte et l'affacturage non", () => {
-    const html = rendu(1, 1);
-    expect(html).toContain(TITRE_FINANCER);
-    expect(html).toContain('name="newLoan"');
-    expect(html).toContain('name="capitalIncrease"');
-    expect(html).not.toContain('name="discount"');
-    expect(html).not.toContain('name="factoring"');
-  });
-
-  it("niveau 2 : même socle de financement qu'au niveau 1", () => {
-    const html = rendu(2, 1);
-    expect(html).toContain(TITRE_FINANCER);
-    expect(html).toContain('name="newLoan"');
-  });
-
-  it("un niveau qui ne ferait ni financer ni investir ne rend aucun encadré vide", () => {
-    // Plus aucun niveau livré n'est dans ce cas : la règle reste, pour un préréglage futur.
+  it("niveau 1 : ni emprunt, ni apport, ni créances ; la banque se lit en lecture seule", () => {
+    // Depuis octobre 2026, le financement s'ouvre au niveau 4 : aucun encadré
+    // « Financer » vide, aucun champ, mais le découvert consenti reste dit.
     const html = rendu(1, 1, {
-      enabled: { ...presetByLevel.get(1)!.decisions, finance: false, investment: false },
+      bankFile: { trust: 1, overdraftLimit: 30000, fullOverdraftLimit: 30000, overdraftAnnualRate: 0.12, lastReliability: null },
+      debtSchedule: { nextMandatory: 5000, outstanding: 80000 },
     });
+    expect(html).not.toContain(TITRE_FINANCER);
+    expect(html).not.toContain('name="newLoan"');
+    expect(html).not.toContain('name="capitalIncrease"');
+    expect(html).not.toContain('name="discount"');
+    expect(html).toContain("data-banque-en-lecture");
+    expect(html).toContain("Découvert autorisé");
+    expect(html).toContain("Échéance d&#x27;emprunt du tour");
+  });
+
+  it("niveau 2 : même chose qu'au niveau 1 pour la banque", () => {
+    const html = rendu(2, 1, {
+      bankFile: { trust: 1, overdraftLimit: 30000, fullOverdraftLimit: 30000, overdraftAnnualRate: 0.12, lastReliability: null },
+    });
+    expect(html).not.toContain(TITRE_FINANCER);
+    expect(html).not.toContain('name="newLoan"');
+    expect(html).toContain("data-banque-en-lecture");
+  });
+
+  it("un niveau qui ne fait ni financer ni investir ne rend aucun encadré vide", () => {
+    const html = rendu(1, 1);
     expect(html).not.toContain(TITRE_FINANCER);
     expect(html).not.toContain('name="newLoan"');
   });
 
-  it("niveau 3 : l'encadré Financer est là, avec ses champs", () => {
-    const html = rendu(3, 1);
+  it("niveau 3 : l'escompte et l'affacturage, pas encore l'emprunt", () => {
+    const html = rendu(3, 1, {
+      treasuryOffer: {
+        discountAnnualRate: 0.08,
+        discountMaxShare: 0.8,
+        factoringFeeRate: 0.04,
+        overdraftLimit: 30000,
+        placementAnnualRate: null,
+        maturedPlacement: 0,
+      },
+    });
+    expect(html).not.toContain(TITRE_FINANCER);
+    expect(html).not.toContain('name="newLoan"');
+    expect(html).toContain('name="discount"');
+    expect(html).toContain('name="factoring"');
+    expect(html).not.toContain(TITRE_AFFECTATION);
+  });
+
+  it("niveau 4 : l'encadré Financer est là, avec ses champs, et la banque n'est plus en lecture seule", () => {
+    const html = rendu(4, 1, {
+      bankFile: { trust: 1, overdraftLimit: 30000, fullOverdraftLimit: 30000, overdraftAnnualRate: 0.12, lastReliability: null },
+    });
     expect(html).toContain(TITRE_FINANCER);
     expect(html).toContain('name="newLoan"');
-    expect(html).not.toContain(TITRE_AFFECTATION);
+    expect(html).toContain('name="capitalIncrease"');
+    expect(html).not.toContain("data-banque-en-lecture");
   });
 
   it("niveau 6, tour 1 : l'affectation du résultat est nommée et annonce son ouverture", () => {

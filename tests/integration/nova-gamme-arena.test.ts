@@ -37,8 +37,8 @@ beforeAll(async () => {
   // joueur est un enseignant d'un établissement sous licence (la règle elle-même est
   // gardée par acces-sans-licence.test.ts).
   await placerSousLicence(userId);
-  // Niveau 4 (Arbitrage) : la R&D est ouverte.
-  gameId = await createSoloGame(userId, "quarter", 3, 4, false, "nova-gamme");
+  // Niveau 5 (Stratégie) : la R&D est ouverte (depuis octobre 2026).
+  gameId = await createSoloGame(userId, "quarter", 3, 5, false, "nova-gamme");
 });
 
 describe("NOVA · gamme dans l'arène", () => {

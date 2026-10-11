@@ -1,6 +1,7 @@
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { PRODUCT_FIELD_PREFIX } from "@/config/decision-source";
 import { PREFIXE_VENTES_ESTIMEES } from "@/config/ventes-estimees";
+import type { PlafondDInvestissement } from "@/engine/investment/plafond";
 
 /**
  * LA DÉCISION QUI NE PASSE PAS DIT POURQUOI, ET OÙ.
@@ -515,6 +516,117 @@ export function messageDuRefusServeur(erreur: unknown): string {
     if (motif.test(message)) return traduire(message);
   }
   return MESSAGE_DE_PANNE;
+}
+
+// ── LE PLAFOND D'INVESTISSEMENT ────────────────────────────────────────────
+
+/**
+ * L'ACHAT D'UNE MACHINE, CHAMP PAR CHAMP. Le parc part au serveur en JSON caché
+ * (`equipmentBuyJson`), sans case à marquer : chaque case « Acheter » porte donc
+ * son propre nom, `equipmentBuy.<type>`, que le refus du plafond vise. Le
+ * serveur ne lit pas ces cases ; il juge le JSON, et nomme la case du premier
+ * type acheté.
+ */
+export const PREFIXE_ACHAT_DE_MACHINE = "equipmentBuy.";
+export const champDAchatDeMachine = (code: string) => `${PREFIXE_ACHAT_DE_MACHINE}${code}`;
+
+/** Ce que le plafond dit, et de quoi l'écrire : les chiffres du calcul (`engine/investment/plafond`). */
+export type PlafondAEcrire = Pick<
+  PlafondDInvestissement,
+  "applique" | "marge" | "effectif" | "mainDOeuvre" | "machineDisponible" | "disponibilite" | "unite"
+>;
+
+type VocabulaireDuPlafond = Pick<ScenarioVocabulary, "unit" | "units" | "plafond">;
+
+/** Les mots d'un scénario qui n'en déclare pas (un scénario de l'enseignant). */
+const MOTS_DU_PLAFOND_PAR_DEFAUT = {
+  equipeFait: "peut assurer",
+  parcEnFait: "votre équipement en assure",
+  enTrop: "un équipement resterait inemployé",
+} as const;
+
+const entier = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(Math.round(n));
+const enUnites = (n: number, v: VocabulaireDuPlafond) => `${entier(n)} ${Math.round(n) >= 2 ? v.units : v.unit}`;
+
+/** « votre équipe de 4 personnes fait tourner 7 200 enceintes par tour ; vos machines en font déjà 7 000 » */
+function constatDuPlafond(p: PlafondAEcrire, v: VocabulaireDuPlafond): string {
+  const mots = v.plafond ?? MOTS_DU_PLAFOND_PAR_DEFAUT;
+  const personnes = `${p.effectif} personne${p.effectif >= 2 ? "s" : ""}`;
+  const dispo =
+    p.disponibilite < 0.995 ? ` (à ${Math.round(p.disponibilite * 100)} % de disponibilité)` : "";
+  return `votre équipe de ${personnes} ${mots.equipeFait} ${enUnites(p.mainDOeuvre, v)} par tour ; ${mots.parcEnFait} déjà ${entier(p.machineDisponible)}${dispo}`;
+}
+
+/**
+ * LE REFUS : « Investissement : votre équipe de 4 personnes fait tourner 7 200
+ * enceintes par tour ; vos machines en font déjà 7 000. Au-delà de 200
+ * enceintes de capacité en plus, une machine resterait à l'arrêt. Les
+ * embauches s'ouvrent au niveau 4. » Le niveau des embauches est lu dans les
+ * préréglages (`premierNiveauQuiOuvre`).
+ */
+export function messageDuPlafond(
+  p: PlafondAEcrire,
+  v: VocabulaireDuPlafond,
+  niveauDesEmbauches: number | null,
+): string {
+  const mots = v.plafond ?? MOTS_DU_PLAFOND_PAR_DEFAUT;
+  const limite =
+    p.marge > 0
+      ? `Au-delà de ${enUnites(p.marge, v)} de capacité en plus, ${mots.enTrop}.`
+      : `Toute capacité en plus serait de trop : ${mots.enTrop}.`;
+  const embauches = niveauDesEmbauches ? ` Les embauches s'ouvrent au niveau ${niveauDesEmbauches}.` : "";
+  return `Investissement : ${constatDuPlafond(p, v)}. ${limite}${embauches}`;
+}
+
+/**
+ * L'AIDE SOUS LE CHAMP, AVANT TOUTE ERREUR : jusqu'où l'on peut investir à ce
+ * niveau. Là où les embauches sont ouvertes, il n'y a pas de plafond : l'aide
+ * dit seulement à partir d'où une capacité en plus demandera d'embaucher.
+ * `null` : le scénario n'ouvre aucun investissement.
+ */
+export function aideDuPlafond(p: PlafondAEcrire, v: VocabulaireDuPlafond): string | null {
+  if (!p.unite) return null;
+  if (!p.applique) {
+    return p.marge > 0
+      ? `Au-delà de ${enUnites(p.marge, v)} de capacité en plus, il faudra embaucher pour la faire tourner.`
+      : "Votre équipe est déjà le goulot : une capacité en plus demandera d'embaucher.";
+  }
+  if (p.marge <= 0) {
+    return `À ce niveau, aucune capacité en plus : ${constatDuPlafond(p, v)}.`;
+  }
+  const phrase = `Jusqu'à ${enUnites(p.marge, v)} de capacité en plus à ce niveau.`;
+  if (p.unite.type === "machines") {
+    const tiennent = p.unite.machines.some((m) => m.maxSousLePlafond > 0);
+    if (!tiennent && p.unite.machines.length > 0) {
+      const petite = [...p.unite.machines].sort((a, b) => a.capacite - b.capacite)[0]!;
+      return `${phrase} La plus petite, ${petite.nom}, en ajoute ${entier(petite.capacite)} : aucune n'entre sous ce plafond.`;
+    }
+  }
+  return phrase;
+}
+
+/**
+ * LE REFUS DU PLAFOND, rattaché à son champ : la case « Acheter » du premier
+ * type acheté (parc typé), ou l'investissement de capacité. `null` : la
+ * décision passe. Le jugement (`depasse`) vient du calcul du plafond, des deux
+ * côtés ; ce module ne fait que l'écrire.
+ */
+export function refusDuPlafond(args: {
+  plafond: PlafondAEcrire;
+  depasse: boolean;
+  /** Les types achetés, dans l'ordre du parc : le premier porte le refus. */
+  typesAchetes: readonly string[];
+  vocabulaire: VocabulaireDuPlafond;
+  niveauDesEmbauches: number | null;
+}): ErreurDeChamp | null {
+  if (!args.depasse) return null;
+  const champ =
+    args.plafond.unite?.type === "machines"
+      ? args.typesAchetes[0]
+        ? champDAchatDeMachine(args.typesAchetes[0])
+        : null
+      : "machineCapacityUnits";
+  return { champ, message: messageDuPlafond(args.plafond, args.vocabulaire, args.niveauDesEmbauches) };
 }
 
 // ── LE RÉSUMÉ ──────────────────────────────────────────────────────────────

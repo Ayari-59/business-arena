@@ -1,3 +1,4 @@
+import { ROUTINES_D_ASSURANCE } from "./sans-assurance";
 import type { CourrierDef } from "./types";
 
 /**
@@ -118,10 +119,15 @@ export const COURRIERS_DE_ROUTINE: CourrierDef[] = [
  * équipes de la même partie reçoivent la même — c'est un courrier de routine,
  * pas un tirage.
  */
-export function courrierDeRoutine(gameId: string, round: number): CourrierDef {
+export function courrierDeRoutine(gameId: string, round: number, assurance = true): CourrierDef {
   let empreinte = round;
   for (const caractere of gameId) empreinte = (empreinte * 31 + caractere.charCodeAt(0)) >>> 0;
-  return COURRIERS_DE_ROUTINE[empreinte % COURRIERS_DE_ROUTINE.length]!;
+  // Sans l'assurance au niveau joué, l'avis d'échéance d'un contrat que
+  // l'équipe n'a pas ne se distribue pas.
+  const pile = assurance
+    ? COURRIERS_DE_ROUTINE
+    : COURRIERS_DE_ROUTINE.filter((c) => !ROUTINES_D_ASSURANCE.includes(c.code));
+  return pile[empreinte % pile.length]!;
 }
 
 /** Un courrier sans effet sur les comptes : celui qu'on classe, pas celui qu'on traite. */

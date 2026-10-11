@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
-import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { DIFFICULTY_PRESETS, premierNiveauQuiOuvre } from "@/config/difficulty";
 import { leviersDuNiveau } from "@/config/decisions";
+import { comparatifDesNiveaux, tableauDuNiveau } from "@/config/tableau-des-niveaux";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
@@ -179,7 +180,17 @@ export default async function JouerPage({
                       teinte: teinteDuMetier(s),
                       promesse: promesseEntreprise(s),
                       ...(famille
-                        ? { variante: { gammeFromLevel: famille.gammeFromLevel, mono: famille.monoLabel, gamme: famille.gammeLabel } }
+                        ? {
+                            variante: {
+                              gammeFromLevel: famille.gammeFromLevel,
+                              mono: famille.monoLabel,
+                              gamme: famille.gammeLabel,
+                              // La référence à bâtir ne se dit qu'au niveau qui ouvre la R&D.
+                              ...(famille.aBatir
+                                ? { aBatir: famille.aBatir, niveauDeLaRd: premierNiveauQuiOuvre("rd") ?? undefined }
+                                : {}),
+                            },
+                          }
                         : {}),
                     };
                   })}
@@ -194,7 +205,9 @@ export default async function JouerPage({
                     name: p.name,
                     tagline: p.tagline,
                     decisions: leviersDuNiveau(p.level).length,
+                    tableau: tableauDuNiveau(p.level),
                   }))}
+                  comparatif={comparatifDesNiveaux()}
                   defaultScenario={scenarioChoisi}
                   defaultLevel={niveauDemande}
                   lancement={

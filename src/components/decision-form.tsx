@@ -30,6 +30,7 @@ import {
   type PivotFieldInfo,
 } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
+import { depasseLePlafond } from "@/engine/investment/plafond";
 import type { RoundDecisions } from "@/engine/types";
 import { INVITATION_NOTE } from "@/config/justification";
 import {
@@ -81,6 +82,10 @@ import {
   type DefCarte,
 } from "@/components/cartes-de-decision";
 import {
+  aideDuPlafond,
+  champDAchatDeMachine,
+  PREFIXE_ACHAT_DE_MACHINE,
+  refusDuPlafond,
   erreurDuChamp,
   idDuChamp,
   libelleDuChamp,
@@ -203,7 +208,14 @@ function EquipmentPanel({
   sellQty,
   setSellQty,
   simple = false,
+  plafond = null,
 }: {
+  /**
+   * LE PLAFOND D'INVESTISSEMENT DU TOUR (`engine/investment/plafond`). Son aide
+   * se lit sous la capacité, avant toute erreur ; aux niveaux sans embauches, il
+   * borne la case « Acheter » de chaque type, et la feuille refuse au-delà.
+   */
+  plafond?: GameView["plafondInvestissement"];
   /**
    * Aux deux premiers niveaux, le parc se lit sans le vocabulaire du bilan : le prix, la
    * capacité, et le tour où la machine sert. L'amortissement, le coefficient d'entretien et la
@@ -235,6 +247,19 @@ function EquipmentPanel({
     return sum + (sellQty[t.code] ?? 0) * avgBook * t.resaleRatio;
   }, 0);
   const { actif: enCarte } = useModeCartes();
+  const refusDuParc = useContext(RefusDesChamps);
+  const aide = plafond ? aideDuPlafond(plafond, vocabulary) : null;
+  // La capacité nette que les AUTRES lignes engagent déjà : la borne d'un type
+  // est ce qu'il reste de la marge, cessions comprises, en machines entières.
+  const engageHors = (code: string) =>
+    offer.types.reduce(
+      (s, t) => s + (t.code === code ? 0 : (buyQty[t.code] ?? 0) * t.capacityPerUnit) - (sellQty[t.code] ?? 0) * t.capacityPerUnit,
+      0,
+    );
+  const borneDAchat = (t: (typeof offer.types)[number]) =>
+    plafond?.applique && t.capacityPerUnit > 0
+      ? Math.max(0, Math.min(t.maxPerRound, Math.floor((plafond.marge - engageHors(t.code)) / t.capacityPerUnit + 1e-6)))
+      : t.maxPerRound;
 
   return (
     <Family
@@ -256,6 +281,11 @@ function EquipmentPanel({
           </>
         ) : null}
       </div>
+      {aide ? (
+        <p data-aide-du-plafond="" className="mb-3 text-sm leading-snug text-slate-300 max-sm:mb-1.5">
+          {aide}
+        </p>
+      ) : null}
       <div className="space-y-3 max-sm:space-y-2">
         {offer.types.map((t) => {
           const fl = offer.fleet.find((f) => f.typeCode === t.code);
@@ -265,6 +295,9 @@ function EquipmentPanel({
           const buy = buyQty[t.code] ?? 0;
           const sell = sellQty[t.code] ?? 0;
           const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
+          const champAchat = champDAchatDeMachine(t.code);
+          const refus = refusPour(refusDuParc, champAchat);
+          const borne = borneDAchat(t);
           return (
             <div key={t.code} className="rounded-lg bg-slate-950/40 px-2.5 py-2 max-sm:py-1.5">
               <div className="flex items-start justify-between gap-2">
@@ -306,9 +339,14 @@ function EquipmentPanel({
                     <input
                       type="number"
                       onWheel={sansMolette}
+                      // Une case nommée : le refus du plafond la vise, la marque et y pose le
+                      // focus. Le serveur, lui, lit le parc en JSON caché, plus bas.
+                      name={champAchat}
+                      id={refus.id}
+                      {...refus.attributs}
                       aria-label={`Acheter · ${t.name}`}
                       min={0}
-                      max={t.maxPerRound}
+                      max={borne}
                       value={buy}
                       onChange={(e) =>
                         setBuyQty((prev) => ({
@@ -318,13 +356,14 @@ function EquipmentPanel({
                       }
                       className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="shrink-0 text-xs text-slate-300">max {t.maxPerRound}</span>
+                    <span className="shrink-0 text-xs text-slate-300">max {borne}</span>
                   </span>
                   {buy > 0 ? (
                     <span className="mt-0.5 block text-xs text-slate-300">
                       = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
                     </span>
                   ) : null}
+                  {refus.message}
                 </label>
                 <label className="block">
                   <span className="libelle text-slate-300 max-sm:hidden">
@@ -2179,6 +2218,8 @@ export function DecisionForm({
   insuranceFormulas,
   suppliersOffer,
   equipmentOffer,
+  plafondInvestissement = null,
+  niveauDuFinancement = null,
   capacityFacts,
   vocabulary,
   verrou,
@@ -2361,6 +2402,10 @@ export function DecisionForm({
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];
   } | null;
+  /** Le niveau qui ouvre l'emprunt, quand celui de la partie ne l'ouvre pas : dit en lecture seule. */
+  niveauDuFinancement?: number | null;
+  /** Le plafond d'investissement du tour (`engine/investment/plafond`) ; `null` sans investissement. */
+  plafondInvestissement?: GameView["plafondInvestissement"];
   /** Vocabulaire du secteur joué (registre des scénarios). */
   vocabulary: ScenarioVocabulary;
   /** Capacité de production : goulots et levier RH. */
@@ -2459,6 +2504,8 @@ export function DecisionForm({
     const vus = new Set<string>();
     for (const el of Array.from(form.elements)) {
       if (!(el instanceof HTMLInputElement) || el.type !== "number" || !el.name || el.disabled) continue;
+      // Les cases du parc se bornent à la frappe ; leur seul refus est celui du plafond, plus bas.
+      if (el.name.startsWith(PREFIXE_ACHAT_DE_MACHINE)) continue;
       if (filtre && !filtre(el)) continue;
       if (vus.has(el.name)) continue;
       vus.add(el.name);
@@ -2478,6 +2525,40 @@ export function DecisionForm({
     }
     // EN GAMME, LE VOLUME EST LA SOMME DES RÉFÉRENCES : zéro partout n'est pas
     // une décision (l'action le refuse aussi). Le refus vise la première.
+    // LE PLAFOND D'INVESTISSEMENT (niveaux sans embauches) : jugé du même calcul
+    // que le serveur (`depasseLePlafond`), sur les cases d'achat telles qu'elles
+    // sont à l'instant (le JSON caché du parc ne suit qu'au rendu d'après) et sur
+    // les cessions retenues.
+    const refusDeLInvestissement = (() => {
+      if (!plafondInvestissement?.applique) return null;
+      const lire = (nom: string) => lireNombre((form.elements.namedItem(nom) as HTMLInputElement | null)?.value ?? "") ?? 0;
+      const types = equipmentOffer?.types ?? [];
+      const achats = types
+        .map((t) => ({ typeCode: t.code, quantity: lire(champDAchatDeMachine(t.code)) }))
+        .filter((l) => l.quantity > 0);
+      const investissement = equipmentOffer
+        ? {
+            equipmentBuy: achats,
+            equipmentSell: types.map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 })),
+          }
+        : { machineCapacityUnits: lire("machineCapacityUnits") };
+      const erreur = refusDuPlafond({
+        plafond: plafondInvestissement,
+        depasse: depasseLePlafond(plafondInvestissement, investissement),
+        typesAchetes: achats.map((l) => l.typeCode),
+        vocabulaire: vocabulary,
+        niveauDesEmbauches: plafondInvestissement.niveauDesEmbauches,
+      });
+      if (!erreur || !erreur.champ) return erreur;
+      const champ = form.elements.namedItem(erreur.champ) as HTMLInputElement | null;
+      return !filtre || (champ && filtre(champ)) ? erreur : null;
+    })();
+    if (refusDeLInvestissement) {
+      // Le refus du plafond dit plus que la borne technique du même champ : il la remplace.
+      const i = erreurs.findIndex((x) => x.champ === refusDeLInvestissement.champ);
+      if (i >= 0) erreurs.splice(i, 1);
+      erreurs.push(refusDeLInvestissement);
+    }
     if (gamme && !filtre) {
       const plans = [
         ...form.querySelectorAll<HTMLInputElement>(
@@ -2893,6 +2974,52 @@ export function DecisionForm({
   const tresorerieVisible = on.dividend || (on.creances && !!treasuryOffer);
   const assuranceVisible =
     on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0);
+  /**
+   * LA BANQUE EN LECTURE SEULE, là où le niveau n'ouvre pas le financement (1 à
+   * 3). Le découvert consenti et l'échéance de la dette d'ouverture étaient
+   * rangés dans « Financer », absent à ces niveaux : l'élève ne les voyait plus,
+   * alors que la banque, elle, continue de prélever et de couvrir. Ils se lisent
+   * ici, sans champ, avec ce qui s'ouvre plus tard.
+   */
+  const banqueEnLecture =
+    !on.finance && (bankFile || (debtSchedule && debtSchedule.outstanding > 0.5)) ? (
+      <div className="mt-3" data-banque-en-lecture="">
+        <PanneauConsulte
+          titre="La banque, ce tour"
+          icone="banque"
+          resume={
+            bankFile
+              ? `découvert autorisé ${formatEuro(bankFile.overdraftLimit)}`
+              : `échéance ${formatEuro(debtSchedule!.nextMandatory)}`
+          }
+        >
+          {bankFile ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+              Découvert autorisé{" "}
+              <strong className="text-slate-100">{formatEuro(bankFile.overdraftLimit)}</strong>, à{" "}
+              <strong className="text-slate-100">
+                {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %
+              </strong>{" "}
+              l&apos;an. Au-delà, la banque cède vos créances à votre place, et vous le paie cher.
+            </p>
+          ) : null}
+          {debtSchedule && debtSchedule.outstanding > 0.5 ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+              Échéance d&apos;emprunt du tour :{" "}
+              <strong className="text-slate-100">{formatEuro(debtSchedule.nextMandatory)}</strong> de
+              capital, prélevée automatiquement (+ intérêts). Dette restante{" "}
+              {formatEuro(debtSchedule.outstanding)}.
+            </p>
+          ) : null}
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+            À ce niveau, la banque couvre seule un manque de trésorerie, par le découvert.
+            {niveauDuFinancement
+              ? ` L'emprunt et l'apport des associés s'ouvrent au niveau ${niveauDuFinancement}.`
+              : ""}
+          </p>
+        </PanneauConsulte>
+      </div>
+    ) : null;
   const etapesVisibles = [
     "vendre",
     approvisionnerVisible ? "approvisionner" : null,
@@ -4131,7 +4258,16 @@ export function DecisionForm({
             />
           </dl>
           {capacityFacts.bottleneck === "labor" ? (
-            <p className="mt-2 text-xs text-slate-300">{v.laborBottleneckHint}</p>
+            // Sans embauches à ce niveau, « envisagez d'embaucher » envoyait vers un levier absent.
+            <p className="mt-2 text-xs text-slate-300">
+              {on.hr
+                ? v.laborBottleneckHint
+                : `À ce niveau, l'effectif est fixé : votre équipe est le goulot.${
+                    plafondInvestissement?.niveauDesEmbauches
+                      ? ` Les embauches s'ouvrent au niveau ${plafondInvestissement.niveauDesEmbauches}.`
+                      : ""
+                  }`}
+            </p>
           ) : capacityFacts.bottleneck === "machine" ? (
             <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
           ) : null}
@@ -4211,6 +4347,7 @@ export function DecisionForm({
                 />
               ) : null}
             </div>
+            {banqueEnLecture}
             <TotalDesBudgets engagement={engagement} />
           </Carte>
         </Family>
@@ -4246,7 +4383,8 @@ export function DecisionForm({
           ) : (
             <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
           )}
-          <TotalDesBudgets engagement={engagement} />
+          {banqueEnLecture}
+            <TotalDesBudgets engagement={engagement} />
         </Family>
       ) : null}
       {communicationOffer ? (
@@ -4407,7 +4545,12 @@ export function DecisionForm({
                 label={`Investissement capacité (${investmentOffer.costPerCapacityUnit.toLocaleString("fr-FR")} €/u)`}
                 defaultValue={0}
                 suffix={v.perRoundLabel}
-                hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
+                hint={[
+                  plafondInvestissement ? aideDuPlafond(plafondInvestissement, v) : null,
+                  `En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               />
             ) : null}
             </>
@@ -4460,6 +4603,7 @@ export function DecisionForm({
             setSellQty={setEquipSellQty}
             // Les niveaux qui n'ouvrent pas encore les créances sont ceux qui débutent.
             simple={!on.creances}
+            plafond={plafondInvestissement}
           />
           <input type="hidden" name="equipmentBuyJson" value={JSON.stringify(
             equipmentOffer.types

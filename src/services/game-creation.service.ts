@@ -30,6 +30,7 @@ import {
 } from "@/services/scenario-source.service";
 import {
   presetByLevel,
+  profilDuNiveau,
   sanitizeEconomicOverrides,
   sanitizeScoringWeightOverrides,
   type EconomicOverrides,
@@ -312,7 +313,9 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         level: preset?.level ?? 1,
         periodicity: args.periodicity,
         kind: args.kind,
-        ...(preset ? { difficulty: { level: preset.level, name: preset.name } } : {}),
+        // LA LISTE DES LEVIERS EST FIGÉE avec la partie : une répartition des niveaux
+        // changée plus tard ne touche pas une partie en cours (`presetFromProfile`).
+        ...(preset ? { difficulty: profilDuNiveau(preset) } : {}),
         ...(overrides ? { economicOverrides: overrides } : {}),
         ...(scoringOverrides ? { scoringWeightOverrides: scoringOverrides } : {}),
         ...(args.variableWorld ? { variableWorld: true } : {}),

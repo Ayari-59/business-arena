@@ -1,3 +1,6 @@
+import { premierNiveauQuiOuvre } from "@/config/difficulty";
+import { appelleLInvestissement } from "@/config/investissement-par-niveau";
+import { aideDuPlafond } from "@/config/refus-de-decision";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -458,6 +461,7 @@ export default async function ArenaPage({
               <CourrierRecommande
                 key={`${courrier.code}-${courrier.teamId ?? "market"}`}
                 code={courrier.code}
+                assurance={view.enabledDecisions.insurance}
                 delayMs={i * 450}
                 annonce
                 destinataire={
@@ -506,6 +510,7 @@ export default async function ArenaPage({
                 <CourrierRecommande
                   key={`${courrier.code}-${courrier.teamId ?? "market"}`}
                   code={courrier.code}
+                  assurance={view.enabledDecisions.insurance}
                   delayMs={i * 450}
                   destinataire={`${
                     courrier.teamId ? "Votre entreprise" : "Tout le marché"
@@ -695,6 +700,7 @@ export default async function ArenaPage({
                               <CourrierRecommande
                                 key={c.code}
                                 code={c.code}
+                                assurance={view.enabledDecisions.insurance}
                                 delayMs={i * 450}
                                 adresse={adresseDuCourrier}
                                 quand={periodLabel(view.roundDays, view.currentRound)}
@@ -1192,6 +1198,14 @@ export default async function ArenaPage({
   // tel quel aux onglets (grand écran) et au parcours en cartes (téléphone).
   // Les trois pièces de « Décider », servies telles quelles à la page de grand écran
   // (onglets) et, séparément, au parcours en cartes du téléphone.
+  // Un courrier qui appelle l'investissement, à un niveau qui le plafonne : le
+  // plafond du tour se lit au pied de la lettre (`engine/investment/plafond`).
+  const noteDInvestissement =
+    view.plafondInvestissement?.applique && view.upcomingDraw.some((c) => appelleLInvestissement(c.code))
+      ? `À ce niveau, sans embauches, on n'investit qu'à hauteur de ce que l'équipe fait tourner. ${
+          aideDuPlafond(view.plafondInvestissement, view.vocabulary) ?? ""
+        }`.trim()
+      : null;
   const courrierBloc = view.kind === "solo" && !finished ? (
                   <div className="mb-4">
                     <CourrierDuTour
@@ -1201,6 +1215,8 @@ export default async function ArenaPage({
                       plis={view.upcomingDraw}
                       adresse={adresseDuCourrier}
                       gazette={view.gazette}
+                      noteDInvestissement={noteDInvestissement}
+                      assurance={view.enabledDecisions.insurance}
                     />
                     {revueDePresse ? <div className="mt-4">{revueDePresse}</div> : null}
                   </div>
@@ -1340,6 +1356,8 @@ export default async function ArenaPage({
       insuranceFormulas={view.insuranceFormulas}
       suppliersOffer={view.suppliersOffer}
       equipmentOffer={view.equipmentOffer}
+      plafondInvestissement={view.plafondInvestissement}
+      niveauDuFinancement={premierNiveauQuiOuvre("finance", undefined, view.difficulty.level)}
       capacityFacts={view.capacityFacts}
       gamme={view.gamme}
       rdOffer={view.rdOffer}
@@ -1578,10 +1596,12 @@ export default async function ArenaPage({
                     price: p.decisions?.price ?? null,
                     productionPlan: p.decisions?.productionPlan ?? null,
                     newLoan: p.decisions?.finance?.newLoan ?? null,
+                    decouvert: p.result.balanceSheet.overdraft,
                   })),
                   libelle: libelleDuTour,
                   unites: view.vocabulary.units,
                   nomDuJournal: NOM_DU_JOURNAL,
+                  financementOuvert: view.enabledDecisions.finance,
                 })}
                 revue={revueDePresse}
                 merite={

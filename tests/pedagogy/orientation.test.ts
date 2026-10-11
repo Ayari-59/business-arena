@@ -8,7 +8,7 @@ import {
   type Semestre,
 } from "../../src/config/orientation";
 import { ATELIERS } from "../../src/config/ateliers";
-import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
+import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
 
 /**
@@ -188,21 +188,23 @@ describe("orientation", () => {
     }
   });
 
-  it("un objectif qui parle d'argent reçoit un niveau qui ouvre le financement", () => {
+  it("un objectif qui parle d'argent reçoit un niveau qui ouvre le levier qu'il promet", () => {
     // La garde qui compte vraiment : elle ne lit pas le minimum déclaré, qui
     // peut être baissé par erreur, mais ce que l'objectif PROMET à l'enseignant.
+    // Depuis octobre 2026, la trésorerie et le BFR se pilotent au niveau 3 par
+    // le poste clients (escompte, affacturage) ; l'emprunt vient au niveau 4.
     const EXIGENCES = [
-      {
-        mots: /trésorerie|financement|bfr|emprunt/i,
-        levier: "finance" as const,
-      },
+      { mots: /financement|emprunt/i, levier: "finance" as const },
+      { mots: /trésorerie|bfr|poste clients|créances/i, levier: "creances" as const },
       { mots: /risque|assurance|couverture/i, levier: "insurance" as const },
     ];
     for (const demande of COMBINAISONS) {
       const o = OBJECTIFS.find((x) => x.code === demande.objectif)!;
       const dit = `${o.libelle} ${o.raison}`;
       const r = recommander(demande);
-      const preset = DIFFICULTY_PRESETS.find((p) => p.level === r.niveau)!;
+      // Un atelier de concours joue le préréglage de repli (LEGACY_PRESET), pas le niveau nommé.
+      const concours = ATELIERS.find((a) => a.code === demande.diplome)?.reglages.concours;
+      const preset = concours ? LEGACY_PRESET : DIFFICULTY_PRESETS.find((p) => p.level === r.niveau)!;
       for (const { mots, levier } of EXIGENCES) {
         if (!mots.test(o.libelle)) continue;
         expect(

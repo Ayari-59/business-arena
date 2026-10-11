@@ -126,12 +126,24 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
       risque:
         "Les charges de structure ne baissent pas, elles : le trou peut se creuser.",
     });
-    routes.push({
-      label: "Aller chercher du financement",
-      gain: "La question du tour est réglée, et l'activité reste intacte.",
-      risque:
-        "Les échéances tombent que la caisse soit pleine ou vide.",
-    });
+    // L'emprunt n'est proposé que là où le niveau l'ouvre. Ailleurs (niveaux 1
+    // à 3), la banque couvre seule par le découvert : c'est l'autre route, et
+    // elle a son prix.
+    if (enabled.finance) {
+      routes.push({
+        label: "Aller chercher du financement",
+        gain: "La question du tour est réglée, et l'activité reste intacte.",
+        risque:
+          "Les échéances tombent que la caisse soit pleine ou vide.",
+      });
+    } else {
+      routes.push({
+        label: "Laisser la banque couvrir",
+        gain: "Le découvert absorbe le manque sans rien décider, et l'activité reste intacte.",
+        risque:
+          "Ses intérêts courent à un taux plus lourd qu'un emprunt, et au-delà du plafond elle cède vos créances à votre place.",
+      });
+    }
     return {
       code: "treasury_crisis",
       headline:

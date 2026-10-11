@@ -1144,7 +1144,7 @@ export interface RoundDecisions {
    * `budget` : dépense d'exploitation du tour, bâtit le capital-image (demande
    * différée). `investment` : effort « process propre », bâtit le capital de
    * réduction durable des rebuts. Les DEUX sont des charges décaissées ce tour.
-   * Ouvert par le niveau de difficulté (decisions.rse), dès Arbitrage.
+   * Ouvert par le niveau de difficulté (decisions.rse), dès Stratégie.
    */
   rse?: {
     budget?: number;

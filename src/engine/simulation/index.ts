@@ -77,7 +77,7 @@ function mergeFleet(active: EquipmentItem[], pending: EquipmentItem[]): Equipmen
   return [...active, ...pending];
 }
 
-function fleetCapacity(
+export function fleetCapacity(
   fleet: EquipmentItem[],
   types: Map<string, EquipmentTypeDef>,
 ): number {

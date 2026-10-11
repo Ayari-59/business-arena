@@ -13,6 +13,7 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
+import { REPARTITION_AVANT_2026_10_11, presetByLevel } from "@/config/difficulty";
 import { games, users } from "@/db/schema";
 import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
@@ -92,10 +93,16 @@ describe("niveaux de difficulté et paramètres économiques", () => {
     expect(breakdown.probability).toBeCloseTo(0.05 * 1.5, 12);
     expect(snapshot.events.find((e) => e.code === "big_order")!.probability).toBe(0);
     const profile = game.difficultyProfile as {
-      difficulty: { level: number; name: string };
+      difficulty: { level: number; name: string; decisions: Record<string, boolean> };
       economicOverrides: Record<string, number>;
     };
-    expect(profile.difficulty).toEqual({ level: 5, name: "Stratégie" });
+    // La liste des leviers est FIGÉE avec la partie : une répartition changée
+    // plus tard ne la touche pas (presetFromProfile).
+    expect(profile.difficulty).toEqual({
+      level: 5,
+      name: "Stratégie",
+      decisions: presetByLevel.get(5)!.decisions,
+    });
     expect(profile.economicOverrides).toEqual({
       vatRate: 0.2,
       taxRate: 0.3,
@@ -191,7 +198,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
     );
   });
 
-  it("au niveau 1 (Découverte), on peut emprunter et investir, mais rien de plus", async () => {
+  it("au niveau 1 (Découverte), l'opérationnel seul : ni emprunt, ni investissement", async () => {
     const orgId = (await getTeacherOrgId(teacherId))!;
     const easy = await createClassGame({
       teacherId,
@@ -211,11 +218,11 @@ describe("niveaux de difficulté et paramètres économiques", () => {
     expect(view!.enabledDecisions).toEqual({
       quality: false,
       maintenance: false,
-      finance: true,
+      finance: false,
       creances: false,
       insurance: false,
       hr: false,
-      investment: true,
+      investment: false,
       rse: false,
       placement: false,
       dividend: false,
@@ -224,5 +231,38 @@ describe("niveaux de difficulté et paramètres économiques", () => {
     // Découverte : TVA non modulée → désactivée, calibration du scénario intacte
     const game = (await db.select().from(games).where(eq(games.id, easy.gameId)))[0]!;
     expect((game.scenarioSnapshot as EngineScenarioConfig).finance.vatRate).toBeUndefined();
+  });
+
+  it("une partie créée avant la répartition d'octobre 2026 garde ses leviers d'alors", async () => {
+    // Le profil d'avant ne figeait que le niveau : il relit la répartition de
+    // son époque, et non celle d'aujourd'hui. Une partie de niveau 2 en cours
+    // garde son emprunt et son investissement ; une de niveau 3 n'ouvre pas
+    // les embauches au milieu de la partie.
+    const orgId = (await getTeacherOrgId(teacherId))!;
+    const ancienne = await createClassGame({
+      teacherId,
+      organizationId: orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 1,
+      botCount: 1,
+      level: 2,
+    });
+    const row = (await db.select().from(games).where(eq(games.id, ancienne.gameId)))[0]!;
+    const profil = row.difficultyProfile as Record<string, unknown>;
+    await db
+      .update(games)
+      .set({ difficultyProfile: { ...profil, difficulty: { level: 2, name: "Gestion" } } })
+      .where(eq(games.id, ancienne.gameId));
+    const pupil = await db
+      .insert(users)
+      .values({ email: "eleve-ancien@test.fr", displayName: "Élève 3" })
+      .returning({ id: users.id });
+    await joinGameByCode({ code: ancienne.joinCode, userId: pupil[0]!.id, pseudo: "Élève 3" });
+    const view = await getGameView(ancienne.gameId, pupil[0]!.id);
+    expect(view!.enabledDecisions).toEqual(REPARTITION_AVANT_2026_10_11[2]);
+    expect(view!.enabledDecisions.finance).toBe(true);
+    expect(view!.enabledDecisions.investment).toBe(true);
+    // Et le plafond d'investissement s'y applique : l'investissement sans les embauches.
+    expect(view!.plafondInvestissement?.applique).toBe(true);
   });
 });

@@ -1,3 +1,4 @@
+import { premierNiveauQuiOuvre } from "@/config/difficulty";
 import type { Metadata } from "next";
 import { Signe } from "@/components/signe";
 import Link from "next/link";
@@ -5,6 +6,7 @@ import {
   SCENARIO_CHOICES,
   SECTOR_LABELS,
   familyOf,
+  gammeEnClair,
   type ScenarioDefinition,
 } from "@/config/scenarios/registry";
 import {
@@ -222,7 +224,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
               // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
               <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-base leading-relaxed text-slate-300">
                 Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du
-                niveau {famille.gammeFromLevel}, {famille.gammeLabel}.
+                niveau {famille.gammeFromLevel}, {gammeEnClair(famille, premierNiveauQuiOuvre("rd"))}.
               </p>
             ) : null}
 

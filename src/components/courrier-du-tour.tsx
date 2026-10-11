@@ -67,7 +67,19 @@ export function CourrierDuTour({
   gazette = null,
   ouvert: ouvertInitial = false,
   classe: classeInitial = false,
+  noteDInvestissement = null,
+  assurance = true,
 }: {
+  /** Le niveau ouvre-t-il l'assurance ? Fermée, les courriers se lisent sans elle. */
+  assurance?: boolean;
+  /**
+   * UN COURRIER QUI APPELLE L'INVESTISSEMENT, À UN NIVEAU QUI LE PLAFONNE. Les
+   * histoires d'investissement (« pouvez-vous servir ce volume ? … investir »)
+   * tombaient dès le niveau 1 dans les parties créées avant la répartition
+   * d'octobre 2026, où l'on n'achète que ce que l'équipe fait tourner : la note
+   * le dit au pied de la lettre, avec le plafond du tour. `null` : rien.
+   */
+  noteDInvestissement?: string | null;
   /**
    * L'entreprise que dirige le joueur : le courrier lui est adressé, son nom est
    * sur l'enveloppe et en tête de la lettre (voir `config/courriers/destinataire`).
@@ -116,7 +128,7 @@ export function CourrierDuTour({
   const presseAnnonce =
     article !== null && (article.auteur === "enseignant" || article.sujets.some((x) => x.sujet !== "calme"));
   // Le courrier de routine : ce que le facteur apporte un trimestre calme.
-  const routine = courrierDeRoutine(gameId, round);
+  const routine = courrierDeRoutine(gameId, round, assurance);
   const vide = plis.length === 0;
 
   // Classé : une ligne, et de quoi relire. Le courrier a dit ce qu'il avait à dire.
@@ -241,7 +253,7 @@ export function CourrierDuTour({
           <div className={seul && !enParcours ? "courrier-pose-seul" : ""}>
           <div className={seul && !enParcours ? "courrier-pose-seul-grille" : ""}>
           {seul && !enParcours ? (
-            <EnveloppeOuverte code={premier} adresse={adresse} />
+            <EnveloppeOuverte code={premier} adresse={adresse} assurance={assurance} />
           ) : null}
           <div className={seul ? "mx-auto w-full sm:max-w-[40rem]" : ""}>
             {/*
@@ -251,12 +263,13 @@ export function CourrierDuTour({
             */}
             <div className={grilleDeCourriers(vide ? 1 : plis.length, "posee")}>
               {vide ? (
-                <CourrierRecommande code={routine.code} adresse={adresse} quand={quand} />
+                <CourrierRecommande code={routine.code} adresse={adresse} quand={quand} assurance={assurance} />
               ) : (
                 plis.map((p, i) => (
                   <CourrierRecommande
                     key={`${p.code}-${p.teamId ?? "market"}`}
                     code={p.code}
+                    assurance={assurance}
                     delayMs={i * 500}
                     destinataire={portee(p.teamId)}
                     adresse={adresse}
@@ -266,6 +279,18 @@ export function CourrierDuTour({
                 ))
               )}
             </div>
+            {/* LE PLAFOND DU TOUR, au pied du courrier : que l'histoire qui appelle
+                l'investissement arrive en lettre ou dans la Gazette (qui reprend
+                alors la circulaire), la note la suit. */}
+            {noteDInvestissement ? (
+              <p
+                data-note-d-investissement=""
+                className="mt-4 flex gap-1.5 text-sm leading-snug text-slate-300"
+              >
+                <Icone nom="usine" className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{noteDInvestissement}</span>
+              </p>
+            ) : null}
             {/* AU PIED DE LA LETTRE, comme un geste de lecture : lu, le
                 courrier se classe et la décision reprend la place. Un bouton
                 secondaire : l'orange de l'écran reste à l'action qui engage. */}

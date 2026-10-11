@@ -50,7 +50,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois élèves",
     notes:
-      "L'hôtel porte trois clientèles qui ne viennent pas aux mêmes saisons, une capacité de chambres qui ne s'étire pas d'un trimestre à l'autre, et une saison haute qui décide de l'exercice. Le niveau retenu ouvre la trésorerie et l'assurance sans ouvrir le recrutement ni l'investissement : la direction opérationnelle d'un établissement en première année se joue sur le tarif, le remplissage et la caisse, pas sur la structure. Le monde variable est décoché pour que toutes vos classes affrontent la même saison.",
+      "L'hôtel porte trois clientèles qui ne viennent pas aux mêmes saisons, une capacité de chambres qui ne s'étire pas d'un trimestre à l'autre, et une saison haute qui décide de l'exercice. Le niveau retenu ouvre le poste clients et les équipes, que l'atelier laisse à leur effectif de départ, sans l'emprunt, l'investissement ni l'assurance : la direction opérationnelle d'un établissement en première année se joue sur le tarif, le remplissage et la caisse, pas sur la structure. Un manque de trésorerie, la banque le couvre seule, par le découvert. Le monde variable est décoché pour que toutes vos classes affrontent la même saison.",
   },
   seances: [
     {
@@ -314,7 +314,7 @@ export const ATELIER_MHR: AtelierDefinition = {
           minutes: 30,
           titre: "Couvrir le besoin",
           detail:
-            "L'équipe décide comment elle passe le creux : tarif d'appel pour capter la clientèle disponible, couverture du découvert, arbitrage des dépenses non essentielles. L'assurance se décide ici aussi : la multirisque hôtelière à 2 200 € le trimestre ne couvre que le dégât des eaux, la formule avec perte d'exploitation à 5 000 € y ajoute la panne de chaudière, qui retire un cinquième des chambres pour un trimestre. Chaque option porte son coût, et un sinistre non couvert dans un trimestre creux est la faute la plus chère de l'atelier.",
+            "L'équipe décide comment elle passe le creux : tarif d'appel pour capter la clientèle disponible, mobilisation des créances ou découvert, arbitrage des dépenses non essentielles. Un sinistre qui tombe dans un trimestre creux, le dégât des eaux ou la panne de chaudière qui retire un cinquième des chambres, se paie sur la caisse : c'est la marge de sécurité qu'on garde, ou qu'on n'a pas. L'assurance, qui couvrirait ces coups durs, s'ouvre au niveau suivant.",
         },
         {
           minutes: 30,

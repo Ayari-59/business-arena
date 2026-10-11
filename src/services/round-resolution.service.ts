@@ -1,3 +1,5 @@
+import { leviersFigesDuProfil, presetFromProfile } from "@/config/difficulty";
+import { investissementPlafonne } from "@/engine/investment/plafond";
 import { randomInt } from "node:crypto";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
@@ -33,7 +35,6 @@ import {
 import { simulateRound } from "@/engine/simulation";
 import { articleDeLaGazette } from "@/config/gazette/generateur";
 import { profilAvecLaGazetteParue } from "@/config/gazette/edition";
-import { presetFromProfile } from "@/config/difficulty";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { subventionsAccordees } from "@/services/subvention.service";
 import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
@@ -187,6 +188,7 @@ export async function submitTeamDecisions(args: {
     teamId: team.id,
     roundIndex: game.currentRound,
     payload: args.payload,
+    leviers: leviersFigesDuProfil(game.difficultyProfile),
   });
   await db
     .insert(decisions)
@@ -233,6 +235,8 @@ async function sourceDesPivots(args: {
   teamId: string;
   roundIndex: number;
   payload: RoundDecisions;
+  /** Les leviers figés de la partie (`leviersFigesDuProfil`). */
+  leviers?: import("@/engine/bots").LeviersOuverts | null;
 }) {
   const previousRound =
     args.roundIndex > 1
@@ -264,6 +268,7 @@ async function sourceDesPivots(args: {
     state: stateRow?.state as CompanyState | undefined,
     roundIndex: args.roundIndex,
     previousPayload: previous?.payload as RoundDecisions | undefined,
+    leviers: args.leviers ?? null,
   });
   return decisionSourceOf(args.payload, proposees);
 }
@@ -403,6 +408,10 @@ async function resolveGameRound(
           lastSoldByProduct: lastSoldByProduct[team.id],
           humanAvgPrice,
           personality: botPersonalityFromSeed(Number(game.seed), botProfile),
+          // Les parties qui figent leurs leviers : le bot ne joue qu'avec eux. Celles
+          // d'avant : comme toujours, au seul plafond d'investissement près.
+          leviers: leviersFigesDuProfil(game.difficultyProfile),
+          investissementPlafonne: investissementPlafonne(presetFromProfile(game.difficultyProfile).decisions),
         });
         continue;
       }
@@ -413,7 +422,12 @@ async function resolveGameRound(
         allDecisions[team.id] = carryOverDecisions(previousPayloads[team.id]!);
         carriedOver.add(team.id);
       } else {
-        allDecisions[team.id] = fallbackDecisions(scenario, state, roundIndex);
+        allDecisions[team.id] = fallbackDecisions(
+          scenario,
+          state,
+          roundIndex,
+          leviersFigesDuProfil(game.difficultyProfile),
+        );
         carriedOver.add(team.id);
       }
     }
@@ -483,6 +497,7 @@ async function resolveGameRound(
         state: states.find((s) => s.id === t.id),
         roundIndex,
         previousPayload: previousPayloads[t.id],
+        leviers: leviersFigesDuProfil(game.difficultyProfile),
       });
       proposedByTeam[t.id] = proposed;
       // Reconduit : rien n'a été décidé. Sinon, la source se lit face à ce que
@@ -620,6 +635,7 @@ async function resolveGameRound(
           scenario,
           tour: roundIndex,
           niveau: presetFromProfile(game.difficultyProfile).level,
+          financementOuvert: presetFromProfile(game.difficultyProfile).decisions.finance,
           graine: Number(game.seed),
           nouveaux: duMarche([...injected, ...output.newEvents]),
           enCours: duMarche(activeEvents),

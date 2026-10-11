@@ -57,15 +57,16 @@ beforeAll(async () => {
 
   // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
   await poserUneLicence(orgId, prof);
-  // Niveau 3 : c'est là que le financement s'ouvre, donc là que la banque
-  // existe et que le plan de trésorerie prend un sens.
+  // Niveau 4 : c'est là que le financement s'ouvre (depuis octobre 2026), donc
+  // là que l'emprunt se décide et que le dossier bancaire prend un sens.
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,
     periodicity: "quarter",
     humanTeamsCount: 1,
     botCount: 1,
-    level: 3,
+    // Le financement (emprunt, apport) s'ouvre au niveau 4.
+    level: 4,
   });
   gameId = partie.gameId;
   const u = await db

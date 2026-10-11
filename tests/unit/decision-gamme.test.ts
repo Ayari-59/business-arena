@@ -477,7 +477,8 @@ describe("le formulaire en gamme", () => {
   });
 
   it("en mono-produit, marketing, qualité, maintenance et R&D forment une seule famille, dans l'étape « Budgéter »", () => {
-    const html = rendu(null, { enabled: presetByLevel.get(4)!.decisions, rdOffer: { techScale: 10000 } });
+    // La R&D s'ouvre au niveau Stratégie (5) depuis octobre 2026.
+    const html = rendu(null, { enabled: presetByLevel.get(5)!.decisions, rdOffer: { techScale: 10000 } });
     expect(html).not.toContain("Produire");
     expect(html).toContain("Les budgets du tour · marketing, qualité, maintenance, R&amp;D");
     const positions = ["marketingBudget", "qualityBudget", "maintenanceBudget", "rdBudget"].map((n) => html.indexOf(`name="${n}"`));
@@ -607,7 +608,7 @@ describe("la R&D par référence", () => {
         defaults,
         kind: "class",
         alreadySubmitted: false,
-        enabled: presetByLevel.get(4)!.decisions,
+        enabled: presetByLevel.get(5)!.decisions,
         vocabulary: boutique.vocabulary,
         gamme: gammeRd,
         rdOffer: { techScale: 10000 },

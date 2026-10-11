@@ -62,14 +62,16 @@ beforeAll(async () => {
   const orgId = (await getTeacherOrgId(prof))!;
   // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
   await poserUneLicence(orgId, prof);
-  // Niveau 3 : le financement est ouvert, donc la trésorerie est jouable.
+  // Niveau 4 : le financement est ouvert (depuis octobre 2026), donc le
+  // sauvetage se joue par l'emprunt et l'apport. Aux niveaux 1 à 3, la banque
+  // couvre seule : voir crise-sans-financement.test.ts.
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,
     periodicity: "quarter",
     humanTeamsCount: 1,
     botCount: 1,
-    level: 3,
+    level: 4,
   });
   gameId = partie.gameId;
   const u = await db

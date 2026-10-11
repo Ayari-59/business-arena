@@ -475,7 +475,11 @@ describe("registre des scénarios", () => {
       const v = d.vocabulary;
       for (const [key, value] of Object.entries(v)) {
         if (key === "unitsGender") continue; // une lettre, vérifiée juste après
-        expect(value.length, `${d.code}/${key} vide`).toBeGreaterThan(1);
+        // Les mots du plafond d'investissement forment un groupe : chacun compte.
+        const mots = typeof value === "string" ? { [key]: value } : (value as Record<string, string>);
+        for (const [sous, mot] of Object.entries(mots)) {
+          expect(mot.length, `${d.code}/${key}/${sous} vide`).toBeGreaterThan(1);
+        }
       }
       // Le genre de l'unité vendue : sans lui, toute phrase qui accorde un
       // participe avec elle est fausse dans les secteurs de l'autre genre.

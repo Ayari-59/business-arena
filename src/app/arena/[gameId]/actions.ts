@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { getGuestUserId } from "@/lib/guest";
-import { roundDecisionsSchema } from "@/services/decision-schema";
+import { refusDuPlafondDInvestissement, roundDecisionsSchema } from "@/services/decision-schema";
 import { decisionsSaisies } from "@/config/decisions-saisies";
 import { estimationAConserver, estimerLeTour } from "@/engine/estimation";
 import type { RoundDecisions } from "@/engine/types";
@@ -152,6 +152,16 @@ export async function playRoundAction(
         },
       ]);
     }
+  }
+
+  // LE PLAFOND D'INVESTISSEMENT, VÉRIFIÉ CÔTÉ SERVEUR. Aux niveaux sans
+  // embauches, on n'achète pas plus de capacité que l'équipe ne fait tourner
+  // (`engine/investment/plafond`). La feuille le dit avant l'envoi ; un
+  // formulaire périmé ou forgé est refusé ici, avec le même message, sur la
+  // case de la machine achetée.
+  if (vue) {
+    const refusDuPlafond = refusDuPlafondDInvestissement(parsed.data, vue.plafondInvestissement, vue.vocabulary);
+    if (refusDuPlafond) return refusDesChamps([refusDuPlafond]);
   }
 
   // LE RÉSULTAT ESTIMÉ, CALCULÉ PAR LE SERVEUR. L'encart l'a déjà affiché dans

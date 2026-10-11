@@ -151,7 +151,8 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
       newLoan: montant(formData, "newLoan"),
       loanRepayment: montant(formData, "loanRepayment"),
       capitalIncrease: montant(formData, "capitalIncrease"),
-      // Le dividende n'est ouvert qu'au niveau 6 : son champ peut être absent.
+      // L'emprunt et l'apport s'ouvrent au niveau 4, le dividende au niveau 6 :
+      // leurs champs peuvent être absents, et valent alors zéro.
       dividend: montant(formData, "dividend"),
     },
     ...(formData.has("discount")
@@ -164,7 +165,7 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
           },
         }
       : {}),
-    // Engagement RSE : ouvert dès Arbitrage ; champs absents ailleurs.
+    // Engagement RSE : ouvert dès Stratégie ; champs absents ailleurs.
     ...(formData.has("rseBudget") || formData.has("rseInvestment")
       ? {
           rse: {

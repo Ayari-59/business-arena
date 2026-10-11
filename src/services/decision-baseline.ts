@@ -1,4 +1,4 @@
-import { neutralDecisions } from "@/engine/bots";
+import { aLaMesureDuNiveau, neutralDecisions, type LeviersOuverts } from "@/engine/bots";
 import { isMultiProduct, scalarsOfGamme, suppliersOf, toGamme } from "@/engine/gamme";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 
@@ -76,6 +76,8 @@ export function startingDecisionsFor(
   snapshot: EngineScenarioConfig,
   state: CompanyState | undefined,
   roundIndex: number,
+  /** Les leviers figés de la partie : la proposition ne porte que ceux-là (`aLaMesureDuNiveau`). */
+  leviers: LeviersOuverts | null = null,
 ): RoundDecisions {
   // Sans état persisté il n'y a pas de capacité à viser : on s'en tient alors
   // au prix de référence du secteur, jamais à celui d'un autre.
@@ -123,7 +125,9 @@ export function startingDecisionsFor(
   // élever son niveau technique est la décision de l'équipe, pas du bot
   // équilibré qui sert de neutre pour le reste. Ni la marque, ni l'axe de
   // communication : le marketing proposé revient tout entier aux références.
-  return auPas(sansRd(sansCommunication(neutralDecisions({ scenario: snapshot, state, roundIndex }))));
+  return auPas(
+    sansRd(sansCommunication(aLaMesureDuNiveau(neutralDecisions({ scenario: snapshot, state, roundIndex }), leviers))),
+  );
 }
 
 function sansCommunication(d: RoundDecisions): RoundDecisions {
@@ -169,8 +173,9 @@ export function proposedDecisionsFor(args: {
   state: CompanyState | undefined;
   roundIndex: number;
   previousPayload: RoundDecisions | null | undefined;
+  leviers?: LeviersOuverts | null;
 }): RoundDecisions {
   return args.previousPayload
     ? auPas(args.previousPayload)
-    : startingDecisionsFor(args.snapshot, args.state, args.roundIndex);
+    : startingDecisionsFor(args.snapshot, args.state, args.roundIndex, args.leviers ?? null);
 }

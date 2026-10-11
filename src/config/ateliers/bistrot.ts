@@ -5,14 +5,14 @@ import type { AtelierDefinition } from "./types";
  *
  * Cinq séances de trois heures sur LA TABLE D'AUGUSTIN, le bistrot de
  * soixante-dix couverts, joué en gamme : la formule du midi, la carte du soir,
- * les banquets, et un traiteur à bâtir. Le secteur a été retenu parce qu'il
+ * les banquets, et un traiteur à lancer. Le secteur a été retenu parce qu'il
  * fait ce qu'aucun autre ne fait : ce qui est préparé et non servi part à la
  * poubelle le soir même, le ratio matières se lit à chaque service, et la
  * même brigade sert des offres qui ne lui prennent pas le même temps.
  *
  * L'atelier de l'hôtel, en première année, se joue sur le tarif, le
  * remplissage et la caisse. Celui-ci ouvre la structure : la brigade
- * s'embauche, la cuisine s'équipe, le traiteur se finance, et c'est le mix des
+ * s'embauche, la cuisine s'équipe, le traiteur se lance, et c'est le mix des
  * offres qui décide de la contrainte qui bloque.
  *
  * Le référentiel du BTS MHR n'a pas encore été confronté à son texte : le code
@@ -50,7 +50,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois élèves",
     notes:
-      "LA TABLE D'AUGUSTIN se joue ici en quatre offres, qui partagent la même cuisine de 9 000 couverts par trimestre et la même brigade de dix personnes, soit 4 550 heures : la formule du midi, la carte du soir, les banquets réglés à trente jours, et une activité traiteur qui demande 18 000 € de développement avant le premier buffet. Ce qui est préparé et non servi est perdu le soir même. Le niveau retenu ouvre la trésorerie, l'assurance, l'embauche de la brigade, l'équipement de la cuisine, la R&D du traiteur et l'engagement RSE : en deuxième année, la direction d'une unité de restauration se joue sur la structure autant que sur la carte. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice ; les aléas restent tirés, plus souvent à ce niveau, et se lisent dans le journal du tour.",
+      "LA TABLE D'AUGUSTIN se joue ici en quatre offres, qui partagent la même cuisine de 9 000 couverts par trimestre et la même brigade de dix personnes, soit 4 550 heures : la formule du midi, la carte du soir, les banquets réglés à trente jours, et une activité traiteur, prête à vendre à ce niveau, dont les clients règlent à quarante-cinq et soixante jours. Ce qui est préparé et non servi est perdu le soir même. Le niveau retenu ouvre la trésorerie, l'assurance, l'embauche de la brigade, l'emprunt et l'équipement de la cuisine ; la R&D, qui ferait bâtir le traiteur avant de le vendre, et l'engagement RSE viennent au niveau suivant : en deuxième année, la direction d'une unité de restauration se joue sur la structure autant que sur la carte. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice ; les aléas restent tirés, plus souvent à ce niveau, et se lisent dans le journal du tour.",
   },
   seances: [
     {
@@ -136,7 +136,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
         "Bloc 3 · Gérer l'offre commerciale et la relation client",
       ],
       objectif:
-        "Choisir un fournisseur de denrées en tenant ensemble son prix, la qualité perçue qu'il fait à la carte, son délai de règlement et son risque de rupture, et décider si l'activité traiteur se finance dès maintenant.",
+        "Choisir un fournisseur de denrées en tenant ensemble son prix, la qualité perçue qu'il fait à la carte, son délai de règlement et son risque de rupture, et décider si l'activité traiteur se lance dès maintenant.",
       competences: [
         "Je compare des fournisseurs sur plusieurs critères, prix, qualité, délai et fiabilité, et je pondère.",
         "Je relie la qualité des denrées à la fréquentation de la carte du soir, par la réputation qu'elle construit.",
@@ -147,10 +147,10 @@ export const ATELIER_BISTROT: AtelierDefinition = {
         "qualité perçue et réputation",
         "délai de règlement fournisseur",
         "besoin en fonds de roulement",
-        "investissement à horizon",
+        "délai de règlement client",
       ],
       preparation:
-        "Relisez les trois fournisseurs du jeu avec leurs chiffres : le grossiste au prix de référence, réglé à vingt et un jours ; le cash & carry à 14 % de moins, payé comptant, qui abaisse la qualité perçue et tombe en rupture une fois sur dix ; les producteurs en circuit court à 20 % de plus, réglés à quinze jours, qui relèvent la qualité et rassurent. La réputation du bistrot bouge vite : un changement de denrées se lit dès le trimestre suivant sur la fréquentation du soir, la clientèle la plus sensible à la qualité. C'est aussi le premier trimestre où le traiteur peut se financer, 18 000 € de développement avant de vendre le moindre buffet. Préparez une matrice multicritère vierge et un tableau où chaque équipe inscrira le solde de trésorerie qu'elle prévoit.",
+        "Relisez les trois fournisseurs du jeu avec leurs chiffres : le grossiste au prix de référence, réglé à vingt et un jours ; le cash & carry à 14 % de moins, payé comptant, qui abaisse la qualité perçue et tombe en rupture une fois sur dix ; les producteurs en circuit court à 20 % de plus, réglés à quinze jours, qui relèvent la qualité et rassurent. La réputation du bistrot bouge vite : un changement de denrées se lit dès le trimestre suivant sur la fréquentation du soir, la clientèle la plus sensible à la qualité. C'est aussi le premier trimestre où le traiteur peut se lancer : il est prêt à vendre, mais ses clients règlent à quarante-cinq et soixante jours. Préparez une matrice multicritère vierge et un tableau où chaque équipe inscrira le solde de trésorerie qu'elle prévoit.",
       deroule: [
         {
           minutes: 20,
@@ -168,13 +168,13 @@ export const ATELIER_BISTROT: AtelierDefinition = {
           minutes: 30,
           titre: "Payer comptant, et le traiteur",
           detail:
-            "Chaque équipe chiffre ce que le passage au comptant fait à sa trésorerie, à résultat inchangé : c'est le besoin en fonds de roulement qui monte, pas la marge qui baisse. Puis elle décide si elle engage les 18 000 € du traiteur, une dépense d'aujourd'hui pour des buffets qui ne se vendront qu'une fois l'activité prête.",
+            "Chaque équipe chiffre ce que le passage au comptant fait à sa trésorerie, à résultat inchangé : c'est le besoin en fonds de roulement qui monte, pas la marge qui baisse. Puis elle décide si elle lance le traiteur, des buffets vendus aujourd'hui et encaissés deux mois plus tard.",
         },
         {
           minutes: 30,
           titre: "Décisions du trimestre",
           detail:
-            "L'équipe arrête son fournisseur, ses couverts, ses prix, son budget de développement et, si elle en a besoin, sa couverture de trésorerie, puis écrit le solde qu'elle attend.",
+            "L'équipe arrête son fournisseur, ses couverts par offre, traiteur compris, ses prix et, si elle en a besoin, sa couverture de trésorerie, puis écrit le solde qu'elle attend.",
         },
         {
           minutes: 20,
@@ -196,7 +196,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       evaluation: [
         "La matrice pondère les critères selon la carte de l'établissement, pas à parts égales par défaut.",
         "L'effet du paiement comptant sur la trésorerie est chiffré, à résultat inchangé.",
-        "La décision sur le traiteur est datée : ce qu'elle coûte maintenant, et quand elle rapportera.",
+        "La décision sur le traiteur est datée : ce qu'elle rapporte, et quand elle sera encaissée.",
       ],
     },
     {
@@ -461,7 +461,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
     {
       question: "Le traiteur est-il obligatoire ?",
       reponse:
-        "Non, et c'est le point. L'activité traiteur demande 18 000 € de développement avant de vendre le moindre buffet, ne connaît ni la taille de la salle ni les congés de la clientèle, et se règle à quarante-cinq et soixante jours. Une équipe qui l'engage au deuxième trimestre en pleine tension de trésorerie apprend ce qu'est un investissement à horizon ; une équipe qui s'en passe apprend ce qu'elle a laissé aux autres. Les deux font une bonne séance de débriefing.",
+        "Non, et c'est le point. L'activité traiteur, prête à vendre à ce niveau, ne connaît ni la taille de la salle ni les congés de la clientèle, et se règle à quarante-cinq et soixante jours. Une équipe qui la lance au deuxième trimestre en pleine tension de trésorerie apprend ce que coûte une vente encaissée tard ; une équipe qui s'en passe apprend ce qu'elle a laissé aux autres. Au niveau suivant, le traiteur se bâtit par la R&D avant de vendre le moindre buffet : c'est le prolongement naturel de l'atelier. Les deux font une bonne séance de débriefing.",
     },
     {
       question: "Quel lien avec les épreuves du BTS ?",

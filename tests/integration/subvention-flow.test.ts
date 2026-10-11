@@ -71,7 +71,8 @@ beforeAll(async () => {
     periodicity: "quarter",
     humanTeamsCount: 1,
     botCount: 1,
-    level: 3,
+    // Le financement (emprunt, apport) s'ouvre au niveau 4.
+    level: 4,
   });
   gameId = partie.gameId;
   const u = await db

@@ -67,11 +67,21 @@ export function AlerteTresorerie({
           sont plus simulées. {alerte.toursConsecutifs} tours de suite sous le plafond de
           découvert sans plus une créance à céder.
         </p>
-        <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
-          Une seule chose la relève : un apport qui ramène la trésorerie au-dessus de{" "}
-          <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
-          Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
-        </p>
+        {alerte.financementOuvert ? (
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
+            Une seule chose la relève : un apport qui ramène la trésorerie au-dessus de{" "}
+            <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
+            Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
+          </p>
+        ) : (
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
+            Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong> pour
+            repasser sous le découvert autorisé. À ce niveau, ni emprunt ni apport des associés
+            ne se décident
+            {alerte.niveauDuFinancement ? ` (ils s'ouvrent au niveau ${alerte.niveauDuFinancement})` : ""} :
+            l&apos;entreprise reste à l&apos;arrêt jusqu&apos;à la fin de la partie.
+          </p>
+        )}
         {recours}
       </section>
     );
@@ -127,7 +137,11 @@ export function AlerteTresorerie({
         {restants <= 1
           ? "Encore un tour dans cet état et votre entreprise sera à l'arrêt."
           : `Encore ${restants} tours dans cet état et votre entreprise sera à l'arrêt.`}{" "}
-        Emprunt, apport des associés, cession d&apos;un actif : il faut décider ce tour-ci.
+        {alerte.financementOuvert
+          ? "Emprunt, apport des associés, cession d'un actif : il faut décider ce tour-ci."
+          : `À ce niveau, la banque couvre le manque par le découvert, à son taux : aucun emprunt à décider${
+              alerte.niveauDuFinancement ? ` (l'emprunt s'ouvre au niveau ${alerte.niveauDuFinancement})` : ""
+            }. C'est l'exploitation qui doit ramener la trésorerie : vendre, produire au plus juste, dépenser moins.`}
       </p>
       {recours}
     </section>

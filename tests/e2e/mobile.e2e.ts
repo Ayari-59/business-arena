@@ -272,7 +272,7 @@ describe("pendant une partie", () => {
     await page.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: /NOVA/ }).click();
-    // Ces parcours testent le niveau 3 (qualité, financement…) : on le choisit, sans dépendre du niveau de départ.
+    // Ces parcours testent le niveau 3 (qualité, équipe, créances…) : on le choisit, sans dépendre du niveau de départ.
     await page.getByRole("button", { name: /^Niveau 3/ }).click();
     await page.getByRole("button", { name: "Lancer la partie" }).click();
     await page.waitForURL(/\/arena\/|trop=1/, { timeout: 60_000 });
@@ -596,23 +596,59 @@ describe("pendant une partie", () => {
     throw new Error("aucune carte ne porte le détail par clientèle");
   });
 
-  it("le financement ne porte que l'emprunt et le capital, le parc machines a sa propre carte", async () => {
+  it("au niveau 3, ni carte de financement ni parc machines : ils s'ouvrent au niveau 4", async () => {
+    // Depuis octobre 2026, l'emprunt et l'investissement s'ouvrent au niveau 4.
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
-    for (let k = 0; k < 20; k++) {
+    const titres: string[] = [];
+    for (let k = 0; k < 24; k++) {
       await page.waitForTimeout(300);
-      if (/Faut-il financer/i.test(await titreDeLaCarte())) break;
+      titres.push(await titreDeLaCarte());
+      if (await page.getByRole("button", { name: /Valider et simuler/ }).count()) break;
       await page.getByRole("button", { name: /^Continuer/ }).last().click();
     }
-    // Le financement ne porte que l'emprunt et le capital : le parc machines a sa carte
-    // (« Investissement »), la suivante, ouverte dès le premier niveau.
-    expect(await page.locator('input[name="newLoan"]:visible').count()).toBe(1);
-    expect(await page.getByText(/Parc machines|Acheter/).filter({ visible: true }).count()).toBe(0);
-    await page.getByRole("button", { name: /^Continuer/ }).last().click();
-    await page.waitForTimeout(300);
-    expect(await titreDeLaCarte()).not.toMatch(/Faut-il financer/i);
-    expect(await page.locator('input[name="newLoan"]:visible').count()).toBe(0);
+    expect(titres.some((t) => /Faut-il financer/i.test(t)), titres.join(" | ")).toBe(false);
+    expect(await page.locator('input[name="newLoan"]').count()).toBe(0);
+    expect(await page.locator('input[name^="equipmentBuy."]').count()).toBe(0);
   });
+
+  it("au niveau 4, le financement ne porte que l'emprunt et le capital, le parc machines a sa propre carte", async () => {
+    // Une partie à part, sous licence, sur un métier sans gamme (le transport) :
+    // le niveau 4 ferait jouer NOVA en gamme.
+    const ctx = await navigateur.newContext({ ...devices["iPhone 13"], viewport: { width: 390, height: 664 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctx);
+    const p = await ctx.newPage();
+    try {
+      await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
+      await p.waitForLoadState("networkidle");
+      await p.getByRole("button", { name: /ROUTE & CIE/ }).first().click();
+      await p.getByRole("button", { name: /^Niveau 4/ }).click();
+      await p.getByRole("button", { name: "Lancer la partie" }).click();
+      await p.waitForURL(/\/arena\//, { timeout: 60_000 });
+      await p.waitForLoadState("networkidle");
+      await p.evaluate(() => (window.location.hash = "decisions"));
+      await p.locator("[data-titre-etape]").waitFor({ state: "visible" });
+      const titre = async () =>
+        `${await p.locator("[data-amorce-etape]").innerText()} ${await p.locator("[data-titre-etape]").innerText()}`
+          .replace(/\s+/g, " ")
+          .trim();
+      const accepter = p.getByRole("button", { name: "Accepter", exact: true });
+      if (await accepter.count()) await accepter.click();
+      for (let k = 0; k < 24; k++) {
+        await p.waitForTimeout(300);
+        if (/Faut-il financer/i.test(await titre())) break;
+        await p.getByRole("button", { name: /^Continuer/ }).last().click();
+      }
+      expect(await p.locator('input[name="newLoan"]:visible').count()).toBe(1);
+      expect(await p.getByText(/Parc machines|Acheter/).filter({ visible: true }).count()).toBe(0);
+      await p.getByRole("button", { name: /^Continuer/ }).last().click();
+      await p.waitForTimeout(300);
+      expect(await titre()).not.toMatch(/Faut-il financer/i);
+      expect(await p.locator('input[name="newLoan"]:visible').count()).toBe(0);
+    } finally {
+      await ctx.close();
+    }
+  }, 120_000);
 
   it("la première décision est la commande exceptionnelle, seule à l'écran", async () => {
     await versLesDecisions();
@@ -752,14 +788,16 @@ describe("pendant une partie", () => {
   it("les décisions dont on peut se passer montrent leurs champs d'emblée, sans question préalable", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    // Au niveau 3, la décision dont on peut se passer est celle des créances
+    // clients (l'emprunt s'ouvre au niveau 4 depuis octobre 2026).
     for (let k = 0; k < 20; k++) {
       await page.waitForTimeout(300);
-      if (/Faut-il financer/i.test(await titreDeLaCarte())) break;
+      if (/Mobilisez-vous vos créances/i.test(await titreDeLaCarte())) break;
       const texte = page.locator('textarea[name="justification"]');
       if ((await texte.count()) && (await texte.isVisible())) break;
       await page.getByRole("button", { name: /^Continuer/ }).last().click();
     }
-    expect(await titreDeLaCarte()).toMatch(/Faut-il financer/i);
+    expect(await titreDeLaCarte()).toMatch(/Mobilisez-vous vos créances/i);
     // Pas de « regarder ou pas » : les champs sont là, à zéro, et Continuer avance.
     expect(await page.getByRole("button", { name: /^Non, |Oui, je regarde/ }).count()).toBe(0);
     expect(
@@ -767,7 +805,7 @@ describe("pendant une partie", () => {
     ).toBeGreaterThan(0);
     await page.getByRole("button", { name: /^Continuer/ }).last().click();
     await page.waitForTimeout(300);
-    expect(await titreDeLaCarte()).not.toMatch(/Faut-il financer/i);
+    expect(await titreDeLaCarte()).not.toMatch(/Mobilisez-vous vos créances/i);
   });
 
   it("dans le parcours, les tiroirs s'ouvrent : pas d'écran à moitié vide", async () => {
@@ -871,7 +909,7 @@ describe("sur ordinateur, ce qui est consulté reste à plat", () => {
     await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
     await p.waitForLoadState("networkidle");
     await p.getByRole("button", { name: /NOVA/ }).click();
-    // Ces parcours testent le niveau 3 (qualité, financement…) : on le choisit, sans dépendre du niveau de départ.
+    // Ces parcours testent le niveau 3 (qualité, équipe, créances…) : on le choisit, sans dépendre du niveau de départ.
     await p.getByRole("button", { name: /^Niveau 3/ }).click();
     await p.getByRole("button", { name: "Lancer la partie" }).click();
     await p.waitForURL(/\/arena\/|trop=1/, { timeout: 60_000 });
@@ -960,7 +998,7 @@ describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
     await petit.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
     await petit.waitForLoadState("networkidle");
     await petit.getByRole("button", { name: /NOVA/ }).click();
-    // Ces parcours testent le niveau 3 (qualité, financement…) : on le choisit, sans dépendre du niveau de départ.
+    // Ces parcours testent le niveau 3 (qualité, équipe, créances…) : on le choisit, sans dépendre du niveau de départ.
     await petit.getByRole("button", { name: /^Niveau 3/ }).click();
     await petit.getByRole("button", { name: "Lancer la partie" }).click();
     await petit.waitForURL(/\/arena\//, { timeout: 60_000 });

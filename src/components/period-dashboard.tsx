@@ -289,6 +289,7 @@ export function PeriodDashboard({
                     <CourrierRecommande
                       key={code}
                       code={code}
+                      assurance={view.enabledDecisions.insurance}
                       delayMs={i * 450}
                       adresse={destinataireDuCourrier({
                         kind: view.kind,

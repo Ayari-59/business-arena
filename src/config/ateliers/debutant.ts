@@ -48,7 +48,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "deux élèves",
     notes:
-      "La boutique achète pour revendre un seul article de mode : la marge s'y lit sans détour, et rien n'y brouille la découverte. La gamme de cinq références attend les niveaux suivants. Le niveau Découverte met aussi l'emprunt et l'investissement à l'écran ; l'atelier n'y touche pas : chaque séance n'annonce qu'un levier, et les autres restent à zéro, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. Décochez « Histoires d'investissement » à la création, sans quoi des courriers de marché feraient bouger la demande entre vos séances. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
+      "La boutique achète pour revendre un seul article de mode : la marge s'y lit sans détour, et rien n'y brouille la découverte. La gamme de cinq références attend les niveaux suivants. Le niveau Découverte ne met à l'écran que le prix, la production et le marketing : chaque séance n'annonce qu'un levier, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas, et aucune histoire d'investissement ne vient bouger la demande entre vos séances. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
   },
   seances: [
     {

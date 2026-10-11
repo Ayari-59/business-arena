@@ -432,21 +432,29 @@ describe("ateliers professionnels", () => {
     // de recrutement que le personnel soit ouvert, une séance d'investissement
     // que l'investissement le soit. Annoncer l'une sans l'autre enverrait
     // l'enseignant chercher devant sa classe un panneau qui n'existe pas.
+    // Depuis octobre 2026, la trésorerie se pilote au niveau 3 par le poste
+    // clients (escompte, affacturage, découvert) ; l'emprunt, la banque qui
+    // prête et l'assurance viennent au niveau 4.
     const EXIGENCES = [
-      { mots: /trésorerie|emprunt|financement|banque/i, levier: "finance" as const },
-      { mots: /recrut|embauch|personnel|effectif/i, levier: "hr" as const },
-      { mots: /investir|investissement/i, levier: "investment" as const },
-      { mots: /placement|excédents? de trésorerie/i, levier: "placement" as const },
+      { mots: /emprunt|financement|\bbanque\b|apport des associés/i, leviers: ["finance"] as const },
+      { mots: /trésorerie|créances|poste clients|escompte|affacturage/i, leviers: ["creances", "finance"] as const },
+      { mots: /recrut|embauch|personnel|effectif/i, leviers: ["hr"] as const },
+      { mots: /investir|investissement/i, leviers: ["investment"] as const },
+      { mots: /assurance|assurer contre/i, leviers: ["insurance"] as const },
+      { mots: /placement|excédents? de trésorerie/i, leviers: ["placement"] as const },
     ];
     for (const a of ATELIERS) {
-      const preset = DIFFICULTY_PRESETS.find((p) => p.level === a.reglages.niveau)!;
+      // Un atelier de concours joue le préréglage de repli, pas le niveau nommé.
+      const preset = a.reglages.concours
+        ? LEGACY_PRESET
+        : DIFFICULTY_PRESETS.find((p) => p.level === a.reglages.niveau)!;
       for (const s of a.seances) {
         const dit = `${s.titre} ${s.objectif}`;
-        for (const { mots, levier } of EXIGENCES) {
+        for (const { mots, leviers } of EXIGENCES) {
           if (!mots.test(dit)) continue;
           expect(
-            preset.decisions[levier],
-            `${a.code}/séance ${s.numero} : porte sur « ${levier} » au niveau ${preset.level}, qui ne l'ouvre pas`,
+            leviers.some((l) => preset.decisions[l]),
+            `${a.code}/séance ${s.numero} : porte sur « ${leviers.join(" ou ")} » au niveau ${preset.level}, qui ne l'ouvre pas`,
           ).toBe(true);
         }
       }

@@ -37,6 +37,8 @@ const alerte = (over: Partial<Alerte> = {}): Alerte => ({
   plafondDecouvert: 30000,
   manque: 46000,
   financementObligatoire: true,
+  financementOuvert: true,
+  niveauDuFinancement: null,
   ...over,
 });
 
@@ -158,5 +160,17 @@ describe("AlerteTresorerie", () => {
     });
     expect(refusee).toContain("refusée");
     expect(refusee).not.toContain('name="montant"');
+  });
+
+  it("sans financement au niveau joué, elle ne réclame ni emprunt ni apport", () => {
+    // Niveaux 1 à 3 : l'emprunt et l'apport ne sont pas à l'écran. L'alerte
+    // dit que la banque couvre par le découvert, et où s'ouvre le financement.
+    const html = rendu(alerte({ financementOuvert: false, niveauDuFinancement: 4 }));
+    expect(html).not.toContain("Emprunt, apport des associés, cession");
+    expect(html).toContain("la banque couvre le manque par le découvert");
+    expect(html).toContain("l&#x27;emprunt s&#x27;ouvre au niveau 4");
+    const gelee = rendu(alerte({ defaillante: true, financementOuvert: false, niveauDuFinancement: 4 }));
+    expect(gelee).not.toContain("Une seule chose la relève");
+    expect(gelee).toContain("ni emprunt ni apport des associés");
   });
 });

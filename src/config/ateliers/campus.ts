@@ -621,7 +621,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
       question:
         "Une première technologique peut-elle vraiment suivre à côté d'un BTS ?",
       reponse:
-        "Oui, parce que le mode concours réduit le jeu à peu de décisions : prix, volume, communication, qualité, entretien, financement, investissement, trésorerie, assurance. Ni recrutement, ni emploi des excédents. Le poste de la production, volume et qualité, demande du raisonnement sur la capacité et pas de technique comptable, et c'est un poste dont l'équipe dépend vraiment. Ce qu'un lycéen n'aura pas, c'est le vocabulaire du bilan : c'est précisément ce que son voisin de comptabilité doit lui apprendre en le disant autrement.",
+        "Oui, parce que le mode concours réduit le jeu à peu de décisions : prix, volume, communication, qualité, entretien, financement, trésorerie, assurance. Ni recrutement, ni investissement, ni emploi des excédents. Le poste de la production, volume et qualité, demande du raisonnement sur la capacité et pas de technique comptable, et c'est un poste dont l'équipe dépend vraiment. Ce qu'un lycéen n'aura pas, c'est le vocabulaire du bilan : c'est précisément ce que son voisin de comptabilité doit lui apprendre en le disant autrement.",
     },
     {
       question:
@@ -632,7 +632,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
     {
       question: "Quel niveau de jeu les équipes reçoivent-elles en concours ?",
       reponse:
-        "Le niveau Pilotage, et il ne se règle pas à la création : prix, volume, communication, qualité, entretien, financement, investissement, trésorerie et assurance sont ouverts ; le recrutement et l'emploi des excédents restent fermés, et aucune histoire d'investissement ne vient bouger la demande : le concours garde son déroulé. Les indices sont en outre ramenés au troisième palier, plus bas qu'en classe, et une décision validée ne se reprend plus. Cette sobriété est ce qui rend le mélange des niveaux jouable.",
+        "Un niveau propre au concours, qui porte le nom de Pilotage sans en suivre la répartition actuelle, et il ne se règle pas à la création : prix, volume, communication, qualité, entretien, financement, trésorerie et assurance sont ouverts ; le recrutement, l'investissement et l'emploi des excédents restent fermés, et aucune histoire d'investissement ne vient bouger la demande : le concours garde son déroulé. Les indices sont en outre ramenés au troisième palier, plus bas qu'en classe, et une décision validée ne se reprend plus. Cette sobriété est ce qui rend le mélange des niveaux jouable.",
     },
     {
       question:

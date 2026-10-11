@@ -1,16 +1,18 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 /**
- * FINANCER ET INVESTIR, DÈS LE NIVEAU 1, SUR LE VRAI MOTEUR.
+ * FINANCER ET INVESTIR, AU NIVEAU QUI LES OUVRE, SUR LE VRAI MOTEUR.
  *
- * Deux promesses à tenir de bout en bout :
+ * Depuis octobre 2026, l'opérationnel d'abord : l'emprunt, l'apport et
+ * l'investissement s'ouvrent au niveau 4. Deux promesses à tenir de bout en
+ * bout :
  *
- *  1. une crise de trésorerie se joue à tous les niveaux : l'emprunt et
- *     l'apport sont à l'écran dès Découverte, et la crise s'y règle par ce
- *     qu'on y voit (avant, le niveau 1 réclamait un financement qu'il ne
- *     montrait pas, et la partie n'était plus jouable) ;
+ *  1. une crise de trésorerie se règle par ce que l'écran propose : au niveau
+ *     4, un emprunt à la hauteur du manque lève le verrou ; aux niveaux 1 à 3,
+ *     il n'y a pas de verrou, la banque couvre par le découvert (voir
+ *     crise-sans-financement.test.ts) ;
  *  2. les histoires qui appellent l'investissement tombent aux bons tours, se
- *     lisent à l'ouverture du tour, et ne se posent que là où on les a voulues.
+ *     lisent à l'ouverture du tour, et seulement là où l'on peut y répondre.
  */
 
 vi.mock("@/db", async () => {
@@ -73,9 +75,24 @@ beforeAll(async () => {
   await placerSousLicence(userId);
 });
 
-describe("la même crise se règle de la même façon à tous les niveaux", () => {
+describe("la crise se règle par ce que l'écran propose", () => {
+  it("niveau 4 : la crise réclame un financement, et l'écran le propose", async () => {
+    const gameId = await createSoloGame(userId, "quarter", 3, 4);
+    let vue = await getGameView(gameId, userId);
+    for (let tour = 0; tour < 4 && !vue?.alerteTresorerie?.crise; tour++) {
+      await resolveCurrentRound({ gameId, userId, playerDecisions: EN_CRISE });
+      vue = await getGameView(gameId, userId);
+    }
+    expect(vue?.alerteTresorerie?.crise).toBe(true);
+    expect(vue!.enabledDecisions.finance).toBe(true);
+    const exigence = vue!.exigenceSauvetage!;
+    expect(exigence.manque).toBeGreaterThan(0);
+    expect(bloqueLaValidation(verdictSauvetage(exigence, { emprunt: 0, apport: 0 }))).toBe(true);
+    expect(bloqueLaValidation(verdictSauvetage(exigence, { emprunt: 0, apport: exigence.manque }))).toBe(false);
+  }, 120000);
+
   for (const niveau of [1, 3] as const) {
-    it(`niveau ${niveau} : la crise réclame un financement, et l'écran le propose`, async () => {
+    it(`niveau ${niveau} : la même crise ne réclame rien que l'écran ne propose pas`, async () => {
       const gameId = await createSoloGame(userId, "quarter", 3, niveau);
       let vue = await getGameView(gameId, userId);
       for (let tour = 0; tour < 4 && !vue?.alerteTresorerie?.crise; tour++) {
@@ -83,35 +100,34 @@ describe("la même crise se règle de la même façon à tous les niveaux", () =
         vue = await getGameView(gameId, userId);
       }
       expect(vue?.alerteTresorerie?.crise).toBe(true);
-      // Les deux leviers du sauvetage sont ouverts au niveau joué…
-      expect(vue!.enabledDecisions.finance).toBe(true);
-      // … et l'exigence se satisfait avec eux : un emprunt à la hauteur du manque lève le verrou.
-      const exigence = vue!.exigenceSauvetage!;
-      expect(exigence.manque).toBeGreaterThan(0);
-      expect(bloqueLaValidation(verdictSauvetage(exigence, { emprunt: 0, apport: 0 }))).toBe(true);
-      expect(bloqueLaValidation(verdictSauvetage(exigence, { emprunt: 0, apport: exigence.manque }))).toBe(false);
+      expect(vue!.enabledDecisions.finance).toBe(false);
+      expect(vue!.exigenceSauvetage).toBeNull();
+      expect(vue!.alerteTresorerie!.financementOuvert).toBe(false);
     }, 120000);
   }
 });
 
 describe("les histoires d'investissement, selon le niveau et selon la partie", () => {
-  it("solo : niveau 1, un signe au tour 2 et la demande qui monte au tour 3", async () => {
-    const gameId = await createSoloGame(userId, "quarter", 3, 1);
-    expect(await histoires(gameId)).toEqual(["2:signal", "3:grand_compte"]);
+  it("solo : aux niveaux 1 à 3, aucune histoire n'appelle un emprunt ou une machine", async () => {
+    for (const n of [1, 2, 3]) expect(await histoires(await createSoloGame(userId, "quarter", 3, n))).toEqual([]);
   });
 
-  it("solo : le niveau 3 ouvre la fenêtre de financement, le 4 le concurrent, le 5 le retournement", async () => {
-    expect(await histoires(await createSoloGame(userId, "quarter", 3, 3))).toEqual([
+  it("solo : le niveau 4 ouvre le signe, la fenêtre de financement et la demande qui monte", async () => {
+    expect(await histoires(await createSoloGame(userId, "quarter", 3, 4))).toEqual([
       "2:signal",
       "2:taux",
       "3:grand_compte",
     ]);
-    expect(await histoires(await createSoloGame(userId, "quarter", 3, 4))).toContain("4:concurrent");
-    expect(await histoires(await createSoloGame(userId, "quarter", 3, 5))).toContain("5:retournement");
+  });
+
+  it("solo : le niveau 5 ajoute le concurrent, le 6 le retournement", async () => {
+    expect(await histoires(await createSoloGame(userId, "quarter", 3, 5))).toContain("4:concurrent");
+    expect(await histoires(await createSoloGame(userId, "quarter", 3, 5))).not.toContain("5:retournement");
+    expect(await histoires(await createSoloGame(userId, "quarter", 3, 6))).toContain("5:retournement");
   });
 
   it("le courrier du tour se lit à l'ouverture du tour, avant la décision", async () => {
-    const gameId = await createSoloGame(userId, "quarter", 3, 1);
+    const gameId = await createSoloGame(userId, "quarter", 3, 4);
     await resolveCurrentRound({ gameId, userId, playerDecisions: EN_CRISE });
     const vue = (await getGameView(gameId, userId))!;
     expect(vue.currentRound).toBe(2);
@@ -125,7 +141,7 @@ describe("les histoires d'investissement, selon le niveau et selon la partie", (
       periodicity: "quarter",
       humanTeamsCount: 1,
       botCount: 1,
-      level: 1,
+      level: 4,
     });
     expect(await histoires(gameId)).toEqual([]);
   });
@@ -137,9 +153,9 @@ describe("les histoires d'investissement, selon le niveau et selon la partie", (
       periodicity: "quarter",
       humanTeamsCount: 1,
       botCount: 1,
-      level: 2,
+      level: 4,
       investmentStories: true,
     });
-    expect(await histoires(gameId)).toEqual(["2:signal", "3:grand_compte"]);
+    expect(await histoires(gameId)).toEqual(["2:signal", "2:taux", "3:grand_compte"]);
   });
 });

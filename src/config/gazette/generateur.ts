@@ -59,7 +59,20 @@ export interface EntreeDeLaGazette {
   nouveaux: readonly EventInstance[];
   /** Les événements de MARCHÉ tombés avant, qui pèsent encore sur ce tour. */
   enCours: readonly EventInstance[];
+  /**
+   * L'emprunt est-il une décision du niveau joué ? Fermé (niveaux 1 à 3), le
+   * journal parle encore des taux (le découvert les suit), mais aucun titre
+   * n'invite à emprunter. Absent : ouvert (les parties d'avant la répartition).
+   */
+  financementOuvert?: boolean;
 }
+
+/**
+ * LES TITRES QUI INVITENT À EMPRUNTER : ils ne paraissent pas là où l'emprunt
+ * n'est pas une décision du niveau. « Le crédit devrait se renchérir » constate ;
+ * « Emprunter devrait coûter moins cher » appelle un geste que l'élève n'a pas.
+ */
+export const INVITE_A_EMPRUNTER = /\bemprunt|\bfinancer\b/i;
 
 /** Ce que le journal lit d'un événement : son sujet, son sens, son intensité. */
 export interface LectureDeLEvenement {
@@ -372,8 +385,12 @@ function empreinte(s: string): number {
  * clé ne lisent donc jamais le même titre tant que la liste est au moins
  * aussi longue que la partie.
  */
-export function titreDe(cle: CleDeGabarit, entree: Pick<EntreeDeLaGazette, "graine" | "tour" | "secteur">): string {
-  const liste = TITRES[cle];
+export function titreDe(
+  cle: CleDeGabarit,
+  entree: Pick<EntreeDeLaGazette, "graine" | "tour" | "secteur" | "financementOuvert">,
+): string {
+  const liste =
+    entree.financementOuvert === false ? TITRES[cle]?.filter((t) => !INVITE_A_EMPRUNTER.test(t)) : TITRES[cle];
   if (!liste || liste.length === 0) throw new Error(`Gazette : aucun titre pour ${cle}`);
   const depart = Math.floor(alea(entree.graine, 0, empreinte(cle)) * liste.length);
   const g = liste[(depart + entree.tour) % liste.length]!;

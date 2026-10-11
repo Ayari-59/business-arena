@@ -12,6 +12,7 @@ import {
 import { Icone } from "@/components/icone";
 import { TuileDuLieu } from "@/components/tuile-du-lieu";
 import type { Sector } from "@/config/scenarios/registry";
+import type { ComparatifDesNiveaux, TableauDuNiveau } from "@/config/tableau-des-niveaux";
 
 /** Sans texte passé par la page : une marque neutre (les noms vivent dans config/tarifs.ts). */
 const OFFRE_PAR_DEFAUT = { marque: "Offre payante", message: "Ces niveaux sont inclus dans les offres payantes." };
@@ -54,13 +55,22 @@ export interface QuickScenario {
    * ce que chaque variante fait jouer, et le niveau à partir duquel c'est la
    * gamme. Absent : le scénario est le même à tous les niveaux.
    */
-  variante?: { gammeFromLevel: number; mono: string; gamme: string };
+  variante?: {
+    gammeFromLevel: number;
+    mono: string;
+    gamme: string;
+    /** La référence qui se bâtit par la R&D, et le niveau qui l'ouvre. */
+    aBatir?: string;
+    niveauDeLaRd?: number;
+  };
 }
 export interface QuickLevel {
   level: number;
   name: string;
   tagline: string;
   decisions: number;
+  /** Ce que le niveau confie, garde et ouvre ensuite (`config/tableau-des-niveaux`). */
+  tableau?: TableauDuNiveau | null;
 }
 
 const PERIODS = [
@@ -106,7 +116,10 @@ export function QuickConfigFields({
   liens,
   offre = OFFRE_PAR_DEFAUT,
   lancement,
+  comparatif,
 }: {
+  /** Le comparatif des niveaux, dépliable sur ordinateur (`config/tableau-des-niveaux`). */
+  comparatif?: ComparatifDesNiveaux;
   scenarios: QuickScenario[];
   levels: QuickLevel[];
   defaultScenario: string;
@@ -135,7 +148,7 @@ export function QuickConfigFields({
 }) {
   const [scenario, setScenario] = useState(defaultScenario);
   // On commence au niveau 3 · Pilotage ; les niveaux 1-2 (questions d'analyse entre deux
-  // réponses, financement fermé) sont à un ou deux crans de curseur.
+  // réponses, l'équipe et les créances encore gérées pour vous) sont à un ou deux crans.
   const [level, setLevel] = useState(() =>
     defaultLevel === undefined
       ? NIVEAU_PAR_DEFAUT
@@ -148,6 +161,7 @@ export function QuickConfigFields({
   const [companies, setCompanies] = useState<string>("3");
   const [rounds, setRounds] = useState<string>("");
   const [optionsOuvertes, setOptionsOuvertes] = useState(false);
+  const [comparatifOuvert, setComparatifOuvert] = useState(false);
 
   const regle: VitrineSolo = vitrine ?? VITRINE_SOLO_PAR_DEFAUT;
   // Le niveau le plus haut jouable avec l'entreprise choisie (6 sous licence).
@@ -363,9 +377,36 @@ export function QuickConfigFields({
         // là où le choix se fait, avec ce que l'autre variante attend.
         <p className="encadre-neutre mt-1 rounded-lg px-3 py-2 text-sm leading-snug text-slate-200" data-variante>
           {level >= sec.variante.gammeFromLevel
-            ? `À ce niveau, ${sec.label} se joue en gamme : ${sec.variante.gamme}. En dessous du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.mono}.`
+            ? `À ce niveau, ${sec.label} se joue en gamme : ${sec.variante.gamme}${
+                sec.variante.aBatir && sec.variante.niveauDeLaRd !== undefined
+                  ? level >= sec.variante.niveauDeLaRd
+                    ? `, ${sec.variante.aBatir}`
+                    : `, livrée prête (${sec.variante.aBatir} au niveau ${sec.variante.niveauDeLaRd})`
+                  : ""
+              }. En dessous du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.mono}.`
             : `À ce niveau, ${sec.label} se joue avec ${sec.variante.mono}. À partir du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.gamme}.`}
         </p>
+      ) : null}
+
+      {cur?.tableau ? <TableauDuNiveauChoisi tableau={cur.tableau} /> : null}
+      {comparatif ? (
+        // LE COMPARATIF, SUR ORDINATEUR SEULEMENT : six colonnes ne tiennent pas
+        // sur un téléphone, où le tableau du niveau choisi suffit. Un bouton et un
+        // rendu conditionnel, comme les options du marché (voir plus bas).
+        <div className="mt-3 max-sm:hidden" data-comparatif-des-niveaux="">
+          <button
+            type="button"
+            onClick={() => setComparatifOuvert((o) => !o)}
+            aria-expanded={comparatifOuvert}
+            className="flex items-center gap-1.5 text-sm font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+          >
+            Comparer les {comparatif.niveaux.length} niveaux
+            <span aria-hidden className={`transition-transform ${comparatifOuvert ? "rotate-180" : ""}`}>⌄</span>
+          </button>
+          {comparatifOuvert ? (
+            <ComparatifDesNiveauxTableau comparatif={comparatif} choisi={level} niveauMax={niveauMax} marque={offre.marque} />
+          ) : null}
+        </div>
       ) : null}
 
       {/* Options repliées.
@@ -474,6 +515,129 @@ export function QuickConfigFields({
         </p>
         {lancement ? <div className="shrink-0 sm:min-w-56">{lancement}</div> : null}
       </div>
+    </div>
+  );
+}
+
+/**
+ * LE NIVEAU CHOISI, EN TROIS BLOCS : ce que le joueur décide, ce que le niveau
+ * tient pour lui, et ce que le suivant ouvre. Tout est lu dans les préréglages
+ * (`config/tableau-des-niveaux`) ; ce composant ne fait que poser les listes.
+ */
+function TableauDuNiveauChoisi({ tableau }: { tableau: TableauDuNiveau }) {
+  const blocs = [
+    { cle: "decidez", titre: "Vous décidez", items: tableau.decidez },
+    { cle: "gere", titre: "Géré pour vous", items: tableau.gere },
+    { cle: "suivant", titre: "Au niveau suivant", items: tableau.suivant },
+  ] as const;
+  return (
+    <section
+      aria-label={`Le niveau ${tableau.level} en bref`}
+      data-tableau-du-niveau={tableau.level}
+      className="mt-3 rounded-lg border border-white/10 px-3 py-3 sm:px-4"
+    >
+      <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+        {blocs.map((b) => (
+          <div key={b.cle} data-bloc={b.cle} className="min-w-0">
+            <h3 className="libelle text-slate-300">{b.titre}</h3>
+            {b.items.length > 0 ? (
+              <ul className="mt-1.5 space-y-1 text-sm leading-snug text-slate-200">
+                {b.items.map((x) => (
+                  <li key={x} className="flex gap-1.5">
+                    <span aria-hidden className="text-slate-400">
+                      {b.cle === "gere" ? "·" : b.cle === "suivant" ? "+" : "✓"}
+                    </span>
+                    <span>{x}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1.5 text-sm leading-snug text-slate-400">
+                {b.cle === "gere" ? "Rien : tout est entre vos mains." : "Vous êtes au niveau le plus complet."}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 border-t border-white/10 pt-2 text-xs text-slate-400">{tableau.reperes}</p>
+    </section>
+  );
+}
+
+/** Le comparatif : une ligne par levier, une colonne par niveau. */
+function ComparatifDesNiveauxTableau({
+  comparatif,
+  choisi,
+  niveauMax,
+  marque,
+}: {
+  comparatif: ComparatifDesNiveaux;
+  choisi: number;
+  niveauMax: number;
+  marque: string;
+}) {
+  const marqueDe = { oui: "Oui", plafonne: "À hauteur de l'équipe", non: "Non" } as const;
+  return (
+    <div className="mt-2 overflow-x-auto">
+      <table className="w-full text-sm" data-tableau-comparatif="">
+        <caption className="sr-only">Les leviers ouverts à chaque niveau</caption>
+        <thead>
+          <tr className="text-left text-xs text-slate-400">
+            <th scope="col" className="py-1.5 pr-3 font-medium">Levier</th>
+            {comparatif.niveaux.map((n) => (
+              <th
+                key={n.level}
+                scope="col"
+                className={`px-3 py-2 text-center font-medium ${n.level === choisi ? "text-slate-50" : ""}`}
+              >
+                <span className="block tabular-nums">
+                  {n.level}
+                  {n.level > niveauMax ? (
+                    <Icone nom="verrou" className="ml-1 h-3 w-3" aria-label={marque} />
+                  ) : null}
+                </span>
+                <span className="block font-normal">{n.name}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {comparatif.lignes.map((l) => (
+            <tr key={l.groupe} className="border-t border-white/5">
+              <th scope="row" className="py-1.5 pr-3 text-left font-normal text-slate-200">
+                {l.libelle}
+              </th>
+              {l.cases.map((c, i) => (
+                <td
+                  key={comparatif.niveaux[i]!.level}
+                  className={`px-3 py-2 text-center ${comparatif.niveaux[i]!.level === choisi ? "bg-white/5" : ""}`}
+                >
+                  <span className="sr-only">{marqueDe[c]}</span>
+                  <span aria-hidden className={c === "non" ? "text-slate-400" : "text-slate-100"}>
+                    {c === "oui" ? "✓" : c === "plafonne" ? "✓*" : "·"}
+                  </span>
+                </td>
+              ))}
+            </tr>
+          ))}
+          <tr className="border-t border-white/5">
+            <th scope="row" className="py-1.5 pr-3 text-left font-normal text-slate-200">
+              Indices par situation
+            </th>
+            {comparatif.indices.map((n, i) => (
+              <td
+                key={comparatif.niveaux[i]!.level}
+                className={`px-3 py-2 text-center tabular-nums text-slate-100 ${comparatif.niveaux[i]!.level === choisi ? "bg-white/5" : ""}`}
+              >
+                {n}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+      <p className="mt-1.5 text-xs text-slate-400">
+        ✓* : investissement à hauteur de votre équipe, faute d&apos;embauches à ce niveau.
+      </p>
     </div>
   );
 }

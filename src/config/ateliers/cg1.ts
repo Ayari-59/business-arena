@@ -11,8 +11,9 @@ import type { AtelierDefinition } from "./types";
  *
  * C'est un atelier de PREMIÈRE année, et il en a le périmètre : une seule
  * enceinte à produire et à vendre (la gamme attend la seconde année), un
- * niveau de jeu qui ouvre le financement sans ouvrir le recrutement ni
- * l'investissement, et des séances qui restent dans les processus de première
+ * niveau de jeu qui ouvre la mobilisation des créances sans ouvrir l'emprunt
+ * ni l'investissement (les ressources humaines, ouvertes au même niveau,
+ * restent à leur effectif de départ), et des séances qui restent dans les processus de première
  * année — opérations commerciales, TVA, stocks, seuil, budget de trésorerie.
  * Le bilan fonctionnel et le financement du poste clients par le calcul
  * viennent en seconde année, avec la gamme.
@@ -52,7 +53,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     tours: 6,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA se joue ici en une seule enceinte : un stock, un coût de production, un seuil de rentabilité qui ne dépend pas d'un mix. La gamme de trois références, et le seuil qui bouge avec le mix, attendent la seconde année. Le niveau Pilotage ouvre l'emprunt, l'apport des associés et la mobilisation des créances, ce qu'il faut pour les séances 3 et 5, sans ouvrir le recrutement ni l'investissement, qui n'ont pas leur place en première année. La TVA est activée pour la séance 5. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
+      "NOVA se joue ici en une seule enceinte : un stock, un coût de production, un seuil de rentabilité qui ne dépend pas d'un mix. La gamme de trois références, et le seuil qui bouge avec le mix, attendent la seconde année. Le niveau Pilotage ouvre la mobilisation des créances, ce qu'il faut pour les séances 3 et 5, et les ressources humaines, que l'atelier laisse à l'effectif de départ ; l'emprunt et l'investissement, qui n'ont pas leur place en première année, n'y sont pas : un manque de trésorerie, la banque le couvre seule par le découvert, à son taux. La TVA est activée pour la séance 5. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
   },
   seances: [
     {
@@ -209,11 +210,11 @@ export const ATELIER_CG1: AtelierDefinition = {
         "P6 · Analyse de la situation financière",
       ],
       objectif:
-        "Construire le budget de trésorerie du trimestre dans le cockpit, en déduire un besoin de financement chiffré et daté, puis mesurer l'écart avec le réalisé.",
+        "Construire le budget de trésorerie du trimestre dans le cockpit, en déduire un besoin de trésorerie chiffré et daté, choisir comment le couvrir, puis mesurer l'écart avec le réalisé.",
       competences: [
         "Je distingue une charge d'un décaissement, et un produit d'un encaissement.",
         "Je construis un budget de trésorerie à partir de décisions prévues et de délais de règlement.",
-        "Je présente un besoin de financement chiffré et daté.",
+        "Je présente un besoin de trésorerie chiffré et daté, et la façon de le couvrir.",
         "Je mesure l'écart entre ma prévision et le réalisé, et j'en cherche la cause.",
       ],
       notions: [
@@ -221,10 +222,10 @@ export const ATELIER_CG1: AtelierDefinition = {
         "délais de règlement clients et fournisseurs",
         "budget de trésorerie",
         "découvert autorisé",
-        "emprunt",
+        "mobilisation des créances",
       ],
       preparation:
-        "Le cockpit de l'équipe (à télécharger depuis la page de la partie) porte une feuille de prévision du résultat et de la trésorerie, qui se recalcule à chaque hypothèse : c'est elle que les équipes renseignent, ligne à ligne, avant de saisir leurs décisions. Vérifiez que la partie tourne au niveau Pilotage : c'est lui qui ouvre l'emprunt et l'apport des associés.",
+        "Le cockpit de l'équipe (à télécharger depuis la page de la partie) porte une feuille de prévision du résultat et de la trésorerie, qui se recalcule à chaque hypothèse : c'est elle que les équipes renseignent, ligne à ligne, avant de saisir leurs décisions. Vérifiez que la partie tourne au niveau Pilotage : c'est lui qui ouvre l'escompte et l'affacturage. L'emprunt n'y est pas : la banque couvre un manque par le découvert, à son taux.",
       deroule: [
         {
           minutes: 20,
@@ -248,7 +249,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 30,
           titre: "Décider le tour 3",
           detail:
-            "Emprunter, faire appel aux associés, ou ne rien faire : l'équipe choisit, et le montant demandé doit correspondre au besoin que son budget démontre. La banque prête dans la limite de ce que les capitaux propres autorisent, et elle lit à chaque clôture comment la trésorerie a été tenue.",
+            "Mobiliser des créances, ajuster la production, ou laisser le découvert couvrir : l'équipe choisit, et ce qu'elle mobilise doit correspondre au besoin que son budget démontre. Au-delà du découvert consenti, la banque cède elle-même les créances, et le fait payer ; elle lit à chaque clôture comment la trésorerie a été tenue.",
         },
         {
           minutes: 20,
@@ -266,10 +267,10 @@ export const ATELIER_CG1: AtelierDefinition = {
       livrable:
         "Le budget de trésorerie du trimestre dans le cockpit, et la note d'écart qui l'accompagne : pour chaque ligne, le prévu, le réalisé, l'écart et sa cause.",
       tracePasseport:
-        "J'ai justifié une demande de financement par un budget de trésorerie que j'ai établi puis confronté au réalisé.",
+        "J'ai justifié la couverture d'un besoin de trésorerie par un budget que j'ai établi puis confronté au réalisé.",
       evaluation: [
         "Les décaissements sont datés selon les délais réels, pas au moment de la charge.",
-        "Le besoin de financement demandé correspond à celui que le budget démontre.",
+        "Le montant mobilisé correspond au besoin que le budget démontre.",
         "Les causes d'écart sont cherchées dans les décisions, pas mises sur le compte du hasard.",
         "Le tableur est lisible par quelqu'un qui ne l'a pas construit.",
       ],
@@ -328,7 +329,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 30,
           titre: "Décider le tour 4",
           detail:
-            "Comment desserrer l'étau : produire moins pour vider le stock, vendre moins cher, mobiliser les créances, emprunter. Chaque solution a son prix, et l'équipe doit dire lequel elle accepte de payer.",
+            "Comment desserrer l'étau : produire moins pour vider le stock, vendre moins cher, mobiliser les créances, laisser le découvert courir. Chaque solution a son prix, et l'équipe doit dire lequel elle accepte de payer.",
         },
         {
           minutes: 20,

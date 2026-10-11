@@ -126,6 +126,21 @@ export interface ScenarioVocabulary {
   laborBottleneckHint: string;
   /** Ce que la capacité compte par tour (« enceintes/tour », « nuitées/tour »). */
   perRoundLabel: string;
+  /**
+   * LES MOTS DU PLAFOND D'INVESTISSEMENT (niveaux sans embauches, voir
+   * `engine/investment/plafond`). « Votre équipe de 4 personnes fait tourner
+   * 7 200 enceintes par tour ; vos machines en font déjà 7 000 » : un hôtel n'a
+   * pas de machines, et sa flotte ne « tourne » pas. Absents (un scénario de
+   * l'enseignant), des mots génériques prennent la place.
+   */
+  plafond?: {
+    /** Ce que l'équipe fait de la capacité : « fait tourner », « peut servir ». */
+    equipeFait: string;
+    /** Le parc, sujet de la phrase, verbe compris : « vos machines en font », « votre flotte en transporte ». */
+    parcEnFait: string;
+    /** Ce que deviendrait une capacité en trop : « une machine resterait à l'arrêt ». */
+    enTrop: string;
+  };
 
   // --- Analyse des coûts : une salle de sport n'achète pas de matières ------
   /**
@@ -264,6 +279,7 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre main-d'œuvre limite la production : envisagez d'embaucher ou de former vos salariés pour augmenter la productivité.",
     perRoundLabel: "enceintes/tour",
+    plafond: { equipeFait: "fait tourner", parcEnFait: "vos machines en font", enTrop: "une machine resterait à l'arrêt" },
     materialLabel: "Matières et composants",
     otherVariableLabel: "Main-d'œuvre directe, énergie",
     supplierPanelLabel: "Fournisseur de composants",
@@ -323,6 +339,7 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre main-d'œuvre limite la production : une Studio demande près de trois fois les heures d'une Go. Envisagez d'embaucher ou de former vos salariés.",
     perRoundLabel: "enceintes/tour",
+    plafond: { equipeFait: "fait tourner", parcEnFait: "vos lignes en font", enTrop: "une ligne resterait à l'arrêt" },
     materialLabel: "Matières et composants",
     otherVariableLabel: "Main-d'œuvre directe, énergie",
     supplierPanelLabel: "Fournisseur de composants",
@@ -377,6 +394,7 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre équipe de vente limite le flux en boutique : envisagez d'embaucher ou de former vos vendeuses.",
     perRoundLabel: "articles/tour",
+    plafond: { equipeFait: "peut traiter", parcEnFait: "votre réserve et vos rayons en reçoivent", enTrop: "un rayonnage resterait vide" },
     materialLabel: "Achats de marchandises (façonniers)",
     otherVariableLabel: "Sacs, commissions, logistique",
     supplierPanelLabel: "Façonnier de la collection",
@@ -431,6 +449,7 @@ export const BOUTIQUE_MONO_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre équipe de vente limite le flux en boutique : envisagez d'embaucher ou de former vos vendeuses.",
     perRoundLabel: "articles/tour",
+    plafond: { equipeFait: "peut traiter", parcEnFait: "votre réserve et vos rayons en reçoivent", enTrop: "un rayonnage resterait vide" },
     materialLabel: "Achats de marchandises",
     otherVariableLabel: "Sacs, commissions, logistique",
     supplierPanelLabel: "Fournisseur de la collection",
@@ -485,6 +504,7 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables : envisagez d'embaucher ou de former.",
     perRoundLabel: "nuitées/tour",
+    plafond: { equipeFait: "peut servir", parcEnFait: "vos chambres en offrent", enTrop: "une chambre resterait fermée" },
     materialLabel: "Petit-déjeuner et linge",
     otherVariableLabel: "Commissions, énergie, ménage",
     supplierPanelLabel: "Prestataires du séjour",
@@ -539,6 +559,7 @@ export const HOTEL_GAMME_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables, et une suite demande plus d'heures qu'une standard : envisagez d'embaucher ou de former.",
     perRoundLabel: "nuitées/tour",
+    plafond: { equipeFait: "peut servir", parcEnFait: "vos chambres en offrent", enTrop: "une chambre resterait fermée" },
     materialLabel: "Petit-déjeuner et linge",
     otherVariableLabel: "Commissions, énergie, ménage",
     supplierPanelLabel: "Prestataires du séjour",
@@ -593,6 +614,7 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre brigade limite le service : des places libres ne servent à rien sans personnel pour les tenir. Embauchez ou formez.",
     perRoundLabel: "couverts/tour",
+    plafond: { equipeFait: "peut servir", parcEnFait: "votre salle et votre cuisine en offrent", enTrop: "une cuisine resterait sans brigade" },
     materialLabel: "Denrées",
     otherVariableLabel: "Énergie de cuisson, commissions",
     supplierPanelLabel: "Fournisseur de denrées",
@@ -682,6 +704,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos consultants SONT la capacité du cabinet : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
     perRoundLabel: "jours/tour",
+    plafond: { equipeFait: "peut assurer", parcEnFait: "vos locaux en accueillent", enTrop: "un poste resterait vide" },
     materialLabel: "Frais de mission",
     otherVariableLabel: "Sous-traitance d'appoint",
     supplierPanelLabel: "Renfort sur les missions",
@@ -737,6 +760,7 @@ export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos consultants SONT la capacité du cabinet, pour les trois offres à la fois : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
     perRoundLabel: "jours/tour",
+    plafond: { equipeFait: "peut assurer", parcEnFait: "vos locaux en accueillent", enTrop: "un poste resterait vide" },
     materialLabel: "Frais de mission",
     otherVariableLabel: "Sous-traitance d'appoint",
     supplierPanelLabel: "Renfort sur les missions",
@@ -792,6 +816,7 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre équipe logistique limite les expéditions : une commande non préparée est une commande annulée. Embauchez ou formez.",
     perRoundLabel: "commandes/tour",
+    plafond: { equipeFait: "peut préparer", parcEnFait: "votre entrepôt en traite", enTrop: "un poste de préparation resterait à l'arrêt" },
     materialLabel: "Achats de marchandises",
     otherVariableLabel: "Préparation, transport, retours",
     supplierPanelLabel: "Fournisseur du catalogue",
@@ -880,6 +905,7 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos coachs limitent l'accueil : sur-vendre des abonnements sans encadrement dégrade l'expérience, donc la rétention. Embauchez avant de vendre.",
     perRoundLabel: "adhérents/tour",
+    plafond: { equipeFait: "peut encadrer", parcEnFait: "votre plateau en accueille", enTrop: "un plateau resterait sans encadrement" },
     materialLabel: "Consommables adhérent",
     otherVariableLabel: "Énergie, maintenance, frais bancaires",
     supplierPanelLabel: "Parc de machines et consommables",
@@ -936,6 +962,7 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos compagnons limitent la surface traitée : embaucher prend un trimestre, et la sous-traitance coûte une part de la marge.",
     perRoundLabel: "m²/tour",
+    plafond: { equipeFait: "peut réaliser", parcEnFait: "votre matériel en permet", enTrop: "un engin resterait au dépôt" },
     materialLabel: "Matériaux",
     otherVariableLabel: "Location de matériel, évacuation",
     supplierPanelLabel: "Fournisseur de matériaux",
@@ -991,6 +1018,7 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos chauffeurs limitent le trafic : ils manquent partout, et ils partent au premier employeur qui paie mieux.",
     perRoundLabel: "palettes/tour",
+    plafond: { equipeFait: "peut acheminer", parcEnFait: "votre flotte en transporte", enTrop: "un véhicule resterait au dépôt" },
     materialLabel: "Gazole et péages",
     otherVariableLabel: "Entretien, pneumatiques, primes",
     supplierPanelLabel: "Fourniture de carburant",
@@ -1044,6 +1072,28 @@ export interface ScenarioFamily {
   /** Ce que chaque variante fait jouer, pour le dire à qui choisit (« une seule enceinte »). */
   monoLabel: string;
   gammeLabel: string;
+  /**
+   * La référence de la gamme qui se BÂTIT par la R&D (« la Studio à développer »).
+   * Elle ne se dit qu'au niveau qui ouvre la R&D : avant, la référence est livrée
+   * prête (`withoutRd`). Absente : la gamme n'a rien à développer.
+   */
+  aBatir?: string;
+}
+
+/**
+ * Ce que la gamme fait jouer, en clair. Au `niveau` d'une partie : la
+ * référence à bâtir n'est dite que si ce niveau ouvre la R&D. Sans niveau (une
+ * page qui présente l'entreprise) : la gamme, puis d'où la référence se bâtit.
+ * `niveauDeLaRd` vient des préréglages (`premierNiveauQuiOuvre("rd")`).
+ */
+export function gammeEnClair(
+  f: Pick<ScenarioFamily, "gammeLabel" | "aBatir">,
+  niveauDeLaRd: number | null,
+  niveau?: number,
+): string {
+  if (!f.aBatir || niveauDeLaRd === null) return f.gammeLabel;
+  if (niveau !== undefined) return niveau >= niveauDeLaRd ? `${f.gammeLabel}, ${f.aBatir}` : f.gammeLabel;
+  return `${f.gammeLabel}, ${f.aBatir} dès le niveau ${niveauDeLaRd}`;
 }
 
 export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
@@ -1051,10 +1101,12 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     head: NOVA_DEFINITION.code,
     mono: NOVA_DEFINITION.code,
     gamme: NOVA_GAMME_DEFINITION.code,
-    // Le niveau qui ouvre la R&D : la Studio se développe avant de se vendre.
+    // Le niveau des grands arbitrages ; la Studio se développe, elle, au niveau
+    // qui ouvre la R&D (avant, elle est livrée prête).
     gammeFromLevel: 4,
     monoLabel: "une seule enceinte",
-    gammeLabel: "la gamme Go, One et Studio, la Studio à développer",
+    gammeLabel: "la gamme Go, One et Studio",
+    aBatir: "la Studio à développer",
   },
   {
     head: BOUTIQUE_DEFINITION.code,
@@ -1078,28 +1130,31 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     head: CONSEIL_DEFINITION.code,
     mono: CONSEIL_DEFINITION.code,
     gamme: CONSEIL_GAMME_DEFINITION.code,
-    // Le niveau qui ouvre la R&D : la cyber-sécurité se bâtit avant de se vendre.
+    // La cyber-sécurité se bâtit au niveau qui ouvre la R&D.
     gammeFromLevel: 4,
     monoLabel: "une seule journée à taux moyen",
-    gammeLabel: "les trois offres, audit, stratégie et une pratique cyber-sécurité à bâtir",
+    gammeLabel: "les trois offres, audit, stratégie et cyber-sécurité",
+    aBatir: "la pratique cyber-sécurité à bâtir",
   },
   {
     head: BISTROT_DEFINITION.code,
     mono: BISTROT_DEFINITION.code,
     gamme: BISTROT_GAMME_DEFINITION.code,
-    // Le niveau qui ouvre la R&D : l'activité traiteur se bâtit avant de se vendre.
+    // L'activité traiteur se bâtit au niveau qui ouvre la R&D.
     gammeFromLevel: 4,
     monoLabel: "un seul ticket moyen",
-    gammeLabel: "la formule du midi, la carte du soir, les banquets et un traiteur à bâtir",
+    gammeLabel: "la formule du midi, la carte du soir, les banquets et un traiteur",
+    aBatir: "le traiteur à bâtir",
   },
   {
     head: ECOMMERCE_DEFINITION.code,
     mono: ECOMMERCE_DEFINITION.code,
     gamme: ECOMMERCE_GAMME_DEFINITION.code,
-    // Le niveau qui ouvre la R&D : la collection de créateurs se bâtit avant de se vendre.
+    // La collection de créateurs se bâtit au niveau qui ouvre la R&D.
     gammeFromLevel: 4,
     monoLabel: "une seule commande à panier moyen",
-    gammeLabel: "les quatre rayons, décoration, mobilier, luminaires et une collection de créateurs à bâtir",
+    gammeLabel: "les quatre rayons, décoration, mobilier, luminaires et une collection de créateurs",
+    aBatir: "la collection de créateurs à bâtir",
   },
 ];
 

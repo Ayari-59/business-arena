@@ -1,6 +1,11 @@
 import { z } from "zod";
 import type { RoundDecisions } from "@/engine/types";
+import { depasseLePlafond } from "@/engine/investment/plafond";
+import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import {
+  refusDuPlafond,
+  type ErreurDeChamp,
+  type PlafondAEcrire,
   BORNES_DES_CHAMPS,
   BORNES_PAR_REFERENCE,
   PRIX_MAX,
@@ -149,3 +154,30 @@ export const roundDecisionsSchema = z.object({
 export type ParsedRoundDecisions = z.infer<typeof roundDecisionsSchema>;
 const _compat: RoundDecisions = {} as ParsedRoundDecisions;
 void _compat;
+
+/**
+ * LE PLAFOND D'INVESTISSEMENT, JUGÉ PAR LE SERVEUR. Le schéma ne connaît que des
+ * bornes fixes ; ce plafond dépend de l'équipe et du parc à l'ouverture du tour
+ * (`engine/investment/plafond`, lu par la vue). La feuille le juge avant
+ * l'envoi avec le même calcul ; un formulaire périmé ou forgé tombe ici. Le
+ * message et le champ visé sont ceux de la feuille (`refusDuPlafond`).
+ *
+ * Seul l'ENVOI est jugé : une décision déjà enregistrée se rejoue telle
+ * quelle, le moteur n'applique aucun plafond.
+ */
+export function refusDuPlafondDInvestissement(
+  decisions: RoundDecisions,
+  plafond: (PlafondAEcrire & { niveauDesEmbauches: number | null }) | null | undefined,
+  vocabulaire: Pick<ScenarioVocabulary, "unit" | "units" | "plafond">,
+): ErreurDeChamp | null {
+  if (!plafond) return null;
+  return refusDuPlafond({
+    plafond,
+    depasse: depasseLePlafond(plafond, decisions.investment),
+    typesAchetes: (decisions.investment?.equipmentBuy ?? [])
+      .filter((l) => l.quantity > 0)
+      .map((l) => l.typeCode),
+    vocabulaire,
+    niveauDesEmbauches: plafond.niveauDesEmbauches,
+  });
+}

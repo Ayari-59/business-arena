@@ -47,7 +47,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois élèves",
     notes:
-      "MAILLE & CO porte un stock, cinq références qui n'ont ni la même marge ni la même saison, trois façonniers qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre le financement sans ouvrir le recrutement ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix et le stock, pas sur la structure. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
+      "MAILLE & CO porte un stock, cinq références qui n'ont ni la même marge ni la même saison, trois façonniers qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre l'équipe et le poste clients, sans l'emprunt ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix, le stock et l'équipe, pas sur la structure. Un manque de trésorerie, la banque le couvre seule, par le découvert. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
   },
   seances: [
     {

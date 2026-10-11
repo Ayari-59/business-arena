@@ -43,9 +43,17 @@ describe("le plan de trésorerie a quitté l'arène", () => {
     // Il vivait dans le panneau du plan, parti avec lui. C'est pourtant le
     // chiffre qui dit jusqu'où la caisse peut descendre : il a suivi dans le
     // bloc « Financer ».
-    const decouvert = FORMULAIRE.indexOf("Découvert autorisé");
-    expect(decouvert, "le plafond de découvert n'est plus annoncé nulle part").toBeGreaterThan(-1);
-    const financer = FORMULAIRE.lastIndexOf('legend="Financer', decouvert);
-    expect(financer, "le plafond a quitté le bloc où l'on décide d'emprunter").toBeGreaterThan(-1);
+    const financer = FORMULAIRE.indexOf('legend="Financer');
+    expect(financer, "le bloc « Financer » a disparu").toBeGreaterThan(-1);
+    const decouvert = FORMULAIRE.indexOf("Découvert autorisé", financer);
+    expect(decouvert, "le plafond a quitté le bloc où l'on décide d'emprunter").toBeGreaterThan(financer);
+  });
+
+  it("là où le niveau n'ouvre pas l'emprunt, le découvert se lit quand même", () => {
+    // Niveaux 1 à 3 : pas de bloc « Financer ». La banque continue pourtant de
+    // couvrir et de prélever : le découvert et l'échéance se lisent en lecture
+    // seule, sans champ.
+    expect(FORMULAIRE).toMatch(/data-banque-en-lecture=""[\s\S]{0,1500}Découvert autorisé/);
+    expect(FORMULAIRE).toMatch(/data-banque-en-lecture=""[\s\S]{0,2500}Échéance d&apos;emprunt du tour/);
   });
 });

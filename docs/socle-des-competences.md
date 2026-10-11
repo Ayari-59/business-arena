@@ -311,7 +311,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `cg1:3:2` Je présente un besoin de financement chiffré et daté.
+- `cg1:3:2` Je présente un besoin de trésorerie chiffré et daté, et la façon de le couvrir.
 
 #### `resultat-contre-caisse`
 

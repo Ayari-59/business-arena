@@ -72,8 +72,8 @@ export function Carte({ cle, children }: { cle: string | string[]; children: Rea
  *
  * Les deux ont leur carte (d'où vient l'argent, où il va), mais le récapitulatif
  * d'un téléphone est une liste de lignes tactiles de 44 px : en ajouter une pour
- * l'investissement, ouvert dès le premier niveau, le faisait déborder de l'écran
- * dès le niveau 3. La ligne fusionnée dit ce qui est décidé et rouvre le
+ * l'investissement, ouvert avec le financement, le faisait déborder de l'écran
+ * aux niveaux les plus fournis. La ligne fusionnée dit ce qui est décidé et rouvre le
  * financement ; l'investissement est la carte d'après.
  */
 export function fusionnerFinancerEtInvestir<T extends { cle: string; nom: string; valeur: string }>(

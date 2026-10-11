@@ -527,7 +527,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       question:
         "Le niveau retenu ouvre beaucoup de décisions, n'est-ce pas trop ?",
       reponse:
-        "Il ouvre le personnel, le financement, l'assurance, l'investissement, la R&D et l'engagement RSE : les trois premiers sont les leviers que les blocs du référentiel demandent de savoir manier, les autres se règlent sans y toucher. En retirer un rendrait une séance sans support. En deuxième année, c'est le bon niveau ; en première année, descendez d'un cran : la partie passe alors sur le cabinet à offre unique, sans R&D ni investissement, et remplacez la séance de recrutement par une seconde séance sur le poste clients.",
+        "Il ouvre le personnel, le financement, l'assurance et l'investissement : les trois premiers sont les leviers que les blocs du référentiel demandent de savoir manier, l'investissement se règle sans y toucher. La R&D et l'engagement RSE attendent le niveau suivant. En retirer un rendrait une séance sans support. En deuxième année, c'est le bon niveau ; en première année, descendez d'un cran : la partie passe alors sur le cabinet à offre unique, avec le recrutement et le poste clients mais sans emprunt, investissement ni assurance, et remplacez la séance des risques par une seconde séance sur le poste clients.",
     },
     {
       question:

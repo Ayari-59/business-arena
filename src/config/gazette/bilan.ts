@@ -9,6 +9,11 @@ import type { ArticleDeLaGazette, ElementDeLArticle, SensDuSujet, SujetDeLaGazet
  * décidé ce tour-là : son prix, son volume, son emprunt. Elle constate, elle ne
  * juge pas : pas de « vous auriez dû ». Le joueur fait le lien lui-même.
  *
+ * ELLE NE PARLE QUE D'UNE DÉCISION DU NIVEAU. Là où l'emprunt est fermé
+ * (niveaux 1 à 3), « Vous n'aviez pas emprunté » reprocherait un geste
+ * impossible : la ligne sur les taux dit alors le découvert de fin de tour,
+ * que la hausse ou la baisse des taux a fait payer plus ou moins cher.
+ *
  * Priorité : les prévisions démenties d'abord (c'est la leçon des niveaux
  * hauts), puis les vraies nouvelles, puis le calme ; une seule ligne par
  * nouvelle (même sujet, même sens). Un article d'enseignant
@@ -21,6 +26,8 @@ export interface DecisionsPourLaPresse {
   price?: number | null;
   productionPlan?: number | null;
   newLoan?: number | null;
+  /** Le découvert en fin de tour : ce que les taux ont touché quand l'emprunt est fermé. */
+  decouvert?: number | null;
 }
 
 interface Formule {
@@ -75,6 +82,7 @@ function reaction(
   maintenant: DecisionsPourLaPresse | undefined,
   avant: DecisionsPourLaPresse | undefined,
   unites: string,
+  financementOuvert: boolean,
 ): string | null {
   if (!maintenant) return null;
   if (sujet === "couts") {
@@ -86,6 +94,13 @@ function reaction(
     const pts = Math.round(Math.abs(v) * 100);
     if (pts === 0) return "Vous aviez laissé vos prix inchangés.";
     return `Vous aviez ${v > 0 ? "relevé" : "baissé"} vos prix de ${pts} %.`;
+  }
+  if (sujet === "taux" && !financementOuvert) {
+    const d = maintenant.decouvert;
+    if (typeof d !== "number") return null;
+    return d > 0.5
+      ? `Votre découvert, seul financement à ce niveau, était de ${formatEuro(d)} en fin de tour.`
+      : "Votre trésorerie avait tenu sans découvert ce tour-là.";
   }
   if (sujet === "taux") {
     const e = maintenant.newLoan ?? 0;
@@ -117,6 +132,7 @@ export function lignesDeLaPresse({
   libelle,
   unites,
   nomDuJournal,
+  financementOuvert = true,
   maximum = 3,
 }: {
   articles: readonly ArticleDeLaGazette[];
@@ -124,6 +140,8 @@ export function lignesDeLaPresse({
   libelle: (tour: number) => string;
   unites: string;
   nomDuJournal: string;
+  /** L'emprunt est une décision du niveau joué. Fermé : la ligne des taux parle du découvert. */
+  financementOuvert?: boolean;
   maximum?: number;
 }): string[] {
   const candidats = articles
@@ -143,7 +161,7 @@ export function lignesDeLaPresse({
     const verbe = x.fiabilite === "prevision" ? "prévoyait" : "annonçait";
     const issue = x.dementi ? f.dementi : f.arrive;
     const quand = libelle(a.tour).toLowerCase();
-    const r = reaction(x.sujet, parTour.get(a.tour), parTour.get(a.tour - 1), unites);
+    const r = reaction(x.sujet, parTour.get(a.tour), parTour.get(a.tour - 1), unites, financementOuvert);
     return `${court} ${verbe} ${f.quoi} au ${quand}\u00a0: ${issue}.${r ? ` ${r}` : ""}`;
   });
 }

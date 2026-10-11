@@ -1,3 +1,5 @@
+import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { phraseDesOuvertures } from "@/config/tableau-des-niveaux";
 import Link from "next/link";
 import { LES_OFFRES_DE_L_ARENE, reponseCombien } from "@/config/tarifs";
 import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
@@ -484,7 +486,9 @@ export default async function GuidePage() {
                 ],
                 [
                   "Que règlent les niveaux de difficulté ?",
-                  "Six niveaux, de Découverte à Executive : les décisions ouvertes (l'emprunt et l'investissement sont ouverts dès le niveau Découverte, l'assurance et la mobilisation des créances au niveau Pilotage, les ressources humaines, la R&D et la RSE au niveau Arbitrage, le placement du surplus au niveau Stratégie, l'affectation du résultat au niveau Executive), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
+                  // La progression se lit dans les préréglages : l'opérationnel d'abord,
+                  // puis l'investissement et le financement, puis la stratégie.
+                  `${DIFFICULTY_PRESETS.length} niveaux, de ${DIFFICULTY_PRESETS[0]!.name} à ${DIFFICULTY_PRESETS.at(-1)!.name} : les décisions ouvertes (${phraseDesOuvertures()}), le plafond d'indices (de ${DIFFICULTY_PRESETS[0]!.hintMaxLevel} à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.`,
                 ],
                 // La réponse se lit dans la grille (config/tarifs.ts, audit C-08) : les
                 // prix n'y sont jamais écrits à la main.

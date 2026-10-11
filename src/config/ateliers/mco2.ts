@@ -56,7 +56,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
     tours: 6,
     effectifParEquipe: "trois élèves",
     notes:
-      "Choisissez « Un mois par tour » à la création : c'est le réglage qui porte tout l'atelier, et la seule fiche du registre qui le demande. La plateforme redimensionne alors le scénario, calibré au trimestre, en divisant les flux par trois : 30 000 € de charges de structure par mois au lieu de 90 000, 2 000 € d'amortissements, une capacité de 3 000 couverts, un seuil autour de 1 500 couverts, soit la même journée type de soixante-dix couverts. Les délais en jours, eux, ne bougent pas : les groupes règlent à trente jours, c'est-à-dire un tour entier, les fournisseurs à vingt et un jours. Le niveau retenu ouvre la trésorerie et l'assurance sans ouvrir le recrutement ni l'équipement de la cuisine : en deuxième année, le pilotage d'une unité se joue sur la carte, le remplissage et la caisse. Réglez la TVA à 10 %, le taux de la restauration sur place, dans les paramètres économiques. Le monde variable est décoché pour que toutes vos classes affrontent le même semestre.",
+      "Choisissez « Un mois par tour » à la création : c'est le réglage qui porte tout l'atelier, et la seule fiche du registre qui le demande. La plateforme redimensionne alors le scénario, calibré au trimestre, en divisant les flux par trois : 30 000 € de charges de structure par mois au lieu de 90 000, 2 000 € d'amortissements, une capacité de 3 000 couverts, un seuil autour de 1 500 couverts, soit la même journée type de soixante-dix couverts. Les délais en jours, eux, ne bougent pas : les groupes règlent à trente jours, c'est-à-dire un tour entier, les fournisseurs à vingt et un jours. Le niveau retenu ouvre le poste clients et la brigade, que l'atelier laisse à son effectif de départ, sans l'emprunt, l'équipement de la cuisine ni l'assurance : en deuxième année, le pilotage d'une unité se joue sur la carte, le remplissage et la caisse. Un manque de trésorerie, la banque le couvre seule, par le découvert. Réglez la TVA à 10 %, le taux de la restauration sur place, dans les paramètres économiques. Le monde variable est décoché pour que toutes vos classes affrontent le même semestre.",
   },
   seances: [
     {
@@ -361,7 +361,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "Bloc 2 · Animer et dynamiser l'offre commerciale",
       ],
       objectif:
-        "Vérifier que les créances de septembre rentrent bien, mesurer ce que la banque a coûté au passage, et décider si la couverture du besoin de trésorerie valait son prix.",
+        "Vérifier que les créances de septembre rentrent bien, mesurer ce qu'ont coûté au passage le découvert et l'escompte, et décider si la couverture du besoin de trésorerie valait son prix.",
       competences: [
         "Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.",
         "Je chiffre le coût d'un financement court terme et je le rapporte à ce qu'il a évité.",
@@ -548,9 +548,9 @@ export const ATELIER_MCO2: AtelierDefinition = {
     },
     {
       question:
-        "Le niveau retenu n'ouvre pas le recrutement et l'atelier ne travaille pas l'équipement de la cuisine, est-ce voulu ?",
+        "L'atelier ne travaille ni le recrutement ni l'équipement de la cuisine, est-ce voulu ?",
       reponse:
-        "Oui. Le pilotage d'une unité en deuxième année se joue sur la carte, le remplissage, les achats et la caisse. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard et qui brouilleraient la lecture du mois. L'investissement est à l'écran, à zéro : décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. L'atelier de management en hôtellerie-restauration, lui, ouvre la brigade et la cuisine : c'est un autre métier et un autre diplôme.",
+        "Oui. Le pilotage d'une unité en deuxième année se joue sur la carte, le remplissage, les achats et la caisse. Travailler la structure ajouterait des décisions que les équipes prendraient au hasard et qui brouilleraient la lecture du mois. La brigade est à l'écran, à son effectif de départ : l'atelier n'y touche pas ; l'investissement, lui, ne s'ouvre qu'au niveau suivant. L'atelier de management en hôtellerie-restauration, lui, ouvre la brigade et la cuisine : c'est un autre métier et un autre diplôme.",
     },
     {
       question: "Quel taux de TVA faut-il régler ?",

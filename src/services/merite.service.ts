@@ -14,7 +14,7 @@ import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { SCENARIO_CHOICES, familyOf } from "@/config/scenarios/registry";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { periodLabel, type Periodicity } from "@/config/scenarios/periodicity";
-import { presetByLevel, type EconomicOverrides, type ScoringWeightOverrides } from "@/config/difficulty";
+import { leviersFigesDuProfil, presetByLevel, presetFromProfile, type EconomicOverrides, type ScoringWeightOverrides } from "@/config/difficulty";
 import { NIVEAU_MAX } from "@/config/vitrine-solo";
 import { ENGINE_VERSION } from "@/engine/simulation";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
@@ -22,6 +22,7 @@ import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { readExpectedLevers, readPedagogyInputs } from "@/services/scoring.service";
 import { commeEnBase, rejouer, type IssueDuRejeu, type PartieARejouer, type PedagogieDuTour } from "@/pedagogy/merite/rejeu";
 import { decisionDeReference } from "@/pedagogy/merite/reference";
+import { investissementPlafonne } from "@/engine/investment/plafond";
 import { GRAINES_DU_MERITE, verdictDuMerite, type VerdictDuMerite } from "@/pedagogy/merite/verdict";
 
 /**
@@ -99,7 +100,7 @@ interface ProfilDeLaPartie {
   investmentStories?: boolean;
   economicOverrides?: EconomicOverrides;
   scoringWeightOverrides?: ScoringWeightOverrides;
-  difficulty?: { level?: number };
+  difficulty?: { level?: number; decisions?: unknown };
   pendingEvents?: unknown[];
 }
 
@@ -220,6 +221,9 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
   // monde reste celui de la partie, et seuls les tirages changent.
   const definition = await resolveScenarioDefinition(snapshot.code);
   const level = profil.difficulty?.level;
+  // Le niveau et SES leviers : ceux figés à la création, ou ceux de son époque
+  // pour une partie d'avant la répartition d'octobre 2026.
+  const presetDeLaPartie = level ? presetFromProfile(profil) : undefined;
   const composer = (graine: number): EngineScenarioConfig =>
     parseScenarioConfig(
       commeEnBase(
@@ -234,6 +238,10 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           roundsCount: snapshot.roundsCount,
           periodicity: profil.periodicity ?? "quarter",
           investmentStories: profil.investmentStories === true,
+          // Une partie d'avant la répartition d'octobre 2026 se recompose avec
+          // les leviers et le calendrier de son époque.
+          leviers: presetDeLaPartie?.decisions,
+          calendrier: profil.difficulty?.decisions ? "actuel" : "avant-2026-10-11",
         }),
       ),
     );
@@ -269,9 +277,15 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
       decisions: decisionsDuJoueur,
       reconduits,
       pedagogie,
+      // Les concurrents pilotés y décident comme à la clôture : sous le plafond
+      // d'investissement quand le niveau n'ouvre pas les embauches.
+      investissementPlafonne: investissementPlafonne(presetDeLaPartie?.decisions),
+      // Les concurrents pilotés n'emploient que les leviers du niveau (marché
+      // équitable), dans les parties qui les figent : comme à la clôture.
+      leviers: leviersFigesDuProfil(profil),
     },
     niveau: profil.difficulty?.level ?? profil.level ?? 1,
-    preset: level ? presetByLevel.get(level as 1 | 2 | 3 | 4 | 5 | 6) : undefined,
+    preset: presetDeLaPartie,
     mondeRetire,
     tours,
     classement,

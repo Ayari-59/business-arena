@@ -60,7 +60,7 @@ export const PARCOURS: readonly Parcours[] = [
     name: "BTS MCO",
     fullName: "BTS Management Commercial Opérationnel",
     pitch:
-      "La gestion opérationnelle d'une unité commerciale, en vrai : offre, prix, marges, trésorerie, et le management d'équipe au niveau Arbitrage.",
+      "La gestion opérationnelle d'une unité commerciale, en vrai : offre, prix, marges, créances clients, et le management d'équipe au niveau Pilotage.",
     recommended: {
       level: 3,
       levelName: "Pilotage",
@@ -68,7 +68,7 @@ export const PARCOURS: readonly Parcours[] = [
       periodicityLabel: "Un trimestre par tour",
       vat: true,
       notes:
-        "TVA activée (gestion courante réelle). Passez au niveau 4 · Arbitrage en seconde année pour ouvrir le bloc RH.",
+        "TVA activée (gestion courante réelle). Le niveau Pilotage ouvre déjà le bloc RH ; passez au niveau 4 · Arbitrage en seconde année pour l'investissement et le financement.",
     },
   },
   {

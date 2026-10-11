@@ -185,7 +185,10 @@ describe("le cockpit de prévision", () => {
 });
 
 describe("le cockpit de NOVA · gamme : la R&D et la marque", () => {
-  const gea = () => ATELIERS.find((a) => a.code === "gea")!;
+  // La R&D s'ouvre au niveau Stratégie (5) depuis octobre 2026 : l'atelier DCG
+  // (NOVA · gamme, niveau 5) la porte ; celui du BUT GEA (niveau 4) livre la
+  // Studio prête.
+  const gea = () => ATELIERS.find((a) => a.code === "dcg")!;
 
   it("la Studio ne se vend pas tant que sa R&D cumulée n'atteint pas son coût", () => {
     const spec = cockpitAtelier(gea());

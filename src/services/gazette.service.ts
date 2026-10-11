@@ -75,6 +75,8 @@ export function articleGenere(args: {
   scenario: EngineScenarioConfig;
   tour: number;
   niveau: number;
+  /** L'emprunt est une décision du niveau joué (les titres qui y invitent en dépendent). */
+  financementOuvert: boolean;
   graine: number;
   nouveaux: readonly EventInstance[];
   enCours: readonly EventInstance[];
@@ -84,6 +86,7 @@ export function articleGenere(args: {
     scenario: args.scenario,
     tour: args.tour,
     niveau: args.niveau,
+    financementOuvert: args.financementOuvert,
     graine: args.graine,
     nouveaux: args.nouveaux,
     enCours: args.enCours,
@@ -162,6 +165,7 @@ export async function articleDuTourCourant(game: PartiePourLaGazette): Promise<A
     scenario,
     tour: game.currentRound,
     niveau: presetFromProfile(game.difficultyProfile).level,
+    financementOuvert: presetFromProfile(game.difficultyProfile).decisions.finance,
     graine: Number(game.seed),
     nouveaux: ev.nouveaux,
     enCours: ev.enCours,
@@ -205,6 +209,7 @@ export async function articleDuTourSuivant(game: PartiePourLaGazette): Promise<A
     scenario,
     tour: suivant,
     niveau: presetFromProfile(game.difficultyProfile).level,
+    financementOuvert: presetFromProfile(game.difficultyProfile).decisions.finance,
     graine: Number(game.seed),
     nouveaux: demain.nouveaux,
     enCours: demain.enCours,

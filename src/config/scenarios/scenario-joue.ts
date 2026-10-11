@@ -5,10 +5,14 @@ import {
   applyEventIntensity,
   applyScoringWeightOverrides,
   presetByLevel,
+  type DifficultyPreset,
   type EconomicOverrides,
   type ScoringWeightOverrides,
 } from "@/config/difficulty";
-import { avecInvestissementParNiveau } from "@/config/investissement-par-niveau";
+import {
+  avecInvestissementParNiveau,
+  type CalendrierDesHistoires,
+} from "@/config/investissement-par-niveau";
 import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { applyPeriodicity, type Periodicity } from "@/config/scenarios/periodicity";
 import { applyRoundsCount } from "@/config/scenarios/rounds";
@@ -46,6 +50,14 @@ export interface ReglagesDuScenarioJoue {
   roundsCount?: number;
   periodicity: Periodicity;
   investmentStories?: boolean;
+  /**
+   * Les leviers de la partie, quand ils diffèrent des préréglages actuels (une
+   * partie créée avant la répartition d'octobre 2026, recomposée par le rejeu
+   * du bilan). Absents : ceux du niveau, aujourd'hui.
+   */
+  leviers?: DifficultyPreset["decisions"];
+  /** Le calendrier des histoires d'investissement ; absent : l'actuel. */
+  calendrier?: CalendrierDesHistoires;
 }
 
 export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenarioConfig {
@@ -70,9 +82,12 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   // Les histoires qui appellent l'investissement, posées selon le niveau. Une partie sans
   // niveau (aucun préréglage) garde le calendrier de son scénario, comme avant.
   const avecHistoires =
-    preset && r.investmentStories ? avecInvestissementParNiveau(snapshot, preset.level) : snapshot;
+    preset && r.investmentStories
+      ? avecInvestissementParNiveau(snapshot, preset.level, r.calendrier ?? "actuel")
+      : snapshot;
   // R&D : un niveau qui ne l'ouvre pas ne doit pas laisser une référence à
   // développer hors de portée pour toute la partie. Le levier est retiré du
   // snapshot et les références à développer sont livrées prêtes.
-  return preset && !preset.decisions.rd ? withoutRd(avecHistoires) : avecHistoires;
+  const leviers = r.leviers ?? preset?.decisions;
+  return preset && leviers && !leviers.rd ? withoutRd(avecHistoires) : avecHistoires;
 }

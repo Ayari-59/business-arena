@@ -12,8 +12,10 @@ import { createRng, deriveRoundSeed } from "../../src/engine/random";
 import type { EngineScenarioConfig } from "../../src/engine/types";
 
 /**
- * L'investissement et le financement s'ouvrent dès le premier niveau, et
- * chaque niveau reçoit les événements qui posent la question d'investir.
+ * LA PROGRESSION (octobre 2026) : l'opérationnel d'abord, puis l'investissement
+ * et le financement, puis la stratégie. L'investissement et le financement
+ * s'ouvrent ensemble au niveau 4, et les histoires qui posent la question
+ * d'investir tombent là où on peut y répondre, jamais avant.
  */
 
 const NOVA = SCENARIOS.find((d) => d.code === "nova")!.scenario;
@@ -21,34 +23,51 @@ const niveau = (n: number) => DIFFICULTY_PRESETS.find((p) => p.level === n)!;
 const inv = (s: EngineScenarioConfig) =>
   s.scriptedEvents.filter((e) => e.eventCode.includes("_inv_")).map((e) => `${e.round}:${e.eventCode.split("_inv_")[1]}`);
 
-describe("financer et investir, dès le premier niveau", () => {
-  it("emprunter, augmenter le capital et investir sont ouverts à tous les niveaux", () => {
+describe("financer et investir, ensemble, au niveau Arbitrage", () => {
+  it("emprunter, apporter et investir s'ouvrent au niveau 4, et restent ouverts ensuite", () => {
     for (const p of DIFFICULTY_PRESETS) {
-      expect(p.decisions.finance, `niveau ${p.level}`).toBe(true);
-      expect(p.decisions.investment, `niveau ${p.level}`).toBe(true);
+      const attendu = p.level >= 4;
+      expect(p.decisions.finance, `niveau ${p.level}`).toBe(attendu);
+      expect(p.decisions.investment, `niveau ${p.level}`).toBe(attendu);
+      expect(p.decisions.insurance, `niveau ${p.level}`).toBe(attendu);
     }
   });
 
-  it("l'escompte et l'affacturage attendent le niveau 3 : un délai de paiement se lit d'abord", () => {
+  it("aucun niveau n'ouvre l'investissement sans les embauches : une machine se fait tourner", () => {
+    for (const p of DIFFICULTY_PRESETS) {
+      if (p.decisions.investment) expect(p.decisions.hr, `niveau ${p.level}`).toBe(true);
+    }
+  });
+
+  it("l'escompte et l'affacturage s'ouvrent au niveau 3, avec l'équipe : le BFR avant l'emprunt", () => {
     expect(niveau(1).decisions.creances).toBe(false);
     expect(niveau(2).decisions.creances).toBe(false);
     for (const n of [3, 4, 5, 6]) expect(niveau(n).decisions.creances).toBe(true);
+    expect(niveau(3).decisions.hr).toBe(true);
     const champs = (n: number) => leviersDuNiveau(n).map((l) => l.champ);
     expect(champs(2)).not.toContain("discount");
-    expect(champs(2)).not.toContain("factoring");
-    expect(champs(2)).toContain("newLoan");
-    expect(champs(2)).toContain("machineCapacityUnits");
+    expect(champs(2)).not.toContain("newLoan");
     expect(champs(3)).toContain("discount");
+    expect(champs(3)).toContain("hire");
+    expect(champs(3)).not.toContain("newLoan");
+    expect(champs(3)).not.toContain("machineCapacityUnits");
+    expect(champs(4)).toContain("newLoan");
+    expect(champs(4)).toContain("machineCapacityUnits");
   });
 
-  it("ce qui reste fermé garde son sens : RH, RSE et R&D à partir du niveau 4", () => {
-    for (const n of [1, 2, 3]) {
-      expect(niveau(n).decisions.hr).toBe(false);
+  it("la stratégie vient ensuite : R&D, RSE et placement au niveau 5, le dividende au 6", () => {
+    for (const n of [1, 2, 3, 4]) {
       expect(niveau(n).decisions.rse).toBe(false);
       expect(niveau(n).decisions.rd).toBe(false);
+      expect(niveau(n).decisions.placement).toBe(false);
     }
-    expect(niveau(4).decisions.hr).toBe(true);
-    expect(niveau(4).decisions.rd).toBe(true);
+    for (const n of [5, 6]) {
+      expect(niveau(n).decisions.rse).toBe(true);
+      expect(niveau(n).decisions.rd).toBe(true);
+      expect(niveau(n).decisions.placement).toBe(true);
+    }
+    expect(niveau(5).decisions.dividend).toBe(false);
+    expect(niveau(6).decisions.dividend).toBe(true);
   });
 });
 
@@ -58,25 +77,44 @@ describe("le calendrier d'investissement, niveau par niveau", () => {
     for (let i = 1; i < parNiveau.length; i += 1) {
       for (const s of parNiveau[i - 1]!) expect(parNiveau[i], `niveau ${i + 1}`).toContain(s);
     }
-    expect(parNiveau[0]).toEqual(["signal", "grand_compte"]);
-    expect(parNiveau[2]).toEqual(["signal", "taux", "grand_compte"]);
-    expect(parNiveau[3]).toContain("concurrent");
-    expect(parNiveau[4]).toContain("retournement");
+    expect(parNiveau[3]).toEqual(["signal", "taux", "grand_compte"]);
+    expect(parNiveau[4]).toContain("concurrent");
+    expect(parNiveau[4]).not.toContain("retournement");
+    expect(parNiveau[5]).toContain("retournement");
   });
 
-  it("niveau 1 : un signe au tour 2, la demande qui monte au tour 3", () => {
-    expect(inv(avecInvestissementParNiveau(NOVA, 1))).toEqual(["2:signal", "3:grand_compte"]);
+  it("aux niveaux 1 à 3, aucune histoire n'appelle un emprunt ou une machine", () => {
+    for (const n of [1, 2, 3]) {
+      expect(etapesDuNiveau(n), `niveau ${n}`).toEqual([]);
+      expect(inv(avecInvestissementParNiveau(NOVA, n)), `niveau ${n}`).toEqual([]);
+    }
   });
 
-  it("niveau 3 : la fenêtre de financement s'ouvre avant la décision d'investir", () => {
-    expect(inv(avecInvestissementParNiveau(NOVA, 3))).toEqual(["2:signal", "2:taux", "3:grand_compte"]);
+  it("chaque histoire tombe à un niveau qui ouvre l'investissement et le financement", () => {
+    for (const e of ETAPES_D_INVESTISSEMENT) {
+      const p = niveau(e.niveauMin);
+      expect(p.decisions.investment && p.decisions.finance, `${e.suffixe} au niveau ${e.niveauMin}`).toBe(true);
+    }
   });
 
-  it("niveaux 4 à 6 : le concurrent, puis le retournement", () => {
-    expect(inv(avecInvestissementParNiveau(NOVA, 4))).toContain("4:concurrent");
-    expect(inv(avecInvestissementParNiveau(NOVA, 4))).not.toContain("5:retournement");
-    expect(inv(avecInvestissementParNiveau(NOVA, 5))).toContain("5:retournement");
-    expect(inv(avecInvestissementParNiveau(NOVA, 6))).toEqual(inv(avecInvestissementParNiveau(NOVA, 5)));
+  it("niveau 4 : un signe et la fenêtre de financement au tour 2, la demande qui monte au tour 3", () => {
+    expect(inv(avecInvestissementParNiveau(NOVA, 4))).toEqual(["2:signal", "2:taux", "3:grand_compte"]);
+  });
+
+  it("niveaux 5 et 6 : le concurrent, puis le retournement", () => {
+    expect(inv(avecInvestissementParNiveau(NOVA, 5))).toContain("4:concurrent");
+    expect(inv(avecInvestissementParNiveau(NOVA, 5))).not.toContain("5:retournement");
+    expect(inv(avecInvestissementParNiveau(NOVA, 6))).toContain("5:retournement");
+  });
+
+  it("une partie d'avant la répartition se recompose avec le calendrier de son époque", () => {
+    expect(inv(avecInvestissementParNiveau(NOVA, 1, "avant-2026-10-11"))).toEqual(["2:signal", "3:grand_compte"]);
+    expect(inv(avecInvestissementParNiveau(NOVA, 3, "avant-2026-10-11"))).toEqual([
+      "2:signal",
+      "2:taux",
+      "3:grand_compte",
+    ]);
+    expect(etapesDuNiveau(5, "avant-2026-10-11").map((e) => e.suffixe)).toContain("retournement");
   });
 
   it("les événements scénarisés du secteur restent en place", () => {
@@ -85,8 +123,8 @@ describe("le calendrier d'investissement, niveau par niveau", () => {
   });
 
   it("poser deux fois le même niveau ne double rien", () => {
-    const une = avecInvestissementParNiveau(NOVA, 5);
-    expect(avecInvestissementParNiveau(une, 5).scriptedEvents).toEqual(une.scriptedEvents);
+    const une = avecInvestissementParNiveau(NOVA, 6);
+    expect(avecInvestissementParNiveau(une, 6).scriptedEvents).toEqual(une.scriptedEvents);
   });
 
   it("on n'invite pas à investir au dernier tour : il faut un tour après l'étape", () => {
@@ -135,7 +173,7 @@ describe("ces cartes ne déplacent pas le hasard des parties", () => {
   });
 
   it("avec le calendrier, les cartes tombent exactement au tour dit, et seulement elles s'ajoutent", () => {
-    const joue = avecInvestissementParNiveau(NOVA, 5);
+    const joue = avecInvestissementParNiveau(NOVA, 6);
     const tombees: string[] = [];
     for (let round = 1; round <= 6; round += 1) {
       const sans = drawEvents(NOVA, round, companies, [], createRng(deriveRoundSeed(7, round))).drawn.map((e) => e.code);
