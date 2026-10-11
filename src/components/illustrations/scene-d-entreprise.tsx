@@ -53,18 +53,30 @@ export const SCENES_DES_ENTREPRISES: Record<string, { lieu: string; Dessin: Comp
  * panneau de chantier et les sacs d'enduit de MARTEL, les étiquettes d'étagères
  * et les logos d'enceintes de NOVA ont été effacés à la retouche).
  *
+ * Octobre : MARTEL, MAILLE & CO, NOVA, VOLT, ATLAS, LA TABLE D'AUGUSTIN et
+ * L'ESCALE passent à une seconde série, plus vivante (des gens au travail, la
+ * salle de VOLT pleine, le service au bistrot, l'accueil à la réception), en
+ * 3:2. Quatre lieux sont retournés en miroir, là où le retournement montre
+ * mieux le lieu : le texte est posé à gauche, sur un voile, et NOVA
+ * (l'assembleur à son établi), L'ESCALE (la réceptionniste et son client), LA
+ * TABLE D'AUGUSTIN (le serveur, la cliente attablée) et ROUTE & CIE (le
+ * cariste et ses palettes) passent ainsi à droite. Aucune de ces quatre photos
+ * ne porte d'écriture qu'un miroir trahirait. Les chiffres du niveau de
+ * MARTEL, l'étiquette de son casque et le logo d'un ordinateur d'ATLAS ont été
+ * gommés.
+ *
  * `cadrage` est la position verticale du cadre (`background-position`), réglée
  * pour garder les visages dans le bandeau, sur ordinateur comme au téléphone.
  */
 export const PHOTOS_DES_ENTREPRISES: Record<string, { cadrage: number }> = {
-  nova: { cadrage: 52 },
-  boutique: { cadrage: 27 },
-  hotel: { cadrage: 37 },
-  bistrot: { cadrage: 34 },
-  conseil: { cadrage: 49 },
+  nova: { cadrage: 40 },
+  boutique: { cadrage: 35 },
+  hotel: { cadrage: 25 },
+  bistrot: { cadrage: 22 },
+  conseil: { cadrage: 25 },
   ecommerce: { cadrage: 44 },
-  fitness: { cadrage: 69 },
-  batiment: { cadrage: 45 },
+  fitness: { cadrage: 50 },
+  batiment: { cadrage: 18 },
   transport: { cadrage: 70 },
 };
 
@@ -80,14 +92,14 @@ export function fichierDeLaPhoto(entreprise: string, petit = false): string {
  * son `srcset`. La garde `mise-en-scene.test.ts` la relit dans les fichiers.
  */
 export const TAILLES_DES_PHOTOS: Record<string, { largeur: number; hauteur: number }> = {
-  nova: { largeur: 1376, hauteur: 768 },
+  nova: { largeur: 1536, hauteur: 1024 },
   boutique: { largeur: 1536, hauteur: 1024 },
   hotel: { largeur: 1536, hauteur: 1024 },
   bistrot: { largeur: 1536, hauteur: 1024 },
-  conseil: { largeur: 1408, hauteur: 768 },
+  conseil: { largeur: 1536, hauteur: 1024 },
   ecommerce: { largeur: 1408, hauteur: 768 },
-  fitness: { largeur: 1408, hauteur: 768 },
-  batiment: { largeur: 1408, hauteur: 768 },
+  fitness: { largeur: 1536, hauteur: 1024 },
+  batiment: { largeur: 1536, hauteur: 1024 },
   transport: { largeur: 1376, hauteur: 768 },
 };
 
