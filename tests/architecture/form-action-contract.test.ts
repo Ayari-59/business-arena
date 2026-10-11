@@ -114,6 +114,36 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/components/choix-equipe.tsx"],
   },
   {
+    nom: "activité LTI : nouvelle partie de classe",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "creerPartieAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
+    nom: "activité LTI : partie existante",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "relierPartieAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
+    nom: "activité LTI : cohorte existante",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "relierCohorteAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
+    nom: "activité LTI : nouvelle cohorte",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "creerCohorteAction" },
+    sources: ["src/app/lti/activite/page.tsx", "src/components/choix-des-episodes.tsx"],
+  },
+  {
+    nom: "élève LTI : son prénom",
+    action: { file: "src/app/lti/eleve/actions.ts", fn: "entrerAction" },
+    sources: ["src/app/lti/eleve/page.tsx"],
+  },
+  {
+    nom: "plateforme LTI inscrite à la main (/admin/lti)",
+    action: { file: "src/app/admin/lti/actions.ts", fn: "ajouterPlateformeAction" },
+    sources: ["src/app/admin/lti/page.tsx"],
+  },
+  {
     nom: "lancement d'une partie publique",
     action: { file: "src/app/actions.ts", fn: "startGameAction" },
     // Les champs vivent dans le composant client de config rapide, qui les

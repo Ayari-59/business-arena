@@ -67,6 +67,10 @@ function perimetre(): string[] {
     join(SRC, "app/layout.tsx"),
     // La page des tarifs : un seul bouton plein, celui de l'offre Établissement.
     join(SRC, "app/tarifs/page.tsx"),
+    // L'intégration LTI : le guide de l'établissement et les écrans d'arrivée depuis
+    // une plateforme de cours (enseignant et élève).
+    join(SRC, "app/integration/page.tsx"),
+    ...tous(join(SRC, "app/lti")),
   ];
   const vus = new Set<string>();
   const pile = [...departs];

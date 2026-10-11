@@ -49,6 +49,7 @@ const PAGES_PUBLIQUES = [
   "app/orientation/page.tsx",
   "app/parcours/page.tsx",
   "app/tarifs/page.tsx",
+  "app/integration/page.tsx",
 ];
 
 /**

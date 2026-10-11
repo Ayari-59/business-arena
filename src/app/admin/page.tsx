@@ -131,6 +131,7 @@ export default async function AdminPage({
         <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
           <Link href="/admin/theme" className="hover:text-slate-300">Thème graphique</Link>
           <Link href="/admin/cohortes" className="hover:text-slate-300">Cohortes d&apos;épisodes</Link>
+          <Link href="/admin/lti" className="hover:text-slate-300">Plateformes LTI</Link>
           <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
           <Link href="/" className="hover:text-slate-300">Landing</Link>
         </nav>

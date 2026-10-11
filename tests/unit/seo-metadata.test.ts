@@ -71,6 +71,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/orientation/page", "Choisir sa simulation", "/orientation"],
     ["/mentions-legales/page", "Mentions légales", "/mentions-legales"],
     ["/tarifs/page", "Tarifs", "/tarifs"],
+    ["/integration/page", "Intégration à Moodle", "/integration"],
   ];
 
   for (const [module, attendu, canonique] of PUBLIQUES) {
@@ -121,7 +122,7 @@ describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {
   });
 
   it("/teacher, /arena, /admin, /org, /profile, /compete : noindex, nofollow par layout", async () => {
-    for (const espace of ["teacher", "arena", "admin", "org", "profile", "compete"]) {
+    for (const espace of ["teacher", "arena", "admin", "org", "profile", "compete", "lti"]) {
       const m = await meta(`/${espace}/layout`);
       expect(m.robots, espace).toMatchObject({ index: false, follow: false });
     }

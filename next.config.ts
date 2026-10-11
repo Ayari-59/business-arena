@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { securityHeaders } from "./src/config/security-headers";
+import { entetesCommuns, entetesDeCadre, SOURCE_HORS_LTI } from "./src/config/security-headers";
 
 const nextConfig: NextConfig = {
   // La pile n'a pas à s'annoncer dans chaque réponse.
@@ -26,11 +26,18 @@ const nextConfig: NextConfig = {
   ],
   headers: async () => [
     {
-      // Tous les en-têtes de sécurité, CSP comprise, servis partout (fichiers
-      // statiques compris). Ils ne dépendent pas de la requête : les pages
-      // restent donc éligibles au rendu statique (plus de nonce par requête).
+      // Les en-têtes de sécurité, servis partout (fichiers statiques compris). Ils
+      // ne dépendent pas de la requête : les pages restent donc éligibles au rendu
+      // statique (plus de nonce par requête).
       source: "/(.*)",
-      headers: securityHeaders(),
+      headers: entetesCommuns(),
+    },
+    {
+      // L'iframe interdite et la CSP du site, sauf sous /api/lti/ : ces routes posent
+      // leur propre politique, limitée à l'origine de la plateforme inscrite
+      // (src/config/security-headers.ts, src/lti/html.ts).
+      source: SOURCE_HORS_LTI,
+      headers: entetesDeCadre(),
     },
     {
       source: "/sw.js",

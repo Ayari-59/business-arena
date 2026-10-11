@@ -18,6 +18,7 @@ export const CHEMINS_PRIVES = [
   "/profile",
   "/admin",
   "/org",
+  "/lti",
 ] as const;
 
 export default function robots(): MetadataRoute.Robots {

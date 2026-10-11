@@ -158,6 +158,23 @@ export default function MentionsLegalesPage() {
                   </td>
                   <td className="py-2">Durée de la cohorte</td>
                 </tr>
+                <tr className="border-t border-white/5" data-ligne-lti="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">
+                    Comptes reçus d&apos;une plateforme d&apos;enseignement (LTI)
+                  </td>
+                  <td className="py-2 pr-3">
+                    Identifiant technique de la personne chez la plateforme, gardé seulement sous
+                    forme d&apos;empreinte ; prénom s&apos;il est envoyé (pseudo de l&apos;élève) ;
+                    rôle ; titres du cours et de l&apos;activité. Pour un enseignant seulement : nom
+                    et courriel si la plateforme les envoie. Aucun courriel d&apos;élève.
+                  </td>
+                  <td className="py-2 pr-3">
+                    Faire entrer la personne dans la partie ou la cohorte choisie par
+                    l&apos;enseignant, sans compte ni code (exécution du service demandé par
+                    l&apos;établissement)
+                  </td>
+                  <td className="py-2">Durée du rattachement de la plateforme</td>
+                </tr>
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Demandes de contact</td>
                   <td className="py-2 pr-3">
@@ -177,6 +194,11 @@ export default function MentionsLegalesPage() {
             données), Resend (envoi des e-mails), Google (agenda des rendez-vous) et, seulement
             si l&apos;assistant d&apos;IA est activé, Anthropic (réponses de l&apos;assistant à
             partir des justifications écrites par les joueurs).
+          </p>
+          <p data-plateformes-lti="">
+            Plateformes LTI (Moodle, Canvas, Blackboard, Brightspace) : elles ne sont pas des
+            sous-traitants de Business Arena. Elles appartiennent à l&apos;établissement client,
+            qui choisit d&apos;y ajouter l&apos;outil et décide de ce qu&apos;elles transmettent.
           </p>
           <p>
             Aucune donnée n&apos;est vendue, louée, transmise à des tiers à des fins
@@ -201,6 +223,12 @@ export default function MentionsLegalesPage() {
             <li>
               <code className="font-mono text-slate-100">ba_guest</code> (signé) : identifiant technique des
               joueurs invités, pour retrouver leurs parties (12 mois) ;
+            </li>
+            <li>
+              <code className="font-mono text-slate-100">ba_lti</code> (signé) et{" "}
+              <code className="font-mono text-slate-100">ba_lti_state</code> : l&apos;arrivée
+              depuis une plateforme d&apos;enseignement, l&apos;activité lancée (4 heures) et la
+              vérification de la connexion (10 minutes) ;
             </li>
             <li>
               <code className="font-mono text-slate-100">google_oauth_state</code> : réservé à

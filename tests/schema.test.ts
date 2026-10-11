@@ -22,6 +22,8 @@ const EXPECTED_TABLES = [
   "competitions", "competition_stages", "competition_entries", "competition_members",
   "episode_parties", "episode_cohortes", "episode_membres", "episode_reprises",
   "episode_objectifs",
+  "lti_plateformes", "lti_jetons_inscription", "lti_nonces", "lti_tickets", "lti_liens",
+  "lti_comptes", "lti_refus",
 ];
 
 describe("schéma de base de données", () => {

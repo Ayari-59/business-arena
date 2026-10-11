@@ -267,6 +267,13 @@
       "when": 1790404557440,
       "tag": "0036_offres_et_devis",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790490957440,
+      "tag": "0037_lti_1_3",
+      "breakpoints": true
     }
   ]
 }

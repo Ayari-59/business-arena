@@ -11,3 +11,4 @@ export * from "./rendez-vous";
 export * from "./devis";
 export * from "./integrations";
 export * from "./episodes";
+export * from "./lti";

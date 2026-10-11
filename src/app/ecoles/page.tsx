@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CONNEXION_ENT, lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { REPONSE_LMS } from "@/lti/textes";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import Link from "next/link";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
@@ -118,7 +119,7 @@ const QUESTIONS = [
   },
   {
     q: "Peut-on les relier à Moodle ou à Blackboard ?",
-    r: CONNEXION_ENT.reponse,
+    r: REPONSE_LMS,
   },
   {
     q: "Quelles données sont collectées ?",
