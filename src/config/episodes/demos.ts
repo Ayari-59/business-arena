@@ -10,9 +10,10 @@ import { NIVEAUX, type CodeNiveau } from "./niveaux";
  * et au niveau Découverte. Les autres restent visibles au catalogue (titre, accroche,
  * métier), marqués du nom de l'offre, avec le lien vers les tarifs.
  *
- * UNE SEULE SOURCE, facile à changer : la page des épisodes, la page de jeu, le profil
- * et la recommandation la lisent. Un test garde la règle « un par métier, tous connus,
- * tous jouables en Découverte ».
+ * LA VALEUR PAR DÉFAUT de la Découverte, désormais réglable dans /admin/offres
+ * (config/decouverte.ts, migration 0041) : la règle serveur lit le réglage
+ * (services/acces.service.ts, `accesAuxEpisodes` le porte jusqu'aux pages). Un test garde
+ * la règle « un par métier, tous connus, tous jouables en Découverte » pour ce défaut.
  *
  * Le choix, validé par le propriétaire, métier par métier : une situation que tout
  * manager reconnaît sans connaître le métier, et qui montre ce que le bilan apporte
@@ -57,6 +58,12 @@ export const MARQUE_DEMO = "Démo gratuite";
 export interface AccesAuxEpisodes {
   /** Une licence en cours qui inclut les épisodes couvre-t-elle cette personne ? */
   licence: boolean;
+  /**
+   * Les démonstrations de la Découverte, telles que /admin/offres les règle (catalogue,
+   * clé « decouverte ») ; absentes : `EPISODES_DE_DEMO`. Et le niveau où elles se jouent.
+   */
+  demos?: readonly string[];
+  niveauDesDemos?: CodeNiveau;
   /** D'où elle vient : la cohorte (l'organisation de son animateur) ou le compte. */
   source: "cohorte" | "compte" | null;
   /**
@@ -72,10 +79,14 @@ export interface AccesAuxEpisodes {
 export const licencePourLEpisode = (acces: AccesAuxEpisodes, code: string): boolean =>
   acces.licence && (!acces.episodes || acces.episodes.includes(code));
 
+/** Cet épisode est-il une démonstration de la Découverte (réglée, ou par défaut) ? */
+export const estUneDemoPour = (acces: Pick<AccesAuxEpisodes, "demos">, code: string): boolean =>
+  acces.demos ? acces.demos.includes(code) : estUneDemo(code);
+
 /** Les niveaux auxquels cet épisode se lance ; vide : il ne se lance pas. */
 export function niveauxDeLEpisode(acces: AccesAuxEpisodes, code: string): readonly CodeNiveau[] {
   if (licencePourLEpisode(acces, code)) return NIVEAUX.map((n) => n.code);
-  return estUneDemo(code) ? [NIVEAU_DES_DEMOS] : [];
+  return estUneDemoPour(acces, code) ? [acces.niveauDesDemos ?? NIVEAU_DES_DEMOS] : [];
 }
 
 /** Cet épisode se lance-t-il, à ce niveau s'il est donné ? */

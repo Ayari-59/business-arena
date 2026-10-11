@@ -1,14 +1,10 @@
 import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { consommerUneUtilisation, rendreUneUtilisation } from "@/services/catalogue.service";
+import { euros, type DevisChiffre } from "@/config/catalogue";
 import { db } from "@/db";
 import { demandesDeDevis } from "@/db/schema";
 import { VENDEUR } from "@/config/editeur";
-import {
-  LIBELLES_DU_DEVIS,
-  MENTION_TVA,
-  nomDeLEntreprise,
-  nomDuNiveau,
-  type OffreDuDevis,
-} from "@/config/tarifs";
+import { MENTION_TVA, nomDeLEntreprise, nomDuNiveau, type LibellesDuDevis } from "@/config/tarifs";
 
 /**
  * LES DEMANDES DE DEVIS ÉCRITES.
@@ -29,7 +25,10 @@ export const PLAFOND_DEVIS_PAR_IP_PAR_HEURE = 5;
 export const DELAI_MEME_EMAIL_MS = 10 * 60 * 1000;
 
 export interface DemandeDeDevis {
-  offre: OffreDuDevis;
+  /** Le code de l'offre du catalogue (`/devis?offre=…`). */
+  offre: string;
+  /** Les libellés du formulaire de cette offre (le nom de l'offre, de l'organisation…). */
+  libelles: LibellesDuDevis;
   nom: string;
   fonction: string;
   organisation: string;
@@ -42,7 +41,18 @@ export interface DemandeDeDevis {
   email: string;
   message: string;
   ip: string | null;
+  /**
+   * LE CODE PROMO vérifié (services/catalogue.service.ts, `verifierUnCodePromo`) et le devis
+   * qu'il donne. `cle` : l'établissement, pour un code à une utilisation par établissement.
+   */
+  promo?: { id: string; code: string; cle: string | null; devis: DevisChiffre } | null;
+  /** L'affichage des prix est-il allumé ? Éteint, l'accusé au demandeur ne dit aucun montant. */
+  montantsPublics?: boolean;
 }
+
+/** Ce qu'un code promo refuse au dernier moment : épuisé entre la vérification et l'envoi. */
+export const CODE_EPUISE_A_L_ENVOI = "Ce code promo vient d'atteindre son nombre d'utilisations : envoyez la demande sans lui.";
+export const CODE_DEJA_UTILISE = "Ce code promo a déjà été utilisé pour cet établissement.";
 
 export async function deposerDemandeDeDevis(
   d: DemandeDeDevis,
@@ -66,7 +76,13 @@ export async function deposerDemandeDeDevis(
   if (recente.length > 0) {
     return { error: "Une demande vient d'être envoyée avec cette adresse : nous y répondons." };
   }
-  const [ligne] = await db
+  // Le code promo : une utilisation se consomme sous le plafond, en une instruction ; si
+  // la demande ne s'enregistre pas (déjà utilisé par l'établissement), elle est rendue.
+  const promo = d.promo ?? null;
+  if (promo && !(await consommerUneUtilisation(promo.id))) return { error: CODE_EPUISE_A_L_ENVOI };
+  let ligne: { id: string } | undefined;
+  try {
+    [ligne] = await db
     .insert(demandesDeDevis)
     .values({
       offre: d.offre,
@@ -80,10 +96,24 @@ export async function deposerDemandeDeDevis(
       email,
       message: d.message.trim(),
       ip: d.ip,
+      codePromo: promo?.code ?? null,
+      codePromoId: promo?.id ?? null,
+      prixCatalogueCents: promo?.devis.prixCatalogueCents ?? null,
+      remiseCents: promo?.devis.remiseCents ?? null,
+      remiseLibelle: promo?.devis.remiseLibelle ?? null,
+      prixRemiseCents: promo?.devis.prixRemiseCents ?? null,
+      promoCle: promo?.cle ?? null,
       createdAt: new Date(now),
       updatedAt: new Date(now),
     })
     .returning({ id: demandesDeDevis.id });
+  } catch (e) {
+    if (promo) await rendreUneUtilisation(promo.id);
+    if (promo && /demandes_de_devis_promo_uq|duplicate key/.test(String((e as { cause?: unknown })?.cause ?? e))) {
+      return { error: CODE_DEJA_UTILISE };
+    }
+    throw e;
+  }
   return { id: ligne!.id };
 }
 
@@ -111,8 +141,24 @@ export async function marquerDemandeDeDevisTraitee(id: string, adminId: string):
 }
 
 /** Les lignes communes aux deux courriels : ce qui a été demandé. */
-function recapitulatif(d: DemandeDeDevis): string[] {
-  const l = LIBELLES_DU_DEVIS[d.offre];
+/**
+ * Le code promo d'une demande, en lignes. `montants` : le devis chiffré (prix catalogue,
+ * remise, prix remisé, prix nets), pour la notification interne, et pour le demandeur
+ * seulement si l'affichage des prix est allumé ; sinon la phrase sans montant.
+ */
+export function lignesDuCodePromo(p: NonNullable<DemandeDeDevis["promo"]>, montants = true): string[] {
+  if (!montants) return [`Code promo ${p.code} pris en compte : la remise sera appliquée à votre devis.`];
+  const v = p.devis;
+  return [
+    `Code promo : ${p.code} (${v.remiseLibelle})`,
+    v.prixCatalogueCents !== null ? `Prix catalogue : ${euros(v.prixCatalogueCents)} par an` : null,
+    v.remiseCents !== null ? `Remise : ${euros(v.remiseCents)}` : null,
+    v.prixRemiseCents !== null ? `Prix remisé : ${euros(v.prixRemiseCents)} par an` : "Prix remisé : établi au devis, remise comprise",
+  ].filter((x): x is string => x !== null);
+}
+
+function recapitulatif(d: DemandeDeDevis, montants = true): string[] {
+  const l = d.libelles;
   return [
     `Offre : ${l.offre}`,
     `${l.organisation} : ${d.organisation.trim()}`,
@@ -120,6 +166,7 @@ function recapitulatif(d: DemandeDeDevis): string[] {
     d.entreprise ? `Entreprise souhaitée : ${nomDeLEntreprise(d.entreprise)}` : null,
     d.niveau ? `Niveau souhaité : ${nomDuNiveau(d.niveau)}` : null,
     d.effectif !== null ? `${l.effectif ?? "Effectif"} : ${d.effectif}` : null,
+    ...(d.promo ? lignesDuCodePromo(d.promo, montants) : []),
     `Demandé par : ${d.nom.trim()}, ${d.fonction.trim()}`,
     `E-mail : ${d.email.trim()}`,
     "",
@@ -131,7 +178,7 @@ function recapitulatif(d: DemandeDeDevis): string[] {
 /** Le courriel à l'adresse de contact : « Répondre » répond au demandeur. */
 export function texteNotificationDevis(d: DemandeDeDevis): { sujet: string; texte: string } {
   return {
-    sujet: `Demande de devis · ${LIBELLES_DU_DEVIS[d.offre].offre} · ${d.organisation.trim()}`,
+    sujet: `Demande de devis · ${d.libelles.offre} · ${d.organisation.trim()}`,
     texte: [
       "Demande de devis reçue depuis business-arena.fr/devis.",
       `Le devis est à établir au nom de ${VENDEUR.nom}. ${MENTION_TVA}.`,
@@ -144,13 +191,13 @@ export function texteNotificationDevis(d: DemandeDeDevis): { sujet: string; text
 /** L'accusé au demandeur : ce qu'il a demandé, qui y répond, et rien de promis de plus. */
 export function texteAccuseDevis(d: DemandeDeDevis, contact: string): { sujet: string; texte: string } {
   return {
-    sujet: `Votre demande de devis Business Arena · ${LIBELLES_DU_DEVIS[d.offre].offre}`,
+    sujet: `Votre demande de devis Business Arena · ${d.libelles.offre}`,
     texte: [
       "Bonjour,",
       "",
       `Votre demande de devis est enregistrée. Le devis vous sera adressé par écrit, établi par ${VENDEUR.nom} (${MENTION_TVA}).`,
       "",
-      ...recapitulatif(d),
+      ...recapitulatif(d, d.montantsPublics === true),
       "",
       `Une question : ${contact}`,
     ].join("\n"),

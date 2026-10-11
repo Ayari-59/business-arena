@@ -61,6 +61,9 @@ import {
   rouvrirCohorteAction,
 } from "@/app/teacher/cohortes/actions";
 
+/** Les démonstrations de la Découverte (par défaut), que l'accès porte jusqu'aux pages. */
+const DEMOS_PAR_DEFAUT = { demos: [...EPISODES_DE_DEMO], niveauDesDemos: "decouverte" };
+
 const estDemo = (code: string) => (EPISODES_DE_DEMO as readonly string[]).includes(code);
 const nonDemos = EPISODES.filter((e) => !estDemo(e.code));
 /** Deux épisodes non démo dans la cohorte, un troisième hors d'elle. */
@@ -201,7 +204,7 @@ describe("l'élève entré par le code", () => {
     const eleve = await nouvelInvite();
     expect((await rejoindreCohorte(eleve, c.code)).ok).toBe(true);
     const acces = await accesAuxEpisodes({ userId: eleve });
-    expect(acces).toEqual({ licence: true, source: "cohorte", episodes: [dansLaCohorte!.code] });
+    expect(acces).toEqual({ licence: true, source: "cohorte", episodes: [dansLaCohorte!.code], ...DEMOS_PAR_DEFAUT });
     expect(niveauxDeLEpisode(acces, dansLaCohorte!.code)).toEqual(["decouverte", "standard", "expert"]);
     // Hors de la cohorte, la règle sans licence : rien pour un non démo, la Découverte pour une démo.
     expect(episodeOuvert(acces, horsCohorte!.code)).toBe(false);
@@ -217,7 +220,7 @@ describe("l'élève entré par le code", () => {
     const eleve = await nouvelInvite();
     await rejoindreCohorte(eleve, c.code);
     const acces = await accesAuxEpisodes({ userId: eleve, sessionUserId: autreProf.userId });
-    expect(acces).toEqual({ licence: true, source: "compte" });
+    expect(acces).toEqual({ licence: true, source: "compte", ...DEMOS_PAR_DEFAUT });
     expect(episodeOuvert(acces, horsCohorte!.code, "expert")).toBe(true);
   });
 

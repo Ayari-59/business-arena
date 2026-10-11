@@ -21,7 +21,7 @@ import {
   MARQUE_DE_L_ARENE,
   messageNiveauxReserves,
   nomDOffre,
-  REFUS_DE_LA_CLASSE,
+  refusDeLaClasse,
 } from "@/config/tarifs";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
@@ -412,7 +412,7 @@ export default async function AtelierPage({
                   {MARQUE_DE_L_ARENE}.
                 </strong>{" "}
                 {niveauFerme ? `${messageNiveauxReserves(vitrineSolo)} ` : ""}
-                {REFUS_DE_LA_CLASSE}{" "}
+                {refusDeLaClasse(vitrineSolo)}{" "}
                 <Link
                   href={LIEN_TARIFS}
                   prefetch={false}

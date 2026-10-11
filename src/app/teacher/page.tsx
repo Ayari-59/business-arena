@@ -25,7 +25,7 @@ import {
   messageNiveauxReserves,
   nomDOffre,
   parametrageEnClair,
-  REFUS_DE_LA_CLASSE,
+  refusDeLaClasse,
   type HorsLicence,
 } from "@/config/tarifs";
 import { LigneDEtatDeLOffre } from "@/components/etat-de-l-offre";
@@ -304,7 +304,7 @@ export default async function TeacherDashboard({
           >
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
             <strong className="font-semibold text-slate-100">{MARQUE_DE_L_ARENE}.</strong>{" "}
-            {REFUS_DE_LA_CLASSE}{" "}
+            {refusDeLaClasse(regle)}{" "}
             <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
               {LIBELLE_DU_DEVIS}
             </Link>{" "}
@@ -825,7 +825,7 @@ export default async function TeacherDashboard({
         >
           {!licence ? (
             <p data-concours-sans-licence="" className="mb-3 text-sm text-slate-300">
-              {REFUS_DE_LA_CLASSE}{" "}
+              {refusDeLaClasse(regle)}{" "}
               <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
                 Voir les tarifs
               </Link>

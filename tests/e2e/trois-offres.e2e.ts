@@ -89,17 +89,14 @@ describe("/tarifs : quatre cartes, un bouton plein sur Programme", () => {
       const prix = (await page.locator("[data-offre] [data-prix]").allInnerTexts()).map((t) =>
         t.replace(/[  ]/g, " ").replace(/\s+/g, " "),
       );
-      expect(prix[1]).toContain("290 € par an");
-      expect(prix[2]).toContain("990 € par an");
-      expect(prix[3]).toContain("1 990 € par an");
+      // Décision d'octobre 2026 : aucun prix affiché, chaque offre de l'arène est « sur devis ».
+      expect(prix.slice(1)).toEqual(["Sur devis Sur mesure, établie au devis", "Sur devis Sur mesure, établie au devis", "Sur devis Sur mesure, établie au devis"]);
       expect(await page.locator(".bouton-plein").count()).toBe(1);
       expect(await page.locator('[data-offre="programme"] .bouton-plein').getAttribute("href")).toBe(
         "/devis?offre=programme",
       );
-      expect(await lire(page.locator('[data-offre="programme"]'))).toContain("Dès 4 groupes, moins cher que 4 offres Classe");
-      expect(await lire(page.locator('[data-offre="campus"]'))).toContain(
-        "Dès 3 entreprises, moins cher que 3 offres Programme",
-      );
+      // Plus de mention comparative calculée sur les prix tant qu'ils sont cachés.
+      expect(await lire(page.locator("main"))).not.toMatch(/moins cher que|€/);
       expect(await lire(page.locator("#enseignement"))).toBe(
         "L'arène, pour l'enseignement : lycées, BTS, écoles de commerce, universités",
       );
@@ -321,14 +318,17 @@ describe("le formulaire de licence de /admin, offre par offre", () => {
     const bloc = page.locator("div.rounded-xl.bg-slate-950", { hasText: nom }).first();
     await bloc.locator("details", { hasText: "Licence" }).locator("summary").click();
     const formulaire = bloc.locator("[data-formulaire-licence]");
-    const lesOptions = (await formulaire.locator('select[name="arene"] option').allInnerTexts()).map((t) =>
+    // Les offres du catalogue (/admin/offres) qui ouvrent l'arène ou les épisodes.
+    const lesOptions = (await formulaire.locator('select[name="offre"] option').allInnerTexts()).map((t) =>
       t.replace(/[  ]/g, " "),
     );
     expect(lesOptions).toEqual([
       "Offre Classe · 290 € par an",
       "Offre Programme · 990 € par an",
       "Offre Campus · 1 990 € par an",
-      "Sans l'arène (épisodes seuls)",
+      "Réseaux d'établissements · sur devis",
+      "Épisodes manager, en cours ou en école · sur devis",
+      "Épisodes manager, pour une entreprise ou un organisme de formation · sur devis",
     ]);
     const champs = async () =>
       formulaire.locator("[data-champ-licence]").evaluateAll((xs) => xs.map((x) => x.getAttribute("data-champ-licence")));
@@ -337,16 +337,16 @@ describe("le formulaire de licence de /admin, offre par offre", () => {
       ["programme", ["entreprise", "plafond"]],
       ["campus", []],
     ] as const) {
-      await formulaire.locator('select[name="arene"]').selectOption(offre);
+      await formulaire.locator('select[name="offre"]').selectOption(offre);
       expect(await champs(), offre).toEqual(attendus);
-      expect(await formulaire.locator('input[name="amount"]').getAttribute("placeholder"), offre).toBe(
+      expect(await formulaire.locator('input[name="prixCatalogue"]').inputValue(), offre).toBe(
         { classe: "290", programme: "990", campus: "1990" }[offre],
       );
       await formulaire.scrollIntoViewIfNeeded();
       await capture(page, `admin-licence-${offre}`);
     }
     // Une Classe L'ESCALE, niveau 4, posée par le formulaire.
-    await formulaire.locator('select[name="arene"]').selectOption("classe");
+    await formulaire.locator('select[name="offre"]').selectOption("classe");
     await formulaire.locator('select[name="entreprise"]').selectOption("hotel");
     await formulaire.locator('select[name="niveau"]').selectOption("4");
     await formulaire.locator('input[name="label"]').fill("Année 2026-2027");

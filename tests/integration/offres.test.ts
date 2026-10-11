@@ -367,7 +367,7 @@ describe("la demande de devis écrite", () => {
       }),
     );
     expect(r.error).toBeNull();
-    expect(r.ok).toEqual({ email: "claire.martin@lycee.test", offre: "campus", accuseEnvoye: false });
+    expect(r.ok).toEqual({ email: "claire.martin@lycee.test", offre: "campus", accuseEnvoye: false, promo: null });
 
     const [d] = (await listerDemandesDeDevis()).filter((x) => x.email === "claire.martin@lycee.test");
     expect(d).toMatchObject({

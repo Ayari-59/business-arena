@@ -27,6 +27,8 @@ const EXPECTED_TABLES = [
   "saml_idps", "saml_federations", "saml_etablissements", "saml_comptes", "saml_requetes",
   "saml_assertions", "saml_refus",
   "inscrits_journal",
+  // Le catalogue commercial (migration 0041, /admin/offres).
+  "catalogue_modules", "catalogue_offres", "catalogue_reglages", "codes_promo", "catalogue_journal",
 ];
 
 describe("schéma de base de données", () => {

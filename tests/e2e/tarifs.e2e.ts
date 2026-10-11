@@ -74,7 +74,7 @@ describe("/tarifs", () => {
   for (const largeur of [1280, 390] as const) {
     it(`à ${largeur} px : répond, sans défilement de côté, un seul bouton plein par écran`, async () => {
       const page = await ouvrir(largeur);
-      expect(await page.locator("main h1").innerText()).toBe("Tarifs");
+      expect(await page.locator("main h1").innerText()).toBe("Offres");
       const debord = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
@@ -82,9 +82,11 @@ describe("/tarifs", () => {
       // Le prix et « par an » sont deux éléments de flex : innerText les
       // sépare d'un saut de ligne. On lit le texte comme on le voit.
       const lu = (await texte(page)).replace(/\s+/g, " ");
-      for (const attendu of ["290 € par an", "990 € par an", "1 990 € par an", "Sur devis", MENTION_TVA, VENDEUR.nom]) {
+      // Décision d'octobre 2026 : les prix ne s'affichent pas (offres sur mesure, sur devis).
+      for (const attendu of ["Construisons votre offre", "Sur devis", "Gratuit", VENDEUR.nom]) {
         expect(lu, attendu).toContain(attendu);
       }
+      expect(lu, "un montant sur /tarifs").not.toMatch(/€|par an\b|\b(?:290|990|1 990)\b/);
       expect(lu).not.toMatch(/\bHT\b|\bTTC\b|TVA 20/);
       const { max, total } = await auPlusUnPleinParEcran(page);
       expect(total, "boutons pleins dans la page").toBe(1);
@@ -163,20 +165,20 @@ describe("le site mène aux tarifs", () => {
     expect(await lien.getAttribute("href")).toBe("/tarifs");
     await lien.click();
     await page.waitForURL(/\/tarifs$/);
-    expect(await page.locator("main h1").innerText()).toBe("Tarifs");
+    expect(await page.locator("main h1").innerText()).toBe("Offres");
     await contexte.close();
   });
 
-  it("le menu porte « Tarifs »", async () => {
+  it("le menu porte « Offres »", async () => {
     const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
     const page = await contexte.newPage();
     await aller(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    const groupe = page.locator('#plan-du-site button[aria-controls^="groupe-"]', { hasText: "Tarifs et contact" });
+    const groupe = page.locator('#plan-du-site button[aria-controls^="groupe-"]', { hasText: "Offres et contact" });
     if ((await groupe.getAttribute("aria-expanded")) === "false") await groupe.click();
     const lien = page.locator('#plan-du-site a[href="/tarifs"]');
     await lien.waitFor({ state: "visible" });
-    expect(await lien.innerText()).toContain("Tarifs");
+    expect(await lien.innerText()).toContain("Offres");
     await contexte.close();
   });
 });
@@ -225,15 +227,14 @@ describe("« Tarifs » se trouve sans ouvrir le menu (audit C-07)", () => {
   });
 
   for (const chemin of ["/enseignants", "/ecoles", "/fonctionnalites"]) {
-    it(`${chemin} : une ligne de prix et le lien vers les tarifs dans la bande finale`, async () => {
+    it(`${chemin} : la ligne des offres, sans montant, et le lien vers les tarifs dans la bande finale`, async () => {
       const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
       const page = await contexte.newPage();
       await aller(page, chemin);
       const ligne = page.locator("[data-ligne-de-prix]");
       const lu = (await ligne.innerText()).replace(/[\u202f\u00a0]/g, " ");
-      expect(lu).toContain("Offre Classe 290 € par an");
-      expect(lu).toContain("offre Programme 990 € par an");
-      expect(lu).toContain("offre Campus 1 990 € par an");
+      expect(lu).toContain("Les offres Classe, Programme et Campus se construisent sur mesure, sur devis.");
+      expect(lu, "un montant dans la bande finale").not.toMatch(/€|par an\b/);
       expect(await ligne.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
       await contexte.close();
     });

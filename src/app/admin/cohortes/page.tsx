@@ -7,7 +7,7 @@ import { SITE_URL } from "@/config/site";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { listerCohortes, organisationsPourLesCohortes } from "@/services/cohortes.service";
-import { EPISODES_DE_DEMO } from "@/config/episodes/demos";
+import { lireLaDecouverte } from "@/services/catalogue.service";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import type { LicenceState } from "@/services/licence.service";
 import { OFFRES } from "@/config/tarifs";
@@ -25,6 +25,7 @@ function ceQuOuvreLaCohorte(
   licence: LicenceState | null,
   episodes: readonly string[] | null,
   close: boolean,
+  demos: number,
 ): string {
   if (close) {
     return "Close : plus de nouveaux participants, aucun nouvel épisode ouvert par la cohorte.";
@@ -34,7 +35,7 @@ function ceQuOuvreLaCohorte(
       ? `Licence épisodes en cours : les membres jouent ${episodes.length > 1 ? `les ${episodes.length} épisodes` : "l'épisode"} de la cohorte, et les démonstrations.`
       : "Licence épisodes en cours : les membres jouent tous les épisodes.";
   }
-  return `Sans licence épisodes en cours : les membres ne jouent que les ${EPISODES_DE_DEMO.length} démonstrations, en Découverte.`;
+  return `Sans licence épisodes en cours : les membres ne jouent que les ${demos} démonstrations de la Découverte.`;
 }
 
 export const dynamic = "force-dynamic";
@@ -66,9 +67,10 @@ export default async function CohortesAdminPage({
   const context = await getStaffContext(session.userId);
   if (!context?.isPlatformAdmin) redirect("/teacher");
   const { creee, renouvelee, rattachee, erreur } = await searchParams;
-  const [cohortes, organisations] = await Promise.all([
+  const [cohortes, organisations, { demos }] = await Promise.all([
     listerCohortes(),
     organisationsPourLesCohortes(),
+    lireLaDecouverte(),
   ]);
   const choixDeLOrganisation = (defaut: string, nom = "organisation") => (
     <select
@@ -178,7 +180,7 @@ export default async function CohortesAdminPage({
                 </p>
                 <p className="text-sm text-slate-300" data-acces-de-la-cohorte="">
                   {c.organisation ? `${c.organisation.nom} · ` : "Aucune organisation · "}
-                  {ceQuOuvreLaCohorte(c.organisation?.licence ?? null, c.episodes, !!c.closeLe)}
+                  {ceQuOuvreLaCohorte(c.organisation?.licence ?? null, c.episodes, !!c.closeLe, demos.length)}
                 </p>
                 {c.episodes ? (
                   <p className="text-xs text-slate-400" data-episodes-de-la-cohorte="">

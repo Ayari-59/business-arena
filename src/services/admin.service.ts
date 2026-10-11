@@ -35,6 +35,29 @@ import {
   VITRINE_SOLO_PAR_DEFAUT,
   type VitrineSolo,
 } from "@/config/vitrine-solo";
+import { catalogueReglages } from "@/db/schema/offres";
+import { normaliserSolo } from "@/config/decouverte";
+
+/**
+ * LES NIVEAUX OUVERTS SANS LICENCE SE RÈGLENT DÉSORMAIS DANS /admin/offres, avec la
+ * Découverte (migration 0041, `catalogue_reglages`, clé « decouverte ») : la migration y a
+ * recopié l'ancien réglage « vitrine solo ». Une base sans ce réglage (ou une table pas
+ * encore migrée) relit l'ancien, puis le défaut. Toute la règle serveur passe par ici
+ * (`getPlatformConfig().vitrineSolo`).
+ */
+async function vitrineDeLaDecouverte(ancienne: unknown): Promise<VitrineSolo> {
+  try {
+    const [r] = await db
+      .select({ valeur: catalogueReglages.valeur })
+      .from(catalogueReglages)
+      .where(eq(catalogueReglages.cle, "decouverte"));
+    const solo = (r?.valeur as { solo?: unknown } | undefined)?.solo;
+    if (solo !== undefined) return normaliserSolo(solo);
+  } catch (e) {
+    console.error("[getPlatformConfig] lecture de la Découverte échouée :", e);
+  }
+  return normaliserVitrine(ancienne);
+}
 
 /**
  * Espace d'administration (hiérarchie ADR-08/ADR-09) :
@@ -199,7 +222,7 @@ export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
       ...lus,
       // Colonne de JSON libre : une valeur inconnue retombe sur le QCM.
       soloAnswerFormat: answerFormatFromProfile({ answerFormat: lus.soloAnswerFormat }),
-      vitrineSolo: normaliserVitrine(lus.vitrineSolo),
+      vitrineSolo: await vitrineDeLaDecouverte(lus.vitrineSolo),
       theme: normaliserTheme(lus.theme),
       domainesAutorises: normaliserListe(lus.domainesAutorises),
       domainesBloques: normaliserListe(lus.domainesBloques),

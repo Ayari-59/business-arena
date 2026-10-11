@@ -1,12 +1,13 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { orgLicences, organizationMembers } from "@/db/schema";
+import { orgLicences, organizationMembers, organizations } from "@/db/schema";
 import {
   OFFRES,
   PARAMETRAGE_DES_OFFRES,
   type OffreDeLArene,
   type ParametrageDeLicence,
 } from "@/config/tarifs";
+import { estUnMotifDeGratuite, type NatureDeLicence } from "@/config/catalogue";
 
 /**
  * La licence d'établissement : ce qui est vendu, et ce qui est refusé.
@@ -56,6 +57,39 @@ export interface OrgLicence {
   niveaux: number[] | null;
   /** Les parties de classe et concours en cours en même temps ; null : sans plafond. */
   maxPartiesEnCours: number | null;
+  /**
+   * LA VENTE (migration 0041) : l'offre du catalogue vendue, son nom AU MOMENT DE LA VENTE
+   * (copié dans les conditions : changer le catalogue ne change pas la licence), la
+   * nature (vendue, offerte, essai), le motif d'une gratuité, le prix catalogue et la
+   * remise. Une licence d'avant le catalogue n'a ni offre ni conditions : elle est vendue.
+   */
+  offreCode: string | null;
+  nomDeLOffre: string | null;
+  nature: NatureDeLicence;
+  motifGratuite: string | null;
+  prixCatalogueCents: number | null;
+  remise: RemiseDeLicence | null;
+}
+
+/** La remise commerciale enregistrée sur une licence. */
+export interface RemiseDeLicence {
+  type: "pourcentage" | "montant";
+  /** Un pourcentage, ou un montant en centimes. */
+  valeur: number;
+  motif: string;
+  /** Ce qu'elle a retiré du prix catalogue, en centimes. */
+  montantCents: number;
+}
+
+/** Les conditions copiées sur la licence au moment de la vente. */
+export interface ConditionsDeVente {
+  code: string;
+  nom: string;
+  tarif: string;
+  prixCents: number | null;
+  modules: unknown[];
+  inclus: string[];
+  precisions: string[];
 }
 
 /** Le paramétrage de l'arène d'une licence, tel que la règle le lit ; null : pas d'arène. */
@@ -88,6 +122,12 @@ export const versLicence = (r: LigneDeLicence): OrgLicence => ({
   entreprises: r.entreprises ?? null,
   niveaux: r.niveaux ?? null,
   maxPartiesEnCours: r.maxPartiesEnCours ?? null,
+  offreCode: r.offreCode ?? null,
+  nomDeLOffre: (r.conditions as ConditionsDeVente | null)?.nom ?? null,
+  nature: r.nature ?? "vendue",
+  motifGratuite: r.motifGratuite ?? null,
+  prixCatalogueCents: r.prixCatalogueCents ?? null,
+  remise: (r.remise as RemiseDeLicence | null) ?? null,
 });
 
 const couvre = (r: LigneDeLicence, portee: PorteeDeLicence): boolean =>
@@ -260,6 +300,17 @@ export async function setOrgLicence(args: {
   entreprises?: readonly string[] | null;
   niveaux?: readonly number[] | null;
   maxPartiesEnCours?: number | null;
+  /**
+   * La vente (migration 0041, services/vente.service.ts) : l'offre du catalogue et la copie
+   * de ses conditions, le prix catalogue, la remise, la nature. Une licence OFFERTE porte
+   * son motif et ne coûte rien ; une licence d'ESSAI non plus.
+   */
+  offreCode?: string | null;
+  conditions?: ConditionsDeVente | null;
+  prixCatalogueCents?: number | null;
+  remise?: RemiseDeLicence | null;
+  nature?: NatureDeLicence;
+  motifGratuite?: string | null;
 }): Promise<{ licenceId: string }> {
   // Dates invalides (champ vide ou malformé → `new Date("")` = Invalid Date) :
   // toute comparaison avec un NaN est fausse, la garde `endsAt <= startsAt`
@@ -269,6 +320,13 @@ export async function setOrgLicence(args: {
   }
   if (args.endsAt <= args.startsAt) {
     throw new Error("La fin de la licence doit suivre son début.");
+  }
+  const nature = args.nature ?? "vendue";
+  if (nature === "offerte" && !estUnMotifDeGratuite(args.motifGratuite)) {
+    throw new Error("Une licence offerte porte son motif : pilote, partenaire, presse ou geste commercial.");
+  }
+  if (nature !== "vendue" && (args.amountCents ?? 0) !== 0) {
+    throw new Error("Une licence offerte ou d'essai ne se facture pas : son montant est de 0 €.");
   }
   const arene = args.arene === undefined ? "campus" : args.arene;
   const episodes = args.episodes ?? false;
@@ -301,12 +359,18 @@ export async function setOrgLicence(args: {
       endsAt: args.endsAt,
       maxTeachers: args.maxTeachers,
       reference: args.reference?.trim() || null,
-      amountCents: args.amountCents ?? null,
+      amountCents: nature === "vendue" ? (args.amountCents ?? null) : 0,
       arene,
       episodes,
       entreprises,
       niveaux,
       maxPartiesEnCours,
+      offreCode: args.offreCode ?? null,
+      conditions: args.conditions ?? null,
+      prixCatalogueCents: args.prixCatalogueCents ?? null,
+      remise: args.remise ?? null,
+      nature,
+      motifGratuite: nature === "offerte" ? args.motifGratuite! : null,
       createdBy: args.adminId,
     })
     .returning({ id: orgLicences.id });
@@ -329,3 +393,18 @@ export async function listOrgLicences(organizationId: string): Promise<OrgLicenc
 }
 
 /** État des licences de tous les établissements, pour l'espace administrateur. */
+
+/**
+ * LES LICENCES OFFERTES ET D'ESSAI (/admin/offres, rubrique Gratuités) : l'établissement,
+ * l'offre, le motif et la fin, les plus récentes en tête.
+ */
+export async function listerLicencesGratuites(limite = 50): Promise<(OrgLicence & { organisation: string })[]> {
+  const rows = await db
+    .select({ licence: orgLicences, organisation: organizations.name })
+    .from(orgLicences)
+    .innerJoin(organizations, eq(organizations.id, orgLicences.organizationId))
+    .where(ne(orgLicences.nature, "vendue"))
+    .orderBy(desc(orgLicences.endsAt))
+    .limit(limite);
+  return rows.map((r) => ({ ...versLicence(r.licence), organisation: r.organisation }));
+}

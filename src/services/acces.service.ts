@@ -27,16 +27,18 @@ import {
   entrepriseDuSecteur,
   horsLicence,
   messageNiveauxReserves,
-  REFUS_DE_LA_CLASSE,
+  refusDeLaClasse,
   type HorsLicence,
   type OffreDeLArene,
   type OffreDuDevis,
   type ParametrageDeLicence,
 } from "@/config/tarifs";
 import type { AccesAuxEpisodes } from "@/config/episodes/demos";
+import { lireLaDecouverte } from "@/services/catalogue.service";
 
 export {
   episodeOuvert,
+  estUneDemoPour,
   licencePourLEpisode,
   niveauxDeLEpisode,
   type AccesAuxEpisodes,
@@ -103,7 +105,7 @@ export class NiveauReserveError extends OffreRequiseError {
 
 /** Le refus d'une partie de classe ou d'un concours sans licence de l'arène en cours. */
 export class ClasseReserveError extends OffreRequiseError {
-  constructor(message: string = REFUS_DE_LA_CLASSE) {
+  constructor(message: string = refusDeLaClasse()) {
     super(message);
     this.name = "ClasseReserveError";
   }
@@ -156,7 +158,12 @@ export async function unCompteAvecEpisodes(
  * ne soit pas encore commencée. Même message dans les trois cas.
  */
 export async function verifierLaClasse(organizationId: string): Promise<void> {
-  if (!(await uneOrganisationSousLicence([organizationId]))) throw new ClasseReserveError();
+  if (!(await uneOrganisationSousLicence([organizationId]))) throw await refusDeLaClasseLu();
+}
+
+/** Le refus de la classe, avec les niveaux du solo que la Découverte ouvre aujourd'hui. */
+async function refusDeLaClasseLu(): Promise<ClasseReserveError> {
+  return new ClasseReserveError(refusDeLaClasse((await getPlatformConfig()).vitrineSolo));
 }
 
 /**
@@ -233,7 +240,7 @@ export async function verifierLaLicence(
   demande: { scenarioCode?: string | null; niveau?: number; concours?: boolean },
 ): Promise<void> {
   const lic = await licenceDeLArene(organizationId);
-  if (!lic) throw new ClasseReserveError();
+  if (!lic) throw await refusDeLaClasseLu();
   const { statut, parametrage } = lic;
   const hors = horsLicence(parametrage, {
     entreprise: demande.concours
@@ -387,6 +394,15 @@ export async function suitUneCohorte(userId: string | null): Promise<boolean> {
  *    ouvre tout, même pour qui suit par ailleurs une cohorte restreinte.
  */
 export async function accesAuxEpisodes(args: {
+  userId: string | null;
+  sessionUserId?: string | null;
+}): Promise<AccesAuxEpisodes> {
+  // Les démonstrations de la Découverte (/admin/offres) : ce qui se joue sans licence.
+  const { demos, niveauDesDemos } = await lireLaDecouverte();
+  return { ...(await licenceDesEpisodes(args)), demos, niveauDesDemos };
+}
+
+async function licenceDesEpisodes(args: {
   userId: string | null;
   sessionUserId?: string | null;
 }): Promise<AccesAuxEpisodes> {

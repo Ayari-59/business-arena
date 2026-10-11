@@ -5,10 +5,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/tarifs" }));
+// Le formulaire de devis tire son action, et l'action la base : on ne rend que l'écran.
+vi.mock("@/db", () => ({ db: {} }));
 
-import TarifsPage, { metadata } from "@/app/tarifs/page";
+import { PageDesTarifs } from "@/components/page-des-tarifs";
 import {
+  CATALOGUE_PAR_DEFAUT,
   CONDITIONS_DE_VENTE,
+  descriptionDesTarifs,
+  ligneDePrix,
+  reponseCombien,
   FORMULE_EN_CLASSE,
   FORMULES_ENTREPRISES,
   MENTION_TVA,
@@ -23,8 +29,15 @@ import {
   ARGUMENTS_POUR_LES_ECOLES,
   INTEGRATION_LMS,
   ENT_DU_SECONDAIRE,
+  VARIABLES_PAR_DEFAUT,
+  VARIABLES_DU_CATALOGUE,
 } from "@/config/tarifs";
+import { erreurDeMiseEnAvant, erreursDeLOffre, texteDuBandeau, vueDesTarifs } from "@/config/catalogue";
+import { DevisForm } from "@/components/devis-form";
+import { texteAccuseDevis } from "@/services/devis.service";
 import { VENDEUR } from "@/config/editeur";
+import GRILLE_FIGEE from "../fixtures/grille-d-octobre-2026.json";
+import * as GRILLE from "@/config/tarifs";
 
 /**
  * LA GRILLE TARIFAIRE A UNE SOURCE, ET LA PAGE LA LIT.
@@ -39,6 +52,13 @@ import { VENDEUR } from "@/config/editeur";
  * chaque offre mène à une demande de devis écrite, qu'il n'y a qu'un bouton plein,
  * celui de l'offre Programme, que les mentions comparatives se calculent sur les prix,
  * et que Moodle n'est pas annoncé comme disponible.
+ *
+ * DEPUIS LE CATALOGUE EN BASE (/admin/offres, migration 0041), la page lit le catalogue ;
+ * sa valeur par défaut est la grille de config/tarifs.ts (`CATALOGUE_PAR_DEFAUT`), et la
+ * garde la rend ici. Elle vérifie en plus que le catalogue par défaut tient ses règles
+ * (une seule offre mise en avant, des prix positifs, aucune offre refusée par
+ * `erreursDeLOffre`) et que son rendu est, texte pour texte, la grille figée avant la
+ * migration (`tests/fixtures/grille-d-octobre-2026.json`) : /tarifs n'a pas bougé.
  */
 
 const SRC = join(process.cwd(), "src");
@@ -57,12 +77,87 @@ function fichiers(racine: string): string[] {
   });
 }
 
-const HTML = renderToStaticMarkup(createElement(TarifsPage));
+/**
+ * DEUX RENDUS. La grille CHIFFRÉE (« Afficher les prix sur le site » allumé dans
+ * /admin/offres) garde toutes les gardes d'avant : c'est le retour en arrière promis au
+ * propriétaire, qui doit rester exact. La page PAR DÉFAUT (prix éteints, décision
+ * d'octobre 2026 : « J'aimerais retirer les prix. Les offres se font sur mesure et
+ * aboutissent à une demande de devis. ») ne montre AUCUN montant : voir plus bas.
+ */
+const HTML = renderToStaticMarkup(
+  createElement(PageDesTarifs, {
+    vue: vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT, { prix: true }),
+    bandeau: null,
+    prixPublics: true,
+  }),
+);
+/** La description de /tarifs pour les moteurs, prix allumés. */
+const metadata = { title: "Tarifs", description: descriptionDesTarifs(CATALOGUE_PAR_DEFAUT, true) };
+
+/** La page par défaut : les prix éteints. */
+const HTML_SANS_PRIX = renderToStaticMarkup(
+  createElement(PageDesTarifs, {
+    vue: vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT, { prix: false }),
+    bandeau: "−20 % sur Programme jusqu'au 30 novembre avec le code RENTREE",
+    prixPublics: false,
+  }),
+);
+const TEXTE_SANS_PRIX = HTML_SANS_PRIX.replace(/<[^>]+>/g, " ")
+  .replace(/&#x27;|&apos;/g, "'")
+  .replace(/[\u00a0\u202f]/g, " ")
+  .replace(/\s+/g, " ");
+/** Un montant en euros, un prix annuel, ou l'un des prix de la grille. */
+const UN_MONTANT = /\d[\d\s.,]*\s?(?:€|euros?\b)|€|par an\b|\b(?:290|490|990|1\s?990)\b/i;
 /** Le texte rendu, balises retirées, espaces fines ramenées à l'espace. */
 const TEXTE = HTML.replace(/<[^>]+>/g, " ")
   .replace(/&#x27;|&apos;/g, "'")
   .replace(/[  ]/g, " ")
   .replace(/\s+/g, " ");
+
+describe("le catalogue par défaut", () => {
+  it("rend, texte pour texte, la grille figée avant la migration du catalogue", () => {
+    const figee = GRILLE_FIGEE as Record<string, unknown>;
+    const lu = (k: string): unknown => {
+      const v = (GRILLE as Record<string, unknown>)[k];
+      if (k === "ceQuOuvrentLesEpisodes") return (v as (n: number) => string)(60);
+      if (k === "messageNiveauxReserves") return (v as (x: unknown) => string)({ active: true, entrepriseOuverte: "", niveauMaxAutres: 3 });
+      return v;
+    };
+    for (const k of Object.keys(figee)) expect(lu(k), k).toEqual(figee[k]);
+  });
+
+  it("une seule offre mise en avant, des prix positifs, aucune offre refusée par la règle", () => {
+    expect(erreurDeMiseEnAvant(CATALOGUE_PAR_DEFAUT)).toBeNull();
+    expect(CATALOGUE_PAR_DEFAUT.offres.filter((o) => o.miseEnAvant).map((o) => o.code)).toEqual(["programme"]);
+    for (const o of CATALOGUE_PAR_DEFAUT.offres) {
+      if (o.tarif === "prix") expect(o.prixCents, o.code).toBeGreaterThan(0);
+      else expect(o.prixCents, o.code).toBeNull();
+      expect(erreursDeLOffre(o, CATALOGUE_PAR_DEFAUT, VARIABLES_DU_CATALOGUE), o.code).toEqual([]);
+    }
+    // Deux mises en avant : la règle le voit.
+    const deux = {
+      ...CATALOGUE_PAR_DEFAUT,
+      offres: CATALOGUE_PAR_DEFAUT.offres.map((o) => (o.code === "campus" ? { ...o, miseEnAvant: true } : o)),
+    };
+    expect(erreurDeMiseEnAvant(deux)).toMatch(/Une seule offre/);
+  });
+
+  it("aucun nombre tiré du produit n'est écrit dans un texte du catalogue : les variables le portent", () => {
+    const textes = CATALOGUE_PAR_DEFAUT.offres.flatMap((o) => [
+      o.nom,
+      o.sousTitre,
+      ...o.inclus,
+      ...o.precisions,
+      ...o.formules.flatMap((f) => [f.nom, ...f.inclus]),
+    ]);
+    // Le nombre d'entreprises, d'épisodes, d'ateliers, les niveaux du solo : jamais en dur.
+    const nombres = [VARIABLES_PAR_DEFAUT.entreprises, VARIABLES_PAR_DEFAUT.episodes, VARIABLES_PAR_DEFAUT.ateliers];
+    for (const t of textes) {
+      for (const n of nombres) expect(t, t).not.toMatch(new RegExp(`(?<![\\d.])${n}(?![\\d.])`));
+      expect(t, t).not.toMatch(/niveaux 1 à 3|1 à 6/);
+    }
+  });
+});
 
 describe("la grille tarifaire", () => {
   it("porte les prix validés : Classe 290 €, Programme 990 €, Campus 1 990 € par an, lus par les cartes", () => {
@@ -128,6 +223,15 @@ describe("la grille tarifaire", () => {
       "config/tarifs.ts",
       "config/editeur.ts",
       "app/tarifs/page.tsx",
+      "components/page-des-tarifs.tsx",
+      "components/carte-d-offre.tsx",
+      // config/catalogue.ts porte la règle qui REFUSE ces mots dans une offre
+      // (`erreursDeLOffre`) : il les nomme, il est donc hors de cette liste.
+      "services/catalogue.service.ts",
+      "services/vente.service.ts",
+      "components/formulaire-de-licence.tsx",
+      "components/editeur-d-offre.tsx",
+      "app/admin/offres/page.tsx",
       "app/devis/page.tsx",
       "app/devis/actions.ts",
       "components/devis-form.tsx",
@@ -141,9 +245,14 @@ describe("la grille tarifaire", () => {
 
   it("les prix n'ont qu'une source : ni la page ni aucun autre fichier ne les écrit", () => {
     const page = code(lire("app/tarifs/page.tsx"));
-    expect(page).toContain('from "@/config/tarifs"');
-    expect(page, "un prix écrit dans la page").not.toMatch(/\b(?:290|490|990|1\s?990)\b/);
-    expect(page, "un symbole euro écrit dans la page").not.toContain("€");
+    // La page lit le catalogue (en base, en cache), et ne rend rien d'elle-même.
+    expect(page).toContain('from "@/services/catalogue.service"');
+    expect(page).toContain("lireLEtatDuCatalogue");
+    for (const f of ["app/tarifs/page.tsx", "components/page-des-tarifs.tsx", "components/carte-d-offre.tsx"]) {
+      const c = code(lire(f));
+      expect(c, `un prix écrit dans ${f}`).not.toMatch(/\b(?:290|490|990|1\s?990)\b/);
+      expect(c, `un symbole euro écrit dans ${f}`).not.toContain("€");
+    }
     // Les pages et les composants : ce que lit un visiteur. (Les épisodes ont
     // leurs propres montants, qui n'ont rien d'un tarif.)
     const ailleurs = [...fichiers(join(SRC, "app")), ...fichiers(join(SRC, "components"))]
@@ -238,5 +347,108 @@ describe("la grille tarifaire", () => {
 
   it("le lieu d'hébergement n'est pas écrit (il n'est pas confirmé)", () => {
     expect(TEXTE).not.toMatch(/héberg|Francfort|Union européenne/i);
+  });
+});
+
+describe("les prix éteints (par défaut) : des offres sur mesure, aucun montant sur les pages publiques", () => {
+  it("la page /tarifs rendue ne porte aucun montant, ni mention calculée sur les prix ; chaque offre mène au devis", () => {
+    expect(TEXTE_SANS_PRIX, TEXTE_SANS_PRIX.match(UN_MONTANT)?.[0]).not.toMatch(UN_MONTANT);
+    expect(TEXTE_SANS_PRIX).not.toMatch(/Dès \d+ (?:groupes|entreprises)|moins cher|plus avantageux/);
+    expect(TEXTE_SANS_PRIX).toContain("Construisons votre offre");
+    expect(TEXTE_SANS_PRIX).toContain("Sur devis");
+    expect(TEXTE_SANS_PRIX).toContain("Gratuit");
+    // Un seul bouton plein, celui de l'offre mise en avant ; un devis par offre.
+    expect(HTML_SANS_PRIX.match(/\bbouton-plein\b/g) ?? []).toHaveLength(1);
+    for (const code of ["classe", "programme", "campus", "reseau", "episodes", "entreprise"]) {
+      expect(HTML_SANS_PRIX).toContain(`href="/devis?offre=${code}"`);
+    }
+    // Le bandeau garde un pourcentage, jamais un montant.
+    expect(TEXTE_SANS_PRIX).toContain("−20 % sur Programme");
+  });
+
+  it("la vue publique ne reçoit aucun montant : prix, mention calculée, option, bande des épisodes", () => {
+    const vue = vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT, { prix: false });
+    expect(vue.cartes.map((c) => c.prixCents)).toEqual(vue.cartes.map(() => null));
+    expect(vue.cartes.map((c) => c.mention)).toEqual(vue.cartes.map(() => null));
+    expect(JSON.stringify(vue), JSON.stringify(vue).match(UN_MONTANT)?.[0]).not.toMatch(UN_MONTANT);
+    // Et la grille chiffrée, elle, porte bien les prix (le retour en arrière reste exact).
+    expect(vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT).cartes.map((c) => c.prixCents)).toEqual([
+      null,
+      PRIX.classe * 100,
+      PRIX.programme * 100,
+      PRIX.campus * 100,
+    ]);
+  });
+
+  it("les phrases tirées de la grille (bandes, guide, métadonnées, bandeau en euros) n'ont aucun montant", () => {
+    for (const t of [
+      ligneDePrix(CATALOGUE_PAR_DEFAUT, false),
+      reponseCombien(CATALOGUE_PAR_DEFAUT, false),
+      descriptionDesTarifs(CATALOGUE_PAR_DEFAUT, false),
+    ]) {
+      expect(t, t).not.toMatch(UN_MONTANT);
+      expect(t).toMatch(/sur mesure/);
+    }
+    const promo = {
+      id: "x",
+      code: "FIDELE",
+      typeRemise: "montant" as const,
+      valeur: 15000,
+      offres: null,
+      debut: null,
+      fin: new Date("2026-12-01T00:00:00+01:00"),
+      utilisationsMax: null,
+      utilisations: 0,
+      unParEtablissement: true,
+      actif: true,
+      affiche: true,
+    };
+    expect(texteDuBandeau(promo, (c) => c, false)).toBe("Une remise sur toutes les offres jusqu'au 30 novembre avec le code FIDELE");
+    expect(texteDuBandeau(promo, (c) => c, true)).toMatch(/^−150\s€/);
+  });
+
+  it("la confirmation du devis et l'accusé au demandeur disent le code sans montant", () => {
+    const html = renderToStaticMarkup(
+      createElement(DevisForm, {
+        offres: [{ code: "programme", offre: "Offre Programme", organisation: "École", exempleOrganisation: "", identifiant: "UAI" }],
+        offreInitiale: "programme",
+        entreprises: [],
+        niveaux: [],
+        vendeur: VENDEUR.nom,
+        mentionTva: MENTION_TVA,
+        contact: VENDEUR.contact,
+        initial: {
+          error: null,
+          values: null,
+          ok: {
+            email: "a@b.test",
+            offre: "programme",
+            accuseEnvoye: true,
+            promo: { code: "RENTREE", montants: false, prixCatalogueCents: null, remiseCents: null, remiseLibelle: "", prixRemiseCents: null },
+          },
+        },
+      }),
+    ).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    expect(html).toContain("Code RENTREE pris en compte : la remise sera appliquée à votre devis.");
+    expect(html.replace(MENTION_TVA, "")).not.toMatch(UN_MONTANT);
+    const accuse = texteAccuseDevis(
+      {
+        offre: "programme",
+        libelles: { offre: "Offre Programme", organisation: "École", exempleOrganisation: "", identifiant: "UAI" },
+        nom: "Claire",
+        fonction: "Directrice",
+        organisation: "École",
+        identifiant: "",
+        effectif: null,
+        email: "a@b.test",
+        message: "",
+        ip: null,
+        promo: { id: "x", code: "RENTREE", cle: null, devis: { prixCatalogueCents: 99000, remiseCents: 19800, remiseLibelle: "−20 %", prixRemiseCents: 79200 } },
+        montantsPublics: false,
+      },
+      VENDEUR.contact,
+    ).texte;
+    expect(accuse).toContain("Code promo RENTREE pris en compte");
+    expect(accuse, accuse.match(UN_MONTANT)?.[0]).not.toMatch(UN_MONTANT);
   });
 });

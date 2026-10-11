@@ -4,14 +4,9 @@ import { DevisForm } from "@/components/devis-form";
 import { PiedDePage } from "@/components/pied-de-page";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
-import {
-  ENTREPRISES,
-  estUneOffreDuDevis,
-  LIBELLES_DU_DEVIS,
-  MENTION_TVA,
-  NIVEAUX_DE_L_ARENE,
-  OFFRES_DU_DEVIS,
-} from "@/config/tarifs";
+import { ENTREPRISES, libellesDuDevisDe, MENTION_TVA, NIVEAUX_DE_L_ARENE } from "@/config/tarifs";
+import { offresDuDevis } from "@/config/catalogue";
+import { lireLeCatalogue } from "@/services/catalogue.service";
 import { VENDEUR } from "@/config/editeur";
 import { LIEN_CONTACT } from "@/config/navigation";
 
@@ -27,8 +22,8 @@ export const metadata: Metadata = {
  *
  * Décision du propriétaire : « la vente se fait sur devis », pour toutes les offres.
  * Chaque carte de /tarifs mène ici avec son offre (`?offre=classe|programme|campus|reseau|
- * episodes|entreprise`) ; une adresse sans offre, ou avec une offre inconnue, pré-remplit
- * Classe.
+ * episodes|entreprise`, ou toute offre du catalogue de /admin/offres) ; une adresse sans
+ * offre, ou avec une offre inconnue, pré-remplit la première de la liste (Classe).
  * Le rendez-vous téléphonique reste proposé, en second.
  */
 export default async function DevisPage({
@@ -37,7 +32,8 @@ export default async function DevisPage({
   searchParams: Promise<{ offre?: string }>;
 }) {
   const { offre } = await searchParams;
-  const offreInitiale = estUneOffreDuDevis(offre) ? offre : "classe";
+  const offres = offresDuDevis(await lireLeCatalogue()).map((o) => ({ code: o.code, ...libellesDuDevisDe(o) }));
+  const offreInitiale = offres.some((o) => o.code === offre) ? offre! : (offres[0]?.code ?? "");
   return (
     <>
       <main id="main">
@@ -48,7 +44,7 @@ export default async function DevisPage({
         />
         <div className={`${COLONNE_DE_PAGE} pb-12`}>
           <DevisForm
-            offres={OFFRES_DU_DEVIS.map((code) => ({ code, ...LIBELLES_DU_DEVIS[code] }))}
+            offres={offres}
             offreInitiale={offreInitiale}
             entreprises={ENTREPRISES.map((e) => ({ code: e.code, nom: e.nom }))}
             niveaux={NIVEAUX_DE_L_ARENE}

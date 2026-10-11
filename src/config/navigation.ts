@@ -73,15 +73,18 @@ export const LIEN_CONTACT: LienDeMenu = {
 };
 
 /**
- * LES TARIFS. Visibles dans la barre sur grand écran et cités par le pied de page :
- * le visiteur qui veut savoir combien ça coûte ne doit pas avoir à ouvrir le menu.
+ * LES OFFRES. Visibles dans la barre sur grand écran et cités par le pied de page :
+ * le visiteur qui veut savoir ce qui se vend ne doit pas avoir à ouvrir le menu.
  * L'aide ne nomme pas les offres (leurs noms vivent dans config/tarifs.ts, qui tire le
- * registre des scénarios ; ce plan est lu par le menu, côté navigateur).
+ * registre des scénarios ; ce plan est lu par le menu, côté navigateur). Décision du
+ * propriétaire (octobre 2026) : « J'aimerais retirer les prix. Les offres se font sur
+ * mesure et aboutissent à une demande de devis. » Le libellé devient « Offres » ; l'adresse
+ * /tarifs reste (liens partagés, référencement).
  */
 export const LIEN_TARIFS_DU_MENU: LienDeMenu = {
   href: "/tarifs",
-  libelle: "Tarifs",
-  aide: "Gratuit pour découvrir en solo ; sur devis pour faire cours, avec les deux offres de l'arène, et pour les épisodes manager.",
+  libelle: "Offres",
+  aide: "Gratuit pour découvrir en solo ; sur mesure et sur devis pour faire cours, et pour les épisodes manager.",
   enTete: true,
 };
 
@@ -220,10 +223,10 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
   {
     // LES TARIFS VIVENT AVEC LE CONTACT : la grille dit ce qui est gratuit et
     // ce qui se vend, et tout se vend sur devis (le site n'encaisse rien). Les
-    // deux entrées servent le même moment. « Tarifs » reste aussi visible dans la
+    // deux entrées servent le même moment. « Offres » reste aussi visible dans la
     // barre sur grand écran (audit C-07 : la page était introuvable).
     code: "contact",
-    titre: "Tarifs et contact",
+    titre: "Offres et contact",
     liens: [LIEN_TARIFS_DU_MENU, LIEN_CONTACT],
   },
 ];

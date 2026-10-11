@@ -13,3 +13,4 @@ export * from "./integrations";
 export * from "./episodes";
 export * from "./lti";
 export * from "./saml";
+export * from "./offres";

@@ -1,6 +1,6 @@
 import { ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
-import { FAMILLES, NOMBRE_D_EPISODES, SECTEURS } from "@/config/episodes/familles";
+import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { EPISODES_DE_DEMO, NIVEAU_DES_DEMOS } from "@/config/episodes/demos";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { QUI_FACTURE } from "@/config/editeur";
@@ -12,8 +12,21 @@ import {
   type Sector,
 } from "@/config/scenarios/registry";
 import type { VitrineSolo } from "@/config/vitrine-solo";
-import { NIVEAU_MAX } from "@/config/vitrine-solo";
-import { formatEuro } from "@/lib/format";
+import { NIVEAU_MAX, VITRINE_SOLO_PAR_DEFAUT } from "@/config/vitrine-solo";
+import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
+import {
+  parametresAreneDe,
+  palierDeLArene,
+  vueDesTarifs,
+  nomDansLeDevis,
+  type Catalogue,
+  type CompositionDeModule,
+  type ModuleDuCatalogue,
+  type OffreDuCatalogue,
+  type ParametresArene,
+  euros,
+} from "@/config/catalogue";
+import { DECOUVERTE_PAR_DEFAUT, niveauMaxSansLicence, type ReglageDeLaDecouverte } from "@/config/decouverte";
 
 /**
  * LA GRILLE TARIFAIRE, EN UN SEUL ENDROIT : LES NOMS, LES PRIX, LES TEXTES.
@@ -49,6 +62,13 @@ import { formatEuro } from "@/lib/format";
  *
  * Aucun chiffre de configuration dans la prose (CLAUDE.md) : prix, taux, délais, nombres
  * d'épisodes, d'ateliers et d'entreprises se lisent de la donnée.
+ *
+ * DEPUIS LE CATALOGUE EN BASE (migration 0041, /admin/offres) : les offres, leurs prix,
+ * leurs textes et leurs modules, la Découverte et les codes promo s'éditent dans
+ * l'administration et se lisent au catalogue (services/catalogue.service.ts). Ce module en
+ * garde la VALEUR PAR DÉFAUT (`CATALOGUE_PAR_DEFAUT`, ce que la migration a versé) et ce
+ * qui ne s'édite pas : les noms cités par les murs de licence, les textes juridiques
+ * (franchise de TVA, conditions de vente), les règles de la licence.
  *
  * Ce module est lu par des pages et des services ; il ne l'est jamais par un composant
  * client (il tire le registre des scénarios). Un composant client reçoit le texte dont il
@@ -100,7 +120,10 @@ export const MARQUE_DES_EPISODES = `${OFFRES.episodes.nom} · sur devis`;
  */
 export const MENTION_TVA = "TVA non applicable, art. 293 B du CGI";
 
-/** Les trois offres de l'arène, par an : des prix de référence, vendus sur devis. */
+/**
+ * Les trois offres de l'arène, par an : des prix de référence, vendus sur devis. Valeur
+ * par défaut du catalogue : le prix en vigueur se lit au catalogue (/admin/offres).
+ */
 export const PRIX: Record<OffreDeLArene, number> = {
   classe: 290,
   programme: 990,
@@ -150,15 +173,10 @@ export const PARAMETRAGE_DES_OFFRES: Record<OffreDeLArene, ParametrageDeLOffre> 
 };
 
 /** Les niveaux de l'arène ouverts dans l'offre gratuite ; les suivants sont payants. */
-export const DERNIER_NIVEAU_GRATUIT = 3;
+export const DERNIER_NIVEAU_GRATUIT = VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres;
 
 /** Les tours d'une partie complète en solo. */
 export const TOURS_DE_LA_PARTIE_SOLO = 6;
-
-/** Une démonstration d'épisode manager par métier des épisodes. */
-export const EPISODES_DE_DEMONSTRATION = SECTEURS.filter((s) =>
-  FAMILLES.some((f) => f.secteur === s.code),
-).length;
 
 /** Les réseaux d'établissements passent sur devis à partir de ce nombre. */
 export const SEUIL_RESEAU_ETABLISSEMENTS = 10;
@@ -197,11 +215,6 @@ export const NIVEAUX_PAYANTS = {
   a: DERNIER_NIVEAU,
   noms: enumeration(nomsDesNiveaux(DERNIER_NIVEAU_GRATUIT + 1, DERNIER_NIVEAU)),
 };
-
-/** « 290 € » : un prix affiché, au format de tout le site. */
-export const prixAffiche = (montant: number) => formatEuro(montant);
-/** « 290 € par an ». */
-export const prixParAn = (montant: number) => `${prixAffiche(montant)} par an`;
 
 /** Les ateliers adossés au référentiel d'un diplôme, et ces diplômes (une option compte pour son diplôme). */
 export const ATELIERS_A_REFERENTIEL = ATELIERS.filter((a) => a.formations.length > 0);
@@ -265,27 +278,28 @@ export interface ParametrageDeLicence {
 }
 
 /**
- * LE PARAMÉTRAGE QU'ON ENREGISTRE POUR UNE OFFRE, à partir de ce que l'admin a choisi
- * dans /admin. Lève, avec une phrase lisible, si un choix que l'offre demande manque :
- * l'entreprise (Classe, Programme), le niveau (Classe), le plafond d'enseignants
- * (Programme : il est fixé au devis).
+ * LE PARAMÉTRAGE QU'ON ENREGISTRE POUR UNE OFFRE DU CATALOGUE, à partir de ses paramètres
+ * d'arène et de ce que l'admin a choisi dans /admin. Lève, avec une phrase lisible, si un
+ * choix que l'offre demande manque : l'entreprise (une au choix), le niveau (un au choix),
+ * le plafond d'enseignants (fixé au devis). Le palier enregistré (Classe, Programme,
+ * Campus) est celui que dessinent les paramètres (`palierDeLArene`).
  */
-export function parametrageDeLOffre(
-  offre: OffreDeLArene,
+export function parametrageDepuisLOffre(
+  nom: string,
+  regle: ParametresArene,
   choix: { entreprise?: string | null; niveau?: number | null; maxEnseignants?: number | null },
 ): ParametrageDeLicence {
-  const regle = PARAMETRAGE_DES_OFFRES[offre];
   let entreprises: string[] | null = null;
   if (regle.entreprises === "une") {
     if (!choix.entreprise || !ENTREPRISES.some((e) => e.code === choix.entreprise)) {
-      throw new Error(`L'offre ${OFFRES[offre].nom} porte une entreprise : choisissez-la.`);
+      throw new Error(`L'offre ${nom} porte une entreprise : choisissez-la.`);
     }
     entreprises = [choix.entreprise];
   }
   let niveaux: number[] | null = null;
   if (regle.niveaux === "un") {
     if (!choix.niveau || !NIVEAUX.some((p) => p.level === choix.niveau)) {
-      throw new Error(`L'offre ${OFFRES[offre].nom} porte un niveau : choisissez-le.`);
+      throw new Error(`L'offre ${nom} porte un niveau : choisissez-le.`);
     }
     niveaux = [choix.niveau];
   }
@@ -293,14 +307,22 @@ export function parametrageDeLOffre(
   if (regle.enseignants === "devis") {
     if (!choix.maxEnseignants || !Number.isInteger(choix.maxEnseignants) || choix.maxEnseignants < 1) {
       throw new Error(
-        `L'offre ${OFFRES[offre].nom} porte le nombre d'enseignants et d'intervenants fixé au devis : indiquez-le.`,
+        `L'offre ${nom} porte le nombre d'enseignants et d'intervenants fixé au devis : indiquez-le.`,
       );
     }
     maxEnseignants = choix.maxEnseignants;
   } else {
     maxEnseignants = regle.enseignants;
   }
-  return { offre, entreprises, niveaux, maxEnseignants, maxPartiesEnCours: regle.partiesEnCours };
+  return { offre: palierDeLArene(regle), entreprises, niveaux, maxEnseignants, maxPartiesEnCours: regle.partiesEnCours };
+}
+
+/** Le paramétrage d'une des trois offres de la grille (ses paramètres par défaut). */
+export function parametrageDeLOffre(
+  offre: OffreDeLArene,
+  choix: { entreprise?: string | null; niveau?: number | null; maxEnseignants?: number | null },
+): ParametrageDeLicence {
+  return { ...parametrageDepuisLOffre(OFFRES[offre].nom, PARAMETRAGE_DES_OFFRES[offre], choix), offre };
 }
 
 /** L'offre de l'arène au-dessus : Classe, puis Programme, puis Campus. */
@@ -444,8 +466,8 @@ export const OFFRES_DU_DEVIS: readonly OffreDuDevis[] = [
 export const estUneOffreDuDevis = (v: unknown): v is OffreDuDevis =>
   typeof v === "string" && (OFFRES_DU_DEVIS as readonly string[]).includes(v);
 
-/** L'adresse de la demande de devis, l'offre pré-remplie. */
-export const lienDuDevis = (offre: OffreDuDevis): string => `/devis?offre=${offre}`;
+/** L'adresse de la demande de devis, l'offre pré-remplie (une offre du catalogue, par son code). */
+export const lienDuDevis = (offre: string): string => `/devis?offre=${offre}`;
 
 /**
  * CE QUE LE FORMULAIRE DEMANDE, SELON LE PUBLIC. Une école ou un lycée a un UAI et compte
@@ -511,12 +533,402 @@ export const LIBELLES_DU_DEVIS: Record<OffreDuDevis, LibellesDuDevis> = {
   },
 };
 
+/** Ce que le formulaire demande, selon le public de l'offre (`formulaire` au catalogue). */
+const PAR_FORMULAIRE: Record<OffreDuCatalogue["formulaire"], Omit<LibellesDuDevis, "offre">> = {
+  etablissement: { ...ENSEIGNEMENT },
+  reseau: {
+    ...ENSEIGNEMENT,
+    organisation: LIBELLES_DU_DEVIS.reseau.organisation,
+    exempleOrganisation: LIBELLES_DU_DEVIS.reseau.exempleOrganisation,
+    effectif: LIBELLES_DU_DEVIS.reseau.effectif!,
+  },
+  entreprise: {
+    organisation: LIBELLES_DU_DEVIS.entreprise.organisation,
+    exempleOrganisation: LIBELLES_DU_DEVIS.entreprise.exempleOrganisation,
+    identifiant: LIBELLES_DU_DEVIS.entreprise.identifiant,
+    effectif: LIBELLES_DU_DEVIS.entreprise.effectif!,
+  },
+};
+
+/**
+ * LES LIBELLÉS DU FORMULAIRE POUR UNE OFFRE DU CATALOGUE : le public (une école, un réseau,
+ * une entreprise), et ce que son arène se paramètre à l'achat (l'entreprise, le niveau ;
+ * pas d'effectif pour une offre d'un seul enseignant). Les offres de la grille gardent
+ * leur exemple d'organisation.
+ */
+export function libellesDuDevisDe(o: OffreDuCatalogue): LibellesDuDevis {
+  const p = parametresAreneDe(o);
+  const { effectif, ...base } = PAR_FORMULAIRE[o.formulaire];
+  const l: LibellesDuDevis = {
+    ...base,
+    offre: nomDansLeDevis(o),
+    exempleOrganisation: estUneOffreDuDevis(o.code)
+      ? LIBELLES_DU_DEVIS[o.code].exempleOrganisation
+      : base.exempleOrganisation,
+  };
+  if (effectif && !(o.formulaire === "etablissement" && p?.enseignants === 1)) l.effectif = effectif;
+  if (p?.entreprises === "une") l.entreprise = true;
+  if (p?.niveaux === "un") l.niveau = true;
+  return l;
+}
+
+/* ---------------------------------------------------------------------------
+ * LE CATALOGUE PAR DÉFAUT : LA GRILLE D'OCTOBRE 2026, TELLE QUE LA BASE LA REÇOIT.
+ *
+ * Demande du propriétaire : « gérer l'offre depuis le panneau admin ». Le catalogue vit en
+ * base (migration 0041, /admin/offres, services/catalogue.service.ts) ; la grille
+ * ci-dessous en est la VALEUR PAR DÉFAUT (base vide, panne de lecture, tests) et ce que
+ * la migration y a versé, texte pour texte (tests/integration/catalogue-offres.test.ts
+ * compare la base migrée à cette grille, et tests/architecture/tarifs.test.ts compare
+ * son rendu à la grille figée `tests/fixtures/grille-d-octobre-2026.json`).
+ *
+ * Les textes portent des VARIABLES (`{entreprises}`, `{demos}`…) que le rendu remplit
+ * (`variablesDuCatalogue`) : un nombre tiré du registre ou d'un réglage ne s'écrit pas
+ * en base. Les textes juridiques (franchise de TVA, vendeur, conditions de vente) restent
+ * ici et dans config/editeur.ts : ils ne s'éditent pas depuis /admin.
+ * ------------------------------------------------------------------------- */
+
 /** Le bouton de chaque carte : une demande de devis écrite. */
 export const LIBELLE_DU_DEVIS = "Demander un devis";
 
+/** Ce que les offres de l'arène n'ouvrent pas, dit sur chaque carte. */
+export const SANS_LES_EPISODES = "Sans les épisodes manager, qui se proposent à part, sur devis.";
+
+/** Les niveaux de l'arène, « 1 à 6 ». */
+const TOUS_LES_NIVEAUX = `${PREMIER_NIVEAU} à ${DERNIER_NIVEAU}`;
+
+/** Ce que toute offre de l'arène ouvre en cours : la partie de classe et son suivi. */
+const LA_PARTIE_DE_CLASSE =
+  "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.";
+const LE_SUIVI =
+  "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.";
+
+/** L'intégration aux plateformes de cours (src/lti) : en ligne, décrite sur /integration. */
+export const INTEGRATION_LMS = {
+  nom: "Intégration à Moodle, Canvas, Blackboard, Brightspace (LTI 1.3)",
+  etat: "Incluse",
+  lien: { href: "/integration", libelle: "Voir l'intégration" },
+} as const;
+
+/** L'ENT du secondaire : rien n'est promis, rien n'est daté. */
+export const ENT_DU_SECONDAIRE = { nom: "ENT du secondaire (GAR)", etat: "À l'étude" } as const;
+
+/**
+ * LES VARIABLES DES TEXTES DU CATALOGUE, et ce qu'elles valent : le registre (entreprises,
+ * niveaux, épisodes, ateliers), les conditions, et le réglage de la Découverte (niveaux
+ * ouverts en solo, démonstrations). /admin/offres les liste à côté des champs.
+ */
+export function variablesDuCatalogue(d: ReglageDeLaDecouverte = DECOUVERTE_PAR_DEFAUT): Record<string, string> {
+  const max = niveauMaxSansLicence(d);
+  return {
+    entreprises: String(ENTREPRISES.length),
+    niveaux: TOUS_LES_NIVEAUX,
+    niveauxDecouverte: `${PREMIER_NIVEAU} à ${max}`,
+    nomsDesNiveauxDecouverte: enumeration(nomsDesNiveaux(PREMIER_NIVEAU, max)),
+    toursSolo: String(TOURS_DE_LA_PARTIE_SOLO),
+    demos: String(d.demos.length),
+    niveauDesDemos: NIVEAUX_DES_EPISODES.find((n) => n.code === d.niveauDesDemos)?.nom ?? d.niveauDesDemos,
+    episodes: String(NOMBRE_D_EPISODES),
+    ateliers: String(ATELIERS.length),
+    ateliersReferentiel: String(ATELIERS_A_REFERENTIEL.length),
+    diplomes: DIPLOMES_DES_ATELIERS.map((x) => x.sigle).join(", "),
+    entrepriseDesConcours: nomDeLEntreprise(ENTREPRISE_DES_CONCOURS),
+    debutAnneeScolaire: CONDITIONS.anneeScolaire.debut,
+    finAnneeScolaire: CONDITIONS.anneeScolaire.fin,
+    seuilReseau: String(SEUIL_RESEAU_ETABLISSEMENTS),
+    managers: String(COHORTE.managers),
+    episodesMin: String(COHORTE.episodesMin),
+    episodesMax: String(COHORTE.episodesMax),
+    lesOffresDeLArene: LES_OFFRES_DE_L_ARENE,
+  };
+}
+
+/** Les noms des variables, pour la validation et l'aide de /admin/offres. */
+export const VARIABLES_DU_CATALOGUE: readonly string[] = Object.keys(variablesDuCatalogue());
+
+/** Les paramètres de l'arène des trois offres de la grille. */
+const arene = (code: OffreDeLArene): CompositionDeModule => ({ module: "arene", parametres: { ...PARAMETRAGE_DES_OFFRES[code] } });
+
+const COMMUN = {
+  libelleTarif: null,
+  precisions: [] as string[],
+  formules: [] as { nom: string; inclus: string[] }[],
+  mention: null,
+  visible: true,
+  miseEnAvant: false,
+  devisLibelle: null,
+  formulaire: "etablissement" as const,
+};
+
+const devis = (code: string) => ({ libelle: LIBELLE_DU_DEVIS, cible: `/devis?offre=${code}` });
+const option = (
+  code: string,
+  ordre: number,
+  nom: string,
+  tarif: OffreDuCatalogue["tarif"],
+  modules: string[],
+  libelleTarif: string | null = null,
+): OffreDuCatalogue => ({
+  ...COMMUN,
+  code,
+  rubrique: "option",
+  public: "enseignement",
+  nom,
+  sousTitre: "",
+  tarif,
+  prixCents: null,
+  libelleTarif,
+  inclus: [],
+  modules: modules.map((module) => ({ module })),
+  ordre,
+  bouton: { libelle: "", cible: "" },
+});
+
+/** Les modules de la grille : deux à effet (l'arène, les épisodes), les autres descriptifs. */
+export const MODULES_PAR_DEFAUT: readonly ModuleDuCatalogue[] = [
+  {
+    code: "arene",
+    nom: "L'arène",
+    description:
+      "Le simulateur en classe : parties de classe, suivi, ateliers, concours, relevé. Se paramètre : entreprises, niveaux, enseignants, parties en cours.",
+    effet: "arene",
+    actif: true,
+    ordre: 10,
+  },
+  {
+    code: "episodes",
+    nom: OFFRES.episodes.nom,
+    description: "Les trimestres joués dans la peau d'un manager, au-delà des démonstrations, et le profil décisionnel.",
+    effet: "episodes",
+    actif: true,
+    ordre: 20,
+  },
+  {
+    code: "lti",
+    nom: "Intégration LMS",
+    description: "L'activité placée dans Moodle, Canvas, Blackboard ou Brightspace (LTI 1.3).",
+    effet: null,
+    actif: true,
+    ordre: 30,
+  },
+  {
+    code: "renater",
+    nom: "Connexion établissement",
+    description: "Se connecter avec son établissement, par la fédération d'identités RENATER.",
+    effet: null,
+    actif: true,
+    ordre: 40,
+  },
+  {
+    code: "accompagnement",
+    nom: "Accompagnement",
+    description: "La prise en main, la formation d'une équipe pédagogique, l'animation sur site.",
+    effet: null,
+    actif: true,
+    ordre: 50,
+  },
+  {
+    code: "concours",
+    nom: "Compétition inter-établissements",
+    description: "Un concours entre plusieurs écoles ou campus, organisé avec vous.",
+    effet: null,
+    actif: true,
+    ordre: 60,
+  },
+];
+
+/** Les offres de la grille, dans l'ordre de /tarifs. */
+export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
+  {
+    ...COMMUN,
+    code: "decouverte",
+    rubrique: "arene",
+    public: "enseignement",
+    nom: OFFRES.decouverte.nom,
+    sousTitre: "Sans compte, pour voir le simulateur de près.",
+    tarif: "gratuit",
+    prixCents: null,
+    inclus: [
+      "L'arène en solo sur les {entreprises} entreprises, niveaux {niveauxDecouverte} ({nomsDesNiveauxDecouverte}), en partie complète de {toursSolo} tours.",
+      "Les fiches notions, le manuel et le guide.",
+      "Un épisode manager de démonstration par métier ({demos} sur {episodes}), au niveau {niveauDesDemos}, avec son bilan.",
+    ],
+    precisions: ["Les parties de classe et les concours commencent avec {lesOffresDeLArene}."],
+    modules: [],
+    ordre: 10,
+    bouton: { libelle: "Tester le simulateur", cible: "/jouer" },
+  },
+  {
+    ...COMMUN,
+    code: "classe",
+    rubrique: "arene",
+    public: "enseignement",
+    nom: OFFRES.classe.nom,
+    sousTitre: "Un cours, un groupe : une entreprise et un niveau, choisis à l'achat.",
+    tarif: "prix",
+    prixCents: PRIX.classe * 100,
+    inclus: [
+      "Une entreprise au choix parmi les {entreprises}, et un niveau au choix de {niveaux}, fixés pour l'année.",
+      "Autant de parties que vous voulez dans l'année avec ce paramétrage, une à la fois.",
+      LA_PARTIE_DE_CLASSE,
+      LE_SUIVI,
+      "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
+      "Un concours à la place d'une partie, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
+    ],
+    precisions: [SANS_LES_EPISODES, "À l'année, pour un enseignant."],
+    modules: [arene("classe")],
+    ordre: 20,
+    bouton: devis("classe"),
+  },
+  {
+    ...COMMUN,
+    code: "programme",
+    rubrique: "arene",
+    public: "enseignement",
+    nom: OFFRES.programme.nom,
+    sousTitre:
+      "Un programme (Bachelor, Grande École, MSc, BTS…) : toutes ses promotions, tous les niveaux, une entreprise.",
+    tarif: "prix",
+    prixCents: PRIX.programme * 100,
+    mention: { mode: "calculee", reference: "classe", unite: "groupes" },
+    inclus: [
+      "Une entreprise au choix parmi les {entreprises}, choisie à l'achat, à tous les niveaux, de {niveaux}.",
+      "Toutes les promotions et tous les groupes du programme, plusieurs parties en même temps.",
+      "L'équipe pédagogique et les intervenants du programme, au nombre fixé au devis.",
+      LA_PARTIE_DE_CLASSE,
+      LE_SUIVI,
+      "Les ateliers clés en main de cette entreprise, avec déroulé, corrigés et dossier enseignant.",
+      "Les concours et le classement à l'IPG, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
+    ],
+    precisions: [SANS_LES_EPISODES, "À l'année, pour l'équipe d'un programme."],
+    modules: [arene("programme")],
+    ordre: 30,
+    miseEnAvant: true,
+    bouton: devis("programme"),
+  },
+  {
+    ...COMMUN,
+    code: "campus",
+    rubrique: "arene",
+    public: "enseignement",
+    nom: OFFRES.campus.nom,
+    sousTitre: "Toute l'école : les {entreprises} entreprises, tous les programmes, enseignants et intervenants sans limite.",
+    tarif: "prix",
+    prixCents: PRIX.campus * 100,
+    mention: { mode: "calculee", reference: "programme", unite: "entreprises" },
+    inclus: [
+      "Les {entreprises} entreprises, à tous les niveaux, dans tous les programmes.",
+      "Des groupes, des enseignants et des intervenants sans limite.",
+      "Les {ateliers} ateliers clés en main, avec déroulé, corrigés et dossier enseignant, dont {ateliersReferentiel} adossés au référentiel d'un diplôme ({diplomes}).",
+      "Les concours et le classement à l'IPG.",
+      "Un référent qui gère les accès.",
+      "Une facture au nom de l'école.",
+      "Une licence par année scolaire, du {debutAnneeScolaire} au {finAnneeScolaire}.",
+    ],
+    precisions: [
+      SANS_LES_EPISODES,
+      "Sur devis, puis bon de commande ou mandat administratif ; Chorus Pro pour les factures publiques.",
+    ],
+    modules: [arene("campus")],
+    ordre: 40,
+    bouton: devis("campus"),
+  },
+  {
+    ...COMMUN,
+    code: "reseau",
+    rubrique: "reseau",
+    public: "enseignement",
+    nom: OFFRES.reseau.nom,
+    sousTitre: "Groupes scolaires, académies, régions, réseaux d'écoles : à partir de {seuilReseau} établissements, sur devis.",
+    tarif: "devis",
+    prixCents: null,
+    inclus: [],
+    modules: [arene("campus")],
+    ordre: 50,
+    bouton: devis("reseau"),
+    formulaire: "reseau",
+  },
+  {
+    ...COMMUN,
+    code: "episodes",
+    rubrique: "episodes",
+    public: "enseignement",
+    nom: OFFRES.episodes.nom,
+    sousTitre: "En classe et en école de commerce",
+    tarif: "devis",
+    prixCents: null,
+    inclus: [
+      "Les {episodes} épisodes, choisis par l'enseignant pour chaque groupe.",
+      "Des cohortes créées depuis l'espace enseignant : les étudiants entrent par un code, sans compte.",
+      "La vue de l'animateur, et une fiche de débrief pour les épisodes en classe.",
+    ],
+    modules: [{ module: "episodes" }],
+    ordre: 60,
+    bouton: devis("episodes"),
+    devisLibelle: `${OFFRES.episodes.nom}, en cours ou en école`,
+  },
+  {
+    ...COMMUN,
+    code: "entreprise",
+    rubrique: "episodes",
+    public: "entreprises",
+    nom: "Entreprises et organismes de formation",
+    sousTitre: "",
+    tarif: "devis",
+    prixCents: null,
+    inclus: [],
+    formules: [
+      {
+        nom: "Parcours manager",
+        inclus: [
+          "Les {episodes} épisodes, en autonomie.",
+          "Le profil décisionnel, et la recommandation du prochain épisode.",
+          "Sans compte à créer : un code de cohorte pour entrer, un code de reprise pour changer d'appareil.",
+        ],
+      },
+      {
+        nom: "Cohorte animée",
+        inclus: [
+          "{managers} managers, {episodesMin} à {episodesMax} épisodes choisis, un code de cohorte.",
+          "La vue de l'animateur.",
+          "Une demi-journée de lancement, et un débrief animé à distance.",
+        ],
+      },
+      {
+        nom: "Organisme de formation",
+        inclus: ["Des animateurs sans limite, des cohortes à volonté.", "Le guide de débrief des {episodes} épisodes."],
+      },
+    ],
+    modules: [{ module: "episodes" }],
+    ordre: 70,
+    bouton: devis("entreprise"),
+    devisLibelle: `${OFFRES.episodes.nom}, pour une entreprise ou un organisme de formation`,
+    formulaire: "entreprise",
+  },
+  // Les options : courtes, sans prix ; la seule gratuite est le rendez-vous qui existe.
+  // L'intégration LTI 1.3 est incluse (src/lti) ; l'ENT du secondaire (GAR) est à l'étude.
+  option("prise-en-main", 100, "Un rendez-vous téléphonique de prise en main, à la demande", "gratuit", ["accompagnement"]),
+  option("formation-equipe", 110, "Formation d'une équipe pédagogique", "devis", ["accompagnement"]),
+  option("animation-sur-site", 120, "Animation sur site", "devis", ["accompagnement"]),
+  option("scenario-sur-mesure", 130, "Scénario sur mesure : une entreprise fictive à l'image de la vôtre", "devis", []),
+  option("competition-inter-etablissements", 140, "Compétition inter-établissements", "devis", ["concours"]),
+  option("integration-lms", 150, INTEGRATION_LMS.nom, "inclus", ["lti"], INTEGRATION_LMS.etat),
+  option("ent-du-secondaire", 160, ENT_DU_SECONDAIRE.nom, "etude", []),
+];
+
+/** Le catalogue par défaut : celui d'une base vide, et ce que la migration 0041 a versé. */
+export const CATALOGUE_PAR_DEFAUT: Catalogue = { modules: [...MODULES_PAR_DEFAUT], offres: [...OFFRES_PAR_DEFAUT] };
+
+/** Les variables par défaut (la Découverte par défaut). */
+export const VARIABLES_PAR_DEFAUT: Readonly<Record<string, string>> = variablesDuCatalogue();
+
 /* ---------------------------------------------------------------------------
- * LES OFFRES DE L'ARÈNE, DANS L'ORDRE DE LA PAGE.
+ * LA GRILLE PAR DÉFAUT, RENDUE : les formes que lisaient /tarifs, /ecoles et les tests
+ * avant le catalogue en base. Elles se TIRENT du catalogue par défaut, elles ne se
+ * recopient pas ; les pages lisent le catalogue en base.
  * ------------------------------------------------------------------------- */
+
+const VUE_PAR_DEFAUT = vueDesTarifs(CATALOGUE_PAR_DEFAUT, VARIABLES_PAR_DEFAUT);
 
 /** Un bouton de carte : où il mène, ce qu'il dit, et s'il est l'action de l'écran. */
 export interface BoutonDOffre {
@@ -527,7 +939,7 @@ export interface BoutonDOffre {
 }
 
 export interface OffreEnseignement {
-  code: "decouverte" | OffreDeLArene;
+  code: string;
   nom: string;
   /** Pour qui, en une ligne. */
   pourQui: string;
@@ -541,89 +953,44 @@ export interface OffreEnseignement {
   bouton: BoutonDOffre;
 }
 
-/** Ce que les offres de l'arène n'ouvrent pas, dit sur chaque carte. */
-export const SANS_LES_EPISODES = "Sans les épisodes manager, qui se proposent à part, sur devis.";
+const versBouton = (b: { libelle: string; href: string; principal: boolean }): BoutonDOffre =>
+  b.principal ? { libelle: b.libelle, href: b.href, principal: true } : { libelle: b.libelle, href: b.href };
 
-/** Les niveaux de l'arène, « 1 à 6 ». */
-const TOUS_LES_NIVEAUX = `${PREMIER_NIVEAU} à ${DERNIER_NIVEAU}`;
-const NOM_DES_CONCOURS = nomDeLEntreprise(ENTREPRISE_DES_CONCOURS);
+export const OFFRES_ENSEIGNEMENT: readonly OffreEnseignement[] = VUE_PAR_DEFAUT.cartes.map((c) => ({
+  code: c.code,
+  nom: c.nom,
+  pourQui: c.pourQui,
+  ...(c.prixCents !== null ? { prix: c.prixCents / 100 } : {}),
+  ...(c.mention ? { mention: c.mention } : {}),
+  inclus: c.inclus,
+  precisions: c.precisions,
+  bouton: versBouton(c.bouton),
+}));
 
-/** Ce que toute offre de l'arène ouvre en cours : la partie de classe et son suivi. */
-const LA_PARTIE_DE_CLASSE =
-  "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.";
-const LE_SUIVI =
-  "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.";
+/** Le libellé d'une offre de la grille dans le catalogue par défaut. */
+const colonne = (code: string) => VUE_PAR_DEFAUT.episodes!.colonnes.find((c) => c.code === code)!;
+const reseauParDefaut = VUE_PAR_DEFAUT.reseaux.find((r) => r.code === "reseau")!;
 
-export const OFFRES_ENSEIGNEMENT: readonly OffreEnseignement[] = [
-  {
-    code: "decouverte",
-    nom: OFFRES.decouverte.nom,
-    pourQui: "Sans compte, pour voir le simulateur de près.",
-    inclus: [
-      `L'arène en solo sur les ${SCENARIO_CHOICES.length} entreprises, niveaux ${NIVEAUX_GRATUITS.de} à ${NIVEAUX_GRATUITS.a} (${NIVEAUX_GRATUITS.noms}), en partie complète de ${TOURS_DE_LA_PARTIE_SOLO} tours.`,
-      "Les fiches notions, le manuel et le guide.",
-      `Un épisode manager de démonstration par métier (${EPISODES_DE_DEMONSTRATION} sur ${NOMBRE_D_EPISODES}), au niveau Découverte, avec son bilan.`,
-    ],
-    precisions: [`Les parties de classe et les concours commencent avec ${LES_OFFRES_DE_L_ARENE}.`],
-    bouton: { libelle: "Tester le simulateur", href: "/jouer" },
-  },
-  {
-    code: "classe",
-    nom: OFFRES.classe.nom,
-    pourQui: "Un cours, un groupe : une entreprise et un niveau, choisis à l'achat.",
-    prix: PRIX.classe,
-    inclus: [
-      `Une entreprise au choix parmi les ${ENTREPRISES.length}, et un niveau au choix de ${TOUS_LES_NIVEAUX}, fixés pour l'année.`,
-      "Autant de parties que vous voulez dans l'année avec ce paramétrage, une à la fois.",
-      LA_PARTIE_DE_CLASSE,
-      LE_SUIVI,
-      "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
-      `Un concours à la place d'une partie, si l'entreprise choisie est ${NOM_DES_CONCOURS} : les concours se jouent avec elle.`,
-    ],
-    precisions: [SANS_LES_EPISODES, "À l'année, pour un enseignant."],
-    bouton: { libelle: LIBELLE_DU_DEVIS, href: lienDuDevis("classe") },
-  },
-  {
-    code: "programme",
-    nom: OFFRES.programme.nom,
-    pourQui:
-      "Un programme (Bachelor, Grande École, MSc, BTS…) : toutes ses promotions, tous les niveaux, une entreprise.",
-    prix: PRIX.programme,
-    mention: `Dès ${seuilProgrammeAvantageux()} groupes, moins cher que ${seuilProgrammeAvantageux()} offres ${OFFRES.classe.nom}`,
-    inclus: [
-      `Une entreprise au choix parmi les ${ENTREPRISES.length}, choisie à l'achat, à tous les niveaux, de ${TOUS_LES_NIVEAUX}.`,
-      "Toutes les promotions et tous les groupes du programme, plusieurs parties en même temps.",
-      "L'équipe pédagogique et les intervenants du programme, au nombre fixé au devis.",
-      LA_PARTIE_DE_CLASSE,
-      LE_SUIVI,
-      "Les ateliers clés en main de cette entreprise, avec déroulé, corrigés et dossier enseignant.",
-      `Les concours et le classement à l'IPG, si l'entreprise choisie est ${NOM_DES_CONCOURS} : les concours se jouent avec elle.`,
-    ],
-    precisions: [SANS_LES_EPISODES, "À l'année, pour l'équipe d'un programme."],
-    bouton: { libelle: LIBELLE_DU_DEVIS, href: lienDuDevis("programme"), principal: true },
-  },
-  {
-    code: "campus",
-    nom: OFFRES.campus.nom,
-    pourQui: `Toute l'école : les ${ENTREPRISES.length} entreprises, tous les programmes, enseignants et intervenants sans limite.`,
-    prix: PRIX.campus,
-    mention: `Dès ${seuilCampusAvantageux()} entreprises, moins cher que ${seuilCampusAvantageux()} offres ${OFFRES.programme.nom}`,
-    inclus: [
-      `Les ${ENTREPRISES.length} entreprises, à tous les niveaux, dans tous les programmes.`,
-      "Des groupes, des enseignants et des intervenants sans limite.",
-      `Les ${ATELIERS.length} ateliers clés en main, avec déroulé, corrigés et dossier enseignant, dont ${ATELIERS_A_REFERENTIEL.length} adossés au référentiel d'un diplôme (${DIPLOMES_DES_ATELIERS.map((d) => d.sigle).join(", ")}).`,
-      "Les concours et le classement à l'IPG.",
-      "Un référent qui gère les accès.",
-      "Une facture au nom de l'école.",
-      `Une licence par année scolaire, du ${CONDITIONS.anneeScolaire.debut} au ${CONDITIONS.anneeScolaire.fin}.`,
-    ],
-    precisions: [
-      SANS_LES_EPISODES,
-      "Sur devis, puis bon de commande ou mandat administratif ; Chorus Pro pour les factures publiques.",
-    ],
-    bouton: { libelle: LIBELLE_DU_DEVIS, href: lienDuDevis("campus") },
-  },
-];
+/** Les réseaux d'établissements, sous les cartes. */
+export const RESEAUX = { texte: reseauParDefaut.texte, bouton: versBouton(reseauParDefaut.bouton) };
+
+export interface FormuleDEpisodes {
+  nom: string;
+  inclus: string[];
+}
+
+/** En classe et en école : les cohortes que l'enseignant crée depuis son espace. */
+export const FORMULE_EN_CLASSE: FormuleDEpisodes = { nom: colonne("episodes").titre, inclus: colonne("episodes").inclus };
+export const BOUTON_EN_CLASSE: BoutonDOffre = versBouton(colonne("episodes").bouton);
+/** Les entreprises et les organismes de formation. */
+export const FORMULES_ENTREPRISES: readonly FormuleDEpisodes[] = colonne("entreprise").formules;
+export const BOUTON_ENTREPRISES: BoutonDOffre = versBouton(colonne("entreprise").bouton);
+
+/** Les options, et leur tarif en un mot. */
+export const OPTIONS: readonly { nom: string; prix: string }[] = VUE_PAR_DEFAUT.options.map((o) => ({
+  nom: o.nom,
+  prix: o.prix,
+}));
 
 /**
  * CE QUI PARLE AUX ÉCOLES (décision du propriétaire : « aller davantage vers les business
@@ -639,16 +1006,6 @@ export const OFFRES_ENSEIGNEMENT: readonly OffreEnseignement[] = [
  *    (GAR) est à l'étude ;
  *  · les épisodes manager, à part, sur devis.
  */
-/** L'intégration aux plateformes de cours (src/lti) : en ligne, décrite sur /integration. */
-export const INTEGRATION_LMS = {
-  nom: "Intégration à Moodle, Canvas, Blackboard, Brightspace (LTI 1.3)",
-  etat: "Incluse",
-  lien: { href: "/integration", libelle: "Voir l'intégration" },
-} as const;
-
-/** L'ENT du secondaire : rien n'est promis, rien n'est daté. */
-export const ENT_DU_SECONDAIRE = { nom: "ENT du secondaire (GAR)", etat: "À l'étude" } as const;
-
 /** Ce que le relevé de l'arène contient vraiment (app/teacher/games/[gameId]/releve). */
 export const LE_RELEVE_DE_L_ARENE =
   "Dans l'arène, le relevé s'exporte en tableur, une ligne par étudiant : note sur 20, diagnostic, questions, rang, indice de performance globale ; la maîtrise des notions se lit partie par partie.";
@@ -679,86 +1036,9 @@ export const ARGUMENTS_POUR_LES_ECOLES: readonly {
   },
 ];
 
-/** Les réseaux d'établissements, sous les cartes. */
-export const RESEAUX = {
-  texte: `Groupes scolaires, académies, régions, réseaux d'écoles : à partir de ${SEUIL_RESEAU_ETABLISSEMENTS} établissements, sur devis.`,
-  bouton: { libelle: LIBELLE_DU_DEVIS, href: lienDuDevis("reseau") } satisfies BoutonDOffre,
-};
-
 /* ---------------------------------------------------------------------------
- * LES ÉPISODES MANAGER : UNE OFFRE À PART, SUR DEVIS, SANS PRIX AFFICHÉ.
- * Le propriétaire teste d'abord les prix d'appel ; la page ne publie que les formules.
+ * LES CONDITIONS, LES QUESTIONS.
  * ------------------------------------------------------------------------- */
-
-export interface FormuleDEpisodes {
-  nom: string;
-  inclus: string[];
-}
-
-/** En classe et en école : les cohortes que l'enseignant crée depuis son espace. */
-export const FORMULE_EN_CLASSE: FormuleDEpisodes = {
-  nom: "En classe et en école de commerce",
-  inclus: [
-    `Les ${NOMBRE_D_EPISODES} épisodes, choisis par l'enseignant pour chaque groupe.`,
-    "Des cohortes créées depuis l'espace enseignant : les étudiants entrent par un code, sans compte.",
-    "La vue de l'animateur, et une fiche de débrief pour les épisodes en classe.",
-  ],
-};
-
-export const BOUTON_EN_CLASSE: BoutonDOffre = {
-  libelle: LIBELLE_DU_DEVIS,
-  href: lienDuDevis("episodes"),
-};
-
-/** Les entreprises et les organismes de formation. */
-export const FORMULES_ENTREPRISES: readonly FormuleDEpisodes[] = [
-  {
-    nom: "Parcours manager",
-    inclus: [
-      `Les ${NOMBRE_D_EPISODES} épisodes, en autonomie.`,
-      "Le profil décisionnel, et la recommandation du prochain épisode.",
-      "Sans compte à créer : un code de cohorte pour entrer, un code de reprise pour changer d'appareil.",
-    ],
-  },
-  {
-    nom: "Cohorte animée",
-    inclus: [
-      `${COHORTE.managers} managers, ${COHORTE.episodesMin} à ${COHORTE.episodesMax} épisodes choisis, un code de cohorte.`,
-      "La vue de l'animateur.",
-      "Une demi-journée de lancement, et un débrief animé à distance.",
-    ],
-  },
-  {
-    nom: "Organisme de formation",
-    inclus: [
-      "Des animateurs sans limite, des cohortes à volonté.",
-      `Le guide de débrief des ${NOMBRE_D_EPISODES} épisodes.`,
-    ],
-  },
-];
-
-export const BOUTON_ENTREPRISES: BoutonDOffre = {
-  libelle: LIBELLE_DU_DEVIS,
-  href: lienDuDevis("entreprise"),
-};
-
-/* ---------------------------------------------------------------------------
- * LES OPTIONS, LES CONDITIONS, LES QUESTIONS.
- * ------------------------------------------------------------------------- */
-
-/**
- * Les options : courtes, sans prix ; la seule gratuite est le rendez-vous qui existe.
- * L'intégration LTI 1.3 est incluse (src/lti) ; l'ENT du secondaire (GAR) est à l'étude.
- */
-export const OPTIONS: readonly { nom: string; prix: "Gratuit" | "Sur devis" | "Incluse" | "À l'étude" }[] = [
-  { nom: "Un rendez-vous téléphonique de prise en main, à la demande", prix: "Gratuit" },
-  { nom: "Formation d'une équipe pédagogique", prix: "Sur devis" },
-  { nom: "Animation sur site", prix: "Sur devis" },
-  { nom: "Scénario sur mesure : une entreprise fictive à l'image de la vôtre", prix: "Sur devis" },
-  { nom: "Compétition inter-établissements", prix: "Sur devis" },
-  { nom: INTEGRATION_LMS.nom, prix: INTEGRATION_LMS.etat },
-  { nom: ENT_DU_SECONDAIRE.nom, prix: ENT_DU_SECONDAIRE.etat },
-];
 
 /**
  * LES CONDITIONS DE VENTE, en phrases. Ni paiement par carte (le site n'encaisse rien),
@@ -805,11 +1085,35 @@ export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
  * LES PHRASES QUE LE RESTE DU SITE TIRE DE LA GRILLE.
  * ------------------------------------------------------------------------- */
 
-/** La ligne de prix des bandes finales (/enseignants, /ecoles, /fonctionnalites). */
-export const LIGNE_DE_PRIX = `${nomDOffre("classe")} ${prixParAn(PRIX.classe)}, offre ${OFFRES.programme.nom} ${prixParAn(PRIX.programme)}, offre ${OFFRES.campus.nom} ${prixParAn(PRIX.campus)}, sur devis. Les épisodes manager se proposent à part, sur devis.`;
+/** « 290 € par an » d'une offre du catalogue ; « sur devis » si elle n'a pas de prix. */
+function prixAnnuelDe(c: Catalogue, code: OffreDeLArene): string {
+  const o = c.offres.find((x) => x.code === code);
+  return o && o.tarif === "prix" && o.prixCents ? `${euros(o.prixCents)} par an` : "sur devis";
+}
 
-/** La réponse du guide à « Combien ça coûte ? » (audit C-08). */
-export const REPONSE_COMBIEN = `La découverte en solo est gratuite, sans compte. Pour faire cours, sur devis : l'offre ${OFFRES.classe.nom} coûte ${prixParAn(PRIX.classe)} pour un groupe (une entreprise et un niveau choisis), l'offre ${OFFRES.programme.nom} ${prixParAn(PRIX.programme)} pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre ${OFFRES.campus.nom} ${prixParAn(PRIX.campus)} pour toute l'école. Les épisodes manager se proposent à part, sur devis.`;
+/**
+ * La ligne de prix des bandes finales (/enseignants, /ecoles, /fonctionnalites), lue au
+ * catalogue. Prix cachés (`prix` faux, le réglage par défaut) : aucun montant, des offres
+ * sur mesure, sur devis.
+ */
+export const ligneDePrix = (c: Catalogue, prix = true): string =>
+  !prix
+    ? `${LES_OFFRES_DE_L_ARENE_EN_TETE} se construisent sur mesure, sur devis. Les épisodes manager se proposent à part, sur devis.`
+    : `${nomDOffre("classe")} ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} ${prixAnnuelDe(c, "campus")}, sur devis. Les épisodes manager se proposent à part, sur devis.`;
+export const LIGNE_DE_PRIX = ligneDePrix(CATALOGUE_PAR_DEFAUT);
+
+/** La réponse du guide à « Combien ça coûte ? » (audit C-08), lue au catalogue ; sans montant si les prix sont cachés. */
+export const reponseCombien = (c: Catalogue, prix = true): string =>
+  !prix
+    ? `La découverte en solo est gratuite, sans compte. Pour faire cours, chaque offre se construit sur mesure et se vend sur devis : l'offre ${OFFRES.classe.nom} pour un groupe (une entreprise et un niveau choisis), l'offre ${OFFRES.programme.nom} pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre ${OFFRES.campus.nom} pour toute l'école. Les épisodes manager se proposent à part, sur devis.`
+    : `La découverte en solo est gratuite, sans compte. Pour faire cours, sur devis : l'offre ${OFFRES.classe.nom} coûte ${prixAnnuelDe(c, "classe")} pour un groupe (une entreprise et un niveau choisis), l'offre ${OFFRES.programme.nom} ${prixAnnuelDe(c, "programme")} pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre ${OFFRES.campus.nom} ${prixAnnuelDe(c, "campus")} pour toute l'école. Les épisodes manager se proposent à part, sur devis.`;
+export const REPONSE_COMBIEN = reponseCombien(CATALOGUE_PAR_DEFAUT);
+
+/** La description de /tarifs pour les moteurs, lue au catalogue ; sans montant si les prix sont cachés. */
+export const descriptionDesTarifs = (c: Catalogue, prix = true): string =>
+  !prix
+    ? `Gratuit pour découvrir le simulateur en solo. ${LES_OFFRES_DE_L_ARENE_EN_TETE} et les épisodes manager se construisent sur mesure : chaque offre aboutit à un devis écrit. L'étudiant ne paie jamais.`
+    : `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} à ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} à ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} à ${prixAnnuelDe(c, "campus")}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'étudiant ne paie jamais.`;
 
 /** Les niveaux fermés, et ce qui les ouvre : « Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus. » */
 export function messageNiveauxReserves(vitrine: VitrineSolo): string {
@@ -819,8 +1123,14 @@ export function messageNiveauxReserves(vitrine: VitrineSolo): string {
     : `Les niveaux ${premier} à ${NIVEAU_MAX} sont inclus dans ${LES_OFFRES_DE_L_ARENE}.`;
 }
 
-/** Le refus d'une partie de classe ou d'un concours sans offre de l'arène en cours. */
-export const REFUS_DE_LA_CLASSE = `Les parties de classe et les concours sont inclus dans ${LES_OFFRES_DE_L_ARENE}. Sans offre en cours, l'arène se joue en solo, aux niveaux ${NIVEAUX_GRATUITS.de} à ${NIVEAUX_GRATUITS.a}. Les parties déjà créées se poursuivent.`;
+/**
+ * Le refus d'une partie de classe ou d'un concours sans offre de l'arène en cours ; les
+ * niveaux du solo sont ceux de la Découverte (réglée dans /admin/offres).
+ */
+export const refusDeLaClasse = (vitrine: VitrineSolo = VITRINE_SOLO_PAR_DEFAUT): string =>
+  `Les parties de classe et les concours sont inclus dans ${LES_OFFRES_DE_L_ARENE}. Sans offre en cours, l'arène se joue en solo, aux niveaux ${NIVEAUX_GRATUITS.de} à ${vitrine.active ? vitrine.niveauMaxAutres : NIVEAU_MAX}. Les parties déjà créées se poursuivent.`;
+/** Le même refus, avec la Découverte par défaut (niveaux 1 à 3). */
+export const REFUS_DE_LA_CLASSE = refusDeLaClasse();
 
 /** Le refus du dossier enseignant d'un atelier (les corrigés) sans offre de l'arène en cours. */
 export const REFUS_DU_DOSSIER = `Le dossier enseignant des ateliers, avec ses corrigés, est inclus dans ${LES_OFFRES_DE_L_ARENE}.`;
@@ -828,8 +1138,10 @@ export const REFUS_DU_DOSSIER = `Le dossier enseignant des ateliers, avec ses co
 /** Le refus du relevé de notes sans offre de l'arène, ni fin d'offre récente. */
 export const REFUS_DU_RELEVE = `Le relevé de notes est inclus dans ${LES_OFFRES_DE_L_ARENE}, et reste téléchargeable ${CONDITIONS.consultationApresMois} mois après la fin de l'offre.`;
 
-/** Le refus d'une cohorte d'épisodes sans offre qui inclut les épisodes. */
-export const REFUS_DES_COHORTES = `Créer une cohorte demande une offre qui inclut les épisodes manager (${MARQUE_DES_EPISODES}). ${LES_OFFRES_DE_L_ARENE_EN_TETE} seules ne les ouvrent pas. Les ${EPISODES_DE_DEMO.length} épisodes de démonstration se jouent sans cohorte, par leur lien.`;
+/** Le refus d'une cohorte d'épisodes sans offre qui inclut les épisodes ; `demos` : les démonstrations de la Découverte. */
+export const refusDesCohortes = (demos: number = EPISODES_DE_DEMO.length): string =>
+  `Créer une cohorte demande une offre qui inclut les épisodes manager (${MARQUE_DES_EPISODES}). ${LES_OFFRES_DE_L_ARENE_EN_TETE} seules ne les ouvrent pas. ${demos > 1 ? `Les ${demos} épisodes de démonstration se jouent` : demos === 1 ? "L'épisode de démonstration se joue" : "Les épisodes de démonstration se jouent"} sans cohorte, par leur lien.`;
+export const REFUS_DES_COHORTES = refusDesCohortes();
 
 /** Sans licence épisodes : ce que l'offre ouvre (le lien vers le devis suit). `total` : les épisodes du registre. */
 export const ceQuOuvrentLesEpisodes = (total: number): string =>

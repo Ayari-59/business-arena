@@ -17,12 +17,14 @@ import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import {
   messageNiveauxReserves,
-  REFUS_DE_LA_CLASSE,
+  refusDeLaClasse,
+  refusDesCohortes,
   refusSansLaDemande,
   type HorsLicence,
 } from "@/config/tarifs";
 import { licenceDeLArene } from "@/services/acces.service";
-import { estUnRefusDeCohorte, NOM_DE_COHORTE_MAX, REFUS_DE_COHORTE, REFUS_SANS_LICENCE } from "@/config/cohortes";
+import { estUnRefusDeCohorte, NOM_DE_COHORTE_MAX, REFUS_DE_COHORTE } from "@/config/cohortes";
+import { lireLaDecouverte } from "@/services/catalogue.service";
 import {
   ANSWER_FORMATS,
   DEFAULT_ANSWER_FORMAT,
@@ -122,12 +124,13 @@ export default async function ActiviteLtiPage({
     );
   }
 
-  const [ouvertures, parties, cohortes, { vitrineSolo }, licenceDeLOrganisation] = await Promise.all([
+  const [ouvertures, parties, cohortes, { vitrineSolo }, licenceDeLOrganisation, { demos }] = await Promise.all([
     ouverturesDeLOrganisation(plateforme.organizationId),
     getTeacherGames(enseignantId),
     cohortesDeLEnseignant(enseignantId),
     getPlatformConfig(),
     licenceDeLArene(plateforme.organizationId),
+    lireLaDecouverte(),
   ]);
   // Le paramétrage de la licence (offres Classe, Programme, Campus) : le formulaire part
   // de l'entreprise et du niveau qu'elle couvre (services/acces.service.ts).
@@ -143,7 +146,7 @@ export default async function ActiviteLtiPage({
       : refus === "niveau"
         ? { texte: messageNiveauxReserves(vitrineSolo), tarifs: true }
         : refus === "classe"
-          ? { texte: REFUS_DE_LA_CLASSE, tarifs: true }
+          ? { texte: refusDeLaClasse(vitrineSolo), tarifs: true }
           : refus.startsWith("licence-") && parametrage && QUOI_HORS_LICENCE.includes(refus.slice("licence-".length))
             ? {
                 texte: refusSansLaDemande(parametrage, refus.slice("licence-".length) as HorsLicence["quoi"]),
@@ -168,7 +171,7 @@ export default async function ActiviteLtiPage({
 
         {!ouvertures.partie && !ouvertures.cohorte ? (
           <p className="rounded-xl encadre-neutre px-4 py-3 text-sm text-slate-200" data-sans-licence="">
-            {REFUS_DE_LA_CLASSE} <Tarifs />
+            {refusDeLaClasse(vitrineSolo)} <Tarifs />
           </p>
         ) : null}
 
@@ -322,7 +325,7 @@ export default async function ActiviteLtiPage({
           </>
         ) : ouvertures.cohorte ? (
           <p className="text-sm text-slate-400">
-            {REFUS_DE_LA_CLASSE} <Tarifs />
+            {refusDeLaClasse(vitrineSolo)} <Tarifs />
           </p>
         ) : null}
 
@@ -368,7 +371,7 @@ export default async function ActiviteLtiPage({
                     className="champ px-3 py-2 text-sm"
                   />
                 </label>
-                <ChoixDesEpisodes preselection={null} />
+                <ChoixDesEpisodes preselection={null} demos={demos} />
                 <SubmitButton pendingLabel="Création de la cohorte…" className={bouton({ variante: "secondaire" })}>
                   Créer la cohorte et y relier l&apos;activité
                 </SubmitButton>
@@ -377,7 +380,7 @@ export default async function ActiviteLtiPage({
           </>
         ) : ouvertures.partie ? (
           <p className="text-sm text-slate-400">
-            {REFUS_SANS_LICENCE} <Tarifs />
+            {refusDesCohortes(demos.length)} <Tarifs />
           </p>
         ) : null}
       </div>

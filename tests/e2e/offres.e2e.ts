@@ -166,7 +166,7 @@ describe("les épisodes non démo suivent la licence épisodes, pas la licence d
 });
 
 describe("le formulaire de licence de /admin", () => {
-  it("propose l'offre de l'arène (Classe, Programme, Campus, sans), la case des épisodes, un montant sans taxe", async () => {
+  it("propose les offres du catalogue (Classe, Programme, Campus, réseaux, épisodes), la case des épisodes, un montant calculé sans taxe", async () => {
     const c = await contexte();
     const { userId, orgId } = await enseignantSousLicence(c, { licence: false });
     const nom = `Lycée du formulaire ${Date.now()}`;
@@ -179,22 +179,25 @@ describe("le formulaire de licence de /admin", () => {
     const bloc = page.locator("div.rounded-xl.bg-slate-950", { hasText: nom }).first();
     await bloc.locator("details", { hasText: "Licence" }).locator("summary").click();
     const formulaire = bloc.locator("[data-formulaire-licence]");
-    const options = await formulaire.locator('select[name="arene"] option').allInnerTexts();
+    // Les offres du catalogue (/admin/offres) qui ouvrent l'arène ou les épisodes.
+    const options = await formulaire.locator('select[name="offre"] option').allInnerTexts();
     expect(options[0]).toMatch(/^Offre Classe · 290/);
     expect(options[1]).toMatch(/^Offre Programme · 990/);
     expect(options[2]).toMatch(/^Offre Campus · 1\s990/);
-    expect(options[3]).toBe("Sans l'arène (épisodes seuls)");
+    expect(options).toContain("Épisodes manager, en cours ou en école · sur devis");
     expect(await formulaire.locator('input[name="episodes"][type="checkbox"]').count()).toBe(1);
-    // textContent : les étiquettes sont en capitales par le style, pas dans le texte.
-    expect(await formulaire.textContent()).toContain("Montant (€)");
-    expect(await formulaire.locator('input[name="amount"]').getAttribute("placeholder")).toBe("290");
+    // Le prix catalogue de l'offre, et le montant facturé qui s'en calcule.
+    expect(await formulaire.locator('input[name="prixCatalogue"]').inputValue()).toBe("290");
+    expect((await formulaire.locator("[data-montant-facture]").innerText()).replace(/[\u00a0\u202f]/g, " ")).toContain(
+      "Montant facturé : 290 €",
+    );
     expect(await formulaire.textContent()).not.toMatch(/\bHT\b|\bTTC\b/);
     expect(await formulaire.locator('input[name="maxTeachers"]').count()).toBe(0);
     await formulaire.scrollIntoViewIfNeeded();
     await capture(page, "admin-formulaire-licence");
 
     // Une licence Campus avec les épisodes, posée par le formulaire.
-    await formulaire.locator('select[name="arene"]').selectOption("campus");
+    await formulaire.locator('select[name="offre"]').selectOption("campus");
     await formulaire.locator('input[name="episodes"]').check();
     await formulaire.locator('input[name="label"]').fill("Année 2026-2027");
     await formulaire.locator('input[name="startsAt"]').fill("2026-09-01");
@@ -202,9 +205,19 @@ describe("le formulaire de licence de /admin", () => {
     await formulaire.getByRole("button", { name: "Enregistrer la licence" }).click();
     await expect
       .poll(() =>
-        enBase(async (b) => (await b.query("select arene, episodes, max_teachers from org_licences where organization_id = $1", [orgId])).rows),
+        enBase(async (b) => (await b.query("select arene, episodes, max_teachers, offre_code, prix_catalogue_cents, amount_cents, nature from org_licences where organization_id = $1", [orgId])).rows),
       )
-      .toEqual([{ arene: "campus", episodes: true, max_teachers: null }]);
+      .toEqual([
+        {
+          arene: "campus",
+          episodes: true,
+          max_teachers: null,
+          offre_code: "campus",
+          prix_catalogue_cents: 199000,
+          amount_cents: 199000,
+          nature: "vendue",
+        },
+      ]);
     await c.close();
   });
 });

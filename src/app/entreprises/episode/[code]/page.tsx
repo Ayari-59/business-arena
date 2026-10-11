@@ -94,7 +94,7 @@ export default async function EpisodePage({
         {niveaux.length > 0 ? (
           <EpisodeJoue code={code} niveaux={niveaux} offre={acces.licence ? null : offre} />
         ) : (
-          <EpisodeFerme code={code} eleve={eleve} />
+          <EpisodeFerme code={code} eleve={eleve} demosReglees={acces.demos ?? EPISODES_DE_DEMO} />
         )}
       </main>
       <PiedDePage />
@@ -106,10 +106,21 @@ export default async function EpisodePage({
  * Un épisode fermé sans licence épisodes : ce qu'il est, ce qui l'ouvre, et ce qui se joue
  * déjà. Devant un élève, une phrase neutre à la place de l'offre.
  */
-function EpisodeFerme({ code, eleve }: { code: string; eleve: boolean }) {
+function EpisodeFerme({
+  code,
+  eleve,
+  demosReglees,
+}: {
+  code: string;
+  eleve: boolean;
+  /** Les démonstrations de la Découverte (/admin/offres). */
+  demosReglees: readonly string[];
+}) {
   const ep = episodeParCode(code)!;
   const secteur = secteurDe(code);
-  const demos = EPISODES_DE_DEMO.map((c) => ({ ep: episodeParCode(c)!, secteur: secteurDe(c) }));
+  const demos = demosReglees
+    .filter((c) => episodeParCode(c))
+    .map((c) => ({ ep: episodeParCode(c)!, secteur: secteurDe(c) }));
   return (
     <div className="mx-auto max-w-4xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12" data-episode-ferme={code}>
       <p className="text-xs uppercase tracking-annonce text-slate-400">
@@ -143,8 +154,8 @@ function EpisodeFerme({ code, eleve }: { code: string; eleve: boolean }) {
             <p>
               <strong className="font-semibold text-slate-50">{MARQUE_DES_EPISODES}.</strong> Cet
               épisode est inclus dans l&apos;offre {OFFRES.episodes.nom}, qui se propose à part,
-              sur devis. Sans elle, seuls les {EPISODES_DE_DEMO.length} épisodes de démonstration
-              se jouent, un par métier, en Découverte.
+              sur devis. Sans elle, seuls les {demos.length} épisodes de démonstration
+              se jouent, en Découverte.
             </p>
             <p className="mt-2">
               <Link

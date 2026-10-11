@@ -67,6 +67,9 @@ function perimetre(): string[] {
     join(SRC, "app/layout.tsx"),
     // La page des tarifs : un seul bouton plein, celui de l'offre Établissement.
     join(SRC, "app/tarifs/page.tsx"),
+    // Le catalogue (/admin/offres) : l'éditeur et l'aperçu des cartes, la promotion
+    // affichée ; l'orange y reste à l'action, les cases cochées comprises.
+    ...tous(join(SRC, "app/admin/offres")),
     // L'intégration LTI : le guide de l'établissement et les écrans d'arrivée depuis
     // une plateforme de cours (enseignant et élève).
     join(SRC, "app/integration/page.tsx"),

@@ -1,6 +1,8 @@
-import { boolean, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { id, timestamps } from "./_shared";
 import { users } from "./identity";
+import { codesPromo } from "./offres";
 
 /**
  * LA DEMANDE DE DEVIS ÉCRITE (migration 0036), envoyée depuis `/devis?offre=…`.
@@ -32,6 +34,19 @@ export const demandesDeDevis = pgTable(
     niveau: integer("niveau"),
     email: text("email").notNull(),
     message: text("message").notNull().default(""),
+    /**
+     * LE CODE PROMO (migration 0041) : le code saisi, vérifié côté serveur, et le devis
+     * qu'il donne : prix catalogue, remise, prix remisé (centimes ; null pour une offre
+     * sur devis, dont seule la remise est connue). `promo_cle` : l'établissement, pour un
+     * code à une utilisation par établissement (index unique avec le code).
+     */
+    codePromo: text("code_promo"),
+    codePromoId: uuid("code_promo_id").references(() => codesPromo.id, { onDelete: "set null" }),
+    prixCatalogueCents: integer("prix_catalogue_cents"),
+    remiseCents: integer("remise_cents"),
+    remiseLibelle: text("remise_libelle"),
+    prixRemiseCents: integer("prix_remise_cents"),
+    promoCle: text("promo_cle"),
     /** Adresse d'origine, pour la limitation ; NULL hors proxy. */
     ip: text("ip"),
     /** Le courriel à l'adresse de contact est-il parti ? */
@@ -44,6 +59,9 @@ export const demandesDeDevis = pgTable(
   },
   (t) => [
     index("demandes_de_devis_cree_idx").on(t.createdAt),
+    uniqueIndex("demandes_de_devis_promo_uq")
+      .on(t.codePromoId, t.promoCle)
+      .where(sql`${t.promoCle} IS NOT NULL`),
     index("demandes_de_devis_ip_idx").on(t.ip, t.createdAt),
   ],
 );

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { bouton } from "@/components/bouton";
 import { envoyerDemandeDeDevisAction, type DevisFormState } from "@/app/devis/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { euros } from "@/config/catalogue";
 
 /**
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
@@ -16,6 +17,12 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
  * page serveur lui passe les offres et leurs libellés (config/tarifs.ts).
  *
  * La confirmation DIT LA VÉRITÉ : l'accusé de réception n'est annoncé que s'il est parti.
+ *
+ * LE CODE PROMO, facultatif, est vérifié par le serveur ; un code refusé revient avec sa
+ * phrase, la saisie gardée. Accepté : « Code RENTREE pris en compte : la remise sera
+ * appliquée à votre devis. » Aucun montant tant que l'affichage des prix est éteint (le
+ * réglage par défaut : offres sur mesure) ; allumé, le devis qu'il donne (prix catalogue,
+ * remise, prix remisé, nets).
  */
 export interface OffreDuFormulaire {
   code: string;
@@ -83,6 +90,45 @@ export function DevisForm({
             ? `Un accusé de réception est parti à ${state.ok.email}.`
             : `Aucun courriel d'accusé de réception n'a pu partir à ${state.ok.email} : la demande est bien enregistrée, et nous vous répondons à cette adresse.`}
         </p>
+        {state.ok.promo && !state.ok.promo.montants ? (
+          <p
+            data-devis-promo={state.ok.promo.code}
+            className="rounded-lg border border-[var(--filet-carte)] px-4 py-3 text-sm leading-relaxed text-slate-200"
+          >
+            Code <strong className="font-semibold text-slate-50">{state.ok.promo.code}</strong> pris en compte : la
+            remise sera appliquée à votre devis.
+          </p>
+        ) : state.ok.promo ? (
+          <dl
+            data-devis-promo={state.ok.promo.code}
+            className="grid gap-x-6 gap-y-1 rounded-lg border border-[var(--filet-carte)] px-4 py-3 text-sm sm:grid-cols-[auto_1fr]"
+          >
+            <dt className="text-slate-400">Code promo</dt>
+            <dd className="font-semibold text-slate-100">
+              {state.ok.promo.code} · {state.ok.promo.remiseLibelle}
+            </dd>
+            {state.ok.promo.prixCatalogueCents !== null ? (
+              <>
+                <dt className="text-slate-400">Prix catalogue</dt>
+                <dd className="tabular-nums text-slate-300" data-prix-catalogue="">
+                  {euros(state.ok.promo.prixCatalogueCents)} par an
+                </dd>
+              </>
+            ) : null}
+            {state.ok.promo.remiseCents !== null ? (
+              <>
+                <dt className="text-slate-400">Remise</dt>
+                <dd className="tabular-nums text-slate-300">{euros(state.ok.promo.remiseCents)}</dd>
+              </>
+            ) : null}
+            <dt className="text-slate-400">Prix remisé</dt>
+            <dd className="font-semibold tabular-nums text-slate-50" data-prix-remise="">
+              {state.ok.promo.prixRemiseCents !== null
+                ? `${euros(state.ok.promo.prixRemiseCents)} par an`
+                : "établi au devis, remise comprise"}
+            </dd>
+          </dl>
+        ) : null}
         <p className="text-sm text-slate-400">{mentionTva}.</p>
         <p className="text-sm text-slate-400">
           Une question : <span className="select-all font-semibold text-slate-200">{contact}</span>
@@ -143,7 +189,11 @@ export function DevisForm({
       {choisie.entreprise ? (
         <label className="block" data-champ-devis="entreprise">
           <span className={etiquette}>L&apos;entreprise souhaitée</span>
-          <select name="entreprise" required defaultValue={v?.entreprise ?? ""} className={champ}>
+          {/* La clé suit la valeur rendue : après un refus (un code promo invalide…), React
+              remet le formulaire à zéro sur la valeur PAR DÉFAUT de la liste, que seul un
+              nouveau montage met à jour. Sans elle, la liste revenait à « Choisir » et
+              bloquait le second envoi. */}
+          <select key={v?.entreprise ?? ""} name="entreprise" required defaultValue={v?.entreprise ?? ""} className={champ}>
             <option value="" disabled>
               Choisir l&apos;entreprise
             </option>
@@ -158,7 +208,7 @@ export function DevisForm({
       {choisie.niveau ? (
         <label className="block" data-champ-devis="niveau">
           <span className={etiquette}>Le niveau souhaité</span>
-          <select name="niveau" required defaultValue={v?.niveau ?? ""} className={champ}>
+          <select key={v?.niveau ?? ""} name="niveau" required defaultValue={v?.niveau ?? ""} className={champ}>
             <option value="" disabled>
               Choisir le niveau
             </option>
@@ -194,6 +244,19 @@ export function DevisForm({
           defaultValue={v?.email ?? ""}
           className={champ}
         />
+      </label>
+      <label className="block">
+        <span className={etiquette}>Code promo</span>
+        <input
+          name="codePromo"
+          maxLength={40}
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          defaultValue={v?.codePromo ?? ""}
+          className={`${champ} font-mono`}
+        />
+        <span className="mt-1 block text-xs text-slate-400">Facultatif.</span>
       </label>
       <label className="block sm:col-span-2">
         <span className={etiquette}>Votre message</span>

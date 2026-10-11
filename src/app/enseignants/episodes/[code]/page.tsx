@@ -5,7 +5,9 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
-import { estUneDemo, MARQUE_DEMO } from "@/config/episodes/demos";
+import { MARQUE_DEMO } from "@/config/episodes/demos";
+import { lireLaDecouverte } from "@/services/catalogue.service";
+import { niveauParCode } from "@/config/episodes/niveaux";
 import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DES_EPISODES } from "@/config/tarifs";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { getSession } from "@/lib/session";
@@ -52,6 +54,8 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
   const lien = lienDeLaClasse(code);
   const session = await getSession();
   const avecEpisodes = session ? await unCompteAvecEpisodes([session.userId]) : false;
+  // Les démonstrations de la Découverte (/admin/offres) et leur niveau.
+  const decouverte = await lireLaDecouverte();
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -100,10 +104,10 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
                 de l'établissement sous licence, que l'enseignant crée depuis son espace,
                 cet épisode déjà coché. */}
             <p className="mt-3 text-sm text-slate-400" data-acces-de-l-episode="">
-              {estUneDemo(code) ? (
+              {decouverte.demos.includes(code) ? (
                 <>
                   <span className="font-semibold text-slate-200">{MARQUE_DEMO}.</span> Il se joue
-                  sans licence, au niveau Découverte. Dans une cohorte de votre établissement, sous
+                  sans licence, au niveau {niveauParCode(decouverte.niveauDesDemos).nom}. Dans une cohorte de votre établissement, sous
                   licence épisodes, il se joue à tous les niveaux.
                 </>
               ) : avecEpisodes ? (

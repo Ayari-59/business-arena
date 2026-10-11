@@ -30,11 +30,13 @@ const COMPOSANTS_GARDES = [
   "src/components/orientation-form.tsx", // demande de simulation (/orientation)
   "src/components/rendez-vous-form.tsx", // rendez-vous téléphonique (/rendez-vous)
   "src/components/formulaire-de-reprise.tsx", // reprise de sa place (/reprendre)
+  "src/components/editeur-d-offre.tsx", // une offre du catalogue (/admin/offres)
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */
 const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/teacher/page.tsx", formulaires: 3 }, // création de partie, rangement depuis la liste, sortie de rangement
+  { file: "src/app/admin/offres/page.tsx", formulaires: 7 }, // affichage des prix, mise en avant, module (et sa création), Découverte, essai, code promo (la suppression : ConfirmForm)
   { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 11 },
   { file: "src/app/teacher/cohortes/page.tsx", formulaires: 1 }, // création d'une cohorte
   { file: "src/app/lti/activite/page.tsx", formulaires: 4 }, // activité LTI : relier ou créer, partie ou cohorte

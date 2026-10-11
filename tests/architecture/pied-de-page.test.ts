@@ -48,7 +48,8 @@ const PAGES_PUBLIQUES = [
   "app/notions/page.tsx",
   "app/orientation/page.tsx",
   "app/parcours/page.tsx",
-  "app/tarifs/page.tsx",
+  // /tarifs lit le catalogue, et rend sa page par components/page-des-tarifs.tsx.
+  "components/page-des-tarifs.tsx",
   "app/integration/page.tsx",
 ];
 

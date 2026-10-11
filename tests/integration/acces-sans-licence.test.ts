@@ -37,6 +37,9 @@ import { EPISODES } from "@/pedagogy/episodes/registre";
 import { etablissementSousLicence } from "./helpers/licence";
 import type { RoundDecisions } from "@/engine/types";
 
+/** Les démonstrations de la Découverte (par défaut), que l'accès porte jusqu'aux pages. */
+const DEMOS_PAR_DEFAUT = { demos: [...EPISODES_DE_DEMO], niveauDesDemos: "decouverte" };
+
 const DECISIONS: RoundDecisions = {
   price: 59,
   productionPlan: 4800,
@@ -178,7 +181,7 @@ describe("les épisodes", () => {
 
   it("le compte rattaché à un établissement dont la licence inclut les épisodes ouvre tout", async () => {
     const acces = await accesAuxEpisodes({ userId: invite, sessionUserId: sousLicence.userId });
-    expect(acces).toEqual({ licence: true, source: "compte" });
+    expect(acces).toEqual({ licence: true, source: "compte", ...DEMOS_PAR_DEFAUT });
     expect(niveauxDeLEpisode(acces, nonDemo.code)).toEqual(["decouverte", "standard", "expert"]);
   });
 
@@ -187,7 +190,7 @@ describe("les épisodes", () => {
     const c = await creerCohorte("Acmé · sous licence", sousLicence.orgId);
     await rejoindreCohorte(manager, c.code);
     const acces = await accesAuxEpisodes({ userId: manager });
-    expect(acces).toEqual({ licence: true, source: "cohorte" });
+    expect(acces).toEqual({ licence: true, source: "cohorte", ...DEMOS_PAR_DEFAUT });
     expect(episodeOuvert(acces, nonDemo.code, "expert")).toBe(true);
   });
 

@@ -5,9 +5,10 @@ import {
   lienDuDevis,
   LIBELLE_DU_DEVIS,
   OFFRES,
-  OFFRES_ENSEIGNEMENT,
-  prixParAn,
+  variablesDuCatalogue,
 } from "@/config/tarifs";
+import { euros, vueDesTarifs } from "@/config/catalogue";
+import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import { REPONSE_LMS } from "@/lti/textes";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import Link from "next/link";
@@ -142,6 +143,12 @@ const QUESTIONS = [
 export default async function EcolesPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
+  // Les offres de l'arène qui se vendent (pas la Découverte), lues au catalogue
+  // (/admin/offres) ; leur prix seulement si l'affichage des prix est allumé.
+  const { catalogue, decouverte, affichage } = await lireLEtatDuCatalogue();
+  const offresAPrix = vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix: affichage.prixPublics }).cartes.filter(
+    (o) => o.tarif !== "gratuit",
+  );
   const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
     <>
@@ -246,10 +253,10 @@ export default async function EcolesPage() {
               L&apos;arène, en trois offres pour les écoles
             </h3>
             <ul className="mt-5 grid gap-6 md:grid-cols-3">
-              {OFFRES_ENSEIGNEMENT.filter((o) => o.prix !== undefined).map((o) => (
+              {offresAPrix.map((o) => (
                 <li key={o.code} data-offre-ecole={o.code}>
                   <p className="titre-carte text-slate-100">
-                    {o.nom} · <span className="tabular-nums">{prixParAn(o.prix!)}</span>
+                    {o.nom} · <span className="tabular-nums">{o.prixCents !== null ? `${euros(o.prixCents)} par an` : "sur devis"}</span>
                   </p>
                   <p className="mt-1 text-base leading-relaxed text-slate-400">{o.pourQui}</p>
                   <Link

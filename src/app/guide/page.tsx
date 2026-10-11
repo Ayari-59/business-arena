@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { LES_OFFRES_DE_L_ARENE, REPONSE_COMBIEN } from "@/config/tarifs";
+import { LES_OFFRES_DE_L_ARENE, reponseCombien } from "@/config/tarifs";
+import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
@@ -126,6 +127,10 @@ function Section({
 export default async function GuidePage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
+  // « Combien ça coûte ? » : le catalogue (/admin/offres), sans montant tant que
+  // l'affichage des prix est éteint.
+  const { catalogue, affichage } = await lireLEtatDuCatalogue();
+  const REPONSE_COMBIEN = reponseCombien(catalogue, affichage.prixPublics);
   const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
     <>

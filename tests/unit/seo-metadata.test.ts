@@ -20,8 +20,12 @@ vi.mock("@/db", () => ({ db: {} }));
 const APP = join(process.cwd(), "src", "app");
 
 async function meta(chemin: string): Promise<Metadata> {
-  const mod = (await import(`@/app${chemin}`)) as { metadata: Metadata };
-  return mod.metadata;
+  const mod = (await import(`@/app${chemin}`)) as {
+    metadata?: Metadata;
+    generateMetadata?: () => Promise<Metadata>;
+  };
+  // /tarifs tire sa description du catalogue (en base, ou la grille par défaut).
+  return mod.metadata ?? (await mod.generateMetadata!());
 }
 
 const titre = (m: Metadata): string =>
@@ -70,7 +74,8 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/fonctionnalites/page", "Fonctionnalités", "/fonctionnalites"],
     ["/orientation/page", "Choisir sa simulation", "/orientation"],
     ["/mentions-legales/page", "Mentions légales", "/mentions-legales"],
-    ["/tarifs/page", "Tarifs", "/tarifs"],
+    // Prix éteints par défaut (offres sur mesure) : la page s'appelle « Offres ».
+    ["/tarifs/page", "Offres", "/tarifs"],
     ["/integration/page", "Intégration à Moodle", "/integration"],
   ];
 

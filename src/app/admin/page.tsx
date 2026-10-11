@@ -6,24 +6,28 @@ import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
 import { formatEuro } from "@/lib/format";
 import { AI_MODELS } from "@/config/ai";
 import { ANSWER_FORMATS } from "@/config/difficulty";
-import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
-import { VITRINE_SOLO_PAR_DEFAUT } from "@/config/vitrine-solo";
 import {
   ENTREPRISES,
   nomDeLEntreprise,
   nomDuNiveau,
-  LIBELLES_DU_DEVIS,
-  MARQUE_DE_L_ARENE,
   NIVEAUX_DE_L_ARENE,
   nomDOffre,
   OFFRES,
-  OFFRES_DE_L_ARENE,
-  PARAMETRAGE_DES_OFFRES,
   parametrageEnClair,
-  PRIX,
-  prixParAn,
-  estUneOffreDuDevis,
+  libellesDuDevisDe,
 } from "@/config/tarifs";
+import {
+  euros,
+  libelleDuTarif,
+  MOTIFS_DE_GRATUITE,
+  MOTIFS_DE_REMISE,
+  nomDansLeDevis,
+  offresAttribuables,
+  ouvreLesEpisodes,
+  parametresAreneDe,
+  type Catalogue,
+} from "@/config/catalogue";
+import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import { parametrageDe, type OrgLicence } from "@/services/licence.service";
 import { FormulaireDeLicence } from "@/components/formulaire-de-licence";
 import { listerDemandesDeDevis } from "@/services/devis.service";
@@ -77,15 +81,38 @@ function perimetre(l: OrgLicence): string {
     .join(" + ");
 }
 
-/** Ce que chaque offre de l'arène porte, pour l'option de la liste : « [offre] Classe · [prix] par an ». */
-const OFFRES_DU_FORMULAIRE = OFFRES_DE_L_ARENE.map((code) => ({
-  code,
-  libelle: `${nomDOffre(code)} · ${prixParAn(PRIX[code])}`,
-  prix: PRIX[code],
-  entreprise: PARAMETRAGE_DES_OFFRES[code].entreprises === "une",
-  niveau: PARAMETRAGE_DES_OFFRES[code].niveaux === "un",
-  plafond: PARAMETRAGE_DES_OFFRES[code].enseignants === "devis",
-}));
+/** La vente d'une licence, en clair : vendue (et sa remise), offerte (et son motif), essai. */
+function vente(l: OrgLicence): string {
+  if (l.nature === "offerte") {
+    return `offerte · ${MOTIFS_DE_GRATUITE[l.motifGratuite as keyof typeof MOTIFS_DE_GRATUITE] ?? l.motifGratuite ?? ""}`;
+  }
+  if (l.nature === "essai") return "essai";
+  const parts = [
+    l.nomDeLOffre ? `offre ${l.nomDeLOffre}` : null,
+    l.prixCatalogueCents !== null && l.remise ? `catalogue ${euros(l.prixCatalogueCents)}` : null,
+    l.remise
+      ? `remise ${l.remise.type === "pourcentage" ? `${l.remise.valeur} %` : euros(l.remise.valeur)} (${MOTIFS_DE_REMISE[l.remise.motif as keyof typeof MOTIFS_DE_REMISE] ?? l.remise.motif})`
+      : null,
+  ];
+  return parts.filter((x): x is string => x !== null).join(" · ");
+}
+
+/** Les offres du catalogue qu'on peut attribuer, pour la liste du formulaire de licence. */
+function offresDuFormulaire(c: Catalogue) {
+  return offresAttribuables(c).map((o) => {
+    const p = parametresAreneDe(o);
+    return {
+      code: o.code,
+      libelle: `${nomDansLeDevis(o)} · ${o.tarif === "prix" && o.prixCents ? `${euros(o.prixCents)} par an` : libelleDuTarif(o).toLowerCase()}`,
+      prixCents: o.tarif === "prix" ? o.prixCents : null,
+      entreprise: p?.entreprises === "une",
+      niveau: p?.niveaux === "un",
+      plafond: p?.enseignants === "devis",
+      arene: p !== null,
+      episodes: ouvreLesEpisodes(o),
+    };
+  });
+}
 
 /** Ce que le retour de Google laisse dans l'adresse, traduit pour l'écran. */
 const RETOURS_AGENDA: Record<string, { ton: "bon" | "mauvais"; texte: string }> = {
@@ -118,6 +145,12 @@ export default async function AdminPage({
   const messageAgenda = retourAgenda ? RETOURS_AGENDA[retourAgenda] : undefined;
   const aVenir = rendezVous.filter((r) => r.aVenir);
   const mesureAnalyse = await mesurerLAnalyseSolo();
+  const { catalogue, essai } = await lireLEtatDuCatalogue();
+  const offresDeLicence = offresDuFormulaire(catalogue);
+  const libellesDe = (code: string) => {
+    const o = catalogue.offres.find((x) => x.code === code);
+    return o ? libellesDuDevisDe(o) : null;
+  };
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
@@ -132,6 +165,7 @@ export default async function AdminPage({
           <Link href="/admin/cohortes" className="hover:text-slate-300">Cohortes d&apos;épisodes</Link>
           <Link href="/admin/lti" className="hover:text-slate-300">Plateformes LTI</Link>
           <Link href="/admin/renater" className="hover:text-slate-300">Connexion RENATER</Link>
+          <Link href="/admin/offres" className="hover:text-slate-300">Offres et tarifs</Link>
           <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
           <Link href="/" className="hover:text-slate-300">Landing</Link>
         </nav>
@@ -251,64 +285,19 @@ export default async function AdminPage({
               gardent leur format. Les parties de classe se règlent chez l&apos;enseignant.
             </p>
           </fieldset>
-          {/* Les niveaux ouverts sans licence (config/vitrine-solo.ts) : par défaut 1 à 3,
-              pour toutes les entreprises, au solo public comme chez l'enseignant. */}
-          <fieldset className="rounded-xl border border-white/10 p-4">
-            <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-              <Icone nom="cible" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
-              Niveaux ouverts sans licence
-            </legend>
-            <label className="flex items-center gap-3 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                name="vitrineActive"
-                defaultChecked={overview.config.vitrineSolo.active}
-                className="h-4 w-4 accent-amber-400"
-              />
-              Fermer les niveaux au-delà du maximum à qui n&apos;a pas de licence en cours
-            </label>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm text-slate-300">
-                Niveau maximum sans licence
-                <select
-                  name="vitrineNiveauMax"
-                  defaultValue={String(overview.config.vitrineSolo.niveauMaxAutres)}
-                  className="mt-1 block w-full champ px-3 py-2 text-sm text-slate-100"
-                >
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <option key={n} value={n}>
-                      Niveau {n}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm text-slate-300">
-                Entreprise ouverte à tous les niveaux, même sans licence
-                <select
-                  name="vitrineEntreprise"
-                  defaultValue={overview.config.vitrineSolo.entrepriseOuverte}
-                  className="mt-1 block w-full champ px-3 py-2 text-sm text-slate-100"
-                >
-                  <option value="">Aucune</option>
-                  {SCENARIO_CHOICES.map((s) => (
-                    <option key={s.code} value={s.code}>
-                      {s.shortName}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              Règle par défaut, décidée avec la grille tarifaire : sans licence, niveaux 1 à{" "}
-              {VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres} pour toutes les entreprises, au solo public
-              comme dans les parties d&apos;enseignant. Au-delà, les
-              niveaux restent visibles, marqués « {MARQUE_DE_L_ARENE} » avec le lien vers les
-              tarifs, et le serveur refuse de les créer. Une licence de l&apos;arène en cours ouvre
-              tous les niveaux. Seule la création est concernée : une partie commencée se termine.
-              Décoché, tous les niveaux sont ouverts à tous. Les parties de classe et les concours,
-              eux, demandent toujours une licence de l&apos;arène en cours.
-            </p>
-          </fieldset>
+          {/* Les niveaux ouverts sans licence se règlent avec la Découverte, dans
+              /admin/offres (migration 0041) : la règle serveur lit ce réglage. */}
+          <p className="text-sm text-slate-400" data-renvoi-decouverte="">
+            Niveaux ouverts sans licence (
+            {overview.config.vitrineSolo.active
+              ? `niveaux 1 à ${overview.config.vitrineSolo.niveauMaxAutres}`
+              : "tous ouverts"}
+            ) et démonstrations d&apos;épisodes :{" "}
+            <Link href="/admin/offres#gratuites" className="underline underline-offset-4 hover:text-slate-300">
+              réglés dans Offres et tarifs, rubrique Gratuités
+            </Link>
+            .
+          </p>
           {/* Les compteurs d'usage de /enseignants. Ils sont comptés dans la
               base et jamais rédigés : ce qui se règle ici, c'est ce qu'on en
               publie, pas ce qu'ils valent. */}
@@ -512,7 +501,7 @@ export default async function AdminPage({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-100">
-                      {estUneOffreDuDevis(d.offre) ? LIBELLES_DU_DEVIS[d.offre].offre : d.offre} ·{" "}
+                      {libellesDe(d.offre)?.offre ?? d.offre} ·{" "}
                       <span className="font-normal text-slate-300">{d.organisation}</span>
                     </p>
                     <p className="mt-0.5 text-xs text-slate-400">
@@ -551,7 +540,7 @@ export default async function AdminPage({
                   {d.effectif !== null ? (
                     <>
                       <dt className="text-slate-400">
-                        {(estUneOffreDuDevis(d.offre) ? LIBELLES_DU_DEVIS[d.offre].effectif : null) ?? "Effectif"}
+                        {libellesDe(d.offre)?.effectif ?? "Effectif"}
                       </dt>
                       <dd>{d.effectif}</dd>
                     </>
@@ -566,6 +555,24 @@ export default async function AdminPage({
                     <>
                       <dt className="text-slate-400">Niveau souhaité</dt>
                       <dd>{nomDuNiveau(d.niveau)}</dd>
+                    </>
+                  ) : null}
+                  {d.codePromo ? (
+                    <>
+                      <dt className="text-slate-400">Code promo</dt>
+                      <dd data-devis-code-promo={d.codePromo}>
+                        <span className="font-mono">{d.codePromo}</span>
+                        {d.remiseLibelle ? ` · ${d.remiseLibelle}` : ""}
+                        {d.prixCatalogueCents !== null ? ` · catalogue ${euros(d.prixCatalogueCents)}` : ""}
+                        {d.prixRemiseCents !== null ? (
+                          <>
+                            {" · "}
+                            <strong className="font-semibold text-slate-100">remisé {euros(d.prixRemiseCents)}</strong>
+                          </>
+                        ) : (
+                          " · prix remisé au devis"
+                        )}
+                      </dd>
                     </>
                   ) : null}
                   {d.message ? (
@@ -889,6 +896,11 @@ export default async function AdminPage({
                         <li key={l.id} className="flex flex-wrap items-center gap-2">
                           <span className="text-slate-300">{l.label}</span>
                           <span data-perimetre-licence="">{perimetre(l)}</span>
+                          {vente(l) ? (
+                            <span data-vente-licence={l.nature} className={l.nature === "vendue" ? "" : "font-semibold text-slate-200"}>
+                              {vente(l)}
+                            </span>
+                          ) : null}
                           <span className="tabular-nums">
                             du {l.startsAt.toLocaleDateString("fr-FR")} au{" "}
                             {l.endsAt.toLocaleDateString("fr-FR")}
@@ -917,24 +929,24 @@ export default async function AdminPage({
 
                   <FormulaireDeLicence
                     action={setLicenceAction.bind(null, org.organizationId)}
-                    offres={OFFRES_DU_FORMULAIRE}
+                    offres={offresDeLicence}
                     entreprises={ENTREPRISES.map((e) => ({ code: e.code, nom: e.nom }))}
                     niveaux={NIVEAUX_DE_L_ARENE}
                     episodes={OFFRES.episodes.nom}
+                    motifsDeRemise={Object.entries(MOTIFS_DE_REMISE).map(([code, libelle]) => ({ code, libelle }))}
+                    motifsDeGratuite={Object.entries(MOTIFS_DE_GRATUITE).map(([code, libelle]) => ({ code, libelle }))}
+                    essai={essai}
                   />
                   <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                    {OFFRES.classe.nom} : une entreprise et un niveau, un enseignant, un groupe à la
-                    fois. {OFFRES.programme.nom} : une entreprise, tous les niveaux, le nombre
-                    d&apos;enseignants et d&apos;intervenants du devis. {OFFRES.campus.nom} : tout,
-                    sans plafond. Une ancienne licence {OFFRES.classe.nom} (avant les trois offres)
-                    est devenue {OFFRES.programme.nom}, sans restriction d&apos;entreprise ni de
-                    niveau : au renouvellement, posez l&apos;offre et l&apos;entreprise vendues. Sans licence de
+                    L&apos;offre choisie au catalogue (<Link href="/admin/offres" className="underline underline-offset-4">Offres
+                    et tarifs</Link>) pose le périmètre, les limites et le prix ; la licence en garde une
+                    copie : changer le catalogue ensuite ne la change pas. Le montant facturé se calcule
+                    (prix catalogue moins la remise). Une licence offerte coûte 0 € et porte son motif ;
+                    l&apos;essai n&apos;apparaît que s&apos;il est activé dans les gratuités. Sans licence de
                     l&apos;arène en cours, ou licence expirée, l&apos;établissement joue en solo aux
                     niveaux gratuits : ni partie de classe ni concours ne se créent, les parties en
-                    cours se poursuivent. Les épisodes manager ne s&apos;ouvrent qu&apos;avec la case{" "}
-                    « {OFFRES.episodes.nom} » : cochez-la pour un client qui les a achetés, y compris
-                    sur une licence posée avant cette case (elles sont toutes passées sans les
-                    épisodes).
+                    cours se poursuivent. Les épisodes manager ne s&apos;ouvrent qu&apos;avec une offre qui
+                    les compose, ou la case « + {OFFRES.episodes.nom} ».
                   </p>
                 </details>
               ) : null}

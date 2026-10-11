@@ -9,15 +9,10 @@ import {
   updatePlatformConfig,
 } from "@/services/admin.service";
 import { seedDemoWorld } from "@/services/demo.service";
-import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
+import { deleteOrgLicence } from "@/services/licence.service";
+import { attribuerUneLicence } from "@/services/vente.service";
 import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
-import { normaliserVitrine, vitrineAEnregistrer, VERSION_DE_LA_REGLE } from "@/config/vitrine-solo";
 import { answerFormatFromProfile } from "@/config/difficulty";
-import {
-  estUneOffreDeLArene,
-  parametrageDeLOffre,
-  type OffreDeLArene,
-} from "@/config/tarifs";
 
 export async function createEstablishmentAction(formData: FormData): Promise<void> {
   const adminId = await requireAdminSession();
@@ -34,16 +29,8 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
     // L'inscription libre se règle dans /admin/inscrits (reglerInscriptionsAction) : ce
     // formulaire ne l'écrit plus, sans quoi il la remettrait à « non » à chaque envoi.
     soloAnswerFormat: answerFormatFromProfile({ answerFormat: formData.get("soloAnswerFormat") }),
-    // Les niveaux ouverts sans licence : enregistrés avec la version de la règle, qui
-    // seule fait foi (config/vitrine-solo.ts).
-    vitrineSolo: vitrineAEnregistrer(
-      normaliserVitrine({
-        version: VERSION_DE_LA_REGLE,
-        active: formData.get("vitrineActive") === "on",
-        entrepriseOuverte: formData.get("vitrineEntreprise"),
-        niveauMaxAutres: formData.get("vitrineNiveauMax"),
-      }),
-    ),
+    // Les niveaux ouverts sans licence se règlent dans /admin/offres, avec la Découverte
+    // (migration 0041) : ce formulaire ne les écrit plus.
     announcement: String(formData.get("announcement") ?? "").trim(),
     contactEmail: String(formData.get("contactEmail") ?? "").trim(),
     // Ce qui se publie du relevé d'usage sur /enseignants. Un compteur exact
@@ -92,51 +79,59 @@ export async function seedDemoAction(): Promise<void> {
 }
 
 /**
- * Enregistre les termes vendus à un établissement.
+ * ATTRIBUE UNE LICENCE DEPUIS UNE OFFRE DU CATALOGUE (/admin/offres).
  *
- * LE PÉRIMÈTRE se choisit (config/tarifs.ts) : l'offre de l'arène, Classe, Programme ou
- * Campus, ou aucune ; et la case « Épisodes manager », vendus à part. LE PARAMÉTRAGE
- * suit l'offre (`parametrageDeLOffre`) : Classe, une entreprise et un niveau, un
- * enseignant, un groupe à la fois ; Programme, une entreprise et le plafond
- * d'enseignants et d'intervenants du devis ; Campus, sans restriction. Une licence des
- * seuls épisodes n'en porte pas.
- *
- * Le montant est saisi en euros et rangé en centimes : un prix stocké en
- * flottant finit toujours par afficher 89,99999. Il est purement documentaire,
- * le produit n'encaisse rien.
+ * L'offre pose le périmètre (l'arène et son paramétrage, les épisodes), les limites et le
+ * prix catalogue ; l'admin choisit ce qu'elle laisse au choix (l'entreprise, le niveau, le
+ * plafond d'enseignants du devis), la nature (vendue, offerte, essai) et la remise. Le
+ * montant facturé est CALCULÉ par le serveur (services/vente.service.ts), jamais lu du
+ * formulaire ; la licence garde une copie des conditions de l'offre. Les montants saisis
+ * en euros sont rangés en centimes : un prix stocké en flottant finit toujours par
+ * afficher 89,99999.
  */
+/** Un champ du formulaire de licence, nettoyé. */
+const lire = (formData: FormData, nom: string) => String(formData.get(nom) ?? "").trim();
+/** Un montant saisi en euros (« 990 », « 1 090,50 »), en centimes ; null si vide ou illisible. */
+function centimes(formData: FormData, nom: string): number | null {
+  const n = Number(lire(formData, nom).replace(/\s/g, "").replace(",", "."));
+  return lire(formData, nom) !== "" && Number.isFinite(n) ? Math.round(n * 100) : null;
+}
+
 export async function setLicenceAction(
   organizationId: string,
   formData: FormData,
 ): Promise<void> {
   const adminId = await requireAdminSession();
-  const texte = (champ: string) => String(formData.get(champ) ?? "").trim();
-  const euros = Number(texte("amount").replace(",", "."));
-  const arene = estUneOffreDeLArene(texte("arene")) ? (texte("arene") as OffreDeLArene) : null;
-  const parametrage = arene
-    ? parametrageDeLOffre(arene, {
-        entreprise: texte("entreprise") || null,
-        niveau: Number(texte("niveau")) || null,
-        maxEnseignants: Number(texte("maxTeachers")) || null,
-      })
-    : null;
-
-  await setOrgLicence({
-    adminId,
-    organizationId,
-    label: texte("label"),
-    startsAt: new Date(texte("startsAt")),
-    endsAt: new Date(texte("endsAt")),
-    maxTeachers: parametrage?.maxEnseignants ?? null,
-    arene,
-    entreprises: parametrage?.entreprises ?? null,
-    niveaux: parametrage?.niveaux ?? null,
-    maxPartiesEnCours: parametrage?.maxPartiesEnCours ?? null,
+  const nature = lire(formData, "nature");
+  const typeRemise = lire(formData, "typeRemise");
+  await attribuerUneLicence(adminId, organizationId, {
+    offre: lire(formData, "offre"),
     episodes: formData.get("episodes") === "on",
-    reference: texte("reference") || null,
-    amountCents: Number.isFinite(euros) && texte("amount") !== "" ? Math.round(euros * 100) : null,
+    entreprise: lire(formData, "entreprise") || null,
+    niveau: Number(lire(formData, "niveau")) || null,
+    maxEnseignants: Number(lire(formData, "maxTeachers")) || null,
+    label: lire(formData, "label"),
+    startsAt: new Date(lire(formData, "startsAt")),
+    endsAt: new Date(lire(formData, "endsAt")),
+    reference: lire(formData, "reference") || null,
+    nature: nature === "offerte" || nature === "essai" ? nature : "vendue",
+    prixCatalogueCents: centimes(formData, "prixCatalogue"),
+    remise:
+      typeRemise === "pourcentage" || typeRemise === "montant"
+        ? {
+            type: typeRemise,
+            valeur:
+              typeRemise === "pourcentage"
+                ? Math.floor(Number(lire(formData, "valeurRemise").replace(",", ".")))
+                : (centimes(formData, "valeurRemise") ?? 0),
+            motif: lire(formData, "motifRemise"),
+          }
+        : null,
+    motifGratuite: lire(formData, "motifGratuite") || null,
   });
   revalidatePath("/admin");
+  revalidatePath("/admin/offres");
+  revalidatePath("/teacher");
 }
 
 export async function deleteLicenceAction(licenceId: string): Promise<void> {

@@ -58,6 +58,48 @@ const CONTRACTS: FormContract[] = [
     action: { file: "src/app/rendez-vous/actions.ts", fn: "reserverRendezVousAction" },
     sources: ["src/components/rendez-vous-form.tsx"],
   },
+  // Le catalogue (/admin/offres, migration 0041) : la licence attribuée depuis une offre,
+  // les modules, les gratuités, les codes promo.
+  {
+    nom: "licence attribuée depuis une offre du catalogue (/admin)",
+    action: { file: "src/app/admin/actions.ts", fn: "setLicenceAction" },
+    sources: ["src/components/formulaire-de-licence.tsx"],
+  },
+  {
+    nom: "offre du catalogue (/admin/offres, éditeur)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerOffreAction" },
+    sources: ["src/components/editeur-d-offre.tsx"],
+  },
+  {
+    nom: "affichage des prix sur le site (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerAffichageAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "mise en avant d'une offre (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "mettreEnAvantAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "module du catalogue (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerModuleAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "la Découverte (/admin/offres, gratuités)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerDecouverteAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "l'essai d'établissement (/admin/offres, gratuités)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerEssaiAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "code promo (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerCodePromoAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
   {
     nom: "création d'une partie de classe",
     action: { file: "src/app/teacher/actions.ts", fn: "createClassGameAction" },

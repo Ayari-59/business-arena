@@ -187,6 +187,21 @@ export const orgLicences = pgTable(
     entreprises: text("entreprises").array(),
     niveaux: integer("niveaux").array(),
     maxPartiesEnCours: integer("max_parties_en_cours"),
+    /**
+     * LA VENTE, COPIÉE AU MOMENT DE LA VENTE (migration 0041, /admin/offres) : l'offre du
+     * catalogue vendue (`offre_code`) et une copie de ses conditions (`conditions` : nom,
+     * modules et paramètres, prix catalogue, ce qu'elle inclut). Changer le catalogue ne
+     * change pas une licence déjà vendue. `prix_catalogue_cents` : le prix de référence
+     * (ou celui du devis pour une offre sur devis) ; `remise` : la remise commerciale
+     * (type, valeur, motif, montant) ; `amount_cents` reste le montant facturé.
+     * `nature` : vendue, offerte (0 €, motif obligatoire) ou essai (0 €, datée).
+     */
+    offreCode: text("offre_code"),
+    conditions: jsonb("conditions"),
+    prixCatalogueCents: integer("prix_catalogue_cents"),
+    remise: jsonb("remise"),
+    nature: text("nature", { enum: ["vendue", "offerte", "essai"] }).notNull().default("vendue"),
+    motifGratuite: text("motif_gratuite"),
     createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },

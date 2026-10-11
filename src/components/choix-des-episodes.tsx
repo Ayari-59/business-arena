@@ -1,6 +1,6 @@
 import { Repliable } from "@/components/repliable";
 import { catalogueDesEpisodes, teinteDuSecteur } from "@/config/episodes/catalogue";
-import { estUneDemo, MARQUE_DEMO } from "@/config/episodes/demos";
+import { EPISODES_DE_DEMO, MARQUE_DEMO } from "@/config/episodes/demos";
 import { compter } from "@/lib/format";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 
@@ -18,7 +18,14 @@ import { episodeParCode } from "@/pedagogy/episodes/registre";
  * champ en saisie). Un épisode reçu par l'adresse (`?episode=…`, depuis sa fiche
  * enseignant) arrive coché, son repli ouvert.
  */
-export function ChoixDesEpisodes({ preselection }: { preselection: string | null }) {
+export function ChoixDesEpisodes({
+  preselection,
+  demos = EPISODES_DE_DEMO,
+}: {
+  preselection: string | null;
+  /** Les démonstrations de la Découverte (/admin/offres), marquées dans la liste. */
+  demos?: readonly string[];
+}) {
   const entreprises = catalogueDesEpisodes();
   return (
     <fieldset className="grid gap-2" data-choix-des-episodes="">
@@ -73,7 +80,7 @@ export function ChoixDesEpisodes({ preselection }: { preselection: string | null
                             <span className="min-w-0">
                               <span className="tabular-nums text-slate-400">{ep.numero}</span>{" "}
                               {ep.titre}
-                              {estUneDemo(code) ? (
+                              {demos.includes(code) ? (
                                 <span className="text-slate-400"> · {MARQUE_DEMO}</span>
                               ) : null}
                             </span>

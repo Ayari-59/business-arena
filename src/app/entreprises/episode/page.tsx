@@ -6,17 +6,15 @@ import { catalogueDesEpisodes, teinteDuSecteur } from "@/config/episodes/catalog
 import type { Episode } from "@/config/episodes/types";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
 import {
-  EPISODES_DE_DEMO,
   MARQUE_DEMO,
   NIVEAU_DES_DEMOS,
-  estUneDemo,
 } from "@/config/episodes/demos";
 import { MARQUE_DES_EPISODES, OFFRES } from "@/config/tarifs";
 import { niveauParCode } from "@/config/episodes/niveaux";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
-import { accesAuxEpisodes, licencePourLEpisode } from "@/services/acces.service";
+import { accesAuxEpisodes, estUneDemoPour, licencePourLEpisode } from "@/services/acces.service";
 
 /** Ce qui se lance dépend de la licence de qui regarde : la page se rend à la demande. */
 export const dynamic = "force-dynamic";
@@ -68,8 +66,13 @@ export default async function EpisodesPage() {
   // Tout est ouvert : une licence de compte ou d'une cohorte sans liste d'épisodes.
   const licence = acces.licence && !acces.episodes;
   const sousLicence = (code: string) => licencePourLEpisode(acces, code);
+  // Les démonstrations de la Découverte, réglées dans /admin/offres, et leur niveau.
+  const demos = acces.demos ?? [];
+  const niveauDesDemos = niveauParCode(acces.niveauDesDemos ?? NIVEAU_DES_DEMOS).nom;
   const secteurDe = (code: string) =>
     entreprises.find((e) => e.familles.some((f) => f.episodes.includes(code)))?.secteur;
+  const unParMetier =
+    demos.length === entreprises.length && new Set(demos.map((c) => secteurDe(c)?.code)).size === demos.length;
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -132,6 +135,7 @@ export default async function EpisodesPage() {
                       ep={ep}
                       niveau={3}
                       teinte={secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)"}
+                      niveauDesDemos={niveauDesDemos}
                       metier={secteur ? `${secteur.nom} · ${secteur.entreprise}` : null}
                     />
                   );
@@ -139,7 +143,7 @@ export default async function EpisodesPage() {
               </ul>
             </section>
           ) : null}
-          {licence ? null : (
+          {licence || demos.length === 0 ? null : (
             <section
               aria-labelledby="demos-gratuites"
               data-demos-gratuites=""
@@ -152,8 +156,8 @@ export default async function EpisodesPage() {
                 Démos gratuites
               </h2>
               <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
-                Un épisode par métier, à jouer sans licence, au niveau{" "}
-                {niveauParCode(NIVEAU_DES_DEMOS).nom}. Les autres épisodes, et les niveaux Standard
+                {unParMetier ? "Un épisode par métier," : demos.length > 1 ? "Des épisodes" : "Un épisode"} à jouer sans licence, au niveau{" "}
+                {niveauDesDemos}. Les autres épisodes, et les niveaux Standard
                 et Expert, sont inclus dans l&apos;offre {OFFRES.episodes.nom}, sur devis.{" "}
                 <Link
                   href={LIEN_TARIFS}
@@ -164,8 +168,9 @@ export default async function EpisodesPage() {
                 </Link>
               </p>
               <ul className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {EPISODES_DE_DEMO.map((code) => {
-                  const ep = episodeParCode(code)!;
+                {demos.map((code) => {
+                  const ep = episodeParCode(code);
+                  if (!ep) return null;
                   const secteur = secteurDe(code);
                   return (
                     <CarteEpisode
@@ -174,6 +179,7 @@ export default async function EpisodesPage() {
                       niveau={3}
                       teinte={secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)"}
                       demo
+                      niveauDesDemos={niveauDesDemos}
                       metier={secteur ? `${secteur.nom} · ${secteur.entreprise}` : null}
                     />
                   );
@@ -189,13 +195,14 @@ export default async function EpisodesPage() {
               if (!ep) return null;
               const secteur = secteurDe(code);
               const teinte = secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)";
-              return sousLicence(code) || estUneDemo(code) ? (
+              return sousLicence(code) || estUneDemoPour(acces, code) ? (
                 <CarteEpisode
                   key={code}
                   ep={ep}
                   niveau={niveau}
                   teinte={teinte}
                   demo={!sousLicence(code)}
+                  niveauDesDemos={niveauDesDemos}
                 />
               ) : (
                 <CarteFermee
@@ -220,9 +227,12 @@ function CarteEpisode({
   teinte,
   niveau,
   demo = false,
+  niveauDesDemos,
   metier = null,
 }: {
   ep: Episode;
+  /** Le niveau où se jouent les démonstrations (réglage de la Découverte). */
+  niveauDesDemos: string;
   teinte: string;
   niveau: 3 | 4;
   /** Sans licence : une démonstration, marquée, qui se joue en Découverte. */
@@ -260,7 +270,7 @@ function CarteEpisode({
         </div>
         <p className="text-sm text-slate-400">
           {ep.etapes.length} décisions · {ep.duree}
-          {demo ? ` · en ${niveauParCode(NIVEAU_DES_DEMOS).nom}` : ""}
+          {demo ? ` · en ${niveauDesDemos}` : ""}
         </p>
         <span className="mt-auto inline-flex items-center gap-1.5 self-start rounded-lg py-1.5 text-sm font-semibold text-amber-300 transition group-hover:bg-[var(--accent-plein)] group-hover:px-3 group-hover:text-[var(--accent-plein-texte)] group-focus-visible:bg-[var(--accent-plein)] group-focus-visible:px-3 group-focus-visible:text-[var(--accent-plein-texte)]">
           Jouer l&apos;épisode {ep.numero}
