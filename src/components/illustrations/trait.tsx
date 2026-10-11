@@ -32,7 +32,7 @@ export const BLANC = "#f1ede4";
 export const OMBRE = "#d9d2c3";
 
 /** La teinte du métier, avec le repli de NOVA hors d'une partie. */
-const TEINTE = "var(--metier, #9fabff)";
+const TEINTE = "var(--metier, #6cb7ff)";
 export const ACCENT: CSSProperties = { fill: TEINTE };
 export const ACCENT_TRAIT: CSSProperties = { stroke: TEINTE };
 

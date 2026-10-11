@@ -37,6 +37,16 @@ export interface Secteur {
    * La santé, qui l'empruntait, prend le vert de l'abonnement : le pire écart
    * des cinq (vision normale et déficiences, les deux côtés) passe de 1,5 à
    * 5,35, au-dessus des 4,2 d'avant le lot, mesurés de la même façon.
+   *
+   * LOT « TEINTES » (octobre 2026) : les neuf jetons sont devenus neuf
+   * familles nommées (voir « LES MÉTIERS » dans globals.css), et les emprunts
+   * ont été refaits sur les 126 façons d'en prendre cinq. Gardés tels quels,
+   * ils tombaient à 3,4 (le magenta du commerce et l'azur du transport, en
+   * déficience). Le négoce prend le sable du bâtiment (Arvel
+   * fournit les artisans du bâtiment), l'hôtellerie-restauration le turquoise
+   * de l'e-commerce, l'agroalimentaire le bleu de
+   * l'industrie ; le conseil et la santé gardent le leur. Le pire écart des
+   * cinq, mesuré de la même façon, passe à 9,0 : le meilleur des 126.
    */
   teinte: string;
   /**
@@ -53,7 +63,7 @@ export interface Secteur {
 export const SECTEURS: readonly Secteur[] = [
   {
     code: "negoce",
-    teinte: "commerce",
+    teinte: "batiment",
     parTheme: true,
     nom: "Négoce et distribution",
     entreprise: "Arvel Distribution",
@@ -62,7 +72,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "hotellerie",
-    teinte: "restauration",
+    teinte: "ecommerce",
     nom: "Hôtellerie-restauration",
     entreprise: "Groupe Escale",
     texte:
@@ -86,7 +96,7 @@ export const SECTEURS: readonly Secteur[] = [
   },
   {
     code: "agroalimentaire",
-    teinte: "transport",
+    teinte: "industrie",
     nom: "Industrie agroalimentaire",
     entreprise: "Laiterie de Kerbrélan",
     texte:

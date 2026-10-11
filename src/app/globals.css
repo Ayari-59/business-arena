@@ -637,102 +637,88 @@
  * LES MÉTIERS : NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS.
  *
  * Une couleur distingue un métier (sa puce, son nom, sa barre, sa tuile, le
- * filet de tête de ses cartes). Le lot 5A avait posé la mécanique, mais avec
- * des teintes DÉLAVÉES (chroma OKLCH 0,023 à 0,096, sous le plancher où une
- * couleur se voit encore) : l'arène a viré au sépia et les quinze métiers se
- * ressemblaient tous. Elles sont refaites FRANCHES.
+ * filet de tête de ses cartes, sa série dans un graphique). Elle s'ajoute au
+ * nom et au pictogramme, elle ne les remplace jamais.
  *
- * NEUF FAMILLES, PAS QUINZE. Six des quinze jetons sont des variantes de
- * scénario d'un métier déjà là : `nova-gamme` est l'industrie, `hotel-gamme`
- * l'hôtellerie, `bistrot-gamme` la restauration, `ecommerce-gamme`
- * l'e-commerce, `conseil-gamme` les services, `boutique-mono` le commerce.
- * Chacune prend une NUANCE VOISINE de sa famille (même teinte à quelques
- * degrés près, un cran de clarté d'écart) et non un créneau à elle. Il ne
- * reste que neuf teintes à vraiment séparer, et c'est ce qui rend « franc »
- * tenable : quinze ne l'était pas, et c'est pourquoi elles avaient été
- * délavées.
+ * NEUF FAMILLES, PAS QUINZE. Le joueur choisit parmi neuf entreprises
+ * (`SCENARIO_CHOICES` du registre) ; les six autres codes de scénario sont la
+ * MÊME entreprise jouée en gamme à partir d'un certain niveau (`nova-gamme`
+ * est l'industrie, `hotel-gamme` l'hôtellerie, `bistrot-gamme` la
+ * restauration, `ecommerce-gamme` l'e-commerce, `conseil-gamme` les services,
+ * `boutique-mono` le commerce). Ils renvoient au jeton de leur entreprise, à
+ * l'identique : un élève ne change pas d'univers en changeant de niveau.
  *
- * CE QUE « FRANC » VEUT DIRE, EN MESURES (les quinze jetons, les deux côtés) :
- *   - chroma OKLCH dans [0,105 ; 0,166[ : AU-DESSUS du plancher de la
- *     compétence `dataviz` (0,10, en dessous duquel une teinte lit comme un
- *     gris) et SOUS l'accent le moins coloré de la charte — l'or (0,166),
- *     devant le vert de résultat (0,169), le rouge (0,175) et l'orange
- *     d'action (0,176). Un métier se voit ; il ne crie pas plus fort qu'un
- *     bouton.
- *   - teinte à plus de 20° des quatre teintes réservées (rouge 23°, orange
- *     d'action 55°, or 83°, vert de résultat 154°) ET à 10 d'écart perçu au
- *     moins de chacun de ces accents : un métier ne se confond ni avec une
- *     action, ni avec un verdict, ni avec un résultat.
- *   - 4,5 pour 1 au moins sur les surfaces réelles (carte #ffffff, page
- *     #f5f7fb, champ du marine #1b416f, relevé #13355f, ardoise #0b2545) et
- *     sous l'encre qui se pose dessus.
- *   - LES NEUF FAMILLES, DANS UN ORDRE FIXE (hôtellerie, bâtiment,
- *     e-commerce, abonnement, transport, commerce, services, restauration,
- *     industrie — lot P6 : services et abonnement ont échangé leur place,
- *     ordre ré-dérivé par énumération des 9! ordres), tiennent la porte de
- *     la compétence entre voisins : 15 d'écart en vision normale et 8 en
- *     protanopie comme en deutéranopie (mesuré au lot P6 : 16,1 et 8,1 sur
- *     le marine, 18,2 et 10,5 sur le papier). Le lot 5A n'atteignait pas
- *     cette porte du tout.
- *   - deux à deux, les neuf sont à 5,1 au moins sur le marine et 7,0 sur le
- *     papier (lot 5A : 3,0 et 1,9 ; lot P6 : 5,1 et 8,4, les trois teintes
- *     refaites étant à 17 au moins de toutes les autres sur le marine). Quinze couleurs franches ne peuvent pas
- *     être deux à deux à 15 — c'est le plafond de séries que la compétence
- *     décrit — d'où l'ordre fixe, et d'où le fait qu'un métier porte TOUJOURS
- *     son nom et son pictogramme : l'identité ne tient jamais à la couleur
- *     seule.
- *   - chaque teinte reste à 10 au moins (6,5 en déficience) de chacun des
- *     CINQ créneaux de la palette des données, à côté desquels elle sert de
- *     série du joueur. C'est le prix mesuré de teintes franches : les cinq
- *     créneaux occupent déjà le bleu, le prune, le bleu-vert, l'indigo et le
- *     bleu acier, et une couleur franche s'en approche fatalement là où une
- *     couleur délavée s'en éloignait. La série du joueur porte pour cela une
- *     étiquette directe et un trait plus épais (charts.tsx).
+ * NEUF FAMILLES QU'UN ÉLÈVE NOMME (lot « teintes », octobre 2026). Sur
+ * /jouer, le propriétaire voyait trois lavandes (NOVA, L'ESCALE, PIXEL) et
+ * deux roses (MAILLE, LA TABLE D'AUGUSTIN) : deux à deux, les neuf n'étaient
+ * qu'à 5,1 d'écart perçu sur le marine et 8,4 sur le papier (OKLab ×100).
+ * Elles ont été cherchées par la mesure : une fenêtre de teinte OKLCH par
+ * famille, de chaque côté, et l'écart minimal des 36 paires maximisé sous les
+ * gardes ci-dessous (outils et journaux dans le scratchpad du lot).
  *
- * LOT P6 : TROIS VERTS N'ÉTAIENT QU'UN. Services (#b8fc85), abonnement
- * (#b1e566) et bâtiment (#acd048) tenaient dans 12° de teinte : 5,6 à 11,8
- * d'écart perçu entre eux sur le marine, 7,0 sur le papier — « la même
- * couleur », disait le propriétaire. Il n'en reste qu'un, l'abonnement (VOLT
- * FITNESS : #b8fc85 sur le marine, #567d01 sur le papier). Les deux autres
- * ont été CHERCHÉS PAR LA MESURE (grille OKLCH, toutes les gardes de ce bloc
- * appliquées ; outils et journaux dans le scratchpad du lot) :
- *   - services (ATLAS CONSEIL) : un GLACIER, #12f8fe sur le marine (198°),
- *     #2a69cb sur le papier (259°). La sarcelle (175-190°) n'existe pas sur
- *     le papier : à 4,5:1 sur le blanc, sa chroma plafonne à 0,100 vers 174°
- *     et tombe dessous au-delà, et elle s'y lit à 4,6 d'écart du vert de
- *     gain (#0f7a46). Le glacier tourne donc vers l'azur côté papier (même
- *     famille froide) : c'est le seul écart de teinte entre les deux côtés.
- *   - bâtiment (MARTEL & FILS) : un SABLE, #b6b262 sur le marine (106°,
- *     chroma 0,103, au plancher), #505901 sur le papier (116°). Plus chaud et
- *     plus sourd que le vert, à 23° de l'or : la teinte du chantier.
- * Sur le marine, chacune des trois est à 17 d'écart au moins de chacun des
- * huit autres métiers (vision normale). Sur le papier, la plus petite paire
- * des trois est sable / vert, 11,0 : avec les six encres foncées existantes
- * et ces gardes, AUCUN trio de teintes nouvelles n'y dépasse 9,8 (14,5 en
- * renonçant aux 20° des accents) — 15 n'y est pas atteignable ; la garde
- * « deux à deux » est réglée sur la mesure (palette-des-donnees.test.ts).
+ *                     famille          marine (clair)      papier (foncé)
+ *   NOVA              bleu roi         #6cb7ff             #463fa9 indigo
+ *   MAILLE & CO       magenta          #ffb2fe orchidée    #530241 prune
+ *   PIXEL & CO        turquoise        #29eac5             #06658e canard
+ *   L'ESCALE          violet           #c6a0f2 lilas       #310373
+ *   LA TABLE D'AUG.   rose framboise   #f98bbc             #8a435b vieux rose
+ *   ATLAS CONSEIL     cyan             #1fbfbf             #053e6f pétrole
+ *   VOLT FITNESS      citron vert      #d2f671             #093c01 sapin
+ *   MARTEL & FILS     sable            #b2b131 moutarde    #505901 olive
+ *   ROUTE & CIE       azur             #5eddfe ciel        #4c6bd3
  *
- * NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS. Le joueur choisit parmi NEUF
- * entreprises (`SCENARIO_CHOICES` du registre) ; les six autres codes de
- * scénario ne sont pas des entreprises de plus, mais la MÊME entreprise jouée
- * en gamme à partir d'un certain niveau. Elles reprennent donc la couleur de
- * leur entreprise, à l'identique : NOVA reste NOVA quand sa gamme s'ouvre au
- * niveau 4, et un élève ne change pas d'univers en changeant de niveau.
+ * Mesuré sur les 36 paires : 10,3 au moins sur le marine (avant : 5,1) et
+ * 12,1 sur le papier (avant : 8,4) ; en protanopie ou deutéranopie, 3,4 et
+ * 8,4 (avant : 1,2 et 4,7). 12 n'est pas atteignable sur le marine avec neuf
+ * familles nommées qui restent les mêmes d'un côté à l'autre : le papier n'a
+ * ni turquoise, ni cyan, ni jaune foncés lisibles (leur chroma tombe sous
+ * 0,10 à 4,5 pour 1 sur le blanc), ses encres vivent donc dans le bleu, le
+ * violet, le rose et un seul vert, et leurs jumelles claires se resserrent
+ * sur le marine : l'orchidée de MAILLE est à 10,3 du lilas de L'ESCALE, le
+ * bleu de NOVA à 10,3 du ciel de ROUTE & CIE. Côté marine, les familles
+ * froides tournent donc vers le vert (turquoise 175°, cyan 195°, ciel 218°,
+ * bleu 249°) là où le papier n'a que du bleu (236° à 280°) : c'est ce qui a
+ * chassé les lavandes.
+ *
+ * CE QUE CHAQUE TEINTE TIENT, des deux côtés (palette-des-donnees.test.ts) :
+ *   - chroma OKLCH dans [0,10 ; 0,166[ : au-dessus du plancher de la
+ *     compétence `dataviz`, sous l'or, le moins coloré des accents réservés.
+ *   - teinte à plus de 20° du rouge (23°), de l'orange d'action (55°), de
+ *     l'or (83°) et du vert de résultat (154°). Une exception, mesurée : le
+ *     vert sapin de VOLT sur le papier (141°), où la marge du vert descend à
+ *     12°. Le papier n'a qu'une poignée de verts foncés lisibles, et à 20° le
+ *     meilleur possible était à 8,7 de l'olive de MARTEL ; il reste à 20,3
+ *     d'écart perçu du vert de gain du papier (#0f7a46).
+ *   - 10 d'écart perçu au moins de chaque accent, vert et rouge du papier
+ *     compris (#0f7a46, #c0392b ; l'ancien vert de VOLT n'en était qu'à 7,0),
+ *     et 15 au moins de l'encre du texte courant (#f1ede4, #0e1a2b).
+ *   - 4,5 pour 1 sur les surfaces réelles (ardoise #0b2545, relevé #13355f,
+ *     champ #1b416f ; carte #ffffff, page #f5f7fb) et sous l'encre posée sur
+ *     un aplat de métier.
+ *   - 10 d'écart au moins (6,5 en déficience) du CRÉNEAU 1 de la palette des
+ *     données, le seul qui partage un graphique avec la série du joueur
+ *     (« Chiffre » contre « Résultat net »). Les quatre autres ne côtoient
+ *     jamais la teinte du métier : les garder coûtait le plus (aucun
+ *     turquoise ni cyan foncé n'en sortait sur le papier).
+ *   - LES NEUF FAMILLES, DANS UN ORDRE FIXE (industrie, restauration,
+ *     transport, abonnement, commerce, services, bâtiment, e-commerce,
+ *     hôtellerie) : deux voisins à 15 au moins en vision normale et 8 en
+ *     déficience, des deux côtés (la porte de la compétence, inchangée).
+ *     Ré-dérivé par énumération des 9! ordres : 96 la tiennent, celui-ci
+ *     au mieux (17,2 et 8,4).
  * ------------------------------------------------------------------------- */
 :root,
 [data-theme="clair"] .contre-jour,
 [data-theme="clair"] .ardoise {
-  --secteur-industrie: #9fabff;
-  --secteur-commerce: #fe89d3;
-  --secteur-ecommerce: #fcb9ff;
-  --secteur-hotellerie: #cbabff;
-  --secteur-restauration: #ffa2c3;
-  /* Lot P6 : services (ATLAS) passe au glacier, bâtiment (MARTEL) au sable,
-     l'abonnement (VOLT) garde LE vert (voir « LOT P6 » plus haut). */
-  --secteur-services: #12f8fe;
-  --secteur-abonnement: #b8fc85;
-  --secteur-batiment: #b6b262;
-  --secteur-transport: #7fbaff;
+  --secteur-industrie: #6cb7ff;
+  --secteur-commerce: #ffb2fe;
+  --secteur-ecommerce: #29eac5;
+  --secteur-hotellerie: #c6a0f2;
+  --secteur-restauration: #f98bbc;
+  --secteur-services: #1fbfbf;
+  --secteur-abonnement: #d2f671;
+  --secteur-batiment: #b2b131;
+  --secteur-transport: #5eddfe;
   /* La gamme d'une entreprise, c'est la même entreprise. */
   --secteur-nova-gamme: var(--secteur-industrie);
   --secteur-hotel-gamme: var(--secteur-hotellerie);
@@ -1155,17 +1141,20 @@ body {
   --voile-choisi-fort: color-mix(in srgb, var(--marine) 8%, #fff);
   --fond-ligne-moi: var(--voile-choisi, color-mix(in srgb, var(--accent-plein) 9%, #fff));
   /* Les teintes des métiers, foncées pour le papier (voir « LES MÉTIERS »).
-     Même teinte qu'en face, à quelques degrés près : c'est la CLARTÉ qui se
-     retourne, parce que les quatre surfaces n'ont pas la même. */
-  --secteur-industrie: #1f0677;
-  --secteur-commerce: #4d0038;
-  --secteur-ecommerce: #6c1072;
-  --secteur-hotellerie: #46097a;
-  --secteur-restauration: #8c094e;
-  --secteur-services: #2a69cb;
-  --secteur-abonnement: #567d01;
+     Même famille qu'en face : c'est la CLARTÉ qui se retourne, parce que les
+     surfaces n'ont pas la même. Le turquoise, le cyan et l'azur y tournent
+     vers le bleu (canard, pétrole, bleu moyen), le citron vert et le sable
+     vers le sapin et l'olive : un foncé lisible n'existe pas dans leur
+     teinte. */
+  --secteur-industrie: #463fa9;
+  --secteur-commerce: #530241;
+  --secteur-ecommerce: #06658e;
+  --secteur-hotellerie: #310373;
+  --secteur-restauration: #8a435b;
+  --secteur-services: #053e6f;
+  --secteur-abonnement: #093c01;
   --secteur-batiment: #505901;
-  --secteur-transport: #003d75;
+  --secteur-transport: #4c6bd3;
   /* La gamme d'une entreprise, c'est la même entreprise. */
   --secteur-nova-gamme: var(--secteur-industrie);
   --secteur-hotel-gamme: var(--secteur-hotellerie);

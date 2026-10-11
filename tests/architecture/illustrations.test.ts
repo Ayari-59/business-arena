@@ -63,7 +63,7 @@ const PALETTE = new Set([
   "#d9d2c3",
 ]);
 /** Le repli de la teinte, hors d'une partie : il n'existe qu'au fond de `var(--metier, …)`. */
-const REPLI_DE_LA_TEINTE = /var\(--metier,\s*#9fabff\)/g;
+const REPLI_DE_LA_TEINTE = /var\(--metier,\s*#6cb7ff\)/g;
 
 const DOSSIER = join(process.cwd(), "src", "components", "illustrations");
 
@@ -189,7 +189,7 @@ describe("la palette fermée", () => {
     expect(pleines.length).toBeGreaterThan(0);
     // Toute déclaration de style est une teinte du métier, rien d'autre.
     for (const [, style] of html.matchAll(/style="([^"]*)"/g)) {
-      expect(style).toMatch(/^(?:fill|stroke):var\(--metier, #9fabff\)$/);
+      expect(style).toMatch(/^(?:fill|stroke):var\(--metier, #6cb7ff\)$/);
     }
   });
 

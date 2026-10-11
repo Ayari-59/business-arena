@@ -27,17 +27,19 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  * chroma de l'orange de l'action, de l'or du verdict, du vert et du rouge des
  * résultats, et aucun graphique n'écrit une couleur en dur.
  *
- * LES QUINZE TEINTES DE MÉTIER, FRANCHES. Le lot 5A les avait laissées
- * délavées (chroma 0,023 à 0,096, sous le plancher où une couleur se voit
- * encore) : l'arène virait au sépia et les quinze se ressemblaient. Elles sont
- * refaites, et la règle qui les tient tient en quatre lignes :
+ * LES NEUF TEINTES DE MÉTIER, NEUF FAMILLES QU'UN ÉLÈVE NOMME (lot
+ * « teintes », octobre 2026 ; le détail et les mesures sont dans le grand
+ * commentaire « LES MÉTIERS » de globals.css). La règle qui les tient :
  *   - NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS : six jetons sont des
- *     VARIANTES de scénario — la même entreprise jouée en gamme — et
+ *     VARIANTES de scénario (la même entreprise jouée en gamme) et
  *     reprennent la couleur de leur entreprise, à l'identique.
- *   - franches : chroma dans [0,105 ; 0,166[, au-dessus du plancher de
+ *   - franches : chroma dans [0,10 ; 0,166[, au-dessus du plancher de
  *     `dataviz` et sous l'or, le moins coloré des quatre accents réservés.
- *   - hors des teintes prises : plus de 20° et plus de 10 d'écart perçu de
- *     chacun de ces accents.
+ *   - hors des teintes prises : plus de 20° (12° pour le seul vert sapin du
+ *     papier) et plus de 10 d'écart perçu de chacun des accents, et 15 de
+ *     l'encre du texte courant.
+ *   - DEUX À DEUX, les 36 paires : 10 au moins sur le marine, 12 sur le
+ *     papier (mesuré 10,3 et 12,1 ; avant le lot, 5,1 et 8,4).
  *   - les neuf familles, dans un ORDRE FIXE, tiennent la porte de la
  *     compétence entre voisins : 15 en vision normale, 8 en déficience.
  */
@@ -139,31 +141,57 @@ const SUR_MARINE_METIERS = CSS.slice(
   CSS.indexOf("LES MÉTIERS : NEUF ENTREPRISES, NEUF UNIVERS, NEUF COULEURS"),
 );
 const SUR_PAPIER_METIERS = CSS.slice(CSS.indexOf('[data-theme="clair"] {\n  /* Même remarque'));
-/** Les quatre accents que la charte réserve, par côté (le papier a ses encres). */
+/**
+ * Les quatre accents que la charte réserve, par côté (le papier a ses encres).
+ * Lot « teintes » : le vert et le rouge de résultat du PAPIER (#0f7a46,
+ * #c0392b) manquaient. L'ancien vert de VOLT (#567d01) n'était qu'à 7,0 du
+ * vert de gain du papier : la garde ne le voyait pas.
+ */
 const ACCENTS_RESERVES = {
   marine: ["#ff8a1f", "#f4b400", "#3ccf7e", "#ff7070"],
-  clair: ["#a35200", "#8a6400", "#a07c00"],
+  clair: ["#a35200", "#8a6400", "#a07c00", "#0f7a46", "#c0392b"],
+};
+/**
+ * Les teintes OKLCH que la charte réserve (rouge de perte, orange d'action,
+ * or du verdict, vert de résultat) et la marge qu'un métier garde autour.
+ * 20° partout, sauf le vert du PAPIER : 12°, pour le seul vert sapin de VOLT
+ * (141°). Le papier n'a qu'une poignée de verts foncés lisibles ; à 20°, le
+ * seul possible tombait à 8,7 de l'olive de MARTEL. L'écart perçu au vert de
+ * gain reste, lui, à 10 au moins (mesuré 20,3).
+ */
+const TEINTES_RESERVEES = { rouge: 23, orange: 55, or: 83, vert: 154 };
+const MARGES_DE_TEINTE = {
+  marine: { rouge: 20, orange: 20, or: 20, vert: 20 },
+  clair: { rouge: 20, orange: 20, or: 20, vert: 12 },
+};
+/** L'encre du texte courant : un nom de métier écrit dans sa teinte doit s'en distinguer. */
+const ENCRES_DU_TEXTE = { marine: [TABLEAU[100]!, TABLEAU[50]!], clair: [PAPIER[100]!, PAPIER[50]!] };
+/** Le créneau qui partage un graphique avec la série du joueur (charts.tsx). */
+const CRENEAU_VOISIN_DU_JOUEUR = 0;
+const ecartDeTeinte = (a: number, b: number) => {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
 };
 /** L'or, le moins coloré des quatre accents : le plafond de la charte. */
 const PLAFOND_CHROMA = 0.166;
 /**
  * L'ordre fixe des neuf familles, et les six variantes avec leur famille.
- * Lot P6 : services et abonnement échangent leur place. Le glacier des
- * services (#12f8fe) tombait à 1,5 d'écart du mauve de l'e-commerce en
- * deutéranopie ; l'ordre a été ré-dérivé en énumérant les 9! ordres (méthode
- * de la compétence dataviz), et c'est le plus proche de l'ancien qui tient
- * la porte : 16,1 / 8,1 sur le marine, 18,2 / 10,5 sur le papier.
+ * Lot « teintes » : ré-dérivé en énumérant les 9! ordres (méthode de la
+ * compétence dataviz) sur les neuf nouvelles teintes. 96 tiennent la porte
+ * des deux côtés ; celui-ci au mieux : 17,2 en vision normale, 8,4 en
+ * déficience. L'ancien ordre y tombait à 3,4 en déficience (l'orchidée de
+ * MAILLE et le ciel de ROUTE & CIE, voisins sur le marine).
  */
 const ORDRE_DES_FAMILLES = [
-  "hotellerie",
-  "batiment",
-  "ecommerce",
-  "abonnement",
+  "industrie",
+  "restauration",
   "transport",
+  "abonnement",
   "commerce",
   "services",
-  "restauration",
-  "industrie",
+  "batiment",
+  "ecommerce",
+  "hotellerie",
 ];
 const VARIANTES: Record<string, string> = {
   "nova-gamme": "industrie",
@@ -317,6 +345,26 @@ describe("la palette des données vient des jetons, jamais d'une couleur écrite
     }
   });
 
+  it("la série du joueur ne côtoie que le créneau 1 dans un même graphique", () => {
+    // C'est ce qui permet à la garde des teintes de métier de ne mesurer que
+    // le créneau 1 (lot « teintes ») : un graphique qui poserait la teinte du
+    // métier à côté des créneaux 2 à 5 devrait d'abord réélargir cette garde.
+    const fautes: string[] = [];
+    for (const chemin of GRAPHIQUES) {
+      const texte = readFileSync(join(process.cwd(), chemin), "utf8");
+      const code = texte.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+      // Un graphique par fonction de premier niveau.
+      for (const bloc of code.split(/\n(?=(?:export )?function )/)) {
+        // (le préambule déclare les jetons eux-mêmes : il ne dessine rien)
+        if (!/^(?:export )?function /.test(bloc.trimStart())) continue;
+        if (!/\bMOI\b|var\(--metier/.test(bloc)) continue;
+        const autres = bloc.match(/creneau\((?!0\))[^)]*\)|CRENEAUX\[|--serie-[2-5]/g) ?? [];
+        if (autres.length) fautes.push(`${chemin} : ${bloc.slice(0, 60).trim()}… ${autres.join(", ")}`);
+      }
+    }
+    expect(fautes, `la teinte du métier côtoie un autre créneau :\n${fautes.join("\n")}`).toEqual([]);
+  });
+
   it("l'ordre des créneaux ne se cycle pas : la sixième série passe au neutre", () => {
     const charts = readFileSync(join(process.cwd(), "src/components/charts.tsx"), "utf8");
     const code = charts.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
@@ -396,31 +444,46 @@ describe("la teinte du métier est le fil d'une partie", () => {
             `${nom} (${teinte}) trop près de l'accent ${accent}`,
           ).toBeGreaterThanOrEqual(10);
         }
-        // DISTINCTE DES CINQ CRÉNEAUX DE DONNÉES, à côté desquels elle sert de
-        // série du joueur. Le lot 5A ne mesurait que le PREMIER créneau, et à
-        // 13 : des teintes délavées sont loin d'un bleu franc dans le plan
-        // a-b, ce seuil ne coûtait rien. Des teintes FRANCHES s'en approchent
-        // fatalement — les cinq créneaux occupent déjà le bleu, le prune, le
-        // bleu-vert, l'indigo et le bleu acier. La garde couvre donc
-        // maintenant les CINQ créneaux, au seuil réellement atteint, et la
-        // série du joueur porte TOUJOURS une étiquette directe et un trait
-        // plus épais (charts.tsx) : l'encodage secondaire que la compétence
-        // dataviz exige dans la bande plancher.
-        for (const creneau of PALETTE[mode]) {
-          const e = ecart(teinte, creneau);
-          expect(e.normal, `${nom} et le créneau ${creneau}`).toBeGreaterThanOrEqual(10);
-          expect(e.dvc, `${nom} et le créneau ${creneau}, en DVC`).toBeGreaterThanOrEqual(6.5);
+        // Et à distance de leur TEINTE : plus de 20° de chacune (12° du vert
+        // sur le papier, voir MARGES_DE_TEINTE). Le commentaire de la feuille
+        // l'annonçait depuis le lot 5A ; rien ne le vérifiait.
+        for (const [accent, angle] of Object.entries(TEINTES_RESERVEES)) {
+          const marge = MARGES_DE_TEINTE[mode][accent as keyof typeof TEINTES_RESERVEES];
+          expect(
+            ecartDeTeinte(oklch(teinte).h, angle),
+            `${nom} (${teinte}, ${oklch(teinte).h.toFixed(0)}°) dans la teinte réservée « ${accent} »`,
+          ).toBeGreaterThan(marge);
         }
+        // Un nom de métier écrit dans sa teinte se distingue du texte courant.
+        for (const encre of ENCRES_DU_TEXTE[mode]) {
+          expect(
+            ecart(teinte, encre).normal,
+            `${nom} (${teinte}) se confond avec l'encre du texte ${encre}`,
+          ).toBeGreaterThanOrEqual(15);
+        }
+        // DISTINCTE DU CRÉNEAU DE DONNÉES QUI LA CÔTOIE. La série du joueur ne
+        // partage un graphique qu'avec le créneau 1 (« Chiffre » contre
+        // « Résultat net », charts.tsx) ; les quatre autres colorent des
+        // catégories (parts de marché, postes de coût) où la teinte du métier
+        // n'entre pas, et une garde plus bas le vérifie dans le code. Lot
+        // « teintes » : la garde couvrait les cinq créneaux, et c'était le
+        // prix le plus lourd (aucun turquoise ni cyan foncé n'en sortait sur
+        // le papier). Elle couvre le créneau 1, aux mêmes seuils ; la série du
+        // joueur porte en plus une étiquette directe et un trait plus épais.
+        const creneau = PALETTE[mode][CRENEAU_VOISIN_DU_JOUEUR]!;
+        const e = ecart(teinte, creneau);
+        expect(e.normal, `${nom} et le créneau ${creneau}`).toBeGreaterThanOrEqual(10);
+        expect(e.dvc, `${nom} et le créneau ${creneau}, en DVC`).toBeGreaterThanOrEqual(6.5);
       }
     }
   });
 
   it("les neuf familles, dans leur ordre fixe, tiennent la porte de la compétence", () => {
-    // Quinze couleurs franches ne peuvent pas être deux à deux à 15 d'écart :
-    // c'est le PLAFOND DE SÉRIES que la compétence dataviz décrit, et le lot 5A
-    // n'avait même pas tenté la porte. On la tient là où elle a un sens : les
-    // NEUF familles, rangées dans un ordre fixe, deux voisins à 15 en vision
-    // normale et 8 en protanopie comme en deutéranopie.
+    // Neuf couleurs franches sous ces gardes ne peuvent pas être deux à deux à
+    // 15 d'écart : c'est le PLAFOND DE SÉRIES que la compétence dataviz
+    // décrit. On la tient là où elle a un sens : les NEUF familles, rangées
+    // dans un ordre fixe, deux voisins à 15 en vision normale et 8 en
+    // protanopie comme en deutéranopie.
     expect(ORDRE_DES_FAMILLES).toHaveLength(9);
     expect(new Set(ORDRE_DES_FAMILLES).size).toBe(9);
     for (const nom of ORDRE_DES_FAMILLES) expect(DECLAREES).toContain(nom);
@@ -444,31 +507,24 @@ describe("la teinte du métier est le fil d'une partie", () => {
     );
   });
 
-  it("lot P6 : les neuf teintes sont deux à deux distinctes, et les trois verts n'en font plus un", () => {
-    // LE RETOUR DU PROPRIÉTAIRE : « services, abonnement et bâtiment ont la
-    // même couleur ». Ils tenaient dans 12° de teinte (5,6 à 11,8 d'écart
-    // perçu sur le marine, 7,0 sur le papier). L'abonnement garde le vert,
-    // les services prennent un glacier, le bâtiment un sable. La garde
-    // calcule l'écart (OKLab ×100, comme le validateur de `dataviz`) sur les
-    // 36 paires, des deux côtés, avec des seuils RÉGLÉS SUR LA MESURE :
-    //   · les trois teintes refaites sont à 15 au moins (le plancher de
-    //     `dataviz` en vision normale) de chacune des huit autres sur le
-    //     marine — mesuré : 17,0 (glacier / transport) ;
-    //   · sur le papier, à 10,5 au moins — mesuré : 11,0 (sable / vert). 15
-    //     n'y est pas atteignable : avec les six encres foncées existantes et
-    //     les gardes de ce fichier, aucun trio de teintes nouvelles ne
-    //     dépasse 9,8 (recherche exhaustive du lot) ;
-    //   · entre elles trois, 10 au moins aussi en protanopie et en
-    //     deutéranopie, des deux côtés — mesuré : 16,2 et 10,1 ;
-    //   · et AUCUNE des 36 paires ne descend sous le plancher actuel : 5 sur le
-    //     marine (pervenche / bleu, 5,1, inchangés depuis le lot 5A) et 8 sur
-    //     le papier (8,4). Les paires des six teintes que ce lot ne touche
-    //     pas restent sous 15 (le plafond de séries de la charte) : le métier
-    //     porte toujours son nom écrit.
-    const REFAITES = ["services", "abonnement", "batiment"];
+  it("lot « teintes » : les neuf familles sont deux à deux distinctes, des deux côtés", () => {
+    // LE RETOUR DU PROPRIÉTAIRE : « des couleurs plus distinctives ». Sur
+    // /jouer, il voyait trois lavandes (NOVA, L'ESCALE, PIXEL) et deux roses
+    // (MAILLE, LA TABLE D'AUGUSTIN) : 5,1 d'écart perçu au plus proche sur le
+    // marine, 8,4 sur le papier, et 1,2 et 4,7 en déficience. Les neuf
+    // teintes ont été recherchées par la mesure, une famille nommée chacune.
+    // La garde porte sur les 36 paires, des deux côtés, au seuil RÉGLÉ SUR LA
+    // MESURE (OKLab ×100, comme le validateur de `dataviz`) :
+    //   · marine : 10 en vision normale (mesuré 10,3 : l'orchidée de MAILLE
+    //     et le lilas de L'ESCALE, le bleu de NOVA et le ciel de ROUTE & CIE),
+    //     3 en déficience (3,4) ;
+    //   · papier : 12 en vision normale (12,1), 8 en déficience (8,4).
+    // 12 n'est pas atteignable sur le marine avec neuf familles qui restent
+    // les mêmes de l'autre côté : le papier n'a ni turquoise, ni cyan, ni
+    // jaune foncés lisibles, et leurs jumelles claires se resserrent.
     const SEUILS = {
-      marine: { refaites: 15, plancher: 5 },
-      clair: { refaites: 10.5, plancher: 8 },
+      marine: { normal: 10, dvc: 3 },
+      clair: { normal: 12, dvc: 8 },
     } as const;
     for (const [source, mode] of [
       [SUR_MARINE_METIERS, "marine"],
@@ -480,26 +536,26 @@ describe("la teinte du métier est le fil d'une partie", () => {
           const [a, b] = [ORDRE_DES_FAMILLES[i]!, ORDRE_DES_FAMILLES[j]!];
           const e = ecart(teinte(a), teinte(b));
           const quoi = `${a} (${teinte(a)}) et ${b} (${teinte(b)}), sur le ${mode}`;
-          expect(e.normal, `${quoi} : sous le plancher`).toBeGreaterThanOrEqual(SEUILS[mode].plancher);
-          if (REFAITES.includes(a) || REFAITES.includes(b)) {
-            expect(e.normal, `${quoi} : une teinte refaite trop proche`).toBeGreaterThanOrEqual(
-              SEUILS[mode].refaites,
-            );
-          }
-          if (REFAITES.includes(a) && REFAITES.includes(b)) {
-            expect(e.dvc, `${quoi}, en protanopie ou deutéranopie`).toBeGreaterThanOrEqual(10);
-          }
+          expect(e.normal, `${quoi} : trop proches`).toBeGreaterThanOrEqual(SEUILS[mode].normal);
+          expect(e.dvc, `${quoi} : confondus en déficience`).toBeGreaterThanOrEqual(
+            SEUILS[mode].dvc,
+          );
         }
       }
       // Un seul vert : des neuf, une seule teinte entre 120° et 150° (le vert
-      // de résultat est à 154° ; sous 120°, c'est l'olive et le sable : le
-      // bâtiment est à 106° sur le marine, 116° sur le papier), des deux côtés.
-      // Avant le lot : trois (123°, 128°, 133° sur le marine).
+      // de résultat est à 154° ; sous 120°, c'est le sable et l'olive de
+      // MARTEL : 106° sur le marine, 116° sur le papier), des deux côtés.
       const verts = ORDRE_DES_FAMILLES.filter((nom) => {
         const { h } = oklch(teinte(nom));
         return h >= 120 && h <= 150;
       });
       expect(verts, `sur le ${mode}, plus d'un vert`).toEqual(["abonnement"]);
+      // Et une seule teinte s'approche du vert de résultat à moins de 20° :
+      // le vert sapin de VOLT, sur le papier (voir MARGES_DE_TEINTE).
+      const presDuVert = ORDRE_DES_FAMILLES.filter(
+        (nom) => ecartDeTeinte(oklch(teinte(nom)).h, TEINTES_RESERVEES.vert) <= 20,
+      );
+      expect(presDuVert).toEqual(mode === "clair" ? ["abonnement"] : []);
     }
   });
 
