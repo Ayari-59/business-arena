@@ -27,7 +27,8 @@ import { formaterCodeDeReprise } from "@/config/reprise";
 import { codeDeRepriseDuProfil, cohorteDe } from "@/services/cohortes.service";
 import { objectifDe } from "@/services/episode-objectifs.service";
 import { competenceParCode } from "@/config/episodes/competences";
-import { bouton } from "@/components/bouton";
+import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
+import { lienDuDebrief } from "@/config/episodes/debrief";
 import { compter } from "@/lib/format";
 import {
   choisirObjectifAction,
@@ -320,6 +321,31 @@ export default async function ProfilPage({
               : il vous rend ce profil depuis un autre appareil.
             </p>
           )}
+          {/* LA COHORTE D'UN ENSEIGNANT (/teacher/cohortes) ouvre les épisodes qu'il y a mis :
+              l'élève les trouve ici, avec le lien de la classe (le même tirage pour tous). */}
+          {cohorte?.episodes && !cohorte.close ? (
+            <section
+              aria-labelledby="episodes-de-ma-cohorte"
+              data-episodes-de-ma-cohorte=""
+              className="mt-6 grid gap-2"
+            >
+              <h2 id="episodes-de-ma-cohorte" className="text-xl font-semibold text-slate-50">
+                Les épisodes de votre cohorte
+              </h2>
+              <ul className="grid gap-1.5">
+                {cohorte.episodes.map((code) => {
+                  const ep = episodeParCode(code);
+                  return ep ? (
+                    <li key={code}>
+                      <Link href={lienDuDebrief(code)} className={LIEN_A_L_ENCRE}>
+                        Épisode {ep.numero} · {ep.titre}
+                      </Link>
+                    </li>
+                  ) : null;
+                })}
+              </ul>
+            </section>
+          ) : null}
           {repris != null && (
             <p
               role="status"

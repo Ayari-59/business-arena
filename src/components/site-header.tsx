@@ -70,7 +70,10 @@ export function SiteHeader() {
   // classe : « Pour les enseignants », « Ateliers » ou « Espace enseignant »
   // n'y disent rien aux élèves et prennent le haut de l'image. La page porte
   // sa propre navigation, dont le retour au pilotage.
-  const enProjection = /^\/teacher\/games\/[^/]+\/projection(\/|$)/.test(chemin ?? "");
+  // Le code d'une cohorte projeté (/teacher/cohortes/…/projection) suit la même règle.
+  const enProjection = /^\/teacher\/(?:games|cohortes)\/[^/]+\/projection(\/|$)/.test(
+    chemin ?? "",
+  );
   const largeur = enJeu ? "max-w-[1400px]" : "max-w-6xl";
 
   const basculerGroupe = (code: string) =>

@@ -253,6 +253,64 @@ describe("l'orange n'est que l'action (lot P1)", () => {
   });
 });
 
+/**
+ * LES COHORTES DE L'ENSEIGNANT (lot « cohortes créées par l'enseignant »).
+ *
+ * Ces pages vivent hors du périmètre ci-dessus (l'espace enseignant), mais elles sont
+ * neuves : elles naissent dans la règle. Leur seul orange est celui de l'action (le
+ * bouton par `bouton()`, qui ne s'écrit pas ici en classes), du focus et de la case
+ * cochée d'un épisode. La garde lit leurs fichiers, pas leurs imports : l'en-tête de
+ * l'espace enseignant, plus ancien, n'est pas dans ce lot.
+ */
+const PAGES_DES_COHORTES = [
+  "app/teacher/cohortes/page.tsx",
+  "app/teacher/cohortes/[id]/page.tsx",
+  "app/teacher/cohortes/[id]/projection/page.tsx",
+  "app/teacher/cohortes/actions.ts",
+  "components/choix-des-episodes.tsx",
+  "components/bouton-copier-le-lien.tsx",
+];
+
+describe("les cohortes de l'enseignant : l'orange n'est que l'action", () => {
+  it("chaque orange de leurs fichiers répond à un contexte permis", () => {
+    const fautes: string[] = [];
+    let permis = 0;
+    for (const nom of PAGES_DES_COHORTES) {
+      code(readFileSync(join(SRC, nom), "utf8"))
+        .split("\n")
+        .forEach((ligne, i) => {
+          for (const m of ligne.matchAll(ORANGE)) {
+            const ok = PERMIS.some(
+              (p) =>
+                (!p.fichier || p.fichier.test(nom)) &&
+                p.classe.test(m[0]) &&
+                (!p.ligne || p.ligne.test(ligne)),
+            );
+            if (ok) permis++;
+            else fautes.push(`${nom}:${i + 1} ${m[0]}  ←  ${ligne.trim().slice(0, 110)}`);
+          }
+        });
+    }
+    expect(fautes, `orange hors de l'action :\n${fautes.join("\n")}`).toEqual([]);
+    // La case cochée d'un épisode est bien vue : la garde regarde quelque chose.
+    expect(permis).toBeGreaterThan(0);
+  });
+
+  it("leurs boutons passent par bouton(), et leurs titres se posent", () => {
+    for (const nom of PAGES_DES_COHORTES) {
+      const source = code(readFileSync(join(SRC, nom), "utf8"));
+      for (const m of source.matchAll(/<h[1-4]\b[^>]*?className=(?:"([^"]*)"|\{`([^`]*)`\})/g)) {
+        expect(m[1] ?? m[2] ?? "", `${nom} : ${m[0].slice(0, 80)}`).not.toMatch(
+          /(?:^|[\s:])(?:font-display|italic|uppercase)\b/,
+        );
+      }
+      for (const m of source.matchAll(/<(?:button|SubmitButton)\b[^>]*?className=(?:"([^"]*)"|\{([^}]*)\})/g)) {
+        expect(m[0], `${nom} : un bouton écrit à la main`).toMatch(/bouton\(/);
+      }
+    }
+  });
+});
+
 describe("les titres se posent (lot P1)", () => {
   it("aucun titre du périmètre ne force le condensé, l'italique ou les capitales", () => {
     const fautes: string[] = [];

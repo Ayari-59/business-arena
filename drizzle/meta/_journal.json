@@ -253,6 +253,13 @@
       "when": 1790231757440,
       "tag": "0034_cohorte_sous_licence",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790318157440,
+      "tag": "0035_cohortes_de_l_enseignant",
+      "breakpoints": true
     }
   ]
 }

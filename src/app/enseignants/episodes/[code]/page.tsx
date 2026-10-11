@@ -6,7 +6,7 @@ import { FICHES, ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { estUneDemo, MARQUE_DEMO, OFFRE_DES_EPISODES } from "@/config/episodes/demos";
-import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { bouton } from "@/components/bouton";
 
 /** Les fiches sont une donnée figée : leurs pages se rendent à la construction. */
 export function generateStaticParams() {
@@ -88,28 +88,34 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
                 Ouvrir l&apos;épisode
               </Link>
             </p>
-            {/* Sans licence, seuls les épisodes de démonstration se lancent
-                (config/episodes/demos.ts) : la fiche le dit avant la séance. */}
+            {/* LE PARCOURS CLASSE (décision du propriétaire : « des cohortes créées par
+                l'enseignant »). Sans licence, seuls les épisodes de démonstration se lancent
+                (config/episodes/demos.ts) ; les autres, la classe les joue dans une cohorte
+                de l'établissement sous licence, que l'enseignant crée depuis son espace,
+                cet épisode déjà coché. */}
             <p className="mt-3 text-sm text-slate-400" data-acces-de-l-episode="">
               {estUneDemo(code) ? (
                 <>
                   <span className="font-semibold text-slate-200">{MARQUE_DEMO}.</span> Il se joue
-                  sans licence, au niveau Découverte.
+                  sans licence, au niveau Découverte. Dans une cohorte de votre établissement sous
+                  licence, il se joue à tous les niveaux.
                 </>
               ) : (
                 <>
-                  <span className="font-semibold text-slate-200">{OFFRE_DES_EPISODES}.</span> Sans
-                  licence, cet épisode ne s&apos;ouvre pas : il se joue avec la licence de
-                  l&apos;établissement.{" "}
-                  <Link
-                    href={LIEN_TARIFS}
-                prefetch={false}
-                    className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
-                  >
-                    Voir les tarifs
-                  </Link>
+                  <span className="font-semibold text-slate-200">{OFFRE_DES_EPISODES}.</span> Vos
+                  élèves le jouent dans une cohorte de votre établissement sous licence : ils la
+                  rejoignent par son code, sans compte, puis ouvrent le lien ci-dessus.
                 </>
               )}
+            </p>
+            <p className="mt-4">
+              <Link
+                href={`/teacher/cohortes?episode=${encodeURIComponent(code)}#nouvelle-cohorte`}
+                data-creer-une-cohorte=""
+                className={bouton()}
+              >
+                Créer une cohorte avec cet épisode
+              </Link>
             </p>
           </div>
 

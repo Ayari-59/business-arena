@@ -10,6 +10,7 @@ import type { AccesAuxEpisodes } from "@/config/episodes/demos";
 
 export {
   episodeOuvert,
+  licencePourLEpisode,
   niveauxDeLEpisode,
   type AccesAuxEpisodes,
 } from "@/config/episodes/demos";
@@ -77,14 +78,23 @@ export async function verifierLeNiveau(args: {
  * LES ÉPISODES.
  * ------------------------------------------------------------------------- */
 
-/** L'organisation de la cohorte que suit cette personne, s'il y en a une. */
-async function organisationDeSaCohorte(userId: string): Promise<string | null> {
+/**
+ * La cohorte que suit cette personne, s'il y en a une : son organisation, les épisodes
+ * qu'elle ouvre (nul : tous) et si elle est close.
+ */
+async function laCohorteDe(
+  userId: string,
+): Promise<{ org: string | null; episodes: string[] | null; close: boolean } | null> {
   const [m] = await db
-    .select({ org: episodeCohortes.organizationId })
+    .select({
+      org: episodeCohortes.organizationId,
+      episodes: episodeCohortes.episodes,
+      closeLe: episodeCohortes.closeLe,
+    })
     .from(episodeMembres)
     .innerJoin(episodeCohortes, eq(episodeCohortes.id, episodeMembres.cohorteId))
     .where(eq(episodeMembres.userId, userId));
-  return m?.org ?? null;
+  return m ? { org: m.org, episodes: m.episodes ?? null, close: m.closeLe !== null } : null;
 }
 
 /**
@@ -93,23 +103,35 @@ async function organisationDeSaCohorte(userId: string): Promise<string | null> {
  * connecté sur ce navigateur, s'il y en a un.
  *
  *  · la cohorte : un manager entré par le code d'une cohorte dont l'organisation est
- *    sous licence joue tous les épisodes ;
- *  · le compte : celui rattaché à une organisation sous licence aussi.
+ *    sous licence joue tous les épisodes ; celle d'un ENSEIGNANT (créée depuis son
+ *    espace) ne prête la licence qu'aux épisodes qu'il y a mis, et une cohorte CLOSE
+ *    n'ouvre plus rien de neuf (une partie commencée se termine : `enregistrerPartie`
+ *    garde toujours la partie jouée) ;
+ *  · le compte : celui rattaché à une organisation sous licence ouvre tout, même pour
+ *    qui suit par ailleurs une cohorte restreinte.
  */
 export async function accesAuxEpisodes(args: {
   userId: string | null;
   sessionUserId?: string | null;
 }): Promise<AccesAuxEpisodes> {
   try {
+    let restreinte: readonly string[] | null = null;
     if (args.userId) {
-      const org = await organisationDeSaCohorte(args.userId);
-      if (org && (await uneOrganisationSousLicence([org]))) {
-        return { licence: true, source: "cohorte" };
+      const cohorte = await laCohorteDe(args.userId);
+      if (
+        cohorte &&
+        !cohorte.close &&
+        cohorte.org &&
+        (await uneOrganisationSousLicence([cohorte.org]))
+      ) {
+        if (!cohorte.episodes) return { licence: true, source: "cohorte" };
+        restreinte = cohorte.episodes;
       }
     }
     if (await unCompteSousLicence([args.userId, args.sessionUserId])) {
       return { licence: true, source: "compte" };
     }
+    if (restreinte) return { licence: true, source: "cohorte", episodes: restreinte };
   } catch (e) {
     // Une panne de lecture n'ouvre rien : les démonstrations restent jouables.
     console.error("[acces] lecture de la licence échouée :", e);

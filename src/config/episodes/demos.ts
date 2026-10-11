@@ -70,11 +70,22 @@ export interface AccesAuxEpisodes {
   licence: boolean;
   /** D'où elle vient : la cohorte (l'organisation de son animateur) ou le compte. */
   source: "cohorte" | "compte" | null;
+  /**
+   * La cohorte d'un enseignant ne prête sa licence qu'aux épisodes qu'il y a mis
+   * (colonne `episode_cohortes.episodes`). Absent : la licence vaut pour tous, celle d'un
+   * compte ou d'une cohorte de l'administration. Hors de cette liste, la règle sans
+   * licence s'applique : les démonstrations, en Découverte.
+   */
+  episodes?: readonly string[];
 }
+
+/** La licence couvre-t-elle cet épisode-ci ? */
+export const licencePourLEpisode = (acces: AccesAuxEpisodes, code: string): boolean =>
+  acces.licence && (!acces.episodes || acces.episodes.includes(code));
 
 /** Les niveaux auxquels cet épisode se lance ; vide : il ne se lance pas. */
 export function niveauxDeLEpisode(acces: AccesAuxEpisodes, code: string): readonly CodeNiveau[] {
-  if (acces.licence) return NIVEAUX.map((n) => n.code);
+  if (licencePourLEpisode(acces, code)) return NIVEAUX.map((n) => n.code);
   return estUneDemo(code) ? [NIVEAU_DES_DEMOS] : [];
 }
 

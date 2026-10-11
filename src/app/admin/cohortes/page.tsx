@@ -8,6 +8,7 @@ import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { listerCohortes, organisationsPourLesCohortes } from "@/services/cohortes.service";
 import { EPISODES_DE_DEMO } from "@/config/episodes/demos";
+import { episodeParCode } from "@/pedagogy/episodes/registre";
 import type { LicenceState } from "@/services/licence.service";
 import {
   creerCohorteAction,
@@ -15,10 +16,22 @@ import {
   renouvelerCleAnimateurAction,
 } from "./actions";
 
-/** Ce que les membres d'une cohorte peuvent jouer, selon la licence de son organisation. */
-function ceQuOuvreLaCohorte(licence: LicenceState | null): string {
+/**
+ * Ce que les membres d'une cohorte peuvent jouer, selon la licence de son organisation,
+ * les épisodes qu'elle porte (nul : tous) et si elle est close.
+ */
+function ceQuOuvreLaCohorte(
+  licence: LicenceState | null,
+  episodes: readonly string[] | null,
+  close: boolean,
+): string {
+  if (close) {
+    return "Close : plus de nouveaux participants, aucun nouvel épisode ouvert par la cohorte.";
+  }
   if (licence === "active" || licence === "bientot_expiree") {
-    return "Sous licence : les membres jouent tous les épisodes.";
+    return episodes
+      ? `Sous licence : les membres jouent ${episodes.length > 1 ? `les ${episodes.length} épisodes` : "l'épisode"} de la cohorte, et les démonstrations.`
+      : "Sous licence : les membres jouent tous les épisodes.";
   }
   return `Sans licence en cours : les membres ne jouent que les ${EPISODES_DE_DEMO.length} démonstrations, en Découverte.`;
 }
@@ -32,6 +45,10 @@ export const dynamic = "force-dynamic";
  * Ici, l'administrateur général la crée d'un formulaire et repart avec les
  * deux liens : l'invitation pour les managers, le lien de l'animateur pour
  * lui seul. Si ce dernier a circulé, on le remplace sans toucher aux membres.
+ *
+ * Les enseignants sous licence créent aussi les leurs, depuis leur espace
+ * (/teacher/cohortes) : la page les montre toutes, avec leur créateur, les épisodes
+ * qu'elles ouvrent et leur état (close ou non).
  */
 export default async function CohortesAdminPage({
   searchParams,
@@ -151,10 +168,26 @@ export default async function CohortesAdminPage({
                     {c.creeeLe.toLocaleDateString("fr-FR")}
                   </span>
                 </p>
+                <p className="text-sm text-slate-300" data-createur-de-la-cohorte="">
+                  {c.creePar
+                    ? `Créée par ${c.creePar.nom || c.creePar.email} (${c.creePar.email}), depuis son espace enseignant.`
+                    : "Créée par l'administration."}
+                </p>
                 <p className="text-sm text-slate-300" data-acces-de-la-cohorte="">
                   {c.organisation ? `${c.organisation.nom} · ` : "Aucune organisation · "}
-                  {ceQuOuvreLaCohorte(c.organisation?.licence ?? null)}
+                  {ceQuOuvreLaCohorte(c.organisation?.licence ?? null, c.episodes, !!c.closeLe)}
                 </p>
+                {c.episodes ? (
+                  <p className="text-xs text-slate-400" data-episodes-de-la-cohorte="">
+                    Épisodes :{" "}
+                    {c.episodes
+                      .map((code) => {
+                        const ep = episodeParCode(code);
+                        return ep ? `${ep.numero} · ${ep.titre}` : code;
+                      })
+                      .join(" ; ")}
+                  </p>
+                ) : null}
                 <GuardedForm
                   action={rattacherCohorteAction.bind(null, c.id)}
                   label="rattachement de la cohorte"

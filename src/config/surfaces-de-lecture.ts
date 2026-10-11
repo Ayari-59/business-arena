@@ -477,6 +477,22 @@ export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
     surface: "cockpit" as const,
     raison: `Un outil de l'espace enseignant. ${PAGE_CLAIRE}`,
   })),
+  {
+    fichier: "components/choix-des-episodes.tsx",
+    composant: "Repliable",
+    repere: "key={e.secteur.code}",
+    surface: "cockpit",
+    raison: `Un repli par entreprise dans le choix des épisodes d'une cohorte : des cases à cocher. ${PAGE_CLAIRE}`,
+  },
+  ...['titre="Renommer la cohorte"', 'titre="Renouveler le code"', "titre={cohorte.closeLe ?"].map(
+    (repere) => ({
+      fichier: "app/teacher/cohortes/[id]/page.tsx",
+      composant: "Tiroir" as const,
+      repere,
+      surface: "cockpit" as const,
+      raison: `Un outil de gestion d'une cohorte de l'espace enseignant. ${PAGE_CLAIRE}`,
+    }),
+  ),
   ...["Parties rangées", "Organiser un concours · Business Arena Championship"].map((t) => ({
     fichier: "app/teacher/page.tsx",
     composant: "Tiroir" as const,

@@ -16,7 +16,7 @@ import { niveauParCode } from "@/config/episodes/niveaux";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
-import { accesAuxEpisodes } from "@/services/acces.service";
+import { accesAuxEpisodes, licencePourLEpisode } from "@/services/acces.service";
 
 /** Ce qui se lance dépend de la licence de qui regarde : la page se rend à la demande. */
 export const dynamic = "force-dynamic";
@@ -56,11 +56,18 @@ export const metadata: Metadata = {
  * (« Démos gratuites ») et marqués dans leurs tiroirs. Les autres restent visibles,
  * avec leur titre, leur accroche et leur métier, marqués « Offre Entreprise » et sans
  * lien de jeu : la carte mène aux tarifs. La page de l'épisode refuse de même.
+ *
+ * MEMBRE D'UNE COHORTE D'ENSEIGNANT : la licence ne vaut que pour les épisodes de la
+ * cohorte. Ils se jouent comme sous licence et sont regroupés en tête (« Les épisodes
+ * de votre cohorte ») ; les autres suivent la règle sans licence.
  */
 export default async function EpisodesPage() {
   const entreprises = catalogueDesEpisodes();
   const [userId, session] = await Promise.all([getGuestUserId(), getSession()]);
-  const { licence } = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
+  const acces = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
+  // Tout est ouvert : une licence de compte ou d'une cohorte sans liste d'épisodes.
+  const licence = acces.licence && !acces.episodes;
+  const sousLicence = (code: string) => licencePourLEpisode(acces, code);
   const secteurDe = (code: string) =>
     entreprises.find((e) => e.familles.some((f) => f.episodes.includes(code)))?.secteur;
   return (
@@ -99,6 +106,39 @@ export default async function EpisodesPage() {
               Mon profil décisionnel
             </Link>
           </p>
+          {acces.episodes ? (
+            <section
+              aria-labelledby="episodes-de-la-cohorte"
+              data-episodes-de-la-cohorte=""
+              className="mt-10 rounded-xl border border-[var(--filet-carte)] p-4 sm:p-6"
+            >
+              <h2
+                id="episodes-de-la-cohorte"
+                className="text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl"
+              >
+                Les épisodes de votre cohorte
+              </h2>
+              <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
+                Ceux que votre enseignant a choisis, à jouer à tous les niveaux.
+              </p>
+              <ul className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {acces.episodes.map((code) => {
+                  const ep = episodeParCode(code);
+                  if (!ep) return null;
+                  const secteur = secteurDe(code);
+                  return (
+                    <CarteEpisode
+                      key={code}
+                      ep={ep}
+                      niveau={3}
+                      teinte={secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)"}
+                      metier={secteur ? `${secteur.nom} · ${secteur.entreprise}` : null}
+                    />
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
           {licence ? null : (
             <section
               aria-labelledby="demos-gratuites"
@@ -149,13 +189,13 @@ export default async function EpisodesPage() {
               if (!ep) return null;
               const secteur = secteurDe(code);
               const teinte = secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)";
-              return licence || estUneDemo(code) ? (
+              return sousLicence(code) || estUneDemo(code) ? (
                 <CarteEpisode
                   key={code}
                   ep={ep}
                   niveau={niveau}
                   teinte={teinte}
-                  demo={!licence}
+                  demo={!sousLicence(code)}
                 />
               ) : (
                 <CarteFermee

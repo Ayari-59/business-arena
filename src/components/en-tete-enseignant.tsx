@@ -14,10 +14,19 @@ import Link from "next/link";
  * La navigation est une rangée de pastilles, la page courante en ambre : on
  * voit où l'on est et où l'on peut aller, sans avoir à lire une liste de liens.
  */
-export type PageEnseignant = "parties" | "scenarios" | "usage" | "apprentissages" | "manuel";
+export type PageEnseignant =
+  | "parties"
+  | "cohortes"
+  | "scenarios"
+  | "usage"
+  | "apprentissages"
+  | "manuel";
 
 const NAVIGATION: ReadonlyArray<{ code: PageEnseignant; href: string; label: string }> = [
   { code: "parties", href: "/teacher", label: "Mes parties" },
+  // Les cohortes d'épisodes manager, à côté des parties : l'autre façon de faire
+  // jouer une classe, sans compte, sous la licence de l'établissement.
+  { code: "cohortes", href: "/teacher/cohortes", label: "Mes cohortes" },
   { code: "scenarios", href: "/teacher/scenarios", label: "Mes scénarios" },
   { code: "usage", href: "/teacher/usage", label: "Carnet d'usage" },
   // Le manuel est un document, pas un écran de pilotage : il reste dans la

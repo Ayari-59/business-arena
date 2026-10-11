@@ -64,6 +64,16 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/teacher/page.tsx", "src/components/economic-params.tsx"],
   },
   {
+    nom: "création d'une cohorte (enseignant)",
+    action: { file: "src/app/teacher/cohortes/actions.ts", fn: "creerCohorteAction" },
+    sources: ["src/app/teacher/cohortes/page.tsx", "src/components/choix-des-episodes.tsx"],
+  },
+  {
+    nom: "nom d'une cohorte (enseignant)",
+    action: { file: "src/app/teacher/cohortes/actions.ts", fn: "renommerCohorteAction" },
+    sources: ["src/app/teacher/cohortes/[id]/page.tsx"],
+  },
+  {
     nom: "création d'un concours",
     action: { file: "src/app/teacher/actions.ts", fn: "createCompetitionAction" },
     sources: ["src/components/competition-create-form.tsx"],
@@ -122,14 +132,14 @@ function actionBody(file: string, fn: string): string {
 }
 
 /**
- * Champs lus : `formData.get("x")` / `.has("x")`, et le même accès passé par un
- * petit lecteur nommé — `nombre(formData, "newLoan")`, `montant(data, "hire")`.
+ * Champs lus : `formData.get("x")` / `.getAll("x")` (des cases cochées du même
+ * nom) / `.has("x")`, et le même accès passé par un petit lecteur nommé — `nombre(formData, "newLoan")`, `montant(data, "hire")`.
  * Une lecture partagée range ses champs ainsi ; les ignorer rendrait le contrat
  * aveugle à tout ce qu'elle lit.
  */
 function fieldsRead(body: string): Set<string> {
   const noms = new Set<string>();
-  for (const m of body.matchAll(/\b(?:formData|data)\.(?:get|has)\(\s*"([^"]+)"\s*\)/g)) {
+  for (const m of body.matchAll(/\b(?:formData|data)\.(?:get|getAll|has)\(\s*"([^"]+)"\s*\)/g)) {
     noms.add(m[1]!);
   }
   for (const m of body.matchAll(/\(\s*(?:formData|data)\s*,\s*"([^"]+)"\s*\)/g)) {

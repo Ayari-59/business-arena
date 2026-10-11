@@ -35,7 +35,9 @@ const COMPOSANTS_GARDES = [
 /** Pages serveur : GuardedForm autour des actions sans état. */
 const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/teacher/page.tsx", formulaires: 3 }, // création de partie, rangement depuis la liste, sortie de rangement
-  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 11 }, // nom de la partie, questions posées, format des réponses, situations manquées, planning de la partie, planning des tours, révélation du classement, codes de reprise manquants, rangement, remise à zéro, suppression (clôture via CloseRoundForm client)
+  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 11 },
+  { file: "src/app/teacher/cohortes/page.tsx", formulaires: 1 }, // création d'une cohorte
+  { file: "src/app/teacher/cohortes/[id]/page.tsx", formulaires: 3 }, // nom, nouveau code, clôture ou réouverture // nom de la partie, questions posées, format des réponses, situations manquées, planning de la partie, planning des tours, révélation du classement, codes de reprise manquants, rangement, remise à zéro, suppression (clôture via CloseRoundForm client)
 ];
 
 describe("composants client gardés", () => {

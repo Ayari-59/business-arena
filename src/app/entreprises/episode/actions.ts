@@ -114,7 +114,12 @@ export async function effacerMesPartiesAction(): Promise<void> {
 export async function rejoindreCohorteAction(code: string): Promise<void> {
   const userId = await getOrCreateGuestUserId();
   const r = await rejoindreCohorte(userId, code);
-  if (!r.ok) redirect(`/entreprises/episode/rejoindre?code=${encodeURIComponent(code)}&inconnu=1`);
+  // Une cohorte close refuse les nouveaux participants : la page le dit.
+  if (!r.ok) {
+    redirect(
+      `/entreprises/episode/rejoindre?code=${encodeURIComponent(code)}&${r.close ? "close" : "inconnu"}=1`,
+    );
+  }
   await codeDeRepriseDuProfil(userId, true);
   revalidatePath("/entreprises/episode/profil");
   redirect("/entreprises/episode/profil?bienvenue=1");

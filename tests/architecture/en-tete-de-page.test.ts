@@ -37,6 +37,8 @@ const PAGES_INTERIEURES = [
   "src/app/mentions-legales/page.tsx",
   "src/app/teacher/login/page.tsx",
   "src/app/teacher/page.tsx",
+  "src/app/teacher/cohortes/page.tsx",
+  "src/app/teacher/cohortes/[id]/page.tsx",
   "src/app/profile/page.tsx",
   "src/app/entreprises/episode/profil/page.tsx",
   "src/app/tarifs/page.tsx",

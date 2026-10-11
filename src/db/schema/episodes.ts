@@ -62,23 +62,42 @@ export const episodeParties = pgTable(
  * programme ensemble. Elle se rejoint par son code ; l'animateur la suit par
  * une clé secrète, sans compte, et ne voit que des agrégats.
  */
-export const episodeCohortes = pgTable("episode_cohortes", {
-  id: id(),
-  /** Le code à donner aux managers, dans le lien d'invitation. */
-  code: text("code").notNull().unique(),
-  nom: text("nom").notNull(),
-  /** La clé du lien de l'animateur : elle ouvre la vue agrégée, rien d'autre. */
-  cleAnimateur: text("cle_animateur").notNull().unique(),
-  /**
-   * L'organisation de l'animateur, celle qui a acheté le programme. Sous licence, ses
-   * membres jouent tous les épisodes ; sans organisation ou sans licence, les seules
-   * démonstrations (config/episodes/demos.ts). Rattachée depuis /admin/cohortes.
-   */
-  organizationId: uuid("organization_id").references(() => organizations.id, {
-    onDelete: "set null",
-  }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const episodeCohortes = pgTable(
+  "episode_cohortes",
+  {
+    id: id(),
+    /** Le code à donner aux managers, dans le lien d'invitation. */
+    code: text("code").notNull().unique(),
+    nom: text("nom").notNull(),
+    /** La clé du lien de l'animateur : elle ouvre la vue agrégée, rien d'autre. */
+    cleAnimateur: text("cle_animateur").notNull().unique(),
+    /**
+     * L'organisation de l'animateur, celle qui a acheté le programme. Sous licence, ses
+     * membres jouent tous les épisodes ; sans organisation ou sans licence, les seules
+     * démonstrations (config/episodes/demos.ts). Rattachée depuis /admin/cohortes.
+     */
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    /**
+     * L'enseignant qui l'a créée depuis son espace (/teacher/cohortes) : lui seul la voit
+     * et la modifie. Nul : une cohorte de l'administration (migration 0035).
+     */
+    creePar: uuid("cree_par").references(() => users.id, { onDelete: "set null" }),
+    /**
+     * Les épisodes que la cohorte ouvre à ses membres, sous la licence de son organisation.
+     * Nul : tous les épisodes, la règle des cohortes de l'administration.
+     */
+    episodes: jsonb("episodes").$type<string[]>(),
+    /**
+     * Close : plus de nouveaux participants, et la cohorte n'ouvre plus de nouvel épisode.
+     * Une partie commencée se termine et reste gardée.
+     */
+    closeLe: timestamp("close_le", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("episode_cohortes_cree_par_idx").on(t.creePar)],
+);
 
 /** L'appartenance d'une personne à une cohorte : une seule à la fois. */
 export const episodeMembres = pgTable(
