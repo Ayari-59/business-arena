@@ -373,6 +373,41 @@ describe("la palette des données vient des jetons, jamais d'une couleur écrite
   });
 });
 
+/** Le mélange `color-mix(in oklab, a p%, b)`, rendu en sRGB (rogné au gamut). */
+function melange(a: string, p: number, b: string): string {
+  const [x, y] = [oklab(lineaire(a)), oklab(lineaire(b))];
+  const [L, A, B] = x.map((v, i) => v * p + y[i]! * (1 - p));
+  const [l, m, s] = [
+    (L! + 0.3963377774 * A! + 0.2158037573 * B!) ** 3,
+    (L! - 0.1055613458 * A! - 0.0638541728 * B!) ** 3,
+    (L! - 0.0894841775 * A! - 1.291485548 * B!) ** 3,
+  ];
+  const lin = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+  const vers = (c: number) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
+  const octet = (c: number) => Math.round(Math.min(1, Math.max(0, vers(c))) * 255);
+  return "#" + lin.map((c) => octet(c).toString(16).padStart(2, "0")).join("");
+}
+
+describe("la teinte du métier dans un champ du cockpit", () => {
+  it("est éclaircie dans le champ, et y tient 4,5 pour 1 pour les neuf entreprises", () => {
+    const sol = brut(CSS, "sol-champ");
+    const regle = CSS.match(
+      /:not\(\.champ-facultatif\) \{\s*--metier: color-mix\(in oklab, var\(--metier-sous-le-champ\) (\d+)%, (#[0-9a-f]{6})\);/,
+    );
+    expect(regle, "la teinte n'est plus éclaircie dans le champ").not.toBeNull();
+    expect(CSS).toContain("--metier-sous-le-champ: var(--metier);");
+    const [part, vers] = [Number(regle![1]) / 100, regle![2]!];
+    for (const nom of ORDRE_DES_FAMILLES) {
+      const dansLeChamp = melange(jeton(SUR_MARINE_METIERS, `secteur-${nom}`), part, vers);
+      expect(contraste(dansLeChamp, sol), `${nom} (${dansLeChamp}) sur le champ ${sol}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
 describe("la teinte du métier est le fil d'une partie", () => {
   const DECLAREES = [...CSS.matchAll(/^\[data-metier="([a-z-]+)"\],$/gm)].map((m) => m[1]!);
 

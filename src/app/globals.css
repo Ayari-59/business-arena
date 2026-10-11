@@ -3594,6 +3594,20 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
 [data-ecran-de-jeu] .champ:not(.papier .champ):not(.champ-facultatif) {
   background-color: var(--sol-champ, #234c80);
 }
+/* LA TEINTE DU MÉTIER DANS UN CHAMP. Le sol du champ (#234c80) est le plus
+   clair du cockpit : cinq des neuf teintes n'y tiennent que 3,8 à 4,1 pour 1.
+   Mesuré dans l'arène des neuf entreprises, aucune ne s'y pose aujourd'hui ;
+   pour qu'un élément teinté glissé un jour dans un champ reste lisible, la
+   teinte y est éclaircie de 30 % vers le blanc cassé (4,7 pour 1 au moins,
+   garde dans palette-des-donnees.test.ts). La teinte est relue sur le PARENT
+   du champ (`:has`) : redéfinir `--metier` à partir de lui-même sur le même
+   élément serait un cycle. */
+[data-ecran-de-jeu] :has(> .champ:not(.papier .champ):not(.champ-facultatif)) {
+  --metier-sous-le-champ: var(--metier);
+}
+[data-ecran-de-jeu] .champ:not(.papier .champ):not(.champ-facultatif) {
+  --metier: color-mix(in oklab, var(--metier-sous-le-champ) 70%, #f1ede4);
+}
 /* LE FOCUS S'ALLUME : le liseré passe à l'orange du focus, doublé d'un anneau
    plein d'un pixel (l'accent ne se dilue pas), par-dessus le halo du lot 5B. */
 [data-ecran-de-jeu] .champ:not(.papier .champ):is(:focus, :focus-within) {
