@@ -11,9 +11,13 @@ export const metadata: Metadata = {
 
 /** Mentions légales & RGPD : page statique, sans base de données. */
 const EDITEUR = {
-  nom: "Mohamed AYARI",
-  statut: "enseignant",
-  contact: "mohamed.ayari@ac-lille.fr",
+  nom: "Mohamed AYARI EI",
+  nomCommercial: "MA Formation et Conseils",
+  statut: "entrepreneur individuel (micro-entreprise)",
+  siret: "527 962 559 00037",
+  adresse: "44 rue Bonte Pollet, 59000 Lille",
+  contact: "contact@business-arena.fr",
+  directeur: "Mohamed AYARI",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -36,7 +40,7 @@ export default function MentionsLegalesPage() {
       */}
       <EnTeteDePage
         surtitre="Mentions légales & données personnelles"
-        titre="Vos élèves jouent sans compte, sans e-mail, sans traceur"
+        titre={"Vos élèves jouent sans compte, sans e\u2011mail, sans traceur"}
         chapeau={
           <>
             Business Arena est conçu pour la classe : la protection des données n&apos;y est pas une
@@ -58,13 +62,9 @@ export default function MentionsLegalesPage() {
             <li>
               <strong className="text-slate-200">Aucun traceur.</strong> Pas de cookies
               publicitaires, pas de mesure d&apos;audience tierce, pas de réseaux sociaux
-              embarqués. Deux cookies techniques signés, strictement nécessaires au
-              fonctionnement, exemptés de consentement au sens des lignes directrices de la
+              embarqués. Deux cookies techniques signés pour les enseignants et les joueurs,
+              strictement nécessaires au fonctionnement, exemptés de consentement au sens des lignes directrices de la
               CNIL.
-            </li>
-            <li>
-              <strong className="text-slate-200">Base de données dans l&apos;Union
-              européenne</strong> (Francfort, Allemagne).
             </li>
             <li>
               <strong className="text-slate-200">Toutes les données de jeu sont
@@ -76,13 +76,19 @@ export default function MentionsLegalesPage() {
 
         <Section title="Éditeur du site">
           <p>
-            Le site business-arena.fr est édité à titre pédagogique par{" "}
-            <strong className="text-slate-200">{EDITEUR.nom}</strong> ({EDITEUR.statut}).
+            Le site business-arena.fr est édité par{" "}
+            <strong className="text-slate-200">{EDITEUR.nom}</strong>, sous le nom commercial{" "}
+            <strong className="text-slate-200">{EDITEUR.nomCommercial}</strong>, {EDITEUR.statut}.
           </p>
           <p>
+            SIRET : <span className="tabular-nums text-slate-200">{EDITEUR.siret}</span>
+            <br />
+            Adresse : {EDITEUR.adresse}
+            <br />
             Contact : <strong className="text-slate-200">{EDITEUR.contact}</strong>
           </p>
-          <p>Directeur de la publication : l&apos;éditeur.</p>
+          <p>TVA non applicable, art. 293 B du CGI.</p>
+          <p>Directeur de la publication : {EDITEUR.directeur}.</p>
         </Section>
 
         <Section title="Hébergement">
@@ -93,10 +99,8 @@ export default function MentionsLegalesPage() {
           </p>
           <p>
             La base de données est hébergée par <strong className="text-slate-200">Neon
-            Inc.</strong> sur une infrastructure AWS située en{" "}
-            <strong className="text-slate-200">Union européenne (région eu-central-1,
-            Francfort, Allemagne)</strong> : les données persistées (comptes enseignants,
-            parties, résultats de simulation) sont stockées dans l&apos;UE.
+            Inc.</strong>, sur l&apos;infrastructure d&apos;Amazon Web Services : elle conserve les
+            données persistées (comptes enseignants, parties, résultats de simulation).
           </p>
         </Section>
 
@@ -142,9 +146,37 @@ export default function MentionsLegalesPage() {
                   <td className="py-2 pr-3">Le jeu, le débriefing et la progression pédagogique</td>
                   <td className="py-2">Durée des parties</td>
                 </tr>
+                <tr className="border-t border-white/5">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Managers en cohorte</td>
+                  <td className="py-2 pr-3">
+                    Pseudo librement choisi, code de cohorte, code de reprise, décisions et
+                    profil décisionnel
+                  </td>
+                  <td className="py-2 pr-3">
+                    Jouer les épisodes de la cohorte, retrouver son profil sur un autre appareil
+                  </td>
+                  <td className="py-2">Durée de la cohorte</td>
+                </tr>
+                <tr className="border-t border-white/5">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Demandes de contact</td>
+                  <td className="py-2 pr-3">
+                    Nom, établissement ou organisation, e-mail, téléphone (rendez-vous),
+                    message, adresse IP (protection contre les envois abusifs)
+                  </td>
+                  <td className="py-2 pr-3">
+                    Répondre à une demande de rendez-vous, de devis ou de simulation
+                  </td>
+                  <td className="py-2">3 ans après le dernier contact</td>
+                </tr>
               </tbody>
             </table>
           </div>
+          <p>
+            Sous-traitants : Vercel (hébergement de l&apos;application), Neon (base de
+            données), Resend (envoi des e-mails), Google (agenda des rendez-vous) et, seulement
+            si l&apos;assistant d&apos;IA est activé, Anthropic (réponses de l&apos;assistant à
+            partir des justifications écrites par les joueurs).
+          </p>
           <p>
             Aucune donnée n&apos;est vendue, louée, transmise à des tiers à des fins
             commerciales, ni utilisée pour de la publicité. Aucun profilage n&apos;est
@@ -159,15 +191,20 @@ export default function MentionsLegalesPage() {
         </Section>
 
         <Section title="Cookies">
-          <p>Le site dépose uniquement deux cookies techniques, signés cryptographiquement :</p>
+          <p>Le site dépose uniquement des cookies techniques :</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              <code className="font-mono text-slate-100">ba_session</code> : session des enseignants et
+              <code className="font-mono text-slate-100">ba_session</code> (signé) : session des enseignants et
               personnels connectés (30 jours) ;
             </li>
             <li>
-              <code className="font-mono text-slate-100">ba_guest</code> : identifiant technique des
-              joueurs invités, pour retrouver leurs parties (12 mois).
+              <code className="font-mono text-slate-100">ba_guest</code> (signé) : identifiant technique des
+              joueurs invités, pour retrouver leurs parties (12 mois) ;
+            </li>
+            <li>
+              <code className="font-mono text-slate-100">google_oauth_state</code> : réservé à
+              l&apos;administrateur, le temps de relier l&apos;agenda des rendez-vous (10 minutes
+              au plus).
             </li>
           </ul>
           <p>
@@ -183,7 +220,7 @@ export default function MentionsLegalesPage() {
             La marque Business Arena, le logo, les contenus pédagogiques (situations, fiches
             notions, courriers) et le moteur de simulation sont la propriété de
             l&apos;éditeur. Les licences des composants open source utilisés sont respectées
-            (notamment la police Big Shoulders, SIL Open Font License).
+            (notamment les polices Barlow et Barlow Condensed, SIL Open Font License).
           </p>
           <p>
             Business Arena est une simulation pédagogique : les entreprises, marchés, chiffres
@@ -195,7 +232,7 @@ export default function MentionsLegalesPage() {
         </Section>
 
         <p className="text-center text-xs text-slate-400">
-          Dernière mise à jour : août 2026 ·{" "}
+          Dernière mise à jour : octobre 2026 ·{" "}
           <Link href="/" className="underline-offset-4 hover:text-slate-400 hover:underline">
             business-arena.fr
           </Link>

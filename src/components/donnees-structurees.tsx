@@ -50,6 +50,16 @@ const GRAPHE = {
       name: NOM_DU_SITE,
       url: SITE_URL,
       description: DESCRIPTION_ACCUEIL,
+      // L'entité qui édite et vend : celle des mentions légales.
+      legalName: "Mohamed AYARI EI (MA Formation et Conseils)",
+      email: "contact@business-arena.fr",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "44 rue Bonte Pollet",
+        postalCode: "59000",
+        addressLocality: "Lille",
+        addressCountry: "FR",
+      },
       logo: {
         "@type": "ImageObject",
         url: `${SITE_URL}${LOGO.chemin}`,

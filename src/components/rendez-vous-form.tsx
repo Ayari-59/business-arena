@@ -304,7 +304,7 @@ export function RendezVousForm({
             {pending ? "Réservation…" : "Réserver ce créneau"}
           </button>
           <span className="text-xs text-slate-400">
-            Vos coordonnées ne servent qu&apos;à cet appel.
+            Vos coordonnées servent à organiser cet appel ; elles ne sont ni revendues ni utilisées pour de la publicité (<Link href="/mentions-legales" className="underline underline-offset-4">données personnelles</Link>).
           </span>
         </div>
       </div>
