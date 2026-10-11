@@ -28,7 +28,14 @@ function entreprise(code: string) {
   return { code: s.code, nom: s.shortName, metier: SECTOR_LABELS[s.sector], teinte: teinteDuMetier(s) };
 }
 
-/** Un lieu de la vitrine : une figure, la tuile du lieu, son nom dessus. */
+/**
+ * Un lieu de la vitrine : une figure, la tuile du lieu, son nom dessus.
+ *
+ * Une vignette réserve DEUX LIGNES au nom (`min-h-[2lh]`) : le texte est ancré
+ * en bas, et un nom qui passe à la ligne (LA TABLE D'AUGUSTIN, MARTEL & FILS)
+ * faisait remonter son trait au-dessus de ceux de ses voisins. Dans une
+ * rangée, les traits sont ainsi au même niveau.
+ */
 function Lieu({
   code,
   grand = false,
@@ -54,7 +61,7 @@ function Lieu({
         {...(grand ? { sizes: "(min-width: 1024px) 460px, 100vw" } : {})}
         className={`rounded-md ring-1 ring-white/15 ${className}`}
         classeTexte={grand ? "px-4 pb-4 pt-10" : "px-3 pb-2.5 pt-6"}
-        classeNom={grand ? "text-lg" : classeNom}
+        classeNom={grand ? "text-lg" : `min-h-[2lh] ${classeNom}`}
         classeMetier={grand ? "text-sm" : "text-xs"}
       />
     </figure>

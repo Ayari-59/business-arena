@@ -186,6 +186,13 @@ export function QuickConfigFields({
           les cartes photo du lot P2 restent (2 puis 3 colonnes), le nom sur
           la photo, l'accroche dessous.
 
+          LES TRAITS AU MÊME NIVEAU. Le texte est ancré en bas de la tuile :
+          un nom qui passe sur deux lignes dans le 3 × 3 (LA TABLE D'AUGUSTIN,
+          ATLAS CONSEIL) faisait remonter son trait d'une ligne au-dessus de
+          ses voisins. Sous 640 px, le nom réserve donc deux lignes
+          (`min-h-[2lh]`) : trait et nom partent du même niveau sur toute la
+          rangée, le métier aussi.
+
           LA CARTE CHOISIE se reconnaît à un filet orange plein de deux pixels
           et à une coche (la règle de « l'option cochée » : une décision, la
           charte la range avec l'action), et non plus à un fond délavé. Elle
@@ -218,7 +225,7 @@ export function QuickConfigFields({
                   className="aspect-[4/5] sm:aspect-[3/2]"
                   classePhoto="transition-transform duration-[var(--duree-passage)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                   classeTexte="px-3 pb-2.5 pt-6 sm:pb-3"
-                  classeNom="text-xs sm:text-base"
+                  classeNom="text-xs max-sm:min-h-[2lh] sm:text-base"
                   classeMetier="text-xs sm:text-sm"
                 />
                 {on ? (
