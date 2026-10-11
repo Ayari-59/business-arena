@@ -167,6 +167,13 @@ export const SURFACES_COCKPIT: readonly SurfaceDeLecture[] = [
     raison: "Des lignes de classement, des barres de comparaison : des chiffres.",
   },
   {
+    cle: "merite-de-la-partie",
+    role: "cockpit",
+    porte: "components/merite-de-la-partie.tsx",
+    raison:
+      "La part du hasard en fin de partie solo : une matrice, une distribution des résultats sur les marchés possibles, des constats chiffrés en phrases courtes.",
+  },
+  {
     cle: "tableau-de-bord-du-tour-clos",
     role: "cockpit",
     porte: "app/arena/[gameId]/page.tsx (tour clos)",

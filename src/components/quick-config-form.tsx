@@ -100,6 +100,7 @@ export function QuickConfigFields({
   scenarios,
   levels,
   defaultScenario,
+  defaultLevel,
   vitrine,
   licence = false,
   liens,
@@ -109,6 +110,12 @@ export function QuickConfigFields({
   scenarios: QuickScenario[];
   levels: QuickLevel[];
   defaultScenario: string;
+  /**
+   * Le niveau proposé à l'ouverture (`/jouer?niveau=`), quand le bilan d'une partie en
+   * conseille un. Un niveau fermé à qui joue retombe au plus haut niveau ouvert : le
+   * lien ne passe pas outre la règle, que le serveur applique de toute façon.
+   */
+  defaultLevel?: number;
   /**
    * Les niveaux ouverts sans licence (config/vitrine-solo) : par défaut 1 à 3 pour toutes
    * les entreprises. Absente : la règle par défaut.
@@ -129,7 +136,14 @@ export function QuickConfigFields({
   const [scenario, setScenario] = useState(defaultScenario);
   // On commence au niveau 3 · Pilotage ; les niveaux 1-2 (questions d'analyse entre deux
   // réponses, financement fermé) sont à un ou deux crans de curseur.
-  const [level, setLevel] = useState(NIVEAU_PAR_DEFAUT);
+  const [level, setLevel] = useState(() =>
+    defaultLevel === undefined
+      ? NIVEAU_PAR_DEFAUT
+      : Math.max(
+          1,
+          Math.min(defaultLevel, niveauMaxPour(vitrine ?? VITRINE_SOLO_PAR_DEFAUT, defaultScenario, licence)),
+        ),
+  );
   const [period, setPeriod] = useState<string>("quarter");
   const [companies, setCompanies] = useState<string>("3");
   const [rounds, setRounds] = useState<string>("");

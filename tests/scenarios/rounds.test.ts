@@ -46,18 +46,25 @@ describe("durée d'une partie", () => {
   it("la création de partie applique la durée demandée", () => {
     // La fonction peut être juste et n'être appelée nulle part : la partie
     // durerait alors six tours comme avant, sans qu'aucun autre test ne bouge.
+    // Le pipeline de l'instantané vit dans `config/scenarios/scenario-joue.ts`
+    // (le rejeu du bilan le partage) : la création lui passe la durée demandée,
+    // et le pipeline l'applique.
     const service = readFileSync("src/services/game-creation.service.ts", "utf-8");
-    const appel = service.slice(service.indexOf("const scenarioSnapshot"));
-    const bloc = appel.slice(0, appel.indexOf(";"));
-    expect(bloc, "la durée demandée n'entre pas dans l'instantané du scénario").toContain(
-      "applyRoundsCount",
+    const appel = service.slice(service.indexOf("const scenarioJoue = composerLeScenarioJoue("));
+    const bloc = appel.slice(0, appel.indexOf("});"));
+    expect(bloc, "la durée ne vient pas des arguments de création").toContain(
+      "roundsCount: args.roundsCount",
     );
-    expect(bloc, "la durée ne vient pas des arguments de création").toContain("args.roundsCount");
+    const pipeline = readFileSync("src/config/scenarios/scenario-joue.ts", "utf-8");
+    const corps = pipeline.slice(pipeline.indexOf("const snapshot = "));
+    expect(corps.slice(0, corps.indexOf(";")), "la durée demandée n'entre pas dans l'instantané").toMatch(
+      /applyRoundsCount\([\s\S]*r\.roundsCount/,
+    );
     // Et la partie crée bien autant de tours que l'instantané en annonce. Le
     // bloc qui les pose est partagé avec la remise à zéro (`poserLEtatDeDepart`)
     // : on vérifie donc les deux bouts, ce qu'on lui passe et ce qu'il en fait.
     expect(service, "l'instantané ne donne pas sa durée à l'état de départ").toContain(
-      "roundsCount: scenarioSnapshot.roundsCount",
+      "roundsCount: scenarioJoue.roundsCount",
     );
     expect(service, "l'état de départ ne pose pas autant de tours qu'on lui en donne").toContain(
       "length: args.roundsCount",

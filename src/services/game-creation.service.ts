@@ -25,14 +25,10 @@ import {
   scenarioCodeForLevel,
   type ScenarioDefinition,
 } from "@/config/scenarios/registry";
-import { avecInvestissementParNiveau } from "@/config/investissement-par-niveau";
 import {
   resolveScenarioDefinition,
 } from "@/services/scenario-source.service";
 import {
-  applyEconomicOverrides,
-  applyEventIntensity,
-  applyScoringWeightOverrides,
   presetByLevel,
   sanitizeEconomicOverrides,
   sanitizeScoringWeightOverrides,
@@ -42,14 +38,10 @@ import {
   type ScoringWeightOverrides,
 } from "@/config/difficulty";
 import {
-  applyPeriodicity,
   applyPeriodicityToCompany,
   type Periodicity,
 } from "@/config/scenarios/periodicity";
-import { applyMarketScale } from "@/config/scenarios/market-scale";
-import { applyRoundsCount } from "@/config/scenarios/rounds";
-import { applyScenarioVariability } from "@/config/scenarios/variability";
-import { withoutRd } from "@/engine/gamme";
+import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import {
@@ -278,8 +270,6 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   // elles, l'instanciation du tour ne retrouve pas leur id et l'élève n'a rien.
   await seedPedagogyReferentials(definition.situations);
   const seed = args.seed ?? randomInt(1, 2 ** 31);
-  // Pipeline du snapshot (ADR-01 + ADR-10) : paramètres économiques modulés
-  // (base trimestrielle) → périodicité → intensité d'événements du niveau.
   const preset = args.level
     ? presetByLevel.get(args.level as 1 | 2 | 3 | 4 | 5 | 6)
     : undefined;
@@ -287,40 +277,26 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   const overrides = Object.keys(sanitized).length > 0 ? sanitized : undefined;
   const sanitizedScoring = sanitizeScoringWeightOverrides(args.scoringWeightOverrides);
   const scoringOverrides = Object.keys(sanitizedScoring).length > 0 ? sanitizedScoring : undefined;
-  // Monde variable : la variante seedée s'applique AVANT les réglages
-  // explicites de l'enseignant (qui gardent donc le dernier mot).
-  const baseScenario = args.variableWorld
-    ? applyScenarioVariability(definition.scenario, seed)
-    : definition.scenario;
   const botCount = Math.min(Math.max(args.botCount, 0), definition.bots.length);
   // Toutes les entreprises se partagent le même marché : sans redimensionnement,
   // une classe nombreuse partage un gâteau calibré pour trois concurrents et
   // aucune équipe n'atteint son seuil. Voir market-scale.ts.
   const concurrents = args.humanTeams.length + botCount;
-
-  const scenarioSnapshot = applyEventIntensity(
-    applyPeriodicity(
-      applyRoundsCount(
-        applyMarketScale(
-          applyScoringWeightOverrides(applyEconomicOverrides(baseScenario, overrides), scoringOverrides),
-          concurrents,
-        ),
-        args.roundsCount,
-      ),
-      args.periodicity,
-    ),
-    preset?.eventProbabilityMultiplier ?? 1,
-  );
-  // Les histoires qui appellent l'investissement, posées selon le niveau. Une partie sans
-  // niveau (aucun préréglage) garde le calendrier de son scénario, comme avant.
-  const scenarioAvecHistoires =
-    preset && args.investmentStories
-      ? avecInvestissementParNiveau(scenarioSnapshot, preset.level)
-      : scenarioSnapshot;
-  // R&D : un niveau qui ne l'ouvre pas ne doit pas laisser une référence à
-  // développer hors de portée pour toute la partie. Le levier est retiré du
-  // snapshot et les références à développer sont livrées prêtes.
-  const scenarioJoue = preset && !preset.decisions.rd ? withoutRd(scenarioAvecHistoires) : scenarioAvecHistoires;
+  // Le pipeline du snapshot vit dans `config/scenarios/scenario-joue.ts` : le
+  // rejeu du bilan (pedagogy/merite) recompose le monde d'une autre graine avec
+  // exactement le même calcul.
+  const scenarioJoue = composerLeScenarioJoue({
+    scenario: definition.scenario,
+    seed,
+    variableWorld: args.variableWorld,
+    level: args.level,
+    economicOverrides: overrides,
+    scoringWeightOverrides: scoringOverrides,
+    concurrents,
+    roundsCount: args.roundsCount,
+    periodicity: args.periodicity,
+    investmentStories: args.investmentStories,
+  });
 
   const [game] = await db
     .insert(games)
@@ -382,7 +358,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     equipes: teamRows,
     definition,
     periodicity: args.periodicity,
-    roundsCount: scenarioSnapshot.roundsCount,
+    roundsCount: scenarioJoue.roundsCount,
   });
 
   return {

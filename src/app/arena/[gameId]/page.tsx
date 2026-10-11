@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cache } from "react";
+import { Suspense, cache } from "react";
 import { getGuestUserId } from "@/lib/guest";
 import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
@@ -62,6 +62,7 @@ import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
 import { causesDuResultat, decompositionDuResultat } from "@/components/lecture-du-resultat";
 import { CeQuiAFaitLeResultat } from "@/components/ce-qui-a-fait-le-resultat";
 import { BilanDePartie } from "@/components/bilan-de-partie";
+import { MeriteDeLaPartieAuBilan, MeriteEnAttente } from "@/components/merite-de-la-partie";
 import { bilanDeLaPartie, titreDuBilan } from "@/pedagogy/bilan-de-partie";
 import { VosReussites } from "@/components/vos-reussites";
 import { reussitesDeLaPartie, lireLeTour } from "@/scoring/reussites";
@@ -1512,6 +1513,16 @@ export default async function ArenaPage({
                     : null
                 }
                 lieu={{ scenario: view.scenarioCode, secteur: view.sector }}
+                merite={
+                  // MÉRITE OU CHANCE (solo) : rejouer vos décisions sur d'autres
+                  // marchés prend de l'ordre d'une seconde. Le bilan s'affiche
+                  // sans l'attendre ; les trois blocs arrivent quand ils sont prêts.
+                  view.kind === "solo" ? (
+                    <Suspense fallback={<MeriteEnAttente />}>
+                      <MeriteDeLaPartieAuBilan gameId={gameId} userId={userId} />
+                    </Suspense>
+                  ) : null
+                }
                 podium={
                   classementOuvert && view.ranking.length > 1
                     ? view.ranking.map((row) => ({

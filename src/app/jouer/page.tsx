@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 export default async function JouerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ secteur?: string; trop?: string; reserve?: string }>;
+  searchParams: Promise<{ secteur?: string; niveau?: string; trop?: string; reserve?: string }>;
 }) {
   const config = await getPlatformConfig();
   // Celui qui revient retrouve sa partie AVANT d'en configurer une autre.
@@ -53,7 +53,9 @@ export default async function JouerPage({
   const licence = await unCompteSousLicence([userId, session?.userId]);
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
-  const { secteur, trop, reserve } = await searchParams;
+  const { secteur, niveau, trop, reserve } = await searchParams;
+  // Le niveau que le bilan d'une partie conseille (« Et ensuite ») : 1 à 6, sinon rien.
+  const niveauDemande = /^[1-6]$/.test(niveau ?? "") ? Number(niveau) : undefined;
   const scenarioChoisi = SCENARIO_CHOICES.some((s) => s.code === secteur)
     ? secteur!
     : DEFAULT_SCENARIO_CODE;
@@ -194,6 +196,7 @@ export default async function JouerPage({
                     decisions: leviersDuNiveau(p.level).length,
                   }))}
                   defaultScenario={scenarioChoisi}
+                  defaultLevel={niveauDemande}
                   lancement={
                     // LE SEUL BOUTON DE LANCEMENT, dans le résumé collant (lot P2).
                     <SubmitButton

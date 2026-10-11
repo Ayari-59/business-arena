@@ -35,6 +35,7 @@ import { moyenne, mulberry32 } from "@/engine/episodes/commun";
 import { decisives } from "@/pedagogy/episodes/bilan";
 import { SEUIL_QUALITE } from "@/pedagogy/episodes/mesures";
 import { EPISODES } from "@/pedagogy/episodes/registre";
+import { SEUILS_DU_CONSEIL } from "./seuils-du-conseil";
 import {
   observer,
   valeurDeLaDecision,
@@ -155,12 +156,8 @@ export const OBJECTIFS_POSSIBLES: readonly CodeCompetence[] = COMPETENCES.filter
 export const estUnObjectif = (code: string | null | undefined): code is CodeCompetence =>
   OBJECTIFS_POSSIBLES.includes(code as CodeCompetence);
 
-/**
- * Au-delà de cette qualité moyenne sur les deux derniers épisodes, on propose
- * l'Expert ; en deçà de la seconde, la Découverte. Des conventions de départ,
- * comme les autres seuils du profil.
- */
-export const SEUILS_DU_CONSEIL = { expert: 0.8, decouverte: 0.4 } as const;
+/** Les seuils du niveau conseillé : voir `seuils-du-conseil.ts`, que l'arène partage. */
+export { SEUILS_DU_CONSEIL };
 
 /**
  * LE NIVEAU CONSEILLÉ : la difficulté suit ce que la personne réussit.

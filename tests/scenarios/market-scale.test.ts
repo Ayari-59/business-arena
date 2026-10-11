@@ -145,16 +145,23 @@ describe("dimensionnement du marché", () => {
   it("la création de partie dimensionne réellement le marché", () => {
     // La fonction peut être parfaite et n'être appelée nulle part : le défaut
     // serait alors exactement celui d'avant, sans qu'aucun autre test ne bouge.
+    // Le pipeline de l'instantané vit dans `config/scenarios/scenario-joue.ts`
+    // (le rejeu du bilan le partage) : on vérifie les deux bouts, que la
+    // création l'appelle avec le nombre de concurrents de la partie, et que le
+    // pipeline dimensionne bien avec ce nombre.
     const service = readFileSync("src/services/game-creation.service.ts", "utf-8");
-    expect(service, "le service n'importe pas le dimensionnement").toContain("applyMarketScale");
-    const appel = service.slice(service.indexOf("const scenarioSnapshot"));
+    const appel = service.slice(service.indexOf("const scenarioJoue = composerLeScenarioJoue("));
+    expect(appel.length, "la création n'appelle pas le pipeline de l'instantané").toBeLessThan(service.length);
     expect(
-      appel.slice(0, appel.indexOf(";")),
-      "le dimensionnement n'entre pas dans l'instantané du scénario",
-    ).toContain("applyMarketScale");
-    expect(
-      appel.slice(0, appel.indexOf(";")),
+      appel.slice(0, appel.indexOf("});")),
       "le nombre de concurrents ne vient pas de la partie créée",
-    ).toContain("concurrents");
+    ).toMatch(/\bconcurrents,/);
+    expect(service).toContain("scenarioSnapshot: scenarioJoue");
+    const pipeline = readFileSync("src/config/scenarios/scenario-joue.ts", "utf-8");
+    const corps = pipeline.slice(pipeline.indexOf("const snapshot = "));
+    expect(
+      corps.slice(0, corps.indexOf(";")),
+      "le dimensionnement n'entre pas dans l'instantané du scénario",
+    ).toMatch(/applyMarketScale\([\s\S]*r\.concurrents/);
   });
 });

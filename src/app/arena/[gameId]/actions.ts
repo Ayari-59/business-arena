@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
 import { decisionsSaisies } from "@/config/decisions-saisies";
@@ -19,6 +20,7 @@ import {
 import { choisirSonEquipe } from "@/services/affectation.service";
 import { deposerDemande } from "@/services/subvention.service";
 import { getGameView } from "@/services/game-view.service";
+import { meriteDeLaPartie } from "@/services/merite.service";
 import {
   getGameKind,
   getGameVocabulary,
@@ -123,7 +125,16 @@ export async function playRoundAction(
     const justification = note || undefined;
     kind = await getGameKind(gameId);
     if (kind === "solo") {
-      await resolveCurrentRound({ gameId, userId, playerDecisions: payload, justification });
+      const { finished } = await resolveCurrentRound({
+        gameId,
+        userId,
+        playerDecisions: payload,
+        justification,
+      });
+      // MÉRITE OU CHANCE : la partie est finie, son verdict se calcule tout de
+      // suite, après la réponse (le joueur ne l'attend pas), pour être prêt
+      // quand il lit son bilan. Une panne ici ne touche pas la partie.
+      if (finished) after(() => meriteDeLaPartie(gameId).catch(() => undefined));
     } else {
       await submitTeamDecisions({ gameId, userId, payload, justification });
     }

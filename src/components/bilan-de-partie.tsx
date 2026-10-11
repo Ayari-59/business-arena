@@ -49,6 +49,7 @@ export function BilanDePartie({
   record = null,
   podium = null,
   lieu = null,
+  merite = null,
   children,
 }: {
   /**
@@ -75,6 +76,12 @@ export function BilanDePartie({
   podium?: readonly MarcheDuPodium[] | null;
   /** Le lieu de l'entreprise, en fond de la clôture (lot P2). */
   lieu?: { scenario: string; secteur: Sector } | null;
+  /**
+   * MÉRITE OU CHANCE (partie solo) : les trois blocs de la part du hasard, posés
+   * entre la lecture du bilan et les actions. Ils arrivent en différé (la page
+   * les pose derrière `Suspense`) : voir `components/merite-de-la-partie.tsx`.
+   */
+  merite?: ReactNode;
   /** Les actions : rejouer, changer de métier. */
   children?: ReactNode;
 }) {
@@ -343,6 +350,8 @@ export function BilanDePartie({
           ) : null}
         </div>
       </section>
+
+      {merite}
 
       {/* LES ACTIONS, APRÈS LA LECTURE (lot P2) : « Rejouer » est l'action de
           la clôture, le grand bouton plein ; changer de métier est l'autre
