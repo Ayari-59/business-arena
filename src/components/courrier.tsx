@@ -9,6 +9,7 @@ import { courrierParCode, positionDuCourrier, referenceDuCourrier } from "@/conf
 import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers/routine";
 import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mission";
 import { COURRIERS_EN_RETOUR, estUnCourrierEnRetour } from "@/config/courriers/reponses";
+import { attentionDuPli, type DestinataireDuCourrier } from "@/config/courriers/destinataire";
 import { BrandMark } from "@/components/brand-mark";
 import { Icone } from "@/components/icone";
 import {
@@ -106,6 +107,7 @@ export function Enveloppe({
   code,
   liasse,
   destinataire,
+  adresse,
   className = "",
 }: {
   /** Le courrier contenu, s'il est connu : il donne le timbre et le cachet. */
@@ -114,6 +116,12 @@ export function Enveloppe({
   liasse?: string | null;
   /** À qui le pli est adressé : « Tout le marché », « Équipe 3 ». */
   destinataire?: string;
+  /**
+   * L'ENTREPRISE DESTINATAIRE, quand on la connaît (l'arène) : la fenêtre porte
+   * alors son nom et la ligne d'attention, comme un vrai pli. La liasse
+   * imprimée de l'enseignant ne la connaît pas et garde `destinataire`.
+   */
+  adresse?: DestinataireDuCourrier;
   className?: string;
 }) {
   const c = code ? courrier(code) : undefined;
@@ -175,11 +183,26 @@ export function Enveloppe({
           </div>
         ) : null}
 
-        {/* la fenêtre du destinataire */}
-        <div className={`mt-auto ${bande ? "pl-7" : ""}`}>
-          <span className="creux filet inline-block rounded-md border border-dashed px-2.5 py-1.5 text-sm leading-relaxed">
+        {/* la fenêtre du destinataire : le nom de l'entreprise, puis le service
+            visé, comme on adresse un pli. Un nom long (« LA TABLE D'AUGUSTIN »)
+            revient à la ligne dans la fenêtre au lieu d'en sortir. */}
+        <div className={`mt-auto min-w-0 ${bande ? "pl-7" : ""}`}>
+          <span
+            data-destinataire-du-pli=""
+            className={`creux filet inline-block rounded-md border border-dashed max-w-full px-2.5 py-1.5 text-sm [overflow-wrap:anywhere] ${adresse ? "leading-snug" : "leading-relaxed"}`}
+          >
             <span className="tenue block text-xs">Destinataire</span>
-            {destinataire ?? "L'entreprise"}
+            {adresse ? (
+              <>
+                <span data-nom-du-destinataire="" className="block font-semibold">
+                  {adresse.nom}
+                </span>
+                <span className="douce block text-xs">{attentionDuPli(c?.pli, "enveloppe")}</span>
+                {adresse.ville ? <span className="douce block text-xs">{adresse.ville}</span> : null}
+              </>
+            ) : (
+              (destinataire ?? "L'entreprise")
+            )}
           </span>
         </div>
 
@@ -208,12 +231,18 @@ export function Lettre({
   code,
   annonce = false,
   destinataire,
+  adresse,
+  quand,
   surligne = false,
 }: {
   code: string;
   /** Courrier annoncé par l'enseignant, pas encore appliqué. */
   annonce?: boolean;
   destinataire?: string;
+  /** L'entreprise destinataire : son bloc se pose en tête, sous l'expéditeur. */
+  adresse?: DestinataireDuCourrier;
+  /** Le moment de la partie où le pli arrive (« Trimestre 3 ») : la ligne de date. */
+  quand?: string;
   /** Vrai quand le courrier s'adresse à l'entreprise de celui qui le lit. */
   surligne?: boolean;
 }) {
@@ -269,6 +298,28 @@ export function Lettre({
             {annonce ? "annoncé" : nature.label}
           </span>
         </div>
+        {/*
+          LE BLOC DESTINATAIRE, comme une lettre d'affaires française : sous
+          l'expéditeur, décalé à droite, le nom de l'entreprise et le service
+          visé ; puis la ligne de date. Sur téléphone, la lettre est étroite :
+          le bloc garde sa marge à gauche mais ne déborde pas, un nom long passe
+          à la ligne. Rien d'inventé : pas de ville que la partie ne donne pas.
+        */}
+        {adresse ? (
+          <div
+            data-destinataire-de-la-lettre=""
+            className="mt-2 ml-auto w-fit max-w-[min(100%,18rem)] pl-6 text-sm leading-snug [overflow-wrap:anywhere] max-sm:pl-10"
+          >
+            <span className="block font-semibold">{adresse.nom}</span>
+            <span className="douce block text-xs">{attentionDuPli(c.pli, "lettre")}</span>
+            {adresse.ville ? <span className="douce block text-xs">{adresse.ville}</span> : null}
+          </div>
+        ) : null}
+        {quand ? (
+          <p data-date-de-la-lettre="" className="tenue mt-1.5 text-right text-xs">
+            {quand}
+          </p>
+        ) : null}
         <div className="filet mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-2 text-xs">
           <span
             className={c.pli === "simple" ? "tenue" : "font-semibold"}
@@ -354,10 +405,13 @@ export function Lettre({
 export function Courriel({
   code,
   destinataire,
+  adresse,
   className = "",
 }: {
   code?: string;
   destinataire?: string;
+  /** L'entreprise destinataire : la ligne « À » porte son nom. */
+  adresse?: DestinataireDuCourrier;
   className?: string;
 }) {
   const c = code ? courrier(code) : undefined;
@@ -394,7 +448,7 @@ export function Courriel({
         {/* Le destinataire en clair sous l'objet, et non dans une fenêtre
             encadrée : une boîte de réception n'a pas de fenêtre d'enveloppe. */}
         <span className="tenue mt-1.5 block pl-[1.125rem] text-sm leading-snug">
-          À {destinataire ?? "L'entreprise"}
+          À {adresse ? adresse.nom : (destinataire ?? "L'entreprise")}
         </span>
 
         {nature ? (
@@ -447,11 +501,14 @@ export function Message({
   code,
   annonce = false,
   destinataire,
+  adresse,
   surligne = false,
 }: {
   code: string;
   annonce?: boolean;
   destinataire?: string;
+  /** L'entreprise destinataire : le champ « À » porte son nom et le service visé. */
+  adresse?: DestinataireDuCourrier;
   surligne?: boolean;
 }) {
   const c = courrier(code);
@@ -499,7 +556,15 @@ export function Message({
               className={`min-w-0 ${surligne ? "font-semibold" : "douce"}`}
               style={surligne ? { color: "#0369a1" } : undefined}
             >
-              {destinataire ?? "L'entreprise"}
+              {adresse ? (
+                <>
+                  <span data-nom-du-destinataire="">{adresse.nom}</span>
+                  {", direction générale"}
+                  {destinataire ? ` · ${destinataire}` : ""}
+                </>
+              ) : (
+                (destinataire ?? "L'entreprise")
+              )}
             </dd>
             <dt className="tenue">Objet</dt>
             <dd className="min-w-0 font-semibold">{c.objet}</dd>
@@ -620,7 +685,16 @@ export function grilleDeCourriers(nombre: number, mise: "rangee" | "posee" = "ra
  * Elle ne se pose que si la place le permet (globals.css, « LOT P7 ») : sur
  * téléphone et à côté de deux plis, aucune.
  */
-export function EnveloppeOuverte({ code, destinataire }: { code: string; destinataire?: string }) {
+export function EnveloppeOuverte({
+  code,
+  destinataire,
+  adresse,
+}: {
+  code: string;
+  destinataire?: string;
+  /** L'entreprise destinataire : son nom, puis le service visé. */
+  adresse?: DestinataireDuCourrier;
+}) {
   const c = courrier(code);
   if (!c || c.pli === "email") return null;
   const interne = c.pli === "interne";
@@ -670,10 +744,20 @@ export function EnveloppeOuverte({ code, destinataire }: { code: string; destina
             </svg>
           </span>
         )}
-        <span className="enveloppe-posee-destinataire">
-          <span className="enveloppe-posee-a">À l&apos;attention de</span>
-          {destinataire ?? "L'entreprise"}
-        </span>
+        {adresse ? (
+          <span className="enveloppe-posee-destinataire">
+            <span data-nom-du-destinataire="" className="enveloppe-posee-nom">
+              {adresse.nom}
+            </span>
+            <span className="enveloppe-posee-a">{attentionDuPli(c.pli, "enveloppe")}</span>
+            {adresse.ville ? <span className="enveloppe-posee-a">{adresse.ville}</span> : null}
+          </span>
+        ) : (
+          <span className="enveloppe-posee-destinataire">
+            <span className="enveloppe-posee-a">À l&apos;attention de</span>
+            {destinataire ?? "L'entreprise"}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -685,6 +769,8 @@ export function CourrierRecommande({
   delayMs = 0,
   annonce = false,
   destinataire,
+  adresse,
+  quand,
   surligne = false,
 }: {
   code: string;
@@ -692,6 +778,13 @@ export function CourrierRecommande({
   annonce?: boolean;
   /** Destinataire affiché : « Tout le marché » ou « → Équipe 3 ». */
   destinataire?: string;
+  /**
+   * L'entreprise à qui le pli est adressé : son nom sur l'enveloppe et en tête
+   * de la lettre. `destinataire` ne dit plus alors que la portée du pli.
+   */
+  adresse?: DestinataireDuCourrier;
+  /** La ligne de date de la lettre (« Trimestre 3 »). */
+  quand?: string;
   surligne?: boolean;
 }) {
   const c = courrier(code);
@@ -712,19 +805,38 @@ export function CourrierRecommande({
     <div className="pli-scene" style={{ animationDelay: `${delayMs}ms` }}>
       <div className="pli-ouverture" style={{ animationDelay: `${delayMs}ms` }}>
         {parCourriel ? (
-          <Courriel code={code} destinataire={destinataire} className="h-full" />
+          <Courriel
+            code={code}
+            destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
+            className="h-full"
+          />
         ) : (
           <Enveloppe
             code={code}
             liasse={position?.liasse}
             destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
             className="h-full"
           />
         )}
         {parCourriel ? (
-          <Message code={code} annonce={annonce} destinataire={destinataire} surligne={surligne} />
+          <Message
+            code={code}
+            annonce={annonce}
+            destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
+            surligne={surligne}
+          />
         ) : (
-          <Lettre code={code} annonce={annonce} destinataire={destinataire} surligne={surligne} />
+          <Lettre
+            code={code}
+            annonce={annonce}
+            destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
+            {...(quand ? { quand } : {})}
+            surligne={surligne}
+          />
         )}
       </div>
     </div>

@@ -3,6 +3,7 @@ import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
 import { lectureBancaire } from "@/components/lecture-bancaire";
 import { ligneTresorerie } from "@/components/ligne-tresorerie";
+import { destinataireDuCourrier } from "@/config/courriers/destinataire";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { BpiPanel } from "@/components/bpi-panel";
@@ -285,7 +286,17 @@ export function PeriodDashboard({
                 </p>
                 <div className={grilleDeCourriers(period.events.length)}>
                   {period.events.map((code, i) => (
-                    <CourrierRecommande key={code} code={code} delayMs={i * 450} />
+                    <CourrierRecommande
+                      key={code}
+                      code={code}
+                      delayMs={i * 450}
+                      adresse={destinataireDuCourrier({
+                        kind: view.kind,
+                        entreprise: view.intro.company,
+                        equipe: view.playerTeamName,
+                      })}
+                      quand={periodLabel(view.roundDays, period.round)}
+                    />
                   ))}
                 </div>
               </section>

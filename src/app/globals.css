@@ -3618,6 +3618,31 @@ main[data-ecran-de-jeu] :is(h2, h3, h4):not(.font-titre, .font-display) {
     0 0 0 5px color-mix(in oklab, var(--focus-champ, var(--color-amber-400)) 22%, transparent);
 }
 
+/* ──────────────────── LA SAISIE REFUSÉE (courrier-erreurs) ─────────────────── */
+
+/* UN CHAMP REFUSÉ SE VOIT À SON CADRE. La couleur est celle des refus déjà en
+   usage dans la feuille (le filet `encadre-perte` du message d'erreur, le rouge
+   400 de la charte) : aucune couleur nouvelle, et pas d'orange, qui reste à
+   l'action. Le cadre seul ne suffit pas (le rouge ne se lit pas pour tout le
+   monde) : le message écrit sous le champ, relié par `aria-describedby`, dit
+   ce qui ne va pas. Le focus garde son halo orangé autour du cadre rouge. */
+[data-ecran-de-jeu] .champ:not(.papier .champ):has([aria-invalid="true"]),
+.champ:has([aria-invalid="true"]),
+.champ[aria-invalid="true"] {
+  border-color: var(--color-red-400);
+  box-shadow:
+    var(--creux-champ, 0 0 #0000),
+    0 0 0 1px var(--color-red-400);
+}
+[data-ecran-de-jeu] .champ:not(.papier .champ):has([aria-invalid="true"]):is(:focus, :focus-within),
+.champ[aria-invalid="true"]:focus {
+  border-color: var(--color-red-400);
+  box-shadow:
+    var(--creux-champ, 0 0 #0000),
+    0 0 0 1px var(--color-red-400),
+    0 0 0 5px color-mix(in oklab, var(--focus-champ, var(--color-amber-400)) 22%, transparent);
+}
+
 /* ─────────────── LES TROIS BOUTONS DU PIED DE LA FEUILLE (point 1) ─────────── */
 
 /* « VALIDER ET SIMULER » : le geste qui fait répondre le marché. Le bouton
@@ -4531,6 +4556,12 @@ details[open] > summary [data-deplier] {
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--encre-tenue);
+}
+/* LE NOM DE L'ENTREPRISE DESTINATAIRE, en tête de l'adresse : un nom long
+   (« LA TABLE D'AUGUSTIN ») passe à la ligne au lieu de sortir de l'enveloppe. */
+.enveloppe-posee-nom {
+  display: block;
+  overflow-wrap: anywhere;
 }
 @media print {
   .enveloppe-posee {

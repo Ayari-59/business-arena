@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import type { DestinataireDuCourrier } from "@/config/courriers/destinataire";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
 import { lettreDeMission } from "@/config/courriers/mission";
@@ -49,6 +50,7 @@ export function MandatDeLEquipe({
   gameId,
   niveau,
   equipe,
+  adresse,
   ouvert: ouvertInitial = false,
 }: {
   gameId: string;
@@ -56,6 +58,11 @@ export function MandatDeLEquipe({
   niveau: number;
   /** Le nom de l'équipe, porté par la lettre comme destinataire. */
   equipe: string;
+  /**
+   * L'entreprise destinataire (`config/courriers/destinataire`) : quand elle
+   * est donnée, la lettre porte son bloc destinataire au lieu de la pastille.
+   */
+  adresse?: DestinataireDuCourrier;
   /** Déjà déplié d'emblée (tests, aperçus). */
   ouvert?: boolean;
 }) {
@@ -107,7 +114,11 @@ export function MandatDeLEquipe({
    */
   return (
     <section aria-label="Votre mandat" className={grilleDeCourriers(1)}>
-      <CourrierRecommande code={mandat.code} destinataire={equipe} />
+      {adresse ? (
+        <CourrierRecommande code={mandat.code} adresse={adresse} />
+      ) : (
+        <CourrierRecommande code={mandat.code} destinataire={equipe} />
+      )}
       <div className="flex justify-center">
         <button
           type="button"

@@ -11,6 +11,7 @@ import {
 } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { courrierDeRoutine } from "@/config/courriers/routine";
+import type { DestinataireDuCourrier } from "@/config/courriers/destinataire";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
 import { Icone } from "@/components/icone";
 
@@ -59,9 +60,15 @@ export function CourrierDuTour({
   round,
   periodeLabel,
   plis,
+  adresse,
   ouvert: ouvertInitial = false,
   classe: classeInitial = false,
 }: {
+  /**
+   * L'entreprise que dirige le joueur : le courrier lui est adressé, son nom est
+   * sur l'enveloppe et en tête de la lettre (voir `config/courriers/destinataire`).
+   */
+  adresse: DestinataireDuCourrier;
   gameId: string;
   /** « Trimestre 3 » : le nom du tour tel que la partie le dit. */
   round: number;
@@ -130,11 +137,12 @@ export function CourrierDuTour({
   // aucune.
   const seul = vide || plis.length === 1;
   const premier = vide ? routine.code : plis[0]!.code;
-  const destinatairePremier = vide
-    ? "L'entreprise"
-    : plis[0]!.teamId
-      ? "Votre entreprise"
-      : "Tout le marché";
+  // La ligne de date de la lettre : le tour, tel que la partie le nomme.
+  const quand = periodeLabel.charAt(0).toUpperCase() + periodeLabel.slice(1);
+  // LA PORTÉE DU PLI, en plus de l'adresse : un courrier « tout le marché » est
+  // une circulaire, reçue aussi par les concurrents, et la lettre le dit. Un
+  // pli adressé à l'entreprise n'a rien à ajouter à son adresse.
+  const portee = (teamId: string | null) => (teamId ? undefined : "Tout le marché");
 
   return (
     // LOT P3 : LE COURRIER EST POSÉ SUR LE BUREAU, PAS DANS UN PANNEAU. La
@@ -174,7 +182,7 @@ export function CourrierDuTour({
                 className="absolute inset-0"
                 style={{ transform: `rotate(${(i - 1) * 3}deg) translateY(${i * -4}px)` }}
               >
-                <Enveloppe className="h-full" destinataire="L'entreprise" liasse={null} />
+                <Enveloppe className="h-full" adresse={adresse} liasse={null} />
               </span>
             ))}
           </div>
@@ -197,7 +205,7 @@ export function CourrierDuTour({
           <div className={seul && !enParcours ? "courrier-pose-seul" : ""}>
           <div className={seul && !enParcours ? "courrier-pose-seul-grille" : ""}>
           {seul && !enParcours ? (
-            <EnveloppeOuverte code={premier} destinataire={destinatairePremier} />
+            <EnveloppeOuverte code={premier} adresse={adresse} />
           ) : null}
           <div className={seul ? "mx-auto w-full sm:max-w-[40rem]" : ""}>
             {/*
@@ -207,14 +215,16 @@ export function CourrierDuTour({
             */}
             <div className={grilleDeCourriers(vide ? 1 : plis.length, "posee")}>
               {vide ? (
-                <CourrierRecommande code={routine.code} destinataire="L'entreprise" />
+                <CourrierRecommande code={routine.code} adresse={adresse} quand={quand} />
               ) : (
                 plis.map((p, i) => (
                   <CourrierRecommande
                     key={`${p.code}-${p.teamId ?? "market"}`}
                     code={p.code}
                     delayMs={i * 500}
-                    destinataire={p.teamId ? "Votre entreprise" : "Tout le marché"}
+                    destinataire={portee(p.teamId)}
+                    adresse={adresse}
+                    quand={quand}
                     surligne={p.isMyTeam}
                   />
                 ))

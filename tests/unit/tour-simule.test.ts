@@ -13,7 +13,12 @@ import { CourrierDuTour } from "@/components/courrier-du-tour";
  * lettre. Et le facteur passe même quand rien ne tombe.
  */
 describe("le courrier du tour", () => {
-  const base = { gameId: "g", round: 3, periodeLabel: "trimestre 3" };
+  const base = {
+    gameId: "g",
+    round: 3,
+    periodeLabel: "trimestre 3",
+    adresse: { nom: "LA TABLE D'AUGUSTIN", ville: null },
+  };
   const plis = [
     { code: "economic_downturn", teamId: null, isMyTeam: false },
     { code: "machine_breakdown", teamId: "moi", isMyTeam: true },
@@ -35,7 +40,17 @@ describe("le courrier du tour", () => {
     expect(html).toContain("recul de la consommation des ménages");
     expect(html).toContain("Tout le marché");
     expect(html).toContain("Arrêt de la ligne principale");
-    expect(html).toContain("Votre entreprise");
+    // Le pli adressé à l'entreprise porte son NOM (sur l'enveloppe et en tête
+    // de la lettre), et non plus « Votre entreprise » ; la circulaire garde sa
+    // portée, « Tout le marché ».
+    expect(html).not.toContain("Votre entreprise");
+    expect(html.match(/data-destinataire-de-la-lettre=""/g)).toHaveLength(2);
+    expect(html.match(/LA TABLE D&#x27;AUGUSTIN/g)?.length).toBeGreaterThanOrEqual(4);
+    expect(html).toContain("À l&#x27;attention de la direction générale");
+    // La note de service circule dans les murs : à la direction, sans formule.
+    expect(html).toContain("Direction générale");
+    // La ligne de date : le tour, tel que la partie le nomme.
+    expect(html).toContain("Trimestre 3");
     expect(html).not.toContain("Ouvrir le courrier");
   });
 

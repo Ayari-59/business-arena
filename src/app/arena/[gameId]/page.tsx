@@ -18,6 +18,7 @@ import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { MandatDeLEquipe } from "@/components/mandat-de-lequipe";
 import { reponsesAuxDecisions } from "@/config/courriers/reponses";
 import { courrierParCode } from "@/config/courriers/registre";
+import { destinataireDuCourrier } from "@/config/courriers/destinataire";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
 import { ChoixEquipe } from "@/components/choix-equipe";
@@ -244,6 +245,13 @@ export default async function ArenaPage({
   // « Situation » réunit tout sur un seul écran. On extrait donc des blocs
   // plutôt que de les dupliquer d'un mode à l'autre.
   const premierTour = periods.length === 0;
+  // À QUI LE COURRIER EST ADRESSÉ : l'entreprise que dirige le joueur, sous son
+  // nom (le scénario en solo, celui de l'équipe en classe quand elle en a un).
+  const adresseDuCourrier = destinataireDuCourrier({
+    kind: view.kind,
+    entreprise: view.intro.company,
+    equipe: view.playerTeamName,
+  });
   // LA PHRASE DE PRISE DE POSTE (lot P2), posée sur le lieu au tour 1 : la
   // promesse du registre (« Prenez les commandes »), puis la règle du jeu.
   // Rien d'inventé : le nombre de tours est celui de la partie.
@@ -420,10 +428,18 @@ export default async function ArenaPage({
                 destinataire={
                   courrier.teamId
                     ? courrier.isMyTeam
-                      ? "Votre entreprise"
+                      ? undefined
                       : `→ ${courrier.teamName ?? "Une autre entreprise"}`
                     : "Tout le marché"
                 }
+                // Un pli adressé à une autre équipe porte SON nom : on lit le
+                // courrier du voisin, pas le sien.
+                adresse={
+                  courrier.teamId && !courrier.isMyTeam
+                    ? { nom: courrier.teamName ?? "Une autre entreprise", ville: null }
+                    : adresseDuCourrier
+                }
+                quand={periodLabel(view.roundDays, view.currentRound)}
                 surligne={courrier.isMyTeam}
               />
             ))}
@@ -459,6 +475,7 @@ export default async function ArenaPage({
                   destinataire={`${
                     courrier.teamId ? "Votre entreprise" : "Tout le marché"
                   } · encore ${courrier.roundsLeft > 1 ? `${courrier.roundsLeft} tours` : "ce tour"}`}
+                  adresse={adresseDuCourrier}
                   surligne={courrier.isMyTeam}
                 />
               ))}
@@ -644,7 +661,8 @@ export default async function ArenaPage({
                                 key={c.code}
                                 code={c.code}
                                 delayMs={i * 450}
-                                destinataire={view.playerTeamName}
+                                adresse={adresseDuCourrier}
+                                quand={periodLabel(view.roundDays, view.currentRound)}
                               />
                             ))}
                           </div>
@@ -1109,6 +1127,7 @@ export default async function ArenaPage({
                 gameId={gameId}
                 niveau={view.difficulty.level}
                 equipe={view.playerTeamName}
+                adresse={adresseDuCourrier}
                 ouvert
               />
             ),
@@ -1144,6 +1163,7 @@ export default async function ArenaPage({
                       round={view.currentRound}
                       periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                       plis={view.upcomingDraw}
+                      adresse={adresseDuCourrier}
                     />
                   </div>
                 ) : null;
@@ -1772,6 +1792,7 @@ export default async function ArenaPage({
                           gameId={gameId}
                           niveau={view.difficulty.level}
                           equipe={view.playerTeamName}
+                          adresse={adresseDuCourrier}
                         />
                       ) : null}
                       {/*

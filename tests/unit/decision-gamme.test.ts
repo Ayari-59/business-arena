@@ -223,7 +223,12 @@ describe("l'action serveur en gamme", () => {
         "product.pull-col-rond.productionPlan": "100",
       }),
     );
-    expect(etat.error).toContain("invalides");
+    // Le refus NOMME LE CHAMP (la référence et son prix), et l'écran sait où
+    // le marquer : « Décisions invalides » ne disait pas lequel.
+    expect(etat.erreurs).toHaveLength(1);
+    expect(etat.erreurs![0]!.champ).toBe("product.pull-col-rond.price");
+    expect(etat.error).toMatch(/la case est vide/);
+    expect(etat.error).not.toMatch(/invalides|Invalid|expected/i);
     expect(submitTeamDecisions).not.toHaveBeenCalled();
   });
 });

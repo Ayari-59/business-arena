@@ -1,10 +1,18 @@
 "use client";
 
 import { bouton } from "@/components/bouton";
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { useGlisser, vibrer, VIBRATION_DE_REUSSITE } from "@/lib/glisser";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
-import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { GuardError, copierSaisie, rejouerSaisie, useGuardedAction } from "@/components/guarded-action";
 import { sansMolette } from "@/components/sans-molette";
 import {
   coutDeLAffacturage,
@@ -13,6 +21,7 @@ import {
   totalDesEtudes,
 } from "@/config/cout-du-financement";
 import {
+  PRODUCT_FIELD_PREFIX,
   pivotFieldsFor,
   pivotsNonTouches,
   productFieldName,
@@ -72,6 +81,17 @@ import {
   type DefCarte,
 } from "@/components/cartes-de-decision";
 import {
+  erreurDuChamp,
+  idDuChamp,
+  libelleDuChamp,
+  lireNombre,
+  referenceDuChamp,
+  refusDuVolume,
+  titreDuRecapitulatif,
+  type ContexteDesLibelles,
+  type ErreurDeChamp,
+} from "@/config/refus-de-decision";
+import {
   cleBrouillon,
   ecrireBrouillon,
   effacerBrouillon,
@@ -83,6 +103,53 @@ import {
 const initialState: PlayRoundState = { error: null };
 
 type ChampSaisi = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
+/**
+ * LES REFUS EN COURS, champ par champ (`config/refus-de-decision.ts`) : le
+ * message que chaque champ refusé porte sous lui. Les champs le lisent par leur
+ * nom ; la feuille le tient à jour (envoi refusé, refus du serveur, correction).
+ */
+const RefusDesChamps = createContext<ReadonlyMap<string, string>>(new Map());
+
+/**
+ * Ce qu'un champ refusé porte : son identifiant (la cible des liens du
+ * récapitulatif), `aria-invalid` et `aria-describedby` vers son message, et le
+ * message lui-même, posé sous le champ. Un champ qui passe ne porte rien.
+ */
+function useRefusDuChamp(nom: string) {
+  return refusPour(useContext(RefusDesChamps), nom);
+}
+
+/** Le même, hors d'un composant (une cellule par référence, dans une boucle). */
+function refusPour(refus: ReadonlyMap<string, string>, nom: string) {
+  const message = refus.get(nom) ?? null;
+  const id = idDuChamp(nom);
+  return {
+    id,
+    attributs: message
+      ? { "aria-invalid": true as const, "aria-describedby": `${id}-refus` }
+      : {},
+    message: message ? <MessageDeRefus id={`${id}-refus`} message={message} /> : null,
+  };
+}
+
+/**
+ * LE MESSAGE SOUS LE CHAMP. Le rouge des refus déjà en usage dans la feuille
+ * (`encadre-perte`, le message d'erreur de l'action) : aucune couleur nouvelle,
+ * et pas d'orange, qui reste à l'action. Le pictogramme double la couleur.
+ */
+function MessageDeRefus({ id, message }: { id: string; message: string }) {
+  return (
+    <span
+      id={id}
+      data-refus-du-champ=""
+      className="mt-1.5 flex items-start gap-1.5 text-sm leading-snug text-red-300"
+    >
+      <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>{message}</span>
+    </span>
+  );
+}
 
 /**
  * Repose une valeur dans un champ, de façon que React la voie.
@@ -483,7 +550,9 @@ function ChampMajeur({
 }) {
   const interne = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? interne;
+  const refus = useRefusDuChamp(name);
   return (
+    <div>
     <label className="block">
       {proposition ? (
         <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -500,6 +569,8 @@ function ChampMajeur({
           inputMode="decimal"
           {...(max !== undefined ? { max } : {})}
           ref={ref}
+          id={refus.id}
+          {...refus.attributs}
           name={name}
           defaultValue={defaultValue}
           step={step}
@@ -527,6 +598,8 @@ function ChampMajeur({
       ) : null}
       {hint ? <span className="mt-1 block text-sm text-slate-400">{hint}</span> : null}
     </label>
+    {refus.message}
+    </div>
   );
 }
 
@@ -575,6 +648,7 @@ function Field({
   const { actif: enCarte } = useModeCartes();
   const interne = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? interne;
+  const refus = useRefusDuChamp(name);
   // PLUSIEURS CHAMPS SUR UNE CARTE : la ligne compacte. Le grand bloc est pour le champ qui est la
   // question de sa carte ; une carte doit tenir sur un écran, et à trois champs il n'y tient plus.
   const compact = enCarte && (libelle !== undefined || !seulSurSaCarte(name));
@@ -648,6 +722,7 @@ function Field({
     );
   }
   return (
+    <div>
     <label className="block">
       <span className="libelle block min-h-8 font-semibold leading-4 text-slate-300">{label}</span>
       <span className="mt-1 flex items-center gap-2 champ px-3 py-2">
@@ -656,6 +731,8 @@ function Field({
           onWheel={sansMolette}
           {...(max !== undefined ? { max } : {})}
           ref={ref}
+          id={refus.id}
+          {...refus.attributs}
           name={name}
           defaultValue={defaultValue}
           step={step}
@@ -675,6 +752,8 @@ function Field({
       </span>
       {hint ? <span className="mt-1 block text-sm text-slate-400">{hint}</span> : null}
     </label>
+    {refus.message}
+    </div>
   );
 }
 
@@ -868,6 +947,7 @@ function SaisieDeCarte({
 }) {
   const interne = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? interne;
+  const refus = useRefusDuChamp(name);
   const auto = plageAuto(defaultValue, suffixe);
   const borneMin = plage?.min ?? 0;
   const borneMax = plage?.max ?? max ?? auto.max;
@@ -900,6 +980,8 @@ function SaisieDeCarte({
               aria-label={label}
               {...(max !== undefined ? { max } : {})}
               ref={ref}
+              id={refus.id}
+              {...refus.attributs}
               name={name}
               defaultValue={defaultValue}
               step={step}
@@ -919,6 +1001,7 @@ function SaisieDeCarte({
             <span className="shrink-0 text-base text-slate-300">{suffixe}</span>
           </span>
         </label>
+        {refus.message}
         {sansCurseur ? null : (
           <CurseurDeSaisie
             champ={ref}
@@ -947,6 +1030,8 @@ function SaisieDeCarte({
           aria-label={label}
           {...(max !== undefined ? { max } : {})}
           ref={ref}
+          id={refus.id}
+          {...refus.attributs}
           name={name}
           defaultValue={defaultValue}
           step={step}
@@ -968,6 +1053,7 @@ function SaisieDeCarte({
         />
         <span className="text-base text-slate-400">{suffixe}</span>
       </label>
+      {refus.message}
       {sansCurseur ? null : (
         <CurseurDeSaisie
           champ={ref}
@@ -1359,6 +1445,8 @@ function GammeReference({
 
   /** Une cellule sans objet : la référence n'est pas encore vendable. */
   const rien = <span className="text-slate-400">—</span>;
+  // Les refus en cours : une cellule refusée porte son cadre et son message.
+  const refusEnCours = useContext(RefusDesChamps);
 
   /** Les deux décisions majeures d'une référence : son prix et son volume. */
   const majeur = (nom: string) => nom === "price" || nom === "productionPlan";
@@ -1395,6 +1483,10 @@ function GammeReference({
     ) : (
     // LE PRIX ET LE VOLUME SONT LES DÉCISIONS MAJEURES DE LA RÉFÉRENCE : leur
     // chiffre se lit en 24 px, les budgets gardent le corps du tableau.
+    (() => {
+    const refus = refusPour(refusEnCours, productFieldName(p.code, nom));
+    return (
+    <>
     <span
       className={`flex items-center gap-1.5 champ ${
         enCartes ? "px-4 py-3" : majeur(nom) ? "px-2.5 py-2" : "px-2 py-1.5"
@@ -1404,6 +1496,8 @@ function GammeReference({
         type="number"
         onWheel={sansMolette}
         name={productFieldName(p.code, nom)}
+        id={refus.id}
+        {...refus.attributs}
         aria-label={`${label} · ${p.name}`}
         defaultValue={valeur}
         onChange={onChange ? (e) => onChange(Number(e.currentTarget.value.replace(",", "."))) : undefined}
@@ -1416,6 +1510,10 @@ function GammeReference({
       />
       <span className={`shrink-0 text-slate-300 ${enCartes ? "text-base" : "text-xs"}`}>{suffixe}</span>
     </span>
+    {refus.message}
+    </>
+    );
+    })()
     );
 
   /**
@@ -1546,12 +1644,16 @@ function GammeReference({
       majeure: true,
       cellule: (p: Reference) => {
         if (enCartes || enDeveloppement(p)) return rien;
+        const refus = refusPour(refusEnCours, champDesVentesEstimees(p.code));
         return (
+          <>
           <span className="flex items-center gap-1.5 champ px-2.5 py-2">
             <input
               type="number"
               onWheel={sansMolette}
               name={champDesVentesEstimees(p.code)}
+              id={refus.id}
+              {...refus.attributs}
               aria-label={`Ventes estimées · ${p.name}`}
               defaultValue={ventesParDefaut?.[p.code] ?? 0}
               step={1}
@@ -1561,6 +1663,8 @@ function GammeReference({
             />
             <span className="shrink-0 text-xs text-slate-300">{v.units}</span>
           </span>
+          {refus.message}
+          </>
         );
       },
       aide: (p: Reference) =>
@@ -1810,6 +1914,7 @@ function GammeReference({
           <button
             key={p.code}
             type="button"
+            data-choisir-reference={p.code}
             onClick={() => setActiveProduct(p.code)}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeProduct === p.code
@@ -2307,14 +2412,146 @@ export function DecisionForm({
   );
   const reserves = Math.max(0, distributableReserves ?? 0);
 
+  // ── LES REFUS : CE QUI NE PASSE PAS, ET OÙ ─────────────────────────────────
+  // Une décision refusée (par la feuille avant l'envoi, ou par le serveur) se
+  // lit à trois endroits : un récapitulatif en tête de la feuille (des liens
+  // vers chaque champ), le champ lui-même (cadre, message dessous), et le focus,
+  // posé sur le PREMIER CHAMP FAUTIF après avoir ouvert son étape, sa carte ou
+  // son repli. Le récapitulatif est annoncé (`role="alert"`) ; il ne prend le
+  // focus que si aucun refus ne vise de champ (un tour clos, une session
+  // expirée). Langue et messages : `config/refus-de-decision.ts`.
+  const [refus, setRefus] = useState<{
+    erreurs: (ErreurDeChamp & { serveur?: boolean })[];
+    /** Faux pour le refus d'une carte du parcours : le champ suffit, pas de récapitulatif. */
+    recapitulatif: boolean;
+    /** Le numéro de l'envoi refusé : le focus ne se pose qu'une fois par refus. */
+    envoi: number;
+    /** Où poser le focus : le premier champ fautif, ou le récapitulatif. */
+    cible: string;
+  } | null>(null);
+  const recapRef = useRef<HTMLDivElement>(null);
+  const saisieEnvoyee = useRef<FormData | null>(null);
+  /** Pose un refus neuf : un nouvel envoi, donc un nouveau focus. */
+  const poserLeRefus = (
+    erreurs: (ErreurDeChamp & { serveur?: boolean })[],
+    recapitulatif: boolean,
+  ) =>
+    setRefus((avant) => ({
+      erreurs,
+      recapitulatif,
+      envoi: (avant?.envoi ?? 0) + 1,
+      cible: erreurs.find((x) => x.champ)?.champ ?? "recap",
+    }));
+  const contexteDesLibelles: ContexteDesLibelles = {
+    vocabulaire: vocabulary,
+    references: gamme?.map((p) => ({ code: p.code, name: p.name })) ?? null,
+  };
+  /**
+   * Juge la saisie comme le serveur la jugera : chaque champ chiffré, ses
+   * bornes d'écran et celles du schéma (`erreurDuChamp`), puis le volume total
+   * d'une gamme. `filtre` restreint aux champs d'une carte du parcours.
+   */
+  const verifierLaSaisie = (
+    form: HTMLFormElement,
+    filtre?: (el: HTMLInputElement) => boolean,
+  ): ErreurDeChamp[] => {
+    const erreurs: ErreurDeChamp[] = [];
+    const vus = new Set<string>();
+    for (const el of Array.from(form.elements)) {
+      if (!(el instanceof HTMLInputElement) || el.type !== "number" || !el.name || el.disabled) continue;
+      if (filtre && !filtre(el)) continue;
+      if (vus.has(el.name)) continue;
+      vus.add(el.name);
+      const erreur = erreurDuChamp(
+        {
+          nom: el.name,
+          brut: el.value,
+          illisible: el.validity.badInput,
+          requis: el.required,
+          min: lireNombre(el.min),
+          max: lireNombre(el.max),
+          pas: el.step === "any" ? null : (lireNombre(el.step) ?? 1),
+        },
+        contexteDesLibelles,
+      );
+      if (erreur) erreurs.push(erreur);
+    }
+    // EN GAMME, LE VOLUME EST LA SOMME DES RÉFÉRENCES : zéro partout n'est pas
+    // une décision (l'action le refuse aussi). Le refus vise la première.
+    if (gamme && !filtre) {
+      const plans = [
+        ...form.querySelectorAll<HTMLInputElement>(
+          `input[name^="${PRODUCT_FIELD_PREFIX}"][name$=".productionPlan"]`,
+        ),
+      ];
+      const total = plans.reduce((t, el) => t + (lireNombre(el.value) ?? 0), 0);
+      if (plans.length > 0 && total < 1 && !erreurs.some((x) => x.champ?.endsWith(".productionPlan"))) {
+        const premier = plans.find((el) => el.type !== "hidden") ?? plans[0]!;
+        erreurs.push(refusDuVolume(premier.name, contexteDesLibelles));
+      }
+    }
+    return erreurs;
+  };
+  /** Pose un refus ; le focus suit, une fois l'écran rendu (voir l'effet plus bas). */
+  const signalerLeRefus = (erreurs: ErreurDeChamp[], recapitulatif: boolean) =>
+    poserLeRefus(erreurs, recapitulatif);
+  /**
+   * UNE CORRECTION EFFACE SON REFUS, à la frappe. Les refus de la feuille sont
+   * rejugés ; ceux du serveur tombent quand on touche à leur champ (la règle
+   * est chez lui) ; un refus sans champ attend le prochain envoi.
+   */
+  const relireLeRefus = (cible: EventTarget) => {
+    const form = formRef.current;
+    if (!refus || !form) return;
+    const nom = cible instanceof HTMLElement ? (cible.getAttribute("name") ?? "") : "";
+    const frais = verifierLaSaisie(form);
+    const restantes = refus.erreurs.flatMap((x) => {
+      if (x.champ === null) return [x];
+      const nouvelle = frais.find((f) => f.champ === x.champ);
+      if (nouvelle) return [nouvelle];
+      if (x.serveur && x.champ !== nom) return [x];
+      return [];
+    });
+    setRefus(restantes.length > 0 ? { ...refus, erreurs: restantes } : null);
+  };
+  // LE REFUS DU SERVEUR : rattaché à son champ quand il en vise un. Lu au
+  // rendu où l'état de l'action change (sans effet ni second rendu en cascade).
+  const [etatLu, setEtatLu] = useState(state);
+  if (etatLu !== state) {
+    setEtatLu(state);
+    const erreurs: ErreurDeChamp[] = state.erreurs?.length
+      ? state.erreurs
+      : state.error
+        ? [{ champ: null, message: state.error }]
+        : [];
+    if (erreurs.length === 0) setRefus(null);
+    else poserLeRefus(erreurs.map((x) => ({ ...x, serveur: true })), true);
+  }
+
   // Les pivots (prix, volume) validés sans avoir été touchés : on le dit avant
   // d'envoyer, une fois. « Oui » confirme et envoie ; « Non » ramène au champ.
   const reference = proposed ?? defaults;
   const [nonTouches, setNonTouches] = useState<PivotFieldInfo[] | null>(null);
   const confirme = useRef(false);
   const verifierPivots = (e: React.FormEvent<HTMLFormElement>) => {
-    if (confirme.current) return;
     const form = e.currentTarget;
+    // LA SAISIE D'ABORD : un champ refusé arrête l'envoi, se marque et prend le
+    // focus (le formulaire est `noValidate` : la bulle du navigateur ne se
+    // voyait pas sur une étape repliée, et ne disait pas comment corriger).
+    const erreurs = verifierLaSaisie(form);
+    if (erreurs.length > 0) {
+      e.preventDefault();
+      confirme.current = false;
+      setNonTouches(null);
+      signalerLeRefus(erreurs, true);
+      return;
+    }
+    if (refus) setRefus(null);
+    // Ce qui part au serveur, gardé : s'il refuse, la saisie est remise dans
+    // la feuille (React la remet à zéro quand l'action se termine), et la
+    // valeur refusée reste sous les yeux, à côté de son message.
+    saisieEnvoyee.current = copierSaisie(new FormData(form));
+    if (confirme.current) return;
     const lire = (name: PivotField) =>
       Number((form.elements.namedItem(name) as HTMLInputElement | null)?.value ?? NaN);
     // Gamme : les pivots sont les scalaires dérivés des champs par produit,
@@ -3022,6 +3259,94 @@ export function DecisionForm({
       }),
     );
   };
+  /**
+   * MENER AU CHAMP REFUSÉ : afficher son étape (ordinateur) ou sa carte
+   * (téléphone), rouvrir ses replis, montrer sa colonne de gamme, puis le faire
+   * défiler au milieu de l'écran (sous le cadran collant) et lui donner le
+   * focus. Faux quand le champ n'est pas sur la feuille.
+   */
+  const allerAuChamp = (nom: string): boolean => {
+    const form = formRef.current;
+    if (!form) return false;
+    const candidats = () =>
+      [...form.querySelectorAll<HTMLElement>(`[name="${CSS.escape(nom)}"]`)].filter(
+        (el) => !(el instanceof HTMLInputElement && el.type === "hidden"),
+      );
+    const champ = candidats()[0];
+    if (!champ) return false;
+    const code = referenceDuChamp(nom);
+    if (modeCartes) {
+      const cles = code
+        ? [`ref-${code}`]
+        : ((champ.closest("[data-carte]") as HTMLElement | null)?.dataset.carte?.split(" ") ?? []);
+      const i = cartes.findIndex((c) => cles.includes(c.cle));
+      if (i >= 0 && i !== carteIdx) allerALaCarte(i);
+    } else {
+      const i = Number((champ.closest("[data-etape]") as HTMLElement | null)?.dataset.etape);
+      if (!Number.isNaN(i) && i !== courante) allerALEtape(i);
+      // Une colonne de gamme masquée (sous 1 024 px, une référence à la fois).
+      const reference = code ?? (nom.startsWith(PREFIXE_VENTES_ESTIMEES) ? nom.slice(PREFIXE_VENTES_ESTIMEES.length) : null);
+      if (reference && champ.getClientRects().length === 0) {
+        form.querySelector<HTMLButtonElement>(`[data-choisir-reference="${CSS.escape(reference)}"]`)?.click();
+      }
+    }
+    for (let d = champ.closest("details"); d; d = d.parentElement?.closest("details") ?? null) {
+      if (!d.open) d.open = true;
+    }
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const cible = candidats().find((el) => el.getClientRects().length > 0) ?? candidats()[0];
+        if (!cible) return;
+        cible.scrollIntoView({ block: "center" });
+        cible.focus({ preventScroll: true });
+      }),
+    );
+    return true;
+  };
+  // Le focus d'un refus, une fois l'écran rendu : le premier champ fautif, ou
+  // le récapitulatif quand aucun refus ne vise de champ de la feuille.
+  const envoiRefuse = refus?.envoi ?? 0;
+  const cibleDuRefus = refus?.cible ?? null;
+  const refusDuServeur = refus?.erreurs.some((x) => x.serveur) ?? false;
+  useEffect(() => {
+    if (!envoiRefuse || !cibleDuRefus) return;
+    // UN REFUS DU SERVEUR NE VIDE PAS LA FEUILLE : la saisie envoyée revient
+    // dans les champs, maintenant puis au tick suivant (derrière la remise à
+    // zéro de React), comme le fait la garde réseau (`useGuardedAction`).
+    const saisie = refusDuServeur ? saisieEnvoyee.current : null;
+    if (saisie && formRef.current) {
+      const form = formRef.current;
+      rejouerSaisie(form, saisie);
+      setTimeout(() => {
+        rejouerSaisie(form, saisie);
+        relireLEstimation();
+      }, 0);
+    }
+    if (cibleDuRefus !== "recap" && allerAuChamp(cibleDuRefus)) return;
+    const r = recapRef.current;
+    if (!r) return;
+    r.scrollIntoView({ block: "center" });
+    r.focus({ preventScroll: true });
+    // Une fois par refus posé : une correction à la frappe ne déplace pas le focus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envoiRefuse]);
+  /** Le message sous le champ : sans répéter son nom, que le champ porte déjà. */
+  const sousLeChamp = (champ: string, message: string) => {
+    const tete = `${libelleDuChamp(champ, contexteDesLibelles)} : `;
+    if (!message.startsWith(tete)) return message;
+    const reste = message.slice(tete.length);
+    return reste.charAt(0).toUpperCase() + reste.slice(1);
+  };
+  const carteDesRefus = new Map<string, string>();
+  for (const x of refus?.erreurs ?? []) {
+    if (x.champ && !carteDesRefus.has(x.champ)) carteDesRefus.set(x.champ, sousLeChamp(x.champ, x.message));
+  }
+  // LE SAUVETAGE EST UN REFUS EN DIRECT : tant qu'il manque de quoi repasser
+  // sous le découvert, « Valider » est grisé ; le nouvel emprunt le dit.
+  if (blocageSauvetage && on.finance && !carteDesRefus.has("newLoan")) {
+    carteDesRefus.set("newLoan", `Financement de sauvetage exigé. ${blocageSauvetage}`);
+  }
+
   // SUR TÉLÉPHONE, LE RÉSULTAT ESTIMÉ PASSE À LA BARRE (lot P7) : un résumé en
   // nombres, publié à chaque rendu (le magasin ne prévient la barre que si un
   // chiffre a changé), retiré quand la feuille s'en va.
@@ -3035,13 +3360,14 @@ export function DecisionForm({
   const carteSuivante = () => {
     const f = formRef.current;
     if (f) {
-      for (const champ of Array.from(f.elements) as HTMLInputElement[]) {
-        if (champ.type === "hidden" || champ.closest("[hidden]")) continue;
-        if (typeof champ.checkValidity === "function" && !champ.checkValidity()) {
-          champ.reportValidity();
-          return;
-        }
+      // Les champs de la carte affichée seulement : le refus se lit sous le
+      // champ, qui prend le focus ; la carte ne s'en va pas.
+      const erreurs = verifierLaSaisie(f, (el) => !el.closest("[hidden]"));
+      if (erreurs.length > 0) {
+        signalerLeRefus(erreurs, false);
+        return;
       }
+      if (refus && !refus.recapitulatif) setRefus(null);
     }
     allerALaCarte(Math.min(cartes.length - 1, carteIdx + 1));
   };
@@ -3295,12 +3621,18 @@ export function DecisionForm({
     <CartesContexte.Provider
       value={{ actif: modeCartes, courante: carteCourante?.cle ?? "" }}
     >
+    <RefusDesChamps.Provider value={carteDesRefus}>
     <form
       ref={formRef}
       action={formAction}
+      // LA FEUILLE JUGE ELLE-MÊME SA SAISIE (voir `verifierPivots`) : la bulle
+      // du navigateur ne se posait pas sur un champ d'étape repliée, et ne
+      // disait ni le minimum ni le maximum accepté.
+      noValidate
       onSubmit={verifierPivots}
       onChange={(e) => {
         noterLaSaisie(e.target);
+        relireLeRefus(e.target);
         sauverBrouillon();
         // L'encart « Résultat estimé » suit la saisie, à toutes les étapes :
         // on décide en voyant ce que la décision donnerait.
@@ -3335,6 +3667,45 @@ export function DecisionForm({
           estimées sont celles que la feuille a proposées, pas celles de
           l'équipe, et la validation ne les garde pas. */}
       {propositionEnCours ? <input type="hidden" name="propositionDeVentes" value="1" /> : null}
+      {/*
+        LE RÉCAPITULATIF DES REFUS, EN TÊTE DE LA FEUILLE. Une ligne par refus,
+        chacune un lien qui mène au champ (son étape ou sa carte ouverte, le
+        focus posé). Annoncé dès qu'il paraît ; il disparaît avec le dernier
+        refus corrigé. Le rouge des refus déjà en usage, pas d'orange.
+      */}
+      {refus && refus.recapitulatif && refus.erreurs.length > 0 ? (
+        <div
+          ref={recapRef}
+          tabIndex={-1}
+          role="alert"
+          data-recapitulatif-des-erreurs=""
+          className="rounded-lg encadre-perte px-3 py-2.5 text-sm scroll-mt-32"
+        >
+          <p className="font-semibold text-slate-50">{titreDuRecapitulatif(refus.erreurs.length)}</p>
+          <ul className="mt-1.5 space-y-1.5">
+            {refus.erreurs.map((x, i) => (
+              <li key={`${x.champ ?? "sans-champ"}-${i}`} className="flex items-start gap-1.5 text-red-300">
+                <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0" />
+                {x.champ ? (
+                  <a
+                    href={`#${idDuChamp(x.champ)}`}
+                    data-lien-du-refus={x.champ}
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      allerAuChamp(x.champ!);
+                    }}
+                    className="underline decoration-1 underline-offset-4 hover:decoration-2"
+                  >
+                    {x.message}
+                  </a>
+                ) : (
+                  <span>{x.message}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {/* Verrou de planning : hors de la fenêtre, on l'annonce et « Valider »
           est grisé (le serveur refuse de toute façon). La page reste lisible. */}
       {verrou ? (
@@ -3361,6 +3732,18 @@ export function DecisionForm({
           <span>
             <strong className="font-semibold">Financement de sauvetage exigé.</strong>{" "}
             {blocageSauvetage}
+            {on.finance ? (
+              <>
+                {" "}
+                <button
+                  type="button"
+                  onClick={() => allerAuChamp("newLoan")}
+                  className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Aller au nouvel emprunt
+                </button>
+              </>
+            ) : null}
           </span>
         </p>
       ) : null}
@@ -4438,15 +4821,7 @@ export function DecisionForm({
           }}
         />
       ) : null}
-      {state.error ? (
-        <p
-          role="alert"
-          aria-live="assertive"
-          className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300"
-        >
-          {state.error}
-        </p>
-      ) : null}
+      {/* Le refus de l'action se lit au récapitulatif, en tête de la feuille. */}
       <GuardError message={guardError} />
       {/*
         LE RÉCAPITULATIF D'ENGAGEMENT, à la dernière étape seulement. Valider,
@@ -4648,6 +5023,7 @@ export function DecisionForm({
         </p>
       ) : null}
     </form>
+    </RefusDesChamps.Provider>
     </CartesContexte.Provider>
     </TelephoneContexte.Provider>
   );

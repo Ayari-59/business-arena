@@ -35,9 +35,36 @@ import {
   retakeSituation,
 } from "@/services/debrief.service";
 import { manques, messageIncomplet } from "@/config/situation-rendu";
+import {
+  erreursDuSchema,
+  messageDuRefusServeur,
+  refusDuVolume,
+  resumeDesRefus,
+  type ContexteDesLibelles,
+  type ErreurDeChamp,
+} from "@/config/refus-de-decision";
+import { productFieldName } from "@/config/decision-source";
 
 export interface PlayRoundState {
+  /** Le refus en une phrase (ou `null`). */
   error: string | null;
+  /**
+   * LES REFUS, CHAMP PAR CHAMP : le nom du champ du formulaire visé (ou `null`
+   * quand la règle n'en vise aucun), et le message dans la langue du joueur.
+   * L'écran marque le champ, l'ouvre et y pose le focus
+   * (`config/refus-de-decision.ts`).
+   */
+  erreurs?: ErreurDeChamp[];
+}
+
+/** Un refus d'une phrase, sans champ : la session, le tour, la partie. */
+function refusSansChamp(message: string): PlayRoundState {
+  return { error: message, erreurs: [{ champ: null, message }] };
+}
+
+/** Un ou plusieurs refus rattachés à leurs champs. */
+function refusDesChamps(erreurs: ErreurDeChamp[]): PlayRoundState {
+  return { error: resumeDesRefus(erreurs), erreurs };
 }
 
 /** Valide les décisions du joueur et résout le tour courant (mode solo, ADR-04). */
@@ -47,7 +74,7 @@ export async function playRoundAction(
   formData: FormData,
 ): Promise<PlayRoundState> {
   const userId = await getGuestUserId();
-  if (!userId) return { error: "Session expirée : relancez une partie depuis l'accueil." };
+  if (!userId) return refusSansChamp("Session expirée : relancez une partie depuis l'accueil.");
 
   // LE FORMULAIRE EST LU UNE SEULE FOIS, PAR LA MÊME FONCTION QUE LE
   // NAVIGATEUR (`config/decisions-saisies`). L'encart « Résultat estimé »
@@ -59,16 +86,21 @@ export async function playRoundAction(
   // Le volume est un pivot : vide ou nul, ce n'est pas une décision, c'est une
   // absence. Le schéma acceptait 0 sans un mot ; on le refuse ici, dans la
   // langue du secteur.
+  //
+  // Le refus vise le champ du volume : en gamme, le plan de la première
+  // référence (le volume est leur somme).
   if (!Number.isFinite(saisie.volume) || saisie.volume < 1) {
     const v = await getGameVocabulary(gameId);
-    return { error: `${v.productionPlanLabel} : le volume doit être ≥ 1 (en ${v.units}).` };
+    const premiere = saisie.products ? Object.keys(saisie.products)[0] : undefined;
+    const champ = premiere ? productFieldName(premiere, "productionPlan") : "productionPlan";
+    return refusDesChamps([refusDuVolume(champ, { vocabulaire: v })]);
   }
 
   // LES VENTES ESTIMÉES PAR L'ÉQUIPE, et le résultat estimé qu'elles donnaient.
   // Le moteur ne les lit pas ; la fin de tour les confronte au réel.
   const estimation = ventesEstimeesSaisies(formData);
 
-  const parsed = roundDecisionsSchema.safeParse({
+  const entree = {
     ...saisie.decisions,
     ...(estimation ? { salesEstimate: estimation } : {}),
     // LE PLAN DE TRÉSORERIE N'EST PLUS DEMANDÉ DEUX FOIS. L'arène ne le
@@ -80,9 +112,21 @@ export async function playRoundAction(
           forecast: { ...saisie.decisions.forecast, expectedUnits: estimation.units },
         }
       : {}),
-  });
+  };
+  const parsed = roundDecisionsSchema.safeParse(entree);
   if (!parsed.success) {
-    return { error: "Décisions invalides : vérifiez les montants saisis." };
+    // CHAQUE REFUS DU SCHÉMA NOMME SON CHAMP, dans la langue du secteur (le
+    // vocabulaire, et le nom des références d'une gamme). « Décisions
+    // invalides : vérifiez les montants saisis » ne disait pas lequel.
+    const ctx: ContexteDesLibelles = {
+      vocabulaire: await getGameVocabulary(gameId),
+      references: await (async () => {
+        if (!saisie.products) return null;
+        const vue = await getGameView(gameId, userId).catch(() => null);
+        return vue?.gamme?.map((p) => ({ code: p.code, name: p.name })) ?? null;
+      })(),
+    };
+    return refusDesChamps(erreursDuSchema(parsed.error.issues, entree, ctx));
   }
 
   // LE FINANCEMENT DE SAUVETAGE, VÉRIFIÉ CÔTÉ SERVEUR. L'écran grise déjà le
@@ -97,7 +141,16 @@ export async function playRoundAction(
       apport: parsed.data.finance?.capitalIncrease ?? 0,
     });
     if (bloqueLaValidation(verdict)) {
-      return { error: messageSauvetage(verdict, formatEuro) ?? "Financement de sauvetage exigé." };
+      // Le refus vise le nouvel emprunt : c'est le premier des deux leviers
+      // (l'apport des associés est juste à côté, dans la même famille).
+      return refusDesChamps([
+        {
+          champ: "newLoan",
+          message: `Financement de sauvetage exigé : ${
+            messageSauvetage(verdict, formatEuro) ?? "empruntez ou faites appel aux associés avant de valider."
+          }`,
+        },
+      ]);
     }
   }
 
@@ -139,7 +192,9 @@ export async function playRoundAction(
       await submitTeamDecisions({ gameId, userId, payload, justification });
     }
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
+    // Le refus d'un service (tour clos, partie terminée, verrou de planning…)
+    // dans la langue du joueur ; une panne du moteur ne montre pas son intérieur.
+    return refusSansChamp(messageDuRefusServeur(error));
   }
   revalidatePath(`/arena/${gameId}`);
   // En solo, valider a résolu le tour tout de suite. Plutôt que de jeter le
