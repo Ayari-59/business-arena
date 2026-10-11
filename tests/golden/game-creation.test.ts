@@ -21,6 +21,7 @@ import {
   createSoloGame,
   createClassGame,
 } from "@/services/game-creation.service";
+import { etablissementSousLicence } from "../integration/helpers/licence";
 
 let userId: string;
 let orgId: string;
@@ -214,7 +215,13 @@ describe("3 — pipeline de création", () => {
 
 describe("4 — paramètres de difficulté", () => {
   it("le profil de difficulté est stocké dans la partie", async () => {
-    const gameId = await createSoloGame(userId, "quarter", 2, 4);
+    // Le niveau 4 est inclus dans les offres Enseignant et Établissement : la partie est
+    // lancée avec un enseignant d'un établissement sous licence connecté (la règle est
+    // gardée par acces-sans-licence.test.ts).
+    const { userId: prof } = await etablissementSousLicence("Difficulté");
+    const gameId = await createSoloGame(userId, "quarter", 2, 4, false, undefined, undefined, null, {
+      licencePar: prof,
+    });
 
     const game = (
       await db.select().from(games).where(eq(games.id, gameId))

@@ -14,6 +14,10 @@ import {
 import { choisirObjectif, objectifDe } from "@/services/episode-objectifs.service";
 import { effacerParties, enregistrerPartie, partiesDe } from "@/services/episode-parties.service";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
+import { CONSEIL_SANS_LICENCE, ceQuApporteLOffre } from "@/config/episodes/demos";
+import { EPISODES } from "@/pedagogy/episodes/registre";
+import { getSession } from "@/lib/session";
+import { accesAuxEpisodes, episodeOuvert } from "@/services/acces.service";
 
 export interface SuiteDeLaPartie {
   ok: boolean;
@@ -28,6 +32,8 @@ export interface SuiteDeLaPartie {
   recommandations: { code: string; numero: number; titre: string; raison: string }[];
   /** Le niveau conseillé pour le prochain épisode, et pourquoi. */
   conseil: { niveau: CodeNiveau; pourquoi: string } | null;
+  /** Sans licence : ce qu'apporte l'offre Entreprise (le lien vers les tarifs suit). */
+  offre: string | null;
 }
 
 const ECHEC: SuiteDeLaPartie = {
@@ -38,6 +44,7 @@ const ECHEC: SuiteDeLaPartie = {
   objectifChoisi: false,
   recommandations: [],
   conseil: null,
+  offre: null,
 };
 
 /**
@@ -51,10 +58,21 @@ const ECHEC: SuiteDeLaPartie = {
 export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeLaPartie> {
   try {
     const userId = await getOrCreateGuestUserId();
+    // La partie jouée est toujours gardée, licence ou non : c'est la fin d'une partie
+    // commencée, et on n'en casse jamais une. La SUITE, elle, ne propose sans licence
+    // que ce qui se lance : les démonstrations, en Découverte.
     const r = await enregistrerPartie(userId, entree);
     if (!r.ok) return ECHEC;
-    const [parties, objectif] = await Promise.all([partiesDe(userId), objectifDe(userId)]);
-    const profil = construireProfil(parties, undefined, { objectif });
+    const session = await getSession();
+    const [parties, objectif, acces] = await Promise.all([
+      partiesDe(userId),
+      objectifDe(userId),
+      accesAuxEpisodes({ userId, sessionUserId: session?.userId }),
+    ]);
+    const profil = construireProfil(parties, undefined, {
+      objectif,
+      proposables: (code) => episodeOuvert(acces, code),
+    });
     const ignoree = profil.ignorees.find((p) => p.enregistree.id === r.id);
     revalidatePath("/entreprises/episode/profil");
     return {
@@ -68,7 +86,8 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
       episodesComptes: profil.comptees.length,
       pourquoi: profil.cible?.pourquoi ?? null,
       objectifChoisi: profil.cible?.choisie ?? false,
-      conseil: profil.conseil,
+      conseil: acces.licence ? profil.conseil : CONSEIL_SANS_LICENCE,
+      offre: acces.licence ? null : ceQuApporteLOffre(EPISODES.length),
       recommandations: profil.recommandations.map((x) => ({
         code: x.code,
         numero: x.numero,

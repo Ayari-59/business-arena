@@ -12,8 +12,10 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
 import { getGuestUserId } from "@/lib/guest";
 import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
-import { LIEN_CONTACT, liensDAcces } from "@/config/navigation";
-import { messageNiveauxReserves } from "@/config/vitrine-solo";
+import { liensDAcces } from "@/config/navigation";
+import { LIEN_TARIFS, messageNiveauxReserves } from "@/config/vitrine-solo";
+import { getSession } from "@/lib/session";
+import { unCompteSousLicence } from "@/services/acces.service";
 import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +47,10 @@ export default async function JouerPage({
   // Celui qui revient retrouve sa partie AVANT d'en configurer une autre.
   const userId = await getGuestUserId();
   const enCours = userId ? await partiesSoloEnCours(userId) : [];
+  // Un enseignant connecté dont l'établissement est sous licence crée à tous les
+  // niveaux ; sans licence, les niveaux fermés restent visibles, marqués et expliqués.
+  const session = await getSession();
+  const licence = await unCompteSousLicence([userId, session?.userId]);
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
   const { secteur, trop, reserve } = await searchParams;
@@ -118,8 +124,15 @@ export default async function JouerPage({
                 role="status"
                 className="mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200"
               >
-                {messageNiveauxReserves(config.vitrineSolo)} Choisissez un niveau plus bas, ou jouez
-                l&apos;entreprise vitrine à tous les niveaux.
+                {messageNiveauxReserves(config.vitrineSolo)} Choisissez un niveau plus bas, ou{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  voyez les tarifs
+                </Link>
+                .
               </p>
             ) : null}
             {trop ? (
@@ -169,8 +182,9 @@ export default async function JouerPage({
                     };
                   })}
                   vitrine={config.vitrineSolo}
+                  licence={licence}
                   liens={{
-                    contact: { href: LIEN_CONTACT.href, libelle: LIEN_CONTACT.libelle },
+                    tarifs: { href: LIEN_TARIFS, libelle: "Voir les tarifs" },
                     enseignant: {
                       href: liensDAcces().find((l) => l.acces === "enseignant")!.href,
                       libelle: "Accéder à l'espace enseignant",

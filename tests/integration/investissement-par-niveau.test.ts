@@ -25,6 +25,7 @@ import { createClassGame, createSoloGame, resolveCurrentRound } from "@/services
 import { getGameView } from "@/services/game-view.service";
 import { bloqueLaValidation, verdictSauvetage } from "@/services/sauvetage";
 import type { EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import { placerSousLicence, poserUneLicence } from "./helpers/licence";
 
 let userId: string;
 let teacherId: string;
@@ -62,6 +63,14 @@ beforeAll(async () => {
   if ("error" in prof) throw new Error(prof.error);
   teacherId = prof.userId;
   orgId = (await getTeacherOrgId(teacherId))!;
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : cet
+  // établissement est sous licence (la règle elle-même est gardée par
+  // acces-sans-licence.test.ts).
+  await poserUneLicence(orgId, teacherId);
+  // Et pour le solo, les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : ce
+  // joueur est un enseignant d'un établissement sous licence (la règle elle-même est
+  // gardée par acces-sans-licence.test.ts).
+  await placerSousLicence(userId);
 });
 
 describe("la même crise se règle de la même façon à tous les niveaux", () => {

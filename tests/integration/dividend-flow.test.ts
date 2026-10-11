@@ -25,6 +25,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 /** Des décisions prudentes : il faut un bénéfice pour avoir à distribuer. */
 const DECISIONS: RoundDecisions = {
@@ -50,6 +51,10 @@ beforeAll(async () => {
   if ("error" in r) throw new Error(r.error);
   prof = r.userId;
   orgId = (await getTeacherOrgId(prof))!;
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : cet
+  // établissement est sous licence (la règle elle-même est gardée par
+  // acces-sans-licence.test.ts).
+  await poserUneLicence(orgId, prof);
 
   const partie = await createClassGame({
     teacherId: prof,

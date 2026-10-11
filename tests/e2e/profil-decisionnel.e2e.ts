@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
 
 /**
@@ -10,6 +11,14 @@ import { episodeParCode } from "../../src/pedagogy/episodes/registre";
  * le bilan dit si ses choix tenaient, ce que l'épisode a observé, et propose
  * la suite ; le profil s'ouvre après deux épisodes, montre ses scores avec
  * leur confiance et leurs preuves, et s'efface à la demande.
+ */
+
+/**
+ * SOUS LICENCE. Sans licence, seuls les épisodes de démonstration se lancent, en
+ * Découverte (services/acces.service.ts) ; ce parcours vérifie autre chose, sur des
+ * épisodes et des niveaux qui n'en sont pas : chaque navigateur y est celui d'un
+ * enseignant d'un établissement sous licence (tests/e2e/helpers/licence.ts). La règle
+ * elle-même est gardée par acces.e2e.ts.
  */
 
 let navigateur: Browser;
@@ -67,6 +76,7 @@ describe("le profil décisionnel", () => {
       viewport: { width: 1280, height: 900 },
       locale: "fr-FR",
     });
+    await enseignantSousLicence(contexte);
   });
 
   afterAll(async () => {
@@ -168,6 +178,7 @@ describe("le profil décisionnel", () => {
 describe("une partie en Découverte", () => {
   it("se joue jusqu'au bilan, mais ne compte pas dans le profil", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    await enseignantSousLicence(contexte);
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );

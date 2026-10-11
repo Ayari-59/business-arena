@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
 import { FICHES } from "../../src/config/episodes/fiches";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
 
@@ -12,6 +13,14 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  * le sommaire et les ancres de la page d'avant (`#secteur-…`, le code d'une
  * famille) et `#famille-…` ouvrent le bon tiroir et y amènent la fenêtre ; un
  * téléphone de 390 px ne déborde pas, tiroir fermé comme ouvert.
+ */
+
+/**
+ * SOUS LICENCE. Sans licence, seuls les épisodes de démonstration se lancent, en
+ * Découverte (services/acces.service.ts) ; ce parcours vérifie autre chose, sur des
+ * épisodes et des niveaux qui n'en sont pas : chaque navigateur y est celui d'un
+ * enseignant d'un établissement sous licence (tests/e2e/helpers/licence.ts). La règle
+ * elle-même est gardée par acces.e2e.ts.
  */
 
 let navigateur: Browser;
@@ -39,6 +48,7 @@ const debordement = (page: Page) =>
 describe("le catalogue des épisodes (/entreprises/episode)", () => {
   it("à l'arrivée : neuf tiroirs de thème, quatre de métier, tous fermés ; toutes les cartes y sont", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 800 }, locale: "fr-FR" });
+    await enseignantSousLicence(page.context());
     await aller(page, "/entreprises/episode");
     expect(await page.locator("[data-tiroir-de-theme] > details").count()).toBe(9);
     expect(await page.locator("[data-tiroir-de-metier] > details").count()).toBe(4);
@@ -52,6 +62,7 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
 
   it("ouvrir un thème d'Arvel montre ses épisodes ; ouvrir un métier montre ses familles", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 800 }, locale: "fr-FR" });
+    await enseignantSousLicence(page.context());
     await aller(page, "/entreprises/episode");
     await page.locator("#vendre > details > summary").click();
     expect(await tiroirOuvert(page, "#vendre")).toBe(true);
@@ -71,6 +82,7 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
 
   it("le sommaire ouvre le tiroir qu'il nomme, même quand l'ancre est déjà dans l'adresse", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 800 }, locale: "fr-FR" });
+    await enseignantSousLicence(page.context());
     await aller(page, "/entreprises/episode");
     const sommaire = page.getByRole("navigation", { name: "Sommaire du catalogue" });
     await sommaire.getByRole("link", { name: /Conseil/ }).click();
@@ -98,6 +110,7 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
   ] as const) {
     it(`l'adresse ${ancre} ouvre le bon tiroir et y mène`, async () => {
       const page = await navigateur.newPage({ viewport: { width: 1280, height: 800 }, locale: "fr-FR" });
+      await enseignantSousLicence(page.context());
       await aller(page, `/entreprises/episode${ancre}`);
       await expect.poll(() => tiroirOuvert(page, tiroir)).toBe(true);
       await expect.poll(() => enVue(page, cible)).toBe(true);
@@ -109,6 +122,7 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
 
   it("à 390 px : aucun débordement, résumés en une ou deux lignes, tiroir ouvert compris", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    await enseignantSousLicence(contexte);
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );
@@ -140,6 +154,7 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
 describe("le catalogue des fiches (/enseignants/episodes)", () => {
   it("les fiches, rangées de même, chacune une fois, tiroirs fermés à l'arrivée", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 800 }, locale: "fr-FR" });
+    await enseignantSousLicence(page.context());
     await aller(page, "/enseignants/episodes");
     expect(await ouverts(page)).toBe(0);
     expect(

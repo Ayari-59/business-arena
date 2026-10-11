@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
 
 /**
  * L'ANALYSE EST PLUS COURTE AU NIVEAU 1, DANS UN VRAI NAVIGATEUR.
@@ -23,6 +24,9 @@ afterAll(async () => {
 async function jusqueLAnalyse(niveau: number): Promise<{ page: Page; fermer: () => Promise<void> }> {
   const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
   await contexte.addInitScript(() => localStorage.setItem("install-prompt-ferme-le", String(Date.now())));
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : au-delà
+  // du niveau 3, ce navigateur est celui d'un enseignant sous licence (helpers/licence.ts).
+  if (niveau > 3) await enseignantSousLicence(contexte);
   const page = await contexte.newPage();
   await page.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
   await page.waitForLoadState("networkidle");

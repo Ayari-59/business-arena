@@ -1,7 +1,8 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { count, desc, eq } from "drizzle-orm";
+import { asc, count, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { episodeCohortes, episodeMembres, episodeReprises } from "@/db/schema";
+import { episodeCohortes, episodeMembres, episodeReprises, organizations } from "@/db/schema";
+import { getLicenceStatus, type LicenceState } from "@/services/licence.service";
 import {
   ALPHABET_REPRISE,
   LONGUEUR_CODE_REPRISE,
@@ -50,8 +51,15 @@ export const normaliserCodeDeCohorte = (saisi: string) =>
     .replace(/[^A-Z0-9-]/g, "")
     .slice(0, 20);
 
+/**
+ * Créer une cohorte. `organizationId` est l'organisation de l'animateur : sous licence,
+ * ses membres jouent tous les épisodes ; sans elle, les seules démonstrations
+ * (services/acces.service.ts). Une cohorte sans licence se crée donc, mais n'ouvre
+ * aucun épisode payant.
+ */
 export async function creerCohorte(
   nom: string,
+  organizationId: string | null = null,
 ): Promise<{ id: string; code: string; nom: string; cleAnimateur: string }> {
   const propre = nom.trim().slice(0, 120);
   if (!propre) throw new Error("Une cohorte a besoin d'un nom.");
@@ -62,6 +70,7 @@ export async function creerCohorte(
         code: codeDeCohorte(propre),
         nom: propre,
         cleAnimateur: randomBytes(18).toString("base64url"),
+        organizationId,
       })
       .onConflictDoNothing()
       .returning();
@@ -172,7 +181,16 @@ export async function vueDeLAnimateur(
 
 /** Toutes les cohortes, la plus récente d'abord, avec leur nombre de membres : pour l'administration. */
 export async function listerCohortes(): Promise<
-  { id: string; code: string; nom: string; cleAnimateur: string; creeeLe: Date; membres: number }[]
+  {
+    id: string;
+    code: string;
+    nom: string;
+    cleAnimateur: string;
+    creeeLe: Date;
+    membres: number;
+    /** L'organisation de l'animateur, et l'état de sa licence ; null : aucune rattachée. */
+    organisation: { id: string; nom: string; licence: LicenceState } | null;
+  }[]
 > {
   const lignes = await db
     .select({
@@ -181,13 +199,51 @@ export async function listerCohortes(): Promise<
       nom: episodeCohortes.nom,
       cleAnimateur: episodeCohortes.cleAnimateur,
       creeeLe: episodeCohortes.createdAt,
+      organisationId: episodeCohortes.organizationId,
+      organisationNom: organizations.name,
       membres: count(episodeMembres.userId),
     })
     .from(episodeCohortes)
     .leftJoin(episodeMembres, eq(episodeMembres.cohorteId, episodeCohortes.id))
-    .groupBy(episodeCohortes.id)
+    .leftJoin(organizations, eq(organizations.id, episodeCohortes.organizationId))
+    .groupBy(episodeCohortes.id, organizations.id)
     .orderBy(desc(episodeCohortes.createdAt));
-  return lignes.map((l) => ({ ...l, membres: Number(l.membres) }));
+  return Promise.all(
+    lignes.map(async ({ organisationId, organisationNom, ...l }) => ({
+      ...l,
+      membres: Number(l.membres),
+      organisation: organisationId
+        ? {
+            id: organisationId,
+            nom: organisationNom ?? "",
+            licence: (await getLicenceStatus(organisationId)).state,
+          }
+        : null,
+    })),
+  );
+}
+
+/**
+ * Rattacher une cohorte à l'organisation de son animateur, ou l'en détacher. Ses membres
+ * jouent tous les épisodes tant que cette organisation est sous licence.
+ */
+export async function rattacherCohorte(
+  cohorteId: string,
+  organizationId: string | null,
+): Promise<void> {
+  await db
+    .update(episodeCohortes)
+    .set({ organizationId })
+    .where(eq(episodeCohortes.id, cohorteId));
+}
+
+/** Les organisations auxquelles rattacher une cohorte (hors l'organisation « grand public »). */
+export async function organisationsPourLesCohortes(): Promise<{ id: string; nom: string }[]> {
+  return db
+    .select({ id: organizations.id, nom: organizations.name })
+    .from(organizations)
+    .where(ne(organizations.kind, "public"))
+    .orderBy(asc(organizations.name));
 }
 
 /**

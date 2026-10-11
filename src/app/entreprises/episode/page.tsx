@@ -5,6 +5,21 @@ import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
 import { catalogueDesEpisodes, teinteDuSecteur } from "@/config/episodes/catalogue";
 import type { Episode } from "@/config/episodes/types";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
+import {
+  EPISODES_DE_DEMO,
+  MARQUE_DEMO,
+  NIVEAU_DES_DEMOS,
+  OFFRE_DES_EPISODES,
+  estUneDemo,
+} from "@/config/episodes/demos";
+import { niveauParCode } from "@/config/episodes/niveaux";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { getGuestUserId } from "@/lib/guest";
+import { getSession } from "@/lib/session";
+import { accesAuxEpisodes } from "@/services/acces.service";
+
+/** Ce qui se lance dépend de la licence de qui regarde : la page se rend à la demande. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises/episode" },
@@ -35,9 +50,19 @@ export const metadata: Metadata = {
  * secteur, lue de `SECTEURS` (la page en tenait une table à elle, restée sur
  * les emprunts du lot 5A : la santé, l'agroalimentaire et l'hôtellerie n'y
  * avaient pas la teinte du reste du site).
+ *
+ * SANS LICENCE (décision d'octobre 2026, config/episodes/demos.ts) : les épisodes de
+ * démonstration, un par métier, se lancent en Découverte ; ils sont regroupés en tête
+ * (« Démos gratuites ») et marqués dans leurs tiroirs. Les autres restent visibles,
+ * avec leur titre, leur accroche et leur métier, marqués « Offre Entreprise » et sans
+ * lien de jeu : la carte mène aux tarifs. La page de l'épisode refuse de même.
  */
-export default function EpisodesPage() {
+export default async function EpisodesPage() {
   const entreprises = catalogueDesEpisodes();
+  const [userId, session] = await Promise.all([getGuestUserId(), getSession()]);
+  const { licence } = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
+  const secteurDe = (code: string) =>
+    entreprises.find((e) => e.familles.some((f) => f.episodes.includes(code)))?.secteur;
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -74,21 +99,71 @@ export default function EpisodesPage() {
               Mon profil décisionnel
             </Link>
           </p>
+          {licence ? null : (
+            <section
+              aria-labelledby="demos-gratuites"
+              data-demos-gratuites=""
+              className="mt-10 rounded-xl border border-[var(--filet-carte)] p-4 sm:p-6"
+            >
+              <h2
+                id="demos-gratuites"
+                className="text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl"
+              >
+                Démos gratuites
+              </h2>
+              <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
+                Un épisode par métier, à jouer sans licence, au niveau{" "}
+                {niveauParCode(NIVEAU_DES_DEMOS).nom}. Les autres épisodes, et les niveaux Standard
+                et Expert, sont inclus dans l&apos;offre Entreprise.{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir les tarifs
+                </Link>
+              </p>
+              <ul className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {EPISODES_DE_DEMO.map((code) => {
+                  const ep = episodeParCode(code)!;
+                  const secteur = secteurDe(code);
+                  return (
+                    <CarteEpisode
+                      key={code}
+                      ep={ep}
+                      niveau={3}
+                      teinte={secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)"}
+                      demo
+                      metier={secteur ? `${secteur.nom} · ${secteur.entreprise}` : null}
+                    />
+                  );
+                })}
+              </ul>
+            </section>
+          )}
           <CatalogueDesEpisodes
             entreprises={entreprises}
             unite={{ un: "épisode", plusieurs: "épisodes" }}
             carte={(code, niveau) => {
               const ep = episodeParCode(code);
               if (!ep) return null;
-              const secteur = entreprises.find((e) =>
-                e.familles.some((f) => f.episodes.includes(code)),
-              )?.secteur;
-              return (
+              const secteur = secteurDe(code);
+              const teinte = secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)";
+              return licence || estUneDemo(code) ? (
                 <CarteEpisode
                   key={code}
                   ep={ep}
                   niveau={niveau}
-                  teinte={secteur ? teinteDuSecteur(secteur) : "var(--filet-carte)"}
+                  teinte={teinte}
+                  demo={!licence}
+                />
+              ) : (
+                <CarteFermee
+                  key={code}
+                  ep={ep}
+                  niveau={niveau}
+                  teinte={teinte}
+                  metier={secteur ? `${secteur.nom} · ${secteur.entreprise}` : null}
                 />
               );
             }}
@@ -104,10 +179,16 @@ function CarteEpisode({
   ep,
   teinte,
   niveau,
+  demo = false,
+  metier = null,
 }: {
   ep: Episode;
   teinte: string;
   niveau: 3 | 4;
+  /** Sans licence : une démonstration, marquée, qui se joue en Découverte. */
+  demo?: boolean;
+  /** Le métier et l'entreprise, quand la carte est hors de son tiroir (les démos en tête). */
+  metier?: string | null;
 }) {
   // Le niveau du titre suit le rangement : sous un tiroir de thème (h2 de
   // l'entreprise) ou sous le sous-titre d'une famille (h3).
@@ -120,20 +201,85 @@ function CarteEpisode({
         style={{ borderLeftColor: teinte }}
       >
         <div>
+          {demo ? (
+            <p className="mb-2">
+              <span
+                data-marque-demo=""
+                className="inline-block rounded-full border border-slate-500 px-2.5 py-0.5 text-sm font-semibold text-slate-100"
+              >
+                {MARQUE_DEMO}
+              </span>
+            </p>
+          ) : null}
           <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
             Épisode {ep.numero} · {ep.domaine}
           </p>
           <Titre className="mt-2 text-xl font-semibold text-slate-50">{ep.titre}</Titre>
+          {metier ? <p className="mt-1 text-sm text-slate-400">{metier}</p> : null}
           <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
         </div>
         <p className="text-sm text-slate-400">
           {ep.etapes.length} décisions · {ep.duree}
+          {demo ? ` · en ${niveauParCode(NIVEAU_DES_DEMOS).nom}` : ""}
         </p>
         <span className="mt-auto inline-flex items-center gap-1.5 self-start rounded-lg py-1.5 text-sm font-semibold text-amber-300 transition group-hover:bg-[var(--accent-plein)] group-hover:px-3 group-hover:text-[var(--accent-plein-texte)] group-focus-visible:bg-[var(--accent-plein)] group-focus-visible:px-3 group-focus-visible:text-[var(--accent-plein-texte)]">
           Jouer l&apos;épisode {ep.numero}
           <span aria-hidden>→</span>
         </span>
       </Link>
+    </li>
+  );
+}
+
+/**
+ * UN ÉPISODE FERMÉ SANS LICENCE : visible (titre, accroche, métier), marqué « Offre
+ * Entreprise », non lançable. La carte n'est pas un lien de jeu ; son seul lien mène
+ * aux tarifs.
+ */
+function CarteFermee({
+  ep,
+  teinte,
+  niveau,
+  metier,
+}: {
+  ep: Episode;
+  teinte: string;
+  niveau: 3 | 4;
+  metier: string | null;
+}) {
+  const Titre = niveau === 3 ? "h3" : "h4";
+  return (
+    <li className="flex">
+      <div
+        data-episode-ferme={ep.code}
+        className="carte flex w-full flex-col gap-4 p-6"
+        style={{ borderLeftColor: teinte }}
+      >
+        <div>
+          <p className="mb-2">
+            <span
+              data-marque-offre=""
+              className="inline-block rounded-full border border-white/15 px-2.5 py-0.5 text-sm text-slate-300"
+            >
+              {OFFRE_DES_EPISODES}
+            </span>
+          </p>
+          <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
+            Épisode {ep.numero} · {ep.domaine}
+          </p>
+          <Titre className="mt-2 text-xl font-semibold text-slate-50">{ep.titre}</Titre>
+          {metier ? <p className="mt-1 text-sm text-slate-400">{metier}</p> : null}
+          <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
+        </div>
+        <Link
+          href={LIEN_TARIFS}
+                prefetch={false}
+          className="mt-auto self-start text-sm font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+        >
+          Voir les tarifs
+          <span className="sr-only"> pour l&apos;épisode {ep.numero}</span>
+        </Link>
+      </div>
     </li>
   );
 }

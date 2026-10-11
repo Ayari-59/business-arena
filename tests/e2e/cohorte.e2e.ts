@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { organisationSousLicence } from "./helpers/licence";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
 
 /**
@@ -10,6 +11,9 @@ import { episodeParCode } from "../../src/pedagogy/episodes/registre";
  * La cohorte est créée par le script de l'équipe ; un manager la rejoint par
  * le lien d'invitation, joue un épisode, puis reprend son profil sur un autre
  * appareil avec son code. L'animateur, par sa clé, ne voit que des totaux.
+ *
+ * La cohorte est celle d'une organisation sous licence : l'épisode joué n'est pas une
+ * démonstration, et ses membres le jouent parce que la licence de l'animateur les couvre.
  */
 
 let navigateur: Browser;
@@ -18,9 +22,10 @@ let animation = "";
 
 beforeAll(async () => {
   navigateur = await ouvrirNavigateur();
+  const organisation = await organisationSousLicence("Entreprise de recette");
   const sortie = execFileSync(
     "npx",
-    ["tsx", "scripts/creer-cohorte.ts", "Cohorte de recette", BASE],
+    ["tsx", "scripts/creer-cohorte.ts", "Cohorte de recette", BASE, organisation],
     { encoding: "utf8", env: process.env },
   );
   invitation = sortie.match(/https?:\/\/\S+\/rejoindre\?code=\S+/)![0];

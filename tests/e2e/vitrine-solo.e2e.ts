@@ -6,10 +6,11 @@ import { BASE, ouvrirNavigateur } from "./helpers/browser";
 /**
  * LA VITRINE DU SOLO PUBLIC, DANS UN VRAI NAVIGATEUR.
  *
- * Allumée : NOVA se joue à tous les niveaux, les autres entreprises jusqu'au niveau 3 ;
- * au-delà, l'écran le dit et le serveur refuse. Le test allume le réglage dans la base,
- * puis le remet comme il l'a trouvé — éteint par défaut, tout le reste de la suite joue
- * à tous les niveaux.
+ * Le réglage des niveaux ouverts sans licence, dans sa forme à deux étages : NOVA rouverte
+ * par l'administrateur à tous les niveaux, les autres entreprises jusqu'au niveau 3 ;
+ * au-delà, l'écran le dit et le serveur refuse. Le test écrit le réglage dans la base
+ * (avec la version qui le fait foi), puis le remet comme il l'a trouvé. La règle par
+ * défaut (niveaux 1 à 3 pour toutes) est gardée par acces.e2e.ts.
  */
 
 let navigateur: Browser;
@@ -47,7 +48,7 @@ async function lireVitrine(): Promise<unknown> {
 
 beforeAll(async () => {
   avant = await lireVitrine();
-  await reglerVitrine({ active: true, entrepriseOuverte: "nova", niveauMaxAutres: 3 });
+  await reglerVitrine({ version: 2, active: true, entrepriseOuverte: "nova", niveauMaxAutres: 3 });
   navigateur = await ouvrirNavigateur();
   contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
   await contexte.addInitScript(() => localStorage.setItem("install-prompt-ferme-le", String(Date.now())));
@@ -80,7 +81,7 @@ describe("la vitrine à deux étages", () => {
     expect(await page.locator("[data-niveaux-reserves]").count()).toBe(0);
   });
 
-  it("une autre entreprise s'arrête au niveau 3 et l'écran dit pourquoi, avec où s'adresser", async () => {
+  it("une autre entreprise s'arrête au niveau 3 et l'écran dit pourquoi, avec où lire les offres", async () => {
     await ouvrirJouer();
     await page.getByRole("button", { name: /L'ESCALE/ }).click();
     await page.getByRole("button", { name: /^Niveau 5/ }).click();
@@ -88,8 +89,13 @@ describe("la vitrine à deux étages", () => {
     expect(await page.locator("input[name=level]").inputValue()).toBe("3");
     const message = page.locator("[data-niveaux-reserves]");
     await message.waitFor({ state: "visible" });
-    expect(await message.innerText()).toContain("Les niveaux 4 à 6 sont réservés aux établissements.");
-    await message.getByRole("link", { name: /Prendre rendez-vous/ }).waitFor({ state: "visible" });
+    expect(await message.innerText()).toContain(
+      "Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement.",
+    );
+    expect(await message.innerText()).toContain("Offre Enseignant");
+    expect(await message.getByRole("link", { name: /Voir les tarifs/ }).getAttribute("href")).toBe(
+      "/tarifs",
+    );
     await message.getByRole("link", { name: /espace enseignant/ }).waitFor({ state: "visible" });
   });
 
@@ -110,7 +116,10 @@ describe("la vitrine à deux étages", () => {
     });
     await page.getByRole("button", { name: "Lancer la partie" }).click();
     await page.waitForURL(/\/jouer\?reserve=1/, { timeout: 30_000 });
-    await page.getByText(/sont réservés aux établissements/).first().waitFor({ state: "visible" });
+    await page
+      .getByText(/sont inclus dans les offres Enseignant et Établissement/)
+      .first()
+      .waitFor({ state: "visible" });
   });
 
   it("une partie permise se lance normalement", async () => {

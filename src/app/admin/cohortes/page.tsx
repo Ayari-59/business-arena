@@ -6,8 +6,22 @@ import { bouton } from "@/components/bouton";
 import { SITE_URL } from "@/config/site";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
-import { listerCohortes } from "@/services/cohortes.service";
-import { creerCohorteAction, renouvelerCleAnimateurAction } from "./actions";
+import { listerCohortes, organisationsPourLesCohortes } from "@/services/cohortes.service";
+import { EPISODES_DE_DEMO } from "@/config/episodes/demos";
+import type { LicenceState } from "@/services/licence.service";
+import {
+  creerCohorteAction,
+  rattacherCohorteAction,
+  renouvelerCleAnimateurAction,
+} from "./actions";
+
+/** Ce que les membres d'une cohorte peuvent jouer, selon la licence de son organisation. */
+function ceQuOuvreLaCohorte(licence: LicenceState | null): string {
+  if (licence === "active" || licence === "bientot_expiree") {
+    return "Sous licence : les membres jouent tous les épisodes.";
+  }
+  return `Sans licence en cours : les membres ne jouent que les ${EPISODES_DE_DEMO.length} démonstrations, en Découverte.`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +36,37 @@ export const dynamic = "force-dynamic";
 export default async function CohortesAdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ creee?: string; renouvelee?: string; erreur?: string }>;
+  searchParams: Promise<{
+    creee?: string;
+    renouvelee?: string;
+    rattachee?: string;
+    erreur?: string;
+  }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const context = await getStaffContext(session.userId);
   if (!context?.isPlatformAdmin) redirect("/teacher");
-  const { creee, renouvelee, erreur } = await searchParams;
-  const cohortes = await listerCohortes();
+  const { creee, renouvelee, rattachee, erreur } = await searchParams;
+  const [cohortes, organisations] = await Promise.all([
+    listerCohortes(),
+    organisationsPourLesCohortes(),
+  ]);
+  const choixDeLOrganisation = (defaut: string, nom = "organisation") => (
+    <select
+      name={nom}
+      defaultValue={defaut}
+      aria-label="Organisation de l'animateur"
+      className="champ px-3 py-2 text-sm"
+    >
+      <option value="">Aucune (démonstrations seulement)</option>
+      {organisations.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.nom}
+        </option>
+      ))}
+    </select>
+  );
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
@@ -51,7 +88,9 @@ export default async function CohortesAdminPage({
         <h2 className="text-lg font-bold text-slate-50">Créer une cohorte</h2>
         <p className="max-w-2xl text-sm text-slate-400">
           Un nom qui dit l&apos;entreprise, le groupe et la période : il s&apos;affiche aux managers
-          sur la page d&apos;invitation.
+          sur la page d&apos;invitation. L&apos;organisation est celle de l&apos;animateur : sous
+          licence, elle ouvre tous les épisodes aux membres ; sans licence, ils ne jouent que les
+          démonstrations. Les licences se posent depuis la page Plateforme.
         </p>
         <GuardedForm action={creerCohorteAction} label="création d'une cohorte">
           <div className="flex flex-wrap items-end gap-3">
@@ -65,6 +104,10 @@ export default async function CohortesAdminPage({
                 className="champ px-3 py-2"
               />
             </label>
+            <label className="grid gap-1">
+              <span className="text-xs uppercase tracking-wide text-slate-400">Organisation</span>
+              {choixDeLOrganisation("")}
+            </label>
             <SubmitButton pendingLabel="Création…" className={bouton({})}>
               Créer la cohorte
             </SubmitButton>
@@ -77,11 +120,13 @@ export default async function CohortesAdminPage({
         )}
       </section>
 
-      {(creee || renouvelee) && (
+      {(creee || renouvelee || rattachee) && (
         <p role="status" className="text-sm text-amber-200">
           {creee
             ? `Cohorte ${creee} créée. Envoyez l'invitation aux managers, et le lien de l'animateur à lui seul.`
-            : "Nouveau lien d'animateur créé : l'ancien n'ouvre plus rien."}
+            : renouvelee
+              ? "Nouveau lien d'animateur créé : l'ancien n'ouvre plus rien."
+              : "Organisation de la cohorte enregistrée."}
         </p>
       )}
 
@@ -106,6 +151,24 @@ export default async function CohortesAdminPage({
                     {c.creeeLe.toLocaleDateString("fr-FR")}
                   </span>
                 </p>
+                <p className="text-sm text-slate-300" data-acces-de-la-cohorte="">
+                  {c.organisation ? `${c.organisation.nom} · ` : "Aucune organisation · "}
+                  {ceQuOuvreLaCohorte(c.organisation?.licence ?? null)}
+                </p>
+                <GuardedForm
+                  action={rattacherCohorteAction.bind(null, c.id)}
+                  label="rattachement de la cohorte"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    {choixDeLOrganisation(c.organisation?.id ?? "")}
+                    <SubmitButton
+                      pendingLabel="Enregistrement…"
+                      className="text-sm text-slate-300 underline hover:text-slate-100"
+                    >
+                      Rattacher
+                    </SubmitButton>
+                  </div>
+                </GuardedForm>
                 <p className="text-sm text-slate-300">
                   Invitation :{" "}
                   <span className="break-all font-mono text-xs text-slate-100">{invitation}</span>

@@ -53,6 +53,11 @@ import { withoutRd } from "@/engine/gamme";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { assertCanCreateGame } from "@/services/licence.service";
+import {
+  unCompteSousLicence,
+  uneOrganisationSousLicence,
+  verifierLeNiveau,
+} from "@/services/acces.service";
 import { type BotProfile } from "@/engine/bots";
 import { ENGINE_VERSION } from "@/engine/simulation";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
@@ -528,11 +533,24 @@ export async function createSoloGame(
   roundsCount?: number,
   /** Adresse d'origine : le plafond se compte dessus. Absente = pas de compte. */
   creatorIp?: string | null,
+  /**
+   * Le compte enseignant connecté sur ce navigateur, s'il y en a un : rattaché à une
+   * organisation sous licence, il ouvre les niveaux fermés. Établi côté serveur par
+   * l'appelant (la session), jamais lu du formulaire.
+   */
+  options: { licencePar?: string | null } = {},
 ): Promise<string> {
   const config = await getPlatformConfig();
   if (!config.allowPublicPlay) {
     throw new Error("Les parties publiques sont désactivées par l'administrateur.");
   }
+  // LES NIVEAUX FERMÉS SANS LICENCE (config/vitrine-solo.ts) : la règle de l'écran,
+  // appliquée ici, pour toute création, quel que soit le formulaire qui l'envoie.
+  await verifierLeNiveau({
+    niveau: level,
+    scenarioCode,
+    licence: () => unCompteSousLicence([userId, options.licencePar]),
+  });
   if (creatorIp) {
     const [compte] = await db
       .select({ n: sql<number>`count(*)::int` })
@@ -601,6 +619,13 @@ export async function createClassGame(args: {
   // mandatement. Clore un tour, débriefer et exporter les notes restent
   // possibles même licence expirée.
   await assertCanCreateGame(args.organizationId);
+  // Sans licence en cours, les niveaux fermés ne se créent pas (config/vitrine-solo.ts).
+  // Une partie déjà commencée à ces niveaux n'est pas concernée : seule la création l'est.
+  await verifierLeNiveau({
+    niveau: args.level,
+    scenarioCode: args.scenarioCode,
+    licence: () => uneOrganisationSousLicence([args.organizationId]),
+  });
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
   const joinCode = makeJoinCode();

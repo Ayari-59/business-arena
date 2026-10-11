@@ -18,6 +18,7 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createSoloGame, getGameView } from "@/services/game.service";
+import { placerSousLicence } from "./helpers/licence";
 
 let userId: string;
 
@@ -27,6 +28,10 @@ beforeAll(async () => {
     .values({ email: "famille@test.local", displayName: "Famille" })
     .returning({ id: users.id });
   userId = inserted[0]!.id;
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : ce
+  // joueur est un enseignant d'un établissement sous licence (la règle elle-même est
+  // gardée par acces-sans-licence.test.ts).
+  await placerSousLicence(userId);
 });
 
 describe("une famille de scénarios se joue selon le niveau", () => {

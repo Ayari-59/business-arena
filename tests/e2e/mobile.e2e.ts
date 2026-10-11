@@ -6,6 +6,7 @@ import {
   type Page,
 } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
 import { COULEUR_DU_PAPIER } from "../../src/config/themes";
 
 /**
@@ -1115,6 +1116,9 @@ describe("le lancement d'une partie, sur téléphone", () => {
 describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
   it("chaque référence tient sur UNE carte, compacte, qui tient (à peu près) sur un écran", async () => {
     const ctx = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    // Les niveaux 5 et 6 sont inclus dans les offres Enseignant et Établissement :
+    // ce navigateur est celui d'un enseignant sous licence (helpers/licence.ts).
+    await enseignantSousLicence(ctx);
     const p = await ctx.newPage();
     try {
       await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
@@ -1169,6 +1173,9 @@ describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
 describe("un niveau complet (NOVA niveau 6), sur téléphone", () => {
   it("aucun cadre de montant ne recouvre son étiquette, et rien ne déborde, sur aucune carte", async () => {
     const ctx = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    // Les niveaux 5 et 6 sont inclus dans les offres Enseignant et Établissement :
+    // ce navigateur est celui d'un enseignant sous licence (helpers/licence.ts).
+    await enseignantSousLicence(ctx);
     const p = await ctx.newPage();
     try {
       await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });

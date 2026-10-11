@@ -27,7 +27,12 @@ import {
   users,
 } from "@/db/schema";
 import { normaliserTheme, THEME_DU_SITE_PAR_DEFAUT, type ThemeDuSite } from "@/config/theme-du-site";
-import { normaliserVitrine, VITRINE_SOLO_PAR_DEFAUT, type VitrineSolo } from "@/config/vitrine-solo";
+import {
+  normaliserVitrine,
+  vitrineAEnregistrer,
+  VITRINE_SOLO_PAR_DEFAUT,
+  type VitrineSolo,
+} from "@/config/vitrine-solo";
 
 /**
  * Espace d'administration (hiérarchie ADR-08/ADR-09) :
@@ -108,8 +113,8 @@ export interface PlatformConfig {
    */
   soloAnswerFormat: AnswerFormat;
   /**
-   * La vitrine du solo public : une entreprise jouable à tous les niveaux, les autres
-   * jusqu'à un niveau maximum. Éteinte par défaut : tout est ouvert. Voir
+   * Les niveaux ouverts sans licence, pour le solo public comme pour les parties
+   * d'enseignant : par défaut 1 à 3, pour toutes les entreprises. Voir
    * config/vitrine-solo.ts.
    */
   vitrineSolo: VitrineSolo;
@@ -204,7 +209,11 @@ export async function updatePlatformConfig(
   patch: Partial<PlatformConfig>,
 ): Promise<PlatformConfig> {
   await requirePlatformAdmin(adminId);
-  const next = { ...(await getPlatformConfig()), ...patch };
+  const fusion = { ...(await getPlatformConfig()), ...patch };
+  // La règle des niveaux sans licence s'enregistre avec sa version, quel que soit le
+  // réglage enregistré (thème, compteurs…) : sans elle, la relecture la remplacerait
+  // par le défaut (config/vitrine-solo.ts).
+  const next = { ...fusion, vitrineSolo: vitrineAEnregistrer(fusion.vitrineSolo) };
   await db
     .insert(platformSettings)
     .values({ id: 1, settings: next })

@@ -21,6 +21,8 @@ import { VerdictDuMarche, type SensDUnEcart } from "@/components/verdict-du-marc
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 import { nombre } from "@/config/episodes/format";
+import { OFFRE_DES_EPISODES } from "@/config/episodes/demos";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import {
   NIVEAUX,
   NIVEAU_PAR_DEFAUT,
@@ -302,13 +304,26 @@ function Suite({
 
 /* ------------------------------------------------------------------------- */
 
-export function EpisodeJoue({ code }: { code: string }) {
+export function EpisodeJoue({
+  code,
+  niveaux = NIVEAUX.map((n) => n.code),
+}: {
+  code: string;
+  /**
+   * Les niveaux auxquels l'épisode se lance, établis par le serveur
+   * (services/acces.service.ts) : sans licence, une démonstration ne se joue qu'en
+   * Découverte. Un niveau demandé dans l'adresse hors de cette liste est ignoré.
+   */
+  niveaux?: readonly CodeNiveau[];
+}) {
   const ep = episodeParCode(code)!;
   const [s, setS] = useState<Etat>(() => nouvelEtat(ep));
   // Le niveau de l'adresse ne se lit que dans le navigateur ; au rendu serveur,
   // c'est le niveau par défaut.
   const demande = useSyncExternalStore(sansAbonnement, niveauDeLAdresse, () => null);
-  const choisi: CodeNiveau = s.niveau ?? demande ?? NIVEAU_PAR_DEFAUT;
+  const permis = (n: CodeNiveau | null): n is CodeNiveau => n !== null && niveaux.includes(n);
+  const souhaite = s.niveau ?? demande ?? NIVEAU_PAR_DEFAUT;
+  const choisi: CodeNiveau = permis(souhaite) ? souhaite : (niveaux[0] ?? NIVEAU_PAR_DEFAUT);
   const niveau = niveauParCode(choisi);
   // La partie terminée juste avant : le bilan suivant la met en regard.
   const [precedente, setPrecedente] = useState<PartieJouee | null>(null);
@@ -339,7 +354,7 @@ export function EpisodeJoue({ code }: { code: string }) {
 
   const commencer = (g: number | null) =>
     setS((e) => ({
-      ...nouvelEtat(ep, g ?? tirerUnHasard(), e.niveau ?? choisi, nouvelleCle()),
+      ...nouvelEtat(ep, g ?? tirerUnHasard(), permis(e.niveau) ? e.niveau : choisi, nouvelleCle()),
       ecran: "jeu",
     }));
   const suivante = () =>
@@ -493,6 +508,7 @@ export function EpisodeJoue({ code }: { code: string }) {
             <Intro
               ep={ep}
               niveau={choisi}
+              niveaux={niveaux}
               onNiveau={(n) => maj(() => ({ niveau: n }))}
               onCommencer={() => commencer(null)}
             />
@@ -578,14 +594,19 @@ function Fil({ etape, phase }: { etape: number; phase: Phase }) {
 function Intro({
   ep,
   niveau,
+  niveaux,
   onNiveau,
   onCommencer,
 }: {
   ep: Episode;
   niveau: CodeNiveau;
+  niveaux: readonly CodeNiveau[];
   onNiveau: (n: CodeNiveau) => void;
   onCommencer: () => void;
 }) {
+  // Sans licence, une démonstration ne se joue qu'en Découverte : les autres niveaux
+  // restent visibles, marqués, avec ce qui les ouvre (jamais un choix grisé muet).
+  const fermes = NIVEAUX.filter((n) => !niveaux.includes(n.code));
   return (
     <section className="carte grid gap-5 p-5 sm:p-7">
       <div>
@@ -625,9 +646,41 @@ function Intro({
         <Choix
           nom="niveau"
           valeur={niveau}
-          options={NIVEAUX.map((n) => ({ id: n.code, t: n.nom, d: n.resume }))}
+          options={NIVEAUX.filter((n) => niveaux.includes(n.code)).map((n) => ({
+            id: n.code,
+            t: n.nom,
+            d: n.resume,
+          }))}
           onChoisir={(id) => onNiveau(id as CodeNiveau)}
         />
+        {fermes.length > 0 && (
+          <>
+            <ul className="mt-2 grid gap-2" data-niveaux-fermes="">
+              {fermes.map((n) => (
+                <li
+                  key={n.code}
+                  className="grid gap-0.5 rounded-lg border border-white/5 px-4 py-3"
+                >
+                  <span className="text-slate-300">
+                    {n.nom} · <span className="font-semibold">{OFFRE_DES_EPISODES}</span>
+                  </span>
+                  <span className="text-sm text-slate-400">{n.resume}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
+              Démonstration gratuite : elle se joue en {NIVEAUX.find((n) => n.code === niveaux[0])?.nom ?? "Découverte"}.
+              Les autres niveaux, et tous les épisodes, sont inclus dans l&apos;offre Entreprise.{" "}
+              <Link
+                href={LIEN_TARIFS}
+                prefetch={false}
+                className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Voir les tarifs
+              </Link>
+            </p>
+          </>
+        )}
       </fieldset>
       <Suite onClick={onCommencer}>Commencer l&apos;épisode</Suite>
     </section>

@@ -3,8 +3,11 @@
 import { useState, type ReactNode } from "react";
 import { sansMolette } from "@/components/sans-molette";
 import {
+  aDeuxEtages,
   messageNiveauxReserves,
   niveauMaxPour,
+  niveauxFermes,
+  OFFRE_DES_NIVEAUX,
   VITRINE_SOLO_PAR_DEFAUT,
   type VitrineSolo,
 } from "@/config/vitrine-solo";
@@ -97,6 +100,7 @@ export function QuickConfigFields({
   levels,
   defaultScenario,
   vitrine,
+  licence = false,
   liens,
   lancement,
 }: {
@@ -104,12 +108,14 @@ export function QuickConfigFields({
   levels: QuickLevel[];
   defaultScenario: string;
   /**
-   * La vitrine du solo public (config/vitrine-solo) : une entreprise jouable à tous les
-   * niveaux, les autres jusqu'à un niveau maximum. Absente ou éteinte : tout est ouvert.
+   * Les niveaux ouverts sans licence (config/vitrine-solo) : par défaut 1 à 3 pour toutes
+   * les entreprises. Absente : la règle par défaut.
    */
   vitrine?: VitrineSolo;
-  /** Où s'adresser pour les niveaux réservés : prendre rendez-vous, ou entrer côté enseignant. */
-  liens?: { contact: { href: string; libelle: string }; enseignant: { href: string; libelle: string } };
+  /** Une licence en cours couvre-t-elle qui joue ? Elle ouvre tous les niveaux. */
+  licence?: boolean;
+  /** Où lire ce qu'ouvrent les offres (les tarifs), ou entrer côté enseignant. */
+  liens?: { tarifs: { href: string; libelle: string }; enseignant: { href: string; libelle: string } };
   /** Le bouton qui lance la partie, posé dans le résumé collant (un seul à l'écran). */
   lancement?: ReactNode;
 }) {
@@ -123,8 +129,11 @@ export function QuickConfigFields({
   const [optionsOuvertes, setOptionsOuvertes] = useState(false);
 
   const regle: VitrineSolo = vitrine ?? VITRINE_SOLO_PAR_DEFAUT;
-  // Le niveau le plus haut jouable avec l'entreprise choisie (6 quand la vitrine est éteinte).
-  const niveauMax = niveauMaxPour(regle, scenario);
+  // Le niveau le plus haut jouable avec l'entreprise choisie (6 sous licence).
+  const niveauMax = niveauMaxPour(regle, scenario, licence);
+  // Une entreprise ouverte à tous les niveaux, les autres non : chaque carte dit jusqu'où
+  // elle se joue. La même borne pour toutes : l'encadré sous le niveau le dit une fois.
+  const parCarte = !licence && aDeuxEtages(regle);
   const minLevel = levels[0]?.level ?? 1;
   const maxLevel = levels[levels.length - 1]?.level ?? 6;
   const cur = levels.find((l) => l.level === level) ?? levels[0];
@@ -186,7 +195,7 @@ export function QuickConfigFields({
               onClick={() => {
                 setScenario(s.code);
                 // Passer à une entreprise dont le niveau choisi est réservé : on retombe au plus haut permis.
-                setLevel((n) => Math.min(n, niveauMaxPour(regle, s.code)));
+                setLevel((n) => Math.min(n, niveauMaxPour(regle, s.code, licence)));
               }}
               aria-pressed={on}
               className={`group relative flex min-w-0 flex-col overflow-hidden rounded-lg border text-left transition sm:rounded-xl ${
@@ -218,20 +227,20 @@ export function QuickConfigFields({
                   </span>
                 ) : null}
               </span>
-              {s.promesse || regle.active ? (
-                // Sous la photo : l'accroche (au-delà du téléphone), et, vitrine
-                // allumée, jusqu'où l'entreprise se joue (partout : c'est une
-                // règle du choix, pas une décoration).
+              {s.promesse || parCarte ? (
+                // Sous la photo : l'accroche (au-delà du téléphone), et, quand une
+                // entreprise est ouverte à tous les niveaux et pas les autres, jusqu'où
+                // chacune se joue (partout : c'est une règle du choix, pas une décoration).
                 <span
                   className={`flex flex-1 flex-col gap-0.5 sm:px-3 sm:pb-3 sm:pt-2 ${
-                    regle.active ? "px-2 pb-2 pt-1.5" : "max-sm:hidden"
+                    parCarte ? "px-2 pb-2 pt-1.5" : "max-sm:hidden"
                   }`}
                 >
                   {s.promesse ? (
                     <span className="text-sm leading-snug text-slate-400 max-sm:hidden">{s.promesse}</span>
                   ) : null}
-                  {regle.active ? (
-                    // Vitrine allumée : chaque carte dit jusqu'où elle se joue.
+                  {parCarte ? (
+                    // Deux étages : chaque carte dit jusqu'où elle se joue.
                     <span
                       className={`self-start rounded-full px-1.5 py-0.5 text-xs leading-none sm:mt-1.5 ${
                         s.code === regle.entrepriseOuverte
@@ -279,7 +288,7 @@ export function QuickConfigFields({
               key={l.level}
               type="button"
               onClick={() => setLevel(Math.min(l.level, niveauMax))}
-              aria-label={`Niveau ${l.level} · ${l.name}${reserve ? " · réservé aux établissements" : ""}`}
+              aria-label={`Niveau ${l.level} · ${l.name}${reserve ? ` · ${OFFRE_DES_NIVEAUX}` : ""}`}
               className={`px-1 text-xs tabular-nums ${
                 l.level === level
                   ? "font-bold text-slate-50"
@@ -295,22 +304,26 @@ export function QuickConfigFields({
         })}
       </div>
       {niveauMax < maxLevel ? (
-        // Les niveaux fermés ne sont pas un bouton muet : on dit pourquoi, ce que l'autre
-        // entreprise offre, et où s'adresser.
+        // Les niveaux fermés restent visibles (l'étendue est l'argument) et ne sont pas un
+        // bouton muet : on dit lesquels, ce qui les ouvre, et où le lire.
         <div
           data-niveaux-reserves
           className="encadre-neutre mt-2 rounded-lg px-3 py-2.5 text-sm leading-snug text-slate-200"
         >
           <p>
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-            <strong className="font-semibold text-slate-100">{messageNiveauxReserves(regle)}</strong>{" "}
-            {scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "L'entreprise vitrine"} se
-            joue à tous les niveaux.
+            <strong className="font-semibold text-slate-100" data-offre-des-niveaux="">
+              {niveauxFermes(regle)} · {OFFRE_DES_NIVEAUX}
+            </strong>{" "}
+            {messageNiveauxReserves(regle)}
+            {aDeuxEtages(regle)
+              ? ` ${scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "Une entreprise"} se joue à tous les niveaux.`
+              : null}
           </p>
           {liens ? (
             <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-              <a href={liens.contact.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
-                {liens.contact.libelle} →
+              <a href={liens.tarifs.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
+                {liens.tarifs.libelle} →
               </a>
               <a href={liens.enseignant.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
                 {liens.enseignant.libelle} →

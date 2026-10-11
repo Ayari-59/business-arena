@@ -5,6 +5,8 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { FICHES, ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
+import { estUneDemo, MARQUE_DEMO, OFFRE_DES_EPISODES } from "@/config/episodes/demos";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 
 /** Les fiches sont une donnée figée : leurs pages se rendent à la construction. */
 export function generateStaticParams() {
@@ -85,6 +87,29 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               >
                 Ouvrir l&apos;épisode
               </Link>
+            </p>
+            {/* Sans licence, seuls les épisodes de démonstration se lancent
+                (config/episodes/demos.ts) : la fiche le dit avant la séance. */}
+            <p className="mt-3 text-sm text-slate-400" data-acces-de-l-episode="">
+              {estUneDemo(code) ? (
+                <>
+                  <span className="font-semibold text-slate-200">{MARQUE_DEMO}.</span> Il se joue
+                  sans licence, au niveau Découverte.
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-slate-200">{OFFRE_DES_EPISODES}.</span> Sans
+                  licence, cet épisode ne s&apos;ouvre pas : il se joue avec la licence de
+                  l&apos;établissement.{" "}
+                  <Link
+                    href={LIEN_TARIFS}
+                prefetch={false}
+                    className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                  >
+                    Voir les tarifs
+                  </Link>
+                </>
+              )}
             </p>
           </div>
 

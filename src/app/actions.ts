@@ -7,8 +7,8 @@ import { getOrCreateGuestUserId } from "@/lib/guest";
 import { createSoloGame } from "@/services/game.service";
 import { TropDePartiesError } from "@/services/game-creation.service";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
-import { getPlatformConfig } from "@/services/admin.service";
-import { niveauReserve } from "@/config/vitrine-solo";
+import { NiveauReserveError } from "@/services/acces.service";
+import { getSession } from "@/lib/session";
 
 const periodicitySchema = z.enum(["month", "quarter", "year"]).catch("quarter");
 const companiesSchema = z.coerce.number().int().min(2).max(8).catch(3);
@@ -25,10 +25,10 @@ export async function startGameAction(formData: FormData): Promise<void> {
   const level = levelSchema.parse(formData.get("level"));
   const scenarioCode = scenarioSchema.parse(formData.get("scenarioCode"));
   const roundsCount = roundsCountSchema.parse(formData.get("roundsCount") || undefined);
-  // LA VITRINE DU SOLO PUBLIC : le serveur applique la règle comme l'écran l'affiche. Un
-  // formulaire forgé ne passe pas outre ; la page redit pourquoi (config/vitrine-solo.ts).
-  const { vitrineSolo } = await getPlatformConfig();
-  if (niveauReserve(vitrineSolo, scenarioCode, level)) redirect("/jouer?reserve=1");
+  // LES NIVEAUX FERMÉS SANS LICENCE : `createSoloGame` applique la règle comme l'écran
+  // l'affiche (config/vitrine-solo.ts), et un formulaire forgé ne passe pas outre. Un
+  // enseignant connecté dont l'établissement est sous licence les ouvre.
+  const session = await getSession();
   // L'ADRESSE D'ORIGINE AVANT L'INVITÉ. Le plafond se compte dessus, et
   // `createSoloGame` refuse au-delà : autrement, une boucle sur ce formulaire
   // créerait autant de parties complètes qu'elle fait de requêtes.
@@ -46,11 +46,13 @@ export async function startGameAction(formData: FormData): Promise<void> {
       scenarioCode,
       roundsCount,
       ip,
+      { licencePar: session?.userId ?? null },
     );
   } catch (e) {
     // Le formulaire n'a pas de canal d'erreur (pas de `useActionState`) : on
     // revient sur la page, qui dit pourquoi. Toute autre panne remonte.
     if (e instanceof TropDePartiesError) redirect("/jouer?trop=1");
+    if (e instanceof NiveauReserveError) redirect("/jouer?reserve=1");
     throw e;
   }
   redirect(`/arena/${gameId}`);

@@ -7,6 +7,7 @@ import { formatEuro } from "@/lib/format";
 import { AI_MODELS } from "@/config/ai";
 import { ANSWER_FORMATS } from "@/config/difficulty";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
+import { VITRINE_SOLO_PAR_DEFAUT } from "@/config/vitrine-solo";
 import type { PreuvesPubliees } from "@/config/preuves-dusage";
 import {
   createEstablishmentAction,
@@ -228,11 +229,12 @@ export default async function AdminPage({
               gardent leur format. Les parties de classe se règlent chez l&apos;enseignant.
             </p>
           </fieldset>
-          {/* La vitrine du solo public : une entreprise complète, les autres jusqu'à un niveau. */}
+          {/* Les niveaux ouverts sans licence (config/vitrine-solo.ts) : par défaut 1 à 3,
+              pour toutes les entreprises, au solo public comme chez l'enseignant. */}
           <fieldset className="rounded-xl border border-white/10 p-4">
             <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
               <Icone nom="cible" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
-              Vitrine du solo public
+              Niveaux ouverts sans licence
             </legend>
             <label className="flex items-center gap-3 text-sm text-slate-300">
               <input
@@ -241,25 +243,11 @@ export default async function AdminPage({
                 defaultChecked={overview.config.vitrineSolo.active}
                 className="h-4 w-4 accent-amber-400"
               />
-              Limiter les niveaux des entreprises autres que l&apos;entreprise vitrine
+              Fermer les niveaux au-delà du maximum à qui n&apos;a pas de licence en cours
             </label>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="block text-sm text-slate-300">
-                Entreprise jouable à tous les niveaux
-                <select
-                  name="vitrineEntreprise"
-                  defaultValue={overview.config.vitrineSolo.entrepriseOuverte}
-                  className="mt-1 block w-full champ px-3 py-2 text-sm text-slate-100"
-                >
-                  {SCENARIO_CHOICES.map((s) => (
-                    <option key={s.code} value={s.code}>
-                      {s.shortName}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm text-slate-300">
-                Niveau maximum des autres entreprises
+                Niveau maximum sans licence
                 <select
                   name="vitrineNiveauMax"
                   defaultValue={String(overview.config.vitrineSolo.niveauMaxAutres)}
@@ -272,11 +260,30 @@ export default async function AdminPage({
                   ))}
                 </select>
               </label>
+              <label className="block text-sm text-slate-300">
+                Entreprise ouverte à tous les niveaux, même sans licence
+                <select
+                  name="vitrineEntreprise"
+                  defaultValue={overview.config.vitrineSolo.entrepriseOuverte}
+                  className="mt-1 block w-full champ px-3 py-2 text-sm text-slate-100"
+                >
+                  <option value="">Aucune</option>
+                  {SCENARIO_CHOICES.map((s) => (
+                    <option key={s.code} value={s.code}>
+                      {s.shortName}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              Éteinte, tout reste ouvert. Allumée, les niveaux au-delà du maximum s&apos;affichent
-              « réservés aux établissements » dans le solo public, avec le lien pour prendre
-              rendez-vous. Les parties de classe ne sont pas concernées.
+              Règle par défaut, décidée avec la grille tarifaire : sans licence, niveaux 1 à{" "}
+              {VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres} pour toutes les entreprises, au solo public
+              comme dans les parties d&apos;enseignant. Au-delà, les
+              niveaux restent visibles, marqués « Offre Enseignant » avec le lien vers les tarifs,
+              et le serveur refuse de les créer. Une licence en cours ouvre tout. Seule la
+              création est concernée : une partie commencée se termine. Décoché, tout est ouvert
+              à tous.
             </p>
           </fieldset>
           {/* Les compteurs d'usage de /enseignants. Ils sont comptés dans la

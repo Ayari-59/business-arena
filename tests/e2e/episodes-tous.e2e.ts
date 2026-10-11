@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
 
 /**
@@ -11,6 +12,14 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  * aucun texte n'affiche « undefined » ou « NaN », et le bilan s'ouvre. Le
  * joueur choisit à chaque fois la première option et ouvre la première
  * source : le parcours le plus bête, qui passe par tous les écrans.
+ */
+
+/**
+ * SOUS LICENCE. Sans licence, seuls les épisodes de démonstration se lancent, en
+ * Découverte (services/acces.service.ts) ; ce parcours vérifie autre chose, sur des
+ * épisodes et des niveaux qui n'en sont pas : chaque navigateur y est celui d'un
+ * enseignant d'un établissement sous licence (tests/e2e/helpers/licence.ts). La règle
+ * elle-même est gardée par acces.e2e.ts.
  */
 
 let navigateur: Browser;
@@ -63,6 +72,7 @@ describe("tous les épisodes", () => {
       const page = await navigateur.newPage({
         viewport: { width: 1280, height: 900 },
       });
+      await enseignantSousLicence(page.context());
       const erreurs: string[] = [];
       page.on("pageerror", (e) => erreurs.push(e.message));
       await page.goto(`${BASE}/entreprises/episode/${ep.code}?hasard=7`);

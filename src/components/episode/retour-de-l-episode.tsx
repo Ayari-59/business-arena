@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { niveauParCode } from "@/config/episodes/niveaux";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import type { Episode, PartieJouee } from "@/config/episodes/types";
 import { observer } from "@/pedagogy/profil/observations";
 import { competencesObservees, phrasesDeRobustesse } from "@/pedagogy/profil/retour";
@@ -28,6 +29,7 @@ const SANS_SUITE: SuiteDeLaPartie = {
   objectifChoisi: false,
   recommandations: [],
   conseil: null,
+  offre: null,
 };
 
 export function RetourDeLEpisode({
@@ -156,6 +158,18 @@ export function RetourDeLEpisode({
                 </li>
               ))}
             </ul>
+            {suite.offre && (
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-300" data-offre-entreprise="">
+                {suite.offre}{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                prefetch={false}
+                  className="whitespace-nowrap font-semibold text-amber-300 underline"
+                >
+                  Voir les tarifs
+                </Link>
+              </p>
+            )}
             {suite.episodesComptes >= 2 ? (
               <p className="text-sm">
                 <Link

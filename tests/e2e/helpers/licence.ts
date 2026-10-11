@@ -1,0 +1,133 @@
+import { createHmac, randomUUID } from "node:crypto";
+import { Client } from "pg";
+import type { BrowserContext } from "playwright-core";
+import { BASE } from "./browser";
+
+/**
+ * JOUER SOUS LICENCE, DANS UN VRAI NAVIGATEUR.
+ *
+ * Sans licence en cours, les niveaux 4 à 6 ne se créent plus et seuls les épisodes de
+ * démonstration se lancent (services/acces.service.ts). Les parcours qui vérifient autre
+ * chose à ces niveaux, ou dans les autres épisodes, jouent donc sous licence, posée en
+ * base comme le ferait l'administrateur : la règle reste en vigueur, eux sont couverts.
+ *
+ * Deux façons d'être couvert, celles du produit :
+ *  · un compte enseignant rattaché à un établissement sous licence, connecté sur ce
+ *    navigateur (`enseignantSousLicence`) ;
+ *  · la cohorte d'une organisation sous licence, rejointe par son code
+ *    (`cohorteSousLicence`).
+ */
+
+async function base<T>(f: (c: Client) => Promise<T>): Promise<T> {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL manquante : ce test pose une licence en base");
+  const c = new Client({ connectionString: url });
+  await c.connect();
+  try {
+    return await f(c);
+  } finally {
+    await c.end();
+  }
+}
+
+/** Une organisation, et une licence en cours si on la demande. */
+async function organisation(c: Client, nom: string, licence: boolean): Promise<string> {
+  const { rows } = await c.query(
+    "insert into organizations (name, slug, kind) values ($1, $2, 'school') returning id",
+    [nom, `e2e-${randomUUID()}`],
+  );
+  const orgId = rows[0].id as string;
+  if (licence) {
+    await c.query(
+      `insert into org_licences (organization_id, label, starts_at, ends_at)
+       values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days')`,
+      [orgId],
+    );
+  }
+  return orgId;
+}
+
+/** Le jeton de session enseignant, signé comme le fait `lib/session.ts`. */
+function jetonDeSession(userId: string): string {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET manquant : il signe la session de l'enseignant");
+  const now = Date.now();
+  const corps = Buffer.from(
+    JSON.stringify({ id: userId, role: "teacher", v: 1, iat: now, exp: now + 24 * 3600 * 1000 }),
+    "utf8",
+  ).toString("base64url");
+  const signature = createHmac("sha256", secret).update(corps).digest("hex").slice(0, 32);
+  return `${corps}.${signature}`;
+}
+
+/**
+ * Un enseignant connecté dans ce contexte de navigateur, rattaché à un établissement
+ * sous licence (ou sans, avec `{ licence: false }`).
+ */
+export async function enseignantSousLicence(
+  contexte: BrowserContext,
+  options: { licence?: boolean } = {},
+): Promise<{ userId: string; orgId: string }> {
+  const licence = options.licence ?? true;
+  const { userId, orgId } = await base(async (c) => {
+    const orgId = await organisation(c, licence ? "Lycée sous licence" : "Lycée sans licence", licence);
+    const { rows } = await c.query(
+      "insert into users (email, display_name) values ($1, $2) returning id",
+      [`prof-${randomUUID()}@e2e.test`, "Prof E2E"],
+    );
+    const userId = rows[0].id as string;
+    await c.query(
+      "insert into organization_members (user_id, organization_id, role) values ($1, $2, 'teacher')",
+      [userId, orgId],
+    );
+    return { userId, orgId };
+  });
+  await contexte.addCookies([{ name: "ba_session", value: jetonDeSession(userId), url: BASE }]);
+  return { userId, orgId };
+}
+
+/** Une cohorte d'épisodes dont l'organisation est sous licence ; renvoie son code. */
+export async function cohorteSousLicence(nom: string): Promise<string> {
+  return base(async (c) => {
+    const orgId = await organisation(c, `Entreprise ${nom}`, true);
+    const code = `E2E-${randomUUID().slice(0, 4).toUpperCase()}`;
+    await c.query(
+      `insert into episode_cohortes (code, nom, cle_animateur, organization_id)
+       values ($1, $2, $3, $4)`,
+      [code, nom, randomUUID().replace(/-/g, ""), orgId],
+    );
+    return code;
+  });
+}
+
+/** Une organisation sous licence, pour la rattacher à ce qu'on crée ensuite. */
+export async function organisationSousLicence(nom: string): Promise<string> {
+  return base((c) => organisation(c, nom, true));
+}
+
+/**
+ * Poser une licence en cours sur l'établissement d'un enseignant inscrit par l'écran (son
+ * e-mail), ou retirer celles qu'on lui a posées ainsi.
+ */
+export async function licenceDeLEnseignant(email: string, geste: "pose" | "retire"): Promise<void> {
+  await base(async (c) => {
+    const { rows } = await c.query(
+      `select m.organization_id as org from organization_members m
+         join users u on u.id = m.user_id
+        where u.email = $1 limit 1`,
+      [email],
+    );
+    if (rows.length !== 1) throw new Error(`établissement de ${email} introuvable`);
+    if (geste === "pose") {
+      await c.query(
+        `insert into org_licences (organization_id, label, starts_at, ends_at)
+         values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days')`,
+        [rows[0].org],
+      );
+    } else {
+      await c.query("delete from org_licences where organization_id = $1 and label = 'Licence e2e'", [
+        rows[0].org,
+      ]);
+    }
+  });
+}

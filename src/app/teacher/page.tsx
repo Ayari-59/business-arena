@@ -3,7 +3,17 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
-import { getStaffContext } from "@/services/admin.service";
+import { getPlatformConfig, getStaffContext } from "@/services/admin.service";
+import { entitlementsForUser } from "@/services/entitlements.service";
+import {
+  aDeuxEtages,
+  LIEN_TARIFS,
+  messageNiveauxReserves,
+  NIVEAU_MAX,
+  niveauMaxPour,
+  niveauxFermes,
+  OFFRE_DES_NIVEAUX,
+} from "@/config/vitrine-solo";
 import {
   archiverPartieAction,
   createClassGameAction,
@@ -59,11 +69,19 @@ function familleNote(code: string): string {
 export default async function TeacherDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ echec?: string }>;
+  searchParams: Promise<{ echec?: string; offre?: string }>;
 }) {
-  const { echec } = await searchParams;
+  const { echec, offre } = await searchParams;
   const session = await getSession();
   if (!session) redirect("/teacher/login");
+  // LES NIVEAUX FERMÉS SANS LICENCE (config/vitrine-solo.ts) : visibles dans le choix du
+  // niveau, marqués « Offre Enseignant », et refusés par le serveur à la création.
+  const [{ vitrineSolo: regle }, droits] = await Promise.all([
+    getPlatformConfig(),
+    entitlementsForUser(session.userId),
+  ]);
+  const licence = droits.plan === "full";
+  const niveauMaxSansLicence = niveauMaxPour(regle, "", licence);
   const games = await getTeacherGames(session.userId);
   // Ce qui appelle un geste : une partie dont toutes les équipes ont rendu.
   const aClore = games.filter((g) => g.aClore);
@@ -131,6 +149,18 @@ export default async function TeacherDashboard({
           className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           La partie n&apos;a pas été créée. {echec}
+          {offre ? (
+            <>
+              {" "}
+              <Link
+                href={LIEN_TARIFS}
+                prefetch={false}
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Voir les tarifs
+              </Link>
+            </>
+          ) : null}
         </p>
       ) : null}
 
@@ -298,15 +328,42 @@ export default async function TeacherDashboard({
             </span>
             <select
               name="level"
-              defaultValue={3}
+              defaultValue={Math.min(3, niveauMaxSansLicence)}
               className="mt-1 w-full champ px-3 py-2 text-sm"
             >
-              {DIFFICULTY_PRESETS.map((p) => (
-                <option key={p.level} value={p.level}>
-                  {p.level} · {p.name} : {p.tagline}
-                </option>
-              ))}
+              {DIFFICULTY_PRESETS.map((p) => {
+                // Un niveau fermé reste dans la liste, marqué : l'étendue est l'argument.
+                // Avec une entreprise ouverte à tous les niveaux (réglage d'admin), le
+                // choix reste possible et le serveur tranche selon l'entreprise.
+                const fermeIci = p.level > niveauMaxSansLicence;
+                return (
+                  <option
+                    key={p.level}
+                    value={p.level}
+                    disabled={fermeIci && !aDeuxEtages(regle)}
+                  >
+                    {p.level} · {p.name} : {p.tagline}
+                    {fermeIci ? ` · ${OFFRE_DES_NIVEAUX}` : ""}
+                  </option>
+                );
+              })}
             </select>
+            {niveauMaxSansLicence < NIVEAU_MAX ? (
+              <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">
+                <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+                <strong className="font-semibold text-slate-200">
+                  {niveauxFermes(regle)} · {OFFRE_DES_NIVEAUX}.
+                </strong>{" "}
+                {messageNiveauxReserves(regle)}{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir les tarifs
+                </Link>
+              </span>
+            ) : null}
           </label>
 
           <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">

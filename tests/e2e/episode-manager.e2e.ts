@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
 
 /**
@@ -10,6 +11,14 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  * comme la stratégie « diagnostic d'abord », l'autre répond à tout par une
  * remise sans rien vérifier. Le bilan doit le dire, sur un poste de bureau
  * comme sur un téléphone, sans que la page déborde en largeur.
+ */
+
+/**
+ * SOUS LICENCE. Sans licence, seuls les épisodes de démonstration se lancent, en
+ * Découverte (services/acces.service.ts) ; ce parcours vérifie autre chose, sur des
+ * épisodes et des niveaux qui n'en sont pas : chaque navigateur y est celui d'un
+ * enseignant d'un établissement sous licence (tests/e2e/helpers/licence.ts). La règle
+ * elle-même est gardée par acces.e2e.ts.
  */
 
 let navigateur: Browser;
@@ -48,6 +57,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
       viewport: { width: 1280, height: 900 },
       locale: "fr-FR",
     });
+    await enseignantSousLicence(page.context());
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
     await bouton(page, "Commencer l'épisode").click();
 
@@ -107,6 +117,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
 
   it("sur un téléphone : la remise réflexe, et l'axe de travail qui va avec", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    await enseignantSousLicence(contexte);
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );
@@ -181,6 +192,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
 
   it("la liste mène à tous les épisodes, et le deuxième se joue jusqu'au bilan", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    await enseignantSousLicence(contexte);
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );
@@ -246,6 +258,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
 describe("les niveaux de difficulté", () => {
   it("en Expert : enquête courte, pas de conseil, une seule vérification, et le bilan le dit", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
+    await enseignantSousLicence(page.context());
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11&niveau=expert`);
     await expect.poll(() => page.getByLabel("Expert", { exact: false }).isChecked()).toBe(true);
     await bouton(page, "Commencer l'épisode").click();
@@ -286,6 +299,7 @@ describe("les niveaux de difficulté", () => {
 
   it("en Découverte : des repères, et l'effet de chaque choix tout de suite", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
+    await enseignantSousLicence(page.context());
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
     await choisir(page, "Découverte");
     await bouton(page, "Commencer l'épisode").click();

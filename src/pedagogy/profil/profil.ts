@@ -568,7 +568,10 @@ function bilanDEntree(
   dejaJoues: ReadonlySet<string>,
   episodes: readonly Episode[],
 ): Recommandation[] {
-  return BILAN_D_ENTREE.filter((code) => !dejaJoues.has(code)).map((code, i) => {
+  const proposes = BILAN_D_ENTREE.filter(
+    (code) => !dejaJoues.has(code) && episodes.some((e) => e.code === code),
+  );
+  return proposes.map((code, i) => {
     const ep = episodes.find((e) => e.code === code)!;
     return {
       code,
@@ -591,10 +594,18 @@ function bilanDEntree(
 export function construireProfil(
   parties: readonly PartieEnregistree[],
   episodes: readonly Episode[] = EPISODES,
-  /** La compétence que la personne a choisi de travailler ; elle prime sur celle du profil. */
-  options: { objectif?: CodeCompetence | null } = {},
+  /**
+   * `objectif` : la compétence que la personne a choisi de travailler ; elle prime sur
+   * celle du profil. `proposables` : les épisodes que la personne peut lancer (sans
+   * licence, les seules démonstrations) ; la recommandation et « où l'observer » ne
+   * proposent qu'eux. Les parties déjà jouées comptent toutes, quelles qu'elles soient.
+   */
+  options: { objectif?: CodeCompetence | null; proposables?: (code: string) => boolean } = {},
 ): Profil {
   const { comptees, ignorees } = trierLesParties(parties, episodes);
+  const aProposer = options.proposables
+    ? episodes.filter((ep) => options.proposables!(ep.code))
+    : episodes;
   const toutes = comptees.flatMap((p) => p.observations);
   const dejaJoues = new Set(parties.map((p) => p.code));
 
@@ -618,7 +629,7 @@ export function construireProfil(
       points,
       observations: os,
       preuve: preuve(competence.code, os),
-      ouLObserver: os.length === 0 ? ouLObserver(competence.code, dejaJoues, episodes) : [],
+      ouLObserver: os.length === 0 ? ouLObserver(competence.code, dejaJoues, aProposer) : [],
     };
   }).sort(
     (a, b) =>
@@ -702,14 +713,14 @@ export function construireProfil(
         lignes.find((l) => l.competence.code === cible.competence)!.score,
         dejaJoues,
         famillesJouees,
-        episodes,
+        aProposer,
       )
-    : bilanDEntree(dejaJoues, episodes);
+    : bilanDEntree(dejaJoues, aProposer);
   // Le bilan d'entrée déjà joué en Découverte : on passe directement à la recommandation.
   const suite =
     recommandations.length > 0
       ? recommandations
-      : recommander("R2", null, dejaJoues, famillesJouees, episodes);
+      : recommander("R2", null, dejaJoues, famillesJouees, aProposer);
 
   return {
     comptees,

@@ -50,6 +50,7 @@ import {
 import { trancherDemande } from "@/services/subvention.service";
 import { affecterEleve } from "@/services/affectation.service";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
+import { NiveauReserveError } from "@/services/acces.service";
 
 export interface FormState {
   error: string | null;
@@ -155,8 +156,8 @@ const optionalRate = (raw: FormDataEntryValue | null): number | undefined => {
  * de connexion, qui renvoie aussitôt vers /teacher puisque la session est
  * valide. L'enseignant revenait sur sa liste, sans partie et sans un mot.
  */
-function echecCreation(raison: string): never {
-  redirect(`/teacher?echec=${encodeURIComponent(raison)}`);
+function echecCreation(raison: string, offre = false): never {
+  redirect(`/teacher?echec=${encodeURIComponent(raison)}${offre ? "&offre=1" : ""}`);
 }
 
 export async function createClassGameAction(formData: FormData): Promise<void> {
@@ -236,7 +237,11 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       roundsCount: parsed.roundsCount,
     }));
   } catch (erreur) {
-    echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.");
+    // Un niveau fermé sans licence : la page ajoute le lien vers les tarifs.
+    echecCreation(
+      erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.",
+      erreur instanceof NiveauReserveError,
+    );
   }
   redirect(`/teacher/games/${gameId}`);
 }

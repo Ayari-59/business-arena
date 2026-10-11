@@ -6,7 +6,17 @@ import {
 import Link from "next/link";
 import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
-import { ATELIERS, atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
+import { atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
+import { getSession } from "@/lib/session";
+import { getGuestUserId } from "@/lib/guest";
+import { getPlatformConfig } from "@/services/admin.service";
+import { unCompteSousLicence } from "@/services/acces.service";
+import {
+  LIEN_TARIFS,
+  messageNiveauxReserves,
+  niveauReserve,
+  OFFRE_DES_NIVEAUX,
+} from "@/config/vitrine-solo";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
 import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
@@ -14,10 +24,12 @@ import { PrintButton } from "@/components/print-button";
 import { bouton } from "@/components/bouton";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
-/** Les ateliers sont une donnée figée : leurs pages se rendent à la construction. */
-export function generateStaticParams() {
-  return ATELIERS.map((a) => ({ code: a.code }));
-}
+/**
+ * Les ateliers sont une donnée figée, mais la fiche dit à qui la lit si la partie se crée
+ * à son niveau : sans licence, les niveaux fermés ne se créent pas (config/vitrine-solo.ts).
+ * Elle se rend donc à la demande, comme l'espace enseignant.
+ */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -101,6 +113,18 @@ export default async function AtelierPage({
   // s'écrire à la main.
   const tournoi = atelier.reglages.tournoi;
   const format = tournoi ? formatDuTournoi(tournoi) : null;
+  // UN ATELIER À UN NIVEAU FERMÉ SANS LICENCE : visible, avec son message, non lançable.
+  // Le serveur refuse de toute façon la création (createClassGame) ; la fiche le dit
+  // avant qu'on ait rempli le formulaire. Un concours ne se règle pas au niveau.
+  const [{ vitrineSolo }, session, invite] = await Promise.all([
+    getPlatformConfig(),
+    getSession(),
+    getGuestUserId(),
+  ]);
+  const niveauFerme =
+    !tournoi &&
+    niveauReserve(vitrineSolo, atelier.reglages.scenarioCode, atelier.reglages.niveau) &&
+    !(await unCompteSousLicence([session?.userId, invite]));
   // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
   // aussi pour un dixième processus face au deuxième.
   // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
@@ -357,11 +381,31 @@ export default async function AtelierPage({
             <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
               {atelier.reglages.notes}
             </p>
-            <Link href="/teacher" className={`${bouton()} mt-4 print:hidden`}>
-              {tournoi
-                ? "Organiser le concours dans mon espace enseignant"
-                : "Créer la partie dans mon espace enseignant"}
-            </Link>
+            {niveauFerme ? (
+              <p
+                data-atelier-ferme=""
+                className="mt-4 rounded-lg encadre-neutre px-3 py-2.5 text-sm leading-relaxed text-slate-200 print:hidden"
+              >
+                <strong className="font-semibold text-slate-100">
+                  Niveau {atelier.reglages.niveau} · {OFFRE_DES_NIVEAUX}.
+                </strong>{" "}
+                {messageNiveauxReserves(vitrineSolo)} Sans licence, la partie de cet atelier ne
+                se crée pas à son niveau.{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir les tarifs
+                </Link>
+              </p>
+            ) : (
+              <Link href="/teacher" className={`${bouton()} mt-4 print:hidden`}>
+                {tournoi
+                  ? "Organiser le concours dans mon espace enseignant"
+                  : "Créer la partie dans mon espace enseignant"}
+              </Link>
+            )}
           </div>
         </Section>
 

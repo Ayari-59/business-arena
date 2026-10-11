@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
+import { licenceDeLEnseignant } from "./helpers/licence";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { adosseAUnReferentiel } from "../../src/config/ateliers/referentiels";
 import { FORMATIONS, publicDeLAtelier } from "../../src/config/formations";
@@ -106,6 +107,12 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("il crée une partie de conseil, et la page de pilotage dit ses réglages", async () => {
+    // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement :
+    // l'établissement de ce parcours est sous licence, posée en base comme le ferait
+    // l'administrateur (la règle elle-même est gardée par acces.e2e.ts).
+    await licenceDeLEnseignant(EMAIL, "pose");
+    await aller(prof, "/teacher");
+    await ouvrirLaCreation(prof);
     // Au niveau 5, ATLAS CONSEIL se joue en gamme : trois offres, chacune à
     // son tarif, vendues par les mêmes consultants.
     await prof.selectOption('select[name="scenarioCode"]', "conseil");
@@ -382,6 +389,9 @@ describe("parcours enseignant et élève", () => {
         [EMAIL],
       );
       expect(rows.length, "établissement de l'enseignant introuvable").toBe(1);
+      // La licence en cours posée plus haut s'achève (le temps qui passe) : seule reste
+      // la licence échue, comme dans un établissement qui n'a pas renouvelé.
+      await licenceDeLEnseignant(EMAIL, "retire");
       await base.query(
         `insert into org_licences (organization_id, label, starts_at, ends_at)
          values ($1, 'Licence échue', now() - interval '400 days', now() - interval '5 days')`,

@@ -25,6 +25,7 @@ import {
 import { getTeamSituations, unlockHint } from "@/services/pedagogy.service";
 import { novaScenario } from "@/config/scenarios/nova";
 import type { EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -48,6 +49,10 @@ beforeAll(async () => {
   if ("error" in result) throw new Error(result.error);
   teacherId = result.userId;
   const orgId = (await getTeacherOrgId(teacherId))!;
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : cet
+  // établissement est sous licence (la règle elle-même est gardée par
+  // acces-sans-licence.test.ts).
+  await poserUneLicence(orgId, teacherId);
   const game = await createClassGame({
     teacherId,
     organizationId: orgId,

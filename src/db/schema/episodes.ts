@@ -11,7 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { id } from "./_shared";
-import { users } from "./identity";
+import { organizations, users } from "./identity";
 
 /**
  * LES PARTIES D'ÉPISODES MANAGER, telles qu'elles ont été jouées.
@@ -69,6 +69,14 @@ export const episodeCohortes = pgTable("episode_cohortes", {
   nom: text("nom").notNull(),
   /** La clé du lien de l'animateur : elle ouvre la vue agrégée, rien d'autre. */
   cleAnimateur: text("cle_animateur").notNull().unique(),
+  /**
+   * L'organisation de l'animateur, celle qui a acheté le programme. Sous licence, ses
+   * membres jouent tous les épisodes ; sans organisation ou sans licence, les seules
+   * démonstrations (config/episodes/demos.ts). Rattachée depuis /admin/cohortes.
+   */
+  organizationId: uuid("organization_id").references(() => organizations.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

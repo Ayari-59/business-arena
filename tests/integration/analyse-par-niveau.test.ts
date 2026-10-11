@@ -23,6 +23,7 @@ import { getTeamSituations, submitDiagnosis, submitQuiz } from "@/services/pedag
 import { situationByCode } from "@/config/scenarios/registry";
 import { mesurerLAnalyseSolo } from "@/services/mesure-analyse.service";
 import type { RoundDecisions } from "@/engine/types";
+import { placerSousLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -44,6 +45,10 @@ beforeAll(async () => {
       .values({ email: "analyse-niveau@test.local", displayName: "Joueur" })
       .returning({ id: users.id })
   )[0]!.id;
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : ce
+  // joueur est un enseignant d'un établissement sous licence (la règle elle-même est
+  // gardée par acces-sans-licence.test.ts).
+  await placerSousLicence(userId);
   facile = await createSoloGame(userId, "quarter", 3, 1);
   decouverte = await createSoloGame(userId, "quarter", 3, 3);
   standard = await createSoloGame(userId, "quarter", 3, 4);

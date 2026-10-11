@@ -11,7 +11,7 @@ import {
 import { seedDemoWorld } from "@/services/demo.service";
 import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
 import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
-import { normaliserVitrine } from "@/config/vitrine-solo";
+import { normaliserVitrine, vitrineAEnregistrer, VERSION_DE_LA_REGLE } from "@/config/vitrine-solo";
 import { answerFormatFromProfile } from "@/config/difficulty";
 
 export async function createEstablishmentAction(formData: FormData): Promise<void> {
@@ -31,11 +31,16 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
     allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
     soloAnswerFormat: answerFormatFromProfile({ answerFormat: formData.get("soloAnswerFormat") }),
-    vitrineSolo: normaliserVitrine({
-      active: formData.get("vitrineActive") === "on",
-      entrepriseOuverte: formData.get("vitrineEntreprise"),
-      niveauMaxAutres: formData.get("vitrineNiveauMax"),
-    }),
+    // Les niveaux ouverts sans licence : enregistrés avec la version de la règle, qui
+    // seule fait foi (config/vitrine-solo.ts).
+    vitrineSolo: vitrineAEnregistrer(
+      normaliserVitrine({
+        version: VERSION_DE_LA_REGLE,
+        active: formData.get("vitrineActive") === "on",
+        entrepriseOuverte: formData.get("vitrineEntreprise"),
+        niveauMaxAutres: formData.get("vitrineNiveauMax"),
+      }),
+    ),
     announcement: String(formData.get("announcement") ?? "").trim(),
     contactEmail: String(formData.get("contactEmail") ?? "").trim(),
     // Ce qui se publie du relevé d'usage sur /enseignants. Un compteur exact

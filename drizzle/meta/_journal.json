@@ -246,6 +246,13 @@
       "when": 1790145357440,
       "tag": "0033_objectif_du_manager",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1790231757440,
+      "tag": "0034_cohorte_sous_licence",
+      "breakpoints": true
     }
   ]
 }
