@@ -18,18 +18,26 @@ let contexte: BrowserContext;
 let page: Page;
 let avant: unknown = null;
 
-async function reglerVitrine(valeur: unknown | null): Promise<void> {
+/*
+ * La vitrine solo se règle dans la Découverte du catalogue (/admin/offres, réglage
+ * `decouverte` de `catalogue_reglages`, migration 0041) : c'est elle que lit
+ * `getPlatformConfig`. L'ancien `platform_settings.vitrineSolo` n'est plus qu'un repli
+ * de lecture ; le régler ici ne changeait plus rien.
+ */
+async function reglerVitrine(solo: unknown | null): Promise<void> {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL manquante : ce test règle la vitrine en base");
   const c = new Client({ connectionString: url });
   await c.connect();
   try {
-    const ligne = await c.query("select settings from platform_settings where id = 1");
-    const settings = { ...(ligne.rows[0]?.settings ?? {}) } as Record<string, unknown>;
-    if (valeur === null) delete settings.vitrineSolo;
-    else settings.vitrineSolo = valeur;
-    if (ligne.rows.length) await c.query("update platform_settings set settings = $1 where id = 1", [settings]);
-    else await c.query("insert into platform_settings (id, settings) values (1, $1)", [settings]);
+    const ligne = await c.query("select valeur from catalogue_reglages where cle = 'decouverte'");
+    const valeur = { ...(ligne.rows[0]?.valeur ?? {}) } as Record<string, unknown>;
+    if (solo === null) delete valeur.solo;
+    else valeur.solo = solo;
+    await c.query(
+      "insert into catalogue_reglages (cle, valeur) values ('decouverte', $1) on conflict (cle) do update set valeur = excluded.valeur",
+      [valeur],
+    );
   } finally {
     await c.end();
   }
@@ -39,8 +47,8 @@ async function lireVitrine(): Promise<unknown> {
   const c = new Client({ connectionString: process.env.DATABASE_URL });
   await c.connect();
   try {
-    const ligne = await c.query("select settings from platform_settings where id = 1");
-    return (ligne.rows[0]?.settings as Record<string, unknown> | undefined)?.vitrineSolo ?? null;
+    const ligne = await c.query("select valeur from catalogue_reglages where cle = 'decouverte'");
+    return (ligne.rows[0]?.valeur as Record<string, unknown> | undefined)?.solo ?? null;
   } finally {
     await c.end();
   }
@@ -48,7 +56,7 @@ async function lireVitrine(): Promise<unknown> {
 
 beforeAll(async () => {
   avant = await lireVitrine();
-  await reglerVitrine({ version: 2, active: true, entrepriseOuverte: "nova", niveauMaxAutres: 3 });
+  await reglerVitrine({ active: true, entrepriseOuverte: "nova", niveauMaxAutres: 3 });
   navigateur = await ouvrirNavigateur();
   contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
   await contexte.addInitScript(() => localStorage.setItem("install-prompt-ferme-le", String(Date.now())));
