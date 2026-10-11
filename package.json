@@ -27,7 +27,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@node-saml/node-saml": "^5.1.0",
     "@types/pg": "^8.23.1",
+    "@xmldom/xmldom": "^0.8.15",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.1",
     "exceljs": "^4.4.0",
@@ -36,6 +38,8 @@
     "qrcode-generator": "^2.0.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "xml-crypto": "^6.3.3",
+    "xpath": "^0.0.34",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -44,6 +48,7 @@
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/xml-encryption": "^1.2.4",
     "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^17.2.4",
     "drizzle-kit": "^0.31.10",
@@ -54,6 +59,7 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "xml-encryption": "^3.1.0"
   }
 }

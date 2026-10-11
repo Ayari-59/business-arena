@@ -122,7 +122,7 @@ describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {
   });
 
   it("/teacher, /arena, /admin, /org, /profile, /compete : noindex, nofollow par layout", async () => {
-    for (const espace of ["teacher", "arena", "admin", "org", "profile", "compete", "lti"]) {
+    for (const espace of ["teacher", "arena", "admin", "org", "profile", "compete", "lti", "etablissement"]) {
       const m = await meta(`/${espace}/layout`);
       expect(m.robots, espace).toMatchObject({ index: false, follow: false });
     }

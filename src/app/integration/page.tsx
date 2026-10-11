@@ -5,6 +5,7 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { SITE_URL } from "@/config/site";
 import { adressesDeLOutil, DUREE_JETON_INSCRIPTION_JOURS } from "@/lti/constantes";
+import { adressesDuSp, ATTRIBUTS_DEMANDES, entityIdDuSp } from "@/saml/constantes";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/integration" },
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
  */
 
 const A = adressesDeLOutil(SITE_URL);
+const SP = adressesDuSp(SITE_URL);
 
 function Section({ id, titre, children }: { id: string; titre: string; children: React.ReactNode }) {
   return (
@@ -150,6 +152,50 @@ export default function IntegrationPage() {
               l&apos;intérieur d&apos;une autre page. Réglé en « Nouvelle fenêtre », l&apos;outil s&apos;ouvre à côté
               du cours. Réglé autrement, il affiche un bouton « Ouvrir Business Arena » qui fait la même chose.
             </p>
+          </Section>
+
+          <Section id="renater" titre="Se connecter avec l'établissement (RENATER)">
+            <p>
+              Disponible pour les établissements de la Fédération Éducation-Recherche : universités, écoles et
+              organismes reliés à RENATER. Sur la page de connexion des enseignants, sur l&apos;entrée par code et
+              sur l&apos;invitation d&apos;une cohorte, un bouton « Se connecter avec mon établissement » mène au
+              service de découverte de RENATER. On y choisit son établissement, on s&apos;identifie chez lui avec
+              ses identifiants habituels, et l&apos;on revient sur Business Arena.
+            </p>
+            <ul className="list-disc space-y-2 pl-6">
+              <li>
+                <strong className="text-slate-100">L&apos;enseignant ou le personnel</strong> d&apos;un établissement
+                client arrive dans son espace enseignant, rattaché à l&apos;organisation de l&apos;établissement : sa
+                licence s&apos;applique telle quelle. Le compte est créé à la première connexion.
+              </li>
+              <li>
+                <strong className="text-slate-100">L&apos;étudiant</strong> retrouve ses parties et sa cohorte sur
+                n&apos;importe quel appareil, sans code de reprise. S&apos;il vient d&apos;un code de partie ou
+                d&apos;une invitation de cohorte, il y revient pour rejoindre.
+              </li>
+              <li>
+                Un établissement de la fédération qui n&apos;a pas encore d&apos;offre : l&apos;enseignant le lit, avec
+                les tarifs et la demande de devis ; l&apos;étudiant joue comme invité.
+              </li>
+            </ul>
+            <p>Les données reçues de l&apos;établissement :</p>
+            <ul className="list-disc space-y-2 pl-6">
+              {ATTRIBUTS_DEMANDES.map((a) => (
+                <li key={a.nom}>
+                  <code className="font-mono text-sm text-slate-100">{a.nom}</code> : {a.pourquoi}
+                </li>
+              ))}
+            </ul>
+            <p>
+              L&apos;identifiant est pseudonyme et propre à Business Arena ; nous n&apos;en gardons qu&apos;une
+              empreinte chiffrée. Aucun nom ni courriel d&apos;étudiant n&apos;est conservé. Pour votre service
+              informatique, le fournisseur de services :
+            </p>
+            <dl className="rounded-lg border border-white/10 px-3">
+              <Adresse libelle="entityID" valeur={entityIdDuSp(SITE_URL)} />
+              <Adresse libelle="Métadonnées" valeur={SP.metadonnees} />
+              <Adresse libelle="ACS (HTTP-POST)" valeur={SP.acs} />
+            </dl>
           </Section>
 
           <Section id="licence" titre="Ce que la connexion ouvre">

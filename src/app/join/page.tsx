@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinForm } from "@/components/join-form";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
+import { ConnexionEtablissement } from "@/components/connexion-etablissement";
 import { getGuestDisplayName, getGuestUserId } from "@/lib/guest";
 import { normaliserCodeDePartie, normaliserRangDEquipe } from "@/lib/code-de-partie";
 import { promesseDuCarton } from "@/services/game.service";
@@ -72,6 +73,13 @@ export default async function JoinPage({
       <JoinForm
         codeInitial={codeInitial}
         equipeInitiale={carton?.deplacera ? rang : null}
+      />
+      {/* L'étudiant d'une université ou d'une école de la fédération RENATER peut se
+          connecter avec son établissement : il revient ici, code compris, et son
+          identité le suit sur tout appareil. Absent si la connexion n'est pas configurée. */}
+      <ConnexionEtablissement
+        retour={codeInitial ? `/join?code=${codeInitial}` : "/join"}
+        className="w-full max-w-sm justify-items-center text-center"
       />
       <Link href="/guide" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
         Première fois ? Consultez le guide de prise en main

@@ -46,6 +46,9 @@ const PAGES_INTERIEURES = [
   "src/app/lti/activite/page.tsx",
   "src/app/lti/eleve/page.tsx",
   "src/app/lti/refus/page.tsx",
+  "src/app/etablissement/parties/page.tsx",
+  "src/app/etablissement/sans-offre/page.tsx",
+  "src/app/etablissement/refus/page.tsx",
 ];
 
 describe("l'en-tête des pages intérieures", () => {

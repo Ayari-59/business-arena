@@ -12,3 +12,4 @@ export * from "./devis";
 export * from "./integrations";
 export * from "./episodes";
 export * from "./lti";
+export * from "./saml";

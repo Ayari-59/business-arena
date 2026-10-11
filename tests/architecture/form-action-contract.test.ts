@@ -144,6 +144,16 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/admin/lti/page.tsx"],
   },
   {
+    nom: "étudiant RENATER : un code de partie ou de cohorte",
+    action: { file: "src/app/etablissement/parties/actions.ts", fn: "rejoindreParCodeAction" },
+    sources: ["src/app/etablissement/parties/page.tsx"],
+  },
+  {
+    nom: "établissement RENATER rattaché (/admin/renater)",
+    action: { file: "src/app/admin/renater/actions.ts", fn: "rattacherAction" },
+    sources: ["src/app/admin/renater/page.tsx"],
+  },
+  {
     nom: "lancement d'une partie publique",
     action: { file: "src/app/actions.ts", fn: "startGameAction" },
     // Les champs vivent dans le composant client de config rapide, qui les

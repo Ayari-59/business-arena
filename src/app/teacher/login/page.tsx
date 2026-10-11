@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { TeacherAuthForms } from "@/components/teacher-auth-forms";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
+import { ConnexionEtablissement } from "@/components/connexion-etablissement";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,9 @@ export default async function TeacherLoginPage() {
       />
       <div className={`${COLONNE_DE_PAGE} space-y-4 pb-16`}>
         <TeacherAuthForms />
+        {/* La connexion par l'établissement (RENATER), si elle est configurée : un
+            bouton secondaire, sous les formulaires habituels. */}
+        <ConnexionEtablissement className="pt-2" />
         <p className="text-sm text-slate-400">
           <Link
             href="/guide#enseignants"

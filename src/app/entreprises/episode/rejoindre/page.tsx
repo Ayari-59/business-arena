@@ -4,6 +4,7 @@ import { GuardedForm } from "@/components/guarded-action";
 import { PiedDePage } from "@/components/pied-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
+import { ConnexionEtablissement } from "@/components/connexion-etablissement";
 import { cohorteParCode } from "@/services/cohortes.service";
 import { SEUIL_D_ANONYMAT } from "@/pedagogy/profil/cohorte";
 import { COHORTE_CLOSE } from "@/config/cohortes";
@@ -122,6 +123,9 @@ export default async function RejoindrePage({
                   Rejoindre la cohorte
                 </SubmitButton>
               </GuardedForm>
+              {/* Connecté avec son établissement (RENATER), l'étudiant retrouve son
+                  profil sur tout appareil : il revient ici, puis rejoint. */}
+              <ConnexionEtablissement retour={`/entreprises/episode/rejoindre?code=${encodeURIComponent(cohorte.code)}`} />
             </>
           ) : (
             <>

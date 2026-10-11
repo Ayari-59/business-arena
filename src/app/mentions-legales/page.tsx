@@ -184,6 +184,23 @@ export default function MentionsLegalesPage() {
                   </td>
                   <td className="py-2">Durée du rattachement de la plateforme</td>
                 </tr>
+                <tr className="border-t border-white/5" data-ligne-renater="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">
+                    Comptes reçus de la fédération RENATER
+                  </td>
+                  <td className="py-2 pr-3">
+                    Identifiant pseudonyme transmis par l&apos;établissement, gardé seulement sous
+                    forme d&apos;empreinte ; statut (étudiant ou personnel) ; établissement. Pour un
+                    enseignant ou un personnel seulement : nom affiché et courriel s&apos;ils sont
+                    transmis. Aucun nom ni courriel d&apos;étudiant.
+                  </td>
+                  <td className="py-2 pr-3">
+                    Reconnaître la personne et son établissement, appliquer la licence de
+                    l&apos;établissement, retrouver les parties de l&apos;étudiant sur tout appareil
+                    (exécution du service demandé)
+                  </td>
+                  <td className="py-2">Durée du compte</td>
+                </tr>
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Demandes de contact</td>
                   <td className="py-2 pr-3">
@@ -203,6 +220,12 @@ export default function MentionsLegalesPage() {
             données), Resend (envoi des e-mails), Google (agenda des rendez-vous) et, seulement
             si l&apos;assistant d&apos;IA est activé, Anthropic (réponses de l&apos;assistant à
             partir des justifications écrites par les joueurs).
+          </p>
+          <p data-federation-renater="">
+            Fédération Éducation-Recherche (RENATER) : RENATER n&apos;est pas un sous-traitant de
+            Business Arena. La fédération met en relation l&apos;établissement de la personne et
+            Business Arena ; c&apos;est l&apos;établissement qui authentifie la personne et décide
+            des attributs transmis.
           </p>
           <p data-plateformes-lti="">
             Plateformes LTI (Moodle, Canvas, Blackboard, Brightspace) : elles ne sont pas des
@@ -238,6 +261,11 @@ export default function MentionsLegalesPage() {
               <code className="font-mono text-slate-100">ba_lti_state</code> : l&apos;arrivée
               depuis une plateforme d&apos;enseignement, l&apos;activité lancée (4 heures) et la
               vérification de la connexion (10 minutes) ;
+            </li>
+            <li>
+              <code className="font-mono text-slate-100">ba_saml</code> : la vérification de la
+              connexion par l&apos;établissement (RENATER), le temps de l&apos;aller et retour (10
+              minutes au plus) ;
             </li>
             <li>
               <code className="font-mono text-slate-100">google_oauth_state</code> : réservé à

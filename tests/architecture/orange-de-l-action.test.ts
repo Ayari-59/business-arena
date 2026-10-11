@@ -71,6 +71,9 @@ function perimetre(): string[] {
     // une plateforme de cours (enseignant et élève).
     join(SRC, "app/integration/page.tsx"),
     ...tous(join(SRC, "app/lti")),
+    // La connexion par l'établissement (RENATER) : son bouton et ses écrans d'arrivée.
+    join(SRC, "components/connexion-etablissement.tsx"),
+    ...tous(join(SRC, "app/etablissement")),
   ];
   const vus = new Set<string>();
   const pile = [...departs];
