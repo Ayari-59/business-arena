@@ -19,6 +19,8 @@ import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situat
 import { CompositionEquipes } from "@/components/composition-equipes";
 import { SubventionsPanel } from "@/components/subventions-panel";
 import { DistributionCourrier } from "@/components/distribution-courrier";
+import { GazetteDuPilotage } from "@/components/gazette-du-pilotage";
+import { gazetteDuPilotage } from "@/services/gazette.service";
 import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
@@ -88,6 +90,9 @@ export default async function TeacherGamePage({
   // Qui joue dans quelle équipe : le seul écran d'où l'on répare une
   // affectation, et le seul recours d'un élève revenu d'un autre poste.
   const composition = await compositionDesEquipes(gameId);
+  // LA GAZETTE : l'article du tour en cours et l'aperçu du suivant, à
+  // remplacer ou à retirer avant que la classe ne l'ouvre.
+  const gazette = await gazetteDuPilotage(gameId, session.userId);
 
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
@@ -118,7 +123,10 @@ export default async function TeacherGamePage({
   const toursJoues = new Map<number, null>(
     view.rounds.filter((r) => r.status === "resolved").map((r) => [r.index, null]),
   );
-  const animer = (!finished && view.mode === "learning") || view.aidRequests.length > 0;
+  const animer =
+    (!finished && view.mode === "learning") ||
+    view.aidRequests.length > 0 ||
+    (gazette?.tours.length ?? 0) > 0;
 
   // COMBIEN DE TEMPS CE TOUR VA PRENDRE. L'estimation se calcule sur ce que la
   // partie demande vraiment (texte à lire, champs ouverts, situation) ; la
@@ -516,6 +524,13 @@ export default async function TeacherGamePage({
           touché le mur, puis le seul geste du jeu qui appartienne à l'animateur
           et à personne d'autre. */}
       <SubventionsPanel gameId={view.gameId} demandes={view.aidRequests} />
+
+      {gazette && gazette.tours.length > 0 ? (
+        <GazetteDuPilotage
+          gameId={view.gameId}
+          tours={gazette.tours.map((t) => ({ ...t, libelle: periodLabel(view.roundDays, t.tour) }))}
+        />
+      ) : null}
 
       {!finished && view.mode === "learning" ? (
         <DistributionCourrier

@@ -50,6 +50,8 @@ export function BilanDePartie({
   podium = null,
   lieu = null,
   merite = null,
+  presse = [],
+  revue = null,
   children,
 }: {
   /**
@@ -82,6 +84,14 @@ export function BilanDePartie({
    * les pose derrière `Suspense`) : voir `components/merite-de-la-partie.tsx`.
    */
   merite?: ReactNode;
+  /**
+   * CE QUE LA PRESSE ANNONÇAIT : une à trois lignes qui relient un article de
+   * la Gazette à ce qui s'est passé, puis à ce que l'équipe a décidé ce
+   * tour-là (`config/gazette/bilan`). Sans morale : un constat.
+   */
+  presse?: readonly string[];
+  /** La revue de presse de toute la partie, rangée dans son pli sous ces lignes. */
+  revue?: ReactNode;
   /** Les actions : rejouer, changer de métier. */
   children?: ReactNode;
 }) {
@@ -347,6 +357,19 @@ export function BilanDePartie({
                 </>
               )}
             </p>
+          ) : null}
+          {presse.length > 0 ? (
+            <div data-ce-que-la-presse-annoncait="" className="filet mt-4 border-t pt-3">
+              <h4 className="text-base font-semibold text-slate-100">Ce que la presse annonçait</h4>
+              <ul className="mt-1.5 space-y-1.5">
+                {presse.map((ligne) => (
+                  <li key={ligne} className="text-base leading-relaxed text-slate-300">
+                    {ligne}
+                  </li>
+                ))}
+              </ul>
+              {revue ? <div className="mt-3">{revue}</div> : null}
+            </div>
           ) : null}
         </div>
       </section>

@@ -31,6 +31,10 @@ import {
   updateRankings,
 } from "@/services/scoring.service";
 import { simulateRound } from "@/engine/simulation";
+import { articleDeLaGazette } from "@/config/gazette/generateur";
+import { profilAvecLaGazetteParue } from "@/config/gazette/edition";
+import { presetFromProfile } from "@/config/difficulty";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { subventionsAccordees } from "@/services/subvention.service";
 import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 import {
@@ -602,6 +606,33 @@ async function resolveGameRound(
       await openSituationsForRound(gameId, roundIndex + 1, output.results);
     }
 
+    // LA GAZETTE PARAÎT. L'article que la classe a lu pendant ce tour est
+    // recalculé sur les événements EXACTS passés au moteur (mêmes nouveaux, mêmes
+    // événements en cours) et figé dans le profil, pour l'archive et le bilan.
+    // Une Gazette qui échoue ne bloque jamais une clôture : le tour passe, le
+    // tour n'a simplement pas d'article archivé.
+    const profilApresGazette = await (async () => {
+      try {
+        const duMarche = (l: readonly EventInstance[]) => l.filter((e) => e.scope === "market");
+        const secteur = (await resolveScenarioDefinition(scenario.code)).sector;
+        const parue = articleDeLaGazette({
+          secteur,
+          scenario,
+          tour: roundIndex,
+          niveau: presetFromProfile(game.difficultyProfile).level,
+          graine: Number(game.seed),
+          nouveaux: duMarche([...injected, ...output.newEvents]),
+          enCours: duMarche(activeEvents),
+        });
+        return profilAvecLaGazetteParue(game.difficultyProfile, parue);
+      } catch (error) {
+        logResolutionStep(context, "Gazette non archivée", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return (game.difficultyProfile as object) ?? {};
+      }
+    })();
+
     // Avancement d'état seulement après succès complet du post-traitement
     await db
       .update(rounds)
@@ -619,7 +650,7 @@ async function resolveGameRound(
         currentRound: finished ? roundIndex : roundIndex + 1,
         status: finished ? "finished" : "running",
         difficultyProfile: {
-          ...(game.difficultyProfile as object),
+          ...profilApresGazette,
           activeEvents: output.events,
           pendingEvents: [],
           pendingEventCodes: undefined,

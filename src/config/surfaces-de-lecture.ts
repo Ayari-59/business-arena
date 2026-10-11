@@ -124,6 +124,14 @@ export const SURFACES_PAPIER: readonly SurfaceDeLecture[] = [
     preuve: { fichier: "components/tiroir.tsx", motif: /"papier tiroir-papier\b/ },
   },
   {
+    cle: "coupure-de-presse",
+    role: "papier",
+    porte: "components/coupure-de-presse.tsx",
+    raison:
+      "La Gazette de l'Arène est un article de journal : un titre et trois ou quatre lignes à lire, sur le papier des lettres, avec son bandeau de journal.",
+    preuve: { fichier: "components/coupure-de-presse.tsx", motif: /className=\{`papier coupure-de-presse/ },
+  },
+  {
     cle: "textes-du-bilan",
     role: "papier",
     porte: "components/bilan-de-partie.tsx (le reste du bilan)",
@@ -225,6 +233,14 @@ export interface InstanceDeRepli {
 const PAGE_CLAIRE = "Page claire hors de l'arène : le sol de la page fait déjà le papier.";
 
 export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
+  {
+    fichier: "components/coupure-de-presse.tsx",
+    composant: "Repliable",
+    repere: 'resume="Revue de presse"',
+    surface: "cockpit",
+    raison:
+      "La revue de presse range les numéros passés : le pli est posé sur le sol de l'arène, chaque article qu'il contient est sa propre feuille de papier.",
+  },
   // ── Les documents : papier ──
   {
     fichier: "components/situation-panel.tsx",

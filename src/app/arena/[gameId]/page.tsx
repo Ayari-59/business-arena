@@ -38,6 +38,10 @@ import { Embleme } from "@/components/embleme";
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
+import { CoupureDePresse, RevueDePresse } from "@/components/coupure-de-presse";
+import { codesRacontesParLaPresse, racontePar } from "@/config/gazette/edition";
+import { lignesDeLaPresse } from "@/config/gazette/bilan";
+import { NOM_DU_JOURNAL } from "@/config/gazette/types";
 import { TourSimule } from "@/components/tour-simule";
 import { TemoinDePartieJouee } from "@/components/temoin-de-partie-jouee";
 import { LigneEstimeEtReel } from "@/components/ecart-d-estimation";
@@ -252,6 +256,29 @@ export default async function ArenaPage({
     entreprise: view.intro.company,
     equipe: view.playerTeamName,
   });
+  // LA GAZETTE DE L'ARÈNE ET LA RÈGLE « PAS DE DOUBLON ». Un événement de
+  // marché que l'article raconte ne s'annonce pas une seconde fois : sa
+  // circulaire « tout le marché » se tait partout où l'élève la lirait (courrier
+  // distribué, bandeau, « encore en vigueur », bande de marché). Les plis
+  // adressés à l'entreprise ne bougent pas. Article remplacé ou retiré par
+  // l'enseignant : il ne raconte rien, les circulaires reviennent.
+  const racontesParLaPresse = codesRacontesParLaPresse(view.gazette);
+  const courriersAnnonces = view.courriersAnnonces.filter((c) => !racontePar(racontesParLaPresse, c));
+  const courriersEnCours = view.courriersEnCours.filter((c) => !racontePar(racontesParLaPresse, c));
+  const libelleDuTour = (tour: number) => periodLabel(view.roundDays, tour);
+  const coupureDuTour =
+    view.gazette.article && !finished ? (
+      <CoupureDePresse
+        article={view.gazette.article}
+        quand={libelleDuTour(view.currentRound)}
+        niveauDuTitre={2}
+        idDuTitre={`gazette-${view.currentRound}-classe`}
+      />
+    ) : null;
+  const revueDePresse =
+    view.gazette.revue.length > 0 ? (
+      <RevueDePresse articles={view.gazette.revue} libelle={libelleDuTour} />
+    ) : null;
   // LA PHRASE DE PRISE DE POSTE (lot P2), posée sur le lieu au tour 1 : la
   // promesse du registre (« Prenez les commandes »), puis la règle du jeu.
   // Rien d'inventé : le nombre de tours est celui de la partie.
@@ -411,15 +438,23 @@ export default async function ArenaPage({
           />
         </section>
       ) : null}
-      {view.courriersAnnonces.length > 0 ? (
+      {/* EN CLASSE, la Gazette ouvre « Ce qui a bougé » : il n'y a pas de
+          courrier du tour où la poser avant la lettre (en solo, elle y est). */}
+      {view.kind !== "solo" && (coupureDuTour || revueDePresse) ? (
+        <section aria-label="La presse du tour" className="space-y-3">
+          {coupureDuTour ? <div className="mx-auto w-full max-w-[40rem]">{coupureDuTour}</div> : null}
+          {revueDePresse}
+        </section>
+      ) : null}
+      {courriersAnnonces.length > 0 ? (
         // UN PANNEAU, PAS UN CADRE ORANGE (lot 6E) : ce n'est pas une action.
         <section className="panneau-info p-3 sm:p-5">
           <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
             <Icone nom="courrier" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
             Le courrier, en détail
           </p>
-          <div className={grilleDeCourriers(view.courriersAnnonces.length)}>
-            {view.courriersAnnonces.map((courrier, i) => (
+          <div className={grilleDeCourriers(courriersAnnonces.length)}>
+            {courriersAnnonces.map((courrier, i) => (
               <CourrierRecommande
                 key={`${courrier.code}-${courrier.teamId ?? "market"}`}
                 code={courrier.code}
@@ -450,9 +485,9 @@ export default async function ArenaPage({
         // CE QUI PÈSE ENCORE : une lettre qui vaut deux trimestres, reçue au
         // tour précédent, s'applique à celui-ci. L'équipe décide en le
         // sachant, pas en le découvrant aux résultats.
-        const encore = courriersQuiMeConcernent(view.courriersEnCours).map((c) => ({
+        const encore = courriersQuiMeConcernent(courriersEnCours).map((c) => ({
           ...c,
-          roundsLeft: view.courriersEnCours.find(
+          roundsLeft: courriersEnCours.find(
             (a) => a.code === c.code && a.teamId === c.teamId,
           )!.roundsLeft,
         }));
@@ -675,8 +710,9 @@ export default async function ArenaPage({
   // l'arbitrage. Une carte vide n'existe pas.
   const alertesPresentes =
     !!view.roundBriefing ||
-    view.courriersAnnonces.length > 0 ||
-    courriersQuiMeConcernent(view.courriersEnCours).length > 0;
+    courriersAnnonces.length > 0 ||
+    courriersQuiMeConcernent(courriersEnCours).length > 0 ||
+    (view.kind !== "solo" && (coupureDuTour !== null || revueDePresse !== null));
   const alerteTresorerieNode = view.alerteTresorerie ? (
     <div>
       <AlerteTresorerie
@@ -1164,7 +1200,9 @@ export default async function ArenaPage({
                       periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                       plis={view.upcomingDraw}
                       adresse={adresseDuCourrier}
+                      gazette={view.gazette}
                     />
+                    {revueDePresse ? <div className="mt-4">{revueDePresse}</div> : null}
                   </div>
                 ) : null;
   const etatDesDecisions = view.pendingDecisionsPar ? (
@@ -1456,9 +1494,9 @@ export default async function ArenaPage({
       {telephone || finished ? null : alerteTresorerieNode}
 
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
-      {!telephone && !finished && view.courriersAnnonces.length > 0 ? (
+      {!telephone && !finished && courriersAnnonces.length > 0 ? (
         <div>
-          <BandeauCourriers courriers={view.courriersAnnonces} />
+          <BandeauCourriers courriers={courriersAnnonces} />
         </div>
       ) : null}
 
@@ -1533,6 +1571,19 @@ export default async function ArenaPage({
                     : null
                 }
                 lieu={{ scenario: view.scenarioCode, secteur: view.sector }}
+                presse={lignesDeLaPresse({
+                  articles: [...view.gazette.revue].reverse(),
+                  decisions: periods.map((p) => ({
+                    tour: p.round,
+                    price: p.decisions?.price ?? null,
+                    productionPlan: p.decisions?.productionPlan ?? null,
+                    newLoan: p.decisions?.finance?.newLoan ?? null,
+                  })),
+                  libelle: libelleDuTour,
+                  unites: view.vocabulary.units,
+                  nomDuJournal: NOM_DU_JOURNAL,
+                })}
+                revue={revueDePresse}
                 merite={
                   // MÉRITE OU CHANCE (solo) : rejouer vos décisions sur d'autres
                   // marchés prend de l'ordre d'une seconde. Le bilan s'affiche

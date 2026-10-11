@@ -14,6 +14,9 @@ import { courrierDeRoutine } from "@/config/courriers/routine";
 import type { DestinataireDuCourrier } from "@/config/courriers/destinataire";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
 import { Icone } from "@/components/icone";
+import { CoupureDePresse } from "@/components/coupure-de-presse";
+import { NOM_DU_JOURNAL, type ArticleDeLaGazette } from "@/config/gazette/types";
+import { codesRacontesParLaPresse, racontePar } from "@/config/gazette/edition";
 
 /**
  * LE COURRIER DU TRIMESTRE, VÉCU.
@@ -59,8 +62,9 @@ export function CourrierDuTour({
   gameId,
   round,
   periodeLabel,
-  plis,
+  plis: plisRecus,
   adresse,
+  gazette = null,
   ouvert: ouvertInitial = false,
   classe: classeInitial = false,
 }: {
@@ -75,6 +79,14 @@ export function CourrierDuTour({
   periodeLabel: string;
   /** Les courriers qui tomberont sur cette équipe : marché et adressés à elle. */
   plis: readonly PliDuTour[];
+  /**
+   * LA GAZETTE DU TOUR : la coupure de presse, posée AVANT la lettre. Quand
+   * elle porte le marché (l'article du journal, ni remplacé ni retiré), elle
+   * raconte les événements « tout le marché » : leurs circulaires se taisent,
+   * pour qu'une même nouvelle ne s'annonce pas deux fois. Le courrier ne garde
+   * que les plis adressés à l'entreprise (ou, à défaut, sa routine).
+   */
+  gazette?: { article: ArticleDeLaGazette | null; porteLeMarche: boolean } | null;
   /** Enveloppe déjà ouverte d'emblée (tests, aperçus). */
   ouvert?: boolean;
   /** Déjà classé et replié d'emblée (tests, aperçus). */
@@ -95,6 +107,14 @@ export function CourrierDuTour({
   const prendreNote = () => memoire.retenir(cle, "2");
   const relire = () => memoire.retenir(cle, "1");
 
+  // PAS DE DOUBLON : la circulaire d'un événement de marché est reprise par la
+  // Gazette. Elle ne revient que si l'article n'est pas celui du journal.
+  const racontes = codesRacontesParLaPresse(gazette);
+  const plis = plisRecus.filter((p) => !racontePar(racontes, p));
+  const article = gazette?.article ?? null;
+  // La presse annonce-t-elle quelque chose (et pas seulement la saison) ?
+  const presseAnnonce =
+    article !== null && (article.auteur === "enseignant" || article.sujets.some((x) => x.sujet !== "calme"));
   // Le courrier de routine : ce que le facteur apporte un trimestre calme.
   const routine = courrierDeRoutine(gameId, round);
   const vide = plis.length === 0;
@@ -110,9 +130,14 @@ export function CourrierDuTour({
           <Icone nom="courrier" className="mr-1.5 h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
           Courrier du {periodeLabel} :{" "}
           <span className="text-slate-300">
-            {vide
-              ? routine.objet
-              : plis.map((p) => courrierParCode.get(p.code)?.objet ?? p.code).join(" · ")}
+            {[
+              article ? `${NOM_DU_JOURNAL}, « ${article.titre} »` : null,
+              ...(vide
+                ? [routine.objet]
+                : plis.map((p) => courrierParCode.get(p.code)?.objet ?? p.code)),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </span>
         </span>
         <button
@@ -163,7 +188,9 @@ export function CourrierDuTour({
         <p className="text-xs text-slate-400">
           {ouvert
             ? vide
-              ? "Rien qui engage ce trimestre : le courrier se classe, et la décision reprend la main."
+              ? presseAnnonce
+                ? "La presse dit ce qui attend tout le marché ; votre courrier, lui, n'engage rien ce trimestre."
+                : "Rien qui engage ce trimestre : le courrier se classe, et la décision reprend la main."
               : `${plis.length > 1 ? `${plis.length} courriers pèsent` : "Un courrier pèse"} sur ce tour : décidez en le sachant.`
             : "Le facteur est passé. Ouvrez le courrier avant de décider."}
         </p>
@@ -202,6 +229,15 @@ export function CourrierDuTour({
           {/* La place de l'enveloppe : la mesure se fait sur la largeur de la
               section (`courrier-pose-seul`, une requête de conteneur), pas sur
               celle de l'écran. */}
+          {/* LA PRESSE D'ABORD : ce qui attend tout le marché, puis ce qui
+              est adressé à l'entreprise. Dans la colonne de la lettre (centrée,
+              40 rem), au-dessus de la rangée enveloppe et lettre : l'enveloppe
+              posée reste à côté de SA lettre. */}
+          {article ? (
+            <div className="coupure-posee mx-auto mb-5 w-full sm:max-w-[40rem]">
+              <CoupureDePresse article={article} quand={quand} niveauDuTitre={enParcours ? 2 : 3} />
+            </div>
+          ) : null}
           <div className={seul && !enParcours ? "courrier-pose-seul" : ""}>
           <div className={seul && !enParcours ? "courrier-pose-seul-grille" : ""}>
           {seul && !enParcours ? (

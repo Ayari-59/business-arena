@@ -55,6 +55,7 @@ import {
   readPendingEvents,
 } from "@/services/round-resolution.service";
 import { classementOuvert } from "@/config/rideau-classement";
+import { gazetteDeLaPartie, type GazetteDuTour } from "@/services/gazette.service";
 import { pseudoAffichable } from "@/config/invite";
 import type { GameKind } from "@/services/game-creation.service";
 
@@ -199,6 +200,13 @@ export interface GameView {
    * résultats.
    */
   upcomingDraw: { code: string; teamId: string | null; isMyTeam: boolean }[];
+  /**
+   * LA GAZETTE DE L'ARÈNE : la coupure de presse du tour en cours (null quand
+   * l'enseignant ne l'a pas publiée, ou la partie finie), et la revue de presse
+   * des tours clos. `porteLeMarche` : l'article est celui du journal, il raconte
+   * les événements de marché ; les circulaires « tout le marché » se taisent.
+   */
+  gazette: GazetteDuTour;
   lastResult: CompanyRoundResult | null;
   /**
    * Tous les tours RÉSOLUS, du plus ancien au plus récent : de quoi rebâtir le
@@ -1668,6 +1676,14 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           isMyTeam: e.scope === "company" && e.companyId === playerTeam.id,
         }));
     })(),
+    gazette: await gazetteDeLaPartie({
+      id: game.id,
+      seed: game.seed,
+      currentRound: game.currentRound,
+      status: game.status,
+      difficultyProfile: game.difficultyProfile,
+      scenarioSnapshot: game.scenarioSnapshot,
+    }),
     lastResult,
     periods,
     // Rapport extra-financier (Lot 3) : synthèse indicative dérivée de tous les

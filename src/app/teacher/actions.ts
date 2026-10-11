@@ -48,6 +48,7 @@ import {
   TAGLINE_MAX,
 } from "@/config/concours-public";
 import { trancherDemande } from "@/services/subvention.service";
+import { consignerLaGazette } from "@/services/gazette.service";
 import { affecterEleve } from "@/services/affectation.service";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 import { OffreRequiseError } from "@/services/acces.service";
@@ -741,6 +742,45 @@ export async function distribuerCourrierAction(
     return { error: null, codeDistribue: distribue };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur.", codeDistribue: null };
+  }
+}
+
+export interface GazetteState {
+  error: string | null;
+  /** Le tour dont la consigne vient d'être prise (le formulaire se referme). */
+  fait: number | null;
+}
+
+/**
+ * LA GAZETTE, ENTRE LES MAINS DE L'ENSEIGNANT : remplacer l'article d'un tour
+ * par le sien, ne rien publier, ou rendre la main au journal. Tout se contrôle
+ * côté serveur (`consignerLaGazette`) : propriétaire, partie de classe en
+ * cours, tour en cours ou suivant, longueur bornée.
+ */
+export async function consignerLaGazetteAction(
+  gameId: string,
+  _prev: GazetteState,
+  formData: FormData,
+): Promise<GazetteState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée.", fait: null };
+  const tour = Number(formData.get("tour"));
+  const brut = String(formData.get("mode") ?? "");
+  const mode = brut === "retire" || brut === "retablir" ? brut : "remplace";
+  try {
+    const r = await consignerLaGazette({
+      gameId,
+      teacherId: session.userId,
+      tour,
+      mode,
+      titre: formData.get("titre"),
+      texte: formData.get("texte"),
+    });
+    if (!r.ok) return { error: r.erreur, fait: null };
+    revalidatePath(`/teacher/games/${gameId}`);
+    return { error: null, fait: tour };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur.", fait: null };
   }
 }
 

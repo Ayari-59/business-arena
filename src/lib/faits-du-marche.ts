@@ -1,5 +1,6 @@
 import { formatEuro, formatPercent, MOINS } from "@/lib/format";
 import type { GameView } from "@/services/game-view.service";
+import { codesRacontesParLaPresse, racontePar } from "@/config/gazette/edition";
 
 /**
  * LES FAITS DU MARCHÉ VIENNENT TOUS DE LA PARTIE — RIEN N'EST INVENTÉ.
@@ -23,7 +24,8 @@ import type { GameView } from "@/services/game-view.service";
  *   · saison / demande          — seasonNotes (coef du tour ; l'écart affiché est
  *                                 la déviation à une saison normale, pas un écart
  *                                 au tour passé, et c'est dit comme tel)
- *   · événement en cours        — courriersEnCours (fait, non chiffré)
+ *   · événement en cours        — courriersEnCours (fait, non chiffré), moins
+ *                                 ceux que la Gazette raconte (pas de doublon)
  *   · rang                      — ranking (gated classement.revele ; le rang du
  *                                 tour passé n'est pas stocké)
  *
@@ -206,7 +208,12 @@ export function faitsDuMarche(view: GameView): FaitDuMarche[] {
   }
 
   // ── Événement en cours ──
-  const enCours = view.courriersEnCours.filter((c) => c.isMyTeam || c.teamId === null);
+  // PAS DE DOUBLON : un événement de marché que la Gazette raconte ne se
+  // recompte pas ici ; la bande ne garde que ce que la presse ne dit pas.
+  const racontes = codesRacontesParLaPresse(view.gazette);
+  const enCours = view.courriersEnCours.filter(
+    (c) => (c.isMyTeam || c.teamId === null) && !racontePar(racontes, c),
+  );
   if (enCours.length > 0) {
     const prochaineFin = Math.min(...enCours.map((c) => c.roundsLeft));
     faits.push({

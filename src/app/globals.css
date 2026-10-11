@@ -4280,6 +4280,92 @@ main[data-ecran-de-jeu] {
   }
 }
 
+/* ───────────────────────────── LA COUPURE DE PRESSE ──────────────────────── */
+
+/* LA GAZETTE DE L'ARÈNE (components/coupure-de-presse.tsx). Même famille de
+   papier que les lettres (`.papier` : blanc, encre, filet, ombre, couleurs en
+   dur) ; ce qui la distingue se voit avant de lire : le bandeau du journal et
+   son double filet, la rubrique en petites capitales, des caractères de presse
+   (une famille à empattements du système, aucune police à charger). Posée sur
+   le bureau comme une lettre, inclinée d'un rien, jamais sur téléphone. */
+.coupure-de-presse {
+  font-family: Georgia, "Times New Roman", "Liberation Serif", serif;
+  padding: 1rem 1.125rem 1.125rem;
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 0.22),
+    0 3px 6px -2px rgb(0 0 0 / 0.24),
+    0 18px 34px -18px rgb(0 0 0 / 0.55);
+}
+.coupure-de-presse .coupure-bandeau {
+  text-align: center;
+  border-bottom: 3px double var(--encre);
+  padding-bottom: 0.375rem;
+  margin-bottom: 0.625rem;
+}
+.coupure-de-presse .coupure-journal {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: var(--encre);
+}
+.coupure-de-presse .coupure-date {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  margin-top: 0.125rem;
+}
+.coupure-de-presse .coupure-rubrique {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--encre-tenue);
+  border-top: 1px solid #dbe2ee;
+  display: inline-block;
+  padding-top: 0.125rem;
+}
+/* Le titre est un `h2` ou un `h3` : la couche de base lui donne la grotesque
+   des titres, et l'écran de jeu son interligne de sous-titre. Ici, c'est une
+   manchette de journal : la famille de la coupure, l'interligne d'un titre. */
+.papier.coupure-de-presse .coupure-titre {
+  font-family: inherit;
+  font-size: 1.3125rem;
+  font-weight: 700;
+  line-height: 1.22;
+  margin-top: 0.25rem;
+  color: var(--encre);
+  text-wrap: balance;
+}
+.coupure-de-presse .coupure-chapo {
+  font-size: 1rem;
+  line-height: 1.55;
+  margin-top: 0.5rem;
+  hyphens: auto;
+}
+.coupure-de-presse.coupure-compacte {
+  padding: 0.75rem 0.875rem;
+  box-shadow: 0 6px 16px -14px rgb(11 37 69 / 0.4);
+}
+.papier.coupure-de-presse.coupure-compacte .coupure-titre {
+  font-size: 1.0625rem;
+}
+.coupure-de-presse.coupure-compacte .coupure-chapo {
+  font-size: 0.9375rem;
+}
+@media (min-width: 640px) {
+  .coupure-posee {
+    transform: rotate(0.4deg);
+  }
+}
+@media print {
+  .coupure-posee {
+    transform: none;
+  }
+}
+
 /* ─────────────────────────────── LOT P4 — FINITIONS ─────────────────────── */
 
 /* UNE SEULE LIGNE D'EN-TÊTE SUR TÉLÉPHONE. Dans l'arène, sous 640 px, la barre
