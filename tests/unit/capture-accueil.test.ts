@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { EPISODE_DE_L_ACCUEIL, PARTIE_D_EXEMPLE } from "@/components/accueil-arene";
 import { formatEuro } from "@/lib/format";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
+import { estUneDemo } from "@/config/episodes/demos";
 
 /**
  * LA COLONNE DE DROITE DE L'ACCUEIL MONTRE L'APPLICATION, SANS LA REJOUER.
@@ -213,6 +214,10 @@ describe("les captures de la page d'accueil", () => {
     // faux au prochain épisode ajouté.
     expect(composant).toContain("{EPISODES.length} épisodes");
     expect(composant).not.toContain(`${EPISODES.length} épisodes`);
+  });
+
+  it("la carte d'épisode de l'accueil mène à une démo gratuite : le visiteur n'a pas de licence", () => {
+    expect(estUneDemo(EPISODE_DE_L_ACCUEIL), EPISODE_DE_L_ACCUEIL).toBe(true);
   });
 
   it("racontent le même tour, et la légende le dit", () => {

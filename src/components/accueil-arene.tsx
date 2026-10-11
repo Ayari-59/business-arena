@@ -55,8 +55,11 @@ export const PARTIE_D_EXEMPLE = {
   ],
 } as const;
 
-/** L'épisode que la carte propose : le quarante-neuvième, celui de la maquette. */
-export const EPISODE_DE_L_ACCUEIL = "chambres-bradees";
+/**
+ * L'épisode que la carte propose. C'est une démo gratuite : la vitrine parle au
+ * visiteur sans licence, et un épisode fermé lui montrerait un mur.
+ */
+export const EPISODE_DE_L_ACCUEIL = "brigade-a-bout";
 
 const P = PARTIE_D_EXEMPLE;
 const RANG = P.classement.findIndex((l) => l.equipe === P.equipe) + 1;
