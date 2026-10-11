@@ -1,3 +1,5 @@
+import { BoutonCopierLeMessage } from "@/components/bouton-copier-le-message";
+import { messageDeLaPartie } from "@/lib/message-cahier-de-textes";
 import Link from "next/link";
 import { mentionDeValidation } from "@/config/validation-du-tour";
 import { dureeDuTour } from "@/config/duree-du-tour";
@@ -292,6 +294,17 @@ export default async function TeacherGamePage({
             Les élèves rejoignent sur <span className="font-mono text-slate-100">/join</span> avec
             ce code, répartis automatiquement dans les {compter(humanTeams.length, "équipe")}.
           </p>
+          {view.joinCode ? (
+            <div className="mt-2">
+              <BoutonCopierLeMessage
+                message={messageDeLaPartie(
+                  view.scenarioTitle,
+                  urlDeJonction(view.joinCode),
+                  view.joinCode,
+                )}
+              />
+            </div>
+          ) : null}
           {/* Le classement dit qui gagne ; l'observation dit si la classe joue
               encore et ce qu'un tour lui coûte. Deux questions, deux écrans. */}
           <span className="mt-1 flex flex-wrap gap-x-4 gap-y-1">

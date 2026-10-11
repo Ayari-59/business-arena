@@ -12,6 +12,8 @@ import { NOM_DE_COHORTE_MAX } from "@/config/cohortes";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { BoutonCopierLeLien } from "@/components/bouton-copier-le-lien";
+import { BoutonCopierLeMessage } from "@/components/bouton-copier-le-message";
+import { messageDeLaCohorte } from "@/lib/message-cahier-de-textes";
 import { CodeQr } from "@/components/code-qr";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
@@ -158,6 +160,7 @@ export default async function MaCohortePage({
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-2">
               <BoutonCopierLeLien lien={lien} />
+              <BoutonCopierLeMessage message={messageDeLaCohorte(cohorte.nom, lien, cohorte.code)} />
               <Link
                 href={`/teacher/cohortes/${cohorte.id}/projection`}
                 className={bouton({ variante: "lien" })}
