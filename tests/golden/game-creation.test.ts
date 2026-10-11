@@ -21,7 +21,7 @@ import {
   createSoloGame,
   createClassGame,
 } from "@/services/game-creation.service";
-import { etablissementSousLicence } from "../integration/helpers/licence";
+import { etablissementSousLicence, poserUneLicence } from "../integration/helpers/licence";
 
 let userId: string;
 let orgId: string;
@@ -39,6 +39,8 @@ beforeAll(async () => {
     .values({ name: "Test Org", slug: "test-creation", kind: "school" })
     .returning({ id: organizations.id });
   orgId = org[0]!.id;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, userId);
 });
 
 describe("1 — création solo", () => {

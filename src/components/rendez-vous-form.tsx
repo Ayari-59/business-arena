@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { JourDeCreneaux } from "@/lib/creneaux";
 import { DUREE_MINUTES } from "@/config/rendez-vous";
+import { VENDEUR } from "@/config/editeur";
 import { reserverRendezVousAction, type RendezVousFormState } from "@/app/rendez-vous/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
@@ -101,11 +102,29 @@ export function RendezVousForm({
           className="rounded-lg encadre-neutre px-3 py-3 text-sm leading-relaxed text-slate-100"
         >
           ✓ Rendez-vous confirmé : <strong className="font-semibold">{state.ok.quand}</strong>. Nous vous
-          appelons au numéro indiqué ; une confirmation part à {state.ok.email}
-          {state.ok.dansAgenda ? ", suivie d'une invitation d'agenda" : ""}.
+          appelons au numéro indiqué.{" "}
+          {/* LA VÉRITÉ SUR LE COURRIEL (audit PAR-06) : la confirmation n'est annoncée que
+              si elle est partie ; sinon, la page dit de noter le créneau. */}
+          {state.ok.confirmationEnvoyee ? (
+            <>
+              Une confirmation est partie à {state.ok.email}
+              {state.ok.dansAgenda ? ", suivie d'une invitation d'agenda" : ""}.
+            </>
+          ) : (
+            <span data-confirmation-non-envoyee="">
+              Aucun courriel de confirmation n&apos;a pu partir : notez ce créneau.
+            </span>
+          )}
         </p>
         <p className="text-sm text-slate-400">
-          Un empêchement ? Répondez à la confirmation, le créneau se déplace sans façon.
+          {state.ok.confirmationEnvoyee ? (
+            "Un empêchement ? Répondez à la confirmation, le créneau se déplace sans façon."
+          ) : (
+            <>
+              Un empêchement ? Écrivez à{" "}
+              <span className="select-all font-semibold text-slate-200">{VENDEUR.contact}</span>.
+            </>
+          )}
         </p>
         <Link href="/orientation" className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
           En attendant, voir quelle simulation conviendrait à votre classe

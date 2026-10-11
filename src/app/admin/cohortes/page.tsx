@@ -10,6 +10,7 @@ import { listerCohortes, organisationsPourLesCohortes } from "@/services/cohorte
 import { EPISODES_DE_DEMO } from "@/config/episodes/demos";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import type { LicenceState } from "@/services/licence.service";
+import { OFFRES } from "@/config/tarifs";
 import {
   creerCohorteAction,
   rattacherCohorteAction,
@@ -30,10 +31,10 @@ function ceQuOuvreLaCohorte(
   }
   if (licence === "active" || licence === "bientot_expiree") {
     return episodes
-      ? `Sous licence : les membres jouent ${episodes.length > 1 ? `les ${episodes.length} épisodes` : "l'épisode"} de la cohorte, et les démonstrations.`
-      : "Sous licence : les membres jouent tous les épisodes.";
+      ? `Licence épisodes en cours : les membres jouent ${episodes.length > 1 ? `les ${episodes.length} épisodes` : "l'épisode"} de la cohorte, et les démonstrations.`
+      : "Licence épisodes en cours : les membres jouent tous les épisodes.";
   }
-  return `Sans licence en cours : les membres ne jouent que les ${EPISODES_DE_DEMO.length} démonstrations, en Découverte.`;
+  return `Sans licence épisodes en cours : les membres ne jouent que les ${EPISODES_DE_DEMO.length} démonstrations, en Découverte.`;
 }
 
 export const dynamic = "force-dynamic";
@@ -105,9 +106,11 @@ export default async function CohortesAdminPage({
         <h2 className="text-lg font-bold text-slate-50">Créer une cohorte</h2>
         <p className="max-w-2xl text-sm text-slate-400">
           Un nom qui dit l&apos;entreprise, le groupe et la période : il s&apos;affiche aux managers
-          sur la page d&apos;invitation. L&apos;organisation est celle de l&apos;animateur : sous
-          licence, elle ouvre tous les épisodes aux membres ; sans licence, ils ne jouent que les
-          démonstrations. Les licences se posent depuis la page Plateforme.
+          sur la page d&apos;invitation. L&apos;organisation est celle de l&apos;animateur : si sa
+          licence en cours inclut les épisodes manager, elle ouvre tous les épisodes aux membres ;
+          sinon (aucune licence, ou une licence {OFFRES.classe.nom} ou {OFFRES.campus.nom} seule), ils ne jouent que les
+          démonstrations. Les licences se posent depuis la page Plateforme, case « Épisodes
+          manager ».
         </p>
         <GuardedForm action={creerCohorteAction} label="création d'une cohorte">
           <div className="flex flex-wrap items-end gap-3">

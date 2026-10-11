@@ -31,6 +31,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 /**
  * La décision qui coule une entreprise : produire beaucoup, vendre à perte,
@@ -59,6 +60,8 @@ beforeAll(async () => {
   if ("error" in r) throw new Error(r.error);
   prof = r.userId;
   const orgId = (await getTeacherOrgId(prof))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
   // Niveau 3 : le financement est ouvert, donc la trésorerie est jouable.
   const partie = await createClassGame({
     teacherId: prof,

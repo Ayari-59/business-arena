@@ -1,5 +1,6 @@
 import { NOM_DU_SITE, DESCRIPTION_ACCUEIL } from "@/config/seo";
 import { SITE_URL } from "@/config/site";
+import { VENDEUR } from "@/config/editeur";
 
 /**
  * CE QUE LE SITE DIT DE LUI-MÊME À UNE MACHINE.
@@ -17,7 +18,7 @@ import { SITE_URL } from "@/config/site";
  *
  * · Pas de `SearchAction` : le site n'a pas de recherche, et annoncer une
  *   fonction qui n'existe pas est un mensonge comme un autre.
- * · Pas d'`offers` ni de prix : il y a un palier gratuit ET des licences.
+ * · Pas d'`offers` ni de prix : toutes les offres se vendent sur devis (/tarifs donne des prix de référence).
  *   Écrire « price: 0 » pour le produit entier serait faux.
  * · Pas d'`aggregateRating` : personne n'a noté quoi que ce soit.
  * · Pas de `sameAs` : aucun compte public à citer.
@@ -51,13 +52,13 @@ const GRAPHE = {
       url: SITE_URL,
       description: DESCRIPTION_ACCUEIL,
       // L'entité qui édite et vend : celle des mentions légales.
-      legalName: "Mohamed AYARI EI (MA Formation et Conseils)",
-      email: "contact@business-arena.fr",
+      legalName: `${VENDEUR.exploitant} (${VENDEUR.nom})`,
+      email: VENDEUR.contact,
       address: {
         "@type": "PostalAddress",
-        streetAddress: "44 rue Bonte Pollet",
-        postalCode: "59000",
-        addressLocality: "Lille",
+        streetAddress: VENDEUR.adresse.rue,
+        postalCode: VENDEUR.adresse.codePostal,
+        addressLocality: VENDEUR.adresse.ville,
         addressCountry: "FR",
       },
       logo: {

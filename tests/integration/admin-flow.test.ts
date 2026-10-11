@@ -38,6 +38,7 @@ import {
   validerContrastes,
   THEME_DU_SITE_PAR_DEFAUT,
 } from "@/config/theme-du-site";
+import { poserUneLicence } from "./helpers/licence";
 
 let platformAdminId: string;
 let orgId: string;
@@ -155,6 +156,8 @@ describe("déploiement d'un établissement", () => {
   });
 
   it("les parties de l'enseignant apparaissent dans le tableau de bord de l'établissement", async () => {
+    // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+    await poserUneLicence(orgId, orgAdminId);
     await createClassGame({
       teacherId,
       organizationId: orgId,

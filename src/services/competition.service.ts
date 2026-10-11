@@ -22,7 +22,7 @@ import {
 } from "@/config/reprise";
 import { garderLesTentatives } from "@/services/reprise.service";
 import { createGameCore } from "@/services/game-creation.service";
-import { entitlementsForOrg } from "@/services/entitlements.service";
+import { verifierLaClasse } from "@/services/acces.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import type { Periodicity } from "@/config/scenarios/periodicity";
 
@@ -61,13 +61,10 @@ export async function createCompetition(args: {
   groupSize: number;
   advancePerGroup: number;
 }): Promise<{ competitionId: string; joinCode: string }> {
-  // Palier gratuit : le mode concours est réservé à l'offre établissement.
-  const ent = await entitlementsForOrg(args.organizationId);
-  if (!ent.competitions) {
-    throw new Error(
-      "Les concours sont réservés à l'offre établissement. Activez une licence pour les ouvrir.",
-    );
-  }
+  // « Pas d'essai en classe » : un concours ne se CRÉE que sous licence de l'arène en
+  // cours (offre Classe ou Campus). Un concours déjà créé se poursuit : ses phases et
+  // leurs parties ne repassent pas par ici.
+  await verifierLaClasse(args.organizationId);
   const { getOrCreateNovaScenarioIdPublic } = await import("./game-creation.service");
   const scenarioId = await getOrCreateNovaScenarioIdPublic();
   const joinCode = makeCode();

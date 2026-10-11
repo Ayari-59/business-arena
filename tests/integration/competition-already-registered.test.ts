@@ -15,6 +15,7 @@ import { db } from "@/db";
 import { competitionEntries, users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { createCompetition, getCompetitionView, joinCompetition } from "@/services/competition.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let joinCode: string;
 let competitionId: string;
@@ -29,6 +30,8 @@ beforeAll(async () => {
   });
   if ("error" in r) throw new Error(r.error);
   const orgId = (await getTeacherOrgId(r.userId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, r.userId);
   ({ competitionId, joinCode } = await createCompetition({
     organizerId: r.userId,
     organizationId: orgId,

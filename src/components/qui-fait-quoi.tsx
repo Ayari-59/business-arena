@@ -14,11 +14,10 @@ import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
  * enseignant » : le troisième niveau n'existait nulle part avant la section
  * « Côté établissements » du guide, repliée dans un accordéon.
  *
- * CE N'EST PAS UNE GRILLE DE TARIFS. Le produit a un palier gratuit et des
- * licences, mais ce qui est ouvert ou fermé se règle dans la configuration de
- * plateforme et vaut « tout ouvert » par défaut : écrire ici ce qui est
- * payant serait faux la plupart du temps. Chaque colonne dit donc ce que son
- * rôle FAIT, pas ce qu'il coûte.
+ * CE N'EST PAS UNE GRILLE DE TARIFS. Ce qui est gratuit et ce qui se vend vit
+ * dans config/tarifs.ts, et ce qu'une licence ouvre se vérifie dans
+ * services/acces.service.ts : l'écrire ici en ferait une seconde source.
+ * Chaque colonne dit donc ce que son rôle FAIT, pas ce qu'il coûte.
  *
  * ET CE N'EST PAS NON PLUS « PAR OÙ COMMENCER », qui vit plus bas sur la même
  * page. L'un répond « où vais-je », l'autre « qui suis-je ici » : la bande des

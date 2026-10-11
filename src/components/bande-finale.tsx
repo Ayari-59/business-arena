@@ -43,6 +43,7 @@ export function BandeFinale({
   titre,
   texte,
   mentions,
+  prix,
   children,
 }: {
   /** L'identifiant de la bande au registre (config/bandes.ts) : « enseignants.finale ». */
@@ -53,6 +54,11 @@ export function BandeFinale({
   texte: string;
   /** Ce qui lève une objection au moment de cliquer : « sans compte élève ». */
   mentions?: { label: string; desc: string }[];
+  /**
+   * La ligne de prix et son lien vers /tarifs (audit C-07) : la page la passe, lue dans
+   * config/tarifs.ts (`LIGNE_DE_PRIX`), jamais écrite à la main.
+   */
+  prix?: React.ReactNode;
   /** Les liens d'action, propres à chaque page. */
   children: React.ReactNode;
 }) {
@@ -68,6 +74,11 @@ export function BandeFinale({
       <div data-cta-principal className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         {children}
       </div>
+      {prix ? (
+        <p data-ligne-de-prix="" className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-slate-300">
+          {prix}
+        </p>
+      ) : null}
       {mentions?.length ? (
         <ul className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-400">
           {mentions.map((m) => (

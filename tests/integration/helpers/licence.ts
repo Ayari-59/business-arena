@@ -1,5 +1,16 @@
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { setOrgLicence } from "@/services/licence.service";
+import type { OffreDeLArene } from "@/config/tarifs";
+
+/**
+ * Le périmètre d'une licence de test (migration 0036) : par défaut l'arène en offre
+ * Campus, SANS les épisodes, comme une licence Classe ou Campus vendue. Les tests qui
+ * ouvrent des épisodes non démo le demandent (`{ episodes: true }`).
+ */
+export interface PerimetreDeTest {
+  arene?: OffreDeLArene | null;
+  episodes?: boolean;
+}
 
 /**
  * UN ÉTABLISSEMENT SOUS LICENCE, POUR LES TESTS QUI JOUENT AU-DELÀ DE LA DÉCOUVERTE.
@@ -16,6 +27,7 @@ let compteur = 0;
 
 export async function etablissementSousLicence(
   nom = "Sous licence",
+  perimetre: PerimetreDeTest = {},
 ): Promise<{ userId: string; orgId: string }> {
   compteur += 1;
   const r = await registerTeacher({
@@ -33,12 +45,18 @@ export async function etablissementSousLicence(
     startsAt: new Date(Date.now() - 10 * JOUR),
     endsAt: new Date(Date.now() + 300 * JOUR),
     maxTeachers: null,
+    arene: perimetre.arene === undefined ? "campus" : perimetre.arene,
+    episodes: perimetre.episodes ?? false,
   });
   return { userId: r.userId, orgId };
 }
 
 /** Poser une licence en cours sur un établissement déjà créé par le test. */
-export async function poserUneLicence(organizationId: string, adminId: string): Promise<void> {
+export async function poserUneLicence(
+  organizationId: string,
+  adminId: string,
+  perimetre: PerimetreDeTest = {},
+): Promise<void> {
   await setOrgLicence({
     adminId,
     organizationId,
@@ -46,6 +64,8 @@ export async function poserUneLicence(organizationId: string, adminId: string): 
     startsAt: new Date(Date.now() - 10 * JOUR),
     endsAt: new Date(Date.now() + 300 * JOUR),
     maxTeachers: null,
+    arene: perimetre.arene === undefined ? "campus" : perimetre.arene,
+    episodes: perimetre.episodes ?? false,
   });
 }
 
@@ -53,7 +73,7 @@ export async function poserUneLicence(organizationId: string, adminId: string): 
  * Rattacher un compte, comme enseignant, à un établissement sous licence : ses parties
  * solo se créent alors à tous les niveaux, comme celles d'un enseignant connecté.
  */
-export async function placerSousLicence(userId: string): Promise<void> {
+export async function placerSousLicence(userId: string, perimetre: PerimetreDeTest = {}): Promise<void> {
   const { db } = await import("@/db");
   const { organizationMembers, organizations } = await import("@/db/schema");
   compteur += 1;
@@ -62,5 +82,20 @@ export async function placerSousLicence(userId: string): Promise<void> {
     .values({ name: `Établissement sous licence ${compteur}`, slug: `sous-licence-${compteur}-${Date.now()}` })
     .returning({ id: organizations.id });
   await db.insert(organizationMembers).values({ userId, organizationId: org!.id, role: "teacher" });
-  await poserUneLicence(org!.id, userId);
+  await poserUneLicence(org!.id, userId, perimetre);
+}
+
+const dejaSousLicence = new Set<string>();
+
+/**
+ * L'établissement d'un enseignant, placé sous licence de l'arène la première fois qu'on
+ * le demande : pas d'essai en classe, la partie de classe et le concours en ont besoin.
+ */
+export async function etablissementDeLEnseignantSousLicence(userId: string): Promise<string> {
+  const orgId = (await getTeacherOrgId(userId))!;
+  if (!dejaSousLicence.has(orgId)) {
+    dejaSousLicence.add(orgId);
+    await poserUneLicence(orgId, userId);
+  }
+  return orgId;
 }

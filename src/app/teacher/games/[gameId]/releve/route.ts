@@ -1,6 +1,8 @@
 import { getSession } from "@/lib/session";
 import { getGameGradeSheet } from "@/services/pedagogy.service";
-import { entitlementsForUser } from "@/services/entitlements.service";
+import { releveOuvert } from "@/services/acces.service";
+import { getTeacherOrgId } from "@/services/auth.service";
+import { REFUS_DU_RELEVE } from "@/config/tarifs";
 
 /**
  * Le relevé de notes en tableur, une ligne par élève.
@@ -60,20 +62,18 @@ export async function GET(
   const session = await getSession();
   if (!session) return new Response("Connexion requise.", { status: 401 });
 
-  // Palier gratuit : l'export du relevé est réservé à l'offre établissement.
-  const ent = await entitlementsForUser(session.userId);
-  if (!ent.gradebookExport) {
-    return new Response(
-      "L'export du relevé de notes est réservé à l'offre établissement.",
-      { status: 402 },
-    );
-  }
-
   const { gameId } = await params;
   const releve = await getGameGradeSheet(gameId, session.userId);
   // Une partie qui n'est pas la sienne se lit comme une partie qui n'existe
   // pas : le service ne dit pas non plus laquelle des deux.
   if (!releve) return new Response("Partie introuvable.", { status: 404 });
+
+  // Le relevé suit la règle de la classe (services/acces.service.ts) : une licence de
+  // l'arène en cours, ou la fin récente d'une licence (les résultats restent
+  // téléchargeables le temps que disent les conditions de vente).
+  if (!(await releveOuvert(await getTeacherOrgId(session.userId)))) {
+    return new Response(`${REFUS_DU_RELEVE} Voir les tarifs : /tarifs`, { status: 402 });
+  }
 
   const lignes = [COLONNES.join(";")];
   for (const equipe of releve.teams) {

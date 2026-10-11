@@ -4,16 +4,17 @@ import { useState, type ReactNode } from "react";
 import { sansMolette } from "@/components/sans-molette";
 import {
   aDeuxEtages,
-  messageNiveauxReserves,
   niveauMaxPour,
   niveauxFermes,
-  OFFRE_DES_NIVEAUX,
   VITRINE_SOLO_PAR_DEFAUT,
   type VitrineSolo,
 } from "@/config/vitrine-solo";
 import { Icone } from "@/components/icone";
 import { TuileDuLieu } from "@/components/tuile-du-lieu";
 import type { Sector } from "@/config/scenarios/registry";
+
+/** Sans texte passé par la page : une marque neutre (les noms vivent dans config/tarifs.ts). */
+const OFFRE_PAR_DEFAUT = { marque: "Offre payante", message: "Ces niveaux sont inclus dans les offres payantes." };
 
 /**
  * Les champs de la configuration rapide, en version tactile : cartes de secteur,
@@ -102,6 +103,7 @@ export function QuickConfigFields({
   vitrine,
   licence = false,
   liens,
+  offre = OFFRE_PAR_DEFAUT,
   lancement,
 }: {
   scenarios: QuickScenario[];
@@ -114,8 +116,13 @@ export function QuickConfigFields({
   vitrine?: VitrineSolo;
   /** Une licence en cours couvre-t-elle qui joue ? Elle ouvre tous les niveaux. */
   licence?: boolean;
-  /** Où lire ce qu'ouvrent les offres (les tarifs), ou entrer côté enseignant. */
-  liens?: { tarifs: { href: string; libelle: string }; enseignant: { href: string; libelle: string } };
+  /** Où lire ce qu'ouvrent les offres (les tarifs). */
+  liens?: { tarifs: { href: string; libelle: string } };
+  /**
+   * Le nom de l'offre qui ouvre les niveaux fermés, et la phrase qui le dit : lus dans
+   * config/tarifs.ts par la page serveur (ce composant client n'importe pas la grille).
+   */
+  offre?: { marque: string; message: string };
   /** Le bouton qui lance la partie, posé dans le résumé collant (un seul à l'écran). */
   lancement?: ReactNode;
 }) {
@@ -288,7 +295,7 @@ export function QuickConfigFields({
               key={l.level}
               type="button"
               onClick={() => setLevel(Math.min(l.level, niveauMax))}
-              aria-label={`Niveau ${l.level} · ${l.name}${reserve ? ` · ${OFFRE_DES_NIVEAUX}` : ""}`}
+              aria-label={`Niveau ${l.level} · ${l.name}${reserve ? ` · ${offre.marque}` : ""}`}
               className={`px-1 text-xs tabular-nums ${
                 l.level === level
                   ? "font-bold text-slate-50"
@@ -313,9 +320,9 @@ export function QuickConfigFields({
           <p>
             <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
             <strong className="font-semibold text-slate-100" data-offre-des-niveaux="">
-              {niveauxFermes(regle)} · {OFFRE_DES_NIVEAUX}
+              {niveauxFermes(regle)} · {offre.marque}
             </strong>{" "}
-            {messageNiveauxReserves(regle)}
+            {offre.message}
             {aDeuxEtages(regle)
               ? ` ${scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "Une entreprise"} se joue à tous les niveaux.`
               : null}
@@ -324,9 +331,6 @@ export function QuickConfigFields({
             <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
               <a href={liens.tarifs.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
                 {liens.tarifs.libelle} →
-              </a>
-              <a href={liens.enseignant.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
-                {liens.enseignant.libelle} →
               </a>
             </p>
           ) : null}

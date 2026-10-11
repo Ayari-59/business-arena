@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, BrowserContext, Page } from "playwright-core";
+import { licenceDeLEnseignant } from "./helpers/licence";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
 import { mesurerContraste } from "./helpers/contraste";
 
@@ -81,6 +82,10 @@ describe("la révélation du classement en projection", () => {
     await prof.fill('input[name="password"]', MOTDEPASSE);
     await prof.getByRole("button", { name: "Créer mon compte enseignant" }).click();
     await prof.waitForURL(/\/teacher$/, { timeout: 60_000 });
+    // Pas d'essai en classe : la partie de classe demande une licence de l'arène en
+    // cours, posée en base comme le ferait l'administrateur (helpers/licence.ts).
+    await licenceDeLEnseignant(EMAIL, "pose", { arene: "classe" });
+    await aller(prof, "/teacher");
 
     await prof.selectOption('select[name="humanTeamsCount"]', "2");
     await prof.selectOption('select[name="botCount"]', "4");

@@ -22,7 +22,7 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 import {
   createClassGame,
@@ -33,6 +33,7 @@ import {
   NOM_PARTIE_MAX,
   submitTeamDecisions,
 } from "@/services/game.service";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 let prof: string;
 let gameId: string;
@@ -71,7 +72,7 @@ beforeAll(async () => {
   prof = r.userId;
   const partie = await createClassGame({
     teacherId: prof,
-    organizationId: (await getTeacherOrgId(prof))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(prof),
     periodicity: "quarter",
     humanTeamsCount: 2,
     botCount: 1,

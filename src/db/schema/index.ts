@@ -8,5 +8,6 @@ export * from "./scoring";
 export * from "./competition";
 export * from "./orientation";
 export * from "./rendez-vous";
+export * from "./devis";
 export * from "./integrations";
 export * from "./episodes";

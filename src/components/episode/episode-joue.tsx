@@ -21,8 +21,6 @@ import { VerdictDuMarche, type SensDUnEcart } from "@/components/verdict-du-marc
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 import { nombre } from "@/config/episodes/format";
-import { OFFRE_DES_EPISODES } from "@/config/episodes/demos";
-import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import {
   NIVEAUX,
   NIVEAU_PAR_DEFAUT,
@@ -304,11 +302,24 @@ function Suite({
 
 /* ------------------------------------------------------------------------- */
 
+/**
+ * Ce qui ouvre les niveaux fermés d'une démonstration, lu dans config/tarifs.ts par la
+ * page serveur. Nul : on ne vend rien (une licence couvre déjà, ou c'est un élève).
+ */
+export interface OffreDesEpisodes {
+  marque: string;
+  nom: string;
+  devis: string;
+  libelle: string;
+}
+
 export function EpisodeJoue({
   code,
   niveaux = NIVEAUX.map((n) => n.code),
+  offre = null,
 }: {
   code: string;
+  offre?: OffreDesEpisodes | null;
   /**
    * Les niveaux auxquels l'épisode se lance, établis par le serveur
    * (services/acces.service.ts) : sans licence, une démonstration ne se joue qu'en
@@ -509,6 +520,7 @@ export function EpisodeJoue({
               ep={ep}
               niveau={choisi}
               niveaux={niveaux}
+              offre={offre}
               onNiveau={(n) => maj(() => ({ niveau: n }))}
               onCommencer={() => commencer(null)}
             />
@@ -595,12 +607,14 @@ function Intro({
   ep,
   niveau,
   niveaux,
+  offre,
   onNiveau,
   onCommencer,
 }: {
   ep: Episode;
   niveau: CodeNiveau;
   niveaux: readonly CodeNiveau[];
+  offre: OffreDesEpisodes | null;
   onNiveau: (n: CodeNiveau) => void;
   onCommencer: () => void;
 }) {
@@ -662,22 +676,35 @@ function Intro({
                   className="grid gap-0.5 rounded-lg border border-white/5 px-4 py-3"
                 >
                   <span className="text-slate-300">
-                    {n.nom} · <span className="font-semibold">{OFFRE_DES_EPISODES}</span>
+                    {n.nom}
+                    {offre ? (
+                      <>
+                        {" "}
+                        · <span className="font-semibold">{offre.marque}</span>
+                      </>
+                    ) : null}
                   </span>
                   <span className="text-sm text-slate-400">{n.resume}</span>
                 </li>
               ))}
             </ul>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
-              Démonstration gratuite : elle se joue en {NIVEAUX.find((n) => n.code === niveaux[0])?.nom ?? "Découverte"}.
-              Les autres niveaux, et tous les épisodes, sont inclus dans l&apos;offre Entreprise.{" "}
-              <Link
-                href={LIEN_TARIFS}
-                prefetch={false}
-                className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
-              >
-                Voir les tarifs
-              </Link>
+              Démonstration gratuite : elle se joue en {NIVEAUX.find((n) => n.code === niveaux[0])?.nom ?? "Découverte"}.{" "}
+              {offre ? (
+                <>
+                  Les autres niveaux, et tous les épisodes, sont inclus dans l&apos;offre{" "}
+                  {offre.nom}, sur devis.{" "}
+                  <Link
+                    href={offre.devis}
+                    prefetch={false}
+                    className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                  >
+                    {offre.libelle}
+                  </Link>
+                </>
+              ) : (
+                "Les autres niveaux ne sont pas ouverts sur cet appareil."
+              )}
             </p>
           </>
         )}

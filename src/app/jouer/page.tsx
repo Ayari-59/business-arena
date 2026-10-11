@@ -12,8 +12,8 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
 import { getGuestUserId } from "@/lib/guest";
 import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
-import { liensDAcces } from "@/config/navigation";
-import { LIEN_TARIFS, messageNiveauxReserves } from "@/config/vitrine-solo";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { MARQUE_DE_L_ARENE, messageNiveauxReserves } from "@/config/tarifs";
 import { getSession } from "@/lib/session";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
@@ -183,13 +183,10 @@ export default async function JouerPage({
                   })}
                   vitrine={config.vitrineSolo}
                   licence={licence}
-                  liens={{
-                    tarifs: { href: LIEN_TARIFS, libelle: "Voir les tarifs" },
-                    enseignant: {
-                      href: liensDAcces().find((l) => l.acces === "enseignant")!.href,
-                      libelle: "Accéder à l'espace enseignant",
-                    },
-                  }}
+                  // L'encadré des niveaux fermés ne propose QUE les tarifs : un compte
+                  // enseignant n'ouvre pas les niveaux 4 à 6, une licence le fait (PAR-14).
+                  liens={{ tarifs: { href: LIEN_TARIFS, libelle: "Voir les tarifs" } }}
+                  offre={{ marque: MARQUE_DE_L_ARENE, message: messageNiveauxReserves(config.vitrineSolo) }}
                   levels={DIFFICULTY_PRESETS.map((p) => ({
                     level: p.level,
                     name: p.name,

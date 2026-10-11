@@ -114,7 +114,7 @@ describe("un enseignant sous licence crée sa cohorte", () => {
   it("crée, copie le lien ; un élève rejoint, joue un épisode non démo ; l'enseignant le voit", async () => {
     expect(estUneDemo(DANS_LA_COHORTE) || estUneDemo(HORS_COHORTE)).toBe(false);
     const ctxProf = await contexte();
-    await enseignantSousLicence(ctxProf);
+    await enseignantSousLicence(ctxProf, { episodes: true });
     const prof = await ctxProf.newPage();
 
     // La page est dans la navigation de l'espace, à côté des parties.
@@ -169,7 +169,13 @@ describe("un enseignant sous licence crée sa cohorte", () => {
     // Un épisode non démo hors de la cohorte ne s'ouvre pas.
     await aller(eleve, `/entreprises/episode/${HORS_COHORTE}`);
     expect(await eleve.getByRole("button", { name: "Commencer l'épisode" }).count()).toBe(0);
-    expect(await eleve.getByText("Offre Entreprise").count()).toBeGreaterThan(0);
+    // Devant un élève (il suit une cohorte), pas de message de vente : une phrase neutre.
+    expect(await eleve.locator("[data-episode-ferme-eleve]").innerText()).toBe(
+      "Cet épisode n'est pas ouvert sur cet appareil ; demandez le lien à votre enseignant.",
+    );
+    expect(await eleve.getByText("Épisodes manager · sur devis").count()).toBe(0);
+    // Dans le contenu de la page (la barre du site porte « Tarifs » partout, comme le pied).
+    expect(await eleve.locator("main").getByRole("link", { name: /devis|tarifs/i }).count()).toBe(0);
     // Au catalogue, la cohorte a sa section, ses épisodes se jouent, les autres non.
     await aller(eleve, "/entreprises/episode");
     expect(
@@ -207,6 +213,22 @@ describe("un enseignant sous licence crée sa cohorte", () => {
   }, 240_000);
 });
 
+describe("un enseignant sous licence Classe seule (sans les épisodes)", () => {
+  it("la création est refusée : les épisodes se vendent à part", async () => {
+    const ctx = await contexte();
+    await enseignantSousLicence(ctx, { arene: "classe" });
+    const page = await ctx.newPage();
+    await aller(page, "/teacher/cohortes");
+    expect(await page.locator("[data-cohortes-sans-licence]").count()).toBe(1);
+    await creer(page, "Seconde 4", [EPISODES_DE_DEMO[0]]);
+    await page.waitForURL(/refus=licence/);
+    const refus = page.locator('[data-refus-de-cohorte="licence"]');
+    expect(await refus.textContent()).toContain(REFUS_SANS_LICENCE);
+    expect(await page.getByText("Aucune cohorte pour l'instant.").count()).toBe(1);
+    await ctx.close();
+  });
+});
+
 describe("un enseignant sans licence", () => {
   it("voit la page ; la création est refusée par le serveur, avec le lien vers les tarifs", async () => {
     const ctx = await contexte();
@@ -235,7 +257,7 @@ describe("depuis une fiche enseignant d'épisode", () => {
   it("le bouton mène au formulaire, l'épisode pré-coché et son repli ouvert", async () => {
     const fiche = FICHES.find((f) => !estUneDemo(f.code))!;
     const ctx = await contexte();
-    await enseignantSousLicence(ctx);
+    await enseignantSousLicence(ctx, { episodes: true });
     const page = await ctx.newPage();
     await aller(page, `/enseignants/episodes/${fiche.code}`);
     // Le signalement provisoire du lot précédent est parti.
@@ -256,7 +278,7 @@ describe("depuis une fiche enseignant d'épisode", () => {
 describe("à 390 px", () => {
   it("rien ne déborde : la liste, le formulaire ouvert, la cohorte, la projection, l'invitation, la fiche", async () => {
     const ctx = await contexte(true);
-    await enseignantSousLicence(ctx);
+    await enseignantSousLicence(ctx, { episodes: true });
     const page = await ctx.newPage();
     await aller(page, "/teacher/cohortes");
     expect(await debordement(page)).toBeLessThanOrEqual(0);

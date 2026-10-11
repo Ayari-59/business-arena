@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CONNEXION_ENT, lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import { LigneDePrix } from "@/components/ligne-de-prix";
 import Link from "next/link";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { COMPETENCES } from "@/config/episodes/competences";
@@ -116,7 +118,7 @@ const QUESTIONS = [
   },
   {
     q: "Peut-on les relier à Moodle ou à Blackboard ?",
-    r: "Pas encore : les participants rejoignent par un code, sans compte. La connexion à une plateforme de cours est à l'étude ; le relevé de notes de l'arène s'exporte déjà.",
+    r: CONNEXION_ENT.reponse,
   },
   {
     q: "Quelles données sont collectées ?",
@@ -158,8 +160,8 @@ export default async function EcolesPage() {
           preuve={{ valeur: `${EPISODES.length}`, libelle: "épisodes manager" }}
           actions={
             <>
-              <Link href="/rendez-vous" className={bouton({ taille: "l" })}>
-                Organiser un essai avec une promotion
+              <Link href={lienDuDevis("episodes")} className={bouton({ taille: "l" })}>
+                {LIBELLE_DU_DEVIS}
               </Link>
               <Link href="/entreprises/episode" className={PORTE_SECONDAIRE}>
                 Jouer un épisode
@@ -324,8 +326,8 @@ export default async function EcolesPage() {
         <BandeFinale
           id="ecoles.finale"
           contraste={c("ecoles.finale")}
-          titre="Essayez avec une promotion"
-          texte="Un essai se monte en une semaine : une cohorte, un épisode d'entrée, un débrief. On regarde ensuite avec vous ce que vous montreriez à un jury."
+          titre="Préparez une promotion"
+          texte="Une cohorte, un épisode d'entrée, un débrief : on regarde avec vous ce que vous montreriez à un jury, puis le devis suit."
           mentions={[
             {
               label: "Sans compte étudiant",
@@ -334,8 +336,15 @@ export default async function EcolesPage() {
             { label: "Hébergé dans l'UE", desc: "Base de données à Francfort" },
             { label: "En français", desc: "Une version anglaise est à l'étude" },
           ]}
+          prix={<LigneDePrix />}
         >
-          <Link href="/rendez-vous" className={bouton({ taille: "l" })}>
+          <Link href={lienDuDevis("episodes")} className={bouton({ taille: "l" })}>
+            {LIBELLE_DU_DEVIS}
+          </Link>
+          <Link
+            href="/rendez-vous"
+            className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+          >
             Prendre rendez-vous
           </Link>
           <Link

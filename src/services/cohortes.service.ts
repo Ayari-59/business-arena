@@ -19,7 +19,7 @@ import { agregerCohorte, type VueDeCohorte } from "@/pedagogy/profil/cohorte";
 import { garderLesTentatives } from "@/services/reprise.service";
 import { partiesDeTous } from "@/services/episode-parties.service";
 import { getTeacherOrgId } from "@/services/auth.service";
-import { uneOrganisationSousLicence } from "@/services/acces.service";
+import { uneOrganisationAvecEpisodes } from "@/services/acces.service";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import { NOM_DE_COHORTE_MAX, type RefusDeCohorte } from "@/config/cohortes";
 
@@ -280,7 +280,7 @@ export async function listerCohortes(): Promise<
           ? {
               id: organisationId,
               nom: organisationNom ?? "",
-              licence: (await getLicenceStatus(organisationId)).state,
+              licence: (await getLicenceStatus(organisationId, new Date(), "episodes")).state,
             }
           : null,
       }),
@@ -361,8 +361,8 @@ export function episodesRetenus(codes: readonly string[]): string[] {
 
 /**
  * Créer la cohorte d'un enseignant. Refusée (CohorteRefuseeError) sans établissement,
- * sans licence en cours de cet établissement (même pour les seules démonstrations : pas
- * d'essai en classe), sans nom ou sans épisode.
+ * sans licence en cours de cet établissement qui inclut les épisodes (même pour les
+ * seules démonstrations : pas d'essai en classe), sans nom ou sans épisode.
  */
 export async function creerCohorteDeLEnseignant(args: {
   enseignantId: string;
@@ -371,7 +371,9 @@ export async function creerCohorteDeLEnseignant(args: {
 }): Promise<{ id: string; code: string; nom: string; cleAnimateur: string }> {
   const organisation = await getTeacherOrgId(args.enseignantId);
   if (!organisation) throw new CohorteRefuseeError("organisation");
-  if (!(await uneOrganisationSousLicence([organisation]))) {
+  // Les épisodes se vendent à part (config/tarifs.ts) : il faut une licence en cours QUI
+  // LES INCLUT ; une licence Classe ou Campus seule n'ouvre que l'arène.
+  if (!(await uneOrganisationAvecEpisodes([organisation]))) {
     throw new CohorteRefuseeError("licence");
   }
   if (!args.nom.trim()) throw new CohorteRefuseeError("nom");

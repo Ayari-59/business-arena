@@ -44,6 +44,8 @@ import { codesDeRepriseDeLaPartie, joueursSansCode } from "@/services/reprise.se
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { entitlementsForUser } from "@/services/entitlements.service";
+import { MARQUE_DE_L_ARENE } from "@/config/tarifs";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { resolveAiSurface } from "@/services/ai.service";
 import { CodeQr } from "@/components/code-qr";
 import { urlDeJonction } from "@/lib/qr";
@@ -330,15 +332,14 @@ export default async function TeacherGamePage({
       </section>
 
       {view.planCapped ? (
-        <section className="rounded-xl border border-amber-400/40 bg-amber-950/20 p-3 sm:p-5">
-          <h2 className="text-sm font-semibold text-amber-300">
-            <Icone nom="verrou" className="mr-1.5 h-4 w-4" />
-            Version gratuite — la partie s&apos;est arrêtée avant la fin
+        <section className="rounded-xl encadre-neutre p-3 sm:p-5">
+          <h2 className="text-sm font-semibold text-slate-100">
+            La partie s&apos;est arrêtée au tour {view.currentRound} sur {view.roundsCount}
           </h2>
-          <p className="mt-1 max-w-3xl text-xs text-amber-200/80">
-            Le palier gratuit s&apos;arrête au tour {view.currentRound} sur {view.roundsCount}.
-            Activez une licence établissement pour jouer le scénario jusqu&apos;au bout, ouvrir les
-            concours, l&apos;export du relevé et le feedback IA.
+          <p className="mt-1 max-w-3xl text-sm text-slate-300">
+            Elle a été jouée sous l&apos;ancien palier gratuit, qui arrêtait les parties avant la
+            fin. Il n&apos;existe plus : une partie créée aujourd&apos;hui se joue jusqu&apos;au
+            dernier tour.
           </p>
         </section>
       ) : null}
@@ -723,12 +724,12 @@ export default async function TeacherGamePage({
                 ⬇ Tableur (une ligne par élève)
               </a>
             ) : (
-              <span
-                className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400"
-                title="Réservé à l'offre établissement"
-              >
+              <span className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400">
                 <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-                Export tableur · offre établissement
+                Export tableur · {MARQUE_DE_L_ARENE}{" "}
+                <Link href={LIEN_TARIFS} prefetch={false} className="underline underline-offset-4">
+                  Voir les tarifs
+                </Link>
               </span>
             )}
           </div>

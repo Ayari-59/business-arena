@@ -28,6 +28,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 74,
@@ -54,6 +55,8 @@ beforeAll(async () => {
   prof = r.userId;
   const orgId = (await getTeacherOrgId(prof))!;
 
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
   // Niveau 3 : c'est là que le financement s'ouvre, donc là que la banque
   // existe et que le plan de trésorerie prend un sens.
   const partie = await createClassGame({

@@ -38,6 +38,12 @@ export interface Formation {
    * coup d'œil.
    */
   sigle: string;
+  /**
+   * Le diplôme dont cette formation est une option, quand elle en est une : « BTS MHR,
+   * options B et C » est le BTS MHR. Compter les diplômes, c'est compter ceci, et non les
+   * publics des ateliers (audit C-09 : « 12 diplômes » annoncés pour 8).
+   */
+  optionDe?: string;
 }
 
 export const FORMATIONS: readonly Formation[] = [
@@ -63,6 +69,7 @@ export const FORMATIONS: readonly Formation[] = [
     code: "bts-mhr-bc",
     nom: "BTS Management en hôtellerie-restauration, options B et C",
     sigle: "BTS MHR · B et C",
+    optionDe: "bts-mhr",
   },
   {
     code: "but-gea",
@@ -117,4 +124,16 @@ export function formationsEnToutesLettres(a: {
 }): string {
   const siennes = formationsDe(a.formations);
   return siennes.length ? enumere(siennes.map((f) => f.nom)) : (a.public ?? "");
+}
+
+/**
+ * LES DIPLÔMES QUE VISENT DES ATELIERS : une option compte pour son diplôme, un atelier
+ * sans formation (découverte, approfondissement) n'en compte aucun. Dans l'ordre du
+ * registre des formations.
+ */
+export function diplomesDesAteliers(ateliers: readonly { formations: readonly string[] }[]): Formation[] {
+  const codes = new Set(
+    ateliers.flatMap((a) => formationsDe(a.formations).map((f) => f.optionDe ?? f.code)),
+  );
+  return FORMATIONS.filter((f) => codes.has(f.code));
 }

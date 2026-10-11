@@ -19,7 +19,7 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { competitionEntries, users } from "@/db/schema";
-import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import { closeCurrentRound, submitTeamDecisions } from "@/services/game.service";
 import {
   createCompetition,
@@ -31,6 +31,7 @@ import {
   startQualification,
 } from "@/services/competition.service";
 import type { RoundDecisions } from "@/engine/types";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -84,7 +85,7 @@ beforeAll(async () => {
   organizerId = result.userId;
   const created = await createCompetition({
     organizerId,
-    organizationId: (await getTeacherOrgId(organizerId))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(organizerId),
     name: "Tournoi du campus",
     periodicity: "quarter",
     groupSize: 2,

@@ -8,6 +8,17 @@ import { AI_MODELS } from "@/config/ai";
 import { ANSWER_FORMATS } from "@/config/difficulty";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { VITRINE_SOLO_PAR_DEFAUT } from "@/config/vitrine-solo";
+import {
+  LIBELLES_DU_DEVIS,
+  MARQUE_DE_L_ARENE,
+  nomDOffre,
+  OFFRES,
+  PLAFOND_D_ENSEIGNANTS,
+  PRIX,
+  prixParAn,
+  estUneOffreDuDevis,
+} from "@/config/tarifs";
+import { listerDemandesDeDevis } from "@/services/devis.service";
 import type { PreuvesPubliees } from "@/config/preuves-dusage";
 import {
   createEstablishmentAction,
@@ -17,6 +28,7 @@ import {
   setLicenceAction,
   updatePlatformConfigAction,
   marquerDemandeOrientationTraiteeAction,
+  marquerDemandeDeDevisTraiteeAction,
   annulerRendezVousAction,
   deconnecterAgendaAction,
 } from "./actions";
@@ -36,7 +48,7 @@ export const dynamic = "force-dynamic";
 
 /** Comment se lit un état de licence, en un mot et une couleur. */
 const ETAT_LICENCE: Record<string, { libelle: string; couleur: string }> = {
-  libre: { libelle: "accès libre", couleur: "text-slate-400" },
+  libre: { libelle: "sans licence", couleur: "text-slate-400" },
   active: { libelle: "en cours", couleur: "text-emerald-300" },
   bientot_expiree: { libelle: "à renouveler", couleur: "text-amber-300" },
   expiree: { libelle: "expirée", couleur: "text-red-300" },
@@ -70,6 +82,13 @@ function LicenceField({
   );
 }
 
+/** Ce que couvre une licence, en clair : l'offre de l'arène, « + » les épisodes s'ils sont inclus. */
+function perimetre(l: { arene: "classe" | "campus" | null; episodes: boolean }): string {
+  return [l.arene ? nomDOffre(l.arene) : null, l.episodes ? OFFRES.episodes.nom : null]
+    .filter((x): x is string => x !== null)
+    .join(" + ");
+}
+
 /** Ce que le retour de Google laisse dans l'adresse, traduit pour l'écran. */
 const RETOURS_AGENDA: Record<string, { ton: "bon" | "mauvais"; texte: string }> = {
   connecte: { ton: "bon", texte: "Agenda connecté : la page de rendez-vous lit désormais vos disponibilités." },
@@ -93,6 +112,8 @@ export default async function AdminPage({
   const overview = await getPlatformOverview(session.userId);
   const demoSeeded = await isDemoSeeded();
   const demandes = await listerDemandesOrientation(50);
+  const devis = await listerDemandesDeDevis(50);
+  const devisATraiter = devis.filter((d) => d.traiteeLe === null);
   const aRepondre = demandes.filter((d) => d.status === "new");
   const rendezVous = await listerRendezVous(30);
   const agenda = await etatAgenda();
@@ -280,10 +301,11 @@ export default async function AdminPage({
               Règle par défaut, décidée avec la grille tarifaire : sans licence, niveaux 1 à{" "}
               {VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres} pour toutes les entreprises, au solo public
               comme dans les parties d&apos;enseignant. Au-delà, les
-              niveaux restent visibles, marqués « Offre Enseignant » avec le lien vers les tarifs,
-              et le serveur refuse de les créer. Une licence en cours ouvre tout. Seule la
-              création est concernée : une partie commencée se termine. Décoché, tout est ouvert
-              à tous.
+              niveaux restent visibles, marqués « {MARQUE_DE_L_ARENE} » avec le lien vers les
+              tarifs, et le serveur refuse de les créer. Une licence de l&apos;arène en cours ouvre
+              tous les niveaux. Seule la création est concernée : une partie commencée se termine.
+              Décoché, tous les niveaux sont ouverts à tous. Les parties de classe et les concours,
+              eux, demandent toujours une licence de l&apos;arène en cours.
             </p>
           </fieldset>
           {/* Les compteurs d'usage de /enseignants. Ils sont comptés dans la
@@ -334,7 +356,7 @@ export default async function AdminPage({
           </label>
           <label className="block">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Adresse de contact (formulaire d&apos;orientation)
+              Adresse de contact (orientation, demandes de devis, rendez-vous)
             </span>
             <input
               name="contactEmail"
@@ -352,48 +374,6 @@ export default async function AdminPage({
             </span>
           </label>
 
-          <fieldset className="rounded-xl border border-amber-400/25 bg-amber-950/10 p-4">
-            <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-amber-300">
-              Palier gratuit (freemium)
-            </legend>
-            <p className="mb-3 text-xs text-slate-400">
-              Ce à quoi un compte <strong className="text-slate-300">sans licence active</strong> a droit.
-              Une licence en cours ouvre tout. <strong className="text-slate-300">Par défaut tout est ouvert</strong> :
-              resserrez ces réglages (ex. 3 tours, concours fermés) pour activer le freemium.
-            </p>
-            <label className="block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Tours jouables en gratuit (vide = illimité)
-              </span>
-              <input
-                name="freeMaxRounds"
-                type="number"
-                min={1}
-                max={24}
-                defaultValue={overview.config.freeTier.maxRounds ?? ""}
-                placeholder="Ex : 3"
-                className="mt-1 w-40 champ px-3 py-2 text-sm text-slate-100 outline-none"
-              />
-              <span className="mt-1 block text-xs text-slate-400">
-                La partie gratuite se termine à ce tour, même si le scénario en prévoit plus : c&apos;est le mur « ne va pas au bout ».
-              </span>
-            </label>
-            <div className="mt-3 space-y-2">
-              <label className="flex items-center gap-3 text-sm text-slate-300">
-                <input type="checkbox" name="freeCompetitions" defaultChecked={overview.config.freeTier.competitions} className="h-4 w-4 accent-amber-400" />
-                Concours autorisés en gratuit
-              </label>
-              <label className="flex items-center gap-3 text-sm text-slate-300">
-                <input type="checkbox" name="freeAi" defaultChecked={overview.config.freeTier.ai} className="h-4 w-4 accent-amber-400" />
-                Feedback IA autorisé en gratuit
-              </label>
-              <label className="flex items-center gap-3 text-sm text-slate-300">
-                <input type="checkbox" name="freeGradebookExport" defaultChecked={overview.config.freeTier.gradebookExport} className="h-4 w-4 accent-amber-400" />
-                Export du relevé de notes autorisé en gratuit
-              </label>
-            </div>
-          </fieldset>
-
           <fieldset className="encadre-neutre rounded-xl p-4">
             <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
               Assistant IA
@@ -401,7 +381,7 @@ export default async function AdminPage({
             <p className="mb-3 text-xs text-slate-400">
               Surfaces d&apos;assistance par IA. <strong className="text-slate-300">Éteintes par défaut</strong> ;
               elles restent inertes tant qu&apos;une clé <code className="text-slate-300">ANTHROPIC_API_KEY</code> n&apos;est pas
-              configurée côté serveur, et le mur « Feedback IA » du palier gratuit s&apos;applique aussi.
+              configurée côté serveur. L&apos;assistant n&apos;est pas vendu : il ne dépend d&apos;aucune licence.
             </p>
             <div className="space-y-2">
               <label className="flex items-center gap-3 text-sm text-slate-300">
@@ -497,6 +477,95 @@ export default async function AdminPage({
             Créer + code admin
           </SubmitButton>
         </form>
+      </section>
+
+      {/*
+        DEMANDES DE DEVIS. Envoyées depuis /devis (chaque carte de /tarifs y mène, l'offre
+        pré-remplie). La demande est ici quoi qu'il arrive ; les indicateurs disent si la
+        notification et l'accusé au demandeur sont partis. On répond par sa propre
+        messagerie ; « Traitée » retire la demande de la pile.
+      */}
+      <section className="carte p-6" data-demandes-de-devis="">
+        <h2 className="text-sm font-semibold text-slate-200">
+          Demandes de devis
+          {devisATraiter.length > 0 ? (
+            <span className="ml-2 rounded-full pastille-etat px-2 py-0.5 text-xs text-slate-200">
+              {devisATraiter.length} à traiter
+            </span>
+          ) : null}
+        </h2>
+        <p className="mt-1 text-xs text-slate-400">
+          Envoyées depuis /devis. Répondez par un devis écrit à l&apos;adresse indiquée, puis
+          posez la licence plus bas une fois le bon de commande reçu.
+        </p>
+        {devis.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">Aucune demande de devis pour l&apos;instant.</p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {devis.map((d) => (
+              <li
+                key={d.id}
+                data-demande-de-devis={d.offre}
+                className={`rounded-xl bg-slate-950 p-4 ${d.traiteeLe ? "opacity-60" : ""}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-100">
+                      {estUneOffreDuDevis(d.offre) ? LIBELLES_DU_DEVIS[d.offre].offre : d.offre} ·{" "}
+                      <span className="font-normal text-slate-300">{d.organisation}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {d.nom} · {d.fonction} ·{" "}
+                      <a href={`mailto:${d.email}`} className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
+                        {d.email}
+                      </a>
+                      {" · "}
+                      {d.createdAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {d.notificationEnvoyee ? "notification envoyée" : "notification non envoyée"} ·{" "}
+                      {d.accuseEnvoye ? "accusé envoyé au demandeur" : "accusé non envoyé au demandeur"}
+                    </p>
+                  </div>
+                  {d.traiteeLe ? (
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400">
+                      ✓ traitée
+                    </span>
+                  ) : (
+                    <GuardedForm action={marquerDemandeDeDevisTraiteeAction} label="demande de devis traitée">
+                      <input type="hidden" name="id" value={d.id} />
+                      <SubmitButton className="rounded-lg bouton-filet border border-white/15 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-white/5">
+                        Traitée
+                      </SubmitButton>
+                    </GuardedForm>
+                  )}
+                </div>
+                <dl className="mt-2 grid gap-x-4 gap-y-1 text-xs text-slate-300 sm:grid-cols-[auto_1fr]">
+                  {d.identifiant ? (
+                    <>
+                      <dt className="text-slate-400">UAI ou SIRET</dt>
+                      <dd className="font-mono">{d.identifiant}</dd>
+                    </>
+                  ) : null}
+                  {d.effectif !== null ? (
+                    <>
+                      <dt className="text-slate-400">
+                        {estUneOffreDuDevis(d.offre) ? LIBELLES_DU_DEVIS[d.offre].effectif : "Effectif"}
+                      </dt>
+                      <dd>{d.effectif}</dd>
+                    </>
+                  ) : null}
+                  {d.message ? (
+                    <>
+                      <dt className="text-slate-400">Message</dt>
+                      <dd className="whitespace-pre-line italic text-slate-300">« {d.message} »</dd>
+                    </>
+                  ) : null}
+                </dl>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/*
@@ -783,12 +852,12 @@ export default async function AdminPage({
                       {ETAT_LICENCE[org.licence.state]?.libelle ?? org.licence.state}
                     </span>
                     {org.licence.licence
-                      ? ` · ${org.licence.licence.label} · ${org.licence.teachers}${
+                      ? ` · ${org.licence.licence.label} · ${perimetre(org.licence.licence)} · ${org.licence.teachers}${
                           org.licence.licence.maxTeachers === null
                             ? ""
                             : ` / ${org.licence.licence.maxTeachers}`
                         } enseignants`
-                      : " · aucune limite en vigueur"}
+                      : " · aucune licence : solo et démonstrations seulement"}
                   </summary>
 
                   {org.licence.blocking ? (
@@ -802,6 +871,7 @@ export default async function AdminPage({
                       {org.licences.map((l) => (
                         <li key={l.id} className="flex flex-wrap items-center gap-2">
                           <span className="text-slate-300">{l.label}</span>
+                          <span data-perimetre-licence="">{perimetre(l)}</span>
                           <span className="tabular-nums">
                             du {l.startsAt.toLocaleDateString("fr-FR")} au{" "}
                             {l.endsAt.toLocaleDateString("fr-FR")}
@@ -821,22 +891,47 @@ export default async function AdminPage({
 
                   <form
                     action={setLicenceAction.bind(null, org.organizationId)}
+                    data-formulaire-licence=""
                     className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
                   >
+                    <label className="block">
+                      <span className="text-xs uppercase tracking-wide text-slate-400">Offre de l&apos;arène</span>
+                      <select
+                        name="arene"
+                        defaultValue="classe"
+                        className="mt-1 w-full champ px-2 py-1.5 text-xs text-slate-100"
+                      >
+                        <option value="classe">
+                          {nomDOffre("classe")} · {PLAFOND_D_ENSEIGNANTS.classe} enseignant · {prixParAn(PRIX.classe)}
+                        </option>
+                        <option value="campus">
+                          {nomDOffre("campus")} · enseignants sans plafond · {prixParAn(PRIX.campus)}
+                        </option>
+                        <option value="">Sans l&apos;arène (épisodes seuls)</option>
+                      </select>
+                    </label>
+                    <label className="flex items-end gap-2 pb-1.5 text-xs text-slate-300">
+                      <input type="checkbox" name="episodes" className="h-4 w-4 accent-amber-400" />
+                      {OFFRES.episodes.nom} (sur devis)
+                    </label>
                     <LicenceField name="label" label="Intitulé" placeholder="Année scolaire 2026-2027" required />
                     <LicenceField name="startsAt" label="Début" type="date" required />
                     <LicenceField name="endsAt" label="Fin" type="date" required />
-                    <LicenceField name="maxTeachers" label="Enseignants" type="number" placeholder="vide = sans plafond" />
-                    <LicenceField name="reference" label="Devis / bon de commande" placeholder="BC-2026-114" />
-                    <LicenceField name="amount" label="Montant €" placeholder="900" />
+                    <LicenceField name="reference" label="Devis / bon de commande" placeholder="DEV-2026-114" />
+                    <LicenceField name="amount" label="Montant (€)" placeholder={String(PRIX.classe)} />
                     <button className={`${bouton({ taille: "s" })} col-span-2 sm:col-span-3`}>
                       Enregistrer la licence
                     </button>
                   </form>
                   <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                    Sans licence, l&apos;établissement reste ouvert : la limite n&apos;existe que
-                    là où une vente l&apos;a définie. Une licence expirée ferme la création de
-                    nouvelles parties et laisse se terminer les classes en cours.
+                    Le plafond d&apos;enseignants suit l&apos;offre : {PLAFOND_D_ENSEIGNANTS.classe} pour{" "}
+                    {OFFRES.classe.nom}, sans plafond pour {OFFRES.campus.nom}. Sans licence de
+                    l&apos;arène en cours, ou licence expirée, l&apos;établissement joue en solo aux
+                    niveaux gratuits : ni partie de classe ni concours ne se créent, les parties en
+                    cours se poursuivent. Les épisodes manager ne s&apos;ouvrent qu&apos;avec la case{" "}
+                    « {OFFRES.episodes.nom} » : cochez-la pour un client qui les a achetés, y compris
+                    sur une licence posée avant cette case (elles sont toutes passées sans les
+                    épisodes).
                   </p>
                 </details>
               ) : null}

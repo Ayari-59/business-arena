@@ -22,7 +22,7 @@ let animation = "";
 
 beforeAll(async () => {
   navigateur = await ouvrirNavigateur();
-  const organisation = await organisationSousLicence("Entreprise de recette");
+  const organisation = await organisationSousLicence("Entreprise de recette", { arene: null, episodes: true });
   const sortie = execFileSync(
     "npx",
     ["tsx", "scripts/creer-cohorte.ts", "Cohorte de recette", BASE, organisation],

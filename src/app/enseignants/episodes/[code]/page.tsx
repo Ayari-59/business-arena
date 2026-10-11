@@ -2,16 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PiedDePage } from "@/components/pied-de-page";
-import { FICHES, ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
+import { ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
-import { estUneDemo, MARQUE_DEMO, OFFRE_DES_EPISODES } from "@/config/episodes/demos";
-import { bouton } from "@/components/bouton";
+import { estUneDemo, MARQUE_DEMO } from "@/config/episodes/demos";
+import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DES_EPISODES } from "@/config/tarifs";
+import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
+import { getSession } from "@/lib/session";
+import { unCompteAvecEpisodes } from "@/services/acces.service";
 
-/** Les fiches sont une donnée figée : leurs pages se rendent à la construction. */
-export function generateStaticParams() {
-  return FICHES.map((f) => ({ code: f.code }));
-}
+/**
+ * Les fiches sont une donnée figée, mais la page lit la licence de l'enseignant qui la
+ * regarde : la marque de l'offre ne s'affiche jamais à qui a déjà les épisodes.
+ */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -46,6 +50,8 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
   const ep = episodeParCode(code);
   if (!fiche || !ep) notFound();
   const lien = lienDeLaClasse(code);
+  const session = await getSession();
+  const avecEpisodes = session ? await unCompteAvecEpisodes([session.userId]) : false;
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -97,14 +103,23 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               {estUneDemo(code) ? (
                 <>
                   <span className="font-semibold text-slate-200">{MARQUE_DEMO}.</span> Il se joue
-                  sans licence, au niveau Découverte. Dans une cohorte de votre établissement sous
-                  licence, il se joue à tous les niveaux.
+                  sans licence, au niveau Découverte. Dans une cohorte de votre établissement, sous
+                  licence épisodes, il se joue à tous les niveaux.
+                </>
+              ) : avecEpisodes ? (
+                <>
+                  Vos élèves le jouent dans une cohorte de votre établissement : ils la rejoignent
+                  par son code, sans compte, puis ouvrent le lien ci-dessus.
                 </>
               ) : (
                 <>
-                  <span className="font-semibold text-slate-200">{OFFRE_DES_EPISODES}.</span> Vos
-                  élèves le jouent dans une cohorte de votre établissement sous licence : ils la
-                  rejoignent par son code, sans compte, puis ouvrent le lien ci-dessus.
+                  <span className="font-semibold text-slate-200">{MARQUE_DES_EPISODES}.</span> Vos
+                  élèves le jouent dans une cohorte de votre établissement, dont la licence inclut
+                  les épisodes manager : ils la rejoignent par son code, sans compte, puis ouvrent
+                  le lien ci-dessus.{" "}
+                  <Link href={lienDuDevis("episodes")} prefetch={false} className={LIEN_A_L_ENCRE}>
+                    {LIBELLE_DU_DEVIS}
+                  </Link>
                 </>
               )}
             </p>

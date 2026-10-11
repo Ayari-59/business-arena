@@ -50,7 +50,7 @@ import {
 import { trancherDemande } from "@/services/subvention.service";
 import { affecterEleve } from "@/services/affectation.service";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
-import { NiveauReserveError } from "@/services/acces.service";
+import { OffreRequiseError } from "@/services/acces.service";
 
 export interface FormState {
   error: string | null;
@@ -237,10 +237,11 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       roundsCount: parsed.roundsCount,
     }));
   } catch (erreur) {
-    // Un niveau fermé sans licence : la page ajoute le lien vers les tarifs.
+    // Un niveau fermé, ou une classe sans licence de l'arène en cours : la page ajoute
+    // le lien vers les tarifs.
     echecCreation(
       erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.",
-      erreur instanceof NiveauReserveError,
+      erreur instanceof OffreRequiseError,
     );
   }
   redirect(`/teacher/games/${gameId}`);
@@ -385,6 +386,8 @@ export interface CreateCompetitionValues {
 export interface CreateCompetitionState {
   error: string | null;
   values: CreateCompetitionValues | null;
+  /** Le refus renvoie aux offres : le formulaire ajoute le lien vers les tarifs. */
+  offre?: boolean;
 }
 
 /**
@@ -537,6 +540,10 @@ export async function createCompetitionAction(
       ...parsed.data,
     }));
   } catch (erreur) {
+    // Sans licence de l'arène en cours : la règle, dite telle quelle, et le lien.
+    if (erreur instanceof OffreRequiseError) {
+      return { error: `Le concours n'a pas été créé. ${erreur.message}`, values, offre: true };
+    }
     const detail = erreur instanceof Error && erreur.message ? ` (${erreur.message})` : "";
     return {
       error: `Le concours n'a pas pu être créé, votre saisie est conservée : réessayez${detail}.`,

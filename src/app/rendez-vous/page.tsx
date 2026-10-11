@@ -30,10 +30,10 @@ const ETAPES = [
   },
   {
     titre: "Vous repartez avec un réglage",
-    // La ligne de la vitrine parle désormais de licence établissement : cette
-    // étape disait « Rien à acheter », ce qui la contredisait.
+    // La vitrine renvoie aux offres de l'arène : cette étape disait « Rien à
+    // acheter », ce qui la contredisait. Le devis, lui, se demande par écrit.
     texte:
-      "Une entreprise, un niveau, une durée, et souvent un atelier prêt à animer. Nous vous indiquons la licence qui convient à votre établissement ; rien à installer.",
+      "Une entreprise, un niveau, une durée, et souvent un atelier prêt à animer. Nous vous indiquons l'offre qui convient, et le devis suit par écrit ; rien à installer.",
   },
 ];
 

@@ -5,6 +5,7 @@ import { createCompetitionAction, type CreateCompetitionState } from "@/app/teac
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { LongActionProgress } from "@/components/long-action-progress";
 import { ATTENTES } from "@/config/cloture";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 
 /**
  * Le formulaire « Organiser un concours ».
@@ -97,6 +98,17 @@ export function CompetitionCreateForm({
           className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300 sm:col-span-2"
         >
           {state.error}
+          {state.offre ? (
+            <>
+              {" "}
+              <a
+                href={LIEN_TARIFS}
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Voir les tarifs
+              </a>
+            </>
+          ) : null}
         </p>
       ) : null}
       {guardError ? (

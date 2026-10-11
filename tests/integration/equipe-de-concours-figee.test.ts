@@ -32,6 +32,7 @@ import {
   joinCompetition,
   startQualification,
 } from "@/services/competition.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let organizerId: string;
 let orgId: string;
@@ -57,6 +58,8 @@ beforeAll(async () => {
   if ("error" in result) throw new Error(result.error);
   organizerId = result.userId;
   orgId = (await getTeacherOrgId(organizerId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, organizerId);
   const created = await createCompetition({
     organizerId,
     organizationId: orgId,

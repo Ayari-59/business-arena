@@ -33,7 +33,7 @@ import {
   teams,
   users,
 } from "@/db/schema";
-import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
@@ -43,6 +43,7 @@ import {
 } from "@/services/game.service";
 import { getTeamSituations, submitDiagnosis } from "@/services/pedagogy.service";
 import { situationByCode } from "@/config/scenarios/registry";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 let prof: string;
 let autreProf: string;
@@ -83,7 +84,7 @@ beforeAll(async () => {
 
   const partie = await createClassGame({
     teacherId: prof,
-    organizationId: (await getTeacherOrgId(prof))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(prof),
     periodicity: "quarter",
     humanTeamsCount: 1,
     botCount: 1,

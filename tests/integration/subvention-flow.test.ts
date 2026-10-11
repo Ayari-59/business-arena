@@ -38,6 +38,7 @@ import {
 } from "@/services/subvention.service";
 import { resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 /** Produire beaucoup, vendre à perte, dépenser le reste : la ruine méthodique. */
 const RUINEUSE: RoundDecisions = {
@@ -62,6 +63,8 @@ beforeAll(async () => {
   if ("error" in r) throw new Error(r.error);
   prof = r.userId;
   const orgId = (await getTeacherOrgId(prof))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,

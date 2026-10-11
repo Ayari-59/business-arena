@@ -26,6 +26,7 @@ import {
   joinGameByCode,
   nommerEquipe,
 } from "@/services/game.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let prof: string;
 let gameId: string;
@@ -44,6 +45,8 @@ beforeAll(async () => {
   prof = r.userId;
   const orgId = (await getTeacherOrgId(prof))!;
 
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,

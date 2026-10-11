@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { LigneDePrix } from "@/components/ligne-de-prix";
 import { ALL_SITUATIONS, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { ApercuArene } from "@/components/apercus";
@@ -63,7 +65,7 @@ const DIFFERENTIATORS = [
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
   // « Essai gratuit » promettait tous les scénarios et toutes les fonctionnalités
   // sans engagement : la grille (config/tarifs.ts) ouvre le solo, pas la classe.
-  { label: "Découverte gratuite", desc: "Le simulateur en solo, sans compte ; l'usage en classe avec l'abonnement" },
+  { label: "Découverte gratuite", desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}` },
   { label: "Testé", desc: "Moteur déterministe, tenu par sa suite de tests" },
 ];
 
@@ -265,6 +267,7 @@ export default async function FonctionnalitesPage() {
           titre="Prêt à tester ?"
           texte="Lancez une partie en 30 secondes, sans compte ni installation."
           mentions={DIFFERENTIATORS}
+          prix={<LigneDePrix />}
         >
           <Link href="/jouer" className={bouton({ taille: "l" })}>
             Tester le simulateur

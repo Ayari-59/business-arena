@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
+import { REFUS_DE_LA_CLASSE } from "../../src/config/tarifs";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
 import { licenceDeLEnseignant } from "./helpers/licence";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
@@ -107,7 +108,7 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("il crée une partie de conseil, et la page de pilotage dit ses réglages", async () => {
-    // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement :
+    // Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus :
     // l'établissement de ce parcours est sous licence, posée en base comme le ferait
     // l'administrateur (la règle elle-même est gardée par acces.e2e.ts).
     await licenceDeLEnseignant(EMAIL, "pose");
@@ -399,7 +400,13 @@ describe("parcours enseignant et élève", () => {
       );
 
       await aller(prof, "/teacher");
+      // L'échéance est dite AVANT l'envoi (PAR-02) : la ligne d'état en tête de l'espace
+      // et l'encadré de la création.
+      const etat = prof.locator("[data-etat-offre]");
+      expect(await etat.getAttribute("data-etat-offre")).toBe("expiree");
+      expect(await etat.innerText()).toContain("terminée le");
       await ouvrirLaCreation(prof);
+      expect(await prof.locator("[data-classe-sans-licence]").isVisible()).toBe(true);
       await prof.selectOption('select[name="scenarioCode"]', "nova");
       await prof.getByRole("button", { name: /Créer la partie/ }).click();
       // On attend le BANDEAU, pas l'URL : la page était déjà /teacher avant le
@@ -409,10 +416,10 @@ describe("parcours enseignant et élève", () => {
         timeout: 30_000,
       });
 
-      const vu = await texte(prof);
-      expect(vu).toContain("La partie n'a pas été créée");
-      expect(vu).toContain("Licence échue");
-      expect(vu).toContain("expiré");
+      // Une licence échue vaut une absence de licence : même règle, même message (PAR-02).
+      const alerte = prof.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
+      expect(await alerte.innerText()).toContain(REFUS_DE_LA_CLASSE);
+      expect(await alerte.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
     } finally {
       await base.end();
     }

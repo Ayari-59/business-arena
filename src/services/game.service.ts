@@ -41,7 +41,7 @@ import {
   type DemandeAInstruire,
 } from "@/services/subvention.service";
 import { teamDisplayName } from "@/services/game-view.service";
-import { entitlementsForOrg } from "@/services/entitlements.service";
+import { releveOuvert } from "@/services/acces.service";
 
 // Re-exports depuis game-creation.service.ts pour compatibilité des consommateurs existants
 export {
@@ -707,9 +707,12 @@ export interface TeacherGameView {
     /** Le classement de ce tour a-t-il été révélé aux élèves ? */
     rankingRevealed: boolean;
   }[];
-  /** Freemium : la partie s'est arrêtée avant la fin du scénario, faute de licence. */
+  /**
+   * La partie s'est arrêtée avant la fin du scénario sous l'ANCIEN palier gratuit, qui
+   * n'existe plus : seules des parties d'avant son retrait portent cette marque.
+   */
   planCapped: boolean;
-  /** Freemium : l'export du relevé est-il ouvert (licence) ? Sinon on propose l'upsell. */
+  /** Le relevé se télécharge-t-il (licence de l'arène en cours, ou fin récente) ? */
   canExportGradebook: boolean;
   /** Secteur joué : titre du scénario et codes d'événements de SA liasse. */
   scenarioCode: string;
@@ -855,7 +858,7 @@ export async function getTeacherGameView(
     planCapped: Boolean(
       (game.difficultyProfile as { planCapped?: boolean } | null)?.planCapped,
     ),
-    canExportGradebook: (await entitlementsForOrg(game.organizationId)).gradebookExport,
+    canExportGradebook: await releveOuvert(game.organizationId),
     rounds: [...gameRounds]
       .sort((a, b) => a.index - b.index)
       .map((r) => ({

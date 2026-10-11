@@ -1,3 +1,4 @@
+import { VENDEUR } from "@/config/editeur";
 import { randomInt } from "node:crypto";
 import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
@@ -7,7 +8,6 @@ import {
   type LicenceStatus,
   type OrgLicence,
 } from "@/services/licence.service";
-import { DEFAULT_FREE_TIER, type FreeTier } from "@/config/entitlements";
 import { DEFAULT_AI_CONFIG, type AiConfig } from "@/config/ai";
 import { DEFAULT_ANSWER_FORMAT, answerFormatFromProfile, type AnswerFormat } from "@/config/difficulty";
 import {
@@ -129,11 +129,6 @@ export interface PlatformConfig {
    */
   contactEmail: string;
   /**
-   * Palier gratuit (freemium) : ce à quoi un compte SANS licence active a droit.
-   * Réglé ici, appliqué par entitlements.service. Voir config/entitlements.ts.
-   */
-  freeTier: FreeTier;
-  /**
    * Les compteurs d'usage publiés sur la page des enseignants.
    *
    * Un compteur exact peut desservir la page qui le porte : « classes créées »
@@ -165,8 +160,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   soloAnswerFormat: DEFAULT_ANSWER_FORMAT,
   vitrineSolo: VITRINE_SOLO_PAR_DEFAUT,
   announcement: "",
-  contactEmail: "contact@business-arena.fr",
-  freeTier: DEFAULT_FREE_TIER,
+  contactEmail: VENDEUR.contact,
   preuvesPubliees: PREUVES_PUBLIEES_PAR_DEFAUT,
   ai: DEFAULT_AI_CONFIG,
   theme: THEME_DU_SITE_PAR_DEFAUT,
@@ -183,7 +177,11 @@ const DEFAULT_CONFIG: PlatformConfig = {
 export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
   try {
     const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
-    const lus = (row?.settings as Partial<PlatformConfig>) ?? {};
+    // L'ancien palier gratuit (`freeTier`) n'est plus un réglage : on ne le relit pas,
+    // et l'enregistrement suivant le fait disparaître (services/entitlements.service.ts).
+    const { freeTier: _ancienPalier, ...lus } =
+      (row?.settings as Partial<PlatformConfig> & { freeTier?: unknown }) ?? {};
+    void _ancienPalier;
     // Le thème se fusionne en profondeur : la colonne est du JSON libre, et un
     // écart enregistré pour une bande supprimée depuis ne doit rien casser.
     return {
@@ -360,6 +358,8 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
           maxTeachers: r.maxTeachers,
           reference: r.reference,
           amountCents: r.amountCents,
+          arene: r.arene ?? null,
+          episodes: r.episodes,
         }));
 
         let licence: LicenceStatus;
@@ -376,6 +376,8 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
             maxTeachers: courante.maxTeachers,
             reference: courante.reference,
             amountCents: courante.amountCents,
+            arene: courante.arene ?? null,
+            episodes: courante.episodes,
           };
           const daysLeft = jours(now, courante.endsAt);
           if (now < courante.startsAt) {

@@ -27,6 +27,7 @@ import {
 } from "@/services/game.service";
 import { createCompetition, joinCompetition, startQualification } from "@/services/competition.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -53,6 +54,8 @@ beforeAll(async () => {
   if ("error" in result) throw new Error(result.error);
   teacherId = result.userId;
   orgId = (await getTeacherOrgId(teacherId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, teacherId);
   const game = await createClassGame({
     teacherId,
     organizationId: orgId,

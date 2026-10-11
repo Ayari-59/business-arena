@@ -9,9 +9,9 @@ import {
   EPISODES_DE_DEMO,
   MARQUE_DEMO,
   NIVEAU_DES_DEMOS,
-  OFFRE_DES_EPISODES,
   estUneDemo,
 } from "@/config/episodes/demos";
+import { MARQUE_DES_EPISODES, OFFRES } from "@/config/tarifs";
 import { niveauParCode } from "@/config/episodes/niveaux";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { getGuestUserId } from "@/lib/guest";
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
  * SANS LICENCE (décision d'octobre 2026, config/episodes/demos.ts) : les épisodes de
  * démonstration, un par métier, se lancent en Découverte ; ils sont regroupés en tête
  * (« Démos gratuites ») et marqués dans leurs tiroirs. Les autres restent visibles,
- * avec leur titre, leur accroche et leur métier, marqués « Offre Entreprise » et sans
+ * avec leur titre, leur accroche et leur métier, marqués du nom de l'offre (config/tarifs.ts) et sans
  * lien de jeu : la carte mène aux tarifs. La page de l'épisode refuse de même.
  *
  * MEMBRE D'UNE COHORTE D'ENSEIGNANT : la licence ne vaut que pour les épisodes de la
@@ -154,7 +154,7 @@ export default async function EpisodesPage() {
               <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
                 Un épisode par métier, à jouer sans licence, au niveau{" "}
                 {niveauParCode(NIVEAU_DES_DEMOS).nom}. Les autres épisodes, et les niveaux Standard
-                et Expert, sont inclus dans l&apos;offre Entreprise.{" "}
+                et Expert, sont inclus dans l&apos;offre {OFFRES.episodes.nom}, sur devis.{" "}
                 <Link
                   href={LIEN_TARIFS}
                 prefetch={false}
@@ -301,7 +301,7 @@ function CarteFermee({
               data-marque-offre=""
               className="inline-block rounded-full border border-white/15 px-2.5 py-0.5 text-sm text-slate-300"
             >
-              {OFFRE_DES_EPISODES}
+              {MARQUE_DES_EPISODES}
             </span>
           </p>
           <p className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">

@@ -57,7 +57,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
       viewport: { width: 1280, height: 900 },
       locale: "fr-FR",
     });
-    await enseignantSousLicence(page.context());
+    await enseignantSousLicence(page.context(), { episodes: true });
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
     await bouton(page, "Commencer l'épisode").click();
 
@@ -117,7 +117,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
 
   it("sur un téléphone : la remise réflexe, et l'axe de travail qui va avec", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
-    await enseignantSousLicence(contexte);
+    await enseignantSousLicence(contexte, { episodes: true });
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );
@@ -192,7 +192,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
 
   it("la liste mène à tous les épisodes, et le deuxième se joue jusqu'au bilan", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
-    await enseignantSousLicence(contexte);
+    await enseignantSousLicence(contexte, { episodes: true });
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );
@@ -258,7 +258,7 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
 describe("les niveaux de difficulté", () => {
   it("en Expert : enquête courte, pas de conseil, une seule vérification, et le bilan le dit", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
-    await enseignantSousLicence(page.context());
+    await enseignantSousLicence(page.context(), { episodes: true });
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11&niveau=expert`);
     await expect.poll(() => page.getByLabel("Expert", { exact: false }).isChecked()).toBe(true);
     await bouton(page, "Commencer l'épisode").click();
@@ -299,7 +299,7 @@ describe("les niveaux de difficulté", () => {
 
   it("en Découverte : des repères, et l'effet de chaque choix tout de suite", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
-    await enseignantSousLicence(page.context());
+    await enseignantSousLicence(page.context(), { episodes: true });
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
     await choisir(page, "Découverte");
     await bouton(page, "Commencer l'épisode").click();

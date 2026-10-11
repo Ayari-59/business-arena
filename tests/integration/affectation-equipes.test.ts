@@ -32,6 +32,7 @@ import {
   choisirSonEquipe,
   compositionDesEquipes,
 } from "@/services/affectation.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let teacherId: string;
 let autreProf: string;
@@ -60,6 +61,8 @@ beforeAll(async () => {
   teacherId = result.userId;
   orgId = (await getTeacherOrgId(teacherId))!;
 
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, teacherId);
   const autre = await registerTeacher({
     email: "collegue@lycee.fr",
     password: "motdepasse!",

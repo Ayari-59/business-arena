@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { messageNiveauxReserves } from "@/config/tarifs";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import {
   aDeuxEtages,
   ENTREPRISE_VITRINE_PAR_DEFAUT,
-  messageNiveauxReserves,
   niveauMaxPour,
   niveauReserve,
   niveauxFermes,
@@ -121,10 +121,10 @@ describe("ce qui est enregistré", () => {
 describe("le message", () => {
   it("dit quels niveaux sont fermés et quelles offres les incluent", () => {
     expect(messageNiveauxReserves(VITRINE_SOLO_PAR_DEFAUT)).toBe(
-      "Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement.",
+      "Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus.",
     );
     expect(messageNiveauxReserves({ ...allumee, niveauMaxAutres: 5 })).toBe(
-      "Le niveau 6 est inclus dans les offres Enseignant et Établissement.",
+      "Le niveau 6 est inclus dans les offres Classe et Campus.",
     );
     expect(niveauxFermes(VITRINE_SOLO_PAR_DEFAUT)).toBe("Les niveaux 4 à 6");
   });

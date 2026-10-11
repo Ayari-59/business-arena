@@ -36,7 +36,7 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import {
   archiverPartie,
   createClassGame,
@@ -57,6 +57,7 @@ import { gameRecoveries } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { LONGUEUR_CODE_REPRISE, MAX_ECHECS_REPRISE, ALPHABET_REPRISE } from "@/config/reprise";
 import { PARTIE_ARCHIVEE } from "@/services/archivage";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 let prof: string;
 let gameId: string;
@@ -91,7 +92,7 @@ beforeAll(async () => {
 
   const partie = await createClassGame({
     teacherId: prof,
-    organizationId: (await getTeacherOrgId(prof))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(prof),
     periodicity: "quarter",
     humanTeamsCount: 3,
     botCount: 0,
@@ -172,7 +173,7 @@ describe("le code rend sa place", () => {
   it("refuse une partie rangée, comme elle refuse d'être rejointe", async () => {
     const partie = await createClassGame({
       teacherId: prof,
-      organizationId: (await getTeacherOrgId(prof))!,
+      organizationId: await etablissementDeLEnseignantSousLicence(prof),
       periodicity: "quarter",
       humanTeamsCount: 2,
       botCount: 0,
@@ -240,7 +241,7 @@ describe("les élèves entrés avant que le code existe", () => {
   it("n'ont pas de clé, et un geste de l'enseignant la leur donne", async () => {
     const partie = await createClassGame({
       teacherId: prof,
-      organizationId: (await getTeacherOrgId(prof))!,
+      organizationId: await etablissementDeLEnseignantSousLicence(prof),
       periodicity: "quarter",
       humanTeamsCount: 2,
       botCount: 0,

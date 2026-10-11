@@ -3,13 +3,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
-import { entitlementsForUser } from "@/services/entitlements.service";
+import { unCompteAvecEpisodes } from "@/services/acces.service";
+import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DES_EPISODES } from "@/config/tarifs";
 import { cohortesDeLEnseignant } from "@/services/cohortes.service";
 import { episodeParCode, EPISODES } from "@/pedagogy/episodes/registre";
 import {
   estUnRefusDeCohorte,
   NOM_DE_COHORTE_MAX,
-  OFFRE_DES_COHORTES,
   REFUS_DE_COHORTE,
   REFUS_SANS_LICENCE,
 } from "@/config/cohortes";
@@ -42,8 +42,9 @@ export const dynamic = "force-dynamic";
  * bouton (un `<details>`), ouverte d'elle-même pour qui n'a encore rien créé, pour qui
  * arrive d'une fiche d'épisode (`?episode=…`, l'épisode pré-coché) et après un refus.
  *
- * SANS LICENCE, la page se montre, avec son formulaire ; la création est refusée par le
- * serveur (services/cohortes.service.ts), avec le message et le lien vers les tarifs.
+ * SANS LICENCE QUI INCLUT LES ÉPISODES (une licence Classe ou Campus seule ne suffit pas :
+ * les épisodes se vendent à part), la page se montre, avec son formulaire ; la création
+ * est refusée par le serveur (services/cohortes.service.ts), avec le message et le lien vers les tarifs.
  * La page le dit avant, pour qu'on ne remplisse pas un formulaire pour rien.
  */
 export default async function MesCohortesPage({
@@ -56,10 +57,10 @@ export default async function MesCohortesPage({
   if (!session) redirect("/teacher/login");
   const [cohortes, droits, staff] = await Promise.all([
     cohortesDeLEnseignant(session.userId),
-    entitlementsForUser(session.userId),
+    unCompteAvecEpisodes([session.userId]),
     getStaffContext(session.userId),
   ]);
-  const licence = droits.plan === "full";
+  const licence = droits;
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const preselection = episode && episodeParCode(episode) ? episode : null;
   const raison = estUnRefusDeCohorte(refus) ? refus : null;
@@ -70,7 +71,7 @@ export default async function MesCohortesPage({
       <EnTeteDePage
         surtitre="Espace enseignant"
         titre="Mes cohortes"
-        chapeau="Une cohorte fait jouer des épisodes manager à une classe. Vos élèves la rejoignent par son code, sans compte, et jouent les épisodes que vous avez choisis, sous la licence de votre établissement."
+        chapeau="Une cohorte fait jouer des épisodes manager à une classe. Vos élèves la rejoignent par son code, sans compte, et jouent les épisodes que vous avez choisis, sous la licence épisodes de votre établissement."
       >
         <NavigationEnseignant
           className="mt-6"
@@ -103,8 +104,12 @@ export default async function MesCohortesPage({
             data-cohortes-sans-licence=""
             className="rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300 sm:px-4 sm:py-3"
           >
-            <strong className="font-semibold text-slate-100">{OFFRE_DES_COHORTES}.</strong>{" "}
+            <strong className="font-semibold text-slate-100">{MARQUE_DES_EPISODES}.</strong>{" "}
             {REFUS_SANS_LICENCE}{" "}
+            <Link href={lienDuDevis("episodes")} prefetch={false} className={LIEN_A_L_ENCRE}>
+              {LIBELLE_DU_DEVIS}
+            </Link>{" "}
+            ·{" "}
             <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
               Voir les tarifs
             </Link>

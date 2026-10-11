@@ -4,12 +4,16 @@
  * Décision du propriétaire (octobre 2026), avec la grille tarifaire : « Fermer les
  * niveaux 4 à 6 ». La Découverte gratuite comprend l'arène aux niveaux 1 à 3 ; les
  * niveaux avancés (RH, RSE, investissement, dividende, placement) sont inclus dans les
- * offres Enseignant et Établissement. La règle vaut pour TOUS ceux qui n'ont pas de
- * licence en cours : le visiteur du solo public, l'enseignant et l'établissement sans
- * licence. Une licence en cours ouvre tout (services/acces.service.ts).
+ * offres de l'arène (Classe et Campus, config/tarifs.ts). La règle vaut pour TOUS ceux
+ * qui n'ont pas de licence de l'arène en cours : le visiteur du solo public, l'enseignant
+ * et l'établissement sans licence. Une licence de l'arène en cours ouvre tous les niveaux
+ * (services/acces.service.ts).
  *
- * L'étendue reste l'argument : les niveaux fermés restent VISIBLES, marqués « Offre
- * Enseignant » avec le lien vers les tarifs, jamais un bouton grisé muet.
+ * L'étendue reste l'argument : les niveaux fermés restent VISIBLES, marqués du nom de
+ * l'offre avec le lien vers les tarifs, jamais un bouton grisé muet. Le nom de l'offre et
+ * la phrase qui l'explique vivent dans config/tarifs.ts (`MARQUE_DE_L_ARENE`,
+ * `messageNiveauxReserves`) : ce module-ci est lu par le formulaire, côté navigateur, et
+ * n'importe pas la grille ; la page serveur lui passe ces textes.
  *
  * Le réglage vit dans /admin et peut encore s'ajuster sans déploiement : relever le
  * niveau maximum, ou rouvrir une entreprise à tous les niveaux (l'ancienne « vitrine »).
@@ -56,9 +60,6 @@ export const VITRINE_SOLO_PAR_DEFAUT: VitrineSolo = {
  * centaine, et un préchargement resté en attente tenait la page pour « jamais finie ».
  */
 export const LIEN_TARIFS = "/tarifs";
-
-/** Le nom de l'offre qui ouvre les niveaux fermés, tel que l'interface le marque. */
-export const OFFRE_DES_NIVEAUX = "Offre Enseignant";
 
 /**
  * Colonne de JSON libre : une valeur absente, d'une version antérieure ou hors bornes
@@ -109,12 +110,4 @@ export const aDeuxEtages = (vitrine: VitrineSolo): boolean =>
 export function niveauxFermes(vitrine: VitrineSolo): string {
   const premier = vitrine.niveauMaxAutres + 1;
   return premier >= NIVEAU_MAX ? `Le niveau ${NIVEAU_MAX}` : `Les niveaux ${premier} à ${NIVEAU_MAX}`;
-}
-
-/** Le message qui dit pourquoi, et ce qui les ouvre. Le lien vers les tarifs l'accompagne. */
-export function messageNiveauxReserves(vitrine: VitrineSolo): string {
-  const premier = vitrine.niveauMaxAutres + 1;
-  return premier >= NIVEAU_MAX
-    ? `Le niveau ${NIVEAU_MAX} est inclus dans les offres Enseignant et Établissement.`
-    : `Les niveaux ${premier} à ${NIVEAU_MAX} sont inclus dans les offres Enseignant et Établissement.`;
 }

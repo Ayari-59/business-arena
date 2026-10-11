@@ -25,7 +25,7 @@ import { libelleCreneau } from "@/lib/creneaux";
 export interface RendezVousFormState {
   error: string | null;
   /** Le rendez-vous est pris : ce que l'enseignant doit savoir. */
-  ok: { quand: string; email: string; dansAgenda: boolean } | null;
+  ok: { quand: string; email: string; dansAgenda: boolean; confirmationEnvoyee: boolean } | null;
   /** La saisie, rendue au formulaire après un échec. */
   values: Record<string, string> | null;
 }
@@ -109,7 +109,13 @@ export async function reserverRendezVousAction(
   );
   return {
     error: null,
-    ok: { quand: libelleCreneau(rdv.debut), email: d.email, dansAgenda: rdv.dansAgenda },
+    // L'écran ne promet la confirmation que si elle est partie (audit PAR-06).
+    ok: {
+      quand: libelleCreneau(rdv.debut),
+      email: d.email,
+      dansAgenda: rdv.dansAgenda,
+      confirmationEnvoyee: envoi.envoye,
+    },
     values: null,
   };
 }

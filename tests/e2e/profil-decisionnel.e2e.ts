@@ -76,7 +76,7 @@ describe("le profil décisionnel", () => {
       viewport: { width: 1280, height: 900 },
       locale: "fr-FR",
     });
-    await enseignantSousLicence(contexte);
+    await enseignantSousLicence(contexte, { episodes: true });
   });
 
   afterAll(async () => {
@@ -178,7 +178,7 @@ describe("le profil décisionnel", () => {
 describe("une partie en Découverte", () => {
   it("se joue jusqu'au bilan, mais ne compte pas dans le profil", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
-    await enseignantSousLicence(contexte);
+    await enseignantSousLicence(contexte, { episodes: true });
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );

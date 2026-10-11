@@ -1,4 +1,4 @@
-import { EPISODES_DE_DEMO } from "./episodes/demos";
+import { REFUS_DES_COHORTES } from "./tarifs";
 
 /**
  * LES COHORTES CRÉÉES PAR L'ENSEIGNANT : CE QUE L'ÉCRAN DIT, ÉCRIT UNE FOIS.
@@ -6,8 +6,9 @@ import { EPISODES_DE_DEMO } from "./episodes/demos";
  * Décision du propriétaire (octobre 2026) : « des cohortes créées par l'enseignant ».
  * Depuis son espace, un enseignant sous licence crée une cohorte (un nom, des épisodes
  * choisis) ; ses élèves la rejoignent par son code, sans compte, et jouent ces épisodes
- * sous la licence de l'établissement. La grille dit « pas d'essai en classe » : sans
- * licence en cours, la création est refusée côté serveur
+ * sous la licence de l'établissement. Les épisodes se vendent à part, sur devis (config/
+ * tarifs.ts) : il faut une licence en cours QUI INCLUT LES ÉPISODES ; une licence Classe
+ * ou Campus seule n'ouvre que l'arène. Sans elle, la création est refusée côté serveur
  * (services/cohortes.service.ts), même pour une cohorte des seules démonstrations.
  *
  * Les textes vivent ici pour que la page, l'action et les tests disent la même chose.
@@ -17,11 +18,8 @@ import { EPISODES_DE_DEMO } from "./episodes/demos";
 /** La longueur d'un nom de cohorte. */
 export const NOM_DE_COHORTE_MAX = 120;
 
-/** L'offre qui ouvre la création des cohortes, telle que l'écran la marque. */
-export const OFFRE_DES_COHORTES = "Offres Enseignant et Établissement";
-
-/** Le refus sans licence, avec ce qui reste possible (le lien vers les tarifs suit). */
-export const REFUS_SANS_LICENCE = `Créer une cohorte demande une licence en cours de votre établissement. Sans elle, aucune cohorte ne se crée, pas même avec les seules démonstrations : les ${EPISODES_DE_DEMO.length} épisodes de démonstration se jouent sans cohorte, par leur lien.`;
+/** Le refus sans licence épisodes, avec ce qui reste possible (le lien vers les tarifs suit). */
+export const REFUS_SANS_LICENCE = REFUS_DES_COHORTES;
 
 /** Les refus de l'action, par code : l'adresse porte le code, jamais le texte. */
 export const REFUS_DE_COHORTE = {

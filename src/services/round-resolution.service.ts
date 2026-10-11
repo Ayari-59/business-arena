@@ -23,7 +23,6 @@ import {
 import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { assertPlayable } from "@/services/play-lock";
-import { entitlementsForOrg } from "@/services/entitlements.service";
 import { proposedDecisionsFor } from "@/services/decision-baseline";
 import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
 import {
@@ -574,13 +573,10 @@ async function resolveGameRound(
       .values(output.companies.map((state) => ({ teamId: state.id, roundIndex, state })))
       .onConflictDoNothing();
 
-    // Palier gratuit : la partie s'arrête au dernier tour ouvert par le plan,
-    // même si le scénario en prévoit davantage (« ne va pas au bout »). Une
-    // licence en cours lève la borne ; sans établissement (solo public), le
-    // palier gratuit s'applique aussi.
-    const ent = await entitlementsForOrg(game.organizationId);
-    const cappedByPlan = ent.maxRounds != null && roundIndex >= ent.maxRounds;
-    const finished = roundIndex >= scenario.roundsCount || cappedByPlan;
+    // La partie va au bout de son scénario. L'ancien palier gratuit qui l'arrêtait
+    // avant la fin est retiré (services/entitlements.service.ts) : sans licence, la
+    // classe ne se crée pas, et une partie créée se joue jusqu'au dernier tour.
+    const finished = roundIndex >= scenario.roundsCount;
 
     // Post-traitement AVANT l'avancement d'état : si l'une de ces étapes
     // échoue, le round reste en « resolving » et le catch le remet à « open ».
@@ -627,9 +623,6 @@ async function resolveGameRound(
           activeEvents: output.events,
           pendingEvents: [],
           pendingEventCodes: undefined,
-          // Vrai seulement si la partie s'arrête AVANT la fin du scénario, du
-          // fait du palier gratuit : sert la bannière d'upsell côté prof.
-          planCapped: cappedByPlan && roundIndex < scenario.roundsCount,
         },
       })
       .where(eq(games.id, gameId));

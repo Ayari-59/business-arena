@@ -12,7 +12,7 @@ import { ATELIERS } from "../../src/config/ateliers";
  * Décision du propriétaire (octobre 2026) : « Fermer les niveaux 4 à 6 et mettre
  * uniquement 5 épisodes en démo », pour tous ceux qui n'ont pas de licence active. Ce
  * parcours regarde ce qu'en voit un visiteur sans compte et un enseignant sans licence :
- * les niveaux fermés restent visibles, marqués « Offre Enseignant » avec le lien vers
+ * les niveaux fermés restent visibles, marqués « Offre Classe ou Campus » avec le lien vers
  * les tarifs, et le serveur refuse un formulaire forgé ; au catalogue, les cinq démos
  * sont signalées et se jouent en Découverte, les autres sont marquées « Offre
  * Entreprise » et ne se lancent pas, même par leur adresse.
@@ -64,27 +64,27 @@ async function jouerJusquAuBilan(page: Page, placeholder: string): Promise<void>
 }
 
 describe("/jouer sans licence", () => {
-  it("les niveaux 4 à 6 restent visibles, marqués « Offre Enseignant », avec le lien vers les tarifs", async () => {
+  it("les niveaux 4 à 6 restent visibles, marqués « Offre Classe ou Campus », avec le lien vers les tarifs", async () => {
     const c = await contexte(true);
     const page = await c.newPage();
     await aller(page, "/jouer");
     const encadre = page.locator("[data-niveaux-reserves]");
     await encadre.waitFor({ state: "visible" });
     const dit = await encadre.innerText();
-    expect(dit).toContain("Les niveaux 4 à 6 · Offre Enseignant");
-    expect(dit).toContain("Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement.");
+    expect(dit).toContain("Les niveaux 4 à 6 · Offre Classe ou Campus");
+    expect(dit).toContain("Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus.");
     expect(await encadre.getByRole("link", { name: /Voir les tarifs/ }).getAttribute("href")).toBe(
       "/tarifs",
     );
     // Chaque niveau fermé se nomme comme tel, et reste à l'écran.
     for (const n of [4, 5, 6]) {
-      const bouton = page.getByRole("button", { name: new RegExp(`^Niveau ${n} .*Offre Enseignant$`) });
+      const bouton = page.getByRole("button", { name: new RegExp(`^Niveau ${n} .*Offre Classe ou Campus$`) });
       expect(await bouton.count(), `niveau ${n}`).toBe(1);
       expect(await bouton.isVisible()).toBe(true);
     }
     for (const n of [1, 2, 3]) {
       expect(
-        await page.getByRole("button", { name: new RegExp(`^Niveau ${n} .*Offre Enseignant$`) }).count(),
+        await page.getByRole("button", { name: new RegExp(`^Niveau ${n} .*Offre Classe ou Campus$`) }).count(),
       ).toBe(0);
     }
     // Une même borne pour les neuf entreprises : l'encadré le dit une fois, pas neuf badges.
@@ -105,7 +105,7 @@ describe("/jouer sans licence", () => {
     await page.getByRole("button", { name: "Lancer la partie" }).click();
     await page.waitForURL(/\/jouer\?reserve=1/, { timeout: 30_000 });
     const statut = page.locator("[role=status]", { hasText: "Offres Enseignant" }).or(
-      page.locator("[role=status]", { hasText: "offres Enseignant et Établissement" }),
+      page.locator("[role=status]", { hasText: "offres Classe et Campus" }),
     );
     await statut.first().waitFor({ state: "visible" });
     expect(await statut.first().getByRole("link", { name: /tarifs/ }).getAttribute("href")).toBe(
@@ -160,11 +160,11 @@ describe("la partie d'un enseignant sans licence", () => {
     for (const o of options) {
       const ferme = Number(o.v) > 3;
       expect(o.ferme, o.v).toBe(ferme);
-      expect(o.texte.includes("Offre Enseignant"), o.v).toBe(ferme);
+      expect(o.texte.includes("Offre Classe ou Campus"), o.v).toBe(ferme);
     }
     const message = page.locator("[data-niveaux-reserves]");
     expect(await message.innerText()).toContain(
-      "Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement.",
+      "Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus.",
     );
     expect(await message.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe(
       "/tarifs",
@@ -178,7 +178,7 @@ describe("la partie d'un enseignant sans licence", () => {
     await page.getByRole("button", { name: /Créer la partie/ }).click();
     await page.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
     const alerte = page.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
-    expect(await alerte.innerText()).toContain("inclus dans les offres Enseignant et Établissement");
+    expect(await alerte.innerText()).toContain("inclus dans les offres Classe et Campus");
     expect(await alerte.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe(
       "/tarifs",
     );
@@ -192,7 +192,7 @@ describe("la partie d'un enseignant sans licence", () => {
     await aller(page, `/animations/${atelier.code}`);
     const ferme = page.locator("[data-atelier-ferme]");
     await ferme.waitFor({ state: "visible" });
-    expect(await ferme.innerText()).toContain("Offre Enseignant");
+    expect(await ferme.innerText()).toContain("Offre Classe ou Campus");
     expect(await ferme.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe(
       "/tarifs",
     );
@@ -207,7 +207,7 @@ describe("la partie d'un enseignant sans licence", () => {
 });
 
 describe("le catalogue des épisodes sans licence", () => {
-  it("les démos en tête, signalées ; les autres visibles, marquées « Offre Entreprise », sans lien de jeu", async () => {
+  it("les démos en tête, signalées ; les autres visibles, marquées « Épisodes manager · sur devis », sans lien de jeu", async () => {
     const c = await contexte();
     const page = await c.newPage();
     await aller(page, "/entreprises/episode");
@@ -221,6 +221,7 @@ describe("le catalogue des épisodes sans licence", () => {
     );
     expect(await page.locator("[data-episode-ferme]").count()).toBe(EPISODES.length - NOMBRE_DE_DEMOS);
     expect(await page.locator("[data-marque-offre]").count()).toBe(EPISODES.length - NOMBRE_DE_DEMOS);
+    expect(await page.locator("[data-marque-offre]").first().textContent()).toBe("Épisodes manager · sur devis");
     expect(
       await page.getByRole("link", { name: /Jouer l'épisode/, includeHidden: true }).count(),
     ).toBe(2 * NOMBRE_DE_DEMOS);
@@ -254,11 +255,11 @@ describe("les épisodes sans licence", () => {
     await ferme.waitFor({ state: "visible" });
     const vu = await texte(page);
     expect(vu).toContain(NON_DEMO.titre);
-    expect(vu).toContain("Offre Entreprise");
-    expect(vu).toContain("Cet épisode est inclus dans l'offre Entreprise");
+    expect(vu).toContain("Épisodes manager · sur devis");
+    expect(vu).toContain("Cet épisode est inclus dans l'offre Épisodes manager");
     expect(
-      await page.getByRole("link", { name: "Voir les tarifs et demander un devis" }).getAttribute("href"),
-    ).toBe("/tarifs");
+      await ferme.getByRole("link", { name: "Demander un devis" }).getAttribute("href"),
+    ).toBe("/devis?offre=episodes");
     expect(await page.getByRole("button", { name: "Commencer l'épisode" }).count()).toBe(0);
     // Les démos sont proposées à la place.
     for (const code of EPISODES_DE_DEMO) {
@@ -280,10 +281,10 @@ describe("les épisodes sans licence", () => {
       expect(await page.locator("input[name=niveau]").count()).toBe(1);
       expect(await page.locator("input[name=niveau]").getAttribute("value")).toBe("decouverte");
       const fermes = await page.locator("[data-niveaux-fermes] li").allInnerTexts();
-      expect(fermes.map((t) => t.split("\n")[0])).toEqual([
-        "Standard · Offre Entreprise",
-        "Expert · Offre Entreprise",
-      ]);
+      // Le lien porte le tirage (`?hasard=`) : c'est le lien qu'un enseignant donne à sa
+      // classe. Devant un élève, les niveaux fermés ne portent aucune marque de vente.
+      expect(fermes.map((t) => t.split("\n")[0])).toEqual(["Standard", "Expert"]);
+      expect(await texte(page)).toContain("Les autres niveaux ne sont pas ouverts sur cet appareil.");
       await page.getByRole("button", { name: "Commencer l'épisode" }).click();
       await page.getByText("Niveau Découverte", { exact: true }).waitFor({ state: "visible" });
       await jouerJusquAuBilan(page, ep.prevision.placeholder);

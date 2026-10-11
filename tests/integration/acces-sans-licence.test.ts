@@ -26,7 +26,8 @@ import {
   joinGameByCode,
   submitTeamDecisions,
 } from "@/services/game.service";
-import { accesAuxEpisodes, NiveauReserveError } from "@/services/acces.service";
+import { accesAuxEpisodes, ClasseReserveError, NiveauReserveError } from "@/services/acces.service";
+import { REFUS_DE_LA_CLASSE } from "@/config/tarifs";
 import { episodeOuvert, EPISODES_DE_DEMO, niveauxDeLEpisode } from "@/config/episodes/demos";
 import { creerCohorte, rattacherCohorte, rejoindreCohorte } from "@/services/cohortes.service";
 import { enregistrerPartie } from "@/services/episode-parties.service";
@@ -44,7 +45,7 @@ const DECISIONS: RoundDecisions = {
   maintenanceBudget: 4000,
 };
 
-const MESSAGE = /Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement/;
+const MESSAGE = /Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus/;
 
 let invite: string;
 let sansLicence: { userId: string; orgId: string };
@@ -68,7 +69,7 @@ beforeAll(async () => {
   });
   if ("error" in r) throw new Error(r.error);
   sansLicence = { userId: r.userId, orgId: (await getTeacherOrgId(r.userId))! };
-  sousLicence = await etablissementSousLicence("Accès");
+  sousLicence = await etablissementSousLicence("Accès", { episodes: true });
 });
 
 const niveauDe = async (gameId: string) =>
@@ -124,12 +125,15 @@ describe("la partie de classe", () => {
       scenarioCode: "nova",
     });
 
-  it("sans licence : niveaux 1 à 3 seulement, refus motivé au-delà", async () => {
-    await expect(classe(sansLicence.orgId, sansLicence.userId, 3)).resolves.toBeTruthy();
-    await expect(classe(sansLicence.orgId, sansLicence.userId, 4)).rejects.toThrow(MESSAGE);
-    await expect(classe(sansLicence.orgId, sansLicence.userId, 6)).rejects.toBeInstanceOf(
-      NiveauReserveError,
-    );
+  it("sans licence : aucune partie de classe, à aucun niveau (pas d'essai en classe), refus motivé", async () => {
+    // Décision du propriétaire (octobre 2026) : la classe sans licence fermait d'abord
+    // les niveaux 4 à 6 ; elle se ferme désormais entière (tests/integration/offres.test.ts).
+    for (const niveau of [1, 3, 4, 6]) {
+      await expect(classe(sansLicence.orgId, sansLicence.userId, niveau)).rejects.toBeInstanceOf(
+        ClasseReserveError,
+      );
+    }
+    await expect(classe(sansLicence.orgId, sansLicence.userId, 3)).rejects.toThrow(REFUS_DE_LA_CLASSE);
   });
 
   it("avec licence : les six niveaux", async () => {
@@ -148,7 +152,7 @@ describe("la partie de classe", () => {
 
     // La licence disparaît (fin de contrat, erreur de saisie corrigée) …
     for (const l of await listOrgLicences(e.orgId)) await deleteOrgLicence(l.id);
-    await expect(classe(e.orgId, e.userId, 5)).rejects.toBeInstanceOf(NiveauReserveError);
+    await expect(classe(e.orgId, e.userId, 5)).rejects.toBeInstanceOf(ClasseReserveError);
 
     // … la partie commencée continue : décisions rendues, tour clos.
     await submitTeamDecisions({ gameId: partie.gameId, userId: eleve, payload: DECISIONS });
@@ -172,13 +176,13 @@ describe("les épisodes", () => {
     expect(episodeOuvert(prof, nonDemo.code)).toBe(false);
   });
 
-  it("le compte rattaché à un établissement sous licence ouvre tout", async () => {
+  it("le compte rattaché à un établissement dont la licence inclut les épisodes ouvre tout", async () => {
     const acces = await accesAuxEpisodes({ userId: invite, sessionUserId: sousLicence.userId });
     expect(acces).toEqual({ licence: true, source: "compte" });
     expect(niveauxDeLEpisode(acces, nonDemo.code)).toEqual(["decouverte", "standard", "expert"]);
   });
 
-  it("la cohorte d'une organisation sous licence : ses membres jouent les épisodes non démo", async () => {
+  it("la cohorte d'une organisation sous licence épisodes : ses membres jouent les épisodes non démo", async () => {
     const manager = await nouvelInvite();
     const c = await creerCohorte("Acmé · sous licence", sousLicence.orgId);
     await rejoindreCohorte(manager, c.code);

@@ -11,12 +11,12 @@ import { getSession } from "@/lib/session";
 import { getGuestUserId } from "@/lib/guest";
 import { getPlatformConfig } from "@/services/admin.service";
 import { unCompteSousLicence } from "@/services/acces.service";
+import { LIEN_TARIFS, niveauReserve } from "@/config/vitrine-solo";
 import {
-  LIEN_TARIFS,
+  MARQUE_DE_L_ARENE,
   messageNiveauxReserves,
-  niveauReserve,
-  OFFRE_DES_NIVEAUX,
-} from "@/config/vitrine-solo";
+  REFUS_DE_LA_CLASSE,
+} from "@/config/tarifs";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
 import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
@@ -121,10 +121,14 @@ export default async function AtelierPage({
     getSession(),
     getGuestUserId(),
   ]);
+  // « Pas d'essai en classe » : sans licence de l'arène en cours, ni la partie ni le
+  // concours d'un atelier ne se créent, quel que soit leur niveau (createClassGame,
+  // createCompetition). La fiche le dit à la place du bouton.
+  const sansLicence = !(await unCompteSousLicence([session?.userId, invite]));
   const niveauFerme =
+    sansLicence &&
     !tournoi &&
-    niveauReserve(vitrineSolo, atelier.reglages.scenarioCode, atelier.reglages.niveau) &&
-    !(await unCompteSousLicence([session?.userId, invite]));
+    niveauReserve(vitrineSolo, atelier.reglages.scenarioCode, atelier.reglages.niveau);
   // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
   // aussi pour un dixième processus face au deuxième.
   // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
@@ -381,19 +385,20 @@ export default async function AtelierPage({
             <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
               {atelier.reglages.notes}
             </p>
-            {niveauFerme ? (
+            {sansLicence ? (
               <p
                 data-atelier-ferme=""
                 className="mt-4 rounded-lg encadre-neutre px-3 py-2.5 text-sm leading-relaxed text-slate-200 print:hidden"
               >
                 <strong className="font-semibold text-slate-100">
-                  Niveau {atelier.reglages.niveau} · {OFFRE_DES_NIVEAUX}.
+                  {niveauFerme ? `Niveau ${atelier.reglages.niveau} · ` : ""}
+                  {MARQUE_DE_L_ARENE}.
                 </strong>{" "}
-                {messageNiveauxReserves(vitrineSolo)} Sans licence, la partie de cet atelier ne
-                se crée pas à son niveau.{" "}
+                {niveauFerme ? `${messageNiveauxReserves(vitrineSolo)} ` : ""}
+                {REFUS_DE_LA_CLASSE}{" "}
                 <Link
                   href={LIEN_TARIFS}
-                prefetch={false}
+                  prefetch={false}
                   className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
                   Voir les tarifs

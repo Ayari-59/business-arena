@@ -134,7 +134,7 @@ const TRACES = {
       <path d="M9 8h6M9 12h6M9 16h3" />
     </>
   ),
-  /** Ce qui est verrouillé : le palier gratuit, un vol, une attaque informatique. */
+  /** Ce qui est verrouillé : une offre non souscrite, un vol, une attaque informatique. */
   verrou: (
     <>
       <rect x="4" y="10" width="16" height="11" rx="2" />

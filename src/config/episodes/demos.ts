@@ -4,10 +4,11 @@ import { NIVEAUX, type CodeNiveau } from "./niveaux";
  * LES ÉPISODES DE DÉMONSTRATION : CE QUI SE JOUE SANS LICENCE.
  *
  * Décision du propriétaire (octobre 2026), avec la grille tarifaire : la Découverte
- * gratuite comprend un épisode de démonstration PAR MÉTIER ; tous les autres sont
- * inclus dans l'offre Entreprise. Sans licence, seuls ceux-ci se lancent, et au niveau
- * Découverte. Les autres restent visibles au catalogue (titre, accroche, métier),
- * marqués « Offre Entreprise », avec le lien vers les tarifs.
+ * gratuite comprend un épisode de démonstration PAR MÉTIER ; tous les autres se vendent à
+ * part, sur devis (l'offre Épisodes manager, config/tarifs.ts), et ne sont PAS inclus dans
+ * les offres de l'arène. Sans licence qui inclut les épisodes, seuls ceux-ci se lancent,
+ * et au niveau Découverte. Les autres restent visibles au catalogue (titre, accroche,
+ * métier), marqués du nom de l'offre, avec le lien vers les tarifs.
  *
  * UNE SEULE SOURCE, facile à changer : la page des épisodes, la page de jeu, le profil
  * et la recommandation la lisent. Un test garde la règle « un par métier, tous connus,
@@ -42,23 +43,11 @@ export const estUneDemo = (code: string): boolean =>
 /** La marque d'une démonstration au catalogue. */
 export const MARQUE_DEMO = "Démo gratuite";
 
-/** La marque d'un épisode fermé sans licence, et l'offre qui l'ouvre. */
-export const OFFRE_DES_EPISODES = "Offre Entreprise";
-
-/**
- * Le niveau conseillé sans licence : la démonstration ne se joue qu'en Découverte, et
- * le profil ne compte pas la Découverte. Le conseil le dit plutôt que de proposer un
- * niveau qui ne se lance pas.
+/*
+ * Le nom de l'offre qui ouvre les autres épisodes, et les phrases qui la nomment, vivent
+ * dans config/tarifs.ts (`MARQUE_DES_EPISODES`, `POURQUOI_LA_DECOUVERTE`) : une seule
+ * source de noms. Ce module-ci est lu par des composants clients et n'importe rien de lourd.
  */
-export const CONSEIL_SANS_LICENCE: { niveau: CodeNiveau; pourquoi: string } = {
-  niveau: NIVEAU_DES_DEMOS,
-  pourquoi:
-    "Sans licence, les démonstrations se jouent en Découverte, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre Entreprise.",
-};
-
-/** Ce qu'apporte l'offre Entreprise, pour qui joue sans licence. `total` : les épisodes du registre. */
-export const ceQuApporteLOffre = (total: number): string =>
-  `L'offre Entreprise ouvre les ${total} épisodes, aux niveaux Standard et Expert, et le profil décisionnel qu'ils construisent.`;
 
 /* ---------------------------------------------------------------------------
  * CE QUI SE LANCE. La licence est établie côté serveur (services/acces.service.ts) ;
@@ -66,7 +55,7 @@ export const ceQuApporteLOffre = (total: number): string =>
  * ------------------------------------------------------------------------- */
 
 export interface AccesAuxEpisodes {
-  /** Une licence en cours couvre-t-elle cette personne ? */
+  /** Une licence en cours qui inclut les épisodes couvre-t-elle cette personne ? */
   licence: boolean;
   /** D'où elle vient : la cohorte (l'organisation de son animateur) ou le compte. */
   source: "cohorte" | "compte" | null;

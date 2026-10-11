@@ -25,6 +25,7 @@ import {
 } from "@/services/game.service";
 import { getTeamSituations, unlockHint } from "@/services/pedagogy.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 // prix cassé + plan au-delà de la machine : utilisation 100 %, demande perdue
 const SATURATING: RoundDecisions = {
@@ -49,6 +50,8 @@ beforeAll(async () => {
   if ("error" in result) throw new Error(result.error);
   teacherId = result.userId;
   const orgId = (await getTeacherOrgId(teacherId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, teacherId);
   const game = await createClassGame({
     teacherId,
     organizationId: orgId,

@@ -36,7 +36,7 @@ vi.mock("@/db", async () => {
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { games, users } from "@/db/schema";
-import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import {
   createClassGame,
   promesseDuCarton,
@@ -46,6 +46,7 @@ import {
   resolveCurrentRound,
 } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 let prof: string;
 let gameId: string;
@@ -89,7 +90,7 @@ beforeAll(async () => {
 
   const partie = await createClassGame({
     teacherId: prof,
-    organizationId: (await getTeacherOrgId(prof))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(prof),
     periodicity: "quarter",
     humanTeamsCount: 4,
     botCount: 2,
@@ -167,7 +168,7 @@ describe("l'élève qui scanne le carton de sa table", () => {
     // Une partie à part : celle du reste du fichier doit rester au tour 1.
     const partie = await createClassGame({
       teacherId: prof,
-      organizationId: (await getTeacherOrgId(prof))!,
+      organizationId: await etablissementDeLEnseignantSousLicence(prof),
       periodicity: "quarter",
       humanTeamsCount: 3,
       botCount: 0,
@@ -258,7 +259,7 @@ describe("le concours, où la table ne décide pas", () => {
     // n'apprendrait rien de plus sur elle.
     const partie = await createClassGame({
       teacherId: prof,
-      organizationId: (await getTeacherOrgId(prof))!,
+      organizationId: await etablissementDeLEnseignantSousLicence(prof),
       periodicity: "quarter",
       humanTeamsCount: 3,
       botCount: 0,

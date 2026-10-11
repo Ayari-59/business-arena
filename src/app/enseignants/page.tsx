@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { ATELIERS_A_REFERENTIEL, DIPLOMES_DES_ATELIERS, LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { LigneDePrix } from "@/components/ligne-de-prix";
 import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
@@ -28,8 +30,12 @@ export const metadata: Metadata = {
     "Le business game qui mesure une décision, pas un clic, et rend compte au référentiel sans mentir. Ateliers clés en main du STMG au DCG, partie créée en 30 secondes.",
 };
 
-/** Les diplômes couverts, dédupliqués depuis le registre des ateliers. */
-const DIPLOMES = [...new Set(ATELIERS.map((a) => publicDeLAtelier(a)))];
+/**
+ * Les diplômes visés : les codes de diplôme des ateliers, une option comptant pour son
+ * diplôme (BTS MHR et ses options B et C : un diplôme), les ateliers sans diplôme
+ * exclus (audit C-09 : le compte des publics annonçait « 12 diplômes » pour 8).
+ */
+const DIPLOMES = DIPLOMES_DES_ATELIERS;
 const HEURES_TOTALES = Math.round(
   ATELIERS.reduce((s, a) => s + dureeTotaleHeures(a), 0),
 );
@@ -152,7 +158,7 @@ const CONFIANCE = [
     // sans engagement : la grille (config/tarifs.ts) n'a pas d'essai en
     // classe. Ce qui est gratuit, c'est le simulateur en solo.
     label: "Découverte gratuite",
-    desc: "Le simulateur en solo, sans compte ; l'usage en classe avec l'abonnement",
+    desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}`,
   },
   {
     // LA PROMESSE SUIVAIT LA PHRASE QU'ON A RETIRÉE, et elle est devenue
@@ -313,8 +319,8 @@ export default async function EnseignantsPage() {
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-center text-base text-slate-400">
             {ATELIERS.length} déroulés prêts à animer, {HEURES_TOTALES} heures
-            de séance au total, chacun adossé à son référentiel et livré avec
-            ses livrables et sa grille d&apos;évaluation.
+            de séance au total, dont {ATELIERS_A_REFERENTIEL.length} adossés au référentiel
+            d&apos;un diplôme, chacun livré avec ses livrables et sa grille d&apos;évaluation.
           </p>
           {/*
             QUINZE ATELIERS DÉTAILLÉS SUR UNE PAGE DE PRÉSENTATION.
@@ -481,6 +487,7 @@ export default async function EnseignantsPage() {
           titre="Prêt à faire jouer votre classe ?"
           texte="Commencez par le réglage qui vous convient, ou ouvrez directement votre espace."
           mentions={CONFIANCE}
+          prix={<LigneDePrix />}
         >
           <Link href="/orientation" className={bouton({ taille: "l" })}>
             Choisir ma simulation

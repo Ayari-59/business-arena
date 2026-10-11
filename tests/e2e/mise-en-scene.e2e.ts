@@ -218,7 +218,7 @@ describe("la vitrine", () => {
       expect(Math.abs(a.height - b.height), "hauteurs").toBeLessThanOrEqual(1);
       // La ligne sous les boutons ne promet plus la gratuité, et mène à l'offre :
       // la grille tarifaire (/tarifs), plus la prise de rendez-vous.
-      const licence = page.getByRole("link", { name: "licence établissement" });
+      const licence = page.getByRole("link", { name: "les offres Classe et Campus" });
       expect(await licence.getAttribute("href")).toBe("/tarifs");
       expect(await page.locator("main").innerText()).not.toContain("Sans compte, sans installation");
       // Les neuf lieux, en 3 × 3 sous les boutons, sans défilement de côté.

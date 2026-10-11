@@ -90,13 +90,16 @@ describe("la vitrine à deux étages", () => {
     const message = page.locator("[data-niveaux-reserves]");
     await message.waitFor({ state: "visible" });
     expect(await message.innerText()).toContain(
-      "Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement.",
+      "Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus.",
     );
-    expect(await message.innerText()).toContain("Offre Enseignant");
+    expect(await message.innerText()).toContain("Offre Classe ou Campus");
     expect(await message.getByRole("link", { name: /Voir les tarifs/ }).getAttribute("href")).toBe(
       "/tarifs",
     );
-    await message.getByRole("link", { name: /espace enseignant/ }).waitFor({ state: "visible" });
+    // Un compte enseignant n'ouvre pas ces niveaux, une licence le fait : l'encadré ne
+    // propose plus « Accéder à l'espace enseignant » (audit PAR-14), seulement les tarifs.
+    expect(await message.getByRole("link", { name: /espace enseignant/ }).count()).toBe(0);
+    expect(await message.getByRole("link").count()).toBe(1);
   });
 
   it("passer de NOVA au niveau 6 à une autre entreprise ramène le niveau à 3", async () => {
@@ -117,7 +120,7 @@ describe("la vitrine à deux étages", () => {
     await page.getByRole("button", { name: "Lancer la partie" }).click();
     await page.waitForURL(/\/jouer\?reserve=1/, { timeout: 30_000 });
     await page
-      .getByText(/sont inclus dans les offres Enseignant et Établissement/)
+      .getByText(/sont inclus dans les offres Classe et Campus/)
       .first()
       .waitFor({ state: "visible" });
   });

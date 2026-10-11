@@ -4,16 +4,23 @@ import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getPlatformConfig, getStaffContext } from "@/services/admin.service";
-import { entitlementsForUser } from "@/services/entitlements.service";
+import { etatDeLOffre } from "@/services/acces.service";
 import {
   aDeuxEtages,
   LIEN_TARIFS,
-  messageNiveauxReserves,
   NIVEAU_MAX,
   niveauMaxPour,
   niveauxFermes,
-  OFFRE_DES_NIVEAUX,
 } from "@/config/vitrine-solo";
+import {
+  LIBELLE_DU_DEVIS,
+  lienDuDevis,
+  MARQUE_DE_L_ARENE,
+  messageNiveauxReserves,
+  REFUS_DE_LA_CLASSE,
+} from "@/config/tarifs";
+import { LigneDEtatDeLOffre } from "@/components/etat-de-l-offre";
+import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import {
   archiverPartieAction,
   createClassGameAction,
@@ -75,12 +82,15 @@ export default async function TeacherDashboard({
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   // LES NIVEAUX FERMÉS SANS LICENCE (config/vitrine-solo.ts) : visibles dans le choix du
-  // niveau, marqués « Offre Enseignant », et refusés par le serveur à la création.
-  const [{ vitrineSolo: regle }, droits] = await Promise.all([
+  // niveau, marqués du nom de l'offre, et refusés par le serveur à la création.
+  // L'ÉTAT DE L'OFFRE (PAR-13) : la ligne d'en-tête, et la règle de la classe (pas de
+  // partie de classe ni de concours sans licence de l'arène en cours, PAR-01 et PAR-02).
+  const [{ vitrineSolo: regle }, etat] = await Promise.all([
     getPlatformConfig(),
-    entitlementsForUser(session.userId),
+    etatDeLOffre(session.userId),
   ]);
-  const licence = droits.plan === "full";
+  const licence =
+    etat.arene !== null && (etat.arene.state === "active" || etat.arene.state === "bientot_expiree");
   const niveauMaxSansLicence = niveauMaxPour(regle, "", licence);
   const games = await getTeacherGames(session.userId);
   // Ce qui appelle un geste : une partie dont toutes les équipes ont rendu.
@@ -142,6 +152,8 @@ export default async function TeacherDashboard({
         />
       </EnTeteDePage>
       <div className={`${COLONNE_DE_PAGE} space-y-8`}>
+
+      <LigneDEtatDeLOffre etat={etat} niveauMaxGratuit={regle.niveauMaxAutres} />
 
       {echec ? (
         <p
@@ -232,6 +244,25 @@ export default async function TeacherDashboard({
         <h2 id="nouvelle-partie-titre" className="titre-carte text-slate-100">
           Nouvelle partie de classe
         </h2>
+        {!licence ? (
+          // PAS D'ESSAI EN CLASSE : la règle se dit AVANT l'envoi ; le serveur la fait
+          // respecter (services/acces.service.ts, `verifierLaClasse`).
+          <p
+            data-classe-sans-licence=""
+            className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
+          >
+            <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+            <strong className="font-semibold text-slate-100">{MARQUE_DE_L_ARENE}.</strong>{" "}
+            {REFUS_DE_LA_CLASSE}{" "}
+            <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
+              {LIBELLE_DU_DEVIS}
+            </Link>{" "}
+            ·{" "}
+            <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+              Voir les tarifs
+            </Link>
+          </p>
+        ) : null}
         <p className="mt-1 text-sm text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
           <Link href="/animations" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
@@ -343,7 +374,7 @@ export default async function TeacherDashboard({
                     disabled={fermeIci && !aDeuxEtages(regle)}
                   >
                     {p.level} · {p.name} : {p.tagline}
-                    {fermeIci ? ` · ${OFFRE_DES_NIVEAUX}` : ""}
+                    {fermeIci ? ` · ${MARQUE_DE_L_ARENE}` : ""}
                   </option>
                 );
               })}
@@ -352,7 +383,7 @@ export default async function TeacherDashboard({
               <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">
                 <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
                 <strong className="font-semibold text-slate-200">
-                  {niveauxFermes(regle)} · {OFFRE_DES_NIVEAUX}.
+                  {niveauxFermes(regle)} · {MARQUE_DE_L_ARENE}.
                 </strong>{" "}
                 {messageNiveauxReserves(regle)}{" "}
                 <Link
@@ -694,6 +725,14 @@ export default async function TeacherDashboard({
           titre="Organiser un concours · Business Arena Championship"
           ouvert={competitions.length === 0 && games.length === 0}
         >
+          {!licence ? (
+            <p data-concours-sans-licence="" className="mb-3 text-sm text-slate-300">
+              {REFUS_DE_LA_CLASSE}{" "}
+              <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+                Voir les tarifs
+              </Link>
+            </p>
+          ) : null}
           <CompetitionCreateForm />
           <p className="mt-2 text-sm text-slate-400">
             Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :

@@ -56,6 +56,7 @@ import { assertCanCreateGame } from "@/services/licence.service";
 import {
   unCompteSousLicence,
   uneOrganisationSousLicence,
+  verifierLaClasse,
   verifierLeNiveau,
 } from "@/services/acces.service";
 import { type BotProfile } from "@/engine/bots";
@@ -616,8 +617,10 @@ export async function createClassGame(args: {
 }): Promise<{ gameId: string; joinCode: string }> {
   // La licence se vérifie ici, à l'OUVERTURE d'une partie, et nulle part
   // ailleurs : une classe commencée se termine, quoi qu'il advienne du
-  // mandatement. Clore un tour, débriefer et exporter les notes restent
-  // possibles même licence expirée.
+  // mandatement. Clore un tour et débriefer restent possibles même licence expirée.
+  // « Pas d'essai en classe » : sans licence de l'arène en cours (aucune, expirée ou
+  // à venir), la partie de classe ne se crée pas (services/acces.service.ts).
+  await verifierLaClasse(args.organizationId);
   await assertCanCreateGame(args.organizationId);
   // Sans licence en cours, les niveaux fermés ne se créent pas (config/vitrine-solo.ts).
   // Une partie déjà commencée à ces niveaux n'est pas concernée : seule la création l'est.

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
-import { ACTION_PRINCIPALE, LIEN_CONTACT, LIENS_LEGAUX } from "@/config/navigation";
+import { ACTION_PRINCIPALE, LIEN_CONTACT, LIEN_TARIFS_DU_MENU, LIENS_LEGAUX } from "@/config/navigation";
+import { VENDEUR } from "@/config/editeur";
 
 /**
  * LE PIED DE PAGE, SUR TOUTES LES PAGES PUBLIQUES.
@@ -84,8 +85,8 @@ export function PiedDePage() {
               </p>
             </div>
           </div>
-          {/* Deux liens : celui qui aide à décider, et celui qui met quelqu'un
-              au bout du fil. Le premier se distingue par son encre forte et
+          {/* Les liens : celui qui aide à décider, les tarifs, celui qui met
+              quelqu'un au bout du fil, et l'adresse de contact. Le premier se distingue par son encre forte et
               son soulignement, parce qu'un pied de page où tout se ressemble
               ne propose rien ; il a porté l'orange, qui ne dit plus que
               l'action d'un bouton (lot P1). Le logo, lui, garde l'orange de
@@ -108,6 +109,14 @@ export function PiedDePage() {
                 </span>
               </Link>
             ) : null}
+            {ailleurs(LIEN_TARIFS_DU_MENU) ? (
+              <Link
+                href={LIEN_TARIFS_DU_MENU.href}
+                className="text-slate-400 transition-colors hover:text-slate-200"
+              >
+                {LIEN_TARIFS_DU_MENU.libelle}
+              </Link>
+            ) : null}
             {ailleurs(LIEN_CONTACT) ? (
               <Link
                 href={LIEN_CONTACT.href}
@@ -116,6 +125,11 @@ export function PiedDePage() {
                 {LIEN_CONTACT.libelle}
               </Link>
             ) : null}
+            {/* L'adresse de contact, en texte : elle se sélectionne et se recopie
+                (config/editeur.ts). */}
+            <span data-contact-pied="" className="select-all text-slate-400">
+              {VENDEUR.contact}
+            </span>
           </nav>
         </div>
         {/* Le filet ferme la signature : le gris bleuté des cartes, plein, le

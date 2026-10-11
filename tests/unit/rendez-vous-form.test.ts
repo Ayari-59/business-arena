@@ -64,7 +64,7 @@ describe("rendez-vous : le formulaire", () => {
       createElement(RendezVousForm, {
         jours,
         periode,
-        initial: { error: null, ok: { quand: "jeudi 17 septembre à 14 h 30", email: "prof@lycee.fr", dansAgenda: true }, values: null },
+        initial: { error: null, ok: { quand: "jeudi 17 septembre à 14 h 30", email: "prof@lycee.fr", dansAgenda: true, confirmationEnvoyee: true }, values: null },
       }),
     );
     expect(apres).toContain("Rendez-vous confirmé");
@@ -72,6 +72,25 @@ describe("rendez-vous : le formulaire", () => {
     expect(apres).toContain("prof@lycee.fr");
     expect(apres).toContain("invitation d&#x27;agenda");
     expect(apres).not.toContain("Réserver ce créneau");
+  });
+
+  it("si la confirmation n'est pas partie, l'écran ne la promet pas (PAR-06)", () => {
+    const apres = renderToStaticMarkup(
+      createElement(RendezVousForm, {
+        jours,
+        periode,
+        initial: {
+          error: null,
+          ok: { quand: "jeudi 17 septembre à 14 h 30", email: "prof@lycee.fr", dansAgenda: false, confirmationEnvoyee: false },
+          values: null,
+        },
+      }),
+    );
+    expect(apres).toContain("jeudi 17 septembre à 14 h 30");
+    expect(apres).toContain("notez ce créneau");
+    expect(apres).not.toContain("Une confirmation est partie");
+    expect(apres).not.toContain("Répondez à la confirmation");
+    expect(apres).toContain("contact@business-arena.fr");
   });
 
   it("après un échec, la saisie et le créneau choisi reviennent", () => {

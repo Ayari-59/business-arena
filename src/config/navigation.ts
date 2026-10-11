@@ -73,6 +73,19 @@ export const LIEN_CONTACT: LienDeMenu = {
 };
 
 /**
+ * LES TARIFS. Visibles dans la barre sur grand écran et cités par le pied de page :
+ * le visiteur qui veut savoir combien ça coûte ne doit pas avoir à ouvrir le menu.
+ * L'aide ne nomme pas les offres (leurs noms vivent dans config/tarifs.ts, qui tire le
+ * registre des scénarios ; ce plan est lu par le menu, côté navigateur).
+ */
+export const LIEN_TARIFS_DU_MENU: LienDeMenu = {
+  href: "/tarifs",
+  libelle: "Tarifs",
+  aide: "Gratuit pour découvrir en solo ; sur devis pour faire cours, avec les deux offres de l'arène, et pour les épisodes manager.",
+  enTete: true,
+};
+
+/**
  * LES GROUPES SONT LES PUBLICS DU SITE.
  *
  * Le plan rangeait les pages par intention (jouer, découvrir) et par
@@ -206,18 +219,12 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
   },
   {
     // LES TARIFS VIVENT AVEC LE CONTACT : la grille dit ce qui est gratuit et
-    // ce qui se commande, et commander passe par un rendez-vous (le site
-    // n'encaisse rien). Les deux entrées servent le même moment.
+    // ce qui se vend, et tout se vend sur devis (le site n'encaisse rien). Les
+    // deux entrées servent le même moment. « Tarifs » reste aussi visible dans la
+    // barre sur grand écran (audit C-07 : la page était introuvable).
     code: "contact",
     titre: "Tarifs et contact",
-    liens: [
-      {
-        href: "/tarifs",
-        libelle: "Tarifs",
-        aide: "Gratuit pour découvrir en solo, un abonnement pour faire cours : les offres Enseignant et Établissement, et les formules des entreprises.",
-      },
-      LIEN_CONTACT,
-    ],
+    liens: [LIEN_TARIFS_DU_MENU, LIEN_CONTACT],
   },
 ];
 

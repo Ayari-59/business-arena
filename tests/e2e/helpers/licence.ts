@@ -11,6 +11,12 @@ import { BASE } from "./browser";
  * chose à ces niveaux, ou dans les autres épisodes, jouent donc sous licence, posée en
  * base comme le ferait l'administrateur : la règle reste en vigueur, eux sont couverts.
  *
+ * LE PÉRIMÈTRE (migration 0036, config/tarifs.ts) : une licence ouvre l'arène (offre
+ * Classe ou Campus) et/ou les épisodes manager, vendus à part. Par défaut, ces aides
+ * posent une licence de l'ARÈNE seule (Campus), comme celles qu'on vend ; un parcours qui
+ * ouvre des épisodes non démo le demande (`{ episodes: true }`). Une cohorte existe pour
+ * jouer des épisodes : son organisation reçoit une licence qui les inclut.
+ *
  * Deux façons d'être couvert, celles du produit :
  *  · un compte enseignant rattaché à un établissement sous licence, connecté sur ce
  *    navigateur (`enseignantSousLicence`) ;
@@ -30,21 +36,37 @@ async function base<T>(f: (c: Client) => Promise<T>): Promise<T> {
   }
 }
 
+export interface PerimetreE2E {
+  /** L'offre de l'arène ; null : la licence n'ouvre pas l'arène. Défaut : Campus. */
+  arene?: "classe" | "campus" | null;
+  /** La licence ouvre-t-elle les épisodes manager ? Défaut : non. */
+  episodes?: boolean;
+}
+
 /** Une organisation, et une licence en cours si on la demande. */
-async function organisation(c: Client, nom: string, licence: boolean): Promise<string> {
+async function organisation(
+  c: Client,
+  nom: string,
+  licence: boolean,
+  perimetre: PerimetreE2E = {},
+): Promise<string> {
   const { rows } = await c.query(
     "insert into organizations (name, slug, kind) values ($1, $2, 'school') returning id",
     [nom, `e2e-${randomUUID()}`],
   );
   const orgId = rows[0].id as string;
-  if (licence) {
-    await c.query(
-      `insert into org_licences (organization_id, label, starts_at, ends_at)
-       values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days')`,
-      [orgId],
-    );
-  }
+  if (licence) await poser(c, orgId, perimetre);
   return orgId;
+}
+
+/** Poser une licence en cours, avec son périmètre, comme le ferait l'administrateur. */
+async function poser(c: Client, orgId: string, perimetre: PerimetreE2E): Promise<void> {
+  const arene = perimetre.arene === undefined ? "campus" : perimetre.arene;
+  await c.query(
+    `insert into org_licences (organization_id, label, starts_at, ends_at, arene, episodes, max_teachers)
+     values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days', $2, $3, $4)`,
+    [orgId, arene, perimetre.episodes ?? false, arene === "classe" ? 1 : null],
+  );
 }
 
 /** Le jeton de session enseignant, signé comme le fait `lib/session.ts`. */
@@ -66,11 +88,16 @@ function jetonDeSession(userId: string): string {
  */
 export async function enseignantSousLicence(
   contexte: BrowserContext,
-  options: { licence?: boolean } = {},
+  options: { licence?: boolean } & PerimetreE2E = {},
 ): Promise<{ userId: string; orgId: string }> {
   const licence = options.licence ?? true;
   const { userId, orgId } = await base(async (c) => {
-    const orgId = await organisation(c, licence ? "Lycée sous licence" : "Lycée sans licence", licence);
+    const orgId = await organisation(
+      c,
+      licence ? "Lycée sous licence" : "Lycée sans licence",
+      licence,
+      options,
+    );
     const { rows } = await c.query(
       "insert into users (email, display_name) values ($1, $2) returning id",
       [`prof-${randomUUID()}@e2e.test`, "Prof E2E"],
@@ -86,10 +113,10 @@ export async function enseignantSousLicence(
   return { userId, orgId };
 }
 
-/** Une cohorte d'épisodes dont l'organisation est sous licence ; renvoie son code. */
+/** Une cohorte d'épisodes dont l'organisation a une licence épisodes ; renvoie son code. */
 export async function cohorteSousLicence(nom: string): Promise<string> {
   return base(async (c) => {
-    const orgId = await organisation(c, `Entreprise ${nom}`, true);
+    const orgId = await organisation(c, `Entreprise ${nom}`, true, { arene: null, episodes: true });
     const code = `E2E-${randomUUID().slice(0, 4).toUpperCase()}`;
     await c.query(
       `insert into episode_cohortes (code, nom, cle_animateur, organization_id)
@@ -101,15 +128,19 @@ export async function cohorteSousLicence(nom: string): Promise<string> {
 }
 
 /** Une organisation sous licence, pour la rattacher à ce qu'on crée ensuite. */
-export async function organisationSousLicence(nom: string): Promise<string> {
-  return base((c) => organisation(c, nom, true));
+export async function organisationSousLicence(nom: string, perimetre: PerimetreE2E = {}): Promise<string> {
+  return base((c) => organisation(c, nom, true, perimetre));
 }
 
 /**
  * Poser une licence en cours sur l'établissement d'un enseignant inscrit par l'écran (son
  * e-mail), ou retirer celles qu'on lui a posées ainsi.
  */
-export async function licenceDeLEnseignant(email: string, geste: "pose" | "retire"): Promise<void> {
+export async function licenceDeLEnseignant(
+  email: string,
+  geste: "pose" | "retire",
+  perimetre: PerimetreE2E = {},
+): Promise<void> {
   await base(async (c) => {
     const { rows } = await c.query(
       `select m.organization_id as org from organization_members m
@@ -119,11 +150,7 @@ export async function licenceDeLEnseignant(email: string, geste: "pose" | "retir
     );
     if (rows.length !== 1) throw new Error(`établissement de ${email} introuvable`);
     if (geste === "pose") {
-      await c.query(
-        `insert into org_licences (organization_id, label, starts_at, ends_at)
-         values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days')`,
-        [rows[0].org],
-      );
+      await poser(c, rows[0].org, perimetre);
     } else {
       await c.query("delete from org_licences where organization_id = $1 and label = 'Licence e2e'", [
         rows[0].org,

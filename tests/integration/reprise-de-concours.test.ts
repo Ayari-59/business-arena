@@ -18,7 +18,7 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { competitionEntries, competitionMembers, loginAttempts, users } from "@/db/schema";
-import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import {
   codeDeRepriseDe,
   codesDeRepriseDuConcours,
@@ -30,6 +30,7 @@ import {
   startQualification,
 } from "@/services/competition.service";
 import { MAX_ECHECS_REPRISE, normaliserCodeDeReprise } from "@/config/reprise";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 let organizerId: string;
 let competitionId: string;
@@ -56,7 +57,7 @@ beforeAll(async () => {
   organizerId = result.userId;
   const created = await createCompetition({
     organizerId,
-    organizationId: (await getTeacherOrgId(organizerId))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(organizerId),
     name: "Tournoi de reprise",
     periodicity: "quarter",
     groupSize: 2,

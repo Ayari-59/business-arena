@@ -1,5 +1,6 @@
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import Link from "next/link";
+import { VENDEUR } from "@/config/editeur";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,13 +12,13 @@ export const metadata: Metadata = {
 
 /** Mentions légales & RGPD : page statique, sans base de données. */
 const EDITEUR = {
-  nom: "Mohamed AYARI EI",
-  nomCommercial: "MA Formation et Conseils",
-  statut: "entrepreneur individuel (micro-entreprise)",
-  siret: "527 962 559 00037",
-  adresse: "44 rue Bonte Pollet, 59000 Lille",
-  contact: "contact@business-arena.fr",
-  directeur: "Mohamed AYARI",
+  nom: VENDEUR.exploitant,
+  nomCommercial: VENDEUR.nom,
+  statut: VENDEUR.statut,
+  siret: VENDEUR.siret,
+  adresse: `${VENDEUR.adresse.rue}, ${VENDEUR.adresse.codePostal} ${VENDEUR.adresse.ville}`,
+  contact: VENDEUR.contact,
+  directeur: VENDEUR.directeurDeLaPublication,
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { nomDOffre, OFFRES } from "@/config/tarifs";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getOrgDashboard } from "@/services/admin.service";
@@ -48,6 +49,13 @@ export default async function OrgAdminPage() {
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h2 className="text-sm font-semibold text-slate-200">
               Licence · {dashboard.licence.licence.label}
+              {" · "}
+              {[
+                dashboard.licence.licence.arene ? nomDOffre(dashboard.licence.licence.arene) : null,
+                dashboard.licence.licence.episodes ? OFFRES.episodes.nom : null,
+              ]
+                .filter(Boolean)
+                .join(" + ")}
             </h2>
             <p className="text-xs text-slate-400">
               du {dashboard.licence.licence.startsAt.toLocaleDateString("fr-FR")} au{" "}

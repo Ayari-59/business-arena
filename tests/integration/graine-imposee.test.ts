@@ -23,6 +23,7 @@ import { db } from "@/db";
 import { games } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { createClassGame } from "@/services/game.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let teacherId: string;
 let orgId: string;
@@ -37,6 +38,8 @@ beforeAll(async () => {
   if ("error" in r) throw new Error(r.error);
   teacherId = r.userId;
   orgId = (await getTeacherOrgId(teacherId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, teacherId);
 });
 
 const graineDe = async (gameId: string) =>

@@ -8,6 +8,10 @@ import { dossierEnseignant } from "@/config/ateliers/dossiers";
 import { conceptByCode } from "@/config/pedagogy/concepts";
 import { modelByCode } from "@/config/pedagogy/models";
 import { PrintButton } from "@/components/print-button";
+import { dossierOuvert } from "@/services/acces.service";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { lienDuDevis, LIBELLE_DU_DEVIS, MARQUE_DE_L_ARENE, REFUS_DU_DOSSIER } from "@/config/tarifs";
+import { LIEN_A_L_ENCRE } from "@/components/bouton";
 
 /**
  * LE DOSSIER DE L'ENSEIGNANT : LES CORRIGÉS.
@@ -23,6 +27,9 @@ import { PrintButton } from "@/components/print-button";
  * La page est derrière la session. Le dossier de l'élève, lui, est public :
  * mettre les deux au même endroit reviendrait à distribuer le corrigé avec le
  * sujet.
+ *
+ * Elle suit la règle de la classe (services/acces.service.ts) : sans licence de l'arène
+ * en cours, ou licence expirée, la page dit ce qui l'ouvre au lieu des corrigés.
  */
 export const dynamic = "force-dynamic";
 
@@ -46,6 +53,36 @@ export default async function DossierEnseignantPage({
   const { code } = await params;
   const atelier = atelierByCode.get(code);
   if (!atelier) notFound();
+  if (!(await dossierOuvert(session.userId))) {
+    return (
+      <main id="main" className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <p className="text-xs uppercase tracking-annonce text-slate-400">
+          <Link href={`/animations/${atelier.code}`} className="hover:text-slate-300">
+            {atelier.titre}
+          </Link>{" "}
+          / Corrigés
+        </p>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-50">
+          Les situations, et leurs corrigés
+        </h1>
+        <p
+          role="status"
+          data-dossier-ferme=""
+          className="mt-6 rounded-lg encadre-neutre px-4 py-3 text-base leading-relaxed text-slate-200"
+        >
+          <strong className="font-semibold text-slate-50">{MARQUE_DE_L_ARENE}.</strong>{" "}
+          {REFUS_DU_DOSSIER} Le dossier de l&apos;élève reste public.{" "}
+          <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
+            {LIBELLE_DU_DEVIS}
+          </Link>{" "}
+          ·{" "}
+          <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+            Voir les tarifs
+          </Link>
+        </p>
+      </main>
+    );
+  }
   const dossier = dossierEnseignant(atelier);
 
   return (

@@ -25,7 +25,7 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { orgLicences, users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { createInvite } from "@/services/admin.service";
 import {
@@ -41,6 +41,8 @@ import {
   setOrgLicence,
 } from "@/services/licence.service";
 import type { RoundDecisions } from "@/engine/types";
+import { ClasseReserveError, verifierLaClasse } from "@/services/acces.service";
+import { REFUS_DE_LA_CLASSE } from "@/config/tarifs";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -74,12 +76,14 @@ beforeAll(async () => {
 });
 
 describe("licence d'établissement", () => {
-  it("sans licence, tout reste ouvert : la limite n'existe que si on l'a vendue", async () => {
+  it("sans licence : l'état est « libre », et la classe ne se crée pas (pas d'essai en classe)", async () => {
     const statut = await getLicenceStatus(orgId);
     expect(statut.state).toBe("libre");
     expect(statut.licence).toBeNull();
     expect(statut.blocking).toBeNull();
+    // Le plafond d'enseignants n'a rien à refuser ; la règle de la classe, si.
     await expect(assertCanCreateGame(orgId)).resolves.toBeUndefined();
+    await expect(verifierLaClasse(orgId)).rejects.toBeInstanceOf(ClasseReserveError);
   });
 
   it("une licence en cours laisse créer, et dit ce qu'il reste", async () => {
@@ -132,6 +136,14 @@ describe("licence d'établissement", () => {
   it("une licence expirée ferme la création NEUVE et laisse finir les classes en cours", async () => {
     const e = await nouvelEtablissement("expiree@lycee.test", "Expiree");
     // une partie ouverte pendant que la licence courait
+    await setOrgLicence({
+      adminId: e.userId,
+      organizationId: e.orgId,
+      label: "Licence en cours",
+      startsAt: dans(-10),
+      endsAt: dans(200),
+      maxTeachers: null,
+    });
     const partie = await createClassGame({
       teacherId: e.userId,
       organizationId: e.orgId,
@@ -150,7 +162,8 @@ describe("licence d'établissement", () => {
     });
     if ("error" in j) throw new Error(j.error);
 
-    // puis la licence expire
+    // puis la licence expire : celle qui courait s'achève, seule reste une licence échue
+    await db.delete(orgLicences).where(eq(orgLicences.organizationId, e.orgId));
     await setOrgLicence({
       adminId: e.userId,
       organizationId: e.orgId,
@@ -163,7 +176,8 @@ describe("licence d'établissement", () => {
     expect(statut.state).toBe("expiree");
     expect(statut.blocking).toContain("expiré");
 
-    // plus aucune partie nouvelle
+    // plus aucune partie nouvelle : une licence expirée vaut une absence de licence,
+    // même refus et même message que sans licence (PAR-02)
     await expect(
       createClassGame({
         teacherId: e.userId,
@@ -172,7 +186,7 @@ describe("licence d'établissement", () => {
         humanTeamsCount: 1,
         botCount: 1,
       }),
-    ).rejects.toThrow(/expiré/);
+    ).rejects.toThrow(REFUS_DE_LA_CLASSE);
 
     // mais la classe en cours va jusqu'au bout : décisions et clôture passent
     await submitTeamDecisions({ gameId: partie.gameId, userId: eleve[0]!.id, payload: DECISIONS });

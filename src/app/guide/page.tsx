@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LES_OFFRES_DE_L_ARENE, REPONSE_COMBIEN } from "@/config/tarifs";
 import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
@@ -480,14 +481,26 @@ export default async function GuidePage() {
                   "Que règlent les niveaux de difficulté ?",
                   "Six niveaux, de Découverte à Executive : les décisions ouvertes (l'emprunt et l'investissement sont ouverts dès le niveau Découverte, l'assurance et la mobilisation des créances au niveau Pilotage, les ressources humaines, la R&D et la RSE au niveau Arbitrage, le placement du surplus au niveau Stratégie, l'affectation du résultat au niveau Executive), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
                 ],
-                [
-                  "Combien ça coûte ?",
-                  "Business Arena est un projet d'enseignant, construit pour la classe. Contactez-nous pour un déploiement en établissement.",
-                ],
+                // La réponse se lit dans la grille (config/tarifs.ts, audit C-08) : les
+                // prix n'y sont jamais écrits à la main.
+                ["Combien ça coûte ?", REPONSE_COMBIEN],
               ].map(([q, a]) => (
                 <div key={q}>
                   <dt className="text-sm font-semibold text-slate-100">{q}</dt>
-                  <dd className="mt-1 text-base leading-relaxed text-slate-400">{a}</dd>
+                  <dd className="mt-1 text-base leading-relaxed text-slate-400">
+                    {a}
+                    {a === REPONSE_COMBIEN ? (
+                      <>
+                        {" "}
+                        <Link
+                          href="/tarifs"
+                          className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                        >
+                          Voir les tarifs
+                        </Link>
+                      </>
+                    ) : null}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -501,7 +514,7 @@ export default async function GuidePage() {
           id="guide.finale"
           contraste={c("guide.finale")}
           titre="Prêt à entrer dans l'arène ?"
-          texte="Lancez une partie solo pour vous faire la main, ou créez votre première partie de classe. Six tours suffisent pour que le BFR devienne inoubliable."
+          texte={`Lancez une partie solo pour vous faire la main. La partie de classe vient avec ${LES_OFFRES_DE_L_ARENE} : six tours suffisent pour que le BFR devienne inoubliable.`}
         >
           <Link href="/jouer" className={bouton({ taille: "l" })}>
             Jouer maintenant

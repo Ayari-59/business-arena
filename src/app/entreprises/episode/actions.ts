@@ -14,10 +14,10 @@ import {
 import { choisirObjectif, objectifDe } from "@/services/episode-objectifs.service";
 import { effacerParties, enregistrerPartie, partiesDe } from "@/services/episode-parties.service";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
-import { CONSEIL_SANS_LICENCE, ceQuApporteLOffre } from "@/config/episodes/demos";
+import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes } from "@/config/tarifs";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import { getSession } from "@/lib/session";
-import { accesAuxEpisodes, episodeOuvert } from "@/services/acces.service";
+import { accesAuxEpisodes, episodeOuvert, suitUneCohorte } from "@/services/acces.service";
 
 export interface SuiteDeLaPartie {
   ok: boolean;
@@ -32,7 +32,7 @@ export interface SuiteDeLaPartie {
   recommandations: { code: string; numero: number; titre: string; raison: string }[];
   /** Le niveau conseillé pour le prochain épisode, et pourquoi. */
   conseil: { niveau: CodeNiveau; pourquoi: string } | null;
-  /** Sans licence : ce qu'apporte l'offre Entreprise (le lien vers les tarifs suit). */
+  /** Sans licence épisodes : ce qu'apporte l'offre (le lien vers les tarifs suit) ; nul devant un élève. */
   offre: string | null;
 }
 
@@ -87,7 +87,9 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
       pourquoi: profil.cible?.pourquoi ?? null,
       objectifChoisi: profil.cible?.choisie ?? false,
       conseil: acces.licence ? profil.conseil : CONSEIL_SANS_LICENCE,
-      offre: acces.licence ? null : ceQuApporteLOffre(EPISODES.length),
+      // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
+      offre:
+        acces.licence || (await suitUneCohorte(userId)) ? null : ceQuOuvrentLesEpisodes(EPISODES.length),
       recommandations: profil.recommandations.map((x) => ({
         code: x.code,
         numero: x.numero,

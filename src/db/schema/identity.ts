@@ -115,15 +115,15 @@ export const orgInvites = pgTable(
 /**
  * Licence d'un établissement : ce qui est vendu.
  *
- * Un lycée n'achète pas un abonnement par carte bancaire : il émet un bon de
- * commande, reçoit une facture et paie par mandat administratif. La licence
+ * Tout se vend sur devis : l'établissement reçoit un devis, émet un bon de commande,
+ * reçoit une facture et paie par virement ou mandat administratif. La licence
  * enregistre donc les termes convenus, elle ne les encaisse pas. Le prix et la
  * référence sont documentaires : le logiciel note ce qui a été vendu, il ne
  * décide pas du tarif.
  *
- * L'ABSENCE de licence vaut accès libre. C'est délibéré : la frontière ne doit
- * pas se refermer sur les établissements existants ni sur une démonstration,
- * et une limite ne se pose que lorsqu'une vente l'a définie.
+ * Sans licence de l'arène en cours, la classe ne s'ouvre pas : décision du
+ * propriétaire, « pas d'essai en classe » (services/acces.service.ts). Le solo
+ * public et les démonstrations d'épisodes restent gratuits.
  */
 export const orgLicences = pgTable(
   "org_licences",
@@ -142,6 +142,14 @@ export const orgLicences = pgTable(
     reference: text("reference"),
     /** Montant facturé en centimes, purement documentaire. */
     amountCents: integer("amount_cents"),
+    /**
+     * LE PÉRIMÈTRE (migration 0036, config/tarifs.ts). `arene` : l'offre de l'arène que la
+     * licence ouvre, Classe ou Campus ; null, elle n'ouvre pas l'arène. `episodes` : elle
+     * ouvre les épisodes manager non démo, vendus à part sur devis. Une licence d'avant la
+     * décision est une licence de l'arène, sans les épisodes.
+     */
+    arene: text("arene", { enum: ["classe", "campus"] }).default("campus"),
+    episodes: boolean("episodes").notNull().default(false),
     createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },

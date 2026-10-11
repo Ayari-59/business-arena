@@ -114,8 +114,8 @@ beforeAll(async () => {
   });
   if ("error" in r) throw new Error(r.error);
   sansLicence = { userId: r.userId, orgId: (await getTeacherOrgId(r.userId))! };
-  prof = await etablissementSousLicence("Cohortes");
-  autreProf = await etablissementSousLicence("Collègue");
+  prof = await etablissementSousLicence("Cohortes", { episodes: true });
+  autreProf = await etablissementSousLicence("Collègue", { episodes: true });
 });
 
 beforeEach(() => {
@@ -154,7 +154,7 @@ describe("créer une cohorte depuis l'espace enseignant", () => {
     const essai = () =>
       creerCohorteDeLEnseignant({ enseignantId: r.userId, nom: "Seconde 4", episodes: [EPISODES_DE_DEMO[1]] });
     await expect(essai()).rejects.toBeInstanceOf(CohorteRefuseeError);
-    await poserUneLicence(org, r.userId);
+    await poserUneLicence(org, r.userId, { episodes: true });
     await expect(essai()).resolves.toMatchObject({ nom: "Seconde 4" });
   });
 
@@ -222,7 +222,7 @@ describe("l'élève entré par le code", () => {
   });
 
   it("une cohorte dont l'organisation perd sa licence n'ouvre plus que les démos", async () => {
-    const e = await etablissementSousLicence("Licence qui s'arrête");
+    const e = await etablissementSousLicence("Licence qui s'arrête", { episodes: true });
     const c = await creerCohorteDeLEnseignant({
       enseignantId: e.userId,
       nom: "Fin de contrat",

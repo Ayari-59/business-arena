@@ -20,7 +20,7 @@ vi.mock("@/db", async () => {
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { games, rounds, teams, users } from "@/db/schema";
-import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import {
   archiverPartie,
   createClassGame,
@@ -31,6 +31,7 @@ import {
   resolveCurrentRound,
 } from "@/services/game.service";
 import { PARTIE_ARCHIVEE } from "@/services/archivage";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 let prof: string;
 let autreProf: string;
@@ -66,7 +67,7 @@ beforeAll(async () => {
 
   const partie = await createClassGame({
     teacherId: prof,
-    organizationId: (await getTeacherOrgId(prof))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(prof),
     periodicity: "quarter",
     humanTeamsCount: 1,
     botCount: 1,

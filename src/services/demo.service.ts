@@ -8,6 +8,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { createClassGame } from "@/services/game-creation.service";
+import { setOrgLicence } from "@/services/licence.service";
 import {
   getTeamSituations,
   submitDiagnosis,
@@ -142,6 +143,20 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
     { userId: teacherId, organizationId, role: "teacher" },
   ]);
   await createInvite({ organizationId, role: "teacher", createdBy: orgAdminId });
+  // Pas d'essai en classe (services/acces.service.ts) : le monde de démonstration est un
+  // établissement en offre Campus, pour un an, sans les épisodes. Sa partie de classe et
+  // son concours se créent donc comme chez un client, et la démonstration montre l'en-tête
+  // d'un établissement sous licence.
+  await setOrgLicence({
+    adminId: orgAdminId,
+    organizationId,
+    label: "Licence de démonstration",
+    startsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    endsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    maxTeachers: null,
+    arene: "campus",
+    episodes: false,
+  });
 
   // Élèves (invités nommés, sans mot de passe)
   const studentIds: string[] = [];

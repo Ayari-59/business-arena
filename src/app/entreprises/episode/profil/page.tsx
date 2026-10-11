@@ -9,9 +9,8 @@ import { niveauParCode } from "@/config/episodes/niveaux";
 import { getGuestUserId } from "@/lib/guest";
 import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
 import { getSession } from "@/lib/session";
-import { accesAuxEpisodes, episodeOuvert } from "@/services/acces.service";
-import { CONSEIL_SANS_LICENCE, ceQuApporteLOffre } from "@/config/episodes/demos";
-import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { accesAuxEpisodes, episodeOuvert, suitUneCohorte } from "@/services/acces.service";
+import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes, lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
 import {
   CONFIANCES,
   MENTION,
@@ -274,6 +273,8 @@ export default async function ProfilPage({
   // Découverte ; et la page dit ce qu'apporte l'offre (services/acces.service.ts).
   const session = await getSession();
   const acces = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
+  // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
+  const eleve = !session && (await suitUneCohorte(userId));
   const calcule = construireProfil(parties, undefined, {
     objectif,
     proposables: (code) => episodeOuvert(acces, code),
@@ -522,18 +523,18 @@ export default async function ProfilPage({
               </span>{" "}
               {profil.conseil.pourquoi}
             </p>
-            {!acces.licence && (
+            {!acces.licence && !eleve && (
               <p
                 className="max-w-3xl text-sm leading-relaxed text-slate-300"
                 data-offre-entreprise=""
               >
-                {ceQuApporteLOffre(EPISODES.length)}{" "}
+                {ceQuOuvrentLesEpisodes(EPISODES.length)}{" "}
                 <Link
-                  href={LIEN_TARIFS}
-                prefetch={false}
+                  href={lienDuDevis("episodes")}
+                  prefetch={false}
                   className="whitespace-nowrap font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  Voir les tarifs
+                  {LIBELLE_DU_DEVIS}
                 </Link>
               </p>
             )}

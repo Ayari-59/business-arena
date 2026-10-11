@@ -13,6 +13,11 @@ import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
 import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
 import { normaliserVitrine, vitrineAEnregistrer, VERSION_DE_LA_REGLE } from "@/config/vitrine-solo";
 import { answerFormatFromProfile } from "@/config/difficulty";
+import {
+  estUneOffreDeLArene,
+  PLAFOND_D_ENSEIGNANTS,
+  type OffreDeLArene,
+} from "@/config/tarifs";
 
 export async function createEstablishmentAction(formData: FormData): Promise<void> {
   const adminId = await requireAdminSession();
@@ -23,9 +28,6 @@ export async function createEstablishmentAction(formData: FormData): Promise<voi
 
 export async function updatePlatformConfigAction(formData: FormData): Promise<void> {
   const adminId = await requireAdminSession();
-  // Palier gratuit : champ « tours » vide = pas de limite de tours (null).
-  const bornTours = String(formData.get("freeMaxRounds") ?? "").trim();
-  const maxRounds = bornTours === "" ? null : Math.max(1, Math.floor(Number(bornTours) || 1));
   const aiModelRaw = formData.get("aiModel");
   await updatePlatformConfig(adminId, {
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
@@ -51,12 +53,6 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
       tours: formData.get("preuveTours") === "on",
       decisions: formData.get("preuveDecisions") === "on",
       classes: formData.get("preuveClasses") === "on",
-    },
-    freeTier: {
-      maxRounds,
-      competitions: formData.get("freeCompetitions") === "on",
-      ai: formData.get("freeAi") === "on",
-      gradebookExport: formData.get("freeGradebookExport") === "on",
     },
     ai: {
       coach: formData.get("aiCoach") === "on",
@@ -97,6 +93,11 @@ export async function seedDemoAction(): Promise<void> {
 /**
  * Enregistre les termes vendus à un établissement.
  *
+ * LE PÉRIMÈTRE se choisit (config/tarifs.ts) : l'offre de l'arène, Classe ou Campus, ou
+ * aucune ; et la case « Épisodes manager », vendus à part. Le plafond d'enseignants
+ * suit l'offre de l'arène (Classe : un enseignant ; Campus : sans plafond) ; une licence
+ * des seuls épisodes n'en porte pas.
+ *
  * Le montant est saisi en euros et rangé en centimes : un prix stocké en
  * flottant finit toujours par afficher 89,99999. Il est purement documentaire,
  * le produit n'encaisse rien.
@@ -108,7 +109,7 @@ export async function setLicenceAction(
   const adminId = await requireAdminSession();
   const texte = (champ: string) => String(formData.get(champ) ?? "").trim();
   const euros = Number(texte("amount").replace(",", "."));
-  const plafond = Number(texte("maxTeachers"));
+  const arene = estUneOffreDeLArene(texte("arene")) ? (texte("arene") as OffreDeLArene) : null;
 
   await setOrgLicence({
     adminId,
@@ -116,8 +117,9 @@ export async function setLicenceAction(
     label: texte("label"),
     startsAt: new Date(texte("startsAt")),
     endsAt: new Date(texte("endsAt")),
-    // Champ laissé vide = pas de plafond : la période seule s'applique.
-    maxTeachers: texte("maxTeachers") === "" || !Number.isFinite(plafond) ? null : plafond,
+    maxTeachers: arene ? PLAFOND_D_ENSEIGNANTS[arene] : null,
+    arene,
+    episodes: formData.get("episodes") === "on",
     reference: texte("reference") || null,
     amountCents: Number.isFinite(euros) && texte("amount") !== "" ? Math.round(euros * 100) : null,
   });
@@ -155,5 +157,15 @@ export async function deconnecterAgendaAction(): Promise<void> {
   const { deconnecterAgenda } = await import("@/services/agenda-google.service");
   await deconnecterAgenda();
   console.info("[agenda] agenda Google déconnecté");
+  revalidatePath("/admin");
+}
+
+/** Une demande de devis prise en charge : elle quitte la pile « à traiter ». */
+export async function marquerDemandeDeDevisTraiteeAction(formData: FormData): Promise<void> {
+  const adminId = await requireAdminSession();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return;
+  const { marquerDemandeDeDevisTraitee } = await import("@/services/devis.service");
+  await marquerDemandeDeDevisTraitee(id, adminId);
   revalidatePath("/admin");
 }

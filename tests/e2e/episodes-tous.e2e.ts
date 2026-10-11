@@ -72,7 +72,7 @@ describe("tous les épisodes", () => {
       const page = await navigateur.newPage({
         viewport: { width: 1280, height: 900 },
       });
-      await enseignantSousLicence(page.context());
+      await enseignantSousLicence(page.context(), { episodes: true });
       const erreurs: string[] = [];
       page.on("pageerror", (e) => erreurs.push(e.message));
       await page.goto(`${BASE}/entreprises/episode/${ep.code}?hasard=7`);
