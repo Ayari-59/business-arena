@@ -15,6 +15,24 @@ export interface Courriel {
   texte: string;
   /** Adresse à laquelle « Répondre » répond, quand elle diffère de l'expéditeur. */
   repondreA?: string;
+  /**
+   * E-MAILS DE NOUVEAUTÉS SEULEMENT : l'adresse de désinscription en un clic du
+   * destinataire (`adresseDeDesinscriptionEnUnClic`, services/nouveautes.service.ts).
+   * Elle part dans les en-têtes `List-Unsubscribe` et `List-Unsubscribe-Post` (RFC 2369
+   * et 8058) : la messagerie affiche alors son propre bouton « Se désabonner », qui poste
+   * à cette adresse sans ouvrir de page. Un message de service (licence, incident, devis)
+   * n'en porte pas : il ne relève pas du consentement. On ne construit pas un e-mail de
+   * nouveautés à la main : `courrielDeNouveautes` pose cette adresse et le lien du corps.
+   */
+  desinscription?: string;
+}
+
+/** Les en-têtes de désinscription d'un e-mail de nouveautés (RFC 2369 et 8058). */
+export function entetesDeDesinscription(adresse: string): Record<string, string> {
+  return {
+    "List-Unsubscribe": `<${adresse}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
 }
 
 export type ResultatEnvoi =
@@ -41,6 +59,7 @@ export async function envoyerCourriel(
         subject: courriel.sujet,
         text: courriel.texte,
         ...(courriel.repondreA ? { reply_to: courriel.repondreA } : {}),
+        ...(courriel.desinscription ? { headers: entetesDeDesinscription(courriel.desinscription) } : {}),
       }),
     });
     if (!reponse.ok) {

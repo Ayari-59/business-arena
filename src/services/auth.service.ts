@@ -9,6 +9,8 @@ import {
   resolveInvite,
 } from "@/services/admin.service";
 import { assertCanAddTeacher } from "@/services/licence.service";
+import { consentementALaCreation } from "@/services/nouveautes.service";
+import { refusDuDomaine } from "@/config/inscriptions";
 
 /**
  * Authentification du personnel (ADR-08) : e-mail + mot de passe (bcrypt).
@@ -27,6 +29,11 @@ export async function registerTeacher(args: {
   displayName: string;
   schoolName: string;
   inviteCode?: string;
+  /**
+   * La case « Recevoir les nouveautés », NON cochée par défaut : vrai seulement si
+   * l'enseignant l'a cochée (services/nouveautes.service.ts).
+   */
+  nouveautes?: boolean;
 }): Promise<{ userId: string } | { error: string }> {
   const email = args.email.trim().toLowerCase();
   if (args.password.length < 8) return { error: "Mot de passe : 8 caractères minimum." };
@@ -35,8 +42,12 @@ export async function registerTeacher(args: {
   if (args.inviteCode?.trim() && !invite) {
     return { error: "Code d'invitation inconnu ou désactivé." };
   }
+  const config = await getPlatformConfig();
+  // Les domaines d'e-mail (/admin/inscrits) : les bloqués toujours ; les autorisés pour
+  // l'inscription libre seulement, un code valide passe outre (config/inscriptions.ts).
+  const refusDomaine = refusDuDomaine(email, config, { parInvitation: invite !== null });
+  if (refusDomaine) return { error: refusDomaine };
   if (!invite) {
-    const config = await getPlatformConfig();
     if (!config.allowSelfServiceTeachers) {
       return {
         error:
@@ -101,6 +112,14 @@ export async function registerTeacher(args: {
     }).onConflictDoNothing();
   }
 
+  // La provenance, la première connexion et le code d'invitation saisi (migration 0040),
+  // puis l'accord aux nouveautés s'il a été coché : la date et la version du texte.
+  await db
+    .update(users)
+    .set({ provenance: "inscription", derniereConnexionLe: new Date(), invitationId: invite?.id ?? null })
+    .where(eq(users.id, userId));
+  await consentementALaCreation(userId, args.nouveautes === true);
+
   await promoteIfBootstrapAdmin(userId, email);
   return { userId };
 }
@@ -108,6 +127,10 @@ export async function registerTeacher(args: {
 /** Fenêtre glissante et plafond de la limitation des tentatives. */
 export const FENETRE_TENTATIVES_MS = 15 * 60 * 1000;
 export const MAX_ECHECS = 5;
+
+/** Ce que lit un enseignant dont le compte a été désactivé. */
+export const COMPTE_DESACTIVE =
+  "Ce compte a été désactivé. Pour le rouvrir, écrivez à l'adresse de contact des mentions légales.";
 
 /** Le même message quel que soit le cas : l'e-mail inconnu n'est pas dit. */
 const IDENTIFIANTS_INCORRECTS = "Identifiants incorrects.";
@@ -161,11 +184,15 @@ export async function loginTeacher(args: {
   if (!row?.passwordHash) return echec();
   const ok = await bcrypt.compare(args.password, row.passwordHash);
   if (!ok) return echec();
+  // Un compte désactivé par l'administration ne se connecte plus (/admin/inscrits). Dit
+  // seulement à qui connaît le mot de passe : l'existence du compte n'est pas révélée.
+  if (row.desactiveLe) return { error: COMPTE_DESACTIVE };
 
   // Succès : le compteur repart de zéro pour cet e-mail et cette adresse.
   await db
     .delete(loginAttempts)
     .where(ip ? or(eq(loginAttempts.email, email), eq(loginAttempts.ip, ip)) : eq(loginAttempts.email, email));
+  await db.update(users).set({ derniereConnexionLe: new Date(now) }).where(eq(users.id, row.id));
   await promoteIfBootstrapAdmin(row.id, email);
   return { userId: row.id, sessionVersion: row.sessionVersion };
 }

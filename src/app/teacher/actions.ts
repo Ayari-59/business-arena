@@ -63,6 +63,8 @@ const registerSchema = z.object({
   displayName: z.string().min(1, "Votre nom est requis"),
   schoolName: z.string().catch(""),
   inviteCode: z.string().catch(""),
+  // La case des nouveautés : envoyée seulement si elle est cochée (jamais par défaut).
+  nouveautes: z.literal("oui").optional().catch(undefined),
 });
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -72,9 +74,11 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     displayName: formData.get("displayName"),
     schoolName: formData.get("schoolName") ?? "",
     inviteCode: formData.get("inviteCode") ?? "",
+    nouveautes: formData.get("nouveautes") ?? undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
-  const result = await registerTeacher(parsed.data);
+  const { nouveautes, ...compte } = parsed.data;
+  const result = await registerTeacher({ ...compte, nouveautes: nouveautes === "oui" });
   if ("error" in result) return { error: result.error };
   await setSession(result.userId, "teacher");
   redirect("/teacher");

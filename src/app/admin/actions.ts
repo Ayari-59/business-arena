@@ -31,7 +31,8 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
   const aiModelRaw = formData.get("aiModel");
   await updatePlatformConfig(adminId, {
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
-    allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
+    // L'inscription libre se règle dans /admin/inscrits (reglerInscriptionsAction) : ce
+    // formulaire ne l'écrit plus, sans quoi il la remettrait à « non » à chaque envoi.
     soloAnswerFormat: answerFormatFromProfile({ answerFormat: formData.get("soloAnswerFormat") }),
     // Les niveaux ouverts sans licence : enregistrés avec la version de la règle, qui
     // seule fait foi (config/vitrine-solo.ts).

@@ -164,6 +164,12 @@ export default async function TeacherDashboard({
           liens={{ etablissement: isOrgAdmin, administration: staff?.isPlatformAdmin ?? false }}
           compte={
             <>
+              <Link
+                href="/teacher/compte"
+                className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
+              >
+                Mon compte
+              </Link>
               <form action={logoutAction}>
                 <button className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
                   Se déconnecter

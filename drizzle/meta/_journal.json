@@ -288,6 +288,13 @@
       "when": 1790663757440,
       "tag": "0039_renater_saml",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790750157440,
+      "tag": "0040_inscrits_et_nouveautes",
+      "breakpoints": true
     }
   ]
 }

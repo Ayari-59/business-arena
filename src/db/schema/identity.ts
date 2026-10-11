@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   uuid,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { id, timestamps } from "./_shared";
 
@@ -28,6 +29,32 @@ export const users = pgTable("users", {
    * signé pour une version antérieure est refusé, quel que soit son délai.
    */
   sessionVersion: integer("session_version").notNull().default(1),
+  /**
+   * LE CONSENTEMENT AUX NOUVEAUTÉS (migration 0040, services/nouveautes.service.ts) : la
+   * date de l'accord, la version du texte accepté, la date du retrait. Le compte consent
+   * quand l'accord est plus récent que le retrait. Jamais coché par défaut.
+   */
+  nouveautesConsentiesLe: timestamp("nouveautes_consenties_le", { withTimezone: true }),
+  nouveautesRetireesLe: timestamp("nouveautes_retirees_le", { withTimezone: true }),
+  nouveautesVersionDuTexte: text("nouveautes_version_du_texte"),
+  /** La dernière connexion (mot de passe, inscription, LTI, RENATER) ; nulle avant 0040. */
+  derniereConnexionLe: timestamp("derniere_connexion_le", { withTimezone: true }),
+  /**
+   * D'où vient le compte : 'inscription' (formulaire du site), 'lti', 'renater'
+   * (fédération). Nulle pour une identité d'élève ou d'invité, qui n'est pas un inscrit.
+   */
+  provenance: text("provenance", { enum: ["inscription", "lti", "renater"] }),
+  /**
+   * DÉSACTIVÉ (migration 0040, /admin/inscrits) : le compte ne se connecte plus et sa session
+   * est refusée (lib/session.ts) ; ses parties restent. Nul : actif.
+   */
+  desactiveLe: timestamp("desactive_le", { withTimezone: true }),
+  /**
+   * INSCRIT PAR UN CODE D'INVITATION (migration 0040) : le code saisi à l'inscription. Il
+   * donne l'état « invité » dans /admin/inscrits et l'usage de chaque code. Nul : inscription
+   * libre, LTI, RENATER, ou compte d'avant 0040.
+   */
+  invitationId: uuid("invitation_id").references((): AnyPgColumn => orgInvites.id, { onDelete: "set null" }),
   ...timestamps,
 });
 
@@ -185,4 +212,23 @@ export const classMembers = pgTable(
     ...timestamps,
   },
   (t) => [primaryKey({ columns: [t.classId, t.userId] })],
+);
+
+/**
+ * LE JOURNAL DES GESTES SUR LES INSCRITS (migration 0040, /admin/inscrits) : qui (l'admin de
+ * la plateforme), quoi (le geste), sur quel compte, avec un détail lisible (établissement,
+ * code, réglages). Écrit par services/inscrits.service.ts, jamais modifié ; lu dans la page
+ * et dans la fiche d'un inscrit.
+ */
+export const inscritsJournal = pgTable(
+  "inscrits_journal",
+  {
+    id: id(),
+    adminId: uuid("admin_id").references(() => users.id, { onDelete: "set null" }),
+    geste: text("geste").notNull(),
+    cibleUserId: uuid("cible_user_id").references(() => users.id, { onDelete: "set null" }),
+    detail: text("detail"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("inscrits_journal_date_idx").on(t.createdAt), index("inscrits_journal_cible_idx").on(t.cibleUserId)],
 );

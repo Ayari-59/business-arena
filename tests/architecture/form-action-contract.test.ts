@@ -154,6 +154,31 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/admin/renater/page.tsx"],
   },
   {
+    nom: "inscription d'un enseignant (case des nouveautés comprise)",
+    action: { file: "src/app/teacher/actions.ts", fn: "registerAction" },
+    sources: ["src/components/teacher-auth-forms.tsx"],
+  },
+  {
+    nom: "réglages des inscriptions (/admin/inscrits)",
+    action: { file: "src/app/admin/inscrits/actions.ts", fn: "reglerInscriptionsAction" },
+    sources: ["src/app/admin/inscrits/page.tsx"],
+  },
+  {
+    nom: "création d'un code d'invitation (/admin/inscrits)",
+    action: { file: "src/app/admin/inscrits/actions.ts", fn: "creerCodeAction" },
+    sources: ["src/app/admin/inscrits/page.tsx"],
+  },
+  {
+    nom: "rattachement d'un inscrit à un établissement (/admin/inscrits/[id])",
+    action: { file: "src/app/admin/inscrits/actions.ts", fn: "rattacherAction" },
+    sources: ["src/app/admin/inscrits/[id]/page.tsx"],
+  },
+  {
+    nom: "réglage des nouveautés (/teacher/compte)",
+    action: { file: "src/app/teacher/compte/actions.ts", fn: "reglerNouveautesAction" },
+    sources: ["src/app/teacher/compte/page.tsx"],
+  },
+  {
     nom: "lancement d'une partie publique",
     action: { file: "src/app/actions.ts", fn: "startGameAction" },
     // Les champs vivent dans le composant client de config rapide, qui les

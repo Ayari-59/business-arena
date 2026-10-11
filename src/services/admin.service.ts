@@ -28,6 +28,7 @@ import {
   users,
 } from "@/db/schema";
 import { normaliserTheme, THEME_DU_SITE_PAR_DEFAUT, type ThemeDuSite } from "@/config/theme-du-site";
+import { normaliserListe } from "@/config/inscriptions";
 import {
   normaliserVitrine,
   vitrineAEnregistrer,
@@ -153,6 +154,12 @@ export interface PlatformConfig {
    * stocke que les ÉCARTS à l'état d'origine (voir config/theme-du-site.ts).
    */
   theme: ThemeDuSite;
+  /**
+   * Les domaines d'e-mail AUTORISÉS à l'inscription par le formulaire (vide : tous) et
+   * BLOQUÉS (prioritaires). Réglés dans /admin/inscrits ; règle : config/inscriptions.ts.
+   */
+  domainesAutorises: string[];
+  domainesBloques: string[];
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
@@ -165,6 +172,8 @@ const DEFAULT_CONFIG: PlatformConfig = {
   preuvesPubliees: PREUVES_PUBLIEES_PAR_DEFAUT,
   ai: DEFAULT_AI_CONFIG,
   theme: THEME_DU_SITE_PAR_DEFAUT,
+  domainesAutorises: [],
+  domainesBloques: [],
 };
 
 /**
@@ -192,6 +201,8 @@ export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
       soloAnswerFormat: answerFormatFromProfile({ answerFormat: lus.soloAnswerFormat }),
       vitrineSolo: normaliserVitrine(lus.vitrineSolo),
       theme: normaliserTheme(lus.theme),
+      domainesAutorises: normaliserListe(lus.domainesAutorises),
+      domainesBloques: normaliserListe(lus.domainesBloques),
     };
   } catch (e) {
     // Panne base : on NE retombe PAS sur les défauts permissifs. Renvoyer
@@ -271,7 +282,7 @@ export async function deactivateInvite(args: {
 /** Résout un code d'invitation actif (utilisé à l'inscription). */
 export async function resolveInvite(
   code: string,
-): Promise<{ organizationId: string; role: "org_admin" | "teacher" } | null> {
+): Promise<{ id: string; organizationId: string; role: "org_admin" | "teacher" } | null> {
   const row = (
     await db
       .select()
@@ -279,7 +290,8 @@ export async function resolveInvite(
       .where(and(eq(orgInvites.code, code.trim().toUpperCase()), eq(orgInvites.active, true)))
   )[0];
   if (!row || row.role === "student") return null;
-  return { organizationId: row.organizationId, role: row.role };
+  // L'id : l'inscription note le code qui l'a permise (migration 0040, l'usage des codes).
+  return { id: row.id, organizationId: row.organizationId, role: row.role };
 }
 
 // ---------------------------------------------------------------------------

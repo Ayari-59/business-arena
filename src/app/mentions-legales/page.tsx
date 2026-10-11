@@ -135,17 +135,26 @@ export default function MentionsLegalesPage() {
                   <td className="py-2 pr-3">Rattacher le joueur à son équipe et à ses parties</td>
                   <td className="py-2">Cookie : 12 mois</td>
                 </tr>
-                <tr className="border-t border-white/5">
+                <tr className="border-t border-white/5" data-ligne-enseignants="">
                   <td className="py-2 pr-3 font-medium text-slate-200">Enseignants / personnels</td>
                   <td className="py-2 pr-3">
                     E-mail, nom affiché, mot de passe (haché, jamais stocké en clair),
-                    établissement de rattachement
+                    établissement de rattachement, date d&apos;inscription et de dernière connexion,
+                    état du compte (actif ou désactivé) ;
+                    si vous l&apos;acceptez, la date de votre accord aux nouveautés et la version du
+                    texte accepté
                   </td>
                   <td className="py-2 pr-3">
-                    Créer et piloter les parties, gérer l&apos;établissement (exécution du
-                    service demandé)
+                    Créer et piloter les parties, gérer l&apos;établissement, vous écrire les messages
+                    de service (licence, incident) : exécution du service demandé, sans
+                    consentement à donner. Envoi des nouveautés, seulement avec votre accord
+                    (révocable à tout moment, d&apos;un clic dans chaque e-mail ou depuis votre
+                    espace enseignant) : au plus une fois par mois
                   </td>
-                  <td className="py-2">Durée du compte</td>
+                  <td className="py-2">
+                    Durée du compte ; pour les nouveautés, jusqu&apos;au retrait du consentement ou à
+                    la suppression du compte
+                  </td>
                 </tr>
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Données de jeu</td>

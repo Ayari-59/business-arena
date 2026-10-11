@@ -63,9 +63,11 @@ export async function compteEnseignant(l: Lancement): Promise<{ userId: string; 
       .update(ltiComptes)
       .set({ dernierLancement: new Date(), courriel: l.courriel ?? existant.courriel })
       .where(eq(ltiComptes.id, existant.id));
-    if (l.nomComplet || l.prenom) {
-      await db.update(users).set({ displayName: nom }).where(eq(users.id, existant.userId));
-    }
+    // La dernière connexion (migration 0040) : un lancement est une connexion.
+    await db
+      .update(users)
+      .set({ derniereConnexionLe: new Date(), ...(l.nomComplet || l.prenom ? { displayName: nom } : {}) })
+      .where(eq(users.id, existant.userId));
     // Rattaché à l'organisation de la plateforme, même s'il en avait été retiré : c'est
     // elle qui le fait entrer. Le plafond s'applique alors comme à une première venue.
     const membre = await db
@@ -99,6 +101,11 @@ export async function compteEnseignant(l: Lancement): Promise<{ userId: string; 
     id: userId,
     email: `lti-${userId}@lti.business-arena.local`,
     displayName: nom.slice(0, 120),
+    // Un inscrit venu d'une plateforme (migration 0040, /admin/inscrits). Aucun accord aux
+    // nouveautés n'est présumé : la case reste à cocher dans son espace (/teacher/compte),
+    // ou par `consentementALaCreation` le jour où le premier lancement la montrera.
+    provenance: "lti",
+    derniereConnexionLe: new Date(),
   });
   const [lie] = await db
     .insert(ltiComptes)

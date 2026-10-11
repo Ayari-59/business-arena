@@ -127,6 +127,7 @@ export default async function AdminPage({
           <h1 className="text-2xl font-bold">Plateforme Business Arena</h1>
         </div>
         <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
+          <Link href="/admin/inscrits" className="hover:text-slate-300">Enseignants inscrits</Link>
           <Link href="/admin/theme" className="hover:text-slate-300">Thème graphique</Link>
           <Link href="/admin/cohortes" className="hover:text-slate-300">Cohortes d&apos;épisodes</Link>
           <Link href="/admin/lti" className="hover:text-slate-300">Plateformes LTI</Link>
@@ -214,15 +215,15 @@ export default async function AdminPage({
             />
             Autoriser les parties solo publiques depuis la landing
           </label>
-          <label className="flex items-center gap-3 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              name="allowSelfServiceTeachers"
-              defaultChecked={overview.config.allowSelfServiceTeachers}
-              className="h-4 w-4 accent-amber-400"
-            />
-            Autoriser l&apos;inscription enseignant sans code d&apos;invitation (auto-service)
-          </label>
+          {/* L'inscription libre des enseignants se règle désormais avec les autres règles
+              d'inscription (domaines, codes), dans /admin/inscrits. */}
+          <p className="text-sm text-slate-400">
+            Inscription des enseignants ({overview.config.allowSelfServiceTeachers ? "libre" : "sur code seulement"}) :{" "}
+            <Link href="/admin/inscrits#reglages" className="underline underline-offset-4 hover:text-slate-300">
+              réglée dans Enseignants inscrits
+            </Link>
+            .
+          </p>
           <fieldset className="rounded-xl border border-white/10 p-4">
             <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
               <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
@@ -807,7 +808,11 @@ export default async function AdminPage({
         </h2>
         <div className="space-y-3">
           {overview.organizations.map((org) => (
-            <div key={org.organizationId} className="rounded-xl bg-slate-950 p-4">
+            <div
+              key={org.organizationId}
+              id={`etablissement-${org.organizationId}`}
+              className="scroll-mt-6 rounded-xl bg-slate-950 p-4"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-slate-100">
                   {org.name}

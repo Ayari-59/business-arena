@@ -20,6 +20,7 @@ export const CHEMINS_PRIVES = [
   "/org",
   "/lti",
   "/etablissement",
+  "/nouveautes",
 ] as const;
 
 export default function robots(): MetadataRoute.Robots {

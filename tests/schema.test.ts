@@ -26,6 +26,7 @@ const EXPECTED_TABLES = [
   "lti_comptes", "lti_refus",
   "saml_idps", "saml_federations", "saml_etablissements", "saml_comptes", "saml_requetes",
   "saml_assertions", "saml_refus",
+  "inscrits_journal",
 ];
 
 describe("schéma de base de données", () => {

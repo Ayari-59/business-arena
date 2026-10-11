@@ -74,6 +74,10 @@ function perimetre(): string[] {
     // La connexion par l'établissement (RENATER) : son bouton et ses écrans d'arrivée.
     join(SRC, "components/connexion-etablissement.tsx"),
     ...tous(join(SRC, "app/etablissement")),
+    // Les inscrits (/admin/inscrits, son export) et la page de désinscription des
+    // nouveautés : la case cochée seule prend l'orange.
+    ...tous(join(SRC, "app/admin/inscrits")),
+    ...tous(join(SRC, "app/nouveautes")),
   ];
   const vus = new Set<string>();
   const pile = [...departs];

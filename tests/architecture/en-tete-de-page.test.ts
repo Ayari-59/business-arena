@@ -49,6 +49,8 @@ const PAGES_INTERIEURES = [
   "src/app/etablissement/parties/page.tsx",
   "src/app/etablissement/sans-offre/page.tsx",
   "src/app/etablissement/refus/page.tsx",
+  "src/app/teacher/compte/page.tsx",
+  "src/app/nouveautes/desinscription/page.tsx",
 ];
 
 describe("l'en-tête des pages intérieures", () => {

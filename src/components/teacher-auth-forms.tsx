@@ -3,6 +3,7 @@
 import { bouton } from "@/components/bouton";
 import { useActionState, useState } from "react";
 import { loginAction, registerAction, type FormState } from "@/app/teacher/actions";
+import { TEXTE_DU_CONSENTEMENT } from "@/config/nouveautes";
 
 const initial: FormState = { error: null };
 
@@ -101,6 +102,21 @@ export function TeacherAuthForms() {
             minLength={8}
             autoComplete="new-password"
           />
+          {/* LES NOUVEAUTÉS : une case NON cochée, facultative, sans effet sur le compte
+              (services/nouveautes.service.ts). La date et la version du texte sont
+              enregistrées si elle est cochée. */}
+          <label className="flex items-start gap-2.5 text-sm leading-snug text-slate-300" data-case-nouveautes="">
+            <input
+              type="checkbox"
+              name="nouveautes"
+              value="oui"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-amber-400"
+            />
+            <span>
+              {TEXTE_DU_CONSENTEMENT}{" "}
+              <span className="text-slate-400">Facultatif, modifiable dans votre espace.</span>
+            </span>
+          </label>
           <ErrorBox error={registerState.error} />
           <button
             type="submit"

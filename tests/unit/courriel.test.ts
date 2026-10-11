@@ -50,4 +50,17 @@ describe("envoyerCourriel", () => {
     const r = await envoyerCourriel(courriel, { RESEND_API_KEY: "re_test" }, poster as unknown as typeof fetch);
     expect(r).toMatchObject({ envoye: false, raison: "injoignable" });
   });
+
+  it("un message de service n'a pas d'en-tête de désinscription ; un e-mail de nouveautés, si (RFC 8058)", async () => {
+    const poster = vi.fn(async () => ({ ok: true, status: 200 }));
+    await envoyerCourriel(courriel, { RESEND_API_KEY: "re_test" }, poster as unknown as typeof fetch);
+    expect(JSON.parse(String((poster.mock.calls[0] as unknown as [string, RequestInit])[1].body))).not.toHaveProperty("headers");
+    const adresse = "https://www.business-arena.fr/api/nouveautes/desinscription?jeton=x.y";
+    await envoyerCourriel({ ...courriel, desinscription: adresse }, { RESEND_API_KEY: "re_test" }, poster as unknown as typeof fetch);
+    const corps = JSON.parse(String((poster.mock.calls[1] as unknown as [string, RequestInit])[1].body));
+    expect(corps.headers).toEqual({
+      "List-Unsubscribe": `<${adresse}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    });
+  });
 });

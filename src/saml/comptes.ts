@@ -74,7 +74,11 @@ export async function compteEnseignant(
       .update(samlComptes)
       .set({ derniereVenue: new Date(), courriel: p.courriel ?? existant.courriel, organizationId })
       .where(eq(samlComptes.id, existant.id));
-    if (p.nom) await db.update(users).set({ displayName: p.nom }).where(eq(users.id, existant.userId));
+    // La dernière connexion (migration 0040) : une venue par la fédération est une connexion.
+    await db
+      .update(users)
+      .set({ derniereConnexionLe: new Date(), ...(p.nom ? { displayName: p.nom } : {}) })
+      .where(eq(users.id, existant.userId));
     // Rattaché à l'organisation de son établissement, même s'il en avait été retiré :
     // c'est elle qui le fait entrer. Le plafond s'applique alors comme à une première venue.
     await rattacherALOrganisation(existant.userId, organizationId);
@@ -92,6 +96,11 @@ export async function compteEnseignant(
     id: userId,
     email: `saml-${userId}@saml.business-arena.local`,
     displayName: (p.nom ?? "Enseignant").slice(0, 120),
+    // Un inscrit venu de la fédération (migration 0040, /admin/inscrits). Aucun accord aux
+    // nouveautés n'est présumé : la case reste à cocher dans son espace (/teacher/compte),
+    // ou par `consentementALaCreation` le jour où la première venue la montrera.
+    provenance: "renater",
+    derniereConnexionLe: new Date(),
   });
   const [lie] = await db
     .insert(samlComptes)
