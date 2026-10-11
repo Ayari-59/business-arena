@@ -16,7 +16,7 @@ export const demandesDeDevis = pgTable(
   "demandes_de_devis",
   {
     id: id(),
-    /** Ce qui est demandé : classe, campus, reseau, episodes ou entreprise (config/tarifs.ts). */
+    /** Ce qui est demandé : classe, programme, campus, reseau, episodes ou entreprise (config/tarifs.ts). */
     offre: text("offre").notNull(),
     nom: text("nom").notNull(),
     fonction: text("fonction").notNull(),
@@ -26,6 +26,10 @@ export const demandesDeDevis = pgTable(
     identifiant: text("identifiant").notNull().default(""),
     /** Enseignants, établissements ou managers, selon l'offre ; null s'il n'est pas donné. */
     effectif: integer("effectif"),
+    /** L'entreprise souhaitée (Classe, Programme ; migration 0038) ; null sinon. */
+    entreprise: text("entreprise"),
+    /** Le niveau souhaité (offre Classe) ; null sinon. */
+    niveau: integer("niveau"),
     email: text("email").notNull(),
     message: text("message").notNull().default(""),
     /** Adresse d'origine, pour la limitation ; NULL hors proxy. */

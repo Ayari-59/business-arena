@@ -7,6 +7,7 @@ import {
   getLicenceStatus,
   type LicenceStatus,
   type OrgLicence,
+  versLicence,
 } from "@/services/licence.service";
 import { DEFAULT_AI_CONFIG, type AiConfig } from "@/config/ai";
 import { DEFAULT_ANSWER_FORMAT, answerFormatFromProfile, type AnswerFormat } from "@/config/difficulty";
@@ -350,17 +351,7 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
         const members = memberRows.filter((m) => m.organizationId === org.id);
         const teachers = members.filter((m) => m.role !== "student").length;
         const orgLicRows = licencesByOrg.get(org.id) ?? [];
-        const licences: OrgLicence[] = orgLicRows.map((r) => ({
-          id: r.id,
-          label: r.label,
-          startsAt: r.startsAt,
-          endsAt: r.endsAt,
-          maxTeachers: r.maxTeachers,
-          reference: r.reference,
-          amountCents: r.amountCents,
-          arene: r.arene ?? null,
-          episodes: r.episodes,
-        }));
+        const licences: OrgLicence[] = orgLicRows.map(versLicence);
 
         let licence: LicenceStatus;
         if (orgLicRows.length === 0) {
@@ -368,17 +359,7 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
         } else {
           const courante =
             orgLicRows.find((r) => r.startsAt <= now && now <= r.endsAt) ?? orgLicRows[0]!;
-          const lic: OrgLicence = {
-            id: courante.id,
-            label: courante.label,
-            startsAt: courante.startsAt,
-            endsAt: courante.endsAt,
-            maxTeachers: courante.maxTeachers,
-            reference: courante.reference,
-            amountCents: courante.amountCents,
-            arene: courante.arene ?? null,
-            episodes: courante.episodes,
-          };
+          const lic: OrgLicence = versLicence(courante);
           const daysLeft = jours(now, courante.endsAt);
           if (now < courante.startsAt) {
             licence = {

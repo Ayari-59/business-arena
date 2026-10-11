@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LIGNE_DE_PRIX } from "@/config/tarifs";
 
 /**
- * LA LIGNE DE PRIX DES BANDES FINALES (audit C-07) : les deux offres de l'arène et leur
+ * LA LIGNE DE PRIX DES BANDES FINALES (audit C-07) : les trois offres de l'arène et leur
  * prix, lus dans config/tarifs.ts, et le lien vers la grille. Écrite une fois pour
  * /enseignants, /ecoles et /fonctionnalites.
  */

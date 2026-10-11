@@ -21,6 +21,12 @@ export interface ScenarioOption {
   unit: string;
   /** Valeurs du scénario, déjà mises en forme pour l'affichage. */
   defaults: Record<string, string | null>;
+  /**
+   * Hors de la licence (une autre entreprise que celle de l'offre Classe ou Programme) :
+   * la marque de l'offre qui l'ouvre (le nom de l'offre Campus). L'option reste visible, marquée,
+   * et ne se choisit pas ; la page dit la règle et donne le lien.
+   */
+  horsLicence?: string;
 }
 
 type Field = {
@@ -113,8 +119,9 @@ export function EconomicParams({
           className="mt-1 w-full champ px-3 py-2 text-sm"
         >
           {scenarios.map((s) => (
-            <option key={s.code} value={s.code}>
+            <option key={s.code} value={s.code} disabled={s.horsLicence !== undefined}>
               {s.label}
+              {s.horsLicence ? ` · ${s.horsLicence}` : ""}
             </option>
           ))}
         </select>

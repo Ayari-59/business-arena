@@ -7,7 +7,7 @@ import { lireContexte } from "@/lti/contexte";
 import { lienParId, relierLien, type Cible } from "@/lti/liens";
 import { plateformeParId } from "@/lti/plateformes";
 import { createClassGame } from "@/services/game.service";
-import { NiveauReserveError, OffreRequiseError } from "@/services/acces.service";
+import { LicenceDepasseeError, NiveauReserveError, OffreRequiseError } from "@/services/acces.service";
 import { CohorteRefuseeError, creerCohorteDeLEnseignant } from "@/services/cohortes.service";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
 import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
@@ -98,6 +98,8 @@ export async function creerPartieAction(formData: FormData): Promise<void> {
     }));
   } catch (e) {
     if (e instanceof NiveauReserveError) refus("niveau");
+    // Hors du paramétrage de la licence (offres Classe, Programme) : ce qui bloque.
+    if (e instanceof LicenceDepasseeError) refus(`licence-${e.quoi}`);
     if (e instanceof OffreRequiseError) refus("classe");
     console.error("[lti] création de partie impossible :", e);
     refus("creation");

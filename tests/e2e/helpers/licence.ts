@@ -11,8 +11,11 @@ import { BASE } from "./browser";
  * chose à ces niveaux, ou dans les autres épisodes, jouent donc sous licence, posée en
  * base comme le ferait l'administrateur : la règle reste en vigueur, eux sont couverts.
  *
- * LE PÉRIMÈTRE (migration 0036, config/tarifs.ts) : une licence ouvre l'arène (offre
- * Classe ou Campus) et/ou les épisodes manager, vendus à part. Par défaut, ces aides
+ * LE PÉRIMÈTRE (migrations 0036 et 0038, config/tarifs.ts) : une licence ouvre l'arène
+ * (offre Classe, Programme ou Campus, avec son paramétrage) et/ou les épisodes manager,
+ * vendus à part. Une Classe porte une entreprise et un niveau (NOVA, niveau 3 par
+ * défaut ici), un enseignant et un groupe à la fois ; un Programme, une entreprise
+ * (NOVA par défaut) et un plafond d'enseignants. Par défaut, ces aides
  * posent une licence de l'ARÈNE seule (Campus), comme celles qu'on vend ; un parcours qui
  * ouvre des épisodes non démo le demande (`{ episodes: true }`). Une cohorte existe pour
  * jouer des épisodes : son organisation reçoit une licence qui les inclut.
@@ -38,9 +41,15 @@ async function base<T>(f: (c: Client) => Promise<T>): Promise<T> {
 
 export interface PerimetreE2E {
   /** L'offre de l'arène ; null : la licence n'ouvre pas l'arène. Défaut : Campus. */
-  arene?: "classe" | "campus" | null;
+  arene?: "classe" | "programme" | "campus" | null;
   /** La licence ouvre-t-elle les épisodes manager ? Défaut : non. */
   episodes?: boolean;
+  /** Les entreprises ouvertes. Défaut : NOVA pour Classe et Programme, toutes pour Campus. */
+  entreprises?: string[] | null;
+  /** Les niveaux ouverts. Défaut : le 3 pour Classe, tous sinon. */
+  niveaux?: number[] | null;
+  /** Le plafond d'enseignants. Défaut : 1 pour Classe, 5 pour Programme, aucun pour Campus. */
+  maxTeachers?: number | null;
 }
 
 /** Une organisation, et une licence en cours si on la demande. */
@@ -62,10 +71,26 @@ async function organisation(
 /** Poser une licence en cours, avec son périmètre, comme le ferait l'administrateur. */
 async function poser(c: Client, orgId: string, perimetre: PerimetreE2E): Promise<void> {
   const arene = perimetre.arene === undefined ? "campus" : perimetre.arene;
+  const restreinte = arene === "classe" || arene === "programme";
   await c.query(
-    `insert into org_licences (organization_id, label, starts_at, ends_at, arene, episodes, max_teachers)
-     values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days', $2, $3, $4)`,
-    [orgId, arene, perimetre.episodes ?? false, arene === "classe" ? 1 : null],
+    `insert into org_licences (organization_id, label, starts_at, ends_at, arene, episodes, max_teachers,
+       entreprises, niveaux, max_parties_en_cours)
+     values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days', $2, $3, $4, $5, $6, $7)`,
+    [
+      orgId,
+      arene,
+      perimetre.episodes ?? false,
+      perimetre.maxTeachers !== undefined
+        ? perimetre.maxTeachers
+        : arene === "classe"
+          ? 1
+          : arene === "programme"
+            ? 5
+            : null,
+      perimetre.entreprises !== undefined ? perimetre.entreprises : restreinte ? ["nova"] : null,
+      perimetre.niveaux !== undefined ? perimetre.niveaux : arene === "classe" ? [3] : null,
+      arene === "classe" ? 1 : null,
+    ],
   );
 }
 

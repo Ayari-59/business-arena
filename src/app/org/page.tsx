@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { nomDOffre, OFFRES } from "@/config/tarifs";
+import { nomDOffre, OFFRES, parametrageEnClair } from "@/config/tarifs";
+import { parametrageDe } from "@/services/licence.service";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getOrgDashboard } from "@/services/admin.service";
@@ -51,7 +52,14 @@ export default async function OrgAdminPage() {
               Licence · {dashboard.licence.licence.label}
               {" · "}
               {[
-                dashboard.licence.licence.arene ? nomDOffre(dashboard.licence.licence.arene) : null,
+                dashboard.licence.licence.arene
+                  ? [
+                      nomDOffre(dashboard.licence.licence.arene),
+                      parametrageEnClair(parametrageDe(dashboard.licence.licence)!),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : null,
                 dashboard.licence.licence.episodes ? OFFRES.episodes.nom : null,
               ]
                 .filter(Boolean)

@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
+import {
+  ARGUMENTS_POUR_LES_ECOLES,
+  LE_RELEVE_DE_L_ARENE,
+  lienDuDevis,
+  LIBELLE_DU_DEVIS,
+  OFFRES,
+  OFFRES_ENSEIGNEMENT,
+  prixParAn,
+} from "@/config/tarifs";
 import { REPONSE_LMS } from "@/lti/textes";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import Link from "next/link";
@@ -230,6 +238,56 @@ export default async function EcolesPage() {
               </div>
             ))}
           </div>
+          {/* LES TROIS OFFRES DE L'ARÈNE, dites pour une école (décision du propriétaire :
+              « aller davantage vers les business schools ») : la grille de /tarifs, lue
+              dans config/tarifs.ts ; et ce qui parle aux écoles, sans rien de promis. */}
+          <div data-offres-ecoles className="mt-14 border-t border-white/10 pt-8">
+            <h3 className="text-xl font-semibold text-slate-100">
+              L&apos;arène, en trois offres pour les écoles
+            </h3>
+            <ul className="mt-5 grid gap-6 md:grid-cols-3">
+              {OFFRES_ENSEIGNEMENT.filter((o) => o.prix !== undefined).map((o) => (
+                <li key={o.code} data-offre-ecole={o.code}>
+                  <p className="titre-carte text-slate-100">
+                    {o.nom} · <span className="tabular-nums">{prixParAn(o.prix!)}</span>
+                  </p>
+                  <p className="mt-1 text-base leading-relaxed text-slate-400">{o.pourQui}</p>
+                  <Link
+                    href={o.bouton.href}
+                    className="mt-2 inline-block text-sm font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                  >
+                    {LIBELLE_DU_DEVIS} →
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="mt-8 grid gap-6 md:grid-cols-2">
+              {ARGUMENTS_POUR_LES_ECOLES.filter((a) => a.titre !== OFFRES.episodes.nom).map((a) => (
+                <li key={a.titre}>
+                  <p className="titre-carte text-slate-100">{a.titre}</p>
+                  <p className="mt-1 text-base leading-relaxed text-slate-400">
+                    {a.texte}
+                    {a.lien ? (
+                      <>
+                        {" "}
+                        <Link
+                          href={a.lien.href}
+                          className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                        >
+                          {a.lien.libelle}
+                        </Link>
+                      </>
+                    ) : null}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-6 text-sm text-slate-400">
+              <Link href="/tarifs" className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
+                Toutes les offres et les tarifs →
+              </Link>
+            </p>
+          </div>
         </Bande>
 
         <Bande
@@ -253,6 +311,9 @@ export default async function EcolesPage() {
                 Les accréditations demandent la preuve que les étudiants acquièrent les compétences
                 visées par le programme. Les épisodes la produisent à chaque partie, sans
                 questionnaire de plus.
+              </p>
+              <p className="mt-3 text-base leading-relaxed text-slate-400" data-releve-de-l-arene="">
+                {LE_RELEVE_DE_L_ARENE}
               </p>
               <dl className="mt-6">
                 {PREUVES.map((p) => (

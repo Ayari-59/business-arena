@@ -39,6 +39,9 @@ const ANCIENS_NOMS: { quoi: string; motif: RegExp }[] = [
   { quoi: "offre Établissement", motif: /offres? (?:d'|de l')?[ÉEé]tablissement\b/i },
   { quoi: "licence établissement (comme une offre)", motif: /licence [ÉEé]tablissement\b/i },
   { quoi: "Offre Entreprise", motif: /offres? Entreprise\b/i },
+  // L'offre du milieu s'est appelée « Section » le temps d'un brouillon : elle est Programme.
+  { quoi: "offre Section", motif: /offres? Section\b/i },
+  { quoi: "licence Section", motif: /licences? Section\b/i },
   { quoi: "abonnement Enseignant", motif: /abonnement (?:Enseignant|[ÉE]tablissement)\b/i },
 ];
 
@@ -61,11 +64,13 @@ describe("les noms des offres", () => {
   it("les noms composés de la grille ne s'écrivent qu'au même endroit", () => {
     const composes = [
       nomDOffre("classe"),
+      nomDOffre("programme"),
       nomDOffre("campus"),
       MARQUE_DE_L_ARENE,
       MARQUE_DES_EPISODES,
-      `offres ${OFFRES.classe.nom} et ${OFFRES.campus.nom}`,
-      `Offres ${OFFRES.classe.nom} et ${OFFRES.campus.nom}`,
+      `offres ${OFFRES.classe.nom}, ${OFFRES.programme.nom} et ${OFFRES.campus.nom}`,
+      `Offres ${OFFRES.classe.nom}, ${OFFRES.programme.nom} et ${OFFRES.campus.nom}`,
+      `offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom}`,
     ];
     const fautes = TOUS.filter(({ chemin }) => chemin !== "config/tarifs.ts").flatMap(({ chemin, texte }) =>
       composes.filter((c) => texte.includes(c)).map((c) => `${chemin} : « ${c} » écrit à la main`),

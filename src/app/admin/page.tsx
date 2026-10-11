@@ -9,15 +9,23 @@ import { ANSWER_FORMATS } from "@/config/difficulty";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { VITRINE_SOLO_PAR_DEFAUT } from "@/config/vitrine-solo";
 import {
+  ENTREPRISES,
+  nomDeLEntreprise,
+  nomDuNiveau,
   LIBELLES_DU_DEVIS,
   MARQUE_DE_L_ARENE,
+  NIVEAUX_DE_L_ARENE,
   nomDOffre,
   OFFRES,
-  PLAFOND_D_ENSEIGNANTS,
+  OFFRES_DE_L_ARENE,
+  PARAMETRAGE_DES_OFFRES,
+  parametrageEnClair,
   PRIX,
   prixParAn,
   estUneOffreDuDevis,
 } from "@/config/tarifs";
+import { parametrageDe, type OrgLicence } from "@/services/licence.service";
+import { FormulaireDeLicence } from "@/components/formulaire-de-licence";
 import { listerDemandesDeDevis } from "@/services/devis.service";
 import type { PreuvesPubliees } from "@/config/preuves-dusage";
 import {
@@ -55,39 +63,29 @@ const ETAT_LICENCE: Record<string, { libelle: string; couleur: string }> = {
   a_venir: { libelle: "à venir", couleur: "text-sky-300" },
 };
 
-function LicenceField({
-  name,
-  label,
-  type = "text",
-  placeholder,
-  required,
-}: {
-  name: string;
-  label: string;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
-      <input
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        className="mt-1 w-full champ px-2 py-1.5 text-xs text-slate-100 outline-none"
-      />
-    </label>
-  );
-}
-
-/** Ce que couvre une licence, en clair : l'offre de l'arène, « + » les épisodes s'ils sont inclus. */
-function perimetre(l: { arene: "classe" | "campus" | null; episodes: boolean }): string {
-  return [l.arene ? nomDOffre(l.arene) : null, l.episodes ? OFFRES.episodes.nom : null]
+/**
+ * Ce que couvre une licence, en clair : l'offre de l'arène et son paramétrage
+ * (« [offre] Classe · NOVA · niveau 3 Pilotage »), « + » les épisodes s'ils sont inclus.
+ */
+function perimetre(l: OrgLicence): string {
+  const p = parametrageDe(l);
+  const arene = p
+    ? [nomDOffre(p.offre), parametrageEnClair(p)].filter((x) => x !== "").join(" · ")
+    : null;
+  return [arene, l.episodes ? OFFRES.episodes.nom : null]
     .filter((x): x is string => x !== null)
     .join(" + ");
 }
+
+/** Ce que chaque offre de l'arène porte, pour l'option de la liste : « [offre] Classe · [prix] par an ». */
+const OFFRES_DU_FORMULAIRE = OFFRES_DE_L_ARENE.map((code) => ({
+  code,
+  libelle: `${nomDOffre(code)} · ${prixParAn(PRIX[code])}`,
+  prix: PRIX[code],
+  entreprise: PARAMETRAGE_DES_OFFRES[code].entreprises === "une",
+  niveau: PARAMETRAGE_DES_OFFRES[code].niveaux === "un",
+  plafond: PARAMETRAGE_DES_OFFRES[code].enseignants === "devis",
+}));
 
 /** Ce que le retour de Google laisse dans l'adresse, traduit pour l'écran. */
 const RETOURS_AGENDA: Record<string, { ton: "bon" | "mauvais"; texte: string }> = {
@@ -551,9 +549,21 @@ export default async function AdminPage({
                   {d.effectif !== null ? (
                     <>
                       <dt className="text-slate-400">
-                        {estUneOffreDuDevis(d.offre) ? LIBELLES_DU_DEVIS[d.offre].effectif : "Effectif"}
+                        {(estUneOffreDuDevis(d.offre) ? LIBELLES_DU_DEVIS[d.offre].effectif : null) ?? "Effectif"}
                       </dt>
                       <dd>{d.effectif}</dd>
+                    </>
+                  ) : null}
+                  {d.entreprise ? (
+                    <>
+                      <dt className="text-slate-400">Entreprise souhaitée</dt>
+                      <dd>{nomDeLEntreprise(d.entreprise)}</dd>
+                    </>
+                  ) : null}
+                  {d.niveau !== null ? (
+                    <>
+                      <dt className="text-slate-400">Niveau souhaité</dt>
+                      <dd>{nomDuNiveau(d.niveau)}</dd>
                     </>
                   ) : null}
                   {d.message ? (
@@ -878,8 +888,17 @@ export default async function AdminPage({
                             {l.endsAt.toLocaleDateString("fr-FR")}
                           </span>
                           <span>
-                            {l.maxTeachers === null ? "sans plafond" : `${l.maxTeachers} enseignants`}
+                            {l.maxTeachers === null
+                              ? "enseignants sans plafond"
+                              : `${l.maxTeachers} enseignant${l.maxTeachers > 1 ? "s" : ""}`}
                           </span>
+                          {l.maxPartiesEnCours !== null ? (
+                            <span>
+                              {l.maxPartiesEnCours === 1
+                                ? "un groupe à la fois"
+                                : `${l.maxPartiesEnCours} groupes à la fois`}
+                            </span>
+                          ) : null}
                           {l.reference ? <span className="font-mono">{l.reference}</span> : null}
                           {l.amountCents !== null ? (
                             <span className="tabular-nums">{formatEuro(l.amountCents / 100)}</span>
@@ -890,43 +909,20 @@ export default async function AdminPage({
                     </ul>
                   ) : null}
 
-                  <form
+                  <FormulaireDeLicence
                     action={setLicenceAction.bind(null, org.organizationId)}
-                    data-formulaire-licence=""
-                    className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
-                  >
-                    <label className="block">
-                      <span className="text-xs uppercase tracking-wide text-slate-400">Offre de l&apos;arène</span>
-                      <select
-                        name="arene"
-                        defaultValue="classe"
-                        className="mt-1 w-full champ px-2 py-1.5 text-xs text-slate-100"
-                      >
-                        <option value="classe">
-                          {nomDOffre("classe")} · {PLAFOND_D_ENSEIGNANTS.classe} enseignant · {prixParAn(PRIX.classe)}
-                        </option>
-                        <option value="campus">
-                          {nomDOffre("campus")} · enseignants sans plafond · {prixParAn(PRIX.campus)}
-                        </option>
-                        <option value="">Sans l&apos;arène (épisodes seuls)</option>
-                      </select>
-                    </label>
-                    <label className="flex items-end gap-2 pb-1.5 text-xs text-slate-300">
-                      <input type="checkbox" name="episodes" className="h-4 w-4 accent-amber-400" />
-                      {OFFRES.episodes.nom} (sur devis)
-                    </label>
-                    <LicenceField name="label" label="Intitulé" placeholder="Année scolaire 2026-2027" required />
-                    <LicenceField name="startsAt" label="Début" type="date" required />
-                    <LicenceField name="endsAt" label="Fin" type="date" required />
-                    <LicenceField name="reference" label="Devis / bon de commande" placeholder="DEV-2026-114" />
-                    <LicenceField name="amount" label="Montant (€)" placeholder={String(PRIX.classe)} />
-                    <button className={`${bouton({ taille: "s" })} col-span-2 sm:col-span-3`}>
-                      Enregistrer la licence
-                    </button>
-                  </form>
+                    offres={OFFRES_DU_FORMULAIRE}
+                    entreprises={ENTREPRISES.map((e) => ({ code: e.code, nom: e.nom }))}
+                    niveaux={NIVEAUX_DE_L_ARENE}
+                    episodes={OFFRES.episodes.nom}
+                  />
                   <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                    Le plafond d&apos;enseignants suit l&apos;offre : {PLAFOND_D_ENSEIGNANTS.classe} pour{" "}
-                    {OFFRES.classe.nom}, sans plafond pour {OFFRES.campus.nom}. Sans licence de
+                    {OFFRES.classe.nom} : une entreprise et un niveau, un enseignant, un groupe à la
+                    fois. {OFFRES.programme.nom} : une entreprise, tous les niveaux, le nombre
+                    d&apos;enseignants et d&apos;intervenants du devis. {OFFRES.campus.nom} : tout,
+                    sans plafond. Une ancienne licence {OFFRES.classe.nom} (avant les trois offres)
+                    est devenue {OFFRES.programme.nom}, sans restriction d&apos;entreprise ni de
+                    niveau : au renouvellement, posez l&apos;offre et l&apos;entreprise vendues. Sans licence de
                     l&apos;arène en cours, ou licence expirée, l&apos;établissement joue en solo aux
                     niveaux gratuits : ni partie de classe ni concours ne se créent, les parties en
                     cours se poursuivent. Les épisodes manager ne s&apos;ouvrent qu&apos;avec la case{" "}

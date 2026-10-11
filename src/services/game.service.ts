@@ -41,7 +41,7 @@ import {
   type DemandeAInstruire,
 } from "@/services/subvention.service";
 import { teamDisplayName } from "@/services/game-view.service";
-import { releveOuvert } from "@/services/acces.service";
+import { releveOuvert, verifierLaReprise } from "@/services/acces.service";
 
 // Re-exports depuis game-creation.service.ts pour compatibilité des consommateurs existants
 export {
@@ -588,6 +588,10 @@ export async function desarchiverPartie(args: {
 }): Promise<void> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+  // Ressortir une partie pas finie la remet en cours : sous l'offre Classe (un groupe à
+  // la fois), seulement s'il reste une place (services/acces.service.ts).
+  const enCours = game.status !== "finished" && game.competitionStageId === null;
+  if (game.archivedAt !== null && enCours) await verifierLaReprise(game.organizationId);
   await db.update(games).set({ archivedAt: null }).where(eq(games.id, args.gameId));
 }
 

@@ -22,7 +22,7 @@ import {
 } from "@/config/reprise";
 import { garderLesTentatives } from "@/services/reprise.service";
 import { createGameCore } from "@/services/game-creation.service";
-import { verifierLaClasse } from "@/services/acces.service";
+import { verifierLaLicence } from "@/services/acces.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import type { Periodicity } from "@/config/scenarios/periodicity";
 
@@ -62,9 +62,10 @@ export async function createCompetition(args: {
   advancePerGroup: number;
 }): Promise<{ competitionId: string; joinCode: string }> {
   // « Pas d'essai en classe » : un concours ne se CRÉE que sous licence de l'arène en
-  // cours (offre Classe ou Campus). Un concours déjà créé se poursuit : ses phases et
-  // leurs parties ne repassent pas par ici.
-  await verifierLaClasse(args.organizationId);
+  // cours, et dans son paramétrage : il se joue avec NOVA, compte comme un groupe en
+  // cours, et demande que les enseignants tiennent dans la licence. Un concours déjà créé
+  // se poursuit : ses phases et leurs parties ne repassent pas par ici.
+  await verifierLaLicence(args.organizationId, { concours: true });
   const { getOrCreateNovaScenarioIdPublic } = await import("./game-creation.service");
   const scenarioId = await getOrCreateNovaScenarioIdPublic();
   const joinCode = makeCode();

@@ -98,6 +98,19 @@ export function CompetitionCreateForm({
           className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300 sm:col-span-2"
         >
           {state.error}
+          {state.devis ? (
+            <>
+              {" "}
+              <a
+                href={state.devis.href}
+                data-devis-du-refus=""
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Demander un devis ({state.devis.offre})
+              </a>{" "}
+              ·
+            </>
+          ) : null}
           {state.offre ? (
             <>
               {" "}

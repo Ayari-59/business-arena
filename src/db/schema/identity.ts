@@ -143,13 +143,23 @@ export const orgLicences = pgTable(
     /** Montant facturé en centimes, purement documentaire. */
     amountCents: integer("amount_cents"),
     /**
-     * LE PÉRIMÈTRE (migration 0036, config/tarifs.ts). `arene` : l'offre de l'arène que la
-     * licence ouvre, Classe ou Campus ; null, elle n'ouvre pas l'arène. `episodes` : elle
-     * ouvre les épisodes manager non démo, vendus à part sur devis. Une licence d'avant la
-     * décision est une licence de l'arène, sans les épisodes.
+     * LE PÉRIMÈTRE (migrations 0036 et 0038, config/tarifs.ts). `arene` : l'offre de
+     * l'arène que la licence ouvre, Classe, Programme ou Campus ; null, elle n'ouvre pas
+     * l'arène. `episodes` : elle ouvre les épisodes manager non démo, vendus à part sur
+     * devis. Une licence d'avant la décision est une licence de l'arène, sans les épisodes.
      */
-    arene: text("arene", { enum: ["classe", "campus"] }).default("campus"),
+    arene: text("arene", { enum: ["classe", "programme", "campus"] }).default("campus"),
     episodes: boolean("episodes").notNull().default(false),
+    /**
+     * LE PARAMÉTRAGE DE L'ARÈNE (migration 0038) : les entreprises ouvertes (codes du
+     * registre ; null : toutes), les niveaux ouverts (null : tous) et le plafond de
+     * parties de classe ou de concours EN COURS en même temps (null : sans plafond).
+     * Une licence Classe porte une entreprise et un niveau, une partie à la fois ; une
+     * Programme, une entreprise ; un Campus, rien de restreint.
+     */
+    entreprises: text("entreprises").array(),
+    niveaux: integer("niveaux").array(),
+    maxPartiesEnCours: integer("max_parties_en_cours"),
     createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },

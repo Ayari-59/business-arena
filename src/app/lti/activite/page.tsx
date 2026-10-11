@@ -15,7 +15,13 @@ import { SubmitButton } from "@/components/submit-button";
 import { ChoixDesEpisodes } from "@/components/choix-des-episodes";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
-import { messageNiveauxReserves, REFUS_DE_LA_CLASSE } from "@/config/tarifs";
+import {
+  messageNiveauxReserves,
+  REFUS_DE_LA_CLASSE,
+  refusSansLaDemande,
+  type HorsLicence,
+} from "@/config/tarifs";
+import { licenceDeLArene } from "@/services/acces.service";
 import { estUnRefusDeCohorte, NOM_DE_COHORTE_MAX, REFUS_DE_COHORTE, REFUS_SANS_LICENCE } from "@/config/cohortes";
 import {
   ANSWER_FORMATS,
@@ -116,12 +122,17 @@ export default async function ActiviteLtiPage({
     );
   }
 
-  const [ouvertures, parties, cohortes, { vitrineSolo }] = await Promise.all([
+  const [ouvertures, parties, cohortes, { vitrineSolo }, licenceDeLOrganisation] = await Promise.all([
     ouverturesDeLOrganisation(plateforme.organizationId),
     getTeacherGames(enseignantId),
     cohortesDeLEnseignant(enseignantId),
     getPlatformConfig(),
+    licenceDeLArene(plateforme.organizationId),
   ]);
+  // Le paramétrage de la licence (offres Classe, Programme, Campus) : le formulaire part
+  // de l'entreprise et du niveau qu'elle couvre (services/acces.service.ts).
+  const parametrage = licenceDeLOrganisation?.parametrage ?? null;
+  const QUOI_HORS_LICENCE: readonly string[] = ["entreprise", "niveau", "enseignants", "parties"];
   const partiesOuvertes = parties.filter((g) => g.status !== "finished");
   const cohortesOuvertes = cohortes.filter((c) => !c.closeLe);
 
@@ -133,6 +144,11 @@ export default async function ActiviteLtiPage({
         ? { texte: messageNiveauxReserves(vitrineSolo), tarifs: true }
         : refus === "classe"
           ? { texte: REFUS_DE_LA_CLASSE, tarifs: true }
+          : refus.startsWith("licence-") && parametrage && QUOI_HORS_LICENCE.includes(refus.slice("licence-".length))
+            ? {
+                texte: refusSansLaDemande(parametrage, refus.slice("licence-".length) as HorsLicence["quoi"]),
+                tarifs: true,
+              }
           : refus.startsWith("cohorte-") && estUnRefusDeCohorte(refus.slice("cohorte-".length))
             ? {
                 texte: REFUS_DE_COHORTE[refus.slice("cohorte-".length) as keyof typeof REFUS_DE_COHORTE],
@@ -204,7 +220,11 @@ export default async function ActiviteLtiPage({
               >
                 <label className="block sm:col-span-3">
                   <span className={LIBELLE}>Entreprise jouée</span>
-                  <select name="scenarioCode" defaultValue={DEFAULT_SCENARIO_CODE} className={CHAMP}>
+                  <select
+                    name="scenarioCode"
+                    defaultValue={parametrage?.entreprises?.[0] ?? DEFAULT_SCENARIO_CODE}
+                    className={CHAMP}
+                  >
                     {SCENARIO_CHOICES.map((d) => (
                       <option key={d.code} value={d.code}>
                         {SECTOR_LABELS[d.sector]} · {d.title}
@@ -253,7 +273,7 @@ export default async function ActiviteLtiPage({
                 </label>
                 <label className="block sm:col-span-2">
                   <span className={LIBELLE}>Niveau de difficulté</span>
-                  <select name="level" defaultValue={3} className={CHAMP}>
+                  <select name="level" defaultValue={parametrage?.niveaux?.[0] ?? 3} className={CHAMP}>
                     {DIFFICULTY_PRESETS.map((p) => (
                       <option key={p.level} value={p.level}>
                         {p.level} · {p.name}

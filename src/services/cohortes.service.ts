@@ -372,7 +372,7 @@ export async function creerCohorteDeLEnseignant(args: {
   const organisation = await getTeacherOrgId(args.enseignantId);
   if (!organisation) throw new CohorteRefuseeError("organisation");
   // Les épisodes se vendent à part (config/tarifs.ts) : il faut une licence en cours QUI
-  // LES INCLUT ; une licence Classe ou Campus seule n'ouvre que l'arène.
+  // LES INCLUT ; une licence de l'arène seule n'ouvre que l'arène.
   if (!(await uneOrganisationAvecEpisodes([organisation]))) {
     throw new CohorteRefuseeError("licence");
   }

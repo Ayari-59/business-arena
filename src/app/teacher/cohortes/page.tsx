@@ -42,7 +42,7 @@ export const dynamic = "force-dynamic";
  * bouton (un `<details>`), ouverte d'elle-même pour qui n'a encore rien créé, pour qui
  * arrive d'une fiche d'épisode (`?episode=…`, l'épisode pré-coché) et après un refus.
  *
- * SANS LICENCE QUI INCLUT LES ÉPISODES (une licence Classe ou Campus seule ne suffit pas :
+ * SANS LICENCE QUI INCLUT LES ÉPISODES (une licence de l'arène seule ne suffit pas :
  * les épisodes se vendent à part), la page se montre, avec son formulaire ; la création
  * est refusée par le serveur (services/cohortes.service.ts), avec le message et le lien vers les tarifs.
  * La page le dit avant, pour qu'on ne remplisse pas un formulaire pour rien.

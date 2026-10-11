@@ -90,9 +90,9 @@ describe("la vitrine à deux étages", () => {
     const message = page.locator("[data-niveaux-reserves]");
     await message.waitFor({ state: "visible" });
     expect(await message.innerText()).toContain(
-      "Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus.",
+      "Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.",
     );
-    expect(await message.innerText()).toContain("Offre Classe ou Campus");
+    expect(await message.innerText()).toContain("Offre Classe, Programme ou Campus");
     expect(await message.getByRole("link", { name: /Voir les tarifs/ }).getAttribute("href")).toBe(
       "/tarifs",
     );
@@ -120,7 +120,7 @@ describe("la vitrine à deux étages", () => {
     await page.getByRole("button", { name: "Lancer la partie" }).click();
     await page.waitForURL(/\/jouer\?reserve=1/, { timeout: 30_000 });
     await page
-      .getByText(/sont inclus dans les offres Classe et Campus/)
+      .getByText(/sont inclus dans les offres Classe, Programme et Campus/)
       .first()
       .waitFor({ state: "visible" });
   });

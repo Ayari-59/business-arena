@@ -10,7 +10,7 @@ import { getTeacherOrgId } from "@/services/auth.service";
  * ne vend pas. Le réglage enregistré en base (`settings.freeTier`) n'est plus lu.
  *
  * Ce qui reste :
- *  · `plan` : « full » quand une licence de l'arène (Classe ou Campus) est en cours. Ce
+ *  · `plan` : « full » quand une licence de l'arène (Classe, Programme ou Campus) est en cours. Ce
  *    qu'elle ouvre se vérifie dans services/acces.service.ts (niveaux, classe, concours,
  *    dossier enseignant, relevé) ;
  *  · `ai` : toujours vrai. L'assistant IA n'est pas vendu ; il ne dépend que de son

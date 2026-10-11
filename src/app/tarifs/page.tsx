@@ -5,6 +5,7 @@ import { EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { Repliable } from "@/components/repliable";
 import {
+  ARGUMENTS_POUR_LES_ECOLES,
   BOUTON_EN_CLASSE,
   BOUTON_ENTREPRISES,
   CONDITIONS_DE_VENTE,
@@ -29,7 +30,7 @@ import { LIEN_CONTACT } from "@/config/navigation";
 export const metadata: Metadata = {
   alternates: { canonical: "/tarifs" },
   title: "Tarifs",
-  description: `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} à ${prixParAn(PRIX.classe)}, ${nomDOffre("campus").toLowerCase()} à ${prixParAn(PRIX.campus)}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'élève ne paie jamais.`,
+  description: `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} à ${prixParAn(PRIX.classe)}, offre ${OFFRES.programme.nom} à ${prixParAn(PRIX.programme)}, offre ${OFFRES.campus.nom} à ${prixParAn(PRIX.campus)}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'étudiant ne paie jamais.`,
 };
 
 /**
@@ -40,14 +41,21 @@ export const metadata: Metadata = {
  * pages publiques claires (`/fonctionnalites`) : l'en-tête commun, des cartes
  * blanches sur le papier, le pied de page commun.
  *
- * TOUT SE VEND SUR DEVIS. Les prix de Classe et de Campus restent affichés, comme
+ * TOUT SE VEND SUR DEVIS. Les prix de Classe, Programme et Campus restent affichés, comme
  * prix de référence ; chaque carte porte « Demander un devis », qui mène à la demande
  * écrite avec l'offre pré-remplie (`/devis?offre=…`). Le rendez-vous téléphonique
  * reste proposé à côté, en lien. Le site n'encaisse rien.
  *
- * UN SEUL BOUTON PLEIN. Il est sur l'offre Campus, celle qu'on veut vendre ; les
- * autres cartes et la bande des épisodes portent un bouton secondaire. Aucune
- * mention « le plus choisi » : rien ne la mesure.
+ * UN SEUL BOUTON PLEIN. Il est sur l'offre Programme, celle du milieu, qu'on veut vendre ;
+ * les autres cartes et la bande des épisodes portent un bouton secondaire. Aucune
+ * mention « le plus choisi » : rien ne la mesure. Les mentions comparatives (« Dès 4
+ * groupes… ») se calculent sur les prix (config/tarifs.ts).
+ *
+ * QUATRE CARTES (Découverte, Classe, Programme, Campus) : côte à côte à partir de
+ * 1280 px, deux par deux sur une tablette, empilées sur un téléphone, de même hauteur
+ * sur une rangée. La page parle aux écoles comme aux lycées (« aller davantage vers les
+ * business schools ») : étudiants, enseignants et intervenants, et ce qui leur parle
+ * (`ARGUMENTS_POUR_LES_ECOLES`).
  *
  * LES ÉPISODES MANAGER SONT UNE OFFRE À PART, sur devis : les cartes de l'arène le
  * disent, et la bande des épisodes aussi.
@@ -62,20 +70,20 @@ export default function TarifsPage() {
           chapeau="Gratuit pour découvrir. Sur devis pour faire cours ou former une équipe."
         >
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-            Le gratuit montre, le payant organise. L&apos;élève ne paie jamais. Toutes les offres
+            Le gratuit montre, le payant organise. L&apos;étudiant ne paie jamais. Toutes les offres
             se vendent sur devis, établi par {VENDEUR.nom}.{" "}
             <span data-mention-tva="">{MENTION_TVA}.</span>
           </p>
         </EnTeteDePage>
 
-        {/* L'ARÈNE : trois cartes côte à côte sur un ordinateur, empilées sur un
-            téléphone, de même hauteur (la rangée de la grille les étire, le bouton
-            descend au pied de chaque carte). */}
-        <section aria-labelledby="enseignement" className="mx-auto max-w-6xl px-6 pb-16 pt-6">
+        {/* L'ARÈNE : quatre cartes côte à côte sur un grand écran, deux par deux sur une
+            tablette, empilées sur un téléphone, de même hauteur (la rangée de la grille les
+            étire, le bouton descend au pied de chaque carte). */}
+        <section aria-labelledby="enseignement" className="mx-auto max-w-7xl px-6 pb-16 pt-6">
           <h2 id="enseignement" className="text-2xl font-bold text-slate-50">
-            L&apos;arène, pour l&apos;enseignement
+            L&apos;arène, pour l&apos;enseignement : lycées, BTS, écoles de commerce, universités
           </h2>
-          <div data-offres className="mt-6 grid gap-6 lg:grid-cols-3">
+          <div data-offres className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {OFFRES_ENSEIGNEMENT.map((o) => (
               <CarteDOffre key={o.code} offre={o} />
             ))}
@@ -87,6 +95,26 @@ export default function TarifsPage() {
               {RESEAUX.bouton.libelle}
             </Link>
           </p>
+          {/* CE QUI PARLE AUX ÉCOLES : l'accréditation, les séminaires et compétitions,
+              Moodle (bientôt), les épisodes pour les MBA. Rien qui n'existe pas. */}
+          <ul data-arguments-ecoles className="mt-10 grid gap-x-10 gap-y-6 md:grid-cols-2">
+            {ARGUMENTS_POUR_LES_ECOLES.map((a) => (
+              <li key={a.titre} className="border-t border-white/10 pt-4">
+                <h3 className="titre-carte text-slate-100">{a.titre}</h3>
+                <p className="mt-1 text-base leading-relaxed text-slate-400">
+                  {a.texte}
+                  {a.lien ? (
+                    <>
+                      {" "}
+                      <Link href={a.lien.href} className={LIEN_A_L_ENCRE}>
+                        {a.lien.libelle}
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* LES ÉPISODES MANAGER : une offre à part, sur devis, sans prix affiché. */}
@@ -99,7 +127,8 @@ export default function TarifsPage() {
               <p className="text-lg font-semibold text-slate-200">Sur devis</p>
             </div>
             <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
-              Des trimestres joués dans la peau d&apos;un manager, en classe, en école ou en
+              Des trimestres joués dans la peau d&apos;un manager : en MBA, en cours de
+              leadership, en formation continue (Executive Education), en classe ou en
               entreprise. Ils se proposent à part : {LES_OFFRES_DE_L_ARENE} ne les incluent pas.
             </p>
             <div className="mt-8 grid gap-x-10 gap-y-8 lg:grid-cols-[1fr_3fr]">
@@ -236,7 +265,7 @@ function CarteDOffre({ offre }: { offre: OffreEnseignement }) {
       <h3 id={`offre-${offre.code}`} className="text-xl font-semibold text-slate-50">
         {offre.nom}
       </h3>
-      <p className="mt-1 text-sm leading-snug text-slate-400 lg:min-h-[2.5rem]">{offre.pourQui}</p>
+      <p className="mt-1 text-sm leading-snug text-slate-400 xl:min-h-[5rem]">{offre.pourQui}</p>
 
       <div data-prix className="mt-5">
         {offre.prix !== undefined ? (

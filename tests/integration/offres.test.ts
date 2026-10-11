@@ -83,13 +83,18 @@ async function enseignant(): Promise<{ userId: string; orgId: string }> {
   return { userId: r.userId, orgId: (await getTeacherOrgId(r.userId))! };
 }
 
-/** Une licence, du `debut` à la `fin` (en jours depuis aujourd'hui), avec son périmètre. */
+/**
+ * Une licence, du `debut` à la `fin` (en jours depuis aujourd'hui), avec son périmètre.
+ * Une Classe porte une entreprise et un niveau (trois offres, migration 0038) : NOVA au
+ * niveau 3 par défaut, celui des parties de ce fichier.
+ */
 async function licence(
   e: { userId: string; orgId: string },
-  perimetre: { arene: "classe" | "campus" | null; episodes: boolean },
+  perimetre: { arene: "classe" | "campus" | null; episodes: boolean; niveaux?: number[] },
   debut = -10,
   fin = 300,
 ) {
+  const { niveaux, ...reste } = perimetre;
   await setOrgLicence({
     adminId: e.userId,
     organizationId: e.orgId,
@@ -97,7 +102,8 @@ async function licence(
     startsAt: new Date(Date.now() + debut * JOUR),
     endsAt: new Date(Date.now() + fin * JOUR),
     maxTeachers: perimetre.arene === "classe" ? 1 : null,
-    ...perimetre,
+    ...reste,
+    ...(perimetre.arene === "classe" ? { entreprises: ["nova"], niveaux: niveaux ?? [3] } : {}),
   });
 }
 
@@ -159,11 +165,13 @@ describe("pas d'essai en classe : la partie de classe et le concours", () => {
     await expect(classe(e)).rejects.toBeInstanceOf(ClasseReserveError);
   });
 
-  it("offre Classe en cours : partie de classe (jusqu'au niveau 6) et concours acceptés", async () => {
+  it("offre Classe en cours : partie de classe à son niveau (jusqu'au 6), ou un concours (NOVA), acceptés", async () => {
     const e = await enseignant();
-    await licence(e, { arene: "classe", episodes: false });
+    await licence(e, { arene: "classe", episodes: false, niveaux: [6] });
     expect((await classe(e, 6)).joinCode).toBeTruthy();
-    expect((await concours(e)).competitionId).toBeTruthy();
+    const f = await enseignant();
+    await licence(f, { arene: "classe", episodes: false });
+    expect((await concours(f)).competitionId).toBeTruthy();
   });
 
   it("offre Campus en cours : acceptés", async () => {
@@ -199,7 +207,7 @@ describe("pas d'essai en classe : la partie de classe et le concours", () => {
 });
 
 describe("les épisodes se vendent à part", () => {
-  it("une licence Classe ou Campus seule n'ouvre pas un épisode non démo (compte)", async () => {
+  it("une licence de l'arène seule (Classe ou Campus) n'ouvre pas un épisode non démo (compte)", async () => {
     for (const arene of ["classe", "campus"] as const) {
       const e = await enseignant();
       await licence(e, { arene, episodes: false });

@@ -52,11 +52,10 @@ import { applyScenarioVariability } from "@/config/scenarios/variability";
 import { withoutRd } from "@/engine/gamme";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
-import { assertCanCreateGame } from "@/services/licence.service";
 import {
   unCompteSousLicence,
   uneOrganisationSousLicence,
-  verifierLaClasse,
+  verifierLaLicence,
   verifierLeNiveau,
 } from "@/services/acces.service";
 import { type BotProfile } from "@/engine/bots";
@@ -619,9 +618,13 @@ export async function createClassGame(args: {
   // ailleurs : une classe commencée se termine, quoi qu'il advienne du
   // mandatement. Clore un tour et débriefer restent possibles même licence expirée.
   // « Pas d'essai en classe » : sans licence de l'arène en cours (aucune, expirée ou
-  // à venir), la partie de classe ne se crée pas (services/acces.service.ts).
-  await verifierLaClasse(args.organizationId);
-  await assertCanCreateGame(args.organizationId);
+  // à venir), la partie de classe ne se crée pas ; avec, elle ne se crée que dans le
+  // paramétrage de la licence : entreprise, niveau, enseignants, parties en cours
+  // (services/acces.service.ts, `verifierLaLicence`).
+  await verifierLaLicence(args.organizationId, {
+    scenarioCode: args.scenarioCode,
+    niveau: args.level,
+  });
   // Sans licence en cours, les niveaux fermés ne se créent pas (config/vitrine-solo.ts).
   // Une partie déjà commencée à ces niveaux n'est pas concernée : seule la création l'est.
   await verifierLeNiveau({

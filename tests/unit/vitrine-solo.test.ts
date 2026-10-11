@@ -121,10 +121,10 @@ describe("ce qui est enregistré", () => {
 describe("le message", () => {
   it("dit quels niveaux sont fermés et quelles offres les incluent", () => {
     expect(messageNiveauxReserves(VITRINE_SOLO_PAR_DEFAUT)).toBe(
-      "Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus.",
+      "Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.",
     );
     expect(messageNiveauxReserves({ ...allumee, niveauMaxAutres: 5 })).toBe(
-      "Le niveau 6 est inclus dans les offres Classe et Campus.",
+      "Le niveau 6 est inclus dans les offres Classe, Programme et Campus.",
     );
     expect(niveauxFermes(VITRINE_SOLO_PAR_DEFAUT)).toBe("Les niveaux 4 à 6");
   });

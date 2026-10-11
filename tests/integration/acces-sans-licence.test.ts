@@ -45,7 +45,7 @@ const DECISIONS: RoundDecisions = {
   maintenanceBudget: 4000,
 };
 
-const MESSAGE = /Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus/;
+const MESSAGE = /Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus/;
 
 let invite: string;
 let sansLicence: { userId: string; orgId: string };

@@ -14,8 +14,9 @@ import { VENDEUR } from "../../src/config/editeur";
  *
  * Ce que la garde d'architecture (`tests/architecture/tarifs.test.ts`) ne voit
  * pas : la page répond sur le build servi, elle tient à 1280 et à 390 sans
- * défilement de côté, les trois cartes sont côte à côte et de même hauteur sur
- * un ordinateur, empilées sur un téléphone, et à aucun moment la fenêtre ne
+ * défilement de côté, les quatre cartes (Découverte, Classe, Programme, Campus)
+ * sont côte à côte et de même hauteur sur un ordinateur, empilées sur un
+ * téléphone, et à aucun moment la fenêtre ne
  * montre plus d'un bouton plein en la parcourant. La vitrine y mène par sa
  * ligne sur les offres de l'arène, l'en-tête et le pied portent « Tarifs ».
  *
@@ -81,7 +82,7 @@ describe("/tarifs", () => {
       // Le prix et « par an » sont deux éléments de flex : innerText les
       // sépare d'un saut de ligne. On lit le texte comme on le voit.
       const lu = (await texte(page)).replace(/\s+/g, " ");
-      for (const attendu of ["490 € par an", "990 € par an", "Sur devis", MENTION_TVA, VENDEUR.nom]) {
+      for (const attendu of ["290 € par an", "990 € par an", "1 990 € par an", "Sur devis", MENTION_TVA, VENDEUR.nom]) {
         expect(lu, attendu).toContain(attendu);
       }
       expect(lu).not.toMatch(/\bHT\b|\bTTC\b|TVA 20/);
@@ -90,7 +91,7 @@ describe("/tarifs", () => {
       expect(max, "boutons pleins dans une même fenêtre").toBe(1);
       const plein = page.locator("main .bouton-plein");
       expect(await plein.innerText()).toBe("Demander un devis");
-      expect(await plein.getAttribute("href")).toBe("/devis?offre=campus");
+      expect(await plein.getAttribute("href")).toBe("/devis?offre=programme");
       // Aucun paiement en ligne, plus de « Commander » : des demandes de devis.
       expect(await page.getByRole("link", { name: /Commander/ }).count()).toBe(0);
       expect(await page.getByRole("link", { name: /payer/i }).count()).toBe(0);
@@ -104,7 +105,7 @@ describe("/tarifs", () => {
     });
   }
 
-  it("à 1280, les trois cartes côte à côte et de même hauteur ; à 390, empilées", async () => {
+  it("à 1280, les quatre cartes côte à côte et de même hauteur ; à 390, empilées", async () => {
     const mesurer = async (page: Page) =>
       page.evaluate(() =>
         [...document.querySelectorAll("[data-offre]")].map((c) => {
@@ -115,6 +116,7 @@ describe("/tarifs", () => {
     const large = await ouvrir(1280);
     const l = await mesurer(large);
     expect(l).toHaveLength(OFFRES_ENSEIGNEMENT.length);
+    expect(l).toHaveLength(4);
     expect(new Set(l.map((c) => c.y)).size, "pas sur une même rangée").toBe(1);
     expect(Math.max(...l.map((c) => c.h)) - Math.min(...l.map((c) => c.h)), "hauteurs").toBeLessThanOrEqual(1);
     // Les boutons tombent au pied des cartes, donc alignés.
@@ -127,8 +129,16 @@ describe("/tarifs", () => {
     const etroit = await ouvrir(390);
     const e = await mesurer(etroit);
     expect(new Set(e.map((c) => c.x)).size, "pas dans une même colonne").toBe(1);
-    expect(e[0]!.y).toBeLessThan(e[1]!.y);
-    expect(e[1]!.y).toBeLessThan(e[2]!.y);
+    expect(e).toHaveLength(4);
+    for (let i = 1; i < e.length; i++) expect(e[i - 1]!.y, `carte ${i}`).toBeLessThan(e[i]!.y);
+    // Empilées et lisibles : chaque carte occupe la colonne, aucune ne déborde.
+    const largeurs = await etroit.evaluate(() =>
+      [...document.querySelectorAll("[data-offre]")].map((c) => Math.round(c.getBoundingClientRect().width)),
+    );
+    for (const w of largeurs) {
+      expect(w).toBeGreaterThanOrEqual(300);
+      expect(w).toBeLessThanOrEqual(390);
+    }
     await etroit.context().close();
   });
 
@@ -149,7 +159,7 @@ describe("le site mène aux tarifs", () => {
     const contexte = await navigateur.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR" });
     const page = await contexte.newPage();
     await aller(page, "/");
-    const lien = page.getByRole("link", { name: "les offres Classe et Campus" });
+    const lien = page.getByRole("link", { name: "les offres Classe, Programme et Campus" });
     expect(await lien.getAttribute("href")).toBe("/tarifs");
     await lien.click();
     await page.waitForURL(/\/tarifs$/);
@@ -221,8 +231,9 @@ describe("« Tarifs » se trouve sans ouvrir le menu (audit C-07)", () => {
       await aller(page, chemin);
       const ligne = page.locator("[data-ligne-de-prix]");
       const lu = (await ligne.innerText()).replace(/[\u202f\u00a0]/g, " ");
-      expect(lu).toContain("490 € par an");
-      expect(lu).toContain("990 € par an");
+      expect(lu).toContain("Offre Classe 290 € par an");
+      expect(lu).toContain("offre Programme 990 € par an");
+      expect(lu).toContain("offre Campus 1 990 € par an");
       expect(await ligne.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
       await contexte.close();
     });
@@ -232,7 +243,13 @@ describe("« Tarifs » se trouve sans ouvrir le menu (audit C-07)", () => {
 describe("la demande de devis, de la carte à la confirmation", () => {
   for (const offre of OFFRES_DU_DEVIS) {
     it(`« Demander un devis » (${offre}) : formulaire pré-rempli, envoi, confirmation honnête`, async () => {
-      const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+      // Une adresse d'origine par demande : le plafond de cinq demandes par adresse et par
+      // heure (services/devis.service.ts) s'applique aussi en recette, et il y a six offres.
+      const contexte = await navigateur.newContext({
+        viewport: { width: 1280, height: 900 },
+        locale: "fr-FR",
+        extraHTTPHeaders: { "x-real-ip": `198.51.100.${OFFRES_DU_DEVIS.indexOf(offre) + 10}` },
+      });
       const page = await contexte.newPage();
       await aller(page, "/tarifs");
       await page.locator(`main a[href="/devis?offre=${offre}"]`).first().click();
@@ -241,16 +258,24 @@ describe("la demande de devis, de la carte à la confirmation", () => {
       const libelles = LIBELLES_DU_DEVIS[offre];
       expect(await page.locator('select[name="offre"]').inputValue()).toBe(offre);
       const formulaire = page.locator("[data-formulaire-devis]");
-      for (const l of [libelles.organisation, libelles.identifiant, libelles.effectif]) {
+      for (const l of [libelles.organisation, libelles.identifiant, libelles.effectif].filter(
+        (x): x is string => x !== undefined,
+      )) {
         // textContent : les étiquettes sont en capitales par le style, pas dans le texte.
         expect(await formulaire.textContent(), l).toContain(l);
       }
+      // Classe et Programme se paramètrent à l'achat : l'entreprise, et pour Classe le niveau.
+      expect(await page.locator('select[name="entreprise"]').count()).toBe(libelles.entreprise ? 1 : 0);
+      expect(await page.locator('select[name="niveau"]').count()).toBe(libelles.niveau ? 1 : 0);
+      expect(await page.locator('input[name="effectif"]').count()).toBe(libelles.effectif ? 1 : 0);
+      if (libelles.entreprise) await page.selectOption('select[name="entreprise"]', "hotel");
+      if (libelles.niveau) await page.selectOption('select[name="niveau"]', "4");
       const email = unique(`devis-${offre}`);
       await page.fill('input[name="nom"]', "Claire Martin");
       await page.fill('input[name="fonction"]', offre === "entreprise" ? "Responsable formation" : "Proviseure adjointe");
       await page.fill('input[name="organisation"]', offre === "entreprise" ? "Groupe Durand" : "Lycée Pasteur");
       await page.fill('input[name="identifiant"]', offre === "entreprise" ? "12345678900012" : "0590001A");
-      await page.fill('input[name="effectif"]', "6");
+      if (libelles.effectif) await page.fill('input[name="effectif"]', "6");
       await page.fill('input[name="email"]', email);
       await page.fill('textarea[name="message"]', "Pour la rentrée.");
       await page.getByRole("button", { name: "Envoyer la demande de devis" }).click();

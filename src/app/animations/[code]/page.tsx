@@ -10,11 +10,17 @@ import { atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
 import { getSession } from "@/lib/session";
 import { getGuestUserId } from "@/lib/guest";
 import { getPlatformConfig } from "@/services/admin.service";
-import { unCompteSousLicence } from "@/services/acces.service";
+import { licenceDeLArene, unCompteSousLicence } from "@/services/acces.service";
+import { getTeacherOrgId } from "@/services/auth.service";
 import { LIEN_TARIFS, niveauReserve } from "@/config/vitrine-solo";
 import {
+  entrepriseDuScenario,
+  horsLicence,
+  LIBELLE_DU_DEVIS,
+  lienDuDevis,
   MARQUE_DE_L_ARENE,
   messageNiveauxReserves,
+  nomDOffre,
   REFUS_DE_LA_CLASSE,
 } from "@/config/tarifs";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
@@ -129,6 +135,17 @@ export default async function AtelierPage({
     sansLicence &&
     !tournoi &&
     niveauReserve(vitrineSolo, atelier.reglages.scenarioCode, atelier.reglages.niveau);
+  // SOUS LICENCE, LE PARAMÉTRAGE : un atelier dont l'entreprise ou le niveau sort de
+  // l'offre (Classe, Programme) reste visible, avec son message, sans bouton de création.
+  // Un concours se joue avec son entreprise et n'a pas de niveau.
+  const orgDuCompte = !sansLicence && session ? await getTeacherOrgId(session.userId) : null;
+  const licenceDuCompte = orgDuCompte ? await licenceDeLArene(orgDuCompte) : null;
+  const horsDeLaLicence = licenceDuCompte
+    ? horsLicence(licenceDuCompte.parametrage, {
+        entreprise: entrepriseDuScenario(atelier.reglages.scenarioCode),
+        niveau: tournoi ? undefined : atelier.reglages.niveau,
+      })
+    : null;
   // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
   // aussi pour un dixième processus face au deuxième.
   // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
@@ -396,6 +413,31 @@ export default async function AtelierPage({
                 </strong>{" "}
                 {niveauFerme ? `${messageNiveauxReserves(vitrineSolo)} ` : ""}
                 {REFUS_DE_LA_CLASSE}{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                  prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir les tarifs
+                </Link>
+              </p>
+            ) : horsDeLaLicence ? (
+              <p
+                data-atelier-hors-licence={horsDeLaLicence.quoi}
+                className="mt-4 rounded-lg encadre-neutre px-3 py-2.5 text-sm leading-relaxed text-slate-200 print:hidden"
+              >
+                <strong className="font-semibold text-slate-100">
+                  {nomDOffre(horsDeLaLicence.offre)}.
+                </strong>{" "}
+                {horsDeLaLicence.message}{" "}
+                <Link
+                  href={lienDuDevis(horsDeLaLicence.offre)}
+                  prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  {LIBELLE_DU_DEVIS}
+                </Link>{" "}
+                ·{" "}
                 <Link
                   href={LIEN_TARIFS}
                   prefetch={false}

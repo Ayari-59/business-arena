@@ -9,8 +9,10 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
  *
  * L'offre arrive pré-remplie de la carte de /tarifs (`?offre=…`) et se change dans la
- * liste ; les libellés suivent le public (un lycée, son UAI et ses enseignants ; une
- * entreprise, son SIRET et ses managers). Ce composant client ne lit pas la grille : la
+ * liste ; les libellés suivent le public (une école, son UAI, ses enseignants et ses
+ * intervenants ; une entreprise, son SIRET et ses managers). Classe et Programme se
+ * paramètrent à l'achat : le formulaire demande l'entreprise souhaitée, et pour Classe le
+ * niveau. Ce composant client ne lit pas la grille : la
  * page serveur lui passe les offres et leurs libellés (config/tarifs.ts).
  *
  * La confirmation DIT LA VÉRITÉ : l'accusé de réception n'est annoncé que s'il est parti.
@@ -21,7 +23,12 @@ export interface OffreDuFormulaire {
   organisation: string;
   exempleOrganisation: string;
   identifiant: string;
-  effectif: string;
+  /** Absent : l'offre ne demande pas d'effectif (Classe, un enseignant). */
+  effectif?: string;
+  /** L'offre se paramètre à l'achat : l'entreprise souhaitée (Classe, Programme). */
+  entreprise?: true;
+  /** Et le niveau (Classe). */
+  niveau?: true;
 }
 
 const ETAT_INITIAL: DevisFormState = { error: null, ok: null, values: null };
@@ -29,6 +36,8 @@ const ETAT_INITIAL: DevisFormState = { error: null, ok: null, values: null };
 export function DevisForm({
   offres,
   offreInitiale,
+  entreprises,
+  niveaux,
   vendeur,
   mentionTva,
   contact,
@@ -36,6 +45,10 @@ export function DevisForm({
 }: {
   offres: readonly OffreDuFormulaire[];
   offreInitiale: string;
+  /** Les entreprises de l'arène, pour les offres qui se paramètrent à l'achat. */
+  entreprises: readonly { code: string; nom: string }[];
+  /** Les niveaux de l'arène, pour l'offre Classe. */
+  niveaux: readonly { niveau: number; nom: string }[];
   /** Qui établit le devis (config/editeur.ts). */
   vendeur: string;
   mentionTva: string;
@@ -127,17 +140,49 @@ export function DevisForm({
         <span className={etiquette}>{choisie.identifiant}</span>
         <input name="identifiant" maxLength={40} defaultValue={v?.identifiant ?? ""} className={champ} />
       </label>
-      <label className="block">
-        <span className={etiquette}>{choisie.effectif}</span>
-        <input
-          name="effectif"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={6}
-          defaultValue={v?.effectif ?? ""}
-          className={champ}
-        />
-      </label>
+      {choisie.entreprise ? (
+        <label className="block" data-champ-devis="entreprise">
+          <span className={etiquette}>L&apos;entreprise souhaitée</span>
+          <select name="entreprise" required defaultValue={v?.entreprise ?? ""} className={champ}>
+            <option value="" disabled>
+              Choisir l&apos;entreprise
+            </option>
+            {entreprises.map((e) => (
+              <option key={e.code} value={e.code}>
+                {e.nom}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {choisie.niveau ? (
+        <label className="block" data-champ-devis="niveau">
+          <span className={etiquette}>Le niveau souhaité</span>
+          <select name="niveau" required defaultValue={v?.niveau ?? ""} className={champ}>
+            <option value="" disabled>
+              Choisir le niveau
+            </option>
+            {niveaux.map((n) => (
+              <option key={n.niveau} value={n.niveau}>
+                {n.niveau} · {n.nom}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {choisie.effectif ? (
+        <label className="block">
+          <span className={etiquette}>{choisie.effectif}</span>
+          <input
+            name="effectif"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            defaultValue={v?.effectif ?? ""}
+            className={champ}
+          />
+        </label>
+      ) : null}
       <label className="block">
         <span className={etiquette}>Votre e-mail, pour recevoir le devis</span>
         <input

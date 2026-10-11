@@ -288,6 +288,7 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
             "L'ÉQUIPE S'ÉCRASE ELLE-MÊME — plusieurs élèves d'une même équipe saisissent en parallèle ; le dernier qui valide remplace le précédent. L'écran affiche qui a validé et à quelle heure : faites-leur désigner une personne qui envoie.",
             "UNE ENTREPRISE EST DÉFAILLANTE — deux tours consécutifs de cessation de paiements. L'activité est gelée et la note financière tombe à zéro. Seule une augmentation de capital qui ramène le découvert sous le plafond la fait repartir ; une subvention accordée par vous peut aussi la sauver.",
             "LA PARTIE DE CLASSE NE SE CRÉE PAS — sans licence de l'arène en cours, ou licence échue, ni partie de classe ni concours ne se créent ; les parties déjà créées vont jusqu'au bout. La ligne en tête de « Mes parties » dit l'offre et sa date de fin, et le chemin vers un devis.",
+            "LA PARTIE SORT DE L'OFFRE — une autre entreprise ou un autre niveau que ceux de la licence, un deuxième groupe en cours sous une offre qui n'en couvre qu'un, ou un enseignant de plus que le devis : le refus dit ce qui bloque et l'offre qui l'ouvre. Le formulaire part déjà des réglages de la licence, et marque les autres choix.",
           ],
         },
       ],

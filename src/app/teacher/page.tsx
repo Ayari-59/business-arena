@@ -13,11 +13,20 @@ import {
   niveauxFermes,
 } from "@/config/vitrine-solo";
 import {
+  entrepriseDuScenario,
+  entrepriseDuSecteur,
+  estUneOffreDuDevis,
+  horsLicence,
   LIBELLE_DU_DEVIS,
+  LIBELLES_DU_DEVIS,
   lienDuDevis,
   MARQUE_DE_L_ARENE,
+  marqueHorsLicence,
   messageNiveauxReserves,
+  nomDOffre,
+  parametrageEnClair,
   REFUS_DE_LA_CLASSE,
+  type HorsLicence,
 } from "@/config/tarifs";
 import { LigneDEtatDeLOffre } from "@/components/etat-de-l-offre";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
@@ -76,9 +85,9 @@ function familleNote(code: string): string {
 export default async function TeacherDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ echec?: string; offre?: string }>;
+  searchParams: Promise<{ echec?: string; offre?: string; geste?: string }>;
 }) {
-  const { echec, offre } = await searchParams;
+  const { echec, offre, geste } = await searchParams;
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   // LES NIVEAUX FERMÉS SANS LICENCE (config/vitrine-solo.ts) : visibles dans le choix du
@@ -92,6 +101,26 @@ export default async function TeacherDashboard({
   const licence =
     etat.arene !== null && (etat.arene.state === "active" || etat.arene.state === "bientot_expiree");
   const niveauMaxSansLicence = niveauMaxPour(regle, "", licence);
+  // LE PARAMÉTRAGE DE LA LICENCE (offres Classe, Programme, Campus) : le formulaire part de
+  // ce que la licence couvre, et marque le reste du nom de l'offre qui l'ouvre, avec le
+  // lien ; le serveur refuse de toute façon (services/acces.service.ts, `verifierLaLicence`).
+  const parametrage = licence ? etat.arene!.parametrage : null;
+  const marque = (d: Parameters<typeof marqueHorsLicence>[1]) =>
+    parametrage ? marqueHorsLicence(parametrage, d) : null;
+  // Ce qui bloque toute création, quels que soient l'entreprise et le niveau : un
+  // enseignant de trop, ou le groupe déjà en cours (offre Classe).
+  const blocage: HorsLicence | null =
+    parametrage && etat.arene
+      ? horsLicence(parametrage, {
+          enseignants: etat.arene.teachers,
+          partiesEnCours: etat.partiesEnCours ?? undefined,
+        })
+      : null;
+  const blocageDuConcours: HorsLicence | null = parametrage
+    ? horsLicence(parametrage, { entreprise: entrepriseDuScenario(DEFAULT_SCENARIO_CODE) })
+    : null;
+  const entrepriseParDefaut = parametrage?.entreprises?.[0] ?? DEFAULT_SCENARIO_CODE;
+  const niveauParDefaut = parametrage?.niveaux?.[0] ?? Math.min(3, niveauMaxSansLicence);
   const games = await getTeacherGames(session.userId);
   // Ce qui appelle un geste : une partie dont toutes les équipes ont rendu.
   const aClore = games.filter((g) => g.aClore);
@@ -118,6 +147,7 @@ export default async function TeacherDashboard({
           label: `★ ${def.title}`,
           unit: def.vocabulary.unit,
           defaults: economicDefaults(def),
+          horsLicence: marque({ entreprise: entrepriseDuSecteur(def.sector) }) ?? undefined,
         };
       }),
   );
@@ -160,7 +190,22 @@ export default async function TeacherDashboard({
           role="alert"
           className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
-          La partie n&apos;a pas été créée. {echec}
+          {geste === "reprise" ? "La partie n'a pas été ressortie." : "La partie n'a pas été créée."}{" "}
+          {echec}
+          {estUneOffreDuDevis(offre) ? (
+            <>
+              {" "}
+              <Link
+                href={lienDuDevis(offre)}
+                prefetch={false}
+                data-devis-du-refus=""
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                {LIBELLE_DU_DEVIS} ({LIBELLES_DU_DEVIS[offre].offre})
+              </Link>{" "}
+              ·
+            </>
+          ) : null}
           {offre ? (
             <>
               {" "}
@@ -263,6 +308,48 @@ export default async function TeacherDashboard({
             </Link>
           </p>
         ) : null}
+        {parametrage && parametrageEnClair(parametrage) ? (
+          // CE QUE LA LICENCE COUVRE, AVANT L'ENVOI : l'entreprise et le niveau choisis à
+          // l'achat sont pré-réglés ; les autres restent visibles dans les listes, marqués
+          // de l'offre qui les ouvre.
+          <p
+            data-parametrage-de-la-licence=""
+            className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
+          >
+            <strong className="font-semibold text-slate-100">
+              {nomDOffre(parametrage.offre)} · {parametrageEnClair(parametrage)}.
+            </strong>{" "}
+            {parametrage.entreprises !== null
+              ? `Les autres entreprises sont marquées « ${nomDOffre("campus")} ». `
+              : ""}
+            {parametrage.niveaux !== null
+              ? `Les autres niveaux sont marqués « ${nomDOffre("programme")} ». `
+              : ""}
+            <Link
+              href={lienDuDevis(parametrage.niveaux !== null ? "programme" : "campus")}
+              prefetch={false}
+              className={LIEN_A_L_ENCRE}
+            >
+              {LIBELLE_DU_DEVIS} ({nomDOffre(parametrage.niveaux !== null ? "programme" : "campus")})
+            </Link>{" "}
+            ·{" "}
+            <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+              Voir les tarifs
+            </Link>
+          </p>
+        ) : null}
+        {blocage ? (
+          <p
+            data-blocage-de-la-licence={blocage.quoi}
+            className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
+          >
+            <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+            {blocage.message}{" "}
+            <Link href={lienDuDevis(blocage.offre)} prefetch={false} className={LIEN_A_L_ENCRE}>
+              {LIBELLE_DU_DEVIS} ({nomDOffre(blocage.offre)})
+            </Link>
+          </p>
+        ) : null}
         <p className="mt-1 text-sm text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
           <Link href="/animations" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
@@ -283,10 +370,11 @@ export default async function TeacherDashboard({
                 label: `${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
                 unit: d.vocabulary.unit,
                 defaults: economicDefaults(d),
+                horsLicence: marque({ entreprise: entrepriseDuScenario(d.code) }) ?? undefined,
               })),
               ...scenariosPublies,
             ]}
-            defaultCode={DEFAULT_SCENARIO_CODE}
+            defaultCode={entrepriseParDefaut}
           />
 
           <label className="block">
@@ -359,7 +447,7 @@ export default async function TeacherDashboard({
             </span>
             <select
               name="level"
-              defaultValue={Math.min(3, niveauMaxSansLicence)}
+              defaultValue={niveauParDefaut}
               className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               {DIFFICULTY_PRESETS.map((p) => {
@@ -367,14 +455,18 @@ export default async function TeacherDashboard({
                 // Avec une entreprise ouverte à tous les niveaux (réglage d'admin), le
                 // choix reste possible et le serveur tranche selon l'entreprise.
                 const fermeIci = p.level > niveauMaxSansLicence;
+                // Hors du niveau de la licence (offre Classe) : visible, marqué de l'offre
+                // qui l'ouvre, non choisissable ; le serveur le refuse aussi.
+                const horsDuNiveau = marque({ niveau: p.level });
                 return (
                   <option
                     key={p.level}
                     value={p.level}
-                    disabled={fermeIci && !aDeuxEtages(regle)}
+                    disabled={(fermeIci && !aDeuxEtages(regle)) || horsDuNiveau !== null}
                   >
                     {p.level} · {p.name} : {p.tagline}
                     {fermeIci ? ` · ${MARQUE_DE_L_ARENE}` : ""}
+                    {horsDuNiveau ? ` · ${horsDuNiveau}` : ""}
                   </option>
                 );
               })}
@@ -730,6 +822,19 @@ export default async function TeacherDashboard({
               {REFUS_DE_LA_CLASSE}{" "}
               <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
                 Voir les tarifs
+              </Link>
+            </p>
+          ) : (blocageDuConcours ?? blocage) ? (
+            // Le concours se joue avec NOVA, et compte comme le groupe en cours : la règle
+            // se dit avant l'envoi (services/acces.service.ts).
+            <p data-concours-hors-licence="" className="mb-3 text-sm text-slate-300">
+              {(blocageDuConcours ?? blocage)!.message}{" "}
+              <Link
+                href={lienDuDevis((blocageDuConcours ?? blocage)!.offre)}
+                prefetch={false}
+                className={LIEN_A_L_ENCRE}
+              >
+                {LIBELLE_DU_DEVIS} ({nomDOffre((blocageDuConcours ?? blocage)!.offre)})
               </Link>
             </p>
           ) : null}

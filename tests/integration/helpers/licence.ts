@@ -3,14 +3,27 @@ import { setOrgLicence } from "@/services/licence.service";
 import type { OffreDeLArene } from "@/config/tarifs";
 
 /**
- * Le périmètre d'une licence de test (migration 0036) : par défaut l'arène en offre
- * Campus, SANS les épisodes, comme une licence Classe ou Campus vendue. Les tests qui
- * ouvrent des épisodes non démo le demandent (`{ episodes: true }`).
+ * Le périmètre d'une licence de test (migrations 0036 et 0038) : par défaut l'arène en
+ * offre Campus (toutes les entreprises, tous les niveaux, sans plafond), SANS les
+ * épisodes. Les tests qui ouvrent des épisodes non démo le demandent
+ * (`{ episodes: true }`) ; ceux qui vérifient une Classe ou un Programme donnent son
+ * paramétrage (`entreprises`, `niveaux`, `maxTeachers`).
  */
 export interface PerimetreDeTest {
   arene?: OffreDeLArene | null;
   episodes?: boolean;
+  entreprises?: string[] | null;
+  niveaux?: number[] | null;
+  maxTeachers?: number | null;
 }
+
+const parametrage = (p: PerimetreDeTest) => ({
+  maxTeachers: p.maxTeachers ?? (p.arene === "classe" ? 1 : null),
+  arene: p.arene === undefined ? ("campus" as const) : p.arene,
+  episodes: p.episodes ?? false,
+  entreprises: p.entreprises ?? null,
+  niveaux: p.niveaux ?? null,
+});
 
 /**
  * UN ÉTABLISSEMENT SOUS LICENCE, POUR LES TESTS QUI JOUENT AU-DELÀ DE LA DÉCOUVERTE.
@@ -44,9 +57,7 @@ export async function etablissementSousLicence(
     label: "Licence de test",
     startsAt: new Date(Date.now() - 10 * JOUR),
     endsAt: new Date(Date.now() + 300 * JOUR),
-    maxTeachers: null,
-    arene: perimetre.arene === undefined ? "campus" : perimetre.arene,
-    episodes: perimetre.episodes ?? false,
+    ...parametrage(perimetre),
   });
   return { userId: r.userId, orgId };
 }
@@ -63,9 +74,7 @@ export async function poserUneLicence(
     label: "Licence de test",
     startsAt: new Date(Date.now() - 10 * JOUR),
     endsAt: new Date(Date.now() + 300 * JOUR),
-    maxTeachers: null,
-    arene: perimetre.arene === undefined ? "campus" : perimetre.arene,
-    episodes: perimetre.episodes ?? false,
+    ...parametrage(perimetre),
   });
 }
 

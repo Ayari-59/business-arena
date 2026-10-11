@@ -2,7 +2,13 @@ import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { demandesDeDevis } from "@/db/schema";
 import { VENDEUR } from "@/config/editeur";
-import { LIBELLES_DU_DEVIS, MENTION_TVA, type OffreDuDevis } from "@/config/tarifs";
+import {
+  LIBELLES_DU_DEVIS,
+  MENTION_TVA,
+  nomDeLEntreprise,
+  nomDuNiveau,
+  type OffreDuDevis,
+} from "@/config/tarifs";
 
 /**
  * LES DEMANDES DE DEVIS ÉCRITES.
@@ -29,6 +35,10 @@ export interface DemandeDeDevis {
   organisation: string;
   identifiant: string;
   effectif: number | null;
+  /** L'entreprise souhaitée (Classe, Programme) ; null sinon. */
+  entreprise?: string | null;
+  /** Le niveau souhaité (Classe) ; null sinon. */
+  niveau?: number | null;
   email: string;
   message: string;
   ip: string | null;
@@ -65,6 +75,8 @@ export async function deposerDemandeDeDevis(
       organisation: d.organisation.trim(),
       identifiant: d.identifiant.trim(),
       effectif: d.effectif,
+      entreprise: d.entreprise ?? null,
+      niveau: d.niveau ?? null,
       email,
       message: d.message.trim(),
       ip: d.ip,
@@ -105,7 +117,9 @@ function recapitulatif(d: DemandeDeDevis): string[] {
     `Offre : ${l.offre}`,
     `${l.organisation} : ${d.organisation.trim()}`,
     d.identifiant.trim() ? `${l.identifiant.replace(/ \(facultatif\)$/, "")} : ${d.identifiant.trim()}` : null,
-    d.effectif !== null ? `${l.effectif} : ${d.effectif}` : null,
+    d.entreprise ? `Entreprise souhaitée : ${nomDeLEntreprise(d.entreprise)}` : null,
+    d.niveau ? `Niveau souhaité : ${nomDuNiveau(d.niveau)}` : null,
+    d.effectif !== null ? `${l.effectif ?? "Effectif"} : ${d.effectif}` : null,
     `Demandé par : ${d.nom.trim()}, ${d.fonction.trim()}`,
     `E-mail : ${d.email.trim()}`,
     "",

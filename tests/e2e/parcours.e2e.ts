@@ -108,7 +108,7 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("il crée une partie de conseil, et la page de pilotage dit ses réglages", async () => {
-    // Les niveaux 4 à 6 sont inclus dans les offres Classe et Campus :
+    // Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus :
     // l'établissement de ce parcours est sous licence, posée en base comme le ferait
     // l'administrateur (la règle elle-même est gardée par acces.e2e.ts).
     await licenceDeLEnseignant(EMAIL, "pose");

@@ -10,7 +10,13 @@ import {
   texteNotificationDevis,
 } from "@/services/devis.service";
 import { envoyerCourriel } from "@/lib/courriel";
-import { OFFRES_DU_DEVIS, type OffreDuDevis } from "@/config/tarifs";
+import {
+  ENTREPRISES,
+  LIBELLES_DU_DEVIS,
+  NIVEAUX_DE_L_ARENE,
+  OFFRES_DU_DEVIS,
+  type OffreDuDevis,
+} from "@/config/tarifs";
 import { VENDEUR } from "@/config/editeur";
 
 /**
@@ -56,7 +62,7 @@ export async function envoyerDemandeDeDevisAction(
   formData: FormData,
 ): Promise<DevisFormState> {
   const brut = Object.fromEntries(
-    ["offre", "nom", "fonction", "organisation", "identifiant", "effectif", "email", "message", "site"].map(
+    ["offre", "nom", "fonction", "organisation", "identifiant", "effectif", "entreprise", "niveau", "email", "message", "site"].map(
       (k) => [k, String(formData.get(k) ?? "")],
     ),
   );
@@ -70,13 +76,26 @@ export async function envoyerDemandeDeDevisAction(
   if (brut.effectif && !/^\d{1,6}$/.test(brut.effectif.trim())) {
     return { error: "Indiquez un nombre", ok: null, values };
   }
+  // L'entreprise et le niveau : seulement pour les offres qui se paramètrent à l'achat, et
+  // alors requis ; une valeur hors du registre est refusée.
+  const libelles = LIBELLES_DU_DEVIS[d.offre];
+  const entreprise = libelles.entreprise ? brut.entreprise!.trim() : "";
+  if (libelles.entreprise && !ENTREPRISES.some((e) => e.code === entreprise)) {
+    return { error: "Choisissez l'entreprise souhaitée", ok: null, values };
+  }
+  const niveau = libelles.niveau ? Number(brut.niveau) : null;
+  if (libelles.niveau && !NIVEAUX_DE_L_ARENE.some((n) => n.niveau === niveau)) {
+    return { error: "Choisissez le niveau souhaité", ok: null, values };
+  }
   const demande = {
     offre: d.offre,
     nom: d.nom,
     fonction: d.fonction,
     organisation: d.organisation,
     identifiant: d.identifiant,
-    effectif: d.effectif ? Number(d.effectif) : null,
+    effectif: libelles.effectif && d.effectif ? Number(d.effectif) : null,
+    entreprise: entreprise || null,
+    niveau,
     email: d.email,
     message: d.message,
     ip: await adresseOrigine(),

@@ -96,7 +96,7 @@ describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle
     await c.close();
   });
 
-  it("offre Classe : « Offre Classe · jusqu'au … », et la partie de classe se crée", async () => {
+  it("offre Classe : « Offre Classe · NOVA · niveau 3 Pilotage · jusqu'au … », et la partie de classe se crée", async () => {
     const c = await contexte();
     await enseignantSousLicence(c, { arene: "classe" });
     const page = await c.newPage();
@@ -104,7 +104,7 @@ describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle
     const etat = page.locator("[data-etat-offre]");
     expect(await etat.getAttribute("data-etat-offre")).toBe("active");
     const lu = await etat.innerText();
-    expect(lu).toMatch(/^Offre Classe · jusqu’au|^Offre Classe · jusqu'au/);
+    expect(lu).toMatch(/^Offre Classe · NOVA · niveau 3 Pilotage · jusqu.au /);
     expect(lu).not.toContain("Épisodes manager");
     await capture(page, "teacher-etat-classe");
     expect(await page.locator("[data-classe-sans-licence]").count()).toBe(0);
@@ -166,7 +166,7 @@ describe("les épisodes non démo suivent la licence épisodes, pas la licence d
 });
 
 describe("le formulaire de licence de /admin", () => {
-  it("propose l'offre de l'arène (Classe, Campus, sans), la case des épisodes, un montant sans taxe", async () => {
+  it("propose l'offre de l'arène (Classe, Programme, Campus, sans), la case des épisodes, un montant sans taxe", async () => {
     const c = await contexte();
     const { userId, orgId } = await enseignantSousLicence(c, { licence: false });
     const nom = `Lycée du formulaire ${Date.now()}`;
@@ -180,13 +180,14 @@ describe("le formulaire de licence de /admin", () => {
     await bloc.locator("details", { hasText: "Licence" }).locator("summary").click();
     const formulaire = bloc.locator("[data-formulaire-licence]");
     const options = await formulaire.locator('select[name="arene"] option').allInnerTexts();
-    expect(options[0]).toMatch(/^Offre Classe · 1 enseignant · 490/);
-    expect(options[1]).toMatch(/^Offre Campus · enseignants sans plafond · 990/);
-    expect(options[2]).toBe("Sans l'arène (épisodes seuls)");
+    expect(options[0]).toMatch(/^Offre Classe · 290/);
+    expect(options[1]).toMatch(/^Offre Programme · 990/);
+    expect(options[2]).toMatch(/^Offre Campus · 1\s990/);
+    expect(options[3]).toBe("Sans l'arène (épisodes seuls)");
     expect(await formulaire.locator('input[name="episodes"][type="checkbox"]').count()).toBe(1);
     // textContent : les étiquettes sont en capitales par le style, pas dans le texte.
     expect(await formulaire.textContent()).toContain("Montant (€)");
-    expect(await formulaire.locator('input[name="amount"]').getAttribute("placeholder")).toBe("490");
+    expect(await formulaire.locator('input[name="amount"]').getAttribute("placeholder")).toBe("290");
     expect(await formulaire.textContent()).not.toMatch(/\bHT\b|\bTTC\b/);
     expect(await formulaire.locator('input[name="maxTeachers"]').count()).toBe(0);
     await formulaire.scrollIntoViewIfNeeded();

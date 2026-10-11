@@ -15,7 +15,7 @@ import { normaliserVitrine, vitrineAEnregistrer, VERSION_DE_LA_REGLE } from "@/c
 import { answerFormatFromProfile } from "@/config/difficulty";
 import {
   estUneOffreDeLArene,
-  PLAFOND_D_ENSEIGNANTS,
+  parametrageDeLOffre,
   type OffreDeLArene,
 } from "@/config/tarifs";
 
@@ -93,10 +93,12 @@ export async function seedDemoAction(): Promise<void> {
 /**
  * Enregistre les termes vendus à un établissement.
  *
- * LE PÉRIMÈTRE se choisit (config/tarifs.ts) : l'offre de l'arène, Classe ou Campus, ou
- * aucune ; et la case « Épisodes manager », vendus à part. Le plafond d'enseignants
- * suit l'offre de l'arène (Classe : un enseignant ; Campus : sans plafond) ; une licence
- * des seuls épisodes n'en porte pas.
+ * LE PÉRIMÈTRE se choisit (config/tarifs.ts) : l'offre de l'arène, Classe, Programme ou
+ * Campus, ou aucune ; et la case « Épisodes manager », vendus à part. LE PARAMÉTRAGE
+ * suit l'offre (`parametrageDeLOffre`) : Classe, une entreprise et un niveau, un
+ * enseignant, un groupe à la fois ; Programme, une entreprise et le plafond
+ * d'enseignants et d'intervenants du devis ; Campus, sans restriction. Une licence des
+ * seuls épisodes n'en porte pas.
  *
  * Le montant est saisi en euros et rangé en centimes : un prix stocké en
  * flottant finit toujours par afficher 89,99999. Il est purement documentaire,
@@ -110,6 +112,13 @@ export async function setLicenceAction(
   const texte = (champ: string) => String(formData.get(champ) ?? "").trim();
   const euros = Number(texte("amount").replace(",", "."));
   const arene = estUneOffreDeLArene(texte("arene")) ? (texte("arene") as OffreDeLArene) : null;
+  const parametrage = arene
+    ? parametrageDeLOffre(arene, {
+        entreprise: texte("entreprise") || null,
+        niveau: Number(texte("niveau")) || null,
+        maxEnseignants: Number(texte("maxTeachers")) || null,
+      })
+    : null;
 
   await setOrgLicence({
     adminId,
@@ -117,8 +126,11 @@ export async function setLicenceAction(
     label: texte("label"),
     startsAt: new Date(texte("startsAt")),
     endsAt: new Date(texte("endsAt")),
-    maxTeachers: arene ? PLAFOND_D_ENSEIGNANTS[arene] : null,
+    maxTeachers: parametrage?.maxEnseignants ?? null,
     arene,
+    entreprises: parametrage?.entreprises ?? null,
+    niveaux: parametrage?.niveaux ?? null,
+    maxPartiesEnCours: parametrage?.maxPartiesEnCours ?? null,
     episodes: formData.get("episodes") === "on",
     reference: texte("reference") || null,
     amountCents: Number.isFinite(euros) && texte("amount") !== "" ? Math.round(euros * 100) : null,

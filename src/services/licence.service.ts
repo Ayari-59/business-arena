@@ -1,7 +1,12 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { orgLicences, organizationMembers } from "@/db/schema";
-import type { OffreDeLArene } from "@/config/tarifs";
+import {
+  OFFRES,
+  PARAMETRAGE_DES_OFFRES,
+  type OffreDeLArene,
+  type ParametrageDeLicence,
+} from "@/config/tarifs";
 
 /**
  * La licence d'établissement : ce qui est vendu, et ce qui est refusé.
@@ -12,9 +17,11 @@ import type { OffreDeLArene } from "@/config/tarifs";
  * ne les encaisse pas : le prix et la référence sont là pour retrouver la vente,
  * pas pour la conclure.
  *
- * UNE LICENCE PORTE SON PÉRIMÈTRE (migration 0036) : l'arène, en offre Classe (un
- * enseignant) ou Campus (tout l'établissement), et/ou les épisodes manager, vendus
- * à part. Ce que chaque périmètre ouvre se décide dans services/acces.service.ts :
+ * UNE LICENCE PORTE SON PÉRIMÈTRE (migration 0036) : l'arène et/ou les épisodes
+ * manager, vendus à part. ET SON PARAMÉTRAGE (migration 0038) : l'offre de l'arène
+ * (Classe, Programme, Campus), les entreprises et les niveaux qu'elle ouvre, ses plafonds
+ * d'enseignants et de parties en cours (config/tarifs.ts, `PARAMETRAGE_DES_OFFRES`).
+ * Ce que chaque licence ouvre se décide dans services/acces.service.ts :
  * sans licence de l'arène en cours, pas de partie de classe ni de concours (« pas
  * d'essai en classe ») ; sans licence qui inclut les épisodes, seules les
  * démonstrations se lancent. Une licence expirée vaut une absence de licence.
@@ -43,6 +50,24 @@ export interface OrgLicence {
   arene: OffreDeLArene | null;
   /** La licence ouvre-t-elle les épisodes manager non démo ? */
   episodes: boolean;
+  /** Les entreprises ouvertes (codes) ; null : toutes. */
+  entreprises: string[] | null;
+  /** Les niveaux ouverts ; null : tous. */
+  niveaux: number[] | null;
+  /** Les parties de classe et concours en cours en même temps ; null : sans plafond. */
+  maxPartiesEnCours: number | null;
+}
+
+/** Le paramétrage de l'arène d'une licence, tel que la règle le lit ; null : pas d'arène. */
+export function parametrageDe(l: OrgLicence): ParametrageDeLicence | null {
+  if (!l.arene) return null;
+  return {
+    offre: l.arene,
+    entreprises: l.entreprises,
+    niveaux: l.niveaux,
+    maxEnseignants: l.maxTeachers,
+    maxPartiesEnCours: l.maxPartiesEnCours,
+  };
 }
 
 /** Sur quoi lire l'état : toute licence, celles de l'arène, ou celles qui incluent les épisodes. */
@@ -50,7 +75,7 @@ export type PorteeDeLicence = "toutes" | "arene" | "episodes";
 
 type LigneDeLicence = typeof orgLicences.$inferSelect;
 
-const versLicence = (r: LigneDeLicence): OrgLicence => ({
+export const versLicence = (r: LigneDeLicence): OrgLicence => ({
   id: r.id,
   label: r.label,
   startsAt: r.startsAt,
@@ -60,6 +85,9 @@ const versLicence = (r: LigneDeLicence): OrgLicence => ({
   amountCents: r.amountCents,
   arene: r.arene ?? null,
   episodes: r.episodes,
+  entreprises: r.entreprises ?? null,
+  niveaux: r.niveaux ?? null,
+  maxPartiesEnCours: r.maxPartiesEnCours ?? null,
 });
 
 const couvre = (r: LigneDeLicence, portee: PorteeDeLicence): boolean =>
@@ -198,8 +226,11 @@ export async function assertCanAddTeacher(organizationId: string): Promise<void>
     throw new Error(statut.blocking ?? "Licence inactive.");
   }
   if (plafond !== null && plafond !== undefined && statut.teachers >= plafond) {
+    const offre = statut.licence?.arene;
     throw new Error(
-      `La licence couvre ${plafond} enseignants, tous rattachés. Le renouvellement ou une extension ouvre une place.`,
+      offre === "classe"
+        ? `L'offre ${OFFRES.classe.nom} couvre ${plafond} enseignant, déjà rattaché. L'offre ${OFFRES.programme.nom} ouvre l'arène à l'équipe pédagogique et aux intervenants du programme.`
+        : `La licence couvre ${plafond} enseignants et intervenants, tous rattachés. Le renouvellement ou une extension ouvre une place.`,
     );
   }
 }
@@ -220,6 +251,15 @@ export async function setOrgLicence(args: {
    */
   arene?: OffreDeLArene | null;
   episodes?: boolean;
+  /**
+   * Le paramétrage de l'arène (config/tarifs.ts, `parametrageDeLOffre`) : entreprises et
+   * niveaux ouverts (null ou absent : tous), plafond de parties en cours (absent : celui
+   * de l'offre). Une licence Classe porte une entreprise et un niveau ; une licence
+   * Programme, une entreprise.
+   */
+  entreprises?: readonly string[] | null;
+  niveaux?: readonly number[] | null;
+  maxPartiesEnCours?: number | null;
 }): Promise<{ licenceId: string }> {
   // Dates invalides (champ vide ou malformé → `new Date("")` = Invalid Date) :
   // toute comparaison avec un NaN est fausse, la garde `endsAt <= startsAt`
@@ -235,6 +275,23 @@ export async function setOrgLicence(args: {
   if (arene === null && !episodes) {
     throw new Error("Une licence ouvre l'arène, les épisodes manager, ou les deux : choisissez.");
   }
+  const entreprises = arene ? (args.entreprises ? [...args.entreprises] : null) : null;
+  const niveaux = arene ? (args.niveaux ? [...args.niveaux] : null) : null;
+  // Une Classe est UN jeu paramétré : une entreprise, un niveau. La garde est ici, au
+  // seul endroit qui écrit une licence, plutôt que dans une contrainte de base que les
+  // migrations rejouées auraient du mal à porter (drizzle/0038_trois_offres.sql).
+  if (arene === "classe" && (entreprises?.length !== 1 || niveaux?.length !== 1)) {
+    throw new Error(`Une licence ${OFFRES.classe.nom} porte une entreprise et un niveau.`);
+  }
+  if (arene === "programme" && entreprises !== null && entreprises.length !== 1) {
+    throw new Error(`Une licence ${OFFRES.programme.nom} porte une entreprise.`);
+  }
+  const maxPartiesEnCours =
+    args.maxPartiesEnCours !== undefined
+      ? args.maxPartiesEnCours
+      : arene
+        ? PARAMETRAGE_DES_OFFRES[arene].partiesEnCours
+        : null;
   const inserted = await db
     .insert(orgLicences)
     .values({
@@ -247,6 +304,9 @@ export async function setOrgLicence(args: {
       amountCents: args.amountCents ?? null,
       arene,
       episodes,
+      entreprises,
+      niveaux,
+      maxPartiesEnCours,
       createdBy: args.adminId,
     })
     .returning({ id: orgLicences.id });

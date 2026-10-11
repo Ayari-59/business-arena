@@ -6,6 +6,7 @@ import {
   LIBELLE_DU_DEVIS,
   nomDOffre,
   OFFRES,
+  parametrageEnClair,
 } from "@/config/tarifs";
 
 /** « 31 août 2027 », au fuseau de Paris. */
@@ -16,8 +17,10 @@ const date = (d: Date) =>
  * L'ÉTAT DE L'OFFRE, EN TÊTE DE L'ESPACE ENSEIGNANT (audit PAR-13).
  *
  * L'enseignant ne voyait ni sa licence ni ce qu'elle ouvre, et l'échéance arrivait sans
- * prévenir (PAR-02). Une ligne le dit : l'offre de l'arène et sa date de fin (avec
- * l'établissement pour Campus), « + Épisodes manager » si la licence les inclut, ou la
+ * prévenir (PAR-02). Une ligne le dit : l'offre de l'arène, son paramétrage et sa date de
+ * fin (« [offre] Classe · NOVA · niveau 3 Pilotage · jusqu'au … » ; « [offre] Programme ·
+ * L'ESCALE · tous niveaux · 4 enseignants sur 5 » ; « [offre] Campus · <établissement> »),
+ * « + Épisodes manager » si la licence les inclut, ou la
  * Découverte gratuite et le chemin vers un devis. Un mois avant la fin, la ligne le dit
  * et propose le devis de renouvellement ; une fois la fin passée, elle dit ce qui est
  * fermé et ce qui continue. Les noms viennent de config/tarifs.ts.
@@ -47,11 +50,20 @@ export function LigneDEtatDeLOffre({
   let etatCode: string;
   if (arene && (arene.state === "active" || arene.state === "bientot_expiree")) {
     etatCode = arene.state;
+    const enClair = parametrageEnClair(arene.parametrage);
+    const plafond = arene.parametrage.maxEnseignants;
     contenu = (
       <>
         <strong className="font-semibold text-slate-100">{nomDOffre(arene.offre)}</strong>
-        {arene.offre === "campus" && etablissement ? ` · ${etablissement}` : ""} · jusqu&apos;au{" "}
-        {date(arene.licence!.endsAt)}
+        {arene.offre === "campus" && etablissement ? ` · ${etablissement}` : ""}
+        {enClair ? <span data-etat-parametrage=""> · {enClair}</span> : null}
+        {plafond !== null && plafond > 1 ? (
+          <span data-etat-enseignants="">
+            {" "}
+            · {arene.teachers} enseignant{arene.teachers > 1 ? "s" : ""} sur {plafond}
+          </span>
+        ) : null}{" "}
+        · jusqu&apos;au {date(arene.licence!.endsAt)}
         {plusEpisodes}
         {arene.state === "bientot_expiree" && arene.daysLeft !== null ? (
           <>

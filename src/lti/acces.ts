@@ -4,8 +4,9 @@ import { uneOrganisationAvecEpisodes, uneOrganisationSousLicence } from "@/servi
  * CE QU'UNE ACTIVITÉ LTI PEUT OUVRIR, SELON LA LICENCE DE L'ORGANISATION DE LA
  * PLATEFORME. Les règles sont celles de services/acces.service.ts, appelées telles
  * quelles, rien n'est réécrit ici :
- *   · une PARTIE de classe : une licence de l'arène en cours (offre Classe ou Campus),
- *     `uneOrganisationSousLicence` ;
+ *   · une PARTIE de classe : une licence de l'arène en cours (offre Classe, Programme ou
+ *     Campus), `uneOrganisationSousLicence` ; la création applique ensuite le paramétrage
+ *     de la licence (entreprise, niveau, enseignants, parties en cours) ;
  *   · une COHORTE d'épisodes : une licence en cours qui inclut les épisodes,
  *     `uneOrganisationAvecEpisodes`.
  *

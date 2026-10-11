@@ -4,7 +4,7 @@
  * Décision du propriétaire (octobre 2026), avec la grille tarifaire : « Fermer les
  * niveaux 4 à 6 ». La Découverte gratuite comprend l'arène aux niveaux 1 à 3 ; les
  * niveaux avancés (RH, RSE, investissement, dividende, placement) sont inclus dans les
- * offres de l'arène (Classe et Campus, config/tarifs.ts). La règle vaut pour TOUS ceux
+ * offres de l'arène (Classe, Programme et Campus, config/tarifs.ts). La règle vaut pour TOUS ceux
  * qui n'ont pas de licence de l'arène en cours : le visiteur du solo public, l'enseignant
  * et l'établissement sans licence. Une licence de l'arène en cours ouvre tous les niveaux
  * (services/acces.service.ts).

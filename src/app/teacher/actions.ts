@@ -51,6 +51,7 @@ import { trancherDemande } from "@/services/subvention.service";
 import { affecterEleve } from "@/services/affectation.service";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 import { OffreRequiseError } from "@/services/acces.service";
+import { LIBELLES_DU_DEVIS, lienDuDevis } from "@/config/tarifs";
 
 export interface FormState {
   error: string | null;
@@ -156,8 +157,14 @@ const optionalRate = (raw: FormDataEntryValue | null): number | undefined => {
  * de connexion, qui renvoie aussitôt vers /teacher puisque la session est
  * valide. L'enseignant revenait sur sa liste, sans partie et sans un mot.
  */
-function echecCreation(raison: string, offre = false): never {
-  redirect(`/teacher?echec=${encodeURIComponent(raison)}${offre ? "&offre=1" : ""}`);
+function echecCreation(raison: string, erreur?: unknown, geste: "creation" | "reprise" = "creation"): never {
+  // Un refus qui renvoie aux offres : la page ajoute « Voir les tarifs », et le devis de
+  // l'offre qui ouvre ce qui bloque quand le refus la nomme (services/acces.service.ts).
+  const offre =
+    erreur instanceof OffreRequiseError ? `&offre=${erreur.offre ?? "1"}` : "";
+  redirect(
+    `/teacher?echec=${encodeURIComponent(raison)}${offre}${geste === "reprise" ? "&geste=reprise" : ""}`,
+  );
 }
 
 export async function createClassGameAction(formData: FormData): Promise<void> {
@@ -239,10 +246,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
   } catch (erreur) {
     // Un niveau fermé, ou une classe sans licence de l'arène en cours : la page ajoute
     // le lien vers les tarifs.
-    echecCreation(
-      erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.",
-      erreur instanceof OffreRequiseError,
-    );
+    echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.", erreur);
   }
   redirect(`/teacher/games/${gameId}`);
 }
@@ -388,6 +392,8 @@ export interface CreateCompetitionState {
   values: CreateCompetitionValues | null;
   /** Le refus renvoie aux offres : le formulaire ajoute le lien vers les tarifs. */
   offre?: boolean;
+  /** Le devis de l'offre qui ouvre ce qui bloque (son adresse et son nom), s'il est connu. */
+  devis?: { href: string; offre: string };
 }
 
 /**
@@ -443,7 +449,13 @@ export async function creerLesCodesManquantsAction(gameId: string): Promise<void
 export async function desarchiverPartieAction(gameId: string): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
-  await desarchiverPartie({ gameId, teacherId: session.userId });
+  try {
+    await desarchiverPartie({ gameId, teacherId: session.userId });
+  } catch (erreur) {
+    // Sous l'offre Classe, un groupe à la fois : la règle, et l'offre qui en ouvre plus.
+    if (erreur instanceof OffreRequiseError) echecCreation(erreur.message, erreur, "reprise");
+    throw erreur;
+  }
   revalidatePath("/teacher");
 }
 
@@ -542,7 +554,14 @@ export async function createCompetitionAction(
   } catch (erreur) {
     // Sans licence de l'arène en cours : la règle, dite telle quelle, et le lien.
     if (erreur instanceof OffreRequiseError) {
-      return { error: `Le concours n'a pas été créé. ${erreur.message}`, values, offre: true };
+      return {
+        error: `Le concours n'a pas été créé. ${erreur.message}`,
+        values,
+        offre: true,
+        devis: erreur.offre
+          ? { href: lienDuDevis(erreur.offre), offre: LIBELLES_DU_DEVIS[erreur.offre].offre }
+          : undefined,
+      };
     }
     const detail = erreur instanceof Error && erreur.message ? ` (${erreur.message})` : "";
     return {

@@ -5,9 +5,11 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import {
+  ENTREPRISES,
   estUneOffreDuDevis,
   LIBELLES_DU_DEVIS,
   MENTION_TVA,
+  NIVEAUX_DE_L_ARENE,
   OFFRES_DU_DEVIS,
 } from "@/config/tarifs";
 import { VENDEUR } from "@/config/editeur";
@@ -17,15 +19,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/devis" },
   title: "Demander un devis",
   description:
-    "Une demande de devis écrite pour Business Arena : l'offre, l'établissement ou l'organisation, le nombre d'enseignants ou de managers. Réponse par écrit.",
+    "Une demande de devis écrite pour Business Arena : l'offre, l'école, l'établissement ou l'organisation, l'entreprise et le niveau souhaités, le nombre d'enseignants et d'intervenants ou de managers. Réponse par écrit.",
 };
 
 /**
  * LA DEMANDE DE DEVIS ÉCRITE.
  *
  * Décision du propriétaire : « la vente se fait sur devis », pour toutes les offres.
- * Chaque carte de /tarifs mène ici avec son offre (`?offre=classe|campus|reseau|episodes|
- * entreprise`) ; une adresse sans offre, ou avec une offre inconnue, pré-remplit Classe.
+ * Chaque carte de /tarifs mène ici avec son offre (`?offre=classe|programme|campus|reseau|
+ * episodes|entreprise`) ; une adresse sans offre, ou avec une offre inconnue, pré-remplit
+ * Classe.
  * Le rendez-vous téléphonique reste proposé, en second.
  */
 export default async function DevisPage({
@@ -47,6 +50,8 @@ export default async function DevisPage({
           <DevisForm
             offres={OFFRES_DU_DEVIS.map((code) => ({ code, ...LIBELLES_DU_DEVIS[code] }))}
             offreInitiale={offreInitiale}
+            entreprises={ENTREPRISES.map((e) => ({ code: e.code, nom: e.nom }))}
+            niveaux={NIVEAUX_DE_L_ARENE}
             vendeur={VENDEUR.nom}
             mentionTva={MENTION_TVA}
             contact={VENDEUR.contact}
