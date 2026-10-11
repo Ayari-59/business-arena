@@ -68,6 +68,11 @@ export default function MentionsLegalesPage() {
               CNIL.
             </li>
             <li>
+              <strong className="text-slate-200">Données conservées dans l&apos;Union
+              européenne.</strong> La base de données et les traitements de l&apos;application sont
+              situés à Francfort (Allemagne).
+            </li>
+            <li>
               <strong className="text-slate-200">Toutes les données de jeu sont
               fictives</strong> : les entreprises, chiffres et résultats sont générés par la
               simulation.
@@ -96,12 +101,16 @@ export default function MentionsLegalesPage() {
           <p>
             L&apos;application est hébergée par <strong className="text-slate-200">Vercel
             Inc.</strong> (440 N Barranca Ave #4133, Covina, CA 91723, États-Unis,
-            vercel.com), qui la sert via son réseau mondial.
+            vercel.com). Les traitements de l&apos;application s&apos;exécutent dans sa région de{" "}
+            <strong className="text-slate-200">Francfort (Allemagne)</strong> ; seuls les fichiers
+            publics du site (pages, images, styles) sont servis par son réseau mondial.
           </p>
           <p>
             La base de données est hébergée par <strong className="text-slate-200">Neon
-            Inc.</strong>, sur l&apos;infrastructure d&apos;Amazon Web Services : elle conserve les
-            données persistées (comptes enseignants, parties, résultats de simulation).
+            Inc.</strong>, sur l&apos;infrastructure d&apos;Amazon Web Services, région eu-central-1{" "}
+            <strong className="text-slate-200">(Francfort, Allemagne)</strong> : elle conserve les
+            données persistées (comptes enseignants, parties, résultats de simulation) dans
+            l&apos;Union européenne.
           </p>
         </Section>
 
