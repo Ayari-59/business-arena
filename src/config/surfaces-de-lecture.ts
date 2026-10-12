@@ -128,7 +128,7 @@ export const SURFACES_PAPIER: readonly SurfaceDeLecture[] = [
     role: "papier",
     porte: "components/coupure-de-presse.tsx",
     raison:
-      "La Gazette de l'Arène est un article de journal : un titre et trois ou quatre lignes à lire, sur le papier des lettres, avec son bandeau de journal.",
+      "La Gazette de l'Arène est un article de journal : un titre et trois ou quatre phrases à lire, sur un papier journal découpé (la famille du papier des lettres, plus terne), avec sa manchette.",
     preuve: { fichier: "components/coupure-de-presse.tsx", motif: /className=\{`papier coupure-de-presse/ },
   },
   {

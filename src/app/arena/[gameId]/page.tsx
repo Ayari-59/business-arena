@@ -445,7 +445,7 @@ export default async function ArenaPage({
           courrier du tour où la poser avant la lettre (en solo, elle y est). */}
       {view.kind !== "solo" && (coupureDuTour || revueDePresse) ? (
         <section aria-label="La presse du tour" className="space-y-3">
-          {coupureDuTour ? <div className="mx-auto w-full max-w-[40rem]">{coupureDuTour}</div> : null}
+          {coupureDuTour ? <div className="py-2">{coupureDuTour}</div> : null}
           {revueDePresse}
         </section>
       ) : null}

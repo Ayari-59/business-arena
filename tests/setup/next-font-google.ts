@@ -16,3 +16,5 @@ const charger = (): Police => ({
 
 export const Barlow = () => charger();
 export const Barlow_Condensed = () => charger();
+export const Playfair_Display = () => charger();
+export const Source_Serif_4 = () => charger();

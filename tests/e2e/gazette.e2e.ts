@@ -8,8 +8,12 @@ import { enseignantSousLicence } from "./helpers/licence";
  *
  *   1. LA COUPURE DANS LE COURRIER DU TOUR, pour NOVA et LA TABLE D'AUGUSTIN, au
  *      niveau 1 et au niveau 5, à 1280 et à 390 : posée AVANT la lettre, un vrai
- *      titre, trois ou quatre lignes, du papier ; à 390, ni débord ni défilement
- *      de côté.
+ *      titre, cinq lignes au plus, du papier ; à 390, ni débord ni défilement
+ *      de côté. UNE COUPURE DE JOURNAL : sur un papier journal qui n'est pas
+ *      celui de la lettre, une découpe qui ne mord sur aucune lettre, étroite
+ *      sur téléphone (une colonne, corps de 15 px au moins), plus large que la
+ *      lettre et en colonnes sur ordinateur quand l'article le demande, droite
+ *      à l'impression.
  *   2. L'ARCHIVE : au tour suivant, la revue de presse garde le numéro passé.
  *   3. LE BILAN : une à trois lignes « Ce que la presse annonçait ».
  *   4. LE PILOTAGE ENSEIGNANT : l'aperçu du tour suivant, « Remplacer par mon
@@ -97,16 +101,42 @@ const lireLaCoupure = (p: Page) =>
     const lettre = zone.querySelector<HTMLElement>(".lettre, .message");
     const titre = c?.querySelector<HTMLElement>("h2, h3");
     const chapo = c?.querySelector<HTMLElement>(".coupure-chapo");
+    const corps = c?.querySelector<HTMLElement>(".coupure-premier");
+    const ombre = c?.closest<HTMLElement>(".coupure-ombre");
     const rc = c?.getBoundingClientRect();
-    const hauteurDeLigne = chapo ? parseFloat(getComputedStyle(chapo).lineHeight) : 0;
+    // Les lignes lues : celles du chapô, puis celles de la plus haute colonne du corps.
+    const lignesDe = (el: HTMLElement | null | undefined) => {
+      if (!el) return 0;
+      const h = Math.max(...[...el.getClientRects()].map((r) => r.height));
+      return Math.round(h / parseFloat(getComputedStyle(el).lineHeight));
+    };
+    // LA DÉCOUPE NE MORD SUR AUCUNE LETTRE : chaque bloc de texte reste à 8 px
+    // au moins des bords de la feuille (la découpe mord de 4 px au plus).
+    const textes = c ? [...c.querySelectorAll<HTMLElement>("header p, .coupure-rubrique, h2, h3, .coupure-texte p")] : [];
+    const marges = textes.map((t) => {
+      const r = t.getBoundingClientRect();
+      return Math.min(r.top - rc!.top, rc!.bottom - r.bottom, r.left - rc!.left, rc!.right - r.right);
+    });
+    const fond = (el: Element | null | undefined) => (el ? getComputedStyle(el).backgroundColor : "");
     return {
       existe: !!c,
       papier: c?.classList.contains("papier") ?? false,
       journal: c?.querySelector(".coupure-journal")?.textContent?.trim() ?? "",
       balise: titre?.tagName ?? null,
       titre: titre?.textContent?.trim() ?? "",
-      chapo: chapo?.textContent?.trim() ?? "",
-      lignes: chapo ? Math.round(chapo.getBoundingClientRect().height / hauteurDeLigne) : 0,
+      // Le texte de l'article (chapô et corps), sans la ligne de date ni la signature.
+      chapo: [chapo?.textContent?.trim(), corps?.textContent?.replace("■", "").trim()].filter(Boolean).join(" "),
+      lignes: lignesDe(chapo) + lignesDe(corps),
+      colonnesVoulues: Number(ombre?.dataset.colonnes ?? 0),
+      colonnes: corps ? Number(getComputedStyle(corps.parentElement!).columnCount) || 1 : 0,
+      corpsPx: corps ? parseFloat(getComputedStyle(corps).fontSize) : 0,
+      justifie: corps ? getComputedStyle(corps).textAlign : "",
+      largeur: rc?.width ?? 0,
+      largeurDeLaLettre: lettre?.getBoundingClientRect().width ?? 0,
+      margeDuTexte: marges.length ? Math.min(...marges) : -1,
+      papierJournal: fond(c),
+      papierDeLaLettre: fond(lettre),
+      signee: !!c?.querySelector(".coupure-signature"),
       avantLaLettre: c && lettre ? !!(c.compareDocumentPosition(lettre) & Node.DOCUMENT_POSITION_FOLLOWING) : null,
       auDessus: rc && lettre ? rc.bottom <= lettre.getBoundingClientRect().top + 1 : null,
       gauche: rc?.left ?? 0,
@@ -147,6 +177,20 @@ describe("la coupure de presse dans le courrier du tour", () => {
       expect(m.deCote).toBeLessThanOrEqual(0);
       // Aux niveaux de prévision, pas un chiffre ; aux niveaux fiables, au plus une fourchette.
       if (partie.niveau >= 3) expect(m.chapo).not.toMatch(/\d/);
+      // UNE COUPURE DE JOURNAL : son papier n'est pas celui de la lettre, la découpe épargne le texte.
+      expect(m.papierJournal).not.toBe(m.papierDeLaLettre);
+      expect(m.margeDuTexte, "la découpe ne mord sur aucune lettre").toBeGreaterThanOrEqual(8);
+      expect(m.signee).toBe(true);
+      expect(m.justifie).toBe("justify");
+      // Plus large que la lettre et en colonnes dès que l'article n'est pas un entrefilet.
+      if (m.colonnesVoulues >= 2) {
+        expect(m.colonnes).toBeGreaterThanOrEqual(2);
+        expect(m.largeur).toBeGreaterThan(m.largeurDeLaLettre);
+      } else expect(m.colonnes).toBe(1);
+      // À l'impression : une feuille droite.
+      await p.emulateMedia({ media: "print" });
+      expect(await p.locator(".coupure-ombre").first().evaluate((e) => getComputedStyle(e).rotate)).toBe("none");
+      await p.emulateMedia({ media: "screen" });
       if (CAPTURES) {
         const zone = p.locator("[data-courrier-du-tour]").first();
         await zone.scrollIntoViewIfNeeded();
@@ -170,6 +214,14 @@ describe("la coupure de presse dans le courrier du tour", () => {
       expect(n.deCote, "pas de défilement de côté").toBeLessThanOrEqual(0);
       expect(n.gauche).toBeGreaterThanOrEqual(8);
       expect(n.droite).toBeGreaterThanOrEqual(8);
+      // Un entrefilet découpé : étroit, centré, une colonne, lisible sans zoom. Plus étroit que les
+      // cartes du parcours (92 % de l'écran) : 88 % et la pose de travers, 90 % au plus.
+      expect(n.largeur / 390).toBeGreaterThanOrEqual(0.85);
+      expect(n.largeur / 390).toBeLessThanOrEqual(0.9);
+      expect(Math.abs(n.gauche - n.droite)).toBeLessThanOrEqual(4);
+      expect(n.colonnes).toBe(1);
+      expect(n.corpsPx).toBeGreaterThanOrEqual(15);
+      expect(n.margeDuTexte, "la découpe ne mord sur aucune lettre").toBeGreaterThanOrEqual(8);
       if (CAPTURES) {
         await q.locator("[data-coupure-de-presse]").first().scrollIntoViewIfNeeded();
         await q.screenshot({ path: `${CAPTURES}/coupure-${partie.nom}-n${partie.niveau}-390.png` });
@@ -243,8 +295,12 @@ describe("l'archive et le bilan", () => {
     }
     expect(await presse.locator("h4").first().innerText()).toBe("Ce que la presse annonçait");
     if (CAPTURES) {
+      // La revue ouverte : les coupures conservées, sous les lignes du bilan.
+      await presse.locator("details.revue-de-presse summary").click();
+      await p.waitForTimeout(400);
       const bilan = p.locator("[data-bilan-lecture]").first();
       await bilan.screenshot({ path: `${CAPTURES}/bilan-presse-1280.png` });
+      await presse.locator("details.revue-de-presse summary").click();
     }
     // L'archive reste lisible à la fin : les six numéros, sous les lignes du bilan.
     expect(await presse.locator("details.revue-de-presse summary").innerText()).toMatch(/Revue de presse\s*6 articles/);
@@ -257,8 +313,9 @@ describe("le pilotage enseignant", () => {
   let urlPartie = "";
   let code = "";
   const TITRE = "Grève des dockers au port de la ville";
+  // Un article LONG (quatre phrases, près de la borne) : il passe en trois colonnes chez les élèves.
   const TEXTE =
-    "Le port est bloqué depuis lundi : les livraisons de la semaine attendront, et les transporteurs s'organisent.";
+    "Le port est bloqué depuis lundi : les livraisons de la semaine attendront, et les transporteurs s'organisent. Les dockers réclament une revalorisation, et aucun navire n'a été déchargé depuis trois jours. Les chargeurs redoutent des retards en chaîne jusqu'à la fin du mois. La chambre de commerce appelle les deux parties à reprendre le dialogue au plus vite.";
 
   it("l'enseignant voit l'article du tour en cours et l'aperçu du suivant", async () => {
     const ctx = await navigateur.newContext({ locale: "fr-FR", viewport: { width: 1280, height: 900 } });
@@ -350,9 +407,20 @@ describe("le pilotage enseignant", () => {
     const revue = eleve.locator("details.revue-de-presse").first();
     await revue.locator("summary").click();
     expect(await revue.innerText()).toContain(avant);
+    // Un article long, sur ordinateur : le corps en trois colonnes quand la feuille le permet.
+    const ombre = eleve.locator(".coupure-ombre").first();
+    expect(await ombre.getAttribute("data-colonnes")).toBe("3");
+    const colonnes = await coupure
+      .locator(".coupure-corps")
+      .evaluate((e) => Number(getComputedStyle(e).columnCount) || 1);
+    expect(colonnes).toBeGreaterThanOrEqual(2);
     if (CAPTURES) {
-      await coupure.scrollIntoViewIfNeeded();
-      await coupure.screenshot({ path: `${CAPTURES}/classe-article-enseignant-1280.png` });
+      await ombre.scrollIntoViewIfNeeded();
+      const r = (await ombre.boundingBox())!;
+      await eleve.screenshot({
+        path: `${CAPTURES}/classe-article-long-${colonnes}-colonnes-1280.png`,
+        clip: { x: Math.max(0, r.x - 24), y: Math.max(0, r.y - 24), width: r.width + 48, height: r.height + 48 },
+      });
     }
 
     // « Ne pas publier » le tour 3 : le pilotage le dit.

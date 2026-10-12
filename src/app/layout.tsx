@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Barlow, Barlow_Condensed, Playfair_Display, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -38,6 +38,32 @@ const policeTexte = Barlow({
   weight: ["400", "500", "600", "700"],
   variable: "--font-brand-sans",
   display: "swap",
+});
+/**
+ * LES CARACTÈRES DE LA GAZETTE, et d'elle seule (`.coupure-de-presse`,
+ * globals.css). Un journal découpé se reconnaît à sa typographie de presse :
+ *   · Playfair Display, une didone (licence SIL Open Font License 1.1), porte
+ *     la manchette, le titre et la lettrine ;
+ *   · Source Serif 4, un romain de lecture (Adobe, licence SIL Open Font
+ *     License 1.1), porte le chapô, le corps justifié et la signature en
+ *     italique.
+ * Polices variables : un fichier par style, toutes graisses comprises. Elles ne
+ * sont PAS préchargées (`preload: false`) : le navigateur ne les télécharge que
+ * sur une page qui pose une coupure, jamais sur l'accueil ni sur /jouer.
+ */
+const policeManchette = Playfair_Display({
+  subsets: ["latin"],
+  style: ["normal"],
+  variable: "--font-journal-manchette",
+  display: "swap",
+  preload: false,
+});
+const policeJournal = Source_Serif_4({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-journal-texte",
+  display: "swap",
+  preload: false,
 });
 import { COULEUR_DU_PAPIER } from "@/config/themes";
 import { paletteDuSite } from "@/config/theme-du-site";
@@ -103,7 +129,7 @@ export default async function RootLayout({
     <html
       lang="fr"
       data-theme="clair"
-      className={`${policeChiffres.variable} ${policeTexte.variable}`}
+      className={`${policeChiffres.variable} ${policeTexte.variable} ${policeManchette.variable} ${policeJournal.variable}`}
     >
       <head>
         {feuille ? (

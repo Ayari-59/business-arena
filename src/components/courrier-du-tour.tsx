@@ -242,11 +242,17 @@ export function CourrierDuTour({
               section (`courrier-pose-seul`, une requête de conteneur), pas sur
               celle de l'écran. */}
           {/* LA PRESSE D'ABORD : ce qui attend tout le marché, puis ce qui
-              est adressé à l'entreprise. Dans la colonne de la lettre (centrée,
-              40 rem), au-dessus de la rangée enveloppe et lettre : l'enveloppe
-              posée reste à côté de SA lettre. */}
+              est adressé à l'entreprise. AU-DESSUS du courrier, et sur ordinateur
+              PLUS LARGE que la lettre (jusqu'à la largeur de l'enveloppe et de
+              la lettre réunies, selon la longueur de l'article : la coupure
+              règle elle-même sa largeur, globals.css « LA COUPURE DE
+              PRESSE ») : un journal se lit en colonnes, une lettre en une
+              seule. À côté de la lettre, elle aurait pris la place de
+              l'enveloppe posée, ou serré la lettre sous ses 40 rem ; dessus,
+              l'ordre de lecture reste celui du sens (le marché, puis
+              l'entreprise), sur téléphone comme sur ordinateur. */}
           {article ? (
-            <div className="coupure-posee mx-auto mb-5 w-full sm:max-w-[40rem]">
+            <div className="coupure-posee mb-7">
               <CoupureDePresse article={article} quand={quand} niveauDuTitre={enParcours ? 2 : 3} />
             </div>
           ) : null}

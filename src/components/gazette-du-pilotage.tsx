@@ -79,7 +79,7 @@ function TourDuPilotage({ gameId, t }: { gameId: string; t: TourDeLaGazette }) {
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
         {enCours ? `En kiosque · ${t.libelle}, vos élèves le lisent` : `À paraître · ${t.libelle}, aperçu`}
       </p>
-      <div className="mt-2 max-w-[40rem]">
+      <div className="mt-3 max-w-[40rem] pb-1">
         {article ? (
           <CoupureDePresse
             article={article}

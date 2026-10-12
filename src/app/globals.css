@@ -4282,87 +4282,329 @@ main[data-ecran-de-jeu] {
 
 /* ───────────────────────────── LA COUPURE DE PRESSE ──────────────────────── */
 
-/* LA GAZETTE DE L'ARÈNE (components/coupure-de-presse.tsx). Même famille de
-   papier que les lettres (`.papier` : blanc, encre, filet, ombre, couleurs en
-   dur) ; ce qui la distingue se voit avant de lire : le bandeau du journal et
-   son double filet, la rubrique en petites capitales, des caractères de presse
-   (une famille à empattements du système, aucune police à charger). Posée sur
-   le bureau comme une lettre, inclinée d'un rien, jamais sur téléphone. */
+/* LA GAZETTE DE L'ARÈNE (components/coupure-de-presse.tsx) : UN MORCEAU DE
+   JOURNAL DÉCOUPÉ ET POSÉ SUR LE BUREAU, PAS UNE CARTE. Le propriétaire : « je
+   veux que l'aspect visuel de la Gazette ressemble vraiment à un journal
+   découpé : pour le mobile, et plus large sur PC ». Elle était une carte
+   blanche du papier des lettres, à bandeau de titre : propre, pas journal.
+
+   LE PAPIER JOURNAL est un OBJET, comme le papier des lettres (« LE PAPIER »,
+   plus haut) : ses couleurs sont écrites ICI, en dur, et ne suivent pas le
+   thème ; aucun utilitaire de couleur Tailwind à l'intérieur (garde :
+   tests/unit/gazette-affichage.test.ts). Un blanc cassé GRISÉ, plus terne que
+   la lettre (#e6e5e0 contre #fff, 1,26 pour 1 : la différence se voit quand
+   la coupure et la lettre sont l'une sur l'autre), jamais crème (la charte l'a
+   retiré du papier) ; ni orange ni or. Ses encres, mesurées sur ce papier :
+   14,2 pour 1 (l'encre), 9,0 (la douce), 6,8 (la ténue), toutes au-dessus de
+   4,5 (garde : le même test calcule les rapports dans cette feuille). Le grain
+   est un bruit SVG de 160 px écrit dans la feuille, à 7 % d'opacité au plus :
+   il se sent, il ne se lit pas, et ne baisse aucun rapport sous le seuil.
+
+   LES BORDS DÉCOUPÉS AUX CISEAUX : une découpe irrégulière en haut et en bas
+   (de 0,5 à 4 px, un point tous les 2 à 4 % de la largeur), des flancs presque
+   droits. Une découpe (`clip-path`) rogne aussi l'ombre de l'élément qui la
+   porte : l'ombre, la rotation et le ruban adhésif sont donc posés sur
+   l'enveloppe `.coupure-ombre`, et l'ombre (`drop-shadow`) suit la
+   découpe. La découpe mord au plus de 4 px ; la feuille a au moins 18 px de
+   marge en haut et en bas : elle ne coupe jamais une lettre (garde e2e). La
+   rotation est statique (rien ne s'anime : la coupure « moins de mouvement »
+   ne la concerne pas), et tombe à l'impression.
+
+   LA MAQUETTE DE PRESSE : la manchette en didone (Playfair Display, chargée par
+   next/font, layout.tsx), un double filet sous elle, la ligne de date entre
+   deux filets (« Économie régionale · Tour 3 · 1,20 € »), la rubrique en
+   petites capitales, le titre gras et serré, le chapô en demi-gras, puis le
+   corps dans un romain de lecture (Source Serif 4) : JUSTIFIÉ, avec césure
+   (la langue est posée sur l'article), ouvert par une lettrine, signé, clos
+   par le carré de fin.
+
+   TÉLÉPHONE : une coupure étroite, une colonne, comme un entrefilet (88 % de
+   l'écran, centrée ; le parcours en laisse déjà 92 % à ses cartes), le corps à 16 px. ORDINATEUR : la coupure s'élargit avec
+   son texte (40 rem pour un entrefilet, 52 pour deux colonnes, 62 pour trois),
+   au-dessus du courrier, et le corps passe en colonnes séparées d'un filet fin
+   dès que SA largeur le permet (requête de conteneur, pas de fenêtre : le
+   pilotage enseignant, plus étroit, reste à une ou deux colonnes). */
+.coupure-ombre {
+  container: coupure / inline-size;
+  position: relative;
+  width: 100%;
+  margin-inline: auto;
+  /* La feuille posée : un contact net, puis une pénombre large et basse,
+     celle des lettres (« LE COURRIER POSÉ »), qui suit la découpe. */
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3)) drop-shadow(0 12px 14px rgb(0 0 0 / 0.38));
+}
+.coupure-ombre[data-format="pleine"] {
+  max-width: 40rem;
+  rotate: -0.4deg;
+}
+.coupure-ombre[data-format="pleine"][data-colonnes="2"] {
+  max-width: 52rem;
+}
+.coupure-ombre[data-format="pleine"][data-colonnes="3"] {
+  max-width: 62rem;
+}
+/* Le ruban adhésif : une bande translucide, à cheval sur le haut de la
+   feuille, au milieu. Elle s'arrête avant la manchette (la feuille a 22 px
+   de marge en haut, le ruban en couvre 14). */
+.coupure-ombre[data-format="pleine"]::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: -0.5rem;
+  left: 50%;
+  width: 5.5rem;
+  height: 1.375rem;
+  translate: -50% 0;
+  rotate: -2.5deg;
+  background-color: rgb(244 245 240 / 0.55);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18);
+}
+@media (max-width: 639.98px) {
+  /* Un entrefilet découpé : étroit et centré, sur toute la place qu'il faut
+     pour se lire sans zoom. */
+  .coupure-ombre[data-format="pleine"] {
+    width: min(100%, 88vw);
+  }
+}
+@media (min-width: 640px) {
+  .coupure-ombre[data-format="pleine"] {
+    rotate: -0.6deg;
+  }
+}
+
 .coupure-de-presse {
-  font-family: Georgia, "Times New Roman", "Liberation Serif", serif;
-  padding: 1rem 1.125rem 1.125rem;
-  box-shadow:
-    0 1px 1px rgb(0 0 0 / 0.22),
-    0 3px 6px -2px rgb(0 0 0 / 0.24),
-    0 18px 34px -18px rgb(0 0 0 / 0.55);
+  --encre: #16171a;
+  --encre-douce: #383a3f;
+  --encre-tenue: #4a4c52;
+  --papier: #e6e5e0;
+  --filet-de-presse: #7a7b7d;
+  font-family: var(--font-journal-texte), Georgia, "Times New Roman", serif;
+  color: var(--encre);
+  background-color: var(--papier);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .1 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 30% 0%, rgb(255 255 255 / 0.28), transparent 70%);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1.375rem 1.125rem 1.25rem;
+  clip-path: polygon(0 3.6px, 2.5% 3.4px, 6.1% 0.8px, 9.6% 2.1px, 13.0% 1.9px, 16.2% 3.8px, 20.1% 3.1px, 22.1% 1.8px, 25.7% 1.5px, 28.8% 1.2px, 31.2% 3.1px, 33.6% 0.5px, 36.7% 2.2px, 39.6% 0.8px, 41.5% 3.5px, 45.2% 1.7px, 47.8% 3.7px, 51.7% 2.3px, 53.8% 3.3px, 57.9% 1.2px, 61.4% 3.8px, 64.4% 1.9px, 67.9% 3.4px, 70.7% 1.7px, 74.1% 1.1px, 77.0% 2.7px, 78.7% 3.2px, 82.0% 1.6px, 84.7% 3.7px, 88.3% 2.4px, 89.9% 2.3px, 92.7% 2.3px, 95.2% 1.6px, 99.2% 1.6px, 100% 2.7px, calc(100% - 1px) 34%, 100% 61%, calc(100% - 0.5px) 83%, 100% calc(100% - 2.3px), 99.7% calc(100% - 2.3px), 97.8% calc(100% - 3.0px), 93.7% calc(100% - 2.4px), 91.2% calc(100% - 2.6px), 89.4% calc(100% - 3.8px), 86.6% calc(100% - 2.4px), 82.5% calc(100% - 3.5px), 78.3% calc(100% - 0.7px), 74.5% calc(100% - 2.8px), 71.1% calc(100% - 1.3px), 67.7% calc(100% - 3.6px), 65.1% calc(100% - 2.2px), 62.3% calc(100% - 3.8px), 59.9% calc(100% - 3.0px), 55.7% calc(100% - 2.5px), 53.1% calc(100% - 0.5px), 50.1% calc(100% - 3.6px), 47.9% calc(100% - 1.3px), 45.3% calc(100% - 2.7px), 43.4% calc(100% - 3.2px), 41.7% calc(100% - 0.5px), 40.0% calc(100% - 0.8px), 36.1% calc(100% - 1.7px), 34.3% calc(100% - 2.6px), 30.4% calc(100% - 2.1px), 26.4% calc(100% - 2.8px), 24.8% calc(100% - 0.7px), 20.8% calc(100% - 3.8px), 18.0% calc(100% - 2.8px), 14.4% calc(100% - 1.3px), 10.2% calc(100% - 1.2px), 7.9% calc(100% - 3.4px), 4.6% calc(100% - 0.5px), 3.0% calc(100% - 3.5px), 0 calc(100% - 1.8px), 0.5px 72%, 0 44%, 1px 18%);
 }
 .coupure-de-presse .coupure-bandeau {
   text-align: center;
-  border-bottom: 3px double var(--encre);
-  padding-bottom: 0.375rem;
-  margin-bottom: 0.625rem;
 }
 .coupure-de-presse .coupure-journal {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  color: var(--encre);
+  font-family: var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  padding-bottom: 0.3rem;
+  border-bottom: 4px double var(--encre);
 }
 .coupure-de-presse .coupure-date {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--encre-douce);
+  padding: 0.2rem 0 0.25rem;
+  border-bottom: 1px solid var(--encre);
 }
 .coupure-de-presse .coupure-rubrique {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 1rem;
   font-weight: 700;
-  font-variant: small-caps;
-  letter-spacing: 0.08em;
-  text-transform: lowercase;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
   color: var(--encre-tenue);
-  border-top: 1px solid #dbe2ee;
-  display: inline-block;
-  padding-top: 0.125rem;
 }
-/* Le titre est un `h2` ou un `h3` : la couche de base lui donne la grotesque
-   des titres, et l'écran de jeu son interligne de sous-titre. Ici, c'est une
-   manchette de journal : la famille de la coupure, l'interligne d'un titre. */
+/* Le titre est un `h2`, un `h3` ou un `h4` : la couche de base lui donne la
+   grotesque des titres. Ici, c'est un titre de presse : la didone, grasse et
+   serrée, l'interligne d'une manchette. */
 .papier.coupure-de-presse .coupure-titre {
-  font-family: inherit;
-  font-size: 1.3125rem;
-  font-weight: 700;
-  line-height: 1.22;
-  margin-top: 0.25rem;
+  font-family: var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+  margin-top: 0.125rem;
   color: var(--encre);
   text-wrap: balance;
 }
 .coupure-de-presse .coupure-chapo {
-  font-size: 1rem;
-  line-height: 1.55;
   margin-top: 0.5rem;
-  hyphens: auto;
-}
-.coupure-de-presse.coupure-compacte {
-  padding: 0.75rem 0.875rem;
-  box-shadow: 0 6px 16px -14px rgb(11 37 69 / 0.4);
-}
-.papier.coupure-de-presse.coupure-compacte .coupure-titre {
   font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.4;
+  text-wrap: pretty;
 }
-.coupure-de-presse.coupure-compacte .coupure-chapo {
-  font-size: 0.9375rem;
+.coupure-de-presse .coupure-corps {
+  margin-top: 0.625rem;
+  font-size: 1rem;
+  line-height: 1.5;
 }
-@media (min-width: 640px) {
-  .coupure-posee {
-    transform: rotate(0.4deg);
+.coupure-de-presse .coupure-premier {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphenate-limit-chars: 6 3 2;
+}
+/* JUSTIFIÉ SUR ORDINATEUR SEULEMENT. Sur une colonne de téléphone (≈ 35
+   caractères), un navigateur sans dictionnaire de césure français creuse des
+   blancs de plusieurs mots ; le fer à gauche s'y lit mieux. Les colonnes de
+   l'ordinateur, plus larges, gardent la justification du journal. */
+@media (max-width: 639.98px) {
+  .coupure-de-presse .coupure-premier {
+    text-align: left;
   }
 }
+/* LA LETTRINE : la première lettre du corps, en didone, sur deux lignes. Du
+   CSS seul : le texte reste entier pour les lecteurs d'écran. Là où
+   `initial-letter` manque, une lettre flottante de même hauteur. */
+.coupure-de-presse .coupure-premier::first-letter {
+  font-family: var(--font-journal-manchette), "Didot", "Bodoni 72", Georgia, serif;
+  font-weight: 800;
+  color: var(--encre);
+  initial-letter: 2;
+  margin-right: 0.125rem;
+}
+/* Un corps court (une ligne sur ordinateur) : la lettrine monte au lieu de
+   tomber, sans quoi elle pendrait sous une ligne seule. */
+.coupure-de-presse .coupure-premier[data-lettrine="montante"]::first-letter {
+  initial-letter: 2 1;
+}
+@supports not (initial-letter: 2) {
+  .coupure-de-presse .coupure-premier[data-lettrine="tombante"]::first-letter {
+    float: left;
+    font-size: 3.15em;
+    line-height: 0.82;
+    padding: 0.06em 0.08em 0 0;
+  }
+  .coupure-de-presse .coupure-premier[data-lettrine="montante"]::first-letter {
+    font-size: 2.1em;
+    line-height: 1;
+  }
+}
+.coupure-de-presse .coupure-signature {
+  margin-top: 0.375rem;
+  text-align: right;
+  font-size: 0.9375rem;
+  color: var(--encre-douce);
+  break-inside: avoid;
+}
+.coupure-de-presse .coupure-fin {
+  font-style: normal;
+  font-size: 0.7em;
+  color: var(--encre);
+}
+
+/* SUR ORDINATEUR, LA LARGEUR DE LA FEUILLE décide, pas celle de l'écran. */
+@container coupure (min-width: 36rem) {
+  .coupure-de-presse {
+    padding: 1.5rem 1.75rem 1.375rem;
+  }
+  .coupure-de-presse .coupure-journal {
+    font-size: 2.375rem;
+  }
+  .papier.coupure-de-presse .coupure-titre {
+    font-size: 2rem;
+    line-height: 1.06;
+  }
+  .coupure-de-presse .coupure-chapo {
+    font-size: 1.1875rem;
+    line-height: 1.38;
+  }
+  .coupure-ombre:is([data-colonnes="2"], [data-colonnes="3"]) .coupure-corps {
+    columns: 2;
+    column-gap: 1.75rem;
+    column-rule: 1px solid var(--filet-de-presse);
+  }
+}
+@container coupure (min-width: 56rem) {
+  .coupure-ombre[data-colonnes="3"] .coupure-corps {
+    columns: 3;
+  }
+}
+
+/* LA REVUE DE PRESSE ET LE BILAN : les mêmes coupures, en plus petit, sur une
+   colonne, posées côte à côte et un peu de travers comme des coupures
+   conservées. Pas de ruban ni de signature : ce sont des archives. Le corps
+   garde 15 px. */
+.coupure-de-presse.coupure-compacte {
+  padding: 1rem 0.875rem 0.875rem;
+}
+.coupure-compacte .coupure-journal {
+  font-size: 1rem;
+  border-bottom-width: 3px;
+  padding-bottom: 0.2rem;
+}
+.coupure-compacte .coupure-date {
+  font-size: 0.8125rem;
+}
+.coupure-compacte .coupure-rubrique {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+}
+.papier.coupure-de-presse.coupure-compacte .coupure-titre {
+  font-size: 1.1875rem;
+  line-height: 1.12;
+}
+.coupure-compacte .coupure-chapo {
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.coupure-compacte .coupure-corps {
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+.coupures-conservees {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  align-items: start;
+  gap: 1.75rem 1.5rem;
+  margin-top: 0.875rem;
+  padding: 0.25rem 0.375rem 0.75rem;
+}
+.coupures-conservees > li:nth-child(3n + 1) > .coupure-ombre {
+  rotate: -0.9deg;
+}
+.coupures-conservees > li:nth-child(3n + 2) > .coupure-ombre {
+  rotate: 0.7deg;
+  translate: 0 0.5rem;
+}
+.coupures-conservees > li:nth-child(3n) > .coupure-ombre {
+  rotate: -0.3deg;
+  translate: 0 -0.25rem;
+}
+@media (max-width: 639.98px) {
+  /* Une pile : une coupure sous l'autre, décalées d'un côté puis de l'autre. */
+  .coupures-conservees > li:nth-child(odd) {
+    padding-right: 6%;
+  }
+  .coupures-conservees > li:nth-child(even) {
+    padding-left: 6%;
+  }
+}
+
+/* À L'IMPRESSION : une feuille droite, sans ombre ni ruban, cernée d'un filet.
+   Les sélecteurs ont le poids de ceux qui posent la rotation (`[data-format]`,
+   `li:nth-child`), et viennent après : sans quoi la pose d'écran l'emporte. */
 @media print {
-  .coupure-posee {
-    transform: none;
+  .coupure-ombre[data-format],
+  .coupures-conservees > li > .coupure-ombre[data-format] {
+    rotate: none;
+    translate: none;
+    filter: none;
+  }
+  .coupure-ombre::before {
+    display: none;
+  }
+  .coupure-de-presse {
+    clip-path: none;
+    background-image: none;
+    border: 1px solid #7a7b7d;
   }
 }
 

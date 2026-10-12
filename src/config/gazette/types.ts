@@ -65,3 +65,10 @@ export interface ArticleDeLaGazette {
 export const NOM_DU_JOURNAL = "La Gazette de l'Arène";
 /** Ce que le bandeau du journal porte sous son nom. */
 export const DEVISE_DU_JOURNAL = "Économie régionale";
+/**
+ * Le prix du numéro, sur la ligne de date : un repère de journal, que le lecteur
+ * reconnaît d'un coup d'œil. Fictif, et sans rapport avec les comptes de la partie.
+ */
+export const PRIX_DU_NUMERO = "1,20 €";
+/** La signature, au pied de l'article : le journal parle par son correspondant. */
+export const SIGNATURE_DU_JOURNAL = "De notre correspondant économique";
