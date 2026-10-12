@@ -55,6 +55,7 @@ import { CodeQr } from "@/components/code-qr";
 import { urlDeJonction } from "@/lib/qr";
 import { bouton } from "@/components/bouton";
 import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
+import { resumePourLePilotage } from "@/services/pairs.service";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -93,6 +94,8 @@ export default async function TeacherGamePage({
   // LA GAZETTE : l'article du tour en cours et l'aperçu du suivant, à
   // remplacer ou à retirer avant que la classe ne l'ouvre.
   const gazette = await gazetteDuPilotage(gameId, session.userId);
+  // L'évaluation entre coéquipiers (parties de classe) : activée ou non, et où elle en est.
+  const coequipiers = await resumePourLePilotage(session.userId, gameId);
 
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
@@ -348,6 +351,18 @@ export default async function TeacherGamePage({
             >
               Observation de séance →
             </Link>
+            {/* L'évaluation entre coéquipiers : sa page à elle (activation, suivi,
+                publication, export), et son état en un mot. */}
+            {coequipiers ? (
+              <Link
+                href={`/teacher/games/${gameId}/coequipiers`}
+                className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                data-lien-coequipiers=""
+              >
+                Évaluation entre coéquipiers
+                {coequipiers.active ? (coequipiers.ouverts > 0 ? " · ouverte" : coequipiers.publies > 0 ? " · publiée" : " · activée") : ""} →
+              </Link>
+            ) : null}
           </span>
         </div>
       </section>

@@ -302,6 +302,7 @@ const GRAPHIQUES = [
   "src/components/episode/bilan-de-l-episode.tsx",
   "src/components/merite-de-la-partie.tsx",
   "src/components/examen/graphiques-de-l-examen.tsx",
+  "src/components/pairs/barres-des-moyennes.tsx",
 ];
 
 describe("la palette des données vient des jetons, jamais d'une couleur écrite", () => {

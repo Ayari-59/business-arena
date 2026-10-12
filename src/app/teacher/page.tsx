@@ -534,6 +534,23 @@ export default async function TeacherDashboard({
             </span>
           </label>
 
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="evaluationDesPairs"
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                Évaluation entre coéquipiers · à la fin de la partie
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-400">
+                Chaque élève note la contribution de ses coéquipiers ; un facteur individuel module la
+                note d&apos;équipe. Critères, moments et bornes se règlent ensuite depuis la partie.
+              </span>
+            </span>
+          </label>
+
           <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
             <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
               <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />

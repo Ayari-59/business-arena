@@ -38,6 +38,7 @@ import {
   startQualification,
 } from "@/services/competition.service";
 import { setMissedPolicy } from "@/services/debrief.service";
+import { activerParDefaut } from "@/services/pairs.service";
 import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
 import { DEFAULT_ANSWER_FORMAT, DEFAULT_QUIZ_MODE } from "@/config/difficulty";
@@ -255,6 +256,9 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     // le lien vers les tarifs.
     echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.", erreur);
   }
+  // L'évaluation entre coéquipiers, cochée à la création : réglages par défaut (fin de
+  // partie), à affiner depuis la partie (services/pairs.service.ts).
+  if (formData.get("evaluationDesPairs") === "on") await activerParDefaut(session.userId, gameId);
   redirect(`/teacher/games/${gameId}`);
 }
 

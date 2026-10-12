@@ -386,6 +386,71 @@ describe("l'examen individuel : l'orange n'est que l'action", () => {
   });
 });
 
+/**
+ * L'ÉVALUATION ENTRE COÉQUIPIERS (lot « évaluation par les pairs ») : la page de
+ * l'enseignant et ses actions. Les pages et composants de l'étudiant vivent sous
+ * `app/arena` : le périmètre de l'arène les couvre déjà. Neuves, elles naissent dans la
+ * règle : l'orange n'y est que l'action, le focus et la case cochée.
+ */
+const PAGES_DES_COEQUIPIERS = [
+  "app/teacher/games/[gameId]/coequipiers/page.tsx",
+  "app/teacher/games/[gameId]/coequipiers/actions.ts",
+  "components/pairs/carte-des-coequipiers.tsx",
+  "components/pairs/barres-des-moyennes.tsx",
+  "app/arena/[gameId]/coequipiers/page.tsx",
+];
+
+describe("l'évaluation entre coéquipiers : l'orange n'est que l'action", () => {
+  it("chaque orange de leurs fichiers répond à un contexte permis", () => {
+    const fautes: string[] = [];
+    let permis = 0;
+    for (const nom of PAGES_DES_COEQUIPIERS) {
+      code(readFileSync(join(SRC, nom), "utf8"))
+        .split("\n")
+        .forEach((ligne, i) => {
+          for (const m of ligne.matchAll(ORANGE)) {
+            const ok = PERMIS.some(
+              (p) =>
+                (!p.fichier || p.fichier.test(nom)) &&
+                p.classe.test(m[0]) &&
+                (!p.ligne || p.ligne.test(ligne)),
+            );
+            if (ok) permis++;
+            else fautes.push(`${nom}:${i + 1} ${m[0]}  ←  ${ligne.trim().slice(0, 110)}`);
+          }
+        });
+    }
+    expect(fautes, `orange hors de l'action :\n${fautes.join("\n")}`).toEqual([]);
+    // Les cases des réglages et les notes cochées de l'étudiant : la garde regarde quelque chose.
+    expect(permis).toBeGreaterThan(0);
+  });
+
+  it("l'arène de l'étudiant est bien dans le périmètre de l'arène", () => {
+    const noms = PERIMETRE.map((f) => f.nom);
+    for (const attendu of [
+      "app/arena/[gameId]/coequipiers/page.tsx",
+      "components/pairs/carte-des-coequipiers.tsx",
+      "components/pairs/barres-des-moyennes.tsx",
+    ]) {
+      expect(noms, attendu).toContain(attendu);
+    }
+  });
+
+  it("leurs boutons passent par bouton(), et leurs titres se posent", () => {
+    for (const nom of PAGES_DES_COEQUIPIERS) {
+      const source = code(readFileSync(join(SRC, nom), "utf8"));
+      for (const m of source.matchAll(/<h[1-4]\b[^>]*?className=(?:"([^"]*)"|\{`([^`]*)`\})/g)) {
+        expect(m[1] ?? m[2] ?? "", `${nom} : ${m[0].slice(0, 80)}`).not.toMatch(
+          /(?:^|[\s:])(?:font-display|italic|uppercase)\b/,
+        );
+      }
+      for (const m of source.matchAll(/<(?:button|SubmitButton)\b[^>]*?className=(?:"([^"]*)"|\{([^}]*)\})/g)) {
+        expect(m[0], `${nom} : un bouton écrit à la main`).toMatch(/bouton\(/);
+      }
+    }
+  });
+});
+
 describe("les titres se posent (lot P1)", () => {
   it("aucun titre du périmètre ne force le condensé, l'italique ou les capitales", () => {
     const fautes: string[] = [];

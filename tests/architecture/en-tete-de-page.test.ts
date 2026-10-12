@@ -46,6 +46,8 @@ const PAGES_INTERIEURES = [
   "src/app/examen/[code]/page.tsx",
   "src/app/examen/[code]/resultat/page.tsx",
   "src/components/examen/recu-d-examen.tsx",
+  "src/app/teacher/games/[gameId]/coequipiers/page.tsx",
+  "src/app/arena/[gameId]/coequipiers/page.tsx",
   "src/app/profile/page.tsx",
   "src/app/entreprises/episode/profil/page.tsx",
   // /tarifs lit le catalogue, et rend sa page par components/page-des-tarifs.tsx.

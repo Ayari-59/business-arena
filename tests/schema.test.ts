@@ -33,6 +33,8 @@ const EXPECTED_TABLES = [
   "catalogue_modules", "catalogue_offres", "catalogue_reglages", "codes_promo", "catalogue_journal",
   // L'examen individuel (migration 0042, /teacher/examens).
   "examens", "examen_candidats",
+  // L'évaluation entre coéquipiers (migration 0044, /teacher/games/[gameId]/coequipiers).
+  "pairs_evaluations", "pairs_moments", "pairs_reponses",
 ];
 
 describe("schéma de base de données", () => {

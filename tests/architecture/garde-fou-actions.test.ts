@@ -44,6 +44,8 @@ const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/teacher/examens/[id]/page.tsx", formulaires: 3 }, // publication (ou son retrait), clôture
   { file: "src/components/examen/retour-des-notes.tsx", formulaires: 1 }, // « Renvoyer les notes » à la plateforme de cours
   { file: "src/app/examen/[code]/page.tsx", formulaires: 1 }, // le candidat commence l'examen
+  { file: "src/app/teacher/games/[gameId]/coequipiers/page.tsx", formulaires: 4 }, // réglages (ou activation), notes d'équipe, publication, retrait de la publication
+  { file: "src/app/arena/[gameId]/coequipiers/page.tsx", formulaires: 1 }, // l'étudiant évalue ses coéquipiers
   { file: "src/app/lti/eleve/page.tsx", formulaires: 1 }, // l'élève LTI donne son prénom
   { file: "src/app/etablissement/parties/page.tsx", formulaires: 1 }, // l'étudiant connecté par son établissement saisit un code
   { file: "src/app/admin/renater/page.tsx", formulaires: 3 }, // relecture de l'agrégat, rattachement, retrait

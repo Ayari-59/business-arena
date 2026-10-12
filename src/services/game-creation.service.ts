@@ -3,6 +3,8 @@ import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   aidRequests,
+  pairsMoments,
+  pairsReponses,
   companyStates,
   decisions,
   eventOccurrences,
@@ -438,6 +440,10 @@ export async function reinitialiserPartie(args: {
   await db.delete(rounds).where(eq(rounds.gameId, args.gameId));
   await db.delete(gameRankings).where(eq(gameRankings.gameId, args.gameId));
   await db.delete(aidRequests).where(eq(aidRequests.gameId, args.gameId));
+  // L'évaluation entre coéquipiers : les réponses et les publications portaient sur la
+  // partie jouée ; les réglages restent, l'évaluation se rouvrira au moment prévu.
+  await db.delete(pairsReponses).where(eq(pairsReponses.gameId, args.gameId));
+  await db.delete(pairsMoments).where(eq(pairsMoments.gameId, args.gameId));
   // Ces cinq tables dorment aujourd'hui : rien ne les écrit. On les vide quand
   // même, parce qu'une réinitialisation qui oublie une table est une
   // réinitialisation qui ment — le jour où elles s'éveilleront, elle tiendra.

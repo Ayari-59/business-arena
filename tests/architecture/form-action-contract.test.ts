@@ -131,6 +131,21 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/lti/activite/page.tsx"],
   },
   {
+    nom: "réglages de l'évaluation entre coéquipiers (enseignant)",
+    action: { file: "src/app/teacher/games/[gameId]/coequipiers/actions.ts", fn: "reglerLEvaluationAction" },
+    sources: ["src/app/teacher/games/[gameId]/coequipiers/page.tsx"],
+  },
+  {
+    nom: "notes d'équipe de l'évaluation entre coéquipiers (enseignant)",
+    action: { file: "src/app/teacher/games/[gameId]/coequipiers/actions.ts", fn: "notesDEquipeAction" },
+    sources: ["src/app/teacher/games/[gameId]/coequipiers/page.tsx"],
+  },
+  {
+    nom: "évaluation de ses coéquipiers (étudiant)",
+    action: { file: "src/app/arena/[gameId]/coequipiers/actions.ts", fn: "enregistrerMesReponsesAction" },
+    sources: ["src/app/arena/[gameId]/coequipiers/page.tsx"],
+  },
+  {
     nom: "création d'un concours",
     action: { file: "src/app/teacher/actions.ts", fn: "createCompetitionAction" },
     sources: ["src/components/competition-create-form.tsx"],

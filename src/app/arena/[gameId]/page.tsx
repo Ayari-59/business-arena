@@ -89,6 +89,7 @@ import { resolveAiSurface } from "@/services/ai.service";
 import { bouton } from "@/components/bouton";
 import { appliquerLHorloge, copieVueParLeCandidat, noterLaCopieDeLaPartie } from "@/services/examen.service";
 import { RecuDExamen } from "@/components/examen/recu-d-examen";
+import { CarteDesCoequipiers } from "@/components/pairs/carte-des-coequipiers";
 import { after } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -1665,6 +1666,10 @@ export default async function ArenaPage({
             );
           })()
         : null}
+
+      {/* L'ÉVALUATION ENTRE COÉQUIPIERS (partie de classe) : une carte au moment prévu par
+          l'enseignant, à mi-parcours ou au bilan ; rien avant (components/pairs). */}
+      {view.kind === "class" ? <CarteDesCoequipiers gameId={gameId} userId={userId} /> : null}
 
       {/* ══════════════════════════════════════════════════════════════════
           ACCORDÉON DE PÉRIODES
