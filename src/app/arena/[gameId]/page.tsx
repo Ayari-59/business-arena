@@ -87,6 +87,9 @@ import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
 import { bouton } from "@/components/bouton";
+import { appliquerLHorloge, copieVueParLeCandidat, noterLaCopieDeLaPartie } from "@/services/examen.service";
+import { RecuDExamen } from "@/components/examen/recu-d-examen";
+import { after } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -94,7 +97,17 @@ export const dynamic = "force-dynamic";
  * La vue de la partie, calculée une fois par requête : le titre de l'onglet et
  * la page la lisent tous deux.
  */
-const vueDeLaPartie = cache((gameId: string, userId: string) => getGameView(gameId, userId));
+const vueDeLaPartie = cache(async (gameId: string, userId: string) => {
+  // L'EXAMEN INDIVIDUEL : l'horloge de l'examen s'applique AVANT de lire la partie (un
+  // tour échu se clôt, un examen fermé remet la copie). Sans effet sur une autre partie.
+  const remise = await appliquerLHorloge(gameId).catch(() => false);
+  if (remise) {
+    after(async () => {
+      await noterLaCopieDeLaPartie(gameId).catch(() => undefined);
+    });
+  }
+  return getGameView(gameId, userId);
+});
 
 /**
  * LE TITRE DE L'ONGLET DIT OÙ L'ON EN EST : « NOVA · Tour 3/6 · Business
@@ -122,13 +135,24 @@ export default async function ArenaPage({
   searchParams,
 }: {
   params: Promise<{ gameId: string }>;
-  searchParams: Promise<{ simule?: string }>;
+  searchParams: Promise<{ simule?: string; bilan?: string }>;
 }) {
   const { gameId } = await params;
   const userId = await getGuestUserId();
   if (!userId) notFound();
-  const view = await vueDeLaPartie(gameId, userId);
-  if (!view) notFound();
+  const vueLue = await vueDeLaPartie(gameId, userId);
+  if (!vueLue) notFound();
+  // LA COPIE D'EXAMEN (services/examen.service.ts) : une partie solo, avec ses gardes. Le
+  // classement ne se montre pas, ni pendant la partie ni au bilan ; l'encart « Résultat
+  // estimé » seulement si l'enseignant l'a laissé ; ni assistant ni « mérite ou chance ».
+  // Remise, la copie montre son reçu ; publiée, le bilan redevient lisible (?bilan).
+  const copie = await copieVueParLeCandidat(gameId, userId);
+  const view = copie
+    ? { ...vueLue, ranking: [], estimation: copie.examen.resultatEstime ? vueLue.estimation : null }
+    : vueLue;
+  if (copie && view.status === "finished" && !(copie.publie && (await searchParams).bilan)) {
+    return <RecuDExamen copie={copie} gameId={gameId} />;
+  }
   // Sur téléphone, ce qu'on consulte se range dans des tiroirs fermés (voir
   // decision-context.tsx et aide-repliable.tsx) ; ce qui décide reste ouvert.
   const telephone = await estUnTelephone();
@@ -159,8 +183,8 @@ export default async function ArenaPage({
   // tour joué ; le tuteur, dès l'ouverture.
   const aiEnt = await entitlementsForUser(userId);
   const aiCoachEnabled =
-    aiEnt.ai && view.kind === "solo" && (await resolveAiSurface("coach")) !== null;
-  const aiTutor = aiEnt.ai && (await resolveAiSurface("tutor")) !== null;
+    !copie && aiEnt.ai && view.kind === "solo" && (await resolveAiSurface("coach")) !== null;
+  const aiTutor = !copie && aiEnt.ai && (await resolveAiSurface("tutor")) !== null;
 
   const finished = view.status === "finished";
   // Chaque période est une pièce de l'accordéon. Les tours RÉSOLUS forment la
@@ -1447,7 +1471,7 @@ export default async function ArenaPage({
         tour={view.currentRound}
         tours={view.roundsCount}
         termine={finished}
-        retour={view.kind === "solo" ? "/jouer" : "/"}
+        retour={copie ? `/examen/${copie.examen.code}` : view.kind === "solo" ? "/jouer" : "/"}
         cockpit={`/arena/${view.gameId}/cockpit`}
         compte={
           telephone ? (

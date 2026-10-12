@@ -11,10 +11,10 @@
  * Ce module est PUR et LÉGER (aucun import du registre) : l'aperçu de /admin/offres, un
  * composant client, s'en sert pour rendre la carte d'une offre avant l'enregistrement.
  *
- *  · UN MODULE est une brique vendable. Deux ont un EFFET dans le produit, et lui seul :
- *    `arene` (paramétrable : entreprises, niveaux, enseignants, parties en cours) et
- *    `episodes`. services/acces.service.ts les lit au travers des licences qui les
- *    portent. Les autres (intégration LMS, connexion établissement, accompagnement,
+ *  · UN MODULE est une brique vendable. Trois ont un EFFET dans le produit, et lui seul :
+ *    `arene` (paramétrable : entreprises, niveaux, enseignants, parties en cours),
+ *    `episodes` et `examen` (l'examen individuel, /teacher/examens).
+ *    services/acces.service.ts les lit au travers des licences qui les portent. Les autres (intégration LMS, connexion établissement, accompagnement,
  *    compétition inter-établissements…) sont DESCRIPTIFS : affichés, vendus, sans verrou.
  *  · UNE OFFRE est une composition de modules, des limites, un prix (ou « sur devis »), et
  *    ce que sa carte dit. Les textes peuvent porter des VARIABLES, `{entreprises}`,
@@ -32,7 +32,7 @@ import { formatEuro, formatEuroCents } from "@/lib/format";
  * ------------------------------------------------------------------------- */
 
 /** Ce qu'un module fait dans le produit ; null : il est descriptif. */
-export type EffetDuModule = "arene" | "episodes";
+export type EffetDuModule = "arene" | "episodes" | "examen";
 
 export interface ModuleDuCatalogue {
   code: string;
@@ -140,7 +140,7 @@ export const estUneOffreDeLaGrille = (code: string): boolean =>
   (OFFRES_DE_LA_GRILLE as readonly string[]).includes(code);
 
 /** Les modules qui ont un effet : leur code et leur effet sont figés. */
-export const MODULES_A_EFFET: readonly EffetDuModule[] = ["arene", "episodes"];
+export const MODULES_A_EFFET: readonly EffetDuModule[] = ["arene", "episodes", "examen"];
 
 export const LIBELLES_DES_TARIFS: Record<Tarif, string> = {
   gratuit: "Gratuit",
@@ -176,6 +176,10 @@ export function parametresAreneDe(o: Pick<OffreDuCatalogue, "modules">): Paramet
 /** L'offre ouvre-t-elle les épisodes manager ? */
 export const ouvreLesEpisodes = (o: Pick<OffreDuCatalogue, "modules">): boolean =>
   o.modules.some((m) => m.module === "episodes");
+
+/** L'offre ouvre-t-elle l'examen individuel (/teacher/examens) ? */
+export const ouvreLExamen = (o: Pick<OffreDuCatalogue, "modules">): boolean =>
+  o.modules.some((m) => m.module === "examen");
 
 /**
  * Le palier de l'arène d'un paramétrage, celui qu'une licence enregistre (`arene`) et que
@@ -460,6 +464,10 @@ export function erreursDeLOffre(
         }
       }
     }
+  }
+  // L'examen individuel se joue dans le périmètre de l'arène (entreprise et niveau de la licence).
+  if (ouvreLExamen(o) && !parametresAreneDe(o)) {
+    e.push("Le module de l'examen individuel va avec celui de l'arène : l'examen se joue dans son périmètre.");
   }
   if (new Set(o.modules.map((m) => m.module)).size !== o.modules.length) {
     e.push("Un module ne figure qu'une fois dans une offre.");

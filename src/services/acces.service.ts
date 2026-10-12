@@ -34,7 +34,9 @@ import {
   type ParametrageDeLicence,
 } from "@/config/tarifs";
 import type { AccesAuxEpisodes } from "@/config/episodes/demos";
-import { lireLaDecouverte } from "@/services/catalogue.service";
+import { lireLaDecouverte, lireLeCatalogue } from "@/services/catalogue.service";
+import { ouvreLExamen } from "@/config/catalogue";
+import { refusDeLExamen } from "@/config/examen/textes";
 
 export {
   episodeOuvert,
@@ -263,6 +265,49 @@ export async function verifierLaReprise(organizationId: string): Promise<void> {
   const lic = await licenceDeLArene(organizationId);
   if (!lic || lic.parametrage.maxPartiesEnCours === null) return;
   const hors = horsLicence(lic.parametrage, { partiesEnCours: await partiesEnCours(organizationId) });
+  if (hors) throw new LicenceDepasseeError(hors);
+}
+
+/* ---------------------------------------------------------------------------
+ * L'EXAMEN INDIVIDUEL (module `examen`, migration 0042).
+ * ------------------------------------------------------------------------- */
+
+/** Le refus d'un examen sans licence qui inclut le module : la page ajoute « Voir les offres ». */
+export class ExamenReserveError extends OffreRequiseError {
+  constructor(message: string) {
+    super(message);
+    this.name = "ExamenReserveError";
+  }
+}
+
+/** La phrase du refus, avec les offres du catalogue qui incluent l'examen aujourd'hui. */
+export async function messageDuRefusDeLExamen(): Promise<string> {
+  const catalogue = await lireLeCatalogue();
+  return refusDeLExamen(catalogue.offres.filter((o) => o.visible && ouvreLExamen(o)).map((o) => o.nom));
+}
+
+/** L'établissement a-t-il une licence en cours qui inclut l'examen individuel ? */
+export async function examenOuvert(organizationId: string | null | undefined): Promise<boolean> {
+  if (!organizationId) return false;
+  return licenceEnCours(organizationId, "examen");
+}
+
+/**
+ * LA RÈGLE DE L'EXAMEN, À SA CRÉATION : une licence en cours qui inclut le module, et une
+ * entreprise et un niveau dans le paramétrage de son arène (comme une partie de classe).
+ * Un examen déjà créé se passe jusqu'au bout, même si la licence expire entre-temps.
+ */
+export async function verifierLExamen(
+  organizationId: string,
+  demande: { scenarioCode: string; niveau: number },
+): Promise<void> {
+  if (!(await examenOuvert(organizationId))) throw new ExamenReserveError(await messageDuRefusDeLExamen());
+  const lic = await licenceDeLArene(organizationId);
+  if (!lic) throw new ExamenReserveError(await messageDuRefusDeLExamen());
+  const hors = horsLicence(lic.parametrage, {
+    entreprise: await entrepriseDe(demande.scenarioCode),
+    niveau: demande.niveau,
+  });
   if (hors) throw new LicenceDepasseeError(hors);
 }
 

@@ -50,6 +50,11 @@ export interface PerimetreE2E {
   niveaux?: number[] | null;
   /** Le plafond d'enseignants. Défaut : 1 pour Classe, 5 pour Programme, aucun pour Campus. */
   maxTeachers?: number | null;
+  /**
+   * L'examen individuel (migration 0042). Défaut : inclus dans Programme et Campus, pas
+   * dans Classe, comme la composition du catalogue par défaut.
+   */
+  examen?: boolean;
 }
 
 /** Une organisation, et une licence en cours si on la demande. */
@@ -74,8 +79,8 @@ async function poser(c: Client, orgId: string, perimetre: PerimetreE2E): Promise
   const restreinte = arene === "classe" || arene === "programme";
   await c.query(
     `insert into org_licences (organization_id, label, starts_at, ends_at, arene, episodes, max_teachers,
-       entreprises, niveaux, max_parties_en_cours)
-     values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days', $2, $3, $4, $5, $6, $7)`,
+       entreprises, niveaux, max_parties_en_cours, examen)
+     values ($1, 'Licence e2e', now() - interval '10 days', now() + interval '300 days', $2, $3, $4, $5, $6, $7, $8)`,
     [
       orgId,
       arene,
@@ -90,6 +95,7 @@ async function poser(c: Client, orgId: string, perimetre: PerimetreE2E): Promise
       perimetre.entreprises !== undefined ? perimetre.entreprises : restreinte ? ["nova"] : null,
       perimetre.niveaux !== undefined ? perimetre.niveaux : arene === "classe" ? [3] : null,
       arene === "classe" ? 1 : null,
+      perimetre.examen ?? (arene === "programme" || arene === "campus"),
     ],
   );
 }

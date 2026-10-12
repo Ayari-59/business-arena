@@ -3,11 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { lireContexte } from "@/lti/contexte";
-import { lienParId } from "@/lti/liens";
+import { lienParId, pilotageDe } from "@/lti/liens";
 import { plateformeParId } from "@/lti/plateformes";
 import { ouverturesDeLOrganisation } from "@/lti/acces";
 import { getTeacherGames } from "@/services/game.service";
 import { cohortesDeLEnseignant } from "@/services/cohortes.service";
+import { examensDeLEnseignant } from "@/services/examen.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { GuardedForm } from "@/components/guarded-action";
@@ -37,6 +38,7 @@ import {
   creerCohorteAction,
   creerPartieAction,
   relierCohorteAction,
+  relierExamenAction,
   relierPartieAction,
 } from "./actions";
 
@@ -102,7 +104,7 @@ export default async function ActiviteLtiPage({
   }
   const enseignantId = session.userId;
   if (lien.cibleType && lien.configurePar === enseignantId) {
-    redirect(lien.cibleType === "partie" ? `/teacher/games/${lien.gameId}` : `/teacher/cohortes/${lien.cohorteId}`);
+    redirect(pilotageDe(lien));
   }
 
   const nomDeLActivite = lien.titre ?? "Activité Business Arena";
@@ -124,14 +126,16 @@ export default async function ActiviteLtiPage({
     );
   }
 
-  const [ouvertures, parties, cohortes, { vitrineSolo }, licenceDeLOrganisation, { demos }] = await Promise.all([
+  const [ouvertures, parties, cohortes, { vitrineSolo }, licenceDeLOrganisation, { demos }, lesExamens] = await Promise.all([
     ouverturesDeLOrganisation(plateforme.organizationId),
     getTeacherGames(enseignantId),
     cohortesDeLEnseignant(enseignantId),
     getPlatformConfig(),
     licenceDeLArene(plateforme.organizationId),
     lireLaDecouverte(),
+    examensDeLEnseignant(enseignantId),
   ]);
+  const examensOuverts = lesExamens.filter((e) => !e.closLe);
   // Le paramétrage de la licence (offres Classe, Programme, Campus) : le formulaire part
   // de l'entreprise et du niveau qu'elle couvre (services/acces.service.ts).
   const parametrage = licenceDeLOrganisation?.parametrage ?? null;
@@ -382,6 +386,31 @@ export default async function ActiviteLtiPage({
           <p className="text-sm text-slate-400">
             {refusDesCohortes(demos.length)} <Tarifs />
           </p>
+        ) : null}
+
+        {/* L'EXAMEN INDIVIDUEL (module de l'offre) : on relie un examen déjà créé dans
+            l'espace enseignant ; ses réglages et sa grille se posent là-bas. */}
+        {ouvertures.examen && examensOuverts.length > 0 ? (
+          <Carte titre="Un de vos examens individuels">
+            <GuardedForm action={relierExamenAction} label="relier l'activité à un examen" className="grid gap-3">
+              <ul className="grid gap-2">
+                {examensOuverts.map((e, i) => (
+                  <li key={e.id}>
+                    <label className="flex items-start gap-3 rounded-lg border border-white/10 px-3 py-2">
+                      <input type="radio" name="examenId" value={e.id} defaultChecked={i === 0} className="mt-1 h-4 w-4 accent-amber-400" />
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-100">{e.nom}</span>
+                        <span className="block text-sm text-slate-400">code {e.code}</span>
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire" })}>
+                Relier l&apos;activité à cet examen
+              </SubmitButton>
+            </GuardedForm>
+          </Carte>
         ) : null}
       </div>
     </main>

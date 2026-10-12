@@ -29,6 +29,8 @@ const EXPECTED_TABLES = [
   "inscrits_journal",
   // Le catalogue commercial (migration 0041, /admin/offres).
   "catalogue_modules", "catalogue_offres", "catalogue_reglages", "codes_promo", "catalogue_journal",
+  // L'examen individuel (migration 0042, /teacher/examens).
+  "examens", "examen_candidats",
 ];
 
 describe("schéma de base de données", () => {

@@ -39,7 +39,10 @@ const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/admin/offres/page.tsx", formulaires: 7 }, // affichage des prix, mise en avant, module (et sa création), Découverte, essai, code promo (la suppression : ConfirmForm)
   { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 11 },
   { file: "src/app/teacher/cohortes/page.tsx", formulaires: 1 }, // création d'une cohorte
-  { file: "src/app/lti/activite/page.tsx", formulaires: 4 }, // activité LTI : relier ou créer, partie ou cohorte
+  { file: "src/app/lti/activite/page.tsx", formulaires: 5 }, // activité LTI : relier ou créer, partie ou cohorte ; relier un examen
+  { file: "src/app/teacher/examens/page.tsx", formulaires: 1 }, // création d'un examen individuel
+  { file: "src/app/teacher/examens/[id]/page.tsx", formulaires: 3 }, // publication (ou son retrait), clôture
+  { file: "src/app/examen/[code]/page.tsx", formulaires: 1 }, // le candidat commence l'examen
   { file: "src/app/lti/eleve/page.tsx", formulaires: 1 }, // l'élève LTI donne son prénom
   { file: "src/app/etablissement/parties/page.tsx", formulaires: 1 }, // l'étudiant connecté par son établissement saisit un code
   { file: "src/app/admin/renater/page.tsx", formulaires: 3 }, // relecture de l'agrégat, rattachement, retrait

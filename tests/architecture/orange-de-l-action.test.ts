@@ -325,6 +325,67 @@ describe("les cohortes de l'enseignant : l'orange n'est que l'action", () => {
   });
 });
 
+/**
+ * L'EXAMEN INDIVIDUEL (lot « examen façon Comp-XM ») : l'espace enseignant de l'examen,
+ * le parcours du candidat, ses graphiques. Neufs, ils naissent dans la règle, comme les
+ * cohortes : l'orange n'y est que l'action, le focus et l'option cochée.
+ */
+const PAGES_DES_EXAMENS = [
+  "app/teacher/examens/page.tsx",
+  "app/teacher/examens/[id]/page.tsx",
+  "app/teacher/examens/[id]/candidats/[candidatId]/page.tsx",
+  "app/teacher/examens/[id]/accreditation/page.tsx",
+  "app/teacher/examens/actions.ts",
+  "app/examen/page.tsx",
+  "app/examen/[code]/page.tsx",
+  "app/examen/[code]/resultat/page.tsx",
+  "app/examen/actions.ts",
+  "components/examen/recu-d-examen.tsx",
+  "components/examen/graphiques-de-l-examen.tsx",
+  "components/examen/suivi-en-direct.tsx",
+  "components/examen/champ-nombre.tsx",
+];
+
+describe("l'examen individuel : l'orange n'est que l'action", () => {
+  it("chaque orange de leurs fichiers répond à un contexte permis", () => {
+    const fautes: string[] = [];
+    let permis = 0;
+    for (const nom of PAGES_DES_EXAMENS) {
+      code(readFileSync(join(SRC, nom), "utf8"))
+        .split("\n")
+        .forEach((ligne, i) => {
+          for (const m of ligne.matchAll(ORANGE)) {
+            const ok = PERMIS.some(
+              (p) =>
+                (!p.fichier || p.fichier.test(nom)) &&
+                p.classe.test(m[0]) &&
+                (!p.ligne || p.ligne.test(ligne)),
+            );
+            if (ok) permis++;
+            else fautes.push(`${nom}:${i + 1} ${m[0]}  ←  ${ligne.trim().slice(0, 110)}`);
+          }
+        });
+    }
+    expect(fautes, `orange hors de l'action :\n${fautes.join("\n")}`).toEqual([]);
+    // Les cases et boutons radio de la création sont bien vus : la garde regarde quelque chose.
+    expect(permis).toBeGreaterThan(0);
+  });
+
+  it("leurs boutons passent par bouton(), et leurs titres se posent", () => {
+    for (const nom of PAGES_DES_EXAMENS) {
+      const source = code(readFileSync(join(SRC, nom), "utf8"));
+      for (const m of source.matchAll(/<h[1-4]\b[^>]*?className=(?:"([^"]*)"|\{`([^`]*)`\})/g)) {
+        expect(m[1] ?? m[2] ?? "", `${nom} : ${m[0].slice(0, 80)}`).not.toMatch(
+          /(?:^|[\s:])(?:font-display|italic|uppercase)\b/,
+        );
+      }
+      for (const m of source.matchAll(/<(?:button|SubmitButton)\b[^>]*?className=(?:"([^"]*)"|\{([^}]*)\})/g)) {
+        expect(m[0], `${nom} : un bouton écrit à la main`).toMatch(/bouton\(/);
+      }
+    }
+  });
+});
+
 describe("les titres se posent (lot P1)", () => {
   it("aucun titre du périmètre ne force le condensé, l'italique ou les capitales", () => {
     const fautes: string[] = [];

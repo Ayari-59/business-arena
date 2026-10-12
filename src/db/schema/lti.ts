@@ -12,6 +12,7 @@ import { id, timestamps } from "./_shared";
 import { organizations, users } from "./identity";
 import { games } from "./game";
 import { episodeCohortes } from "./episodes";
+import { examens } from "./examens";
 
 /**
  * LTI 1.3 : BUSINESS ARENA COMME OUTIL EXTERNE D'UNE PLATEFORME D'ENSEIGNEMENT.
@@ -144,10 +145,12 @@ export const ltiLiens = pgTable(
     contexteId: text("contexte_id"),
     contexteTitre: text("contexte_titre"),
     titre: text("titre"),
-    /** « partie » ou « cohorte » ; nul tant que l'activité n'est pas configurée. */
+    /** « partie », « cohorte » ou « examen » ; nul tant que l'activité n'est pas configurée. */
     cibleType: text("cible_type"),
     gameId: uuid("game_id").references(() => games.id, { onDelete: "set null" }),
     cohorteId: uuid("cohorte_id").references(() => episodeCohortes.id, { onDelete: "set null" }),
+    /** L'examen individuel que l'activité ouvre (migration 0042), quand `cible_type` = « examen ». */
+    examenId: uuid("examen_id").references(() => examens.id, { onDelete: "set null" }),
     configurePar: uuid("configure_par").references(() => users.id, { onDelete: "set null" }),
     configureLe: timestamp("configure_le", { withTimezone: true }),
     ...timestamps,

@@ -1,4 +1,4 @@
-import { randomInt } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -197,6 +197,15 @@ export interface CreateGameArgs {
    * vidéo ratée se refait à l'identique.
    */
   seed?: number;
+  /**
+   * L'ORDRE DES ÉQUIPES FIXÉ (l'examen individuel). Le moteur consomme les entreprises
+   * triées par identifiant pour ses tirages ciblés (un courrier adressé, une rupture
+   * d'approvisionnement) : avec des identifiants tirés au hasard, deux parties à la même
+   * graine ne frappaient pas la même entreprise. Ici, les identifiants sont tirés puis
+   * rangés : l'équipe humaine d'abord, puis les concurrents dans l'ordre du registre. Deux
+   * candidats d'un examen sur la même graine jouent ainsi exactement le même marché.
+   */
+  ordreFixe?: boolean;
 }
 
 export interface CreatedGame {
@@ -334,21 +343,25 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     .returning({ id: games.id });
   if (!game) throw new Error("Création de partie impossible");
 
+  const lignesDEquipes = [
+    ...args.humanTeams.map((t) => ({
+      gameId: game.id,
+      name: t.name,
+      controller: "human" as const,
+    })),
+    ...definition.bots.slice(0, botCount).map((b) => ({
+      gameId: game.id,
+      name: b.name,
+      controller: "bot" as const,
+      botProfile: b.profile,
+    })),
+  ];
+  const idsRanges = args.ordreFixe
+    ? Array.from({ length: lignesDEquipes.length }, () => randomUUID()).sort((a, b) => a.localeCompare(b))
+    : null;
   const teamRows = await db
     .insert(teams)
-    .values([
-      ...args.humanTeams.map((t) => ({
-        gameId: game.id,
-        name: t.name,
-        controller: "human" as const,
-      })),
-      ...definition.bots.slice(0, botCount).map((b) => ({
-        gameId: game.id,
-        name: b.name,
-        controller: "bot" as const,
-        botProfile: b.profile,
-      })),
-    ])
+    .values(lignesDEquipes.map((l, i) => (idsRanges ? { ...l, id: idsRanges[i]! } : l)))
     .returning({
       id: teams.id,
       name: teams.name,

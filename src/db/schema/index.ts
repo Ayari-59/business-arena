@@ -14,3 +14,4 @@ export * from "./episodes";
 export * from "./lti";
 export * from "./saml";
 export * from "./offres";
+export * from "./examens";

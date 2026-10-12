@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getSession } from "@/lib/session";
 import { lireContexte } from "@/lti/contexte";
-import { lienParId, relierLien, type Cible } from "@/lti/liens";
+import { lienParId, pilotageDe, relierLien, type Cible } from "@/lti/liens";
 import { plateformeParId } from "@/lti/plateformes";
 import { createClassGame } from "@/services/game.service";
 import { LicenceDepasseeError, NiveauReserveError, OffreRequiseError } from "@/services/acces.service";
@@ -38,13 +38,26 @@ const refus = (code: string): never => redirect(`/lti/activite?refus=${code}`);
 
 async function relier(a: { enseignantId: string; lienId: string }, cible: Cible): Promise<never> {
   if (!(await relierLien({ lienId: a.lienId, enseignantId: a.enseignantId, cible }))) refus("introuvable");
-  redirect(cible.type === "partie" ? `/teacher/games/${cible.id}` : `/teacher/cohortes/${cible.id}`);
+  redirect(
+    pilotageDe({
+      cibleType: cible.type,
+      gameId: cible.type === "partie" ? cible.id : null,
+      cohorteId: cible.type === "cohorte" ? cible.id : null,
+      examenId: cible.type === "examen" ? cible.id : null,
+    }),
+  );
 }
 
 /** Relier l'activité à une partie de classe existante de l'enseignant. */
 export async function relierPartieAction(formData: FormData): Promise<void> {
   const a = await activiteDeLEnseignant();
   await relier(a, { type: "partie", id: String(formData.get("gameId") ?? "") });
+}
+
+/** Relier l'activité à un examen individuel de l'enseignant. */
+export async function relierExamenAction(formData: FormData): Promise<void> {
+  const a = await activiteDeLEnseignant();
+  await relier(a, { type: "examen", id: String(formData.get("examenId") ?? "") });
 }
 
 /** Relier l'activité à une cohorte existante de l'enseignant. */

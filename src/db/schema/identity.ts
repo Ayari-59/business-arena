@@ -178,6 +178,12 @@ export const orgLicences = pgTable(
     arene: text("arene", { enum: ["classe", "programme", "campus"] }).default("campus"),
     episodes: boolean("episodes").notNull().default(false),
     /**
+     * L'EXAMEN INDIVIDUEL (migration 0042, /teacher/examens) : la licence ouvre-t-elle le
+     * module `examen` ? Posé à la vente depuis la composition de l'offre ; les licences
+     * Programme et Campus d'avant la migration le reçoivent (inclus par défaut).
+     */
+    examen: boolean("examen").notNull().default(false),
+    /**
      * LE PARAMÉTRAGE DE L'ARÈNE (migration 0038) : les entreprises ouvertes (codes du
      * registre ; null : toutes), les niveaux ouverts (null : tous) et le plafond de
      * parties de classe ou de concours EN COURS en même temps (null : sans plafond).

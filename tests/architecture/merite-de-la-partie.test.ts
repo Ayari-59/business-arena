@@ -37,6 +37,9 @@ describe("le hasard se mesure au bilan, jamais pendant la partie", () => {
       "app/arena/[gameId]/actions.ts",
       "app/arena/[gameId]/page.tsx",
       "components/merite-de-la-partie.tsx",
+      // L'examen individuel note une copie REMISE (partie terminée) par ce verdict, après
+      // la fin de la partie, et ne le montre au candidat que par sa note, une fois publiée.
+      "services/examen.service.ts",
       "services/merite.service.ts",
     ]);
   });

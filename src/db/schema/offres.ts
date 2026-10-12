@@ -26,14 +26,14 @@ import { users } from "./identity";
 
 /**
  * LES MODULES : les briques vendables. `effet` dit ce que le produit en fait :
- * 'arene' et 'episodes' sont lus par services/acces.service.ts (au travers des licences
+ * 'arene', 'episodes' et 'examen' (migration 0042) sont lus par services/acces.service.ts (au travers des licences
  * qui les portent) ; null, le module est descriptif : affiché, vendu, sans verrou.
  */
 export const catalogueModules = pgTable("catalogue_modules", {
   code: text("code").primaryKey(),
   nom: text("nom").notNull(),
   description: text("description").notNull().default(""),
-  effet: text("effet", { enum: ["arene", "episodes"] }),
+  effet: text("effet", { enum: ["arene", "episodes", "examen"] }),
   actif: boolean("actif").notNull().default(true),
   ordre: integer("ordre").notNull().default(0),
   ...timestamps,

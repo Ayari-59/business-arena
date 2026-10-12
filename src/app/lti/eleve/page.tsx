@@ -75,6 +75,10 @@ export default async function EleveLtiPage({ searchParams }: { searchParams: Pro
     return <Ecran titre="Cette cohorte est close" chapeau={c?.close ? COHORTE_CLOSE : "Relancez l'activité depuis votre cours."} />;
   }
 
+  if (lien.cibleType === "examen") {
+    return <Ecran titre="Cet examen n'est plus ouvert" chapeau="Relancez l'activité depuis votre cours ; votre enseignant vous dira la suite." />;
+  }
+
   const [g] = lien.gameId ? await db.select({ code: games.joinCode }).from(games).where(eq(games.id, lien.gameId)) : [];
   const empechement = g?.code ? await refusDeRejoindre(g.code) : "Cette partie n'existe plus.";
   if (empechement) return <Ecran titre="La partie n'est plus ouverte" chapeau={`${empechement} Votre enseignant vous dira la suite.`} />;

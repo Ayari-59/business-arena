@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { getTeacherGames } from "@/services/game.service";
 import { cohortesDeLEnseignant } from "@/services/cohortes.service";
+import { examensDeLEnseignant } from "@/services/examen.service";
 import { clesDeLOutil } from "./cles";
 import { adressesDeLOutil, CLAIM, MESSAGE, NOM_DE_L_OUTIL, PARAMETRE_CIBLE, VERSION_LTI } from "./constantes";
 import { compteEnseignant, PlafondAtteint } from "./comptes";
@@ -16,8 +17,8 @@ import { journaliserRefus } from "./journal";
  * LA SÉLECTION DE CONTENU (Deep Linking 2.0), « Sélectionner le contenu » dans Moodle.
  *
  * L'enseignant ajoute une activité et, depuis la plateforme, choisit tout de suite ce
- * qu'elle ouvre : une de ses parties de classe, une de ses cohortes, ou « au premier
- * lancement ». L'outil renvoie un jeton signé de SA clé (`LtiDeepLinkingResponse`) qui
+ * qu'elle ouvre : une de ses parties de classe, une de ses cohortes, un de ses examens,
+ * ou « au premier lancement ». L'outil renvoie un jeton signé de SA clé (`LtiDeepLinkingResponse`) qui
  * porte le lien de ressource ; la cible voyage dans un paramètre personnalisé, que le
  * lancement revérifie (liens.ts).
  *
@@ -80,9 +81,10 @@ export async function ecranDeSelection(l: Lancement): Promise<Response> {
       deploymentId: l.deploymentId,
     },
   });
-  const [parties, cohortes] = await Promise.all([
+  const [parties, cohortes, lesExamens] = await Promise.all([
     getTeacherGames(compte.userId),
     cohortesDeLEnseignant(compte.userId),
+    examensDeLEnseignant(compte.userId),
   ]);
   const option = (valeur: string, titre: string, detail: string, coche = false) =>
     `<label class="choix"><input type="radio" name="cible" value="${echapper(valeur)}"${coche ? " checked" : ""}><span><strong>${echapper(titre)}</strong><br><span class="note">${echapper(detail)}</span></span></label>`;
@@ -109,6 +111,15 @@ ${
     .filter((c) => !c.closeLe)
     .map((c) => option(`cohorte:${c.id}`, c.nom, `Cohorte · code ${c.code}`))
     .join("\n") || `<p class="note">Aucune cohorte ouverte pour l'instant.</p>`
+}
+</div>
+<h2>Un de vos examens individuels</h2>
+<div class="carte">
+${
+  lesExamens
+    .filter((e) => !e.closLe)
+    .map((e) => option(`examen:${e.id}`, e.nom, `Examen · code ${e.code}`))
+    .join("\n") || `<p class="note">Aucun examen ouvert pour l'instant.</p>`
 }
 </div>
 <button class="bouton" type="submit">Ajouter l'activité</button>

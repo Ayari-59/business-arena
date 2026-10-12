@@ -9,6 +9,7 @@ import {
   MOTIFS_DE_REMISE,
   montantDeLaRemise,
   ouvreLesEpisodes,
+  ouvreLExamen,
   parametresAreneDe,
   type NatureDeLicence,
   type TypeDeRemise,
@@ -141,6 +142,8 @@ export async function attribuerUneLicence(
     niveaux: parametrage?.niveaux ?? null,
     maxPartiesEnCours: parametrage?.maxPartiesEnCours ?? null,
     episodes: avecEpisodes,
+    // L'examen individuel suit la composition de l'offre vendue (/admin/offres).
+    examen: regle !== null && ouvreLExamen(offre),
     reference: s.reference,
     amountCents,
     offreCode: offre.code,

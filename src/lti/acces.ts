@@ -1,4 +1,4 @@
-import { uneOrganisationAvecEpisodes, uneOrganisationSousLicence } from "@/services/acces.service";
+import { examenOuvert, uneOrganisationAvecEpisodes, uneOrganisationSousLicence } from "@/services/acces.service";
 
 /**
  * CE QU'UNE ACTIVITÉ LTI PEUT OUVRIR, SELON LA LICENCE DE L'ORGANISATION DE LA
@@ -17,14 +17,17 @@ import { uneOrganisationAvecEpisodes, uneOrganisationSousLicence } from "@/servi
 export interface Ouvertures {
   partie: boolean;
   cohorte: boolean;
+  /** Un EXAMEN individuel : une licence en cours qui inclut le module `examen`. */
+  examen: boolean;
 }
 
 export async function ouverturesDeLOrganisation(organizationId: string): Promise<Ouvertures> {
-  const [partie, cohorte] = await Promise.all([
+  const [partie, cohorte, examen] = await Promise.all([
     uneOrganisationSousLicence([organizationId]),
     uneOrganisationAvecEpisodes([organizationId]),
+    examenOuvert(organizationId),
   ]);
-  return { partie, cohorte };
+  return { partie, cohorte, examen };
 }
 
 /** L'organisation ouvre-t-elle au moins une des deux cibles ? (écran de l'élève) */

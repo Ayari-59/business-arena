@@ -684,7 +684,7 @@ const option = (
   bouton: { libelle: "", cible: "" },
 });
 
-/** Les modules de la grille : deux à effet (l'arène, les épisodes), les autres descriptifs. */
+/** Les modules de la grille : trois à effet (l'arène, les épisodes, l'examen individuel), les autres descriptifs. */
 export const MODULES_PAR_DEFAUT: readonly ModuleDuCatalogue[] = [
   {
     code: "arene",
@@ -702,6 +702,15 @@ export const MODULES_PAR_DEFAUT: readonly ModuleDuCatalogue[] = [
     effet: "episodes",
     actif: true,
     ordre: 20,
+  },
+  {
+    code: "examen",
+    nom: "Examen individuel",
+    description:
+      "Une partie solo notée sur une grille fixe, la même pour tous les candidats, et un relevé par compétence pour le dossier d'accréditation.",
+    effet: "examen",
+    actif: true,
+    ordre: 25,
   },
   {
     code: "lti",
@@ -801,7 +810,8 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       "Les concours et le classement à l'IPG, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
     ],
     precisions: [SANS_LES_EPISODES, "À l'année, pour l'équipe d'un programme."],
-    modules: [arene("programme")],
+    // L'examen individuel (migration 0042) : inclus dans Programme et Campus, pas dans Classe.
+    modules: [arene("programme"), { module: "examen" }],
     ordre: 30,
     miseEnAvant: true,
     bouton: devis("programme"),
@@ -829,7 +839,8 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       SANS_LES_EPISODES,
       "Sur devis, puis bon de commande ou mandat administratif ; Chorus Pro pour les factures publiques.",
     ],
-    modules: [arene("campus")],
+    // L'examen individuel (migration 0042) : inclus dans Programme et Campus, pas dans Classe.
+    modules: [arene("campus"), { module: "examen" }],
     ordre: 40,
     bouton: devis("campus"),
   },

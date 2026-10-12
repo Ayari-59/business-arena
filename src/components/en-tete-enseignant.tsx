@@ -17,6 +17,7 @@ import Link from "next/link";
 export type PageEnseignant =
   | "parties"
   | "cohortes"
+  | "examens"
   | "scenarios"
   | "usage"
   | "apprentissages"
@@ -27,6 +28,8 @@ const NAVIGATION: ReadonlyArray<{ code: PageEnseignant; href: string; label: str
   // Les cohortes d'épisodes manager, à côté des parties : l'autre façon de faire
   // jouer une classe, sans compte, sous la licence de l'établissement.
   { code: "cohortes", href: "/teacher/cohortes", label: "Mes cohortes" },
+  // L'examen individuel noté (module de l'offre) : une partie solo par candidat, une grille fixe.
+  { code: "examens", href: "/teacher/examens", label: "Mes examens" },
   { code: "scenarios", href: "/teacher/scenarios", label: "Mes scénarios" },
   { code: "usage", href: "/teacher/usage", label: "Carnet d'usage" },
   // Le manuel est un document, pas un écran de pilotage : il reste dans la

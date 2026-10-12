@@ -795,6 +795,38 @@ export async function distribuerUnCourrier(args: {
 }
 
 /**
+ * L'EXAMEN INDIVIDUEL : le tour dont l'échéance est passée se clôt sans le candidat, ses
+ * décisions reconduites (ADR-04), comme une équipe absente en classe. Personne n'est
+ * « l'enseignant de la partie » ici : c'est l'horloge de l'examen qui décide
+ * (services/examen.service.ts l'appelle, après avoir lu l'échéance). Idempotent comme la
+ * clôture de classe : un tour déjà clos est rendu tel quel.
+ */
+export async function cloreLeTourEchu(args: {
+  gameId: string;
+  expectedRound: number;
+}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean }> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  const attendu = (
+    await db
+      .select({ status: rounds.status })
+      .from(rounds)
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, args.expectedRound)))
+  )[0];
+  if (!attendu || attendu.status !== "open" || game.currentRound !== args.expectedRound || game.status !== "running") {
+    return { roundIndex: args.expectedRound, finished: game.status === "finished", alreadyClosed: true };
+  }
+  try {
+    return { ...(await resolveGameRound(args.gameId)), alreadyClosed: false };
+  } catch (error) {
+    if (error instanceof Error && error.message === "Ce tour est déjà en cours de résolution") {
+      return { roundIndex: args.expectedRound, finished: false, alreadyClosed: true };
+    }
+    throw error;
+  }
+}
+
+/**
  * Mode classe : l'enseignant (créateur de la partie) clôt le tour courant.
  *
  * `expectedRound` est le tour que l'enseignant a vu à l'écran. Un double

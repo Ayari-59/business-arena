@@ -104,13 +104,13 @@ export default function IntegrationPage() {
           <Section id="enseignant" titre="Ce que fait l'enseignant">
             <p>
               Il ajoute une activité « Outil externe » dans son cours et choisit Business Arena. À la première
-              ouverture, il choisit ce qu&apos;elle ouvre : une de ses parties de classe, une nouvelle partie, ou une
-              cohorte d&apos;épisodes si la licence de l&apos;établissement les inclut. Ensuite, l&apos;activité le
-              mène directement au pilotage.
+              ouverture, il choisit ce qu&apos;elle ouvre : une de ses parties de classe, une nouvelle partie, une
+              cohorte d&apos;épisodes ou un examen individuel, selon ce que la licence de l&apos;établissement
+              inclut. Ensuite, l&apos;activité le mène directement au pilotage.
             </p>
             <p>
               Il peut aussi passer par « Sélectionner le contenu » au moment d&apos;ajouter l&apos;activité : la
-              liste de ses parties et de ses cohortes s&apos;affiche dans la plateforme.
+              liste de ses parties, de ses cohortes et de ses examens s&apos;affiche dans la plateforme.
             </p>
           </Section>
 
@@ -120,6 +120,10 @@ export default function IntegrationPage() {
               la classe. Si la plateforme envoie son prénom, il sert de pseudo ; sinon, l&apos;élève en choisit un à
               son arrivée. Si l&apos;enseignant n&apos;a pas encore choisi la partie, l&apos;élève le lit, et revient
               plus tard.
+            </p>
+            <p>
+              Pour un examen individuel, il arrive sur la page de l&apos;examen, reconnu par sa plateforme : il lit les
+              règles, donne le nom sous lequel son enseignant le retrouvera, et commence quand il est prêt.
             </p>
           </Section>
 
@@ -201,7 +205,8 @@ export default function IntegrationPage() {
           <Section id="licence" titre="Ce que la connexion ouvre">
             <p>
               Ce que couvre la licence de votre établissement, ni plus ni moins : les parties de classe avec une
-              offre de l&apos;arène, les cohortes d&apos;épisodes avec les épisodes manager.{" "}
+              offre de l&apos;arène, les cohortes d&apos;épisodes avec les épisodes manager, les examens individuels
+              avec le module d&apos;examen.{" "}
               <Link href="/tarifs" className={LIEN_A_L_ENCRE}>
                 Voir les offres
               </Link>

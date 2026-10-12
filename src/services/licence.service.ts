@@ -51,6 +51,8 @@ export interface OrgLicence {
   arene: OffreDeLArene | null;
   /** La licence ouvre-t-elle les épisodes manager non démo ? */
   episodes: boolean;
+  /** La licence ouvre-t-elle l'examen individuel (module `examen`, migration 0042) ? */
+  examen: boolean;
   /** Les entreprises ouvertes (codes) ; null : toutes. */
   entreprises: string[] | null;
   /** Les niveaux ouverts ; null : tous. */
@@ -104,8 +106,11 @@ export function parametrageDe(l: OrgLicence): ParametrageDeLicence | null {
   };
 }
 
-/** Sur quoi lire l'état : toute licence, celles de l'arène, ou celles qui incluent les épisodes. */
-export type PorteeDeLicence = "toutes" | "arene" | "episodes";
+/**
+ * Sur quoi lire l'état : toute licence, celles de l'arène, celles qui incluent les épisodes,
+ * ou celles qui incluent l'examen individuel.
+ */
+export type PorteeDeLicence = "toutes" | "arene" | "episodes" | "examen";
 
 type LigneDeLicence = typeof orgLicences.$inferSelect;
 
@@ -119,6 +124,7 @@ export const versLicence = (r: LigneDeLicence): OrgLicence => ({
   amountCents: r.amountCents,
   arene: r.arene ?? null,
   episodes: r.episodes,
+  examen: r.examen ?? false,
   entreprises: r.entreprises ?? null,
   niveaux: r.niveaux ?? null,
   maxPartiesEnCours: r.maxPartiesEnCours ?? null,
@@ -130,8 +136,13 @@ export const versLicence = (r: LigneDeLicence): OrgLicence => ({
   remise: (r.remise as RemiseDeLicence | null) ?? null,
 });
 
-const couvre = (r: LigneDeLicence, portee: PorteeDeLicence): boolean =>
-  portee === "toutes" || (portee === "arene" ? r.arene !== null : r.episodes);
+const couvre = (r: LigneDeLicence, portee: PorteeDeLicence): boolean => {
+  if (portee === "toutes") return true;
+  if (portee === "arene") return r.arene !== null;
+  // L'examen se joue dans le périmètre de l'arène : la licence porte les deux.
+  if (portee === "examen") return r.examen && r.arene !== null;
+  return r.episodes;
+};
 
 export interface LicenceStatus {
   state: LicenceState;
@@ -143,6 +154,12 @@ export interface LicenceStatus {
   /** Ce qui est refusé aujourd'hui, en une phrase adressée à un humain. */
   blocking: string | null;
 }
+
+/**
+ * Les offres de l'arène qui incluent l'examen individuel par défaut (la composition du
+ * catalogue par défaut, config/tarifs.ts) : Programme et Campus, pas Classe.
+ */
+export const EXAMEN_PAR_DEFAUT: readonly OffreDeLArene[] = ["programme", "campus"];
 
 /** Seuil d'alerte : de quoi lancer un renouvellement sans courir. */
 const ALERTE_JOURS = 30;
@@ -292,6 +309,12 @@ export async function setOrgLicence(args: {
   arene?: OffreDeLArene | null;
   episodes?: boolean;
   /**
+   * L'examen individuel (migration 0042). Absent : il suit la composition par défaut du
+   * catalogue, inclus dans Programme et Campus, pas dans Classe. Une vente depuis une
+   * offre (services/vente.service.ts) le pose d'après les modules de l'offre.
+   */
+  examen?: boolean;
+  /**
    * Le paramétrage de l'arène (config/tarifs.ts, `parametrageDeLOffre`) : entreprises et
    * niveaux ouverts (null ou absent : tous), plafond de parties en cours (absent : celui
    * de l'offre). Une licence Classe porte une entreprise et un niveau ; une licence
@@ -333,6 +356,7 @@ export async function setOrgLicence(args: {
   if (arene === null && !episodes) {
     throw new Error("Une licence ouvre l'arène, les épisodes manager, ou les deux : choisissez.");
   }
+  const examen = arene === null ? false : (args.examen ?? EXAMEN_PAR_DEFAUT.includes(arene));
   const entreprises = arene ? (args.entreprises ? [...args.entreprises] : null) : null;
   const niveaux = arene ? (args.niveaux ? [...args.niveaux] : null) : null;
   // Une Classe est UN jeu paramétré : une entreprise, un niveau. La garde est ici, au
@@ -362,6 +386,7 @@ export async function setOrgLicence(args: {
       amountCents: nature === "vendue" ? (args.amountCents ?? null) : 0,
       arene,
       episodes,
+      examen,
       entreprises,
       niveaux,
       maxPartiesEnCours,

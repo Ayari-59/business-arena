@@ -21,6 +21,7 @@ import { choisirSonEquipe } from "@/services/affectation.service";
 import { deposerDemande } from "@/services/subvention.service";
 import { getGameView } from "@/services/game-view.service";
 import { meriteDeLaPartie } from "@/services/merite.service";
+import { apresLeTour, noterLaCopieDeLaPartie } from "@/services/examen.service";
 import {
   getGameKind,
   getGameVocabulary,
@@ -194,10 +195,20 @@ export async function playRoundAction(
         playerDecisions: payload,
         justification,
       });
+      // L'EXAMEN INDIVIDUEL : le tour suivant reçoit son échéance, ou la copie
+      // est remise (services/examen.service.ts). Rien pour une partie solo ordinaire.
+      const remise = await apresLeTour(gameId).catch(() => false);
       // MÉRITE OU CHANCE : la partie est finie, son verdict se calcule tout de
       // suite, après la réponse (le joueur ne l'attend pas), pour être prêt
       // quand il lit son bilan. Une panne ici ne touche pas la partie.
       if (finished) after(() => meriteDeLaPartie(gameId).catch(() => undefined));
+      // Une copie d'examen remise est notée dans la foulée, par ce même verdict
+      // (mémoïsé : il ne se calcule qu'une fois).
+      if (remise) {
+        after(async () => {
+          await noterLaCopieDeLaPartie(gameId).catch(() => undefined);
+        });
+      }
     } else {
       await submitTeamDecisions({ gameId, userId, payload, justification });
     }

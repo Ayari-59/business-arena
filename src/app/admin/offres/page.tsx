@@ -57,8 +57,9 @@ export const dynamic = "force-dynamic";
  * composition de plusieurs modules, la gestion des remises, des promos ». Cinq rubriques :
  *  · LES OFFRES : la liste dans l'ordre de /tarifs, la mise en avant (le seul bouton plein,
  *    qui se déplace), l'éditeur d'une offre avec l'aperçu de sa carte ;
- *  · LES MODULES : les briques vendables ; l'arène et les épisodes ont un effet (le verrou
- *    de services/acces.service.ts), les autres sont descriptifs, et l'écran le dit ;
+ *  · LES MODULES : les briques vendables ; l'arène, les épisodes et l'examen individuel ont
+ *    un effet (le verrou de services/acces.service.ts), les autres sont descriptifs, et
+ *    l'écran le dit ;
  *  · LES GRATUITÉS : la Découverte (niveaux ouverts en solo, démonstrations), l'essai
  *    d'établissement (désactivé), les licences offertes ;
  *  · LES CODES PROMO, et la promotion affichée sur /tarifs ;
@@ -329,16 +330,17 @@ export default async function AdminOffresPage({
         </ul>
       </section>
 
-      {/* LES MODULES : deux ont un effet, les autres sont descriptifs. */}
+      {/* LES MODULES : trois ont un effet, les autres sont descriptifs. */}
       <section aria-labelledby="modules" className="carte p-4 sm:p-6">
         <h2 id="modules" className="text-lg font-semibold text-slate-100">
           Les modules
         </h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Les briques qu&apos;une offre compose. <strong className="text-slate-200">L&apos;arène</strong> et{" "}
-          <strong className="text-slate-200">{OFFRES.episodes.nom}</strong> ont un effet dans le produit : la
-          licence qui les porte ouvre les parties de classe, les concours et les épisodes, et le serveur
-          le vérifie. <strong className="text-slate-200">Les autres sont descriptifs</strong> : affichés et
+          Les briques qu&apos;une offre compose. <strong className="text-slate-200">L&apos;arène</strong>,{" "}
+          <strong className="text-slate-200">{OFFRES.episodes.nom}</strong> et{" "}
+          <strong className="text-slate-200">l&apos;examen individuel</strong> ont un effet dans le produit :
+          la licence qui les porte ouvre les parties de classe, les concours, les épisodes et les examens,
+          et le serveur le vérifie. <strong className="text-slate-200">Les autres sont descriptifs</strong> : affichés et
           vendus, ils n&apos;ouvrent ni ne ferment rien dans le produit.
         </p>
         {erreurIci("modules")}

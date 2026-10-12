@@ -116,6 +116,21 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/teacher/cohortes/[id]/page.tsx"],
   },
   {
+    nom: "création d'un examen individuel (enseignant)",
+    action: { file: "src/app/teacher/examens/actions.ts", fn: "creerExamenAction" },
+    sources: ["src/app/teacher/examens/page.tsx"],
+  },
+  {
+    nom: "début d'un examen (candidat)",
+    action: { file: "src/app/examen/actions.ts", fn: "commencerExamenAction" },
+    sources: ["src/app/examen/[code]/page.tsx"],
+  },
+  {
+    nom: "relier une activité LTI à un examen",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "relierExamenAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
     nom: "création d'un concours",
     action: { file: "src/app/teacher/actions.ts", fn: "createCompetitionAction" },
     sources: ["src/components/competition-create-form.tsx"],

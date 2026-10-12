@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { episodeCohortes, games, ltiLiens, ltiPlateformes } from "@/db/schema";
+import { episodeCohortes, examens, games, ltiLiens, ltiPlateformes } from "@/db/schema";
 import { PARAMETRE_CIBLE } from "./constantes";
 import type { Lancement } from "./lancement";
 
@@ -9,22 +9,34 @@ import type { Lancement } from "./lancement";
  *
  * Une activité (le « resource link » de la plateforme) se reconnaît à sa plateforme, son
  * déploiement et son identifiant. Elle naît au premier lancement, vide ; l'enseignant
- * choisit ensuite ce qu'elle ouvre : une partie de classe ou une cohorte d'épisodes, qui
- * doivent être À LUI et appartenir à l'organisation de la plateforme. Une fois reliée,
+ * choisit ensuite ce qu'elle ouvre : une partie de classe, une cohorte d'épisodes ou un
+ * examen individuel (migration 0042), qui doivent être À LUI et appartenir à
+ * l'organisation de la plateforme. Une fois reliée,
  * elle le reste : ses lancements mènent l'enseignant au pilotage, l'élève à sa partie.
  */
 
 export type Lien = typeof ltiLiens.$inferSelect;
-export type Cible = { type: "partie"; id: string } | { type: "cohorte"; id: string };
+export type Cible =
+  | { type: "partie"; id: string }
+  | { type: "cohorte"; id: string }
+  | { type: "examen"; id: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** « partie:<uuid> » ou « cohorte:<uuid> », tel que la sélection de contenu le pose. */
+/** « partie:<uuid> », « cohorte:<uuid> » ou « examen:<uuid> », tel que la sélection de contenu le pose. */
 export function lireCible(valeur: string | null | undefined): Cible | null {
-  const m = /^(partie|cohorte):(.+)$/.exec(valeur?.trim() ?? "");
+  const m = /^(partie|cohorte|examen):(.+)$/.exec(valeur?.trim() ?? "");
   if (!m || !UUID.test(m[2]!)) return null;
-  return { type: m[1] as "partie" | "cohorte", id: m[2]!.toLowerCase() };
+  return { type: m[1] as Cible["type"], id: m[2]!.toLowerCase() };
 }
+
+/** Le pilotage d'une cible, côté enseignant. */
+export const pilotageDe = (c: { cibleType: string | null; gameId: string | null; cohorteId: string | null; examenId: string | null }): string =>
+  c.cibleType === "partie"
+    ? `/teacher/games/${c.gameId}`
+    : c.cibleType === "examen"
+      ? `/teacher/examens/${c.examenId}`
+      : `/teacher/cohortes/${c.cohorteId}`;
 
 export const ecrireCible = (c: Cible): string => `${c.type}:${c.id}`;
 
@@ -54,7 +66,7 @@ export async function lienParId(id: string | null | undefined): Promise<Lien | n
 
 /**
  * La cible est-elle à cet enseignant, et à l'organisation de la plateforme ? Une partie :
- * une partie DE CLASSE qu'il a créée. Une cohorte : une cohorte qu'il a créée.
+ * une partie DE CLASSE qu'il a créée. Une cohorte, un examen : ceux qu'il a créés.
  */
 export async function cibleDeLEnseignant(args: {
   cible: Cible;
@@ -69,6 +81,10 @@ export async function cibleDeLEnseignant(args: {
       g.organizationId === args.organizationId &&
       (g.difficultyProfile as { kind?: string } | null)?.kind === "class"
     );
+  }
+  if (args.cible.type === "examen") {
+    const [e] = await db.select().from(examens).where(eq(examens.id, args.cible.id));
+    return !!e && e.creePar === args.enseignantId && e.organizationId === args.organizationId;
   }
   const [c] = await db.select().from(episodeCohortes).where(eq(episodeCohortes.id, args.cible.id));
   return !!c && c.creePar === args.enseignantId && c.organizationId === args.organizationId;
@@ -96,6 +112,7 @@ export async function relierLien(args: {
       cibleType: args.cible.type,
       gameId: args.cible.type === "partie" ? args.cible.id : null,
       cohorteId: args.cible.type === "cohorte" ? args.cible.id : null,
+      examenId: args.cible.type === "examen" ? args.cible.id : null,
       configurePar: args.enseignantId,
       configureLe: new Date(),
       updatedAt: new Date(),
@@ -118,7 +135,9 @@ export async function relierDepuisLaSelection(lien: Lien, l: Lancement): Promise
   const proprietaire =
     cible.type === "partie"
       ? (await db.select({ u: games.createdBy }).from(games).where(eq(games.id, cible.id)))[0]?.u
-      : (await db.select({ u: episodeCohortes.creePar }).from(episodeCohortes).where(eq(episodeCohortes.id, cible.id)))[0]?.u;
+      : cible.type === "examen"
+        ? (await db.select({ u: examens.creePar }).from(examens).where(eq(examens.id, cible.id)))[0]?.u
+        : (await db.select({ u: episodeCohortes.creePar }).from(episodeCohortes).where(eq(episodeCohortes.id, cible.id)))[0]?.u;
   if (!proprietaire) return lien;
   if (await relierLien({ lienId: lien.id, enseignantId: proprietaire, cible })) {
     return (await lienParId(lien.id)) ?? lien;
@@ -132,7 +151,9 @@ export async function relierDepuisLaSelection(lien: Lien, l: Lancement): Promise
  */
 export async function lienSansCibleOrpheline(lien: Lien): Promise<Lien> {
   const orphelin =
-    (lien.cibleType === "partie" && !lien.gameId) || (lien.cibleType === "cohorte" && !lien.cohorteId);
+    (lien.cibleType === "partie" && !lien.gameId) ||
+    (lien.cibleType === "cohorte" && !lien.cohorteId) ||
+    (lien.cibleType === "examen" && !lien.examenId);
   if (!orphelin) return lien;
   const [maj] = await db
     .update(ltiLiens)

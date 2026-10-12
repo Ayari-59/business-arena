@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { episodeCohortes, games } from "@/db/schema";
+import { episodeCohortes, examens, games } from "@/db/schema";
 import { setGuestCookie } from "@/lib/guest";
 import { clearSession, setSession } from "@/lib/session";
 import { joinGameByCode } from "@/services/game.service";
@@ -8,7 +8,7 @@ import { rejoindreCohorte } from "@/services/cohortes.service";
 import { compteEleve, compteEnseignant, PlafondAtteint } from "./comptes";
 import { poserContexte, type ContexteLti } from "./contexte";
 import type { Lancement } from "./lancement";
-import { lienDuLancement, lienSansCibleOrpheline, relierDepuisLaSelection } from "./liens";
+import { lienDuLancement, lienSansCibleOrpheline, pilotageDe, relierDepuisLaSelection } from "./liens";
 
 /**
  * OÙ MÈNE UN LANCEMENT VÉRIFIÉ.
@@ -53,7 +53,14 @@ export async function entrerDansLaCible(args: {
   cibleType: string | null;
   gameId: string | null;
   cohorteId: string | null;
+  examenId?: string | null;
 }): Promise<string | null> {
+  // L'EXAMEN : l'élève arrive sur sa page (les règles, puis « Commencer »), reconnu par
+  // sa plateforme ; rien ne commence sans lui, le temps d'un tour non plus.
+  if (args.cibleType === "examen" && args.examenId) {
+    const [e] = await db.select({ code: examens.code }).from(examens).where(eq(examens.id, args.examenId));
+    return e ? `/examen/${e.code}` : null;
+  }
   if (args.cibleType === "partie" && args.gameId) {
     const code = await codeDeLaPartie(args.gameId);
     if (!code) return null;
@@ -82,11 +89,7 @@ export async function aiguiller(l: Lancement): Promise<Aiguillage> {
     let lien = await lienSansCibleOrpheline(await lienDuLancement(l));
     lien = await relierDepuisLaSelection(lien, l);
     const sien = lien.cibleType !== null && lien.configurePar === compte.userId;
-    const chemin = !sien
-      ? "/lti/activite"
-      : lien.cibleType === "partie"
-        ? `/teacher/games/${lien.gameId}`
-        : `/teacher/cohortes/${lien.cohorteId}`;
+    const chemin = !sien ? "/lti/activite" : pilotageDe(lien);
     return {
       chemin,
       session: { userId: compte.userId, v: compte.sessionVersion },
@@ -103,7 +106,7 @@ export async function aiguiller(l: Lancement): Promise<Aiguillage> {
     contexte: { u: userId, p: p.id, r: "eleve" as const, l: lien.id },
   };
   // La cohorte n'a pas besoin de prénom : ses vues sont agrégées, sans nom.
-  if (lien.cibleType === "cohorte" || (lien.cibleType === "partie" && pseudo)) {
+  if (lien.cibleType === "cohorte" || lien.cibleType === "examen" || (lien.cibleType === "partie" && pseudo)) {
     const arrivee = await entrerDansLaCible({ userId, pseudo: pseudo ?? "", ...lien });
     if (arrivee) return { ...base, chemin: arrivee };
   }

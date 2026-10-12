@@ -7,7 +7,11 @@ import {
   OFFRES,
   variablesDuCatalogue,
 } from "@/config/tarifs";
-import { euros, vueDesTarifs } from "@/config/catalogue";
+import { enumerer, euros, ouvreLExamen, vueDesTarifs } from "@/config/catalogue";
+import { COMPETENCES_D_EXAMEN } from "@/config/examen/competences";
+import { GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
+import { ETABLISSEMENTS_MINIMUM } from "@/config/examen/comparaisons";
+import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
 import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import { REPONSE_LMS } from "@/lti/textes";
 import { LigneDePrix } from "@/components/ligne-de-prix";
@@ -150,6 +154,8 @@ export default async function EcolesPage() {
     (o) => o.tarif !== "gratuit",
   );
   const c = (id: string) => contrasteDeLaBande(theme, id);
+  // L'EXAMEN INDIVIDUEL : les offres qui l'incluent se lisent au catalogue (/admin/offres).
+  const offresDeLExamen = catalogue.offres.filter((o) => o.visible && ouvreLExamen(o)).map((o) => o.nom);
   return (
     <>
       <main id="main" className="relative overflow-hidden">
@@ -347,6 +353,61 @@ export default async function EcolesPage() {
               </ol>
             </div>
           </div>
+
+          {/* ÉVALUER ET ACCRÉDITER : l'examen individuel noté (module de l'offre, décision
+              du propriétaire « façon Comp-XM »). Rien n'est promis qu'il ne tienne : le
+              rapport est conçu pour nourrir un dossier, aucun organisme ne le « reconnaît ». */}
+          <section id="evaluer" aria-labelledby="evaluer-titre" data-evaluer-et-accrediter="" className="mt-14 border-t border-white/10 pt-8">
+            <p className="text-xs uppercase tracking-surtitre text-amber-300">L&apos;examen individuel</p>
+            <h3 id="evaluer-titre" className="mt-2 text-2xl font-semibold text-slate-100">
+              Évaluer et accréditer
+            </h3>
+            <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-400">
+              Une mesure directe des acquis : chaque étudiant dirige seul son entreprise face à des concurrents pilotés
+              par l&apos;ordinateur, sur le même scénario et le même niveau que toute sa promotion.
+            </p>
+            <ul className="mt-6 grid gap-6 md:grid-cols-2">
+              <li>
+                <p className="titre-carte text-slate-100">Une note qui juge les décisions, pas le hasard</p>
+                <p className="mt-1 text-base leading-relaxed text-slate-400">
+                  Les décisions de chaque candidat sont rejouées sur {GRAINES_DU_BILAN.length} marchés possibles, les
+                  mêmes pour tous, à côté d&apos;une gestion de référence. Un marché favorable ne fait pas une note.
+                </p>
+              </li>
+              <li>
+                <p className="titre-carte text-slate-100">Une grille fixe, publiée et versionnée</p>
+                <p className="mt-1 text-base leading-relaxed text-slate-400">
+                  « {GRILLE_BUSINESS_ARENA_2026.nom} » par défaut, copiée dans l&apos;examen à sa création : chaque
+                  note se décompose ligne par ligne, et rien ne change une fois l&apos;examen ouvert.
+                </p>
+              </li>
+              <li>
+                <p className="titre-carte text-slate-100">Un relevé par compétence</p>
+                <p className="mt-1 text-base leading-relaxed text-slate-400">
+                  {enumerer(COMPETENCES_D_EXAMEN.map((x) => x.nom.toLowerCase()))}, avec des niveaux et des seuils
+                  écrits, et un rapport d&apos;une page conçu pour nourrir un dossier d&apos;accréditation (AACSB, EQUIS).
+                </p>
+              </li>
+              <li>
+                <p className="titre-carte text-slate-100">Des comparaisons, quand elles auront un sens</p>
+                <p className="mt-1 text-base leading-relaxed text-slate-400">
+                  Entre établissements, en agrégats anonymes, à partir de {ETABLISSEMENTS_MINIMUM} établissements sur la
+                  même épreuve. Aucune donnée nominative ne quitte l&apos;établissement.
+                </p>
+              </li>
+            </ul>
+            {offresDeLExamen.length > 0 ? (
+              <p className="mt-6 text-sm text-slate-400" data-offres-de-l-examen="">
+                Inclus dans {offresDeLExamen.length > 1 ? "les offres" : "l'offre"} {enumerer(offresDeLExamen)}, sur devis.{" "}
+                <Link
+                  href={lienDuDevis("programme")}
+                  className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  {LIBELLE_DU_DEVIS} →
+                </Link>
+              </p>
+            ) : null}
+          </section>
         </Bande>
 
         <Bande
