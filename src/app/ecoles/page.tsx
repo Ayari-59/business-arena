@@ -371,7 +371,8 @@ export default async function EcolesPage() {
                 <p className="titre-carte text-slate-100">Une note qui juge les décisions, pas le hasard</p>
                 <p className="mt-1 text-base leading-relaxed text-slate-400">
                   Les décisions de chaque candidat sont rejouées sur {GRAINES_DU_BILAN.length} marchés possibles, les
-                  mêmes pour tous, à côté d&apos;une gestion de référence. Un marché favorable ne fait pas une note.
+                  mêmes pour tous, à côté de la gestion neutre du secteur, qui part de la gestion proposée et la tient
+                  à chaque tour. Un marché favorable ne fait pas une note.
                 </p>
               </li>
               <li>

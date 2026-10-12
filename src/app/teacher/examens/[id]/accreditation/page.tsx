@@ -118,7 +118,8 @@ export default async function RapportDAccreditationPage({ params }: { params: Pr
           pilotés par l&apos;ordinateur, sur le même scénario et le même niveau que tous les autres candidats
           {examen.modeGraine === "lot" ? ", sur un marché tiré dans un lot de marchés d'égale difficulté" : ", sur le même marché"}.
           Pour neutraliser la chance, ses décisions sont rejouées telles quelles sur {marches} marchés possibles, les
-          mêmes pour tous, à côté d&apos;une gestion de référence : la note juge les décisions, pas le tirage. La grille
+          mêmes pour tous, à côté de {grille.reference.nom} : la note juge les décisions, pas le tirage.{" "}
+          {grille.reference.definition} La grille
           « {grille.nom} » (version {grille.version}, publiée le {date(new Date(`${grille.publiee}T12:00:00Z`))}) est fixée avant l&apos;épreuve.
           Chaque ligne nourrit une ou deux compétences ; le niveau d&apos;une compétence est la part des points
           rattachés : {NIVEAUX_DE_COMPETENCE.map((n, i) => `${n.nom.toLowerCase()} ${i === 0 ? `sous ${Math.round(NIVEAUX_DE_COMPETENCE[1]!.depuis * 100)} %` : `dès ${Math.round(n.depuis * 100)} %`}`).join(", ")}.

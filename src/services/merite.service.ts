@@ -21,17 +21,19 @@ import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engin
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { readExpectedLevers, readPedagogyInputs } from "@/services/scoring.service";
 import { commeEnBase, rejouer, type IssueDuRejeu, type PartieARejouer, type PedagogieDuTour } from "@/pedagogy/merite/rejeu";
-import { decisionDeReference } from "@/pedagogy/merite/reference";
+import { rejeuxDeLEtalon, type Etalon } from "@/pedagogy/merite/etalons";
 import { investissementPlafonne } from "@/engine/investment/plafond";
-import { GRAINES_DU_MERITE, verdictDuMerite, type VerdictDuMerite } from "@/pedagogy/merite/verdict";
+import { GRAINES_DU_MERITE, marcheRejoue, verdictDuMerite, type MarcheRejoue, type VerdictDuMerite } from "@/pedagogy/merite/verdict";
 
 /**
  * MÉRITE OU CHANCE, CÔTÉ SERVEUR : lire une partie solo terminée, la rejouer,
  * garder le verdict.
  *
- * LE CALCUL : la partie sous sa propre graine (la garde de vérité), puis les
- * décisions du joueur et la méthode de référence sous les trente marchés
- * possibles : 61 parties de six tours. Mesuré : de l'ordre d'une seconde (voir
+ * LE CALCUL : la partie sous sa propre graine (la garde de vérité) ; la
+ * méthode de référence sous cette même graine, où elle décide tour par tour
+ * avec ce que le joueur voyait ; puis les décisions du joueur et celles de la
+ * référence, rejouées telles quelles sous les trente marchés possibles : 62
+ * parties de six tours. Mesuré : de l'ordre d'une seconde (voir
  * le rapport du lot). C'est trop pour le rendu d'une page qui doit rester
  * rapide : la page de la partie le DIFFÈRE (une frontière `Suspense`, les trois
  * blocs arrivent quand ils sont prêts), et la clôture du dernier tour le lance
@@ -51,8 +53,19 @@ import { GRAINES_DU_MERITE, verdictDuMerite, type VerdictDuMerite } from "@/peda
  * serait faux, et dit avec assurance.
  */
 
-/** Change quand le rejeu, la référence ou le verdict changent : l'ancien cache ne vaut plus. */
-export const VERSION_DU_MERITE = 1;
+/**
+ * Change quand le rejeu, la référence ou le verdict changent : l'ancien cache ne vaut plus.
+ *
+ *   1  la gestion neutre du secteur, rejouée sous chaque marché ;
+ *   2  un bon gestionnaire (`pedagogy/merite/reference.ts`), qui joue le marché
+ *      de la partie avec ce que le joueur voyait, puis voit ses décisions
+ *      rejouées comme les siennes ; décisions solides : deux marchés sur trois,
+ *      sans condition d'écart moyen ; jamais de descente de niveau pour qui gagne
+ *      son marché. Les parties déjà jouées se recalculent
+ *      avec lui : leurs décisions n'ont pas changé, l'étalon est plus juste, et
+ *      rien n'était gardé ailleurs qu'en mémoire.
+ */
+export const VERSION_DU_MERITE = 2;
 export const cleDuMerite = (gameId: string) => `${gameId}:${ENGINE_VERSION}:${VERSION_DU_MERITE}`;
 
 export type RaisonSansVerdict =
@@ -326,22 +339,39 @@ export function ecartAvecLaPartie(lue: PartieLue, rejeu: IssueDuRejeu): string |
   return null;
 }
 
-/** Le calcul complet, sans cache. */
-export async function calculerLeMerite(gameId: string): Promise<MeriteDeLaPartie> {
-  const debut = performance.now();
+/**
+ * LES REJEUX D'UNE PARTIE contre un étalon : la partie lue, la garde de vérité
+ * sous sa graine, les décisions du joueur sous les trente marchés possibles, et
+ * l'étalon sur les mêmes. Le bilan et l'examen passent tous deux par ici : un
+ * seul moteur de rejeu, une seule garde.
+ */
+async function rejeuxDeLaPartie(
+  gameId: string,
+  etalon: Etalon,
+): Promise<{ lue: PartieLue; joue: IssueDuRejeu; joueur: IssueDuRejeu[]; reference: IssueDuRejeu[] } | RaisonSansVerdict> {
   const lue = await lirePartieARejouer(gameId);
-  if (typeof lue === "string") return sansVerdict(lue);
+  if (typeof lue === "string") return lue;
   const joue = rejouer(lue.partie, lue.partie.graine);
   const ecart = ecartAvecLaPartie(lue, joue);
   if (ecart) {
     const horsTirage = ecart.includes("hors tirage");
     console.warn(`[merite] ${gameId} : ${ecart}`);
-    return sansVerdict(horsTirage ? "geste-humain" : "rejeu-infidele");
+    return horsTirage ? "geste-humain" : "rejeu-infidele";
   }
-  const ouverts = lue.preset?.decisions ?? null;
-  const reference = { type: "methode" as const, decider: (c: Parameters<typeof decisionDeReference>[0]) => decisionDeReference(c, ouverts) };
-  const joueur = GRAINES_DU_MERITE.map((g) => rejouer(lue.partie, g));
-  const references = GRAINES_DU_MERITE.map((g) => rejouer(lue.partie, g, reference));
+  return {
+    lue,
+    joue,
+    joueur: GRAINES_DU_MERITE.map((g) => rejouer(lue.partie, g)),
+    reference: rejeuxDeLEtalon(lue.partie, lue.preset?.decisions ?? null, etalon),
+  };
+}
+
+/** Le calcul complet du bilan, sans cache : contre un bon gestionnaire. */
+export async function calculerLeMerite(gameId: string): Promise<MeriteDeLaPartie> {
+  const debut = performance.now();
+  const r = await rejeuxDeLaPartie(gameId, "bon-gestionnaire");
+  if (typeof r === "string") return sansVerdict(r);
+  const { lue, joue, joueur, reference: references } = r;
   const verdict = verdictDuMerite({
     joue,
     joueur,
@@ -359,6 +389,47 @@ export async function calculerLeMerite(gameId: string): Promise<MeriteDeLaPartie
     mondeRetire: lue.mondeRetire,
     niveau: lue.niveau,
     duree: Math.round(performance.now() - debut),
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * L'EXAMEN : LE REJEU CONTRE L'ÉTALON DE SA GRILLE.
+ * ------------------------------------------------------------------------- */
+
+export type RejeuDeLExamen =
+  | {
+      etat: "rejeu";
+      /** L'étalon contre lequel la copie est rejouée : celui que la grille nomme. */
+      etalon: Etalon;
+      /** Le nombre d'entreprises en lice (le candidat et ses concurrents). */
+      sur: number;
+      /** Le nombre de marchés possibles. */
+      n: number;
+      /** Les décisions du candidat, marché par marché. */
+      joueur: MarcheRejoue[];
+      /** L'étalon, sur les mêmes marchés, dans le même ordre. */
+      reference: MarcheRejoue[];
+    }
+  | { etat: "sans-verdict"; raison: RaisonSansVerdict; message: string };
+
+/**
+ * LA COPIE D'EXAMEN, REJOUÉE : les mêmes trente marchés et la même garde de
+ * vérité que le bilan, mais contre l'étalon que la grille de l'examen nomme (la
+ * gestion neutre du secteur pour les grilles publiées). Ni verdict, ni bon
+ * gestionnaire quand la grille ne le demande pas : l'examen n'en a pas l'usage.
+ * Pas de cache : la note se calcule une fois, à la remise, et se garde en base
+ * (`examen_candidats.notation`).
+ */
+export async function rejeuPourLExamen(gameId: string, etalon: Etalon): Promise<RejeuDeLExamen> {
+  const r = await rejeuxDeLaPartie(gameId, etalon);
+  if (typeof r === "string") return { etat: "sans-verdict", raison: r, message: RAISONS_SANS_VERDICT[r] };
+  return {
+    etat: "rejeu",
+    etalon,
+    sur: r.joue.sur,
+    n: r.joueur.length,
+    joueur: r.joueur.map(marcheRejoue),
+    reference: r.reference.map(marcheRejoue),
   };
 }
 

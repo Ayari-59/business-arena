@@ -14,12 +14,17 @@ import { mesurerContraste } from "./helpers/contraste";
  *      par rangée, votre partie marquée), la fourchette des places, aucun
  *      défilement de côté, et aucun bouton plein dans les trois blocs (le seul
  *      reste « Rejouer »).
- *   3. ET ENSUITE : un niveau ouvert se lance d'un lien qui règle /jouer ; un
- *      niveau fermé sans licence est montré, avec les tarifs, sans lien de
- *      lancement ; et /jouer ne présélectionne jamais un niveau fermé.
+ *   3. ET ENSUITE : des décisions fragiles ne font pas monter ; le niveau
+ *      conseillé se lance d'un lien qui règle /jouer ; et /jouer ne
+ *      présélectionne jamais un niveau fermé. (Le niveau fermé montré sans se
+ *      lancer : tests/unit/merite-de-la-partie-vue.test.ts.)
  *
  * Le joueur relève son prix de 8 % au premier tour et garde ensuite ce que le
- * formulaire lui propose : une partie ordinaire, pas un cas fabriqué.
+ * formulaire lui propose : une partie ordinaire, pas un cas fabriqué. Un seul
+ * geste, que la référence (un bon gestionnaire, qui lit ses ventes manquées et
+ * son stock à chaque tour) bat : la partie finit « fragile », Chance ou Leçon.
+ * C'était l'objet du durcissement : avec la gestion neutre pour étalon, ce
+ * même geste passait pour des décisions solides sur trente marchés sur trente.
  *
  * Captures (facultatives) : `CAPTURES=<dossier>`.
  */
@@ -70,6 +75,9 @@ async function jouerUnTour(p: Page, tour: number): Promise<void> {
 }
 
 /** Ce que les trois blocs montrent, lu dans la page. */
+/** « la 1re le plus souvent » ou « toujours 1re » : la fourchette dit qu'il gagne son marché. */
+const gagneSonMarche = (fourchette: string) => /la 1re le plus souvent|toujours 1re /.test(fourchette);
+
 async function lireLeMerite(p: Page) {
   const bloc = p.locator("[data-merite-de-la-partie]");
   await bloc.waitFor({ timeout: 60_000 });
@@ -81,11 +89,14 @@ async function lireLeMerite(p: Page) {
       cas: r.dataset.cas ?? null,
       blocs: [...r.querySelectorAll<HTMLElement>("[data-bloc-du-merite]")].map((b) => b.dataset.blocDuMerite),
       verdict: r.querySelector("[data-verdict-du-merite]")?.textContent?.trim() ?? "",
+      quiEstLaReference: r.querySelector("[data-qui-est-la-reference]")?.textContent?.trim() ?? "",
+      rangeeReference: r.querySelector('[data-rangee="reference"] p')?.textContent?.trim() ?? "",
       fourchette: r.querySelector("[data-fourchette-de-rang]")?.textContent?.trim() ?? "",
       pointsJoueur: visibles('[data-rangee="joueur"] span[title]'),
       pointsReference: visibles('[data-rangee="reference"] span[title]'),
       votrePartie: visibles("[data-votre-partie]"),
       constats: r.querySelectorAll("[data-constat]").length,
+      ensuite: r.querySelector('[data-bloc-du-merite="ensuite"] p')?.textContent?.trim() ?? "",
       niveau: Number(r.querySelector<HTMLElement>("[data-niveau-conseille]")?.dataset.niveauConseille ?? 0),
       lien: r.querySelector<HTMLAnchorElement>("[data-lien-de-la-suite]")?.getAttribute("href") ?? null,
       ferme: r.querySelector("[data-niveau-ferme]")?.textContent?.trim() ?? null,
@@ -133,8 +144,15 @@ describe("mérite ou chance, de la partie au bilan", () => {
     await page.locator("[data-cloture-de-l-exercice]").waitFor({ timeout: 60_000 });
     const m = await lireLeMerite(page);
     expect(m.blocs).toEqual(["decisions", "constats", "ensuite"]);
-    expect(["merite", "malchance", "chance", "lecon"]).toContain(m.cas);
-    expect(m.verdict).toMatch(/^(Mérité|Malchance|Chance|Leçon)\. /);
+    // Un seul geste (+8 % au premier tour) ne fait pas des décisions solides.
+    expect(["chance", "lecon"]).toContain(m.cas);
+    expect(m.verdict).toMatch(/^(Chance|Leçon)\. /);
+    expect(m.verdict).toMatch(/qu'un bon gestionnaire/);
+    // 1er le plus souvent sur les marchés rejoués : le verdict le dit d'abord.
+    if (gagneSonMarche(m.fourchette)) expect(m.verdict).toMatch(/^(Chance|Leçon)\. .*[Vv]ous gagnez votre marché \(1re place sur \d+ des 30\), mais /);
+    // La référence se nomme, et la ligne qui dit ce qu'elle fait est là.
+    expect(m.quiEstLaReference).toMatch(/^Un bon gestionnaire part de la gestion proposée/);
+    expect(m.rangeeReference).toBe("Un bon gestionnaire");
     expect(m.fourchette).toMatch(/^Sur 30 marchés possibles, avec vos décisions : /);
     expect(m.pointsJoueur).toBe(30);
     expect(m.pointsReference).toBe(30);
@@ -153,7 +171,7 @@ describe("mérite ou chance, de la partie au bilan", () => {
     console.info(`[merite e2e] ${urlArene} : ${JSON.stringify(m)}`);
     if (CAPTURES) {
       await page.screenshot({ path: `${CAPTURES}/bilan-solo-1280.png`, fullPage: true });
-      await page.locator("[data-merite-de-la-partie]").screenshot({ path: `${CAPTURES}/merite-1280.png` });
+      await page.locator("[data-merite-de-la-partie]").screenshot({ path: `${CAPTURES}/merite-${m.cas}-1280.png` });
     }
   }, 900_000);
 
@@ -200,32 +218,35 @@ describe("mérite ou chance, de la partie au bilan", () => {
     expect(debords).toBe(0);
     if (CAPTURES) {
       await q.screenshot({ path: `${CAPTURES}/bilan-solo-390.png`, fullPage: true });
-      await q.locator("[data-merite-de-la-partie]").screenshot({ path: `${CAPTURES}/merite-390.png` });
+      await q.locator("[data-merite-de-la-partie]").screenshot({ path: `${CAPTURES}/merite-${m.cas}-390.png` });
     }
     await tel.close();
   }, 120_000);
 
-  it("et ensuite : un niveau ouvert se lance, un niveau fermé se montre sans se lancer", async () => {
+  it("et ensuite : des décisions fragiles ne font pas monter, et le niveau conseillé se lance", async () => {
     await page.goto(urlArene, { waitUntil: "networkidle" });
     const m = await lireLeMerite(page);
-    if (m.niveau > 3) {
-      // Sans licence, les niveaux 4 à 6 sont fermés : montrés, pas lançables.
-      expect(m.lien).toBeNull();
-      expect(m.ferme).toMatch(/inclus dans/);
-      expect(m.tarifs).toBe("/tarifs");
-      if (CAPTURES) {
-        await page
-          .locator('[data-bloc-du-merite="ensuite"]')
-          .screenshot({ path: `${CAPTURES}/ensuite-niveau-ferme-1280.png` });
-      }
-    } else {
-      expect(m.ferme).toBeNull();
-      expect(m.lien).toMatch(new RegExp(`^/jouer\\?secteur=[a-z-]+&niveau=${m.niveau}$`));
-      await page.locator("[data-lien-de-la-suite]").click();
-      await page.waitForURL(/\/jouer\?/, { timeout: 60_000 });
-      await page.waitForLoadState("networkidle");
-      expect(await texte(page)).toMatch(new RegExp(`Niveau ${m.niveau} · `));
+    // On reste au niveau 3 (autre métier) ou on descend au 2 : jamais au-delà,
+    // donc jamais un niveau fermé sans licence. Le niveau fermé, montré sans se
+    // lancer, est gardé par tests/unit/merite-de-la-partie-vue.test.ts.
+    expect([2, 3]).toContain(m.niveau);
+    // Qui gagne son marché n'est jamais renvoyé au niveau inférieur : même
+    // niveau, une autre entreprise, et le texte ne se contredit pas.
+    if (gagneSonMarche(m.fourchette)) {
+      expect(m.niveau).toBe(3);
+      expect(m.lien).not.toMatch(/secteur=nova&/);
+      expect(m.ensuite).toMatch(/Restez au niveau 3 et essayez une autre entreprise/);
+      expect(m.ensuite).not.toMatch(/restent loin|reprendre pied|niveau 2/);
     }
+    expect(m.ferme).toBeNull();
+    expect(m.lien).toMatch(new RegExp(`^/jouer\\?secteur=[a-z-]+&niveau=${m.niveau}$`));
+    if (CAPTURES) {
+      await page.locator('[data-bloc-du-merite="ensuite"]').screenshot({ path: `${CAPTURES}/ensuite-${m.cas}-1280.png` });
+    }
+    await page.locator("[data-lien-de-la-suite]").click();
+    await page.waitForURL(/\/jouer\?/, { timeout: 60_000 });
+    await page.waitForLoadState("networkidle");
+    expect(await texte(page)).toMatch(new RegExp(`Niveau ${m.niveau} · `));
   }, 120_000);
 
   it("un niveau fermé demandé à /jouer n'y est pas présélectionné sans licence", async () => {

@@ -289,6 +289,9 @@ export default async function ExamenPage({
 
         <Rubrique note={`${grille.nom}, version ${grille.version}`}>La grille de notation</Rubrique>
         <section aria-label="La grille de notation" className="grid gap-3 text-sm">
+          <p className="text-slate-300" data-etalon-de-la-grille={grille.reference.code}>
+            <span className="font-semibold text-slate-100">Étalon : {grille.reference.nom}.</span> {grille.reference.definition}
+          </p>
           <ul className="grid gap-2">
             {grille.lignes.map((l) => (
               <li key={l.code} className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-white/10 pt-2">

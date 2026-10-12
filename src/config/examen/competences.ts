@@ -108,7 +108,7 @@ export type NiveauDeCompetence = "non-acquis" | "en-cours" | "acquis" | "maitris
  *
  * Le SEUIL D'ATTEINTE de l'objectif (ce qu'un rapport AoL compte) est « acquis » : 60 %.
  * Une ligne à moitié tenue (50 %) correspond à une gestion qui fait jeu égal avec la
- * gestion de référence ; « acquis » demande de faire mieux qu'elle.
+ * gestion neutre du secteur (l'étalon de la grille) ; « acquis » demande de faire mieux qu'elle.
  */
 export const SEUILS_DE_NIVEAU = { enCours: 0.4, acquis: 0.6, maitrise: 0.8 } as const;
 

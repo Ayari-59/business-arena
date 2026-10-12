@@ -314,6 +314,13 @@ describe("un examen, de la création à la publication", () => {
     expect(await a.getByRole("heading", { level: 1 }).textContent()).toMatch(/^Votre note : [\d,]+ sur 100$/);
     expect(await a.locator("[data-releve-des-competences] li").count()).toBe(6);
     expect(await a.locator("[data-detail-de-la-note] li").count()).toBe(6);
+    // Noté contre la gestion neutre du secteur, nommée et définie ; plus de « gestion de référence ».
+    expect(await a.locator('[data-etalon-de-la-note="gestion-neutre"]').count()).toBe(1);
+    const releve = await texte(a);
+    expect(releve).toMatch(/à côté de la gestion neutre du secteur\./);
+    expect(releve).toMatch(/La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour/);
+    expect(releve).toContain("Décisions qui battent la gestion neutre du secteur");
+    expect(releve).not.toMatch(/gestion de référence/);
     await sansTexteIllisible(a);
     await capture(a, "examen-releve-candidat-1280");
     // L'arène dit la publication, et rouvre le bilan.
@@ -331,6 +338,8 @@ describe("un examen, de la création à la publication", () => {
     expect(await prof.locator("[data-resultats-par-competence] tbody tr").count()).toBe(6);
     const t = await texte(prof);
     expect(t).toContain("conçu pour nourrir un dossier d'accréditation");
+    expect(t).toMatch(/à côté de la gestion neutre du secteur : la note juge les décisions, pas le tirage\. La gestion neutre du secteur part/);
+    expect(t).not.toMatch(/gestion de référence/);
     expect(t).not.toMatch(/Alice|Bruno|210001/);
     expect(t).not.toMatch(/reconnu par l'AACSB|accrédité par/i);
     await prof.emulateMedia({ media: "print" });

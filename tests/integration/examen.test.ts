@@ -31,6 +31,7 @@ import {
   decisionsDuCandidat,
   examensDeLEnseignant,
   exportDeLExamen,
+  grilleDeLExamen,
   noterLaCopieDuCandidat,
   publierLesResultats,
   suiviDeLExamen,
@@ -42,7 +43,8 @@ import { attribuerCodeDeReprise, reprendreSaPlace } from "@/services/reprise.ser
 import { ExamenReserveError, LicenceDepasseeError } from "@/services/acces.service";
 import { neutralDecisions } from "@/engine/bots";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
-import { noteDeDecision } from "@/config/examen/grille";
+import { REFERENCE_GESTION_NEUTRE, noteDeDecision, noterLaCopie } from "@/config/examen/grille";
+import { rejeuPourLExamen } from "@/services/merite.service";
 import type { CompanyState, RoundDecisions } from "@/engine/types";
 import { etablissementSousLicence } from "./helpers/licence";
 import { cibleDeLEnseignant, lireCible, pilotageDe } from "@/lti/liens";
@@ -242,6 +244,33 @@ describe("deux candidats passent l'examen", () => {
     expect(na.note).toBeLessThanOrEqual(100);
     expect(na.lignes.reduce((s, l) => s + l.points, 0)).toBeCloseTo(na.note, 0);
     expect(na.horsCalcul.map((l) => l.code)).toEqual(["diagnostics"]);
+  }, 120_000);
+
+  it("LA COPIE EST NOTÉE CONTRE LA GESTION NEUTRE DU SECTEUR, l'étalon que sa grille figée nomme, et la notation le garde", async () => {
+    const [examen] = await db.select().from(examens).where(eq(examens.id, examenId));
+    // La copie figée de la grille écrit son étalon.
+    expect((examen!.grille as { reference?: unknown }).reference).toEqual(REFERENCE_GESTION_NEUTRE);
+    const [ca] = await db.select().from(examenCandidats).where(eq(examenCandidats.gameId, partieA));
+    const gardee = ca!.notation as NotationGardee;
+    expect(gardee.etat).toBe("notee");
+    if (gardee.etat !== "notee") return;
+    expect(gardee.grille.reference).toEqual(REFERENCE_GESTION_NEUTRE);
+    // La note gardée est celle du rejeu contre la gestion neutre, au centième de point.
+    const neutre = await rejeuPourLExamen(partieA, "gestion-neutre");
+    expect(neutre.etat).toBe("rejeu");
+    if (neutre.etat !== "rejeu") return;
+    const attendue = noterLaCopie(
+      grilleDeLExamen(examen!),
+      { sur: neutre.sur, joueur: neutre.joueur, reference: neutre.reference, situations: null },
+      { questions: examen!.questions },
+    );
+    expect(gardee.note).toBe(attendue.note);
+    expect(gardee.lignes).toEqual(attendue.lignes);
+    // Pas celle du bon gestionnaire, l'étalon du bilan : sur cette partie, il fait autre chose.
+    const bon = await rejeuPourLExamen(partieA, "bon-gestionnaire");
+    if (bon.etat !== "rejeu") throw new Error(bon.message);
+    expect(bon.joueur).toEqual(neutre.joueur);
+    expect(bon.reference.map((m) => m.resultat)).not.toEqual(neutre.reference.map((m) => m.resultat));
   }, 120_000);
 
   it("l'enseignant suit : notes, rangs, compétences ; les décisions de chaque candidat se consultent", async () => {

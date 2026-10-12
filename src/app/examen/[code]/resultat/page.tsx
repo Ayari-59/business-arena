@@ -5,6 +5,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { copieRetenueDuCandidat, examenParCode } from "@/services/examen.service";
 import { normaliserCodeDExamen, phraseDuRecu } from "@/config/examen/textes";
 import { NIVEAUX_DE_COMPETENCE, SEUIL_D_ATTEINTE_EN_POURCENT } from "@/config/examen/competences";
+import { referenceDeLaCopie } from "@/config/examen/grille";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PrintButton } from "@/components/print-button";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
@@ -83,7 +84,10 @@ export default async function ResultatDuCandidatPage({ params }: { params: Promi
               </h2>
               <p className="text-sm text-slate-400">
                 Grille « {n.grille.nom} », version {n.grille.version}. Vos décisions ont été rejouées sur {n.marches} marchés
-                possibles, les mêmes pour tous les candidats.
+                possibles, les mêmes pour tous les candidats, à côté de {referenceDeLaCopie(n).nom}.
+              </p>
+              <p className="text-sm text-slate-400" data-etalon-de-la-note={referenceDeLaCopie(n).code}>
+                {referenceDeLaCopie(n).definition}
               </p>
               <ul className="grid gap-1 text-sm" data-detail-de-la-note="">
                 {n.lignes.map((l) => (

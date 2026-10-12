@@ -237,7 +237,9 @@ export default async function MesExamensPage({
                     />
                     <span>
                       {g.nom} <span className="text-slate-400">(version {g.version})</span>
-                      <span className={AIDE}>{g.propos}</span>
+                      <span className={AIDE}>
+                        {g.propos} Étalon : {g.reference.nom}.
+                      </span>
                     </span>
                   </label>
                 ))}

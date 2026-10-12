@@ -8,6 +8,7 @@ import { IDENTIFICATIONS, phraseDuRecu } from "@/config/examen/textes";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ReleveDesCompetences } from "@/components/examen/graphiques-de-l-examen";
+import { referenceDeLaCopie } from "@/config/examen/grille";
 
 export const metadata: Metadata = {
   title: "Décisions d'un candidat",
@@ -62,6 +63,10 @@ export default async function DecisionsDuCandidatPage({
             <h2 id="note-titre" className="titre-carte text-slate-100">
               Note : <span className="tabular-nums">{notation.note.toLocaleString("fr-FR")}</span> sur 100
             </h2>
+            <p className="text-sm text-slate-400" data-etalon-de-la-note={referenceDeLaCopie(notation).code}>
+              Grille « {notation.grille.nom} », version {notation.grille.version}, notée contre{" "}
+              {referenceDeLaCopie(notation).nom}. {referenceDeLaCopie(notation).definition}
+            </p>
             <ul className="grid gap-1 text-sm">
               {notation.lignes.map((l) => (
                 <li key={l.code} className="flex flex-wrap justify-between gap-x-4 border-t border-white/10 pt-1">

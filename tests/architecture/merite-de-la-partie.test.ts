@@ -10,6 +10,9 @@ import { describe, expect, it } from "vitest";
  *    rien de cela ne doit paraître pendant la partie. Le verdict n'est lu que
  *    par le bilan d'une partie terminée (la page de l'arène, dans le bloc de
  *    fin), et calculé par la clôture du DERNIER tour.
+ *    L'examen individuel ne lit pas ce verdict : il note une copie remise contre
+ *    l'étalon de sa grille (la gestion neutre du secteur), par `rejeuPourLExamen`,
+ *    et seulement lui.
  * 2. LA DISTRIBUTION SUIT LA PALETTE DES DONNÉES : aucune couleur écrite,
  *    seulement des jetons connus. C'est la règle de
  *    `palette-des-donnees.test.ts` ; elle est appliquée ici au nouveau
@@ -37,11 +40,21 @@ describe("le hasard se mesure au bilan, jamais pendant la partie", () => {
       "app/arena/[gameId]/actions.ts",
       "app/arena/[gameId]/page.tsx",
       "components/merite-de-la-partie.tsx",
-      // L'examen individuel note une copie REMISE (partie terminée) par ce verdict, après
-      // la fin de la partie, et ne le montre au candidat que par sa note, une fois publiée.
-      "services/examen.service.ts",
       "services/merite.service.ts",
     ]);
+  });
+
+  it("l'examen note par son propre rejeu, contre l'étalon de sa grille, et rien d'autre ne le lit", () => {
+    const lecteurs = sources(SRC)
+      .filter((f) => /\brejeuPourLExamen\b/.test(sansCommentaires(readFileSync(f, "utf8"))))
+      .map((f) => f.slice(SRC.length + 1))
+      .sort();
+    // L'examen note une copie REMISE (partie terminée), après la fin de la partie, et ne la
+    // montre au candidat que par sa note, une fois publiée.
+    expect(lecteurs).toEqual(["services/examen.service.ts", "services/merite.service.ts"]);
+    const examen = sansCommentaires(lire("services/examen.service.ts"));
+    expect(examen).toMatch(/rejeuPourLExamen\(l\.candidat\.gameId, referenceDeLaGrille\(grille\)\.code\)/);
+    expect(examen).not.toMatch(/\bmeriteDeLaPartie\b|\bcalculerLeMerite\b/);
   });
 
   it("la page ne le pose que dans le bilan de fin de partie, en solo, derrière Suspense", () => {

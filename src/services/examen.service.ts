@@ -18,12 +18,13 @@ import { getTeacherOrgId } from "@/services/auth.service";
 import { verifierLExamen } from "@/services/acces.service";
 import { createGameCore } from "@/services/game-creation.service";
 import { cloreLeTourEchu } from "@/services/round-resolution.service";
-import { meriteDeLaPartie } from "@/services/merite.service";
+import { rejeuPourLExamen } from "@/services/merite.service";
 import { SCENARIO_CHOICES, scenarioByCode, scenarioCodeForLevel } from "@/config/scenarios/registry";
 import { NIVEAU_MAX } from "@/config/vitrine-solo";
 import {
   grilleParCode,
   noterLaCopie,
+  referenceDeLaGrille,
   type CopieNotee,
   type GrilleDeNotation,
   type MesuresDeLaCopie,
@@ -62,8 +63,11 @@ import type { RoundDecisions } from "@/engine/types";
  *     l'animateur, pas d'assistant, pas de classement, l'encart estimé si l'enseignant le
  *     veut). Une copie remise ne se rejoue pas.
  *   · LA NOTE se calcule à la remise, par la grille figée dans l'examen
- *     (config/examen/grille.ts), sur le rejeu de « mérite ou chance », appelé par sa
- *     fonction publique (`meriteDeLaPartie`) : la référence qu'il porte est celle de l'examen.
+ *     (config/examen/grille.ts), sur le rejeu de « mérite ou chance » appelé par sa
+ *     fonction dédiée (`rejeuPourLExamen`), contre L'ÉTALON QUE LA GRILLE NOMME : la gestion
+ *     neutre du secteur pour les grilles publiées. Le bilan des parties juge, lui, contre
+ *     un bon gestionnaire ; l'examen ne lit pas ce verdict. La notation figée garde
+ *     l'étalon contre lequel la copie a été notée.
  *
  * LE PLAFOND DES PARTIES PUBLIQUES (dix par adresse et par heure, game-creation.service)
  * NE S'APPLIQUE PAS aux parties d'examen, et c'est voulu : une salle d'examen entière
@@ -206,8 +210,14 @@ export async function creerExamen(enseignantId: string, s: SaisieDExamen): Promi
   throw new Error("Impossible de tirer un code d'examen libre.");
 }
 
-/** La grille FIGÉE d'un examen (sa copie), jamais celle du code. */
-export const grilleDeLExamen = (e: Pick<LigneDExamen, "grille">): GrilleDeNotation => e.grille as GrilleDeNotation;
+/**
+ * La grille FIGÉE d'un examen (sa copie), jamais celle du code. Une copie gardée avant que
+ * la grille n'écrive son étalon le reçoit tel qu'il était : la gestion neutre du secteur.
+ */
+export const grilleDeLExamen = (e: Pick<LigneDExamen, "grille">): GrilleDeNotation => {
+  const g = e.grille as GrilleDeNotation;
+  return { ...g, reference: referenceDeLaGrille(g) };
+};
 
 export interface ExamenListe {
   id: string;
@@ -540,20 +550,20 @@ export async function noterLaCopieDuCandidat(candidatId: string, { forcer = fals
     .where(eq(examenCandidats.id, candidatId));
   if (!l || !l.candidat.remisLe || !l.candidat.gameId) return null;
   if (l.candidat.notation && !forcer) return l.candidat.notation as NotationGardee;
-  const merite = await meriteDeLaPartie(l.candidat.gameId);
+  const grille = grilleDeLExamen(l.examen);
+  const rejeu = await rejeuPourLExamen(l.candidat.gameId, referenceDeLaGrille(grille).code);
   let notation: NotationGardee;
-  if (merite.etat !== "verdict") {
-    notation = { etat: "sans-note", raison: merite.raison, message: merite.message };
+  if (rejeu.etat !== "rejeu") {
+    notation = { etat: "sans-note", raison: rejeu.raison, message: rejeu.message };
   } else {
-    const v = merite.verdict;
     const mesures: MesuresDeLaCopie = {
-      sur: v.sur,
-      joueur: v.joueur,
-      reference: v.reference,
+      sur: rejeu.sur,
+      joueur: rejeu.joueur,
+      reference: rejeu.reference,
       situations: l.examen.questions ? { scores: await scoresDesSituations(l.candidat.gameId) } : null,
     };
-    const copie = noterLaCopie(grilleDeLExamen(l.examen), mesures, { questions: l.examen.questions });
-    notation = { etat: "notee", marches: v.n, ...copie };
+    const copie = noterLaCopie(grille, mesures, { questions: l.examen.questions });
+    notation = { etat: "notee", marches: rejeu.n, ...copie };
   }
   await db
     .update(examenCandidats)

@@ -148,6 +148,13 @@ export type DecideurDuJoueur =
         roundIndex: number;
         lastSoldUnits?: number;
         lastSoldByProduct?: Record<string, number>;
+        /**
+         * Ce que l'équipe a sous les yeux de son tour passé, et rien d'autre :
+         * son propre résultat (ventes, ruptures, coûts) et sa propre décision,
+         * tels que la base les rend. Absents au premier tour.
+         */
+        resultatPrecedent?: CompanyRoundResult;
+        decisionPrecedente?: RoundDecisions;
       }) => RoundDecisions;
     };
 
@@ -155,6 +162,8 @@ export interface IssueDUneEquipe {
   ipg: number;
   rang: number;
   resultatNetCumule: number;
+  /** Le chiffre d'affaires cumulé : l'échelle d'un écart quand le résultat est proche de zéro. */
+  chiffreDAffairesCumule: number;
   tresorerieFinale: number;
   defaillant: boolean;
 }
@@ -210,6 +219,7 @@ export function rejouer(
   const scoresParTour: Record<string, { index: number; bpi: number }[]> = {};
   const sommes: Record<string, Map<string, { sum: number; n: number }>> = {};
   const netCumule: Record<string, number> = {};
+  const caCumule: Record<string, number> = {};
   const tresorerie: Record<string, number> = {};
   const resultatParTour: number[] = [];
   const poids = scoringWeightsByName(scenario.scoring);
@@ -217,6 +227,7 @@ export function rejouer(
     scoresParTour[id] = [];
     sommes[id] = new Map();
     netCumule[id] = 0;
+    caCumule[id] = 0;
     tresorerie[id] = 0;
   }
 
@@ -267,6 +278,8 @@ export function rejouer(
           roundIndex: tour,
           lastSoldUnits: vendu[e.id],
           lastSoldByProduct: venduParProduit[e.id],
+          resultatPrecedent: resultatsPrecedents[e.id] ? commeEnBase(resultatsPrecedents[e.id]!) : undefined,
+          decisionPrecedente: precedentes[e.id],
         });
       } else {
         const jouee = partie.decisions[indice];
@@ -340,6 +353,7 @@ export function rejouer(
       };
       tourRejoue.evenements[id] = visibles(id);
       netCumule[id] = netCumule[id]! + auCentime(r.incomeStatement.netIncome);
+      caCumule[id] = caCumule[id]! + auCentime(r.incomeStatement.revenue);
       tresorerie[id] = auCentime(r.functionalBalance.netTreasury);
     }
     toursRejoues.push(tourRejoue);
@@ -375,6 +389,7 @@ export function rejouer(
       ipg: Number(l.bpi.toFixed(2)),
       rang: i + 1,
       resultatNetCumule: Math.round(netCumule[l.id]! * 100) / 100,
+      chiffreDAffairesCumule: Math.round(caCumule[l.id]! * 100) / 100,
       tresorerieFinale: tresorerie[l.id]!,
       defaillant: (etats.find((s) => s.id === l.id)?.status ?? "active") === "defaillant",
     };

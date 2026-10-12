@@ -10,7 +10,7 @@ import { unCompteSousLicence } from "@/services/acces.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { meriteDeLaPartie } from "@/services/merite.service";
 import { CAS_DU_MERITE, type CasDuMerite, type VerdictDuMerite } from "@/pedagogy/merite/verdict";
-import { NOM_DE_LA_REFERENCE } from "@/pedagogy/merite/reference";
+import { PHRASE_DE_LA_REFERENCE, deLaReference } from "@/pedagogy/merite/reference";
 
 /**
  * MÉRITE OU CHANCE : LE BILAN EN TROIS BLOCS (comme les épisodes manager).
@@ -18,7 +18,8 @@ import { NOM_DE_LA_REFERENCE } from "@/pedagogy/merite/reference";
  *   1. « Vos décisions tenaient-elles ? » : le verdict de la matrice en une
  *      phrase, la place du marché joué, la fourchette des places sur les
  *      marchés possibles, la distribution des résultats (vos décisions et la
- *      gestion de référence, sous les mêmes marchés, votre partie marquée) ;
+ *      décisions d'un bon gestionnaire, sous les mêmes marchés, votre partie
+ *      marquée) ;
  *   2. « Ce que la partie montre » : des constats de tour, tirés des mêmes
  *      rejeux ;
  *   3. « Et ensuite » : le niveau conseillé et l'entreprise suivante, avec le
@@ -152,9 +153,12 @@ export function MeriteDeLaPartieVue({
         </h2>
         <p className="max-w-3xl text-base leading-relaxed text-slate-300">
           Votre partie s&apos;est jouée sur un seul marché. Vos décisions ont été rejouées telles
-          quelles sur {v.n} autres, avec leurs propres clients, imprévus et concurrents, et{" "}
-          {NOM_DE_LA_REFERENCE} sur les mêmes. Sous un même marché, l&apos;écart entre les deux tient
-          à vos décisions.
+          quelles sur {v.n} autres, avec leurs propres clients, imprévus et concurrents, et celles{" "}
+          {deLaReference} sur les mêmes. Sous un même marché, l&apos;écart entre les deux
+          tient aux décisions.
+        </p>
+        <p data-qui-est-la-reference="" className="max-w-3xl text-sm leading-relaxed text-slate-400">
+          {PHRASE_DE_LA_REFERENCE}
         </p>
       </header>
 
@@ -284,7 +288,7 @@ function Matrice({ cas }: { cas: CasDuMerite }) {
 /**
  * LA DISTRIBUTION DES MARCHÉS : un point par marché possible, sur l'échelle du
  * résultat net cumulé. Deux rangées, sous la même échelle : vos décisions (la
- * teinte du métier, `--metier`) et la gestion de référence (le neutre de
+ * teinte du métier, `--metier`) et un bon gestionnaire (le neutre de
  * référence, `--donnee-2`). Les points d'une même tranche s'empilent (un
  * histogramme de points). Votre partie est marquée d'un trait et nommée ; la
  * ligne du zéro est tracée quand l'échelle la traverse.
@@ -329,7 +333,7 @@ function DistributionDesMarches({ verdict: v }: { verdict: VerdictDuMerite }) {
     },
     {
       cle: "reference",
-      nom: "Gestion de référence",
+      nom: "Un bon gestionnaire",
       points: empiler(v.reference),
       teinte: "bg-[var(--donnee-2)]",
     },
@@ -426,7 +430,7 @@ function DistributionDesMarches({ verdict: v }: { verdict: VerdictDuMerite }) {
           <tr>
             <th scope="col">Marché</th>
             <th scope="col">Vos décisions</th>
-            <th scope="col">Gestion de référence</th>
+            <th scope="col">Un bon gestionnaire</th>
           </tr>
         </thead>
         <tbody>

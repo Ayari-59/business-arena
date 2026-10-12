@@ -18,10 +18,14 @@ import {
  *     ne touche un examen ouvert.
  *  2. LA NOTE JUGE LES DÉCISIONS, PAS LE TIRAGE. Toutes les lignes, sauf le diagnostic, se
  *     mesurent sur les trente marchés possibles où les décisions du candidat sont rejouées
- *     telles quelles, à côté de la gestion de référence rejouée sur les mêmes (le rejeu de
- *     « mérite ou chance », services/merite.service.ts). Le marché que le candidat a joué
- *     n'y pèse pas plus qu'un autre : deux candidats aux mêmes décisions ont la même note,
- *     quelle que soit la graine de leur partie.
+ *     telles quelles, à côté de L'ÉTALON QUE LA GRILLE NOMME rejoué sur les mêmes (le rejeu
+ *     de « mérite ou chance », `rejeuPourLExamen` de services/merite.service.ts). Le marché
+ *     que le candidat a joué n'y pèse pas plus qu'un autre : deux candidats aux mêmes
+ *     décisions ont la même note, quelle que soit la graine de leur partie.
+ *     L'ÉTALON FAIT PARTIE DE LA GRILLE (`reference`) : les grilles publiées notent contre
+ *     la gestion neutre du secteur. Le bilan des parties juge, lui, contre « un bon
+ *     gestionnaire » ; si l'examen devait en changer, ce serait une nouvelle version de
+ *     grille, et la notation figée de chaque copie dit contre quoi elle a été notée.
  *  3. CHAQUE LIGNE EST BORNÉE DE 0 À SON MAXIMUM, et la note de 0 à 100. Une ligne qui ne
  *     s'applique pas (les questions éteintes, aucune situation rencontrée) sort du calcul,
  *     et les points des autres sont rapportés à 100 dans la même proportion.
@@ -50,10 +54,32 @@ export interface LigneDeGrille {
   siQuestions?: true;
 }
 
+/**
+ * L'ÉTALON D'UNE GRILLE : contre qui les décisions du candidat sont rejouées. Son code est
+ * celui que le service de rejeu connaît (`Etalon`, pedagogy/merite/etalons.ts) ; son nom et
+ * sa définition s'impriment dans la grille, le relevé et le rapport d'accréditation.
+ */
+export interface ReferenceDeLaGrille {
+  code: "gestion-neutre" | "bon-gestionnaire";
+  nom: string;
+  /** Ce qu'elle fait, en une phrase. */
+  definition: string;
+}
+
+/** La gestion neutre du secteur : l'étalon des grilles publiées. */
+export const REFERENCE_GESTION_NEUTRE: ReferenceDeLaGrille = {
+  code: "gestion-neutre",
+  nom: "la gestion neutre du secteur",
+  definition:
+    "La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour : le prix du marché, un volume qui suit les ventes, un marketing et une qualité au niveau du marché, rien de ce que le niveau n'ouvre pas. Elle ne réagit à personne.",
+};
+
 export interface GrilleDeNotation {
   code: string;
   nom: string;
   version: number;
+  /** L'étalon : en changer impose une nouvelle version de la grille. */
+  reference: ReferenceDeLaGrille;
   /** La date de publication de cette version (AAAA-MM-JJ). */
   publiee: string;
   /** Ce que la grille privilégie, en une phrase (le choix de l'enseignant). */
@@ -71,21 +97,21 @@ export interface GrilleDeNotation {
  * LES LIGNES : LEUR MÉTHODE ET LEURS COMPÉTENCES (communes aux grilles).
  * ------------------------------------------------------------------------- */
 
-/** Au-delà de deux écarts-types de la référence, l'écart moyen vaut tous ses points (ou aucun). */
+/** Au-delà de deux écarts-types de l'étalon, l'écart moyen vaut tous ses points (ou aucun). */
 export const ECARTS_TYPES_A_SATURATION = 2;
 
 const LIGNES: Record<CodeDeLigne, Omit<LigneDeGrille, "points">> = {
   "battre-la-reference": {
     code: "battre-la-reference",
-    libelle: "Décisions qui battent la gestion de référence",
+    libelle: "Décisions qui battent la gestion neutre du secteur",
     methode:
-      "La part des {marches} marchés possibles où le résultat net cumulé des décisions du candidat dépasse celui de la gestion de référence.",
+      "La part des {marches} marchés possibles où le résultat net cumulé des décisions du candidat dépasse celui de la gestion neutre du secteur.",
     competences: [{ code: "decision-incertitude", part: 1 }],
   },
   "ecart-a-la-reference": {
     code: "ecart-a-la-reference",
-    libelle: "Écart moyen à la gestion de référence",
-    methode: `L'écart moyen de résultat net cumulé avec la gestion de référence, en écarts-types de celle-ci sur les {marches} marchés : zéro vaut la moitié des points, ${ECARTS_TYPES_A_SATURATION} écarts-types au-dessus les valent tous, ${ECARTS_TYPES_A_SATURATION} en dessous aucun.`,
+    libelle: "Écart moyen à la gestion neutre du secteur",
+    methode: `L'écart moyen de résultat net cumulé avec la gestion neutre du secteur, en écarts-types de celle-ci sur les {marches} marchés : zéro vaut la moitié des points, ${ECARTS_TYPES_A_SATURATION} écarts-types au-dessus les valent tous, ${ECARTS_TYPES_A_SATURATION} en dessous aucun.`,
     competences: [
       { code: "strategie", part: 0.4 },
       { code: "marketing-prix", part: 0.3 },
@@ -150,7 +176,7 @@ export const methodeDe = (l: Pick<LigneDeGrille, "methode">, marches: number): s
  * « BUSINESS ARENA 2026 », LA GRILLE PAR DÉFAUT.
  *
  *   · qualité des décisions, 40 points (25 + 15) : c'est ce qu'un examen de simulation
- *     mesure et qu'aucune autre épreuve ne mesure ; la régularité (battre la référence)
+ *     mesure et qu'aucune autre épreuve ne mesure ; la régularité (battre la gestion neutre)
  *     compte plus que l'ampleur (l'écart moyen), pour qu'un coup heureux ne fasse pas une
  *     note ;
  *   · tenue financière, 35 points (15 + 10 + 10) : ce qu'un jury attend d'un futur
@@ -166,6 +192,7 @@ export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
   nom: "Business Arena 2026",
   version: 1,
   publiee: "2026-10-12",
+  reference: REFERENCE_GESTION_NEUTRE,
   propos: "La grille par défaut : la qualité des décisions d'abord, la tenue financière ensuite.",
   lignes: [
     ligne("battre-la-reference", 25),
@@ -181,7 +208,7 @@ export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
       famille: "Qualité des décisions",
       lignes: ["battre-la-reference", "ecart-a-la-reference"],
       pourquoi:
-        "c'est ce que la simulation mesure et qu'aucune autre épreuve ne mesure. La régularité (battre la gestion de référence) compte plus que l'ampleur (l'écart moyen), pour qu'un coup heureux ne fasse pas une note.",
+        "c'est ce que la simulation mesure et qu'aucune autre épreuve ne mesure. La régularité (battre la gestion neutre du secteur) compte plus que l'ampleur (l'écart moyen), pour qu'un coup heureux ne fasse pas une note.",
     },
     {
       famille: "Tenue financière",
@@ -212,6 +239,7 @@ export const GRILLE_DECISION_D_ABORD: GrilleDeNotation = {
   nom: "Décision d'abord",
   version: 1,
   publiee: "2026-10-12",
+  reference: REFERENCE_GESTION_NEUTRE,
   propos: "Pour mesurer d'abord le jugement : la qualité des décisions pèse plus de la moitié de la note.",
   lignes: [
     ligne("battre-la-reference", 35),
@@ -226,7 +254,7 @@ export const GRILLE_DECISION_D_ABORD: GrilleDeNotation = {
     {
       famille: "Qualité des décisions",
       lignes: ["battre-la-reference", "ecart-a-la-reference"],
-      pourquoi: "battre la gestion de référence et l'écart moyen font plus de la moitié de la note.",
+      pourquoi: "battre la gestion neutre du secteur et l'écart moyen font plus de la moitié de la note.",
     },
     {
       famille: "Tenue financière",
@@ -256,6 +284,13 @@ export const GRILLE_PAR_DEFAUT = GRILLE_BUSINESS_ARENA_2026.code;
 
 export const grilleParCode = (code: string | null | undefined): GrilleDeNotation | null =>
   GRILLES.find((g) => g.code === code) ?? null;
+
+/**
+ * L'étalon d'une grille figée. Une copie gardée avant que la grille ne l'écrive n'a pas le
+ * champ : elle a été publiée, et notée, contre la gestion neutre du secteur.
+ */
+export const referenceDeLaGrille = (g: Omit<GrilleDeNotation, "reference"> & { reference?: ReferenceDeLaGrille }): ReferenceDeLaGrille =>
+  g.reference ?? REFERENCE_GESTION_NEUTRE;
 
 /** Une grille est bien formée : ses points font 100, chaque ligne rattache des compétences qui somment à 1. */
 export function erreursDeLaGrille(g: GrilleDeNotation): string[] {
@@ -292,7 +327,7 @@ export interface MesuresDeLaCopie {
   sur: number;
   /** Les décisions du candidat, marché par marché. */
   joueur: readonly MarcheDuRejeu[];
-  /** La gestion de référence, sur les mêmes marchés, dans le même ordre. */
+  /** L'étalon de la grille (la gestion neutre du secteur), sur les mêmes marchés, dans le même ordre. */
   reference: readonly MarcheDuRejeu[];
   /** Les situations rencontrées et leurs scores (0 à 1) ; null : les questions sont éteintes. */
   situations: { scores: readonly number[] } | null;
@@ -330,8 +365,8 @@ export function mesurerLaLigne(
     case "ecart-a-la-reference": {
       const refs = m.reference.map((r) => r.resultat);
       const ecart = moyenne(m.joueur.map((j, i) => j.resultat - refs[i]!));
-      // L'écart-type de la référence sur les trente marchés, avec un plancher : une
-      // référence presque constante ne doit pas faire d'un euro un écart immense.
+      // L'écart-type de l'étalon sur les trente marchés, avec un plancher : un étalon
+      // presque constant ne doit pas faire d'un euro un écart immense.
       const echelle = Math.max(ecartType(refs), 0.05 * moyenne(refs.map(Math.abs)), 1);
       const z = ecart / echelle;
       return {
@@ -396,7 +431,8 @@ export interface CompetenceNotee {
 export interface CopieNotee {
   /** La note sur 100, une décimale. */
   note: number;
-  grille: { code: string; version: number; nom: string };
+  /** La grille, sa version, et l'étalon contre lequel la copie a été notée. */
+  grille: { code: string; version: number; nom: string; reference: ReferenceDeLaGrille };
   lignes: LigneNotee[];
   /** Les lignes de la grille qui ne s'appliquaient pas, et pourquoi. */
   horsCalcul: { code: CodeDeLigne; libelle: string; raison: string }[];
@@ -459,7 +495,12 @@ export function noterLaCopie(
   }
   return {
     note,
-    grille: { code: grille.code, version: grille.version, nom: grille.nom },
+    grille: {
+      code: grille.code,
+      version: grille.version,
+      nom: grille.nom,
+      reference: { ...referenceDeLaGrille(grille) },
+    },
     lignes,
     horsCalcul,
     competences,
@@ -467,7 +508,16 @@ export function noterLaCopie(
 }
 
 /**
- * La part des décisions qui battent la référence, seule (« la note de décision ») : ce que
+ * L'étalon d'une copie notée. Une notation gardée avant qu'elle ne l'écrive a été notée
+ * contre la gestion neutre du secteur (c'était l'étalon des grilles publiées).
+ */
+export const referenceDeLaCopie = (c: {
+  grille: Omit<CopieNotee["grille"], "reference"> & { reference?: ReferenceDeLaGrille };
+}): ReferenceDeLaGrille =>
+  c.grille.reference ?? REFERENCE_GESTION_NEUTRE;
+
+/**
+ * La part des décisions qui battent l'étalon, seule (« la note de décision ») : ce que
  * la garde de neutralisation compare entre deux candidats aux mêmes décisions.
  */
 export function noteDeDecision(copie: CopieNotee): number {

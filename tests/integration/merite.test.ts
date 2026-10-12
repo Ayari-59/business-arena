@@ -28,6 +28,8 @@ import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { neutralDecisions } from "@/engine/bots";
 import type { CompanyState, RoundDecisions } from "@/engine/types";
 import { rejouer } from "@/pedagogy/merite/rejeu";
+import { partieDeLaReference } from "@/pedagogy/merite/reference";
+import { GRAINES_DU_MERITE } from "@/pedagogy/merite/verdict";
 import {
   ecartAvecLaPartie,
   lirePartieARejouer,
@@ -177,7 +179,17 @@ describe("le verdict : calculé une fois, gardé, relu", () => {
     expect(v.joue.place).toBeLessThanOrEqual(30);
     expect(v.constats.length).toBeGreaterThanOrEqual(2);
     expect(premier.duree).toBeGreaterThan(0);
-    console.info(`[merite] calcul complet : ${premier.duree} ms, cas ${v.cas}, ${v.battues}/30`);
+    // LA RÉFÉRENCE DU VERDICT : un bon gestionnaire qui a joué le marché de la
+    // partie, ses décisions rejouées telles quelles, comme celles du joueur.
+    const lue = (await lirePartieARejouer(gameId)) as PartieLue;
+    const laReference = partieDeLaReference(lue.partie, lue.preset?.decisions ?? null);
+    expect(laReference.decisions).toHaveLength(lue.partie.tours);
+    for (const i of [0, 13, 29]) {
+      expect(v.reference[i]!.resultat).toBe(rejouer(laReference, GRAINES_DU_MERITE[i]!).joueur.resultatNetCumule);
+    }
+    console.info(
+      `[merite] calcul complet : ${premier.duree} ms, cas ${v.cas}, ${v.battues}/30, écart ${Math.round(v.ecart.relatif * 100)} %`,
+    );
   }, 120_000);
 
   it("deux lectures simultanées ne calculent qu'une fois", async () => {
