@@ -47,6 +47,8 @@ export interface Personne {
   custom?: Record<string, string>;
   selection?: boolean;
   affichage?: string;
+  /** Des revendications de plus (le service de notes, tests/helpers/carnet-de-notes.ts). */
+  revendications?: Record<string, unknown>;
 }
 
 const b64 = (o: unknown) => Buffer.from(JSON.stringify(o), "utf8").toString("base64url");
@@ -161,7 +163,7 @@ export class SimulateurLti {
         data: "donnees-opaques",
       };
     }
-    return { ...c, ...autres };
+    return { ...c, ...(p.revendications ?? {}), ...autres };
   }
 
   idToken(p: Personne, nonce: string, autres: Record<string, unknown> = {}): string {

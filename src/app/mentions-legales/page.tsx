@@ -181,15 +181,17 @@ export default function MentionsLegalesPage() {
                     Comptes reçus d&apos;une plateforme d&apos;enseignement (LTI)
                   </td>
                   <td className="py-2 pr-3">
-                    Identifiant technique de la personne chez la plateforme, gardé seulement sous
-                    forme d&apos;empreinte ; prénom s&apos;il est envoyé (pseudo de l&apos;élève) ;
+                    Identifiant technique de la personne chez la plateforme, gardé sous forme
+                    d&apos;empreinte, et chiffré pour un élève quand la plateforme accorde le retour
+                    des notes ; prénom s&apos;il est envoyé (pseudo de l&apos;élève) ;
                     rôle ; titres du cours et de l&apos;activité. Pour un enseignant seulement : nom
                     et courriel si la plateforme les envoie. Aucun courriel d&apos;élève.
                   </td>
                   <td className="py-2 pr-3">
                     Faire entrer la personne dans la partie ou la cohorte choisie par
-                    l&apos;enseignant, sans compte ni code (exécution du service demandé par
-                    l&apos;établissement)
+                    l&apos;enseignant, sans compte ni code ; renvoyer la note d&apos;un examen dans
+                    le carnet de notes de la plateforme, quand elle l&apos;accorde (exécution du
+                    service demandé par l&apos;établissement)
                   </td>
                   <td className="py-2">Durée du rattachement de la plateforme</td>
                 </tr>

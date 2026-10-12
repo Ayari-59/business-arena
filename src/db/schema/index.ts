@@ -15,3 +15,4 @@ export * from "./lti";
 export * from "./saml";
 export * from "./offres";
 export * from "./examens";
+export * from "./lti-notes";

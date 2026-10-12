@@ -1,4 +1,9 @@
 import { randomBytes } from "node:crypto";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { examens } from "@/db/schema";
+import { ETIQUETTE, NOTE_MAXIMALE } from "./ags/constantes";
+import { libelleDeLaColonne } from "./ags/regles";
 import { getTeacherGames } from "@/services/game.service";
 import { cohortesDeLEnseignant } from "@/services/cohortes.service";
 import { examensDeLEnseignant } from "@/services/examen.service";
@@ -165,6 +170,20 @@ export async function reponseDeSelection(args: {
     url: adressesDeLOutil(args.origine).lancement,
   };
   if (cible) item.custom = { [PARAMETRE_CIBLE]: ecrireCible(cible) };
+  // UN EXAMEN : la plateforme crée sa colonne de notes avec l'activité (lti/ags) ; ses
+  // lancements la désigneront, et la note publiée y arrivera. Rien pour une partie de
+  // classe ou une cohorte : l'outil n'y pose jamais de note.
+  if (cible?.type === "examen") {
+    const [e] = await db.select({ nom: examens.nom }).from(examens).where(eq(examens.id, cible.id));
+    if (e) {
+      item.lineItem = {
+        scoreMaximum: NOTE_MAXIMALE,
+        label: libelleDeLaColonne(e.nom),
+        resourceId: `examen:${cible.id}`,
+        tag: ETIQUETTE,
+      };
+    }
+  }
 
   const cles = clesDeLOutil();
   const iat = Math.floor(now.getTime() / 1000);

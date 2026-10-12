@@ -8,6 +8,8 @@ import { LancementRefuse, validerLancement } from "@/lti/lancement";
 import { COOKIE_STATE } from "@/lti/oidc";
 import { ecranDeSelection, originesDeLaPlateforme } from "@/lti/selection";
 import { creerTicket } from "@/lti/tickets";
+import { apresLeLancement } from "@/lti/ags/envois";
+import { plusTard } from "@/lti/ags/plus-tard";
 
 /**
  * LE LANCEMENT : la plateforme poste ici l'`id_token` (formulaire auto-soumis, depuis
@@ -57,6 +59,9 @@ export async function POST(request: Request): Promise<Response> {
   if (lancement.type === "selection") return ecranDeSelection(lancement);
 
   const aiguillage = await aiguiller(lancement);
+  // Le retour des notes (lti/ags) : la progression d'une partie de classe, après la réponse.
+  const lienId = aiguillage.contexte?.l;
+  if (lancement.role === "eleve" && lancement.ags && lienId) plusTard(() => apresLeLancement(lienId));
   if (lancement.affichage === "iframe" || lancement.affichage === "frame") {
     const ticket = await creerTicket({
       type: "ouverture",

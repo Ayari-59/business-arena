@@ -47,6 +47,7 @@ import { cleDeComparaison, comparer, type Comparaison } from "@/config/examen/co
 import { csvDeLExamen } from "@/config/examen/export";
 import { composerUnLot, graineDuRang, type LotDeGraines } from "@/pedagogy/examen/lot";
 import type { RoundDecisions } from "@/engine/types";
+import { synchroniserLesNotesDeLExamen } from "@/lti/ags/envois";
 
 /**
  * L'EXAMEN INDIVIDUEL, CÔTÉ SERVEUR (décision du propriétaire : « Lance l'examen individuel
@@ -576,6 +577,8 @@ export async function noterLaCopieDuCandidat(candidatId: string, { forcer = fals
 export async function noterLaCopieDeLaPartie(gameId: string): Promise<void> {
   const copie = await copieDeLaPartie(gameId);
   if (copie?.candidat.remisLe) await noterLaCopieDuCandidat(copie.candidat.id);
+  // Remise après la publication : la note part aussi vers la plateforme de cours (lti/ags).
+  if (copie?.candidat.remisLe && copie.examen.publieLe) await synchroniserLesNotesDeLExamen(copie.examen.id);
 }
 
 /* ---------------------------------------------------------------------------

@@ -5,6 +5,8 @@ import { CLAIM, MESSAGE, roleRetenu, VERSION_LTI, type RoleLti } from "./constan
 import { clePubliqueDepuisJwk, decoderJwt, exigerRS256, JwtInvalide, verifierSignature } from "./jwt";
 import { cleDeLaPlateforme } from "./reseau";
 import { plateformeActive, type Plateforme } from "./plateformes";
+import { CLAIM_AGS } from "./ags/constantes";
+import { lireLaRevendication, type AgsDuLancement } from "./ags/regles";
 
 /**
  * LE LANCEMENT : VÉRIFIER L'`id_token` AVANT DE CROIRE UN MOT DE CE QU'IL DIT.
@@ -58,6 +60,8 @@ export interface Lancement {
   selection: { retour: string; donnees: string | null; types: string[] } | null;
   /** Où la plateforme affiche l'outil : « window », « iframe », « frame »… */
   affichage: string | null;
+  /** Le service de notes accordé à l'activité (lti/ags), ou null : aucun. */
+  ags?: AgsDuLancement | null;
 }
 
 const texte = (v: unknown, max = 300): string | null =>
@@ -180,5 +184,6 @@ export async function validerLancement(args: {
     personnalise,
     selection: retour ? { retour, donnees: texte(reglages.data, 2000), types } : null,
     affichage: texte(objet(c[CLAIM.presentation]).document_target, 20),
+    ags: lireLaRevendication(c[CLAIM_AGS]),
   };
 }

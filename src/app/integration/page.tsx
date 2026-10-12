@@ -131,7 +131,9 @@ export default function IntegrationPage() {
             <ul className="list-disc space-y-2 pl-6">
               <li>
                 Pour chaque personne, l&apos;identifiant technique que la plateforme lui donne. Nous n&apos;en gardons
-                qu&apos;une empreinte chiffrée : il n&apos;est jamais stocké en clair.
+                qu&apos;une empreinte chiffrée : il n&apos;est jamais stocké en clair. Quand la plateforme accorde le
+                retour des notes, celui d&apos;un élève est aussi gardé chiffré : c&apos;est l&apos;adresse de sa note
+                dans le carnet.
               </li>
               <li>Le prénom, si la plateforme l&apos;envoie : il devient le pseudo de l&apos;élève.</li>
               <li>Le rôle dans le cours (enseignant ou élève), le titre du cours et celui de l&apos;activité.</li>
@@ -147,6 +149,40 @@ export default function IntegrationPage() {
                 mentions légales
               </Link>
               .
+            </p>
+          </Section>
+
+          <Section id="notes" titre="Les notes dans le carnet de la plateforme">
+            <p>
+              Business Arena demande à l&apos;inscription le service de notes de LTI Advantage (Assignment and Grade
+              Services). Dans Moodle, il se règle dans la configuration de l&apos;outil : « Services IMS LTI
+              Assignment and Grade », sur « Utiliser ce service pour la synchronisation des notes et la gestion des
+              colonnes ». Sans ce service, rien ne change : l&apos;activité fonctionne comme avant, et les notes se
+              recopient à la main.
+            </p>
+            <ul className="list-disc space-y-2 pl-6">
+              <li>
+                <strong className="text-slate-100">L&apos;examen individuel</strong> : la note sur 100 de chaque
+                candidat venu du cours part dans le carnet à la publication des résultats, pas avant, avec le nom de la
+                grille et sa version en commentaire. Retirer la publication remet la note en attente. Une copie remise
+                sans note n&apos;envoie rien.
+              </li>
+              <li>
+                <strong className="text-slate-100">La colonne</strong> : celle que la plateforme crée avec
+                l&apos;activité quand l&apos;enseignant passe par « Sélectionner le contenu » ; sinon, Business Arena
+                en crée une, une seule par examen, nommée « Business Arena · » suivi du nom de l&apos;examen.
+              </li>
+              <li>
+                <strong className="text-slate-100">La partie de classe</strong> : aucune note, seulement la
+                progression (en cours, terminée), et seulement dans une colonne que la plateforme a créée pour
+                l&apos;activité. Une partie se joue en équipe, face à un marché : la note reste celle de
+                l&apos;enseignant.
+              </li>
+            </ul>
+            <p>
+              Sur la page de l&apos;examen, l&apos;enseignant voit combien de notes sont parties, l&apos;erreur
+              éventuelle de la plateforme, et peut renvoyer les notes. Une plateforme momentanément injoignable est
+              relancée d&apos;elle-même.
             </p>
           </Section>
 
@@ -212,8 +248,7 @@ export default function IntegrationPage() {
               </Link>
             </p>
             <p>
-              À venir : le renvoi des notes de fin de partie dans le carnet de notes de la plateforme, et la
-              connexion à l&apos;ENT du secondaire (GAR).
+              À venir : la connexion à l&apos;ENT du secondaire (GAR).
             </p>
           </Section>
         </div>

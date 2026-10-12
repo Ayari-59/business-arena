@@ -40,13 +40,18 @@ export const pilotageDe = (c: { cibleType: string | null; gameId: string | null;
 
 export const ecrireCible = (c: Cible): string => `${c.type}:${c.id}`;
 
-/** L'activité de ce lancement, créée au premier passage ; ses titres suivent la plateforme. */
+/** L'activité de ce lancement, créée au premier passage ; ses titres et son service de notes suivent la plateforme. */
 export async function lienDuLancement(l: Lancement): Promise<Lien> {
   const r = l.ressource!;
   const valeurs = {
     contexteId: l.contexte?.id ?? null,
     contexteTitre: l.contexte?.titre ?? null,
     titre: r.titre,
+    // Le service de notes, tel que la plateforme l'accorde À CE LANCEMENT (lti/ags) : une
+    // plateforme qui cesse de l'accorder cesse de recevoir des notes.
+    agsPortees: l.ags?.portees ?? null,
+    agsLineitems: l.ags?.colonnes ?? null,
+    agsLineitem: l.ags?.colonne ?? null,
   };
   const [lien] = await db
     .insert(ltiLiens)

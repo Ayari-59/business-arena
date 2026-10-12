@@ -6,6 +6,8 @@ import { lireContexte } from "@/lti/contexte";
 import { lienParId, pilotageDe } from "@/lti/liens";
 import { plateformeParId } from "@/lti/plateformes";
 import { ouverturesDeLOrganisation } from "@/lti/acces";
+import { accordeLesNotes, nomDeLaPlateforme } from "@/lti/ags/regles";
+import { phraseDeLActivite } from "@/lti/ags/textes";
 import { getTeacherGames } from "@/services/game.service";
 import { cohortesDeLEnseignant } from "@/services/cohortes.service";
 import { examensDeLEnseignant } from "@/services/examen.service";
@@ -172,6 +174,14 @@ export default async function ActiviteLtiPage({
             {message.texte} {message.tarifs ? <Tarifs /> : null}
           </p>
         ) : null}
+
+        <p className="rounded-xl encadre-neutre px-4 py-3 text-sm leading-relaxed text-slate-200" data-retour-des-notes={accordeLesNotes(lien.agsPortees) ? "accorde" : "non-accorde"}>
+          {phraseDeLActivite({
+            plateforme: nomDeLaPlateforme(plateforme.nom),
+            accorde: accordeLesNotes(lien.agsPortees),
+            colonne: !!lien.agsLineitem,
+          })}
+        </p>
 
         {!ouvertures.partie && !ouvertures.cohorte ? (
           <p className="rounded-xl encadre-neutre px-4 py-3 text-sm text-slate-200" data-sans-licence="">

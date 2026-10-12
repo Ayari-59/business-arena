@@ -9,6 +9,7 @@ import { compteEleve, compteEnseignant, PlafondAtteint } from "./comptes";
 import { poserContexte, type ContexteLti } from "./contexte";
 import type { Lancement } from "./lancement";
 import { lienDuLancement, lienSansCibleOrpheline, pilotageDe, relierDepuisLaSelection } from "./liens";
+import { retenirLEleve } from "./ags/envois";
 
 /**
  * OÙ MÈNE UN LANCEMENT VÉRIFIÉ.
@@ -100,6 +101,9 @@ export async function aiguiller(l: Lancement): Promise<Aiguillage> {
   const { userId, pseudo } = await compteEleve(l);
   let lien = await lienSansCibleOrpheline(await lienDuLancement(l));
   lien = await relierDepuisLaSelection(lien, l);
+  // Le retour des notes (lti/ags) : l'adresse de la note de cet élève, chiffrée, si la
+  // plateforme l'accorde à l'activité. Rien sinon.
+  await retenirLEleve({ lienId: lien.id, userId, sub: l.sub, portees: lien.agsPortees });
   const base = {
     invite: userId,
     effacerSession: true,

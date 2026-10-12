@@ -25,7 +25,11 @@ import { BoutonCopierLeLien } from "@/components/bouton-copier-le-lien";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { CompetencesDeLaPromotion, HistogrammeDesNotes } from "@/components/examen/graphiques-de-l-examen";
 import { SuiviEnDirect } from "@/components/examen/suivi-en-direct";
-import { cloreExamenAction, publierExamenAction, retirerPublicationAction } from "../actions";
+import { RetourDesNotes } from "@/components/examen/retour-des-notes";
+import { etatDuRetourDesNotes, envoisEnCours } from "@/lti/ags/etat";
+import { synchroniserLesNotesDeLExamen } from "@/lti/ags/envois";
+import { plusTard } from "@/lti/ags/plus-tard";
+import { cloreExamenAction, publierExamenAction, renvoyerLesNotesAction, retirerPublicationAction } from "../actions";
 
 export const metadata: Metadata = {
   title: "Examen individuel",
@@ -49,6 +53,7 @@ const FAITS: Record<string, string> = {
   publie: "Les résultats sont publiés : chaque candidat voit sa note et son relevé.",
   retire: "La publication est retirée : les candidats ne voient plus que leur reçu.",
   clos: "L'examen est clos : plus personne n'entre, les copies en cours ont été remises.",
+  renvoi: "Les notes repartent vers la plateforme de cours : l'encart du carnet de notes se met à jour de lui-même.",
 };
 
 const heure = (d: Date) =>
@@ -76,6 +81,10 @@ export default async function ExamenPage({
     origineDeLaRequete(),
   ]);
   if (!suivi) notFound();
+  // LE CARNET DE NOTES DE LA PLATEFORME (lti/ags) : son état, et, après la réponse, ce qui
+  // attend encore (une copie notée depuis, une erreur temporaire échue).
+  const retour = await etatDuRetourDesNotes(suivi.examen.id);
+  if (retour?.accorde) plusTard(() => synchroniserLesNotesDeLExamen(suivi.examen.id));
   const { examen } = suivi;
   const comparaison = await comparaisonNationale(examen);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
@@ -92,7 +101,10 @@ export default async function ExamenPage({
 
   return (
     <main id="main" className="pb-16">
-      <SuiviEnDirect actif={enCours > 0} />
+      <SuiviEnDirect
+        actif={enCours > 0 || envoisEnCours(retour)}
+        toutesLesMs={enCours === 0 && envoisEnCours(retour) ? 5_000 : undefined}
+      />
       <EnTeteDePage
         surtitre="Examen individuel"
         titre={examen.nom}
@@ -249,6 +261,8 @@ export default async function ExamenPage({
               : "Tant que les résultats ne sont pas publiés, chaque candidat ne voit que son reçu."}
           </p>
         </section>
+
+        {retour ? <RetourDesNotes etat={retour} renvoyer={renvoyerLesNotesAction.bind(null, examen.id)} /> : null}
 
         <Rubrique note={suivi.notees.length ? compter(suivi.notees.length, "copie notée", "copies notées") : undefined}>
           Résultats

@@ -153,6 +153,18 @@ export const ltiLiens = pgTable(
     examenId: uuid("examen_id").references(() => examens.id, { onDelete: "set null" }),
     configurePar: uuid("configure_par").references(() => users.id, { onDelete: "set null" }),
     configureLe: timestamp("configure_le", { withTimezone: true }),
+    /**
+     * LE RETOUR DES NOTES (migration 0043, lti/ags) : ce que la plateforme a accordé au
+     * dernier lancement. `agsPortees` nul : pas de service de notes pour cette activité.
+     * `agsLineitem` : la colonne créée par la plateforme (sélection de contenu, ou
+     * « accepter les notes de l'outil ») ; `agsLineitemCree` : celle que l'outil a créée
+     * faute de mieux, pour la ressource `agsRessource` (« examen:<id> »).
+     */
+    agsPortees: jsonb("ags_portees").$type<string[]>(),
+    agsLineitems: text("ags_lineitems"),
+    agsLineitem: text("ags_lineitem"),
+    agsLineitemCree: text("ags_lineitem_cree"),
+    agsRessource: text("ags_ressource"),
     ...timestamps,
   },
   (t) => [

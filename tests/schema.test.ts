@@ -24,6 +24,8 @@ const EXPECTED_TABLES = [
   "episode_objectifs",
   "lti_plateformes", "lti_jetons_inscription", "lti_nonces", "lti_tickets", "lti_liens",
   "lti_comptes", "lti_refus",
+  // Le retour des notes dans le carnet de la plateforme (migration 0043, lti/ags).
+  "lti_notes_eleves", "lti_notes_envois",
   "saml_idps", "saml_federations", "saml_etablissements", "saml_comptes", "saml_requetes",
   "saml_assertions", "saml_refus",
   "inscrits_journal",

@@ -9,9 +9,12 @@ import {
   ExamenRefuseError,
   cloreLExamen,
   creerExamen,
+  examenDeLEnseignant,
   publierLesResultats,
   type SaisieDExamen,
 } from "@/services/examen.service";
+import { envoyerCeQuiAttend, preparerLesNotesDeLExamen, ressourceDeLExamen } from "@/lti/ags/envois";
+import { plusTard } from "@/lti/ags/plus-tard";
 
 /**
  * LES GESTES DE L'ENSEIGNANT SUR SES EXAMENS.
@@ -64,10 +67,20 @@ export async function creerExamenAction(formData: FormData): Promise<void> {
   redirect(`/teacher/examens/${id}?cree=1`);
 }
 
-/** Publier les résultats : chaque candidat voit sa note et son relevé. */
+/**
+ * LE CARNET DE NOTES DE LA PLATEFORME (lti/ags) : ce qui doit partir est posé au journal
+ * tout de suite (l'encart le montre « en cours »), et part après la réponse.
+ */
+async function renvoyerVersLaPlateforme(examenId: string, forcer = false): Promise<void> {
+  await preparerLesNotesDeLExamen(examenId, { forcer });
+  plusTard(() => envoyerCeQuiAttend(ressourceDeLExamen(examenId)));
+}
+
+/** Publier les résultats : chaque candidat voit sa note et son relevé ; la plateforme la reçoit. */
 export async function publierExamenAction(examenId: string): Promise<void> {
   const enseignantId = await enseignant();
   if (!(await publierLesResultats(enseignantId, examenId, true))) redirect("/teacher/examens?refus=introuvable");
+  await renvoyerVersLaPlateforme(examenId);
   revalidatePath(`/teacher/examens/${examenId}`);
   redirect(`/teacher/examens/${examenId}?fait=publie`);
 }
@@ -76,6 +89,7 @@ export async function publierExamenAction(examenId: string): Promise<void> {
 export async function retirerPublicationAction(examenId: string): Promise<void> {
   const enseignantId = await enseignant();
   if (!(await publierLesResultats(enseignantId, examenId, false))) redirect("/teacher/examens?refus=introuvable");
+  await renvoyerVersLaPlateforme(examenId);
   revalidatePath(`/teacher/examens/${examenId}`);
   redirect(`/teacher/examens/${examenId}?fait=retire`);
 }
@@ -86,4 +100,13 @@ export async function cloreExamenAction(examenId: string): Promise<void> {
   if (!(await cloreLExamen(enseignantId, examenId))) redirect("/teacher/examens?refus=introuvable");
   revalidatePath(`/teacher/examens/${examenId}`);
   redirect(`/teacher/examens/${examenId}?fait=clos`);
+}
+
+/** Renvoyer les notes à la plateforme : chaque ligne repart, celles déjà reçues comprises. */
+export async function renvoyerLesNotesAction(examenId: string): Promise<void> {
+  const enseignantId = await enseignant();
+  if (!(await examenDeLEnseignant(enseignantId, examenId))) redirect("/teacher/examens?refus=introuvable");
+  await renvoyerVersLaPlateforme(examenId, true);
+  revalidatePath(`/teacher/examens/${examenId}`);
+  redirect(`/teacher/examens/${examenId}?fait=renvoi`);
 }

@@ -19,6 +19,7 @@ import {
   type Plateforme,
 } from "./plateformes";
 import { demanderJson, urlDePlateformeAdmise } from "./reseau";
+import { PORTEES_DEMANDEES } from "./ags/constantes";
 
 /**
  * L'INSCRIPTION DYNAMIQUE (IMS LTI Dynamic Registration), celle de Moodle 3.10 et 4.x.
@@ -115,7 +116,9 @@ export function configurationDeLOutil(origine: string) {
     jwks_uri: a.jwks,
     logo_uri: `${origine}/icon.png`,
     token_endpoint_auth_method: "private_key_jwt",
-    scope: "",
+    // Le service de notes (AGS) : créer la colonne d'un examen, lire les résultats, poser
+    // les notes (lti/ags). Une plateforme qui ne l'accorde pas reste branchée comme avant.
+    scope: PORTEES_DEMANDEES.join(" "),
     [CONFIGURATION_OUTIL]: {
       domain: new URL(origine).host,
       description:

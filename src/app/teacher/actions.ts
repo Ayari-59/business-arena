@@ -53,6 +53,8 @@ import { affecterEleve } from "@/services/affectation.service";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 import { OffreRequiseError } from "@/services/acces.service";
 import { LIBELLES_DU_DEVIS, lienDuDevis } from "@/config/tarifs";
+import { synchroniserLaPartie } from "@/lti/ags/envois";
+import { plusTard } from "@/lti/ags/plus-tard";
 
 export interface FormState {
   error: string | null;
@@ -352,7 +354,10 @@ export async function closeRoundAction(
   const brut = Number(formData.get("roundIndex"));
   const expectedRound = Number.isInteger(brut) && brut > 0 ? brut : undefined;
   try {
-    await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
+    const { finished } = await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
+    // La partie est finie : la progression de ses élèves venus d'une plateforme part,
+    // « terminée », vers le carnet de notes (lti/ags), après la réponse.
+    if (finished) plusTard(() => synchroniserLaPartie(gameId));
   } catch (error) {
     return { error: error instanceof Error ? error.message : "La clôture a échoué." };
   }
