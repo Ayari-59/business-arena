@@ -118,7 +118,7 @@ export function CompetitionCreateForm({
                 href={LIEN_TARIFS}
                 className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
               >
-                Voir les tarifs
+                Voir les offres
               </a>
             </>
           ) : null}

@@ -756,7 +756,7 @@ export default async function TeacherGamePage({
                 <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
                 Export tableur · {MARQUE_DE_L_ARENE}{" "}
                 <Link href={LIEN_TARIFS} prefetch={false} className="underline underline-offset-4">
-                  Voir les tarifs
+                  Voir les offres
                 </Link>
               </span>
             )}

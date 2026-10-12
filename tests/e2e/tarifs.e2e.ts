@@ -235,7 +235,7 @@ describe("« Tarifs » se trouve sans ouvrir le menu (audit C-07)", () => {
       const lu = (await ligne.innerText()).replace(/[\u202f\u00a0]/g, " ");
       expect(lu).toContain("Les offres Classe, Programme et Campus se construisent sur mesure, sur devis.");
       expect(lu, "un montant dans la bande finale").not.toMatch(/€|par an\b/);
-      expect(await ligne.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+      expect(await ligne.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
       await contexte.close();
     });
   }

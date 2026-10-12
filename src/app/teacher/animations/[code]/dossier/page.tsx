@@ -77,7 +77,7 @@ export default async function DossierEnseignantPage({
           </Link>{" "}
           ·{" "}
           <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
-            Voir les tarifs
+            Voir les offres
           </Link>
         </p>
       </main>

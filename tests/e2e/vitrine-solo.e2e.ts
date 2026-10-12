@@ -101,7 +101,7 @@ describe("la vitrine à deux étages", () => {
       "Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.",
     );
     expect(await message.innerText()).toContain("Offre Classe, Programme ou Campus");
-    expect(await message.getByRole("link", { name: /Voir les tarifs/ }).getAttribute("href")).toBe(
+    expect(await message.getByRole("link", { name: /Voir les offres/ }).getAttribute("href")).toBe(
       "/tarifs",
     );
     // Un compte enseignant n'ouvre pas ces niveaux, une licence le fait : l'encadré ne

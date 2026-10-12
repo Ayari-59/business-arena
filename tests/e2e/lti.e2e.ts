@@ -217,7 +217,7 @@ describe("une organisation sans licence", () => {
     expect(await lancer(p, { sub: "prof-sans", role: "enseignant", ressource: "act" }, simSansLicence)).toBe("/lti/activite");
     const vu = await texte(p);
     expect(vu).toContain(REFUS_DE_LA_CLASSE);
-    expect(await p.getByRole("link", { name: "Voir les tarifs" }).count()).toBeGreaterThan(0);
+    expect(await p.getByRole("link", { name: "Voir les offres" }).count()).toBeGreaterThan(0);
     expect(await p.locator('select[name="level"]').count()).toBe(0);
   });
 

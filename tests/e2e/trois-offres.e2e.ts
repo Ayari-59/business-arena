@@ -177,7 +177,7 @@ describe("l'enseignant sous licence Classe : un jeu paramétré", () => {
     expect(await regle.getByRole("link", { name: /Demander un devis/ }).getAttribute("href")).toBe(
       "/devis?offre=programme",
     );
-    expect(await regle.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+    expect(await regle.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     await regle.scrollIntoViewIfNeeded();
     await page.evaluate(() => window.scrollBy(0, -260));
     await capture(page, "teacher-classe-formulaire");
@@ -214,7 +214,7 @@ describe("l'enseignant sous licence Classe : un jeu paramétré", () => {
     expect(refus).toContain("Votre offre Classe couvre L'ESCALE. NOVA n'en fait pas partie");
     expect(refus).toContain("l'offre Campus ouvre les 9 entreprises");
     expect(await alerte.locator("[data-devis-du-refus]").getAttribute("href")).toBe("/devis?offre=campus");
-    expect(await alerte.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+    expect(await alerte.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     // Rien n'a été créé.
     expect(
       await enBase(

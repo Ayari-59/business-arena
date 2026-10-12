@@ -164,7 +164,7 @@ export default async function EpisodesPage() {
                 prefetch={false}
                   className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  Voir les tarifs
+                  Voir les offres
                 </Link>
               </p>
               <ul className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -326,7 +326,7 @@ function CarteFermee({
                 prefetch={false}
           className="mt-auto self-start text-sm font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
-          Voir les tarifs
+          Voir les offres
           <span className="sr-only"> pour l&apos;épisode {ep.numero}</span>
         </Link>
       </div>

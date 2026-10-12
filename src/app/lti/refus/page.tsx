@@ -24,7 +24,7 @@ export default function RefusLtiPage() {
       />
       <div className={COLONNE_DE_PAGE}>
         <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
-          Voir les tarifs
+          Voir les offres
         </Link>
       </div>
     </main>

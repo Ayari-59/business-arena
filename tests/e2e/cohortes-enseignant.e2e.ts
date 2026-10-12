@@ -237,7 +237,7 @@ describe("un enseignant sans licence", () => {
     await aller(page, "/teacher/cohortes");
     const avertissement = page.locator("[data-cohortes-sans-licence]");
     expect(await avertissement.count()).toBe(1);
-    expect(await avertissement.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe(
+    expect(await avertissement.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe(
       "/tarifs",
     );
 
@@ -247,7 +247,7 @@ describe("un enseignant sans licence", () => {
     const refus = page.locator('[data-refus-de-cohorte="licence"]');
     expect(await refus.getAttribute("role")).toBe("alert");
     expect(await refus.textContent()).toContain(REFUS_SANS_LICENCE);
-    expect(await refus.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+    expect(await refus.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     expect(await page.getByText("Aucune cohorte pour l'instant.").count()).toBe(1);
     await ctx.close();
   }, 120_000);

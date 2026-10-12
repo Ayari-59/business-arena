@@ -29,7 +29,7 @@ export async function GET(
   if (!atelier) return new Response("Atelier introuvable.", { status: 404 });
   // Le dossier enseignant suit la règle de la classe (services/acces.service.ts).
   if (!(await dossierOuvert(session.userId))) {
-    return new Response(`${REFUS_DU_DOSSIER} Voir les tarifs : /tarifs`, { status: 402 });
+    return new Response(`${REFUS_DU_DOSSIER} Voir les offres : /tarifs`, { status: 402 });
   }
 
   return new Response(grilleEvaluationCsv(atelier), {

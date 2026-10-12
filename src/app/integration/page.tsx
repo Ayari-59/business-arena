@@ -203,7 +203,7 @@ export default function IntegrationPage() {
               Ce que couvre la licence de votre établissement, ni plus ni moins : les parties de classe avec une
               offre de l&apos;arène, les cohortes d&apos;épisodes avec les épisodes manager.{" "}
               <Link href="/tarifs" className={LIEN_A_L_ENCRE}>
-                Voir les tarifs
+                Voir les offres
               </Link>
             </p>
             <p>

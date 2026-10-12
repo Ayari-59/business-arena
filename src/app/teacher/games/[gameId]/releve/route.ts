@@ -72,7 +72,7 @@ export async function GET(
   // l'arène en cours, ou la fin récente d'une licence (les résultats restent
   // téléchargeables le temps que disent les conditions de vente).
   if (!(await releveOuvert(await getTeacherOrgId(session.userId)))) {
-    return new Response(`${REFUS_DU_RELEVE} Voir les tarifs : /tarifs`, { status: 402 });
+    return new Response(`${REFUS_DU_RELEVE} Voir les offres : /tarifs`, { status: 402 });
   }
 
   const lignes = [COLONNES.join(";")];

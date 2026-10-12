@@ -220,7 +220,7 @@ export default async function TeacherDashboard({
                 prefetch={false}
                 className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
               >
-                Voir les tarifs
+                Voir les offres
               </Link>
             </>
           ) : null}
@@ -310,7 +310,7 @@ export default async function TeacherDashboard({
             </Link>{" "}
             ·{" "}
             <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
-              Voir les tarifs
+              Voir les offres
             </Link>
           </p>
         ) : null}
@@ -340,7 +340,7 @@ export default async function TeacherDashboard({
             </Link>{" "}
             ·{" "}
             <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
-              Voir les tarifs
+              Voir les offres
             </Link>
           </p>
         ) : null}
@@ -489,7 +489,7 @@ export default async function TeacherDashboard({
                 prefetch={false}
                   className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  Voir les tarifs
+                  Voir les offres
                 </Link>
               </span>
             ) : null}
@@ -827,7 +827,7 @@ export default async function TeacherDashboard({
             <p data-concours-sans-licence="" className="mb-3 text-sm text-slate-300">
               {refusDeLaClasse(regle)}{" "}
               <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
-                Voir les tarifs
+                Voir les offres
               </Link>
             </p>
           ) : (blocageDuConcours ?? blocage) ? (

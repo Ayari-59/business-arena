@@ -227,7 +227,7 @@ export function MeriteDeLaPartieVue({
               prefetch={false}
               className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
-              voir les tarifs
+              voir les offres
             </Link>
             .
           </p>

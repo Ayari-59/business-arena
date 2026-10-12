@@ -29,7 +29,7 @@ export default function SansOffrePage() {
             Demander un devis
           </Link>
           <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
-            Voir les tarifs
+            Voir les offres
           </Link>
         </div>
         <p className="max-w-2xl text-base leading-relaxed text-slate-300">

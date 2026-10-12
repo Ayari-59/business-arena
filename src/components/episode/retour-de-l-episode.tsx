@@ -166,7 +166,7 @@ export function RetourDeLEpisode({
                 prefetch={false}
                   className="whitespace-nowrap font-semibold text-amber-300 underline"
                 >
-                  Voir les tarifs
+                  Voir les offres
                 </Link>
               </p>
             )}

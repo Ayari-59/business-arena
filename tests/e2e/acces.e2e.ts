@@ -73,7 +73,7 @@ describe("/jouer sans licence", () => {
     const dit = await encadre.innerText();
     expect(dit).toContain("Les niveaux 4 à 6 · Offre Classe, Programme ou Campus");
     expect(dit).toContain("Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.");
-    expect(await encadre.getByRole("link", { name: /Voir les tarifs/ }).getAttribute("href")).toBe(
+    expect(await encadre.getByRole("link", { name: /Voir les offres/ }).getAttribute("href")).toBe(
       "/tarifs",
     );
     // Chaque niveau fermé se nomme comme tel, et reste à l'écran.
@@ -166,7 +166,7 @@ describe("la partie d'un enseignant sans licence", () => {
     expect(await message.innerText()).toContain(
       "Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.",
     );
-    expect(await message.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe(
+    expect(await message.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe(
       "/tarifs",
     );
     // Un formulaire forgé : le serveur refuse, l'enseignant lit pourquoi, et où.
@@ -179,7 +179,7 @@ describe("la partie d'un enseignant sans licence", () => {
     await page.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
     const alerte = page.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
     expect(await alerte.innerText()).toContain("inclus dans les offres Classe, Programme et Campus");
-    expect(await alerte.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe(
+    expect(await alerte.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe(
       "/tarifs",
     );
     await c.close();
@@ -193,7 +193,7 @@ describe("la partie d'un enseignant sans licence", () => {
     const ferme = page.locator("[data-atelier-ferme]");
     await ferme.waitFor({ state: "visible" });
     expect(await ferme.innerText()).toContain("Offre Classe, Programme ou Campus");
-    expect(await ferme.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe(
+    expect(await ferme.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe(
       "/tarifs",
     );
     expect(await page.getByRole("link", { name: /Créer la partie dans mon espace/ }).count()).toBe(0);
@@ -228,7 +228,7 @@ describe("le catalogue des épisodes sans licence", () => {
     // Une carte fermée garde son titre et son accroche, et mène aux tarifs.
     const carte = page.locator(`[data-episode-ferme="${NON_DEMO.code}"]`);
     expect(await carte.textContent()).toContain(NON_DEMO.titre);
-    expect(await carte.getByRole("link", { name: /Voir les tarifs/, includeHidden: true }).getAttribute("href")).toBe(
+    expect(await carte.getByRole("link", { name: /Voir les offres/, includeHidden: true }).getAttribute("href")).toBe(
       "/tarifs",
     );
     await c.close();

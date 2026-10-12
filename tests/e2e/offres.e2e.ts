@@ -79,7 +79,7 @@ describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle
     await page.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
     const alerte = page.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
     expect(await alerte.innerText()).toContain(REFUS_DE_LA_CLASSE);
-    expect(await alerte.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+    expect(await alerte.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     await alerte.scrollIntoViewIfNeeded();
     await capture(page, "refus-classe-sans-licence");
     // Le concours aussi.
@@ -91,7 +91,7 @@ describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle
     const refusConcours = page.locator("[role=alert]", { hasText: "Le concours n'a pas été créé" });
     await refusConcours.waitFor({ state: "visible", timeout: 30_000 });
     expect(await refusConcours.innerText()).toContain(REFUS_DE_LA_CLASSE);
-    expect(await refusConcours.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+    expect(await refusConcours.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     expect(page.url()).toMatch(/\/teacher(\?|$)/);
     await c.close();
   });
@@ -159,7 +159,7 @@ describe("les épisodes non démo suivent la licence épisodes, pas la licence d
     const neutre = page.locator("[data-episode-ferme-eleve]");
     expect(await neutre.innerText()).toBe(EPISODE_FERME_POUR_L_ELEVE);
     const lu = await texte(page);
-    expect(lu).not.toMatch(/sur devis|Demander un devis|Voir les tarifs/);
+    expect(lu).not.toMatch(/sur devis|Demander un devis|Voir les offres/);
     await capture(page, "episode-ferme-eleve-390", { fullPage: true });
     await c.close();
   });

@@ -278,7 +278,7 @@ describe("un établissement de la fédération sans offre", () => {
     expect(arrivee).toBe("/etablissement/sans-offre");
     expect(await texte(page)).toContain("Votre établissement n'a pas encore d'offre Business Arena");
     expect(await page.getByRole("link", { name: "Demander un devis" }).getAttribute("href")).toBe("/devis");
-    expect(await page.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+    expect(await page.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     await capture(page, "etablissement-sans-offre");
 
     const eleve = await nouvellePage(390);

@@ -163,7 +163,7 @@ const optionalRate = (raw: FormDataEntryValue | null): number | undefined => {
  * valide. L'enseignant revenait sur sa liste, sans partie et sans un mot.
  */
 function echecCreation(raison: string, erreur?: unknown, geste: "creation" | "reprise" = "creation"): never {
-  // Un refus qui renvoie aux offres : la page ajoute « Voir les tarifs », et le devis de
+  // Un refus qui renvoie aux offres : la page ajoute « Voir les offres », et le devis de
   // l'offre qui ouvre ce qui bloque quand le refus la nomme (services/acces.service.ts).
   const offre =
     erreur instanceof OffreRequiseError ? `&offre=${erreur.offre ?? "1"}` : "";

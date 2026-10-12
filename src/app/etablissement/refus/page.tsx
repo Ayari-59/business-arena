@@ -47,7 +47,7 @@ export default async function RefusPage({ searchParams }: { searchParams: Promis
       <div className={`${COLONNE_DE_PAGE} grid justify-items-start gap-4`}>
         {cle === "plafond" ? (
           <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
-            Voir les tarifs
+            Voir les offres
           </Link>
         ) : (
           <>

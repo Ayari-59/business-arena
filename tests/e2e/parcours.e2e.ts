@@ -419,7 +419,7 @@ describe("parcours enseignant et élève", () => {
       // Une licence échue vaut une absence de licence : même règle, même message (PAR-02).
       const alerte = prof.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
       expect(await alerte.innerText()).toContain(REFUS_DE_LA_CLASSE);
-      expect(await alerte.getByRole("link", { name: "Voir les tarifs" }).getAttribute("href")).toBe("/tarifs");
+      expect(await alerte.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     } finally {
       await base.end();
     }

@@ -198,7 +198,7 @@ export default async function JouerPage({
                   licence={licence}
                   // L'encadré des niveaux fermés ne propose QUE les tarifs : un compte
                   // enseignant n'ouvre pas les niveaux 4 à 6, une licence le fait (PAR-14).
-                  liens={{ tarifs: { href: LIEN_TARIFS, libelle: "Voir les tarifs" } }}
+                  liens={{ tarifs: { href: LIEN_TARIFS, libelle: "Voir les offres" } }}
                   offre={{ marque: MARQUE_DE_L_ARENE, message: messageNiveauxReserves(config.vitrineSolo) }}
                   levels={DIFFICULTY_PRESETS.map((p) => ({
                     level: p.level,
