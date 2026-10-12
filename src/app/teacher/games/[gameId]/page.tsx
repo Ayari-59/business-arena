@@ -56,6 +56,8 @@ import { urlDeJonction } from "@/lib/qr";
 import { bouton } from "@/components/bouton";
 import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 import { resumePourLePilotage } from "@/services/pairs.service";
+import { CommencerLaVraiePartie } from "@/components/commencer-la-vraie-partie";
+import { EXPLICATION_DU_TOUR_D_ESSAI } from "@/config/tour-d-essai";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -80,6 +82,8 @@ export default async function TeacherGamePage({
   const { recommencer, supprimer } = await searchParams;
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
+  // L'ARCHIVE D'UN TOUR D'ESSAI ne se pilote pas : elle se relit, depuis sa partie.
+  if (view.essaiDe) redirect(`/teacher/games/${view.essaiDe}/essai`);
   const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
   // Les clés personnelles des élèves : à relire à qui a changé de poste et
   // perdu la sienne. La liste est vide tant que personne n'a rejoint.
@@ -98,6 +102,11 @@ export default async function TeacherGamePage({
   const coequipiers = await resumePourLePilotage(session.userId, gameId);
 
   const finished = view.status === "finished";
+  // LE TOUR D'ESSAI (config/tour-d-essai.ts) : pendant qu'il se joue, l'ardoise le dit
+  // et offre le second geste ; son dernier tour clos, « commencer » devient le seul.
+  const essai = view.essai;
+  const essaiEnJeu = essai !== null && essai.phase !== "fini";
+  const essaiTermine = essai?.phase === "termine" || essai?.phase === "bascule";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
@@ -127,7 +136,7 @@ export default async function TeacherGamePage({
     view.rounds.filter((r) => r.status === "resolved").map((r) => [r.index, null]),
   );
   const animer =
-    (!finished && view.mode === "learning") ||
+    (!finished && !essaiTermine && view.mode === "learning") ||
     view.aidRequests.length > 0 ||
     (gazette?.tours.length ?? 0) > 0;
 
@@ -222,15 +231,17 @@ export default async function TeacherGamePage({
               id="ce-tour-titre"
               className="text-xs font-semibold uppercase tracking-annonce text-slate-300"
             >
-              {finished ? "Fin de partie" : "Ce tour"}
+              {finished ? "Fin de partie" : essaiEnJeu ? "Tour d'essai · ne compte pas" : "Ce tour"}
             </h2>
             <p className="mt-1 font-display text-4xl font-extrabold leading-none text-slate-50 tabular-nums sm:text-5xl">
               {finished
                 ? compter(view.roundsCount, "tour joué", "tours joués")
-                : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`}
+                : essaiTermine
+                  ? "Essai terminé"
+                  : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`}
             </p>
           </div>
-          {!finished ? (
+          {!finished && !essaiTermine ? (
             <dl className="flex flex-wrap gap-x-8 gap-y-3">
               {/* Le chiffre d'abord, son libellé dessous : « 0/4 · équipes
                   ont validé ». L'ordre du document garde le libellé en tête. */}
@@ -254,13 +265,37 @@ export default async function TeacherGamePage({
             </dl>
           ) : null}
         </div>
-        {!finished ? (
+        {essaiEnJeu ? (
+          <p className="mt-3 max-w-2xl text-sm text-slate-300" data-tour-d-essai={essai.phase}>
+            {essaiTermine
+              ? essai.phase === "bascule"
+                ? "La vraie partie se met en place. Si l'attente s'éternise, relancez : rien n'est perdu."
+                : "Les équipes lisent les résultats de l'essai. Quand la classe est prête, commencez la vraie partie : les entreprises repartiront de zéro."
+              : EXPLICATION_DU_TOUR_D_ESSAI}
+          </p>
+        ) : null}
+        {!finished && !essaiTermine ? (
           <CloseRoundForm
             gameId={view.gameId}
             tour={view.currentRound}
             validees={submittedCount}
             total={humanTeams.length}
+            nomDuTour={essaiEnJeu ? `le tour d'essai ${view.currentRound}` : undefined}
           />
+        ) : null}
+        {essaiEnJeu ? <CommencerLaVraiePartie gameId={view.gameId} principal={essaiTermine} /> : null}
+        {essai?.phase === "fini" ? (
+          <p className="mt-3 text-sm text-slate-300" data-tour-d-essai="fini">
+            {view.currentRound === 1 && !dernierTourClos
+              ? "La vraie partie a commencé : les entreprises sont reparties de zéro. "
+              : null}
+            <Link
+              href={`/teacher/games/${gameId}/essai`}
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              Revoir le tour d&apos;essai →
+            </Link>
+          </p>
         ) : null}
       </section>
 
@@ -454,7 +489,7 @@ export default async function TeacherGamePage({
                     {t.controller === "bot" ? "—" : t.playerNames.join(", ") || "aucun joueur"}
                   </td>
                   <td className="py-2 pr-3">
-                    {finished ? (
+                    {finished || essaiTermine ? (
                       "—"
                     ) : t.hasSubmitted ? (
                       <>
@@ -547,7 +582,9 @@ export default async function TeacherGamePage({
         />
       ) : null}
 
-      {!finished && view.mode === "learning" ? (
+      {/* L'essai terminé, un courrier n'aurait plus de tour où tomber : il partirait
+          avec l'essai à la bascule. */}
+      {!finished && !essaiTermine && view.mode === "learning" ? (
         <DistributionCourrier
           gameId={view.gameId}
           courriersEnAttente={view.pendingEvents}
@@ -1278,7 +1315,7 @@ export default async function TeacherGamePage({
         <RoundStatusPoller
           gameId={view.gameId}
           currentRound={view.currentRound}
-          roundStatus="open"
+          roundStatus={essaiTermine ? "resolved" : "open"}
           endpoint="submissions"
           submittedCount={submittedCount}
         />

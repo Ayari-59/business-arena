@@ -1,5 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { partieQuiCompte } from "@/services/archives-d-essai";
 import {
   concepts,
   games,
@@ -15,6 +16,7 @@ import {
   situations,
   teams,
 } from "@/db/schema";
+import { enEssai } from "@/config/tour-d-essai";
 import { conceptByCode } from "@/config/pedagogy/concepts";
 import {
   SCENARIOS,
@@ -281,10 +283,15 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     levelsByInstance.set(u.situationInstanceId, list);
   }
 
-  const allMembers = await db
-    .select()
-    .from(players)
-    .where(inArray(players.teamId, teamIds));
+  // UN TOUR D'ESSAI NE NOURRIT PAS LE PROFIL (config/tour-d-essai.ts) : la situation
+  // se débriefe pour l'équipe, mais ni la maîtrise des notions ni les compétences de
+  // l'élève ne bougent. Elles lui appartiennent, et survivraient à la bascule.
+  const allMembers = enEssai(gameRow)
+    ? []
+    : await db
+        .select()
+        .from(players)
+        .where(inArray(players.teamId, teamIds));
   const membersByTeam = new Map<string, (typeof allMembers)[number][]>();
   for (const m of allMembers) {
     const list = membersByTeam.get(m.teamId) ?? [];
@@ -634,7 +641,12 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     concepts: [],
   };
 
-  const gameRows = await db.select().from(games).where(eq(games.createdBy, teacherId));
+  // Ni archive d'essai, ni partie qui joue encore son essai : le carnet ne compte que
+  // ce qui compte (services/archives-d-essai.ts).
+  const gameRows = await db
+    .select()
+    .from(games)
+    .where(and(eq(games.createdBy, teacherId), partieQuiCompte));
   if (gameRows.length === 0) return empty;
   const gameIds = gameRows.map((g) => g.id);
 

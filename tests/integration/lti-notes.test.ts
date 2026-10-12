@@ -98,7 +98,7 @@ import {
 } from "@/services/examen.service";
 import { createClassGame, resolveCurrentRound } from "@/services/game.service";
 import { publierExamenAction, renvoyerLesNotesAction, retirerPublicationAction } from "@/app/teacher/examens/actions";
-import { closeRoundAction } from "@/app/teacher/actions";
+import { closeRoundAction, commencerLaVraiePartieAction } from "@/app/teacher/actions";
 import { neutralDecisions } from "@/engine/bots";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import type { CompanyState } from "@/engine/types";
@@ -492,6 +492,54 @@ describe("une partie de classe : la progression, jamais une note", () => {
     expect(carnet.notesDe("eleve-zoe")).toEqual([]);
     expect(carnet.colonnes).toHaveLength(colonnes);
   }, 180_000);
+
+  it("un tour d'essai : rien ne part pendant l'essai, « commencée » à la vraie partie, « terminée » à sa fin seulement", async () => {
+    // config/tour-d-essai.ts : un tour d'essai, puis deux vrais tours.
+    const { gameId } = await createClassGame({
+      teacherId: prof.userId,
+      organizationId: prof.orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 1,
+      botCount: 1,
+      level: 1,
+      roundsCount: 2,
+      essai: { tours: 1, enchainement: "manuel" },
+    });
+    const colonne = carnet.creerUneColonne({ label: "Simulation avec essai", scoreMaximum: 20, resourceLinkId: "act-essai" });
+    const avec = carnet.revendication({ colonne });
+    await lancement({ sub: "prof-notes", role: "enseignant", ressource: "act-essai", revendications: avec });
+    expect(await relierLien({ lienId: (await lienDe("act-essai")).id, enseignantId: prof.userId, cible: { type: "partie", id: gameId } })).toBe(true);
+
+    // L'élève entre PENDANT l'essai : rien ne part.
+    expect(await lancement({ sub: "eleve-noa", role: "eleve", prenom: "Noa", ressource: "act-essai", revendications: avec })).toBe(`/arena/${gameId}`);
+    await jouerLesTaches();
+    expect(carnet.notesDe("eleve-noa")).toEqual([]);
+
+    // Le dernier tour d'essai est clos : toujours rien, et surtout pas « terminée ».
+    await setSession(prof.userId, "teacher", 1);
+    const fd = new FormData();
+    fd.set("roundIndex", "1");
+    expect(await closeRoundAction(gameId, { error: null }, fd)).toEqual({ error: null });
+    await jouerLesTaches();
+    expect(carnet.notesDe("eleve-noa")).toEqual([]);
+
+    // La vraie partie commence : « commencée », jamais « terminée ».
+    expect(await commencerLaVraiePartieAction(gameId, { error: null }, new FormData())).toEqual({ error: null });
+    await jouerLesTaches();
+    expect(carnet.notesDe("eleve-noa")).toEqual([expect.objectContaining({ activityProgress: "InProgress", gradingProgress: "NotReady" })]);
+
+    // La vraie partie va au bout : « terminée », une fois.
+    for (let tour = 1; tour <= 2; tour += 1) {
+      const f = new FormData();
+      f.set("roundIndex", String(tour));
+      expect(await closeRoundAction(gameId, { error: null }, f)).toEqual({ error: null });
+    }
+    await jouerLesTaches();
+    const recues = carnet.notesDe("eleve-noa");
+    expect(recues).toHaveLength(2);
+    expect(recues[1]).toMatchObject({ activityProgress: "Completed", gradingProgress: "NotReady" });
+    expect(recues.every((n) => !("scoreGiven" in n))).toBe(true);
+  }, 240_000);
 });
 
 describe("une plateforme qui n'accorde pas le service de notes", () => {

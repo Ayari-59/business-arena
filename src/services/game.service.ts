@@ -1,5 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
+import { enEssai, lireLEssai, type TourDEssai } from "@/config/tour-d-essai";
+import { horsArchivesDEssai } from "@/services/archives-d-essai";
 import {
   decisions,
   gameRankings,
@@ -387,6 +389,18 @@ export interface TeacherGameSummary {
   /** Le nom court (« NOVA · gamme ») : sur téléphone, le titre entier ne tient pas. */
   scenarioShortName: string;
   sector: Sector;
+  /** Le tour d'essai, tant qu'il se joue : la liste dit « Tour d'essai 1/2 ». */
+  essai: TourDEssaiAffiche | null;
+}
+
+/** Ce que les écrans lisent du tour d'essai : sans le scénario réel qui attend dedans. */
+export type TourDEssaiAffiche = Omit<TourDEssai, "scenario">;
+
+function essaiAffiche(brut: unknown): TourDEssaiAffiche | null {
+  const e = lireLEssai(brut);
+  if (!e) return null;
+  const { scenario: _scenario, ...reste } = e;
+  return reste;
 }
 
 /** La longueur d'un nom de partie : une ligne de liste, pas une phrase. */
@@ -425,7 +439,7 @@ export async function getTeacherGames(
   const rows = await db
     .select()
     .from(games)
-    .where(eq(games.createdBy, teacherId))
+    .where(and(eq(games.createdBy, teacherId), horsArchivesDEssai))
     .orderBy(desc(games.createdAt));
   const classGames = rows.filter(
     (g) =>
@@ -511,6 +525,7 @@ export async function getTeacherGames(
         scenarioTitle: def.title,
         scenarioShortName: def.shortName,
         sector: def.sector,
+        essai: enEssai(g) ? essaiAffiche(g.essai) : null,
       };
     }),
   );
@@ -689,6 +704,13 @@ export async function setRoundWindows(args: {
 
 export interface TeacherGameView {
   gameId: string;
+  /**
+   * LE TOUR D'ESSAI (config/tour-d-essai.ts) : null pour une partie qui n'en a pas eu.
+   * Après la bascule, il reste (phase « fini ») pour l'annonce et le lien vers l'archive.
+   */
+  essai: TourDEssaiAffiche | null;
+  /** Cette partie EST l'archive d'un essai : l'identifiant de sa partie. */
+  essaiDe: string | null;
   joinCode: string | null;
   /** Le nom donné par l'enseignant à cette partie, s'il en a donné un. */
   label: string | null;
@@ -843,6 +865,8 @@ export async function getTeacherGameView(
 
   return {
     gameId,
+    essai: essaiAffiche(game.essai),
+    essaiDe: game.essaiDe,
     joinCode: game.joinCode,
     label: game.label,
     status: game.status,

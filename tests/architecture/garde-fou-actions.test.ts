@@ -25,6 +25,7 @@ const COMPOSANTS_GARDES = [
   "src/components/competition-join-form.tsx", // /compete
   "src/components/competition-recovery-form.tsx", // reprise d'une équipe par code
   "src/components/close-round-form.tsx", // clôture du tour (confirmée)
+  "src/components/commencer-la-vraie-partie.tsx", // fin du tour d'essai (confirmée)
   "src/components/stage-schedule.tsx", // fenêtre d'une étape de concours
   "src/components/public-page-form.tsx", // page publique d'annonce du concours
   "src/components/orientation-form.tsx", // demande de simulation (/orientation)

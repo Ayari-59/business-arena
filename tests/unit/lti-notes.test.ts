@@ -119,6 +119,14 @@ describe("ce qui part, et quand", () => {
     expect(natureVoulueDeLaPartie({ joueur: true, terminee: true })).toBe("terminee");
     expect(natureVoulueDeLaPartie({ joueur: false, terminee: true })).toBeNull();
   });
+
+  it("la partie de classe en tour d'essai : rien ne part, ni « commencée » ni « terminée »", () => {
+    // config/tour-d-essai.ts : l'essai ne compte pas. Un élève entré pendant l'essai n'est
+    // pas « commencé » ; le dernier tour d'essai clos n'est pas une fin de partie.
+    expect(natureVoulueDeLaPartie({ joueur: true, terminee: false, essai: true })).toBeNull();
+    expect(natureVoulueDeLaPartie({ joueur: true, terminee: true, essai: true })).toBeNull();
+    expect(natureVoulueDeLaPartie({ joueur: true, terminee: false, essai: false })).toBe("commencee");
+  });
 });
 
 describe("l'assertion client_credentials", () => {

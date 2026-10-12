@@ -1,6 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { classes, decisions, rounds, teams } from "@/db/schema";
+import { partieQuiCompte, tourQuiCompte } from "@/services/archives-d-essai";
+import { classes, decisions, games, rounds, teams } from "@/db/schema";
 import { assezPourEtreDit, type PreuvesDusage } from "@/config/preuves-dusage";
 
 /**
@@ -71,19 +72,22 @@ export async function preuvesDusage(maintenant = Date.now()): Promise<PreuvesDus
       db
         .select({ n: sql<number>`count(*)::int` })
         .from(rounds)
-        .where(sql`${rounds.resolvedAt} is not null`),
+        .where(and(sql`${rounds.resolvedAt} is not null`, tourQuiCompte)),
       db
         .select({ n: sql<number>`count(distinct ${rounds.gameId})::int` })
         .from(rounds)
-        .where(sql`${rounds.resolvedAt} is not null`),
+        .where(and(sql`${rounds.resolvedAt} is not null`, tourQuiCompte)),
       db
         .select({ n: sql<number>`count(*)::int` })
         .from(decisions)
         .innerJoin(teams, eq(decisions.teamId, teams.id))
+        .innerJoin(games, eq(games.id, teams.gameId))
         .where(
           and(
             inArray(decisions.status, ["validated", "locked"]),
             eq(teams.controller, "human"),
+            // Les décisions d'un tour d'essai ne sont pas des décisions envoyées au marché.
+            partieQuiCompte,
           ),
         ),
       db.select({ n: sql<number>`count(*)::int` }).from(classes),

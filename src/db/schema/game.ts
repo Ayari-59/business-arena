@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   bigint,
   index,
   integer,
@@ -18,6 +19,7 @@ import { classes, organizations, users } from "./identity";
 import { scenarios } from "./catalog";
 import { competitionStages } from "./competition";
 import type { EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import type { TourDEssai } from "@/config/tour-d-essai";
 
 export const gameMode = pgEnum("game_mode", ["learning", "competition", "contest"]);
 export const gameStatus = pgEnum("game_status", [
@@ -105,9 +107,24 @@ export const games = pgTable(
      * personne ; `estArchivee` accepte les deux, par prudence.
      */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /**
+     * LE TOUR D'ESSAI (migration 0045, config/tour-d-essai.ts). Nul pour toute partie
+     * qui n'en a pas : elle se comporte exactement comme avant. Tant que l'essai dure,
+     * `seed` et `scenarioSnapshot` portent ceux de l'ESSAI ; la graine et le scénario de
+     * la vraie partie attendent ici, et reprennent leur place à la bascule.
+     */
+    essai: jsonb("essai").$type<TourDEssai>(),
+    /**
+     * Posé sur l'ARCHIVE d'un tour d'essai : la partie qui reçoit à la bascule tout ce
+     * que l'essai a joué. Elle sort des listes et des compteurs
+     * (services/tour-d-essai.service.ts, `horsArchivesDEssai`) et part avec sa partie.
+     */
+    essaiDe: uuid("essai_de").references((): AnyPgColumn => games.id, { onDelete: "cascade" }),
     ...timestamps,
   },
   (t) => [
+    // Une seule archive d'essai par partie : la bascule rejouée la retrouve.
+    uniqueIndex("games_essai_de_uq").on(t.essaiDe),
     index("games_class_idx").on(t.classId),
     index("games_status_idx").on(t.status),
     index("games_created_by_idx").on(t.createdBy),

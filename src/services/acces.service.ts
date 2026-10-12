@@ -1,5 +1,6 @@
 import { and, eq, isNull, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { horsArchivesDEssai } from "@/services/archives-d-essai";
 import {
   competitions,
   episodeCohortes,
@@ -203,6 +204,7 @@ export async function partiesEnCours(
           isNull(games.archivedAt),
           notInArray(games.status, ["finished", "archived"]),
           sql`${games.difficultyProfile}->>'kind' = 'class'`,
+          horsArchivesDEssai,
         ),
       ),
     db

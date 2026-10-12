@@ -18,6 +18,8 @@ import { SubmitButton } from "@/components/submit-button";
 import { ChoixDesEpisodes } from "@/components/choix-des-episodes";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { EXPLICATION_DU_TOUR_D_ESSAI, TOURS_D_ESSAI } from "@/config/tour-d-essai";
+import { compter } from "@/lib/format";
 import {
   messageNiveauxReserves,
   refusDeLaClasse,
@@ -318,6 +320,28 @@ export default async function ActiviteLtiPage({
                     ))}
                   </select>
                 </label>
+                {/* LE TOUR D'ESSAI (config/tour-d-essai.ts), comme dans l'espace enseignant :
+                    aucun par défaut, un ou deux tours pour de faux avant la vraie partie. */}
+                <fieldset data-tour-d-essai-choix="" className="sm:col-span-3">
+                  <legend className={LIBELLE}>Tour d&apos;essai</legend>
+                  <p className="mt-1 text-sm text-slate-400">{EXPLICATION_DU_TOUR_D_ESSAI}</p>
+                  <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+                    <label className="flex items-center gap-2 text-sm text-slate-200">
+                      <input type="radio" name="toursDEssai" value="" defaultChecked className="h-4 w-4 accent-amber-400" />
+                      Aucun
+                    </label>
+                    {TOURS_D_ESSAI.map((n) => (
+                      <label key={n} className="flex items-center gap-2 text-sm text-slate-200">
+                        <input type="radio" name="toursDEssai" value={n} className="h-4 w-4 accent-amber-400" />
+                        {compter(n, "tour")}
+                      </label>
+                    ))}
+                  </div>
+                  <label className="mt-2 flex items-start gap-3">
+                    <input type="checkbox" name="enchainementDeLEssai" className="mt-0.5 h-4 w-4 accent-amber-400" />
+                    <span className="text-sm text-slate-200">Commencer la vraie partie dès la fin de l&apos;essai</span>
+                  </label>
+                </fieldset>
                 <label className="flex items-start gap-3 sm:col-span-3">
                   <input type="checkbox" name="variableWorld" defaultChecked className="mt-0.5 h-4 w-4 accent-amber-400" />
                   <span className="text-sm text-slate-200">Monde variable : chaque partie diffère</span>

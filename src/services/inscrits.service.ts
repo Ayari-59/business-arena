@@ -1,5 +1,6 @@
 import { and, count, desc, eq, gte, inArray, isNotNull, isNull, lte, max, or, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { horsArchivesDEssai } from "@/services/archives-d-essai";
 import {
   episodeCohortes,
   games,
@@ -267,7 +268,13 @@ async function tousLesInscrits(
     db
       .select({ userId: games.createdBy, n: count() })
       .from(games)
-      .where(and(isNull(games.competitionStageId), sql`${games.difficultyProfile}->>'kind' = 'class'`))
+      .where(
+        and(
+          isNull(games.competitionStageId),
+          sql`${games.difficultyProfile}->>'kind' = 'class'`,
+          horsArchivesDEssai,
+        ),
+      )
       .groupBy(games.createdBy),
     db
       .select({ userId: episodeCohortes.creePar, n: count() })

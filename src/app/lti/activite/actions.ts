@@ -7,6 +7,7 @@ import { lireContexte } from "@/lti/contexte";
 import { lienParId, pilotageDe, relierLien, type Cible } from "@/lti/liens";
 import { plateformeParId } from "@/lti/plateformes";
 import { createClassGame } from "@/services/game.service";
+import { lireLeChoixDEssai } from "@/config/tour-d-essai";
 import { LicenceDepasseeError, NiveauReserveError, OffreRequiseError } from "@/services/acces.service";
 import { CohorteRefuseeError, creerCohorteDeLEnseignant } from "@/services/cohortes.service";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
@@ -108,6 +109,8 @@ export async function creerPartieAction(formData: FormData): Promise<void> {
       quizMode: r.quizMode,
       answerFormat: r.answerFormat,
       roundsCount: r.roundsCount,
+      // Aucun (le défaut), 1 ou 2 tours d'essai avant la vraie partie (config/tour-d-essai.ts).
+      essai: lireLeChoixDEssai(formData.get("toursDEssai"), formData.get("enchainementDeLEssai")),
     }));
   } catch (e) {
     if (e instanceof NiveauReserveError) refus("niveau");

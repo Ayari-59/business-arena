@@ -21,6 +21,7 @@ export function CloseRoundForm({
   validees,
   total,
   ouvert = false,
+  nomDuTour,
 }: {
   gameId: string;
   tour: number;
@@ -28,6 +29,8 @@ export function CloseRoundForm({
   total: number;
   /** Confirmation déjà ouverte (rendu de test). */
   ouvert?: boolean;
+  /** Le nom du tour sur le bouton : « le tour d'essai 1 » pendant l'essai. */
+  nomDuTour?: string;
 }) {
   const [confirmation, setConfirmation] = useState(ouvert);
   // Le tour clôturé, la mise à jour RSC réutilise ce composant pour le tour
@@ -86,7 +89,7 @@ export function CloseRoundForm({
           onClick={() => setConfirmation(true)}
           className={`${bouton({ taille: "l" })} w-full`}
         >
-          Clore le tour {tour} et simuler
+          Clore {nomDuTour ?? `le tour ${tour}`} et simuler
         </button>
       )}
     </form>

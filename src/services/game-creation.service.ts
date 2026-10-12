@@ -1,6 +1,7 @@
 import { randomInt, randomUUID } from "node:crypto";
 import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { horsArchivesDEssai } from "@/services/archives-d-essai";
 import {
   aidRequests,
   pairsMoments,
@@ -56,6 +57,13 @@ import {
 import { type BotProfile } from "@/engine/bots";
 import { ENGINE_VERSION } from "@/engine/simulation";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
+import {
+  graineDEssai,
+  lireLEssai,
+  scenarioDEssai,
+  type EnchainementDeLEssai,
+  type NombreDeToursDEssai,
+} from "@/config/tour-d-essai";
 
 // ---------------------------------------------------------------------------
 // Helpers internes
@@ -208,6 +216,11 @@ export interface CreateGameArgs {
    * candidats d'un examen sur la même graine jouent ainsi exactement le même marché.
    */
   ordreFixe?: boolean;
+  /**
+   * LE TOUR D'ESSAI (config/tour-d-essai.ts) : un ou deux tours pour de faux avant la
+   * vraie partie. Absent : la partie commence au tour 1, comme toujours.
+   */
+  essai?: { tours: NombreDeToursDEssai; enchainement: EnchainementDeLEssai };
 }
 
 export interface CreatedGame {
@@ -234,7 +247,7 @@ export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
  * reconstitution écrite une seconde fois qui dériverait au premier changement
  * de la première.
  */
-async function poserLEtatDeDepart(args: {
+export async function poserLEtatDeDepart(args: {
   gameId: string;
   equipes: { id: string; name: string; controller: string; botProfile: string | null }[];
   definition: ScenarioDefinition;
@@ -309,15 +322,47 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     periodicity: args.periodicity,
     investmentStories: args.investmentStories,
   });
+  // LE TOUR D'ESSAI se joue sur une autre graine et sans événement scripté : tant
+  // qu'il dure, la partie porte SON scénario et SA graine, la vraie partie attend
+  // dans `essai` et reprend sa place à la bascule (services/tour-d-essai.service.ts).
+  const graineEssai = args.essai ? graineDEssai(seed) : null;
+  const scenarioEssai =
+    args.essai && graineEssai !== null
+      ? scenarioDEssai(
+          // Le même calcul que la vraie partie, sur la graine de l'essai.
+          composerLeScenarioJoue({
+            scenario: definition.scenario,
+            seed: graineEssai,
+            variableWorld: args.variableWorld,
+            level: args.level,
+            economicOverrides: overrides,
+            scoringWeightOverrides: scoringOverrides,
+            concurrents,
+            roundsCount: args.roundsCount,
+            periodicity: args.periodicity,
+            investmentStories: args.investmentStories,
+          }),
+          args.essai.tours,
+        )
+      : null;
 
   const [game] = await db
     .insert(games)
     .values({
       organizationId: args.organizationId,
       scenarioId,
-      scenarioSnapshot: scenarioJoue,
+      scenarioSnapshot: scenarioEssai ?? scenarioJoue,
       engineVersion: ENGINE_VERSION,
-      seed,
+      seed: graineEssai ?? seed,
+      essai: args.essai
+        ? {
+            tours: args.essai.tours,
+            enchainement: args.essai.enchainement,
+            phase: "en_cours",
+            graine: seed,
+            scenario: scenarioJoue,
+          }
+        : null,
       mode: args.mode ?? "learning",
       competitionStageId: args.competitionStageId,
       difficultyProfile: {
@@ -376,7 +421,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     equipes: teamRows,
     definition,
     periodicity: args.periodicity,
-    roundsCount: scenarioJoue.roundsCount,
+    roundsCount: (scenarioEssai ?? scenarioJoue).roundsCount,
   });
 
   return {
@@ -417,6 +462,10 @@ export async function reinitialiserPartie(args: {
 }): Promise<void> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+  // Pendant l'essai, recommencer, c'est recommencer L'ESSAI : la partie porte son
+  // scénario, et il redevient « en cours ». Pendant la bascule, on attend qu'elle finisse.
+  const essai = lireLEssai(game.essai);
+  if (essai?.phase === "bascule") throw new Error("La vraie partie est en train de commencer : réessayez dans un instant.");
 
   const snapshot = game.scenarioSnapshot as { code?: string; roundsCount: number };
   const definition = await resolveScenarioDefinition(snapshot.code);
@@ -459,7 +508,11 @@ export async function reinitialiserPartie(args: {
 
   await db
     .update(games)
-    .set({ currentRound: 1, status: "running" })
+    .set({
+      currentRound: 1,
+      status: "running",
+      ...(essai && essai.phase !== "fini" ? { essai: { ...essai, phase: "en_cours" as const } } : {}),
+    })
     .where(eq(games.id, args.gameId));
 
   await poserLEtatDeDepart({
@@ -557,6 +610,7 @@ export async function createSoloGame(
         and(
           eq(games.creatorIp, creatorIp),
           gt(games.createdAt, new Date(Date.now() - 60 * 60 * 1000)),
+          horsArchivesDEssai,
         ),
       );
     if ((compte?.n ?? 0) >= PLAFOND_PARTIES_PAR_IP_PAR_HEURE) throw new TropDePartiesError();
@@ -611,6 +665,8 @@ export async function createClassGame(args: {
   roundsCount?: number;
   /** Graine imposée (monde de démonstration) ; absente = tirage au hasard. */
   seed?: number;
+  /** Un ou deux tours d'essai avant la vraie partie ; absent = aucun. */
+  essai?: CreateGameArgs["essai"];
 }): Promise<{ gameId: string; joinCode: string }> {
   // La licence se vérifie ici, à l'OUVERTURE d'une partie, et nulle part
   // ailleurs : une classe commencée se termine, quoi qu'il advienne du
@@ -651,6 +707,7 @@ export async function createClassGame(args: {
     answerFormat: args.answerFormat,
     roundsCount: args.roundsCount,
     seed: args.seed,
+    essai: args.essai,
   });
   return { gameId, joinCode };
 }

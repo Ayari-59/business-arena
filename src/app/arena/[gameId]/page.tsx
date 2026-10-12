@@ -39,6 +39,7 @@ import { RoundStatusPoller } from "@/components/round-status-poller";
 import { QuiARendu } from "@/components/qui-a-rendu";
 import { Embleme } from "@/components/embleme";
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
+import { BandeauDuTourDEssai } from "@/components/bandeau-du-tour-d-essai";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
 import { CoupureDePresse, RevueDePresse } from "@/components/coupure-de-presse";
@@ -197,7 +198,10 @@ export default async function ArenaPage({
     situations.debriefedByRound.map((dr) => [dr.roundIndex, dr]),
   );
   const mostRecentDebriefedRound = situations.debriefedByRound[0]?.roundIndex ?? null;
-  const hasActivePeriod = !finished;
+  // LE TOUR D'ESSAI TERMINÉ (config/tour-d-essai.ts) : il n'y a plus de tour à jouer,
+  // seulement des résultats à lire, en attendant que la vraie partie commence.
+  const essaiTermine = view.essai?.phase === "termine" || view.essai?.phase === "bascule";
+  const hasActivePeriod = !finished && !essaiTermine;
 
   // ── Écran intermédiaire « Tour simulé » (solo, après une validation) ──
   // Valider a résolu le tour à l'instant (playRoundAction redirige ici avec
@@ -1483,6 +1487,12 @@ export default async function ArenaPage({
           ) : null
         }
       />
+      {/* LE TOUR D'ESSAI : « ne compte pas », puis « la vraie partie commence ». */}
+      <BandeauDuTourDEssai
+        essai={view.essai}
+        tour={view.currentRound}
+        vraiTourJoue={periods.length > 0}
+      />
       {/* ── L'en-tête du document ──
           Le seul h1 de la page : le nom de l'équipe, précédé de son emblème. Il
           ne s'affiche plus en grand : l'ardoise, juste dessous, porte
@@ -1919,7 +1929,7 @@ export default async function ArenaPage({
           </section>
         ) : null}
 
-        {telephone && !finished ? null : toursPasses}
+        {telephone && !finished && !essaiTermine ? null : toursPasses}
       </div>
 
       {/*
@@ -1978,7 +1988,9 @@ export default async function ArenaPage({
         <RoundStatusPoller
           gameId={view.gameId}
           currentRound={view.currentRound}
-          roundStatus="open"
+          // L'essai terminé, le tour courant est clos : l'arène attend qu'il rouvre,
+          // c'est-à-dire que la vraie partie commence (config/tour-d-essai.ts).
+          roundStatus={essaiTermine ? "resolved" : "open"}
           // « submissions » est l'endpoint de l'ENSEIGNANT : il exige d'être le
           // créateur de la partie, et un élève y recevrait 403 en silence. Celui
           // de l'élève rend désormais le même compte, qui bouge sans que le tour

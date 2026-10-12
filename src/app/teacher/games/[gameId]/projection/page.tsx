@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { tourAffiche } from "@/config/tour-d-essai";
 import { SITE_URL } from "@/config/site";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { EchoDeSeance } from "@/components/signal-de-seance";
@@ -62,6 +63,7 @@ export default async function ProjectionPage({
   const { gameId } = await params;
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
+  const essaiEnJeu = view.essai !== null && view.essai.phase !== "fini";
   const composition = await compositionDesEquipes(gameId);
 
   const finished = view.status === "finished";
@@ -139,7 +141,12 @@ export default async function ProjectionPage({
         adresse={`${SITE_URL.replace(/^https?:\/\//, "")}/join`}
         elevesConnectes={elevesConnectes}
         equipes={equipes}
-        libelleTour={periodLabel(view.roundDays, view.currentRound)}
+        libelleTour={
+          // Pendant l'essai, la salle lit « Tour d'essai 1/2 » (config/tour-d-essai.ts).
+          essaiEnJeu
+            ? tourAffiche({ essai: view.essai, tour: view.currentRound, tours: view.roundsCount })
+            : periodLabel(view.roundDays, view.currentRound)
+        }
         echeance={echeance}
         classement={view.ranking.map((row) => {
           const equipe = chiffresDuTour.get(row.teamId);
@@ -165,13 +172,23 @@ export default async function ProjectionPage({
         })}
         classementRevele={dernierTourClos?.rankingRevealed ?? false}
         libelleTourClos={
-          dernierTourClos ? periodLabel(view.roundDays, dernierTourClos.index) : null
+          dernierTourClos
+            ? essaiEnJeu
+              ? `Tour d'essai ${dernierTourClos.index}`
+              : periodLabel(view.roundDays, dernierTourClos.index)
+            : null
         }
         // CE QUI DÉCLENCHE LA RÉVÉLATION : le tour clos dont le classement est
         // révélé. Le mur compare avec le dernier qu'il a dévoilé dans CE
         // navigateur ; plus récent, il le joue, sinon il montre l'état final.
         tourRevele={
-          dernierTourClos?.rankingRevealed ? dernierTourClos.index : null
+          // Le mur se souvient, dans ce navigateur, du dernier tour qu'il a dévoilé.
+          // Après un essai, la vraie partie repart au tour 1 : ses révélations sont
+          // numérotées après celles de l'essai, sinon le vrai tour 1 passerait pour
+          // déjà vu et ne se jouerait pas.
+          dernierTourClos?.rankingRevealed
+            ? dernierTourClos.index + (view.essai?.phase === "fini" ? view.essai.tours : 0)
+            : null
         }
         finished={finished}
         retour={`/teacher/games/${gameId}`}

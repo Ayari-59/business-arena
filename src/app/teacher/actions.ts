@@ -56,6 +56,8 @@ import { OffreRequiseError } from "@/services/acces.service";
 import { LIBELLES_DU_DEVIS, lienDuDevis } from "@/config/tarifs";
 import { synchroniserLaPartie } from "@/lti/ags/envois";
 import { plusTard } from "@/lti/ags/plus-tard";
+import { lireLeChoixDEssai } from "@/config/tour-d-essai";
+import { BasculeRefuseeError, commencerLaVraiePartie } from "@/services/tour-d-essai.service";
 
 export interface FormState {
   error: string | null;
@@ -250,6 +252,8 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       quizMode: parsed.quizMode,
       answerFormat: parsed.answerFormat,
       roundsCount: parsed.roundsCount,
+      // Aucun (le défaut), 1 ou 2 tours d'essai avant la vraie partie.
+      essai: lireLeChoixDEssai(formData.get("toursDEssai"), formData.get("enchainementDeLEssai")),
     }));
   } catch (erreur) {
     // Un niveau fermé, ou une classe sans licence de l'arène en cours : la page ajoute
@@ -358,12 +362,38 @@ export async function closeRoundAction(
   const brut = Number(formData.get("roundIndex"));
   const expectedRound = Number.isInteger(brut) && brut > 0 ? brut : undefined;
   try {
-    const { finished } = await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
+    const { finished, finDeLEssai } = await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
     // La partie est finie : la progression de ses élèves venus d'une plateforme part,
-    // « terminée », vers le carnet de notes (lti/ags), après la réponse.
-    if (finished) plusTard(() => synchroniserLaPartie(gameId));
+    // « terminée », vers le carnet de notes (lti/ags), après la réponse. Le dernier tour
+    // d'essai clos : rien ne part tant que l'essai dure ; si la vraie partie a commencé
+    // d'elle-même, « commencée » part, jamais « terminée » (lti/ags/regles.ts).
+    if (finished || finDeLEssai) plusTard(() => synchroniserLaPartie(gameId));
   } catch (error) {
     return { error: error instanceof Error ? error.message : "La clôture a échoué." };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return { error: null };
+}
+
+/**
+ * « COMMENCER LA VRAIE PARTIE » : la fin du tour d'essai (services/tour-d-essai.service.ts).
+ * Le refus (un tour d'essai en cours de calcul) revient à l'écran, en toutes lettres.
+ */
+export async function commencerLaVraiePartieAction(
+  gameId: string,
+  _prev: CloseRoundState,
+  _formData: FormData,
+): Promise<CloseRoundState> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  try {
+    const { dejaFaite } = await commencerLaVraiePartie({ gameId, teacherId: session.userId });
+    // La vraie partie commence : les élèves venus d'une plateforme passent « commencée »
+    // dans le carnet de notes (rien n'était parti pendant l'essai), jamais « terminée ».
+    if (!dejaFaite) plusTard(() => synchroniserLaPartie(gameId));
+  } catch (error) {
+    if (error instanceof BasculeRefuseeError) return { error: error.message };
+    return { error: "La vraie partie n'a pas pu commencer. Réessayez : rien n'est perdu." };
   }
   revalidatePath(`/teacher/games/${gameId}`);
   return { error: null };

@@ -156,7 +156,9 @@ describe("dimensionnement du marché", () => {
       appel.slice(0, appel.indexOf("});")),
       "le nombre de concurrents ne vient pas de la partie créée",
     ).toMatch(/\bconcurrents,/);
-    expect(service).toContain("scenarioSnapshot: scenarioJoue");
+    // Le tour d'essai (config/tour-d-essai.ts) joue d'abord le scénario de l'essai, composé
+    // par le même pipeline sur une autre graine ; sans essai, c'est scenarioJoue.
+    expect(service).toMatch(/scenarioSnapshot: (scenarioEssai \?\? )?scenarioJoue\b/);
     const pipeline = readFileSync("src/config/scenarios/scenario-joue.ts", "utf-8");
     const corps = pipeline.slice(pipeline.indexOf("const snapshot = "));
     expect(

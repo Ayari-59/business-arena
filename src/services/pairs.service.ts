@@ -36,6 +36,7 @@ import {
 } from "@/config/pairs/calcul";
 import { csvDesPairs, type LigneExportee } from "@/config/pairs/export";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
+import { enEssai } from "@/config/tour-d-essai";
 
 /**
  * L'ÉVALUATION ENTRE COÉQUIPIERS (migration 0044, config/pairs/*).
@@ -102,7 +103,15 @@ export function estUnePartieDeClasse(g: Partie): boolean {
 }
 
 /** Le moment est-il atteint (indépendamment de la publication) ? */
-export function momentAtteint(g: Pick<Partie, "status" | "currentRound">, tours: number, moment: MomentDesPairs): boolean {
+export function momentAtteint(
+  g: Pick<Partie, "status" | "currentRound" | "essai">,
+  tours: number,
+  moment: MomentDesPairs,
+): boolean {
+  // Un tour d'essai ne compte pas (config/tour-d-essai.ts) : avec deux tours d'essai, la
+  // mi-parcours de l'essai serait « atteinte » après le premier. Rien ne s'ouvre avant la
+  // vraie partie, et rien ne se publie.
+  if (enEssai(g)) return false;
   if (g.status === "finished") return true;
   return moment === "mi_parcours" && g.currentRound > tourDeMiParcours(tours);
 }

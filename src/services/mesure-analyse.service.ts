@@ -1,5 +1,6 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { partieQuiCompte } from "@/services/archives-d-essai";
 import { games, hintUsages, rounds, situationInstances } from "@/db/schema";
 import { presetFromProfile } from "@/config/difficulty";
 import { agregerParNiveau, type LigneAnalyse, type MesureParNiveau } from "@/pedagogy/mesure-analyse";
@@ -30,8 +31,11 @@ export async function mesurerLAnalyseSolo(): Promise<{
     .innerJoin(rounds, eq(rounds.id, situationInstances.roundId))
     .innerJoin(games, eq(games.id, rounds.gameId))
     .where(
-      sql`${situationInstances.status} = 'debriefed'
+      and(
+        sql`${situationInstances.status} = 'debriefed'
         and coalesce(${games.difficultyProfile}->>'kind', 'solo') = 'solo'`,
+        partieQuiCompte,
+      ),
     );
   if (rows.length === 0) return { niveaux: [], situations: 0 };
 

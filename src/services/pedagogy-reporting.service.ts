@@ -1,5 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
+import { enEssai } from "@/config/tour-d-essai";
+import { partieQuiCompte } from "@/services/archives-d-essai";
 import {
   concepts,
   decisions,
@@ -305,7 +307,10 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     concepts: [],
   };
 
-  const gameRows = await db.select().from(games).where(eq(games.createdBy, teacherId));
+  const gameRows = await db
+    .select()
+    .from(games)
+    .where(and(eq(games.createdBy, teacherId), partieQuiCompte));
   if (gameRows.length === 0) return empty;
   const gameIds = gameRows.map((g) => g.id);
 
@@ -559,6 +564,9 @@ export async function getGameGradeSheet(
 ): Promise<GradeSheet | null> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game || game.createdBy !== teacherId) return null;
+  // LE TOUR D'ESSAI NE SE NOTE PAS : pas de relevé tant qu'il se joue. Après la bascule,
+  // ses tours sont dans l'archive, et le relevé ne lit que la vraie partie.
+  if (enEssai(game)) return null;
 
   const teamRows = (await db.select().from(teams).where(eq(teams.gameId, gameId))).filter(
     (t) => t.controller === "human",

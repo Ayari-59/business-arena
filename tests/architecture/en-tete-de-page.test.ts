@@ -42,6 +42,8 @@ const PAGES_INTERIEURES = [
   "src/app/teacher/examens/page.tsx",
   "src/app/teacher/examens/[id]/page.tsx",
   "src/app/teacher/examens/[id]/candidats/[candidatId]/page.tsx",
+  // Le tour d'essai relu pour le débrief (config/tour-d-essai.ts).
+  "src/app/teacher/games/[gameId]/essai/page.tsx",
   "src/app/examen/page.tsx",
   "src/app/examen/[code]/page.tsx",
   "src/app/examen/[code]/resultat/page.tsx",

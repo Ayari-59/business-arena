@@ -98,9 +98,13 @@ export function natureVoulueDeLExamen(args: {
   return args.deja === "note" || args.deja === "retrait" ? "retrait" : null;
 }
 
-/** LA PARTIE DE CLASSE : la progression d'un élève entré dans une équipe. */
-export function natureVoulueDeLaPartie(args: { joueur: boolean; terminee: boolean }): Nature | null {
-  if (!args.joueur) return null;
+/**
+ * LA PARTIE DE CLASSE : la progression d'un élève entré dans une équipe. Pendant un tour
+ * d'essai (config/tour-d-essai.ts), rien ne part : l'essai ne compte pas, et la partie
+ * n'est ni commencée ni terminée au sens du carnet de notes.
+ */
+export function natureVoulueDeLaPartie(args: { joueur: boolean; terminee: boolean; essai?: boolean }): Nature | null {
+  if (!args.joueur || args.essai) return null;
   return args.terminee ? "terminee" : "commencee";
 }
 

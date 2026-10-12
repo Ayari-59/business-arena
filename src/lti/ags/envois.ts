@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { authSecret } from "@/lib/auth-secret";
 import { chiffrer, dechiffrer } from "@/lib/chiffrement";
+import { enEssai } from "@/config/tour-d-essai";
 import type { ClesDeLOutil } from "../cles";
 import { urlDePlateformeAdmise } from "../reseau";
 import { TYPE } from "./constantes";
@@ -199,8 +200,10 @@ async function ciblesDeLExamen(examenId: string): Promise<Cible[]> {
 }
 
 async function ciblesDeLaPartie(gameId: string): Promise<Cible[]> {
-  const [partie] = await db.select({ statut: games.status }).from(games).where(eq(games.id, gameId));
+  const [partie] = await db.select({ statut: games.status, essai: games.essai }).from(games).where(eq(games.id, gameId));
   if (!partie) return [];
+  // Un tour d'essai ne compte pas : rien ne part tant qu'il se joue.
+  const essai = enEssai(partie);
   // La progression ne va que dans une colonne créée par la plateforme (regles.ts).
   const liens = (
     await db.select().from(ltiLiens).where(and(eq(ltiLiens.gameId, gameId), eq(ltiLiens.cibleType, "partie")))
@@ -219,7 +222,7 @@ async function ciblesDeLaPartie(gameId: string): Promise<Cible[]> {
   const ressource = ressourceDeLaPartie(gameId);
   const cibles: Cible[] = [];
   for (const e of eleves) {
-    const nature = natureVoulueDeLaPartie({ joueur: joueurs.has(e.userId), terminee: partie.statut === "finished" });
+    const nature = natureVoulueDeLaPartie({ joueur: joueurs.has(e.userId), terminee: partie.statut === "finished", essai });
     if (nature) cibles.push({ lienId: e.lienId, userId: e.userId, ressource, nature, note: null, commentaire: null });
   }
   return cibles;

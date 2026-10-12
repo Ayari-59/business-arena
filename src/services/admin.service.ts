@@ -3,6 +3,7 @@ import { randomInt } from "node:crypto";
 import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { horsArchivesDEssai } from "@/services/archives-d-essai";
 import {
   getLicenceStatus,
   type LicenceStatus,
@@ -356,7 +357,7 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
   ] = await Promise.all([
     db.select().from(organizations),
     db.select({ count: sql<number>`count(*)::int` }).from(users),
-    db.select({ id: games.id, organizationId: games.organizationId }).from(games),
+    db.select({ id: games.id, organizationId: games.organizationId }).from(games).where(horsArchivesDEssai),
     db.select({ count: sql<number>`count(*)::int` }).from(competitions),
     db.select().from(organizationMembers),
     db.select().from(orgInvites),
@@ -506,7 +507,7 @@ export async function getOrgDashboard(userId: string): Promise<OrgDashboard> {
     db
       .select()
       .from(games)
-      .where(eq(games.organizationId, organizationId))
+      .where(and(eq(games.organizationId, organizationId), horsArchivesDEssai))
       .orderBy(desc(games.createdAt)),
     db
       .select()

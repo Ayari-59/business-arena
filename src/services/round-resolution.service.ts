@@ -38,6 +38,8 @@ import { profilAvecLaGazetteParue } from "@/config/gazette/edition";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { subventionsAccordees } from "@/services/subvention.service";
 import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
+import { lireLEssai } from "@/config/tour-d-essai";
+import { enchainerSiDemande } from "@/services/tour-d-essai.service";
 import {
   enrichError,
   logResolutionStep,
@@ -278,13 +280,20 @@ async function sourceDesPivots(args: {
  * Décisions par équipe humaine : soumises → sinon reconduites du tour
  * précédent (carried_over, ADR-04) → sinon repli. Bots : stratégies pures.
  */
+/** Le refus d'une clôture pendant que la vraie partie se met en place. */
+const PENDANT_LA_BASCULE = "La vraie partie est en train de commencer : ce tour d'essai ne se clôt plus.";
+
 async function resolveGameRound(
   gameId: string,
-): Promise<{ roundIndex: number; finished: boolean }> {
+): Promise<{ roundIndex: number; finished: boolean; finDeLEssai?: boolean }> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
   if (game.status !== "running") throw new Error("Cette partie est terminée");
+  // LE TOUR D'ESSAI (config/tour-d-essai.ts). Son dernier tour clos, la partie ne se
+  // termine pas : elle attend la vraie partie. Pendant la bascule, plus rien ne se clôt.
+  const essai = lireLEssai(game.essai);
+  if (essai?.phase === "bascule") throw new Error(PENDANT_LA_BASCULE);
   const roundIndex = game.currentRound;
 
   const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
@@ -303,6 +312,15 @@ async function resolveGameRound(
     .where(and(eq(rounds.id, roundRow.id), eq(rounds.status, "open")))
     .returning({ id: rounds.id });
   if (!locked[0]) throw new Error("Ce tour est déjà en cours de résolution");
+  // Le contrôle symétrique du verrou de la bascule (services/tour-d-essai.service.ts) :
+  // si elle a commencé entre-temps, on rend le tour et on renonce.
+  if (essai) {
+    const [relu] = await db.select({ essai: games.essai }).from(games).where(eq(games.id, gameId));
+    if (lireLEssai(relu?.essai)?.phase === "bascule") {
+      await db.update(rounds).set({ status: "open" }).where(eq(rounds.id, roundRow.id));
+      throw new Error(PENDANT_LA_BASCULE);
+    }
+  }
 
   // Contexte de résolution utilisé pour les validations et le logging
   const context = { gameId, roundIndex };
@@ -595,7 +613,9 @@ async function resolveGameRound(
     // La partie va au bout de son scénario. L'ancien palier gratuit qui l'arrêtait
     // avant la fin est retiré (services/entitlements.service.ts) : sans licence, la
     // classe ne se crée pas, et une partie créée se joue jusqu'au dernier tour.
-    const finished = roundIndex >= scenario.roundsCount;
+    const dernierTour = roundIndex >= scenario.roundsCount;
+    const finDeLEssai = dernierTour && essai?.phase === "en_cours";
+    const finished = dernierTour && !finDeLEssai;
 
     // Post-traitement AVANT l'avancement d'état : si l'une de ces étapes
     // échoue, le round reste en « resolving » et le catch le remet à « open ».
@@ -617,7 +637,7 @@ async function resolveGameRound(
     });
     await updateRankings(gameId, teamRows.map((t) => t.id));
 
-    if (!finished) {
+    if (!dernierTour) {
       await openSituationsForRound(gameId, roundIndex + 1, output.results);
     }
 
@@ -654,7 +674,7 @@ async function resolveGameRound(
       .update(rounds)
       .set({ status: "resolved", resolvedAt: new Date() })
       .where(eq(rounds.id, roundRow.id));
-    if (!finished) {
+    if (!dernierTour) {
       await db
         .update(rounds)
         .set({ status: "open" })
@@ -663,8 +683,9 @@ async function resolveGameRound(
     await db
       .update(games)
       .set({
-        currentRound: finished ? roundIndex : roundIndex + 1,
+        currentRound: dernierTour ? roundIndex : roundIndex + 1,
         status: finished ? "finished" : "running",
+        ...(finDeLEssai && essai ? { essai: { ...essai, phase: "termine" as const } } : {}),
         difficultyProfile: {
           ...profilApresGazette,
           activeEvents: output.events,
@@ -679,7 +700,9 @@ async function resolveGameRound(
       finished,
       teamsCount: teamRows.length,
     });
-    return { roundIndex, finished };
+    // L'essai fini, la vraie partie commence d'elle-même si l'animateur l'a choisi.
+    if (finDeLEssai) await enchainerSiDemande(gameId);
+    return { roundIndex, finished, ...(finDeLEssai ? { finDeLEssai } : {}) };
   } catch (error) {
     // libère le verrou pour permettre une nouvelle tentative
     logResolutionStep(context, "Erreur lors de la résolution", {
@@ -839,7 +862,7 @@ export async function closeCurrentRound(args: {
   gameId: string;
   teacherId: string;
   expectedRound?: number;
-}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean }> {
+}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean; finDeLEssai?: boolean }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)

@@ -63,8 +63,9 @@ describe("durée d'une partie", () => {
     // Et la partie crée bien autant de tours que l'instantané en annonce. Le
     // bloc qui les pose est partagé avec la remise à zéro (`poserLEtatDeDepart`)
     // : on vérifie donc les deux bouts, ce qu'on lui passe et ce qu'il en fait.
-    expect(service, "l'instantané ne donne pas sa durée à l'état de départ").toContain(
-      "roundsCount: scenarioJoue.roundsCount",
+    // Avec un tour d'essai, la partie pose d'abord les tours de l'essai (config/tour-d-essai.ts).
+    expect(service, "l'instantané ne donne pas sa durée à l'état de départ").toMatch(
+      /roundsCount: \(?(scenarioEssai \?\? )?scenarioJoue\)?\.roundsCount/,
     );
     expect(service, "l'état de départ ne pose pas autant de tours qu'on lui en donne").toContain(
       "length: args.roundsCount",

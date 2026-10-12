@@ -272,8 +272,10 @@ describe("les résultats ne refont pas lire le courrier en grand", () => {
   });
 
   it("les tours passés ne sont posés qu'une fois sur téléphone : dans la carte des résultats", () => {
+    // L'essai terminé (config/tour-d-essai.ts), il n'y a plus de tour en cours, donc plus
+    // de carte des résultats : les tours passés se posent alors, une fois, comme à la fin.
     expect(lire("src/app/arena/[gameId]/page.tsx")).toContain(
-      "{telephone && !finished ? null : toursPasses}",
+      "{telephone && !finished && !essaiTermine ? null : toursPasses}",
     );
   });
 });

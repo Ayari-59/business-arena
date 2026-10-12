@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
+import { lireLEssai, type TourDEssai } from "@/config/tour-d-essai";
 import {
   companyStates,
   decisions,
@@ -118,6 +119,11 @@ export interface GameView {
   kind: GameKind;
   status: string;
   currentRound: number;
+  /**
+   * LE TOUR D'ESSAI (config/tour-d-essai.ts), sans le scénario réel qui attend dedans :
+   * l'arène en tire son bandeau. Null pour une partie qui n'en a pas eu.
+   */
+  essai: Omit<TourDEssai, "scenario"> | null;
   /**
    * Verrou temporel du tour courant (planning). `playable` faux = hors fenêtre :
    * l'écran passe en lecture seule et « Valider » est grisé. Dates en ISO.
@@ -1624,6 +1630,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     kind: kindDeLaPartie,
     status: game.status,
     currentRound: game.currentRound,
+    essai: (() => {
+      const e = lireLEssai(game.essai);
+      if (!e) return null;
+      const { scenario: _scenario, ...affiche } = e;
+      return affiche;
+    })(),
     playLock,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,

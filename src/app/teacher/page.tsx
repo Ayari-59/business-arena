@@ -63,6 +63,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { FormPendingProgress } from "@/components/long-action-progress";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
+import { EXPLICATION_DU_TOUR_D_ESSAI, TOURS_D_ESSAI } from "@/config/tour-d-essai";
 import { Tiroir } from "@/components/tiroir";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { FriseDesTours } from "@/components/frise-des-tours";
@@ -447,6 +448,59 @@ export default async function TeacherDashboard({
               pour un nombre de tours, au-delà, les équipes joueraient sans matière.
             </span>
           </label>
+
+          {/* LE TOUR D'ESSAI (config/tour-d-essai.ts) : un ou deux tours pour de faux
+              avant la vraie partie. Aucun reste le défaut : une partie se crée comme
+              avant tant que l'enseignant ne le demande pas. */}
+          <fieldset
+            data-tour-d-essai-choix=""
+            className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3"
+          >
+            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <Icone nom="recommencer" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+              Tour d&apos;essai
+            </legend>
+            <p className="mt-1 text-sm text-slate-400">{EXPLICATION_DU_TOUR_D_ESSAI}</p>
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+              <label className="flex items-center gap-2 text-sm text-slate-200">
+                <input
+                  type="radio"
+                  name="toursDEssai"
+                  value=""
+                  defaultChecked
+                  className="h-4 w-4 accent-amber-400"
+                />
+                Aucun
+              </label>
+              {TOURS_D_ESSAI.map((n) => (
+                <label key={n} className="flex items-center gap-2 text-sm text-slate-200">
+                  <input
+                    type="radio"
+                    name="toursDEssai"
+                    value={n}
+                    className="h-4 w-4 accent-amber-400"
+                  />
+                  {compter(n, "tour")}
+                </label>
+              ))}
+            </div>
+            <label className="mt-3 flex items-start gap-3 border-t border-white/5 pt-3">
+              <input
+                type="checkbox"
+                name="enchainementDeLEssai"
+                className="mt-0.5 h-4 w-4 accent-amber-400"
+              />
+              <span>
+                <span className="text-sm font-medium text-slate-200">
+                  Commencer la vraie partie dès la fin de l&apos;essai
+                </span>
+                <span className="mt-0.5 block text-sm text-slate-400">
+                  Sans cette case, c&apos;est vous qui la lancez, une fois les résultats de
+                  l&apos;essai commentés avec la classe.
+                </span>
+              </span>
+            </label>
+          </fieldset>
           <label className="block sm:col-span-3">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Niveau de difficulté
@@ -703,7 +757,9 @@ export default async function TeacherDashboard({
                       {g.elevesCount > 0 ? ` · ${compter(g.elevesCount, "élève")}` : ""} ·{" "}
                       {finished
                         ? "partie terminée"
-                        : `${periodLabel(g.roundDays, g.currentRound)} sur ${g.roundsCount}`}
+                        : g.essai
+                          ? `tour d'essai ${Math.min(g.currentRound, g.essai.tours)} sur ${g.essai.tours}`
+                          : `${periodLabel(g.roundDays, g.currentRound)} sur ${g.roundsCount}`}
                       {" · "}
                       {jourDeCreation(g.createdAt)}
                     </span>
