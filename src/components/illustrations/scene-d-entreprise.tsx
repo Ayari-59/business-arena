@@ -53,14 +53,15 @@ export const SCENES_DES_ENTREPRISES: Record<string, { lieu: string; Dessin: Comp
  * panneau de chantier et les sacs d'enduit de MARTEL, les étiquettes d'étagères
  * et les logos d'enceintes de NOVA ont été effacés à la retouche).
  *
- * Octobre : MARTEL, MAILLE & CO, NOVA, VOLT, ATLAS, LA TABLE D'AUGUSTIN et
- * L'ESCALE passent à une seconde série, plus vivante (des gens au travail, la
- * salle de VOLT pleine, le service au bistrot, l'accueil à la réception), en
- * 3:2. Quatre lieux sont retournés en miroir, là où le retournement montre
- * mieux le lieu : le texte est posé à gauche, sur un voile, et NOVA
- * (l'assembleur à son établi), L'ESCALE (la réceptionniste et son client), LA
- * TABLE D'AUGUSTIN (le serveur, la cliente attablée) et ROUTE & CIE (le
- * cariste et ses palettes) passent ainsi à droite. Aucune de ces quatre photos
+ * Octobre : les neuf passent à une seconde série, plus vivante (des gens au
+ * travail, la salle de VOLT pleine, le service au bistrot, l'accueil à la
+ * réception, le chargement à quai de ROUTE & CIE, l'emballage d'une commande
+ * chez PIXEL & CO), en 3:2. Cinq lieux sont retournés en miroir, là où le
+ * retournement montre mieux le lieu : le texte est posé à gauche, sur un voile,
+ * et NOVA (l'assembleur à son établi), L'ESCALE (la réceptionniste et son
+ * client), LA TABLE D'AUGUSTIN (le serveur, la cliente attablée), ROUTE & CIE
+ * (le cariste et sa palette) et PIXEL & CO (l'emballeuse et son écran)
+ * passent ainsi à droite. Aucune de ces cinq photos
  * ne porte d'écriture qu'un miroir trahirait. Les chiffres du niveau de
  * MARTEL, l'étiquette de son casque et le logo d'un ordinateur d'ATLAS ont été
  * gommés.
@@ -74,10 +75,10 @@ export const PHOTOS_DES_ENTREPRISES: Record<string, { cadrage: number }> = {
   hotel: { cadrage: 25 },
   bistrot: { cadrage: 22 },
   conseil: { cadrage: 25 },
-  ecommerce: { cadrage: 44 },
+  ecommerce: { cadrage: 28 },
   fitness: { cadrage: 50 },
   batiment: { cadrage: 18 },
-  transport: { cadrage: 70 },
+  transport: { cadrage: 42 },
 };
 
 /** Le fichier d'une photo de lieu, pleine taille ou réduite pour le téléphone. */
@@ -97,10 +98,10 @@ export const TAILLES_DES_PHOTOS: Record<string, { largeur: number; hauteur: numb
   hotel: { largeur: 1536, hauteur: 1024 },
   bistrot: { largeur: 1536, hauteur: 1024 },
   conseil: { largeur: 1536, hauteur: 1024 },
-  ecommerce: { largeur: 1408, hauteur: 768 },
+  ecommerce: { largeur: 1536, hauteur: 1024 },
   fitness: { largeur: 1536, hauteur: 1024 },
   batiment: { largeur: 1536, hauteur: 1024 },
-  transport: { largeur: 1376, hauteur: 768 },
+  transport: { largeur: 1536, hauteur: 1024 },
 };
 
 /**
