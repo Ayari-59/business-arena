@@ -36,6 +36,7 @@ import {
   minutesEnClair,
 } from "@/config/ateliers/adaptations";
 import { PrintButton } from "@/components/print-button";
+import { ROLES } from "@/config/ateliers/roles";
 import { bouton } from "@/components/bouton";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 import {
@@ -224,6 +225,18 @@ export default async function AtelierPage({
             >
               Dossier élève
             </Link>
+            {/* Et un dossier par responsable : la direction générale et les
+                quatre postes, chacun avec sa page à imprimer à part. */}
+            {ROLES.map((r) => (
+              <Link
+                key={r.code}
+                href={`/animations/${atelier.code}/dossier/${r.code}`}
+                data-dossier-du-responsable={r.code}
+                className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+              >
+                {r.titre}
+              </Link>
+            ))}
             <Link
               href={`/animations/${atelier.code}/formulaires`}
               className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"

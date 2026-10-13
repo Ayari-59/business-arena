@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { ATELIERS } from "@/config/ateliers";
+import { ROLES } from "@/config/ateliers/roles";
 import { GUIDES, cheminDuGuide } from "@/config/guides";
 import { SITE_URL } from "@/config/site";
 import { getPublicCompetitionCodes } from "@/services/competition.service";
@@ -9,7 +10,7 @@ import { getPublicCompetitionCodes } from "@/services/competition.service";
  *
  * Les fiches des entreprises et des notions sont des sections de leur page
  * (ancres), pas des routes : elles n'ont pas d'entrée propre. Les ateliers, si :
- * chacun a sa page, son dossier élève et ses formulaires.
+ * chacun a sa page, son dossier élève, un dossier par responsable et ses formulaires.
  */
 
 /** Pages publiques de premier niveau (hors ateliers, listés à part). */
@@ -82,6 +83,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.5,
     },
+    // Et le dossier de chaque responsable, la direction comprise.
+    ...ROLES.map((r) => ({
+      url: `${SITE_URL}/animations/${a.code}/dossier/${r.code}`,
+      lastModified: DATE_DE_BUILD,
+      changeFrequency: "monthly" as const,
+      priority: 0.4,
+    })),
   ]);
 
   // Les quatre guides de prise en main, un par public (/guides/<public>).

@@ -6,6 +6,7 @@ import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
 import { atelierByCode } from "@/config/ateliers";
 import { dossierEleve } from "@/config/ateliers/dossiers";
+import { dossiersDesResponsables } from "@/config/ateliers/dossiers-des-responsables";
 import { PERIODICITY_LABELS } from "@/config/scenarios/periodicity";
 import { PrintButton } from "@/components/print-button";
 
@@ -55,6 +56,16 @@ export default async function DossierElevePage({
   if (!atelier) notFound();
   const dossier = dossierEleve(atelier);
   const { entreprise } = dossier;
+  // Le sommaire des cinq responsables : le titre, la mission en une phrase
+  // (la première du dossier du responsable), ses décisions à ce niveau.
+  const dossiers = dossiersDesResponsables(atelier);
+  const responsables = dossiers.map((d) => ({
+    role: d.role,
+    resume: d.mission.split(/(?<=\.)\s/)[0]!,
+    decisions: d.decisions.map((l) => l.nom),
+  }));
+  // La règle de répartition est la même dans les cinq dossiers : on la lit du premier.
+  const repartition = dossiers[0]!.repartition;
   const periodicite =
     PERIODICITY_LABELS[dossier.periodicite].singular.toLowerCase();
 
@@ -321,99 +332,74 @@ export default async function DossierElevePage({
         </div>
       </section>
 
-      {/* Les quatre dossiers de service : chaque membre de l'équipe a sa
-          page, avec les chiffres de son domaine tels que le jeu les applique
-          et les questions à s'être posées avant de valider. */}
-      <section className="mt-10 break-before-page">
+      {/* Les cinq responsables : chaque membre de l'équipe a SON dossier, à
+          part (dossier/[role]). Ici, le sommaire : qui tient quoi, la mission
+          en une phrase, ses décisions à ce niveau, et la règle de répartition
+          selon l'effectif. Les chiffres de chaque domaine sont dans le dossier
+          du responsable, pas recopiés ici. */}
+      <section className="mt-10 break-before-page" data-sommaire-des-responsables="">
         <h2 className="text-xl font-bold text-slate-100 print:text-black">
-          Vos dossiers de service
+          Les cinq responsables
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-          Une équipe se répartit les rôles. Chaque service a sa page : ce
-          qu&apos;il décide, les chiffres de son domaine, et les trois questions
-          à avoir posées avant de valider le tour. Le{" "}
+          Une équipe se répartit les postes. Chaque responsable a son dossier,
+          à imprimer à part : sa mission, les décisions qu&apos;il porte et ce
+          qu&apos;elles changent, les chiffres de son domaine, ce qu&apos;il lit
+          à chaque clôture, ce qu&apos;il prépare pour chaque séance, et sa
+          feuille de décision. Le{" "}
           <a
             href={`/animations/${atelier.code}/cockpit`}
             className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2 print:text-black print:no-underline"
           >
             cockpit de prévision
           </a>{" "}
-          reprend ces chiffres dans un classeur qui calcule la logistique, le
-          résultat et la trésorerie de chaque tour à partir de vos hypothèses.
+          reprend les chiffres de tous les domaines dans un classeur qui
+          calcule la logistique, le résultat et la trésorerie de chaque tour.
         </p>
-        <div className="mt-4 space-y-6">
-          {dossier.services.map((service) => (
+        <div className="mt-4 space-y-3">
+          {responsables.map((r) => (
             <article
-              key={service.code}
-              className="break-inside-avoid rounded-xl border border-white/10 p-5 print:border-black/20"
+              key={r.role.code}
+              className="break-inside-avoid rounded-xl border border-white/10 px-5 py-4 print:border-black/20"
             >
-              <h3 className="text-lg font-bold text-slate-50 print:text-black">
-                {service.titre}
+              <h3 className="text-base font-bold text-slate-50 print:text-black">
+                <Link
+                  href={`/animations/${atelier.code}/dossier/${r.role.code}`}
+                  className="hover:text-amber-300"
+                >
+                  {r.role.titre}
+                </Link>
+                <span className="ml-2 text-xs font-normal uppercase tracking-wider text-slate-400 print:text-black">
+                  {r.role.domaine}
+                </span>
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300 print:text-black">
-                {service.mission}
+              <p className="mt-1 text-sm leading-relaxed text-slate-300 print:text-black">
+                {r.resume}
               </p>
-              <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-                {service.lignes.map((l) => (
-                  <div
-                    key={l.libelle}
-                    className="flex justify-between gap-3 border-b border-white/5 py-1 print:border-black/10"
-                  >
-                    <dt className="text-slate-400 print:text-black">
-                      {l.libelle}
-                    </dt>
-                    <dd className="text-right tabular-nums text-slate-100 print:text-black">
-                      {l.valeur}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              {service.tableau ? (
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full border-collapse text-xs">
-                    <thead>
-                      <tr className="text-left uppercase tracking-wide text-slate-400 print:text-black">
-                        {service.tableau.entetes.map((e) => (
-                          <th
-                            key={e}
-                            className="border-b border-white/10 py-1.5 pr-3 font-medium print:border-black/30"
-                          >
-                            {e}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="text-slate-300 print:text-black">
-                      {service.tableau.lignes.map((ligne, i) => (
-                        <tr
-                          key={i}
-                          className="border-b border-white/5 print:border-black/20"
-                        >
-                          {ligne.map((c, j) => (
-                            <td
-                              key={j}
-                              className={`py-1.5 pr-3 ${j > 0 ? "tabular-nums" : "text-slate-100 print:text-black"}`}
-                            >
-                              {c}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : null}
-              <p className="mt-4 text-xs font-semibold uppercase tracking-surtitre text-slate-400 print:text-black">
-                Avant de valider le tour
+              <p className="mt-1 text-xs text-slate-400 print:text-black">
+                {r.decisions.length > 0
+                  ? `Ses décisions à ce niveau : ${r.decisions.join(", ")}.`
+                  : r.role.code === "direction"
+                    ? "Aucune case de décision : la note de justification et la validation du tour."
+                    : "Aucune case de décision à ce niveau : il surveille et conseille."}{" "}
+                <Link
+                  href={`/animations/${atelier.code}/dossier/${r.role.code}`}
+                  className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2 print:hidden"
+                >
+                  Ouvrir son dossier
+                </Link>
               </p>
-              <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
-                {service.questions.map((q) => (
-                  <li key={q}>· {q}</li>
-                ))}
-              </ul>
             </article>
           ))}
         </div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-surtitre text-slate-400 print:text-black">
+          Qui tient quel dossier, selon la taille de l&apos;équipe
+        </p>
+        <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black" data-repartition="">
+          {repartition.map((r) => (
+            <li key={r}>· {r}</li>
+          ))}
+        </ul>
       </section>
 
       {/* Le tableau de bord de l'équipe, à remplir à la main tour après tour.

@@ -196,7 +196,7 @@ export function dossiersDeService(
 
   const approvisionnement: DossierService = {
     code: "approvisionnement",
-    titre: `Service approvisionnement et ${v.leftoverLabel.toLowerCase()}`,
+    titre: "Responsable production et approvisionnement",
     mission: `Décider chaque tour ${v.productionPlanLabel.toLowerCase()}${multi ? ", référence par référence," : ""} de façon à servir la demande sans laisser dormir de l'argent en ${v.leftoverLabel.toLowerCase()} ; choisir le fournisseur ; tenir la capacité.`,
     lignes: [
       {
@@ -265,7 +265,7 @@ export function dossiersDeService(
 
   const commercial: DossierService = {
     code: "commercial",
-    titre: "Service commercial",
+    titre: "Responsable marketing et commercial",
     mission: `Fixer ${v.priceLabel.toLowerCase()}${multi ? " de chaque référence" : ""} et le budget marketing${marque ? ", partagé entre la marque et chaque référence," : ""}${communication ? " puis choisir l'axe de communication," : ""} en lisant chaque clientèle : ce qu'elle a l'habitude de payer, ce qu'elle supporte, quand elle achète${communication ? ", ce qu'elle regarde" : ""}.`,
     lignes: [
       {
@@ -339,7 +339,7 @@ export function dossiersDeService(
 
   const rh: DossierService = {
     code: "rh",
-    titre: "Service ressources humaines",
+    titre: "Responsable des ressources humaines",
     mission: config.hr
       ? `Ajuster l'effectif, la formation et les salaires pour que la main-d'œuvre suive le volume décidé, sans payer des ${temps.pluriel} qui ne servent pas.`
       : "Vérifier chaque tour que la main-d'œuvre disponible couvre le volume décidé : c'est la seconde limite de l'entreprise, après la capacité.",
@@ -397,7 +397,7 @@ export function dossiersDeService(
 
   const financier: DossierService = {
     code: "financier",
-    titre: "Service financier",
+    titre: "Responsable financier",
     mission:
       "Prévoir la trésorerie du tour avant de valider : ce qui entre, ce qui sort, et quand. Un résultat positif ne garantit pas une caisse positive.",
     lignes: [
