@@ -8,6 +8,7 @@ import { organisationsPourLesCohortes } from "@/services/cohortes.service";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 import { adressesDeLOutil } from "@/lti/constantes";
 import { etatDesCles } from "@/lti/cles";
 import {
@@ -108,20 +109,19 @@ export default async function AdminLtiPage({
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6" data-admin-lti="">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-annonce text-slate-400">Administration générale</p>
-          <h1 className="text-2xl font-bold">Plateformes d&apos;enseignement (LTI 1.3)</h1>
-        </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/admin" className="hover:text-slate-300">
-            ← Plateforme
-          </Link>
-          <Link href="/integration" className="hover:text-slate-300">
-            Guide de l&apos;établissement
-          </Link>
-        </nav>
-      </header>
+      <EnTeteAdmin
+        titre="Plateformes d'enseignement (LTI 1.3)"
+        actif="lti"
+        sommaire={
+          <p className="text-sm text-slate-400">
+            La page publique que suit un établissement :{" "}
+            <Link href="/integration" className="underline underline-offset-4 hover:text-slate-300">
+              Moodle et RENATER
+            </Link>
+            .
+          </p>
+        }
+      />
 
       {fait && FAITS[fait] ? (
         <p role="status" className="text-sm text-emerald-300">

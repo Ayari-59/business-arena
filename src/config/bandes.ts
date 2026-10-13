@@ -61,7 +61,7 @@ export const PAGES_A_BANDES: readonly PageABandes[] = [
   { page: "/ecoles", nom: "Écoles de commerce et universités" },
   { page: "/entreprises", nom: "Entreprises" },
   { page: "/fonctionnalites", nom: "Fonctionnalités" },
-  { page: "/guide", nom: "Guide", partielle: true },
+  { page: "/guide", nom: "Règles du jeu", partielle: true },
   { page: "/notions", nom: "Notions", partielle: true },
   { page: "/parcours", nom: "Parcours", partielle: true },
 ];

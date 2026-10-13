@@ -3,6 +3,7 @@ import { appelleLInvestissement } from "@/config/investissement-par-niveau";
 import { aideDuPlafond } from "@/config/refus-de-decision";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MenuDeLArene } from "@/components/menu-de-l-arene";
 import { notFound } from "next/navigation";
 import { Suspense, cache } from "react";
 import { getGuestUserId } from "@/lib/guest";
@@ -1453,7 +1454,9 @@ export default async function ArenaPage({
     </section>
   );
 
-
+  // Où mène « Quitter la partie » (la flèche de la barre du téléphone et le menu de
+  // l'arène) : l'examen pour un candidat, l'écran de lancement en solo, l'accueil en classe.
+  const retour = copie ? `/examen/${copie.examen.code}` : view.kind === "solo" ? "/jouer" : "/";
   return (
     // LA TEINTE DU MÉTIER, POUR TOUTE LA PARTIE (lot 5A) : `data-metier`
     // publie `--metier`, que l'ardoise, les cartes, le fil des étapes et les
@@ -1476,7 +1479,7 @@ export default async function ArenaPage({
         tour={view.currentRound}
         tours={view.roundsCount}
         termine={finished}
-        retour={copie ? `/examen/${copie.examen.code}` : view.kind === "solo" ? "/jouer" : "/"}
+        retour={retour}
         cockpit={`/arena/${view.gameId}/cockpit`}
         compte={
           telephone ? (
@@ -1968,19 +1971,9 @@ export default async function ArenaPage({
 
         {telephone ? null : compteNode}
 
-        {/* Les deux liens retirés du bandeau de jeu : ils restent à portée,
-            là où l'élève regarde son profil. */}
-        <p className="flex flex-wrap gap-x-4 text-xs text-slate-400 max-sm:hidden">
-          <Link href="/profile" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
-            Mon profil et ma progression
-          </Link>
-          <Link href="/notions" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
-            Fiches notions
-          </Link>
-          <Link href="/guides/etudiant" data-lien-guide-etudiant="" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
-            Guide de l&apos;étudiant
-          </Link>
-        </p>
+        {/* Le petit menu de l'arène, là où l'élève regarde son profil : le même
+            que dans le menu de la barre du téléphone, lu dans le plan du site. */}
+        <MenuDeLArene retour={retour} forme="ligne" />
       </div>
 
       {/* ── Assistant IA (coach de tour + tuteur) ── */}

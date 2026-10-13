@@ -42,7 +42,7 @@ describe("le thème d'origine", () => {
 describe("les refus", () => {
   it("une page ne peut pas perdre toutes ses coupures", () => {
     const fautes = validerContrastes(avec({ "guide.finale": false }));
-    expect(fautes.join("\n")).toMatch(/Guide : aucune bande à contre-jour/);
+    expect(fautes.join("\n")).toMatch(/Règles du jeu : aucune bande à contre-jour/);
   });
 
   it("le nombre de bandes à contre-jour par page n'est pas plafonné", () => {

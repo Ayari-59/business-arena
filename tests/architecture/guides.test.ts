@@ -235,10 +235,16 @@ describe("les guides de prise en main", () => {
 
   it("les portes d'entrée mènent au bon guide", () => {
     expect(lire("src/components/pied-de-page.tsx")).toContain("LIEN_GUIDES");
-    expect(lire("src/config/navigation.ts")).toMatch(/LIEN_GUIDES: LienDeMenu = \{\s*href: "\/guides"/);
-    expect(lire("src/components/en-tete-enseignant.tsx")).toContain('href: "/guides/enseignant"');
-    expect(lire("src/app/arena/[gameId]/page.tsx")).toContain('href="/guides/etudiant"');
-    expect(lire("src/components/barre-de-jeu.tsx")).toContain('href="/guides/etudiant"');
+    const plan = lire("src/config/navigation.ts");
+    expect(plan).toMatch(/LIEN_GUIDES: LienDeMenu = \{\s*href: "\/guides"/);
+    // L'espace enseignant (sa pastille « Aide ») et l'arène (son menu) lisent le
+    // plan : c'est là que les deux adresses s'écrivent, une fois chacune.
+    expect(plan).toContain('href: "/guides/enseignant"');
+    expect(plan).toContain('href: "/guides/etudiant"');
+    expect(lire("src/components/en-tete-enseignant.tsx")).toContain("NAVIGATION_ENSEIGNANT");
+    expect(lire("src/app/arena/[gameId]/page.tsx")).toContain("<MenuDeLArene");
+    expect(lire("src/components/barre-de-jeu.tsx")).toContain("<MenuDeLArene");
+    expect(lire("src/components/menu-de-l-arene.tsx")).toContain("data-lien-guide-etudiant");
     expect(lire("src/app/integration/page.tsx")).toContain('href="/guides/etablissement"');
     expect(lire("src/app/join/page.tsx")).toContain('href="/guides/etudiant"');
     expect(lire("src/app/teacher/login/page.tsx")).toContain('href="/guides/enseignant"');

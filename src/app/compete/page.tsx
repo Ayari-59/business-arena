@@ -56,7 +56,7 @@ export default async function CompetePage({
                 href="/guide#concours"
                 className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
               >
-                Tout savoir sur les concours dans le guide →
+                Tout savoir sur les concours dans les règles du jeu →
               </Link>
             </p>
           </section>

@@ -398,7 +398,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
     {
       titre: "Les règles du jeu et les concours",
       texte: "Le tour vu par l'élève, le courrier, le score et le championnat entre classes.",
-      lien: { href: "/guide", libelle: "Lire le guide du jeu" },
+      lien: { href: "/guide", libelle: "Lire les règles du jeu" },
     },
     {
       titre: "Les notions mobilisées",

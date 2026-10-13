@@ -94,13 +94,23 @@ describe("le pied de page", () => {
     ).toEqual([]);
   });
 
-  it("lit le plan du site plutôt que de recopier ses liens", () => {
-    // Le pied de l'accueil déroulait les quatorze liens du plan à la main.
-    // Ce qu'il porte maintenant vient du registre : l'entrée principale et
-    // les mentions légales, jamais une copie qui prendra du retard.
+  it("déroule le plan du site en quatre colonnes, sans recopier ses liens", () => {
+    // Le pied de l'accueil déroulait les quatorze liens du plan à la main, puis
+    // n'en a plus proposé que quatre. Il lit maintenant le plan, groupe par
+    // groupe, sous les mêmes titres que la barre et le menu : Jouer / les trois
+    // publics / l'aide / les offres et le contact, empilés sur téléphone.
     const source = readFileSync(join(SRC, "components", "pied-de-page.tsx"), "utf8");
+    expect(source).toContain("NAVIGATION");
     expect(source).toContain("ACTION_PRINCIPALE");
-    expect(source).toContain("LIENS_LEGAUX");
-    expect(source).not.toContain("NAVIGATION");
+    expect(source).toContain('aria-label="Plan du site"');
+    expect(source).toMatch(/grid-cols-1 [^"]*lg:grid-cols-4/);
+    for (const code of ["jouer", "enseignants", "ecoles", "entreprises", "aide", "offres"]) {
+      expect(source, `la colonne « ${code} » manque`).toContain(`groupe("${code}")`);
+    }
+    // L'adresse de contact reste en texte, et l'année se lit au rendu.
+    expect(source).toContain("VENDEUR.contact");
+    expect(source).toContain("new Date().getFullYear()");
+    // La page courante ne se propose pas : elle est marquée, en texte.
+    expect(source).toContain('aria-current="page"');
   });
 });

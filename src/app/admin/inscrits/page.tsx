@@ -27,6 +27,7 @@ import {
 import { OFFRES } from "@/config/tarifs";
 import { VERSION_DU_TEXTE } from "@/config/nouveautes";
 import { bouton } from "@/components/bouton";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { creerCodeAction, desactiverCodeAction, reglerInscriptionsAction } from "./actions";
@@ -124,20 +125,7 @@ export default async function AdminInscritsPage({
 
   return (
     <main id="main" className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" data-admin-inscrits="">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="surtitre">Administration générale</p>
-          <h1 className="text-2xl font-bold">Enseignants inscrits</h1>
-        </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/admin" className="hover:text-slate-300">
-            ← Plateforme
-          </Link>
-          <Link href="/mentions-legales" className="hover:text-slate-300">
-            Mentions légales
-          </Link>
-        </nav>
-      </header>
+      <EnTeteAdmin titre="Enseignants inscrits" actif="inscrits" />
 
       {fait ? (
         <p role="status" className="text-sm text-emerald-300">

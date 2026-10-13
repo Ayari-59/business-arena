@@ -55,6 +55,7 @@ import { bouton } from "@/components/bouton";
 import { mesurerLAnalyseSolo } from "@/services/mesure-analyse.service";
 import { SEUIL_RENDU_TARDIF_MINUTES } from "@/pedagogy/mesure-analyse";
 import { Icone } from "@/components/icone";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -154,22 +155,7 @@ export default async function AdminPage({
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-annonce text-amber-400">Administration générale</p>
-          <h1 className="text-2xl font-bold">Plateforme Business Arena</h1>
-        </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/admin/inscrits" className="hover:text-slate-300">Enseignants inscrits</Link>
-          <Link href="/admin/theme" className="hover:text-slate-300">Thème graphique</Link>
-          <Link href="/admin/cohortes" className="hover:text-slate-300">Cohortes d&apos;épisodes</Link>
-          <Link href="/admin/lti" className="hover:text-slate-300">Plateformes LTI</Link>
-          <Link href="/admin/renater" className="hover:text-slate-300">Connexion RENATER</Link>
-          <Link href="/admin/offres" className="hover:text-slate-300">Offres et tarifs</Link>
-          <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
-          <Link href="/" className="hover:text-slate-300">Landing</Link>
-        </nav>
-      </header>
+      <EnTeteAdmin titre="Plateforme Business Arena" actif="plateforme" />
 
       {/* Statistiques */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">

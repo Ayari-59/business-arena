@@ -6,6 +6,7 @@ import { useProgression } from "@/lib/progression-parcours";
 import { allerAuChampDesVentes, useEstimationEnCours } from "@/lib/estimation-en-cours";
 import { LigneEstimeeCompacte } from "@/components/resultat-estime";
 import { PHASES } from "@/config/phases-du-tour";
+import { MenuDeLArene } from "@/components/menu-de-l-arene";
 
 /**
  * LA BARRE D'UNE APPLICATION, À LA PLACE DE CELLE D'UN SITE, DANS L'ARÈNE.
@@ -18,8 +19,9 @@ import { PHASES } from "@/config/phases-du-tour";
  *
  * Elle ne remplace la barre du site QUE sur petit écran (le site la masque, voir
  * site-header.tsx) : sur grand écran, la vitrine garde sa barre et celle-ci
- * disparaît. Le reste de ce que portait la barre du site — profil, fiches,
- * guide — vit dans son menu « ⋯ », au bout d'un doigt.
+ * disparaît. Le reste de ce que portait la barre du site (le guide de
+ * l'étudiant, les fiches, le profil) vit dans son menu « ⋯ », au bout d'un
+ * doigt, sous les mots du plan du site (components/menu-de-l-arene.tsx).
  */
 export function BarreDeJeu({
   nom,
@@ -222,21 +224,9 @@ export function BarreDeJeu({
           <Link href={cockpit} className={lien}>
             Cockpit de prévision
           </Link>
-          <Link href="/profile" className={lien}>
-            Mon profil et ma progression
-          </Link>
-          <Link href="/notions" className={lien}>
-            Fiches notions
-          </Link>
-          <Link href="/guide" className={lien}>
-            Guide
-          </Link>
-          <Link href="/guides/etudiant" className={lien} data-lien-guide-etudiant="">
-            Guide de l&apos;étudiant
-          </Link>
-          <Link href="/" className={lien}>
-            Accueil du site
-          </Link>
+          {/* Le petit menu de l'arène, le même que sous le profil sur grand écran :
+              lu dans le plan du site, et fermé par « Quitter la partie ». */}
+          <MenuDeLArene retour={retour} forme="liste" />
           {compte ? (
             <div className="mt-1 space-y-3 border-t border-white/10 p-2 pt-3">
               {compte}

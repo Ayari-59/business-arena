@@ -3,6 +3,8 @@ import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ConnexionEtablissement } from "@/components/connexion-etablissement";
+import { PastillesDeNavigation } from "@/components/pastilles-de-navigation";
+import { NAVIGATION_ETUDIANT } from "@/config/navigation";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { getGuestUserId } from "@/lib/guest";
@@ -39,7 +41,11 @@ export default async function PartiesDeLEtudiantPage({
         surtitre="Connexion par l'établissement"
         titre="Vos parties et cohortes"
         chapeau="Connecté avec votre établissement, vous retrouvez vos parties sur n'importe quel appareil, sans code de reprise."
-      />
+      >
+        {/* Les pages de l'étudiant, sous les mots du plan du site : la même rangée
+            de pastilles que l'espace enseignant et l'établissement. */}
+        <PastillesDeNavigation className="mt-6" label="Vos pages" pastilles={NAVIGATION_ETUDIANT} actif="parties" />
+      </EnTeteDePage>
       <div className={`${COLONNE_DE_PAGE} grid gap-6`}>
         {offre === "aucune" ? (
           <p className="max-w-2xl rounded-xl encadre-neutre px-4 py-3 text-base text-slate-200" data-sans-offre="">

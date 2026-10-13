@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 import {
   etablissementsAuChoix,
   ficheDeLInscrit,
@@ -77,17 +78,7 @@ export default async function FicheInscritPage({
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6" data-fiche-inscrit={i.id}>
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="surtitre">Enseignants inscrits</p>
-          <h1 className="break-words text-2xl font-bold">{i.nom}</h1>
-        </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/admin/inscrits" className="hover:text-slate-300">
-            ← Enseignants inscrits
-          </Link>
-        </nav>
-      </header>
+      <EnTeteAdmin surtitre="Enseignants inscrits" titre={i.nom} actif="inscrits" />
 
       {fait && FAITS[fait] ? (
         <p role="status" className="text-sm text-emerald-300">

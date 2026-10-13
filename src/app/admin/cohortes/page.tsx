@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 import { SITE_URL } from "@/config/site";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
@@ -90,19 +90,7 @@ export default async function CohortesAdminPage({
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
-            Administration générale
-          </p>
-          <h1 className="text-2xl font-bold">Cohortes d&apos;épisodes manager</h1>
-        </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/admin" className="hover:text-slate-300">
-            ← Plateforme
-          </Link>
-        </nav>
-      </header>
+      <EnTeteAdmin titre="Cohortes d'épisodes manager" actif="cohortes" />
 
       <section className="carte grid gap-3 p-5">
         <h2 className="text-lg font-bold text-slate-50">Créer une cohorte</h2>

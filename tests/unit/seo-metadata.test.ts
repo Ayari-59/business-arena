@@ -68,7 +68,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/jouer/page", "Lancer une partie", "/jouer"],
     ["/entreprises/page", "entreprises jouables", "/entreprises"],
     ["/notions/page", "Fiches notions de gestion", "/notions"],
-    ["/guide/page", "Guide de prise en main", "/guide"],
+    ["/guide/page", "Règles du jeu", "/guide"],
     ["/animations/page", "Ateliers", "/animations"],
     ["/parcours/page", "Parcours par diplôme", "/parcours"],
     ["/fonctionnalites/page", "Fonctionnalités", "/fonctionnalites"],

@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { nomDOffre, OFFRES, parametrageEnClair } from "@/config/tarifs";
 import { parametrageDe } from "@/services/licence.service";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getOrgDashboard } from "@/services/admin.service";
+import { getOrgDashboard, getStaffContext } from "@/services/admin.service";
+import { PastillesDeNavigation } from "@/components/pastilles-de-navigation";
+import { LIEN_ADMINISTRATION, LIEN_ESPACE_ENSEIGNANT, LIEN_ETABLISSEMENT } from "@/config/navigation";
 import {
   deactivateTeacherInviteAction,
   newTeacherInviteAction,
@@ -21,20 +22,26 @@ export default async function OrgAdminPage() {
   } catch {
     redirect("/teacher");
   }
+  // Le propriétaire de la plateforme voit aussi la sortie vers l'administration générale.
+  const staff = await getStaffContext(session.userId);
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      {/* L'en-tête de l'établissement : la même anatomie que l'espace enseignant et
+          l'administration, et la même rangée de pastilles, lue dans le plan du site. */}
+      <header className="space-y-4">
         <div>
           <p className="text-xs uppercase tracking-annonce text-amber-400">
             Administration d&apos;établissement
           </p>
           <h1 className="text-2xl font-bold">{dashboard.name}</h1>
         </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
-          <Link href="/" className="hover:text-slate-300">Landing</Link>
-        </nav>
+        <PastillesDeNavigation
+          label="Mon établissement"
+          pastilles={[LIEN_ETABLISSEMENT]}
+          actif={LIEN_ETABLISSEMENT.code}
+          droite={[LIEN_ESPACE_ENSEIGNANT, ...(staff?.isPlatformAdmin ? [LIEN_ADMINISTRATION] : [])]}
+        />
       </header>
 
       {dashboard.licence.state !== "libre" && dashboard.licence.licence ? (

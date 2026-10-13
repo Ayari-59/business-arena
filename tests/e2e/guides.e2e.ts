@@ -191,7 +191,8 @@ describe("les portes d'entrée mènent au bon guide", () => {
     await enseignantSousLicence(ctx);
     const prof = await ctx.newPage();
     await aller(prof, "/teacher");
-    const pastille = prof.getByRole("navigation", { name: "Espace enseignant" }).getByRole("link", { name: "Guide de prise en main" });
+    // La pastille « Aide » de l'espace enseignant mène au guide de l'enseignant.
+    const pastille = prof.getByRole("navigation", { name: "Espace enseignant" }).getByRole("link", { name: "Aide", exact: true });
     if ((await prof.locator("#nouvelle-partie[open]").count()) === 0) await prof.locator("#nouvelle-partie > summary").click();
     await prof.selectOption('select[name="humanTeamsCount"]', "1");
     await prof.selectOption('select[name="botCount"]', "1");

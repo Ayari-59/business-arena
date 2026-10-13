@@ -9,6 +9,7 @@ import { ConfirmForm, GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { EditeurDOffre } from "@/components/editeur-d-offre";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 import { utcToParisLocalInput } from "@/lib/paris-time";
 import {
   dateLongue,
@@ -166,25 +167,22 @@ export default async function AdminOffresPage({
 
   return (
     <main id="main" className="mx-auto max-w-6xl space-y-8 px-4 py-6 sm:px-6" data-admin-offres="">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-slate-400">Administration générale</p>
-          <h1 className="text-2xl font-bold">Offres et tarifs</h1>
-        </div>
-        <nav aria-label="Rubriques" className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-400">
-          <Link href="/admin" className="hover:text-slate-300">
-            ← Plateforme
-          </Link>
-          <a href="#offres" className="hover:text-slate-300">Offres</a>
-          <a href="#modules" className="hover:text-slate-300">Modules</a>
-          <a href="#gratuites" className="hover:text-slate-300">Gratuités</a>
-          <a href="#codes" className="hover:text-slate-300">Codes promo</a>
-          <a href="#historique" className="hover:text-slate-300">Historique</a>
-          <Link href="/tarifs" prefetch={false} className="hover:text-slate-300">
-            Voir /tarifs
-          </Link>
-        </nav>
-      </header>
+      <EnTeteAdmin
+        titre="Offres et tarifs"
+        actif="offres"
+        sommaire={
+          <nav aria-label="Rubriques" className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-400">
+            <a href="#offres" className="hover:text-slate-300">Offres</a>
+            <a href="#modules" className="hover:text-slate-300">Modules</a>
+            <a href="#gratuites" className="hover:text-slate-300">Gratuités</a>
+            <a href="#codes" className="hover:text-slate-300">Codes promo</a>
+            <a href="#historique" className="hover:text-slate-300">Historique</a>
+            <Link href="/tarifs" prefetch={false} className="hover:text-slate-300">
+              Voir les offres
+            </Link>
+          </nav>
+        }
+      />
 
       {fait && FAITS[fait] ? (
         <p role="status" className="rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-100" data-fait={fait}>

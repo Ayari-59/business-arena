@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
-import { ACTION_PRINCIPALE, LIEN_CONTACT, LIEN_GUIDES, LIEN_TARIFS_DU_MENU, LIENS_LEGAUX } from "@/config/navigation";
+import {
+  ACTION_PRINCIPALE,
+  LIEN_GUIDES,
+  NAVIGATION,
+  type GroupeDeMenu,
+  type LienDeMenu,
+} from "@/config/navigation";
 import { VENDEUR } from "@/config/editeur";
 
 /**
@@ -14,54 +20,36 @@ import { VENDEUR } from "@/config/editeur";
  * atteignable que par le panneau « Menu » : un lien que la loi veut visible,
  * rangé derrière un bouton qui recouvre la page.
  *
- * CE QU'IL NE FAIT PLUS. Celui de l'accueil déroulait à plat les QUATORZE
- * liens du plan, dans l'ordre du registre, sans hiérarchie ni regroupement —
- * c'est-à-dire exactement ce que le menu affiche déjà en accordéon, en moins
- * lisible, puisque les groupes qui disent à qui chaque page s'adresse y
- * disparaissaient. Un pied de page n'est pas un second menu. La navigation
- * reste au menu, qui la fait mieux.
- *
- * TROIS CHOSES, DONC, ET RIEN D'AUTRE : qui édite et ce que fait le site ; où
- * aller si l'on n'a encore rien décidé, plus de quoi nous joindre ; ce que la
- * loi impose. Le rappel d'action est UNIQUE et lit `ACTION_PRINCIPALE` : la
- * même entrée que le menu met en tête, jamais une copie qui dérivera.
+ * LE PLAN, EN QUATRE COLONNES (décision du propriétaire, octobre 2026). Sa
+ * version précédente ne proposait que quatre liens, par crainte de redire le
+ * menu ; mais un pied de page qui déroule le plan rangé par public est la
+ * carte du site, celle qu'on lit en bas d'une page quand on n'a pas trouvé.
+ * Il LIT le plan (config/navigation.ts), groupe par groupe, sous les mêmes
+ * titres que la barre et le menu : jamais une copie qui dérivera. Quatre
+ * colonnes sur grand écran, Jouer / les trois publics / l'aide / les offres et
+ * le contact ; empilées sur téléphone.
  *
  * IL SE POSE HORS DU `<main>`, en frère de celui-ci. C'est ce qui en fait un
  * repère « contentinfo » pour une synthèse vocale ; imbriqué dans le contenu,
- * un `<footer>` n'est plus qu'un bloc parmi d'autres, et le site n'avait alors
- * aucun repère de pied de page — pas même sur l'accueil, où il en existait un.
+ * un `<footer>` n'est plus qu'un bloc parmi d'autres.
  *
- * IL NE PROPOSE PAS LA PAGE OÙ L'ON EST. Le rappel d'action pointe vers
- * l'orientation ; sur la page d'orientation elle-même, c'était un lien qui
- * ramène là où l'on se trouve déjà — la version en une ligne du survol qui ne
- * fait rien. Le pied lit donc le chemin courant, comme la barre le fait pour
- * marquer la page ouverte, et retire l'entrée devenue inutile.
+ * IL NE PROPOSE PAS LA PAGE OÙ L'ON EST. Un lien qui ramène là où l'on se
+ * trouve déjà est la version en une ligne du survol qui ne fait rien. Le pied
+ * lit donc le chemin courant, comme la barre le fait pour marquer la page
+ * ouverte, et pose l'entrée devenue inutile en texte, marquée `aria-current`.
  *
- * UN COLOPHON, PAS UNE LIGNE DE MENTIONS. Sa première version disait les
- * trois bonnes choses et les disait toutes de la même façon : quatorze mots de
- * gris pâle sur deux rangées, l'emblème absent, le nom de la marque noyé au
- * milieu d'une phrase, et huit cents pixels de vide entre la gauche et la
- * droite. Un pied de page est la signature d'une page, comme l'achevé
- * d'imprimer ferme un livre : il lui faut une hiérarchie.
- *
- * Elle tient en quatre décisions. L'emblème ancre le bloc à gauche — c'est
- * `BrandMark`, le dessin monochrome qui prend la couleur de son texte, donc
- * l'or de la maison dans les deux thèmes, sans second fichier ni couleur
- * écrite ici. Le nom quitte la phrase et se pose seul, au serif des titres :
- * une marque se lit, elle ne se glisse pas dans une légende. Les deux liens
- * passent en colonne alignée à droite, ce qui répond aux deux lignes de
- * gauche au lieu de laisser le vide entre elles. Et le filet qui sépare la
- * signature des mentions est de laiton qui s'éteint vers la droite, pas d'un
- * gris de plus.
+ * UN COLOPHON, PAS UNE LIGNE DE MENTIONS. L'emblème ancre la signature à
+ * gauche : c'est `BrandMark`, le dessin monochrome qui prend la couleur de son
+ * texte, donc l'or de la maison dans les deux thèmes. Le nom se pose seul, au
+ * serif des titres : une marque se lit, elle ne se glisse pas dans une légende.
+ * Le filet qui ferme le plan est le gris bleuté des cartes, le même sur toutes
+ * les pages.
  *
  * AUCUNE COULEUR ÉCRITE À LA MAIN. `slate-400`, `white/10` et l'accent du site
- * désignent des paliers d'une échelle que le thème clair renverse : le filet
- * est un gris pâle sur fond sombre et un gris d'encre sur papier, sans qu'on
- * ait à l'écrire deux fois.
+ * désignent des paliers d'une échelle que le thème clair renverse.
  */
 export function PiedDePage() {
   const chemin = usePathname();
-  const ailleurs = (lien: { href: string }) => lien.href !== chemin;
 
   // L'année est lue au rendu, donc à la compilation pour la page servie et à
   // l'hydratation pour celle du navigateur. Les deux disent la même chose sauf
@@ -70,97 +58,123 @@ export function PiedDePage() {
   // se corrige toute seule au lieu de vieillir avec le dernier déploiement.
   const annee = new Date().getFullYear();
 
+  // Les quatre colonnes : « Jouer » seul, puis les trois publics l'un sous
+  // l'autre, puis l'aide, puis les offres et le contact. Lues du plan par leur
+  // code : un groupe ajouté demain prend sa colonne ici sans qu'on l'écrive.
+  const groupe = (code: string): GroupeDeMenu => {
+    const g = NAVIGATION.find((x) => x.code === code);
+    if (!g) throw new Error(`pied de page : le groupe « ${code} » n'est pas dans le plan`);
+    return g;
+  };
+  const colonnes: GroupeDeMenu[][] = [
+    [groupe("jouer")],
+    [groupe("enseignants"), groupe("ecoles"), groupe("entreprises")],
+    [groupe("aide")],
+    [groupe("offres")],
+  ];
+
   return (
     <footer className="border-t border-white/10">
       <div className="mx-auto max-w-6xl px-6 py-14">
-        <div className="flex flex-wrap items-start justify-between gap-x-12 gap-y-10">
-          <div className="flex items-start gap-4">
-            <BrandMark className="mt-0.5 h-10 w-10 shrink-0 text-amber-400" />
-            <div>
-              <p className="font-display text-lg font-semibold tracking-etiquette text-slate-200">
-                BUSINESS <span className="accent-arena">ARENA</span>
-              </p>
-              <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-400">
-                Simulation d&apos;entreprise, apprentissage de la décision.
-              </p>
-            </div>
+        <div className="flex items-start gap-4">
+          <BrandMark className="mt-0.5 h-10 w-10 shrink-0 text-amber-400" />
+          <div>
+            <p className="font-display text-lg font-semibold tracking-etiquette text-slate-200">
+              BUSINESS <span className="accent-arena">ARENA</span>
+            </p>
+            <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-400">
+              Simulation d&apos;entreprise, apprentissage de la décision.
+            </p>
           </div>
-          {/* Les liens : celui qui aide à décider, les tarifs, celui qui met
-              quelqu'un au bout du fil, et l'adresse de contact. Le premier se distingue par son encre forte et
-              son soulignement, parce qu'un pied de page où tout se ressemble
-              ne propose rien ; il a porté l'orange, qui ne dit plus que
-              l'action d'un bouton (lot P1). Le logo, lui, garde l'orange de
-              la marque : c'est une marque, pas une couleur d'interface. */}
-          <nav
-            aria-label="Aller plus loin"
-            className="flex flex-col gap-3 text-sm sm:items-end sm:text-right"
-          >
-            {ailleurs(ACTION_PRINCIPALE) ? (
-              <Link
-                href={ACTION_PRINCIPALE.href}
-                className="group font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
-              >
-                {ACTION_PRINCIPALE.libelle}
-                <span
-                  aria-hidden
-                  className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
-                >
-                  →
-                </span>
-              </Link>
-            ) : null}
-            {ailleurs(LIEN_TARIFS_DU_MENU) ? (
-              <Link
-                href={LIEN_TARIFS_DU_MENU.href}
-                className="text-slate-400 transition-colors hover:text-slate-200"
-              >
-                {LIEN_TARIFS_DU_MENU.libelle}
-              </Link>
-            ) : null}
-            {/* L'aide, sur toutes les pages publiques : les guides de prise en main. */}
-            {ailleurs(LIEN_GUIDES) ? (
-              <Link
-                href={LIEN_GUIDES.href}
-                data-lien-des-guides=""
-                className="text-slate-400 transition-colors hover:text-slate-200"
-              >
-                {LIEN_GUIDES.libelle}
-              </Link>
-            ) : null}
-            {ailleurs(LIEN_CONTACT) ? (
-              <Link
-                href={LIEN_CONTACT.href}
-                className="text-slate-400 transition-colors hover:text-slate-200"
-              >
-                {LIEN_CONTACT.libelle}
-              </Link>
-            ) : null}
-            {/* L'adresse de contact, en texte : elle se sélectionne et se recopie
-                (config/editeur.ts). */}
-            <span data-contact-pied="" className="select-all text-slate-400">
-              {VENDEUR.contact}
-            </span>
-          </nav>
         </div>
-        {/* Le filet ferme la signature : le gris bleuté des cartes, plein, le
-            même sur toutes les pages. Il a été un dégradé d'orange qui
-            s'éteignait vers la droite, et l'orange ne décore pas. */}
+
+        <nav
+          aria-label="Plan du site"
+          data-plan-du-pied=""
+          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {colonnes.map((groupes, i) => (
+            <div key={i} className="space-y-8">
+              {groupes.map((g) => (
+                <div key={g.code} data-groupe-du-pied={g.code}>
+                  <p className="font-display text-sm font-semibold tracking-etiquette text-slate-200">
+                    {g.titre}
+                    {g.precision ? (
+                      <>
+                        {" "}
+                        <span className="font-sans text-xs font-normal tracking-normal text-slate-400">
+                          {g.precision}
+                        </span>
+                      </>
+                    ) : null}
+                  </p>
+                  <ul className="mt-3 space-y-2 text-sm">
+                    {g.liens.map((lien) => (
+                      <li key={lien.href}>
+                        <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        {/* Le filet ferme le plan : le gris bleuté des cartes, plein, le même
+            sur toutes les pages. Il a été un dégradé d'orange qui s'éteignait
+            vers la droite, et l'orange ne décore pas. */}
         <div aria-hidden className="mt-12 h-px bg-[var(--filet-carte)]" />
         <div className="mt-5 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 text-xs text-slate-400">
           <p>© {annee} Business Arena</p>
-          <div className="flex flex-wrap gap-x-8 gap-y-2">
-            {LIENS_LEGAUX.filter(ailleurs).map((lien) => (
-              <Link
-                key={lien.href}
-                href={lien.href}
-                className="transition-colors hover:text-slate-200"
-              >
-                {lien.libelle}
-              </Link>
-            ))}
-          </div>
+          {/* L'adresse de contact, en texte : elle se sélectionne et se recopie
+              (config/editeur.ts). */}
+          <span data-contact-pied="" className="select-all">
+            {VENDEUR.contact}
+          </span>
         </div>
       </div>
     </footer>
+  );
+}
+
+/**
+ * Une entrée du plan, dans sa colonne. L'action principale se distingue par
+ * son encre forte, son soulignement et sa flèche, parce qu'un pied de page où
+ * tout se ressemble ne propose rien ; elle a porté l'orange, qui ne dit plus
+ * que l'action d'un bouton (lot P1). La page courante est du texte, pas un
+ * lien.
+ */
+function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
+  const principale = lien.href === ACTION_PRINCIPALE.href;
+  if (courant) {
+    return (
+      <span aria-current="page" className="text-slate-200">
+        {lien.libelle}
+      </span>
+    );
+  }
+  if (principale) {
+    return (
+      <Link
+        href={lien.href}
+        className="group font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+      >
+        {lien.libelle}
+        <span aria-hidden className="ml-1.5 inline-block transition-transform group-hover:translate-x-1">
+          →
+        </span>
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href={lien.href}
+      // L'aide, sur toutes les pages publiques : les guides de prise en main (tests/e2e/guides.e2e.ts).
+      {...(lien.href === LIEN_GUIDES.href ? { "data-lien-des-guides": "" } : {})}
+      className="text-slate-400 transition-colors hover:text-slate-200"
+    >
+      {lien.libelle}
+    </Link>
   );
 }

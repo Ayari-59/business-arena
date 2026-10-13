@@ -26,5 +26,5 @@ export const metadata: Metadata = {
 };
 
 export default async function ManuelPublicPage() {
-  return <ManuelImprimable retour={{ href: "/enseignants", label: "Pour les enseignants" }} />;
+  return <ManuelImprimable retour={{ href: "/enseignants", label: "Enseignants" }} />;
 }

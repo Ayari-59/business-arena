@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getPlatformConfig, getStaffContext } from "@/services/admin.service";
 import { etatDesContrastes, paletteDuSite } from "@/config/theme-du-site";
 import { FormulaireTheme } from "@/components/formulaire-theme";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -16,22 +16,7 @@ export default async function ThemeAdminPage() {
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-annonce text-amber-400">
-            Administration générale
-          </p>
-          <h1 className="text-2xl font-bold">Thème graphique</h1>
-        </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/admin" className="hover:text-slate-300">
-            ← Plateforme
-          </Link>
-          <Link href="/" className="hover:text-slate-300">
-            Landing
-          </Link>
-        </nav>
-      </header>
+      <EnTeteAdmin titre="Thème graphique" actif="theme" />
 
       <FormulaireTheme
         initial={etatDesContrastes(config.theme)}

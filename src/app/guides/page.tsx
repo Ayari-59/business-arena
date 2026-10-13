@@ -75,7 +75,7 @@ export default async function GuidesPage() {
               <li>
                 Les règles du jeu, le courrier, le score et les concours :{" "}
                 <Link href="/guide" className={LIEN_A_L_ENCRE}>
-                  le guide du jeu
+                  les règles du jeu
                 </Link>
                 .
               </li>

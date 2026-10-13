@@ -164,7 +164,7 @@ export async function ManuelImprimable({
           href="/guide"
           className="rounded-lg border border-slate-700 px-3 py-2 text-slate-500 transition hover:text-slate-100"
         >
-          Guide en ligne
+          Règles du jeu
         </Link>
         <p className="ml-auto text-xs text-slate-600">
           Imprimez (Ctrl+P) ou enregistrez en PDF.

@@ -1,4 +1,10 @@
-import Link from "next/link";
+import {
+  LIEN_ADMINISTRATION,
+  LIEN_ETABLISSEMENT,
+  NAVIGATION_ENSEIGNANT,
+  type Pastille,
+} from "@/config/navigation";
+import { PastillesDeNavigation } from "@/components/pastilles-de-navigation";
 
 /**
  * L'EN-TÊTE DE L'ESPACE ENSEIGNANT, écrit une fois.
@@ -11,36 +17,12 @@ import Link from "next/link";
  * l'enseignant qui passe de sa partie à l'écran de ses élèves reste dans le
  * même lieu.
  *
- * La navigation est une rangée de pastilles, la page courante en ambre : on
- * voit où l'on est et où l'on peut aller, sans avoir à lire une liste de liens.
+ * La navigation est une rangée de pastilles, lue dans le plan du site
+ * (config/navigation.ts, `NAVIGATION_ENSEIGNANT`) et dessinée par le composant
+ * partagé des espaces : la page courante est marquée, on voit où l'on est et
+ * où l'on peut aller sans lire une liste de liens.
  */
-export type PageEnseignant =
-  | "parties"
-  | "cohortes"
-  | "examens"
-  | "scenarios"
-  | "usage"
-  | "apprentissages"
-  | "manuel"
-  | "guide";
-
-const NAVIGATION: ReadonlyArray<{ code: PageEnseignant; href: string; label: string }> = [
-  { code: "parties", href: "/teacher", label: "Mes parties" },
-  // Les cohortes d'épisodes manager, à côté des parties : l'autre façon de faire
-  // jouer une classe, sans compte, sous la licence de l'établissement.
-  { code: "cohortes", href: "/teacher/cohortes", label: "Mes cohortes" },
-  // L'examen individuel noté (module de l'offre) : une partie solo par candidat, une grille fixe.
-  { code: "examens", href: "/teacher/examens", label: "Mes examens" },
-  { code: "scenarios", href: "/teacher/scenarios", label: "Mes scénarios" },
-  { code: "usage", href: "/teacher/usage", label: "Carnet d'usage" },
-  // Le manuel est un document, pas un écran de pilotage : il reste dans la
-  // barre parce qu'on le cherche justement quand on ne sait plus où chercher.
-  { code: "manuel", href: "/teacher/manuel", label: "Manuel" },
-  // LE GUIDE DE PRISE EN MAIN de l'enseignant (/guides/enseignant) : les gestes dans
-  // l'ordre, avec les écrans réels. Le manuel dit comment l'application évalue ; le
-  // guide, comment s'en servir.
-  { code: "guide", href: "/guides/enseignant", label: "Guide de prise en main" },
-];
+export type PageEnseignant = "parties" | "examens" | "cohortes" | "scenarios" | "usage" | "aide";
 
 export function EnTeteEnseignant({
   surtitre = "Espace enseignant",
@@ -55,7 +37,7 @@ export function EnTeteEnseignant({
   surtitre?: string;
   titre: React.ReactNode;
   description?: React.ReactNode;
-  /** La page courante, mise en ambre dans la navigation. Absente : page hors navigation. */
+  /** La page courante, marquée dans la navigation. Absente : page hors navigation. */
   actif?: PageEnseignant;
   /**
    * Une tuile à gauche du titre (pictogramme du secteur, comme dans l'arène).
@@ -92,9 +74,10 @@ export function EnTeteEnseignant({
 
 /**
  * La navigation de l'espace, seule : la rangée de pastilles, la page courante
- * mise en avant. Une page qui pose l'en-tête commun des pages intérieures
- * (« Mes parties ») la place sous son chapeau ; les autres la reçoivent avec
- * l'en-tête enseignant.
+ * mise en avant, et à droite les sorties vers l'établissement (pour qui
+ * l'administre) et vers l'administration générale (pour le propriétaire). Une
+ * page qui pose l'en-tête commun des pages intérieures (« Mes parties ») la
+ * place sous son chapeau ; les autres la reçoivent avec l'en-tête enseignant.
  */
 export function NavigationEnseignant({
   actif,
@@ -107,43 +90,19 @@ export function NavigationEnseignant({
   compte?: React.ReactNode;
   className?: string;
 }) {
+  const droite: Pastille[] = [
+    ...(liens.etablissement ? [LIEN_ETABLISSEMENT] : []),
+    ...(liens.administration ? [LIEN_ADMINISTRATION] : []),
+  ];
   return (
-    <nav
-      aria-label="Espace enseignant"
-      className={`flex flex-wrap items-center gap-2 ${className}`}
-    >
-      {NAVIGATION.map((n) => (
-        <Link
-          key={n.code}
-          href={n.href}
-          aria-current={n.code === actif ? "page" : undefined}
-          className={`rounded-full border px-3 py-1 text-xs transition ${
-            n.code === actif
-              ? "border-amber-400/40 bg-amber-400/10 text-amber-300"
-              : "border-white/10 text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
-          }`}
-        >
-          {n.label}
-        </Link>
-      ))}
-      {liens.etablissement ? (
-        <Link
-          href="/org"
-          className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-        >
-          Mon établissement
-        </Link>
-      ) : null}
-      {liens.administration ? (
-        <Link
-          href="/admin"
-          className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-        >
-          Administration
-        </Link>
-      ) : null}
-      {compte ? <span className="ml-auto flex items-center gap-3">{compte}</span> : null}
-    </nav>
+    <PastillesDeNavigation
+      label="Espace enseignant"
+      pastilles={NAVIGATION_ENSEIGNANT}
+      actif={actif}
+      droite={droite}
+      fin={compte}
+      className={className}
+    />
   );
 }
 

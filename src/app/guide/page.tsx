@@ -51,12 +51,19 @@ const DIMENSIONS_DE_L_INDICE = BPI_V2_DIMENSIONS.map((code) => ({
 
 export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
-  title: "Guide de prise en main",
+  title: "Règles du jeu",
   description:
-    "Démarrer en 2 minutes : lancer une partie, rejoindre une classe, animer un tour, distribuer le courrier et lire ses résultats.",
+    "Les règles du jeu en 2 minutes : lancer une partie, rejoindre une classe, animer un tour, distribuer le courrier, lire ses résultats et son score.",
 };
 
-/** Guide de prise en main : statique, sans base de données — toujours disponible. */
+/**
+ * LES RÈGLES DU JEU. La page s'est appelée « Guide de prise en main » puis « Guide »
+ * tout court, à côté des « Guides de prise en main » (/guides) : deux pages, un même
+ * mot, et personne ne savait laquelle ouvrir. Elle porte maintenant le nom de ce
+ * qu'elle contient (comment on joue, comment on anime, les concours, le courrier, le
+ * score), et l'adresse /guide ne change pas. Statique, sans base de données : toujours
+ * disponible.
+ */
 
 const SECTIONS = [
   { id: "demarrer", label: "En 2 minutes" },
@@ -147,8 +154,8 @@ export default async function GuidePage() {
           l'en-tête ouvre déjà.
         */}
         <EnTeteDePage
-          surtitre="Guide de prise en main"
-          titre={<>Tout ce qu&apos;il faut pour votre première partie</>}
+          surtitre="Aide"
+          titre="Règles du jeu"
           chapeau={
             <>
               Business Arena ne vous demande jamais « calculez le BFR ». Vous vivez une situation,
@@ -157,7 +164,7 @@ export default async function GuidePage() {
             </>
           }
         >
-          <nav aria-label="Sommaire du guide" className="mt-6 flex flex-wrap gap-2">
+          <nav aria-label="Sommaire des règles" className="mt-6 flex flex-wrap gap-2">
             {SECTIONS.map((s) => (
               <a
                 key={s.id}

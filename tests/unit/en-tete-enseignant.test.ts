@@ -18,7 +18,16 @@ describe("l'en-tête enseignant", () => {
     expect(html).toContain("Espace enseignant");
     expect(html).toContain("Mes scénarios");
     expect(html).toMatch(/aria-current="page"[^>]*>Mes scénarios/);
-    for (const lien of ["Mes parties", "Carnet d&#x27;usage"]) expect(html).toContain(lien);
+    for (const lien of ["Mes parties", "Carnet d&#x27;usage", "Aide"]) expect(html).toContain(lien);
+    // L'aide mène au guide de prise en main de l'enseignant ; le manuel n'a plus
+    // de pastille (il se lit depuis le guide et depuis le menu du site).
+    expect(html).toContain('href="/guides/enseignant"');
+    expect(html).not.toContain("/teacher/manuel");
+    // Dans l'ordre d'usage : parties, examens, cohortes, scénarios, carnet, aide.
+    const nav = html.slice(html.indexOf("<nav"));
+    const ordre = ["Mes parties", "Mes examens", "Mes cohortes", "Mes scénarios", "Carnet d&#x27;usage", "Aide"].map((l) => nav.indexOf(`>${l}<`));
+    expect(ordre.every((i) => i >= 0)).toBe(true);
+    expect([...ordre].sort((a, b) => a - b)).toEqual(ordre);
     // pas d'établissement ni d'administration sans le droit
     expect(html).not.toContain("Mon établissement");
     expect(html).not.toContain("Administration");

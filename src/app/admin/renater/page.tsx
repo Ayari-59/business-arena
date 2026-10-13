@@ -7,6 +7,7 @@ import { organisationsPourLesCohortes } from "@/services/cohortes.service";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
+import { EnTeteAdmin } from "@/components/en-tete-admin";
 import { etatDeConfiguration } from "@/saml/configuration";
 import { CERTIFICAT_DE_SIGNATURE_RENATER } from "@/saml/constantes";
 import { etatDeLaFederation, listerIdps } from "@/saml/federation";
@@ -80,20 +81,19 @@ export default async function AdminRenaterPage({
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6" data-admin-renater="">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-annonce text-slate-400">Administration générale</p>
-          <h1 className="text-2xl font-bold">Connexion par l&apos;établissement (RENATER)</h1>
-        </div>
-        <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
-          <Link href="/admin" className="hover:text-slate-300">
-            ← Plateforme
-          </Link>
-          <Link href="/integration#renater" className="hover:text-slate-300">
-            Guide de l&apos;établissement
-          </Link>
-        </nav>
-      </header>
+      <EnTeteAdmin
+        titre="Connexion par l'établissement (RENATER)"
+        actif="renater"
+        sommaire={
+          <p className="text-sm text-slate-400">
+            La page publique que suit un établissement :{" "}
+            <Link href="/integration#renater" className="underline underline-offset-4 hover:text-slate-300">
+              Moodle et RENATER
+            </Link>
+            .
+          </p>
+        }
+      />
 
       {fait && FAITS[fait] ? (
         <p role="status" className="text-sm text-emerald-300">

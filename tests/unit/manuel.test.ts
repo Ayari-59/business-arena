@@ -154,11 +154,15 @@ describe("il n'envoie pas chercher ce qui n'existe pas", () => {
     }
   });
 
-  it("il s'imprime, et l'espace enseignant y mène", () => {
+  it("il s'imprime, et le groupe « Aide » du site comme le guide de l'enseignant y mènent", () => {
     const rendu = lire("src/components/manuel-imprimable.tsx");
     expect(rendu).toContain('data-theme="clair"');
     expect(rendu).toContain("@page { size: A4 portrait");
-    expect(lire("src/components/en-tete-enseignant.tsx")).toContain("/teacher/manuel");
+    // La pastille « Manuel » de l'espace enseignant a cédé la place à « Aide »
+    // (le guide de prise en main) : le manuel reste à un clic, depuis le guide
+    // et depuis le menu du site.
+    expect(lire("src/config/navigation.ts")).toMatch(/href: "\/manuel",\s*libelle: "Manuel de l'enseignant"/);
+    expect(lire("src/config/guides/enseignant.ts")).toContain('href: "/manuel"');
   });
 
   /**

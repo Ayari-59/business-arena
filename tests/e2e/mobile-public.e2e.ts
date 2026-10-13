@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { GROUPE_OUVERT, NAVIGATION } from "../../src/config/navigation";
 
 /**
  * LE SITE PUBLIC, AU POUCE.
@@ -83,13 +84,19 @@ describe("le menu, rangé par public", () => {
     const { contexte, page } = await telephone();
     await ouvrir(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
-    for (const titre of ["Jouer", "Formations", "Écoles de commerce", "Ressources"]) {
-      const groupe = page.locator("#plan-du-site button[aria-controls^='groupe-']", {
-        hasText: titre,
-      });
-      await groupe.first().waitFor({ state: "visible" });
-      const boite = (await groupe.first().boundingBox())!;
-      expect(boite.height, `groupe « ${titre} » trop bas`).toBeGreaterThanOrEqual(43); // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7)
+    // Les groupes sont ceux du plan, dans son ordre, sous leurs titres : un par public.
+    const groupes = page.locator("#plan-du-site button[aria-controls^='groupe-']");
+    await groupes.first().waitFor({ state: "visible" });
+    expect(await groupes.evaluateAll((b) => b.map((x) => x.getAttribute("aria-controls")))).toEqual(
+      NAVIGATION.map((g) => `groupe-${g.code}`),
+    );
+    for (const g of NAVIGATION) {
+      const groupe = page.locator(`#plan-du-site button[aria-controls='groupe-${g.code}']`);
+      expect((await groupe.innerText()).trim().startsWith(g.titre), `groupe « ${g.titre} »`).toBe(true);
+      const boite = (await groupe.boundingBox())!;
+      expect(boite.height, `groupe « ${g.titre} » trop bas`).toBeGreaterThanOrEqual(43); // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7)
+      // Seul « Jouer » est déplié à l'ouverture ; les autres se déplient à la demande.
+      expect(await groupe.getAttribute("aria-expanded"), `groupe « ${g.titre} »`).toBe(g.code === GROUPE_OUVERT ? "true" : "false");
     }
     // « Jouer » est ouvert d'office : on joue sans chercher.
     // Dans le menu : la barre d'action basse porte aussi « Jouer maintenant ».

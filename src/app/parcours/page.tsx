@@ -11,7 +11,7 @@ import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
 import { EnTeteDePage } from "@/components/en-tete-de-page";
-import { LIEN_CONTACT } from "@/config/navigation";
+import { LIEN_CONTACT, LIEN_REGLES } from "@/config/navigation";
 import { TiroirsDesDiplomes } from "@/components/tiroirs-de-diplomes";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -385,10 +385,10 @@ export default async function ParcoursPage() {
             {LIEN_CONTACT.libelle}
           </Link>
           <Link
-            href="/guide"
+            href={LIEN_REGLES.href}
             className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
           >
-            Guide de prise en main
+            {LIEN_REGLES.libelle}
           </Link>
         </BandeFinale>
       </main>

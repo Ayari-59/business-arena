@@ -186,7 +186,7 @@ describe("/admin/inscrits : l'administrateur de la plateforme", () => {
   it("voit la liste et les compteurs, cherche, filtre", async () => {
     const p = await pageAdmin();
     await aller(p, "/admin");
-    await p.getByRole("link", { name: "Enseignants inscrits", exact: true }).click();
+    await p.getByRole("navigation", { name: "Administration" }).getByRole("link", { name: "Inscrits", exact: true }).click();
     await p.waitForURL(/\/admin\/inscrits$/);
     await p.waitForLoadState("networkidle");
     const vu = await texte(p);

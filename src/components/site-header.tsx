@@ -9,7 +9,6 @@ import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
   GROUPE_OUVERT,
-  LIENS_LEGAUX,
   liensDAcces,
   liensDeTete,
   NAVIGATION,
@@ -47,11 +46,13 @@ import {
  * pour elle seule : ses classes, écrites pour un fond sombre, s'y lisent
  * telles quelles, et le logo y prend sa version blanche.
  *
- * Les liens à plat sont ceux de l'enseignant qui découvre : présentation,
- * ateliers, entreprises. Les fiches notions n'y sont plus, elles sont une
- * ressource, pas une vitrine. À droite, deux boutons, un par public : l'espace
- * enseignant et le code d'une partie, pour que ni l'un ni l'autre n'ait à
- * ouvrir le menu.
+ * LES LIENS À PLAT SONT LES PUBLICS DU PLAN : Enseignants · Écoles ·
+ * Entreprises · Aide · Offres, chacun vers la présentation de son public, et
+ * chacun portant EXACTEMENT le titre du groupe que le menu déplie sous le même
+ * mot. Un visiteur qui lit la barre sait donc ce qu'il trouvera dans le menu,
+ * et inversement. À droite, deux portes, une par public : le code d'une partie
+ * et l'espace enseignant, pour que ni l'élève ni l'enseignant n'ait à ouvrir
+ * le menu.
  */
 export function SiteHeader() {
   const chemin = usePathname();
@@ -333,6 +334,14 @@ export function SiteHeader() {
                       }`}
                     >
                       {groupe.titre}
+                      {/* Ce que le mot ne dit pas seul (« lycée, BTS, université »),
+                          en petit et en gris : le titre reste celui de la barre. */}
+                      {groupe.precision ? (
+                        <>
+                          {" "}
+                          <span className="text-xs font-normal text-slate-400">{groupe.precision}</span>
+                        </>
+                      ) : null}
                     </span>
                     {/* Le filet occupe ce que le titre laisse : c'est ce qui
                         distingue une rubrique d'un lien, sans l'écrire. */}
@@ -381,17 +390,6 @@ export function SiteHeader() {
             <InstallButton />
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-400">
-            {LIENS_LEGAUX.map((lien) => (
-              <Link
-                key={lien.href}
-                href={lien.href}
-                className="hover:text-slate-300 pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
-              >
-                {lien.libelle}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </header>

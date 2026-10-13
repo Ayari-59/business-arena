@@ -296,7 +296,7 @@ export const GUIDE_ETUDIANT: Guide = {
     {
       titre: "Les règles du jeu",
       texte: "Le tour, les indices, le courrier et le score, réunis au même endroit.",
-      lien: { href: "/guide", libelle: "Lire le guide du jeu" },
+      lien: { href: "/guide", libelle: "Lire les règles du jeu" },
     },
   ],
   faq: [

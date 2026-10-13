@@ -452,12 +452,12 @@ export default async function EnseignantsPage() {
           */}
           <p className="mt-6 text-center text-base text-slate-400">
             Le déroulé d&apos;une séance, de la création au débriefing, est dans
-            le{" "}
+            les{" "}
             <Link
               href="/guide"
               className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
             >
-              guide de prise en main
+              règles du jeu
             </Link>
             .
           </p>
