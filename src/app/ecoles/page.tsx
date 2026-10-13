@@ -25,6 +25,7 @@ import { BandeDeChiffres } from "@/components/bande-de-chiffres";
 import { BandeFinale } from "@/components/bande-finale";
 import { BandeOuverture, PORTE_SECONDAIRE } from "@/components/bande-ouverture";
 import { PiedDePage } from "@/components/pied-de-page";
+import { ParagrapheSurMesure } from "@/components/encart-sur-mesure";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
 
@@ -300,6 +301,9 @@ export default async function EcolesPage() {
                 Toutes les offres et les tarifs →
               </Link>
             </p>
+            {/* LES SITUATIONS SUR MESURE, en un paragraphe : le texte de
+                config/sur-mesure.ts, le même que l'encart des ateliers. */}
+            <ParagrapheSurMesure className="mt-8 max-w-3xl text-base leading-relaxed text-slate-400" />
           </div>
         </Bande>
 

@@ -410,6 +410,11 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
   ],
+  creneauConseille: {
+    minutes: 120,
+    pourquoi:
+      "La séance de travaux dirigés d'une section de technicien, première année. L'état des lieux et le calcul de marge tiennent dans le premier créneau, la décision du trimestre et le débriefing dans le second.",
+  },
   formats: [
     {
       nom: "Cinq séances hebdomadaires",

@@ -4,6 +4,7 @@ import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
 import { EPISODES_DE_DEMO, NIVEAU_DES_DEMOS } from "@/config/episodes/demos";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { QUI_FACTURE } from "@/config/editeur";
+import { SUR_MESURE } from "@/config/sur-mesure";
 import { diplomesDesAteliers } from "@/config/formations";
 import {
   DEFAULT_SCENARIO_CODE,
@@ -921,7 +922,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
   option("prise-en-main", 100, "Un rendez-vous téléphonique de prise en main, à la demande", "gratuit", ["accompagnement"]),
   option("formation-equipe", 110, "Formation d'une équipe pédagogique", "devis", ["accompagnement"]),
   option("animation-sur-site", 120, "Animation sur site", "devis", ["accompagnement"]),
-  option("scenario-sur-mesure", 130, "Scénario sur mesure : une entreprise fictive à l'image de la vôtre", "devis", []),
+  option("scenario-sur-mesure", 130, SUR_MESURE.offre, "devis", []),
   option("competition-inter-etablissements", 140, "Compétition inter-établissements", "devis", ["concours"]),
   option("integration-lms", 150, INTEGRATION_LMS.nom, "inclus", ["lti"], INTEGRATION_LMS.etat),
   option("ent-du-secondaire", 160, ENT_DU_SECONDAIRE.nom, "etude", []),

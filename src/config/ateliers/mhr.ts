@@ -413,6 +413,11 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
   ],
+  creneauConseille: {
+    minutes: 120,
+    pourquoi:
+      "La séance de travaux dirigés d'une section de technicien, première année. Le plan de saison se construit au premier créneau, la décision du trimestre et sa clôture se jouent au second.",
+  },
   formats: [
     {
       nom: "Cinq séances hebdomadaires",

@@ -102,7 +102,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
         "Créez le concours une semaine avant, notez le code à six caractères et publiez sa page publique : c'est l'affiche de l'immersion. Composez les équipes AVANT la première séance, une par filière et cinq élèves par équipe, en mélangeant les classes : laisser les élèves se choisir reproduit les classes et vide l'exercice de son sens. Imprimez les cinq cartes de poste, une par élève, et la fiche de tour vierge, une par équipe et par séance. Les chiffres que les équipes doivent retrouver seules : 22 € de matières et 16 € d'autres charges variables par enceinte, soit 38 € de coût variable ; 91 000 € de charges fixes par trimestre, plus 5 000 € d'amortissements ; un atelier de 7 000 enceintes et une main-d'œuvre qui en couvre 7 200. Trois clientèles, qui n'ont ni le même prix de référence ni la même sensibilité : les étudiants autour de 59 €, très sensibles au prix, les passionnés autour de 79 €, sensibles à la qualité, et CampusTech, la chaîne de magasins, autour de 55 € et réglée à quatre-vingts jours.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 12,
           titre: "Les équipes et les postes",
           detail:
             "Vous annoncez les équipes et distribuez les cartes de poste : direction financière à la comptabilité et gestion, direction commerciale au management commercial, direction des clientèles à la relation client, direction générale à la terminale technologique, direction de la production à la première technologique. Vous annoncez aussi la règle qui tient l'immersion : rien n'est validé que le plus jeune ne puisse redire en une phrase.",
@@ -114,13 +114,13 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
             "Chacun explore NOVA depuis son poste et note trois faits que les autres ignorent : les charges et le coût de revient pour la finance, l'offre et les prix pour le commerce, les clientèles et leurs délais de règlement pour la relation client, la capacité de l'atelier pour la production, les objectifs et la concurrence pour la direction générale.",
         },
         {
-          minutes: 20,
+          minutes: 18,
           titre: "Premier comité de direction",
           detail:
             "Chaque poste expose ses trois faits en deux minutes, la direction générale tient le temps. L'équipe en tire son coût variable unitaire, la marge de chacun des trois prix de référence, et le nombre d'enceintes qui couvre ses charges de structure.",
         },
         {
-          minutes: 20,
+          minutes: 25,
           titre: "Premières décisions",
           detail:
             "La direction générale fait le tour des postes, puis valide prix et volume. Avant de cliquer, elle demande à la direction de la production de redire la décision en une phrase : si elle n'y arrive pas, l'équipe reprend. En concours, une décision validée ne se reprend plus.",

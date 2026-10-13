@@ -413,6 +413,11 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       ],
     },
   ],
+  creneauConseille: {
+    minutes: 120,
+    pourquoi:
+      "La séance de travaux dirigés d'une section de technicien, deuxième année. Le ratio matières offre par offre se calcule au premier créneau, la décision du trimestre et sa clôture se jouent au second.",
+  },
   formats: [
     {
       nom: "Cinq séances hebdomadaires",

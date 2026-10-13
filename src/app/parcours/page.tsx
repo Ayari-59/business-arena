@@ -7,11 +7,13 @@ import {
   couvertureDeLaFormation,
 } from "@/config/couverture";
 import { FORMATIONS } from "@/config/formations";
+import { scenariosServant } from "@/config/scenarios/formations-servies";
+import { SUR_MESURE } from "@/config/sur-mesure";
+import { LIBELLE_DU_DEVIS } from "@/config/tarifs";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
 import { EnTeteDePage } from "@/components/en-tete-de-page";
-import { LIEN_CONTACT, LIEN_REGLES } from "@/config/navigation";
 import { TiroirsDesDiplomes } from "@/components/tiroirs-de-diplomes";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -99,6 +101,10 @@ const FILIERES = (() => {
       // titre transforme la page en sommaire : on ne sait plus ce qu'il y a
       // derrière, donc on n'ouvre pas. Compté depuis la donnée, jamais écrit.
       blocs: couvertureDeLaFormation(formation.code).length,
+      // LES ENTREPRISES QUI SERVENT CE DIPLÔME, lues dans le registre des
+      // entreprises (config/scenarios/formations-servies) : celles que ses
+      // déroulés font jouer, et celles qui lui conviennent sans déroulé.
+      entreprises: scenariosServant(formation.code).map((s) => s.playerTeamName),
       // LE VOLUME NE S'ADDITIONNE PAS QUAND IL Y A PLUSIEURS CHEMINS. Le BTS
       // MCO en a deux, de cinq et six séances : annoncer « 11 séances, 36
       // heures » promettrait un parcours que personne ne jouera. Un seul
@@ -249,6 +255,19 @@ export default async function ParcoursPage() {
                   </>
                 ) : null}
 
+                {f.entreprises.length > 0 ? (
+                  <p
+                    data-entreprises-du-diplome=""
+                    className="mt-5 text-sm leading-relaxed text-slate-400"
+                  >
+                    <span className="font-medium text-slate-300">
+                      Les entreprises qui servent ce diplôme :
+                    </span>{" "}
+                    {f.entreprises.join(", ")}. Une même entreprise sert
+                    plusieurs formations, chacune à son niveau.
+                  </p>
+                ) : null}
+
                 {/*
                   LE RÉFÉRENTIEL SE PRÉSENTE UNE FOIS, PAS UNE FOIS PAR DÉROULÉ.
                   La page affichait une liste par déroulé : pour le BTS MCO, qui
@@ -370,25 +389,25 @@ export default async function ParcoursPage() {
 
         {/* La bande sort de la colonne de lecture : une fin de page tient toute
             la largeur, sinon elle reste une carte de plus dans la pile. */}
+        {/* LA BANDE FINALE DIT LES SITUATIONS SUR MESURE, avec les mots de
+            config/sur-mesure.ts : la même promesse que l'encart des ateliers et
+            l'option de la grille des offres. Le bouton fait ce que le texte
+            demande, le rendez-vous du menu, et le devis vient en second
+            (audit P2-16, puis audit des ateliers d'octobre). */}
         <BandeFinale
           id="parcours.finale"
           contraste={c("parcours.finale")}
-          titre="Votre diplôme n'est pas dans cette liste ?"
-          texte="Les mêmes mécaniques servent d'autres référentiels : prenons rendez-vous, et regardons ensemble ce que votre programme demande."
+          titre={SUR_MESURE.titre}
+          texte={SUR_MESURE.promesse}
         >
-          {/* LE BOUTON FAIT CE QUE LE TEXTE DEMANDE. La bande disait
-              « écrivez-nous » et proposait de créer une partie : celui dont le
-              diplôme manque n'a justement pas de quoi la régler. Le texte et le
-              bouton disent maintenant le même geste, le rendez-vous du menu
-              (audit P2-16). */}
-          <Link href={LIEN_CONTACT.href} className={bouton({ taille: "l" })}>
-            {LIEN_CONTACT.libelle}
+          <Link href={SUR_MESURE.appel.rendezVous.href} className={bouton({ taille: "l" })}>
+            {SUR_MESURE.appel.rendezVous.libelle}
           </Link>
           <Link
-            href={LIEN_REGLES.href}
+            href={SUR_MESURE.appel.devis.href}
             className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
           >
-            {LIEN_REGLES.libelle}
+            {LIBELLE_DU_DEVIS}
           </Link>
         </BandeFinale>
       </main>

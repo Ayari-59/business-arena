@@ -183,6 +183,21 @@ export interface AtelierDefinition {
   };
   seances: AtelierSeance[];
   /**
+   * LE CRÉNEAU RÉEL DE LA CLASSE, QUAND IL EST PLUS COURT QUE LA SÉANCE.
+   *
+   * Un atelier écrit en séances de trois heures s'annonce à un enseignant de
+   * section de technicien dont la séance de travaux dirigés fait deux heures.
+   * Plutôt qu'une seconde fiche, la donnée dit le créneau, et la fiche calcule
+   * le découpage de chaque séance (config/ateliers/duree-des-seances,
+   * `decoupageEnCreneaux`) : les phases dans l'ordre, la saisie du tour jamais
+   * séparée de sa clôture. Absent : les séances tiennent dans le créneau.
+   */
+  creneauConseille?: {
+    minutes: number;
+    /** Pourquoi ce créneau : celui de qui, et ce que le découpage préserve. */
+    pourquoi: string;
+  };
+  /**
    * Les tempos possibles pour le MÊME contenu. Un atelier hebdomadaire, une
    * semaine bloquée et un fil rouge sur l'année ne demandent pas d'écrire trois
    * ateliers : ils demandent de dire comment on découpe celui-là.

@@ -17,6 +17,12 @@ import {
 } from "../../src/config/scenarios/registry";
 import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
 import { formatDuTournoi, LIMITES_CONCOURS } from "../../src/config/concours";
+import { FORMATIONS } from "../../src/config/formations";
+import {
+  chargeDesSeances,
+  decoupageEnCreneaux,
+  MARGE_CONSEILLEE,
+} from "../../src/config/ateliers/duree-des-seances";
 
 /**
  * Garde-fous des ateliers professionnels.
@@ -718,10 +724,26 @@ describe("ateliers professionnels", () => {
     }
   });
 
-  it("les pages d'atelier n'écrivent aucun mot de référentiel en dur", () => {
+  it("les pages d'atelier n'écrivent aucun mot de référentiel ni aucun sigle en dur", () => {
     // Sans cette garde, une page peut retomber sur « processus » pour tous les
     // diplômes sans qu'aucune donnée ne change : le défaut d'origine.
-    for (const chemin of ["src/app/animations/page.tsx", "src/app/animations/[code]/page.tsx"]) {
+    //
+    // LE PÉRIMÈTRE S'EST ÉLARGI AUX SIGLES. La liste des ateliers écrivait
+    // « processus en BTS CG, blocs de compétences en MCO, NDRC et GPME » dans
+    // une phrase : un diplôme ajouté au registre, et la phrase mentait. Depuis
+    // que les entreprises disent les formations qu'elles servent, quatre pages
+    // nomment des formations, et chacune doit les lire dans le registre. On
+    // cherche donc le sigle et le nom entier de chaque formation dans le code
+    // seul, commentaires retirés, puisqu'un commentaire cite forcément ce
+    // qu'il interdit.
+    const PAGES = [
+      "src/app/animations/page.tsx",
+      "src/app/animations/[code]/page.tsx",
+      "src/app/jouer/page.tsx",
+      "src/app/parcours/page.tsx",
+      "src/components/quick-config-form.tsx",
+    ];
+    for (const chemin of PAGES) {
       const source = readFileSync(chemin, "utf-8")
         .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
         .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -729,11 +751,104 @@ describe("ateliers professionnels", () => {
       expect(source, `${chemin} écrit « Processus mobilisés » en dur`).not.toMatch(
         /Processus mobilisés/i,
       );
+      for (const f of FORMATIONS) {
+        expect(source, `${chemin} écrit le sigle « ${f.sigle} » en dur`).not.toContain(f.sigle);
+        expect(source, `${chemin} écrit « ${f.nom} » en dur`).not.toContain(f.nom);
+      }
     }
     const fiche = readFileSync("src/app/animations/[code]/page.tsx", "utf-8");
     expect(fiche, "la fiche n'ouvre pas le mot du référentiel").toContain(
       "atelier.referentielLabel",
     );
+  });
+
+  it("chaque séance laisse au tour joué au moins ce que le modèle de durée estime", () => {
+    // Un déroulé promet un tour par séance et lui donne une phase sur six. Le
+    // modèle de durée (config/duree-du-tour) sait ce que ce tour demande à une
+    // équipe de cet atelier : le texte à lire, les champs que le niveau ouvre,
+    // la situation du tour, la prise en main au premier. Deux séances donnaient
+    // vingt minutes à un tour estimé à dix-neuf et vingt : juste, mais sans
+    // rien pour la discussion à trois autour de l'écran.
+    //
+    // LA TOLÉRANCE EST NULLE, ET C'EST VOULU. Le modèle est déjà un plancher :
+    // il ne compte ni les aides du formulaire ni le courrier du tour, et sa
+    // lecture est lente à dessein. Une phase qui donne moins que ce plancher
+    // est un déroulé faux, pas un déroulé serré. La marge conseillée d'un
+    // quart (MARGE_CONSEILLEE) n'est pas exigée ici : elle est un objectif
+    // d'écriture, que l'audit d'octobre 2026 a atteint sur les soixante et
+    // onze séances jouées, et que la fiche montre à l'enseignant en écrivant
+    // les deux chiffres. Un texte de situation qui s'allonge demain fera
+    // rougir cette garde avant la classe, et c'est son rôle.
+    expect(MARGE_CONSEILLEE).toBeGreaterThan(1);
+    for (const a of ATELIERS) {
+      for (const c of chargeDesSeances(a)) {
+        expect(
+          c.minutesDeJeu,
+          `${a.code}/séance ${c.seance.numero} : aucune phase ne joue le tour ${c.seance.tourJoue}`,
+        ).toBeGreaterThan(0);
+        expect(
+          c.verdict,
+          `${a.code}/séance ${c.seance.numero} : le tour demande ≈ ${c.estimation.minutes} min, le déroulé lui en donne ${c.minutesDeJeu}`,
+        ).not.toBe("impossible");
+      }
+    }
+  });
+
+  it("le niveau de jeu suit la formation et l'année", () => {
+    // Le niveau d'une fiche se lisait seul, sans règle. Celle-ci est celle de
+    // l'audit d'octobre 2026 : le lycée découvre (1), une première année de
+    // section de technicien gère ou pilote (2 à 3), une seconde année et le BUT
+    // pilotent ou arbitrent (3 à 4), le DCG arbitre ou fait de la stratégie
+    // (4 à 5), l'approfondissement transversal fait de la stratégie (5). Un
+    // concours impose son niveau, une découverte sans formation choisit le
+    // sien.
+    const attendu = (a: (typeof ATELIERS)[number]): number[] | null => {
+      if (a.reglages.concours) return null;
+      if (a.formations.length === 0) return /avancé/i.test(a.annee) ? [5] : null;
+      if (a.formations.includes("stmg") && a.formations.length === 1) return [1];
+      if (a.formations.includes("dcg")) return [4, 5];
+      if (a.formations.some((f) => f.startsWith("but-"))) return [3, 4];
+      if (/première/i.test(a.annee)) return [2, 3];
+      return [3, 4];
+    };
+    for (const a of ATELIERS) {
+      const niveaux = attendu(a);
+      if (!niveaux) continue;
+      expect(
+        niveaux,
+        `${a.code} (${a.formations.join(", ")}, ${a.annee}) : niveau ${a.reglages.niveau}`,
+      ).toContain(a.reglages.niveau);
+    }
+  });
+
+  it("une fiche de lycée ou de section de technicien qui dépasse deux heures conseille un créneau", () => {
+    // « 6 séances de 3 h » s'annonce à un enseignant de BTS dont la séance de
+    // travaux dirigés fait deux heures. La fiche ne se réécrit pas : elle
+    // déclare le créneau, et le découpage de chaque séance se calcule, la
+    // saisie du tour jamais séparée de sa clôture. Un créneau déclaré doit
+    // donc être plus court que la séance, et chaque séance doit s'y couper.
+    const DEUX_HEURES = 120;
+    for (const a of ATELIERS) {
+      const plusLongue = Math.max(...a.seances.map((s) => s.dureeMinutes));
+      const secondaire =
+        a.formations.length > 0 &&
+        a.formations.every((f) => f === "stmg" || f.startsWith("bts-"));
+      if (secondaire && plusLongue > DEUX_HEURES) {
+        expect(
+          a.creneauConseille,
+          `${a.code} : des séances de ${plusLongue} min pour une section de technicien, sans créneau conseillé`,
+        ).toBeDefined();
+      }
+      if (!a.creneauConseille) continue;
+      expect(a.creneauConseille.minutes, `${a.code} : le créneau doit être plus court que la séance`).toBeLessThan(plusLongue);
+      expect(a.creneauConseille.pourquoi.length, `${a.code} : le créneau ne dit pas pourquoi`).toBeGreaterThan(60);
+      for (const s of a.seances) {
+        const creneaux = decoupageEnCreneaux(s, a.creneauConseille.minutes);
+        expect(creneaux, `${a.code}/séance ${s.numero} : une phase dépasse le créneau à elle seule`).not.toBeNull();
+        const total = creneaux!.reduce((t, c) => t + c.minutes, 0);
+        expect(total, `${a.code}/séance ${s.numero} : le découpage perd des minutes`).toBe(s.dureeMinutes);
+      }
+    }
   });
 
   it("aucune prose d'atelier ne coupe une phrase par un tiret", () => {

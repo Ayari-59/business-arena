@@ -2,9 +2,17 @@ import type { Metadata } from "next";
 import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
-import { scenarioByCode } from "@/config/scenarios/registry";
+import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
+import {
+  entreprisesEtFormations,
+  formationsServies,
+  sertEnClair,
+  teteDeFamille,
+} from "@/config/scenarios/formations-servies";
+import { FORMATIONS, formationsDe } from "@/config/formations";
 import { PiedDePage } from "@/components/pied-de-page";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+import { EncartSurMesure } from "@/components/encart-sur-mesure";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/animations" },
@@ -55,6 +63,30 @@ function Etoiles({ n }: { n: number }) {
  * l'aurait ouverte en croyant pouvoir la conduire dans son cours.
  */
 const IMMERSIONS = ATELIERS.filter((a) => a.reglages.concours);
+
+/** « Sert : STMG, BTS CG et DCG » : les formations que l'entreprise d'un atelier sert. */
+const sert = (a: { reglages: { scenarioCode: string } }) =>
+  sertEnClair(formationsServies(teteDeFamille(a.reglages.scenarioCode)));
+
+/**
+ * LE MOT DE CHAQUE RÉFÉRENTIEL, LU DANS LES FICHES. La page l'écrivait en dur,
+ * « processus en BTS CG, blocs de compétences en MCO, NDRC et GPME » : un
+ * diplôme ajouté, et la phrase mentait. Chaque fiche porte le mot de son
+ * référentiel ; on les regroupe, dans l'ordre du registre des formations.
+ */
+const MOTS_DES_REFERENTIELS = (() => {
+  const parMot = new Map<string, Set<string>>();
+  for (const f of FORMATIONS) {
+    const fiche = ATELIERS.find((a) => a.formations.includes(f.code));
+    if (!fiche) continue;
+    const mot = fiche.referentielLabel.toLowerCase();
+    if (!parMot.has(mot)) parMot.set(mot, new Set());
+    parMot.get(mot)!.add(f.code);
+  }
+  return [...parMot].map(([mot, codes]) => `${mot} en ${sertEnClair(formationsDe([...codes]))}`);
+})();
+
+const ENTREPRISES = entreprisesEtFormations();
 
 export default function AteliersPage() {
   return (
@@ -169,6 +201,9 @@ export default function AteliersPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-400">
                       {scenarioByCode(a.reglages.scenarioCode).playerTeamName}
+                      <span className="block text-xs text-slate-400">
+                        Sert : {sert(a)}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-slate-400">
                       {a.format}
@@ -229,6 +264,7 @@ export default function AteliersPage() {
                       "Entreprise",
                       scenarioByCode(a.reglages.scenarioCode).playerTeamName,
                     ],
+                    ["Sert", sert(a)],
                     [
                       "Durée",
                       `${a.format}, ${dureeTotaleHeures(a)} h au total`,
@@ -262,6 +298,66 @@ export default function AteliersPage() {
             ))}
           </div>
 
+          {/*
+            UNE MÊME ENTREPRISE, PLUSIEURS FORMATIONS. Le propriétaire : « une
+            situation peut servir plusieurs formations, donc les indiquer. »
+            Par entreprise, dans l'ordre des choix : les déroulés qui la font
+            jouer et les formations qu'elle sert, lus dans le registre
+            (config/scenarios/formations-servies), jamais écrits ici.
+          */}
+          <h2 id="entreprises" className="mt-14 text-xl font-bold text-slate-100">
+            Une même entreprise, plusieurs formations
+          </h2>
+          <p className="mt-3 text-base leading-relaxed text-slate-400">
+            Chaque entreprise du registre se joue à plusieurs niveaux, et sert
+            donc plusieurs formations : la même usine d&apos;enceintes se dirige
+            en première et en expertise comptable, chacun à son étage. Une
+            entreprise sans déroulé publié se joue déjà en partie libre, et son
+            déroulé s&apos;écrit sur mesure.
+          </p>
+          <ul data-entreprises-et-formations="" className="mt-4 divide-y divide-white/5 rounded-xl border border-white/10">
+            {ENTREPRISES.map(({ scenario, ateliers, formations }) => (
+              <li
+                key={scenario.code}
+                data-entreprise={scenario.code}
+                className="grid gap-x-6 gap-y-1 px-4 py-3 text-sm sm:grid-cols-[minmax(10rem,1fr)_2fr]"
+              >
+                <div>
+                  <p className="font-medium text-slate-200">{scenario.playerTeamName}</p>
+                  <p className="text-xs text-slate-400">
+                    {SECTOR_LABELS[scenario.sector]}
+                    {formations.length > 0 ? ` · sert ${sertEnClair(formations)}` : ""}
+                  </p>
+                </div>
+                <div className="text-slate-400">
+                  {ateliers.length > 0 ? (
+                    ateliers.map((a) => (
+                      <p key={a.code}>
+                        <Link
+                          href={`/animations/${a.code}`}
+                          className="text-slate-300 underline-offset-4 hover:text-amber-300 hover:underline"
+                        >
+                          {a.titre}
+                        </Link>{" "}
+                        · {publicDeLAtelier(a)}
+                      </p>
+                    ))
+                  ) : (
+                    <p>
+                      Aucun déroulé publié : en partie libre, ou{" "}
+                      <a href="#sur-mesure-titre" className="text-slate-300 underline-offset-4 hover:text-amber-300 hover:underline">
+                        sur mesure
+                      </a>
+                      .
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <EncartSurMesure className="mt-10" />
+
           <h2 className="mt-14 text-xl font-bold text-slate-100">
             Comment ils sont écrits
           </h2>
@@ -272,9 +368,8 @@ export default function AteliersPage() {
               demandés sont ceux que le jeu met entre les mains des équipes.
             </p>
             <p>
-              Chaque diplôme découpe le métier avec ses propres mots : processus
-              en BTS CG, blocs de compétences en MCO, NDRC et GPME, thèmes au
-              lycée, unités d&apos;enseignement en DCG. Chaque fiche emploie les
+              Chaque diplôme découpe le métier avec ses propres mots :{" "}
+              {MOTS_DES_REFERENTIELS.join(", ")}. Chaque fiche emploie les
               siens.
             </p>
             <p>

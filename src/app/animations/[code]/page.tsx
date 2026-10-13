@@ -26,6 +26,18 @@ import {
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
 import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
+import {
+  formationsServiesEnPlus,
+  sertEnClair,
+} from "@/config/scenarios/formations-servies";
+import {
+  chargeDesSeances,
+  decoupageEnCreneaux,
+} from "@/config/ateliers/duree-des-seances";
+import {
+  adaptationsDuNiveau,
+  minutesEnClair,
+} from "@/config/ateliers/adaptations";
 import { PrintButton } from "@/components/print-button";
 import { bouton } from "@/components/bouton";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
@@ -94,6 +106,7 @@ const SOMMAIRE = [
   ["technique", "Fiche technique"],
   ["partie", "La partie à créer"],
   ["formats", "Trois façons de le placer"],
+  ["adapter", "Adapter le niveau"],
   ["deroule", "Déroulé séance par séance"],
   ["livrables", "Livrables attendus"],
   ["evaluation", "Modalités d'évaluation"],
@@ -157,6 +170,19 @@ export default async function AtelierPage({
   const processus = [
     ...new Set(atelier.seances.flatMap((s) => s.processus)),
   ].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+  // CE QUE CHAQUE TOUR DEMANDE, selon le modèle de durée, en face de ce que le
+  // déroulé lui donne : la fiche l'écrit par séance, et une garde refuse un
+  // déroulé qui donnerait moins que l'estimation (config/ateliers/duree-des-seances).
+  const charge = new Map(chargeDesSeances(atelier).map((c) => [c.seance.numero, c]));
+  // LES DEUX CRANS VOISINS, lus dans les préréglages et le modèle de durée,
+  // jamais écrits à la main (config/ateliers/adaptations).
+  const adaptations = adaptationsDuNiveau(atelier);
+  // L'ENTREPRISE SERT D'AUTRES FORMATIONS que celle de cette fiche : le
+  // registre des entreprises le dit (config/scenarios/formations-servies).
+  const sertAussi = formationsServiesEnPlus(atelier);
+  // LE CRÉNEAU RÉEL, quand il est plus court que la séance : le découpage se
+  // calcule, phase par phase, sans séparer la saisie du tour de sa clôture.
+  const creneau = atelier.creneauConseille ?? null;
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
@@ -270,6 +296,16 @@ export default async function AtelierPage({
               ({SECTOR_LABELS[scenario.sector].toLowerCase()}),{" "}
               {atelier.reglages.equipes} équipes de{" "}
               {atelier.reglages.effectifParEquipe}.
+              {sertAussi.length > 0 ? (
+                <span data-sert-aussi="">
+                  {" "}
+                  Cette entreprise sert aussi{" "}
+                  <strong className="text-slate-100 print:text-black">
+                    {sertEnClair(sertAussi)}
+                  </strong>
+                  .
+                </span>
+              ) : null}
             </li>
             <li>
               · Exigence :{" "}
@@ -298,6 +334,12 @@ export default async function AtelierPage({
                       `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()}`,
                     ],
                     ["Entreprise dirigée", scenario.title],
+                    [
+                      "L'entreprise sert aussi",
+                      sertAussi.length > 0
+                        ? sertEnClair(sertAussi)
+                        : "aucune autre formation du registre",
+                    ],
                     ["Secteur", SECTOR_LABELS[scenario.sector]],
                     ["Ce que l'entreprise vend", scenario.vocabulary.units],
                     ["Périodicité", atelier.reglages.periodiciteLabel],
@@ -479,6 +521,113 @@ export default async function AtelierPage({
               </div>
             ))}
           </div>
+          {creneau ? (
+            <div data-creneau-conseille="" className="mt-6 break-inside-avoid">
+              <h3 className="text-sm font-semibold text-slate-100 print:text-black">
+                Si vos créneaux font {minutesEnTexte(creneau.minutes)}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-400 print:text-black">
+                {creneau.pourquoi}
+              </p>
+              <ul className="mt-3 space-y-2 text-sm leading-relaxed text-slate-300 print:text-black">
+                {atelier.seances.map((s) => {
+                  const creneaux = decoupageEnCreneaux(s, creneau.minutes);
+                  return (
+                    <li key={s.numero}>
+                      <strong className="text-slate-100 print:text-black">
+                        Séance {s.numero}.{" "}
+                      </strong>
+                      {creneaux === null
+                        ? "Une phase dépasse le créneau à elle seule : cette séance se joue entière."
+                        : creneaux.length === 1
+                          ? `Tient dans un seul créneau (${minutesEnTexte(creneaux[0]!.minutes)}).`
+                          : creneaux
+                              .map(
+                                (c, i) =>
+                                  `${i + 1}er créneau (${minutesEnTexte(c.minutes)}) : ${c.phases.map((p) => p.titre).join(", ")}`.replace(
+                                    /^1er/,
+                                    "Premier",
+                                  ).replace(/^2er/, "Second").replace(/^3er/, "Troisième"),
+                              )
+                              .join(" · ")}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </Section>
+
+        <Section id="adapter" titre="Adapter le niveau">
+          <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
+            Le déroulé est écrit pour le niveau {atelier.reglages.niveau} ·{" "}
+            {atelier.reglages.niveauNom}. Un cran au-dessus ou au-dessous se
+            règle à la création de la partie, et voici ce qu&apos;il change :
+            les leviers, l&apos;entreprise jouée, les séances à retoucher et le
+            temps de chaque tour, lus dans les réglages du jeu plutôt
+            qu&apos;écrits à la main.
+          </p>
+          {adaptations.raison ? (
+            <p
+              data-adaptation-aucune=""
+              className="mt-3 text-sm leading-relaxed text-slate-300 print:text-black"
+            >
+              {adaptations.raison}
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {[adaptations.bas, adaptations.haut].map((ad, i) =>
+                ad ? (
+                  <div
+                    key={ad.sens}
+                    data-adaptation={ad.sens}
+                    className="break-inside-avoid carte p-4 print:border-black/20 print:bg-transparent"
+                  >
+                    <h3 className="text-sm font-semibold text-slate-100 print:text-black">
+                      {ad.sens === "bas" ? "Un cran plus bas" : "Un cran plus haut"} :
+                      niveau {ad.niveau} · {ad.niveauNom}
+                    </h3>
+                    <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
+                      <li>
+                        ·{" "}
+                        {ad.ferme.length > 0
+                          ? `Ferme : ${ad.ferme.join(", ").toLowerCase()}.`
+                          : "Ne ferme aucun levier."}{" "}
+                        {ad.ouvre.length > 0
+                          ? `Ouvre : ${ad.ouvre.join(", ").toLowerCase()}.`
+                          : "N'ouvre aucun levier."}
+                      </li>
+                      <li>
+                        ·{" "}
+                        {ad.bascule
+                          ? `L'entreprise change de variante : ${ad.bascule.de} devient ${ad.bascule.vers}.`
+                          : `L'entreprise reste ${scenario.shortName}.`}
+                      </li>
+                      <li>
+                        ·{" "}
+                        {ad.seances.length > 0
+                          ? `À retoucher : ${ad.seances
+                              .map((s) => `séance ${s.numero} (${s.raison})`)
+                              .join(" ; ")}.`
+                          : "Aucune séance à retoucher : le déroulé tient tel quel."}
+                      </li>
+                      <li>· Par tour, selon le modèle de durée : {minutesEnClair(ad.minutesParTour)}.</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <div
+                    key={i === 0 ? "bas" : "haut"}
+                    data-adaptation={i === 0 ? "bas" : "haut"}
+                    className="carte p-4 text-sm leading-relaxed text-slate-400 print:border-black/20 print:bg-transparent"
+                  >
+                    {i === 0
+                      ? "Aucun cran plus bas : c'est le premier niveau du jeu."
+                      : "Aucun cran plus haut : c'est le dernier niveau du jeu."}
+                  </div>
+                ),
+              )}
+            </div>
+          )}
         </Section>
 
         <Section id="deroule" titre="Déroulé séance par séance">
@@ -511,6 +660,19 @@ export default async function AtelierPage({
                         : ""}
                     </span>
                   </div>
+                  {charge.has(s.numero) ? (
+                    <p
+                      data-tour-demande=""
+                      className="mt-1.5 text-sm text-slate-400 print:text-black"
+                    >
+                      Le tour demande ≈ {charge.get(s.numero)!.estimation.minutes} min
+                      (estimation : lecture, saisie, analyse
+                      {charge.get(s.numero)!.estimation.priseEnMain > 0
+                        ? ", prise en main"
+                        : ""}
+                      ), le déroulé lui en donne {charge.get(s.numero)!.minutesDeJeu}.
+                    </p>
+                  ) : null}
 
                   <p className="mt-3 text-sm leading-relaxed text-slate-300 print:text-black">
                     <strong className="text-slate-100 print:text-black">

@@ -481,6 +481,11 @@ export const ATELIER_GPME: AtelierDefinition = {
       ],
     },
   ],
+  creneauConseille: {
+    minutes: 120,
+    pourquoi:
+      "La séance de travaux dirigés d'une section de technicien, deuxième année. Le chiffrage du poste clients ou du risque se fait au premier créneau, la décision du trimestre et le débriefing au second.",
+  },
   formats: [
     {
       nom: "Six séances hebdomadaires",

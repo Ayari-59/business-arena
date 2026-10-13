@@ -51,6 +51,12 @@ export interface QuickScenario {
   /** La promesse du registre (« Prenez les commandes »), l'accroche de la carte. */
   promesse: string | null;
   /**
+   * Les formations que l'entreprise sert (« STMG, BTS CG et DCG »), lues dans
+   * le registre : une même entreprise se joue à plusieurs niveaux, et la carte
+   * le dit à l'enseignant qui cherche la sienne. Null quand aucune.
+   */
+  sert?: string | null;
+  /**
    * Un scénario à famille se joue en un produit ou en gamme selon le niveau :
    * ce que chaque variante fait jouer, et le niveau à partir duquel c'est la
    * gamme. Absent : le scénario est le même à tous les niveaux.
@@ -281,6 +287,11 @@ export function QuickConfigFields({
                   {s.promesse ? (
                     <span className="text-sm leading-snug text-slate-400 max-sm:hidden">{s.promesse}</span>
                   ) : null}
+                  {s.sert ? (
+                    <span data-sert="" className="text-xs leading-snug text-slate-400 max-sm:hidden">
+                      Sert : {s.sert}
+                    </span>
+                  ) : null}
                   {parCarte ? (
                     // Deux étages : chaque carte dit jusqu'où elle se joue.
                     <span
@@ -299,7 +310,12 @@ export function QuickConfigFields({
           );
         })}
       </div>
-      <p className="mt-2 text-sm leading-snug text-slate-400">{sec?.tagline}</p>
+      <p className="mt-2 text-sm leading-snug text-slate-400">
+        {sec?.tagline}
+        {/* Sur téléphone, la carte ne porte pas les formations : la légende de
+            l'entreprise choisie les dit, à toutes les largeurs. */}
+        {sec?.sert ? <span data-sert-legende=""> Sert : {sec.sert}.</span> : null}
+      </p>
 
       {/* 2 · Niveau */}
       <div className="mt-5 flex items-baseline justify-between gap-3">

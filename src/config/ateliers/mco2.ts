@@ -92,7 +92,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
             "Vous annoncez la règle : six séances, six mois, de juin à novembre, un document de pilotage rendu à chaque fin de séance. Vous insistez sur le rythme : ici un tour est un mois, et tout ce qui se décide se relit trente jours plus tard.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Lire le compte du mois",
           detail:
             "Chaque équipe relève ce que l'unité dépense pour produire un couvert, ce que coûte un mois d'ouverture que la salle soit pleine ou vide, et ce qu'elle doit à la banque chaque mois. Vous circulez sans corriger : une équipe qui oublie une charge le découvrira dans son résultat.",
@@ -104,7 +104,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
             "L'équipe calcule son ratio matières, sa marge par couvert, puis le nombre de couverts qui couvre le mois, et le divise par ses jours d'ouverture. Le chiffre obtenu est celui qu'un responsable d'unité surveille tous les jours.",
         },
         {
-          minutes: 20,
+          minutes: 25,
           titre: "Décisions du mois",
           detail:
             "L'arène pose au premier mois un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit son prix et ses couverts à préparer, en sachant que le surplus part à la poubelle le soir même.",

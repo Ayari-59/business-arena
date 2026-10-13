@@ -491,6 +491,11 @@ export const ATELIER_CG1: AtelierDefinition = {
       ],
     },
   ],
+  creneauConseille: {
+    minutes: 120,
+    pourquoi:
+      "La séance de travaux dirigés d'une section de technicien, première année. Chaque séance de trois heures se coupe en deux créneaux ; le calcul à la main se fait au premier, la décision du tour et sa clôture restent ensemble au second.",
+  },
   formats: [
     {
       nom: "Atelier hebdomadaire",

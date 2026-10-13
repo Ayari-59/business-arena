@@ -22,6 +22,7 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+import { ParagrapheSurMesure } from "@/components/encart-sur-mesure";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -381,6 +382,9 @@ export default async function EnseignantsPage() {
             font jouer un coût marginal, une VAN ou un rachat comme une décision, avec leur fiche
             enseignant.
           </p>
+          {/* LES SITUATIONS SUR MESURE, en un paragraphe : le texte de
+              config/sur-mesure.ts, le même que l'encart des ateliers. */}
+          <ParagrapheSurMesure className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-slate-400" />
         </Bande>
 
         {/*

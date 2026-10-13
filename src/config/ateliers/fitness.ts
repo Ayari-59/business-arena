@@ -483,6 +483,11 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       ],
     },
   ],
+  creneauConseille: {
+    minutes: 120,
+    pourquoi:
+      "La séance de travaux dirigés d'une section de technicien, deuxième année. La valeur vie de l'adhérent se calcule au premier créneau, la décision du trimestre et sa clôture au second.",
+  },
   formats: [
     {
       nom: "Six séances hebdomadaires",

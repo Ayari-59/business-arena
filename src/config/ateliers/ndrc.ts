@@ -482,6 +482,11 @@ export const ATELIER_NDRC: AtelierDefinition = {
       ],
     },
   ],
+  creneauConseille: {
+    minutes: 120,
+    pourquoi:
+      "La séance de travaux dirigés d'une section de technicien, première année. Le calcul du coût d'acquisition se fait au premier créneau, la saisie du trimestre et ses résultats au second.",
+  },
   formats: [
     {
       nom: "Six séances hebdomadaires",

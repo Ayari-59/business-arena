@@ -18,6 +18,7 @@ import { MARQUE_DE_L_ARENE, messageNiveauxReserves } from "@/config/tarifs";
 import { getSession } from "@/lib/session";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
+import { formationsServies, sertEnClair } from "@/config/scenarios/formations-servies";
 
 export const dynamic = "force-dynamic";
 
@@ -179,6 +180,8 @@ export default async function JouerPage({
                       tagline: s.tagline,
                       teinte: teinteDuMetier(s),
                       promesse: promesseEntreprise(s),
+                      // Les formations que l'entreprise sert, lues dans le registre.
+                      sert: sertEnClair(formationsServies(s.code)) || null,
                       ...(famille
                         ? {
                             variante: {
