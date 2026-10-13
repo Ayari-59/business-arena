@@ -29,7 +29,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
     "Cinq trimestres dans un pure player, du premier euro d'acquisition au tableau de bord de la performance commerciale.",
   difficulte: 2,
   difficulteLabel: "Initiation",
-  format: "6 séances de 2 h",
+  format: "7 séances de 2 h",
   pourquoi:
     "Le coût d'acquisition d'un client se comprend en une phrase et ne se mesure jamais dans un exercice, parce qu'un exercice le donne. Ici l'équipe fixe elle-même son budget d'acquisition, constate le trimestre suivant combien de clients il a réellement amenés, et divise. Le chiffre qui sort est le sien. La question du métier arrive alors d'elle-même : ce client, une fois payé ce qu'il a coûté à faire venir, rapporte-t-il encore quelque chose. Et celle qui suit, plus dure : vaut-il mieux en faire venir un de plus ou garder celui de l'an dernier.",
   reglages: {
@@ -44,6 +44,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 5,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "PIXEL & CO oppose trois clientèles qui ne se pilotent pas de la même façon : le trafic payant, qu'il faut acheter à chaque fois, la base installée, qui revient si on la soigne, et les marketplaces, qui apportent du volume contre une commission. L'atelier travaille les décisions commerciales et laisse à zéro les décisions de structure, que le niveau met à l'écran : un atelier de première année n'a pas à faire arbitrer un emprunt. Décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas restent possibles, atténués au niveau retenu, et se lisent dans le journal du tour.",
@@ -51,6 +52,79 @@ export const ATELIER_NDRC: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans PIXEL & CO sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 2 · Relation client à distance et digitalisation",
+        "Bloc 1 · Relation client et négociation-vente",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de PIXEL & CO, ses trois clientèles digitales et ses canaux d'acquisition, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un pure player en une page : ses trois clientèles, ses canaux d'acquisition et les charges qui tombent chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le coût d'acquisition et la marge par clientèle.",
+      ],
+      notions: [
+        "acquisition payante et coût par client",
+        "base installée et taux de rétention",
+        "commission marketplace et marge nette",
+        "compte de résultat d'un pure player",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario ecommerce, un trimestre par tour, niveau Gestion, cinq tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du pure player, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis cinq trimestres, un seul pure player, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur boutique en ligne.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de PIXEL & CO, ses trois clientèles avec leur valeur et leur taux de rétention, les canaux d'acquisition disponibles et leur coût, les marketplaces et leur commission, les charges de structure du trimestre. Elle remplit la première moitié de sa fiche d'identité : clientèles, canaux, charges.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, alloue son budget par canal et par clientèle, fixe ses prix et ses commissions marketplace, puis saisit ses décisions. Vous ne corrigez rien : un budget mal alloué est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires par canal, son coût d'acquisition et son résultat, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des budgets par canal, un coût d'acquisition, une marge par clientèle, un résultat. Qui a acquis le plus de clients, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. La commission marketplace réduit la marge : vendre par tous les canaux n'est pas toujours plus rentable.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de PIXEL & CO, une page : les trois clientèles avec leur valeur et leur taux de rétention, les canaux d'acquisition et leur coût, les commissions marketplace, les charges de structure, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté un pure player sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mes fiches descriptives d'activités.",
+      evaluation: [
+        "Les trois clientèles sont listées avec leur valeur et leur taux de rétention.",
+        "Les canaux d'acquisition sont distingués avec leur coût unitaire.",
+        "Les trois chiffres de l'essai sont exacts, et la différence de marge entre canal direct et marketplace est relevée.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "D'où viennent les clients",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -123,7 +197,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Ce que coûte un client",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -196,7 +270,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Le service après-vente se paie",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -269,7 +343,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Tenir un pic de commandes",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -342,7 +416,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Négocier sa place chez les partenaires",
       dureeMinutes: 120,
       tourJoue: 5,
@@ -415,7 +489,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       ],
     },
     {
-      numero: 6,
+      numero: 7,
       titre: "Rendre compte de la performance commerciale",
       dureeMinutes: 120,
       tourJoue: null,

@@ -33,7 +33,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     "Quatre trimestres à la tête d'un industriel, du coût de revient au diagnostic financier complet, avec la montée en charge d'un compte-clé comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "5 séances de 2 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Le coût de revient se calcule au tableau et s'oublie à la sortie, parce qu'un exercice donne les charges et demande le coût. Ici l'équipe fixe son volume de production et son prix, découvre au trimestre suivant sa marge réelle une fois les charges fixes absorbées, et voit sa trésorerie se tendre alors que son compte de résultat est bénéficiaire, parce que ses clients paient à soixante jours. Le besoin en fonds de roulement cesse d'être une formule : une équipe qui a vendu davantage sans financer son cycle se retrouve à court de caisse au meilleur de son activité, et son tableau de trésorerie le lui dit avant sa banque.",
   reglages: {
@@ -48,6 +48,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "NOVA se joue ici en trois références, qui se disputent le même atelier : le coût de revient et la marge se calculent enceinte par enceinte, et le mix devient une décision. NOVA porte un coût de production, des charges fixes qui pèsent tant que le volume ne les absorbe pas, des délais de règlement qui creusent le besoin en fonds de roulement, et un compte-clé qui fait bondir la demande au quatrième trimestre. Le niveau retenu ouvre la trésorerie, l'assurance, le recrutement, l'emprunt et l'investissement ; la troisième enceinte y est livrée prête, sa recherche et l'engagement RSE attendent le niveau suivant : la gestion généraliste demande de voir l'entreprise entière, du coût de revient au financement de sa croissance. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice.",
@@ -55,6 +56,79 @@ export const ATELIER_GEA: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans NOVA sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 1 · Analyser les coûts et la rentabilité",
+        "Bloc 2 · Établir et lire les documents de synthèse",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois références d'enceintes et son atelier, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, sa capacité de production et les charges qui structurent son coût.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et un premier bilan simplifié, et je distingue résultat, trésorerie et structure financière.",
+      ],
+      notions: [
+        "coût de production et marge par référence",
+        "charges fixes et charges variables",
+        "cycle d'exploitation et besoin en fonds de roulement",
+        "compte de résultat et bilan simplifié",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario nova-gamme, un trimestre par tour, niveau Arbitrage, quatre tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité de l'entreprise, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de NOVA, ses trois références d'enceintes avec leur coût de production, la capacité de l'atelier, les délais de règlement des clients et des fournisseurs. Elle remplit la première moitié de sa fiche d'identité : références, capacité, charges de structure.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, décide de son mix de production et de ses prix de vente, puis saisit ses décisions. Vous ne corrigez rien : un volume mal calibré est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son résultat et sa trésorerie de fin de trimestre, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un mix, un résultat, une trésorerie. Qui a vendu le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Le bilan simplifié montre que le stock invendu pèse sur la trésorerie sans passer par le résultat.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de NOVA, une page : références et coûts de production, capacité de l'atelier, délais de règlement, charges de structure du trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté une entreprise manufacturière sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon dossier professionnel.",
+      evaluation: [
+        "Les trois références sont listées avec leur coût de production.",
+        "La capacité de l'atelier et les délais de règlement sont renseignés.",
+        "Les trois chiffres de l'essai sont exacts, et la différence entre le résultat et la trésorerie est relevée.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Calculer un coût de revient",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -127,7 +201,7 @@ export const ATELIER_GEA: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Du résultat à la trésorerie",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -200,7 +274,7 @@ export const ATELIER_GEA: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Produire quoi, quand l'atelier est plein",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -273,7 +347,7 @@ export const ATELIER_GEA: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Piloter la montée en charge",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -346,7 +420,7 @@ export const ATELIER_GEA: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Établir le diagnostic financier",
       dureeMinutes: 120,
       tourJoue: null,

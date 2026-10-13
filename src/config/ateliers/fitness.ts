@@ -30,7 +30,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     "Cinq trimestres dans une salle de sport par abonnement, de l'attrition à la valeur vie d'un adhérent, avec la saturation de janvier comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "6 séances de 2 h",
+  format: "7 séances de 2 h",
   pourquoi:
     "La fidélisation s'enseigne en une phrase, garder coûte moins cher que recruter, et personne ne la mesure, parce qu'un exercice donne le taux d'attrition. Ici l'équipe part avec mille six cents adhérents, voit au trimestre suivant combien sont partis, et comprend que ce chiffre décide de son résultat plus que ses ventes du trimestre. La valeur vie d'un adhérent cesse d'être une formule : à quinze pour cent d'attrition il vaut six cents euros de marge, à dix pour cent il en vaut neuf cents, et l'équipe qui a rempli sa salle au-delà de ce que ses coachs encadrent voit son attrition monter et sa valeur fondre. Le métier arrive alors de lui-même : que faire d'un abonnement annuel encaissé d'avance, et faut-il vendre à celui qui ne restera pas.",
   reglages: {
@@ -45,6 +45,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 5,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "VOLT FITNESS part avec 1 600 adhérents qui paient 105 € par trimestre, une capacité de 2 200 places et huit coachs qui en encadrent à peine plus, un emprunt de 420 000 € et une attrition de base de 15 % par trimestre, qui monte l'été, avec le prix, quand la qualité baisse ou quand la salle dépasse 85 % de remplissage. Le marketing ramène des adhérents nouveaux, il n'en retient aucun. Le niveau retenu ouvre la qualité, la maintenance, le poste clients et l'encadrement, que l'atelier laisse aux huit coachs du départ, et ferme l'emprunt, l'investissement et l'assurance : en deuxième année, la relation client se pilote par ce qu'on offre et ce qu'on facture, pas par la structure. Un manque de trésorerie, la banque le couvre seule, par le découvert. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice ; les aléas restent tirés et se lisent dans le journal du tour.",
@@ -52,6 +53,79 @@ export const ATELIER_FITNESS: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans VOLT FITNESS sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 1 · Relation client et négociation-vente",
+        "Bloc 2 · Relation client à distance et digitalisation",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de VOLT FITNESS, ses trois clientèles et ses leviers de fidélisation, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une salle de fitness en une page : ses clientèles, sa capacité d'accueil, ses leviers d'acquisition et de fidélisation.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le coût d'acquisition et le résultat.",
+      ],
+      notions: [
+        "adhérents actifs et taux d'attrition",
+        "coût d'acquisition et valeur d'un client",
+        "taux de remplissage et chiffre d'affaires",
+        "marketing digital et relation client à distance",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario fitness, un trimestre par tour, niveau Pilotage, cinq tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité de la salle, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis cinq trimestres, une seule salle de sport, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de VOLT FITNESS, ses 1 600 adhérents de départ, sa capacité de 2 200 places, ses huit coachs, le taux d'attrition de base et les leviers marketing disponibles. Elle remplit la première moitié de sa fiche d'identité : clientèle de départ, capacité, charges de structure.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, décide de son budget marketing, de ses canaux d'acquisition et de sa cotisation, puis saisit ses décisions. Vous ne corrigez rien : un budget mal alloué est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son nombre d'adhérents, son chiffre d'affaires et son résultat, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un budget marketing, un nombre d'adhérents, un résultat. Qui a le plus d'adhérents, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Le coût d'acquisition compare ce qu'on a dépensé à ce que chaque nouveau client rapportera.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de VOLT FITNESS, une page : clientèle de départ et taux d'attrition, capacité d'accueil et effectif de coachs, leviers d'acquisition et de fidélisation, charges de structure, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté une salle de fitness sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mes fiches descriptives d'activités.",
+      evaluation: [
+        "Les trois clientèles sont identifiées avec leur taux d'attrition de base.",
+        "Les leviers d'acquisition et de fidélisation sont distingués avec leur coût.",
+        "Les trois chiffres de l'essai sont exacts, et le coût d'acquisition par nouvel adhérent est calculé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Mille six cents adhérents et un crédit",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -124,7 +198,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Ceux qui ne reviennent pas",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -197,7 +271,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Le creux de l'été",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -270,7 +344,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Douze mois encaissés d'avance",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -343,7 +417,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Trop de monde aux heures de pointe",
       dureeMinutes: 120,
       tourJoue: 5,
@@ -416,7 +490,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       ],
     },
     {
-      numero: 6,
+      numero: 7,
       titre: "Rendre compte de sa relation client",
       dureeMinutes: 120,
       tourJoue: null,

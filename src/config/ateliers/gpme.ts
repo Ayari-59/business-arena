@@ -28,7 +28,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     "Cinq trimestres dans un cabinet de conseil de douze personnes, du diagnostic d'entrée au rapport d'activité présenté au dirigeant.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "6 séances de 2 h",
+  format: "7 séances de 2 h",
   pourquoi:
     "Dans une PME, personne n'a de service dédié : la même personne relance un client en retard le matin et prépare un recrutement l'après-midi, et les deux décisions se tiennent par la trésorerie. C'est ce lien-là qu'un dossier découpé par bloc ne fait jamais sentir. Ici l'équipe décide de recruter au trimestre trois et se retrouve au trimestre quatre à devoir payer un salaire de plus avec des créances qui ne rentrent pas. Les blocs du référentiel cessent d'être des chapitres séparés : ce sont les quatre faces d'une même décision.",
   reglages: {
@@ -43,6 +43,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 5,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la stratégie et une pratique de cyber-sécurité à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas du niveau Arbitrage restent fréquents, et c'est voulu : la troisième séance en fait sa leçon.",
@@ -50,6 +51,79 @@ export const ATELIER_GPME: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans ATLAS CONSEIL sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
+        "Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat d'ATLAS CONSEIL, ses offres de consulting et sa capacité en journées consultants, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un cabinet de conseil en une page : ses offres, sa capacité en journées et les charges qui tombent chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le résultat et la trésorerie du cabinet.",
+      ],
+      notions: [
+        "journée consultant, unité du cabinet",
+        "taux d'occupation et capacité disponible",
+        "charges de structure d'une PME de services",
+        "compte de résultat et trésorerie d'un cabinet",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario conseil-gamme, un trimestre par tour, niveau Arbitrage, cinq tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du cabinet, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis cinq trimestres, un seul cabinet, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur cabinet.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat d'ATLAS CONSEIL, ses trois offres avec leur tarif journalier et leur marge, la capacité de l'équipe en journées, le poste clients et les charges de structure. Elle remplit la première moitié de sa fiche d'identité : offres, capacité, charges.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, décide de son mix d'offres, de son budget de prospection et de ses prix, puis saisit ses décisions. Vous ne corrigez rien : une capacité mal allouée est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son résultat et sa trésorerie, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un mix d'offres, un taux d'occupation, un résultat. Qui a rempli le plus son agenda, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. La journée non vendue ne se stocke pas : elle est perdue.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité d'ATLAS CONSEIL, une page : les trois offres avec leur tarif et leur marge, la capacité de l'équipe en journées, les charges de structure du trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté un cabinet de conseil sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon dossier professionnel.",
+      evaluation: [
+        "Les trois offres sont listées avec leur tarif journalier et leur marge.",
+        "La capacité en journées et les charges de structure sont renseignées.",
+        "Les trois chiffres de l'essai sont exacts, et le coût d'une journée non vendue est relevé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Prendre la mesure du cabinet",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -122,7 +196,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Faire rentrer l'argent",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -195,7 +269,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Les risques d'une petite structure",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -268,7 +342,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Recruter, et à quel moment",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -341,7 +415,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Défendre son prix",
       dureeMinutes: 120,
       tourJoue: 5,
@@ -414,7 +488,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       ],
     },
     {
-      numero: 6,
+      numero: 7,
       titre: "Rendre compte au dirigeant",
       dureeMinutes: 120,
       tourJoue: null,

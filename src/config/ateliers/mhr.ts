@@ -33,7 +33,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     "Quatre trimestres à la tête d'un hôtel, du calcul du prix moyen et du taux d'occupation au tableau de bord de direction, avec la haute saison comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "5 séances de 2 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Le taux d'occupation et le prix moyen se récitent en une heure et ne se comprennent qu'en les subissant. Ici l'équipe fixe son tarif, découvre au trimestre suivant combien de chambres sont restées vides à ce prix, et voit son revenu par chambre disponible monter ou tomber selon qu'elle a rempli ou tenu ses prix. La saisonnalité cesse d'être un chapitre : un hôtel qui a bradé ses nuitées en basse saison n'a plus de trésorerie pour affronter la haute, et une équipe qui a gardé ses tarifs sur un trimestre creux voit ses concurrents remplir pendant que ses étages restent éteints. La perte sèche de la nuitée invendue, que rien ne rattrape le lendemain, fait le reste de la leçon.",
   reglages: {
@@ -48,6 +48,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "L'hôtel porte trois clientèles qui ne viennent pas aux mêmes saisons, une capacité de chambres qui ne s'étire pas d'un trimestre à l'autre, et une saison haute qui décide de l'exercice. Le niveau retenu ouvre le poste clients et les équipes, que l'atelier laisse à leur effectif de départ, sans l'emprunt, l'investissement ni l'assurance : la direction opérationnelle d'un établissement en première année se joue sur le tarif, le remplissage et la caisse, pas sur la structure. Un manque de trésorerie, la banque le couvre seule, par le découvert. Le monde variable est décoché pour que toutes vos classes affrontent la même saison.",
@@ -55,6 +56,79 @@ export const ATELIER_MHR: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Prendre la direction de l'hôtel sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
+        "Bloc 2 · Analyser les coûts et la performance pour décider",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de l'hôtel, ses trois clientèles et sa saisonnalité, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un hôtel en une page : ses clientèles, sa capacité en chambres, ses tarifs et les charges qui tombent chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le taux d'occupation et le résultat.",
+      ],
+      notions: [
+        "taux d'occupation et revenu par chambre disponible",
+        "clientèles et saisonnalité hôtelière",
+        "charges de structure d'un établissement hôtelier",
+        "compte de résultat d'un hôtel",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario hotel, un trimestre par tour, niveau Pilotage, quatre tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité de l'hôtel, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul hôtel, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de l'hôtel, ses trois clientèles avec leur saisonnalité, la capacité en chambres, les tarifs pratiqués et les charges de structure du trimestre. Elle remplit la première moitié de sa fiche d'identité : clientèles, capacité, charges.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, fixe ses tarifs par clientèle et son budget de communication, puis saisit ses décisions. Vous ne corrigez rien : un tarif trop haut en saison creuse est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son taux d'occupation, son chiffre d'affaires et son résultat, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des tarifs, un taux d'occupation, un résultat. Qui a rempli le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Une chambre vide la nuit est une perte définitive : elle ne se stocke pas.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de l'hôtel, une page : les trois clientèles avec leur saisonnalité, la capacité en chambres, les charges de structure du trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté un hôtel sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon dossier professionnel.",
+      evaluation: [
+        "Les trois clientèles sont listées avec leur saisonnalité.",
+        "La capacité en chambres et les charges de structure sont renseignées.",
+        "Les trois chiffres de l'essai sont exacts, et le coût d'une chambre vide est relevé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Prendre la direction de l'hôtel",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -127,7 +201,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Tarifer selon la demande",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -200,7 +274,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Réussir la haute saison",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -273,7 +347,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Tenir la trésorerie dans le creux",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -346,7 +420,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Rendre compte de sa direction",
       dureeMinutes: 120,
       tourJoue: null,

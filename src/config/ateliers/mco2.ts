@@ -39,7 +39,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
     "Six mois à la tête d'un bistrot, au rythme réel d'une unité commerciale. Un tour par mois, des groupes réglés à trente jours, un tableau de bord pour finir.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "6 séances de 2 h",
+  format: "7 séances de 2 h",
   pourquoi:
     "Le trimestre arrange l'enseignant et dessert l'élève. Un responsable d'unité commerciale rend ses chiffres tous les mois, découvre tous les mois que son loyer est dû, et négocie tous les mois avec une banque qui regarde son solde. Au trimestre, un délai de règlement de trente jours disparaît dans la moyenne du tour ; au mois, il est un tour entier, et la classe voit enfin de ses yeux ce que veut dire encaisser après avoir payé. Le creux d'août cesse d'être une ligne de cours sur les charges fixes : il est un mois où la salle est vide, où le personnel est payé, et où le solde bancaire descend. C'est cette expérience-là, et pas le vocabulaire, qui fait qu'un étudiant surveille sa trésorerie dans son unité de stage.",
   reglages: {
@@ -54,6 +54,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 6,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "Choisissez « Un mois par tour » à la création : c'est le réglage qui porte tout l'atelier, et la seule fiche du registre qui le demande. La plateforme redimensionne alors le scénario, calibré au trimestre, en divisant les flux par trois : 30 000 € de charges de structure par mois au lieu de 90 000, 2 000 € d'amortissements, une capacité de 3 000 couverts, un seuil autour de 1 500 couverts, soit la même journée type de soixante-dix couverts. Les délais en jours, eux, ne bougent pas : les groupes règlent à trente jours, c'est-à-dire un tour entier, les fournisseurs à vingt et un jours. Le niveau retenu ouvre le poste clients et la brigade, que l'atelier laisse à son effectif de départ, sans l'emprunt, l'équipement de la cuisine ni l'assurance : en deuxième année, le pilotage d'une unité se joue sur la carte, le remplissage et la caisse. Un manque de trésorerie, la banque le couvre seule, par le découvert. Réglez la TVA à 10 %, le taux de la restauration sur place, dans les paramètres économiques. Le monde variable est décoché pour que toutes vos classes affrontent le même semestre.",
@@ -61,6 +62,79 @@ export const ATELIER_MCO2: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans LA TABLE D'AUGUSTIN sur un mois d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 3 · Assurer la gestion opérationnelle",
+        "Bloc 2 · Animer et dynamiser l'offre commerciale",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de LA TABLE D'AUGUSTIN, ses offres et sa capacité mensuelle, jouer un mois d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un restaurant en une page : ses offres, sa capacité d'accueil mensuelle et les charges qui tombent chaque mois.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque mois et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat mensuel et je distingue chiffre d'affaires, ratio matières et résultat.",
+      ],
+      notions: [
+        "ratio matières et coût de revient d'un couvert",
+        "charges de structure mensuelles d'un restaurant",
+        "taux de remplissage mensuel et chiffre d'affaires",
+        "compte de résultat et trésorerie d'une unité de restauration",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario bistrot, un mois par tour, niveau Pilotage, six tours, cinq équipes, deux concurrents machine, TVA activée à 10 %, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du restaurant, vierge. Rappel : ici c'est un mois par tour, et non un trimestre.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : sept séances, un mois d'essai qui ne compte pas puis six mois, un seul restaurant, un document rendu à chaque fin de séance. Un mois par tour, ce qui change le rythme : les couverts du mois, les charges du mois, le résultat du mois. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de LA TABLE D'AUGUSTIN, ses offres de restauration, la capacité d'accueil mensuelle, les charges fixes du mois et le panneau du fournisseur. Elle remplit la première moitié de sa fiche d'identité : offres, capacité mensuelle, charges.",
+        },
+        {
+          minutes: 25,
+          titre: "Le mois d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du mois, choisit ses offres et leur tarif, saisit ses décisions pour ce mois. Vous ne corrigez rien : un tarif ou un mix mal calibré est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le mois d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son ratio matières et son résultat du mois, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des prix, un taux de remplissage mensuel, un ratio matières, un résultat. Qui a rempli le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Le mois ne donne pas de second recours : un mois creux ne rattrape pas le mois suivant.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier mois, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de LA TABLE D'AUGUSTIN, une page : les offres avec leur ratio matières cible, la capacité d'accueil mensuelle, les charges qui tombent chaque mois, et les trois chiffres du mois d'essai.",
+      tracePasseport:
+        "J'ai présenté un restaurant sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai mensuel, pour ouvrir mes fiches d'activités professionnelles.",
+      evaluation: [
+        "Les offres du restaurant sont listées avec leur ratio matières cible.",
+        "Les charges de structure mensuelles sont distinguées des coûts variables.",
+        "Les trois chiffres de l'essai sont exacts, et le lien entre ratio matières et résultat mensuel est relevé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Juin, le compte du mois",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -133,7 +207,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Juillet, le fournisseur et la caisse",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -206,7 +280,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Août, la salle est vide et le loyer tombe",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -279,7 +353,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Septembre, les groupes reviennent et paient dans trente jours",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -352,7 +426,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Octobre, encaisser ce que septembre a vendu",
       dureeMinutes: 120,
       tourJoue: 5,
@@ -425,7 +499,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       ],
     },
     {
-      numero: 6,
+      numero: 7,
       titre: "Novembre, le tableau de bord du semestre",
       dureeMinutes: 120,
       tourJoue: 6,

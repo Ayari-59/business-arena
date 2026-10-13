@@ -33,7 +33,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     "Cinq trimestres à la tête d'un transporteur, du mix de clientèles au diagnostic stratégique, sous un monde variable où l'aléa fait partie du jeu.",
   difficulte: 4,
   difficulteLabel: "Avancé",
-  format: "6 séances de 2 h",
+  format: "7 séances de 2 h",
   pourquoi:
     "Une équipe qui maîtrise chaque notion séparément échoue encore à les tenir ensemble, parce que la réalité ne pose jamais un problème à la fois. Ici la décision de flotte engage la trésorerie, le choix des contrats fixe le besoin en fonds de roulement, le pic impose un recrutement qu'il faudra financer, et le monde variable défait parfois le raisonnement le plus juste. L'équipe apprend que la bonne stratégie n'est pas celle qui gagne à tous les coups, mais celle qui survit à un mauvais trimestre sans se rompre, et cela ne s'enseigne qu'en le vivant sur plusieurs tours enchaînés.",
   reglages: {
@@ -48,6 +48,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     mondeVariable: true,
     quizMode: "Questions de connaissances activées",
     tours: 5,
+    tourDEssai: 1,
     effectifParEquipe: "quatre élèves",
     notes:
       "Le transport oppose des contrats industriels réguliers et une bourse de fret plus volatile, avec des délais de règlement qui pèsent sur la trésorerie et une flotte lourde à financer. Le niveau retenu ouvre tous les leviers : trésorerie, assurance, recrutement, investissement et placement des excédents. Le monde variable est activé volontairement : à ce niveau, l'aléa fait partie de l'exercice, et l'objet de l'atelier est d'apprendre à décider quand même. Réservez cet atelier à des équipes déjà rodées.",
@@ -55,6 +56,79 @@ export const ATELIER_AVANCE: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans l'entreprise de transport sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Volet 1 · Analyser les coûts et la rentabilité",
+        "Volet 2 · Construire une stratégie commerciale",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat du transporteur, ses clientèles et sa flotte, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une entreprise de transport en une page : ce qu'elle transporte, pour qui, avec quelle flotte et quels délais de règlement.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le monde variable peut modifier.",
+        "Je lis un premier compte de résultat et un premier tableau de flux, et je distingue ce qui a été facturé, ce qui a été gagné et ce qui est entré en caisse.",
+      ],
+      notions: [
+        "palette transportée, unité de l'entreprise",
+        "clientèles et délais de règlement",
+        "charges de structure de la flotte",
+        "compte de résultat et tableau de flux",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario transport, un trimestre par tour, niveau 5 · Stratégie, cinq tours, six équipes, deux concurrents machine, TVA activée, monde variable coché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : quatre élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du transporteur, vierge. Prévenez que le monde variable est actif dès l'essai : un événement peut tomber, et c'est voulu.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis cinq trimestres, un seul transporteur, un document rendu à chaque fin de séance, et un monde variable qui peut défaire le raisonnement le plus juste. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat du transporteur, ses trois clientèles avec leurs délais de règlement, le parc de camions et ses deux plafonds de tonnage, le panneau du tarif carburant. Elle remplit la première moitié de sa fiche d'identité : ce que transporte l'entreprise, pour qui, et avec quels moyens.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, arbitre entre contrats industriels et bourse de fret, puis saisit son mix et son prix. Vous ne corrigez rien : un arbitrage trop agressif est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son résultat et sa trésorerie de fin de trimestre, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un mix, un prix, un résultat, une trésorerie. Qui a vendu le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Le tableau de flux montre que ce qui a été facturé n'est pas encore rentré. Un éventuel aléa du monde variable est lu ensemble.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité du transporteur, une page : ce que transporte l'entreprise et pour qui, les trois clientèles avec leur délai de règlement, le parc de camions et les plafonds de tonnage, les charges qui tombent chaque trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté une entreprise de transport sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon dossier de synthèse.",
+      evaluation: [
+        "Les trois clientèles sont nommées avec leur délai de règlement.",
+        "Les deux plafonds du parc de camions sont distingués.",
+        "Les trois chiffres de l'essai sont exacts, et la différence entre le résultat et la trésorerie est relevée.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Lire la rentabilité à la palette",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -127,7 +201,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Le camion qui rentre à vide",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -200,7 +274,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Le gazole prend dix-huit pour cent",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -273,7 +347,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Le grand compte qui paie à soixante jours, en plein pic",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -346,7 +420,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Renouveler la flotte ou la réparer",
       dureeMinutes: 120,
       tourJoue: 5,
@@ -419,7 +493,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       ],
     },
     {
-      numero: 6,
+      numero: 7,
       titre: "Bâtir le diagnostic stratégique",
       dureeMinutes: 120,
       tourJoue: null,

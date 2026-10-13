@@ -36,7 +36,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     "Une partie de six trimestres étalée sur six séances, du diagnostic d'ouverture à la note de gestion, sur une seule enceinte et avec les seuls outils de première année.",
   difficulte: 2,
   difficulteLabel: "Initiation",
-  format: "6 séances de 2 h",
+  format: "7 séances de 2 h",
   pourquoi:
     "En atelier professionnel, la difficulté n'est pas de faire calculer un seuil de rentabilité : c'est de faire comprendre à quoi il sert. Un dossier fournit les chiffres et demande la réponse. Ici les chiffres sont ceux que l'équipe a produits au tour précédent, personne ne connaît la réponse, et une décision prise sans le calcul se paie au tour suivant. Le compte de résultat, le stock, la TVA à décaisser et la caisse ne sont plus des documents à recopier : ce sont les conséquences de ce que l'équipe a fait. Et parce que c'est une première année, une seule chose nouvelle par séance, sur une seule enceinte.",
   reglages: {
@@ -51,6 +51,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 6,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "NOVA se joue ici en une seule enceinte : un stock, un coût de production, un seuil de rentabilité qui ne dépend pas d'un mix. La gamme de trois références, et le seuil qui bouge avec le mix, attendent la seconde année. Le niveau Pilotage ouvre la mobilisation des créances, ce qu'il faut pour les séances 3 et 5, et les ressources humaines, que l'atelier laisse à l'effectif de départ ; l'emprunt et l'investissement, qui n'ont pas leur place en première année, n'y sont pas : un manque de trésorerie, la banque le couvre seule par le découvert, à son taux. La TVA est activée pour la séance 5. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
@@ -58,6 +59,78 @@ export const ATELIER_CG1: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans NOVA sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "P1 · Contrôle et traitement comptable des opérations commerciales",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois références d'enceintes et son atelier, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, pour qui, avec quelle capacité de production.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue les produits vendus, le résultat et la trésorerie de fin de trimestre.",
+      ],
+      notions: [
+        "unité produite et capacité de l'atelier",
+        "charges de structure d'une période",
+        "cycle d'exploitation et besoin en fonds de roulement",
+        "compte de résultat et trésorerie",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario nova, un trimestre par tour, niveau Pilotage, six tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité de l'entreprise, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis six trimestres, une seule entreprise, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de NOVA, ses trois références d'enceintes avec leur prix de revient, la capacité de l'atelier, les délais de règlement des clients et des fournisseurs. Elle remplit la première moitié de sa fiche d'identité : ce que fabrique l'entreprise, à qui elle vend, et avec quels moyens.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, décide de son mix de production et de ses prix de vente, puis saisit ses décisions. Vous ne corrigez rien : un volume mal calibré est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son résultat et sa trésorerie de fin de trimestre, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un mix, un prix, un résultat, une trésorerie. Qui a vendu le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Le tableau de flux montre que ce qui a été facturé n'est pas encore rentré : c'est la phrase que l'atelier répétera pendant six trimestres.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de NOVA, une page : ce que fabrique et vend l'entreprise, ses trois références avec leur prix de revient, la capacité de l'atelier, les délais de règlement, les charges qui tombent chaque trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté une entreprise manufacturière sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon passeport professionnel.",
+      evaluation: [
+        "Les trois références sont listées avec leur prix de revient.",
+        "La capacité de l'atelier et les délais de règlement sont renseignés.",
+        "Les trois chiffres de l'essai sont exacts, et la différence entre le résultat et la trésorerie est relevée.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Prendre l'entreprise en main",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -129,7 +202,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Le coût, le prix, le seuil",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -201,7 +274,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Vendre n'est pas encaisser",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -276,7 +349,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Produire, stocker, encaisser",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -350,7 +423,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "La TVA, les délais et le poste clients",
       dureeMinutes: 120,
       tourJoue: 5,
@@ -424,7 +497,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       ],
     },
     {
-      numero: 6,
+      numero: 7,
       titre: "Rendre compte",
       dureeMinutes: 120,
       tourJoue: 6,

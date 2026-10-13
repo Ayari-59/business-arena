@@ -30,7 +30,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     "Quatre trimestres dans une boutique de maille à cinq références, du diagnostic du linéaire au tableau de bord commercial, avec Noël comme épreuve.",
   difficulte: 2,
   difficulteLabel: "Initiation",
-  format: "5 séances de 2 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Le coefficient multiplicateur s'enseigne en une heure et s'oublie en une semaine, parce qu'un exercice donne le prix d'achat et demande le prix de vente. Ici l'équipe choisit son circuit d'approvisionnement, donc son prix d'achat, puis son prix de vente, et découvre au trimestre suivant ce que sa marge est devenue une fois la démarque passée et le stock invendu payé. La saisonnalité cesse d'être un chapitre : une équipe qui n'a pas anticipé le pic de fin d'année voit son rayon vide pendant que ses concurrentes vendent, et son taux de transformation le lui dit.",
   reglages: {
@@ -45,6 +45,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "MAILLE & CO porte un stock, cinq références qui n'ont ni la même marge ni la même saison, trois façonniers qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre l'équipe et le poste clients, sans l'emprunt ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix, le stock et l'équipe, pas sur la structure. Un manque de trésorerie, la banque le couvre seule, par le découvert. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
@@ -52,6 +53,79 @@ export const ATELIER_MCO: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans MAILLE & CO sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 3 · Assurer la gestion opérationnelle",
+        "Bloc 2 · Animer et dynamiser l'offre commerciale",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de MAILLE & CO, ses cinq références textiles et sa saisonnalité, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un point de vente en une page : ses références, sa saisonnalité, ses fournisseurs et les charges qui tombent chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue le chiffre d'affaires, la marge commerciale et le résultat.",
+      ],
+      notions: [
+        "marge commerciale et coefficient multiplicateur",
+        "stock et saisonnalité",
+        "charges de structure d'un point de vente",
+        "compte de résultat d'un commerce",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario boutique, un trimestre par tour, niveau Pilotage, quatre tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du magasin, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul magasin, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur point de vente.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de MAILLE & CO, ses cinq références textiles avec leur marge et leur saisonnalité, les trois fournisseurs et leurs délais, les charges de structure du trimestre. Elle remplit la première moitié de sa fiche d'identité : références, fournisseurs, charges.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, choisit ses quantités à commander, ses prix de vente et son budget promotionnel, puis saisit ses décisions. Vous ne corrigez rien : un stock trop lourd ou trop léger est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, sa marge commerciale et son résultat, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des commandes, un taux de vente, une marge, un résultat. Qui a vendu le plus, qui a la meilleure marge, et pourquoi ce n'est pas la même équipe. Le stock invendu représente une immobilisation de trésorerie que le Noël suivant devra absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de MAILLE & CO, une page : les cinq références avec leur marge et leur saisonnalité, les fournisseurs avec leurs délais, les charges de structure du trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté un point de vente sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mes fiches d'activités professionnelles.",
+      evaluation: [
+        "Les cinq références sont listées avec leur marge et leur saisonnalité.",
+        "Les fournisseurs sont distingués avec leur délai de règlement.",
+        "Les trois chiffres de l'essai sont exacts, et le lien entre stock invendu et trésorerie est relevé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Prendre le magasin en main",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -124,7 +198,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Choisir son circuit d'approvisionnement",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -197,7 +271,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Animer l'offre sans détruire la marge",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -270,7 +344,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Réussir la fin d'année",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -343,7 +417,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Rendre compte de sa gestion",
       dureeMinutes: 120,
       tourJoue: null,

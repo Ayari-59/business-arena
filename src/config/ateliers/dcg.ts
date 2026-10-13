@@ -30,7 +30,7 @@ export const ATELIER_DCG: AtelierDefinition = {
     "Quatre trimestres dans une entreprise industrielle, du diagnostic financier d'ouverture au rapport de gestion soutenu, budgets et écarts compris.",
   difficulte: 4,
   difficulteLabel: "Avancé",
-  format: "5 séances de 2 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Un sujet de finance d'entreprise donne les flux et demande la valeur actuelle nette. L'exercice est juste, et il laisse intacte la question qui compte : d'où viennent ces flux, et qui les a estimés. Ici l'équipe produit elle-même sa prévision, la dépose, puis découvre au trimestre suivant l'écart entre ce qu'elle avait annoncé et ce qui s'est produit. Elle apprend alors ce qu'aucune correction ne transmet : qu'un calcul d'investissement ne vaut que ce que valent les hypothèses de celui qui l'a fait, et que la banque, elle, regarde d'abord la façon dont la trésorerie a été tenue : une crise ou un affacturage forcé lui font perdre confiance, et le découvert se resserre.",
   reglages: {
@@ -45,6 +45,7 @@ export const ATELIER_DCG: AtelierDefinition = {
     mondeVariable: true,
     quizMode: "Modèle d'analyse seul",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "NOVA se joue ici en trois références qui se disputent la même capacité : quand la demande dépasse l'atelier, la marge par unité de capacité décide de ce qu'on produit, et l'investissement se juge sur le mix qu'il libère. NOVA porte un cycle d'exploitation complet, des stocks, des délais de règlement des deux côtés et une capacité de production qui s'investit. Le niveau retenu ouvre le financement, l'investissement et le placement des excédents, c'est-à-dire la matière de la finance d'entreprise. Le monde variable est ici ACTIVÉ, à la différence des ateliers de BTS : à ce niveau, la distinction entre une bonne décision et un bon résultat fait partie de ce qui s'évalue. Les questions de connaissances sont désactivées et seul le choix du modèle d'analyse est demandé.",
@@ -52,6 +53,76 @@ export const ATELIER_DCG: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans NOVA sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: ["UE6 · Finance d'entreprise", "UE11 · Contrôle de gestion"],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois références et son atelier, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, sa capacité et les leviers financiers ouverts au niveau Stratégie.",
+        "Je repère, sur l'écran de décision, les choix de production, de financement et d'investissement disponibles.",
+        "Je lis un premier compte de résultat et un premier bilan simplifié, et je distingue résultat, trésorerie et structure financière.",
+      ],
+      notions: [
+        "cycle d'exploitation et besoin en fonds de roulement",
+        "structure financière et effet de levier",
+        "marge sur coût variable et seuil de rentabilité",
+        "compte de résultat, bilan et tableau de flux",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario nova-gamme, un trimestre par tour, niveau Stratégie, quatre tours, cinq équipes, deux concurrents machine, TVA activée, monde variable coché, questions de connaissances désactivées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe. Prévenez que le monde variable est actif dès l'essai.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, un document rendu à chaque fin de séance, et un monde variable qui distingue bonne décision et bon résultat. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de NOVA, ses trois références avec leur coût et leur marge, la capacité de l'atelier, les lignes de financement disponibles et les premiers indicateurs de structure. Elle remplit la première moitié de sa fiche d'identité : références, capacité, structure financière de départ.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, décide de son mix, de son investissement éventuel et de son financement, puis saisit ses décisions. Vous ne corrigez rien : un levier mal calibré est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son résultat, sa trésorerie et ses ratios de structure, et reporte les chiffres clés sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un mix, un résultat, une trésorerie, un ratio d'endettement. Qui a gagné le plus, qui est le plus solide, et pourquoi ce n'est pas la même équipe. Un éventuel aléa du monde variable est lu ensemble.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de NOVA, une page : références et coûts, capacité de l'atelier, structure financière de départ, leviers disponibles au niveau Stratégie, et les chiffres clés du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté une entreprise manufacturière sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon portfolio de compétences.",
+      evaluation: [
+        "Les trois références sont listées avec leur marge unitaire.",
+        "La structure financière de départ est renseignée avec les leviers disponibles.",
+        "Les chiffres clés de l'essai sont exacts, et la distinction entre résultat et trésorerie est relevée.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Diagnostic financier d'ouverture",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -121,7 +192,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Coûts, seuil et levier",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -191,7 +262,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Investir et financer",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -261,7 +332,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Budget et analyse des écarts",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -331,7 +402,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Rapport de gestion et soutenance",
       dureeMinutes: 120,
       tourJoue: null,

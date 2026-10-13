@@ -98,7 +98,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     "Une première rencontre avec la décision de gestion, du prix affiché au résultat de l'exercice, sur une année complète et sans prérequis.",
   difficulte: 1,
   difficulteLabel: "Découverte",
-  format: "4 séances de 1 h 30",
+  format: "5 séances de 1 h 30",
   pourquoi:
     "En classe de première, la création de valeur s'énonce facilement et se comprend mal, parce que rien dans un cours ne fait sentir qu'une décision engage. Un élève à qui l'on demande si le prix doit monter répond au hasard, et le corrigé lui donne une réponse qu'il oublie. Ici l'équipe fixe son prix, et le trimestre suivant lui montre ses ventes, sa marge et sa place dans la classe. La discussion change de nature : elle ne porte plus sur ce qu'il fallait répondre, mais sur ce qui s'est passé. En terminale, la même trame sert d'entrée dans le programme du tronc commun, et le débriefing se déplace de la décision vers l'organisation qui la prend.",
   reglages: {
@@ -113,6 +113,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois ou quatre élèves",
     notes:
       "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. L'atelier ne fait travailler que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. L'emprunt et l'investissement sont à l'écran et restent à zéro, et il faut décocher « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, et les aléas du niveau Découverte sont deux fois moins fréquents qu'ailleurs : ce qui distingue deux résultats est presque toujours une décision, et un événement, quand il tombe, se lit dans le journal du tour.",
@@ -120,6 +121,75 @@ export const ATELIER_STMG: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans NOVA sur un tour d'essai",
+      dureeMinutes: 90,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        THEMES_STMG.creationValeur,
+        THEMES_STMG.individuActeur,
+        THEMES_STMG.rencontreManagement,
+        THEMES_STMG.activiteProduction,
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois décisions et son atelier, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une entreprise de fabrication en quelques lignes : ce qu'elle produit, pour qui, et les trois décisions qu'elle prend chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce que mon équipe peut modifier et ce que le jeu fixe.",
+        "Je lis un premier résultat et je distingue ce qui a été vendu, ce qui a été gagné et ce qu'il reste en caisse.",
+      ],
+      notions: [
+        "enceinte produite, unité de l'entreprise",
+        "prix de vente, volume produit et communication",
+        "résultat et trésorerie de fin de trimestre",
+        "décision et conséquence",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario nova, un trimestre par tour, niveau Découverte, quatre tours, huit équipes, zéro concurrent machine, TVA désactivée, monde variable décoché, questions de connaissances activées, décochez « Histoires d'investissement », et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois ou quatre élèves par équipe. Aucun prérequis n'est nécessaire : la première décision se prend avant le premier cours.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : quatre séances d'une heure et demie, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, une trace à produire à chaque séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+        },
+        {
+          minutes: 20,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de NOVA : ce que l'entreprise fabrique, combien d'enceintes l'atelier peut produire, ce que chaque enceinte coûte et les trois décisions disponibles (le prix, le volume à produire et le budget de communication). Elle note ces informations sur sa fiche d'identité.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, discute à trois ou quatre puis saisit un prix, un volume et un budget de communication. Vous ne corrigez rien : une décision hasardeuse est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 15,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit ses ventes, son résultat et sa trésorerie, et note les trois chiffres sur sa fiche.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un prix, un volume, un résultat, une trésorerie. Qui a vendu le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise : la première décision qui comptera se prend à la séance suivante.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de NOVA, une demi-page : ce que fabrique l'entreprise, les trois décisions disponibles, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté une entreprise de fabrication en quelques lignes à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon portfolio de compétences.",
+      evaluation: [
+        "Les trois décisions disponibles sont nommées avec leur effet attendu.",
+        "La différence entre ce qui a été vendu et ce qu'il reste en caisse est relevée.",
+        "Les trois chiffres de l'essai sont exacts.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Décider sans savoir",
       dureeMinutes: 90,
       tourJoue: 1,
@@ -194,7 +264,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Ce que la décision a coûté",
       dureeMinutes: 90,
       tourJoue: 2,
@@ -268,7 +338,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Un gros client s'annonce",
       dureeMinutes: 90,
       tourJoue: 3,
@@ -342,7 +412,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Le pic, et ce qu'on en retient",
       dureeMinutes: 90,
       tourJoue: 4,

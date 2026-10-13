@@ -34,7 +34,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     "Cinq trimestres pour transformer un engagement RSE en performance, du premier arbitrage budgétaire à la déclaration extra-financière soutenue.",
   difficulte: 4,
   difficulteLabel: "Avancé",
-  format: "6 séances de 2 h",
+  format: "7 séances de 2 h",
   pourquoi:
     "Un sujet d'examen présente la RSE comme un chapitre : on définit, on classe les trois piliers, on récite les obligations de reporting. L'élève apprend le vocabulaire sans jamais rencontrer la seule question qui rend la RSE difficile à gérer : elle coûte maintenant et rapporte plus tard, quand elle rapporte. Ici l'équipe décide elle-même du montant qu'elle engage, le paie sur sa marge du trimestre, et découvre aux tours suivants un capital d'image qui monte lentement, un financement qui se détend, un climat social qui se tient, ou au contraire un bad buzz et une sanction quand l'engagement reste tiède. Elle apprend alors ce qu'aucune récitation ne transmet : que la responsabilité est un investissement à horizon, qu'elle peut être un mauvais calcul à court terme, et qu'un rapport extra-financier n'a de valeur que s'il rend compte de décisions réellement prises.",
   reglages: {
@@ -49,6 +49,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     mondeVariable: true,
     quizMode: "Modèle d'analyse seul",
     tours: 5,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "NOVA se joue ici en trois références, chacune avec son catalogue de fournisseurs et son budget qualité : le choix responsable se fait ligne par ligne, et son coût se lit sur la marge de chaque enceinte. NOVA porte un cycle d'exploitation complet, des fournisseurs, de la non-qualité si vous l'activez à la création (taux de rebuts, 5 % conseillé) et une capacité qui s'investit : de quoi rendre la RSE tangible plutôt que déclarative. Le niveau Stratégie ouvre le financement, l'investissement et l'engagement RSE, c'est-à-dire les leviers de l'atelier. Le monde variable est activé : à ce niveau, distinguer une bonne décision d'un bon résultat fait partie de ce qui s'évalue, et la RSE en est l'illustration la plus nette, puisqu'un engagement juste peut ne pas payer sur cinq tours. La cinquième séance joue le dernier tour ; la sixième ne joue rien et sert à rendre compte.",
@@ -56,6 +57,79 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans NOVA sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "UE7 · Management des organisations",
+        "UE11 · Contrôle de gestion",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois références et ses leviers RSE, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, ses fournisseurs responsables et les leviers RSE disponibles.",
+        "Je repère, sur l'écran de décision, les choix stratégiques, les engagements RSE et les indicateurs de performance disponibles.",
+        "Je lis un premier compte de résultat et je distingue résultat économique et performance RSE.",
+      ],
+      notions: [
+        "référentiel d'achat responsable et coût d'un engagement RSE",
+        "indicateur RSE et tableau de bord",
+        "marge par référence et arbitrage stratégique",
+        "monde variable et distinction décision/résultat",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario nova-gamme, un trimestre par tour, niveau Stratégie, cinq tours, cinq équipes, deux concurrents machine, TVA activée, monde variable coché, questions de connaissances désactivées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Activez les rebuts RSE à 5 % dans les paramètres économiques. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe. Prévenez que le monde variable est actif dès l'essai.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis cinq trimestres, une sixième séance de restitution sans tour joué, une seule entreprise, un document rendu à chaque fin de séance, et un monde variable qui distingue bonne décision et bon résultat. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de NOVA, ses trois références avec leurs fournisseurs responsables et leurs surcoûts, le panneau RSE et ses indicateurs, les leviers stratégiques disponibles. Elle remplit la première moitié de sa fiche d'identité : références, fournisseurs, leviers RSE.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, choisit ses fournisseurs par référence, décide de ses engagements RSE et saisit ses décisions. Vous ne corrigez rien : un engagement trop coûteux ou insuffisant est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son résultat, son indice RSE et reporte les chiffres clés sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des choix de fournisseurs, un indice RSE, un résultat. Qui a le meilleur indice, qui a le meilleur résultat, et pourquoi ce n'est pas la même équipe. Un aléa du monde variable est lu ensemble : c'est ainsi que bonne décision et bon résultat se distinguent.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de NOVA, une page : références, fournisseurs responsables et surcoûts, leviers RSE disponibles, et les chiffres clés du tour d'essai avec l'indice RSE.",
+      tracePasseport:
+        "J'ai présenté une entreprise manufacturière avec ses leviers RSE sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon portfolio de compétences.",
+      evaluation: [
+        "Les trois références sont listées avec leurs fournisseurs et le surcoût responsable.",
+        "Les leviers RSE disponibles sont identifiés avec leur impact sur le résultat.",
+        "Les chiffres clés de l'essai sont exacts, et la tension entre résultat économique et indice RSE est relevée.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Agir, puis mesurer : le premier indice RSE",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -127,7 +201,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "L'arbitrage inter-temporel : le capital d'image",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -199,7 +273,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Sourcing responsable et investissement propre",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -271,7 +345,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Financement vert et climat social",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -343,7 +417,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Le monde réagit : label, réputation et sanction",
       dureeMinutes: 120,
       tourJoue: 5,
@@ -412,7 +486,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       ],
     },
     {
-      numero: 6,
+      numero: 7,
       titre: "Rendre compte : la déclaration de performance extra-financière",
       dureeMinutes: 120,
       tourJoue: null,

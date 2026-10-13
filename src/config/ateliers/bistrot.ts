@@ -33,7 +33,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
     "Quatre trimestres à la tête d'un bistrot en quatre offres, du ratio matières par service au tableau de bord d'exploitation, avec la saison des banquets comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "5 séances de 2 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Le ratio matières s'apprend au tableau, à vingt-huit pour cent, et personne ne sait ce qu'il se passe quand il dérive de deux points. Ici l'équipe fixe ses couverts à préparer avant de savoir combien de clients viendront, jette le soir même ce qu'elle a préparé de trop, et lit au trimestre suivant ce que deux points de ratio ont fait à son résultat. La brigade cesse d'être une charge sur un tableau : un banquet prend moins d'heures par couvert qu'une carte du soir, et l'équipe qui a rempli sa salle de la mauvaise offre découvre que ce ne sont pas les places qui manquaient, mais les bras. La carte devient une décision de gestion, pas une affaire de goût.",
   reglages: {
@@ -48,6 +48,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
       "LA TABLE D'AUGUSTIN se joue ici en quatre offres, qui partagent la même cuisine de 9 000 couverts par trimestre et la même brigade de dix personnes, soit 4 550 heures : la formule du midi, la carte du soir, les banquets réglés à trente jours, et une activité traiteur, prête à vendre à ce niveau, dont les clients règlent à quarante-cinq et soixante jours. Ce qui est préparé et non servi est perdu le soir même. Le niveau retenu ouvre la trésorerie, l'assurance, l'embauche de la brigade, l'emprunt et l'équipement de la cuisine ; la R&D, qui ferait bâtir le traiteur avant de le vendre, et l'engagement RSE viennent au niveau suivant : en deuxième année, la direction d'une unité de restauration se joue sur la structure autant que sur la carte. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice ; les aléas restent tirés, plus souvent à ce niveau, et se lisent dans le journal du tour.",
@@ -55,6 +56,79 @@ export const ATELIER_BISTROT: AtelierDefinition = {
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans LA TABLE D'AUGUSTIN sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 2 · Analyser les coûts et la performance pour décider",
+        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat du restaurant, ses offres et ses charges, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un restaurant en une page : ses offres, sa capacité d'accueil et les charges qui tombent chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et j'y retrouve le chiffre d'affaires, le ratio matières et le résultat.",
+      ],
+      notions: [
+        "ratio matières et coût de revient d'un couvert",
+        "charges de structure d'un restaurant",
+        "taux de remplissage et chiffre d'affaires",
+        "compte de résultat d'un établissement de restauration",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario bistrot-gamme, un trimestre par tour, niveau Arbitrage, quatre tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du restaurant, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul restaurant, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de LA TABLE D'AUGUSTIN, ses offres de restauration, la capacité d'accueil, les charges fixes du trimestre et le panneau du fournisseur. Elle remplit la première moitié de sa fiche d'identité : ce que vend le restaurant, à qui, et avec quels moyens.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, choisit ses offres et leur tarif, saisit ses décisions. Vous ne corrigez rien : un prix trop bas ou trop haut est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, son ratio matières et son résultat, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des prix, un taux de remplissage, un ratio matières, un résultat. Qui a rempli le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Le ratio matières montre que la marge dépend autant des prix d'achat que des prix de vente.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de LA TABLE D'AUGUSTIN, une page : les offres avec leur ratio matières cible, la capacité d'accueil, les charges qui tombent chaque trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté un restaurant sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon dossier professionnel.",
+      evaluation: [
+        "Les offres du restaurant sont listées avec leur ratio matières cible.",
+        "Les charges de structure du trimestre sont distinguées des coûts variables.",
+        "Les trois chiffres de l'essai sont exacts, et le lien entre ratio matières et résultat est relevé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Le ratio matières, offre par offre",
       dureeMinutes: 120,
       tourJoue: 1,
@@ -127,7 +201,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Le cash & carry ou le maraîcher",
       dureeMinutes: 120,
       tourJoue: 2,
@@ -200,7 +274,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Le beurre a pris 24 %",
       dureeMinutes: 120,
       tourJoue: 3,
@@ -273,7 +347,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "La saison des banquets",
       dureeMinutes: 120,
       tourJoue: 4,
@@ -346,7 +420,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Rendre compte de son exploitation",
       dureeMinutes: 120,
       tourJoue: null,
