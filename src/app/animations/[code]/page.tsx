@@ -305,16 +305,6 @@ export default async function AtelierPage({
               ({SECTOR_LABELS[scenario.sector].toLowerCase()}),{" "}
               {atelier.reglages.equipes} équipes de{" "}
               {atelier.reglages.effectifParEquipe}.
-              {sertAussi.length > 0 ? (
-                <span data-sert-aussi="">
-                  {" "}
-                  Cette entreprise sert aussi{" "}
-                  <strong className="text-slate-100 print:text-black">
-                    {sertEnClair(sertAussi)}
-                  </strong>
-                  .
-                </span>
-              ) : null}
             </li>
             <li>
               · Exigence :{" "}
@@ -340,15 +330,11 @@ export default async function AtelierPage({
                   [
                     [
                       "Formations",
-                      `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()}`,
+                      sertAussi.length > 0
+                        ? `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()} · sert aussi ${sertEnClair(sertAussi)}`
+                        : `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()}`,
                     ],
                     ["Entreprise dirigée", scenario.title],
-                    [
-                      "L'entreprise sert aussi",
-                      sertAussi.length > 0
-                        ? sertEnClair(sertAussi)
-                        : "aucune autre formation du registre",
-                    ],
                     ["Secteur", SECTOR_LABELS[scenario.sector]],
                     ["Ce que l'entreprise vend", scenario.vocabulary.units],
                     ["Périodicité", atelier.reglages.periodiciteLabel],

@@ -81,7 +81,7 @@ describe("les formations servies par une entreprise", () => {
     expect(code("src/app/animations/page.tsx")).toContain("entreprisesEtFormations(");
     expect(code("src/app/animations/page.tsx")).toContain("Une même entreprise, plusieurs formations");
     expect(code("src/app/animations/[code]/page.tsx")).toContain("formationsServiesEnPlus(");
-    expect(code("src/app/animations/[code]/page.tsx")).toContain("Cette entreprise sert aussi");
+    expect(code("src/app/animations/[code]/page.tsx")).toContain("· sert aussi");
     expect(code("src/app/parcours/page.tsx")).toContain("scenariosServant(");
   });
 });

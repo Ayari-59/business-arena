@@ -78,10 +78,10 @@ describe("la fiche d'un atelier", () => {
     const carteHaut = await page.locator('[data-adaptation="haut"]').innerText();
     expect(carteHaut).toContain(`niveau ${haut!.niveau} · ${haut!.niveauNom}`);
     expect(carteHaut).toContain(haut!.bascule!.vers);
-    // L'entreprise sert aussi d'autres formations.
+    // Les formations secondaires sont fusionnées dans la ligne Formations.
     const aussi = formationsServiesEnPlus(cg1);
     expect(aussi.length).toBeGreaterThan(0);
-    expect(await page.locator("[data-sert-aussi]").innerText()).toContain(sertEnClair(aussi));
+    expect(vu).toContain(sertEnClair(aussi));
   });
 
   it("une fiche de concours dit qu'elle ne s'adapte pas", async () => {
