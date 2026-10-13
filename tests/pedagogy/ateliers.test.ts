@@ -21,7 +21,6 @@ import { TOURS_D_ESSAI } from "../../src/config/tour-d-essai";
 import { FORMATIONS } from "../../src/config/formations";
 import {
   chargeDesSeances,
-  decoupageEnCreneaux,
   MARGE_CONSEILLEE,
 } from "../../src/config/ateliers/duree-des-seances";
 
@@ -103,17 +102,31 @@ describe("ateliers professionnels", () => {
     );
   });
 
-  it("aucune séance ne dépasse trois heures", () => {
-    // Une séance de quatre heures ne rentre pas dans un emploi du temps ordinaire :
-    // l'enseignant qui n'a que trois heures devant lui doit couper lui-même, et il
-    // coupe le débriefing, qui est justement ce qui fait l'atelier. La trame tient
-    // donc en trois heures, à charge pour qui dispose de plus de temps d'étirer.
+  it("aucune séance post-bac ne dépasse deux heures", () => {
+    // Décision du propriétaire, 13 octobre 2026 : « Ok, passe tout à 2 h. »
+    // Deux heures, c'est la séance de travaux dirigés d'une section de
+    // technicien, d'un BUT, d'un DCG : la trame y tient, à charge pour qui
+    // dispose de plus de temps d'étirer. Une séance plus longue obligeait
+    // l'enseignant à couper lui-même, et il coupait le débriefing, qui est
+    // justement ce qui fait l'atelier. Le lycée et le tournoi travaillent par
+    // séances d'une heure trente ; ce sont les seules exceptions, nommées ici
+    // une à une plutôt que déduites, pour qu'une nouvelle fiche ne s'y glisse
+    // pas sans qu'on l'ait écrit. Toute autre séance fait EXACTEMENT deux
+    // heures : une séance de 110 minutes serait un déroulé qu'on a raccourci
+    // sans réécrire, et la garde du format (« N séances de 2 h ») ne la
+    // verrait pas.
+    const DEUX_HEURES = 120;
+    const SEANCES_D_UNE_HEURE_TRENTE: Record<string, number> = {
+      stmg: 90, // le lycée travaille par séances d'une heure trente
+      campus: 90, // le tournoi inter-filières, sept séances courtes sur un campus
+    };
     for (const a of ATELIERS) {
+      const attendu = SEANCES_D_UNE_HEURE_TRENTE[a.code] ?? DEUX_HEURES;
       for (const s of a.seances) {
         expect(
           s.dureeMinutes,
-          `${a.code}/séance ${s.numero} : ${s.dureeMinutes} minutes annoncées`,
-        ).toBeLessThanOrEqual(180);
+          `${a.code}/séance ${s.numero} : ${s.dureeMinutes} minutes annoncées, ${attendu} attendues`,
+        ).toBe(attendu);
       }
     }
   });
@@ -542,8 +555,8 @@ describe("ateliers professionnels", () => {
     // carte doit tomber juste, sinon elle ment sur la vitrine.
     //
     // La demi-heure est lue elle aussi. Le registre ne savait écrire que des
-    // heures entières, ce qui convient aux créneaux de deux ou trois heures
-    // d'une section de technicien et à rien d'autre : un lycée travaille par
+    // heures entières, ce qui convient aux créneaux de deux heures d'une
+    // section de technicien et à rien d'autre : un lycée travaille par
     // séances d'une heure trente, et l'animation de découverte s'est cognée à
     // cette limite le jour où il a fallu lui donner quatre séances sans
     // allonger son volume.
@@ -855,36 +868,6 @@ describe("ateliers professionnels", () => {
         niveaux,
         `${a.code} (${a.formations.join(", ")}, ${a.annee}) : niveau ${a.reglages.niveau}`,
       ).toContain(a.reglages.niveau);
-    }
-  });
-
-  it("une fiche de lycée ou de section de technicien qui dépasse deux heures conseille un créneau", () => {
-    // « 6 séances de 3 h » s'annonce à un enseignant de BTS dont la séance de
-    // travaux dirigés fait deux heures. La fiche ne se réécrit pas : elle
-    // déclare le créneau, et le découpage de chaque séance se calcule, la
-    // saisie du tour jamais séparée de sa clôture. Un créneau déclaré doit
-    // donc être plus court que la séance, et chaque séance doit s'y couper.
-    const DEUX_HEURES = 120;
-    for (const a of ATELIERS) {
-      const plusLongue = Math.max(...a.seances.map((s) => s.dureeMinutes));
-      const secondaire =
-        a.formations.length > 0 &&
-        a.formations.every((f) => f === "stmg" || f.startsWith("bts-"));
-      if (secondaire && plusLongue > DEUX_HEURES) {
-        expect(
-          a.creneauConseille,
-          `${a.code} : des séances de ${plusLongue} min pour une section de technicien, sans créneau conseillé`,
-        ).toBeDefined();
-      }
-      if (!a.creneauConseille) continue;
-      expect(a.creneauConseille.minutes, `${a.code} : le créneau doit être plus court que la séance`).toBeLessThan(plusLongue);
-      expect(a.creneauConseille.pourquoi.length, `${a.code} : le créneau ne dit pas pourquoi`).toBeGreaterThan(60);
-      for (const s of a.seances) {
-        const creneaux = decoupageEnCreneaux(s, a.creneauConseille.minutes);
-        expect(creneaux, `${a.code}/séance ${s.numero} : une phase dépasse le créneau à elle seule`).not.toBeNull();
-        const total = creneaux!.reduce((t, c) => t + c.minutes, 0);
-        expect(total, `${a.code}/séance ${s.numero} : le découpage perd des minutes`).toBe(s.dureeMinutes);
-      }
     }
   });
 

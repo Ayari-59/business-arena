@@ -3,7 +3,6 @@ import { ATELIERS } from "@/config/ateliers";
 import {
   avecQuestions,
   chargeDesSeances,
-  decoupageEnCreneaux,
   estimationDuTour,
   estPhaseDeJeu,
   minutesDeJeu,
@@ -139,33 +138,6 @@ describe("l'estimation d'un tour d'atelier", () => {
       cg1.seances.filter((s) => s.tourJoue !== null).map((s) => s.numero),
     );
     for (const l of lignes) expect(l.minutesDeJeu).toBeGreaterThan(0);
-  });
-});
-
-describe("le découpage en créneaux", () => {
-  const p = (titre: string, minutes: number, detail = "") => ({ titre, minutes, detail });
-
-  it("remplit les créneaux dans l'ordre, sans séparer la saisie de sa clôture", () => {
-    const seance = {
-      deroule: [p("Le cadre", 30), p("Le calcul", 40), p("Décider le tour 2", 40), p("Clôture", 20), p("Débriefing", 30)],
-    };
-    const creneaux = decoupageEnCreneaux(seance, 90)!;
-    expect(creneaux.map((c) => c.phases.map((x) => x.titre))).toEqual([
-      ["Le cadre", "Le calcul"],
-      ["Décider le tour 2", "Clôture", "Débriefing"],
-    ]);
-    expect(creneaux.map((c) => c.minutes)).toEqual([70, 90]);
-  });
-
-  it("refuse une phase, ou un bloc de jeu et sa clôture, plus long que le créneau", () => {
-    expect(decoupageEnCreneaux({ deroule: [p("La note", 100)] }, 90)).toBeNull();
-    expect(decoupageEnCreneaux({ deroule: [p("Décisions du trimestre", 60), p("Clôture", 40)] }, 90)).toBeNull();
-  });
-
-  it("une séance qui tient dans le créneau fait un seul créneau", () => {
-    const creneaux = decoupageEnCreneaux({ deroule: [p("A", 30), p("B", 30)] }, 90)!;
-    expect(creneaux).toHaveLength(1);
-    expect(creneaux[0]!.minutes).toBe(60);
   });
 });
 

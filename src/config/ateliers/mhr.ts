@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MHR.
  *
- * Cinq séances de trois heures sur un hôtel qui traverse une année de saisons.
+ * Cinq séances de deux heures sur un hôtel qui traverse une année de saisons.
  * Le choix du secteur va de soi pour le management en hôtellerie-restauration :
  * on n'y fabrique rien de stockable, la nuitée invendue est perdue à minuit, et
  * tout se joue sur le tarif, le taux d'occupation et la trésorerie qui doit
@@ -28,12 +28,12 @@ export const ATELIER_MHR: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de trois heures. Chaque équipe dirige le même hôtel d'un trimestre à l'autre, fixe ses tarifs selon la demande, prépare la haute saison, tient sa trésorerie dans le creux, et rend à chaque séance un document que l'on retrouverait sur le bureau d'un directeur d'établissement.",
+    "Cinq séances de deux heures. Chaque équipe dirige le même hôtel d'un trimestre à l'autre, fixe ses tarifs selon la demande, prépare la haute saison, tient sa trésorerie dans le creux, et rend à chaque séance un document que l'on retrouverait sur le bureau d'un directeur d'établissement.",
   resume:
     "Quatre trimestres à la tête d'un hôtel, du calcul du prix moyen et du taux d'occupation au tableau de bord de direction, avec la haute saison comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "5 séances de 3 h",
+  format: "5 séances de 2 h",
   pourquoi:
     "Le taux d'occupation et le prix moyen se récitent en une heure et ne se comprennent qu'en les subissant. Ici l'équipe fixe son tarif, découvre au trimestre suivant combien de chambres sont restées vides à ce prix, et voit son revenu par chambre disponible monter ou tomber selon qu'elle a rempli ou tenu ses prix. La saisonnalité cesse d'être un chapitre : un hôtel qui a bradé ses nuitées en basse saison n'a plus de trésorerie pour affronter la haute, et une équipe qui a gardé ses tarifs sur un trimestre creux voit ses concurrents remplir pendant que ses étages restent éteints. La perte sèche de la nuitée invendue, que rien ne rattrape le lendemain, fait le reste de la leçon.",
   reglages: {
@@ -56,7 +56,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       numero: 1,
       titre: "Prendre la direction de l'hôtel",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 1,
       processus: [
         "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
@@ -80,40 +80,40 @@ export const ATELIER_MHR: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de la tarification, une du remplissage, une du suivi. Imprimez la fiche de calcul du prix moyen et du taux d'occupation, une par équipe. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, un seul hôtel, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : cinq séances de deux heures, quatre trimestres, un seul hôtel, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "État des lieux de l'établissement",
           detail:
             "Chaque équipe relève ce que l'hôtel possède en chambres, ce qu'il doit à ses fournisseurs, et ce que lui coûte un trimestre d'ouverture, que les chambres soient occupées ou non.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Le prix moyen et le remplissage",
           detail:
             "L'équipe calcule son prix moyen par chambre, son taux d'occupation, puis le remplissage qu'il faut atteindre pour ne rien perdre. Vous circulez sans corriger : une équipe qui confond chiffre d'affaires et revenu par chambre disponible le découvrira au tour suivant, et ne l'oubliera plus.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Premier arbitrage et décisions",
           detail:
             "L'arène pose au premier trimestre un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit son tarif et son offre.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son compte de résultat, son prix moyen réalisé, son taux d'occupation et sa place au classement.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leur calcul de seuil et le confrontent à leur remplissage réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte.",
+            "Deux équipes présentent leur calcul de seuil et le confrontent à leur remplissage réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte. La fiche de positionnement se finit hors séance, pour la séance suivante.",
         },
       ],
       livrable:
@@ -129,7 +129,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       numero: 2,
       titre: "Tarifer selon la demande",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 2,
       processus: [
         "Bloc 3 · Gérer l'offre commerciale et la relation client",
@@ -150,43 +150,43 @@ export const ATELIER_MHR: AtelierDefinition = {
         "marge sur coût variable d'une chambre",
       ],
       preparation:
-        "Relisez les clientèles décrites dans le scénario et la saison qui s'ouvre, pour animer le débat sans le trancher. Préparez au tableau une grille à deux colonnes, tenir le tarif ou le baisser, que les équipes rempliront en séance.",
+        "Relisez les clientèles décrites dans le scénario et la saison qui s'ouvre, pour animer le débat sans le trancher. Préparez au tableau une grille à deux colonnes, tenir le tarif ou le baisser, que les équipes rempliront en séance. À préparer par les équipes avant la séance : sur la marge de leur premier trimestre, lue dans leur espace, le nombre de nuitées supplémentaires qu'exigerait une baisse de tarif de dix pour cent, puis de vingt, calcul posé sur une feuille qu'elles apportent.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur le trimestre précédent",
           detail:
             "Chaque équipe relit son résultat et dit en une phrase ce qu'elle a compris. Vous notez au tableau les écarts entre le remplissage visé et le remplissage réel.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Ce que coûte une nuitée bradée",
           detail:
-            "Sur sa propre marge, chaque équipe calcule le nombre de nuitées supplémentaires qu'exigerait une baisse de tarif de dix pour cent, puis de vingt. Les chiffres surprennent toujours : c'est le moment de la séance.",
+            "Chaque équipe part du calcul préparé avant la séance, le vérifie sur sa propre marge et le reporte dans la grille : le nombre de nuitées supplémentaires qu'exigerait une baisse de tarif de dix pour cent, puis de vingt. Les chiffres surprennent toujours : c'est le moment de la séance.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Débat contradictoire",
           detail:
             "Deux équipes défendent chacune une politique, tenir ou baisser, devant la classe. Les autres posent les questions. Personne ne conclut : chaque équipe repart libre de son choix.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Décisions du trimestre",
           detail:
             "L'équipe arrête son tarif et son offre, et écrit en trois lignes ce qu'elle attend de ce choix. Cette prévision sera relue au tour suivant.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Le prix moyen et le taux d'occupation de chaque équipe apparaissent côte à côte, avec leur effet sur la marge.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les équipes qui ont le plus rempli et celles qui ont le mieux gagné. La question qui reste ouverte : remplir à tout prix, est-ce diriger un hôtel.",
+            "On compare les équipes qui ont le plus rempli et celles qui ont le mieux gagné. La question qui reste ouverte : remplir à tout prix, est-ce diriger un hôtel. La note tarifaire se finit hors séance.",
         },
       ],
       livrable:
@@ -202,7 +202,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       numero: 3,
       titre: "Réussir la haute saison",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 3,
       processus: [
         "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
@@ -223,22 +223,22 @@ export const ATELIER_MHR: AtelierDefinition = {
         "revenu par chambre disponible",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de saison, où l'équipe écrira son tarif et sa clientèle attendue AVANT de connaître le résultat. Relisez les coefficients de saison du scénario : au troisième trimestre, les loisirs sont à deux fois leur niveau, les affaires à la moitié, les groupes presque à rien, et la demande totale ne dépasse la capacité que de peu. Les loisirs sont la clientèle la plus sensible au prix de l'hôtel, et ils règlent comptant : la caisse se remplit ce trimestre, puis les affaires et les groupes reviennent au suivant en payant à trente et quarante-cinq jours.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de saison, où l'équipe écrira son tarif et sa clientèle attendue AVANT de connaître le résultat. À préparer par les équipes avant la séance : la synthèse de leurs deux trimestres joués, lue dans leur espace, avec pour chacun le mix de clientèles, le tarif, le taux d'occupation et qui a payé comptant ou à trente jours ; c'est le socle sur lequel le plan se construit en séance, sans rien dire de la saison qui vient. Relisez les coefficients de saison du scénario : au troisième trimestre, les loisirs sont à deux fois leur niveau, les affaires à la moitié, les groupes presque à rien, et la demande totale ne dépasse la capacité que de peu. Les loisirs sont la clientèle la plus sensible au prix de l'hôtel, et ils règlent comptant : la caisse se remplit ce trimestre, puis les affaires et les groupes reviennent au suivant en payant à trente et quarante-cinq jours.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Ce que dit la saison",
           detail:
             "Vous rappelez sans donner de chiffre que le trimestre qui s'ouvre n'est pas un trimestre ordinaire, et que ce ne sont pas les mêmes clients qui frappent à la porte. Les équipes retrouvent seules, dans les informations du jeu, qui vient et qui ne vient plus.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Plan de haute saison",
           detail:
-            "Chaque équipe construit son plan à partir de ses trimestres joués et des coefficients de saison de chaque clientèle : le mix attendu, le tarif qu'elle affichera pour une clientèle de loisirs plus sensible au prix que celle des affaires, et ce que ce mix change à ses encaissements. Rien n'est saisi à ce stade.",
+            "Chaque équipe part de la synthèse de ses trimestres joués, préparée avant la séance, et construit son plan avec les coefficients de saison de chaque clientèle : le mix attendu, le tarif qu'elle affichera pour une clientèle de loisirs plus sensible au prix que celle des affaires, et ce que ce mix change à ses encaissements. Rien n'est saisi à ce stade.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Les deux erreurs de saison",
           detail:
             "L'équipe chiffre les deux fautes possibles : reconduire le tarif qui convenait aux affaires, que les touristes ne paieront pas, ou brader pour remplir alors que la demande couvre déjà presque la capacité. Puis elle choisit de quel côté elle prend le risque. La commande exceptionnelle, quand elle tombe, est le vrai arbitrage entre clientèles : un allotement de tour-opérateur payé comptant à bas prix, ou un congrès mieux payé mais réglé à soixante jours.",
@@ -250,16 +250,16 @@ export const ATELIER_MHR: AtelierDefinition = {
             "Saisie du tarif et de l'offre. Le plan écrit reste sur la table, visible.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre de la haute saison. Les écarts entre équipes sont ici les plus larges de tout l'atelier, et la caisse de chacune reflète une clientèle qui a payé comptant.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus rempli est-elle celle qui a le mieux valorisé sa saison, et que reste-t-il en caisse pour aborder le trimestre où les affaires reviennent en payant à trente jours.",
+            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus rempli est-elle celle qui a le mieux valorisé sa saison, et que reste-t-il en caisse pour aborder le trimestre où les affaires reviennent en payant à trente jours. L'écart constaté s'écrit sur la fiche de plan de saison hors séance.",
         },
       ],
       livrable:
@@ -275,7 +275,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       numero: 4,
       titre: "Tenir la trésorerie dans le creux",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 4,
       processus: [
         "Bloc 2 · Analyser les coûts et la performance pour décider",
@@ -296,22 +296,22 @@ export const ATELIER_MHR: AtelierDefinition = {
         "tarif d'appel et clientèle disponible",
       ],
       preparation:
-        "Rouvrez la fiche notion sur la trésorerie, que les équipes auront à mobiliser. Au quatrième trimestre, le scénario fait bondir le coût de l'énergie de 22 % pour deux trimestres : annoncez-le avant la prévision, sinon l'écart sera imputé à la prévision et non au choc. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
+        "Rouvrez la fiche notion sur la trésorerie, que les équipes auront à mobiliser. Au quatrième trimestre, le scénario fait bondir le coût de l'énergie de 22 % pour deux trimestres : annoncez-le en fin de séance précédente, avec le travail à préparer, sinon l'écart sera imputé à la prévision et non au choc. À préparer par les équipes avant la séance : la projection de leurs encaissements du trimestre creux, à partir du mix de clientèles et des délais de règlement de leur haute saison, lus dans leur espace, face aux charges fixes du trimestre, énergie comprise. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Relecture de la haute saison",
           detail:
             "Chaque équipe confronte ce qu'elle avait prévu à ce qui s'est produit, et dit ce qu'il lui reste en caisse pour aborder le creux. L'écart s'explique en une phrase, sans excuse.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Le creux vu de la caisse",
           detail:
-            "Chaque équipe projette ses encaissements du trimestre creux face à ses charges fixes, qui, elles, ne baissent pas. Le solde prévu s'inscrit au tableau, et il est souvent négatif.",
+            "Chaque équipe part de la projection préparée avant la séance et la finit : ses encaissements du trimestre creux face à ses charges fixes, qui, elles, ne baissent pas. Le solde prévu s'inscrit au tableau, et il est souvent négatif.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Couvrir le besoin",
           detail:
             "L'équipe décide comment elle passe le creux : tarif d'appel pour capter la clientèle disponible, mobilisation des créances ou découvert, arbitrage des dépenses non essentielles. Un sinistre qui tombe dans un trimestre creux, le dégât des eaux ou la panne de chaudière qui retire un cinquième des chambres, se paie sur la caisse : c'est la marge de sécurité qu'on garde, ou qu'on n'a pas. L'assurance, qui couvrirait ces coups durs, s'ouvre au niveau suivant.",
@@ -323,16 +323,16 @@ export const ATELIER_MHR: AtelierDefinition = {
             "Saisie du tarif, de l'offre et de la couverture de trésorerie. Le solde prévu reste affiché, visible de tous.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre creux. Le solde de trésorerie réalisé apparaît à côté du solde prévu par chaque équipe.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les soldes prévus et réalisés. Une équipe qui a bradé sa haute saison et se retrouve à sec dans le creux fait la démonstration à votre place.",
+            "On compare les soldes prévus et réalisés. Une équipe qui a bradé sa haute saison et se retrouve à sec dans le creux fait la démonstration à votre place. L'écart au solde réalisé s'écrit sur le plan de trésorerie hors séance.",
         },
       ],
       livrable:
@@ -348,7 +348,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       numero: 5,
       titre: "Rendre compte de sa direction",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: null,
       processus: [
         "Bloc 2 · Analyser les coûts et la performance pour décider",
@@ -369,7 +369,7 @@ export const ATELIER_MHR: AtelierDefinition = {
         "compte rendu de gestion",
       ],
       preparation:
-        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe.",
+        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. À préparer par les équipes avant la séance : une version de travail de leur tableau de bord des quatre trimestres, construite depuis leur espace, une page, quatre indicateurs au maximum. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe.",
       deroule: [
         {
           minutes: 10,
@@ -378,32 +378,32 @@ export const ATELIER_MHR: AtelierDefinition = {
             "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe disposera d'un temps de présentation court suivi de questions du jury.",
         },
         {
-          minutes: 50,
+          minutes: 25,
           titre: "Construction du tableau de bord",
           detail:
-            "Les équipes reprennent les quatre trimestres depuis leur espace et construisent leur tableau de bord. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié.",
+            "Les équipes partent de la version de travail préparée avant la séance et la finissent. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole, préparation des réponses aux questions probables. Vous passez dans les équipes pour repérer les tableaux illisibles avant qu'ils ne soient projetés.",
         },
         {
-          minutes: 75,
+          minutes: 50,
           titre: "Passage des équipes",
           detail:
-            "Huit minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
+            "Cinq minutes de présentation et trois minutes de questions par équipe. Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
         },
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Bilan de l'atelier",
           detail:
             "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et l'oral. Chaque élève écrit les trois phrases de son dossier professionnel.",
         },
       ],
       livrable:
-        "Le tableau de bord de direction des quatre trimestres : une page, quatre indicateurs justifiés, la saison la mieux et la moins bien gérée avec leurs raisons, et la présentation orale de huit minutes qui l'accompagne.",
+        "Le tableau de bord de direction des quatre trimestres : une page, quatre indicateurs justifiés, la saison la mieux et la moins bien gérée avec leurs raisons, et la présentation orale de cinq minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord de direction d'un hôtel sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [
@@ -413,11 +413,6 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
   ],
-  creneauConseille: {
-    minutes: 120,
-    pourquoi:
-      "La séance de travaux dirigés d'une section de technicien, première année. Le plan de saison se construit au premier créneau, la décision du trimestre et sa clôture se jouent au second.",
-  },
   formats: [
     {
       nom: "Cinq séances hebdomadaires",

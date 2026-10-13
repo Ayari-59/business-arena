@@ -6,7 +6,7 @@ La demande du propriétaire, mot pour mot : « J'aimerais auditer les ateliers :
 
 ## 1. Ce que l'audit du 16 septembre a laissé, et ce qui est réglé
 
-Le document `docs/11-audit-ateliers.md` portait quatorze constats transversaux et trois lots. Les trois lots ont été livrés le jour même, et la plupart des constats sont devenus des gardes dans `tests/pedagogy/ateliers.test.ts` : minutage exact des séances (l. 48), tours égaux aux séances jouées (l. 60), aucune séance au-delà de trois heures (l. 99), temps de parole qui tient dans sa phase (l. 114), entrées de référentiel non inventées (l. 185 et l. 253), aucun atelier qui ferme avant le pic du secteur (l. 317), réglages qui existent dans le produit et nom du niveau égal à celui du préréglage (l. 346 à 368), aucune séance sur un levier fermé (l. 430), traces à un acte, livrables comptés juste, promesses que le produit ne tient pas, échelle d'exigence unique, notions reliées à une fiche, mot du référentiel jamais écrit en dur.
+Le document `docs/11-audit-ateliers.md` portait quatorze constats transversaux et trois lots. Les trois lots ont été livrés le jour même, et la plupart des constats sont devenus des gardes dans `tests/pedagogy/ateliers.test.ts` : minutage exact des séances (l. 48), tours égaux aux séances jouées (l. 60), aucune séance au-delà de deux heures depuis le 13 octobre (voir 3.4), temps de parole qui tient dans sa phase (l. 114), entrées de référentiel non inventées (l. 185 et l. 253), aucun atelier qui ferme avant le pic du secteur (l. 317), réglages qui existent dans le produit et nom du niveau égal à celui du préréglage (l. 346 à 368), aucune séance sur un levier fermé (l. 430), traces à un acte, livrables comptés juste, promesses que le produit ne tient pas, échelle d'exigence unique, notions reliées à une fiche, mot du référentiel jamais écrit en dur.
 
 Restaient ouverts, au 16 septembre : la situation « 18 % de commission » de l'hôtel, que le moteur ne modélise pas, et la relecture des arrêtés du BTS MHR et du BUT GEA (`REFERENTIELS_NON_VERIFIES`, `referentiels.ts` l. 163). Les deux restent ouverts : ce ne sont pas des questions de durée ni de niveau, et inventer un référentiel pour les clore serait pire que de les laisser nommés.
 
@@ -31,6 +31,8 @@ Ce que le document 11 ne regardait pas, et que la demande d'aujourd'hui exige : 
 | dcg-rse | dcg | nova-gamme | 5 | 5 | 4 | 6 séances de 3 h |
 | avance | (Toutes filières, après un premier atelier) | transport | 5 | 5 | 4 | 6 séances de 3 h |
 | campus | bts-cg, bts-mco, bts-ndrc, stmg | nova | 3 | 6 | 3 | 7 séances de 1 h 30 |
+
+Les formats « de 3 h » sont ceux du relevé du matin ; la décision du 13 octobre (3.4) les passe tous à 2 h.
 
 Lecture : quatre ateliers de section de technicien sur onze tournent sur NOVA ou sa gamme, les cinq autres entreprises jouées se partagent sept ateliers, et une entreprise du choix n'a de déroulé que sans formation (ROUTE & CIE). MARTEL & FILS, qui n'en avait aucun à la date de l'audit, porte depuis l'atelier `martel` (BTS GPME, première année, sept séances de deux heures dont un tour d'essai). C'est le point de départ de la section 5.
 
@@ -134,64 +136,7 @@ Aucun autre déroulé n'a été touché, et aucun `format` n'a changé : les soi
 
 ### 3.4 Les créneaux réels
 
-Un lycée travaille par séances d'une heure trente, une section de technicien en travaux dirigés de deux heures, un BUT, un DCG et une journée banalisée en trois heures. Deux ateliers du secondaire sont déjà à la bonne maille (stmg en quatre fois une heure trente, mco2 en six fois deux heures) ; sept ateliers de section de technicien s'annoncent en séances de trois heures : cg1, mco, ndrc, mhr (première année), fitness, gpme, bistrot (deuxième année).
-
-Plutôt qu'une seconde fiche pour chacun, un CHAMP DE DONNÉES : `creneauConseille` (`types.ts` l. 195), déclaré sur ces sept ateliers (`cg1.ts` l. 494, `mco.ts` l. 413, `ndrc.ts` l. 485, `mhr.ts` l. 416, `fitness.ts` l. 486, `gpme.ts` l. 484, `bistrot.ts` l. 416) avec le créneau en minutes et la raison en une phrase. Le découpage se CALCULE (`decoupageEnCreneaux`) : les phases dans l'ordre, un créneau rempli jusqu'à ce que la phase suivante ne tienne plus, et une seule règle, la phase qui joue le tour et la clôture qui la suit restent dans le même créneau, parce qu'une équipe qui saisit ses décisions doit voir ses résultats avant de partir. La fiche l'affiche sous « Trois façons de le placer dans l'année », sous le titre « Si vos créneaux font 2 h ». Le relevé du découpage, tel que la fiche le montre :
-
-cg1 :
-  S1 : 75 min (Le cadre, Lecture individuelle, Diagnostic d'équipe) | 105 min (Le premier arbitrage, Clôture et résultats, Débriefing)
-  S2 : 105 min (Reprise, Le tri des charges, Le calcul, à la main, Confrontation) | 75 min (Décider le tour 2, Clôture et débriefing)
-  S3 : 90 min (Résultat et caisse ne sont pas la même chose, Le budget, sur tableur, Le besoin, chiffré et daté) | 90 min (Décider le tour 3, Clôture, L'écart)
-  S4 : 90 min (Le constat, Le stock, ce qu'il vaut, La production stockée) | 90 min (Où est passé l'argent, Décider le tour 4, Clôture)
-  S5 : 100 min (La TVA n'est pas une charge, Son poids dans la caisse, Escompte ou affacturage) | 80 min (Décider le tour 5, Clôture, Débriefing)
-  S6 : 100 min (Le dernier tour, Récupérer et contrôler, La note) | 80 min (Présentations, Retour au groupe)
-
-mco :
-  S1 : 85 min (Le cadre, État des lieux du magasin, La marge, article par article) | 95 min (Premier arbitrage et décisions, Clôture et résultats, Débriefing)
-  S2 : 90 min (Retour sur le trimestre précédent, Les trois circuits, Débat contradictoire) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S3 : 85 min (Relecture des prévisions, Combien coûte une remise, Construire l'opération) | 95 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S4 : 85 min (Ce que dit la saison, Prévision de ventes, Les deux risques) | 95 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S5 : 80 min (Consignes et tirage, Construction du tableau de bord, Préparation de l'oral) | 100 min (Soutenances, Bilan de l'atelier)
-
-ndrc :
-  S1 : 85 min (Le cadre, Les trois clientèles, Premier plan d'action) | 95 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S2 : 95 min (Relecture des annonces, Le calcul, Rentable quand) | 85 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S3 : 95 min (Retour sur le trimestre, Combien coûte un retour, Construire une politique de service) | 85 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S4 : 90 min (Ce que dit la saison, Prévision de commandes, Les trois conditions) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S5 : 115 min (Retour sur le pic, Ce que laisse un partenaire, Préparer la négociation, Jeu de rôle) | 65 min (Décisions du trimestre, Clôture et débriefing)
-  S6 : 90 min (Consignes et tirage, Construction du tableau de bord, Préparation de l'oral) | 90 min (Soutenances, Bilan de l'atelier)
-
-fitness :
-  S1 : 85 min (Le cadre, Ce que rapporte un adhérent qui reste, Du portefeuille au seuil) | 95 min (Premier arbitrage et décisions, Clôture et résultats, Débriefing)
-  S2 : 90 min (Retour sur janvier, Ce que vaut un adhérent, Retenir plutôt que remplacer) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S3 : 90 min (Retour sur le trimestre, Des charges qui ne suivent pas la saison, Tenir la relation dans le creux) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S4 : 90 min (Retour sur l'été, Encaisser avant de fournir, Ce que l'avance fait à la fidélité) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S5 : 85 min (Ce que dit le trimestre, La surface ou les coachs, Choisir ses partenaires) | 95 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S6 : 80 min (Consignes et tirage, Construction du tableau de bord, Préparation de l'oral) | 100 min (Passage des équipes, Bilan de l'atelier)
-
-gpme :
-  S1 : 90 min (Le cadre, Lecture du bilan d'entrée, Ce qui limite l'activité) | 90 min (Premier arbitrage et décisions, Clôture et résultats, Débriefing)
-  S2 : 95 min (Rentable et sans trésorerie, Le poste clients en euros, Quatre solutions, quatre coûts) | 85 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S3 : 95 min (Les consultants au banc, Cartographier, Garder ou transférer) | 85 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S4 : 95 min (Où en est le carnet, Ce que coûte un consultant de plus, Recruter ou sous-traiter) | 85 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S5 : 90 min (La demande, Ce que coûte la remise, Chercher la contrepartie) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S6 : 90 min (Consignes et tirage, Construction du rapport, Préparation de l'oral) | 90 min (Présentations, Bilan de l'atelier)
-
-mhr :
-  S1 : 85 min (Le cadre, État des lieux de l'établissement, Le prix moyen et le remplissage) | 95 min (Premier arbitrage et décisions, Clôture et résultats, Débriefing)
-  S2 : 90 min (Retour sur le trimestre précédent, Ce que coûte une nuitée bradée, Débat contradictoire) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S3 : 85 min (Ce que dit la saison, Plan de haute saison, Les deux erreurs de saison) | 95 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S4 : 85 min (Relecture de la haute saison, Le creux vu de la caisse, Couvrir le besoin) | 95 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S5 : 80 min (Consignes et tirage, Construction du tableau de bord, Préparation de l'oral) | 100 min (Passage des équipes, Bilan de l'atelier)
-
-bistrot :
-  S1 : 85 min (Le cadre, Lire la carte en coûts, Du ratio à la marge) | 95 min (Premier arbitrage et décisions, Clôture et résultats, Débriefing)
-  S2 : 90 min (Retour sur le premier trimestre, Trois fournisseurs, quatre critères, Payer comptant, et le traiteur) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S3 : 90 min (Retour sur le trimestre, Répercuter ou retravailler la carte, Préparer une saison qu'on ne voit pas encore) | 90 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S4 : 85 min (Ce que dit la saison, Les places ou les bras, Préparer juste, encaisser tard) | 95 min (Décisions du trimestre, Clôture et résultats, Débriefing)
-  S5 : 80 min (Consignes et tirage, Construction du tableau de bord, Préparation de l'oral) | 100 min (Passage des équipes, Bilan de l'atelier)
-
-Chaque séance de ces sept ateliers se coupe en deux créneaux de 65 à 115 minutes ; aucune phase ne dépasse le créneau à elle seule, et une garde le vérifie (section 7).
+Décision du propriétaire, le 13 octobre 2026, après lecture de ce relevé (« J'aimerais ramener toutes les durées à 1 h 30, 2 h max par séance ? Ça me semble beaucoup 3 heures. » puis « Ok, passe tout à 2 h. ») : toutes les séances post-bac passent en 2 h, le format standard de tous les ateliers hors lycée (stmg, 1 h 30) et tournoi (campus, 1 h 30). Les onze ateliers écrits en séances de 3 h (cg1, mco, ndrc, mhr, fitness, gpme, bistrot, gea, dcg, dcg-rse, avance) sont réécrits en 120 minutes par séance, sans toucher ni aux parties, ni aux livrables, ni aux traces, ni aux blocs du référentiel ; le découpage en créneaux plus courts (`creneauConseille`, `decoupageEnCreneaux`, « Si vos créneaux font 2 h ») que ce paragraphe décrivait devient sans objet et a été retiré des données, des types, de la fiche et des gardes. La garde « aucune séance post-bac ne dépasse deux heures » (section 7) tient la décision.
 
 ### 3.5 Sur la fiche et dans le cockpit
 
@@ -292,7 +237,7 @@ Dans `tests/pedagogy/ateliers.test.ts` :
 
 1. « chaque séance laisse au tour joué au moins ce que le modèle de durée estime » (l. 765) : pour toute séance qui joue un tour, au moins une phase de jeu, et un verdict qui n'est pas « impossible ». La tolérance est NULLE, et c'est écrit dans la garde : le modèle est déjà un plancher (il ne compte ni les aides du formulaire ni le courrier du tour, et sa lecture est lente à dessein), donc une phase qui donne moins que ce plancher est un déroulé faux, pas un déroulé serré. La marge d'un quart n'est pas exigée : c'est un objectif d'écriture, atteint sur les soixante et onze séances, et la fiche montre les deux chiffres. Un texte de situation qui s'allonge demain fera rougir cette garde avant la classe. Vue rouge en donnant quinze minutes au premier mois de mco2.
 2. « le niveau de jeu suit la formation et l'année » (l. 797). Vue rouge en passant cg1 au niveau 5.
-3. « une fiche de lycée ou de section de technicien qui dépasse deux heures conseille un créneau » (l. 824) : le créneau est plus court que la séance, dit pourquoi, et chaque séance s'y découpe sans perdre une minute. Vue rouge en retirant le créneau de cg1.
+3. « aucune séance post-bac ne dépasse deux heures » (remplace « aucune séance ne dépasse trois heures ») : chaque séance fait exactement 120 minutes, sauf stmg et campus, nommés un à un, à 90. Vue rouge sur les onze fiches tant qu'elles annoncent 180 minutes. La garde du créneau conseillé, que cette liste portait ici, a été retirée avec le champ (3.4).
 4. La garde des mots de référentiel étendue aux sigles et aux cinq fichiers (l. 727). Vue rouge en écrivant « BTS CG » dans `/jouer`.
 
 Nouveaux fichiers : `tests/architecture/formations-servies.test.ts` (vue rouge avec un code de formation inventé), `tests/architecture/sur-mesure.test.ts` (vue rouge avec un libellé d'option qui diverge), `tests/unit/duree-des-seances.test.ts` (la règle des phases de jeu, les verdicts, l'estimation, le découpage), `tests/unit/adaptations.test.ts` (les crans de cg1, stmg, dcg, mco, campus ; vue rouge avec un levier sans mots). Trois parcours de navigateur : `tests/e2e/animations.e2e.ts`, `jouer.e2e.ts`, `ecoles.e2e.ts`.

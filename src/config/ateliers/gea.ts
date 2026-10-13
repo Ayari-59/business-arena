@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BUT / DUT GEA.
  *
- * Cinq séances de trois heures sur NOVA, l'industriel, choisi pour sa gestion
+ * Cinq séances de deux heures sur NOVA, l'industriel, choisi pour sa gestion
  * généraliste : on y fabrique un produit, donc on y calcule un coût de revient,
  * on y lit un compte de résultat, on y suit une trésorerie que le besoin en
  * fonds de roulement met sous tension, et on y arbitre un investissement de
@@ -28,12 +28,12 @@ export const ATELIER_GEA: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de trois heures. Chaque équipe gère le même industriel d'un trimestre à l'autre, calcule ses coûts de revient, lit ses documents de synthèse, tient sa trésorerie sous la tension du besoin en fonds de roulement, arbitre un investissement, et rend à chaque séance un document de gestion.",
+    "Cinq séances de deux heures. Chaque équipe gère le même industriel d'un trimestre à l'autre, calcule ses coûts de revient, lit ses documents de synthèse, tient sa trésorerie sous la tension du besoin en fonds de roulement, arbitre un investissement, et rend à chaque séance un document de gestion.",
   resume:
     "Quatre trimestres à la tête d'un industriel, du coût de revient au diagnostic financier complet, avec la montée en charge d'un compte-clé comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "5 séances de 3 h",
+  format: "5 séances de 2 h",
   pourquoi:
     "Le coût de revient se calcule au tableau et s'oublie à la sortie, parce qu'un exercice donne les charges et demande le coût. Ici l'équipe fixe son volume de production et son prix, découvre au trimestre suivant sa marge réelle une fois les charges fixes absorbées, et voit sa trésorerie se tendre alors que son compte de résultat est bénéficiaire, parce que ses clients paient à soixante jours. Le besoin en fonds de roulement cesse d'être une formule : une équipe qui a vendu davantage sans financer son cycle se retrouve à court de caisse au meilleur de son activité, et son tableau de trésorerie le lui dit avant sa banque.",
   reglages: {
@@ -56,7 +56,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       numero: 1,
       titre: "Calculer un coût de revient",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 1,
       processus: [
         "Bloc 1 · Analyser les coûts et la rentabilité",
@@ -80,40 +80,40 @@ export const ATELIER_GEA: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable des coûts, une de la production, une du suivi. Imprimez la fiche de coût de revient vierge, une par équipe, avec une colonne par enceinte : la Go de poche, la One qui a fait la marque, et la Studio, la plus haut de gamme, livrée prête à ce niveau et vendable au plus tôt au deuxième trimestre. Les coûts variables vont du simple au plus du triple d'une référence à l'autre, et la marge unitaire de la Studio vaut près de quatre fois celle de la Go : c'est ce que la fiche doit faire apparaître. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, une seule entreprise, et un document de gestion rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : cinq séances, quatre trimestres, une seule entreprise, et un document de gestion rendu entre deux séances. Les équipes rejoignent la partie avec le code.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Lire les charges",
           detail:
             "Chaque équipe relève ce que l'entreprise dépense pour produire chaque enceinte, ce qui reste dû, et ce que coûte un trimestre d'activité que la chaîne tourne ou non. Les charges fixes sont communes aux références : personne ne les ventile encore.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Du coût à la marge",
           detail:
             "L'équipe calcule le coût de revient unitaire et la marge sur coût variable de chaque enceinte, puis le volume à produire pour couvrir ses charges fixes au mix qu'elle prévoit : la même structure s'absorbe avec bien moins de Studio que de Go. Vous circulez sans corriger : une équipe qui oublie une charge dans son coût le découvrira dans son résultat.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Premier arbitrage et décisions",
           detail:
             "L'arène pose au premier trimestre un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. S'y ajoute la question de la Studio : lui réserver dès maintenant une place sur les lignes, pour une enceinte qui ne se vendra qu'au deuxième trimestre, ou attendre de voir sa demande. L'équipe tranche, motive son choix en trois lignes, puis saisit un volume et un prix par référence.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son compte de résultat, sa marge réalisée et sa place au classement.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leurs coûts de revient par enceinte et les confrontent à leur résultat réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte, et vous faites remarquer qu'à chiffre d'affaires égal, le mix vendu a fait la différence.",
+            "Deux équipes présentent leurs coûts de revient par enceinte et les confrontent à leur résultat réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte, et vous faites remarquer qu'à chiffre d'affaires égal, le mix vendu a fait la différence. La fiche de coût de revient se finit hors séance, avec le résultat sous les yeux.",
         },
       ],
       livrable:
@@ -129,7 +129,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       numero: 2,
       titre: "Du résultat à la trésorerie",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 2,
       processus: [
         "Bloc 3 · Piloter la trésorerie et le financement",
@@ -150,43 +150,43 @@ export const ATELIER_GEA: AtelierDefinition = {
         "écart entre résultat et trésorerie",
       ],
       preparation:
-        "Rouvrez la fiche notion sur le besoin en fonds de roulement, que les équipes auront à mobiliser. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
+        "Rouvrez la fiche notion sur le besoin en fonds de roulement, que les équipes auront à mobiliser. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre. À préparer par les équipes avant la séance : relever dans le bilan du premier trimestre les créances clients, les dettes fournisseurs et le solde de trésorerie, et noter le délai de règlement de chaque clientèle tel que le jeu l'affiche.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur le trimestre précédent",
           detail:
             "Chaque équipe relit son résultat et dit en une phrase ce qu'elle a compris. Vous notez au tableau les équipes bénéficiaires dont la caisse a pourtant baissé.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Où passe l'argent",
           detail:
-            "Les équipes reconstituent leur cycle : elles paient leurs charges avant d'encaisser leurs ventes, comptant auprès des étudiants et des passionnés, à soixante jours auprès de la grande distribution, à quatre-vingts jours auprès du compte-clé quand il arrive. Le décalage porte un nom, et chacune le retrouve dans son propre bilan.",
+            "Les équipes partent des créances, des dettes et des délais relevés avant la séance et reconstituent leur cycle : elles paient leurs charges avant d'encaisser leurs ventes, comptant auprès des étudiants et des passionnés, à soixante jours auprès de la grande distribution, à quatre-vingts jours auprès du compte-clé quand il arrive. Le décalage porte un nom, et chacune le chiffre dans son propre bilan.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Le plan de trésorerie",
           detail:
             "Chaque équipe projette ses encaissements et ses décaissements du trimestre à venir et en tire un solde prévu, qu'elle inscrit au tableau. Rien n'est saisi à ce stade.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "L'équipe arrête son volume, son prix et, si elle en a besoin, sa couverture de trésorerie, puis écrit en trois lignes ce qu'elle attend de ce choix.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Le solde de trésorerie réalisé apparaît à côté du résultat de chaque équipe, et l'écart saute aux yeux.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a gagné et manqué de caisse à une équipe qui a moins gagné et gardé sa trésorerie. La question qui reste ouverte : laquelle a la meilleure gestion.",
+            "On compare une équipe qui a gagné et manqué de caisse à une équipe qui a moins gagné et gardé sa trésorerie. La question qui reste ouverte : laquelle a la meilleure gestion. Le plan de trésorerie se complète hors séance de l'écart au solde réalisé.",
         },
       ],
       livrable:
@@ -202,7 +202,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       numero: 3,
       titre: "Produire quoi, quand l'atelier est plein",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 3,
       processus: [
         "Bloc 1 · Analyser les coûts et la rentabilité",
@@ -223,43 +223,43 @@ export const ATELIER_GEA: AtelierDefinition = {
         "retour sur investissement",
       ],
       preparation:
-        "Relisez la capacité de l'entreprise et la demande à venir décrites dans le scénario, pour animer le débat sans le trancher. Au troisième trimestre, la demande dépasse ce que l'atelier produit : quand les plans par référence additionnés dépassent la capacité, le jeu les coupe tous dans la même proportion, et des clients repartent sans Studio comme sans Go. Le classement des références se fait par marge rapportée à la capacité consommée, et non par prix ni par volume : sur un atelier compté en enceintes, la Studio rapporte près de quatre fois plus qu'une Go pour la même place. Les lignes s'achètent typées, manuelle, semi-automatique ou automatisée, de 15 000 à 55 000 € pour 1 000 à 2 500 enceintes de capacité, et n'entrent en service qu'au trimestre suivant : une ligne achetée ce trimestre ne sauvera pas ce trimestre. Préparez au tableau une grille à trois colonnes, servir d'abord, investir, tenir, que les équipes rempliront en séance.",
+        "Relisez la capacité de l'entreprise et la demande à venir décrites dans le scénario, pour animer le débat sans le trancher. Au troisième trimestre, la demande dépasse ce que l'atelier produit : quand les plans par référence additionnés dépassent la capacité, le jeu les coupe tous dans la même proportion, et des clients repartent sans Studio comme sans Go. Le classement des références se fait par marge rapportée à la capacité consommée, et non par prix ni par volume : sur un atelier compté en enceintes, la Studio rapporte près de quatre fois plus qu'une Go pour la même place. Les lignes s'achètent typées, manuelle, semi-automatique ou automatisée, de 15 000 à 55 000 € pour 1 000 à 2 500 enceintes de capacité, et n'entrent en service qu'au trimestre suivant : une ligne achetée ce trimestre ne sauvera pas ce trimestre. Préparez au tableau une grille à trois colonnes, servir d'abord, investir, tenir, que les équipes rempliront en séance. À préparer par les équipes avant la séance : chiffrer la demande attendue de chaque référence au troisième trimestre et la capacité actuelle de l'atelier, puis classer les trois enceintes par marge rapportée à la place qu'elles prennent sur les lignes.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Relecture des prévisions",
           detail:
             "Chaque équipe confronte ce qu'elle avait prévu au tour précédent à ce qui s'est produit, et dit où en est sa trésorerie avant de décider d'un investissement.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Le facteur rare",
           detail:
-            "Les équipes chiffrent la demande de chaque référence et la comparent à leur capacité actuelle. Elles classent les enceintes par marge rapportée à la place qu'elles prennent sur les lignes, servent la première jusqu'à épuiser sa demande, puis la suivante, et calculent la marge perdue sur ce qui reste. Une équipe qui laisse le jeu couper ses plans en proportion perd sur la Studio ce qu'elle garde sur la Go.",
+            "Les équipes partent de la demande et du classement chiffrés avant la séance et les confrontent à leur capacité actuelle. Elles servent la première enceinte du classement jusqu'à épuiser sa demande, puis la suivante, et calculent la marge perdue sur ce qui reste. Une équipe qui laisse le jeu couper ses plans en proportion perd sur la Studio ce qu'elle garde sur la Go.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Investir ou tenir",
           detail:
             "Chaque équipe remplit la grille : le coût de la ligne, la capacité qu'elle ajoute, la marge qu'elle rendra possible à partir du trimestre suivant, et le risque qu'elle fasse défaut si la demande retombe. Personne ne conclut à sa place.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "L'équipe arrête ses volumes par référence dans l'ordre de son classement, ses prix, et son investissement, puis inscrit la marge qu'elle attend de sa décision et le trimestre où elle l'attend.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. L'effet du classement des références apparaît dans les résultats de chaque équipe. Celui de l'investissement ne se lit encore que sur la trésorerie : la capacité, elle, arrive au trimestre suivant.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les équipes qui ont servi la Studio d'abord et celles qui ont laissé couper leurs plans, puis celles qui ont investi et celles qui ont attendu. La question qui reste ouverte : le bon moment d'investir se juge-t-il avant ou après le pic, sachant que la ligne arrive un trimestre après la décision.",
+            "On compare les équipes qui ont servi la Studio d'abord et celles qui ont laissé couper leurs plans, puis celles qui ont investi et celles qui ont attendu. La question qui reste ouverte : le bon moment d'investir se juge-t-il avant ou après le pic, sachant que la ligne arrive un trimestre après la décision. La note de capacité se rédige hors séance.",
         },
       ],
       livrable:
@@ -275,7 +275,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       numero: 4,
       titre: "Piloter la montée en charge",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 4,
       processus: [
         "Bloc 1 · Analyser les coûts et la rentabilité",
@@ -296,43 +296,43 @@ export const ATELIER_GEA: AtelierDefinition = {
         "besoin en fonds de roulement",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de charge, où l'équipe écrira son volume et son solde de trésorerie attendus AVANT de connaître le résultat.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de charge, où l'équipe écrira son volume et son solde de trésorerie attendus AVANT de connaître le résultat. À préparer par les équipes avant la séance : le relevé des trois trimestres joués sur la fiche de plan de charge, volume produit, marge réalisée et solde de trésorerie par trimestre, et le délai de règlement moyen constaté.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Ce que dit le trimestre",
           detail:
             "Vous rappelez sans donner de chiffre que le compte-clé pèse désormais une part majeure de la demande. Les équipes retrouvent seules l'ampleur de la montée dans les informations du jeu.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Plan de charge",
           detail:
-            "Chaque équipe construit son plan à partir de ses trimestres joués : le volume qu'elle produira, la marge qu'elle en attend, et le solde de trésorerie qui en découle. Rien n'est saisi à ce stade.",
+            "Chaque équipe construit son plan à partir du relevé de ses trimestres joués, préparé avant la séance : le volume qu'elle produira, la marge qu'elle en attend, et le solde de trésorerie qui en découle. Rien n'est saisi à ce stade.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "La croissance qui assèche",
           detail:
             "L'équipe chiffre l'effet de la croissance sur son besoin en fonds de roulement : plus elle vend, plus elle avance de trésorerie avant d'être payée. Puis elle décide comment elle finance ce cycle.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "Saisie du volume, du prix et de la couverture de trésorerie. Le plan écrit reste sur la table, visible.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre de pointe. Les écarts entre équipes sont ici les plus larges de tout l'atelier.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus produit est-elle celle qui a le mieux tenu sa trésorerie.",
+            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus produit est-elle celle qui a le mieux tenu sa trésorerie. L'analyse de l'écart s'écrit hors séance sur la fiche de plan de charge.",
         },
       ],
       livrable:
@@ -348,7 +348,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       numero: 5,
       titre: "Établir le diagnostic financier",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: null,
       processus: [
         "Bloc 2 · Établir et lire les documents de synthèse",
@@ -369,41 +369,41 @@ export const ATELIER_GEA: AtelierDefinition = {
         "compte rendu de gestion",
       ],
       preparation:
-        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe.",
+        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe. À préparer par les équipes avant la séance : le diagnostic financier des quatre trimestres, rédigé sur une page avec ses quatre indicateurs ; la séance sert à le finir, pas à le commencer.",
       deroule: [
         {
-          minutes: 10,
+          minutes: 5,
           titre: "Consignes et tirage",
           detail:
             "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe disposera d'un temps de présentation court suivi de questions du jury.",
         },
         {
-          minutes: 50,
+          minutes: 25,
           titre: "Construction du diagnostic",
           detail:
-            "Les équipes reprennent les quatre trimestres depuis leur espace et construisent leur diagnostic. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié, reliant l'activité à la trésorerie.",
+            "Les équipes partent du diagnostic rédigé avant la séance et le finissent depuis leur espace, les quatre trimestres sous les yeux. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié, reliant l'activité à la trésorerie.",
         },
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole, préparation des réponses aux questions probables. Vous passez dans les équipes pour repérer les diagnostics illisibles avant qu'ils ne soient projetés.",
         },
         {
-          minutes: 75,
+          minutes: 60,
           titre: "Passage des équipes",
           detail:
-            "Huit minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente son diagnostic puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
+            "Sept minutes de présentation et trois minutes de questions par équipe, au chronomètre. Chaque équipe présente son diagnostic puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
         },
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Bilan de l'atelier",
           detail:
             "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le diagnostic et l'oral. Chaque élève écrit les trois phrases de son dossier professionnel.",
         },
       ],
       livrable:
-        "Le diagnostic financier des quatre trimestres : une page, quatre indicateurs justifiés reliant activité, rentabilité et trésorerie, la décision qui a le plus pesé et son effet chiffré, et la présentation orale de huit minutes qui l'accompagne.",
+        "Le diagnostic financier des quatre trimestres : une page, quatre indicateurs justifiés reliant activité, rentabilité et trésorerie, la décision qui a le plus pesé et son effet chiffré, et la présentation orale de sept minutes qui l'accompagne.",
       tracePasseport:
         "J'ai établi le diagnostic financier d'une entreprise sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [

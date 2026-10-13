@@ -82,8 +82,6 @@ describe("la fiche d'un atelier", () => {
     const aussi = formationsServiesEnPlus(cg1);
     expect(aussi.length).toBeGreaterThan(0);
     expect(await page.locator("[data-sert-aussi]").innerText()).toContain(sertEnClair(aussi));
-    // Le créneau conseillé et son découpage.
-    expect(await page.locator("[data-creneau-conseille]").count()).toBe(cg1.creneauConseille ? 1 : 0);
   });
 
   it("une fiche de concours dit qu'elle ne s'adapte pas", async () => {

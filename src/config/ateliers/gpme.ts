@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS GPME.
  *
- * Six séances de trois heures sur ATLAS CONSEIL. Le cabinet a été retenu parce
+ * Six séances de deux heures sur ATLAS CONSEIL. Le cabinet a été retenu parce
  * qu'il EST une PME au sens du diplôme : une douzaine de personnes, un dirigeant
  * qui décide de tout, presque aucun actif immobilisé et un poste clients qui
  * pèse plus lourd que tout le reste du bilan.
@@ -23,12 +23,12 @@ export const ATELIER_GPME: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de trois heures. Chaque équipe seconde la direction du même cabinet, relance ses clients, assure ses risques, recrute ou renonce, défend ses prix, et rend à chaque séance un document que le dirigeant pourrait signer.",
+    "Six séances de deux heures. Chaque équipe seconde la direction du même cabinet, relance ses clients, assure ses risques, recrute ou renonce, défend ses prix, et rend à chaque séance un document que le dirigeant pourrait signer.",
   resume:
     "Cinq trimestres dans un cabinet de conseil de douze personnes, du diagnostic d'entrée au rapport d'activité présenté au dirigeant.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "6 séances de 3 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Dans une PME, personne n'a de service dédié : la même personne relance un client en retard le matin et prépare un recrutement l'après-midi, et les deux décisions se tiennent par la trésorerie. C'est ce lien-là qu'un dossier découpé par bloc ne fait jamais sentir. Ici l'équipe décide de recruter au trimestre trois et se retrouve au trimestre quatre à devoir payer un salaire de plus avec des créances qui ne rentrent pas. Les blocs du référentiel cessent d'être des chapitres séparés : ce sont les quatre faces d'une même décision.",
   reglages: {
@@ -51,7 +51,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     {
       numero: 1,
       titre: "Prendre la mesure du cabinet",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 1,
       processus: [
         "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
@@ -75,40 +75,40 @@ export const ATELIER_GPME: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois avec des rôles nommés : relation clients, ressources humaines, suivi financier. Imprimez la trame de note de diagnostic, une page maximum, contrainte comprise.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances, cinq trimestres, un seul cabinet, une note rendue à chaque fin de séance et jamais plus d'une page.",
+            "Vous annoncez la règle : six séances, cinq trimestres, un seul cabinet, une note rendue entre deux séances et jamais plus d'une page.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Lecture du bilan d'entrée",
           detail:
             "Chaque équipe relève où se trouve l'argent du cabinet. La surprise est toujours la même : il n'est ni en caisse ni en machines, il est chez les clients.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Ce qui limite l'activité",
           detail:
             "L'équipe calcule combien de journées le cabinet peut vendre au maximum dans le trimestre, et ce que coûte une journée non vendue. La notion de taux d'occupation naît de ce calcul plutôt que d'une définition.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Premier arbitrage et décisions",
           detail:
             "L'arène pose un arbitrage à deux issues. L'équipe tranche, motive son choix en trois lignes, puis saisit son tarif journalier et son budget de prospection.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son taux d'occupation, son tarif réalisé et son délai de règlement moyen.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Deux équipes lisent leur note de diagnostic. Vous ne dites pas laquelle a raison : vous affichez les deux comptes de résultat.",
+            "Deux équipes lisent le brouillon de leur note de diagnostic. Vous ne dites pas laquelle a raison : vous affichez les deux comptes de résultat. La note se finit hors séance, avec le premier trimestre sous les yeux.",
         },
       ],
       livrable:
@@ -124,7 +124,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     {
       numero: 2,
       titre: "Faire rentrer l'argent",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 2,
       processus: [
         "Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME",
@@ -145,43 +145,43 @@ export const ATELIER_GPME: AtelierDefinition = {
         "procédure de relance",
       ],
       preparation:
-        "Relisez les outils de mobilisation des créances proposés par le jeu, pour pouvoir orienter sans décider à la place des équipes. Préparez la trame de procédure de relance en quatre étapes, à compléter par les équipes.",
+        "Relisez les outils de mobilisation des créances proposés par le jeu, pour pouvoir orienter sans décider à la place des équipes. Préparez la trame de procédure de relance en quatre étapes, à compléter par les équipes. À préparer par les équipes avant la séance : relever dans le bilan du premier trimestre les créances clients, le chiffre d'affaires du trimestre et le délai de règlement moyen que le jeu affiche, pour en tirer le montant immobilisé chez les clients.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Rentable et sans trésorerie",
           detail:
             "Les équipes constatent l'écart entre leur résultat et ce qu'il reste en banque. La situation est fréquente dans le jeu comme en cabinet, et c'est le point de départ.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Le poste clients en euros",
           detail:
-            "Chaque équipe calcule son délai moyen de règlement et le montant immobilisé chez ses clients, puis ce qu'un mois de délai en moins libérerait.",
+            "Chaque équipe part du délai moyen et du montant immobilisé relevés avant la séance, les vérifie sur son bilan, puis calcule ce qu'un mois de délai en moins libérerait.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Quatre solutions, quatre coûts",
           detail:
             "L'équipe compare attendre, relancer, escompter et céder la créance, et chiffre ce que chacune coûte. Le panneau des frais de mission, trois politiques réglées à trente, trente et quinze jours, est la seule relation fournisseurs du cabinet : faites-le lire, il joue sur la même caisse. La gratuité apparente de la relance se discute : elle coûte du temps et parfois un client.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "Saisie des décisions, y compris celles qui touchent au financement du besoin. L'équipe écrit ce qu'elle attend de sa décision sur sa trésorerie de fin de trimestre.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez. Le délai de règlement et la trésorerie nette de chaque équipe s'affichent côte à côte.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a mobilisé ses créances et une qui a attendu. La différence de résultat est petite ; la différence de trésorerie ne l'est pas.",
+            "On compare une équipe qui a mobilisé ses créances et une qui a attendu. La différence de résultat est petite ; la différence de trésorerie ne l'est pas. La procédure de relance en quatre étapes se rédige hors séance.",
         },
       ],
       livrable:
@@ -197,7 +197,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     {
       numero: 3,
       titre: "Les risques d'une petite structure",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 3,
       processus: [
         "Bloc 2 · Participer à la gestion des risques de la PME",
@@ -218,43 +218,43 @@ export const ATELIER_GPME: AtelierDefinition = {
         "coût d'un sinistre non couvert",
       ],
       preparation:
-        "Repérez les couvertures d'assurance proposées dans le scénario et ce que chacune couvre réellement, pour pouvoir répondre sans souffler la réponse. Préparez une grille de cartographie à deux entrées, probabilité et impact, vierge.",
+        "Repérez les couvertures d'assurance proposées dans le scénario et ce que chacune couvre réellement, pour pouvoir répondre sans souffler la réponse. Préparez une grille de cartographie à deux entrées, probabilité et impact, vierge. À préparer par les équipes avant la séance : la liste des risques qui pèsent sur le cabinet, chacun avec une première estimation de ce qu'il coûterait en euros, la dépendance au principal donneur d'ordres comprise.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Les consultants au banc",
           detail:
             "Les équipes constatent ce que coûte une équipe qui ne facture pas, et découvrent que la sous-activité est un risque au même titre qu'un sinistre.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Cartographier",
           detail:
-            "Chaque équipe place ses risques sur la grille, avec un chiffre d'impact pour chacun. Un risque sans montant reste une inquiétude, pas un risque.",
+            "Chaque équipe part de la liste de risques préparée avant la séance et la place sur la grille, en discutant chaque montant d'impact. Un risque sans montant reste une inquiétude, pas un risque.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Garder ou transférer",
           detail:
             "L'équipe compare le coût annuel d'une couverture et le coût du sinistre qu'elle éviterait. Certains risques ne s'assurent pas : ceux-là se réduisent ou s'acceptent, et il faut le dire.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "Saisie des décisions, dont la couverture retenue. L'équipe écrit ce qu'elle accepte de supporter seule.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez. Les événements du trimestre tombent, et l'on voit qui était couvert. Le hasard fait ici partie de la leçon.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On regarde les équipes touchées et les équipes épargnées, et l'on distingue une bonne décision d'un bon résultat. C'est la séance où cette distinction s'installe.",
+            "On regarde les équipes touchées et les équipes épargnées, et l'on distingue une bonne décision d'un bon résultat. C'est la séance où cette distinction s'installe. La cartographie se met au propre hors séance.",
         },
       ],
       livrable:
@@ -270,7 +270,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     {
       numero: 4,
       titre: "Recruter, et à quel moment",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 4,
       processus: [
         "Bloc 3 · Gérer le personnel et contribuer à la gestion des ressources humaines de la PME",
@@ -291,43 +291,43 @@ export const ATELIER_GPME: AtelierDefinition = {
         "délai de montée en compétence",
       ],
       preparation:
-        "Vérifiez que le niveau de la partie ouvre bien les décisions de personnel, sans quoi la séance n'a pas de support. Au quatrième trimestre, le scénario fait tomber un décret qui ouvre le marché de l'audit aux petites structures : lisez-le avec la classe en ouverture de séance, c'est lui qui pose la question du recrutement. Préparez la fiche de décision d'embauche, avec la ligne de calcul du nombre de journées à vendre laissée vide.",
+        "Vérifiez que le niveau de la partie ouvre bien les décisions de personnel, sans quoi la séance n'a pas de support. Au quatrième trimestre, le scénario fait tomber un décret qui ouvre le marché de l'audit aux petites structures : lisez-le avec la classe en ouverture de séance, c'est lui qui pose la question du recrutement. Préparez la fiche de décision d'embauche, avec la ligne de calcul du nombre de journées à vendre laissée vide. À préparer par les équipes avant la séance : le taux d'occupation des trois trimestres joués et le coût complet annuel d'un consultant, salaire chargé, poste et frais compris, inscrits sur la fiche.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Où en est le carnet",
           detail:
-            "Chaque équipe relève son taux d'occupation des trimestres joués et dit si elle sature ou si elle a du mou.",
+            "Chaque équipe lit le taux d'occupation relevé avant la séance et dit si elle sature ou si elle a du mou. Vous lisez avec la classe le décret qui ouvre le marché de l'audit.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Ce que coûte un consultant de plus",
           detail:
-            "L'équipe calcule le coût complet annuel d'un recrutement, puis le nombre de journées qu'il faut lui vendre pour qu'il se paie. Le chiffre obtenu se compare au taux d'occupation actuel.",
+            "L'équipe part du coût complet annuel préparé avant la séance, le vérifie, puis calcule le nombre de journées qu'il faut vendre à un consultant de plus pour qu'il se paie. Le chiffre obtenu se compare au taux d'occupation actuel.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Recruter ou sous-traiter",
           detail:
             "L'équipe compare l'embauche et le renfort ponctuel : l'un engage durablement et coûte moins cher à la journée, l'autre coûte plus cher et se rend. Le bon choix dépend de ce que l'équipe croit du carnet à venir. Le renfort ponctuel se chiffre sur le papier, au tarif que vous donnez : la simulation ne le propose pas en décision, c'est l'embauche qu'elle joue.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "Saisie des décisions. L'équipe qui recrute écrit ce qu'elle attend en journées vendues supplémentaires.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez. L'effet d'un recrutement ne se lit pas entièrement ce trimestre : il faut le dire pour éviter des conclusions hâtives.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On oppose une équipe qui a recruté et une qui s'en est tenue à son effectif, en gardant ouverte la question de savoir laquelle aura eu raison au trimestre suivant.",
+            "On oppose une équipe qui a recruté et une qui s'en est tenue à son effectif, en gardant ouverte la question de savoir laquelle aura eu raison au trimestre suivant. La fiche de décision d'embauche se finit hors séance.",
         },
       ],
       livrable:
@@ -343,7 +343,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     {
       numero: 5,
       titre: "Défendre son prix",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 5,
       processus: [
         "Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME",
@@ -364,43 +364,43 @@ export const ATELIER_GPME: AtelierDefinition = {
         "coût d'une journée non vendue",
       ],
       preparation:
-        "Préparez trois contreparties possibles à une remise, sans les donner : volume, délai de règlement, durée d'engagement. Les équipes doivent les trouver, mais vous devez pouvoir relancer celles qui butent.",
+        "Préparez trois contreparties possibles à une remise, sans les donner : volume, délai de règlement, durée d'engagement. Les équipes doivent les trouver, mais vous devez pouvoir relancer celles qui butent. À préparer par les équipes avant la séance : la marge sur coût variable d'une journée vendue, offre par offre, et la part de chaque client dans le chiffre d'affaires des quatre trimestres joués.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "La demande",
           detail:
             "L'arène pose la situation du trimestre. Chaque équipe la lit et note sa première réaction, avant tout calcul. Cette réaction sera comparée à la décision finale.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Ce que coûte la remise",
           detail:
-            "L'équipe chiffre l'effet de la remise sur sa marge, puis le volume qu'il faudrait pour la compenser, puis ce que la perte du client représenterait dans son activité.",
+            "À partir de la marge par journée et du poids de chaque client préparés avant la séance, l'équipe chiffre l'effet de la remise sur sa marge, puis le volume qu'il faudrait pour la compenser, puis ce que la perte du client représenterait dans son activité.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Chercher la contrepartie",
           detail:
             "Une remise se donne, elle ne se subit pas : l'équipe cherche ce qu'elle peut demander en échange. Le raccourci fréquent est de ne demander que du volume.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "Saisie des décisions, avec la réponse commerciale rédigée en trois phrases comme si elle partait au client.",
         },
         {
-          minutes: 25,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le dernier trimestre joué. Les équipes voient l'effet de leur réponse sur leur marge et sur leur occupation.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les premières réactions notées en début de séance et les décisions finales. L'écart entre les deux est ce que l'atelier a produit.",
+            "On compare les premières réactions notées en début de séance et les décisions finales. L'écart entre les deux est ce que l'atelier a produit. La réponse commerciale argumentée se met au propre hors séance.",
         },
       ],
       livrable:
@@ -416,7 +416,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     {
       numero: 6,
       titre: "Rendre compte au dirigeant",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: null,
       processus: [
         "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
@@ -437,34 +437,34 @@ export const ATELIER_GPME: AtelierDefinition = {
         "préconisation",
       ],
       preparation:
-        "Annoncez la présentation à la séance précédente et remettez la grille aux équipes. Prévoyez un ordre de passage tiré au sort et un jury où siège un élève d'une autre équipe.",
+        "Annoncez la présentation à la séance précédente et remettez la grille aux équipes. Prévoyez un ordre de passage tiré au sort et un jury où siège un élève d'une autre équipe. À préparer par les équipes avant la séance : le tableau de bord des cinq trimestres sur une page et les deux préconisations, rédigés ; la séance sert à les finir, pas à les commencer.",
       deroule: [
         {
-          minutes: 10,
+          minutes: 5,
           titre: "Consignes et tirage",
           detail:
-            "Rappel de la grille et tirage de l'ordre. Sept minutes de présentation, trois minutes de questions.",
-        },
-        {
-          minutes: 55,
-          titre: "Construction du rapport",
-          detail:
-            "Les équipes reprennent les cinq trimestres. Contrainte : une page de tableau de bord, quatre indicateurs au maximum, et deux préconisations pour l'année suivante.",
+            "Rappel de la grille et tirage de l'ordre. Sept minutes de présentation, trois minutes de questions, au chronomètre.",
         },
         {
           minutes: 25,
+          titre: "Construction du rapport",
+          detail:
+            "Les équipes partent du rapport rédigé avant la séance et le finissent, les cinq trimestres sous les yeux. Contrainte : une page de tableau de bord, quatre indicateurs au maximum, et deux préconisations pour l'année suivante.",
+        },
+        {
+          minutes: 10,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole et anticipation des objections. Vous repérez les tableaux illisibles avant projection.",
         },
         {
-          minutes: 65,
+          minutes: 60,
           titre: "Présentations",
           detail:
-            "Passage des équipes devant le jury. Les questions portent d'abord sur les préconisations : ce sont elles qui engagent.",
+            "Passage des équipes devant le jury, dix minutes chacune. Les questions portent d'abord sur les préconisations : ce sont elles qui engagent.",
         },
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Bilan de l'atelier",
           detail:
             "Vous rendez le classement puis vous l'écartez : ce qui se note est le rapport et sa présentation. Chaque élève rédige les phrases qui iront dans son dossier professionnel.",
@@ -481,11 +481,6 @@ export const ATELIER_GPME: AtelierDefinition = {
       ],
     },
   ],
-  creneauConseille: {
-    minutes: 120,
-    pourquoi:
-      "La séance de travaux dirigés d'une section de technicien, deuxième année. Le chiffrage du poste clients ou du risque se fait au premier créneau, la décision du trimestre et le débriefing au second.",
-  },
   formats: [
     {
       nom: "Six séances hebdomadaires",
@@ -495,7 +490,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     },
     {
       nom: "Trois demi-journées",
-      quand: "Quand l'emploi du temps donne des blocs de six heures.",
+      quand: "Quand l'emploi du temps donne des blocs de quatre heures.",
       comment:
         "Deux séances par demi-journée avec une pause franche entre les deux. Gardez la séance du recrutement en début de bloc : elle demande des calculs que la fatigue abîme.",
     },

@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS NDRC, deuxième année.
  *
- * Six séances de trois heures sur VOLT FITNESS, la salle de sport par
+ * Six séances de deux heures sur VOLT FITNESS, la salle de sport par
  * abonnement. Le secteur a été retenu parce qu'il porte ce que le pure player
  * de première année ne portait pas : un portefeuille d'adhérents qui paient à
  * chaque trimestre, et qu'on ne gagne donc pas une fois mais qu'on garde ou
@@ -25,12 +25,12 @@ export const ATELIER_FITNESS: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de trois heures. Chaque équipe dirige la même salle de sport sur cinq trimestres, mesure son attrition, calcule ce que vaut un adhérent qui reste, traverse l'été où la moitié des nouveaux ne viennent plus, encaisse des abonnements d'avance, refuse de sur-vendre une salle pleine, et rend à chaque séance un document de pilotage de la relation client.",
+    "Six séances de deux heures. Chaque équipe dirige la même salle de sport sur cinq trimestres, mesure son attrition, calcule ce que vaut un adhérent qui reste, traverse l'été où la moitié des nouveaux ne viennent plus, encaisse des abonnements d'avance, refuse de sur-vendre une salle pleine, et rend à chaque séance un document de pilotage de la relation client.",
   resume:
     "Cinq trimestres dans une salle de sport par abonnement, de l'attrition à la valeur vie d'un adhérent, avec la saturation de janvier comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
-  format: "6 séances de 3 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "La fidélisation s'enseigne en une phrase, garder coûte moins cher que recruter, et personne ne la mesure, parce qu'un exercice donne le taux d'attrition. Ici l'équipe part avec mille six cents adhérents, voit au trimestre suivant combien sont partis, et comprend que ce chiffre décide de son résultat plus que ses ventes du trimestre. La valeur vie d'un adhérent cesse d'être une formule : à quinze pour cent d'attrition il vaut six cents euros de marge, à dix pour cent il en vaut neuf cents, et l'équipe qui a rempli sa salle au-delà de ce que ses coachs encadrent voit son attrition monter et sa valeur fondre. Le métier arrive alors de lui-même : que faire d'un abonnement annuel encaissé d'avance, et faut-il vendre à celui qui ne restera pas.",
   reglages: {
@@ -53,7 +53,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     {
       numero: 1,
       titre: "Mille six cents adhérents et un crédit",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 1,
       processus: [
         "Bloc 1 · Relation client et négociation-vente",
@@ -77,40 +77,40 @@ export const ATELIER_FITNESS: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de l'offre et des prix, une de l'expérience adhérent, une du suivi financier. Imprimez la fiche d'ouverture vierge, une par équipe. Les chiffres que les équipes doivent retrouver seules : 105 € d'abonnement par trimestre et 15 € de coût variable par adhérent, soit 90 € de marge qui revient à chaque trimestre tant qu'il reste ; 105 000 € de charges fixes par trimestre, 56 000 € de salaires des huit coachs et de l'accueil et 49 000 € de loyer, d'énergie et d'assurances, plus 16 000 € d'amortissements ; un seuil autour de 1 170 adhérents, soit un peu plus de la moitié des 2 200 places. Le premier trimestre est celui des bonnes résolutions : la demande nouvelle est la plus forte de l'année, et ces inscrits sont les plus volatils. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances, cinq trimestres, une seule salle, et un document de pilotage rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : six séances, cinq trimestres, une seule salle, et un document de pilotage rendu à chaque séance, fini hors séance. Les équipes rejoignent la partie avec le code.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Ce que rapporte un adhérent qui reste",
           detail:
             "Chaque équipe relève ce qu'un adhérent paie, ce qu'il coûte, et ce que coûte un trimestre de salle que le plateau soit plein ou vide. Elle constate que le chiffre d'affaires du trimestre retombe tel quel au suivant si personne ne part, et que la question du métier devient combien partent, pas combien j'en vends.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Du portefeuille au seuil",
           detail:
             "L'équipe calcule la marge récurrente par adhérent, le nombre d'adhérents au seuil, et la marge de sécurité que lui laissent ses mille six cents adhérents. Vous circulez sans corriger : une équipe qui compte l'emprunt dans les charges fixes le découvrira dans sa trésorerie, pas dans son résultat.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Premier arbitrage et décisions",
           detail:
             "L'arène pose au premier trimestre l'arbitrage du secteur : recruter, ou garder. L'équipe tranche, motive son choix en trois lignes, puis saisit son abonnement et les places qu'elle met en vente en janvier, sans dépasser ce que ses coachs encadrent.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son compte de résultat, son portefeuille d'adhérents de fin de trimestre et sa place au classement.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leur fiche d'ouverture et la confrontent à leur résultat réel. Vous affichez côte à côte le portefeuille de fin de trimestre de chacune : la différence entre les nouveaux inscrits et les partis est le chiffre que la séance suivante va disséquer.",
+            "Deux équipes présentent leur fiche d'ouverture et la confrontent à leur résultat réel. Vous affichez côte à côte le portefeuille de fin de trimestre de chacune : la différence entre les nouveaux inscrits et les partis est le chiffre que la séance suivante va disséquer. La fiche d'ouverture se finit hors séance.",
         },
       ],
       livrable:
@@ -126,7 +126,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     {
       numero: 2,
       titre: "Ceux qui ne reviennent pas",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 2,
       processus: [
         "Bloc 1 · Relation client et négociation-vente",
@@ -147,22 +147,22 @@ export const ATELIER_FITNESS: AtelierDefinition = {
         "coût d'acquisition d'un client",
       ],
       preparation:
-        "Relisez la situation du deuxième trimestre : sur quatre cents inscrits de janvier, soixante-deux renouvellent, quand neuf réguliers sur dix restent. La valeur vie se calcule en divisant la marge par le taux d'attrition : 90 € divisés par 15 % font 600 €, et 900 € si l'attrition tombe à 10 %. Ce qui retient dans le jeu : une qualité perçue au-dessus de sa référence, un prix sous les 105 € de référence, et une salle en dessous de 85 % de remplissage. Le budget marketing ramène des inscrits nouveaux et n'en retient aucun : c'est la confusion que la séance doit lever. Préparez un tableau où chaque équipe inscrira son taux d'attrition, sa valeur vie et le levier qu'elle engage.",
+        "Relisez la situation du deuxième trimestre : sur quatre cents inscrits de janvier, soixante-deux renouvellent, quand neuf réguliers sur dix restent. La valeur vie se calcule en divisant la marge par le taux d'attrition : 90 € divisés par 15 % font 600 €, et 900 € si l'attrition tombe à 10 %. Ce qui retient dans le jeu : une qualité perçue au-dessus de sa référence, un prix sous les 105 € de référence, et une salle en dessous de 85 % de remplissage. Le budget marketing ramène des inscrits nouveaux et n'en retient aucun : c'est la confusion que la séance doit lever. Préparez un tableau où chaque équipe inscrira son taux d'attrition, sa valeur vie et le levier qu'elle engage. À préparer par les équipes avant la séance : la fiche d'ouverture rendue ; le portefeuille de fin de janvier relevé depuis leur espace, inscrits et partis comptés ; et la valeur vie de leur adhérent moyen, la marge divisée par le taux d'attrition.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur janvier",
           detail:
-            "Chaque équipe lit son portefeuille de fin de trimestre, compte les partis, et dit en une phrase si elle a gagné des adhérents ou seulement remplacé ceux qui s'en allaient.",
+            "Chaque équipe affiche le portefeuille de fin de trimestre relevé avant la séance, les partis comptés, et dit en une phrase si elle a gagné des adhérents ou seulement remplacé ceux qui s'en allaient.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Ce que vaut un adhérent",
           detail:
-            "Les équipes calculent la valeur vie de leur adhérent moyen, puis celle d'un inscrit de janvier et celle d'un régulier : ce ne sont pas les mêmes clients, et le coût pour faire venir le premier dépasse parfois ce qu'il rapportera. Réduire l'attrition de cinq points augmente cette valeur de moitié sans dépenser un euro de publicité.",
+            "Les équipes partent de la valeur vie de l'adhérent moyen calculée avant la séance, puis calculent celle d'un inscrit de janvier et celle d'un régulier : ce ne sont pas les mêmes clients, et le coût pour faire venir le premier dépasse parfois ce qu'il rapportera. Réduire l'attrition de cinq points augmente cette valeur de moitié sans dépenser un euro de publicité.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Retenir plutôt que remplacer",
           detail:
             "Chaque équipe choisit son levier de rétention et le chiffre : ce que coûte un budget qualité ou de maintenance ce trimestre, contre la valeur qu'il ajoute à tout le portefeuille sur la durée. Une équipe qui répond par de la publicité écrit pourquoi, et découvrira à la clôture que cela n'a rien retenu.",
@@ -174,16 +174,16 @@ export const ATELIER_FITNESS: AtelierDefinition = {
             "L'équipe arrête son prix, ses places à vendre, ses budgets de qualité, de maintenance et de marketing, et écrit le taux d'attrition qu'elle attend. Cette prévision sera relue au tour suivant.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Le taux d'attrition réalisé apparaît à côté du taux prévu, et la valeur vie de chaque équipe se recalcule.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a investi dans la rétention et une équipe qui a acheté des inscrits. La question qui reste ouverte : à partir de quel taux d'attrition un adhérent recruté coûte-t-il plus qu'il ne rapporte.",
+            "On compare une équipe qui a investi dans la rétention et une équipe qui a acheté des inscrits. La question qui reste ouverte : à partir de quel taux d'attrition un adhérent recruté coûte-t-il plus qu'il ne rapporte. La note de rétention se finit hors séance.",
         },
       ],
       livrable:
@@ -199,7 +199,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     {
       numero: 3,
       titre: "Le creux de l'été",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 3,
       processus: [
         "Bloc 2 · Relation client à distance et digitalisation",
@@ -220,22 +220,22 @@ export const ATELIER_FITNESS: AtelierDefinition = {
         "hausse de coût subie",
       ],
       preparation:
-        "Relisez la situation du troisième trimestre : la demande nouvelle est à la moitié de son niveau, l'attrition est multipliée par une fois et demie, et le scénario fait bondir l'énergie de 28 % pour deux trimestres : annoncez-le en ouverture, sinon l'écart sera imputé à la prévision et non au choc. Les charges fixes ne bougent pas, seul le coût variable de 15 € par adhérent disparaît avec ceux qui partent. Avec mille six cents adhérents et un seuil autour de 1 170, la marge de sécurité est de quatre cent trente adhérents : un été qui en fait partir cinq cents fait basculer le trimestre. Le creux se prépare au trimestre précédent, pas pendant ; vous en ferez la remarque aux équipes qui ne l'ont pas fait. Préparez un tableau où chaque équipe inscrira son portefeuille de fin d'été prévu.",
+        "Relisez la situation du troisième trimestre : la demande nouvelle est à la moitié de son niveau, l'attrition est multipliée par une fois et demie, et le scénario fait bondir l'énergie de 28 % pour deux trimestres : annoncez-le en ouverture, sinon l'écart sera imputé à la prévision et non au choc. Les charges fixes ne bougent pas, seul le coût variable de 15 € par adhérent disparaît avec ceux qui partent. Avec mille six cents adhérents et un seuil autour de 1 170, la marge de sécurité est de quatre cent trente adhérents : un été qui en fait partir cinq cents fait basculer le trimestre. Le creux se prépare au trimestre précédent, pas pendant ; vous en ferez la remarque aux équipes qui ne l'ont pas fait. Préparez un tableau où chaque équipe inscrira son portefeuille de fin d'été prévu. À préparer par les équipes avant la séance : la note de rétention rendue, et la projection de l'été sur leur portefeuille, la demande nouvelle divisée par deux, l'attrition multipliée par une fois et demie, les charges fixes inchangées, d'où la marge de sécurité en adhérents ; la hausse de l'énergie, elles ne la connaissent pas encore.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur le trimestre",
           detail:
             "Chaque équipe confronte l'attrition prévue à l'attrition réalisée, et dit ce que son levier de rétention a fait, ou pas encore fait.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Des charges qui ne suivent pas la saison",
           detail:
-            "Les équipes projettent l'été : la demande nouvelle divisée par deux, l'attrition relevée, les charges fixes identiques, l'énergie en hausse. Elles calculent leur marge de sécurité en adhérents et le nombre de départs qui fait basculer le trimestre. C'est la définition même d'une charge fixe, et elle se comprend ici mieux qu'au tableau.",
+            "Les équipes partent de la projection d'été préparée avant la séance, la demande nouvelle divisée par deux, l'attrition relevée, les charges fixes identiques, et y ajoutent l'énergie en hausse que vous venez d'annoncer. Elles corrigent leur marge de sécurité en adhérents et le nombre de départs qui fait basculer le trimestre. C'est la définition même d'une charge fixe, et elle se comprend ici mieux qu'au tableau.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Tenir la relation dans le creux",
           detail:
             "Chaque équipe choisit ses actions : un budget qualité pour retenir, un budget marketing pour recruter dans un marché à moitié vide, un prix d'été. Elle écrit ce que chaque action coûte et ce qu'elle attend d'elle, en distinguant ce qui retient de ce qui recrute.",
@@ -247,16 +247,16 @@ export const ATELIER_FITNESS: AtelierDefinition = {
             "L'équipe arrête son prix, ses places, ses budgets et sa couverture de trésorerie, et inscrit le portefeuille de fin d'été qu'elle attend.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre d'été. Le portefeuille réalisé apparaît à côté du portefeuille prévu, et le résultat de certaines équipes passe sous zéro pour la première fois.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui avait préparé l'été au trimestre précédent et une équipe qui l'a subi. La question qui reste ouverte : un trimestre en perte est-il une erreur de ce trimestre, ou du précédent.",
+            "On compare une équipe qui avait préparé l'été au trimestre précédent et une équipe qui l'a subi. La question qui reste ouverte : un trimestre en perte est-il une erreur de ce trimestre, ou du précédent. La note d'été se finit hors séance.",
         },
       ],
       livrable:
@@ -272,7 +272,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     {
       numero: 4,
       titre: "Douze mois encaissés d'avance",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 4,
       processus: [
         "Bloc 1 · Relation client et négociation-vente",
@@ -293,22 +293,22 @@ export const ATELIER_FITNESS: AtelierDefinition = {
         "contrats entreprises et délai de règlement",
       ],
       preparation:
-        "Relisez la situation du quatrième trimestre : une formule annuelle à 340 € en une fois contre quatre trimestres à 105 €, soit 420 €, l'adhérent engagé pour l'année ne se perdant plus en cours de route. La formule se travaille sur l'énoncé, en chiffres ; dans le jeu, la décision qui en découle est le prix du trimestre, et les contrats entreprises, réglés à quarante-cinq jours, sont la seule clientèle qui se fait attendre. Le niveau ouvre la trésorerie : l'escompte des créances entreprises, le découvert autorisé de 40 000 € à 13 % l'an, un nouvel emprunt. Préparez un plan de trésorerie vierge où chaque équipe inscrira ce que l'encaissement d'avance déplace d'un trimestre à l'autre.",
+        "Relisez la situation du quatrième trimestre : une formule annuelle à 340 € en une fois contre quatre trimestres à 105 €, soit 420 €, l'adhérent engagé pour l'année ne se perdant plus en cours de route. La formule se travaille sur l'énoncé, en chiffres ; dans le jeu, la décision qui en découle est le prix du trimestre, et les contrats entreprises, réglés à quarante-cinq jours, sont la seule clientèle qui se fait attendre. Le niveau ouvre la trésorerie : l'escompte des créances entreprises, le découvert autorisé de 40 000 € à 13 % l'an, un nouvel emprunt. Préparez un plan de trésorerie vierge où chaque équipe inscrira ce que l'encaissement d'avance déplace d'un trimestre à l'autre. À préparer par les équipes avant la séance : la note d'été rendue, et le chiffrage de la formule annuelle sur l'énoncé du trimestre, 340 € en une fois contre quatre trimestres à 105 €, par adhérent puis sur tout le portefeuille, avec ce que l'encaissement du premier jour déplace d'un trimestre à l'autre.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur l'été",
           detail:
             "Chaque équipe confronte son portefeuille prévu à son portefeuille réalisé, et dit ce qu'il lui reste en caisse après le creux.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Encaisser avant de fournir",
           detail:
-            "Les équipes chiffrent la formule annuelle : 80 € de moins par adhérent, mais 340 € encaissés le premier jour pour une prestation due sur douze mois. Elles distinguent ce qui est encaissé de ce qui est acquis, constatent que ce sont les clients qui financent le cycle, et nomment ce besoin en fonds de roulement devenu négatif.",
+            "Les équipes partent du chiffrage préparé avant la séance : 80 € de moins par adhérent, mais 340 € encaissés le premier jour pour une prestation due sur douze mois. Elles distinguent ce qui est encaissé de ce qui est acquis, constatent que ce sont les clients qui financent le cycle, et nomment ce besoin en fonds de roulement devenu négatif.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Ce que l'avance fait à la fidélité",
           detail:
             "Chaque équipe pèse ce que l'engagement fait à l'attrition d'un adhérent qui a déjà payé, contre ce que la remise fait à sa marge, puis construit son plan de trésorerie du trimestre en y plaçant les contrats entreprises réglés à quarante-cinq jours, et décide de ce qu'elle mobilise.",
@@ -320,16 +320,16 @@ export const ATELIER_FITNESS: AtelierDefinition = {
             "Saisie du prix, des places, des budgets et de la couverture de trésorerie. Le plan écrit reste sur la table, visible.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Le solde de trésorerie réalisé apparaît à côté du solde prévu, et le coût de la couverture se lit dans le résultat.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les plans de trésorerie. Une équipe bénéficiaire et à découvert, parce que ses contrats entreprises se règlent tard, fait la démonstration à votre place : le résultat et la caisse ne racontent pas la même histoire.",
+            "On compare les plans de trésorerie. Une équipe bénéficiaire et à découvert, parce que ses contrats entreprises se règlent tard, fait la démonstration à votre place : le résultat et la caisse ne racontent pas la même histoire. La note d'abonnement annuel se finit hors séance.",
         },
       ],
       livrable:
@@ -345,7 +345,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     {
       numero: 5,
       titre: "Trop de monde aux heures de pointe",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 5,
       processus: [
         "Bloc 3 · Relation client et animation de réseaux",
@@ -366,22 +366,22 @@ export const ATELIER_FITNESS: AtelierDefinition = {
         "délai de règlement des contrats",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer tout le temps annoncé. Relisez la situation du cinquième trimestre : trois cents adhérents de trop font passer l'attrition de 10 à 16 %, et la valeur vie de 900 à 563 €. La capacité réelle est la plus petite des deux, 2 200 places sur le plateau et environ 2 427 adhérents que huit coachs encadrent ; au-delà de 85 % de remplissage, l'attrition monte d'un cran. Le niveau ne permet ni d'embaucher ni d'agrandir : la seule décision est de ne pas sur-vendre. Les commandes exceptionnelles du jeu sont des partenariats, un comité d'entreprise à 82 € réglé à soixante jours, une mutuelle à 74 € à quarante-cinq jours, un club de handball à 128 € comptant sur des créneaux du matin, une campagne étudiante à 58 € : chacun remplit, et chacun prend de la place. Préparez la fiche de plan de janvier, où l'équipe écrira ses places mises en vente et son attrition attendue AVANT de connaître le résultat.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer tout le temps annoncé. Relisez la situation du cinquième trimestre : trois cents adhérents de trop font passer l'attrition de 10 à 16 %, et la valeur vie de 900 à 563 €. La capacité réelle est la plus petite des deux, 2 200 places sur le plateau et environ 2 427 adhérents que huit coachs encadrent ; au-delà de 85 % de remplissage, l'attrition monte d'un cran. Le niveau ne permet ni d'embaucher ni d'agrandir : la seule décision est de ne pas sur-vendre. Les commandes exceptionnelles du jeu sont des partenariats, un comité d'entreprise à 82 € réglé à soixante jours, une mutuelle à 74 € à quarante-cinq jours, un club de handball à 128 € comptant sur des créneaux du matin, une campagne étudiante à 58 € : chacun remplit, et chacun prend de la place. Préparez la fiche de plan de janvier, où l'équipe écrira ses places mises en vente et son attrition attendue AVANT de connaître le résultat. À préparer par les équipes avant la séance : la note d'abonnement annuel rendue, et le relevé, depuis leur espace, de leur portefeuille de fin de trimestre, de leur taux de remplissage et du nombre d'adhérents que leurs huit coachs encadrent.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Ce que dit le trimestre",
           detail:
-            "Vous rappelez sans chiffre que janvier revient, et que la salle n'est plus vide comme au premier. Les équipes retrouvent seules leur taux de remplissage et la capacité qui les borne.",
+            "Vous rappelez sans chiffre que janvier revient, et que la salle n'est plus vide comme au premier. Les équipes affichent le taux de remplissage relevé avant la séance et nomment seules la capacité qui les borne.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "La surface ou les coachs",
           detail:
-            "Chaque équipe calcule ses deux capacités et retient la plus petite, puis chiffre ce que trois cents adhérents de trop feraient à son attrition, à sa valeur vie et à son résultat sur les trimestres suivants. Vendre plus ce trimestre, c'est perdre sur tous les autres.",
+            "Chaque équipe pose ses deux capacités, relevées avant la séance, et retient la plus petite, puis chiffre ce que trois cents adhérents de trop feraient à son attrition, à sa valeur vie et à son résultat sur les trimestres suivants. Vendre plus ce trimestre, c'est perdre sur tous les autres.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Choisir ses partenaires",
           detail:
             "L'équipe juge les partenariats proposés sur trois critères, la marge, le délai de règlement et la place prise aux heures de pointe, et retient ceux qui remplissent sans saturer. Un club qui vient le matin ne prend pas la place d'un adhérent du soir : c'est le raisonnement attendu.",
@@ -393,16 +393,16 @@ export const ATELIER_FITNESS: AtelierDefinition = {
             "Saisie des places mises en vente, du prix, des budgets, de la commande exceptionnelle retenue ou refusée. Le plan écrit reste sur la table, visible.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le dernier trimestre joué. Le taux d'attrition et la valeur vie de chaque équipe apparaissent à côté de ce qu'elle avait prévu, et les écarts entre équipes sont les plus larges de l'atelier.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a vendu le plus d'abonnements en janvier est-elle celle dont le portefeuille vaut le plus.",
+            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a vendu le plus d'abonnements en janvier est-elle celle dont le portefeuille vaut le plus. La fiche de plan de janvier se finit hors séance.",
         },
       ],
       livrable:
@@ -418,7 +418,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     {
       numero: 6,
       titre: "Rendre compte de sa relation client",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: null,
       processus: [
         "Bloc 2 · Relation client à distance et digitalisation",
@@ -439,7 +439,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
         "compte rendu de gestion",
       ],
       preparation:
-        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe.",
+        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe : six minutes de présentation et trois minutes de questions par équipe. À préparer par les équipes avant la séance : la fiche de plan de janvier rendue, et le tableau de bord ébauché, les cinq trimestres relevés depuis leur espace, le taux d'attrition trimestre par trimestre compris ; la séance sert à le finir et à le présenter, pas à le construire depuis rien.",
       deroule: [
         {
           minutes: 10,
@@ -448,32 +448,32 @@ export const ATELIER_FITNESS: AtelierDefinition = {
             "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe disposera d'un temps de présentation court suivi de questions du jury.",
         },
         {
-          minutes: 50,
+          minutes: 25,
           titre: "Construction du tableau de bord",
           detail:
-            "Les équipes reprennent les cinq trimestres depuis leur espace et construisent leur tableau de bord. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié, et le taux d'attrition trimestre par trimestre y figure obligatoirement.",
+            "Les équipes finissent le tableau de bord ébauché avant la séance sur les cinq trimestres relevés depuis leur espace. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié, et le taux d'attrition trimestre par trimestre y figure obligatoirement.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole, préparation des réponses aux questions probables. Vous passez dans les équipes pour repérer les tableaux illisibles avant qu'ils ne soient projetés.",
         },
         {
-          minutes: 75,
+          minutes: 55,
           titre: "Passage des équipes",
           detail:
-            "Huit minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
+            "Six minutes de présentation et trois minutes de questions par équipe. Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
         },
         {
-          minutes: 25,
+          minutes: 15,
           titre: "Bilan de l'atelier",
           detail:
             "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et l'oral. Chaque élève écrit les trois phrases de sa fiche descriptive d'activité.",
         },
       ],
       livrable:
-        "Le tableau de bord de la relation client des cinq trimestres : une page, quatre indicateurs justifiés dont le taux d'attrition, le trimestre le mieux et le moins bien piloté avec leurs raisons, et la présentation orale de huit minutes qui l'accompagne.",
+        "Le tableau de bord de la relation client des cinq trimestres : une page, quatre indicateurs justifiés dont le taux d'attrition, le trimestre le mieux et le moins bien piloté avec leurs raisons, et la présentation orale de six minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord de la relation client d'une salle de sport sur cinq trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [
@@ -483,11 +483,6 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       ],
     },
   ],
-  creneauConseille: {
-    minutes: 120,
-    pourquoi:
-      "La séance de travaux dirigés d'une section de technicien, deuxième année. La valeur vie de l'adhérent se calcule au premier créneau, la décision du trimestre et sa clôture au second.",
-  },
   formats: [
     {
       nom: "Six séances hebdomadaires",

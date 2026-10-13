@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER D'APPROFONDISSEMENT · NIVEAU AVANCÉ.
  *
- * Six séances de trois heures sur le transport, choisi pour la richesse de ses
+ * Six séances de deux heures sur le transport, choisi pour la richesse de ses
  * arbitrages : deux clientèles qui s'opposent, des contrats industriels
  * réguliers mais exigeants et une bourse de fret qui remplit les retours, des
  * délais de règlement qui creusent le besoin en fonds de roulement, une flotte
@@ -28,12 +28,12 @@ export const ATELIER_AVANCE: AtelierDefinition = {
   referentielLabel: "Compétences de gestion",
   referentielAccord: "mobilisées",
   pitch:
-    "Six séances de trois heures. Chaque équipe dirige la même entreprise de transport sur cinq trimestres, arbitre entre contrats industriels et bourse de fret, finance un besoin en fonds de roulement qui s'emballe, agrandit ou renouvelle sa flotte, place ses excédents, et affronte un monde variable où l'aléa a le dernier mot. Un diagnostic stratégique clôt le tout.",
+    "Six séances de deux heures. Chaque équipe dirige la même entreprise de transport sur cinq trimestres, arbitre entre contrats industriels et bourse de fret, finance un besoin en fonds de roulement qui s'emballe, agrandit ou renouvelle sa flotte, place ses excédents, et affronte un monde variable où l'aléa a le dernier mot. Un diagnostic stratégique clôt le tout.",
   resume:
     "Cinq trimestres à la tête d'un transporteur, du mix de clientèles au diagnostic stratégique, sous un monde variable où l'aléa fait partie du jeu.",
   difficulte: 4,
   difficulteLabel: "Avancé",
-  format: "6 séances de 3 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Une équipe qui maîtrise chaque notion séparément échoue encore à les tenir ensemble, parce que la réalité ne pose jamais un problème à la fois. Ici la décision de flotte engage la trésorerie, le choix des contrats fixe le besoin en fonds de roulement, le pic impose un recrutement qu'il faudra financer, et le monde variable défait parfois le raisonnement le plus juste. L'équipe apprend que la bonne stratégie n'est pas celle qui gagne à tous les coups, mais celle qui survit à un mauvais trimestre sans se rompre, et cela ne s'enseigne qu'en le vivant sur plusieurs tours enchaînés.",
   reglages: {
@@ -56,7 +56,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       numero: 1,
       titre: "Lire la rentabilité à la palette",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 1,
       processus: [
         "Volet 1 · Analyser les coûts et la rentabilité",
@@ -77,22 +77,22 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "charges fixes d'une flotte",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de quatre, une par domaine : coûts, commercial, flotte, finance. Imprimez la fiche de coût à la palette vierge. Prévenez que le monde variable est actif : une décision juste pourra mal tourner, et ce ne sera pas une erreur.",
+        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de quatre, une par domaine : coûts, commercial, flotte, finance. Imprimez la fiche de coût à la palette vierge et distribuez-la une semaine avant, avec les charges d'un trimestre de la flotte et les prix moyens par clientèle tels que le scénario les donne. À préparer par les équipes avant la séance : un premier coût de revient à la palette, calculé à la maison sur cette fiche, retours à vide compris ; la séance part de ce calcul et le corrige, elle ne le refait pas. Prévenez que le monde variable est actif : une décision juste pourra mal tourner, et ce ne sera pas une erreur.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Le cadre et le contrat",
           detail:
             "Vous annoncez la règle : six séances, cinq trimestres, un seul transporteur, un document rendu à chaque fois, et un monde qui réserve des surprises. Les équipes rejoignent la partie.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Le coût d'une palette",
           detail:
-            "Chaque équipe reconstitue ce que coûte une palette transportée, charges de flotte comprises, en tenant compte des retours à vide qui ne rapportent rien.",
+            "Chaque équipe confronte le coût à la palette qu'elle a préparé aux chiffres que l'arène affiche, charges de flotte comprises, et corrige ce qu'elle avait oublié : les retours à vide qui ne rapportent rien sont l'oubli le plus fréquent.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Deux clientèles qui s'opposent",
           detail:
             "L'équipe compare la marge d'un contrat industriel, régulier mais exigeant, et celle d'un chargement de la bourse de fret, opportuniste et volatile. Le mix n'est pas neutre.",
@@ -104,16 +104,16 @@ export const ATELIER_AVANCE: AtelierDefinition = {
             "L'arène pose un arbitrage à deux issues. L'équipe tranche son mix de clientèles et son prix, motive son choix, puis saisit ses décisions.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son compte de résultat, sa marge par clientèle et sa place au classement.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leur coût à la palette et leur mix, et les confrontent à leur résultat. Vous affichez les deux comptes de résultat côte à côte.",
+            "Deux équipes présentent leur coût à la palette et leur mix, et les confrontent à leur résultat. Vous affichez les deux comptes de résultat côte à côte. La fiche de rentabilité se termine hors séance, à partir des chiffres de la clôture.",
         },
       ],
       livrable:
@@ -129,7 +129,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       numero: 2,
       titre: "Le camion qui rentre à vide",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 2,
       processus: [
         "Volet 1 · Analyser les coûts et la rentabilité",
@@ -150,43 +150,43 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "coût d'opportunité",
       ],
       preparation:
-        "Relisez la situation du deuxième trimestre : les porteurs rentrent à vide trois fois sur quatre, la bourse propose des lots à 52 € la palette quand le prix moyen est de 74 € et le coût complet proche de 54 €. Le coût de route d'une palette, carburant et péages, tourne autour de 25 € : c'est le seul chiffre que la décision ajoute, le reste est payé que le camion roule ou non. Préparez au tableau un compte à deux colonnes, retour à vide et retour chargé à 52 €, que les équipes rempliront. Le monde variable est activé : un aléa peut faire mentir le trimestre, et c'est déjà l'objet de l'exercice.",
+        "Relisez la situation du deuxième trimestre : les porteurs rentrent à vide trois fois sur quatre, la bourse propose des lots à 52 € la palette quand le prix moyen est de 74 € et le coût complet proche de 54 €. Le coût de route d'une palette, carburant et péages, tourne autour de 25 € : c'est le seul chiffre que la décision ajoute, le reste est payé que le camion roule ou non. Distribuez à la fin de la séance précédente un compte à deux colonnes, retour à vide et retour chargé à 52 €. À préparer par les équipes avant la séance : ce compte rempli avec les chiffres de la situation du deuxième trimestre, et une phrase qui dit laquelle des deux colonnes elles croient ; la séance part de ce compte. Le monde variable est activé : un aléa peut faire mentir le trimestre, et c'est déjà l'objet de l'exercice.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur le premier trimestre",
           detail:
             "Chaque équipe relit son résultat, son taux de remplissage et l'aléa qu'elle a subi ou évité. Vous notez qui a gagné en résultat mais dont les camions rentrent vides.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Ce que coûte un retour à vide",
           detail:
-            "Les équipes remplissent le compte à deux colonnes. Le chauffeur est payé et le camion s'amortit dans les deux cas : un lot à 52 € laisse 27 € de plus qu'un retour à vide, alors que le coût complet dit qu'on vend à perte. La séance tient dans cette contradiction, et l'équipe doit dire laquelle des deux lectures sert la décision.",
+            "Les équipes reprennent le compte à deux colonnes qu'elles ont préparé et le confrontent entre elles. Le chauffeur est payé et le camion s'amortit dans les deux cas : un lot à 52 € laisse 27 € de plus qu'un retour à vide, alors que le coût complet dit qu'on vend à perte. La séance tient dans cette contradiction, et l'équipe doit dire laquelle des deux lectures sert la décision.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Le prix plancher",
           detail:
             "Chaque équipe fixe le tarif au-dessous duquel elle refuse un lot de retour, et écrit pourquoi ce n'est ni le coût complet ni le coût de route : un marché habitué à 52 € finira par le demander sur l'aller. Le prix plancher est une décision commerciale autant qu'un calcul.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Décisions du trimestre",
           detail:
             "L'équipe arrête son mix entre contrats industriels, distribution et bourse, son prix, et le volume qu'elle vise, puis écrit le taux de remplissage qu'elle attend. Cette prévision sera relue au tour suivant.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Le taux de remplissage et le prix moyen à la palette apparaissent côte à côte, et une équipe qui a chargé ses retours lit ce que cela a fait à son prix moyen comme à son résultat.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a chargé la bourse et une équipe qui a tenu son prix. La question qui reste ouverte : le prix moyen le plus élevé est-il le résultat le plus élevé.",
+            "On compare une équipe qui a chargé la bourse et une équipe qui a tenu son prix. La question qui reste ouverte : le prix moyen le plus élevé est-il le résultat le plus élevé. La note de coût marginal se termine hors séance, avec l'écart de remplissage constaté.",
         },
       ],
       livrable:
@@ -202,7 +202,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       numero: 3,
       titre: "Le gazole prend dix-huit pour cent",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 3,
       processus: [
         "Volet 1 · Analyser les coûts et la rentabilité",
@@ -223,22 +223,22 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "délai de mise en service",
       ],
       preparation:
-        "Le scénario fait bondir le gazole de 18 % ce trimestre : annoncez-le en ouverture, il pèse sur chaque palette roulée. Les industriels sous contrat sont peu sensibles au prix, la grande distribution l'est beaucoup, la bourse de fret l'est plus encore : la hausse ne se répercute pas pareil sur les trois. Relisez la saisonnalité : le quatrième trimestre est le pic de l'année, surtout pour la distribution. Les véhicules s'achètent typés, fourgon à 45 000 € pour 1 000 palettes, porteur à 95 000 € pour 2 000, semi-remorque à 165 000 € pour 3 000, et entrent en service au trimestre suivant. Les conducteurs embauchés, 2 800 € par recrutement, arrivent eux aussi au trimestre suivant, dans la limite de dix-huit salariés. Préparez une grille à trois colonnes, répercuter, absorber, préparer le pic, que les équipes rempliront.",
+        "Le scénario fait bondir le gazole de 18 % ce trimestre : annoncez-le en ouverture, il pèse sur chaque palette roulée. Les industriels sous contrat sont peu sensibles au prix, la grande distribution l'est beaucoup, la bourse de fret l'est plus encore : la hausse ne se répercute pas pareil sur les trois. Relisez la saisonnalité : le quatrième trimestre est le pic de l'année, surtout pour la distribution. Les véhicules s'achètent typés, fourgon à 45 000 € pour 1 000 palettes, porteur à 95 000 € pour 2 000, semi-remorque à 165 000 € pour 3 000, et entrent en service au trimestre suivant. Les conducteurs embauchés, 2 800 € par recrutement, arrivent eux aussi au trimestre suivant, dans la limite de dix-huit salariés. Distribuez à la fin de la séance précédente une grille à trois colonnes, répercuter, absorber, préparer le pic, avec la hausse annoncée et la sensibilité au prix de chaque clientèle. À préparer par les équipes avant la séance : les deux premières colonnes, c'est-à-dire ce que la hausse retire à la marge d'une palette et ce qu'une répercussion rendrait clientèle par clientèle ; la séance part de ces chiffres et consacre son temps à la troisième colonne.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Relecture des prévisions",
           detail:
             "Chaque équipe confronte le remplissage prévu à celui obtenu, et lit le poids du carburant dans son prix avant la hausse.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Répercuter ou absorber",
           detail:
-            "Les équipes chiffrent ce que la hausse retire à la marge d'une palette, puis décident clientèle par clientèle : répercuter aux industriels qui suivront, moins à la distribution qui partirait, presque rien à la bourse qui n'attend que cela. Une hausse uniforme est la réponse facile, et la séance est faite pour la refuser.",
+            "Les équipes reprennent les deux colonnes qu'elles ont préparées et tranchent clientèle par clientèle : répercuter aux industriels qui suivront, moins à la distribution qui partirait, presque rien à la bourse qui n'attend que cela. Une hausse uniforme est la réponse facile, et la séance est faite pour la refuser.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Préparer un pic qu'on ne voit pas encore",
           detail:
             "Chaque équipe remplit la troisième colonne : le véhicule qu'elle achète et les conducteurs qu'elle embauche pour un trimestre qui n'est pas celui-ci. Elle écrit à quelle condition son choix reste bon si le pic déçoit, parce que le monde variable peut le faire.",
@@ -250,16 +250,16 @@ export const ATELIER_AVANCE: AtelierDefinition = {
             "L'équipe arrête ses prix par clientèle, son mix, son investissement et son recrutement, et inscrit la capacité qu'elle attend au trimestre suivant.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. La répercussion se lit tout de suite dans le prix moyen et les volumes par clientèle. Le véhicule et les conducteurs, eux, ne se lisent encore que dans la trésorerie : la capacité arrive au trimestre suivant.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a répercuté uniformément et une équipe qui a modulé par clientèle, puis celles qui ont préparé le pic et celles qui attendent de le voir. La question qui reste ouverte : peut-on décider d'une capacité pour une demande qu'on ne connaît pas encore.",
+            "On compare une équipe qui a répercuté uniformément et une équipe qui a modulé par clientèle, puis celles qui ont préparé le pic et celles qui attendent de le voir. La question qui reste ouverte : peut-on décider d'une capacité pour une demande qu'on ne connaît pas encore. La note de répercussion se termine hors séance.",
         },
       ],
       livrable:
@@ -275,7 +275,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       numero: 4,
       titre: "Le grand compte qui paie à soixante jours, en plein pic",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 4,
       processus: [
         "Volet 3 · Piloter la trésorerie et le financement",
@@ -296,22 +296,22 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "plan de trésorerie",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer tout le temps annoncé. La demande culmine ce trimestre, la distribution plus encore que le reste, et les équipes qui ont préparé leur capacité au trimestre précédent la reçoivent maintenant. Relisez la situation du quatrième trimestre : bénéficiaire, et pourtant à découvert, parce que l'entreprise encaisse à soixante jours ce qu'elle décaisse à quinze et trente. Préparez la fiche de plan de pointe, où l'équipe écrira son solde de trésorerie attendu, le financement de ses créances et les contrats qu'elle sert en priorité AVANT de connaître le résultat. Les délais des clientèles sont dans le jeu : industriels à soixante jours, distribution à quarante-cinq, bourse comptant.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer tout le temps annoncé. La demande culmine ce trimestre, la distribution plus encore que le reste, et les équipes qui ont préparé leur capacité au trimestre précédent la reçoivent maintenant. Relisez la situation du quatrième trimestre : bénéficiaire, et pourtant à découvert, parce que l'entreprise encaisse à soixante jours ce qu'elle décaisse à quinze et trente. Distribuez à la fin de la séance précédente la fiche de plan de pointe, où l'équipe écrira son solde de trésorerie attendu, le financement de ses créances et les contrats qu'elle sert en priorité AVANT de connaître le résultat. À préparer par les équipes avant la séance : le cycle du trimestre reconstitué sur cette fiche, le gazole à quinze jours, les chauffeurs à la fin du mois, les industriels à soixante jours, avec une première projection du solde de trésorerie ; la séance part de cette projection. Les délais des clientèles sont dans le jeu : industriels à soixante jours, distribution à quarante-cinq, bourse comptant.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Ce que dit le trimestre",
           detail:
             "Vous rappelez sans chiffre que la demande va culminer. Les équipes retrouvent seules l'ampleur du pic dans les informations du jeu, mesurent l'écart avec la capacité qu'elles ont reçue, et lisent leur délai de règlement client moyen.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Le cycle qui avance de l'argent",
           detail:
-            "Chaque équipe reconstitue son cycle du trimestre : le gazole à quinze jours, les chauffeurs à la fin du mois, les industriels à soixante jours. Elle projette son solde de trésorerie et découvre que servir plus de palettes creuse le découvert avant de remplir la caisse.",
+            "Chaque équipe reprend le cycle qu'elle a préparé et le corrige avec la demande réelle du pic : le gazole à quinze jours, les chauffeurs à la fin du mois, les industriels à soixante jours. Elle arrête son solde de trésorerie projeté et découvre que servir plus de palettes creuse le découvert avant de remplir la caisse.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Financer les créances, choisir les clients",
           detail:
             "L'équipe compare l'escompte et l'affacturage sur leur coût, décide de la part des créances qu'elle mobilise, et choisit les contrats qu'elle honore en priorité si la capacité ne suffit pas : la bourse payée comptant soulage la caisse, l'industriel à soixante jours la creuse mais reste fidèle. Elle chiffre aussi ce que lui coûterait de perdre son grand compte.",
@@ -323,16 +323,16 @@ export const ATELIER_AVANCE: AtelierDefinition = {
             "Saisie du mix, des prix, de la mobilisation des créances et de la couverture du découvert. La fiche de plan de pointe reste sur la table, visible.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre de pointe. Le solde de trésorerie réalisé apparaît à côté du solde prévu, le coût du financement dans le résultat, et le monde variable a corsé la note pour certaines.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare son plan et son résultat. Celle qui a le plus roulé a-t-elle le mieux gagné, et celle qui a le mieux gagné a-t-elle encore de la caisse : les deux questions n'ont pas la même réponse, et c'est le cours.",
+            "Chaque équipe compare son plan et son résultat. Celle qui a le plus roulé a-t-elle le mieux gagné, et celle qui a le mieux gagné a-t-elle encore de la caisse : les deux questions n'ont pas la même réponse, et c'est le cours. L'écart au solde réalisé s'écrit sur la fiche hors séance.",
         },
       ],
       livrable:
@@ -348,7 +348,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       numero: 5,
       titre: "Renouveler la flotte ou la réparer",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 5,
       processus: [
         "Volet 3 · Piloter la trésorerie et le financement",
@@ -369,22 +369,22 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "réserve de sécurité",
       ],
       preparation:
-        "Relisez la situation du cinquième trimestre : trois porteurs dont l'entretien coûte 21 000 € par trimestre et grimpe, à remplacer pour 315 000 € financés sur six ans, contre un entretien retombant à 5 500 € et neuf pour cent de gazole en moins. Dans le jeu, la décision se prend en revendant des porteurs et en en achetant, et le placement des excédents rapporte deux pour cent l'an. Préparez au tableau un tableau de flux vierge, année par année, où les équipes n'inscriront que ce que la décision change. Prévoyez que certaines équipes sortent du pic à sec, et adaptez leur travail à la couverture plutôt qu'au placement.",
+        "Relisez la situation du cinquième trimestre : trois porteurs dont l'entretien coûte 21 000 € par trimestre et grimpe, à remplacer pour 315 000 € financés sur six ans, contre un entretien retombant à 5 500 € et neuf pour cent de gazole en moins. Dans le jeu, la décision se prend en revendant des porteurs et en en achetant, et le placement des excédents rapporte deux pour cent l'an. Distribuez à la fin de la séance précédente un tableau de flux vierge, année par année, avec les chiffres de la situation. À préparer par les équipes avant la séance : ce tableau rempli des seuls flux que la décision change, actualisé, avec le signe de la somme ; la séance part de ce tableau et le discute, elle ne le remplit pas. Prévoyez que certaines équipes sortent du pic à sec, et adaptez leur travail à la couverture plutôt qu'au placement.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Après la pointe",
           detail:
             "Chaque équipe fait le point de sa trésorerie après le pic : certaines débordent d'excédents, d'autres pansent un aléa ou un découvert de croissance. Le travail de la séance n'est pas le même pour toutes, et c'est voulu.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Les flux que la décision change",
           detail:
-            "Les équipes remplissent le tableau : l'entretien évité, le gazole économisé, la revente des anciens porteurs, et le prix des nouveaux. L'amortissement n'y entre pas, ce n'est pas un flux. Puis elles actualisent et lisent le signe de la somme. Une équipe qui compare le coût d'achat aux économies d'un seul trimestre conclut à l'envers.",
+            "Les équipes reprennent le tableau qu'elles ont préparé et le confrontent : l'entretien évité, le gazole économisé, la revente des anciens porteurs, et le prix des nouveaux. L'amortissement n'y entre pas, ce n'est pas un flux. Elles relisent le signe de la somme actualisée. Une équipe qui a comparé le coût d'achat aux économies d'un seul trimestre a conclu à l'envers, et c'est ici qu'elle le voit.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Une trésorerie qui dort ne rapporte rien",
           detail:
             "Les équipes en excédent chiffrent ce que leur trésorerie inactive laisse perdre, ce qu'un placement rapporterait, et la réserve qu'un monde variable impose de garder devant un dernier trimestre incertain. Les autres chiffrent le coût de leur couverture.",
@@ -396,16 +396,16 @@ export const ATELIER_AVANCE: AtelierDefinition = {
             "Saisie de la revente et de l'achat de véhicules, du placement ou de la couverture selon la situation, du mix et du prix. Chaque équipe écrit ce qu'elle attend de son choix.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le dernier trimestre joué. Le rendement d'un placement, ou le coût d'une couverture, apparaît dans le résultat de chaque équipe, et les véhicules revendus ont quitté le bilan.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a renouvelé et une équipe qui a réparé, puis une équipe qui a fait travailler son excédent et une équipe qui l'a laissé dormir, sans oublier celle qu'un aléa a rattrapée. La question qui reste ouverte : jusqu'où engager quand demain est incertain.",
+            "On compare une équipe qui a renouvelé et une équipe qui a réparé, puis une équipe qui a fait travailler son excédent et une équipe qui l'a laissé dormir, sans oublier celle qu'un aléa a rattrapée. La question qui reste ouverte : jusqu'où engager quand demain est incertain. La note de renouvellement se termine hors séance.",
         },
       ],
       livrable:
@@ -421,7 +421,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       numero: 6,
       titre: "Bâtir le diagnostic stratégique",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: null,
       processus: [
         "Volet 2 · Construire une stratégie commerciale",
@@ -442,7 +442,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "compte rendu à une direction",
       ],
       preparation:
-        "Annoncez la soutenance à la séance précédente et donnez la grille d'évaluation. Prévoyez un ordre de passage tiré au sort et un temps de parole tenu au chronomètre pour chaque groupe. Préparez, pour le jury, une question qui oblige chaque équipe à assumer un arbitrage risqué.",
+        "Annoncez la soutenance à la séance précédente et donnez la grille d'évaluation. À préparer par les équipes avant la séance : le diagnostic sur une page, bâti à partir des cinq trimestres depuis leur espace, avec ses quatre indicateurs au plus ; la séance le resserre et le défend, elle ne le construit pas. Prévoyez un ordre de passage tiré au sort et un temps de parole tenu au chronomètre pour chaque groupe. Préparez, pour le jury, une question qui oblige chaque équipe à assumer un arbitrage risqué.",
       deroule: [
         {
           minutes: 10,
@@ -451,28 +451,28 @@ export const ATELIER_AVANCE: AtelierDefinition = {
             "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe disposera d'un temps de présentation court suivi de questions du jury, qui contestera au moins un arbitrage.",
         },
         {
-          minutes: 50,
-          titre: "Construction du diagnostic",
+          minutes: 25,
+          titre: "Mise au point du diagnostic",
           detail:
-            "Les équipes reprennent les cinq trimestres et bâtissent leur diagnostic. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié, dont un qui mesure la résistance aux aléas subis.",
+            "Les équipes reprennent le diagnostic qu'elles ont préparé et le resserrent. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié, dont un qui mesure la résistance aux aléas subis.",
         },
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole, anticipation des objections du jury. Vous passez dans les équipes pour repérer les diagnostics qui masquent un mauvais trimestre plutôt que de l'assumer.",
         },
         {
-          minutes: 75,
+          minutes: 60,
           titre: "Passage des équipes",
           detail:
-            "Huit minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente son diagnostic puis affronte les questions du jury, formé de vous et de deux élèves d'une autre équipe qui contestent au moins un arbitrage chacun.",
+            "Huit minutes de présentation et deux minutes de questions par équipe, chronométrées. Chaque équipe présente son diagnostic puis affronte les questions du jury, formé de vous et de deux élèves d'une autre équipe qui contestent un arbitrage.",
         },
         {
-          minutes: 25,
+          minutes: 15,
           titre: "Bilan de l'atelier",
           detail:
-            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le diagnostic et sa défense. Chaque élève écrit les trois phrases de son dossier de synthèse.",
+            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le diagnostic et sa défense. Chaque élève écrit les trois phrases de son dossier de synthèse ; la mise au propre se termine hors séance.",
         },
       ],
       livrable:

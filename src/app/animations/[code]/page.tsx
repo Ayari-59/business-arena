@@ -30,10 +30,7 @@ import {
   formationsServiesEnPlus,
   sertEnClair,
 } from "@/config/scenarios/formations-servies";
-import {
-  chargeDesSeances,
-  decoupageEnCreneaux,
-} from "@/config/ateliers/duree-des-seances";
+import { chargeDesSeances } from "@/config/ateliers/duree-des-seances";
 import {
   adaptationsDuNiveau,
   minutesEnClair,
@@ -184,9 +181,6 @@ export default async function AtelierPage({
   // L'ENTREPRISE SERT D'AUTRES FORMATIONS que celle de cette fiche : le
   // registre des entreprises le dit (config/scenarios/formations-servies).
   const sertAussi = formationsServiesEnPlus(atelier);
-  // LE CRÉNEAU RÉEL, quand il est plus court que la séance : le découpage se
-  // calcule, phase par phase, sans séparer la saisie du tour de sa clôture.
-  const creneau = atelier.creneauConseille ?? null;
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
@@ -528,41 +522,6 @@ export default async function AtelierPage({
               </div>
             ))}
           </div>
-          {creneau ? (
-            <div data-creneau-conseille="" className="mt-6 break-inside-avoid">
-              <h3 className="text-sm font-semibold text-slate-100 print:text-black">
-                Si vos créneaux font {minutesEnTexte(creneau.minutes)}
-              </h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-400 print:text-black">
-                {creneau.pourquoi}
-              </p>
-              <ul className="mt-3 space-y-2 text-sm leading-relaxed text-slate-300 print:text-black">
-                {atelier.seances.map((s) => {
-                  const creneaux = decoupageEnCreneaux(s, creneau.minutes);
-                  return (
-                    <li key={s.numero}>
-                      <strong className="text-slate-100 print:text-black">
-                        Séance {s.numero}.{" "}
-                      </strong>
-                      {creneaux === null
-                        ? "Une phase dépasse le créneau à elle seule : cette séance se joue entière."
-                        : creneaux.length === 1
-                          ? `Tient dans un seul créneau (${minutesEnTexte(creneaux[0]!.minutes)}).`
-                          : creneaux
-                              .map(
-                                (c, i) =>
-                                  `${i + 1}er créneau (${minutesEnTexte(c.minutes)}) : ${c.phases.map((p) => p.titre).join(", ")}`.replace(
-                                    /^1er/,
-                                    "Premier",
-                                  ).replace(/^2er/, "Second").replace(/^3er/, "Troisième"),
-                              )
-                              .join(" · ")}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ) : null}
         </Section>
 
         <Section id="adapter" titre="Adapter le niveau">
@@ -640,7 +599,7 @@ export default async function AtelierPage({
         <Section id="deroule" titre="Déroulé séance par séance">
           <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
             Le minutage est une trame, pas une contrainte. Aucune séance ne
-            dépasse trois heures, de sorte qu&apos;elle entre dans un créneau
+            dépasse deux heures, de sorte qu&apos;elle entre dans un créneau
             ordinaire ; à vous de l&apos;étirer si vous disposez de plus de
             temps, ou de la resserrer. Une seule règle si vous devez couper :
             prenez sur la production plutôt que sur le débriefing, qui est ce
