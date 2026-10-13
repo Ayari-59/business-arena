@@ -58,19 +58,26 @@ export function PiedDePage() {
   // se corrige toute seule au lieu de vieillir avec le dernier déploiement.
   const annee = new Date().getFullYear();
 
-  // Les quatre colonnes : « Jouer » seul, puis les trois publics l'un sous
-  // l'autre, puis l'aide, puis les offres et le contact. Lues du plan par leur
-  // code : un groupe ajouté demain prend sa colonne ici sans qu'on l'écrive.
+  // SIX BLOCS, TROIS PAR RANGÉE. Le plan se déroulait en quatre colonnes dont
+  // la deuxième empilait les trois publics : une colonne de trente lignes à
+  // côté de trois colonnes de cinq, et un pied de page mal calibré, long d'un
+  // côté, vide de l'autre. Chaque groupe prend maintenant sa case, dans
+  // l'ordre du plan : Jouer, Enseignants, Écoles sur la première rangée ; puis
+  // Entreprises, Aide, Offres. Deux par rangée sur tablette, une pile sur
+  // téléphone. Lus du plan par leur code : un groupe ajouté demain prend sa
+  // case ici sans qu'on l'écrive.
   const groupe = (code: string): GroupeDeMenu => {
     const g = NAVIGATION.find((x) => x.code === code);
     if (!g) throw new Error(`pied de page : le groupe « ${code} » n'est pas dans le plan`);
     return g;
   };
-  const colonnes: GroupeDeMenu[][] = [
-    [groupe("jouer")],
-    [groupe("enseignants"), groupe("ecoles"), groupe("entreprises")],
-    [groupe("aide")],
-    [groupe("offres")],
+  const groupes: GroupeDeMenu[] = [
+    groupe("jouer"),
+    groupe("enseignants"),
+    groupe("ecoles"),
+    groupe("entreprises"),
+    groupe("aide"),
+    groupe("offres"),
   ];
 
   return (
@@ -91,32 +98,28 @@ export function PiedDePage() {
         <nav
           aria-label="Plan du site"
           data-plan-du-pied=""
-          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4"
+          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {colonnes.map((groupes, i) => (
-            <div key={i} className="space-y-8">
-              {groupes.map((g) => (
-                <div key={g.code} data-groupe-du-pied={g.code}>
-                  <p className="font-display text-sm font-semibold tracking-etiquette text-slate-200">
-                    {g.titre}
-                    {g.precision ? (
-                      <>
-                        {" "}
-                        <span className="font-sans text-xs font-normal tracking-normal text-slate-400">
-                          {g.precision}
-                        </span>
-                      </>
-                    ) : null}
-                  </p>
-                  <ul className="mt-3 space-y-2 text-sm">
-                    {g.liens.map((lien) => (
-                      <li key={lien.href}>
-                        <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+          {groupes.map((g) => (
+            <div key={g.code} data-groupe-du-pied={g.code}>
+              <p className="font-display text-sm font-semibold tracking-etiquette text-slate-200">
+                {g.titre}
+                {g.precision ? (
+                  <>
+                    {" "}
+                    <span className="font-sans text-xs font-normal tracking-normal text-slate-400">
+                      {g.precision}
+                    </span>
+                  </>
+                ) : null}
+              </p>
+              <ul className="mt-3 space-y-2 text-sm">
+                {g.liens.map((lien) => (
+                  <li key={lien.href}>
+                    <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </nav>
