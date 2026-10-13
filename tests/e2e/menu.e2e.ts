@@ -145,7 +145,7 @@ describe("le menu du site", () => {
  * La barre, le menu et le pied de page lisent le même registre : ces gardes
  * vérifient, dans un vrai navigateur, que les trois disent la même chose, que
  * la page courante se marque dans chacun, et que le pied de page tient en
- * six blocs, trois par rangée, sur grand écran et en une pile sur téléphone.
+ * cinq colonnes et une ligne sur grand écran et en une pile sur téléphone.
  */
 describe("la barre, le menu et le pied de page lisent le même plan", () => {
   const titres = (locator: ReturnType<Page["locator"]>) =>
@@ -214,7 +214,7 @@ describe("la barre, le menu et le pied de page lisent le même plan", () => {
         expect(await a.innerText(), lien.href).toContain(lien.libelle);
       }
       expect(await pied.locator('a[href="/notions"]').count(), "le pied propose la page où l'on est").toBe(0);
-      // Six blocs : trois par rangée sur grand écran, une pile sur téléphone.
+      // Cinq colonnes et une ligne sur grand écran, une pile sur téléphone.
       const cases = await pied.locator(":scope > div").evaluateAll((els) =>
         els.map((e) => {
           const r = e.getBoundingClientRect();
@@ -224,7 +224,7 @@ describe("la barre, le menu et le pied de page lisent le même plan", () => {
       expect(cases).toHaveLength(6);
       const colonnes = new Set(cases.map((c) => c.gauche)).size;
       const rangees = new Set(cases.map((c) => c.haut)).size;
-      expect(colonnes, `colonnes à ${cases.map((c) => c.gauche).join(", ")}`).toBe(largeur.nom === "téléphone" ? 1 : 3);
+      expect(colonnes, `colonnes à ${cases.map((c) => c.gauche).join(", ")}`).toBe(largeur.nom === "téléphone" ? 1 : 5);
       expect(rangees, `rangées à ${cases.map((c) => c.haut).join(", ")}`).toBe(largeur.nom === "téléphone" ? 6 : 2);
       // L'adresse de contact, en texte, et aucun débordement.
       expect((await page.locator("footer [data-contact-pied]").innerText()).trim().length).toBeGreaterThan(3);

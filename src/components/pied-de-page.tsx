@@ -25,9 +25,9 @@ import { VENDEUR } from "@/config/editeur";
  * menu ; mais un pied de page qui déroule le plan rangé par public est la
  * carte du site, celle qu'on lit en bas d'une page quand on n'a pas trouvé.
  * Il LIT le plan (config/navigation.ts), groupe par groupe, sous les mêmes
- * titres que la barre et le menu : jamais une copie qui dérivera. Quatre
- * colonnes sur grand écran, Jouer / les trois publics / l'aide / les offres et
- * le contact ; empilées sur téléphone.
+ * titres que la barre et le menu : jamais une copie qui dérivera. Cinq
+ * colonnes sur grand écran, Jouer / Enseignants / Écoles / Entreprises / Aide,
+ * puis les offres et le contact sur une ligne ; empilées sur téléphone.
  *
  * IL SE POSE HORS DU `<main>`, en frère de celui-ci. C'est ce qui en fait un
  * repère « contentinfo » pour une synthèse vocale ; imbriqué dans le contenu,
@@ -58,27 +58,28 @@ export function PiedDePage() {
   // se corrige toute seule au lieu de vieillir avec le dernier déploiement.
   const annee = new Date().getFullYear();
 
-  // SIX BLOCS, TROIS PAR RANGÉE. Le plan se déroulait en quatre colonnes dont
+  // CINQ COLONNES ET UNE LIGNE. Le plan se déroulait en quatre colonnes dont
   // la deuxième empilait les trois publics : une colonne de trente lignes à
   // côté de trois colonnes de cinq, et un pied de page mal calibré, long d'un
-  // côté, vide de l'autre. Chaque groupe prend maintenant sa case, dans
-  // l'ordre du plan : Jouer, Enseignants, Écoles sur la première rangée ; puis
-  // Entreprises, Aide, Offres. Deux par rangée sur tablette, une pile sur
-  // téléphone. Lus du plan par leur code : un groupe ajouté demain prend sa
-  // case ici sans qu'on l'écrive.
+  // côté, vide de l'autre. Les cinq premiers groupes prennent maintenant
+  // chacun leur colonne, dans l'ordre du plan : Jouer, Enseignants, Écoles,
+  // Entreprises, Aide. Le sixième, les offres et le contact, se lit sur une
+  // seule ligne sous les cinq, comme la ligne de contact d'un courrier. Trois
+  // colonnes sur tablette, une pile sur téléphone. Lus du plan par leur code :
+  // un groupe ajouté demain prend sa colonne ici sans qu'on l'écrive.
   const groupe = (code: string): GroupeDeMenu => {
     const g = NAVIGATION.find((x) => x.code === code);
     if (!g) throw new Error(`pied de page : le groupe « ${code} » n'est pas dans le plan`);
     return g;
   };
-  const groupes: GroupeDeMenu[] = [
+  const colonnes: GroupeDeMenu[] = [
     groupe("jouer"),
     groupe("enseignants"),
     groupe("ecoles"),
     groupe("entreprises"),
     groupe("aide"),
-    groupe("offres"),
   ];
+  const ligne = groupe("offres");
 
   return (
     <footer className="border-t border-white/10">
@@ -98,9 +99,9 @@ export function PiedDePage() {
         <nav
           aria-label="Plan du site"
           data-plan-du-pied=""
-          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
+          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-5"
         >
-          {groupes.map((g) => (
+          {colonnes.map((g) => (
             <div key={g.code} data-groupe-du-pied={g.code}>
               <p className="font-display text-sm font-semibold tracking-etiquette text-slate-200">
                 {g.titre}
@@ -122,6 +123,29 @@ export function PiedDePage() {
               </ul>
             </div>
           ))}
+          <div
+            data-groupe-du-pied={ligne.code}
+            className="flex flex-wrap items-baseline gap-x-6 gap-y-2 sm:col-span-3 lg:col-span-5"
+          >
+            <p className="font-display text-sm font-semibold tracking-etiquette text-slate-200">
+              {ligne.titre}
+              {ligne.precision ? (
+                <>
+                  {" "}
+                  <span className="font-sans text-xs font-normal tracking-normal text-slate-400">
+                    {ligne.precision}
+                  </span>
+                </>
+              ) : null}
+            </p>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {ligne.liens.map((lien) => (
+                <li key={lien.href}>
+                  <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
+                </li>
+              ))}
+            </ul>
+          </div>
         </nav>
 
         {/* Le filet ferme le plan : le gris bleuté des cartes, plein, le même

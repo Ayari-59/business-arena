@@ -94,21 +94,23 @@ describe("le pied de page", () => {
     ).toEqual([]);
   });
 
-  it("déroule le plan du site en six blocs, trois par rangée, sans recopier ses liens", () => {
+  it("déroule le plan du site en cinq colonnes et une ligne, sans recopier ses liens", () => {
     // Le pied de l'accueil déroulait les quatorze liens du plan à la main, puis
     // n'en a plus proposé que quatre. Il lit maintenant le plan, groupe par
-    // groupe, sous les mêmes titres que la barre et le menu, un bloc par
-    // groupe : trois par rangée sur grand écran, deux sur tablette, une pile
-    // sur téléphone. Il a été en quatre colonnes dont une empilait les trois
-    // publics : trente lignes à côté de trois fois cinq.
+    // groupe, sous les mêmes titres que la barre et le menu : cinq colonnes
+    // sur grand écran, puis les offres et le contact sur une ligne ; trois
+    // colonnes sur tablette, une pile sur téléphone. Il a été en quatre
+    // colonnes dont une empilait les trois publics : trente lignes à côté de
+    // trois fois cinq.
     const source = readFileSync(join(SRC, "components", "pied-de-page.tsx"), "utf8");
     expect(source).toContain("NAVIGATION");
     expect(source).toContain("ACTION_PRINCIPALE");
     expect(source).toContain('aria-label="Plan du site"');
-    expect(source).toMatch(/grid-cols-1 [^"]*sm:grid-cols-2 [^"]*lg:grid-cols-3/);
-    expect(source, "un groupe ne s'empile plus sous un autre").not.toContain("const colonnes");
+    expect(source).toMatch(/grid-cols-1 [^"]*sm:grid-cols-3 [^"]*lg:grid-cols-5/);
+    expect(source, "la ligne traverse les cinq colonnes").toMatch(/sm:col-span-3 lg:col-span-5/);
+    expect(source).toContain('const ligne = groupe("offres")');
     for (const code of ["jouer", "enseignants", "ecoles", "entreprises", "aide", "offres"]) {
-      expect(source, `le bloc « ${code} » manque`).toContain(`groupe("${code}")`);
+      expect(source, `le groupe « ${code} » manque`).toContain(`groupe("${code}")`);
     }
     // L'adresse de contact reste en texte, et l'année se lit au rendu.
     expect(source).toContain("VENDEUR.contact");
