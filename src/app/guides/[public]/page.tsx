@@ -33,8 +33,12 @@ import { lireLeCatalogue } from "@/services/catalogue.service";
  * configuration et dans le catalogue des offres, jamais dans la prose.
  */
 
-export const dynamicParams = false;
-
+/**
+ * Les quatre guides sont prérendus (`generateStaticParams`) et un public inconnu
+ * tombe sur `notFound()`. Les chemins ne sont pas figés à la génération : quand
+ * le catalogue change, l'admin expire ces pages (étiquette et `revalidatePath`),
+ * et un chemin figé refusait alors de se régénérer (404, `NoFallbackError`).
+ */
 export function generateStaticParams(): { public: PublicDuGuide }[] {
   return GUIDES.map((g) => ({ public: g.public }));
 }

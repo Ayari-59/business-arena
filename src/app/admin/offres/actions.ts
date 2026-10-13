@@ -28,7 +28,9 @@ import type { CodeNiveau } from "@/config/episodes/niveaux";
  * formulaire pour l'éditeur d'offre, dans l'adresse (`?erreur=`) pour les autres.
  *
  * Après chaque enregistrement, le cache du catalogue expire (`updateTag`) et les pages qui
- * le lisent se régénèrent : /tarifs, /devis, les bandes de prix, la Découverte.
+ * le lisent se régénèrent : /tarifs, /devis, les bandes de prix, la Découverte, les
+ * guides de prise en main (statiques, `dynamicParams = false` : sans ce rappel, la page
+ * expirée par l'étiquette répondait 404, `NoFallbackError`).
  */
 
 const PAGES_DU_CATALOGUE = [
@@ -38,6 +40,11 @@ const PAGES_DU_CATALOGUE = [
   "/enseignants",
   "/fonctionnalites",
   "/guide",
+  "/guides",
+  "/guides/enseignant",
+  "/guides/etudiant",
+  "/guides/etablissement",
+  "/guides/formateur",
   "/jouer",
   "/teacher",
   "/teacher/cohortes",

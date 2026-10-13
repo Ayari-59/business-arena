@@ -93,7 +93,10 @@ describe("les guides de prise en main", () => {
     // La page dynamique se génère pour chaque guide du registre, et pour lui seul.
     const page = lire("src/app/guides/[public]/page.tsx");
     expect(page).toContain("return GUIDES.map((g) => ({ public: g.public }));");
-    expect(page).toContain("export const dynamicParams = false;");
+    // Pas de `dynamicParams = false` : la page, expirée par le catalogue, doit pouvoir se
+    // régénérer ; un public inconnu tombe sur notFound().
+    expect(page).not.toContain("dynamicParams");
+    expect(page).toContain("if (!brut) notFound();");
     expect(existsSync(join(SRC, "app", "guides", "[public]", "page.tsx"))).toBe(true);
     expect(existsSync(join(SRC, "app", "guides", "page.tsx"))).toBe(true);
     for (const g of GUIDES) {
