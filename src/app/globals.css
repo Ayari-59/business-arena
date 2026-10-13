@@ -4896,3 +4896,87 @@ details[open] > summary [data-deplier] {
     display: none;
   }
 }
+
+/* ───────────────────────── LES GUIDES, À L'IMPRESSION ────────────────────────── */
+
+/* LES GUIDES DE PRISE EN MAIN (app/guides/[public]/page.tsx) S'IMPRIMENT : c'est leur
+   version PDF, à joindre à un devis ou à distribuer en formation. Une feuille A4, des
+   marges de document, la marque, le guide et sa version en tête de chaque page, le folio
+   en pied (les deux posés par la page, en marge de page) ; ni barre du site, ni pied de
+   page, ni navigation ; une capture ne se coupe jamais d'une page à l'autre, et une
+   étape longue commence une page. */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 18mm 15mm 16mm;
+    @top-left {
+      font-family: var(--font-sans), sans-serif;
+      font-size: 8.5pt;
+      color: #4b5970;
+    }
+    @bottom-left {
+      font-family: var(--font-sans), sans-serif;
+      font-size: 8pt;
+      color: #4b5970;
+    }
+    @bottom-right {
+      font-family: var(--font-sans), sans-serif;
+      font-size: 8pt;
+      color: #4b5970;
+    }
+  }
+  body:has(.guide-imprimable) footer {
+    display: none !important;
+  }
+  .guide-imprimable {
+    padding-bottom: 0;
+  }
+  .guide-imprimable [data-en-tete-de-page] {
+    padding-top: 0;
+  }
+  .guide-imprimable .carte {
+    border-color: #c9d2df;
+  }
+  /* Une grille ne se coupe pas bien d'une page à l'autre : Chromium repousse un bloc
+     entier à la page suivante et laisse un blanc derrière lui. À l'impression, le guide
+     redevient un flux de blocs, espacés à la main. */
+  .guide-imprimable .grid:not([class*="print:hidden"]) {
+    display: block;
+  }
+  .guide-imprimable .grid > * + * {
+    margin-top: 6mm;
+  }
+  .guide-imprimable .etape-du-guide .grid > * + * {
+    margin-top: 4mm;
+  }
+  /* Une étape n'est plus une carte sur papier : un filet la sépare de la précédente. */
+  .guide-imprimable .etape-du-guide {
+    border: 0;
+    border-top: 0.5pt solid #c9d2df;
+    border-radius: 0;
+    padding: 5mm 0 0;
+    background: none;
+    box-shadow: none;
+  }
+  .guide-imprimable .capture-du-guide {
+    break-inside: avoid;
+  }
+  .guide-imprimable .capture-du-guide img {
+    max-height: 105mm;
+    width: auto;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+  .guide-imprimable .etape-du-guide h2,
+  .guide-imprimable h3 {
+    break-after: avoid;
+  }
+  .guide-imprimable .saut-de-page {
+    break-before: page;
+  }
+  .guide-imprimable .encadre-neutre,
+  .guide-imprimable .question-du-guide,
+  .guide-imprimable [data-en-cinq-minutes] {
+    break-inside: avoid;
+  }
+}

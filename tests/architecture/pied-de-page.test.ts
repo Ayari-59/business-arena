@@ -44,6 +44,8 @@ const PAGES_PUBLIQUES = [
   "app/entreprises/page.tsx",
   "app/fonctionnalites/page.tsx",
   "app/guide/page.tsx",
+  "app/guides/page.tsx",
+  "app/guides/[public]/page.tsx",
   "app/jouer/page.tsx",
   "app/notions/page.tsx",
   "app/orientation/page.tsx",

@@ -30,6 +30,8 @@ const code = (source: string) =>
 const PAGES_INTERIEURES = [
   "src/app/parcours/page.tsx",
   "src/app/guide/page.tsx",
+  "src/app/guides/page.tsx",
+  "src/app/guides/[public]/page.tsx",
   "src/app/orientation/page.tsx",
   "src/app/notions/page.tsx",
   "src/app/fonctionnalites/page.tsx",

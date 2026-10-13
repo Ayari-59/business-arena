@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { ATELIERS } from "@/config/ateliers";
+import { GUIDES, cheminDuGuide } from "@/config/guides";
 import { SITE_URL } from "@/config/site";
 import { getPublicCompetitionCodes } from "@/services/competition.service";
 
@@ -24,6 +25,7 @@ export const PAGES_PUBLIQUES = [
   "/fonctionnalites",
   "/notions",
   "/guide",
+  "/guides",
   "/manuel",
   "/orientation",
   "/rendez-vous",
@@ -82,5 +84,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]);
 
-  return [...pages, ...ateliers, ...(await concoursPublies())];
+  // Les quatre guides de prise en main, un par public (/guides/<public>).
+  const guides: MetadataRoute.Sitemap = GUIDES.map((g) => ({
+    url: `${SITE_URL}${cheminDuGuide(g.public)}`,
+    lastModified: DATE_DE_BUILD,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...pages, ...guides, ...ateliers, ...(await concoursPublies())];
 }

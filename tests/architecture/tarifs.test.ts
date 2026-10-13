@@ -315,6 +315,8 @@ describe("la grille tarifaire", () => {
         "/rendez-vous",
         "/integration",
         "/orientation",
+        // Le pied de page cite les guides de prise en main sur toutes les pages publiques.
+        "/guides",
         "/mentions-legales",
       ]),
     );

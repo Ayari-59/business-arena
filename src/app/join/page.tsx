@@ -81,7 +81,7 @@ export default async function JoinPage({
         retour={codeInitial ? `/join?code=${codeInitial}` : "/join"}
         className="w-full max-w-sm justify-items-center text-center"
       />
-      <Link href="/guide" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
+      <Link href="/guides/etudiant" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
         Première fois ? Consultez le guide de prise en main
       </Link>
     </main>

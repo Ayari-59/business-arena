@@ -32,7 +32,7 @@ export default async function TeacherLoginPage() {
         <ConnexionEtablissement className="pt-2" />
         <p className="text-sm text-slate-400">
           <Link
-            href="/guide#enseignants"
+            href="/guides/enseignant"
             className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
           >
             Première fois ? Consultez le guide de prise en main

@@ -55,7 +55,17 @@ export default function IntegrationPage() {
           surtitre="Intégration LTI 1.3"
           titre="Ajouter Business Arena à Moodle en deux minutes"
           chapeau="Business Arena s'ajoute comme outil externe à Moodle, Canvas, Blackboard ou Brightspace. L'enseignant place une activité dans son cours ; l'élève clique et arrive dans sa partie, sans compte, sans code et sans courriel."
-        />
+        >
+          {/* Le guide du référent : la licence, les comptes enseignants, Moodle pas à
+              pas avec les écrans, RENATER et les données, dans l'ordre d'un
+              déploiement. Cette page garde les adresses ; le guide y renvoie. */}
+          <p className="mt-4 text-base text-slate-300">
+            <Link href="/guides/etablissement" data-lien-guide-referent="" className={LIEN_A_L_ENCRE}>
+              Le guide du référent établissement
+            </Link>{" "}
+            reprend ces étapes dans l&apos;ordre d&apos;un déploiement, avec les écrans.
+          </p>
+        </EnTeteDePage>
         <div className={`${COLONNE_DE_PAGE} space-y-6`}>
           <Section id="dynamique" titre="La voie courte : coller une adresse">
             <p>

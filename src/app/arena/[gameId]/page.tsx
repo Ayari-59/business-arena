@@ -1977,6 +1977,9 @@ export default async function ArenaPage({
           <Link href="/notions" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
             Fiches notions
           </Link>
+          <Link href="/guides/etudiant" data-lien-guide-etudiant="" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
+            Guide de l&apos;étudiant
+          </Link>
         </p>
       </div>
 

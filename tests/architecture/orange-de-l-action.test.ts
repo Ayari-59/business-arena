@@ -73,6 +73,8 @@ function perimetre(): string[] {
     // L'intégration LTI : le guide de l'établissement et les écrans d'arrivée depuis
     // une plateforme de cours (enseignant et élève).
     join(SRC, "app/integration/page.tsx"),
+    // Les guides de prise en main : leur seul plein est l'action du guide (bouton()).
+    ...tous(join(SRC, "app/guides")),
     ...tous(join(SRC, "app/lti")),
     // La connexion par l'établissement (RENATER) : son bouton et ses écrans d'arrivée.
     join(SRC, "components/connexion-etablissement.tsx"),

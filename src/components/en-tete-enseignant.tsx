@@ -21,7 +21,8 @@ export type PageEnseignant =
   | "scenarios"
   | "usage"
   | "apprentissages"
-  | "manuel";
+  | "manuel"
+  | "guide";
 
 const NAVIGATION: ReadonlyArray<{ code: PageEnseignant; href: string; label: string }> = [
   { code: "parties", href: "/teacher", label: "Mes parties" },
@@ -35,6 +36,10 @@ const NAVIGATION: ReadonlyArray<{ code: PageEnseignant; href: string; label: str
   // Le manuel est un document, pas un écran de pilotage : il reste dans la
   // barre parce qu'on le cherche justement quand on ne sait plus où chercher.
   { code: "manuel", href: "/teacher/manuel", label: "Manuel" },
+  // LE GUIDE DE PRISE EN MAIN de l'enseignant (/guides/enseignant) : les gestes dans
+  // l'ordre, avec les écrans réels. Le manuel dit comment l'application évalue ; le
+  // guide, comment s'en servir.
+  { code: "guide", href: "/guides/enseignant", label: "Guide de prise en main" },
 ];
 
 export function EnTeteEnseignant({

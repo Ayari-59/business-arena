@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
-import { ACTION_PRINCIPALE, LIEN_CONTACT, LIEN_TARIFS_DU_MENU, LIENS_LEGAUX } from "@/config/navigation";
+import { ACTION_PRINCIPALE, LIEN_CONTACT, LIEN_GUIDES, LIEN_TARIFS_DU_MENU, LIENS_LEGAUX } from "@/config/navigation";
 import { VENDEUR } from "@/config/editeur";
 
 /**
@@ -115,6 +115,16 @@ export function PiedDePage() {
                 className="text-slate-400 transition-colors hover:text-slate-200"
               >
                 {LIEN_TARIFS_DU_MENU.libelle}
+              </Link>
+            ) : null}
+            {/* L'aide, sur toutes les pages publiques : les guides de prise en main. */}
+            {ailleurs(LIEN_GUIDES) ? (
+              <Link
+                href={LIEN_GUIDES.href}
+                data-lien-des-guides=""
+                className="text-slate-400 transition-colors hover:text-slate-200"
+              >
+                {LIEN_GUIDES.libelle}
               </Link>
             ) : null}
             {ailleurs(LIEN_CONTACT) ? (

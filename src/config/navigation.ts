@@ -89,6 +89,17 @@ export const LIEN_TARIFS_DU_MENU: LienDeMenu = {
 };
 
 /**
+ * LES GUIDES DE PRISE EN MAIN (/guides) : un guide par public, avec les écrans réels et
+ * une version PDF. Rangés dans « Ressources », à côté du guide du jeu, et cités par le
+ * pied de page : on cherche l'aide là où l'on bute, c'est-à-dire n'importe où.
+ */
+export const LIEN_GUIDES: LienDeMenu = {
+  href: "/guides",
+  libelle: "Guides de prise en main",
+  aide: "Un guide par public (enseignant, étudiant, référent établissement, formateur), les étapes dans l'ordre avec les écrans réels, et sa version PDF.",
+};
+
+/**
  * LES GROUPES SONT LES PUBLICS DU SITE.
  *
  * Le plan rangeait les pages par intention (jouer, découvrir) et par
@@ -218,6 +229,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         libelle: "Guide",
         aide: "Comment on joue et comment on anime, réunis au même endroit.",
       },
+      LIEN_GUIDES,
     ],
   },
   {

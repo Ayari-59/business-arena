@@ -231,6 +231,9 @@ export function BarreDeJeu({
           <Link href="/guide" className={lien}>
             Guide
           </Link>
+          <Link href="/guides/etudiant" className={lien} data-lien-guide-etudiant="">
+            Guide de l&apos;étudiant
+          </Link>
           <Link href="/" className={lien}>
             Accueil du site
           </Link>
