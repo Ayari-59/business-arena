@@ -32,7 +32,7 @@ Ce que le document 11 ne regardait pas, et que la demande d'aujourd'hui exige : 
 | avance | (Toutes filières, après un premier atelier) | transport | 5 | 5 | 4 | 6 séances de 3 h |
 | campus | bts-cg, bts-mco, bts-ndrc, stmg | nova | 3 | 6 | 3 | 7 séances de 1 h 30 |
 
-Lecture : quatre ateliers de section de technicien sur onze tournent sur NOVA ou sa gamme, les cinq autres entreprises jouées se partagent sept ateliers, et deux entreprises du choix n'ont aucun déroulé (MARTEL & FILS, et ROUTE & CIE n'en a qu'un sans formation). C'est le point de départ de la section 5.
+Lecture : quatre ateliers de section de technicien sur onze tournent sur NOVA ou sa gamme, les cinq autres entreprises jouées se partagent sept ateliers, et une entreprise du choix n'a de déroulé que sans formation (ROUTE & CIE). MARTEL & FILS, qui n'en avait aucun à la date de l'audit, porte depuis l'atelier `martel` (BTS GPME, première année, sept séances de deux heures dont un tour d'essai). C'est le point de départ de la section 5.
 
 ## 3. Calibrer les durées
 
@@ -264,7 +264,7 @@ Les justifications de la liste éditoriale, par les blocs du référentiel :
 - **ATLAS CONSEIL, et le BUT GEA** : le poste clients en euros, les risques d'une petite structure, le coût complet d'un recrutement, autant de gestes de la compétence « piloter les relations avec les acteurs internes et externes » et du parcours gestion comptable, fiscale et financière, au niveau 4 où le cabinet se joue en gamme ; le BTS GPME vient de son atelier (Bloc 1, relation clients et fournisseurs ; Bloc 2, risques ; Bloc 3, personnel).
 - **PIXEL & CO, et le BTS MCO** : le coût d'acquisition et le panier moyen (Bloc 2 · Animer et dynamiser l'offre commerciale), les retours et le service (Bloc 1 · Développer la relation client) ; le BTS NDRC vient de son atelier (Bloc 2 · relation client à distance et digitalisation).
 - **VOLT FITNESS, et le BTS MCO** : l'attrition et la valeur vie d'un adhérent (Bloc 1 · relation client), l'encaissement d'avance et la saison (Bloc 3 · gestion opérationnelle) ; le BTS NDRC vient de son atelier.
-- **MARTEL & FILS, et le BTS GPME et le BUT GEA** : aucun déroulé publié. Les chantiers, la sous-traitance et la trésorerie de chantier sont, bloc pour bloc, la relation avec les clients et les fournisseurs et la gestion des risques de la PME (Blocs 1 et 2 du BTS GPME), et la gestion financière d'une activité à cycle long pour le BUT. C'est l'entreprise la plus évidente à écrire sur mesure.
+- **MARTEL & FILS, et le BTS GPME et le BUT GEA** : le BTS GPME vient depuis de son atelier de première année (`martel`, Blocs 1, 2, 4 et une séance du Bloc 3 : le devis, le poste clients, le budget de trésorerie et les risques, l'embauche, le rapport au dirigeant) ; le BUT reste éditorial, pour la gestion financière d'une activité à cycle long, sans déroulé publié.
 - **ROUTE & CIE, et le BUT GEA, le DCG et le BTS GPME** : l'atelier avancé la joue sans formation. Le coût à la palette, le renouvellement de la flotte par la valeur actuelle nette, le grand compte à soixante jours sont UE6 et UE11 du DCG, la gestion financière du BUT, et les Blocs 1 et 4 du BTS GPME (fournisseurs et développement de la PME).
 
 Le tout est gardé (`tests/architecture/formations-servies.test.ts`) : chaque code existe, chaque entreprise jouée par un atelier liste au moins les formations de cet atelier, chaque entreprise du choix sert au moins une formation dans l'ordre du registre, et les pages lisent le module.
@@ -301,5 +301,5 @@ Nouveaux fichiers : `tests/architecture/formations-servies.test.ts` (vue rouge a
 
 - Les arrêtés du BTS MHR et du BUT GEA, toujours à lire (`REFERENTIELS_NON_VERIFIES`), et la situation « 18 % de commission » de l'hôtel : inchangés depuis le document 11.
 - Le modèle de durée est un modèle, pas une mesure. Dès qu'une classe aura joué un atelier, la médiane mesurée par le carnet d'usage dira mieux que l'estimation ; la garde devrait alors lire la mesure quand elle existe.
-- MARTEL & FILS n'a pas de déroulé : c'est l'entreprise désignée pour une première situation sur mesure, pour le BTS GPME.
+- MARTEL & FILS a maintenant son déroulé pour le BTS GPME (`src/config/ateliers/martel.ts`) ; la sous-traitance que le bâtiment promettait n'existe pas dans le moteur pour cette entreprise, et la fiche la chiffre sur le papier.
 - Les adaptations nomment les séances à retoucher ; elles ne les réécrivent pas. Un atelier joué un cran plus bas reste à retoucher par son auteur, et la fiche dit lesquelles de ses séances.

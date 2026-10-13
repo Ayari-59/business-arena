@@ -39,6 +39,8 @@ export interface FormulaireLivrable {
   seance: number;
   seanceTitre: string;
   tourJoue: number | null;
+  /** La séance joue le tour d'essai, qui ne compte pas. */
+  essai: boolean;
   /**
    * Le nom du document, quand la phrase le donne avant les deux points. Toutes
    * ne le donnent pas : cinq livrables sur trente deux énumèrent directement,
@@ -109,6 +111,7 @@ export function formulaireLivrable(seance: AtelierSeance): FormulaireLivrable {
     seance: seance.numero,
     seanceTitre: seance.titre,
     tourJoue: seance.tourJoue,
+    essai: seance.essai === true,
     document,
     precisions: restants.filter((m) => PRECISION_DE_FORMAT.test(m)),
     consigne,
@@ -157,7 +160,7 @@ export function formulairesCsv(atelier: AtelierDefinition): string {
     lignes.push([]);
     lignes.push([
       `SÉANCE ${f.seance} · ${f.seanceTitre}`,
-      f.tourJoue !== null ? `Tour joué : ${f.tourJoue}` : "Aucun tour joué",
+      f.essai ? "Tour d'essai" : f.tourJoue !== null ? `Tour joué : ${f.tourJoue}` : "Aucun tour joué",
     ]);
     lignes.push([
       f.document ?? f.phrase,

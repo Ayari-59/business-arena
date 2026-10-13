@@ -960,7 +960,7 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
       "Vos échafaudages et vos fourgons limitent les chantiers menés de front : le matériel acheté ce trimestre n'entre en service qu'au suivant.",
     laborLabel: "Capacité des compagnons",
     laborBottleneckHint:
-      "Vos compagnons limitent la surface traitée : embaucher prend un trimestre, et la sous-traitance coûte une part de la marge.",
+      "Vos compagnons limitent la surface traitée : embaucher prend un trimestre, et un compagnon de plus se paie dès le trimestre de son recrutement.",
     perRoundLabel: "m²/tour",
     plafond: { equipeFait: "peut réaliser", parcEnFait: "votre matériel en permet", enTrop: "un engin resterait au dépôt" },
     materialLabel: "Matériaux",

@@ -170,13 +170,15 @@ function adaptation(
     }
   }
 
+  // Les séances qui jouent un tour, l'essai compris : c'est l'estimation qui le dit.
   const ecarts = a.seances
-    .filter((s) => s.tourJoue !== null)
     .map((s) => {
-      const avant = estimationDuTour(a, s)!.minutes;
+      const avant = estimationDuTour(a, s);
+      if (!avant) return null;
       const apres = estimationDuTour(a, s, { scenarioCode, preset: voisin })!.minutes;
-      return apres - avant;
-    });
+      return apres - avant.minutes;
+    })
+    .filter((e): e is number => e !== null);
   const minutesParTour =
     ecarts.length > 0
       ? { min: Math.min(...ecarts), max: Math.max(...ecarts) }

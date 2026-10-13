@@ -10,6 +10,7 @@ import {
   verdict,
 } from "@/config/ateliers/duree-des-seances";
 import { MINUTES_PRISE_EN_MAIN } from "@/config/duree-du-tour";
+import { repartitionDesSeancesEnClair, tourDEssaiEnClair } from "@/config/ateliers/essai";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 
 /**
@@ -102,6 +103,27 @@ describe("l'estimation d'un tour d'atelier", () => {
     expect(estimationDuTour(cg1, sansTour)).toBeNull();
   });
 
+  it("une séance d'essai demande ce qu'un premier tour demande, et le vrai tour 1 n'a plus de prise en main", () => {
+    // MARTEL & FILS ouvre sur un tour d'essai : il rejoue le tour 1 du
+    // scénario, situation comprise, et c'est là que la classe prend l'arène
+    // en main. La séance suivante joue le vrai tour 1, sans la reprendre.
+    const martel = ATELIERS.find((a) => a.code === "martel")!;
+    const [essai, tour1] = martel.seances;
+    expect(essai!.essai).toBe(true);
+    expect(essai!.tourJoue).toBeNull();
+    const e = estimationDuTour(martel, essai!)!;
+    expect(e.priseEnMain).toBe(MINUTES_PRISE_EN_MAIN);
+    const t1 = estimationDuTour(martel, tour1!)!;
+    expect(t1.priseEnMain).toBe(0);
+    // Même tour du scénario, donc même situation à analyser ; le cadrage, lui,
+    // se lit en entier pendant l'essai et se reconsulte ensuite.
+    expect(t1.analyse).toBe(e.analyse);
+    expect(t1.lecture).toBeLessThanOrEqual(e.lecture);
+    expect(chargeDesSeances(martel).map((l) => l.seance.numero)).toEqual(
+      martel.seances.map((s) => s.numero),
+    );
+  });
+
   it("au niveau voisin, l'estimation suit les champs que ce niveau ouvre", () => {
     const s2 = cg1.seances[1]!;
     const courant = estimationDuTour(cg1, s2)!;
@@ -144,5 +166,24 @@ describe("le découpage en créneaux", () => {
     const creneaux = decoupageEnCreneaux({ deroule: [p("A", 30), p("B", 30)] }, 90)!;
     expect(creneaux).toHaveLength(1);
     expect(creneaux[0]!.minutes).toBe(60);
+  });
+});
+
+describe("ce que les séances jouent, en clair", () => {
+  const atelier = (code: string) => ATELIERS.find((a) => a.code === code)!;
+
+  it("distingue une séance de restitution d'une séance d'essai", () => {
+    expect(repartitionDesSeancesEnClair(atelier("cg1"))).toBe("Chaque séance joue un tour.");
+    expect(repartitionDesSeancesEnClair(atelier("gpme"))).toBe(
+      "5 séances jouent un tour, la dernière rend compte.",
+    );
+    expect(repartitionDesSeancesEnClair(atelier("martel"))).toBe(
+      "La première joue le tour d'essai, 6 séances jouent un tour.",
+    );
+  });
+
+  it("dit le tour d'essai de la fiche, et son absence", () => {
+    expect(tourDEssaiEnClair(atelier("martel"))).toBe("Un tour d'essai avant la vraie partie");
+    expect(tourDEssaiEnClair(atelier("cg1"))).toBe("Sans tour d'essai");
   });
 });

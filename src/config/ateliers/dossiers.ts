@@ -4,6 +4,7 @@ import { scenarioByCode, type ScenarioDefinition } from "../scenarios/registry";
 import { leviersDuNiveau } from "../decisions";
 import { DIFFICULTY_PRESETS } from "../difficulty";
 import type { SituationDef } from "../scenarios/situation-kit";
+import type { NombreDeToursDEssai } from "../tour-d-essai";
 import {
   dossiersDeService,
   referencesDuDossier,
@@ -66,10 +67,14 @@ export interface DossierEleve {
   /** Le nombre de tours joués, tel que la partie sera créée. */
   tours: number;
   periodicite: "month" | "quarter" | "year";
+  /** Un ou deux tours d'essai avant la vraie partie, tels que la partie sera créée ; null sans essai. */
+  tourDEssai: NombreDeToursDEssai | null;
   seances: {
     numero: number;
     titre: string;
     tourJoue: number | null;
+    /** La séance joue le tour d'essai, qui ne compte pas. */
+    essai: boolean;
     objectif: string;
     /** À la première personne : c'est l'élève qui atteste. */
     competences: string[];
@@ -170,10 +175,12 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
     },
     tours: atelier.reglages.tours,
     periodicite: atelier.reglages.periodicite,
+    tourDEssai: atelier.reglages.tourDEssai ?? null,
     seances: atelier.seances.map((s) => ({
       numero: s.numero,
       titre: s.titre,
       tourJoue: s.tourJoue,
+      essai: s.essai === true,
       objectif: s.objectif,
       competences: [...s.competences],
       notions: [...s.notions],

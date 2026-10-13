@@ -70,25 +70,41 @@ export function avecQuestions(a: Pick<AtelierDefinition, "reglages">): boolean {
 }
 
 /**
+ * LE TOUR DU SCÉNARIO QUE LA SÉANCE FAIT JOUER. Le tour annoncé, d'ordinaire ;
+ * pour une séance d'essai, le premier : l'essai rejoue le début du scénario
+ * avec ses écrans et sa situation du tour 1, sans ses événements scriptés
+ * (config/tour-d-essai, `scenarioDEssai`), et demande donc à l'équipe ce
+ * qu'un premier tour demande. Null quand la séance ne joue rien.
+ */
+export function tourEstime(s: Pick<AtelierSeance, "tourJoue" | "essai">): number | null {
+  if (s.essai) return 1;
+  return s.tourJoue;
+}
+
+/**
  * Ce que le tour joué par cette séance demande à une équipe de cet atelier :
  * le scénario de la fiche, le niveau de la fiche, la situation du tour, et la
- * prise en main si c'est le premier tour que l'atelier fait jouer. Null quand
- * la séance ne joue aucun tour.
+ * prise en main si c'est le premier tour que l'atelier fait jouer, essai
+ * compris : une classe qui a pris l'arène en main pendant l'essai ne la
+ * reprend pas au tour 1. Null quand la séance ne joue aucun tour.
  */
 export function estimationDuTour(
   a: Pick<AtelierDefinition, "reglages" | "seances">,
-  s: Pick<AtelierSeance, "tourJoue">,
+  s: Pick<AtelierSeance, "tourJoue" | "essai">,
   options: { scenarioCode?: string; preset?: DifficultyPreset } = {},
 ): DureeDuTour | null {
-  if (s.tourJoue === null) return null;
+  const tour = tourEstime(s);
+  if (tour === null) return null;
   const def = scenarioByCode(options.scenarioCode ?? a.reglages.scenarioCode);
   const preset = options.preset ?? presetDeLAtelier(a);
-  const premier = a.seances.find((x) => x.tourJoue !== null)?.tourJoue ?? 1;
+  const avecEssai = a.seances.some((x) => x.essai);
+  const premierJoue = a.seances.find((x) => x.tourJoue !== null)?.tourJoue ?? 1;
+  const premierTour = s.essai ? true : !avecEssai && s.tourJoue === premierJoue;
   return dureeDuTour({
     signesDeCadrage: signesDeCadrage(def),
-    signesDeSituation: signesDeSituation(def.situations, s.tourJoue),
+    signesDeSituation: signesDeSituation(def.situations, tour),
     champs: champsOuverts(preset.decisions),
-    premierTour: s.tourJoue === premier,
+    premierTour,
     avecQuiz: avecQuestions(a),
   });
 }
@@ -119,7 +135,7 @@ export function verdict(estimation: number, jeu: number): Verdict {
   return "impossible";
 }
 
-/** Les séances qui jouent un tour, avec l'estimation, les minutes de jeu et le verdict. */
+/** Les séances qui jouent un tour, l'essai compris, avec l'estimation, les minutes de jeu et le verdict. */
 export function chargeDesSeances(a: AtelierDefinition): ChargeDeLaSeance[] {
   const lignes: ChargeDeLaSeance[] = [];
   for (const seance of a.seances) {

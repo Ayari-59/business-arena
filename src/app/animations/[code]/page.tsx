@@ -41,6 +41,11 @@ import {
 import { PrintButton } from "@/components/print-button";
 import { bouton } from "@/components/bouton";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+import {
+  repartitionDesSeancesEnClair,
+  tourDEssaiEnClair,
+  tourDeLaSeanceEnClair,
+} from "@/config/ateliers/essai";
 
 /**
  * Les ateliers sont une donnée figée, mais la fiche dit à qui la lit si la partie se crée
@@ -161,12 +166,11 @@ export default async function AtelierPage({
     : null;
   // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
   // aussi pour un dixième processus face au deuxième.
-  // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
-  // compte sans rien jouer. Les confondre a fait annoncer cinq trimestres sur la
-  // fiche du DCG là où l'atelier en joue quatre et la partie en durait six.
-  const seancesQuiJouent = atelier.seances.filter(
-    (s) => s.tourJoue !== null,
-  ).length;
+  // Le nombre de tours ne se déduit pas du nombre de séances : une séance peut
+  // rendre compte sans rien jouer, ou jouer le tour d'essai. Les confondre a
+  // fait annoncer cinq trimestres sur la fiche du DCG là où l'atelier en joue
+  // quatre et la partie en durait six ; la phrase se lit dans les séances
+  // (config/ateliers/essai, `repartitionDesSeancesEnClair`).
   const processus = [
     ...new Set(atelier.seances.flatMap((s) => s.processus)),
   ].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
@@ -267,9 +271,7 @@ export default async function AtelierPage({
               </strong>
               , soit {dureeTotaleHeures(atelier)} heures, et une partie de{" "}
               {atelier.reglages.tours} tours.{" "}
-              {seancesQuiJouent === atelier.seances.length
-                ? "Chaque séance joue un tour."
-                : `${seancesQuiJouent} séances jouent un tour, la dernière rend compte.`}
+              {repartitionDesSeancesEnClair(atelier)}
             </li>
             <li>
               · {atelier.referentielLabel} {atelier.referentielAccord} :{" "}
@@ -354,6 +356,7 @@ export default async function AtelierPage({
                       `${atelier.reglages.equipes} équipes de ${atelier.reglages.effectifParEquipe}`,
                     ],
                     ["Concurrents machine", `${atelier.reglages.bots}`],
+                    ["Tour d'essai", tourDEssaiEnClair(atelier)],
                     ["Exigence", atelier.difficulteLabel],
                   ] as const
                 ).map(([k, v]) => (
@@ -431,6 +434,10 @@ export default async function AtelierPage({
                     atelier.reglages.mondeVariable ? "activé" : "décoché",
                   ],
                   ["Questions", atelier.reglages.quizMode],
+                  // L'option « Tour d'essai » du formulaire de création
+                  // (config/tour-d-essai) : la fiche la dit pour toutes les
+                  // fiches, celles qui n'en demandent pas comprises.
+                  ["Tour d'essai", tourDEssaiEnClair(atelier)],
                 ] as const
               ).map(([k, v]) => (
                 <div key={k} className="flex gap-3">
@@ -655,9 +662,7 @@ export default async function AtelierPage({
                     </h3>
                     <span className="text-xs text-slate-400">
                       {minutesEnTexte(s.dureeMinutes)}
-                      {s.tourJoue !== null
-                        ? ` · tour ${s.tourJoue} joué en séance`
-                        : ""}
+                      {tourDeLaSeanceEnClair(s) ? ` · ${tourDeLaSeanceEnClair(s)}` : ""}
                     </span>
                   </div>
                   {charge.has(s.numero) ? (

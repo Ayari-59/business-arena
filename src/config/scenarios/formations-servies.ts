@@ -17,7 +17,7 @@ import { familyOf, SCENARIO_CHOICES, type ScenarioDefinition } from "./registry"
  * qui jouent cette entreprise servent des formations, donc l'entreprise les
  * sert. La seconde s'écrit, ici, parce qu'une entreprise convient à des
  * formations pour lesquelles aucun déroulé n'est encore publié : le bâtiment
- * n'a pas d'atelier et sert pourtant la gestion de la PME. Chaque entrée de
+ * sert le BUT sans qu'aucun déroulé ne l'y joue. Chaque entrée de
  * cette seconde liste se justifie par les blocs du référentiel, dans
  * docs/12-audit-ateliers-durees-niveaux.md, et une garde vérifie qu'elle ne
  * cite que des formations qui existent.
@@ -48,8 +48,8 @@ export const CONVIENT_AUSSI: Readonly<Record<string, readonly string[]>> = {
   // La salle de sport : adhérents, attrition, encaissement d'avance ; la
   // fidélisation des deux BTS commerciaux.
   fitness: ["bts-ndrc", "bts-mco"],
-  // Le bâtiment : chantiers, sous-traitance, trésorerie de chantier ; la PME
-  // et le BUT, sans déroulé publié à ce jour.
+  // Le bâtiment : chantiers, délais par clientèle, trésorerie de chantier ;
+  // la PME par son atelier de première année, le BUT sans déroulé à ce jour.
   batiment: ["bts-gpme", "but-gea"],
   // Le transport : coût à la palette, flotte, grand compte à soixante jours ;
   // l'investissement et le financement du BUT, du DCG et de la PME.

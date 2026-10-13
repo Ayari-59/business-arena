@@ -97,6 +97,7 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 | Piloter une unité de restauration au mois | BTS MCO | BTS CG 6/6 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BTS GPME 3/4 · BUT GEA 3/4 · DCG 3/4 · STMG 6/10 |
 | Rentabiliser une clientèle sur cinq trimestres | BTS NDRC | BTS MCO 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS GPME 3/4 · STMG 7/10 · BTS CG 3/6 · DCG 2/4 |
 | Garder ses adhérents plutôt que les remplacer | BTS NDRC | BTS MCO 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS GPME 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 4/6 |
+| Tenir les chantiers et la caisse d'une entreprise de rénovation | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · STMG 9/10 · DCG 2/4 |
 | Assister le dirigeant d'une PME pendant cinq trimestres | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · DCG 3/4 · STMG 4/10 |
 | Piloter un hôtel sur une année de saisons | BTS MHR | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · DCG 2/4 |
 | Composer la carte et tenir le service | BTS MHR · B et C | BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BUT GEA 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 2/6 |

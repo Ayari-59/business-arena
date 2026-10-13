@@ -128,6 +128,20 @@ export default async function DossierElevePage({
           vendent aux mêmes clients que vous, et ce que vous ne prenez pas,
           quelqu&apos;un le prend.
         </p>
+        {/* LE TOUR D'ESSAI (config/tour-d-essai) : l'élève doit savoir, avant
+            d'entrer dans l'arène, que le premier tour qu'il joue ne compte pas
+            et que son entreprise repartira de zéro. */}
+        {dossier.tourDEssai !== null ? (
+          <p
+            data-tour-d-essai=""
+            className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black"
+          >
+            Avant le premier tour, vous jouez{" "}
+            {dossier.tourDEssai === 1 ? "un tour d'essai" : `${dossier.tourDEssai} tours d'essai`}{" "}
+            qui ne compte pas : mêmes écrans, mêmes décisions, et à la fin votre
+            entreprise repart de son état de départ.
+          </p>
+        ) : null}
       </section>
 
       {/* Ce que l'équipe vend : une référence, ou la gamme entière chez
@@ -249,9 +263,11 @@ export default async function DossierElevePage({
             >
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 Séance {s.numero}
-                {s.tourJoue !== null
-                  ? ` · vous jouez le tour ${s.tourJoue}`
-                  : " · aucun tour joué"}
+                {s.essai
+                  ? " · vous jouez le tour d'essai, qui ne compte pas"
+                  : s.tourJoue !== null
+                    ? ` · vous jouez le tour ${s.tourJoue}`
+                    : " · aucun tour joué"}
               </p>
               <h3 className="mt-1 text-lg font-bold text-slate-50 print:text-black">
                 {s.titre}

@@ -17,6 +17,7 @@ import {
 } from "../../src/config/scenarios/registry";
 import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
 import { formatDuTournoi, LIMITES_CONCOURS } from "../../src/config/concours";
+import { TOURS_D_ESSAI } from "../../src/config/tour-d-essai";
 import { FORMATIONS } from "../../src/config/formations";
 import {
   chargeDesSeances,
@@ -370,6 +371,42 @@ describe("ateliers professionnels", () => {
       ).toBeLessThanOrEqual(8);
       expect(a.reglages.bots, a.code).toBeGreaterThanOrEqual(0);
       expect(a.reglages.bots, a.code).toBeLessThanOrEqual(4);
+      // Le tour d'essai se demande à la création, parmi les longueurs que le
+      // formulaire propose : une fiche qui en annoncerait trois enverrait
+      // l'enseignant cocher une case qui n'existe pas.
+      if (a.reglages.tourDEssai !== undefined) {
+        expect(
+          TOURS_D_ESSAI,
+          `${a.code} : ${a.reglages.tourDEssai} tours d'essai, que la création ne propose pas`,
+        ).toContain(a.reglages.tourDEssai);
+      }
+    }
+  });
+
+  it("une séance d'essai se déclare dans les réglages, vient avant tout tour réel et ne compte pas", () => {
+    // Le tour d'essai (config/tour-d-essai) se joue dans la partie, puis tout
+    // repart de zéro. Une fiche qui le fait jouer doit le demander à la
+    // création, sans quoi la première séance attendrait un essai que la partie
+    // n'a pas ; et une fiche qui le demande sans séance pour le jouer
+    // laisserait l'essai se jouer hors de tout déroulé. L'essai précède la
+    // vraie partie : une séance d'essai après un tour réel est impossible, et
+    // elle ne joue aucun tour de la partie, puisque rien de ce qu'elle joue
+    // ne compte.
+    for (const a of ATELIERS) {
+      const essais = a.seances.filter((s) => s.essai);
+      if (a.reglages.tourDEssai === undefined) {
+        expect(essais.map((s) => s.numero), `${a.code} : une séance d'essai sans tour d'essai demandé à la création`).toEqual([]);
+        continue;
+      }
+      expect(essais.length, `${a.code} : un tour d'essai demandé à la création, qu'aucune séance ne joue`).toBeGreaterThan(0);
+      const premierReel = a.seances.findIndex((s) => s.tourJoue !== null);
+      for (const s of essais) {
+        expect(s.tourJoue, `${a.code}/séance ${s.numero} : l'essai ne joue aucun tour de la partie`).toBeNull();
+        expect(
+          a.seances.indexOf(s),
+          `${a.code}/séance ${s.numero} : l'essai vient après un tour réel`,
+        ).toBeLessThan(premierReel);
+      }
     }
   });
 

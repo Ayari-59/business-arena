@@ -125,9 +125,11 @@ export default async function FormulairesPage({
                 Séance {f.seance} · {f.seanceTitre}
               </p>
               <p className="text-xs uppercase tracking-wider text-slate-400 print:text-black">
-                {f.tourJoue !== null
-                  ? `Tour joué : ${f.tourJoue}`
-                  : "Aucun tour joué"}
+                {f.essai
+                  ? "Tour d'essai"
+                  : f.tourJoue !== null
+                    ? `Tour joué : ${f.tourJoue}`
+                    : "Aucun tour joué"}
               </p>
             </div>
 

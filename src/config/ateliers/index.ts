@@ -10,6 +10,7 @@ import { ATELIER_DEBUTANT } from "./debutant";
 import { ATELIER_FITNESS } from "./fitness";
 import { ATELIER_GEA } from "./gea";
 import { ATELIER_GPME } from "./gpme";
+import { ATELIER_MARTEL } from "./martel";
 import { ATELIER_MHR } from "./mhr";
 import { ATELIER_NDRC } from "./ndrc";
 import { ATELIER_STMG } from "./stmg";
@@ -23,7 +24,10 @@ export type { AtelierDefinition, AtelierPhase, AtelierSeance } from "./types";
  * toutes les filières d'abord, puis le lycée, puis les ateliers de section de
  * technicien et le BUT, puis l'expertise comptable, et enfin l'atelier
  * d'approfondissement transversal, puis le tournoi qui fait jouer tout un
- * campus. Un enseignant ne doit pas parcourir la moitié du registre avant de
+ * campus. Au sein d'une même section, la première année précède la seconde :
+ * la boutique avant le bistrot en MCO, la boutique en ligne avant la salle de
+ * sport en NDRC, l'entreprise de rénovation avant le cabinet de conseil en
+ * GPME. Un enseignant ne doit pas parcourir la moitié du registre avant de
  * trouver la sienne.
  */
 export const ATELIERS: readonly AtelierDefinition[] = [
@@ -34,6 +38,7 @@ export const ATELIERS: readonly AtelierDefinition[] = [
   ATELIER_MCO2,
   ATELIER_NDRC,
   ATELIER_FITNESS,
+  ATELIER_MARTEL,
   ATELIER_GPME,
   ATELIER_MHR,
   ATELIER_BISTROT,

@@ -77,10 +77,22 @@ export const SOCLE: readonly FamilleDeGestes[] = [
       "Ce qu'on fait avant de décider : comprendre ce qu'on a sous les yeux.",
     gestes: [
       {
+        code: "presenter-l-entreprise",
+        enonce:
+          "Je présente l'entreprise que je dirige en une page : ce qu'elle vend, à qui, et avec quels moyens.",
+        origines: ["martel:1:0"],
+      },
+      {
+        code: "lire-l-ecran-de-decision",
+        enonce:
+          "Je repère, sur un écran de décision, ce qui se décide à chaque période et ce qui reste fixé.",
+        origines: ["martel:1:1"],
+      },
+      {
         code: "lire-les-comptes",
         enonce:
           "Je lis les documents de synthèse d'une entreprise et j'en tire ce qu'elle possède, ce qu'elle doit, et ce qui lui reste.",
-        origines: [
+        origines: ["martel:1:2", 
           "debutant:1:2",
           "stmg:1:0",
           "stmg:1:2",
@@ -92,7 +104,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "variable-ou-fixe",
         enonce:
           "Je distingue une charge qui suit les ventes d'une charge qui tombe de toute façon, y compris sur des documents qui ne les séparent pas.",
-        origines: ["stmg:2:0", "cg1:2:0", "gea:1:0", "dcg:2:0"],
+        origines: ["martel:2:0", "stmg:2:0", "cg1:2:0", "gea:1:0", "dcg:2:0"],
       },
       {
         code: "reperer-la-contrainte",
@@ -158,13 +170,13 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "couts-pertinents",
         enonce:
           "Je distingue, dans un coût complet, ce qui est engagé de toute façon de ce que la décision ajoute, et je décide sur le second.",
-        origines: ["avance:2:0", "avance:2:1"],
+        origines: ["martel:3:0", "avance:2:0", "avance:2:1"],
       },
       {
         code: "seuil-de-rentabilite",
         enonce:
           "Je calcule le volume qui couvre les charges de structure d'une période, et la marge de sécurité qui m'en sépare.",
-        origines: [
+        origines: ["martel:2:1", 
           "stmg:2:1",
           "cg1:2:2",
           "mco:1:1",
@@ -208,10 +220,16 @@ export const SOCLE: readonly FamilleDeGestes[] = [
       "La décision commerciale élémentaire, et le risque qu'on prend d'un côté ou de l'autre.",
     gestes: [
       {
+        code: "accepter-ou-refuser-une-commande",
+        enonce:
+          "Je décide d'accepter ou de refuser une commande sous le coût complet selon que ma capacité est creuse ou pleine.",
+        origines: ["martel:3:1"],
+      },
+      {
         code: "fixer-un-prix",
         enonce:
           "Je fixe un prix de vente et je dis sur quoi je me suis appuyé pour le fixer.",
-        origines: ["debutant:1:1", "stmg:1:1", "cg1:2:3", "mhr:3:1"],
+        origines: ["martel:2:2", "debutant:1:1", "stmg:1:1", "cg1:2:3", "mhr:3:1"],
       },
       {
         code: "decider-un-volume",
@@ -306,7 +324,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "plan-de-tresorerie",
         enonce:
           "Je construis un plan de trésorerie de la période à partir de décisions prévues et de délais de règlement, et j'y repère le point de tension.",
-        origines: [
+        origines: ["martel:5:0", 
           "cg1:3:1",
           "fitness:4:1",
           "mhr:4:0",
@@ -330,7 +348,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "effet-d-un-delai",
         enonce:
           "Je mesure ce qu'un délai de règlement fait à la trésorerie, à résultat inchangé, et je le traduis en euros immobilisés.",
-        origines: [
+        origines: ["martel:4:1", 
           "mco:2:1",
           "mco2:2:1",
           "mco2:4:1",
@@ -346,13 +364,13 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "besoin-en-fonds-de-roulement",
         enonce:
           "Je repère le besoin en fonds de roulement dans un bilan et je le relie aux délais de règlement et au rythme de l'activité.",
-        origines: ["gea:2:0", "gea:4:1", "dcg:1:0", "avance:4:0", "campus:4:0"],
+        origines: ["martel:4:0", "gea:2:0", "gea:4:1", "dcg:1:0", "avance:4:0", "campus:4:0"],
       },
       {
         code: "financer-le-court-terme",
         enonce:
           "Je compare ce que coûtent les façons de couvrir un besoin de trésorerie, et je rapporte ce coût à ce qu'il évite.",
-        origines: [
+        origines: ["martel:4:2", 
           "cg1:4:3",
           "cg1:5:2",
           "cg1:5:3",
@@ -411,6 +429,12 @@ export const SOCLE: readonly FamilleDeGestes[] = [
       "Les décisions dont l'effet arrive après la période où on les prend.",
     gestes: [
       {
+        code: "exploitation-ou-structure",
+        enonce:
+          "Je distingue une décision d'exploitation, que je peux défaire, d'une décision de structure qui m'engage sur plusieurs périodes.",
+        origines: ["martel:6:2"],
+      },
+      {
         code: "juger-un-investissement",
         enonce:
           "J'évalue un investissement sur les flux que la décision change, et non sur son coût seul.",
@@ -426,13 +450,13 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "valeur-d-aujourd-hui",
         enonce:
           "Je ramène des flux étalés sur plusieurs périodes à leur valeur d'aujourd'hui, et je décide sur leur somme.",
-        origines: ["avance:5:1"],
+        origines: ["martel:7:0", "avance:5:1"],
       },
       {
         code: "quand-recruter",
         enonce:
           "Je calcule ce qu'un recrutement doit produire pour se payer, et je situe le moment entre la surcharge et l'embauche qui devance le carnet.",
-        origines: [
+        origines: ["martel:6:0", "martel:6:1", 
           "gpme:4:0",
           "gpme:4:1",
           "gpme:4:2",
@@ -532,7 +556,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "repondre-sans-rompre",
         enonce:
           "Je construis une réponse commerciale qui n'est ni l'acceptation ni le refus sec.",
-        origines: ["gpme:5:2"],
+        origines: ["martel:3:2", "gpme:5:2"],
       },
       {
         code: "ce-que-preleve-un-canal",
@@ -557,13 +581,13 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "identifier-les-risques",
         enonce:
           "J'identifie les risques propres à ma structure, dont la dépendance à un donneur d'ordres.",
-        origines: ["gpme:3:0"],
+        origines: ["martel:5:1", "gpme:3:0"],
       },
       {
         code: "supporter-reduire-transferer",
         enonce:
           "J'arbitre entre supporter un risque, le réduire, et le transférer à un tiers.",
-        origines: ["gpme:3:2"],
+        origines: ["martel:5:2", "gpme:3:2"],
       },
       {
         code: "reputation-ou-finance",
@@ -626,7 +650,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "tableau-de-bord",
         enonce:
           "Je construis un tableau de bord qui tient sur une page et qui se lit.",
-        origines: [
+        origines: ["martel:7:1", 
           "mco:5:0",
           "mco2:6:0",
           "ndrc:6:0",
@@ -662,7 +686,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "presenter-a-l-oral",
         enonce:
           "Je présente oralement une gestion, ses réussites et ses erreurs, devant un jury.",
-        origines: [
+        origines: ["martel:7:2", 
           "stmg:4:1",
           "cg1:6:3",
           "mco:5:2",

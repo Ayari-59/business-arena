@@ -10,6 +10,8 @@
  * qui ne laisse que des souvenirs ne remplit pas un passeport professionnel.
  */
 
+import type { NombreDeToursDEssai } from "../tour-d-essai";
+
 /** Un moment de la séance, avec sa durée : un déroulé sans minutes ne s'anime pas. */
 export interface AtelierPhase {
   minutes: number;
@@ -27,6 +29,20 @@ export interface AtelierSeance {
    * peut n'en jouer aucun : la dernière sert à rendre compte.
    */
   tourJoue: number | null;
+  /**
+   * CETTE SÉANCE JOUE LE TOUR D'ESSAI, et aucun tour de la partie.
+   *
+   * Le produit propose un ou deux tours pour de faux avant la vraie partie
+   * (config/tour-d-essai) : mêmes écrans, mêmes équipes, puis tout repart de
+   * l'état initial. Un atelier qui l'emploie consacre sa première séance à la
+   * présentation du jeu et à cet essai ; `tourJoue` reste nul, parce que rien
+   * de ce qui s'y joue ne compte, mais la séance demande au tour autant de
+   * temps qu'un premier tour réel, prise en main comprise, et le modèle de
+   * durée la lit comme telle (`duree-des-seances`, `tourEstime`). La fiche
+   * déclare l'essai dans `reglages.tourDEssai`, et une garde vérifie que les
+   * deux se répondent.
+   */
+  essai?: true;
   /** Processus du référentiel mobilisés, nommés comme le référentiel les nomme. */
   processus: string[];
   objectif: string;
@@ -150,6 +166,14 @@ export interface AtelierDefinition {
      * autre.
      */
     effectifParEquipe: string;
+    /**
+     * UN OU DEUX TOURS D'ESSAI AVANT LA VRAIE PARTIE, à demander à la
+     * création (config/tour-d-essai, `TOURS_D_ESSAI`). Absent : la partie
+     * commence au tour 1, comme toutes les fiches écrites avant que l'option
+     * n'existe. Présent, une séance au moins le joue (`AtelierSeance.essai`),
+     * avant le premier tour réel, et la fiche technique le dit.
+     */
+    tourDEssai?: NombreDeToursDEssai;
     /**
      * Cette fiche se joue en mode CONCOURS, et non en partie de classe.
      *
