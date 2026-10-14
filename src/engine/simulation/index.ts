@@ -1,4 +1,5 @@
 import type {
+  CommercialActionEffects,
   CompanyRoundResult,
   CompanyState,
   EngineScenarioConfig,
@@ -10,6 +11,9 @@ import type {
   SegmentSalesDetail,
   SimulationInput,
   SimulationOutput,
+  PerformanceAlert,
+  PerformanceMetrics,
+  AlertSeverity,
 } from "../types";
 import {
   createNewMachines,
@@ -244,6 +248,122 @@ export function orderOfferForRound(
   const rng = createRng(deriveRoundSeed((seed ^ 0x0ffe12ab) >>> 0, roundIndex));
   return archetype[Math.floor(rng.next() * archetype.length)] ?? null;
 }
+
+// ---------------------------------------------------------------------------
+// Indicateurs de performance avancés
+// ---------------------------------------------------------------------------
+
+function computePerformanceMetrics(
+  machineFleet: MachineRecord[] | null,
+  hrDeparted: number,
+  headcount: number,
+  closing: { equity: number; financialDebt: number; cash: number },
+  revenue: number,
+  netIncome: number,
+): PerformanceMetrics {
+  const alerts: PerformanceAlert[] = [];
+
+  // 1. Robustesse financière
+  const equity = closing.equity ?? 0;
+  const debt = closing.financialDebt ?? 0;
+  const cash = closing.cash ?? 0;
+  const debtRatio = equity > 0 ? debt / equity : debt > 0 ? 2 : 0;
+  const quarterlyRevenue = revenue / 4;
+  const cashRatio = quarterlyRevenue > 0 ? cash / quarterlyRevenue : 0;
+
+  if (cash < 0) {
+    alerts.push({
+      type: "cashCrisis",
+      severity: "critical",
+      message: `Trésorerie négative : ${Math.round(cash / 1000)}k€`,
+      value: cash,
+    });
+  }
+  if (debtRatio > 2) {
+    alerts.push({
+      type: "highDebt",
+      severity: debtRatio > 3 ? "critical" : "warning",
+      message: `Ratio dette/FP : ${debtRatio.toFixed(1)}x`,
+      value: debtRatio,
+    });
+  }
+
+  const financialRobustness = Math.max(
+    0,
+    Math.min(
+      1,
+      0.4 * Math.max(0, 1 - debtRatio / 3) +
+        0.4 * Math.max(0, Math.min(1, cashRatio / 2)) +
+        0.2 * (equity > 0 ? 1 : 0),
+    ),
+  );
+
+  // 2. Santé opérationnelle
+  const machines = machineFleet ?? [];
+  const avgWear =
+    machines.length > 0
+      ? machines.reduce((s, m) => s + m.wear, 0) / machines.length
+      : 0;
+  const attritionRate = headcount > 0 ? hrDeparted / headcount : 0;
+
+  if (avgWear > 0.7) {
+    alerts.push({
+      type: "fleetWear",
+      severity: avgWear > 0.85 ? "critical" : "warning",
+      message: `Usure moyenne parc : ${Math.round(avgWear * 100)}%`,
+      value: avgWear,
+    });
+  }
+  if (attritionRate > 0.15) {
+    alerts.push({
+      type: "highTurnover",
+      severity: attritionRate > 0.25 ? "critical" : "warning",
+      message: `Turn-over RH : ${Math.round(attritionRate * 100)}%`,
+      value: attritionRate,
+    });
+  }
+
+  const operationalHealth = Math.max(
+    0,
+    Math.min(
+      1,
+      0.5 * Math.max(0, 1 - avgWear) +
+        0.5 * Math.max(0, 1 - attritionRate / 0.3),
+    ),
+  );
+
+  // 3. Score de compétitivité
+  const netMargin = revenue > 0 ? netIncome / revenue : 0;
+
+  if (netMargin < -0.05) {
+    alerts.push({
+      type: "lowMargin",
+      severity: netMargin < -0.15 ? "critical" : "warning",
+      message: `Marge nette : ${(netMargin * 100).toFixed(1)}%`,
+      value: netMargin,
+    });
+  }
+
+  const competitivenessScore = Math.max(
+    0,
+    Math.min(
+      1,
+      0.5 * Math.max(0, Math.min(1, (netMargin + 0.1) / 0.3)) +
+        0.5 * operationalHealth,
+    ),
+  );
+
+  // Trier par gravité décroissante
+  const severityOrder: Record<AlertSeverity, number> = {
+    critical: 0,
+    warning: 1,
+    info: 2,
+  };
+  alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
+  return { competitivenessScore, financialRobustness, operationalHealth, alerts };
+}
+
 
 /**
  * Résolution d'un tour (doc 02 §2). Fonction PURE et DÉTERMINISTE :
@@ -493,6 +613,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     hsActionsCount: number;
     /** Actions H&S récurrentes actives à la clôture du tour. */
     nextActiveHsActions: { actionCode: string; startedRound: number; remainingRounds: number }[];
+    /** Effets agrégés des formations actives ce tour. */
+    trainingEffectsAgg: import("../types").TrainingProgramEffects;
+    /** Coût total des formations décaissé ce tour. */
+    trainingCostTotal: number;
+    /** Programmes de formation actifs à la clôture du tour. */
+    nextActiveTrainingPrograms: { programId: string; enrolledCount: number; remainingRounds: number }[];
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -560,6 +686,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rdGridStart: raw.rdGridStart,
       maintenanceDecisions: raw.maintenanceDecisions,
       hsActions: raw.hsActions,
+      trainingEnrollments: raw.trainingEnrollments,
     };
     // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
     // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
@@ -1112,6 +1239,42 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         nextActiveHsActions.push({ ...active, remainingRounds: newRemaining });
       }
     }
+    // --- Formation RH ---
+    const trainingEffectsAgg: import("../types").TrainingProgramEffects = {
+      productivityBonus: 0, attritionReduction: 0,
+      qualityBonus: 0, safetyBonus: 0, maintenanceSaving: 0,
+    };
+    let trainingCostTotal = 0;
+    const nextActiveTrainingPrograms: { programId: string; enrolledCount: number; remainingRounds: number }[] = [];
+    if (scenario.trainingPrograms && state.status !== "defaillant") {
+      const cfg = scenario.trainingPrograms;
+      // Avancer les programmes actifs existants
+      for (const ap of state.activeTrainingPrograms ?? []) {
+        const def = cfg.programs.find((p) => p.id === ap.programId);
+        if (!def) continue;
+        const remaining = ap.remainingRounds - 1;
+        trainingCostTotal += ap.enrolledCount * def.costPerEmployee;
+        for (const k of Object.keys(trainingEffectsAgg) as (keyof import("../types").TrainingProgramEffects)[]) {
+          trainingEffectsAgg[k] += def.effects[k] ?? 0;
+        }
+        if (remaining > 0) nextActiveTrainingPrograms.push({ ...ap, remainingRounds: remaining });
+      }
+      // Nouvelles inscriptions ce tour
+      const enrollments = decisions.trainingEnrollments ?? [];
+      for (const enr of enrollments) {
+        const alreadyActive = nextActiveTrainingPrograms.some((a) => a.programId === enr.programId);
+        if (alreadyActive) continue;
+        if (nextActiveTrainingPrograms.length >= cfg.maxConcurrentPrograms) continue;
+        const def = cfg.programs.find((p) => p.id === enr.programId);
+        if (!def) continue;
+        const count = Math.min(enr.enrolledCount, def.maxEmployeesPerRound);
+        trainingCostTotal += count * def.costPerEmployee;
+        for (const k of Object.keys(trainingEffectsAgg) as (keyof import("../types").TrainingProgramEffects)[]) {
+          trainingEffectsAgg[k] += def.effects[k] ?? 0;
+        }
+        nextActiveTrainingPrograms.push({ programId: enr.programId, enrolledCount: count, remainingRounds: def.durationRounds });
+      }
+    }
     // Non-qualité interne (doc 02 §4.2) : rebuts fonction de la qualité
     // produite — payés (matières, MOD) mais invendables : seul le net entre
     // en stock, la perte est valorisée au coût variable. Le capital « process
@@ -1383,6 +1546,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       hsImmoCost,
       hsActionsCount,
       nextActiveHsActions,
+      trainingEffectsAgg,
+      trainingCostTotal,
+      nextActiveTrainingPrograms,
     };
   });
 
@@ -1950,6 +2116,53 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // les capitaux propres (cash ET dette baissent) mais on le suspend aussi,
     // une entreprise à l'arrêt ne décaissant plus rien.
     const gelee = w.state.status === "defaillant";
+
+    // --- Actions commerciales ---
+    // Promotions, fidélisation, prospection, communication (inspiré de StratiRAC).
+    // Chaque action active consomme `costPerRound` et agrège ses effets.
+    // L'état `activeCommercialActions` est mis à jour en fin de traitement.
+    const commercialEffectsAgg: CommercialActionEffects = {
+      demandBonus: 0,
+      loyaltyBonus: 0,
+      marginImpact: 0,
+      imageBonus: 0,
+      newClientRatio: 0,
+    };
+    let commercialCostTotal = 0;
+
+    if (scenario.commercialActions && !gelee) {
+      const cfg = scenario.commercialActions;
+      // Avancer les actions déjà actives (décrémente le compteur de tours)
+      const nowActive: { id: string; remainingRounds: number }[] = [];
+      for (const ac of w.state.activeCommercialActions ?? []) {
+        const def = cfg.actions.find((a) => a.id === ac.id);
+        if (!def) continue;
+        const remaining = ac.remainingRounds - 1;
+        commercialCostTotal += def.costPerRound;
+        for (const k of Object.keys(commercialEffectsAgg) as (keyof CommercialActionEffects)[]) {
+          commercialEffectsAgg[k] += def.effects[k] ?? 0;
+        }
+        if (remaining > 0) {
+          nowActive.push({ id: ac.id, remainingRounds: remaining });
+        }
+      }
+      // Nouvelles actions activées ce tour
+      const requested = w.decisions.activeCommercialActionIds ?? [];
+      for (const id of requested) {
+        const alreadyActive = nowActive.some((a) => a.id === id);
+        if (alreadyActive) continue;
+        if (nowActive.length >= cfg.maxActionsPerRound) continue;
+        const def = cfg.actions.find((a) => a.id === id);
+        if (!def) continue;
+        commercialCostTotal += def.costPerRound;
+        for (const k of Object.keys(commercialEffectsAgg) as (keyof CommercialActionEffects)[]) {
+          commercialEffectsAgg[k] += def.effects[k] ?? 0;
+        }
+        nowActive.push({ id, remainingRounds: def.durationRounds });
+      }
+      w.state.activeCommercialActions = nowActive.length > 0 ? nowActive : undefined;
+    }
+
     // Catégories d'emprunt (machines, installations) : chaque catégorie a sa
     // propre durée. Backward-compatible : absent = 0, comportement inchangé.
     const loanCats = scenario.finance.loanCategories;
@@ -1998,7 +2211,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       inventoryChange,
       cogs,
       commissionCost,
-      marketingCost: marketingTotal,
+      marketingCost: marketingTotal + commercialCostTotal,
       qualityCost: w.qualityTotal,
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
@@ -2018,7 +2231,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
       // capital, l'argent entre quel que soit l'état de l'entreprise.
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
-      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost,
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost + w.trainingCostTotal,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
@@ -2407,6 +2620,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           }
         : undefined;
 
+    const performanceMetrics = computePerformanceMetrics(
+      w.activeMachineFleet,
+      w.hr.departed,
+      w.state.headcount,
+      finance.closing,
+      revenue,
+      finance.incomeStatement.netIncome,
+    );
+
     results[w.state.id] = {
       companyId: w.state.id,
       ...(statut === "defaillant" ? { defaillant: true } : {}),
@@ -2704,6 +2926,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
+      ...(w.trainingCostTotal > 0 ? { trainingCost: w.trainingCostTotal } : {}),
+      ...(Object.values(w.trainingEffectsAgg).some((v) => v > 0) ? { trainingEffects: w.trainingEffectsAgg } : {}),
+      // Actions commerciales : émis dès qu'un coût ou un effet existe.
+      ...(commercialCostTotal > 0 ? { commercialCost: commercialCostTotal } : {}),
+      ...(Object.values(commercialEffectsAgg).some((v) => v !== 0)
+        ? { commercialEffects: commercialEffectsAgg }
+        : {}),
       ...(w.insured
         ? {
             insurance: {
@@ -2780,6 +3009,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // Journal comptable (Jalon B du plan fondation comptable) : présent
       // SEULEMENT en multi-produits pour non-régression des snapshots mono.
       ...(multi ? { accounting: journalByCompany.get(w.state.id)!.build() } : {}),
+      // Indicateurs de performance avancés : émis dès qu'une alerte est déclenchée
+      // ou que le score de compétitivité est inférieur à 0.9.
+      ...(performanceMetrics.alerts.length > 0 || performanceMetrics.competitivenessScore < 0.9
+        ? { performanceMetrics }
+        : {}),
     };
 
     const lastMarketShare: Record<string, number> = {};
@@ -2881,6 +3115,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // H&S : actions récurrentes actives pour le tour suivant.
       ...(w.nextActiveHsActions.length > 0 || w.state.activeHsActions !== undefined
         ? { activeHsActions: w.nextActiveHsActions.length > 0 ? w.nextActiveHsActions : undefined }
+        : {}),
+      // Formation RH : programmes actifs pour le tour suivant.
+      ...(w.nextActiveTrainingPrograms.length > 0 || w.state.activeTrainingPrograms !== undefined
+        ? { activeTrainingPrograms: w.nextActiveTrainingPrograms.length > 0 ? w.nextActiveTrainingPrograms : undefined }
         : {}),
       // Gamme : chaque référence suit sa propre qualité perçue ; celle de
       // l'entreprise en est la moyenne pondérée par les unités produites.

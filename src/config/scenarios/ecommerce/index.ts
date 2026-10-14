@@ -716,6 +716,38 @@ const rawEcommerce = {
   // la classe préparait un argumentaire pendant que ses coûts sautaient pour
   // une raison sans rapport, et la situation du tour parlait de transport
   // quand la séance parlait de commission.
+  commercialActions: {
+    maxActionsPerRound: 2,
+    actions: [
+      {
+        id: "flash-sale",
+        label: "Vente flash 48h (-15%)",
+        type: "promotion",
+        isRecurring: false,
+        durationRounds: 1,
+        costPerRound: 2000,
+        effects: { demandBonus: 0.25, loyaltyBonus: 0, marginImpact: -0.15, imageBonus: 0, newClientRatio: 0.10 },
+      },
+      {
+        id: "seo-content",
+        label: "Stratégie SEO et contenus",
+        type: "communication",
+        isRecurring: true,
+        durationRounds: 1,
+        costPerRound: 4000,
+        effects: { demandBonus: 0.08, loyaltyBonus: 0.02, marginImpact: 0, imageBonus: 0.05, newClientRatio: 0.06 },
+      },
+      {
+        id: "parrainage",
+        label: "Programme de parrainage",
+        type: "fidelisation",
+        isRecurring: true,
+        durationRounds: 1,
+        costPerRound: 2500,
+        effects: { demandBonus: 0.06, loyaltyBonus: 0.08, marginImpact: -0.01, imageBonus: 0.02, newClientRatio: 0.09 },
+      },
+    ],
+  },
   scriptedEvents: [{ round: 6, eventCode: "ecom_frais_port" }],
   // Actions de maintenance par machine (e-commerce — équipements logistiques : chariots, convoyeurs).
   // Coûts plus élevés en curatif : une panne en entrepôt bloque les expéditions.
@@ -883,6 +915,38 @@ const rawEcommerce = {
       },
     ],
     maxActionsPerRound: 3,
+  },
+  trainingPrograms: {
+    maxConcurrentPrograms: 2,
+    programs: [
+      {
+        id: "formation-digital",
+        label: "Marketing digital et analytics",
+        domaine: "commercial",
+        durationRounds: 2,
+        costPerEmployee: 700,
+        maxEmployeesPerRound: 8,
+        effects: { productivityBonus: 0.05, attritionReduction: 0.01, qualityBonus: 0, safetyBonus: 0, maintenanceSaving: 0 },
+      },
+      {
+        id: "formation-logistique",
+        label: "Optimisation logistique",
+        domaine: "technique",
+        durationRounds: 3,
+        costPerEmployee: 900,
+        maxEmployeesPerRound: 8,
+        effects: { productivityBonus: 0.07, attritionReduction: 0.02, qualityBonus: 0.02, safetyBonus: 0, maintenanceSaving: 150 },
+      },
+      {
+        id: "formation-service-client",
+        label: "Excellence service client",
+        domaine: "commercial",
+        durationRounds: 2,
+        costPerEmployee: 500,
+        maxEmployeesPerRound: 12,
+        effects: { productivityBonus: 0.02, attritionReduction: 0.04, qualityBonus: 0.03, safetyBonus: 0, maintenanceSaving: 0 },
+      },
+    ],
   },
   scoring: {
     weights: {
