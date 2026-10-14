@@ -261,6 +261,92 @@ export interface HsActionsConfig {
   maxActionsPerRound?: number;
 }
 
+/** Effets d'un programme de formation RH. */
+export interface TrainingProgramEffects {
+  productivityBonus: number;
+  attritionReduction: number;
+  qualityBonus: number;
+  safetyBonus: number;
+  maintenanceSaving: number;
+}
+
+/** Définition d'un programme de formation RH. */
+export interface TrainingProgramDef {
+  id: string;
+  label: string;
+  domaine: "production" | "commercial" | "management" | "rh" | "technique";
+  durationRounds: number;
+  costPerEmployee: number;
+  maxEmployeesPerRound: number;
+  effects: TrainingProgramEffects;
+}
+
+/** Catalogue de programmes de formation RH (optionnel, activable par scénario). */
+export interface TrainingProgramsConfig {
+  programs: TrainingProgramDef[];
+  maxConcurrentPrograms: number;
+}
+
+/** Effets d'une action commerciale enrichie. */
+export interface CommercialActionEffects {
+  demandBonus: number;
+  loyaltyBonus: number;
+  marginImpact: number;
+  imageBonus: number;
+  newClientRatio: number;
+}
+
+/** Définition d'une action commerciale enrichie. */
+export interface CommercialActionDef {
+  id: string;
+  label: string;
+  type: "promotion" | "fidelisation" | "prospection" | "communication";
+  targetSegment?: string;
+  isRecurring: boolean;
+  durationRounds: number;
+  costPerRound: number;
+  effects: CommercialActionEffects;
+}
+
+/** Catalogue d'actions commerciales enrichies (optionnel, activable par scénario). */
+export interface CommercialActionsConfig {
+  actions: CommercialActionDef[];
+  maxActionsPerRound: number;
+}
+
+/** Type d'alerte de performance. */
+export type PerformanceAlertType =
+  | "rdLag"
+  | "fleetWear"
+  | "highTurnover"
+  | "lowMargin"
+  | "highDebt"
+  | "supplyRisk"
+  | "cashCrisis"
+  | "qualityDrift";
+
+export type AlertSeverity = "info" | "warning" | "critical";
+
+/** Alerte de performance calculée par le moteur. */
+export interface PerformanceAlert {
+  type: PerformanceAlertType;
+  severity: AlertSeverity;
+  message: string;
+  value: number;
+}
+
+/** Indicateurs de performance synthétiques calculés par le moteur chaque tour. */
+export interface PerformanceMetrics {
+  /** Score de compétitivité global [0-1]. */
+  competitivenessScore: number;
+  /** Robustesse financière [0-1]. */
+  financialRobustness: number;
+  /** Santé opérationnelle [0-1]. */
+  operationalHealth: number;
+  /** Alertes déclenchées ce tour, triées par gravité décroissante. */
+  alerts: PerformanceAlert[];
+}
+
 /** Un niveau d'une action de maintenance (préventive ou curative). */
 export interface MaintenanceActionLevel {
   level: number;
@@ -602,6 +688,10 @@ export interface EngineScenarioConfig {
    * sur l'attrition RH, la productivité, l'image et les rebuts.
    */
   healthSafetyActions?: HsActionsConfig;
+  /** Catalogue de programmes de formation RH (optionnel). */
+  trainingPrograms?: TrainingProgramsConfig;
+  /** Catalogue d'actions commerciales enrichies (optionnel). */
+  commercialActions?: CommercialActionsConfig;
   /**
    * Fournisseurs de matières premières (optionnel — doc 02 §5bis) : le joueur
    * choisit son fournisseur chaque tour. Le premier de la liste est le
@@ -1340,6 +1430,14 @@ export interface CompanyState {
    */
   activeHsActions?: { actionCode: string; startedRound: number; remainingRounds: number }[];
   /**
+   * Programmes de formation RH actifs (module `trainingPrograms`).
+   * Chaque entrée persiste `durationRounds` tours, puis est retirée.
+   * Absent si aucun programme n'est en cours.
+   */
+  activeTrainingPrograms?: { programId: string; enrolledCount: number; remainingRounds: number }[];
+  /** Actions commerciales enrichies actives (module `commercialActions`). */
+  activeCommercialActions?: { id: string; remainingRounds: number }[];
+  /**
    * Historique des actions de maintenance décidées par machine (module
    * `maintenanceActions`). Absent si aucune action n'a encore été engagée.
    */
@@ -1570,6 +1668,10 @@ export interface RoundDecisions {
    * bancaire de toutes les parties sans qu'on l'ait décidé.
    */
   salesEstimate?: SalesEstimate;
+  /** Inscriptions aux programmes de formation ce tour (module `trainingPrograms`). */
+  trainingEnrollments?: { programId: string; enrolledCount: number }[];
+  /** IDs des actions commerciales activées ce tour (module `commercialActions`). */
+  activeCommercialActionIds?: string[];
 }
 
 /** Ventes estimées d'un tour et résultat estimé correspondant (voir `RoundDecisions.salesEstimate`). */
@@ -2132,7 +2234,17 @@ export interface CompanyRoundResult {
       maintenanceSaving: number;
     };
   };
+  /** Coût total des formations RH décaissé ce tour (module `trainingPrograms`). */
+  trainingCost?: number;
+  /** Effets agrégés des formations actives ce tour. */
+  trainingEffects?: Partial<TrainingProgramEffects>;
+  /** Coût total des actions commerciales ce tour (module `commercialActions`). */
+  commercialCost?: number;
+  /** Effets agrégés des actions commerciales actives ce tour. */
+  commercialEffects?: Partial<CommercialActionEffects>;
   kpis: Record<string, number>;
+  /** Indicateurs de performance synthétiques calculés par le moteur. */
+  performanceMetrics?: PerformanceMetrics;
 }
 
 /**
@@ -2174,6 +2286,9 @@ export interface EngineTrace {
   subscription?: CompanyRoundResult["subscription"] | null;
   /** H&S : coûts et effets du tour (module `healthSafetyActions`). */
   hsCost?: CompanyRoundResult["hsCost"] | null;
+  /** Formations RH : coût et effets du tour (module `trainingPrograms`). */
+  trainingCost?: CompanyRoundResult["trainingCost"] | null;
+  trainingEffects?: CompanyRoundResult["trainingEffects"] | null;
 }
 
 export interface EventInstance {

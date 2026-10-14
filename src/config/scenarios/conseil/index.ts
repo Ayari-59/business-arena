@@ -557,6 +557,29 @@ const rawConseil = {
   ],
   // Une réglementation nouvelle au tour 4 ouvre un marché : encore faut-il
   // avoir les consultants disponibles pour le prendre.
+  commercialActions: {
+    maxActionsPerRound: 2,
+    actions: [
+      {
+        id: "livre-blanc",
+        label: "Publication livre blanc sectoriel",
+        type: "communication",
+        isRecurring: false,
+        durationRounds: 2,
+        costPerRound: 5000,
+        effects: { demandBonus: 0.07, loyaltyBonus: 0.03, marginImpact: 0, imageBonus: 0.10, newClientRatio: 0.08 },
+      },
+      {
+        id: "conference-client",
+        label: "Conférence clients et prospects",
+        type: "prospection",
+        isRecurring: false,
+        durationRounds: 1,
+        costPerRound: 8000,
+        effects: { demandBonus: 0.10, loyaltyBonus: 0.05, marginImpact: 0, imageBonus: 0.08, newClientRatio: 0.15 },
+      },
+    ],
+  },
   scriptedEvents: [{ round: 4, eventCode: "conseil_reglementation" }],
   healthSafetyActions: {
     actions: [
@@ -625,6 +648,38 @@ const rawConseil = {
       },
     ],
     maxActionsPerRound: 3,
+  },
+  trainingPrograms: {
+    maxConcurrentPrograms: 2,
+    programs: [
+      {
+        id: "formation-methode",
+        label: "Méthodologies de conseil",
+        domaine: "technique",
+        durationRounds: 3,
+        costPerEmployee: 1500,
+        maxEmployeesPerRound: 5,
+        effects: { productivityBonus: 0.08, attritionReduction: 0.03, qualityBonus: 0.05, safetyBonus: 0, maintenanceSaving: 0 },
+      },
+      {
+        id: "formation-langues",
+        label: "Anglais des affaires",
+        domaine: "commercial",
+        durationRounds: 4,
+        costPerEmployee: 800,
+        maxEmployeesPerRound: 8,
+        effects: { productivityBonus: 0.04, attritionReduction: 0.02, qualityBonus: 0, safetyBonus: 0, maintenanceSaving: 0 },
+      },
+      {
+        id: "formation-leadership",
+        label: "Leadership et gestion de projet",
+        domaine: "management",
+        durationRounds: 2,
+        costPerEmployee: 1200,
+        maxEmployeesPerRound: 4,
+        effects: { productivityBonus: 0.05, attritionReduction: 0.06, qualityBonus: 0.02, safetyBonus: 0, maintenanceSaving: 0 },
+      },
+    ],
   },
   scoring: {
     weights: {

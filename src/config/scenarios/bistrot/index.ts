@@ -661,6 +661,38 @@ const rawBistrot = {
   ],
   // Le beurre, la viande et l'énergie flambent au tour 3 : le ratio matières
   // dérape en plein creux d'août, quand la salle est déjà vide.
+  commercialActions: {
+    maxActionsPerRound: 2,
+    actions: [
+      {
+        id: "menu-decouverte",
+        label: "Menu découverte à prix réduit",
+        type: "promotion",
+        isRecurring: false,
+        durationRounds: 2,
+        costPerRound: 1500,
+        effects: { demandBonus: 0.12, loyaltyBonus: 0.04, marginImpact: -0.08, imageBonus: 0.03, newClientRatio: 0.10 },
+      },
+      {
+        id: "carte-fidelite",
+        label: "Carte de fidélité et avantages",
+        type: "fidelisation",
+        isRecurring: true,
+        durationRounds: 1,
+        costPerRound: 800,
+        effects: { demandBonus: 0.05, loyaltyBonus: 0.12, marginImpact: -0.02, imageBonus: 0.02, newClientRatio: 0 },
+      },
+      {
+        id: "evenement-chef",
+        label: "Soirée thématique avec le chef",
+        type: "communication",
+        isRecurring: false,
+        durationRounds: 1,
+        costPerRound: 2000,
+        effects: { demandBonus: 0.08, loyaltyBonus: 0.06, marginImpact: 0.02, imageBonus: 0.08, newClientRatio: 0.07 },
+      },
+    ],
+  },
   scriptedEvents: [{ round: 3, eventCode: "bistrot_matieres_premieres" }],
   // Actions de maintenance par machine (bistrot — équipements de cuisine et de salle).
   // Pannes graves en service (four, lave-vaisselle) = impact fort sur la capacité.
@@ -828,6 +860,38 @@ const rawBistrot = {
       },
     ],
     maxActionsPerRound: 3,
+  },
+  trainingPrograms: {
+    maxConcurrentPrograms: 2,
+    programs: [
+      {
+        id: "formation-culinaire",
+        label: "Perfectionnement culinaire",
+        domaine: "technique",
+        durationRounds: 3,
+        costPerEmployee: 1200,
+        maxEmployeesPerRound: 4,
+        effects: { productivityBonus: 0.05, attritionReduction: 0.03, qualityBonus: 0.08, safetyBonus: 0.01, maintenanceSaving: 0 },
+      },
+      {
+        id: "formation-service",
+        label: "Art du service en salle",
+        domaine: "commercial",
+        durationRounds: 2,
+        costPerEmployee: 400,
+        maxEmployeesPerRound: 8,
+        effects: { productivityBonus: 0.04, attritionReduction: 0.05, qualityBonus: 0.03, safetyBonus: 0, maintenanceSaving: 0 },
+      },
+      {
+        id: "formation-hygiene",
+        label: "HACCP et hygiène alimentaire",
+        domaine: "rh",
+        durationRounds: 1,
+        costPerEmployee: 300,
+        maxEmployeesPerRound: 15,
+        effects: { productivityBonus: 0, attritionReduction: 0.01, qualityBonus: 0.04, safetyBonus: 0.05, maintenanceSaving: 0 },
+      },
+    ],
   },
   scoring: {
     weights: {

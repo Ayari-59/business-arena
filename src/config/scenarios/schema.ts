@@ -546,6 +546,55 @@ export const engineScenarioConfigSchema = z.object({
       maxActionsPerRound: z.number().int().positive().optional(),
     })
     .optional(),
+  // Programmes de formation RH : catalogue des sessions de formation,
+  // effets sur productivité, attrition et qualité.
+  trainingPrograms: z
+    .object({
+      programs: z.array(
+        z.object({
+          id: z.string().min(1),
+          label: z.string().min(1),
+          domaine: z.enum(["production", "commercial", "management", "rh", "technique"]),
+          durationRounds: z.number().int().min(1),
+          costPerEmployee: z.number().min(0),
+          maxEmployeesPerRound: z.number().int().min(1),
+          effects: z.object({
+            productivityBonus: z.number().min(0).max(1).default(0),
+            attritionReduction: z.number().min(0).max(1).default(0),
+            qualityBonus: z.number().min(0).max(1).default(0),
+            safetyBonus: z.number().min(0).max(1).default(0),
+            maintenanceSaving: z.number().min(0).default(0),
+          }),
+        }),
+      ).min(1),
+      maxConcurrentPrograms: z.number().int().min(1).default(2),
+    })
+    .optional(),
+  // Actions commerciales enrichies : promotions, fidélisation, prospection,
+  // avec effets sur demande, loyauté, marge et image.
+  commercialActions: z
+    .object({
+      actions: z.array(
+        z.object({
+          id: z.string().min(1),
+          label: z.string().min(1),
+          type: z.enum(["promotion", "fidelisation", "prospection", "communication"]),
+          targetSegment: z.string().optional(),
+          isRecurring: z.boolean().default(false),
+          durationRounds: z.number().int().min(1).default(1),
+          costPerRound: z.number().min(0),
+          effects: z.object({
+            demandBonus: z.number().min(-0.5).max(1).default(0),
+            loyaltyBonus: z.number().min(0).max(1).default(0),
+            marginImpact: z.number().min(-0.5).max(0).default(0),
+            imageBonus: z.number().min(-1).max(1).default(0),
+            newClientRatio: z.number().min(0).max(0.5).default(0),
+          }),
+        }),
+      ).min(1),
+      maxActionsPerRound: z.number().int().min(1).default(2),
+    })
+    .optional(),
   // RSE (Responsabilité Sociale des Entreprises) : le levier n'existe que si
   // le bloc est déclaré. Absent → DEFAULT_RSE_CONFIG. Les grandeurs sont sans
   // dimension : normalisées par l'échelle marketing du scénario.
