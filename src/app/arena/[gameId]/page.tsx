@@ -793,7 +793,12 @@ export default async function ArenaPage({
   /** Les décisions prises à un tour clos (null si elles ne sont pas conservées). */
   const decisionsDuTour = (p: (typeof periods)[number]) =>
     p.decisions ? (
-      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
+      <PeriodDecisionsRecap
+        decisions={p.decisions}
+        vocabulary={view.vocabulary}
+        gamme={view.gamme}
+        modules={p.modules}
+      />
     ) : null;
 
   const ongletsDuTour = (p: (typeof periods)[number]) => {
@@ -1392,6 +1397,7 @@ export default async function ArenaPage({
       gamme={view.gamme}
       rdOffer={view.rdOffer}
       communicationOffer={view.communicationOffer}
+      modulesOffer={view.modulesOffer}
       verrou={
         view.playLock.playable
           ? null

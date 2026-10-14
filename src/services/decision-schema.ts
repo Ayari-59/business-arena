@@ -32,6 +32,10 @@ import {
 const B = BORNES_DES_CHAMPS;
 const R = BORNES_PAR_REFERENCE;
 const nombre = (b: { min: number; max: number }) => z.coerce.number().min(b.min).max(b.max);
+/** Plafond technique d'une liste de choix de module (les catalogues en portent moins de dix). */
+const MODULES_MAX = 20;
+const identifiant = z.string().min(1).max(64);
+const identifiants = z.array(identifiant).max(MODULES_MAX).optional();
 
 export const roundDecisionsSchema = z.object({
   price: z.coerce.number().min(1).max(PRIX_MAX),
@@ -148,6 +152,39 @@ export const roundDecisionsSchema = z.object({
       expectedCash: z.coerce.number().optional(),
     })
     .optional(),
+  /**
+   * LES MODULES DU SCÉNARIO (catalogues optionnels : `config/modules-saisis`).
+   * Un `z.object` supprime les clés qu'il ne connaît pas : sans ces lignes, une
+   * case cochée disparaissait ici, avant le moteur, sans un mot. Bornes
+   * techniques seulement ; ce que le scénario offre ce tour (catalogue, tour
+   * minimal, plafonds) est jugé ensuite par `refusDesModules`.
+   */
+  qualityActions: z
+    .array(z.object({ actionCode: identifiant, level: z.coerce.number().int().min(1).max(10) }))
+    .max(MODULES_MAX)
+    .optional(),
+  hsActions: z
+    .array(z.object({ actionCode: identifiant, machineId: identifiant.optional() }))
+    .max(MODULES_MAX)
+    .optional(),
+  trainingEnrollments: z
+    .array(
+      z.object({ programId: identifiant, enrolledCount: z.coerce.number().int().min(0).max(1000) }),
+    )
+    .max(MODULES_MAX)
+    .optional(),
+  activeCommercialActionIds: identifiants,
+  activeContractIds: identifiants,
+  activeCapacityOptionIds: identifiants,
+  enteredMarketIds: identifiants,
+  startedInnovationIds: identifiants,
+  activeRseActionIds: identifiants,
+  activePricingStrategyIds: identifiants,
+  activeHRPolicyIds: identifiants,
+  activeCrisisPlanIds: identifiants,
+  activatePartnershipIds: identifiants,
+  startDigitalProjectIds: identifiants,
+  activeBrandActionIds: identifiants,
 });
 
 // garde de compatibilité structurelle avec le type moteur

@@ -16,11 +16,14 @@ export function PeriodDecisionsRecap({
   decisions,
   vocabulary,
   gamme = null,
+  modules = null,
 }: {
   decisions: RoundDecisions;
   vocabulary: ScenarioVocabulary;
   /** Gamme du scénario joué : le récapitulatif se lit alors référence par référence. */
   gamme?: GameView["gamme"];
+  /** Les modules du scénario engagés ou en vigueur ce tour (`bilanDesModules`). */
+  modules?: GameView["periods"][number]["modules"];
 }) {
   const d = decisions;
   const parProduit =
@@ -178,6 +181,38 @@ export function PeriodDecisionsRecap({
               </span>
             ))}
           </div>
+        </div>
+      ) : null}
+      {modules ? (
+        <div data-modules-engages="">
+          <p className="mb-2 text-sm font-semibold text-slate-200">Modules engagés ce tour</p>
+          {modules.crise ? (
+            <p className="mb-2 flex items-start gap-1.5 text-sm text-slate-200">
+              <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--metier,var(--color-slate-300))]" />
+              {modules.crise}
+            </p>
+          ) : null}
+          {modules.lignes.length > 0 ? (
+            <ul className="space-y-1.5">
+              {modules.lignes.map((l) => (
+                <li
+                  key={l.titre}
+                  className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-300"
+                >
+                  <span className="font-medium text-slate-100">{l.titre}</span>
+                  {l.engage.length > 0 ? <span> · engagé : {l.engage.join(", ")}</span> : null}
+                  <span className="mt-0.5 block text-xs text-slate-400">
+                    {[
+                      l.cout !== null && l.cout > 0 ? `Coût du tour ${formatEuro(l.cout)}` : null,
+                      l.effet,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "Sans coût ce tour"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : null}
     </div>

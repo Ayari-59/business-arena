@@ -460,7 +460,7 @@ export function FinancialStatements({
           ) : null}
           {(cr.exceptionalCharge ?? 0) > 0.5 ? (
             <Ligne
-              label="− Sanction RSE (exceptionnel)"
+              label="− Charges exceptionnelles"
               valeur={-(cr.exceptionalCharge ?? 0)}
               avant={pcr?.exceptionalCharge !== undefined ? -pcr.exceptionalCharge : null}
               decalee

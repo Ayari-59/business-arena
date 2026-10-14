@@ -11,7 +11,11 @@ import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engin
  *
  * Champs ponctuels (remis à undefined) :
  *   hr.hire, hr.fire, hr.trainingBudget,
- *   investment, treasury, finance, acceptOrder, studies
+ *   investment, treasury, finance, acceptOrder, studies,
+ *   et les choix de module (actions qualité, hygiène et sécurité,
+ *   activations des catalogues optionnels) : ce sont des DÉMARRAGES, que le
+ *   moteur garde ensuite dans l'état. Reconduits, ils relanceraient une action
+ *   ponctuelle ou une action échue que l'équipe n'a pas redécidée.
  */
 export function carryOverDecisions(prev: RoundDecisions): RoundDecisions {
   return {
@@ -23,6 +27,22 @@ export function carryOverDecisions(prev: RoundDecisions): RoundDecisions {
     finance: undefined,
     acceptOrder: undefined,
     studies: undefined,
+    qualityActions: undefined,
+    maintenanceDecisions: undefined,
+    hsActions: undefined,
+    trainingEnrollments: undefined,
+    activeCommercialActionIds: undefined,
+    activeContractIds: undefined,
+    activeCapacityOptionIds: undefined,
+    enteredMarketIds: undefined,
+    startedInnovationIds: undefined,
+    activeRseActionIds: undefined,
+    activePricingStrategyIds: undefined,
+    activeHRPolicyIds: undefined,
+    activeCrisisPlanIds: undefined,
+    activatePartnershipIds: undefined,
+    startDigitalProjectIds: undefined,
+    activeBrandActionIds: undefined,
   };
 }
 
