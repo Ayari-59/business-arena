@@ -271,6 +271,8 @@ export interface EngineScenarioConfig {
      * trésorerie. Absente = illimité (comportement historique).
      */
     maxCapitalIncreaseTotal?: number;
+    /** Ratio dette/capitaux propres maximum autorisé. Absent = illimité. */
+    maxDebtToEquity?: number;
     /**
      * DOSSIER BANCAIRE (optionnel). Présent : le plan de trésorerie déposé
      * avec les décisions cesse d'être un exercice sans suite et devient la
