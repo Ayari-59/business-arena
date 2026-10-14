@@ -90,6 +90,98 @@ const rawNova = {
     maintenanceReference: 4000,
     availabilityDecay: 0.05,
   },
+  qualityActions: {
+    maxConcurrentActions: 2,
+    actions: [
+      {
+        code: "amelioration_composants",
+        label: "Amélioration des composants (qualité audio)",
+        levels: [
+          {
+            level: 1,
+            label: "Composants N1 — sélection de transducteurs haute fidélité",
+            cost: 8000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.05, productionCostReduction: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Composants N2 — intégration DSP de traitement du signal",
+            cost: 12000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.07, productionCostReduction: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Composants N3 — certification audio indépendante et étanchéité IP67",
+            cost: 18000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.10, productionCostReduction: 0.02, maintenanceSaving: 1500 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "amelioration_process_assemblage",
+        label: "Amélioration du process (assemblage)",
+        levels: [
+          {
+            level: 1,
+            label: "Assemblage N1 — standardisation des postes de montage",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { productionCostReduction: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Assemblage N2 — contrôle qualité automatisé en ligne",
+            cost: 10000,
+            durationRounds: 1,
+            effects: { productionCostReduction: 0.04, qualityImageBonus: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Assemblage N3 — lean manufacturing et zéro défaut",
+            cost: 15000,
+            durationRounds: 1,
+            effects: { productionCostReduction: 0.05, qualityImageBonus: 0.04, maintenanceSaving: 2000 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "satisfaction_support",
+        label: "Satisfaction client (support technique)",
+        levels: [
+          {
+            level: 1,
+            label: "Support N1 — FAQ et tutoriels en ligne",
+            cost: 3000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Support N2 — hotline dédiée et garantie 2 ans",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Support N3 — programme ambassadeurs et communauté utilisateurs",
+            cost: 9000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.08 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   marketing: { scale: 12000 },
   finance: {
     loanAnnualRate: 0.05,

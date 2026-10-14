@@ -134,6 +134,98 @@ const rawEcommerce = {
     baseDefectRate: 0.01,
     externalReturnSensitivity: 0.3,
   },
+  qualityActions: {
+    maxConcurrentActions: 2,
+    actions: [
+      {
+        code: "maitrise_couts_retours",
+        label: "Maîtrise des coûts de non-qualité (retours colis)",
+        levels: [
+          {
+            level: 1,
+            label: "Retours N1 — analyse des causes de retour",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { returnRateReduction: 0.12, productionCostReduction: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Retours N2 — contrôle qualité avant expédition",
+            cost: 8000,
+            durationRounds: 1,
+            effects: { returnRateReduction: 0.15, defectRateReduction: 0.08 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Retours N3 — logistique retour optimisée et réduction gaspillage",
+            cost: 12000,
+            durationRounds: 1,
+            effects: { returnRateReduction: 0.10, defectRateReduction: 0.07, productionCostReduction: 0.03, maintenanceSaving: 1000 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "amelioration_packaging",
+        label: "Amélioration des composants (emballage / packaging)",
+        levels: [
+          {
+            level: 1,
+            label: "Packaging N1 — emballages protecteurs renforcés",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.10, returnRateReduction: 0.08 },
+          },
+          {
+            level: 2,
+            label: "Packaging N2 — packaging éco-responsable et différenciant",
+            cost: 10000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.08, qualityImageBonus: 0.04 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Packaging N3 — personnalisation et expérience déballage premium",
+            cost: 15000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.08, returnRateReduction: 0.10 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "satisfaction_livraison",
+        label: "Satisfaction client (livraison et service après-vente)",
+        levels: [
+          {
+            level: 1,
+            label: "Livraison N1 — suivi de commande en temps réel",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.04, returnRateReduction: 0.05 },
+          },
+          {
+            level: 2,
+            label: "Livraison N2 — délais garantis et notifications proactives",
+            cost: 7000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.05, returnRateReduction: 0.10 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Livraison N3 — service client dédié et politique retour simplifiée",
+            cost: 10000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.07, returnRateReduction: 0.12 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   marketing: { scale: 30000 },
   finance: {
     loanAnnualRate: 0.062,

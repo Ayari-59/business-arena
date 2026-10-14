@@ -119,6 +119,98 @@ const rawBistrot = {
     externalReturnSensitivity: 0,
     maintenanceDefectSensitivity: 0.15,
   },
+  qualityActions: {
+    maxConcurrentActions: 2,
+    actions: [
+      {
+        code: "maitrise_couts_non_qualite",
+        label: "Maîtrise des coûts de non-qualité",
+        levels: [
+          {
+            level: 1,
+            label: "Maîtrise des coûts N1 — suivi des gaspillages alimentaires",
+            cost: 3000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.10, productionCostReduction: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Maîtrise des coûts N2 — tableaux de bord hebdomadaires",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.08, productionCostReduction: 0.04 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Maîtrise des coûts N3 — optimisation des commandes fournisseurs",
+            cost: 7000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.07, productionCostReduction: 0.05, maintenanceSaving: 500 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "amelioration_process",
+        label: "Amélioration du process (cuisine)",
+        levels: [
+          {
+            level: 1,
+            label: "Process N1 — standardisation des recettes",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.12, productionCostReduction: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Process N2 — formation aux techniques culinaires",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.10, productionCostReduction: 0.03, qualityImageBonus: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Process N3 — certification hygiène HACCP renforcée",
+            cost: 9000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.08, qualityImageBonus: 0.05, maintenanceSaving: 800 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "satisfaction_client",
+        label: "Satisfaction client (service en salle)",
+        levels: [
+          {
+            level: 1,
+            label: "Satisfaction N1 — grille d'évaluation du service",
+            cost: 2000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Satisfaction N2 — formation à l'accueil et la fidélisation",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.05, returnRateReduction: 0.10 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Satisfaction N3 — programme de fidélité et suivi avis clients",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.06, returnRateReduction: 0.15 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   marketing: { scale: 7000 },
   finance: {
     loanAnnualRate: 0.058,
