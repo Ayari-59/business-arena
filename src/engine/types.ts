@@ -216,6 +216,83 @@ export interface QualityActionsConfig {
   maxConcurrentActions?: number;
 }
 
+/** Effets mesurables d'une action H&S. */
+export interface HsActionEffects {
+  /** Réduction du taux d'attrition RH (0..1 : 0.1 = −10 % de turnover). */
+  attritionReduction?: number;
+  /** Réduction du taux d'accidents (informatif, 0..1). */
+  accidentRateReduction?: number;
+  /** Bonus image RH dans le calcul RSE (+X, 0..1). */
+  hrImageBonus?: number;
+  /** Gain de productivité (0..0.3 : 0.04 = +4 %). */
+  productivityBonus?: number;
+  /** Économie sur la maintenance par tour (€ absolus). */
+  maintenanceSaving?: number;
+  /** Réduction du taux de rebuts (0..0.3). */
+  defectReduction?: number;
+}
+
+/** Définition d'une action Hygiène & Sécurité du catalogue. */
+export interface HsActionDef {
+  code: string;
+  label: string;
+  description?: string;
+  /** Charge main-d'œuvre (€, décaissée le tour de l'engagement). */
+  laborCost: number;
+  /** Coût d'immobilisation (€, charge exceptionnelle). */
+  immobilizationCost?: number;
+  /** Temps d'intervention en heures par niveau de technicien. */
+  timeHoursN1?: number;
+  timeHoursN2?: number;
+  timeHoursN3?: number;
+  /** Nécessite une machine spécifique (optionnel). */
+  requiresMachine?: boolean;
+  effects: HsActionEffects;
+  /** true = effet actif pendant `durationRounds` tours suivants. */
+  isRecurring?: boolean;
+  /** Durée en tours si récurrente. */
+  durationRounds?: number;
+}
+
+/** Catalogue d'actions Hygiène & Sécurité (optionnel, activable par scénario). */
+export interface HsActionsConfig {
+  actions: HsActionDef[];
+  /** Nombre maximal d'actions engageables par tour. Défaut : 3. */
+  maxActionsPerRound?: number;
+}
+
+/** Un niveau d'une action de maintenance (préventive ou curative). */
+export interface MaintenanceActionLevel {
+  level: number;
+  label: string;
+  /** Charge main-d'œuvre (€). */
+  laborCost: number;
+  /** Coût d'immobilisation machine pendant l'intervention (€). */
+  downtimeCost: number;
+  /** Temps d'intervention (heures) pour chaque grade de technicien. */
+  timeHoursN1: number;
+  timeHoursN2: number;
+  timeHoursN3: number;
+  /** Réduction de l'usure de la machine (0..1). */
+  wearReduction?: number;
+  /** Réduction de la probabilité de panne ce tour (0..1). */
+  breakdownRiskReduction?: number;
+  /** Taux de restauration de la capacité d'une machine hors-service (0..1). */
+  capacityRestoration?: number;
+}
+
+/** Un type d'action de maintenance (ex. "preventif" | "curatif"). */
+export interface MaintenanceActionType {
+  code: string;
+  label: string;
+  levels: MaintenanceActionLevel[];
+}
+
+/** Configuration du module de maintenance par machine (optionnel, inspiré de StratiRAC). */
+export interface MaintenanceActionsConfig {
+  types: MaintenanceActionType[];
+}
+
 export interface EngineScenarioConfig {
   code: string;
   version: string;
@@ -339,6 +416,33 @@ export interface EngineScenarioConfig {
       /** Part du plafond de découvert consentie à confiance nulle (0..1). */
       minOverdraftShare: number;
     };
+    /** Taux d'escompte annuel exposé aux équipes (information pédagogique). */
+    discountRate?: number;
+    /** Part des créances escomptables (0..1, exposée aux équipes). */
+    discountableRatio?: number;
+    /**
+     * Rémunération annuelle des placements (exposée aux équipes). Si défini,
+     * utilisé à la place de `treasury.placementAnnualRate` dans le moteur.
+     */
+    placementRate?: number;
+    /**
+     * Catégories d'emprunt moyen terme : machines et installations. Absent →
+     * comportement historique (emprunt générique unique).
+     */
+    loanCategories?: {
+      machines?: {
+        maxLoanRatio: number;
+        durationRounds: number;
+        annualRate?: number;
+      };
+      installations?: {
+        maxLoanRatio: number;
+        durationRounds: number;
+        annualRate?: number;
+        /** Libellé pédagogique (ex : "Qualité, H&S, Environnement, brevets"). */
+        label?: string;
+      };
+    };
   };
   /**
    * Outils de gestion de trésorerie (optionnel) : mobilisation du poste
@@ -449,6 +553,19 @@ export interface EngineScenarioConfig {
    * coûts variables et l'image. La progression est séquentielle (N+1 requiert N).
    */
   qualityActions?: QualityActionsConfig;
+  /**
+   * Actions de maintenance par machine (optionnel, inspiré de StratiRAC) :
+   * chaque tour, le joueur peut décider des actions préventives ou curatives
+   * sur des machines individuelles de son parc (`machineFleet`). Absent ou
+   * parc non individuel → décisions ignorées silencieusement.
+   */
+  maintenanceActions?: MaintenanceActionsConfig;
+  /**
+   * Hygiène & Sécurité (optionnel) : catalogue d'actions ponctuelles ou
+   * récurrentes (plan d'évacuation, formation, audit, ergonomie…) avec effets
+   * sur l'attrition RH, la productivité, l'image et les rebuts.
+   */
+  healthSafetyActions?: HsActionsConfig;
   /**
    * Fournisseurs de matières premières (optionnel — doc 02 §5bis) : le joueur
    * choisit son fournisseur chaque tour. Le premier de la liste est le
@@ -1155,6 +1272,24 @@ export interface CompanyState {
    */
   qualityActionsCompleted?: Record<string, number>;
   /**
+   * Actions H&S récurrentes en cours d'effet (module `healthSafetyActions`).
+   * Chaque entrée persiste `durationRounds` tours, puis est retirée.
+   * Absent si aucune action récurrente n'est active.
+   */
+  activeHsActions?: { actionCode: string; startedRound: number; remainingRounds: number }[];
+  /**
+   * Historique des actions de maintenance décidées par machine (module
+   * `maintenanceActions`). Absent si aucune action n'a encore été engagée.
+   */
+  maintenanceLog?: {
+    round: number;
+    machineId: string;
+    actionCode: string;
+    level: number;
+    laborCost: number;
+    downtimeCost: number;
+  }[];
+  /**
    * Défaillance (cessation de paiements, V2 couche 2). Une entreprise passe
    * `defaillant` après deux tours consécutifs de crise de trésorerie
    * caractérisée (découvert au-delà du plafond, plus de créances à céder).
@@ -1274,6 +1409,19 @@ export interface RoundDecisions {
    */
   qualityActions?: { actionCode: string; level: number }[];
   /**
+   * Actions de maintenance décidées ce tour, machine par machine (si le scénario
+   * a un bloc `maintenanceActions` et un parc individuel `machineFleet`). Chaque
+   * entrée cible une machine par son `id`, un type d'action (ex. "preventif") et
+   * un niveau (1, 2 ou 3). Actions ponctuelles : jamais reconduites.
+   */
+  maintenanceDecisions?: { machineId: string; actionCode: string; level: number }[];
+  /**
+   * Actions Hygiène & Sécurité engagées ce tour (si le scénario a un catalogue
+   * `healthSafetyActions`). Actions ponctuelles : jamais reconduites
+   * (sauf `isRecurring` = true → ajoutées à `activeHsActions`).
+   */
+  hsActions?: { actionCode: string; machineId?: string }[];
+  /**
    * Investissement capacitaire (si le scénario le propose) : unités de
    * capacité machine achetées ce tour — décaissées maintenant, en service au
    * tour suivant. Action ponctuelle : jamais reconduite.
@@ -1303,6 +1451,10 @@ export interface RoundDecisions {
      * décision se prend, comme une assemblée statue sur l'exercice écoulé.
      */
     dividend?: number;
+    /** Emprunt pour machines ce tour (si loanCategories.machines est défini). */
+    machineLoan?: number;
+    /** Emprunt pour installations ce tour (si loanCategories.installations est défini). */
+    installationLoan?: number;
   };
   /** Trésorerie : montants de créances à mobiliser ce tour (actions ponctuelles). */
   treasury?: {
@@ -1625,6 +1777,18 @@ export interface CompanyRoundResult {
     returnedUnits: number;
   };
   /**
+   * Coûts des actions de maintenance par machine ce tour (module
+   * `maintenanceActions`). Absent si aucune action n'a été décidée.
+   */
+  maintenanceCost?: {
+    /** Somme des charges MOD des interventions décidées ce tour. */
+    laborCost: number;
+    /** Somme des coûts d'immobilisation machine des interventions. */
+    downtimeCost: number;
+    /** Nombre d'actions engagées ce tour. */
+    actionsCount: number;
+  };
+  /**
    * Actions qualité du catalogue : niveaux démarrés ce tour et effets cumulés actifs.
    * Présent dès qu'une action est démarrée OU que des effets sont en cours.
    */
@@ -1757,6 +1921,10 @@ export interface CompanyRoundResult {
     newLoan: number;
     outstanding: number;
     nextMandatory: number;
+    /** Emprunt machines accordé ce tour (catégorie `loanCategories.machines`). */
+    machineLoanGranted?: number;
+    /** Emprunt installations accordé ce tour (catégorie `loanCategories.installations`). */
+    installationLoanGranted?: number;
   };
   /** Trésorerie du tour : mobilisations de créances et coûts financiers. */
   treasury?: {
@@ -1773,6 +1941,12 @@ export interface CompanyRoundResult {
     matured: number;
     /** Intérêts encaissés sur le placement arrivé à terme. */
     placementIncome: number;
+    /**
+     * Montant escomptable calculé (= créances × discountableRatio).
+     * Information pédagogique : combien de créances est-il possible de
+     * mobiliser via l'escompte bancaire.
+     */
+    discountableReceivables?: number;
   };
   /** RH du tour : effectif, mouvements et coût (doc 02 §4.1). */
   hr?: {
@@ -1814,6 +1988,21 @@ export interface CompanyRoundResult {
    * Présent en gamme (≥ 2 produits) où les opérations par référence sont détaillées.
    */
   accounting?: Ledger;
+  /**
+   * Coûts et effets H&S du tour (module `healthSafetyActions`). Présent dès
+   * qu'au moins une action est engagée ce tour ou qu'une action récurrente est active.
+   */
+  hsCost?: {
+    laborCost: number;
+    immobilizationCost: number;
+    actionsCount: number;
+    effects: {
+      attritionReduction: number;
+      productivityBonus: number;
+      defectReduction: number;
+      maintenanceSaving: number;
+    };
+  };
   kpis: Record<string, number>;
 }
 

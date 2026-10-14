@@ -177,6 +177,37 @@ export const engineScenarioConfigSchema = z.object({
         minOverdraftShare: z.number().min(0).max(1),
       })
       .optional(),
+    // Conditions court terme exposées aux équipes (information pédagogique).
+    /** Taux d'escompte annuel sur les créances clients (ex : 0.10 = 10 %). */
+    discountRate: z.number().min(0).max(1).optional(),
+    /** Part des créances clients escomptables (ex : 0.80 = 80 %). */
+    discountableRatio: z.number().min(0).max(1).optional(),
+    /** Rémunération annuelle des placements de trésorerie (ex : 0.03 = 3 %). */
+    placementRate: z.number().min(0).max(1).optional(),
+    /**
+     * Catégories d'emprunt moyen terme (machines, installations) : chacune
+     * avec son plafond (% du coût de l'investissement), sa durée propre en
+     * tours et, optionnellement, son taux (à défaut : loanAnnualRate).
+     */
+    loanCategories: z
+      .object({
+        machines: z
+          .object({
+            maxLoanRatio: z.number().min(0).max(1),
+            durationRounds: z.number().int().positive(),
+            annualRate: z.number().min(0).max(1).optional(),
+          })
+          .optional(),
+        installations: z
+          .object({
+            maxLoanRatio: z.number().min(0).max(1),
+            durationRounds: z.number().int().positive(),
+            annualRate: z.number().min(0).max(1).optional(),
+            label: z.string().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   }),
   treasury: z
     .object({
@@ -456,6 +487,63 @@ export const engineScenarioConfigSchema = z.object({
       axisFit: z.number().min(1).max(3),
       axisMisfit: z.number().min(0).max(1),
       axisSwitchDecay: z.number().min(0).max(1),
+    })
+    .optional(),
+  // Actions de maintenance par machine (préventive / curative).
+  // Inspiré de StratiRAC : 3 niveaux par type, effets sur l'usure, le risque
+  // de panne et la restauration de capacité. Absent = comportement historique.
+  maintenanceActions: z
+    .object({
+      types: z.array(
+        z.object({
+          code: z.string().min(1),
+          label: z.string().min(1),
+          levels: z.array(
+            z.object({
+              level: z.number().int().min(1).max(3),
+              label: z.string().min(1),
+              laborCost: z.number().nonnegative(),
+              downtimeCost: z.number().nonnegative(),
+              timeHoursN1: z.number().nonnegative(),
+              timeHoursN2: z.number().nonnegative(),
+              timeHoursN3: z.number().nonnegative(),
+              wearReduction: z.number().min(0).max(1).optional(),
+              breakdownRiskReduction: z.number().min(0).max(1).optional(),
+              capacityRestoration: z.number().min(0).max(1).optional(),
+            }),
+          ).min(1).max(3),
+        }),
+      ).min(1),
+    })
+    .optional(),
+  // Hygiène & Sécurité (H&S) : catalogue d'actions ponctuelles ou récurrentes
+  // avec effets sur l'attrition RH, la productivité, l'image RSE et les rebuts.
+  healthSafetyActions: z
+    .object({
+      actions: z.array(
+        z.object({
+          code: z.string().min(1),
+          label: z.string().min(1),
+          description: z.string().optional(),
+          laborCost: z.number().nonnegative(),
+          immobilizationCost: z.number().nonnegative().optional(),
+          timeHoursN1: z.number().nonnegative().optional(),
+          timeHoursN2: z.number().nonnegative().optional(),
+          timeHoursN3: z.number().nonnegative().optional(),
+          requiresMachine: z.boolean().optional(),
+          effects: z.object({
+            attritionReduction: z.number().min(0).max(1).optional(),
+            accidentRateReduction: z.number().min(0).max(1).optional(),
+            hrImageBonus: z.number().min(0).max(1).optional(),
+            productivityBonus: z.number().min(0).max(0.3).optional(),
+            maintenanceSaving: z.number().nonnegative().optional(),
+            defectReduction: z.number().min(0).max(0.3).optional(),
+          }),
+          isRecurring: z.boolean().optional(),
+          durationRounds: z.number().int().positive().optional(),
+        }),
+      ).min(1),
+      maxActionsPerRound: z.number().int().positive().optional(),
     })
     .optional(),
   // RSE (Responsabilité Sociale des Entreprises) : le levier n'existe que si

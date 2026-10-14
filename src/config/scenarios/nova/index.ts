@@ -827,6 +827,91 @@ const rawNova = {
       fineAmount: 1,
     },
   },
+  // Actions de maintenance par machine (enceinte portable NOVA).
+  // Préventif : éviter la dégradation des lignes d'assemblage semi-auto.
+  // Curatif : remettre en service une machine tombée en panne.
+  maintenanceActions: {
+    types: [
+      {
+        code: "preventif",
+        label: "Maintenance préventive",
+        levels: [
+          {
+            level: 1,
+            label: "Vérification visuelle",
+            laborCost: 500,
+            downtimeCost: 200,
+            timeHoursN1: 4,
+            timeHoursN2: 4,
+            timeHoursN3: 2,
+            wearReduction: 0.05,
+            breakdownRiskReduction: 0.1,
+          },
+          {
+            level: 2,
+            label: "Révision complète",
+            laborCost: 1500,
+            downtimeCost: 800,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            wearReduction: 0.15,
+            breakdownRiskReduction: 0.25,
+          },
+          {
+            level: 3,
+            label: "Refonte préventive",
+            laborCost: 3500,
+            downtimeCost: 2000,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            wearReduction: 0.35,
+            breakdownRiskReduction: 0.5,
+          },
+        ],
+      },
+      {
+        code: "curatif",
+        label: "Maintenance curative",
+        levels: [
+          {
+            level: 1,
+            label: "Réparation partielle",
+            laborCost: 800,
+            downtimeCost: 1200,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            capacityRestoration: 0.5,
+            wearReduction: 0.1,
+          },
+          {
+            level: 2,
+            label: "Réparation complète",
+            laborCost: 2000,
+            downtimeCost: 3000,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            capacityRestoration: 0.8,
+            wearReduction: 0.25,
+          },
+          {
+            level: 3,
+            label: "Remplacement de modules",
+            laborCost: 5000,
+            downtimeCost: 6000,
+            timeHoursN1: 24,
+            timeHoursN2: 20,
+            timeHoursN3: 16,
+            capacityRestoration: 1.0,
+            wearReduction: 0.6,
+          },
+        ],
+      },
+    ],
+  },
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
   // Scoring IPG (doc 08 §1) : pondérations imposées, bornes calibrées sur les
   // trajectoires de référence (snapshot doré) — min → 0 point, cible → 100.

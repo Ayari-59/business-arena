@@ -449,6 +449,37 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       qualityImageBonus: number;
       maintenanceSaving: number;
     };
+    /** Actions de maintenance décidées ce tour, avec leur coût et leurs effets. */
+    maintenanceLog: {
+      round: number;
+      machineId: string;
+      actionCode: string;
+      level: number;
+      laborCost: number;
+      downtimeCost: number;
+    }[];
+    /** Coût total de charge (MOD) des maintenances ce tour. */
+    maintenanceLaborCost: number;
+    /** Coût total d'immobilisation machine des maintenances ce tour. */
+    maintenanceDowntimeCost: number;
+    /** Parc individuel après application des actions de maintenance. */
+    machineFleetAfterMaintenance: import("../types").MachineRecord[] | null;
+    /** Hygiène & Sécurité : effets cumulés actifs ce tour (nouvelles + récurrentes en cours). */
+    hsEffects: {
+      attritionReduction: number;
+      productivityBonus: number;
+      defectReduction: number;
+      maintenanceSaving: number;
+      hrImageBonus: number;
+    };
+    /** Coût de charge H&S décaissé ce tour (laborCost des nouvelles actions). */
+    hsLaborCost: number;
+    /** Coût d'immobilisation H&S ce tour (charge exceptionnelle). */
+    hsImmoCost: number;
+    /** Nombre d'actions H&S engagées ce tour. */
+    hsActionsCount: number;
+    /** Actions H&S récurrentes actives à la clôture du tour. */
+    nextActiveHsActions: { actionCode: string; startedRound: number; remainingRounds: number }[];
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -485,6 +516,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             products: undefined,
             brandMarketingBudget: undefined,
             communicationAxis: undefined,
+            maintenanceDecisions: undefined,
             finance: soumis.finance?.capitalIncrease
               ? { capitalIncrease: soumis.finance.capitalIncrease }
               : undefined,
@@ -513,6 +545,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       communicationAxis: raw.communicationAxis,
       qualityActions: raw.qualityActions,
       rdGridStart: raw.rdGridStart,
+      maintenanceDecisions: raw.maintenanceDecisions,
+      hsActions: raw.hsActions,
     };
     // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
     // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
@@ -527,13 +561,28 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseOpeningImage,
       rseConfig.socialAttritionRelief,
     );
+    // H&S : réduction d'attrition issue des actions RÉCURRENTES DÉJÀ ACTIVES
+    // (capital d'ouverture — même logique différée que l'attrition RSE).
+    // Les nouvelles actions de CE tour sont traitées plus bas mais leur attrition
+    // s'applique aussi dès ce tour (effect immédiat, actions ponctuelles).
+    const hsOpeningAttritionRelief = (state.activeHsActions ?? []).reduce((sum, a) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === a.actionCode);
+      return sum + (def?.effects.attritionReduction ?? 0);
+    }, 0);
+    // Pour les nouvelles actions décidées ce tour, on anticipe aussi leur effet attrition.
+    const hsNewAttritionRelief = (raw.hsActions ?? []).reduce((sum, req) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === req.actionCode);
+      return sum + (def?.effects.attritionReduction ?? 0);
+    }, 0);
+    const hsAttritionRelief = Math.min(0.5, hsOpeningAttritionRelief + hsNewAttritionRelief);
     // RH (doc 02 §4.1) : morale du tour, coûts, mouvements d'effectif à t+1.
+    const combinedAttritionRelief = rseAttritionRelief + hsAttritionRelief;
     const hr = computeHr({
       config:
-        scenario.hr && rseAttritionRelief > 0
+        scenario.hr && combinedAttritionRelief > 0
           ? {
               ...scenario.hr,
-              attritionThreshold: scenario.hr.attritionThreshold * (1 - rseAttritionRelief),
+              attritionThreshold: scenario.hr.attritionThreshold * (1 - combinedAttritionRelief),
             }
           : scenario.hr,
       decisions: raw.hr,
@@ -654,6 +703,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           return base;
         })()
       : null;
+    // H&S : bonus de productivité anticipé (actions récurrentes actives + nouvelles ce tour).
+    const hsEarlyProductivityBonus = Math.min(
+      0.3,
+      (state.activeHsActions ?? []).reduce((sum, a) => {
+        const def = scenario.healthSafetyActions?.actions.find((d) => d.code === a.actionCode);
+        return sum + (def?.effects.productivityBonus ?? 0);
+      }, 0) +
+      (raw.hsActions ?? []).reduce((sum, req) => {
+        const def = scenario.healthSafetyActions?.actions.find((d) => d.code === req.actionCode);
+        return sum + (def?.effects.productivityBonus ?? 0);
+      }, 0),
+    );
     const effectiveMachineCapacity = scenario.equipment
       ? (activeMachineFleet && typeMap
           ? machineFleetCapacity(activeMachineFleet, typeMap)
@@ -680,7 +741,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         state.availability * mods.availabilityMultiplier * (multi ? 1 : supplyAvailabilityHit),
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
-      productivity: state.productivity * hr.morale,
+      productivity: state.productivity * hr.morale * (1 + hsEarlyProductivityBonus),
     });
     // Qualité produite PAR PRODUIT. En gamme, l'échelle du budget qualité est
     // divisée par le nombre de références : un budget réparti à parts égales
@@ -797,7 +858,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const rseInvestment = Math.max(0, raw.rse?.investment ?? 0);
     const rseCost = rseBudget + rseInvestment;
     const rseScale = scenario.marketing.scale;
-    const rseImageFactor = imageAttractionFactor(rseOpeningImage, rseConfig.imageDemandSensitivity);
+    // H&S hrImageBonus (ouverture) : bonus additif sur le facteur image RSE.
+    const hsOpeningHrImageBonus = (state.activeHsActions ?? []).reduce((sum, a) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === a.actionCode);
+      return sum + (def?.effects.hrImageBonus ?? 0);
+    }, 0);
+    const hsNewHrImageBonus = (raw.hsActions ?? []).reduce((sum, req) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === req.actionCode);
+      return sum + (def?.effects.hrImageBonus ?? 0);
+    }, 0);
+    const rseImageFactor = imageAttractionFactor(rseOpeningImage, rseConfig.imageDemandSensitivity)
+      + Math.min(0.5, hsOpeningHrImageBonus + hsNewHrImageBonus);
     // Cartes RSE (Lot 2C) : leur effet demande passe par l'attraction (le moteur
     // n'applique pas les modificateurs de demande company-scope ailleurs). On
     // isole les SEULS codes RSE : les autres événements company-scope à modif de
@@ -905,17 +976,140 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         }
       }
     }
+    // Actions de maintenance par machine (module maintenanceActions).
+    // Pour chaque décision, on trouve la machine dans le parc individuel,
+    // on applique les effets (usure, panne) et on cumule les coûts.
+    // Si le scénario n'a pas de bloc `maintenanceActions` ou si le parc
+    // individuel est absent, on ignore silencieusement.
+    const maConfig = scenario.maintenanceActions;
+    const maintenanceLog: {
+      round: number;
+      machineId: string;
+      actionCode: string;
+      level: number;
+      laborCost: number;
+      downtimeCost: number;
+    }[] = [];
+    let maintenanceLaborCost = 0;
+    let maintenanceDowntimeCost = 0;
+    // On part du parc actif (ouverture + pending du tour précédent intégré dans activeMachineFleet).
+    // La maintenance est appliquée avant la mise à jour de fin de tour.
+    let machineFleetAfterMaintenance: import("../types").MachineRecord[] | null = activeMachineFleet
+      ? [...activeMachineFleet]
+      : null;
+    if (
+      maConfig &&
+      machineFleetAfterMaintenance &&
+      decisions.maintenanceDecisions &&
+      decisions.maintenanceDecisions.length > 0 &&
+      state.status !== "defaillant"
+    ) {
+      for (const dec of decisions.maintenanceDecisions) {
+        const actionTypeDef = maConfig.types.find((t) => t.code === dec.actionCode);
+        if (!actionTypeDef) continue;
+        const levelDef = actionTypeDef.levels.find((l) => l.level === dec.level);
+        if (!levelDef) continue;
+        const machineIdx = machineFleetAfterMaintenance.findIndex((m: MachineRecord) => m.id === dec.machineId);
+        if (machineIdx < 0) continue;
+        const machine: MachineRecord = machineFleetAfterMaintenance[machineIdx]!;
+        // Appliquer les effets sur la machine.
+        let newWear: number = machine.wear;
+        let newIsOperational: boolean = machine.isOperational;
+        if (levelDef.wearReduction !== undefined) {
+          newWear = Math.max(0, newWear - levelDef.wearReduction);
+        }
+        if (levelDef.capacityRestoration !== undefined && !machine.isOperational) {
+          // Restaurer la machine en panne selon le taux de restauration.
+          if (rng.next() < levelDef.capacityRestoration) {
+            newIsOperational = true;
+            // Réduction d'usure liée à la restauration (déjà appliquée ci-dessus si wearReduction présent).
+            if (levelDef.wearReduction !== undefined) {
+              newWear = Math.max(0, machine.wear - levelDef.wearReduction);
+            }
+          }
+        }
+        // Mettre à jour la machine dans le parc.
+        machineFleetAfterMaintenance = machineFleetAfterMaintenance.map((m: MachineRecord, i: number) =>
+          i === machineIdx ? { ...m, wear: newWear, isOperational: newIsOperational } : m,
+        );
+        // Cumuler les coûts.
+        maintenanceLaborCost += levelDef.laborCost;
+        maintenanceDowntimeCost += levelDef.downtimeCost;
+        maintenanceLog.push({
+          round: roundIndex,
+          machineId: dec.machineId,
+          actionCode: dec.actionCode,
+          level: dec.level,
+          laborCost: levelDef.laborCost,
+          downtimeCost: levelDef.downtimeCost,
+        });
+      }
+    }
+    // Hygiène & Sécurité : traitement des actions H&S ce tour.
+    // 1. Accumuler les effets des actions récurrentes encore actives (ouverture).
+    // 2. Traiter les nouvelles décisions hsActions.
+    // 3. Décrémenter / retirer les actions récurrentes en cours.
+    const hsConfig = scenario.healthSafetyActions;
+    const openingHsActions = state.activeHsActions ?? [];
+    const hsEffects = {
+      attritionReduction: 0,
+      productivityBonus: 0,
+      defectReduction: 0,
+      maintenanceSaving: 0,
+      hrImageBonus: 0,
+    };
+    let hsLaborCost = 0;
+    let hsImmoCost = 0;
+    let hsActionsCount = 0;
+    for (const active of openingHsActions) {
+      const def = hsConfig?.actions.find((a) => a.code === active.actionCode);
+      if (!def) continue;
+      hsEffects.attritionReduction += def.effects.attritionReduction ?? 0;
+      hsEffects.productivityBonus += def.effects.productivityBonus ?? 0;
+      hsEffects.defectReduction += def.effects.defectReduction ?? 0;
+      hsEffects.maintenanceSaving += def.effects.maintenanceSaving ?? 0;
+      hsEffects.hrImageBonus += def.effects.hrImageBonus ?? 0;
+    }
+    const nextActiveHsActions: { actionCode: string; startedRound: number; remainingRounds: number }[] = [];
+    if (hsConfig && decisions.hsActions && decisions.hsActions.length > 0 && state.status !== "defaillant") {
+      const maxPerRound = hsConfig.maxActionsPerRound ?? 3;
+      for (const req of decisions.hsActions.slice(0, maxPerRound)) {
+        const def = hsConfig.actions.find((a) => a.code === req.actionCode);
+        if (!def) continue;
+        hsLaborCost += def.laborCost;
+        hsImmoCost += def.immobilizationCost ?? 0;
+        hsActionsCount++;
+        hsEffects.attritionReduction += def.effects.attritionReduction ?? 0;
+        hsEffects.productivityBonus += def.effects.productivityBonus ?? 0;
+        hsEffects.defectReduction += def.effects.defectReduction ?? 0;
+        hsEffects.maintenanceSaving += def.effects.maintenanceSaving ?? 0;
+        hsEffects.hrImageBonus += def.effects.hrImageBonus ?? 0;
+        if (def.isRecurring && (def.durationRounds ?? 0) > 0) {
+          nextActiveHsActions.push({
+            actionCode: def.code,
+            startedRound: roundIndex,
+            remainingRounds: def.durationRounds!,
+          });
+        }
+      }
+    }
+    for (const active of openingHsActions) {
+      const newRemaining = active.remainingRounds - 1;
+      if (newRemaining > 0) {
+        nextActiveHsActions.push({ ...active, remainingRounds: newRemaining });
+      }
+    }
     // Non-qualité interne (doc 02 §4.2) : rebuts fonction de la qualité
     // produite — payés (matières, MOD) mais invendables : seul le net entre
     // en stock, la perte est valorisée au coût variable. Le capital « process
     // propre » RSE en retranche une part (effet différé, capital d'ouverture).
     // Taux de rebut PAR PRODUIT : la qualité produite de chaque référence
     // (mono : le seul, sur la qualité produite historique).
-    // Grille R&D + actions qualité : réductions des rebuts additives avec RSE
+    // Grille R&D + actions qualité + H&S : réductions des rebuts additives avec RSE
     // (même plafonnement à 0,8 pour éviter les effets > 100 %).
     const combinedDefectReduction = Math.min(
       0.8,
-      rseDefectReduction + rdGridEffects.defectReduction + qualityActionsEffects.defectRateReduction,
+      rseDefectReduction + rdGridEffects.defectReduction + qualityActionsEffects.defectRateReduction + hsEffects.defectReduction,
     );
     const productDefectRate = productQuality.map((quality) =>
       scenario.qualityCosts
@@ -1044,7 +1238,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     let nextPendingMachineFleet: MachineRecord[] | null = null;
     if (scenario.equipment && typeMap) {
       // 1. Retirer les machines vendues ce tour (FIFO par type, plus anciennes d'abord).
-      let updatedFleet = activeMachineFleet ?? [];
+      // On part du parc APRÈS application des actions de maintenance (usure et pannes
+      // déjà ajustées), sinon l'update de fin de tour ignore leurs effets.
+      const fleetBasedOnMaintenance = machineFleetAfterMaintenance ?? activeMachineFleet ?? [];
+      let updatedFleet = fleetBasedOnMaintenance;
       for (const sold of equipSold) {
         updatedFleet = removeMachinesFromFleet(updatedFleet, sold.typeCode, sold.quantity);
       }
@@ -1164,6 +1361,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       qualityActionsStarted,
       qualityActionsCost,
       qualityActionsEffects,
+      maintenanceLog,
+      maintenanceLaborCost,
+      maintenanceDowntimeCost,
+      machineFleetAfterMaintenance,
+      hsEffects,
+      hsLaborCost,
+      hsImmoCost,
+      hsActionsCount,
+      nextActiveHsActions,
     };
   });
 
@@ -1713,6 +1919,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ? 0
       : Math.min(w.decisions.maintenanceBudget, w.qualityActionsEffects.maintenanceSaving);
     const qaExceptionalIncome = qaVariableSaving + qaMaintenanceSaving;
+    // H&S : économies maintenance (maintenanceSaving) → produit exceptionnel, comme les actions qualité.
+    const hsMaintSaving = gelee
+      ? 0
+      : Math.min(w.decisions.maintenanceBudget, w.hsEffects.maintenanceSaving);
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -1733,9 +1943,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...((w.rdTotal + w.rdGridInvestmentCost) > 0 ? { rdCost: w.rdTotal + w.rdGridInvestmentCost } : {}),
       // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
       // Actions qualité : coût ponctuel en charge exceptionnelle ; économies en produit exceptionnel.
-      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge + w.qualityActionsCost,
-      exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome + qaExceptionalIncome,
-      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
+      // Maintenance par machine : laborCost en charges fixes (ligne maintenance) ;
+      // downtimeCost en charge exceptionnelle (immobilisation machine).
+      // H&S : laborCost en charges fixes ; immobilizationCost en charge exceptionnelle.
+      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge + w.qualityActionsCost + w.maintenanceDowntimeCost + w.hsImmoCost,
+      exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome + qaExceptionalIncome + hsMaintSaving,
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
@@ -2299,6 +2512,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
+      // Actions de maintenance par machine : émis dès qu'une action a été décidée ce tour.
+      ...(w.maintenanceLog.length > 0
+        ? {
+            maintenanceCost: {
+              laborCost: w.maintenanceLaborCost,
+              downtimeCost: w.maintenanceDowntimeCost,
+              actionsCount: w.maintenanceLog.length,
+            },
+          }
+        : {}),
       // Grille R&D : émis dès qu'une action est en cours ou terminée.
       ...(w.rdGridActionsNext.length > 0
         ? {
@@ -2322,6 +2545,22 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               defectReduction: w.rseDefectReduction,
               financingBonus: rseFinancingBonus,
               attritionRelief: w.rseAttritionRelief,
+            },
+          }
+        : {}),
+      // H&S : émis dès qu'une action est engagée ce tour OU qu'une récurrente est active.
+      ...(w.hsActionsCount > 0 || w.nextActiveHsActions.length > 0 || (state.activeHsActions ?? []).length > 0
+        ? {
+            hsCost: {
+              laborCost: w.hsLaborCost,
+              immobilizationCost: w.hsImmoCost,
+              actionsCount: w.hsActionsCount,
+              effects: {
+                attritionReduction: w.hsEffects.attritionReduction,
+                productivityBonus: w.hsEffects.productivityBonus,
+                defectReduction: w.hsEffects.defectReduction,
+                maintenanceSaving: w.hsEffects.maintenanceSaving,
+              },
             },
           }
         : {}),
@@ -2484,6 +2723,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // est démarrée (puis maintenus).
       ...(Object.keys(w.qualityActionsCompleted).length > 0 || w.state.qualityActionsCompleted !== undefined
         ? { qualityActionsCompleted: w.qualityActionsCompleted }
+        : {}),
+      // Historique de maintenance par machine : cumulé d'un tour à l'autre.
+      ...(w.maintenanceLog.length > 0 || w.state.maintenanceLog !== undefined
+        ? {
+            maintenanceLog: [
+              ...(w.state.maintenanceLog ?? []),
+              ...w.maintenanceLog,
+            ],
+          }
+        : {}),
+      // H&S : actions récurrentes actives pour le tour suivant.
+      ...(w.nextActiveHsActions.length > 0 || w.state.activeHsActions !== undefined
+        ? { activeHsActions: w.nextActiveHsActions.length > 0 ? w.nextActiveHsActions : undefined }
         : {}),
       // Gamme : chaque référence suit sa propre qualité perçue ; celle de
       // l'entreprise en est la moyenne pondérée par les unités produites.

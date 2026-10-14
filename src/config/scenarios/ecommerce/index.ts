@@ -700,6 +700,90 @@ const rawEcommerce = {
   // une raison sans rapport, et la situation du tour parlait de transport
   // quand la séance parlait de commission.
   scriptedEvents: [{ round: 6, eventCode: "ecom_frais_port" }],
+  // Actions de maintenance par machine (e-commerce — équipements logistiques : chariots, convoyeurs).
+  // Coûts plus élevés en curatif : une panne en entrepôt bloque les expéditions.
+  maintenanceActions: {
+    types: [
+      {
+        code: "preventif",
+        label: "Maintenance préventive",
+        levels: [
+          {
+            level: 1,
+            label: "Inspection logistique",
+            laborCost: 400,
+            downtimeCost: 300,
+            timeHoursN1: 4,
+            timeHoursN2: 3,
+            timeHoursN3: 2,
+            wearReduction: 0.04,
+            breakdownRiskReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Révision des équipements",
+            laborCost: 1200,
+            downtimeCost: 900,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            wearReduction: 0.12,
+            breakdownRiskReduction: 0.2,
+          },
+          {
+            level: 3,
+            label: "Remise à niveau complète",
+            laborCost: 2800,
+            downtimeCost: 2200,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            wearReduction: 0.3,
+            breakdownRiskReduction: 0.45,
+          },
+        ],
+      },
+      {
+        code: "curatif",
+        label: "Maintenance curative",
+        levels: [
+          {
+            level: 1,
+            label: "Dépannage d'urgence",
+            laborCost: 900,
+            downtimeCost: 1800,
+            timeHoursN1: 6,
+            timeHoursN2: 5,
+            timeHoursN3: 3,
+            capacityRestoration: 0.5,
+            wearReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Réparation standard",
+            laborCost: 2200,
+            downtimeCost: 3500,
+            timeHoursN1: 12,
+            timeHoursN2: 10,
+            timeHoursN3: 7,
+            capacityRestoration: 0.8,
+            wearReduction: 0.2,
+          },
+          {
+            level: 3,
+            label: "Remplacement complet",
+            laborCost: 4500,
+            downtimeCost: 7000,
+            timeHoursN1: 20,
+            timeHoursN2: 16,
+            timeHoursN3: 12,
+            capacityRestoration: 1.0,
+            wearReduction: 0.55,
+          },
+        ],
+      },
+    ],
+  },
   scoring: {
     weights: {
       economic: 0.3,

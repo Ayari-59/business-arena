@@ -645,6 +645,90 @@ const rawBistrot = {
   // Le beurre, la viande et l'énergie flambent au tour 3 : le ratio matières
   // dérape en plein creux d'août, quand la salle est déjà vide.
   scriptedEvents: [{ round: 3, eventCode: "bistrot_matieres_premieres" }],
+  // Actions de maintenance par machine (bistrot — équipements de cuisine et de salle).
+  // Pannes graves en service (four, lave-vaisselle) = impact fort sur la capacité.
+  maintenanceActions: {
+    types: [
+      {
+        code: "preventif",
+        label: "Entretien préventif",
+        levels: [
+          {
+            level: 1,
+            label: "Nettoyage et contrôle",
+            laborCost: 300,
+            downtimeCost: 150,
+            timeHoursN1: 3,
+            timeHoursN2: 3,
+            timeHoursN3: 2,
+            wearReduction: 0.04,
+            breakdownRiskReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Révision des appareils",
+            laborCost: 900,
+            downtimeCost: 500,
+            timeHoursN1: 6,
+            timeHoursN2: 5,
+            timeHoursN3: 3,
+            wearReduction: 0.12,
+            breakdownRiskReduction: 0.22,
+          },
+          {
+            level: 3,
+            label: "Mise à niveau complète",
+            laborCost: 2200,
+            downtimeCost: 1400,
+            timeHoursN1: 14,
+            timeHoursN2: 10,
+            timeHoursN3: 7,
+            wearReduction: 0.3,
+            breakdownRiskReduction: 0.45,
+          },
+        ],
+      },
+      {
+        code: "curatif",
+        label: "Réparation urgente",
+        levels: [
+          {
+            level: 1,
+            label: "Dépannage rapide",
+            laborCost: 700,
+            downtimeCost: 1000,
+            timeHoursN1: 5,
+            timeHoursN2: 4,
+            timeHoursN3: 3,
+            capacityRestoration: 0.5,
+            wearReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Réparation complète",
+            laborCost: 1800,
+            downtimeCost: 2500,
+            timeHoursN1: 10,
+            timeHoursN2: 8,
+            timeHoursN3: 6,
+            capacityRestoration: 0.8,
+            wearReduction: 0.22,
+          },
+          {
+            level: 3,
+            label: "Remplacement d'équipement",
+            laborCost: 4000,
+            downtimeCost: 5000,
+            timeHoursN1: 18,
+            timeHoursN2: 14,
+            timeHoursN3: 10,
+            capacityRestoration: 1.0,
+            wearReduction: 0.55,
+          },
+        ],
+      },
+    ],
+  },
   scoring: {
     weights: {
       economic: 0.3,
