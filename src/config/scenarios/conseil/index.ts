@@ -558,6 +558,74 @@ const rawConseil = {
   // Une réglementation nouvelle au tour 4 ouvre un marché : encore faut-il
   // avoir les consultants disponibles pour le prendre.
   scriptedEvents: [{ round: 4, eventCode: "conseil_reglementation" }],
+  healthSafetyActions: {
+    actions: [
+      {
+        code: "rps_prevention",
+        label: "Programme de prévention des RPS",
+        description: "Mise en place d'un programme de prévention des Risques Psycho-Sociaux : enquête interne, groupes de travail, plan d'action.",
+        laborCost: 2500,
+        timeHoursN1: 8,
+        timeHoursN2: 8,
+        timeHoursN3: 4,
+        effects: {
+          attritionReduction: 0.08,
+          hrImageBonus: 0.08,
+          productivityBonus: 0.03,
+        },
+        isRecurring: true,
+        durationRounds: 2,
+      },
+      {
+        code: "teletravail_ergonomie",
+        label: "Kit ergonomique télétravail",
+        description: "Fourniture d'un kit ergonomique (écran, siège, repose-poignets) pour les consultants en télétravail et sensibilisation aux bonnes pratiques.",
+        laborCost: 2000,
+        immobilizationCost: 1500,
+        timeHoursN1: 4,
+        timeHoursN2: 4,
+        timeHoursN3: 2,
+        effects: {
+          attritionReduction: 0.06,
+          productivityBonus: 0.04,
+          hrImageBonus: 0.06,
+        },
+        isRecurring: true,
+        durationRounds: 3,
+      },
+      {
+        code: "pse1_formation",
+        label: "Formation premiers secours (PSE1)",
+        description: "Formation PSE1 (Premiers Secours en Équipe niveau 1) pour les référents sécurité du cabinet.",
+        laborCost: 1500,
+        timeHoursN1: 16,
+        timeHoursN2: 12,
+        timeHoursN3: 8,
+        effects: {
+          accidentRateReduction: 0.12,
+          hrImageBonus: 0.05,
+          attritionReduction: 0.03,
+        },
+      },
+      {
+        code: "audit_bien_etre",
+        label: "Audit bien-être et qualité de vie au travail",
+        description: "Audit QVT par un prestataire externe : baromètre social, recommandations et plan d'amélioration.",
+        laborCost: 3000,
+        timeHoursN1: 8,
+        timeHoursN2: 6,
+        timeHoursN3: 4,
+        effects: {
+          attritionReduction: 0.1,
+          hrImageBonus: 0.1,
+          productivityBonus: 0.04,
+        },
+        isRecurring: true,
+        durationRounds: 2,
+      },
+    ],
+    maxActionsPerRound: 3,
+  },
   scoring: {
     weights: {
       economic: 0.3,
