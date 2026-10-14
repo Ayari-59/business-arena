@@ -619,6 +619,24 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     trainingCostTotal: number;
     /** Programmes de formation actifs à la clôture du tour. */
     nextActiveTrainingPrograms: { programId: string; enrolledCount: number; remainingRounds: number }[];
+    /** Multiplicateur de capacité dû à l'expansion de capacité, calculé depuis l'état d'ouverture (vague 5). */
+    effectiveCapacityMultiplier: number;
+    /** Effets cumulés des innovations lancées, calculés depuis l'état d'ouverture (vague 5). */
+    innovationEffects: import("../types").InnovationEffects;
+    /** Effets cumulés des actions RSE actives, calculés depuis l'état d'ouverture (vague 5). */
+    rseProgramEffects: import("../types").RseProgramActionEffects;
+    /** Économie matières via négociation fournisseurs (calculée post-marché, vague 5). */
+    supplierNegotiationSaving: number;
+    /** Coût total expansion capacité ce tour (calculé post-marché, vague 5). */
+    capacityCostTotal: number;
+    /** Revenus internationaux ce tour (calculé post-marché, vague 5). */
+    internationalRevenue: number;
+    /** Coûts internationaux ce tour (calculé post-marché, vague 5). */
+    internationalCost: number;
+    /** Coût total des innovations en développement ce tour (calculé post-marché, vague 5). */
+    innovationCost: number;
+    /** Coût total du programme RSE ce tour (calculé post-marché, vague 5). */
+    rseProgramCost: number;
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -864,7 +882,38 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             ))
       : state.machineCapacity + (state.pendingCapacity ?? 0);
     // Grille R&D : bonus de capacité des actions terminées (ex. : lean process).
-    const effectiveMachineCapacityWithRdGrid = effectiveMachineCapacity * (1 + rdGridEffects.capacityBonus);
+    // Expansion capacité (vague 5) : multiplicateur issu des options actives à l'ouverture.
+    const effectiveCapacityMultiplier = (scenario.capacityExpansion
+      ? (state.activeCapacityOptions ?? []).reduce((acc, ao) => {
+          const def = scenario.capacityExpansion!.options.find((o) => o.id === ao.id);
+          return def ? acc * (1 + def.capacityBonus) : acc;
+        }, 1)
+      : 1);
+    const effectiveMachineCapacityWithRdGrid = effectiveMachineCapacity * (1 + rdGridEffects.capacityBonus) * effectiveCapacityMultiplier;
+    // Innovation produit (vague 5) : effets cumulés des innovations lancées à l'ouverture.
+    const innovationEffects: import("../types").InnovationEffects = { priceBonus: 0, demandBonus: 0, marginBonus: 0, cannibalizationRate: 0 };
+    if (scenario.productInnovation) {
+      for (const innId of state.launchedInnovations ?? []) {
+        const def = scenario.productInnovation.innovations.find((inn) => inn.id === innId);
+        if (!def) continue;
+        innovationEffects.priceBonus += def.effects.priceBonus;
+        innovationEffects.demandBonus += def.effects.demandBonus;
+        innovationEffects.marginBonus += def.effects.marginBonus;
+        innovationEffects.cannibalizationRate += def.effects.cannibalizationRate;
+      }
+    }
+    // Programme RSE structuré (vague 5) : effets cumulés des actions actives à l'ouverture.
+    const rseProgramEffects: import("../types").RseProgramActionEffects = { carbonReduction: 0, imageBonus: 0, employeeSatisfaction: 0, energySaving: 0 };
+    if (scenario.rseProgram) {
+      for (const ra of state.activeRseActions ?? []) {
+        const def = scenario.rseProgram.actions.find((a) => a.id === ra.id);
+        if (!def || ra.roundsActive < def.implementationRounds) continue;
+        rseProgramEffects.carbonReduction = Math.min(1, rseProgramEffects.carbonReduction + def.effects.carbonReduction);
+        rseProgramEffects.imageBonus += def.effects.imageBonus;
+        rseProgramEffects.employeeSatisfaction += def.effects.employeeSatisfaction;
+        rseProgramEffects.energySaving += def.effects.energySaving;
+      }
+    }
     // Mono-produit : la rupture ampute la disponibilité de l'usine (chemin
     // historique). Gamme : elle ampute le plan des SEULES références que le
     // fournisseur défaillant fournit — les autres ne sont pas touchées.
@@ -972,14 +1021,26 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const supplierPriceIdx = priceIndexBySupplier.get(supplier?.code ?? "") ?? 1;
     // Grille R&D : réduction du coût matières issue des actions terminées
     const rdGridMaterialFactor = 1 - rdGridEffects.materialCostReduction;
+    // supplierNegotiationFactor est calculé plus loin (avant allocateProduction) ; ici il doit
+    // être disponible — on forward-reference la variable déclarée après ce bloc.
+    // Pour éviter la forward-reference, on l'initialise à 1 et on l'actualise.
+    // En fait il est calculé dans le bloc vague-5 APRÈS ce bloc ; on utilise la valeur de state
+    // directement ici pour ne pas reordonnancer tous les blocs.
+    const _snFactor = (scenario.supplierNegotiation
+      ? (state.activeSupplierContracts ?? []).reduce((acc, ac) => {
+          const def = scenario.supplierNegotiation!.contracts.find((c) => c.id === ac.id);
+          return def ? acc * (1 - def.discountRate) : acc;
+        }, 1)
+      : 1);
     const materialMultiplier =
-      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx * rdGridMaterialFactor;
+      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx * rdGridMaterialFactor * _snFactor;
     const materialMultipliers = multi
       ? productSuppliers.map((s) =>
           mods.materialCostMultiplier *
           (s?.costMultiplier ?? 1) *
           (priceIndexBySupplier.get(s?.code ?? "") ?? 1) *
-          rdGridMaterialFactor,
+          rdGridMaterialFactor *
+          _snFactor,
         )
       : [materialMultiplier];
     // Coût variable unitaire de chaque produit (mono : le seul, expression
@@ -1549,6 +1610,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       trainingEffectsAgg,
       trainingCostTotal,
       nextActiveTrainingPrograms,
+      // Vague 5 : valeurs d'ouverture (effets), autres initialisées à 0 et mutées post-marché.
+      effectiveCapacityMultiplier,
+      innovationEffects,
+      rseProgramEffects,
+      supplierNegotiationSaving: 0,
+      capacityCostTotal: 0,
+      internationalRevenue: 0,
+      internationalCost: 0,
+      innovationCost: 0,
+      rseProgramCost: 0,
     };
   });
 
@@ -1607,7 +1678,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             ? w.rseImageFactor * w.rseCardFactor * brandFactor(w.brandOpening, fit)
             : w.rseImageFactor * w.rseCardFactor) *
             (1 + w.rdGridEffects.demandBonus) *
-            (1 + w.qualityActionsEffects.qualityImageBonus),
+            (1 + w.qualityActionsEffects.qualityImageBonus) *
+            (1 + w.innovationEffects.demandBonus) *
+            (1 + w.rseProgramEffects.imageBonus),
         });
       });
       const shares = allocateShares(
@@ -2163,6 +2236,192 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       w.state.activeCommercialActions = nowActive.length > 0 ? nowActive : undefined;
     }
 
+    // ── Vague 5 ─────────────────────────────────────────────────────────────
+
+    // O. Négociation fournisseurs : économie sur les matières premières.
+    if (scenario.supplierNegotiation && !gelee) {
+      const snCfg = scenario.supplierNegotiation;
+      const nowContracts: { id: string; remainingRounds: number }[] = [];
+      // Avancer les contrats déjà actifs
+      for (const ac of w.state.activeSupplierContracts ?? []) {
+        const def = snCfg.contracts.find((c) => c.id === ac.id);
+        if (!def) continue;
+        const remaining = ac.remainingRounds - 1;
+        if (remaining > 0) nowContracts.push({ id: ac.id, remainingRounds: remaining });
+      }
+      // Nouveaux contrats activés ce tour
+      for (const id of w.decisions.activeContractIds ?? []) {
+        if (nowContracts.some((c) => c.id === id)) continue;
+        if (nowContracts.length >= snCfg.maxActiveContracts) continue;
+        const def = snCfg.contracts.find((c) => c.id === id);
+        if (!def) continue;
+        nowContracts.push({ id, remainingRounds: def.contractDurationRounds });
+      }
+      w.state.activeSupplierContracts = nowContracts.length > 0 ? nowContracts : undefined;
+      // Économie = rawMaterialCost * sum(discountRate) pour les contrats actifs à l'ouverture
+      const snFactorOpening = (w.state.activeSupplierContracts ?? []).reduce((acc, ac) => {
+        const def = snCfg.contracts.find((c) => c.id === ac.id);
+        return def ? acc + def.discountRate : acc;
+      }, 0);
+      const rawMaterialCostBeforeDiscount = w.producedPerProduct.reduce(
+        (sum, qty, k) => sum + qty * gamme[k]!.materialCostPerUnit,
+        0,
+      );
+      w.supplierNegotiationSaving = rawMaterialCostBeforeDiscount * snFactorOpening;
+    }
+
+    // P. Expansion de capacité : coût fixe du tour.
+    if (scenario.capacityExpansion && !gelee) {
+      const ceCfg = scenario.capacityExpansion;
+      const nowOptions: { id: string; roundsUsed: number }[] = [];
+      // Avancer les options déjà actives
+      for (const ao of w.state.activeCapacityOptions ?? []) {
+        const def = ceCfg.options.find((o) => o.id === ao.id);
+        if (!def) continue;
+        const nextRoundsUsed = ao.roundsUsed + 1;
+        if (nextRoundsUsed <= def.maxRounds) nowOptions.push({ id: ao.id, roundsUsed: nextRoundsUsed });
+      }
+      // Nouvelles options activées ce tour
+      for (const id of w.decisions.activeCapacityOptionIds ?? []) {
+        if (nowOptions.some((o) => o.id === id)) continue;
+        if (nowOptions.length >= ceCfg.maxActiveOptions) continue;
+        const def = ceCfg.options.find((o) => o.id === id);
+        if (!def) continue;
+        // setupCost est en charge exceptionnelle (ajoutée plus bas)
+        nowOptions.push({ id, roundsUsed: 1 });
+      }
+      // Coût total = costPerRound des options actives (ouverture) + setupCost des nouvelles
+      let capCost = 0;
+      for (const ao of w.state.activeCapacityOptions ?? []) {
+        const def = ceCfg.options.find((o) => o.id === ao.id);
+        if (def) capCost += def.costPerRound;
+      }
+      // setupCost pour les nouvelles options décidées ce tour
+      for (const id of w.decisions.activeCapacityOptionIds ?? []) {
+        if ((w.state.activeCapacityOptions ?? []).some((o) => o.id === id)) continue;
+        const def = ceCfg.options.find((o) => o.id === id);
+        if (def) capCost += def.setupCost;
+      }
+      w.capacityCostTotal = capCost;
+      w.state.activeCapacityOptions = nowOptions.length > 0 ? nowOptions : undefined;
+    }
+
+    // Q. Marchés internationaux : revenus et coûts.
+    if (scenario.internationalMarkets && !gelee) {
+      const imCfg = scenario.internationalMarkets;
+      const nowMarkets: { id: string; enteredAtRound: number }[] = [];
+      // Conserver les marchés déjà actifs
+      for (const am of w.state.activeInternationalMarkets ?? []) {
+        const def = imCfg.markets.find((m) => m.id === am.id);
+        if (def) nowMarkets.push(am);
+      }
+      // Entrer dans de nouveaux marchés ce tour
+      for (const id of w.decisions.enteredMarketIds ?? []) {
+        if (nowMarkets.some((m) => m.id === id)) continue;
+        if (nowMarkets.length >= imCfg.maxActiveMarkets) continue;
+        const def = imCfg.markets.find((m) => m.id === id);
+        if (!def) continue;
+        nowMarkets.push({ id, enteredAtRound: roundIndex });
+      }
+      // Calculer revenus et coûts pour les marchés actifs (depuis l'ouverture)
+      let intlRev = 0;
+      let intlCost = 0;
+      for (const am of w.state.activeInternationalMarkets ?? []) {
+        const def = imCfg.markets.find((m) => m.id === am.id);
+        if (!def) continue;
+        // Volatilité du taux de change (PRNG dédié 0x4958 = "IX")
+        // Volatilité FX : RNG dédié par tour (0x4958 = "IX"), combinaison avec l'id de l'entreprise.
+        const fxSeed = (input.seed ^ 0x4958 ^ (w.state.id.charCodeAt(0) || 0)) >>> 0;
+        const fxRng = createRng(deriveRoundSeed(fxSeed, roundIndex));
+        const fxShock = (fxRng.next() - 0.5) * 2 * def.exchangeRateVolatility;
+        const fxFactor = 1 + fxShock;
+        const baseRev = revenue * def.demandMultiplier * 0.1; // 10% du CA de base
+        intlRev += baseRev * fxFactor;
+        intlCost += baseRev * def.tariffRate + def.localAdaptationCost;
+      }
+      // Coût d'entrée pour les nouveaux marchés
+      for (const id of w.decisions.enteredMarketIds ?? []) {
+        if ((w.state.activeInternationalMarkets ?? []).some((m) => m.id === id)) continue;
+        const def = imCfg.markets.find((m) => m.id === id);
+        if (def) intlCost += def.entryInvestment;
+      }
+      w.internationalRevenue = intlRev;
+      w.internationalCost = intlCost;
+      w.state.activeInternationalMarkets = nowMarkets.length > 0 ? nowMarkets : undefined;
+    }
+
+    // R. Innovation produit : coût de développement et lancement.
+    if (scenario.productInnovation && !gelee) {
+      const piCfg = scenario.productInnovation;
+      const nowInDev: { id: string; roundsCompleted: number }[] = [];
+      const nowLaunched: string[] = [...(w.state.launchedInnovations ?? [])];
+      // Avancer les innovations en développement
+      for (const inDev of w.state.innovationsInDev ?? []) {
+        const def = piCfg.innovations.find((inn) => inn.id === inDev.id);
+        if (!def) continue;
+        w.innovationCost += def.devCostPerRound;
+        const completed = inDev.roundsCompleted + 1;
+        if (completed >= def.developmentRounds) {
+          // L'innovation est terminée : lancement automatique
+          if (!nowLaunched.includes(inDev.id)) {
+            nowLaunched.push(inDev.id);
+            w.innovationCost += def.launchCost;
+          }
+        } else {
+          nowInDev.push({ id: inDev.id, roundsCompleted: completed });
+        }
+      }
+      // Démarrer de nouvelles innovations ce tour
+      for (const id of w.decisions.startedInnovationIds ?? []) {
+        if (nowInDev.some((inn) => inn.id === id)) continue;
+        if (nowLaunched.includes(id)) continue;
+        if (nowInDev.length >= piCfg.maxSimultaneousDev) continue;
+        const def = piCfg.innovations.find((inn) => inn.id === id);
+        if (!def) continue;
+        w.innovationCost += def.devCostPerRound;
+        if (def.developmentRounds <= 1) {
+          nowLaunched.push(id);
+          w.innovationCost += def.launchCost;
+        } else {
+          nowInDev.push({ id, roundsCompleted: 1 });
+        }
+      }
+      w.state.innovationsInDev = nowInDev.length > 0 ? nowInDev : undefined;
+      w.state.launchedInnovations = nowLaunched.length > 0 ? nowLaunched : undefined;
+    }
+
+    // S. Programme RSE structuré : coût, empreinte carbone.
+    if (scenario.rseProgram && !gelee) {
+      const rpCfg = scenario.rseProgram;
+      const nowRseActions: { id: string; roundsActive: number }[] = [];
+      // Avancer les actions déjà actives
+      for (const ra of w.state.activeRseActions ?? []) {
+        const def = rpCfg.actions.find((a) => a.id === ra.id);
+        if (!def) continue;
+        w.rseProgramCost += def.costPerRound;
+        nowRseActions.push({ id: ra.id, roundsActive: ra.roundsActive + 1 });
+      }
+      // Nouvelles actions activées ce tour
+      for (const id of w.decisions.activeRseActionIds ?? []) {
+        if (nowRseActions.some((a) => a.id === id)) continue;
+        const def = rpCfg.actions.find((a) => a.id === id);
+        if (!def) continue;
+        w.rseProgramCost += def.costPerRound;
+        nowRseActions.push({ id, roundsActive: 1 });
+      }
+      w.state.activeRseActions = nowRseActions.length > 0 ? nowRseActions : undefined;
+      // Empreinte carbone : réduite par les actions actives complètement déployées
+      const baseCarbon = w.state.carbonFootprint ?? (rpCfg.carbonBudget ?? 1000);
+      const totalCarbonReduction = nowRseActions.reduce((acc, ra) => {
+        const def = rpCfg.actions.find((a) => a.id === ra.id);
+        if (!def || ra.roundsActive < def.implementationRounds) return acc;
+        return acc + baseCarbon * def.effects.carbonReduction;
+      }, 0);
+      w.state.carbonFootprint = Math.max(0, baseCarbon - totalCarbonReduction);
+    }
+
+    // ── Fin vague 5 ──────────────────────────────────────────────────────────
+
     // Catégories d'emprunt (machines, installations) : chaque catégorie a sa
     // propre durée. Backward-compatible : absent = 0, comportement inchangé.
     const loanCats = scenario.finance.loanCategories;
@@ -2203,7 +2462,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
-      revenue,
+      // Vague 5 : les revenus internationaux s'ajoutent au CA.
+      revenue: revenue + (gelee ? 0 : w.internationalRevenue),
       receivableRatio,
       purchases,
       payableRatio,
@@ -2223,7 +2483,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // Maintenance par machine : laborCost en charges fixes (ligne maintenance) ;
       // downtimeCost en charge exceptionnelle (immobilisation machine).
       // H&S : laborCost en charges fixes ; immobilizationCost en charge exceptionnelle.
-      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge + w.qualityActionsCost + w.maintenanceDowntimeCost + w.hsImmoCost,
+      // Vague 5 : capacityCostTotal et innovationCost en charges exceptionnelles ; rseProgramEnergySaving en produit exceptionnel.
+      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge + w.qualityActionsCost + w.maintenanceDowntimeCost + w.hsImmoCost + w.internationalCost,
       exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome + qaExceptionalIncome + hsMaintSaving,
       // LA SUBVENTION DE SAUVETAGE, ELLE, TRAVERSE LE GEL. Une entreprise
       // défaillante ne dépense plus rien — mais c'est justement à elle que
@@ -2231,7 +2492,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
       // capital, l'argent entre quel que soit l'état de l'entreprise.
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
-      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost + w.trainingCostTotal,
+      // Vague 5 : capacityCostTotal, innovationCost et rseProgramCost entrent dans les charges fixes.
+      // L'économie RSE sur l'énergie vient en déduction.
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost + w.trainingCostTotal + w.capacityCostTotal + w.innovationCost + Math.max(0, w.rseProgramCost - w.rseProgramEffects.energySaving),
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
@@ -2933,6 +3196,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(Object.values(commercialEffectsAgg).some((v) => v !== 0)
         ? { commercialEffects: commercialEffectsAgg }
         : {}),
+      // Vague 5 : résultats des 5 modules optionnels.
+      ...(w.supplierNegotiationSaving > 0 ? { supplierNegotiationSaving: w.supplierNegotiationSaving } : {}),
+      ...(w.capacityCostTotal > 0 ? { capacityCost: w.capacityCostTotal } : {}),
+      ...(w.internationalRevenue > 0 ? { internationalRevenue: w.internationalRevenue } : {}),
+      ...(w.internationalCost > 0 ? { internationalCost: w.internationalCost } : {}),
+      ...(w.innovationCost > 0 ? { innovationCost: w.innovationCost } : {}),
+      ...(Object.values(w.innovationEffects).some((v) => v !== 0) ? { innovationEffects: w.innovationEffects } : {}),
+      ...(w.rseProgramCost > 0 ? { rseProgramCost: w.rseProgramCost } : {}),
+      ...(Object.values(w.rseProgramEffects).some((v) => v !== 0) ? { rseProgramEffects: w.rseProgramEffects } : {}),
       ...(w.insured
         ? {
             insurance: {
@@ -3179,6 +3451,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       lastMarketShare,
       // Abonnement : le portefeuille de clôture, émis SEULEMENT avec le modèle.
       ...(scenario.subscription ? { members: subClosing } : {}),
+      // Vague 5 : état de clôture des 5 modules optionnels (via w.state mutation).
+      // activeSupplierContracts, activeCapacityOptions, activeInternationalMarkets,
+      // innovationsInDev, launchedInnovations, activeRseActions, carbonFootprint
+      // sont tous mis à jour directement sur w.state dans les blocs vague-5 ci-dessus
+      // et portés ici via le spread ...w.state au début du push.
     });
   });
 

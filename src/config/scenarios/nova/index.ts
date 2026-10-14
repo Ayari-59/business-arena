@@ -1099,6 +1099,56 @@ const rawNova = {
       },
     ],
   },
+  supplierNegotiation: {
+    maxActiveContracts: 2,
+    contracts: [
+      { id: "contrat-matiere", label: "Contrat volume matières premières", supplierType: "matiere", volumeThreshold: 3000, discountRate: 0.07, contractDurationRounds: 4, supplyRiskReduction: 0.2 },
+      { id: "contrat-energie", label: "Contrat long terme énergie", supplierType: "energie", volumeThreshold: 0, discountRate: 0.05, contractDurationRounds: 6, supplyRiskReduction: 0.1 },
+    ],
+  },
+  capacityExpansion: {
+    maxActiveOptions: 2,
+    options: [
+      { id: "equipeNuit", label: "Équipe de nuit", type: "equipeNuit", capacityBonus: 0.35, costPerRound: 12000, setupCost: 5000, minProductionLevel: 0, maxRounds: 99 },
+      { id: "automatisation", label: "Automatisation ligne de production", type: "automatisation", capacityBonus: 0.50, costPerRound: 8000, setupCost: 30000, minProductionLevel: 0, maxRounds: 99 },
+    ],
+  },
+  internationalMarkets: {
+    maxActiveMarkets: 2,
+    markets: [
+      { id: "europe", label: "Marchés européens (UE)", region: "europe", demandMultiplier: 1.5, baseEntryRound: 2, entryInvestment: 20000, exchangeRateVolatility: 0.03, tariffRate: 0.02, localAdaptationCost: 5000 },
+      { id: "asie", label: "Marchés asiatiques", region: "asie", demandMultiplier: 2.5, baseEntryRound: 4, entryInvestment: 45000, exchangeRateVolatility: 0.12, tariffRate: 0.08, localAdaptationCost: 15000 },
+    ],
+  },
+  productInnovation: {
+    maxSimultaneousDev: 1,
+    innovations: [
+      { id: "gamme-premium", label: "Gamme haute fidélité premium", type: "gamme", developmentRounds: 3, devCostPerRound: 10000, launchCost: 15000, effects: { priceBonus: 0.12, demandBonus: 0.15, marginBonus: 0.05, cannibalizationRate: 0.08 } },
+      { id: "digital-connected", label: "Enceinte connectée / app mobile", type: "digital", developmentRounds: 4, devCostPerRound: 12000, launchCost: 20000, effects: { priceBonus: 0.18, demandBonus: 0.20, marginBonus: 0.03, cannibalizationRate: 0.10 } },
+    ],
+  },
+  rseProgram: {
+    carbonBudget: 1200,
+    actions: [
+      { id: "rse-energie", label: "Efficacité énergétique atelier", category: "energie", costPerRound: 3000, implementationRounds: 2, effects: { carbonReduction: 0.12, imageBonus: 0.04, employeeSatisfaction: 0.02, energySaving: 2500 } },
+      { id: "rse-dechets", label: "Plan zéro déchet industriel", category: "dechets", costPerRound: 2000, implementationRounds: 3, effects: { carbonReduction: 0.08, imageBonus: 0.05, employeeSatisfaction: 0.01, energySaving: 0 } },
+      { id: "rse-social", label: "Politique RH responsable", category: "social", costPerRound: 4000, implementationRounds: 1, effects: { carbonReduction: 0.02, imageBonus: 0.06, employeeSatisfaction: 0.06, energySaving: 0 } },
+    ],
+  },
+  rdActions: {
+    maxSimultaneousProjects: 2,
+    actions: [
+      { id: "rd-materiaux", label: "R&D matériaux biosourcés", theme: "matiere", level: 1, costPerRound: 8000, durationRounds: 3, effects: { costReduction: 0.05, qualityBonus: 0.10, imageBonus: 0.05 } },
+      { id: "rd-process", label: "Optimisation du process de fabrication", theme: "process", level: 2, costPerRound: 12000, durationRounds: 4, effects: { costReduction: 0.10, qualityBonus: 0.05, imageBonus: 0 } },
+      { id: "rd-emballage", label: "Emballage recyclable", theme: "emballage", level: 1, costPerRound: 5000, durationRounds: 2, effects: { costReduction: 0.02, qualityBonus: 0.03, imageBonus: 0.10 } },
+    ],
+  },
+  financingOptions: {
+    options: [
+      { id: "credit-court", label: "Crédit court terme", type: "creditLine", maxAmount: 150000, interestRatePerRound: 0.015, durationRounds: 4, availableFromRound: 1 },
+      { id: "emprunt-equipement", label: "Emprunt équipement", type: "termLoan", maxAmount: 500000, interestRatePerRound: 0.01, durationRounds: 12, availableFromRound: 2 },
+    ],
+  },
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
   // Scoring IPG (doc 08 §1) : pondérations imposées, bornes calibrées sur les
   // trajectoires de référence (snapshot doré) — min → 0 point, cible → 100.

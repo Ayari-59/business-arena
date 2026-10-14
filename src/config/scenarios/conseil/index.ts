@@ -701,6 +701,40 @@ const rawConseil = {
       utilizationTarget: 0.78,
     },
   },
+  capacityExpansion: {
+    maxActiveOptions: 1,
+    options: [
+      { id: "sousTraitance", label: "Partenariat sous-traitance consultants externes", type: "sousTraitance", capacityBonus: 0.35, costPerRound: 18000, setupCost: 10000, minProductionLevel: 0, maxRounds: 99 },
+    ],
+  },
+  internationalMarkets: {
+    maxActiveMarkets: 2,
+    markets: [
+      { id: "europe", label: "Projets conseil en Europe", region: "europe", demandMultiplier: 2.0, baseEntryRound: 2, entryInvestment: 30000, exchangeRateVolatility: 0.03, tariffRate: 0, localAdaptationCost: 10000 },
+      { id: "amerique", label: "Marché conseil Amérique du Nord", region: "amerique", demandMultiplier: 3.5, baseEntryRound: 5, entryInvestment: 70000, exchangeRateVolatility: 0.08, tariffRate: 0, localAdaptationCost: 25000 },
+    ],
+  },
+  productInnovation: {
+    maxSimultaneousDev: 1,
+    innovations: [
+      { id: "service-digital", label: "Offre conseil digital / transformation IA", type: "service", developmentRounds: 3, devCostPerRound: 12000, launchCost: 18000, effects: { priceBonus: 0.15, demandBonus: 0.20, marginBonus: 0.06, cannibalizationRate: 0.05 } },
+      { id: "digital-plateforme", label: "Plateforme SaaS de conseil à distance", type: "digital", developmentRounds: 4, devCostPerRound: 18000, launchCost: 30000, effects: { priceBonus: 0.20, demandBonus: 0.25, marginBonus: 0.08, cannibalizationRate: 0.10 } },
+    ],
+  },
+  rseProgram: {
+    carbonBudget: 400,
+    actions: [
+      { id: "rse-mobilite", label: "Politique mobilité verte (télétravail, vélos)", category: "mobilite", costPerRound: 3000, implementationRounds: 1, effects: { carbonReduction: 0.18, imageBonus: 0.05, employeeSatisfaction: 0.06, energySaving: 2000 } },
+      { id: "rse-social", label: "Programme bien-être et diversité", category: "social", costPerRound: 4500, implementationRounds: 1, effects: { carbonReduction: 0.02, imageBonus: 0.07, employeeSatisfaction: 0.08, energySaving: 0 } },
+      { id: "rse-energie", label: "Bureaux basse consommation", category: "energie", costPerRound: 2500, implementationRounds: 2, effects: { carbonReduction: 0.10, imageBonus: 0.03, employeeSatisfaction: 0.02, energySaving: 2200 } },
+    ],
+  },
+  financingOptions: {
+    options: [
+      { id: "credit-tresorerie", label: "Ligne de trésorerie", type: "creditLine", maxAmount: 80000, interestRatePerRound: 0.016, durationRounds: 4, availableFromRound: 1 },
+      { id: "emprunt-expansion", label: "Emprunt expansion", type: "termLoan", maxAmount: 300000, interestRatePerRound: 0.013, durationRounds: 10, availableFromRound: 3 },
+    ],
+  },
 } satisfies EngineScenarioConfig;
 
 export const conseilScenario: EngineScenarioConfig = parseScenarioConfig(rawConseil);
