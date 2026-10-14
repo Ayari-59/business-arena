@@ -1246,7 +1246,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     };
     let trainingCostTotal = 0;
     const nextActiveTrainingPrograms: { programId: string; enrolledCount: number; remainingRounds: number }[] = [];
-    if (scenario.trainingPrograms && !gelee) {
+    if (scenario.trainingPrograms && state.status !== "defaillant") {
       const cfg = scenario.trainingPrograms;
       // Avancer les programmes actifs existants
       for (const ap of state.activeTrainingPrograms ?? []) {
