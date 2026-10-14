@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario NOVA (doc 07) — enceinte portable « NOVA One », 6 tours
@@ -94,10 +95,12 @@ const rawNova = {
     loanAnnualRate: 0.05,
     overdraftAnnualRate: 0.12,
     overdraftLimit: 30000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 22,
@@ -106,13 +109,15 @@ const rawNova = {
     // les associés suivent jusqu'à 100 000 € sur la partie — pas au-delà :
     // l'apport illimité fausserait le jeu de trésorerie
     maxCapitalIncreaseTotal: 100000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 5000,
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements
   fixedCostsPerRound: 91000,
-  // Le deck d'événements (§19) : chaque entrée est une CARTE (habillage dans
-  // src/config/events/cards.ts). Probabilités faibles : 1 à 2 cartes par
-  // partie en moyenne, en plus des cartes scriptées.
+  // La liasse d'événements (§19) : chaque entrée est un COURRIER (habillage
+  // dans src/config/courriers/). Probabilités faibles : 1 à 2 courriers par
+  // partie en moyenne, en plus des courriers scriptés.
   events: [
     {
       code: "raw_material_spike",
@@ -323,6 +328,43 @@ const rawNova = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "nova_price_war",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.88 }],
+    },
+    {
+      code: "nova_counterfeit",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:etudiants", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "nova_campus_tender",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:campustech", op: "mul", value: 1.3 }],
+    },
+    {
+      code: "nova_engineer_leaves",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "nova_press_award",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("nova"),
   ],
   // Fournisseurs (doc 02 §5bis) : 3 fournisseurs avec des profils distincts.
   // Le standard est le référent (coût = 22 €, délai = 22 j, pas de risque).
@@ -339,6 +381,15 @@ const rawNova = {
       paymentDelayDays: 22,
       supplyRiskProbability: 0,
       supplyRiskAvailabilityHit: 1,
+      // Indice de cours : volatilité modérée, légère tendance haussière
+      // (composants électroniques sous tension géopolitique sur 6 tours).
+      priceIndex: {
+        volatility: 0.06,
+        trend: 0.01,
+        momentum: 0.55,
+        minMultiplier: 0.82,
+        maxMultiplier: 1.22,
+      },
     },
     {
       code: "lowcost",
@@ -350,6 +401,15 @@ const rawNova = {
       paymentDelayDays: 45,
       supplyRiskProbability: 0.15,
       supplyRiskAvailabilityHit: 0.75,
+      // Indice de cours : très volatile (fret maritime + yuan), sans tendance
+      // marquée mais avec une forte inertie (les cycles de fret durent).
+      priceIndex: {
+        volatility: 0.11,
+        trend: 0.0,
+        momentum: 0.7,
+        minMultiplier: 0.72,
+        maxMultiplier: 1.35,
+      },
     },
     {
       code: "premium",
@@ -593,8 +653,35 @@ const rawNova = {
     maxHiresPerRound: 3,
     maxHeadcount: 10,
   },
+  // RSE (Responsabilité Sociale des Entreprises) : fabrication de produits
+  // technologiques — sourcing responsable, conditions de travail, éco-conception.
+  // Le capital-image relève l'attractivité auprès des passionnés et de CampusTech
+  // (clientèle sensible aux labels) ; le capital « process propre » réduit les
+  // rebuts en production. imageDemandSensitivity plus élevé car le segment
+  // passionnés est sensible à l'image de marque (qualité, engagement).
+  rse: {
+    imageDemandSensitivity: 0.22,
+    imageInertia: 0.65,
+    cleanDefectReductionMax: 0.4,
+    cleanInertia: 0.75,
+    financingTrustBonus: 0.15,
+    socialAttritionRelief: 0.5,
+    cards: {
+      minRound: 3,
+      labelImageThreshold: 0.7,
+      labelDemandBonus: 0.15,
+      labelDuration: 2,
+      badBuzzImageCeiling: 0.25,
+      badBuzzProbability: 0.25,
+      badBuzzDemandMalus: 0.25,
+      aidCleanThreshold: 0.7,
+      aidAmount: 1,
+      sanctionProbability: 0.2,
+      fineAmount: 1,
+    },
+  },
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
-  // Scoring BPI (doc 08 §1) : pondérations imposées, bornes calibrées sur les
+  // Scoring IPG (doc 08 §1) : pondérations imposées, bornes calibrées sur les
   // trajectoires de référence (snapshot doré) — min → 0 point, cible → 100.
   scoring: {
     weights: {

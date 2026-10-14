@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario RESTAURANT — « LA TABLE D'AUGUSTIN », bistrot de 70 couverts,
@@ -123,16 +124,20 @@ const rawBistrot = {
     loanAnnualRate: 0.058,
     overdraftAnnualRate: 0.14,
     overdraftLimit: 20000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     // les fournisseurs de frais ne font pas crédit longtemps
     supplierPaymentDelayDays: 21,
     loanDurationRounds: 24,
     maxCapitalIncreaseTotal: 90000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 6000,
   },
   treasury: {
@@ -339,6 +344,33 @@ const rawBistrot = {
     maxHiresPerRound: 3,
     maxHeadcount: 18,
   },
+  // RSE (restauration) : sourcing local, réduction du gaspillage alimentaire,
+  // bien-être du personnel. L'impact image est fort sur la clientèle de
+  // quartier (soir_locaux, midi_employes). imageDemandSensitivity élevé car la
+  // réputation locale se construit vite sur les engagements concrets.
+  // socialAttritionRelief plus fort : la restauration souffre d'une tension
+  // salariale permanente — un employeur engagé retient mieux sa brigade.
+  rse: {
+    imageDemandSensitivity: 0.28,
+    imageInertia: 0.55,
+    cleanDefectReductionMax: 0.3,
+    cleanInertia: 0.7,
+    financingTrustBonus: 0.1,
+    socialAttritionRelief: 0.6,
+    cards: {
+      minRound: 2,
+      labelImageThreshold: 0.65,
+      labelDemandBonus: 0.2,
+      labelDuration: 2,
+      badBuzzImageCeiling: 0.3,
+      badBuzzProbability: 0.3,
+      badBuzzDemandMalus: 0.3,
+      aidCleanThreshold: 0.65,
+      aidAmount: 0.8,
+      sanctionProbability: 0.25,
+      fineAmount: 0.8,
+    },
+  },
   events: [
     {
       code: "bistrot_avis_viral",
@@ -480,6 +512,43 @@ const rawBistrot = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "bistrot_food_truck",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:midi_affaires", op: "mul", value: 0.82 }],
+    },
+    {
+      code: "bistrot_concurrent_etoile",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:soir_locaux", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "bistrot_marche_hebdo",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
+    },
+    {
+      code: "bistrot_chef_absent",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "bistrot_critique_elogieuse",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("bistrot"),
   ],
   // Le beurre, la viande et l'énergie flambent au tour 3 : le ratio matières
   // dérape en plein creux d'août, quand la salle est déjà vide.

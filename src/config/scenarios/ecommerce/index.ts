@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario E-COMMERCE — « PIXEL & CO », pure player de décoration et
@@ -138,15 +139,19 @@ const rawEcommerce = {
     loanAnnualRate: 0.062,
     overdraftAnnualRate: 0.14,
     overdraftLimit: 35000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 16,
     maxCapitalIncreaseTotal: 200000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 5000,
   },
   treasury: {
@@ -173,6 +178,14 @@ const rawEcommerce = {
       paymentDelayDays: 45,
       supplyRiskProbability: 0.04,
       supplyRiskAvailabilityHit: 0.9,
+      // Indice de cours : légère volatilité européenne, tendance neutre.
+      priceIndex: {
+        volatility: 0.05,
+        trend: 0.005,
+        momentum: 0.5,
+        minMultiplier: 0.85,
+        maxMultiplier: 1.18,
+      },
     },
     {
       code: "import_direct",
@@ -184,6 +197,14 @@ const rawEcommerce = {
       paymentDelayDays: 0,
       supplyRiskProbability: 0.14,
       supplyRiskAvailabilityHit: 0.75,
+      // Indice de cours : très volatile (fret, change, matières), inertie élevée.
+      priceIndex: {
+        volatility: 0.13,
+        trend: 0.0,
+        momentum: 0.72,
+        minMultiplier: 0.68,
+        maxMultiplier: 1.4,
+      },
     },
     {
       code: "createurs_fr",
@@ -344,6 +365,32 @@ const rawEcommerce = {
     maxHiresPerRound: 3,
     maxHeadcount: 14,
   },
+  // RSE (e-commerce) : logistique durable, emballages éco-responsables, chaîne
+  // d'approvisionnement éthique. Les consommateurs du segment « bio/responsable »
+  // y sont directement sensibles. imageDemandSensitivity élevé (acheteurs en
+  // ligne comparent les pratiques RSE) ; cleanDefectReductionMax plus modeste
+  // (les rebuts logistiques sont moins maîtrisables que la production usine).
+  rse: {
+    imageDemandSensitivity: 0.25,
+    imageInertia: 0.6,
+    cleanDefectReductionMax: 0.3,
+    cleanInertia: 0.7,
+    financingTrustBonus: 0.12,
+    socialAttritionRelief: 0.45,
+    cards: {
+      minRound: 3,
+      labelImageThreshold: 0.65,
+      labelDemandBonus: 0.18,
+      labelDuration: 2,
+      badBuzzImageCeiling: 0.25,
+      badBuzzProbability: 0.3,
+      badBuzzDemandMalus: 0.28,
+      aidCleanThreshold: 0.65,
+      aidAmount: 1.2,
+      sanctionProbability: 0.2,
+      fineAmount: 1,
+    },
+  },
   events: [
     {
       code: "ecom_algo_publicitaire",
@@ -483,6 +530,43 @@ const rawEcommerce = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "ecom_geant_promo",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:acquisition", op: "mul", value: 0.75 }],
+    },
+    {
+      code: "ecom_livraison_gratuite",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "ecom_avis_cinq_etoiles",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:fideles", op: "mul", value: 1.2 }],
+    },
+    {
+      code: "ecom_panne_paiement",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "ecom_taxe_colis",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "material_cost", op: "mul", value: 1.08 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("ecom"),
   ],
   // Les frais de port explosent au dernier tour. Ils tombaient au tour 5, où
   // le BTS NDRC place sa séance de négociation avec les places de marché :

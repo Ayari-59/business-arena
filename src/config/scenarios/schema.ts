@@ -27,6 +27,9 @@ const segmentSchema = z.object({
   priceEffectBounds: z
     .object({ min: z.number().nonnegative(), max: z.number().positive() })
     .refine((b) => b.min < b.max, "bornes d'effet prix incohérentes"),
+  // Prix de rupture, en multiple du prix usuel. > 1 : sous 1, la clientèle
+  // décrocherait au prix de référence, ce qui n'a pas de sens.
+  walkAwayPriceRatio: z.number().gt(1).optional(),
   paymentDelayDays: z.number().int().nonnegative(),
   // Une commission de 100 % ne serait plus un canal de vente : la borne haute
   // est stricte, et un scénario qui la franchit ne se charge pas.
@@ -34,6 +37,23 @@ const segmentSchema = z.object({
   marketingGate: z.number().min(0).max(1).optional(),
   seasonality: z.array(z.number().nonnegative()).optional(),
 });
+
+const priceIndexSchema = z
+  .object({
+    /** Écart-type du choc de cours par tour (0.08 = ±8 % typique). */
+    volatility: z.number().min(0).max(0.5),
+    /** Dérive tendancielle par tour (0.01 = +1 % de tendance haussière). */
+    trend: z.number().min(-0.1).max(0.1),
+    /**
+     * Inertie du choc (0 = bruit blanc, 0.95 = cycles très lents).
+     * Une valeur haute produit des tendances durables ; une valeur basse
+     * donne des fluctuations indépendantes d'un tour à l'autre.
+     */
+    momentum: z.number().min(0).max(0.95),
+    minMultiplier: z.number().min(0.5).max(1),
+    maxMultiplier: z.number().min(1).max(2),
+  })
+  .refine((p) => p.minMultiplier < p.maxMultiplier, "priceIndex : minMultiplier doit être < maxMultiplier");
 
 const supplierSchema = z.object({
   code: z.string().min(1),
@@ -44,6 +64,7 @@ const supplierSchema = z.object({
   paymentDelayDays: z.number().int().nonnegative(),
   supplyRiskProbability: z.number().min(0).max(0.3),
   supplyRiskAvailabilityHit: z.number().min(0.5).max(1),
+  priceIndex: priceIndexSchema.optional(),
 });
 
 /**
@@ -57,6 +78,8 @@ const supplierSchema = z.object({
 const productDefSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
+  /** Nom de repli sur écran étroit (voir ProductDef.shortName). */
+  shortName: z.string().min(1).optional(),
   materialCostPerUnit: z.number().nonnegative(),
   otherVariableCostPerUnit: z.number().nonnegative(),
   hoursPerUnit: z.number().positive(),
@@ -139,6 +162,9 @@ export const engineScenarioConfigSchema = z.object({
     depreciationPerRound: z.number().nonnegative(),
     loanDurationRounds: z.number().positive().optional(),
     maxCapitalIncreaseTotal: z.number().positive().optional(),
+    maxDebtToEquity: z.number().positive().optional(),
+    crisisRoundsBeforeFailure: z.number().int().positive().optional(),
+    rescueFinancingRequired: z.boolean().optional(),
     /**
      * Dossier bancaire. Ce schéma est la frontière que traverse le snapshot
      * d'une partie : une clé qu'il ignore est SILENCIEUSEMENT retirée, et la
@@ -223,6 +249,9 @@ export const engineScenarioConfigSchema = z.object({
             maintenanceMultiplier: z.number().positive(),
             maxPerRound: z.number().int().positive(),
             resaleRatio: z.number().min(0).max(1).optional(),
+            wearRatePerRound: z.number().min(0).max(1).optional(),
+            breakdownThreshold: z.number().min(0).max(1).optional(),
+            maintenanceRepairRate: z.number().min(0).max(1).optional(),
           }),
         )
         .min(1),
@@ -301,7 +330,7 @@ export const engineScenarioConfigSchema = z.object({
       })
       .refine(
         (w) => Math.abs(Object.values(w).reduce((a, b) => a + b, 0) - 1) < 1e-6,
-        "les pondérations du BPI doivent sommer à 1",
+        "les pondérations de l'IPG doivent sommer à 1",
       ),
     benchmarks: z.object({
       operatingIncome: z.object({ min: z.number(), target: z.number() }),
@@ -339,6 +368,32 @@ export const engineScenarioConfigSchema = z.object({
       axisFit: z.number().min(1).max(3),
       axisMisfit: z.number().min(0).max(1),
       axisSwitchDecay: z.number().min(0).max(1),
+    })
+    .optional(),
+  // RSE (Responsabilité Sociale des Entreprises) : le levier n'existe que si
+  // le bloc est déclaré. Absent → DEFAULT_RSE_CONFIG. Les grandeurs sont sans
+  // dimension : normalisées par l'échelle marketing du scénario.
+  rse: z
+    .object({
+      imageDemandSensitivity: z.number().nonnegative(),
+      imageInertia: z.number().min(0).max(1),
+      cleanDefectReductionMax: z.number().min(0).max(1),
+      cleanInertia: z.number().min(0).max(1),
+      financingTrustBonus: z.number().min(0).max(1),
+      socialAttritionRelief: z.number().min(0).max(1),
+      cards: z.object({
+        minRound: z.number().int().positive(),
+        labelImageThreshold: z.number().min(0).max(1),
+        labelDemandBonus: z.number().nonnegative(),
+        labelDuration: z.number().int().positive(),
+        badBuzzImageCeiling: z.number().min(0).max(1),
+        badBuzzProbability: z.number().min(0).max(1),
+        badBuzzDemandMalus: z.number().min(0).max(1),
+        aidCleanThreshold: z.number().min(0).max(1),
+        aidAmount: z.number().nonnegative(),
+        sanctionProbability: z.number().min(0).max(1),
+        fineAmount: z.number().nonnegative(),
+      }),
     })
     .optional(),
 }) satisfies z.ZodType<EngineScenarioConfig>;

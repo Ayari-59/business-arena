@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario SERVICES — « ATLAS CONSEIL », cabinet de conseil et bureau
@@ -114,15 +115,19 @@ const rawConseil = {
     loanAnnualRate: 0.065,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 70000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 20,
     maxCapitalIncreaseTotal: 150000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     // cabinet asset-light : très peu d'amortissements
     depreciationPerRound: 6000,
   },
@@ -332,6 +337,34 @@ const rawConseil = {
     maxHiresPerRound: 3,
     maxHeadcount: 24,
   },
+  // RSE (conseil) : les clients publics et grandes entreprises sélectionnent
+  // leurs prestataires sur des critères RSE (clauses sociales, bilan carbone).
+  // imageDemandSensitivity très élevé : le cabinet se vend autant sur ses
+  // valeurs que sur son expertise. socialAttritionRelief fort : un consultant
+  // engage son employeur — un cabinet peu engagé perd ses talents au profit
+  // de structures à mission. cleanDefectReductionMax plus faible (activité de
+  // service : les « rebuts » sont des livrables ratés, moins maîtrisables).
+  rse: {
+    imageDemandSensitivity: 0.32,
+    imageInertia: 0.6,
+    cleanDefectReductionMax: 0.2,
+    cleanInertia: 0.65,
+    financingTrustBonus: 0.18,
+    socialAttritionRelief: 0.65,
+    cards: {
+      minRound: 3,
+      labelImageThreshold: 0.7,
+      labelDemandBonus: 0.2,
+      labelDuration: 3,
+      badBuzzImageCeiling: 0.25,
+      badBuzzProbability: 0.25,
+      badBuzzDemandMalus: 0.3,
+      aidCleanThreshold: 0.7,
+      aidAmount: 1.5,
+      sanctionProbability: 0.15,
+      fineAmount: 1.2,
+    },
+  },
   events: [
     {
       code: "conseil_appel_offres_gagne",
@@ -469,6 +502,43 @@ const rawConseil = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "conseil_plateforme_freelance",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:pme", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "conseil_grand_cabinet_public",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:public", op: "mul", value: 0.75 }],
+    },
+    {
+      code: "conseil_partenariat_editeur",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
+    },
+    {
+      code: "conseil_debauchage",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "conseil_plan_relance",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:pme", op: "mul", value: 1.3 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("conseil"),
   ],
   // Une réglementation nouvelle au tour 4 ouvre un marché : encore faut-il
   // avoir les consultants disponibles pour le prendre.
