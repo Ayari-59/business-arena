@@ -1270,6 +1270,8 @@ export interface ProductRoundResult {
     costMultiplier: number;
     qualityBonus: number;
     supplyDisruption: boolean;
+    /** Multiplicateur de l'indice de cours ce tour (1 = cours de base). Absent si pas d'indice. */
+    priceIndexMultiplier?: number;
   };
   /**
    * R&D de la référence (scénarios avec bloc `rd`) : le budget du tour, l'état
@@ -1481,6 +1483,8 @@ export interface CompanyRoundResult {
     costMultiplier: number;
     qualityBonus: number;
     supplyDisruption: boolean;
+    /** Multiplicateur de l'indice de cours ce tour (1 = cours de base). Absent si pas d'indice. */
+    priceIndexMultiplier?: number;
   };
   /** Études achetées ce tour : lesquelles, et la facture (charge de structure). */
   studies?: { purchased: ("market" | "price" | "finance" | "project")[]; cost: number };

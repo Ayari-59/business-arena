@@ -76,6 +76,7 @@ import {
   effectiveModifiers,
   tickEvents,
 } from "../events";
+import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -369,6 +370,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     unitCosts: number[];
     /** Multiplicateur du coût matières par produit (mono : [materialMultiplier]). */
     materialMultipliers: number[];
+    /**
+     * Multiplicateur de l'indice de cours par fournisseur utilisé ce tour
+     * (clé = code fournisseur). 1 si le fournisseur n'a pas de priceIndex.
+     */
+    priceIndexBySupplier: Map<string, number>;
     /** Stocks d'ouverture et de fin de production, par produit. */
     openingStocks: StockLot[];
     productStocks: StockLot[];
@@ -688,9 +694,37 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       communicationAxis !== undefined &&
       communicationAxis !== state.lastCommunicationAxis;
     const brandNext = comm ? updateBrandAwareness(brandOpening, brandBudget, axisChanged, comm) : 0;
-    const materialMultiplier = mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1);
+    // Indice de cours flottant : un multiplicateur par fournisseur réellement
+    // utilisé ce tour. Calculé sur un flux RNG DÉDIÉ (graine ^ 0x504943 =
+    // "PIC") — n'altère aucun tirage existant.
+    const priceIndexBySupplier = new Map<string, number>();
+    for (const s of productSuppliers) {
+      if (!s || priceIndexBySupplier.has(s.code)) continue;
+      priceIndexBySupplier.set(
+        s.code,
+        s.priceIndex
+          ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex)
+          : 1,
+      );
+    }
+    // Fournisseur scalaire (mono-produit) — peut différer des productSuppliers
+    if (supplier && !priceIndexBySupplier.has(supplier.code)) {
+      priceIndexBySupplier.set(
+        supplier.code,
+        supplier.priceIndex
+          ? computePriceIndexMultiplier(input.seed, supplier.code, supplier.priceIndex, roundIndex)
+          : 1,
+      );
+    }
+    const supplierPriceIdx = priceIndexBySupplier.get(supplier?.code ?? "") ?? 1;
+    const materialMultiplier =
+      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx;
     const materialMultipliers = multi
-      ? productSuppliers.map((s) => mods.materialCostMultiplier * (s?.costMultiplier ?? 1))
+      ? productSuppliers.map((s) =>
+          mods.materialCostMultiplier *
+          (s?.costMultiplier ?? 1) *
+          (priceIndexBySupplier.get(s?.code ?? "") ?? 1),
+        )
       : [materialMultiplier];
     // Coût variable unitaire de chaque produit (mono : le seul, expression
     // historique inchangée).
@@ -941,6 +975,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       productDisruptions,
       unitCosts,
       materialMultipliers,
+      priceIndexBySupplier,
       openingStocks,
       productStocks,
       productDefectUnits,
@@ -1778,6 +1813,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                           costMultiplier: w.productSuppliers[k]!.costMultiplier,
                           qualityBonus: w.productSuppliers[k]!.qualityBonus,
                           supplyDisruption: w.productDisruptions[k]!,
+                          ...(w.productSuppliers[k]!.priceIndex !== undefined
+                            ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.productSuppliers[k]!.code) ?? 1 }
+                            : {}),
                         },
                       }
                     : {}),
@@ -1947,6 +1985,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               costMultiplier: w.supplier.costMultiplier,
               qualityBonus: w.supplier.qualityBonus,
               supplyDisruption: w.supplyDisruption,
+              ...(w.supplier.priceIndex !== undefined
+                ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.supplier.code) ?? 1 }
+                : {}),
             },
           }
         : {}),
