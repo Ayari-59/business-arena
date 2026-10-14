@@ -185,6 +185,109 @@ const rawHotelGamme = {
   },
   products: GAMME,
   orderOffers: ORDER_OFFERS,
+  // Études de marché — identique au mono.
+  studies: {
+    marketCost: 2600,
+    priceCost: 2200,
+    financeCost: 1600,
+    projectCost: 2400,
+  },
+  // Parc hôtelier — identique au mono : les mêmes équipements hébergent les
+  // trois types de chambre (standard, supérieure, suite).
+  equipment: {
+    types: [
+      {
+        code: "chambre_standard",
+        name: "Chambre standard",
+        capacityPerUnit: 900,
+        costPerUnit: 80000,
+        depreciationRounds: 32,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 3,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "chambre_renovee",
+        name: "Chambre rénovée",
+        capacityPerUnit: 1800,
+        costPerUnit: 180000,
+        depreciationRounds: 40,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "suite_premium",
+        name: "Suite premium",
+        capacityPerUnit: 2700,
+        costPerUnit: 310000,
+        depreciationRounds: 48,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "chambre_standard", count: 4 },
+      { typeCode: "chambre_renovee", count: 1 },
+    ],
+  },
+  // RH — identique au mono.
+  hr: {
+    salaryPerEmployeePerRound: 8600,
+    includedHeadcount: 14,
+    hiringCost: 2600,
+    firingCost: 6500,
+    trainingScale: 4000,
+    trainingSensitivity: 0.06,
+    maxProductivity: 1.3,
+    moraleSensitivity: 0.6,
+    attritionThreshold: 0.95,
+    maxHiresPerRound: 4,
+    maxHeadcount: 26,
+  },
+  // Fournisseurs — identique au mono.
+  suppliers: [
+    {
+      code: "integre",
+      name: "Blanchisserie et petit-déjeuner intégrés",
+      narrative:
+        "Vous gérez tout en interne : coût maîtrisé, qualité constante, fournisseurs réglés à 30 jours.",
+      costMultiplier: 1,
+      qualityBonus: 0,
+      paymentDelayDays: 30,
+      supplyRiskProbability: 0.03,
+      supplyRiskAvailabilityHit: 0.92,
+    },
+    {
+      code: "externalise",
+      name: "Tout externalisé (prestataire discount)",
+      narrative:
+        "Un prestataire reprend blanchisserie et petits-déjeuners pour 15 % de moins, payable à 60 jours. Mais la qualité suit sa cadence, pas la vôtre, et les clients le notent.",
+      costMultiplier: 0.85,
+      qualityBonus: -0.07,
+      paymentDelayDays: 60,
+      supplyRiskProbability: 0.11,
+      supplyRiskAvailabilityHit: 0.82,
+    },
+    {
+      code: "terroir",
+      name: "Petit-déjeuner terroir & linge premium",
+      narrative:
+        "Produits locaux au buffet, linge haut de gamme : 25 % plus cher, réglé comptant aux producteurs. C'est ce dont les clients parlent dans leurs avis.",
+      costMultiplier: 1.25,
+      qualityBonus: 0.11,
+      paymentDelayDays: 0,
+      supplyRiskProbability: 0.05,
+      supplyRiskAvailabilityHit: 0.9,
+    },
+  ],
+  // Investissement capacité — identique au mono.
+  investment: {
+    costPerCapacityUnit: 100,
+    depreciationRounds: 40,
+    maxPerRound: 900,
+  },
   // Le levier communication : la notoriété de L'ESCALE porte les trois
   // chambres (jusqu'à +25 %, avec retard, qui s'use sans entretien), et un
   // axe. Le prix parle aux vacanciers et aux groupes, l'image aux habitués

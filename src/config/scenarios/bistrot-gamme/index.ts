@@ -245,6 +245,109 @@ const rawBistrotGamme = {
   },
   products: GAMME,
   orderOffers: ORDER_OFFERS,
+  // Études de marché — identique au mono.
+  studies: {
+    marketCost: 900,
+    priceCost: 700,
+    financeCost: 600,
+    projectCost: 800,
+  },
+  // Parc cuisine — identique au mono : les mêmes équipements servent les
+  // quatre offres (midi, soir, banquets, traiteur).
+  equipment: {
+    types: [
+      {
+        code: "cuisine_traditionnelle",
+        name: "Cuisine traditionnelle",
+        capacityPerUnit: 1500,
+        costPerUnit: 15000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "cuisine_semi_pro",
+        name: "Cuisine semi-professionnelle",
+        capacityPerUnit: 3000,
+        costPerUnit: 36000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "cuisine_pro",
+        name: "Cuisine professionnelle",
+        capacityPerUnit: 5000,
+        costPerUnit: 70000,
+        depreciationRounds: 28,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "cuisine_traditionnelle", count: 2 },
+      { typeCode: "cuisine_semi_pro", count: 2 },
+    ],
+  },
+  // RH — identique au mono.
+  hr: {
+    salaryPerEmployeePerRound: 7200,
+    includedHeadcount: 10,
+    hiringCost: 2000,
+    firingCost: 4500,
+    trainingScale: 2200,
+    trainingSensitivity: 0.06,
+    maxProductivity: 1.28,
+    moraleSensitivity: 0.75,
+    attritionThreshold: 0.97,
+    maxHiresPerRound: 3,
+    maxHeadcount: 18,
+  },
+  // Fournisseurs — identique au mono.
+  suppliers: [
+    {
+      code: "grossiste",
+      name: "Grossiste alimentaire",
+      narrative:
+        "Le camion passe trois fois par semaine, la qualité est régulière, la facture tombe à 21 jours. Le choix par défaut de la profession.",
+      costMultiplier: 1,
+      qualityBonus: 0,
+      paymentDelayDays: 21,
+      supplyRiskProbability: 0.04,
+      supplyRiskAvailabilityHit: 0.9,
+    },
+    {
+      code: "cash_carry",
+      name: "Cash & carry (vous chargez le camion)",
+      narrative:
+        "14 % de moins sur les denrées, mais payées comptant en caisse et chargées par vos soins. Le ratio matières s'améliore, les avis clients un peu moins.",
+      costMultiplier: 0.86,
+      qualityBonus: -0.06,
+      paymentDelayDays: 0,
+      supplyRiskProbability: 0.1,
+      supplyRiskAvailabilityHit: 0.84,
+    },
+    {
+      code: "circuit_court",
+      name: "Producteurs en circuit court",
+      narrative:
+        "Maraîcher, éleveur et fromager du coin : 20 % plus cher, réglés à 15 jours. C'est ce que vous écrivez sur l'ardoise, et ce que les clients racontent.",
+      costMultiplier: 1.2,
+      qualityBonus: 0.1,
+      paymentDelayDays: 15,
+      supplyRiskProbability: 0.07,
+      supplyRiskAvailabilityHit: 0.86,
+    },
+  ],
+  // Investissement capacité — identique au mono.
+  investment: {
+    costPerCapacityUnit: 27,
+    depreciationRounds: 12,
+    maxPerRound: 1800,
+  },
   // Le levier R&D : au-delà du coût de développement, la R&D élève le niveau
   // technique d'une offre (carte retravaillée, techniques, formation de la
   // brigade) — jusqu'à +12 % de qualité perçue, avec retard, et qui s'érode de

@@ -4,11 +4,20 @@ import type {
   EngineScenarioConfig,
   EquipmentItem,
   EquipmentTypeDef,
+  MachineRecord,
   OrderOfferDef,
   SegmentSalesDetail,
   SimulationInput,
   SimulationOutput,
 } from "../types";
+import {
+  createNewMachines,
+  initMachineFleet,
+  machineFleetCapacity,
+  machineFleetMaintenanceMultiplier,
+  removeMachinesFromFleet,
+  updateMachineFleet,
+} from "../equipment";
 import { createRng, deriveRoundSeed } from "../random";
 import { JournalBuilder } from "../accounting/journal";
 import { axisFitFactor, brandFactor, updateBrandAwareness } from "../market/communication";
@@ -381,6 +390,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     equipDisposalLoss: number;
     equipNewFleet: EquipmentItem[];
     equipPendingFleet: EquipmentItem[];
+    /** Parc individuel actif (ouverture + pendingMachineFleet du tour précédent). */
+    activeMachineFleet: MachineRecord[] | null;
+    /** Parc individuel mis à jour en fin de calcul (devient machineFleet au prochain tour). */
+    nextMachineFleet: MachineRecord[] | null;
+    /** Machines achetées ce tour, en attente de mise en service. */
+    nextPendingMachineFleet: MachineRecord[] | null;
     equipDepreciation: number;
     chosenFormula: import("../types").InsuranceFormulaDef | null;
     supplier: import("../types").SupplierDef | null;
@@ -565,12 +580,31 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
     const supplyDisruption = supplier ? (disruptionBySupplier.get(supplier.code) ?? false) : false;
     const supplyAvailabilityHit = supplyDisruption ? (supplier?.supplyRiskAvailabilityHit ?? 1) : 1;
-    // Capacité machine : soit calculée du parc typé, soit homogène (legacy).
+    // Capacité machine : soit calculée du parc individuel (MachineRecord),
+    // soit du parc typé par lots, soit homogène (legacy).
+    const typeMap = scenario.equipment
+      ? new Map(scenario.equipment.types.map((t) => [t.code, t]))
+      : null;
+    // Parc individuel actif : ouverture + pendingMachineFleet du tour précédent
+    // (les machines achetées au tour T sont en service au tour T+1).
+    const activeMachineFleet: MachineRecord[] | null = scenario.equipment
+      ? (() => {
+          const base = state.machineFleet
+            ? [...state.machineFleet, ...(state.pendingMachineFleet ?? [])]
+            : initMachineFleet(
+                [...(state.fleet ?? []), ...(state.pendingFleet ?? [])],
+                roundIndex,
+              );
+          return base;
+        })()
+      : null;
     const effectiveMachineCapacity = scenario.equipment
-      ? fleetCapacity(
-          mergeFleet(state.fleet ?? [], state.pendingFleet ?? []),
-          new Map(scenario.equipment.types.map((t) => [t.code, t])),
-        )
+      ? (activeMachineFleet && typeMap
+          ? machineFleetCapacity(activeMachineFleet, typeMap)
+          : fleetCapacity(
+              mergeFleet(state.fleet ?? [], state.pendingFleet ?? []),
+              new Map(scenario.equipment.types.map((t) => [t.code, t])),
+            ))
       : state.machineCapacity + (state.pendingCapacity ?? 0);
     // Mono-produit : la rupture ampute la disponibilité de l'usine (chemin
     // historique). Gamme : elle ampute le plan des SEULES références que le
@@ -830,6 +864,40 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       );
       investOutlay = investUnits * scenario.investment.costPerCapacityUnit;
     }
+    // Suivi individuel des machines (StratiRAC) : appliqué seulement quand le
+    // scénario a un bloc equipment ET que le parc individuel est initialisé.
+    let nextMachineFleet: MachineRecord[] | null = null;
+    let nextPendingMachineFleet: MachineRecord[] | null = null;
+    if (scenario.equipment && typeMap) {
+      // 1. Retirer les machines vendues ce tour (FIFO par type, plus anciennes d'abord).
+      let updatedFleet = activeMachineFleet ?? [];
+      for (const sold of equipSold) {
+        updatedFleet = removeMachinesFromFleet(updatedFleet, sold.typeCode, sold.count);
+      }
+      // 2. Vieillissement, usure, pannes aléatoires selon budget maintenance.
+      updatedFleet = updateMachineFleet({
+        fleet: updatedFleet,
+        maintenanceBudget: raw.maintenanceBudget ?? 0,
+        maintenanceReference:
+          scenario.production.maintenanceReference *
+          (activeMachineFleet
+            ? machineFleetMaintenanceMultiplier(activeMachineFleet, typeMap)
+            : 1),
+        types: typeMap,
+        rng: () => rng.next(),
+        roundIndex,
+      });
+      nextMachineFleet = updatedFleet;
+      // 3. Créer les nouvelles machines achetées ce tour (disponibles au tour+1).
+      let pending: MachineRecord[] = [];
+      for (const bought of equipBought) {
+        const existingSize = updatedFleet.filter((m) => m.typeCode === bought.typeCode).length;
+        pending = pending.concat(
+          createNewMachines(bought.typeCode, bought.count, roundIndex, existingSize),
+        );
+      }
+      nextPendingMachineFleet = pending.length > 0 ? pending : null;
+    }
     // Abonnement : le portefeuille d'ouverture part en partie (attrition
     // fonction de la qualité perçue, du prix et de la saturation du tour) ;
     // le reste sera servi en priorité sur la capacité, au marché.
@@ -894,6 +962,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       equipNewFleet,
       equipPendingFleet,
       equipDepreciation,
+      activeMachineFleet,
+      nextMachineFleet,
+      nextPendingMachineFleet,
       chosenFormula,
       supplier,
       supplyDisruption,
@@ -1940,12 +2011,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // Mise à jour du parc et de la capacité machine pour le prochain tour.
     const nextFleetState = scenario.equipment
       ? {
-          machineCapacity: fleetCapacity(
-            w.equipNewFleet,
-            new Map(scenario.equipment.types.map((t) => [t.code, t])),
-          ),
+          machineCapacity: w.nextMachineFleet
+            ? machineFleetCapacity(
+                w.nextMachineFleet,
+                new Map(scenario.equipment.types.map((t) => [t.code, t])),
+              )
+            : fleetCapacity(
+                w.equipNewFleet,
+                new Map(scenario.equipment.types.map((t) => [t.code, t])),
+              ),
           fleet: w.equipNewFleet,
           pendingFleet: w.equipPendingFleet,
+          ...(w.nextMachineFleet !== null
+            ? { machineFleet: w.nextMachineFleet }
+            : {}),
+          ...(w.nextPendingMachineFleet !== null
+            ? { pendingMachineFleet: w.nextPendingMachineFleet }
+            : {}),
           pendingCapacity: undefined,
           extraDepreciationPerRound: undefined,
           pendingDepreciationPerRound: undefined,
@@ -2026,10 +2108,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         maintenanceBudget: w.decisions.maintenanceBudget,
         maintenanceReference: scenario.production.maintenanceReference * (
           scenario.equipment
-            ? fleetMaintenanceMultiplier(
-                mergeFleet(w.state.fleet ?? [], w.state.pendingFleet ?? []),
-                new Map(scenario.equipment.types.map((t) => [t.code, t])),
-              )
+            ? (w.activeMachineFleet
+                ? machineFleetMaintenanceMultiplier(
+                    w.activeMachineFleet,
+                    new Map(scenario.equipment.types.map((t) => [t.code, t])),
+                  )
+                : fleetMaintenanceMultiplier(
+                    mergeFleet(w.state.fleet ?? [], w.state.pendingFleet ?? []),
+                    new Map(scenario.equipment.types.map((t) => [t.code, t])),
+                  ))
             : 1
         ),
         availabilityDecay: scenario.production.availabilityDecay,

@@ -178,6 +178,112 @@ const rawConseilGamme = {
   },
   products: GAMME,
   orderOffers: ORDER_OFFERS,
+  // Études de marché — identique au mono.
+  studies: {
+    marketCost: 2400,
+    priceCost: 2000,
+    financeCost: 1500,
+    projectCost: 2200,
+  },
+  // Postes consultants — identiques au mono : les mêmes espaces de travail
+  // accueillent les trois pratiques (audit, transformation, cyber).
+  equipment: {
+    types: [
+      {
+        code: "poste_junior",
+        name: "Poste consultant junior",
+        capacityPerUnit: 250,
+        costPerUnit: 8000,
+        depreciationRounds: 12,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.3,
+      },
+      {
+        code: "poste_confirme",
+        name: "Poste consultant confirmé",
+        capacityPerUnit: 500,
+        costPerUnit: 18000,
+        depreciationRounds: 16,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 3,
+        resaleRatio: 0.45,
+      },
+      {
+        code: "bureau_associe",
+        name: "Bureau associé",
+        capacityPerUnit: 750,
+        costPerUnit: 35000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "poste_junior", count: 2 },
+      { typeCode: "poste_confirme", count: 2 },
+    ],
+  },
+  // RH — identique au mono.
+  hr: {
+    salaryPerEmployeePerRound: 12600,
+    includedHeadcount: 12,
+    hiringCost: 8000,
+    firingCost: 15000,
+    trainingScale: 5000,
+    trainingSensitivity: 0.07,
+    maxProductivity: 1.35,
+    moraleSensitivity: 0.8,
+    attritionThreshold: 0.97,
+    maxHiresPerRound: 3,
+    maxHeadcount: 24,
+  },
+  // Fournisseurs — identique au mono.
+  suppliers: [
+    {
+      code: "standard",
+      name: "Déplacements standard",
+      narrative:
+        "Trains et hôtels à tarif négocié : le mode opératoire habituel du cabinet.",
+      costMultiplier: 1,
+      qualityBonus: 0,
+      paymentDelayDays: 30,
+      supplyRiskProbability: 0.03,
+      supplyRiskAvailabilityHit: 0.92,
+    },
+    {
+      code: "distance",
+      name: "Missions à distance",
+      narrative:
+        "40 % de déplacements en moins, 6 % de marge perçue en moins : les clients voient moins vos équipes, c'est bankable sur des missions techniques, délicat en transformation.",
+      costMultiplier: 0.6,
+      qualityBonus: -0.06,
+      paymentDelayDays: 30,
+      supplyRiskProbability: 0.08,
+      supplyRiskAvailabilityHit: 0.9,
+    },
+    {
+      code: "presence",
+      name: "Présence renforcée",
+      narrative:
+        "35 % de plus en frais de mission, qualité perçue en hausse : les clients vous voient sur le terrain, la confiance monte et les litiges baissent.",
+      costMultiplier: 1.35,
+      qualityBonus: 0.08,
+      paymentDelayDays: 15,
+      supplyRiskProbability: 0.02,
+      supplyRiskAvailabilityHit: 0.95,
+    },
+  ],
+  // Investissement — aménagement de bureaux pour développer la capacité des
+  // trois pratiques (audit, transformation, cyber). Contrairement au mono,
+  // le cabinet gamme peut ouvrir de nouveaux plateaux de travail : ~150 €
+  // par jour-consultant de capacité supplémentaire, amorti sur 20 trimestres.
+  investment: {
+    costPerCapacityUnit: 150,
+    depreciationRounds: 20,
+    maxPerRound: 120,
+  },
   // Le levier R&D : au-delà du coût de développement, la R&D élève le niveau
   // technique d'une offre (méthodes, outils, veille) — jusqu'à +12 % de
   // qualité perçue, avec retard, et qui s'érode de moitié par tour sans

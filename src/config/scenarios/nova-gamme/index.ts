@@ -287,6 +287,74 @@ const rawNovaGamme = {
   // Le catalogue du scénario est celui du One (affichages mono-produit).
   suppliers: COMPOSANTS_ONE,
   orderOffers: ORDER_OFFERS,
+  // Études de marché — légèrement plus élevées que le mono : analyser trois
+  // profils (Go, One, Studio) coûte plus qu'un seul marché unifié.
+  studies: {
+    marketCost: 2000,
+    priceCost: 1500,
+    financeCost: 1000,
+    projectCost: 1800,
+  },
+  // Parc machines — identique au mono : les mêmes lignes d'assemblage
+  // produisent les trois références Nova.
+  equipment: {
+    types: [
+      {
+        code: "manual",
+        name: "Ligne manuelle",
+        capacityPerUnit: 1000,
+        costPerUnit: 15000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 3,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "semi_auto",
+        name: "Ligne semi-automatisée",
+        capacityPerUnit: 1500,
+        costPerUnit: 30000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "auto",
+        name: "Ligne automatisée",
+        capacityPerUnit: 2500,
+        costPerUnit: 55000,
+        depreciationRounds: 32,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.6,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "manual", count: 4 },
+      { typeCode: "semi_auto", count: 2 },
+    ],
+  },
+  // RH — identique au mono.
+  hr: {
+    salaryPerEmployeePerRound: 8000,
+    includedHeadcount: 4,
+    hiringCost: 3000,
+    firingCost: 6000,
+    trainingScale: 3000,
+    trainingSensitivity: 0.05,
+    maxProductivity: 1.25,
+    moraleSensitivity: 0.5,
+    attritionThreshold: 0.95,
+    maxHiresPerRound: 3,
+    maxHeadcount: 10,
+  },
+  // Investissement capacité — identique au mono.
+  investment: {
+    costPerCapacityUnit: 20,
+    depreciationRounds: 16,
+    maxPerRound: 2000,
+  },
   // Le levier R&D : au-delà du coût de développement, la R&D élève le niveau
   // technique d'une référence — jusqu'à +12 % de qualité perçue, avec retard,
   // et qui s'érode de moitié par tour sans entretien. Échelle : 10 000 € par

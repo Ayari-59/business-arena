@@ -552,6 +552,25 @@ export interface SupplierDef {
   supplyRiskProbability: number;
   /** Malus de disponibilité si la rupture se matérialise (ex. 0.8 = −20 %). */
   supplyRiskAvailabilityHit: number;
+  /**
+   * INDICE DE COURS (optionnel) : fluctuation du prix des matières premières
+   * de tour en tour, à la manière d'un indice de matières premières. Le cours
+   * suit une marche aléatoire avec dérive et inertie (momentum), bornée par
+   * `minMultiplier` et `maxMultiplier`. Sans ce champ, le coût matières est
+   * fixe (comportement historique).
+   *
+   * `volatility` : écart-type du choc par tour (0.08 = ±8 % typique).
+   * `trend` : dérive par tour (0.01 = +1 % de tendance haussière).
+   * `momentum` : persistance du choc précédent (0 = bruit blanc, 0.7 = forte inertie).
+   * `minMultiplier` / `maxMultiplier` : plancher et plafond du multiplicateur.
+   */
+  priceIndex?: {
+    volatility: number;
+    trend: number;
+    momentum: number;
+    minMultiplier: number;
+    maxMultiplier: number;
+  };
 }
 
 /** Une commande exceptionnelle du pool (voir EngineScenarioConfig.orderOffers). */
@@ -593,6 +612,43 @@ export interface EquipmentTypeDef {
   maxPerRound: number;
   /** Part de la valeur nette comptable récupérée à la revente (0..1, défaut 0.5). */
   resaleRatio?: number;
+  /**
+   * Taux d'usure par tour (0..1, défaut 0.05). Utilisé dans le suivi individuel
+   * des machines (`machineFleet`). Sans ce champ, la valeur par défaut s'applique.
+   */
+  wearRatePerRound?: number;
+  /**
+   * Seuil d'usure à partir duquel des pannes aléatoires sont possibles (0..1,
+   * défaut 0.7). En dessous, la machine ne peut pas tomber en panne.
+   */
+  breakdownThreshold?: number;
+  /**
+   * Taux de réparation de l'usure par tour avec maintenance pleine (0..1,
+   * défaut 0.1). La maintenance réduit l'usure d'autant chaque tour.
+   */
+  maintenanceRepairRate?: number;
+}
+
+/**
+ * Enregistrement individuel d'une machine dans le parc (suivi granulaire).
+ * Présent quand le scénario active les équipements typés et que le parc est
+ * suivi machine par machine (champ `machineFleet` de `CompanyState`).
+ */
+export interface MachineRecord {
+  /** Identifiant unique de la machine au sein de la partie, ex. "manual-r0-0". */
+  id: string;
+  /** Référence au type de machine (EquipmentTypeDef.code). */
+  typeCode: string;
+  /** Numéro du tour où la machine a été achetée (0 = parc initial). */
+  purchasedRound: number;
+  /** Âge en tours depuis l'achat. */
+  age: number;
+  /** Usure cumulée (0..1) : 0 = neuve, 1 = en bout de vie. */
+  wear: number;
+  /** Vrai si la machine est opérationnelle (contribue à la capacité). */
+  isOperational: boolean;
+  /** Tour de la dernière maintenance (maintenance budget > 30 % de la référence). */
+  lastMaintenanceRound: number;
 }
 
 /**
@@ -902,6 +958,16 @@ export interface CompanyState {
   fleet?: EquipmentItem[];
   /** Machines achetées ce tour, en attente d'installation (en service à t+1). */
   pendingFleet?: EquipmentItem[];
+  /**
+   * Suivi individuel des machines (granularité StratiRAC). Présent quand le
+   * scénario active les équipements typés ET que la partie a été initialisée
+   * avec ce suivi. Chaque machine porte son âge, son usure et son état
+   * opérationnel. La capacité est calculée sur les seules machines opérationnelles.
+   * Absent = comportement historique (fleet par lots).
+   */
+  machineFleet?: MachineRecord[];
+  /** Machines achetées ce tour, en attente de mise en service (suivi individuel). */
+  pendingMachineFleet?: MachineRecord[];
   /** Capacité machine achetée au tour précédent, mise en service ce tour. */
   pendingCapacity?: number;
   /** Amortissement de l'investissement en attente de mise en service. */
