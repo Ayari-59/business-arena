@@ -872,7 +872,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // 1. Retirer les machines vendues ce tour (FIFO par type, plus anciennes d'abord).
       let updatedFleet = activeMachineFleet ?? [];
       for (const sold of equipSold) {
-        updatedFleet = removeMachinesFromFleet(updatedFleet, sold.typeCode, sold.count);
+        updatedFleet = removeMachinesFromFleet(updatedFleet, sold.typeCode, sold.quantity);
       }
       // 2. Vieillissement, usure, pannes aléatoires selon budget maintenance.
       updatedFleet = updateMachineFleet({
@@ -893,7 +893,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       for (const bought of equipBought) {
         const existingSize = updatedFleet.filter((m) => m.typeCode === bought.typeCode).length;
         pending = pending.concat(
-          createNewMachines(bought.typeCode, bought.count, roundIndex, existingSize),
+          createNewMachines(bought.typeCode, bought.quantity, roundIndex, existingSize),
         );
       }
       nextPendingMachineFleet = pending.length > 0 ? pending : null;
