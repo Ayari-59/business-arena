@@ -940,6 +940,54 @@ const rawBistrot = {
       { id: "rse-dechets", label: "Réduction gaspillage alimentaire", category: "dechets", costPerRound: 1500, implementationRounds: 2, effects: { carbonReduction: 0.15, imageBonus: 0.05, employeeSatisfaction: 0.02, energySaving: 0 } },
     ],
   },
+  pricingStrategy: {
+    maxActiveStrategies: 1,
+    strategies: [
+      { id: "ps-midi-affaires", label: "Menu affaires express midi", type: "segmentation", priceMultiplier: 1.08, demandImpact: 0.06, marginImpact: 0.05, imageImpact: 0.02, minRound: 1 },
+      { id: "ps-happy-hour", label: "Happy hour et promotions soirée", type: "dynamique", priceMultiplier: 0.85, demandImpact: 0.14, marginImpact: -0.07, imageImpact: 0, minRound: 1 },
+      { id: "ps-gastronomique", label: "Menu gastronomique week-end", type: "premium", priceMultiplier: 1.20, demandImpact: -0.08, marginImpact: 0.15, imageImpact: 0.10, minRound: 2 },
+    ],
+  },
+  advancedHR: {
+    maxActivePolicies: 2,
+    policies: [
+      { id: "hr-poly", label: "Polyvalence serveurs/cuisine", type: "carrieres", costPerRound: 1500, implementationRounds: 1, effects: { attritionReduction: 0.05, productivityBonus: 0.06, recruitmentBonus: 0.03, absenteeismReduction: 0.04 } },
+      { id: "hr-horaires", label: "Aménagement des horaires en coupure", type: "bienEtre", costPerRound: 2000, implementationRounds: 1, effects: { attritionReduction: 0.10, productivityBonus: 0.02, recruitmentBonus: 0.08, absenteeismReduction: 0.06 } },
+      { id: "hr-commissions", label: "Commissions sur addition", type: "salaires", costPerRound: 3500, implementationRounds: 1, effects: { attritionReduction: 0.04, productivityBonus: 0.10, recruitmentBonus: 0.05, absenteeismReduction: 0.02 } },
+    ],
+  },
+  crisisManagement: {
+    crisisEventProbability: 0.22,
+    plans: [
+      { id: "cm-sanitaire", label: "Protocole sanitaire renforcé", crisisType: "criseSanitaire", preparationCostPerRound: 1500, activationCost: 4000, effects: { revenueProtection: 0.70, recoverySpeedBonus: 0.30, imageProtection: 0.60 } },
+      { id: "cm-mauvaise-presse", label: "Cellule communication de crise", crisisType: "rappelProduit", preparationCostPerRound: 1000, activationCost: 3000, effects: { revenueProtection: 0.50, recoverySpeedBonus: 0.20, imageProtection: 0.75 } },
+      { id: "cm-approvisionnement", label: "Fournisseurs de secours", crisisType: "ruptureFournisseur", preparationCostPerRound: 2000, activationCost: 5000, effects: { revenueProtection: 0.65, recoverySpeedBonus: 0.25, imageProtection: 0.30 } },
+    ],
+  },
+  partnerships: {
+    maxActivePartnerships: 2,
+    options: [
+      { id: "part-livraison", label: "Partenariat plateforme livraison", type: "franchise", entryFee: 3000, royaltiesPerRound: 1500, durationRounds: 3, minRound: 1, effects: { revenueBonus: 0.10, costReduction: 0, rdBonus: 0, marketAccessBonus: 0.12 } },
+      { id: "part-traiteur", label: "Prestations traiteur entreprises", type: "appelOffre", entryFee: 2000, royaltiesPerRound: 1000, durationRounds: 4, minRound: 1, effects: { revenueBonus: 0.08, costReduction: 0.02, rdBonus: 0, marketAccessBonus: 0.06 } },
+      { id: "part-producteurs", label: "Circuit court producteurs locaux", type: "codeveloppement", entryFee: 1500, royaltiesPerRound: 800, durationRounds: 5, minRound: 1, effects: { revenueBonus: 0, costReduction: 0.06, rdBonus: 0, marketAccessBonus: 0.03 } },
+    ],
+  },
+  digitalTransformation: {
+    maxSimultaneousProjects: 2,
+    projects: [
+      { id: "dt-caisse", label: "Caisse numérique et gestion tables", type: "erp", costPerRound: 2500, implementationRounds: 1, maintenanceCostPerRound: 400, effects: { efficiencyBonus: 0.08, costReduction: 0.03, demandBonus: 0.02, errorReduction: 0.12 } },
+      { id: "dt-reservations", label: "Système réservations en ligne", type: "ecommerce", costPerRound: 1800, implementationRounds: 1, maintenanceCostPerRound: 300, effects: { efficiencyBonus: 0.04, costReduction: 0, demandBonus: 0.08, errorReduction: 0.05 } },
+      { id: "dt-stocks", label: "Gestion intelligente des stocks", type: "automatisation", costPerRound: 3000, implementationRounds: 2, maintenanceCostPerRound: 500, effects: { efficiencyBonus: 0.06, costReduction: 0.08, demandBonus: 0, errorReduction: 0.10 } },
+    ],
+  },
+  brandManagement: {
+    maxActionsPerRound: 2,
+    actions: [
+      { id: "bm-reseaux", label: "Animation réseaux sociaux locaux", type: "reputation", costPerRound: 1500, durationRounds: 3, isRecurring: true, effects: { imageBonus: 0.06, loyaltyBonus: 0.05, priceAcceptance: 0.02, crisisRecovery: 0.05 } },
+      { id: "bm-guide", label: "Référencement guide gastronomique", type: "certificationLabel", costPerRound: 2500, durationRounds: 2, isRecurring: false, effects: { imageBonus: 0.12, loyaltyBonus: 0.03, priceAcceptance: 0.08, crisisRecovery: 0 } },
+      { id: "bm-evenements", label: "Soirées thématiques et événements", type: "nps", costPerRound: 2000, durationRounds: 2, isRecurring: false, effects: { imageBonus: 0.05, loyaltyBonus: 0.10, priceAcceptance: 0.03, crisisRecovery: 0.04 } },
+    ],
+  },
   financingOptions: {
     options: [
       { id: "credit-fournisseur", label: "Crédit fournisseur", type: "creditLine", maxAmount: 30000, interestRatePerRound: 0.02, durationRounds: 3, availableFromRound: 1 },

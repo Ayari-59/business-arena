@@ -1135,6 +1135,54 @@ const rawNova = {
       { id: "rse-social", label: "Politique RH responsable", category: "social", costPerRound: 4000, implementationRounds: 1, effects: { carbonReduction: 0.02, imageBonus: 0.06, employeeSatisfaction: 0.06, energySaving: 0 } },
     ],
   },
+  pricingStrategy: {
+    maxActiveStrategies: 2,
+    strategies: [
+      { id: "ps-premium", label: "Positionnement haut de gamme", type: "premium", priceMultiplier: 1.15, demandImpact: -0.05, marginImpact: 0.12, imageImpact: 0.08, minRound: 1 },
+      { id: "ps-penetration", label: "Prix d'appel marché", type: "penetration", priceMultiplier: 0.88, demandImpact: 0.10, marginImpact: -0.08, imageImpact: 0, minRound: 1 },
+      { id: "ps-segmentation", label: "Segmentation tarifaire B2B/B2C", type: "segmentation", priceMultiplier: 1.05, demandImpact: 0.06, marginImpact: 0.08, imageImpact: 0.03, minRound: 2 },
+    ],
+  },
+  advancedHR: {
+    maxActivePolicies: 2,
+    policies: [
+      { id: "hr-flex", label: "Télétravail flexible", type: "teletravail", costPerRound: 3000, implementationRounds: 1, effects: { attritionReduction: 0.06, productivityBonus: 0.04, recruitmentBonus: 0.05, absenteeismReduction: 0.03 } },
+      { id: "hr-formation", label: "Plan de formation intensif", type: "carrieres", costPerRound: 6000, implementationRounds: 2, effects: { attritionReduction: 0.04, productivityBonus: 0.08, recruitmentBonus: 0.10, absenteeismReduction: 0.02 } },
+      { id: "hr-bien-etre", label: "Programme bien-être au travail", type: "bienEtre", costPerRound: 4500, implementationRounds: 2, effects: { attritionReduction: 0.08, productivityBonus: 0.03, recruitmentBonus: 0.06, absenteeismReduction: 0.06 } },
+    ],
+  },
+  crisisManagement: {
+    crisisEventProbability: 0.18,
+    plans: [
+      { id: "cm-qualite", label: "Cellule de crise qualité", crisisType: "rappelProduit", preparationCostPerRound: 2000, activationCost: 5000, effects: { revenueProtection: 0.60, recoverySpeedBonus: 0.20, imageProtection: 0.50 } },
+      { id: "cm-approvisionnement", label: "Plan continuité approvisionnement", crisisType: "ruptureFournisseur", preparationCostPerRound: 3000, activationCost: 8000, effects: { revenueProtection: 0.70, recoverySpeedBonus: 0.30, imageProtection: 0.30 } },
+      { id: "cm-cyber", label: "Bouclier cybersécurité", crisisType: "cyberAttaque", preparationCostPerRound: 4000, activationCost: 10000, effects: { revenueProtection: 0.80, recoverySpeedBonus: 0.40, imageProtection: 0.60 } },
+    ],
+  },
+  partnerships: {
+    maxActivePartnerships: 2,
+    options: [
+      { id: "part-distrib", label: "Partenariat réseau de distribution", type: "licence", entryFee: 15000, royaltiesPerRound: 4000, durationRounds: 4, minRound: 1, effects: { revenueBonus: 0.08, costReduction: 0.02, rdBonus: 0, marketAccessBonus: 0.10 } },
+      { id: "part-techno", label: "Alliance technologique OEM", type: "codeveloppement", entryFee: 20000, royaltiesPerRound: 5000, durationRounds: 5, minRound: 2, effects: { revenueBonus: 0.04, costReduction: 0.05, rdBonus: 0.10, marketAccessBonus: 0.03 } },
+      { id: "part-sourcing", label: "Co-achat matières premières", type: "appelOffre", entryFee: 8000, royaltiesPerRound: 2500, durationRounds: 3, minRound: 1, effects: { revenueBonus: 0, costReduction: 0.10, rdBonus: 0, marketAccessBonus: 0 } },
+    ],
+  },
+  digitalTransformation: {
+    maxSimultaneousProjects: 2,
+    projects: [
+      { id: "dt-erp", label: "ERP intégré", type: "erp", costPerRound: 10000, implementationRounds: 3, maintenanceCostPerRound: 2000, effects: { efficiencyBonus: 0.10, costReduction: 0.08, demandBonus: 0, errorReduction: 0.15 } },
+      { id: "dt-crm", label: "CRM relation client", type: "crm", costPerRound: 6000, implementationRounds: 2, maintenanceCostPerRound: 1500, effects: { efficiencyBonus: 0.04, costReduction: 0.02, demandBonus: 0.06, errorReduction: 0.05 } },
+      { id: "dt-ia-qualite", label: "IA contrôle qualité", type: "automatisation", costPerRound: 8000, implementationRounds: 3, maintenanceCostPerRound: 1000, effects: { efficiencyBonus: 0.06, costReduction: 0.05, demandBonus: 0.02, errorReduction: 0.20 } },
+    ],
+  },
+  brandManagement: {
+    maxActionsPerRound: 2,
+    actions: [
+      { id: "bm-campagne", label: "Campagne image nationale", type: "reputation", costPerRound: 8000, durationRounds: 2, isRecurring: false, effects: { imageBonus: 0.10, loyaltyBonus: 0.04, priceAcceptance: 0.03, crisisRecovery: 0 } },
+      { id: "bm-ambassadeurs", label: "Programme ambassadeurs clients", type: "ambassadeurs", costPerRound: 5000, durationRounds: 3, isRecurring: true, effects: { imageBonus: 0.05, loyaltyBonus: 0.08, priceAcceptance: 0.05, crisisRecovery: 0.10 } },
+      { id: "bm-label", label: "Certification label qualité", type: "certificationLabel", costPerRound: 3500, durationRounds: 4, isRecurring: false, effects: { imageBonus: 0.08, loyaltyBonus: 0.03, priceAcceptance: 0.08, crisisRecovery: 0.05 } },
+    ],
+  },
   rdActions: {
     maxSimultaneousProjects: 2,
     actions: [

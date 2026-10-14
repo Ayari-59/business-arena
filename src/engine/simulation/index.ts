@@ -637,6 +637,29 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     innovationCost: number;
     /** Coût total du programme RSE ce tour (calculé post-marché, vague 5). */
     rseProgramCost: number;
+    // ── Vague 6 ──────────────────────────────────────────────────────────────
+    /** Effets agrégés des stratégies de prix actives (vague 6). */
+    pricingEffects: { priceMultiplier: number; demandImpact: number; marginImpact: number };
+    /** Coût total des politiques RH avancées ce tour (vague 6). */
+    advancedHRCost: number;
+    /** Effets agrégés des politiques RH avancées actives (vague 6). */
+    advancedHREffects: import("../types").AdvancedHREffects;
+    /** Coût total de gestion de crise ce tour (vague 6). */
+    crisisCostTotal: number;
+    /** Événement de crise survenu ce tour (vague 6). */
+    crisisEvent: { type: string; impactDescription: string } | null;
+    /** Coût total des partenariats ce tour (vague 6). */
+    partnershipCostTotal: number;
+    /** Effets agrégés des partenariats actifs (vague 6). */
+    partnershipEffectsAgg: import("../types").PartnershipEffects;
+    /** Coût total de la transformation digitale ce tour (vague 6). */
+    digitalCostTotal: number;
+    /** Effets agrégés des projets digitaux terminés (vague 6). */
+    digitalEffectsAgg: import("../types").DigitalProjectEffects;
+    /** Coût total des actions de marque ce tour (vague 6). */
+    brandCostTotal: number;
+    /** Effets agrégés des actions de marque actives (vague 6). */
+    brandEffectsAgg: import("../types").BrandActionEffects;
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -705,6 +728,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceDecisions: raw.maintenanceDecisions,
       hsActions: raw.hsActions,
       trainingEnrollments: raw.trainingEnrollments,
+      // Vague 5 : décisions des modules optionnels.
+      activeContractIds: raw.activeContractIds,
+      activeCapacityOptionIds: raw.activeCapacityOptionIds,
+      enteredMarketIds: raw.enteredMarketIds,
+      startedInnovationIds: raw.startedInnovationIds,
+      activeRseActionIds: raw.activeRseActionIds,
+      // Vague 6 : décisions des modules optionnels.
+      activePricingStrategyIds: raw.activePricingStrategyIds,
+      activeHRPolicyIds: raw.activeHRPolicyIds,
+      activeCrisisPlanIds: raw.activeCrisisPlanIds,
+      activatePartnershipIds: raw.activatePartnershipIds,
+      startDigitalProjectIds: raw.startDigitalProjectIds,
+      activeBrandActionIds: raw.activeBrandActionIds,
     };
     // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
     // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
@@ -912,6 +948,66 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         rseProgramEffects.imageBonus += def.effects.imageBonus;
         rseProgramEffects.employeeSatisfaction += def.effects.employeeSatisfaction;
         rseProgramEffects.energySaving += def.effects.energySaving;
+      }
+    }
+    // ── Vague 6 : effets d'ouverture ──────────────────────────────────────────
+    // Stratégie de prix (vague 6) : effets cumulés des stratégies actives à l'ouverture.
+    const pricingEffects = { priceMultiplier: 1, demandImpact: 0, marginImpact: 0 };
+    if (scenario.pricingStrategy) {
+      for (const sid of state.activePricingStrategies ?? []) {
+        const def = scenario.pricingStrategy.strategies.find((s) => s.id === sid);
+        if (!def || roundIndex < def.minRound) continue;
+        pricingEffects.priceMultiplier *= def.priceMultiplier;
+        pricingEffects.demandImpact += def.demandImpact;
+        pricingEffects.marginImpact += def.marginImpact;
+      }
+    }
+    // Transformation digitale (vague 6) : effets cumulés des projets terminés à l'ouverture.
+    const digitalEffectsAgg: import("../types").DigitalProjectEffects = { efficiencyBonus: 0, costReduction: 0, demandBonus: 0, errorReduction: 0 };
+    if (scenario.digitalTransformation) {
+      for (const pid of state.completedDigitalProjects ?? []) {
+        const def = scenario.digitalTransformation.projects.find((p) => p.id === pid);
+        if (!def) continue;
+        digitalEffectsAgg.efficiencyBonus = Math.min(0.4, digitalEffectsAgg.efficiencyBonus + def.effects.efficiencyBonus);
+        digitalEffectsAgg.costReduction = Math.min(0.3, digitalEffectsAgg.costReduction + def.effects.costReduction);
+        digitalEffectsAgg.demandBonus += def.effects.demandBonus;
+        digitalEffectsAgg.errorReduction = Math.min(0.5, digitalEffectsAgg.errorReduction + def.effects.errorReduction);
+      }
+    }
+    // Gestion de marque (vague 6) : effets cumulés des actions actives à l'ouverture.
+    const brandEffectsAgg: import("../types").BrandActionEffects = { imageBonus: 0, loyaltyBonus: 0, priceAcceptance: 0, crisisRecovery: 0 };
+    if (scenario.brandManagement) {
+      for (const ba of state.activeBrandActions ?? []) {
+        const def = scenario.brandManagement.actions.find((a) => a.id === ba.id);
+        if (!def) continue;
+        brandEffectsAgg.imageBonus += def.effects.imageBonus;
+        brandEffectsAgg.loyaltyBonus += def.effects.loyaltyBonus;
+        brandEffectsAgg.priceAcceptance += def.effects.priceAcceptance;
+        brandEffectsAgg.crisisRecovery = Math.max(brandEffectsAgg.crisisRecovery, def.effects.crisisRecovery);
+      }
+    }
+    // RH avancée (vague 6) : effets cumulés des politiques actives à l'ouverture.
+    const advancedHREffectsOpening: import("../types").AdvancedHREffects = { attritionReduction: 0, productivityBonus: 0, recruitmentBonus: 0, absenteeismReduction: 0 };
+    if (scenario.advancedHR) {
+      for (const hp of state.activeHRPolicies ?? []) {
+        const def = scenario.advancedHR.policies.find((p) => p.id === hp.id);
+        if (!def || hp.roundsActive < def.implementationRounds) continue;
+        advancedHREffectsOpening.attritionReduction = Math.min(0.5, advancedHREffectsOpening.attritionReduction + def.effects.attritionReduction);
+        advancedHREffectsOpening.productivityBonus = Math.min(0.3, advancedHREffectsOpening.productivityBonus + def.effects.productivityBonus);
+        advancedHREffectsOpening.recruitmentBonus = Math.min(0.5, advancedHREffectsOpening.recruitmentBonus + def.effects.recruitmentBonus);
+        advancedHREffectsOpening.absenteeismReduction = Math.min(0.3, advancedHREffectsOpening.absenteeismReduction + def.effects.absenteeismReduction);
+      }
+    }
+    // Partenariats (vague 6) : effets cumulés des partenariats actifs à l'ouverture.
+    const partnershipEffectsOpening: import("../types").PartnershipEffects = { revenueBonus: 0, costReduction: 0, rdBonus: 0, marketAccessBonus: 0 };
+    if (scenario.partnerships) {
+      for (const ap of state.activePartnerships ?? []) {
+        const def = scenario.partnerships.options.find((o) => o.id === ap.id);
+        if (!def) continue;
+        partnershipEffectsOpening.revenueBonus += def.effects.revenueBonus;
+        partnershipEffectsOpening.costReduction = Math.min(0.3, partnershipEffectsOpening.costReduction + def.effects.costReduction);
+        partnershipEffectsOpening.rdBonus += def.effects.rdBonus;
+        partnershipEffectsOpening.marketAccessBonus += def.effects.marketAccessBonus;
       }
     }
     // Mono-produit : la rupture ampute la disponibilité de l'usine (chemin
@@ -1620,6 +1716,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       internationalCost: 0,
       innovationCost: 0,
       rseProgramCost: 0,
+      // Vague 6 : valeurs d'ouverture (effets), autres initialisées à 0 et mutées post-marché.
+      pricingEffects,
+      advancedHRCost: 0,
+      advancedHREffects: advancedHREffectsOpening,
+      crisisCostTotal: 0,
+      crisisEvent: null,
+      partnershipCostTotal: 0,
+      partnershipEffectsAgg: partnershipEffectsOpening,
+      digitalCostTotal: 0,
+      digitalEffectsAgg,
+      brandCostTotal: 0,
+      brandEffectsAgg,
     };
   });
 
@@ -1663,7 +1771,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           : 1;
         if (comm) w.axisFitBySegment[segment.code] = fit;
         return attractionScore({
-          price: w.gamme[k]!.price,
+          // Vague 6 : priceMultiplier de la stratégie de prix, priceAcceptance de la marque.
+          price: w.gamme[k]!.price * w.pricingEffects.priceMultiplier * (1 - w.brandEffectsAgg.priceAcceptance),
           marketingBudget: comm ? w.gamme[k]!.marketingBudget * fit : w.gamme[k]!.marketingBudget,
           // La qualité perçue DE LA RÉFÉRENCE (mono : celle de l'entreprise).
           perceivedQuality: w.productPerceived[k]!,
@@ -1674,13 +1783,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           // la notoriété de marque (communication) aussi, à l'adéquation de l'axe.
           // Grille R&D : le bonus de demande s'ajoute comme un facteur d'attractivité.
           // Actions qualité : qualityImageBonus relève l'attractivité (+X multiplicateur).
+          // Vague 6 : demandImpact de la stratégie de prix, demandBonus digital, imageBonus marque.
           imageFactor: (comm
             ? w.rseImageFactor * w.rseCardFactor * brandFactor(w.brandOpening, fit)
             : w.rseImageFactor * w.rseCardFactor) *
             (1 + w.rdGridEffects.demandBonus) *
             (1 + w.qualityActionsEffects.qualityImageBonus) *
             (1 + w.innovationEffects.demandBonus) *
-            (1 + w.rseProgramEffects.imageBonus),
+            (1 + w.rseProgramEffects.imageBonus) *
+            (1 + w.pricingEffects.demandImpact) *
+            (1 + w.digitalEffectsAgg.demandBonus) *
+            (1 + w.brandEffectsAgg.imageBonus) *
+            (1 + w.partnershipEffectsAgg.marketAccessBonus),
         });
       });
       const shares = allocateShares(
@@ -2422,6 +2536,246 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
     // ── Fin vague 5 ──────────────────────────────────────────────────────────
 
+    // T. Stratégie de prix : mise à jour de l'état des stratégies actives.
+    if (scenario.pricingStrategy && !gelee) {
+      const psCfg = scenario.pricingStrategy;
+      const nowStrategies: string[] = [];
+      // Conserver les stratégies actives (pas d'expiration automatique)
+      for (const sid of w.state.activePricingStrategies ?? []) {
+        const def = psCfg.strategies.find((s) => s.id === sid);
+        if (def) nowStrategies.push(sid);
+      }
+      // Nouvelles stratégies activées ce tour
+      for (const sid of w.decisions.activePricingStrategyIds ?? []) {
+        if (nowStrategies.includes(sid)) continue;
+        if (nowStrategies.length >= psCfg.maxActiveStrategies) break;
+        const def = psCfg.strategies.find((s) => s.id === sid);
+        if (!def || roundIndex < def.minRound) continue;
+        nowStrategies.push(sid);
+      }
+      w.state.activePricingStrategies = nowStrategies.length > 0 ? nowStrategies : undefined;
+    }
+
+    // U. RH avancée : mise à jour des politiques actives et coût.
+    if (scenario.advancedHR && !gelee) {
+      const hrCfg = scenario.advancedHR;
+      const nowPolicies: { id: string; roundsActive: number }[] = [];
+      // Avancer les politiques déjà actives
+      for (const hp of w.state.activeHRPolicies ?? []) {
+        const def = hrCfg.policies.find((p) => p.id === hp.id);
+        if (!def) continue;
+        w.advancedHRCost += def.costPerRound;
+        nowPolicies.push({ id: hp.id, roundsActive: hp.roundsActive + 1 });
+      }
+      // Nouvelles politiques activées ce tour
+      for (const id of w.decisions.activeHRPolicyIds ?? []) {
+        if (nowPolicies.some((p) => p.id === id)) continue;
+        if (nowPolicies.length >= hrCfg.maxActivePolicies) continue;
+        const def = hrCfg.policies.find((p) => p.id === id);
+        if (!def) continue;
+        w.advancedHRCost += def.costPerRound;
+        nowPolicies.push({ id, roundsActive: 1 });
+      }
+      w.state.activeHRPolicies = nowPolicies.length > 0 ? nowPolicies : undefined;
+      // Recalculer les effets agrégés avec les politiques mises à jour
+      const eff = w.advancedHREffects;
+      eff.attritionReduction = 0; eff.productivityBonus = 0; eff.recruitmentBonus = 0; eff.absenteeismReduction = 0;
+      for (const hp of nowPolicies) {
+        const def = hrCfg.policies.find((p) => p.id === hp.id);
+        if (!def || hp.roundsActive < def.implementationRounds) continue;
+        eff.attritionReduction = Math.min(0.5, eff.attritionReduction + def.effects.attritionReduction);
+        eff.productivityBonus = Math.min(0.3, eff.productivityBonus + def.effects.productivityBonus);
+        eff.recruitmentBonus = Math.min(0.5, eff.recruitmentBonus + def.effects.recruitmentBonus);
+        eff.absenteeismReduction = Math.min(0.3, eff.absenteeismReduction + def.effects.absenteeismReduction);
+      }
+    }
+
+    // V. Gestion de crise : tirage d'un événement de crise et application.
+    if (scenario.crisisManagement && !gelee) {
+      const cmCfg = scenario.crisisManagement;
+      // Coûts de préparation (plans actifs)
+      let crisisPreparationCost = 0;
+      const nowCrisisPlans: string[] = [];
+      // Conserver les plans actifs
+      for (const pid of w.state.activeCrisisPlans ?? []) {
+        const def = cmCfg.plans.find((p) => p.id === pid);
+        if (def) { nowCrisisPlans.push(pid); crisisPreparationCost += def.preparationCostPerRound; }
+      }
+      // Activer de nouveaux plans ce tour
+      for (const id of w.decisions.activeCrisisPlanIds ?? []) {
+        if (nowCrisisPlans.includes(id)) continue;
+        const def = cmCfg.plans.find((p) => p.id === id);
+        if (!def) continue;
+        nowCrisisPlans.push(id);
+        crisisPreparationCost += def.preparationCostPerRound;
+      }
+      w.state.activeCrisisPlans = nowCrisisPlans.length > 0 ? nowCrisisPlans : undefined;
+      w.crisisCostTotal += crisisPreparationCost;
+      // Tirer un événement de crise (RNG dédié 0x6372 = "cr")
+      if (!estimation) {
+        const crisisSeed = (input.seed ^ 0x6372 ^ (w.state.id.charCodeAt(0) || 0)) >>> 0;
+        const crisisRng = createRng(deriveRoundSeed(crisisSeed, roundIndex));
+        if (crisisRng.next() < cmCfg.crisisEventProbability) {
+          // Tirer un type de crise parmi ceux du catalogue
+          const crisisTypes = cmCfg.plans.map((p) => p.crisisType);
+          const uniqueTypes = [...new Set(crisisTypes)];
+          const crisisTypeIndex = Math.floor(crisisRng.next() * uniqueTypes.length);
+          const drawnType = uniqueTypes[crisisTypeIndex] ?? cmCfg.plans[0]!.crisisType;
+          // Chercher un plan actif couvrant ce type
+          const coveringPlan = nowCrisisPlans.flatMap((pid) => {
+            const def = cmCfg.plans.find((p) => p.id === pid && p.crisisType === drawnType);
+            return def ? [def] : [];
+          })[0];
+          const revenueProtection = coveringPlan?.effects.revenueProtection ?? 0;
+          const imageProtection = coveringPlan?.effects.imageProtection ?? 0;
+          const activationCost = coveringPlan ? coveringPlan.activationCost : 0;
+          w.crisisCostTotal += activationCost;
+          // Impact sur le CA (pertes de revenus non protégées)
+          const crisisRevenueLoss = revenue * 0.1 * (1 - revenueProtection) * (1 - w.brandEffectsAgg.crisisRecovery);
+          w.internationalRevenue -= Math.min(Math.abs(w.internationalRevenue), crisisRevenueLoss);
+          w.crisisEvent = {
+            type: drawnType,
+            impactDescription: `Crise ${drawnType} : perte de CA estimée ${Math.round(crisisRevenueLoss)} € (protection : ${Math.round(revenueProtection * 100)} %, image : ${Math.round(imageProtection * 100)} %)`,
+          };
+          w.state.ongoingCrisis = { type: drawnType, roundsRemaining: 1 };
+        } else {
+          w.state.ongoingCrisis = null;
+        }
+      }
+    }
+
+    // W. Partenariats & alliances : activation, royalties et effets.
+    if (scenario.partnerships && !gelee) {
+      const pCfg = scenario.partnerships;
+      const nowPartnerships: { id: string; remainingRounds: number }[] = [];
+      // Avancer les partenariats déjà actifs
+      for (const ap of w.state.activePartnerships ?? []) {
+        const def = pCfg.options.find((o) => o.id === ap.id);
+        if (!def) continue;
+        const remaining = ap.remainingRounds - 1;
+        if (remaining > 0) {
+          w.partnershipCostTotal += def.royaltiesPerRound;
+          nowPartnerships.push({ id: ap.id, remainingRounds: remaining });
+        }
+      }
+      // Activer de nouveaux partenariats ce tour
+      for (const id of w.decisions.activatePartnershipIds ?? []) {
+        if (nowPartnerships.some((p) => p.id === id)) continue;
+        if (nowPartnerships.length >= pCfg.maxActivePartnerships) continue;
+        const def = pCfg.options.find((o) => o.id === id);
+        if (!def || roundIndex < def.minRound) continue;
+        w.partnershipCostTotal += def.entryFee + def.royaltiesPerRound;
+        nowPartnerships.push({ id, remainingRounds: def.durationRounds });
+      }
+      w.state.activePartnerships = nowPartnerships.length > 0 ? nowPartnerships : undefined;
+      // Recalculer les effets des partenariats actifs (ouverture + nouveaux)
+      const pe = w.partnershipEffectsAgg;
+      pe.revenueBonus = 0; pe.costReduction = 0; pe.rdBonus = 0; pe.marketAccessBonus = 0;
+      for (const ap of nowPartnerships) {
+        const def = pCfg.options.find((o) => o.id === ap.id);
+        if (!def) continue;
+        pe.revenueBonus += def.effects.revenueBonus;
+        pe.costReduction = Math.min(0.3, pe.costReduction + def.effects.costReduction);
+        pe.rdBonus += def.effects.rdBonus;
+        pe.marketAccessBonus += def.effects.marketAccessBonus;
+      }
+    }
+
+    // X. Transformation digitale : avancement des projets et coûts.
+    if (scenario.digitalTransformation && !gelee) {
+      const dtCfg = scenario.digitalTransformation;
+      const nowInProgress: { id: string; roundsCompleted: number }[] = [];
+      const nowCompleted: string[] = [...(w.state.completedDigitalProjects ?? [])];
+      // Avancer les projets en cours
+      for (const dp of w.state.digitalProjectsInProgress ?? []) {
+        const def = dtCfg.projects.find((p) => p.id === dp.id);
+        if (!def) continue;
+        w.digitalCostTotal += def.costPerRound;
+        const completed = dp.roundsCompleted + 1;
+        if (completed >= def.implementationRounds) {
+          if (!nowCompleted.includes(dp.id)) nowCompleted.push(dp.id);
+        } else {
+          nowInProgress.push({ id: dp.id, roundsCompleted: completed });
+        }
+      }
+      // Démarrer de nouveaux projets ce tour
+      for (const id of w.decisions.startDigitalProjectIds ?? []) {
+        if (nowInProgress.some((p) => p.id === id) || nowCompleted.includes(id)) continue;
+        if (nowInProgress.length >= dtCfg.maxSimultaneousProjects) continue;
+        const def = dtCfg.projects.find((p) => p.id === id);
+        if (!def) continue;
+        w.digitalCostTotal += def.costPerRound;
+        if (def.implementationRounds <= 1) {
+          nowCompleted.push(id);
+        } else {
+          nowInProgress.push({ id, roundsCompleted: 1 });
+        }
+      }
+      // Maintenance des projets terminés
+      for (const pid of nowCompleted) {
+        const def = dtCfg.projects.find((p) => p.id === pid);
+        if (def && def.maintenanceCostPerRound > 0) w.digitalCostTotal += def.maintenanceCostPerRound;
+      }
+      w.state.digitalProjectsInProgress = nowInProgress.length > 0 ? nowInProgress : undefined;
+      w.state.completedDigitalProjects = nowCompleted.length > 0 ? nowCompleted : undefined;
+      // Recalculer les effets des projets terminés
+      const de = w.digitalEffectsAgg;
+      de.efficiencyBonus = 0; de.costReduction = 0; de.demandBonus = 0; de.errorReduction = 0;
+      for (const pid of nowCompleted) {
+        const def = dtCfg.projects.find((p) => p.id === pid);
+        if (!def) continue;
+        de.efficiencyBonus = Math.min(0.4, de.efficiencyBonus + def.effects.efficiencyBonus);
+        de.costReduction = Math.min(0.3, de.costReduction + def.effects.costReduction);
+        de.demandBonus += def.effects.demandBonus;
+        de.errorReduction = Math.min(0.5, de.errorReduction + def.effects.errorReduction);
+      }
+    }
+
+    // Y. Gestion de marque : actions actives, coûts et effets.
+    if (scenario.brandManagement && !gelee) {
+      const bmCfg = scenario.brandManagement;
+      const nowBrandActions: { id: string; remainingRounds: number }[] = [];
+      // Avancer les actions actives
+      for (const ba of w.state.activeBrandActions ?? []) {
+        const def = bmCfg.actions.find((a) => a.id === ba.id);
+        if (!def) continue;
+        const remaining = ba.remainingRounds - 1;
+        if (remaining > 0) {
+          w.brandCostTotal += def.costPerRound;
+          nowBrandActions.push({ id: ba.id, remainingRounds: remaining });
+        } else if (def.isRecurring) {
+          // Action récurrente : se renouvelle automatiquement
+          w.brandCostTotal += def.costPerRound;
+          nowBrandActions.push({ id: ba.id, remainingRounds: def.durationRounds });
+        }
+      }
+      // Activer de nouvelles actions ce tour (dans la limite maxActionsPerRound)
+      const newActionsThisTurn = w.decisions.activeBrandActionIds ?? [];
+      const activatedCount = Math.min(newActionsThisTurn.length, bmCfg.maxActionsPerRound);
+      for (let i = 0; i < activatedCount; i++) {
+        const id = newActionsThisTurn[i]!;
+        if (nowBrandActions.some((a) => a.id === id)) continue;
+        const def = bmCfg.actions.find((a) => a.id === id);
+        if (!def) continue;
+        w.brandCostTotal += def.costPerRound;
+        nowBrandActions.push({ id, remainingRounds: def.durationRounds });
+      }
+      w.state.activeBrandActions = nowBrandActions.length > 0 ? nowBrandActions : undefined;
+      // Recalculer les effets agrégés des actions actives
+      const be = w.brandEffectsAgg;
+      be.imageBonus = 0; be.loyaltyBonus = 0; be.priceAcceptance = 0; be.crisisRecovery = 0;
+      for (const ba of nowBrandActions) {
+        const def = bmCfg.actions.find((a) => a.id === ba.id);
+        if (!def) continue;
+        be.imageBonus += def.effects.imageBonus;
+        be.loyaltyBonus += def.effects.loyaltyBonus;
+        be.priceAcceptance += def.effects.priceAcceptance;
+        be.crisisRecovery = Math.max(be.crisisRecovery, def.effects.crisisRecovery);
+      }
+    }
+
+    // ── Fin vague 6 ──────────────────────────────────────────────────────────
+
     // Catégories d'emprunt (machines, installations) : chaque catégorie a sa
     // propre durée. Backward-compatible : absent = 0, comportement inchangé.
     const loanCats = scenario.finance.loanCategories;
@@ -2494,7 +2848,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
       // Vague 5 : capacityCostTotal, innovationCost et rseProgramCost entrent dans les charges fixes.
       // L'économie RSE sur l'énergie vient en déduction.
-      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost + w.trainingCostTotal + w.capacityCostTotal + w.innovationCost + Math.max(0, w.rseProgramCost - w.rseProgramEffects.energySaving),
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost + w.trainingCostTotal + w.capacityCostTotal + w.innovationCost + Math.max(0, w.rseProgramCost - w.rseProgramEffects.energySaving) + w.advancedHRCost + w.crisisCostTotal + w.partnershipCostTotal + w.digitalCostTotal + w.brandCostTotal,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
@@ -3205,6 +3559,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(Object.values(w.innovationEffects).some((v) => v !== 0) ? { innovationEffects: w.innovationEffects } : {}),
       ...(w.rseProgramCost > 0 ? { rseProgramCost: w.rseProgramCost } : {}),
       ...(Object.values(w.rseProgramEffects).some((v) => v !== 0) ? { rseProgramEffects: w.rseProgramEffects } : {}),
+      // Vague 6 : résultats des modules T–Y.
+      ...(w.pricingEffects.priceMultiplier !== 1 || w.pricingEffects.demandImpact !== 0 || w.pricingEffects.marginImpact !== 0
+        ? { pricingEffects: w.pricingEffects }
+        : {}),
+      ...(w.advancedHRCost > 0 ? { hrCost: w.advancedHRCost } : {}),
+      ...(Object.values(w.advancedHREffects).some((v) => v !== 0) ? { hrEffects: w.advancedHREffects } : {}),
+      ...(w.crisisCostTotal > 0 ? { crisisCost: w.crisisCostTotal } : {}),
+      ...(w.crisisEvent ? { crisisEvent: w.crisisEvent } : {}),
+      ...(w.partnershipCostTotal > 0 ? { partnershipCost: w.partnershipCostTotal } : {}),
+      ...(Object.values(w.partnershipEffectsAgg).some((v) => v !== 0) ? { partnershipEffects: w.partnershipEffectsAgg } : {}),
+      ...(w.digitalCostTotal > 0 ? { digitalCost: w.digitalCostTotal } : {}),
+      ...(Object.values(w.digitalEffectsAgg).some((v) => v !== 0) ? { digitalEffects: w.digitalEffectsAgg } : {}),
+      ...(w.brandCostTotal > 0 ? { brandCost: w.brandCostTotal } : {}),
+      ...(Object.values(w.brandEffectsAgg).some((v) => v !== 0) ? { brandEffects: w.brandEffectsAgg } : {}),
       ...(w.insured
         ? {
             insurance: {
