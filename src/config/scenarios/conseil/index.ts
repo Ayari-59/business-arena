@@ -729,6 +729,54 @@ const rawConseil = {
       { id: "rse-energie", label: "Bureaux basse consommation", category: "energie", costPerRound: 2500, implementationRounds: 2, effects: { carbonReduction: 0.10, imageBonus: 0.03, employeeSatisfaction: 0.02, energySaving: 2200 } },
     ],
   },
+  pricingStrategy: {
+    maxActiveStrategies: 2,
+    strategies: [
+      { id: "ps-valeur", label: "Tarification à la valeur livrée", type: "premium", priceMultiplier: 1.18, demandImpact: -0.06, marginImpact: 0.14, imageImpact: 0.08, minRound: 1 },
+      { id: "ps-abonnement", label: "Contrats de maintenance forfaitaires", type: "segmentation", priceMultiplier: 1.05, demandImpact: 0.08, marginImpact: 0.06, imageImpact: 0.04, minRound: 1 },
+      { id: "ps-competitive", label: "Appel d'offres prix compétitif", type: "penetration", priceMultiplier: 0.90, demandImpact: 0.12, marginImpact: -0.05, imageImpact: 0, minRound: 2 },
+    ],
+  },
+  advancedHR: {
+    maxActivePolicies: 2,
+    policies: [
+      { id: "hr-carriere", label: "Plan de carrière consultant", type: "carrieres", costPerRound: 5000, implementationRounds: 2, effects: { attritionReduction: 0.10, productivityBonus: 0.05, recruitmentBonus: 0.12, absenteeismReduction: 0.03 } },
+      { id: "hr-mentoring", label: "Programme mentoring interne", type: "recrutement", costPerRound: 3500, implementationRounds: 1, effects: { attritionReduction: 0.06, productivityBonus: 0.07, recruitmentBonus: 0.08, absenteeismReduction: 0.02 } },
+      { id: "hr-autonomie", label: "Politique d'autonomie et flex", type: "teletravail", costPerRound: 2500, implementationRounds: 1, effects: { attritionReduction: 0.08, productivityBonus: 0.04, recruitmentBonus: 0.10, absenteeismReduction: 0.05 } },
+    ],
+  },
+  crisisManagement: {
+    crisisEventProbability: 0.16,
+    plans: [
+      { id: "cm-client", label: "Cellule réclamations client", crisisType: "rappelProduit", preparationCostPerRound: 2000, activationCost: 5000, effects: { revenueProtection: 0.55, recoverySpeedBonus: 0.25, imageProtection: 0.70 } },
+      { id: "cm-depart-cle", label: "Plan de succession consultant clé", crisisType: "greve", preparationCostPerRound: 3000, activationCost: 8000, effects: { revenueProtection: 0.70, recoverySpeedBonus: 0.30, imageProtection: 0.40 } },
+      { id: "cm-rgpd", label: "Dispositif conformité RGPD/cyber", crisisType: "cyberAttaque", preparationCostPerRound: 4000, activationCost: 10000, effects: { revenueProtection: 0.80, recoverySpeedBonus: 0.40, imageProtection: 0.65 } },
+    ],
+  },
+  partnerships: {
+    maxActivePartnerships: 2,
+    options: [
+      { id: "part-editeur", label: "Partenariat éditeur logiciel", type: "licence", entryFee: 12000, royaltiesPerRound: 3500, durationRounds: 4, minRound: 1, effects: { revenueBonus: 0.06, costReduction: 0.03, rdBonus: 0.08, marketAccessBonus: 0.10 } },
+      { id: "part-cabinet-audit", label: "Alliance cabinet d'audit", type: "jointVenture", entryFee: 15000, royaltiesPerRound: 4000, durationRounds: 5, minRound: 2, effects: { revenueBonus: 0.08, costReduction: 0, rdBonus: 0.05, marketAccessBonus: 0.12 } },
+      { id: "part-formation", label: "Co-développement formation", type: "codeveloppement", entryFee: 8000, royaltiesPerRound: 2000, durationRounds: 3, minRound: 1, effects: { revenueBonus: 0.04, costReduction: 0.05, rdBonus: 0.10, marketAccessBonus: 0.04 } },
+    ],
+  },
+  digitalTransformation: {
+    maxSimultaneousProjects: 2,
+    projects: [
+      { id: "dt-crm-conseil", label: "CRM et suivi client 360°", type: "crm", costPerRound: 7000, implementationRounds: 2, maintenanceCostPerRound: 1500, effects: { efficiencyBonus: 0.06, costReduction: 0.02, demandBonus: 0.08, errorReduction: 0.05 } },
+      { id: "dt-knowledge", label: "Base de connaissances collaborative", type: "dataAnalytics", costPerRound: 5000, implementationRounds: 2, maintenanceCostPerRound: 800, effects: { efficiencyBonus: 0.10, costReduction: 0.04, demandBonus: 0.03, errorReduction: 0.08 } },
+      { id: "dt-analytique", label: "BI et reporting client", type: "dataAnalytics", costPerRound: 9000, implementationRounds: 3, maintenanceCostPerRound: 2000, effects: { efficiencyBonus: 0.08, costReduction: 0.05, demandBonus: 0.06, errorReduction: 0.10 } },
+    ],
+  },
+  brandManagement: {
+    maxActionsPerRound: 2,
+    actions: [
+      { id: "bm-thought-leadership", label: "Livres blancs et conférences", type: "reputation", costPerRound: 4000, durationRounds: 3, isRecurring: false, effects: { imageBonus: 0.10, loyaltyBonus: 0.04, priceAcceptance: 0.07, crisisRecovery: 0.05 } },
+      { id: "bm-references", label: "Programme référencement client", type: "ambassadeurs", costPerRound: 3000, durationRounds: 4, isRecurring: true, effects: { imageBonus: 0.06, loyaltyBonus: 0.08, priceAcceptance: 0.05, crisisRecovery: 0.10 } },
+      { id: "bm-media", label: "Relations presse et médias", type: "communicationCrise", costPerRound: 5000, durationRounds: 2, isRecurring: false, effects: { imageBonus: 0.12, loyaltyBonus: 0.02, priceAcceptance: 0.04, crisisRecovery: 0.15 } },
+    ],
+  },
   financingOptions: {
     options: [
       { id: "credit-tresorerie", label: "Ligne de trésorerie", type: "creditLine", maxAmount: 80000, interestRatePerRound: 0.016, durationRounds: 4, availableFromRound: 1 },

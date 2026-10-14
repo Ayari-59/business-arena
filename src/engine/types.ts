@@ -421,6 +421,151 @@ export interface RseProgramConfig {
   carbonBudget?: number;
 }
 
+// ---------------------------------------------------------------------------
+// Vague 6 : Interfaces des 6 nouveaux modules optionnels
+// ---------------------------------------------------------------------------
+
+/** Définition d'une stratégie de prix (vague 6). */
+export interface PricingStrategyDef {
+  id: string;
+  label: string;
+  type: "premium" | "penetration" | "dynamique" | "segmentation" | "psychologique";
+  priceMultiplier: number;
+  demandImpact: number;
+  marginImpact: number;
+  imageImpact: number;
+  minRound: number;
+}
+
+/** Catalogue de stratégies de prix (vague 6). */
+export interface PricingStrategyConfig {
+  strategies: PricingStrategyDef[];
+  maxActiveStrategies: number;
+}
+
+/** Effets d'une politique RH avancée (vague 6). */
+export interface AdvancedHREffects {
+  attritionReduction: number;
+  productivityBonus: number;
+  recruitmentBonus: number;
+  absenteeismReduction: number;
+}
+
+/** Définition d'une politique RH avancée (vague 6). */
+export interface AdvancedHRPolicyDef {
+  id: string;
+  label: string;
+  type: "recrutement" | "carrieres" | "salaires" | "teletravail" | "bienEtre";
+  costPerRound: number;
+  implementationRounds: number;
+  effects: AdvancedHREffects;
+}
+
+/** Catalogue de politiques RH avancées (vague 6). */
+export interface AdvancedHRConfig {
+  policies: AdvancedHRPolicyDef[];
+  maxActivePolicies: number;
+}
+
+/** Effets d'un plan de gestion de crise (vague 6). */
+export interface CrisisPlanEffects {
+  revenueProtection: number;
+  recoverySpeedBonus: number;
+  imageProtection: number;
+}
+
+/** Définition d'un plan de gestion de crise (vague 6). */
+export interface CrisisPlanDef {
+  id: string;
+  label: string;
+  crisisType: "greve" | "rappelProduit" | "cyberAttaque" | "ruptureFournisseur" | "criseSanitaire";
+  preparationCostPerRound: number;
+  activationCost: number;
+  effects: CrisisPlanEffects;
+}
+
+/** Catalogue de gestion de crise (vague 6). */
+export interface CrisisManagementConfig {
+  plans: CrisisPlanDef[];
+  crisisEventProbability: number;
+}
+
+/** Effets d'un partenariat ou d'une alliance (vague 6). */
+export interface PartnershipEffects {
+  revenueBonus: number;
+  costReduction: number;
+  rdBonus: number;
+  marketAccessBonus: number;
+}
+
+/** Définition d'une option de partenariat (vague 6). */
+export interface PartnershipOptionDef {
+  id: string;
+  label: string;
+  type: "codeveloppement" | "licence" | "jointVenture" | "appelOffre" | "franchise";
+  entryFee: number;
+  royaltiesPerRound: number;
+  minRound: number;
+  durationRounds: number;
+  effects: PartnershipEffects;
+}
+
+/** Catalogue de partenariats & alliances (vague 6). */
+export interface PartnershipsConfig {
+  options: PartnershipOptionDef[];
+  maxActivePartnerships: number;
+}
+
+/** Effets d'un projet de transformation digitale terminé (vague 6). */
+export interface DigitalProjectEffects {
+  efficiencyBonus: number;
+  costReduction: number;
+  demandBonus: number;
+  errorReduction: number;
+}
+
+/** Définition d'un projet de transformation digitale (vague 6). */
+export interface DigitalProjectDef {
+  id: string;
+  label: string;
+  type: "erp" | "crm" | "automatisation" | "dataAnalytics" | "ecommerce";
+  implementationRounds: number;
+  costPerRound: number;
+  maintenanceCostPerRound: number;
+  effects: DigitalProjectEffects;
+}
+
+/** Catalogue de transformation digitale (vague 6). */
+export interface DigitalTransformationConfig {
+  projects: DigitalProjectDef[];
+  maxSimultaneousProjects: number;
+}
+
+/** Effets d'une action de gestion de marque (vague 6). */
+export interface BrandActionEffects {
+  imageBonus: number;
+  loyaltyBonus: number;
+  priceAcceptance: number;
+  crisisRecovery: number;
+}
+
+/** Définition d'une action de gestion de marque (vague 6). */
+export interface BrandActionDef {
+  id: string;
+  label: string;
+  type: "reputation" | "communicationCrise" | "ambassadeurs" | "nps" | "certificationLabel";
+  costPerRound: number;
+  durationRounds: number;
+  isRecurring: boolean;
+  effects: BrandActionEffects;
+}
+
+/** Catalogue de gestion de marque (vague 6). */
+export interface BrandManagementConfig {
+  actions: BrandActionDef[];
+  maxActionsPerRound: number;
+}
+
 /** Type d'alerte de performance. */
 export type PerformanceAlertType =
   | "rdLag"
@@ -1020,6 +1165,18 @@ export interface EngineScenarioConfig {
       availableFromRound: number;
     }[];
   };
+  /** Stratégies de prix (vague 6). */
+  pricingStrategy?: PricingStrategyConfig;
+  /** Politiques RH avancées (vague 6). */
+  advancedHR?: AdvancedHRConfig;
+  /** Gestion de crise (vague 6). */
+  crisisManagement?: CrisisManagementConfig;
+  /** Partenariats & alliances (vague 6). */
+  partnerships?: PartnershipsConfig;
+  /** Transformation digitale (vague 6). */
+  digitalTransformation?: DigitalTransformationConfig;
+  /** Gestion de marque (vague 6). */
+  brandManagement?: BrandManagementConfig;
 }
 
 /**
@@ -1605,6 +1762,22 @@ export interface CompanyState {
     laborCost: number;
     downtimeCost: number;
   }[];
+  /** Stratégies de prix actives (module `pricingStrategy`). */
+  activePricingStrategies?: string[];
+  /** Politiques RH avancées actives (module `advancedHR`). */
+  activeHRPolicies?: { id: string; roundsActive: number }[];
+  /** Plans de gestion de crise actifs (module `crisisManagement`). */
+  activeCrisisPlans?: string[];
+  /** Crise en cours (module `crisisManagement`). */
+  ongoingCrisis?: { type: string; roundsRemaining: number } | null;
+  /** Partenariats actifs (module `partnerships`). */
+  activePartnerships?: { id: string; remainingRounds: number }[];
+  /** Projets de transformation digitale en cours (module `digitalTransformation`). */
+  digitalProjectsInProgress?: { id: string; roundsCompleted: number }[];
+  /** IDs des projets de transformation digitale terminés (module `digitalTransformation`). */
+  completedDigitalProjects?: string[];
+  /** Actions de gestion de marque actives (module `brandManagement`). */
+  activeBrandActions?: { id: string; remainingRounds: number }[];
   /**
    * Défaillance (cessation de paiements, V2 couche 2). Une entreprise passe
    * `defaillant` après deux tours consécutifs de crise de trésorerie
@@ -1838,6 +2011,18 @@ export interface RoundDecisions {
   startedInnovationIds?: string[];
   /** IDs des actions RSE activées ce tour (module `rseProgram`). */
   activeRseActionIds?: string[];
+  /** IDs des stratégies de prix activées ce tour (module `pricingStrategy`). */
+  activePricingStrategyIds?: string[];
+  /** IDs des politiques RH avancées activées ce tour (module `advancedHR`). */
+  activeHRPolicyIds?: string[];
+  /** IDs des plans de crise activés ce tour (module `crisisManagement`). */
+  activeCrisisPlanIds?: string[];
+  /** IDs des partenariats activés ce tour (module `partnerships`). */
+  activatePartnershipIds?: string[];
+  /** IDs des projets digitaux démarrés ce tour (module `digitalTransformation`). */
+  startDigitalProjectIds?: string[];
+  /** IDs des actions de marque activées ce tour (module `brandManagement`). */
+  activeBrandActionIds?: string[];
 }
 
 /** Ventes estimées d'un tour et résultat estimé correspondant (voir `RoundDecisions.salesEstimate`). */
@@ -2424,6 +2609,28 @@ export interface CompanyRoundResult {
   rseProgramCost?: number;
   /** Effets cumulés des actions RSE actives ce tour (module `rseProgram`). */
   rseProgramEffects?: Partial<RseProgramActionEffects>;
+  /** Effets de la stratégie de prix active ce tour (module `pricingStrategy`). */
+  pricingEffects?: { priceMultiplier: number; demandImpact: number; marginImpact: number };
+  /** Coût total des politiques RH avancées ce tour (module `advancedHR`). */
+  hrCost?: number;
+  /** Effets agrégés des politiques RH avancées ce tour (module `advancedHR`). */
+  hrEffects?: Partial<AdvancedHREffects>;
+  /** Coût total de gestion de crise ce tour (module `crisisManagement`). */
+  crisisCost?: number;
+  /** Événement de crise survenu ce tour (module `crisisManagement`). */
+  crisisEvent?: { type: string; impactDescription: string } | null;
+  /** Coût total des partenariats ce tour (module `partnerships`). */
+  partnershipCost?: number;
+  /** Effets agrégés des partenariats actifs ce tour (module `partnerships`). */
+  partnershipEffects?: Partial<PartnershipEffects>;
+  /** Coût total de la transformation digitale ce tour (module `digitalTransformation`). */
+  digitalCost?: number;
+  /** Effets agrégés des projets digitaux terminés ce tour (module `digitalTransformation`). */
+  digitalEffects?: Partial<DigitalProjectEffects>;
+  /** Coût total des actions de marque ce tour (module `brandManagement`). */
+  brandCost?: number;
+  /** Effets agrégés des actions de marque actives ce tour (module `brandManagement`). */
+  brandEffects?: Partial<BrandActionEffects>;
   kpis: Record<string, number>;
   /** Indicateurs de performance synthétiques calculés par le moteur. */
   performanceMetrics?: PerformanceMetrics;

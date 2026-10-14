@@ -1002,6 +1002,54 @@ const rawEcommerce = {
       { id: "rse-social", label: "Programme conditions de travail entrepôt", category: "social", costPerRound: 3500, implementationRounds: 1, effects: { carbonReduction: 0.02, imageBonus: 0.04, employeeSatisfaction: 0.07, energySaving: 0 } },
     ],
   },
+  pricingStrategy: {
+    maxActiveStrategies: 2,
+    strategies: [
+      { id: "ps-promo-flash", label: "Ventes flash et promotions ciblées", type: "dynamique", priceMultiplier: 0.92, demandImpact: 0.15, marginImpact: -0.06, imageImpact: 0.02, minRound: 1 },
+      { id: "ps-premium-select", label: "Gamme premium sélective", type: "premium", priceMultiplier: 1.12, demandImpact: -0.04, marginImpact: 0.10, imageImpact: 0.06, minRound: 2 },
+      { id: "ps-psycho", label: "Tarification psychologique (9,99 €)", type: "psychologique", priceMultiplier: 0.98, demandImpact: 0.07, marginImpact: 0.02, imageImpact: 0, minRound: 1 },
+    ],
+  },
+  advancedHR: {
+    maxActivePolicies: 2,
+    policies: [
+      { id: "hr-teletravail", label: "Full remote préparateurs", type: "teletravail", costPerRound: 2500, implementationRounds: 1, effects: { attritionReduction: 0.05, productivityBonus: 0.03, recruitmentBonus: 0.08, absenteeismReduction: 0.04 } },
+      { id: "hr-incentive", label: "Intéressement performance logistique", type: "salaires", costPerRound: 7000, implementationRounds: 1, effects: { attritionReduction: 0.03, productivityBonus: 0.10, recruitmentBonus: 0.04, absenteeismReduction: 0.02 } },
+      { id: "hr-upskill", label: "Formation e-commerce et data", type: "carrieres", costPerRound: 5000, implementationRounds: 2, effects: { attritionReduction: 0.04, productivityBonus: 0.08, recruitmentBonus: 0.12, absenteeismReduction: 0.02 } },
+    ],
+  },
+  crisisManagement: {
+    crisisEventProbability: 0.20,
+    plans: [
+      { id: "cm-rupture-stock", label: "Plan de continuité stocks", crisisType: "ruptureFournisseur", preparationCostPerRound: 2500, activationCost: 6000, effects: { revenueProtection: 0.65, recoverySpeedBonus: 0.25, imageProtection: 0.40 } },
+      { id: "cm-fraude", label: "Cellule anti-fraude", crisisType: "cyberAttaque", preparationCostPerRound: 3500, activationCost: 9000, effects: { revenueProtection: 0.75, recoverySpeedBonus: 0.35, imageProtection: 0.60 } },
+      { id: "cm-logistique", label: "Backup prestataire logistique", crisisType: "greve", preparationCostPerRound: 4000, activationCost: 12000, effects: { revenueProtection: 0.80, recoverySpeedBonus: 0.40, imageProtection: 0.35 } },
+    ],
+  },
+  partnerships: {
+    maxActivePartnerships: 2,
+    options: [
+      { id: "part-marketplace", label: "Intégration marketplace partenaire", type: "franchise", entryFee: 10000, royaltiesPerRound: 3000, durationRounds: 4, minRound: 1, effects: { revenueBonus: 0.12, costReduction: 0, rdBonus: 0, marketAccessBonus: 0.15 } },
+      { id: "part-paiement", label: "Partenariat fintech paiement", type: "codeveloppement", entryFee: 8000, royaltiesPerRound: 2000, durationRounds: 3, minRound: 1, effects: { revenueBonus: 0.03, costReduction: 0.02, rdBonus: 0.05, marketAccessBonus: 0.05 } },
+      { id: "part-logistique", label: "Alliance mutualisation entrepôts", type: "jointVenture", entryFee: 18000, royaltiesPerRound: 4500, durationRounds: 5, minRound: 2, effects: { revenueBonus: 0, costReduction: 0.12, rdBonus: 0, marketAccessBonus: 0.04 } },
+    ],
+  },
+  digitalTransformation: {
+    maxSimultaneousProjects: 3,
+    projects: [
+      { id: "dt-ia-prix", label: "IA de pricing dynamique", type: "dataAnalytics", costPerRound: 12000, implementationRounds: 3, maintenanceCostPerRound: 2500, effects: { efficiencyBonus: 0.06, costReduction: 0.03, demandBonus: 0.08, errorReduction: 0.05 } },
+      { id: "dt-appli-mobile", label: "Application mobile clients", type: "ecommerce", costPerRound: 8000, implementationRounds: 2, maintenanceCostPerRound: 1500, effects: { efficiencyBonus: 0.03, costReduction: 0, demandBonus: 0.10, errorReduction: 0 } },
+      { id: "dt-wms", label: "WMS entrepôt intelligent", type: "automatisation", costPerRound: 14000, implementationRounds: 4, maintenanceCostPerRound: 3000, effects: { efficiencyBonus: 0.12, costReduction: 0.10, demandBonus: 0, errorReduction: 0.20 } },
+    ],
+  },
+  brandManagement: {
+    maxActionsPerRound: 2,
+    actions: [
+      { id: "bm-influence", label: "Marketing d'influence", type: "reputation", costPerRound: 7000, durationRounds: 2, isRecurring: false, effects: { imageBonus: 0.08, loyaltyBonus: 0.03, priceAcceptance: 0.02, crisisRecovery: 0 } },
+      { id: "bm-avis", label: "Programme fidélité et avis clients", type: "nps", costPerRound: 4000, durationRounds: 4, isRecurring: true, effects: { imageBonus: 0.04, loyaltyBonus: 0.10, priceAcceptance: 0.04, crisisRecovery: 0.08 } },
+      { id: "bm-content", label: "Stratégie content marketing", type: "ambassadeurs", costPerRound: 5500, durationRounds: 3, isRecurring: false, effects: { imageBonus: 0.07, loyaltyBonus: 0.05, priceAcceptance: 0.03, crisisRecovery: 0.05 } },
+    ],
+  },
   rdActions: {
     maxSimultaneousProjects: 2,
     actions: [
