@@ -314,6 +314,113 @@ export interface CommercialActionsConfig {
   maxActionsPerRound: number;
 }
 
+// ---------------------------------------------------------------------------
+// Vague 5 : Interfaces des 5 nouveaux modules optionnels
+// ---------------------------------------------------------------------------
+
+/** Définition d'un contrat fournisseur pour la négociation (vague 5). */
+export interface SupplierContractDef {
+  id: string;
+  label: string;
+  supplierType: "matiere" | "energie" | "logistique" | "soustraitance";
+  volumeThreshold: number;
+  discountRate: number;
+  contractDurationRounds: number;
+  supplyRiskReduction: number;
+}
+
+/** Catalogue de négociation fournisseurs (vague 5). */
+export interface SupplierNegotiationConfig {
+  contracts: SupplierContractDef[];
+  maxActiveContracts: number;
+}
+
+/** Définition d'une option d'expansion de capacité (vague 5). */
+export interface CapacityOptionDef {
+  id: string;
+  label: string;
+  type: "atelier" | "equipeNuit" | "sousTraitance" | "automatisation";
+  capacityBonus: number;
+  costPerRound: number;
+  setupCost: number;
+  minProductionLevel: number;
+  maxRounds: number;
+}
+
+/** Catalogue d'expansion de capacité (vague 5). */
+export interface CapacityExpansionConfig {
+  options: CapacityOptionDef[];
+  maxActiveOptions: number;
+}
+
+/** Définition d'un marché international (vague 5). */
+export interface InternationalMarketDef {
+  id: string;
+  label: string;
+  region: "europe" | "amerique" | "asie" | "afrique";
+  demandMultiplier: number;
+  baseEntryRound: number;
+  entryInvestment: number;
+  exchangeRateVolatility: number;
+  tariffRate: number;
+  localAdaptationCost: number;
+}
+
+/** Catalogue de marchés internationaux (vague 5). */
+export interface InternationalMarketsConfig {
+  markets: InternationalMarketDef[];
+  maxActiveMarkets: number;
+}
+
+/** Effets d'une innovation produit lancée (vague 5). */
+export interface InnovationEffects {
+  priceBonus: number;
+  demandBonus: number;
+  marginBonus: number;
+  cannibalizationRate: number;
+}
+
+/** Définition d'une innovation produit (vague 5). */
+export interface InnovationDef {
+  id: string;
+  label: string;
+  type: "gamme" | "packaging" | "service" | "digital";
+  developmentRounds: number;
+  devCostPerRound: number;
+  launchCost: number;
+  effects: InnovationEffects;
+}
+
+/** Catalogue d'innovation produit (vague 5). */
+export interface ProductInnovationConfig {
+  innovations: InnovationDef[];
+  maxSimultaneousDev: number;
+}
+
+/** Effets d'une action RSE active (vague 5). */
+export interface RseProgramActionEffects {
+  carbonReduction: number;
+  imageBonus: number;
+  employeeSatisfaction: number;
+  energySaving: number;
+}
+
+/** Définition d'une action du programme RSE structuré (vague 5). */
+export interface RseProgramActionDef {
+  id: string;
+  label: string;
+  category: "energie" | "dechets" | "mobilite" | "fournisseurs" | "social";
+  costPerRound: number;
+  implementationRounds: number;
+  effects: RseProgramActionEffects;
+}
+
+/** Catalogue du programme RSE structuré (vague 5). */
+export interface RseProgramConfig {
+  actions: RseProgramActionDef[];
+  carbonBudget?: number;
+}
+
 /** Type d'alerte de performance. */
 export type PerformanceAlertType =
   | "rdLag"
@@ -878,6 +985,41 @@ export interface EngineScenarioConfig {
     axisSwitchDecay: number;
   };
   enrichedBots?: boolean;
+  /** Négociation fournisseurs (vague 5). */
+  supplierNegotiation?: SupplierNegotiationConfig;
+  /** Expansion de capacité (vague 5). */
+  capacityExpansion?: CapacityExpansionConfig;
+  /** Marchés internationaux (vague 5). */
+  internationalMarkets?: InternationalMarketsConfig;
+  /** Innovation produit (vague 5). */
+  productInnovation?: ProductInnovationConfig;
+  /** Programme RSE structuré (vague 5). */
+  rseProgram?: RseProgramConfig;
+  /** Catalogue d'actions R&D ponctuelles (vague 1). */
+  rdActions?: {
+    actions: {
+      id: string;
+      label: string;
+      theme: string;
+      level: number;
+      costPerRound: number;
+      durationRounds: number;
+      effects: { costReduction: number; qualityBonus: number; imageBonus: number };
+    }[];
+    maxSimultaneousProjects: number;
+  };
+  /** Catalogue d'options de financement structurées (vague 3). */
+  financingOptions?: {
+    options: {
+      id: string;
+      label: string;
+      type: "creditLine" | "termLoan";
+      maxAmount: number;
+      interestRatePerRound: number;
+      durationRounds: number;
+      availableFromRound: number;
+    }[];
+  };
 }
 
 /**
@@ -1437,6 +1579,20 @@ export interface CompanyState {
   activeTrainingPrograms?: { programId: string; enrolledCount: number; remainingRounds: number }[];
   /** Actions commerciales enrichies actives (module `commercialActions`). */
   activeCommercialActions?: { id: string; remainingRounds: number }[];
+  /** Contrats fournisseurs actifs (module `supplierNegotiation`). */
+  activeSupplierContracts?: { id: string; remainingRounds: number }[];
+  /** Options de capacité actives (module `capacityExpansion`). */
+  activeCapacityOptions?: { id: string; roundsUsed: number }[];
+  /** Marchés internationaux actifs (module `internationalMarkets`). */
+  activeInternationalMarkets?: { id: string; enteredAtRound: number }[];
+  /** Innovations en cours de développement (module `productInnovation`). */
+  innovationsInDev?: { id: string; roundsCompleted: number }[];
+  /** IDs des innovations lancées (module `productInnovation`). */
+  launchedInnovations?: string[];
+  /** Actions RSE actives (module `rseProgram`). */
+  activeRseActions?: { id: string; roundsActive: number }[];
+  /** Empreinte carbone courante (module `rseProgram`). Absent = non suivi. */
+  carbonFootprint?: number;
   /**
    * Historique des actions de maintenance décidées par machine (module
    * `maintenanceActions`). Absent si aucune action n'a encore été engagée.
@@ -1672,6 +1828,16 @@ export interface RoundDecisions {
   trainingEnrollments?: { programId: string; enrolledCount: number }[];
   /** IDs des actions commerciales activées ce tour (module `commercialActions`). */
   activeCommercialActionIds?: string[];
+  /** IDs des contrats fournisseurs activés ce tour (module `supplierNegotiation`). */
+  activeContractIds?: string[];
+  /** IDs des options de capacité activées ce tour (module `capacityExpansion`). */
+  activeCapacityOptionIds?: string[];
+  /** IDs des marchés internationaux entrés ce tour (module `internationalMarkets`). */
+  enteredMarketIds?: string[];
+  /** IDs des innovations démarrées en développement ce tour (module `productInnovation`). */
+  startedInnovationIds?: string[];
+  /** IDs des actions RSE activées ce tour (module `rseProgram`). */
+  activeRseActionIds?: string[];
 }
 
 /** Ventes estimées d'un tour et résultat estimé correspondant (voir `RoundDecisions.salesEstimate`). */
@@ -2242,6 +2408,22 @@ export interface CompanyRoundResult {
   commercialCost?: number;
   /** Effets agrégés des actions commerciales actives ce tour. */
   commercialEffects?: Partial<CommercialActionEffects>;
+  /** Économie réalisée sur les matières via contrats fournisseurs (module `supplierNegotiation`). */
+  supplierNegotiationSaving?: number;
+  /** Coût total de l'expansion de capacité ce tour (module `capacityExpansion`). */
+  capacityCost?: number;
+  /** Revenus internationaux générés ce tour (module `internationalMarkets`). */
+  internationalRevenue?: number;
+  /** Coûts liés aux marchés internationaux ce tour (module `internationalMarkets`). */
+  internationalCost?: number;
+  /** Coût total des innovations en développement ce tour (module `productInnovation`). */
+  innovationCost?: number;
+  /** Effets cumulés des innovations lancées actives ce tour (module `productInnovation`). */
+  innovationEffects?: Partial<InnovationEffects>;
+  /** Coût total du programme RSE ce tour (module `rseProgram`). */
+  rseProgramCost?: number;
+  /** Effets cumulés des actions RSE actives ce tour (module `rseProgram`). */
+  rseProgramEffects?: Partial<RseProgramActionEffects>;
   kpis: Record<string, number>;
   /** Indicateurs de performance synthétiques calculés par le moteur. */
   performanceMetrics?: PerformanceMetrics;

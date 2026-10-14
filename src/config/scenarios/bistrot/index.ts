@@ -912,6 +912,40 @@ const rawBistrot = {
       utilizationTarget: 0.75,
     },
   },
+  supplierNegotiation: {
+    maxActiveContracts: 2,
+    contracts: [
+      { id: "contrat-matiere", label: "Contrat volume produits frais", supplierType: "matiere", volumeThreshold: 2000, discountRate: 0.06, contractDurationRounds: 3, supplyRiskReduction: 0.20 },
+      { id: "contrat-energie", label: "Contrat énergie restauration", supplierType: "energie", volumeThreshold: 0, discountRate: 0.04, contractDurationRounds: 5, supplyRiskReduction: 0.05 },
+    ],
+  },
+  capacityExpansion: {
+    maxActiveOptions: 1,
+    options: [
+      { id: "atelier", label: "Extension salle de réception / atelier traiteur", type: "atelier", capacityBonus: 0.30, costPerRound: 8000, setupCost: 25000, minProductionLevel: 0, maxRounds: 99 },
+    ],
+  },
+  productInnovation: {
+    maxSimultaneousDev: 1,
+    innovations: [
+      { id: "gamme-saison", label: "Menu gastronomique saisonnier", type: "gamme", developmentRounds: 2, devCostPerRound: 5000, launchCost: 8000, effects: { priceBonus: 0.15, demandBonus: 0.12, marginBonus: 0.04, cannibalizationRate: 0.06 } },
+      { id: "packaging-eco", label: "Packaging éco-responsable emporter", type: "packaging", developmentRounds: 1, devCostPerRound: 3000, launchCost: 4000, effects: { priceBonus: 0.05, demandBonus: 0.08, marginBonus: 0.01, cannibalizationRate: 0.02 } },
+    ],
+  },
+  rseProgram: {
+    carbonBudget: 600,
+    actions: [
+      { id: "rse-energie", label: "Économies d'énergie cuisine", category: "energie", costPerRound: 2000, implementationRounds: 2, effects: { carbonReduction: 0.10, imageBonus: 0.04, employeeSatisfaction: 0.02, energySaving: 1800 } },
+      { id: "rse-fournisseurs", label: "Approvisionnement local et bio", category: "fournisseurs", costPerRound: 3000, implementationRounds: 1, effects: { carbonReduction: 0.12, imageBonus: 0.08, employeeSatisfaction: 0.03, energySaving: 0 } },
+      { id: "rse-dechets", label: "Réduction gaspillage alimentaire", category: "dechets", costPerRound: 1500, implementationRounds: 2, effects: { carbonReduction: 0.15, imageBonus: 0.05, employeeSatisfaction: 0.02, energySaving: 0 } },
+    ],
+  },
+  financingOptions: {
+    options: [
+      { id: "credit-fournisseur", label: "Crédit fournisseur", type: "creditLine", maxAmount: 30000, interestRatePerRound: 0.02, durationRounds: 3, availableFromRound: 1 },
+      { id: "emprunt-travaux", label: "Emprunt travaux salle", type: "termLoan", maxAmount: 120000, interestRatePerRound: 0.011, durationRounds: 8, availableFromRound: 1 },
+    ],
+  },
 } satisfies EngineScenarioConfig;
 
 export const bistrotScenario: EngineScenarioConfig = parseScenarioConfig(rawBistrot);

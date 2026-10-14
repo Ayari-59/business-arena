@@ -967,6 +967,55 @@ const rawEcommerce = {
       utilizationTarget: 0.78,
     },
   },
+  supplierNegotiation: {
+    maxActiveContracts: 2,
+    contracts: [
+      { id: "contrat-logistique", label: "Contrat prestataire logistique", supplierType: "logistique", volumeThreshold: 5000, discountRate: 0.06, contractDurationRounds: 4, supplyRiskReduction: 0.15 },
+      { id: "contrat-soustraitance", label: "Accord sous-traitance picking", supplierType: "soustraitance", volumeThreshold: 0, discountRate: 0.04, contractDurationRounds: 3, supplyRiskReduction: 0.10 },
+    ],
+  },
+  capacityExpansion: {
+    maxActiveOptions: 1,
+    options: [
+      { id: "sousTraitance", label: "Externalisation logistique complémentaire", type: "sousTraitance", capacityBonus: 0.40, costPerRound: 15000, setupCost: 8000, minProductionLevel: 0, maxRounds: 99 },
+    ],
+  },
+  internationalMarkets: {
+    maxActiveMarkets: 2,
+    markets: [
+      { id: "europe", label: "Expansion Europe (Bénélux, DACH)", region: "europe", demandMultiplier: 1.8, baseEntryRound: 2, entryInvestment: 25000, exchangeRateVolatility: 0.04, tariffRate: 0.01, localAdaptationCost: 8000 },
+      { id: "amerique", label: "Marché nord-américain", region: "amerique", demandMultiplier: 3.0, baseEntryRound: 5, entryInvestment: 60000, exchangeRateVolatility: 0.10, tariffRate: 0.06, localAdaptationCost: 20000 },
+    ],
+  },
+  productInnovation: {
+    maxSimultaneousDev: 1,
+    innovations: [
+      { id: "service-premium", label: "Offre premium livraison express", type: "service", developmentRounds: 2, devCostPerRound: 8000, launchCost: 10000, effects: { priceBonus: 0.10, demandBonus: 0.18, marginBonus: 0.04, cannibalizationRate: 0.05 } },
+      { id: "digital-app", label: "Application mobile personnalisée", type: "digital", developmentRounds: 3, devCostPerRound: 15000, launchCost: 25000, effects: { priceBonus: 0.08, demandBonus: 0.22, marginBonus: 0.02, cannibalizationRate: 0.06 } },
+    ],
+  },
+  rseProgram: {
+    carbonBudget: 800,
+    actions: [
+      { id: "rse-mobilite", label: "Flotte de livraison verte", category: "mobilite", costPerRound: 5000, implementationRounds: 2, effects: { carbonReduction: 0.15, imageBonus: 0.06, employeeSatisfaction: 0.02, energySaving: 3000 } },
+      { id: "rse-dechets", label: "Réduction emballages plastiques", category: "dechets", costPerRound: 2500, implementationRounds: 2, effects: { carbonReduction: 0.08, imageBonus: 0.05, employeeSatisfaction: 0.01, energySaving: 0 } },
+      { id: "rse-social", label: "Programme conditions de travail entrepôt", category: "social", costPerRound: 3500, implementationRounds: 1, effects: { carbonReduction: 0.02, imageBonus: 0.04, employeeSatisfaction: 0.07, energySaving: 0 } },
+    ],
+  },
+  rdActions: {
+    maxSimultaneousProjects: 2,
+    actions: [
+      { id: "rd-algo-reco", label: "Algorithme de recommandation", theme: "process", level: 2, costPerRound: 15000, durationRounds: 3, effects: { costReduction: 0, qualityBonus: 0.08, imageBonus: 0.05 } },
+      { id: "rd-livraison-verte", label: "Livraison bas carbone", theme: "emballage", level: 1, costPerRound: 8000, durationRounds: 2, effects: { costReduction: 0.03, qualityBonus: 0, imageBonus: 0.12 } },
+      { id: "rd-entrepot-auto", label: "Automatisation entrepôt", theme: "process", level: 3, costPerRound: 20000, durationRounds: 5, effects: { costReduction: 0.15, qualityBonus: 0.05, imageBonus: 0 } },
+    ],
+  },
+  financingOptions: {
+    options: [
+      { id: "credit-treso", label: "Facilité de trésorerie", type: "creditLine", maxAmount: 100000, interestRatePerRound: 0.018, durationRounds: 3, availableFromRound: 1 },
+      { id: "emprunt-infra", label: "Emprunt infrastructure digitale", type: "termLoan", maxAmount: 400000, interestRatePerRound: 0.012, durationRounds: 10, availableFromRound: 2 },
+    ],
+  },
 } satisfies EngineScenarioConfig;
 
 export const ecommerceScenario: EngineScenarioConfig = parseScenarioConfig(rawEcommerce);
