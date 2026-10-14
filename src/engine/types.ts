@@ -2043,6 +2043,8 @@ export interface EngineTrace {
   communication?: CompanyRoundResult["communication"] | null;
   /** Abonnement (bloc `subscription`) : le portefeuille d'adhérents du tour. */
   subscription?: CompanyRoundResult["subscription"] | null;
+  /** H&S : coûts et effets du tour (module `healthSafetyActions`). */
+  hsCost?: CompanyRoundResult["hsCost"] | null;
 }
 
 export interface EventInstance {

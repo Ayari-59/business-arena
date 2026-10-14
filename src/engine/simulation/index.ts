@@ -1906,6 +1906,22 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // les capitaux propres (cash ET dette baissent) mais on le suspend aussi,
     // une entreprise à l'arrêt ne décaissant plus rien.
     const gelee = w.state.status === "defaillant";
+    // Catégories d'emprunt (machines, installations) : chaque catégorie a sa
+    // propre durée. Backward-compatible : absent = 0, comportement inchangé.
+    const loanCats = scenario.finance.loanCategories;
+    const machineLoanReq = Math.max(0, w.decisions.finance?.machineLoan ?? 0);
+    const machineLoanGranted =
+      loanCats?.machines && machineLoanReq > 0 && !gelee && !(bank && !planFourni)
+        ? Math.min(machineLoanReq, w.investOutlay * loanCats.machines.maxLoanRatio)
+        : 0;
+    const installLoanReq = Math.max(0, w.decisions.finance?.installationLoan ?? 0);
+    const installationLoanGranted =
+      loanCats?.installations && installLoanReq > 0 && !gelee && !(bank && !planFourni)
+        ? Math.min(
+            installLoanReq,
+            (w.rseCost + w.qualityActionsCost) * loanCats.installations.maxLoanRatio,
+          )
+        : 0;
     // Actions qualité : économies sur les coûts variables et la maintenance.
     // La réduction des coûts variables s'applique sur les coûts variables décaissés (hors matières).
     const qaVariableSaving = gelee
@@ -1964,7 +1980,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       taxRate: scenario.finance.taxRate,
       openingTaxLossCarryforward: w.state.taxLossCarryforward ?? 0,
       vatRate: scenario.finance.vatRate ?? 0,
-      newLoan,
+      // Inclure les emprunts de catégorie dans le flux de financement.
+      newLoan: newLoan + machineLoanGranted + installationLoanGranted,
       loanRepayment: gelee ? 0 : mandatoryRepayment + earlyRepayment,
       capitalIncrease,
       dividend,
@@ -1981,7 +1998,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               forcedFactoringFeeRate: scenario.treasury.forcedFactoringFeeRate,
               overdraftLimit: conditions.overdraftLimit,
               placementRequest: Math.max(0, w.decisions.treasury?.placement ?? 0),
-              placementAnnualRate: scenario.treasury.placementAnnualRate,
+              // finance.placementRate prend le dessus sur treasury.placementAnnualRate
+              // si les deux sont définis — les scénarios peuvent exposer le taux
+              // dans la config finance sans dupliquer le bloc treasury.
+              placementAnnualRate:
+                scenario.finance.placementRate ?? scenario.treasury.placementAnnualRate,
             },
           }
         : {}),
@@ -1991,6 +2012,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     if (Math.abs(gap) > 0.01) {
       throw new Error(`Bilan déséquilibré (${gap.toFixed(4)} €) pour ${w.state.id}`);
     }
+
+    // Montant escomptable : information pédagogique exposée aux équipes.
+    const discountableReceivables =
+      scenario.finance.discountableRatio !== undefined
+        ? finance.closing.receivables * scenario.finance.discountableRatio
+        : undefined;
 
     // Jalon B : Enregistrement de la dépréciation (débit 681 / crédit 2185)
     const depreciationAmount = finance.incomeStatement.depreciation;
@@ -2057,6 +2084,28 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         ];
       }
       nextMandatory = nextLoans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
+    }
+    // Catégories d'emprunt : ajout aux échéanciers avec leur durée propre.
+    // Rétro-compatible : si loanCats absent, les deux blocs sont sautés (0 accordé).
+    if (!gelee) {
+      if (machineLoanGranted > 0) {
+        nextLoans = [
+          ...(nextLoans ?? []),
+          {
+            remaining: machineLoanGranted,
+            perRound: machineLoanGranted / loanCats!.machines!.durationRounds,
+          },
+        ];
+      }
+      if (installationLoanGranted > 0) {
+        nextLoans = [
+          ...(nextLoans ?? []),
+          {
+            remaining: installationLoanGranted,
+            perRound: installationLoanGranted / loanCats!.installations!.durationRounds,
+          },
+        ];
+      }
     }
 
     // Faillite (V2 couche 2, #5) : cessation de paiements = crise de trésorerie
@@ -2470,7 +2519,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
-      ...(scheduled
+      ...(scheduled || machineLoanGranted > 0 || installationLoanGranted > 0
         ? {
             debt: {
               mandatoryRepayment,
@@ -2478,6 +2527,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               newLoan,
               outstanding: finance.closing.financialDebt,
               nextMandatory,
+              ...(machineLoanGranted > 0 ? { machineLoanGranted } : {}),
+              ...(installationLoanGranted > 0 ? { installationLoanGranted } : {}),
             },
           }
         : {}),
@@ -2487,8 +2538,14 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         finance.treasury.forcedFactored > 0 ||
         finance.treasury.placed > 0 ||
         finance.treasury.matured > 0 ||
-        finance.treasury.crisis)
-        ? { treasury: finance.treasury }
+        finance.treasury.crisis ||
+        discountableReceivables !== undefined)
+        ? {
+            treasury: {
+              ...finance.treasury,
+              ...(discountableReceivables !== undefined ? { discountableReceivables } : {}),
+            },
+          }
         : {}),
       ...(scenario.qualityCosts
         ? {
@@ -2549,7 +2606,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           }
         : {}),
       // H&S : émis dès qu'une action est engagée ce tour OU qu'une récurrente est active.
-      ...(w.hsActionsCount > 0 || w.nextActiveHsActions.length > 0 || (state.activeHsActions ?? []).length > 0
+      ...(w.hsActionsCount > 0 || w.nextActiveHsActions.length > 0 || (w.state.activeHsActions ?? []).length > 0
         ? {
             hsCost: {
               laborCost: w.hsLaborCost,
@@ -2685,7 +2742,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       headcount: w.hr.nextHeadcount,
       productivity: w.hr.nextProductivity,
       ...nextFleetState,
-      ...(scheduled ? { loans: nextLoans } : {}),
+      ...(scheduled
+        ? { loans: nextLoans }
+        : nextLoans !== undefined && nextLoans.length > 0
+          ? { loans: nextLoans }
+          : {}),
       ...(capitalIncrease > 0 || w.state.capitalRaised !== undefined
         ? { capitalRaised: raisedBefore + capitalIncrease }
         : {}),
