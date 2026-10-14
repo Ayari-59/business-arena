@@ -347,6 +347,98 @@ const rawEcommerceGamme = {
   // qualité perçue, avec retard, et qui s'érode de moitié par tour sans
   // entretien. Échelle : 8 000 € par trimestre donnent environ +4 % à l'équilibre.
   rd: { techScale: 8000, techSensitivity: 0.08, techMax: 0.12, techInertia: 0.5 },
+  // Grille R&D : trois thèmes structurant l'excellence opérationnelle e-commerce.
+  rdGrid: {
+    themes: [
+      {
+        code: "logistique",
+        label: "Logistique & préparation",
+        levels: [
+          {
+            level: 1,
+            label: "Optimisation picking N1 — tournées et bacs colorés",
+            cost: 6000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.06, capacityBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Batch picking N2 — préparation multi-commandes simultanées",
+            cost: 14000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.08, capacityBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Automatisation tri N3 — convoyeur scan-and-go",
+            cost: 25000,
+            durationRounds: 3,
+            effects: { defectReduction: 0.06, capacityBonus: 0.10, materialCostReduction: 0.03 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "interface",
+        label: "Interface & expérience client",
+        levels: [
+          {
+            level: 1,
+            label: "Fiches produit enrichies N1 — photos 360° et vidéos",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { demandBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Moteur de recommandation N2 — algo affinités",
+            cost: 12000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Personnalisation N3 — page d'accueil sur-mesure",
+            cost: 22000,
+            durationRounds: 3,
+            effects: { demandBonus: 0.08 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "service_client",
+        label: "Service client & SAV",
+        levels: [
+          {
+            level: 1,
+            label: "FAQ intelligente N1 — base de connaissances",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { demandBonus: 0.02, materialCostReduction: 0.01 },
+          },
+          {
+            level: 2,
+            label: "Chat en direct N2 — équipe dédiée 8h-22h",
+            cost: 10000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.05 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Satisfaction garantie N3 — retour 60 jours sans condition",
+            cost: 18000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.07 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   // Le levier communication : la notoriété de PIXEL & CO porte les quatre
   // rayons (jusqu'à +25 %, avec retard, qui s'use sans entretien), et un
   // axe. Le prix parle au trafic payant et aux places de marché, la qualité

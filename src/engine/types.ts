@@ -175,6 +175,47 @@ export interface RseEngineConfig {
   };
 }
 
+/** Effets mesurables d'un niveau d'action qualité. */
+export interface QualityActionEffects {
+  /** Réduction du taux de rebuts (0..1 : 0.15 = −15 %). */
+  defectRateReduction?: number;
+  /** Réduction du taux de retours clients (0..1). */
+  returnRateReduction?: number;
+  /** Réduction du coût variable de production (0..1). */
+  productionCostReduction?: number;
+  /** Bonus image qualité sur l'attractivité (+X multiplicateur). */
+  qualityImageBonus?: number;
+  /** Économie sur la maintenance par tour (€ absolus). */
+  maintenanceSaving?: number;
+}
+
+/** Un niveau d'une action qualité. */
+export interface QualityActionLevelDef {
+  level: number;
+  label: string;
+  /** Coût ponctuel décaissé au lancement (€). */
+  cost: number;
+  /** Durée d'implémentation en tours (1 = effet immédiat, version simplifiée). */
+  durationRounds: number;
+  effects: QualityActionEffects;
+  /** Niveau prérequis : level N ne peut être démarré que si level N−1 est terminé. */
+  prerequisiteLevel?: number;
+}
+
+/** Définition d'une action qualité du catalogue. */
+export interface QualityActionDef {
+  code: string;
+  label: string;
+  levels: QualityActionLevelDef[];
+}
+
+/** Catalogue d'actions qualité (optionnel, activable par scénario). */
+export interface QualityActionsConfig {
+  actions: QualityActionDef[];
+  /** Nombre maximal d'actions pouvant tourner en parallèle. Défaut : 2. */
+  maxConcurrentActions?: number;
+}
+
 export interface EngineScenarioConfig {
   code: string;
   version: string;
@@ -403,6 +444,12 @@ export interface EngineScenarioConfig {
     maintenanceDefectSensitivity?: number;
   };
   /**
+   * Catalogue d'actions qualité (optionnel) : des investissements ponctuels
+   * à 3 niveaux, avec des effets mesurables sur les rebuts, les retours, les
+   * coûts variables et l'image. La progression est séquentielle (N+1 requiert N).
+   */
+  qualityActions?: QualityActionsConfig;
+  /**
    * Fournisseurs de matières premières (optionnel — doc 02 §5bis) : le joueur
    * choisit son fournisseur chaque tour. Le premier de la liste est le
    * fournisseur par défaut (reconduction). Absent = un seul fournisseur
@@ -447,6 +494,49 @@ export interface EngineScenarioConfig {
     priceCost: number;
     financeCost: number;
     projectCost: number;
+  };
+  /**
+   * Catalogue d'études enrichi (optionnel, complément ou alternative aux
+   * 4 types historiques). Chaque catégorie révèle des champs précis de l'état
+   * du marché — prix / qualité produits, tailles de segments, parts de marché,
+   * RH concurrents, comportement d'achat, innovations R&D. Une étude de
+   * prévision globale peut s'ajouter avec un horizon configurable (3, 5 ou
+   * 7 mois). L'activation requiert que le scénario porte ce bloc ; les 4 types
+   * historiques restent utilisables simultanément.
+   */
+  studiesV2?: {
+    categories: Array<{
+      /** Code métier (ex. "produits", "marches", "segments", …). */
+      code: string;
+      /** Libellé affiché dans l'interface. */
+      label: string;
+      /** Coût facturé en charge de structure (base trimestrielle). */
+      cost: number;
+      /** Description de ce que révèle l'étude. */
+      description: string;
+      /**
+       * Champs du résultat moteur exposés par cette catégorie (documentation
+       * uniquement — le moteur s'en sert pour construire le rapport).
+       */
+      revealsFields: string[];
+      /**
+       * Abonnement : si true, le joueur peut souscrire une fois pour que
+       * l'étude soit automatiquement reconduite. Non implémenté côté moteur
+       * dans cette version : la décision doit être répétée chaque tour.
+       */
+      isSubscription?: boolean;
+    }>;
+    /** Étude de prévision globale (optionnelle) : demande prévisionnelle. */
+    forecastStudy?: {
+      horizons: Array<{
+        /** Horizon en mois (3, 5 ou 7). */
+        months: number;
+        /** Coût de l'étude à cet horizon. */
+        cost: number;
+      }>;
+    };
+    /** Nombre maximum d'études achetables par tour (absent = illimité). */
+    maxStudiesPerRound?: number;
   };
   /**
    * Ressources humaines (optionnel — doc 02 §4.1) : embauches, licenciements,
@@ -497,6 +587,32 @@ export interface EngineScenarioConfig {
     techSensitivity: number;
     techMax: number;
     techInertia: number;
+  };
+  /**
+   * Grille R&D par thème et niveau (optionnel, complément du bloc `rd`).
+   * Chaque thème (ex. matière, process, emballage) propose N niveaux d'actions
+   * concrètes : investissement one-shot, durée en tours, effets mesurables.
+   * Le joueur choisit quelles actions démarrer ; elles se déroulent sur
+   * `durationRounds` tours puis s'appliquent définitivement à l'entreprise.
+   */
+  rdGrid?: {
+    themes: Array<{
+      code: string;
+      label: string;
+      levels: Array<{
+        level: number;
+        label: string;
+        cost: number;
+        durationRounds: number;
+        effects: {
+          materialCostReduction?: number;
+          defectReduction?: number;
+          demandBonus?: number;
+          capacityBonus?: number;
+        };
+        prerequisiteLevel?: number;
+      }>;
+    }>;
   };
   /**
    * Communication (levier « marque et axe »). Absent : le marketing reste un
@@ -836,6 +952,19 @@ export interface EventModifier {
 // État d'une entreprise
 // ---------------------------------------------------------------------------
 
+/**
+ * Une action R&D de la grille en cours d'exécution ou terminée.
+ * `remainingRounds` = 0 à la clôture du dernier tour → effets actifs.
+ */
+export interface RdGridActionState {
+  themeCode: string;
+  level: number;
+  /** Tours restants avant que l'action soit complète. 0 = terminée. */
+  remainingRounds: number;
+  /** Tour de démarrage (pour traçabilité). */
+  startedRound: number;
+}
+
 export interface BalanceSheet {
   fixedAssetsNet: number;
   inventoryValue: number;
@@ -1014,6 +1143,18 @@ export interface CompanyState {
    */
   rseCleanCapital?: number;
   /**
+   * Actions R&D de la grille (scénarios avec bloc `rdGrid`).
+   * Actions en cours (remainingRounds > 0) et terminées (remainingRounds = 0).
+   * Absent = aucune action démarrée.
+   */
+  rdGridActions?: RdGridActionState[];
+  /**
+   * Niveaux d'actions qualité complétés (catalogue `qualityActions`).
+   * Clé = code de l'action, valeur = niveau le plus élevé terminé (1, 2 ou 3).
+   * Absent = aucune action terminée.
+   */
+  qualityActionsCompleted?: Record<string, number>;
+  /**
    * Défaillance (cessation de paiements, V2 couche 2). Une entreprise passe
    * `defaillant` après deux tours consécutifs de crise de trésorerie
    * caractérisée (découvert au-delà du plafond, plus de créances à céder).
@@ -1084,16 +1225,41 @@ export interface RoundDecisions {
    */
   supplierChoice?: string;
   /**
+   * Actions R&D de la grille à démarrer ce tour (scénarios avec `rdGrid`).
+   * Chaque entrée nomme un thème et un niveau. Action ponctuelle : jamais
+   * reconduite. La décision est ignorée si le prérequis n'est pas satisfait
+   * ou si l'action est déjà en cours / terminée.
+   */
+  rdGridStart?: { themeCode: string; level: number }[];
+  /**
    * Accepter la commande exceptionnelle proposée pour ce tour (si le scénario
    * a un pool `orderOffers`). Action ponctuelle : jamais reconduite.
    */
   acceptOrder?: boolean;
   /**
-   * Études achetées ce tour (si le scénario a un catalogue `studies`) :
-   * facturées en charges de structure, rapports délivrés avec les résultats.
-   * Actions ponctuelles : jamais reconduites.
+   * Études achetées ce tour (si le scénario a un catalogue `studies` et/ou
+   * `studiesV2`) : facturées en charges de structure, rapports délivrés avec
+   * les résultats. Actions ponctuelles : jamais reconduites.
+   * Les 4 clés historiques (market, price, finance, project) restent valides ;
+   * les 6 catégories studiesV2 s'y ajoutent ; forecastHorizon déclenche
+   * l'étude de prévision si le scénario porte un bloc forecastStudy.
    */
-  studies?: { market?: boolean; price?: boolean; finance?: boolean; project?: boolean };
+  studies?: {
+    // Catalogue historique
+    market?: boolean;
+    price?: boolean;
+    finance?: boolean;
+    project?: boolean;
+    // studiesV2 — catégories enrichies
+    produits?: boolean;
+    marches?: boolean;
+    segments?: boolean;
+    remunerations?: boolean;
+    comportement?: boolean;
+    innovations?: boolean;
+    // Étude de prévision globale — horizon en mois (3, 5 ou 7)
+    forecastHorizon?: number;
+  };
   /**
    * Décisions RH (si le scénario le propose). hire/fire prennent effet au
    * tour SUIVANT (le recrutement prend du temps), les coûts tombent ce tour.
@@ -1101,6 +1267,12 @@ export interface RoundDecisions {
    * hire/fire/trainingBudget : actions ponctuelles (jamais reconduites).
    */
   hr?: { hire?: number; fire?: number; trainingBudget?: number; salaryIndex?: number };
+  /**
+   * Actions qualité démarrées ce tour (si le scénario a un catalogue `qualityActions`).
+   * Chaque entrée identifie l'action et le niveau acheté ce tour.
+   * Actions ponctuelles (non reconduites) : chaque niveau ne peut être acheté qu'une fois.
+   */
+  qualityActions?: { actionCode: string; level: number }[];
   /**
    * Investissement capacitaire (si le scénario le propose) : unités de
    * capacité machine achetées ce tour — décaissées maintenant, en service au
@@ -1453,6 +1625,22 @@ export interface CompanyRoundResult {
     returnedUnits: number;
   };
   /**
+   * Actions qualité du catalogue : niveaux démarrés ce tour et effets cumulés actifs.
+   * Présent dès qu'une action est démarrée OU que des effets sont en cours.
+   */
+  qualityActions?: {
+    /** Actions démarrées ce tour (coût ponctuel décaissé). */
+    started: { actionCode: string; level: number; cost: number }[];
+    /** Effets permanents cumulés de toutes les actions terminées. */
+    activeEffects: {
+      defectRateReduction: number;
+      returnRateReduction: number;
+      productionCostReduction: number;
+      qualityImageBonus: number;
+      maintenanceSaving: number;
+    };
+  };
+  /**
    * Engagement RSE du tour (Lot 2). Présent dès que l'équipe dépense OU porte
    * déjà du capital. `imageFactor` et `defectReduction` sont les effets
    * APPLIQUÉS ce tour, dérivés du capital d'OUVERTURE — l'effet est différé :
@@ -1488,8 +1676,78 @@ export interface CompanyRoundResult {
     /** Multiplicateur de l'indice de cours ce tour (1 = cours de base). Absent si pas d'indice. */
     priceIndexMultiplier?: number;
   };
-  /** Études achetées ce tour : lesquelles, et la facture (charge de structure). */
-  studies?: { purchased: ("market" | "price" | "finance" | "project")[]; cost: number };
+  /** Études achetées ce tour : lesquelles, la facture, et les données révélées. */
+  studies?: {
+    purchased: string[];
+    cost: number;
+    /** Données enrichies (studiesV2) — absent si aucune catégorie v2 achetée. */
+    v2Data?: {
+      /** produits : prix, qualité et niveau technique des concurrents. */
+      produits?: {
+        competitors: Array<{
+          companyId: string;
+          price: number;
+          qualityLevel: number;
+          techLevel?: number;
+        }>;
+      };
+      /** marches : taille des segments, délais clients/fournisseur. */
+      marches?: {
+        totalPotential: number;
+        segmentPotentials: Record<string, number>;
+        supplierPaymentDelayDays: number;
+        /** Délai client moyen pondéré (jours). */
+        avgCustomerPaymentDelayDays: number;
+      };
+      /** segments : parts de marché et notoriété de marque par concurrent. */
+      segments?: {
+        competitors: Array<{
+          companyId: string;
+          totalShare: number;
+          bySegment: Record<string, number>;
+          brandAwareness?: number;
+        }>;
+      };
+      /** remunerations : effectif et indice de salaire des concurrents. */
+      remunerations?: {
+        competitors: Array<{
+          companyId: string;
+          headcount: number;
+          salaryIndex: number;
+        }>;
+      };
+      /** comportement : paramètres de demande de chaque segment. */
+      comportement?: {
+        segments: Array<{
+          code: string;
+          priceElasticity: number;
+          marketingSensitivity: number;
+          qualitySensitivity: number;
+          loyalty: number;
+          refPrice: number;
+        }>;
+      };
+      /** innovations : niveau technique et budget R&D des concurrents. */
+      innovations?: {
+        competitors: Array<{
+          companyId: string;
+          products: Array<{
+            code: string;
+            techLevel: number;
+            rdBudget: number;
+          }>;
+        }>;
+      };
+      /** forecast : demande prévisionnelle sur l'horizon choisi. */
+      forecast?: {
+        horizonMonths: number;
+        segments: Array<{
+          code: string;
+          demandByRound: number[];
+        }>;
+      };
+    };
+  };
   /** Apport en capital du tour, borné par l'enveloppe des associés. */
   capital?: { requested: number; applied: number; remainingAfter: number };
   /** Dette du tour : échéance obligatoire, anticipé, prochaine échéance. */
@@ -1579,6 +1837,7 @@ export interface EngineTrace {
   hr?: CompanyRoundResult["hr"] | null;
   investment?: CompanyRoundResult["investment"] | null;
   qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
+  qualityActions?: CompanyRoundResult["qualityActions"] | null;
   debt?: CompanyRoundResult["debt"] | null;
   treasury?: CompanyRoundResult["treasury"] | null;
   bank?: CompanyRoundResult["bank"] | null;

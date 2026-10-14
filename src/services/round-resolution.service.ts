@@ -503,6 +503,7 @@ async function resolveGameRound(
               hr: r.hr ?? null,
               investment: r.investment ?? null,
               qualityCosts: r.qualityCosts ?? null,
+              qualityActions: r.qualityActions ?? null,
               debt: r.debt ?? null,
               treasury: r.treasury ?? null,
               bank: r.bank ?? null,

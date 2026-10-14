@@ -252,6 +252,39 @@ const rawBistrotGamme = {
     financeCost: 600,
     projectCost: 800,
   },
+  // Catalogue enrichi (studiesV2) — restauration : dynamiques de marché et
+  // comportement client au cœur du pilotage, RH présents dans le scénario.
+  studiesV2: {
+    categories: [
+      {
+        code: "marches",
+        label: "Structure du marché de la restauration",
+        cost: 1000,
+        description: "Taille et potentiel de chaque segment (midi, soir, banquets…), délais de paiement.",
+        revealsFields: ["totalPotential", "segmentPotentials", "supplierPaymentDelayDays", "avgCustomerPaymentDelayDays"],
+      },
+      {
+        code: "segments",
+        label: "Parts de marché par offre",
+        cost: 1100,
+        description: "Parts de marché de chaque concurrent sur les différents segments de la gamme.",
+        revealsFields: ["totalShare", "bySegment"],
+      },
+      {
+        code: "comportement",
+        label: "Comportement d'achat des clients",
+        cost: 900,
+        description: "Élasticité-prix, sensibilité qualité et fidélité par segment de clientèle.",
+        revealsFields: ["priceElasticity", "marketingSensitivity", "qualitySensitivity", "loyalty", "refPrice"],
+      },
+    ],
+    forecastStudy: {
+      horizons: [
+        { months: 3, cost: 800 },
+        { months: 5, cost: 1400 },
+      ],
+    },
+  },
   // Parc cuisine — identique au mono : les mêmes équipements servent les
   // quatre offres (midi, soir, banquets, traiteur).
   equipment: {

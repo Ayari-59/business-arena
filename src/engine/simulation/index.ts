@@ -418,6 +418,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     rseAttritionRelief: number;
     rseNextImageCapital: number;
     rseNextCleanCapital: number;
+    /** Effets agrégés des actions R&D terminées (grille rdGrid). */
+    rdGridEffects: { materialCostReduction: number; defectReduction: number; demandBonus: number; capacityBonus: number };
+    /** Actions R&D de la grille à la clôture du tour (en cours + nouvelles). */
+    rdGridActionsNext: import("../types").RdGridActionState[];
+    /** Coût total des nouvelles actions R&D démarrées ce tour (charge décaissée). */
+    rdGridInvestmentCost: number;
     /**
      * Abonnement (bloc `subscription`, sinon tout à zéro et rien n'est émis) :
      * portefeuille d'ouverture, occupation, taux d'attrition, adhérents restés
@@ -429,6 +435,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     subChurnRate: number;
     subRetained: number;
     subServed: number;
+    /** Actions qualité du catalogue : état complété après ce tour. */
+    qualityActionsCompleted: Record<string, number>;
+    /** Actions démarrées ce tour (niveaux achetés). */
+    qualityActionsStarted: { actionCode: string; level: number; cost: number }[];
+    /** Coût total des actions qualité démarrées ce tour. */
+    qualityActionsCost: number;
+    /** Effets permanents cumulés de toutes les actions terminées (incl. ce tour). */
+    qualityActionsEffects: {
+      defectRateReduction: number;
+      returnRateReduction: number;
+      productionCostReduction: number;
+      qualityImageBonus: number;
+      maintenanceSaving: number;
+    };
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -491,6 +511,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       products: raw.products,
       brandMarketingBudget: raw.brandMarketingBudget,
       communicationAxis: raw.communicationAxis,
+      qualityActions: raw.qualityActions,
+      rdGridStart: raw.rdGridStart,
     };
     // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
     // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
@@ -542,6 +564,34 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : [];
     const companyEvents = insured ? active.filter((e) => !covered.has(e.code)) : active;
     const mods = effectiveModifiers(companyEvents, state.id);
+    // Grille R&D (levier `rdGrid`) : agréger les effets des actions TERMINÉES
+    // (remainingRounds = 0) issues de l'état d'OUVERTURE (effets différés).
+    // Même philosophie que le capital RSE : payer maintenant, gagner plus tard.
+    const rdGridOpening = scenario.rdGrid ? (state.rdGridActions ?? []) : [];
+    const rdGridCompleted = rdGridOpening.filter((a) => a.remainingRounds === 0);
+    const rdGridEffects = (() => {
+      let materialCostReduction = 0;
+      let defectReduction = 0;
+      let demandBonus = 0;
+      let capacityBonus = 0;
+      if (!scenario.rdGrid) return { materialCostReduction, defectReduction, demandBonus, capacityBonus };
+      for (const action of rdGridCompleted) {
+        const theme = scenario.rdGrid.themes.find((t) => t.code === action.themeCode);
+        const lvl = theme?.levels.find((l) => l.level === action.level);
+        if (!lvl) continue;
+        materialCostReduction += lvl.effects.materialCostReduction ?? 0;
+        defectReduction += lvl.effects.defectReduction ?? 0;
+        demandBonus += lvl.effects.demandBonus ?? 0;
+        capacityBonus += lvl.effects.capacityBonus ?? 0;
+      }
+      // Plafonner à des valeurs raisonnables (éviter effets > 100 %)
+      return {
+        materialCostReduction: Math.min(0.8, materialCostReduction),
+        defectReduction: Math.min(0.8, defectReduction),
+        demandBonus: Math.min(0.5, demandBonus),
+        capacityBonus: Math.min(0.5, capacityBonus),
+      };
+    })();
     // Décisions par produit (mono : les scalaires bornés ci-dessus, recopiés).
     const gammeDecisionsBrutes = toGammeDecisions(decisions, gamme);
     // R&D (levier `rd`) : l'état d'ouverture de chaque référence. Une
@@ -612,6 +662,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               new Map(scenario.equipment.types.map((t) => [t.code, t])),
             ))
       : state.machineCapacity + (state.pendingCapacity ?? 0);
+    // Grille R&D : bonus de capacité des actions terminées (ex. : lean process).
+    const effectiveMachineCapacityWithRdGrid = effectiveMachineCapacity * (1 + rdGridEffects.capacityBonus);
     // Mono-produit : la rupture ampute la disponibilité de l'usine (chemin
     // historique). Gamme : elle ampute le plan des SEULES références que le
     // fournisseur défaillant fournit — les autres ne sont pas touchées.
@@ -623,7 +675,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1),
           )
         : gammeDecisions.map((d) => d.productionPlan),
-      machineCapacity: effectiveMachineCapacity,
+      machineCapacity: effectiveMachineCapacityWithRdGrid,
       availability:
         state.availability * mods.availabilityMultiplier * (multi ? 1 : supplyAvailabilityHit),
       headcount: state.headcount,
@@ -717,13 +769,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       );
     }
     const supplierPriceIdx = priceIndexBySupplier.get(supplier?.code ?? "") ?? 1;
+    // Grille R&D : réduction du coût matières issue des actions terminées
+    const rdGridMaterialFactor = 1 - rdGridEffects.materialCostReduction;
     const materialMultiplier =
-      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx;
+      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx * rdGridMaterialFactor;
     const materialMultipliers = multi
       ? productSuppliers.map((s) =>
           mods.materialCostMultiplier *
           (s?.costMultiplier ?? 1) *
-          (priceIndexBySupplier.get(s?.code ?? "") ?? 1),
+          (priceIndexBySupplier.get(s?.code ?? "") ?? 1) *
+          rdGridMaterialFactor,
         )
       : [materialMultiplier];
     // Coût variable unitaire de chaque produit (mono : le seul, expression
@@ -771,18 +826,103 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseEffort(rseInvestment, rseScale),
       rseConfig.cleanInertia,
     );
+    // Grille R&D : avancement des actions en cours, démarrage des nouvelles.
+    // Seules les actions valides (thème + niveau connu, prérequis satisfaits,
+    // pas déjà en cours ou terminées) sont acceptées.
+    let rdGridInvestmentCost = 0;
+    const rdGridActionsNext: import("../types").RdGridActionState[] = (() => {
+      if (!scenario.rdGrid || state.status === "defaillant") return rdGridOpening;
+      // Avancement : chaque action en cours décrémente son compteur.
+      const advanced = rdGridOpening.map((a) =>
+        a.remainingRounds > 0 ? { ...a, remainingRounds: a.remainingRounds - 1 } : a,
+      );
+      // Nouvelles actions demandées ce tour.
+      const toStart = decisions.rdGridStart ?? [];
+      const result = [...advanced];
+      for (const req of toStart) {
+        const theme = scenario.rdGrid.themes.find((t) => t.code === req.themeCode);
+        const lvlDef = theme?.levels.find((l) => l.level === req.level);
+        if (!theme || !lvlDef) continue;
+        // Déjà en cours ou terminée ?
+        if (result.some((a) => a.themeCode === req.themeCode && a.level === req.level)) continue;
+        // Prérequis : le niveau précédent doit être terminé.
+        if (lvlDef.prerequisiteLevel !== undefined) {
+          const prereq = result.find(
+            (a) => a.themeCode === req.themeCode && a.level === lvlDef.prerequisiteLevel,
+          );
+          if (!prereq || prereq.remainingRounds > 0) continue;
+        }
+        rdGridInvestmentCost += lvlDef.cost;
+        result.push({ themeCode: req.themeCode, level: req.level, remainingRounds: lvlDef.durationRounds, startedRound: roundIndex });
+      }
+      return result;
+    })();
+    // Catalogue d'actions qualité : traitement des nouvelles décisions et
+    // calcul des effets cumulés de toutes les actions terminées.
+    const qaConfig = scenario.qualityActions;
+    const prevQaCompleted = state.qualityActionsCompleted ?? {};
+    const qualityActionsStarted: { actionCode: string; level: number; cost: number }[] = [];
+    let qualityActionsCost = 0;
+    const qualityActionsCompleted: Record<string, number> = { ...prevQaCompleted };
+    if (qaConfig && decisions.qualityActions && state.status !== "defaillant") {
+      const maxConcurrent = qaConfig.maxConcurrentActions ?? 2;
+      for (const req of decisions.qualityActions) {
+        if (qualityActionsStarted.length >= maxConcurrent) break;
+        const actionDef = qaConfig.actions.find((a) => a.code === req.actionCode);
+        if (!actionDef) continue;
+        const levelDef = actionDef.levels.find((l) => l.level === req.level);
+        if (!levelDef) continue;
+        const currentLevel = prevQaCompleted[req.actionCode] ?? 0;
+        // Ne peut acheter qu'un niveau supérieur au niveau actuel.
+        if (req.level <= currentLevel) continue;
+        // Prérequis séquentiel : level N requiert N−1 terminé.
+        if (req.level > currentLevel + 1) continue;
+        if (levelDef.prerequisiteLevel !== undefined && currentLevel < levelDef.prerequisiteLevel) continue;
+        qualityActionsStarted.push({ actionCode: req.actionCode, level: req.level, cost: levelDef.cost });
+        qualityActionsCost += levelDef.cost;
+        qualityActionsCompleted[req.actionCode] = req.level;
+      }
+    }
+    // Effets cumulés de toutes les actions terminées (incl. celles démarrées ce tour).
+    const qualityActionsEffects = {
+      defectRateReduction: 0,
+      returnRateReduction: 0,
+      productionCostReduction: 0,
+      qualityImageBonus: 0,
+      maintenanceSaving: 0,
+    };
+    if (qaConfig) {
+      for (const actionDef of qaConfig.actions) {
+        const completedLevel = qualityActionsCompleted[actionDef.code] ?? 0;
+        for (const levelDef of actionDef.levels) {
+          if (levelDef.level <= completedLevel) {
+            qualityActionsEffects.defectRateReduction += levelDef.effects.defectRateReduction ?? 0;
+            qualityActionsEffects.returnRateReduction += levelDef.effects.returnRateReduction ?? 0;
+            qualityActionsEffects.productionCostReduction += levelDef.effects.productionCostReduction ?? 0;
+            qualityActionsEffects.qualityImageBonus += levelDef.effects.qualityImageBonus ?? 0;
+            qualityActionsEffects.maintenanceSaving += levelDef.effects.maintenanceSaving ?? 0;
+          }
+        }
+      }
+    }
     // Non-qualité interne (doc 02 §4.2) : rebuts fonction de la qualité
     // produite — payés (matières, MOD) mais invendables : seul le net entre
     // en stock, la perte est valorisée au coût variable. Le capital « process
     // propre » RSE en retranche une part (effet différé, capital d'ouverture).
     // Taux de rebut PAR PRODUIT : la qualité produite de chaque référence
     // (mono : le seul, sur la qualité produite historique).
+    // Grille R&D + actions qualité : réductions des rebuts additives avec RSE
+    // (même plafonnement à 0,8 pour éviter les effets > 100 %).
+    const combinedDefectReduction = Math.min(
+      0.8,
+      rseDefectReduction + rdGridEffects.defectReduction + qualityActionsEffects.defectRateReduction,
+    );
     const productDefectRate = productQuality.map((quality) =>
       scenario.qualityCosts
         ? computeDefectRate({
             baseDefectRate: scenario.qualityCosts.baseDefectRate,
             producedQuality: quality,
-            rseDefectReduction,
+            rseDefectReduction: combinedDefectReduction,
             // La maintenance n'agit sur les rebuts que si le scénario l'active
             // (maintenanceDefectSensitivity > 0) ; sinon facteur neutre, comportement
             // historique. Référence : budget de maintenance de référence du scénario.
@@ -1012,11 +1152,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseAttritionRelief,
       rseNextImageCapital,
       rseNextCleanCapital,
+      rdGridEffects,
+      rdGridActionsNext,
+      rdGridInvestmentCost,
       subOpening,
       subOccupancy,
       subChurnRate,
       subRetained,
       subServed: 0,
+      qualityActionsCompleted,
+      qualityActionsStarted,
+      qualityActionsCost,
+      qualityActionsEffects,
     };
   });
 
@@ -1069,9 +1216,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           marketingScale: scenario.marketing.scale,
           // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité ;
           // la notoriété de marque (communication) aussi, à l'adéquation de l'axe.
-          imageFactor: comm
+          // Grille R&D : le bonus de demande s'ajoute comme un facteur d'attractivité.
+          // Actions qualité : qualityImageBonus relève l'attractivité (+X multiplicateur).
+          imageFactor: (comm
             ? w.rseImageFactor * w.rseCardFactor * brandFactor(w.brandOpening, fit)
-            : w.rseImageFactor * w.rseCardFactor,
+            : w.rseImageFactor * w.rseCardFactor) *
+            (1 + w.rdGridEffects.demandBonus) *
+            (1 + w.qualityActionsEffects.qualityImageBonus),
         });
       });
       const shares = allocateShares(
@@ -1216,11 +1367,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // Non-qualité externe : retours clients fonction de la qualité perçue,
     // remboursés au prix de vente (unités détruites — la marge part entière).
     // Le taux de retour est celui de chaque référence (mono : de l'entreprise).
+    // Actions qualité : returnRateReduction réduit la sensibilité aux retours.
+    const effectiveReturnSensitivity = scenario.qualityCosts
+      ? scenario.qualityCosts.externalReturnSensitivity *
+        (1 - Math.min(0.8, w.qualityActionsEffects.returnRateReduction))
+      : 0;
     const productReturnRate = w.productPerceived.map((perceived) =>
       scenario.qualityCosts
         ? Math.min(
             0.3,
-            scenario.qualityCosts.externalReturnSensitivity * Math.max(0, 1 - perceived),
+            effectiveReturnSensitivity * Math.max(0, 1 - perceived),
           )
         : 0,
     );
@@ -1435,10 +1591,37 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           (k) => w.decisions.studies?.[k],
         )
       : [];
-    const studiesCost = studiesPurchased.reduce(
+    const studiesLegacyCost = studiesPurchased.reduce(
       (sum, k) => sum + scenario.studies![`${k}Cost`],
       0,
     );
+
+    // studiesV2 : catégories enrichies (présentes seulement si le scénario
+    // porte un bloc studiesV2). Chaque catégorie achetée est facturée au coût
+    // défini dans le catalogue, et son rapport est construit avec les résultats.
+    const studiesV2Cats = scenario.studiesV2?.categories ?? [];
+    const studiesV2Purchased: string[] = studiesV2Cats
+      .filter((c) => {
+        const d = w.decisions.studies as Record<string, unknown> | undefined;
+        return d?.[c.code] === true;
+      })
+      .map((c) => c.code);
+    const studiesV2Cost = studiesV2Purchased.reduce(
+      (sum, code) => sum + (studiesV2Cats.find((c) => c.code === code)?.cost ?? 0),
+      0,
+    );
+
+    // Étude de prévision (forecastStudy) : horizon en mois → nombre de tours.
+    const forecastHorizonMonths = w.decisions.studies?.forecastHorizon;
+    const forecastHorizonDef =
+      forecastHorizonMonths !== undefined
+        ? scenario.studiesV2?.forecastStudy?.horizons.find(
+            (h) => h.months === forecastHorizonMonths,
+          )
+        : undefined;
+    const forecastStudyCost = forecastHorizonDef?.cost ?? 0;
+
+    const studiesCost = studiesLegacyCost + studiesV2Cost + forecastStudyCost;
 
     // Échéanciers d'emprunts (doc 02 §6.5) : les échéances sont OBLIGATOIRES,
     // le remboursement décidé est un anticipé facultatif. Sans échéancier au
@@ -1517,6 +1700,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // les capitaux propres (cash ET dette baissent) mais on le suspend aussi,
     // une entreprise à l'arrêt ne décaissant plus rien.
     const gelee = w.state.status === "defaillant";
+    // Actions qualité : économies sur les coûts variables et la maintenance.
+    // La réduction des coûts variables s'applique sur les coûts variables décaissés (hors matières).
+    const qaVariableSaving = gelee
+      ? 0
+      : sumExact(
+          w.producedPerProduct.map(
+            (q, k) => q * gamme[k]!.otherVariableCostPerUnit * w.qualityActionsEffects.productionCostReduction,
+          ),
+        );
+    const qaMaintenanceSaving = gelee
+      ? 0
+      : Math.min(w.decisions.maintenanceBudget, w.qualityActionsEffects.maintenanceSaving);
+    const qaExceptionalIncome = qaVariableSaving + qaMaintenanceSaving;
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -1533,11 +1729,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
       rseCost: gelee ? 0 : w.rseCost,
-      // R&D : ligne et flux absents sans levier (rdTotal = 0).
-      ...(w.rdTotal > 0 ? { rdCost: w.rdTotal } : {}),
+      // R&D classique + grille R&D : les deux passent dans la même ligne R&D.
+      ...((w.rdTotal + w.rdGridInvestmentCost) > 0 ? { rdCost: w.rdTotal + w.rdGridInvestmentCost } : {}),
       // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
-      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge,
-      exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome,
+      // Actions qualité : coût ponctuel en charge exceptionnelle ; économies en produit exceptionnel.
+      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge + w.qualityActionsCost,
+      exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome + qaExceptionalIncome,
       fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
@@ -1694,6 +1891,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingTotal +
       w.qualityTotal +
       w.rdTotal +
+      w.rdGridInvestmentCost +
       w.decisions.maintenanceBudget;
     // Seuil : en gamme, prix moyen pondéré par les unités vendues et coût
     // variable moyen pondéré par les unités produites (mono : les valeurs du
@@ -1738,6 +1936,137 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         scenario.production.qualityInertia,
       ),
     );
+
+    // studiesV2 : construction des rapports enrichis ─ données révélées
+    // par les catégories achetées ce tour. Accès direct à `working` pour
+    // lire les concurrents ; `potentialBySegment` et `salesBySegment` pour
+    // les volumes et les parts. Tout est calculé AVANT la clôture des résultats.
+    const allSegments = gamme.flatMap((p) => p.market.segments);
+    const studiesV2Data: NonNullable<import("../types").CompanyRoundResult["studies"]>["v2Data"] | undefined =
+      studiesV2Purchased.length > 0 || forecastHorizonDef !== undefined
+        ? {
+            ...(studiesV2Purchased.includes("produits")
+              ? {
+                  produits: {
+                    competitors: working.map((wj) => ({
+                      companyId: wj.state.id,
+                      price: wj.gamme[0]!.price,
+                      qualityLevel: wj.productPerceived[0] ?? 0,
+                      ...(scenario.rd ? { techLevel: wj.productRdOpening[0]?.techLevel ?? 0 } : {}),
+                    })),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("marches")
+              ? {
+                  marches: {
+                    totalPotential: Object.values(potentialBySegment).reduce((a, b) => a + b, 0),
+                    segmentPotentials: { ...potentialBySegment },
+                    supplierPaymentDelayDays: scenario.finance.supplierPaymentDelayDays,
+                    avgCustomerPaymentDelayDays:
+                      allSegments.length > 0
+                        ? allSegments.reduce((s, seg) => s + seg.paymentDelayDays, 0) /
+                          allSegments.length
+                        : 0,
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("segments")
+              ? {
+                  segments: {
+                    competitors: working.map((wj, j) => {
+                      const bySegment: Record<string, number> = {};
+                      for (const seg of allSegments) {
+                        bySegment[seg.code] = salesBySegment.get(seg.code)?.[j]?.share ?? 0;
+                      }
+                      const totalSh =
+                        allSegments.length > 0
+                          ? allSegments.reduce(
+                              (s, seg) => s + (bySegment[seg.code] ?? 0) * potentialBySegment[seg.code]!,
+                              0,
+                            ) /
+                            Math.max(
+                              1,
+                              allSegments.reduce((s, seg) => s + (potentialBySegment[seg.code] ?? 0), 0),
+                            )
+                          : 0;
+                      return {
+                        companyId: wj.state.id,
+                        totalShare: totalSh,
+                        bySegment,
+                        ...(scenario.communication ? { brandAwareness: wj.brandOpening } : {}),
+                      };
+                    }),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("remunerations") && scenario.hr
+              ? {
+                  remunerations: {
+                    competitors: working.map((wj) => ({
+                      companyId: wj.state.id,
+                      headcount: wj.state.headcount,
+                      salaryIndex: wj.hr.salaryIndex,
+                    })),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("comportement")
+              ? {
+                  comportement: {
+                    segments: allSegments.map((seg) => ({
+                      code: seg.code,
+                      priceElasticity: seg.priceElasticity,
+                      marketingSensitivity: seg.marketingSensitivity,
+                      qualitySensitivity: seg.qualitySensitivity,
+                      loyalty: seg.loyalty,
+                      refPrice: seg.refPrice,
+                    })),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("innovations") && scenario.rd
+              ? {
+                  innovations: {
+                    competitors: working.map((wj) => ({
+                      companyId: wj.state.id,
+                      products: gamme.map((p, k) => ({
+                        code: p.code,
+                        techLevel: wj.productRdOpening[k]?.techLevel ?? 0,
+                        rdBudget: wj.gamme[k]!.rdBudget ?? 0,
+                      })),
+                    })),
+                  },
+                }
+              : {}),
+            ...(forecastHorizonDef !== undefined
+              ? (() => {
+                  const roundsPerMonth = scenario.roundDays > 0 ? 30 / scenario.roundDays : 1;
+                  const horizonRounds = Math.max(
+                    1,
+                    Math.round(forecastHorizonDef.months * roundsPerMonth),
+                  );
+                  return {
+                    forecast: {
+                      horizonMonths: forecastHorizonDef.months,
+                      segments: allSegments.map((seg) => ({
+                        code: seg.code,
+                        demandByRound: Array.from({ length: horizonRounds }, (_, n) =>
+                          computePotentialDemand(
+                            seg,
+                            roundIndex + n + 1,
+                            gamme.find((p) => p.market.segments.some((s) => s.code === seg.code))
+                              ?.market.seasonality ?? [],
+                            1,
+                          ) * (0.95 + 0.1 * ((roundIndex + n) % 3 === 0 ? 0.5 : 1)),
+                        ),
+                      })),
+                    },
+                  };
+                })()
+              : {}),
+          }
+        : undefined;
 
     results[w.state.id] = {
       companyId: w.state.id,
@@ -1880,9 +2209,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
-      ...(studiesPurchased.length > 0
-        ? { studies: { purchased: [...studiesPurchased], cost: studiesCost } }
-        : {}),
+      ...(() => {
+        const allPurchased: string[] = [...studiesPurchased, ...studiesV2Purchased];
+        if (forecastHorizonDef !== undefined) allPurchased.push(`forecast:${forecastHorizonDef.months}m`);
+        if (allPurchased.length === 0 && studiesV2Data === undefined) return {};
+        return {
+          studies: {
+            purchased: allPurchased,
+            cost: studiesCost,
+            ...(studiesV2Data !== undefined ? { v2Data: studiesV2Data } : {}),
+          },
+        };
+      })(),
       ...(capitalCap !== undefined && requestedCapital > 0
         ? {
             capital: {
@@ -1947,6 +2285,27 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               externalFailure: refund,
               defectUnits: w.defectUnits,
               returnedUnits,
+            },
+          }
+        : {}),
+      // Catalogue d'actions qualité : émis dès qu'une action est démarrée ce tour
+      // OU que des effets cumulés sont actifs (niveau > 0 sur au moins une action).
+      ...(w.qualityActionsStarted.length > 0 ||
+      Object.values(w.qualityActionsCompleted).some((lvl) => lvl > 0)
+        ? {
+            qualityActions: {
+              started: w.qualityActionsStarted,
+              activeEffects: w.qualityActionsEffects,
+            },
+          }
+        : {}),
+      // Grille R&D : émis dès qu'une action est en cours ou terminée.
+      ...(w.rdGridActionsNext.length > 0
+        ? {
+            rdGrid: {
+              actions: w.rdGridActionsNext,
+              effects: w.rdGridEffects,
+              investmentCost: w.rdGridInvestmentCost,
             },
           }
         : {}),
@@ -2116,6 +2475,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         : {}),
       ...(w.rseNextCleanCapital > 0 || w.state.rseCleanCapital !== undefined
         ? { rseCleanCapital: w.rseNextCleanCapital }
+        : {}),
+      // Grille R&D : suivi des actions en cours et terminées.
+      ...(w.rdGridActionsNext.length > 0 || w.state.rdGridActions !== undefined
+        ? { rdGridActions: w.rdGridActionsNext }
+        : {}),
+      // Catalogue d'actions qualité : niveaux complétés, suivis dès qu'une action
+      // est démarrée (puis maintenus).
+      ...(Object.keys(w.qualityActionsCompleted).length > 0 || w.state.qualityActionsCompleted !== undefined
+        ? { qualityActionsCompleted: w.qualityActionsCompleted }
         : {}),
       // Gamme : chaque référence suit sa propre qualité perçue ; celle de
       // l'entreprise en est la moyenne pondérée par les unités produites.

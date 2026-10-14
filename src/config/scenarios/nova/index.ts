@@ -541,6 +541,61 @@ const rawNova = {
     financeCost: 800, // ratios complets, structure des coûts, comparaison sectorielle
     projectCost: 1200, // VAN/TRI de l'investissement, arbitrage de la commande du tour
   },
+  // Catalogue enrichi (studiesV2) — marché électronique : forte disponibilité
+  // de l'information, accès à l'ensemble des 6 catégories.
+  studiesV2: {
+    categories: [
+      {
+        code: "produits",
+        label: "Analyse produits concurrents",
+        cost: 2000,
+        description: "Prix, qualité perçue et niveau technique de chaque concurrent sur le marché.",
+        revealsFields: ["price", "qualityLevel", "techLevel"],
+      },
+      {
+        code: "marches",
+        label: "Taille et structure du marché",
+        cost: 1800,
+        description: "Demande potentielle totale et par segment, délais clients moyens et fournisseur.",
+        revealsFields: ["totalPotential", "segmentPotentials", "supplierPaymentDelayDays", "avgCustomerPaymentDelayDays"],
+      },
+      {
+        code: "segments",
+        label: "Parts de marché par segment",
+        cost: 2200,
+        description: "Parts de marché et notoriété de marque de chaque acteur, segment par segment.",
+        revealsFields: ["totalShare", "bySegment", "brandAwareness"],
+      },
+      {
+        code: "remunerations",
+        label: "Politique salariale des concurrents",
+        cost: 1400,
+        description: "Effectif et indice de salaire de chaque concurrent (module RH actif).",
+        revealsFields: ["headcount", "salaryIndex"],
+      },
+      {
+        code: "comportement",
+        label: "Comportement d'achat",
+        cost: 1600,
+        description: "Élasticité-prix, sensibilités marketing et qualité, fidélité et prix de référence par segment.",
+        revealsFields: ["priceElasticity", "marketingSensitivity", "qualitySensitivity", "loyalty", "refPrice"],
+      },
+      {
+        code: "innovations",
+        label: "État des innovations R&D",
+        cost: 2400,
+        description: "Niveau technique et budget R&D de chaque concurrent par référence.",
+        revealsFields: ["techLevel", "rdBudget"],
+      },
+    ],
+    forecastStudy: {
+      horizons: [
+        { months: 3, cost: 1500 },
+        { months: 5, cost: 2500 },
+        { months: 7, cost: 3500 },
+      ],
+    },
+  },
   // Commandes exceptionnelles ENTRE CHAQUE TOUR : l'offre du tour est TIRÉE
   // dans ce pool à la graine de la partie (orderOfferForRound) — la même pour
   // toutes les équipes, mais deux parties ne voient pas la même séquence.

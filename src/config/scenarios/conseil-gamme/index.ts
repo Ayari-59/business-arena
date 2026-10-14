@@ -185,6 +185,34 @@ const rawConseilGamme = {
     financeCost: 1500,
     projectCost: 2200,
   },
+  // Catalogue enrichi (studiesV2) — conseil : les RH sont le cœur du modèle ;
+  // comprendre le comportement client et la politique salariale des concurrents
+  // est essentiel pour positionner l'offre et attirer les talents.
+  studiesV2: {
+    categories: [
+      {
+        code: "comportement",
+        label: "Comportement d'achat des donneurs d'ordre",
+        cost: 2600,
+        description: "Élasticité-prix, sensibilité à la qualité et fidélité des segments clients du conseil.",
+        revealsFields: ["priceElasticity", "marketingSensitivity", "qualitySensitivity", "loyalty", "refPrice"],
+      },
+      {
+        code: "remunerations",
+        label: "Politique de rémunération des concurrents",
+        cost: 2800,
+        description: "Effectif et indice de salaire de chaque cabinet concurrent — clé de l'attractivité RH.",
+        revealsFields: ["headcount", "salaryIndex"],
+      },
+      {
+        code: "segments",
+        label: "Parts de marché par pratique",
+        cost: 2200,
+        description: "Parts de marché de chaque cabinet sur les segments audit, transformation et cyber.",
+        revealsFields: ["totalShare", "bySegment"],
+      },
+    ],
+  },
   // Postes consultants — identiques au mono : les mêmes espaces de travail
   // accueillent les trois pratiques (audit, transformation, cyber).
   equipment: {
@@ -289,6 +317,98 @@ const rawConseilGamme = {
   // qualité perçue, avec retard, et qui s'érode de moitié par tour sans
   // entretien. Échelle : 8 000 € par trimestre donnent environ +4 % à l'équilibre.
   rd: { techScale: 8000, techSensitivity: 0.08, techMax: 0.12, techInertia: 0.5 },
+  // Grille R&D : trois thèmes structurant la montée en valeur des offres de conseil.
+  rdGrid: {
+    themes: [
+      {
+        code: "methodologie",
+        label: "Méthodologie & IP",
+        levels: [
+          {
+            level: 1,
+            label: "Capitalisation méthodes N1 — playbooks et templates",
+            cost: 5000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.06, demandBonus: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Cadre propriétaire N2 — framework ATLAS certifié",
+            cost: 12000,
+            durationRounds: 3,
+            effects: { demandBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Offre brevetée N3 — accréditation internationale",
+            cost: 22000,
+            durationRounds: 4,
+            effects: { demandBonus: 0.10 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "outils_digitaux",
+        label: "Outils digitaux & automatisation",
+        levels: [
+          {
+            level: 1,
+            label: "Portail client N1 — suivi de mission en ligne",
+            cost: 6000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.03, materialCostReduction: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Analyse de données N2 — dashboards automatisés",
+            cost: 14000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.05, materialCostReduction: 0.04 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "IA appliquée N3 — audit assisté par LLM",
+            cost: 25000,
+            durationRounds: 3,
+            effects: { demandBonus: 0.07, materialCostReduction: 0.05 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "formation_interne",
+        label: "Formation & capital humain",
+        levels: [
+          {
+            level: 1,
+            label: "Académie interne N1 — e-learning et ateliers mensuels",
+            cost: 4000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.05, capacityBonus: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Certification consultants N2 — parcours 60 h + examen",
+            cost: 10000,
+            durationRounds: 3,
+            effects: { defectReduction: 0.08, demandBonus: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Centre d'excellence N3 — pôle R&D et veille sectorielle",
+            cost: 20000,
+            durationRounds: 3,
+            effects: { defectReduction: 0.07, demandBonus: 0.06, capacityBonus: 0.05 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   // Le levier communication : la notoriété d'ATLAS porte les trois offres
   // (jusqu'à +25 %, avec retard, qui s'use sans entretien), et un axe. La
   // qualité parle aux grands comptes et aux DSI, l'image aux clients fidèles,

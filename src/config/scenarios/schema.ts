@@ -269,6 +269,36 @@ export const engineScenarioConfigSchema = z.object({
       projectCost: z.number().positive(),
     })
     .optional(),
+  // Catalogue d'études enrichi (studiesV2) : taxonomie à 6 catégories + prévision.
+  studiesV2: z
+    .object({
+      categories: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            label: z.string().min(1),
+            cost: z.number().positive(),
+            description: z.string().min(1),
+            revealsFields: z.array(z.string()),
+            isSubscription: z.boolean().optional(),
+          }),
+        )
+        .min(1),
+      forecastStudy: z
+        .object({
+          horizons: z
+            .array(
+              z.object({
+                months: z.number().int().positive(),
+                cost: z.number().positive(),
+              }),
+            )
+            .min(1),
+        })
+        .optional(),
+      maxStudiesPerRound: z.number().int().positive().optional(),
+    })
+    .optional(),
   // Commandes exceptionnelles entre les tours : rotation déterministe.
   orderOffers: z
     .array(
@@ -290,6 +320,38 @@ export const engineScenarioConfigSchema = z.object({
       baseDefectRate: z.number().min(0).max(0.2),
       externalReturnSensitivity: z.number().min(0).max(2),
       maintenanceDefectSensitivity: z.number().min(0).max(1).optional(),
+    })
+    .optional(),
+  qualityActions: z
+    .object({
+      actions: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            label: z.string().min(1),
+            levels: z
+              .array(
+                z.object({
+                  level: z.number().int().min(1).max(3),
+                  label: z.string().min(1),
+                  cost: z.number().nonnegative(),
+                  durationRounds: z.number().int().min(1),
+                  effects: z.object({
+                    defectRateReduction: z.number().min(0).max(1).optional(),
+                    returnRateReduction: z.number().min(0).max(1).optional(),
+                    productionCostReduction: z.number().min(0).max(0.5).optional(),
+                    qualityImageBonus: z.number().min(0).max(0.5).optional(),
+                    maintenanceSaving: z.number().nonnegative().optional(),
+                  }),
+                  prerequisiteLevel: z.number().int().min(1).optional(),
+                }),
+              )
+              .min(1)
+              .max(3),
+          }),
+        )
+        .min(1),
+      maxConcurrentActions: z.number().int().positive().optional(),
     })
     .optional(),
   hr: z
@@ -356,6 +418,32 @@ export const engineScenarioConfigSchema = z.object({
       techSensitivity: z.number().nonnegative(),
       techMax: z.number().min(0).max(1),
       techInertia: z.number().min(0).max(1),
+    })
+    .optional(),
+  // Grille R&D par thème × niveau : actions concrètes avec effets mesurables.
+  rdGrid: z
+    .object({
+      themes: z.array(
+        z.object({
+          code: z.string().min(1),
+          label: z.string().min(1),
+          levels: z.array(
+            z.object({
+              level: z.number().int().positive(),
+              label: z.string().min(1),
+              cost: z.number().positive(),
+              durationRounds: z.number().int().positive(),
+              effects: z.object({
+                materialCostReduction: z.number().min(0).max(1).optional(),
+                defectReduction: z.number().min(0).max(1).optional(),
+                demandBonus: z.number().min(0).max(1).optional(),
+                capacityBonus: z.number().min(0).max(1).optional(),
+              }),
+              prerequisiteLevel: z.number().int().positive().optional(),
+            }),
+          ),
+        }),
+      ),
     })
     .optional(),
   // Communication (marque et axe) : le levier n'existe que si le bloc est déclaré.

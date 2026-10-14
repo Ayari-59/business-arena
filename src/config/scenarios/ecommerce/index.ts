@@ -295,6 +295,40 @@ const rawEcommerce = {
     financeCost: 900,
     projectCost: 1300,
   },
+  // Catalogue enrichi (studiesV2) — e-commerce : forte importance du comportement
+  // d'achat et des parts de marché ; prévision utile pour le BFR saisonnier.
+  studiesV2: {
+    categories: [
+      {
+        code: "produits",
+        label: "Analyse produits concurrents",
+        cost: 2100,
+        description: "Prix et qualité perçue des offres concurrentes sur le marché e-commerce.",
+        revealsFields: ["price", "qualityLevel"],
+      },
+      {
+        code: "segments",
+        label: "Parts de marché et notoriété",
+        cost: 2400,
+        description: "Parts de marché et notoriété de marque de chaque acteur, segment par segment.",
+        revealsFields: ["totalShare", "bySegment", "brandAwareness"],
+      },
+      {
+        code: "comportement",
+        label: "Comportement d'achat en ligne",
+        cost: 1800,
+        description: "Élasticité-prix, sensibilités et porte marketing par segment e-commerce.",
+        revealsFields: ["priceElasticity", "marketingSensitivity", "qualitySensitivity", "loyalty", "refPrice"],
+      },
+    ],
+    forecastStudy: {
+      horizons: [
+        { months: 3, cost: 1700 },
+        { months: 5, cost: 2800 },
+        { months: 7, cost: 4000 },
+      ],
+    },
+  },
   orderOffers: [
     {
       code: "ecom_offer_coffrets_ce",
