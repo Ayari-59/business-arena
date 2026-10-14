@@ -10,6 +10,12 @@ import {
   rounds,
 } from "@/db/schema";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import {
+  bilanDesModules,
+  construireOffreDesModules,
+  type BilanDesModules,
+  type OffreDesModules,
+} from "@/services/modules-offer";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
 import { leviersFigesDuProfil, premierNiveauQuiOuvre, presetFromProfile } from "@/config/difficulty";
@@ -243,6 +249,8 @@ export interface GameView {
     rse: RseIndex;
     /** Journal et grand livre du tour (exposé dans le tableau de bord comptabilité). */
     accounting?: GameView["accounting"];
+    /** Les modules du scénario engagés ou en vigueur ce tour, et la crise s'il y en a eu une. */
+    modules: BilanDesModules | null;
   }[];
   /**
    * Rapport extra-financier (Lot 3) : synthèse DPEF SIMPLIFIÉE et indicative sur
@@ -757,6 +765,13 @@ export interface GameView {
     /** Le niveau qui ouvre le financement, pour le dire ; `null` si aucun. */
     niveauDuFinancement: number | null;
   } | null;
+  /**
+   * LES MODULES DU SCÉNARIO proposés ce tour (actions qualité, capacité,
+   * export, innovation, marque…), avec ce qui tourne déjà. `null` : le
+   * scénario n'en porte aucun, ou le niveau n'en ouvre aucun
+   * (`services/modules-offer.ts`).
+   */
+  modulesOffer: OffreDesModules | null;
   /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
   studiesOffer: {
     marketCost: number;
@@ -937,6 +952,24 @@ function reconstructResult(
     ...(trace.rd ? { rd: trace.rd } : {}),
     ...(trace.communication ? { communication: trace.communication } : {}),
     ...(trace.subscription ? { subscription: trace.subscription } : {}),
+    // Modules optionnels : clé émise seulement si la trace la porte.
+    ...(trace.hsCost != null ? { hsCost: trace.hsCost } : {}),
+    ...(trace.capacityCost != null ? { capacityCost: trace.capacityCost } : {}),
+    ...(trace.internationalRevenue != null ? { internationalRevenue: trace.internationalRevenue } : {}),
+    ...(trace.internationalCost != null ? { internationalCost: trace.internationalCost } : {}),
+    ...(trace.innovationCost != null ? { innovationCost: trace.innovationCost } : {}),
+    ...(trace.innovationEffects != null ? { innovationEffects: trace.innovationEffects } : {}),
+    ...(trace.rseProgramCost != null ? { rseProgramCost: trace.rseProgramCost } : {}),
+    ...(trace.rseProgramEffects != null ? { rseProgramEffects: trace.rseProgramEffects } : {}),
+    ...(trace.pricingEffects != null ? { pricingEffects: trace.pricingEffects } : {}),
+    ...(trace.crisisCost != null ? { crisisCost: trace.crisisCost } : {}),
+    ...(trace.crisisEvent != null ? { crisisEvent: trace.crisisEvent } : {}),
+    ...(trace.partnershipCost != null ? { partnershipCost: trace.partnershipCost } : {}),
+    ...(trace.partnershipEffects != null ? { partnershipEffects: trace.partnershipEffects } : {}),
+    ...(trace.digitalCost != null ? { digitalCost: trace.digitalCost } : {}),
+    ...(trace.digitalEffects != null ? { digitalEffects: trace.digitalEffects } : {}),
+    ...(trace.brandCost != null ? { brandCost: trace.brandCost } : {}),
+    ...(trace.brandEffects != null ? { brandEffects: trace.brandEffects } : {}),
   };
   return { result, events: trace.events ?? [] };
 }
@@ -1141,6 +1174,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id, resolved.length),
       rse: computeRseIndex(result),
       accounting: formatAccountingData(result.accounting),
+      modules: bilanDesModules(result, dec, snapshot),
     });
   }
 
@@ -2237,6 +2271,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         otherVariableCostPerUnit: product.otherVariableCostPerUnit,
       };
     })(),
+    modulesOffer: construireOffreDesModules({
+      scenario: game.scenarioSnapshot as EngineScenarioConfig,
+      etat: stateRow?.state as CompanyState | undefined,
+      tour: game.currentRound,
+      leviers: presetFromProfile(game.difficultyProfile).decisions,
+      vocabulaire: scenarioDef.vocabulary,
+    }),
     studiesOffer: (() => {
       const catalog = (game.scenarioSnapshot as EngineScenarioConfig).studies;
       return catalog ? { ...catalog } : null;

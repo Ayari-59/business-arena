@@ -2678,6 +2678,27 @@ export interface EngineTrace {
   /** Formations RH : coût et effets du tour (module `trainingPrograms`). */
   trainingCost?: CompanyRoundResult["trainingCost"] | null;
   trainingEffects?: CompanyRoundResult["trainingEffects"] | null;
+  /**
+   * Modules optionnels (vagues 5 et 6) : coûts et effets du tour, relus par la
+   * vue pour le bilan « Modules engagés ce tour ». Absents sur les lignes
+   * écrites avant eux, et pour tout scénario sans ces catalogues.
+   */
+  capacityCost?: CompanyRoundResult["capacityCost"] | null;
+  internationalRevenue?: CompanyRoundResult["internationalRevenue"] | null;
+  internationalCost?: CompanyRoundResult["internationalCost"] | null;
+  innovationCost?: CompanyRoundResult["innovationCost"] | null;
+  innovationEffects?: CompanyRoundResult["innovationEffects"] | null;
+  rseProgramCost?: CompanyRoundResult["rseProgramCost"] | null;
+  rseProgramEffects?: CompanyRoundResult["rseProgramEffects"] | null;
+  pricingEffects?: CompanyRoundResult["pricingEffects"] | null;
+  crisisCost?: CompanyRoundResult["crisisCost"] | null;
+  crisisEvent?: CompanyRoundResult["crisisEvent"] | null;
+  partnershipCost?: CompanyRoundResult["partnershipCost"] | null;
+  partnershipEffects?: CompanyRoundResult["partnershipEffects"] | null;
+  digitalCost?: CompanyRoundResult["digitalCost"] | null;
+  digitalEffects?: CompanyRoundResult["digitalEffects"] | null;
+  brandCost?: CompanyRoundResult["brandCost"] | null;
+  brandEffects?: CompanyRoundResult["brandEffects"] | null;
 }
 
 export interface EventInstance {

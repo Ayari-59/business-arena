@@ -20,6 +20,7 @@ import {
 import { choisirSonEquipe } from "@/services/affectation.service";
 import { deposerDemande } from "@/services/subvention.service";
 import { getGameView } from "@/services/game-view.service";
+import { refusDesModules } from "@/services/modules-offer";
 import { meriteDeLaPartie } from "@/services/merite.service";
 import { apresLeTour, noterLaCopieDeLaPartie } from "@/services/examen.service";
 import {
@@ -163,6 +164,15 @@ export async function playRoundAction(
   if (vue) {
     const refusDuPlafond = refusDuPlafondDInvestissement(parsed.data, vue.plafondInvestissement, vue.vocabulary);
     if (refusDuPlafond) return refusDesChamps([refusDuPlafond]);
+  }
+
+  // LES MODULES DU SCÉNARIO, VÉRIFIÉS CÔTÉ SERVEUR. La feuille ne coche que
+  // l'offre du tour et grise les cases au plafond ; un formulaire périmé ou
+  // forgé (catalogue absent, tour minimal non atteint, déjà en cours, plafond
+  // dépassé) est refusé ici, sur la case visée (`services/modules-offer`).
+  if (vue) {
+    const refus = refusDesModules(parsed.data, vue.modulesOffer);
+    if (refus.length > 0) return refusDesChamps(refus);
   }
 
   // LE RÉSULTAT ESTIMÉ, CALCULÉ PAR LE SERVEUR. L'encart l'a déjà affiché dans

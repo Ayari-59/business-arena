@@ -81,6 +81,9 @@ import {
   useModeCartes,
   type DefCarte,
 } from "@/components/cartes-de-decision";
+import { ModulesDeDecision } from "@/components/modules-de-decision";
+import { modulesSaisis, PREFIXE_DES_MODULES } from "@/config/modules-saisis";
+import { refusDesModules } from "@/services/modules-offer";
 import {
   aideDuPlafond,
   champDAchatDeMachine,
@@ -2228,6 +2231,7 @@ export function DecisionForm({
   gamme = null,
   rdOffer = null,
   communicationOffer = null,
+  modulesOffer = null,
   estimation = null,
 }: {
   /**
@@ -2270,6 +2274,12 @@ export function DecisionForm({
   gamme?: GameView["gamme"];
   /** Levier R&D du scénario (échelle du budget par tour) ; null sans levier. */
   rdOffer?: GameView["rdOffer"];
+  /**
+   * Les modules du scénario proposés ce tour (actions qualité, capacité,
+   * export, innovation, marque…) ; null sans module à ce niveau. Ils ont leur
+   * étape, « Projets », rendue par `modules-de-decision.tsx`.
+   */
+  modulesOffer?: GameView["modulesOffer"];
   roundIndex: number;
   periodName: string;
   /**
@@ -2569,6 +2579,13 @@ export function DecisionForm({
       if (plans.length > 0 && total < 1 && !erreurs.some((x) => x.champ?.endsWith(".productionPlan"))) {
         const premier = plans.find((el) => el.type !== "hidden") ?? plans[0]!;
         erreurs.push(refusDuVolume(premier.name, contexteDesLibelles));
+      }
+    }
+    // LES MODULES, jugés du même calcul que le serveur (`refusDesModules`).
+    if (modulesOffer) {
+      for (const erreur of refusDesModules(modulesSaisis(new FormData(form).entries()), modulesOffer)) {
+        const champ = erreur.champ ? (form.elements.namedItem(erreur.champ) as HTMLInputElement | null) : null;
+        if (!filtre || (champ && filtre(champ))) erreurs.push(erreur);
       }
     }
     return erreurs;
@@ -3028,6 +3045,7 @@ export function DecisionForm({
     financerVisible ? "financer" : null,
     tresorerieVisible ? "tresorerie" : null,
     assuranceVisible ? "assurance" : null,
+    modulesOffer ? "projets" : null,
     "prevoir",
   ].filter((x): x is string => x !== null);
   const META: Record<string, { titre: string; icone: NomDIcone }> = {
@@ -3041,6 +3059,7 @@ export function DecisionForm({
     financer: { titre: "Financer & investir", icone: "banque" },
     tresorerie: { titre: "Trésorerie", icone: "tresorerie" },
     assurance: { titre: "Assurance", icone: "assurance" },
+    projets: { titre: "Projets", icone: "idee" },
     prevoir: { titre: "S'informer & prévoir", icone: "loupe" },
   };
   const idx = (cle: string) => etapesVisibles.indexOf(cle);
@@ -3272,6 +3291,20 @@ export function DecisionForm({
                   const choix = d.get("insurance");
                   if (!choix) return "Aucune";
                   return insuranceFormulas?.find((f) => f.code === choix)?.name ?? "Souscrite";
+                },
+              },
+            ]
+          : []),
+        ...(modulesOffer
+          ? [
+              {
+                cle: "projets",
+                etape: "projets",
+                nom: "Projets",
+                question: "Quels projets engagez-vous ?",
+                resume: (d: FormData) => {
+                  const n = [...d.keys()].filter((k) => k.startsWith(PREFIXE_DES_MODULES)).length;
+                  return n > 0 ? `${n} engagé${n > 1 ? "s" : ""}` : "Aucun";
                 },
               },
             ]
@@ -4801,6 +4834,32 @@ export function DecisionForm({
           </span>
         </label>
         </Carte>
+      ) : null}
+      </section>
+
+      {/* LES PROJETS DU SCÉNARIO : les catalogues optionnels (qualité, capacité,
+          export, innovation, marque…), une étape à eux quand le scénario en
+          porte et que le niveau en ouvre. */}
+      <section
+        data-etape={idx("projets")}
+        hidden={masquee("projets")}
+        className="space-y-3"
+      >
+      {modulesOffer ? (
+        <Family
+          carte="projets"
+          icone="idee"
+          legend="Projets du tour · ce que votre entreprise peut engager en plus"
+          repli
+          deplie
+        >
+          <ModulesDeDecision
+            offre={modulesOffer}
+            choisis={alreadySubmitted ? defaults : null}
+            erreurs={carteDesRefus}
+            telephone={telephone}
+          />
+        </Family>
       ) : null}
       </section>
 

@@ -298,6 +298,13 @@ export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
     surface: "papier",
     raison: "Un « pourquoi » : la notion du coût de l'information, en prose.",
   },
+  {
+    fichier: "components/modules-de-decision.tsx",
+    composant: "Tiroir",
+    repere: 'titre="Comment ça marche"',
+    surface: "papier",
+    raison: "Le mécanisme d'un module du scénario (quand le coût tombe, quand l'effet vient), en prose.",
+  },
   // ── Le cockpit : l'aspect par défaut ──
   {
     fichier: "components/aide-repliable.tsx",

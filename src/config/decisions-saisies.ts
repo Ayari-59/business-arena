@@ -1,6 +1,7 @@
 import { readProductFields } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
 import type { ProductCode, ProductDecisions, RoundDecisions } from "@/engine/types";
+import { modulesSaisis } from "@/config/modules-saisis";
 
 /**
  * LES DÉCISIONS, LUES SUR LE FORMULAIRE — UNE SEULE FOIS, POUR LES DEUX CÔTÉS.
@@ -188,6 +189,9 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
             },
           };
     })(),
+    // Les modules du scénario (actions qualité, projets, partenariats…) : des
+    // cases à cocher, chacune sous un nom unique. Rien coché, rien ajouté.
+    ...modulesSaisis(formData.entries()),
   };
   return { decisions, products, volume };
 }

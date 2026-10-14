@@ -82,7 +82,7 @@ const SANS_FICHE: string[] = [
   "dont déficit antérieur imputé (report)",
   "− Charges financières (intérêts, agios, mobilisations)",
   "+ Produits financiers (placement)",
-  "− Sanction RSE (exceptionnel)",
+  "− Charges exceptionnelles",
   "+ Éco-subvention RSE (exceptionnel)",
   // La subvention de sauvetage : l'équipe l'a demandée elle-même et
   // l'animateur la lui a accordée. Elle n'enseigne aucune méthode — c'est un
