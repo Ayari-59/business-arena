@@ -689,7 +689,7 @@ const rawBistrot = {
         isRecurring: false,
         durationRounds: 1,
         costPerRound: 2000,
-        effects: { demandBonus: 0.08, loyaltyBonus: 0.06, marginImpact: 0.02, imageBonus: 0.08, newClientRatio: 0.07 },
+        effects: { demandBonus: 0.08, loyaltyBonus: 0.06, marginImpact: 0, imageBonus: 0.08, newClientRatio: 0.07 },
       },
     ],
   },
@@ -957,7 +957,7 @@ const rawBistrot = {
     ],
   },
   crisisManagement: {
-    crisisEventProbability: 0.22,
+    crisisEventProbability: 0.2,
     plans: [
       { id: "cm-sanitaire", label: "Protocole sanitaire renforcé", crisisType: "criseSanitaire", preparationCostPerRound: 1500, activationCost: 4000, effects: { revenueProtection: 0.70, recoverySpeedBonus: 0.30, imageProtection: 0.60 } },
       { id: "cm-mauvaise-presse", label: "Cellule communication de crise", crisisType: "rappelProduit", preparationCostPerRound: 1000, activationCost: 3000, effects: { revenueProtection: 0.50, recoverySpeedBonus: 0.20, imageProtection: 0.75 } },
