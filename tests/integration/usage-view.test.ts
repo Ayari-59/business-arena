@@ -37,6 +37,7 @@ import {
 } from "@/services/pedagogy.service";
 import { situationByCode } from "@/config/scenarios/registry";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -206,6 +207,8 @@ describe("une équipe restée sans joueur ne compte pas comme un échec", () => 
     const prof = inscription.userId;
     const orgId = (await getTeacherOrgId(prof))!;
 
+    // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+    await poserUneLicence(orgId, prof);
     const { gameId, joinCode } = await createClassGame({
       teacherId: prof,
       organizationId: orgId,
@@ -263,6 +266,8 @@ describe("une équipe muette n'est pas une situation ratée", () => {
     const prof = inscription.userId;
     const orgId = (await getTeacherOrgId(prof))!;
 
+    // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+    await poserUneLicence(orgId, prof);
     const { gameId, joinCode } = await createClassGame({
       teacherId: prof,
       organizationId: orgId,
@@ -317,6 +322,8 @@ describe("une équipe muette n'est pas une situation ratée", () => {
     if ("error" in inscription) throw new Error(inscription.error);
     const prof = inscription.userId;
     const orgId = (await getTeacherOrgId(prof))!;
+    // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+    await poserUneLicence(orgId, prof);
     const { gameId, joinCode } = await createClassGame({
       teacherId: prof,
       organizationId: orgId,
@@ -361,6 +368,8 @@ describe("le compteur d'élèves des notions", () => {
     if ("error" in inscription) throw new Error(inscription.error);
     const prof = inscription.userId;
     const orgId = (await getTeacherOrgId(prof))!;
+    // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+    await poserUneLicence(orgId, prof);
     const { gameId, joinCode } = await createClassGame({
       teacherId: prof,
       organizationId: orgId,

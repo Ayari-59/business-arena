@@ -36,7 +36,7 @@ export function DeleteLicenceButton({ licenceId }: { licenceId: string }) {
     <button
       type="button"
       onClick={() => setConfirmation(true)}
-      className="text-slate-600 hover:text-red-400"
+      className="text-slate-400 hover:text-red-400"
       title="Supprimer"
     >
       ✕

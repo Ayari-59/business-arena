@@ -1,0 +1,85 @@
+import type { GameView } from "@/services/game-view.service";
+
+type Gamme = NonNullable<GameView["gamme"]>;
+
+/**
+ * La gamme en une ligne par référence : son nom, et ce qui la distingue des
+ * autres — volume du marché, marge unitaire, et le cas de la référence encore
+ * à développer.
+ *
+ * Ces qualificatifs sont DÉDUITS du scénario joué, jamais rédigés. Un libellé
+ * écrit dans la config mentirait le jour où l'enseignant change un prix ou une
+ * taille de marché ; ici « forte marge » veut dire « la plus forte de CETTE
+ * gamme », ce qui reste vrai après n'importe quel réglage.
+ */
+
+/**
+ * Couleurs de repère, dans l'ordre de la gamme. Au-delà, on boucle. Ce sont
+ * des CATÉGORIES : elles prennent les teintes franches des métiers, et non
+ * le vert et le rouge des résultats ni l'orange de l'action.
+ */
+const REPERES = [
+  "bg-[var(--secteur-hotellerie)]",
+  "bg-[var(--secteur-industrie)]",
+  "bg-[var(--secteur-ecommerce)]",
+  "bg-[var(--secteur-services)]",
+  "bg-[var(--secteur-commerce)]",
+  "bg-[var(--secteur-abonnement)]",
+] as const;
+
+/** Situe une valeur dans sa gamme : haut, milieu, bas. */
+function rang(valeur: number, toutes: number[]): "haut" | "milieu" | "bas" {
+  const triees = [...new Set(toutes)].sort((a, b) => a - b);
+  // Une gamme dont toutes les références se valent sur cet axe n'a pas de haut
+  // ni de bas : le dire serait faux.
+  if (triees.length < 2) return "milieu";
+  if (valeur === triees[triees.length - 1]) return "haut";
+  if (valeur === triees[0]) return "bas";
+  return "milieu";
+}
+
+const MOTS_VOLUME = { haut: "fort volume", milieu: "volume moyen", bas: "faible volume" } as const;
+const MOTS_MARGE = { haut: "forte marge", milieu: "marge moyenne", bas: "faible marge" } as const;
+
+export function GammeLigne({ gamme }: { gamme: Gamme }) {
+  // Le taux de marge, pas la marge en euros : comparer 2 € sur 12 € à 40 € sur
+  // 300 € en valeur absolue classerait la gamme à l'envers.
+  const taux = (p: Gamme[number]) =>
+    p.refPrice > 0
+      ? (p.refPrice - p.materialCostPerUnit - p.otherVariableCostPerUnit) / p.refPrice
+      : 0;
+
+  const tousVolumes = gamme.map((p) => p.marketSize);
+  const tousTaux = gamme.map(taux);
+
+  return (
+    <ul className="space-y-1.5">
+      {gamme.map((p, i) => {
+        const aDevelopper = p.rd?.development ? !p.rd.development.available : false;
+        const qualificatifs = aDevelopper
+          ? [MOTS_MARGE[rang(taux(p), tousTaux)], "prototype à financer"]
+          : [
+              MOTS_VOLUME[rang(p.marketSize, tousVolumes)],
+              MOTS_MARGE[rang(taux(p), tousTaux)],
+            ];
+        return (
+          // Nom et qualificatifs coulent dans UN SEUL texte, pas deux blocs
+          // côte à côte : un nom un peu long passait à la ligne pendant que ses
+          // qualificatifs restaient sur la première, et la liste partait en
+          // escalier. Ici la ligne se replie comme une phrase, alignée sur la
+          // même marge gauche.
+          <li key={p.code} className="flex gap-2 text-sm">
+            <span
+              aria-hidden
+              className={`mt-[0.45rem] h-2 w-2 shrink-0 rounded-full ${REPERES[i % REPERES.length]}`}
+            />
+            <span className="min-w-0">
+              <span className="font-medium text-slate-100">{p.name}</span>{" "}
+              <span className="text-slate-400">{`— ${qualificatifs.join(" · ")}`}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

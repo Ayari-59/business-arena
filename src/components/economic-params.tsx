@@ -21,6 +21,12 @@ export interface ScenarioOption {
   unit: string;
   /** Valeurs du scénario, déjà mises en forme pour l'affichage. */
   defaults: Record<string, string | null>;
+  /**
+   * Hors de la licence (une autre entreprise que celle de l'offre Classe ou Programme) :
+   * la marque de l'offre qui l'ouvre (le nom de l'offre Campus). L'option reste visible, marquée,
+   * et ne se choisit pas ; la page dit la règle et donne le lien.
+   */
+  horsLicence?: string;
 }
 
 type Field = {
@@ -60,6 +66,15 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
     ],
   },
   {
+    title: "Défaillance et sortie de crise",
+    note: "Une entreprise est en cessation de paiements quand son découvert dépasse le plafond ET qu'il ne lui reste plus de créances à céder. Ces deux réglages disent à quelle vitesse elle y arrive et combien de temps elle a pour s'en sortir : la capacité d'endettement décide quand la banque cesse de prêter, et le nombre de tours décide quand la partie est perdue. Le compteur retombe à zéro dès qu'un tour repasse sous le plafond — une recapitalisation dégèle l'entreprise. Le financement de sauvetage obligatoire empêche de valider le tour suivant une crise sans avoir réuni de quoi repasser sous le découvert autorisé ; à 0, l'équipe n'est qu'avertie et reste libre de couler.",
+    fields: [
+      { name: "maxDebtToEquity", label: "Emprunt max. / capitaux propres", suffix: "×" },
+      { name: "crisisRoundsBeforeFailure", label: "Tours en crise avant défaillance", suffix: "tours" },
+      { name: "rescueFinancingRequired", label: "Financement de sauvetage obligatoire", suffix: "1 = oui" },
+    ],
+  },
+  {
     title: "Coûts et structure",
     fields: [
       { name: "fixedCostsPerRound", label: "Charges de structure / tour", suffix: "€" },
@@ -71,12 +86,12 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   },
 ];
 
-/** Les six dimensions du BPI v2, pondérables par l'enseignant (saisie en %). */
+/** Les six dimensions de l'IPG v2, pondérables par l'enseignant (saisie en %). */
 const BPI_FIELDS: { name: string; label: string; hint: string }[] = [
   { name: "bpiEconomic", label: "Performance économique", hint: "Résultat d'exploitation vs benchmark" },
   { name: "bpiFinancial", label: "Performance financière", hint: "Variation du résultat net, plancher si perte" },
   { name: "bpiCommercial", label: "Performance commerciale", hint: "Chiffre d'affaires et part de marché" },
-  { name: "bpiProfitability", label: "Rentabilité", hint: "Rentabilité des capitaux propres" },
+  { name: "bpiProfitability", label: "Responsabilité sociétale", hint: "Indice RSE du tour : environnement, social, gouvernance" },
   { name: "bpiPilotage", label: "Pilotage", hint: "Exécution opérationnelle et cohérence des décisions" },
   { name: "bpiDecisionMastery", label: "Maîtrise décisionnelle", hint: "Scores des situations rendues" },
 ];
@@ -101,27 +116,28 @@ export function EconomicParams({
           name="scenarioCode"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+          className="mt-1 w-full champ px-3 py-2 text-sm"
         >
           {scenarios.map((s) => (
-            <option key={s.code} value={s.code}>
+            <option key={s.code} value={s.code} disabled={s.horsLicence !== undefined}>
               {s.label}
+              {s.horsLicence ? ` · ${s.horsLicence}` : ""}
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-slate-400">
+        <span className="mt-1 block text-sm text-slate-400">
           Chaque secteur enseigne ce que les autres ne peuvent pas : le stock et le coefficient
           multiplicateur dans le commerce, le taux d&apos;occupation en hôtellerie, le ratio
           matières en restauration, le poste clients dans les services.
         </span>
       </label>
 
-      <details className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4 sm:col-span-3">
+      <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
-          ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
+          Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
 
-        <p className="mt-3 text-xs leading-relaxed text-slate-400">
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
           Les valeurs en filigrane sont celles de{" "}
           <strong className="text-slate-400">{selected.label}</strong>. Montants en base
           trimestrielle, redimensionnés selon la périodicité choisie. Une valeur hors bornes est
@@ -142,14 +158,14 @@ export function EconomicParams({
                 return (
                   <label key={field.name} className="block">
                     <span className="text-xs text-slate-400">{field.label}</span>
-                    <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+                    <span className="mt-1 flex items-center gap-1.5 champ px-2.5 py-1.5">
                       <input
                         type="text"
                         inputMode="decimal"
                         name={field.name}
                         placeholder={unavailable ? "non proposé" : (fallback ?? "")}
                         disabled={unavailable}
-                        className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
+                        className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
                       />
                       <span className="whitespace-nowrap text-xs text-slate-400">
                         {field.suffix === "unit" ? `€/${selected.unit}` : field.suffix}
@@ -160,19 +176,19 @@ export function EconomicParams({
               })}
             </div>
             {group.note ? (
-              <p className="mt-2 text-xs leading-relaxed text-slate-600">{group.note}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{group.note}</p>
             ) : null}
           </section>
         ))}
       </details>
 
-      <details className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4 sm:col-span-3">
+      <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
-          📊 Pondérations du BPI (avancé) · laissez vide pour les poids du scénario
+          Pondérations de l&apos;IPG (avancé) · laissez vide pour les poids du scénario
         </summary>
 
-        <p className="mt-3 text-xs leading-relaxed text-slate-400">
-          Le BPI est la moyenne pondérée de six dimensions. Les valeurs en filigrane sont celles de{" "}
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          L&apos;IPG est la moyenne pondérée de six dimensions. Les valeurs en filigrane sont celles de{" "}
           <strong className="text-slate-400">{selected.label}</strong>. Ce sont des poids{" "}
           <strong className="text-slate-400">relatifs</strong> : inutile de tomber juste à 100 %, ils
           sont renormalisés. Une dimension laissée vide garde le poids du scénario.
@@ -182,17 +198,17 @@ export function EconomicParams({
           {BPI_FIELDS.map((field) => (
             <label key={field.name} className="block">
               <span className="text-xs text-slate-400">{field.label}</span>
-              <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+              <span className="mt-1 flex items-center gap-1.5 champ px-2.5 py-1.5">
                 <input
                   type="text"
                   inputMode="decimal"
                   name={field.name}
                   placeholder={selected.defaults[field.name] ?? ""}
-                  className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                  className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-400"
                 />
                 <span className="whitespace-nowrap text-xs text-slate-400">%</span>
               </span>
-              <span className="mt-1 block text-xs text-slate-600">{field.hint}</span>
+              <span className="mt-1 block text-sm text-slate-400">{field.hint}</span>
             </label>
           ))}
         </div>

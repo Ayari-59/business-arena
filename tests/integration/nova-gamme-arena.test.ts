@@ -22,6 +22,7 @@ import { users } from "@/db/schema";
 import { createSoloGame, getGameView, resolveCurrentRound } from "@/services/game.service";
 import { cockpitEquipe } from "@/services/cockpit.service";
 import type { RoundDecisions } from "@/engine/types";
+import { placerSousLicence } from "./helpers/licence";
 
 let userId: string;
 let gameId: string;
@@ -32,8 +33,12 @@ beforeAll(async () => {
     .values({ email: "novag@test.local", displayName: "Nova gamme" })
     .returning({ id: users.id });
   userId = inserted[0]!.id;
-  // Niveau 4 (Arbitrage) : la R&D est ouverte.
-  gameId = await createSoloGame(userId, "quarter", 3, 4, false, "nova-gamme");
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : ce
+  // joueur est un enseignant d'un établissement sous licence (la règle elle-même est
+  // gardée par acces-sans-licence.test.ts).
+  await placerSousLicence(userId);
+  // Niveau 5 (Stratégie) : la R&D est ouverte (depuis octobre 2026).
+  gameId = await createSoloGame(userId, "quarter", 3, 5, false, "nova-gamme");
 });
 
 describe("NOVA · gamme dans l'arène", () => {

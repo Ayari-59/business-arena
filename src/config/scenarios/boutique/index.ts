@@ -7,6 +7,7 @@ import type {
 } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario BOUTIQUE — « MAILLE & CO », marque de vêtements en maille,
@@ -212,7 +213,7 @@ const FACONNIERS_ACCESSOIRES: SupplierDef[] = [FACONNIER_REFERENCE, TRICOTEUR_AC
 const GAMME: ProductDef[] = [
   {
     code: "pull-col-rond",
-    name: "Pull col rond",
+    name: "Col rond",
     // coût d'achat au façonnier : le nerf du commerce (coefficient ≈ 2,4)
     materialCostPerUnit: 25,
     // sacs, cintres, commissions carte bancaire, logistique retour
@@ -223,7 +224,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "cardigan",
-    name: "Cardigan boutonné",
+    name: "Cardigan",
     materialCostPerUnit: 34,
     otherVariableCostPerUnit: 4,
     hoursPerUnit: 0.15,
@@ -245,7 +246,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "pull-merinos",
-    name: "Pull mérinos premium",
+    name: "Mérinos",
     materialCostPerUnit: 56,
     otherVariableCostPerUnit: 5,
     hoursPerUnit: 0.2,
@@ -361,20 +362,59 @@ const rawBoutique = {
     availabilityDecay: 0.05,
   },
   marketing: { scale: 9000 },
+  /**
+   * LA MARQUE ET L'AXE (levier `communication`).
+   *
+   * MAILLE & CO a cinq références, trois clientèles et un seul discours : ce
+   * qu'il dit vaut pour toute la boutique. D'où deux leviers distincts du
+   * marketing par référence, qui lui, fait venir sur UN article ce tour-ci :
+   *
+   *  · le BUDGET DE MARQUE bâtit une notoriété qui profite à toute la gamme,
+   *    avec retard, et qui s'use si l'on cesse — l'enseigne de quartier se
+   *    construit sur des années, pas sur un trimestre. D'où une inertie plus
+   *    forte (0,55) que dans les secteurs où l'on se fait connaître vite ;
+   *  · l'AXE décide à qui ce budget parle. Et les trois clientèles de la
+   *    boutique ne veulent pas entendre la même chose : les passants comparent
+   *    les étiquettes, les clientes fidèles regardent la qualité, les comités
+   *    d'entreprise achètent une maison de confiance. Un axe bien choisi rend
+   *    le même euro plus efficace ; mal choisi, il dessert.
+   *
+   * Aucune affinité n'est écrite segment par segment : celles que le moteur
+   * déduit de l'élasticité, de la sensibilité qualité et de la fidélité disent
+   * déjà exactement cela, et une table écrite à la main mentirait le jour où
+   * l'enseignant change un de ces trois réglages.
+   *
+   * L'échelle du budget de marque (7 000 €) est un peu sous celle du marketing
+   * par référence (9 000 €) : la marque coûte moins cher à faire bouger, mais
+   * elle met un tour à porter et se plafonne vite.
+   */
+  communication: {
+    brandScale: 7000,
+    brandSensitivity: 0.18,
+    brandMax: 0.25,
+    brandInertia: 0.55,
+    axisFit: 1.3,
+    axisMisfit: 0.7,
+    axisSwitchDecay: 0.6,
+  },
   finance: {
     loanAnnualRate: 0.052,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 25000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     // le commerce paie ses façonniers à 45 jours (usage de la profession)
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 20,
     maxCapitalIncreaseTotal: 80000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 4500,
   },
   treasury: {
@@ -727,6 +767,48 @@ const rawBoutique = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "boutique_fast_fashion",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.86 }],
+    },
+    {
+      code: "boutique_soldes_concurrent",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [
+        { target: "demand:pull_passage", op: "mul", value: 0.8 },
+        { target: "demand:cardigan_passage", op: "mul", value: 0.8 },
+        { target: "demand:echarpe_passage", op: "mul", value: 0.8 },
+        { target: "demand:bonnet_passage", op: "mul", value: 0.8 },
+      ],
+    },
+    {
+      code: "boutique_vendeuse_star",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.08 }],
+    },
+    {
+      code: "boutique_greve_transporteur",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "boutique_marche_noel",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand", op: "mul", value: 1.2 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("boutique"),
   ],
   // La laine flambe au tour 5 : la marge d'achat se comprime juste après Noël,
   // quand la trésorerie a déjà tout donné dans le réassort.

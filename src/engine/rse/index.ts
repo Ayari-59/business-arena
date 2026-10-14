@@ -52,7 +52,7 @@ export const DEFAULT_RSE_CONFIG: RseEngineConfig = {
   },
 };
 
-/** Codes des cartes événement RSE (Lot 2C / 2C.2), reliés à leur habillage. */
+/** Codes des courriers RSE (Lot 2C / 2C.2), reliés à leur habillage. */
 export const RSE_CARD_CODES = {
   label: "rse_label",
   badBuzz: "rse_bad_buzz",
@@ -186,9 +186,10 @@ export function cleanDefectReduction(cleanCapital: number, max: number): number 
 }
 
 /**
- * FINANCEMENT VERT (Lot 2B) : bonus de confiance bancaire tiré du capital-image
- * (borné à 1, le maximum de confiance). Saturant, comme les autres effets : un
- * capital mûr rassure la banque sans jamais la rendre naïve.
+ * FINANCEMENT VERT (Lot 2B) : prime de confiance bancaire tirée du capital-image,
+ * qui s'ajoute à la confiance acquise (borne dure dans `conditionsBancaires`).
+ * Saturante, comme les autres effets : un capital mûr rassure la banque sans
+ * jamais la rendre naïve.
  */
 export function financingTrustBonus(imageCapital: number, coef: number): number {
   const c = Math.max(0, imageCapital);

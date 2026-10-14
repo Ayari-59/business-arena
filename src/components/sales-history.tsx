@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { formatEuro, formatUnits } from "@/lib/format";
 import type { GameView } from "@/services/game.service";
+import { Tiroir } from "@/components/tiroir";
 
 /**
  * Historique des ventes, clientèle par clientèle et tour par tour.
@@ -27,37 +28,64 @@ export function SalesHistory({
   if (history.rounds.length === 0) return null;
 
   return (
-    <details className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-      <summary className="cursor-pointer text-sm font-semibold text-slate-200">
-        📈 Historique de vos ventes ({history.rounds.length} tour
-        {history.rounds.length > 1 ? "s" : ""})
-      </summary>
-
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full text-sm">
+    <Tiroir
+      icone="resultats"
+      titre="Historique de vos ventes"
+      quoi={`${history.rounds.length} tour${history.rounds.length > 1 ? "s" : ""}`}
+      ferme
+      groupe="comptes-du-tour"
+    >
+      {/* Le tableau défile DANS son conteneur, la page jamais ; l'intitulé de
+          ligne (le tour) reste collé à gauche pendant qu'on fait glisser les
+          clientèles, sinon on lit des chiffres sans savoir de quel tour. */}
+      <div className="tableau-financier">
+        <table className="text-sm">
+          <caption className="sr-only">
+            Vos ventes tour par tour et clientèle par clientèle : la demande du marché, vos ventes
+            et leur chiffre d&apos;affaires.
+          </caption>
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-              <th className="pb-1 pr-3 font-medium">Tour</th>
-              <th className="pb-1 pr-3 text-right font-medium">
+            <tr className="libelle text-left">
+              <th scope="col" className="pb-1 pr-3 font-medium">
+                Tour
+              </th>
+              <th scope="col" className="pb-1 pr-3 text-right font-medium">
                 {priceLabel ?? vocabulary.priceLabel}
               </th>
               {history.segments.map((name) => (
-                <th key={name} className="pb-1 pr-3 text-right font-medium" colSpan={3}>
+                <th
+                  key={name}
+                  scope="colgroup"
+                  className="pb-1 pr-3 text-right font-medium"
+                  colSpan={3}
+                >
                   {name}
                 </th>
               ))}
-              <th className="pb-1 pr-3 text-right font-medium">Prévu</th>
-              <th className="pb-1 pr-3 text-right font-medium">Total vendu</th>
-              <th className="pb-1 text-right font-medium">Manquées</th>
+              <th scope="col" className="pb-1 pr-3 text-right font-medium">
+                Prévu
+              </th>
+              <th scope="col" className="pb-1 pr-3 text-right font-medium">
+                Total vendu
+              </th>
+              <th scope="col" className="pb-1 text-right font-medium">
+                Manquées
+              </th>
             </tr>
-            <tr className="text-left text-xs text-slate-600">
+            <tr className="text-left text-xs text-slate-400">
               <th className="pb-1 pr-3" />
               <th className="pb-1 pr-3" />
               {history.segments.map((name) => (
                 <Fragment key={name}>
-                  <th className="pb-1 pr-3 text-right font-normal">demande</th>
-                  <th className="pb-1 pr-3 text-right font-normal">vos ventes</th>
-                  <th className="pb-1 pr-3 text-right font-normal">chiffre d&apos;affaires</th>
+                  <th scope="col" className="pb-1 pr-3 text-right font-normal">
+                    demande
+                  </th>
+                  <th scope="col" className="pb-1 pr-3 text-right font-normal">
+                    vos ventes
+                  </th>
+                  <th scope="col" className="pb-1 pr-3 text-right font-normal">
+                    chiffre d&apos;affaires
+                  </th>
                 </Fragment>
               ))}
               <th className="pb-1 pr-3" />
@@ -68,7 +96,9 @@ export function SalesHistory({
           <tbody className="text-slate-300">
             {history.rounds.map((row) => (
               <tr key={row.round} className="border-t border-white/5">
-                <td className="py-1.5 pr-3 text-slate-400">T{row.round}</td>
+                <th scope="row" className="py-1.5 pr-3 text-left font-normal text-slate-400">
+                  T{row.round}
+                </th>
                 <td className="py-1.5 pr-3 text-right tabular-nums">
                   {row.price === null ? "—" : formatEuro(row.price)}
                 </td>
@@ -77,9 +107,7 @@ export function SalesHistory({
                     <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
                       {formatUnits(seg.potential)}
                     </td>
-                    <td className="py-1.5 pr-3 text-right tabular-nums">
-                      {formatUnits(seg.sold)}
-                    </td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums">{formatUnits(seg.sold)}</td>
                     {/* Une part en unités ne dit pas la dépendance à un canal
                         quand les canaux ne rapportent pas la même chose. */}
                     <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
@@ -87,13 +115,17 @@ export function SalesHistory({
                     </td>
                   </Fragment>
                 ))}
-                <td className="py-1.5 pr-3 text-right tabular-nums text-sky-300/80">
+                {/* Ce que VOUS aviez annoncé : la teinte de votre métier (lot
+                    5A), qui tient 4,8 pour 1 au moins sur le papier comme sur
+                    le marine, mesuré sur les quinze. Hors d'une partie, l'encre
+                    de la donnée. */}
+                <td className="py-1.5 pr-3 text-right tabular-nums text-[color:var(--metier,var(--donnee))]">
                   {row.forecastUnits === null ? "—" : formatUnits(row.forecastUnits)}
                 </td>
                 <td className="py-1.5 pr-3 text-right font-medium tabular-nums text-slate-100">
                   {formatUnits(row.sold)}
                 </td>
-                <td className="py-1.5 text-right tabular-nums text-red-300/80">
+                <td className="py-1.5 text-right tabular-nums text-red-300">
                   {row.lost > 0 ? formatUnits(row.lost) : "—"}
                 </td>
               </tr>
@@ -102,29 +134,29 @@ export function SalesHistory({
         </table>
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-slate-400">
-        La colonne « prévu » est ce que vous aviez annoncé avant de jouer le tour.
-        De quoi construire une prévision plutôt que de deviner : moyenne des tours passés,
-        tendance d&apos;un tour à l&apos;autre, coefficient de saison en rapportant chaque tour
-        à la moyenne. La colonne « demande » porte la saison du marché, la vôtre porte l&apos;effet
-        de votre prix. Comparez ensuite votre prévision au réalisé : l&apos;écart est plus
-        instructif que la prévision.
+      <p className="mt-3 text-sm leading-relaxed text-slate-400">
+        La colonne « prévu » est ce que vous aviez annoncé avant de jouer le tour. De quoi
+        construire une prévision plutôt que de deviner : moyenne des tours passés, tendance
+        d&apos;un tour à l&apos;autre, coefficient de saison en rapportant chaque tour à la moyenne.
+        La colonne « demande » porte la saison du marché, la vôtre porte l&apos;effet de votre prix.
+        Comparez ensuite votre prévision au réalisé : l&apos;écart est plus instructif que la
+        prévision.
       </p>
       {/* Le taux, à côté des chiffres qu'il ampute. La commission se lit au
           compte de résultat en un seul montant : sans ce rappel, l'équipe ne
           sait pas de quel canal il vient, et ne peut pas comparer une vente
           par un tiers à une vente en direct. */}
       {history.commissions.length > 0 ? (
-        <p className="mt-2 text-xs leading-relaxed text-slate-400">
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
           {history.commissions.map((c) => (
             <span key={c.segment} className="block">
-              {c.segment} : le canal prélève {Math.round(c.rate * 100)} % du prix de vente.
-              Le chiffre d&apos;affaires ci-dessus est celui que paie le client ; ce qui vous
-              reste est diminué d&apos;autant, et se lit au compte de résultat.
+              {c.segment} : le canal prélève {Math.round(c.rate * 100)} % du prix de vente. Le
+              chiffre d&apos;affaires ci-dessus est celui que paie le client ; ce qui vous reste est
+              diminué d&apos;autant, et se lit au compte de résultat.
             </span>
           ))}
         </p>
       ) : null}
-    </details>
+    </Tiroir>
   );
 }

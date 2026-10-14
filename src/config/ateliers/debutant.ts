@@ -7,7 +7,7 @@ import type { AtelierDefinition } from "./types";
  * on achète, on revend, et la marge se lit d'un coup d'œil. C'est l'animation
  * d'entrée, pensée pour une classe qui n'a jamais joué et qui n'a pas encore
  * les mots de la gestion. Une seule décision structurante par séance, un seul
- * calcul à la fois, et un niveau de jeu qui n'ouvre ni trésorerie, ni structure,
+ * calcul à la fois, et un niveau de jeu où l'on ne travaille qu'un levier à la fois,
  * pour que rien ne se décide au hasard.
  *
  * Ce n'est pas un atelier de section de technicien : il ne s'adosse à aucun
@@ -17,8 +17,9 @@ import type { AtelierDefinition } from "./types";
  */
 export const ATELIER_DEBUTANT: AtelierDefinition = {
   code: "debutant",
-  titre: "Découvrir la gestion en tenant une boutique",
-  diplome: "Découverte, toutes filières",
+  titre: "Tenir la boutique Maille & Co, premiers pas en gestion",
+  formations: [],
+  public: "Toutes filières, en découverte",
   annee: "Premiers pas",
   nature: "Animation de découverte",
   traceLabel: "carnet de bord",
@@ -29,7 +30,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
   resume:
     "Quatre trimestres dans une boutique pour découvrir la gestion sans en avoir le vocabulaire, une décision à la fois, jusqu'à la grosse saison.",
   difficulte: 1,
-  difficulteLabel: "Initiation",
+  difficulteLabel: "Découverte",
   format: "4 séances de 2 h",
   pourquoi:
     "Un débutant à qui l'on explique la marge l'oublie avant la sonnerie, parce qu'il n'en a pas eu besoin. Ici l'équipe fixe un prix parce qu'il faut bien en fixer un, et découvre au trimestre suivant si elle a gagné ou perdu à ce prix. La leçon vient de la décision, pas du cours. Chaque séance n'ajoute qu'une chose : d'abord le prix, puis le volume à commander, puis la promotion, puis la saison, si bien qu'à la fin la classe a manipulé les quatre leviers de base sans jamais avoir eu à tout tenir en même temps. C'est le seul moment où l'on peut se tromper sans conséquence, et c'est ce qui rend l'erreur précieuse.",
@@ -47,7 +48,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "deux élèves",
     notes:
-      "La boutique achète pour revendre un seul article de mode : la marge s'y lit sans détour, et rien n'y brouille la découverte. La gamme de cinq références attend les niveaux suivants. Le niveau retenu n'ouvre que le prix et le volume : ni trésorerie, ni recrutement, ni investissement, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
+      "La boutique achète pour revendre un seul article de mode : la marge s'y lit sans détour, et rien n'y brouille la découverte. La gamme de cinq références attend les niveaux suivants. Le niveau Découverte ne met à l'écran que le prix, la production et le marketing : chaque séance n'annonce qu'un levier, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas, et aucune histoire d'investissement ne vient bouger la demande entre vos séances. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
   },
   seances: [
     {
@@ -101,7 +102,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
       livrable:
         "Le carnet de bord du trimestre, une demi-page : le prix d'achat, le prix de vente choisi, la marge par article, et une phrase sur ce que le binôme ferait différemment.",
       tracePasseport:
-        "J'ai fixé le prix de vente d'une boutique et j'ai compris, en voyant mon résultat, ce qu'est une marge.",
+        "J'ai fixé le prix de vente d'une boutique, puis lu dans mon résultat ce qu'est une marge.",
       evaluation: [
         "Le prix de vente est écrit, avec sa raison en une phrase.",
         "La marge par article est calculée à partir des deux prix.",
@@ -159,7 +160,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
       livrable:
         "Le carnet de bord du trimestre : la quantité commandée, la vente prévue, ce qui a été vendu réellement, et une phrase sur l'écart entre les deux.",
       tracePasseport:
-        "J'ai choisi une quantité de marchandise à commander et j'ai compris ce que coûtent un rayon vide et un rayon plein d'invendus.",
+        "J'ai choisi une quantité de marchandise à commander en pesant ce que coûtent un rayon vide et un rayon plein d'invendus.",
       evaluation: [
         "La quantité commandée est écrite avec la vente attendue.",
         "Les deux erreurs, trop et trop peu, sont expliquées avec des mots simples.",
@@ -217,7 +218,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
       livrable:
         "Le carnet de bord du trimestre : la décision de promotion ou non, le prix retenu, les ventes visées, et une phrase sur ce que la remise a réellement laissé.",
       tracePasseport:
-        "J'ai tenté une promotion et j'ai compris qu'une remise ne rapporte que si elle fait vendre assez pour compenser la marge perdue.",
+        "J'ai tenté une promotion en sachant qu'une remise ne rapporte que si elle fait vendre assez pour compenser la marge perdue.",
       evaluation: [
         "La décision de promotion est écrite, avec le nombre de ventes visé.",
         "Le binôme explique pourquoi une remise doit faire vendre plus.",
@@ -275,7 +276,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
       livrable:
         "Le carnet de bord de la grosse saison et le bilan de l'année : le prix et la quantité retenus, la vente visée, et trois phrases sur ce que le binôme a appris en quatre trimestres.",
       tracePasseport:
-        "J'ai préparé la grosse saison d'une boutique en réunissant le prix, la quantité et la promotion, et j'ai fait le bilan d'une année de gestion.",
+        "J'ai préparé la grosse saison d'une boutique en réunissant le prix, la quantité et la promotion, puis dressé le bilan d'une année de gestion.",
       evaluation: [
         "Le prix et la quantité de la grosse saison sont décidés ensemble.",
         "La décision s'appuie sur les trimestres précédents, pas sur une intuition.",
@@ -298,7 +299,8 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
     },
     {
       nom: "En marge du cours",
-      quand: "Quand l'animation sert d'accroche à un premier chapitre de gestion.",
+      quand:
+        "Quand l'animation sert d'accroche à un premier chapitre de gestion.",
       comment:
         "Une séance courte glissée à intervalles réguliers, chacune ouvrant la notion que le cours formalisera ensuite. La partie reste ouverte entre deux séances.",
     },
@@ -321,9 +323,9 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
         "Non, c'est même l'inverse. L'animation est faite pour venir avant le cours : elle donne aux élèves l'expérience d'une marge, d'un stock et d'une saison, sur laquelle le cours viendra ensuite poser des mots. Une classe qui a joué comprend un chapitre de gestion bien plus vite qu'une classe qui le découvre à froid.",
     },
     {
-      question: "Le niveau retenu est très fermé, est-ce un défaut ?",
+      question: "Le niveau retenu laisse beaucoup de leviers à zéro, est-ce un défaut ?",
       reponse:
-        "Non, c'est le point. Un débutant qui aurait accès à la trésorerie, au recrutement et à l'investissement prendrait dix décisions qu'il ne comprend pas, et n'apprendrait rien d'aucune. En n'ouvrant que le prix et la quantité, l'animation garantit que chaque décision est comprise. Les autres leviers viendront, un atelier plus tard.",
+        "Non, c'est le point. Un débutant qui toucherait à la trésorerie, au recrutement et à l'investissement prendrait dix décisions qu'il ne comprend pas, et n'apprendrait rien d'aucune. En ne travaillant que le prix et la quantité, l'animation garantit que chaque décision est comprise : les autres cases restent à zéro, et vous le dites en début de séance. Les autres leviers viendront, un atelier plus tard.",
     },
     {
       question: "Pourquoi des binômes plutôt que des équipes de trois ?",
@@ -331,7 +333,8 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
         "Parce qu'à ce niveau, chaque élève doit prendre part à la seule décision de la séance, et un trio en laisse toujours un en retrait. Le binôme force les deux à trancher ensemble. Vous pouvez passer à trois si votre effectif l'impose, en confiant au troisième la tenue du carnet de bord.",
     },
     {
-      question: "Que faire d'un binôme qui a tout perdu dès le premier trimestre ?",
+      question:
+        "Que faire d'un binôme qui a tout perdu dès le premier trimestre ?",
       reponse:
         "Le féliciter, presque. Une boutique qui se plante tôt et qui comprend pourquoi apprend davantage qu'une boutique qui réussit sans savoir comment. Aidez le binôme à lire son résultat, laissez-le corriger au trimestre suivant, et notez sa lucidité plutôt que sa marge.",
     },

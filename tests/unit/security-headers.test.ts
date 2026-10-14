@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import nextConfig from "../../next.config";
-import { CSP_HEADER_NAME, contentSecurityPolicy, securityHeaders } from "@/config/security-headers";
+import {
+  CSP_HEADER_NAME,
+  contentSecurityPolicy,
+  securityHeaders,
+  SOURCE_HORS_LTI,
+} from "@/config/security-headers";
 
 /**
  * LES EN-TÊTES DE SÉCURITÉ SONT SERVIS SUR TOUTES LES RÉPONSES.
@@ -24,11 +29,23 @@ const STATIQUES = [
   "Strict-Transport-Security",
 ];
 
+/**
+ * Les en-têtes que reçoit une route : ceux de toutes les règles dont la source la
+ * couvre. Les sources sont des expressions de path-to-regexp ; celles du site n'ont que
+ * des groupes d'expression régulière, qu'on évalue tels quels.
+ */
+async function entetesDe(chemin: string): Promise<string[]> {
+  const regles = await nextConfig.headers!();
+  return regles
+    .filter((r) => new RegExp(`^${r.source}$`).test(chemin))
+    .flatMap((r) => r.headers.map((h) => h.key));
+}
+
 async function regleGlobale() {
   const regles = await nextConfig.headers!();
   const globale = regles.find((r) => r.source === "/(.*)");
   expect(globale, "aucune règle d'en-têtes sur /(.*)").toBeDefined();
-  return globale!;
+  return { headers: (await entetesDe("/")).map((key) => ({ key })) };
 }
 
 describe("configuration Next", () => {
@@ -47,6 +64,26 @@ describe("configuration Next", () => {
     const cles = globale.headers.map((h) => h.key);
     expect(cles).toContain("Content-Security-Policy");
     expect(cles).not.toContain("Content-Security-Policy-Report-Only");
+  });
+
+  it("toutes les pages, /lti/* comprises, gardent l'iframe interdite et la CSP du site", async () => {
+    for (const chemin of ["/", "/teacher", "/lti/activite", "/api/games/x", "/apilti", "/api/ltix"]) {
+      const cles = await entetesDe(chemin);
+      expect(cles, chemin).toContain("X-Frame-Options");
+      expect(cles, chemin).toContain("Content-Security-Policy");
+    }
+  });
+
+  it("seules les routes /api/lti/ posent leur propre CSP (intégrables par la plateforme inscrite)", async () => {
+    expect(SOURCE_HORS_LTI).toBe("/((?!api/lti/).*)");
+    for (const chemin of ["/api/lti/selection", "/api/lti/inscription"]) {
+      const cles = await entetesDe(chemin);
+      expect(cles, chemin).not.toContain("X-Frame-Options");
+      expect(cles, chemin).not.toContain("Content-Security-Policy");
+      for (const commun of ["X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy", "Strict-Transport-Security"]) {
+        expect(cles, chemin).toContain(commun);
+      }
+    }
   });
 
   it("garde la règle propre au service worker", async () => {

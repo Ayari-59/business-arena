@@ -1,0 +1,319 @@
+"use client";
+
+import { bouton } from "@/components/bouton";
+import { useParcours } from "@/components/parcours-mobile";
+import { useSyncExternalStore } from "react";
+import {
+  CourrierRecommande,
+  Enveloppe,
+  EnveloppeOuverte,
+  grilleDeCourriers,
+} from "@/components/courrier";
+import { courrierParCode } from "@/config/courriers/registre";
+import { courrierDeRoutine } from "@/config/courriers/routine";
+import type { DestinataireDuCourrier } from "@/config/courriers/destinataire";
+import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
+import { Icone } from "@/components/icone";
+import { CoupureDePresse } from "@/components/coupure-de-presse";
+import { NOM_DU_JOURNAL, type ArticleDeLaGazette } from "@/config/gazette/types";
+import { codesRacontesParLaPresse, racontePar } from "@/config/gazette/edition";
+
+/**
+ * LE COURRIER DU TRIMESTRE, VÉCU.
+ *
+ * Le moteur tire les événements d'un tour à sa clôture ; en solo, le joueur
+ * les découvrait dans ses résultats, après avoir décidé. Le tirage étant
+ * déterministe (voir `peekEventDraw`), on le lui présente ENTRE L'ANALYSE ET
+ * LA DÉCISION : la situation lue, les situations analysées, le courrier
+ * attend, cacheté, à l'entrée de « Décider » — un geste pour l'ouvrir, et ce
+ * qui pèsera sur le trimestre tombe sur une décision déjà réfléchie, qu'il
+ * faut reprendre. C'est ce qui fait d'un aléa subi un événement joué.
+ *
+ * UNE ENVELOPPE N'EST JAMAIS VIDE. Quand rien de notable ne tombe, le facteur
+ * passe quand même : un courrier de routine, sans effet sur les comptes,
+ * remplace le « aucune carte ce tour » d'autrefois. Le trimestre calme se lit,
+ * lui aussi.
+ *
+ * Une fois lu, on en prend note et le courrier SE CLASSE : il a dit ce qu'il
+ * avait à dire, la décision reprend toute la place. Il en reste une ligne, et
+ * de quoi le relire. L'appareil retient où en est le joueur (ouvert, classé) :
+ * revenir sur la page ne rejoue pas la scène.
+ */
+export interface PliDuTour {
+  code: string;
+  /** null = toute la classe ; sinon l'entreprise destinataire. */
+  teamId: string | null;
+  isMyTeam: boolean;
+}
+
+function cleMemoire(gameId: string, round: number): string {
+  return `courrier:${gameId}:${round}`;
+}
+
+/**
+ * La mémoire de l'ouverture : "" jamais ouvert · "1" ouvert · "2" classé.
+ * Elle survit à un stockage refusé (voir `memoire-de-lecture`), sans quoi les
+ * deux boutons de cette scène ne feraient rien du tout sur un appareil en
+ * navigation privée.
+ */
+const memoire = creerMemoireDeLecture(["1", "2"] as const);
+
+export function CourrierDuTour({
+  gameId,
+  round,
+  periodeLabel,
+  plis: plisRecus,
+  adresse,
+  gazette = null,
+  ouvert: ouvertInitial = false,
+  classe: classeInitial = false,
+  noteDInvestissement = null,
+  assurance = true,
+}: {
+  /** Le niveau ouvre-t-il l'assurance ? Fermée, les courriers se lisent sans elle. */
+  assurance?: boolean;
+  /**
+   * UN COURRIER QUI APPELLE L'INVESTISSEMENT, À UN NIVEAU QUI LE PLAFONNE. Les
+   * histoires d'investissement (« pouvez-vous servir ce volume ? … investir »)
+   * tombaient dès le niveau 1 dans les parties créées avant la répartition
+   * d'octobre 2026, où l'on n'achète que ce que l'équipe fait tourner : la note
+   * le dit au pied de la lettre, avec le plafond du tour. `null` : rien.
+   */
+  noteDInvestissement?: string | null;
+  /**
+   * L'entreprise que dirige le joueur : le courrier lui est adressé, son nom est
+   * sur l'enveloppe et en tête de la lettre (voir `config/courriers/destinataire`).
+   */
+  adresse: DestinataireDuCourrier;
+  gameId: string;
+  /** « Trimestre 3 » : le nom du tour tel que la partie le dit. */
+  round: number;
+  periodeLabel: string;
+  /** Les courriers qui tomberont sur cette équipe : marché et adressés à elle. */
+  plis: readonly PliDuTour[];
+  /**
+   * LA GAZETTE DU TOUR : la coupure de presse, posée AVANT la lettre. Quand
+   * elle porte le marché (l'article du journal, ni remplacé ni retiré), elle
+   * raconte les événements « tout le marché » : leurs circulaires se taisent,
+   * pour qu'une même nouvelle ne s'annonce pas deux fois. Le courrier ne garde
+   * que les plis adressés à l'entreprise (ou, à défaut, sa routine).
+   */
+  gazette?: { article: ArticleDeLaGazette | null; porteLeMarche: boolean } | null;
+  /** Enveloppe déjà ouverte d'emblée (tests, aperçus). */
+  ouvert?: boolean;
+  /** Déjà classé et replié d'emblée (tests, aperçus). */
+  classe?: boolean;
+}) {
+  const cle = cleMemoire(gameId, round);
+  const retenu = useSyncExternalStore(
+    memoire.subscribe,
+    () => memoire.lire(cle),
+    () => "" as const,
+  );
+  // Dans le parcours du téléphone, la lettre a son titre : celui du tour, au-dessus, ne dit plus
+  // rien une fois le pli ouvert, et il repoussait la lettre sous le pli de l'écran.
+  const enParcours = useParcours() !== null;
+  const classe = classeInitial || retenu === "2";
+  const ouvert = ouvertInitial || classe || retenu === "1";
+  const ouvrir = () => memoire.retenir(cle, "1");
+  const prendreNote = () => memoire.retenir(cle, "2");
+  const relire = () => memoire.retenir(cle, "1");
+
+  // PAS DE DOUBLON : la circulaire d'un événement de marché est reprise par la
+  // Gazette. Elle ne revient que si l'article n'est pas celui du journal.
+  const racontes = codesRacontesParLaPresse(gazette);
+  const plis = plisRecus.filter((p) => !racontePar(racontes, p));
+  const article = gazette?.article ?? null;
+  // La presse annonce-t-elle quelque chose (et pas seulement la saison) ?
+  const presseAnnonce =
+    article !== null && (article.auteur === "enseignant" || article.sujets.some((x) => x.sujet !== "calme"));
+  // Le courrier de routine : ce que le facteur apporte un trimestre calme.
+  const routine = courrierDeRoutine(gameId, round, assurance);
+  const vide = plis.length === 0;
+
+  // Classé : une ligne, et de quoi relire. Le courrier a dit ce qu'il avait à dire.
+  if (classe) {
+    return (
+      <section
+        aria-label={`Le courrier du ${periodeLabel}`}
+        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-slate-400"
+      >
+        <span>
+          <Icone nom="courrier" className="mr-1.5 h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" />
+          Courrier du {periodeLabel} :{" "}
+          <span className="text-slate-300">
+            {[
+              article ? `${NOM_DU_JOURNAL}, « ${article.titre} »` : null,
+              ...(vide
+                ? [routine.objet]
+                : plis.map((p) => courrierParCode.get(p.code)?.objet ?? p.code)),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={relire}
+          className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+        >
+          Relire
+        </button>
+      </section>
+    );
+  }
+
+  // UN PLI SEUL se pose seul, au milieu ; plusieurs plis se posent côte à
+  // côte, deux par rangée.
+  // LOT P4 : l'enveloppe ouverte d'un pli seul avait été retirée (son rabat
+  // flottait, son étiquette en pointillé était serrée). LOT P7 : elle revient,
+  // REDESSINÉE (`EnveloppeOuverte`), à côté de la lettre qui reste l'objet
+  // principal et garde ses 40 rem. Une enveloppe par pli si la place le
+  // permet, sinon aucune : à deux plis, les lettres prennent déjà la largeur
+  // (2 × 40 rem et deux enveloppes demanderaient 112 rem) ; sur téléphone,
+  // aucune.
+  const seul = vide || plis.length === 1;
+  const premier = vide ? routine.code : plis[0]!.code;
+  // La ligne de date de la lettre : le tour, tel que la partie le nomme.
+  const quand = periodeLabel.charAt(0).toUpperCase() + periodeLabel.slice(1);
+  // LA PORTÉE DU PLI, en plus de l'adresse : un courrier « tout le marché » est
+  // une circulaire, reçue aussi par les concurrents, et la lettre le dit. Un
+  // pli adressé à l'entreprise n'a rien à ajouter à son adresse.
+  const portee = (teamId: string | null) => (teamId ? undefined : "Tout le marché");
+
+  return (
+    // LOT P3 : LE COURRIER EST POSÉ SUR LE BUREAU, PAS DANS UN PANNEAU. La
+    // lettre faisait 440 px au milieu d'un panneau marine de 1 230 px vide : on
+    // aurait dit une fenêtre surgissante. Le panneau disparaît ; la lettre,
+    // plus large (40 rem), se pose sur le sol du cockpit avec son ombre et une
+    // très légère rotation (globals.css, « LE COURRIER POSÉ »), et « J'ai pris
+    // note » à son pied.
+    <section aria-label={`Le courrier du ${periodeLabel}`} data-courrier-du-tour="">
+      {ouvert && enParcours ? null : (
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        {/* LOT 6E : un titre n'est pas une action. Il était à l'orange, à côté
+            du bouton orange qu'il annonce : il prend la teinte du métier. */}
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--metier,var(--color-slate-300))]">
+          <Icone nom="courrier" className="h-4 w-4" />
+          Le courrier du {periodeLabel}
+        </h2>
+        <p className="text-xs text-slate-400">
+          {ouvert
+            ? vide
+              ? presseAnnonce
+                ? "La presse dit ce qui attend tout le marché ; votre courrier, lui, n'engage rien ce trimestre."
+                : "Rien qui engage ce trimestre : le courrier se classe, et la décision reprend la main."
+              : `${plis.length > 1 ? `${plis.length} courriers pèsent` : "Un courrier pèse"} sur ce tour : décidez en le sachant.`
+            : "Le facteur est passé. Ouvrez le courrier avant de décider."}
+        </p>
+      </div>
+      )}
+
+      {!ouvert ? (
+        <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          {/* la pile de plis, cachetés, posée en éventail. Décor pur : sur téléphone
+              elle prenait 176 px au-dessus du seul bouton qui compte, et elle
+              disparaît. */}
+          <div className="relative h-40 w-60 shrink-0 max-sm:hidden" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="absolute inset-0"
+                style={{ transform: `rotate(${(i - 1) * 3}deg) translateY(${i * -4}px)` }}
+              >
+                <Enveloppe className="h-full" adresse={adresse} liasse={null} />
+              </span>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={ouvrir}
+            // L'action de l'étape : tant qu'elle est là, le bouton qui fait
+            // avancer passe en filet (un seul aplat orange par écran).
+            data-action-de-l-etape=""
+            className={bouton({ taille: "l" })}
+          >
+            Ouvrir le courrier
+          </button>
+        </div>
+      ) : (
+        <div aria-live="polite" className={enParcours ? "" : "mt-5"}>
+          {/* La place de l'enveloppe : la mesure se fait sur la largeur de la
+              section (`courrier-pose-seul`, une requête de conteneur), pas sur
+              celle de l'écran. */}
+          {/* LA PRESSE D'ABORD : ce qui attend tout le marché, puis ce qui
+              est adressé à l'entreprise. AU-DESSUS du courrier, et sur ordinateur
+              PLUS LARGE que la lettre (jusqu'à la largeur de l'enveloppe et de
+              la lettre réunies, selon la longueur de l'article : la coupure
+              règle elle-même sa largeur, globals.css « LA COUPURE DE
+              PRESSE ») : un journal se lit en colonnes, une lettre en une
+              seule. À côté de la lettre, elle aurait pris la place de
+              l'enveloppe posée, ou serré la lettre sous ses 40 rem ; dessus,
+              l'ordre de lecture reste celui du sens (le marché, puis
+              l'entreprise), sur téléphone comme sur ordinateur. */}
+          {article ? (
+            <div className="coupure-posee mb-7">
+              <CoupureDePresse article={article} quand={quand} niveauDuTitre={enParcours ? 2 : 3} />
+            </div>
+          ) : null}
+          <div className={seul && !enParcours ? "courrier-pose-seul" : ""}>
+          <div className={seul && !enParcours ? "courrier-pose-seul-grille" : ""}>
+          {seul && !enParcours ? (
+            <EnveloppeOuverte code={premier} adresse={adresse} assurance={assurance} />
+          ) : null}
+          <div className={seul ? "mx-auto w-full sm:max-w-[40rem]" : ""}>
+            {/*
+              Le courrier de routine s'ouvre comme les autres : c'est le geste
+              qui compte, et il doit être le même que le trimestre soit calme
+              ou non.
+            */}
+            <div className={grilleDeCourriers(vide ? 1 : plis.length, "posee")}>
+              {vide ? (
+                <CourrierRecommande code={routine.code} adresse={adresse} quand={quand} assurance={assurance} />
+              ) : (
+                plis.map((p, i) => (
+                  <CourrierRecommande
+                    key={`${p.code}-${p.teamId ?? "market"}`}
+                    code={p.code}
+                    assurance={assurance}
+                    delayMs={i * 500}
+                    destinataire={portee(p.teamId)}
+                    adresse={adresse}
+                    quand={quand}
+                    surligne={p.isMyTeam}
+                  />
+                ))
+              )}
+            </div>
+            {/* LE PLAFOND DU TOUR, au pied du courrier : que l'histoire qui appelle
+                l'investissement arrive en lettre ou dans la Gazette (qui reprend
+                alors la circulaire), la note la suit. */}
+            {noteDInvestissement ? (
+              <p
+                data-note-d-investissement=""
+                className="mt-4 flex gap-1.5 text-sm leading-snug text-slate-300"
+              >
+                <Icone nom="usine" className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{noteDInvestissement}</span>
+              </p>
+            ) : null}
+            {/* AU PIED DE LA LETTRE, comme un geste de lecture : lu, le
+                courrier se classe et la décision reprend la place. Un bouton
+                secondaire : l'orange de l'écran reste à l'action qui engage. */}
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={prendreNote}
+                className={`${bouton({ variante: "secondaire", taille: "m" })} pointer-coarse:min-h-11 max-sm:w-full`}
+              >
+                J&apos;ai pris note
+              </button>
+            </div>
+          </div>
+          </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

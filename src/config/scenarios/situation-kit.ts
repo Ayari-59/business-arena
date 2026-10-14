@@ -1,5 +1,11 @@
 import { modelByCode } from "../pedagogy/models";
 import { createRng } from "../../engine/random";
+import {
+  distracteursDuModele,
+  modeleAvecAide,
+  NIVEAU_STANDARD,
+  profondeurDAnalyse,
+} from "../analyse-par-niveau";
 
 /**
  * Machinerie commune aux situations pédagogiques, tous secteurs confondus
@@ -25,12 +31,31 @@ export interface DecisionLever {
   hint: string;
 }
 
+/**
+ * L'intitulé que l'élève lit au-dessus de la situation. Il dit ce qu'elle
+ * EST, pas d'où elle vient : deux alertes se lisent toutes deux dans les
+ * chiffres du tour, mais « des clients repartis sans acheter » n'est pas une
+ * alerte comptable, c'est l'atelier ou le stock qui n'ont pas suivi.
+ *  · alerte_comptable : le résultat ou la trésorerie (sous le seuil,
+ *    bénéficiaire à découvert) ;
+ *  · alerte_operationnelle : l'outil de production, le stock, les équipes
+ *    (rupture, capacité saturée, banc, heures de pointe).
+ */
 export type SituationCategory =
   | "prise_de_poste"
   | "contexte_marche"
   | "decision_strategique"
   | "alerte_comptable"
-  | "tresorerie_dormante";
+  | "alerte_operationnelle"
+  | "tresorerie_dormante"
+  /**
+   * CE QUI A MARCHÉ. Quatre des cinq déclencheurs d'origine signalaient un
+   * problème : une équipe qui pilotait bien traversait la partie sans presque
+   * rien déclencher, et ne savait donc pas POURQUOI elle gagnait — la
+   * meilleure façon de ne pas savoir reproduire. Une réussite s'analyse comme
+   * une alerte, avec le même diagnostic et les mêmes questions.
+   */
+  | "reussite";
 
 export type DetectCode =
   | "profitable_illiquid"
@@ -43,7 +68,21 @@ export type DetectCode =
    * pose. Il suppose que le niveau ouvre le placement, sans quoi la situation
    * poserait un arbitrage que le joueur ne peut pas trancher.
    */
-  | "idle_cash";
+  | "idle_cash"
+  /**
+   * SERVI SANS GÂCHER : l'outil a tourné haut, presque rien n'a été refusé,
+   * presque rien n'est resté sur les bras. Le plan collait à la demande, ce
+   * qui est le geste le plus difficile du métier et ne se voit dans aucun
+   * compte — ni la rupture évitée, ni l'invendu qui n'existe pas.
+   */
+  | "served_without_waste"
+  /**
+   * LE REDRESSEMENT : le tour précédent était sous le seuil, à découvert ou
+   * en trésorerie négative ; celui-ci ne l'est plus. Le seul déclencheur qui
+   * regarde DEUX tours, parce qu'un redressement n'existe pas dans un
+   * instantané.
+   */
+  | "recovered";
 
 export interface SituationHintDef {
   level: 1 | 2 | 3 | 4 | 5;
@@ -60,7 +99,8 @@ export interface SituationHintDef {
 export interface QuizQuestionDef {
   id: string;
   prompt: string;
-  options: { id: string; label: string; credit?: number }[];
+  /** `aide` : au niveau Découverte, ce à quoi sert le modèle proposé (voir analyse-par-niveau). */
+  options: { id: string; label: string; credit?: number; aide?: string }[];
   correctOptionId: string;
   explain: string;
 }
@@ -81,13 +121,23 @@ export interface SituationDef {
   modelRelevance: Record<string, ModelRelevance>; // par code de modèle ; note la question du modèle (§7)
   conceptCodes: string[];
   hints: SituationHintDef[];
-  trigger: { round: number } | { detect: DetectCode };
+  /**
+   * QUAND LA SITUATION S'OUVRE.
+   *
+   *  · `{ round }` — au tour dit, pour l'enseignant qui construit une
+   *    progression. Mais un tour donné ne garantit rien de ce qui s'y est
+   *    passé : `requires` pose alors la condition que l'énoncé suppose.
+   *  · `{ detect }` — dès que les résultats présentent le cas.
+   *
+   * `requires` répare une faute qui s'est vue en classe : « Le paradoxe du
+   * succès » — trimestre record, caisse dans le rouge — s'ouvrait au tour 4
+   * quelles que soient les performances, et racontait un record à une équipe
+   * qui venait de perdre 108 000 €. Un énoncé que les chiffres démentent
+   * n'enseigne pas le paradoxe : il apprend à ne pas lire ses résultats.
+   */
+  trigger: { round: number; requires?: DetectCode } | { detect: DetectCode };
   weight: number;
   decisionLevers: DecisionLever[];
-  /** Étapes d'apprentissage obligatoires pour accéder à cette situation. */
-  requiredLearningSteps?: string[];
-  /** Étapes d'apprentissage débloquées/complétées après débriefing de cette situation. */
-  grantedLearningSteps?: string[];
   /**
    * Vivier de distracteurs pour la question du modèle (codes de modèles).
    * Facultatif : à défaut, les distracteurs sont tirés de `modelRelevance`.
@@ -97,8 +147,31 @@ export interface SituationDef {
   distractorPool?: string[];
 }
 
-/** Coûts standard des 5 niveaux (doc 03 §4) : cumulés = 45 % de score restant. */
-const HINT_COSTS = [0.05, 0.1, 0.2, 0.35, 0.55] as const;
+/**
+ * COÛTS DES 5 NIVEAUX D'INDICE (doc 03 §4).
+ *
+ * Chaque niveau coûte sa part du score de la situation, et les parts
+ * s'ADDITIONNENT : le bouton annonce « −4 % » et c'est exactement ce que le
+ * niveau retire. Les cinq ensemble laissent 80 %.
+ *
+ * CE QUE CE PLANCHER PROTÈGE. Le score d'une situation devient une note sur
+ * 20 dans le relevé de l'enseignant, et la maîtrise par notion converge vers
+ * lui. Deux barèmes successifs l'ont oublié : celui d'origine — 5, 10, 20, 35,
+ * 55 — valait 125 % une fois additionné et butait sur le plancher à 20 %, soit
+ * 4/20 ; son remplaçant, à 45 %, donnait 9/20 à un élève qui, après avoir tout
+ * ouvert, cochait le bon diagnostic et répondait juste à tout. Compris,
+ * démontré, et noté sous la moyenne. Pire, la maîtrise plafonnait alors sous
+ * le seuil de prérequis de 60 : le barème ne coûtait pas des points, il
+ * fermait la progression.
+ *
+ * À 80 %, l'élève assisté rend 16/20 et l'élève autonome 20/20. L'écart dit
+ * encore que chercher seul vaut mieux, sans que demander de l'aide disqualifie.
+ * C'est un choix d'auteur, et il a son revers : à 2 %, le premier indice ne
+ * coûte plus rien, et l'incitation à chercher d'abord devient surtout morale.
+ *
+ * Score restant : 98 %, 95 %, 91 %, 86 %, 80 %.
+ */
+const HINT_COSTS = [0.02, 0.03, 0.04, 0.05, 0.06] as const;
 
 export const hints = (
   texts: [string, string, string, string, string],
@@ -131,15 +204,21 @@ function shuffleSeeded<T>(items: readonly T[], seed: number): T[] {
 }
 
 /**
- * Distracteurs par niveau (P8). L'optimal est toujours présent ; les trois
- * distracteurs sont choisis dans le vivier (celui de la situation, sinon les
- * autres modèles de sa matrice de pertinence) selon le niveau :
+ * Distracteurs par niveau (P8). L'optimal est toujours présent ; les mauvaises
+ * réponses sont choisies dans le vivier (celui de la situation, sinon les
+ * autres modèles de sa matrice de pertinence) selon la profondeur d'analyse
+ * du niveau (voir config/analyse-par-niveau) :
  *
- * - niveaux 1-2 : la même famille d'abord — modèles acceptables (voisins
- *   raisonnables), puis hors-sujet manifestes ; le piège plausible (misleading)
- *   passe en dernier, pour que l'optimal se détache nettement ;
- * - niveaux 3+ : le voisin plausible (misleading) passe en tête — le choix
- *   demande alors de vraiment distinguer les modèles.
+ * - Intuition (niveaux 1-2) : UN distracteur, le plus étranger au problème —
+ *   un choix entre deux. Le voisin acceptable (qui vaut 0,6) passe en dernier :
+ *   dans un choix entre deux, une « mauvaise » réponse à moitié juste serait
+ *   une question piège ;
+ * - Découverte (niveau 3) : deux distracteurs, les plus étrangers d'abord —
+ *   hors-sujet manifestes, puis voisins acceptables ; le piège plausible
+ *   (misleading) en dernier, pour que l'optimal se détache nettement ;
+ * - Standard (niveaux 4 à 6) : trois distracteurs, le voisin plausible
+ *   (misleading) en tête — le choix demande alors de vraiment distinguer les
+ *   modèles.
  *
  * L'ordre des options est ensuite mélangé par la graine (jamais figé).
  */
@@ -157,14 +236,17 @@ export function modelOptionCodes(
   ).filter((c) => c !== optimal);
   // « optimal » reste en tête : une situation peut coter plusieurs modèles
   // comme optimaux (plusieurs bonnes réponses), et ils doivent figurer parmi
-  // les options. L'ordre des deux distracteurs suivants porte le niveau :
-  // aux niveaux 1-2 l'acceptable (voisin de la même famille) précède le piège
-  // « misleading » ; à partir du niveau 3 le piège plausible passe devant.
+  // les options.
+  const profondeur = profondeurDAnalyse(level);
   const priority: ModelRelevance[] =
-    level <= 2
-      ? ["optimal", "acceptable", "irrelevant", "misleading"]
-      : ["optimal", "misleading", "acceptable", "irrelevant"];
-  const distractors = priority.flatMap((r) => pool.filter((c) => rel(c) === r)).slice(0, 3);
+    profondeur === "intuition"
+      ? ["optimal", "irrelevant", "misleading", "acceptable"]
+      : profondeur === "decouverte"
+        ? ["optimal", "irrelevant", "acceptable", "misleading"]
+        : ["optimal", "misleading", "acceptable", "irrelevant"];
+  const distractors = priority
+    .flatMap((r) => pool.filter((c) => rel(c) === r))
+    .slice(0, distracteursDuModele(level));
   const codes = optimal ? [optimal, ...distractors] : distractors;
   return shuffleSeeded(codes, (seed ^ hashCode(optimal ?? "")) >>> 0);
 }
@@ -172,12 +254,18 @@ export function modelOptionCodes(
 function optionsFromCodes(
   relevance: Record<string, ModelRelevance>,
   codes: string[],
-): { id: string; label: string; credit: number }[] {
-  return codes.map((code) => ({
-    id: code,
-    label: modelByCode.get(code)?.name ?? code,
-    credit: RELEVANCE_CREDITS[relevance[code] ?? "irrelevant"],
-  }));
+  avecAide: boolean,
+): { id: string; label: string; credit: number; aide?: string }[] {
+  return codes.map((code) => {
+    const modele = modelByCode.get(code);
+    return {
+      id: code,
+      label: modele?.name ?? code,
+      credit: RELEVANCE_CREDITS[relevance[code] ?? "irrelevant"],
+      // Découverte : on reconnaît le modèle à ce qu'il sert, pas à son nom.
+      ...(avecAide && modele?.objective ? { aide: modele.objective } : {}),
+    };
+  });
 }
 
 /**
@@ -204,7 +292,7 @@ function modelQuestion(
   return {
     id: MODEL_QUESTION_ID,
     prompt: "Quel modèle d'analyse mobilisez-vous en priorité ici ?",
-    options: optionsFromCodes(relevance, codes),
+    options: optionsFromCodes(relevance, codes, modeleAvecAide(opts.level)),
     correctOptionId: optimal,
     explain,
   };
@@ -247,9 +335,11 @@ export function attachModelQuestions(
     if (!Object.values(s.modelRelevance).includes("optimal")) {
       throw new Error(`Situation « ${s.code} » : aucun modèle marqué « optimal »`);
     }
-    // Question canonique (niveau 3, graine 0) : source stable de la correction
+    // Question canonique (palier Standard, graine 0 : toutes les options) : source stable de la correction
     // et des crédits ; la vue et le calcul du score la reconstruisent ensuite
     // par niveau et par graine de partie (modelQuestionFor).
-    s.quiz.push(modelQuestion(s.modelRelevance, explain, { level: 3, seed: 0, distractorPool: s.distractorPool }));
+    s.quiz.push(
+      modelQuestion(s.modelRelevance, explain, { level: NIVEAU_STANDARD, seed: 0, distractorPool: s.distractorPool }),
+    );
   }
 }

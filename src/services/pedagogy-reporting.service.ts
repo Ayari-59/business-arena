@@ -1,5 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
+import { enEssai } from "@/config/tour-d-essai";
+import { partieQuiCompte } from "@/services/archives-d-essai";
 import {
   concepts,
   decisions,
@@ -17,7 +19,7 @@ import {
 } from "@/db/schema";
 import { SCENARIOS, DEFAULT_SCENARIO_CODE, situationByCode } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
-import { quizModeFromProfile, type QuizMode } from "@/config/difficulty";
+import { answerFormatFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { decrireSource, lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import { playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
@@ -107,7 +109,15 @@ export async function getTeamSituations(
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) continue;
     const levels = levelsByInstance.get(instance.id) ?? [];
-    const view = toView(instance, def, levels, quizMode, hintCap, modelCtxOf(game));
+    const view = toView(
+      instance,
+      def,
+      levels,
+      quizMode,
+      hintCap,
+      modelCtxOf(game),
+      answerFormatFromProfile(game.difficultyProfile),
+    );
     if (currentRound && instance.roundId === currentRound.id && instance.status !== "debriefed") {
       current.push(view);
     } else if (resolvedRoundIds.has(instance.roundId)) {
@@ -297,7 +307,10 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     concepts: [],
   };
 
-  const gameRows = await db.select().from(games).where(eq(games.createdBy, teacherId));
+  const gameRows = await db
+    .select()
+    .from(games)
+    .where(and(eq(games.createdBy, teacherId), partieQuiCompte));
   if (gameRows.length === 0) return empty;
   const gameIds = gameRows.map((g) => g.id);
 
@@ -551,6 +564,9 @@ export async function getGameGradeSheet(
 ): Promise<GradeSheet | null> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game || game.createdBy !== teacherId) return null;
+  // LE TOUR D'ESSAI NE SE NOTE PAS : pas de relevé tant qu'il se joue. Après la bascule,
+  // ses tours sont dans l'archive, et le relevé ne lit que la vraie partie.
+  if (enEssai(game)) return null;
 
   const teamRows = (await db.select().from(teams).where(eq(teams.gameId, gameId))).filter(
     (t) => t.controller === "human",

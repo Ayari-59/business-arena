@@ -82,7 +82,7 @@ describe("NOVA — invariant 3 : aucune stratégie ne dépasse le découvert ava
 
 describe("NOVA — invariant 4 : une stratégie équilibrée raisonnable est récompensée", () => {
   it("balanced termine la partie avec un résultat cumulé positif", () => {
-    // proxy financier en attendant le BPI (étape 10) — cible doc 07 : BPI 55-75
+    // proxy financier en attendant l'IPG (étape 10) — cible doc 07 : IPG 55-75
     expect(cumulativeNetIncome(playStrategy("balanced"))).toBeGreaterThan(0);
   });
   it("balanced redevient liquide en fin de partie (la crise du T4 se gère)", () => {

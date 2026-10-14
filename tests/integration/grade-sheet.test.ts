@@ -37,6 +37,7 @@ import {
 } from "@/services/pedagogy.service";
 import { situationByCode } from "@/config/scenarios/registry";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -88,6 +89,8 @@ beforeAll(async () => {
   prof = r.userId;
   orgId = (await getTeacherOrgId(prof))!;
 
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,

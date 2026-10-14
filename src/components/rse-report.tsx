@@ -1,5 +1,6 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import type { RseReport, RseReportIndicator } from "@/scoring/rse-report";
+import { Icone } from "@/components/icone";
 
 /**
  * RAPPORT EXTRA-FINANCIER (Lot 3) — synthèse façon DPEF, INDICATIVE et non
@@ -28,20 +29,20 @@ function formatIndicator(i: RseReportIndicator): string {
 const TREND_LABEL: Record<RseReport["carbon"]["trend"], { text: string; className: string }> = {
   amélioration: { text: "↓ en amélioration", className: "text-emerald-300" },
   stable: { text: "→ stable", className: "text-slate-400" },
-  dégradation: { text: "↑ en dégradation", className: "text-amber-300" },
+  dégradation: { text: "↑ en dégradation", className: "text-red-300" },
 };
 
 function Pillar({ title, items }: { title: string; items: RseReportIndicator[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-3">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
+    <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-4">
+      <h3 className="mb-2 text-sm font-semibold text-slate-200">{title}</h3>
       <dl className="space-y-1.5">
         {items.map((i) => (
           <div key={i.label} className="flex items-baseline justify-between gap-3 text-xs">
             <dt className="text-slate-400">
               {i.label}
-              {i.hint ? <span className="text-slate-600"> · {i.hint}</span> : null}
+              {i.hint ? <span className="text-slate-400"> · {i.hint}</span> : null}
             </dt>
             <dd className="shrink-0 tabular-nums font-semibold text-slate-200">
               {formatIndicator(i)}
@@ -59,16 +60,19 @@ export function RseReportPanel({ report }: { report: RseReport }) {
   return (
     <section
       aria-label="Rapport extra-financier"
-      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-1.5 sm:p-4"
+      className="panneau-info p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold text-slate-200">🌍 Rapport extra-financier</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Icone nom="feuille" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
+          Rapport extra-financier
+        </h2>
         <span className="tabular-nums text-lg font-semibold text-emerald-300">
           {report.latestScore}
           <span className="text-xs text-slate-400"> / 100</span>
         </span>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-slate-400">
         Synthèse sur {report.roundsCovered} tour{report.roundsCovered > 1 ? "s" : ""} · engagement RSE
         cumulé {formatEuro(report.engagementTotal)}
       </p>
@@ -86,9 +90,9 @@ export function RseReportPanel({ report }: { report: RseReport }) {
         </div>
       ) : null}
 
-      <div className="mt-3 rounded-lg border border-emerald-400/10 bg-slate-950 p-1.5 sm:p-3">
+      <div className="encadre-neutre mt-3 rounded-lg p-3 sm:p-4">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <h3 className="text-sm font-semibold text-slate-200">
             Empreinte carbone (indice indicatif)
           </h3>
           <span className={`text-xs font-semibold ${trend.className}`}>{trend.text}</span>
@@ -98,19 +102,19 @@ export function RseReportPanel({ report }: { report: RseReport }) {
             <p className="tabular-nums text-base font-semibold text-slate-100">
               {Math.round(report.carbon.totalPoints).toLocaleString("fr-FR")}
             </p>
-            <p className="text-xs text-slate-500">points cumulés</p>
+            <p className="text-xs text-slate-400">points cumulés</p>
           </div>
           <div>
             <p className="tabular-nums text-base font-semibold text-slate-100">
               {report.carbon.perUnit.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-slate-500">points / unité</p>
+            <p className="text-xs text-slate-400">points / unité</p>
           </div>
           <div>
             <p className="tabular-nums text-base font-semibold text-emerald-300">
               {formatPercent(report.carbon.avoidedShare)}
             </p>
-            <p className="text-xs text-slate-500">évité (process propre)</p>
+            <p className="text-xs text-slate-400">évité (process propre)</p>
           </div>
         </div>
       </div>
@@ -121,7 +125,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
         <Pillar title="Gouvernance" items={report.pillars.governance} />
       </div>
 
-      <p className="mt-3 text-xs leading-snug text-slate-500">
+      <p className="mt-3 text-sm leading-snug text-slate-400">
         Synthèse <strong>indicative et simplifiée</strong>, à visée pédagogique : elle s&apos;inspire
         d&apos;une déclaration de performance extra-financière sans en suivre une norme officielle.
         L&apos;empreinte carbone est un <strong>proxy</strong> (points, non des tCO₂e).

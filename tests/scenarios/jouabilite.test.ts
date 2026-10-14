@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
+import { applyMarketScale } from "../../src/config/scenarios/market-scale";
 import { simulateRound } from "../../src/engine/simulation";
 import { botDecisions, neutralDecisions } from "../../src/engine/bots";
 import { balanceGap } from "../../src/engine/finance/statements";
@@ -17,11 +18,24 @@ import type { CompanyState, RoundDecisions } from "../../src/engine/types";
  *
  * Ce test joue la partie entière de chaque secteur, avec les décisions
  * neutres que le moteur applique à une équipe absente. Il ne juge pas la
- * performance : il vérifie que le monde tient debout et que le marché répond.
+ * performance : il vérifie que le monde tient debout, que le marché répond, et
+ * qu'une équipe qui ne décide rien n'est pas condamnée d'avance.
+ *
+ * IL JOUE LE JEU, ET NON UNE CONFIGURATION QUI N'EXISTE PAS. Il faisait tourner
+ * le scénario BRUT avec le joueur et les sept bots. Or une vraie partie applique
+ * `applyMarketScale`, précisément parce que sans redimensionnement « une classe
+ * nombreuse partage un gâteau calibré pour trois concurrents » (voir
+ * game-creation.service.ts). Mesuré dans la configuration qu'il jouait : tout
+ * le monde déposait le bilan au tour deux, sur treize secteurs sur quinze. Le
+ * test passait quand même, parce qu'il ne regardait jamais la survie. Un filet
+ * qui laisse passer ça n'est pas un filet.
  */
 describe("jouabilité de chaque secteur", () => {
   for (const d of SCENARIOS) {
     it(`${d.code} se joue de bout en bout sans casser`, () => {
+      // Le marché se partage entre TOUTES les entreprises de la table, comme
+      // à la création d'une partie : joueur compris.
+      const scenario = applyMarketScale(d.scenario, 1 + d.bots.length);
       let companies: CompanyState[] = [
         d.company("player", d.playerTeamName, "human"),
         ...d.bots.map((b) => d.company(b.id, b.name, "bot", b.profile)),
@@ -32,17 +46,17 @@ describe("jouabilité de chaque secteur", () => {
       let lastSold: number | undefined;
       const ventes: number[] = [];
 
-      for (let round = 1; round <= d.scenario.roundsCount; round += 1) {
+      for (let round = 1; round <= scenario.roundsCount; round += 1) {
         const decisions: Record<string, RoundDecisions> = {};
         for (const c of companies) {
-          const ctx = { scenario: d.scenario, state: c, roundIndex: round, lastSoldUnits: lastSold };
+          const ctx = { scenario, state: c, roundIndex: round, lastSoldUnits: lastSold };
           const profil = profils.get(c.id);
           decisions[c.id] =
             profil === undefined ? neutralDecisions(ctx) : botDecisions(profil, ctx);
         }
 
         const out = simulateRound({
-          scenario: d.scenario,
+          scenario,
           roundIndex: round,
           companies,
           decisions,
@@ -70,6 +84,15 @@ describe("jouabilité de chaque secteur", () => {
           moi.production.machineCapacity,
           `${d.code}, tour ${round} : capacité nulle`,
         ).toBeGreaterThan(0);
+
+        // CE QUI MANQUAIT. Une équipe qui ne décide rien — celle qui n'a pas
+        // rendu, le cas le plus fréquent d'une salle de classe — doit finir la
+        // partie debout. Si les décisions neutres mènent au dépôt de bilan,
+        // ce n'est pas un secteur exigeant, c'est un secteur mal calibré.
+        expect(
+          moi.defaillant ?? false,
+          `${d.code}, tour ${round} : le joueur neutre est défaillant`,
+        ).toBe(false);
 
         lastSold = vendu;
         companies = out.companies;

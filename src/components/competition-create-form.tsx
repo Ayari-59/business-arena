@@ -1,9 +1,11 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { createCompetitionAction, type CreateCompetitionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { LongActionProgress } from "@/components/long-action-progress";
 import { ATTENTES } from "@/config/cloture";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 
 /**
  * Le formulaire « Organiser un concours ».
@@ -20,7 +22,7 @@ import { ATTENTES } from "@/config/cloture";
 
 const ETAT_INITIAL: CreateCompetitionState = { error: null, values: null };
 
-const champ = "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm";
+const champ = "mt-1 w-full champ px-3 py-2 text-sm";
 const etiquette = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 export function CompetitionCreateForm({
@@ -51,26 +53,37 @@ export function CompetitionCreateForm({
           className={champ}
         />
       </label>
+      {/*
+        DEUX NIVEAUX, DEUX MOTS. Une ÉQUIPE réunit des élèves et se qualifie
+        d'un bloc ; une POULE réunit des équipes qui jouent une même partie.
+        Les libellés disaient « groupe », qui s'entend comme un groupe
+        d'élèves : « deux qualifiés par groupe » se lisait alors comme si une
+        équipe pouvait partir en finale amputée de la moitié des siens.
+      */}
       <label className="block">
-        <span className={etiquette}>Équipes par groupe</span>
+        <span className={etiquette}>Équipes par poule de qualification</span>
         <select name="groupSize" defaultValue={v?.groupSize ?? "3"} className={champ}>
           {[2, 3, 4, 5, 6].map((n) => (
             <option key={n} value={n}>
-              {n} équipes par partie
+              {n} équipes s&apos;affrontent dans une poule
             </option>
           ))}
         </select>
       </label>
       <label className="block">
-        <span className={etiquette}>Qualifiés par groupe</span>
+        <span className={etiquette}>Équipes qualifiées par poule</span>
         <select name="advancePerGroup" defaultValue={v?.advancePerGroup ?? "1"} className={champ}>
           {[1, 2, 3].map((n) => (
             <option key={n} value={n}>
-              {n} par groupe → finale
+              {n === 1 ? "La première de chaque poule" : `Les ${n} premières de chaque poule`}
             </option>
           ))}
         </select>
       </label>
+      <p className="text-sm leading-relaxed text-slate-400 sm:col-span-2">
+        Une poule est un ensemble d&apos;équipes qui jouent la même partie de qualification. Une
+        équipe qualifiée part en finale entière, avec tous ses membres.
+      </p>
       <label className="block sm:col-span-2">
         <span className={etiquette}>Périodicité</span>
         <select name="periodicity" defaultValue={v?.periodicity ?? "quarter"} className={champ}>
@@ -82,9 +95,33 @@ export function CompetitionCreateForm({
       {state.error ? (
         <p
           role="alert"
-          className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300 sm:col-span-2"
+          className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300 sm:col-span-2"
         >
           {state.error}
+          {state.devis ? (
+            <>
+              {" "}
+              <a
+                href={state.devis.href}
+                data-devis-du-refus=""
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Demander un devis ({state.devis.offre})
+              </a>{" "}
+              ·
+            </>
+          ) : null}
+          {state.offre ? (
+            <>
+              {" "}
+              <a
+                href={LIEN_TARIFS}
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Voir les offres
+              </a>
+            </>
+          ) : null}
         </p>
       ) : null}
       {guardError ? (
@@ -100,7 +137,7 @@ export function CompetitionCreateForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60 sm:col-span-2"
+        className={`${bouton()} sm:col-span-2`}
       >
         {pending ? "Création du concours…" : "Créer le concours et ouvrir les inscriptions"}
       </button>

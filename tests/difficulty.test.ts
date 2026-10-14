@@ -6,6 +6,9 @@ import {
   LEGACY_PRESET,
   presetFromProfile,
   quizModeFromProfile,
+  answerFormatFromProfile,
+  ANSWER_FORMATS,
+  DEFAULT_ANSWER_FORMAT,
   sanitizeEconomicOverrides,
   QUIZ_MODES,
 } from "../src/config/difficulty";
@@ -227,5 +230,20 @@ describe("réglage des questions posées dans les situations", () => {
 
   it("une valeur inconnue retombe sur le comportement historique", () => {
     expect(quizModeFromProfile({ quizMode: "n'importe quoi" })).toBe("full");
+  });
+});
+
+describe("format des réponses aux questions des situations", () => {
+  it("lit un réglage explicite, quelle que soit la position", () => {
+    for (const format of ANSWER_FORMATS) {
+      expect(answerFormatFromProfile({ answerFormat: format.code })).toBe(format.code);
+    }
+  });
+
+  it("les parties d'avant le réglage restent en QCM", () => {
+    expect(DEFAULT_ANSWER_FORMAT).toBe("qcm");
+    expect(answerFormatFromProfile(null)).toBe("qcm");
+    expect(answerFormatFromProfile({})).toBe("qcm");
+    expect(answerFormatFromProfile({ answerFormat: "n'importe quoi" })).toBe("qcm");
   });
 });

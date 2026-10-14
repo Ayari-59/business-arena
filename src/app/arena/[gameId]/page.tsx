@@ -1,35 +1,136 @@
+import { premierNiveauQuiOuvre } from "@/config/difficulty";
+import { appelleLInvestissement } from "@/config/investissement-par-niveau";
+import { aideDuPlafond } from "@/config/refus-de-decision";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { MenuDeLArene } from "@/components/menu-de-l-arene";
 import { notFound } from "next/navigation";
+import { Suspense, cache } from "react";
 import { getGuestUserId } from "@/lib/guest";
-import { formatEuro } from "@/lib/format";
+import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
+import { estUnTelephone } from "@/lib/appareil";
+import { BarreDeJeu } from "@/components/barre-de-jeu";
+import { StockageDurable } from "@/components/stockage-durable";
 import { getTeamSituations } from "@/services/pedagogy.service";
-import { SituationCard, SituationDebrief } from "@/components/situation-panel";
+import { AnalyseDuTour, SituationCard, SituationDebrief } from "@/components/situation-panel";
+import { SaisonDuTour } from "@/components/saison-du-tour";
+import { AlerteTresorerie } from "@/components/alerte-tresorerie";
+import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { EventCard } from "@/components/event-card";
-import { cardByCode } from "@/config/events/cards";
+import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
+import { MandatDeLEquipe } from "@/components/mandat-de-lequipe";
+import { reponsesAuxDecisions } from "@/config/courriers/reponses";
+import { courrierParCode } from "@/config/courriers/registre";
+import { destinataireDuCourrier } from "@/config/courriers/destinataire";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
-import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
+import { ChoixEquipe } from "@/components/choix-equipe";
+import { porteUnNomParDefaut } from "@/config/nom-equipe";
+import { DetailParClientele, DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
+import {
+  ParcoursMobile,
+  type AnalyseDuParcours,
+  type CarteDuParcours,
+} from "@/components/parcours-mobile";
 import { RoundStatusPoller } from "@/components/round-status-poller";
-import { RoundStatusBanner } from "@/components/round-status-banner";
-import { EventBanner } from "@/components/event-banner";
-import { surtitreDePartie } from "@/config/scenarios/presentation";
-import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { QuiARendu } from "@/components/qui-a-rendu";
+import { Embleme } from "@/components/embleme";
+import { AnnonceDuTour } from "@/components/annonce-du-tour";
+import { BandeauDuTourDEssai } from "@/components/bandeau-du-tour-d-essai";
+import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
+import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
+import { CoupureDePresse, RevueDePresse } from "@/components/coupure-de-presse";
+import { codesRacontesParLaPresse, racontePar } from "@/config/gazette/edition";
+import { lignesDeLaPresse } from "@/config/gazette/bilan";
+import { NOM_DU_JOURNAL } from "@/config/gazette/types";
+import { TourSimule } from "@/components/tour-simule";
+import { TemoinDePartieJouee } from "@/components/temoin-de-partie-jouee";
+import { LigneEstimeEtReel } from "@/components/ecart-d-estimation";
+import { CourrierDuTour } from "@/components/courrier-du-tour";
+import { GammeLigne } from "@/components/gamme-ligne";
+import { FaitsCles } from "@/components/faits-cles";
+import { Tiroir } from "@/components/tiroir";
+import { Icone } from "@/components/icone";
+import { Chevron } from "@/components/repliable";
+import { FriseDesTours } from "@/components/frise-des-tours";
+import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
+import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
+import {
+  LigneDeLArdoise,
+  TableauDeBord,
+  type EnTeteDeLArdoise,
+  type TourChiffre,
+} from "@/components/tableau-de-bord";
+import { ArdoiseRepliee } from "@/components/ardoise-repliee";
+import { BandeDeMarche } from "@/components/bande-de-marche";
+import { faitsDuMarche } from "@/lib/faits-du-marche";
+import { verdictDuTour } from "@/pedagogy/verdict-du-tour";
+import { causesDuResultat, decompositionDuResultat } from "@/components/lecture-du-resultat";
+import { CeQuiAFaitLeResultat } from "@/components/ce-qui-a-fait-le-resultat";
+import { BilanDePartie } from "@/components/bilan-de-partie";
+import { MeriteDeLaPartieAuBilan, MeriteEnAttente } from "@/components/merite-de-la-partie";
+import { bilanDeLaPartie, titreDuBilan } from "@/pedagogy/bilan-de-partie";
+import { VosReussites } from "@/components/vos-reussites";
+import { reussitesDeLaPartie, lireLeTour } from "@/scoring/reussites";
+import { recordPersonnel } from "@/services/profile.service";
+import { attribuerCodeDeReprise, codeDeRepriseDuJoueur } from "@/services/reprise.service";
+import { EcheanceDuTour } from "@/components/echeance-du-tour";
+import { mentionDeValidation } from "@/config/validation-du-tour";
+import { couperTitre, surtitreDePartie, teinteDuMetier } from "@/config/scenarios/presentation";
+import { OuvertureDeLaPartie } from "@/components/ouverture-de-la-partie";
+import { SECTOR_LABELS } from "@/config/scenarios/registry";
+import { PictoSecteur } from "@/components/picto-secteur";
 import { statutDesSituations } from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
-import { InfoHint } from "@/components/info-hint";
+import { bouton } from "@/components/bouton";
+import { appliquerLHorloge, copieVueParLeCandidat, noterLaCopieDeLaPartie } from "@/services/examen.service";
+import { RecuDExamen } from "@/components/examen/recu-d-examen";
+import { CarteDesCoequipiers } from "@/components/pairs/carte-des-coequipiers";
+import { after } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-function appositive(tagline: string): string {
-  const trimmed = tagline.trim().replace(/\.$/, "");
-  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+/**
+ * La vue de la partie, calculée une fois par requête : le titre de l'onglet et
+ * la page la lisent tous deux.
+ */
+const vueDeLaPartie = cache(async (gameId: string, userId: string) => {
+  // L'EXAMEN INDIVIDUEL : l'horloge de l'examen s'applique AVANT de lire la partie (un
+  // tour échu se clôt, un examen fermé remet la copie). Sans effet sur une autre partie.
+  const remise = await appliquerLHorloge(gameId).catch(() => false);
+  if (remise) {
+    after(async () => {
+      await noterLaCopieDeLaPartie(gameId).catch(() => undefined);
+    });
+  }
+  return getGameView(gameId, userId);
+});
+
+/**
+ * LE TITRE DE L'ONGLET DIT OÙ L'ON EN EST : « NOVA · Tour 3/6 · Business
+ * Arena ». Un élève qui garde l'arène ouverte à côté d'un tableur retrouvait
+ * un onglet générique, sans entreprise ni tour.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ gameId: string }>;
+}): Promise<Metadata> {
+  const { gameId } = await params;
+  const userId = await getGuestUserId();
+  const view = userId ? await vueDeLaPartie(gameId, userId) : null;
+  if (!view) return {};
+  const ou =
+    view.status === "finished"
+      ? "Partie terminée"
+      : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`;
+  return { title: `${view.intro.company} · ${ou}` };
 }
 
 export default async function ArenaPage({
@@ -37,14 +138,46 @@ export default async function ArenaPage({
   searchParams,
 }: {
   params: Promise<{ gameId: string }>;
-  searchParams: Promise<{ simule?: string }>;
+  searchParams: Promise<{ simule?: string; bilan?: string }>;
 }) {
   const { gameId } = await params;
   const userId = await getGuestUserId();
   if (!userId) notFound();
-  const view = await getGameView(gameId, userId);
-  if (!view) notFound();
+  const vueLue = await vueDeLaPartie(gameId, userId);
+  if (!vueLue) notFound();
+  // LA COPIE D'EXAMEN (services/examen.service.ts) : une partie solo, avec ses gardes. Le
+  // classement ne se montre pas, ni pendant la partie ni au bilan ; l'encart « Résultat
+  // estimé » seulement si l'enseignant l'a laissé ; ni assistant ni « mérite ou chance ».
+  // Remise, la copie montre son reçu ; publiée, le bilan redevient lisible (?bilan).
+  const copie = await copieVueParLeCandidat(gameId, userId);
+  const view = copie
+    ? { ...vueLue, ranking: [], estimation: copie.examen.resultatEstime ? vueLue.estimation : null }
+    : vueLue;
+  if (copie && view.status === "finished" && !(copie.publie && (await searchParams).bilan)) {
+    return <RecuDExamen copie={copie} gameId={gameId} />;
+  }
+  // Sur téléphone, ce qu'on consulte se range dans des tiroirs fermés (voir
+  // decision-context.tsx et aide-repliable.tsx) ; ce qui décide reste ouvert.
+  const telephone = await estUnTelephone();
+  // Le code personnel. En classe, il est donné à l'entrée (ou manque, pour les
+  // parties d'avant). En solo, il est créé ICI, à la première ouverture : les
+  // parties déjà commencées en ont un aussi, et personne ne peut relire un code
+  // perdu — c'est donc dans l'arène, tant que l'appareil est là, qu'on le note.
+  const codeDeReprise =
+    view.kind === "solo"
+      ? await attribuerCodeDeReprise(gameId, userId)
+      : await codeDeRepriseDuJoueur(gameId, userId);
   const situations = await getTeamSituations(gameId, userId);
+  // Le record personnel : seulement à la fin d'une partie solo, où l'IPG est
+  // déjà à l'écran. En classe, il appartient à l'enseignant de le révéler.
+  const recordPrecedent =
+    view.status === "finished" && view.kind === "solo" && view.playerBpi !== null
+      ? await recordPersonnel({
+          userId,
+          scenarioCode: view.scenarioCode,
+          saufPartie: gameId,
+        })
+      : null;
   const statutSituations = statutDesSituations(situations.current);
 
   // Assistant IA (facultatif) : coach de tour (solo) et tuteur. Disponibles
@@ -53,8 +186,8 @@ export default async function ArenaPage({
   // tour joué ; le tuteur, dès l'ouverture.
   const aiEnt = await entitlementsForUser(userId);
   const aiCoachEnabled =
-    aiEnt.ai && view.kind === "solo" && (await resolveAiSurface("coach")) !== null;
-  const aiTutor = aiEnt.ai && (await resolveAiSurface("tutor")) !== null;
+    !copie && aiEnt.ai && view.kind === "solo" && (await resolveAiSurface("coach")) !== null;
+  const aiTutor = !copie && aiEnt.ai && (await resolveAiSurface("tutor")) !== null;
 
   const finished = view.status === "finished";
   // Chaque période est une pièce de l'accordéon. Les tours RÉSOLUS forment la
@@ -66,7 +199,10 @@ export default async function ArenaPage({
     situations.debriefedByRound.map((dr) => [dr.roundIndex, dr]),
   );
   const mostRecentDebriefedRound = situations.debriefedByRound[0]?.roundIndex ?? null;
-  const hasActivePeriod = !finished;
+  // LE TOUR D'ESSAI TERMINÉ (config/tour-d-essai.ts) : il n'y a plus de tour à jouer,
+  // seulement des résultats à lire, en attendant que la vraie partie commence.
+  const essaiTermine = view.essai?.phase === "termine" || view.essai?.phase === "bascule";
+  const hasActivePeriod = !finished && !essaiTermine;
 
   // ── Écran intermédiaire « Tour simulé » (solo, après une validation) ──
   // Valider a résolu le tour à l'instant (playRoundAction redirige ici avec
@@ -78,54 +214,64 @@ export default async function ArenaPage({
   const tourJoue = periods.at(-1) ?? null;
   if (simule != null && view.kind === "solo" && tourJoue !== null) {
     return (
-      <main
-        id="main"
-        className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 py-12 text-center"
-      >
-        <span
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl ${SECTOR_COLORS[view.sector].bg}`}
-        >
-          {view.scenarioIcon}
-        </span>
-        <p className="mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
-          <span aria-hidden>✓</span> Tour simulé
-        </p>
-        <h1 className="mt-3 text-3xl font-bold text-slate-50">
-          {periodLabel(view.roundDays, tourJoue.round)} joué
-        </h1>
-        <p className="mt-3 flex items-center gap-2 text-sm text-slate-400">
-          <span>Tour résolu</span>
-          <InfoHint
-            icon="?"
-            hint="Vos décisions sont enregistrées. Regardez leurs résultats, ou enchaînez sur la suite."
-            variant="subtle"
+      <>
+      {/* LOT P4 : un tour validé et résolu, c'est une partie jouée sur cet
+          appareil ; l'invitation à installer peut, ailleurs, se proposer. */}
+      <TemoinDePartieJouee />
+      <TourSimule
+        gameId={gameId}
+        round={tourJoue.round}
+        currentRound={view.currentRound}
+        roundDays={view.roundDays}
+        finished={finished}
+        sector={view.sector}
+        entreprise={view.intro.company}
+        roundsCount={view.roundsCount}
+        explication={
+          // CE QUI A FAIT LE RÉSULTAT (lot 6E) : la cascade et les causes,
+          // lues dans les comptes du tour joué, son benchmark et l'estimation
+          // déposée avec ses décisions. Rien d'inventé : voir lecture-du-resultat.ts.
+          <CeQuiAFaitLeResultat
+            decomposition={decompositionDuResultat(tourJoue.result.incomeStatement)}
+            causes={causesDuResultat({
+              result: tourJoue.result,
+              prixPratique:
+                tourJoue.competitiveBenchmark?.competitors.find((c) => c.isPlayer)?.avgPrice ?? null,
+              prixDuMarche: tourJoue.competitiveBenchmark?.marketAvgPrice ?? null,
+              estimation: tourJoue.decisions?.salesEstimate ?? null,
+              unites: view.vocabulary.units,
+            })}
           />
-        </p>
-        <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href={`/arena/${gameId}#dernier-resultat`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
-          >
-            <span aria-hidden>📊</span> Voir les résultats
-          </Link>
-          {finished ? (
-            <Link
-              href={`/arena/${gameId}`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
-            >
-              <span aria-hidden>🏁</span> Bilan de la partie
-            </Link>
-          ) : (
-            <Link
-              href={`/arena/${gameId}#tour-en-cours`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
-            >
-              Passer au {periodLabel(view.roundDays, view.currentRound)}
-              <span aria-hidden>→</span>
-            </Link>
-          )}
-        </div>
-      </main>
+        }
+        ecartEstime={
+          // « LE MARCHÉ RÉPOND » : ce que l'équipe avait estimé, en face de ce
+          // qui est arrivé. Les deux chiffres sont déjà là — l'estimation est
+          // dans les décisions du tour, le réel dans son résultat.
+          <LigneEstimeEtReel
+            estimation={tourJoue.decisions?.salesEstimate ?? null}
+            result={tourJoue.result}
+            vocabulary={view.vocabulary}
+          />
+        }
+        bilan={(() => {
+          const precedent = view.history.find((h) => h.round === tourJoue.round - 1);
+          const moi = view.ranking.find((row) => row.isPlayer);
+          // LE VERDICT EN UNE PHRASE : celle que la révélation du tour écrit
+          // déjà, tirée des deux comptes de résultat. Rien n'est inventé ici.
+          const compteAvant =
+            periods.find((p) => p.round === tourJoue.round - 1)?.result.incomeStatement ?? null;
+          return {
+            resultatNet: tourJoue.result.incomeStatement.netIncome,
+            resultatPrecedent: precedent?.netIncome ?? null,
+            chiffreDAffaires: tourJoue.result.incomeStatement.revenue,
+            tresorerie: tourJoue.result.functionalBalance.netTreasury,
+            rang: moi ? { place: moi.rank, sur: view.ranking.length } : null,
+            ipg: view.playerBpi,
+            verdict: verdictDuTour(tourJoue.result.incomeStatement, compteAvant).phrase,
+          };
+        })()}
+      />
+      </>
     );
   }
 
@@ -136,42 +282,136 @@ export default async function ArenaPage({
   // « Situation » réunit tout sur un seul écran. On extrait donc des blocs
   // plutôt que de les dupliquer d'un mode à l'autre.
   const premierTour = periods.length === 0;
+  // À QUI LE COURRIER EST ADRESSÉ : l'entreprise que dirige le joueur, sous son
+  // nom (le scénario en solo, celui de l'équipe en classe quand elle en a un).
+  const adresseDuCourrier = destinataireDuCourrier({
+    kind: view.kind,
+    entreprise: view.intro.company,
+    equipe: view.playerTeamName,
+  });
+  // LA GAZETTE DE L'ARÈNE ET LA RÈGLE « PAS DE DOUBLON ». Un événement de
+  // marché que l'article raconte ne s'annonce pas une seconde fois : sa
+  // circulaire « tout le marché » se tait partout où l'élève la lirait (courrier
+  // distribué, bandeau, « encore en vigueur », bande de marché). Les plis
+  // adressés à l'entreprise ne bougent pas. Article remplacé ou retiré par
+  // l'enseignant : il ne raconte rien, les circulaires reviennent.
+  const racontesParLaPresse = codesRacontesParLaPresse(view.gazette);
+  const courriersAnnonces = view.courriersAnnonces.filter((c) => !racontePar(racontesParLaPresse, c));
+  const courriersEnCours = view.courriersEnCours.filter((c) => !racontePar(racontesParLaPresse, c));
+  const libelleDuTour = (tour: number) => periodLabel(view.roundDays, tour);
+  const coupureDuTour =
+    view.gazette.article && !finished ? (
+      <CoupureDePresse
+        article={view.gazette.article}
+        quand={libelleDuTour(view.currentRound)}
+        niveauDuTitre={2}
+        idDuTitre={`gazette-${view.currentRound}-classe`}
+      />
+    ) : null;
+  const revueDePresse =
+    view.gazette.revue.length > 0 ? (
+      <RevueDePresse articles={view.gazette.revue} libelle={libelleDuTour} />
+    ) : null;
+  // LA PHRASE DE PRISE DE POSTE (lot P2), posée sur le lieu au tour 1 : la
+  // promesse du registre (« Prenez les commandes »), puis la règle du jeu.
+  // Rien d'inventé : le nombre de tours est celui de la partie.
+  const promesseDuTitre = couperTitre(view.intro.title).promesse;
+  const phraseDePriseDePoste = `${promesseDuTitre ? `${promesseDuTitre}. ` : ""}${compter(
+    view.roundsCount,
+    "tour",
+  )} pour faire vos preuves : vous décidez, le marché répond.`;
 
   // DONNÉES : ce avec quoi on entre dans le tour — l'entreprise (au 1er tour),
   // les paramètres du secteur et la capacité de production.
-  const donneesSection = premierTour ? (
-    <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 text-slate-300">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-          {periodLabel(view.roundDays, 1)} · prise en main
-          <InfoHint
-            icon="📖"
-            hint={`Vous reprenez ${view.intro.company}, ${appositive(view.intro.tagline)}. ${view.intro.briefing}`}
-            variant="subtle"
+  // La présentation de l'entreprise (au 1er tour seulement) : qui elle est, où elle
+  // en est, ce qu'on attend de vous. Sur téléphone elle fait une carte à elle ;
+  // sur grand écran elle ouvre la carte des données.
+  const presentation = premierTour ? (
+    <>
+      {/*
+        LOT 6B, PUIS P2 : LE LIEU EN TÊTE. La feuille de présentation s'ouvrait
+        sur la photo du lieu, en bandeau. Lot P2 : au tour 1, le lieu OUVRE la
+        partie, et il n'y a qu'une photo à l'écran.
+          · Sur ordinateur, il est en tête de l'arène, en pleine largeur
+            (`ouvertureNode`, au-dessus de la bande de marché et des étapes) :
+            la feuille de présentation ne le répète pas, elle commence au nom.
+          · Sur téléphone, c'est cette carte « Votre entreprise », devenue la
+            PREMIÈRE du briefing, qui s'ouvre sur le lieu en plein cadre, nom
+            posé dessus : le nom n'est donc pas réécrit dessous.
+        À l'impression, la photo s'efface.
+      */}
+      {telephone ? (
+        <div
+          data-en-tete-illustre=""
+          className="-mx-3 -mt-3 overflow-hidden print:hidden"
+          style={{ borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit" }}
+        >
+          <OuvertureDeLaPartie
+            forme="carte"
+            scenario={view.scenarioCode}
+            secteur={view.sector}
+            entreprise={view.intro.company}
+            metier={`${SECTOR_LABELS[view.sector]} · Niveau ${view.difficulty.level} · ${view.difficulty.name}`}
+            description={view.intro.tagline}
+            phrase={phraseDePriseDePoste}
           />
-        </h2>
+        </div>
+      ) : null}
+      <div>
+        {telephone ? null : (
+          <>
+            <h3 className="text-xl font-bold text-slate-100 max-sm:text-2xl">
+              {view.intro.company}
+            </h3>
+            <p className="text-sm text-slate-400 max-sm:text-base">{view.intro.tagline}</p>
+          </>
+        )}
+        <FaitsCles
+          capacityFacts={view.capacityFacts}
+          vocabulary={view.vocabulary}
+          gamme={view.gamme}
+        />
+        {view.gamme ? (
+          <div className="mt-3">
+            <GammeLigne gamme={view.gamme} />
+          </div>
+        ) : null}
       </div>
-      {view.intro.context && (
-        <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
-            Contexte
-            <InfoHint icon="?" hint={view.intro.context} variant="subtle" />
-          </h3>
+      {telephone ? (
+        // Sur téléphone, « Situation » et « Contexte » ont la même forme : deux tiroirs
+        // de même niveau, ouverts dans le parcours.
+        <Tiroir titre="Situation">
+          <p className="text-sm leading-relaxed">{view.intro.briefing}</p>
+        </Tiroir>
+      ) : (
+        <div>
+          <h3 className="text-base font-semibold text-slate-100">Situation</h3>
+          <p className="mt-1 text-sm leading-relaxed">{view.intro.briefing}</p>
         </div>
       )}
-      <ParametersPanels
-        intro={view.intro}
-        vocabulary={view.vocabulary}
-        capacityFacts={view.capacityFacts}
-        gamme={view.gamme}
-      />
-    </section>
-  ) : (
-    // Dès le 2ᵉ tour, on montre les panneaux directement : pas d'en-tête « Vos
-    // paramètres et votre capacité » ni de carte englobante par-dessus, qui
-    // faisaient doublon avec les titres propres des panneaux (« Votre
-    // entreprise », « Le marché en face de vous ») et rognaient la largeur sur
-    // téléphone (une carte dans une carte).
+      {/*
+        Le contexte n'oriente pas la décision du tour, il l'éclaire : qui est
+        parti, depuis quand la concurrence est installée. LOT 6C : sur grand
+        écran, il est une SECTION DE LA FEUILLE, au même niveau et sur le même
+        papier que « Situation » — et non un tiroir gris de cockpit encastré
+        dans le document (le propriétaire l'a repéré sur la feuille blanche).
+        Sur téléphone, la présentation vit sur une carte de cockpit, pas sur
+        papier : « Situation » et « Contexte » y restent deux tiroirs de même
+        niveau, ce qui est cohérent avec leur sol.
+      */}
+      {telephone ? (
+        <Tiroir titre="Contexte">
+          <p className="text-sm leading-relaxed">{view.intro.context}</p>
+        </Tiroir>
+      ) : (
+        <div>
+          <h3 className="text-base font-semibold text-slate-100">Contexte</h3>
+          <p className="mt-1 text-sm leading-relaxed">{view.intro.context}</p>
+        </div>
+      )}
+    </>
+  ) : null;
+  const chiffres = (
     <ParametersPanels
       intro={view.intro}
       vocabulary={view.vocabulary}
@@ -179,78 +419,168 @@ export default async function ArenaPage({
       gamme={view.gamme}
     />
   );
+  const chiffresSansDetail = (
+    <ParametersPanels
+      intro={view.intro}
+      vocabulary={view.vocabulary}
+      capacityFacts={view.capacityFacts}
+      gamme={view.gamme}
+      sansDetail
+    />
+  );
+  const donneesSection = premierTour ? (
+    // LOT 6A — DEUX SOLS, ENSEMBLE. La présentation de l'entreprise (nom,
+    // situation, contexte) est de la PROSE : une feuille blanche (`papier`)
+    // posée sur le cockpit. Les paramètres et la capacité (`chiffres`) sont des
+    // informations consultables : ils restent sur le marine du cockpit, juste
+    // dessous. Les deux se voient dans la même fenêtre.
+    <section className="space-y-4">
+      <div className="papier space-y-4 rounded-xl p-4 sm:p-6">{presentation}</div>
+      {chiffres}
+    </section>
+  ) : (
+    // Dès le 2ᵉ tour, on montre les panneaux directement : pas d'en-tête « Vos
+    // paramètres et votre capacité » ni de carte englobante par-dessus, qui
+    // faisaient doublon avec les titres propres des panneaux (« Votre
+    // entreprise », « Le marché ») et rognaient la largeur sur
+    // téléphone (une carte dans une carte).
+    chiffres
+  );
 
   // MARCHÉ & ALERTES : ce qui a bougé et ce qu'on vous signale — où vous en êtes
-  // (dès le 2ᵉ tour), les cartes événements annoncées, la saison.
-  const alertesSection = (
+  // (dès le 2ᵉ tour), le courrier distribué, la saison.
+  const alertesSansSaison = (
     <>
       {view.roundBriefing ? (
-        <section className="space-y-2 rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 text-slate-300">
+        // LOT 6A : « où vous en êtes » est un texte de situation à lire — papier.
+        <section className="space-y-2 papier rounded-xl p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-100">
             {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
           </h2>
           <p className="text-sm leading-relaxed">{view.roundBriefing.headline}</p>
+          {/*
+            LE CONSTAT ET LA NOTE VONT ENSEMBLE. Le constat dit ce qui est
+            arrivé ; la note dit ce que l'équipe avait prévu en validant. Les
+            séparer, c'était garder la prévision pour le seul enseignant, et
+            priver l'élève de la seule comparaison qui lui apprenne quelque
+            chose sur son propre raisonnement.
+          */}
+          <NoteDuTourPrecedent
+            texte={periods.at(-1)?.justification ?? null}
+            periode={periodLabel(view.roundDays, Math.max(1, view.currentRound - 1))}
+          />
         </section>
       ) : null}
-      {view.announcedEventCards.length > 0 ? (
-        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-1.5 sm:p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400 flex items-center gap-2">
-            ⚡ Carte annoncée
-            <InfoHint
-              icon="?"
-              hint="Votre enseignant a tiré une carte qui s'appliquera à ce tour. Adaptez vos décisions en conséquence."
-              variant="subtle"
-            />
+      {/* EN CLASSE, la Gazette ouvre « Ce qui a bougé » : il n'y a pas de
+          courrier du tour où la poser avant la lettre (en solo, elle y est). */}
+      {view.kind !== "solo" && (coupureDuTour || revueDePresse) ? (
+        <section aria-label="La presse du tour" className="space-y-3">
+          {coupureDuTour ? <div className="py-2">{coupureDuTour}</div> : null}
+          {revueDePresse}
+        </section>
+      ) : null}
+      {courriersAnnonces.length > 0 ? (
+        // UN PANNEAU, PAS UN CADRE ORANGE (lot 6E) : ce n'est pas une action.
+        <section className="panneau-info p-3 sm:p-5">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
+            <Icone nom="courrier" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
+            Le courrier, en détail
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {view.announcedEventCards.map((card, i) => (
-              <EventCard
-                key={`${card.code}-${card.teamId ?? "market"}`}
-                code={card.code}
+          <div className={grilleDeCourriers(courriersAnnonces.length)}>
+            {courriersAnnonces.map((courrier, i) => (
+              <CourrierRecommande
+                key={`${courrier.code}-${courrier.teamId ?? "market"}`}
+                code={courrier.code}
+                assurance={view.enabledDecisions.insurance}
                 delayMs={i * 450}
-                announced
-                targetLabel={
-                  card.teamId
-                    ? card.isMyTeam
-                      ? "🎯 Votre équipe"
-                      : `→ ${card.teamName ?? "Une autre équipe"}`
-                    : "Toute la classe"
+                annonce
+                destinataire={
+                  courrier.teamId
+                    ? courrier.isMyTeam
+                      ? undefined
+                      : `→ ${courrier.teamName ?? "Une autre entreprise"}`
+                    : "Tout le marché"
                 }
-                highlight={card.isMyTeam}
+                // Un pli adressé à une autre équipe porte SON nom : on lit le
+                // courrier du voisin, pas le sien.
+                adresse={
+                  courrier.teamId && !courrier.isMyTeam
+                    ? { nom: courrier.teamName ?? "Une autre entreprise", ville: null }
+                    : adresseDuCourrier
+                }
+                quand={periodLabel(view.roundDays, view.currentRound)}
+                surligne={courrier.isMyTeam}
               />
             ))}
           </div>
         </section>
       ) : null}
-      {view.seasonNotes.length > 0 ? (
-        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-sky-200">
-          🌤️ Saison du tour :{" "}
-          {view.seasonNotes
-            .map(
-              (n) =>
-                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
-                  n.coef > 1 ? "haute saison" : "basse saison"
-                })`,
-            )
-            .join(" · ")}
-          {". "}Dimensionnez votre volume en conséquence.
-        </section>
-      ) : null}
+      {(() => {
+        // CE QUI PÈSE ENCORE : une lettre qui vaut deux trimestres, reçue au
+        // tour précédent, s'applique à celui-ci. L'équipe décide en le
+        // sachant, pas en le découvrant aux résultats.
+        const encore = courriersQuiMeConcernent(courriersEnCours).map((c) => ({
+          ...c,
+          roundsLeft: courriersEnCours.find(
+            (a) => a.code === c.code && a.teamId === c.teamId,
+          )!.roundsLeft,
+        }));
+        return encore.length > 0 ? (
+          <section className="panneau-info p-3 sm:p-5">
+            <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
+              <Icone nom="duree" className="h-4 w-4" />
+              Encore en vigueur ce tour
+            </p>
+            <p className="mb-3 text-xs text-slate-400">
+              {encore.length > 1 ? "Ces courriers sont arrivés" : "Ce courrier est arrivé"} à un tour
+              précédent et {encore.length > 1 ? "pèsent" : "pèse"} toujours sur celui-ci.
+            </p>
+            <div className={grilleDeCourriers(encore.length)}>
+              {encore.map((courrier, i) => (
+                <CourrierRecommande
+                  key={`${courrier.code}-${courrier.teamId ?? "market"}`}
+                  code={courrier.code}
+                  assurance={view.enabledDecisions.insurance}
+                  delayMs={i * 450}
+                  destinataire={`${
+                    courrier.teamId ? "Votre entreprise" : "Tout le marché"
+                  } · encore ${courrier.roundsLeft > 1 ? `${courrier.roundsLeft} tours` : "ce tour"}`}
+                  adresse={adresseDuCourrier}
+                  surligne={courrier.isMyTeam}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+    </>
+  );
+  // La saison commande la demande, donc le volume : sur téléphone elle se lit avec les
+  // chiffres du marché (une seule carte), pas avec les alertes.
+  const saisonNode = <SaisonDuTour notes={view.seasonNotes} />;
+  const alertesSection = (
+    <>
+      {alertesSansSaison}
+      {saisonNode}
     </>
   );
 
   // ARBITRAGE : la question qui cadre le tour.
+  // Le titre dit « Votre arbitrage », pas « Votre décision » : la décision,
+  // c'est le formulaire juste en dessous, et l'élève en rend une à chaque
+  // tour. Ce qui se joue ici est le choix ENTRE deux routes qui se valent —
+  // le mot du métier, et celui que la carte met en scène.
+  // La phrase « Fixez votre prix, votre volume et vos budgets » a été retirée :
+  // les champs du formulaire, juste en dessous, portent déjà ces intitulés.
   const dilemmeSection = premierTour ? (
-    <>
-      <DilemmaCard
-        title="Votre premier arbitrage"
-        question={view.intro.dilemma.question}
-        routes={view.intro.dilemma.routes}
-      />
-    </>
+    <DilemmaCard
+      title="Votre arbitrage"
+      question={view.intro.dilemma.question}
+      routes={view.intro.dilemma.routes}
+    />
   ) : view.roundBriefing ? (
     <DilemmaCard
-      title="L'arbitrage de ce tour"
+      title="Votre arbitrage"
       question={view.roundBriefing.question}
       routes={view.roundBriefing.routes}
     />
@@ -262,6 +592,18 @@ export default async function ArenaPage({
   // repliée par défaut et révélée à la demande. Les « points clés » ont été
   // retirés (redondants avec la situation et ses indices progressifs). Volume
   // réduit à une ligne par levier — le champ, le sens, la piste la plus utile.
+  /*
+   * Les réponses au dernier tour clos : on compare ses décisions à celles du
+   * tour d'avant, parce qu'une coupe ne se lit que par rapport à ce qui
+   * précède. Fonction pure, éprouvée règle par règle dans
+   * `courriers-en-retour.test.ts` ; la page n'en fait que l'affichage.
+   */
+  const reponses = (() => {
+    const dernier = periods[periods.length - 1];
+    if (!dernier) return [];
+    return reponsesAuxDecisions(dernier.decisions, periods[periods.length - 2]?.decisions ?? null);
+  })();
+
   const leviersIndice = (() => {
     const FIELD_LABELS: Record<string, string> = {
       price: "Prix de vente",
@@ -299,22 +641,22 @@ export default async function ArenaPage({
     }));
     if (levers.length === 0) return null;
     return (
-      <details className="rounded-lg border border-slate-700 bg-slate-800/40">
-        <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-amber-300 hover:text-amber-200 flex items-center gap-2">
-          💡 Leviers d&apos;action
-          <InfoHint icon="?" hint="Pistes pour ajuster votre stratégie" variant="subtle" />
-        </summary>
-        <ul className="space-y-1.5 px-3 pb-3 pt-1">
+      <Tiroir
+        icone="idee"
+        titre="Leviers d'action"
+        quoi={`${levers.length} levier${levers.length > 1 ? "s" : ""}`}
+      >
+        <ul className="space-y-1.5">
           {levers.map((l) => (
             <li key={l.field} className="flex gap-2 text-sm leading-snug text-slate-300">
-              <span className="mt-px leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
+              <span className="mt-px leading-none text-slate-400">{DIRECTION_ICONS[l.direction]}</span>
               <span>
                 <span className="font-medium text-slate-200">{l.label}</span> — {l.hint}
               </span>
             </li>
           ))}
         </ul>
-      </details>
+      </Tiroir>
     );
   })();
 
@@ -329,16 +671,16 @@ export default async function ArenaPage({
           <details
             key={s.instanceId}
             open={i === 0}
-            className="group rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
+            // UN PANNEAU (lot 6E) : ni cadre, ni pointillé quand il est fermé,
+            // ni filet sous le titre ; le repère à la teinte du métier.
+            className="group panneau-info"
           >
-            <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
-              <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
-                ▸
-              </span>
-              <span aria-hidden>🔍</span>
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-[var(--rayon-panneau)] px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5 [&::-webkit-details-marker]:hidden">
+              <Chevron className="text-slate-400" />
+              <Icone nom="loupe" className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
               <span className="min-w-0">{s.title}</span>
             </summary>
-            <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
+            <div className="px-2 pb-2.5 sm:px-4 sm:pb-4">
               <SituationCard gameId={view.gameId} situation={s} />
             </div>
           </details>
@@ -358,99 +700,989 @@ export default async function ArenaPage({
       </div>
     ) : null;
 
-  return (
-    <main id="main" className="mx-auto max-w-5xl px-2 pt-5 pb-12 sm:px-6">
-      {/* ── Header ── */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${SECTOR_COLORS[view.sector].bg}`}>
-            {view.scenarioIcon}
-          </span>
-          <div>
-            <p className={`text-xs uppercase tracking-[0.3em] ${SECTOR_COLORS[view.sector].accent}`}>
-              {surtitreDePartie(view.intro.title, view.playerTeamName)}
-            </p>
-            <h1 className="text-2xl font-bold text-slate-50">{view.playerTeamName}</h1>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link href="/profile" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-            Mon profil
-          </Link>
-          <Link href="/notions" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-            Fiches notions
-          </Link>
-          <p className={`rounded-full border border-white/10 px-3 py-1 text-xs ${SECTOR_COLORS[view.sector].accent}`}>
-            {SECTOR_ICONS[view.sector]} {SECTOR_LABELS[view.sector]}
-          </p>
-          <p
-            className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300"
-            title="Niveau de difficulté de la partie"
-          >
-            Niveau {view.difficulty.level} · {view.difficulty.name}
-          </p>
-          {latestRound !== null && view.ranking.length > 1 ? (() => {
-            const me = view.ranking.find((row) => row.isPlayer);
-            return me ? (
-              <p className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300" title="Votre position au classement BPI">
-                #{me.rank}/{view.ranking.length} · BPI {me.bpi.toFixed(0)}
-              </p>
-            ) : null;
-          })() : null}
-          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-            {finished
-              ? "Partie terminée"
-              : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
-          </p>
-        </div>
-      </header>
+  // L'analyse sur téléphone : toutes les situations du tour sur UN écran, en accordéon.
+  const analyseCartes: AnalyseDuParcours[] = statutSituations
+    ? [
+        {
+          cle: "analyse",
+          noeud: <AnalyseDuTour gameId={view.gameId} situations={situations.current} />,
+          etapes: situations.current.length,
+        },
+      ]
+    : [];
 
-      {/* ── Status banner ── */}
-      <div className="mt-6">
-        <RoundStatusBanner
-          currentRound={view.currentRound}
+  // Ce qu'on répond aux décisions du tour clos (voir plus haut) : servi aux onglets
+  // comme au parcours en cartes.
+  const reponsesSection =
+    reponses.length > 0 ? (
+                        <section className="panneau-info p-3 sm:p-5">
+                          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
+                            <Icone nom="courrier" className="h-4 w-4" />
+                            En retour de vos décisions
+                          </p>
+                          <p className="mb-3 text-xs text-slate-400">
+                            {reponses.length > 1 ? "Ces courriers répondent" : "Ce courrier répond"}{" "}
+                            à ce que vous avez décidé au{" "}
+                            {periodLabel(view.roundDays, latestRound ?? 1).toLowerCase()}.
+                          </p>
+                          <div className={grilleDeCourriers(reponses.length)}>
+                            {reponses.map((c, i) => (
+                              <CourrierRecommande
+                                key={c.code}
+                                code={c.code}
+                                assurance={view.enabledDecisions.insurance}
+                                delayMs={i * 450}
+                                adresse={adresseDuCourrier}
+                                quand={periodLabel(view.roundDays, view.currentRound)}
+                              />
+                            ))}
+                          </div>
+                        </section>
+    ) : null;
+
+  // LE BRIEFING, EN CARTES (téléphone). La Situation tenait trois écrans en une
+  // page ; elle devient une suite de cartes, une idée chacune : ce qu'on vous
+  // répond, votre mandat, qui est l'entreprise, ses chiffres, ce qui a bougé,
+  // l'arbitrage. Une carte vide n'existe pas.
+  const alertesPresentes =
+    !!view.roundBriefing ||
+    courriersAnnonces.length > 0 ||
+    courriersQuiMeConcernent(courriersEnCours).length > 0 ||
+    (view.kind !== "solo" && (coupureDuTour !== null || revueDePresse !== null));
+  const alerteTresorerieNode = view.alerteTresorerie ? (
+    <div>
+      <AlerteTresorerie
+        gameId={view.gameId}
+        alerte={view.alerteTresorerie}
+        exigence={view.exigenceSauvetage}
+        demande={view.demandeSubvention}
+      />
+    </div>
+  ) : null;
+  const nomNode = view.peutSeNommer ? (
+    <div>
+      <TeamNameForm
+        gameId={gameId}
+        nomActuel={view.playerTeamName}
+        dejaNommee={!porteUnNomParDefaut(view.playerTeamName)}
+        emblemeActuel={view.playerTeamEmbleme}
+      />
+    </div>
+  ) : null;
+  // Les trois facettes d'une période close : ce qu'on a analysé (Situation + correction), ce
+  // qu'on a décidé, ce qui en est ressorti. Servies à l'accordéon des tours passés, et, sur
+  // téléphone, à la carte des résultats du dernier tour.
+  /** Le débriefing des situations d'un tour clos (null s'il n'y en a pas). */
+  const situationsDuTour = (p: (typeof periods)[number]) => {
+    const dr = debriefByRound.get(p.round);
+    return dr ? (
+      <section className="space-y-3">
+        {dr.situations.map((s) => (
+          <SituationDebrief
+            key={s.instanceId}
+            situation={s}
+            gameId={view.gameId}
+            retakeable={
+              situations.missedPolicy === "retake50" && p.round === mostRecentDebriefedRound
+            }
+          />
+        ))}
+      </section>
+    ) : null;
+  };
+  /** Les décisions prises à un tour clos (null si elles ne sont pas conservées). */
+  const decisionsDuTour = (p: (typeof periods)[number]) =>
+    p.decisions ? (
+      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
+    ) : null;
+
+  const ongletsDuTour = (p: (typeof periods)[number]) => {
+    const isLatest = p.round === latestRound;
+    return (
+        <SegmentedTabs
+          defaultKey={isLatest ? "resultats" : "situation"}
+          tabs={[
+            { key: "situation", label: "Situation", icon: "fiche" },
+            { key: "decisions", label: "Décisions", icon: "ecrire" },
+            { key: "resultats", label: "Résultats", icon: "resultats" },
+          ]}
+        >
+          {{
+            situation: situationsDuTour(p),
+            decisions: decisionsDuTour(p),
+            resultats: (
+              <PeriodDashboard
+                view={view}
+                period={p}
+                standing={isLatest}
+                courrierResume={telephone}
+              />
+            ),
+          }}
+        </SegmentedTabs>
+    );
+  };
+
+  const toursPassesDe = (liste: typeof periods) => (
+    <>
+      {liste.length > 0 ? (
+        <p className="surtitre">
+          {finished ? "Vos tours" : "Tours passés"}
+        </p>
+      ) : null}
+      {/*
+        LOT P3 : UNE LISTE, PAS UNE PILE DE CADRES. Chaque tour clos était un
+        panneau à lui, cerné d'un filet de gauche vert ou rouge, son numéro dans
+        un cercle de la même couleur : six cadres à la file, et un tour en perte
+        cerné de rouge comme une erreur. Les tours sont désormais les lignes
+        d'UN objet d'information (`panneau-info`), séparées d'un filet ; le gain
+        ou la perte se lit sur le chiffre seul, en vert ou en rouge francs. Un
+        tour perdant n'est pas une erreur.
+      */}
+      {liste.length > 0 ? (
+      <div
+        data-liste-des-tours=""
+        className="panneau-info divide-y divide-[color:var(--filet-information)]"
+      >
+      {liste.map((p) => {
+        const isLatest = p.round === latestRound;
+        const netIncome = p.result.incomeStatement.netIncome;
+        const netTreasury = p.result.functionalBalance.netTreasury;
+        return (
+          <details
+            key={p.round}
+            // Cible du retour après une validation en solo : la période la plus
+            // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
+            // la hauteur de l'en-tête collant pour que le titre reste visible.
+            id={isLatest ? "dernier-resultat" : undefined}
+            // LOT P4 : AU BILAN, TOUS LES TOURS SONT REPLIÉS. La partie close
+            // dit son rang une fois, en grand, en tête du bilan ; le dernier
+            // tour déplié le redisait (« Au classement révélé : 3e sur 3 »,
+            // puis le classement IPG) sous la cérémonie. En cours de partie,
+            // le plus récent reste ouvert : c'est lui qu'on vient lire.
+            open={isLatest && !finished}
+            // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
+            // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
+            // à la file se lisaient comme une grille, pas comme quatre tours.
+            //
+            // UN CADRE PLEIN, ET LE SIGNE DANS UN FILET. Fermés, les tours
+            // passés portaient le pointillé des replis, et ce pointillé prenait
+            // la couleur du filet de gauche : une pile de cadres tiretés roses
+            // et verts, la seule chose de l'arène qui n'était pas dans la
+            // charte. Le cadre est désormais celui de toutes les cartes ; le
+            // gain ou la perte se lit au filet de 2 px et à la pastille du
+            // numéro, et l'état replié au chevron qui pivote.
+            data-tour-passe
+            //
+            // LOT 6E : UN PANNEAU, ET LE SIGNE DANS SON FILET. Lot P3 : ni
+            // panneau ni filet de signe, une ligne de la liste (voir plus haut).
+            className="group scroll-mt-24"
+          >
+            {/*
+              LE NUMÉRO FAIT LA SÉPARATION. Il était noyé derrière un 📊
+              répété — l'œil tombait sur une icône identique d'un tour à
+              l'autre au lieu de trouver 1, 2, 3. En pastille à gauche, les
+              numéros font colonne et donnent une colonne vertébrale à la
+              liste. Lot P3 : le cercle est neutre ; le résultat du tour, juste
+              à côté, porte seul le vert ou le rouge.
+            */}
+            <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
+              {/* Le chevron commun, en tête (lot P5) : il était un « ▸ » au
+                  bord droit, à l'opposé de celui des tiroirs. */}
+              <Chevron className="-mr-1 text-slate-400" />
+              <span
+                aria-hidden
+                // Un numéro sur le voile neutre : il portait le signe du tour
+                // en trait plein vert ou rouge (lot P3 : le chiffre suffit).
+                className="voile-neutre flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums text-slate-100"
+              >
+                {p.round}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-slate-100">
+                  {periodLabel(view.roundDays, p.round)}
+                  {isLatest && !finished ? (
+                    <span className="pastille-etat ml-2 rounded-full px-2 py-0.5 text-xs font-medium text-slate-200">
+                      résultats livrés
+                    </span>
+                  ) : null}
+                </span>
+                {/* Les trois chiffres du tour, chacun insécable : la ligne se
+                    replie ENTRE deux chiffres, jamais au milieu d'un montant. */}
+                <span className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs tabular-nums text-slate-400">
+                  <span className="whitespace-nowrap">
+                    CA {formatEuro(p.result.incomeStatement.revenue)}
+                    <span aria-hidden className="text-slate-400">
+                      {" "}
+                      ·
+                    </span>
+                  </span>
+                  <span
+                    className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-red-300"}`}
+                  >
+                    {netIncome >= 0 ? "+" : ""}
+                    {formatEuro(netIncome)}
+                    <span aria-hidden className="text-slate-400">
+                      {" "}
+                      ·
+                    </span>
+                  </span>
+                  <span
+                    className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-red-300"}`}
+                  >
+                    tréso {formatEuro(netTreasury)}
+                  </span>
+                </span>
+              </span>
+            </summary>
+            <div className="px-2 pb-2.5 sm:px-4 sm:pb-4">
+              {/* Les trois facettes d'une période close : ce qu'on a analysé
+                  (Situation + correction), ce qu'on a décidé, ce qui en est
+                  ressorti. Les onglets ne s'opposent pas à l'accordéon — il
+                  situe la période, ils en montrent une face à la fois. */}
+              {ongletsDuTour(p)}
+            </div>
+          </details>
+        );
+      })}
+      </div>
+      ) : null}
+    </>
+  );
+  const toursPasses = toursPassesDe(periods);
+
+  // L'ARDOISE DU DIRIGEANT : l'entreprise, le tour, et les quatre chiffres
+  // qu'on regarde en conseil. Elle est en tête de l'arène à chaque étape, sur
+  // téléphone comme sur grand écran ; la partie close prend l'ardoise de
+  // clôture (BilanDePartie).
+  const toursChiffres: TourChiffre[] = periods.map((p) => ({
+    round: p.round,
+    libelle: periodLabel(view.roundDays, p.round),
+    ca: p.result.incomeStatement.revenue,
+    resultat: p.result.incomeStatement.netIncome,
+    tresorerie: p.result.functionalBalance.netTreasury,
+  }));
+  const moiAuClassement = view.ranking.find((row) => row.isPlayer);
+  const enteteArdoise: EnTeteDeLArdoise = {
+    entreprise: view.intro.company,
+    tour: `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`,
+    sousTitre: [
+      porteUnNomParDefaut(view.playerTeamName) || view.playerTeamName === view.intro.company
+        ? null
+        : view.playerTeamName,
+      SECTOR_LABELS[view.sector],
+      `Niveau ${view.difficulty.level} · ${view.difficulty.name}`,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    rang:
+      latestRound !== null && moiAuClassement
+        ? { place: moiAuClassement.rank, sur: view.ranking.length }
+        : null,
+    rangVoile:
+      latestRound !== null && !moiAuClassement && view.classement.parLAnimateur
+        ? "Révélé par votre enseignant"
+        : null,
+    ipg: latestRound !== null ? view.playerBpi : null,
+  };
+  // L'EN-TÊTE DE L'ARÈNE. Dès le 2ᵉ tour, l'ardoise du dirigeant et ses
+  // chiffres. AU TOUR 1 (lot P2), il n'y a encore aucun chiffre : l'ardoise
+  // vide (« … s'afficheront ici ») laisse la place à l'OUVERTURE, le lieu en
+  // pleine largeur avec le nom, le métier, le tour et la prise de poste. Sur
+  // téléphone, le lieu ouvre le parcours en cartes (carte « Votre
+  // entreprise ») : rien ne se pose ici, et la barre de la partie porte seule
+  // l'entreprise et le tour, une fois.
+  const tableauNode = (() => {
+    const coin = (
+      <>
+        {/* Sous quel nom on décide. En salle informatique le poste passe d'une
+            classe à l'autre : sans ce rappel, un élève joue sous l'identité du
+            précédent sans jamais l'apprendre. Il mène au bloc qui permet de
+            libérer l'appareil. */}
+        {view.kind !== "solo" && view.playerPseudo ? (
+          <a
+            href="#mon-profil"
+            className="rounded-full border border-white/15 px-3 py-1 text-xs text-slate-200 transition hover:border-white/30 hover:text-slate-50 max-sm:hidden"
+          >
+            <Icone nom="personne" className="mr-1 h-3.5 w-3.5" />
+            {view.playerPseudo}
+          </a>
+        ) : null}
+        {/* L'heure de fermeture du tour, quand l'enseignant en a posé une : on la
+            découvrait en étant refusé. */}
+        {!finished && view.playLock.playable && view.playLock.closesAt ? (
+          <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
+        ) : null}
+      </>
+    );
+    if (premierTour) {
+      return telephone ? null : (
+        <OuvertureDeLaPartie
+          scenario={view.scenarioCode}
+          secteur={view.sector}
+          entreprise={view.intro.company}
+          metier={enteteArdoise.sousTitre ?? SECTOR_LABELS[view.sector]}
+          description={view.intro.tagline}
+          tour={`${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
+          phrase={phraseDePriseDePoste}
+        >
+          {coin}
+        </OuvertureDeLaPartie>
+      );
+    }
+    return (
+    <TableauDeBord
+      tours={toursChiffres}
+      entete={enteteArdoise}
+      visage={
+        // LE VISAGE DU SECTEUR : neuf formes, quinze teintes, et une partie se
+        // reconnaît d'un coup d'œil (l'emoji du système changeait d'un
+        // appareil à l'autre). La tuile PORTE la teinte du métier (lot 5A) :
+        // elle était un carré gris et un pictogramme teinté.
+        <span
+          aria-hidden
+          className="tuile-metier flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+        >
+          <PictoSecteur secteur={view.sector} className="h-5 w-5" />
+        </span>
+      }
+    >
+      {coin}
+      {/* La frise : un segment par tour, au signe de son résultat. */}
+      <div className="max-sm:hidden">
+        <FriseDesTours
           roundsCount={view.roundsCount}
-          roundDays={view.roundDays}
-          pendingDecisions={view.pendingDecisions !== null}
-          kind={view.kind}
+          currentRound={view.currentRound}
+          resultats={new Map(periods.map((p) => [p.round, p.result.incomeStatement.netIncome]))}
           finished={finished}
-          situations={statutSituations}
         />
       </div>
+    </TableauDeBord>
+    );
+  })();
+  const soumissionsNode = view.soumissions ? (
+    <div className="px-0.5 py-2">
+      <QuiARendu
+        validees={view.soumissions.validees}
+        total={view.soumissions.total}
+      />
+    </div>
+  ) : null;
+  const compositionNode =
+    !finished && view.equipesDeLaClasse.length > 1 ? (
+      view.peutChoisirSonEquipe ? (
+        <ChoixEquipe
+          gameId={gameId}
+          equipes={view.equipesDeLaClasse}
+          monEquipeId={view.playerTeamId}
+          ouvert
+        />
+      ) : (
+        <Tiroir
+          icone="equipes"
+          titre="Composition des équipes"
+          quoi={compter(view.equipesDeLaClasse.length, "équipe")}
+        >
+          <ChoixEquipe
+            gameId={gameId}
+            equipes={view.equipesDeLaClasse}
+            monEquipeId={view.playerTeamId}
+            ouvert={false}
+            concours={view.estUnConcours}
+          />
+        </Tiroir>
+      )
+    ) : null;
+  const vosReussites =
+    periods.length > 0 ? (
+      <VosReussites
+        cases={reussitesDeLaPartie(
+          periods.map((p) => lireLeTour(p.round, p.result, p.forecastReview)),
+        )}
+        nommerLeTour={(round) => periodLabel(view.roundDays, round)}
+      />
+    ) : null;
+  const compteNode = (
+    <>
+      {view.kind !== "solo" && view.playerPseudo ? (
+        <IdentiteDeLAppareil
+          pseudo={view.playerPseudo}
+          equipe={view.playerTeamName}
+          variante="arene"
+        />
+      ) : null}
+      {codeDeReprise ? (
+        <MaCarteDeReprise gameId={gameId} code={codeDeReprise} solo={view.kind === "solo"} />
+      ) : null}
+    </>
+  );
+  // LES RÉSULTATS, EN TÊTE DU TOUR (téléphone) : trois cartes — le verdict, les chiffres,
+  // l'évolution —, puis le détail à la demande, dans un tiroir fermé. Un tableau de bord
+  // de trois mille pixels ne se traîne pas jusqu'au bout : on lit ce qui compte, et on
+  // ouvre le reste si l'on veut.
+  const periodeRecente = periods.find((p) => p.round === latestRound);
+  const resultatsCartes: CarteDuParcours[] = periodeRecente
+    ? [
+        {
+          cle: "resultats",
+          phase: "resultats",
+          titre: "Ce que ça a donné",
+          noeud: (
+            <section className="space-y-4">
+              {/* LES RÉSULTATS ET SEULEMENT EUX, avec leurs trois onglets de détail (Synthèse, Marché,
+                  Finance). Le menu Situation / Décisions / Résultats n'a pas sa place ici : le
+                  débriefing et les décisions du tour se lisent à la demande, dans un tiroir. */}
+              {/* La carte « Résultats » du téléphone n'a pas les onglets du tour
+                  au-dessus d'elle : le tableau de bord y garde les siens, seule
+                  navigation de l'écran (lot P3). */}
+              <PeriodDashboard
+                view={view}
+                period={periodeRecente}
+                standing
+                courrierResume={telephone}
+                navigation="onglets"
+              />
+              {situationsDuTour(periodeRecente) || decisionsDuTour(periodeRecente) ? (
+                <Tiroir titre="Débriefing et décisions de ce tour" ferme>
+                  <div className="space-y-4">
+                    {situationsDuTour(periodeRecente)}
+                    {decisionsDuTour(periodeRecente)}
+                  </div>
+                </Tiroir>
+              ) : null}
+              {/* Les tours plus anciens et les réussites : à la demande, fermés. */}
+              {periods.length > 1 || vosReussites ? (
+                <Tiroir titre="Tours précédents et réussites" ferme>
+                  <div className="space-y-4">
+                    {toursPassesDe(periods.filter((x) => x.round !== latestRound))}
+                    {vosReussites}
+                  </div>
+                </Tiroir>
+              ) : null}
+            </section>
+          ),
+        },
+      ]
+    : [];
+
+  const briefingCartes: CarteDuParcours[] = (
+    [
+      // LE LIEU D'ABORD (lot P2). Au tour 1, la carte « Votre entreprise »
+      // ouvre le parcours : la photo en plein cadre, le nom posé dessus. Elle
+      // venait en deuxième, après le mandat.
+      presentation
+        ? {
+            cle: "presentation",
+            titre: "Votre entreprise",
+            noeud: (
+              <section className="space-y-4 panneau-info p-3 text-slate-300">
+                {presentation}
+              </section>
+            ),
+          }
+        : null,
+      alerteTresorerieNode
+        ? { cle: "alerte-tresorerie", titre: "Alerte de trésorerie", noeud: alerteTresorerieNode }
+        : null,
+      ...resultatsCartes,
+      reponsesSection ? { cle: "reponses", titre: "Ce que vous aviez prévu", noeud: reponsesSection } : null,
+      nomNode ? { cle: "nom", titre: "Le nom de votre équipe", noeud: nomNode } : null,
+      view.peutChoisirSonEquipe && compositionNode
+        ? { cle: "equipe", titre: "Composition de l'équipe", noeud: compositionNode }
+        : null,
+      view.currentRound === 1
+        ? {
+            cle: "mandat",
+            titre: "Votre prise de poste",
+            noeud: (
+              <MandatDeLEquipe
+                gameId={gameId}
+                niveau={view.difficulty.level}
+                equipe={view.playerTeamName}
+                adresse={adresseDuCourrier}
+                ouvert
+              />
+            ),
+          }
+        : null,
+      {
+        cle: "chiffres",
+        titre: "Vos chiffres et votre marché",
+        noeud: (
+          <div className="space-y-4">
+            {chiffresSansDetail}
+            {/* Même forme, même niveau, fermés, et ils se replient l'un l'autre. */}
+            <DetailParClientele intro={view.intro} gamme={view.gamme} groupe="precisions" ferme />
+            <SaisonDuTour notes={view.seasonNotes} groupe="precisions" ferme />
+          </div>
+        ),
+      },
+      alertesPresentes
+        ? { cle: "alertes", titre: "Ce qui a bougé", noeud: alertesSansSaison }
+        : null,
+      dilemmeSection ? { cle: "arbitrage", titre: "Le dilemme du tour", noeud: dilemmeSection } : null,
+    ] as (CarteDuParcours | null)[]
+  ).filter((c): c is CarteDuParcours => c !== null);
+
+  // « Décider » : la piste, le courrier du tour, puis la saisie. Un seul nœud, servi
+  // tel quel aux onglets (grand écran) et au parcours en cartes (téléphone).
+  // Les trois pièces de « Décider », servies telles quelles à la page de grand écran
+  // (onglets) et, séparément, au parcours en cartes du téléphone.
+  // Un courrier qui appelle l'investissement, à un niveau qui le plafonne : le
+  // plafond du tour se lit au pied de la lettre (`engine/investment/plafond`).
+  const noteDInvestissement =
+    view.plafondInvestissement?.applique && view.upcomingDraw.some((c) => appelleLInvestissement(c.code))
+      ? `À ce niveau, sans embauches, on n'investit qu'à hauteur de ce que l'équipe fait tourner. ${
+          aideDuPlafond(view.plafondInvestissement, view.vocabulary) ?? ""
+        }`.trim()
+      : null;
+  const courrierBloc = view.kind === "solo" && !finished ? (
+                  <div className="mb-4">
+                    <CourrierDuTour
+                      gameId={gameId}
+                      round={view.currentRound}
+                      periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+                      plis={view.upcomingDraw}
+                      adresse={adresseDuCourrier}
+                      gazette={view.gazette}
+                      noteDInvestissement={noteDInvestissement}
+                      assurance={view.enabledDecisions.insurance}
+                    />
+                    {revueDePresse ? <div className="mt-4">{revueDePresse}</div> : null}
+                  </div>
+                ) : null;
+  const etatDesDecisions = view.pendingDecisionsPar ? (
+                    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                      <span className="pastille-etat rounded-full px-2 py-0.5 font-semibold text-slate-100">
+                        ✓{" "}
+                        {mentionDeValidation(
+                          view.pendingDecisionsPar.nom,
+                          new Date(view.pendingDecisionsPar.quand),
+                        )}
+                      </span>
+                      <span className="text-slate-400">
+                        Modifiable jusqu&apos;à la clôture : votre envoi remplacera le sien.
+                      </span>
+                    </p>
+                  ) : null;
+  const formulaireDeDecision = (
+    <DecisionForm
+      telephone={telephone}
+      enTeteDuRecapitulatif={
+        // Rien à dire : pas de conteneur vide, qui laisserait quand même son interligne.
+        telephone &&
+        (etatDesDecisions ||
+          soumissionsNode ||
+          (!finished && view.playLock.playable && view.playLock.closesAt)) ? (
+          <div className="space-y-2">
+            {etatDesDecisions}
+            {soumissionsNode}
+            {!finished && view.playLock.playable && view.playLock.closesAt ? (
+              <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
+            ) : null}
+          </div>
+        ) : null
+      }
+      reperes={
+        // LES REPÈRES SERVENT AUSSI SUR ORDINATEUR. Ils n'étaient servis qu'au
+        // téléphone ; or c'est sur ordinateur que le prix avait exactement le
+        // champ d'une case facultative, sans rien à côté pour le situer.
+        {
+          prixUsuels: (() => {
+            const prix = view.intro.segments.map((seg) => seg.refPrice);
+            if (prix.length === 0) return null;
+            const bas = Math.min(...prix);
+            const haut = Math.max(...prix);
+            return bas === haut ? formatEuro(bas) : `${formatEuro(bas)} – ${formatEuro(haut)}`;
+          })(),
+          coutVariable: view.gamme ? null : view.intro.variableCostPerUnit,
+          // Le curseur de prix court de la moitié du plus bas prix usuel à
+          // près du double du plus haut : assez large pour essayer, pas au point
+          // de rendre un euro introuvable.
+          ...(view.intro.segments.length > 0
+            ? {
+                plagePrix: {
+                  min: Math.floor(Math.min(...view.intro.segments.map((seg) => seg.refPrice)) / 2),
+                  max:
+                    Math.ceil(
+                      (Math.max(...view.intro.segments.map((seg) => seg.refPrice)) * 1.8) / 5,
+                    ) * 5,
+                },
+              }
+            : {}),
+          // CE QUE LE TOUR PASSÉ A DONNÉ : le prix pratiqué et le volume vendu,
+          // lus de l'historique des ventes. Rien d'inventé, et rien au premier
+          // tour — la vue ne porte alors aucun tour résolu.
+          tourPasse: (() => {
+            const dernier = view.salesHistory.rounds.at(-1);
+            if (!dernier) return null;
+            return { tour: dernier.round, prix: dernier.price, volume: dernier.sold };
+          })(),
+          // En gamme, le même repère référence par référence : le résultat du
+          // dernier tour résolu porte le prix et le volume de chacune.
+          ...(view.gamme
+            ? {
+                tourPasseParReference: (() => {
+                  const dernier = view.periods.at(-1);
+                  const produits = dernier?.result.products;
+                  if (!dernier || !produits) return {};
+                  return Object.fromEntries(
+                    view.gamme
+                      // Une référence encore à bâtir n'a rien pratiqué : le moteur
+                      // force son plan à zéro, et le prix qu'elle porte est celui
+                      // du champ caché, que personne n'a choisi. Lui prêter un
+                      // « tour passé » serait inventer un repère.
+                      .filter((reference) => {
+                        const produit = produits[reference.code];
+                        const dev = produit?.rd?.development;
+                        return Boolean(produit) && !(dev && !dev.launched);
+                      })
+                      .map((reference) => [
+                        reference.code,
+                        {
+                          tour: dernier.round,
+                          prix: produits[reference.code]!.price,
+                          volume: produits[reference.code]!.sold,
+                        },
+                      ]),
+                  );
+                })(),
+              }
+            : {}),
+        }
+      }
+      gameId={view.gameId}
+      roundIndex={view.currentRound}
+      estimation={view.estimation}
+      vocabulary={view.vocabulary}
+      periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+      defaults={
+        view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions
+      }
+      proposed={view.proposedDecisions}
+      kind={view.kind}
+      alreadySubmitted={view.pendingDecisions !== null}
+      insuranceOffer={
+        view.insuranceOffer
+          ? {
+              premium: view.insuranceOffer.premium,
+              coveredLabels: view.insuranceOffer.coveredEventCodes.map(
+                (c) => courrierParCode.get(c)?.objet ?? c,
+              ),
+            }
+          : null
+      }
+      enabled={view.enabledDecisions}
+      distributableReserves={view.distributableReserves}
+      investmentOffer={view.investmentOffer}
+      debtSchedule={view.debtSchedule}
+      treasuryOffer={view.treasuryOffer}
+      bankFile={view.bankFile}
+      orderOffer={view.orderOffer}
+      studiesOffer={view.studiesOffer}
+      capitalAllowance={view.capitalAllowance}
+      loanCapacity={view.loanCapacity}
+      financeOffer={view.financeOffer}
+      insuranceFormulas={view.insuranceFormulas}
+      suppliersOffer={view.suppliersOffer}
+      equipmentOffer={view.equipmentOffer}
+      plafondInvestissement={view.plafondInvestissement}
+      niveauDuFinancement={premierNiveauQuiOuvre("finance", undefined, view.difficulty.level)}
+      capacityFacts={view.capacityFacts}
+      gamme={view.gamme}
+      rdOffer={view.rdOffer}
+      communicationOffer={view.communicationOffer}
+      verrou={
+        view.playLock.playable
+          ? null
+          : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")
+      }
+      echeance={view.playLock.closesAt}
+      sauvetage={view.exigenceSauvetage}
+    />
+  );
+
+  const decisionsNode = (
+                    <section id="decisions">
+                {/*
+                  LE TIRAGE, VÉCU — entre l'analyse et la décision. En solo,
+                  personne ne joue de carte à la main : c'est le moteur qui
+                  tire, et le joueur ne le voyait qu'après coup. Le tirage
+                  étant déterministe, on le retourne ici, une fois la situation
+                  lue et analysée, juste avant de fixer le prix : la carte
+                  tombe sur une décision déjà réfléchie, et l'oblige à la
+                  reprendre. En classe, c'est l'enseignant qui tient la pioche.
+                */}
+                {courrierBloc}
+                {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
+                <div className="mb-4">
+                  <h2 className="text-sm font-semibold text-slate-200">
+                    Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+                  </h2>
+                  {/* Une équipe, c'est trois ou quatre élèves sur autant
+                      d'écrans. Sans cette ligne, chacun croit être seul à
+                      décider et écrase la saisie d'un camarade sans le savoir :
+                      l'heure et le prénom étaient déjà en base, relus nulle
+                      part. */}
+                  {etatDesDecisions}
+                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                    <a
+                      href={`/arena/${view.gameId}/cockpit`}
+                      className="text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                    >
+                      Cockpit de prévision (Excel)
+                    </a>
+                    {" "}: testez vos hypothèses avant de valider.
+                  </p>
+                </div>
+                {formulaireDeDecision}
+              </section>
+  );
+
+  // Sur téléphone, « Décider » se découpe : le courrier du tour (avec la piste des
+  // leviers) est une carte à lui, puis le formulaire en cartes, une décision chacune.
+  const courrierCarte =
+    courrierBloc || leviersIndice ? (
+      <section id="courrier-du-tour" className="space-y-4">
+        {courrierBloc}
+        {leviersIndice}
+      </section>
+    ) : null;
+  const decisionsMobile = (
+    <section id="decisions" className="space-y-3">
+      {formulaireDeDecision}
+    </section>
+  );
+
+  // Où mène « Quitter la partie » (la flèche de la barre du téléphone et le menu de
+  // l'arène) : l'examen pour un candidat, l'écran de lancement en solo, l'accueil en classe.
+  const retour = copie ? `/examen/${copie.examen.code}` : view.kind === "solo" ? "/jouer" : "/";
+  return (
+    // LA TEINTE DU MÉTIER, POUR TOUTE LA PARTIE (lot 5A) : `data-metier`
+    // publie `--metier`, que l'ardoise, les cartes, le fil des étapes et les
+    // courbes de l'entreprise lisent. Une seule source : le registre.
+    // LOT 6A — LE COCKPIT. Le sol de l'écran de jeu bascule sur le marine
+    // profond : `ardoise` rend à tout l'écran de jeu ses jetons sombres (le thème
+    // clair les inverse ailleurs), et `lumiere-de-scene` pose dessus le dégradé
+    // radial retenu dans la teinte du métier. Les documents de lecture (courrier,
+    // situation, textes pédagogiques) restent du papier, posés sur ce bureau.
+    // Le bord-à-bord vient de `body:has(main[data-ecran-de-jeu])` (globals.css).
+    <main id="main" data-ecran-de-jeu="" data-metier={teinteDuMetier({ code: view.scenarioCode, sector: view.sector })} className="ardoise lumiere-de-scene mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-6 sm:space-y-8 sm:px-6 sm:pb-16">
+      {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
+          dans l'arène (voir site-header.tsx) et celle-ci porte la partie et le tour. */}
+      <StockageDurable />
+      {/* LOT P4 : dès qu'un tour est résolu (ou la partie terminée), l'appareil
+          a joué une partie : l'invitation à installer peut se proposer hors jeu. */}
+      {periods.length > 0 || finished ? <TemoinDePartieJouee /> : null}
+      <BarreDeJeu
+        nom={view.playerTeamName}
+        tour={view.currentRound}
+        tours={view.roundsCount}
+        termine={finished}
+        retour={retour}
+        cockpit={`/arena/${view.gameId}/cockpit`}
+        compte={
+          telephone ? (
+            <>
+              {compteNode}
+              {view.peutChoisirSonEquipe ? null : compositionNode}
+            </>
+          ) : null
+        }
+      />
+      {/* LE TOUR D'ESSAI : « ne compte pas », puis « la vraie partie commence ». */}
+      <BandeauDuTourDEssai
+        essai={view.essai}
+        tour={view.currentRound}
+        vraiTourJoue={periods.length > 0}
+      />
+      {/* ── L'en-tête du document ──
+          Le seul h1 de la page : le nom de l'équipe, précédé de son emblème. Il
+          ne s'affiche plus en grand : l'ardoise, juste dessous, porte
+          l'entreprise et le tour en tête de l'écran, et la barre de la partie
+          les porte sur téléphone. Il reste dans le document, lisible par une
+          synthèse vocale. */}
+      <header className="sr-only">
+        <p>{surtitreDePartie(view.intro.title, view.playerTeamName)}</p>
+        <h1>
+          <Embleme code={view.playerTeamEmbleme} equipe={view.playerTeamName} className="h-6 w-6" />
+          {view.playerTeamName}
+        </h1>
+      </header>
+
+      {/* ── L'ARDOISE DU DIRIGEANT ──
+          En tête, à chaque étape du tour ; elle se replie en une ligne collée
+          sous la barre du haut dès qu'on défile. La partie close a son ardoise
+          de clôture, plus bas. */}
+      {finished ? null : (
+        <>
+          {tableauNode}
+          <ArdoiseRepliee>
+            <LigneDeLArdoise tours={toursChiffres} entete={enteteArdoise} />
+          </ArdoiseRepliee>
+          {/* ── LA BANDE DE MARCHÉ ──
+              Sous l'ardoise, à chaque étape : les faits du tour et leur écart au
+              tour passé (lib/faits-du-marche.ts : rien d'inventé). Elle ne défile
+              pas. Pas rendue du tout sur téléphone (parcours en cartes : voir
+              bande-de-marche.tsx), et masquée sous `sm` sur une fenêtre étroite. */}
+          {telephone ? null : <BandeDeMarche faits={faitsDuMarche(view)} />}
+        </>
+      )}
+
+      {/* ── L'état du tour, pour qui n'a pas l'écran ──
+          Le bandeau qui s'affichait ici disait ce que la frise, les onglets et
+          le lien du tour clos disent déjà ; il ne reste que sa région live, qui
+          annonce à la voix la clôture d'un tour survenue sans action de
+          l'élève. Sans surface : `sr-only`. */}
+      <AnnonceDuTour
+        currentRound={view.currentRound}
+        roundsCount={view.roundsCount}
+        roundDays={view.roundDays}
+        pendingDecisions={view.pendingDecisions !== null}
+        kind={view.kind}
+        finished={finished}
+      />
+
+      {/* ── Crise de trésorerie : avant tout le reste, et sans rideau ──
+          Cet état appartient à l'équipe : il ne dépend pas de la révélation du
+          classement, seul endroit où la défaillance se disait jusqu'ici. */}
+      {/* La partie close n'a plus de tour à décider : l'alerte se tait. */}
+      {telephone || finished ? null : alerteTresorerieNode}
 
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
-      {!finished && view.announcedEventCards.length > 0 ? (
-        <div className="mt-4">
-          <EventBanner cards={view.announcedEventCards} />
+      {!telephone && !finished && courriersAnnonces.length > 0 ? (
+        <div>
+          <BandeauCourriers courriers={courriersAnnonces} />
         </div>
       ) : null}
 
       {/* ── Team naming ── */}
-      {view.peutSeNommer ? (
-        <div className="mt-6">
-          <TeamNameForm gameId={gameId} nomActuel={view.playerTeamName} />
-        </div>
-      ) : null}
+      {telephone ? null : nomNode}
 
-      {/* ── Victory / End screen ── */}
-      {finished ? (
-        <section className="mt-6 rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">
-          <h2 className="text-xl font-bold text-amber-300">
-            {view.ranking.find((row) => row.isPlayer)?.rank === 1
-              ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
-              : "Partie terminée. Analysez votre trajectoire tour par tour ci-dessous."}
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Résultat cumulé : {formatEuro(view.ranking.find((row) => row.isPlayer)?.cumulativeNetIncome ?? 0)}
-          </p>
-          <Link
-            href="/"
-            className="mt-4 inline-block rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
-          >
-            Rejouer
-          </Link>
-        </section>
-      ) : null}
+
+      {/*
+        ── LE BILAN DE FIN DE PARTIE ──
+        Il tenait en trois lignes : un titre, le résultat cumulé, deux boutons.
+        Six tours de travail, souvent deux heures de classe, s'arrêtaient sans
+        rien à regarder ensemble. Tout était pourtant déjà calculé, mais
+        éparpillé — la trajectoire dans les tuiles, les tours dans l'accordéon,
+        les réussites dans le profil. Rien de neuf n'est mesuré ici : les tours
+        clos sont relus, comme partout ailleurs dans l'arène.
+      */}
+      {finished
+        ? (() => {
+            const bilan = bilanDeLaPartie(
+              periods.map((p) => ({
+                round: p.round,
+                libelle: periodLabel(view.roundDays, p.round),
+                ca: p.result.incomeStatement.revenue,
+                resultat: p.result.incomeStatement.netIncome,
+                tresorerie: p.result.functionalBalance.netTreasury,
+              })),
+            );
+            if (!bilan) return null;
+            const cases = reussitesDeLaPartie(
+              periods.map((p) => lireLeTour(p.round, p.result, p.forecastReview)),
+            );
+            const acquises = cases.filter((c) => c.round !== null);
+            // La dernière franchie : celle qu'on a envie de nommer, parce
+            // qu'elle est encore fraîche.
+            const derniere = acquises.reduce<(typeof acquises)[number] | null>(
+              (tard, c) => (!tard || c.round! > tard.round! ? c : tard),
+              null,
+            );
+            const moi = view.ranking.find((row) => row.isPlayer);
+            const classementOuvert = !view.classement.parLAnimateur || view.classement.revele;
+            // LE TITRE NE CÉLÈBRE PAS UNE PERTE (lot P5) : la 1re place reste
+            // dite, en or, sous le titre ; « Victoire ! » attend un résultat
+            // cumulé positif. Un classement non révélé ne s'y devine pas.
+            const tete = titreDuBilan({
+              rang: classementOuvert && moi ? moi.rank : null,
+              resultatCumule: bilan.resultatCumule,
+              equipe: view.playerTeamName,
+            });
+            return (
+              <BilanDePartie
+                titre={tete.titre}
+                victoire={tete.victoire}
+                bilan={bilan}
+                reussites={{
+                  acquises: acquises.length,
+                  total: cases.length,
+                  derniere: derniere?.reussite.titre ?? null,
+                }}
+                place={
+                  classementOuvert && moi
+                    ? { rang: moi.rank, total: view.ranking.length }
+                    : null
+                }
+                motDeClassement={
+                  classementOuvert
+                    ? null
+                    : "Le classement final sera révélé par votre enseignant."
+                }
+                record={
+                  view.kind === "solo" && view.playerBpi !== null
+                    ? { monIpg: view.playerBpi, meilleur: recordPrecedent?.bpi ?? null }
+                    : null
+                }
+                lieu={{ scenario: view.scenarioCode, secteur: view.sector }}
+                presse={lignesDeLaPresse({
+                  articles: [...view.gazette.revue].reverse(),
+                  decisions: periods.map((p) => ({
+                    tour: p.round,
+                    price: p.decisions?.price ?? null,
+                    productionPlan: p.decisions?.productionPlan ?? null,
+                    newLoan: p.decisions?.finance?.newLoan ?? null,
+                    decouvert: p.result.balanceSheet.overdraft,
+                  })),
+                  libelle: libelleDuTour,
+                  unites: view.vocabulary.units,
+                  nomDuJournal: NOM_DU_JOURNAL,
+                  financementOuvert: view.enabledDecisions.finance,
+                })}
+                revue={revueDePresse}
+                merite={
+                  // MÉRITE OU CHANCE (solo) : rejouer vos décisions sur d'autres
+                  // marchés prend de l'ordre d'une seconde. Le bilan s'affiche
+                  // sans l'attendre ; les trois blocs arrivent quand ils sont prêts.
+                  view.kind === "solo" ? (
+                    <Suspense fallback={<MeriteEnAttente />}>
+                      <MeriteDeLaPartieAuBilan gameId={gameId} userId={userId} />
+                    </Suspense>
+                  ) : null
+                }
+                podium={
+                  classementOuvert && view.ranking.length > 1
+                    ? view.ranking.map((row) => ({
+                        nom: row.name,
+                        rang: row.rank,
+                        moi: row.isPlayer,
+                        ipg: row.bpi,
+                      }))
+                    : null
+                }
+              >
+                {/* « Rejouer » est l'action de la clôture : le grand bouton plein,
+                    le seul orange de l'ardoise. Changer de métier est l'autre
+                    chemin, en filet. */}
+                <Link
+                  href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
+                  className={`${bouton({ taille: "l" })} sm:min-w-56`}
+                >
+                  Rejouer {view.intro.company}
+                </Link>
+                <Link href="/jouer" className={bouton({ variante: "secondaire", taille: "l" })}>
+                  Un autre métier
+                </Link>
+              </BilanDePartie>
+            );
+          })()
+        : null}
+
+      {/* L'ÉVALUATION ENTRE COÉQUIPIERS (partie de classe) : une carte au moment prévu par
+          l'enseignant, à mi-parcours ou au bilan ; rien avant (components/pairs). */}
+      {view.kind === "class" ? <CarteDesCoequipiers gameId={gameId} userId={userId} /> : null}
 
       {/* ══════════════════════════════════════════════════════════════════
           ACCORDÉON DE PÉRIODES
@@ -458,168 +1690,230 @@ export default async function ArenaPage({
           trésorerie) et se rouvre sur son tableau de bord complet + son
           débriefing. Le tour en cours est la période active, toujours ouverte.
           ══════════════════════════════════════════════════════════════════ */}
-      <div className="mt-4 space-y-2">
-        {periods.length > 0 ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            {finished ? "Vos tours" : "Tours passés"}
-          </p>
-        ) : null}
+      {/*
+        space-y-4 et non 3 : l'écart ENTRE deux tours doit dépasser l'écart
+        interne d'une carte (py-3), sans quoi l'œil ne sait plus où finit un
+        tour et où commence le suivant.
+      */}
 
-        {periods.map((p) => {
-          const isLatest = p.round === latestRound;
-          const dr = debriefByRound.get(p.round);
-          const netIncome = p.result.incomeStatement.netIncome;
-          const netTreasury = p.result.functionalBalance.netTreasury;
-          return (
-            <details
-              key={p.round}
-              // Cible du retour après une validation en solo : la période la plus
-              // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
-              // la hauteur de l'en-tête collant pour que le titre reste visible.
-              id={isLatest ? "dernier-resultat" : undefined}
-              open={isLatest}
-              className="group scroll-mt-24 rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
-            >
-              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
-                <span className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-                  <span className="text-slate-400 transition-transform group-open:rotate-90">▸</span>
-                  📊 {periodLabel(view.roundDays, p.round)}
-                  <span className="rounded-full border border-sky-400/30 bg-sky-400/10 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-sky-300">
-                    tour clos
-                  </span>
-                  {isLatest && !finished ? (
-                    <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
-                      résultats livrés
-                    </span>
-                  ) : null}
-                </span>
-                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-slate-400">
-                  <span>CA {formatEuro(p.result.incomeStatement.revenue)}</span>
-                  <span className={netIncome >= 0 ? "text-emerald-300" : "text-red-300"}>
-                    Résultat {formatEuro(netIncome)}
-                  </span>
-                  <span className={netTreasury >= 0 ? "text-slate-300" : "text-red-300"}>
-                    Tréso {formatEuro(netTreasury)}
-                  </span>
-                </span>
-              </summary>
-              <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
-                {/* Les trois facettes d'une période close : ce qu'on a analysé
-                    (Situation + correction), ce qu'on a décidé, ce qui en est
-                    ressorti. Les onglets ne s'opposent pas à l'accordéon — il
-                    situe la période, ils en montrent une face à la fois. */}
-                <SegmentedTabs
-                  defaultKey={isLatest ? "resultats" : "situation"}
-                  tabs={[
-                    { key: "situation", label: "Situation", icon: "📋" },
-                    { key: "decisions", label: "Décisions", icon: "✏️" },
-                    { key: "resultats", label: "Résultats", icon: "📊" },
-                  ]}
-                >
-                  {{
-                    situation: dr ? (
-                      <section className="space-y-3">
-                        <p className="text-xs text-slate-400 flex items-center gap-2">
-                          📋 Énoncé &amp; correction
-                          <InfoHint icon="?" hint="Relisez la situation et la réponse attendue" variant="subtle" />
-                        </p>
-                        {dr.situations.map((s) => (
-                          <SituationDebrief
-                            key={s.instanceId}
-                            situation={s}
-                            gameId={view.gameId}
-                            retakeable={
-                              situations.missedPolicy === "retake50" &&
-                              p.round === mostRecentDebriefedRound
-                            }
-                          />
-                        ))}
-                      </section>
-                    ) : null,
-                    decisions: p.decisions ? (
-                      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
-                    ) : null,
-                    resultats: <PeriodDashboard view={view} period={p} standing={isLatest} />,
-                  }}
-                </SegmentedTabs>
-              </div>
-            </details>
-          );
-        })}
+      {/*
+        LE TOUR À JOUER EN PREMIER.
 
+        La frise des tours clos ouvrait cette section, et commençait au tour
+        1 : mesuré dans le navigateur, un élève qui ouvrait sa partie sur
+        téléphone voyait 461 px d'administration puis le tour 1, et devait
+        descendre une page de 2 718 px pour atteindre le tour qu'il avait à
+        jouer. Il arrive maintenant dessus.
+
+        Les tours clos gardent leur place juste dessous, le dernier ouvert :
+        on lit ses résultats avant de décider, et c'est le lien en tête du
+        tour en cours qui y mène.
+      */}
+      <div className="space-y-4">
         {/* ── Période active : le tour en cours, ouvert ── */}
         {hasActivePeriod ? (
           <section
             id="tour-en-cours"
-            className="scroll-mt-24 rounded-xl border border-amber-400/30 bg-slate-950/40"
+            // UN FILET NEUTRE. Le cadre du tour portait un filet orange : c'est
+            // lui que l'œil voyait d'abord, avant les chiffres de l'entreprise.
+            // L'orange reste à l'action ; l'ardoise, au-dessus, porte le tour.
+            // LOT 6E : PLUS DE CADRE AUTOUR DU TOUR. Il enfermait tout l'écran
+            // de décision dans un rectangle de la couleur de la page, et chaque
+            // panneau devenait un cadre dans un cadre. Le tour se pose
+            // directement sur le sol de la page, coiffé du filet du métier
+            // (« LOT 5A ») ; ses panneaux s'en détachent par leur propre sol.
+            className="scroll-mt-24"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4">
-              <span className="flex items-center gap-2 text-sm font-semibold text-amber-200">
-                ✏️ {periodLabel(view.roundDays, view.currentRound)}
-                <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-amber-300">
-                  tour en cours
+            {/* Sur téléphone, le tour est annoncé par la barre du haut et le parcours
+                en cartes : ni cadre, ni « Tour 1 / 6 », ni « en cours » ici. Ne reste
+                de cette ligne que l'état des décisions, en classe. */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 pb-2 pt-3 max-sm:p-0 max-sm:empty:hidden">
+              {/* LE RANG SUR LE TOTAL. « Tour 2 » seul ne dit pas s'il en reste
+                  six ou un : la frise le montre en segments, elle ne le chiffre
+                  pas, et c'est le bandeau retiré qui portait ce « / N ». Il est
+                  ici, sur le tour qu'il compte. */}
+              <span className="flex items-baseline gap-1.5 text-sm font-semibold text-slate-100 max-sm:hidden">
+                <Icone nom="ecrire" className="h-4 w-4 self-center" />
+                {periodLabel(view.roundDays, view.currentRound)}
+                <span className="text-xs font-normal tabular-nums text-slate-400">
+                  / {view.roundsCount}
                 </span>
               </span>
-              <InfoHint
-                icon="📖"
-                hint={
-                  view.kind === "solo"
-                    ? "📋 Situation → 🔍 Analyser → ✏️ Décider → 📊 Simuler"
-                    : "📋 Situation → 🔍 Analyser → ✏️ Décider"
-                }
-                variant="subtle"
-              />
+              <span className="ml-auto flex flex-wrap items-center justify-end gap-2 max-sm:hidden">
+                {/* LA SEULE CHOSE QUE LE BANDEAU DISAIT SEUL. « Décisions
+                    enregistrées » se lisait tout en haut de la page ; le reste
+                    du bandeau étant redite, l'état revient ici, sur l'en-tête du
+                    tour qu'il qualifie. Le formulaire, plus bas, le dit aussi
+                    (« Mettre à jour mes décisions validées »), mais il faut
+                    avoir ouvert l'onglet Décider pour le voir. */}
+                {/* EN TEXTE, PAS EN PASTILLE. Cet état portait un liseré vert
+                    et un fond vert ; posé à côté de la pastille « en cours »,
+                    devenue verte elle aussi, on lisait deux jumelles dont
+                    aucune ne ressortait. Le vert de la ligne appartient
+                    désormais à « en cours » ; il n'en reste ici que la coche,
+                    qui suffit à dire que c'est fait. */}
+                {view.kind === "solo" ? null : view.pendingDecisions !== null ? (
+                  <span className="text-xs text-slate-300">
+                    <span aria-hidden className="text-emerald-400">
+                      ✓
+                    </span>{" "}
+                    Décisions enregistrées · en attente de la clôture
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-400">Résultats à la clôture du tour.</span>
+                )}
+                {/* « en cours » quitte le titre pour l'autre bout de la ligne :
+                    collé au libellé, il allongeait la seule chose qu'on lit en
+                    diagonale (le numéro du tour) ; en pastille à droite, il
+                    qualifie la ligne comme « résultats livrés » qualifie celle
+                    d'un tour clos. Même place, même forme, sens inverse.
+
+                    UN ÉTAT, PAS UN RÉSULTAT : neutre, avec son point plein.
+                    Il a été ambre (fondu dans le cadre ambre de la section),
+                    puis vert lumineux avec sa diode : mais « en cours » n'est
+                    pas un gain, et le vert ne dit que des résultats. Le point
+                    marine suffit à dire « ça tourne ». */}
+                <span className="pastille-etat rounded-full px-2.5 py-0.5 text-xs font-semibold text-slate-100 max-sm:hidden">
+                  en cours
+                </span>
+              </span>
             </div>
+
+            {/*
+              OÙ EN EST LA CLASSE. La ligne d'état dit où en est VOTRE équipe ;
+              celle-ci dit où en est la classe, et transforme l'attente de la
+              clôture en attente commune. Elle ne nomme personne : ce serait une
+              comparaison permanente entre équipes, que le dépôt refuse ailleurs
+              en laissant l'enseignant maître du classement.
+            */}
+            {telephone ? null : soumissionsNode}
 
             {/* Le tour précédent vient de livrer ses résultats (solo : la
                 simulation ; classe : la clôture par l'enseignant) : on met
                 « voir les résultats » en tête du tour suivant, pour ne pas
                 enchaîner sur une nouvelle saisie sans être passé par ses
-                résultats. Le lien remonte à la période close, ouverte sur ses
+                résultats. Le lien descend vers la période close, ouverte sur ses
                 résultats (#dernier-resultat). */}
-            {latestRound !== null ? (
+            {!telephone && latestRound !== null ? (
               <a
                 href="#dernier-resultat"
-                className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-3 py-2.5 text-sm transition hover:bg-emerald-400/10 sm:px-4"
+                className="voile-neutre flex items-center justify-between gap-3 rounded-[var(--rayon-panneau)] px-3 py-2.5 text-sm transition hover:underline sm:px-4"
               >
-                <span className="flex items-center gap-2 font-medium text-emerald-200">
-                  <span aria-hidden>📊</span>
+                <span className="flex items-center gap-2 font-medium text-slate-100">
+                  <Icone nom="resultats" className="h-4 w-4" />
                   {periodLabel(view.roundDays, latestRound)} {view.kind === "solo" ? "simulé" : "clos"} — voir les résultats
                 </span>
-                <span aria-hidden className="text-emerald-300">
-                  ↑
+                {/* La flèche descend : les tours clos sont passés SOUS le
+                    tour en cours, pour que l'élève ouvre sa partie sur ce
+                    qu'il a à faire. */}
+                <span aria-hidden className="text-slate-300">
+                  ↓
                 </span>
               </a>
             ) : null}
 
-            <div className="px-2 py-2.5 sm:p-4">
+            <div className="py-2 sm:py-3">
+              {/*
+                UNE ÉTAPE ENTRE LES RÉSULTATS ET LA SAISIE SUIVANTE. Tant que
+                l'élève n'a pas dit qu'il passait au tour suivant, le formulaire
+                reste replié : les résultats du tour clos, juste au-dessus, ont
+                alors l'écran pour eux. C'est une étape, pas un verrou — voir
+                `PassageAuTour`. Au premier tour, `labelPrecedent` vaut null et
+                le contenu s'affiche directement : il n'y a rien à lire avant.
+              */}
+              <PassageAuTour
+                gameId={gameId}
+                tour={view.currentRound}
+                labelTour={periodLabel(view.roundDays, view.currentRound)}
+                labelPrecedent={
+                  // Sur téléphone, les résultats sont la première carte du parcours :
+                  // il n'y a pas d'étape à franchir avant la saisie.
+                  !telephone && latestRound !== null
+                    ? periodLabel(view.roundDays, latestRound)
+                    : null
+                }
+              >
               {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
                   le premier tour : Situation (à lire), Décisions (à rendre) et
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
                   Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
-              <SegmentedTabs
-                defaultKey="situation"
-                // Un seul parcours, solo comme en classe : un fil d'étapes guidé
-                // en trois temps — Situation (données, marché, alertes,
-                // arbitrage) → Analyser (aides d'analyse puis les QCM en
-                // accordéon) → Décider. En solo, « Décider » simule aussitôt ; en
-                // classe, il rend les décisions et les résultats arrivent à la
-                // clôture du tour, dans l'accordéon des tours passés (donc pas
-                // d'onglet Résultats vide ici).
-                guided
-                syncAnchors={["situation", "decisions"]}
-                tabs={[
-                  { key: "situation", label: "Situation", icon: "📋" },
-                  { key: "analyser", label: "Analyser", icon: "🔍" },
-                  { key: "decisions", label: "Décider", icon: "✏️" },
-                ]}
-              >
-                {{
-                  // « Situation » : le décor du tour (données, marché, alertes,
-                  // arbitrage). L'analyse (aides d'analyse + QCM) vit dans
-                  // « Analyser », et la saisie dans « Décider ».
-                  situation: (
-                    <div id="situation" className="space-y-6">
+                {telephone ? (
+                  // SUR TÉLÉPHONE, UN PARCOURS ET NON DES ONGLETS : briefing en
+                  // cartes, analyse, puis les décisions, avec un seul bouton en bas.
+                  <ParcoursMobile
+                    briefing={briefingCartes}
+                    analyse={analyseCartes}
+                    courrier={courrierCarte}
+                    decisions={decisionsMobile}
+                  />
+                ) : (
+                  <SegmentedTabs
+                    defaultKey="situation"
+                    // Un seul parcours, solo comme en classe : un fil d'étapes guidé
+                    // en trois temps — Situation (données, marché, alertes,
+                    // arbitrage) → Analyser (aides d'analyse puis les QCM en
+                    // accordéon) → Décider. En solo, « Décider » simule aussitôt ; en
+                    // classe, il rend les décisions et les résultats arrivent à la
+                    // clôture du tour, dans l'accordéon des tours passés (donc pas
+                    // d'onglet Résultats vide ici).
+                    guided
+                    syncAnchors={["situation", "decisions"]}
+                    tabs={[
+                      { key: "situation", label: "Situation", icon: "fiche" },
+                      { key: "analyser", label: "Analyser", icon: "loupe" },
+                      { key: "decisions", label: "Décider", icon: "ecrire" },
+                    ]}
+                  >
+                    {{
+                      // « Situation » : le décor du tour (données, marché, alertes,
+                      // arbitrage). L'analyse (aides d'analyse + QCM) vit dans
+                      // « Analyser », et la saisie dans « Décider ».
+                      situation: (
+                        <div id="situation" className="space-y-6">
+                          {/*
+                        LE MANDAT, AU PREMIER TOUR, AVANT TOUT LE RESTE.
+
+                        Les leviers du niveau sont tous ouverts dès le premier
+                        écran de décision, et aucun n'avait été réclamé par
+                        personne : on remplissait des champs qui étaient là
+                        parce qu'ils étaient là. Cette note des associés dit qui
+                        confie quoi, et elle nomme les domaines dans les termes
+                        mêmes des étapes du formulaire — l'élève lit « vous avez
+                        la main sur le financement », puis retrouve l'onglet.
+
+                        Une seule fois, au tour 1 : un mandat ne se répète pas.
+                        Et il se range une fois lu — il arrive là où l'élève a
+                        déjà le plus à lire, et quatre blocs empilés font qu'on
+                        ne lit plus le premier.
+                      */}
+                      {/*
+                        CE QU'ON VOUS RÉPOND. Le courrier ne descendait que dans
+                        un sens : le monde écrivait, l'équipe répondait par des
+                        chiffres, et personne ne lui répondait jamais. On
+                        licenciait sans qu'aucun avocat n'écrive, on doublait un
+                        prix sans qu'aucun client ne s'en plaigne.
+
+                        Ces lettres répondent aux décisions du tour qui vient
+                        d'être clos, et elles ne touchent aucun compte : la
+                        conséquence chiffrée, le moteur l'a déjà calculée. Elles
+                        disent qui la subit, ce qu'un tableau de résultats ne
+                        dira jamais.
+                      */}
+                      {reponsesSection}
+                      {view.currentRound === 1 ? (
+                        <MandatDeLEquipe
+                          gameId={gameId}
+                          niveau={view.difficulty.level}
+                          equipe={view.playerTeamName}
+                          adresse={adresseDuCourrier}
+                        />
+                      ) : null}
+                      {/*
+                        On arrive à la décision, on ne l'ouvre pas : d'abord où
+                        l'on est (identité, gamme, capacité, situation), puis ce
+                        qu'on demande de trancher. Décider avant de savoir n'a
+                        pas de sens.
+                      */}
                       {donneesSection}
                       {alertesSection}
                       {dilemmeSection}
@@ -629,70 +1923,57 @@ export default async function ArenaPage({
                   analyser: analyserContenu,
                   // « Décider » : la piste (leviers d'action) en indice repliable,
                   // au plus près des champs qu'elle désigne, puis la saisie.
-                  decisions: (
-                    <section id="decisions">
-                {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
-                <div className="mb-4 border-b border-white/10 pb-3">
-                  <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                    Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                    <InfoHint
-                      icon="?"
-                      hint="Validez pour produire les résultats et ouvrir le tour suivant."
-                      variant="subtle"
-                    />
-                  </h2>
-                  <a
-                    href={`/arena/${view.gameId}/cockpit`}
-                    className="mt-2 inline-flex items-center gap-1 text-xs text-amber-300 underline-offset-4 hover:underline"
-                    title="Vérifier hypothèses, logistique, trésorerie"
-                  >
-                    📊 Cockpit
-                  </a>
-                </div>
-                <DecisionForm
-                  gameId={view.gameId}
-                  roundIndex={view.currentRound}
-                  vocabulary={view.vocabulary}
-                  periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                  defaults={view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions}
-                  proposed={view.proposedDecisions}
-                  kind={view.kind}
-                  alreadySubmitted={view.pendingDecisions !== null}
-                  insuranceOffer={
-                    view.insuranceOffer
-                      ? {
-                          premium: view.insuranceOffer.premium,
-                          coveredLabels: view.insuranceOffer.coveredEventCodes.map(
-                            (c) => cardByCode.get(c)?.title ?? c,
-                          ),
-                        }
-                      : null
-                  }
-                  enabled={view.enabledDecisions}
-                  distributableReserves={view.distributableReserves}
-                  investmentOffer={view.investmentOffer}
-                  debtSchedule={view.debtSchedule}
-                  treasuryOffer={view.treasuryOffer}
-                  bankFile={view.bankFile}
-                  orderOffer={view.orderOffer}
-                  studiesOffer={view.studiesOffer}
-                  capitalAllowance={view.capitalAllowance}
-                  insuranceFormulas={view.insuranceFormulas}
-                  suppliersOffer={view.suppliersOffer}
-                  equipmentOffer={view.equipmentOffer}
-                  capacityFacts={view.capacityFacts}
-                  gamme={view.gamme}
-                  rdOffer={view.rdOffer}
-                  communicationOffer={view.communicationOffer}
-                  verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
-                />
-              </section>
-                  ),
+                  decisions: decisionsNode,
                 }}
               </SegmentedTabs>
+              )}
+              </PassageAuTour>
             </div>
           </section>
         ) : null}
+
+        {telephone && !finished && !essaiTermine ? null : toursPasses}
+      </div>
+
+      {/*
+        ── CE QUI N'EST PAS LE JEU ──
+
+        L'identité, la clé de reprise et la composition des équipes ouvraient
+        la page : 461 px d'administration avant la première ligne de jeu, sur
+        un écran de téléphone qui en fait 844. Elles sont vraies et utiles,
+        mais elles ne sont pas ce que l'élève vient faire. Elles vivent donc
+        sous le tour, dans l'ordre où l'on en a besoin.
+
+        Le nom reste visible en permanence : le bandeau de jeu le porte, en
+        haut. C'était le seul rôle que l'encadré remplissait mieux qu'une
+        ligne — prévenir qu'on joue sous l'identité du poste précédent.
+      */}
+      {/*
+        ── Composition des équipes ──
+        Le code d'invitation range dans l'équipe la moins remplie : l'élève
+        arrivé avec son groupe se retrouve seul ailleurs, et celui qui revient
+        d'un autre poste — cookie d'invité perdu — est réaffecté au hasard sans
+        qu'aucun message ne le prévienne. Ouvert au premier tour, replié
+        ensuite : passé la clôture, il ne reste qu'à lire qui est où et à le
+        signaler à l'enseignant.
+      */}
+      {telephone ? null : compositionNode}
+
+      <div id="mon-profil" className="scroll-mt-24 space-y-4">
+        {/*
+          LES RÉUSSITES EN TÊTE DU PROFIL. Les réussites se disaient au tour où
+          ils arrivaient et disparaissaient avec lui : au sixième tour, plus
+          rien ne rappelait qu'on avait sauvé la trésorerie au deuxième. Ils
+          sont relus des résultats déjà calculés — rien de neuf n'est stocké — et
+          les cases vides disent ce qu'il reste à viser.
+        */}
+        {telephone && !finished ? null : vosReussites}
+
+        {telephone ? null : compteNode}
+
+        {/* Le petit menu de l'arène, là où l'élève regarde son profil : le même
+            que dans le menu de la barre du téléphone, lu dans le plan du site. */}
+        <MenuDeLArene retour={retour} forme="ligne" />
       </div>
 
       {/* ── Assistant IA (coach de tour + tuteur) ── */}
@@ -703,8 +1984,16 @@ export default async function ArenaPage({
         <RoundStatusPoller
           gameId={view.gameId}
           currentRound={view.currentRound}
-          roundStatus="open"
+          // L'essai terminé, le tour courant est clos : l'arène attend qu'il rouvre,
+          // c'est-à-dire que la vraie partie commence (config/tour-d-essai.ts).
+          roundStatus={essaiTermine ? "resolved" : "open"}
+          // « submissions » est l'endpoint de l'ENSEIGNANT : il exige d'être le
+          // créateur de la partie, et un élève y recevrait 403 en silence. Celui
+          // de l'élève rend désormais le même compte, qui bouge sans que le tour
+          // change — sans quoi la ligne « 3 équipes sur 6 » resterait figée
+          // pendant tout le temps où elle sert.
           endpoint="round-status"
+          submittedCount={view.soumissions?.validees}
         />
       ) : null}
     </main>

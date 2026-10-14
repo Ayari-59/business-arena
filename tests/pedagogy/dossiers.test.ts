@@ -226,7 +226,8 @@ describe("les deux dossiers d'un atelier", () => {
 
 describe("les dossiers de service savent la R&D et la communication", () => {
   it("NOVA · gamme annonce la Studio à développer, la marque et l'axe ; un secteur sans levier n'en dit rien", () => {
-    const gea = ATELIERS.find((a) => a.code === "gea")!;
+    // La R&D s'ouvre au niveau 5 : l'atelier DCG (NOVA · gamme, niveau 5) la porte.
+    const gea = ATELIERS.find((a) => a.code === "dcg")!;
     const services = dossierEleve(gea).services;
     const par = (code: string) => services.find((s) => s.code === code)!;
     const appro = par("approvisionnement");

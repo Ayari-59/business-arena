@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getCompetitionView } from "@/services/competition.service";
+import { codesDeRepriseDuConcours, getCompetitionView } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
-import { CompetitionControl } from "@/components/competition-controls";
+import { CodesDeReprise } from "@/components/codes-de-reprise";
+import { CompetitionControl, NouvellePhase } from "@/components/competition-controls";
 import { CompetitionSettings, CompetitionSteps } from "@/components/competition-steps";
 import { StageSchedule } from "@/components/stage-schedule";
 import { PublicPageForm } from "@/components/public-page-form";
 import { SITE_URL } from "@/config/site";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
+import { Icone } from "@/components/icone";
 
 export const dynamic = "force-dynamic";
 
@@ -21,29 +24,52 @@ export default async function TeacherCompetitionPage({
   const { competitionId } = await params;
   const view = await getCompetitionView(competitionId);
   if (!view || view.organizerId !== session.userId) notFound();
+  const codes = await codesDeRepriseDuConcours(competitionId, session.userId);
 
-  const qualification = view.stages.find((s) => s.kind === "qualification");
-  const finalStage = view.stages.find((s) => s.kind === "final");
-  const qualificationDone =
-    qualification !== undefined && qualification.games.every((g) => g.status === "finished");
-  const finalDone = finalStage !== undefined && finalStage.games.every((g) => g.status === "finished");
+  // LA PHASE EN COURS, QUELLE QU'ELLE SOIT. Le concours n'a plus deux phases
+  // nommées mais autant que l'organisateur en lance : on raisonne donc sur
+  // celle qui tourne, et non sur « la qualification » et « la finale ».
+  const phase = view.stages.find((s) => s.status === "running") ?? null;
+  const phaseTerminee =
+    phase !== null && phase.games.length > 0 && phase.games.every((g) => g.status === "finished");
+  const finale = phase?.kind === "final" ? phase : null;
+
+  // Combien d'équipes sortiront de la phase en cours : une poule envoie en
+  // moyenne autant d'équipes que son format l'annonce. C'est la matière de la
+  // phase suivante, et ce que l'aperçu doit chiffrer.
+  const survivantes = phase
+    ? phase.games.length * Math.max(1, phase.format.advanceCount ?? 1)
+    : 0;
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-6 px-2 py-6 sm:p-6">
-      <Link
-        href="/teacher"
-        className="inline-block text-sm text-slate-400 underline-offset-4 hover:text-amber-300 hover:underline"
-      >
-        ← Mes parties et concours
-      </Link>
-      <header>
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Concours</p>
-        <h1 className="text-2xl font-bold">{view.name}</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Code d&apos;inscription : <span className="font-mono text-amber-300">{view.joinCode}</span>
-          {" · "}les équipes s&apos;inscrivent sur <span className="font-mono">/compete</span>.
-        </p>
-      </header>
+      <EnTeteEnseignant
+        surtitre="Concours"
+        titre={view.name}
+        tuile={
+          <span
+            aria-hidden
+            className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400/10 text-amber-400"
+          >
+            <Icone nom="trophee" className="h-7 w-7" />
+          </span>
+        }
+        description={
+          <>
+            Code d&apos;inscription :{" "}
+            <span className="font-mono text-slate-100">{view.joinCode}</span>
+            {" · "}les équipes s&apos;inscrivent sur <span className="font-mono">/compete</span>.
+          </>
+        }
+        droite={
+          <Link
+            href="/teacher"
+            className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs text-amber-300 transition hover:bg-amber-400/20"
+          >
+            ← Mes parties et concours
+          </Link>
+        }
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <CompetitionSettings rules={view.rules} joinCode={view.joinCode} />
@@ -53,14 +79,22 @@ export default async function TeacherCompetitionPage({
       {view.status === "registration" ? (
         <CompetitionControl competitionId={competitionId} action="qualification" />
       ) : null}
-      {view.status === "running" && qualification && qualificationDone && !finalStage ? (
-        <CompetitionControl competitionId={competitionId} action="final" />
+      {view.status === "running" && phaseTerminee && !finale ? (
+        <div className="space-y-4">
+          <NouvellePhase
+            competitionId={competitionId}
+            equipesEnLice={survivantes}
+            taillePouleParDefaut={view.rules.groupSize}
+            qualifieesParDefaut={view.rules.advancePerGroup}
+          />
+          <CompetitionControl competitionId={competitionId} action="final" />
+        </div>
       ) : null}
-      {view.status === "running" && finalStage && finalDone ? (
+      {view.status === "running" && finale && phaseTerminee ? (
         <CompetitionControl competitionId={competitionId} action="finish" />
       ) : null}
-      {view.status === "running" && !qualificationDone && qualification ? (
-        <p className="rounded-lg border border-white/10 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-400">
+      {view.status === "running" && phase && !phaseTerminee ? (
+        <p className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-400">
           Pilotez chaque partie (clôture des tours) via les liens « Piloter » ci-dessous.
           Règles du mode compétition : décisions verrouillées après validation, indices
           limités aux niveaux 1 à 3.
@@ -68,8 +102,11 @@ export default async function TeacherCompetitionPage({
       ) : null}
 
       {view.status !== "finished" && view.stages.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-          <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning des étapes</h2>
+        <section className="carte p-3 sm:p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+            <Icone nom="planning" className="h-4 w-4 text-amber-400" />
+            Planning des étapes
+          </h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Fenêtre pendant laquelle les équipes peuvent jouer les parties de chaque étape (heure
             de Paris). En dehors, l&apos;arène passe en lecture seule. Cette fenêtre s&apos;ajoute à
@@ -91,8 +128,11 @@ export default async function TeacherCompetitionPage({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-        <h2 className="text-sm font-semibold text-slate-200">🌐 Page publique d&apos;annonce</h2>
+      <section className="carte p-3 sm:p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Icone nom="monde" className="h-4 w-4 text-amber-400" />
+          Page publique d&apos;annonce
+        </h2>
         <p className="mt-1 max-w-3xl text-xs text-slate-400">
           Une page ouverte pour annoncer l&apos;événement, avec un bouton d&apos;inscription et des
           boutons de partage (LinkedIn, X, Facebook, WhatsApp). Les dates du programme reprennent
@@ -112,6 +152,7 @@ export default async function TeacherCompetitionPage({
         </div>
       </section>
 
+      <CodesDeReprise codes={codes} />
       <CompetitionBoard view={view} gameLinkBase="/teacher/games" />
     </main>
   );

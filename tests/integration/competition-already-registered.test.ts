@@ -15,6 +15,7 @@ import { db } from "@/db";
 import { competitionEntries, users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { createCompetition, getCompetitionView, joinCompetition } from "@/services/competition.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let joinCode: string;
 let competitionId: string;
@@ -29,6 +30,8 @@ beforeAll(async () => {
   });
   if ("error" in r) throw new Error(r.error);
   const orgId = (await getTeacherOrgId(r.userId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, r.userId);
   ({ competitionId, joinCode } = await createCompetition({
     organizerId: r.userId,
     organizationId: orgId,
@@ -45,10 +48,13 @@ beforeAll(async () => {
 describe("inscription répétée", () => {
   it("la première inscription crée l'équipe, la seconde la retrouve", async () => {
     const premiere = await joinCompetition({ code: joinCode, userId: eleve, teamLabel: "Alpha" });
-    expect(premiere).toEqual({ competitionId });
+    // L'inscription rend aussi le code de reprise personnel du joueur.
+    expect(premiere).toMatchObject({ competitionId });
+    expect("codeDeReprise" in premiere && premiere.codeDeReprise).toHaveLength(8);
 
     // Même code, même nom.
     const meme = await joinCompetition({ code: joinCode, userId: eleve, teamLabel: "Alpha" });
+    // Déjà inscrit : on le lui dit, sans lui repasser de code.
     expect(meme).toEqual({ competitionId, alreadyMember: "Alpha" });
 
     // Même code, autre nom : on ne change pas d'équipe en douce.

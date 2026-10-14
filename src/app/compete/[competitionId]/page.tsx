@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
-import { getPlayerCompetition } from "@/services/competition.service";
+import { codeDeRepriseDe, getPlayerCompetition } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
+import { CarteDuCodeDeReprise } from "@/components/carte-du-code-de-reprise";
+import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
@@ -17,23 +19,24 @@ export default async function PlayerCompetitionPage({
   const data = await getPlayerCompetition(competitionId, userId);
   if (!data) notFound();
   const { view, myGameId, myTeamLabel } = data;
+  const codeDeReprise = await codeDeRepriseDe(competitionId, userId);
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-6 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Concours</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Concours</p>
           <h1 className="text-2xl font-bold">{view.name}</h1>
           {myTeamLabel ? (
             <p className="mt-1 text-sm text-slate-400">
-              Votre équipe : <span className="text-amber-200">{myTeamLabel}</span>
+              Votre équipe : <span className="font-semibold text-slate-100">{myTeamLabel}</span>
             </p>
           ) : null}
         </div>
         {myGameId ? (
           <Link
             href={`/arena/${myGameId}`}
-            className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+            className={bouton()}
           >
             Jouer ma partie →
           </Link>
@@ -43,6 +46,7 @@ export default async function PlayerCompetitionPage({
           </p>
         ) : null}
       </header>
+      {codeDeReprise ? <CarteDuCodeDeReprise code={codeDeReprise} /> : null}
       <CompetitionBoard view={view} gameLinkBase={null} />
     </main>
   );

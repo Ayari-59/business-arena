@@ -1,0 +1,672 @@
+/**
+ * LES TRACES : ce qu'une partie mesure directement, par une règle écrite.
+ *
+ * Chaque épisode juge déjà, dans son bilan, le diagnostic de la semaine 1, sa
+ * réévaluation, les options réflexes et la prévision chiffrée. On relève ici,
+ * pour tous, de quoi appliquer les mêmes règles partout :
+ *
+ *   · le bon diagnostic, et celui qui s'en approche (une vraie cause, mais pas
+ *     la principale) ;
+ *   · les options réflexes, [décision, option], reprises des épisodes eux-mêmes ;
+ *   · les seuils de la prévision : juste, et proche, dans l'unité de l'épisode.
+ *
+ * Un test vérifie que ces valeurs donnent les mêmes constats que le bilan de
+ * chaque épisode : les traces et le bilan ne peuvent pas se contredire.
+ */
+import * as trimestreQuiDerape from "./trimestre-qui-derape";
+import * as equipeQuiSEpuise from "./equipe-qui-s-epuise";
+import * as depotQuiDeborde from "./depot-qui-deborde";
+import * as budgetQuiNeTientPas from "./budget-qui-ne-tient-pas";
+import * as projetQuiGlisse from "./projet-qui-glisse";
+import * as fournisseurQuiAugmente from "./fournisseur-qui-augmente";
+import * as posteQuiResteVide from "./poste-qui-reste-vide";
+import * as reclamationQuiEnfle from "./reclamation-qui-enfle";
+import * as quaiDangereux from "./quai-dangereux";
+import * as reorganisationQuiCoince from "./reorganisation-qui-coince";
+import * as tresorerieQuiFond from "./tresorerie-qui-fond";
+import * as agenceQuiDemarre from "./agence-qui-demarre";
+import * as panneQuiParalyse from "./panne-qui-paralyse";
+import * as collaborateurQuiDecroche from "./collaborateur-qui-decroche";
+import * as indicateurQuiMent from "./indicateur-qui-ment";
+import * as appelDOffres from "./appel-d-offres";
+import * as prixQuiNePassePlus from "./prix-qui-ne-passe-plus";
+import * as agendaQuiDeborde from "./agenda-qui-deborde";
+import * as preavisDeGreve from "./preavis-de-greve";
+import * as clientQuiSEnVa from "./client-qui-s-en-va";
+import * as tourneesQuiDebordent from "./tournees-qui-debordent";
+import * as siteQuiNeVendPas from "./site-qui-ne-vend-pas";
+import * as talentQuiVeutPartir from "./talent-qui-veut-partir";
+import * as competencesQuiManquent from "./competences-qui-manquent";
+import * as factureQuiFlambe from "./facture-qui-flambe";
+import * as controleQuiSAnnonce from "./controle-qui-s-annonce";
+import * as fusionDesAgences from "./fusion-des-agences";
+import * as nouveauService from "./nouveau-service";
+import * as equipeDispersee from "./equipe-dispersee";
+import * as centPremiersJours from "./cent-premiers-jours";
+import * as commandeAPrixCasse from "./commande-a-prix-casse";
+import * as produitDeficitaire from "./produit-deficitaire";
+import * as faireOuFaireFaire from "./faire-ou-faire-faire";
+import * as seuilQuiBouge from "./seuil-qui-bouge";
+import * as ecartsDuBudget from "./ecarts-du-budget";
+import * as atelierSature from "./atelier-sature";
+import * as investissementAChoisir from "./investissement-a-choisir";
+import * as croissanceAFinancer from "./croissance-a-financer";
+import * as louerOuAcheter from "./louer-ou-acheter";
+import * as clientARisque from "./client-a-risque";
+import * as discounterQuiArrive from "./discounter-qui-arrive";
+import * as concurrentARacheter from "./concurrent-a-racheter";
+import * as marcheQuiSOuvre from "./marche-qui-s-ouvre";
+import * as fabricantEnDirect from "./fabricant-en-direct";
+import * as projetAArreter from "./projet-a-arreter";
+import * as reseauARedessiner from "./reseau-a-redessiner";
+import * as pariDuReemploi from "./pari-du-reemploi";
+import * as grandCompteExclusif from "./grand-compte-exclusif";
+import * as chambresBradees from "./chambres-bradees";
+import * as seminaireQuiEvince from "./seminaire-qui-evince";
+import * as surreservation from "./surreservation";
+import * as noteQuiChute from "./note-qui-chute";
+import * as ratioMatiere from "./ratio-matiere";
+import * as intersaison from "./intersaison";
+import * as chambresPasPretes from "./chambres-pas-pretes";
+import * as brigadeABout from "./brigade-a-bout";
+import * as renovationSansFermer from "./renovation-sans-fermer";
+import * as saisonniersDeJuillet from "./saisonniers-de-juillet";
+import * as postesIntrouvables from "./postes-introuvables";
+import * as apprentisQuiDecrochent from "./apprentis-qui-decrochent";
+import * as cuisineCentrale from "./cuisine-centrale";
+import * as spaAFinancer from "./spa-a-financer";
+import * as enseigneALaPorte from "./enseigne-a-la-porte";
+import * as appelsDOffresEnRafale from "./appels-d-offres-en-rafale";
+import * as clientQuiEnDemandePlus from "./client-qui-en-demande-plus";
+import * as livrableRefuse from "./livrable-refuse";
+import * as joursNonFactures from "./jours-non-factures";
+import * as forfaitTropBas from "./forfait-trop-bas";
+import * as facturesQuiDorment from "./factures-qui-dorment";
+import * as staffingDuLundi from "./staffing-du-lundi";
+import * as consultantStar from "./consultant-star";
+import * as promotionRefusee from "./promotion-refusee";
+import * as departsADeuxAns from "./departs-a-deux-ans";
+import * as freelancesOuEmbauches from "./freelances-ou-embauches";
+import * as practiceAReorienter from "./practice-a-reorienter";
+import * as assistantIa from "./assistant-ia";
+import * as associeQuiPart from "./associe-qui-part";
+import * as generalisteOuSpecialiste from "./generaliste-ou-specialiste";
+import * as litsVides from "./lits-vides";
+import * as sortiesQuiBloquent from "./sorties-qui-bloquent";
+import * as familleQuiEcrit from "./famille-qui-ecrit";
+import * as interimQuiFlambe from "./interim-qui-flambe";
+import * as sectionEnDeficit from "./section-en-deficit";
+import * as heureADomicile from "./heure-a-domicile";
+import * as chutesLaNuit from "./chutes-la-nuit";
+import * as dossierDeSoins from "./dossier-de-soins";
+import * as postesDeDouzeHeures from "./postes-de-douze-heures";
+import * as absenteismeQuiSInstalle from "./absenteisme-qui-s-installe";
+import * as formerSesSoignants from "./former-ses-soignants";
+import * as equipesJourEtNuit from "./equipes-jour-et-nuit";
+import * as reconstruireOuRegrouper from "./reconstruire-ou-regrouper";
+import * as associationAReprendre from "./association-a-reprendre";
+import * as virageDomiciliaire from "./virage-domiciliaire";
+import * as changementsDeFormat from "./changements-de-format";
+import * as dlcQuiTombe from "./dlc-qui-tombe";
+import * as lotARappeler from "./lot-a-rappeler";
+import * as negociationsAnnuelles from "./negociations-annuelles";
+import * as promotionQuiCoute from "./promotion-qui-coute";
+import * as appelDOffresMdd from "./appel-d-offres-mdd";
+import * as producteursQuiArretent from "./producteurs-qui-arretent";
+import * as potARemplacer from "./pot-a-remplacer";
+import * as energieDeLUsine from "./energie-de-l-usine";
+import * as polyvalenceDesOperateurs from "./polyvalence-des-operateurs";
+import * as maintenanceQuiCourt from "./maintenance-qui-court";
+import * as picDesFetes from "./pic-des-fetes";
+import * as exportAOuvrir from "./export-a-ouvrir";
+import * as gammeVegetale from "./gamme-vegetale";
+import * as offreDeRachat from "./offre-de-rachat";
+
+export interface TracesDeLEpisode {
+  diagnostic: { juste: string; proche: string };
+  reflexes: readonly (readonly [number, number])[];
+  prevision: { juste: number; proche: number };
+}
+
+export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
+  "trimestre-qui-derape": {
+    diagnostic: { juste: "karim", proche: "livraison" },
+    reflexes: [...trimestreQuiDerape.REMISES_REFLEXES],
+    prevision: { juste: 1, proche: 2.5 },
+  },
+  "equipe-qui-s-epuise": {
+    diagnostic: { juste: "relances", proche: "effectif" },
+    reflexes: [...equipeQuiSEpuise.PRESSIONS],
+    prevision: { juste: 0.3, proche: 0.8 },
+  },
+  "depot-qui-deborde": {
+    diagnostic: { juste: "repartition", proche: "inventaire" },
+    reflexes: [...depotQuiDeborde.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  "budget-qui-ne-tient-pas": {
+    diagnostic: { juste: "engagements", proche: "energie" },
+    reflexes: [...budgetQuiNeTientPas.COUPES_AVEUGLES],
+    prevision: { juste: 4, proche: 10 },
+  },
+  "projet-qui-glisse": {
+    diagnostic: { juste: "perimetre", proche: "recette" },
+    reflexes: [...projetQuiGlisse.REFLEXES],
+    prevision: { juste: 10, proche: 25 },
+  },
+  "fournisseur-qui-augmente": {
+    diagnostic: { juste: "levier", proche: "couts" },
+    reflexes: [...fournisseurQuiAugmente.REFLEXES],
+    prevision: { juste: 1, proche: 2.5 },
+  },
+  "poste-qui-reste-vide": {
+    diagnostic: { juste: "annonce", proche: "marche" },
+    reflexes: [...posteQuiResteVide.REFLEXES],
+    prevision: { juste: 3, proche: 8 },
+  },
+  "reclamation-qui-enfle": {
+    diagnostic: { juste: "lot", proche: "usage" },
+    reflexes: [...reclamationQuiEnfle.REFLEXES],
+    prevision: { juste: 1, proche: 2.5 },
+  },
+  "quai-dangereux": {
+    diagnostic: { juste: "signaux", proche: "habilitation" },
+    reflexes: [...quaiDangereux.REFLEXES],
+    prevision: { juste: 2, proche: 4 },
+  },
+  "reorganisation-qui-coince": {
+    diagnostic: { juste: "objections", proche: "rythme" },
+    reflexes: [...reorganisationQuiCoince.INJONCTIONS, ...reorganisationQuiCoince.RECULS],
+    prevision: { juste: 3, proche: 8 },
+  },
+  "tresorerie-qui-fond": {
+    diagnostic: { juste: "bfr", proche: "clients" },
+    reflexes: [...tresorerieQuiFond.REFLEXES],
+    prevision: { juste: 40, proche: 120 },
+  },
+  "agence-qui-demarre": {
+    diagnostic: { juste: "service", proche: "notoriete" },
+    reflexes: [...agenceQuiDemarre.PRIX, ...agenceQuiDemarre.ATTENTES],
+    prevision: { juste: 2, proche: 5 },
+  },
+  "panne-qui-paralyse": {
+    diagnostic: { juste: "duree", proche: "redemarrage" },
+    reflexes: [...panneQuiParalyse.REFLEXES],
+    prevision: { juste: 5, proche: 12 },
+  },
+  "collaborateur-qui-decroche": {
+    diagnostic: { juste: "outil", proche: "confiance" },
+    reflexes: [...collaborateurQuiDecroche.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.2 },
+  },
+  "indicateur-qui-ment": {
+    diagnostic: { juste: "goodhart", proche: "formation" },
+    reflexes: [...indicateurQuiMent.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
+  },
+  "appel-d-offres": {
+    diagnostic: { juste: "grille", proche: "charge" },
+    reflexes: [...appelDOffres.REFLEXES],
+    prevision: { juste: 8, proche: 20 },
+  },
+  "prix-qui-ne-passe-plus": {
+    diagnostic: { juste: "bloc", proche: "couts" },
+    reflexes: [...prixQuiNePassePlus.REFLEXES],
+    prevision: { juste: 1, proche: 2.5 },
+  },
+  "agenda-qui-deborde": {
+    diagnostic: { juste: "goulot", proche: "reunions" },
+    reflexes: [...agendaQuiDeborde.REFLEXES],
+    prevision: { juste: 8, proche: 20 },
+  },
+  "preavis-de-greve": {
+    diagnostic: { juste: "interets", proche: "confiance" },
+    reflexes: [...preavisDeGreve.FERMETES, ...preavisDeGreve.CONCESSIONS],
+    prevision: { juste: 4, proche: 10 },
+  },
+  "client-qui-s-en-va": {
+    diagnostic: { juste: "irritant", proche: "facturation" },
+    reflexes: [...clientQuiSEnVa.REFLEXES],
+    prevision: { juste: 4, proche: 12 },
+  },
+  "tournees-qui-debordent": {
+    diagnostic: { juste: "creneaux", proche: "soustraitance" },
+    reflexes: [...tourneesQuiDebordent.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  "site-qui-ne-vend-pas": {
+    diagnostic: { juste: "entonnoir", proche: "agences" },
+    reflexes: [...siteQuiNeVendPas.REFLEXES],
+    prevision: { juste: 8, proche: 20 },
+  },
+  "talent-qui-veut-partir": {
+    diagnostic: { juste: "besoins", proche: "charge" },
+    reflexes: [...talentQuiVeutPartir.REFLEXES],
+    prevision: { juste: 3, proche: 7 },
+  },
+  "competences-qui-manquent": {
+    diagnostic: { juste: "transmission", proche: "remplacement" },
+    reflexes: [...competencesQuiManquent.REFLEXES],
+    prevision: { juste: 8, proche: 20 },
+  },
+  "facture-qui-flambe": {
+    diagnostic: { juste: "horsHoraires", proche: "prix" },
+    reflexes: [...factureQuiFlambe.REFLEXES],
+    prevision: { juste: 10, proche: 25 },
+  },
+  "controle-qui-s-annonce": {
+    diagnostic: { juste: "circuit", proche: "arriere" },
+    reflexes: [...controleQuiSAnnonce.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
+  },
+  "fusion-des-agences": {
+    diagnostic: { juste: "personnes", proche: "doublons" },
+    reflexes: [...fusionDesAgences.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  "nouveau-service": {
+    diagnostic: { juste: "inconnue", proche: "concurrent" },
+    reflexes: [...nouveauService.PROMESSES, ...nouveauService.ATTENTES],
+    prevision: { juste: 2, proche: 4 },
+  },
+  "equipe-dispersee": {
+    diagnostic: { juste: "isolement", proche: "competences" },
+    reflexes: [...equipeDispersee.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
+  },
+  "cent-premiers-jours": {
+    diagnostic: { juste: "irritants", proche: "comptoir" },
+    reflexes: [...centPremiersJours.IMPOSITIONS, ...centPremiersJours.MENAGEMENTS],
+    prevision: { juste: 4, proche: 10 },
+  },
+  "commande-a-prix-casse": {
+    diagnostic: { juste: "marginal", proche: "saison" },
+    reflexes: [...commandeAPrixCasse.REFLEXES],
+    prevision: { juste: 0.5, proche: 3 },
+  },
+  "produit-deficitaire": {
+    diagnostic: { juste: "repartition", proche: "liees" },
+    reflexes: [...produitDeficitaire.REFLEXES],
+    prevision: { juste: 2, proche: 8 },
+  },
+  "faire-ou-faire-faire": {
+    diagnostic: { juste: "evitables", proche: "lointaines" },
+    reflexes: [...faireOuFaireFaire.REFLEXES],
+    prevision: { juste: 2, proche: 7 },
+  },
+  "seuil-qui-bouge": {
+    diagnostic: { juste: "structure", proche: "volume" },
+    reflexes: [...seuilQuiBouge.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "ecarts-du-budget": {
+    diagnostic: { juste: "presse", proche: "moules" },
+    reflexes: [...ecartsDuBudget.REFLEXES],
+    prevision: { juste: 0.05, proche: 0.5 },
+  },
+  "atelier-sature": {
+    diagnostic: { juste: "facteurRare", proche: "capacite" },
+    reflexes: [...atelierSature.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "investissement-a-choisir": {
+    diagnostic: { juste: "van", proche: "enveloppe" },
+    reflexes: [...investissementAChoisir.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "croissance-a-financer": {
+    diagnostic: { juste: "structurel", proche: "decalage" },
+    reflexes: [...croissanceAFinancer.REFLEXES],
+    prevision: { juste: 20, proche: 75 },
+  },
+  "louer-ou-acheter": {
+    diagnostic: { juste: "utilisation", proche: "pannes" },
+    reflexes: [...louerOuAcheter.REFLEXES],
+    prevision: { juste: 1, proche: 3.5 },
+  },
+  "client-a-risque": {
+    diagnostic: { juste: "perteAttendue", proche: "fragilite" },
+    reflexes: [...clientARisque.REFLEXES],
+    prevision: { juste: 2, proche: 8 },
+  },
+  "discounter-qui-arrive": {
+    diagnostic: { juste: "exposition", proche: "service" },
+    reflexes: [...discounterQuiArrive.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "concurrent-a-racheter": {
+    diagnostic: { juste: "prix", proche: "synergies" },
+    reflexes: [...concurrentARacheter.REFLEXES],
+    prevision: { juste: 100, proche: 400 },
+  },
+  "marche-qui-s-ouvre": {
+    diagnostic: { juste: "option", proche: "artisans" },
+    reflexes: [...marcheQuiSOuvre.REFLEXES],
+    prevision: { juste: 4, proche: 12 },
+  },
+  "fabricant-en-direct": {
+    diagnostic: { juste: "exposition", proche: "services" },
+    reflexes: [...fabricantEnDirect.REFLEXES],
+    prevision: { juste: 15, proche: 60 },
+  },
+  "projet-a-arreter": {
+    diagnostic: { juste: "avenir", proche: "sites" },
+    reflexes: [...projetAArreter.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "reseau-a-redessiner": {
+    diagnostic: { juste: "reseau", proche: "incertitude" },
+    reflexes: [...reseauARedessiner.REFLEXES],
+    prevision: { juste: 8, proche: 25 },
+  },
+  "pari-du-reemploi": {
+    diagnostic: { juste: "gisements", proche: "premier" },
+    reflexes: [...pariDuReemploi.REFLEXES],
+    prevision: { juste: 300, proche: 1000 },
+  },
+  "grand-compte-exclusif": {
+    diagnostic: { juste: "dependance", proche: "marge" },
+    reflexes: [...grandCompteExclusif.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "chambres-bradees": {
+    diagnostic: { juste: "segments", proche: "semaine" },
+    reflexes: [...chambresBradees.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "seminaire-qui-evince": {
+    diagnostic: { juste: "deplacement", proche: "attrition" },
+    reflexes: [...seminaireQuiEvince.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  surreservation: {
+    diagnostic: { juste: "arbitrage", proche: "defections" },
+    reflexes: [...surreservation.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "note-qui-chute": {
+    diagnostic: { juste: "climatisation", proche: "petitDejeuner" },
+    reflexes: [...noteQuiChute.REFLEXES],
+    prevision: { juste: 300, proche: 1000 },
+  },
+  "ratio-matiere": {
+    diagnostic: { juste: "carte", proche: "grammages" },
+    reflexes: [...ratioMatiere.REFLEXES],
+    prevision: { juste: 0.3, proche: 1 },
+  },
+  intersaison: {
+    diagnostic: { juste: "cycle", proche: "travaux" },
+    reflexes: [...intersaison.REFLEXES],
+    prevision: { juste: 10, proche: 30 },
+  },
+  "chambres-pas-pretes": {
+    diagnostic: { juste: "flux", proche: "ordre" },
+    reflexes: [...chambresPasPretes.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "brigade-a-bout": {
+    diagnostic: { juste: "pics", proche: "effectif" },
+    reflexes: [...brigadeABout.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "renovation-sans-fermer": {
+    diagnostic: { juste: "nuisances", proche: "delai" },
+    reflexes: [...renovationSansFermer.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "saisonniers-de-juillet": {
+    diagnostic: { juste: "integration", proche: "departs" },
+    reflexes: [...saisonniersDeJuillet.REFLEXES],
+    prevision: { juste: 20, proche: 80 },
+  },
+  "postes-introuvables": {
+    diagnostic: { juste: "logement", proche: "coupures" },
+    reflexes: [...postesIntrouvables.REFLEXES],
+    prevision: { juste: 2, proche: 6 },
+  },
+  "apprentis-qui-decrochent": {
+    diagnostic: { juste: "tutorat", proche: "calendrier" },
+    reflexes: [...apprentisQuiDecrochent.REFLEXES],
+    prevision: { juste: 0.3, proche: 0.8 },
+  },
+  "cuisine-centrale": {
+    diagnostic: { juste: "identite", proche: "logistique" },
+    reflexes: [...cuisineCentrale.REFLEXES],
+    prevision: { juste: 5, proche: 20 },
+  },
+  "spa-a-financer": {
+    diagnostic: { juste: "differentiel", proche: "prix" },
+    reflexes: [...spaAFinancer.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "enseigne-a-la-porte": {
+    diagnostic: { juste: "portefeuille", proche: "commissions" },
+    reflexes: [...enseigneALaPorte.REFLEXES],
+    prevision: { juste: 8, proche: 20 },
+  },
+  "appels-d-offres-en-rafale": {
+    diagnostic: { juste: "selection", proche: "seniors" },
+    reflexes: [...appelsDOffresEnRafale.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "client-qui-en-demande-plus": {
+    diagnostic: { juste: "perimetre", proche: "besoins" },
+    reflexes: [...clientQuiEnDemandePlus.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "livrable-refuse": {
+    diagnostic: { juste: "methode", proche: "validation" },
+    reflexes: [...livrableRefuse.REFLEXES],
+    prevision: { juste: 2, proche: 6 },
+  },
+  "jours-non-factures": {
+    diagnostic: { juste: "forfaits", proche: "kervalan" },
+    reflexes: [...joursNonFactures.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "forfait-trop-bas": {
+    diagnostic: { juste: "cout", proche: "depassements" },
+    reflexes: [...forfaitTropBas.REFLEXES],
+    prevision: { juste: 10, proche: 60 },
+  },
+  "factures-qui-dorment": {
+    diagnostic: { juste: "avantFacture", proche: "rejets" },
+    reflexes: [...facturesQuiDorment.REFLEXES],
+    prevision: { juste: 20, proche: 100 },
+  },
+  "staffing-du-lundi": {
+    diagnostic: { juste: "valeurRisque", proche: "reservations" },
+    reflexes: [...staffingDuLundi.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  "consultant-star": {
+    diagnostic: { juste: "comportement", proche: "delegation" },
+    reflexes: [...consultantStar.REFLEXES],
+    prevision: { juste: 1.5, proche: 4 },
+  },
+  "promotion-refusee": {
+    diagnostic: { juste: "criteres", proche: "annonce" },
+    reflexes: [...promotionRefusee.REFLEXES],
+    prevision: { juste: 3, proche: 8 },
+  },
+  "departs-a-deux-ans": {
+    diagnostic: { juste: "segments", proche: "missions" },
+    reflexes: [...departsADeuxAns.REFLEXES],
+    prevision: { juste: 2.5, proche: 6 },
+  },
+  "freelances-ou-embauches": {
+    diagnostic: { juste: "durable", proche: "delai" },
+    reflexes: [...freelancesOuEmbauches.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "practice-a-reorienter": {
+    diagnostic: { juste: "reconversion", proche: "ventes" },
+    reflexes: [...practiceAReorienter.REFLEXES],
+    prevision: { juste: 20, proche: 60 },
+  },
+  "assistant-ia": {
+    diagnostic: { juste: "modele", proche: "usages" },
+    reflexes: [...assistantIa.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "associe-qui-part": {
+    diagnostic: { juste: "montage", proche: "prix" },
+    reflexes: [...associeQuiPart.REFLEXES],
+    prevision: { juste: 15, proche: 60 },
+  },
+  "generaliste-ou-specialiste": {
+    diagnostic: { juste: "specialisation", proche: "differenciation" },
+    reflexes: [...generalisteOuSpecialiste.REFLEXES],
+    prevision: { juste: 20, proche: 100 },
+  },
+  "lits-vides": {
+    diagnostic: { juste: "circuit", proche: "prescripteurs" },
+    reflexes: [...litsVides.REFLEXES],
+    prevision: { juste: 3, proche: 15 },
+  },
+  "sorties-qui-bloquent": {
+    diagnostic: { juste: "aval", proche: "places" },
+    reflexes: [...sortiesQuiBloquent.REFLEXES],
+    prevision: { juste: 100, proche: 300 },
+  },
+  "famille-qui-ecrit": {
+    diagnostic: { juste: "organisation", proche: "matins" },
+    reflexes: [...familleQuiEcrit.REFLEXES],
+    prevision: { juste: 0.1, proche: 0.3 },
+  },
+  "interim-qui-flambe": {
+    diagnostic: { juste: "symptome", proche: "vacances" },
+    reflexes: [...interimQuiFlambe.REFLEXES],
+    prevision: { juste: 2, proche: 6 },
+  },
+  "section-en-deficit": {
+    diagnostic: { juste: "hebergement", proche: "repartition" },
+    reflexes: [...sectionEnDeficit.REFLEXES],
+    prevision: { juste: 5, proche: 20 },
+  },
+  "heure-a-domicile": {
+    diagnostic: { juste: "revient", proche: "trajets" },
+    reflexes: [...heureADomicile.REFLEXES],
+    prevision: { juste: 0.25, proche: 0.8 },
+  },
+  "chutes-la-nuit": {
+    diagnostic: { juste: "causes", proche: "psychotropes" },
+    reflexes: [...chutesLaNuit.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
+  },
+  "dossier-de-soins": {
+    diagnostic: { juste: "terrain", proche: "parametrage" },
+    reflexes: [...dossierDeSoins.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "postes-de-douze-heures": {
+    diagnostic: { juste: "effets", proche: "attractivite" },
+    reflexes: [...postesDeDouzeHeures.REFLEXES],
+    prevision: { juste: 1, proche: 4 },
+  },
+  "absenteisme-qui-s-installe": {
+    diagnostic: { juste: "causes", proche: "dos" },
+    reflexes: [...absenteismeQuiSInstalle.REFLEXES],
+    prevision: { juste: 10, proche: 30 },
+  },
+  "former-ses-soignants": {
+    diagnostic: { juste: "penurie", proche: "glissement" },
+    reflexes: [...formerSesSoignants.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "equipes-jour-et-nuit": {
+    diagnostic: { juste: "frontiere", proche: "matin" },
+    reflexes: [...equipesJourEtNuit.REFLEXES],
+    prevision: { juste: 0.5, proche: 2 },
+  },
+  "reconstruire-ou-regrouper": {
+    diagnostic: { juste: "differentiel", proche: "plafond" },
+    reflexes: [...reconstruireOuRegrouper.REFLEXES],
+    prevision: { juste: 0.5, proche: 1.5 },
+  },
+  "association-a-reprendre": {
+    diagnostic: { juste: "conditions", proche: "passifs" },
+    reflexes: [...associationAReprendre.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "virage-domiciliaire": {
+    diagnostic: { juste: "virage", proche: "transformer" },
+    reflexes: [...virageDomiciliaire.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "changements-de-format": {
+    diagnostic: { juste: "changements", proche: "doseur" },
+    reflexes: [...changementsDeFormat.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "dlc-qui-tombe": {
+    diagnostic: { juste: "plan", proche: "promotions" },
+    reflexes: [...dlcQuiTombe.REFLEXES],
+    prevision: { juste: 6, proche: 20 },
+  },
+  "lot-a-rappeler": {
+    diagnostic: { juste: "perimetre", proche: "lot" },
+    reflexes: [...lotARappeler.REFLEXES],
+    prevision: { juste: 1, proche: 5 },
+  },
+  "negociations-annuelles": {
+    diagnostic: { juste: "preparation", proche: "contreparties" },
+    reflexes: [...negociationsAnnuelles.REFLEXES],
+    prevision: { juste: 25, proche: 120 },
+  },
+  "promotion-qui-coute": {
+    diagnostic: { juste: "decomposition", proche: "remise" },
+    reflexes: [...promotionQuiCoute.REFLEXES],
+    prevision: { juste: 3, proche: 8 },
+  },
+  "appel-d-offres-mdd": {
+    diagnostic: { juste: "marge", proche: "capacite" },
+    reflexes: [...appelDOffresMdd.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "producteurs-qui-arretent": {
+    diagnostic: { juste: "transmission", proche: "tournees" },
+    reflexes: [...producteursQuiArretent.REFLEXES],
+    prevision: { juste: 1, proche: 3 },
+  },
+  "pot-a-remplacer": {
+    diagnostic: { juste: "qualifier", proche: "cout" },
+    reflexes: [...potARemplacer.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "energie-de-l-usine": {
+    diagnostic: { juste: "usages", proche: "prix" },
+    reflexes: [...energieDeLUsine.REFLEXES],
+    prevision: { juste: 50, proche: 150 },
+  },
+  "polyvalence-des-operateurs": {
+    diagnostic: { juste: "dependance", proche: "absences" },
+    reflexes: [...polyvalenceDesOperateurs.REFLEXES],
+    prevision: { juste: 6, proche: 20 },
+  },
+  "maintenance-qui-court": {
+    diagnostic: { juste: "pareto", proche: "pieces" },
+    reflexes: [...maintenanceQuiCourt.REFLEXES],
+    prevision: { juste: 3, proche: 10 },
+  },
+  "pic-des-fetes": {
+    diagnostic: { juste: "heures", proche: "interim" },
+    reflexes: [...picDesFetes.REFLEXES],
+    prevision: { juste: 5, proche: 20 },
+  },
+  "export-a-ouvrir": {
+    diagnostic: { juste: "etapes", proche: "dlc" },
+    reflexes: [...exportAOuvrir.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "gamme-vegetale": {
+    diagnostic: { juste: "test", proche: "allergenes" },
+    reflexes: [...gammeVegetale.REFLEXES],
+    prevision: { juste: 100, proche: 300 },
+  },
+  "offre-de-rachat": {
+    diagnostic: { juste: "trois-reperes", proche: "sous-le-marche" },
+    reflexes: [...offreDeRachat.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
+  },
+};

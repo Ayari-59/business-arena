@@ -2,6 +2,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  CONSIGNE_DIAGNOSTIC_OUVERT,
+  CONSIGNE_MODELE_OUVERT,
   DIAGNOSTIC,
   MODELE,
   STATUT_RENDUE,
@@ -13,7 +15,8 @@ import {
   messageIncomplet,
   statutDesSituations,
 } from "@/config/situation-rendu";
-import { RoundStatusBanner } from "@/components/round-status-banner";
+import { AnnonceDuTour } from "@/components/annonce-du-tour";
+import { SituationDebrief } from "@/components/situation-panel";
 import type { SituationView } from "@/services/pedagogy.service";
 
 /**
@@ -23,16 +26,33 @@ import type { SituationView } from "@/services/pedagogy.service";
  * « Valider mes réponses » de l'autre, et des équipes débriefées sur une
  * moitié de copie. Un seul bouton, grisé tant qu'une moitié manque, un
  * refus serveur identique pour un formulaire forgé, et le statut lisible
- * en tête de l'onglet Situation comme dans le bandeau d'en-tête.
+ * en tête de l'onglet Situation.
  */
 
+// Les actions serveur touchent désormais le service des subventions, qui
+// charge `@/db` — lequel jette à l'import sans DATABASE_URL. Fermer cette
+// frontière garde ce test unitaire : aucune requête n'est faite ici.
+vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+// Le financement de sauvetage est vérifié côté serveur : l'action lit la vue
+// pour savoir si l'équipe est en crise. C'est une frontière de service de
+// plus, et `@/db` jette à l'import sans DATABASE_URL — une vue nulle vaut
+// « pas de crise », ce qui laisse passer les décisions de ces tests.
+vi.mock("@/services/game-view.service", () => ({ getGameView: vi.fn(async () => null) }));
 vi.mock("@/lib/guest", () => ({ getGuestUserId: vi.fn(async () => "invite-1") }));
 vi.mock("@/services/game.service", () => ({
   getGameKind: vi.fn(),
   nommerEquipe: vi.fn(),
   resolveCurrentRound: vi.fn(),
   submitTeamDecisions: vi.fn(),
+}));
+// `actions.ts` importe retakeSituation de debrief.service, qui charge `@/db` —
+// lequel jette à l'import sans DATABASE_URL. Le mock ferme la frontière de
+// service, pour que ce test reste unitaire sans base ni variable d'environnement.
+vi.mock("@/services/debrief.service", () => ({
+  retakeSituation: vi.fn(),
+  answerFormatOfInstance: vi.fn(async () => "qcm"),
+  resolveOpenAnswers: vi.fn(),
 }));
 vi.mock("@/services/pedagogy.service", () => ({
   submitDiagnosis: vi.fn(async () => ({ score: 1 })),
@@ -41,6 +61,7 @@ vi.mock("@/services/pedagogy.service", () => ({
 }));
 
 const { submitDiagnosis, submitQuiz } = await import("@/services/pedagogy.service");
+const { answerFormatOfInstance, resolveOpenAnswers } = await import("@/services/debrief.service");
 const { submitSituationAction } = await import("@/app/arena/[gameId]/actions");
 const { SituationCard } = await import("@/components/situation-panel");
 
@@ -64,9 +85,12 @@ function situation(partiel: Partial<SituationView> = {}): SituationView {
     problem: "D'où vient le recul ?",
     origin: "scripted",
     status: "open",
+    answerFormat: "qcm",
+    quizTexts: null,
     weight: 1,
     level: 1,
     aboveGameLevel: false,
+    diagnosticUnique: false,
     diagnosticOptions: [
       { id: "a", label: "Le prix a baissé" },
       { id: "b", label: "Les coûts ont monté" },
@@ -92,8 +116,6 @@ function situation(partiel: Partial<SituationView> = {}): SituationView {
     rendered: false,
     missed: false,
     retaken: false,
-    requiredLearningSteps: [],
-    isAccessible: true,
     debrief: null,
     ...partiel,
   };
@@ -288,41 +310,232 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
   });
 });
 
-describe("le bandeau d'en-tête reprend le statut à côté de « À vous de jouer »", () => {
-  function bandeau(situations: ReturnType<typeof statutDesSituations>, pendingDecisions = false): string {
+/**
+ * LE BANDEAU D'ÉTAT A DISPARU, SA VOIX EST RESTÉE.
+ *
+ * Un encadré occupait le haut de l'arène pour dire le numéro du tour (que
+ * porte la frise), « à vous de jouer » (que portent les onglets et le bouton
+ * de validation) et la clôture du tour précédent (que porte le lien vert du
+ * tour en cours). Trois redites en cinq lignes, avant la moindre donnée.
+ *
+ * Ce qu'il faut sauver en le retirant : en classe, le tour se clôt et la page
+ * se rafraîchit toute seule. À l'écran la nouvelle période se voit ; à la voix,
+ * rien ne l'annonce si la région live disparaît avec l'encadré. D'où
+ * `AnnonceDuTour` : une phrase, `role="status"`, `sr-only`.
+ */
+describe("l'annonce du tour", () => {
+  function annonce(
+    etat: Partial<{
+      currentRound: number;
+      pendingDecisions: boolean;
+      kind: "solo" | "class";
+      finished: boolean;
+    }> = {},
+  ): string {
     return renderToStaticMarkup(
-      createElement(RoundStatusBanner, {
+      createElement(AnnonceDuTour, {
         currentRound: 2,
         roundsCount: 6,
         roundDays: 30,
-        pendingDecisions,
+        pendingDecisions: false,
         kind: "class",
         finished: false,
-        situations,
+        ...etat,
       }),
     );
   }
 
-  it("incomplète : plus d'étiquette de statut, seul l'appel à décider demeure", () => {
-    const html = bandeau(statutDesSituations([situation()]));
-    expect(html).toContain("À vous de jouer");
-    // On n'affiche plus « Situation incomplète » : le bouton grisé le dit déjà.
-    expect(html).not.toContain("statut-situation");
-    expect(html).not.toContain("Situation incomplète");
-    expect(html).toContain('href="#decisions"');
+  it("tous les états gardent la région live", () => {
+    // Le tour se clôt et la page se rafraîchit sans que l'élève ne fasse rien :
+    // un lecteur d'écran doit l'annoncer. Retirer le bandeau ne devait pas
+    // coûter cela.
+    for (const etat of [
+      {},
+      { pendingDecisions: true },
+      { finished: true },
+      { kind: "solo" as const },
+    ]) {
+      expect(annonce(etat)).toContain('role="status"');
+      expect(annonce(etat)).toContain('aria-live="polite"');
+    }
   });
 
-  it("le bandeau ne montre plus de statut de situation, même une fois rendue", () => {
-    const rendue = statutDesSituations([
-      situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
-    ]);
-    expect(bandeau(rendue)).not.toContain("statut-situation");
-    expect(bandeau(rendue, true)).not.toContain("statut-situation");
-    expect(bandeau(rendue, true)).toContain("Décisions enregistrées");
+  it("elle ne se voit pas : aucune surface, aucun encadré", () => {
+    // La faute à empêcher : remettre un bandeau derrière ce composant. Il est
+    // une voix, pas une boîte.
+    const html = annonce();
+    expect(html).toContain('class="sr-only"');
+    expect(html).not.toContain("rounded");
+    expect(html).not.toContain("border-");
   });
 
-  it("aucune situation ce tour : rien de plus dans le bandeau", () => {
-    const html = bandeau(null);
-    expect(html).not.toContain("statut-situation");
+  it("chaque état dit ce qu'il est", () => {
+    expect(annonce()).toContain("À vous de jouer");
+    expect(annonce()).toContain("Tour 2 sur 6");
+    expect(annonce({ pendingDecisions: true })).toContain("Décisions enregistrées");
+    expect(annonce({ pendingDecisions: true })).toContain("clôture du tour par l&#x27;enseignant");
+    expect(annonce({ pendingDecisions: true, kind: "solo" })).toContain("résolution en cours");
+    expect(annonce({ finished: true })).toContain("Partie terminée");
+  });
+
+  it("au deuxième tour elle situe le tour clos ; au premier, elle n'invente rien", () => {
+    expect(annonce({ currentRound: 2 })).toContain("est clos");
+    expect(annonce({ currentRound: 1 })).not.toContain("est clos");
+  });
+
+  it("et surtout, plus de raccourci qui saute par-dessus Analyser", () => {
+    // La faute d'origine : une porte vers la saisie posée tout en haut, avant
+    // le contexte, qui invitait à trancher avant d'avoir lu.
+    for (const etat of [{}, { pendingDecisions: true }, { finished: true }]) {
+      expect(annonce(etat)).not.toContain('href="#decisions"');
+    }
+  });
+});
+
+describe("questions ouvertes : l'élève écrit, le serveur ramène le texte aux options", () => {
+  const TEXTE = "Le prix a baissé et la marge s'effondre sur chaque unité vendue.";
+  const OUVERT = {
+    options: ["a"],
+    answers: { model_choice: "m1" },
+    texts: { model_choice: "Je mobilise le seuil de rentabilité, parce que les charges pèsent." },
+    questions: ["model_choice"],
+    manques: [] as string[],
+  };
+
+  it("la carte montre des champs de texte, ni cases ni propositions", () => {
+    const html = renderToStaticMarkup(
+      createElement(SituationCard, { gameId: "g1", situation: situation({ answerFormat: "open" }) }),
+    );
+    expect(html).toContain('name="freeText"');
+    expect(html).toContain('name="open_model_choice"');
+    expect(html).not.toContain('type="checkbox"');
+    expect(html).not.toContain('type="radio"');
+    expect(html).toContain("Valider mon analyse");
+    // Grisé tant que rien n'est écrit : même message qu'au QCM.
+    expect(html).toContain("Situation incomplète : il manque le diagnostic et le modèle");
+  });
+
+  it("chaque zone dit ce qu'on attend, en gris, sans être une réponse pré-remplie", () => {
+    const html = renderToStaticMarkup(
+      createElement(SituationCard, { gameId: "g1", situation: situation({ answerFormat: "open" }) }),
+    );
+    // La consigne est un placeholder : elle disparaît à la frappe et ne compte pas comme rendu.
+    expect(html).toContain(`placeholder="${CONSIGNE_DIAGNOSTIC_OUVERT.replace(/'/g, "&#x27;")}"`);
+    expect(html).toContain(`placeholder="${CONSIGNE_MODELE_OUVERT.replace(/'/g, "&#x27;")}"`);
+    expect(html).toContain("Situation incomplète");
+    // Le bouton grisé suffit : pas de phrase en plus sous lui.
+    expect(html).not.toContain("Complet ou rien");
+    // Les consignes disent la forme, pas la solution.
+    expect(CONSIGNE_DIAGNOSTIC_OUVERT).toMatch(/une ou deux phrases/);
+    expect(CONSIGNE_MODELE_OUVERT).toMatch(/une phrase/);
+  });
+
+  it("rendu complet : les options retenues partent au barème d'avant, les textes sont gardés", async () => {
+    vi.mocked(answerFormatOfInstance).mockResolvedValueOnce("open");
+    vi.mocked(resolveOpenAnswers).mockResolvedValueOnce(OUVERT as never);
+    const etat = await submitSituationAction(
+      "g1",
+      "inst-1",
+      ETAT,
+      formulaire({ freeText: TEXTE, open_model_choice: OUVERT.texts.model_choice, questions: "model_choice" }),
+    );
+    expect(etat.error).toBeNull();
+    expect(submitDiagnosis).toHaveBeenCalledWith({
+      instanceId: "inst-1",
+      userId: "invite-1",
+      selectedOptionIds: ["a"],
+      freeText: TEXTE,
+    });
+    expect(submitQuiz).toHaveBeenCalledWith({
+      instanceId: "inst-1",
+      userId: "invite-1",
+      answers: { model_choice: "m1" },
+      texts: OUVERT.texts,
+    });
+    // Les textes écrits sont ceux que le serveur a lus dans le formulaire.
+    expect(resolveOpenAnswers).toHaveBeenCalledWith(
+      expect.objectContaining({ freeText: TEXTE, texts: { model_choice: OUVERT.texts.model_choice } }),
+    );
+  });
+
+  it("un texte trop court est refusé comme une moitié absente, rien n'est enregistré", async () => {
+    vi.mocked(answerFormatOfInstance).mockResolvedValueOnce("open");
+    vi.mocked(resolveOpenAnswers).mockResolvedValueOnce({ ...OUVERT, manques: ["le modèle"] } as never);
+    const etat = await submitSituationAction(
+      "g1",
+      "inst-1",
+      ETAT,
+      formulaire({ freeText: TEXTE, open_model_choice: "oui", questions: "model_choice" }),
+    );
+    expect(etat.error).toBe("Situation incomplète : il manque le modèle");
+    expect(submitDiagnosis).not.toHaveBeenCalled();
+    expect(submitQuiz).not.toHaveBeenCalled();
+  });
+
+  it("le format se lit sur la partie : un formulaire de cases forgé sur une partie ouverte n'est pas cru", async () => {
+    vi.mocked(answerFormatOfInstance).mockResolvedValueOnce("open");
+    vi.mocked(resolveOpenAnswers).mockResolvedValueOnce({
+      options: [],
+      answers: {},
+      texts: {},
+      questions: ["model_choice"],
+      manques: ["le diagnostic", "le modèle"],
+    } as never);
+    const etat = await submitSituationAction(
+      "g1",
+      "inst-1",
+      ETAT,
+      formulaire({ options: ["a", "b"], quiz_model_choice: "m1", questions: "model_choice" }),
+    );
+    expect(etat.error).toBe("Situation incomplète : il manque le diagnostic et le modèle");
+    expect(submitDiagnosis).not.toHaveBeenCalled();
+  });
+});
+
+
+
+describe("le débriefing dit les bonnes causes que le niveau n'a pas proposées", () => {
+  const debrief = (autresCauses: { id: string; label: string }[]) =>
+    situation({
+      status: "debriefed",
+      rendered: true,
+      diagnosis: { selected: ["a"], freeText: "", score: 1 },
+      debrief: {
+        correctOptionIds: ["a"],
+        autresCauses,
+        quizCorrection: [],
+        quizScore: null,
+        modelInsight: null,
+        consequenceFacts: null,
+        interpretation: null,
+        concepts: [],
+        finalScore: 1,
+      },
+    });
+
+  it("l'affiche à part, comme une chose à retenir et non comme une erreur", () => {
+    const html = renderToStaticMarkup(
+      createElement(SituationDebrief, {
+        situation: debrief([{ id: "z", label: "Que chaque unité vendue rapporte plus que son coût" }]),
+      }),
+    );
+    expect(html).toContain("une autre bonne cause, non proposée à votre niveau");
+    expect(html).toContain("Que chaque unité vendue rapporte plus que son coût");
+    // Jamais comptée « manquée » : le joueur ne pouvait pas la cocher.
+    expect(html).not.toContain("(manqué)");
+  });
+
+  it("au pluriel quand il y en a plusieurs, et se tait quand il n'y en a pas", () => {
+    const deux = renderToStaticMarkup(
+      createElement(SituationDebrief, {
+        situation: debrief([
+          { id: "y", label: "Cause Y" },
+          { id: "z", label: "Cause Z" },
+        ]),
+      }),
+    );
+    expect(deux).toContain("d&#x27;autres bonnes causes, non proposées à votre niveau");
+    const aucune = renderToStaticMarkup(createElement(SituationDebrief, { situation: debrief([]) }));
+    expect(aucune).not.toContain("À retenir aussi");
   });
 });

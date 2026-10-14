@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import robots, { CHEMINS_PRIVES } from "@/app/robots";
@@ -33,9 +33,12 @@ function routeExiste(chemin: string): boolean {
       dossier = direct;
       continue;
     }
-    const dynamique = join(dossier, "[code]");
-    if (existsSync(dynamique)) {
-      dossier = dynamique;
+    // Les segments dynamiques : [code] des ateliers, [public] des guides.
+    const crochets = existsSync(dossier)
+      ? readdirSync(dossier).filter((d) => /^\[[a-zA-Z]+\]$/.test(d))
+      : [];
+    if (crochets.length === 1) {
+      dossier = join(dossier, crochets[0]!);
       continue;
     }
     return false;

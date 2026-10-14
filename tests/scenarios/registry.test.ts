@@ -72,14 +72,25 @@ describe("registre des scénarios", () => {
     for (const d of SCENARIOS) {
       expect(d.context.length, d.code).toBeGreaterThan(120);
       expect(d.dilemma.question.trim().endsWith("?"), d.code).toBe(true);
+      // La question tient sur une ligne d'écran : au-delà, elle n'est plus
+      // lue, elle est survolée. Les plus longues faisaient 198 caractères.
+      expect(d.dilemma.question.length, d.code).toBeLessThanOrEqual(130);
       // Deux routes : une « décision » à une seule issue n'en est pas une.
       expect(d.dilemma.routes.length, d.code).toBe(2);
       for (const route of d.dilemma.routes) {
         expect(route.label.length, d.code).toBeGreaterThan(5);
-        // Un choix sans contrepartie chiffrable n'apprend rien : les deux
-        // faces sont obligatoires.
-        expect(route.gain.length, `${d.code} / ${route.label}`).toBeGreaterThan(60);
-        expect(route.risque.length, `${d.code} / ${route.label}`).toBeGreaterThan(60);
+        // Un choix sans contrepartie n'apprend rien : les deux faces sont
+        // obligatoires. Mais une face, c'est UNE phrase — le plafond tient
+        // la carte à sa taille, le développement appartient à la situation.
+        for (const [face, texte] of [
+          ["gain", route.gain],
+          ["risque", route.risque],
+        ] as const) {
+          const ou = `${d.code} / ${route.label} / ${face}`;
+          expect(texte.length, ou).toBeGreaterThan(45);
+          expect(texte.length, ou).toBeLessThanOrEqual(85);
+          expect(texte.split(/[.!?]\s/).filter(Boolean).length, ou).toBe(1);
+        }
       }
       // Les deux routes doivent être distinctes, pas une reformulation.
       const [a, b] = d.dilemma.routes;
@@ -227,12 +238,26 @@ describe("registre des scénarios", () => {
     // tourne mal. Un élève en hôtellerie recevait moins qu'un élève à
     // l'atelier, sans que rien ne le laisse deviner.
     for (const d of SCENARIOS) {
-      const tours = d.situations
-        .map((s) => ("round" in s.trigger ? s.trigger.round : null))
-        .filter((r): r is number => r !== null)
-        .sort((a, b) => a - b);
+      // Ce qui est exigé est la COUVERTURE : aucun tour joué sans situation.
+      // Un tour peut en porter deux — les services instancient toutes les
+      // situations dont le tour correspond (situation-instance.service.ts,
+      // pedagogy.service.ts), et NOVA en profite pour doubler son tour 2 d'une
+      // analyse d'écarts. Une égalité stricte l'interdisait, ce que le bilan
+      // rappelé ci-dessus ne demandait pas.
+      const tours = new Set(
+        d.situations
+          .map((s) => ("round" in s.trigger ? s.trigger.round : null))
+          .filter((r): r is number => r !== null),
+      );
       const attendus = Array.from({ length: d.scenario.roundsCount }, (_, i) => i + 1);
-      expect(tours, `${d.code} : un tour joué sans situation scriptée`).toEqual(attendus);
+      const manquants = attendus.filter((r) => !tours.has(r));
+      expect(manquants, `${d.code} : tour joué sans situation scriptée`).toEqual([]);
+      // Et l'inverse, que l'égalité attrapait au passage : une situation posée
+      // sur un tour qui ne sera jamais joué ne se montrerait à personne.
+      const horsBornes = [...tours]
+        .filter((r) => r < 1 || r > d.scenario.roundsCount)
+        .sort((a, b) => a - b);
+      expect(horsBornes, `${d.code} : situation scriptée hors des tours joués`).toEqual([]);
     }
   });
 
@@ -450,7 +475,11 @@ describe("registre des scénarios", () => {
       const v = d.vocabulary;
       for (const [key, value] of Object.entries(v)) {
         if (key === "unitsGender") continue; // une lettre, vérifiée juste après
-        expect(value.length, `${d.code}/${key} vide`).toBeGreaterThan(1);
+        // Les mots du plafond d'investissement forment un groupe : chacun compte.
+        const mots = typeof value === "string" ? { [key]: value } : (value as Record<string, string>);
+        for (const [sous, mot] of Object.entries(mots)) {
+          expect(mot.length, `${d.code}/${key}/${sous} vide`).toBeGreaterThan(1);
+        }
       }
       // Le genre de l'unité vendue : sans lui, toute phrase qui accorde un
       // participe avec elle est fausse dans les secteurs de l'autre genre.
@@ -520,23 +549,24 @@ describe("registre des scénarios", () => {
   });
 });
 
-describe("le pictogramme et le nom court d'un scénario", () => {
+describe("le nom court d'un scénario", () => {
   it("deux scénarios du même secteur ne se ressemblent pas", () => {
-    // Le choix de l'entreprise se fait sur une tuile : un pictogramme et un
-    // nom court. NOVA se joue en un produit ou en gamme ; deux tuiles
-    // « 🏭 Industrie » ne disaient pas laquelle est laquelle.
+    // Le choix de l'entreprise se fait sur une tuile : le pictogramme du
+    // secteur et un nom court. NOVA se joue en un produit ou en gamme ; deux
+    // tuiles « Industrie » ne disaient pas laquelle est laquelle. Chaque
+    // scénario portait pour cela un emoji à lui, que le système dessinait à
+    // sa façon : c'est désormais le nom court qui distingue, en toutes
+    // lettres.
     for (const d of SCENARIOS) {
-      expect(d.icon.length, d.code).toBeGreaterThan(0);
       expect(d.shortName.length, d.code).toBeGreaterThan(0);
       expect(d.title.toUpperCase().startsWith(d.shortName.split(" · ")[0]!.toUpperCase()), `${d.code} : le nom court n'est pas la tête du titre`).toBe(true);
     }
     const parSecteur = new Map<string, typeof SCENARIOS[number][]>();
     for (const d of SCENARIOS) parSecteur.set(d.sector, [...(parSecteur.get(d.sector) ?? []), d]);
     for (const [secteur, defs] of parSecteur) {
-      expect(new Set(defs.map((d) => d.icon)).size, `${secteur} : deux scénarios avec le même pictogramme`).toBe(defs.length);
       expect(new Set(defs.map((d) => d.shortName)).size, `${secteur} : deux scénarios avec le même nom court`).toBe(defs.length);
     }
-    expect(scenarioByCode("nova").icon).not.toBe(scenarioByCode("nova-gamme").icon);
+    expect(scenarioByCode("nova").shortName).not.toBe(scenarioByCode("nova-gamme").shortName);
     expect(scenarioByCode("nova-gamme").shortName).toContain("gamme");
   });
 });

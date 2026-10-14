@@ -1,0 +1,292 @@
+{
+  "OFFRES_ENSEIGNEMENT": [
+    {
+      "code": "decouverte",
+      "nom": "Découverte",
+      "pourQui": "Sans compte, pour voir le simulateur de près.",
+      "inclus": [
+        "L'arène en solo sur les 9 entreprises, niveaux 1 à 3 (Découverte, Gestion et Pilotage), en partie complète de 6 tours.",
+        "Les fiches notions, le manuel et le guide.",
+        "Un épisode manager de démonstration par métier (5 sur 108), au niveau Découverte, avec son bilan."
+      ],
+      "precisions": [
+        "Les parties de classe et les concours commencent avec les offres Classe, Programme et Campus."
+      ],
+      "bouton": {
+        "libelle": "Tester le simulateur",
+        "href": "/jouer"
+      }
+    },
+    {
+      "code": "classe",
+      "nom": "Classe",
+      "pourQui": "Un cours, un groupe : une entreprise et un niveau, choisis à l'achat.",
+      "prix": 290,
+      "inclus": [
+        "Une entreprise au choix parmi les 9, et un niveau au choix de 1 à 6, fixés pour l'année.",
+        "Autant de parties que vous voulez dans l'année avec ce paramétrage, une à la fois.",
+        "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.",
+        "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.",
+        "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
+        "Un concours à la place d'une partie, si l'entreprise choisie est NOVA : les concours se jouent avec elle."
+      ],
+      "precisions": [
+        "Sans les épisodes manager, qui se proposent à part, sur devis.",
+        "À l'année, pour un enseignant."
+      ],
+      "bouton": {
+        "libelle": "Demander un devis",
+        "href": "/devis?offre=classe"
+      }
+    },
+    {
+      "code": "programme",
+      "nom": "Programme",
+      "pourQui": "Un programme (Bachelor, Grande École, MSc, BTS…) : toutes ses promotions, tous les niveaux, une entreprise.",
+      "prix": 990,
+      "mention": "Dès 4 groupes, moins cher que 4 offres Classe",
+      "inclus": [
+        "Une entreprise au choix parmi les 9, choisie à l'achat, à tous les niveaux, de 1 à 6.",
+        "Toutes les promotions et tous les groupes du programme, plusieurs parties en même temps.",
+        "L'équipe pédagogique et les intervenants du programme, au nombre fixé au devis.",
+        "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.",
+        "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.",
+        "Les ateliers clés en main de cette entreprise, avec déroulé, corrigés et dossier enseignant.",
+        "Les concours et le classement à l'IPG, si l'entreprise choisie est NOVA : les concours se jouent avec elle."
+      ],
+      "precisions": [
+        "Sans les épisodes manager, qui se proposent à part, sur devis.",
+        "À l'année, pour l'équipe d'un programme."
+      ],
+      "bouton": {
+        "libelle": "Demander un devis",
+        "href": "/devis?offre=programme",
+        "principal": true
+      }
+    },
+    {
+      "code": "campus",
+      "nom": "Campus",
+      "pourQui": "Toute l'école : les 9 entreprises, tous les programmes, enseignants et intervenants sans limite.",
+      "prix": 1990,
+      "mention": "Dès 3 entreprises, moins cher que 3 offres Programme",
+      "inclus": [
+        "Les 9 entreprises, à tous les niveaux, dans tous les programmes.",
+        "Des groupes, des enseignants et des intervenants sans limite.",
+        "Les 16 ateliers clés en main, avec déroulé, corrigés et dossier enseignant, dont 14 adossés au référentiel d'un diplôme (STMG, BTS CG, BTS MCO, BTS NDRC, BTS GPME, BTS MHR, BUT GEA, DCG).",
+        "Les concours et le classement à l'IPG.",
+        "Un référent qui gère les accès.",
+        "Une facture au nom de l'école.",
+        "Une licence par année scolaire, du 1er septembre au 31 août."
+      ],
+      "precisions": [
+        "Sans les épisodes manager, qui se proposent à part, sur devis.",
+        "Sur devis, puis bon de commande ou mandat administratif ; Chorus Pro pour les factures publiques."
+      ],
+      "bouton": {
+        "libelle": "Demander un devis",
+        "href": "/devis?offre=campus"
+      }
+    }
+  ],
+  "RESEAUX": {
+    "texte": "Groupes scolaires, académies, régions, réseaux d'écoles : à partir de 10 établissements, sur devis.",
+    "bouton": {
+      "libelle": "Demander un devis",
+      "href": "/devis?offre=reseau"
+    }
+  },
+  "FORMULE_EN_CLASSE": {
+    "nom": "En classe et en école de commerce",
+    "inclus": [
+      "Les 108 épisodes, choisis par l'enseignant pour chaque groupe.",
+      "Des cohortes créées depuis l'espace enseignant : les étudiants entrent par un code, sans compte.",
+      "La vue de l'animateur, et une fiche de débrief pour les épisodes en classe."
+    ]
+  },
+  "BOUTON_EN_CLASSE": {
+    "libelle": "Demander un devis",
+    "href": "/devis?offre=episodes"
+  },
+  "FORMULES_ENTREPRISES": [
+    {
+      "nom": "Parcours manager",
+      "inclus": [
+        "Les 108 épisodes, en autonomie.",
+        "Le profil décisionnel, et la recommandation du prochain épisode.",
+        "Sans compte à créer : un code de cohorte pour entrer, un code de reprise pour changer d'appareil."
+      ]
+    },
+    {
+      "nom": "Cohorte animée",
+      "inclus": [
+        "15 managers, 3 à 6 épisodes choisis, un code de cohorte.",
+        "La vue de l'animateur.",
+        "Une demi-journée de lancement, et un débrief animé à distance."
+      ]
+    },
+    {
+      "nom": "Organisme de formation",
+      "inclus": [
+        "Des animateurs sans limite, des cohortes à volonté.",
+        "Le guide de débrief des 108 épisodes."
+      ]
+    }
+  ],
+  "BOUTON_ENTREPRISES": {
+    "libelle": "Demander un devis",
+    "href": "/devis?offre=entreprise"
+  },
+  "OPTIONS": [
+    {
+      "nom": "Un rendez-vous téléphonique de prise en main, à la demande",
+      "prix": "Gratuit"
+    },
+    {
+      "nom": "Formation d'une équipe pédagogique",
+      "prix": "Sur devis"
+    },
+    {
+      "nom": "Animation sur site",
+      "prix": "Sur devis"
+    },
+    {
+      "nom": "Scénario sur mesure : une entreprise fictive à l'image de la vôtre",
+      "prix": "Sur devis"
+    },
+    {
+      "nom": "Compétition inter-établissements",
+      "prix": "Sur devis"
+    },
+    {
+      "nom": "Intégration à Moodle, Canvas, Blackboard, Brightspace (LTI 1.3)",
+      "prix": "Incluse"
+    },
+    {
+      "nom": "ENT du secondaire (GAR)",
+      "prix": "À l'étude"
+    }
+  ],
+  "CONDITIONS_DE_VENTE": [
+    "Prix annuels, établis sur devis. TVA non applicable, art. 293 B du CGI.",
+    "Toutes les offres se vendent sur devis : vous recevez un devis écrit, vous le retournez signé ou vous émettez un bon de commande, la licence est ouverte, puis la facture suit.",
+    "Les devis et les factures sont établis par MA Formation et Conseils.",
+    "Facture payable à 30 jours, par virement ou par mandat administratif. Les factures publiques passent par Chorus Pro.",
+    "Durée : un an pour les offres Classe et Programme et pour les épisodes manager, une année scolaire pour l'offre Campus.",
+    "Les offres Classe et Programme se paramètrent à l'achat : l'entreprise, et pour Classe le niveau, sont écrits sur le devis et ouverts pour l'année.",
+    "Pas de reconduction tacite : l'échéance s'affiche dans l'espace enseignant, et le renouvellement passe par un nouveau devis.",
+    "À la fin de l'offre, les parties et les résultats restent consultables 12 mois, relevé de notes compris.",
+    "Les étudiants et les élèves jouent sans nom ni e-mail : un code suffit."
+  ],
+  "QUESTIONS_TARIFS": [
+    {
+      "q": "Les étudiants paient-ils ?",
+      "r": "Non, jamais. Ils rejoignent la partie de leur enseignant avec un code, sans compte ni e-mail."
+    },
+    {
+      "q": "Comment commander ?",
+      "r": "Demandez un devis écrit depuis cette page : il précise l'offre, l'entreprise et le niveau pour Classe, l'entreprise et le nombre d'enseignants et d'intervenants pour Programme, et la durée. Bon de commande, mandat administratif et Chorus Pro sont acceptés."
+    },
+    {
+      "q": "Quelle différence entre Classe, Programme et Campus ?",
+      "r": "Classe : un enseignant, un groupe à la fois, une entreprise et un niveau. Programme : l'équipe d'un programme, toutes ses promotions en même temps, une entreprise à tous les niveaux. Campus : toute l'école, les 9 entreprises, sans limite d'enseignants, d'intervenants ni de groupes."
+    },
+    {
+      "q": "Peut-on essayer avec un groupe ?",
+      "r": "Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec les offres Classe, Programme et Campus."
+    },
+    {
+      "q": "Les épisodes manager sont-ils inclus ?",
+      "r": "Non. Les offres Classe, Programme et Campus ouvrent l'arène. Les épisodes manager se proposent à part, sur devis, en classe comme en entreprise ; 5 démonstrations restent gratuites."
+    }
+  ],
+  "LIBELLES_DU_DEVIS": {
+    "classe": {
+      "offre": "Offre Classe",
+      "organisation": "École ou établissement",
+      "exempleOrganisation": "École de commerce, lycée, université",
+      "identifiant": "UAI (facultatif)",
+      "entreprise": true,
+      "niveau": true
+    },
+    "programme": {
+      "offre": "Offre Programme",
+      "organisation": "École ou établissement",
+      "exempleOrganisation": "École de commerce, lycée, université",
+      "identifiant": "UAI (facultatif)",
+      "effectif": "Nombre d'enseignants et d'intervenants",
+      "entreprise": true
+    },
+    "campus": {
+      "offre": "Offre Campus",
+      "organisation": "École ou établissement",
+      "exempleOrganisation": "École de commerce, lycée, université",
+      "identifiant": "UAI (facultatif)",
+      "effectif": "Nombre d'enseignants et d'intervenants"
+    },
+    "reseau": {
+      "offre": "Réseaux d'établissements",
+      "organisation": "Réseau, groupe ou académie",
+      "exempleOrganisation": "Groupe d'écoles, groupe scolaire, académie, région",
+      "identifiant": "UAI (facultatif)",
+      "effectif": "Nombre d'établissements"
+    },
+    "episodes": {
+      "offre": "Épisodes manager, en cours ou en école",
+      "organisation": "École ou établissement",
+      "exempleOrganisation": "École de commerce, université, lycée",
+      "identifiant": "UAI (facultatif)",
+      "effectif": "Nombre d'enseignants et d'intervenants"
+    },
+    "entreprise": {
+      "offre": "Épisodes manager, pour une entreprise ou un organisme de formation",
+      "organisation": "Organisation",
+      "exempleOrganisation": "Entreprise, organisme de formation",
+      "identifiant": "SIRET (facultatif)",
+      "effectif": "Nombre de managers"
+    }
+  },
+  "OFFRES_DU_DEVIS": [
+    "classe",
+    "programme",
+    "campus",
+    "reseau",
+    "episodes",
+    "entreprise"
+  ],
+  "LIGNE_DE_PRIX": "Offre Classe 290 € par an, offre Programme 990 € par an, offre Campus 1 990 € par an, sur devis. Les épisodes manager se proposent à part, sur devis.",
+  "REPONSE_COMBIEN": "La découverte en solo est gratuite, sans compte. Pour faire cours, sur devis : l'offre Classe coûte 290 € par an pour un groupe (une entreprise et un niveau choisis), l'offre Programme 990 € par an pour un programme (une entreprise, tous les niveaux, toutes les promotions), l'offre Campus 1 990 € par an pour toute l'école. Les épisodes manager se proposent à part, sur devis.",
+  "MARQUE_DE_L_ARENE": "Offre Classe, Programme ou Campus",
+  "LES_OFFRES_DE_L_ARENE": "les offres Classe, Programme et Campus",
+  "MARQUE_DES_EPISODES": "Épisodes manager · sur devis",
+  "REFUS_DE_LA_CLASSE": "Les parties de classe et les concours sont inclus dans les offres Classe, Programme et Campus. Sans offre en cours, l'arène se joue en solo, aux niveaux 1 à 3. Les parties déjà créées se poursuivent.",
+  "REFUS_DU_DOSSIER": "Le dossier enseignant des ateliers, avec ses corrigés, est inclus dans les offres Classe, Programme et Campus.",
+  "REFUS_DU_RELEVE": "Le relevé de notes est inclus dans les offres Classe, Programme et Campus, et reste téléchargeable 12 mois après la fin de l'offre.",
+  "REFUS_DES_COHORTES": "Créer une cohorte demande une offre qui inclut les épisodes manager (Épisodes manager · sur devis). Les offres Classe, Programme et Campus seules ne les ouvrent pas. Les 5 épisodes de démonstration se jouent sans cohorte, par leur lien.",
+  "POURQUOI_LA_DECOUVERTE": "Sans licence, les démonstrations se jouent en Découverte, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre Épisodes manager, sur devis.",
+  "ceQuOuvrentLesEpisodes": "L'offre Épisodes manager, sur devis, ouvre les 60 épisodes aux niveaux Standard et Expert, et le profil décisionnel qu'ils construisent.",
+  "messageNiveauxReserves": "Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.",
+  "ARGUMENTS_POUR_LES_ECOLES": [
+    {
+      "titre": "Des traces pour l'accréditation",
+      "texte": "Pour l'assurance of learning (AACSB, EQUIS). Dans l'arène, le relevé s'exporte en tableur, une ligne par étudiant : note sur 20, diagnostic, questions, rang, indice de performance globale ; la maîtrise des notions se lit partie par partie. Le relevé ne suit pas la grille de compétences de votre école : il se reprend dans la vôtre. Les épisodes manager, eux, mesurent un profil de compétences."
+    },
+    {
+      "titre": "Séminaires et compétitions",
+      "texte": "Les ateliers se placent en semaine bloquée, en séminaire de trois jours ou en journées banalisées. Le concours met les groupes en poules, puis en finale, classés à l'indice de performance globale. Entre plusieurs écoles ou campus : sur devis."
+    },
+    {
+      "titre": "Intégration à Moodle, Canvas, Blackboard, Brightspace (LTI 1.3) : incluse",
+      "texte": "L'activité se place dans le cours ; l'étudiant clique et arrive dans sa partie, sans compte ni code. ENT du secondaire (GAR) : à l'étude.",
+      "lien": {
+        "href": "/integration",
+        "libelle": "Voir l'intégration"
+      }
+    },
+    {
+      "titre": "Épisodes manager",
+      "texte": "Pour les MBA, les cours de leadership et la formation continue (Executive Education) : des trimestres joués dans la peau d'un manager. À part, sur devis."
+    }
+  ],
+  "SANS_LES_EPISODES": "Sans les épisodes manager, qui se proposent à part, sur devis."
+}

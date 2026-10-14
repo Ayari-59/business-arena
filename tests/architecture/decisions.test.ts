@@ -23,7 +23,10 @@ const champsDuFormulaire = new Set(
     .map((m) => m[1]!)
     // Ces deux là ne sont pas des décisions de gestion : l'un porte le choix du
     // modèle d'analyse, l'autre le champ technique du bouton de validation.
-    .filter((n) => !["quiz_model_choice", "options", "justification", "equipmentBuyJson", "equipmentSellJson"].includes(n)),
+    // LOT P4 : `propositionDeVentes` non plus — c'est le témoin caché d'une
+    // proposition de ventes estimées que le joueur n'a pas touchée ; le moteur
+    // ne le lit pas, pas plus que les ventes estimées elles-mêmes.
+    .filter((n) => !["quiz_model_choice", "options", "justification", "equipmentBuyJson", "equipmentSellJson", "propositionDeVentes"].includes(n)),
 );
 
 describe("leviers de décision", () => {
@@ -77,8 +80,14 @@ describe("leviers de décision", () => {
     // couvre, on s'informe, on prévoit. Le choix du fournisseur se trouvait
     // auparavant en dernier, après l'assurance, alors qu'il fixe le coût
     // d'achat de ce qu'on vend.
+    // Le panneau des fournisseurs est défini avant le `return` (il se loge dans une
+    // étape ou une autre selon le mode) : sa position est celle de l'endroit où
+    // il est RENDU, pas celle du texte de ses boutons.
+    const RENDU_DES_FOURNISSEURS = "{gamme ? null : panneauFournisseurs}";
     const position = (champ: string) =>
-      Math.max(FORMULAIRE.indexOf(`name="${champ}"`), FORMULAIRE.indexOf(`name: "${champ}"`));
+      champ === "supplierChoice"
+        ? FORMULAIRE.indexOf(RENDU_DES_FOURNISSEURS)
+        : Math.max(FORMULAIRE.indexOf(`name="${champ}"`), FORMULAIRE.indexOf(`name: "${champ}"`));
     const attendus = LEVIERS.filter((l) => position(l.champ) >= 0);
     const desordre: string[] = [];
     for (let i = 1; i < attendus.length; i += 1) {

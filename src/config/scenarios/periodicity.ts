@@ -15,6 +15,27 @@ import { mapGammeSegments } from "../../engine/gamme";
  * - délais de paiement (en jours) et taux annuels : INCHANGÉS — leur poids
  *   relatif varie donc naturellement avec la durée du tour (un client à 80 j
  *   pèse plus lourd au mois qu'à l'année : c'est voulu et pédagogique).
+ *
+ * QUAND L'UNITÉ VENDUE EST UNE PÉRIODE (scénarios à `subscription`).
+ *
+ * Un adhérent paie un TOUR d'abonnement et consomme un TOUR d'encadrement :
+ * son prix, son coût variable et les heures qu'il prend sont des flux, pas des
+ * grandeurs unitaires figées. La règle générale les laissait intacts, et le
+ * bloc d'abonnement n'était pas redimensionné du tout : au mois, une salle
+ * gardait 15 % d'attrition PAR MOIS là où le scénario les avait calibrés par
+ * trimestre, soit près de 86 % par an, tout en encaissant 105 € mensuels pour
+ * des charges divisées par trois. Le scénario n'était pas jouable au mois, et
+ * rien ne le disait.
+ *
+ * Trois règles supplémentaires, donc, et elles suffisent à tenir les trois
+ * invariants que la garde vérifie : le seuil en adhérents, la capacité en
+ * adhérents et l'attrition annualisée ne dépendent pas de la durée du tour.
+ * - les taux d'attrition par tour se COMPOSENT comme les croissances :
+ *   1 − (1 − c)^k ;
+ * - prix d'un tour d'abonnement, coût variable et heures par adhérent : × k,
+ *   sur le bloc d'abonnement comme sur le marché des nouveaux ;
+ * - la capacité d'accueil est un STOCK de places, pas un flux : elle ne bouge
+ *   pas, non plus que le prix d'une place à l'achat.
  */
 
 export type Periodicity = "month" | "quarter" | "year";
@@ -53,6 +74,16 @@ export function periodLabel(_roundDays: number, index: number): string {
 const compound = (ratePerQuarter: number, k: number) => Math.pow(1 + ratePerQuarter, k) - 1;
 
 /**
+ * Un taux de PERTE par tour, ramené à une autre durée de tour.
+ *
+ * Ce n'est pas la même composition qu'une croissance : ce qui se compose est
+ * la part qui RESTE. Quinze pour cent par trimestre font 5,27 % par mois, et
+ * non cinq.
+ */
+const composerPerte = (tauxParTour: number, k: number) =>
+  1 - Math.pow(1 - Math.min(1, Math.max(0, tauxParTour)), k);
+
+/**
  * Un tarif affiché à l'élève, arrondi à l'euro.
  *
  * Les prestations proratisées tombaient juste tant qu'un tour valait un
@@ -69,18 +100,54 @@ export function applyPeriodicity(
   const days = PERIODICITY_DAYS[periodicity];
   const k = days / 90;
   if (k === 1) return scenario;
+  // L'unité vendue est-elle une période ? Tout ce qui suit en dépend.
+  const abonnement = scenario.subscription !== undefined;
 
   // Demande de base et croissance : sur le marché du scénario et, en gamme,
   // sur celui de chaque produit (les seuls segments que le moteur simule).
+  // Dans un scénario par abonnement, le prix d'un segment est celui d'un TOUR
+  // d'abonnement : il suit la durée du tour, comme ses seuils.
   const redimensionne = mapGammeSegments(scenario, (s) => ({
     ...s,
     size: s.size * k,
     growth: compound(s.growth, k),
+    ...(abonnement
+      ? {
+          refPrice: s.refPrice * k,
+          minAcceptablePrice: s.minAcceptablePrice * k,
+          psychThresholds: s.psychThresholds.map((p) => ({ ...p, threshold: p.threshold * k })),
+        }
+      : {}),
   }));
 
   return {
     ...redimensionne,
     roundDays: days,
+    // Un tour d'abonnement coûte à servir ce qu'un tour dure : matières,
+    // autres charges variables et heures d'encadrement suivent la durée.
+    ...(abonnement
+      ? {
+          product: {
+            ...scenario.product,
+            materialCostPerUnit: scenario.product.materialCostPerUnit * k,
+            otherVariableCostPerUnit: scenario.product.otherVariableCostPerUnit * k,
+            hoursPerUnit: scenario.product.hoursPerUnit * k,
+          },
+        }
+      : {}),
+    ...(scenario.subscription
+      ? {
+          subscription: {
+            ...scenario.subscription,
+            baseChurnRate: composerPerte(scenario.subscription.baseChurnRate, k),
+            crowdingChurn: composerPerte(scenario.subscription.crowdingChurn, k),
+            ...(scenario.subscription.maxChurnRate !== undefined
+              ? { maxChurnRate: composerPerte(scenario.subscription.maxChurnRate, k) }
+              : {}),
+            refPrice: scenario.subscription.refPrice * k,
+          },
+        }
+      : {}),
     production: {
       ...scenario.production,
       qualityScale: scenario.production.qualityScale * k,
@@ -184,7 +251,12 @@ export function applyPeriodicity(
     ...(scenario.investment
       ? {
           investment: {
-            costPerCapacityUnit: scenario.investment.costPerCapacityUnit / k,
+            // Une place de salle coûte le même prix quelle que soit la durée
+            // du tour : c'est une capacité d'accueil, pas une capacité de
+            // production par tour.
+            costPerCapacityUnit: abonnement
+              ? scenario.investment.costPerCapacityUnit
+              : scenario.investment.costPerCapacityUnit / k,
             depreciationRounds: scenario.investment.depreciationRounds / k,
             maxPerRound: scenario.investment.maxPerRound * k,
           },
@@ -197,7 +269,7 @@ export function applyPeriodicity(
           equipment: {
             types: scenario.equipment.types.map((t) => ({
               ...t,
-              capacityPerUnit: t.capacityPerUnit * k,
+              capacityPerUnit: abonnement ? t.capacityPerUnit : t.capacityPerUnit * k,
               depreciationRounds: t.depreciationRounds / k,
               maxPerRound: Math.max(1, Math.round(t.maxPerRound * k)),
             })),
@@ -226,6 +298,11 @@ const scaleBounds = (b: { min: number; target: number }, k: number) => ({
 /**
  * Redimensionne l'état initial d'une entreprise (capacités par tour).
  * Le bilan initial (stock de valeur, pas flux) reste inchangé.
+ *
+ * `abonnement` dit que l'unité vendue est une période : la capacité d'accueil
+ * est alors un STOCK de places, qui ne dépend pas de la durée du tour. Une
+ * salle de mille places en accueille mille au mois comme au trimestre ; la
+ * redimensionner reviendrait à en murer les deux tiers.
  */
 export function applyPeriodicityToCompany<
   T extends {
@@ -234,12 +311,12 @@ export function applyPeriodicityToCompany<
     loans?: { remaining: number; perRound: number }[];
     fleet?: { typeCode: string; count: number; acquiredRound: number; bookValue: number }[];
   },
->(company: T, periodicity: Periodicity): T {
+>(company: T, periodicity: Periodicity, options?: { abonnement?: boolean }): T {
   const k = PERIODICITY_DAYS[periodicity] / 90;
   if (k === 1) return company;
   return {
     ...company,
-    machineCapacity: company.machineCapacity * k,
+    machineCapacity: options?.abonnement ? company.machineCapacity : company.machineCapacity * k,
     hoursPerEmployee: company.hoursPerEmployee * k,
     // même dette, même durée réelle : l'échéance PAR TOUR varie en k
     ...(company.loans

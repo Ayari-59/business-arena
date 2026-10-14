@@ -4,6 +4,7 @@ import type {
   EngineScenarioConfig,
   EquipmentItem,
   EquipmentTypeDef,
+  EventInstance,
   MachineRecord,
   OrderOfferDef,
   SegmentSalesDetail,
@@ -56,7 +57,6 @@ import {
   updateRseCapital,
   imageAttractionFactor,
   cleanDefectReduction,
-  financingTrustBonus,
   socialAttritionRelief,
   evaluateRseCards,
   RSE_CARD_CODES,
@@ -66,9 +66,12 @@ import { computeRatios } from "../finance/ratios";
 import {
   conditionsBancaires,
   confianceInitiale,
+  confianceServie,
   confianceSuivante,
   fiabiliteDuPlan,
+  jugementDeLaBanque,
   planDepose,
+  tenueDeTresorerie,
 } from "../finance/bank";
 import {
   demandMultiplierFor,
@@ -84,7 +87,7 @@ function mergeFleet(active: EquipmentItem[], pending: EquipmentItem[]): Equipmen
   return [...active, ...pending];
 }
 
-function fleetCapacity(
+export function fleetCapacity(
   fleet: EquipmentItem[],
   types: Map<string, EquipmentTypeDef>,
 ): number {
@@ -192,8 +195,19 @@ function allocateProduction(args: {
   const produced = perProduct.reduce((a, b) => a + b, 0);
   // Capacité main-d'œuvre exprimée en unités AU MIX PLANIFIÉ (heures moyennes
   // pondérées par plan) — comparable à la capacité machine, en unités.
-  const laborCapacity =
-    hoursNeeded > 0 && totalPlan > 0 ? laborHours / (hoursNeeded / totalPlan) : Infinity;
+  //
+  // SANS PLAN, PAS DE MIX — mais pas une capacité infinie pour autant. Le
+  // calcul valait `Infinity` quand rien n'était planifié, ce qui arrive à
+  // chaque tour d'une entreprise défaillante (production gelée) comme à
+  // l'élève qui met zéro partout. Or ce nombre part en base dans
+  // `engineTrace`, en jsonb : `JSON.stringify(Infinity)` vaut `null`, et la
+  // colonne promettait un nombre. À défaut de mix, on mesure la capacité sur
+  // les heures MOYENNES de la gamme : c'est ce que l'atelier sortirait en
+  // fabriquant de tout à parts égales, un ordre de grandeur juste et fini.
+  const heuresMoyennes =
+    args.gamme.reduce((s, p) => s + p.hoursPerUnit, 0) / Math.max(1, args.gamme.length);
+  const heuresParUnite = hoursNeeded > 0 && totalPlan > 0 ? hoursNeeded / totalPlan : heuresMoyennes;
+  const laborCapacity = heuresParUnite > 0 ? laborHours / heuresParUnite : 0;
   return {
     perProduct,
     produced,
@@ -254,14 +268,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     journalByCompany.set(company.id, new JournalBuilder());
   }
 
+  // Résultat estimé (`input.estimation`) : rien n'est tiré, ni événement, ni
+  // carte RSE, ni rupture. Le tour se joue sur ce que l'équipe sait.
+  const estimation = input.estimation;
   // 1. Événements : tirage + poursuite des événements actifs (doc 02 §7).
-  const { active, drawn } = drawEvents(
-    scenario,
-    roundIndex,
-    input.companies,
-    input.activeEvents,
-    rng,
-  );
+  const { active, drawn } = estimation
+    ? { active: [...input.activeEvents], drawn: [] as EventInstance[] }
+    : drawEvents(scenario, roundIndex, input.companies, input.activeEvents, rng);
   // 1bis. Cartes événement RSE (Lot 2C) : company-scope, tirées sur le
   // capital-image d'OUVERTURE de chaque entreprise. Elles n'entrent PAS dans
   // marketMods (scope company) et leur effet demande est appliqué via
@@ -271,7 +284,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const rseCardsConfig = scenario.rse?.cards ?? DEFAULT_RSE_CONFIG.cards;
   const rseCardRng = createRng(deriveRoundSeed(input.seed ^ 0x52534332, roundIndex));
   for (const state of input.companies) {
-    if (state.status === "defaillant") continue;
+    if (state.status === "defaillant" || estimation) continue;
     const draws = evaluateRseCards({
       imageCapital: Math.max(0, state.rseImageCapital ?? 0),
       cleanCapital: Math.max(0, state.rseCleanCapital ?? 0),
@@ -679,7 +692,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       if (!s || disruptionBySupplier.has(s.code)) continue;
       disruptionBySupplier.set(
         s.code,
-        s.supplyRiskProbability > 0 ? rng.next() < s.supplyRiskProbability : false,
+        s.supplyRiskProbability > 0 && !estimation ? rng.next() < s.supplyRiskProbability : false,
       );
     }
     const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
@@ -1439,11 +1452,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       const potential = potentialBySegment[segment.code] ?? 0;
       salesBySegment.set(
         segment.code,
-        working.map((_, i) => ({
+        working.map((w, i) => ({
           potential,
           attraction: attractions[i] ?? 0,
           share: shares[i] ?? 0,
-          demandForCompany: potential * (shares[i] ?? 0),
+          // Estimation : la demande que l'équipe s'attend à recevoir, à la
+          // place de celle que le marché lui aurait adressée. Une entreprise
+          // hors marché (défaillante, référence en développement) n'en reçoit
+          // pas plus que du marché réel.
+          demandForCompany: estimation
+            ? w.state.status === "defaillant" || !w.productAvailable[k]
+              ? 0
+              : Math.max(0, estimation.demand[w.state.id]?.[segment.code] ?? 0)
+            : potential * (shares[i] ?? 0),
           sold: 0,
           lost: 0,
           revenue: 0,
@@ -1494,7 +1515,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const totalPotential = Object.values(potentialBySegment).reduce((a, b) => a + b, 0);
   // Commande exceptionnelle du tour (doc 02 §5.1) : la même pour tous,
   // tirée à la graine de la partie (alternance crédit / comptant garantie).
-  const roundOffer = orderOfferForRound(scenario, roundIndex, input.seed);
+  const roundOffer = estimation
+    ? estimation.orderOffer
+    : orderOfferForRound(scenario, roundIndex, input.seed);
 
   working.forEach((w, i) => {
     // Faillite (V2 couche 2, #5) : une entreprise défaillante est dormante — elle
@@ -1841,22 +1864,26 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const earlyRepayment = scheduled
       ? Math.min(requestedRepayment, Math.max(0, w.state.finance.financialDebt - mandatoryRepayment))
       : Math.min(requestedRepayment, w.state.finance.financialDebt);
-    // DOSSIER BANCAIRE (scénarios portant un finance.bank). Le plan de
-    // trésorerie déposé avec les décisions est la pièce que lit la banque :
-    // sans lui, la demande d'emprunt n'est pas instruite. Et la fiabilité des
-    // plans passés, résumée dans la confiance, fixe le plafond de découvert
-    // consenti ce tour et le taux auquel il est facturé.
+    // DOSSIER BANCAIRE (scénarios portant un finance.bank) : la confiance fixe
+    // le plafond de découvert consenti ce tour et son taux.
+    //
+    // La confiance ACQUISE se lit dans la tenue de la trésorerie des tours
+    // passés (voir `finance/bank.ts`) : un tour clos en crise ou en affacturage
+    // forcé l'a fait descendre, des tours sains l'ont regagnée. Elle se met à
+    // jour en clôture, plus bas, une fois le tour joué.
     const bank = scenario.finance.bank;
     const confianceAvant = confianceInitiale(w.state);
-    // FINANCEMENT VERT (Lot 2B) : le capital-image RSE relève la confiance
-    // servie à la banque (borné à 1) — découvert plus large, taux plus doux.
-    // Effet DIFFÉRÉ (capital d'ouverture) : un engagement d'aujourd'hui
-    // n'améliore les conditions qu'aux tours suivants.
-    const rseFinancingBonus = financingTrustBonus(
-      w.state.rseImageCapital ?? 0,
-      (scenario.rse ?? DEFAULT_RSE_CONFIG).financingTrustBonus,
-    );
-    const confianceGreen = Math.min(1, confianceAvant + rseFinancingBonus);
+    // FINANCEMENT VERT (Lot 2B) : le standing RSE porte la confiance AU-DESSUS
+    // du plein — découvert plus large, taux plus doux. Effet DIFFÉRÉ (capital
+    // d'ouverture) : un engagement d'aujourd'hui n'améliore les conditions
+    // qu'aux tours suivants.
+    //
+    // La prime était autrefois écrasée par un `Math.min(1, …)`. Le plafond
+    // avait un sens quand les plans de trésorerie faisaient descendre la
+    // confiance : la prime servait à la regagner. Le plan retiré, plus personne
+    // ne descendait, et la récompense ne pouvait plus rien relever.
+    const confianceGreen = confianceServie(w.state, scenario);
+    const rseFinancingBonus = confianceGreen - confianceAvant;
     const planFourni = planDepose(w.decisions.forecast);
     const conditions = bank
       ? conditionsBancaires(
@@ -1872,7 +1899,24 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
         };
     const loanRequested = Math.max(0, w.decisions.finance?.newLoan ?? 0);
-    const newLoan = bank && !planFourni ? 0 : loanRequested;
+    // L'EMPRUNT N'EST PLUS CONDITIONNÉ À UN PLAN DE TRÉSORERIE. L'arène ne
+    // demande plus ce plan — remplir un prévisionnel avant chaque tour tenait
+    // de l'exercice scolaire plus que du jeu. La banque instruit désormais
+    // toute demande ; ce qu'elle juge, c'est la trésorerie réalisée (le moteur
+    // sait toujours juger un plan déposé par une autre voie).
+    //
+    // LA BANQUE N'EST PAS UN PUITS. Elle prête tant que la dette financière
+    // reste sous `maxDebtToEquity` fois les capitaux propres — la règle d'un
+    // vrai dossier de crédit, et celle qui se resserre toute seule quand
+    // l'entreprise perd de l'argent : celle qui va mal touche le mur au moment
+    // où elle voudrait emprunter davantage. Capitaux propres à zéro ou
+    // négatifs : plus un euro. Sans plafond déclaré : comportement historique.
+    const ratioMax = scenario.finance.maxDebtToEquity;
+    const loanCeiling =
+      ratioMax === undefined
+        ? Infinity
+        : Math.max(0, ratioMax * w.state.finance.equity - w.state.finance.financialDebt);
+    const newLoan = Math.min(loanRequested, loanCeiling);
 
     // Augmentation de capital : bornée par l'enveloppe TOTALE des associés
     // (scenario.finance.maxCapitalIncreaseTotal) — un apport illimité
@@ -1939,6 +1983,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const hsMaintSaving = gelee
       ? 0
       : Math.min(w.decisions.maintenanceBudget, w.hsEffects.maintenanceSaving);
+    // Ce que l'animateur a accordé à CETTE entreprise pour CE tour, en réponse
+    // à sa demande de subvention exceptionnelle. Zéro dans l'immense majorité
+    // des cas — et alors rien n'est émis nulle part.
+    const subventionSauvetage = Math.max(0, input.rescueSubsidies?.[w.state.id] ?? 0);
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -1964,6 +2012,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // H&S : laborCost en charges fixes ; immobilizationCost en charge exceptionnelle.
       exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge + w.qualityActionsCost + w.maintenanceDowntimeCost + w.hsImmoCost,
       exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome + qaExceptionalIncome + hsMaintSaving,
+      // LA SUBVENTION DE SAUVETAGE, ELLE, TRAVERSE LE GEL. Une entreprise
+      // défaillante ne dépense plus rien — mais c'est justement à elle que
+      // l'animateur accorde une aide, et la lui refuser ici la condamnerait
+      // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
+      // capital, l'argent entre quel que soit l'état de l'entreprise.
+      ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
       fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
@@ -2049,6 +2103,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       });
     }
 
+    // Jalon B : la subvention de sauvetage (débit 512 / crédit 771). Produit
+    // exceptionnel : elle n'a rien d'une subvention d'exploitation récurrente.
+    if (multi && subventionSauvetage > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Subvention exceptionnelle",
+        category: "financing",
+        debitAccount: "512",
+        debitLabel: "Banque",
+        creditAccount: "771",
+        creditLabel: "Produits exceptionnels sur opérations de gestion",
+        amount: subventionSauvetage,
+      });
+    }
+
     // Jalon B : Enregistrement des nouveaux emprunts (débit 512 / crédit 16)
     if (multi && newLoan > 0) {
       journalByCompany.get(w.state.id)!.record({
@@ -2119,12 +2188,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // recapitalisation, par exemple), ce qui dégèle l'entreprise.
     const enCessationDePaiements = finance.treasury.crisis;
     const crisisStreak = enCessationDePaiements ? (w.state.crisisStreak ?? 0) + 1 : 0;
-    const statut: "active" | "defaillant" = crisisStreak >= 2 ? "defaillant" : "active";
+    // Combien de tours de suite avant la défaillance : deux par défaut, mais
+    // c'est une règle de jeu, pas une loi. L'enseignant la fixe dans son
+    // espace selon la durée de sa séance.
+    const toursAvantDefaillance = scenario.finance.crisisRoundsBeforeFailure ?? 2;
+    const statut: "active" | "defaillant" =
+      crisisStreak >= toursAvantDefaillance ? "defaillant" : "active";
 
     const functionalBalance = computeFunctionalBalance(finance.closing);
-    // Le plan de CE tour n'est jugeable qu'une fois le tour joué : sa
-    // fiabilité fixe les conditions du tour SUIVANT, jamais celles du tour en
-    // cours, qui ont été consenties sur la foi des tours passés.
+    // CE tour n'est jugeable qu'une fois joué : ce que la banque en retient
+    // fixe les conditions du tour SUIVANT, jamais celles du tour en cours, qui
+    // ont été consenties sur la foi des tours passés. Elle lit la tenue de la
+    // trésorerie (crise, affacturage forcé, ou rien de tout cela) et, si un
+    // plan est arrivé par une autre voie que le formulaire, sa fiabilité.
     const fiabilite = bank
       ? fiabiliteDuPlan({
           expectedUnits: w.decisions.forecast?.expectedUnits,
@@ -2134,8 +2210,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           cashScale: scenario.fixedCostsPerRound,
         })
       : null;
+    const tenue = tenueDeTresorerie(finance.treasury);
     const confianceApres = bank
-      ? confianceSuivante(confianceAvant, fiabilite, bank)
+      ? confianceSuivante(confianceAvant, jugementDeLaBanque({ tenue, fiabilite }), bank)
       : confianceAvant;
     const ratios = computeRatios(
       finance.incomeStatement,
@@ -2529,6 +2606,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               nextMandatory,
               ...(machineLoanGranted > 0 ? { machineLoanGranted } : {}),
               ...(installationLoanGranted > 0 ? { installationLoanGranted } : {}),
+              // Émis SEULEMENT quand la banque a coupé la demande : un champ à
+              // zéro sur toutes les parties normales alourdirait le résultat
+              // sérialisé et changerait les instantanés dorés pour rien.
+              ...(loanRequested - newLoan > 0.005
+                ? { loanRefused: loanRequested - newLoan }
+                : {}),
             },
           }
         : {}),
@@ -2665,6 +2748,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             bank: {
               trustBefore: confianceAvant,
               trustAfter: confianceApres,
+              treasuryConduct: tenue,
               reliability: fiabilite,
               planFiled: planFourni,
               loanRequested,

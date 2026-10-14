@@ -24,6 +24,7 @@ vi.mock("@/lib/session", () => ({
 
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { REFUS_DU_RELEVE } from "@/config/tarifs";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
   closeCurrentRound,
@@ -35,6 +36,7 @@ import { getTeamSituations, submitDiagnosis } from "@/services/pedagogy.service"
 import { situationByCode } from "@/config/scenarios/registry";
 import { GET } from "@/app/teacher/games/[gameId]/releve/route";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 // Un prix et un volume qui ne sont pas ceux que le secteur propose : la
 // source des décisions doit les voir comme des choix.
@@ -63,6 +65,8 @@ beforeAll(async () => {
   prof = r.userId;
   const orgId = (await getTeacherOrgId(prof))!;
 
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,
@@ -185,5 +189,26 @@ describe("export du relevé en tableur", () => {
 
     sessionCourante = null;
     expect((await appeler(gameId)).status).toBe(401);
+  });
+
+  it("suit la règle de la classe : sans licence de l'arène, ni en cours ni récente, il est refusé", async () => {
+    const orgId = (await getTeacherOrgId(prof))!;
+    const { orgLicences } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const avant = await db.select().from(orgLicences).where(eq(orgLicences.organizationId, orgId));
+    // La licence a pris fin il y a plus longtemps que le délai de consultation.
+    await db
+      .update(orgLicences)
+      .set({ startsAt: new Date("2020-09-01"), endsAt: new Date("2021-08-31") })
+      .where(eq(orgLicences.organizationId, orgId));
+    sessionCourante = { userId: prof, role: "teacher" };
+    const r = await appeler(gameId);
+    expect(r.status).toBe(402);
+    expect(await r.text()).toContain(REFUS_DU_RELEVE);
+    // Remise en l'état.
+    for (const l of avant) {
+      await db.update(orgLicences).set({ startsAt: l.startsAt, endsAt: l.endsAt }).where(eq(orgLicences.id, l.id));
+    }
+    expect((await appeler(gameId)).status).toBe(200);
   });
 });

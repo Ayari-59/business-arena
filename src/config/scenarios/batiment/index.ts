@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario BÂTIMENT — « MARTEL & FILS », entreprise de rénovation de quatorze
@@ -117,9 +118,12 @@ const rawBatiment = {
     loanAnnualRate: 0.058,
     overdraftAnnualRate: 0.14,
     overdraftLimit: 90000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     vatRate: 0.2,
@@ -127,6 +131,8 @@ const rawBatiment = {
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 24,
     maxCapitalIncreaseTotal: 200000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 14000,
   },
   treasury: {
@@ -462,6 +468,43 @@ const rawBatiment = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "batiment_artisan_low_cost",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:particuliers", op: "mul", value: 0.82 }],
+    },
+    {
+      code: "batiment_major_petits_marches",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:marches_publics", op: "mul", value: 0.75 }],
+    },
+    {
+      code: "batiment_bouche_a_oreille",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:syndics", op: "mul", value: 1.25 }],
+    },
+    {
+      code: "batiment_conducteur_absent",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "batiment_norme_thermique",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "material_cost", op: "mul", value: 1.1 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("batiment"),
   ],
   // Le crédit immobilier se resserre au tour 4 : les particuliers reportent
   // leurs travaux au moment même où la saison devrait repartir.

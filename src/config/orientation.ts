@@ -1,6 +1,11 @@
-import { ATELIERS } from "./ateliers";
+import { ATELIERS, type AtelierDefinition } from "./ateliers";
+import { formationsEnToutesLettres, publicDeLAtelier } from "./formations";
 import { DIFFICULTY_PRESETS } from "./difficulty";
-import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "./scenarios/registry";
+import {
+  SCENARIOS,
+  scenarioByCode,
+  scenarioCodeForLevel,
+} from "./scenarios/registry";
 import { tourDuPic } from "./scenarios/rounds";
 import type { Periodicity } from "./scenarios/periodicity";
 
@@ -85,9 +90,18 @@ export const OBJECTIFS: readonly Objectif[] = [
     code: "risques",
     libelle: "Les risques et leur couverture",
     secteur: "batiment",
+    // La couverture des risques se décide avec l'assurance, ouverte au niveau 4.
+    niveauMinimum: 4,
+    raison:
+      "Le bâtiment porte des chantiers en cours et leurs aléas. Les risques y ont un montant : on les arbitre au lieu de les qualifier.",
+  },
+  {
+    code: "immersion_campus",
+    libelle: "Faire travailler plusieurs filières ensemble",
+    secteur: "nova",
     niveauMinimum: 3,
     raison:
-      "Le bâtiment porte des chantiers en cours et des aléas de chantier : les risques y ont un montant, ce qui permet de les arbitrer plutôt que de les qualifier.",
+      "NOVA occupe cinq postes de direction sans en noyer aucun. C'est l'entreprise des championnats, et le terrain d'une immersion qui mêle les niveaux.",
   },
   {
     code: "diagnostic_financier",
@@ -122,9 +136,40 @@ export interface Demande {
 /** Les diplômes proposés : ceux qui ont un atelier, plus une porte de sortie. */
 export function diplomesProposes(): { code: string; libelle: string }[] {
   return [
-    ...ATELIERS.map((a) => ({ code: a.code, libelle: `${a.diplome} · ${a.annee}` })),
+    ...ATELIERS.map((a) => ({
+      code: a.code,
+      libelle: `${formationsEnToutesLettres(a)} · ${a.annee}`,
+    })),
     { code: "autre", libelle: "Un autre diplôme ou une autre formation" },
   ];
+}
+
+/**
+ * Le réglage d'un atelier joué en concours : celui que le produit impose.
+ *
+ * Il se lit de la fiche, et la fiche est tenue par une garde de dire ce que le
+ * championnat applique vraiment. L'objectif et le semestre n'y changent rien,
+ * et c'est la première chose que la recommandation doit dire.
+ */
+function reglageDeConcours(atelier: AtelierDefinition): Recommandation {
+  const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  const preset = DIFFICULTY_PRESETS.find(
+    (p) => p.level === atelier.reglages.niveau,
+  )!;
+  return {
+    scenarioCode: atelier.reglages.scenarioCode,
+    scenarioTitre: scenario.title,
+    niveau: atelier.reglages.niveau,
+    niveauNom: preset.name,
+    tours: atelier.reglages.tours,
+    periodicite: atelier.reglages.periodicite,
+    atelierCode: atelier.code,
+    pourquoi: [
+      "Cet atelier se joue en mode concours, et un championnat ne se règle pas comme une partie de classe : le secteur, le niveau et la durée sont imposés par le produit, quels que soient votre objectif et votre semestre.",
+      `Les équipes jouent donc ${scenario.title} au niveau ${preset.name}, sur ${atelier.reglages.tours} tours, sans concurrent simulé, avec les indices plafonnés et les décisions verrouillées une fois validées.`,
+      `L'atelier « ${atelier.titre} » est écrit pour ces contraintes : ${atelier.format}, avec ses livrables et sa grille d'évaluation.`,
+    ],
+  };
 }
 
 /**
@@ -137,20 +182,32 @@ export function diplomesProposes(): { code: string; libelle: string }[] {
  */
 export function recommander(demande: Demande): Recommandation {
   const atelier = ATELIERS.find((a) => a.code === demande.diplome) ?? null;
-  const objectif = OBJECTIFS.find((o) => o.code === demande.objectif) ?? OBJECTIFS[0]!;
+  const objectif =
+    OBJECTIFS.find((o) => o.code === demande.objectif) ?? OBJECTIFS[0]!;
+  // Un atelier de CONCOURS coupe court : rien de ce qui suit ne s'applique,
+  // puisque le produit impose le secteur, le niveau et la durée d'un
+  // championnat. Répondre autre chose enverrait l'organisateur régler ce qui ne
+  // se règle pas, et il ne s'en apercevrait qu'en créant son concours.
+  if (atelier?.reglages.concours) return reglageDeConcours(atelier);
   const pourquoi: string[] = [];
 
   // 1. Le secteur : celui de l'objectif, qui est le plus parlant, sauf si
   //    l'atelier du diplôme en impose un autre pour de bonnes raisons.
-  let scenarioCode = objectif.secteur ?? atelier?.reglages.scenarioCode ?? SCENARIOS[0]!.code;
-  if (atelier && objectif.secteur && atelier.reglages.scenarioCode !== objectif.secteur) {
+  let scenarioCode =
+    objectif.secteur ?? atelier?.reglages.scenarioCode ?? SCENARIOS[0]!.code;
+  if (
+    atelier &&
+    objectif.secteur &&
+    atelier.reglages.scenarioCode !== objectif.secteur
+  ) {
     pourquoi.push(
-      `L'atelier ${atelier.diplome} se joue d'ordinaire sur un autre secteur ; votre objectif déplace le choix. ${objectif.raison}`,
+      `L'atelier ${publicDeLAtelier(atelier)} se joue d'ordinaire sur un autre secteur ; votre objectif déplace le choix. ${objectif.raison}`,
     );
   } else {
     pourquoi.push(objectif.raison);
   }
-  if (!SCENARIOS.some((s) => s.code === scenarioCode)) scenarioCode = SCENARIOS[0]!.code;
+  if (!SCENARIOS.some((s) => s.code === scenarioCode))
+    scenarioCode = SCENARIOS[0]!.code;
 
   // 2. Le niveau : celui de l'atelier, jamais sous ce que l'objectif exige,
   //    et rabattu d'un cran au premier semestre.
@@ -158,8 +215,8 @@ export function recommander(demande: Demande): Recommandation {
   let niveau = Math.max(atelier?.reglages.niveau ?? 2, objectif.niveauMinimum);
   if (demande.semestre === "s1") {
     // Le plancher de l'objectif ne se franchit pas : proposer « la trésorerie et
-    // le BFR » sur un niveau qui n'ouvre pas le financement enverrait
-    // l'enseignant chercher une banque qui n'existe pas dans sa partie.
+    // le BFR » sur un niveau qui n'ouvre pas les créances clients enverrait
+    // l'enseignant chercher un levier qui n'existe pas dans sa partie.
     const abaisse = Math.max(objectif.niveauMinimum, 1, niveau - 1);
     if (abaisse !== niveau) {
       pourquoi.push(

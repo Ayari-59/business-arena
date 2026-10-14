@@ -53,6 +53,74 @@ Inscriptions ──< competition_entries (équipe, organisation, statut)
 - Ce design garantit qu'organiser un championnat national = de l'orchestration de parties
   existantes, **zéro modification du moteur économique**.
 
+### 3.0 Le code de reprise d'un joueur (implémenté)
+
+Un élève de concours n'a ni compte ni mot de passe : il est reconnu par un cookie invité
+signé, donc par SON NAVIGATEUR. Changer de poste, vider ses cookies ou passer du PC de la
+salle au téléphone suffisait à le rendre méconnaissable — et, une fois les inscriptions
+closes, à l'exclure de son propre tournoi, sans aucun recours.
+
+- `competition_members (competition_id, user_id, team_label, recovery_code)` : un code
+  personnel par membre, tiré à l'inscription dans l'alphabet des codes lisibles (ni I, ni
+  L, ni O, ni 0, ni 1), huit signes, unique pour toute la base — il se saisit donc seul,
+  sans le code du concours.
+- `reprendreSonIdentite({ code, ip })` rend l'identité de son propriétaire ; l'appareil la
+  reçoit par `setGuestCookie`. Le message d'échec est le même pour un code mal formé et
+  pour un code inconnu, et les tentatives sont comptées par adresse dans `login_attempts`
+  sous le marqueur `reprise-de-concours`, distinct de la connexion enseignante.
+- Le code est stocké EN CLAIR, à dessein : le chemin de secours réel d'une salle de classe
+  est l'enseignant, qui doit pouvoir le relire à l'élève qui l'a perdu. Il est donc visible
+  par son propriétaire (sur sa page de concours) et par l'organisateur (liste repliée, avec
+  la mise en garde de ne pas la projeter). Il ne donne accès qu'à ce joueur, dans ce
+  concours.
+- Le code appartient au JOUEUR et non à l'équipe : deux coéquipiers n'ont pas le même,
+  sinon l'un jouerait pour l'autre. Se réinscrire ne le change pas, puisque c'est celui
+  que l'élève a noté.
+
+### 3.0 bis L'équipe de concours est figée
+
+Constaté en jouant une vraie finale : l'arène d'une partie de concours
+proposait à un finaliste de REJOINDRE L'ÉQUIPE ADVERSE, et de renommer la
+sienne. Les deux gestes viennent de la partie de classe, où le code
+d'invitation range au hasard et où l'élève doit pouvoir se corriger au premier
+tour (`peutChoisirSonEquipe`, `nommerEquipe`). Ni l'un ni l'autre ne regardait
+le mode de la partie.
+
+Le second était destructeur : le classement d'une phase porte `teams.name`
+(`stageStandings`), et `cloreLaPhase` compare ce nom au `team_label` de
+l'inscription. Une équipe renommée devenait introuvable au moment de qualifier
+— éliminée alors qu'elle avait gagné — et la phase suivante se créait sans un
+seul joueur, `membersByLabel` étant clé sur l'ancien libellé.
+
+Les deux gestes sont donc refusés en mode `competition`, côté service et non
+seulement à l'écran, et le panneau des équipes n'y est plus qu'une lecture qui
+dit pourquoi : l'équipe est celle de l'inscription, elle se qualifie d'un bloc.
+
+### 3.1 Phases intermédiaires (implémenté)
+
+L'arbre ci-dessus n'était parcouru qu'en deux temps : des poules de qualification, puis la
+finale. Un tournoi de campus en demande davantage — préliminaires, demi-finales, finale —,
+et rien dans la table ne l'interdisait : elle porte déjà un `index` et un type `semifinal`.
+
+- `startIntermediateStage({ groupSize, advancePerGroup, nom })` clôt la phase en cours,
+  qualifie ses meilleures équipes et les retire au sort dans de nouvelles **poules**. Le
+  geste est répétable : on empile autant de phases que l'organisateur en lance, jusqu'à ce
+  qu'il appelle `startFinal`.
+- Le **nom** saisi (« Demi-finales », « Tour 2 ») vit dans le `format` jsonb de la phase :
+  aucune colonne à ajouter, et l'affichage sait nommer une phase autrement que « Phase 2 ».
+- La graine du tirage est celle du concours **décalée par l'index** de la phase. Sans ce
+  décalage, deux phases successives mélangeraient la même liste dans le même ordre et les
+  mêmes équipes se retrouveraient ensemble sans que rien ne l'explique.
+- Avant de confirmer, l'organisateur voit l'**aperçu** de la phase (`apercuDePhase`) :
+  nombre de poules, taille réelle après redistribution du reste, équipes encore en lice.
+  Deux empêchements le bloquent, et chacun dit quoi faire à la place — moins de deux poules
+  possibles (c'est une finale qu'il faut lancer), et autant de qualifiées que d'équipes
+  dans la plus petite poule (la phase ne trancherait rien).
+- Chaque phase se clôt du même geste, finale comprise : les qualifiées restent `active`,
+  les autres passent `eliminated`. Dans un concours terminé, plus personne n'est en lice.
+- Le déroulé affiché suit les phases réellement créées, et non plus quatre étapes figées :
+  inscriptions, une entrée par phase, la finale tant qu'elle n'est pas lancée, le podium.
+
 ## 4. Rôles et cycle de vie
 
 - `organizer` (rôle sur le concours) : crée les phases, fixe le calendrier, publie les

@@ -1,8 +1,8 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { partieQuiCompte } from "@/services/archives-d-essai";
 import {
   concepts,
-  decisionModels,
   games,
   hintUsages,
   hints,
@@ -12,35 +12,28 @@ import {
   players,
   roundResults,
   rounds,
-  situationConcepts,
   situationInstances,
-  situationModels,
   situations,
   teams,
 } from "@/db/schema";
-import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
-import { DECISION_MODELS } from "@/config/pedagogy/models";
-import type { SituationDef } from "@/config/scenarios/nova/situations";
+import { enEssai } from "@/config/tour-d-essai";
+import { conceptByCode } from "@/config/pedagogy/concepts";
 import {
-  MODEL_QUESTION_ID,
-  type QuizQuestionDef,
-} from "@/config/scenarios/situation-kit";
-import {
-  ALL_SITUATIONS,
   SCENARIOS,
   scenarioByCode,
   situationByCode,
 } from "@/config/scenarios/registry";
-import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
+import { presetFromProfile, quizModeFromProfile } from "@/config/difficulty";
+import { NIVEAU_STANDARD, optionsDuDiagnostic } from "@/config/analyse-par-niveau";
+import { askedQuestions, modelCtxOf } from "@/services/debrief.service";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
-import { buildConsequenceContext, buildInterpretation, buildTriggerContext, detectSituations } from "@/pedagogy/detection";
+import { buildConsequenceContext, buildInterpretation } from "@/pedagogy/detection";
 import type { ConsequenceFact, InterpretationFact } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
 import type { CompanyRoundResult } from "@/engine/types";
-import { markStepCompleted } from "@/services/learning-progress.service";
 /**
  * Moteur pédagogique côté services — barrel de compatibilité.
  *
@@ -50,7 +43,10 @@ import { markStepCompleted } from "@/services/learning-progress.service";
  *   - situation-instance.service  : ouverture / chargement des situations
  *   - hints.service               : plafond et déblocage des indices
  *   - diagnosis.service           : diagnostic + score F1
- *   - debrief.service             : QCM, rattrapage, débriefing, vue (toView)
+ *   - debrief.service             : rattrapage, politique de rattrapage, vue
+ *                                   (toView). Le QCM et le débriefing sont
+ *                                   ICI : la copie qu'en portait ce service-là
+ *                                   n'était importée par personne.
  *   - pedagogy-reporting.service  : vues lecture élève / enseignant
  *
  * Ce fichier ne fait que ré-exporter leur API publique : les appelants qui
@@ -60,181 +56,28 @@ import { markStepCompleted } from "@/services/learning-progress.service";
 // Seed idempotent des référentiels (appelé à la création de partie)
 // ---------------------------------------------------------------------------
 
-const DOMAIN_TO_DB: Record<string, "market" | "commercial" | "costs" | "margins" | "thresholds" | "production" | "finance" | "profitability"> = {
-  market: "market",
-  commercial: "commercial",
-  costs: "costs",
-  margins: "margins",
-  thresholds: "thresholds",
-  production: "production",
-  finance: "finance",
-  profitability: "profitability",
-};
 
-export async function seedPedagogyReferentials(): Promise<void> {
-  await db
-    .insert(concepts)
-    .values(
-      CONCEPTS.map((c) => ({
-        code: c.code,
-        name: c.name,
-        domain: DOMAIN_TO_DB[c.domain]!,
-        definition: c.definition,
-        layers: { intuition: c.intuition, method: c.method },
-        formulas: c.formula ? [c.formula] : null,
-        introDifficulty: 1,
-      })),
-    )
-    .onConflictDoNothing({ target: concepts.code });
-
-  await db
-    .insert(decisionModels)
-    .values(
-      DECISION_MODELS.map((m) => ({
-        code: m.code,
-        name: m.name,
-        description: m.description,
-        objective: m.objective,
-        difficulty: m.difficulty,
-      })),
-    )
-    .onConflictDoNothing({ target: decisionModels.code });
-
-  await db
-    .insert(situations)
-    .values(
-      ALL_SITUATIONS.map((s) => ({
-        code: s.code,
-        titleKey: s.title,
-        narrativeKey: s.narrative,
-        problemKey: s.problem,
-        diagnosticOptions: s.diagnosticOptions,
-        trigger: s.trigger,
-        difficulty: 1,
-        weight: s.weight.toString(),
-      })),
-    )
-    .onConflictDoNothing({ target: situations.code });
-
-  // Jointures (hints, matrice de pertinence, concepts) — après résolution des ids
-  const situationRows = await db.select().from(situations);
-  const modelRows = await db.select().from(decisionModels);
-  const conceptRows = await db.select().from(concepts);
-  const situationIdByCode = new Map(situationRows.map((r) => [r.code, r.id]));
-  const modelIdByCode = new Map(modelRows.map((r) => [r.code, r.id]));
-  const conceptIdByCode = new Map(conceptRows.map((r) => [r.code, r.id]));
-
-  const hintValues = ALL_SITUATIONS.flatMap((s) =>
-    s.hints.map((h) => ({
-      situationId: situationIdByCode.get(s.code)!,
-      level: h.level,
-      textKey: h.text,
-      costRatio: h.costRatio.toString(),
-    })),
-  );
-  if (hintValues.length > 0) await db.insert(hints).values(hintValues).onConflictDoNothing();
-
-  const relevanceValues = ALL_SITUATIONS.flatMap((s) =>
-    Object.entries(s.modelRelevance)
-      .filter(([code]) => modelIdByCode.has(code))
-      .map(([code, relevance]) => ({
-        situationId: situationIdByCode.get(s.code)!,
-        decisionModelId: modelIdByCode.get(code)!,
-        relevance,
-      })),
-  );
-  if (relevanceValues.length > 0)
-    await db.insert(situationModels).values(relevanceValues).onConflictDoNothing();
-
-  const conceptValues = ALL_SITUATIONS.flatMap((s) =>
-    s.conceptCodes
-      .filter((code) => conceptIdByCode.has(code))
-      .map((code) => ({
-        situationId: situationIdByCode.get(s.code)!,
-        conceptId: conceptIdByCode.get(code)!,
-      })),
-  );
-  if (conceptValues.length > 0)
-    await db.insert(situationConcepts).values(conceptValues).onConflictDoNothing();
-}
+/**
+ * Semis des référentiels : réexporté de pedagogy-seed.service, seule source.
+ * Une copie sans paramètre vivait ici et masquait l'autre : `game-creation`
+ * l'appelait donc sans les situations du scénario enseignant, qui n'étaient
+ * jamais semées — leurs élèves n'en recevaient aucune.
+ */
+export { seedPedagogyReferentials } from "@/services/pedagogy-seed.service";
 
 // ---------------------------------------------------------------------------
 // Instanciation des situations d'un tour (scriptées + détectées, doc 03 §1.1)
 // ---------------------------------------------------------------------------
 
-export async function openSituationsForRound(
-  gameId: string,
-  roundIndex: number,
-  previousResults?: Record<string, CompanyRoundResult>,
-): Promise<void> {
-  const roundRow = (
-    await db
-      .select()
-      .from(rounds)
-      .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex)))
-  )[0];
-  if (!roundRow) return;
-  const humanTeams = await db
-    .select()
-    .from(teams)
-    .where(and(eq(teams.gameId, gameId), eq(teams.controller, "human")));
-  if (humanTeams.length === 0) return;
-
-  const situationRows = await db.select().from(situations);
-  const situationIdByCode = new Map(situationRows.map((r) => [r.code, r.id]));
-
-  // Les situations appartiennent au scénario JOUÉ : une partie d'hôtellerie
-  // n'ouvre jamais une situation d'atelier. Le snapshot porte le code du
-  // scénario de la partie (un code inconnu retombe sur NOVA).
-  const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  const snapshotCode = (gameRow?.scenarioSnapshot as { code?: string } | null)?.code;
-  const definition = scenarioByCode(snapshotCode);
-
-  const values: (typeof situationInstances.$inferInsert)[] = [];
-  const scripted = definition.situations.filter(
-    (s) => "round" in s.trigger && s.trigger.round === roundIndex,
-  );
-  for (const team of humanTeams) {
-    for (const s of scripted) {
-      const situationId = situationIdByCode.get(s.code);
-      if (situationId)
-        values.push({
-          roundId: roundRow.id,
-          teamId: team.id,
-          situationId,
-          origin: "scripted",
-          status: "open",
-          openedAt: new Date(),
-        });
-    }
-    const result = previousResults?.[team.id];
-    if (result) {
-      const detected = new Set(
-        detectSituations(result, {
-          placement: presetFromProfile(gameRow?.difficultyProfile).decisions.placement,
-        }),
-      );
-      // Résolution par le déclencheur porté par la situation, pas par une
-      // convention de nommage : chaque scénario nomme ses situations librement.
-      for (const s of definition.situations) {
-        if (!("detect" in s.trigger) || !detected.has(s.trigger.detect)) continue;
-        const situationId = situationIdByCode.get(s.code);
-        if (situationId)
-          values.push({
-            roundId: roundRow.id,
-            teamId: team.id,
-            situationId,
-            origin: "detected",
-            status: "open",
-            triggerContext: buildTriggerContext(s.trigger.detect, result),
-            openedAt: new Date(),
-          });
-      }
-    }
-  }
-  if (values.length > 0)
-    await db.insert(situationInstances).values(values).onConflictDoNothing();
-}
+/**
+ * Ouverture des situations d'un tour : réexporté de situation-instance.service,
+ * seule source. Une copie vivait ici et résolvait le scénario par
+ * `scenarioByCode`, qui ne connaît que les neuf secteurs intégrés : un scénario
+ * ENSEIGNANT retombait donc sur NOVA, et les situations qu'il avait ajoutées
+ * n'étaient jamais instanciées. L'autre passe par `resolveScenarioDefinition`,
+ * qui va les chercher en base.
+ */
+export { openSituationsForRound } from "@/services/situation-instance.service";
 
 // ---------------------------------------------------------------------------
 // Interactions joueur : indices, diagnostic, QCM de connaissances
@@ -334,9 +177,16 @@ export async function submitDiagnosis(args: {
   selectedOptionIds: string[];
   freeText?: string;
 }): Promise<{ score: number }> {
-  const { instance, def } = await loadInstanceForUser(args.instanceId, args.userId);
+  const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
-  const score = evaluateDiagnosis(args.selectedOptionIds, def.diagnosticOptions);
+  // Noté sur les causes réellement proposées à ce niveau (config/analyse-par-niveau).
+  const score = evaluateDiagnosis(
+    args.selectedOptionIds,
+    optionsDuDiagnostic(
+      def.diagnosticOptions,
+      game ? presetFromProfile(game.difficultyProfile).level : NIVEAU_STANDARD,
+    ),
+  );
   await db
     .update(situationInstances)
     .set({
@@ -356,13 +206,16 @@ export async function submitQuiz(args: {
   instanceId: string;
   userId: string;
   answers: Record<string, string>;
+  /** En questions ouvertes : les textes écrits, conservés tels quels à côté des options retenues. */
+  texts?: Record<string, string>;
 }): Promise<{ score: number }> {
   const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
   if (instance.quiz) throw new Error("Le QCM de cette situation est déjà validé");
   // L'enseignant a retiré les QCM de cette partie : le formulaire n'est plus
   // servi, et une soumission forgée ne doit pas non plus être acceptée.
-  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile));
+  // Les questions réellement POSÉES à ce niveau : celles que le joueur a vues, pas la version canonique.
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), modelCtxOf(game));
   if (asked.length === 0) {
     throw new Error("Les QCM sont désactivés pour cette partie");
   }
@@ -375,7 +228,11 @@ export async function submitQuiz(args: {
   await db
     .update(situationInstances)
     .set({
-      quiz: { answers, score },
+      quiz: {
+        answers,
+        score,
+        ...(args.texts && Object.keys(args.texts).length > 0 ? { texts: args.texts } : {}),
+      },
       status: "answered",
       answeredAt: new Date(),
     })
@@ -407,6 +264,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
   const conceptIdByCode = new Map(conceptRows.map((r) => [r.code, r.id]));
   const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   const quizMode = quizModeFromProfile(gameRow?.difficultyProfile);
+  const modelCtx = modelCtxOf(gameRow);
 
   const toDebrief = instances.filter((i) => i.status !== "debriefed");
   if (toDebrief.length === 0) return;
@@ -425,10 +283,15 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     levelsByInstance.set(u.situationInstanceId, list);
   }
 
-  const allMembers = await db
-    .select()
-    .from(players)
-    .where(inArray(players.teamId, teamIds));
+  // UN TOUR D'ESSAI NE NOURRIT PAS LE PROFIL (config/tour-d-essai.ts) : la situation
+  // se débriefe pour l'équipe, mais ni la maîtrise des notions ni les compétences de
+  // l'élève ne bougent. Elles lui appartiennent, et survivraient à la bascule.
+  const allMembers = enEssai(gameRow)
+    ? []
+    : await db
+        .select()
+        .from(players)
+        .where(inArray(players.teamId, teamIds));
   const membersByTeam = new Map<string, (typeof allMembers)[number][]>();
   for (const m of allMembers) {
     const list = membersByTeam.get(m.teamId) ?? [];
@@ -476,12 +339,21 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       evidenceCount: p.evidenceCount,
     });
   }
+  /**
+   * Ce qui aura bougé à la fin, une ligne par paire (élève, notion). Indexée
+   * par la même clé que `progressMap` : le dédoublonnage vient de la structure,
+   * pas d'une passe de nettoyage qu'on pourrait oublier.
+   */
+  const aEcrire = new Map<
+    string,
+    { userId: string; conceptId: string; mastery: string; evidenceCount: number }
+  >();
 
   const fallbackChoiceIds = toDebrief
     .filter((inst) => {
       const def = situationByCode.get(codeById.get(inst.situationId) ?? "");
       if (!def) return false;
-      const hasQuiz = askedQuestions(def, quizMode).length > 0;
+      const hasQuiz = askedQuestions(def, quizMode, modelCtx).length > 0;
       if (!hasQuiz) return false;
       return (inst.quiz as { score?: number } | null)?.score == null;
     })
@@ -510,7 +382,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       production: (r.engineTrace as { production?: CompanyRoundResult["production"] })?.production ?? { utilizationRate: 0 },
     } as CompanyRoundResult);
   }
-  let beforeByTeam = new Map<string, CompanyRoundResult>();
+  const beforeByTeam = new Map<string, CompanyRoundResult>();
   if (roundIndex > 1) {
     const prevRoundRow = (
       await db
@@ -542,7 +414,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     const levels = levelsByInstance.get(instance.id) ?? [];
     const diagScore =
       ((instance.diagnosis as { score?: number } | null)?.score as number | undefined) ?? 0;
-    const hasQuizQuestions = askedQuestions(def, quizMode).length > 0;
+    const hasQuizQuestions = askedQuestions(def, quizMode, modelCtx).length > 0;
     let quizScore: number | null = null;
     if (hasQuizQuestions) {
       quizScore = (instance.quiz as { score?: number } | null)?.score ?? null;
@@ -582,19 +454,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       })
       .where(eq(situationInstances.id, instance.id));
 
-    // Mark granted learning steps as completed for team members
-    const grantedSteps = def.grantedLearningSteps ?? [];
     const members = membersByTeam.get(instance.teamId) ?? [];
-    for (const member of members) {
-      for (const stepId of grantedSteps) {
-        try {
-          await markStepCompleted(member.userId, stepId);
-        } catch (error) {
-          // Silently skip if step doesn't exist or prerequisites aren't met
-          // (this allows situations to grant steps that don't exist yet without breaking)
-        }
-      }
-    }
 
     // Only track learning progress if the team submitted a diagnosis (V1-5: measure only)
     const diagnosisSubmitted = (instance.diagnosis as { selected?: string[] } | null)?.selected !== undefined;
@@ -615,70 +475,104 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
         const current = progressMap.get(key);
         const mastery = updateMastery(Number(current?.mastery ?? 0), score, def.weight);
         const evidenceCount = (current?.evidenceCount ?? 0) + 1;
-        await db
-          .insert(learningProgress)
-          .values({
-            userId: member.userId,
-            conceptId,
-            mastery: mastery.toFixed(2),
-            evidenceCount: 1,
-            lastEventAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [learningProgress.userId, learningProgress.conceptId],
-            set: {
-              mastery: mastery.toFixed(2),
-              evidenceCount,
-              lastEventAt: new Date(),
-            },
-          });
+        // On ne va PAS en base ici : `progressMap` porte déjà l'état courant,
+        // et la même paire (élève, notion) revient d'une situation à l'autre
+        // dans le même appel. On la tient à jour en mémoire, on note qu'elle
+        // a bougé, et tout part en une écriture après la boucle.
         progressMap.set(key, { mastery: mastery.toFixed(2), evidenceCount });
+        aEcrire.set(key, { userId: member.userId, conceptId, mastery: mastery.toFixed(2), evidenceCount });
       }
     }
   }
 
-  // Recompute skills once for all affected users
+  // LA PROGRESSION DE TOUT LE MONDE, EN UNE ÉCRITURE.
+  //
+  // C'était un upsert par notion, par élève et par situation : une classe de
+  // trente sur neuf situations à trois notions, c'étaient huit cents
+  // allers-retours en série pendant que l'enseignant attend la clôture du
+  // tour. La carte `aEcrire` est indexée par paire (élève, notion) : elle
+  // dédoublonne d'elle-même, ce qui n'est pas un détail — un lot qui porterait
+  // deux fois la même clé ferait échouer l'upsert (« ON CONFLICT DO UPDATE
+  // command cannot affect row a second time »).
+  if (aEcrire.size > 0) {
+    const maintenant = new Date();
+    await db
+      .insert(learningProgress)
+      .values(
+        [...aEcrire.values()].map((l) => ({
+          userId: l.userId,
+          conceptId: l.conceptId,
+          mastery: l.mastery,
+          evidenceCount: l.evidenceCount,
+          lastEventAt: maintenant,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [learningProgress.userId, learningProgress.conceptId],
+        set: {
+          mastery: sql`excluded.mastery`,
+          evidenceCount: sql`excluded.evidence_count`,
+          lastEventAt: sql`excluded.last_event_at`,
+        },
+      });
+  }
+
+  // LES COMPÉTENCES DE TOUT LE MONDE, EN DEUX REQUÊTES.
+  //
+  // Ce bloc était une boucle sur les élèves : une lecture de progression
+  // CHACUN, puis une écriture par axe et par élève. Une classe de trente,
+  // c'était trente allers-retours de lecture et cent quatre-vingts d'écriture,
+  // en série, dans le chemin que l'enseignant déclenche en cliquant « clore le
+  // tour », debout devant sa classe. Le travail était juste ; c'est le nombre
+  // d'allers-retours qui faisait paraître l'application lente.
+  //
+  // Une lecture pour tout le monde, un regroupement en mémoire, une écriture
+  // groupée. `excluded.value` est la valeur de la ligne qu'on tentait
+  // d'insérer : c'est ainsi qu'un upsert par lot met à jour chaque ligne avec
+  // SA valeur, et non toutes avec la dernière.
   const codeByConceptId = new Map(conceptRows.map((r) => [r.id, r.code]));
-  for (const userId of allUserIds) {
-    const progress = await db
-      .select({ mastery: learningProgress.mastery, conceptId: learningProgress.conceptId })
-      .from(learningProgress)
-      .where(eq(learningProgress.userId, userId));
-    if (progress.length === 0) continue;
-    const byAxis = new Map<string, number[]>();
-    for (const p of progress) {
-      const def = conceptByCode.get(codeByConceptId.get(p.conceptId) ?? "");
-      if (!def) continue;
-      const list = byAxis.get(def.axis) ?? [];
-      list.push(Number(p.mastery));
-      byAxis.set(def.axis, list);
-    }
-    for (const axis of AXES) {
-      const masteries = byAxis.get(axis);
-      if (!masteries || masteries.length === 0) continue;
-      const value = aggregateAxis(masteries).toFixed(2);
-      await db
-        .insert(playerSkills)
-        .values({ userId, axis, value })
-        .onConflictDoUpdate({ target: [playerSkills.userId, playerSkills.axis], set: { value } });
-    }
+  const progressions = allUserIds.length
+    ? await db
+        .select({
+          userId: learningProgress.userId,
+          mastery: learningProgress.mastery,
+          conceptId: learningProgress.conceptId,
+        })
+        .from(learningProgress)
+        .where(inArray(learningProgress.userId, allUserIds))
+    : [];
+
+  const parEleve = new Map<string, Map<string, number[]>>();
+  for (const p of progressions) {
+    const def = conceptByCode.get(codeByConceptId.get(p.conceptId) ?? "");
+    if (!def) continue;
+    const axes = parEleve.get(p.userId) ?? new Map<string, number[]>();
+    axes.set(def.axis, [...(axes.get(def.axis) ?? []), Number(p.mastery)]);
+    parEleve.set(p.userId, axes);
+  }
+
+  const lignes = [...parEleve].flatMap(([userId, axes]) =>
+    AXES.flatMap((axis) => {
+      const masteries = axes.get(axis);
+      return masteries && masteries.length > 0
+        ? [{ userId, axis, value: aggregateAxis(masteries).toFixed(2) }]
+        : [];
+    }),
+  );
+  if (lignes.length > 0) {
+    await db
+      .insert(playerSkills)
+      .values(lignes)
+      .onConflictDoUpdate({
+        target: [playerSkills.userId, playerSkills.axis],
+        set: { value: sql`excluded.value` },
+      });
   }
 }
 
 // ---------------------------------------------------------------------------
 // Lectures : vue joueur et vue pédagogique enseignant (§27)
 // ---------------------------------------------------------------------------
-
-/**
- * Questions réellement posées pour cette partie. Le mode « model » ne garde
- * que la question du modèle d'analyse : les questions de connaissances
- * redemandent hors contexte ce que le diagnostic teste déjà en situation.
- */
-function askedQuestions(def: SituationDef, mode: QuizMode): QuizQuestionDef[] {
-  if (mode === "off") return [];
-  if (mode === "model") return def.quiz.filter((q) => q.id === MODEL_QUESTION_ID);
-  return def.quiz;
-}
 
 export interface AnalyticalHint {
   code: string;
@@ -747,7 +641,12 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     concepts: [],
   };
 
-  const gameRows = await db.select().from(games).where(eq(games.createdBy, teacherId));
+  // Ni archive d'essai, ni partie qui joue encore son essai : le carnet ne compte que
+  // ce qui compte (services/archives-d-essai.ts).
+  const gameRows = await db
+    .select()
+    .from(games)
+    .where(and(eq(games.createdBy, teacherId), partieQuiCompte));
   if (gameRows.length === 0) return empty;
   const gameIds = gameRows.map((g) => g.id);
 

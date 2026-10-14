@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MHR.
  *
- * Cinq séances de trois heures sur un hôtel qui traverse une année de saisons.
+ * Cinq séances de deux heures sur un hôtel qui traverse une année de saisons.
  * Le choix du secteur va de soi pour le management en hôtellerie-restauration :
  * on n'y fabrique rien de stockable, la nuitée invendue est perdue à minuit, et
  * tout se joue sur le tarif, le taux d'occupation et la trésorerie qui doit
@@ -21,19 +21,19 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_MHR: AtelierDefinition = {
   code: "mhr",
   titre: "Piloter un hôtel sur une année de saisons",
-  diplome: "BTS Management en hôtellerie-restauration",
+  formations: ["bts-mhr"],
   annee: "Première année",
   nature: "Atelier professionnel",
   traceLabel: "dossier professionnel",
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de trois heures. Chaque équipe dirige le même hôtel d'un trimestre à l'autre, fixe ses tarifs selon la demande, prépare la haute saison, tient sa trésorerie dans le creux, et rend à chaque séance un document que l'on retrouverait sur le bureau d'un directeur d'établissement.",
+    "Cinq séances de deux heures. Chaque équipe dirige le même hôtel d'un trimestre à l'autre, fixe ses tarifs selon la demande, prépare la haute saison, tient sa trésorerie dans le creux, et rend à chaque séance un document que l'on retrouverait sur le bureau d'un directeur d'établissement.",
   resume:
     "Quatre trimestres à la tête d'un hôtel, du calcul du prix moyen et du taux d'occupation au tableau de bord de direction, avec la haute saison comme épreuve.",
   difficulte: 3,
-  difficulteLabel: "Pilotage",
-  format: "5 séances de 3 h",
+  difficulteLabel: "Approfondissement",
+  format: "6 séances de 2 h",
   pourquoi:
     "Le taux d'occupation et le prix moyen se récitent en une heure et ne se comprennent qu'en les subissant. Ici l'équipe fixe son tarif, découvre au trimestre suivant combien de chambres sont restées vides à ce prix, et voit son revenu par chambre disponible monter ou tomber selon qu'elle a rempli ou tenu ses prix. La saisonnalité cesse d'être un chapitre : un hôtel qui a bradé ses nuitées en basse saison n'a plus de trésorerie pour affronter la haute, et une équipe qui a gardé ses tarifs sur un trimestre creux voit ses concurrents remplir pendant que ses étages restent éteints. La perte sèche de la nuitée invendue, que rien ne rattrape le lendemain, fait le reste de la leçon.",
   reglages: {
@@ -48,15 +48,89 @@ export const ATELIER_MHR: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
-      "L'hôtel porte trois clientèles qui ne viennent pas aux mêmes saisons, une capacité de chambres qui ne s'étire pas d'un trimestre à l'autre, et une saison haute qui décide de l'exercice. Le niveau retenu ouvre la trésorerie et l'assurance sans ouvrir le recrutement ni l'investissement : la direction opérationnelle d'un établissement en première année se joue sur le tarif, le remplissage et la caisse, pas sur la structure. Le monde variable est décoché pour que toutes vos classes affrontent la même saison.",
+      "L'hôtel porte trois clientèles qui ne viennent pas aux mêmes saisons, une capacité de chambres qui ne s'étire pas d'un trimestre à l'autre, et une saison haute qui décide de l'exercice. Le niveau retenu ouvre le poste clients et les équipes, que l'atelier laisse à leur effectif de départ, sans l'emprunt, l'investissement ni l'assurance : la direction opérationnelle d'un établissement en première année se joue sur le tarif, le remplissage et la caisse, pas sur la structure. Un manque de trésorerie, la banque le couvre seule, par le découvert. Le monde variable est décoché pour que toutes vos classes affrontent la même saison.",
   },
   seances: [
     {
       numero: 1,
+      titre: "Prendre la direction de l'hôtel sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
+        "Bloc 2 · Analyser les coûts et la performance pour décider",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de l'hôtel, ses trois clientèles et sa saisonnalité, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un hôtel en une page : ses clientèles, sa capacité en chambres, ses tarifs et les charges qui tombent chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le taux d'occupation et le résultat.",
+      ],
+      notions: [
+        "taux d'occupation et revenu par chambre disponible",
+        "clientèles et saisonnalité hôtelière",
+        "charges de structure d'un établissement hôtelier",
+        "compte de résultat d'un hôtel",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario hotel, un trimestre par tour, niveau Pilotage, quatre tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité de l'hôtel, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul hôtel, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de l'hôtel, ses trois clientèles avec leur saisonnalité, la capacité en chambres, les tarifs pratiqués et les charges de structure du trimestre. Elle remplit la première moitié de sa fiche d'identité : clientèles, capacité, charges.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, fixe ses tarifs par clientèle et son budget de communication, puis saisit ses décisions. Vous ne corrigez rien : un tarif trop haut en saison creuse est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son taux d'occupation, son chiffre d'affaires et son résultat, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des tarifs, un taux d'occupation, un résultat. Qui a rempli le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Une chambre vide la nuit est une perte définitive : elle ne se stocke pas.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de l'hôtel, une page : les trois clientèles avec leur saisonnalité, la capacité en chambres, les charges de structure du trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté un hôtel sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon dossier professionnel.",
+      evaluation: [
+        "Les trois clientèles sont listées avec leur saisonnalité.",
+        "La capacité en chambres et les charges de structure sont renseignées.",
+        "Les trois chiffres de l'essai sont exacts, et le coût d'une chambre vide est relevé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Prendre la direction de l'hôtel",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 1,
       processus: [
         "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
@@ -80,46 +154,46 @@ export const ATELIER_MHR: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de la tarification, une du remplissage, une du suivi. Imprimez la fiche de calcul du prix moyen et du taux d'occupation, une par équipe. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, un seul hôtel, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : cinq séances de deux heures, quatre trimestres, un seul hôtel, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "État des lieux de l'établissement",
           detail:
             "Chaque équipe relève ce que l'hôtel possède en chambres, ce qu'il doit à ses fournisseurs, et ce que lui coûte un trimestre d'ouverture, que les chambres soient occupées ou non.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Le prix moyen et le remplissage",
           detail:
             "L'équipe calcule son prix moyen par chambre, son taux d'occupation, puis le remplissage qu'il faut atteindre pour ne rien perdre. Vous circulez sans corriger : une équipe qui confond chiffre d'affaires et revenu par chambre disponible le découvrira au tour suivant, et ne l'oubliera plus.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Premier arbitrage et décisions",
           detail:
             "L'arène pose au premier trimestre un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit son tarif et son offre.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son compte de résultat, son prix moyen réalisé, son taux d'occupation et sa place au classement.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leur calcul de seuil et le confrontent à leur remplissage réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte.",
+            "Deux équipes présentent leur calcul de seuil et le confrontent à leur remplissage réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte. La fiche de positionnement se finit hors séance, pour la séance suivante.",
         },
       ],
       livrable:
         "La fiche de positionnement de l'hôtel, une page : prix moyen visé, taux d'occupation attendu, charges de structure du trimestre, remplissage au seuil, et le positionnement retenu avec sa justification.",
       tracePasseport:
-        "J'ai calculé le prix moyen, le taux d'occupation et le seuil d'un hôtel, et j'ai justifié un positionnement à partir de ces calculs.",
+        "J'ai justifié le positionnement tarifaire d'un hôtel par le calcul de son prix moyen, de son taux d'occupation et de son seuil.",
       evaluation: [
         "Le taux d'occupation et le revenu par chambre disponible sont distingués, et pas confondus.",
         "Le seuil est exprimé en remplissage à atteindre, pas seulement en euros.",
@@ -127,9 +201,9 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Tarifer selon la demande",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 2,
       processus: [
         "Bloc 3 · Gérer l'offre commerciale et la relation client",
@@ -150,49 +224,49 @@ export const ATELIER_MHR: AtelierDefinition = {
         "marge sur coût variable d'une chambre",
       ],
       preparation:
-        "Relisez les clientèles décrites dans le scénario et la saison qui s'ouvre, pour animer le débat sans le trancher. Préparez au tableau une grille à deux colonnes, tenir le tarif ou le baisser, que les équipes rempliront en séance.",
+        "Relisez les clientèles décrites dans le scénario et la saison qui s'ouvre, pour animer le débat sans le trancher. Préparez au tableau une grille à deux colonnes, tenir le tarif ou le baisser, que les équipes rempliront en séance. À préparer par les équipes avant la séance : sur la marge de leur premier trimestre, lue dans leur espace, le nombre de nuitées supplémentaires qu'exigerait une baisse de tarif de dix pour cent, puis de vingt, calcul posé sur une feuille qu'elles apportent.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur le trimestre précédent",
           detail:
             "Chaque équipe relit son résultat et dit en une phrase ce qu'elle a compris. Vous notez au tableau les écarts entre le remplissage visé et le remplissage réel.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Ce que coûte une nuitée bradée",
           detail:
-            "Sur sa propre marge, chaque équipe calcule le nombre de nuitées supplémentaires qu'exigerait une baisse de tarif de dix pour cent, puis de vingt. Les chiffres surprennent toujours : c'est le moment de la séance.",
+            "Chaque équipe part du calcul préparé avant la séance, le vérifie sur sa propre marge et le reporte dans la grille : le nombre de nuitées supplémentaires qu'exigerait une baisse de tarif de dix pour cent, puis de vingt. Les chiffres surprennent toujours : c'est le moment de la séance.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Débat contradictoire",
           detail:
             "Deux équipes défendent chacune une politique, tenir ou baisser, devant la classe. Les autres posent les questions. Personne ne conclut : chaque équipe repart libre de son choix.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Décisions du trimestre",
           detail:
             "L'équipe arrête son tarif et son offre, et écrit en trois lignes ce qu'elle attend de ce choix. Cette prévision sera relue au tour suivant.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Le prix moyen et le taux d'occupation de chaque équipe apparaissent côte à côte, avec leur effet sur la marge.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les équipes qui ont le plus rempli et celles qui ont le mieux gagné. La question qui reste ouverte : remplir à tout prix, est-ce diriger un hôtel.",
+            "On compare les équipes qui ont le plus rempli et celles qui ont le mieux gagné. La question qui reste ouverte : remplir à tout prix, est-ce diriger un hôtel. La note tarifaire se finit hors séance.",
         },
       ],
       livrable:
         "La note tarifaire, une page : la grille des deux politiques, le tarif retenu, la clientèle visée, ce que l'équipe en attend chiffré, et le risque qu'elle accepte de prendre.",
       tracePasseport:
-        "J'ai arbitré une politique tarifaire entre remplissage et marge, et j'en ai chiffré l'effet avant de décider.",
+        "J'ai arbitré une politique tarifaire entre remplissage et marge, après en avoir chiffré l'effet.",
       evaluation: [
         "L'effet de la baisse de tarif est calculé sur la marge, pas sur le chiffre d'affaires.",
         "La clientèle visée est nommée, et son rapport au prix est expliqué.",
@@ -200,20 +274,20 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Réussir la haute saison",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 3,
       processus: [
         "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
         "Bloc 3 · Gérer l'offre commerciale et la relation client",
       ],
       objectif:
-        "Tirer le meilleur de la saison où la demande dépasse la capacité : monter les tarifs sans faire fuir, choisir les clientèles à servir en priorité.",
+        "Tirer le meilleur d'une saison qui change la nature de la demande plus que son volume : les touristes de loisirs doublent, la clientèle affaires se retire à moitié et les groupes disparaissent. Fixer le tarif pour une clientèle qui n'a ni la même sensibilité au prix ni le même délai de règlement que celle des trimestres joués.",
       competences: [
-        "J'anticipe un afflux de demande à partir de la saisonnalité et de mes trimestres précédents.",
-        "Je fixe un tarif de haute saison qui capte la demande sans la casser.",
-        "J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.",
+        "J'anticipe une bascule de clientèles à partir de la saisonnalité de chaque segment et de mes trimestres précédents.",
+        "Je fixe un tarif de haute saison adapté à la clientèle qui domine, sans transposer celui qui convenait à la clientèle d'avant.",
+        "Je relie le mix de clientèles du trimestre à son encaissement : qui paie comptant, qui paie à trente ou quarante-cinq jours.",
       ],
       notions: [
         "saisonnalité de la demande",
@@ -223,25 +297,25 @@ export const ATELIER_MHR: AtelierDefinition = {
         "revenu par chambre disponible",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de saison, où l'équipe écrira son tarif et sa clientèle prioritaire AVANT de connaître le résultat.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de saison, où l'équipe écrira son tarif et sa clientèle attendue AVANT de connaître le résultat. À préparer par les équipes avant la séance : la synthèse de leurs deux trimestres joués, lue dans leur espace, avec pour chacun le mix de clientèles, le tarif, le taux d'occupation et qui a payé comptant ou à trente jours ; c'est le socle sur lequel le plan se construit en séance, sans rien dire de la saison qui vient. Relisez les coefficients de saison du scénario : au troisième trimestre, les loisirs sont à deux fois leur niveau, les affaires à la moitié, les groupes presque à rien, et la demande totale ne dépasse la capacité que de peu. Les loisirs sont la clientèle la plus sensible au prix de l'hôtel, et ils règlent comptant : la caisse se remplit ce trimestre, puis les affaires et les groupes reviennent au suivant en payant à trente et quarante-cinq jours.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Ce que dit la saison",
           detail:
-            "Vous rappelez sans donner de chiffre que le trimestre qui s'ouvre n'est pas un trimestre ordinaire. Les équipes retrouvent seules l'ampleur de l'afflux dans les informations du jeu.",
+            "Vous rappelez sans donner de chiffre que le trimestre qui s'ouvre n'est pas un trimestre ordinaire, et que ce ne sont pas les mêmes clients qui frappent à la porte. Les équipes retrouvent seules, dans les informations du jeu, qui vient et qui ne vient plus.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Plan de haute saison",
           detail:
-            "Chaque équipe construit son plan à partir de ses trimestres joués et du coefficient de saison : le tarif qu'elle affichera, et la clientèle qu'elle servira en premier si les chambres manquent. Rien n'est saisi à ce stade.",
+            "Chaque équipe part de la synthèse de ses trimestres joués, préparée avant la séance, et construit son plan avec les coefficients de saison de chaque clientèle : le mix attendu, le tarif qu'elle affichera pour une clientèle de loisirs plus sensible au prix que celle des affaires, et ce que ce mix change à ses encaissements. Rien n'est saisi à ce stade.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Les deux erreurs de saison",
           detail:
-            "L'équipe chiffre les deux fautes possibles : un tarif trop bas qui remplit sans profiter de la rareté, un tarif trop haut qui laisse des chambres vides un trimestre où tout se vend. Puis elle choisit de quel côté elle prend le risque.",
+            "L'équipe chiffre les deux fautes possibles : reconduire le tarif qui convenait aux affaires, que les touristes ne paieront pas, ou brader pour remplir alors que la demande couvre déjà presque la capacité. Puis elle choisit de quel côté elle prend le risque. La commande exceptionnelle, quand elle tombe, est le vrai arbitrage entre clientèles : un allotement de tour-opérateur payé comptant à bas prix, ou un congrès mieux payé mais réglé à soixante jours.",
         },
         {
           minutes: 30,
@@ -250,32 +324,32 @@ export const ATELIER_MHR: AtelierDefinition = {
             "Saisie du tarif et de l'offre. Le plan écrit reste sur la table, visible.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le trimestre de la haute saison. Les écarts entre équipes sont ici les plus larges de tout l'atelier.",
+            "Vous clôturez le trimestre de la haute saison. Les écarts entre équipes sont ici les plus larges de tout l'atelier, et la caisse de chacune reflète une clientèle qui a payé comptant.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus rempli est-elle celle qui a le mieux valorisé sa saison.",
+            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus rempli est-elle celle qui a le mieux valorisé sa saison, et que reste-t-il en caisse pour aborder le trimestre où les affaires reviennent en payant à trente jours. L'écart constaté s'écrit sur la fiche de plan de saison hors séance.",
         },
       ],
       livrable:
-        "La fiche de plan de saison : le tarif de haute saison et son raisonnement, la clientèle servie en priorité, les deux erreurs chiffrées, le risque choisi, et l'écart constaté après clôture.",
+        "La fiche de plan de saison : le mix de clientèles attendu, le tarif de haute saison et son raisonnement, les deux erreurs chiffrées, le risque choisi, l'encaissement attendu du trimestre, et l'écart constaté après clôture.",
       tracePasseport:
-        "J'ai bâti un plan de haute saison, arbitré entre des clientèles sous contrainte de capacité, et analysé mon écart au résultat.",
+        "J'ai bâti un plan de haute saison pour une clientèle qui changeait de nature, en tarifant pour elle et non pour celle des trimestres joués, puis analysé mon écart au résultat.",
       evaluation: [
-        "Le plan est construit sur les trimestres joués, pas sur une intuition.",
+        "Le plan est construit sur les trimestres joués et les coefficients de saison de chaque clientèle, pas sur une intuition.",
         "Les deux erreurs de saison sont chiffrées, pas seulement décrites.",
-        "L'arbitrage entre clientèles est justifié par la capacité, pas par la préférence.",
+        "Le tarif est justifié par la clientèle qui domine le trimestre, pas par celle d'avant.",
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Tenir la trésorerie dans le creux",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 4,
       processus: [
         "Bloc 2 · Analyser les coûts et la performance pour décider",
@@ -293,28 +367,28 @@ export const ATELIER_MHR: AtelierDefinition = {
         "charges fixes et point mort saisonnier",
         "besoin en fonds de roulement",
         "découvert et coût du financement court terme",
-        "assurance des risques d'exploitation",
+        "tarif d'appel et clientèle disponible",
       ],
       preparation:
-        "Rouvrez la fiche notion sur la trésorerie, que les équipes auront à mobiliser. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
+        "Rouvrez la fiche notion sur la trésorerie, que les équipes auront à mobiliser. Au quatrième trimestre, le scénario fait bondir le coût de l'énergie de 22 % pour deux trimestres : annoncez-le en fin de séance précédente, avec le travail à préparer, sinon l'écart sera imputé à la prévision et non au choc. À préparer par les équipes avant la séance : la projection de leurs encaissements du trimestre creux, à partir du mix de clientèles et des délais de règlement de leur haute saison, lus dans leur espace, face aux charges fixes du trimestre, énergie comprise. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Relecture de la haute saison",
           detail:
             "Chaque équipe confronte ce qu'elle avait prévu à ce qui s'est produit, et dit ce qu'il lui reste en caisse pour aborder le creux. L'écart s'explique en une phrase, sans excuse.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Le creux vu de la caisse",
           detail:
-            "Chaque équipe projette ses encaissements du trimestre creux face à ses charges fixes, qui, elles, ne baissent pas. Le solde prévu s'inscrit au tableau, et il est souvent négatif.",
+            "Chaque équipe part de la projection préparée avant la séance et la finit : ses encaissements du trimestre creux face à ses charges fixes, qui, elles, ne baissent pas. Le solde prévu s'inscrit au tableau, et il est souvent négatif.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Couvrir le besoin",
           detail:
-            "L'équipe décide comment elle passe le creux : tarif d'appel pour capter la clientèle disponible, couverture du découvert, arbitrage des dépenses non essentielles. Chaque option porte son coût.",
+            "L'équipe décide comment elle passe le creux : tarif d'appel pour capter la clientèle disponible, mobilisation des créances ou découvert, arbitrage des dépenses non essentielles. Un sinistre qui tombe dans un trimestre creux, le dégât des eaux ou la panne de chaudière qui retire un cinquième des chambres, se paie sur la caisse : c'est la marge de sécurité qu'on garde, ou qu'on n'a pas. L'assurance, qui couvrirait ces coups durs, s'ouvre au niveau suivant.",
         },
         {
           minutes: 30,
@@ -323,22 +397,22 @@ export const ATELIER_MHR: AtelierDefinition = {
             "Saisie du tarif, de l'offre et de la couverture de trésorerie. Le solde prévu reste affiché, visible de tous.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre creux. Le solde de trésorerie réalisé apparaît à côté du solde prévu par chaque équipe.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les soldes prévus et réalisés. Une équipe qui a bradé sa haute saison et se retrouve à sec dans le creux fait la démonstration à votre place.",
+            "On compare les soldes prévus et réalisés. Une équipe qui a bradé sa haute saison et se retrouve à sec dans le creux fait la démonstration à votre place. L'écart au solde réalisé s'écrit sur le plan de trésorerie hors séance.",
         },
       ],
       livrable:
         "Le plan de trésorerie du trimestre : encaissements attendus, charges fixes, solde prévu, couverture retenue avec son coût, et l'écart au solde réalisé après clôture.",
       tracePasseport:
-        "J'ai construit un plan de trésorerie de trimestre, décidé d'une couverture du besoin, et analysé l'écart entre le solde prévu et le solde réalisé.",
+        "J'ai décidé d'une couverture du besoin de trésorerie à partir d'un plan de trimestre, puis analysé l'écart entre le solde prévu et le solde réalisé.",
       evaluation: [
         "Le solde prévu est construit sur des encaissements et des charges, pas sur une impression.",
         "L'effet des charges fixes sur un trimestre creux est nommé, pas seulement mentionné.",
@@ -346,9 +420,9 @@ export const ATELIER_MHR: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Rendre compte de sa direction",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: null,
       processus: [
         "Bloc 2 · Analyser les coûts et la performance pour décider",
@@ -369,7 +443,7 @@ export const ATELIER_MHR: AtelierDefinition = {
         "compte rendu de gestion",
       ],
       preparation:
-        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe.",
+        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation aux équipes. À préparer par les équipes avant la séance : une version de travail de leur tableau de bord des quatre trimestres, construite depuis leur espace, une page, quatre indicateurs au maximum. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre pour chaque groupe.",
       deroule: [
         {
           minutes: 10,
@@ -378,32 +452,32 @@ export const ATELIER_MHR: AtelierDefinition = {
             "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe disposera d'un temps de présentation court suivi de questions du jury.",
         },
         {
-          minutes: 50,
+          minutes: 25,
           titre: "Construction du tableau de bord",
           detail:
-            "Les équipes reprennent les quatre trimestres depuis leur espace et construisent leur tableau de bord. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié.",
+            "Les équipes partent de la version de travail préparée avant la séance et la finissent. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole, préparation des réponses aux questions probables. Vous passez dans les équipes pour repérer les tableaux illisibles avant qu'ils ne soient projetés.",
         },
         {
-          minutes: 75,
+          minutes: 50,
           titre: "Passage des équipes",
           detail:
-            "Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
+            "Cinq minutes de présentation et trois minutes de questions par équipe. Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
         },
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Bilan de l'atelier",
           detail:
             "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et l'oral. Chaque élève écrit les trois phrases de son dossier professionnel.",
         },
       ],
       livrable:
-        "Le tableau de bord de direction des quatre trimestres, une page, quatre indicateurs justifiés, plus la présentation orale qui l'accompagne.",
+        "Le tableau de bord de direction des quatre trimestres : une page, quatre indicateurs justifiés, la saison la mieux et la moins bien gérée avec leurs raisons, et la présentation orale de cinq minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord de direction d'un hôtel sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [
@@ -434,7 +508,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "Les cinq livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
+    "Les quatre livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
     "Le tableau de bord de direction de la dernière séance, pour un quart.",
     "La présentation orale et les réponses aux questions du jury, pour le dernier quart.",
     "Le classement du jeu n'entre pas dans la note : une équipe peut finir dernière et rendre le meilleur tableau de bord.",
@@ -446,29 +520,32 @@ export const ATELIER_MHR: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Faut-il avoir traité le revenu par chambre disponible avant la première séance ?",
+      question:
+        "Faut-il avoir traité le revenu par chambre disponible avant la première séance ?",
       reponse:
         "Non, et il vaut même mieux ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent un prix moyen et un taux d'occupation parce qu'elles doivent fixer un tarif, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
-      question: "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
+      question:
+        "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
-        "Parce que la haute saison est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie reste ouverte : si votre progression le permet, les deux trimestres suivants se jouent en prolongement, avec le financement d'une rénovation comme fil.",
+        "Parce que la haute saison est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement d'une rénovation comme fil.",
     },
     {
-      question: "Le niveau retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
+      question:
+        "Le niveau retenu n'ouvre pas le recrutement et l'atelier ne travaille pas l'investissement, est-ce voulu ?",
       reponse:
-        "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. Vous pouvez monter d'un niveau en deuxième année.",
-    },
-    {
-      question: "Le référentiel du BTS MHR est-il repris au mot dans les intitulés de blocs ?",
-      reponse:
-        "Pas encore. Les blocs cités décrivent l'activité de management de façon fidèle mais n'ont pas été confrontés au texte de l'arrêté : le diplôme figure pour cette raison dans la liste des référentiels non vérifiés. Relisez-les avec votre référentiel sous les yeux et ajustez les intitulés avant un usage certificatif.",
+        "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. L'investissement est à l'écran, à zéro : décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. En deuxième année, vous pouvez monter d'un niveau : l'hôtel passe alors en trois catégories de chambres, avec le recrutement ouvert et l'investissement mis au travail.",
     },
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
         "Oui, en fusionnant les rôles de la tarification et du remplissage. En dessous de trois élèves, le débat contradictoire de la deuxième séance perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+    },
+    {
+      question: "Quel lien avec les épreuves du BTS ?",
+      reponse:
+        "Le référentiel du BTS MHR n'a pas encore été confronté à cette fiche, et les épreuves diffèrent selon l'option : rapprochez chaque livrable de l'épreuve de votre option avant de l'annoncer aux étudiants. Le tableau de bord de direction et sa soutenance sont, dans toutes les options, un entraînement à rendre compte d'une exploitation.",
     },
   ],
 };

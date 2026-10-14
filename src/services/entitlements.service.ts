@@ -1,52 +1,39 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { platformSettings } from "@/db/schema";
-import { getLicenceStatus } from "@/services/licence.service";
+import { licenceEnCours } from "@/services/licence.service";
 import { getTeacherOrgId } from "@/services/auth.service";
-import {
-  DEFAULT_FREE_TIER,
-  FULL_ENTITLEMENTS,
-  type Entitlements,
-  type FreeTier,
-} from "@/config/entitlements";
-
-export type { Entitlements } from "@/config/entitlements";
 
 /**
- * Droits d'accès effectifs (freemium).
+ * Droits d'accès effectifs.
  *
- * Règle unique : une licence EN COURS (active ou bientôt expirée mais encore
- * valide) ouvre tout ; sinon on retombe sur le palier gratuit réglé en admin.
- * On lit la config plateforme en direct (et non via admin.service) pour éviter
- * un cycle d'imports avec les services de jeu qui appellent cette fonction.
+ * L'ANCIEN PALIER GRATUIT (« freemium ») EST RETIRÉ. Il bornait, depuis un réglage de
+ * /admin, les tours, les concours, le relevé et l'IA de qui n'avait pas de licence ; il
+ * ne correspondait plus à la grille (config/tarifs.ts) et pouvait poser des murs qu'elle
+ * ne vend pas. Le réglage enregistré en base (`settings.freeTier`) n'est plus lu.
+ *
+ * Ce qui reste :
+ *  · `plan` : « full » quand une licence de l'arène (Classe, Programme ou Campus) est en cours. Ce
+ *    qu'elle ouvre se vérifie dans services/acces.service.ts (niveaux, classe, concours,
+ *    dossier enseignant, relevé) ;
+ *  · `ai` : toujours vrai. L'assistant IA n'est pas vendu ; il ne dépend que de son
+ *    propre réglage dans /admin et d'une clé côté serveur (services/ai.service.ts).
+ *
+ * Une partie ne s'arrête plus jamais avant la fin de son scénario faute de licence.
  */
-
-async function freeTier(): Promise<FreeTier> {
-  try {
-    const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
-    const stored = (row?.settings as { freeTier?: Partial<FreeTier> } | null)?.freeTier;
-    return { ...DEFAULT_FREE_TIER, ...(stored ?? {}) };
-  } catch (e) {
-    // Panne base : on retombe sur le palier par défaut, qui est OUVERT
-    // (freemium éteint). Un incident de lecture ne doit pas transformer le
-    // site en paywall et bloquer des utilisateurs par erreur.
-    console.error("[entitlements] lecture du palier gratuit échouée :", e);
-    return DEFAULT_FREE_TIER;
-  }
+export interface Entitlements {
+  plan: "full" | "free";
+  ai: boolean;
 }
 
-/** Droits d'un établissement (ou d'un accès sans établissement : palier gratuit). */
+/** Droits d'un établissement (ou d'un accès sans établissement). */
 export async function entitlementsForOrg(organizationId: string | null): Promise<Entitlements> {
   if (organizationId) {
     try {
-      const st = await getLicenceStatus(organizationId);
-      if (st.state === "active" || st.state === "bientot_expiree") return FULL_ENTITLEMENTS;
+      if (await licenceEnCours(organizationId, "arene")) return { plan: "full", ai: true };
     } catch (e) {
+      // On ne DÉBLOQUE pas sur incident.
       console.error("[entitlements] lecture de la licence échouée :", e);
-      // On ne DÉBLOQUE pas sur incident : on continue vers le palier gratuit.
     }
   }
-  return { plan: "free", ...(await freeTier()) };
+  return { plan: "free", ai: true };
 }
 
 /** Droits d'un utilisateur, via l'établissement auquel il est rattaché. */

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
@@ -73,15 +73,23 @@ describe("notions", () => {
   it("l'ancienne adresse des fiches redirige au lieu de disparaître", () => {
     // Elle a pu être copiée dans un cahier de textes ou sur un support
     // imprimé : la casser silencieusement serait pire que de l'avoir renommée.
-    const ancienne = readFileSync("src/app/concepts/page.tsx", "utf-8");
-    expect(ancienne).toContain("redirect");
-    expect(ancienne).toContain("/notions");
+    //
+    // Elle redirige par la CONFIGURATION, pas par une page : une page prérendue
+    // qui redirige est régénérée à chaque invalidation du cache, avec un en-tête
+    // Location écrit deux fois, donc un 404 après chaque réglage d'admin.
+    const config = readFileSync("next.config.ts", "utf-8");
+    expect(config).toMatch(
+      /source: "\/concepts", destination: "\/notions", permanent: true/,
+    );
+    expect(
+      existsSync("src/app/concepts/page.tsx"),
+      "une page à cette adresse masquerait la redirection et réintroduirait le 404",
+    ).toBe(false);
   });
 
   it("aucun lien ne pointe encore vers l'ancienne adresse", () => {
     const fautifs = PAGES.filter(
       (chemin) =>
-        chemin !== "src/app/concepts/page.tsx" &&
         /href=\{?[`"]\/concepts/.test(readFileSync(chemin, "utf-8")),
     );
     expect(fautifs, `liens vers l'ancienne adresse : ${fautifs.join(", ")}`).toEqual([]);

@@ -24,14 +24,16 @@ import type { AtelierDefinition } from "./types";
  *
  * D'où trois choix qui la distinguent des ateliers de section de technicien.
  *
- * Le niveau de jeu retenu n'ouvre que le prix, le volume produit et la
- * communication. Un élève de première qui découvrirait au premier tour un
- * panneau de dix décisions les prendrait au hasard, et le tour suivant ne lui
- * apprendrait rien puisqu'il ne saurait pas laquelle a agi.
+ * L'atelier ne fait travailler que le prix, le volume produit et la
+ * communication ; le niveau met d'autres leviers à l'écran, à zéro. Un élève de
+ * première qui prendrait au premier tour dix décisions les prendrait au hasard,
+ * et le tour suivant ne lui apprendrait rien puisqu'il ne saurait pas laquelle
+ * a agi.
  *
- * Le monde variable est décoché. En découverte, un aléa fait perdre une équipe
- * qui avait raison, et la classe en retient que le jeu est injuste au lieu d'en
- * retenir un raisonnement.
+ * Le monde variable est décoché : toutes les parties jouent le même marché.
+ * Les aléas du niveau Découverte restent possibles, deux fois moins fréquents
+ * qu'au niveau de pilotage : une équipe qui en subit un doit pouvoir le lire
+ * dans le journal du tour, pas en conclure que le jeu est injuste.
  *
  * Les tours ne sont pas commentés par le professeur avant que la classe ne les
  * ait lus. Une animation de découverte se juge à ce que les élèves disent au
@@ -83,8 +85,8 @@ export const THEMES_STMG = {
 
 export const ATELIER_STMG: AtelierDefinition = {
   code: "stmg",
-  titre: "Découvrir la gestion d'une entreprise en quatre séances",
-  diplome: "Baccalauréat STMG",
+  titre: "Prendre les commandes de Nova en quatre séances",
+  formations: ["stmg"],
   annee: "Première et terminale",
   nature: "Animation de découverte",
   traceLabel: "portfolio de compétences",
@@ -96,7 +98,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     "Une première rencontre avec la décision de gestion, du prix affiché au résultat de l'exercice, sur une année complète et sans prérequis.",
   difficulte: 1,
   difficulteLabel: "Découverte",
-  format: "4 séances de 1 h 30",
+  format: "5 séances de 1 h 30",
   pourquoi:
     "En classe de première, la création de valeur s'énonce facilement et se comprend mal, parce que rien dans un cours ne fait sentir qu'une décision engage. Un élève à qui l'on demande si le prix doit monter répond au hasard, et le corrigé lui donne une réponse qu'il oublie. Ici l'équipe fixe son prix, et le trimestre suivant lui montre ses ventes, sa marge et sa place dans la classe. La discussion change de nature : elle ne porte plus sur ce qu'il fallait répondre, mais sur ce qui s'est passé. En terminale, la même trame sert d'entrée dans le programme du tronc commun, et le débriefing se déplace de la décision vers l'organisation qui la prend.",
   reglages: {
@@ -111,17 +113,92 @@ export const ATELIER_STMG: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois ou quatre élèves",
     notes:
-      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. Le niveau retenu n'ouvre que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, sans aléa : ce qui distingue deux résultats est alors une décision, et rien d'autre.",
+      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. L'atelier ne fait travailler que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. L'emprunt et l'investissement sont à l'écran et restent à zéro, et il faut décocher « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, et les aléas du niveau Découverte sont deux fois moins fréquents qu'ailleurs : ce qui distingue deux résultats est presque toujours une décision, et un événement, quand il tombe, se lit dans le journal du tour.",
   },
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans NOVA sur un tour d'essai",
+      dureeMinutes: 90,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        THEMES_STMG.creationValeur,
+        THEMES_STMG.individuActeur,
+        THEMES_STMG.rencontreManagement,
+        THEMES_STMG.activiteProduction,
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois décisions et son atelier, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente une entreprise de fabrication en quelques lignes : ce qu'elle produit, pour qui, et les trois décisions qu'elle prend chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce que mon équipe peut modifier et ce que le jeu fixe.",
+        "Je lis un premier résultat et je distingue ce qui a été vendu, ce qui a été gagné et ce qu'il reste en caisse.",
+      ],
+      notions: [
+        "enceinte produite, unité de l'entreprise",
+        "prix de vente, volume produit et communication",
+        "résultat et trésorerie de fin de trimestre",
+        "décision et conséquence",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario nova, un trimestre par tour, niveau Découverte, quatre tours, huit équipes, zéro concurrent machine, TVA désactivée, monde variable décoché, questions de connaissances activées, décochez « Histoires d'investissement », et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois ou quatre élèves par équipe. Aucun prérequis n'est nécessaire : la première décision se prend avant le premier cours.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : quatre séances d'une heure et demie, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, une trace à produire à chaque séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+        },
+        {
+          minutes: 20,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de NOVA : ce que l'entreprise fabrique, combien d'enceintes l'atelier peut produire, ce que chaque enceinte coûte et les trois décisions disponibles (le prix, le volume à produire et le budget de communication). Elle note ces informations sur sa fiche d'identité.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, discute à trois ou quatre puis saisit un prix, un volume et un budget de communication. Vous ne corrigez rien : une décision hasardeuse est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 15,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit ses ventes, son résultat et sa trésorerie, et note les trois chiffres sur sa fiche.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : un prix, un volume, un résultat, une trésorerie. Qui a vendu le plus, qui a gagné le plus, et pourquoi ce n'est pas la même équipe. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise : la première décision qui comptera se prend à la séance suivante.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de NOVA, une demi-page : ce que fabrique l'entreprise, les trois décisions disponibles, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté une entreprise de fabrication en quelques lignes à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mon portfolio de compétences.",
+      evaluation: [
+        "Les trois décisions disponibles sont nommées avec leur effet attendu.",
+        "La différence entre ce qui a été vendu et ce qu'il reste en caisse est relevée.",
+        "Les trois chiffres de l'essai sont exacts.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Décider sans savoir",
       dureeMinutes: 90,
       tourJoue: 1,
-      processus: [THEMES_STMG.creationValeur, THEMES_STMG.rencontreManagement, THEMES_STMG.activiteProduction],
+      processus: [
+        THEMES_STMG.creationValeur,
+        THEMES_STMG.individuActeur,
+        THEMES_STMG.rencontreManagement,
+        THEMES_STMG.activiteProduction,
+      ],
       objectif:
         "Prendre une première décision de gestion sans cours préalable, puis découvrir ce qu'elle a produit, pour installer le besoin des notions plutôt que de les annoncer.",
       competences: [
@@ -129,7 +206,13 @@ export const ATELIER_STMG: AtelierDefinition = {
         "Je fixe un prix de vente et je dis sur quoi je me suis appuyé pour le fixer.",
         "Je lis un compte de résultat simple et j'y retrouve la décision que mon équipe a prise.",
       ],
-      notions: ["chiffre d'affaires", "coût d'achat des matières", "marge", "résultat", "stock"],
+      notions: [
+        "chiffre d'affaires",
+        "coût d'achat des matières",
+        "marge",
+        "résultat",
+        "stock",
+      ],
       preparation:
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation au tableau. Constituez des équipes de trois ou quatre, sans les composer par niveau : la discussion vaut mieux qu'un classement. Imprimez la grille de décision vierge, une par équipe. Résistez à l'envie de faire un cours d'introduction : cette séance repose entièrement sur le fait que les élèves décident avant de savoir.",
       deroule: [
@@ -173,7 +256,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       livrable:
         "La grille de décision du premier trimestre, une page : coût d'une unité, charges du trimestre, prix retenu et sa justification en une phrase, ventes attendues, puis ventes réelles et résultat obtenu.",
       tracePasseport:
-        "J'ai pris une décision de prix pour une entreprise, je l'ai justifiée, et j'ai confronté ce que j'attendais à ce que le marché a réellement donné.",
+        "J'ai pris une décision de prix justifiée pour une entreprise, puis confronté ce que j'attendais à ce que le marché a réellement donné.",
       evaluation: [
         "Les trois nombres relevés dans la situation de départ sont exacts.",
         "La justification du prix s'appuie sur un coût ou sur la concurrence, pas sur une préférence.",
@@ -181,11 +264,15 @@ export const ATELIER_STMG: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Ce que la décision a coûté",
       dureeMinutes: 90,
       tourJoue: 2,
-      processus: [THEMES_STMG.creationValeur, THEMES_STMG.tempsRisque, THEMES_STMG.organisationsActeurs],
+      processus: [
+        THEMES_STMG.creationValeur,
+        THEMES_STMG.tempsRisque,
+        THEMES_STMG.organisationsActeurs,
+      ],
       objectif:
         "Relier chaque euro du résultat à une décision prise au tour précédent, et corriger une décision en sachant dire ce qu'on en attend.",
       competences: [
@@ -243,7 +330,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       livrable:
         "La fiche de seuil de l'équipe, une page : les charges rangées en deux colonnes, la marge sur une unité vendue, le nombre d'unités à vendre pour ne rien perdre, et l'effet chiffré que l'équipe attend de sa décision du trimestre avant la clôture.",
       tracePasseport:
-        "J'ai distingué les charges variables des charges fixes d'une entreprise et j'ai calculé le nombre de ventes nécessaire pour couvrir ses charges.",
+        "J'ai calculé le nombre de ventes nécessaire pour couvrir les charges d'une entreprise, après avoir distingué ses charges variables de ses charges fixes.",
       evaluation: [
         "Le rangement des charges en deux colonnes est exact, y compris pour les lignes discutées en classe.",
         "Le seuil est exprimé en unités à vendre, et pas seulement en euros.",
@@ -251,11 +338,15 @@ export const ATELIER_STMG: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Un gros client s'annonce",
       dureeMinutes: 90,
       tourJoue: 3,
-      processus: [THEMES_STMG.tempsRisque, THEMES_STMG.managementStrategique, THEMES_STMG.organisationsActeurs],
+      processus: [
+        THEMES_STMG.tempsRisque,
+        THEMES_STMG.managementStrategique,
+        THEMES_STMG.organisationsActeurs,
+      ],
       objectif:
         "Décider aujourd'hui pour un trimestre qui n'est pas encore là, en pesant ce que coûte de produire d'avance contre ce que coûte de ne pas pouvoir livrer.",
       competences: [
@@ -313,7 +404,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       livrable:
         "La fiche de prévision de l'équipe, une page : la capacité maximale de l'atelier pour un trimestre, la demande attendue au trimestre suivant, l'écart entre les deux, le volume de production retenu et le pari écrit en une phrase.",
       tracePasseport:
-        "J'ai comparé la capacité de production d'une entreprise à la demande annoncée, et j'ai décidé d'un volume de production en assumant par écrit le risque de mon choix.",
+        "J'ai décidé d'un volume de production en comparant la capacité de l'entreprise à la demande annoncée, en assumant par écrit le risque de mon choix.",
       evaluation: [
         "La capacité maximale de l'atelier est calculée juste, et pas estimée au jugé.",
         "L'écart entre la capacité et la demande annoncée est chiffré.",
@@ -321,11 +412,16 @@ export const ATELIER_STMG: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Le pic, et ce qu'on en retient",
       dureeMinutes: 90,
       tourJoue: 4,
-      processus: [THEMES_STMG.creationValeur, THEMES_STMG.choixStrategiques, THEMES_STMG.organisationsSociete],
+      processus: [
+        THEMES_STMG.creationValeur,
+        THEMES_STMG.numeriqueCollectif,
+        THEMES_STMG.choixStrategiques,
+        THEMES_STMG.organisationsSociete,
+      ],
       objectif:
         "Jouer le trimestre qui décide de l'exercice, puis rendre compte devant la classe de ce que l'équipe a décidé, de ce que cela a donné et de ce qu'elle ferait autrement.",
       competences: [
@@ -347,7 +443,7 @@ export const ATELIER_STMG: AtelierDefinition = {
           minutes: 15,
           titre: "La décision du pic",
           detail:
-            "La grosse commande annoncée est là, et le marché a presque doublé. Les équipes décident vite : le prix, la communication, et ce qu'elles sortent de leur stock. Vous ne commentez rien.",
+            "La grosse commande annoncée est là, et le marché a presque doublé. Les équipes décident vite : le prix, la communication, et combien elles produisent en plus du stock déjà constitué. Vous ne commentez rien.",
         },
         {
           minutes: 5,
@@ -371,7 +467,7 @@ export const ATELIER_STMG: AtelierDefinition = {
           minutes: 20,
           titre: "Bilan collectif",
           detail:
-            "Vous reprenez les décisions relevées et faites nommer par la classe les notions qu'elles mobilisent. En première, la liste obtenue est celle du programme de sciences de gestion, écrite par les élèves à partir de leur propre année. En terminale, vous prolongez vers la question des choix de l'organisation et de leurs effets au-delà de son résultat.",
+            "Vous reprenez les décisions relevées et faites nommer par la classe les notions qu'elles mobilisent. En première, la liste obtenue est celle du programme de sciences de gestion, écrite par les élèves à partir de leur propre année. En terminale, vous prolongez vers la question des choix de l'organisation et de leurs effets au-delà de son résultat. Une dernière question, pour tous : l'équipe qui a le meilleur résultat a-t-elle aussi la meilleure trésorerie, et sinon pourquoi, quand le compte-clé paie à quatre-vingts jours.",
         },
       ],
       livrable:
@@ -388,19 +484,22 @@ export const ATELIER_STMG: AtelierDefinition = {
   formats: [
     {
       nom: "Quatre semaines de suite",
-      quand: "Le format d'origine, en début d'année ou après les conseils de classe.",
+      quand:
+        "Le format d'origine, en début d'année ou après les conseils de classe.",
       comment:
         "Une séance par semaine, un trimestre par séance, un mois en tout. La semaine qui sépare deux séances laisse le temps de traiter en cours la notion que la séance a fait apparaître, ce qui est tout l'intérêt de l'ordre retenu. Elle laisse aussi les équipes réfléchir au pari de la troisième séance avant de le jouer.",
     },
     {
-      nom: "Demi-journée banalisée",
-      quand: "Journée d'intégration, semaine de la spécialité, portes ouvertes.",
+      nom: "Journée banalisée",
+      quand:
+        "Journée d'intégration, semaine de la spécialité, portes ouvertes.",
       comment:
         "Les quatre séances s'enchaînent avec une pause après la deuxième. Le rythme est plus tendu et le bilan collectif plus court, mais la mémoire des trimestres est meilleure et la classe voit l'année entière dans la même journée, pic compris.",
     },
     {
       nom: "Entrée en terminale",
-      quand: "À la rentrée de terminale, avec des élèves qui ont déjà fait de la gestion en première.",
+      quand:
+        "À la rentrée de terminale, avec des élèves qui ont déjà fait de la gestion en première.",
       comment:
         "Le déroulé ne change pas, les questions de débriefing si : chaque séance en propose une version terminale, tournée vers l'organisation et ses acteurs plutôt que vers le calcul. Vous pouvez alors monter d'un cran le niveau de jeu à la création de la partie.",
     },
@@ -414,31 +513,36 @@ export const ATELIER_STMG: AtelierDefinition = {
   prolongements: [
     "Rejouer la même année avec le monde variable activé : la classe découvre qu'une bonne décision peut mal finir, ce qui ouvre la question du risque et donne tout son sens au pari de la troisième séance.",
     "Basculer sur la boutique de maille pour opposer, sur le même déroulé, une entreprise qui fabrique et une entreprise qui achète pour revendre.",
-    "En terminale, prolonger jusqu'au sixième trimestre en montant d'un cran le niveau de jeu, ce qui ouvre les décisions de trésorerie que le programme de la spécialité gestion et finance mobilise, et fait vivre l'après pic.",
+    "En terminale, prolonger jusqu'au sixième trimestre en montant au niveau Pilotage, deux crans plus haut, ce qui ouvre les décisions de trésorerie que le programme de la spécialité gestion et finance mobilise, et fait vivre l'après pic.",
   ],
   faq: [
     {
-      question: "Pourquoi quatre trimestres, et des séances d'une heure et demie ?",
+      question:
+        "Pourquoi quatre trimestres, et des séances d'une heure et demie ?",
       reponse:
         "Parce que quatre trimestres font une année, et qu'une découverte qui s'arrête en cours d'exercice ne montre pas de résultat annuel. Surtout, le quatrième trimestre est celui où une chaîne de magasins passe sa grosse commande : le marché y double, et c'est la séance qui donne son sens à tout ce qui précède. Une animation de trois séances se jouerait entièrement dans le creux. La séance d'une heure et demie est le créneau ordinaire d'un lycée, et le volume total ne bouge pas.",
     },
     {
-      question: "Mes élèves n'ont jamais fait de gestion, est ce jouable en début de première ?",
+      question:
+        "Mes élèves n'ont jamais fait de gestion, est ce jouable en début de première ?",
       reponse:
         "Oui, et c'est le moment prévu. La première séance ne suppose aucune notion : elle demande de lire trois nombres dans une situation et de fixer un prix. Les notions arrivent ensuite, appelées par ce que les équipes ont vécu, ce qui est exactement l'ordre inverse d'un cours et exactement celui qui fait retenir.",
     },
     {
-      question: "Pourquoi seulement trois décisions alors que le jeu en propose beaucoup plus ?",
+      question:
+        "Pourquoi seulement trois décisions alors que le jeu en propose beaucoup plus ?",
       reponse:
         "Parce qu'une décision ne s'apprend qu'à condition de pouvoir en lire l'effet. Avec dix décisions simultanées, un élève de première ne sait pas laquelle a produit son résultat, et le tour suivant ne lui apprend rien. Le niveau de jeu s'élève à la création de la partie si votre classe a déjà de la bouteille, et le déroulé reste valable.",
     },
     {
-      question: "La même animation peut-elle vraiment servir en première et en terminale ?",
+      question:
+        "La même animation peut-elle vraiment servir en première et en terminale ?",
       reponse:
         "Le déroulé oui, les questions non. Chaque séance porte une question de débriefing différente selon le niveau : en première on nomme la marge, le seuil et la performance, en terminale on interroge l'organisation, ses acteurs et ses choix. C'est le débriefing qui fait le niveau, pas la difficulté du jeu.",
     },
     {
-      question: "Combien d'élèves par équipe, et que faire d'une classe nombreuse ?",
+      question:
+        "Combien d'élèves par équipe, et que faire d'une classe nombreuse ?",
       reponse:
         "Trois ou quatre par équipe, ce qui couvre une classe entière avec le nombre d'équipes prévu par les réglages. Au-delà, créez une seconde partie en parallèle plutôt que d'agrandir les équipes : à cinq, deux élèves regardent les autres jouer, et ce sont rarement ceux qu'on voudrait faire travailler.",
     },
@@ -448,9 +552,15 @@ export const ATELIER_STMG: AtelierDefinition = {
         "Ce n'est pas obligatoire, et une découverte gagne souvent à ne pas l'être. Si vous notez, notez les fiches et l'oral, jamais le classement : une équipe qui a mal joué et qui l'analyse lucidement a plus appris qu'une équipe qui a gagné sans savoir pourquoi.",
     },
     {
-      question: "Que faire si une équipe fait faillite dès le premier trimestre ?",
+      question:
+        "Que faire si une équipe fait faillite dès le premier trimestre ?",
       reponse:
         "Rien, et surtout pas la relancer. Sa situation est le meilleur support de la deuxième séance : elle a devant elle un compte de résultat qui explique très clairement pourquoi on ne vend pas à perte, et la classe entière comprend le seuil de rentabilité en le regardant. Prévenez simplement l'équipe qu'elle ne sera pas notée là-dessus.",
+    },
+    {
+      question: "Quel lien avec les épreuves du baccalauréat ?",
+      reponse:
+        "L'épreuve écrite de spécialité, management, sciences de gestion et numérique, pose une étude de cas sur les documents d'une organisation : les quatre séances en produisent l'équivalent sur une entreprise que la classe a dirigée elle-même, ce qui rend les documents lisibles. La prise de parole de trois minutes de la dernière séance, avec sa question, est un entraînement direct au Grand oral.",
     },
   ],
 };

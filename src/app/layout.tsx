@@ -1,28 +1,74 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter_Tight } from "next/font/google";
+import { Barlow, Barlow_Condensed, Playfair_Display, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { InstallPrompt } from "@/components/install-prompt";
+import { BarreDActionMobile } from "@/components/barre-d-action-mobile";
 
 /**
  * Les deux voix typographiques de la maison, auto-hébergées par next/font
- * (aucune requête au chargement). Fraunces, un serif de caractère, ne sert
- * qu'aux grands titres (règle h1 dans globals.css) ; Inter Tight, une
- * grotesque nette et un peu resserrée, porte tout le reste. Chacune expose une
- * variable CSS que le thème (@theme) branche sur --font-display et --font-sans,
- * si bien qu'aucun composant n'a à nommer une police.
+ * (aucune requête au chargement).
+ *
+ *   · Barlow, la grotesque de lecture, porte le texte ET LES TITRES (jeton
+ *     `--font-titre`) : droits, en casse de phrase, de 600 à 700. Lot P1 : les
+ *     titres ont parlé comme un tableau des scores, en condensé extra-gras
+ *     italique capitale ; c'était la voix d'une affiche de compétition, et le
+ *     propriétaire vise un produit très haut de gamme. Un titre se pose, il ne
+ *     crie pas (règles h1 à h4 dans globals.css, « LES TITRES PARLENT D'UNE
+ *     VOIX POSÉE ») ;
+ *   · Barlow Condensed, sa version étroite et dense, ne porte plus que ce où
+ *     elle excelle : les CHIFFRES qu'on affiche en grand (ardoise, verdict,
+ *     podium, résultat estimé) et le surtitre en capitales espacées, le seul
+ *     niveau de capitales du site. Droite : l'italique n'est plus chargé.
+ *
+ * Barlow n'est pas une police variable : on ne charge que les graisses
+ * employées. Chacune expose une variable CSS que le thème (@theme) branche sur
+ * --font-display, --font-sans et --font-titre, si bien qu'aucun composant n'a
+ * à nommer une police.
  */
-const policeTitre = Fraunces({
+const policeChiffres = Barlow_Condensed({
   subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  style: ["normal"],
   variable: "--font-brand-display",
   display: "swap",
 });
-const policeTexte = Inter_Tight({
+const policeTexte = Barlow({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-brand-sans",
   display: "swap",
 });
-import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
+/**
+ * LES CARACTÈRES DE LA GAZETTE, et d'elle seule (`.coupure-de-presse`,
+ * globals.css). Un journal découpé se reconnaît à sa typographie de presse :
+ *   · Playfair Display, une didone (licence SIL Open Font License 1.1), porte
+ *     la manchette, le titre et la lettrine ;
+ *   · Source Serif 4, un romain de lecture (Adobe, licence SIL Open Font
+ *     License 1.1), porte le chapô, le corps justifié et la signature en
+ *     italique.
+ * Polices variables : un fichier par style, toutes graisses comprises. Elles ne
+ * sont PAS préchargées (`preload: false`) : le navigateur ne les télécharge que
+ * sur une page qui pose une coupure, jamais sur l'accueil ni sur /jouer.
+ */
+const policeManchette = Playfair_Display({
+  subsets: ["latin"],
+  style: ["normal"],
+  variable: "--font-journal-manchette",
+  display: "swap",
+  preload: false,
+});
+const policeJournal = Source_Serif_4({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-journal-texte",
+  display: "swap",
+  preload: false,
+});
+import { COULEUR_DU_PAPIER } from "@/config/themes";
+import { paletteDuSite } from "@/config/theme-du-site";
+import { feuilleDePalette } from "@/config/palettes";
+import { getPlatformConfig } from "@/services/admin.service";
 import { SITE_URL } from "@/config/site";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
 
@@ -37,10 +83,13 @@ export const metadata: Metadata = {
   description: DESCRIPTION_ACCUEIL,
   openGraph: { siteName: NOM_DU_SITE, locale: "fr_FR", type: "website", url: SITE_URL },
   twitter: { card: "summary_large_image" },
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    // « black-translucent » laisse la page passer sous la barre d'état et en
+    // écrit l'heure en BLANC : lisible sur l'encre du thème sombre, invisible
+    // depuis que le site s'ouvre en clair. « default » rend une barre opaque à
+    // texte foncé, qui va aux deux.
+    statusBarStyle: "default",
     title: "Arena",
   },
   icons: {
@@ -58,7 +107,12 @@ export const metadata: Metadata = {
  * service worker) ne dépend pas de cette ligne.
  */
 export const viewport: Viewport = {
-  themeColor: "#d97706",
+  // « cover » : la page va jusqu'aux bords du téléphone, encoche comprise. La
+  // réserve des bords est posée dans globals.css (safe-area-inset). La couleur
+  // de la barre d'état prolonge le papier : une barre qui continue le fond de
+  // la page disparaît, et c'est ce qu'on attend d'elle.
+  viewportFit: "cover",
+  themeColor: COULEUR_DU_PAPIER,
   width: "device-width",
   initialScale: 1,
 };
@@ -66,24 +120,23 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Le thème est relu et posé avant le premier affichage. Placé ici, en tête du
-  // corps, ce script s'exécute pendant l'analyse du document, donc avant que
-  // quoi que ce soit soit peint : sans lui, une page choisie en clair
-  // s'ouvrirait en sombre le temps d'un battement. Les codes viennent du
-  // registre, pour qu'un thème ajouté n'ait pas à être répété ici.
-  const codes = JSON.stringify(THEMES.map((t) => t.code));
-  const amorce =
-    `try{var c=localStorage.getItem(${JSON.stringify(CLE_THEME)});` +
-    `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
+  const { theme } = await getPlatformConfig();
+  // La palette d'accent se pose par une feuille de style, vide pour celle
+  // d'origine : le site d'usine ne reçoit alors pas un octet de plus.
+  const feuille = feuilleDePalette(paletteDuSite(theme));
 
   return (
     <html
       lang="fr"
-      data-theme={THEME_PAR_DEFAUT}
-      className={`${policeTitre.variable} ${policeTexte.variable}`}
+      data-theme="clair"
+      className={`${policeChiffres.variable} ${policeTexte.variable} ${policeManchette.variable} ${policeJournal.variable}`}
     >
+      <head>
+        {feuille ? (
+          <style id="palette-d-accent" dangerouslySetInnerHTML={{ __html: feuille }} />
+        ) : null}
+      </head>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
-        <script dangerouslySetInnerHTML={{ __html: amorce }} />
         {/* Premier élément focusable : au clavier, on saute la navigation. */}
         <a
           href="#main"
@@ -95,6 +148,7 @@ export default async function RootLayout({
         {children}
         {/* Invite d'installation, sur mobile uniquement (fermable, mémorisée). */}
         <InstallPrompt />
+        <BarreDActionMobile />
         <script
           dangerouslySetInnerHTML={{
             __html: `if("serviceWorker"in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")});window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;window.dispatchEvent(new Event("bip-ready"))})`,

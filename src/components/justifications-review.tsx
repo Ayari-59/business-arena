@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { reviewJustificationsAction } from "@/app/teacher/games/[gameId]/ai-actions";
+import { bouton } from "@/components/bouton";
+import { Icone } from "@/components/icone";
 
 /**
  * Bouton enseignant : demande à l'IA une synthèse des justifications de la
@@ -30,22 +32,23 @@ export function JustificationsReview({
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-sky-400/25 bg-sky-950/10 p-3">
+    <div className="mt-3 rounded-lg border border-white/5 bg-slate-950 p-3">
       <button
         type="button"
         onClick={ask}
         disabled={pending}
-        className="rounded-lg border border-sky-400/40 bg-sky-400/10 px-4 py-2 text-sm font-medium text-sky-100 transition hover:bg-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+        className={bouton({ variante: "lien" })}
       >
-        {pending ? "Synthèse en cours…" : "✨ Synthèse IA des justifications"}
+        {pending ? null : <Icone nom="idee" className="h-4 w-4" />}
+        {pending ? "Synthèse en cours…" : "Synthèse IA des justifications"}
       </button>
       {error ? <p className="mt-2 text-sm text-red-300">{error}</p> : null}
       {text ? (
-        <p className="mt-3 whitespace-pre-wrap rounded-lg border border-white/10 bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200">
+        <p className="mt-3 whitespace-pre-wrap rounded-lg border border-white/5 bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200">
           {text}
         </p>
       ) : null}
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-400">
         Générée par une IA à partir des justifications du tour : à relire, une aide au débriefing.
       </p>
     </div>

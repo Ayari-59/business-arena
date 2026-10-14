@@ -2,10 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { getGuestUserId } from "@/lib/guest";
-import { roundDecisionsSchema } from "@/services/decision-schema";
-import { readProductFields } from "@/config/decision-source";
-import { scalarsOfGamme } from "@/engine/gamme";
+import { refusDuPlafondDInvestissement, roundDecisionsSchema } from "@/services/decision-schema";
+import { decisionsSaisies } from "@/config/decisions-saisies";
+import { estimationAConserver, estimerLeTour } from "@/engine/estimation";
+import type { RoundDecisions } from "@/engine/types";
+import { ventesEstimeesSaisies } from "@/config/ventes-estimees";
+import { formatEuro } from "@/lib/format";
+import {
+  bloqueLaValidation,
+  messageSauvetage,
+  resteApresLeviers,
+  verdictAuMaximum,
+  verdictSauvetage,
+} from "@/services/sauvetage";
+import { choisirSonEquipe } from "@/services/affectation.service";
+import { deposerDemande } from "@/services/subvention.service";
+import { getGameView } from "@/services/game-view.service";
+import { meriteDeLaPartie } from "@/services/merite.service";
+import { apresLeTour, noterLaCopieDeLaPartie } from "@/services/examen.service";
 import {
   getGameKind,
   getGameVocabulary,
@@ -14,11 +30,42 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
-import { retakeSituation } from "@/services/debrief.service";
+import {
+  answerFormatOfInstance,
+  resolveOpenAnswers,
+  retakeSituation,
+} from "@/services/debrief.service";
 import { manques, messageIncomplet } from "@/config/situation-rendu";
+import {
+  erreursDuSchema,
+  messageDuRefusServeur,
+  refusDuVolume,
+  resumeDesRefus,
+  type ContexteDesLibelles,
+  type ErreurDeChamp,
+} from "@/config/refus-de-decision";
+import { productFieldName } from "@/config/decision-source";
 
 export interface PlayRoundState {
+  /** Le refus en une phrase (ou `null`). */
   error: string | null;
+  /**
+   * LES REFUS, CHAMP PAR CHAMP : le nom du champ du formulaire visé (ou `null`
+   * quand la règle n'en vise aucun), et le message dans la langue du joueur.
+   * L'écran marque le champ, l'ouvre et y pose le focus
+   * (`config/refus-de-decision.ts`).
+   */
+  erreurs?: ErreurDeChamp[];
+}
+
+/** Un refus d'une phrase, sans champ : la session, le tour, la partie. */
+function refusSansChamp(message: string): PlayRoundState {
+  return { error: message, erreurs: [{ champ: null, message }] };
+}
+
+/** Un ou plusieurs refus rattachés à leurs champs. */
+function refusDesChamps(erreurs: ErreurDeChamp[]): PlayRoundState {
+  return { error: resumeDesRefus(erreurs), erreurs };
 }
 
 /** Valide les décisions du joueur et résout le tour courant (mode solo, ADR-04). */
@@ -28,161 +75,147 @@ export async function playRoundAction(
   formData: FormData,
 ): Promise<PlayRoundState> {
   const userId = await getGuestUserId();
-  if (!userId) return { error: "Session expirée : relancez une partie depuis l'accueil." };
+  if (!userId) return refusSansChamp("Session expirée : relancez une partie depuis l'accueil.");
 
-  // GAMME : le formulaire envoie un prix, un plan, un marketing — et, selon le
-  // niveau et le scénario, une qualité et un fournisseur — PAR RÉFÉRENCE
-  // (`product.<code>.*`). Les scalaires historiques en sont dérivés ici — plan
-  // = somme, prix = moyenne pondérée, marketing et qualité = somme, fournisseur
-  // = celui de la référence au plan le plus fort —, du même calcul que le
-  // formulaire et que la proposition, pour que la comparaison des pivots reste
-  // juste. Mono-produit : les champs scalaires font foi.
-  const products = readProductFields(formData.entries());
-  const scalars = products ? scalarsOfGamme(products) : null;
+  // LE FORMULAIRE EST LU UNE SEULE FOIS, PAR LA MÊME FONCTION QUE LE
+  // NAVIGATEUR (`config/decisions-saisies`). L'encart « Résultat estimé »
+  // estime à la frappe avec cette lecture ; l'action résout le tour avec
+  // elle. Deux lectures écrites séparément auraient fini par diverger, et
+  // l'élève aurait vu annoncer autre chose que ce que le moteur applique.
+  const saisie = decisionsSaisies(formData);
 
   // Le volume est un pivot : vide ou nul, ce n'est pas une décision, c'est une
   // absence. Le schéma acceptait 0 sans un mot ; on le refuse ici, dans la
   // langue du secteur.
-  const volumeBrut = String(formData.get("productionPlan") ?? "").trim().replace(",", ".");
-  const volume = scalars ? scalars.productionPlan : volumeBrut === "" ? NaN : Number(volumeBrut);
-  if (!Number.isFinite(volume) || volume < 1) {
+  //
+  // Le refus vise le champ du volume : en gamme, le plan de la première
+  // référence (le volume est leur somme).
+  if (!Number.isFinite(saisie.volume) || saisie.volume < 1) {
     const v = await getGameVocabulary(gameId);
-    return { error: `${v.productionPlanLabel} : le volume doit être ≥ 1 (en ${v.units}).` };
+    const premiere = saisie.products ? Object.keys(saisie.products)[0] : undefined;
+    const champ = premiere ? productFieldName(premiere, "productionPlan") : "productionPlan";
+    return refusDesChamps([refusDuVolume(champ, { vocabulaire: v })]);
   }
 
-  const parsed = roundDecisionsSchema.safeParse({
-    price: scalars ? scalars.price : formData.get("price"),
-    productionPlan: scalars ? scalars.productionPlan : formData.get("productionPlan"),
-    marketingBudget: scalars ? scalars.marketingBudget : formData.get("marketingBudget"),
-    ...(products ? { products } : {}),
-    // Gamme : la qualité et le fournisseur se décident par référence quand le
-    // formulaire les y porte ; les scalaires en sont dérivés (somme, et
-    // fournisseur de la référence au plan le plus fort).
-    qualityBudget: scalars?.qualityBudget ?? formData.get("qualityBudget"),
-    maintenanceBudget: formData.get("maintenanceBudget"),
-    // R&D : par référence en gamme (scalaire = somme), scalaire en mono ;
-    // absent quand le formulaire ne porte pas le levier.
-    ...(() => {
-      const rd = scalars?.rdBudget ?? formData.get("rdBudget");
-      return rd !== undefined && rd !== null && rd !== "" ? { rdBudget: rd } : {};
-    })(),
-    // Communication : marque et axe, absents quand le formulaire ne les porte pas.
-    ...(() => {
-      const brand = formData.get("brandMarketingBudget");
-      const axis = formData.get("communicationAxis");
-      return {
-        ...(brand !== null && brand !== "" ? { brandMarketingBudget: brand } : {}),
-        ...(typeof axis === "string" && axis !== "" ? { communicationAxis: axis } : {}),
-      };
-    })(),
-    insurance: (() => {
-      const raw = formData.get("insurance");
-      if (raw === "on" || raw === "true") return true;
-      if (typeof raw === "string" && raw.length > 0) return raw;
-      return false;
-    })(),
-    supplierChoice: scalars?.supplierChoice ?? (formData.get("supplierChoice") || undefined),
-    acceptOrder: formData.get("acceptOrder") === "on",
-    studies: (() => {
-      const picked = {
-        market: formData.get("studyMarket") === "on",
-        price: formData.get("studyPrice") === "on",
-        finance: formData.get("studyFinance") === "on",
-        project: formData.get("studyProject") === "on",
-      };
-      return Object.values(picked).some(Boolean) ? picked : undefined;
-    })(),
-    hr: formData.has("salaryPercent")
+  // LES VENTES ESTIMÉES PAR L'ÉQUIPE, et le résultat estimé qu'elles donnaient.
+  // Le moteur ne les lit pas ; la fin de tour les confronte au réel.
+  const estimation = ventesEstimeesSaisies(formData);
+
+  const entree = {
+    ...saisie.decisions,
+    ...(estimation ? { salesEstimate: estimation } : {}),
+    // LE PLAN DE TRÉSORERIE N'EST PLUS DEMANDÉ DEUX FOIS. L'arène ne le
+    // réclame plus (voir `tests/architecture/forecast-field.test.ts`) ; si un
+    // écran le rouvre un jour, c'est l'ESTIMATION qui donne les ventes
+    // annoncées — jamais une seconde saisie de la même chose.
+    ...(estimation && saisie.decisions.forecast?.expectedCash !== undefined
       ? {
-          hire: formData.get("hire") || 0,
-          fire: formData.get("fire") || 0,
-          trainingBudget: formData.get("trainingBudget") || 0,
-          salaryIndex: Number(formData.get("salaryPercent") || 100) / 100,
+          forecast: { ...saisie.decisions.forecast, expectedUnits: estimation.units },
         }
-      : undefined,
-    investment: (() => {
-      const hasMachine = formData.has("machineCapacityUnits");
-      const buyRaw = formData.get("equipmentBuyJson");
-      const sellRaw = formData.get("equipmentSellJson");
-      // Champs cachés alimentés par l'îlot d'équipement : un formulaire forgé
-      // (ou une page périmée) peut envoyer un JSON invalide. On parse en sûreté
-      // — un contenu illisible devient « pas d'équipement » plutôt qu'un 500,
-      // et Zod valide ensuite la forme du tableau retenu.
-      const parseEquip = (raw: FormDataEntryValue | null): unknown[] | undefined => {
-        if (!raw) return undefined;
-        try {
-          const v = JSON.parse(String(raw));
-          return Array.isArray(v) ? v : undefined;
-        } catch {
-          return undefined;
-        }
-      };
-      const equipBuy = parseEquip(buyRaw);
-      const equipSell = parseEquip(sellRaw);
-      const hasEquip = (equipBuy && equipBuy.length > 0) || (equipSell && equipSell.length > 0);
-      if (!hasMachine && !hasEquip) return undefined;
-      return {
-        machineCapacityUnits: hasMachine ? (formData.get("machineCapacityUnits") || 0) : undefined,
-        equipmentBuy: equipBuy && equipBuy.length > 0 ? equipBuy : undefined,
-        equipmentSell: equipSell && equipSell.length > 0 ? equipSell : undefined,
-      };
-    })(),
-    finance: {
-      newLoan: formData.get("newLoan") || 0,
-      loanRepayment: formData.get("loanRepayment") || 0,
-      capitalIncrease: formData.get("capitalIncrease") || 0,
-      // Le dividende n'est ouvert qu'au niveau 6 : son champ peut être absent.
-      dividend: formData.get("dividend") || 0,
-    },
-    // Prévisions : facultatives, et sans effet sur le calcul du tour. Deux
-    // champs vides ne doivent pas devenir deux zéros prévus.
-    forecast: (() => {
-      const num = (name: string) => {
-        const raw = String(formData.get(name) ?? "").trim().replace(",", ".");
-        if (raw === "") return undefined;
-        const n = Number(raw);
-        return Number.isFinite(n) ? n : undefined;
-      };
-      const expectedUnits = num("expectedUnits");
-      const expectedCash = num("expectedCash");
-      return expectedUnits === undefined && expectedCash === undefined
-        ? undefined
-        : { expectedUnits, expectedCash };
-    })(),
-    treasury: formData.has("discount")
-      ? {
-          discount: formData.get("discount") || 0,
-          factoring: formData.get("factoring") || 0,
-          // Le placement n'est servi qu'aux niveaux qui l'ouvrent : son champ
-          // peut donc être absent du formulaire.
-          placement: formData.get("placement") || 0,
-        }
-      : undefined,
-    // Engagement RSE (Lot 2) : ouvert dès Arbitrage ; les champs sont absents
-    // aux niveaux qui ne l'exposent pas.
-    rse:
-      formData.has("rseBudget") || formData.has("rseInvestment")
-        ? {
-            budget: formData.get("rseBudget") || 0,
-            investment: formData.get("rseInvestment") || 0,
-          }
-        : undefined,
-  });
+      : {}),
+  };
+  const parsed = roundDecisionsSchema.safeParse(entree);
   if (!parsed.success) {
-    return { error: "Décisions invalides : vérifiez les montants saisis." };
+    // CHAQUE REFUS DU SCHÉMA NOMME SON CHAMP, dans la langue du secteur (le
+    // vocabulaire, et le nom des références d'une gamme). « Décisions
+    // invalides : vérifiez les montants saisis » ne disait pas lequel.
+    const ctx: ContexteDesLibelles = {
+      vocabulaire: await getGameVocabulary(gameId),
+      references: await (async () => {
+        if (!saisie.products) return null;
+        const vue = await getGameView(gameId, userId).catch(() => null);
+        return vue?.gamme?.map((p) => ({ code: p.code, name: p.name })) ?? null;
+      })(),
+    };
+    return refusDesChamps(erreursDuSchema(parsed.error.issues, entree, ctx));
   }
+
+  // LE FINANCEMENT DE SAUVETAGE, VÉRIFIÉ CÔTÉ SERVEUR. L'écran grise déjà le
+  // bouton, mais un formulaire périmé — l'élève avait la page ouverte avant la
+  // clôture qui l'a mis en crise — ou forgé passerait outre. La règle est la
+  // même des deux côtés (`verdictSauvetage`), pour que l'écran n'autorise
+  // jamais ce que le serveur refuse.
+  const vue = await getGameView(gameId, userId);
+  if (vue?.exigenceSauvetage) {
+    const verdict = verdictSauvetage(vue.exigenceSauvetage, {
+      emprunt: parsed.data.finance?.newLoan ?? 0,
+      apport: parsed.data.finance?.capitalIncrease ?? 0,
+    });
+    if (bloqueLaValidation(verdict)) {
+      // Le refus vise le nouvel emprunt : c'est le premier des deux leviers
+      // (l'apport des associés est juste à côté, dans la même famille).
+      return refusDesChamps([
+        {
+          champ: "newLoan",
+          message: `Financement de sauvetage exigé : ${
+            messageSauvetage(verdict, formatEuro) ?? "empruntez ou faites appel aux associés avant de valider."
+          }`,
+        },
+      ]);
+    }
+  }
+
+  // LE PLAFOND D'INVESTISSEMENT, VÉRIFIÉ CÔTÉ SERVEUR. Aux niveaux sans
+  // embauches, on n'achète pas plus de capacité que l'équipe ne fait tourner
+  // (`engine/investment/plafond`). La feuille le dit avant l'envoi ; un
+  // formulaire périmé ou forgé est refusé ici, avec le même message, sur la
+  // case de la machine achetée.
+  if (vue) {
+    const refusDuPlafond = refusDuPlafondDInvestissement(parsed.data, vue.plafondInvestissement, vue.vocabulary);
+    if (refusDuPlafond) return refusDesChamps([refusDuPlafond]);
+  }
+
+  // LE RÉSULTAT ESTIMÉ, CALCULÉ PAR LE SERVEUR. L'encart l'a déjà affiché dans
+  // le navigateur, mais ce qui est CONSERVÉ avec les décisions est recalculé
+  // ici, du même moteur, sur l'état d'ouverture : un chiffre venu de la page
+  // serait un chiffre qu'on n'a pas vérifié. Si le calcul échoue, l'estimation
+  // de ventes reste déposée sans son compte : jamais un tour perdu pour ça.
+  const payload: RoundDecisions = (() => {
+    const ventes = parsed.data.salesEstimate?.byProduct;
+    if (!ventes || !vue?.estimation) return parsed.data;
+    try {
+      const estime = estimerLeTour(vue.estimation, parsed.data, ventes);
+      return { ...parsed.data, salesEstimate: estimationAConserver(ventes, estime) };
+    } catch {
+      return parsed.data;
+    }
+  })();
+
+  // LA NOTE D'AVANT EST FACULTATIVE : enregistrée quand elle est écrite, jamais exigée.
+  const note = String(formData.get("justification") ?? "").trim();
 
   let kind: Awaited<ReturnType<typeof getGameKind>>;
   try {
-    const justification = String(formData.get("justification") ?? "").trim() || undefined;
+    const justification = note || undefined;
     kind = await getGameKind(gameId);
     if (kind === "solo") {
-      await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data, justification });
+      const { finished } = await resolveCurrentRound({
+        gameId,
+        userId,
+        playerDecisions: payload,
+        justification,
+      });
+      // L'EXAMEN INDIVIDUEL : le tour suivant reçoit son échéance, ou la copie
+      // est remise (services/examen.service.ts). Rien pour une partie solo ordinaire.
+      const remise = await apresLeTour(gameId).catch(() => false);
+      // MÉRITE OU CHANCE : la partie est finie, son verdict se calcule tout de
+      // suite, après la réponse (le joueur ne l'attend pas), pour être prêt
+      // quand il lit son bilan. Une panne ici ne touche pas la partie.
+      if (finished) after(() => meriteDeLaPartie(gameId).catch(() => undefined));
+      // Une copie d'examen remise est notée dans la foulée, par ce même verdict
+      // (mémoïsé : il ne se calcule qu'une fois).
+      if (remise) {
+        after(async () => {
+          await noterLaCopieDeLaPartie(gameId).catch(() => undefined);
+        });
+      }
     } else {
-      await submitTeamDecisions({ gameId, userId, payload: parsed.data, justification });
+      await submitTeamDecisions({ gameId, userId, payload, justification });
     }
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
+    // Le refus d'un service (tour clos, partie terminée, verrou de planning…)
+    // dans la langue du joueur ; une panne du moteur ne montre pas son intérieur.
+    return refusSansChamp(messageDuRefusServeur(error));
   }
   revalidatePath(`/arena/${gameId}`);
   // En solo, valider a résolu le tour tout de suite. Plutôt que de jeter le
@@ -220,6 +253,17 @@ export async function unlockHintAction(
   return { error: null };
 }
 
+/** Les réponses écrites d'un formulaire en questions ouvertes : `open_<question>` → texte. */
+function textesOuverts(formData: FormData): Record<string, string> {
+  const textes: Record<string, string> = {};
+  for (const [cle, valeur] of formData.entries()) {
+    if (cle.startsWith("open_") && typeof valeur === "string") {
+      textes[cle.slice("open_".length)] = valeur;
+    }
+  }
+  return textes;
+}
+
 /**
  * Rend la situation d'un coup : diagnostic ET modèle, ou rien (vague 1, P6).
  * Le formulaire grise son bouton tant qu'une moitié manque ; ici on refuse
@@ -249,9 +293,30 @@ export async function submitSituationAction(
       reponses[key.slice("quiz_".length)] = value;
     }
   }
-  const m = manques({ options, questions, reponses });
-  if (m.length > 0) return { error: messageIncomplet(m) };
   try {
+    // QUESTIONS OUVERTES : le format se lit sur la partie, pas sur le formulaire. Les textes
+    // sont ramenés aux options de la situation, puis tout suit le chemin du QCM.
+    if ((await answerFormatOfInstance(instanceId, userId)) === "open") {
+      const ouvert = await resolveOpenAnswers({
+        instanceId,
+        userId,
+        freeText,
+        texts: textesOuverts(formData),
+      });
+      if (ouvert.manques.length > 0) return { error: messageIncomplet(ouvert.manques) };
+      await submitDiagnosis({ instanceId, userId, selectedOptionIds: ouvert.options, freeText });
+      if (ouvert.questions.length > 0)
+        await submitQuiz({
+          instanceId,
+          userId,
+          answers: ouvert.answers,
+          texts: ouvert.texts,
+        });
+      revalidatePath(`/arena/${gameId}`);
+      return { error: null };
+    }
+    const m = manques({ options, questions, reponses });
+    if (m.length > 0) return { error: messageIncomplet(m) };
     await submitDiagnosis({ instanceId, userId, selectedOptionIds: options, freeText });
     if (questions.length > 0) await submitQuiz({ instanceId, userId, answers: reponses });
   } catch (error) {
@@ -285,9 +350,28 @@ export async function retakeSituationAction(
       reponses[key.slice("quiz_".length)] = value;
     }
   }
-  const m = manques({ options, questions, reponses });
-  if (m.length > 0) return { error: messageIncomplet(m) };
   try {
+    if ((await answerFormatOfInstance(instanceId, userId)) === "open") {
+      const ouvert = await resolveOpenAnswers({
+        instanceId,
+        userId,
+        freeText,
+        texts: textesOuverts(formData),
+      });
+      if (ouvert.manques.length > 0) return { error: messageIncomplet(ouvert.manques) };
+      await retakeSituation({
+        instanceId,
+        userId,
+        selectedOptionIds: ouvert.options,
+        freeText,
+        answers: ouvert.answers,
+        texts: ouvert.texts,
+      });
+      revalidatePath(`/arena/${gameId}`);
+      return { error: null };
+    }
+    const m = manques({ options, questions, reponses });
+    if (m.length > 0) return { error: messageIncomplet(m) };
     await retakeSituation({ instanceId, userId, selectedOptionIds: options, freeText, answers: reponses });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };
@@ -309,9 +393,110 @@ export async function nommerEquipeAction(
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
   try {
-    await nommerEquipe({ gameId, userId, nom: String(formData.get("nom") ?? "") });
+    // `embleme` absent du formulaire (ancien écran, envoi partiel) : on ne
+    // touche pas à celui de l'équipe. Chaîne vide : elle n'en veut aucun.
+    const brut = formData.get("embleme");
+    await nommerEquipe({
+      gameId,
+      userId,
+      nom: String(formData.get("nom") ?? ""),
+      ...(brut === null ? {} : { embleme: String(brut) || null }),
+    });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Le nom n'a pas pu être enregistré." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+export interface DemandeSubventionState {
+  error: string | null;
+}
+
+/**
+ * L'équipe dépose sa demande de subvention exceptionnelle.
+ *
+ * La garde qui compte est ici : on ne dépose un dossier QUE si le mur est
+ * réel — en crise, financement de sauvetage exigé, et emprunt et apport
+ * insuffisants même utilisés jusqu'au bout. Sans cela, ce serait un bouton
+ * « demander de l'argent » ouvert à toute équipe qui trouve son tour difficile,
+ * et l'animateur croulerait sous des dossiers sans objet.
+ */
+export async function demanderSubventionAction(
+  gameId: string,
+  _previous: DemandeSubventionState,
+  formData: FormData,
+): Promise<DemandeSubventionState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
+
+  const vue = await getGameView(gameId, userId);
+  const exigence = vue?.exigenceSauvetage;
+  if (!vue || !exigence) {
+    return { error: "Aucun financement de sauvetage n'est exigé de votre équipe." };
+  }
+  if (exigence.avecAnimateur === false) {
+    return { error: "En partie solo, il n'y a pas d'animateur à solliciter." };
+  }
+  if (verdictAuMaximum(exigence).issue !== "leviers_epuises") {
+    return {
+      error:
+        "Votre emprunt et l'apport de vos associés peuvent encore couvrir ce qui manque : " +
+        "utilisez-les avant de demander une aide.",
+    };
+  }
+
+  const plafond = resteApresLeviers(exigence);
+  const montant = Number(String(formData.get("montant") ?? "").replace(",", "."));
+  if (!Number.isFinite(montant) || montant <= 0) {
+    return { error: "Indiquez le montant que vous demandez." };
+  }
+  // On ne demande pas plus que ce qui manque : le dossier porte sur un trou
+  // précis, pas sur un confort de trésorerie.
+  if (montant > plafond + 1) {
+    return { error: `Vous ne pouvez pas demander plus que ce qui manque (${formatEuro(plafond)}).` };
+  }
+
+  try {
+    await deposerDemande({
+      gameId,
+      teamId: vue.playerTeamId,
+      roundIndex: vue.currentRound,
+      montant,
+      motif: String(formData.get("motif") ?? ""),
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "La demande n'a pas pu être déposée." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+export interface ChoixEquipeState {
+  error: string | null;
+}
+
+/**
+ * L'élève rejoint l'équipe de ses camarades, au premier tour.
+ *
+ * Le code d'invitation range dans l'équipe la moins remplie : correct pour
+ * ouvrir la séance, faux dès que la classe a ses propres groupes.
+ */
+export async function choisirMonEquipeAction(
+  gameId: string,
+  _previous: ChoixEquipeState,
+  formData: FormData,
+): Promise<ChoixEquipeState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
+  const teamId = String(formData.get("teamId") ?? "");
+  if (!teamId) return { error: "Choisissez une équipe." };
+  try {
+    await choisirSonEquipe({ gameId, userId, teamId });
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Le changement d'équipe a échoué.",
+    };
   }
   revalidatePath(`/arena/${gameId}`);
   return { error: null };

@@ -9,6 +9,10 @@ import type {
   CommunicationAxis,
 } from "../types";
 import { fleetMaintenanceMultiplier } from "../simulation";
+import { bornerLInvestissement, investissementPlafonne, plafondDInvestissement } from "../investment/plafond";
+import { aLaMesureDuNiveau, type LeviersOuverts } from "./leviers";
+
+export { aLaMesureDuNiveau, type LeviersOuverts } from "./leviers";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, toGamme, type GammeProduct } from "../gamme";
 import type { SupplierDef } from "../types";
 
@@ -90,6 +94,21 @@ export interface BotContext {
   humanAvgPrice?: number;
   /** Personnalité du bot (défaut « suiveur »). */
   personality?: BotPersonality;
+  /**
+   * Les leviers que le niveau de la partie ouvre. Le bot n'emploie qu'eux, au
+   * même défaut que le joueur pour les autres (`aLaMesureDuNiveau`) ; et là où
+   * le niveau ouvre l'investissement sans les embauches, il n'achète pas plus de
+   * capacité que son équipe ne fait tourner (`investment/plafond`). Absents :
+   * le bot décide avec tout, comme avant.
+   */
+  leviers?: LeviersOuverts | null;
+  /**
+   * Le seul plafond d'investissement, sans filtrer les autres leviers : pour
+   * les parties créées avant la répartition d'octobre 2026, dont les bots
+   * jouent comme ils ont toujours joué, sauf pour acheter des machines que leur
+   * équipe ne ferait pas tourner. Ignoré quand `leviers` est donné.
+   */
+  investissementPlafonne?: boolean;
 }
 
 /**
@@ -538,6 +557,24 @@ function brandShare(profile: BotProfile, ctx: BotContext): number {
 }
 
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
+  const brute = decisionsDuProfil(profile, ctx);
+  // UN MARCHÉ ÉQUITABLE : les leviers du niveau, au défaut du joueur pour les autres.
+  const leviers = ctx.leviers ?? null;
+  const d = leviers
+    ? aLaMesureDuNiveau(brute, leviers, profile === "balanced" ? brute : decisionsDuProfil("balanced", ctx))
+    : brute;
+  // LE PLAFOND D'INVESTISSEMENT : la même règle que pour le joueur, sur l'état
+  // du bot et sa propre politique salariale (la morale en dépend).
+  const plafonne = leviers ? investissementPlafonne(leviers) : ctx.investissementPlafonne === true;
+  if (plafonne && d.investment) {
+    const plafond = plafondDInvestissement(ctx.scenario, ctx.state, { hr: false, investment: true }, d.hr);
+    return bornerLInvestissement(d, plafond);
+  }
+  return d;
+}
+
+/** Ce que décide un profil, avec tous les leviers du scénario. */
+function decisionsDuProfil(profile: BotProfile, ctx: BotContext): RoundDecisions {
   const ref = mainRefPrice(ctx.scenario);
   const maintenanceMul = ctx.scenario.equipment
     ? fleetMaintenanceMultiplier(

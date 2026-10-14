@@ -24,7 +24,8 @@ import { scenarioByCode } from "../scenarios/registry";
  */
 
 /** Ce qui dit le format du document et ne se remplit donc pas : « une page ». */
-const PRECISION_DE_FORMAT = /^(une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix) pages?$/i;
+const PRECISION_DE_FORMAT =
+  /^(une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix) pages?$/i;
 
 /**
  * Les mots qui relient les rubriques d'une énumération française. Ils ouvrent
@@ -38,6 +39,8 @@ export interface FormulaireLivrable {
   seance: number;
   seanceTitre: string;
   tourJoue: number | null;
+  /** La séance joue le tour d'essai, qui ne compte pas. */
+  essai: boolean;
   /**
    * Le nom du document, quand la phrase le donne avant les deux points. Toutes
    * ne le donnent pas : cinq livrables sur trente deux énumèrent directement,
@@ -78,7 +81,11 @@ function morceaux(enumeration: string): string[] {
     .replace(/\.\s*$/, "")
     .split(",")
     .map((m) => m.trim())
-    .map((m) => m.replace(new RegExp(`^(?:${MOTS_DE_LIAISON.join("|")})\\s+`, "i"), "").trim())
+    .map((m) =>
+      m
+        .replace(new RegExp(`^(?:${MOTS_DE_LIAISON.join("|")})\\s+`, "i"), "")
+        .trim(),
+    )
     .filter(Boolean);
 }
 
@@ -96,13 +103,15 @@ export function formulaireLivrable(seance: AtelierSeance): FormulaireLivrable {
   const document = coupe === -1 ? null : phrase.slice(0, coupe).trim();
   const enumeration = coupe === -1 ? phrase : phrase.slice(coupe + 3);
   const tous = morceaux(enumeration);
-  const consigne = tous.length > 1 && CONSIGNE_EN_TETE.test(tous[0]!) ? tous[0]! : null;
+  const consigne =
+    tous.length > 1 && CONSIGNE_EN_TETE.test(tous[0]!) ? tous[0]! : null;
   const restants = consigne === null ? tous : tous.slice(1);
 
   return {
     seance: seance.numero,
     seanceTitre: seance.titre,
     tourJoue: seance.tourJoue,
+    essai: seance.essai === true,
     document,
     precisions: restants.filter((m) => PRECISION_DE_FORMAT.test(m)),
     consigne,
@@ -112,7 +121,9 @@ export function formulaireLivrable(seance: AtelierSeance): FormulaireLivrable {
   };
 }
 
-export function formulairesAtelier(atelier: AtelierDefinition): FormulaireLivrable[] {
+export function formulairesAtelier(
+  atelier: AtelierDefinition,
+): FormulaireLivrable[] {
   return atelier.seances.map(formulaireLivrable);
 }
 
@@ -149,9 +160,12 @@ export function formulairesCsv(atelier: AtelierDefinition): string {
     lignes.push([]);
     lignes.push([
       `SÉANCE ${f.seance} · ${f.seanceTitre}`,
-      f.tourJoue !== null ? `Tour joué : ${f.tourJoue}` : "Aucun tour joué",
+      f.essai ? "Tour d'essai" : f.tourJoue !== null ? `Tour joué : ${f.tourJoue}` : "Aucun tour joué",
     ]);
-    lignes.push([f.document ?? f.phrase, ...(f.precisions.length ? [f.precisions.join(", ")] : [])]);
+    lignes.push([
+      f.document ?? f.phrase,
+      ...(f.precisions.length ? [f.precisions.join(", ")] : []),
+    ]);
     // La consigne porte une étiquette, sans quoi elle se lit comme une
     // rubrique de plus, avec une case vide en face qu'il faudrait remplir.
     if (f.consigne) lignes.push(["Consigne", f.consigne]);
@@ -162,7 +176,9 @@ export function formulairesCsv(atelier: AtelierDefinition): string {
   }
 
   // Signature d'octets en tête : c'est elle qui fait lire les accents à Excel.
-  return "\ufeff" + lignes.map((l) => l.map(cellule).join(";")).join("\r\n") + "\r\n";
+  return (
+    "\ufeff" + lignes.map((l) => l.map(cellule).join(";")).join("\r\n") + "\r\n"
+  );
 }
 
 /**
@@ -178,7 +194,10 @@ export function formulairesCsv(atelier: AtelierDefinition): string {
  * le nom de l'enseignant.
  */
 export function grilleEvaluationCsv(atelier: AtelierDefinition): string {
-  const equipes = Array.from({ length: atelier.reglages.equipes }, (_, i) => `Équipe ${i + 1}`);
+  const equipes = Array.from(
+    { length: atelier.reglages.equipes },
+    (_, i) => `Équipe ${i + 1}`,
+  );
   const vide = equipes.map(() => "");
   const lignes: string[][] = [];
 
@@ -197,5 +216,7 @@ export function grilleEvaluationCsv(atelier: AtelierDefinition): string {
   lignes.push(["ÉVALUATION FINALE", ...equipes]);
   for (const c of atelier.evaluationFinale) lignes.push([c, ...vide]);
 
-  return "\ufeff" + lignes.map((l) => l.map(cellule).join(";")).join("\r\n") + "\r\n";
+  return (
+    "\ufeff" + lignes.map((l) => l.map(cellule).join(";")).join("\r\n") + "\r\n"
+  );
 }

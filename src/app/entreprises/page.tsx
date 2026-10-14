@@ -1,12 +1,32 @@
+import { premierNiveauQuiOuvre } from "@/config/difficulty";
 import type { Metadata } from "next";
+import { Signe } from "@/components/signe";
 import Link from "next/link";
-import { SCENARIO_CHOICES, SECTOR_LABELS, familyOf, type ScenarioDefinition } from "@/config/scenarios/registry";
+import {
+  SCENARIO_CHOICES,
+  SECTOR_LABELS,
+  familyOf,
+  gammeEnClair,
+  type ScenarioDefinition,
+} from "@/config/scenarios/registry";
 import {
   accentsDe,
-  emblemeDe,
   nomEntreprise as nomSeul,
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
+import { CONCEPTS } from "@/config/pedagogy/concepts";
+import { LEVIERS } from "@/config/decisions";
+import { PictoSecteur } from "@/components/picto-secteur";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+import { Repliable } from "@/components/repliable";
+import { bouton } from "@/components/bouton";
+import { BandeFinale } from "@/components/bande-finale";
+import { BandeOuverture } from "@/components/bande-ouverture";
+import { PiedDePage } from "@/components/pied-de-page";
+import { Bande } from "@/components/bande";
+import { EPISODES } from "@/pedagogy/episodes/registre";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
+import { getPlatformConfig } from "@/services/admin.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
@@ -28,228 +48,428 @@ export const metadata: Metadata = {
  * Rien n'est recopié, donc rien ne peut mentir quand un scénario change.
  */
 
+const NOM_DE_NOTION = new Map(CONCEPTS.map((c) => [c.code, c.name]));
+
+/** Combien de notions une fiche montre avant de dire « et N autres ». */
+const NOTIONS_MONTREES = 6;
+
+/**
+ * LES NOTIONS QU'UNE ENTREPRISE FAIT TRAVAILLER, LES PLUS MOBILISÉES D'ABORD.
+ *
+ * Elles ne sont écrites nulle part : chaque situation déclare les siennes, et
+ * une entreprise en mobilise de quinze à trente et une selon le métier. Les
+ * afficher toutes ferait un mur de trente et une pastilles où l'œil ne prend
+ * rien ; n'en afficher aucune, ce qui était le cas, laisse un enseignant
+ * deviner ce que la fiche fait travailler. On montre donc les plus
+ * fréquentes, et on dit combien il y en a.
+ *
+ * L'ordre se décide sur le nombre de situations qui mobilisent la notion,
+ * puis sur son code : deux notions à égalité sortent toujours dans le même
+ * ordre, d'une compilation à l'autre.
+ */
+function notionsDe(d: ScenarioDefinition) {
+  const compte = new Map<string, number>();
+  for (const s of d.situations) {
+    for (const code of s.conceptCodes ?? []) compte.set(code, (compte.get(code) ?? 0) + 1);
+  }
+  const triees = [...compte.entries()]
+    .filter(([code]) => NOM_DE_NOTION.has(code))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return {
+    total: triees.length,
+    tetes: triees.slice(0, NOTIONS_MONTREES).map(([code]) => ({
+      code,
+      nom: NOM_DE_NOTION.get(code)!,
+    })),
+  };
+}
+
+/**
+ * Les arbitrages qu'une entreprise demande, dans l'ordre du registre des
+ * leviers — le prix et le volume d'abord, les budgets ensuite. Trier sur le
+ * registre plutôt que sur l'ordre des situations donne la même liste pour
+ * tous les métiers, ce qui rend les fiches comparables entre elles.
+ */
+function arbitragesDe(d: ScenarioDefinition) {
+  const champs = new Set<string>();
+  for (const s of d.situations) {
+    for (const levier of s.decisionLevers ?? []) champs.add(levier.field);
+  }
+  return LEVIERS.filter((l) => champs.has(l.champ)).map((l) => l.nom);
+}
+
+/**
+ * CE QU'UN ENSEIGNANT VIENT CHERCHER SUR CETTE PAGE.
+ *
+ * La fiche disait le métier, sa contrainte et son premier arbitrage — ce qui
+ * répond à « de quoi ça parle » mais pas à « qu'est-ce que ma classe y
+ * travaille ». Les trois réponses existaient dans le registre sans qu'aucune
+ * soit affichée : les notions déclarées par les situations, les leviers
+ * qu'elles font manœuvrer, et les indicateurs propres au métier dont un seul,
+ * le premier, paraissait dans le tableau de fin de page.
+ *
+ * TOUT EST LU, RIEN N'EST RECOPIÉ. Une situation ajoutée à un scénario change
+ * ces trois lignes sans que personne y touche, et une notion renommée l'est
+ * partout à la fois.
+ */
+function CeQuOnYTravaille({ d }: { d: ScenarioDefinition }) {
+  const notions = notionsDe(d);
+  const arbitrages = arbitragesDe(d);
+  return (
+    <dl className="mt-4 grid gap-4 border-t border-white/10 pt-4 sm:grid-cols-[8.5rem_1fr] sm:gap-x-6 sm:gap-y-3">
+      <dt className="text-xs uppercase tracking-surtitre text-slate-400">Notions</dt>
+      <dd className="m-0 flex flex-wrap items-baseline gap-x-2 gap-y-1.5 text-sm text-slate-300">
+        {notions.tetes.map((n, i) => (
+          <span key={n.code}>
+            {/* Chaque notion a sa fiche : le lien y mène directement plutôt
+                que de laisser chercher dans une page de cinquante-deux. */}
+            <Link
+              href={`/notions#${n.code}`}
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              {n.nom}
+            </Link>
+            {i < notions.tetes.length - 1 ? <span aria-hidden> ·</span> : null}
+          </span>
+        ))}
+        {notions.total > notions.tetes.length ? (
+          <span className="text-slate-400">et {notions.total - notions.tetes.length} autres</span>
+        ) : null}
+      </dd>
+
+      <dt className="text-xs uppercase tracking-surtitre text-slate-400">Arbitrages</dt>
+      <dd className="m-0 text-sm text-slate-300">{arbitrages.join(" · ")}</dd>
+
+      <dt className="text-xs uppercase tracking-surtitre text-slate-400">Indicateurs</dt>
+      <dd className="m-0 flex flex-wrap items-baseline gap-x-2 gap-y-1.5 text-sm text-slate-300">
+        {d.kpis.map((k, i) => (
+          // Ce que mesure l'indicateur reste accessible : l'infobulle pour la
+          // souris, le texte caché pour une synthèse vocale.
+          <span key={k.key} title={k.hint}>
+            {k.label}
+            <span className="sr-only"> : {k.hint}</span>
+            {i < d.kpis.length - 1 ? <span aria-hidden> ·</span> : null}
+          </span>
+        ))}
+      </dd>
+    </dl>
+  );
+}
+
 function Fiche({ d }: { d: ScenarioDefinition }) {
   const famille = familyOf(d.code);
   const a = accentsDe(d);
-  const v = d.vocabulary;
   return (
     <article
       id={d.code}
-      className={`group relative scroll-mt-24 overflow-hidden rounded-2xl border border-white/10 bg-slate-900 transition ${a.bord}`}
+      className={`group relative scroll-mt-24 overflow-hidden carte transition ${a.bord}`}
     >
       <div
         aria-hidden
-        className={`pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full blur-3xl transition-opacity duration-500 ${a.halo} opacity-60 group-hover:opacity-100`}
+        className={`pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full blur-3xl transition-opacity duration-[var(--duree-chiffre)] ${a.halo} opacity-60 group-hover:opacity-100`}
       />
       <div className={`h-1 w-full ${a.barre}`} />
       <div className="relative p-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-2xl" aria-hidden>
-            {emblemeDe(d)}
-          </span>
+          {/*
+            LE PICTOGRAMME PLUTÔT QUE L'EMOJI. Chaque fiche portait le sien,
+            que le système dessine à sa façon : différent d'un appareil à
+            l'autre, en couleurs étrangères à la maison, et brouillé au
+            vidéoprojecteur. `PictoSecteur` est dessiné d'un seul trait et prend
+            l'encre du thème — c'est déjà lui qui tient la bande des métiers sur
+            la page d'accueil.
+          */}
+          <PictoSecteur secteur={d.sector} className={`h-6 w-6 ${a.texte}`} />
           <span
             className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${a.puce}`}
           >
             {SECTOR_LABELS[d.sector]}
           </span>
-          <span className="text-xs uppercase tracking-wider text-slate-600">
+          <span className="text-xs uppercase tracking-wider text-slate-400">
             {d.situations.length} situations · {d.bots.length} concurrents
           </span>
         </div>
 
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-50">{nomSeul(d)}</h2>
         <p className={`text-sm font-medium ${a.texte}`}>{promesse(d) ?? d.tagline}</p>
-        <p className="mt-3 text-sm leading-relaxed text-slate-400">{d.briefing}</p>
-        {famille ? (
-          // Le même métier en un produit ou en gamme : c'est le niveau de
-          // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
-          <p className="mt-3 rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
-            Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
-            {famille.gammeFromLevel}, {famille.gammeLabel}.
-          </p>
-        ) : null}
-
-        {/* La carte d'identité du métier : ce qui change vraiment d'un secteur
-            à l'autre, et que le décor seul ne dit pas. */}
-        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            ["Vous vendez", v.units],
-            ["Vous fixez", v.priceLabel.toLowerCase()],
-            ["L'invendu devient", v.leftoverLabel.toLowerCase()],
-            ["Le goulot", `${v.capacityBottleneckLabel.toLowerCase()} ou équipe`],
-          ].map(([label, valeur]) => (
-            <div key={label} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
-              <dt className="text-xs uppercase tracking-wide text-slate-600">{label}</dt>
-              <dd className="mt-0.5 text-sm text-slate-200">{valeur}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <div className="mt-5 rounded-xl border border-white/5 bg-slate-950/60 p-4">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
-            Ce que vous trouvez en arrivant
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">{d.context}</p>
-        </div>
-
-        <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
-            Le premier arbitrage
-          </p>
-          <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {d.dilemma.routes.map((r) => (
-              <div key={r.label} className="rounded-lg border border-white/5 bg-slate-900/70 p-3">
-                <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/80">↗ {r.gain}</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-rose-300/80">↘ {r.risque}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wide text-slate-600">
-            Ses indicateurs
-          </span>
-          {d.kpis.slice(0, 5).map((k) => (
-            <span
+        <p className="mt-3 text-base leading-relaxed text-slate-400">{d.briefing}</p>
+        {/*
+          LA FICHE EST UNE CARTE, SUR TOUS LES ÉCRANS (audit P3-07) : le métier,
+          sa promesse, ses indicateurs, le nombre de situations, et le bouton
+          pour jouer. Le reste (le contexte d'arrivée, le premier arbitrage, ce
+          que la classe y travaille) s'ouvre à la demande. Le repli ne valait
+          que sur téléphone, où les fiches dépliées faisaient seize mille pixels ;
+          sur ordinateur, toutes ouvertes, elles en faisaient encore plusieurs
+          milliers, et le lecteur venu en comparer deux les perdait de vue.
+        */}
+        <ul aria-label="Indicateurs suivis" className="mt-3 flex flex-wrap gap-1.5">
+          {d.kpis.slice(0, 3).map((k) => (
+            <li
               key={k.key}
-              title={k.hint}
-              className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-400"
+              className="rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-xs text-slate-300"
             >
               {k.label}
-            </span>
+            </li>
           ))}
-        </div>
+        </ul>
 
-        <div className="mt-5 flex flex-wrap items-center gap-4">
-          <Link
-            href={`/jouer?secteur=${d.code}`}
-            className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white"
+        <div className="flex flex-col">
+          <Repliable
+            resume="Voir le détail de l'entreprise"
+            className="order-2 mt-3"
+            classeResume="text-sm font-semibold text-amber-300 group-hover:text-amber-200"
           >
-            Diriger {nomSeul(d)}
-          </Link>
-          <span className="text-xs text-slate-600">
-            Vous jouez {d.playerTeamName}, face à {d.bots.length} concurrents
-          </span>
+            {famille ? (
+              // Le même métier en un produit ou en gamme : c'est le niveau de
+              // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
+              <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-base leading-relaxed text-slate-300">
+                Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du
+                niveau {famille.gammeFromLevel}, {gammeEnClair(famille, premierNiveauQuiOuvre("rd"))}.
+              </p>
+            ) : null}
+
+            {/*
+              LA CARTE D'IDENTITÉ DU MÉTIER A QUITTÉ LA FICHE. Elle disait, en
+              quatre cases — ce qu'on vend, ce qu'on fixe, ce que devient
+              l'invendu, où est le goulot —, exactement ce que le tableau dit
+              maintenant EN TÊTE de page, et mieux : côte à côte. Quatre cases
+              isolées ne se comparent à rien ; une ligne de tableau se compare aux
+              huit autres, et c'est bien la comparaison qui est le sujet.
+
+              Une carte d'identité par fiche, à cent dix pixels pièce : un mètre de
+              défilement rendu au lecteur.
+            */}
+            <p className="mt-5 text-base leading-relaxed text-slate-300">
+              <span className="text-xs uppercase tracking-annonce text-slate-400">
+                En arrivant ·{" "}
+              </span>
+              {d.context}
+            </p>
+
+            <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
+              <p className="text-xs uppercase tracking-annonce text-slate-400">
+                Le premier arbitrage
+              </p>
+              <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {d.dilemma.routes.map((r) => (
+                  <div
+                    key={r.label}
+                    className="rounded-lg border border-white/5 bg-slate-900/70 p-3"
+                  >
+                    <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
+                    {/* La phrase à l'encre ; seul le signe dit le gain ou le coût. */}
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+                      <Signe sens="gain" className="text-emerald-400" /> {r.gain}
+                    </p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+                      <Signe sens="cout" className="text-red-400" /> {r.risque}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <CeQuOnYTravaille d={d} />
+          </Repliable>
+
+          <div className="order-1 mt-5 flex flex-wrap items-center gap-4">
+            <Link
+              href={`/jouer?secteur=${d.code}`}
+              className={`${bouton({ variante: "secondaire", taille: "m" })} px-5 pointer-coarse:min-h-11`}
+            >
+              Diriger {nomSeul(d)}
+            </Link>
+            <span className="text-xs text-slate-400">
+              Vous jouez {d.playerTeamName}, face à {d.bots.length} concurrents
+            </span>
+          </div>
         </div>
       </div>
     </article>
   );
 }
 
-export default function EntreprisesPage() {
+export default async function EntreprisesPage() {
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const { theme } = await getPlatformConfig();
+  const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
-    <main id="main" className="relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
-      />
-
-      <section className="mx-auto max-w-6xl px-6 py-14">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-          {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
-        </p>
-        <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-          Toutes les entreprises gagnent de l&apos;argent de la même façon.
-          <br />
-          <span className="text-amber-400">Aucune ne le perd pareil.</span>
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-          Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
-          réserve, mais elle a déjà coûté sa trésorerie. Une journée de conseil facturée à
-          quatre-vingt-dix jours est un bénéfice qu&apos;on ne peut pas dépenser. Le compte de
-          résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-2">
-          {SCENARIO_CHOICES.map((d) => (
-            <a
-              key={d.code}
-              href={`#${d.code}`}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
+    <>
+      <main id="main" className="relative overflow-hidden">
+        {/* L'OUVERTURE MARINE, comme l'accueil (components/bande-ouverture) :
+            le chiffre-preuve est le nombre de métiers jouables, lu dans le
+            registre des scénarios. */}
+        <BandeOuverture
+          id="entreprises.accroche"
+          contraste={c("entreprises.accroche")}
+          surtitre={`${SCENARIO_CHOICES.length} métiers · ${SCENARIO_CHOICES.length} contraintes`}
+          titre={
+            <>
+              Toutes les entreprises gagnent de l&apos;argent de la même façon.{" "}
+              <span>Aucune ne le perd pareil.</span>
+            </>
+          }
+          chapeau={
+            <>
+              Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
+              réserve, mais elle a déjà coûté sa trésorerie. Une journée de conseil facturée à
+              quatre-vingt-dix jours est un bénéfice qu&apos;on ne peut pas dépenser. Le compte de
+              résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
+            </>
+          }
+          preuve={{ valeur: `${SCENARIO_CHOICES.length}`, libelle: "métiers jouables" }}
+          actions={
+            <>
+              <Link href="/jouer" className={bouton({ taille: "l" })}>
+                Tester le simulateur
+              </Link>
+            </>
+          }
+        >
+          <div className="mt-8 flex flex-wrap gap-2">
+            {/*
+              DES PASTILLES NEUTRES, LA COULEUR AU SEUL PICTOGRAMME. Chacune
+              prenait le fond, le trait et l'encre de son secteur : neuf teintes
+              en rang faisaient un arc-en-ciel qui concurrençait le laiton dès
+              le haut de la page. La couleur du secteur reste sur le dessin, qui
+              suffit à la reconnaître. Et elles font 44 pixels de haut, la
+              taille d'un doigt : elles mènent chacune à une fiche.
+            */}
+            {SCENARIO_CHOICES.map((d) => (
+              <a
+                key={d.code}
+                href={`#${d.code}`}
+                className="flex min-h-11 items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-500"
+              >
+                <PictoSecteur secteur={d.sector} className={`h-4 w-4 ${accentsDe(d).texte}`} />
+                {nomSeul(d)}
+              </a>
+            ))}
+          </div>
+          {/*
+            LA DÉMONSTRATION POUR LES ENTREPRISES. Une phrase grise sous les
+            pastilles passait inaperçue : c'est un autre public, il lui faut un
+            bloc à lui et un bouton, dans le premier écran.
+          */}
+          <div className="mt-8 flex max-w-3xl flex-col gap-4 rounded-lg border border-white/15 bg-slate-900 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-300">
+                Nouveau · Pour les entreprises
+              </p>
+              <p className="mt-1.5 text-base leading-relaxed text-slate-200">
+                {EPISODES.length} épisodes dans la peau d&apos;un manager : une agence qui dérape,
+                une équipe qui s&apos;épuise, des chambres qu&apos;on brade, un forfait vendu sous
+                son coût, un consultant star, des lits d&apos;EHPAD qui restent vides, des yaourts
+                qui périment, un lot à rappeler, un concurrent à racheter… Jugé sur ses décisions
+                plutôt que sur son résultat.
+              </p>
+            </div>
+            <Link
+              href="/entreprises/episode"
+              className={`${bouton({ variante: "lien", taille: "l" })} shrink-0`}
             >
-              {emblemeDe(d)} {nomSeul(d)}
-            </a>
-          ))}
-        </div>
-      </section>
+              Jouer la démonstration
+            </Link>
+          </div>
+        </BandeOuverture>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16">
-        <div className="grid gap-6">
-          {SCENARIO_CHOICES.map((d) => (
-            <Fiche key={d.code} d={d} />
-          ))}
-        </div>
-      </section>
+        {/*
+          LE TABLEAU QUI MET TOUS LES MÉTIERS CÔTE À CÔTE — EN TÊTE, PLUS EN
+          QUEUE.
 
-      {/* ---------- Le tableau qui met tous les métiers côte à côte ---------- */}
-      <section className="border-y border-white/5 bg-slate-900/40">
-        <div className="mx-auto max-w-6xl px-6 py-14">
-          <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
+          Il fermait la page, après sept mille pixels de fiches : un lecteur
+          arrivé à la troisième entreprise n'avait aucun moyen de la situer, et
+          celui qui atteignait le tableau n'avait plus rien à comparer, il avait
+          déjà choisi. Une vue d'ensemble se lit AVANT le détail — c'est même
+          tout ce qui la distingue d'un récapitulatif.
+
+          Ce déplacement rend une place à la coupure de la page : le tableau
+          prend le sol ici, à six cents pixels du haut, quand il l'aurait pris à
+          six cents pixels de la bande finale s'il était resté en bas. Deux fonds
+          retournés qui se rencontrent ne font pas deux blocs qui se voient, ils
+          en font deux qui s'annulent.
+        */}
+        <Bande
+          id="entreprises.differences"
+          contraste={c("entreprises.differences")}
+          interieur="mx-auto max-w-6xl px-6 py-14"
+        >
+          <h2 className="text-2xl font-bold text-slate-50">
+            Ce qui change d&apos;un métier à l&apos;autre
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
             Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
             ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
             autre.
           </p>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-4 font-medium">Entreprise</th>
-                  <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
-                  <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
-                  <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
-                  <th className="pb-2 font-medium">Son indicateur roi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SCENARIO_CHOICES.map((d) => (
-                  <tr key={d.code} className="border-t border-white/5">
-                    <td className="py-2.5 pr-4">
-                      <a
-                        href={`#${d.code}`}
-                        className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
-                      >
-                        {nomSeul(d)}
-                      </a>
-                    </td>
-                    <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
-                    <td className="py-2.5 pr-4 text-slate-400">
-                      {d.scenario.perishable ? (
-                        <span className="text-rose-300/90">
-                          {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
-                        </span>
-                      ) : (
-                        <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
-                    <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
+          <RepliableSurTelephone resume="Afficher le tableau comparatif" className="mt-6">
+            <div className="mt-3 overflow-x-auto sm:mt-0">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-4 font-medium">Entreprise</th>
+                    <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
+                    <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
+                    <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
+                    <th className="pb-2 font-medium">Son indicateur roi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-4 text-xs leading-relaxed text-slate-600">
+                </thead>
+                <tbody>
+                  {SCENARIO_CHOICES.map((d) => (
+                    <tr key={d.code} className="border-t border-white/5">
+                      <td className="py-2.5 pr-4">
+                        <a
+                          href={`#${d.code}`}
+                          className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
+                        >
+                          {nomSeul(d)}
+                        </a>
+                      </td>
+                      <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
+                      <td className="py-2.5 pr-4 text-slate-400">
+                        {d.scenario.perishable ? (
+                          <span className="font-medium text-slate-200">
+                            {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
+                          </span>
+                        ) : (
+                          <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
+                      <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </RepliableSurTelephone>
+          <p className="mt-4 text-base leading-relaxed text-slate-400">
             Les activités périssables ne stockent rien : la capacité non vendue est perdue au
-            passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
-            industriel, et elle change tout le raisonnement sur le prix.
+            passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un industriel,
+            et elle change tout le raisonnement sur le prix. Chaque nom mène à sa fiche, plus bas.
           </p>
-        </div>
-      </section>
+        </Bande>
 
-      <section className="mx-auto max-w-6xl px-6 py-16 text-center">
-        <h2 className="text-2xl font-bold text-slate-50">Choisissez votre métier</h2>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
-          Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter
-          à chaque tour. Sans compte, sans installation.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/jouer"
-            className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
-          >
+        <Bande
+          id="entreprises.fiches"
+          contraste={c("entreprises.fiches")}
+          interieur="mx-auto max-w-6xl px-6 pb-16"
+        >
+          <div className="grid gap-6">
+            {SCENARIO_CHOICES.map((d) => (
+              <Fiche key={d.code} d={d} />
+            ))}
+          </div>
+        </Bande>
+
+        <BandeFinale
+          id="entreprises.finale"
+          contraste={c("entreprises.finale")}
+          titre="Choisissez votre métier"
+          texte="Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter à chaque tour. Sans compte, sans installation."
+        >
+          <Link href="/jouer" className={bouton({ taille: "l" })}>
             Tester le simulateur
           </Link>
           <Link
@@ -258,8 +478,9 @@ export default function EntreprisesPage() {
           >
             Créer une partie pour ma classe
           </Link>
-        </div>
-      </section>
-    </main>
+        </BandeFinale>
+      </main>
+      <PiedDePage />
+    </>
   );
 }

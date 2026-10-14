@@ -1,14 +1,15 @@
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
- * INDICE RSE — LOT 1 : UNE MESURE, PAS ENCORE UN LEVIER.
+ * INDICE RSE : UNE MESURE, ET UNE DIMENSION DE L'INDICE GLOBAL.
  *
  * Cet indice LIT le résultat d'un tour et en dérive une lecture
- * environnement / social / gouvernance (ESG). Il n'influe sur RIEN : ni le
- * marché, ni les événements, ni le classement, ni le BPI. C'est une prise de
- * conscience — l'élève VOIT l'empreinte RSE des décisions qu'il a déjà prises
- * (fournisseur, rebuts, salaires, formation, transparence du plan). Les effets
- * de jeu (image, risque, financement) viendront au Lot 2.
+ * environnement / social / gouvernance (ESG). Il n'influe pas sur le jeu
+ * lui-même (ni le marché, ni les événements) ; mais il PÈSE dans l'IPG,
+ * l'indice de performance globale, à la place de la rentabilité, qui y
+ * faisait doublon. L'élève voit l'empreinte RSE des décisions qu'il a déjà
+ * prises (fournisseur, rebuts, salaires, formation, transparence du plan), et
+ * cette empreinte compte au classement.
  *
  * Conséquence de ce choix : le module est PUR et se calcule à la lecture, à
  * partir du seul résultat persisté. Aucun champ moteur, aucune migration.
@@ -113,20 +114,20 @@ function social(r: CompanyRoundResult, notes: string[]): RsePillar {
  * GOUVERNANCE : transparence (un plan de trésorerie accompagne-t-il les
  * décisions ?), fiabilité de ce plan, et prudence financière (une crise de
  * trésorerie caractérisée est un défaut de pilotage).
+ *
+ * Le dépôt du plan est un bonus, jamais un malus : le formulaire de décision
+ * ne propose plus ce panneau, une équipe ne peut donc pas être pénalisée pour
+ * ne pas l'avoir rempli. Sans plan, le pilier n'est évalué que par la prudence
+ * financière.
  */
 function governance(r: CompanyRoundResult, notes: string[]): RsePillar {
   let score = 50;
   let evaluated = false;
 
-  if (r.bank) {
+  if (r.bank?.planFiled) {
     evaluated = true;
-    if (r.bank.planFiled) {
-      score += 15;
-      if (r.bank.reliability !== null) score += clamp(r.bank.reliability * 20, 0, 20);
-    } else {
-      score -= 10;
-      notes.push("Plan de trésorerie non déposé");
-    }
+    score += 15;
+    if (r.bank.reliability !== null) score += clamp(r.bank.reliability * 20, 0, 20);
   }
 
   if (r.treasury?.crisis) {

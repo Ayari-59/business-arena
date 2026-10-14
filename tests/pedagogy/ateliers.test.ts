@@ -1,13 +1,28 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { DIFFICULTES } from "../../src/config/ateliers/types";
+import { ficheDeNotion } from "../../src/config/ateliers/notions";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { THEMES_STMG } from "../../src/config/ateliers/stmg";
 import {
   REFERENTIELS,
   REFERENTIELS_NON_VERIFIES,
+  referentielDeCitation,
 } from "../../src/config/ateliers/referentiels";
-import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "../../src/config/scenarios/registry";
-import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
+import {
+  DEFAULT_SCENARIO_CODE,
+  SCENARIOS,
+  scenarioByCode,
+  scenarioCodeForLevel,
+} from "../../src/config/scenarios/registry";
+import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
+import { formatDuTournoi, LIMITES_CONCOURS } from "../../src/config/concours";
+import { TOURS_D_ESSAI } from "../../src/config/tour-d-essai";
+import { FORMATIONS } from "../../src/config/formations";
+import {
+  chargeDesSeances,
+  MARGE_CONSEILLEE,
+} from "../../src/config/ateliers/duree-des-seances";
 
 /**
  * Garde-fous des ateliers professionnels.
@@ -87,17 +102,31 @@ describe("ateliers professionnels", () => {
     );
   });
 
-  it("aucune séance ne dépasse trois heures", () => {
-    // Une séance de quatre heures ne rentre pas dans un emploi du temps ordinaire :
-    // l'enseignant qui n'a que trois heures devant lui doit couper lui-même, et il
-    // coupe le débriefing, qui est justement ce qui fait l'atelier. La trame tient
-    // donc en trois heures, à charge pour qui dispose de plus de temps d'étirer.
+  it("aucune séance post-bac ne dépasse deux heures", () => {
+    // Décision du propriétaire, 13 octobre 2026 : « Ok, passe tout à 2 h. »
+    // Deux heures, c'est la séance de travaux dirigés d'une section de
+    // technicien, d'un BUT, d'un DCG : la trame y tient, à charge pour qui
+    // dispose de plus de temps d'étirer. Une séance plus longue obligeait
+    // l'enseignant à couper lui-même, et il coupait le débriefing, qui est
+    // justement ce qui fait l'atelier. Le lycée et le tournoi travaillent par
+    // séances d'une heure trente ; ce sont les seules exceptions, nommées ici
+    // une à une plutôt que déduites, pour qu'une nouvelle fiche ne s'y glisse
+    // pas sans qu'on l'ait écrit. Toute autre séance fait EXACTEMENT deux
+    // heures : une séance de 110 minutes serait un déroulé qu'on a raccourci
+    // sans réécrire, et la garde du format (« N séances de 2 h ») ne la
+    // verrait pas.
+    const DEUX_HEURES = 120;
+    const SEANCES_D_UNE_HEURE_TRENTE: Record<string, number> = {
+      stmg: 90, // le lycée travaille par séances d'une heure trente
+      campus: 90, // le tournoi inter-filières, sept séances courtes sur un campus
+    };
     for (const a of ATELIERS) {
+      const attendu = SEANCES_D_UNE_HEURE_TRENTE[a.code] ?? DEUX_HEURES;
       for (const s of a.seances) {
         expect(
           s.dureeMinutes,
-          `${a.code}/séance ${s.numero} : ${s.dureeMinutes} minutes annoncées`,
-        ).toBeLessThanOrEqual(180);
+          `${a.code}/séance ${s.numero} : ${s.dureeMinutes} minutes annoncées, ${attendu} attendues`,
+        ).toBe(attendu);
       }
     }
   });
@@ -241,6 +270,45 @@ describe("ateliers professionnels", () => {
     }
   });
 
+  it("une fiche qui mobilise plusieurs diplômes est vérifiée intitulé par intitulé", () => {
+    // Une immersion de campus cite quatre référentiels dans la même séance :
+    // aucune clé unique ne peut la couvrir, et elle échappait donc à toute
+    // vérification. Chaque intitulé y nomme son diplôme en préfixe, et c'est ce
+    // préfixe qui rend la garde possible.
+    const segments = (entree: string) =>
+      entree
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .split("·")
+        .map((m) => m.replace(/[^a-z0-9]+/g, " ").trim())
+        .filter((m) => m.length >= 10 && !/^[a-z]{0,7} ?\d+$/.test(m));
+
+    for (const a of ATELIERS) {
+      // Les fiches qui ont leur propre référentiel sont déjà couvertes.
+      if (REFERENTIELS[a.code]) continue;
+      const inventees: string[] = [];
+      let prefixees = 0;
+      for (const cite of new Set(a.seances.flatMap((s) => s.processus))) {
+        const source = referentielDeCitation(cite);
+        if (!source) continue;
+        prefixees += 1;
+        const officiels = source.referentiel.entrees.flatMap(segments);
+        const cites = segments(cite);
+        if (!cites.some((c) => officiels.some((o) => o.includes(c) || c.includes(o))))
+          inventees.push(`${cite} (cherché dans ${source.code})`);
+      }
+      expect(
+        inventees,
+        `${a.code} : intitulés introuvables dans le texte du diplôme qu'ils nomment :\n${inventees.join("\n")}`,
+      ).toEqual([]);
+      // Une fiche multi-diplômes qui cesserait de préfixer ses intitulés
+      // redeviendrait invérifiable sans que rien ne le signale.
+      if (a.reglages.concours)
+        expect(prefixees, `${a.code} : aucun intitulé ne nomme son diplôme`).toBeGreaterThan(0);
+    }
+  });
+
   it("l'animation de lycée ne cite que des thèmes qui existent au programme", () => {
     // Deux thèmes étaient inventés : un « Évaluation et performance » qui
     // n'appartient à aucun des trois programmes, cité par deux séances, et un
@@ -316,6 +384,102 @@ describe("ateliers professionnels", () => {
       ).toBeLessThanOrEqual(8);
       expect(a.reglages.bots, a.code).toBeGreaterThanOrEqual(0);
       expect(a.reglages.bots, a.code).toBeLessThanOrEqual(4);
+      // Le tour d'essai se demande à la création, parmi les longueurs que le
+      // formulaire propose : une fiche qui en annoncerait trois enverrait
+      // l'enseignant cocher une case qui n'existe pas.
+      if (a.reglages.tourDEssai !== undefined) {
+        expect(
+          TOURS_D_ESSAI,
+          `${a.code} : ${a.reglages.tourDEssai} tours d'essai, que la création ne propose pas`,
+        ).toContain(a.reglages.tourDEssai);
+      }
+    }
+  });
+
+  it("une séance d'essai se déclare dans les réglages, vient avant tout tour réel et ne compte pas", () => {
+    // Le tour d'essai (config/tour-d-essai) se joue dans la partie, puis tout
+    // repart de zéro. Une fiche qui le fait jouer doit le demander à la
+    // création, sans quoi la première séance attendrait un essai que la partie
+    // n'a pas ; et une fiche qui le demande sans séance pour le jouer
+    // laisserait l'essai se jouer hors de tout déroulé. L'essai précède la
+    // vraie partie : une séance d'essai après un tour réel est impossible, et
+    // elle ne joue aucun tour de la partie, puisque rien de ce qu'elle joue
+    // ne compte.
+    for (const a of ATELIERS) {
+      const essais = a.seances.filter((s) => s.essai);
+      if (a.reglages.tourDEssai === undefined) {
+        expect(essais.map((s) => s.numero), `${a.code} : une séance d'essai sans tour d'essai demandé à la création`).toEqual([]);
+        continue;
+      }
+      expect(essais.length, `${a.code} : un tour d'essai demandé à la création, qu'aucune séance ne joue`).toBeGreaterThan(0);
+      const premierReel = a.seances.findIndex((s) => s.tourJoue !== null);
+      for (const s of essais) {
+        expect(s.tourJoue, `${a.code}/séance ${s.numero} : l'essai ne joue aucun tour de la partie`).toBeNull();
+        expect(
+          a.seances.indexOf(s),
+          `${a.code}/séance ${s.numero} : l'essai vient après un tour réel`,
+        ).toBeLessThan(premierReel);
+      }
+    }
+  });
+
+  it("un atelier joué en concours annonce ce que le concours impose", () => {
+    // Un championnat ne se règle pas comme une partie de classe. Le produit y
+    // impose le secteur par défaut, applique le préréglage de repli faute de
+    // niveau transmis, joue tous les tours du scénario et ne crée aucun
+    // concurrent simulé. Une fiche qui annoncerait autre chose enverrait
+    // l'organisateur régler ce qui ne se règle pas, et il ne s'en apercevrait
+    // qu'une fois son concours créé, devant les classes réunies.
+    for (const a of ATELIERS.filter((x) => x.reglages.concours)) {
+      expect(a.reglages.scenarioCode, `${a.code} : le concours impose le secteur par défaut`).toBe(
+        DEFAULT_SCENARIO_CODE,
+      );
+      expect(a.reglages.niveau, `${a.code} : le concours applique le préréglage de repli`).toBe(
+        LEGACY_PRESET.level,
+      );
+      expect(a.reglages.niveauNom, `${a.code} : le nom du niveau imposé`).toBe(LEGACY_PRESET.name);
+      expect(a.reglages.bots, `${a.code} : un concours ne crée aucun concurrent simulé`).toBe(0);
+      expect(
+        a.reglages.tours,
+        `${a.code} : un concours joue tous les tours du scénario, sans raccourci`,
+      ).toBe(scenarioByCode(a.reglages.scenarioCode).scenario.roundsCount);
+      expect(
+        a.reglages.mondeVariable,
+        `${a.code} : un concours ne passe pas le monde variable`,
+      ).toBe(false);
+    }
+  });
+
+  it("un tournoi annonce le format que son tirage produira", () => {
+    // Le piège : le nombre de groupes est le QUOTIENT ENTIER du nombre
+    // d'équipes par la taille visée, et la finale est plafonnée. Une fiche qui
+    // écrit ses groupes et ses finalistes à la main se trompe devant tout un
+    // campus. Elle déclare donc les trois nombres qui se règlent, et le reste
+    // se calcule du tirage réel.
+    for (const a of ATELIERS.filter((x) => x.reglages.concours)) {
+      const t = a.reglages.tournoi;
+      expect(t, `${a.code} : une fiche de concours sans configuration de tournoi`).toBeDefined();
+      expect(
+        t!.equipes,
+        `${a.code} : en dessous de deux équipes, le produit refuse les qualifications`,
+      ).toBeGreaterThanOrEqual(LIMITES_CONCOURS.equipesMin);
+      expect(t!.tailleGroupe).toBeGreaterThanOrEqual(LIMITES_CONCOURS.tailleGroupe.min);
+      expect(t!.tailleGroupe).toBeLessThanOrEqual(LIMITES_CONCOURS.tailleGroupe.max);
+      expect(t!.qualifiesParGroupe).toBeGreaterThanOrEqual(
+        LIMITES_CONCOURS.qualifiesParGroupe.min,
+      );
+      expect(t!.qualifiesParGroupe).toBeLessThanOrEqual(LIMITES_CONCOURS.qualifiesParGroupe.max);
+      // Le déroulé décrit une partie de qualification : le nombre d'équipes
+      // qu'il annonce est celui d'un groupe RÉEL, pas la taille visée.
+      const format = formatDuTournoi(t!);
+      expect(
+        a.reglages.equipes,
+        `${a.code} : ${a.reglages.equipes} équipes annoncées pour des groupes de ${format.equipesParGroupe.join(", ")}`,
+      ).toBe(Math.max(...format.equipesParGroupe));
+      expect(
+        format.finalistes,
+        `${a.code} : une finale doit réunir au moins deux équipes`,
+      ).toBeGreaterThanOrEqual(2);
     }
   });
 
@@ -324,21 +488,29 @@ describe("ateliers professionnels", () => {
     // de recrutement que le personnel soit ouvert, une séance d'investissement
     // que l'investissement le soit. Annoncer l'une sans l'autre enverrait
     // l'enseignant chercher devant sa classe un panneau qui n'existe pas.
+    // Depuis octobre 2026, la trésorerie se pilote au niveau 3 par le poste
+    // clients (escompte, affacturage, découvert) ; l'emprunt, la banque qui
+    // prête et l'assurance viennent au niveau 4.
     const EXIGENCES = [
-      { mots: /trésorerie|emprunt|financement|banque/i, levier: "finance" as const },
-      { mots: /recrut|embauch|personnel|effectif/i, levier: "hr" as const },
-      { mots: /investir|investissement/i, levier: "investment" as const },
-      { mots: /placement|excédents? de trésorerie/i, levier: "placement" as const },
+      { mots: /emprunt|financement|\bbanque\b|apport des associés/i, leviers: ["finance"] as const },
+      { mots: /trésorerie|créances|poste clients|escompte|affacturage/i, leviers: ["creances", "finance"] as const },
+      { mots: /recrut|embauch|personnel|effectif/i, leviers: ["hr"] as const },
+      { mots: /investir|investissement/i, leviers: ["investment"] as const },
+      { mots: /assurance|assurer contre/i, leviers: ["insurance"] as const },
+      { mots: /placement|excédents? de trésorerie/i, leviers: ["placement"] as const },
     ];
     for (const a of ATELIERS) {
-      const preset = DIFFICULTY_PRESETS.find((p) => p.level === a.reglages.niveau)!;
+      // Un atelier de concours joue le préréglage de repli, pas le niveau nommé.
+      const preset = a.reglages.concours
+        ? LEGACY_PRESET
+        : DIFFICULTY_PRESETS.find((p) => p.level === a.reglages.niveau)!;
       for (const s of a.seances) {
         const dit = `${s.titre} ${s.objectif}`;
-        for (const { mots, levier } of EXIGENCES) {
+        for (const { mots, leviers } of EXIGENCES) {
           if (!mots.test(dit)) continue;
           expect(
-            preset.decisions[levier],
-            `${a.code}/séance ${s.numero} : porte sur « ${levier} » au niveau ${preset.level}, qui ne l'ouvre pas`,
+            leviers.some((l) => preset.decisions[l]),
+            `${a.code}/séance ${s.numero} : porte sur « ${leviers.join(" ou ")} » au niveau ${preset.level}, qui ne l'ouvre pas`,
           ).toBe(true);
         }
       }
@@ -383,8 +555,8 @@ describe("ateliers professionnels", () => {
     // carte doit tomber juste, sinon elle ment sur la vitrine.
     //
     // La demi-heure est lue elle aussi. Le registre ne savait écrire que des
-    // heures entières, ce qui convient aux créneaux de deux ou trois heures
-    // d'une section de technicien et à rien d'autre : un lycée travaille par
+    // heures entières, ce qui convient aux créneaux de deux heures d'une
+    // section de technicien et à rien d'autre : un lycée travaille par
     // séances d'une heure trente, et l'animation de découverte s'est cognée à
     // cette limite le jour où il a fallu lui donner quatre séances sans
     // allonger son volume.
@@ -415,6 +587,94 @@ describe("ateliers professionnels", () => {
       for (const f of a.faq) {
         expect(f.question.trim().endsWith("?"), `${a.code} : « ${f.question} »`).toBe(true);
         expect(f.reponse.length, `${a.code}/${f.question}`).toBeGreaterThan(80);
+      }
+    }
+  });
+
+  it("l'évaluation finale compte les livrables intermédiaires juste", () => {
+    // Quatre fiches annonçaient « cinq livrables intermédiaires » pour quatre
+    // séances jouées, puis comptaient le livrable de la dernière séance une
+    // seconde fois à la ligne suivante : la note s'annonçait sur des
+    // documents qui n'existaient pas. Le nombre écrit est le nombre de
+    // séances qui jouent un tour, et rien d'autre.
+    const NOMBRES: Record<string, number> = {
+      deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8,
+    };
+    for (const a of ATELIERS) {
+      const joues = a.seances.filter((s) => s.tourJoue !== null).length;
+      for (const ligne of a.evaluationFinale) {
+        const m = ligne.match(/^Les (\w+) (?:livrables|notes|dossiers) intermédiaires/i);
+        if (!m) continue;
+        expect(
+          NOMBRES[m[1]!.toLowerCase()],
+          `${a.code} : « ${ligne} » pour ${joues} séances jouées`,
+        ).toBe(joues);
+      }
+    }
+  });
+
+  it("aucune fiche ne promet ce que le produit ne fait pas", () => {
+    // Trois promesses ont vécu dans les fiches sans qu'aucun réglage ne les
+    // tienne. « La partie reste ouverte, les tours suivants se jouent en
+    // prolongement » : le nombre de tours se fixe à la création et rien ne le
+    // prolonge. « Sans aléa » : le monde variable ne coupe que la texture des
+    // paramètres, les événements restent tirés à tous les niveaux. « Descendez
+    // d'un niveau puis remontez » : le niveau ne change plus une fois la partie
+    // créée. Une fiche qui les écrit envoie l'enseignant chercher un bouton qui
+    // n'existe pas.
+    const INTERDITS: { motif: RegExp; raison: string }[] = [
+      { motif: /se jouent en prolongement/i, raison: "une partie ne se prolonge pas au delà de ses tours" },
+      { motif: /partie reste ouverte\s*:/i, raison: "une partie ne se prolonge pas au delà de ses tours" },
+      { motif: /sans aléa/i, raison: "le monde variable ne coupe pas les événements" },
+      { motif: /remontez pour/i, raison: "le niveau ne change pas en cours de partie" },
+    ];
+    for (const a of ATELIERS) {
+      const prose = [
+        a.pitch, a.resume, a.pourquoi, a.reglages.notes,
+        ...a.seances.flatMap((s) => [s.objectif, s.preparation, s.livrable, ...s.deroule.map((p) => p.detail)]),
+        ...a.formats.flatMap((f) => [f.quand, f.comment]),
+        ...a.evaluationFinale, ...a.prolongements,
+        ...a.faq.flatMap((f) => [f.question, f.reponse]),
+      ].join("\n");
+      for (const { motif, raison } of INTERDITS) {
+        expect(prose, `${a.code} : ${raison} (« ${prose.match(motif)?.[0] ?? ""} »)`).not.toMatch(motif);
+      }
+    }
+  });
+
+  it("chaque fiche lit l'exigence sur la même échelle", () => {
+    // Le même chiffre portait des mots différents d'une fiche à l'autre : 1
+    // était « Initiation » ici et « Découverte » là, 3 « Approfondissement »
+    // ou « Pilotage ». Un enseignant qui compare deux fiches doit lire une
+    // seule échelle.
+    for (const a of ATELIERS) {
+      expect(a.difficulteLabel, `${a.code} : exigence ${a.difficulte}`).toBe(DIFFICULTES[a.difficulte]);
+    }
+  });
+
+  it("chaque trace est un acte, pas deux", () => {
+    // Un passeport professionnel attend une ligne par acte : « J'ai calculé un
+    // seuil ». Une trace « J'ai fait ceci, et j'ai fait cela » se coche à
+    // moitié et ne se retrouve dans aucune compétence. Le complément reste
+    // libre (« en pesant… », « puis analysé… ») ; un second « j'ai » non.
+    for (const a of ATELIERS) {
+      for (const s of a.seances) {
+        expect(s.tracePasseport, `${a.code}/séance ${s.numero} : « ${s.tracePasseport} »`).not.toMatch(
+          /(, | et )j['’](ai|en ai)\b|, je m['’]en\b/,
+        );
+      }
+    }
+  });
+
+  it("chaque séance mobilise au moins une notion qui a sa fiche", () => {
+    // Les notions s'affichaient en texte mort : l'élève qui butait sur l'une
+    // d'elles n'avait aucune porte à pousser. Le lien se fait par le sens
+    // (config/ateliers/notions) ; une séance dont aucune notion n'est couverte
+    // est une séance que le site n'aide pas à préparer.
+    for (const a of ATELIERS) {
+      for (const s of a.seances) {
+        const liees = s.notions.filter((n) => ficheDeNotion(n) !== null);
+        expect(liees.length, `${a.code}/séance ${s.numero} : ${s.notions.join(", ")}`).toBeGreaterThan(0);
       }
     }
   });
@@ -514,10 +774,26 @@ describe("ateliers professionnels", () => {
     }
   });
 
-  it("les pages d'atelier n'écrivent aucun mot de référentiel en dur", () => {
+  it("les pages d'atelier n'écrivent aucun mot de référentiel ni aucun sigle en dur", () => {
     // Sans cette garde, une page peut retomber sur « processus » pour tous les
     // diplômes sans qu'aucune donnée ne change : le défaut d'origine.
-    for (const chemin of ["src/app/animations/page.tsx", "src/app/animations/[code]/page.tsx"]) {
+    //
+    // LE PÉRIMÈTRE S'EST ÉLARGI AUX SIGLES. La liste des ateliers écrivait
+    // « processus en BTS CG, blocs de compétences en MCO, NDRC et GPME » dans
+    // une phrase : un diplôme ajouté au registre, et la phrase mentait. Depuis
+    // que les entreprises disent les formations qu'elles servent, quatre pages
+    // nomment des formations, et chacune doit les lire dans le registre. On
+    // cherche donc le sigle et le nom entier de chaque formation dans le code
+    // seul, commentaires retirés, puisqu'un commentaire cite forcément ce
+    // qu'il interdit.
+    const PAGES = [
+      "src/app/animations/page.tsx",
+      "src/app/animations/[code]/page.tsx",
+      "src/app/jouer/page.tsx",
+      "src/app/parcours/page.tsx",
+      "src/components/quick-config-form.tsx",
+    ];
+    for (const chemin of PAGES) {
       const source = readFileSync(chemin, "utf-8")
         .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
         .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -525,11 +801,74 @@ describe("ateliers professionnels", () => {
       expect(source, `${chemin} écrit « Processus mobilisés » en dur`).not.toMatch(
         /Processus mobilisés/i,
       );
+      for (const f of FORMATIONS) {
+        expect(source, `${chemin} écrit le sigle « ${f.sigle} » en dur`).not.toContain(f.sigle);
+        expect(source, `${chemin} écrit « ${f.nom} » en dur`).not.toContain(f.nom);
+      }
     }
     const fiche = readFileSync("src/app/animations/[code]/page.tsx", "utf-8");
     expect(fiche, "la fiche n'ouvre pas le mot du référentiel").toContain(
       "atelier.referentielLabel",
     );
+  });
+
+  it("chaque séance laisse au tour joué au moins ce que le modèle de durée estime", () => {
+    // Un déroulé promet un tour par séance et lui donne une phase sur six. Le
+    // modèle de durée (config/duree-du-tour) sait ce que ce tour demande à une
+    // équipe de cet atelier : le texte à lire, les champs que le niveau ouvre,
+    // la situation du tour, la prise en main au premier. Deux séances donnaient
+    // vingt minutes à un tour estimé à dix-neuf et vingt : juste, mais sans
+    // rien pour la discussion à trois autour de l'écran.
+    //
+    // LA TOLÉRANCE EST NULLE, ET C'EST VOULU. Le modèle est déjà un plancher :
+    // il ne compte ni les aides du formulaire ni le courrier du tour, et sa
+    // lecture est lente à dessein. Une phase qui donne moins que ce plancher
+    // est un déroulé faux, pas un déroulé serré. La marge conseillée d'un
+    // quart (MARGE_CONSEILLEE) n'est pas exigée ici : elle est un objectif
+    // d'écriture, que l'audit d'octobre 2026 a atteint sur les soixante et
+    // onze séances jouées, et que la fiche montre à l'enseignant en écrivant
+    // les deux chiffres. Un texte de situation qui s'allonge demain fera
+    // rougir cette garde avant la classe, et c'est son rôle.
+    expect(MARGE_CONSEILLEE).toBeGreaterThan(1);
+    for (const a of ATELIERS) {
+      for (const c of chargeDesSeances(a)) {
+        expect(
+          c.minutesDeJeu,
+          `${a.code}/séance ${c.seance.numero} : aucune phase ne joue le tour ${c.seance.tourJoue}`,
+        ).toBeGreaterThan(0);
+        expect(
+          c.verdict,
+          `${a.code}/séance ${c.seance.numero} : le tour demande ≈ ${c.estimation.minutes} min, le déroulé lui en donne ${c.minutesDeJeu}`,
+        ).not.toBe("impossible");
+      }
+    }
+  });
+
+  it("le niveau de jeu suit la formation et l'année", () => {
+    // Le niveau d'une fiche se lisait seul, sans règle. Celle-ci est celle de
+    // l'audit d'octobre 2026 : le lycée découvre (1), une première année de
+    // section de technicien gère ou pilote (2 à 3), une seconde année et le BUT
+    // pilotent ou arbitrent (3 à 4), le DCG arbitre ou fait de la stratégie
+    // (4 à 5), l'approfondissement transversal fait de la stratégie (5). Un
+    // concours impose son niveau, une découverte sans formation choisit le
+    // sien.
+    const attendu = (a: (typeof ATELIERS)[number]): number[] | null => {
+      if (a.reglages.concours) return null;
+      if (a.formations.length === 0) return /avancé/i.test(a.annee) ? [5] : null;
+      if (a.formations.includes("stmg") && a.formations.length === 1) return [1];
+      if (a.formations.includes("dcg")) return [4, 5];
+      if (a.formations.some((f) => f.startsWith("but-"))) return [3, 4];
+      if (/première/i.test(a.annee)) return [2, 3];
+      return [3, 4];
+    };
+    for (const a of ATELIERS) {
+      const niveaux = attendu(a);
+      if (!niveaux) continue;
+      expect(
+        niveaux,
+        `${a.code} (${a.formations.join(", ")}, ${a.annee}) : niveau ${a.reglages.niveau}`,
+      ).toContain(a.reglages.niveau);
+    }
   });
 
   it("aucune prose d'atelier ne coupe une phrase par un tiret", () => {

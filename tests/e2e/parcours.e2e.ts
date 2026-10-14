@@ -1,7 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
+import { REFUS_DE_LA_CLASSE } from "../../src/config/tarifs";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
+import { licenceDeLEnseignant } from "./helpers/licence";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
+import { adosseAUnReferentiel } from "../../src/config/ateliers/referentiels";
+import { FORMATIONS, publicDeLAtelier } from "../../src/config/formations";
+import { SCENARIO_CHOICES } from "../../src/config/scenarios/registry";
+import { nomEntreprise } from "../../src/config/scenarios/presentation";
 
 /**
  * Le parcours complet, dans un vrai navigateur, sur une vraie base.
@@ -40,11 +46,24 @@ const PRIX_AUDIT = 'input[name="product.audit.price"]';
  * « Décisions » qui n'existe plus : il attendait un écran que personne ne voit.
  */
 async function ouvrirDecisions(page: Page): Promise<void> {
-  const raccourci = page.getByRole("button", { name: /Prendre mes décisions/ }).first();
+  // Une étape précède la saisie dès qu'un tour a livré ses résultats : le tour
+  // suivant reste replié tant que l'élève n'a pas dit qu'il y passait, pour que
+  // les résultats aient l'écran pour eux. Absente au premier tour — d'où le
+  // test de visibilité plutôt qu'un clic inconditionnel.
+  const passer = page.getByRole("button", { name: /Passer au tour/i }).first();
+  if (await passer.isVisible().catch(() => false)) {
+    await passer.click();
+  }
+  const raccourci = page
+    .getByRole("button", { name: /Prendre mes décisions/ })
+    .first();
   if (await raccourci.isVisible().catch(() => false)) {
     await raccourci.click();
   } else {
-    await page.getByRole("tab", { name: /Décider/ }).first().click();
+    await page
+      .getByRole("tab", { name: /Décider/ })
+      .first()
+      .click();
   }
 }
 
@@ -59,6 +78,17 @@ afterAll(async () => {
   await navigateur?.close();
 });
 
+/**
+ * Le formulaire de création attend derrière « Nouvelle partie » dès qu'une
+ * partie existe : on l'ouvre s'il ne l'est pas déjà (il l'est d'office pour un
+ * compte sans partie, ou après un échec de création).
+ */
+async function ouvrirLaCreation(p: Page): Promise<void> {
+  if ((await p.locator("#nouvelle-partie[open]").count()) === 0) {
+    await p.locator("#nouvelle-partie > summary").click();
+  }
+}
+
 describe("parcours enseignant et élève", () => {
   it("un enseignant crée son compte et arrive sur ses parties", async () => {
     await aller(prof, "/teacher/login");
@@ -69,13 +99,21 @@ describe("parcours enseignant et élève", () => {
     await prof.fill('input[name="schoolName"]', "Lycée du Parcours");
     await prof.fill('input[name="email"]', EMAIL);
     await prof.fill('input[name="password"]', MOTDEPASSE);
-    await prof.getByRole("button", { name: "Créer mon compte enseignant" }).click();
+    await prof
+      .getByRole("button", { name: "Créer mon compte enseignant" })
+      .click();
 
     await prof.waitForURL(/\/teacher$/, { timeout: 30_000 });
     expect(await texte(prof)).toContain("Mes parties");
   });
 
   it("il crée une partie de conseil, et la page de pilotage dit ses réglages", async () => {
+    // Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus :
+    // l'établissement de ce parcours est sous licence, posée en base comme le ferait
+    // l'administrateur (la règle elle-même est gardée par acces.e2e.ts).
+    await licenceDeLEnseignant(EMAIL, "pose");
+    await aller(prof, "/teacher");
+    await ouvrirLaCreation(prof);
     // Au niveau 5, ATLAS CONSEIL se joue en gamme : trois offres, chacune à
     // son tarif, vendues par les mêmes consultants.
     await prof.selectOption('select[name="scenarioCode"]', "conseil");
@@ -94,8 +132,12 @@ describe("parcours enseignant et élève", () => {
 
     // Le code se lit dans le DOM, pas au filtre sur le texte : l'alphabet des
     // codes est celui des majuscules, et « PARTIE » y ressemble à s'y méprendre.
-    codeInvitation = (await prof.locator("h1 span.font-mono").innerText()).trim();
-    expect(codeInvitation, "code d'invitation illisible").toMatch(/^[A-Z2-9]{6}$/);
+    codeInvitation = (
+      await prof.locator("#code-invitation").innerText()
+    ).trim();
+    expect(codeInvitation, "code d'invitation illisible").toMatch(
+      /^[A-Z2-9]{6}$/,
+    );
   });
 
   it("un élève rejoint avec le code seul et voit son secteur, pas un autre", async () => {
@@ -115,7 +157,7 @@ describe("parcours enseignant et élève", () => {
     expect(vu).not.toContain("enceinte");
     // les trois offres du cabinet, pas un tarif unique
     expect(vu).toContain("Audit");
-    expect(vu).toContain("Transformation");
+    expect(vu).toContain("Stratégie");
 
     // le point de départ vient du secteur : la journée d'audit, pas 59 €
     const prix = await eleve.inputValue(PRIX_AUDIT);
@@ -127,7 +169,8 @@ describe("parcours enseignant et élève", () => {
     // (assurance…) vivent sur une étape masquée, exclue de `innerText`. On lit
     // donc tout le contenu du formulaire, visible ou non, pour que la garde
     // « français, pas de millièmes » couvre l'ensemble des leviers.
-    const vu = (await eleve.locator(`form:has(${PRIX_AUDIT})`).textContent()) ?? "";
+    const vu =
+      (await eleve.locator(`form:has(${PRIX_AUDIT})`).textContent()) ?? "";
     // les couvertures d'assurance sont en français (écart de la 1re recette)
     expect(vu).not.toMatch(/natural disaster|cold wave|machine breakdown/i);
     // aucun montant à trois décimales (écart de la 2e recette)
@@ -145,12 +188,25 @@ describe("parcours enseignant et élève", () => {
       if (!(await suivant.isVisible().catch(() => false))) break;
       await suivant.click();
     }
-    await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
+    // LA NOTE D'AVANT EST FACULTATIVE (voir `config/justification`) : sans elle, rien ne
+    // bloque. Le champ n'a donc aucun refus natif, et le premier clic mène droit au
+    // garde-fou des pivots.
+    expect(
+      await eleve
+        .locator('textarea[name="justification"]')
+        .evaluate((n: HTMLTextAreaElement) => n.required || n.minLength > 0),
+      "la note ne doit ni être requise ni avoir de longueur minimale",
+    ).toBe(false);
+    await eleve
+      .getByRole("button", { name: /Valider les décisions de l'équipe/ })
+      .click();
 
     // Le prix est touché mais le volume (« Jours à staffer ») reste à sa valeur
     // proposée : le garde-fou des pivots (A1) demande de confirmer avant
     // d'envoyer. On confirme, comme le ferait un élève qui assume ce volume.
-    await eleve.getByRole("button", { name: /je garde ces valeurs/ }).click({ timeout: 10_000 });
+    await eleve
+      .getByRole("button", { name: /je garde ces valeurs/ })
+      .click({ timeout: 10_000 });
 
     // On relit la page : ce qui compte est que le serveur ait ENREGISTRÉ le
     // tour, pas que le bouton ait changé d'étiquette.
@@ -168,11 +224,17 @@ describe("parcours enseignant et élève", () => {
 
   it("l'enseignant clôture le tour et la partie avance", async () => {
     await aller(prof, urlPartie);
-    await prof.getByRole("button", { name: /Clore le tour 1 et simuler/ }).click();
+    await prof
+      .getByRole("button", { name: /Clore le tour 1 et simuler/ })
+      .click();
     // Le clic ouvre d'abord une confirmation (équipes validées + irréversibilité,
     // A2) : c'est « Clore et simuler » qui lance réellement la résolution.
-    await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
-    await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 60_000 });
+    await prof
+      .getByRole("button", { name: "Clore et simuler", exact: true })
+      .click();
+    await prof.waitForSelector("text=/Clore le tour 2 et simuler/", {
+      timeout: 60_000,
+    });
     expect(await texte(prof)).toContain("Tour 2");
   });
 
@@ -182,17 +244,26 @@ describe("parcours enseignant et élève", () => {
     // conseil n'achète pas de matières : il paie des frais de mission.
     await aller(eleve, new URL(eleve.url()).pathname);
     // Les résultats d'une période vivent dans sa carte, dépliée par défaut pour
-    // le tour le plus récent ; les états financiers sont dans le sous-onglet
-    // « Finance ». On y navigue, puis on ouvre les comptes dépliables.
-    await eleve.getByRole("tab", { name: /Finance/ }).click({ timeout: 30_000 });
-    await eleve.evaluate(() => {
-      // les comptes sont dépliables : leur contenu ne compte pas dans le texte
-      // visible tant qu'ils sont fermés.
-      document.querySelectorAll("details").forEach((d) => d.setAttribute("open", ""));
-    });
+    // le tour le plus récent ; les états financiers sont dans la face
+    // « Finance ». Lot P3 : plus de seconde rangée d'onglets sous ceux du
+    // tour, un sommaire d'ancres ; on y navigue par son lien, puis on ouvre les
+    // comptes dépliables.
+    const versFinance = eleve
+      .getByRole("navigation", { name: /^Résultats du / })
+      .first()
+      .getByRole("link", { name: "Finance", exact: true });
+    await versFinance.click({ timeout: 30_000 });
+    expect(await versFinance.getAttribute("href")).toMatch(/^#tour-\d+-finance$/);
+    // Les comptes forment un accordéon : en ouvrir un ferme les autres, donc on ouvre CELUI de
+    // l'analyse des coûts, comme le ferait l'élève, plutôt que de tout forcer ouvert.
+    await eleve
+      .locator("summary", { hasText: /Analyse des coûts/i })
+      .click({ timeout: 30_000 });
     const vu = (await texte(eleve)).toLowerCase();
     expect(vu).toContain("frais de mission");
-    expect(vu, "l'étiquette figée est revenue").not.toContain("matières premières");
+    expect(vu, "l'étiquette figée est revenue").not.toContain(
+      "matières premières",
+    );
   });
 
   it("le relevé de notes est là, et son tableur se télécharge vraiment", async () => {
@@ -242,6 +313,7 @@ describe("parcours enseignant et élève", () => {
     // jusqu'à l'écran : un champ ouvert côté service mais absent du formulaire
     // n'existe pas.
     await aller(prof, "/teacher");
+    await ouvrirLaCreation(prof);
     await prof.selectOption('select[name="scenarioCode"]', "nova");
     await prof.selectOption('select[name="humanTeamsCount"]', "1");
     await prof.selectOption('select[name="botCount"]', "1");
@@ -249,13 +321,15 @@ describe("parcours enseignant et élève", () => {
     await prof.getByRole("button", { name: /Créer la partie/ }).click();
     await prof.waitForURL(/\/teacher\/games\//, { timeout: 30_000 });
     expect(await texte(prof)).toContain("Niveau 6");
-    const code = (await prof.locator("h1 span.font-mono").innerText()).trim();
+    const code = (await prof.locator("#code-invitation").innerText()).trim();
 
     const executive = await (await navigateur.newContext()).newPage();
     await aller(executive, "/join");
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
-    await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await executive
+      .getByRole("button", { name: "Rejoindre la partie" })
+      .click();
     // Le tour ouvre sur « Situation » : on passe à « Décider » pour le
     // formulaire. Il range ses décisions par famille en accordéon : le champ
     // dividende vit dans « Financer », repliée par défaut. On attend le prix,
@@ -263,15 +337,25 @@ describe("parcours enseignant et élève", () => {
     await ouvrirDecisions(executive);
     // Au niveau 6, NOVA se joue en gamme : le prix est celui de chaque
     // référence (`product.<code>.price`), pas un champ unique.
-    await executive.waitForSelector('input[name="price"], input[name$=".price"]', { timeout: 30_000 });
-    // L'assistant est en étapes : le dividende vit sur « Trésorerie &
-    // couverture », masquée tant qu'on ne l'affiche pas. On y va, puis on
-    // déplie tout pour que le champ compte dans le texte rendu.
-    await executive.getByRole("button", { name: /Trésorerie & couverture/ }).first().click();
-    await executive.evaluate(() =>
-      document.querySelectorAll("details").forEach((d) => d.setAttribute("open", "")),
+    await executive.waitForSelector(
+      'input[name="price"], input[name$=".price"]',
+      { timeout: 30_000 },
     );
-    await executive.waitForSelector('input[name="dividend"]', { timeout: 30_000 });
+    // L'assistant est en étapes : le dividende vit sur « Trésorerie »,
+    // masquée tant qu'on ne l'affiche pas. On y va, puis on
+    // déplie tout pour que le champ compte dans le texte rendu.
+    await executive
+      .getByRole("button", { name: "Trésorerie", exact: true })
+      .first()
+      .click();
+    await executive.evaluate(() =>
+      document
+        .querySelectorAll("details")
+        .forEach((d) => d.setAttribute("open", "")),
+    );
+    await executive.waitForSelector('input[name="dividend"]', {
+      timeout: 30_000,
+    });
 
     const vu = await texte(executive);
     // sans tenir compte de la casse : les libellés de champ sont mis en
@@ -306,6 +390,9 @@ describe("parcours enseignant et élève", () => {
         [EMAIL],
       );
       expect(rows.length, "établissement de l'enseignant introuvable").toBe(1);
+      // La licence en cours posée plus haut s'achève (le temps qui passe) : seule reste
+      // la licence échue, comme dans un établissement qui n'a pas renouvelé.
+      await licenceDeLEnseignant(EMAIL, "retire");
       await base.query(
         `insert into org_licences (organization_id, label, starts_at, ends_at)
          values ($1, 'Licence échue', now() - interval '400 days', now() - interval '5 days')`,
@@ -313,47 +400,58 @@ describe("parcours enseignant et élève", () => {
       );
 
       await aller(prof, "/teacher");
+      // L'échéance est dite AVANT l'envoi (PAR-02) : la ligne d'état en tête de l'espace
+      // et l'encadré de la création.
+      const etat = prof.locator("[data-etat-offre]");
+      expect(await etat.getAttribute("data-etat-offre")).toBe("expiree");
+      expect(await etat.innerText()).toContain("terminée le");
+      await ouvrirLaCreation(prof);
+      expect(await prof.locator("[data-classe-sans-licence]").isVisible()).toBe(true);
       await prof.selectOption('select[name="scenarioCode"]', "nova");
       await prof.getByRole("button", { name: /Créer la partie/ }).click();
       // On attend le BANDEAU, pas l'URL : la page était déjà /teacher avant le
       // clic, si bien qu'attendre cette adresse revenait à ne rien attendre du
       // tout et à lire la page avant sa mise à jour.
-      await prof.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
+      await prof.waitForSelector("text=/La partie n'a pas été créée/", {
+        timeout: 30_000,
+      });
 
-      const vu = await texte(prof);
-      expect(vu).toContain("La partie n'a pas été créée");
-      expect(vu).toContain("Licence échue");
-      expect(vu).toContain("expiré");
+      // Une licence échue vaut une absence de licence : même règle, même message (PAR-02).
+      const alerte = prof.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
+      expect(await alerte.innerText()).toContain(REFUS_DE_LA_CLASSE);
+      expect(await alerte.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     } finally {
       await base.end();
     }
   });
 
-  it("la vitrine présente les sept entreprises, et son bouton choisit le métier", async () => {
+  it("la vitrine présente toutes les entreprises, et son bouton choisit le métier", async () => {
     // Une page vitrine se vérifie dans un navigateur ou pas du tout : elle
     // n'est faite que de rendu et de liens. Et son bouton doit VRAIMENT
     // amener sur le formulaire (/jouer) avec le bon secteur : c'est la
     // jointure, donc l'endroit où ça casse.
+    //
+    // LES NOMS SE LISENT DANS LE REGISTRE. Ils étaient écrits ici à la main,
+    // et ce test s'intitulait « les sept entreprises » alors que la vitrine
+    // en présente neuf : deux métiers ajoutés depuis n'étaient couverts par
+    // rien. Une liste recopiée ne se met pas à jour, et personne ne relit le
+    // titre d'un test qui passe.
     await aller(prof, "/entreprises");
     const vitrine = await texte(prof);
-    for (const nom of [
-      "NOVA",
-      "MAILLE & CO",
-      "L'ESCALE",
-      "LA TABLE D'AUGUSTIN",
-      "ATLAS CONSEIL",
-      "PIXEL & CO",
-      "VOLT FITNESS",
-    ]) {
+    for (const nom of SCENARIO_CHOICES.map(nomEntreprise)) {
       expect(vitrine, `${nom} absente de la vitrine`).toContain(nom);
     }
     // le tableau comparatif oppose bien le périssable au stockable
     expect(vitrine).toContain("rien ne se stocke");
     expect(vitrine).toContain("déjà payé");
 
-    await prof.getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" }).click();
+    await prof
+      .getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" })
+      .click();
     await prof.waitForURL(/secteur=bistrot/, { timeout: 30_000 });
-    expect(await prof.locator('input[name="scenarioCode"]').inputValue()).toBe("bistrot");
+    expect(await prof.locator('input[name="scenarioCode"]').inputValue()).toBe(
+      "bistrot",
+    );
   });
 
   it("l'atelier professionnel s'affiche en entier et tient ses comptes", async () => {
@@ -361,7 +459,14 @@ describe("parcours enseignant et élève", () => {
     // calculés à partir du déroulé : ce test vérifie qu'ils arrivent bien
     // jusqu'à la page, et que les six séances y sont toutes.
     await aller(prof, "/animations");
-    expect(await texte(prof)).toContain("BTS Comptabilité et Gestion");
+    // CE QUE LA LISTE NOMME SE DÉDUIT. Elle montrait « BTS Comptabilité et
+    // Gestion », écrit ici en toutes lettres ; elle montre le sigle depuis
+    // qu'un atelier peut servir plusieurs formations et que quinze cartes
+    // doivent rester balayables. Figer la forme dans un test, c'est interdire
+    // de changer d'avis sans rougir : on vérifie que la formation est nommée,
+    // pas la façon dont elle l'est.
+    const cgListe = ATELIERS.find((a) => a.code === "cg1")!;
+    expect(await texte(prof)).toContain(publicDeLAtelier(cgListe));
 
     // On désigne la fiche par son adresse et non par le premier lien de la
     // page : ce test tenait pour acquis que l'atelier de comptabilité ouvrait
@@ -389,7 +494,204 @@ describe("parcours enseignant et élève", () => {
       expect(fiche, `« ${attendu} » absent de la fiche`).toContain(attendu);
     }
     // toutes les séances de l'atelier, pas une de moins
-    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(cg1.seances.length);
+    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(
+      cg1.seances.length,
+    );
+  });
+
+  it("le titre de l'accueil grandit avec l'écran sans sortir de sa colonne", async () => {
+    // LE DÉFAUT MESURÉ : le titre faisait 38,5 px à 1280 comme à 1728. Il se
+    // dimensionnait en unités de sa COLONNE et devait tenir sur une ligne dans
+    // une demi-largeur, si bien qu'il rapetissait au lieu de grandir — et son
+    // plafond n'était jamais atteint. Une taille figée ne se voit pas en
+    // lisant la feuille de style : elle se mesure à deux largeurs.
+    //
+    // ET LE REVERS DU REMÈDE : une taille qui ne sait rien de la place
+    // disponible. Le titre partage sa ligne avec la main de cartes ; trop
+    // grand, il passerait sous l'image sans que rien ne déborde de la page,
+    // puisque le premier écran est rogné ; trop grand sur un téléphone, il se
+    // replie et « Dirigez une entreprise. » tombe sur deux lignes. On mesure
+    // donc la largeur RÉELLE de la plus longue ligne contre celle de sa
+    // colonne.
+    //
+    // ET ON LA MESURE SUR UN TÉLÉPHONE AUSSI. Cette garde n'a d'abord regardé
+    // que 1024 et 1728, et c'est par 390 que le défaut est passé : le titre
+    // s'y repliait sur deux lignes, sans rien déborder et sans qu'aucun test
+    // ne le voie. Une règle de mise en page vérifiée sur un seul ordre de
+    // largeur ne vérifie rien.
+    const mesurer = async (largeur: number) => {
+      await prof.setViewportSize({ width: largeur, height: 1000 });
+      await aller(prof, "/");
+      return prof.evaluate(() => {
+        const h1 = document.querySelector("h1")!;
+        const r = document.createRange();
+        r.selectNodeContents(h1.firstChild!);
+        return {
+          px: parseFloat(getComputedStyle(h1).fontSize),
+          texte: r.getBoundingClientRect().width,
+          colonne: h1.getBoundingClientRect().width,
+        };
+      });
+    };
+    const telephone = await mesurer(390);
+    const petit = await mesurer(1024);
+    const grand = await mesurer(1728);
+    expect(
+      grand.px,
+      `le titre reste à ${grand.px} px quand l'écran passe de 1024 à 1728`,
+    ).toBeGreaterThan(petit.px + 3);
+    expect(
+      telephone.px,
+      `le titre fait ${telephone.px} px sur un téléphone comme ${grand.px} sur un grand écran`,
+    ).toBeLessThan(grand.px);
+    for (const [nom, m] of [
+      ["390", telephone],
+      ["1024", petit],
+      ["1728", grand],
+    ] as const) {
+      expect(
+        Math.round(m.texte),
+        `à ${nom} px, le titre mesure ${Math.round(m.texte)} px dans une colonne de ${Math.round(m.colonne)}`,
+      ).toBeLessThanOrEqual(Math.round(m.colonne));
+    }
+
+    // Et le premier écran porte le sol que le registre lui donne. Il a été
+    // clair du temps du papier ivoire, où un aplat de nuit en tête faisait
+    // croire au thème sombre ; l'habillage « L'arène » l'ouvre sur le marine,
+    // comme sa maquette, sous un en-tête marine lui aussi. L'administrateur
+    // peut toujours le remettre au clair ; ce n'est plus l'état d'origine.
+    const sols = await prof.evaluate(() => {
+      const hero = document.querySelector("main section")!;
+      return { contreJour: hero.classList.contains("contre-jour") };
+    });
+    expect(sols.contreJour, "le premier écran n'est pas sur le marine").toBe(
+      true,
+    );
+  });
+
+  it("la liste des ateliers ne déborde pas sur un téléphone", async () => {
+    // LE DÉFAUT MESURÉ : un tableau de cinq colonnes forcé à 640 px dans une
+    // fenêtre de 390. La colonne de l'entreprise sortait du cadre, coupée en
+    // « MAILL… », et la ligne se lisait au doigt.
+    //
+    // CE QU'IL NE FAUT PAS FAIRE POUR LE RÉPARER, et c'est pour cela que ce
+    // test mesure le débord plutôt que la présence du tableau : l'empiler
+    // aurait fait défiler deux fois la même chose, puisque les cartes qui le
+    // suivent portent déjà les quinze mêmes ateliers. Le tableau sert la
+    // comparaison, qui n'existe qu'à une largeur où les colonnes s'alignent ;
+    // sous 768 px les cartes suffisent.
+    const onglet = await navigateur.newPage();
+    await onglet.setViewportSize({ width: 390, height: 844 });
+    try {
+      await aller(onglet, "/animations");
+      const debord = await onglet.evaluate(() => {
+        const trop: string[] = [];
+        for (const el of document.querySelectorAll("main *")) {
+          const b = el.getBoundingClientRect();
+          if (b.width > 0 && (b.right > 391 || b.left < -1)) {
+            trop.push(`${el.tagName}.${el.className.toString().slice(0, 40)}`);
+          }
+        }
+        return {
+          trop: trop.slice(0, 5),
+          scroll: document.documentElement.scrollWidth,
+        };
+      });
+      expect(
+        debord.trop,
+        `éléments hors cadre :\n${debord.trop.join("\n")}`,
+      ).toEqual([]);
+      expect(debord.scroll, "la page défile latéralement").toBeLessThanOrEqual(
+        391,
+      );
+
+      // Et les cartes disent tout ce que le tableau disait : sans cela, le
+      // replier reviendrait à cacher de l'information à qui lit sur téléphone.
+      // Comparaison insensible à la casse : l'entête d'une carte est mise en
+      // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
+      // celui du code. Le piège a déjà coûté un faux échec ailleurs ici.
+      const vu = (await texte(onglet)).toLowerCase();
+      const cg1 = ATELIERS.find((a) => a.code === "cg1")!;
+      expect(vu).toContain(`${dureeTotaleHeures(cg1)} h au total`);
+      expect(vu).toContain(cg1.annee.toLowerCase());
+    } finally {
+      await onglet.close();
+    }
+  });
+
+  it("les diplômes sont repliés, et l'index ouvre celui qu'il désigne", async () => {
+    // LA PAGE FAISAIT SEIZE MILLE NEUF CENTS PIXELS sur un téléphone, parce
+    // qu'elle dépliait douze diplômes à la suite alors qu'on vient en chercher
+    // un. Repliés, ils en font quatre mille : la page redevient un index.
+    //
+    // CE QUE LE REPLI CASSE, ET QUI EST MESURÉ ICI. Un navigateur déplie un
+    // tiroir quand l'ancre vise DEDANS, pas quand elle vise le tiroir ; les
+    // pastilles de l'index amenaient donc devant un titre seul. Le défaut est
+    // invisible à la lecture du code et ne se voit qu'au clic.
+    const onglet = await navigateur.newPage();
+    await onglet.setViewportSize({ width: 390, height: 844 });
+    try {
+      await aller(onglet, "/parcours");
+      const hauteur = () =>
+        onglet.evaluate(() => document.documentElement.scrollHeight);
+      const replie = await hauteur();
+      expect(replie, `page repliée : ${replie} px`).toBeLessThan(6000);
+
+      const tiroirs = onglet.locator("details[data-diplome]");
+      // Seuls les diplômes : la découverte, l'approfondissement et le tournoi
+      // inter-filières n'ont pas de référentiel et ne sont pas sur cette page.
+      const diplomes = new Set(
+        FORMATIONS.filter((f) =>
+          ATELIERS.some(
+            (a) =>
+              a.formations.includes(f.code) && adosseAUnReferentiel(a.code),
+          ),
+        ).map((f) => f.code),
+      );
+      expect(await tiroirs.count(), "un tiroir par diplôme servi").toBe(
+        diplomes.size,
+      );
+      expect(await onglet.locator("details[data-diplome][open]").count()).toBe(
+        0,
+      );
+
+      // Le tiroir fermé dit encore ce qu'il cache : sans cela, l'index est une
+      // liste de noms devant laquelle personne ne sait quoi ouvrir.
+      const premier = await tiroirs.first().locator("summary").innerText();
+      expect(premier).toMatch(/blocs de référentiel/);
+      // LE VOLUME OU LE NOMBRE DE CHEMINS, selon ce que la formation a : les
+      // séances ne s'additionnent pas d'un chemin à l'autre, donc une
+      // formation qui en propose plusieurs annonce leur compte plutôt qu'un
+      // total que personne ne jouerait. Exiger « séances » figeait l'une des
+      // deux formes, et le test est devenu rouge le jour où le tournoi
+      // inter-filières a rejoint la première formation de la liste.
+      expect(premier, `résumé du premier tiroir : ${premier}`).toMatch(
+        /\d+ séances, \d+ heures|\d+ chemins proposés/,
+      );
+
+      // Chaque pastille vise un tiroir, et l'ouvre.
+      const pastilles = onglet.locator('nav[aria-label] a[href^="#"]');
+      expect(await pastilles.count()).toBe(diplomes.size);
+      const cible = await pastilles.nth(5).getAttribute("href");
+      await pastilles.nth(5).click();
+      await expect
+        .poll(() =>
+          onglet
+            .locator(`details${cible}`)
+            .evaluate((e: Element) => (e as HTMLDetailsElement).open),
+        )
+        .toBe(true);
+
+      // Et tout se déplie d'un geste : les tiroirs fermés échappent au Ctrl+F
+      // du navigateur, donc il faut un moyen de tout rendre cherchable.
+      await onglet.getByRole("button", { name: "Tout déplier" }).click();
+      await expect
+        .poll(() => onglet.locator("details[data-diplome][open]").count())
+        .toBe(diplomes.size);
+      expect(await hauteur()).toBeGreaterThan(replie * 2);
+    } finally {
+      await onglet.close();
+    }
   });
 
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
@@ -411,7 +713,10 @@ describe("parcours enseignant et élève", () => {
       await aller(prof, chemin);
       const vu = await texte(prof);
       const faute = vu.match(new RegExp(`.{0,40}${inciseur.source}.{0,40}`));
-      expect(faute?.[0], `${chemin} coupe une phrase par un tiret`).toBeUndefined();
+      expect(
+        faute?.[0],
+        `${chemin} coupe une phrase par un tiret`,
+      ).toBeUndefined();
     }
   });
 });

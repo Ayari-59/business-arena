@@ -32,6 +32,8 @@ import type {
 export interface GammeProduct {
   code: ProductCode;
   name: string;
+  /** Nom de repli sur écran étroit (voir ProductDef.shortName). */
+  shortName?: string;
   materialCostPerUnit: number;
   otherVariableCostPerUnit: number;
   hoursPerUnit: number;
@@ -120,6 +122,9 @@ export function toGamme(scenario: EngineScenarioConfig): GammeProduct[] {
   return scenario.products!.map((p: ProductDef) => ({
     code: p.code,
     name: p.name,
+    // Émis seulement s'il existe : le cas mono-produit garde exactement la
+    // même forme d'objet qu'avant l'ouverture à la gamme.
+    ...(p.shortName ? { shortName: p.shortName } : {}),
     materialCostPerUnit: p.materialCostPerUnit,
     otherVariableCostPerUnit: p.otherVariableCostPerUnit,
     hoursPerUnit: p.hoursPerUnit,

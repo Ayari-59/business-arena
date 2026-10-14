@@ -1,14 +1,21 @@
+import { VENDEUR } from "@/config/editeur";
 import { randomInt } from "node:crypto";
 import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { horsArchivesDEssai } from "@/services/archives-d-essai";
 import {
   getLicenceStatus,
   type LicenceStatus,
   type OrgLicence,
+  versLicence,
 } from "@/services/licence.service";
-import { DEFAULT_FREE_TIER, type FreeTier } from "@/config/entitlements";
 import { DEFAULT_AI_CONFIG, type AiConfig } from "@/config/ai";
+import { DEFAULT_ANSWER_FORMAT, answerFormatFromProfile, type AnswerFormat } from "@/config/difficulty";
+import {
+  PREUVES_PUBLIEES_PAR_DEFAUT,
+  type PreuvesPubliees,
+} from "@/config/preuves-dusage";
 import {
   competitions,
   games,
@@ -21,6 +28,37 @@ import {
   teams,
   users,
 } from "@/db/schema";
+import { normaliserTheme, THEME_DU_SITE_PAR_DEFAUT, type ThemeDuSite } from "@/config/theme-du-site";
+import { normaliserListe } from "@/config/inscriptions";
+import {
+  normaliserVitrine,
+  vitrineAEnregistrer,
+  VITRINE_SOLO_PAR_DEFAUT,
+  type VitrineSolo,
+} from "@/config/vitrine-solo";
+import { catalogueReglages } from "@/db/schema/offres";
+import { normaliserSolo } from "@/config/decouverte";
+
+/**
+ * LES NIVEAUX OUVERTS SANS LICENCE SE RÈGLENT DÉSORMAIS DANS /admin/offres, avec la
+ * Découverte (migration 0041, `catalogue_reglages`, clé « decouverte ») : la migration y a
+ * recopié l'ancien réglage « vitrine solo ». Une base sans ce réglage (ou une table pas
+ * encore migrée) relit l'ancien, puis le défaut. Toute la règle serveur passe par ici
+ * (`getPlatformConfig().vitrineSolo`).
+ */
+async function vitrineDeLaDecouverte(ancienne: unknown): Promise<VitrineSolo> {
+  try {
+    const [r] = await db
+      .select({ valeur: catalogueReglages.valeur })
+      .from(catalogueReglages)
+      .where(eq(catalogueReglages.cle, "decouverte"));
+    const solo = (r?.valeur as { solo?: unknown } | undefined)?.solo;
+    if (solo !== undefined) return normaliserSolo(solo);
+  } catch (e) {
+    console.error("[getPlatformConfig] lecture de la Découverte échouée :", e);
+  }
+  return normaliserVitrine(ancienne);
+}
 
 /**
  * Espace d'administration (hiérarchie ADR-08/ADR-09) :
@@ -93,6 +131,19 @@ export interface PlatformConfig {
   allowPublicPlay: boolean;
   /** Autoriser l'inscription enseignant SANS code d'invitation (auto-service). */
   allowSelfServiceTeachers: boolean;
+  /**
+   * Format des réponses dans les parties solo publiques : QCM, ou questions
+   * ouvertes (corrigées par mots-clés). Les parties de classe se règlent, elles,
+   * par l'enseignant. Lu à la création de la partie : celles déjà lancées
+   * gardent le leur.
+   */
+  soloAnswerFormat: AnswerFormat;
+  /**
+   * Les niveaux ouverts sans licence, pour le solo public comme pour les parties
+   * d'enseignant : par défaut 1 à 3, pour toutes les entreprises. Voir
+   * config/vitrine-solo.ts.
+   */
+  vitrineSolo: VitrineSolo;
   /** Message d'annonce affiché sur la landing (vide = aucun). */
   announcement: string;
   /**
@@ -104,25 +155,49 @@ export interface PlatformConfig {
    */
   contactEmail: string;
   /**
-   * Palier gratuit (freemium) : ce à quoi un compte SANS licence active a droit.
-   * Réglé ici, appliqué par entitlements.service. Voir config/entitlements.ts.
+   * Les compteurs d'usage publiés sur la page des enseignants.
+   *
+   * Un compteur exact peut desservir la page qui le porte : « classes créées »
+   * vaut zéro, et c'est le seul chiffre nul d'une page destinée aux
+   * enseignants. Le remède n'est pas de maquiller la valeur — ce serait
+   * mentir — mais de choisir ce qui se publie. Le choix est donc ici, pas dans
+   * le code de la page. Le plancher de publication continue de s'appliquer
+   * par-dessus : un réglage ne fait pas apparaître une bande qui n'a pas de
+   * quoi être dite.
    */
-  freeTier: FreeTier;
+  preuvesPubliees: PreuvesPubliees;
   /**
    * Assistant IA (facultatif) : quelles surfaces sont allumées et quel modèle.
    * Réglé ici, appliqué par ai.service. Éteint par défaut — aucun coût sans
    * réglage explicite, et une clé ANTHROPIC_API_KEY reste requise côté serveur.
    */
   ai: AiConfig;
+  /**
+   * Le thème graphique du site : ce que l'administrateur règle sans toucher au
+   * code. Pour l'instant, quelles bandes de page passent à contre-jour. Ne
+   * stocke que les ÉCARTS à l'état d'origine (voir config/theme-du-site.ts).
+   */
+  theme: ThemeDuSite;
+  /**
+   * Les domaines d'e-mail AUTORISÉS à l'inscription par le formulaire (vide : tous) et
+   * BLOQUÉS (prioritaires). Réglés dans /admin/inscrits ; règle : config/inscriptions.ts.
+   */
+  domainesAutorises: string[];
+  domainesBloques: string[];
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
   allowPublicPlay: true,
   allowSelfServiceTeachers: true,
+  soloAnswerFormat: DEFAULT_ANSWER_FORMAT,
+  vitrineSolo: VITRINE_SOLO_PAR_DEFAUT,
   announcement: "",
-  contactEmail: "contact@business-arena.fr",
-  freeTier: DEFAULT_FREE_TIER,
+  contactEmail: VENDEUR.contact,
+  preuvesPubliees: PREUVES_PUBLIEES_PAR_DEFAUT,
   ai: DEFAULT_AI_CONFIG,
+  theme: THEME_DU_SITE_PAR_DEFAUT,
+  domainesAutorises: [],
+  domainesBloques: [],
 };
 
 /**
@@ -136,7 +211,23 @@ const DEFAULT_CONFIG: PlatformConfig = {
 export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
   try {
     const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
-    return { ...DEFAULT_CONFIG, ...((row?.settings as Partial<PlatformConfig>) ?? {}) };
+    // L'ancien palier gratuit (`freeTier`) n'est plus un réglage : on ne le relit pas,
+    // et l'enregistrement suivant le fait disparaître (services/entitlements.service.ts).
+    const { freeTier: _ancienPalier, ...lus } =
+      (row?.settings as Partial<PlatformConfig> & { freeTier?: unknown }) ?? {};
+    void _ancienPalier;
+    // Le thème se fusionne en profondeur : la colonne est du JSON libre, et un
+    // écart enregistré pour une bande supprimée depuis ne doit rien casser.
+    return {
+      ...DEFAULT_CONFIG,
+      ...lus,
+      // Colonne de JSON libre : une valeur inconnue retombe sur le QCM.
+      soloAnswerFormat: answerFormatFromProfile({ answerFormat: lus.soloAnswerFormat }),
+      vitrineSolo: await vitrineDeLaDecouverte(lus.vitrineSolo),
+      theme: normaliserTheme(lus.theme),
+      domainesAutorises: normaliserListe(lus.domainesAutorises),
+      domainesBloques: normaliserListe(lus.domainesBloques),
+    };
   } catch (e) {
     // Panne base : on NE retombe PAS sur les défauts permissifs. Renvoyer
     // allowPublicPlay/allowSelfServiceTeachers à true en cas d'incident
@@ -152,7 +243,11 @@ export async function updatePlatformConfig(
   patch: Partial<PlatformConfig>,
 ): Promise<PlatformConfig> {
   await requirePlatformAdmin(adminId);
-  const next = { ...(await getPlatformConfig()), ...patch };
+  const fusion = { ...(await getPlatformConfig()), ...patch };
+  // La règle des niveaux sans licence s'enregistre avec sa version, quel que soit le
+  // réglage enregistré (thème, compteurs…) : sans elle, la relecture la remplacerait
+  // par le défaut (config/vitrine-solo.ts).
+  const next = { ...fusion, vitrineSolo: vitrineAEnregistrer(fusion.vitrineSolo) };
   await db
     .insert(platformSettings)
     .values({ id: 1, settings: next })
@@ -211,7 +306,7 @@ export async function deactivateInvite(args: {
 /** Résout un code d'invitation actif (utilisé à l'inscription). */
 export async function resolveInvite(
   code: string,
-): Promise<{ organizationId: string; role: "org_admin" | "teacher" } | null> {
+): Promise<{ id: string; organizationId: string; role: "org_admin" | "teacher" } | null> {
   const row = (
     await db
       .select()
@@ -219,7 +314,8 @@ export async function resolveInvite(
       .where(and(eq(orgInvites.code, code.trim().toUpperCase()), eq(orgInvites.active, true)))
   )[0];
   if (!row || row.role === "student") return null;
-  return { organizationId: row.organizationId, role: row.role };
+  // L'id : l'inscription note le code qui l'a permise (migration 0040, l'usage des codes).
+  return { id: row.id, organizationId: row.organizationId, role: row.role };
 }
 
 // ---------------------------------------------------------------------------
@@ -261,7 +357,7 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
   ] = await Promise.all([
     db.select().from(organizations),
     db.select({ count: sql<number>`count(*)::int` }).from(users),
-    db.select({ id: games.id, organizationId: games.organizationId }).from(games),
+    db.select({ id: games.id, organizationId: games.organizationId }).from(games).where(horsArchivesDEssai),
     db.select({ count: sql<number>`count(*)::int` }).from(competitions),
     db.select().from(organizationMembers),
     db.select().from(orgInvites),
@@ -291,15 +387,7 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
         const members = memberRows.filter((m) => m.organizationId === org.id);
         const teachers = members.filter((m) => m.role !== "student").length;
         const orgLicRows = licencesByOrg.get(org.id) ?? [];
-        const licences: OrgLicence[] = orgLicRows.map((r) => ({
-          id: r.id,
-          label: r.label,
-          startsAt: r.startsAt,
-          endsAt: r.endsAt,
-          maxTeachers: r.maxTeachers,
-          reference: r.reference,
-          amountCents: r.amountCents,
-        }));
+        const licences: OrgLicence[] = orgLicRows.map(versLicence);
 
         let licence: LicenceStatus;
         if (orgLicRows.length === 0) {
@@ -307,15 +395,7 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
         } else {
           const courante =
             orgLicRows.find((r) => r.startsAt <= now && now <= r.endsAt) ?? orgLicRows[0]!;
-          const lic: OrgLicence = {
-            id: courante.id,
-            label: courante.label,
-            startsAt: courante.startsAt,
-            endsAt: courante.endsAt,
-            maxTeachers: courante.maxTeachers,
-            reference: courante.reference,
-            amountCents: courante.amountCents,
-          };
+          const lic: OrgLicence = versLicence(courante);
           const daysLeft = jours(now, courante.endsAt);
           if (now < courante.startsAt) {
             licence = {
@@ -427,7 +507,7 @@ export async function getOrgDashboard(userId: string): Promise<OrgDashboard> {
     db
       .select()
       .from(games)
-      .where(eq(games.organizationId, organizationId))
+      .where(and(eq(games.organizationId, organizationId), horsArchivesDEssai))
       .orderBy(desc(games.createdAt)),
     db
       .select()

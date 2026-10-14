@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario TRANSPORT — « ROUTE & CIE », transporteur routier régional de dix
@@ -148,6 +149,8 @@ const rawTransport = {
     supplierPaymentDelayDays: 15,
     loanDurationRounds: 24,
     maxCapitalIncreaseTotal: 250000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     // la flotte s'amortit vite, et cela se voit
     depreciationPerRound: 26000,
   },
@@ -491,6 +494,43 @@ const rawTransport = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "transport_concurrent_est",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:affretement", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "transport_distribution_internalise",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:distribution", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "transport_contrat_cadre",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:industriels", op: "mul", value: 1.2 }],
+    },
+    {
+      code: "transport_controle_routier",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "transport_peages",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "material_cost", op: "mul", value: 1.06 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("transport"),
   ],
   // Le gazole prend dix-huit pour cent au tour 3, en plein creux d'été : les
   // charges montent quand les camions roulent le moins.

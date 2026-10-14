@@ -14,22 +14,47 @@ import { describe, expect, it } from "vitest";
 /** Composants client : le hook, une ref sur le <form>, le message. */
 const COMPOSANTS_GARDES = [
   "src/components/competition-create-form.tsx", // création de concours
-  "src/components/card-deck.tsx", // tirage de carte
+  "src/components/distribution-courrier.tsx", // distribution du courrier
   "src/components/competition-controls.tsx", // inscriptions, groupes, finale
   "src/components/decision-form.tsx", // décisions du tour
   "src/components/situation-panel.tsx", // diagnostic, modèle, indices
   "src/components/team-name-form.tsx", // nom d'entreprise
+  "src/components/choix-equipe.tsx", // l'élève rejoint l'équipe de ses camarades
+  "src/components/composition-equipes.tsx", // l'enseignant affecte un élève à une équipe
   "src/components/join-form.tsx", // /join
   "src/components/competition-join-form.tsx", // /compete
+  "src/components/competition-recovery-form.tsx", // reprise d'une équipe par code
   "src/components/close-round-form.tsx", // clôture du tour (confirmée)
+  "src/components/commencer-la-vraie-partie.tsx", // fin du tour d'essai (confirmée)
   "src/components/stage-schedule.tsx", // fenêtre d'une étape de concours
   "src/components/public-page-form.tsx", // page publique d'annonce du concours
+  "src/components/orientation-form.tsx", // demande de simulation (/orientation)
+  "src/components/rendez-vous-form.tsx", // rendez-vous téléphonique (/rendez-vous)
+  "src/components/formulaire-de-reprise.tsx", // reprise de sa place (/reprendre)
+  "src/components/editeur-d-offre.tsx", // une offre du catalogue (/admin/offres)
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */
 const PAGES_GARDEES: { file: string; formulaires: number }[] = [
-  { file: "src/app/teacher/page.tsx", formulaires: 1 }, // création de partie
-  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 4 }, // questions posées, situations manquées, planning de la partie, planning des tours (clôture via CloseRoundForm client)
+  { file: "src/app/teacher/page.tsx", formulaires: 3 }, // création de partie, rangement depuis la liste, sortie de rangement
+  { file: "src/app/admin/offres/page.tsx", formulaires: 7 }, // affichage des prix, mise en avant, module (et sa création), Découverte, essai, code promo (la suppression : ConfirmForm)
+  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 11 },
+  { file: "src/app/teacher/cohortes/page.tsx", formulaires: 1 }, // création d'une cohorte
+  { file: "src/app/lti/activite/page.tsx", formulaires: 5 }, // activité LTI : relier ou créer, partie ou cohorte ; relier un examen
+  { file: "src/app/teacher/examens/page.tsx", formulaires: 1 }, // création d'un examen individuel
+  { file: "src/app/teacher/examens/[id]/page.tsx", formulaires: 3 }, // publication (ou son retrait), clôture
+  { file: "src/components/examen/retour-des-notes.tsx", formulaires: 1 }, // « Renvoyer les notes » à la plateforme de cours
+  { file: "src/app/examen/[code]/page.tsx", formulaires: 1 }, // le candidat commence l'examen
+  { file: "src/app/teacher/games/[gameId]/coequipiers/page.tsx", formulaires: 4 }, // réglages (ou activation), notes d'équipe, publication, retrait de la publication
+  { file: "src/app/arena/[gameId]/coequipiers/page.tsx", formulaires: 1 }, // l'étudiant évalue ses coéquipiers
+  { file: "src/app/lti/eleve/page.tsx", formulaires: 1 }, // l'élève LTI donne son prénom
+  { file: "src/app/etablissement/parties/page.tsx", formulaires: 1 }, // l'étudiant connecté par son établissement saisit un code
+  { file: "src/app/admin/renater/page.tsx", formulaires: 3 }, // relecture de l'agrégat, rattachement, retrait
+  { file: "src/app/admin/lti/page.tsx", formulaires: 5 }, // jeton, révocation, déploiement, activation, inscription manuelle
+  { file: "src/app/teacher/compte/page.tsx", formulaires: 1 }, // réglage des nouveautés (déconnexion en <form> direct)
+  { file: "src/app/admin/inscrits/page.tsx", formulaires: 3 }, // réglages des inscriptions, création et révocation d'un code (recherche en GET, export par lien)
+  { file: "src/app/admin/inscrits/[id]/page.tsx", formulaires: 4 }, // retrait, rattachement, réactivation, désactivation
+  { file: "src/app/teacher/cohortes/[id]/page.tsx", formulaires: 3 }, // nom, nouveau code, clôture ou réouverture // nom de la partie, questions posées, format des réponses, situations manquées, planning de la partie, planning des tours, révélation du classement, codes de reprise manquants, rangement, remise à zéro, suppression (clôture via CloseRoundForm client)
 ];
 
 describe("composants client gardés", () => {

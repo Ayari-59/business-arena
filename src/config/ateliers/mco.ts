@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MCO.
  *
- * Cinq séances de trois heures sur MAILLE & CO, la marque de maille et sa
+ * Cinq séances de deux heures sur MAILLE & CO, la marque de maille et sa
  * boutique. Le choix du secteur n'est pas neutre : en MCO, la gestion
  * opérationnelle ne s'apprend pas sur une usine. On n'y fabrique rien, on fait
  * tricoter pour revendre, et tout se joue sur le coefficient, l'assortiment
@@ -18,19 +18,19 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_MCO: AtelierDefinition = {
   code: "mco",
   titre: "Tenir un point de vente pendant quatre trimestres",
-  diplome: "BTS Management commercial opérationnel",
+  formations: ["bts-mco"],
   annee: "Première année",
   nature: "Atelier professionnel",
-  traceLabel: "passeport professionnel",
+  traceLabel: "fiches d'activités professionnelles",
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de trois heures. Chaque équipe tient le même magasin d'un trimestre à l'autre, choisit son assortiment, fixe ses prix, prépare Noël, et rend à chaque séance un document que l'on retrouve en magasin.",
+    "Cinq séances de deux heures. Chaque équipe tient le même magasin d'un trimestre à l'autre, choisit son assortiment, fixe ses prix, prépare Noël, et rend à chaque séance un document que l'on retrouve en magasin.",
   resume:
     "Quatre trimestres dans une boutique de maille à cinq références, du diagnostic du linéaire au tableau de bord commercial, avec Noël comme épreuve.",
   difficulte: 2,
   difficulteLabel: "Initiation",
-  format: "5 séances de 3 h",
+  format: "6 séances de 2 h",
   pourquoi:
     "Le coefficient multiplicateur s'enseigne en une heure et s'oublie en une semaine, parce qu'un exercice donne le prix d'achat et demande le prix de vente. Ici l'équipe choisit son circuit d'approvisionnement, donc son prix d'achat, puis son prix de vente, et découvre au trimestre suivant ce que sa marge est devenue une fois la démarque passée et le stock invendu payé. La saisonnalité cesse d'être un chapitre : une équipe qui n'a pas anticipé le pic de fin d'année voit son rayon vide pendant que ses concurrentes vendent, et son taux de transformation le lui dit.",
   reglages: {
@@ -45,15 +45,89 @@ export const ATELIER_MCO: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 4,
+    tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
-      "MAILLE & CO porte un stock, cinq références qui n'ont ni la même marge ni la même saison, trois façonniers qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre le financement sans ouvrir le recrutement ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix et le stock, pas sur la structure. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
+      "MAILLE & CO porte un stock, cinq références qui n'ont ni la même marge ni la même saison, trois façonniers qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre l'équipe et le poste clients, sans l'emprunt ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix, le stock et l'équipe, pas sur la structure. Un manque de trésorerie, la banque le couvre seule, par le découvert. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
   },
   seances: [
     {
       numero: 1,
+      titre: "Entrer dans MAILLE & CO sur un tour d'essai",
+      dureeMinutes: 120,
+      tourJoue: null,
+      essai: true,
+      processus: [
+        "Bloc 3 · Assurer la gestion opérationnelle",
+        "Bloc 2 · Animer et dynamiser l'offre commerciale",
+      ],
+      objectif:
+        "Apprendre le jeu avant que rien ne compte : lire le mandat de MAILLE & CO, ses cinq références textiles et sa saisonnalité, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
+      competences: [
+        "Je présente un point de vente en une page : ses références, sa saisonnalité, ses fournisseurs et les charges qui tombent chaque trimestre.",
+        "Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.",
+        "Je lis un premier compte de résultat et je distingue le chiffre d'affaires, la marge commerciale et le résultat.",
+      ],
+      notions: [
+        "marge commerciale et coefficient multiplicateur",
+        "stock et saisonnalité",
+        "charges de structure d'un point de vente",
+        "compte de résultat d'un commerce",
+      ],
+      preparation:
+        "Créez la partie depuis votre espace avec ces réglages : scénario boutique, un trimestre par tour, niveau Pilotage, quatre tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du magasin, vierge.",
+      deroule: [
+        {
+          minutes: 10,
+          titre: "Le cadre",
+          detail:
+            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul magasin, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur point de vente.",
+        },
+        {
+          minutes: 25,
+          titre: "L'entreprise, lue à l'écran",
+          detail:
+            "Chaque équipe lit le mandat de MAILLE & CO, ses cinq références textiles avec leur marge et leur saisonnalité, les trois fournisseurs et leurs délais, les charges de structure du trimestre. Elle remplit la première moitié de sa fiche d'identité : références, fournisseurs, charges.",
+        },
+        {
+          minutes: 25,
+          titre: "Le tour d'essai",
+          detail:
+            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du trimestre, choisit ses quantités à commander, ses prix de vente et son budget promotionnel, puis saisit ses décisions. Vous ne corrigez rien : un stock trop lourd ou trop léger est exactement ce que l'essai est fait pour absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture de l'essai et premiers résultats",
+          detail:
+            "Vous clôturez le tour d'essai depuis votre espace. Chaque équipe lit son chiffre d'affaires, sa marge commerciale et son résultat, et reporte les trois chiffres sur sa fiche d'identité.",
+        },
+        {
+          minutes: 20,
+          titre: "Ce que l'essai apprend",
+          detail:
+            "Vous affichez deux équipes côte à côte : des commandes, un taux de vente, une marge, un résultat. Qui a vendu le plus, qui a la meilleure marge, et pourquoi ce n'est pas la même équipe. Le stock invendu représente une immobilisation de trésorerie que le Noël suivant devra absorber.",
+        },
+        {
+          minutes: 20,
+          titre: "La vraie partie commence",
+          detail:
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier trimestre, cette fois pour de vrai.",
+        },
+      ],
+      livrable:
+        "La fiche d'identité de MAILLE & CO, une page : les cinq références avec leur marge et leur saisonnalité, les fournisseurs avec leurs délais, les charges de structure du trimestre, et les trois chiffres du tour d'essai.",
+      tracePasseport:
+        "J'ai présenté un point de vente sur une page à partir de ses écrans de décision et de ses premiers résultats d'essai, pour ouvrir mes fiches d'activités professionnelles.",
+      evaluation: [
+        "Les cinq références sont listées avec leur marge et leur saisonnalité.",
+        "Les fournisseurs sont distingués avec leur délai de règlement.",
+        "Les trois chiffres de l'essai sont exacts, et le lien entre stock invendu et trésorerie est relevé.",
+      ],
+    },
+    {
+      numero: 2,
       titre: "Prendre le magasin en main",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 1,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -77,46 +151,46 @@ export const ATELIER_MCO: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de l'offre, une des prix, une du suivi. Imprimez la fiche de calcul de marge vierge, une par équipe. Prévoyez que la première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, un seul magasin, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : cinq séances, quatre trimestres, un seul magasin, et un document rendu entre deux séances. Les équipes rejoignent la partie avec le code.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "État des lieux du magasin",
           detail:
             "Chaque équipe relève ce que le magasin possède en rayon, ce qu'il doit à ses fournisseurs, et ce que lui coûte un trimestre d'ouverture, que la caisse sonne ou non.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "La marge, article par article",
           detail:
             "L'équipe calcule sa marge unitaire, son taux de marque, puis le nombre d'articles qu'il faut vendre pour ne rien perdre. Vous circulez sans corriger : une équipe qui confond taux de marge et taux de marque le découvrira au tour suivant, et ne l'oubliera plus.",
         },
         {
-          minutes: 35,
+          minutes: 30,
           titre: "Premier arbitrage et décisions",
           detail:
             "L'arène pose au premier trimestre un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit son prix et son volume d'approvisionnement.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son compte de résultat, son panier moyen, son taux de transformation et sa place au classement.",
         },
         {
-          minutes: 40,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leur calcul de seuil et le confrontent à leurs ventes réelles. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte.",
+            "Deux équipes présentent leur calcul de seuil et le confrontent à leurs ventes réelles. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte. La fiche de marge se finit hors séance, avec le résultat sous les yeux.",
         },
       ],
       livrable:
         "La fiche de marge du magasin, une page : prix d'achat, prix de vente, coefficient, taux de marque, charges de structure du trimestre, seuil en articles, et le positionnement retenu avec sa justification.",
       tracePasseport:
-        "J'ai calculé la marge et le seuil de rentabilité d'un point de vente, et j'ai justifié un positionnement à partir de ces calculs.",
+        "J'ai justifié le positionnement d'un point de vente par le calcul de sa marge et de son seuil de rentabilité.",
       evaluation: [
         "Le taux de marque et le taux de marge sont distingués, et pas confondus.",
         "Le seuil est exprimé en articles à vendre, pas seulement en euros.",
@@ -124,9 +198,9 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 2,
+      numero: 3,
       titre: "Choisir son circuit d'approvisionnement",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 2,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -147,49 +221,49 @@ export const ATELIER_MCO: AtelierDefinition = {
         "trésorerie du point de vente",
       ],
       preparation:
-        "Relisez les trois circuits proposés dans le scénario et leurs conséquences, pour animer le débat sans le trancher. Préparez au tableau une grille à trois colonnes, un circuit par colonne, que les équipes rempliront en séance.",
+        "Relisez les trois circuits proposés dans le scénario et leurs conséquences, pour animer le débat sans le trancher. Préparez au tableau une grille à trois colonnes, un circuit par colonne, que les équipes reporteront en séance. À préparer par les équipes avant la séance : la grille des trois circuits remplie au brouillon, ce que chacun coûte à l'article, quand il faut le payer, ce qu'il apporte à l'image et ce qu'il risque de manquer, d'après les informations du jeu.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Retour sur le trimestre précédent",
           detail:
             "Chaque équipe relit son résultat et dit en une phrase ce qu'elle a compris. Vous notez au tableau les écarts entre le seuil calculé et les ventes réelles.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Les trois circuits",
           detail:
-            "Les équipes remplissent la grille : ce que chaque circuit coûte, ce qu'il apporte à l'image, quand il faut le payer, et ce qu'il risque de manquer.",
+            "Les équipes partent de la grille remplie avant la séance et la confrontent entre elles : ce que chaque circuit coûte, ce qu'il apporte à l'image, quand il faut le payer, et ce qu'il risque de manquer. Les écarts entre équipes sur un même circuit sont le premier sujet du débat.",
+        },
+        {
+          minutes: 20,
+          titre: "Débat contradictoire",
+          detail:
+            "Trois équipes défendent chacune un circuit devant la classe, cinq minutes chacune, puis les autres posent les questions. Personne ne conclut : chaque équipe repart libre de son choix.",
         },
         {
           minutes: 30,
-          titre: "Débat contradictoire",
-          detail:
-            "Trois équipes défendent chacune un circuit devant la classe. Les autres posent les questions. Personne ne conclut : chaque équipe repart libre de son choix.",
-        },
-        {
-          minutes: 35,
           titre: "Décisions du trimestre",
           detail:
             "L'équipe arrête son circuit, son prix et son volume, et écrit en trois lignes ce qu'elle attend de ce choix. Cette prévision sera relue au tour suivant.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Les circuits choisis apparaissent dans les résultats de chaque équipe, avec leur effet sur la marge et sur la caisse.",
         },
         {
-          minutes: 35,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On compare les équipes qui ont acheté le moins cher et celles qui ont acheté le mieux. La question qui reste ouverte : laquelle a fait le bon choix, et sur quel horizon.",
+            "On compare les équipes qui ont acheté le moins cher et celles qui ont acheté le mieux. La question qui reste ouverte : laquelle a fait le bon choix, et sur quel horizon. La note d'approvisionnement se rédige hors séance.",
         },
       ],
       livrable:
         "La note d'approvisionnement, une page : la grille comparative des trois circuits, le circuit retenu, ce que l'équipe en attend chiffré, et le risque qu'elle accepte de prendre.",
       tracePasseport:
-        "J'ai comparé des offres fournisseurs sur le prix, le délai de règlement et l'image, et j'ai argumenté un choix d'approvisionnement.",
+        "J'ai argumenté un choix d'approvisionnement en comparant des offres fournisseurs sur le prix, le délai de règlement et l'image.",
       evaluation: [
         "Les trois circuits sont comparés sur au moins trois critères, dont un non financier.",
         "L'effet du délai de règlement sur la trésorerie est nommé, pas seulement mentionné.",
@@ -197,9 +271,9 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 3,
+      numero: 4,
       titre: "Animer l'offre sans détruire la marge",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 3,
       processus: [
         "Bloc 2 · Animer et dynamiser l'offre commerciale",
@@ -220,49 +294,49 @@ export const ATELIER_MCO: AtelierDefinition = {
         "fidélisation",
       ],
       preparation:
-        "Rouvrez la fiche concept sur la marge sur coût variable, que les équipes auront à mobiliser. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le volume supplémentaire qu'elle estime nécessaire pour compenser sa remise.",
+        "Rouvrez la fiche concept sur la marge sur coût variable, que les équipes auront à mobiliser. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le volume supplémentaire qu'elle estime nécessaire pour compenser sa remise. À préparer par les équipes avant la séance : relire la prévision écrite au trimestre précédent face aux ventes réalisées, et apporter l'écart expliqué en une phrase, avec la marge unitaire du trimestre sous la main.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Relecture des prévisions",
           detail:
-            "Chaque équipe confronte ce qu'elle avait écrit au tour précédent à ce qui s'est produit. L'écart s'explique en une phrase, sans excuse.",
+            "Chaque équipe lit la phrase préparée avant la séance : ce qu'elle avait écrit au tour précédent, ce qui s'est produit, et l'écart expliqué sans excuse.",
         },
         {
-          minutes: 35,
+          minutes: 25,
           titre: "Combien coûte une remise",
           detail:
-            "Sur sa propre marge unitaire, chaque équipe calcule le volume supplémentaire qu'exigerait une remise de dix points, puis de vingt. Les chiffres surprennent toujours : c'est le moment de la séance.",
+            "Sur sa propre marge unitaire, apportée en séance, chaque équipe calcule le volume supplémentaire qu'exigerait une remise de dix points, puis de vingt. Les chiffres surprennent toujours : c'est le moment de la séance.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Construire l'opération",
           detail:
             "L'équipe décide de son opération commerciale, de sa cible et de son budget de communication, et inscrit au tableau le volume qu'il lui faudra atteindre.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "Saisie des décisions. Les équipes qui ont choisi de ne rien brader doivent le justifier aussi précisément que les autres.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez. Le panier moyen et le taux de transformation de chaque équipe s'affichent à côté de son chiffre d'affaires.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "On confronte les volumes annoncés au tableau et les volumes atteints. Une équipe qui a vendu beaucoup et gagné moins qu'au trimestre précédent fait la démonstration à votre place.",
+            "On confronte les volumes annoncés au tableau et les volumes atteints. Une équipe qui a vendu beaucoup et gagné moins qu'au trimestre précédent fait la démonstration à votre place. La fiche d'opération se complète hors séance du résultat constaté.",
         },
       ],
       livrable:
         "La fiche d'opération commerciale : la cible, le mécanisme, l'effet attendu sur la marge unitaire, le volume à atteindre pour la compenser, et le résultat constaté après clôture.",
       tracePasseport:
-        "J'ai construit une opération commerciale, j'en ai chiffré l'effet sur la marge avant de la lancer, et j'ai mesuré son résultat.",
+        "J'ai construit une opération commerciale dont j'ai chiffré l'effet sur la marge avant de la lancer, puis mesuré le résultat.",
       evaluation: [
         "Le volume de compensation est calculé sur la marge unitaire, pas sur le chiffre d'affaires.",
         "La cible de l'opération est une clientèle du magasin, nommée.",
@@ -270,9 +344,9 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 4,
+      numero: 5,
       titre: "Réussir la fin d'année",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: 4,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -293,49 +367,49 @@ export const ATELIER_MCO: AtelierDefinition = {
         "besoin en fonds de roulement",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de prévision saisonnière, où l'équipe écrira son volume attendu AVANT de connaître le résultat.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de prévision saisonnière, où l'équipe écrira son volume attendu AVANT de connaître le résultat. À préparer par les équipes avant la séance : le relevé des ventes des trois trimestres joués, référence par référence, sur la fiche de prévision saisonnière, sans encore appliquer de coefficient de saison.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Ce que dit la saison",
           detail:
             "Vous rappelez sans donner de chiffre que le trimestre qui s'ouvre n'est pas un trimestre ordinaire. Les équipes retrouvent seules l'ampleur du pic dans les informations du jeu.",
         },
         {
-          minutes: 40,
+          minutes: 25,
           titre: "Prévision de ventes",
           detail:
-            "Chaque équipe construit sa prévision à partir de ses trois trimestres joués et du coefficient de saison, et l'inscrit sur sa fiche. Rien n'est saisi à ce stade.",
+            "Chaque équipe construit sa prévision à partir du relevé de ses trois trimestres, préparé avant la séance, et du coefficient de saison, et l'inscrit sur sa fiche. Rien n'est saisi à ce stade.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Les deux risques",
           detail:
             "L'équipe chiffre les deux erreurs possibles : ce que lui coûte une cliente repartie les mains vides, ce que lui coûte un article encore en rayon en janvier. Puis elle choisit lequel des deux risques elle préfère prendre.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Décisions du trimestre",
           detail:
             "Saisie de l'approvisionnement, du prix et du budget de communication. La prévision écrite reste sur la table, visible.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre des fêtes. Les écarts entre équipes sont ici les plus larges de tout l'atelier.",
         },
         {
-          minutes: 45,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare sa prévision et ses ventes, puis dit ce qui lui reste en stock. La question finale : celle qui a le plus vendu est-elle celle qui a le mieux gagné.",
+            "Chaque équipe compare sa prévision et ses ventes, puis dit ce qui lui reste en stock. La question finale : celle qui a le plus vendu est-elle celle qui a le mieux gagné. L'analyse de l'écart s'écrit hors séance sur la fiche de prévision.",
         },
       ],
       livrable:
         "La fiche de prévision saisonnière : le volume attendu et son raisonnement, le coût estimé d'une rupture, le coût estimé d'un surstock, le risque choisi, et l'écart constaté après clôture.",
       tracePasseport:
-        "J'ai prévu les ventes d'une forte saison, j'ai dimensionné un approvisionnement en connaissant les deux risques, et j'ai analysé mon écart.",
+        "J'ai dimensionné l'approvisionnement d'une forte saison à partir d'une prévision de ventes, en connaissant les deux risques, puis analysé mon écart.",
       evaluation: [
         "La prévision est construite sur les trimestres joués, pas sur une intuition.",
         "Les deux risques sont chiffrés, pas seulement décrits.",
@@ -343,9 +417,9 @@ export const ATELIER_MCO: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Rendre compte de sa gestion",
-      dureeMinutes: 180,
+      dureeMinutes: 120,
       tourJoue: null,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -366,41 +440,41 @@ export const ATELIER_MCO: AtelierDefinition = {
         "compte rendu de gestion",
       ],
       preparation:
-        "Annoncez la soutenance à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre.",
+        "Annoncez la soutenance à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre. À préparer par les équipes avant la séance : le tableau de bord des quatre trimestres, rédigé sur une page avec ses quatre indicateurs ; la séance sert à le finir, pas à le commencer.",
       deroule: [
         {
-          minutes: 10,
+          minutes: 5,
           titre: "Consignes et tirage",
           detail:
-            "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe dispose de huit minutes de présentation et de quatre minutes de questions.",
+            "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe dispose de sept minutes de présentation et de trois minutes de questions, au chronomètre.",
         },
         {
-          minutes: 50,
+          minutes: 25,
           titre: "Construction du tableau de bord",
           detail:
-            "Les équipes reprennent les quatre trimestres depuis leur espace et construisent leur tableau de bord. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié.",
+            "Les équipes partent du tableau de bord rédigé avant la séance et le finissent depuis leur espace, les quatre trimestres sous les yeux. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié.",
         },
         {
-          minutes: 20,
+          minutes: 10,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole, préparation des réponses aux questions probables. Vous passez dans les équipes pour repérer les tableaux illisibles avant qu'ils ne soient projetés.",
         },
         {
-          minutes: 75,
+          minutes: 60,
           titre: "Soutenances",
           detail:
-            "Passage des équipes. Le jury, ce sont vous et deux élèves d'une autre équipe, qui posent au moins une question chacun.",
+            "Passage des équipes, dix minutes chacune. Le jury, ce sont vous et deux élèves d'une autre équipe, qui posent au moins une question chacun.",
         },
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Bilan de l'atelier",
           detail:
-            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et la soutenance. Chaque élève écrit les trois phrases de son passeport professionnel.",
+            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et la soutenance. Chaque élève écrit les trois phrases qui iront dans ses fiches d'activités professionnelles.",
         },
       ],
       livrable:
-        "Le tableau de bord commercial des quatre trimestres, une page, quatre indicateurs justifiés, plus la présentation orale de huit minutes qui l'accompagne.",
+        "Le tableau de bord commercial des quatre trimestres : une page, quatre indicateurs justifiés, l'erreur de gestion assumée et ce qui serait fait autrement, et la présentation orale de sept minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord commercial d'un point de vente sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [
@@ -431,7 +505,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "Les cinq livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
+    "Les quatre livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
     "Le tableau de bord commercial de la dernière séance, pour un quart.",
     "La soutenance orale et les réponses aux questions du jury, pour le dernier quart.",
     "Le classement du jeu n'entre pas dans la note : une équipe peut finir dernière et rendre le meilleur tableau de bord.",
@@ -443,19 +517,22 @@ export const ATELIER_MCO: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Faut-il avoir traité le coefficient multiplicateur avant la première séance ?",
+      question:
+        "Faut-il avoir traité le coefficient multiplicateur avant la première séance ?",
       reponse:
         "Non, et c'est même préférable de ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent une marge parce qu'elles doivent fixer un prix, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
-      question: "Pourquoi arrêter à quatre trimestres alors que la partie en compte six ?",
+      question:
+        "Pourquoi arrêter à quatre trimestres alors que la partie en compte six ?",
       reponse:
-        "Parce que le trimestre des fêtes est le point culminant de ce secteur et que rien ne gagne à le dépasser dans un atelier de cinq séances. La partie reste ouverte : si votre progression le permet, les deux trimestres suivants se jouent en prolongement, avec le financement du développement comme fil.",
+        "Parce que le trimestre des fêtes est le point culminant de ce secteur et que rien ne gagne à le dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement du développement comme fil.",
     },
     {
-      question: "Le niveau de jeu retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
+      question:
+        "Le niveau de jeu retenu n'ouvre pas le recrutement et l'atelier ne travaille pas l'investissement, est-ce voulu ?",
       reponse:
-        "Oui. La gestion opérationnelle d'un point de vente en première année se joue sur l'offre, le prix et le stock. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs marges. Vous pouvez monter d'un niveau en deuxième année.",
+        "Oui. La gestion opérationnelle d'un point de vente en première année se joue sur l'offre, le prix et le stock. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs marges. L'investissement est à l'écran, à zéro : décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. Vous pouvez monter d'un niveau en deuxième année.",
     },
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
@@ -466,6 +543,11 @@ export const ATELIER_MCO: AtelierDefinition = {
       question: "Comment noter une équipe qui a fait faillite ?",
       reponse:
         "Exactement comme les autres, sur ses livrables. Une équipe qui a mal géré et qui l'analyse lucidement rend un meilleur tableau de bord qu'une équipe qui a gagné sans savoir pourquoi, et c'est cette lucidité que le référentiel demande.",
+    },
+    {
+      question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
+      reponse:
+        "E4, développement de la relation client et vente conseil, et E5, animation et dynamisation de l'offre commerciale, s'appuient sur les fiches d'activités professionnelles que chaque séance nourrit. E6, gestion opérationnelle, est une épreuve écrite où le calcul de marge, de seuil et de prévision saisonnière de cet atelier se retrouve tel quel. Vérifiez les intitulés sur le référentiel en vigueur.",
     },
   ],
 };

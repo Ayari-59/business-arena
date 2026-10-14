@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { clearSession, getSession, setSession } from "@/lib/session";
+import { creerLesCodesManquants } from "@/services/reprise.service";
 import {
   bumpSessionVersion,
   getTeacherOrgId,
@@ -12,12 +13,19 @@ import {
   registerTeacher,
 } from "@/services/auth.service";
 import {
+  archiverPartie,
   closeCurrentRound,
   createClassGame,
-  drawEventCardForNextRound,
+  desarchiverPartie,
+  distribuerUnCourrier,
+  nommerLaPartie,
+  reinitialiserPartie,
   setGameSchedule,
   setQuizMode,
+  setAnswerFormat,
+  setRankingRevealed,
   setRoundWindows,
+  supprimerPartie,
 } from "@/services/game.service";
 import { parisLocalToUtc } from "@/lib/paris-time";
 import {
@@ -26,18 +34,30 @@ import {
   setPublicPage,
   setStageWindow,
   startFinal,
+  startIntermediateStage,
   startQualification,
 } from "@/services/competition.service";
 import { setMissedPolicy } from "@/services/debrief.service";
+import { activerParDefaut } from "@/services/pairs.service";
 import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
-import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
+import { DEFAULT_ANSWER_FORMAT, DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import {
   ACCENTS_CONCOURS,
   DESCRIPTION_MAX,
   ORGANIZER_LABEL_MAX,
   TAGLINE_MAX,
 } from "@/config/concours-public";
+import { trancherDemande } from "@/services/subvention.service";
+import { consignerLaGazette } from "@/services/gazette.service";
+import { affecterEleve } from "@/services/affectation.service";
+import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
+import { OffreRequiseError } from "@/services/acces.service";
+import { LIBELLES_DU_DEVIS, lienDuDevis } from "@/config/tarifs";
+import { synchroniserLaPartie } from "@/lti/ags/envois";
+import { plusTard } from "@/lti/ags/plus-tard";
+import { lireLeChoixDEssai } from "@/config/tour-d-essai";
+import { BasculeRefuseeError, commencerLaVraiePartie } from "@/services/tour-d-essai.service";
 
 export interface FormState {
   error: string | null;
@@ -49,6 +69,8 @@ const registerSchema = z.object({
   displayName: z.string().min(1, "Votre nom est requis"),
   schoolName: z.string().catch(""),
   inviteCode: z.string().catch(""),
+  // La case des nouveautés : envoyée seulement si elle est cochée (jamais par défaut).
+  nouveautes: z.literal("oui").optional().catch(undefined),
 });
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -58,9 +80,11 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     displayName: formData.get("displayName"),
     schoolName: formData.get("schoolName") ?? "",
     inviteCode: formData.get("inviteCode") ?? "",
+    nouveautes: formData.get("nouveautes") ?? undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
-  const result = await registerTeacher(parsed.data);
+  const { nouveautes, ...compte } = parsed.data;
+  const result = await registerTeacher({ ...compte, nouveautes: nouveautes === "oui" });
   if ("error" in result) return { error: result.error };
   await setSession(result.userId, "teacher");
   redirect("/teacher");
@@ -118,6 +142,8 @@ const createGameSchema = z.object({
   scenarioCode: z.string().min(1).catch(DEFAULT_SCENARIO_CODE),
   // Questions posées dans les situations (voir QUIZ_MODES).
   quizMode: z.enum(["full", "model", "off"]).catch(DEFAULT_QUIZ_MODE),
+  // Comment l'élève y répond : en cochant (QCM) ou en écrivant (questions ouvertes).
+  answerFormat: z.enum(["qcm", "open"]).catch(DEFAULT_ANSWER_FORMAT),
 });
 
 /** Champ numérique optionnel : vide = valeur du scénario (jamais de dur). */
@@ -141,8 +167,14 @@ const optionalRate = (raw: FormDataEntryValue | null): number | undefined => {
  * de connexion, qui renvoie aussitôt vers /teacher puisque la session est
  * valide. L'enseignant revenait sur sa liste, sans partie et sans un mot.
  */
-function echecCreation(raison: string): never {
-  redirect(`/teacher?echec=${encodeURIComponent(raison)}`);
+function echecCreation(raison: string, erreur?: unknown, geste: "creation" | "reprise" = "creation"): never {
+  // Un refus qui renvoie aux offres : la page ajoute « Voir les offres », et le devis de
+  // l'offre qui ouvre ce qui bloque quand le refus la nomme (services/acces.service.ts).
+  const offre =
+    erreur instanceof OffreRequiseError ? `&offre=${erreur.offre ?? "1"}` : "";
+  redirect(
+    `/teacher?echec=${encodeURIComponent(raison)}${offre}${geste === "reprise" ? "&geste=reprise" : ""}`,
+  );
 }
 
 export async function createClassGameAction(formData: FormData): Promise<void> {
@@ -156,6 +188,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     roundsCount: formData.get("roundsCount") || undefined,
     scenarioCode: formData.get("scenarioCode"),
     quizMode: formData.get("quizMode"),
+    answerFormat: formData.get("answerFormat"),
   });
   const economicOverrides = {
     taxRate: optionalRate(formData.get("taxRate")),
@@ -170,6 +203,11 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     overdraftLimit: optionalNumber(formData.get("overdraftLimit")),
     discountMaxShare: optionalRate(formData.get("discountMaxShare")),
     factoringFeeRate: optionalRate(formData.get("factoringFeeRate")),
+    // Défaillance et sortie de crise : un multiple, pas un taux — pas de
+    // division par cent ici, « 2 » veut dire deux fois les capitaux propres.
+    maxDebtToEquity: optionalNumber(formData.get("maxDebtToEquity")),
+    crisisRoundsBeforeFailure: optionalNumber(formData.get("crisisRoundsBeforeFailure")),
+    rescueFinancingRequired: optionalNumber(formData.get("rescueFinancingRequired")),
     // Coûts et structure
     fixedCostsPerRound: optionalNumber(formData.get("fixedCostsPerRound")),
     materialCostPerUnit: optionalNumber(formData.get("materialCostPerUnit")),
@@ -177,7 +215,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     depreciationPerRound: optionalNumber(formData.get("depreciationPerRound")),
     baseDefectRate: optionalRate(formData.get("baseDefectRate")),
   };
-  // Pondérations du BPI, saisies en % (poids relatifs, renormalisés côté service).
+  // Pondérations de l'IPG, saisies en % (poids relatifs, renormalisés côté service).
   const scoringWeightOverrides = {
     economic: optionalRate(formData.get("bpiEconomic")),
     financial: optionalRate(formData.get("bpiFinancial")),
@@ -209,14 +247,35 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       economicOverrides,
       scoringWeightOverrides,
       variableWorld: formData.get("variableWorld") === "on",
+      investmentStories: formData.get("investmentStories") === "on",
       scenarioCode,
       quizMode: parsed.quizMode,
+      answerFormat: parsed.answerFormat,
       roundsCount: parsed.roundsCount,
+      // Aucun (le défaut), 1 ou 2 tours d'essai avant la vraie partie.
+      essai: lireLeChoixDEssai(formData.get("toursDEssai"), formData.get("enchainementDeLEssai")),
     }));
   } catch (erreur) {
-    echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.");
+    // Un niveau fermé, ou une classe sans licence de l'arène en cours : la page ajoute
+    // le lien vers les tarifs.
+    echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.", erreur);
   }
+  // L'évaluation entre coéquipiers, cochée à la création : réglages par défaut (fin de
+  // partie), à affiner depuis la partie (services/pairs.service.ts).
+  if (formData.get("evaluationDesPairs") === "on") await activerParDefaut(session.userId, gameId);
   redirect(`/teacher/games/${gameId}`);
+}
+
+/** Règle le format des réponses (QCM ou questions ouvertes) d'une partie en cours. */
+export async function setAnswerFormatAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const format = z
+    .enum(["qcm", "open"])
+    .catch(DEFAULT_ANSWER_FORMAT)
+    .parse(formData.get("format"));
+  await setAnswerFormat({ gameId, teacherId: session.userId, format });
+  revalidatePath(`/teacher/games/${gameId}`);
 }
 
 /** Règle les questions posées dans les situations d'une partie en cours. */
@@ -228,6 +287,24 @@ export async function setQuizModeAction(gameId: string, formData: FormData): Pro
     .catch(DEFAULT_QUIZ_MODE)
     .parse(formData.get("mode"));
   await setQuizMode({ gameId, teacherId: session.userId, mode });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+/**
+ * Lève le rideau sur le classement d'un tour, ou le referme.
+ *
+ * C'est l'animateur qui révèle : le bouton vit sur SA page, l'élève n'a rien à
+ * cliquer. Refermer sert au tour suivant — chaque clôture est un moment.
+ */
+export async function setRankingRevealedAction(
+  gameId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const roundIndex = z.coerce.number().int().positive().parse(formData.get("roundIndex"));
+  const revealed = formData.get("revealed") === "1";
+  await setRankingRevealed({ gameId, teacherId: session.userId, roundIndex, revealed });
   revalidatePath(`/teacher/games/${gameId}`);
 }
 
@@ -285,9 +362,38 @@ export async function closeRoundAction(
   const brut = Number(formData.get("roundIndex"));
   const expectedRound = Number.isInteger(brut) && brut > 0 ? brut : undefined;
   try {
-    await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
+    const { finished, finDeLEssai } = await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
+    // La partie est finie : la progression de ses élèves venus d'une plateforme part,
+    // « terminée », vers le carnet de notes (lti/ags), après la réponse. Le dernier tour
+    // d'essai clos : rien ne part tant que l'essai dure ; si la vraie partie a commencé
+    // d'elle-même, « commencée » part, jamais « terminée » (lti/ags/regles.ts).
+    if (finished || finDeLEssai) plusTard(() => synchroniserLaPartie(gameId));
   } catch (error) {
     return { error: error instanceof Error ? error.message : "La clôture a échoué." };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return { error: null };
+}
+
+/**
+ * « COMMENCER LA VRAIE PARTIE » : la fin du tour d'essai (services/tour-d-essai.service.ts).
+ * Le refus (un tour d'essai en cours de calcul) revient à l'écran, en toutes lettres.
+ */
+export async function commencerLaVraiePartieAction(
+  gameId: string,
+  _prev: CloseRoundState,
+  _formData: FormData,
+): Promise<CloseRoundState> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  try {
+    const { dejaFaite } = await commencerLaVraiePartie({ gameId, teacherId: session.userId });
+    // La vraie partie commence : les élèves venus d'une plateforme passent « commencée »
+    // dans le carnet de notes (rien n'était parti pendant l'essai), jamais « terminée ».
+    if (!dejaFaite) plusTard(() => synchroniserLaPartie(gameId));
+  } catch (error) {
+    if (error instanceof BasculeRefuseeError) return { error: error.message };
+    return { error: "La vraie partie n'a pas pu commencer. Réessayez : rien n'est perdu." };
   }
   revalidatePath(`/teacher/games/${gameId}`);
   return { error: null };
@@ -328,6 +434,126 @@ export interface CreateCompetitionValues {
 export interface CreateCompetitionState {
   error: string | null;
   values: CreateCompetitionValues | null;
+  /** Le refus renvoie aux offres : le formulaire ajoute le lien vers les tarifs. */
+  offre?: boolean;
+  /** Le devis de l'offre qui ouvre ce qui bloque (son adresse et son nom), s'il est connu. */
+  devis?: { href: string; offre: string };
+}
+
+/**
+ * RANGER UNE PARTIE, ET LA RESSORTIR.
+ *
+ * En fin d'année, la liste porte toutes les parties de l'année, dont beaucoup
+ * jamais closes : on ne clôt pas la dernière séance de juin, on part en
+ * vacances. Archiver les sort de la liste, ferme la porte aux élèves, et ne
+ * détruit rien. Le geste se défait depuis le tableau de bord.
+ */
+export async function archiverPartieAction(gameId: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await archiverPartie({ gameId, teacherId: session.userId });
+  revalidatePath("/teacher");
+  redirect("/teacher");
+}
+
+/**
+ * NOMMER UNE PARTIE, POUR LA RETROUVER DANS LA LISTE.
+ *
+ * Un champ vide efface le nom : la partie reprend celui de son scénario. Le
+ * geste se refait autant de fois qu'on veut, et personne d'autre que
+ * l'enseignant ne voit ce nom.
+ */
+export async function nommerLaPartieAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await nommerLaPartie({
+    gameId,
+    teacherId: session.userId,
+    nom: String(formData.get("nom") ?? ""),
+  });
+  revalidatePath(`/teacher/games/${gameId}`);
+  revalidatePath("/teacher");
+}
+
+/**
+ * DONNER SA CLÉ À QUI N'EN A PAS ENCORE.
+ *
+ * Les élèves entrés avant que le code de reprise existe n'en ont pas, et leur
+ * prochaine entrée par code leur en donnerait une — sauf qu'ils n'entreront
+ * plus, justement parce qu'ils sont déjà dans la partie. Un clic comble le
+ * trou, et ne touche pas aux codes déjà notés par les autres.
+ */
+export async function creerLesCodesManquantsAction(gameId: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await creerLesCodesManquants(gameId, session.userId);
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+export async function desarchiverPartieAction(gameId: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  try {
+    await desarchiverPartie({ gameId, teacherId: session.userId });
+  } catch (erreur) {
+    // Sous l'offre Classe, un groupe à la fois : la règle, et l'offre qui en ouvre plus.
+    if (erreur instanceof OffreRequiseError) echecCreation(erreur.message, erreur, "reprise");
+    throw erreur;
+  }
+  revalidatePath("/teacher");
+}
+
+/**
+ * RECOMMENCER LA MÊME PARTIE, AVEC LES MÊMES ÉLÈVES.
+ *
+ * Le geste efface tout ce qui a été joué et ne se défait pas : la
+ * confirmation se fait en recopiant le mot, comme pour les gestes qu'on ne
+ * veut pas voir partir d'un clic de trop.
+ */
+export async function reinitialiserPartieAction(
+  gameId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  // Le nom du champ est PROPRE À CE GESTE : les deux confirmations vivent sur
+  // la même page, et deux champs de même nom sont un piège pour qui relit.
+  const confirmation = String(formData.get("confirmationRemiseAZero") ?? "").trim().toUpperCase();
+  if (confirmation !== "RECOMMENCER") {
+    redirect(`/teacher/games/${gameId}?recommencer=mot`);
+  }
+  await reinitialiserPartie({ gameId, teacherId: session.userId });
+  revalidatePath(`/teacher/games/${gameId}`);
+  redirect(`/teacher/games/${gameId}?recommencer=fait`);
+}
+
+/**
+ * SUPPRIMER UNE PARTIE VIERGE.
+ *
+ * Le service refuse tout ce qui a servi ; l'écran doit alors DIRE pourquoi, et
+ * proposer le rangement, sinon l'enseignant cherche un bouton qui n'existe pas.
+ * Le refus revient donc sur la page, en toutes lettres.
+ */
+export async function supprimerPartieAction(
+  gameId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const confirmation = String(formData.get("confirmationSuppression") ?? "").trim().toUpperCase();
+  if (confirmation !== "SUPPRIMER") {
+    redirect(`/teacher/games/${gameId}?supprimer=mot`);
+  }
+  try {
+    await supprimerPartie({ gameId, teacherId: session.userId });
+  } catch (e) {
+    if (e instanceof Error && (e.message === PARTIE_DEJA_JOUEE || e.message === PARTIE_AVEC_ELEVES)) {
+      redirect(`/teacher/games/${gameId}?supprimer=${e.message === PARTIE_DEJA_JOUEE ? "jouee" : "eleves"}`);
+    }
+    throw e;
+  }
+  revalidatePath("/teacher");
+  redirect("/teacher");
 }
 
 /**
@@ -370,6 +596,17 @@ export async function createCompetitionAction(
       ...parsed.data,
     }));
   } catch (erreur) {
+    // Sans licence de l'arène en cours : la règle, dite telle quelle, et le lien.
+    if (erreur instanceof OffreRequiseError) {
+      return {
+        error: `Le concours n'a pas été créé. ${erreur.message}`,
+        values,
+        offre: true,
+        devis: erreur.offre
+          ? { href: lienDuDevis(erreur.offre), offre: LIBELLES_DU_DEVIS[erreur.offre].offre }
+          : undefined,
+      };
+    }
     const detail = erreur instanceof Error && erreur.message ? ` (${erreur.message})` : "";
     return {
       error: `Le concours n'a pas pu être créé, votre saisie est conservée : réessayez${detail}.`,
@@ -412,6 +649,34 @@ export async function startFinalAction(
   _formData: FormData,
 ): Promise<CompetitionActionState> {
   return runCompetitionAction(competitionId, startFinal);
+}
+
+/**
+ * Une phase intermédiaire de poules (demi-finales, tour 2…). Contrairement aux
+ * autres gestes de concours, celui-ci porte des réglages : la taille des
+ * poules, le nombre d'équipes qualifiées, et le nom de la phase. Ils sont lus
+ * du formulaire et bornés par le service.
+ */
+export async function startIntermediateStageAction(
+  competitionId: string,
+  _prev: CompetitionActionState,
+  formData: FormData,
+): Promise<CompetitionActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée : reconnectez-vous." };
+  try {
+    await startIntermediateStage({
+      competitionId,
+      organizerId: session.userId,
+      groupSize: Number(formData.get("groupSize") ?? 3),
+      advancePerGroup: Number(formData.get("advancePerGroup") ?? 1),
+      nom: String(formData.get("nom") ?? ""),
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/teacher/competitions/${competitionId}`);
+  return { error: null };
 }
 
 export async function finishCompetitionAction(
@@ -490,31 +755,151 @@ export async function setCompetitionPublicPageAction(
   return { error: null };
 }
 
-export interface DrawCardState {
+export interface DistributionState {
   error: string | null;
-  drawnCode: string | null;
+  codeDistribue: string | null;
 }
 
-/** Tirage d'une carte événement (animation de classe, mode apprentissage). */
-export async function drawCardAction(
+/** Distribution d'un courrier (animation de classe, mode apprentissage). */
+export async function distribuerCourrierAction(
   gameId: string,
-  _prev: DrawCardState,
+  _prev: DistributionState,
   formData: FormData,
-): Promise<DrawCardState> {
+): Promise<DistributionState> {
   const session = await getSession();
-  if (!session) return { error: "Session expirée.", drawnCode: null };
+  if (!session) return { error: "Session expirée.", codeDistribue: null };
   const eventCode = String(formData.get("eventCode") ?? "").trim() || undefined;
   const teamId = String(formData.get("teamId") ?? "").trim() || undefined;
   try {
-    const { eventCode: drawn } = await drawEventCardForNextRound({
+    const { eventCode: distribue } = await distribuerUnCourrier({
       gameId,
       teacherId: session.userId,
       eventCode,
       teamId,
     });
     revalidatePath(`/teacher/games/${gameId}`);
-    return { error: null, drawnCode: drawn };
+    return { error: null, codeDistribue: distribue };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Erreur.", drawnCode: null };
+    return { error: error instanceof Error ? error.message : "Erreur.", codeDistribue: null };
   }
+}
+
+export interface GazetteState {
+  error: string | null;
+  /** Le tour dont la consigne vient d'être prise (le formulaire se referme). */
+  fait: number | null;
+}
+
+/**
+ * LA GAZETTE, ENTRE LES MAINS DE L'ENSEIGNANT : remplacer l'article d'un tour
+ * par le sien, ne rien publier, ou rendre la main au journal. Tout se contrôle
+ * côté serveur (`consignerLaGazette`) : propriétaire, partie de classe en
+ * cours, tour en cours ou suivant, longueur bornée.
+ */
+export async function consignerLaGazetteAction(
+  gameId: string,
+  _prev: GazetteState,
+  formData: FormData,
+): Promise<GazetteState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée.", fait: null };
+  const tour = Number(formData.get("tour"));
+  const brut = String(formData.get("mode") ?? "");
+  const mode = brut === "retire" || brut === "retablir" ? brut : "remplace";
+  try {
+    const r = await consignerLaGazette({
+      gameId,
+      teacherId: session.userId,
+      tour,
+      mode,
+      titre: formData.get("titre"),
+      texte: formData.get("texte"),
+    });
+    if (!r.ok) return { error: r.erreur, fait: null };
+    revalidatePath(`/teacher/games/${gameId}`);
+    return { error: null, fait: tour };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur.", fait: null };
+  }
+}
+
+export interface TrancherSubventionState {
+  error: string | null;
+}
+
+/**
+ * L'animateur accorde ou refuse une subvention exceptionnelle.
+ *
+ * Le montant est modifiable : accorder la moitié de ce qui est demandé est un
+ * arbitrage légitime — « je vous sors de l'eau, pas plus ». Le mot laissé à
+ * l'équipe compte autant que la somme : c'est lui qui fait de la réponse une
+ * décision motivée plutôt qu'un jet de dés.
+ */
+export async function trancherSubventionAction(
+  gameId: string,
+  _prev: TrancherSubventionState,
+  formData: FormData,
+): Promise<TrancherSubventionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée." };
+  const requestId = String(formData.get("requestId") ?? "");
+  const accord = formData.get("accord") === "1";
+  const brut = Number(String(formData.get("montant") ?? "").replace(",", "."));
+  try {
+    await trancherDemande({
+      requestId,
+      teacherId: session.userId,
+      accord,
+      montant: Number.isFinite(brut) && brut > 0 ? brut : undefined,
+      note: String(formData.get("note") ?? ""),
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "La demande n'a pas pu être tranchée." };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return { error: null };
+}
+
+export interface AffectationState {
+  error: string | null;
+  message: string | null;
+}
+
+/**
+ * L'enseignant range un élève dans la bonne équipe.
+ *
+ * Le seul recours quand un élève revient d'un autre poste : son cookie
+ * d'invité perdu, il a été affecté au hasard et ne peut plus se déplacer
+ * lui-même une fois le premier tour clos.
+ */
+export async function affecterEleveAction(
+  gameId: string,
+  _prev: AffectationState,
+  formData: FormData,
+): Promise<AffectationState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée.", message: null };
+  const eleveId = String(formData.get("eleveId") ?? "");
+  const teamId = String(formData.get("teamId") ?? "");
+  const nomDeLEleve = String(formData.get("nomDeLEleve") ?? "").trim();
+  if (!eleveId || !teamId) return { error: "Choisissez une équipe.", message: null };
+  let nomDeLEquipe: string;
+  try {
+    ({ nomDeLEquipe } = await affecterEleve({
+      gameId,
+      teacherId: session.userId,
+      eleveId,
+      teamId,
+    }));
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "L'élève n'a pas pu être déplacé.",
+      message: null,
+    };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return {
+    error: null,
+    message: `${nomDeLEleve || "L'élève"} rejoint ${nomDeLEquipe}.`,
+  };
 }

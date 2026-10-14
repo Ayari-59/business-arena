@@ -5,7 +5,6 @@ import {
   ACCENTS_SECTEUR,
   accentsDe,
   surtitreDePartie,
-  emblemeDe,
   nomEntreprise,
   promesseEntreprise,
 } from "../../src/config/scenarios/presentation";
@@ -29,13 +28,6 @@ describe("identité visuelle des secteurs", () => {
     expect(new Set(textes).size).toBe(textes.length);
   });
 
-  it("chaque métier a son propre emblème", () => {
-    const emblemes = SCENARIOS.map((d) => emblemeDe(d));
-    expect(new Set(emblemes).size, `emblèmes partagés : ${emblemes.join(" ")}`).toBe(
-      emblemes.length,
-    );
-  });
-
   it("aucune classe n'est composée à l'exécution", () => {
     // Tailwind lit les SOURCES : une classe assemblée au moment du rendu
     // n'apparaît dans aucun fichier, n'est donc jamais générée, et la carte
@@ -44,7 +36,7 @@ describe("identité visuelle des secteurs", () => {
     const source = readFileSync("src/config/scenarios/presentation.ts", "utf-8");
     const bloc = source.slice(
       source.indexOf("ACCENTS_SECTEUR"),
-      source.indexOf("EMBLEMES_SECTEUR"),
+      source.indexOf("const IDENTITES_SCENARIO"),
     );
     expect(bloc.length, "le bloc des accents est introuvable").toBeGreaterThan(200);
     expect(bloc, "une classe est assemblée avec un gabarit").not.toContain("`");
@@ -100,6 +92,15 @@ describe("le surtitre de l'écran de jeu", () => {
       const surtitre = surtitreDePartie(d.title, "Équipe 3");
       expect(surtitre, `${d.code}`).toContain(nomEntreprise(d));
       expect(surtitre, `${d.code}`).toContain(promesseEntreprise(d)!);
+    }
+  });
+
+  it("ne redit pas la marque, que la barre porte déjà", () => {
+    // « BUSINESS ARENA · NOVA · PRENEZ LES COMMANDES » passait sur deux lignes
+    // en capitales espacées sur un téléphone, pour dire une fois de plus où
+    // l'on est : le logo est dans la barre, juste au-dessus.
+    for (const d of SCENARIOS) {
+      expect(surtitreDePartie(d.title, "Équipe 3")).not.toContain("Business Arena");
     }
   });
 

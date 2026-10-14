@@ -19,6 +19,12 @@ import type { EngineScenarioConfig } from "../engine/types";
  * formulaire : on vend, on achète, on décide ses budgets (marketing, qualité,
  * maintenance, R&D) puis sa communication, on paie ses équipes, on finance,
  * on se couvre, on s'informe, on prévoit.
+ *
+ * UNE SEULE EXCEPTION, ET ELLE EST VOULUE : la commande exceptionnelle vient
+ * APRÈS le prix et le volume. C'est une option ponctuelle, qu'on refuse neuf
+ * fois sur dix, et elle ouvrait la feuille de décision : la première chose
+ * qu'on lisait sur l'écran du tour n'était pas la décision n°1. Elle se range
+ * désormais derrière un repli, sous les deux décisions majeures.
  */
 export interface LevierDeDecision {
   /** Le `name` du champ dans le formulaire de décision. */
@@ -39,12 +45,13 @@ export interface LevierDeDecision {
 }
 
 export const LEVIERS: readonly LevierDeDecision[] = [
-  { champ: "acceptOrder", nom: "Commande exceptionnelle", ouvertPar: "secteur" },
   { champ: "price", nom: "Prix de vente", ouvertPar: "toujours" },
   { champ: "productionPlan", nom: "Volume du tour", ouvertPar: "toujours" },
+  { champ: "acceptOrder", nom: "Commande exceptionnelle", ouvertPar: "secteur" },
   { champ: "supplierChoice", nom: "Choix du fournisseur", ouvertPar: "secteur" },
-  // Les quatre budgets du tour se décident au même endroit : marketing,
-  // qualité, maintenance, R&D. La communication (marque, axe) les suit.
+  // Les budgets du tour : marketing, qualité, maintenance, R&D. En gamme, les
+  // trois premiers se décident dans l'onglet de CHAQUE référence, avec son prix
+  // et son volume ; l'entretien et la marque restent à l'entreprise.
   { champ: "marketingBudget", nom: "Budget marketing", ouvertPar: "toujours" },
   { champ: "qualityBudget", nom: "Budget qualité", ouvertPar: "quality" },
   { champ: "maintenanceBudget", nom: "Budget maintenance", ouvertPar: "maintenance" },
@@ -67,16 +74,14 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "capitalIncrease", nom: "Augmentation de capital", ouvertPar: "finance" },
   { champ: "machineCapacityUnits", nom: "Investissement de capacité", ouvertPar: "investment" },
   { champ: "dividend", nom: "Dividende", ouvertPar: "dividend" },
-  { champ: "discount", nom: "Escompte de créances", ouvertPar: "finance" },
-  { champ: "factoring", nom: "Affacturage", ouvertPar: "finance" },
+  { champ: "discount", nom: "Escompte de créances", ouvertPar: "creances" },
+  { champ: "factoring", nom: "Affacturage", ouvertPar: "creances" },
   { champ: "placement", nom: "Placement de trésorerie", ouvertPar: "placement" },
   { champ: "insurance", nom: "Couverture d'assurance", ouvertPar: "insurance" },
   { champ: "studyMarket", nom: "Étude de marché", ouvertPar: "secteur" },
   { champ: "studyPrice", nom: "Étude des prix", ouvertPar: "secteur" },
   { champ: "studyFinance", nom: "Étude financière", ouvertPar: "secteur" },
   { champ: "studyProject", nom: "Étude de projet", ouvertPar: "secteur" },
-  { champ: "expectedUnits", nom: "Ventes prévues", ouvertPar: "finance" },
-  { champ: "expectedCash", nom: "Trésorerie prévue", ouvertPar: "finance" },
 ];
 
 /**

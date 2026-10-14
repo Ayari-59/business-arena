@@ -94,9 +94,9 @@ describe("le cockpit de prévision", () => {
     const logistique = spec.feuilles[1]!;
     const sections = logistique.lignes.filter((l) => l[0]?.style === "section").map((l) => l[0]!.v);
     expect(sections).toEqual([
-      "PULL COL ROND",
-      "CARDIGAN BOUTONNÉ",
-      "PULL MÉRINOS PREMIUM",
+      "COL ROND",
+      "CARDIGAN",
+      "MÉRINOS",
       "ÉCHARPE",
       "BONNET",
       "TOUTES RÉFÉRENCES",
@@ -185,7 +185,10 @@ describe("le cockpit de prévision", () => {
 });
 
 describe("le cockpit de NOVA · gamme : la R&D et la marque", () => {
-  const gea = () => ATELIERS.find((a) => a.code === "gea")!;
+  // La R&D s'ouvre au niveau Stratégie (5) depuis octobre 2026 : l'atelier DCG
+  // (NOVA · gamme, niveau 5) la porte ; celui du BUT GEA (niveau 4) livre la
+  // Studio prête.
+  const gea = () => ATELIERS.find((a) => a.code === "dcg")!;
 
   it("la Studio ne se vend pas tant que sa R&D cumulée n'atteint pas son coût", () => {
     const spec = cockpitAtelier(gea());
@@ -340,14 +343,14 @@ describe("les dossiers de service", () => {
     const mco = ATELIERS.find((a) => a.code === "mco")!;
     const gamme = dossierEleve(mco).gamme;
     expect(gamme.map((g) => g.nom)).toEqual([
-      "Pull col rond",
-      "Cardigan boutonné",
-      "Pull mérinos premium",
+      "Col rond",
+      "Cardigan",
+      "Mérinos",
       "Écharpe",
       "Bonnet",
     ]);
     expect(gamme.find((g) => g.nom === "Bonnet")!.stockOuverture).toBe(250);
-    expect(gamme.find((g) => g.nom === "Pull mérinos premium")!.margeUsuelle).toBeGreaterThan(
+    expect(gamme.find((g) => g.nom === "Mérinos")!.margeUsuelle).toBeGreaterThan(
       gamme.find((g) => g.nom === "Bonnet")!.margeUsuelle * 3,
     );
     const stmg = ATELIERS.find((a) => a.code === "stmg")!;

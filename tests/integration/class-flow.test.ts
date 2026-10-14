@@ -23,9 +23,11 @@ import {
   getTeacherGameView,
   getTeacherGames,
   joinGameByCode,
+  setRankingRevealed,
   submitTeamDecisions,
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -56,6 +58,8 @@ beforeAll(async () => {
   if ("error" in result) throw new Error(result.error);
   teacherId = result.userId;
   orgId = (await getTeacherOrgId(teacherId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, teacherId);
 });
 
 describe("authentification enseignant", () => {
@@ -131,7 +135,32 @@ describe("partie de classe complète", () => {
     expect(view!.currentRound).toBe(2);
     expect(view!.pendingDecisions).toBeNull();
     expect(view!.lastResult).not.toBeNull();
-    expect(view!.ranking).toHaveLength(3);
+
+    // LE RIDEAU. En classe, c'est l'enseignant qui révèle le classement : tant
+    // qu'il ne l'a pas fait, la vue de l'élève NE LE CONTIENT PAS — on ne le
+    // masque pas à l'affichage, on ne l'envoie pas. Son IPG, lui, reste sien :
+    // il mesure sa progression, pas sa place.
+    expect(view!.ranking).toHaveLength(0);
+    expect(view!.classement).toEqual({ revele: false, parLAnimateur: true });
+    expect(view!.playerBpi).not.toBeNull();
+
+    // un élève ne peut pas lever le rideau
+    await expect(
+      setRankingRevealed({ gameId, teacherId: alice, roundIndex: 1, revealed: true }),
+    ).rejects.toThrow();
+    // ni personne sur un tour qui n'est pas clos : son classement n'existe pas
+    await expect(
+      setRankingRevealed({ gameId, teacherId, roundIndex: 2, revealed: true }),
+    ).rejects.toThrow();
+
+    await setRankingRevealed({ gameId, teacherId, roundIndex: 1, revealed: true });
+    const apresRevelation = await getGameView(gameId, alice);
+    expect(apresRevelation!.ranking).toHaveLength(3);
+    expect(apresRevelation!.classement.revele).toBe(true);
+
+    // et il peut refermer
+    await setRankingRevealed({ gameId, teacherId, roundIndex: 1, revealed: false });
+    expect((await getGameView(gameId, alice))!.ranking).toHaveLength(0);
 
     // jouer les 5 tours restants
     for (let round = 2; round <= 6; round++) {
@@ -141,6 +170,12 @@ describe("partie de classe complète", () => {
     }
 
     const summaries = await getTeacherGames(teacherId);
-    expect(summaries.some((s) => s.gameId === gameId && s.status === "finished")).toBe(true);
+    const resume = summaries.find((s) => s.gameId === gameId);
+    expect(resume?.status).toBe("finished");
+    // La liste des parties a un visage : le secteur joué (qui donne son
+    // pictogramme dessiné) et son titre.
+    expect(resume?.scenarioCode).toBe("nova");
+    expect(resume?.sector).toBe("industrie");
+    expect(resume?.scenarioTitle).toContain("NOVA");
   });
 });

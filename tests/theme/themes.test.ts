@@ -1,111 +1,143 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { genererThemeClair, FICHIER_GENERE, SOURCE_TAILWIND } from "../../scripts/generer-theme-clair";
-import { CLE_THEME, estCodeTheme, THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
+import {
+  genererThemeClair,
+  identiteDeLaMaison,
+  FICHIER_GENERE,
+  PAPIER,
+  SOURCE_IDENTITE,
+  SOURCE_TAILWIND,
+  TABLEAU,
+} from "../../scripts/generer-theme-clair";
+import { COULEUR_DU_PAPIER, COULEUR_DU_TABLEAU } from "../../src/config/themes";
 
 /**
- * Les thèmes tiennent en deux moitiés qui ne se parlent pas : la liste, en
- * TypeScript, et les couleurs, dans les feuilles de style, parce que Tailwind
- * ne lit pas le TypeScript. Rien dans le langage n'oblige les deux à
- * correspondre, et une moitié sans l'autre ne casse rien de visible : un thème
- * proposé dans le menu qui ne change aucune couleur, ou un jeu de couleurs que
- * personne ne peut choisir.
+ * L'HABILLAGE UNIQUE : le papier, et le tableau.
+ *
+ * Le site a eu deux thèmes, un interrupteur, une amorce qui relisait le choix
+ * avant l'affichage et un réglage d'administration pour le thème d'ouverture.
+ * Il n'en a plus qu'un. Ces essais tiennent les deux moitiés qui ne se parlent
+ * pas — les couleurs dans les feuilles de style, les rares couleurs écrites en
+ * clair dans le TypeScript pour ce qui ne lit pas les feuilles — et gardent la
+ * porte fermée au retour d'un second thème par la bande.
  */
 const GLOBALS = readFileSync("src/app/globals.css", "utf-8");
 const CLAIR = readFileSync(FICHIER_GENERE, "utf-8");
 const LAYOUT = readFileSync("src/app/layout.tsx", "utf-8");
-const SELECTEUR = readFileSync("src/components/theme-switcher.tsx", "utf-8");
+const HEADER = readFileSync("src/components/site-header.tsx", "utf-8");
 
-/** Les thèmes déclarés dans les feuilles, dans l'ordre où on les y trouve. */
-const declaresEnCss = [...(GLOBALS + CLAIR).matchAll(/\[data-theme="([a-z]+)"\]/g)].map(
+/** Les thèmes qui déclarent un JEU DE COULEURS : `[data-theme="x"] {`. */
+const declaresEnCss = [...(GLOBALS + CLAIR).matchAll(/\[data-theme="([a-z]+)"\]\s*\{/g)].map(
   (m) => m[1]!,
 );
 
-describe("les thèmes", () => {
-  it("chaque thème du registre a ses couleurs, sauf celui d'origine", () => {
-    for (const theme of THEMES) {
-      const present = declaresEnCss.includes(theme.code);
-      if (theme.code === THEME_PAR_DEFAUT) {
-        // Le thème par défaut est l'échelle de Tailwind telle quelle : lui
-        // écrire un bloc reviendrait à recopier ce qui existe déjà, avec le
-        // risque que la copie diverge.
-        expect(present, `${theme.code} ne devrait pas avoir de bloc`).toBe(false);
-      } else {
-        expect(present, `${theme.code} est proposé au choix mais ne change aucune couleur`).toBe(
-          true,
-        );
-      }
-    }
+/**
+ * Une valeur d'échelle en #rrggbb, pour comparer aux couleurs écrites en
+ * clair : l'hexadécimal tel quel, l'oklch(L% C H) converti.
+ */
+function oklchEnHex(valeur: string): string {
+  if (/^#[0-9a-f]{6}$/i.test(valeur)) return valeur.toLowerCase();
+  const [l, c, h] = valeur.match(/[\d.]+/g)!.map(Number) as [number, number, number];
+  const L = l / 100;
+  const a = c * Math.cos((h * Math.PI) / 180);
+  const b = c * Math.sin((h * Math.PI) / 180);
+  const l_ = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m_ = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s_ = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const rgb = [
+    4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_,
+    -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_,
+    -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_,
+  ];
+  return `#${rgb
+    .map((x) => {
+      const v = Math.max(0, Math.min(1, x));
+      const s = v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
+      return Math.round(255 * s)
+        .toString(16)
+        .padStart(2, "0");
+    })
+    .join("")}`;
+}
+
+describe("un seul habillage", () => {
+  it("une seule palette déclarée : le papier", () => {
+    expect([...new Set(declaresEnCss)]).toEqual(["clair"]);
+    expect(GLOBALS + CLAIR, "une règle du thème sombre traîne encore").not.toContain(
+      '[data-theme="sombre"]',
+    );
   });
 
-  it("aucun jeu de couleurs ne traîne sans être proposé", () => {
-    for (const code of new Set(declaresEnCss)) {
-      expect(estCodeTheme(code), `« ${code} » est habillé mais absent du registre`).toBe(true);
-    }
+  it("aucun interrupteur, aucune amorce : la racine porte le papier dès le serveur", () => {
+    expect(existsSync("src/components/theme-switcher.tsx")).toBe(false);
+    expect(HEADER).not.toContain("ThemeSwitcher");
+    expect(LAYOUT).toContain('data-theme="clair"');
+    expect(LAYOUT, "une amorce relit encore un thème choisi").not.toContain("localStorage");
   });
 
-  it("chaque thème a un nom et une pastille", () => {
-    for (const theme of THEMES) {
-      expect(theme.nom.length, `${theme.code} sans nom`).toBeGreaterThan(2);
-      expect(theme.description.length, `${theme.code} sans description`).toBeGreaterThan(15);
-      expect(theme.apercu.fond, `${theme.code} : fond`).toMatch(/^#[0-9a-f]{6}$/);
-      expect(theme.apercu.accent, `${theme.code} : accent`).toMatch(/^#[0-9a-f]{6}$/);
-    }
-    const noms = THEMES.map((t) => t.nom);
-    expect(new Set(noms).size, `noms en double : ${noms.join(", ")}`).toBe(noms.length);
+  it("le navigateur dessine ses commandes pour le papier, et pour l'ardoise sur le tableau", () => {
+    // Les barres de défilement, les champs et les cases à cocher sont dessinés
+    // par le navigateur, qui ne lit pas nos variables.
+    expect(GLOBALS).toMatch(/\[data-theme="clair"\]\s*\{[^}]*color-scheme: light;/);
+    expect(GLOBALS).toMatch(
+      /\[data-theme="clair"\] \.contre-jour,\s*\[data-theme="clair"\] \.ardoise\s*\{\s*color-scheme: dark;/,
+    );
   });
 
-  it("le script d'amorçage et le sélecteur écrivent au même endroit", () => {
-    // S'ils divergeaient, le choix serait bien enregistré et jamais relu : le
-    // thème reviendrait à l'ardoise à chaque page, sans erreur nulle part.
-    expect(LAYOUT, "le script d'amorçage n'utilise pas la clé du registre").toContain("CLE_THEME");
-    expect(SELECTEUR, "le sélecteur n'utilise pas la clé du registre").toContain("CLE_THEME");
-    expect(CLE_THEME.length).toBeGreaterThan(3);
-  });
-
-  it("le sélecteur se règle sur le registre, sans recopier les noms", () => {
-    // Le bouton annonce le thème d'arrivée : il doit le tenir du registre, sinon
-    // retirer un thème laisserait un bouton qui mène vers un thème disparu.
-    expect(SELECTEUR, "le sélecteur n'ouvre pas le registre").toContain("THEMES");
-    for (const theme of THEMES) {
-      expect(SELECTEUR, `« ${theme.nom} » est écrit en dur dans le sélecteur`).not.toContain(
-        theme.nom,
-      );
-    }
-  });
-
-  it("l'attribut de thème est posé dès le rendu du serveur", () => {
-    // Sans valeur initiale, la première image de la page n'aurait pas de thème
-    // du tout et le sélecteur afficherait un choix qui n'est pas celui appliqué.
-    expect(LAYOUT).toMatch(/<html[^>]*data-theme=\{THEME_PAR_DEFAUT\}/);
+  it("les couleurs écrites en clair sont celles des échelles, converties", () => {
+    // La barre du téléphone, l'écran de démarrage et les aperçus de palette ne
+    // lisent pas les feuilles : leurs couleurs sont recopiées, et une copie
+    // dérive. Celle-ci se recalcule.
+    expect(COULEUR_DU_PAPIER).toBe(oklchEnHex(PAPIER[950]!));
+    expect(COULEUR_DU_TABLEAU).toBe(oklchEnHex(TABLEAU[950]!));
   });
 });
 
-describe("le thème clair", () => {
-  it("le fichier engendré est à jour", () => {
+describe("le fichier engendré", () => {
+  it("est à jour", () => {
     // Il est versionné pour que la compilation n'ait pas besoin du script ;
     // versionner une sortie, c'est accepter qu'elle vieillisse en silence.
-    const attendu = genererThemeClair(readFileSync(SOURCE_TAILWIND, "utf-8"));
+    const attendu = genererThemeClair(
+      readFileSync(SOURCE_TAILWIND, "utf-8"),
+      readFileSync(SOURCE_IDENTITE, "utf-8"),
+    );
     expect(
       CLAIR,
       `${FICHIER_GENERE} n'est plus à jour : npx tsx scripts/generer-theme-clair.ts`,
     ).toBe(attendu);
   });
 
-  it("renverse bien le clair et le sombre", () => {
-    const valeur = (palier: string) =>
-      CLAIR.match(new RegExp(`--color-slate-${palier}: ([^;]+);`))?.[1];
-    // Le fond le plus sombre du site prend la valeur du gris le plus clair.
-    expect(valeur("950")).toBeDefined();
-    expect(valeur("950")).toBe(
-      readFileSync(SOURCE_TAILWIND, "utf-8").match(/--color-slate-50: ([^;]+);/)?.[1],
-    );
+  it("le neutre du papier est celui de l'arène, écrit, pas le gris renversé de Tailwind", () => {
+    const papier = CLAIR.slice(0, CLAIR.indexOf(".contre-jour"));
+    for (const [palier, valeur] of Object.entries(PAPIER)) {
+      expect(papier, `slate-${palier}`).toContain(`--color-slate-${palier}: ${valeur};`);
+    }
+  });
+
+  it("le tableau rend l'échelle DU SITE, avec le marine pour neutre", () => {
+    // Le site ne se sert pas de l'amber de Tailwind : son `@theme` le remplace
+    // par l'orange de l'arène. Le bloc à contre-jour l'a ignoré pendant une
+    // journée, du temps de l'or patiné, et une bande sombre y ramenait l'amber
+    // brut, un jaune d'autocar qu'on ne trouve nulle part ailleurs. Seul le
+    // neutre fait exception : il est écrit dans TABLEAU.
+    const identite = identiteDeLaMaison(readFileSync(SOURCE_IDENTITE, "utf-8"));
+    const debut = CLAIR.indexOf('[data-theme="clair"] .contre-jour,');
+    const bloc = CLAIR.slice(debut, CLAIR.indexOf("\n}", debut));
+    expect(bloc).toContain('[data-theme="clair"] .ardoise {');
+    expect(identite.size, "le @theme du site ne pose aucune couleur").toBeGreaterThan(3);
+    for (const [cle, valeur] of identite) {
+      if (cle.startsWith("slate-")) continue;
+      expect(bloc, `${cle} n'est pas rendue au tableau`).toContain(`--color-${cle}: ${valeur};`);
+    }
+    for (const [palier, valeur] of Object.entries(TABLEAU)) {
+      expect(bloc, `slate-${palier} du tableau`).toContain(`--color-slate-${palier}: ${valeur};`);
+    }
   });
 
   it("laisse le papier blanc à l'impression", () => {
     // Les fiches d'atelier s'impriment avec print:bg-white et print:text-black.
-    // Sur le thème clair, où le blanc et le noir sont échangés, elles
-    // sortiraient en noir sur noir.
+    // Sur le papier, où le blanc et le noir sont échangés, elles sortiraient en
+    // noir sur noir.
     const impression = CLAIR.slice(CLAIR.indexOf("@media print"));
     expect(impression, "aucune règle d'impression").toContain("--color-white: #fff");
     expect(impression).toContain("--color-black: #000");

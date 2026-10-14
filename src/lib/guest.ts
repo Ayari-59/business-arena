@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authSecret } from "@/lib/auth-secret";
+import { NOM_INVITE_PAR_DEFAUT, pseudoAffichable } from "@/config/invite";
+import { COOKIE_INVITE, optionsCookieInvite } from "@/lib/cookie-invite";
 
 /**
  * Identité invitée (v0.1, étape 6) : un visiteur reçoit un identifiant signé en
@@ -12,7 +14,7 @@ import { authSecret } from "@/lib/auth-secret";
  * complète (ADR-08) arrive à l'étape 7 avec l'interface enseignant.
  */
 
-const COOKIE = "ba_guest";
+const COOKIE = COOKIE_INVITE;
 
 function secret(): string {
   return authSecret();
@@ -44,15 +46,9 @@ export async function getOrCreateGuestUserId(): Promise<string> {
   await db.insert(users).values({
     id,
     email: `guest-${id}@guest.business-arena.local`,
-    displayName: "Joueur invité",
+    displayName: NOM_INVITE_PAR_DEFAUT,
   });
-  store.set(COOKIE, `${id}.${sign(id)}`, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 365,
-    path: "/",
-  });
+  store.set(COOKIE, `${id}.${sign(id)}`, optionsCookieInvite());
   return id;
 }
 
@@ -61,4 +57,60 @@ export async function getGuestUserId(): Promise<string | null> {
   const store = await cookies();
   const raw = store.get(COOKIE)?.value;
   return raw ? verify(raw) : null;
+}
+
+/**
+ * DONNER À CET APPAREIL UNE IDENTITÉ QUI EXISTE DÉJÀ.
+ *
+ * Un élève de concours qui change de poste, vide ses cookies ou passe au
+ * téléphone n'est plus reconnu : le cookie invité est la seule mémoire de qui
+ * il est. Son code de reprise le rend à lui-même, et c'est ici que l'appareil
+ * reçoit son identité retrouvée plutôt qu'une nouvelle.
+ *
+ * La fonction ne vérifie RIEN : l'appelant doit avoir établi que ce joueur est
+ * bien celui qui demande. Aujourd'hui, seul le service de concours l'appelle,
+ * après avoir reconnu un code de reprise.
+ */
+export async function setGuestCookie(userId: string): Promise<void> {
+  const store = await cookies();
+  store.set(COOKIE, `${userId}.${sign(userId)}`, optionsCookieInvite());
+}
+
+/**
+ * LIBÉRER L'APPAREIL.
+ *
+ * Le cookie invité dure un an. En salle informatique, le poste passe d'une
+ * classe à l'autre : sans ce geste, le deuxième élève retrouve le cookie du
+ * premier, `joinGameByCode` écrase son prénom et les deux ne font plus qu'un
+ * seul joueur — une équipe, un jeu de décisions, un historique de situations,
+ * et un nom perdu au carnet de l'enseignant. L'effacement rend l'appareil
+ * neutre ; l'élève suivant reçoit sa propre identité à son entrée par code.
+ *
+ * Rien n'est supprimé en base : les décisions déjà prises appartiennent à
+ * l'équipe, pas à l'appareil, et l'élève qui revient avec le même code les
+ * retrouve (l'enseignant le remet dans son équipe si le hasard l'a rangé
+ * ailleurs).
+ */
+export async function clearGuestCookie(): Promise<void> {
+  const store = await cookies();
+  store.delete(COOKIE);
+}
+
+/**
+ * Le prénom porté par l'appareil, ou null s'il n'en porte pas encore.
+ *
+ * Sert à avertir AVANT la saisie : « cet appareil est à Léa ». Après, il est
+ * trop tard — le pseudo est déjà écrasé.
+ */
+export async function getGuestDisplayName(): Promise<string | null> {
+  const id = await getGuestUserId();
+  if (!id) return null;
+  const found = await db
+    .select({ nom: users.displayName })
+    .from(users)
+    .where(eq(users.id, id));
+  // Le nom par défaut n'apprend rien : c'est celui d'un visiteur qui n'a
+  // encore rejoint aucune partie. L'annoncer ferait un avertissement de plus
+  // sans un seul cas d'usage.
+  return pseudoAffichable(found[0]?.nom);
 }

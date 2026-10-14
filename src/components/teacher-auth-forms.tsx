@@ -1,7 +1,9 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useActionState, useState } from "react";
 import { loginAction, registerAction, type FormState } from "@/app/teacher/actions";
+import { TEXTE_DU_CONSENTEMENT } from "@/config/nouveautes";
 
 const initial: FormState = { error: null };
 
@@ -12,7 +14,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
       <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
       <input
         {...rest}
-        className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+        className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
       />
     </label>
   );
@@ -20,11 +22,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
 
 function ErrorBox({ error }: { error: string | null }) {
   if (!error) return null;
-  return (
-    <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-      {error}
-    </p>
-  );
+  return <p className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">{error}</p>;
 }
 
 export function TeacherAuthForms() {
@@ -36,7 +34,7 @@ export function TeacherAuthForms() {
   );
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+    <div className="w-full max-w-md carte p-4 sm:p-7">
       <div className="mb-5 grid grid-cols-2 gap-2">
         {(
           [
@@ -48,10 +46,13 @@ export function TeacherAuthForms() {
             key={value}
             type="button"
             onClick={() => setTab(value)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+            // L'ONGLET ACTIF N'EST PAS UN BOUTON D'ACTION : le voile neutre et
+            // le filet orange d'un état choisi. En aplat orange, il ressemblait
+            // trait pour trait au bouton « Se connecter » du formulaire.
+            className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
               tab === value
-                ? "bg-amber-400 text-slate-950"
-                : "bg-slate-950 text-slate-400 hover:text-slate-200"
+                ? "voile-neutre border-amber-400 font-semibold text-slate-100"
+                : "border-transparent bg-slate-950 text-slate-400 hover:text-slate-200"
             }`}
           >
             {label}
@@ -73,7 +74,7 @@ export function TeacherAuthForms() {
           <button
             type="submit"
             disabled={loginPending}
-            className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+            className={`${bouton({ taille: "l" })} w-full`}
           >
             {loginPending ? "Connexion…" : "Se connecter"}
           </button>
@@ -101,11 +102,26 @@ export function TeacherAuthForms() {
             minLength={8}
             autoComplete="new-password"
           />
+          {/* LES NOUVEAUTÉS : une case NON cochée, facultative, sans effet sur le compte
+              (services/nouveautes.service.ts). La date et la version du texte sont
+              enregistrées si elle est cochée. */}
+          <label className="flex items-start gap-2.5 text-sm leading-snug text-slate-300" data-case-nouveautes="">
+            <input
+              type="checkbox"
+              name="nouveautes"
+              value="oui"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-amber-400"
+            />
+            <span>
+              {TEXTE_DU_CONSENTEMENT}{" "}
+              <span className="text-slate-400">Facultatif, modifiable dans votre espace.</span>
+            </span>
+          </label>
           <ErrorBox error={registerState.error} />
           <button
             type="submit"
             disabled={registerPending}
-            className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+            className={`${bouton({ taille: "l" })} w-full`}
           >
             {registerPending ? "Création…" : "Créer mon compte enseignant"}
           </button>

@@ -1,9 +1,27 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
-import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
-import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { bouton } from "@/components/bouton";
 import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
+import { useGlisser, vibrer, VIBRATION_DE_REUSSITE } from "@/lib/glisser";
+import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
+import { GuardError, copierSaisie, rejouerSaisie, useGuardedAction } from "@/components/guarded-action";
+import { sansMolette } from "@/components/sans-molette";
+import {
+  coutDeLAffacturage,
+  coutDeLEscompte,
+  echeancierEmprunt,
+  totalDesEtudes,
+} from "@/config/cout-du-financement";
+import {
+  PRODUCT_FIELD_PREFIX,
   pivotFieldsFor,
   pivotsNonTouches,
   productFieldName,
@@ -12,14 +30,175 @@ import {
   type PivotFieldInfo,
 } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
+import { depasseLePlafond } from "@/engine/investment/plafond";
 import type { RoundDecisions } from "@/engine/types";
+import { INVITATION_NOTE } from "@/config/justification";
+import {
+  EngagementDuTour,
+  lireLEngagement,
+  type Engagement,
+} from "@/components/engagement-du-tour";
+import { Chevron, Repliable } from "@/components/repliable";
+import { ValeurRafraichie } from "@/components/chiffre-qui-arrive";
+import {
+  EncartResultatEstime,
+  aideDesVentesEstimees,
+  resumeDeLEstimation,
+  useResultatEstime,
+} from "@/components/resultat-estime";
+import { definirEstimationEnCours } from "@/lib/estimation-en-cours";
+import {
+  champDesVentesEstimees,
+  PREFIXE_VENTES_ESTIMEES,
+  ventesEstimeesParDefaut as defautDesVentesEstimees,
+} from "@/config/ventes-estimees";
+import { aideDuBudgetEntretien } from "@/config/entretien";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
+import {
+  bloqueLaValidation,
+  messageSauvetage,
+  verdictSauvetage,
+  type ExigenceSauvetage,
+  type VerdictSauvetage,
+} from "@/services/sauvetage";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
+import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { SimulationProgress } from "@/components/simulation-progress";
+import { NomReference } from "@/components/nom-reference";
+import { Aide, PanneauConsulte, TelephoneContexte } from "@/components/aide-repliable";
+import { Icone, type NomDIcone } from "@/components/icone";
+import { Tiroir } from "@/components/tiroir";
+import { useParcours } from "@/components/parcours-mobile";
+import { allerAuDebutDEtape } from "@/lib/debut-d-etape";
+import {
+  Carte,
+  CartesContexte,
+  RecapDesDecisions,
+  fusionnerFinancerEtInvestir,
+  estMontre,
+  useModeCartes,
+  type DefCarte,
+} from "@/components/cartes-de-decision";
+import {
+  aideDuPlafond,
+  champDAchatDeMachine,
+  PREFIXE_ACHAT_DE_MACHINE,
+  refusDuPlafond,
+  erreurDuChamp,
+  idDuChamp,
+  libelleDuChamp,
+  lireNombre,
+  referenceDuChamp,
+  refusDuVolume,
+  titreDuRecapitulatif,
+  type ContexteDesLibelles,
+  type ErreurDeChamp,
+} from "@/config/refus-de-decision";
+import {
+  cleBrouillon,
+  ecrireBrouillon,
+  effacerBrouillon,
+  effacerBrouillonsAnterieurs,
+  lireBrouillon,
+  type Brouillon,
+} from "@/lib/brouillon-decisions";
 
 const initialState: PlayRoundState = { error: null };
+
+type ChampSaisi = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
+/**
+ * LES REFUS EN COURS, champ par champ (`config/refus-de-decision.ts`) : le
+ * message que chaque champ refusé porte sous lui. Les champs le lisent par leur
+ * nom ; la feuille le tient à jour (envoi refusé, refus du serveur, correction).
+ */
+const RefusDesChamps = createContext<ReadonlyMap<string, string>>(new Map());
+
+/**
+ * Ce qu'un champ refusé porte : son identifiant (la cible des liens du
+ * récapitulatif), `aria-invalid` et `aria-describedby` vers son message, et le
+ * message lui-même, posé sous le champ. Un champ qui passe ne porte rien.
+ */
+function useRefusDuChamp(nom: string) {
+  return refusPour(useContext(RefusDesChamps), nom);
+}
+
+/** Le même, hors d'un composant (une cellule par référence, dans une boucle). */
+function refusPour(refus: ReadonlyMap<string, string>, nom: string) {
+  const message = refus.get(nom) ?? null;
+  const id = idDuChamp(nom);
+  return {
+    id,
+    attributs: message
+      ? { "aria-invalid": true as const, "aria-describedby": `${id}-refus` }
+      : {},
+    message: message ? <MessageDeRefus id={`${id}-refus`} message={message} /> : null,
+  };
+}
+
+/**
+ * LE MESSAGE SOUS LE CHAMP. Le rouge des refus déjà en usage dans la feuille
+ * (`encadre-perte`, le message d'erreur de l'action) : aucune couleur nouvelle,
+ * et pas d'orange, qui reste à l'action. Le pictogramme double la couleur.
+ */
+function MessageDeRefus({ id, message }: { id: string; message: string }) {
+  return (
+    <span
+      id={id}
+      data-refus-du-champ=""
+      className="mt-1.5 flex items-start gap-1.5 text-sm leading-snug text-red-300"
+    >
+      <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>{message}</span>
+    </span>
+  );
+}
+
+/**
+ * Repose une valeur dans un champ, de façon que React la voie.
+ *
+ * React garde une copie de la valeur de chaque champ pour filtrer les
+ * événements qu'il juge redondants : écrire `champ.value` puis émettre un
+ * événement ne déclencherait donc RIEN. On passe par le setter natif du
+ * prototype, qui met à jour le champ et cette copie, avant d'émettre.
+ * Sans quoi la marge en temps réel, le façonnier choisi et l'axe de
+ * communication resteraient sur leur valeur d'origine après restauration.
+ */
+function poserValeur(champ: ChampSaisi, valeur: string): void {
+  const setter = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(champ) as object,
+    "value",
+  )?.set;
+  if (setter) setter.call(champ, valeur);
+  else champ.value = valeur;
+  champ.dispatchEvent(new Event("input", { bubbles: true }));
+  // Un `<select>` écoute `change`, pas `input`.
+  if (champ instanceof HTMLSelectElement) {
+    champ.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
+/** Relit les quantités du parc machines depuis leur champ caché en JSON. */
+function quantitesDepuisJson(json: string | undefined): Record<string, number> {
+  if (!json) return {};
+  try {
+    const lu: unknown = JSON.parse(json);
+    if (!Array.isArray(lu)) return {};
+    const q: Record<string, number> = {};
+    for (const ligne of lu) {
+      if (typeof ligne !== "object" || ligne === null) continue;
+      const { typeCode, quantity } = ligne as { typeCode?: unknown; quantity?: unknown };
+      if (typeof typeCode === "string" && typeof quantity === "number" && quantity > 0) {
+        q[typeCode] = quantity;
+      }
+    }
+    return q;
+  } catch {
+    return {};
+  }
+}
 
 function EquipmentPanel({
   offer,
@@ -28,7 +207,21 @@ function EquipmentPanel({
   setBuyQty,
   sellQty,
   setSellQty,
+  simple = false,
+  plafond = null,
 }: {
+  /**
+   * LE PLAFOND D'INVESTISSEMENT DU TOUR (`engine/investment/plafond`). Son aide
+   * se lit sous la capacité, avant toute erreur ; aux niveaux sans embauches, il
+   * borne la case « Acheter » de chaque type, et la feuille refuse au-delà.
+   */
+  plafond?: GameView["plafondInvestissement"];
+  /**
+   * Aux deux premiers niveaux, le parc se lit sans le vocabulaire du bilan : le prix, la
+   * capacité, et le tour où la machine sert. L'amortissement, le coefficient d'entretien et la
+   * valeur nette comptable viennent avec le niveau qui sait les lire.
+   */
+  simple?: boolean;
   offer: NonNullable<Parameters<typeof DecisionForm>[0]["equipmentOffer"]>;
   vocabulary: ScenarioVocabulary;
   buyQty: Record<string, number>;
@@ -53,14 +246,28 @@ function EquipmentPanel({
     const avgBook = f.bookValue / f.count;
     return sum + (sellQty[t.code] ?? 0) * avgBook * t.resaleRatio;
   }, 0);
+  const { actif: enCarte } = useModeCartes();
+  const refusDuParc = useContext(RefusDesChamps);
+  const aide = plafond ? aideDuPlafond(plafond, vocabulary) : null;
+  // La capacité nette que les AUTRES lignes engagent déjà : la borne d'un type
+  // est ce qu'il reste de la marge, cessions comprises, en machines entières.
+  const engageHors = (code: string) =>
+    offer.types.reduce(
+      (s, t) => s + (t.code === code ? 0 : (buyQty[t.code] ?? 0) * t.capacityPerUnit) - (sellQty[t.code] ?? 0) * t.capacityPerUnit,
+      0,
+    );
+  const borneDAchat = (t: (typeof offer.types)[number]) =>
+    plafond?.applique && t.capacityPerUnit > 0
+      ? Math.max(0, Math.min(t.maxPerRound, Math.floor((plafond.marge - engageHors(t.code)) / t.capacityPerUnit + 1e-6)))
+      : t.maxPerRound;
 
   return (
     <Family
-      legend="🏭 Parc machines · investir ou céder"
-      tone="border-indigo-400/25 bg-indigo-950/20"
-      legendClass="text-xs font-semibold uppercase tracking-wide text-indigo-300"
+      carte="investissement"
+      icone="usine"
+      legend="Parc machines · investir ou céder"
     >
-      <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm max-sm:mb-2">
         <span className="text-slate-400">Capacité en service</span>
         <span className="text-right text-slate-200">
           {Math.round(totalCapacity).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}
@@ -74,7 +281,12 @@ function EquipmentPanel({
           </>
         ) : null}
       </div>
-      <div className="space-y-3">
+      {aide ? (
+        <p data-aide-du-plafond="" className="mb-3 text-sm leading-snug text-slate-300 max-sm:mb-1.5">
+          {aide}
+        </p>
+      ) : null}
+      <div className="space-y-3 max-sm:space-y-2">
         {offer.types.map((t) => {
           const fl = offer.fleet.find((f) => f.typeCode === t.code);
           const pend = offer.pendingFleet.find((f) => f.typeCode === t.code);
@@ -83,8 +295,11 @@ function EquipmentPanel({
           const buy = buyQty[t.code] ?? 0;
           const sell = sellQty[t.code] ?? 0;
           const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
+          const champAchat = champDAchatDeMachine(t.code);
+          const refus = refusPour(refusDuParc, champAchat);
+          const borne = borneDAchat(t);
           return (
-            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
+            <div key={t.code} className="rounded-lg bg-slate-950/40 px-2.5 py-2 max-sm:py-1.5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-slate-200">{t.name}</span>
@@ -96,24 +311,42 @@ function EquipmentPanel({
                   {owned} en service{pendCount > 0 ? ` + ${pendCount} en attente` : ""}
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0 text-xs text-slate-400 max-sm:mt-1">
                 <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
-                <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
-                <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
-                {owned > 0 ? (
-                  <span>VNC moy. {Math.round(avgBook).toLocaleString("fr-FR")} €</span>
-                ) : null}
+                {simple ? (
+                  <span>en service au tour suivant</span>
+                ) : (
+                  <>
+                    <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
+                    <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
+                    {owned > 0 ? (
+                      <span>VNC moy. {Math.round(avgBook).toLocaleString("fr-FR")} €</span>
+                    ) : null}
+                  </>
+                )}
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-3">
+              {/* ACHETER ET VENDRE NE SONT NI UN GAIN NI UNE PERTE : l'encre et
+                  un signe, plus le vert et le rouge des résultats. */}
+              <div className="mt-2 grid grid-cols-2 gap-3 max-sm:mt-1">
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-emerald-400">
-                    Acheter
+                  <span className="libelle text-slate-300 max-sm:hidden">
+                    <span aria-hidden>+ </span>Acheter
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-emerald-400/60">
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 max-sm:mt-0">
+                    <span className="libelle shrink-0 text-slate-300 sm:hidden">
+                      <span aria-hidden>+ </span>Acheter
+                    </span>
                     <input
                       type="number"
+                      onWheel={sansMolette}
+                      // Une case nommée : le refus du plafond la vise, la marque et y pose le
+                      // focus. Le serveur, lui, lit le parc en JSON caché, plus bas.
+                      name={champAchat}
+                      id={refus.id}
+                      {...refus.attributs}
+                      aria-label={`Acheter · ${t.name}`}
                       min={0}
-                      max={t.maxPerRound}
+                      max={borne}
                       value={buy}
                       onChange={(e) =>
                         setBuyQty((prev) => ({
@@ -121,23 +354,29 @@ function EquipmentPanel({
                           [t.code]: Math.min(t.maxPerRound, Math.max(0, parseInt(e.target.value) || 0)),
                         }))
                       }
-                      className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-400">max {t.maxPerRound}</span>
+                    <span className="shrink-0 text-xs text-slate-300">max {borne}</span>
                   </span>
                   {buy > 0 ? (
-                    <span className="mt-0.5 block text-xs text-emerald-300/80">
+                    <span className="mt-0.5 block text-xs text-slate-300">
                       = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
                     </span>
                   ) : null}
+                  {refus.message}
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-red-400">
-                    Vendre
+                  <span className="libelle text-slate-300 max-sm:hidden">
+                    <span aria-hidden>− </span>Vendre
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-red-400/60">
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 max-sm:mt-0">
+                    <span className="libelle shrink-0 text-slate-300 sm:hidden">
+                      <span aria-hidden>− </span>Vendre
+                    </span>
                     <input
                       type="number"
+                      onWheel={sansMolette}
+                      aria-label={`Vendre · ${t.name}`}
                       min={0}
                       max={owned}
                       value={sell}
@@ -147,12 +386,12 @@ function EquipmentPanel({
                           [t.code]: Math.min(owned, Math.max(0, parseInt(e.target.value) || 0)),
                         }))
                       }
-                      className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-400">max {owned}</span>
+                    <span className="shrink-0 text-xs text-slate-300">max {owned}</span>
                   </span>
                   {sell > 0 ? (
-                    <span className="mt-0.5 block text-xs text-red-300/80">
+                    <span className="mt-0.5 block text-xs text-slate-300">
                       = {Math.round(sell * avgBook * t.resaleRatio).toLocaleString("fr-FR")} € (VNC {Math.round(sell * avgBook).toLocaleString("fr-FR")} €)
                     </span>
                   ) : null}
@@ -163,7 +402,7 @@ function EquipmentPanel({
         })}
       </div>
       {(buyImpact > 0 || sellImpact > 0) ? (
-        <div className="mt-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs">
+        <div className="mt-3 rounded-lg bg-slate-950/40 px-3 py-2 text-xs">
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
             {buyImpact > 0 ? (
               <>
@@ -192,12 +431,214 @@ function EquipmentPanel({
           </div>
         </div>
       ) : null}
-      <p className="mt-3 text-xs leading-relaxed text-slate-400">
-        Les machines achetées entrent en service au tour suivant. La revente se fait à la
-        valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
-        perte de cession, un coût bien réel que le résultat encaisse.
-      </p>
+      {enCarte ? (
+        <div className="mt-2">
+          <Tiroir titre="Mise en service et revente" ferme surface="papier">
+            <p className="text-sm leading-relaxed text-slate-400">
+              Les machines achetées entrent en service au tour suivant. La revente se fait à la
+              valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
+              perte de cession, un coût bien réel que le résultat encaisse.
+            </p>
+          </Tiroir>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Les machines achetées entrent en service au tour suivant. La revente se fait à la
+          valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
+          perte de cession, un coût bien réel que le résultat encaisse.
+        </p>
+      )}
     </Family>
+  );
+}
+
+/**
+ * CE QUE LA DÉCISION VA COÛTER, SOUS LE CHAMP QUI LA PORTE.
+ *
+ * Un taux annoncé n'apprend rien : l'élève saisit un montant et ne rencontre
+ * jamais le chiffre qui l'intéresse. Ces lignes se recalculent à la frappe, et
+ * les nombres qu'elles montrent sont exactement ceux que le moteur appliquera
+ * (voir `config/cout-du-financement`, et le test qui compare les deux).
+ *
+ * Rien ne s'affiche tant que le montant est nul : un encadré de zéros à côté
+ * d'un champ vide est un meuble, pas une information.
+ */
+function Chiffrage({
+  lignes,
+}: {
+  lignes: { label: string; valeur: string; fort?: boolean; alerte?: boolean }[];
+}) {
+  if (lignes.length === 0) return null;
+  return (
+    <dl
+      role="status"
+      className="mt-2 grid gap-x-4 gap-y-1 rounded-lg bg-slate-950/40 px-3 py-2 text-xs sm:grid-cols-[auto_1fr]"
+    >
+      {lignes.map((ligne) => (
+        <div key={ligne.label} className="contents">
+          <dt className={ligne.alerte ? "text-red-300" : "text-slate-400"}>{ligne.label}</dt>
+          <dd
+            className={`text-right tabular-nums sm:text-left ${
+              ligne.alerte
+                ? "font-semibold text-red-300"
+                : ligne.fort
+                  ? // Une valeur chiffrée est une information : l'encre, jamais l'orange
+                    // de l'action (charte).
+                    "font-semibold text-slate-50"
+                  : "text-slate-200"
+            }`}
+          >
+            {ligne.valeur}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * CE QUE LES BUDGETS SORTENT DE LA CAISSE CE TOUR-CI, SOUS LES BUDGETS.
+ *
+ * Chaque montant se saisit dans son coin ; leur somme n'apparaissait qu'au
+ * récapitulatif de la dernière étape, c'est-à-dire après l'arbitrage. Elle est
+ * calculée par `engagement-du-tour.tsx`, lue sur le formulaire : un total qui
+ * tiendrait ses propres valeurs finirait par mentir.
+ *
+ * ET ON LE VOIT SE METTRE À JOUR. Il suivait déjà la frappe, mais sans qu'un
+ * pixel ne le dise : on arbitrait en regardant un nombre qu'on croyait figé.
+ * `ValeurRafraichie` ouvre et referme l'anneau d'accent autour de lui à chaque
+ * recalcul (voir `components/chiffre-qui-arrive.tsx`).
+ */
+function TotalDesBudgets({ engagement }: { engagement: Engagement | null }) {
+  const { actif: enCarte } = useModeCartes();
+  // En parcours, les budgets sont une carte à eux et le récapitulatif vient
+  // juste après : un total de plus y prendrait la place d'un champ.
+  if (enCarte || !engagement || engagement.budgets.length === 0) return null;
+  return (
+    <p className="mt-3 flex items-baseline justify-between gap-3 border-t border-white/10 pt-3 text-sm">
+      <span className="text-slate-400">Total des budgets du tour</span>
+      <strong className="font-semibold tabular-nums text-slate-50">
+        <ValeurRafraichie valeur={engagement.total}>{formatEuro(engagement.total)}</ValeurRafraichie>
+      </strong>
+    </p>
+  );
+}
+
+/**
+ * LA DÉCISION N°1 N'A PAS LE MÊME CHAMP QU'UNE CASE FACULTATIVE.
+ *
+ * Sur ordinateur, le prix — la décision qui commande tout le tour — avait
+ * exactement la forme de « Budget RSE » : un intitulé de 12 px en capitales
+ * grises, un cadre de 14 px. L'écran était un formulaire d'administration, où
+ * rien ne disait ce qui pèse.
+ *
+ * Un champ MAJEUR porte donc son intitulé à l'encre, en lettres ordinaires, et
+ * son chiffre en 30 px tabulaires, l'unité posée à côté. Dessous, le repère du
+ * tour passé : le prix pratiqué, le volume vendu. C'est une DONNÉE (bleu
+ * donnée), pas un résultat : ni vert ni rouge sur un niveau, et jamais
+ * l'orange de l'action.
+ *
+ * Le repère ne s'invente pas — il vient de la vue de partie — et il manque au
+ * premier tour, où il n'y a rien à rappeler : la ligne ne paraît alors pas.
+ */
+/**
+ * « PROPOSITION — À AJUSTER » (lot P4). Au premier tour, les ventes estimées
+ * partent du plan de production proposé : la feuille le dit, pour que personne
+ * ne prenne ce chiffre pour une prévision du marché. Le marqueur disparaît à
+ * la première saisie. Une pastille d'ÉTAT, neutre : ni l'orange de l'action,
+ * ni une couleur de résultat.
+ */
+function MarqueDeProposition({ source }: { source: string }) {
+  return (
+    <span
+      data-proposition-de-ventes=""
+      className="pastille-attente inline-flex flex-wrap items-baseline gap-x-1.5 rounded-full px-2.5 py-0.5 text-sm text-slate-100"
+    >
+      <span className="font-semibold">Proposition — à ajuster</span>
+      <span className="text-slate-300">{source}</span>
+    </span>
+  );
+}
+
+function ChampMajeur({
+  name,
+  label,
+  defaultValue,
+  step,
+  max,
+  suffix,
+  hint,
+  repere,
+  proposition,
+  onValueChange,
+  inputRef,
+}: {
+  name: string;
+  label: string;
+  defaultValue: number;
+  step: number;
+  max?: number;
+  suffix: string;
+  hint?: string;
+  /** Ce que le tour passé a donné, déjà formaté. Absent au premier tour. */
+  repere?: string;
+  /** Le marqueur d'une valeur proposée par la feuille (lot P4), posé à côté de l'intitulé. */
+  proposition?: ReactNode;
+  onValueChange?: (valeur: number) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
+}) {
+  const interne = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? interne;
+  const refus = useRefusDuChamp(name);
+  return (
+    <div>
+    <label className="block">
+      {proposition ? (
+        <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <span className="text-base font-semibold text-slate-50">{label}</span>
+          {proposition}
+        </span>
+      ) : (
+        <span className="block text-base font-semibold text-slate-50">{label}</span>
+      )}
+      <span className="mt-1.5 flex items-baseline gap-2 champ px-4 py-3">
+        <input
+          type="number"
+          onWheel={sansMolette}
+          inputMode="decimal"
+          {...(max !== undefined ? { max } : {})}
+          ref={ref}
+          id={refus.id}
+          {...refus.attributs}
+          name={name}
+          defaultValue={defaultValue}
+          step={step}
+          min={0}
+          required
+          onChange={
+            onValueChange
+              ? (e) => {
+                  const v = Number(e.currentTarget.value.replace(",", "."));
+                  onValueChange(Number.isFinite(v) ? v : 0);
+                }
+              : undefined
+          }
+          className="min-w-0 flex-1 bg-transparent text-3xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <span className="shrink-0 text-base text-slate-300">{suffix}</span>
+      </span>
+      {repere ? (
+        <span
+          data-repere-du-tour-passe
+          className="mt-1.5 block text-sm tabular-nums text-[var(--donnee)]"
+        >
+          {repere}
+        </span>
+      ) : null}
+      {hint ? <span className="mt-1 block text-sm text-slate-400">{hint}</span> : null}
+    </label>
+    {refus.message}
+    </div>
   );
 }
 
@@ -206,65 +647,584 @@ function Field({
   label,
   defaultValue,
   step = 1,
+  max,
   suffix,
   hint,
+  onValueChange,
+  inputRef,
+  plage,
+  libelle,
+  sansCurseur,
+  majeur = false,
+  repere,
+  proposition,
 }: {
+  /** Le marqueur d'une valeur proposée par la feuille (lot P4) : sur ordinateur, à côté de l'intitulé d'un champ majeur. */
+  proposition?: ReactNode;
+  /** L'étiquette courte d'une ligne compacte (plusieurs champs sur la même carte). Absente : le champ est en grand. */
+  libelle?: string;
+  /** Une décision majeure : sur ordinateur, un champ large et un chiffre de 30 px. */
+  majeur?: boolean;
+  /** Le repère du tour passé, déjà formaté : lu sous un champ majeur. */
+  repere?: string;
+  /** Pas de curseur : le montant se tape. */
+  sansCurseur?: boolean;
   name: string;
   label: string;
   defaultValue: number;
   step?: number;
+  /** Plafond opposable : le navigateur refuse d'envoyer au-delà. */
+  max?: number;
   suffix: string;
   hint?: string;
+  /** Remonte la valeur saisie, pour les champs qu'une règle doit suivre en direct. */
+  onValueChange?: (valeur: number) => void;
+  /** Donne la main sur la saisie : le curseur écrit dedans, elle reste la source. */
+  inputRef?: RefObject<HTMLInputElement | null>;
+  /** La plage du curseur, sur téléphone ; à défaut, jusqu'au double de la valeur proposée. */
+  plage?: { min?: number; max: number };
 }) {
+  const { actif: enCarte } = useModeCartes();
+  const interne = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? interne;
+  const refus = useRefusDuChamp(name);
+  // PLUSIEURS CHAMPS SUR UNE CARTE : la ligne compacte. Le grand bloc est pour le champ qui est la
+  // question de sa carte ; une carte doit tenir sur un écran, et à trois champs il n'y tient plus.
+  const compact = enCarte && (libelle !== undefined || !seulSurSaCarte(name));
+  if (compact) {
+    return (
+      <div className="block">
+        <SaisieDeCarte
+          name={name}
+          label={label}
+          defaultValue={defaultValue}
+          step={step}
+          {...(max !== undefined ? { max } : {})}
+          suffixe={suffix}
+          {...(plage ? { plage } : {})}
+          // Un curseur n'a de sens qu'avec une échelle : un plafond connu, une valeur proposée à
+          // doubler. Un champ à zéro, sans plafond, n'en a pas : « 0 à 20 000 € » n'était qu'un décor.
+          sansCurseur={sansCurseur ?? (inputRef !== undefined || (!plage && !(defaultValue > 0)))}
+          grand={false}
+          compact
+          libelle={libelle ?? label}
+          inputRef={ref}
+          {...(onValueChange ? { onValueChange } : {})}
+        />
+        {hint ? <span className="mt-0.5 block text-sm text-slate-400">{hint}</span> : null}
+      </div>
+    );
+  }
+  if (enCarte) {
+    return (
+      <div className="block">
+        {/* Seul sur sa carte, le chiffre est celui de la question ; parmi d'autres, il se nomme. */}
+        {seulSurSaCarte(name) ? null : (
+          <span className="mb-1.5 block text-base font-medium text-slate-200">{label}</span>
+        )}
+        <SaisieDeCarte
+          name={name}
+          label={label}
+          defaultValue={defaultValue}
+          step={step}
+          {...(max !== undefined ? { max } : {})}
+          suffixe={suffix}
+          {...(plage ? { plage } : {})}
+          // Un champ plafonné porte déjà son curseur (voir ChampPlafonne).
+          sansCurseur={inputRef !== undefined}
+          // Un champ seul sur sa carte se lit en grand ; plusieurs sur la même, plus serré.
+          grand={seulSurSaCarte(name)}
+          inputRef={ref}
+          {...(onValueChange ? { onValueChange } : {})}
+        />
+        {hint ? <span className="mt-2 block text-sm text-slate-400 max-sm:text-base">{hint}</span> : null}
+      </div>
+    );
+  }
+  // SUR ORDINATEUR, LA HIÉRARCHIE : une décision majeure a son champ large, les
+  // budgets et les options gardent le champ normal.
+  if (majeur) {
+    return (
+      <ChampMajeur
+        name={name}
+        label={label}
+        defaultValue={defaultValue}
+        step={step}
+        {...(max !== undefined ? { max } : {})}
+        suffix={suffix}
+        {...(hint ? { hint } : {})}
+        {...(repere ? { repere } : {})}
+        {...(proposition ? { proposition } : {})}
+        {...(onValueChange ? { onValueChange } : {})}
+        {...(inputRef ? { inputRef } : {})}
+      />
+    );
+  }
   return (
+    <div>
     <label className="block">
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
-      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
+      <span className="libelle block min-h-8 font-semibold leading-4 text-slate-300">{label}</span>
+      <span className="mt-1 flex items-center gap-2 champ px-3 py-2">
         <input
           type="number"
+          onWheel={sansMolette}
+          {...(max !== undefined ? { max } : {})}
+          ref={ref}
+          id={refus.id}
+          {...refus.attributs}
           name={name}
           defaultValue={defaultValue}
           step={step}
           min={0}
           required
-          className="w-full bg-transparent text-sm text-slate-100 outline-none"
+          onChange={
+            onValueChange
+              ? (e) => {
+                  const v = Number(e.currentTarget.value.replace(",", "."));
+                  onValueChange(Number.isFinite(v) ? v : 0);
+                }
+              : undefined
+          }
+          className="min-w-0 flex-1 bg-transparent text-sm font-semibold tabular-nums text-slate-50 outline-none"
         />
-        <span className="text-xs text-slate-400">{suffix}</span>
+        <span className="shrink-0 text-xs text-slate-300">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-sm text-slate-400">{hint}</span> : null}
     </label>
+    {refus.message}
+    </div>
   );
 }
 
-/** Champ FACULTATIF : vide veut dire « pas de prévision », jamais zéro. */
-function OptionalField({
+/**
+ * LE PAS D'UN CURSEUR SE LIT SANS COMPTER : 1, 2 ou 5 fois une puissance de dix.
+ * Un plafond de 312 000 € se règle par 5 000, jamais par 3 124.
+ */
+export function pasDuCurseur(plafond: number): number {
+  const brut = plafond / 100;
+  if (!(brut > 0)) return 1;
+  const puissance = Math.pow(10, Math.floor(Math.log10(brut)));
+  for (const multiple of [1, 2, 5]) {
+    if (brut <= multiple * puissance) return multiple * puissance;
+  }
+  return 10 * puissance;
+}
+
+/**
+ * OÙ LE CURSEUR S'ARRÊTE : sur un cran rond, sauf tout en haut.
+ *
+ * Arrondir au pas laisserait le dernier cran sous le plafond — 310 000 quand
+ * la banque en prête 312 453 —, et le « ce que la banque prête encore » écrit
+ * sous le curseur serait faux d'un cran. Le bout du curseur vaut donc le
+ * plafond EXACT.
+ */
+export function cranDuCurseur(brut: number, maximum: number, pas: number): number {
+  if (!(maximum > 0)) return 0;
+  if (brut >= maximum - pas / 2) return maximum;
+  return Math.min(Math.max(0, Math.round(brut / pas) * pas), maximum);
+}
+
+/** Les champs qui ont leur carte à eux : le chiffre y est le seul sujet. */
+const CHAMPS_SEULS_SUR_LEUR_CARTE = [
+  "price",
+  "productionPlan",
+  "marketingBudget",
+  "qualityBudget",
+  "maintenanceBudget",
+];
+
+/**
+ * Les ventes estimées ont aussi leur carte : c'est la première question du
+ * tour. Leur nom est construit (`ventesEstimees.<référence>`), d'où ce test de
+ * préfixe plutôt qu'une entrée dans la liste ci-dessus.
+ */
+function seulSurSaCarte(name: string): boolean {
+  return CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name) || name.startsWith(PREFIXE_VENTES_ESTIMEES);
+}
+
+/**
+ * LA PLAGE D'UN CURSEUR QUAND PERSONNE NE LA DONNE : jusqu'au double de la valeur
+ * proposée, arrondi à un cran rond. Un champ à zéro (une embauche, un emprunt)
+ * n'a pas de point de départ à doubler : l'unité dit alors l'ordre de grandeur.
+ */
+export function plageAuto(valeur: number, suffixe: string): { min: number; max: number } {
+  if (valeur > 0) {
+    const brut = valeur * 2;
+    const pas = pasDuCurseur(brut);
+    return { min: 0, max: Math.ceil(brut / pas) * pas };
+  }
+  if (suffixe === "€") return { min: 0, max: 20000 };
+  return { min: 0, max: 10 };
+}
+
+/**
+ * LE CURSEUR D'UNE SAISIE, SUR TÉLÉPHONE. Un doigt règle un montant d'un geste, là
+ * où des boutons − et + l'auraient fait cran par cran. La saisie au clavier reste
+ * au-dessus : c'est elle qui porte la valeur et le `name`, le curseur ne fait que
+ * l'écrire — par le même chemin que le brouillon à la restauration — et la suit
+ * quand elle change (le brouillon, une frappe).
+ */
+function CurseurDeSaisie({
+  champ,
+  label,
+  min,
+  max,
+  suffixe,
+  valeurInitiale,
+  compact = false,
+}: {
+  champ: RefObject<HTMLInputElement | null>;
+  label: string;
+  min: number;
+  max: number;
+  suffixe: string;
+  valeurInitiale: number;
+  /** Les bornes de part et d'autre du curseur, sur une seule ligne : la forme d'un champ parmi plusieurs. */
+  compact?: boolean;
+}) {
+  const [valeur, setValeur] = useState(valeurInitiale);
+  useEffect(() => {
+    const el = champ.current;
+    if (!el) return;
+    const suivre = () => setValeur(Number(el.value.replace(",", ".")) || 0);
+    el.addEventListener("input", suivre);
+    return () => el.removeEventListener("input", suivre);
+  }, [champ]);
+  const etendue = Math.max(1, max - min);
+  const pas = pasDuCurseur(etendue);
+  const curseur = (
+    <input
+      type="range"
+      onWheel={sansMolette}
+      aria-label={`${label} : curseur`}
+      min={min}
+      max={max}
+      step="any"
+      value={Math.min(Math.max(valeur, min), max)}
+      onChange={(e) => {
+        const cran = min + cranDuCurseur(Number(e.currentTarget.value) - min, etendue, pas);
+        if (champ.current) poserValeur(champ.current, String(Math.round(cran * 100) / 100));
+      }}
+      className="curseur curseur-jeu min-w-0 accent-amber-400"
+      // 44 px : sous le pouce, le trait de 24 px se manque ; 40 px quand le champ n'est qu'un parmi
+      // plusieurs. (Hors classe : la règle de `.curseur` n'est pas dans une couche et l'emporterait
+      // sur un utilitaire.) `--part` : la part parcourue, que la piste peint en laiton.
+      style={
+        {
+          height: compact ? "2.5rem" : "2.75rem",
+          "--part": `${Math.round(((Math.min(Math.max(valeur, min), max) - min) / Math.max(1, max - min)) * 100)}%`,
+        } as React.CSSProperties
+      }
+    />
+  );
+  if (compact) {
+    return (
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-sm text-slate-400 tabular-nums">
+        <span>{min.toLocaleString("fr-FR")}</span>
+        {curseur}
+        <span>
+          {max.toLocaleString("fr-FR")} {suffixe}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4">
+      {curseur}
+      <span className="mt-1 flex justify-between gap-2 text-base text-slate-400 tabular-nums">
+        <span>
+          {min.toLocaleString("fr-FR")} {suffixe}
+        </span>
+        <span>
+          {max.toLocaleString("fr-FR")} {suffixe}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Une saisie chiffrée en grand, avec son curseur : la forme d'un champ de décision
+ * sur une carte (téléphone). Utilisée par `Field` et par les cellules de la gamme.
+ */
+function SaisieDeCarte({
   name,
   label,
-  placeholder,
-  suffix,
-  hint,
+  defaultValue,
+  step,
+  max,
+  suffixe,
+  plage,
+  sansCurseur = false,
+  obligatoire = true,
+  inputRef,
+  onValueChange,
+  grand = true,
+  compact = false,
+  libelle,
 }: {
   name: string;
   label: string;
-  placeholder: string;
+  defaultValue: number;
+  step: number;
+  max?: number;
+  suffixe: string;
+  plage?: { min?: number; max: number };
+  sansCurseur?: boolean;
+  obligatoire?: boolean;
+  inputRef?: RefObject<HTMLInputElement | null>;
+  onValueChange?: (valeur: number) => void;
+  grand?: boolean;
+  /**
+   * Plusieurs champs sur une même carte (les références d'une gamme) : l'étiquette à gauche et le
+   * montant à droite sur UNE ligne, le curseur dessous. Le grand bloc est beau quand il tient sur un
+   * écran ; à cinq par carte, il n'y tient plus.
+   */
+  compact?: boolean;
+  /** L'étiquette visible de la ligne compacte (le `label` reste le nom accessible du champ). */
+  libelle?: string;
+}) {
+  const interne = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? interne;
+  const refus = useRefusDuChamp(name);
+  const auto = plageAuto(defaultValue, suffixe);
+  const borneMin = plage?.min ?? 0;
+  const borneMax = plage?.max ?? max ?? auto.max;
+  // LE BLOC SE CALE SUR LE MONTANT. Un chiffre de six caractères n'a pas besoin du corps ni
+  // de la hauteur d'un chiffre de deux : la taille suit le nombre de caractères, l'unité se
+  // pose à côté du chiffre plutôt qu'en dessous, et un champ parmi d'autres sur sa carte est
+  // plus bas que celui qui l'occupe seul.
+  const [longueur, setLongueur] = useState(String(defaultValue).length);
+  const corps = grand
+    ? longueur <= 5
+      ? "text-5xl"
+      : longueur <= 8
+        ? "text-4xl"
+        : "text-3xl"
+    : longueur <= 6
+      ? "text-3xl"
+      : longueur <= 9
+        ? "text-2xl"
+        : "text-xl";
+  if (compact) {
+    return (
+      <div className="block">
+        <label className="flex min-h-10 items-center justify-between gap-3">
+          <span className="min-w-0 flex-1 text-base text-slate-300">{libelle ?? label}</span>
+          <span className="champ flex min-h-10 w-44 shrink-0 items-baseline justify-end gap-1.5 px-3 py-1">
+            <input
+              type="number"
+              onWheel={sansMolette}
+              inputMode="decimal"
+              aria-label={label}
+              {...(max !== undefined ? { max } : {})}
+              ref={ref}
+              id={refus.id}
+              {...refus.attributs}
+              name={name}
+              defaultValue={defaultValue}
+              step={step}
+              min={0}
+              required={obligatoire}
+              onInput={(e) => setLongueur(Math.max(1, e.currentTarget.value.length))}
+              onChange={
+                onValueChange
+                  ? (e) => {
+                      const v = Number(e.currentTarget.value.replace(",", "."));
+                      onValueChange(Number.isFinite(v) ? v : 0);
+                    }
+                  : undefined
+              }
+              className="min-w-0 flex-1 bg-transparent text-right text-xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="shrink-0 text-base text-slate-300">{suffixe}</span>
+          </span>
+        </label>
+        {refus.message}
+        {sansCurseur ? null : (
+          <CurseurDeSaisie
+            champ={ref}
+            label={label}
+            min={borneMin}
+            max={Math.max(borneMax, borneMin + 1)}
+            suffixe={suffixe}
+            valeurInitiale={defaultValue}
+            compact
+          />
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="block">
+      {/* Une étiquette, pas une boîte : toucher n'importe où dans le cadre met le curseur dans le
+          champ, qui n'a que la largeur de son contenu. */}
+      <label
+        className={`champ flex flex-wrap items-baseline justify-center gap-x-2 px-4 ${grand ? "py-4" : "py-2.5"}`}
+      >
+        <input
+          type="number"
+          onWheel={sansMolette}
+          inputMode="decimal"
+          aria-label={label}
+          {...(max !== undefined ? { max } : {})}
+          ref={ref}
+          id={refus.id}
+          {...refus.attributs}
+          name={name}
+          defaultValue={defaultValue}
+          step={step}
+          min={0}
+          required={obligatoire}
+          onInput={(e) => setLongueur(Math.max(1, e.currentTarget.value.length))}
+          onChange={
+            onValueChange
+              ? (e) => {
+                  const v = Number(e.currentTarget.value.replace(",", "."));
+                  onValueChange(Number.isFinite(v) ? v : 0);
+                }
+              : undefined
+          }
+          // Le champ épouse son contenu (en `ch`, chiffres tabulaires) : chiffre et unité
+          // restent côte à côte et centrés, quelle que soit la taille du nombre.
+          style={{ width: `${Math.max(2, longueur) + 0.5}ch` }}
+          className={`max-w-full min-w-0 bg-transparent text-center font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${corps}`}
+        />
+        <span className="text-base text-slate-400">{suffixe}</span>
+      </label>
+      {refus.message}
+      {sansCurseur ? null : (
+        <CurseurDeSaisie
+          champ={ref}
+          label={label}
+          min={borneMin}
+          max={Math.max(borneMax, borneMin + 1)}
+          suffixe={suffixe}
+          valeurInitiale={defaultValue}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * UN PLAFOND QUI TIENT, PLUTÔT QU'UN PLAFOND QUI PRÉVIENT.
+ *
+ * Quatre décisions ont un plafond connu avant la validation, et que le moteur
+ * applique EN SILENCE : l'emprunt (ratio × capitaux propres − dette), l'apport
+ * (l'enveloppe des associés), le remboursement anticipé (la dette restante) et
+ * le dividende (les réserves). Taper au-delà ne déclenche rien : la décision
+ * part entière, `Math.min` la rabote, et l'élève découvre l'écart au tour
+ * suivant sans savoir d'où il vient.
+ *
+ * Le curseur ne va pas au-delà. Le plafond devient une borne qu'on sent sous le
+ * doigt, pas un avertissement après coup. La saisie reste à côté : une décision
+ * de gestion se prend au chiffre près, et un curseur seul ne donne pas 312 000
+ * pile. C'est elle qui porte la valeur et le `name` ; le curseur ne fait que
+ * l'écrire, par le même chemin que le brouillon à la restauration.
+ */
+function ChampPlafonne({
+  name,
+  label,
+  plafond,
+  suffix,
+  hint,
+  legendePlafond,
+  defaultValue = 0,
+  onValueChange,
+}: {
+  name: string;
+  label: string;
+  /** Le maximum que le moteur retiendra. Au-delà, il rabote sans le dire. */
+  plafond: number;
   suffix: string;
   hint?: string;
+  /** Ce que vaut le bout du curseur, en toutes lettres. */
+  legendePlafond: string;
+  defaultValue?: number;
+  onValueChange?: (valeur: number) => void;
 }) {
-  return (
-    <label className="block">
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
-      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
-        <input
-          type="text"
-          inputMode="decimal"
+  const champ = useRef<HTMLInputElement | null>(null);
+  const [valeur, setValeur] = useState(defaultValue);
+  const { actif: enCarte } = useModeCartes();
+  const maximum = Math.max(0, Math.floor(plafond));
+  const pas = pasDuCurseur(maximum);
+
+  if (enCarte) {
+    // En parcours : la ligne compacte, son curseur borné au plafond, et le plafond dit sous le
+    // curseur ; l'explication (`hint`) se range dans l'aide de la carte, que le parent compose.
+    return (
+      <div>
+        <Field
           name={name}
-          placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+          label={label}
+          libelle={label}
+          defaultValue={defaultValue}
+          max={maximum}
+          suffix={suffix}
+          inputRef={champ}
+          onValueChange={(v) => {
+            setValeur(v);
+            onValueChange?.(v);
+          }}
         />
-        <span className="text-xs text-slate-400">{suffix}</span>
-      </span>
-      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
-    </label>
+        {maximum > 0 ? (
+          <CurseurDeSaisie
+            champ={champ}
+            label={label}
+            min={0}
+            max={maximum}
+            suffixe={suffix}
+            valeurInitiale={valeur}
+            compact
+          />
+        ) : null}
+        {hint ? <span className="mt-0.5 block text-sm text-slate-400">{hint}</span> : null}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Field
+        name={name}
+        label={label}
+        defaultValue={defaultValue}
+        max={maximum}
+        suffix={suffix}
+        hint={hint}
+        inputRef={champ}
+        onValueChange={(v) => {
+          setValeur(v);
+          onValueChange?.(v);
+        }}
+      />
+      {maximum > 0 ? (
+        <>
+          <input
+            type="range"
+            onWheel={sansMolette}
+            aria-label={`${label} : curseur`}
+            min={0}
+            max={maximum}
+            step="any"
+            value={Math.min(Math.max(valeur, 0), maximum)}
+            onChange={(e) => {
+              const cran = cranDuCurseur(Number(e.currentTarget.value), maximum, pas);
+              if (champ.current) poserValeur(champ.current, String(cran));
+            }}
+            className="curseur mt-2 accent-amber-400"
+            style={{ height: "2.75rem" }}
+          />
+          <span className="flex justify-between gap-2 text-sm text-slate-400">
+            <span>0 {suffix}</span>
+            <span className="text-right tabular-nums">
+              {maximum.toLocaleString("fr-FR")} {suffix} · {legendePlafond}
+            </span>
+          </span>
+        </>
+      ) : null}
+    </div>
   );
 }
 
@@ -287,44 +1247,6 @@ export function ecartFournisseur(
   return pct === 0 ? "coût de référence" : `${pct > 0 ? "+" : "−"}${Math.abs(pct)} %`;
 }
 
-/**
- * Le lien entre le façonnier et le prix : ce que la référence coûte à
- * l'achat chez le façonnier choisi, ce qu'elle coûte en tout (coût variable),
- * ce qu'il en reste au prix saisi (marge unitaire) et le coefficient
- * multiplicateur (prix / coût d'achat), la règle de pouce du commerce.
- */
-function LienPrixFaconnier({
-  price,
-  achat,
-  autres,
-}: {
-  price: number;
-  achat: number;
-  autres: number;
-}) {
-  const cvu = achat + autres;
-  const marge = price - cvu;
-  const coefficient = achat > 0 ? price / achat : 0;
-  return (
-    <span className="mt-1 block text-xs leading-snug">
-      <span className="text-slate-400">achat </span>
-      <span className="text-slate-200">{formatEuroCents(achat)}</span>
-      <span className="text-slate-400"> · coût variable </span>
-      <span className="text-slate-200">{formatEuroCents(cvu)}</span>
-      <span className="text-slate-400"> · marge </span>
-      <span className={marge < 0 ? "font-medium text-red-400" : "font-medium text-emerald-300"}>
-        {formatEuroCents(marge)}
-      </span>
-      {coefficient > 0 ? (
-        <span className="text-slate-400">
-          {" "}
-          · coef. {coefficient.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
-        </span>
-      ) : null}
-    </span>
-  );
-}
-
 /** Une référence en développement ne se vend ni ne se produit : rien à saisir. */
 function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
   const dev = p.rd?.development;
@@ -334,8 +1256,8 @@ function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
 /** La pastille d'une référence en développement, à côté de son nom. */
 function EnDeveloppement() {
   return (
-    <span className="ml-2 inline-block whitespace-nowrap rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 align-middle text-xs font-medium text-amber-300">
-      🔬 en développement
+    <span className="pastille-etat ml-2 whitespace-nowrap rounded-full px-2 py-0.5 align-middle text-xs font-medium text-slate-200">
+      en développement
     </span>
   );
 }
@@ -349,20 +1271,197 @@ function EnDeveloppement() {
  * Mobile : layout de cartes par référence au lieu de tableau, pour éviter
  * le scroll horizontal sur petit écran.
  */
-function GammeVentes({
+/**
+ * Une suite de faits courts — « 34,56 €/u · qualité −6 % · règlement 30 j ».
+ *
+ * Écrite en phrase continue, elle se coupait au milieu d'un fait : le lecteur
+ * recollait « jours non facturés 0 » d'une ligne et « jours-conseil » de la
+ * suivante. Ici chaque fait est insécable et porte SON séparateur, de sorte que
+ * le point médian termine une ligne au lieu d'en commencer une.
+ */
+function Faits({ faits, className = "" }: { faits: string[]; className?: string }) {
+  return (
+    <span className={`flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs leading-snug text-slate-400 ${className}`}>
+      {faits.map((fait, i) => (
+        <span key={fait} className="whitespace-nowrap">
+          {fait}
+          {i < faits.length - 1 ? (
+            <span aria-hidden className="text-slate-400"> ·</span>
+          ) : null}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Un fait de capacité : son intitulé, son chiffre, et ce qui l'explique.
+ * L'intitulé au-dessus du chiffre — c'est la seule disposition qui tienne
+ * quand l'un et l'autre sont longs et que l'écran fait 390 px.
+ */
+function FaitCapacite({
+  label,
+  valeur,
+  note,
+  couleur = "text-slate-200",
+  testId,
+}: {
+  label: string;
+  valeur: string;
+  note?: string;
+  couleur?: string;
+  testId?: string;
+}) {
+  return (
+    <div>
+      <dt className="libelle leading-4">{label}</dt>
+      <dd className={`text-sm font-medium tabular-nums ${couleur}`} data-testid={testId}>
+        {valeur}
+      </dd>
+      {note ? <dd className="text-sm leading-snug text-slate-400">{note}</dd> : null}
+    </div>
+  );
+}
+
+/**
+ * Ce que le fournisseur choisi entraîne : son prix d'achat, sa qualité, son
+ * délai de règlement, son risque de rupture.
+ *
+ * Ces quatre faits vivaient dans le libellé de l'<option>, que le système rend
+ * à sa façon — sur Android, trois lignes par option dans un pavé blanc. Ici la
+ * page les met en page elle-même, et les deux derniers (délai, rupture), qui
+ * n'étaient nulle part à l'écran alors que le texte les annonce, se voient
+ * enfin.
+ */
+function FaitsFournisseur({
+  fournisseur: f,
+}: {
+  fournisseur: {
+    materialCostPerUnit: number;
+    qualityBonus: number;
+    paymentDelayDays: number;
+    supplyRiskProbability: number;
+  };
+}) {
+  const faits = [`${formatEuroCents(f.materialCostPerUnit)}/u`];
+  if (f.qualityBonus !== 0) {
+    faits.push(
+      `qualité ${f.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(f.qualityBonus * 100))} %`,
+    );
+  }
+  faits.push(f.paymentDelayDays > 0 ? `règlement ${f.paymentDelayDays} j` : "règlement comptant");
+  if (f.supplyRiskProbability > 0) {
+    faits.push(`rupture ${Math.round(f.supplyRiskProbability * 100)} %`);
+  }
+  return <Faits faits={faits} className="mt-1" />;
+}
+
+/**
+ * LA GAMME EN MATRICE : LES INTITULÉS EN LIGNE, LES RÉFÉRENCES EN COLONNE.
+ *
+ * Le formulaire en gamme avait deux jeux d'onglets — un pour le prix, le
+ * volume et le façonnier, un autre pour le marketing, la qualité et la R&D —
+ * puis un seul, puis cinq cartes côte à côte. Chaque étape rapprochait ce qui
+ * se décide ensemble ; celle-ci va au bout.
+ *
+ * Car la gamme est un TABLEAU, et l'avait toujours été : les mêmes six ou sept
+ * décisions, répétées référence par référence. Les servir en cartes, c'était
+ * redire sept fois les mêmes intitulés et obliger à comparer de mémoire. En
+ * matrice, chaque ligne est une question posée à toute la gamme d'un coup —
+ * « à quel prix ? », « combien ? », « combien de marketing ? » — et la réponse
+ * se lit en travers. C'est ainsi que se fait l'arbitrage : un prix contre un
+ * autre, une marge contre une autre, une capacité partagée à répartir.
+ *
+ * Les lignes suivent la chaîne du raisonnement, et non l'ordre du schéma de
+ * données : chez qui j'achète → ce que ça me coûte → à quel prix je vends →
+ * ce qu'il m'en reste → combien j'en fais → ce que je dépense pour le vendre.
+ * Les lignes DÉDUITES (coût variable, marge, coefficient) se recalculent à la
+ * frappe : le prix saisi et le façonnier choisi sont écoutés, les champs
+ * restant non contrôlés pour que le formulaire les envoie tels quels.
+ *
+ * SUR TÉLÉPHONE, une seule colonne tient. La barre d'onglets ne disparaît donc
+ * pas : elle choisit la colonne visible, et la matrice se lit comme une fiche
+ * — intitulé à gauche, valeur à droite. C'est le MÊME tableau, avec des
+ * colonnes masquées en CSS : aucun champ n'est démonté, aucun nom de champ
+ * n'est en double, et rien ne change de forme au chargement.
+ *
+ * Une seule chose a besoin de savoir où l'on est : le `required` des champs —
+ * il vaut pour la colonne active sur téléphone, et pour toutes sur grand
+ * écran. D'où le `matchMedia`, qui part de « téléphone » et ne peut donc
+ * jamais exiger un champ que personne ne voit.
+ */
+function GammeReference({
   gamme,
   defaults,
   vocabulary: v,
+  quality,
+  rd,
+  roundIndex,
+  capacite,
+  tourPasse,
+  reperesEstimes,
+  ventesParDefaut,
+  proposition = false,
 }: {
+  /**
+   * Ce que le tour passé a vendu et ce qui a manqué, référence par référence :
+   * l'aide courte du champ des ventes estimées. Absent au premier tour.
+   */
+  reperesEstimes?: Record<string, { tour: number; vendu: number; manque: number }>;
+  /**
+   * Le point de départ du champ des ventes estimées, référence par référence
+   * (`ventesEstimeesParDefaut` : déjà validé, vendu au tour passé, ou au
+   * premier tour le plan de production proposé).
+   */
+  ventesParDefaut?: Record<string, number>;
+  /** Les ventes estimées sont-elles encore la proposition de la feuille (lot P4) ? */
+  proposition?: boolean;
+  /** Ce que l'atelier peut produire ce tour, toutes références confondues : le haut du curseur de volume. */
+  capacite?: number;
+  /**
+   * Ce que chaque référence a donné au tour passé : le prix pratiqué et le
+   * volume vendu, lus de la vue de partie. Absent au premier tour — la ligne
+   * de repère ne paraît alors pas.
+   */
+  tourPasse?: Record<string, { tour: number; prix: number | null; volume: number | null }>;
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
+  /** Le budget qualité est-il ouvert à ce niveau ? */
+  quality: boolean;
+  /** La R&D est-elle ouverte (niveau ET scénario) ? */
+  rd: boolean;
+  roundIndex: number;
 }) {
+  const n = gamme.length;
   const avecFournisseurs = gamme.some((p) => p.suppliers);
-  const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
-  // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
-  // marge en direct : les champs restent non contrôlés (le formulaire les
-  // envoie), on ne fait que les écouter.
+  const avecRd = rd && gamme.some((p) => p.rd);
+  const avecSaison = gamme.some((p) => Math.abs(p.seasonCoef - 1) > 0.01);
+  const [produitChoisi, setActiveProduct] = useState(gamme[0]?.code ?? "");
+  // EN CARTES (téléphone), la référence affichée est celle de la carte courante :
+  // une carte par référence, plus d'onglets pour passer de l'une à l'autre.
+  const { actif: enCartes, courante: carteCourante } = useModeCartes();
+  const activeProduct = enCartes
+    ? (gamme.find((p) => `ref-${p.code}` === carteCourante)?.code ?? gamme[0]?.code ?? "")
+    : produitChoisi;
+  // Où sommes-nous ? La mise en page, elle, n'a pas besoin de le demander : le
+  // CSS s'en charge. Seul le `required` doit le savoir — exiger un champ qu'on
+  // ne voit pas bloque l'envoi sans rien afficher, et le point de départ est
+  // donc « téléphone », le cas où une seule colonne est visible.
+  const [surGrandEcran, setSurGrandEcran] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const suivre = () => setSurGrandEcran(mq.matches);
+    suivre();
+    mq.addEventListener("change", suivre);
+    return () => mq.removeEventListener("change", suivre);
+  }, []);
+  /** Cette colonne est-elle sous les yeux ? Toutes le sont sur grand écran. */
+  const visible = (code: string) => (surGrandEcran && !enCartes) || code === activeProduct;
+  /** Masquée en CSS tant qu'on n'a pas la place — jamais démontée. */
+  const colonne = (code: string) =>
+    `${code === activeProduct ? "" : "hidden "}lg:table-cell overflow-hidden px-2 py-1.5 align-top`;
+
   const [prix, setPrix] = useState<Record<string, number>>(() =>
     Object.fromEntries(gamme.map((p) => [p.code, defaults.products?.[p.code]?.price ?? p.refPrice])),
   );
@@ -376,308 +1475,600 @@ function GammeVentes({
     ),
   );
 
-  return (
-    <div className="space-y-3">
-      {/* Navigation par référence : tabs sur desktop, boutons empilés sur mobile */}
-      <div className="flex flex-wrap gap-2">
-        {gamme.map((p) => (
-          <button
-            key={p.code}
-            type="button"
-            onClick={() => setActiveProduct(p.code)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${
-              activeProduct === p.code
-                ? "bg-amber-400/20 border border-amber-400/60 text-amber-200"
-                : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            {p.name}
-          </button>
-        ))}
-      </div>
+  type Reference = NonNullable<GameView["gamme"]>[number];
+  const faconnierDe = (p: Reference) =>
+    p.suppliers?.find((s) => s.code === faconniers[p.code]) ?? p.suppliers?.[0];
+  const achatDe = (p: Reference) => faconnierDe(p)?.materialCostPerUnit ?? p.materialCostPerUnit;
+  const cvuDe = (p: Reference) => achatDe(p) + p.otherVariableCostPerUnit;
+  const prixDe = (p: Reference) => prix[p.code] ?? p.refPrice;
 
-      {/* Contenu par référence sélectionnée */}
-      {gamme
-        .filter((p) => p.code === activeProduct)
-        .map((p) => {
-          const own = defaults.products?.[p.code];
-          const price = own?.price ?? p.refPrice;
-          const plan = Math.round(own?.productionPlan ?? 0);
-          const suppliers = p.suppliers;
-          const reference = suppliers?.[0];
-          const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
-          const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
+  /** Une cellule sans objet : la référence n'est pas encore vendable. */
+  const rien = <span className="text-slate-400">—</span>;
+  // Les refus en cours : une cellule refusée porte son cadre et son message.
+  const refusEnCours = useContext(RefusDesChamps);
 
-          if (enDeveloppement(p)) {
-            return (
-              <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
-                <span className="text-sm font-medium text-slate-100">{p.name}</span>
-                <EnDeveloppement />
-                <span className="block text-xs leading-snug text-slate-400">
-                  Rien à vendre tant qu&apos;elle n&apos;est pas bâtie : son financement se décide
-                  dans les budgets du tour, à la R&amp;D.
+  /** Les deux décisions majeures d'une référence : son prix et son volume. */
+  const majeur = (nom: string) => nom === "price" || nom === "productionPlan";
+
+  /** Un champ chiffré, dans sa cellule. */
+  const champ = (
+    p: Reference,
+    nom: "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "rdBudget",
+    label: string,
+    valeur: number,
+    suffixe: string,
+    pas = 1,
+    onChange?: (v: number) => void,
+  ) =>
+    enCartes ? (
+      <SaisieDeCarte
+        name={productFieldName(p.code, nom)}
+        label={`${label} · ${p.name}`}
+        defaultValue={valeur}
+        step={pas}
+        suffixe={suffixe}
+        obligatoire={visible(p.code)}
+        grand={false}
+        compact
+        libelle={label}
+        // Le curseur sert au prix et au volume, qu'on tâtonne. Les budgets (marketing, qualité, R&D)
+        // se tapent : un curseur de plus par ligne ne tenait plus sur l'écran, et ne servait à rien.
+        sansCurseur={nom !== "price" && nom !== "productionPlan"}
+        // Le prix se règle autour de ce que paient les clients ; le reste, autour de la valeur proposée.
+        {...(nom === "price" ? { plage: { min: 0, max: Math.ceil((p.refPrice * 2.2) / 5) * 5 } } : {})}
+        {...(nom === "productionPlan" && capacite ? { plage: { min: 0, max: Math.max(capacite, valeur) } } : {})}
+        {...(onChange ? { onValueChange: onChange } : {})}
+      />
+    ) : (
+    // LE PRIX ET LE VOLUME SONT LES DÉCISIONS MAJEURES DE LA RÉFÉRENCE : leur
+    // chiffre se lit en 24 px, les budgets gardent le corps du tableau.
+    (() => {
+    const refus = refusPour(refusEnCours, productFieldName(p.code, nom));
+    return (
+    <>
+    <span
+      className={`flex items-center gap-1.5 champ ${
+        enCartes ? "px-4 py-3" : majeur(nom) ? "px-2.5 py-2" : "px-2 py-1.5"
+      }`}
+    >
+      <input
+        type="number"
+        onWheel={sansMolette}
+        name={productFieldName(p.code, nom)}
+        id={refus.id}
+        {...refus.attributs}
+        aria-label={`${label} · ${p.name}`}
+        defaultValue={valeur}
+        onChange={onChange ? (e) => onChange(Number(e.currentTarget.value.replace(",", "."))) : undefined}
+        step={pas}
+        min={0}
+        required={visible(p.code)}
+        className={`min-w-0 flex-1 bg-transparent tabular-nums text-slate-100 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${
+          enCartes ? "text-xl" : majeur(nom) ? "text-2xl font-bold text-slate-50" : "text-sm"
+        }`}
+      />
+      <span className={`shrink-0 text-slate-300 ${enCartes ? "text-base" : "text-xs"}`}>{suffixe}</span>
+    </span>
+    {refus.message}
+    </>
+    );
+    })()
+    );
+
+  /**
+   * Les lignes de la matrice, dans l'ordre du raisonnement. Une ligne absente
+   * (pas de façonnier dans ce secteur, pas de qualité à ce niveau) n'est pas
+   * une ligne vide : elle n'existe pas.
+   */
+  const lignes: {
+    cle: string;
+    label: string;
+    deduite?: boolean;
+    /** Une décision majeure de la référence : son intitulé se lit à l'encre. */
+    majeure?: boolean;
+    cellule: (p: Reference) => ReactNode;
+    /** Une aide courte sous la cellule : le repère du tour passé, référence par référence. */
+    aide?: (p: Reference) => string | undefined;
+  }[] = [
+    {
+      cle: "refPrice",
+      label: "Prix usuel",
+      deduite: true,
+      cellule: (p) => <span className="tabular-nums">{formatEuro(p.refPrice)}</span>,
+    },
+    // LE REPÈRE DU TOUR PASSÉ, référence par référence : ce qui a été pratiqué
+    // et ce qui s'est vendu. C'est une DONNÉE (bleu donnée), pas un résultat ;
+    // la ligne n'existe pas au premier tour, où il n'y a rien à rappeler.
+    ...(tourPasse && gamme.some((p) => tourPasse[p.code]?.prix != null)
+      ? [
+          {
+            cle: "tour-passe",
+            label: "Tour passé",
+            deduite: true,
+            cellule: (p: Reference) => {
+              const avant = tourPasse[p.code];
+              if (!avant || avant.prix === null) return rien;
+              return (
+                <span data-repere-du-tour-passe className="tabular-nums text-[var(--donnee)]">
+                  {formatEuro(avant.prix)}
+                  {avant.volume !== null ? ` · ${formatUnits(avant.volume)} ${v.units}` : ""}
                 </span>
-                <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
-                <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
-                {suppliers && faconniers[p.code] ? (
-                  <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
-                ) : null}
-              </div>
-            );
-          }
-
-          return (
-            <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
-              {/* Info produit */}
-              <div className="space-y-1">
-                <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-                <span className="block text-xs leading-snug text-slate-400">
-                  prix usuel {formatEuro(p.refPrice)} · {v.leftoverLabel.toLowerCase()}{" "}
-                  {formatUnits(p.stock)} {v.units}
-                  {Math.abs(p.seasonCoef - 1) > 0.01
-                    ? ` · saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`
-                    : ""}
-                </span>
-              </div>
-
-              {/* Marge en temps réel */}
-              <LienPrixFaconnier
-                price={prix[p.code] ?? price}
-                achat={achat}
-                autres={p.otherVariableCostPerUnit}
-              />
-
-              {/* Champs de saisie : prix et volume */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{v.priceLabel}</span>
-                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                    <input
-                      type="number"
-                      name={productFieldName(p.code, "price")}
-                      aria-label={`${v.priceLabel} · ${p.name}`}
-                      defaultValue={Math.round(price * 10) / 10}
-                      onChange={(e) => {
-                        const saisi = Number(e.currentTarget.value.replace(",", "."));
-                        setPrix((etat) => ({ ...etat, [p.code]: Number.isFinite(saisi) ? saisi : 0 }));
-                      }}
-                      step={0.1}
-                      min={0}
-                      required
-                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                    />
-                    <span className="text-xs text-slate-400">€</span>
-                  </span>
-                </label>
-                <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{v.productionPlanLabel}</span>
-                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                    <input
-                      type="number"
-                      name={productFieldName(p.code, "productionPlan")}
-                      aria-label={`${v.productionPlanLabel} · ${p.name}`}
-                      defaultValue={plan}
-                      step={1}
-                      min={0}
-                      required
-                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                    />
-                    <span className="text-xs text-slate-400">{v.units}</span>
-                  </span>
-                </label>
-              </div>
-
-              {/* Fournisseur */}
-              {avecFournisseurs && suppliers ? (
-                <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Fournisseur</span>
+              );
+            },
+          },
+        ]
+      : []),
+    {
+      cle: "stock",
+      label: v.leftoverLabel,
+      deduite: true,
+      cellule: (p) => (
+        <span className="tabular-nums">
+          {formatUnits(p.stock)} {v.units}
+        </span>
+      ),
+    },
+    ...(avecSaison
+      ? [
+          {
+            cle: "saison",
+            label: "Saison",
+            deduite: true,
+            cellule: (p: Reference) => (
+              <span className="tabular-nums">
+                ×{p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+              </span>
+            ),
+          },
+        ]
+      : []),
+    ...(avecFournisseurs
+      ? [
+          {
+            cle: "supplierChoice",
+            label: "Fournisseur",
+            cellule: (p: Reference) => {
+              const suppliers = p.suppliers;
+              if (!suppliers) return rien;
+              const reference = suppliers[0];
+              const choisi = faconnierDe(p);
+              return (
+                <>
                   <select
                     name={productFieldName(p.code, "supplierChoice")}
                     aria-label={`Fournisseur · ${p.name}`}
                     defaultValue={faconniers[p.code]}
-                    onChange={(e) => {
-                      const code = e.currentTarget.value;
-                      setFaconniers((etat) => ({ ...etat, [p.code]: code }));
-                    }}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                    onChange={(e) =>
+                      setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
+                    }
+                    className={`w-full champ text-slate-100 outline-none ${enCartes ? "px-3 py-2.5 text-base" : "px-2 py-1.5 text-sm"}`}
                   >
-                    {suppliers.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {s.name} · {formatEuroCents(s.materialCostPerUnit)}/u ({ecartFournisseur(s, reference)})
-                        {s.qualityBonus !== 0
-                          ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %`
-                          : ""}
-                      </option>
-                    ))}
+                    {suppliers.map((s) => {
+                      // Le nom seul pour le façonnier de référence, l'écart
+                      // collé au nom pour les autres : dans une colonne de
+                      // matrice, « · coût de référence » ne tenait pas.
+                      const ecart = ecartFournisseur(s, reference);
+                      return (
+                        <option key={s.code} value={s.code}>
+                          {ecart === "coût de référence" ? s.name : `${s.name} ${ecart}`}
+                        </option>
+                      );
+                    })}
                   </select>
-                </label>
-              ) : null}
-            </div>
-          );
-        })}
+                  {choisi ? <FaitsFournisseur fournisseur={choisi} /> : null}
+                </>
+              );
+            },
+          },
+        ]
+      : []),
+    {
+      cle: "cvu",
+      label: "Coût variable",
+      deduite: true,
+      cellule: (p) => <span className="tabular-nums">{formatEuroCents(cvuDe(p))}</span>,
+    },
+    // LES VENTES ESTIMÉES VIENNENT EN PREMIER, avant le prix et le volume : la
+    // question du tour n'est pas « combien produire » mais « combien pense-t-on
+    // vendre ». Elle est MAJEURE, dans la même grammaire que le prix et le
+    // volume (intitulé à l'encre, chiffre en grand), et son aide rappelle ce
+    // que le tour passé a vendu et ce qui a manqué.
+    //
+    // EN PARCOURS, elle n'est PAS dans la matrice : elle a sa propre carte, une
+    // ligne par référence (voir plus bas). Un septième champ sur la carte d'une
+    // référence et la carte débordait de l'écran (mesuré : 872 px pour 664).
+    {
+      cle: "ventesEstimees",
+      label: "Ventes estimées",
+      majeure: true,
+      cellule: (p: Reference) => {
+        if (enCartes || enDeveloppement(p)) return rien;
+        const refus = refusPour(refusEnCours, champDesVentesEstimees(p.code));
+        return (
+          <>
+          <span className="flex items-center gap-1.5 champ px-2.5 py-2">
+            <input
+              type="number"
+              onWheel={sansMolette}
+              name={champDesVentesEstimees(p.code)}
+              id={refus.id}
+              {...refus.attributs}
+              aria-label={`Ventes estimées · ${p.name}`}
+              defaultValue={ventesParDefaut?.[p.code] ?? 0}
+              step={1}
+              min={0}
+              required={visible(p.code)}
+              className="min-w-0 flex-1 bg-transparent text-2xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="shrink-0 text-xs text-slate-300">{v.units}</span>
+          </span>
+          {refus.message}
+          </>
+        );
+      },
+      aide: (p: Reference) =>
+        enCartes || enDeveloppement(p)
+          ? undefined
+          : aideDesVentesEstimees(reperesEstimes?.[p.code], v),
+    },
+    {
+      cle: "price",
+      label: v.priceLabel,
+      majeure: true,
+      cellule: (p) =>
+        enDeveloppement(p) ? (
+          <>
+            {rien}
+            <input
+              type="hidden"
+              name={productFieldName(p.code, "price")}
+              value={Math.round((defaults.products?.[p.code]?.price ?? p.refPrice) * 10) / 10}
+            />
+          </>
+        ) : (
+          champ(
+            p,
+            "price",
+            v.priceLabel,
+            Math.round((defaults.products?.[p.code]?.price ?? p.refPrice) * 10) / 10,
+            "€",
+            0.1,
+            (saisi) => setPrix((etat) => ({ ...etat, [p.code]: Number.isFinite(saisi) ? saisi : 0 })),
+          )
+        ),
+    },
+    {
+      cle: "marge",
+      label: "Marge unitaire",
+      deduite: true,
+      cellule: (p) => {
+        if (enDeveloppement(p)) return rien;
+        const marge = prixDe(p) - cvuDe(p);
+        // UNE MARGE UNITAIRE EST UN NIVEAU, pas un résultat : elle s'écrit à
+        // l'encre (charte). Le rouge reste pour celle qui passe sous zéro —
+        // vendre au-dessous du coût variable est, lui, un fait à signaler.
+        return (
+          <span className={`font-medium tabular-nums ${marge < 0 ? "text-red-400" : ""}`}>
+            {formatEuroCents(marge)}
+          </span>
+        );
+      },
+    },
+    {
+      cle: "coef",
+      label: "Coefficient",
+      deduite: true,
+      cellule: (p) => {
+        const achat = achatDe(p);
+        if (enDeveloppement(p) || achat <= 0) return rien;
+        return (
+          <span className="tabular-nums">
+            ×{(prixDe(p) / achat).toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+          </span>
+        );
+      },
+    },
+    {
+      cle: "productionPlan",
+      label: v.productionPlanLabel,
+      majeure: true,
+      cellule: (p) =>
+        enDeveloppement(p) ? (
+          <>
+            {rien}
+            <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
+          </>
+        ) : (
+          champ(
+            p,
+            "productionPlan",
+            v.productionPlanLabel,
+            Math.round(defaults.products?.[p.code]?.productionPlan ?? 0),
+            v.units,
+          )
+        ),
+    },
+    {
+      cle: "marketingBudget",
+      label: "Marketing",
+      cellule: (p) =>
+        enDeveloppement(p) ? (
+          <>
+            {rien}
+            <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
+          </>
+        ) : (
+          champ(
+            p,
+            "marketingBudget",
+            "Marketing",
+            Math.round(defaults.products?.[p.code]?.marketingBudget ?? defaults.marketingBudget / n),
+            "€",
+          )
+        ),
+    },
+    ...(quality
+      ? [
+          {
+            cle: "qualityBudget",
+            label: "Qualité",
+            cellule: (p: Reference) =>
+              enDeveloppement(p) ? (
+                <>
+                  {rien}
+                  <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} />
+                </>
+              ) : (
+                champ(
+                  p,
+                  "qualityBudget",
+                  "Qualité",
+                  Math.round(defaults.products?.[p.code]?.qualityBudget ?? defaults.qualityBudget / n),
+                  "€",
+                )
+              ),
+          },
+        ]
+      : []),
+    ...(avecRd
+      ? [
+          {
+            cle: "rdBudget",
+            label: "R&D",
+            cellule: (p: Reference) =>
+              champ(p, "rdBudget", "R&D", Math.round(defaults.products?.[p.code]?.rdBudget ?? 0), "€"),
+          },
+        ]
+      : []),
+  ];
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
-        Les références partagent la même réserve : si la somme des volumes dépasse votre
-        capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
-        par référence.
-        {avecFournisseurs
-          ? " Chaque référence a ses façonniers et le prix d'achat est celui de la référence chez chacun : la marge affichée est le prix saisi moins ce coût d'achat et les autres frais variables, le coefficient est le prix divisé par le coût d'achat. Le bonus de qualité, le délai de règlement et le risque de rupture du façonnier ne touchent que la référence qu'il fournit."
-          : ""}
-      </p>
-    </div>
-  );
-}
+  /** Ce qu'il reste à financer sur une référence encore à bâtir, dit en clair. */
+  const chantiers = gamme.flatMap((p) => {
+    const dev = p.rd?.development;
+    return dev && !dev.available ? [{ p, dev }] : [];
+  });
 
-/**
- * Le tableau des BUDGETS de la gamme : le marketing, la qualité et la R&D de
- * chaque référence, une ligne par référence. Il vit dans la famille des
- * budgets du tour, avec l'entretien, pour que les quatre budgets se décident
- * au même endroit et que la fenêtre des ventes reste légère.
- *
- * Mobile : layout de cartes par référence au lieu de tableau.
- */
-function GammeBudgets({
-  gamme,
-  defaults,
-  quality,
-  rd,
-  roundIndex,
-}: {
-  gamme: NonNullable<GameView["gamme"]>;
-  defaults: RoundDecisions;
-  /** Le budget qualité est-il ouvert à ce niveau ? */
-  quality: boolean;
-  /** La R&D est-elle ouverte (niveau ET scénario) ? */
-  rd: boolean;
-  roundIndex: number;
-}) {
-  const n = gamme.length;
-  const avecRd = rd && gamme.some((p) => p.rd);
-  const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
+  if (enCartes) {
+    return (
+      <div>
+        {gamme.map((p) => (
+          <div key={p.code} hidden={p.code !== activeProduct} className="space-y-2">
+            {(() => {
+              // Les trois repères qui font la décision (prix usuel, coût variable, marge) se lisent
+              // d'un coup d'œil ; stock, saison et coefficient se consultent, dans un tiroir fermé :
+              // une carte doit tenir sur un écran.
+              const reperes = lignes.filter(
+                (l) => l.deduite && !(enDeveloppement(p) && (l.cle === "marge" || l.cle === "coef")),
+              );
+              const principaux = reperes.filter((l) => ["refPrice", "cvu", "marge"].includes(l.cle));
+              const autres = reperes.filter((l) => !["refPrice", "cvu", "marge"].includes(l.cle));
+              // Libellés courts pour tenir sur une ligne : « Coût », « Marge ».
+              const courts: Record<string, string> = { cvu: "Coût", marge: "Marge" };
+              const repere = (l: (typeof lignes)[number]) => (
+                <span key={l.cle} className="whitespace-nowrap">
+                  <span className="text-slate-400">{courts[l.cle] ?? l.label}</span> {l.cellule(p)}
+                </span>
+              );
+              const pastille = (l: (typeof lignes)[number]) => (
+                <li
+                  key={l.cle}
+                  className="voile-neutre rounded-full px-2.5 py-1 text-sm text-slate-200"
+                >
+                  <span className="text-slate-400">{l.label}</span> {l.cellule(p)}
+                </li>
+              );
+              return (
+                <>
+                  {/* Une ligne de texte, pas trois pastilles : elles passaient sur deux rangées. */}
+                  <p className="flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-slate-200">
+                    {principaux.map(repere)}
+                  </p>
+                  {autres.length > 0 ? (
+                    <Tiroir titre="Autres repères" ferme>
+                      <ul className="flex flex-wrap gap-1.5">{autres.map(pastille)}</ul>
+                    </Tiroir>
+                  ) : null}
+                </>
+              );
+            })()}
+            {enDeveloppement(p) ? <EnDeveloppement /> : null}
+            {lignes
+              .filter((l) => !l.deduite && l.cle !== "ventesEstimees")
+              .map((l) => {
+                // Un champ chiffré porte son étiquette sur sa propre ligne (compacte) ; une cellule
+                // sans objet (référence à bâtir) ou le choix du fournisseur gardent la leur au-dessus.
+                const aVendre = ["price", "productionPlan", "marketingBudget", "qualityBudget"].includes(l.cle);
+                // Une référence à bâtir ne se vend ni ne se produit : ses champs restent dans le
+                // formulaire (leur valeur part à zéro), masqués, sans étiquette ni tiret.
+                if (aVendre && enDeveloppement(p)) {
+                  return (
+                    <div key={l.cle} hidden>
+                      {l.cellule(p)}
+                    </div>
+                  );
+                }
+                // Le fournisseur : l'étiquette à gauche du choix, sur la même ligne.
+                if (l.cle === "supplierChoice") {
+                  return (
+                    <div key={l.cle} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3">
+                      <span className="text-base text-slate-300">{l.label}</span>
+                      <div className="min-w-0">{l.cellule(p)}</div>
+                    </div>
+                  );
+                }
+                const etiquetteIntegree = aVendre || l.cle === "rdBudget";
+                return (
+                  <div key={l.cle} className="space-y-1">
+                    {etiquetteIntegree ? null : (
+                      <span className="block text-base text-slate-300">{l.label}</span>
+                    )}
+                    {l.cellule(p)}
+                  </div>
+                );
+              })}
+            {chantiers
+              .filter((c) => c.p.code === p.code)
+              .map(({ dev }) => {
+                const reste = Math.max(0, dev.cost - dev.invested);
+                return (
+                  <p key={p.code} className="text-base leading-relaxed text-slate-300">
+                    {reste <= 0
+                      ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
+                  </p>
+                );
+              })}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
-      {/* Navigation par référence */}
-      <div className="flex flex-wrap gap-2">
+      {/* Sur téléphone, une seule colonne tient : ces boutons choisissent
+          laquelle. Au-delà, elles sont toutes là et il n'y a rien à choisir. */}
+      <div className="flex flex-wrap gap-2 lg:hidden">
         {gamme.map((p) => (
           <button
             key={p.code}
             type="button"
+            data-choisir-reference={p.code}
             onClick={() => setActiveProduct(p.code)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
               activeProduct === p.code
-                ? "bg-amber-400/20 border border-amber-400/60 text-amber-200"
-                : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
+                ? // La référence affichée est une POSITION (lot 6E) : voile neutre et
+                  // filet à la teinte du métier, comme l'étape en cours. L'orange
+                  // reste à l'action.
+                  "voile-neutre border-[color:var(--metier,var(--color-slate-300))] text-slate-100"
+                : "border-white/5 bg-slate-900 text-slate-400 hover:text-slate-200"
             }`}
           >
-            {p.name}
+            <NomReference reference={p} />
           </button>
         ))}
       </div>
 
-      {/* Contenu par référence sélectionnée */}
-      {gamme
-        .filter((p) => p.code === activeProduct)
-        .map((p) => {
-          const own = defaults.products?.[p.code];
-          const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
-          const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
-          const rdDefaut = Math.round(own?.rdBudget ?? 0);
-          const dev = p.rd?.development;
+      {/* LOT P4 : au premier tour, les ventes estimées de chaque référence
+          partent de son plan de production. La feuille le dit, une fois. */}
+      {proposition ? (
+        <p>
+          <MarqueDeProposition source="vos plans de production" />
+        </p>
+      ) : null}
 
-          // En développement
-          if (dev && !dev.available) {
-            const reste = Math.max(0, dev.cost - dev.invested);
-            const pret = reste <= 0;
-            return (
-              <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
-                <span className="text-sm font-medium text-slate-100">{p.name}</span>
-                <EnDeveloppement />
-                <span className="block text-xs leading-snug text-slate-400">
-                  {pret
-                    ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-                    : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
-                </span>
-                <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
-                {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
-              </div>
-            );
-          }
+      <div className="overflow-x-auto">
+        {/* `table-fixed` : les colonnes se partagent la largeur également, au
+            lieu de la réclamer selon leur contenu. Sans lui, la liste
+            déroulante des façonniers — dont la largeur minimale est celle de
+            son option la plus longue — poussait la dernière référence hors du
+            cadre. Les colonnes masquées ne réservent rien : sur téléphone, il
+            ne reste que l'intitulé et la référence choisie. */}
+        <table className="w-full table-fixed border-collapse text-sm">
+          <caption className="sr-only">
+            Vos décisions, référence par référence : les intitulés en ligne, les références en
+            colonne.
+          </caption>
+          <thead>
+            <tr className="border-b border-white/10">
+              <td className="w-[38%] lg:w-[15%]" />
+              {gamme.map((p) => (
+                <th
+                  key={p.code}
+                  scope="col"
+                  className={`${colonne(p.code)} text-left text-sm font-medium text-slate-100`}
+                >
+                  <NomReference reference={p} />
+                  {enDeveloppement(p) ? <EnDeveloppement /> : null}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {lignes.map((l) => (
+              <tr key={l.cle} className="border-b border-white/5 last:border-0">
+                <th
+                  scope="row"
+                  className={
+                    l.majeure
+                      ? "py-1.5 pr-2 text-left align-middle text-sm font-semibold leading-5 text-slate-100"
+                      : "libelle py-1.5 pr-2 text-left align-top leading-4"
+                  }
+                >
+                  {l.label}
+                </th>
+                {gamme.map((p) => {
+                  const aide = l.aide?.(p);
+                  return (
+                    <td
+                      key={p.code}
+                      className={`${colonne(p.code)} ${l.deduite ? "text-xs text-slate-300" : ""}`}
+                    >
+                      {l.cellule(p)}
+                      {aide ? (
+                        <span
+                          data-repere-du-tour-passe
+                          className="mt-1 block text-xs tabular-nums text-[var(--donnee)]"
+                        >
+                          {aide}
+                        </span>
+                      ) : null}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-          return (
-            <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
-              <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+      {chantiers.map(({ p, dev }) => {
+        const reste = Math.max(0, dev.cost - dev.invested);
+        return (
+          <p key={p.code} className="text-sm leading-relaxed text-slate-300">
+            <strong className="font-medium">{p.name}</strong> —{" "}
+            {reste <= 0
+              ? `financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+              : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
+          </p>
+        );
+      })}
 
-              {/* Budgets : affichés en colonne sur mobile, 2 cols sur sm+ */}
-              <div className={`grid ${quality ? "grid-cols-1" : avecRd ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
-                <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Marketing</span>
-                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                    <input
-                      type="number"
-                      name={productFieldName(p.code, "marketingBudget")}
-                      aria-label={`Marketing · ${p.name}`}
-                      defaultValue={marketing}
-                      step={1}
-                      min={0}
-                      required
-                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                    />
-                    <span className="text-xs text-slate-400">€</span>
-                  </span>
-                </label>
-
-                {quality ? (
-                  <label className="block">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Qualité</span>
-                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                      <input
-                        type="number"
-                        name={productFieldName(p.code, "qualityBudget")}
-                        aria-label={`Qualité · ${p.name}`}
-                        defaultValue={qualite}
-                        step={1}
-                        min={0}
-                        required
-                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                      />
-                      <span className="text-xs text-slate-400">€</span>
-                    </span>
-                  </label>
-                ) : null}
-
-                {avecRd ? (
-                  <label className="block">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">R&D</span>
-                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                      <input
-                        type="number"
-                        name={productFieldName(p.code, "rdBudget")}
-                        aria-label={`R&D · ${p.name}`}
-                        defaultValue={rdDefaut}
-                        step={1}
-                        min={0}
-                        required
-                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                      />
-                      <span className="text-xs text-slate-400">€</span>
-                    </span>
-                  </label>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
-
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
-        Chaque budget va à la référence qui le reçoit, et se paie le tour même. Le marketing
-        soutient sa demande, et retombe vite si on cesse
-        {quality ? " ; la qualité fait sa qualité perçue" : ""}
-        {avecRd
-          ? " ; la R&D la bâtit quand elle est à développer, puis élève son niveau technique, avec retard, et s'érode si elle cesse"
-          : ""}
-        .
-      </p>
+      <Aide>
+        <p className="text-sm leading-relaxed text-slate-400">
+          Capacité partagée : si la somme des volumes la dépasse, toutes les références sont
+          réduites dans la même proportion.
+          {avecFournisseurs
+            ? " Le façonnier choisi ne vaut que pour sa référence : son coût d'achat, sa qualité, son délai, son risque de rupture."
+            : ""}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          Chaque budget va à sa référence et se paie le tour même. Marketing : effet immédiat,
+          qui retombe si on cesse
+          {quality ? " ; qualité : la qualité perçue" : ""}
+          {avecRd ? " ; R&D : le niveau technique, avec retard" : ""}.
+        </p>
+      </Aide>
     </div>
   );
 }
@@ -690,24 +2081,113 @@ function GammeBudgets({
  */
 function Family({
   legend,
+  icone,
   children,
   defaultOpen = true,
-  tone = "border-white/10 bg-slate-950",
-  legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
+  // LE PANNEAU (lot 6E) : son sol et son arête de lumière, pas un cadre. Il
+  // était un cadre à 10 % de blanc sur un fond… de la couleur de la page.
+  // Lot P3 : c'est LE PANNEAU DE DÉCISION, celui où l'on saisit ; le premier
+  // de l'étape porte l'arête du métier (globals.css, « LOT P3 »).
+  tone = "panneau-decision",
+  // Le titre d'un volet : en casse de phrase, à l'encre (lot P1). Il était en
+  // petites capitales espacées, comme tous les intitulés de la feuille, si bien
+  // que plus rien n'y était un surtitre.
+  legendClass = "text-sm font-semibold text-slate-100",
+  carte,
+  repli = false,
+  deplie = false,
+  quoi,
 }: {
   legend: ReactNode;
+  /**
+   * Le repère de la famille, dessiné en laiton devant son titre. Il était écrit
+   * en emoji au début de la légende : une pastille de couleur étrangère au
+   * site, différente sur chaque téléphone de la classe.
+   */
+  icone?: NomDIcone;
   children: ReactNode;
   defaultOpen?: boolean;
   tone?: string;
   legendClass?: string;
+  /**
+   * La ou les cartes (parcours téléphone) sur lesquelles cette famille se montre.
+   * En parcours, une famille se présente À PLAT, sans titre ni repli : la carte a
+   * sa propre question. Sans cette indication, elle ne paraît sur aucune carte.
+   */
+  carte?: string | string[];
+  /**
+   * UNE OPTION PONCTUELLE, REPLIÉE PAR DÉFAUT (ordinateur).
+   *
+   * L'assurance, les études, la commande exceptionnelle, le dividende et les
+   * outils de trésorerie ne se touchent qu'un tour sur trois ; dépliés, ils
+   * poussaient le prix et le volume hors de l'écran. Ils prennent le repli du
+   * site (`Repliable` du lot 3B : un chevron, un bord plein), et `quoi` annonce
+   * ce qu'ils portent — un repli ne cache jamais qu'on a engagé quelque chose.
+   */
+  repli?: boolean;
+  /**
+   * LE REPLI S'OUVRE QUAND L'ÉTAPE N'A QUE LUI (lot 6D). Le repli ci-dessus
+   * date d'une feuille d'un seul tenant, où ces options poussaient le prix et le
+   * volume hors de l'écran. Depuis que la feuille est en étapes, la trésorerie,
+   * l'assurance et l'information ont chacune la leur : fermé, leur volet laissait
+   * un écran presque vide, et il fallait cliquer pour voir ce qu'on pouvait
+   * décider. Sur une étape dont il est le contenu décisionnel, il arrive donc
+   * ouvert ; il garde son chevron et son compte, et se referme d'un geste. La
+   * commande exceptionnelle, posée sur l'étape « Vendre » à côté du prix et du
+   * volume, reste repliée : la raison du repli y vaut toujours.
+   */
+  deplie?: boolean;
+  /** Ce qui est engagé derrière le repli, compté depuis le formulaire. */
+  quoi?: string;
 }) {
+  const contexte = useModeCartes();
+  if (contexte.actif) {
+    const cles = carte === undefined ? [] : Array.isArray(carte) ? carte : [carte];
+    return (
+      <div data-carte={cles.join(" ")} hidden={!estMontre(contexte, cles)} className="space-y-3">
+        {children}
+      </div>
+    );
+  }
+  if (repli) {
+    return (
+      <Repliable
+        ouvert={deplie}
+        className={`option-ponctuelle px-3 py-2 sm:px-3.5 sm:py-2.5 ${tone}`}
+        classeResume={legendClass}
+        {...(quoi ? { quoi } : {})}
+        resume={
+          <span className="flex items-center gap-1.5">
+            {icone ? <Icone nom={icone} className="h-3.5 w-3.5 text-[color:var(--metier,var(--color-slate-300))]" /> : null}
+            {legend}
+          </span>
+        }
+      >
+        <div className="mt-2 pt-1">{children}</div>
+      </Repliable>
+    );
+  }
   return (
-    <details open={defaultOpen} className={`group rounded-lg border ${tone}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-1.5 py-2 sm:px-3.5 sm:py-2.5 [&::-webkit-details-marker]:hidden">
-        <span className={legendClass}>{legend}</span>
-        <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
+    // UN PANNEAU, PAS UN CADRE (lot 6E) : le sol relevé, l'arête de lumière, la
+    // teinte du métier en tête et sur le repère. Plus de pointillé quand il est
+    // fermé (un repli fermé est rangé, pas vide), plus de filet sous le titre.
+    // LE CHEVRON EN TÊTE (lot P5) : il était un « ▸ » de 12 px collé au bord
+    // DROIT, quand les tiroirs et les options repliées le portent à gauche.
+    // Un seul chevron, le commun (`Chevron`), à gauche, avant l'icône.
+    <details open={defaultOpen} className={`group ${tone}`}>
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-[var(--rayon-panneau)] px-3 py-2 sm:px-4 sm:py-2.5 [&::-webkit-details-marker]:hidden">
+        <Chevron className="text-slate-400" />
+        <span className={`flex items-center gap-1.5 ${legendClass}`}>
+          {icone ? (
+            <Icone
+              nom={icone}
+              className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]"
+            />
+          ) : null}
+          {legend}
+        </span>
       </summary>
-      <div className="border-t border-white/10 p-1.5 sm:p-3.5">{children}</div>
+      <div className="px-3 pb-3 pt-1 sm:px-4 sm:pb-4">{children}</div>
     </details>
   );
 }
@@ -720,6 +2200,9 @@ export function DecisionForm({
   proposed,
   kind,
   alreadySubmitted,
+  telephone = false,
+  enTeteDuRecapitulatif = null,
+  reperes = null,
   insuranceOffer,
   enabled,
   distributableReserves,
@@ -730,17 +2213,57 @@ export function DecisionForm({
   orderOffer,
   studiesOffer,
   capitalAllowance,
+  loanCapacity,
+  financeOffer,
   insuranceFormulas,
   suppliersOffer,
   equipmentOffer,
+  plafondInvestissement = null,
+  niveauDuFinancement = null,
   capacityFacts,
   vocabulary,
   verrou,
+  echeance = null,
+  sauvetage,
   gamme = null,
   rdOffer = null,
   communicationOffer = null,
+  estimation = null,
 }: {
+  /**
+   * LE DOSSIER D'ESTIMATION, préparé par le serveur : de quoi calculer dans le
+   * navigateur, à la frappe, le résultat que ces décisions donneraient si les
+   * ventes estimées se réalisaient. Expurgé du marché, sans graine (voir
+   * `services/game-view.service.ts`). `null` : l'encart ne paraît pas.
+   */
+  estimation?: GameView["estimation"];
   gameId: string;
+  /** Sur téléphone, les textes d'aide se rangent dans un tiroir (voir aide-repliable.tsx). */
+  telephone?: boolean;
+  /** Sur téléphone, l'état de l'équipe (décisions enregistrées, classe, échéance) se lit au récapitulatif. */
+  enTeteDuRecapitulatif?: ReactNode;
+  /**
+   * Ce qui éclaire le prix sur sa carte : la fourchette de ce que paient les clients,
+   * et le coût d'une unité (absent en gamme, où chaque référence a le sien).
+   */
+  reperes?: {
+    prixUsuels: string | null;
+    coutVariable: number | null;
+    /** La plage du curseur de prix : de la moitié du plus bas prix usuel à près du double du plus haut. */
+    plagePrix?: { min: number; max: number };
+    /**
+     * CE QUE LE TOUR PASSÉ A DONNÉ : le prix pratiqué et le volume vendu, lus de
+     * la vue de partie (historique des ventes en mono-produit, résultat par
+     * référence en gamme). `null` au premier tour, où il n'y a rien à rappeler :
+     * la ligne de repère ne paraît alors pas, plutôt que d'annoncer un zéro.
+     */
+    tourPasse?: { tour: number; prix: number | null; volume: number | null } | null;
+    /** Le même repère, référence par référence, en gamme. */
+    tourPasseParReference?: Record<
+      string,
+      { tour: number; prix: number | null; volume: number | null }
+    >;
+  } | null;
   /** Levier communication du scénario (marque et axe) ; null sans levier. */
   communicationOffer?: GameView["communicationOffer"];
   /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
@@ -755,6 +2278,18 @@ export function DecisionForm({
    * « Valider » est grisé ; le serveur refuse de toute façon.
    */
   verrou?: string | null;
+  /**
+   * Échéance du tour (ISO) quand l'enseignant en a posé une. Le verrou dit
+   * qu'il est trop tard ; ceci le dit AVANT, ce qui est toute la différence
+   * entre un tour validé et vingt minutes de saisie refusées.
+   */
+  echeance?: string | null;
+  /**
+   * Financement de sauvetage exigé après un tour clos en cessation de
+   * paiements. `null` hors crise, ou quand l'enseignant a préféré
+   * l'avertissement au verrou.
+   */
+  sauvetage?: ExigenceSauvetage | null;
   defaults: RoundDecisions;
   /**
    * Les valeurs PROPOSÉES pour ce tour (tour précédent, sinon point de départ
@@ -771,6 +2306,7 @@ export function DecisionForm({
     quality: boolean;
     maintenance: boolean;
     finance: boolean;
+    creances: boolean;
     insurance: boolean;
     hr: boolean;
     investment: boolean;
@@ -803,7 +2339,6 @@ export function DecisionForm({
     overdraftLimit: number;
     fullOverdraftLimit: number;
     overdraftAnnualRate: number;
-    refusedLoan: number | null;
     lastReliability: number | null;
   } | null;
   /** Commande exceptionnelle proposée pour CE tour (rotation du pool). */
@@ -826,6 +2361,14 @@ export function DecisionForm({
   } | null;
   /** Enveloppe d'augmentation de capital restante (null = illimitée). */
   capitalAllowance?: { total: number; remaining: number } | null;
+  /** Ce que la banque peut encore prêter : `null` sans plafond déclaré. */
+  loanCapacity?: { remaining: number; ratio: number; equity: number; debt: number } | null;
+  /** Conditions du crédit, pour chiffrer l'emprunt avant la validation. */
+  financeOffer?: {
+    loanAnnualRate: number;
+    loanDurationRounds: number | null;
+    roundDays: number;
+  } | null;
   /** Formules d'assurance (si le scénario en propose plusieurs — remplace le toggle simple). */
   insuranceFormulas?: {
     code: string;
@@ -859,11 +2402,21 @@ export function DecisionForm({
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];
   } | null;
+  /** Le niveau qui ouvre l'emprunt, quand celui de la partie ne l'ouvre pas : dit en lecture seule. */
+  niveauDuFinancement?: number | null;
+  /** Le plafond d'investissement du tour (`engine/investment/plafond`) ; `null` sans investissement. */
+  plafondInvestissement?: GameView["plafondInvestissement"];
   /** Vocabulaire du secteur joué (registre des scénarios). */
   vocabulary: ScenarioVocabulary;
   /** Capacité de production : goulots et levier RH. */
   capacityFacts?: {
     machineCapacity: number;
+    /** Disponibilité machine (0..1) : ce que l'entretien commande. */
+    availability: number;
+    /** Capacité machine réellement disponible : nominale × disponibilité. */
+    availableMachineCapacity: number;
+    /** Le budget d'entretien sous lequel la disponibilité se dégrade. */
+    maintenanceReference: number;
     laborCapacity: number;
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
@@ -876,6 +2429,22 @@ export function DecisionForm({
     };
   } | null;
 }) {
+  // L'aide du champ d'entretien : le seuil du métier, puis l'état de l'atelier.
+  const aideEntretien = aideDuBudgetEntretien(capacityFacts);
+  // LE HAUT DU CURSEUR DE VOLUME est ce que l'atelier peut réellement produire ce tour : la plus
+  // basse de la capacité machine disponible et de la capacité de main-d'œuvre. Au-delà, le moteur
+  // borne de toute façon la production. Hors cas (abonnement, pas de capacité connue), le curseur
+  // retombe sur deux fois la valeur proposée.
+  const capaciteEffective =
+    capacityFacts && !capacityFacts.subscription
+      ? (() => {
+          const bornes = [capacityFacts.availableMachineCapacity, capacityFacts.laborCapacity].filter(
+            (c) => Number.isFinite(c) && c > 0,
+          );
+          return bornes.length > 0 ? Math.ceil(Math.min(...bornes)) : undefined;
+        })()
+      : undefined;
+
   const action = playRoundAction.bind(null, gameId);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     action,
@@ -888,14 +2457,182 @@ export function DecisionForm({
   );
   const reserves = Math.max(0, distributableReserves ?? 0);
 
+  // ── LES REFUS : CE QUI NE PASSE PAS, ET OÙ ─────────────────────────────────
+  // Une décision refusée (par la feuille avant l'envoi, ou par le serveur) se
+  // lit à trois endroits : un récapitulatif en tête de la feuille (des liens
+  // vers chaque champ), le champ lui-même (cadre, message dessous), et le focus,
+  // posé sur le PREMIER CHAMP FAUTIF après avoir ouvert son étape, sa carte ou
+  // son repli. Le récapitulatif est annoncé (`role="alert"`) ; il ne prend le
+  // focus que si aucun refus ne vise de champ (un tour clos, une session
+  // expirée). Langue et messages : `config/refus-de-decision.ts`.
+  const [refus, setRefus] = useState<{
+    erreurs: (ErreurDeChamp & { serveur?: boolean })[];
+    /** Faux pour le refus d'une carte du parcours : le champ suffit, pas de récapitulatif. */
+    recapitulatif: boolean;
+    /** Le numéro de l'envoi refusé : le focus ne se pose qu'une fois par refus. */
+    envoi: number;
+    /** Où poser le focus : le premier champ fautif, ou le récapitulatif. */
+    cible: string;
+  } | null>(null);
+  const recapRef = useRef<HTMLDivElement>(null);
+  const saisieEnvoyee = useRef<FormData | null>(null);
+  /** Pose un refus neuf : un nouvel envoi, donc un nouveau focus. */
+  const poserLeRefus = (
+    erreurs: (ErreurDeChamp & { serveur?: boolean })[],
+    recapitulatif: boolean,
+  ) =>
+    setRefus((avant) => ({
+      erreurs,
+      recapitulatif,
+      envoi: (avant?.envoi ?? 0) + 1,
+      cible: erreurs.find((x) => x.champ)?.champ ?? "recap",
+    }));
+  const contexteDesLibelles: ContexteDesLibelles = {
+    vocabulaire: vocabulary,
+    references: gamme?.map((p) => ({ code: p.code, name: p.name })) ?? null,
+  };
+  /**
+   * Juge la saisie comme le serveur la jugera : chaque champ chiffré, ses
+   * bornes d'écran et celles du schéma (`erreurDuChamp`), puis le volume total
+   * d'une gamme. `filtre` restreint aux champs d'une carte du parcours.
+   */
+  const verifierLaSaisie = (
+    form: HTMLFormElement,
+    filtre?: (el: HTMLInputElement) => boolean,
+  ): ErreurDeChamp[] => {
+    const erreurs: ErreurDeChamp[] = [];
+    const vus = new Set<string>();
+    for (const el of Array.from(form.elements)) {
+      if (!(el instanceof HTMLInputElement) || el.type !== "number" || !el.name || el.disabled) continue;
+      // Les cases du parc se bornent à la frappe ; leur seul refus est celui du plafond, plus bas.
+      if (el.name.startsWith(PREFIXE_ACHAT_DE_MACHINE)) continue;
+      if (filtre && !filtre(el)) continue;
+      if (vus.has(el.name)) continue;
+      vus.add(el.name);
+      const erreur = erreurDuChamp(
+        {
+          nom: el.name,
+          brut: el.value,
+          illisible: el.validity.badInput,
+          requis: el.required,
+          min: lireNombre(el.min),
+          max: lireNombre(el.max),
+          pas: el.step === "any" ? null : (lireNombre(el.step) ?? 1),
+        },
+        contexteDesLibelles,
+      );
+      if (erreur) erreurs.push(erreur);
+    }
+    // EN GAMME, LE VOLUME EST LA SOMME DES RÉFÉRENCES : zéro partout n'est pas
+    // une décision (l'action le refuse aussi). Le refus vise la première.
+    // LE PLAFOND D'INVESTISSEMENT (niveaux sans embauches) : jugé du même calcul
+    // que le serveur (`depasseLePlafond`), sur les cases d'achat telles qu'elles
+    // sont à l'instant (le JSON caché du parc ne suit qu'au rendu d'après) et sur
+    // les cessions retenues.
+    const refusDeLInvestissement = (() => {
+      if (!plafondInvestissement?.applique) return null;
+      const lire = (nom: string) => lireNombre((form.elements.namedItem(nom) as HTMLInputElement | null)?.value ?? "") ?? 0;
+      const types = equipmentOffer?.types ?? [];
+      const achats = types
+        .map((t) => ({ typeCode: t.code, quantity: lire(champDAchatDeMachine(t.code)) }))
+        .filter((l) => l.quantity > 0);
+      const investissement = equipmentOffer
+        ? {
+            equipmentBuy: achats,
+            equipmentSell: types.map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 })),
+          }
+        : { machineCapacityUnits: lire("machineCapacityUnits") };
+      const erreur = refusDuPlafond({
+        plafond: plafondInvestissement,
+        depasse: depasseLePlafond(plafondInvestissement, investissement),
+        typesAchetes: achats.map((l) => l.typeCode),
+        vocabulaire: vocabulary,
+        niveauDesEmbauches: plafondInvestissement.niveauDesEmbauches,
+      });
+      if (!erreur || !erreur.champ) return erreur;
+      const champ = form.elements.namedItem(erreur.champ) as HTMLInputElement | null;
+      return !filtre || (champ && filtre(champ)) ? erreur : null;
+    })();
+    if (refusDeLInvestissement) {
+      // Le refus du plafond dit plus que la borne technique du même champ : il la remplace.
+      const i = erreurs.findIndex((x) => x.champ === refusDeLInvestissement.champ);
+      if (i >= 0) erreurs.splice(i, 1);
+      erreurs.push(refusDeLInvestissement);
+    }
+    if (gamme && !filtre) {
+      const plans = [
+        ...form.querySelectorAll<HTMLInputElement>(
+          `input[name^="${PRODUCT_FIELD_PREFIX}"][name$=".productionPlan"]`,
+        ),
+      ];
+      const total = plans.reduce((t, el) => t + (lireNombre(el.value) ?? 0), 0);
+      if (plans.length > 0 && total < 1 && !erreurs.some((x) => x.champ?.endsWith(".productionPlan"))) {
+        const premier = plans.find((el) => el.type !== "hidden") ?? plans[0]!;
+        erreurs.push(refusDuVolume(premier.name, contexteDesLibelles));
+      }
+    }
+    return erreurs;
+  };
+  /** Pose un refus ; le focus suit, une fois l'écran rendu (voir l'effet plus bas). */
+  const signalerLeRefus = (erreurs: ErreurDeChamp[], recapitulatif: boolean) =>
+    poserLeRefus(erreurs, recapitulatif);
+  /**
+   * UNE CORRECTION EFFACE SON REFUS, à la frappe. Les refus de la feuille sont
+   * rejugés ; ceux du serveur tombent quand on touche à leur champ (la règle
+   * est chez lui) ; un refus sans champ attend le prochain envoi.
+   */
+  const relireLeRefus = (cible: EventTarget) => {
+    const form = formRef.current;
+    if (!refus || !form) return;
+    const nom = cible instanceof HTMLElement ? (cible.getAttribute("name") ?? "") : "";
+    const frais = verifierLaSaisie(form);
+    const restantes = refus.erreurs.flatMap((x) => {
+      if (x.champ === null) return [x];
+      const nouvelle = frais.find((f) => f.champ === x.champ);
+      if (nouvelle) return [nouvelle];
+      if (x.serveur && x.champ !== nom) return [x];
+      return [];
+    });
+    setRefus(restantes.length > 0 ? { ...refus, erreurs: restantes } : null);
+  };
+  // LE REFUS DU SERVEUR : rattaché à son champ quand il en vise un. Lu au
+  // rendu où l'état de l'action change (sans effet ni second rendu en cascade).
+  const [etatLu, setEtatLu] = useState(state);
+  if (etatLu !== state) {
+    setEtatLu(state);
+    const erreurs: ErreurDeChamp[] = state.erreurs?.length
+      ? state.erreurs
+      : state.error
+        ? [{ champ: null, message: state.error }]
+        : [];
+    if (erreurs.length === 0) setRefus(null);
+    else poserLeRefus(erreurs.map((x) => ({ ...x, serveur: true })), true);
+  }
+
   // Les pivots (prix, volume) validés sans avoir été touchés : on le dit avant
   // d'envoyer, une fois. « Oui » confirme et envoie ; « Non » ramène au champ.
   const reference = proposed ?? defaults;
   const [nonTouches, setNonTouches] = useState<PivotFieldInfo[] | null>(null);
   const confirme = useRef(false);
   const verifierPivots = (e: React.FormEvent<HTMLFormElement>) => {
-    if (confirme.current) return;
     const form = e.currentTarget;
+    // LA SAISIE D'ABORD : un champ refusé arrête l'envoi, se marque et prend le
+    // focus (le formulaire est `noValidate` : la bulle du navigateur ne se
+    // voyait pas sur une étape repliée, et ne disait pas comment corriger).
+    const erreurs = verifierLaSaisie(form);
+    if (erreurs.length > 0) {
+      e.preventDefault();
+      confirme.current = false;
+      setNonTouches(null);
+      signalerLeRefus(erreurs, true);
+      return;
+    }
+    if (refus) setRefus(null);
+    // Ce qui part au serveur, gardé : s'il refuse, la saisie est remise dans
+    // la feuille (React la remet à zéro quand l'action se termine), et la
+    // valeur refusée reste sous les yeux, à côté de son message.
+    saisieEnvoyee.current = copierSaisie(new FormData(form));
+    if (confirme.current) return;
     const lire = (name: PivotField) =>
       Number((form.elements.namedItem(name) as HTMLInputElement | null)?.value ?? NaN);
     // Gamme : les pivots sont les scalaires dérivés des champs par produit,
@@ -930,7 +2667,7 @@ export function DecisionForm({
     // et le focus reste sans effet (l'élève ne verrait rien se passer).
     const section = champ?.closest("[data-etape]") as HTMLElement | null;
     const i = Number(section?.dataset.etape);
-    if (!Number.isNaN(i)) setEtape(i);
+    if (!Number.isNaN(i)) allerALEtape(i);
     requestAnimationFrame(() => champ?.focus());
   };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
@@ -939,6 +2676,104 @@ export function DecisionForm({
   // inactives restent MONTÉES (attribut `hidden`, jamais démontées) : le
   // formulaire se soumet toujours en entier, quelle que soit l'étape à l'écran.
   const [etape, setEtape] = useState(0);
+  /**
+   * LES ÉTAPES DÉJÀ VUES, ET NON CELLES D'AVANT.
+   *
+   * La coche de la barre d'étapes se posait sur tout ce qui portait un numéro
+   * inférieur à l'étape affichée. Elle mentait des deux côtés : sauter
+   * directement à « Financer » cochait les trois étapes sautées, et revenir en
+   * arrière décochait celles qu'on venait de remplir. Une coche qui ment est
+   * pire qu'une absence de coche, parce qu'on s'y fie pour valider.
+   *
+   * On retient donc ce qui a vraiment été affiché. La première étape l'est dès
+   * l'ouverture.
+   */
+  const [vues, setVues] = useState<ReadonlySet<number>>(() => new Set([0]));
+  /**
+   * CE QUE L'ÉQUIPE ENGAGE, RELU JUSTE AVANT DE VALIDER. Lu sur le formulaire
+   * lui-même à l'arrivée sur la dernière étape, puis à chaque frappe tant qu'on
+   * y est : un récapitulatif qui tiendrait ses propres valeurs finirait par
+   * mentir. `null` tant qu'on n'est pas arrivé au bout.
+   */
+  const [engagement, setEngagement] = useState<Engagement | null>(null);
+  /**
+   * EN PARCOURS (téléphone) : la carte affichée, ce que le joueur a répondu (relu
+   * sur le formulaire pour le récapitulatif), et sa réponse à la commande
+   * exceptionnelle — `null` tant qu'il n'a rien dit, pour qu'aucun des deux
+   * boutons ne paraisse déjà choisi.
+   */
+  const [carte, setCarte] = useState(0);
+  const [donneesRecap, setDonneesRecap] = useState<FormData | null>(null);
+  const [commandeAcceptee, setCommandeAcceptee] = useState<boolean | null>(null);
+  const [prixSaisi, setPrixSaisi] = useState<number | null>(null);
+  // LE RÉSULTAT ESTIMÉ, RECALCULÉ À LA FRAPPE. Le calcul est celui du moteur,
+  // dans le navigateur, derrière un anti-rebond (voir `resultat-estime.tsx`).
+  const { estime, relire: relireLEstimation } = useResultatEstime(estimation ?? null, formRef);
+  const relireLEngagement = () => {
+    const f = formRef.current;
+    if (!f) return;
+    const donnees = new FormData(f);
+    setDonneesRecap(donnees);
+    setEngagement(
+      lireLEngagement(
+        donnees,
+        gamme?.map((p) => p.code) ?? [],
+        (code) => insuranceFormulas?.find((formule) => formule.code === code)?.name ?? "souscrite",
+      ),
+    );
+  };
+
+  /**
+   * UN SEUL APLAT ORANGE PAR ÉCRAN. Sur l'onglet « Décider », le courrier du
+   * tour se pose au-dessus du formulaire avec son bouton « Ouvrir le courrier »
+   * (marqué `data-action-de-l-etape`) : tant qu'il est là, le pied du
+   * formulaire passe en filet.
+   */
+  const [actionPropre, setActionPropre] = useState(false);
+  useEffect(() => {
+    const zone = formRef.current?.closest("#decisions");
+    if (!zone) return;
+    const relire = () =>
+      setActionPropre(
+        [...zone.querySelectorAll("[data-action-de-l-etape]")].some(
+          (el) => !formRef.current?.contains(el),
+        ),
+      );
+    relire();
+    const veille = new MutationObserver(relire);
+    veille.observe(zone, { childList: true, subtree: true });
+    return () => veille.disconnect();
+  }, [formRef]);
+  // Tant que le courrier attend, « Valider » ne s'éteint pas en fantôme : il
+  // prend la forme pleine et neutre de « Suivant » (lot 6E).
+  const aplat = (classes: string) =>
+    actionPropre ? `${bouton({ variante: "secondaire", taille: "l" })} bouton-suite` : classes;
+
+  /** Afficher une carte : on repart du haut de l'écran, et le récapitulatif se relit. */
+  const allerALaCarte = (i: number) => {
+    setCarte(i);
+    // Le début de la carte, sous la barre et l'ardoise repliée : pas le haut de
+    // la page, où l'ardoise reprenait la place du champ (voir debut-d-etape).
+    allerAuDebutDEtape(formRef.current);
+    if (cartes[i]?.cle === "recap") relireLEngagement();
+  };
+
+  /** Le seul chemin pour changer d'étape : il retient qu'on y est passé. */
+  const allerALEtape = (calcul: number | ((e: number) => number)) => {
+    const brut = typeof calcul === "function" ? calcul(etape) : calcul;
+    if (modeCartes) {
+      // En parcours, une étape n'est qu'un groupe de cartes : on va à la première.
+      const premiere = cartes.findIndex((c) => c.etape === etapesVisibles[brut]);
+      if (premiere >= 0) allerALaCarte(premiere);
+      return;
+    }
+    setEtape(brut);
+    setVues((v) => (v.has(brut) ? v : new Set(v).add(brut)));
+    if (brut === total - 1) relireLEngagement();
+    // L'étape suivante commence en haut du formulaire : si l'on a défilé plus
+    // bas, on y remonte, sous la barre et l'ardoise repliée.
+    allerAuDebutDEtape(formRef.current, { seulementSiDepasse: true });
+  };
 
   // Un champ requis dans une famille repliée — OU sur une étape masquée — est
   // invisible : le navigateur ne peut pas y afficher sa bulle de validation et
@@ -947,16 +2782,25 @@ export function DecisionForm({
   // rouvre la famille du champ fautif ET on affiche son étape.
   const revelerFamilleInvalide = (e: React.FormEvent<HTMLFormElement>) => {
     const cible = e.target as HTMLElement;
+    if (modeCartes) {
+      // En parcours, le champ fautif se retrouve par sa carte.
+      const bloc = cible.closest?.("[data-carte]") as HTMLElement | null;
+      const cles = bloc?.dataset.carte?.split(" ") ?? [];
+      const i = cartes.findIndex((c) => cles.includes(c.cle));
+      if (i >= 0) allerALaCarte(i);
+      return;
+    }
     const famille = cible.closest?.("details") as HTMLDetailsElement | null;
     if (famille && !famille.open) famille.open = true;
     const section = cible.closest?.("[data-etape]") as HTMLElement | null;
     const i = Number(section?.dataset.etape);
-    if (!Number.isNaN(i)) setEtape(i);
+    if (!Number.isNaN(i)) allerALEtape(i);
   };
   const on = enabled ?? {
     quality: true,
     maintenance: true,
     finance: true,
+    creances: true,
     insurance: true,
     hr: false,
     investment: false,
@@ -968,9 +2812,146 @@ export function DecisionForm({
   const rdMono = on.rd && !!rdOffer && !gamme;
   // L'axe de communication tenu : écouté pour dire à qui il parle.
   const [axe, setAxe] = useState<string>(defaults.communicationAxis ?? "");
+  // LES DEUX LEVIERS DU SAUVETAGE, SUIVIS EN DIRECT. Le bouton de validation
+  // doit se débloquer à la saisie, pas après un aller-retour serveur : une
+  // équipe en crise a déjà assez à comprendre sans découvrir son erreur après
+  // l'envoi.
+  const [renfort, setRenfort] = useState({
+    emprunt: Math.max(0, defaults.finance?.newLoan ?? 0),
+    apport: Math.max(0, defaults.finance?.capitalIncrease ?? 0),
+  });
+  // Les montants que le chiffrage suit à la frappe. L'emprunt est déjà suivi
+  // par `renfort` (garde-fou du sauvetage) : on ne le double pas.
+  const [mobilisation, setMobilisation] = useState({ escompte: 0, affacturage: 0 });
+  const [etudesCochees, setEtudesCochees] = useState<Record<string, number>>({});
+
+  // ── LE CHIFFRAGE, RECALCULÉ À CHAQUE FRAPPE ────────────────────────────
+  // Les nombres montrés sont ceux du moteur : le module est calé dessus, et un
+  // test d'intégration compare les deux sur une vraie simulation.
+  const tauxEmprunt = financeOffer
+    ? `${(financeOffer.loanAnnualRate * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %/an`
+    : "Taux du scénario";
+  const chiffrageEmprunt =
+    financeOffer && financeOffer.loanDurationRounds && renfort.emprunt > 0
+      ? (() => {
+          const e = echeancierEmprunt({
+            montant: renfort.emprunt,
+            dureeEnTours: financeOffer.loanDurationRounds,
+            tauxAnnuel: financeOffer.loanAnnualRate,
+            joursDuTour: financeOffer.roundDays,
+            plafond: loanCapacity?.remaining ?? null,
+          });
+          return [
+            // LE MOTEUR RABOTE EN SILENCE : chiffrer la demande annoncerait une
+            // échéance que personne ne paiera. On chiffre ce qui sera prêté, et
+            // on dit que la demande a été ramenée au plafond.
+            ...(e.plafonne
+              ? [
+                  {
+                    label: "Au-delà du plafond",
+                    valeur: `la banque prêtera ${formatEuro(e.montantAccorde)}`,
+                    alerte: true,
+                  },
+                ]
+              : []),
+            { label: `Échéance, sur ${e.tours} tours`, valeur: `${formatEuro(e.echeanceParTour)} par tour` },
+            { label: "Intérêts", valeur: formatEuro(e.interets) },
+            { label: "Total à rembourser", valeur: formatEuro(e.totalARembourser), fort: true },
+          ];
+        })()
+      : [];
+  const chiffrageEscompte =
+    treasuryOffer && financeOffer && mobilisation.escompte > 0
+      ? (() => {
+          const c = coutDeLEscompte({
+            montant: mobilisation.escompte,
+            tauxAnnuel: treasuryOffer.discountAnnualRate,
+            joursDuTour: financeOffer.roundDays,
+          });
+          return [
+            { label: "Agios", valeur: formatEuro(c.cout) },
+            { label: "En caisse", valeur: formatEuro(c.net), fort: true },
+            // Le plafond se calcule sur les ventes DU TOUR, que l'élève est en
+            // train de décider : aucun chiffre exact ne peut être annoncé ici.
+            {
+              label: "Plafond",
+              valeur: `${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients du tour ; le surplus ne sera pas escompté`,
+            },
+          ];
+        })()
+      : [];
+  const chiffrageAffacturage =
+    treasuryOffer && mobilisation.affacturage > 0
+      ? (() => {
+          const c = coutDeLAffacturage({
+            montant: mobilisation.affacturage,
+            commission: treasuryOffer.factoringFeeRate,
+          });
+          return [
+            { label: "Commission", valeur: formatEuro(c.cout) },
+            { label: "En caisse", valeur: formatEuro(c.net), fort: true },
+          ];
+        })()
+      : [];
+
+  const prixCoches = Object.values(etudesCochees);
+  const totalEtudes = totalDesEtudes(prixCoches);
+  const nombreDEtudes = `${prixCoches.length} étude${prixCoches.length > 1 ? "s" : ""}`;
+
+  const verdict: VerdictSauvetage = sauvetage
+    ? verdictSauvetage(sauvetage, renfort)
+    : { issue: "suffisant" };
+  const blocageSauvetage = messageSauvetage(verdict, formatEuro);
+  // Le verrou et le message ne disent pas la même chose : une demande de
+  // subvention déposée lève le verrou sans rien réunir de plus, et n'a donc
+  // aucun message de blocage à afficher.
+  const validationBloquee = bloqueLaValidation(verdict);
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
+
+  // ── LES VENTES ESTIMÉES ──────────────────────────────────────────────────
+  // En mono-produit, la référence est le produit du scénario ; le point de
+  // départ du champ est ce que l'équipe a déjà validé ce tour-ci, ou ce qu'elle
+  // a VENDU au tour passé (son propre chiffre, qu'elle a sous les yeux).
+  // LOT P4 : au premier tour, où il n'y a rien à reprendre, le champ partait à
+  // zéro et le résultat estimé restait muet. Il part du PLAN DE PRODUCTION
+  // proposé, le volume que le joueur voit déjà dans le champ d'à côté : rien
+  // de caché du moteur. C'est une proposition, marquée « Proposition — à
+  // ajuster » tant que le joueur n'y a pas touché, et la validation ne la
+  // compte pas comme une estimation (`ventesEstimeesSaisies`). Le calcul est
+  // celui de `config/ventes-estimees.ts`, le même pour la gamme.
+  const codeMonoProduit = estimation?.scenario.product.code ?? "";
+  const reperesEstimes = Object.fromEntries((estimation?.reperes ?? []).map((r) => [r.code, r]));
+  const repereEstimeMono = reperesEstimes[codeMonoProduit];
+  const premierTourDEstimation = roundIndex === 1;
+  const defautDeLaReference = (code: string, planDeProduction: number | undefined) =>
+    defautDesVentesEstimees({
+      deposee: estimation?.deposees?.[code],
+      venduAuTourPasse: reperesEstimes[code]?.vendu,
+      planDeProduction,
+      premierTour: premierTourDEstimation,
+    });
+  const defautMono = defautDeLaReference(codeMonoProduit, defaults.productionPlan);
+  const ventesEstimeesParDefaut = defautMono.valeur;
+  const defautsGamme = Object.fromEntries(
+    (gamme ?? []).map((p) => [
+      p.code,
+      defautDeLaReference(p.code, defaults.products?.[p.code]?.productionPlan),
+    ]),
+  );
+  // La proposition est-elle à l'écran, et le joueur l'a-t-il laissée telle
+  // quelle ? Une seule saisie dans un champ des ventes estimées suffit à en
+  // faire SON estimation : le marqueur et le témoin caché disparaissent.
+  const propositionPresente =
+    !!estimation &&
+    (gamme
+      ? Object.values(defautsGamme).some((d) => d.proposition)
+      : defautMono.proposition);
+  const [propositionTouchee, setPropositionTouchee] = useState(false);
+  const propositionEnCours = propositionPresente && !propositionTouchee;
+  const aideEstimee = aideDesVentesEstimees(repereEstimeMono, v);
+  const marqueMono = <MarqueDeProposition source="votre plan de production" />;
 
   // Répartition des leviers en étapes courtes (anti-scroll) : plutôt qu'un long
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
@@ -980,198 +2961,651 @@ export function DecisionForm({
   // communication ont leur étape, « Budgéter » : ce que l'entreprise dépense
   // ce tour pour soutenir son offre. « Vendre » ne garde que le prix, le
   // volume et l'approvisionnement. Il n'y a plus d'étape « Produire ».
+  // EN GAMME, « Budgéter » ne garde que les budgets d'entreprise : l'entretien
+  // et la marque. Sans l'un ni l'autre, l'étape n'a plus rien à montrer — elle
+  // disparaît donc de la barre. Sa section reste dans le DOM, masquée : les
+  // scalaires cachés qu'elle porte (qualité, entretien) continuent de partir.
+  const budgetsVisible = !gamme || on.maintenance || !!communicationOffer;
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
-  const couvertureVisible =
-    on.dividend ||
-    (on.finance && !!treasuryOffer) ||
-    (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0));
+  // Le choix d'un fournisseur n'a son étape qu'en mono-produit : en gamme il se
+  // fait dans le tableau des ventes (voir « S'approvisionner » plus bas).
+  const approvisionnerVisible = !gamme && !!suppliersOffer && suppliersOffer.length > 0;
+  const tresorerieVisible = on.dividend || (on.creances && !!treasuryOffer);
+  const assuranceVisible =
+    on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0);
+  /**
+   * LA BANQUE EN LECTURE SEULE, là où le niveau n'ouvre pas le financement (1 à
+   * 3). Le découvert consenti et l'échéance de la dette d'ouverture étaient
+   * rangés dans « Financer », absent à ces niveaux : l'élève ne les voyait plus,
+   * alors que la banque, elle, continue de prélever et de couvrir. Ils se lisent
+   * ici, sans champ, avec ce qui s'ouvre plus tard.
+   */
+  const banqueEnLecture =
+    !on.finance && (bankFile || (debtSchedule && debtSchedule.outstanding > 0.5)) ? (
+      <div className="mt-3" data-banque-en-lecture="">
+        <PanneauConsulte
+          titre="La banque, ce tour"
+          icone="banque"
+          resume={
+            bankFile
+              ? `découvert autorisé ${formatEuro(bankFile.overdraftLimit)}`
+              : `échéance ${formatEuro(debtSchedule!.nextMandatory)}`
+          }
+        >
+          {bankFile ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+              Découvert autorisé{" "}
+              <strong className="text-slate-100">{formatEuro(bankFile.overdraftLimit)}</strong>, à{" "}
+              <strong className="text-slate-100">
+                {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %
+              </strong>{" "}
+              l&apos;an. Au-delà, la banque cède vos créances à votre place, et vous le paie cher.
+            </p>
+          ) : null}
+          {debtSchedule && debtSchedule.outstanding > 0.5 ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+              Échéance d&apos;emprunt du tour :{" "}
+              <strong className="text-slate-100">{formatEuro(debtSchedule.nextMandatory)}</strong> de
+              capital, prélevée automatiquement (+ intérêts). Dette restante{" "}
+              {formatEuro(debtSchedule.outstanding)}.
+            </p>
+          ) : null}
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+            À ce niveau, la banque couvre seule un manque de trésorerie, par le découvert.
+            {niveauDuFinancement
+              ? ` L'emprunt et l'apport des associés s'ouvrent au niveau ${niveauDuFinancement}.`
+              : ""}
+          </p>
+        </PanneauConsulte>
+      </div>
+    ) : null;
   const etapesVisibles = [
     "vendre",
-    "budgets",
+    approvisionnerVisible ? "approvisionner" : null,
+    budgetsVisible ? "budgets" : null,
     equipeVisible ? "equipe" : null,
     financerVisible ? "financer" : null,
-    couvertureVisible ? "couverture" : null,
+    tresorerieVisible ? "tresorerie" : null,
+    assuranceVisible ? "assurance" : null,
     "prevoir",
   ].filter((x): x is string => x !== null);
-  const META: Record<string, { titre: string; icone: string }> = {
-    vendre: { titre: "Vendre & s'approvisionner", icone: "🎯" },
-    budgets: { titre: "Budgéter", icone: "💸" },
-    equipe: { titre: "Équipe & RSE", icone: "👥" },
-    financer: { titre: "Financer & investir", icone: "💶" },
-    couverture: { titre: "Trésorerie & couverture", icone: "🛡️" },
-    prevoir: { titre: "S'informer & prévoir", icone: "📊" },
+  const META: Record<string, { titre: string; icone: NomDIcone }> = {
+    // En gamme, la première étape ne se limite plus à vendre : elle porte TOUT
+    // ce qui se décide sur une référence, budgets compris. L'appeler « Vendre »
+    // ferait chercher ailleurs des champs qui sont là.
+    vendre: { titre: gamme ? "Vos références" : "Vendre", icone: "cible" },
+    approvisionner: { titre: "S'approvisionner", icone: "camion" },
+    budgets: { titre: "Budgéter", icone: "argent" },
+    equipe: { titre: "Équipe & RSE", icone: "equipes" },
+    financer: { titre: "Financer & investir", icone: "banque" },
+    tresorerie: { titre: "Trésorerie", icone: "tresorerie" },
+    assurance: { titre: "Assurance", icone: "assurance" },
+    prevoir: { titre: "S'informer & prévoir", icone: "loupe" },
   };
   const idx = (cle: string) => etapesVisibles.indexOf(cle);
   const total = etapesVisibles.length;
   const courante = Math.min(etape, total - 1);
-  const derniere = courante === total - 1;
 
-  return (
-    <form
-      ref={formRef}
-      action={formAction}
-      onSubmit={verifierPivots}
-      onInvalidCapture={revelerFamilleInvalide}
-      className="space-y-3"
-    >
-      {/* Verrou de planning : hors de la fenêtre, on l'annonce et « Valider »
-          est grisé (le serveur refuse de toute façon). La page reste lisible. */}
-      {verrou ? (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-sm text-amber-200"
-        >
-          <span aria-hidden>🔒</span> {verrou}
-        </p>
-      ) : null}
-      {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
-          replient en simples numéros sur petit écran. */}
-      <ol className="flex flex-wrap gap-1.5" aria-label="Étapes de décision">
-        {etapesVisibles.map((cle, i) => {
-          const actif = i === courante;
-          const fait = i < courante;
-          return (
-            <li key={cle} className="min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={() => setEtape(i)}
-                aria-current={actif ? "step" : undefined}
-                className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition ${
-                  actif
-                    ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
-                    : fait
-                      ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300/80 hover:text-emerald-200"
-                      : "border-white/10 text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <span aria-hidden>{fait ? "✓" : META[cle]!.icone}</span>
-                <span className="hidden truncate sm:inline">{META[cle]!.titre}</span>
-                <span className="sm:hidden">{i + 1}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+  // ── LES CARTES (parcours téléphone) ──────────────────────────────────────
+  // Une décision par écran. Chaque carte désigne l'étape (la section) qui porte
+  // ses champs et sait résumer la réponse du joueur pour le récapitulatif. La
+  // liste suit EXACTEMENT les conditions des sections plus bas : une carte sans
+  // champ, ou un champ sans carte, serait un trou dans le parcours.
+  const parcours = useParcours();
+  const modeCartes = parcours !== null;
+  const nb = (x: FormDataEntryValue | null) => Number(x ?? 0).toLocaleString("fr-FR");
+  const euros = (champ: string) => (d: FormData) => `${nb(d.get(champ))} €`;
+  const cartes: DefCarte[] = modeCartes
+    ? [
+        ...(orderOffer
+          ? [
+              {
+                cle: "commande",
+                etape: "vendre",
+                nom: "Commande exceptionnelle",
+                question: "Une commande exceptionnelle",
+                resume: (d: FormData) => (d.get("acceptOrder") ? "Acceptée" : "Refusée"),
+              },
+            ]
+          : []),
+        // CE QU'ON PENSE VENDRE, AVANT LE PRIX ET LE VOLUME : c'est la question
+        // qui donne un sens aux deux. Elle vient après la commande
+        // exceptionnelle, qui ouvre le tour depuis le lot 3A (à prendre ou à
+        // laisser, et elle ne repassera pas).
+        ...(estimation
+          ? [
+              {
+                cle: "ventes-estimees",
+                etape: "vendre",
+                nom: "Ventes estimées",
+                question: "Combien pensez-vous vendre ?",
+                // SANS RÉSUMÉ : le récapitulatif liste les DÉCISIONS du tour, et
+                // une estimation n'en est pas une (le moteur ne la lit pas,
+                // c'est pourquoi elle ne figure pas non plus au registre des
+                // leviers). Une ligne de plus y coûtait 49 px, et la carte du
+                // récapitulatif tenait déjà tout juste sur un écran. Le chiffre
+                // estimé y est rappelé autrement, en une ligne.
+              },
+            ]
+          : []),
+        ...(gamme
+          ? gamme.map((p) => ({
+              cle: `ref-${p.code}`,
+              etape: "vendre",
+              nom: p.name,
+              question: `Vos choix pour ${p.name}`,
+              resume: (d: FormData) =>
+                enDeveloppement(p)
+                  ? "À développer"
+                  : `${nb(d.get(productFieldName(p.code, "price")))} € · ${nb(d.get(productFieldName(p.code, "productionPlan")))} ${v.units}`,
+            }))
+          : [
+              {
+                cle: "prix",
+                etape: "vendre",
+                nom: "Prix de vente",
+                question: "À quel prix vendez-vous ?",
+                resume: (d: FormData) => `${nb(d.get("price"))} €/${v.unit}`,
+              },
+              {
+                cle: "volume",
+                etape: "vendre",
+                nom: "Production",
+                question: "Combien produisez-vous ?",
+                resume: (d: FormData) => `${nb(d.get("productionPlan"))} ${v.units}`,
+              },
+            ]),
+        ...(approvisionnerVisible
+          ? [
+              {
+                cle: "fournisseur",
+                etape: "approvisionner",
+                nom: "Fournisseur",
+                question: "Chez qui vous approvisionnez-vous ?",
+                resume: (d: FormData) =>
+                  suppliersOffer?.find((s) => s.code === d.get("supplierChoice"))?.name ?? "—",
+              },
+            ]
+          : []),
+        ...(gamme
+          ? on.maintenance
+            ? [
+                {
+                  cle: "maintenance",
+                  etape: "budgets",
+                  nom: "Entretien",
+                  question: "Quel budget d'entretien ?",
+                  resume: euros("maintenanceBudget"),
+                },
+              ]
+            : []
+          : [
+              // Marketing, qualité, maintenance (et R&D) : UNE carte. Séparés, trois écrans presque
+              // vides, chacun avec la même aide, pour des montants qui se règlent ensemble.
+              {
+                cle: "budgets",
+                etape: "budgets",
+                nom: "Budgets",
+                question: "Vos budgets du tour",
+                resume: (d: FormData) =>
+                  [
+                    "marketingBudget",
+                    ...(on.quality ? ["qualityBudget"] : []),
+                    ...(on.maintenance ? ["maintenanceBudget"] : []),
+                    ...(rdMono ? ["rdBudget"] : []),
+                  ]
+                    .map((k) => `${nb(d.get(k))} €`)
+                    .join(" · "),
+              },
+            ]),
+        ...(communicationOffer
+          ? [
+              {
+                cle: "communication",
+                etape: "budgets",
+                nom: "Communication",
+                question: gamme ? "Quelle marque, quel axe ?" : "Quel axe de communication ?",
+                resume: (d: FormData) =>
+                  COMMUNICATION_AXIS_LABELS[
+                    String(d.get("communicationAxis")) as keyof typeof COMMUNICATION_AXIS_LABELS
+                  ]?.label ?? "—",
+              },
+            ]
+          : []),
+        ...(on.hr
+          ? [
+              {
+                cle: "rh",
+                etape: "equipe",
+                nom: "Équipe",
+                question: "Que décidez-vous pour votre équipe ?",
+                resume: (d: FormData) =>
+                  `${nb(d.get("hire"))} arrivée${Number(d.get("hire")) > 1 ? "s" : ""}, ${nb(d.get("fire"))} départ${Number(d.get("fire")) > 1 ? "s" : ""}`,
+              },
+            ]
+          : []),
+        ...(on.rse
+          ? [
+              {
+                cle: "rse",
+                etape: "equipe",
+                nom: "RSE",
+                question: "Quel engagement RSE ?",
+                resume: euros("rseBudget"),
+              },
+            ]
+          : []),
+        // FINANCER ET INVESTIR sont deux questions : emprunter ou augmenter le capital
+        // (d'où vient l'argent), puis acheter ou céder des machines (où il va).
+        ...(on.finance
+          ? [
+              {
+                cle: "financement",
+                etape: "financer",
+                nom: "Financement",
+                question: "Faut-il financer ce tour ?",
+                resume: (d: FormData) => {
+                  const lignes = [
+                    Number(d.get("newLoan")) > 0 ? `emprunt ${nb(d.get("newLoan"))} €` : null,
+                    Number(d.get("loanRepayment")) > 0 ? `remboursement ${nb(d.get("loanRepayment"))} €` : null,
+                    Number(d.get("capitalIncrease")) > 0 ? `capital ${nb(d.get("capitalIncrease"))} €` : null,
+                  ].filter(Boolean);
+                  return lignes.length > 0 ? lignes.join(", ") : "Aucun";
+                },
+              },
+            ]
+          : []),
+        ...(on.investment && equipmentOffer
+          ? [
+              {
+                cle: "investissement",
+                etape: "financer",
+                nom: "Investissement",
+                question: "Investissez-vous dans des machines ?",
+                resume: (d: FormData) => {
+                  const lignes = [
+                    d.get("equipmentBuyJson") && d.get("equipmentBuyJson") !== "[]" ? "achat de machines" : null,
+                    d.get("equipmentSellJson") && d.get("equipmentSellJson") !== "[]" ? "vente de machines" : null,
+                  ].filter(Boolean);
+                  return lignes.length > 0 ? lignes.join(", ") : "Aucun";
+                },
+              },
+            ]
+          : []),
+        ...(on.dividend
+          ? [
+              {
+                cle: "dividende",
+                etape: "tresorerie",
+                nom: "Dividende",
+                question: "Quel dividende versez-vous ?",
+                resume: (d: FormData) => (Number(d.get("dividend")) > 0 ? `${nb(d.get("dividend"))} €` : "Aucun"),
+              },
+            ]
+          : []),
+        ...(on.creances && treasuryOffer
+          ? [
+              {
+                cle: "mobilisation",
+                etape: "tresorerie",
+                nom: "Trésorerie",
+                question: "Mobilisez-vous vos créances clients ?",
+                resume: (d: FormData) => {
+                  const lignes = [
+                    Number(d.get("discount")) > 0 ? `escompte ${nb(d.get("discount"))} €` : null,
+                    Number(d.get("factoring")) > 0 ? `affacturage ${nb(d.get("factoring"))} €` : null,
+                  ].filter(Boolean);
+                  return lignes.length > 0 ? lignes.join(", ") : "Aucune";
+                },
+              },
+            ]
+          : []),
+        ...(assuranceVisible
+          ? [
+              {
+                cle: "assurance",
+                etape: "assurance",
+                nom: "Assurance",
+                question: "Quelle couverture choisissez-vous ?",
+                resume: (d: FormData) => {
+                  const choix = d.get("insurance");
+                  if (!choix) return "Aucune";
+                  return insuranceFormulas?.find((f) => f.code === choix)?.name ?? "Souscrite";
+                },
+              },
+            ]
+          : []),
+        ...(studiesOffer
+          ? [
+              {
+                cle: "etudes",
+                etape: "prevoir",
+                nom: "Études",
+                question: "Achetez-vous des études ?",
+                resume: (d: FormData) => {
+                  const n = ["studyMarket", "studyPrice", "studyFinance", "studyProject"].filter((c) => d.get(c)).length;
+                  return n > 0 ? `${n} étude${n > 1 ? "s" : ""}` : "Aucune";
+                },
+              },
+            ]
+          : []),
+        {
+          cle: "justification",
+          etape: "prevoir",
+          nom: "Votre note",
+          question: "Qu'attendez-vous de ces choix ?",
+          resume: (d: FormData) => {
+            const t = String(d.get("justification") ?? "").trim();
+            return t ? (t.length > 28 ? `${t.slice(0, 28)}…` : t) : "—";
+          },
+        },
+        { cle: "recap", etape: "recap", nom: "", question: "Vos décisions du tour" },
+      ]
+    : [];
+  const carteIdx = Math.min(carte, Math.max(0, cartes.length - 1));
+  const carteCourante = modeCartes ? cartes[carteIdx] : undefined;
+  const derniere = modeCartes ? carteCourante?.cle === "recap" : courante === total - 1;
+  const masquee = (cle: string) =>
+    modeCartes ? carteCourante?.etape !== cle : courante !== idx(cle);
 
-      <section
-        data-etape={idx("vendre")}
-        hidden={courante !== idx("vendre")}
-        className="space-y-3"
-      >
-      {orderOffer ? (
-        <Family
-          legend={`📦 Commande exceptionnelle · ${orderOffer.title}`}
-          tone="border-sky-400/25 bg-sky-950/20"
-          legendClass="text-xs font-semibold uppercase tracking-wide text-sky-300"
-        >
-          <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
-          <p className="mt-2 text-xs text-slate-400">
-            <strong className="text-slate-200">
-              {Math.round(orderOffer.units).toLocaleString("fr-FR")} {v.units}
-            </strong>{" "}
-            à{" "}
-            <strong className="text-slate-200">
-              {orderOffer.price.toLocaleString("fr-FR")} €/u
-            </strong>{" "}
-            (coût variable ≈ {orderOffer.unitVariableCost.toLocaleString("fr-FR")} €/u),{" "}
-            {orderOffer.paymentDelayDays > 0
-              ? `règlement à ${orderOffer.paymentDelayDays} jours`
-              : "règlement comptant"}
-            .{" "}
-            {orderOffer.productName
-              ? `Elle porte sur la référence « ${orderOffer.productName} » et se sert sur son stock restant après le marché.`
-              : "Servie sur votre stock restant après le marché."}
-          </p>
-          <p className="mt-1 text-xs text-slate-400">
-            {orderOffer.paymentDelayDays > 0
-              ? "Belle marge… mais ce chiffre d'affaires dormira en créances : votre BFR gonflera d'autant. Qui finance l'attente ?"
-              : "Du cash dès la livraison… mais une marge mince : comparez le prix à votre coût variable avant de signer."}
-          </p>
-          <label className="mt-3 flex items-start gap-3">
-            <input
-              type="checkbox"
-              name="acceptOrder"
-              defaultChecked={defaults.acceptOrder ?? false}
-              className="mt-0.5 h-4 w-4 accent-sky-400"
-            />
-            <span className="text-sm font-medium text-slate-200">
-              Accepter la commande, à prendre ou à laisser : elle ne repassera pas.
-            </span>
-          </label>
-        </Family>
-      ) : null}
-      {gamme ? (
-        <Family legend="🎯 Vos ventes · le prix et le volume de chaque référence" defaultOpen>
-          <GammeVentes gamme={gamme} defaults={defaults} vocabulary={v} />
-        </Family>
-      ) : null}
-      {gamme ? (
-        <></>
-      ) : (
-        <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
-          <div className="grid grid-cols-2 gap-3">
-            <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
-              suffix={`€/${v.unit}`}
-              hint="Attention aux seuils psychologiques…" />
-            <Field name="productionPlan" label={v.productionPlanLabel}
-              defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
-              hint="Le volume réel sera borné par vos capacités." />
-          </div>
-        </Family>
-      )}
-      {capacityFacts ? (
-        <div className="rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2 sm:px-3.5 sm:py-2.5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            ⚙️ {v.capacityPanelTitle}
-          </p>
-          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            {capacityFacts.subscription ? (
-              <>
-                <span className="text-slate-400">Portefeuille d&apos;{v.units}</span>
-                <span className="text-right text-slate-200" data-testid="portefeuille-adherents">
-                  {capacityFacts.subscription.members.toLocaleString("fr-FR")} {v.units}
-                  <span className="ml-1 text-xs text-slate-400">
-                    (~{capacityFacts.subscription.expectedRetained.toLocaleString("fr-FR")} resteront à{" "}
-                    {Math.round(capacityFacts.subscription.baseChurnRate * 100)} % d&apos;attrition)
-                  </span>
-                </span>
-              </>
-            ) : null}
-            <span className="text-slate-400">{v.capacityLabel}</span>
-            <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-            </span>
-            <span className="text-slate-400">{v.laborLabel}</span>
-            <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-              <span className="ml-1 text-xs text-slate-400">
-                ({capacityFacts.headcount} pers. × prod. {Math.round(capacityFacts.productivity * 100)} %)
-              </span>
-            </span>
-            <span className="text-slate-400">Goulot</span>
-            <span className={`text-right font-medium ${
-              capacityFacts.bottleneck === "labor"
-                ? "text-amber-400"
-                : capacityFacts.bottleneck === "machine"
-                  ? "text-sky-400"
-                  : "text-emerald-400"
-            }`}>
-              {capacityFacts.bottleneck === "labor"
-                ? v.laborLabel
-                : capacityFacts.bottleneck === "machine"
-                  ? v.capacityBottleneckLabel
-                  : "Équilibré"}
-            </span>
-          </div>
-          {capacityFacts.bottleneck === "labor" ? (
-            <p className="mt-2 text-xs text-amber-300/80">{v.laborBottleneckHint}</p>
-          ) : capacityFacts.bottleneck === "machine" ? (
-            <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
-          ) : null}
-        </div>
-      ) : null}
-      {(() => {
+  // ── LA HIÉRARCHIE DE LA FEUILLE ──────────────────────────────────────────
+  // Le repère du tour passé, à côté de la décision majeure qu'il éclaire. Il
+  // vient de la vue de partie et n'existe pas au premier tour : la ligne ne
+  // paraît alors pas, plutôt que d'annoncer « 0 € pratiqué ».
+  const tourPasse = reperes?.tourPasse ?? null;
+  const repereDuPrix =
+    tourPasse && tourPasse.prix !== null
+      ? `Tour ${tourPasse.tour} : ${formatEuro(tourPasse.prix)} pratiqué par ${v.unit}`
+      : undefined;
+  const repereDuVolume =
+    tourPasse && tourPasse.volume !== null
+      ? `Tour ${tourPasse.tour} : ${formatUnits(tourPasse.volume)} ${v.units} vendu${
+          tourPasse.volume > 1 ? "s" : ""
+        }`
+      : undefined;
+  /**
+   * Ce qu'un repli d'option ponctuelle annonce : les options engagées qu'il
+   * porte, lues sur le formulaire. « aucune » quand il n'y a rien derrière —
+   * un repli muet laisserait chercher.
+   */
+  const quoiDeLOption = (cle: string): string => {
+    const dedans = (engagement?.optionsPonctuelles ?? []).filter((o) => o.cle === cle);
+    if (dedans.length === 0) return "aucune";
+    return dedans.map((o) => `${o.label.toLowerCase()} ${o.valeur}`).join(" · ");
+  };
+
+  /**
+   * SUR ORDINATEUR, L'ENGAGEMENT EST LU DÈS L'ARRIVÉE. Le total des budgets et
+   * le compte des options repliées se lisent du formulaire ; sans cette
+   * première lecture, ils restaient vides jusqu'à la première frappe, et un
+   * repli annonçait « aucune » alors qu'une valeur reconduite l'habitait déjà.
+   * Après le montage, jamais pendant le rendu : le serveur n'a pas de formulaire.
+   */
+  useEffect(() => {
+    if (!modeCartes) relireLEngagement();
+    // Une seule fois : ensuite, c'est `onChange` qui suit la saisie.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modeCartes]);
+
+  // En parcours, le formulaire dit où il en est à la barre de la partie (carte
+  // courante, nombre de cartes) ; reculer depuis la première ramène à l'analyse.
+  useEffect(() => {
+    if (modeCartes) parcours?.rapporterDecision(carteIdx, cartes.length);
+  }, [parcours, modeCartes, carteIdx, cartes.length]);
+  // Et la question de la carte se lit en haut de l'écran, dans la barre de la partie.
+  const questionDeLaCarte = modeCartes ? carteCourante?.question : undefined;
+  const definirEntete = parcours?.definirEntete;
+  useEffect(() => {
+    if (!questionDeLaCarte) return;
+    definirEntete?.({ titre: questionDeLaCarte });
+    return () => definirEntete?.(null);
+  }, [definirEntete, questionDeLaCarte]);
+
+  /**
+   * LE CHAMP DES VENTES ESTIMÉES, À PORTÉE DE LIEN (lot P7). Tant qu'aucune
+   * vente n'est estimée, le cadran (ordinateur) et la ligne de la barre
+   * (téléphone) invitent à estimer : le lien mène à l'étape ou à la carte du
+   * champ, puis y pose le focus.
+   */
+  const allerAuChampDesVentes = () => {
+    if (modeCartes) {
+      const i = cartes.findIndex((c) => c.cle === "ventes-estimees");
+      if (i >= 0) allerALaCarte(i);
+    } else {
+      allerALEtape(idx("vendre"));
+    }
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const champ = [
+          ...(formRef.current?.querySelectorAll<HTMLInputElement>(
+            `input[name^="${PREFIXE_VENTES_ESTIMEES}"]`,
+          ) ?? []),
+        ].find((c) => c.offsetParent !== null);
+        champ?.focus();
+      }),
+    );
+  };
+  /**
+   * MENER AU CHAMP REFUSÉ : afficher son étape (ordinateur) ou sa carte
+   * (téléphone), rouvrir ses replis, montrer sa colonne de gamme, puis le faire
+   * défiler au milieu de l'écran (sous le cadran collant) et lui donner le
+   * focus. Faux quand le champ n'est pas sur la feuille.
+   */
+  const allerAuChamp = (nom: string): boolean => {
+    const form = formRef.current;
+    if (!form) return false;
+    const candidats = () =>
+      [...form.querySelectorAll<HTMLElement>(`[name="${CSS.escape(nom)}"]`)].filter(
+        (el) => !(el instanceof HTMLInputElement && el.type === "hidden"),
+      );
+    const champ = candidats()[0];
+    if (!champ) return false;
+    const code = referenceDuChamp(nom);
+    if (modeCartes) {
+      const cles = code
+        ? [`ref-${code}`]
+        : ((champ.closest("[data-carte]") as HTMLElement | null)?.dataset.carte?.split(" ") ?? []);
+      const i = cartes.findIndex((c) => cles.includes(c.cle));
+      if (i >= 0 && i !== carteIdx) allerALaCarte(i);
+    } else {
+      const i = Number((champ.closest("[data-etape]") as HTMLElement | null)?.dataset.etape);
+      if (!Number.isNaN(i) && i !== courante) allerALEtape(i);
+      // Une colonne de gamme masquée (sous 1 024 px, une référence à la fois).
+      const reference = code ?? (nom.startsWith(PREFIXE_VENTES_ESTIMEES) ? nom.slice(PREFIXE_VENTES_ESTIMEES.length) : null);
+      if (reference && champ.getClientRects().length === 0) {
+        form.querySelector<HTMLButtonElement>(`[data-choisir-reference="${CSS.escape(reference)}"]`)?.click();
+      }
+    }
+    for (let d = champ.closest("details"); d; d = d.parentElement?.closest("details") ?? null) {
+      if (!d.open) d.open = true;
+    }
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const cible = candidats().find((el) => el.getClientRects().length > 0) ?? candidats()[0];
+        if (!cible) return;
+        cible.scrollIntoView({ block: "center" });
+        cible.focus({ preventScroll: true });
+      }),
+    );
+    return true;
+  };
+  // Le focus d'un refus, une fois l'écran rendu : le premier champ fautif, ou
+  // le récapitulatif quand aucun refus ne vise de champ de la feuille.
+  const envoiRefuse = refus?.envoi ?? 0;
+  const cibleDuRefus = refus?.cible ?? null;
+  const refusDuServeur = refus?.erreurs.some((x) => x.serveur) ?? false;
+  useEffect(() => {
+    if (!envoiRefuse || !cibleDuRefus) return;
+    // UN REFUS DU SERVEUR NE VIDE PAS LA FEUILLE : la saisie envoyée revient
+    // dans les champs, maintenant puis au tick suivant (derrière la remise à
+    // zéro de React), comme le fait la garde réseau (`useGuardedAction`).
+    const saisie = refusDuServeur ? saisieEnvoyee.current : null;
+    if (saisie && formRef.current) {
+      const form = formRef.current;
+      rejouerSaisie(form, saisie);
+      setTimeout(() => {
+        rejouerSaisie(form, saisie);
+        relireLEstimation();
+      }, 0);
+    }
+    if (cibleDuRefus !== "recap" && allerAuChamp(cibleDuRefus)) return;
+    const r = recapRef.current;
+    if (!r) return;
+    r.scrollIntoView({ block: "center" });
+    r.focus({ preventScroll: true });
+    // Une fois par refus posé : une correction à la frappe ne déplace pas le focus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envoiRefuse]);
+  /** Le message sous le champ : sans répéter son nom, que le champ porte déjà. */
+  const sousLeChamp = (champ: string, message: string) => {
+    const tete = `${libelleDuChamp(champ, contexteDesLibelles)} : `;
+    if (!message.startsWith(tete)) return message;
+    const reste = message.slice(tete.length);
+    return reste.charAt(0).toUpperCase() + reste.slice(1);
+  };
+  const carteDesRefus = new Map<string, string>();
+  for (const x of refus?.erreurs ?? []) {
+    if (x.champ && !carteDesRefus.has(x.champ)) carteDesRefus.set(x.champ, sousLeChamp(x.champ, x.message));
+  }
+  // LE SAUVETAGE EST UN REFUS EN DIRECT : tant qu'il manque de quoi repasser
+  // sous le découvert, « Valider » est grisé ; le nouvel emprunt le dit.
+  if (blocageSauvetage && on.finance && !carteDesRefus.has("newLoan")) {
+    carteDesRefus.set("newLoan", `Financement de sauvetage exigé. ${blocageSauvetage}`);
+  }
+
+  // SUR TÉLÉPHONE, LE RÉSULTAT ESTIMÉ PASSE À LA BARRE (lot P7) : un résumé en
+  // nombres, publié à chaque rendu (le magasin ne prévient la barre que si un
+  // chiffre a changé), retiré quand la feuille s'en va.
+  const resumeEstime = modeCartes && estimation ? resumeDeLEstimation(estime, v.units) : null;
+  useEffect(() => {
+    definirEstimationEnCours(resumeEstime, allerAuChampDesVentes);
+  });
+  useEffect(() => () => definirEstimationEnCours(null), []);
+
+  /** Avancer d'une carte, à condition que celle-ci soit remplie correctement. */
+  const carteSuivante = () => {
+    const f = formRef.current;
+    if (f) {
+      // Les champs de la carte affichée seulement : le refus se lit sous le
+      // champ, qui prend le focus ; la carte ne s'en va pas.
+      const erreurs = verifierLaSaisie(f, (el) => !el.closest("[hidden]"));
+      if (erreurs.length > 0) {
+        signalerLeRefus(erreurs, false);
+        return;
+      }
+      if (refus && !refus.recapitulatif) setRefus(null);
+    }
+    allerALaCarte(Math.min(cartes.length - 1, carteIdx + 1));
+  };
+  const cartePrecedente = () =>
+    carteIdx === 0 ? parcours?.reculerAvantLesDecisions() : allerALaCarte(carteIdx - 1);
+  // Le glissement double les boutons. Il ne passe pas la commande (qui veut une réponse) ni la
+  // dernière carte (qui veut un envoi) : seul un geste franc, sur une carte ordinaire, avance.
+  const glisser = useGlisser({
+    actif: modeCartes && !verrou,
+    suivant:
+      !derniere && carteCourante?.cle !== "commande"
+        ? () => {
+            vibrer(8);
+            carteSuivante();
+          }
+        : undefined,
+    precedent: () => {
+      vibrer(8);
+      cartePrecedente();
+    },
+  });
+  // Valider se sent dans la main : le tour part.
+  useEffect(() => {
+    if (pending) vibrer(VIBRATION_DE_REUSSITE);
+  }, [pending]);
+  const repondreALaCommande = (oui: boolean) => {
+    const champ = formRef.current?.elements.namedItem("acceptOrder") as HTMLInputElement | null;
+    // Un vrai clic, pas une affectation : c'est lui qui prévient le formulaire,
+    // donc le brouillon et le récapitulatif.
+    if (champ && champ.checked !== oui) champ.click();
+    setCommandeAcceptee(oui);
+    allerALaCarte(Math.min(cartes.length - 1, carteIdx + 1));
+  };
+
+  // ── BROUILLON LOCAL ──────────────────────────────────────────────────────
+  // Six étapes, des dizaines de champs, et rien n'était gardé tant qu'on
+  // n'avait pas validé : un onglet fermé ou un appel en plein cours, et le tour
+  // entier était à ressaisir. On sauve à chaque frappe, dans le navigateur.
+  // La note d'avant est recommandée, jamais exigée (voir config/justification).
+  const premierTour = roundIndex === 1;
+  const cle = cleBrouillon(gameId, roundIndex);
+  const brouillonRestaure = useRef(false);
+
+  const sauverBrouillon = () => {
+    const form = formRef.current;
+    if (!form || alreadySubmitted) return;
+    const b: Brouillon = {};
+    for (const [nom, valeur] of new FormData(form).entries()) {
+      if (typeof valeur === "string") b[nom] = valeur;
+    }
+    ecrireBrouillon(cle, b);
+  };
+
+  // La restauration se fait APRÈS le montage, jamais pendant le rendu : le
+  // serveur ne voit pas `localStorage`, et lire le stockage au rendu ferait
+  // diverger le HTML hydraté de celui du serveur.
+  useEffect(() => {
+    if (brouillonRestaure.current) return;
+    brouillonRestaure.current = true;
+    // Un tour joué ne se rejoue pas : son brouillon n'a plus d'objet.
+    effacerBrouillonsAnterieurs(gameId, cle);
+    if (alreadySubmitted) {
+      effacerBrouillon(cle);
+      return;
+    }
+    const b = lireBrouillon(cle);
+    const form = formRef.current;
+    if (!b || !form) return;
+
+    for (const champ of Array.from(form.elements)) {
+      if (
+        !(champ instanceof HTMLInputElement) &&
+        !(champ instanceof HTMLSelectElement) &&
+        !(champ instanceof HTMLTextAreaElement)
+      ) {
+        continue;
+      }
+      const nom = champ.name;
+      if (!nom) continue;
+      // Les champs cachés sont recalculés par React à chaque rendu : y écrire
+      // ne servirait à rien. Ceux qui portent un état — le parc machines — sont
+      // remis plus bas, par leur état.
+      if (champ instanceof HTMLInputElement && champ.type === "hidden") continue;
+      if (champ instanceof HTMLInputElement && champ.type === "checkbox") {
+        // Une case décochée ne figure pas dans un envoi : son absence du
+        // brouillon veut dire « décochée », pas « inconnue ».
+        champ.checked = Object.prototype.hasOwnProperty.call(b, nom);
+        continue;
+      }
+      if (champ instanceof HTMLInputElement && champ.type === "radio") {
+        champ.checked = b[nom] === champ.value;
+        continue;
+      }
+      const valeur = b[nom];
+      if (valeur !== undefined && valeur !== champ.value) poserValeur(champ, valeur);
+    }
+
+    // Le parc machines ne passe pas par des champs nommés : ses quantités
+    // vivent dans un état React et ressortent en JSON caché. On les relit là.
+    setEquipBuyQty(quantitesDepuisJson(b.equipmentBuyJson));
+    setEquipSellQty(quantitesDepuisJson(b.equipmentSellJson));
+  }, [cle, gameId, alreadySubmitted, formRef]);
+
+  // Le tour est parti : le filet n'a plus lieu d'être.
+  useEffect(() => {
+    if (alreadySubmitted) effacerBrouillon(cle);
+  }, [alreadySubmitted, cle]);
+
+  // Le panneau des fournisseurs, calculé ici pour pouvoir se loger dans l'étape
+  // « S'approvisionner » (mono-produit) ou sous « Vos références » (gamme).
+  const panneauFournisseurs = (() => {
         // Mono-produit : les fournisseurs du scénario, à choisir ici (radio),
         // leur coût lu par rapport au fournisseur de référence. Gamme : la
         // fiche de chaque façonnier, avec les références qu'il fournit et le
@@ -1206,24 +3640,38 @@ export function DecisionForm({
           }
         }
         if (fiches.length === 0) return null;
+        // En cartes, le catalogue n'a pas de carte : le façonnier se choisit sur celle
+        // de sa référence, avec ses délais et son risque sous le choix.
+        if (gamme && modeCartes) return null;
         return (
           <Family
-            legend={`🏭 ${v.supplierPanelLabel}`}
-            tone="border-emerald-400/25 bg-emerald-950/20"
-            legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
+            // EN GAMME, CE PANNEAU NE PORTE AUCUNE DÉCISION : le façonnier se
+            // choisit ligne par ligne dans le tableau des ventes, et ceci n'est
+            // qu'un catalogue — autant de fiches que de façonniers, dépliées
+            // au-dessus des champs qu'on vient remplir. Il s'ouvre à la demande.
+            // En mono-produit, au contraire, le choix EST ici (les boutons
+            // radio) : le replier cacherait une décision du tour.
+            defaultOpen={!gamme}
+            carte={gamme ? "references" : "fournisseur"}
+            icone="camion"
+            legend={
+              gamme
+                ? `${v.supplierPanelLabel} · ${fiches.length} fiche${fiches.length > 1 ? "s" : ""}`
+                : v.supplierPanelLabel
+            }
           >
             {gamme ? (
-              <p className="mb-2 text-xs leading-relaxed text-emerald-200/80">
+              <p className="mb-2 text-sm leading-relaxed text-slate-400">
                 Chaque référence a ses façonniers ; le choix se fait ligne par ligne dans le
                 tableau de vos ventes. Voici ce que chacun propose, et à quel prix d&apos;achat
                 pour chaque référence qu&apos;il fournit.
               </p>
             ) : null}
-            <div className="space-y-2">
+            <div className="space-y-2 max-sm:space-y-1.5">
               {fiches.map((s) => (
                 <label
                   key={`${s.code}·${s.name}`}
-                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                  className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12 max-sm:py-1.5"
                 >
                   {gamme ? null : (
                     <input
@@ -1231,7 +3679,7 @@ export function DecisionForm({
                       name="supplierChoice"
                       value={s.code}
                       defaultChecked={(defaults.supplierChoice ?? fiches[0]?.code) === s.code}
-                      className="mt-0.5 h-4 w-4 accent-emerald-400"
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                     />
                   )}
                   <span>
@@ -1241,7 +3689,7 @@ export function DecisionForm({
                         ? ""
                         : ` · ${v.materialLabel.toLowerCase()} à ${formatEuroCents(s.prix[0]!.achat)}/${v.unit} (${s.prix[0]!.ecart})`}
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400 max-sm:line-clamp-1">{s.narrative}</span>
                     {gamme ? (
                       <span className="mt-1 block text-xs text-slate-300">
                         {s.prix.map((x, i) => (
@@ -1252,9 +3700,9 @@ export function DecisionForm({
                         ))}
                       </span>
                     ) : null}
-                    <span className="mt-1 flex flex-wrap gap-3 text-xs">
+                    <span className="mt-1 flex flex-wrap gap-x-3 gap-y-0 text-xs max-sm:mt-0.5">
                       {s.qualityBonus !== 0 ? (
-                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
+                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-red-400"}>
                           Qualité {s.qualityBonus > 0 ? "+" : "−"}{Math.abs(Math.round(s.qualityBonus * 100))} %
                         </span>
                       ) : null}
@@ -1266,22 +3714,580 @@ export function DecisionForm({
                           Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
                         </span>
                       ) : (
-                        <span className="text-emerald-400/60">Approvisionnement fiable</span>
+                        <span className="text-emerald-400">Approvisionnement fiable</span>
                       )}
                     </span>
                   </span>
                 </label>
               ))}
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-slate-400">
-              Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
-              votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
-              perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
-              ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
-            </p>
+            <div className="mt-3">
+              <Aide>
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
+                  votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
+                  perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
+                  ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
+                </p>
+              </Aide>
+            </div>
           </Family>
         );
-      })()}
+      })();
+
+  // LOT P4 : la première saisie dans un champ des ventes estimées fait de la
+  // proposition l'estimation du joueur (frappe, curseur ou brouillon restauré :
+  // tous passent par un événement `input`).
+  const noterLaSaisie = (cible: EventTarget) => {
+    const nom = cible instanceof HTMLInputElement ? cible.name : "";
+    if (propositionEnCours && nom.startsWith(PREFIXE_VENTES_ESTIMEES)) setPropositionTouchee(true);
+  };
+
+  return (
+    <TelephoneContexte.Provider value={telephone}>
+    <CartesContexte.Provider
+      value={{ actif: modeCartes, courante: carteCourante?.cle ?? "" }}
+    >
+    <RefusDesChamps.Provider value={carteDesRefus}>
+    <form
+      ref={formRef}
+      action={formAction}
+      // LA FEUILLE JUGE ELLE-MÊME SA SAISIE (voir `verifierPivots`) : la bulle
+      // du navigateur ne se posait pas sur un champ d'étape repliée, et ne
+      // disait ni le minimum ni le maximum accepté.
+      noValidate
+      onSubmit={verifierPivots}
+      onChange={(e) => {
+        noterLaSaisie(e.target);
+        relireLeRefus(e.target);
+        sauverBrouillon();
+        // L'encart « Résultat estimé » suit la saisie, à toutes les étapes :
+        // on décide en voyant ce que la décision donnerait.
+        relireLEstimation();
+        // En parcours, le récapitulatif ne suit la saisie que sur la dernière
+        // carte : ailleurs, il n'est pas affiché. SUR ORDINATEUR, l'engagement
+        // est relu à chaque frappe : le total des budgets se lit sous les
+        // budgets, et chaque option ponctuelle repliée annonce ce qu'elle porte.
+        if (derniere || !modeCartes) relireLEngagement();
+      }}
+      onInvalidCapture={revelerFamilleInvalide}
+      data-debut-d-etape=""
+      className="space-y-3"
+      {...glisser}
+    >
+      {/*
+        LE CADRAN DU RÉSULTAT ESTIMÉ (lot P7), PREMIER ENFANT DE LA FEUILLE ET
+        COLLANT. Lot 6E, il était monté sous la piste, au-dessus des étapes :
+        il partait avec le défilement dès la première, et ne se voyait plus aux
+        étapes 2 à 7 ni au moment de valider. Il colle désormais sous la barre
+        du site et l'ardoise repliée tant que la feuille est à l'écran : les
+        commandes défilent dessous, leur effet reste au-dessus.
+      */}
+      {!modeCartes && estimation ? (
+        <EncartResultatEstime
+          estime={estime}
+          vocabulary={v}
+          allerAuChamp={allerAuChampDesVentes}
+        />
+      ) : null}
+      {/* LE TÉMOIN DE LA PROPOSITION (lot P4) : tant qu'il part, les ventes
+          estimées sont celles que la feuille a proposées, pas celles de
+          l'équipe, et la validation ne les garde pas. */}
+      {propositionEnCours ? <input type="hidden" name="propositionDeVentes" value="1" /> : null}
+      {/*
+        LE RÉCAPITULATIF DES REFUS, EN TÊTE DE LA FEUILLE. Une ligne par refus,
+        chacune un lien qui mène au champ (son étape ou sa carte ouverte, le
+        focus posé). Annoncé dès qu'il paraît ; il disparaît avec le dernier
+        refus corrigé. Le rouge des refus déjà en usage, pas d'orange.
+      */}
+      {refus && refus.recapitulatif && refus.erreurs.length > 0 ? (
+        <div
+          ref={recapRef}
+          tabIndex={-1}
+          role="alert"
+          data-recapitulatif-des-erreurs=""
+          className="rounded-lg encadre-perte px-3 py-2.5 text-sm scroll-mt-32"
+        >
+          <p className="font-semibold text-slate-50">{titreDuRecapitulatif(refus.erreurs.length)}</p>
+          <ul className="mt-1.5 space-y-1.5">
+            {refus.erreurs.map((x, i) => (
+              <li key={`${x.champ ?? "sans-champ"}-${i}`} className="flex items-start gap-1.5 text-red-300">
+                <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0" />
+                {x.champ ? (
+                  <a
+                    href={`#${idDuChamp(x.champ)}`}
+                    data-lien-du-refus={x.champ}
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      allerAuChamp(x.champ!);
+                    }}
+                    className="underline decoration-1 underline-offset-4 hover:decoration-2"
+                  >
+                    {x.message}
+                  </a>
+                ) : (
+                  <span>{x.message}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {/* Verrou de planning : hors de la fenêtre, on l'annonce et « Valider »
+          est grisé (le serveur refuse de toute façon). La page reste lisible. */}
+      {verrou ? (
+        <p
+          role="status"
+          className="encadre-neutre flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-100"
+        >
+          <Icone nom="verrou" className="h-4 w-4" /> {verrou}
+        </p>
+      ) : null}
+      {/*
+        LE FINANCEMENT DE SAUVETAGE. Visible à toutes les étapes, comme le
+        verrou de planning : le bouton « Valider » est grisé au bas de chacune
+        d'elles, et un bouton grisé sans sa raison sous les yeux est une
+        impasse. Le message dit le montant qui reste à réunir et s'efface de
+        lui-même dès que le compte y est.
+      */}
+      {blocageSauvetage ? (
+        <p
+          role="status"
+          className="flex items-start gap-2 rounded-lg encadre-perte px-3 py-2 text-sm leading-relaxed text-red-200"
+        >
+          <Icone nom="alerte" className="mt-0.5 h-4 w-4" />
+          <span>
+            <strong className="font-semibold">Financement de sauvetage exigé.</strong>{" "}
+            {blocageSauvetage}
+            {on.finance ? (
+              <>
+                {" "}
+                <button
+                  type="button"
+                  onClick={() => allerAuChamp("newLoan")}
+                  className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Aller au nouvel emprunt
+                </button>
+              </>
+            ) : null}
+          </span>
+        </p>
+      ) : null}
+      {/*
+        LA PISTE DES ÉTAPES (lot 6E). Les familles de décision se lisaient comme
+        une seconde rangée d'onglets, au même rang que Situation / Analyser /
+        Décider, avec l'orange de l'action sur l'étape en cours. Elles deviennent
+        une PISTE, au second rang : un segment par étape, qui s'allume dans la
+        teinte du métier quand on y est passé, et un compteur HONNÊTE. Toutes
+        les décisions ont une valeur proposée : « 5 / 7 décidées » mentirait.
+        Ce que le code sait vraiment, c'est ce qui a été AFFICHÉ (`vues`) : on
+        compte donc les étapes parcourues. Au bout de la piste, la validation,
+        qui est la fin du parcours. Saut direct toujours possible.
+      */}
+      <nav
+        aria-label="Étapes de décision"
+        className={`space-y-2 ${modeCartes ? "hidden" : ""}`}
+        data-piste-des-etapes=""
+      >
+        <p className="flex items-baseline justify-between gap-3 text-xs">
+          <span className="surtitre text-slate-300">
+            Votre feuille de décision
+          </span>
+          <span className="tabular-nums text-slate-300" data-compteur-de-la-piste="">
+            <strong className="font-semibold text-slate-50">{vues.size}</strong> / {total}{" "}
+            parcourue{vues.size > 1 ? "s" : ""}
+          </span>
+        </p>
+        <ol className="flex gap-1.5 sm:gap-2">
+          {etapesVisibles.map((cle, i) => {
+            const actif = i === courante;
+            const fait = !actif && vues.has(i);
+            return (
+              <li key={cle} className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={() => allerALEtape(i)}
+                  aria-current={actif ? "step" : undefined}
+                  aria-label={`${META[cle]!.titre}${fait ? ", parcourue" : ""}`}
+                  className="group flex min-h-11 w-full flex-col justify-start gap-1.5 rounded-md px-0.5 pb-1 pt-1.5 text-left"
+                >
+                  <span
+                    aria-hidden
+                    className="piste-segment w-full"
+                    data-etat={actif ? "courante" : fait ? "parcourue" : "a-venir"}
+                  />
+                  <span
+                    className={`flex min-w-0 items-center gap-1 text-xs ${
+                      actif
+                        ? // L'ÉTAPE EN COURS EST À LA TEINTE DU MÉTIER (lot 6E) : la
+                          // navigation dit où l'on est ; l'orange reste à l'action.
+                          "font-semibold text-slate-50"
+                        : fait
+                          ? "text-slate-200 group-hover:text-slate-50"
+                          : "text-slate-400 group-hover:text-slate-200"
+                    }`}
+                  >
+                    {fait ? (
+                      <span aria-hidden className="text-[color:var(--metier,var(--color-slate-300))]">
+                        ✓
+                      </span>
+                    ) : (
+                      <Icone
+                        nom={META[cle]!.icone}
+                        className={`h-3.5 w-3.5 shrink-0 ${
+                          actif ? "text-[color:var(--metier,var(--color-slate-300))]" : ""
+                        }`}
+                      />
+                    )}
+                    <span className="hidden truncate sm:inline">{META[cle]!.titre}</span>
+                    <span className="sm:hidden">{i + 1}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          {/* LA FIN DU PARCOURS : la validation, qui envoie tout au marché. */}
+          <li aria-hidden className="hidden shrink-0 flex-col gap-1.5 px-0.5 pb-1 pt-1.5 lg:flex">
+            <span className="piste-segment w-8" />
+            <span className="flex items-center gap-1 text-xs text-slate-400">
+              <Icone nom="resultats" className="h-3.5 w-3.5" />
+              Valider
+            </span>
+          </li>
+        </ol>
+      </nav>
+
+
+      <section
+        data-etape={idx("vendre")}
+        hidden={masquee("vendre")}
+        className="space-y-3"
+      >
+      {/*
+        EN PARCOURS, LES VENTES ESTIMÉES D'UNE GAMME ONT LEUR CARTE : une ligne
+        compacte par référence, avant les cartes des références elles-mêmes.
+        Posées sur la carte de chaque référence, elles en faisaient un septième
+        champ et la carte débordait de l'écran. Sur grand écran, elles restent
+        une ligne de la matrice, à leur place.
+      */}
+      {gamme && estimation && modeCartes ? (
+        <Carte cle="ventes-estimees">
+          {propositionEnCours ? (
+            <p className="mb-3">
+              <MarqueDeProposition source="vos plans de production" />
+            </p>
+          ) : null}
+          <div className="space-y-2">
+            {gamme.map((p) =>
+              enDeveloppement(p) ? null : (
+                <SaisieDeCarte
+                  key={p.code}
+                  name={champDesVentesEstimees(p.code)}
+                  label={`Ventes estimées · ${p.name}`}
+                  libelle={p.name}
+                  defaultValue={defautsGamme[p.code]?.valeur ?? 0}
+                  step={1}
+                  suffixe={v.units}
+                  grand={false}
+                  compact
+                  {...(capaciteEffective ? { plage: { min: 0, max: capaciteEffective } } : {})}
+                />
+              ),
+            )}
+          </div>
+        </Carte>
+      ) : null}
+      {gamme ? (
+        // TOUT CE QUI SE DÉCIDE POUR UNE RÉFÉRENCE EST DANS SON ONGLET : prix,
+        // volume, façonnier, puis les budgets qui la soutiennent. Séparés, le
+        // prix et le budget marketing d'une même référence se décidaient sur
+        // deux étapes, alors que l'un commande l'autre.
+        <Family
+          carte={gamme.map((p) => `ref-${p.code}`)}
+          icone="cible"
+          legend="Vos références · tout ce qui se décide pour chacune"
+          defaultOpen
+        >
+          <GammeReference
+            gamme={gamme}
+            defaults={defaults}
+            vocabulary={v}
+            quality={on.quality}
+            rd={on.rd && !!rdOffer}
+            roundIndex={roundIndex}
+            {...(capaciteEffective ? { capacite: capaciteEffective } : {})}
+            {...(reperes?.tourPasseParReference
+              ? { tourPasse: reperes.tourPasseParReference }
+              : {})}
+            {...(estimation
+              ? {
+                  ventesParDefaut: Object.fromEntries(
+                    Object.entries(defautsGamme).map(([code, d]) => [code, d.valeur]),
+                  ),
+                }
+              : {})}
+            {...(estimation ? { reperesEstimes } : {})}
+            proposition={propositionEnCours}
+          />
+        </Family>
+      ) : null}
+      {gamme ? (
+        <></>
+      ) : (
+        <Family
+          carte={["ventes-estimees", "prix", "volume"]}
+          icone="cible"
+          legend="Vos ventes · ce que vous pensez vendre, le prix et le volume"
+          defaultOpen
+        >
+          {/*
+            LA PREMIÈRE QUESTION DU TOUR : combien pensez-vous vendre ? Elle
+            vient AVANT le prix et le volume — c'est elle qui donne un sens aux
+            deux — et elle prend la même grammaire qu'eux (champ majeur, chiffre
+            en grand, repère du tour passé dessous). Elle ne décide rien : le
+            moteur ne la lit pas.
+          */}
+          {estimation ? (
+            <Carte cle="ventes-estimees">
+              {/* EN PARCOURS, le repère du tour passé est une pastille au-dessus
+                  du champ, comme pour le prix : `Field` ne le pose sous le
+                  chiffre que sur grand écran. */}
+              {modeCartes && aideEstimee ? (
+                <p className="mb-3">
+                  <span
+                    data-repere-du-tour-passe
+                    className="voile-neutre inline-block rounded-full px-3 py-1.5 text-sm tabular-nums text-[var(--donnee)]"
+                  >
+                    {aideEstimee}
+                  </span>
+                </p>
+              ) : null}
+              {/* Au premier tour, la même place : la proposition, marquée. */}
+              {modeCartes && propositionEnCours ? (
+                <p className="mb-3">{marqueMono}</p>
+              ) : null}
+              <Field
+                name={champDesVentesEstimees(codeMonoProduit)}
+                label="Ventes estimées"
+                defaultValue={ventesEstimeesParDefaut}
+                {...(!modeCartes && propositionEnCours ? { proposition: marqueMono } : {})}
+                suffix={v.units}
+                majeur
+                {...(capaciteEffective
+                  ? {
+                      plage: { min: 0, max: Math.max(capaciteEffective, ventesEstimeesParDefaut) },
+                    }
+                  : {})}
+                {...(aideEstimee ? { repere: aideEstimee } : {})}
+                hint="Ce que vous pensez vendre ce tour. Cela ne change rien au marché : c'est ce qui fait apparaître le résultat estimé."
+              />
+            </Carte>
+          ) : null}
+          <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+            <Carte cle="prix">
+              {/* En parcours, les repères sont des pastilles au-dessus du champ de la
+                  carte ; sur ordinateur ils se lisent sous les deux champs majeurs. */}
+              {modeCartes && reperes ? (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {reperes.prixUsuels ? (
+                    <span className="voile-neutre rounded-full px-3 py-1.5 text-sm text-slate-200">
+                      Prix usuels {reperes.prixUsuels}
+                    </span>
+                  ) : null}
+                  {reperes.coutVariable !== null ? (
+                    <span className="voile-neutre rounded-full px-3 py-1.5 text-sm text-slate-200">
+                      Coût variable {formatEuro(reperes.coutVariable)}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+              <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
+                suffix={`€/${v.unit}`} onValueChange={setPrixSaisi} majeur
+                {...(repereDuPrix ? { repere: repereDuPrix } : {})}
+                {...(reperes?.plagePrix ? { plage: reperes.plagePrix } : {})}
+                hint="Passer au-dessus d'un prix rond fait perdre des clients d'un coup." />
+              {modeCartes && reperes && reperes.coutVariable !== null ? (
+                <p className="mt-3 flex items-baseline justify-between px-1 pt-1 text-base text-slate-300">
+                  <span>Marge par {v.unit}</span>
+                  {/* Une valeur chiffrée est une information, jamais l'orange de l'action. */}
+                  <strong className="text-lg tabular-nums text-slate-50">
+                    {formatEuro((prixSaisi ?? defaults.price) - reperes.coutVariable)}
+                  </strong>
+                </p>
+              ) : null}
+            </Carte>
+            <Carte cle="volume">
+              <Field name="productionPlan" label={v.productionPlanLabel}
+                defaultValue={Math.round(defaults.productionPlan)} suffix={v.units} majeur
+                {...(repereDuVolume ? { repere: repereDuVolume } : {})}
+                {...(capaciteEffective
+                  ? { plage: { min: 0, max: Math.max(capaciteEffective, Math.round(defaults.productionPlan)) } }
+                  : {})}
+                hint="Le volume réel sera borné par vos capacités." />
+            </Carte>
+          </div>
+          {/* LES REPÈRES DU MARCHÉ, SUR ORDINATEUR : sous les deux champs majeurs, pas
+              au-dessus d'eux. Ce sont des données (bleu donnée), pas des résultats. */}
+          {!modeCartes && reperes && (reperes.prixUsuels || reperes.coutVariable !== null) ? (
+            <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm tabular-nums text-[var(--donnee)]">
+              {reperes.prixUsuels ? (
+                <span>
+                  <span className="text-slate-400">Prix usuels du marché</span>{" "}
+                  {reperes.prixUsuels}
+                </span>
+              ) : null}
+              {reperes.coutVariable !== null ? (
+                <span>
+                  <span className="text-slate-400">Coût variable</span>{" "}
+                  {formatEuro(reperes.coutVariable)}
+                </span>
+              ) : null}
+            </p>
+          ) : null}
+        </Family>
+      )}
+      {orderOffer ? (
+        <Family
+          carte="commande"
+          icone="colis"
+          legend={`Commande exceptionnelle · ${orderOffer.title}`}
+          repli
+          quoi={quoiDeLOption("commande")}
+        >
+          <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
+          <p className="mt-2 text-xs text-slate-400">
+            <strong className="text-slate-200">
+              {Math.round(orderOffer.units).toLocaleString("fr-FR")} {v.units}
+            </strong>{" "}
+            à{" "}
+            <strong className="text-slate-200">
+              {orderOffer.price.toLocaleString("fr-FR")} €/u
+            </strong>{" "}
+            (coût variable ≈ {orderOffer.unitVariableCost.toLocaleString("fr-FR")} €/u),{" "}
+            {orderOffer.paymentDelayDays > 0
+              ? `règlement à ${orderOffer.paymentDelayDays} jours`
+              : "règlement comptant"}
+            .{" "}
+            {orderOffer.productName
+              ? `Sur « ${orderOffer.productName} », servie sur son stock restant après le marché.`
+              : "Servie sur votre stock restant après le marché."}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
+            {orderOffer.paymentDelayDays > 0
+              ? "Belle marge, mais encaissée plus tard : le BFR gonfle d'autant."
+              : "Cash immédiat, marge mince : comparez le prix à votre coût variable."}
+          </p>
+          <label className={`mt-3 flex items-start gap-3 ${modeCartes ? "sr-only" : ""}`}>
+            <input
+              type="checkbox"
+              name="acceptOrder"
+              defaultChecked={defaults.acceptOrder ?? false}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
+            />
+            <span className="text-sm font-medium text-slate-200">
+              Accepter la commande, à prendre ou à laisser : elle ne repassera pas.
+            </span>
+          </label>
+        </Family>
+      ) : null}
+      {capacityFacts ? (
+        <Carte cle="volume">
+        <PanneauConsulte
+          titre={v.capacityPanelTitle}
+          icone="usine"
+          resume={`${Math.round(capacityFacts.availableMachineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel} · ${
+            capacityFacts.bottleneck === "labor"
+              ? v.laborLabel
+              : capacityFacts.bottleneck === "machine"
+                ? v.capacityBottleneckLabel
+                : "équilibré"
+          }`}
+        >
+          {/*
+            Deux colonnes à parts égales sur téléphone donnaient une grille
+            illisible : « Jours-consultants disponibles » se coupait à gauche
+            pendant que « 720 jours/tour (12 pers. × prod. 100 %) » se coupait à
+            droite, l'un et l'autre alignés à contre-sens. L'intitulé passe donc
+            AU-DESSUS de son chiffre, et la grille ne se rétablit qu'une fois la
+            place venue.
+          */}
+          <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+            {capacityFacts.subscription ? (
+              <FaitCapacite
+                label={`Portefeuille d'${v.units}`}
+                valeur={`${capacityFacts.subscription.members.toLocaleString("fr-FR")} ${v.units}`}
+                note={`~${capacityFacts.subscription.expectedRetained.toLocaleString("fr-FR")} resteront à ${Math.round(capacityFacts.subscription.baseChurnRate * 100)} % d'attrition`}
+                testId="portefeuille-adherents"
+              />
+            ) : null}
+            {/*
+              LA CAPACITÉ ANNONCÉE EST CELLE QU'ON A, PAS CELLE D'UN ATELIER
+              NEUF. Le moteur produit sous `machineCapacity × availability` : à
+              82 % de disponibilité, annoncer la capacité nominale promettait un
+              plafond inatteignable, sans dire pourquoi. La note ne paraît qu'en
+              dessous de 100 % — à l'ouverture, il n'y a rien à expliquer.
+            */}
+            <FaitCapacite
+              label={v.capacityLabel}
+              valeur={`${Math.round(capacityFacts.availableMachineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel}`}
+              note={
+                capacityFacts.availability < 0.995
+                  ? `${Math.round(capacityFacts.availability * 100)} % de disponibilité, sur ${Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} à l'état neuf`
+                  : undefined
+              }
+            />
+            <FaitCapacite
+              label={v.laborLabel}
+              valeur={`${Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel}`}
+              note={`${capacityFacts.headcount} pers. × prod. ${Math.round(capacityFacts.productivity * 100)} %`}
+            />
+            <FaitCapacite
+              label="Goulot"
+              valeur={
+                capacityFacts.bottleneck === "labor"
+                  ? v.laborLabel
+                  : capacityFacts.bottleneck === "machine"
+                    ? v.capacityBottleneckLabel
+                    : "Équilibré"
+              }
+              // Le goulot est un CONSTAT, ni une action ni un résultat :
+              // l'encre, quel qu'il soit (« Équilibré » passait au vert, la
+              // main-d'œuvre à l'orange de l'action, la machine au bleu ciel).
+              couleur="text-slate-100"
+            />
+          </dl>
+          {capacityFacts.bottleneck === "labor" ? (
+            // Sans embauches à ce niveau, « envisagez d'embaucher » envoyait vers un levier absent.
+            <p className="mt-2 text-xs text-slate-300">
+              {on.hr
+                ? v.laborBottleneckHint
+                : `À ce niveau, l'effectif est fixé : votre équipe est le goulot.${
+                    plafondInvestissement?.niveauDesEmbauches
+                      ? ` Les embauches s'ouvrent au niveau ${plafondInvestissement.niveauDesEmbauches}.`
+                      : ""
+                  }`}
+            </p>
+          ) : capacityFacts.bottleneck === "machine" ? (
+            <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
+          ) : null}
+        </PanneauConsulte>
+        </Carte>
+      ) : null}
+      {gamme ? panneauFournisseurs : null}
+      </section>
+
+      {/* S'APPROVISIONNER, À PART. Le choix du fournisseur (les boutons radio) pesait
+          707 px dans une étape déjà longue de 1 329 px : il a la sienne. En gamme, le
+          façonnier se choisit ligne par ligne dans le tableau des ventes et ce panneau
+          n'est qu'un catalogue : il reste sous « Vos références », et l'étape ne
+          paraît pas. */}
+      <section
+        data-etape={idx("approvisionner")}
+        hidden={masquee("approvisionner")}
+        className="space-y-3"
+      >
+      {gamme ? null : panneauFournisseurs}
       </section>
 
       {/* Budgéter : les quatre budgets du tour (marketing, qualité, entretien,
@@ -1290,80 +4296,95 @@ export function DecisionForm({
           à sa valeur proposée, pour que la lecture côté serveur reste complète. */}
       <section
         data-etape={idx("budgets")}
-        hidden={courante !== idx("budgets")}
+        hidden={masquee("budgets")}
         className="space-y-3"
       >
-      <p className="text-sm leading-relaxed text-slate-400">
-        Ce que vous dépensez ce tour pour soutenir votre offre : faire venir les clients,
-        tenir la qualité, entretenir votre capacité{on.rd && rdOffer ? ", développer" : ""}
-        {communicationOffer ? ", et bâtir votre marque" : ""}. Chaque budget se paie le tour même, en charge.
-      </p>
+      {/* En parcours, une partie mono n'a pas besoin de cette aide : chaque champ porte déjà la sienne,
+          juste dessous. Elle ne se répète pas sur un écran qui dit la même chose. */}
+      {modeCartes && !gamme ? null : (
+      <Aide>
+        <p className="text-sm leading-relaxed text-slate-400">
+          Faire venir les clients, tenir la qualité, entretenir votre
+          capacité{on.rd && rdOffer ? ", développer" : ""}
+          {communicationOffer ? ", bâtir votre marque" : ""}. Chaque budget se paie le tour même.
+        </p>
+      </Aide>
+      )}
       {gamme ? null : (
         // Les budgets du tour, au même endroit : marketing, qualité, maintenance
         // et R&D.
         <Family
-          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
+          carte="budgets"
+          icone="argent"
+          legend={`Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
-              hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
-            {on.quality ? (
-              <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€"
-                hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
-            ) : (
-              <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
-            )}
-            {on.maintenance ? (
-              <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
-                hint="Une maintenance insuffisante dégrade la disponibilité machine." />
-            ) : (
-              <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
-            )}
-            {rdMono ? (
-              <Field
-                name="rdBudget"
-                label="Recherche et développement"
-                defaultValue={Math.round(defaults.rdBudget ?? 0)}
-                suffix="€"
-                hint="Élève le niveau technique du produit : une qualité perçue qui monte avec retard, et s'érode si la R&D cesse. Une charge du tour."
-              />
-            ) : null}
-          </div>
+          <Carte cle="budgets">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field name="marketingBudget" label="Budget marketing" libelle="Marketing" defaultValue={defaults.marketingBudget} suffix="€"
+                hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
+              {on.quality ? (
+                <Field name="qualityBudget" label="Budget qualité" libelle="Qualité" defaultValue={defaults.qualityBudget} suffix="€"
+                  hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
+              ) : (
+                <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
+              )}
+              {on.maintenance ? (
+                <Field name="maintenanceBudget" label="Budget maintenance" libelle="Maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
+                  hint={aideEntretien} />
+              ) : (
+                <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+              )}
+              {rdMono ? (
+                <Field
+                  name="rdBudget"
+                  label="Recherche et développement"
+                  libelle="R&D"
+                  sansCurseur
+                  defaultValue={Math.round(defaults.rdBudget ?? 0)}
+                  suffix="€"
+                  hint="Élève le niveau technique, avec retard ; s'érode si la R&D cesse."
+                />
+              ) : null}
+            </div>
+            {banqueEnLecture}
+            <TotalDesBudgets engagement={engagement} />
+          </Carte>
         </Family>
       )}
       {gamme ? (
-        // En gamme, les quatre budgets du tour se décident au même endroit :
-        // le marketing, la qualité et la R&D référence par référence dans un
-        // tableau, puis l'entretien de la capacité, qui est de l'entreprise.
-        // La fenêtre des ventes ne porte ainsi que le prix, le volume et le
-        // façonnier. Quand le niveau n'ouvre pas la qualité ou l'entretien, le
-        // scalaire caché part d'ici.
+        // EN GAMME, IL NE RESTE ICI QUE LES BUDGETS DE L'ENTREPRISE : l'entretien
+        // de la capacité, qu'aucune référence ne porte à elle seule (et, plus
+        // bas, la marque). Le marketing, la qualité et la R&D de chaque
+        // référence se décident dans SON onglet, avec son prix et son volume.
+        // Les scalaires que le niveau n'ouvre pas partent cachés d'ici : le
+        // serveur ne dérive rien des références pour eux.
         <Family
-          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.rd && !!rdOffer && gamme.some((p) => p.rd) ? "R&D" : null, on.maintenance ? "entretien" : null].filter(Boolean).join(", ")}`}
+          carte="maintenance"
+          icone="argent"
+          legend={`Les budgets de l'entreprise · ${[on.maintenance ? "entretien" : null, communicationOffer ? "marque" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
-          <GammeBudgets
-            gamme={gamme}
-            defaults={defaults}
-            quality={on.quality}
-            rd={on.rd && !!rdOffer}
-            roundIndex={roundIndex}
-          />
+          <p className="text-sm leading-relaxed text-slate-400">
+            Le marketing, la qualité et la R&D de chaque référence se décident dans son
+            onglet, à l&apos;étape précédente.
+          </p>
           {on.quality ? null : <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />}
           {on.maintenance ? (
-            <div className="mt-3 grid grid-cols-1 gap-3 border-t border-white/5 pt-3 sm:grid-cols-2">
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field
                 name="maintenanceBudget"
                 label={`Budget d'entretien · ${v.capacityLabel.toLowerCase()}`}
                 defaultValue={defaults.maintenanceBudget}
                 suffix="€"
-                hint={`Un entretien insuffisant dégrade la disponibilité de votre capacité (${v.capacityLabel.toLowerCase()}) : ce que vous pouvez offrir à la vente.`}
+                hint={aideEntretien}
               />
             </div>
           ) : (
             <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
           )}
+          {banqueEnLecture}
+            <TotalDesBudgets engagement={engagement} />
         </Family>
       ) : null}
       {communicationOffer ? (
@@ -1371,7 +4392,12 @@ export function DecisionForm({
         // gamme seulement (les budgets par référence restent le marketing
         // spécifique), et l'AXE tenu ce tour. L'axe est un choix d'entreprise :
         // un seul, lisible, dont le formulaire dit à qui il parle.
-        <Family legend={gamme ? "📣 Communication · la marque et l'axe" : "📣 Communication · l'axe"} defaultOpen>
+        <Family
+          carte="communication"
+          icone="communication"
+          legend={gamme ? "Communication · la marque et l'axe" : "Communication · l'axe"}
+          defaultOpen
+        >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {gamme ? (
               <Field
@@ -1379,30 +4405,30 @@ export function DecisionForm({
                 label="Budget de marque"
                 defaultValue={Math.round(defaults.brandMarketingBudget ?? 0)}
                 suffix="€"
-                hint={`Bâtit la notoriété de la marque, pour toute la gamme, avec retard : elle vaut ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture, et s'use si vous cessez. Les budgets par référence, eux, agissent tout de suite.`}
+                hint={`Notoriété de marque, toute la gamme, avec retard — ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture. Les budgets par référence agissent tout de suite.`}
               />
             ) : null}
             <label className="block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Axe de communication</span>
+              <span className="libelle block min-h-8 font-semibold leading-4 text-slate-300">Axe de communication</span>
               <select
                 name="communicationAxis"
                 value={axe}
                 onChange={(e) => setAxe(e.currentTarget.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
               >
-                <option value="">Aucun axe : le budget parle à tout le monde, sans porter nulle part</option>
+                <option value="">Aucun axe : le budget parle à tout le monde</option>
                 {communicationOffer.axes.map((a) => (
                   <option key={a.code} value={a.code}>
                     {a.label}
                   </option>
                 ))}
               </select>
-              <span className="mt-1 block text-[13px] text-slate-400">
+              <span className="mt-1 block text-sm text-slate-400">
                 {axe
                   ? COMMUNICATION_AXIS_LABELS[axe as keyof typeof COMMUNICATION_AXIS_LABELS].hint
-                  : "Le même budget rend davantage quand l'axe correspond à ce que la clientèle regarde, et dessert quand il ne lui parle pas."}
+                  : "Bien choisi, l'axe rend le même budget plus efficace ; mal choisi, il dessert."}
                 {communicationOffer.lastAxis && axe && axe !== communicationOffer.lastAxis
-                  ? " Changer d'axe use la notoriété acquise : une marque qui change de discours repart de plus bas."
+                  ? " Changer d'axe use la notoriété acquise."
                   : ""}
               </span>
             </label>
@@ -1413,12 +4439,12 @@ export function DecisionForm({
 
       <section
         data-etape={idx("equipe")}
-        hidden={courante !== idx("equipe")}
+        hidden={masquee("equipe")}
         className="space-y-3"
       >
       {on.hr ? (
-        <Family legend="👥 Ressources humaines">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Family carte="rh" icone="equipes" legend="Ressources humaines">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
               hint="Arrivée au tour suivant, coût de recrutement immédiat." />
             <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
@@ -1431,15 +4457,14 @@ export function DecisionForm({
         </Family>
       ) : null}
       {on.rse ? (
-        <Family legend="🌱 Engagement RSE">
+        <Family carte="rse" icone="feuille" legend="Engagement RSE">
           <p className="mb-2 text-xs text-slate-400">
-            Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs
-            tours à se construire — et à retomber si vous cessez. Sur un horizon
-            court, ce peut être un pari perdant.
+            Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs tours
+            à se construire, et à retomber si vous cessez.
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field name="rseBudget" label="Budget RSE" defaultValue={0} suffix="€"
-              hint="Dépense d'exploitation : bâtit un capital-image qui relève lentement la demande (l'inverse du marketing)." />
+              hint="Capital-image : relève la demande lentement, à l'inverse du marketing." />
             <Field name="rseInvestment" label="Investissement process propre" defaultValue={0} suffix="€"
               hint="Réduit durablement les rebuts, tour après tour." />
           </div>
@@ -1449,24 +4474,49 @@ export function DecisionForm({
 
       <section
         data-etape={idx("financer")}
-        hidden={courante !== idx("financer")}
+        hidden={masquee("financer")}
         className="space-y-3"
       >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
-        <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
-          🏦 Échéance d&apos;emprunt du tour :{" "}
+        <Carte cle="financement">
+        {/* Une information, pas une action : l'encre sur le voile neutre. */}
+        <p className="encadre-neutre rounded-lg px-3 py-2 text-xs text-slate-200">
+          <Icone nom="banque" className="mr-1.5 h-3.5 w-3.5" />
+          Échéance d&apos;emprunt du tour :{" "}
           <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
           de capital, prélevée automatiquement (+ intérêts). Dette restante{" "}
-          {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €. Les échéances
-          tombent, que la caisse soit pleine ou vide.
+          {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €.
+          <span className="max-sm:hidden"> Les échéances tombent, que la caisse soit pleine ou vide.</span>
         </p>
+        </Carte>
       ) : null}
       {on.finance ? (
-      <Family legend="💶 Financer · emprunt, capital, investissement">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <Family carte="financement" icone="banque" legend="Financer · emprunt, capital, investissement">
+        <div className="grid grid-cols-1 gap-3 max-sm:gap-1.5 sm:grid-cols-2">
             <>
-              <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-                hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
+              <div>
+                {/*
+                  LE TAUX VIENT DU SCÉNARIO. Il était écrit « 5 %/an » en dur :
+                  un scénario qui prête à 6 % annonçait 5 %.
+                  Le plafond, lui, ne s'annonce plus : il borne le curseur.
+                */}
+                {loanCapacity ? (
+                  <ChampPlafonne
+                    name="newLoan"
+                    label="Nouvel emprunt"
+                    plafond={loanCapacity.remaining}
+                    suffix="€"
+                    legendePlafond="ce que la banque prête encore"
+                    onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
+                    hint={`${tauxEmprunt}. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres.`}
+                  />
+                ) : (
+                  <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
+                    onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
+                    hint={`${tauxEmprunt}. Amortissement constant sur la durée du contrat.`} />
+                )}
+                <Chiffrage lignes={chiffrageEmprunt} />
+              </div>
               <Field
                 name="loanRepayment"
                 label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
@@ -1474,27 +4524,76 @@ export function DecisionForm({
                 suffix="€"
                 hint={debtSchedule ? "Facultatif, en plus de l'échéance obligatoire." : undefined}
               />
-              <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
-                hint={
-                  capitalAllowance
-                    ? `Apport des associés · enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
-                    : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
-                } />
+              {capitalAllowance ? (
+                <ChampPlafonne
+                  name="capitalIncrease"
+                  label="Augmentation de capital"
+                  plafond={capitalAllowance.remaining}
+                  suffix="€"
+                  legendePlafond="reste de l'enveloppe"
+                  onValueChange={(v) => setRenfort((r) => ({ ...r, apport: v }))}
+                  hint={`Apport des associés · enveloppe de ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour la partie.`}
+                />
+              ) : (
+                <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
+                  onValueChange={(v) => setRenfort((r) => ({ ...r, apport: v }))}
+                  hint="Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif." />
+              )}
             {on.investment && investmentOffer && !equipmentOffer ? (
               <Field
                 name="machineCapacityUnits"
                 label={`Investissement capacité (${investmentOffer.costPerCapacityUnit.toLocaleString("fr-FR")} €/u)`}
                 defaultValue={0}
                 suffix={v.perRoundLabel}
-                hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
+                hint={[
+                  plafondInvestissement ? aideDuPlafond(plafondInvestissement, v) : null,
+                  `En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               />
             ) : null}
             </>
         </div>
+        {/*
+          LE DÉCOUVERT EST UN FAIT DE LA DÉCISION, PAS UNE NOTE DE BAS DE PAGE.
+          Il vivait dans le panneau du plan de trésorerie, parti avec lui. Or
+          c'est le chiffre qui dit jusqu'où la caisse peut descendre avant que
+          la banque force la cession des créances : il a sa place là où l'on
+          décide d'emprunter.
+        */}
+        {bankFile ? (
+          modeCartes ? (
+            <div className="mt-2">
+              <Tiroir
+                titre="Découvert autorisé"
+                quoi={`${formatEuro(bankFile.overdraftLimit)} · ${(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %/an`}
+                ferme
+              >
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Au-delà, la banque cède vos créances à votre place, et vous le paie cher.
+                </p>
+              </Tiroir>
+            </div>
+          ) : (
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            Découvert autorisé{" "}
+            <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>, à{" "}
+            <strong className="text-slate-200">
+              {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", {
+                maximumFractionDigits: 1,
+              })}{" "}
+              %
+            </strong>{" "}
+            l&apos;an. Au-delà, la banque cède vos créances à votre place, et
+            vous le paie cher.
+          </p>
+          )
+        ) : null}
       </Family>
       ) : null}
       {on.investment && equipmentOffer ? (
-        <>
+        <Carte cle="investissement">
           <EquipmentPanel
             offer={equipmentOffer}
             vocabulary={v}
@@ -1502,6 +4601,9 @@ export function DecisionForm({
             setBuyQty={setEquipBuyQty}
             sellQty={equipSellQty}
             setSellQty={setEquipSellQty}
+            // Les niveaux qui n'ouvrent pas encore les créances sont ceux qui débutent.
+            simple={!on.creances}
+            plafond={plafondInvestissement}
           />
           <input type="hidden" name="equipmentBuyJson" value={JSON.stringify(
             equipmentOffer.types
@@ -1513,49 +4615,58 @@ export function DecisionForm({
               .filter((t) => (equipSellQty[t.code] ?? 0) > 0)
               .map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 }))
           )} />
-        </>
+        </Carte>
       ) : null}
       </section>
 
       <section
-        data-etape={idx("couverture")}
-        hidden={courante !== idx("couverture")}
+        data-etape={idx("tresorerie")}
+        hidden={masquee("tresorerie")}
         className="space-y-3"
       >
       {on.dividend ? (
-        <Family legend="💰 Affectation du résultat · dividende">
-          <Field
+        <Family carte="dividende" icone="argent" legend="Affectation du résultat · dividende" repli deplie quoi={quoiDeLOption("dividende")}>
+          <ChampPlafonne
             name="dividend"
             label="Dividende versé aux associés"
-            defaultValue={0}
+            plafond={reserves}
             suffix="€"
+            legendePlafond="toutes les réserves"
             hint={
               reserves > 0
-                ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
+                ? "Les réserves sont les bénéfices non distribués des tours passés. Le versement sort en trésorerie, pas en résultat."
                 : roundIndex <= 1
-                  ? "Rien à distribuer au premier tour : l'affectation du résultat s'ouvre à partir du tour 2, une fois le premier résultat connu, et seulement sur des bénéfices."
-                  : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
+                  ? "Rien à distribuer : l'affectation s'ouvre à partir du tour 2."
+                  : "Rien à distribuer : une perte se rattrape d'abord."
             }
           />
         </Family>
       ) : null}
-      {on.finance && treasuryOffer ? (
-        <Family legend="💶 Trésorerie · mobiliser le poste clients">
+      {on.creances && treasuryOffer ? (
+        <Family carte="mobilisation" icone="tresorerie" legend="Trésorerie · mobiliser le poste clients" repli deplie quoi={quoiDeLOption("mobilisation")}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field
-              name="discount"
-              label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
-              defaultValue={0}
-              suffix="€"
-              hint={`Avance sur créances, plafonnée à ${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients, le moins cher.`}
-            />
-            <Field
-              name="factoring"
-              label={`Affacturage (${(treasuryOffer.factoringFeeRate * 100).toLocaleString("fr-FR")} % du montant)`}
-              defaultValue={0}
-              suffix="€"
-              hint="Cession de créances, sans plafond : plus cher, immédiat."
-            />
+            <div>
+              <Field
+                name="discount"
+                label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
+                defaultValue={0}
+                suffix="€"
+                onValueChange={(v) => setMobilisation((m) => ({ ...m, escompte: v }))}
+                hint={`Avance sur créances, plafonnée à ${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients, le moins cher.`}
+              />
+              <Chiffrage lignes={chiffrageEscompte} />
+            </div>
+            <div>
+              <Field
+                name="factoring"
+                label={`Affacturage (${(treasuryOffer.factoringFeeRate * 100).toLocaleString("fr-FR")} % du montant)`}
+                defaultValue={0}
+                suffix="€"
+                onValueChange={(v) => setMobilisation((m) => ({ ...m, affacturage: v }))}
+                hint="Cession de créances, sans plafond : plus cher, immédiat."
+              />
+              <Chiffrage lignes={chiffrageAffacturage} />
+            </div>
           </div>
           {on.placement && treasuryOffer.placementAnnualRate !== null ? (
             <div className="mt-3 border-t border-white/5 pt-3">
@@ -1566,78 +4677,122 @@ export function DecisionForm({
                 suffix="€"
                 hint="Bloqué jusqu'au tour suivant : cet argent ne paiera rien ce tour-ci."
               />
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">
                 {treasuryOffer.maturedPlacement > 0.5
                   ? `${Math.round(treasuryOffer.maturedPlacement).toLocaleString("fr-FR")} € placés au tour précédent sont revenus en caisse, intérêts compris. `
                   : ""}
-                L&apos;argent qui dort ne rapporte rien, mais l&apos;argent placé ne paie pas les
-                factures. Placez trop et vous financerez un découvert à{" "}
+                Placez trop et vous financerez un découvert à{" "}
                 {(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} % avec un
                 placement à{" "}
                 {(treasuryOffer.placementAnnualRate * 100).toLocaleString("fr-FR")} %.
               </p>
             </div>
           ) : null}
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
-            Découvert autorisé jusqu&apos;à{" "}
-            {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
-            banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
-            trésorerie, quelqu&apos;un la gérera pour vous.
-          </p>
+          {modeCartes ? (
+            <div className="mt-2">
+              <Tiroir
+                titre="Découvert autorisé"
+                quoi={`${Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €`}
+                ferme
+              >
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Au-delà, la banque cède vos créances d&apos;office, au tarif fort.
+                </p>
+              </Tiroir>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Découvert autorisé jusqu&apos;à{" "}
+              {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
+              banque cède vos créances d&apos;office, au tarif fort.
+            </p>
+          )}
         </Family>
       ) : null}
+      </section>
+
+      {/* L'ASSURANCE, À PART. Elle faisait 844 px sous la trésorerie : une famille
+          de formules qu'on compare, et qui demande un écran à elle. */}
+      <section
+        data-etape={idx("assurance")}
+        hidden={masquee("assurance")}
+        className="space-y-3"
+      >
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <Family legend="🛡️ Assurance · choisissez votre couverture">
+        <Family carte="assurance" icone="assurance" legend="Assurance · choisissez votre couverture" repli deplie quoi={quoiDeLOption("assurance")}>
           <div className="space-y-2">
-            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
+            <label className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12">
               <input
                 type="radio"
                 name="insurance"
                 value=""
                 defaultChecked={!defaults.insurance}
-                className="mt-0.5 h-4 w-4 accent-amber-400"
+                className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
               />
-              <span className="text-sm text-slate-400">Pas d&apos;assurance : pas de prime, tous les risques à votre charge.</span>
+              <span className="text-sm text-slate-400">Aucune : pas de prime, tous les risques pour vous.</span>
             </label>
             {insuranceFormulas.map((f) => (
               <label
                 key={f.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12"
               >
                 <input
                   type="radio"
                   name="insurance"
                   value={f.code}
                   defaultChecked={defaults.insurance === f.code || (defaults.insurance === true && f.code === insuranceFormulas[0]?.code)}
-                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
                     {f.name} · {formatEuro(f.premium)}
                   </span>
+                  {/* En parcours, la liste complète des risques ne tient pas sur l'écran : la ligne dit
+                      combien, et le détail de chaque formule est dans le tiroir sous les choix. */}
                   <span className="mt-0.5 block text-xs text-slate-400">
-                    Couvre : {f.coveredLabels.join(", ")}.
+                    {modeCartes
+                      ? `${f.coveredLabels.length} risque${f.coveredLabels.length > 1 ? "s" : ""} couvert${f.coveredLabels.length > 1 ? "s" : ""}`
+                      : `Couvre : ${f.coveredLabels.join(", ")}.`}
                   </span>
                 </span>
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          {modeCartes ? (
+            <div className="mt-2">
+              <Tiroir titre="Ce que couvre chaque formule" ferme surface="papier">
+                <ul className="space-y-2 text-sm text-slate-300">
+                  {insuranceFormulas.map((f) => (
+                    <li key={f.code}>
+                      <strong className="text-slate-100">{f.name}</strong> : {f.coveredLabels.join(", ")}.
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                  Un coût certain contre un risque incertain : plus la couverture est large, plus la prime pèse.
+                </p>
+              </Tiroir>
+            </div>
+          ) : (
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Un coût certain contre un risque incertain : plus la couverture est large, plus
-            la prime pèse sur votre seuil de rentabilité.
+            la prime pèse.
           </p>
+          )}
         </Family>
       ) : on.insurance && insuranceOffer ? (
-        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-2.5 py-2">
+        <Carte cle="assurance">
+        <label className="flex items-start gap-3 bg-slate-950 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12">
           <input
             type="checkbox"
             name="insurance"
             defaultChecked={defaults.insurance === true}
-            className="mt-0.5 h-4 w-4 accent-amber-400"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
           />
           <span>
             <span className="text-sm font-medium text-slate-200">
-              🛡️ Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
+              <Icone nom="assurance" className="mr-1.5 h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
+              Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
             </span>
             <span className="mt-0.5 block text-xs text-slate-400">
               Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
@@ -1645,16 +4800,24 @@ export function DecisionForm({
             </span>
           </span>
         </label>
+        </Carte>
       ) : null}
       </section>
 
       <section
         data-etape={idx("prevoir")}
-        hidden={courante !== idx("prevoir")}
+        hidden={masquee("prevoir")}
         className="space-y-3"
       >
       {studiesOffer ? (
-        <Family legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}>
+        <Family
+          carte="etudes"
+          icone="loupe"
+          legend={"Acheter de l'information · livrée avec les résultats du tour"}
+          repli
+          deplie
+          quoi={quoiDeLOption("etudes")}
+        >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
               [
@@ -1686,149 +4849,168 @@ export function DecisionForm({
             ).map((study) => (
               <label
                 key={study.name}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12"
               >
                 <input
                   type="checkbox"
                   name={study.name}
                   defaultChecked={false}
-                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                  onChange={(e) =>
+                    setEtudesCochees((cochees) => {
+                      const suite = { ...cochees };
+                      if (e.target.checked) suite[study.name] = study.cost;
+                      else delete suite[study.name];
+                      return suite;
+                    })
+                  }
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
                     {study.label} · {formatEuro(study.cost)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">{study.hint}</span>
+                  <span className="mt-0.5 block text-xs text-slate-400 max-sm:line-clamp-2">{study.hint}</span>
                 </span>
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
-            L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
-            de rentabilité. Décider sans données coûte souvent plus cher.
-          </p>
-        </Family>
-      ) : null}
-      {/*
-        Gardé sur `on.finance` SEUL, jamais sur `bankFile`. Une partie ouverte
-        avant le dossier bancaire n'a pas de bloc `bank` dans son snapshot,
-        donc pas de `bankFile` : la conditionner dessus faisait disparaître les
-        deux champs en cours de partie, à des élèves qui les remplissaient
-        depuis le premier tour. Le texte change, les champs restent.
-      */}
-      {on.finance ? (
-        <Family
-          legend={
-            bankFile
-              ? "🏦 Votre plan de trésorerie · la pièce que lit la banque"
-              : "🔭 Votre prévision · facultative, sans effet sur le tour"
-          }
-        >
-          {bankFile && bankFile.refusedLoan !== null ? (
-            <p className="mb-3 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs leading-relaxed text-rose-200">
-              Au tour précédent, votre demande de{" "}
-              {formatEuro(bankFile.refusedLoan)} n&apos;a pas été instruite : aucun plan de
-              trésorerie ne l&apos;accompagnait. La banque ne prête pas contre une intention.
-            </p>
-          ) : null}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <OptionalField
-              name="expectedUnits"
-              label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
-              placeholder="ex. 4 200"
-              suffix={v.units}
-              hint="Appuyez-vous sur l'historique de vos ventes, plus bas dans la page."
-            />
-            <OptionalField
-              name="expectedCash"
-              label="Trésorerie nette en fin de tour"
-              placeholder="ex. 18 000"
-              suffix="€"
-              hint={
-                bankFile
-                  ? "Ce que vous pensez avoir en caisse une fois tout payé. Sans cette ligne, pas d'emprunt."
-                  : "Ce que vous pensez avoir en caisse une fois tout payé."
-              }
-            />
-          </div>
-          {bankFile ? (
-            <>
-              <p className="mt-3 text-xs leading-relaxed text-slate-400">
-                Confiance de votre banque :{" "}
-              <strong className="text-slate-200">{Math.round(bankFile.trust * 100)} %</strong>. Elle
-              vous consent ce tour un découvert de{" "}
-              <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>
-              {bankFile.overdraftLimit < bankFile.fullOverdraftLimit - 0.5
-                ? ` au lieu de ${formatEuro(bankFile.fullOverdraftLimit)}`
-                : ""}
-              , à{" "}
-              <strong className="text-slate-200">
-                {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", {
-                  maximumFractionDigits: 1,
-                })}{" "}
-                %
-              </strong>{" "}
-              l&apos;an.
-              {bankFile.lastReliability !== null
-                ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
-                : ""}
-            </p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-400">
-              Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
-              n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
-              annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
-              découvert et son taux. Annoncer large pour se couvrir se paie autant que se tromper.
-            </p>
-            </>
+          {/*
+            LE CUMUL, PENDANT QU'ON COCHE. Quatre prix affichés à côté de
+            quatre cases ne font pas une addition : l'élève coche trois études
+            et découvre la facture au tour suivant, dans les charges de
+            structure. Le total se voit maintenant au moment du choix.
+          */}
+          <Chiffrage
+            lignes={
+              totalEtudes > 0
+                ? [
+                    {
+                      label: `Coût total des études (${nombreDEtudes})`,
+                      valeur: formatEuro(totalEtudes),
+                      fort: true,
+                    },
+                  ]
+                : []
+            }
+          />
+          {modeCartes ? (
+            <div className="mt-2">
+              <Tiroir titre="Pourquoi payer l'information ?" ferme surface="papier">
+                <p className="text-sm leading-relaxed text-slate-400">
+                  L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
+                  de rentabilité. Décider sans données coûte souvent plus cher.
+                </p>
+              </Tiroir>
+            </div>
           ) : (
-            <p className="mt-3 text-xs leading-relaxed text-slate-400">
-              Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
-              savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
-              vous sera montré avec les résultats du tour. Cette partie a été ouverte avant le
-              dossier bancaire : votre prévision n&apos;y change aucun calcul.
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
+              de rentabilité. Décider sans données coûte souvent plus cher.
             </p>
           )}
         </Family>
       ) : null}
+      {/*
+        LA NOTE D'AVANT. Écrire ce qu'on attend de ses choix AVANT de connaître
+        le résultat est la seule façon de mesurer son propre raisonnement : au
+        tour suivant, la note revient à côté du constat, et l'écart se lit.
+        Elle est exigée au PREMIER TOUR, où personne n'a encore d'habitude à
+        reconduire, puis laissée libre : une note arrachée chaque tour devient
+        une formalité qu'on expédie, et une formalité n'apprend rien.
+
+        LOT P5 : son titre prend le gabarit des autres volets (il était un cran
+        plus petit, en `text-xs`), comme son chevron prend leur place.
+      */}
       <Family
-        legend="✍️ En quelques mots"
-        tone="border-slate-700/60"
-        legendClass="text-xs font-medium text-slate-400"
+        carte="justification"
+        icone="ecrire"
+        legend="En quelques mots"
       >
         <textarea
           name="justification"
           rows={2}
           aria-label="Justification de vos décisions"
-          placeholder="Pourquoi ces choix ce tour-ci ?"
-          className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
+          placeholder={premierTour ? INVITATION_NOTE : "Pourquoi ces choix ce tour-ci ?"}
+          className="w-full resize-y champ px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400 focus:outline-none"
         />
-        <p className="mt-1 text-xs text-slate-400">
-          Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
+        <p className="mt-1 text-sm leading-relaxed text-slate-400">
+          {premierTour
+            ? "Recommandé : une phrase, avant de savoir. Elle vous reviendra au prochain tour, en face du résultat."
+            : "Elle vous reviendra au prochain tour, en face du résultat. L'enseignant la lira au débriefing."}
         </p>
       </Family>
       </section>
-      {state.error ? (
-        <p
-          role="alert"
-          aria-live="assertive"
-          className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300"
-        >
-          {state.error}
-        </p>
+
+      {/*
+        LE RÉSULTAT ESTIMÉ EST HORS DES ÉTAPES, DONC SOUS LES YEUX À TOUTES. Il
+        était tentant de le poser dans l'étape où les ventes estimées se
+        saisissent : on aurait alors réglé le prix, les budgets et l'emprunt
+        sans plus rien voir de ce qu'ils donnent. Lot P7 : sur ordinateur, c'est
+        le cadran collant en tête de la feuille ; sur téléphone, la ligne de la
+        barre du parcours, sur CHAQUE carte (elle ne vivait que sur celle des
+        ventes estimées), sans un pixel de plus par carte : une carte tient sur
+        un écran (lot 3A). Un seul exemplaire par écran, une seule annonce.
+      */}
+      {modeCartes && carteCourante?.cle === "recap" ? enTeteDuRecapitulatif : null}
+      {modeCartes && carteCourante?.cle === "recap" && donneesRecap ? (
+        <RecapDesDecisions
+          lignes={fusionnerFinancerEtInvestir(
+            cartes
+              .filter((c) => c.resume)
+              .map((c) => ({ cle: c.cle, nom: c.nom, valeur: c.resume!(donneesRecap) })),
+          )}
+          surModifier={(cle) => {
+            const i = cartes.findIndex((c) => c.cle === cle);
+            if (i >= 0) allerALaCarte(i);
+          }}
+        />
       ) : null}
+      {/* Le refus de l'action se lit au récapitulatif, en tête de la feuille. */}
       <GuardError message={guardError} />
+      {/*
+        LE RÉCAPITULATIF D'ENGAGEMENT, à la dernière étape seulement. Valider,
+        c'est l'acte du tour ; il ressemblait à l'envoi d'un formulaire. Une
+        équipe à quatre, qui a rempli les étapes chacune de son côté, validait
+        sans que personne n'ait vu l'ensemble.
+      */}
+      {derniere && engagement && !verrou && !modeCartes ? (
+        <EngagementDuTour
+          engagement={engagement}
+          vocabulary={v}
+          gamme={Boolean(gamme && gamme.length > 0)}
+        />
+      ) : null}
       {pending && kind === "solo" ? (
         // Le tour se résout côté serveur puis redirige : entre les deux, on
         // rend l'attente tangible — la machine tourne, étape après étape —
         // plutôt qu'un bouton grisé « Envoi en cours… ».
-        <SimulationProgress periodName={periodName} />
+        modeCartes ? (
+          // EN PARCOURS, l'attente prend l'écran : posée sous la dernière carte, elle restait hors
+          // de vue, et le toucher sur « Valider et simuler » semblait ne rien faire.
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-6 backdrop-blur-sm">
+            <div className="w-full max-w-sm">
+              <SimulationProgress periodName={periodName} />
+            </div>
+          </div>
+        ) : (
+          <SimulationProgress periodName={periodName} />
+        )
       ) : nonTouches ? (
         // Pivots laissés aux valeurs proposées : la confirmation REMPLACE le
         // pied de navigation au lieu de s'y ajouter. Sans ça, « Oui/Non » et
         // « Valider » cohabitaient à l'écran (double boutonnage) ; ici une
         // seule action est offerte à la fois.
-        <div role="alert" className="border-t border-orange-400/30 pt-3">
-          <p className="text-sm text-orange-100">
+        <div
+          role="alert"
+          className={`border-t border-white/15 pt-3 ${
+            modeCartes
+              ? // EN PARCOURS, la question prend la place du pied fixe : posée sous un long
+                // récapitulatif, elle restait hors de l'écran.
+                "fixed inset-x-0 bottom-0 z-40 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md print:hidden"
+              : ""
+          }`}
+        >
+          <p className="text-sm text-slate-100">
             Vous validez avec les valeurs proposées pour :{" "}
             <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
           </p>
@@ -1836,14 +5018,14 @@ export function DecisionForm({
             <button
               type="button"
               onClick={garderLesValeurs}
-              className="rounded-lg bg-orange-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-orange-300"
+              className={`${bouton({ taille: "m" })} min-h-11`}
             >
               Oui, je garde ces valeurs
             </button>
             <button
               type="button"
               onClick={lesModifier}
-              className="rounded-lg border border-orange-400/50 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-orange-400/10"
+              className={`${bouton({ variante: "secondaire", taille: "m" })} min-h-11`}
             >
               Non, je les modifie
             </button>
@@ -1854,58 +5036,130 @@ export function DecisionForm({
         // étape à l'autre, et « Valider » (envoi réel) à la dernière seulement.
         // Le bouton d'avance est de type `button` : changer d'étape ne soumet
         // rien, seul le « Valider » final déclenche la résolution du tour.
-        // Sur mobile, l'action principale se replie sur sa propre ligne (via
-        // `order` + `flex-wrap`), calée à droite par `ml-auto` : coincée entre
-        // « Précédent » et « Étape X/Y », elle rétrécissait et son libellé
-        // débordait. On garde un bouton à la TAILLE DE SON CONTENU plutôt qu'une
-        // barre pleine largeur, qui paraissait trop lourde sur téléphone. Sur
-        // grand écran, tout revient sur une seule rangée : Précédent · Étape ·
-        // action (poussée à droite par le `sm:mr-auto` du compteur).
-        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
-          <button
-            type="button"
-            onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
-            disabled={courante === 0}
-            className="order-2 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 sm:order-1"
-          >
-            ← Précédent
-          </button>
-          <span className="order-3 shrink-0 text-xs tabular-nums text-slate-400 sm:order-2 sm:mr-auto">
-            Étape {courante + 1} / {total}
-          </span>
-          {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
-              bascule : sans cela, React réutilisait le même <button> en passant
-              de « Suivant » (type=button) à « Valider » (type=submit) pendant le
-              clic, et le navigateur exécutait l'activation par défaut sur un
-              bouton devenu submit — le dernier « Suivant » envoyait le tour. */}
-          {derniere ? (
+        // SUR TÉLÉPHONE, CE PIED EST COLLÉ AU BAS DE L'ÉCRAN, juste au-dessus des
+        // onglets de l'arène (voir segmented-tabs.tsx) : « Précédent » à gauche,
+        // l'action principale qui prend toute la place restante. Le compteur
+        // « Étape X/Y » y disparaît : les pastilles numérotées juste au-dessus
+        // du formulaire le disent déjà, et il coûtait la largeur d'un bouton.
+        // Sur grand écran, tout reste sur une rangée : Précédent · Étape · action
+        // (poussée à droite par le `sm:mr-auto` du compteur).
+        <div
+          className={`space-y-3 pt-3 ${
+            modeCartes
+              ? // EN PARCOURS, LE PIED EST FIXÉ AU BAS DE L'ÉCRAN, quelle que soit la
+                // longueur de la carte : une carte courte ne laisse pas son bouton
+                // flotter au milieu, comme un site.
+                // `mb-0` : l'espacement du formulaire (space-y) donnait au pied une
+                // marge basse, qui le décollait de 12 px du bas de l'écran.
+                "fixed inset-x-0 bottom-0 z-40 mb-0 border-t border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden"
+              : // Sur grand écran, plus de filet au-dessus du pied (lot 6E) : les
+                // boutons se suffisent ; collé au bas d'une fenêtre étroite, il
+                // garde son bord.
+                "max-sm:sticky max-sm:bottom-[var(--barre-bas,0px)] max-sm:z-30 max-sm:-mx-4 max-sm:border-t max-sm:border-white/10 max-sm:bg-slate-950/95 max-sm:px-4 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-sm:backdrop-blur-md"
+          }`}
+        >
+          {/* L'échéance se rappelle ici, contre le bouton : c'est le moment où
+              savoir qu'il reste huit minutes change quelque chose. */}
+          {echeance && !verrou ? <EcheanceDuTour closesAt={echeance} /> : null}
+          <div className="flex items-center gap-3 sm:flex-wrap">
             <button
-              key="valider"
-              type="submit"
-              disabled={pending || verrou != null}
-              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
-            >
-              {pending
-                ? "Envoi en cours…"
-                : kind === "solo"
-                  ? "Valider et simuler"
-                  : alreadySubmitted
-                    ? "Mettre à jour mes décisions validées"
-                    : "Valider les décisions de l'équipe"}
-            </button>
-          ) : (
-            <button
-              key="suivant"
               type="button"
-              onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
-              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:ml-0"
+              onClick={() => {
+                if (modeCartes) {
+                  vibrer(8);
+                  cartePrecedente();
+                } else allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1));
+              }}
+              disabled={!modeCartes && courante === 0}
+              aria-label={modeCartes ? "Retour" : "Précédent"}
+              // « PRÉCÉDENT » EST DISCRET (lot 6E) : un retour, pas un chemin
+              // qu'on vous propose. Sur téléphone, « Retour » garde son cadre :
+              // c'est une cible tactile dans une barre fixe.
+              className={
+                modeCartes
+                  ? "order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 active:scale-[0.98] disabled:cursor-not-allowed"
+                  : "bouton-retour order-1 min-h-11 shrink-0 px-1 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed"
+              }
             >
-              Suivant →
+              {modeCartes ? "Retour" : "← Précédent"}
             </button>
-          )}
+            {/* La position se lit sur la piste, au-dessus : ici, ce qui reste. */}
+            <span className="order-2 hidden shrink-0 text-xs tabular-nums text-slate-400 sm:mr-auto sm:block">
+              {derniere ? "Fin du parcours" : `Étape ${courante + 1} / ${total}`}
+            </span>
+            {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
+                bascule : sans cela, React réutilisait le même <button> en passant
+                de « Suivant » (type=button) à « Valider » (type=submit) pendant le
+                clic, et le navigateur exécutait l'activation par défaut sur un
+                bouton devenu submit — le dernier « Suivant » envoyait le tour. */}
+            {derniere ? (
+              <button
+                key="valider"
+                type="submit"
+                disabled={pending || verrou != null || validationBloquee}
+                // « Envoi en cours… » se lit déjà dans le libellé ; `aria-busy`
+                // le dit aussi aux technologies d'assistance, garde l'encre du
+                // bouton entière au lieu de l'éteindre, et lui pose la barre
+                // indéterminée des actions longues (bloc « LOT 5B »).
+                aria-busy={pending}
+                // LE GESTE QUI FAIT RÉPONDRE LE MARCHÉ (lot 6E) : le grand bouton
+                // orange plein, le seul aplat orange de son écran — sauf tant que
+                // le courrier attend d'être ouvert, où c'est lui l'orange (`aplat`).
+                className={`${aplat(`${bouton({ taille: "l" })} bouton-valider`)} active:scale-[0.98] order-3 max-sm:flex-1`}
+              >
+                {pending
+                  ? "Envoi en cours…"
+                  : kind === "solo"
+                    ? "Valider et simuler"
+                    : alreadySubmitted
+                      ? "Mettre à jour mes décisions validées"
+                      : "Valider les décisions de l'équipe"}
+              </button>
+            ) : modeCartes && carteCourante?.cle === "commande" ? (
+              // UNE QUESTION, DEUX RÉPONSES : la réponse fait avancer. La case à
+              // cocher du formulaire reste, masquée, et c'est elle qui part.
+              <div key="commande" className="order-3 flex min-w-0 flex-1 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => repondreALaCommande(false)}
+                  className={`${bouton({ variante: commandeAcceptee === false ? "principal" : "secondaire", taille: "l" })} min-h-12 min-w-0 flex-1 px-3`}
+                >
+                  Refuser
+                </button>
+                <button
+                  type="button"
+                  onClick={() => repondreALaCommande(true)}
+                  className={`${bouton({ variante: commandeAcceptee === false ? "secondaire" : "principal", taille: "l" })} min-h-12 min-w-0 flex-1 px-3`}
+                >
+                  Accepter
+                </button>
+              </div>
+            ) : (
+              <button
+                key="suivant"
+                type="button"
+                onClick={() => {
+                  if (modeCartes) {
+                    vibrer(8);
+                    carteSuivante();
+                  } else allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1));
+                }}
+                // CE QUI FAIT AVANCER N'EST PAS CE QUI DÉCLENCHE LE MARCHÉ (lot 6E) :
+                // « Suivant » est plein mais neutre, et il dit où il mène.
+                className={`${bouton({ variante: "secondaire", taille: "l" })} bouton-suite active:scale-[0.98] order-3 max-sm:flex-1`}
+              >
+                {modeCartes
+                  ? "Continuer"
+                  : `Suivant${etapesVisibles[courante + 1] ? ` : ${META[etapesVisibles[courante + 1]!]!.titre}` : ""}`}{" "}
+                →
+              </button>
+            )}
+          </div>
         </div>
       )}
-      {!(pending && kind === "solo") ? (
+      {/* La place du pied fixe : sans elle, le bas de la carte passerait dessous. */}
+      {modeCartes ? <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))]" /> : null}
+      {!(pending && kind === "solo") && !modeCartes ? (
         <p className="text-center text-xs text-slate-400">
           {kind === "solo"
             ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
@@ -1913,5 +5167,8 @@ export function DecisionForm({
         </p>
       ) : null}
     </form>
+    </RefusDesChamps.Provider>
+    </CartesContexte.Provider>
+    </TelephoneContexte.Provider>
   );
 }

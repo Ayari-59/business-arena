@@ -17,6 +17,10 @@ vi.mock("next/navigation", () => ({
     throw new Error(`__redirect__${url}`);
   },
 }));
+// Les actions serveur touchent désormais le service des subventions, qui
+// charge `@/db` — lequel jette à l'import sans DATABASE_URL. Fermer cette
+// frontière garde ce test unitaire : aucune requête n'est faite ici.
+vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("@/lib/session", () => ({
   getSession: vi.fn(),
@@ -37,9 +41,13 @@ vi.mock("@/services/competition.service", () => ({
 vi.mock("@/services/game.service", () => ({
   closeCurrentRound: vi.fn(),
   createClassGame: vi.fn(),
-  drawEventCardForNextRound: vi.fn(),
+  distribuerUnCourrier: vi.fn(),
   setQuizMode: vi.fn(),
 }));
+// `teacher/actions.ts` importe setMissedPolicy de debrief.service, qui charge
+// `@/db` — lequel jette à l'import sans DATABASE_URL. Le mock ferme la frontière
+// de service, pour que ce test reste unitaire sans base ni variable d'environnement.
+vi.mock("@/services/debrief.service", () => ({ setMissedPolicy: vi.fn() }));
 vi.mock("@/services/pedagogy.service", () => ({
   setMissedPolicy: vi.fn(),
 }));

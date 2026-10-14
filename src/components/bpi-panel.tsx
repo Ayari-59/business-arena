@@ -1,15 +1,21 @@
 import { DIMENSION_DISPLAY_ORDER, DIMENSION_LABEL_BY_NAME } from "@/scoring/bpi";
 
-/** Décomposition du BPI de l'équipe : une barre 0-100 par dimension jouée (moyenne des tours). */
-export function BpiPanel({
-  dimensions,
-}: {
-  dimensions: Partial<Record<string, number>>;
-}) {
+/**
+ * Décomposition de l'IPG de l'équipe : une barre 0-100 par dimension jouée
+ * (moyenne des tours).
+ *
+ * Cinq mesures d'une même grandeur, et toutes celles de VOTRE entreprise :
+ * une seule teinte, celle de son métier (lot 5A). Colorer chaque dimension
+ * autrement dépenserait le canal de l'identité pour redire ce que la longueur
+ * de la barre montre déjà.
+ */
+export function BpiPanel({ dimensions }: { dimensions: Partial<Record<string, number>> }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-      <h2 className="mb-3 text-sm font-semibold text-slate-200">Votre profil de performance</h2>
-      <ul className="space-y-2">
+    <div className="panneau-info p-3 sm:p-5">
+      <h2 className="mb-2 text-sm font-semibold text-slate-200 sm:mb-3">
+        Votre profil de performance
+      </h2>
+      <ul className="space-y-1.5 sm:space-y-2">
         {DIMENSION_DISPLAY_ORDER.map((dimension) => {
           const value = dimensions[dimension];
           if (value === undefined) return null;
@@ -21,7 +27,7 @@ export function BpiPanel({
               </div>
               <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
                 <div
-                  className="h-1.5 rounded-full bg-[#3987e5]"
+                  className="h-1.5 rounded-full bg-[color:var(--metier,var(--donnee))]"
                   style={{ width: `${Math.max(2, Math.min(100, value))}%` }}
                 />
               </div>

@@ -75,13 +75,37 @@ export interface HeaderPair {
  * requête : le rendu statique des pages reste possible.
  */
 export function securityHeaders(): HeaderPair[] {
+  return [...entetesCommuns(), ...entetesDeCadre()];
+}
+
+/** Ce qui vaut pour TOUTES les réponses, routes LTI comprises. */
+export function entetesCommuns(): HeaderPair[] {
   return [
     { key: "X-Content-Type-Options", value: "nosniff" },
-    { key: "X-Frame-Options", value: "DENY" },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
     // Deux ans, sous-domaines compris, candidat à la liste de préchargement.
     { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  ];
+}
+
+/**
+ * L'iframe interdite et la CSP du site : partout SAUF sous /api/lti/.
+ *
+ * Les routes LTI (lti/html.ts) servent des écrans que la plateforme d'enseignement
+ * affiche dans sa propre page (sélection de contenu, inscription dynamique) et qui
+ * postent vers elle (retour de la sélection). Elles posent leur propre CSP, plus stricte
+ * sur tout le reste (default-src 'none', script à nonce), qui n'ouvre l'intégration qu'à
+ * l'origine de LA plateforme et le formulaire qu'à son adresse de retour. Mesuré sur le
+ * build : une CSP posée par une route est ÉCRASÉE par celle de next.config ; la règle
+ * globale doit donc s'écarter de ce seul préfixe, plutôt que d'y être contredite.
+ */
+export function entetesDeCadre(): HeaderPair[] {
+  return [
+    { key: "X-Frame-Options", value: "DENY" },
     { key: CSP_HEADER_NAME, value: contentSecurityPolicy() },
   ];
 }
+
+/** Toutes les routes sauf /api/lti/… (path-to-regexp, lu par next.config). */
+export const SOURCE_HORS_LTI = "/((?!api/lti/).*)";

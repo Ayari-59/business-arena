@@ -1,0 +1,90 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
+import { FriseDesTours } from "@/components/frise-des-tours";
+
+/**
+ * L'ESPACE ENSEIGNANT A LE VISAGE DE L'ARÈNE. Un en-tête écrit une fois :
+ * surtitre, titre, navigation en pastilles avec la page courante en ambre ;
+ * des rubriques qui donnent le rythme de la séance ; une frise qui sait
+ * montrer un tour joué sans lui prêter un signe.
+ */
+describe("l'en-tête enseignant", () => {
+  it("nomme la page courante et propose les autres", () => {
+    const html = renderToStaticMarkup(
+      createElement(EnTeteEnseignant, { titre: "Mes scénarios", actif: "scenarios" }),
+    );
+    expect(html).toContain("Espace enseignant");
+    expect(html).toContain("Mes scénarios");
+    expect(html).toMatch(/aria-current="page"[^>]*>Mes scénarios/);
+    for (const lien of ["Mes parties", "Carnet d&#x27;usage", "Aide"]) expect(html).toContain(lien);
+    // L'aide mène au guide de prise en main de l'enseignant ; le manuel n'a plus
+    // de pastille (il se lit depuis le guide et depuis le menu du site).
+    expect(html).toContain('href="/guides/enseignant"');
+    expect(html).not.toContain("/teacher/manuel");
+    // Dans l'ordre d'usage : parties, examens, cohortes, scénarios, carnet, aide.
+    const nav = html.slice(html.indexOf("<nav"));
+    const ordre = ["Mes parties", "Mes examens", "Mes cohortes", "Mes scénarios", "Carnet d&#x27;usage", "Aide"].map((l) => nav.indexOf(`>${l}<`));
+    expect(ordre.every((i) => i >= 0)).toBe(true);
+    expect([...ordre].sort((a, b) => a - b)).toEqual(ordre);
+    // pas d'établissement ni d'administration sans le droit
+    expect(html).not.toContain("Mon établissement");
+    expect(html).not.toContain("Administration");
+    // L'onglet « Progression » a été retiré : il affichait 0 % pour toutes les
+    // équipes, toujours, faute d'étape d'apprentissage que quoi que ce soit
+    // pût délivrer. Cette ligne empêche qu'il revienne par mégarde.
+    expect(html).not.toContain("Progression");
+  });
+
+  it("montre l'établissement et l'administration à qui y a droit", () => {
+    const html = renderToStaticMarkup(
+      createElement(EnTeteEnseignant, {
+        titre: "Mes parties",
+        actif: "parties",
+        liens: { etablissement: true, administration: true },
+      }),
+    );
+    expect(html).toContain('href="/org"');
+    expect(html).toContain('href="/admin"');
+  });
+
+  it("porte la tuile du secteur, et le surtitre en laiton comme tout le site", () => {
+    // La couleur du secteur appartient à la tuile ; le surtitre est celui de
+    // toutes les pages, en laiton. Il n'y a plus de quoi le teinter.
+    const html = renderToStaticMarkup(
+      createElement(EnTeteEnseignant, {
+        surtitre: "Pilotage de partie · Industrie",
+        titre: "NOVA",
+        tuile: createElement("span", { "data-tuile": "", className: "text-blue-400" }),
+      }),
+    );
+    expect(html).toContain("data-tuile");
+    expect(html).toMatch(/text-amber-400[^>]*>Pilotage de partie · Industrie/);
+    expect(html).not.toMatch(/text-blue-400[^>]*>Pilotage/);
+  });
+
+  it("une rubrique dit le mot et, s'il y a lieu, le compte", () => {
+    const html = renderToStaticMarkup(createElement(Rubrique, { note: "1 partie" } as Parameters<typeof Rubrique>[0], "Mes parties"));
+    expect(html).toContain("Mes parties");
+    expect(html).toContain("1 partie");
+  });
+});
+
+describe("la frise côté enseignant", () => {
+  it("un tour joué sans signe est plein, ni vert ni rouge", () => {
+    const html = renderToStaticMarkup(
+      createElement(FriseDesTours, {
+        roundsCount: 4,
+        currentRound: 3,
+        resultats: new Map<number, number | null>([[1, null], [2, null]]),
+        finished: false,
+      }),
+    );
+    expect(html).toContain("Tour 1 · joué");
+    expect(html).not.toContain("bg-emerald-400/70");
+    expect(html).not.toContain("bg-red-400/70");
+    expect(html).toContain("Tour 3 · en cours");
+    expect(html).toContain("Tour 4 · à venir");
+  });
+});

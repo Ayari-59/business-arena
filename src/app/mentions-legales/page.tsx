@@ -1,6 +1,7 @@
+import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import Link from "next/link";
+import { VENDEUR } from "@/config/editeur";
 import type { Metadata } from "next";
-import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/mentions-legales" },
@@ -11,14 +12,18 @@ export const metadata: Metadata = {
 
 /** Mentions légales & RGPD : page statique, sans base de données. */
 const EDITEUR = {
-  nom: "Mohamed AYARI",
-  statut: "enseignant",
-  contact: "mohamed.ayari@ac-lille.fr",
+  nom: VENDEUR.exploitant,
+  nomCommercial: VENDEUR.nom,
+  statut: VENDEUR.statut,
+  siret: VENDEUR.siret,
+  adresse: `${VENDEUR.adresse.rue}, ${VENDEUR.adresse.codePostal} ${VENDEUR.adresse.ville}`,
+  contact: VENDEUR.contact,
+  directeur: VENDEUR.directeurDeLaPublication,
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8">
+    <section className="carte p-6 sm:p-8">
       <h2 className="text-lg font-bold text-slate-50">{title}</h2>
       <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-400">{children}</div>
     </section>
@@ -28,34 +33,26 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function MentionsLegalesPage() {
   return (
     <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
-      <nav className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
-        <Link href="/">
-          <SiteLogo />
-        </Link>
-        <Link
-          href="/"
-          className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-        >
-          Retour au site
-        </Link>
-      </nav>
+      {/*
+        PAS DE DEUXIÈME BARRE DE NAVIGATION. Cette page portait la sienne, logo
+        compris, sous l'en-tête du site : deux logos l'un sur l'autre, et un
+        « Retour au site » qui doublait le logo de l'en-tête, lequel ramène déjà
+        à l'accueil.
+      */}
+      <EnTeteDePage
+        surtitre="Mentions légales & données personnelles"
+        titre={"Vos élèves jouent sans compte, sans e\u2011mail, sans traceur"}
+        chapeau={
+          <>
+            Business Arena est conçu pour la classe : la protection des données n&apos;y est pas une
+            case à cocher, c&apos;est un choix d&apos;architecture. Cette page dit exactement ce
+            que la plateforme collecte, et surtout ce qu&apos;elle ne collecte pas.
+          </>
+        }
+      />
 
-      <header className="mx-auto max-w-3xl px-6 pb-4 pt-8">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-          Mentions légales & données personnelles
-        </p>
-        <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50">
-          Vos élèves jouent sans compte, sans e-mail, sans traceur
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-          Business Arena est conçu pour la classe : la protection des données n&apos;y est pas
-          une case à cocher, c&apos;est un choix d&apos;architecture. Cette page dit exactement
-          ce que la plateforme collecte, et surtout ce qu&apos;elle ne collecte pas.
-        </p>
-      </header>
-
-      <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
-        <Section title="🎓 L'essentiel pour les établissements">
+      <div className={`${COLONNE_DE_PAGE} space-y-6 pb-12 pt-2`}>
+        <Section title="L'essentiel pour les établissements">
           <ul className="list-disc space-y-2 pl-5">
             <li>
               <strong className="text-slate-200">Aucun compte élève.</strong> Les élèves
@@ -66,13 +63,14 @@ export default function MentionsLegalesPage() {
             <li>
               <strong className="text-slate-200">Aucun traceur.</strong> Pas de cookies
               publicitaires, pas de mesure d&apos;audience tierce, pas de réseaux sociaux
-              embarqués. Deux cookies techniques signés, strictement nécessaires au
-              fonctionnement, exemptés de consentement au sens des lignes directrices de la
+              embarqués. Deux cookies techniques signés pour les enseignants et les joueurs,
+              strictement nécessaires au fonctionnement, exemptés de consentement au sens des lignes directrices de la
               CNIL.
             </li>
             <li>
-              <strong className="text-slate-200">Base de données dans l&apos;Union
-              européenne</strong> (Francfort, Allemagne).
+              <strong className="text-slate-200">Données conservées dans l&apos;Union
+              européenne.</strong> La base de données et les traitements de l&apos;application sont
+              situés à Francfort (Allemagne).
             </li>
             <li>
               <strong className="text-slate-200">Toutes les données de jeu sont
@@ -82,33 +80,41 @@ export default function MentionsLegalesPage() {
           </ul>
         </Section>
 
-        <Section title="📇 Éditeur du site">
+        <Section title="Éditeur du site">
           <p>
-            Le site business-arena.fr est édité à titre pédagogique par{" "}
-            <strong className="text-slate-200">{EDITEUR.nom}</strong> ({EDITEUR.statut}).
+            Le site business-arena.fr est édité par{" "}
+            <strong className="text-slate-200">{EDITEUR.nom}</strong>, sous le nom commercial{" "}
+            <strong className="text-slate-200">{EDITEUR.nomCommercial}</strong>, {EDITEUR.statut}.
           </p>
           <p>
+            SIRET : <span className="tabular-nums text-slate-200">{EDITEUR.siret}</span>
+            <br />
+            Adresse : {EDITEUR.adresse}
+            <br />
             Contact : <strong className="text-slate-200">{EDITEUR.contact}</strong>
           </p>
-          <p>Directeur de la publication : l&apos;éditeur.</p>
+          <p>TVA non applicable, art. 293 B du CGI.</p>
+          <p>Directeur de la publication : {EDITEUR.directeur}.</p>
         </Section>
 
-        <Section title="🖥️ Hébergement">
+        <Section title="Hébergement">
           <p>
             L&apos;application est hébergée par <strong className="text-slate-200">Vercel
             Inc.</strong> (440 N Barranca Ave #4133, Covina, CA 91723, États-Unis,
-            vercel.com), qui la sert via son réseau mondial.
+            vercel.com). Les traitements de l&apos;application s&apos;exécutent dans sa région de{" "}
+            <strong className="text-slate-200">Francfort (Allemagne)</strong> ; seuls les fichiers
+            publics du site (pages, images, styles) sont servis par son réseau mondial.
           </p>
           <p>
             La base de données est hébergée par <strong className="text-slate-200">Neon
-            Inc.</strong> sur une infrastructure AWS située en{" "}
-            <strong className="text-slate-200">Union européenne (région eu-central-1,
-            Francfort, Allemagne)</strong> : les données persistées (comptes enseignants,
-            parties, résultats de simulation) sont stockées dans l&apos;UE.
+            Inc.</strong>, sur l&apos;infrastructure d&apos;Amazon Web Services, région eu-central-1{" "}
+            <strong className="text-slate-200">(Francfort, Allemagne)</strong> : elle conserve les
+            données persistées (comptes enseignants, parties, résultats de simulation) dans
+            l&apos;Union européenne.
           </p>
         </Section>
 
-        <Section title="🔐 Données personnelles (RGPD)">
+        <Section title="Données personnelles (RGPD)">
           <p>Les données traitées, leur finalité et leur durée :</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -129,17 +135,26 @@ export default function MentionsLegalesPage() {
                   <td className="py-2 pr-3">Rattacher le joueur à son équipe et à ses parties</td>
                   <td className="py-2">Cookie : 12 mois</td>
                 </tr>
-                <tr className="border-t border-white/5">
+                <tr className="border-t border-white/5" data-ligne-enseignants="">
                   <td className="py-2 pr-3 font-medium text-slate-200">Enseignants / personnels</td>
                   <td className="py-2 pr-3">
                     E-mail, nom affiché, mot de passe (haché, jamais stocké en clair),
-                    établissement de rattachement
+                    établissement de rattachement, date d&apos;inscription et de dernière connexion,
+                    état du compte (actif ou désactivé) ;
+                    si vous l&apos;acceptez, la date de votre accord aux nouveautés et la version du
+                    texte accepté
                   </td>
                   <td className="py-2 pr-3">
-                    Créer et piloter les parties, gérer l&apos;établissement (exécution du
-                    service demandé)
+                    Créer et piloter les parties, gérer l&apos;établissement, vous écrire les messages
+                    de service (licence, incident) : exécution du service demandé, sans
+                    consentement à donner. Envoi des nouveautés, seulement avec votre accord
+                    (révocable à tout moment, d&apos;un clic dans chaque e-mail ou depuis votre
+                    espace enseignant) : au plus une fois par mois
                   </td>
-                  <td className="py-2">Durée du compte</td>
+                  <td className="py-2">
+                    Durée du compte ; pour les nouveautés, jusqu&apos;au retrait du consentement ou à
+                    la suppression du compte
+                  </td>
                 </tr>
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Données de jeu</td>
@@ -150,9 +165,84 @@ export default function MentionsLegalesPage() {
                   <td className="py-2 pr-3">Le jeu, le débriefing et la progression pédagogique</td>
                   <td className="py-2">Durée des parties</td>
                 </tr>
+                <tr className="border-t border-white/5">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Managers en cohorte</td>
+                  <td className="py-2 pr-3">
+                    Pseudo librement choisi, code de cohorte, code de reprise, décisions et
+                    profil décisionnel
+                  </td>
+                  <td className="py-2 pr-3">
+                    Jouer les épisodes de la cohorte, retrouver son profil sur un autre appareil
+                  </td>
+                  <td className="py-2">Durée de la cohorte</td>
+                </tr>
+                <tr className="border-t border-white/5" data-ligne-lti="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">
+                    Comptes reçus d&apos;une plateforme d&apos;enseignement (LTI)
+                  </td>
+                  <td className="py-2 pr-3">
+                    Identifiant technique de la personne chez la plateforme, gardé sous forme
+                    d&apos;empreinte, et chiffré pour un élève quand la plateforme accorde le retour
+                    des notes ; prénom s&apos;il est envoyé (pseudo de l&apos;élève) ;
+                    rôle ; titres du cours et de l&apos;activité. Pour un enseignant seulement : nom
+                    et courriel si la plateforme les envoie. Aucun courriel d&apos;élève.
+                  </td>
+                  <td className="py-2 pr-3">
+                    Faire entrer la personne dans la partie ou la cohorte choisie par
+                    l&apos;enseignant, sans compte ni code ; renvoyer la note d&apos;un examen dans
+                    le carnet de notes de la plateforme, quand elle l&apos;accorde (exécution du
+                    service demandé par l&apos;établissement)
+                  </td>
+                  <td className="py-2">Durée du rattachement de la plateforme</td>
+                </tr>
+                <tr className="border-t border-white/5" data-ligne-renater="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">
+                    Comptes reçus de la fédération RENATER
+                  </td>
+                  <td className="py-2 pr-3">
+                    Identifiant pseudonyme transmis par l&apos;établissement, gardé seulement sous
+                    forme d&apos;empreinte ; statut (étudiant ou personnel) ; établissement. Pour un
+                    enseignant ou un personnel seulement : nom affiché et courriel s&apos;ils sont
+                    transmis. Aucun nom ni courriel d&apos;étudiant.
+                  </td>
+                  <td className="py-2 pr-3">
+                    Reconnaître la personne et son établissement, appliquer la licence de
+                    l&apos;établissement, retrouver les parties de l&apos;étudiant sur tout appareil
+                    (exécution du service demandé)
+                  </td>
+                  <td className="py-2">Durée du compte</td>
+                </tr>
+                <tr className="border-t border-white/5">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Demandes de contact</td>
+                  <td className="py-2 pr-3">
+                    Nom, établissement ou organisation, e-mail, téléphone (rendez-vous),
+                    message, adresse IP (protection contre les envois abusifs)
+                  </td>
+                  <td className="py-2 pr-3">
+                    Répondre à une demande de rendez-vous, de devis ou de simulation
+                  </td>
+                  <td className="py-2">3 ans après le dernier contact</td>
+                </tr>
               </tbody>
             </table>
           </div>
+          <p>
+            Sous-traitants : Vercel (hébergement de l&apos;application), Neon (base de
+            données), Resend (envoi des e-mails), Google (agenda des rendez-vous) et, seulement
+            si l&apos;assistant d&apos;IA est activé, Anthropic (réponses de l&apos;assistant à
+            partir des justifications écrites par les joueurs).
+          </p>
+          <p data-federation-renater="">
+            Fédération Éducation-Recherche (RENATER) : RENATER n&apos;est pas un sous-traitant de
+            Business Arena. La fédération met en relation l&apos;établissement de la personne et
+            Business Arena ; c&apos;est l&apos;établissement qui authentifie la personne et décide
+            des attributs transmis.
+          </p>
+          <p data-plateformes-lti="">
+            Plateformes LTI (Moodle, Canvas, Blackboard, Brightspace) : elles ne sont pas des
+            sous-traitants de Business Arena. Elles appartiennent à l&apos;établissement client,
+            qui choisit d&apos;y ajouter l&apos;outil et décide de ce qu&apos;elles transmettent.
+          </p>
           <p>
             Aucune donnée n&apos;est vendue, louée, transmise à des tiers à des fins
             commerciales, ni utilisée pour de la publicité. Aucun profilage n&apos;est
@@ -166,16 +256,32 @@ export default function MentionsLegalesPage() {
           </p>
         </Section>
 
-        <Section title="🍪 Cookies">
-          <p>Le site dépose uniquement deux cookies techniques, signés cryptographiquement :</p>
+        <Section title="Cookies">
+          <p>Le site dépose uniquement des cookies techniques :</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              <code className="text-amber-300">ba_session</code> : session des enseignants et
+              <code className="font-mono text-slate-100">ba_session</code> (signé) : session des enseignants et
               personnels connectés (30 jours) ;
             </li>
             <li>
-              <code className="text-amber-300">ba_guest</code> : identifiant technique des
-              joueurs invités, pour retrouver leurs parties (12 mois).
+              <code className="font-mono text-slate-100">ba_guest</code> (signé) : identifiant technique des
+              joueurs invités, pour retrouver leurs parties (12 mois) ;
+            </li>
+            <li>
+              <code className="font-mono text-slate-100">ba_lti</code> (signé) et{" "}
+              <code className="font-mono text-slate-100">ba_lti_state</code> : l&apos;arrivée
+              depuis une plateforme d&apos;enseignement, l&apos;activité lancée (4 heures) et la
+              vérification de la connexion (10 minutes) ;
+            </li>
+            <li>
+              <code className="font-mono text-slate-100">ba_saml</code> : la vérification de la
+              connexion par l&apos;établissement (RENATER), le temps de l&apos;aller et retour (10
+              minutes au plus) ;
+            </li>
+            <li>
+              <code className="font-mono text-slate-100">google_oauth_state</code> : réservé à
+              l&apos;administrateur, le temps de relier l&apos;agenda des rendez-vous (10 minutes
+              au plus).
             </li>
           </ul>
           <p>
@@ -186,12 +292,12 @@ export default function MentionsLegalesPage() {
           </p>
         </Section>
 
-        <Section title="⚖️ Propriété intellectuelle & responsabilité">
+        <Section title="Propriété intellectuelle & responsabilité">
           <p>
             La marque Business Arena, le logo, les contenus pédagogiques (situations, fiches
-            notions, cartes événements) et le moteur de simulation sont la propriété de
+            notions, courriers) et le moteur de simulation sont la propriété de
             l&apos;éditeur. Les licences des composants open source utilisés sont respectées
-            (notamment la police Big Shoulders, SIL Open Font License).
+            (notamment les polices Barlow et Barlow Condensed, SIL Open Font License).
           </p>
           <p>
             Business Arena est une simulation pédagogique : les entreprises, marchés, chiffres
@@ -202,8 +308,8 @@ export default function MentionsLegalesPage() {
           </p>
         </Section>
 
-        <p className="text-center text-xs text-slate-600">
-          Dernière mise à jour : août 2026 ·{" "}
+        <p className="text-center text-xs text-slate-400">
+          Dernière mise à jour : octobre 2026 ·{" "}
           <Link href="/" className="underline-offset-4 hover:text-slate-400 hover:underline">
             business-arena.fr
           </Link>

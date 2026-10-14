@@ -23,12 +23,9 @@ export async function createTestDb() {
     }
   }
   const database = drizzle(client, { schema });
-  // Palier gratuit « illimité » par défaut en test : les tests jouent des
-  // parties complètes et créent des concours. Le freemium borné est vérifié à
-  // part, par les tests qui écrivent eux-mêmes une config restrictive.
-  await database.insert(schema.platformSettings).values({
-    id: 1,
-    settings: { freeTier: { maxRounds: null, competitions: true, ai: true, gradebookExport: true } },
-  });
+  // Une ligne de réglages vide : la configuration par défaut du code s'applique.
+  // (L'ancien palier gratuit n'est plus un réglage ; tests/golden/freemium-entitlements
+  // vérifie qu'un réglage hérité reste sans effet.)
+  await database.insert(schema.platformSettings).values({ id: 1, settings: {} });
   return database;
 }

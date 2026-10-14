@@ -1,22 +1,31 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { orgLicences, organizationMembers } from "@/db/schema";
+import { orgLicences, organizationMembers, organizations } from "@/db/schema";
+import {
+  OFFRES,
+  PARAMETRAGE_DES_OFFRES,
+  type OffreDeLArene,
+  type ParametrageDeLicence,
+} from "@/config/tarifs";
+import { estUnMotifDeGratuite, type NatureDeLicence } from "@/config/catalogue";
 
 /**
  * La licence d'établissement : ce qui est vendu, et ce qui est refusé.
  *
- * Un lycée n'achète pas un abonnement par carte bancaire. Il émet un bon de
- * commande, reçoit une facture et paie par mandat administratif, parfois deux
- * mois plus tard. Le produit enregistre donc les termes convenus, il ne les
- * encaisse pas : le prix et la référence sont là pour retrouver la vente, pas
- * pour la conclure.
+ * Tout se vend sur devis (config/tarifs.ts). L'établissement émet un bon de
+ * commande, reçoit une facture et paie par virement ou mandat administratif,
+ * parfois deux mois plus tard. Le produit enregistre donc les termes convenus, il
+ * ne les encaisse pas : le prix et la référence sont là pour retrouver la vente,
+ * pas pour la conclure.
  *
- * TROIS DÉCISIONS, ET CHACUNE PROTÈGE QUELQU'UN.
- *
- * L'absence de licence vaut ACCÈS LIBRE. Une frontière qui se refermerait
- * d'elle-même sur les établissements existants, sur une démonstration ou sur
- * un essai serait une régression déguisée en modèle économique. La limite
- * n'existe que là où une vente l'a définie.
+ * UNE LICENCE PORTE SON PÉRIMÈTRE (migration 0036) : l'arène et/ou les épisodes
+ * manager, vendus à part. ET SON PARAMÉTRAGE (migration 0038) : l'offre de l'arène
+ * (Classe, Programme, Campus), les entreprises et les niveaux qu'elle ouvre, ses plafonds
+ * d'enseignants et de parties en cours (config/tarifs.ts, `PARAMETRAGE_DES_OFFRES`).
+ * Ce que chaque licence ouvre se décide dans services/acces.service.ts :
+ * sans licence de l'arène en cours, pas de partie de classe ni de concours (« pas
+ * d'essai en classe ») ; sans licence qui inclut les épisodes, seules les
+ * démonstrations se lancent. Une licence expirée vaut une absence de licence.
  *
  * Une licence expirée n'interrompt JAMAIS une classe en cours. Elle empêche
  * d'ouvrir une NOUVELLE partie, et laisse terminer celles qui tournent. Un
@@ -38,7 +47,102 @@ export interface OrgLicence {
   maxTeachers: number | null;
   reference: string | null;
   amountCents: number | null;
+  /** L'offre de l'arène que la licence ouvre ; null : elle n'ouvre pas l'arène. */
+  arene: OffreDeLArene | null;
+  /** La licence ouvre-t-elle les épisodes manager non démo ? */
+  episodes: boolean;
+  /** La licence ouvre-t-elle l'examen individuel (module `examen`, migration 0042) ? */
+  examen: boolean;
+  /** Les entreprises ouvertes (codes) ; null : toutes. */
+  entreprises: string[] | null;
+  /** Les niveaux ouverts ; null : tous. */
+  niveaux: number[] | null;
+  /** Les parties de classe et concours en cours en même temps ; null : sans plafond. */
+  maxPartiesEnCours: number | null;
+  /**
+   * LA VENTE (migration 0041) : l'offre du catalogue vendue, son nom AU MOMENT DE LA VENTE
+   * (copié dans les conditions : changer le catalogue ne change pas la licence), la
+   * nature (vendue, offerte, essai), le motif d'une gratuité, le prix catalogue et la
+   * remise. Une licence d'avant le catalogue n'a ni offre ni conditions : elle est vendue.
+   */
+  offreCode: string | null;
+  nomDeLOffre: string | null;
+  nature: NatureDeLicence;
+  motifGratuite: string | null;
+  prixCatalogueCents: number | null;
+  remise: RemiseDeLicence | null;
 }
+
+/** La remise commerciale enregistrée sur une licence. */
+export interface RemiseDeLicence {
+  type: "pourcentage" | "montant";
+  /** Un pourcentage, ou un montant en centimes. */
+  valeur: number;
+  motif: string;
+  /** Ce qu'elle a retiré du prix catalogue, en centimes. */
+  montantCents: number;
+}
+
+/** Les conditions copiées sur la licence au moment de la vente. */
+export interface ConditionsDeVente {
+  code: string;
+  nom: string;
+  tarif: string;
+  prixCents: number | null;
+  modules: unknown[];
+  inclus: string[];
+  precisions: string[];
+}
+
+/** Le paramétrage de l'arène d'une licence, tel que la règle le lit ; null : pas d'arène. */
+export function parametrageDe(l: OrgLicence): ParametrageDeLicence | null {
+  if (!l.arene) return null;
+  return {
+    offre: l.arene,
+    entreprises: l.entreprises,
+    niveaux: l.niveaux,
+    maxEnseignants: l.maxTeachers,
+    maxPartiesEnCours: l.maxPartiesEnCours,
+  };
+}
+
+/**
+ * Sur quoi lire l'état : toute licence, celles de l'arène, celles qui incluent les épisodes,
+ * ou celles qui incluent l'examen individuel.
+ */
+export type PorteeDeLicence = "toutes" | "arene" | "episodes" | "examen";
+
+type LigneDeLicence = typeof orgLicences.$inferSelect;
+
+export const versLicence = (r: LigneDeLicence): OrgLicence => ({
+  id: r.id,
+  label: r.label,
+  startsAt: r.startsAt,
+  endsAt: r.endsAt,
+  maxTeachers: r.maxTeachers,
+  reference: r.reference,
+  amountCents: r.amountCents,
+  arene: r.arene ?? null,
+  episodes: r.episodes,
+  examen: r.examen ?? false,
+  entreprises: r.entreprises ?? null,
+  niveaux: r.niveaux ?? null,
+  maxPartiesEnCours: r.maxPartiesEnCours ?? null,
+  offreCode: r.offreCode ?? null,
+  nomDeLOffre: (r.conditions as ConditionsDeVente | null)?.nom ?? null,
+  nature: r.nature ?? "vendue",
+  motifGratuite: r.motifGratuite ?? null,
+  prixCatalogueCents: r.prixCatalogueCents ?? null,
+  remise: (r.remise as RemiseDeLicence | null) ?? null,
+});
+
+const couvre = (r: LigneDeLicence, portee: PorteeDeLicence): boolean => {
+  if (portee === "toutes") return true;
+  if (portee === "arene") return r.arene !== null;
+  // L'examen se joue dans le périmètre de l'arène : la licence porte les deux.
+  if (portee === "examen") return r.examen && r.arene !== null;
+  return r.episodes;
+};
 
 export interface LicenceStatus {
   state: LicenceState;
@@ -51,22 +155,35 @@ export interface LicenceStatus {
   blocking: string | null;
 }
 
+/**
+ * Les offres de l'arène qui incluent l'examen individuel par défaut (la composition du
+ * catalogue par défaut, config/tarifs.ts) : Programme et Campus, pas Classe.
+ */
+export const EXAMEN_PAR_DEFAUT: readonly OffreDeLArene[] = ["programme", "campus"];
+
 /** Seuil d'alerte : de quoi lancer un renouvellement sans courir. */
 const ALERTE_JOURS = 30;
 
 const jours = (de: Date, a: Date) =>
   Math.ceil((a.getTime() - de.getTime()) / (24 * 60 * 60 * 1000));
 
-/** La licence en cours d'un établissement, ou la plus récente s'il n'y en a pas. */
+/**
+ * La licence en cours d'un établissement, ou la plus récente s'il n'y en a pas. `portee`
+ * restreint la lecture aux licences de l'arène ou à celles qui incluent les épisodes : un
+ * établissement peut avoir une licence Campus en cours et une licence épisodes expirée.
+ */
 export async function getLicenceStatus(
   organizationId: string,
   now: Date = new Date(),
+  portee: PorteeDeLicence = "toutes",
 ): Promise<LicenceStatus> {
-  const rows = await db
-    .select()
-    .from(orgLicences)
-    .where(eq(orgLicences.organizationId, organizationId))
-    .orderBy(desc(orgLicences.endsAt));
+  const rows = (
+    await db
+      .select()
+      .from(orgLicences)
+      .where(eq(orgLicences.organizationId, organizationId))
+      .orderBy(desc(orgLicences.endsAt))
+  ).filter((r) => couvre(r, portee));
 
   const membres = await db
     .select({ role: organizationMembers.role })
@@ -81,15 +198,7 @@ export async function getLicenceStatus(
   // Celle qui couvre aujourd'hui ; à défaut, la plus récente, pour que
   // l'établissement voie ce qui vient d'expirer plutôt que rien.
   const courante = rows.find((r) => r.startsAt <= now && now <= r.endsAt) ?? rows[0]!;
-  const licence: OrgLicence = {
-    id: courante.id,
-    label: courante.label,
-    startsAt: courante.startsAt,
-    endsAt: courante.endsAt,
-    maxTeachers: courante.maxTeachers,
-    reference: courante.reference,
-    amountCents: courante.amountCents,
-  };
+  const licence = versLicence(courante);
   const daysLeft = jours(now, courante.endsAt);
 
   if (now < courante.startsAt) {
@@ -129,14 +238,41 @@ export async function getLicenceStatus(
 }
 
 /**
- * Lève si l'établissement ne peut pas ouvrir une nouvelle partie.
+ * Lève si la licence de l'arène de l'établissement, EN COURS, compte plus d'enseignants
+ * qu'elle n'en couvre. L'absence de licence, une licence expirée ou à venir, se refusent
+ * avant, et avec le même message, dans `verifierLaClasse` (services/acces.service.ts).
  *
  * Appelé à la CRÉATION seulement : clore un tour, débriefer et exporter les
- * notes restent possibles quoi qu'il arrive. Ce qui a commencé se termine.
+ * notes restent possibles. Ce qui a commencé se termine.
  */
 export async function assertCanCreateGame(organizationId: string): Promise<void> {
-  const statut = await getLicenceStatus(organizationId);
-  if (statut.blocking) throw new Error(statut.blocking);
+  const statut = await getLicenceStatus(organizationId, new Date(), "arene");
+  if ((statut.state === "active" || statut.state === "bientot_expiree") && statut.blocking) {
+    throw new Error(statut.blocking);
+  }
+}
+
+/** Une licence de cette portée est-elle en cours (active, ou bientôt à renouveler) ? */
+export async function licenceEnCours(
+  organizationId: string,
+  portee: Exclude<PorteeDeLicence, "toutes">,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const st = await getLicenceStatus(organizationId, now, portee);
+  return st.state === "active" || st.state === "bientot_expiree";
+}
+
+/**
+ * La fin de la dernière licence de l'arène de l'établissement, si elle est passée : le
+ * relevé de notes reste téléchargeable un temps après (config/tarifs.ts, CONDITIONS).
+ */
+export async function finDeLaDerniereLicenceDeLArene(organizationId: string): Promise<Date | null> {
+  const rows = await db
+    .select({ endsAt: orgLicences.endsAt, arene: orgLicences.arene })
+    .from(orgLicences)
+    .where(eq(orgLicences.organizationId, organizationId))
+    .orderBy(desc(orgLicences.endsAt));
+  return rows.find((r) => r.arene !== null)?.endsAt ?? null;
 }
 
 /** Lève si accueillir un enseignant de plus dépasserait le plafond vendu. */
@@ -147,8 +283,11 @@ export async function assertCanAddTeacher(organizationId: string): Promise<void>
     throw new Error(statut.blocking ?? "Licence inactive.");
   }
   if (plafond !== null && plafond !== undefined && statut.teachers >= plafond) {
+    const offre = statut.licence?.arene;
     throw new Error(
-      `La licence couvre ${plafond} enseignants, tous rattachés. Le renouvellement ou une extension ouvre une place.`,
+      offre === "classe"
+        ? `L'offre ${OFFRES.classe.nom} couvre ${plafond} enseignant, déjà rattaché. L'offre ${OFFRES.programme.nom} ouvre l'arène à l'équipe pédagogique et aux intervenants du programme.`
+        : `La licence couvre ${plafond} enseignants et intervenants, tous rattachés. Le renouvellement ou une extension ouvre une place.`,
     );
   }
 }
@@ -163,6 +302,38 @@ export async function setOrgLicence(args: {
   maxTeachers: number | null;
   reference?: string | null;
   amountCents?: number | null;
+  /**
+   * Le périmètre vendu. Absent : une licence de l'arène en offre Campus, sans les
+   * épisodes, comme les licences d'avant la décision.
+   */
+  arene?: OffreDeLArene | null;
+  episodes?: boolean;
+  /**
+   * L'examen individuel (migration 0042). Absent : il suit la composition par défaut du
+   * catalogue, inclus dans Programme et Campus, pas dans Classe. Une vente depuis une
+   * offre (services/vente.service.ts) le pose d'après les modules de l'offre.
+   */
+  examen?: boolean;
+  /**
+   * Le paramétrage de l'arène (config/tarifs.ts, `parametrageDeLOffre`) : entreprises et
+   * niveaux ouverts (null ou absent : tous), plafond de parties en cours (absent : celui
+   * de l'offre). Une licence Classe porte une entreprise et un niveau ; une licence
+   * Programme, une entreprise.
+   */
+  entreprises?: readonly string[] | null;
+  niveaux?: readonly number[] | null;
+  maxPartiesEnCours?: number | null;
+  /**
+   * La vente (migration 0041, services/vente.service.ts) : l'offre du catalogue et la copie
+   * de ses conditions, le prix catalogue, la remise, la nature. Une licence OFFERTE porte
+   * son motif et ne coûte rien ; une licence d'ESSAI non plus.
+   */
+  offreCode?: string | null;
+  conditions?: ConditionsDeVente | null;
+  prixCatalogueCents?: number | null;
+  remise?: RemiseDeLicence | null;
+  nature?: NatureDeLicence;
+  motifGratuite?: string | null;
 }): Promise<{ licenceId: string }> {
   // Dates invalides (champ vide ou malformé → `new Date("")` = Invalid Date) :
   // toute comparaison avec un NaN est fausse, la garde `endsAt <= startsAt`
@@ -173,6 +344,36 @@ export async function setOrgLicence(args: {
   if (args.endsAt <= args.startsAt) {
     throw new Error("La fin de la licence doit suivre son début.");
   }
+  const nature = args.nature ?? "vendue";
+  if (nature === "offerte" && !estUnMotifDeGratuite(args.motifGratuite)) {
+    throw new Error("Une licence offerte porte son motif : pilote, partenaire, presse ou geste commercial.");
+  }
+  if (nature !== "vendue" && (args.amountCents ?? 0) !== 0) {
+    throw new Error("Une licence offerte ou d'essai ne se facture pas : son montant est de 0 €.");
+  }
+  const arene = args.arene === undefined ? "campus" : args.arene;
+  const episodes = args.episodes ?? false;
+  if (arene === null && !episodes) {
+    throw new Error("Une licence ouvre l'arène, les épisodes manager, ou les deux : choisissez.");
+  }
+  const examen = arene === null ? false : (args.examen ?? EXAMEN_PAR_DEFAUT.includes(arene));
+  const entreprises = arene ? (args.entreprises ? [...args.entreprises] : null) : null;
+  const niveaux = arene ? (args.niveaux ? [...args.niveaux] : null) : null;
+  // Une Classe est UN jeu paramétré : une entreprise, un niveau. La garde est ici, au
+  // seul endroit qui écrit une licence, plutôt que dans une contrainte de base que les
+  // migrations rejouées auraient du mal à porter (drizzle/0038_trois_offres.sql).
+  if (arene === "classe" && (entreprises?.length !== 1 || niveaux?.length !== 1)) {
+    throw new Error(`Une licence ${OFFRES.classe.nom} porte une entreprise et un niveau.`);
+  }
+  if (arene === "programme" && entreprises !== null && entreprises.length !== 1) {
+    throw new Error(`Une licence ${OFFRES.programme.nom} porte une entreprise.`);
+  }
+  const maxPartiesEnCours =
+    args.maxPartiesEnCours !== undefined
+      ? args.maxPartiesEnCours
+      : arene
+        ? PARAMETRAGE_DES_OFFRES[arene].partiesEnCours
+        : null;
   const inserted = await db
     .insert(orgLicences)
     .values({
@@ -182,7 +383,19 @@ export async function setOrgLicence(args: {
       endsAt: args.endsAt,
       maxTeachers: args.maxTeachers,
       reference: args.reference?.trim() || null,
-      amountCents: args.amountCents ?? null,
+      amountCents: nature === "vendue" ? (args.amountCents ?? null) : 0,
+      arene,
+      episodes,
+      examen,
+      entreprises,
+      niveaux,
+      maxPartiesEnCours,
+      offreCode: args.offreCode ?? null,
+      conditions: args.conditions ?? null,
+      prixCatalogueCents: args.prixCatalogueCents ?? null,
+      remise: args.remise ?? null,
+      nature,
+      motifGratuite: nature === "offerte" ? args.motifGratuite! : null,
       createdBy: args.adminId,
     })
     .returning({ id: orgLicences.id });
@@ -201,15 +414,22 @@ export async function listOrgLicences(organizationId: string): Promise<OrgLicenc
     .from(orgLicences)
     .where(eq(orgLicences.organizationId, organizationId))
     .orderBy(desc(orgLicences.endsAt));
-  return rows.map((r) => ({
-    id: r.id,
-    label: r.label,
-    startsAt: r.startsAt,
-    endsAt: r.endsAt,
-    maxTeachers: r.maxTeachers,
-    reference: r.reference,
-    amountCents: r.amountCents,
-  }));
+  return rows.map(versLicence);
 }
 
 /** État des licences de tous les établissements, pour l'espace administrateur. */
+
+/**
+ * LES LICENCES OFFERTES ET D'ESSAI (/admin/offres, rubrique Gratuités) : l'établissement,
+ * l'offre, le motif et la fin, les plus récentes en tête.
+ */
+export async function listerLicencesGratuites(limite = 50): Promise<(OrgLicence & { organisation: string })[]> {
+  const rows = await db
+    .select({ licence: orgLicences, organisation: organizations.name })
+    .from(orgLicences)
+    .innerJoin(organizations, eq(organizations.id, orgLicences.organizationId))
+    .where(ne(orgLicences.nature, "vendue"))
+    .orderBy(desc(orgLicences.endsAt))
+    .limit(limite);
+  return rows.map((r) => ({ ...versLicence(r.licence), organisation: r.organisation }));
+}

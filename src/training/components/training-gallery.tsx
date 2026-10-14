@@ -8,10 +8,12 @@ interface TrainingGalleryProps {
   onSelectModule: (module: TrainingModule) => void;
 }
 
+// La difficulté est un repère, pas un résultat : ni vert ni rouge, l'encre
+// sur le voile neutre, le mot dit le degré.
 const difficultyColors = {
-  beginner: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
-  intermediate: "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300",
-  advanced: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
+  beginner: "pastille-etat text-slate-300",
+  intermediate: "pastille-etat text-slate-200",
+  advanced: "pastille-etat font-semibold text-slate-100",
 };
 
 const difficultyLabels = {
@@ -48,18 +50,18 @@ export function TrainingGallery({
                 </h3>
               </div>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+            <p className="text-xs text-slate-400 mb-3">
               {module.description}
             </p>
             <div className="flex items-center gap-2 justify-between">
               <span
-                className={`text-xs px-2 py-1 rounded ${
+                className={`text-xs px-2 py-1 rounded-md ${
                   difficultyColors[module.difficulty]
                 }`}
               >
                 {difficultyLabels[module.difficulty]}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-400">
                 {module.estimatedTime}m
               </span>
             </div>

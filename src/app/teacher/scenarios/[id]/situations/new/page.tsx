@@ -12,7 +12,7 @@ import { addSituationAction } from "../../../actions";
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 const CAT_LABEL: Record<string, string> = {
@@ -20,7 +20,9 @@ const CAT_LABEL: Record<string, string> = {
   contexte_marche: "Contexte de marché",
   decision_strategique: "Décision stratégique",
   alerte_comptable: "Alerte comptable",
+  alerte_operationnelle: "Alerte opérationnelle",
   tresorerie_dormante: "Trésorerie dormante",
+  reussite: "Ce qui a marché",
 };
 const DETECT_LABEL: Record<string, string> = {
   profitable_illiquid: "Rentable mais à court de trésorerie",
@@ -61,7 +63,7 @@ export default async function NewSituationPage({
     <main id="main" className="mx-auto max-w-3xl space-y-6 p-6">
       <header className="flex items-end justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Nouvelle situation</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Nouvelle situation</p>
           <h1 className="text-2xl font-bold">{loaded.summary.title}</h1>
           <p className="mt-1 text-sm text-slate-400">
             Composez une situation : le récit, le diagnostic, le modèle d&apos;analyse attendu, les
@@ -70,7 +72,7 @@ export default async function NewSituationPage({
         </div>
         <Link
           href={`/teacher/scenarios/${id}`}
-          className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           ← Le scénario
         </Link>
@@ -79,7 +81,7 @@ export default async function NewSituationPage({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
@@ -88,7 +90,7 @@ export default async function NewSituationPage({
       <GuardedForm
         action={addSituationAction}
         label="création de la situation"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
+        className="space-y-5 carte p-4 sm:p-7"
       >
         <input type="hidden" name="scenarioId" value={id} />
 
@@ -122,7 +124,7 @@ export default async function NewSituationPage({
           <textarea name="problem" rows={2} className={champ} />
         </label>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Diagnostic · cochez la bonne réponse
           </legend>
@@ -138,7 +140,7 @@ export default async function NewSituationPage({
           ))}
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Modèles d&apos;analyse · au moins un « optimal »
           </legend>
@@ -146,7 +148,7 @@ export default async function NewSituationPage({
             {DECISION_MODELS.map((m) => (
               <label key={m.code} className="flex items-center justify-between gap-3">
                 <span className="text-sm text-slate-300">{m.name}</span>
-                <select name={`model_${m.code}`} defaultValue="" className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs text-slate-100">
+                <select name={`model_${m.code}`} defaultValue="" className="champ px-2 py-1 text-xs text-slate-100">
                   {REL_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
@@ -163,7 +165,7 @@ export default async function NewSituationPage({
           <textarea name="modelExplain" rows={3} className={champ} />
         </label>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Notions travaillées · au moins une
           </legend>
@@ -184,7 +186,7 @@ export default async function NewSituationPage({
           </div>
         </fieldset>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Indices (coût croissant)
           </legend>
@@ -196,7 +198,7 @@ export default async function NewSituationPage({
           ))}
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Déclenchement
           </legend>

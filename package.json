@@ -16,21 +16,30 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "calibrate": "tsx scripts/calibrate.ts",
+    "base:locale": "tsx scripts/base-locale.mts",
     "seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
+    "cohorte:creer": "tsx --env-file=.env scripts/creer-cohorte.ts",
+    "verify:migrations": "tsx --env-file=.env scripts/verifier-migrations.ts",
+    "verify:qr": "tsx scripts/verifier-qr.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@node-saml/node-saml": "^5.1.0",
     "@types/pg": "^8.23.1",
+    "@xmldom/xmldom": "^0.8.15",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.1",
     "exceljs": "^4.4.0",
-    "next": "^16.3.1",
+    "next": "^16.3.5",
     "pg": "^8.23.0",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "xml-crypto": "^6.3.3",
+    "xpath": "^0.0.34",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -39,16 +48,18 @@
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/xml-encryption": "^1.2.4",
     "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^17.2.4",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.4",
+    "eslint-config-next": "^16.3.5",
     "playwright-core": "^1.62.1",
     "postcss": "^8.5.26",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "xml-encryption": "^3.1.0"
   }
 }

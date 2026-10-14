@@ -75,7 +75,7 @@ export function TutorialOverlay({
           {!isFirst && (
             <button
               onClick={onPrev}
-              className="px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
+              className="px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
             >
               ← Précédent
             </button>
@@ -83,7 +83,7 @@ export function TutorialOverlay({
           {!isLast && (
             <button
               onClick={onNext}
-              className="px-3 py-2 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded"
+              className="px-3 py-2 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded-md"
             >
               Suivant →
             </button>
@@ -91,7 +91,7 @@ export function TutorialOverlay({
           {isLast && (
             <button
               onClick={onClose}
-              className="px-3 py-2 text-sm bg-green-500 text-white hover:bg-green-600 rounded"
+              className="px-3 py-2 text-sm bg-green-500 text-white hover:bg-green-600 rounded-md"
             >
               Terminé ✓
             </button>

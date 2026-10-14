@@ -286,7 +286,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_t5_saturation",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "Trop de monde aux heures de pointe",
     narrative:
       "Dix-huit heures trente. File d'attente devant les tapis, vestiaires pleins, et trois avis en ligne cette semaine sur le thème « impossible de s'entraîner correctement ». Vos adhérents réguliers commencent à demander un remboursement.",

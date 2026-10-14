@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
+import { PREREQUISITE_MASTERY_THRESHOLD } from "../src/pedagogy/progress";
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
 import { buildConsequenceContext, buildInterpretation, buildTriggerContext, CONSEQUENCE_METADATA, DETECTION_METADATA, INTERPRETATION_METADATA, detectSituations, overallDirection } from "../src/pedagogy/detection";
 import type { InterpretationFact } from "../src/pedagogy/detection";
@@ -14,6 +15,7 @@ import { ALL_SITUATIONS } from "../src/config/scenarios/registry";
 import { CONCEPTS, conceptByCode } from "../src/config/pedagogy/concepts";
 import { DECISION_MODELS, modelByCode } from "../src/config/pedagogy/models";
 import type { CompanyRoundResult } from "../src/engine/types";
+import { formatPercent, formatUnits } from "../src/lib/format";
 
 describe("système d'indices (doc 03 §4)", () => {
   const hintDefs = situationByCode.get("nova_t4_paradox")!.hints;
@@ -25,11 +27,40 @@ describe("système d'indices (doc 03 §4)", () => {
     expect(() => nextUnlockableLevel([2])).toThrow(); // séquence corrompue
   });
 
-  it("coûts cumulés : 5 %, 15 %, 35 %, 70 %... plancher à 20 % de score restant", () => {
+  it("le barème laisse 98, 95, 91, 86 puis 80 % du score", () => {
     expect(hintScoreMultiplier([], hintDefs)).toBe(1);
-    expect(hintScoreMultiplier([1], hintDefs)).toBeCloseTo(0.95, 9);
-    expect(hintScoreMultiplier([1, 2, 3], hintDefs)).toBeCloseTo(0.65, 9);
-    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeCloseTo(0.2, 9); // plancher
+    expect(hintScoreMultiplier([1], hintDefs)).toBeCloseTo(0.98, 9);
+    expect(hintScoreMultiplier([1, 2], hintDefs)).toBeCloseTo(0.95, 9);
+    expect(hintScoreMultiplier([1, 2, 3], hintDefs)).toBeCloseTo(0.91, 9);
+    expect(hintScoreMultiplier([1, 2, 3, 4], hintDefs)).toBeCloseTo(0.86, 9);
+    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeCloseTo(0.8, 9);
+  });
+
+  it("demander de l'aide ne fait jamais passer sous la moyenne", () => {
+    // Le score d'une situation devient une note sur 20 dans le relevé, et la
+    // maîtrise par notion converge vers lui. Deux barèmes l'ont oublié : celui
+    // d'origine rendait 4/20 à qui ouvrait tout, son remplaçant 9/20. Un élève
+    // qui, après s'être fait aider, coche le bon diagnostic et répond juste à
+    // tout doit rester au-dessus de la moyenne ET du seuil de maîtrise de 60.
+    const restant = hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs);
+    expect(restant * 20).toBeGreaterThanOrEqual(10);
+    expect(restant * 100).toBeGreaterThan(PREREQUISITE_MASTERY_THRESHOLD);
+  });
+
+  it("aucune marche ne coûte plus du double de la précédente", () => {
+    // La falaise se mesure : elle est dans l'écart entre deux marches, pas
+    // dans le total. Le garde interdit qu'elle revienne par un réglage.
+    const restants = [0, 1, 2, 3, 4, 5].map((n) =>
+      hintScoreMultiplier([1, 2, 3, 4, 5].slice(0, n), hintDefs),
+    );
+    const marches = restants.slice(1).map((r, i) => restants[i]! - r);
+    for (let i = 1; i < marches.length; i++) {
+      expect(marches[i]!, `marche ${i + 1}`).toBeLessThanOrEqual(2 * marches[i - 1]!);
+    }
+  });
+
+  it("le plancher n'est plus atteint : c'est un filet, pas une règle", () => {
+    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeGreaterThan(0.2);
   });
 
 });
@@ -93,6 +124,83 @@ describe("détection de situations (doc 03 §1.1)", () => {
     expect(detectSituations(stockout)).toContain("stockout");
     expect(detectSituations(base)).not.toContain("stockout");
   });
+  /**
+   * CE QUI A MARCHÉ. Quatre des cinq règles d'origine signalaient une panne :
+   * une équipe qui pilotait bien traversait la partie sans presque rien
+   * déclencher, et n'apprenait donc jamais pourquoi elle gagnait.
+   */
+  const bienServi = {
+    incomeStatement: { netIncome: 10000 },
+    functionalBalance: { netTreasury: 8000 },
+    market: { bySegment: { s: { sold: 1000, lost: 20 } } },
+    production: { utilizationRate: 0.9, produced: 1010 },
+  } as unknown as CompanyRoundResult;
+
+  it("servi sans gâcher : l'outil tourne haut, presque rien de refusé ni d'invendu", () => {
+    expect(detectSituations(bienServi)).toContain("served_without_waste");
+  });
+
+  it("un atelier à plein qui refuse du monde n'est pas un plan juste", () => {
+    const refuse = {
+      ...bienServi,
+      market: { bySegment: { s: { sold: 1000, lost: 200 } } },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(refuse)).not.toContain("served_without_waste");
+  });
+
+  it("un stock qui gonfle non plus, même si tout a été vendu de ce qui était demandé", () => {
+    const invendu = {
+      ...bienServi,
+      production: { utilizationRate: 0.9, produced: 1200 },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(invendu)).not.toContain("served_without_waste");
+  });
+
+  it("un outil au ralenti ne mérite pas la mention, même sans rupture ni invendu", () => {
+    const ralenti = {
+      ...bienServi,
+      production: { utilizationRate: 0.4, produced: 1010 },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(ralenti)).not.toContain("served_without_waste");
+  });
+
+  it("le redressement demande de savoir d'où l'on vient", () => {
+    const sain = { netIncome: 5000, netTreasury: 3000 };
+    const trou = { netIncome: -12000, netTreasury: -4000 };
+    // Sans le tour d'avant, aucun redressement ne peut se lire.
+    expect(detectSituations(bienServi)).not.toContain("recovered");
+    expect(detectSituations(bienServi, {}, sain)).not.toContain("recovered");
+    expect(detectSituations(bienServi, {}, trou)).toContain("recovered");
+  });
+
+  it("sortir d'une perte compte, y rester non", () => {
+    const perte = {
+      ...bienServi,
+      incomeStatement: { netIncome: -3000 },
+    } as unknown as CompanyRoundResult;
+    const trou = { netIncome: -12000, netTreasury: -4000 };
+    expect(detectSituations(perte, {}, trou)).not.toContain("recovered");
+  });
+
+  it("une trésorerie nette redevenue positive suffit, même après un tour bénéficiaire", () => {
+    // Le paradoxe du succès pris par l'autre bout : on pouvait gagner de
+    // l'argent ET être à sec. En sortir est un redressement.
+    const sorti = detectSituations(bienServi, {}, { netIncome: 9000, netTreasury: -2000 });
+    expect(sorti).toContain("recovered");
+  });
+
+  it("une réussite et une panne peuvent s'ouvrir au même tour", () => {
+    // Bien produire ne suffit pas à gagner de l'argent : les deux leçons
+    // valent, et rien n'oblige à n'en retenir qu'une.
+    const justeMaisDeficitaire = {
+      ...bienServi,
+      incomeStatement: { netIncome: -2000 },
+    } as unknown as CompanyRoundResult;
+    const codes = detectSituations(justeMaisDeficitaire);
+    expect(codes).toContain("served_without_waste");
+    expect(codes).toContain("below_breakeven");
+  });
+
   it("atelier saturé : machine à plein ET demande perdue ⇒ la question d'investir", () => {
     const saturated = {
       ...base,
@@ -220,18 +328,74 @@ describe("métadonnées de détection (A1 — causalité visible)", () => {
     expect(facts[0]!.direction).toBe("negative");
   });
 
-  it("stockout : unités vendues et demande perdue", () => {
+  it("stockout : la demande adressée, les ventes et la demande perdue", () => {
     const facts = buildTriggerContext("stockout", base);
-    expect(facts).toHaveLength(2);
-    expect(facts[0]!.label).toContain("vendues");
-    expect(facts[1]!.label).toContain("non servie");
+    expect(facts.map((f) => f.label)).toEqual([
+      "Demande qui vous était adressée",
+      "Unités vendues",
+      "Demande non servie",
+    ]);
+    expect(facts[2]!.direction).toBe("negative");
   });
 
-  it("capacity_saturated : taux d'utilisation et demande perdue", () => {
+  it("stockout : la zone de chalandise, clientèle par clientèle", () => {
+    // « Une part importante de la demande n'a pas pu être servie » ne disait
+    // ni combien de clients il y avait, ni lesquels sont repartis. Les faits
+    // nomment les clientèles, et ne détaillent que celles qui ont perdu.
+    const deux = {
+      ...base,
+      market: {
+        bySegment: {
+          pros: { potential: 3000, demandForCompany: 1200, sold: 400, lost: 800 },
+          etud: { potential: 5000, demandForCompany: 900, sold: 900, lost: 0 },
+        },
+      },
+    } as unknown as CompanyRoundResult;
+    const facts = buildTriggerContext("stockout", deux, { clienteles: { pros: "Pros", etud: "Étudiants" }, references: {} });
+    expect(facts.map((f) => f.label)).toEqual([
+      "Demande du marché, toutes clientèles",
+      "Demande qui vous était adressée",
+      "Unités vendues",
+      "Demande non servie",
+      "dont Pros",
+    ]);
+    expect(facts[0]!.value).toBe(formatUnits(8000));
+    expect(facts[1]!.value).toBe(formatUnits(2100));
+    expect(facts[3]!.value).toContain(formatPercent(800 / 2100));
+    expect(facts[4]!.value).toBe(`${formatUnits(800)} sur ${formatUnits(1200)} repartis sans acheter`);
+    // Sans dictionnaire, le code sert de nom plutôt que de taire la clientèle.
+    expect(buildTriggerContext("stockout", deux).at(-1)!.label).toBe("dont pros");
+  });
+
+  it("stockout en gamme : la référence qui manque et celle qui dort, sur une ligne chacune", () => {
+    // Chaque référence a son marché : le détail par clientèle redirait le
+    // détail par référence en plus long. Ce que l'élève doit lire, c'est de
+    // QUOI il manquait et ce qui reste en réserve — et rien sur une
+    // référence pas encore vendable.
+    const gamme = {
+      ...base,
+      market: { bySegment: { lyc: { potential: 3000, demandForCompany: 1100, sold: 300, lost: 800 }, aud: { potential: 3400, demandForCompany: 900, sold: 900, lost: 0 } } },
+      products: {
+        go: { sold: 300, lost: 800, stock: { quantity: 0, unitCost: 20 } },
+        one: { sold: 900, lost: 0, stock: { quantity: 3100, unitCost: 38 } },
+        studio: { sold: 0, lost: 0, stock: { quantity: 0, unitCost: 0 } },
+      },
+    } as unknown as CompanyRoundResult;
+    const facts = buildTriggerContext("stockout", gamme, {
+      clienteles: { lyc: "Lycéens", aud: "Audiophiles" },
+      references: { go: "NOVA Go", one: "NOVA One", studio: "NOVA Studio" },
+    });
+    expect(facts.slice(4)).toEqual([
+      { label: "NOVA Go", value: `${formatUnits(800)} sur ${formatUnits(1100)} repartis sans acheter · ${formatUnits(0)} en stock`, direction: "negative" },
+      { label: "NOVA One", value: `rien de manqué · ${formatUnits(3100)} en stock`, direction: "neutral" },
+    ]);
+    expect(facts.map((f) => f.label)).not.toContain("dont Lycéens");
+  });
+
+  it("capacity_saturated : taux d'utilisation, puis la demande perdue et d'où elle venait", () => {
     const facts = buildTriggerContext("capacity_saturated", base);
-    expect(facts).toHaveLength(2);
     expect(facts[0]!.label).toContain("utilisation");
-    expect(facts[1]!.label).toContain("non servie");
+    expect(facts.at(-1)!.label).toContain("non servie");
   });
 
   it("idle_cash : trésorerie, charges, ratio", () => {
@@ -558,13 +722,25 @@ describe("cohérence des référentiels", () => {
       expect(DETECTION_METADATA[code as keyof typeof DETECTION_METADATA], `${s.code} → ${code}`).toBeDefined();
     }
   });
-  it("6 situations scriptées (une par tour) + 5 détectées", () => {
+  it("7 situations scriptées couvrant les six tours, dont deux au tour 2, + 7 détectées", () => {
     const scripted = NOVA_SITUATIONS.filter((s) => "round" in s.trigger);
     const detected = NOVA_SITUATIONS.filter((s) => "detect" in s.trigger);
-    expect(scripted.map((s) => (s.trigger as { round: number }).round).sort()).toEqual([1, 2, 3, 4, 5, 6]);
-    // quatre pannes, plus la trésorerie qui dort : la seule qui s'ouvre alors
-    // que tout va bien
-    expect(detected).toHaveLength(5);
+    // Le tour 2 en porte deux : la guerre des prix et la décomposition des
+    // écarts. Les deux services instancient TOUTES les situations dont le tour
+    // correspond, donc les deux s'ouvrent — voir registry.test.ts, qui vérifie
+    // la couverture des tours sans en interdire deux sur le même.
+    const tours = scripted.map((s) => (s.trigger as { round: number }).round).sort((a, b) => a - b);
+    expect(tours).toEqual([1, 2, 2, 3, 4, 5, 6]);
+    // Quatre pannes, la trésorerie qui dort, et DEUX RÉUSSITES : le trimestre
+    // où le plan collait à la demande, et le redressement. Sans elles, une
+    // équipe qui pilotait bien ne déclenchait presque rien et n'apprenait
+    // jamais pourquoi elle gagnait.
+    expect(detected).toHaveLength(7);
+    const reussites = detected.filter((s) => s.category === "reussite");
+    expect(reussites.map((s) => (s.trigger as { detect: string }).detect).sort()).toEqual([
+      "recovered",
+      "served_without_waste",
+    ]);
   });
 });
 
@@ -596,7 +772,11 @@ describe("difficulté adaptive (§28 bis)", () => {
   it("le plancher de 0.2 reste en vigueur pour tous les niveaux", () => {
     const allLevels = [1, 2, 3, 4, 5];
     expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeGreaterThanOrEqual(0.2);
-    expect(adaptiveHintMultiplier(allLevels, hintDefs, 100)).toBeCloseTo(0.2, 9);
+    // Au plein tarif, les cinq indices laissent 80 % : le filet ne sert plus.
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 100)).toBeCloseTo(0.8, 9);
+    // Et l'élève le plus faible, qui a ouvert les cinq, garde 90 % : l'aide
+    // coûte, elle ne condamne pas.
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeCloseTo(0.9, 9);
   });
 
   it("sans indices débloqués, le discount n'a aucun effet", () => {

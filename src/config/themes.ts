@@ -1,48 +1,27 @@
 /**
- * Les thèmes du site : un sombre, un clair.
+ * L'HABILLAGE DU SITE : « L'ARÈNE », LE CLAIR ET LE MARINE.
  *
- * Un thème ne redéfinit que deux choses : la teinte neutre, qui fait les fonds
- * et les textes, et la teinte d'accent, qui fait les boutons d'action. Les
- * couleurs de secteur et celles qui portent un sens (le rouge d'une perte, le
- * vert d'un bénéfice) ne bougent pas d'un thème à l'autre : les faire varier
- * demanderait à l'élève de réapprendre à lire ses écrans.
+ * Le site a longtemps proposé deux thèmes, un sombre et un clair qui le
+ * renversait, et un bouton pour basculer de l'un à l'autre. Il n'en a plus
+ * qu'un, qui ne se choisit pas, et qui garde ses deux sols :
  *
- * Les valeurs vivent dans les feuilles de style, parce que Tailwind ne lit pas
- * le TypeScript. Ce fichier tient la liste, les libellés, et les pastilles du
- * sélecteur ; un test vérifie que les deux ne divergent pas.
+ *   · le PAPIER, un fond clair à peine bleuté, ses cartes blanches et son
+ *     encre, pour lire et pour jouer ;
+ *   · le TABLEAU, un marine et ses blancs, là où la classe regarde ensemble :
+ *     l'en-tête, le haut de l'accueil, les bandes à contre-jour, les écrans de
+ *     chiffres de l'arène, la projection.
+ *
+ * L'orange y est l'action, l'or la distinction, le vert et le rouge le gain et
+ * la perte. Les échelles complètes vivent dans scripts/generer-theme-clair.ts
+ * (PAPIER, TABLEAU), qui engendre la feuille.
+ *
+ * Ce fichier garde les deux couleurs de fond en clair, pour ce qui ne lit pas
+ * les feuilles de style : la barre d'état du téléphone, l'écran de démarrage
+ * de l'application installée, les pastilles d'aperçu des palettes.
  */
-export type CodeTheme = "sombre" | "clair";
 
-export interface Theme {
-  code: CodeTheme;
-  nom: string;
-  /** Ce que le thème change, en une phrase, pour le sélecteur. */
-  description: string;
-  /** Les deux couleurs de la pastille : le fond, puis l'accent. */
-  apercu: { fond: string; accent: string };
-}
+/** Le fond de la page : le clair de l'arène. */
+export const COULEUR_DU_PAPIER = "#f5f7fb";
 
-/** Le thème appliqué tant que personne n'a choisi. Il n'a pas de feuille : c'est celle du site. */
-export const THEME_PAR_DEFAUT: CodeTheme = "sombre";
-
-/** La clé du navigateur. Le choix reste sur l'appareil, il ne part sur aucun serveur. */
-export const CLE_THEME = "arena-theme";
-
-export const THEMES: Theme[] = [
-  {
-    code: "sombre",
-    nom: "Sombre",
-    description: "Gris bleuté et ambre, l'habillage d'origine.",
-    apercu: { fond: "#020618", accent: "#f59e0b" },
-  },
-  {
-    code: "clair",
-    nom: "Clair",
-    description: "Fond clair, lisible en salle éclairée et économe à l'impression.",
-    apercu: { fond: "#f8fafc", accent: "#b45309" },
-  },
-];
-
-export function estCodeTheme(valeur: unknown): valeur is CodeTheme {
-  return typeof valeur === "string" && THEMES.some((t) => t.code === valeur);
-}
+/** Le fond du tableau : le marine de l'arène. */
+export const COULEUR_DU_TABLEAU = "#0b2545";

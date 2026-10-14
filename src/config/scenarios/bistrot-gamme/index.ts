@@ -113,6 +113,9 @@ const GAMME: ProductDef[] = [
   {
     code: "banquets",
     name: "Banquets et repas d'entreprise",
+    // Sur téléphone, le mot qui identifie le service suffit : le reste du nom
+    // dit à qui on vend, ce que la carte de la référence redit juste en dessous.
+    shortName: "Banquets",
     // menu unique servi en une fois : des denrées maîtrisées, une salle privatisée
     materialCostPerUnit: 10,
     otherVariableCostPerUnit: 2.5,
@@ -152,6 +155,7 @@ const GAMME: ProductDef[] = [
   {
     code: "traiteur",
     name: "Traiteur · buffets livrés",
+    shortName: "Traiteur",
     // produit en cuisine, livré sur place : moins de denrées, du transport et des emballages
     materialCostPerUnit: 8.5,
     otherVariableCostPerUnit: 3.5,

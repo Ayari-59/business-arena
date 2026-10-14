@@ -104,10 +104,11 @@ describe("GameView NOVA — tour initial (round 1, aucune résolution)", () => {
     expect(view!.pendingDecisions).toBeNull();
   });
 
-  it("announcedEventCards est vide au tour 1", async () => {
+  it("courriersAnnonces est vide au tour 1", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     const view = await getGameView(gameId, userId);
-    expect(view!.announcedEventCards).toHaveLength(0);
+    expect(view!.courriersAnnonces).toHaveLength(0);
+    expect(view!.courriersEnCours).toHaveLength(0);
   });
 
   it("difficulty et vocabulary sont présents", async () => {
@@ -189,7 +190,7 @@ describe("GameView NOVA — après résolution du tour 1", () => {
     expect(view!.salesHistory.rounds[0]!.sold).toBeGreaterThan(0);
   });
 
-  it("ranking mis à jour avec revenus et BPI", async () => {
+  it("ranking mis à jour avec revenus et IPG", async () => {
     const view = await getGameView(gameId, userId);
     for (const row of view!.ranking) {
       expect(row.rank).toBeGreaterThanOrEqual(1);
@@ -197,8 +198,10 @@ describe("GameView NOVA — après résolution du tour 1", () => {
     }
   });
 
-  it("peutSeNommer passe à false après le tour 1 (sauf si nom par défaut)", async () => {
+  it("en solo, aucun panneau de nommage : l'entreprise est celle du scénario", async () => {
     const view = await getGameView(gameId, userId);
-    expect(typeof view!.peutSeNommer).toBe("boolean");
+    expect(view!.peutSeNommer).toBe(false);
+    expect(view!.equipesDeLaClasse).toEqual([]);
+    expect(view!.peutChoisirSonEquipe).toBe(false);
   });
 });

@@ -1,9 +1,11 @@
 import {
+  type AnyPgColumn,
   bigint,
   index,
   integer,
   interval,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -17,6 +19,7 @@ import { classes, organizations, users } from "./identity";
 import { scenarios } from "./catalog";
 import { competitionStages } from "./competition";
 import type { EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import type { TourDEssai } from "@/config/tour-d-essai";
 
 export const gameMode = pgEnum("game_mode", ["learning", "competition", "contest"]);
 export const gameStatus = pgEnum("game_status", [
@@ -71,16 +74,67 @@ export const games = pgTable(
     opensAt: timestamp("opens_at", { withTimezone: true }),
     closesAt: timestamp("closes_at", { withTimezone: true }),
     joinCode: text("join_code").unique(), // code d'invitation des joueurs (parties de classe)
+    // LE NOM QUE L'ENSEIGNANT DONNE À SA PARTIE.
+    //
+    // La liste affichait six fois « NOVA », avec la même icône et la même
+    // allure : rien ne disait laquelle était celle de la seconde 3. Le nom est
+    // facultatif — une partie sans nom garde celui de son scénario — et ne sert
+    // qu'à la retrouver : ni les élèves ni le classement ne le voient.
+    label: text("label"),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
+    /**
+     * L'adresse d'origine de la création, pour les seules parties nées d'un
+     * formulaire public. Elle ne sert qu'à compter : `/jouer` crée une partie
+     * entière — snapshot de scénario compris — à chaque envoi, sans qu'aucune
+     * session soit exigée. Sans ce compteur, une boucle crée autant de parties
+     * qu'elle fait de requêtes. Nulle pour les parties créées par un
+     * enseignant identifié, qui n'ont rien à plafonner.
+     */
+    creatorIp: text("creator_ip"),
+    /**
+     * RANGÉE, PAS TERMINÉE. Une partie archivée sort des listes, ne se rejoint
+     * plus et ne se joue plus ; tout y reste, et le geste se défait.
+     *
+     * Le statut porte le CYCLE DE VIE (en cours, terminée) ; l'archivage est
+     * une autre question, celle du rangement. Les mélanger obligerait à deviner
+     * quel statut rendre au désarchivage, et ferait perdre l'information : une
+     * partie de juin jamais close doit redevenir « en cours » si on la
+     * ressort, pas « terminée ». Une date à part, donc, orthogonale au statut.
+     *
+     * L'énumération garde sa valeur « archived », qui n'a jamais été écrite par
+     * personne ; `estArchivee` accepte les deux, par prudence.
+     */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /**
+     * LE TOUR D'ESSAI (migration 0045, config/tour-d-essai.ts). Nul pour toute partie
+     * qui n'en a pas : elle se comporte exactement comme avant. Tant que l'essai dure,
+     * `seed` et `scenarioSnapshot` portent ceux de l'ESSAI ; la graine et le scénario de
+     * la vraie partie attendent ici, et reprennent leur place à la bascule.
+     */
+    essai: jsonb("essai").$type<TourDEssai>(),
+    /**
+     * Posé sur l'ARCHIVE d'un tour d'essai : la partie qui reçoit à la bascule tout ce
+     * que l'essai a joué. Elle sort des listes et des compteurs
+     * (services/tour-d-essai.service.ts, `horsArchivesDEssai`) et part avec sa partie.
+     */
+    essaiDe: uuid("essai_de").references((): AnyPgColumn => games.id, { onDelete: "cascade" }),
     ...timestamps,
   },
   (t) => [
+    // Une seule archive d'essai par partie : la bascule rejouée la retrouve.
+    uniqueIndex("games_essai_de_uq").on(t.essaiDe),
     index("games_class_idx").on(t.classId),
     index("games_status_idx").on(t.status),
     index("games_created_by_idx").on(t.createdBy),
     index("games_competition_stage_idx").on(t.competitionStageId),
+    // Le plafond se lit « combien de parties depuis cette adresse depuis une
+    // heure » : c'est cet index qui rend la question gratuite.
+    index("games_creator_ip_idx").on(t.creatorIp, t.createdAt),
+    // La liste de l'enseignant demande « mes parties non archivées » à chaque
+    // affichage : c'est cet index qui rend la question gratuite.
+    index("games_created_by_archived_idx").on(t.createdBy, t.archivedAt),
   ],
 );
 
@@ -95,6 +149,12 @@ export const teams = pgTable(
     name: text("name").notNull(),
     controller: teamController("controller").notNull().default("human"),
     botProfile: text("bot_profile"), // requis si controller = bot (garde applicative)
+    /**
+     * L'emblème choisi par l'équipe au premier tour (code du catalogue
+     * `config/emblemes`). Null : elle n'en a pas choisi, et n'affiche rien —
+     * une forme par défaut ferait croire à un choix.
+     */
+    embleme: text("embleme"),
     joinCode: text("join_code").unique(),
     ...timestamps,
   },
@@ -117,6 +177,39 @@ export const players = pgTable(
   (t) => [primaryKey({ columns: [t.teamId, t.userId] }), index("players_user_id_idx").on(t.userId)],
 );
 
+/**
+ * LE CODE DE REPRISE D'UN JOUEUR, DANS UNE PARTIE DE CLASSE.
+ *
+ * L'élève est reconnu par son cookie invité, donc par son navigateur. Il
+ * change de poste, vide ses cookies, passe au téléphone : l'application ne le
+ * reconnaît plus et le range dans une équipe quelconque, sans message et sans
+ * retour possible. Le concours avait déjà son remède ; la classe, non.
+ *
+ * Une table à part, et non une colonne de `players`, parce que le code
+ * appartient au couple (partie, élève) et non à son équipe : changer d'équipe
+ * supprime et réinsère la ligne `players`, ce qui aurait effacé ou changé un
+ * code que l'élève venait justement de noter.
+ */
+export const gameRecoveries = pgTable(
+  "game_recoveries",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    recoveryCode: text("recovery_code").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    primaryKey({ columns: [t.gameId, t.userId] }),
+    // Le code se saisit seul, sans le code de la partie : il est donc unique
+    // pour toute la base, et non seulement dans sa partie.
+    uniqueIndex("game_recoveries_code_uq").on(t.recoveryCode),
+  ],
+);
+
 export const rounds = pgTable(
   "rounds",
   {
@@ -129,10 +222,16 @@ export const rounds = pgTable(
     opensAt: timestamp("opens_at", { withTimezone: true }),
     deadline: timestamp("deadline", { withTimezone: true }),
     resolvedAt: timestamp("resolved_at", { withTimezone: true }),
-    // Version de la formule BPI ayant scoré ce tour (1 = 7 dimensions historiques ;
+    // Version de la formule IPG ayant scoré ce tour (1 = 7 dimensions historiques ;
     // 2 = 6 dimensions, base zéro, ex æquo, finance en variation — V1-2). Les
     // tours déjà scorés gardent leur version : on ne recalcule jamais un relevé.
     bpiVersion: integer("bpi_version").notNull().default(1),
+    // Quand l'animateur a révélé le classement de ce tour. NULL = pas encore.
+    // En classe et en concours, c'est lui qui ouvre le rideau : sans cela, la
+    // classe lisait le classement sur son téléphone avant qu'il ne le projette,
+    // et son moment n'existait pas. En solo, il n'y a personne pour révéler :
+    // la vue considère le classement toujours ouvert, sans rien écrire ici.
+    rankingRevealedAt: timestamp("ranking_revealed_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [uniqueIndex("rounds_game_index_uq").on(t.gameId, t.index)],
@@ -166,4 +265,69 @@ export const decisions = pgTable(
     ...timestamps,
   },
   (t) => [uniqueIndex("decisions_round_team_uq").on(t.roundId, t.teamId)],
+);
+
+/**
+ * Le statut d'une demande de subvention exceptionnelle. `pending` tant que
+ * l'animateur ne l'a pas instruite ; ensuite, sa réponse, qui ne se reprend pas.
+ */
+export const aidRequestStatus = pgEnum("aid_request_status", [
+  "pending",
+  "granted",
+  "refused",
+]);
+
+/**
+ * LA DEMANDE DE SUBVENTION EXCEPTIONNELLE — le dernier recours d'une équipe
+ * en cessation de paiements.
+ *
+ * Le tour qui suit une crise exige un financement de sauvetage : de quoi
+ * repasser sous le plafond de découvert. Deux leviers y répondent, l'emprunt
+ * et l'apport des associés. Quand les DEUX sont épuisés — la banque ne prête
+ * plus, l'enveloppe des associés est vide — l'équipe n'a plus rien à décider
+ * et se trouve bloquée sans issue. C'est ce mur qui ouvre cette table.
+ *
+ * L'équipe dépose alors une demande : un montant, un motif. Elle n'est pas une
+ * décision de jeu, elle ne s'auto-accorde pas — c'est l'animateur qui tranche,
+ * depuis son espace, comme le ferait une collectivité ou un actionnaire de
+ * dernière heure. Accordée, la subvention est encaissée à la clôture du tour
+ * demandé, en produit exceptionnel. Refusée, elle laisse l'équipe face aux
+ * conséquences : c'est aussi une leçon.
+ *
+ * Une seule demande par équipe et par tour (index unique) : on ne dépose pas
+ * trois dossiers pour le même trou.
+ */
+export const aidRequests = pgTable(
+  "aid_requests",
+  {
+    id: id(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    /** Le tour PENDANT lequel la demande est déposée — celui qu'elle sauve. */
+    roundIndex: integer("round_index").notNull(),
+    /** Montant demandé, en euros. */
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    /** Ce que l'équipe écrit pour justifier sa demande. */
+    reason: text("reason").notNull(),
+    status: aidRequestStatus("status").notNull().default("pending"),
+    /**
+     * Montant réellement accordé. L'animateur peut accorder moins que demandé —
+     * une aide partielle est un arbitrage pédagogique, pas une erreur. NULL
+     * tant que la demande n'est pas instruite, et après un refus.
+     */
+    grantedAmount: numeric("granted_amount", { precision: 14, scale: 2 }),
+    /** Le mot de l'animateur à l'équipe : pourquoi oui, pourquoi non. */
+    decisionNote: text("decision_note"),
+    decidedBy: uuid("decided_by").references(() => users.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("aid_requests_team_round_uq").on(t.teamId, t.roundIndex),
+    index("aid_requests_game_status_idx").on(t.gameId, t.status),
+  ],
 );

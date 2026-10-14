@@ -1,15 +1,56 @@
 import type { Metadata } from "next";
+import {
+  formationsEnToutesLettres,
+  publicDeLAtelier,
+} from "@/config/formations";
 import Link from "next/link";
+import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
-import { ATELIERS, atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
+import { atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
+import { getSession } from "@/lib/session";
+import { getGuestUserId } from "@/lib/guest";
+import { getPlatformConfig } from "@/services/admin.service";
+import { licenceDeLArene, unCompteSousLicence } from "@/services/acces.service";
+import { getTeacherOrgId } from "@/services/auth.service";
+import { LIEN_TARIFS, niveauReserve } from "@/config/vitrine-solo";
+import {
+  entrepriseDuScenario,
+  horsLicence,
+  LIBELLE_DU_DEVIS,
+  lienDuDevis,
+  MARQUE_DE_L_ARENE,
+  messageNiveauxReserves,
+  nomDOffre,
+  refusDeLaClasse,
+} from "@/config/tarifs";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
 import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
+import {
+  formationsServiesEnPlus,
+  sertEnClair,
+} from "@/config/scenarios/formations-servies";
+import { chargeDesSeances } from "@/config/ateliers/duree-des-seances";
+import {
+  adaptationsDuNiveau,
+  minutesEnClair,
+} from "@/config/ateliers/adaptations";
 import { PrintButton } from "@/components/print-button";
+import { ROLES } from "@/config/ateliers/roles";
+import { bouton } from "@/components/bouton";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+import {
+  repartitionDesSeancesEnClair,
+  tourDEssaiEnClair,
+  tourDeLaSeanceEnClair,
+} from "@/config/ateliers/essai";
 
-/** Les ateliers sont une donnée figée : leurs pages se rendent à la construction. */
-export function generateStaticParams() {
-  return ATELIERS.map((a) => ({ code: a.code }));
-}
+/**
+ * Les ateliers sont une donnée figée, mais la fiche dit à qui la lit si la partie se crée
+ * à son niveau : sans licence, les niveaux fermés ne se créent pas (config/vitrine-solo.ts).
+ * Elle se rend donc à la demande, comme l'espace enseignant.
+ */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -19,7 +60,10 @@ export async function generateMetadata({
   const { code } = await params;
   const a = atelierByCode.get(code);
   if (!a) return { title: "Atelier introuvable" };
-  return { title: `${a.titre} · ${a.diplome}`, description: a.resume };
+  return {
+    title: `${a.titre} · ${publicDeLAtelier(a)}`,
+    description: a.resume,
+  };
 }
 
 /**
@@ -52,7 +96,9 @@ function Section({
 }) {
   return (
     <section id={id} className="mt-10 scroll-mt-24">
-      <h2 className="text-lg font-bold text-slate-100 print:text-black">{titre}</h2>
+      <h2 className="text-lg font-bold text-slate-100 print:text-black">
+        {titre}
+      </h2>
       {children}
     </section>
   );
@@ -63,6 +109,7 @@ const SOMMAIRE = [
   ["technique", "Fiche technique"],
   ["partie", "La partie à créer"],
   ["formats", "Trois façons de le placer"],
+  ["adapter", "Adapter le niveau"],
   ["deroule", "Déroulé séance par séance"],
   ["livrables", "Livrables attendus"],
   ["evaluation", "Modalités d'évaluation"],
@@ -70,36 +117,94 @@ const SOMMAIRE = [
   ["faq", "Questions d'enseignants"],
 ] as const;
 
-export default async function AtelierPage({ params }: { params: Promise<{ code: string }> }) {
+export default async function AtelierPage({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}) {
   const { code } = await params;
   const atelier = atelierByCode.get(code);
   if (!atelier) notFound();
 
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
-  const niveau = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau);
+  const niveau = DIFFICULTY_PRESETS.find(
+    (p) => p.level === atelier.reglages.niveau,
+  );
+  // Une fiche de concours annonce un TOURNOI, pas une partie de classe : ses
+  // groupes et ses finalistes se calculent du tirage réel plutôt que de
+  // s'écrire à la main.
+  const tournoi = atelier.reglages.tournoi;
+  const format = tournoi ? formatDuTournoi(tournoi) : null;
+  // UN ATELIER À UN NIVEAU FERMÉ SANS LICENCE : visible, avec son message, non lançable.
+  // Le serveur refuse de toute façon la création (createClassGame) ; la fiche le dit
+  // avant qu'on ait rempli le formulaire. Un concours ne se règle pas au niveau.
+  const [{ vitrineSolo }, session, invite] = await Promise.all([
+    getPlatformConfig(),
+    getSession(),
+    getGuestUserId(),
+  ]);
+  // « Pas d'essai en classe » : sans licence de l'arène en cours, ni la partie ni le
+  // concours d'un atelier ne se créent, quel que soit leur niveau (createClassGame,
+  // createCompetition). La fiche le dit à la place du bouton.
+  const sansLicence = !(await unCompteSousLicence([session?.userId, invite]));
+  const niveauFerme =
+    sansLicence &&
+    !tournoi &&
+    niveauReserve(vitrineSolo, atelier.reglages.scenarioCode, atelier.reglages.niveau);
+  // SOUS LICENCE, LE PARAMÉTRAGE : un atelier dont l'entreprise ou le niveau sort de
+  // l'offre (Classe, Programme) reste visible, avec son message, sans bouton de création.
+  // Un concours se joue avec son entreprise et n'a pas de niveau.
+  const orgDuCompte = !sansLicence && session ? await getTeacherOrgId(session.userId) : null;
+  const licenceDuCompte = orgDuCompte ? await licenceDeLArene(orgDuCompte) : null;
+  const horsDeLaLicence = licenceDuCompte
+    ? horsLicence(licenceDuCompte.parametrage, {
+        entreprise: entrepriseDuScenario(atelier.reglages.scenarioCode),
+        niveau: tournoi ? undefined : atelier.reglages.niveau,
+      })
+    : null;
   // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
   // aussi pour un dixième processus face au deuxième.
-  // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
-  // compte sans rien jouer. Les confondre a fait annoncer cinq trimestres sur la
-  // fiche du DCG là où l'atelier en joue quatre et la partie en durait six.
-  const seancesQuiJouent = atelier.seances.filter((s) => s.tourJoue !== null).length;
-  const processus = [...new Set(atelier.seances.flatMap((s) => s.processus))].sort((a, b) =>
-    a.localeCompare(b, "fr", { numeric: true }),
-  );
+  // Le nombre de tours ne se déduit pas du nombre de séances : une séance peut
+  // rendre compte sans rien jouer, ou jouer le tour d'essai. Les confondre a
+  // fait annoncer cinq trimestres sur la fiche du DCG là où l'atelier en joue
+  // quatre et la partie en durait six ; la phrase se lit dans les séances
+  // (config/ateliers/essai, `repartitionDesSeancesEnClair`).
+  const processus = [
+    ...new Set(atelier.seances.flatMap((s) => s.processus)),
+  ].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+  // CE QUE CHAQUE TOUR DEMANDE, selon le modèle de durée, en face de ce que le
+  // déroulé lui donne : la fiche l'écrit par séance, et une garde refuse un
+  // déroulé qui donnerait moins que l'estimation (config/ateliers/duree-des-seances).
+  const charge = new Map(chargeDesSeances(atelier).map((c) => [c.seance.numero, c]));
+  // LES DEUX CRANS VOISINS, lus dans les préréglages et le modèle de durée,
+  // jamais écrits à la main (config/ateliers/adaptations).
+  const adaptations = adaptationsDuNiveau(atelier);
+  // L'ENTREPRISE SERT D'AUTRES FORMATIONS que celle de cette fiche : le
+  // registre des entreprises le dit (config/scenarios/formations-servies).
+  const sertAussi = formationsServiesEnPlus(atelier);
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
       <main id="main" className="min-w-0">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
+        <p className="text-xs uppercase tracking-annonce text-slate-400 print:hidden">
           <Link href="/animations" className="hover:text-slate-300">
             Ateliers
           </Link>{" "}
-          / {atelier.diplome}
+          {/*
+            LE SIGLE DANS LE FIL D'ARIANE, PAS LE NOM ENTIER. Le tournoi
+            inter-filières sert quatre formations : « Baccalauréat STMG, BTS
+            Comptabilité et Gestion, BTS Management commercial opérationnel et
+            BTS Négociation et digitalisation de la relation client » occupait
+            six lignes au-dessus du titre, sur un téléphone, avant qu'on sache
+            de quoi parlait la page. Les noms entiers restent dans la fiche
+            technique, où on vient les lire.
+          */}
+          / {atelier.titre}
         </p>
 
         <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
-            {atelier.nature} · {atelier.diplome} · {atelier.annee}
+            {atelier.nature} · {atelier.annee}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
             {atelier.titre}
@@ -111,6 +216,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               distribuent ; les corrigés et la grille de correction sont
               derrière la session, parce que les mettre ici reviendrait à
               distribuer le corrigé avec le sujet. */}
+          <RepliableSurTelephone resume="Les documents de l'atelier" className="mt-3 print:hidden">
           <div className="mt-4 flex flex-wrap gap-3 print:hidden">
             <PrintButton label="Imprimer cette fiche" />
             <Link
@@ -119,6 +225,18 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             >
               Dossier élève
             </Link>
+            {/* Et un dossier par responsable : la direction générale et les
+                quatre postes, chacun avec sa page à imprimer à part. */}
+            {ROLES.map((r) => (
+              <Link
+                key={r.code}
+                href={`/animations/${atelier.code}/dossier/${r.code}`}
+                data-dossier-du-responsable={r.code}
+                className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+              >
+                {r.titre}
+              </Link>
+            ))}
             <Link
               href={`/animations/${atelier.code}/formulaires`}
               className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
@@ -133,36 +251,41 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             </a>
             <Link
               href={`/teacher/animations/${atelier.code}/dossier`}
-              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+              className="rounded-lg bouton-filet border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5"
             >
               Corrigés des situations
             </Link>
             <a
               href={`/teacher/animations/${atelier.code}/grille`}
-              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+              className="rounded-lg bouton-filet border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/50 hover:bg-white/5"
             >
               Grille de correction
             </a>
           </div>
+          </RepliableSurTelephone>
         </header>
 
         {/* À retenir : les faits que l'enseignant veut avant de lire le reste. */}
         <div className="mt-8 break-inside-avoid rounded-xl border-l-2 border-amber-400 bg-amber-950/10 px-5 py-4 print:border-black/40 print:bg-transparent">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
+          <p className="text-xs font-semibold uppercase tracking-surtitre text-amber-300 print:text-black">
             À retenir
           </p>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
             <li>
-              · <strong className="text-slate-100 print:text-black">{atelier.format}</strong>, soit{" "}
-              {dureeTotaleHeures(atelier)} heures, et une partie de {atelier.reglages.tours} tours.{" "}
-              {seancesQuiJouent === atelier.seances.length
-                ? "Chaque séance joue un tour."
-                : `${seancesQuiJouent} séances jouent un tour, la dernière rend compte.`}
+              ·{" "}
+              <strong className="text-slate-100 print:text-black">
+                {atelier.format}
+              </strong>
+              , soit {dureeTotaleHeures(atelier)} heures, et une partie de{" "}
+              {atelier.reglages.tours} tours.{" "}
+              {repartitionDesSeancesEnClair(atelier)}
             </li>
             <li>
               · {atelier.referentielLabel} {atelier.referentielAccord} :{" "}
               <strong className="text-slate-100 print:text-black">
-                {[...new Set(processus.map((p) => p.split("·")[0]!.trim()))].join(", ")}
+                {[
+                  ...new Set(processus.map((p) => p.split("·")[0]!.trim())),
+                ].join(", ")}
               </strong>
               .
             </li>
@@ -171,17 +294,24 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               <strong className="text-slate-100 print:text-black">
                 {atelier.seances.length} livrables
               </strong>{" "}
-              et verse {atelier.seances.length} traces à son {atelier.traceLabel}.
+              et verse {atelier.seances.length} traces à son{" "}
+              {atelier.traceLabel}.
             </li>
             <li>
               · Entreprise :{" "}
-              <strong className="text-slate-100 print:text-black">{scenario.playerTeamName}</strong>{" "}
-              ({SECTOR_LABELS[scenario.sector].toLowerCase()}), {atelier.reglages.equipes} équipes de{" "}
+              <strong className="text-slate-100 print:text-black">
+                {scenario.playerTeamName}
+              </strong>{" "}
+              ({SECTOR_LABELS[scenario.sector].toLowerCase()}),{" "}
+              {atelier.reglages.equipes} équipes de{" "}
               {atelier.reglages.effectifParEquipe}.
             </li>
             <li>
-              · Exigence : <strong className="text-slate-100 print:text-black">{atelier.difficulteLabel}</strong>,
-              aucun prérequis de jeu pour l&apos;enseignant.
+              · Exigence :{" "}
+              <strong className="text-slate-100 print:text-black">
+                {atelier.difficulteLabel}
+              </strong>
+              , aucun prérequis de jeu pour l&apos;enseignant.
             </li>
           </ul>
         </div>
@@ -198,7 +328,12 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               <tbody>
                 {(
                   [
-                    ["Diplôme", `${atelier.diplome}, ${atelier.annee.toLowerCase()}`],
+                    [
+                      "Formations",
+                      sertAussi.length > 0
+                        ? `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()} · sert aussi ${sertEnClair(sertAussi)}`
+                        : `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()}`,
+                    ],
                     ["Entreprise dirigée", scenario.title],
                     ["Secteur", SECTOR_LABELS[scenario.sector]],
                     ["Ce que l'entreprise vend", scenario.vocabulary.units],
@@ -209,19 +344,28 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     ],
                     ["Nombre de séances", `${atelier.seances.length}`],
                     ["Volume horaire", `${dureeTotaleHeures(atelier)} heures`],
-                    ["Effectif conseillé", `${atelier.reglages.equipes} équipes de ${atelier.reglages.effectifParEquipe}`],
+                    [
+                      "Effectif conseillé",
+                      `${atelier.reglages.equipes} équipes de ${atelier.reglages.effectifParEquipe}`,
+                    ],
                     ["Concurrents machine", `${atelier.reglages.bots}`],
+                    ["Tour d'essai", tourDEssaiEnClair(atelier)],
                     ["Exigence", atelier.difficulteLabel],
                   ] as const
                 ).map(([k, v]) => (
-                  <tr key={k} className="border-t border-white/5 first:border-t-0 print:border-black/10">
+                  <tr
+                    key={k}
+                    className="border-t border-white/5 first:border-t-0 print:border-black/10"
+                  >
                     <th
                       scope="row"
-                      className="w-56 px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400"
+                      className="w-36 px-4 py-2 text-left sm:w-56 text-xs font-medium uppercase tracking-wide text-slate-400"
                     >
                       {k}
                     </th>
-                    <td className="px-4 py-2 text-slate-200 print:text-black">{v}</td>
+                    <td className="px-4 py-2 text-slate-200 print:text-black">
+                      {v}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -229,7 +373,14 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           </div>
         </Section>
 
-        <Section id="partie" titre="La partie à créer, une fois pour tout l'atelier">
+        <Section
+          id="partie"
+          titre={
+            tournoi
+              ? "Le tournoi à créer, une fois pour tout le campus"
+              : "La partie à créer, une fois pour tout l'atelier"
+          }
+        >
           <div className="mt-3 break-inside-avoid rounded-xl border border-amber-400/25 bg-amber-950/10 p-5 print:border-black/30 print:bg-transparent">
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
               {(
@@ -240,11 +391,46 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     "Niveau",
                     `${atelier.reglages.niveau} · ${atelier.reglages.niveauNom}${niveau ? ` : ${niveau.tagline}` : ""}`,
                   ],
-                  ["Équipes", `${atelier.reglages.equipes} équipes d'élèves`],
-                  ["Concurrents", `${atelier.reglages.bots} pilotés par la machine`],
-                  ["TVA", atelier.reglages.tva ? "activée à 20 %" : "désactivée"],
-                  ["Monde variable", atelier.reglages.mondeVariable ? "activé" : "décoché"],
+                  ...(tournoi
+                    ? ([
+                        [
+                          "Équipes inscrites",
+                          `${tournoi.equipes} sur l'ensemble du campus`,
+                        ],
+                        [
+                          "Groupes",
+                          `${tournoi.tailleGroupe} par groupe à la création, ${libelleFormatTournoi(tournoi).toLowerCase()}`,
+                        ],
+                        [
+                          "Qualifiés",
+                          `${tournoi.qualifiesParGroupe} par groupe, soit ${format!.finalistes} en finale`,
+                        ],
+                      ] as const)
+                    : ([
+                        [
+                          "Équipes",
+                          `${atelier.reglages.equipes} équipes d'élèves`,
+                        ],
+                      ] as const)),
+                  [
+                    "Concurrents",
+                    `${atelier.reglages.bots} pilotés par la machine`,
+                  ],
+                  // Le taux se règle dans les paramètres économiques de la
+                  // partie, et il n'est pas le même partout : vingt pour cent
+                  // dans le commerce de détail, dix dans la restauration sur
+                  // place. La page ne l'invente donc plus, les notes de chaque
+                  // fiche le disent.
+                  ["TVA", atelier.reglages.tva ? "activée" : "désactivée"],
+                  [
+                    "Monde variable",
+                    atelier.reglages.mondeVariable ? "activé" : "décoché",
+                  ],
                   ["Questions", atelier.reglages.quizMode],
+                  // L'option « Tour d'essai » du formulaire de création
+                  // (config/tour-d-essai) : la fiche la dit pour toutes les
+                  // fiches, celles qui n'en demandent pas comprises.
+                  ["Tour d'essai", tourDEssaiEnClair(atelier)],
                 ] as const
               ).map(([k, v]) => (
                 <div key={k} className="flex gap-3">
@@ -255,32 +441,81 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 </div>
               ))}
             </dl>
-            <p className="mt-3 text-xs leading-relaxed text-slate-400 print:text-black">
+            <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
               {atelier.reglages.notes}
             </p>
-            <Link
-              href="/teacher"
-              className="mt-4 inline-block rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 print:hidden"
-            >
-              Créer la partie dans mon espace enseignant
-            </Link>
+            {sansLicence ? (
+              <p
+                data-atelier-ferme=""
+                className="mt-4 rounded-lg encadre-neutre px-3 py-2.5 text-sm leading-relaxed text-slate-200 print:hidden"
+              >
+                <strong className="font-semibold text-slate-100">
+                  {niveauFerme ? `Niveau ${atelier.reglages.niveau} · ` : ""}
+                  {MARQUE_DE_L_ARENE}.
+                </strong>{" "}
+                {niveauFerme ? `${messageNiveauxReserves(vitrineSolo)} ` : ""}
+                {refusDeLaClasse(vitrineSolo)}{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                  prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir les offres
+                </Link>
+              </p>
+            ) : horsDeLaLicence ? (
+              <p
+                data-atelier-hors-licence={horsDeLaLicence.quoi}
+                className="mt-4 rounded-lg encadre-neutre px-3 py-2.5 text-sm leading-relaxed text-slate-200 print:hidden"
+              >
+                <strong className="font-semibold text-slate-100">
+                  {nomDOffre(horsDeLaLicence.offre)}.
+                </strong>{" "}
+                {horsDeLaLicence.message}{" "}
+                <Link
+                  href={lienDuDevis(horsDeLaLicence.offre)}
+                  prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  {LIBELLE_DU_DEVIS}
+                </Link>{" "}
+                ·{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                  prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir les offres
+                </Link>
+              </p>
+            ) : (
+              <Link href="/teacher" className={`${bouton()} mt-4 print:hidden`}>
+                {tournoi
+                  ? "Organiser le concours dans mon espace enseignant"
+                  : "Créer la partie dans mon espace enseignant"}
+              </Link>
+            )}
           </div>
         </Section>
 
         <Section id="formats" titre="Trois façons de le placer dans l'année">
           <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-            Le contenu ne change pas, seul le découpage change. Prenez celui qui correspond à votre
-            emploi du temps.
+            Le contenu ne change pas, seul le découpage change. Prenez celui qui
+            correspond à votre emploi du temps.
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {atelier.formats.map((f) => (
               <div
                 key={f.nom}
-                className="break-inside-avoid rounded-xl border border-white/10 bg-slate-900 p-4 print:border-black/20 print:bg-transparent"
+                className="break-inside-avoid carte p-4 print:border-black/20 print:bg-transparent"
               >
-                <h3 className="text-sm font-semibold text-slate-100 print:text-black">{f.nom}</h3>
-                <p className="mt-1 text-xs text-amber-300/80 print:text-black">{f.quand}</p>
-                <p className="mt-2 text-xs leading-relaxed text-slate-400 print:text-black">
+                <h3 className="text-sm font-semibold text-slate-100 print:text-black">
+                  {f.nom}
+                </h3>
+                <p className="mt-1 text-xs text-amber-300/80 print:text-black">
+                  {f.quand}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
                   {f.comment}
                 </p>
               </div>
@@ -288,13 +523,86 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           </div>
         </Section>
 
+        <Section id="adapter" titre="Adapter le niveau">
+          <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
+            Le déroulé est écrit pour le niveau {atelier.reglages.niveau} ·{" "}
+            {atelier.reglages.niveauNom}. Un cran au-dessus ou au-dessous se
+            règle à la création de la partie, et voici ce qu&apos;il change :
+            les leviers, l&apos;entreprise jouée, les séances à retoucher et le
+            temps de chaque tour, lus dans les réglages du jeu plutôt
+            qu&apos;écrits à la main.
+          </p>
+          {adaptations.raison ? (
+            <p
+              data-adaptation-aucune=""
+              className="mt-3 text-sm leading-relaxed text-slate-300 print:text-black"
+            >
+              {adaptations.raison}
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {[adaptations.bas, adaptations.haut].map((ad, i) =>
+                ad ? (
+                  <div
+                    key={ad.sens}
+                    data-adaptation={ad.sens}
+                    className="break-inside-avoid carte p-4 print:border-black/20 print:bg-transparent"
+                  >
+                    <h3 className="text-sm font-semibold text-slate-100 print:text-black">
+                      {ad.sens === "bas" ? "Un cran plus bas" : "Un cran plus haut"} :
+                      niveau {ad.niveau} · {ad.niveauNom}
+                    </h3>
+                    <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
+                      <li>
+                        ·{" "}
+                        {ad.ferme.length > 0
+                          ? `Ferme : ${ad.ferme.join(", ").toLowerCase()}.`
+                          : "Ne ferme aucun levier."}{" "}
+                        {ad.ouvre.length > 0
+                          ? `Ouvre : ${ad.ouvre.join(", ").toLowerCase()}.`
+                          : "N'ouvre aucun levier."}
+                      </li>
+                      <li>
+                        ·{" "}
+                        {ad.bascule
+                          ? `L'entreprise change de variante : ${ad.bascule.de} devient ${ad.bascule.vers}.`
+                          : `L'entreprise reste ${scenario.shortName}.`}
+                      </li>
+                      <li>
+                        ·{" "}
+                        {ad.seances.length > 0
+                          ? `À retoucher : ${ad.seances
+                              .map((s) => `séance ${s.numero} (${s.raison})`)
+                              .join(" ; ")}.`
+                          : "Aucune séance à retoucher : le déroulé tient tel quel."}
+                      </li>
+                      <li>· Par tour, selon le modèle de durée : {minutesEnClair(ad.minutesParTour)}.</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <div
+                    key={i === 0 ? "bas" : "haut"}
+                    data-adaptation={i === 0 ? "bas" : "haut"}
+                    className="carte p-4 text-sm leading-relaxed text-slate-400 print:border-black/20 print:bg-transparent"
+                  >
+                    {i === 0
+                      ? "Aucun cran plus bas : c'est le premier niveau du jeu."
+                      : "Aucun cran plus haut : c'est le dernier niveau du jeu."}
+                  </div>
+                ),
+              )}
+            </div>
+          )}
+        </Section>
+
         <Section id="deroule" titre="Déroulé séance par séance">
           <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
-            Le minutage est une trame, pas une contrainte. Aucune séance ne dépasse trois heures,
-            de sorte qu&apos;elle entre dans un créneau ordinaire ; à vous de l&apos;étirer si
-            vous disposez de plus de temps, ou de la resserrer. Une seule règle si vous devez
-            couper : prenez sur la production plutôt que sur le débriefing, qui est ce qui
-            transforme une partie jouée en séance apprise.
+            Le minutage est une trame, pas une contrainte. Aucune séance ne
+            dépasse deux heures, de sorte qu&apos;elle entre dans un créneau
+            ordinaire ; à vous de l&apos;étirer si vous disposez de plus de
+            temps, ou de la resserrer. Une seule règle si vous devez couper :
+            prenez sur la production plutôt que sur le débriefing, qui est ce
+            qui transforme une partie jouée en séance apprise.
           </p>
           <ol className="mt-5 space-y-6 border-l border-white/10 pl-6 print:border-black/20">
             {atelier.seances.map((s) => (
@@ -305,17 +613,34 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 >
                   {s.numero}
                 </span>
-                <article className="rounded-xl border border-white/10 bg-slate-900 p-5 print:border-black/20 print:bg-transparent">
+                <article className="carte p-5 print:border-black/20 print:bg-transparent">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 className="text-xl font-bold text-slate-50 print:text-black">{s.titre}</h3>
+                    <h3 className="text-xl font-bold text-slate-50 print:text-black">
+                      {s.titre}
+                    </h3>
                     <span className="text-xs text-slate-400">
                       {minutesEnTexte(s.dureeMinutes)}
-                      {s.tourJoue !== null ? ` · tour ${s.tourJoue} joué en séance` : ""}
+                      {tourDeLaSeanceEnClair(s) ? ` · ${tourDeLaSeanceEnClair(s)}` : ""}
                     </span>
                   </div>
+                  {charge.has(s.numero) ? (
+                    <p
+                      data-tour-demande=""
+                      className="mt-1.5 text-sm text-slate-400 print:text-black"
+                    >
+                      Le tour demande ≈ {charge.get(s.numero)!.estimation.minutes} min
+                      (estimation : lecture, saisie, analyse
+                      {charge.get(s.numero)!.estimation.priseEnMain > 0
+                        ? ", prise en main"
+                        : ""}
+                      ), le déroulé lui en donne {charge.get(s.numero)!.minutesDeJeu}.
+                    </p>
+                  ) : null}
 
                   <p className="mt-3 text-sm leading-relaxed text-slate-300 print:text-black">
-                    <strong className="text-slate-100 print:text-black">Objectif. </strong>
+                    <strong className="text-slate-100 print:text-black">
+                      Objectif.{" "}
+                    </strong>
                     {s.objectif}
                   </p>
 
@@ -330,9 +655,15 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     ))}
                   </div>
 
+                  {/* SUR TÉLÉPHONE, la séance se lit en trois lignes — son titre, son
+                      objectif, ses processus — et s'ouvre pour le minutage, les
+                      livrables et l'évaluation. Quatre à sept séances dépliées
+                      faisaient plusieurs écrans chacune ; au-delà de `sm`, tout
+                      reste affiché, et à l'impression aussi. */}
+                  <RepliableSurTelephone resume="Voir le déroulé de la séance" className="mt-2 sm:mt-0">
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-600">
                         Compétences travaillées
                       </h4>
                       <ul className="mt-1.5 space-y-1 text-sm text-slate-300 print:text-black">
@@ -342,17 +673,17 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                       </ul>
                     </div>
                     <div>
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-600">
                         Notions mobilisées
                       </h4>
                       <p className="mt-1.5 text-sm text-slate-400 print:text-black">
-                        {s.notions.join(", ")}.
+                        <NotionsMobilisees notions={s.notions} />
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-4 rounded-lg border border-white/5 bg-slate-950/60 p-3 print:border-black/15 print:bg-transparent">
-                    <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
+                    <h4 className="text-xs uppercase tracking-surtitre text-slate-600">
                       Ce que vous préparez avant
                     </h4>
                     <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -360,7 +691,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     </p>
                   </div>
 
-                  <h4 className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-600">
+                  <h4 className="mt-4 text-xs uppercase tracking-surtitre text-slate-600">
                     Minutage
                   </h4>
                   <ol className="mt-1.5 space-y-2">
@@ -382,16 +713,16 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                   </ol>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg border border-emerald-400/20 bg-emerald-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-emerald-300/80 print:text-black">
+                    <div className="encadre-neutre rounded-lg p-3 print:border-black/15">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-200 print:text-black">
                         Livrable de la séance
                       </h4>
                       <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
                         {s.livrable}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-sky-400/20 bg-sky-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-xs uppercase tracking-[0.2em] text-sky-300/80 print:text-black">
+                    <div className="encadre-neutre rounded-lg p-3 print:border-black/15">
+                      <h4 className="text-xs uppercase tracking-surtitre text-slate-200 print:text-black">
                         Trace pour le {atelier.traceLabel}
                       </h4>
                       <p className="mt-1.5 text-sm italic leading-relaxed text-slate-300 print:text-black">
@@ -400,7 +731,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     </div>
                   </div>
 
-                  <h4 className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-600">
+                  <h4 className="mt-4 text-xs uppercase tracking-surtitre text-slate-600">
                     Ce qui est évalué
                   </h4>
                   <ul className="mt-1.5 space-y-1 text-sm text-slate-400 print:text-black">
@@ -408,6 +739,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                       <li key={c}>· {c}</li>
                     ))}
                   </ul>
+                  </RepliableSurTelephone>
                 </article>
               </li>
             ))}
@@ -416,13 +748,15 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
         <Section id="livrables" titre="Livrables attendus, dans l'ordre">
           <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-            De quoi construire votre grille : la liste est celle des séances, elle ne peut pas en
-            différer.
+            De quoi construire votre grille : la liste est celle des séances,
+            elle ne peut pas en différer.
           </p>
           <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-slate-300 print:text-black">
             {atelier.seances.map((s) => (
               <li key={s.numero}>
-                <strong className="text-slate-100 print:text-black">Séance {s.numero}. </strong>
+                <strong className="text-slate-100 print:text-black">
+                  Séance {s.numero}.{" "}
+                </strong>
                 {s.livrable}
               </li>
             ))}
@@ -465,21 +799,31 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           </div>
         </Section>
 
-        <p className="mt-10 text-xs leading-relaxed text-slate-600 print:text-black">
-          {atelier.referentielLabel} {atelier.referentielAccord} sont nommés comme le
-          référentiel du diplôme les nomme. Le rapprochement entre une séance et l&apos;un
-          d&apos;eux est une proposition, à ajuster à la progression de votre établissement et
-          aux compétences que votre équipe évalue.
+        <p className="mt-10 text-sm leading-relaxed text-slate-600 print:text-black">
+          {atelier.referentielLabel} {atelier.referentielAccord} sont nommés
+          comme le référentiel du diplôme les nomme. Le rapprochement entre une
+          séance et l&apos;un d&apos;eux est une proposition, à ajuster à la
+          progression de votre établissement et aux compétences que votre équipe
+          évalue.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-4 text-sm print:hidden">
-          <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/animations"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             Tous les ateliers
           </Link>
-          <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/entreprises"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             Les entreprises
           </Link>
-          <Link href="/parcours" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/parcours"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             Alignement sur les référentiels
           </Link>
         </div>
@@ -487,13 +831,16 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
       <aside className="hidden lg:block print:hidden">
         <nav className="sticky top-8 border-l border-white/10 pl-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-surtitre text-slate-600">
             Sommaire
           </p>
           <ul className="mt-3 space-y-2 text-xs">
             {SOMMAIRE.map(([id, label]) => (
               <li key={id}>
-                <a href={`#${id}`} className="text-slate-400 transition hover:text-amber-300">
+                <a
+                  href={`#${id}`}
+                  className="text-slate-400 transition hover:text-amber-300"
+                >
                   {label}
                 </a>
               </li>

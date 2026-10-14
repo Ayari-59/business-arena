@@ -17,7 +17,7 @@ import { db } from "@/db";
 import { games, users } from "@/db/schema";
 import {
   createSoloGame,
-  drawEventCardForNextRound,
+  distribuerUnCourrier,
   resolveCurrentRound,
   submitTeamDecisions,
   nommerEquipe,
@@ -133,7 +133,7 @@ describe("tirage de carte — enseignant et restrictions", () => {
   it("seul le créateur peut tirer une carte", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId: strangerId }),
+      distribuerUnCourrier({ gameId, teacherId: strangerId }),
     ).rejects.toThrow("enseignant");
   });
 
@@ -148,7 +148,7 @@ describe("tirage de carte — enseignant et restrictions", () => {
       if (finished) break;
     }
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId: userId }),
+      distribuerUnCourrier({ gameId, teacherId: userId }),
     ).rejects.toThrow("terminée");
   });
 });

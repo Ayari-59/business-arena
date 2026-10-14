@@ -1,23 +1,63 @@
+import { BoutonCopierLeMessage } from "@/components/bouton-copier-le-message";
+import { messageDeLaPartie } from "@/lib/message-cahier-de-textes";
+import Link from "next/link";
+import { mentionDeValidation } from "@/config/validation-du-tour";
+import { dureeDuTour } from "@/config/duree-du-tour";
+import { DureeDuTourAffichee } from "@/components/duree-du-tour";
+import { getObservationSeance } from "@/services/observation.service";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
+import { compositionDesEquipes } from "@/services/affectation.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
-import { formatEuro } from "@/lib/format";
+import { compter, formatDecimal, formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { setMissedPolicyAction, setQuizModeAction } from "../../actions";
-import { QUIZ_MODES } from "@/config/difficulty";
+import { setAnswerFormatAction, setMissedPolicyAction, setQuizModeAction } from "../../actions";
+import { ANSWER_FORMATS, QUIZ_MODES } from "@/config/difficulty";
 import { estParDefaut } from "@/config/decision-source";
 import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situation";
-import { CardDeck } from "@/components/card-deck";
+import { CompositionEquipes } from "@/components/composition-equipes";
+import { SubventionsPanel } from "@/components/subventions-panel";
+import { DistributionCourrier } from "@/components/distribution-courrier";
+import { GazetteDuPilotage } from "@/components/gazette-du-pilotage";
+import { gazetteDuPilotage } from "@/services/gazette.service";
 import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
-import { setGameScheduleAction, setRoundWindowsAction } from "../../actions";
+import { SignalDeSeance } from "@/components/signal-de-seance";
+import { Icone } from "@/components/icone";
+import { PictoSecteur } from "@/components/picto-secteur";
+import {
+  archiverPartieAction,
+  creerLesCodesManquantsAction,
+  nommerLaPartieAction,
+  reinitialiserPartieAction,
+  supprimerPartieAction,
+  setGameScheduleAction,
+  setRankingRevealedAction,
+  setRoundWindowsAction,
+} from "../../actions";
 import { utcToParisLocalInput } from "@/lib/paris-time";
 import { JustificationsReview } from "@/components/justifications-review";
+import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
+import { Tiroir } from "@/components/tiroir";
+import { NOM_PARTIE_MAX } from "@/services/game.service";
+import { CodesDeReprise } from "@/components/codes-de-reprise";
+import { codesDeRepriseDeLaPartie, joueursSansCode } from "@/services/reprise.service";
+import { FriseDesTours } from "@/components/frise-des-tours";
+import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { entitlementsForUser } from "@/services/entitlements.service";
+import { MARQUE_DE_L_ARENE } from "@/config/tarifs";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { resolveAiSurface } from "@/services/ai.service";
+import { CodeQr } from "@/components/code-qr";
+import { urlDeJonction } from "@/lib/qr";
+import { bouton } from "@/components/bouton";
+import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
+import { resumePourLePilotage } from "@/services/pairs.service";
+import { CommencerLaVraiePartie } from "@/components/commencer-la-vraie-partie";
+import { EXPLICATION_DU_TOUR_D_ESSAI } from "@/config/tour-d-essai";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -31,78 +71,357 @@ export const dynamic = "force-dynamic";
 
 export default async function TeacherGamePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ gameId: string }>;
+  searchParams: Promise<{ recommencer?: string; supprimer?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const { gameId } = await params;
+  const { recommencer, supprimer } = await searchParams;
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
+  // L'ARCHIVE D'UN TOUR D'ESSAI ne se pilote pas : elle se relit, depuis sa partie.
+  if (view.essaiDe) redirect(`/teacher/games/${view.essaiDe}/essai`);
   const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
+  // Les clés personnelles des élèves : à relire à qui a changé de poste et
+  // perdu la sienne. La liste est vide tant que personne n'a rejoint.
+  const codesDeReprise = await codesDeRepriseDeLaPartie(gameId, session.userId);
+  // Les élèves entrés avant que le code existe : ils n'entreront plus par le
+  // code, justement parce qu'ils sont déjà dans la partie.
+  const sansCode = await joueursSansCode(gameId, session.userId);
   const releve = await getGameGradeSheet(gameId, session.userId);
+  // Qui joue dans quelle équipe : le seul écran d'où l'on répare une
+  // affectation, et le seul recours d'un élève revenu d'un autre poste.
+  const composition = await compositionDesEquipes(gameId);
+  // LA GAZETTE : l'article du tour en cours et l'aperçu du suivant, à
+  // remplacer ou à retirer avant que la classe ne l'ouvre.
+  const gazette = await gazetteDuPilotage(gameId, session.userId);
+  // L'évaluation entre coéquipiers (parties de classe) : activée ou non, et où elle en est.
+  const coequipiers = await resumePourLePilotage(session.userId, gameId);
 
   const finished = view.status === "finished";
+  // LE TOUR D'ESSAI (config/tour-d-essai.ts) : pendant qu'il se joue, l'ardoise le dit
+  // et offre le second geste ; son dernier tour clos, « commencer » devient le seul.
+  const essai = view.essai;
+  const essaiEnJeu = essai !== null && essai.phase !== "fini";
+  const essaiTermine = essai?.phase === "termine" || essai?.phase === "bascule";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
+  // Une partie VIERGE : jamais jouée, personne dedans. C'est la seule qu'on
+  // puisse supprimer, et c'est aussi la seule à qui proposer le bouton — le
+  // service refuse les autres, mais un bouton qu'on ne peut pas cliquer avec
+  // succès est une invitation à se cogner.
+  const vierge =
+    view.currentRound <= 1 &&
+    submittedCount === 0 &&
+    composition.every((e) => e.membres.length === 0);
+  // Le tour dont le classement se révèle : le dernier clos. Les précédents sont
+  // derrière nous, celui en cours n'a pas encore de classement.
+  const dernierTourClos = [...view.rounds]
+    .filter((r) => r.status === "resolved")
+    .sort((a3, b3) => b3.index - a3.index)[0];
 
   // Synthèse IA des justifications (facultative) : droit du compte + réglage
   // admin + clé API.
   const aiEnt = await entitlementsForUser(session.userId);
   const aiReview = aiEnt.ai && (await resolveAiSurface("teacherReview")) !== null;
 
+  const toursBornes = view.rounds.filter((r) => r.opensAt || r.deadline).length;
+  // La frise : un segment plein par tour clos, sans signe (il y a un résultat
+  // par équipe, pas un pour la classe), l'ambre pour celui en cours.
+  const toursJoues = new Map<number, null>(
+    view.rounds.filter((r) => r.status === "resolved").map((r) => [r.index, null]),
+  );
+  const animer =
+    (!finished && !essaiTermine && view.mode === "learning") ||
+    view.aidRequests.length > 0 ||
+    (gazette?.tours.length ?? 0) > 0;
+
+  // COMBIEN DE TEMPS CE TOUR VA PRENDRE. L'estimation se calcule sur ce que la
+  // partie demande vraiment (texte à lire, champs ouverts, situation) ; la
+  // mesure, quand elle existe, vient du dernier tour clos de cette partie et
+  // lui passe devant. Le repère de départ d'un tour est la clôture du
+  // précédent, donc la mesure existe dès le deuxième tour clos, planning ou
+  // non.
+  const dureeEstimee = dureeDuTour({
+    ...view.chargeDuTour,
+    premierTour: view.currentRound === 1,
+  });
+  const observation = await getObservationSeance(gameId, session.userId);
+  const tourMesure = [...(observation?.tours ?? [])]
+    .filter((t) => t.clos && t.minutesMedianes !== null)
+    .sort((a4, b4) => b4.index - a4.index)[0];
+
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-4 px-2 py-6 sm:space-y-8 sm:p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Pilotage de partie</p>
-          <h1 className="text-2xl font-bold">
-            Code d&apos;invitation : <span className="font-mono text-amber-300">{view.joinCode}</span>
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Les élèves rejoignent sur <span className="font-mono">/join</span> avec ce code.
-          </p>
-          <p className="mt-1 text-xs text-slate-400">{view.scenarioTitle}</p>
+    <main id="main" className="mx-auto max-w-4xl space-y-4 px-2 py-6 sm:space-y-6 sm:p-6">
+      <EnTeteEnseignant
+        surtitre={`Pilotage de partie · ${SECTOR_LABELS[view.sector]}`}
+        tuile={
+          // LA TUILE DE L'ARÈNE, TELLE QUELLE. Elle portait l'emoji du
+          // scénario (🔊 pour NOVA), dessiné par le système ; l'arène des
+          // élèves avait déjà son pictogramme de secteur. L'enseignant voit
+          // désormais la même tuile que ses élèves, et c'est elle seule qui
+          // porte la couleur du secteur : le surtitre reste en laiton.
+          <span
+            aria-hidden
+            className={`flex h-12 w-12 items-center justify-center rounded-xl ${SECTOR_COLORS[view.sector].bg} ${SECTOR_COLORS[view.sector].accent}`}
+          >
+            <PictoSecteur secteur={view.sector} className="h-7 w-7" />
+          </span>
+        }
+        titre={view.scenarioTitle}
+        actif="parties"
+        droite={
+          <>
+            {finished ? (
+              <p className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
+                Partie terminée
+              </p>
+            ) : null}
+            {/* Le niveau et le monde variable se choisissent à la création puis
+                disparaissaient : une partie doit pouvoir dire sous quelles
+                règles elle tourne. */}
+            <p className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-slate-300">
+              Niveau {view.difficulty.level} · {view.difficulty.name}
+            </p>
+            <p className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
+              {view.variableWorld ? "Monde variable" : "Monde figé"}
+            </p>
+            <FriseDesTours
+              roundsCount={view.roundsCount}
+              currentRound={view.currentRound}
+              resultats={toursJoues}
+              finished={finished}
+            />
+          </>
+        }
+      />
+
+
+      {/* LE PILOTAGE PARLE AU MUR. Clore le tour et révéler le classement se
+          font ici ; ce qu'on en attend se passe LÀ-BAS, sur l'écran que la
+          classe regarde. Ce signal le prévient, sans serveur ni délai, quand
+          les deux onglets sont dans le même navigateur : la projection se
+          recharge et joue la révélation du classement. */}
+      <SignalDeSeance
+        gameId={gameId}
+        tourClos={dernierTourClos?.index ?? null}
+        revele={dernierTourClos?.rankingRevealed ?? false}
+      />
+
+      {/*
+        LE BANDEAU « CE TOUR », SUR LE MARINE (audit P2-15). La projection était
+        réussie et le pilotage n'avait pas d'ardoise : où en est le tour se
+        lisait dans une ligne grise de 12 px, entre deux rubriques. Le bandeau
+        dit, en chiffres qu'on lit de loin, le tour, qui a validé et combien de
+        temps le tour prend, et il porte le seul geste orange de l'écran :
+        clore le tour et simuler. C'est une ardoise, pas une bande de page :
+        elle prend la matière du tableau sans compter parmi les contre-jours.
+      */}
+      <section
+        aria-labelledby="ce-tour-titre"
+        className="ardoise rounded-xl border border-white/10 bg-slate-950 p-4 text-slate-100 sm:p-6"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+          <div>
+            <h2
+              id="ce-tour-titre"
+              className="text-xs font-semibold uppercase tracking-annonce text-slate-300"
+            >
+              {finished ? "Fin de partie" : essaiEnJeu ? "Tour d'essai · ne compte pas" : "Ce tour"}
+            </h2>
+            <p className="mt-1 font-display text-4xl font-extrabold leading-none text-slate-50 tabular-nums sm:text-5xl">
+              {finished
+                ? compter(view.roundsCount, "tour joué", "tours joués")
+                : essaiTermine
+                  ? "Essai terminé"
+                  : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`}
+            </p>
+          </div>
+          {!finished && !essaiTermine ? (
+            <dl className="flex flex-wrap gap-x-8 gap-y-3">
+              {/* Le chiffre d'abord, son libellé dessous : « 0/4 · équipes
+                  ont validé ». L'ordre du document garde le libellé en tête. */}
+              <div className="flex flex-col-reverse">
+                <dt className="text-sm text-slate-300">
+                  {humanTeams.length > 1 ? "équipes ont validé" : "équipe a validé"}
+                </dt>
+                <dd className="m-0 font-display text-3xl font-bold leading-tight text-slate-50 tabular-nums">
+                  {submittedCount}/{humanTeams.length}
+                </dd>
+              </div>
+              <div className="flex flex-col-reverse">
+                <dt className="text-sm text-slate-300">durée du tour</dt>
+                <dd className="m-0 font-display text-3xl font-bold leading-tight text-slate-50 tabular-nums">
+                  ≈ {tourMesure ? tourMesure.minutesMedianes : dureeEstimee.minutes} min{" "}
+                  <span className="font-sans text-sm font-normal text-slate-300">
+                    {tourMesure ? "(mesuré)" : "(estimé)"}
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          ) : null}
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-            {finished
-              ? "Partie terminée"
-              : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
+        {essaiEnJeu ? (
+          <p className="mt-3 max-w-2xl text-sm text-slate-300" data-tour-d-essai={essai.phase}>
+            {essaiTermine
+              ? essai.phase === "bascule"
+                ? "La vraie partie se met en place. Si l'attente s'éternise, relancez : rien n'est perdu."
+                : "Les équipes lisent les résultats de l'essai. Quand la classe est prête, commencez la vraie partie : les entreprises repartiront de zéro."
+              : EXPLICATION_DU_TOUR_D_ESSAI}
           </p>
-          {/* Le niveau et le monde variable se choisissent à la création puis
-              disparaissaient : le niveau n'était plus lisible que côté élève, et
-              la case du monde variable nulle part. Une partie doit pouvoir dire
-              sous quelles règles elle tourne. */}
-          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-            Niveau {view.difficulty.level} · {view.difficulty.name}
+        ) : null}
+        {!finished && !essaiTermine ? (
+          <CloseRoundForm
+            gameId={view.gameId}
+            tour={view.currentRound}
+            validees={submittedCount}
+            total={humanTeams.length}
+            nomDuTour={essaiEnJeu ? `le tour d'essai ${view.currentRound}` : undefined}
+          />
+        ) : null}
+        {essaiEnJeu ? <CommencerLaVraiePartie gameId={view.gameId} principal={essaiTermine} /> : null}
+        {essai?.phase === "fini" ? (
+          <p className="mt-3 text-sm text-slate-300" data-tour-d-essai="fini">
+            {view.currentRound === 1 && !dernierTourClos
+              ? "La vraie partie a commencé : les entreprises sont reparties de zéro. "
+              : null}
+            <Link
+              href={`/teacher/games/${gameId}/essai`}
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              Revoir le tour d&apos;essai →
+            </Link>
           </p>
-          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-            {view.variableWorld ? "Monde variable" : "Monde figé"}
-          </p>
+        ) : null}
+      </section>
+
+      {/*
+        LE TICKET. Le code d'invitation est la seule chose que l'enseignant
+        écrit au tableau : il a sa carte à lui, et il se lit de loin. Elle
+        était en pointillé, comme un billet à détacher ; le pointillé est,
+        partout ailleurs dans l'application, le signe d'un repli fermé, et la
+        carte la plus importante de la page passait pour un tiroir à ouvrir.
+        Son cadre est plein, en laiton : c'est le code, en chasse fixe, qui en
+        fait un billet.
+      */}
+      <section
+        aria-label="Code d'invitation"
+        className="carte flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-amber-400/40 px-4 py-4 sm:px-6"
+      >
+        {/* LE CODE ET SON QR, ENSEMBLE. Le QR encode la même entrée que le
+            code — `/join?code=…` — mais la remplit d'avance : l'élève qui
+            vise avec son téléphone n'a plus que son prénom à écrire. Ici il
+            est petit : l'enseignant ne le scanne pas, il le montre, et c'est
+            la page de projection qui l'affiche pour la salle. */}
+        <div className="flex items-center gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-annonce text-amber-400">Code d&apos;invitation</p>
+            <p
+              id="code-invitation"
+              className="mt-1 font-mono text-3xl font-bold tracking-surtitre text-slate-100"
+            >
+              {view.joinCode}
+            </p>
+          </div>
+          {view.joinCode ? (
+            <CodeQr
+              valeur={urlDeJonction(view.joinCode)}
+              description={`QR code d'entrée dans la partie, code ${view.joinCode}`}
+              className="h-20 w-20 shrink-0 rounded-md"
+            />
+          ) : null}
         </div>
-      </header>
+        <div className="text-sm text-slate-300">
+          <p>
+            Les élèves rejoignent sur <span className="font-mono text-slate-100">/join</span> avec
+            ce code, répartis automatiquement dans les {compter(humanTeams.length, "équipe")}.
+          </p>
+          {view.joinCode ? (
+            <div className="mt-2">
+              <BoutonCopierLeMessage
+                message={messageDeLaPartie(
+                  view.scenarioTitle,
+                  urlDeJonction(view.joinCode),
+                  view.joinCode,
+                )}
+              />
+            </div>
+          ) : null}
+          {/* Le classement dit qui gagne ; l'observation dit si la classe joue
+              encore et ce qu'un tour lui coûte. Deux questions, deux écrans. */}
+          <span className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {/* Et la projection dit à la CLASSE où elle en est : le code, les
+                validations, le classement, écrits assez grand pour le fond de
+                la salle. C'est le premier lien, parce que c'est celui qu'on
+                ouvre en branchant le vidéoprojecteur. */}
+            <Link
+              href={`/teacher/games/${gameId}/projection`}
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              <Icone nom="ecran" /> Projeter pour la classe →
+            </Link>
+            <Link
+              href={`/teacher/games/${gameId}/fiches`}
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              <Icone nom="imprimer" /> Fiches à imprimer →
+            </Link>
+            {/* Les cartons décident des équipes par la PLACE : un par table,
+                l'élève s'assoit, scanne, et l'équipe est celle de sa table.
+                C'est l'autre façon de composer les équipes, sans rien
+                annoncer ni répartir à la main. */}
+            <Link
+              href={`/teacher/games/${gameId}/cartons`}
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              <Icone nom="etiquette" /> Cartons de table →
+            </Link>
+            <Link
+              href={`/teacher/games/${gameId}/observation`}
+              className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              Observation de séance →
+            </Link>
+            {/* L'évaluation entre coéquipiers : sa page à elle (activation, suivi,
+                publication, export), et son état en un mot. */}
+            {coequipiers ? (
+              <Link
+                href={`/teacher/games/${gameId}/coequipiers`}
+                className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+                data-lien-coequipiers=""
+              >
+                Évaluation entre coéquipiers
+                {coequipiers.active ? (coequipiers.ouverts > 0 ? " · ouverte" : coequipiers.publies > 0 ? " · publiée" : " · activée") : ""} →
+              </Link>
+            ) : null}
+          </span>
+        </div>
+      </section>
 
       {view.planCapped ? (
-        <section className="rounded-xl border border-amber-400/40 bg-amber-950/20 p-1.5 sm:p-4">
-          <h2 className="text-sm font-semibold text-amber-300">
-            🔒 Version gratuite — la partie s&apos;est arrêtée avant la fin
+        <section className="rounded-xl encadre-neutre p-3 sm:p-5">
+          <h2 className="text-sm font-semibold text-slate-100">
+            La partie s&apos;est arrêtée au tour {view.currentRound} sur {view.roundsCount}
           </h2>
-          <p className="mt-1 max-w-3xl text-xs text-amber-200/80">
-            Le palier gratuit s&apos;arrête au tour {view.currentRound} sur {view.roundsCount}.
-            Activez une licence établissement pour jouer le scénario jusqu&apos;au bout, ouvrir les
-            concours, l&apos;export du relevé et le feedback IA.
+          <p className="mt-1 max-w-3xl text-sm text-slate-300">
+            Elle a été jouée sous l&apos;ancien palier gratuit, qui arrêtait les parties avant la
+            fin. Il n&apos;existe plus : une partie créée aujourd&apos;hui se joue jusqu&apos;au
+            dernier tour.
           </p>
         </section>
       ) : null}
 
       {defaillantes.length > 0 ? (
-        <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-1.5 sm:p-4">
+        <section className="rounded-xl encadre-perte p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-red-300">
-            ⚠️ {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
+            <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
+            {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
           </h2>
-          <p className="mt-1 text-xs text-red-200/80">
+          <p className="mt-1 text-xs text-red-200">
             Deux tours consécutifs de cessation de paiements. L&apos;activité est gelée (ni
             production, ni charges) et la note financière tombe à zéro. Seule une augmentation de
             capital qui ramène le découvert sous le plafond fait repartir l&apos;entreprise.
@@ -111,7 +430,7 @@ export default async function TeacherGamePage({
             {defaillantes.map((row) => (
               <li
                 key={row.name}
-                className="rounded-full border border-red-400/40 bg-red-950/40 px-3 py-1 text-xs font-semibold text-red-200"
+                className="rounded-full encadre-perte px-3 py-1 text-xs font-semibold text-red-200"
               >
                 {row.name}
               </li>
@@ -120,266 +439,108 @@ export default async function TeacherGamePage({
         </section>
       ) : null}
 
-      {!finished && view.mode === "learning" ? (
-        <CardDeck
-          gameId={view.gameId}
-          pendingEvents={view.pendingEvents}
-          teams={view.teams
-            .filter((t) => t.controller === "human")
-            .map((t) => ({ teamId: t.teamId, name: t.name }))}
-          scenarioEventCodes={view.scenarioEventCodes}
-          scenarioCode={view.scenarioCode}
-        />
-      ) : null}
-
-      {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-          <h2 className="text-sm font-semibold text-slate-200">
-            📝 Questions posées dans les situations
-          </h2>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
-            Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
-            porte que sur les questions qui le suivent. Les situations déjà débriefées gardent
-            le score obtenu sous l&apos;ancien réglage.
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            {QUIZ_MODES.map((m) => {
-              const active = m.code === view.quizMode;
-              return (
-                <GuardedForm
-                  key={m.code}
-                  action={setQuizModeAction.bind(null, view.gameId)}
-                  label="questions posées"
-                >
-                  <input type="hidden" name="mode" value={m.code} />
-                  <SubmitButton
-                    disabled={active}
-                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
-                      active
-                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
-                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
-                    }`}
-                  >
-                    <span
-                      className={`text-sm font-medium ${
-                        active ? "text-amber-300" : "text-slate-200"
-                      }`}
-                    >
-                      {active ? "✓ " : ""}
-                      {m.name}
-                    </span>
-                    <span className="mt-1 block text-xs text-slate-400">{m.help}</span>
-                  </SubmitButton>
-                </GuardedForm>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
-
-      {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-          <h2 className="text-sm font-semibold text-slate-200">📚 Situations manquées</h2>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
-            Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
-            Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
-            situations déjà rattrapées gardent leur score.
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {(["readonly", "retake50"] as const).map((p) => {
-              const active = p === view.missedPolicy;
-              return (
-                <GuardedForm
-                  key={p}
-                  action={setMissedPolicyAction.bind(null, view.gameId)}
-                  label="situations manquées"
-                >
-                  <input type="hidden" name="policy" value={p} />
-                  <SubmitButton
-                    disabled={active}
-                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
-                      active
-                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
-                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
-                    }`}
-                  >
-                    <span className={`text-sm font-medium ${active ? "text-amber-300" : "text-slate-200"}`}>
-                      {active ? "✓ " : ""}
-                      {MISSED_POLICY_LABELS[p]}
-                    </span>
-                    <span className="mt-1 block text-xs text-slate-400">{MISSED_POLICY_HELP[p]}</span>
-                  </SubmitButton>
-                </GuardedForm>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
-
-      {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-          <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning de la partie</h2>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
-            Fenêtre pendant laquelle les élèves peuvent jouer (heure de Paris). En dehors,
-            l&apos;arène passe en lecture seule et « Valider » est grisé. Laissez un champ vide pour
-            ne pas poser de borne ; sans fenêtre, la partie suit le pilotage manuel des tours.
-          </p>
-          <GuardedForm
-            action={setGameScheduleAction.bind(null, view.gameId)}
-            label="planning de la partie"
-            className="mt-3"
-          >
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-xs font-medium text-slate-300">Ouverture</span>
-                <input
-                  type="datetime-local"
-                  name="opensAt"
-                  defaultValue={utcToParisLocalInput(view.opensAt ? new Date(view.opensAt) : null)}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-slate-300">Fermeture</span>
-                <input
-                  type="datetime-local"
-                  name="closesAt"
-                  defaultValue={utcToParisLocalInput(view.closesAt ? new Date(view.closesAt) : null)}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
-                />
-              </label>
-            </div>
-            <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
-              Enregistrer le planning
-            </SubmitButton>
-          </GuardedForm>
-        </section>
-      ) : null}
-
-      {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-          <h2 className="text-sm font-semibold text-slate-200">⏱️ Planning des tours</h2>
-          <p className="mt-1 max-w-3xl text-xs text-slate-400">
-            Ouverture et échéance de chaque tour (heure de Paris). Ces bornes s&apos;ajoutent à
-            la fenêtre globale : un tour n&apos;est jouable que pendant l&apos;intersection des
-            deux. Laissez un couple vide pour laisser le tour suivre le pilotage manuel.
-          </p>
-          <GuardedForm
-            action={setRoundWindowsAction.bind(null, view.gameId)}
-            label="planning des tours"
-            className="mt-3"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="pb-2 pr-3 font-medium">Tour</th>
-                    <th className="pb-2 pr-3 font-medium">Ouverture</th>
-                    <th className="pb-2 font-medium">Échéance</th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-300">
-                  {view.rounds.map((r) => (
-                    <tr key={r.index} className="border-t border-white/5">
-                      <td className="py-2 pr-3 align-middle whitespace-nowrap">
-                        <span className="font-semibold text-slate-200">Tour {r.index}</span>
-                        <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
-                          {ROUND_STATUS_LABEL[r.status] ?? r.status}
-                        </span>
-                      </td>
-                      <td className="py-2 pr-3">
-                        <label className="block">
-                          <span className="sr-only">Ouverture du tour {r.index}</span>
-                          <input
-                            type="datetime-local"
-                            name={`opensAt-${r.index}`}
-                            defaultValue={utcToParisLocalInput(r.opensAt ? new Date(r.opensAt) : null)}
-                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
-                          />
-                        </label>
-                      </td>
-                      <td className="py-2">
-                        <label className="block">
-                          <span className="sr-only">Échéance du tour {r.index}</span>
-                          <input
-                            type="datetime-local"
-                            name={`deadline-${r.index}`}
-                            defaultValue={utcToParisLocalInput(r.deadline ? new Date(r.deadline) : null)}
-                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
-                          />
-                        </label>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
-              Enregistrer le planning des tours
-            </SubmitButton>
-          </GuardedForm>
-        </section>
-      ) : null}
-
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+      {/*
+        L'ORDRE DE LA SÉANCE. D'abord ce tour : qui a validé, et le geste de
+        clôture. Puis ce que l'animateur peut jouer (une carte, une aide).
+        Puis ce qu'il lit (classement, notions, relevé). Les réglages, qu'on
+        touche une fois, ferment la page dans des tiroirs.
+      */}
+      {/* Le tableau des équipes : le détail de ce que le bandeau compte. */}
+      <section className="carte p-3 sm:p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
-          Équipes · état des décisions du tour {view.currentRound}
+          Équipes · état des décisions du {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-2 pr-3 font-medium">Équipe</th>
-                <th className="pb-2 pr-3 font-medium">Joueurs</th>
+                <th className="hidden pb-2 pr-3 font-medium sm:table-cell">Joueurs</th>
                 <th className="pb-2 pr-3 font-medium">Décisions</th>
-                <th className="pb-2 pr-3 text-right font-medium">Dernier résultat</th>
-                <th className="pb-2 text-right font-medium">Trésorerie</th>
+                <th className="pb-2 pr-3 text-right font-medium">
+                  <span className="sm:hidden">Résultat</span>
+                  <span className="hidden sm:inline">Dernier résultat</span>
+                </th>
+                <th className="pb-2 text-right font-medium">
+                  <span className="sm:hidden">Tréso.</span>
+                  <span className="hidden sm:inline">Trésorerie</span>
+                </th>
               </tr>
             </thead>
             <tbody className="text-slate-300">
               {view.teams.map((t) => (
                 <tr key={t.teamId} className="border-t border-white/5">
                   <td className="py-2 pr-3">
-                    {t.name}
+                    <span className="whitespace-nowrap">{t.name}</span>
                     {t.controller === "bot" ? (
-                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
+                      <span className="mt-0.5 block w-fit whitespace-nowrap rounded-md bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400 sm:ml-2 sm:mt-0 sm:inline">
                         bot{t.botPersonality ? ` · ${t.botPersonality}` : ""}
                       </span>
                     ) : null}
+                    {/* Sur téléphone, les joueurs passent sous le nom : leur
+                        colonne poussait la trésorerie hors de l'écran. */}
+                    {t.controller === "human" ? (
+                      <span className="block text-sm text-slate-400 sm:hidden">
+                        {t.playerNames.join(", ") || "aucun joueur"}
+                      </span>
+                    ) : null}
                   </td>
-                  <td className="py-2 pr-3 text-slate-400">
+                  <td className="hidden py-2 pr-3 text-slate-400 sm:table-cell">
                     {t.controller === "bot" ? "—" : t.playerNames.join(", ") || "aucun joueur"}
                   </td>
                   <td className="py-2 pr-3">
-                    {finished ? (
+                    {finished || essaiTermine ? (
                       "—"
                     ) : t.hasSubmitted ? (
                       <>
-                        <span className="text-emerald-400">validées</span>
+                        <span className="pastille-etat whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-slate-200">✓ validées</span>
                         {estParDefaut(t.decisionSource) ? (
                           <span
                             title="Prix et volume validés sans modification des valeurs proposées"
-                            className="ml-2 rounded bg-orange-950/60 px-1.5 py-0.5 text-xs text-orange-300"
+                            className="ml-2 whitespace-nowrap rounded-md border border-white/20 px-1.5 py-0.5 text-xs text-slate-300"
                           >
                             par défaut
                           </span>
                         ) : null}
+                        {/* Par qui, et à quelle heure. La table le notait déjà
+                            à chaque envoi ; personne ne le lisait. L'enseignant
+                            qui voit un élève inactif sait maintenant si son
+                            équipe a validé sans lui. */}
+                        {t.validation ? (
+                          <p className="mt-1 text-sm text-slate-400">
+                            {mentionDeValidation(t.validation.nom, new Date(t.validation.quand))}
+                          </p>
+                        ) : null}
                         {t.justification ? (
-                          <p className="mt-1 max-w-md text-xs italic leading-relaxed text-slate-400">
+                          <p className="mt-1 max-w-md text-sm italic leading-relaxed text-slate-400">
                             « {t.justification} »
                           </p>
                         ) : null}
                       </>
                     ) : (
-                      <span className="text-amber-300">en attente</span>
+                      <span className="pastille-attente whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-slate-200">en attente</span>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-right tabular-nums">
-                    {t.lastNetIncome === null ? "—" : formatEuro(t.lastNetIncome)}
+                  {/* LE RÉSULTAT EST SIGNÉ, VERT OU ROUGE FRANCS, comme dans
+                      l'arène : une perte en noir se lisait comme un niveau.
+                      La trésorerie, elle, est un niveau : à l'encre, sauf en
+                      découvert. */}
+                  <td
+                    className={`whitespace-nowrap py-2 pr-3 text-right font-semibold tabular-nums ${
+                      t.lastNetIncome === null || t.lastNetIncome === 0
+                        ? ""
+                        : t.lastNetIncome > 0
+                          ? "text-emerald-300"
+                          : "text-red-300"
+                    }`}
+                  >
+                    {t.lastNetIncome === null
+                      ? "—"
+                      : `${t.lastNetIncome > 0 ? "+" : ""}${formatEuro(t.lastNetIncome)}`}
                   </td>
                   <td
-                    className={`py-2 text-right tabular-nums ${
-                      (t.lastNetTreasury ?? 0) < 0 ? "text-red-400" : ""
+                    className={`whitespace-nowrap py-2 text-right tabular-nums ${
+                      (t.lastNetTreasury ?? 0) < 0 ? "text-red-300" : ""
                     }`}
                   >
                     {t.lastNetTreasury === null ? "—" : formatEuro(t.lastNetTreasury)}
@@ -389,19 +550,140 @@ export default async function TeacherGamePage({
             </tbody>
           </table>
         </div>
-        {!finished ? (
-          <CloseRoundForm
-            gameId={view.gameId}
-            tour={view.currentRound}
-            validees={submittedCount}
-            total={humanTeams.length}
-          />
-        ) : null}
         <JustificationsReview gameId={gameId} available={aiReview} />
       </section>
 
+      <Tiroir
+        icone="equipes"
+        titre="Composition des équipes"
+        quoi={compter(
+          composition.reduce((total, e) => total + e.membres.length, 0),
+          "élève inscrit",
+          "élèves inscrits",
+        )}
+      >
+        <CompositionEquipes
+          gameId={gameId}
+          equipes={composition}
+          premierTour={view.currentRound === 1}
+        />
+      </Tiroir>
+
+      {animer ? <Rubrique>Animer</Rubrique> : null}
+      {/* Les demandes de subvention : rien à l'écran tant qu'aucune équipe n'a
+          touché le mur, puis le seul geste du jeu qui appartienne à l'animateur
+          et à personne d'autre. */}
+      <SubventionsPanel gameId={view.gameId} demandes={view.aidRequests} />
+
+      {gazette && gazette.tours.length > 0 ? (
+        <GazetteDuPilotage
+          gameId={view.gameId}
+          tours={gazette.tours.map((t) => ({ ...t, libelle: periodLabel(view.roundDays, t.tour) }))}
+        />
+      ) : null}
+
+      {/* L'essai terminé, un courrier n'aurait plus de tour où tomber : il partirait
+          avec l'essai à la bascule. */}
+      {!finished && !essaiTermine && view.mode === "learning" ? (
+        <DistributionCourrier
+          gameId={view.gameId}
+          courriersEnAttente={view.pendingEvents}
+          teams={view.teams
+            .filter((t) => t.controller === "human")
+            .map((t) => ({ teamId: t.teamId, name: t.name }))}
+          scenarioEventCodes={view.scenarioEventCodes}
+          scenarioCode={view.scenarioCode}
+        />
+      ) : null}
+
+      {/* LE RECOURS RÉEL D'UNE SALLE DE CLASSE, C'EST VOUS. L'élève qui a
+          changé de poste ET perdu son code vient vous le demander ; sans cette
+          liste, personne au monde ne pourrait le lui rendre. Repliée, parce que
+          ce sont des clés personnelles et que cet écran finit projeté. */}
+      <CodesDeReprise codes={codesDeReprise}>
+        {sansCode.length > 0 ? (
+          <GuardedForm
+            action={creerLesCodesManquantsAction.bind(null, gameId)}
+            label="création des codes de reprise manquants"
+          >
+            <SubmitButton
+              className="rounded-lg bouton-filet border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/5"
+              pendingLabel="Création…"
+            >
+              <Icone nom="cle" /> Donner sa clé aux {compter(sansCode.length, "élève")} qui n&apos;en ont pas
+            </SubmitButton>
+          </GuardedForm>
+        ) : null}
+      </CodesDeReprise>
+
+      <Rubrique>Lire</Rubrique>
+      <section className="carte p-3 sm:p-5">
+        <h2 className="text-sm font-semibold text-slate-200">Classement</h2>
+        {/*
+          LE RIDEAU. Le classement ci-dessous est le vôtre : les élèves ne le
+          voient pas tant que vous ne l'avez pas révélé. Tour par tour — refermé
+          à chaque nouvelle clôture, pour que chacune reste un moment.
+          Ils gardent pendant ce temps leurs propres chiffres et leur IPG : c'est
+          leur progression, pas leur place.
+        */}
+        {dernierTourClos ? (
+          <div className="encadre-neutre mb-3 mt-2 flex flex-wrap items-center gap-3 rounded-lg px-3 py-2">
+            <span className="text-sm text-slate-200">
+              {dernierTourClos.rankingRevealed
+                ? `Classement du ${periodLabel(view.roundDays, dernierTourClos.index)} révélé aux élèves.`
+                : `Les élèves ne voient pas encore le classement du ${periodLabel(view.roundDays, dernierTourClos.index)}.`}
+            </span>
+            <GuardedForm
+              action={setRankingRevealedAction.bind(null, view.gameId)}
+              label="révélation du classement"
+            >
+              <input type="hidden" name="roundIndex" value={dernierTourClos.index} />
+              <input
+                type="hidden"
+                name="revealed"
+                value={dernierTourClos.rankingRevealed ? "0" : "1"}
+              />
+              {/* Un bouton à filet : le seul geste orange de l'écran est la
+                  clôture du tour, dans le bandeau. */}
+              <SubmitButton className={bouton({ variante: "secondaire", taille: "s" })}>
+                {dernierTourClos.rankingRevealed ? "Masquer" : "Révéler le classement"}
+              </SubmitButton>
+            </GuardedForm>
+          </div>
+        ) : null}
+        {view.ranking.length === 0 ? (
+          <p className="text-sm text-slate-400">Disponible après le premier tour.</p>
+        ) : (
+          <ol className="space-y-2">
+            {view.ranking.map((row) => (
+              <li
+                key={row.name}
+                className={`flex items-center justify-between gap-2 rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-300 ${classeLigneDeRang(row.rank)}`}
+              >
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <PastilleDeRang rang={row.rank} />
+                  {row.name}
+                  {row.defaillant ? (
+                    <span className="rounded-full encadre-perte px-2 py-0.5 text-xs font-semibold text-red-300">
+                      <Icone nom="alerte" className="mr-1 h-3 w-3" />
+                      Défaillante
+                    </span>
+                  ) : null}
+                </span>
+                <span className="tabular-nums">
+                  <span className="font-semibold text-slate-100">IPG {formatDecimal(row.bpi)}</span>
+                  <span className="ml-2 text-xs text-slate-400">
+                    {formatEuro(row.cumulativeNetIncome)} cumulés
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
       {pedagogy ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+        <section className="carte p-3 sm:p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Vue pédagogique</h2>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="space-y-4">
@@ -410,7 +692,7 @@ export default async function TeacherGamePage({
                   Notions exposées ce tour
                 </h3>
                 {pedagogy.conceptsExposed.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-400">Aucune situation ouverte ce tour.</p>
+                  <p className="mt-2 text-sm text-slate-400">Aucune situation ouverte ce tour.</p>
                 ) : (
                   <ul className="mt-2 flex flex-wrap gap-1.5">
                     {pedagogy.conceptsExposed.map((c) => (
@@ -429,7 +711,7 @@ export default async function TeacherGamePage({
                   Maîtrise mesurée (de la plus fragile à la plus solide)
                 </h3>
                 {pedagogy.conceptMastery.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-sm text-slate-400">
                     Aucune situation rendue : rien n&apos;est mesuré pour l&apos;instant.
                   </p>
                 ) : (
@@ -448,7 +730,7 @@ export default async function TeacherGamePage({
                         {/* 0 = barre vide : un zéro mesuré se voit comme un zéro. */}
                         <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
                           <div
-                            className={`h-1.5 rounded-full ${c.average < 40 ? "bg-red-400" : c.average < 70 ? "bg-amber-400" : "bg-emerald-400"}`}
+                            className="h-1.5 rounded-full bg-[var(--donnee)]"
                             style={{ width: `${Math.max(0, Math.min(100, c.average))}%` }}
                           />
                         </div>
@@ -489,7 +771,7 @@ export default async function TeacherGamePage({
                   </span>
                 </li>
               </ul>
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 text-sm text-slate-400">
                 {view.quizMode === "off"
                   ? "Aucune question n'est posée dans cette partie : ces chiffres portent sur les tours joués sous un autre réglage."
                   : view.quizMode === "model"
@@ -502,11 +784,11 @@ export default async function TeacherGamePage({
       ) : null}
 
       {releve && releve.teams.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+        <section className="carte p-3 sm:p-5">
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-200">Relevé de notes</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
                 Deux mesures séparées, et non fondues en une : la note tirée des situations
                 rendues dit ce que l&apos;équipe a compris, le score composite dit ce que
                 l&apos;entreprise a fait. Une bonne analyse peut mener à un mauvais
@@ -517,16 +799,17 @@ export default async function TeacherGamePage({
             {view.canExportGradebook ? (
               <a
                 href={`/teacher/games/${view.gameId}/releve`}
-                className="shrink-0 rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10"
+                className="shrink-0 rounded-lg bouton-filet border border-white/15 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-white/5"
               >
                 ⬇ Tableur (une ligne par élève)
               </a>
             ) : (
-              <span
-                className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400"
-                title="Réservé à l'offre établissement"
-              >
-                🔒 Export tableur · offre établissement
+              <span className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400">
+                <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+                Export tableur · {MARQUE_DE_L_ARENE}{" "}
+                <Link href={LIEN_TARIFS} prefetch={false} className="underline underline-offset-4">
+                  Voir les offres
+                </Link>
               </span>
             )}
           </div>
@@ -556,7 +839,7 @@ export default async function TeacherGamePage({
                     </td>
                     <td
                       className={`py-2 pr-3 text-right tabular-nums ${
-                        equipe.unanswered > 0 ? "text-slate-300" : "text-slate-600"
+                        equipe.unanswered > 0 ? "text-slate-300" : "text-slate-400"
                       }`}
                     >
                       {equipe.unanswered > 0 ? equipe.unanswered : "—"}
@@ -573,13 +856,7 @@ export default async function TeacherGamePage({
                     </td>
                     <td
                       className={`py-2 pr-3 text-right font-semibold tabular-nums ${
-                        equipe.note === null
-                          ? "text-slate-600"
-                          : equipe.note < 8
-                            ? "text-red-300"
-                            : equipe.note < 13
-                              ? "text-amber-300"
-                              : "text-emerald-300"
+                        equipe.note === null ? "text-slate-400" : "text-slate-100"
                       }`}
                     >
                       {equipe.note === null
@@ -587,7 +864,14 @@ export default async function TeacherGamePage({
                         : `${equipe.note.toString().replace(".", ",")} / 20`}
                     </td>
                     <td className="py-2 text-right tabular-nums text-slate-400">
-                      {equipe.bpi === null ? "—" : `${equipe.bpi.toFixed(1)} · ${equipe.rank}ᵉ`}
+                      {equipe.bpi === null ? (
+                        "—"
+                      ) : (
+                        <span className="inline-flex items-center justify-end gap-2">
+                          {formatDecimal(equipe.bpi)}
+                          {equipe.rank !== null ? <PastilleDeRang rang={equipe.rank} /> : null}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -595,50 +879,443 @@ export default async function TeacherGamePage({
             </table>
           </div>
           {releve.roundsResolved === 0 ? (
-            <p className="mt-3 text-xs text-slate-400">
+            <p className="mt-3 text-sm text-slate-400">
               Aucun tour clôturé : le relevé se remplit à la première clôture.
             </p>
           ) : null}
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-200">Classement</h2>
-        {view.ranking.length === 0 ? (
-          <p className="text-sm text-slate-400">Disponible après le premier tour.</p>
-        ) : (
-          <ol className="space-y-2">
-            {view.ranking.map((row) => (
-              <li
-                key={row.name}
-                className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-300"
-              >
-                <span>
-                  <span className="mr-2 text-slate-400">#{row.rank}</span>
-                  {row.name}
-                  {row.defaillant ? (
-                    <span className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
-                      ⚠️ Défaillante
+      {!finished ? (
+        <>
+          <Rubrique note="réglages à toucher une fois">Régler</Rubrique>
+          <section className="carte space-y-2 p-3 sm:p-5">
+      {!finished ? (
+        <Tiroir icone="document"
+        titre="Questions posées dans les situations" quoi={QUIZ_MODES.find((m) => m.code === view.quizMode)?.name}>
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+            Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
+            porte que sur les questions qui le suivent. Les situations déjà débriefées gardent
+            le score obtenu sous l&apos;ancien réglage.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            {QUIZ_MODES.map((m) => {
+              const active = m.code === view.quizMode;
+              return (
+                <GuardedForm
+                  key={m.code}
+                  action={setQuizModeAction.bind(null, view.gameId)}
+                  label="questions posées"
+                >
+                  <input type="hidden" name="mode" value={m.code} />
+                  <SubmitButton
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span
+                      className="text-sm font-medium text-slate-100"
+                    >
+                      {active ? "✓ " : ""}
+                      {m.name}
                     </span>
-                  ) : null}
-                </span>
-                <span className="tabular-nums">
-                  <span className="font-semibold text-slate-100">BPI {row.bpi.toFixed(1)}</span>
-                  <span className="ml-2 text-xs text-slate-400">
-                    {formatEuro(row.cumulativeNetIncome)} cumulés
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
+                    <span className="mt-1 block text-sm text-slate-400">{m.help}</span>
+                  </SubmitButton>
+                </GuardedForm>
+              );
+            })}
+          </div>
+          {/* Le format des réponses : cocher, ou écrire. Indépendant du mode ci-dessus. */}
+          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-400">
+            <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+            Format des réponses
+          </p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {ANSWER_FORMATS.map((f) => {
+              const active = f.code === view.answerFormat;
+              return (
+                <GuardedForm
+                  key={f.code}
+                  action={setAnswerFormatAction.bind(null, view.gameId)}
+                  label="format des réponses"
+                >
+                  <input type="hidden" name="format" value={f.code} />
+                  <SubmitButton
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span
+                      className="text-sm font-medium text-slate-100"
+                    >
+                      {active ? "✓ " : ""}
+                      {f.name}
+                    </span>
+                    <span className="mt-1 block text-sm text-slate-400">{f.help}</span>
+                  </SubmitButton>
+                </GuardedForm>
+              );
+            })}
+          </div>
+        </Tiroir>
+      ) : null}
+      {!finished ? (
+        <Tiroir icone="document"
+        titre="Situations manquées" quoi={MISSED_POLICY_LABELS[view.missedPolicy]}>
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+            Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
+            Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
+            situations déjà rattrapées gardent leur score.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {(["readonly", "retake50"] as const).map((p) => {
+              const active = p === view.missedPolicy;
+              return (
+                <GuardedForm
+                  key={p}
+                  action={setMissedPolicyAction.bind(null, view.gameId)}
+                  label="situations manquées"
+                >
+                  <input type="hidden" name="policy" value={p} />
+                  <SubmitButton
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-slate-100">
+                      {active ? "✓ " : ""}
+                      {MISSED_POLICY_LABELS[p]}
+                    </span>
+                    <span className="mt-1 block text-sm text-slate-400">{MISSED_POLICY_HELP[p]}</span>
+                  </SubmitButton>
+                </GuardedForm>
+              );
+            })}
+          </div>
+        </Tiroir>
+      ) : null}
+      {!finished ? (
+        <Tiroir icone="planning"
+        titre="Planning de la partie" quoi={view.opensAt || view.closesAt ? "fenêtre posée" : "sans borne"}>
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+            Fenêtre pendant laquelle les élèves peuvent jouer (heure de Paris). En dehors,
+            l&apos;arène passe en lecture seule et « Valider » est grisé. Laissez un champ vide pour
+            ne pas poser de borne ; sans fenêtre, la partie suit le pilotage manuel des tours.
+          </p>
+          <GuardedForm
+            action={setGameScheduleAction.bind(null, view.gameId)}
+            label="planning de la partie"
+            className="mt-3"
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-medium text-slate-300">Ouverture</span>
+                <input
+                  type="datetime-local"
+                  name="opensAt"
+                  defaultValue={utcToParisLocalInput(view.opensAt ? new Date(view.opensAt) : null)}
+                  className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-slate-300">Fermeture</span>
+                <input
+                  type="datetime-local"
+                  name="closesAt"
+                  defaultValue={utcToParisLocalInput(view.closesAt ? new Date(view.closesAt) : null)}
+                  className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
+                />
+              </label>
+            </div>
+            <SubmitButton className={`${bouton({ variante: "secondaire" })} mt-3`}>
+              Enregistrer le planning
+            </SubmitButton>
+          </GuardedForm>
+        </Tiroir>
+      ) : null}
+      {!finished ? (
+        <Tiroir icone="duree"
+        titre="Planning des tours" quoi={toursBornes > 0 ? compter(toursBornes, "tour borné") : "aucune borne"}>
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+            Ouverture et échéance de chaque tour (heure de Paris). Ces bornes s&apos;ajoutent à
+            la fenêtre globale : un tour n&apos;est jouable que pendant l&apos;intersection des
+            deux. Laissez un couple vide pour laisser le tour suivre le pilotage manuel.
+          </p>
+          {/* Le seul écran où l'on décide combien de temps on laisse : le
+              chiffre doit être là, pas dans la tête de celui qui tape. */}
+          <div className="mt-3 max-w-3xl">
+            <DureeDuTourAffichee
+              estimation={dureeEstimee}
+              mesure={tourMesure?.minutesMedianes ?? null}
+              libelleTourMesure={
+                tourMesure ? periodLabel(view.roundDays, tourMesure.index) : null
+              }
+            />
+          </div>
+          <GuardedForm
+            action={setRoundWindowsAction.bind(null, view.gameId)}
+            label="planning des tours"
+            className="mt-3"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-3 font-medium">Tour</th>
+                    <th className="pb-2 pr-3 font-medium">Ouverture</th>
+                    <th className="pb-2 font-medium">Échéance</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  {view.rounds.map((r) => (
+                    <tr key={r.index} className="border-t border-white/5">
+                      <td className="py-2 pr-3 align-middle whitespace-nowrap">
+                        <span className="font-semibold text-slate-200">Tour {r.index}</span>
+                        <span className="ml-2 rounded-md bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
+                          {ROUND_STATUS_LABEL[r.status] ?? r.status}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <label className="block">
+                          <span className="sr-only">Ouverture du tour {r.index}</span>
+                          <input
+                            type="datetime-local"
+                            name={`opensAt-${r.index}`}
+                            defaultValue={utcToParisLocalInput(r.opensAt ? new Date(r.opensAt) : null)}
+                            className="w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
+                          />
+                        </label>
+                      </td>
+                      <td className="py-2">
+                        <label className="block">
+                          <span className="sr-only">Échéance du tour {r.index}</span>
+                          <input
+                            type="datetime-local"
+                            name={`deadline-${r.index}`}
+                            defaultValue={utcToParisLocalInput(r.deadline ? new Date(r.deadline) : null)}
+                            className="w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
+                          />
+                        </label>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <SubmitButton className={`${bouton({ variante: "secondaire" })} mt-3`}>
+              Enregistrer le planning des tours
+            </SubmitButton>
+          </GuardedForm>
+        </Tiroir>
+      ) : null}
+          </section>
+        </>
+      ) : null}
+
+      {/*
+        LES TROIS GESTES QUI TOUCHENT À LA PARTIE ELLE-MÊME S'ANNONCENT, au
+        lieu de se perdre au bas d'une page qui compte huit tiroirs. « Régler »
+        plus haut change comment la partie se joue ; ici, on range, on
+        recommence, on supprime.
+      */}
+      <Rubrique note="nom, rangement, remise à zéro, suppression">Gérer cette partie</Rubrique>
+
+      {/*
+        NOMMER LA PARTIE, POUR LA RETROUVER.
+        Six parties du même scénario s'appelaient toutes « NOVA » dans la
+        liste : le nom de la classe est la seule chose qui les distingue. Il
+        est facultatif, se change à tout moment, et s'efface en validant un
+        champ vide. Personne d'autre ne le voit : ni les élèves, ni le
+        classement, ni le relevé de notes.
+      */}
+      <Tiroir icone="ecrire"
+        titre="Nommer cette partie" quoi={view.label ?? "sans nom"}>
+        <GuardedForm
+          action={nommerLaPartieAction.bind(null, gameId)}
+          label="nom de la partie"
+          className="flex flex-wrap items-end gap-2 px-3 pb-3"
+        >
+          <label className="min-w-0 flex-1">
+            <span className="block text-sm text-slate-400">
+              Le nom sous lequel vous la retrouverez, par exemple « Seconde 3 » ou « BTS MCO
+              groupe B ». Videz le champ pour revenir au nom du scénario.
+            </span>
+            <input
+              name="nom"
+              defaultValue={view.label ?? ""}
+              maxLength={NOM_PARTIE_MAX}
+              className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
+              placeholder={view.scenarioTitle}
+            />
+          </label>
+          <SubmitButton
+            pendingLabel="Enregistrement…"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200"
+          >
+            Enregistrer
+          </SubmitButton>
+        </GuardedForm>
+      </Tiroir>
+
+      {/*
+        LE RANGEMENT EST LE DERNIER GESTE DE LA PAGE, et c'est sa place : on ne
+        range pas une partie au milieu de ses réglages. Il vaut AUSSI pour une
+        partie en cours — c'est même le cas du ménage de fin d'année, où l'on
+        n'a jamais clos la séance de juin. Le risque est tenu par la
+        réversibilité : la partie garde son statut et se ressort d'un clic
+        depuis le tableau de bord.
+      */}
+      <Tiroir icone="ranger"
+        titre="Ranger cette partie" quoi="réversible">
+        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
+          Une partie rangée sort de votre liste et n&apos;est plus jouable : le code
+          n&apos;ouvre plus rien, les élèves déjà inscrits ne peuvent plus rendre de
+          décisions. <strong>Rien n&apos;est supprimé</strong> : les équipes, les tours joués,
+          les résultats et les traces restent intacts.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm text-slate-400">
+          {finished
+            ? "Cette partie est terminée : la ranger ne change rien pour personne."
+            : "Cette partie est EN COURS. La ranger interrompt le jeu pour vos élèves, jusqu'à ce que vous la ressortiez."}{" "}
+          Vous la retrouverez en bas du tableau de bord, dans « Parties rangées ».
+        </p>
+        <GuardedForm
+          action={archiverPartieAction.bind(null, view.gameId)}
+          label="rangement de la partie"
+          className="mt-3"
+        >
+          <SubmitButton className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200">
+            Ranger cette partie
+          </SubmitButton>
+        </GuardedForm>
+      </Tiroir>
+
+      {/*
+        RECOMMENCER EST LE SEUL GESTE DE CETTE PAGE QUI NE SE DÉFAIT PAS. Il
+        vient après le rangement, et derrière un mot à recopier : un bouton de
+        plus sur une page qui en compte vingt finirait par être cliqué de
+        travers, un soir de fin de séance.
+      */}
+      <Tiroir icone="recommencer"
+        titre="Recommencer cette partie" quoi="définitif">
+        {recommencer === "fait" ? (
+          <p
+            role="status"
+            className="encadre-neutre mt-1 rounded-lg px-3 py-2 text-sm text-slate-100"
+          >
+            C&apos;est fait : la partie est repartie au tour 1, avec les mêmes équipes et le
+            même code.
+          </p>
+        ) : null}
+        {recommencer === "mot" ? (
+          <p
+            role="status"
+            className="mt-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
+          >
+            Rien n&apos;a été fait : le mot recopié ne correspondait pas.
+          </p>
+        ) : null}
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+          La partie repart au <strong>tour 1</strong>. Vos équipes et vos élèves restent en
+          place, le code ne change pas : personne n&apos;a à se réinscrire.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Tout ce qui a été joué disparaît, et <strong>ne se récupère pas</strong> : décisions,
+          résultats, classements, situations ouvertes avec leurs indices et leurs réponses.
+          Ce que vos élèves ont appris, lui, reste : la maîtrise des notions appartient à
+          l&apos;élève, pas à la partie.
+        </p>
+        <GuardedForm
+          action={reinitialiserPartieAction.bind(null, view.gameId)}
+          label="remise à zéro de la partie"
+          className="mt-3 flex flex-wrap items-end gap-3"
+        >
+          <label className="block">
+            <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
+              Recopiez RECOMMENCER pour confirmer
+            </span>
+            <input
+              name="confirmationRemiseAZero"
+              autoComplete="off"
+              placeholder="RECOMMENCER"
+              className="mt-1 w-56 champ px-3 py-2 text-sm text-slate-100 outline-none"
+            />
+          </label>
+          <SubmitButton className="rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400 hover:text-red-100">
+            Recommencer la partie
+          </SubmitButton>
+        </GuardedForm>
+      </Tiroir>
+
+      {/*
+        LA SUPPRESSION N'EXISTE QUE POUR UNE PARTIE VIERGE : une créée en
+        double, un essai de réglage, une erreur de secteur. Au-delà, ranger
+        rend le même service sans emporter du travail d'élève, et c'est ce que
+        dit le tiroir plutôt que d'offrir un bouton qui refuserait.
+      */}
+      {vierge ? (
+        <Tiroir icone="supprimer"
+        titre="Supprimer cette partie" quoi="définitif">
+          {supprimer === "mot" ? (
+            <p
+              role="status"
+              className="mt-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
+            >
+              Rien n&apos;a été fait : le mot recopié ne correspondait pas.
+            </p>
+          ) : null}
+          {supprimer === "jouee" || supprimer === "eleves" ? (
+            <p
+              role="status"
+              className="mt-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200"
+            >
+              {supprimer === "jouee"
+                ? "Cette partie a été jouée entre-temps : elle ne se supprime plus. Rangez-la, rien ne sera perdu."
+                : "Un élève vient de s'inscrire : la partie ne se supprime plus. Rangez-la, rien ne sera perdu."}
+            </p>
+          ) : null}
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+            Cette partie n&apos;a jamais servi : aucun tour joué, aucun élève inscrit. La
+            supprimer l&apos;efface <strong>définitivement</strong>, avec ses équipes et son
+            code. Il n&apos;y a rien à perdre, et rien à récupérer.
+          </p>
+          <GuardedForm
+            action={supprimerPartieAction.bind(null, view.gameId)}
+            label="suppression de la partie"
+            className="mt-3 flex flex-wrap items-end gap-3"
+          >
+            <label className="block">
+              <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
+                Recopiez SUPPRIMER pour confirmer
+              </span>
+              <input
+                name="confirmationSuppression"
+                autoComplete="off"
+                placeholder="SUPPRIMER"
+                className="mt-1 w-56 champ px-3 py-2 text-sm text-slate-100 outline-none"
+              />
+            </label>
+            <SubmitButton className="rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400 hover:text-red-100">
+              Supprimer définitivement
+            </SubmitButton>
+          </GuardedForm>
+        </Tiroir>
+      ) : null}
 
       {!finished ? (
         <RoundStatusPoller
           gameId={view.gameId}
           currentRound={view.currentRound}
-          roundStatus="open"
+          roundStatus={essaiTermine ? "resolved" : "open"}
           endpoint="submissions"
           submittedCount={submittedCount}
         />

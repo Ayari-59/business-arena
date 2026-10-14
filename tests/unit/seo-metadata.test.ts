@@ -20,8 +20,12 @@ vi.mock("@/db", () => ({ db: {} }));
 const APP = join(process.cwd(), "src", "app");
 
 async function meta(chemin: string): Promise<Metadata> {
-  const mod = (await import(`@/app${chemin}`)) as { metadata: Metadata };
-  return mod.metadata;
+  const mod = (await import(`@/app${chemin}`)) as {
+    metadata?: Metadata;
+    generateMetadata?: () => Promise<Metadata>;
+  };
+  // /tarifs tire sa description du catalogue (en base, ou la grille par défaut).
+  return mod.metadata ?? (await mod.generateMetadata!());
 }
 
 const titre = (m: Metadata): string =>
@@ -64,12 +68,15 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/jouer/page", "Lancer une partie", "/jouer"],
     ["/entreprises/page", "entreprises jouables", "/entreprises"],
     ["/notions/page", "Fiches notions de gestion", "/notions"],
-    ["/guide/page", "Guide de prise en main", "/guide"],
+    ["/guide/page", "Règles du jeu", "/guide"],
     ["/animations/page", "Ateliers", "/animations"],
     ["/parcours/page", "Parcours par diplôme", "/parcours"],
     ["/fonctionnalites/page", "Fonctionnalités", "/fonctionnalites"],
     ["/orientation/page", "Choisir sa simulation", "/orientation"],
     ["/mentions-legales/page", "Mentions légales", "/mentions-legales"],
+    // Prix éteints par défaut (offres sur mesure) : la page s'appelle « Offres ».
+    ["/tarifs/page", "Offres", "/tarifs"],
+    ["/integration/page", "Intégration à Moodle", "/integration"],
   ];
 
   for (const [module, attendu, canonique] of PUBLIQUES) {
@@ -120,7 +127,7 @@ describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {
   });
 
   it("/teacher, /arena, /admin, /org, /profile, /compete : noindex, nofollow par layout", async () => {
-    for (const espace of ["teacher", "arena", "admin", "org", "profile", "compete"]) {
+    for (const espace of ["teacher", "arena", "admin", "org", "profile", "compete", "lti", "etablissement", "nouveautes"]) {
       const m = await meta(`/${espace}/layout`);
       expect(m.robots, espace).toMatchObject({ index: false, follow: false });
     }

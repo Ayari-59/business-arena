@@ -1,5 +1,8 @@
 import { formatEuro, formatPercent } from "@/lib/format";
+import { Embleme } from "@/components/embleme";
+import { Tiroir } from "@/components/tiroir";
 import type { GameView } from "@/services/game-view.service";
+import { Icone } from "@/components/icone";
 
 export function CompetitiveBenchmark({
   benchmark,
@@ -7,25 +10,49 @@ export function CompetitiveBenchmark({
   benchmark: NonNullable<GameView["competitiveBenchmark"]>;
 }) {
   const playerIdx = benchmark.competitivenessIndex;
-  const idxTone =
-    playerIdx >= 1.05 ? "text-emerald-400" : playerIdx < 0.95 ? "text-red-400" : "text-slate-100";
+  // Les caractères présents dans ce tableau, une seule fois chacun : deux
+  // concurrents peuvent partager un profil, la légende n'a pas à le répéter.
+  const styles = [
+    ...new Map(
+      benchmark.competitors
+        .map((c) => c.style)
+        .filter((st): st is NonNullable<typeof st> => st !== null)
+        .map((st) => [st.label, st] as const),
+    ).values(),
+  ];
+  // L'INDICE EST UNE INFORMATION, PAS UN RÉSULTAT : un prix sous le marché
+  // n'est ni un gain ni une perte. Il s'écrit à l'encre ; la phrase dessous
+  // dit ce qu'il veut dire. (Il passait au vert au-dessus de 105.)
+  const idxTone = "text-slate-100";
+
+  // BARRES DE COMPARAISON DE LA PART DE MARCHÉ. La donnée posée en chiffre ne
+  // dit pas d'un coup d'œil qui pèse : une barre à côté le montre. Charte : la
+  // barre du joueur est en bleu donnée (série principale), celle des autres en
+  // gris ardoise neutre (seconde série) ; aucune teinte de métier ni d'accent.
+  // L'échelle est relative à la plus grande part, pour que les écarts se lisent.
+  const maxShare = Math.max(0.0001, ...benchmark.competitors.map((c) => c.marketShare));
 
   return (
     <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-fuchsia-300">
-        📊 Benchmark concurrentiel
+      <h3 className="surtitre mb-2 flex items-center gap-1.5 text-slate-300 sm:mb-3">
+        <Icone nom="concurrence" className="h-3.5 w-3.5" />
+        Benchmark concurrentiel
       </h3>
 
-      <div className="mb-4 flex items-baseline gap-3 rounded-lg border border-fuchsia-400/20 bg-fuchsia-950/20 px-1.5 py-2.5 sm:px-4 sm:py-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-slate-400">
+      {/*
+        SUR TÉLÉPHONE, LE NOM ET LE CHIFFRE SUR UNE LIGNE, la phrase dessous. Côte à côte, le libellé
+        tenait en trois lignes dans une colonne étroite, et le chiffre tombait sous lui.
+      */}
+      <div className="encadre-neutre mb-3 rounded-lg px-3 py-2.5 sm:mb-4 sm:flex sm:items-baseline sm:gap-3 sm:px-4 sm:py-3">
+        <div className="flex items-baseline justify-between gap-3 sm:block">
+          <p className="libelle">
             Indice de compétitivité-prix
           </p>
           <p className={`text-2xl font-semibold tabular-nums ${idxTone}`}>
             {(playerIdx * 100).toFixed(0)}
           </p>
         </div>
-        <p className="text-xs leading-snug text-slate-400">
+        <p className="mt-0.5 text-sm leading-snug text-slate-400 sm:mt-0">
           {playerIdx >= 1.05
             ? "Votre prix est inférieur au marché : vous captez de la demande, mais marquez-vous assez ?"
             : playerIdx < 0.95
@@ -37,7 +64,7 @@ export function CompetitiveBenchmark({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <tr className="libelle text-left">
               <th className="pb-2 pr-3 font-medium">Entreprise</th>
               <th className="pb-2 pr-3 text-right font-medium">Prix moyen</th>
               <th className="pb-2 pr-3 text-right font-medium">Part de marché</th>
@@ -48,19 +75,65 @@ export function CompetitiveBenchmark({
             {benchmark.competitors.map((c) => (
               <tr
                 key={c.name}
-                className={`border-t border-white/5 ${c.isPlayer ? "bg-amber-400/5 text-amber-100" : ""}`}
+                className={`border-t border-white/5 ${c.isPlayer ? "ligne-moi font-semibold text-slate-100" : ""}`}
               >
                 <td className="py-2 pr-3">
+                  {/* LE REPÈRE D'APPARTENANCE : votre emblème prend la teinte
+                      de votre métier (lot 5A), comme le filet de la ligne
+                      (`.ligne-moi`). La ligne portait un filet orange, et
+                      l'orange est la couleur de l'action. */}
+                  <Embleme
+                    code={c.embleme}
+                    className={`mr-1.5 h-3.5 w-3.5 ${
+                      c.isPlayer
+                        ? "text-[color:var(--metier,var(--color-slate-100))]"
+                        : "text-slate-400"
+                    }`}
+                  />
                   {c.name}
                   {c.isPlayer ? (
-                    <span className="ml-1.5 text-xs text-amber-400/70">vous</span>
+                    <span className="ml-1.5 text-xs font-normal text-slate-400">vous</span>
+                  ) : null}
+                  {/*
+                    LE CARACTÈRE DU CONCURRENT, sous son nom. Le moteur donne à
+                    chaque entreprise simulée un profil qui décide vraiment de
+                    ses choix ; l'élève ne voyait qu'un nom et un prix, et ne
+                    pouvait donc pas apprendre à LIRE un adversaire. Il paraît
+                    après deux tours clos — avant, ce serait une fiche technique
+                    plutôt qu'une observation — et jamais pour une équipe de la
+                    classe, qui a des élèves et non un profil.
+                  */}
+                  {/*
+                    L'étiquette seule ici : l'explication vit dans la légende,
+                    sous le tableau. Une infobulle `title` ne s'ouvre pas sur un
+                    téléphone, et la répéter dans les deux endroits ferait lire
+                    deux fois la même phrase.
+                  */}
+                  {c.style ? (
+                    <span className="mt-0.5 block text-xs text-slate-400">{c.style.label}</span>
                   ) : null}
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">
                   {c.avgPrice !== null ? formatEuro(c.avgPrice) : "—"}
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">
-                  {formatPercent(c.marketShare)}
+                  <span className="block">{formatPercent(c.marketShare)}</span>
+                  {/* La barre, sous le chiffre : bleu donnée pour vous, gris
+                      ardoise neutre pour les autres (charte). La valeur reste
+                      écrite au-dessus — la couleur ne dit rien seule. */}
+                  <span
+                    aria-hidden
+                    className="mt-1 ml-auto block h-1 w-16 rounded-full bg-slate-800"
+                  >
+                    <span
+                      className="block h-1 rounded-full"
+                      style={{
+                        width: `${Math.max(2, Math.min(100, (c.marketShare / maxShare) * 100))}%`,
+                        marginLeft: "auto",
+                        background: c.isPlayer ? "var(--donnee)" : "var(--donnee-2)",
+                      }}
+                    />
+                  </span>
                 </td>
                 <td className="py-2 text-right tabular-nums">{formatEuro(c.revenue)}</td>
               </tr>
@@ -79,11 +152,35 @@ export function CompetitiveBenchmark({
         </table>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
-        L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de
-        100, vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier
-        parmi d&apos;autres : marketing, qualité et stock font le reste.
-      </p>
+      {/*
+        CE QUE CHAQUE CARACTÈRE IMPLIQUE, une ligne par style présent. Le
+        tableau porte l'étiquette ; sans cette légende, elle ne dirait rien à
+        qui ne joue pas depuis dix ans, et une infobulle ne s'ouvre pas sur un
+        téléphone.
+      */}
+      {/*
+        LA LÉGENDE ET LA RÈGLE DE LECTURE, À LA DEMANDE. Elles faisaient sept lignes sous le
+        tableau, lues une fois puis traînées à chaque tour : on les range dans un tiroir fermé,
+        et le tableau, lui, reste à l'écran.
+      */}
+      <div className="mt-2">
+        <Tiroir titre="Comment lire ce tableau" ferme surface="papier">
+          {styles.length > 0 ? (
+            <ul className="mb-2 space-y-1">
+              {styles.map((st) => (
+                <li key={st.label} className="text-sm leading-snug text-slate-400">
+                  <span className="font-semibold text-slate-300">{st.label}</span> · {st.aide}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="text-sm leading-relaxed text-slate-400">
+            L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de 100,
+            vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier parmi
+            d&apos;autres : marketing, qualité et stock font le reste.
+          </p>
+        </Tiroir>
+      </div>
     </section>
   );
 }

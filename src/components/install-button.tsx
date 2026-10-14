@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { bouton } from "@/components/bouton";
 
 /**
  * Bouton d'installation explicite : Chrome n'affiche sa bannière qu'après
@@ -21,8 +22,8 @@ declare global {
   }
 }
 
-const BTN =
-  "rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10";
+/** Le bouton secondaire de la maison, petite taille (lot P1 : il était écrit à la main). */
+const BTN = `${bouton({ variante: "secondaire", taille: "s" })} pointer-coarse:min-h-11`;
 
 export function InstallButton() {
   const [canPrompt, setCanPrompt] = useState(false);
@@ -92,7 +93,7 @@ export function InstallButton() {
           Installer l&apos;app
         </button>
         {showIosHelp ? (
-          <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-white/10 bg-slate-900 p-4 text-left shadow-2xl">
+          <div className="absolute right-0 top-full z-50 mt-2 w-64 carte p-4 text-left shadow-2xl">
             <p className="text-xs font-semibold text-slate-100">
               Ajouter à l&apos;écran d&apos;accueil
             </p>

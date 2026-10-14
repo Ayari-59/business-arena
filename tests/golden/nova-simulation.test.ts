@@ -246,14 +246,18 @@ describe("golden NOVA — multi-tour (3 rounds)", () => {
   });
 
   it("snapshot déterministe du tour 3 du joueur", () => {
+    // Valeurs refigées quand le moteur a cessé de dépenser un tirage sur les
+    // cartes à probabilité nulle (cartes réservées à l'enseignant) : la suite
+    // aléatoire du tour a changé une fois pour toutes, et avec elle les
+    // événements tombés sur le joueur au tour 3.
     const p3 = rounds[2]!.results["player"]!;
     expect(p3).toMatchObject({
       incomeStatement: expect.objectContaining({
         revenue: expect.closeTo(283200, 0),
-        netIncome: expect.closeTo(-8740, 0),
+        netIncome: expect.closeTo(1460, 0),
       }),
       functionalBalance: expect.objectContaining({
-        frng: expect.closeTo(-14930, 0),
+        frng: expect.closeTo(11110, 0),
       }),
       market: expect.objectContaining({
         totalShare: expect.closeTo(0.1894, 2),

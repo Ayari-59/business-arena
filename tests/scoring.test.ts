@@ -113,8 +113,8 @@ describe("cohérence stratégique (doc 08 §1.3)", () => {
   });
 });
 
-describe("BPI d'un tour (doc 08 §1)", () => {
-  it("7 dimensions dans [0,100], BPI pondéré, la meilleure entreprise domine", () => {
+describe("IPG d'un tour (doc 08 §1)", () => {
+  it("7 dimensions dans [0,100], IPG pondéré, la meilleure entreprise domine", () => {
     const scores = computeRoundScores(novaScenario, [
       {
         companyId: "forte",
@@ -158,9 +158,9 @@ describe("BPI d'un tour (doc 08 §1)", () => {
   });
 });
 
-describe("BPI de partie (doc 08 §1.4)", () => {
+describe("IPG de partie (doc 08 §1.4)", () => {
   it("poids croissants : le dernier tour pèse plus que le premier", () => {
-    // [tour 1 : 0, tour 2 : 100] → le 100 final domine : BPI > 50
+    // [tour 1 : 0, tour 2 : 100] → le 100 final domine : IPG > 50
     expect(
       gameBpi([
         { index: 1, bpi: 0 },

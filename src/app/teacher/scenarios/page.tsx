@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { listScenariosByAuthor, listSharedScenarios } from "@/services/scenario-editor.service";
-import { SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { SCENARIOS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 import { ConfirmForm, GuardedForm } from "@/components/guarded-action";
 import {
   deleteScenarioAction,
@@ -11,6 +12,7 @@ import {
   importScenarioAction,
   publishScenarioAction,
 } from "./actions";
+import { PictoSecteur } from "@/components/picto-secteur";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +22,9 @@ const STATUT_LABEL: Record<string, string> = {
   archived: "Retiré",
 };
 const STATUT_CLASS: Record<string, string> = {
-  draft: "border-amber-400/40 bg-amber-400/10 text-amber-300",
-  published: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+  // Des états, pas des actions ni des résultats : l'encre et un point plein.
+  draft: "pastille-etat text-slate-200",
+  published: "pastille-etat font-semibold text-slate-100",
   archived: "border-white/10 bg-slate-800 text-slate-400",
 };
 
@@ -31,7 +34,7 @@ function StatutForm({ id, to, label }: { id: string; to: string; label: string }
     <GuardedForm action={publishScenarioAction} label="statut du scénario">
       <input type="hidden" name="scenarioId" value={id} />
       <input type="hidden" name="status" value={to} />
-      <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-emerald-400/50">
+      <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-emerald-400">
         {label}
       </button>
     </GuardedForm>
@@ -51,30 +54,22 @@ export default async function TeacherScenariosPage({
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
-          <h1 className="text-2xl font-bold">Mes scénarios</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Partez d&apos;un secteur calibré, reformulez-le à votre main, réutilisez-le d&apos;une
-            classe à l&apos;autre.
-          </p>
-        </div>
-        <Link href="/teacher" className="text-xs text-amber-300 underline-offset-4 hover:underline">
-          ← Mes parties
-        </Link>
-      </header>
+      <EnTeteEnseignant
+        titre="Mes scénarios"
+        actif="scenarios"
+        description="Partez d'un secteur calibré, reformulez-le à votre main, réutilisez-le d'une classe à l'autre."
+      />
 
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Mes scénarios</h2>
         {mine.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">
@@ -85,7 +80,7 @@ export default async function TeacherScenariosPage({
             {mine.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
               >
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 text-sm font-medium text-slate-100">
@@ -150,7 +145,7 @@ export default async function TeacherScenariosPage({
         </p>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Scénarios partagés</h2>
         <p className="mt-1 text-xs text-slate-400">
           Publiés par d&apos;autres enseignants. Dupliquez-en un pour en obtenir votre propre copie
@@ -166,7 +161,7 @@ export default async function TeacherScenariosPage({
             {shared.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>
@@ -187,7 +182,7 @@ export default async function TeacherScenariosPage({
         )}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Importer un scénario</h2>
         <p className="mt-1 text-xs text-slate-400">
           Depuis un fichier JSON exporté (d&apos;un autre espace, d&apos;un collègue). Il devient un
@@ -202,7 +197,7 @@ export default async function TeacherScenariosPage({
             type="text"
             name="title"
             placeholder="Titre (facultatif)"
-            className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="champ px-3 py-2 text-sm text-slate-100"
           />
           <input
             type="file"
@@ -216,7 +211,7 @@ export default async function TeacherScenariosPage({
         </GuardedForm>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Partir d&apos;un secteur</h2>
         <p className="mt-1 text-xs text-slate-400">
           Chaque secteur est calibré et jouable. La copie hérite de ses règles ; vous en changez
@@ -224,11 +219,23 @@ export default async function TeacherScenariosPage({
         </p>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {SCENARIOS.map((d) => (
+            /*
+              `min-w-0` : élément de grille, donc `min-width: auto` par défaut,
+              donc refus de descendre sous la largeur de son contenu. Mesuré à
+              360 px : la liste débordait de 137 px. Voir la même note sur les
+              cartes de partie, dans teacher/page.tsx.
+            */
             <li
               key={d.code}
-              className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3"
+              className="flex min-w-0 items-center gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
             >
-              <div className="min-w-0">
+              <span
+                aria-hidden
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${SECTOR_COLORS[d.sector].bg} ${SECTOR_COLORS[d.sector].accent}`}
+              >
+                <PictoSecteur secteur={d.sector} className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-slate-100">{d.title}</p>
                 <p className="text-xs text-slate-400">{SECTOR_LABELS[d.sector]}</p>
               </div>

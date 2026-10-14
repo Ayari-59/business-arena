@@ -15,7 +15,7 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { organizationMembers, organizations, users } from "@/db/schema";
+import { games, organizationMembers, organizations, users } from "@/db/schema";
 import { getTeacherOrgId, loginTeacher, registerTeacher } from "@/services/auth.service";
 import {
   createEstablishment,
@@ -29,6 +29,16 @@ import {
   updatePlatformConfig,
 } from "@/services/admin.service";
 import { createClassGame, createSoloGame } from "@/services/game.service";
+import { answerFormatFromProfile } from "@/config/difficulty";
+import {
+  contrasteDeLaBande,
+  etatDesContrastes,
+  themeDepuisEtat,
+  paletteDuSite,
+  validerContrastes,
+  THEME_DU_SITE_PAR_DEFAUT,
+} from "@/config/theme-du-site";
+import { poserUneLicence } from "./helpers/licence";
 
 let platformAdminId: string;
 let orgId: string;
@@ -146,6 +156,8 @@ describe("déploiement d'un établissement", () => {
   });
 
   it("les parties de l'enseignant apparaissent dans le tableau de bord de l'établissement", async () => {
+    // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+    await poserUneLicence(orgId, orgAdminId);
     await createClassGame({
       teacherId,
       organizationId: orgId,
@@ -189,6 +201,25 @@ describe("réglages globaux du jeu", () => {
     await updatePlatformConfig(platformAdminId, { allowSelfServiceTeachers: true });
   });
 
+  it("le format des réponses en solo se règle ici : QCM par défaut, questions ouvertes sur demande", async () => {
+    expect((await getPlatformConfig()).soloAnswerFormat).toBe("qcm");
+    const formatDe = async (id: string) =>
+      answerFormatFromProfile(
+        (await db.select().from(games).where(eq(games.id, id)))[0]!.difficultyProfile,
+      );
+    expect(await formatDe(await createSoloGame(teacherId, "quarter", 2))).toBe("qcm");
+
+    await updatePlatformConfig(platformAdminId, { soloAnswerFormat: "open" });
+    expect((await getPlatformConfig()).soloAnswerFormat).toBe("open");
+    const ouverte = await createSoloGame(teacherId, "quarter", 2);
+    expect(await formatDe(ouverte)).toBe("open");
+
+    // Le réglage vaut pour les parties lancées ensuite : celle-ci garde le sien.
+    await updatePlatformConfig(platformAdminId, { soloAnswerFormat: "qcm" });
+    expect(await formatDe(ouverte)).toBe("open");
+    expect(await formatDe(await createSoloGame(teacherId, "quarter", 2))).toBe("qcm");
+  });
+
   it("l'annonce est persistée et relue", async () => {
     await updatePlatformConfig(platformAdminId, { announcement: "Finale le 12 juin !" });
     expect((await getPlatformConfig()).announcement).toBe("Finale le 12 juin !");
@@ -203,5 +234,99 @@ describe("réglages globaux du jeu", () => {
   it("la connexion promeut aussi les e-mails bootstrap", async () => {
     const login = await loginTeacher({ email: "direction@business-arena.fr", password: "motdepasse!" });
     expect("userId" in login).toBe(true);
+  });
+});
+
+describe("thème graphique", () => {
+  // Le réglage vit dans la même ligne que les autres réglages globaux : il doit
+  // survivre à une relecture, ne rien casser chez ses voisins, et s'effacer
+  // d'un seul geste.
+  it("un réglage valide s'enregistre et se relit, sans toucher aux autres réglages", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      announcement: "Maintenance ce soir",
+    });
+    const etat = {
+      ...etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT),
+      "accueil.metiers": true,
+      "accueil.chiffres": true,
+    };
+    expect(validerContrastes(etat)).toEqual([]);
+    await updatePlatformConfig(platformAdminId, {
+      theme: themeDepuisEtat(etat),
+    });
+
+    const relu = await getPlatformConfig();
+    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.metiers")).toBe(true);
+    // Une bande qu'on n'a pas touchée suit toujours son état d'origine :
+    // l'ouverture marine des enseignants à contre-jour, ses chiffres au clair.
+    expect(contrasteDeLaBande(relu.theme, "enseignants.accroche")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "enseignants.chiffres")).toBe(false);
+    // Les autres réglages ne bougent pas : le thème s'écrit à côté, pas par-dessus.
+    expect(relu.announcement).toBe("Maintenance ce soir");
+    expect(relu.allowPublicPlay).toBe(true);
+  });
+
+  it("ne stocke que les écarts à l'état d'origine", async () => {
+    const relu = await getPlatformConfig();
+    expect(Object.keys(relu.theme.contrastes).sort()).toEqual([
+      "accueil.chiffres",
+      "accueil.metiers",
+    ]);
+  });
+
+  it("un identifiant de bande disparu depuis est ignoré à la lecture, sans erreur", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      theme: { contrastes: { "bande.supprimee": true, "accueil.hero": false } },
+    });
+    const relu = await getPlatformConfig();
+    expect(relu.theme.contrastes).toEqual({ "accueil.hero": false });
+  });
+
+  it("rétablir l'état d'origine efface tous les écarts", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      theme: THEME_DU_SITE_PAR_DEFAUT,
+    });
+    const relu = await getPlatformConfig();
+    expect(relu.theme.contrastes).toEqual({});
+    expect(contrasteDeLaBande(relu.theme, "accueil.hero")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(false);
+  });
+
+  it("est refusé à qui n'est pas administrateur de la plateforme", async () => {
+    const intrus = await db
+      .insert(users)
+      .values({ email: "intrus-theme@x.fr", displayName: "Intrus" })
+      .returning({ id: users.id });
+    await expect(
+      updatePlatformConfig(intrus[0]!.id, {
+        theme: { contrastes: { "accueil.hero": false } },
+      }),
+    ).rejects.toThrow();
+    const relu = await getPlatformConfig();
+    expect(relu.theme.contrastes).toEqual({});
+  });
+
+  it("un ancien thème d'ouverture resté en base est ignoré à la lecture", async () => {
+    // Le site n'a plus qu'un habillage. Un réglage enregistré du temps des deux
+    // thèmes ne doit ni casser la lecture, ni survivre à la relecture.
+    await updatePlatformConfig(platformAdminId, {
+      theme: { contrastes: {}, parDefaut: "sombre" } as never,
+    });
+    const relu = await getPlatformConfig();
+    expect(relu.theme).toEqual({ contrastes: {} });
+    await updatePlatformConfig(platformAdminId, { theme: THEME_DU_SITE_PAR_DEFAUT });
+  });
+
+  it("la palette s'enregistre à côté du reste, et se rétablit avec lui", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      theme: themeDepuisEtat(etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT), "cobalt"),
+    });
+    const relu = await getPlatformConfig();
+    expect(paletteDuSite(relu.theme)).toBe("cobalt");
+    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(false);
+
+    await updatePlatformConfig(platformAdminId, { theme: THEME_DU_SITE_PAR_DEFAUT });
+    expect(paletteDuSite((await getPlatformConfig()).theme)).toBe("arene");
   });
 });

@@ -1,0 +1,871 @@
+import {
+  BANDE_DU_PLI,
+  MENTION_DU_PLI,
+  NATURES,
+  dureeDuCourrier,
+  type CourrierDef,
+} from "@/config/courriers/types";
+import { courrierParCode, positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
+import { courrierSelonLAssurance } from "@/config/courriers/sans-assurance";
+import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers/routine";
+import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mission";
+import { COURRIERS_EN_RETOUR, estUnCourrierEnRetour } from "@/config/courriers/reponses";
+import { attentionDuPli, type DestinataireDuCourrier } from "@/config/courriers/destinataire";
+import { BrandMark } from "@/components/brand-mark";
+import { Icone } from "@/components/icone";
+import {
+  PortraitDInterlocuteur,
+  interlocuteurDe,
+} from "@/components/illustrations/portrait-d-interlocuteur";
+
+/**
+ * LE COURRIER DE L'ENTREPRISE : une enveloppe, puis la lettre qu'elle contient.
+ *
+ * L'animation d'ouverture est du pur théâtre CSS — le tirage réel est fait par
+ * le PRNG seedé du moteur, ou décidé par l'enseignant.
+ *
+ * LE MÊME PAPIER DES DEUX CÔTÉS. L'enveloppe et sa lettre partagent le blanc,
+ * l'encre, le filet et l'ombre (classe `papier`, globals.css) : ce qui sort de
+ * l'enveloppe doit être de la même matière que l'enveloppe. Elles ne diffèrent
+ * que par ce qui les distingue vraiment — les marques postales d'un côté, le
+ * texte de l'autre — et se répondent sur trois repères posés au même endroit :
+ * l'expéditeur en haut à gauche, la référence en bas à droite, la liasse en
+ * bas à gauche.
+ *
+ * TROIS PLIS. Le recommandé porte sa bande rouge sur la tranche, le pli simple
+ * n'a rien, la note de service circule dans une pochette interne : ni timbre
+ * ni cachet, mais la grille de circulation des enveloppes navette. Un chef
+ * d'atelier n'affranchit pas son rapport.
+ *
+ * ET UN QUATRIÈME CANAL QUI N'EST PAS DU PAPIER. Le courriel a ses propres
+ * objets — `Courriel` pour la ligne fermée, `Message` pour le message ouvert —
+ * parce qu'une panne de serveur ne s'annonce pas par la poste. Ils occupent
+ * exactement la place de l'enveloppe et de la lettre dans la scène
+ * d'ouverture, mais dans l'autre matière (`.ecran`, globals.css) : blanc
+ * froid, pas de rabat, pas de timbre, un en-tête à étiquettes. Le canal doit
+ * se voir avant d'être lu — c'est lui qui dit si la chose engage.
+ */
+
+/**
+ * Le courrier d'un code, qu'il vienne d'une liasse ou de la routine. Les
+ * courriers de routine ne sont pas au registre — ils ne sont jamais tirés —,
+ * mais ils se lisent et s'impriment comme les autres.
+ */
+const routineParCode = new Map(COURRIERS_DE_ROUTINE.map((c) => [c.code, c]));
+/** Les mandats ne sont pas au registre non plus : ils ne se tirent jamais. */
+const missionParCode = new Map(LETTRES_DE_MISSION.map((c) => [c.code, c]));
+/** Les réponses non plus : elles ne se tirent pas, elles se méritent. */
+const retourParCode = new Map(COURRIERS_EN_RETOUR.map((c) => [c.code, c]));
+
+function courrier(code: string, assurance = true): CourrierDef | undefined {
+  // Une partie dont le niveau n'ouvre pas l'assurance lit la variante sans elle
+  // (`config/courriers/sans-assurance`) : même effet, sans parler d'un contrat
+  // que l'équipe ne peut pas souscrire.
+  return courrierSelonLAssurance(
+    courrierParCode.get(code) ??
+      routineParCode.get(code) ??
+      missionParCode.get(code) ??
+      retourParCode.get(code),
+    assurance,
+  );
+}
+
+/**
+ * D'où vient ce courrier, pour le pied de page. Les liasses numérotent leurs
+ * plis (« NOVA · 7 / 30 ») ; les deux piles hors registre se nomment. Le pied
+ * disait « Courrier de routine » pour tout ce qui n'était pas numéroté, ce qui
+ * aurait fait passer un mandat des associés pour un relevé bancaire.
+ */
+function pileDuCourrier(code: string): string {
+  const position = positionDuCourrier(code);
+  if (position) return `${position.liasse} · ${position.index} / ${position.total}`;
+  if (estUneLettreDeMission(code)) return "Lettre de mission";
+  if (estUnCourrierEnRetour(code)) return "Courrier en retour";
+  return "Courrier de routine";
+}
+
+/**
+ * LOT 6B : LE VISAGE DE QUI ÉCRIT. Une lettre ouverte montre, à côté de
+ * l'expéditeur, la figure qui la signe (la banque, un fournisseur, un client,
+ * l'administration…) : l'élève apprend à reconnaître QUI lui écrit avant de
+ * lire ce qu'on lui écrit. Décoratif (le nom est écrit à côté), carré de 56 à
+ * 64 px, et absent à l'impression, où un aplat marine ne dirait rien de plus
+ * que le nom et coûterait de l'encre.
+ */
+function VisageDeLExpediteur({ expediteur, className }: { expediteur: string; className: string }) {
+  const qui = interlocuteurDe(expediteur);
+  if (!qui) return null;
+  return (
+    <PortraitDInterlocuteur
+      qui={qui}
+      className={`portrait-d-interlocuteur shrink-0 rounded-md print:hidden ${className}`}
+    />
+  );
+}
+
+/**
+ * L'ENVELOPPE, écrite une fois : l'écran l'anime, le papier l'imprime. C'est
+ * ce partage qui garantit que le pli distribué en classe est le même que celui
+ * que l'élève ouvre dans l'arène.
+ */
+export function Enveloppe({
+  code,
+  liasse,
+  destinataire,
+  adresse,
+  className = "",
+  assurance = true,
+}: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
+  /** Le courrier contenu, s'il est connu : il donne le timbre et le cachet. */
+  code?: string;
+  /** La liasse imprimée en pied d'enveloppe. */
+  liasse?: string | null;
+  /** À qui le pli est adressé : « Tout le marché », « Équipe 3 ». */
+  destinataire?: string;
+  /**
+   * L'ENTREPRISE DESTINATAIRE, quand on la connaît (l'arène) : la fenêtre porte
+   * alors son nom et la ligne d'attention, comme un vrai pli. La liasse
+   * imprimée de l'enseignant ne la connaît pas et garde `destinataire`.
+   */
+  adresse?: DestinataireDuCourrier;
+  className?: string;
+}) {
+  const c = code ? courrier(code, assurance) : undefined;
+  const nature = c ? NATURES[c.nature] : null;
+  const interne = c?.pli === "interne";
+  const bande = c ? BANDE_DU_PLI[c.pli] : null;
+  const reference = code ? referenceDuCourrier(code) : null;
+
+  return (
+    <div className={`papier enveloppe rounded-lg p-3 ${className}`}>
+      <div className="relative flex h-full min-h-full flex-col">
+        {/* tranche gauche : recommandé en rouge, note de service en ardoise */}
+        {bande ? (
+          <span
+            className="enveloppe-bande absolute inset-y-0 left-0 w-5 rounded-md py-2 text-center text-xs font-bold uppercase text-white"
+            style={{ backgroundColor: c!.pli === "recommande" ? "#b91c1c" : "#475569" }}
+          >
+            {bande.mention}
+          </span>
+        ) : null}
+
+        <div className={`flex items-start justify-between gap-2 ${bande ? "pl-7" : ""}`}>
+          {/* expéditeur et cachet, en haut à gauche */}
+          <span className="min-w-0">
+            <span className="douce block text-sm font-semibold leading-snug">
+              {c ? c.expediteur : "Courrier à ouvrir"}
+            </span>
+            {nature ? (
+              <span
+                className="mt-1 inline-block -rotate-2 rounded-md border border-dashed px-1.5 py-0.5 text-xs font-bold uppercase leading-none tracking-wide"
+                style={{ borderColor: "var(--cachet-or)", color: "var(--cachet-or)" }}
+              >
+                {interne ? "Note de service" : nature.mention}
+              </span>
+            ) : null}
+          </span>
+          {/*
+            Le timbre, sauf pour la note de service : une enveloppe navette
+            n'est jamais affranchie, et c'est à cela qu'on la reconnaît de loin.
+          */}
+          {interne ? null : (
+            <span
+              className="enveloppe-timbre flex h-10 w-9 shrink-0 items-center justify-center rounded-[2px]"
+              style={nature ? { color: "var(--cachet-or)" } : undefined}
+              aria-hidden
+            >
+              {/* Le timbre prend l'or du cachet : la nature du courrier se lit
+                  au tampon, et la vignette en porte l'icône. */}
+              <Icone nom={c ? c.icone : "courrier"} className="h-5 w-5" />
+            </span>
+          )}
+        </div>
+
+        {/* la grille de circulation, propre à la pochette interne */}
+        {interne ? (
+          <div className={`mt-2 ${bande ? "pl-7" : ""}`}>
+            <span className="tenue block text-xs">Circulation</span>
+            <span className="enveloppe-circulation mt-1 block h-7 w-full max-w-[11rem]" aria-hidden />
+          </div>
+        ) : null}
+
+        {/* la fenêtre du destinataire : le nom de l'entreprise, puis le service
+            visé, comme on adresse un pli. Un nom long (« LA TABLE D'AUGUSTIN »)
+            revient à la ligne dans la fenêtre au lieu d'en sortir. */}
+        <div className={`mt-auto min-w-0 ${bande ? "pl-7" : ""}`}>
+          <span
+            data-destinataire-du-pli=""
+            className={`creux filet inline-block rounded-md border border-dashed max-w-full px-2.5 py-1.5 text-sm [overflow-wrap:anywhere] ${adresse ? "leading-snug" : "leading-relaxed"}`}
+          >
+            <span className="tenue block text-xs">Destinataire</span>
+            {adresse ? (
+              <>
+                <span data-nom-du-destinataire="" className="block font-semibold">
+                  {adresse.nom}
+                </span>
+                <span className="douce block text-xs">{attentionDuPli(c?.pli, "enveloppe")}</span>
+                {adresse.ville ? <span className="douce block text-xs">{adresse.ville}</span> : null}
+              </>
+            ) : (
+              (destinataire ?? "L'entreprise")
+            )}
+          </span>
+        </div>
+
+        <div className={`mt-2 flex items-end justify-between gap-2 ${bande ? "pl-7" : ""}`}>
+          <span className="tenue flex items-center gap-1.5 text-xs">
+            <BrandMark className="h-3.5 w-3.5" />
+            {liasse ?? "Business Arena"}
+          </span>
+          {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * LA LETTRE, écrite une fois elle aussi.
+ *
+ * La formule d'appel et la politesse sont DESSINÉES, pas stockées : les
+ * répéter dans deux cents textes serait deux cents occasions de les écrire
+ * différemment. Ne reste dans la donnée que ce qui varie — qui écrit, à quel
+ * sujet, pour dire quoi. Une note de service, elle, n'en porte aucune : on
+ * n'écrit pas « Madame, Monsieur » à son propre atelier.
+ */
+export function Lettre({
+  code,
+  annonce = false,
+  destinataire,
+  adresse,
+  quand,
+  surligne = false,
+  assurance = true,
+}: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
+  code: string;
+  /** Courrier annoncé par l'enseignant, pas encore appliqué. */
+  annonce?: boolean;
+  destinataire?: string;
+  /** L'entreprise destinataire : son bloc se pose en tête, sous l'expéditeur. */
+  adresse?: DestinataireDuCourrier;
+  /** Le moment de la partie où le pli arrive (« Trimestre 3 ») : la ligne de date. */
+  quand?: string;
+  /** Vrai quand le courrier s'adresse à l'entreprise de celui qui le lit. */
+  surligne?: boolean;
+}) {
+  const c = courrier(code, assurance);
+  if (!c) return null;
+  const nature = NATURES[c.nature];
+  const reference = referenceDuCourrier(code);
+  const duree = dureeDuCourrier(c);
+  /*
+   * SANS EFFET SUR LES COMPTES : les pastilles de durée promettent une
+   * conséquence mécanique. Les courriers de routine n'en ont pas, le mandat
+   * des associés non plus, et les réponses aux décisions pas davantage — le
+   * moteur a déjà chiffré la conséquence, elles la nomment. Leur donner
+   * « ● ● » aurait fait chercher aux élèves un effet qui n'arrive jamais ;
+   * leur ligne d'effet s'écrit donc en encre douce, sans pastille. (Elle
+   * portait aussi un éclair ou un classeur en emoji, qui ne disaient rien de
+   * plus que l'encre et sont partis avec les autres.)
+   */
+  const sansEffet =
+    estUnCourrierDeRoutine(code) || estUneLettreDeMission(code) || estUnCourrierEnRetour(code);
+  const interne = c.pli === "interne";
+
+  return (
+    <div
+      className="papier lettre rounded-lg p-3"
+      style={
+        {
+          // Le liseré du destinataire est écrit en dur : sur du papier, un
+          // jeton de thème s'inverserait avec le site.
+          ...(surligne ? { boxShadow: "0 0 0 2px #0369a1" } : {}),
+        } as React.CSSProperties
+      }
+    >
+      {/*
+        `min-h-full` et non `h-full` : la hauteur est un plancher, pas un
+        plafond. Une lettre au corps long grandit avec son contenu au lieu
+        d'en laisser déborder la signature ; en rangée, toutes prennent la
+        hauteur de la plus haute (globals.css).
+      */}
+      <div className="flex min-h-full flex-col">
+        {/* en-tête : qui écrit, et sous quelle forme */}
+        <div className="flex items-start justify-between gap-2">
+          <span className="flex min-w-0 items-center gap-3">
+            <VisageDeLExpediteur expediteur={c.expediteur} className="h-16 w-16" />
+            <span className="min-w-0 text-sm font-semibold leading-snug">
+              {c.expediteur}
+            </span>
+          </span>
+          <span
+            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium"
+            style={{ borderColor: nature.encre, color: nature.encre }}
+          >
+            {annonce ? "annoncé" : nature.label}
+          </span>
+        </div>
+        {/*
+          LE BLOC DESTINATAIRE, comme une lettre d'affaires française : sous
+          l'expéditeur, décalé à droite, le nom de l'entreprise et le service
+          visé ; puis la ligne de date. Sur téléphone, la lettre est étroite :
+          le bloc garde sa marge à gauche mais ne déborde pas, un nom long passe
+          à la ligne. Rien d'inventé : pas de ville que la partie ne donne pas.
+        */}
+        {adresse ? (
+          <div
+            data-destinataire-de-la-lettre=""
+            className="mt-2 ml-auto w-fit max-w-[min(100%,18rem)] pl-6 text-sm leading-snug [overflow-wrap:anywhere] max-sm:pl-10"
+          >
+            <span className="block font-semibold">{adresse.nom}</span>
+            <span className="douce block text-xs">{attentionDuPli(c.pli, "lettre")}</span>
+            {adresse.ville ? <span className="douce block text-xs">{adresse.ville}</span> : null}
+          </div>
+        ) : null}
+        {quand ? (
+          <p data-date-de-la-lettre="" className="tenue mt-1.5 text-right text-xs">
+            {quand}
+          </p>
+        ) : null}
+        <div className="filet mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-2 text-xs">
+          <span
+            className={c.pli === "simple" ? "tenue" : "font-semibold"}
+            style={c.pli === "recommande" ? { color: "#b91c1c" } : undefined}
+          >
+            {MENTION_DU_PLI[c.pli]}
+          </span>
+          {reference ? <span className="tenue tabular-nums">Nos réf. : {reference}</span> : null}
+        </div>
+
+        {destinataire ? (
+          <span
+            className={`mt-2.5 inline-flex w-fit rounded-full border px-2 py-0.5 text-xs font-semibold ${
+              surligne ? "" : "filet creux tenue"
+            }`}
+            style={surligne ? { borderColor: "#0369a1", color: "#0369a1" } : undefined}
+          >
+            {destinataire}
+          </span>
+        ) : null}
+
+        <p className="mt-2.5 text-sm font-semibold leading-snug">
+          <span className="tenue">Objet : </span>
+          {c.objet}
+        </p>
+
+        {interne ? null : <p className="douce mt-2.5 text-xs italic">Madame, Monsieur,</p>}
+        <p className={`douce ${interne ? "mt-2.5" : "mt-1"} text-sm leading-relaxed`}>{c.corps}</p>
+        <p className="douce mt-2 text-right text-sm italic leading-snug">
+          {interne ? null : (
+            <>
+              Veuillez agréer nos salutations distinguées.
+              <br />
+            </>
+          )}
+          <span className="not-italic">{c.signataire}</span>
+        </p>
+
+        {/* ce que l'entreprise doit en faire, et ses pastilles de durée */}
+        <div className="creux filet mt-auto rounded-lg border px-3 py-2">
+          <div className="flex items-start justify-between gap-2">
+            <p className={`text-sm font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
+              {c.effet}
+            </p>
+            {sansEffet ? null : (
+              <span
+                className="tenue mt-0.5 shrink-0 text-xs tracking-widest"
+                aria-label={`${duree} tour${duree > 1 ? "s" : ""}`}
+                title={`${duree} tour${duree > 1 ? "s" : ""}`}
+              >
+                {"●".repeat(duree)}
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="douce mt-2 flex gap-1.5 text-sm leading-snug">
+          <Icone nom="idee" className="mt-0.5 h-4 w-4" />
+          <span>{c.enJeu}</span>
+        </p>
+
+        <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
+          <span className="tenue text-xs">
+            {pileDuCourrier(code)}
+          </span>
+          <span style={{ color: nature.encre }}>
+            <Icone nom={c.icone} className="h-4 w-4" />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * LE COURRIEL FERMÉ : une ligne de boîte de réception.
+ *
+ * Il joue le rôle de l'enveloppe — l'objet qu'on voit avant d'ouvrir — mais il
+ * ne lui ressemble en rien, et c'est voulu : on reconnaît un message non lu à
+ * son point plein et à son expéditeur en gras, pas à un rabat et à un timbre.
+ * Il porte l'heure plutôt qu'un cachet, parce qu'un courriel arrive dans la
+ * journée quand une lettre arrive dans la semaine.
+ */
+export function Courriel({
+  code,
+  destinataire,
+  adresse,
+  className = "",
+  assurance = true,
+}: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
+  code?: string;
+  destinataire?: string;
+  /** L'entreprise destinataire : la ligne « À » porte son nom. */
+  adresse?: DestinataireDuCourrier;
+  className?: string;
+}) {
+  const c = code ? courrier(code, assurance) : undefined;
+  const nature = c ? NATURES[c.nature] : null;
+  const reference = code ? referenceDuCourrier(code) : null;
+
+  return (
+    <div className={`ecran courriel rounded-md p-3 ${className}`}>
+      <div className="flex h-full min-h-full flex-col">
+        <div className="creux filet -mx-3 -mt-3 mb-3 flex items-center justify-between gap-2 border-b px-3 py-1.5">
+          <span className="tenue text-xs font-semibold">
+            Boîte de réception
+          </span>
+          <span className="tenue text-xs tabular-nums">1 non lu</span>
+        </div>
+
+        <div className="flex items-start gap-2.5">
+          <span aria-hidden className="courriel-point mt-1.5 h-2 w-2 shrink-0 rounded-full" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold leading-snug">
+              {c ? c.expediteur : "Message à ouvrir"}
+            </span>
+            {c ? (
+              <span className="douce mt-1 block text-sm leading-snug">{c.objet}</span>
+            ) : null}
+          </span>
+          {c ? (
+            <span className="shrink-0" style={nature ? { color: nature.encre } : undefined}>
+              <Icone nom={c.icone} className="h-5 w-5" />
+            </span>
+          ) : null}
+        </div>
+
+        {/* Le destinataire en clair sous l'objet, et non dans une fenêtre
+            encadrée : une boîte de réception n'a pas de fenêtre d'enveloppe. */}
+        <span className="tenue mt-1.5 block pl-[1.125rem] text-sm leading-snug">
+          À {adresse ? adresse.nom : (destinataire ?? "L'entreprise")}
+        </span>
+
+        {nature ? (
+          <span
+            className="mt-2.5 inline-flex w-fit border-l-2 pl-1.5 text-xs font-semibold leading-none"
+            style={{ borderColor: nature.encre, color: nature.encre }}
+          >
+            {nature.mention}
+          </span>
+        ) : null}
+
+        {/*
+          LES MESSAGES DÉJÀ LUS, en dessous : deux lignes éteintes, sans texte.
+          L'objet fermé prend la hauteur de son voisin ouvert (`h-full` dans la
+          scène), et sans elles cette hauteur était un grand vide au milieu de
+          la carte. Une boîte de réception qui ne contient qu'un seul message
+          n'existe pas ; ces deux lignes disent que celui du jour arrive dans
+          une pile, ce qui est le propre du canal.
+        */}
+        <div aria-hidden className="mt-auto space-y-2 pt-3 opacity-40">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center gap-2.5">
+              <span className="filet h-2 w-2 shrink-0 rounded-full border" />
+              <span className="creux h-1.5 flex-1 rounded-full" style={{ maxWidth: `${88 - i * 22}%` }} />
+            </div>
+          ))}
+        </div>
+
+        <div className="filet mt-2 flex items-end justify-between gap-2 border-t pt-1.5">
+          <span className="tenue flex items-center gap-1.5 text-xs">
+            <BrandMark className="h-3.5 w-3.5" />
+            Messagerie
+          </span>
+          {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * LE MESSAGE OUVERT.
+ *
+ * Même contenu qu'une lettre, autres usages : pas de « Madame, Monsieur », pas
+ * de « Veuillez agréer » — on n'écrit pas ainsi un message qu'on envoie dans
+ * l'heure. À la place, l'en-tête à étiquettes qui fait reconnaître un courriel
+ * de loin, et une mention qui est la vraie leçon du canal : il ne prouve rien.
+ */
+export function Message({
+  code,
+  annonce = false,
+  destinataire,
+  adresse,
+  surligne = false,
+  assurance = true,
+}: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
+  code: string;
+  annonce?: boolean;
+  destinataire?: string;
+  /** L'entreprise destinataire : le champ « À » porte son nom et le service visé. */
+  adresse?: DestinataireDuCourrier;
+  surligne?: boolean;
+}) {
+  const c = courrier(code, assurance);
+  if (!c) return null;
+  const nature = NATURES[c.nature];
+  const reference = referenceDuCourrier(code);
+  const duree = dureeDuCourrier(c);
+  /*
+   * SANS EFFET SUR LES COMPTES : les pastilles de durée promettent une
+   * conséquence mécanique. Les courriers de routine n'en ont pas, le mandat
+   * des associés non plus, et les réponses aux décisions pas davantage — le
+   * moteur a déjà chiffré la conséquence, elles la nomment. Leur donner
+   * « ● ● » aurait fait chercher aux élèves un effet qui n'arrive jamais ;
+   * leur ligne d'effet s'écrit donc en encre douce, sans pastille. (Elle
+   * portait aussi un éclair ou un classeur en emoji, qui ne disaient rien de
+   * plus que l'encre et sont partis avec les autres.)
+   */
+  const sansEffet =
+    estUnCourrierDeRoutine(code) || estUneLettreDeMission(code) || estUnCourrierEnRetour(code);
+
+  return (
+    <div
+      className="ecran message rounded-md"
+      style={surligne ? { boxShadow: "0 0 0 2px #0369a1" } : undefined}
+    >
+      {/* L'en-tête à étiquettes : De, À, Objet. C'est lui qui fait le courriel,
+          bien plus que la couleur du fond. */}
+      <div className="creux filet border-b px-3 py-2">
+        <div className="flex items-start justify-between gap-2">
+          <span className="tenue text-xs font-semibold">Message</span>
+          <span
+            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium"
+            style={{ borderColor: nature.encre, color: nature.encre }}
+          >
+            {annonce ? "annoncé" : nature.label}
+          </span>
+        </div>
+        <div className="mt-1.5 flex items-start gap-3">
+          <VisageDeLExpediteur expediteur={c.expediteur} className="h-14 w-14" />
+          <dl className="grid min-w-0 flex-1 grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1 text-xs leading-snug">
+            <dt className="tenue">De</dt>
+            <dd className="min-w-0 font-semibold">{c.expediteur}</dd>
+            <dt className="tenue">À</dt>
+            <dd
+              className={`min-w-0 ${surligne ? "font-semibold" : "douce"}`}
+              style={surligne ? { color: "#0369a1" } : undefined}
+            >
+              {adresse ? (
+                <>
+                  <span data-nom-du-destinataire="">{adresse.nom}</span>
+                  {", direction générale"}
+                  {destinataire ? ` · ${destinataire}` : ""}
+                </>
+              ) : (
+                (destinataire ?? "L'entreprise")
+              )}
+            </dd>
+            <dt className="tenue">Objet</dt>
+            <dd className="min-w-0 font-semibold">{c.objet}</dd>
+          </dl>
+        </div>
+      </div>
+
+      {/*
+        `flex-1` SANS `min-h-full` : le message a un en-tête frère, là où la
+        lettre n'en a pas. Une hauteur minimale de 100 % posée ici s'ajoutait à
+        celle de l'en-tête, et le total dépassait le pli — à l'impression,
+        l'effet du courrier et la leçon tombaient sous le bord et
+        disparaissaient. `flex-1` remplit ce qui reste, ce qui est exactement
+        ce qu'on veut.
+      */}
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5">
+        <p className="douce text-xs italic">Bonjour,</p>
+        <p className="douce mt-1 text-sm leading-relaxed">{c.corps}</p>
+        <p className="douce mt-2 text-sm italic leading-snug">
+          Cordialement,
+          <br />
+          <span className="not-italic">{c.signataire}</span>
+        </p>
+
+        {/* La mention du canal, en clair : ce qu'un courriel ne fait pas. */}
+        <p className="tenue filet mt-2 border-t pt-1.5 text-xs">{MENTION_DU_PLI[c.pli]}</p>
+
+        <div className="creux filet mt-auto rounded-md border px-3 py-2">
+          <div className="flex items-start justify-between gap-2">
+            <p className={`text-sm font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
+              {c.effet}
+            </p>
+            {sansEffet ? null : (
+              <span
+                className="tenue mt-0.5 shrink-0 text-xs tracking-widest"
+                aria-label={`${duree} tour${duree > 1 ? "s" : ""}`}
+                title={`${duree} tour${duree > 1 ? "s" : ""}`}
+              >
+                {"●".repeat(duree)}
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="douce mt-2 flex gap-1.5 text-sm leading-snug">
+          <Icone nom="idee" className="mt-0.5 h-4 w-4" />
+          <span>{c.enJeu}</span>
+        </p>
+
+        <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
+          <span className="tenue text-xs">
+            {pileDuCourrier(code)}
+          </span>
+          {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * LA GRILLE D'UNE DISTRIBUTION.
+ *
+ * À deux colonnes dès qu'il y a deux plis. Mais un courrier seul dans une
+ * grille à deux colonnes se range à gauche et laisse la moitié de la carte
+ * vide : l'œil cherche le second, qui n'existe pas. Seul, il se centre et
+ * prend la largeur d'une lettre — il devient ce qu'il est, la pièce du jour,
+ * et non la première d'une paire.
+ *
+ * TOUS LES COURRIERS D'UNE DISTRIBUTION ONT LA MÊME HAUTEUR, `auto-rows-fr`.
+ *
+ * Une grille règle chaque rangée sur son propre contenu : à deux, les deux
+ * plis s'alignaient déjà (une seule rangée), mais au troisième la seconde
+ * rangée prenait sa propre hauteur — mesuré 471, 471, puis 453 px. Les
+ * colonnes cessaient de se répondre et la distribution se lisait comme des
+ * cartes dépareillées au lieu d'une pile.
+ *
+ * `auto-rows-fr` donne à toutes les rangées la même piste, réglée sur la plus
+ * haute : quatre courriers forment un carré, pas un escalier. Seulement à
+ * partir de `sm`, là où la grille a deux colonnes — en colonne unique, sur
+ * téléphone, personne n'est côte à côte et imposer la hauteur du plus long à
+ * tous ne ferait qu'allonger le défilement.
+ */
+export function grilleDeCourriers(nombre: number, mise: "rangee" | "posee" = "rangee"): string {
+  // LOT P3 : LE COURRIER DU TOUR SE POSE. Ouvert à l'étape Décider, il n'est
+  // plus rangé dans un panneau : les lettres se posent sur le bureau, plus
+  // larges (le parent les borne à 40 rem quand il n'y en a qu'une), avec leur
+  // ombre et leur légère rotation (`courriers-poses`, globals.css). Plus
+  // d'écart entre deux lettres inclinées, pour qu'elles ne se touchent pas.
+  if (mise === "posee") {
+    return nombre <= 1
+      ? "courriers-poses grid"
+      : "courriers-poses grid gap-5 sm:auto-rows-fr sm:grid-cols-2 sm:gap-8";
+  }
+  return nombre <= 1
+    ? "grid gap-3 sm:mx-auto sm:max-w-md"
+    : "grid gap-3 sm:auto-rows-fr sm:grid-cols-2";
+}
+
+/**
+ * L'ENVELOPPE OUVERTE, POSÉE À CÔTÉ DE SA LETTRE (lot P7, redessinée).
+ *
+ * Le lot P3 en avait posé une, que le lot P4 a retirée : son rabat était un
+ * triangle blanc posé AU-DESSUS d'elle, sans le filet ni l'ombre du corps, et
+ * il flottait ; sa nature (« Environnement économique ») s'écrivait sur une
+ * étiquette jaune en pointillé, serrée. Le propriétaire la veut de retour,
+ * crédible et calme :
+ *   · UN SEUL DESSIN pour le corps et le rabat ouvert : la base du rabat EST le
+ *     bord haut du corps (y = 56), et l'ombre portée, celle de la lettre (le
+ *     contact net, puis la pénombre), tombe sur la forme entière. Le rabat ne
+ *     peut pas flotter : il n'a pas de bord à lui ;
+ *   · un papier un cran plus foncé que la lettre (#eef1f5 contre le blanc), le
+ *     rabat, vu de l'intérieur, un cran encore ;
+ *   · dessus, l'expéditeur et le destinataire à l'encre du courrier, et un
+ *     timbre oblitéré, sobre. Pas d'étiquette : la catégorie reste sur la
+ *     lettre, qui est l'objet principal ;
+ *   · décor pur (`aria-hidden`) : tout ce qu'elle porte, la lettre le dit.
+ * Un courriel n'a pas d'enveloppe, et la pochette interne n'est pas affranchie.
+ * Elle ne se pose que si la place le permet (globals.css, « LOT P7 ») : sur
+ * téléphone et à côté de deux plis, aucune.
+ */
+export function EnveloppeOuverte({
+  code,
+  destinataire,
+  adresse,
+  assurance = true,
+}: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
+  code: string;
+  destinataire?: string;
+  /** L'entreprise destinataire : son nom, puis le service visé. */
+  adresse?: DestinataireDuCourrier;
+}) {
+  const c = courrier(code, assurance);
+  if (!c || c.pli === "email") return null;
+  const interne = c.pli === "interne";
+  return (
+    <div aria-hidden data-enveloppe-posee="" className="enveloppe-posee">
+      <svg
+        viewBox="0 0 216 196"
+        className="enveloppe-posee-forme"
+        focusable="false"
+        preserveAspectRatio="none"
+      >
+        {/* Le rabat ouvert, vu de l'intérieur : sa base est le bord du corps. */}
+        <path data-rabat="" d="M0 56 L101 8.5 Q108 5.2 115 8.5 L216 56 Z" fill="#dfe5ed" />
+        {/* La bande de gomme, le long des bords du rabat. */}
+        <path
+          d="M15 56 L103 14.6 Q108 12.4 113 14.6 L201 56"
+          fill="none"
+          stroke="#cdd5df"
+          strokeWidth="1"
+        />
+        {/* Le corps, coins arrondis en bas seulement : le haut est le pli. */}
+        <path
+          data-corps=""
+          d="M0 56 H216 V193 Q216 196 213 196 H3 Q0 196 0 193 Z"
+          fill="#eef1f5"
+        />
+        {/* Le pli, là où le papier tourne. */}
+        <path d="M0 56.5 H216" stroke="#c7cfda" strokeWidth="1" />
+      </svg>
+      <div className="enveloppe-posee-face">
+        <span className="enveloppe-posee-expediteur">{c.expediteur}</span>
+        {interne ? null : (
+          <span className="enveloppe-posee-timbre">
+            <span className="enveloppe-timbre flex h-10 w-[2.125rem] items-center justify-center rounded-[2px]">
+              <Icone nom={c.icone} className="h-[1.125rem] w-[1.125rem]" />
+            </span>
+            {/* L'oblitération : deux cercles et trois ondes, un trait plein. */}
+            <svg viewBox="0 0 64 30" className="enveloppe-posee-cachet" focusable="false">
+              <circle cx="15" cy="15" r="12.5" fill="none" stroke="currentColor" strokeWidth="1" />
+              <circle cx="15" cy="15" r="8.5" fill="none" stroke="currentColor" strokeWidth="0.75" />
+              <path
+                d="M30 9 q5 -3 10 0 t10 0 t10 0 M30 15 q5 -3 10 0 t10 0 t10 0 M30 21 q5 -3 10 0 t10 0 t10 0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+            </svg>
+          </span>
+        )}
+        {adresse ? (
+          <span className="enveloppe-posee-destinataire">
+            <span data-nom-du-destinataire="" className="enveloppe-posee-nom">
+              {adresse.nom}
+            </span>
+            <span className="enveloppe-posee-a">{attentionDuPli(c.pli, "enveloppe")}</span>
+            {adresse.ville ? <span className="enveloppe-posee-a">{adresse.ville}</span> : null}
+          </span>
+        ) : (
+          <span className="enveloppe-posee-destinataire">
+            <span className="enveloppe-posee-a">À l&apos;attention de</span>
+            {destinataire ?? "L'entreprise"}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Le pli distribué : l'enveloppe, puis la lettre qui en sort. */
+export function CourrierRecommande({
+  code,
+  delayMs = 0,
+  annonce = false,
+  destinataire,
+  adresse,
+  quand,
+  surligne = false,
+  assurance = true,
+}: {
+  /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
+  assurance?: boolean;
+  code: string;
+  delayMs?: number;
+  annonce?: boolean;
+  /** Destinataire affiché : « Tout le marché » ou « → Équipe 3 ». */
+  destinataire?: string;
+  /**
+   * L'entreprise à qui le pli est adressé : son nom sur l'enveloppe et en tête
+   * de la lettre. `destinataire` ne dit plus alors que la portée du pli.
+   */
+  adresse?: DestinataireDuCourrier;
+  /** La ligne de date de la lettre (« Trimestre 3 »). */
+  quand?: string;
+  surligne?: boolean;
+}) {
+  const c = courrier(code, assurance);
+  if (!c) {
+    return (
+      <div className="rounded-lg encadre-neutre px-3 py-2 text-xs text-slate-200">
+        <Icone nom="courrier" className="mr-1.5 h-4 w-4" />
+        {code}
+      </div>
+    );
+  }
+  const position = positionDuCourrier(code);
+  // Le canal décide des deux objets, et de rien d'autre : la scène, le retard
+  // d'ouverture et la place dans la grille sont les mêmes pour tous.
+  const parCourriel = c.pli === "email";
+
+  return (
+    <div className="pli-scene" style={{ animationDelay: `${delayMs}ms` }}>
+      <div className="pli-ouverture" style={{ animationDelay: `${delayMs}ms` }}>
+        {parCourriel ? (
+          <Courriel
+            code={code}
+            assurance={assurance}
+            destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
+            className="h-full"
+          />
+        ) : (
+          <Enveloppe
+            code={code}
+            assurance={assurance}
+            liasse={position?.liasse}
+            destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
+            className="h-full"
+          />
+        )}
+        {parCourriel ? (
+          <Message
+            code={code}
+            assurance={assurance}
+            annonce={annonce}
+            destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
+            surligne={surligne}
+          />
+        ) : (
+          <Lettre
+            code={code}
+            assurance={assurance}
+            annonce={annonce}
+            destinataire={destinataire}
+            {...(adresse ? { adresse } : {})}
+            {...(quand ? { quand } : {})}
+            surligne={surligne}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

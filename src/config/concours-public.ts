@@ -19,7 +19,9 @@ export interface AccentConcours {
 }
 
 export const ACCENTS_CONCOURS: AccentConcours[] = [
-  { cle: "laiton", nom: "Laiton", vif: "#f59e0b", doux: "#fcd34d" },
+  // Le laiton de la maison, pas l'amber de Tailwind : c'est l'accent par
+  // défaut, donc celui qu'une affiche de concours portera le plus souvent.
+  { cle: "laiton", nom: "Laiton", vif: "#d8b45c", doux: "#e7cd8b" },
   { cle: "emeraude", nom: "Émeraude", vif: "#10b981", doux: "#6ee7b7" },
   { cle: "azur", nom: "Azur", vif: "#3b82f6", doux: "#93c5fd" },
   { cle: "rubis", nom: "Rubis", vif: "#f43f5e", doux: "#fda4af" },

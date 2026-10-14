@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { bouton } from "@/components/bouton";
+import { useEffect, useRef, useState } from "react";
+import { unePartieAEteJouee } from "@/lib/partie-jouee";
+import { estEcranDeJeu } from "@/config/ecrans-de-jeu";
+import { Icone } from "@/components/icone";
 
 /**
  * Pop-up d'installation, sur mobile uniquement.
@@ -15,6 +20,21 @@ import { useEffect, useState } from "react";
  * On ne harcèle pas : déjà installée (standalone) → rien ; fermée ou installée
  * → mémorisé dans localStorage et plus rien pendant DELAI_SILENCE. `sm:hidden`
  * la réserve au petit écran.
+ *
+ * UNE LIGNE, ET JAMAIS EN JEU. Elle prenait quarante pour cent de l'écran, par-dessus
+ * la partie, avec trois étapes de texte : la première chose qu'un
+ * téléphone montrait d'une « application » était une publicité pour elle. Elle
+ * tient maintenant sur une barre d'une ligne, et se tait sur les écrans de jeu
+ * (voir src/config/ecrans-de-jeu.ts), où l'élève décide et n'a pas à être
+ * sollicité.
+ *
+ * LOT P4 : PAS AVANT D'AVOIR JOUÉ, JAMAIS SUR UNE ACTION. Elle recouvrait encore
+ * le bas de la vitrine dès l'arrivée : on proposait d'installer un produit
+ * qu'on n'avait pas essayé. Elle attend maintenant qu'une partie ait été jouée
+ * sur l'appareil (un tour résolu ou une partie terminée : le témoin que pose
+ * l'arène, `lib/partie-jouee.ts`), et elle s'efface — glissée sous le bord —
+ * tant qu'un bouton d'action passe sous elle : elle ne se pose jamais
+ * par-dessus « Tester le simulateur » ni sur aucun autre bouton.
  */
 
 type BeforeInstallPromptEvent = Event & {
@@ -34,16 +54,40 @@ function ferméRécemment(): boolean {
   }
 }
 
+/** Les commandes qu'elle ne doit jamais recouvrir : tout bouton, et les liens habillés en bouton. */
+const ACTIONS = "button, [role='button'], input[type='submit'], .bouton-plein, .bouton-filet";
+
+/** Un bouton d'action visible passe-t-il sous la bande `haut`–bas de l'écran ? */
+function uneActionDessous(haut: number, barre: HTMLElement | null): boolean {
+  for (const el of document.querySelectorAll<HTMLElement>(ACTIONS)) {
+    if (barre?.contains(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) continue;
+    if (r.bottom > haut && r.top < window.innerHeight) {
+      const s = getComputedStyle(el);
+      if (s.visibility !== "hidden" && s.display !== "none") return true;
+    }
+  }
+  return false;
+}
+
 export function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [canPrompt, setCanPrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const chemin = usePathname();
+  // LOT P2 : /jouer garde le bas de l'écran pour son résumé collant (« NOVA ·
+  // Niveau 3 · Lancer la partie ») ; l'invitation s'y posait par-dessus le
+  // bouton de lancement. Elle s'y tait, comme dans une partie.
+  const enJeu = estEcranDeJeu(chemin) || chemin === "/jouer";
 
   useEffect(() => {
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-    if (standalone || ferméRécemment()) return;
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true;
+    // Pas avant une première partie jouée sur cet appareil (lot P4).
+    if (standalone || ferméRécemment() || !unePartieAEteJouee()) return;
 
     const ua = navigator.userAgent;
     const iosLike =
@@ -100,60 +144,83 @@ export function InstallPrompt() {
     else fermer();
   };
 
-  if (!visible) return null;
+  // La barre d'action du bas (BarreDActionMobile) cède la place tant que cette
+  // invitation est affichée : elles occupent le même bord de l'écran.
+  const affichee = visible && !enJeu;
 
+  // JAMAIS PAR-DESSUS UN BOUTON (lot P4) : tant qu'une commande passe sous la
+  // bande qu'elle occupe, l'invitation glisse sous le bord de l'écran. Relu au
+  // défilement et au redimensionnement, une fois par image au plus.
+  const barre = useRef<HTMLDivElement>(null);
+  const [cede, setCede] = useState(true);
+  useEffect(() => {
+    if (!affichee) return;
+    let image = 0;
+    const relire = () => {
+      image = 0;
+      const el = barre.current;
+      if (!el) return;
+      const haut = window.innerHeight - el.offsetHeight;
+      setCede(uneActionDessous(haut, el));
+    };
+    const planifier = () => {
+      if (!image) image = requestAnimationFrame(relire);
+    };
+    relire();
+    window.addEventListener("scroll", planifier, { passive: true });
+    window.addEventListener("resize", planifier);
+    return () => {
+      if (image) cancelAnimationFrame(image);
+      window.removeEventListener("scroll", planifier);
+      window.removeEventListener("resize", planifier);
+    };
+  }, [affichee, chemin]);
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-install-prompt", affichee);
+    return () => document.documentElement.removeAttribute("data-install-prompt");
+  }, [affichee]);
+
+  if (!visible || enJeu) return null;
+
+  // Sur iOS il n'y a pas de bouton à offrir : l'installation passe par le menu
+  // Partager de Safari. On le dit en une ligne, on n'en fait pas un tutoriel.
   return (
     <div
+      ref={barre}
       role="dialog"
       aria-label="Installer l'application"
-      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:hidden"
+      inert={cede}
+      data-cede={cede ? "" : undefined}
+      className={`fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] transition-transform duration-[var(--duree-passage)] motion-reduce:transition-none sm:hidden ${
+        cede ? "pointer-events-none translate-y-[calc(100%+1rem)]" : ""
+      }`}
     >
-      <div className="mx-auto max-w-md rounded-2xl border border-amber-400/25 bg-slate-900/95 p-4 shadow-2xl backdrop-blur">
-        <div className="flex items-start gap-3">
-          <span
-            aria-hidden
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/10 text-xl ring-1 ring-inset ring-amber-400/25"
-          >
-            📲
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-100">
-              Installer Business Arena
-            </p>
-            <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
-              {isIos
-                ? "Ajoutez l'app à votre écran d'accueil : elle s'ouvre en plein écran, sans barre de navigateur."
-                : "Un accès direct depuis l'écran d'accueil, en plein écran, comme une vraie app."}
-            </p>
-          </div>
-        </div>
-
-        {isIos ? (
-          <ol className="mt-3 space-y-1 text-xs leading-relaxed text-slate-300">
-            <li>1. Touchez l&apos;icône Partager (carré avec une flèche ↑) dans Safari.</li>
-            <li>2. Choisissez «&nbsp;Sur l&apos;écran d&apos;accueil&nbsp;».</li>
-            <li>3. Confirmez avec «&nbsp;Ajouter&nbsp;».</li>
-          </ol>
-        ) : null}
-
-        <div className="mt-3 flex items-center justify-end gap-2">
+      <div className="mx-auto flex max-w-md items-center gap-2 rounded-xl border border-white/15 bg-slate-900/95 py-1.5 pl-3 pr-1.5 shadow-2xl backdrop-blur">
+        <Icone nom="telephone" className="h-5 w-5 text-slate-300" />
+        <p className="min-w-0 flex-1 text-sm leading-snug text-slate-200">
+          {isIos ? (
+            <>Partager, puis «&nbsp;Sur l&apos;écran d&apos;accueil&nbsp;».</>
+          ) : (
+            <>Installer Business Arena</>
+          )}
+        </p>
+        {canPrompt ? (
           <button
             type="button"
-            onClick={fermer}
-            className="rounded-lg px-3 py-2 text-xs font-medium text-slate-400 transition hover:text-slate-200"
+            onClick={installer}
+            className={`${bouton({ taille: "m" })} min-h-11 shrink-0`}
           >
-            {isIos ? "Compris" : "Plus tard"}
+            Installer
           </button>
-          {canPrompt ? (
-            <button
-              type="button"
-              onClick={installer}
-              className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
-            >
-              Installer l&apos;app
-            </button>
-          ) : null}
-        </div>
+        ) : null}
+        <button
+          type="button"
+          onClick={fermer}
+          aria-label="Fermer"
+          className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-xl text-lg text-slate-400 transition hover:text-slate-200"
+        >
+          <span aria-hidden>×</span>
+        </button>
       </div>
     </div>
   );

@@ -32,6 +32,7 @@ import { getTeamSituations, submitDiagnosis, submitQuiz } from "@/services/pedag
 import { situationByCode } from "@/config/scenarios/registry";
 import { MODEL_QUESTION_ID } from "@/config/scenarios/situation-kit";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 59,
@@ -135,10 +136,12 @@ describe("réglage des questions par l'enseignant", () => {
     const soloGame = (await db.select().from(games).where(eq(games.id, solo)))[0]!;
     expect(quizModeFromProfile(soloGame.difficultyProfile)).toBe(DEFAULT_QUIZ_MODE);
 
-    const org = await getTeacherOrgId(userId);
+    const org = (await getTeacherOrgId(userId)) ?? soloGame.organizationId!;
+    // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+    await poserUneLicence(org, userId);
     const classe = await createClassGame({
       teacherId: userId,
-      organizationId: org ?? soloGame.organizationId!,
+      organizationId: org,
       periodicity: "quarter",
       humanTeamsCount: 2,
       botCount: 1,

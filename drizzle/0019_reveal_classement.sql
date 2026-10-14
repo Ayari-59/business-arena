@@ -1,0 +1,14 @@
+-- Le classement d'un tour se révèle, il ne s'affiche pas tout seul.
+--
+-- En classe et en concours, c'est l'animateur qui ouvre le rideau. NULL tant
+-- qu'il ne l'a pas fait. Les parties déjà en cours héritent donc de NULL : leur
+-- classement se referme, et l'enseignant le rouvre tour par tour.
+--
+-- `IF NOT EXISTS` : la colonne peut déjà exister sur une base où quelqu'un
+-- aurait joué ce fichier à la main. Rejouable sans risque, contrairement à
+-- 0017 et 0018 qui font un ADD COLUMN nu.
+--
+-- Numérotée 0019 et non 0014 : les fichiers 0013 à 0018 existent sur le disque
+-- mais NE FIGURENT PAS au journal (voir scripts/verifier-migrations.ts). Elle
+-- prend le premier numéro libre pour n'entrer en collision avec aucun d'eux.
+ALTER TABLE "rounds" ADD COLUMN IF NOT EXISTS "ranking_revealed_at" timestamp with time zone;

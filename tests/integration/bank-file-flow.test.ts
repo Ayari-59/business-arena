@@ -28,6 +28,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 const DECISIONS: RoundDecisions = {
   price: 74,
@@ -54,15 +55,18 @@ beforeAll(async () => {
   prof = r.userId;
   const orgId = (await getTeacherOrgId(prof))!;
 
-  // Niveau 3 : c'est là que le financement s'ouvre, donc là que la banque
-  // existe et que le plan de trésorerie prend un sens.
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
+  // Niveau 4 : c'est là que le financement s'ouvre (depuis octobre 2026), donc
+  // là que l'emprunt se décide et que le dossier bancaire prend un sens.
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,
     periodicity: "quarter",
     humanTeamsCount: 1,
     botCount: 1,
-    level: 3,
+    // Le financement (emprunt, apport) s'ouvre au niveau 4.
+    level: 4,
   });
   gameId = partie.gameId;
   const u = await db
@@ -81,10 +85,14 @@ describe("dossier bancaire, de la saisie au bilan", () => {
     expect(vue.bankFile).not.toBeNull();
     expect(vue.bankFile!.trust).toBe(1);
     expect(vue.bankFile!.overdraftLimit).toBeCloseTo(vue.bankFile!.fullOverdraftLimit, 6);
-    expect(vue.bankFile!.refusedLoan).toBeNull();
   });
 
-  it("un emprunt demandé sans plan de trésorerie n'entre jamais en caisse", async () => {
+  it("un emprunt demandé sans plan de trésorerie est instruit quand même", async () => {
+    // L'ARÈNE NE DEMANDE PLUS DE PLAN DE TRÉSORERIE. Remplir un prévisionnel
+    // avant chaque tour tenait de l'exercice scolaire plus que du jeu, et le
+    // verrou qui en découlait — pas de plan, pas d'emprunt — aurait interdit
+    // d'emprunter à tout le monde une fois le champ retiré. La banque instruit
+    // désormais toute demande.
     await submitTeamDecisions({
       gameId,
       userId: eleve,
@@ -94,12 +102,15 @@ describe("dossier bancaire, de la saisie au bilan", () => {
 
     const vue = (await getGameView(gameId, eleve))!;
     expect(vue.lastResult!.bank!.loanRequested).toBe(EMPRUNT);
-    expect(vue.lastResult!.bank!.loanGranted).toBe(0);
-    // et l'élève l'apprend au tour suivant, dans le panneau où il rédige
-    expect(vue.bankFile!.refusedLoan).toBe(EMPRUNT);
+    expect(vue.lastResult!.bank!.loanGranted).toBe(EMPRUNT);
+    expect(vue.lastResult!.bank!.planFiled).toBe(false);
+    // Sans plan à juger, la confiance reste où elle est : la ligne de crédit
+    // du tour suivant ne bouge pas.
+    expect(vue.bankFile!.trust).toBe(1);
+    expect(vue.bankFile!.overdraftLimit).toBeCloseTo(vue.bankFile!.fullOverdraftLimit, 6);
   });
 
-  it("le même emprunt, appuyé d'un plan, est accordé", async () => {
+  it("un plan déposé par une autre voie reste jugé : le moteur en garde la capacité", async () => {
     const avant = (await getGameView(gameId, eleve))!;
     const detteAvant = avant.lastResult!.balanceSheet.financialDebt;
 
@@ -119,7 +130,6 @@ describe("dossier bancaire, de la saisie au bilan", () => {
     expect(apres.lastResult!.bank!.loanGranted).toBe(EMPRUNT);
     // la dette financière monte de l'emprunt, échéance du tour déduite
     expect(apres.lastResult!.balanceSheet.financialDebt).toBeGreaterThan(detteAvant);
-    expect(apres.bankFile!.refusedLoan).toBeNull();
   });
 
   it("un plan démenti par les faits resserre la ligne de crédit du tour suivant", async () => {

@@ -25,6 +25,7 @@ import { users } from "@/db/schema";
 import { scenarioByCode } from "@/config/scenarios/registry";
 import { fleetMaintenanceMultiplier } from "@/engine/simulation";
 import type { EquipmentTypeDef } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 let teacherId: string;
 let orgId: string;
@@ -39,6 +40,10 @@ beforeAll(async () => {
   if ("error" in r) throw new Error(r.error);
   teacherId = r.userId;
   orgId = (await getTeacherOrgId(teacherId))!;
+  // Les niveaux 4 à 6 sont inclus dans les offres Enseignant et Établissement : cet
+  // établissement est sous licence (la règle elle-même est gardée par
+  // acces-sans-licence.test.ts).
+  await poserUneLicence(orgId, teacherId);
 });
 
 /** Décisions effectivement jouées par l'unique équipe HUMAINE du tour 1. */

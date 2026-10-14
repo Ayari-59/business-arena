@@ -19,13 +19,14 @@ import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
-  drawEventCardForNextRound,
+  distribuerUnCourrier,
   getGameView,
   getTeacherGameView,
   joinGameByCode,
   submitTeamDecisions,
 } from "@/services/game.service";
 import type { RoundDecisions } from "@/engine/types";
+import { poserUneLicence } from "./helpers/licence";
 
 // prix élevé + plan au maximum : l'équipe garde du stock, la commande
 // exceptionnelle peut donc être livrée intégralement
@@ -54,6 +55,8 @@ beforeAll(async () => {
   if ("error" in result) throw new Error(result.error);
   teacherId = result.userId;
   const orgId = (await getTeacherOrgId(teacherId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, teacherId);
   const game = await createClassGame({
     teacherId,
     organizationId: orgId,
@@ -85,8 +88,8 @@ describe("commande exceptionnelle + assurance catastrophe (bout en bout)", () =>
   });
 
   it("catastrophe (marché) + commande ferme (équipe) : effets différenciés", async () => {
-    await drawEventCardForNextRound({ gameId, teacherId, eventCode: "natural_disaster" });
-    await drawEventCardForNextRound({
+    await distribuerUnCourrier({ gameId, teacherId, eventCode: "natural_disaster" });
+    await distribuerUnCourrier({
       gameId,
       teacherId,
       eventCode: "big_order",

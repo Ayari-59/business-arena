@@ -99,3 +99,38 @@ export const competitionEntries = pgTable(
   },
   (t) => [primaryKey({ columns: [t.competitionId, t.teamLabel] })],
 );
+
+/**
+ * LE CODE DE REPRISE : retrouver son identité sur un autre appareil.
+ *
+ * Un élève de concours n'a ni compte ni mot de passe : il est reconnu par un
+ * cookie invité, donc par SON NAVIGATEUR. Changer de poste, vider ses cookies
+ * ou passer du PC de la salle au téléphone suffisait à le rendre méconnaissable
+ * — et, une fois les inscriptions closes, à l'exclure de son propre tournoi.
+ *
+ * Chaque membre reçoit donc, à l'inscription, un code personnel qu'il note et
+ * qui rend son identité depuis n'importe quel appareil. Il est stocké en clair
+ * parce que l'organisateur doit pouvoir le relire à l'élève qui l'a perdu :
+ * c'est le chemin de secours réel d'une salle de classe. Il ne donne accès
+ * qu'à ce joueur dans ce concours, et les tentatives sont limitées.
+ */
+export const competitionMembers = pgTable(
+  "competition_members",
+  {
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competitions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    teamLabel: text("team_label").notNull(),
+    recoveryCode: text("recovery_code").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    primaryKey({ columns: [t.competitionId, t.userId] }),
+    // Le code se saisit seul, sans le code du concours : il est donc unique
+    // pour toute la base, et non seulement dans son tournoi.
+    uniqueIndex("competition_members_code_uq").on(t.recoveryCode),
+  ],
+);

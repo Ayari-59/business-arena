@@ -1,3 +1,5 @@
+import { leviersFigesDuProfil, presetFromProfile } from "@/config/difficulty";
+import { investissementPlafonne } from "@/engine/investment/plafond";
 import { randomInt } from "node:crypto";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
@@ -16,11 +18,13 @@ import {
   debriefRound,
   openSituationsForRound,
 } from "@/services/pedagogy.service";
-import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
+import {
+  COURRIERS_ENTREPRISE_CODES,
+  COURRIERS_MARCHE_CODES,
+} from "@/config/courriers/registre";
 import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { assertPlayable } from "@/services/play-lock";
-import { entitlementsForOrg } from "@/services/entitlements.service";
 import { proposedDecisionsFor } from "@/services/decision-baseline";
 import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
 import {
@@ -29,6 +33,13 @@ import {
   updateRankings,
 } from "@/services/scoring.service";
 import { simulateRound } from "@/engine/simulation";
+import { articleDeLaGazette } from "@/config/gazette/generateur";
+import { profilAvecLaGazetteParue } from "@/config/gazette/edition";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
+import { subventionsAccordees } from "@/services/subvention.service";
+import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
+import { lireLEssai } from "@/config/tour-d-essai";
+import { enchainerSiDemande } from "@/services/tour-d-essai.service";
 import {
   enrichError,
   logResolutionStep,
@@ -49,27 +60,61 @@ import type {
  * Ce module isole le pipeline de résolution (verrou optimiste, simulation,
  * persistance, scoring, pédagogie) et les fonctions qui en dépendent
  * directement : soumission de décisions, clôture par l'enseignant, tirage
- * de cartes événement.
+ * du courrier de l'entreprise.
  *
  * Le driver HTTP Neon n'offre pas de transactions : la résolution est
  * idempotente via un verrou optimiste sur rounds.status (open → resolving),
  * et re-tentable — chaque écriture est un upsert ou une insertion idempotente.
  */
 
-/** Carte jouée par l'enseignant, en attente d'application à la clôture. */
-export interface PendingEventCard {
+/** Courrier distribué par l'enseignant, en attente d'application à la clôture. */
+export interface CourrierAnnonce {
   code: string;
   /** null = toute la classe (portée marché) ; sinon l'équipe ciblée. */
   teamId: string | null;
 }
 
-export function readPendingEvents(profile: unknown): PendingEventCard[] {
-  const p = profile as { pendingEvents?: PendingEventCard[]; pendingEventCodes?: string[] };
+export function readPendingEvents(profile: unknown): CourrierAnnonce[] {
+  const p = profile as { pendingEvents?: CourrierAnnonce[]; pendingEventCodes?: string[] };
   if (Array.isArray(p.pendingEvents)) return p.pendingEvents;
   // rétro-compatibilité : ancien format (codes marché uniquement)
   if (Array.isArray(p.pendingEventCodes))
     return p.pendingEventCodes.map((code) => ({ code, teamId: null }));
   return [];
+}
+
+/** Les événements encore actifs, tels que la clôture précédente les a laissés. */
+export function activeEventsOf(profile: unknown): EventInstance[] {
+  const p = profile as { activeEvents?: EventInstance[] };
+  return Array.isArray(p.activeEvents) ? p.activeEvents : [];
+}
+
+/**
+ * Les courriers distribués par l'enseignant pour le tour, prêts pour le
+ * moteur. Une seule fonction, parce que la clôture ET l'aperçu de la
+ * distribution doivent voir exactement la même liste : c'est elle qui décale
+ * le tirage seedé.
+ */
+export function injectedEvents(
+  scenario: EngineScenarioConfig,
+  courriers: readonly CourrierAnnonce[],
+  activeEvents: readonly EventInstance[],
+): EventInstance[] {
+  return courriers.flatMap((card) => {
+    const def = scenario.events.find((e) => e.code === card.code);
+    if (!def) return [];
+    if (activeEvents.some((e) => e.code === card.code && e.companyId === (card.teamId ?? undefined)))
+      return [];
+    return [
+      {
+        code: def.code,
+        scope: card.teamId ? ("company" as const) : ("market" as const),
+        companyId: card.teamId ?? undefined,
+        roundsLeft: def.duration,
+        modifiers: def.modifiers,
+      },
+    ];
+  });
 }
 
 const toMoney = (v: number) => (Math.round(v * 100) / 100).toString();
@@ -103,6 +148,7 @@ export async function submitTeamDecisions(args: {
   try {
     const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
     if (!game) throw new Error("Partie introuvable");
+    if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
     if (game.status !== "running") throw new Error("Cette partie est terminée");
     const { team } = await findUserTeam(args.gameId, args.userId);
     if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
@@ -144,6 +190,7 @@ export async function submitTeamDecisions(args: {
     teamId: team.id,
     roundIndex: game.currentRound,
     payload: args.payload,
+    leviers: leviersFigesDuProfil(game.difficultyProfile),
   });
   await db
     .insert(decisions)
@@ -190,6 +237,8 @@ async function sourceDesPivots(args: {
   teamId: string;
   roundIndex: number;
   payload: RoundDecisions;
+  /** Les leviers figés de la partie (`leviersFigesDuProfil`). */
+  leviers?: import("@/engine/bots").LeviersOuverts | null;
 }) {
   const previousRound =
     args.roundIndex > 1
@@ -221,6 +270,7 @@ async function sourceDesPivots(args: {
     state: stateRow?.state as CompanyState | undefined,
     roundIndex: args.roundIndex,
     previousPayload: previous?.payload as RoundDecisions | undefined,
+    leviers: args.leviers ?? null,
   });
   return decisionSourceOf(args.payload, proposees);
 }
@@ -230,12 +280,20 @@ async function sourceDesPivots(args: {
  * Décisions par équipe humaine : soumises → sinon reconduites du tour
  * précédent (carried_over, ADR-04) → sinon repli. Bots : stratégies pures.
  */
+/** Le refus d'une clôture pendant que la vraie partie se met en place. */
+const PENDANT_LA_BASCULE = "La vraie partie est en train de commencer : ce tour d'essai ne se clôt plus.";
+
 async function resolveGameRound(
   gameId: string,
-): Promise<{ roundIndex: number; finished: boolean }> {
+): Promise<{ roundIndex: number; finished: boolean; finDeLEssai?: boolean }> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
+  if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
   if (game.status !== "running") throw new Error("Cette partie est terminée");
+  // LE TOUR D'ESSAI (config/tour-d-essai.ts). Son dernier tour clos, la partie ne se
+  // termine pas : elle attend la vraie partie. Pendant la bascule, plus rien ne se clôt.
+  const essai = lireLEssai(game.essai);
+  if (essai?.phase === "bascule") throw new Error(PENDANT_LA_BASCULE);
   const roundIndex = game.currentRound;
 
   const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
@@ -254,6 +312,15 @@ async function resolveGameRound(
     .where(and(eq(rounds.id, roundRow.id), eq(rounds.status, "open")))
     .returning({ id: rounds.id });
   if (!locked[0]) throw new Error("Ce tour est déjà en cours de résolution");
+  // Le contrôle symétrique du verrou de la bascule (services/tour-d-essai.service.ts) :
+  // si elle a commencé entre-temps, on rend le tour et on renonce.
+  if (essai) {
+    const [relu] = await db.select({ essai: games.essai }).from(games).where(eq(games.id, gameId));
+    if (lireLEssai(relu?.essai)?.phase === "bascule") {
+      await db.update(rounds).set({ status: "open" }).where(eq(rounds.id, roundRow.id));
+      throw new Error(PENDANT_LA_BASCULE);
+    }
+  }
 
   // Contexte de résolution utilisé pour les validations et le logging
   const context = { gameId, roundIndex };
@@ -359,6 +426,10 @@ async function resolveGameRound(
           lastSoldByProduct: lastSoldByProduct[team.id],
           humanAvgPrice,
           personality: botPersonalityFromSeed(Number(game.seed), botProfile),
+          // Les parties qui figent leurs leviers : le bot ne joue qu'avec eux. Celles
+          // d'avant : comme toujours, au seul plafond d'investissement près.
+          leviers: leviersFigesDuProfil(game.difficultyProfile),
+          investissementPlafonne: investissementPlafonne(presetFromProfile(game.difficultyProfile).decisions),
         });
         continue;
       }
@@ -369,30 +440,24 @@ async function resolveGameRound(
         allDecisions[team.id] = carryOverDecisions(previousPayloads[team.id]!);
         carriedOver.add(team.id);
       } else {
-        allDecisions[team.id] = fallbackDecisions(scenario, state, roundIndex);
+        allDecisions[team.id] = fallbackDecisions(
+          scenario,
+          state,
+          roundIndex,
+          leviersFigesDuProfil(game.difficultyProfile),
+        );
         carriedOver.add(team.id);
       }
     }
 
-    const profile = game.difficultyProfile as { activeEvents?: EventInstance[] };
-    const activeEvents = Array.isArray(profile.activeEvents) ? profile.activeEvents : [];
+    const activeEvents = activeEventsOf(game.difficultyProfile);
     // Cartes jouées par l'enseignant : marché (toute la classe) ou ciblées
-    const pendingCards = readPendingEvents(game.difficultyProfile);
-    const injected: EventInstance[] = pendingCards.flatMap((card) => {
-      const def = scenario.events.find((e) => e.code === card.code);
-      if (!def) return [];
-      if (activeEvents.some((e) => e.code === card.code && e.companyId === (card.teamId ?? undefined)))
-        return [];
-      return [
-        {
-          code: def.code,
-          scope: card.teamId ? ("company" as const) : ("market" as const),
-          companyId: card.teamId ?? undefined,
-          roundsLeft: def.duration,
-          modifiers: def.modifiers,
-        },
-      ];
-    });
+    const injected = injectedEvents(scenario, readPendingEvents(game.difficultyProfile), activeEvents);
+    // Les subventions exceptionnelles que l'animateur a ACCORDÉES pour ce tour.
+    // Elles ne viennent d'aucune décision d'équipe et d'aucun tirage : c'est un
+    // geste humain, pris dans son espace, que le moteur se contente
+    // d'encaisser. Vide dans l'immense majorité des tours.
+    const subventions = await subventionsAccordees(gameId, roundIndex);
     logResolutionStep(context, "Simulation en cours", {
       statesCount: states.length,
       decisionsCount: Object.keys(allDecisions).length,
@@ -404,6 +469,7 @@ async function resolveGameRound(
       decisions: allDecisions,
       activeEvents: [...activeEvents, ...injected],
       seed: game.seed,
+      ...(Object.keys(subventions).length > 0 ? { rescueSubsidies: subventions } : {}),
     });
 
     // Validation défensive : résultats cohérents post-simulation
@@ -440,7 +506,7 @@ async function resolveGameRound(
         .map((e) => e.code);
 
     // Valeurs proposées et source des pivots par équipe : calculées une fois,
-    // réutilisées pour la trace des décisions ET pour la cohérence du BPI v2.
+    // réutilisées pour la trace des décisions ET pour la cohérence de l'IPG v2.
     const proposedByTeam: Record<string, RoundDecisions> = {};
     const decisionSourceByTeam: Record<string, ReturnType<typeof decisionSourceOf>> = {};
     for (const t of teamRows) {
@@ -449,6 +515,7 @@ async function resolveGameRound(
         state: states.find((s) => s.id === t.id),
         roundIndex,
         previousPayload: previousPayloads[t.id],
+        leviers: leviersFigesDuProfil(game.difficultyProfile),
       });
       proposedByTeam[t.id] = proposed;
       // Reconduit : rien n'a été décidé. Sinon, la source se lit face à ce que
@@ -544,13 +611,12 @@ async function resolveGameRound(
       .values(output.companies.map((state) => ({ teamId: state.id, roundIndex, state })))
       .onConflictDoNothing();
 
-    // Palier gratuit : la partie s'arrête au dernier tour ouvert par le plan,
-    // même si le scénario en prévoit davantage (« ne va pas au bout »). Une
-    // licence en cours lève la borne ; sans établissement (solo public), le
-    // palier gratuit s'applique aussi.
-    const ent = await entitlementsForOrg(game.organizationId);
-    const cappedByPlan = ent.maxRounds != null && roundIndex >= ent.maxRounds;
-    const finished = roundIndex >= scenario.roundsCount || cappedByPlan;
+    // La partie va au bout de son scénario. L'ancien palier gratuit qui l'arrêtait
+    // avant la fin est retiré (services/entitlements.service.ts) : sans licence, la
+    // classe ne se crée pas, et une partie créée se joue jusqu'au dernier tour.
+    const dernierTour = roundIndex >= scenario.roundsCount;
+    const finDeLEssai = dernierTour && essai?.phase === "en_cours";
+    const finished = dernierTour && !finDeLEssai;
 
     // Post-traitement AVANT l'avancement d'état : si l'une de ces étapes
     // échoue, le round reste en « resolving » et le catch le remet à « open ».
@@ -572,16 +638,44 @@ async function resolveGameRound(
     });
     await updateRankings(gameId, teamRows.map((t) => t.id));
 
-    if (!finished) {
+    if (!dernierTour) {
       await openSituationsForRound(gameId, roundIndex + 1, output.results);
     }
+
+    // LA GAZETTE PARAÎT. L'article que la classe a lu pendant ce tour est
+    // recalculé sur les événements EXACTS passés au moteur (mêmes nouveaux, mêmes
+    // événements en cours) et figé dans le profil, pour l'archive et le bilan.
+    // Une Gazette qui échoue ne bloque jamais une clôture : le tour passe, le
+    // tour n'a simplement pas d'article archivé.
+    const profilApresGazette = await (async () => {
+      try {
+        const duMarche = (l: readonly EventInstance[]) => l.filter((e) => e.scope === "market");
+        const secteur = (await resolveScenarioDefinition(scenario.code)).sector;
+        const parue = articleDeLaGazette({
+          secteur,
+          scenario,
+          tour: roundIndex,
+          niveau: presetFromProfile(game.difficultyProfile).level,
+          financementOuvert: presetFromProfile(game.difficultyProfile).decisions.finance,
+          graine: Number(game.seed),
+          nouveaux: duMarche([...injected, ...output.newEvents]),
+          enCours: duMarche(activeEvents),
+        });
+        return profilAvecLaGazetteParue(game.difficultyProfile, parue);
+      } catch (error) {
+        logResolutionStep(context, "Gazette non archivée", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return (game.difficultyProfile as object) ?? {};
+      }
+    })();
 
     // Avancement d'état seulement après succès complet du post-traitement
     await db
       .update(rounds)
       .set({ status: "resolved", resolvedAt: new Date() })
       .where(eq(rounds.id, roundRow.id));
-    if (!finished) {
+    if (!dernierTour) {
       await db
         .update(rounds)
         .set({ status: "open" })
@@ -590,16 +684,14 @@ async function resolveGameRound(
     await db
       .update(games)
       .set({
-        currentRound: finished ? roundIndex : roundIndex + 1,
+        currentRound: dernierTour ? roundIndex : roundIndex + 1,
         status: finished ? "finished" : "running",
+        ...(finDeLEssai && essai ? { essai: { ...essai, phase: "termine" as const } } : {}),
         difficultyProfile: {
-          ...(game.difficultyProfile as object),
+          ...profilApresGazette,
           activeEvents: output.events,
           pendingEvents: [],
           pendingEventCodes: undefined,
-          // Vrai seulement si la partie s'arrête AVANT la fin du scénario, du
-          // fait du palier gratuit : sert la bannière d'upsell côté prof.
-          planCapped: cappedByPlan && roundIndex < scenario.roundsCount,
         },
       })
       .where(eq(games.id, gameId));
@@ -609,7 +701,9 @@ async function resolveGameRound(
       finished,
       teamsCount: teamRows.length,
     });
-    return { roundIndex, finished };
+    // L'essai fini, la vraie partie commence d'elle-même si l'animateur l'a choisi.
+    if (finDeLEssai) await enchainerSiDemande(gameId);
+    return { roundIndex, finished, ...(finDeLEssai ? { finDeLEssai } : {}) };
   } catch (error) {
     // libère le verrou pour permettre une nouvelle tentative
     logResolutionStep(context, "Erreur lors de la résolution", {
@@ -641,22 +735,24 @@ export async function resolveCurrentRound(args: {
 }
 
 /**
- * Tirage manuel d'une carte événement par l'enseignant (animation de classe).
+ * Distribution d'un courrier par l'enseignant (animation de classe).
+ *
  * Mode apprentissage uniquement : en compétition, seul le tirage seedé fait
- * foi (équité). La carte est ANNONCÉE aux joueurs et appliquée à la clôture
- * du tour courant. Cartes de portée marché uniquement (équité du tirage manuel).
+ * foi (équité). Le courrier est ANNONCÉ aux joueurs et appliqué à la clôture
+ * du tour courant.
  */
-export async function drawEventCardForNextRound(args: {
+export async function distribuerUnCourrier(args: {
   gameId: string;
   teacherId: string;
   eventCode?: string;
-  /** Carte « équipe » : l'équipe ciblée (tirage physique par équipe en classe). */
+  /** Courrier adressé à UNE entreprise (distribution ciblée en classe). */
   teamId?: string;
 }): Promise<{ eventCode: string; teamId: string | null }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)
-    throw new Error("Seul l'enseignant qui a créé la partie peut tirer une carte");
+    throw new Error("Seul l'enseignant qui a créé la partie peut distribuer un courrier");
+  if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
   if (game.status !== "running") throw new Error("Cette partie est terminée");
   if (game.mode !== "learning")
     throw new Error("Mode compétition : seul le tirage aléatoire seedé fait foi (équité)");
@@ -675,18 +771,18 @@ export async function drawEventCardForNextRound(args: {
 
   const scenario = parseScenarioConfig(game.scenarioSnapshot);
   const scenarioCodes = new Set(scenario.events.map((e) => e.code));
-  // deck marché (toute la classe) ou deck équipe (carte ciblée)
-  const pool = (targetTeamId ? TEAM_CARD_CODES : TEACHER_DRAWABLE_CODES).filter((code) =>
+  // liasse du marché (toute la classe) ou liasse des entreprises (pli adressé)
+  const pool = (targetTeamId ? COURRIERS_ENTREPRISE_CODES : COURRIERS_MARCHE_CODES).filter((code) =>
     scenarioCodes.has(code),
   );
-  if (pool.length === 0) throw new Error("Aucune carte tirable dans ce scénario");
+  if (pool.length === 0) throw new Error("Aucun courrier distribuable dans ce scénario");
 
   const pending = readPendingEvents(game.difficultyProfile);
-  if (pending.length >= 4) throw new Error("Quatre cartes sont déjà en jeu pour ce tour");
+  if (pending.length >= 4) throw new Error("Quatre courriers sont déjà distribués pour ce tour");
   if (targetTeamId && pending.filter((p) => p.teamId === targetTeamId).length >= 1)
-    throw new Error("Cette équipe a déjà une carte en jeu ce tour");
+    throw new Error("Cette équipe a déjà reçu un courrier ce tour");
   if (!targetTeamId && pending.filter((p) => p.teamId === null).length >= 2)
-    throw new Error("Deux cartes « toute la classe » sont déjà en jeu pour ce tour");
+    throw new Error("Deux courriers « tout le marché » sont déjà distribués pour ce tour");
 
   const activeEvents = (game.difficultyProfile as { activeEvents?: EventInstance[] })
     ?.activeEvents;
@@ -698,12 +794,12 @@ export async function drawEventCardForNextRound(args: {
       !activeCodes.has(c) &&
       !pending.some((p) => p.code === c && p.teamId === targetTeamId),
   );
-  if (candidates.length === 0) throw new Error("Toutes les cartes de ce deck sont déjà en jeu");
+  if (candidates.length === 0) throw new Error("Toute la liasse est déjà distribuée");
 
   let eventCode: string;
   if (args.eventCode) {
     if (!candidates.includes(args.eventCode))
-      throw new Error("Cette carte n'est pas tirable actuellement");
+      throw new Error("Ce courrier n'est pas distribuable actuellement");
     eventCode = args.eventCode;
   } else {
     eventCode = candidates[randomInt(candidates.length)]!;
@@ -723,6 +819,38 @@ export async function drawEventCardForNextRound(args: {
 }
 
 /**
+ * L'EXAMEN INDIVIDUEL : le tour dont l'échéance est passée se clôt sans le candidat, ses
+ * décisions reconduites (ADR-04), comme une équipe absente en classe. Personne n'est
+ * « l'enseignant de la partie » ici : c'est l'horloge de l'examen qui décide
+ * (services/examen.service.ts l'appelle, après avoir lu l'échéance). Idempotent comme la
+ * clôture de classe : un tour déjà clos est rendu tel quel.
+ */
+export async function cloreLeTourEchu(args: {
+  gameId: string;
+  expectedRound: number;
+}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean }> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  const attendu = (
+    await db
+      .select({ status: rounds.status })
+      .from(rounds)
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, args.expectedRound)))
+  )[0];
+  if (!attendu || attendu.status !== "open" || game.currentRound !== args.expectedRound || game.status !== "running") {
+    return { roundIndex: args.expectedRound, finished: game.status === "finished", alreadyClosed: true };
+  }
+  try {
+    return { ...(await resolveGameRound(args.gameId)), alreadyClosed: false };
+  } catch (error) {
+    if (error instanceof Error && error.message === "Ce tour est déjà en cours de résolution") {
+      return { roundIndex: args.expectedRound, finished: false, alreadyClosed: true };
+    }
+    throw error;
+  }
+}
+
+/**
  * Mode classe : l'enseignant (créateur de la partie) clôt le tour courant.
  *
  * `expectedRound` est le tour que l'enseignant a vu à l'écran. Un double
@@ -735,7 +863,7 @@ export async function closeCurrentRound(args: {
   gameId: string;
   teacherId: string;
   expectedRound?: number;
-}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean }> {
+}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean; finDeLEssai?: boolean }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)

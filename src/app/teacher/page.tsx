@@ -3,15 +3,54 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
-import { getStaffContext } from "@/services/admin.service";
-import { createClassGameAction, logoutAction, logoutEverywhereAction } from "./actions";
+import { getPlatformConfig, getStaffContext } from "@/services/admin.service";
+import { etatDeLOffre } from "@/services/acces.service";
+import {
+  aDeuxEtages,
+  LIEN_TARIFS,
+  NIVEAU_MAX,
+  niveauMaxPour,
+  niveauxFermes,
+} from "@/config/vitrine-solo";
+import {
+  entrepriseDuScenario,
+  entrepriseDuSecteur,
+  estUneOffreDuDevis,
+  horsLicence,
+  LIBELLE_DU_DEVIS,
+  LIBELLES_DU_DEVIS,
+  lienDuDevis,
+  MARQUE_DE_L_ARENE,
+  marqueHorsLicence,
+  messageNiveauxReserves,
+  nomDOffre,
+  parametrageEnClair,
+  refusDeLaClasse,
+  type HorsLicence,
+} from "@/config/tarifs";
+import { LigneDEtatDeLOffre } from "@/components/etat-de-l-offre";
+import { LIEN_A_L_ENCRE } from "@/components/bouton";
+import {
+  archiverPartieAction,
+  createClassGameAction,
+  desarchiverPartieAction,
+  logoutAction,
+  logoutEverywhereAction,
+} from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { compter } from "@/lib/format";
-import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
+import { compter, jourDeCreation } from "@/lib/format";
+import {
+  ANSWER_FORMATS,
+  DEFAULT_ANSWER_FORMAT,
+  DEFAULT_QUIZ_MODE,
+  DIFFICULTY_PRESETS,
+  QUIZ_MODES,
+} from "@/config/difficulty";
 import {
   DEFAULT_SCENARIO_CODE,
   SCENARIO_CHOICES,
   familyOf,
+  SECTOR_COLORS,
   SECTOR_LABELS,
   economicDefaults,
 } from "@/config/scenarios/registry";
@@ -22,7 +61,15 @@ import { GuardedForm } from "@/components/guarded-action";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
 import { FormPendingProgress } from "@/components/long-action-progress";
+import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
+import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
+import { EXPLICATION_DU_TOUR_D_ESSAI, TOURS_D_ESSAI } from "@/config/tour-d-essai";
+import { Tiroir } from "@/components/tiroir";
+import { PictoSecteur } from "@/components/picto-secteur";
+import { FriseDesTours } from "@/components/frise-des-tours";
 import { ATTENTES } from "@/config/cloture";
+import { bouton } from "@/components/bouton";
+import { Icone } from "@/components/icone";
 
 export const dynamic = "force-dynamic";
 
@@ -39,12 +86,51 @@ function familleNote(code: string): string {
 export default async function TeacherDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ echec?: string }>;
+  searchParams: Promise<{ echec?: string; offre?: string; geste?: string }>;
 }) {
-  const { echec } = await searchParams;
+  const { echec, offre, geste } = await searchParams;
   const session = await getSession();
   if (!session) redirect("/teacher/login");
+  // LES NIVEAUX FERMÉS SANS LICENCE (config/vitrine-solo.ts) : visibles dans le choix du
+  // niveau, marqués du nom de l'offre, et refusés par le serveur à la création.
+  // L'ÉTAT DE L'OFFRE (PAR-13) : la ligne d'en-tête, et la règle de la classe (pas de
+  // partie de classe ni de concours sans licence de l'arène en cours, PAR-01 et PAR-02).
+  const [{ vitrineSolo: regle }, etat] = await Promise.all([
+    getPlatformConfig(),
+    etatDeLOffre(session.userId),
+  ]);
+  const licence =
+    etat.arene !== null && (etat.arene.state === "active" || etat.arene.state === "bientot_expiree");
+  const niveauMaxSansLicence = niveauMaxPour(regle, "", licence);
+  // LE PARAMÉTRAGE DE LA LICENCE (offres Classe, Programme, Campus) : le formulaire part de
+  // ce que la licence couvre, et marque le reste du nom de l'offre qui l'ouvre, avec le
+  // lien ; le serveur refuse de toute façon (services/acces.service.ts, `verifierLaLicence`).
+  const parametrage = licence ? etat.arene!.parametrage : null;
+  const marque = (d: Parameters<typeof marqueHorsLicence>[1]) =>
+    parametrage ? marqueHorsLicence(parametrage, d) : null;
+  // Ce qui bloque toute création, quels que soient l'entreprise et le niveau : un
+  // enseignant de trop, ou le groupe déjà en cours (offre Classe).
+  const blocage: HorsLicence | null =
+    parametrage && etat.arene
+      ? horsLicence(parametrage, {
+          enseignants: etat.arene.teachers,
+          partiesEnCours: etat.partiesEnCours ?? undefined,
+        })
+      : null;
+  const blocageDuConcours: HorsLicence | null = parametrage
+    ? horsLicence(parametrage, { entreprise: entrepriseDuScenario(DEFAULT_SCENARIO_CODE) })
+    : null;
+  const entrepriseParDefaut = parametrage?.entreprises?.[0] ?? DEFAULT_SCENARIO_CODE;
+  const niveauParDefaut = parametrage?.niveaux?.[0] ?? Math.min(3, niveauMaxSansLicence);
   const games = await getTeacherGames(session.userId);
+  // Ce qui appelle un geste : une partie dont toutes les équipes ont rendu.
+  const aClore = games.filter((g) => g.aClore);
+  // Les parties rangées ne sont pas dans la liste : elles attendent en bas, et
+  // se ressortent d'un clic. `getTeacherGames` rend TOUT quand on le lui
+  // demande, d'où le filtre ici plutôt qu'un second aller-retour.
+  const rangees = (await getTeacherGames(session.userId, true)).filter(
+    (g) => g.archivedAt !== null,
+  );
   const competitions = await getOrganizerCompetitions(session.userId);
   const staff = await getStaffContext(session.userId);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
@@ -62,70 +148,218 @@ export default async function TeacherDashboard({
           label: `★ ${def.title}`,
           unit: def.vocabulary.unit,
           defaults: economicDefaults(def),
+          horsLicence: marque({ entreprise: entrepriseDuSecteur(def.sector) }) ?? undefined,
         };
       }),
   );
 
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
-          <h1 className="text-2xl font-bold">Mes parties</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/teacher/scenarios"
-            className="text-xs text-amber-300 underline-offset-4 hover:underline"
-          >
-            Mes scénarios
-          </Link>
-          <Link
-            href="/teacher/usage"
-            className="text-xs text-amber-300 underline-offset-4 hover:underline"
-          >
-            Carnet d&apos;usage
-          </Link>
-          {isOrgAdmin ? (
-            <Link href="/org" className="text-xs text-amber-300 underline-offset-4 hover:underline">
-              Mon établissement
-            </Link>
-          ) : null}
-          {staff?.isPlatformAdmin ? (
-            <Link href="/admin" className="text-xs text-amber-300 underline-offset-4 hover:underline">
-              Administration
-            </Link>
-          ) : null}
-          <form action={logoutAction}>
-            <button className="text-xs text-slate-400 underline hover:text-slate-300">
-              Se déconnecter
-            </button>
-          </form>
-          <form action={logoutEverywhereAction}>
-            <button
-              className="text-xs text-slate-400 underline hover:text-slate-300"
-              title="Ferme aussi les sessions ouvertes sur d'autres appareils"
-            >
-              Se déconnecter partout
-            </button>
-          </form>
-        </div>
-      </header>
+    <main id="main" className="pb-16">
+      {/* L'EN-TÊTE DES PAGES INTÉRIEURES, la navigation de l'espace sous le
+          chapeau : « Mes parties » avait un titre de 24 px, le plus petit du
+          site, pour la page qu'un enseignant ouvre le plus souvent. */}
+      <EnTeteDePage surtitre="Espace enseignant" titre="Mes parties">
+        <NavigationEnseignant
+          className="mt-6"
+          actif="parties"
+          liens={{ etablissement: isOrgAdmin, administration: staff?.isPlatformAdmin ?? false }}
+          compte={
+            <>
+              <Link
+                href="/teacher/compte"
+                className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
+              >
+                Mon compte
+              </Link>
+              <form action={logoutAction}>
+                <button className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
+                  Se déconnecter
+                </button>
+              </form>
+              <form action={logoutEverywhereAction}>
+                <button
+                  className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
+                  title="Ferme aussi les sessions ouvertes sur d'autres appareils"
+                >
+                  Se déconnecter partout
+                </button>
+              </form>
+            </>
+          }
+        />
+      </EnTeteDePage>
+      <div className={`${COLONNE_DE_PAGE} space-y-8`}>
+
+      <LigneDEtatDeLOffre etat={etat} niveauMaxGratuit={regle.niveauMaxAutres} />
 
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
-          La partie n&apos;a pas été créée. {echec}
+          {geste === "reprise" ? "La partie n'a pas été ressortie." : "La partie n'a pas été créée."}{" "}
+          {echec}
+          {estUneOffreDuDevis(offre) ? (
+            <>
+              {" "}
+              <Link
+                href={lienDuDevis(offre)}
+                prefetch={false}
+                data-devis-du-refus=""
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                {LIBELLE_DU_DEVIS} ({LIBELLES_DU_DEVIS[offre].offre})
+              </Link>{" "}
+              ·
+            </>
+          ) : null}
+          {offre ? (
+            <>
+              {" "}
+              <Link
+                href={LIEN_TARIFS}
+                prefetch={false}
+                className="font-semibold underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Voir les offres
+              </Link>
+            </>
+          ) : null}
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
-        <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
-        <p className="mt-1 text-xs text-slate-400">
+      {/*
+        LES PARTIES D'ABORD. On vient ici pour retrouver sa classe, pas pour
+        remplir un formulaire : la liste ouvre la page, la création suit. Chaque
+        partie a le visage de son secteur (la tuile de l'arène), son code, et sa
+        frise des tours.
+      */}
+      <Rubrique note={games.length > 0 ? compter(games.length, "partie") : undefined}>
+        Mes parties
+      </Rubrique>
+      {/*
+        LA PROCHAINE ACTION, AVANT LA LISTE.
+        Le compte des parties ne dit pas quoi faire. Ce qui appelle un geste,
+        c'est une partie dont toutes les équipes ont rendu : elle attend une
+        clôture, et cela ne se lisait qu'en ouvrant chaque partie une à une.
+        La ligne n'apparaît que s'il y a quelque chose à faire — une ligne qui
+        dit « rien à faire » est une ligne de plus à lire chaque fois.
+      */}
+      {aClore.length > 0 ? (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg encadre-neutre px-3 py-2 text-sm text-slate-200">
+          <Icone nom="duree" className="h-4 w-4" />
+          <span>
+            {aClore.length === 1
+              ? "Une partie attend sa clôture :"
+              : `${aClore.length} parties attendent leur clôture :`}
+          </span>
+          {aClore.map((g) => (
+            <Link
+              key={g.gameId}
+              href={`/teacher/games/${g.gameId}`}
+              className="font-semibold underline-offset-4 hover:underline"
+            >
+              {g.label ?? g.scenarioShortName}
+            </Link>
+          ))}
+        </p>
+      ) : null}
+      {/*
+        LA CRÉATION, REPLIÉE DERRIÈRE SON BOUTON (audit P2-15). Le tableau de
+        bord était un long formulaire de création, ouvert en permanence sous la
+        liste : on vient ici retrouver sa classe, et l'on crée une partie
+        quelques fois par an. Le formulaire attend derrière « Nouvelle
+        partie », le geste principal de la page. Il s'ouvre de lui-même pour
+        qui n'a encore aucune partie, et après un échec de création, pour
+        qu'on retrouve ses réglages. C'est un <details> : clavier, lecteur
+        d'écran et état ouvert viennent du navigateur, sans script.
+      */}
+      <details
+        id="nouvelle-partie"
+        className="group"
+        open={games.length === 0 || Boolean(echec) || undefined}
+      >
+        <summary className="inline-flex cursor-pointer list-none rounded-lg [&::-webkit-details-marker]:hidden">
+          {/* Deux visages, un seul affiché : le bouton plein quand c'est fermé,
+              un filet pour replier quand c'est ouvert. L'enveloppe porte le
+              masquage, le bouton garde son `inline-flex`. */}
+          <span className="group-open:hidden">
+            <span className={bouton({ taille: "l" })}>
+              <span aria-hidden>+</span> Nouvelle partie
+            </span>
+          </span>
+          <span className="hidden group-open:inline">
+            <span className={bouton({ variante: "secondaire" })}>Replier le formulaire</span>
+          </span>
+        </summary>
+        <section aria-labelledby="nouvelle-partie-titre" className="carte mt-4 p-4 sm:p-7">
+        <h2 id="nouvelle-partie-titre" className="titre-carte text-slate-100">
+          Nouvelle partie de classe
+        </h2>
+        {!licence ? (
+          // PAS D'ESSAI EN CLASSE : la règle se dit AVANT l'envoi ; le serveur la fait
+          // respecter (services/acces.service.ts, `verifierLaClasse`).
+          <p
+            data-classe-sans-licence=""
+            className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
+          >
+            <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+            <strong className="font-semibold text-slate-100">{MARQUE_DE_L_ARENE}.</strong>{" "}
+            {refusDeLaClasse(regle)}{" "}
+            <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
+              {LIBELLE_DU_DEVIS}
+            </Link>{" "}
+            ·{" "}
+            <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+              Voir les offres
+            </Link>
+          </p>
+        ) : null}
+        {parametrage && parametrageEnClair(parametrage) ? (
+          // CE QUE LA LICENCE COUVRE, AVANT L'ENVOI : l'entreprise et le niveau choisis à
+          // l'achat sont pré-réglés ; les autres restent visibles dans les listes, marqués
+          // de l'offre qui les ouvre.
+          <p
+            data-parametrage-de-la-licence=""
+            className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
+          >
+            <strong className="font-semibold text-slate-100">
+              {nomDOffre(parametrage.offre)} · {parametrageEnClair(parametrage)}.
+            </strong>{" "}
+            {parametrage.entreprises !== null
+              ? `Les autres entreprises sont marquées « ${nomDOffre("campus")} ». `
+              : ""}
+            {parametrage.niveaux !== null
+              ? `Les autres niveaux sont marqués « ${nomDOffre("programme")} ». `
+              : ""}
+            <Link
+              href={lienDuDevis(parametrage.niveaux !== null ? "programme" : "campus")}
+              prefetch={false}
+              className={LIEN_A_L_ENCRE}
+            >
+              {LIBELLE_DU_DEVIS} ({nomDOffre(parametrage.niveaux !== null ? "programme" : "campus")})
+            </Link>{" "}
+            ·{" "}
+            <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+              Voir les offres
+            </Link>
+          </p>
+        ) : null}
+        {blocage ? (
+          <p
+            data-blocage-de-la-licence={blocage.quoi}
+            className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300"
+          >
+            <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+            {blocage.message}{" "}
+            <Link href={lienDuDevis(blocage.offre)} prefetch={false} className={LIEN_A_L_ENCRE}>
+              {LIBELLE_DU_DEVIS} ({nomDOffre(blocage.offre)})
+            </Link>
+          </p>
+        ) : null}
+        <p className="mt-1 text-sm text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
-          <Link href="/animations" className="text-amber-300 underline-offset-4 hover:underline">
+          <Link href="/animations" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">
             Les ateliers professionnels
           </Link>{" "}
           donnent un déroulé de plusieurs séances avec les réglages qui vont avec.
@@ -140,13 +374,14 @@ export default async function TeacherDashboard({
             scenarios={[
               ...SCENARIO_CHOICES.map((d) => ({
                 code: d.code,
-                label: `${d.icon} ${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
+                label: `${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
                 unit: d.vocabulary.unit,
                 defaults: economicDefaults(d),
+                horsLicence: marque({ entreprise: entrepriseDuScenario(d.code) }) ?? undefined,
               })),
               ...scenariosPublies,
             ]}
-            defaultCode={DEFAULT_SCENARIO_CODE}
+            defaultCode={entrepriseParDefaut}
           />
 
           <label className="block">
@@ -156,7 +391,7 @@ export default async function TeacherDashboard({
             <select
               name="humanTeamsCount"
               defaultValue={4}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                 <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
@@ -170,7 +405,7 @@ export default async function TeacherDashboard({
             <select
               name="botCount"
               defaultValue={1}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               {[0, 1, 2, 3, 4].map((n) => (
                 <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
@@ -184,7 +419,7 @@ export default async function TeacherDashboard({
             <select
               name="periodicity"
               defaultValue="quarter"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               <option value="month">Un mois par tour</option>
               <option value="quarter">Un trimestre par tour</option>
@@ -198,7 +433,7 @@ export default async function TeacherDashboard({
             <select
               name="roundsCount"
               defaultValue=""
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               <option value="">Toute la partie</option>
               {[3, 4, 5].map((n) => (
@@ -207,30 +442,114 @@ export default async function TeacherDashboard({
                 </option>
               ))}
             </select>
-            <span className="mt-1 block text-xs text-slate-400">
+            <span className="mt-1 block text-sm text-slate-400">
               Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
               s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
               pour un nombre de tours, au-delà, les équipes joueraient sans matière.
             </span>
           </label>
+
+          {/* LE TOUR D'ESSAI (config/tour-d-essai.ts) : un ou deux tours pour de faux
+              avant la vraie partie. Aucun reste le défaut : une partie se crée comme
+              avant tant que l'enseignant ne le demande pas. */}
+          <fieldset
+            data-tour-d-essai-choix=""
+            className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3"
+          >
+            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <Icone nom="recommencer" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+              Tour d&apos;essai
+            </legend>
+            <p className="mt-1 text-sm text-slate-400">{EXPLICATION_DU_TOUR_D_ESSAI}</p>
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+              <label className="flex items-center gap-2 text-sm text-slate-200">
+                <input
+                  type="radio"
+                  name="toursDEssai"
+                  value=""
+                  defaultChecked
+                  className="h-4 w-4 accent-amber-400"
+                />
+                Aucun
+              </label>
+              {TOURS_D_ESSAI.map((n) => (
+                <label key={n} className="flex items-center gap-2 text-sm text-slate-200">
+                  <input
+                    type="radio"
+                    name="toursDEssai"
+                    value={n}
+                    className="h-4 w-4 accent-amber-400"
+                  />
+                  {compter(n, "tour")}
+                </label>
+              ))}
+            </div>
+            <label className="mt-3 flex items-start gap-3 border-t border-white/5 pt-3">
+              <input
+                type="checkbox"
+                name="enchainementDeLEssai"
+                className="mt-0.5 h-4 w-4 accent-amber-400"
+              />
+              <span>
+                <span className="text-sm font-medium text-slate-200">
+                  Commencer la vraie partie dès la fin de l&apos;essai
+                </span>
+                <span className="mt-0.5 block text-sm text-slate-400">
+                  Sans cette case, c&apos;est vous qui la lancez, une fois les résultats de
+                  l&apos;essai commentés avec la classe.
+                </span>
+              </span>
+            </label>
+          </fieldset>
           <label className="block sm:col-span-3">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Niveau de difficulté
             </span>
             <select
               name="level"
-              defaultValue={3}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              defaultValue={niveauParDefaut}
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
-              {DIFFICULTY_PRESETS.map((p) => (
-                <option key={p.level} value={p.level}>
-                  {p.level} · {p.name} : {p.tagline}
-                </option>
-              ))}
+              {DIFFICULTY_PRESETS.map((p) => {
+                // Un niveau fermé reste dans la liste, marqué : l'étendue est l'argument.
+                // Avec une entreprise ouverte à tous les niveaux (réglage d'admin), le
+                // choix reste possible et le serveur tranche selon l'entreprise.
+                const fermeIci = p.level > niveauMaxSansLicence;
+                // Hors du niveau de la licence (offre Classe) : visible, marqué de l'offre
+                // qui l'ouvre, non choisissable ; le serveur le refuse aussi.
+                const horsDuNiveau = marque({ niveau: p.level });
+                return (
+                  <option
+                    key={p.level}
+                    value={p.level}
+                    disabled={(fermeIci && !aDeuxEtages(regle)) || horsDuNiveau !== null}
+                  >
+                    {p.level} · {p.name} : {p.tagline}
+                    {fermeIci ? ` · ${MARQUE_DE_L_ARENE}` : ""}
+                    {horsDuNiveau ? ` · ${horsDuNiveau}` : ""}
+                  </option>
+                );
+              })}
             </select>
+            {niveauMaxSansLicence < NIVEAU_MAX ? (
+              <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">
+                <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+                <strong className="font-semibold text-slate-200">
+                  {niveauxFermes(regle)} · {MARQUE_DE_L_ARENE}.
+                </strong>{" "}
+                {messageNiveauxReserves(regle)}{" "}
+                <Link
+                  href={LIEN_TARIFS}
+                prefetch={false}
+                  className="font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2"
+                >
+                  Voir les offres
+                </Link>
+              </span>
+            ) : null}
           </label>
 
-          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
             <input
               type="checkbox"
               name="variableWorld"
@@ -239,9 +558,9 @@ export default async function TeacherDashboard({
             />
             <span>
               <span className="text-sm font-medium text-slate-200">
-                🌍 Monde variable · chaque partie diffère
+                Monde variable · chaque partie diffère
               </span>
-              <span className="mt-0.5 block text-xs text-slate-400">
+              <span className="mt-0.5 block text-sm text-slate-400">
                 Croissance des segments, saisonnalité, événements et commandes exceptionnelles
                 varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
                 équipes jouent le même monde). Décochez pour le scénario classique, identique
@@ -250,9 +569,46 @@ export default async function TeacherDashboard({
             </span>
           </label>
 
-          <fieldset className="rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="investmentStories"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                Histoires d&apos;investissement · des courriers qui appellent la décision
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-400">
+                Selon le niveau : un client qui annonce du volume, une banque qui baisse ses taux, un
+                concurrent qui investit, puis une demande qui retombe. Décochez pour un atelier au
+                déroulé calibré, où chaque séance n&apos;ouvre qu&apos;un levier.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="evaluationDesPairs"
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                Évaluation entre coéquipiers · à la fin de la partie
+              </span>
+              <span className="mt-0.5 block text-sm text-slate-400">
+                Chaque élève note la contribution de ses coéquipiers ; un facteur individuel module la
+                note d&apos;équipe. Critères, moments et bornes se règlent ensuite depuis la partie.
+              </span>
+            </span>
+          </label>
+
+          <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
             <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-              📝 Questions posées dans les situations
+              <Icone nom="document" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+              Questions posées dans les situations
             </legend>
             <div className="mt-1 space-y-2">
               {QUIZ_MODES.map((m) => (
@@ -266,12 +622,35 @@ export default async function TeacherDashboard({
                   />
                   <span>
                     <span className="text-sm font-medium text-slate-200">{m.name}</span>
-                    <span className="mt-0.5 block text-xs text-slate-400">{m.help}</span>
+                    <span className="mt-0.5 block text-sm text-slate-400">{m.help}</span>
                   </span>
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+            <div className="mt-3 border-t border-white/5 pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <Icone nom="ecrire" className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                Format des réponses
+              </p>
+              <div className="mt-1 space-y-2">
+                {ANSWER_FORMATS.map((f) => (
+                  <label key={f.code} className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="answerFormat"
+                      value={f.code}
+                      defaultChecked={f.code === DEFAULT_ANSWER_FORMAT}
+                      className="mt-0.5 h-4 w-4 accent-amber-400"
+                    />
+                    <span>
+                      <span className="text-sm font-medium text-slate-200">{f.name}</span>
+                      <span className="mt-0.5 block text-sm text-slate-400">{f.help}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
               débriefées gardent le score obtenu sous l&apos;ancien réglage.
             </p>
@@ -280,37 +659,169 @@ export default async function TeacherDashboard({
           <FormPendingProgress label={ATTENTES.creationPartie} className="sm:col-span-3" />
           <SubmitButton
             pendingLabel="Création de la partie et des équipes…"
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3"
+            className={`${bouton()} sm:col-span-3`}
           >
             Créer la partie et obtenir le code d&apos;invitation
           </SubmitButton>
         </GuardedForm>
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-2 text-sm text-slate-400">
           Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
           rejoignent avec le code, répartis automatiquement dans les équipes. Le niveau règle
           les décisions ouvertes, le plafond d&apos;indices et la fréquence des événements.
         </p>
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
-        <h2 className="text-sm font-semibold text-slate-200">
-          Organiser un concours · Business Arena Championship
-        </h2>
-        <CompetitionCreateForm />
-        <p className="mt-2 text-xs text-slate-400">
-          Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
-          décisions verrouillées après validation, indices limités.
+        </section>
+      </details>
+      {games.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-white/15 px-4 py-5 text-center text-sm text-slate-400">
+          Aucune partie pour l&apos;instant. Créez la première avec le formulaire ci-dessus : vous
+          obtiendrez un code d&apos;invitation à donner à vos élèves.
         </p>
+      ) : (
+        <ul className="grid gap-3">
+          {games.map((g) => {
+            const finished = g.status === "finished";
+            const joues = new Map<number, null>();
+            for (let n = 1; n < (finished ? g.roundsCount + 1 : g.currentRound); n++) joues.set(n, null);
+            return (
+              /*
+                `min-w-0` N'EST PAS UN DÉTAIL ICI. Une carte est un élément de
+                grille, et un élément de grille vaut `min-width: auto` par
+                défaut : il refuse de descendre sous la largeur minimale de son
+                contenu. Sur un téléphone de 390 px, la carte se figeait à 417
+                et toute la page partait en défilement horizontal.
+                Mesuré : masquer le code, la frise, le bouton ou l'icône n'y
+                changeait rien — c'est bien la règle de grille, et non la
+                longueur d'un texte. Avec `min-w-0`, la carte rétrécit et le
+                titre se coupe, ce qu'il sait déjà faire (`truncate`).
+              */
+              <li
+                key={g.gameId}
+                className="carte flex h-full min-w-0 items-center gap-3 px-3 py-3 transition hover:border-amber-400/40 sm:px-4"
+              >
+                <Link
+                  href={`/teacher/games/${g.gameId}`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${SECTOR_COLORS[g.sector].bg} ${SECTOR_COLORS[g.sector].accent}`}
+                  >
+                    <PictoSecteur secteur={g.sector} className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    {/*
+                      LE NOM COURT, ET NON LE TITRE. « NOVA · Prenez les
+                      commandes » est un titre de vitrine ; sur une liste de
+                      SES parties, ce qu'on cherche est le secteur, et le nom
+                      court le dit en distinguant « NOVA » de « NOVA · gamme ».
+                      C'est d'ailleurs son emploi déclaré au registre : « pour
+                      une tuile ou une pastille ».
+                      Mesuré, et c'est ce qui a tranché : à 1280 px une carte
+                      fait 418 px et la colonne du titre 187 ; le titre entier
+                      en demande 194. Il manquait SEPT pixels, pris par le
+                      bouton « Ranger » que cette carte porte désormais. Plutôt
+                      qu'un seuil de largeur qui coupe presque partout, le nom
+                      court tient toujours.
+                    */}
+                    {/*
+                      LE NOM QUE VOUS AVEZ DONNÉ, S'IL Y EN A UN. Six parties
+                      s'appelaient « NOVA », avec la même icône et la même
+                      allure : rien ne disait laquelle était celle de la
+                      seconde 3. Le scénario passe alors en sous-titre, où il
+                      reste lisible sans occuper la ligne qui distingue.
+                    */}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="block truncate text-sm font-semibold text-slate-100">
+                        {g.label ?? g.scenarioShortName}
+                      </span>
+                      {/* L'ÉTAT, EN UN MOT ET EN COULEUR. « Toutes les équipes
+                          ont rendu » est la seule chose qui appelle un geste,
+                          et elle ne se lisait qu'en ouvrant la partie. */}
+                      {finished ? (
+                        <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-xs text-slate-400">
+                          terminée
+                        </span>
+                      ) : g.aClore ? (
+                        <span className="shrink-0 rounded-full pastille-etat px-2 py-0.5 text-xs font-medium text-slate-200">
+                          tour à clore
+                        </span>
+                      ) : null}
+                    </span>
+                    {/* La ligne de détail a le droit de passer à la ligne : à
+                        1280 px la colonne fait 187 px, et « NOVA · 3 équipes ·
+                        18 élèves · tour 4 sur 6 · samedi » en demande le
+                        double. Coupée, elle perdait la date, qui est
+                        justement ce qui distingue deux parties du même nom. */}
+                    <span className="mt-0.5 block text-sm leading-snug text-slate-400">
+                      {g.label ? `${g.scenarioShortName} · ` : ""}
+                      {compter(g.teamsCount, "équipe")}
+                      {g.elevesCount > 0 ? ` · ${compter(g.elevesCount, "élève")}` : ""} ·{" "}
+                      {finished
+                        ? "partie terminée"
+                        : g.essai
+                          ? `tour d'essai ${Math.min(g.currentRound, g.essai.tours)} sur ${g.essai.tours}`
+                          : `${periodLabel(g.roundDays, g.currentRound)} sur ${g.roundsCount}`}
+                      {" · "}
+                      {jourDeCreation(g.createdAt)}
+                    </span>
+                    <span className="mt-1.5 block">
+                      <FriseDesTours
+                        roundsCount={g.roundsCount}
+                        currentRound={g.currentRound}
+                        resultats={joues}
+                        finished={finished}
+                      />
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block text-xs uppercase tracking-wide text-slate-400">Code</span>
+                    <span className="block font-mono text-base font-semibold text-slate-100">
+                      {g.joinCode}
+                    </span>
+                  </span>
+                </Link>
+                {/*
+                  RANGER SE FAIT DEPUIS LA LISTE, parce que c'est en la
+                  regardant qu'on s'aperçoit qu'elle est trop longue. Le geste
+                  vivait au bas de la page d'une partie, vingt tiroirs plus
+                  loin : il y était introuvable au moment où l'on en a besoin.
+                  Un clic suffit, sans confirmation : le geste est réversible,
+                  et la partie réapparaît juste en dessous, dans « Parties
+                  rangées », avec son bouton pour la ressortir.
+                */}
+                <GuardedForm
+                  action={archiverPartieAction.bind(null, g.gameId)}
+                  label="rangement de la partie"
+                  className="shrink-0"
+                >
+                  <SubmitButton
+                    pendingLabel="Rangement…"
+                    className="rounded-lg border border-white/10 px-2.5 py-2 text-xs font-medium text-slate-400 transition hover:border-amber-400/40 hover:text-amber-200"
+                  >
+                    Ranger
+                  </SubmitButton>
+                </GuardedForm>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+
+
+      <Rubrique note={competitions.length > 0 ? compter(competitions.length, "concours") : undefined}>
+        Concours
+      </Rubrique>
+      <section className="carte p-4 sm:p-7">
         {competitions.length > 0 ? (
-          <ul className="mt-4 space-y-2">
+          <ul className="mb-4 space-y-2">
             {competitions.map((c) => (
               <li key={c.competitionId}>
                 <Link
                   href={`/teacher/competitions/${c.competitionId}`}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
+                  className="flex items-center justify-between rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 text-sm transition hover:border-amber-400/40 sm:px-4 sm:py-3"
                 >
                   <span>
-                    <span className="font-mono text-amber-300">{c.joinCode}</span>
+                    <span className="font-mono text-slate-100">{c.joinCode}</span>
                     <span className="ml-3 text-slate-300">{c.name}</span>
                   </span>
                   <span className="text-slate-400">
@@ -326,31 +837,94 @@ export default async function TeacherDashboard({
             ))}
           </ul>
         ) : null}
+        {/*
+          Le concours est l'usage rare : son formulaire attend dans un tiroir,
+          ouvert seulement pour qui n'a encore ni partie ni concours.
+        */}
+        {/*
+          LES PARTIES RANGÉES ATTENDENT ICI, et nulle part ailleurs. Le tiroir
+          n'existe que s'il y en a : un enseignant qui n'a jamais rangé ne voit
+          pas une rubrique vide lui rappeler qu'il pourrait.
+        */}
+        {rangees.length > 0 ? (
+          <Tiroir icone="ranger"
+            titre="Parties rangées" quoi={compter(rangees.length, "partie")}>
+            <p className="mt-1 text-sm text-slate-300">
+              Elles ne sont plus jouables et leur code n&apos;ouvre plus rien. Rien n&apos;a
+              été supprimé : ressortez-en une et elle reprend exactement où elle en était.
+            </p>
+            <ul className="mt-3 grid gap-2">
+              {rangees.map((g) => (
+                <li
+                  key={g.gameId}
+                  className="flex flex-wrap items-center gap-3 rounded-lg border border-white/10 px-3 py-2"
+                >
+                  <span className={SECTOR_COLORS[g.sector].accent}>
+                    <PictoSecteur secteur={g.sector} className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <Link
+                      href={`/teacher/games/${g.gameId}`}
+                      className="block truncate text-sm font-medium text-slate-100 underline-offset-4 hover:underline"
+                    >
+                      {g.scenarioTitle}
+                    </Link>
+                    <span className="mt-0.5 block text-sm text-slate-400">
+                      {compter(g.teamsCount, "équipe")} · tour {g.currentRound} / {g.roundsCount} ·
+                      rangée le{" "}
+                      {g.archivedAt?.toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </span>
+                  <GuardedForm
+                    action={desarchiverPartieAction.bind(null, g.gameId)}
+                    label="sortie de rangement"
+                  >
+                    <SubmitButton className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200">
+                      Ressortir
+                    </SubmitButton>
+                  </GuardedForm>
+                </li>
+              ))}
+            </ul>
+          </Tiroir>
+        ) : null}
+        <Tiroir
+          titre="Organiser un concours · Business Arena Championship"
+          ouvert={competitions.length === 0 && games.length === 0}
+        >
+          {!licence ? (
+            <p data-concours-sans-licence="" className="mb-3 text-sm text-slate-300">
+              {refusDeLaClasse(regle)}{" "}
+              <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
+                Voir les offres
+              </Link>
+            </p>
+          ) : (blocageDuConcours ?? blocage) ? (
+            // Le concours se joue avec NOVA, et compte comme le groupe en cours : la règle
+            // se dit avant l'envoi (services/acces.service.ts).
+            <p data-concours-hors-licence="" className="mb-3 text-sm text-slate-300">
+              {(blocageDuConcours ?? blocage)!.message}{" "}
+              <Link
+                href={lienDuDevis((blocageDuConcours ?? blocage)!.offre)}
+                prefetch={false}
+                className={LIEN_A_L_ENCRE}
+              >
+                {LIBELLE_DU_DEVIS} ({nomDOffre((blocageDuConcours ?? blocage)!.offre)})
+              </Link>
+            </p>
+          ) : null}
+          <CompetitionCreateForm />
+          <p className="mt-2 text-sm text-slate-400">
+            Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
+            décisions verrouillées après validation, indices limités.
+          </p>
+        </Tiroir>
       </section>
-
-      <section className="space-y-3">
-        {games.length === 0 ? (
-          <p className="text-sm text-slate-400">Aucune partie pour l&apos;instant.</p>
-        ) : (
-          games.map((g) => (
-            <Link
-              key={g.gameId}
-              href={`/teacher/games/${g.gameId}`}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
-            >
-              <span>
-                <span className="font-mono text-amber-300">{g.joinCode}</span>
-                <span className="ml-3 text-slate-300">{compter(g.teamsCount, "équipe")}</span>
-              </span>
-              <span className="text-slate-400">
-                {g.status === "finished"
-                  ? "Terminée"
-                  : `${periodLabel(g.roundDays, g.currentRound)} / ${g.roundsCount}`}
-              </span>
-            </Link>
-          ))
-        )}
-      </section>
+      </div>
     </main>
   );
 }

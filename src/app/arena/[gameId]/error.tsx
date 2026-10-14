@@ -1,5 +1,7 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
+
 export default function ArenaError({
   error,
   reset,
@@ -18,7 +20,7 @@ export default function ArenaError({
       <button
         type="button"
         onClick={reset}
-        className="mt-6 rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+        className={`${bouton()} mt-6`}
       >
         Réessayer
       </button>

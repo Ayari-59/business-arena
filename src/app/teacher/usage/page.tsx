@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 import { getTeacherUsageView } from "@/services/pedagogy.service";
 
 export const dynamic = "force-dynamic";
@@ -40,36 +40,26 @@ export default async function UsagePage() {
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
-        <h1 className="mt-1 text-2xl font-bold">Carnet d&apos;usage</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Ce que toutes vos parties disent ensemble, et qu&apos;aucune ne dit seule. Une
-          situation ratée par une classe est un accident ; ratée par cinq, c&apos;est
-          l&apos;énoncé qu&apos;il faut revoir.
-        </p>
-        <Link
-          href="/teacher"
-          className="mt-3 inline-block text-xs text-slate-400 underline-offset-4 hover:underline"
-        >
-          ← Retour à mes parties
-        </Link>
-      </header>
+      <EnTeteEnseignant
+        titre="Carnet d'usage"
+        actif="usage"
+        description="Ce que toutes vos parties disent ensemble, et qu'aucune ne dit seule. Une situation ratée par une classe est un accident ; ratée par cinq, c'est l'énoncé qu'il faut revoir."
+      />
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {totals.map((t) => (
-          <div key={t.label} className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-            <p className="text-2xl font-bold tabular-nums text-amber-400">{t.value}</p>
+          <div key={t.label} className="carte p-3 sm:p-5">
+            <p className="text-2xl font-bold tabular-nums text-slate-50">{t.value}</p>
             <p className="mt-1 text-xs leading-tight text-slate-400">{t.label}</p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">
           Les situations qui résistent
         </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
           Classées par score moyen croissant : les plus difficiles en tête. Le score comprend le
           malus d&apos;indices, ce qui explique qu&apos;une situation très aidée descende. Le
           compte est en équipes, celui des notions plus bas en élèves. Deux silences ne
@@ -108,7 +98,7 @@ export default async function UsagePage() {
                     </td>
                     <td
                       className={`py-2 pr-3 text-right tabular-nums ${
-                        s.unanswered > 0 ? "text-slate-300" : "text-slate-600"
+                        s.unanswered > 0 ? "text-slate-300" : "text-slate-400"
                       }`}
                     >
                       {s.unanswered > 0 ? s.unanswered : "—"}
@@ -116,7 +106,7 @@ export default async function UsagePage() {
                     <td
                       className={`py-2 pr-3 text-right font-medium tabular-nums ${
                         s.averageScore === null
-                          ? "text-slate-600"
+                          ? "text-slate-400"
                           : s.averageScore < 0.4
                             ? "text-red-300"
                             : s.averageScore < 0.65
@@ -138,9 +128,9 @@ export default async function UsagePage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+        <section className="carte p-4 sm:p-7">
           <h2 className="text-sm font-semibold text-slate-200">Jusqu&apos;où vont les indices</h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
             Les cinq niveaux vont de l&apos;observation à la méthode détaillée. Beaucoup de
             niveaux 4 et 5 signalent une marche trop haute, pas des élèves paresseux.
           </p>
@@ -168,9 +158,9 @@ export default async function UsagePage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+        <section className="carte p-4 sm:p-7">
           <h2 className="text-sm font-semibold text-slate-200">Secteurs joués</h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
             Un secteur jamais joué n&apos;est pas forcément mauvais : il est peut-être
             simplement invisible au moment de créer la partie.
           </p>
@@ -193,11 +183,11 @@ export default async function UsagePage() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">
           Notions les moins ancrées, toutes classes confondues
         </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
           Maîtrise moyenne de vos élèves, sur 100. C&apos;est ici que se lisent les notions à
           reprendre en cours plutôt que dans le jeu.
         </p>
@@ -217,7 +207,7 @@ export default async function UsagePage() {
                 <span className="text-slate-300">{c.name}</span>
                 <span className="tabular-nums text-slate-400">
                   {Math.round(c.average)}
-                  <span className="ml-2 text-xs text-slate-600">
+                  <span className="ml-2 text-xs text-slate-400">
                     {c.students} élève{c.students > 1 ? "s" : ""}
                   </span>
                 </span>

@@ -86,7 +86,7 @@ export default async function ConcoursPublicPage({
         <header className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <span
-              className="text-xs font-semibold uppercase tracking-[0.3em]"
+              className="text-xs font-semibold uppercase tracking-annonce"
               style={{ color: accent.doux }}
             >
               {concours.organizerLabel ?? "Concours Business Arena"}
@@ -113,7 +113,7 @@ export default async function ConcoursPublicPage({
 
         {/* Inscription */}
         <section
-          className="rounded-2xl border p-4 sm:p-6"
+          className="rounded-xl border p-4 sm:p-6"
           style={{ borderColor: `${accent.vif}40`, background: `${accent.vif}0d` }}
         >
           {ouvert ? (
@@ -176,7 +176,7 @@ export default async function ConcoursPublicPage({
           <ShareButtons url={url} title={concours.name} accent={accent.doux} />
         </section>
 
-        <footer className="border-t border-white/10 pt-6 text-sm text-slate-500">
+        <footer className="border-t border-white/10 pt-6 text-sm text-slate-400">
           Organisé sur{" "}
           <Link href="/" className="underline-offset-4 hover:underline" style={{ color: accent.doux }}>
             Business Arena

@@ -389,17 +389,53 @@ export interface EngineScenarioConfig {
      * trésorerie. Absente = illimité (comportement historique).
      */
     maxCapitalIncreaseTotal?: number;
-    /** Ratio dette/capitaux propres maximum autorisé. Absent = illimité. */
+    /**
+     * PLAFOND D'ENDETTEMENT, en multiple des capitaux propres d'ouverture.
+     * La banque ne prête pas au-delà : dette financière après emprunt ≤
+     * `maxDebtToEquity` × capitaux propres. C'est la règle que lit un
+     * banquier, et elle a la propriété qu'on cherche ici — elle se resserre
+     * d'elle-même à mesure que l'entreprise perd de l'argent, donc celle qui
+     * va mal touche le mur au moment où elle voudrait s'endetter davantage.
+     *
+     * Capitaux propres nuls ou négatifs : capacité nulle, plus un euro.
+     * Absent = pas de plafond (comportement historique).
+     */
     maxDebtToEquity?: number;
     /**
-     * DOSSIER BANCAIRE (optionnel). Présent : le plan de trésorerie déposé
-     * avec les décisions cesse d'être un exercice sans suite et devient la
-     * pièce que lit la banque.
+     * Nombre de tours de cessation de paiements CONSÉCUTIFS avant la
+     * défaillance. Un seul tour est une alerte, pas une faillite : une
+     * mauvaise passe se rattrape, et c'est la leçon. Absent = 2, la règle
+     * historique. L'enseignant le règle dans son espace : 1 pour une séance
+     * courte où la sanction doit tomber vite, 3 ou 4 pour laisser le temps de
+     * redresser.
+     */
+    crisisRoundsBeforeFailure?: number;
+    /**
+     * FINANCEMENT DE SAUVETAGE OBLIGATOIRE. Après un tour clos en cessation de
+     * paiements, l'équipe ne peut valider le suivant qu'en réunissant de quoi
+     * repasser sous le plafond de découvert (emprunt + apport des associés).
      *
-     *  1. pas de plan, pas d'emprunt : une demande non appuyée est refusée ;
-     *  2. l'écart entre le plan et le réalisé nourrit une CONFIANCE (0..1),
-     *     qui fixe au tour suivant le plafond de découvert consenti et le
-     *     taux auquel ce découvert est facturé.
+     * Absent = obligatoire. C'est le comportement voulu par défaut : sans lui,
+     * une équipe traverse sa crise sans jamais avoir à trancher, et découvre
+     * la faillite au tour d'après. Une séance peut vouloir l'avertissement
+     * sans le verrou — un cours d'une heure où personne ne doit rester bloqué
+     * la main levée : l'enseignant le désactive alors dans son espace.
+     */
+    rescueFinancingRequired?: boolean;
+    /**
+     * DOSSIER BANCAIRE (optionnel). Présent : le plafond de découvert consenti
+     * et son taux suivent une CONFIANCE (0..1) au lieu d'être fixes.
+     *
+     * La confiance se lit dans la TENUE DE LA TRÉSORERIE : un tour clos en
+     * crise ou passé par l'affacturage forcé la fait descendre sous le plein
+     * — d'un pas borné, jamais sous un plancher —, des tours sains la
+     * regagnent (voir `finance/bank.ts`). Un plan de trésorerie arrivé par une
+     * autre voie que le formulaire reste jugé (`fiabiliteDuPlan`). Le standing
+     * RSE, lui, la porte AU-DESSUS du plein : le plafond du scénario est ce
+     * qu'obtient une entreprise sans engagement, un standing établi obtient
+     * mieux — voir `confianceServie`.
+     *
+     * Ce qui borne l'emprunt aujourd'hui, c'est `maxDebtToEquity`.
      *
      * Le découvert est un concours révocable : la banque peut le réduire et
      * le renchérir quand elle veut, ce qui n'est pas vrai d'un emprunt déjà
@@ -687,7 +723,7 @@ export interface EngineScenarioConfig {
   };
   events: EventDefinitionConfig[];
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
-  /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
+  /** Références du scoring IPG (doc 08 §1.1) — bornes min/cible par tour. */
   scoring: ScoringConfig;
   /** V2 : les bots utilisent les décisions financières, RH, investissement et trésorerie. Absent = false. */
   /**
@@ -948,6 +984,26 @@ export interface SegmentConfig {
   loyalty: number;
   /** Bornes de l'effet prix (documentées scénario, doc 02 §3.2). */
   priceEffectBounds: { min: number; max: number };
+  /**
+   * PRIX DE RUPTURE, en multiple du prix usuel du segment : au-delà, la
+   * clientèle n'achète plus, quelle que soit son élasticité.
+   *
+   * Sans cette borne, une élasticité faible — les passionnés à −0,7 — laissait
+   * un cinquième de l'attraction à DIX FOIS le prix usuel, et le plancher
+   * `priceEffectBounds.min` la remontait encore. Multiplier ses prix par dix
+   * devenait la stratégie la plus rentable du jeu.
+   *
+   * Le décrochage occupe le DERNIER TIERS de la plage : il commence aux deux
+   * tiers de la borne et l'attraction s'éteint linéairement jusqu'à zéro. À 3
+   * (le défaut), rien ne change jusqu'à deux fois le prix usuel. La proportion
+   * compte : un écart fixe avant la borne ferait commencer le décrochage AU
+   * PRIX DE RÉFÉRENCE dès qu'un scénario resserre à 2, et pénaliserait alors
+   * un prix parfaitement raisonnable.
+   *
+   * Un scénario resserre cette borne pour une clientèle qui négocie, ou
+   * l'écarte pour un produit de luxe.
+   */
+  walkAwayPriceRatio?: number;
   /** Délai de paiement clients en jours (0 = comptant). */
   paymentDelayDays: number;
   /**
@@ -1021,6 +1077,12 @@ export interface ProductDevelopmentDef {
 export interface ProductDef {
   code: ProductCode;
   name: string;
+  /**
+   * Le nom sur écran étroit, quand `name` ne tient pas sur un bouton de
+   * téléphone (« Transformation et Stratégie » → « Stratégie »). Absent :
+   * `name` est affiché partout. N'entre dans aucun calcul : c'est un libellé.
+   */
+  shortName?: string;
   materialCostPerUnit: number;
   otherVariableCostPerUnit: number;
   hoursPerUnit: number;
@@ -1472,7 +1534,7 @@ export interface RoundDecisions {
    * `budget` : dépense d'exploitation du tour, bâtit le capital-image (demande
    * différée). `investment` : effort « process propre », bâtit le capital de
    * réduction durable des rebuts. Les DEUX sont des charges décaissées ce tour.
-   * Ouvert par le niveau de difficulté (decisions.rse), dès Arbitrage.
+   * Ouvert par le niveau de difficulté (decisions.rse), dès Stratégie.
    */
   rse?: {
     budget?: number;
@@ -1492,6 +1554,42 @@ export interface RoundDecisions {
     expectedNetIncome?: number;
     /** Trésorerie nette attendue en fin de tour (le budget de trésorerie). */
     expectedCash?: number;
+  };
+  /**
+   * LES VENTES ESTIMÉES PAR L'ÉQUIPE, et le résultat qu'elles donnaient.
+   *
+   * Ce que l'équipe croyait vendre au marché ce tour-ci, saisi en tête de la
+   * feuille de décision, et le compte estimé que l'estimateur en a tiré à la
+   * validation (`engine/estimation`). Rien de tout cela n'entre dans le calcul
+   * du tour : le moteur ne lit pas ce champ. Il sert à confronter, au rituel
+   * de fin de tour et dans les résultats, ce qu'on croyait à ce qui est arrivé.
+   *
+   * Distinct de `forecast` : `forecast.expectedUnits` nourrit le jugement de la
+   * banque (fiabilité du plan) dans les scénarios à dossier bancaire. L'arène
+   * ne demande plus ce plan ; y verser l'estimation changerait la confiance
+   * bancaire de toutes les parties sans qu'on l'ait décidé.
+   */
+  salesEstimate?: SalesEstimate;
+}
+
+/** Ventes estimées d'un tour et résultat estimé correspondant (voir `RoundDecisions.salesEstimate`). */
+export interface SalesEstimate {
+  /** Ventes au marché estimées, par référence (code produit ; mono : le code du produit). */
+  byProduct: Record<ProductCode, number>;
+  /** Leur total, toutes références confondues. */
+  units: number;
+  /**
+   * Le résultat estimé, calculé par le serveur à la validation, sur l'état
+   * d'ouverture et les décisions du tour. Absent si le calcul n'a pas pu se
+   * faire (une estimation sans résultat reste une estimation de ventes).
+   */
+  estimate?: {
+    revenue: number;
+    netIncome: number;
+    /** Trésorerie nette de fin de tour (trésorerie active − concours bancaires). */
+    netTreasury: number;
+    /** Ce que l'équipe pouvait réellement livrer au marché, toutes références. */
+    deliverableUnits: number;
   };
 }
 
@@ -1538,6 +1636,13 @@ export interface IncomeStatement {
   exceptionalCharge?: number;
   /** Produit exceptionnel du tour (ex. éco-subvention RSE, Lot 2C.2). Absent si nul. */
   exceptionalIncome?: number;
+  /**
+   * Subvention exceptionnelle accordée par l'animateur à une équipe en
+   * cessation de paiements. Produit exceptionnel comme les précédents, mais
+   * sur sa PROPRE ligne : la confondre avec l'éco-subvention RSE ferait lire
+   * un geste de sauvetage comme une récompense écologique. Absente si nulle.
+   */
+  rescueSubsidy?: number;
   pretaxIncome: number;
   /**
    * Déficit reporté imputé sur le bénéfice de ce tour (report en avant des
@@ -1623,26 +1728,38 @@ export interface ProductRoundResult {
   /** Stock de fin de tour du produit (CUMP). */
   stock: { quantity: number; unitCost: number };
   /**
-   * Variance analysis (pilot on NOVA, optional — present only if variances tracked).
-   * Decomposes actual vs. standard costs and revenues to diagnose performance drivers.
-   * Absent in mono-product scenarios without pedagogy, or when all variances are zero.
+   * ÉCARTS SUR COÛTS du tour, référence par référence (voir
+   * `engine/costs/variance`). Absents en mono-produit, où le moteur ne les
+   * suit pas, et absents aussi quand tout écart est négligeable.
+   *
+   * Le vocabulaire est celui du contrôle de gestion : écart sur PRIX pour
+   * l'achat des matières, écart sur QUANTITÉ pour ce qui part au rebut. Le
+   * second poste n'est pas la main-d'œuvre mais les AUTRES CHARGES VARIABLES
+   * (MOD, énergie, divers) : les salaires sont une charge de structure et
+   * leur écart se calcule ailleurs.
    */
   variances?: {
-    // Cost variances (€), positive = unfavorable (cost overrun)
+    /** Écart sur prix des matières (€), positif = défavorable. */
     materialPriceVariance: number;
-    materialEfficiencyVariance: number;
-    laborRateVariance: number;
-    laborEfficiencyVariance: number;
+    /** Écart sur quantité de matières : le rebut, valorisé au standard. */
+    materialQuantityVariance: number;
+    /** Écart sur quantité des autres charges variables, même rebut. */
+    otherVariableQuantityVariance: number;
     totalCostVariance: number;
-    // Percentage of actual COGS for relative comparison
+    /** Part de l'écart total dans le coût de revient réel du tour. */
     costVarianceRatio: number;
-    // Revenue variances by segment
+    /**
+     * CE BLOC N'EST PAS UN ÉCART : `priceVariance` vaut le chiffre d'affaires
+     * réalisé et `volumeVariance` les unités non vendues, comptées en unités.
+     * Un vrai écart sur chiffre d'affaires suppose un budget de ventes, qui
+     * n'existe pas encore. Rien ne doit en être affiché d'ici là.
+     */
     revenueVarianceBySegment: Record<SegmentCode, {
-      priceVariance: number;  // positive = favorable
-      volumeVariance: number; // positive = favorable
+      priceVariance: number;
+      volumeVariance: number;
       totalVariance: number;
     }>;
-    // Contribution margin variance: how pricing and volume combined beat/missed plan
+    /** Somme des deux précédents : à ne pas lire comme un écart sur marge. */
     contributionMarginVariance: number;
   };
   /** Codes des segments qui composent le marché du produit. */
@@ -1925,6 +2042,12 @@ export interface CompanyRoundResult {
     machineLoanGranted?: number;
     /** Emprunt installations accordé ce tour (catégorie `loanCategories.installations`). */
     installationLoanGranted?: number;
+    /**
+     * Emprunt demandé ce tour, quand la banque n'a pas tout accordé : la
+     * différence avec `newLoan` est ce que la capacité d'endettement a refusé.
+     * Absent quand la demande a été servie en entier — rien à expliquer.
+     */
+    loanRefused?: number;
   };
   /** Trésorerie du tour : mobilisations de créances et coûts financiers. */
   treasury?: {
@@ -1968,8 +2091,14 @@ export interface CompanyRoundResult {
   bank?: {
     /** Confiance à l'ouverture, celle qui a fixé les conditions de CE tour. */
     trustBefore: number;
-    /** Confiance après lecture de l'écart entre le plan et le réalisé. */
+    /** Confiance après lecture du tour : tenue de la trésorerie, et plan s'il y en a un. */
     trustAfter: number;
+    /**
+     * Ce que la banque a lu dans la trésorerie du tour : 1 tenue, 0,75
+     * affacturage forcé, 0 crise caractérisée. Absent des tours joués avant
+     * que la banque ne lise la tenue (les résultats persistés d'alors).
+     */
+    treasuryConduct?: number;
     /** Fiabilité du plan de ce tour (0..1) ; null : aucun plan déposé. */
     reliability: number | null;
     /** Un plan de trésorerie accompagnait-il les décisions du tour ? */
@@ -2063,6 +2192,37 @@ export interface SimulationInput {
   activeEvents: EventInstance[];
   /** Graine de la partie ; le tirage du tour dérive de (seed, roundIndex). */
   seed: number;
+  /**
+   * SUBVENTIONS EXCEPTIONNELLES ACCORDÉES POUR CE TOUR, par entreprise.
+   *
+   * Elles ne viennent ni du scénario ni du hasard : une équipe en cessation de
+   * paiements dont l'emprunt et l'apport des associés sont épuisés dépose un
+   * dossier, et l'animateur l'accorde ou non. Le moteur n'a donc rien à
+   * décider ici — il encaisse ce qui a été accordé, en produit exceptionnel.
+   *
+   * Absentes (le cas de toutes les parties qui se passent bien) : rien n'est
+   * émis, ni au compte de résultat ni au tableau de flux.
+   */
+  rescueSubsidies?: Record<CompanyId, number>;
+  /**
+   * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
+   *
+   * Présent, le marché n'est pas joué : chaque entreprise reçoit, segment par
+   * segment, la demande qu'on lui impose ici, et la vend dans la limite de son
+   * stock, exactement comme le marché la lui aurait adressée. Et rien n'est
+   * tiré : ni nouvel événement, ni carte RSE, ni rupture d'approvisionnement.
+   * Les événements qui comptent sont ceux que l'appelant passe en
+   * `activeEvents`, ceux que l'équipe connaît. La commande exceptionnelle est
+   * celle qui lui a été annoncée (la graine n'est pas connue du navigateur).
+   * Tout le reste (production, stocks au CUMP, charges, financement, impôt)
+   * suit le chemin du tour réel, sans une ligne de comptabilité à part.
+   */
+  estimation?: {
+    /** Demande imposée, par entreprise puis par segment (unités). */
+    demand: Record<CompanyId, Record<SegmentCode, number>>;
+    /** La commande exceptionnelle du tour, telle qu'annoncée ; null s'il n'y en a pas. */
+    orderOffer: OrderOfferDef | null;
+  };
 }
 
 export interface SimulationOutput {

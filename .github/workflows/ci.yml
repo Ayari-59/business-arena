@@ -33,6 +33,12 @@ jobs:
       - run: npm ci
       - name: Types
         run: npm run typecheck
+      # Le lint manquait à l'appel : `npm run lint` existait dans package.json
+      # mais aucune étape ne l'appelait, si bien qu'une erreur d'ESLint
+      # n'aurait rien bloqué. Il passe AVANT les tests, parce qu'il répond en
+      # quelques secondes là où la suite prend des minutes.
+      - name: Lint
+        run: npm run lint
       - name: Tests
         run: npm test
       - name: Compilation de production

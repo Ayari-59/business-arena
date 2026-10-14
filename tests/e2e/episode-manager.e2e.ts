@@ -1,0 +1,324 @@
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { devices, type Browser, type Page } from "playwright-core";
+import { BASE, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
+import { EPISODES } from "../../src/pedagogy/episodes/registre";
+
+/**
+ * L'ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT DANS UN VRAI NAVIGATEUR.
+ *
+ * Deux joueurs, un trimestre connu (`?hasard=11`) : l'un enquête puis décide
+ * comme la stratégie « diagnostic d'abord », l'autre répond à tout par une
+ * remise sans rien vérifier. Le bilan doit le dire, sur un poste de bureau
+ * comme sur un téléphone, sans que la page déborde en largeur.
+ */
+
+/**
+ * SOUS LICENCE. Sans licence, seuls les épisodes de démonstration se lancent, en
+ * Découverte (services/acces.service.ts) ; ce parcours vérifie autre chose, sur des
+ * épisodes et des niveaux qui n'en sont pas : chaque navigateur y est celui d'un
+ * enseignant d'un établissement sous licence (tests/e2e/helpers/licence.ts). La règle
+ * elle-même est gardée par acces.e2e.ts.
+ */
+
+let navigateur: Browser;
+
+beforeAll(async () => {
+  navigateur = await ouvrirNavigateur();
+}, 60_000);
+
+afterAll(async () => {
+  await navigateur?.close();
+});
+
+const bouton = (page: Page, nom: string | RegExp) => page.getByRole("button", { name: nom });
+const choisir = (page: Page, libelle: string) => page.getByLabel(libelle, { exact: false }).check();
+
+/** Le diagnostic propose les mêmes causes deux fois : la principale, puis la seconde. */
+const principal = (page: Page, libelle: string) =>
+  page
+    .getByRole("group", { name: /problème principal/ })
+    .getByLabel(libelle)
+    .check();
+
+async function decider(page: Page, option: string) {
+  await choisir(page, option);
+  await bouton(page, "Valider la décision").click();
+  await bouton(page, /^(Continuer|Voir le bilan)$/).click();
+}
+
+async function debordement(page: Page) {
+  return page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+}
+
+describe("l'épisode « Le trimestre qui dérape »", () => {
+  it("sur un poste de bureau : enquêter, diagnostiquer, et le bilan le reconnaît", async () => {
+    const page = await navigateur.newPage({
+      viewport: { width: 1280, height: 900 },
+      locale: "fr-FR",
+    });
+    await enseignantSousLicence(page.context(), { episodes: true });
+    await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
+    await bouton(page, "Commencer l'épisode").click();
+
+    // Décision 1 : le signal, l'enquête qui coûte du temps, le diagnostic.
+    await bouton(page, "Enquêter").click();
+    await bouton(page, /Détail par commercial/).click();
+    await bouton(page, /Appeler un client perdu/).click();
+    await expect.poll(() => page.getByText("Il vous reste 3,5 jours").count()).toBe(1);
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("34");
+    await decider(page, "Réaffecter le portefeuille de Karim");
+
+    // Décision 2 : réévaluer, vérifier, décider.
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, /Coût du créneau/).click();
+    await bouton(page, /Stock disponible/).click();
+    await bouton(page, "Décider").click();
+    await decider(page, "Garantir la livraison le lendemain");
+
+    // Décision 3 : Julie, surchargée par les comptes de Karim.
+    await bouton(page, "Décider").click();
+    await bouton(page, /portefeuille et l'agenda de Julie/).click();
+    await expect.poll(() => page.getByText("Julie suit 52 comptes").count()).toBe(1);
+    await decider(page, "Confier six de ses comptes à Thomas");
+
+    // Décisions 4 à 6.
+    await bouton(page, "Décider").click();
+    await bouton(page, /Balance âgée/).click();
+    await decider(page, "Proposer un escompte");
+    await bouton(page, "Décider").click();
+    await bouton(page, /Le poids de Delta/).click();
+    await decider(page, "Contre-proposer 4 %");
+    await bouton(page, "Décider").click();
+    await decider(page, "Relancer tous les devis");
+
+    await expect
+      .poll(() => page.getByRole("heading", { level: 1 }).textContent())
+      .toContain("de marge, pénalités déduites");
+    // Le joueur a joué exactement la stratégie de référence : même résultat, même hasard.
+    const valeurs = await page
+      .locator("li", { hasText: /^(Vous|Diagnostic d'abord)/ })
+      .allTextContents();
+    expect(valeurs).toHaveLength(2);
+    expect(valeurs[0]!.replace("Vous", "")).toBe(valeurs[1]!.replace("Diagnostic d'abord", ""));
+    expect(await page.getByText("Votre diagnostic de la semaine 1 était juste").count()).toBe(1);
+    expect(
+      await page.getByRole("figure", { name: "Votre trimestre, semaine par semaine" }).count(),
+    ).toBe(1);
+    expect(await page.getByText("Ce que les aléas vous ont réservé").count()).toBe(1);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await page.close();
+  }, 120_000);
+
+  it("sur un téléphone : la remise réflexe, et l'axe de travail qui va avec", async () => {
+    const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    await enseignantSousLicence(contexte, { episodes: true });
+    await contexte.addInitScript(() =>
+      localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
+    );
+    const page = await contexte.newPage();
+    await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
+    await bouton(page, "Commencer l'épisode").click();
+
+    await bouton(page, "Enquêter").click();
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Nos prix ne sont plus compétitifs");
+    await bouton(page, "Décider").click();
+    // Sans prévision chiffrée, la décision ne se valide pas.
+    await choisir(page, "Remise de 5 % sur les grands comptes");
+    expect(await bouton(page, "Valider la décision").isDisabled()).toBe(true);
+    await page.getByRole("spinbutton").fill("36");
+    await bouton(page, "Valider la décision").click();
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await bouton(page, "Continuer").click();
+
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, "Décider").click();
+    await decider(page, "S'aligner par une remise de 3 %");
+    await bouton(page, "Décider").click();
+    await decider(page, "Lui accorder une prime exceptionnelle");
+    await bouton(page, "Décider").click();
+    await decider(page, "Relancer les impayés");
+    await bouton(page, "Décider").click();
+    await decider(page, "Accepter les 8 %");
+    await bouton(page, "Décider").click();
+    await decider(page, "Remise de 5 % sur tout pour finir");
+
+    await expect.poll(() => page.getByText("Votre axe de travail").count()).toBe(1);
+    expect(await page.getByText("Vérifier la cause avant d'agir").count()).toBe(1);
+    expect(await page.getByText("vous avez choisi la remise 3 fois sur 3").count()).toBe(1);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+
+    // Recommencer avec les mêmes aléas ramène à la première décision…
+    await bouton(page, "Recommencer avec les mêmes aléas").click();
+    await expect
+      .poll(() => page.getByRole("heading", { level: 1 }).textContent())
+      .toBe("La transformation décroche");
+
+    // … et le bilan suivant met les deux parties côte à côte.
+    await bouton(page, "Enquêter").click();
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("36");
+    await decider(page, "Réaffecter le portefeuille de Karim");
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, "Décider").click();
+    await decider(page, "Garantir la livraison le lendemain");
+    for (const option of [
+      "Confier six de ses comptes à Thomas",
+      "Proposer un escompte",
+      "Contre-proposer 4 %",
+      "Relancer tous les devis",
+    ]) {
+      await bouton(page, "Décider").click();
+      await decider(page, option);
+    }
+    await expect.poll(() => page.getByText("Votre partie précédente, et celle-ci").count()).toBe(1);
+    expect(await page.getByText("Mêmes aléas pour les deux parties").count()).toBe(1);
+    expect(await page.getByText("changé", { exact: true }).count()).toBe(6);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await contexte.close();
+  }, 120_000);
+
+  it("la liste mène à tous les épisodes, et le deuxième se joue jusqu'au bilan", async () => {
+    const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    await enseignantSousLicence(contexte, { episodes: true });
+    await contexte.addInitScript(() =>
+      localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
+    );
+    const page = await contexte.newPage();
+    await page.goto(`${BASE}/entreprises/episode`);
+    // Les épisodes sont rangés dans des tiroirs fermés à l'arrivée (un par
+    // thème d'Arvel Distribution, un par métier pour les autres) : les cartes
+    // sont dans la page, repliées. On compte donc aussi celles qu'on ne voit
+    // pas, puis on vérifie qu'un tiroir déplié montre bien les siennes.
+    expect(
+      await page.getByRole("link", { name: /Jouer l'épisode/, includeHidden: true }).count(),
+    ).toBe(EPISODES.length);
+    expect(await page.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(0);
+    await page.locator("main details > summary").first().click();
+    expect(await page.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBeGreaterThan(0);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+
+    await page.goto(`${BASE}/entreprises/episode/equipe-qui-s-epuise?hasard=4242`);
+    await bouton(page, "Commencer l'épisode").click();
+    await bouton(page, "Enquêter").click();
+    await bouton(page, /Analyser les demandes/).click();
+    await bouton(page, /Écouter trois conseillers/).click();
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les retards font écrire les clients deux fois");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("3.8");
+    await decider(page, "Envoyer un accusé de réception");
+
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, /entretien avec Mathieu/).click();
+    await expect
+      .poll(() => page.getByText("plus calme depuis l'accusé de réception").count())
+      .toBe(1);
+    await bouton(page, "Décider").click();
+    await decider(page, "Lui proposer 150 € de plus");
+    for (const option of [
+      "Créer une file d'expertise tournante",
+      "Préparer des réponses types",
+      "Accepter à l'essai",
+      "Traiter d'abord les demandes les plus anciennes",
+    ]) {
+      await bouton(page, "Décider").click();
+      await decider(page, option);
+    }
+
+    await expect
+      .poll(() => page.getByRole("heading", { level: 1 }).textContent())
+      .toContain("sous le budget");
+    expect(await page.getByText("Votre diagnostic de la semaine 1 était juste").count()).toBe(1);
+    const valeurs = await page
+      .locator("li", { hasText: /^(Vous|Soulager la file d'abord)/ })
+      .allTextContents();
+    expect(valeurs[0]!.replace("Vous", "")).toBe(
+      valeurs[1]!.replace("Soulager la file d'abord", ""),
+    );
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await contexte.close();
+  }, 120_000);
+});
+
+describe("les niveaux de difficulté", () => {
+  it("en Expert : enquête courte, pas de conseil, une seule vérification, et le bilan le dit", async () => {
+    const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
+    await enseignantSousLicence(page.context(), { episodes: true });
+    await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11&niveau=expert`);
+    await expect.poll(() => page.getByLabel("Expert", { exact: false }).isChecked()).toBe(true);
+    await bouton(page, "Commencer l'épisode").click();
+    expect(await page.getByText("Niveau Expert", { exact: true }).count()).toBe(1);
+
+    await bouton(page, "Enquêter").click();
+    await expect.poll(() => page.getByText("Il vous reste 2,5 jours").count()).toBe(1);
+    expect(await bouton(page, /Demander conseil/).count()).toBe(0);
+    await bouton(page, /Détail par commercial/).click();
+    await bouton(page, /Appeler un client perdu/).click();
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("34");
+    await decider(page, "Réaffecter le portefeuille de Karim");
+
+    // Décision 2 : une vérification, pas deux.
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, /Coût du créneau/).click();
+    await expect.poll(() => bouton(page, /Stock disponible/).isDisabled()).toBe(true);
+    expect(await page.getByText("une seule vérification").count()).toBe(1);
+    await bouton(page, "Décider").click();
+    await decider(page, "Garantir la livraison le lendemain");
+    for (const option of [
+      "Confier six de ses comptes à Thomas",
+      "Proposer un escompte",
+      "Contre-proposer 4 %",
+      "Relancer tous les devis",
+    ]) {
+      await bouton(page, "Décider").click();
+      await decider(page, option);
+    }
+    await expect.poll(() => page.getByText(/niveau Expert · tirage n°/).count()).toBe(1);
+    await page.close();
+  }, 120_000);
+
+  it("en Découverte : des repères, et l'effet de chaque choix tout de suite", async () => {
+    const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
+    await enseignantSousLicence(page.context(), { episodes: true });
+    await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
+    await choisir(page, "Découverte");
+    await bouton(page, "Commencer l'épisode").click();
+    expect(await page.getByText("Niveau Découverte", { exact: true }).count()).toBe(1);
+    expect(await page.getByText("Repère ·").count()).toBe(1);
+    await bouton(page, "Enquêter").click();
+    expect(await bouton(page, /Demander conseil/).count()).toBe(1);
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("34");
+    await choisir(page, "Réaffecter le portefeuille de Karim");
+    await bouton(page, "Valider la décision").click();
+    await expect
+      .poll(() =>
+        page.getByText(/Retour immédiat · Sur ce trimestre-ci, ce choix (rapporte|coûte)/).count(),
+      )
+      .toBe(1);
+    expect(await page.locator("main").innerText()).not.toMatch(/undefined|NaN/);
+    await page.close();
+  }, 120_000);
+});

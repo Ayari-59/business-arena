@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { securityHeaders } from "./src/config/security-headers";
+import { entetesCommuns, entetesDeCadre, SOURCE_HORS_LTI } from "./src/config/security-headers";
 
 const nextConfig: NextConfig = {
   // La pile n'a pas à s'annoncer dans chaque réponse.
@@ -11,14 +11,33 @@ const nextConfig: NextConfig = {
     { source: "/ateliers", destination: "/animations", permanent: true },
     { source: "/ateliers/:path*", destination: "/animations/:path*", permanent: true },
     { source: "/teacher/ateliers/:path*", destination: "/teacher/animations/:path*", permanent: true },
+    // L'ancienne adresse des fiches, devenue /notions. Elle a pu être copiée dans
+    // un cahier de textes ou sur un support imprimé : un 308 ne casse aucun lien
+    // ET consolide le référencement vers la nouvelle adresse.
+    //
+    // ELLE ÉTAIT UNE PAGE qui appelait permanentRedirect(), et c'est ce qui l'a
+    // cassée : une page prérendue qui redirige est régénérée à chaque
+    // invalidation du cache, et la régénération écrivait l'en-tête Location
+    // deux fois (« /notions, /notions »), donc une adresse qui n'existe pas.
+    // Après chaque enregistrement du thème dans l'admin, /concepts répondait 404.
+    // Une redirection de configuration est résolue avant toute page : rien à
+    // prérendre, rien à régénérer.
+    { source: "/concepts", destination: "/notions", permanent: true },
   ],
   headers: async () => [
     {
-      // Tous les en-têtes de sécurité, CSP comprise, servis partout (fichiers
-      // statiques compris). Ils ne dépendent pas de la requête : les pages
-      // restent donc éligibles au rendu statique (plus de nonce par requête).
+      // Les en-têtes de sécurité, servis partout (fichiers statiques compris). Ils
+      // ne dépendent pas de la requête : les pages restent donc éligibles au rendu
+      // statique (plus de nonce par requête).
       source: "/(.*)",
-      headers: securityHeaders(),
+      headers: entetesCommuns(),
+    },
+    {
+      // L'iframe interdite et la CSP du site, sauf sous /api/lti/ : ces routes posent
+      // leur propre politique, limitée à l'origine de la plateforme inscrite
+      // (src/config/security-headers.ts, src/lti/html.ts).
+      source: SOURCE_HORS_LTI,
+      headers: entetesDeCadre(),
     },
     {
       source: "/sw.js",

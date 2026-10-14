@@ -10,6 +10,8 @@
  * qui ne laisse que des souvenirs ne remplit pas un passeport professionnel.
  */
 
+import type { NombreDeToursDEssai } from "../tour-d-essai";
+
 /** Un moment de la séance, avec sa durée : un déroulé sans minutes ne s'anime pas. */
 export interface AtelierPhase {
   minutes: number;
@@ -27,6 +29,20 @@ export interface AtelierSeance {
    * peut n'en jouer aucun : la dernière sert à rendre compte.
    */
   tourJoue: number | null;
+  /**
+   * CETTE SÉANCE JOUE LE TOUR D'ESSAI, et aucun tour de la partie.
+   *
+   * Le produit propose un ou deux tours pour de faux avant la vraie partie
+   * (config/tour-d-essai) : mêmes écrans, mêmes équipes, puis tout repart de
+   * l'état initial. Un atelier qui l'emploie consacre sa première séance à la
+   * présentation du jeu et à cet essai ; `tourJoue` reste nul, parce que rien
+   * de ce qui s'y joue ne compte, mais la séance demande au tour autant de
+   * temps qu'un premier tour réel, prise en main comprise, et le modèle de
+   * durée la lit comme telle (`duree-des-seances`, `tourEstime`). La fiche
+   * déclare l'essai dans `reglages.tourDEssai`, et une garde vérifie que les
+   * deux se répondent.
+   */
+  essai?: true;
   /** Processus du référentiel mobilisés, nommés comme le référentiel les nomme. */
   processus: string[];
   objectif: string;
@@ -42,7 +58,12 @@ export interface AtelierSeance {
   deroule: AtelierPhase[];
   /** Ce que l'équipe rend à la fin de la séance. */
   livrable: string;
-  /** La phrase à verser au passeport professionnel. */
+  /**
+   * La phrase à verser au document de trace de la spécialité : passeport
+   * professionnel en BTS CG, fiches d'activités en MCO, fiches descriptives en
+   * NDRC, dossier professionnel en GPME, portfolio en DCG… Le nom exact est
+   * `traceLabel`, sur l'atelier ; le champ garde son nom historique.
+   */
   tracePasseport: string;
   /** Les critères sur lesquels le livrable est regardé. */
   evaluation: string[];
@@ -51,7 +72,32 @@ export interface AtelierSeance {
 export interface AtelierDefinition {
   code: string;
   titre: string;
-  diplome: string;
+  /**
+   * LES FORMATIONS QUE CET ATELIER SERT — zéro, une, ou plusieurs.
+   *
+   * C'était `diplome`, au singulier, et ce champ faisait l'identité de
+   * l'atelier : la fiche s'appelait « Découvrir la gestion d'une entreprise en
+   * quatre séances » et c'est le mot STMG posé à côté qui disait de quoi il
+   * s'agissait. Un atelier ne pouvait donc servir qu'une formation, non parce
+   * qu'un autre diplôme n'y aurait rien trouvé, mais parce que la forme des
+   * données l'interdisait. L'identité est maintenant l'intitulé, que
+   * tests/architecture/intitules-des-ateliers garde distinctif.
+   *
+   * Les codes viennent de src/config/formations.ts, et une garde vérifie
+   * qu'aucun ne désigne une formation qui n'existe pas.
+   */
+  formations: readonly string[];
+  /**
+   * À QUI IL S'ADRESSE QUAND IL NE SERT AUCUNE FORMATION EN PARTICULIER.
+   *
+   * Trois ateliers sont dans ce cas : une découverte, un approfondissement, un
+   * tournoi. Ils portaient un FAUX DIPLÔME — « Découverte, toutes filières » —
+   * qui se mêlait aux vrais partout où le site les listait, et jusque dans la
+   * page des parcours, où il affichait des « blocs de référentiel » tirés
+   * d'aucun arrêté. Un public est une autre sorte de chose qu'un diplôme, et
+   * se lit comme telle.
+   */
+  public?: string;
   annee: string;
   /**
    * Ce que cette offre EST, dans les mots du niveau visé. Un BTS conduit un
@@ -86,7 +132,7 @@ export interface AtelierDefinition {
   pitch: string;
   /** Résumé d'une ligne, pour la carte du tableau récapitulatif. */
   resume: string;
-  /** Exigence, de 1 (initiation) à 4 (avancé), et son mot. */
+  /** Exigence, de 1 à 4, et son mot : celui de DIFFICULTES, jamais un autre. */
   difficulte: 1 | 2 | 3 | 4;
   difficulteLabel: string;
   /** Durée telle qu'elle s'annonce à un enseignant (« 6 séances de 4 h »). */
@@ -120,6 +166,43 @@ export interface AtelierDefinition {
      * autre.
      */
     effectifParEquipe: string;
+    /**
+     * UN OU DEUX TOURS D'ESSAI AVANT LA VRAIE PARTIE, à demander à la
+     * création (config/tour-d-essai, `TOURS_D_ESSAI`). Absent : la partie
+     * commence au tour 1, comme toutes les fiches écrites avant que l'option
+     * n'existe. Présent, une séance au moins le joue (`AtelierSeance.essai`),
+     * avant le premier tour réel, et la fiche technique le dit.
+     */
+    tourDEssai?: NombreDeToursDEssai;
+    /**
+     * Cette fiche se joue en mode CONCOURS, et non en partie de classe.
+     *
+     * Ce n'est pas une nuance d'affichage : un championnat ne se règle pas. Le
+     * produit y impose le secteur, le niveau, la durée et l'absence de
+     * concurrent simulé, quels que soient le vœu de l'enseignant et le moment
+     * de l'année. L'orientation le lit pour cesser de proposer un réglage que
+     * l'organisateur ne pourra pas appliquer, et une garde vérifie que la fiche
+     * annonce bien ce que le concours impose.
+     */
+    concours?: true;
+    /**
+     * La configuration du TOURNOI, quand la fiche se joue en concours.
+     *
+     * Les réglages voisins décrivent une partie de classe et ne disent rien
+     * d'un championnat : ce qui le décrit, c'est le nombre d'équipes attendues
+     * sur le campus, la taille visée des groupes et le nombre de qualifiés par
+     * groupe. Le nombre de groupes et celui des finalistes ne s'écrivent pas à
+     * la main, ils se calculent du tirage réel (`formatDuTournoi`), parce que
+     * le produit divise par quotient entier et plafonne sa finale.
+     */
+    tournoi?: {
+      /** Équipes attendues sur l'ensemble du campus. */
+      equipes: number;
+      /** Taille de groupe à régler à la création du concours. */
+      tailleGroupe: number;
+      /** Qualifiés par groupe à régler à la création du concours. */
+      qualifiesParGroupe: number;
+    };
     notes: string;
   };
   seances: AtelierSeance[];
@@ -136,3 +219,18 @@ export interface AtelierDefinition {
   /** Les questions que pose un enseignant avant de se lancer, et leurs réponses. */
   faq: { question: string; reponse: string }[];
 }
+
+/**
+ * L'échelle d'exigence, écrite une fois.
+ *
+ * Le même chiffre portait des mots différents d'une fiche à l'autre : 1 était
+ * « Initiation » ici et « Découverte » là, 3 était « Approfondissement » ou
+ * « Pilotage ». Un enseignant qui compare les fiches doit lire la même
+ * échelle ; une garde vérifie que chacune l'emploie.
+ */
+export const DIFFICULTES: Record<AtelierDefinition["difficulte"], string> = {
+  1: "Découverte",
+  2: "Initiation",
+  3: "Approfondissement",
+  4: "Avancé",
+};

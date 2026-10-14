@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario HÔTEL — « L'ESCALE », hôtel 3 étoiles de 60 chambres en ville
@@ -114,15 +115,19 @@ const rawHotel = {
     loanAnnualRate: 0.042, // adossé aux murs : le taux est bas
     overdraftAnnualRate: 0.12,
     overdraftLimit: 60000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 40, // crédit immobilier : 10 ans
     maxCapitalIncreaseTotal: 250000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 28000, // les murs et l'agencement pèsent lourd
   },
   treasury: {
@@ -462,6 +467,43 @@ const rawHotel = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "hotel_nouvel_hotel",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "hotel_locations_particuliers",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:loisirs", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "hotel_congres",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:affaires", op: "mul", value: 1.35 }],
+    },
+    {
+      code: "hotel_chef_reconnu",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
+    },
+    {
+      code: "hotel_legionelle",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.6 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("hotel"),
   ],
   // L'énergie flambe au tour 4 : la facture explose juste après la saison
   // haute, quand on croyait l'exercice sauvé.

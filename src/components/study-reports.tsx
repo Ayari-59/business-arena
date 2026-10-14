@@ -1,4 +1,5 @@
 import type { StudyReports } from "@/services/game.service";
+import { Icone } from "@/components/icone";
 
 /**
  * Rapports des études achetées au dernier tour résolu (doc 02 §8bis) :
@@ -13,8 +14,10 @@ const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
 
 function Report({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <article className="rounded-xl border border-indigo-400/20 bg-slate-900 p-1.5 sm:p-4">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-indigo-300">{title}</h4>
+    // LOT P3 : un rapport d'étude se CONSULTE : le panneau d'information plat du
+    // cockpit (il était cerné d'un filet indigo, une couleur hors charte).
+    <article className="panneau-info p-3 sm:p-5">
+      <h4 className="text-sm font-semibold text-slate-200">{title}</h4>
       <div className="mt-2 space-y-2 text-xs text-slate-300">{children}</div>
     </article>
   );
@@ -47,7 +50,7 @@ function Table({
             <tr
               key={i}
               className={`border-t border-white/5 ${
-                i === highlight ? "font-semibold text-amber-200" : "text-slate-300"
+                i === highlight ? "font-semibold text-slate-50" : "text-slate-300"
               }`}
             >
               {cells.map((c, j) => (
@@ -66,8 +69,9 @@ function Table({
 export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
   return (
     <section className="mt-4">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-300">
-        📊 Vos études du tour {reports.round} · {euro(reports.cost)} d&apos;honoraires
+      <p className="surtitre mb-2 flex items-center gap-1.5 text-slate-300">
+        <Icone nom="loupe" className="h-3.5 w-3.5" />
+        Vos études du tour {reports.round} · {euro(reports.cost)} d&apos;honoraires
       </p>
       <div className="grid gap-3 lg:grid-cols-2">
         {reports.market ? (

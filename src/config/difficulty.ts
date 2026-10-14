@@ -20,21 +20,58 @@ export interface DifficultyPreset {
   tagline: string;
   /** Plafond d'indices débloquables (0 = aucun indice). */
   hintMaxLevel: 0 | 1 | 2 | 3 | 4 | 5;
-  /** Décisions exposées au joueur (prix, production, marketing : toujours actives). */
+  /**
+   * Décisions exposées au joueur (prix, production, marketing : toujours actives).
+   *
+   * LA PROGRESSION (décision du propriétaire, octobre 2026) : l'opérationnel
+   * d'abord, puis l'investissement et le financement, puis la stratégie.
+   *
+   *   1 Découverte   prix, production, marketing
+   *   2 Gestion      + qualité, maintenance
+   *   3 Pilotage     + ressources humaines, créances clients
+   *   4 Arbitrage    + investissement, financement, assurance
+   *   5 Stratégie    + R&D, RSE, placement
+   *   6 Executive    + dividende
+   *
+   * La répartition d'avant (l'emprunt et l'investissement dès le niveau 1, les
+   * RH au niveau 4) reste lisible pour les parties créées avant elle : voir
+   * `REPARTITION_AVANT_2026_10_11` et `presetFromProfile`.
+   */
   decisions: {
     quality: boolean;
     maintenance: boolean;
+    /**
+     * Financer : emprunter, rembourser, augmenter le capital. Ouvert avec
+     * l'investissement, au niveau 4 : on ne décide pas d'acheter une machine
+     * sans savoir d'où vient l'argent. Fermé, la banque ne laisse pas l'équipe
+     * sans réponse : le découvert, à son taux, couvre le manque, et au-delà de
+     * son plafond elle cède les créances (affacturage forcé). Aucun verrou de
+     * validation ne réclame un emprunt que l'écran ne propose pas.
+     */
     finance: boolean;
+    /**
+     * Mobiliser le poste clients (escompte, affacturage). Un outil de
+     * trésorerie à part : il suppose de savoir lire un délai de paiement. Il
+     * s'ouvre au niveau 3, avec les ressources humaines : c'est le niveau où
+     * l'on pilote le besoin en fonds de roulement avant d'emprunter.
+     */
+    creances: boolean;
     insurance: boolean;
-    /** RH (embauches, formation, salaires) — doc 08 : dès ARBITRAGE. */
+    /** RH (embauches, formation, salaires) : dès Pilotage, avant d'investir. */
     hr: boolean;
-    /** Investissement capacitaire — doc 08 : dès ARBITRAGE. */
+    /**
+     * Investissement capacitaire : acheter de la capacité, ou des machines.
+     * Ouvert au niveau 4 avec le financement, qui lui donne un sens, et après
+     * les ressources humaines : une machine ne produit que si une équipe la
+     * fait tourner (voir `engine/investment/plafond`, qui borne l'achat là où
+     * l'investissement serait ouvert sans les embauches).
+     */
     investment: boolean;
     /**
      * Engagement RSE (Lot 2) — le levier « payer maintenant, gagner plus tard ».
-     * Ouvert dès ARBITRAGE : c'est un arbitrage inter-temporel qui suppose déjà
-     * de savoir lire une marge et une trésorerie, et il ne prend son sens que
-     * sur un horizon assez long (≥ 5-6 tours).
+     * Ouvert au niveau Stratégie : c'est un arbitrage inter-temporel qui suppose
+     * déjà de savoir lire une marge et une trésorerie, et il ne prend son sens
+     * que sur un horizon assez long (≥ 5-6 tours).
      */
     rse: boolean;
     /**
@@ -54,8 +91,8 @@ export interface DifficultyPreset {
     /**
      * Recherche et développement : lancer une référence à développer, élever
      * le niveau technique. Un investissement immatériel qui coûte maintenant
-     * et rapporte plus tard : ouvert avec l'investissement, au niveau
-     * Arbitrage. Fermé, les références à développer sont livrées prêtes.
+     * et rapporte plus tard : ouvert au niveau Stratégie, avec la RSE. Fermé,
+     * les références à développer sont livrées prêtes.
      */
     rd: boolean;
   };
@@ -63,50 +100,88 @@ export interface DifficultyPreset {
   eventProbabilityMultiplier: number;
 }
 
+export type LeviersDuNiveau = DifficultyPreset["decisions"];
+
+/** Tous les leviers fermés : le point de départ d'une répartition. */
+const FERME: LeviersDuNiveau = {
+  quality: false,
+  maintenance: false,
+  finance: false,
+  creances: false,
+  insurance: false,
+  hr: false,
+  investment: false,
+  rse: false,
+  placement: false,
+  dividend: false,
+  rd: false,
+};
+
 export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
   {
     level: 1,
     code: "decouverte",
     name: "Découverte",
-    tagline: "Prix, production, marketing : l'essentiel, avec tous les indices.",
+    tagline: "Prix, production, marketing : l'essentiel du métier, avec tous les indices.",
     hintMaxLevel: 5,
-    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+    decisions: { ...FERME },
     eventProbabilityMultiplier: 0.5,
   },
   {
     level: 2,
     code: "gestion",
     name: "Gestion",
-    tagline: "Qualité et maintenance entrent en jeu.",
+    tagline: "Qualité et maintenance entrent en jeu : ce que vous produisez, et l'outil qui le produit.",
     hintMaxLevel: 5,
-    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+    decisions: { ...FERME, quality: true, maintenance: true },
     eventProbabilityMultiplier: 0.75,
   },
   {
     level: 3,
     code: "pilotage",
     name: "Pilotage",
-    tagline: "Financement et assurance : la trésorerie se pilote. Indices limités.",
+    tagline: "Votre équipe et vos créances clients : effectif, salaires et trésorerie se pilotent. Indices limités.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+    decisions: { ...FERME, quality: true, maintenance: true, hr: true, creances: true },
     eventProbabilityMultiplier: 1,
   },
   {
     level: 4,
     code: "arbitrage",
     name: "Arbitrage",
-    tagline: "Les aléas frappent plus souvent : anticipez.",
+    tagline: "Emprunter, investir, s'assurer : les grands arbitrages, sous des aléas plus fréquents.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: false, dividend: false, rd: true },
+    decisions: {
+      ...FERME,
+      quality: true,
+      maintenance: true,
+      hr: true,
+      creances: true,
+      investment: true,
+      finance: true,
+      insurance: true,
+    },
     eventProbabilityMultiplier: 1.25,
   },
   {
     level: 5,
     code: "strategie",
     name: "Stratégie",
-    tagline: "Deux indices, pas un de plus, et un marché nerveux.",
+    tagline: "R&D, RSE et placements : payer maintenant pour gagner plus tard. Deux indices, un marché nerveux.",
     hintMaxLevel: 2,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: false, rd: true },
+    decisions: {
+      ...FERME,
+      quality: true,
+      maintenance: true,
+      hr: true,
+      creances: true,
+      investment: true,
+      finance: true,
+      insurance: true,
+      rd: true,
+      rse: true,
+      placement: true,
+    },
     eventProbabilityMultiplier: 1.5,
   },
   {
@@ -116,12 +191,100 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     tagline:
       "Affectation du résultat, aucun indice, événements doublés : vous répondez aussi aux associés.",
     hintMaxLevel: 0,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: true, rd: true },
+    decisions: {
+      quality: true,
+      maintenance: true,
+      finance: true,
+      creances: true,
+      insurance: true,
+      hr: true,
+      investment: true,
+      rse: true,
+      placement: true,
+      dividend: true,
+      rd: true,
+    },
     eventProbabilityMultiplier: 2,
   },
 ];
 
 export const presetByLevel = new Map(DIFFICULTY_PRESETS.map((p) => [p.level, p]));
+
+/**
+ * LA RÉPARTITION D'AVANT LE 11 OCTOBRE 2026, pour les parties créées avant
+ * elle. Un niveau ne figeait alors que son numéro dans le profil de la partie,
+ * et relisait les préréglages du moment : changer la répartition aurait fermé
+ * l'emprunt au milieu d'une partie de niveau 2, ou ouvert les embauches d'une
+ * partie de niveau 3. Une partie créée depuis fige sa liste de leviers
+ * (`difficultyProfile.difficulty.decisions`) ; celles d'avant relisent cette
+ * table, telle qu'elle était.
+ */
+export const REPARTITION_AVANT_2026_10_11: Readonly<Record<DifficultyPreset["level"], LeviersDuNiveau>> = {
+  1: { ...FERME, finance: true, investment: true },
+  2: { ...FERME, quality: true, maintenance: true, finance: true, investment: true },
+  3: {
+    ...FERME,
+    quality: true,
+    maintenance: true,
+    finance: true,
+    creances: true,
+    insurance: true,
+    investment: true,
+  },
+  4: {
+    ...FERME,
+    quality: true,
+    maintenance: true,
+    finance: true,
+    creances: true,
+    insurance: true,
+    hr: true,
+    investment: true,
+    rse: true,
+    rd: true,
+  },
+  5: {
+    ...FERME,
+    quality: true,
+    maintenance: true,
+    finance: true,
+    creances: true,
+    insurance: true,
+    hr: true,
+    investment: true,
+    rse: true,
+    rd: true,
+    placement: true,
+  },
+  6: {
+    quality: true,
+    maintenance: true,
+    finance: true,
+    creances: true,
+    insurance: true,
+    hr: true,
+    investment: true,
+    rse: true,
+    placement: true,
+    dividend: true,
+    rd: true,
+  },
+};
+
+/**
+ * Le premier niveau qui ouvre un levier (« les embauches s'ouvrent au niveau
+ * 3 ») : lu dans les préréglages, jamais écrit dans une phrase. `apres` : le
+ * premier au-delà de ce niveau (une partie d'avant la répartition actuelle, au
+ * niveau 3, apprend que les embauches viennent au 4, pas « au 3 »). `null` si
+ * aucun niveau ne l'ouvre.
+ */
+export function premierNiveauQuiOuvre(
+  levier: keyof DifficultyPreset["decisions"],
+  presets: readonly DifficultyPreset[] = DIFFICULTY_PRESETS,
+  apres = 0,
+): number | null {
+  return presets.find((p) => p.level > apres && p.decisions[levier])?.level ?? null;
+}
 
 /** Comportement des parties créées AVANT le sélecteur (rétro-compatibilité). */
 export const LEGACY_PRESET: DifficultyPreset = {
@@ -130,14 +293,55 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+  decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
   eventProbabilityMultiplier: 1,
 };
 
-/** Lit le préréglage d'un difficultyProfile de partie (null → LEGACY_PRESET). */
+/** Une liste de leviers figée dans un profil : chaque drapeau booléen lu, les absents fermés. */
+function leviersFiges(brut: unknown): LeviersDuNiveau | null {
+  if (!brut || typeof brut !== "object") return null;
+  const lus = Object.entries(brut as Record<string, unknown>).filter(
+    ([cle, v]) => cle in FERME && typeof v === "boolean",
+  );
+  if (lus.length === 0) return null;
+  return { ...FERME, ...Object.fromEntries(lus) };
+}
+
+/**
+ * Le difficultyProfile d'une partie, à sa création : le niveau, son nom, et SA
+ * LISTE DE LEVIERS, figée. La répartition peut changer ensuite sans toucher aux
+ * parties en cours.
+ */
+export function profilDuNiveau(preset: DifficultyPreset): {
+  level: DifficultyPreset["level"];
+  name: string;
+  decisions: LeviersDuNiveau;
+} {
+  return { level: preset.level, name: preset.name, decisions: { ...preset.decisions } };
+}
+
+/**
+ * Les leviers FIGÉS d'une partie, s'il y en a (une partie créée depuis la
+ * répartition d'octobre 2026). `null` pour les parties d'avant : leurs
+ * concurrents pilotés continuent de jouer comme ils ont toujours joué.
+ */
+export function leviersFigesDuProfil(profile: unknown): LeviersDuNiveau | null {
+  return leviersFiges((profile as { difficulty?: { decisions?: unknown } } | null)?.difficulty?.decisions);
+}
+
+/**
+ * Lit le préréglage d'un difficultyProfile de partie (null → LEGACY_PRESET).
+ * Les leviers sont ceux FIGÉS à la création ; une partie d'avant qui n'en a
+ * pas relit la répartition de son époque (`REPARTITION_AVANT_2026_10_11`).
+ */
 export function presetFromProfile(profile: unknown): DifficultyPreset {
-  const d = (profile as { difficulty?: { level?: number } })?.difficulty;
-  return (d?.level && presetByLevel.get(d.level as DifficultyPreset["level"])) || LEGACY_PRESET;
+  const d = (profile as { difficulty?: { level?: number; decisions?: unknown } })?.difficulty;
+  const base = d?.level ? presetByLevel.get(d.level as DifficultyPreset["level"]) : undefined;
+  if (!base) return LEGACY_PRESET;
+  return {
+    ...base,
+    decisions: leviersFiges(d?.decisions) ?? { ...REPARTITION_AVANT_2026_10_11[base.level] },
+  };
 }
 
 /**
@@ -173,6 +377,42 @@ export const QUIZ_MODES: readonly { code: QuizMode; name: string; help: string }
     help: "Le diagnostic fait toute la note. Le débriefing continue d'indiquer le modèle attendu et son explication, en lecture seule.",
   },
 ];
+
+/**
+ * LE FORMAT DES RÉPONSES : QCM, OU QUESTIONS OUVERTES.
+ *
+ * Le diagnostic et le modèle d'analyse se répondent d'ordinaire en cochant : des cases
+ * pour le diagnostic, un choix pour le modèle. Un enseignant peut vouloir une partie sans
+ * QCM, où l'élève écrit avec ses mots. Le texte est alors ramené aux options de la
+ * situation par les mots qu'il emploie (voir `pedagogy/reponse-ouverte`), de sorte que
+ * le score, le débriefing et la maîtrise suivent le chemin d'avant. Cette correction est
+ * approximative : l'enseignant relit les textes, conservés tels quels.
+ *
+ * Le réglage est indépendant du mode des questions (`QuizMode`) : il dit COMMENT on
+ * répond à ce qui est posé, pas CE QUI est posé.
+ */
+export type AnswerFormat = "qcm" | "open";
+
+export const DEFAULT_ANSWER_FORMAT: AnswerFormat = "qcm";
+
+export const ANSWER_FORMATS: readonly { code: AnswerFormat; name: string; help: string }[] = [
+  {
+    code: "qcm",
+    name: "QCM",
+    help: "Cases à cocher pour le diagnostic, un choix parmi des propositions pour le modèle d'analyse.",
+  },
+  {
+    code: "open",
+    name: "Questions ouvertes",
+    help: "L'élève écrit son diagnostic et le modèle qu'il mobilise, avec ses mots. Corrigé automatiquement par mots-clés, donc de façon approximative.",
+  },
+];
+
+/** Réglage d'une partie ; absent (parties d'avant ce réglage) = QCM, comme à l'époque. */
+export function answerFormatFromProfile(profile: unknown): AnswerFormat {
+  const p = profile as { answerFormat?: unknown } | null;
+  return p?.answerFormat === "open" ? "open" : "qcm";
+}
 
 /**
  * Réglage d'une partie. Deux replis, dans cet ordre :
@@ -214,6 +454,25 @@ export const economicOverridesSchema = z.object({
   overdraftLimit: z.number().min(0).max(5_000_000).optional(),
   /** Durée d'amortissement d'un nouvel emprunt, en tours. */
   loanDurationRounds: z.number().int().min(1).max(60).optional(),
+  /**
+   * Capacité d'endettement : la banque ne prête pas au-delà de ce multiple
+   * des capitaux propres. Bas, elle coupe le crédit tôt et la crise arrive
+   * vite ; haut, l'équipe peut s'enfoncer longtemps avant de trouver le mur.
+   */
+  maxDebtToEquity: z.number().min(0).max(20).optional(),
+  /**
+   * Tours de cessation de paiements CONSÉCUTIFS avant la défaillance. 1 : la
+   * sanction tombe au premier tour dans le rouge, pour une séance courte.
+   * 4 : le temps de redresser, pour un atelier qui court sur plusieurs
+   * séances.
+   */
+  crisisRoundsBeforeFailure: z.number().int().min(1).max(10).optional(),
+  /**
+   * Le financement de sauvetage est-il un verrou ou un avertissement ? Saisi
+   * comme 1 (obligatoire) ou 0 (simple alerte) : le panneau ne pose que des
+   * champs numériques, et une case à cocher y serait le seul cas particulier.
+   */
+  rescueFinancingRequired: z.number().min(0).max(1).optional(),
   /** Dotations aux amortissements par trimestre (€). */
   depreciationPerRound: z.number().min(0).max(500_000).optional(),
   /** Part maximale du poste clients mobilisable à l'escompte (0-1). */
@@ -313,6 +572,13 @@ export function applyEconomicOverrides(
       supplierPaymentDelayDays:
         overrides.supplierPaymentDelayDays ?? scenario.finance.supplierPaymentDelayDays,
       loanDurationRounds: overrides.loanDurationRounds ?? scenario.finance.loanDurationRounds,
+      maxDebtToEquity: overrides.maxDebtToEquity ?? scenario.finance.maxDebtToEquity,
+      crisisRoundsBeforeFailure:
+        overrides.crisisRoundsBeforeFailure ?? scenario.finance.crisisRoundsBeforeFailure,
+      rescueFinancingRequired:
+        overrides.rescueFinancingRequired === undefined
+          ? scenario.finance.rescueFinancingRequired
+          : overrides.rescueFinancingRequired === 1,
       depreciationPerRound:
         overrides.depreciationPerRound ?? scenario.finance.depreciationPerRound,
     },
@@ -360,7 +626,7 @@ export function applyEconomicOverrides(
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
- * PONDÉRATIONS DU BPI, PARAMÉTRABLES PAR L'ENSEIGNANT (V2 couche 2, chantier #3).
+ * PONDÉRATIONS DU IPG, PARAMÉTRABLES PAR L'ENSEIGNANT (V2 couche 2, chantier #3).
  *
  * Hors moteur : le module de scoring (src/scoring/bpi.ts) reste pur et ignore
  * ces réglages ; on ne fait que réécrire `scenario.scoring.weights` AVANT de
@@ -368,7 +634,7 @@ export function applyEconomicOverrides(
  * scoring aval (tour et classement) lit alors les poids surchargés sans le
  * savoir.
  *
- * L'enseignant pondère les SIX dimensions affichées du BPI v2. En interne, le
+ * L'enseignant pondère les SIX dimensions affichées de l'IPG v2. En interne, le
  * scénario porte sept poids : « pilotage » y est la SOMME de `strategy` +
  * `operational`, et le scoring v2 ne lit jamais que cette somme. On répartit
  * donc « pilotage » entre les deux en conservant le ratio d'origine — neutre
@@ -385,7 +651,7 @@ export const scoringWeightOverridesSchema = z.object({
 
 export type ScoringWeightOverrides = z.infer<typeof scoringWeightOverridesSchema>;
 
-/** Les six dimensions pondérables du BPI v2, dans l'ordre d'affichage. */
+/** Les six dimensions pondérables de l'IPG v2, dans l'ordre d'affichage. */
 export const SCORING_WEIGHT_DIMENSIONS = [
   "economic",
   "financial",
@@ -411,7 +677,7 @@ export function sanitizeScoringWeightOverrides(
 }
 
 /**
- * Réécrit les pondérations du BPI depuis les réglages de l'enseignant. Les
+ * Réécrit les pondérations de l'IPG depuis les réglages de l'enseignant. Les
  * dimensions non fournies gardent la valeur du scénario. Le résultat est
  * TOUJOURS renormalisé (somme = 1, exigée par le schéma de scoring) : les
  * réglages expriment un poids RELATIF, jamais une valeur absolue. Une somme

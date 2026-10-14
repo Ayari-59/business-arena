@@ -1,16 +1,21 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
+import { allerAuDebutDEtape } from "@/lib/debut-d-etape";
+import { Icone, type NomDIcone } from "@/components/icone";
 import {
   Fragment,
   useEffect,
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 
-export type SegmentedTab = { key: string; label: string; icon?: string };
+/** Un onglet : sa clé, son nom, et son pictogramme (un nom de la liste du site, pas un emoji). */
+export type SegmentedTab = { key: string; label: string; icon?: NomDIcone };
 
 /**
  * Un jeu d'onglets local et autonome : contrairement à `ArenaLayout`, il ne
@@ -31,6 +36,31 @@ export type SegmentedTab = { key: string; label: string; icon?: string };
  * est ni quoi faire ensuite ; il peut toujours revenir en arrière (les étapes
  * restent cliquables). Sur la dernière étape, pas de bouton « suivant » : c'est
  * l'action propre du panneau (valider et simuler) qui conclut.
+ *
+ * SUR TÉLÉPHONE, UNE SEULE BARRE FIXE : L'ACTION DE L'ÉTAPE. Le fil d'étapes
+ * reste EN HAUT, dans le flux, comme sur grand écran (seul le libellé de
+ * l'étape courante s'y écrit, les autres gardent leur numéro) ; en bas de
+ * l'écran, le seul bouton qui mène à l'étape suivante. Les onglets étaient
+ * descendus sous le pouce, dans une seconde barre fixe : avec le pied du
+ * formulaire et les tuiles du haut, il restait environ 200 px pour le champ à
+ * remplir, et le cadre de l'onglet actif débordait de la barre.
+ *
+ * UN SEUL APLAT ORANGE PAR ÉCRAN. Quand l'étape porte sa propre action
+ * (« Valider mon analyse », marquée `data-action-de-l-etape`), le bouton qui
+ * mène à la suivante passe en filet.
+ *
+ * LA TEINTE DU MÉTIER MARQUE OÙ L'ON EN EST (lot 5A). Le fil des étapes
+ * cerclait l'étape courante d'orange et numérotait sa pastille en orange : la
+ * couleur de l'ACTION servait à dire une POSITION, et l'orange du bouton
+ * « étape suivante », juste dessous, n'en ressortait plus. L'étape courante
+ * prend donc la teinte du métier de la partie, et les étapes faites restent
+ * neutres : un état n'est pas une identité.
+ *
+ * AVANCER N'EST PAS AGIR (lot 6E). Le bouton « étape suivante » a quitté
+ * l'orange à son tour : il est plein mais neutre (`bouton-suite`), comme
+ * « Suivant » sur la feuille de décision. L'orange ne marque plus que les
+ * gestes qui FONT quelque chose : ouvrir le courrier, valider l'analyse,
+ * valider et simuler.
  *
  * `syncAnchors` : les clés d'onglets qui portent une ancre de page (un panneau
  * dont le contenu a un `id` cible d'un lien `href="#id"`). Comme seul le panneau
@@ -58,11 +88,23 @@ export function SegmentedTabs({
   const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
   const visible = tabs.filter((t) => children[t.key] != null);
   const [active, setActive] = useState(
-    defaultKey && visible.some((t) => t.key === defaultKey)
-      ? defaultKey
-      : visible[0]?.key ?? "",
+    defaultKey && visible.some((t) => t.key === defaultKey) ? defaultKey : (visible[0]?.key ?? ""),
   );
   const current = visible.find((t) => t.key === active) ? active : visible[0]?.key;
+
+  // Le cadre entier : on revient à son début d'une étape à l'autre, et l'on y
+  // guette l'action propre de l'étape.
+  const cadre = useRef<HTMLDivElement>(null);
+  const [actionPropre, setActionPropre] = useState(false);
+  useEffect(() => {
+    const el = cadre.current;
+    if (!el || !guided) return;
+    const relire = () => setActionPropre(el.querySelector("[data-action-de-l-etape]") !== null);
+    relire();
+    const veille = new MutationObserver(relire);
+    veille.observe(el, { childList: true, subtree: true });
+    return () => veille.disconnect();
+  }, [guided, current]);
 
   const visibleKeys = visible.map((t) => t.key).join(",");
   const anchorKeys = (syncAnchors ?? []).join(",");
@@ -88,18 +130,29 @@ export function SegmentedTabs({
 
   const tabId = (key: string) => `${baseId}-tab-${key}`;
   const panelId = (key: string) => `${baseId}-panel-${key}`;
-  const currentIndex = Math.max(0, visible.findIndex((t) => t.key === current));
+  const currentIndex = Math.max(
+    0,
+    visible.findIndex((t) => t.key === current),
+  );
 
-  const allerA = (index: number) => {
+  const allerA = (index: number, depuisLaBarre = false) => {
     const k = visible[index]?.key;
     if (!k) return;
     setActive(k);
-    boutons.current[k]?.focus();
+    if (depuisLaBarre) {
+      // Le contenu change sous les yeux : on repart du début des étapes (pas du
+      // haut de la page, où l'ardoise reprenait la place), sinon on arriverait
+      // au milieu de l'étape suivante, à la hauteur où l'on avait défilé.
+      allerAuDebutDEtape(cadre.current);
+      boutons.current[k]?.focus({ preventScroll: true });
+    } else {
+      boutons.current[k]?.focus();
+    }
   };
 
   // Flèches et Origine/Fin : on déplace le focus d'onglet en onglet et on active
   // au passage (activation « automatique », la plus simple à suivre au clavier).
-  const auClavier = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
+  const auClavier = (e: KeyboardEvent<HTMLButtonElement>, index: number, depuisLaBarre = false) => {
     const n = visible.length;
     let cible = index;
     if (e.key === "ArrowRight" || e.key === "ArrowDown") cible = (index + 1) % n;
@@ -108,13 +161,38 @@ export function SegmentedTabs({
     else if (e.key === "End") cible = n - 1;
     else return;
     e.preventDefault();
-    allerA(cible);
+    allerA(cible, depuisLaBarre);
   };
+  const suivant = guided && currentIndex < visible.length - 1 ? visible[currentIndex + 1]! : null;
+  // LOT 6E : AVANCER N'EST PAS AGIR. Le bouton qui mène à l'étape suivante est
+  // plein mais neutre (`bouton-suite`), comme « Suivant » sur la feuille ;
+  // l'orange reste aux gestes qui font quelque chose (ouvrir le courrier,
+  // valider l'analyse, valider et simuler). Quand l'étape porte sa propre
+  // action, il s'efface d'un cran de plus, en simple filet.
+  const classeSuivant = actionPropre
+    ? bouton({ variante: "secondaire", taille: "l" })
+    : `${bouton({ variante: "secondaire", taille: "l" })} bouton-suite`;
 
   return (
-    <div className="space-y-4">
+    <div
+      ref={cadre}
+      data-debut-d-etape=""
+      className="space-y-4"
+      // La hauteur de la barre fixe, quand il y en a une : le pied du formulaire
+      // de décision s'y pose dessus au lieu de passer dessous (voir
+      // decision-form.tsx). À la dernière étape, il n'y en a pas.
+      style={
+        guided && suivant
+          ? ({ "--barre-bas": "calc(4.5rem + env(safe-area-inset-bottom))" } as CSSProperties)
+          : undefined
+      }
+    >
       {guided ? (
-        <nav className="flex items-center gap-2" role="tablist" aria-label={label}>
+        <nav
+          className="flex min-w-0 items-center gap-1.5 sm:gap-2"
+          role="tablist"
+          aria-label={label}
+        >
           {visible.map((tab, index) => {
             const estCourant = current === tab.key;
             const estFait = index < currentIndex;
@@ -127,16 +205,30 @@ export function SegmentedTabs({
                   }}
                   type="button"
                   role="tab"
+                  // Sur téléphone, une étape non courante ne montre que son
+                  // numéro : son nom reste celui que lit un lecteur d'écran.
+                  aria-label={tab.label}
                   aria-selected={estCourant}
                   aria-controls={panelId(tab.key)}
                   tabIndex={estCourant ? 0 : -1}
                   onClick={() => setActive(tab.key)}
                   onKeyDown={(e) => auClavier(e, index)}
-                  className={`flex min-w-0 items-center gap-2 rounded-lg border px-2 py-2 text-left transition sm:flex-1 sm:gap-2.5 sm:px-3 ${
+                  className={`flex min-h-11 min-w-11 items-center gap-2 rounded-lg border px-2 py-2 text-left transition sm:flex-1 sm:gap-2.5 sm:px-3 ${
+                    estCourant ? "min-w-0 flex-1" : "shrink-0"
+                  } ${
                     estCourant
-                      ? "border-amber-400/50 bg-amber-400/10"
+                      ? // L'ÉTAPE COURANTE EST À LA TEINTE DU MÉTIER (lot 5A) :
+                        // l'orange, qui la cerclait, reste à l'ACTION seule, et
+                        // la barre du bas la porte toujours.
+                        // L'anneau double le filet sans décaler la rangée
+                        // d'un pixel : une bordure de 2 px sur la seule étape
+                        // courante ferait sauter les autres.
+                        // LOT 6E : hors d'une partie, le repli est un gris clair, plus
+                        // l'orange — la navigation ne lit jamais l'accent d'action.
+                        "voile-neutre border-[color:var(--metier,var(--color-slate-300))] ring-1 ring-[color:var(--metier,var(--color-slate-300))]"
                       : estFait
-                        ? "border-emerald-400/30 bg-emerald-950/20 hover:bg-emerald-950/30"
+                        ? // Une étape faite est un état : neutre, pas menthe.
+                          "voile-neutre border-white/10 hover:border-white/20"
                         : "border-white/10 bg-slate-900 hover:border-white/20"
                   }`}
                 >
@@ -144,9 +236,9 @@ export function SegmentedTabs({
                     aria-hidden
                     className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${
                       estCourant
-                        ? "bg-amber-400 text-slate-950"
+                        ? "bg-[color:var(--metier,var(--color-slate-300))] text-[color:var(--metier-texte,var(--color-slate-950))]"
                         : estFait
-                          ? "bg-emerald-400 text-slate-950"
+                          ? "bg-[var(--point-etat)] text-[var(--point-etat-texte)]"
                           : "bg-slate-700 text-slate-300"
                     }`}
                   >
@@ -159,15 +251,15 @@ export function SegmentedTabs({
                   <span
                     className={`min-w-0 truncate text-sm font-medium ${
                       estCourant
-                        ? "text-amber-100"
-                        : `hidden sm:inline ${estFait ? "text-emerald-200" : "text-slate-300"}`
+                        ? "text-slate-50"
+                        : `hidden sm:inline ${estFait ? "text-slate-200" : "text-slate-300"}`
                     }`}
                   >
                     {tab.label}
                   </span>
                 </button>
                 {index < visible.length - 1 ? (
-                  <span aria-hidden className="shrink-0 text-slate-600">
+                  <span aria-hidden className="shrink-0 text-slate-400">
                     →
                   </span>
                 ) : null}
@@ -177,7 +269,7 @@ export function SegmentedTabs({
         </nav>
       ) : (
         <nav
-          className="flex gap-1 rounded-lg border border-white/10 bg-slate-900 p-1"
+          className="flex gap-1 rounded-lg bg-slate-950/50 p-1"
           role="tablist"
           aria-label={label}
         >
@@ -195,13 +287,15 @@ export function SegmentedTabs({
               tabIndex={current === tab.key ? 0 : -1}
               onClick={() => setActive(tab.key)}
               onKeyDown={(e) => auClavier(e, index)}
+              // LE RAIL : l'onglet actif garde son relief neutre et porte, sous
+              // lui, un filet de 2 px à la teinte du métier (lot 5A).
               className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 current === tab.key
-                  ? "bg-slate-700 text-slate-50"
+                  ? "bg-slate-700 text-slate-50 shadow-[inset_0_-2px_0_0_var(--metier,var(--color-slate-300))]"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              {tab.icon ? <span className="mr-1.5">{tab.icon}</span> : null}
+              {tab.icon ? <Icone nom={tab.icon} className="mr-1.5 h-4 w-4" /> : null}
               {tab.label}
             </button>
           ))}
@@ -218,7 +312,7 @@ export function SegmentedTabs({
       </div>
 
       {guided && currentIndex < visible.length - 1 ? (
-        <div className="flex items-center justify-between gap-3">
+        <div className="hidden items-center justify-between gap-3 sm:flex">
           {currentIndex > 0 ? (
             <button
               type="button"
@@ -233,12 +327,29 @@ export function SegmentedTabs({
           <button
             type="button"
             onClick={() => allerA(currentIndex + 1)}
-            className="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+            className={classeSuivant}
           >
             {visible[currentIndex + 1]!.label}
             <span aria-hidden>→</span>
           </button>
         </div>
+      ) : null}
+
+      {guided && suivant ? (
+        <>
+          {/* La place de la barre : sans elle, la fin de l'étape passerait dessous. */}
+          <div aria-hidden className="h-20 sm:hidden" />
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/12 bg-slate-950/95 px-3.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden">
+            <button
+              type="button"
+              onClick={() => allerA(currentIndex + 1, true)}
+              className={`${classeSuivant} min-h-12 w-full`}
+            >
+              {suivant.label}
+              <span aria-hidden>→</span>
+            </button>
+          </div>
+        </>
       ) : null}
     </div>
   );

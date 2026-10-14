@@ -33,13 +33,117 @@ interface FormContract {
    * (bouton de soumission nommé, champ caché construit ailleurs…).
    */
   tolerated?: string[];
+  /**
+   * Modules de LECTURE PARTAGÉE que l'action délègue : leurs `formData.get`
+   * comptent comme les siens.
+   *
+   * La feuille de décision est lue par la même fonction côté serveur et côté
+   * navigateur (`config/decisions-saisies`), pour que l'encart « Résultat
+   * estimé » et le moteur ne puissent pas lire deux choses différentes. Sans
+   * cette ligne, sortir la lecture du corps de l'action aurait VIDÉ ce
+   * contrat : l'action ne lisant plus rien en propre, aucun champ n'aurait
+   * plus été vérifié, et la panne d'août serait redevenue possible.
+   */
+  lecteurs?: string[];
 }
 
 const CONTRACTS: FormContract[] = [
   {
+    nom: "demande de simulation (/orientation)",
+    action: { file: "src/app/orientation/actions.ts", fn: "envoyerDemandeOrientationAction" },
+    sources: ["src/components/orientation-form.tsx"],
+  },
+  {
+    nom: "rendez-vous téléphonique (/rendez-vous)",
+    action: { file: "src/app/rendez-vous/actions.ts", fn: "reserverRendezVousAction" },
+    sources: ["src/components/rendez-vous-form.tsx"],
+  },
+  // Le catalogue (/admin/offres, migration 0041) : la licence attribuée depuis une offre,
+  // les modules, les gratuités, les codes promo.
+  {
+    nom: "licence attribuée depuis une offre du catalogue (/admin)",
+    action: { file: "src/app/admin/actions.ts", fn: "setLicenceAction" },
+    sources: ["src/components/formulaire-de-licence.tsx"],
+  },
+  {
+    nom: "offre du catalogue (/admin/offres, éditeur)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerOffreAction" },
+    sources: ["src/components/editeur-d-offre.tsx"],
+  },
+  {
+    nom: "affichage des prix sur le site (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerAffichageAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "mise en avant d'une offre (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "mettreEnAvantAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "module du catalogue (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerModuleAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "la Découverte (/admin/offres, gratuités)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerDecouverteAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "l'essai d'établissement (/admin/offres, gratuités)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerEssaiAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
+    nom: "code promo (/admin/offres)",
+    action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerCodePromoAction" },
+    sources: ["src/app/admin/offres/page.tsx"],
+  },
+  {
     nom: "création d'une partie de classe",
     action: { file: "src/app/teacher/actions.ts", fn: "createClassGameAction" },
     sources: ["src/app/teacher/page.tsx", "src/components/economic-params.tsx"],
+  },
+  {
+    nom: "création d'une cohorte (enseignant)",
+    action: { file: "src/app/teacher/cohortes/actions.ts", fn: "creerCohorteAction" },
+    sources: ["src/app/teacher/cohortes/page.tsx", "src/components/choix-des-episodes.tsx"],
+  },
+  {
+    nom: "nom d'une cohorte (enseignant)",
+    action: { file: "src/app/teacher/cohortes/actions.ts", fn: "renommerCohorteAction" },
+    sources: ["src/app/teacher/cohortes/[id]/page.tsx"],
+  },
+  {
+    nom: "création d'un examen individuel (enseignant)",
+    action: { file: "src/app/teacher/examens/actions.ts", fn: "creerExamenAction" },
+    sources: ["src/app/teacher/examens/page.tsx"],
+  },
+  {
+    nom: "début d'un examen (candidat)",
+    action: { file: "src/app/examen/actions.ts", fn: "commencerExamenAction" },
+    sources: ["src/app/examen/[code]/page.tsx"],
+  },
+  {
+    nom: "relier une activité LTI à un examen",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "relierExamenAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
+    nom: "réglages de l'évaluation entre coéquipiers (enseignant)",
+    action: { file: "src/app/teacher/games/[gameId]/coequipiers/actions.ts", fn: "reglerLEvaluationAction" },
+    sources: ["src/app/teacher/games/[gameId]/coequipiers/page.tsx"],
+  },
+  {
+    nom: "notes d'équipe de l'évaluation entre coéquipiers (enseignant)",
+    action: { file: "src/app/teacher/games/[gameId]/coequipiers/actions.ts", fn: "notesDEquipeAction" },
+    sources: ["src/app/teacher/games/[gameId]/coequipiers/page.tsx"],
+  },
+  {
+    nom: "évaluation de ses coéquipiers (étudiant)",
+    action: { file: "src/app/arena/[gameId]/coequipiers/actions.ts", fn: "enregistrerMesReponsesAction" },
+    sources: ["src/app/arena/[gameId]/coequipiers/page.tsx"],
   },
   {
     nom: "création d'un concours",
@@ -49,7 +153,17 @@ const CONTRACTS: FormContract[] = [
   {
     nom: "décisions du tour",
     action: { file: "src/app/arena/[gameId]/actions.ts", fn: "playRoundAction" },
-    sources: ["src/components/decision-form.tsx"],
+    sources: [
+      "src/components/decision-form.tsx",
+      "src/components/resultat-estime.tsx",
+    ],
+    lecteurs: ["src/config/decisions-saisies.ts", "src/config/ventes-estimees.ts"],
+    // LE PLAN DE TRÉSORERIE N'EST PLUS DEMANDÉ PAR L'ARÈNE (voir
+    // forecast-field.test.ts) : la lecture partagée sait encore l'accueillir,
+    // pour un écran d'atelier qui le rouvrirait, mais la feuille de décision
+    // ne pose pas ces deux champs — et c'est l'ESTIMATION qui donnerait alors
+    // les ventes annoncées, jamais une seconde saisie.
+    tolerated: ["expectedUnits", "expectedCash"],
   },
   {
     nom: "réglage des questions en cours de partie",
@@ -57,9 +171,84 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/teacher/games/[gameId]/page.tsx"],
   },
   {
-    nom: "tirage d'une carte événement",
-    action: { file: "src/app/teacher/actions.ts", fn: "drawCardAction" },
-    sources: ["src/components/card-deck.tsx"],
+    nom: "distribution d'un courrier",
+    action: { file: "src/app/teacher/actions.ts", fn: "distribuerCourrierAction" },
+    sources: ["src/components/distribution-courrier.tsx"],
+  },
+  {
+    nom: "affectation d'un élève à une équipe (enseignant)",
+    action: { file: "src/app/teacher/actions.ts", fn: "affecterEleveAction" },
+    sources: ["src/components/composition-equipes.tsx"],
+  },
+  {
+    nom: "changement d'équipe (élève)",
+    action: { file: "src/app/arena/[gameId]/actions.ts", fn: "choisirMonEquipeAction" },
+    sources: ["src/components/choix-equipe.tsx"],
+  },
+  {
+    nom: "activité LTI : nouvelle partie de classe",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "creerPartieAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
+    nom: "activité LTI : partie existante",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "relierPartieAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
+    nom: "activité LTI : cohorte existante",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "relierCohorteAction" },
+    sources: ["src/app/lti/activite/page.tsx"],
+  },
+  {
+    nom: "activité LTI : nouvelle cohorte",
+    action: { file: "src/app/lti/activite/actions.ts", fn: "creerCohorteAction" },
+    sources: ["src/app/lti/activite/page.tsx", "src/components/choix-des-episodes.tsx"],
+  },
+  {
+    nom: "élève LTI : son prénom",
+    action: { file: "src/app/lti/eleve/actions.ts", fn: "entrerAction" },
+    sources: ["src/app/lti/eleve/page.tsx"],
+  },
+  {
+    nom: "plateforme LTI inscrite à la main (/admin/lti)",
+    action: { file: "src/app/admin/lti/actions.ts", fn: "ajouterPlateformeAction" },
+    sources: ["src/app/admin/lti/page.tsx"],
+  },
+  {
+    nom: "étudiant RENATER : un code de partie ou de cohorte",
+    action: { file: "src/app/etablissement/parties/actions.ts", fn: "rejoindreParCodeAction" },
+    sources: ["src/app/etablissement/parties/page.tsx"],
+  },
+  {
+    nom: "établissement RENATER rattaché (/admin/renater)",
+    action: { file: "src/app/admin/renater/actions.ts", fn: "rattacherAction" },
+    sources: ["src/app/admin/renater/page.tsx"],
+  },
+  {
+    nom: "inscription d'un enseignant (case des nouveautés comprise)",
+    action: { file: "src/app/teacher/actions.ts", fn: "registerAction" },
+    sources: ["src/components/teacher-auth-forms.tsx"],
+  },
+  {
+    nom: "réglages des inscriptions (/admin/inscrits)",
+    action: { file: "src/app/admin/inscrits/actions.ts", fn: "reglerInscriptionsAction" },
+    sources: ["src/app/admin/inscrits/page.tsx"],
+  },
+  {
+    nom: "création d'un code d'invitation (/admin/inscrits)",
+    action: { file: "src/app/admin/inscrits/actions.ts", fn: "creerCodeAction" },
+    sources: ["src/app/admin/inscrits/page.tsx"],
+  },
+  {
+    nom: "rattachement d'un inscrit à un établissement (/admin/inscrits/[id])",
+    action: { file: "src/app/admin/inscrits/actions.ts", fn: "rattacherAction" },
+    sources: ["src/app/admin/inscrits/[id]/page.tsx"],
+  },
+  {
+    nom: "réglage des nouveautés (/teacher/compte)",
+    action: { file: "src/app/teacher/compte/actions.ts", fn: "reglerNouveautesAction" },
+    sources: ["src/app/teacher/compte/page.tsx"],
   },
   {
     nom: "lancement d'une partie publique",
@@ -79,11 +268,21 @@ function actionBody(file: string, fn: string): string {
   return source.slice(start, next === -1 ? undefined : next);
 }
 
-/** Champs lus dans le corps de l'action : formData.get / formData.has. */
+/**
+ * Champs lus : `formData.get("x")` / `.getAll("x")` (des cases cochées du même
+ * nom) / `.has("x")`, et le même accès passé par un petit lecteur nommé — `nombre(formData, "newLoan")`, `montant(data, "hire")`.
+ * Une lecture partagée range ses champs ainsi ; les ignorer rendrait le contrat
+ * aveugle à tout ce qu'elle lit.
+ */
 function fieldsRead(body: string): Set<string> {
-  return new Set(
-    [...body.matchAll(/formData\.(?:get|has)\(\s*"([^"]+)"\s*\)/g)].map((m) => m[1]!),
-  );
+  const noms = new Set<string>();
+  for (const m of body.matchAll(/\b(?:formData|data)\.(?:get|getAll|has)\(\s*"([^"]+)"\s*\)/g)) {
+    noms.add(m[1]!);
+  }
+  for (const m of body.matchAll(/\(\s*(?:formData|data)\s*,\s*"([^"]+)"\s*\)/g)) {
+    noms.add(m[1]!);
+  }
+  return noms;
 }
 
 /** Champs offerts par le formulaire : attributs name= littéraux. */
@@ -97,6 +296,13 @@ function fieldsOffered(sources: string[]): Set<string> {
     // Champs engendrés par une boucle sur une liste de définitions :
     // { name: "taxRate", label: … } dans le panneau économique.
     for (const m of source.matchAll(/\{\s*name:\s*"([^"]+)"/g)) names.add(m[1]!);
+    // Champs dont le NOM est construit par un helper partagé : une décision par
+    // référence (`product.<code>.price`) et les ventes estimées
+    // (`ventesEstimees.<code>`). Le préfixe suffit : le lecteur ne lit pas ces
+    // champs un à un, il balaie le préfixe.
+    for (const m of source.matchAll(/\b(productFieldName|champDesVentesEstimees)\s*\(/g)) {
+      names.add(m[1] === "productFieldName" ? "product." : "ventesEstimees.");
+    }
   }
   return names;
 }
@@ -104,7 +310,12 @@ function fieldsOffered(sources: string[]): Set<string> {
 describe("accord entre les formulaires et leurs actions serveur", () => {
   for (const contract of CONTRACTS) {
     it(`${contract.nom} : l'action ne lit aucun champ absent du formulaire`, () => {
-      const read = fieldsRead(actionBody(contract.action.file, contract.action.fn));
+      const read = fieldsRead(
+        [
+          actionBody(contract.action.file, contract.action.fn),
+          ...(contract.lecteurs ?? []).map((f) => readFileSync(f, "utf8")),
+        ].join("\n"),
+      );
       const offered = fieldsOffered(contract.sources);
       const tolerated = new Set(contract.tolerated ?? []);
 

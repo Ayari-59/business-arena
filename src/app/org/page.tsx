@@ -1,7 +1,10 @@
-import Link from "next/link";
+import { nomDOffre, OFFRES, parametrageEnClair } from "@/config/tarifs";
+import { parametrageDe } from "@/services/licence.service";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getOrgDashboard } from "@/services/admin.service";
+import { getOrgDashboard, getStaffContext } from "@/services/admin.service";
+import { PastillesDeNavigation } from "@/components/pastilles-de-navigation";
+import { LIEN_ADMINISTRATION, LIEN_ESPACE_ENSEIGNANT, LIEN_ETABLISSEMENT } from "@/config/navigation";
 import {
   deactivateTeacherInviteAction,
   newTeacherInviteAction,
@@ -19,27 +22,33 @@ export default async function OrgAdminPage() {
   } catch {
     redirect("/teacher");
   }
+  // Le propriétaire de la plateforme voit aussi la sortie vers l'administration générale.
+  const staff = await getStaffContext(session.userId);
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      {/* L'en-tête de l'établissement : la même anatomie que l'espace enseignant et
+          l'administration, et la même rangée de pastilles, lue dans le plan du site. */}
+      <header className="space-y-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs uppercase tracking-annonce text-amber-400">
             Administration d&apos;établissement
           </p>
           <h1 className="text-2xl font-bold">{dashboard.name}</h1>
         </div>
-        <nav className="flex gap-4 text-xs text-slate-400">
-          <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
-          <Link href="/" className="hover:text-slate-300">Landing</Link>
-        </nav>
+        <PastillesDeNavigation
+          label="Mon établissement"
+          pastilles={[LIEN_ETABLISSEMENT]}
+          actif={LIEN_ETABLISSEMENT.code}
+          droite={[LIEN_ESPACE_ENSEIGNANT, ...(staff?.isPlatformAdmin ? [LIEN_ADMINISTRATION] : [])]}
+        />
       </header>
 
       {dashboard.licence.state !== "libre" && dashboard.licence.licence ? (
         <section
-          className={`rounded-2xl border p-5 ${
+          className={`rounded-xl border p-5 ${
             dashboard.licence.blocking
-              ? "border-red-400/30 bg-red-950/20"
+              ? "encadre-perte"
               : dashboard.licence.state === "bientot_expiree"
                 ? "border-amber-400/30 bg-amber-950/20"
                 : "border-white/10 bg-slate-900"
@@ -48,6 +57,20 @@ export default async function OrgAdminPage() {
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h2 className="text-sm font-semibold text-slate-200">
               Licence · {dashboard.licence.licence.label}
+              {" · "}
+              {[
+                dashboard.licence.licence.arene
+                  ? [
+                      nomDOffre(dashboard.licence.licence.arene),
+                      parametrageEnClair(parametrageDe(dashboard.licence.licence)!),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : null,
+                dashboard.licence.licence.episodes ? OFFRES.episodes.nom : null,
+              ]
+                .filter(Boolean)
+                .join(" + ")}
             </h2>
             <p className="text-xs text-slate-400">
               du {dashboard.licence.licence.startsAt.toLocaleDateString("fr-FR")} au{" "}
@@ -91,7 +114,7 @@ export default async function OrgAdminPage() {
             ["Concours", dashboard.stats.competitions],
           ] as const
         ).map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-white/10 bg-slate-900 p-4">
+          <div key={label} className="carte p-4">
             <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
             <p className="mt-1 text-2xl font-semibold text-slate-50">{value}</p>
           </div>
@@ -99,7 +122,7 @@ export default async function OrgAdminPage() {
       </section>
 
       {/* Invitations enseignants */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="text-sm font-semibold text-slate-200">Inviter des enseignants</h2>
         <p className="mt-1 text-xs text-slate-400">
           Partagez un code : l&apos;enseignant s&apos;inscrit sur /teacher/login avec ce code et
@@ -112,7 +135,7 @@ export default async function OrgAdminPage() {
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 font-mono ${
                 invite.active
                   ? "border-amber-400/40 text-amber-300"
-                  : "border-white/10 text-slate-600 line-through"
+                  : "border-white/10 text-slate-400 line-through"
               }`}
             >
               {invite.code}
@@ -132,7 +155,7 @@ export default async function OrgAdminPage() {
       </section>
 
       {/* Équipe pédagogique */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="carte p-6">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipe pédagogique ({dashboard.teachers.length})
         </h2>
@@ -153,7 +176,7 @@ export default async function OrgAdminPage() {
                   <td className="py-2 pr-3 text-slate-400">{t.email}</td>
                   <td className="py-2 pr-3">
                     {t.role === "org_admin" ? (
-                      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-xs text-amber-300">
+                      <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-xs text-amber-300">
                         admin
                       </span>
                     ) : (
@@ -170,7 +193,7 @@ export default async function OrgAdminPage() {
 
       {/* Activité */}
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <div className="carte p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Dernières parties</h2>
           {dashboard.games.length === 0 ? (
             <p className="text-sm text-slate-400">Aucune partie pour l&apos;instant.</p>
@@ -180,7 +203,7 @@ export default async function OrgAdminPage() {
                 <li key={g.gameId} className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-slate-300">
                   <span>
                     {g.joinCode ? (
-                      <span className="mr-2 font-mono text-amber-300">{g.joinCode}</span>
+                      <span className="mr-2 font-mono text-slate-100">{g.joinCode}</span>
                     ) : null}
                     par {g.createdBy}
                   </span>
@@ -192,7 +215,7 @@ export default async function OrgAdminPage() {
             </ul>
           )}
         </div>
-        <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <div className="carte p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Concours</h2>
           {dashboard.competitions.length === 0 ? (
             <p className="text-sm text-slate-400">Aucun concours pour l&apos;instant.</p>
@@ -214,7 +237,7 @@ export default async function OrgAdminPage() {
               name="name"
               defaultValue={dashboard.name}
               maxLength={80}
-              className="flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none"
             />
             <button className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300 hover:border-amber-400/40">
               Renommer

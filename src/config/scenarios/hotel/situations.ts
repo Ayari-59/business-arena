@@ -417,7 +417,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_detect_capacity_saturated",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "Complet, et des clients refusés",
     narrative:
       "L'hôtel a affiché complet plusieurs nuits, et la réception a dû refuser du monde. C'est une excellente nouvelle. C'est aussi le signe que vous laissez de l'argent sur la table.",

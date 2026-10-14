@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   uuid,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { id, timestamps } from "./_shared";
 
@@ -28,6 +29,32 @@ export const users = pgTable("users", {
    * signé pour une version antérieure est refusé, quel que soit son délai.
    */
   sessionVersion: integer("session_version").notNull().default(1),
+  /**
+   * LE CONSENTEMENT AUX NOUVEAUTÉS (migration 0040, services/nouveautes.service.ts) : la
+   * date de l'accord, la version du texte accepté, la date du retrait. Le compte consent
+   * quand l'accord est plus récent que le retrait. Jamais coché par défaut.
+   */
+  nouveautesConsentiesLe: timestamp("nouveautes_consenties_le", { withTimezone: true }),
+  nouveautesRetireesLe: timestamp("nouveautes_retirees_le", { withTimezone: true }),
+  nouveautesVersionDuTexte: text("nouveautes_version_du_texte"),
+  /** La dernière connexion (mot de passe, inscription, LTI, RENATER) ; nulle avant 0040. */
+  derniereConnexionLe: timestamp("derniere_connexion_le", { withTimezone: true }),
+  /**
+   * D'où vient le compte : 'inscription' (formulaire du site), 'lti', 'renater'
+   * (fédération). Nulle pour une identité d'élève ou d'invité, qui n'est pas un inscrit.
+   */
+  provenance: text("provenance", { enum: ["inscription", "lti", "renater"] }),
+  /**
+   * DÉSACTIVÉ (migration 0040, /admin/inscrits) : le compte ne se connecte plus et sa session
+   * est refusée (lib/session.ts) ; ses parties restent. Nul : actif.
+   */
+  desactiveLe: timestamp("desactive_le", { withTimezone: true }),
+  /**
+   * INSCRIT PAR UN CODE D'INVITATION (migration 0040) : le code saisi à l'inscription. Il
+   * donne l'état « invité » dans /admin/inscrits et l'usage de chaque code. Nul : inscription
+   * libre, LTI, RENATER, ou compte d'avant 0040.
+   */
+  invitationId: uuid("invitation_id").references((): AnyPgColumn => orgInvites.id, { onDelete: "set null" }),
   ...timestamps,
 });
 
@@ -115,15 +142,15 @@ export const orgInvites = pgTable(
 /**
  * Licence d'un établissement : ce qui est vendu.
  *
- * Un lycée n'achète pas un abonnement par carte bancaire : il émet un bon de
- * commande, reçoit une facture et paie par mandat administratif. La licence
+ * Tout se vend sur devis : l'établissement reçoit un devis, émet un bon de commande,
+ * reçoit une facture et paie par virement ou mandat administratif. La licence
  * enregistre donc les termes convenus, elle ne les encaisse pas. Le prix et la
  * référence sont documentaires : le logiciel note ce qui a été vendu, il ne
  * décide pas du tarif.
  *
- * L'ABSENCE de licence vaut accès libre. C'est délibéré : la frontière ne doit
- * pas se refermer sur les établissements existants ni sur une démonstration,
- * et une limite ne se pose que lorsqu'une vente l'a définie.
+ * Sans licence de l'arène en cours, la classe ne s'ouvre pas : décision du
+ * propriétaire, « pas d'essai en classe » (services/acces.service.ts). Le solo
+ * public et les démonstrations d'épisodes restent gratuits.
  */
 export const orgLicences = pgTable(
   "org_licences",
@@ -142,6 +169,45 @@ export const orgLicences = pgTable(
     reference: text("reference"),
     /** Montant facturé en centimes, purement documentaire. */
     amountCents: integer("amount_cents"),
+    /**
+     * LE PÉRIMÈTRE (migrations 0036 et 0038, config/tarifs.ts). `arene` : l'offre de
+     * l'arène que la licence ouvre, Classe, Programme ou Campus ; null, elle n'ouvre pas
+     * l'arène. `episodes` : elle ouvre les épisodes manager non démo, vendus à part sur
+     * devis. Une licence d'avant la décision est une licence de l'arène, sans les épisodes.
+     */
+    arene: text("arene", { enum: ["classe", "programme", "campus"] }).default("campus"),
+    episodes: boolean("episodes").notNull().default(false),
+    /**
+     * L'EXAMEN INDIVIDUEL (migration 0042, /teacher/examens) : la licence ouvre-t-elle le
+     * module `examen` ? Posé à la vente depuis la composition de l'offre ; les licences
+     * Programme et Campus d'avant la migration le reçoivent (inclus par défaut).
+     */
+    examen: boolean("examen").notNull().default(false),
+    /**
+     * LE PARAMÉTRAGE DE L'ARÈNE (migration 0038) : les entreprises ouvertes (codes du
+     * registre ; null : toutes), les niveaux ouverts (null : tous) et le plafond de
+     * parties de classe ou de concours EN COURS en même temps (null : sans plafond).
+     * Une licence Classe porte une entreprise et un niveau, une partie à la fois ; une
+     * Programme, une entreprise ; un Campus, rien de restreint.
+     */
+    entreprises: text("entreprises").array(),
+    niveaux: integer("niveaux").array(),
+    maxPartiesEnCours: integer("max_parties_en_cours"),
+    /**
+     * LA VENTE, COPIÉE AU MOMENT DE LA VENTE (migration 0041, /admin/offres) : l'offre du
+     * catalogue vendue (`offre_code`) et une copie de ses conditions (`conditions` : nom,
+     * modules et paramètres, prix catalogue, ce qu'elle inclut). Changer le catalogue ne
+     * change pas une licence déjà vendue. `prix_catalogue_cents` : le prix de référence
+     * (ou celui du devis pour une offre sur devis) ; `remise` : la remise commerciale
+     * (type, valeur, motif, montant) ; `amount_cents` reste le montant facturé.
+     * `nature` : vendue, offerte (0 €, motif obligatoire) ou essai (0 €, datée).
+     */
+    offreCode: text("offre_code"),
+    conditions: jsonb("conditions"),
+    prixCatalogueCents: integer("prix_catalogue_cents"),
+    remise: jsonb("remise"),
+    nature: text("nature", { enum: ["vendue", "offerte", "essai"] }).notNull().default("vendue"),
+    motifGratuite: text("motif_gratuite"),
     createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },
@@ -167,4 +233,23 @@ export const classMembers = pgTable(
     ...timestamps,
   },
   (t) => [primaryKey({ columns: [t.classId, t.userId] })],
+);
+
+/**
+ * LE JOURNAL DES GESTES SUR LES INSCRITS (migration 0040, /admin/inscrits) : qui (l'admin de
+ * la plateforme), quoi (le geste), sur quel compte, avec un détail lisible (établissement,
+ * code, réglages). Écrit par services/inscrits.service.ts, jamais modifié ; lu dans la page
+ * et dans la fiche d'un inscrit.
+ */
+export const inscritsJournal = pgTable(
+  "inscrits_journal",
+  {
+    id: id(),
+    adminId: uuid("admin_id").references(() => users.id, { onDelete: "set null" }),
+    geste: text("geste").notNull(),
+    cibleUserId: uuid("cible_user_id").references(() => users.id, { onDelete: "set null" }),
+    detail: text("detail"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("inscrits_journal_date_idx").on(t.createdAt), index("inscrits_journal_cible_idx").on(t.cibleUserId)],
 );

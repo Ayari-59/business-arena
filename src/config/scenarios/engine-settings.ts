@@ -5,7 +5,7 @@ import { mapGammeSegments, toGamme } from "../../engine/gamme";
 /**
  * Réglages de MARCHÉ d'un scénario, éditables par l'enseignant (PR 3).
  *
- * Les paramètres économiques et les poids du BPI réutilisent la machinerie
+ * Les paramètres économiques et les poids de l'IPG réutilisent la machinerie
  * bornée déjà écrite (`applyEconomicOverrides`, `applyScoringWeightOverrides`).
  * Le marché n'en avait pas : on ajoute ici de quoi régler l'intensité
  * concurrentielle du marché et, par segment, la taille de la demande et le prix

@@ -1,4 +1,4 @@
-import { neutralDecisions } from "@/engine/bots";
+import { neutralDecisions, type LeviersOuverts } from "@/engine/bots";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 
 /**
@@ -34,9 +34,9 @@ export function fallbackDecisions(
   scenario: EngineScenarioConfig,
   state: CompanyState,
   roundIndex: number,
+  /** Les leviers figés de la partie : l'équipe absente ne décide qu'avec eux. */
+  leviers: LeviersOuverts | null = null,
 ): RoundDecisions {
-  return {
-    ...neutralDecisions({ scenario, state, roundIndex }),
-    finance: { newLoan: 0, loanRepayment: 0 },
-  };
+  const neutre = neutralDecisions({ scenario, state, roundIndex, leviers });
+  return { ...neutre, finance: { ...(neutre.finance ?? {}), newLoan: 0, loanRepayment: 0 } };
 }

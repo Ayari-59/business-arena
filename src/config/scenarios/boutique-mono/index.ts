@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario BOUTIQUE MONO-PRODUIT — « MAILLE & CO », concept store de
@@ -111,16 +112,20 @@ const rawBoutique = {
     loanAnnualRate: 0.052,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 25000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     // le commerce paie ses fournisseurs à 45 jours (usage de la profession)
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 20,
     maxCapitalIncreaseTotal: 80000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 4500,
   },
   treasury: {
@@ -453,6 +458,43 @@ const rawBoutique = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "boutique_fast_fashion",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.86 }],
+    },
+    {
+      code: "boutique_soldes_concurrent",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:chalands", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "boutique_vendeuse_star",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.08 }],
+    },
+    {
+      code: "boutique_greve_transporteur",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "boutique_marche_noel",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand", op: "mul", value: 1.2 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("boutique"),
   ],
   // Le coton flambe au tour 5 : la marge d'achat se comprime juste après Noël,
   // quand la trésorerie a déjà tout donné dans le réassort.

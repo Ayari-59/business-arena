@@ -2,6 +2,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { situationInstances } from "@/db/schema";
 import { evaluateDiagnosis } from "@/pedagogy/evaluation";
+import { NIVEAU_STANDARD, optionsDuDiagnostic } from "@/config/analyse-par-niveau";
+import { presetFromProfile } from "@/config/difficulty";
 import { loadInstanceForUser } from "./situation-instance.service";
 
 /**
@@ -18,9 +20,12 @@ export async function submitDiagnosis(args: {
   selectedOptionIds: string[];
   freeText?: string;
 }): Promise<{ score: number }> {
-  const { instance, def } = await loadInstanceForUser(args.instanceId, args.userId);
+  const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
-  const score = evaluateDiagnosis(args.selectedOptionIds, def.diagnosticOptions);
+  const score = evaluateDiagnosis(
+    args.selectedOptionIds,
+    optionsDuDiagnostic(def.diagnosticOptions, game ? presetFromProfile(game.difficultyProfile).level : NIVEAU_STANDARD),
+  );
   await db
     .update(situationInstances)
     .set({

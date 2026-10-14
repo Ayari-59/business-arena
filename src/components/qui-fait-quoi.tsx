@@ -1,0 +1,129 @@
+import { Bande } from "@/components/bande";
+import Link from "next/link";
+import { ATELIERS } from "@/config/ateliers";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+
+/**
+ * TROIS RÔLES, ET CE QUE CHACUN FAIT ICI.
+ *
+ * Relevé pendant l'audit : le mot « établissement » n'apparaissait qu'une
+ * fois, sur trois pages, et jamais sur l'accueil. Or le produit a bel et bien
+ * trois niveaux — un élève qui joue, un enseignant qui fait jouer, un
+ * établissement qui rassemble son équipe — et le visiteur devait les deviner.
+ * L'accueil offrait deux boutons, « Commencer une partie » et « Je suis
+ * enseignant » : le troisième niveau n'existait nulle part avant la section
+ * « Côté établissements » du guide, repliée dans un accordéon.
+ *
+ * CE N'EST PAS UNE GRILLE DE TARIFS. Ce qui est gratuit et ce qui se vend vit
+ * dans config/tarifs.ts, et ce qu'une licence ouvre se vérifie dans
+ * services/acces.service.ts : l'écrire ici en ferait une seconde source.
+ * Chaque colonne dit donc ce que son rôle FAIT, pas ce qu'il coûte.
+ *
+ * ET CE N'EST PAS NON PLUS « PAR OÙ COMMENCER », qui vit plus bas sur la même
+ * page. L'un répond « où vais-je », l'autre « qui suis-je ici » : la bande des
+ * chiffres les sépare, pour que deux listes de liens ne se suivent pas.
+ *
+ * Rien n'est annoncé qui n'existe : l'espace d'administration par
+ * établissement, les codes d'invitation enseignants et les concours rattachés
+ * à l'établissement sont dans le produit, et l'atelier de campus fait bien
+ * jouer quatre filières ensemble.
+ */
+const ROLES = [
+  {
+    role: "L'élève",
+    resume: "Il décide, et il en lit les conséquences.",
+    faits: [
+      "Un code et un pseudo suffisent : rien à installer, aucun compte à créer.",
+      "Une situation à lire, un diagnostic à poser, des décisions à prendre.",
+      "Son profil de compétences avance à chaque situation traitée.",
+    ],
+    lien: { href: "/jouer", libelle: "Jouer en solo" },
+  },
+  {
+    role: "L'enseignant",
+    resume: "Il crée la partie, et il la pilote.",
+    faits: [
+      "Une partie multi-équipes, des tours qu'il ouvre et qu'il clôt.",
+      "La maîtrise de chaque notion, suivie équipe par équipe.",
+      `${ATELIERS.length} ateliers clés en main, et ses propres scénarios s'il le veut.`,
+    ],
+    lien: { href: "/enseignants", libelle: "Pour les enseignants" },
+  },
+  {
+    role: "L'établissement",
+    resume: "Il rassemble son équipe pédagogique.",
+    faits: [
+      "Un espace d'administration : ses enseignants, ses parties, ses concours.",
+      "Des codes d'invitation pour y rattacher les enseignants.",
+      "Des concours entre ses classes, et un atelier qui fait jouer tout un campus.",
+    ],
+    lien: { href: "/guide#etablissements", libelle: "Côté établissements" },
+  },
+] as const;
+
+export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
+  return (
+    <Bande
+      id="accueil.roles"
+      contraste={contraste}
+      fond="bande-soutenue"
+      interieur="mx-auto max-w-6xl px-6 py-10 sm:py-14"
+      labelledby="roles"
+    >
+      <h2
+        id="roles"
+        className="surtitre flex items-center gap-3"
+      >
+        <span aria-hidden className="h-px w-8 bg-slate-400" />
+        Qui fait quoi
+      </h2>
+      {/*
+        SUR TÉLÉPHONE, CHAQUE RÔLE TIENT EN TROIS LIGNES SERRÉES : le rôle et
+        son lien sur la même ligne, la phrase, puis « En savoir plus ». Le lien
+        vivait sous le repli, chacun sur sa ligne avec sa marge de doigt, et un
+        rôle prenait un demi-écran pour deux phrases. Au-delà de `sm`, la grille
+        se défait et chaque colonne se lit de haut en bas, lien en dernier.
+      */}
+      <div className="mt-6 grid gap-x-10 gap-y-3 sm:mt-8 sm:gap-y-10 md:grid-cols-3">
+        {ROLES.map((r) => (
+          <div
+            key={r.role}
+            className="grid grid-cols-[1fr_auto] items-center gap-x-4 border-t border-white/10 pt-3 sm:block sm:pt-5"
+          >
+            <h3 className="text-xl font-semibold text-slate-100">{r.role}</h3>
+            <p className="col-span-2 text-base leading-relaxed text-slate-300 sm:mt-1">
+              {r.resume}
+            </p>
+            {/* Sur téléphone, les trois faits s'ouvrent à la demande ; au-delà
+                de `sm`, tout est affiché. */}
+            <RepliableSurTelephone resume="En savoir plus" className="col-span-2">
+              <ul className="mt-1 space-y-2.5 sm:mt-4">
+                {r.faits.map((f) => (
+                  <li key={f} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
+                    <span
+                      aria-hidden
+                      className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-400"
+                    />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </RepliableSurTelephone>
+            <Link
+              href={r.lien.href}
+              className="group col-start-2 row-start-1 inline-flex text-sm font-semibold text-slate-100 underline decoration-1 underline-offset-4 hover:decoration-2 pointer-coarse:min-h-11 pointer-coarse:items-center sm:mt-5"
+            >
+              {r.lien.libelle}
+              <span
+                aria-hidden
+                className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </Link>
+          </div>
+        ))}
+      </div>
+    </Bande>
+  );
+}

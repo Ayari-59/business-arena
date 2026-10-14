@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { setCompetitionPublicPageAction, type CompetitionActionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import {
@@ -41,7 +42,7 @@ export function PublicPageForm({
   });
 
   const champ =
-    "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+    "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
 
   return (
     <form ref={formRef} action={formAction} className="space-y-3">
@@ -50,14 +51,14 @@ export function PublicPageForm({
           type="checkbox"
           name="visible"
           defaultChecked={visible}
-          className="h-4 w-4 rounded border-white/20 bg-slate-950 accent-amber-500"
+          className="h-4 w-4 rounded-md border-white/20 bg-slate-950 accent-amber-500"
         />
         Rendre la page publique (visible par tous à l&apos;adresse ci-dessous)
       </label>
 
       <label className="block">
         <span className="text-xs font-medium text-slate-300">
-          Accroche <span className="text-slate-500">(une phrase, {TAGLINE_MAX} car. max)</span>
+          Accroche <span className="text-slate-400">(une phrase, {TAGLINE_MAX} car. max)</span>
         </span>
         <input
           type="text"
@@ -83,7 +84,7 @@ export function PublicPageForm({
 
       <label className="block">
         <span className="text-xs font-medium text-slate-300">
-          Présentation <span className="text-slate-500">(affichée sous « À propos »)</span>
+          Présentation <span className="text-slate-400">(affichée sous « À propos »)</span>
         </span>
         <textarea
           name="description"
@@ -111,7 +112,7 @@ export function PublicPageForm({
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-progress disabled:opacity-70"
+          className={bouton()}
         >
           {pending ? "Enregistrement…" : "Enregistrer la page"}
         </button>
@@ -119,12 +120,12 @@ export function PublicPageForm({
           href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-amber-300 underline-offset-4 hover:underline"
+          className="text-sm text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           Prévisualiser / ouvrir la page →
         </a>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-400">
         Adresse publique : <span className="font-mono text-slate-400">{publicUrl}</span>
       </p>
 

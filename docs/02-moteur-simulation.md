@@ -384,14 +384,16 @@ panne machine, grève, perte d'un client grand compte, nouveau concurrent entran
 des taux, changement réglementaire (norme qualité), opportunité d'export, campagne
 marketing virale.
 
-### 7.1 Cartes événements (habillage de classe)
+### 7.1 Le courrier de l'entreprise (habillage de classe)
 
-Les **cartes** (`src/config/events/cards.ts`) sont l'habillage théâtral des événements —
-le moteur ne les connaît pas. Deux decks :
+Les **courriers** (`src/config/courriers/`) sont l'habillage des événements — le moteur
+ne les connaît pas. Chacun porte un expéditeur, un objet, un corps de lettre, une
+signature et un type de pli (recommandé avec accusé de réception, ou pli simple). Deux
+liasses :
 
-- **Cartes marché** (`scope: "market"`) : toute la classe. L'enseignant peut en tirer
-  jusqu'à 2 par tour (mode apprentissage uniquement).
-- **Cartes équipe** (`scope: "team"`) : une seule entreprise ciblée. Une carte par équipe
+- **Courrier de marché** (`scope: "market"`) : toute la classe. L'enseignant peut en
+  distribuer jusqu'à 2 par tour (mode apprentissage uniquement).
+- **Pli adressé** (`scope: "team"`) : une seule entreprise destinataire. Un pli par équipe
   et par tour ; l'injection se fait avec `scope: "company"` + `companyId` de l'équipe,
   les autres équipes ne subissent (et ne voient) pas l'effet. Les événements
   correspondants du scénario ont `probability: 0` : jamais tirés par le PRNG, donc
@@ -399,10 +401,11 @@ le moteur ne les connaît pas. Deux decks :
   `material_cost` / `availability` / `interest_rate` (la demande est un modificateur
   de marché, non déclinable par entreprise).
 
-Plafond global : 4 cartes en jeu par tour. Un **deck physique imprimable**
-(`/teacher/cards/print`, A4, dos + face à plier) permet le tirage réel en classe ;
-l'enseignant saisit ensuite la carte tirée dans le deck numérique pour qu'elle
-s'applique à la clôture du tour. En mode compétition, seul le tirage seedé fait foi.
+Plafond global : 4 courriers distribués par tour. Une **liasse imprimable**
+(`/teacher/courriers/print`, A4, enveloppe + lettre à plier, quatre plis par feuille)
+permet la distribution réelle en classe ; l'enseignant saisit ensuite le courrier
+dans l'application pour qu'il s'applique à la clôture du tour. En mode compétition,
+seul le tirage seedé fait foi.
 
 ### 7.2 Commandes fermes et assurance catastrophe
 
@@ -450,13 +453,13 @@ unitaire imposé (cible `order_price`) et un droit à sous-traiter (`order_subco
 unités) si le scénario définit `subcontracting.unitCost`. Le stock sert d'abord, la
 sous-traitance comble (achetée finie, décaissée et comptée au coût des ventes) — la
 marge d'une commande sous-traitée se CALCULE : c'est l'arbitrage make or buy, et la
-carte XXL (2 500 u à 61 €, sous-traitance à 52 €) le rend physique. Deux cartes :
+courrier XXL (2 500 u à 61 €, sous-traitance à 52 €) le rend physique. Deux courriers :
 `tight_order` (tient dans la capacité, 55 €/u imposés — coûts pertinents) et
 `xxl_order` (dépasse la capacité — sous-traiter ou avoir investi).
 
 Sur NOVA : `natural_disaster` (marché, disponibilité ×0,72 et matières ×1,12, couvert),
 `cold_wave` (couvert), `export_market` (demande ×1,15 sur 2 tours), `big_order`
-(commande ferme de 600 unités/trimestre, carte équipe) ; prime 2 500 €/trimestre.
+(commande ferme de 600 unités/trimestre, pli adressé) ; prime 2 500 €/trimestre.
 Tous à `probability: 0` sauf `cold_wave` (déjà existant) — et **appondus en fin de
 liste** : le PRNG consomme un tirage par événement, insérer au milieu décalerait les
 tirages seedés existants.
@@ -504,7 +507,7 @@ amplitude de la saisonnalité globale ±15 % (la forme du pic T4 et les saisonna
 segment — l'arrivée de CampusTech — ne bougent pas), échelle marketing ±10 %, attraction
 extérieure ±10 %, délai fournisseurs ±15 %, charges de structure ±2 %, prime d'assurance
 et prix des études ±10 %, probabilités d'événements ×0,8..1,3 (une probabilité 0 RESTE
-0 : cartes enseignant intactes). Les **intangibles pédagogiques** ne varient jamais :
+0 : courrier de l'enseignant intact). Les **intangibles pédagogiques** ne varient jamais :
 tout chiffre cité par un texte du jeu (prix de référence 59 €, coût variable 38 €,
 sous-traitant 52 €, investissement 20 €/u, taux 5 %, plafonds) est hors périmètre.
 La variante est revalidée par le schéma zod avant de devenir l'instantané de la partie.

@@ -12,8 +12,21 @@ import { describe, expect, it, vi } from "vitest";
  * change, les champs scalaires font foi.
  */
 
+// Les actions serveur touchent désormais le service des subventions, qui
+// charge `@/db` — lequel jette à l'import sans DATABASE_URL. Fermer cette
+// frontière garde ce test unitaire : aucune requête n'est faite ici.
+vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+// Le financement de sauvetage est vérifié côté serveur : l'action lit la vue
+// pour savoir si l'équipe est en crise. C'est une frontière de service de
+// plus, et `@/db` jette à l'import sans DATABASE_URL — une vue nulle vaut
+// « pas de crise », ce qui laisse passer les décisions de ces tests.
+vi.mock("@/services/game-view.service", () => ({ getGameView: vi.fn(async () => null) }));
 vi.mock("@/lib/guest", () => ({ getGuestUserId: async () => "invite-1" }));
+// `actions.ts` importe retakeSituation de debrief.service, qui charge `@/db` —
+// lequel jette à l'import sans DATABASE_URL. Le mock ferme la frontière de
+// service, pour que ce test reste unitaire sans base ni variable d'environnement.
+vi.mock("@/services/debrief.service", () => ({ retakeSituation: vi.fn() }));
 vi.mock("@/services/pedagogy.service", () => ({
   submitDiagnosis: vi.fn(),
   submitQuiz: vi.fn(),
@@ -210,7 +223,12 @@ describe("l'action serveur en gamme", () => {
         "product.pull-col-rond.productionPlan": "100",
       }),
     );
-    expect(etat.error).toContain("invalides");
+    // Le refus NOMME LE CHAMP (la référence et son prix), et l'écran sait où
+    // le marquer : « Décisions invalides » ne disait pas lequel.
+    expect(etat.erreurs).toHaveLength(1);
+    expect(etat.erreurs![0]!.champ).toBe("product.pull-col-rond.price");
+    expect(etat.error).toMatch(/la case est vide/);
+    expect(etat.error).not.toMatch(/invalides|Invalid|expected/i);
     expect(submitTeamDecisions).not.toHaveBeenCalled();
   });
 });
@@ -239,6 +257,7 @@ describe("le formulaire en gamme", () => {
     otherVariableCostPerUnit: p.otherVariableCostPerUnit,
     hoursPerUnit: p.hoursPerUnit,
     refPrice: p.market.segments[0]!.refPrice,
+    marketSize: 1000,
     segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
     seasonCoef: 1,
     stock: 0,
@@ -299,7 +318,7 @@ describe("le formulaire en gamme", () => {
     expect(html).not.toContain('name="marketingBudget"');
     // Les valeurs proposées de chaque référence sont bien celles du produit.
     expect(html).toContain('name="product.pull-merinos.price" value="129"');
-    expect(html).toContain('aria-label="Prix de vente · Pull mérinos premium"');
+    expect(html).toContain('aria-label="Prix de vente · Mérinos"');
   });
 
   it("au niveau 1, sans qualité, ne propose pas de budget qualité par référence", () => {
@@ -324,6 +343,31 @@ describe("le formulaire en gamme", () => {
     expect(html).toContain('<option value="grossiste" selected="">');
   });
 
+  it("le panneau des façonniers s'ouvre là où il porte la décision, et se replie sinon", () => {
+    // EN GAMME, il ne porte RIEN : le façonnier se choisit ligne par ligne dans
+    // le tableau des ventes, et le panneau n'est qu'un catalogue de fiches
+    // dépliées au-dessus des champs à remplir. Il arrive donc fermé, et son
+    // titre annonce ce qu'il cache.
+    const enGamme = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+    // Le panneau se reconnaît à son pictogramme, la camionnette du
+    // fournisseur, dessinée en tête de son titre (c'était un emoji 🏭). Lot
+    // P5 : le chevron commun des replis le précède, en tête du résumé.
+    const camion =
+      /<summary[^>]*><svg[^>]*data-chevron=""[^>]*><path d="M6 3\.5 10\.5 8 6 12\.5"><\/path><\/svg><span[^>]*><svg[^>]*><path d="M2\.5 6\.5h11v9\.5h-11z"/;
+    // `<details>` SANS `open` : le panneau est replié.
+    expect(enGamme).toMatch(new RegExp(`<details class="[^"]*">${camion.source}`));
+    // Son titre annonce ce qu'il cache. Le compte est celui des façonniers de
+    // la GAMME (chaque référence a son catalogue, fusionnés par façonnier), pas
+    // celui du scénario mono : le figer ici mentirait.
+    expect(enGamme).toMatch(/M2\.5 6\.5h11v9\.5h-11z"[\s\S]*?<\/svg>[^<]* · \d+ fiches?</);
+
+    // EN MONO-PRODUIT, le choix EST dans ce panneau (les boutons radio) :
+    // le replier cacherait une décision du tour.
+    const enMono = rendu(null, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+    expect(enMono).toMatch(new RegExp(`<details open="" class="[^"]*">${camion.source}`));
+    expect(enMono).toContain('name="supplierChoice"');
+  });
+
   it("chaque référence propose SON catalogue, au prix d'achat de la référence, l'écart lu par rapport à son référent", () => {
     const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
     // Le mérinos a une filature, pas de déstockeur ; les accessoires ont un
@@ -343,55 +387,98 @@ describe("le formulaire en gamme", () => {
     // La fiche du façonnier dit le délai de règlement, pas un « délai fournisseur ».
     expect(html).toContain("Délai de règlement");
     expect(html).not.toContain("Délai fournisseur");
-    // Et le lien avec le prix : achat, coût variable, marge et coefficient.
-    expect(html).toContain("coef.");
-    expect(html).toContain("marge");
+    // Et le lien avec le prix, désormais en LIGNES de la matrice : ce que la
+    // référence coûte, ce qu'il en reste au prix saisi, et le coefficient.
+    expect(html).toContain("Coût variable");
+    expect(html).toContain("Marge unitaire");
+    expect(html).toContain("Coefficient");
   });
 
-  it("les budgets ont leur étape « Budgéter » : en gamme, une seule famille avec le tableau par référence puis l'entretien, et l'étape « Vendre » ne porte que le prix, le volume et le façonnier", () => {
+  it("tout ce qui concerne une référence est dans SON onglet ; « Budgéter » ne garde que les budgets de l'entreprise", () => {
+    // LA RÈGLE : une référence se joue seule, dans son onglet — donc son prix,
+    // son volume, son façonnier ET les budgets qui la soutiennent y sont
+    // ensemble. Séparés sur deux étapes, le prix et le budget marketing d'une
+    // même référence se décidaient loin l'un de l'autre, alors que l'un
+    // commande l'autre. Ne reste dans « Budgéter » que ce qui est de
+    // L'ENTREPRISE et qu'aucune référence ne porte : l'entretien, la marque.
     const niveau3 = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
     expect(niveau3).not.toContain("Produire");
-    expect(niveau3).toContain("Les budgets du tour · marketing, qualité, entretien");
+    expect(niveau3).toContain("Vos références · tout ce qui se décide pour chacune");
+    expect(niveau3).toContain("Les budgets de l&#x27;entreprise · entretien");
     expect(niveau3).toContain("Budget d&#x27;entretien · réserve et linéaire");
-    expect(niveau3).toContain('name="maintenanceBudget"');
-    expect(niveau3).not.toContain("Production · qualité");
-    expect(niveau3).not.toContain("Entretien · réserve et linéaire");
-    // L'étape « Vendre » (la première) : prix, volume, façonnier — sans budget.
-    const ventes = niveau3.indexOf("Vos ventes · le prix et le volume de chaque référence");
-    const finVentes = niveau3.indexOf("</details>", ventes);
+
+    // La première étape porte les SIX décisions du bonnet, sans exception.
+    const references = niveau3.indexOf("Vos références · tout ce qui se décide pour chacune");
+    const finReferences = niveau3.indexOf("</details>", references);
     const etapeBudgets = niveau3.indexOf('data-etape="1"');
     const etapeSuivante = niveau3.indexOf('data-etape="2"');
-    expect(ventes).toBeGreaterThan(0);
-    expect(finVentes).toBeLessThan(etapeBudgets);
-    for (const champ of ["product.bonnet.price", "product.bonnet.productionPlan", "product.bonnet.supplierChoice"]) {
+    expect(references).toBeGreaterThan(0);
+    expect(finReferences).toBeLessThan(etapeBudgets);
+    for (const champ of [
+      "product.bonnet.price",
+      "product.bonnet.productionPlan",
+      "product.bonnet.supplierChoice",
+      "product.bonnet.marketingBudget",
+      "product.bonnet.qualityBudget",
+    ]) {
       const pos = niveau3.indexOf(`name="${champ}"`);
-      expect(pos, champ).toBeGreaterThan(ventes);
-      expect(pos, champ).toBeLessThan(finVentes);
+      expect(pos, champ).toBeGreaterThan(references);
+      expect(pos, champ).toBeLessThan(finReferences);
     }
-    // L'étape « Budgéter » (la deuxième) : marketing et qualité par référence,
-    // puis l'entretien, contigus dans la même famille, puis la communication.
-    expect(niveau3).toContain("Budgéter");
-    const debut = niveau3.indexOf("Les budgets du tour");
-    const fin = niveau3.indexOf("</details>", debut);
-    expect(debut).toBeGreaterThan(etapeBudgets);
-    expect(fin).toBeLessThan(etapeSuivante);
-    for (const champ of ["product.bonnet.marketingBudget", "product.bonnet.qualityBudget", "maintenanceBudget"]) {
-      const pos = niveau3.indexOf(`name="${champ}"`);
-      expect(pos, champ).toBeGreaterThan(debut);
-      expect(pos, champ).toBeLessThan(fin);
-    }
-    const etapeEntretien = niveau3.indexOf('name="maintenanceBudget"');
-    expect(etapeEntretien).toBeGreaterThan(niveau3.indexOf('name="product.bonnet.qualityBudget"'));
-    expect(etapeEntretien).toBeLessThan(etapeSuivante);
-    // Niveau 1 : ni qualité ni entretien ouverts, les scalaires cachés partent quand même.
+
+    // Et la deuxième ne porte QUE l'entretien : plus un seul champ par
+    // référence n'a le droit d'y traîner.
+    const entretien = niveau3.indexOf('name="maintenanceBudget"');
+    expect(entretien).toBeGreaterThan(etapeBudgets);
+    expect(entretien).toBeLessThan(etapeSuivante);
+    expect(niveau3.slice(etapeBudgets, etapeSuivante)).not.toContain('name="product.');
+
+    // Niveau 1 : ni qualité ni entretien, et aucune marque à bâtir — l'étape
+    // « Budgéter » n'a plus rien à montrer et disparaît de la barre. Sa
+    // section reste dans le DOM : les scalaires cachés partent quand même,
+    // sans quoi le serveur lirait des budgets nuls.
     const niveau1 = rendu(gamme);
     expect(niveau1).not.toContain("Produire");
+    expect(niveau1).not.toContain("Budgéter");
     expect(niveau1).toContain('type="hidden" name="qualityBudget"');
     expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
   });
 
+  it("la gamme est une matrice : les intitulés en ligne, les références en colonne", () => {
+    // Les mêmes six ou sept décisions, répétées référence par référence : la
+    // gamme est un tableau et l'a toujours été. En cartes, on redisait sept
+    // fois les mêmes intitulés et on comparait de mémoire.
+    const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
+    // UN intitulé par décision, pas un par référence.
+    expect(html.match(/Marketing</g) ?? []).toHaveLength(1);
+    // Une colonne par référence, en en-tête.
+    for (const p of gamme) {
+      expect(html).toContain(`>${p.name}<`);
+    }
+    // Chaque ligne pose la même question à toute la gamme.
+    for (const p of gamme) {
+      expect(html).toContain(`name="product.${p.code}.price"`);
+      expect(html).toContain(`name="product.${p.code}.marketingBudget"`);
+    }
+  });
+
+  it("sur téléphone, la barre d'onglets choisit la colonne visible", () => {
+    // Une seule colonne tient sur 390 px. Ce sont les MÊMES cellules, masquées
+    // en CSS : aucun champ démonté, aucun nom de champ en double, et rien qui
+    // change de forme au chargement.
+    const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
+    expect(html).toContain("flex flex-wrap gap-2 lg:hidden");
+    // Les colonnes autres que l'active portent `hidden`, levé dès `lg`.
+    const cellules = [...html.matchAll(/class="(hidden )?lg:table-cell/g)];
+    expect(cellules.length).toBeGreaterThan(gamme.length);
+    // Sur chaque ligne, une seule colonne est visible sans media query.
+    const visibles = cellules.filter((m) => m[1] === undefined).length;
+    expect(visibles * gamme.length).toBe(cellules.length);
+  });
+
   it("en mono-produit, marketing, qualité, maintenance et R&D forment une seule famille, dans l'étape « Budgéter »", () => {
-    const html = rendu(null, { enabled: presetByLevel.get(4)!.decisions, rdOffer: { techScale: 10000 } });
+    // La R&D s'ouvre au niveau Stratégie (5) depuis octobre 2026.
+    const html = rendu(null, { enabled: presetByLevel.get(5)!.decisions, rdOffer: { techScale: 10000 } });
     expect(html).not.toContain("Produire");
     expect(html).toContain("Les budgets du tour · marketing, qualité, maintenance, R&amp;D");
     const positions = ["marketingBudget", "qualityBudget", "maintenanceBudget", "rdBudget"].map((n) => html.indexOf(`name="${n}"`));
@@ -487,6 +574,7 @@ describe("la R&D par référence", () => {
     otherVariableCostPerUnit: p.otherVariableCostPerUnit,
     hoursPerUnit: p.hoursPerUnit,
     refPrice: p.market.segments[0]!.refPrice,
+    marketSize: 1000,
     segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
     seasonCoef: 1,
     stock: 0,
@@ -520,7 +608,7 @@ describe("la R&D par référence", () => {
         defaults,
         kind: "class",
         alreadySubmitted: false,
-        enabled: presetByLevel.get(4)!.decisions,
+        enabled: presetByLevel.get(5)!.decisions,
         vocabulary: boutique.vocabulary,
         gamme: gammeRd,
         rdOffer: { techScale: 10000 },
@@ -574,6 +662,7 @@ describe("la marque et l'axe de communication", () => {
     otherVariableCostPerUnit: p.otherVariableCostPerUnit,
     hoursPerUnit: p.hoursPerUnit,
     refPrice: p.market.segments[0]!.refPrice,
+    marketSize: 1000,
     segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
     seasonCoef: 1,
     stock: 0,

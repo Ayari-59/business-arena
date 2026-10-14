@@ -103,12 +103,20 @@ export async function setSession(
   });
 }
 
-/** La version de session courante du compte ; null si le compte n'existe plus. */
+/**
+ * La version de session courante du compte ; null si le compte n'existe plus, ou s'il a
+ * été DÉSACTIVÉ par l'administration (/admin/inscrits) : sa session est alors refusée à
+ * chaque lecture, quelle que soit la façon dont elle a été ouverte (mot de passe, LTI,
+ * RENATER). La désactivation fait aussi avancer la version : les deux gardes se tiennent.
+ */
 export async function sessionVersionOf(userId: string): Promise<number | null> {
   const row = (
-    await db.select({ v: users.sessionVersion }).from(users).where(eq(users.id, userId))
+    await db
+      .select({ v: users.sessionVersion, desactiveLe: users.desactiveLe })
+      .from(users)
+      .where(eq(users.id, userId))
   )[0];
-  return row ? row.v : null;
+  return row && row.desactiveLe === null ? row.v : null;
 }
 
 export async function getSession(): Promise<{ userId: string; role: SessionRole } | null> {

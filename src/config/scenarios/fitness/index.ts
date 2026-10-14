@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario ABONNEMENT — « VOLT FITNESS », salle de sport de 1 200 m²,
@@ -133,15 +134,19 @@ const rawFitness = {
     loanAnnualRate: 0.055,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 40000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 28,
     maxCapitalIncreaseTotal: 180000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     // le parc de machines pèse lourd et se renouvelle
     depreciationPerRound: 16000,
   },
@@ -477,6 +482,43 @@ const rawFitness = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "fitness_chaine_nationale",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:reguliers", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "fitness_appli_gratuite",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:resolutions", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "fitness_mutuelle",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:entreprises", op: "mul", value: 1.3 }],
+    },
+    {
+      code: "fitness_coach_depart",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "fitness_portes_ouvertes",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
+    },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("fitness"),
   ],
   // L'énergie flambe au tour 3, en plein creux d'été : les charges montent
   // quand la salle est vide. Le pire moment, comme toujours.

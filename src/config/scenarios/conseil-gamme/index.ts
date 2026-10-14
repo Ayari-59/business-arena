@@ -5,20 +5,26 @@ import { conseilBots, conseilCompany, conseilScenario } from "../conseil";
 
 /**
  * Scénario SERVICES · GAMME — « ATLAS CONSEIL » en trois offres : l'audit et
- * la conformité, la transformation et la stratégie, et une offre de
- * cybersécurité qui n'existe qu'à l'état de projet, 6 tours trimestriels.
+ * la conformité, la stratégie et la transformation des grands comptes, et une
+ * pratique de cyber-sécurité qui n'existe qu'à l'état de projet, 6 tours
+ * trimestriels.
+ *
+ * Les codes du moteur restent ceux du premier jet (`audit`, `transformation`,
+ * `cyber`) : ils sont écrits dans les décisions déjà jouées et dans le mapping
+ * des commandes exceptionnelles. Ce que l'élève lit, ce sont les noms — Audit,
+ * Stratégie, Cyber-sécurité.
  *
  * Le cabinet d'origine vend « la journée » à un taux moyen. Ici, chaque offre
  * a son taux, ses clients et ses frais, et toutes se partagent les mêmes
  * consultants : 12 personnes, 60 jours ouvrés, 720 jours à vendre par
  * trimestre, quelle que soit l'offre. Le MIX des journées vendues décide du
  * taux journalier moyen autant que le taux d'occupation, et une offre neuve
- * se bâtit avant de se vendre : la pratique cyber demande 30 000 € de
+ * se bâtit avant de se vendre : la cyber-sécurité demande 30 000 € de
  * méthodes, de certifications et de recrutement de compétences avant la
  * première mission, et pas avant le tour 2.
  *
  * Calibration (base trimestrielle) : 720 jours vendables ; audit 560 €
- * (marge 470 €), transformation 780 € (marge 665 €), cyber 850 € (marge
+ * (marge 470 €), stratégie 780 € (marge 665 €), cyber-sécurité 850 € (marge
  * 750 €) ; 198 000 € de structure décaissée → seuil ≈ 380 jours au mix
  * usuel (53 % d'occupation), contre 421 en un seul taux moyen.
  */
@@ -44,7 +50,7 @@ const AUDIT_MARKET = {
 const GAMME: ProductDef[] = [
   {
     code: "audit",
-    name: "Audit et conformité",
+    name: "Audit",
     // la journée du cabinet d'origine : frais de mission et sous-traitance d'appoint
     materialCostPerUnit: 55,
     otherVariableCostPerUnit: 35,
@@ -53,7 +59,9 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "transformation",
-    name: "Transformation et stratégie",
+    name: "Transformation et Stratégie",
+    // « Transformation et Stratégie » ne tient pas sur un bouton de téléphone.
+    shortName: "Stratégie",
     // des missions chez le client, loin, longtemps : plus de frais, plus d'experts d'appoint
     materialCostPerUnit: 70,
     otherVariableCostPerUnit: 45,
@@ -70,6 +78,11 @@ const GAMME: ProductDef[] = [
           refPrice: 690,
           minAcceptablePrice: 420,
           psychThresholds: [{ threshold: 750, penalty: 0.9 }],
+          // Une clientèle de cabinet négocie : au-delà du double du tarif usuel,
+          // elle va voir ailleurs. Sans cette borne resserrée, des élasticités
+          // molles (−0,8 à −1,3) laissaient encore 504 k€ de résultat en
+          // doublant les prix — le secteur le plus clément du jeu.
+          walkAwayPriceRatio: 2,
           marketingSensitivity: 0.15,
           qualitySensitivity: 0.45,
           loyalty: 0.35,
@@ -85,7 +98,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "cyber",
-    name: "Cybersécurité et conformité numérique",
+    name: "Cyber-sécurité",
     materialCostPerUnit: 60,
     otherVariableCostPerUnit: 40,
     hoursPerUnit: 1,
@@ -104,6 +117,11 @@ const GAMME: ProductDef[] = [
           refPrice: 850,
           minAcceptablePrice: 520,
           psychThresholds: [{ threshold: 900, penalty: 0.92 }],
+          // Une clientèle de cabinet négocie : au-delà du double du tarif usuel,
+          // elle va voir ailleurs. Sans cette borne resserrée, des élasticités
+          // molles (−0,8 à −1,3) laissaient encore 504 k€ de résultat en
+          // doublant les prix — le secteur le plus clément du jeu.
+          walkAwayPriceRatio: 2,
           marketingSensitivity: 0.12,
           qualitySensitivity: 0.55,
           loyalty: 0.4,
@@ -121,6 +139,11 @@ const GAMME: ProductDef[] = [
           refPrice: 720,
           minAcceptablePrice: 450,
           psychThresholds: [{ threshold: 750, penalty: 0.9 }],
+          // Une clientèle de cabinet négocie : au-delà du double du tarif usuel,
+          // elle va voir ailleurs. Sans cette borne resserrée, des élasticités
+          // molles (−0,8 à −1,3) laissaient encore 504 k€ de résultat en
+          // doublant les prix — le secteur le plus clément du jeu.
+          walkAwayPriceRatio: 2,
           marketingSensitivity: 0.1,
           qualitySensitivity: 0.35,
           loyalty: 0.3,
@@ -142,8 +165,9 @@ const GAMME: ProductDef[] = [
  */
 /**
  * La référence de chaque commande, et son prix quand la référence n'est pas
- * celle du mono : le programme de transformation et la due diligence sont de la
- * transformation, le reste de l'audit et de la conformité.
+ * celle du mono : le programme de transformation et la due diligence relèvent
+ * de la Stratégie (code `transformation`), le reste de l'audit et de la
+ * conformité.
  */
 const CIBLES: Record<string, { productCode: string; price?: number }> = {
   conseil_offer_transformation: { productCode: "transformation" },

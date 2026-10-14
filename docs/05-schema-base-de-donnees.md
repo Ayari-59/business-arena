@@ -19,14 +19,16 @@ IDENTITÉ        users, organizations, organization_members, classes, class_memb
 CATALOGUE       scenarios, concepts, decision_models, decision_model_concepts,
 (référentiels)  situations, situation_models, situation_concepts, hints,
                 event_definitions, decision_options
-PARTIE          games, teams, players, rounds, decisions
+PARTIE          games, teams, players, game_recoveries, rounds, decisions, aid_requests
 ÉTAT SIMULÉ     markets, market_segments, products, production_units, employees,
                 suppliers, customers, inventory, financial_accounts, transactions
 RÉSULTATS       round_results, kpis, event_occurrences
 PÉDAGOGIE       situation_instances, model_choices, hint_usages,
                 learning_progress, player_skills
+ÉPISODES        episode_parties, episode_cohortes, episode_membres, episode_reprises,
+                episode_objectifs
 SCORING         scores, game_rankings
-COMPÉTITION     competitions, competition_stages, competition_entries
+COMPÉTITION     competitions, competition_stages, competition_entries, competition_members
 ```
 
 Correspondance avec la liste imposée (§30) : `events` → `event_definitions` (catalogue) +
@@ -68,8 +70,10 @@ Correspondance avec la liste imposée (§30) : `events` → `event_definitions` 
 | `games` | id, organization_id FK, class_id FK null, competition_stage_id FK null, scenario_id FK, scenario_snapshot **jsonb** (ADR-10), engine_version text, seed bigint, mode enum(`learning`,`competition`,`contest`), difficulty_profile jsonb, status enum(`draft`,`open`,`running`,`finished`,`archived`), current_round int, round_duration interval null, created_by FK→users | index (class_id), (status) |
 | `teams` | id, game_id FK, name, controller enum(`human`,`bot`), bot_profile text null, join_code unique null | **unique (game_id, name)** ; check bot ⇒ bot_profile not null |
 | `players` | team_id FK, user_id FK, role enum(`captain`,`member`) | PK (team_id, user_id) ; **unique (user_id, game_id)** via contrainte (un joueur, une équipe par partie — vue matérialisée d'appui ou trigger) |
+| `game_recoveries` | game_id FK, user_id FK, recovery_code text UNIQUE — PK (game_id, user_id). Le code personnel qui rend son identité à un élève de classe depuis un autre appareil. Table à part et non colonne de `players` : le code appartient au couple (partie, élève) et non à son équipe, or changer d'équipe supprime et réinsère la ligne `players` |
 | `rounds` | id, game_id FK, index int, status enum(`pending`,`open`,`resolving`,`resolved`), opens_at, deadline, resolved_at | **unique (game_id, index)** ; le verrou de résolution = update conditionnel sur status (cron idempotent) |
 | `decisions` | id, round_id FK, team_id FK, payload **jsonb** (validé contre `decision_options`), forecast jsonb (prévisions du joueur → analyse d'écarts), justification text, status enum(`draft`,`validated`,`locked`,`carried_over`), validated_at, validated_by FK→users | **unique (round_id, team_id)** ; append-only logique : jamais de UPDATE après `locked` (trigger de garde) |
+| `aid_requests` | id, game_id FK, team_id FK, round_index int, amount numeric(14,2), reason text, status enum(`pending`,`granted`,`refused`), granted_amount numeric(14,2), decision_note text, decided_by FK→users, decided_at | **unique (team_id, round_index)** ; demande de subvention exceptionnelle déposée par une équipe en cessation de paiements dont l'emprunt ET l'apport des associés sont épuisés. L'animateur seul tranche ; accordée, elle est encaissée en produit exceptionnel à la résolution du tour `round_index`. |
 
 ## 5. État simulé (par partie/équipe)
 
@@ -106,6 +110,11 @@ résolution de chaque tour (transaction unique).
 | `hint_usages` | id, situation_instance_id FK, hint_id FK, level int, user_id FK, used_at — **unique (situation_instance_id, level)** (séquentialité garantie par le service + check level croissant) |
 | `learning_progress` | user_id FK, concept_id FK, mastery numeric 0..100, evidence_count int, last_event_at — PK (user_id, concept_id) |
 | `player_skills` | user_id FK, axis enum(`finance`,`marketing`,`production`,`analysis`,`strategy`,`decision`,`risk`), value numeric 0..100 — PK (user_id, axis) |
+| `episode_parties` | id, user_id FK (cascade), cle uuid, episode_code text, version_modele int, niveau text, graine int, chemin jsonb, consultes jsonb, jours double, diagnostic text, reevaluation jsonb, prevision double, confiance int, premiere bool, created_at — **unique (user_id, cle)**. Les faits bruts d'une partie d'épisode manager, sans score ni texte libre : la qualité de décision et le profil se recalculent à partir d'eux (`src/pedagogy/profil/`) |
+| `episode_cohortes` | id, code text UNIQUE, nom text, cle_animateur text UNIQUE, created_at. Un groupe de managers ; l'animateur la suit par sa clé, sans compte, et ne voit que des agrégats (à partir de cinq personnes) |
+| `episode_membres` | user_id PK FK (cascade), cohorte_id FK (cascade), depuis. Une cohorte à la fois par personne |
+| `episode_reprises` | user_id PK FK (cascade), code text UNIQUE, created_at. Le code qui rend son profil à une personne depuis un autre appareil |
+| `episode_objectifs` | user_id PK FK (cascade), competence text, updated_at. La compétence qu'une personne choisit de travailler ; la recommandation du prochain épisode la suit |
 
 ## 8. Scoring et compétition
 
@@ -116,6 +125,7 @@ résolution de chaque tour (transaction unique).
 | `competitions` | id, organization_id FK null (null = nationale), name, status enum(`draft`,`registration`,`running`,`finished`), scenario_id FK, rules jsonb, organizer_id FK |
 | `competition_stages` | id, competition_id FK, index int, kind enum(`qualification`,`groups`,`knockout`,`semifinal`,`final`), format jsonb (teamsPerGame, advanceCount, tieBreakers), status — **unique (competition_id, index)** |
 | `competition_entries` | competition_id FK, team_label text, member_user_ids uuid[], organization_id FK, seed_rank int, status enum(`registered`,`active`,`eliminated`,`winner`) — PK (competition_id, team_label) |
+| `competition_members` | competition_id FK, user_id FK, team_label text, recovery_code text UNIQUE — PK (competition_id, user_id). Le code personnel qui rend son identité à un joueur depuis un autre appareil (doc 04 §3.0) |
 
 ## 9. Relations — diagramme d'ensemble
 
@@ -138,7 +148,7 @@ scenarios ──────┘  │                       └──< players >�
    │                                        └──< hint_usages >────┴──< hints
    │  concepts ──< situation_concepts, decision_model_concepts
    │  users ──< learning_progress >── concepts ;  users ──< player_skills
-   └── competitions ──< competition_stages ──< games ;  competitions ──< competition_entries
+   └── competitions ──< competition_stages ──< games ;  competitions ──< competition_entries, competition_members
 teams ──< products, production_units, employees, inventory, financial_accounts, transactions
 ```
 

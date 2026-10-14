@@ -1,10 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { games, hintUsages, players, rounds, situationInstances, situations, teams } from "@/db/schema";
+import { games, hintUsages, players, rounds, roundResults, situationInstances, situations, teams } from "@/db/schema";
 import { situationByCode } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { presetFromProfile } from "@/config/difficulty";
-import { buildTriggerContext, detectSituations } from "@/pedagogy/detection";
+import { buildTriggerContext, detectSituations, nomsDuMarche } from "@/pedagogy/detection";
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
@@ -47,13 +47,69 @@ export async function openSituationsForRound(
   const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   const snapshotCode = (gameRow?.scenarioSnapshot as { code?: string } | null)?.code;
   const definition = await resolveScenarioDefinition(snapshotCode);
+  // Les faits nomment les clientèles et les références ; le snapshot est la
+  // partie telle qu'elle est jouée, réglages de l'enseignant compris.
+  const noms = nomsDuMarche(
+    (gameRow?.scenarioSnapshot as Pick<typeof definition.scenario, "market" | "products"> | null) ??
+      definition.scenario,
+  );
+
+  /*
+    LE TOUR D'AVANT LE TOUR OBSERVÉ. `previousResults` porte le tour qui vient
+    de se clore ; le redressement demande celui d'encore avant, pour savoir
+    d'où l'équipe vient. Deux colonnes suffisent, donc aucune reconstruction
+    de résultat : une lecture, et rien de plus.
+  */
+  const avantPrecedent = new Map<string, { netIncome: number; netTreasury: number }>();
+  if (roundIndex >= 3) {
+    const rndAvant = (
+      await db
+        .select()
+        .from(rounds)
+        .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex - 2)))
+    )[0];
+    if (rndAvant) {
+      const lignes = await db
+        .select({
+          teamId: roundResults.teamId,
+          netIncome: roundResults.netIncome,
+          netTreasury: roundResults.netTreasury,
+        })
+        .from(roundResults)
+        .where(eq(roundResults.roundId, rndAvant.id));
+      for (const l of lignes) {
+        avantPrecedent.set(l.teamId, {
+          netIncome: Number(l.netIncome),
+          netTreasury: Number(l.netTreasury),
+        });
+      }
+    }
+  }
 
   const values: (typeof situationInstances.$inferInsert)[] = [];
   const scripted = definition.situations.filter(
     (s) => "round" in s.trigger && s.trigger.round === roundIndex,
   );
   for (const team of humanTeams) {
+    const result = previousResults?.[team.id];
+    const detected = result
+      ? new Set(
+          detectSituations(
+            result,
+            { placement: presetFromProfile(gameRow?.difficultyProfile).decisions.placement },
+            avantPrecedent.get(team.id) ?? null,
+          ),
+        )
+      : new Set<ReturnType<typeof detectSituations>[number]>();
+
     for (const s of scripted) {
+      // LA CONDITION QUE L'ÉNONCÉ SUPPOSE. « Le paradoxe du succès » raconte un
+      // trimestre record avec la caisse dans le rouge : ouvert à une équipe qui
+      // vient de perdre 108 000 €, il n'enseigne pas le paradoxe, il apprend à
+      // ne pas lire ses résultats. Sans condition déclarée, rien ne change —
+      // la situation s'ouvre au tour dit, comme avant.
+      const condition = "round" in s.trigger ? s.trigger.requires : undefined;
+      if (condition && !detected.has(condition)) continue;
       const situationId = situationIdByCode.get(s.code);
       if (situationId)
         values.push({
@@ -62,16 +118,11 @@ export async function openSituationsForRound(
           situationId,
           origin: "scripted",
           status: "open",
+          ...(condition && result ? { triggerContext: buildTriggerContext(condition, result, noms) } : {}),
           openedAt: new Date(),
         });
     }
-    const result = previousResults?.[team.id];
     if (result) {
-      const detected = new Set(
-        detectSituations(result, {
-          placement: presetFromProfile(gameRow?.difficultyProfile).decisions.placement,
-        }),
-      );
       // Résolution par le déclencheur porté par la situation, pas par une
       // convention de nommage : chaque scénario nomme ses situations librement.
       for (const s of definition.situations) {
@@ -84,7 +135,7 @@ export async function openSituationsForRound(
             situationId,
             origin: "detected",
             status: "open",
-            triggerContext: buildTriggerContext(s.trigger.detect, result),
+            triggerContext: buildTriggerContext(s.trigger.detect, result, noms),
             openedAt: new Date(),
           });
       }

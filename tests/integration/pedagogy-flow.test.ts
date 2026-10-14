@@ -78,7 +78,7 @@ describe("référentiels et instanciation", () => {
     expect(current[0]!.code).toBe("nova_t1_takeover");
     expect(current[0]!.problem).not.toMatch(/calculez/i); // question ouverte (§3)
     expect(current[0]!.unlockedHints).toHaveLength(0);
-    expect(current[0]!.nextHint).toEqual({ level: 1, costRatio: 0.05 });
+    expect(current[0]!.nextHint).toEqual({ level: 1, costRatio: 0.02 });
   });
 });
 
@@ -191,13 +191,21 @@ describe("débriefing et progression", () => {
     const d = debriefedByRound[0]!.situations[0]!;
     expect(d.code).toBe("nova_t1_takeover");
     expect(d.debrief).not.toBeNull();
-    expect(d.debrief!.correctOptionIds.sort()).toEqual(["cover_fixed", "unit_margin"]);
+    // Les bonnes causes de CE niveau : à ce niveau de la partie, la situation ne propose
+    // qu'une des deux (config/analyse-par-niveau) ; elles sont toutes justes.
+    expect(d.debrief!.correctOptionIds).toContain("cover_fixed");
+    for (const id of d.debrief!.correctOptionIds) expect(["cover_fixed", "unit_margin"]).toContain(id);
+    // Rien ne se perd : ce que le niveau n'a pas proposé est dit à part au débriefing
+    // (« à retenir aussi »), de sorte que les deux listes recomposent toutes les bonnes causes.
+    const toutes = [...d.debrief!.correctOptionIds, ...d.debrief!.autresCauses.map((c) => c.id)].sort();
+    expect(toutes).toEqual(["cover_fixed", "unit_margin"]);
+    for (const c of d.debrief!.autresCauses) expect(c.label.length).toBeGreaterThan(0);
     // la correction du QCM est révélée, avec explications
     expect(d.debrief!.quizScore).toBeCloseTo(2 / 3, 9);
     expect(d.debrief!.quizCorrection.length).toBe(d.quizQuestions.length);
     expect(d.debrief!.quizCorrection.every((c) => c.explain.length > 0)).toBe(true);
-    // score final : (0,5×1 + 0,5×2/3) × malus 2 indices (0,85)
-    expect(d.debrief!.finalScore).toBeCloseTo((0.5 + 0.5 * (2 / 3)) * 0.85, 6);
+    // score final : (0,5×1 + 0,5×2/3) × coût de 2 indices (2 % + 3 % → 0,95)
+    expect(d.debrief!.finalScore).toBeCloseTo((0.5 + 0.5 * (2 / 3)) * 0.95, 6);
 
     // la situation scriptée du tour 2 est ouverte
     expect(current.some((s) => s.code === "nova_t2_price_war")).toBe(true);

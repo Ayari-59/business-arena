@@ -19,6 +19,7 @@ import { db } from "@/db";
 import { games, rounds } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { closeCurrentRound, createClassGame } from "@/services/game.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let teacherId: string;
 let orgId: string;
@@ -33,6 +34,8 @@ beforeAll(async () => {
   if ("error" in r) throw new Error(r.error);
   teacherId = r.userId;
   orgId = (await getTeacherOrgId(teacherId))!;
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, teacherId);
 });
 
 async function tourCourant(gameId: string): Promise<number> {

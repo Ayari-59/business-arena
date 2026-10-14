@@ -24,7 +24,7 @@ vi.mock("@/db", async () => {
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { concepts, learningProgress, users } from "@/db/schema";
-import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
+import { registerTeacher } from "@/services/auth.service";
 import { closeCurrentRound, createClassGame, joinGameByCode } from "@/services/game.service";
 import {
   getTeacherPedagogyView,
@@ -32,6 +32,7 @@ import {
   submitDiagnosis,
 } from "@/services/pedagogy.service";
 import { situationByCode } from "@/config/scenarios/registry";
+import { etablissementDeLEnseignantSousLicence } from "./helpers/licence";
 
 let prof: string;
 let gameId: string;
@@ -50,7 +51,7 @@ beforeAll(async () => {
   prof = r.userId;
   const partie = await createClassGame({
     teacherId: prof,
-    organizationId: (await getTeacherOrgId(prof))!,
+    organizationId: await etablissementDeLEnseignantSousLicence(prof),
     periodicity: "quarter",
     humanTeamsCount: 2,
     botCount: 0,

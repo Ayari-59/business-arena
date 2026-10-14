@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { setStageWindowAction, type CompetitionActionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { utcToParisLocalInput } from "@/lib/paris-time";
@@ -42,7 +43,7 @@ export function StageSchedule({
     <form
       ref={formRef}
       action={formAction}
-      className="rounded-lg border border-white/10 bg-slate-950/60 p-3"
+      className="rounded-lg border border-white/5 bg-slate-950/60 p-3"
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
         {KIND_LABEL[kind] ?? kind}
@@ -54,7 +55,7 @@ export function StageSchedule({
             type="datetime-local"
             name="startsAt"
             defaultValue={utcToParisLocalInput(startsAt ? new Date(startsAt) : null)}
-            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+            className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
           />
         </label>
         <label className="block">
@@ -63,7 +64,7 @@ export function StageSchedule({
             type="datetime-local"
             name="endsAt"
             defaultValue={utcToParisLocalInput(endsAt ? new Date(endsAt) : null)}
-            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+            className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
           />
         </label>
       </div>
@@ -71,7 +72,7 @@ export function StageSchedule({
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-progress disabled:opacity-70"
+        className={`${bouton()} mt-3`}
       >
         {pending ? "Enregistrement…" : "Enregistrer"}
       </button>

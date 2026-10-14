@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   competitionEntries,
+  competitionMembers,
   competitionStages,
   competitions,
   gameRankings,
@@ -12,8 +13,16 @@ import {
   users,
 } from "@/db/schema";
 import { composeGroups, podium, qualifiers, type GroupStanding } from "@/competition";
+import { apercuDePhase, LIMITES_CONCOURS } from "@/config/concours";
+import {
+  ALPHABET_REPRISE,
+  codeDeReprisePlausible,
+  LONGUEUR_CODE_REPRISE,
+  normaliserCodeDeReprise,
+} from "@/config/reprise";
+import { garderLesTentatives } from "@/services/reprise.service";
 import { createGameCore } from "@/services/game-creation.service";
-import { entitlementsForOrg } from "@/services/entitlements.service";
+import { verifierLaLicence } from "@/services/acces.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import type { Periodicity } from "@/config/scenarios/periodicity";
 
@@ -52,13 +61,11 @@ export async function createCompetition(args: {
   groupSize: number;
   advancePerGroup: number;
 }): Promise<{ competitionId: string; joinCode: string }> {
-  // Palier gratuit : le mode concours est réservé à l'offre établissement.
-  const ent = await entitlementsForOrg(args.organizationId);
-  if (!ent.competitions) {
-    throw new Error(
-      "Les concours sont réservés à l'offre établissement. Activez une licence pour les ouvrir.",
-    );
-  }
+  // « Pas d'essai en classe » : un concours ne se CRÉE que sous licence de l'arène en
+  // cours, et dans son paramétrage : il se joue avec NOVA, compte comme un groupe en
+  // cours, et demande que les enseignants tiennent dans la licence. Un concours déjà créé
+  // se poursuit : ses phases et leurs parties ne repassent pas par ici.
+  await verifierLaLicence(args.organizationId, { concours: true });
   const { getOrCreateNovaScenarioIdPublic } = await import("./game-creation.service");
   const scenarioId = await getOrCreateNovaScenarioIdPublic();
   const joinCode = makeCode();
@@ -91,12 +98,31 @@ export async function createCompetition(args: {
  * alors `alreadyMember`, le nom de son équipe, pour que la page le dise au
  * lieu de rediriger en silence (vague 1, K4).
  */
+/**
+ * POURQUOI CE CODE DE CONCOURS NE PERMET PAS DE S'INSCRIRE, s'il y a une raison.
+ *
+ * Même motif que `refusDeRejoindre` : l'action créait un utilisateur invité
+ * avant de savoir si le concours existe. Le refus se prononce d'abord, sur une
+ * lecture seule. `joinCompetition` refait le contrôle et fait autorité.
+ */
+export async function refusDeSInscrire(code: string): Promise<string | null> {
+  const competition = (
+    await db.select().from(competitions).where(eq(competitions.joinCode, code.trim().toUpperCase()))
+  )[0];
+  if (!competition) return "Code de concours inconnu.";
+  if (competition.status !== "registration") return "Les inscriptions de ce concours sont closes.";
+  return null;
+}
+
 export async function joinCompetition(args: {
   code: string;
   userId: string;
   teamLabel: string;
   pseudo?: string;
-}): Promise<{ competitionId: string; alreadyMember?: string } | { error: string }> {
+}): Promise<
+  | { competitionId: string; alreadyMember?: string; codeDeReprise?: string }
+  | { error: string }
+> {
   const competition = (
     await db.select().from(competitions).where(eq(competitions.joinCode, args.code.trim().toUpperCase()))
   )[0];
@@ -130,8 +156,13 @@ export async function joinCompetition(args: {
     )
     .returning({ teamLabel: competitionEntries.teamLabel });
 
+  // LE NOM CANONIQUE DE L'ÉQUIPE, ET NON CELUI QUI VIENT D'ÊTRE TAPÉ.
+  // « les requins » rejoint bien « Les Requins », mais c'est le nom de
+  // l'équipe qu'il faut retenir : sinon le membre garde la casse de sa propre
+  // saisie, et l'organisateur lit deux équipes là où il n'y en a qu'une.
+  let libelleCanonique = label;
   if (updated.length > 0) {
-    // Successfully joined existing team
+    libelleCanonique = updated[0]!.teamLabel;
   } else {
     // Determine why UPDATE returned 0 rows
     const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
@@ -170,6 +201,7 @@ export async function joinCompetition(args: {
           .returning({ teamLabel: competitionEntries.teamLabel });
         if (retried.length === 0)
           return { error: "Cette équipe est complète (6 joueurs max)." };
+        libelleCanonique = retried[0]!.teamLabel;
       } else {
         throw err;
       }
@@ -178,7 +210,157 @@ export async function joinCompetition(args: {
   if (args.pseudo?.trim()) {
     await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
   }
-  return { competitionId: competition.id };
+  const codeDeReprise = await attribuerCodeDeReprise(
+    competition.id,
+    args.userId,
+    libelleCanonique,
+  );
+  return { competitionId: competition.id, codeDeReprise };
+}
+
+/**
+ * LE CODE PERSONNEL D'UN MEMBRE, POSÉ UNE FOIS POUR TOUTES.
+ *
+ * Il est tiré au sort dans l'alphabet des codes lisibles. La collision est
+ * improbable (mille milliards de combinaisons) mais l'index l'interdit, donc
+ * on retente plutôt que de laisser l'inscription échouer sur un coup de dé.
+ *
+ * Un membre qui a déjà son code le garde : ce serait le pire moment pour le
+ * changer, puisqu'il l'a justement noté.
+ */
+async function attribuerCodeDeReprise(
+  competitionId: string,
+  userId: string,
+  teamLabel: string,
+): Promise<string> {
+  const existant = await db
+    .select()
+    .from(competitionMembers)
+    .where(
+      and(
+        eq(competitionMembers.competitionId, competitionId),
+        eq(competitionMembers.userId, userId),
+      ),
+    );
+  if (existant[0]) return existant[0].recoveryCode;
+
+  for (let essai = 0; essai < 8; essai++) {
+    const code = Array.from(
+      { length: LONGUEUR_CODE_REPRISE },
+      () => ALPHABET_REPRISE[randomInt(ALPHABET_REPRISE.length)],
+    ).join("");
+    const pose = await db
+      .insert(competitionMembers)
+      .values({ competitionId, userId, teamLabel, recoveryCode: code })
+      .onConflictDoNothing()
+      .returning({ recoveryCode: competitionMembers.recoveryCode });
+    if (pose[0]) return pose[0].recoveryCode;
+    // Conflit : soit le code était pris, soit le membre existe déjà.
+    const relu = await db
+      .select()
+      .from(competitionMembers)
+      .where(
+        and(
+          eq(competitionMembers.competitionId, competitionId),
+          eq(competitionMembers.userId, userId),
+        ),
+      );
+    if (relu[0]) return relu[0].recoveryCode;
+  }
+  throw new Error("Impossible d'attribuer un code de reprise");
+}
+
+/** Le code personnel d'un membre, pour le lui réafficher ou le relire. */
+export async function codeDeRepriseDe(
+  competitionId: string,
+  userId: string,
+): Promise<string | null> {
+  const rows = await db
+    .select()
+    .from(competitionMembers)
+    .where(
+      and(
+        eq(competitionMembers.competitionId, competitionId),
+        eq(competitionMembers.userId, userId),
+      ),
+    );
+  return rows[0]?.recoveryCode ?? null;
+}
+
+/** Les codes de tout un concours : la liste que l'organisateur relit à un élève. */
+export async function codesDeRepriseDuConcours(
+  competitionId: string,
+  organizerId: string,
+): Promise<{ teamLabel: string; pseudo: string; code: string }[]> {
+  await loadOwnedCompetition(competitionId, organizerId);
+  const rows = await db
+    .select({
+      teamLabel: competitionMembers.teamLabel,
+      code: competitionMembers.recoveryCode,
+      pseudo: users.displayName,
+    })
+    .from(competitionMembers)
+    .innerJoin(users, eq(users.id, competitionMembers.userId))
+    .where(eq(competitionMembers.competitionId, competitionId));
+  return rows
+    .map((r) => ({ teamLabel: r.teamLabel, pseudo: r.pseudo ?? "", code: r.code }))
+    .sort((a, b) => a.teamLabel.localeCompare(b.teamLabel) || a.pseudo.localeCompare(b.pseudo));
+}
+
+/**
+ * REPRENDRE SON IDENTITÉ AVEC SON CODE.
+ *
+ * Rend l'identité du membre à qui ce code appartient. Le message d'échec est
+ * le même pour un code mal formé et pour un code inconnu : dire « ce code
+ * n'existe pas » plutôt que « ce code est faux » apprendrait à un curieux
+ * lesquels existent.
+ *
+ * Les tentatives sont comptées par adresse dans la table des échecs de
+ * connexion, en base et non en mémoire, parce que l'application est servie
+ * depuis plusieurs instances qui ne partagent rien.
+ */
+export const MARQUEUR_REPRISE = "reprise-de-concours";
+
+export async function reprendreSonIdentite(args: {
+  code: string;
+  ip?: string | null;
+  now?: number;
+}): Promise<
+  | { userId: string; competitionId: string; teamLabel: string }
+  | { error: string }
+> {
+  const CODE_REFUSE = "Code de reprise inconnu. Vérifiez-le auprès de votre enseignant.";
+  // La garde est la même que celle de la classe, et elle n'est écrite qu'une
+  // fois (reprise.service) : deux comptages des tentatives auraient fini par
+  // diverger, et c'est la moitié oubliée qui aurait laissé deviner un code.
+  const garde = await garderLesTentatives({
+    marqueur: MARQUEUR_REPRISE,
+    ip: args.ip,
+    now: args.now,
+  });
+  if (garde.refus) return { error: garde.refus };
+
+  const echec = async () => {
+    await garde.echec();
+    return { error: CODE_REFUSE };
+  };
+
+  // Un code mal formé ne peut pas être le bon : même message, même compteur.
+  if (!codeDeReprisePlausible(args.code)) return echec();
+  const rows = await db
+    .select()
+    .from(competitionMembers)
+    .where(eq(competitionMembers.recoveryCode, normaliserCodeDeReprise(args.code)));
+  const membre = rows[0];
+  if (!membre) return echec();
+
+  // Succès : le compteur de cette adresse repart de zéro.
+  await garde.succes();
+  return {
+    userId: membre.userId,
+    competitionId: membre.competitionId,
+    teamLabel: membre.teamLabel,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -314,38 +496,167 @@ async function stageStandings(stageId: string): Promise<GroupStanding[][]> {
   });
 }
 
-/** Lance la finale : qualifie les meilleurs de chaque groupe (doc 04 §3). */
+/**
+ * LA PHASE QUI SE TERMINE, ET CE QU'ELLE QUALIFIE.
+ *
+ * Un concours n'a plus deux phases mais autant que l'organisateur en lance :
+ * des poules, puis d'autres poules s'il le veut, puis la finale. Tout ce qui
+ * enchaîne passe donc par ici — la phase en cours, quel que soit son type, et
+ * les équipes qui en sortent.
+ *
+ * Le nombre de qualifiées se lit sur le FORMAT DE LA PHASE et non sur les
+ * règles du concours : chaque phase porte le sien depuis sa création, et c'est
+ * ce qui permet de qualifier deux équipes par poule en demi-finale après n'en
+ * avoir qualifié qu'une en préliminaire.
+ */
+async function phaseQuiSeTermine(competitionId: string): Promise<{
+  stage: typeof competitionStages.$inferSelect;
+  standings: GroupStanding[][];
+  qualifieesParPoule: number;
+}> {
+  const stages = await db
+    .select()
+    .from(competitionStages)
+    .where(eq(competitionStages.competitionId, competitionId));
+  const stage = stages.find((s) => s.status === "running");
+  if (!stage) throw new Error("Aucune phase en cours");
+
+  const stageGames = await db.select().from(games).where(eq(games.competitionStageId, stage.id));
+  if (stageGames.length === 0 || stageGames.some((g) => g.status !== "finished"))
+    throw new Error("Toutes les parties de cette phase doivent être terminées");
+
+  const format = (stage.format ?? {}) as { advanceCount?: number };
+  return {
+    stage,
+    standings: await stageStandings(stage.id),
+    qualifieesParPoule: Math.max(1, format.advanceCount ?? 1),
+  };
+}
+
+/**
+ * Clôt la phase qui s'achève : elle passe en terminée, les qualifiées restent
+ * actives, les autres sont éliminées. Un même geste après chaque phase, pour
+ * que le statut d'une équipe dise toujours si elle joue encore.
+ */
+async function cloreLaPhase(
+  competitionId: string,
+  stageId: string,
+  survivantes: string[],
+): Promise<void> {
+  await db
+    .update(competitionStages)
+    .set({ status: "finished" })
+    .where(eq(competitionStages.id, stageId));
+  const entries = await db
+    .select()
+    .from(competitionEntries)
+    .where(eq(competitionEntries.competitionId, competitionId));
+  for (const entry of entries) {
+    await db
+      .update(competitionEntries)
+      .set({ status: survivantes.includes(entry.teamLabel) ? "active" : "eliminated" })
+      .where(
+        and(
+          eq(competitionEntries.competitionId, competitionId),
+          eq(competitionEntries.teamLabel, entry.teamLabel),
+        ),
+      );
+  }
+}
+
+/**
+ * UNE PHASE INTERMÉDIAIRE DE POULES (demi-finales, tour 2…).
+ *
+ * Les qualifiées de la phase en cours sont retirées au sort dans de nouvelles
+ * poules. La graine du tirage est celle du concours DÉCALÉE PAR L'INDEX de la
+ * phase : sans ce décalage, deux phases successives mélangeraient la même
+ * liste dans le même ordre, et les équipes se retrouveraient ensemble deux
+ * fois de suite sans que rien ne l'explique.
+ *
+ * Le nom saisi par l'organisateur vit dans le format de la phase, en jsonb :
+ * aucune colonne à ajouter, et l'affichage sait dire « Demi-finales » plutôt
+ * que « Phase 2 ».
+ */
+export async function startIntermediateStage(args: {
+  competitionId: string;
+  organizerId: string;
+  groupSize: number;
+  advancePerGroup: number;
+  nom?: string;
+}): Promise<{ groups: number; survivors: string[] }> {
+  const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
+  const rules = rulesOf(competition);
+  const { stage, standings, qualifieesParPoule } = await phaseQuiSeTermine(competition.id);
+  if (stage.kind === "final") throw new Error("La finale ne se prolonge pas : clôturez le concours");
+
+  const survivantes = qualifiers(standings, qualifieesParPoule);
+  const taille = Math.min(
+    Math.max(args.groupSize, LIMITES_CONCOURS.tailleGroupe.min),
+    LIMITES_CONCOURS.tailleGroupe.max,
+  );
+  const qualifiees = Math.min(
+    Math.max(args.advancePerGroup, LIMITES_CONCOURS.qualifiesParGroupe.min),
+    LIMITES_CONCOURS.qualifiesParGroupe.max,
+  );
+  // Le même aperçu que celui montré à l'organisateur avant de confirmer : ce
+  // qui est refusé à l'écran doit l'être ici, et pour la même raison.
+  const apercu = apercuDePhase(survivantes.length, taille, qualifiees);
+  if (!apercu.possible) throw new Error(apercu.empechement!);
+
+  const index = stage.index + 1;
+  const nouvelle = await db
+    .insert(competitionStages)
+    .values({
+      competitionId: competition.id,
+      index,
+      kind: "semifinal",
+      format: { teamsPerGame: taille, advanceCount: qualifiees, nom: args.nom?.trim() || null },
+      status: "running",
+    })
+    .returning({ id: competitionStages.id });
+
+  const entries = await db
+    .select()
+    .from(competitionEntries)
+    .where(eq(competitionEntries.competitionId, competition.id));
+  const membersByLabel = new Map(entries.map((e) => [e.teamLabel, e.memberUserIds]));
+  const poules = composeGroups(survivantes, taille, rules.seed + index);
+  for (const poule of poules) {
+    await createStageGame({
+      competition,
+      stageId: nouvelle[0]!.id,
+      rules,
+      entryLabels: poule,
+      membersByLabel,
+    });
+  }
+
+  await cloreLaPhase(competition.id, stage.id, survivantes);
+  return { groups: poules.length, survivors: survivantes };
+}
+
+/** Lance la finale : qualifie les meilleures de la phase en cours (doc 04 §3). */
 export async function startFinal(args: {
   competitionId: string;
   organizerId: string;
 }): Promise<{ finalists: string[] }> {
   const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
   const rules = rulesOf(competition);
-  const stages = await db
-    .select()
-    .from(competitionStages)
-    .where(eq(competitionStages.competitionId, competition.id));
-  const qualification = stages.find((s) => s.kind === "qualification");
-  if (!qualification || qualification.status !== "running")
-    throw new Error("Aucune phase de qualification en cours");
+  const { stage, standings, qualifieesParPoule } = await phaseQuiSeTermine(competition.id);
+  if (stage.kind === "final") throw new Error("La finale est déjà lancée");
 
-  const stageGames = await db
-    .select()
-    .from(games)
-    .where(eq(games.competitionStageId, qualification.id));
-  if (stageGames.some((g) => g.status !== "finished"))
-    throw new Error("Toutes les parties de qualification doivent être terminées");
-
-  const standings = await stageStandings(qualification.id);
-  const targetCount = Math.min(8, Math.max(2, standings.length * rules.advancePerGroup));
-  const finalists = qualifiers(standings, rules.advancePerGroup, targetCount);
+  const targetCount = Math.min(
+    LIMITES_CONCOURS.finalistesMax,
+    Math.max(2, standings.length * qualifieesParPoule),
+  );
+  const finalists = qualifiers(standings, qualifieesParPoule, targetCount);
   if (finalists.length < 2) throw new Error("Pas assez de qualifiés pour une finale");
 
   const finalStage = await db
     .insert(competitionStages)
     .values({
       competitionId: competition.id,
-      index: 2,
+      index: stage.index + 1,
       kind: "final",
       format: { teamsPerGame: finalists.length, advanceCount: 1 },
       status: "running",
@@ -365,21 +676,7 @@ export async function startFinal(args: {
     membersByLabel,
   });
 
-  await db
-    .update(competitionStages)
-    .set({ status: "finished" })
-    .where(eq(competitionStages.id, qualification.id));
-  for (const entry of entries) {
-    await db
-      .update(competitionEntries)
-      .set({ status: finalists.includes(entry.teamLabel) ? "active" : "eliminated" })
-      .where(
-        and(
-          eq(competitionEntries.competitionId, competition.id),
-          eq(competitionEntries.teamLabel, entry.teamLabel),
-        ),
-      );
-  }
+  await cloreLaPhase(competition.id, stage.id, finalists);
   return { finalists };
 }
 
@@ -405,6 +702,9 @@ export async function finishCompetition(args: {
   const standings = await stageStandings(finalStage.id);
   const ranking = podium(standings[0] ?? []);
   const winner = ranking[0];
+  // La finale se clôt comme les autres phases : plus personne n'est « en
+  // lice » dans un concours terminé. Le vainqueur reçoit ensuite son statut.
+  await cloreLaPhase(competition.id, finalStage.id, []);
   if (winner) {
     await db
       .update(competitionEntries)
@@ -416,10 +716,6 @@ export async function finishCompetition(args: {
         ),
       );
   }
-  await db
-    .update(competitionStages)
-    .set({ status: "finished" })
-    .where(eq(competitionStages.id, finalStage.id));
   await db
     .update(competitions)
     .set({ status: "finished" })
@@ -569,6 +865,12 @@ export interface CompetitionView {
     index: number;
     kind: string;
     status: string;
+    /**
+     * Le format figé à la création de la phase : taille des poules, équipes
+     * qualifiées, et le nom que l'organisateur lui a donné. C'est lui, et non
+     * les règles du concours, qui décrit une phase intermédiaire.
+     */
+    format: { teamsPerGame?: number; advanceCount?: number; nom?: string | null };
     /** Fenêtre de l'étape (planning), en ISO ou null. */
     startsAt: string | null;
     endsAt: string | null;
@@ -622,6 +924,7 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
       index: stage.index,
       kind: stage.kind,
       status: stage.status,
+      format: (stage.format ?? {}) as { teamsPerGame?: number; advanceCount?: number; nom?: string | null },
       startsAt: stage.startsAt ? stage.startsAt.toISOString() : null,
       endsAt: stage.endsAt ? stage.endsAt.toISOString() : null,
       games: stageGames.map((g, i) => ({

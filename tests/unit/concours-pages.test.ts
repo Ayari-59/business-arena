@@ -23,6 +23,9 @@ vi.mock("next/navigation", () => ({
   redirect: (url: string) => {
     throw new Error(`__redirect__${url}`);
   },
+  // Le pied de page lit le chemin courant pour ne pas proposer la page où
+  // l'on se trouve : rendu hors navigateur, il lui faut une réponse.
+  usePathname: () => "/compete",
 }));
 vi.mock("@/lib/guest", () => ({
   getOrCreateGuestUserId: vi.fn(async () => "invite-1"),
@@ -30,6 +33,9 @@ vi.mock("@/lib/guest", () => ({
 }));
 vi.mock("@/services/competition.service", () => ({
   joinCompetition: vi.fn(),
+  // L'action demande d'abord si le code ouvre quelque chose, AVANT de créer
+  // l'invité : ici il ouvre toujours, ces cas-là testent la suite.
+  refusDeSInscrire: vi.fn(async () => null),
 }));
 
 const { joinCompetition } = await import("@/services/competition.service");
@@ -73,13 +79,13 @@ describe("le déroulé d'un concours", () => {
     expect(d.etapes.map((e) => e.etat)).toEqual(["courante", "a_venir", "a_venir", "a_venir"]);
     expect(d.etapes[0]!.detail).toBe("4 équipes inscrites avec le code R4KT7B.");
     expect(d.etapes[1]!.detail).toBe(
-      "Des groupes de 3 équipes tirés au sort, 1 qualifié par groupe au score BPI.",
+      "Des poules de 3 équipes tirées au sort, 1 équipe qualifiée par poule au score IPG.",
     );
     const enQualif = derouleConcours(
       concours({ status: "running", stages: [{ kind: "qualification", games: [{}, {}] }] }),
     );
     expect(enQualif.etapes.map((e) => e.etat)).toEqual(["passee", "courante", "a_venir", "a_venir"]);
-    expect(enQualif.etapes[1]!.detail).toMatch(/^2 groupes de 3 équipes/);
+    expect(enQualif.etapes[1]!.detail).toMatch(/^2 poules de 3 équipes/);
   });
 });
 
@@ -91,8 +97,14 @@ describe("la page enseignant du concours", () => {
     expect(html).toContain("Réglages");
     expect(html).toContain("R4KT7B");
     expect(html).toContain("Un trimestre par tour");
-    expect(html).toContain("3 équipes par partie de qualification");
-    expect(html).toContain("1 par groupe → finale");
+    // Ces réglages sont ceux de la QUALIFICATION : une phase intermédiaire a
+    // les siens, et ses premières de poule ne vont pas en finale mais au tour
+    // suivant. Le bloc ne doit donc rien promettre sur la finale.
+    expect(html).toContain("Poules de qualification");
+    expect(html).toContain("3 équipes par poule");
+    expect(html).toContain("Qualifiées par poule");
+    expect(html).toContain("La première équipe de chaque poule");
+    expect(html).not.toContain("pour la finale");
   });
 
   it("le bloc Déroulé met l'étape en cours en avant", () => {
@@ -105,7 +117,8 @@ describe("la page enseignant du concours", () => {
     expect(html.match(/<li /g)?.length).toBe(4);
     expect(html.match(/aria-current="step"/g)?.length).toBe(1);
     expect(html).toMatch(/aria-current="step"[^>]*data-etat="courante"[^>]*>.*?Qualifications · en cours/);
-    expect(html).toContain("✓ Inscriptions");
+    // L'étape franchie porte sa coche, la suivante son rang.
+    expect(html).toMatch(/data-etat="passee"[^>]*>.*?✓.*?Inscriptions/);
   });
 
   it("la page porte les deux blocs et le lien de retour", () => {
@@ -118,8 +131,8 @@ describe("la page enseignant du concours", () => {
 });
 
 describe("/compete explique le concours", () => {
-  it("cinq lignes et un lien vers le guide", async () => {
-    expect(EXPLICATIONS_CONCOURS).toHaveLength(5);
+  it("six lignes et un lien vers le guide", async () => {
+    expect(EXPLICATIONS_CONCOURS).toHaveLength(6);
     // Composant serveur asynchrone : on le résout (searchParams vide) avant de
     // rendre l'élément obtenu.
     const element = await CompetePage({ searchParams: Promise.resolve({}) });
@@ -128,6 +141,10 @@ describe("/compete explique le concours", () => {
       expect(html).toContain(ligne.replace(/'/g, "&#x27;"));
     }
     expect(html).toContain('href="/guide#concours"');
+    // Le code de reprise est annoncé avant l'inscription, et repris en bas de
+    // page pour l'élève qui arrive d'un autre appareil.
+    expect(html).toContain("code de reprise");
+    expect(html).toContain("Retrouver mon équipe");
     // Le formulaire reste là, sous les explications.
     expect(html.indexOf("Un concours, c&#x27;est quoi ?")).toBeLessThan(html.indexOf('name="code"'));
   });

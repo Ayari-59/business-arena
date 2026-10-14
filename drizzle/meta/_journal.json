@@ -96,8 +96,239 @@
     {
       "idx": 13,
       "version": "7",
-      "when": 1789134987183,
+      "when": 1788912000000,
+      "tag": "0013_decision_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788998400000,
+      "tag": "0014_login_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789084800000,
+      "tag": "0015_bpi_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789171200000,
+      "tag": "0016_scenario_definition",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789257600000,
+      "tag": "0017_previous_lester",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789344000000,
+      "tag": "0018_public_competition_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789367757434,
       "tag": "0013_add_learning_steps_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1789367757435,
+      "tag": "0019_reveal_classement",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789367757436,
+      "tag": "0020_subvention_exceptionnelle",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1789367757437,
+      "tag": "0021_ipg_rse",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1789367757438,
+      "tag": "0022_demandes_orientation",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789367757439,
+      "tag": "0023_rendez_vous",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789367757440,
+      "tag": "0024_integrations",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1789454157440,
+      "tag": "0025_code_de_reprise",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1789540557440,
+      "tag": "0026_ip_de_creation",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1789626957440,
+      "tag": "0027_archivage_des_parties",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1789713357440,
+      "tag": "0028_reprise_en_classe",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1789799757440,
+      "tag": "0029_nom_de_partie",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1789886157440,
+      "tag": "0030_embleme_dequipe",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1789972557440,
+      "tag": "0031_parties_d_episode",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790058957440,
+      "tag": "0032_cohortes_d_episodes",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790145357440,
+      "tag": "0033_objectif_du_manager",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1790231757440,
+      "tag": "0034_cohorte_sous_licence",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790318157440,
+      "tag": "0035_cohortes_de_l_enseignant",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1790404557440,
+      "tag": "0036_offres_et_devis",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790490957440,
+      "tag": "0037_lti_1_3",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1790577357440,
+      "tag": "0038_trois_offres",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790663757440,
+      "tag": "0039_renater_saml",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790750157440,
+      "tag": "0040_inscrits_et_nouveautes",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1790836557440,
+      "tag": "0041_catalogue_des_offres",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1790922957440,
+      "tag": "0042_examen_individuel",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791009357440,
+      "tag": "0043_retour_des_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791095757440,
+      "tag": "0044_evaluation_par_les_pairs",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1791182157440,
+      "tag": "0045_tour_d_essai",
       "breakpoints": true
     }
   ]

@@ -187,7 +187,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_t3_banc",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "Des consultants sur le banc",
     narrative:
       "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide. Quatre de vos douze consultants n'ont aucune mission ce trimestre. Leurs salaires, eux, tombent normalement.",

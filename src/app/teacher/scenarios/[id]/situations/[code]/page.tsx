@@ -10,7 +10,7 @@ import { updateSituationAction } from "../../../actions";
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 export default async function SituationEditorPage({
@@ -37,7 +37,7 @@ export default async function SituationEditorPage({
     <main id="main" className="mx-auto max-w-3xl space-y-6 p-6">
       <header className="flex items-end justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Situation pédagogique</p>
+          <p className="text-xs uppercase tracking-annonce text-amber-400">Situation pédagogique</p>
           <h1 className="text-2xl font-bold">{situation.title}</h1>
           <p className="mt-1 text-sm text-slate-400">
             Édition du texte. La structure d&apos;analyse (modèles, notions, niveaux d&apos;indices)
@@ -46,21 +46,21 @@ export default async function SituationEditorPage({
         </div>
         <Link
           href={`/teacher/scenarios/${id}`}
-          className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          className="text-xs text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           ← Le scénario
         </Link>
       </header>
 
       {ok ? (
-        <p className="rounded-xl border border-emerald-400/30 bg-emerald-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-emerald-200">
+        <p className="rounded-xl encadre-neutre px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-100">
           Situation enregistrée.
         </p>
       ) : null}
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
+          className="rounded-xl encadre-perte px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
@@ -69,7 +69,7 @@ export default async function SituationEditorPage({
       <GuardedForm
         action={updateSituationAction}
         label="enregistrement de la situation"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
+        className="space-y-5 carte p-4 sm:p-7"
       >
         <input type="hidden" name="scenarioId" value={id} />
         <input type="hidden" name="situationCode" value={situation.code} />
@@ -88,7 +88,7 @@ export default async function SituationEditorPage({
           <textarea name="problem" defaultValue={situation.problem} rows={2} className={champ} />
         </label>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Options de diagnostic
           </legend>
@@ -97,7 +97,7 @@ export default async function SituationEditorPage({
               <span className="text-xs text-slate-400">
                 Option {i + 1}
                 {o.correct ? (
-                  <span className="ml-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-emerald-300">
+                  <span className="pastille-gain ml-2 rounded-full px-2 py-0.5 text-slate-200">
                     bonne réponse
                   </span>
                 ) : null}
@@ -107,7 +107,7 @@ export default async function SituationEditorPage({
           ))}
         </fieldset>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Indices (coût croissant)
           </legend>

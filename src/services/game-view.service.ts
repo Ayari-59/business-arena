@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
+import { lireLEssai, type TourDEssai } from "@/config/tour-d-essai";
 import {
   companyStates,
   decisions,
@@ -11,25 +12,43 @@ import {
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
-import { presetFromProfile } from "@/config/difficulty";
-import { porteUnNomParDefaut } from "@/config/nom-equipe";
-import { cardByCode } from "@/config/events/cards";
+import { leviersFigesDuProfil, premierNiveauQuiOuvre, presetFromProfile } from "@/config/difficulty";
+import {
+  capaciteDeLAtelier,
+  plafondDInvestissement,
+  type PlafondDInvestissement,
+} from "@/engine/investment/plafond";
+import { teamDisplayName } from "@/config/nom-equipe";
+import {
+  compositionDesEquipes,
+  peutChoisirSonEquipe,
+  type EquipeEtSesMembres,
+} from "@/services/affectation.service";
+import { courrierParCode } from "@/config/courriers/registre";
+import type { EventInstance } from "@/engine/types";
+import { peekEventDraw } from "@/engine/events";
+import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
+import { expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
-import { COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
+import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
-import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
+import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
+import { styleDuConcurrent } from "@/config/styles-de-concurrent";
 import { computeRseIndex, type RseIndex } from "@/scoring/rse";
 import { RSE_CARD_CODES } from "@/engine/rse";
 import { computeRseReport, type RseReport } from "@/scoring/rse-report";
 import { playWindowFor, playLockMessage } from "@/services/play-lock";
+import { demandeDuTour, type DemandeDeSubvention } from "@/services/subvention.service";
+import type { ExigenceSauvetage } from "@/services/sauvetage";
 import type {
   CompanyRoundResult,
   CompanyState,
   EngineScenarioConfig,
+  OrderOfferDef,
   RoundDecisions,
   CommunicationAxis,
   AccountingEntry,
@@ -41,18 +60,13 @@ import {
   findUserTeam,
   readPendingEvents,
 } from "@/services/round-resolution.service";
+import { classementOuvert } from "@/config/rideau-classement";
+import { gazetteDeLaPartie, type GazetteDuTour } from "@/services/gazette.service";
+import { pseudoAffichable } from "@/config/invite";
 import type { GameKind } from "@/services/game-creation.service";
 
-/**
- * Nom d'équipe affiché. Les parties solo créées avant ce nettoyage portent le
- * suffixe « (vous) » dans le nom stocké : il servait à repérer le joueur, ce
- * que le surlignage de sa ligne fait déjà. On le retire à l'affichage plutôt
- * que par une migration, pour que les parties en cours en soient debarrassées
- * elles aussi.
- */
-export function teamDisplayName(name: string): string {
-  return name.replace(/\s*\(vous\)\s*$/, "");
-}
+/** Réexport : le nom affiché se calcule dans la config des noms d'équipe. */
+export { teamDisplayName };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -106,6 +120,11 @@ export interface GameView {
   status: string;
   currentRound: number;
   /**
+   * LE TOUR D'ESSAI (config/tour-d-essai.ts), sans le scénario réel qui attend dedans :
+   * l'arène en tire son bandeau. Null pour une partie qui n'en a pas eu.
+   */
+  essai: Omit<TourDEssai, "scenario"> | null;
+  /**
    * Verrou temporel du tour courant (planning). `playable` faux = hors fenêtre :
    * l'écran passe en lecture seule et « Valider » est grisé. Dates en ISO.
    * Sans fenêtre réglée, toujours ouvert (solo libre, ou classe non planifiée).
@@ -121,17 +140,84 @@ export interface GameView {
   roundDays: number;
   playerTeamId: string;
   playerTeamName: string;
+  /**
+   * Le prénom sous lequel joue CET appareil, pour que l'élève voie sous quelle
+   * identité il décide. Null en solo (personne d'autre ne s'assied devant) et
+   * tant que l'élève n'a pas donné de pseudo.
+   */
+  playerPseudo: string | null;
   peutSeNommer: boolean;
+  /**
+   * Les équipes de la classe et qui s'y trouve, pour l'élève rangé d'office
+   * dans la mauvaise. Vide en solo : il n'y a personne à rejoindre.
+   */
+  equipesDeLaClasse: EquipeEtSesMembres[];
+  /** L'emblème de l'équipe du joueur (code du catalogue), null sans choix. */
+  playerTeamEmbleme: string | null;
+  /** L'élève peut encore changer d'équipe lui-même (partie de classe, tour 1). */
+  peutChoisirSonEquipe: boolean;
+  /**
+   * Partie de concours : l'équipe vient de l'inscription et ne bouge plus.
+   * L'écran le dit à sa façon, qui n'est pas celle d'un tour clos.
+   */
+  estUnConcours: boolean;
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
-  /** Cartes événement annoncées par l'enseignant pour le tour courant. */
-  announcedEventCards: {
+  /**
+   * OÙ EN EST LA CLASSE sur le tour en cours : combien d'équipes ont rendu, sur
+   * combien. Une fois ses décisions validées, l'équipe attendait la clôture
+   * devant une ligne grise, alors que toute la classe attendait la même chose :
+   * le temps mort était collectif sans que personne ne le voie. Null en solo,
+   * hors tour ouvert, ou quand il n'y a qu'une équipe humaine — il n'y a alors
+   * personne à attendre.
+   */
+  soumissions: { validees: number; total: number } | null;
+  /**
+   * Qui, dans l'équipe, a validé ces décisions, et à quelle heure. Une équipe
+   * est faite de trois ou quatre élèves sur trois ou quatre écrans : sans
+   * cette ligne, chacun croit être seul à décider et écrase la saisie du
+   * camarade sans le savoir. Null tant que rien n'est validé.
+   */
+  pendingDecisionsPar: { nom: string | null; quand: string } | null;
+  /** Courriers distribués par l'enseignant pour le tour courant. */
+  courriersAnnonces: {
     code: string;
-    /** null = carte marché (toute la classe) ; sinon l'équipe ciblée. */
+    /** null = courrier de marché (toute la classe) ; sinon l'entreprise destinataire. */
     teamId: string | null;
     teamName: string | null;
     isMyTeam: boolean;
   }[];
+  /**
+   * Courriers ENCORE EN VIGUEUR pour le tour à jouer : reçus à un tour
+   * précédent, du moteur ou de l'enseignant, et pas encore éteints — une
+   * lettre qui vaut deux trimestres pèse sur les décisions du second. Sans
+   * elles, l'équipe décidait sans savoir que la conjoncture morose courait
+   * toujours.
+   */
+  courriersEnCours: {
+    code: string;
+    teamId: string | null;
+    teamName: string | null;
+    isMyTeam: boolean;
+    /** Tours pendant lesquels le courrier pèse encore, celui-ci compris. */
+    roundsLeft: number;
+  }[];
+  /**
+   * LE COURRIER DU TOUR À JOUER, lu d'avance : les plis que le moteur tirera
+   * à la clôture, exactement (même graine, même tour, mêmes entreprises).
+   * Vide une fois la partie finie. Ne porte que ce qui concerne l'équipe qui
+   * lit : les courriers de marché et ceux qui lui sont adressés. Les courriers
+   * RSE, appelés par le standing de chaque entreprise, restent découverts aux
+   * résultats.
+   */
+  upcomingDraw: { code: string; teamId: string | null; isMyTeam: boolean }[];
+  /**
+   * LA GAZETTE DE L'ARÈNE : la coupure de presse du tour en cours (null quand
+   * l'enseignant ne l'a pas publiée, ou la partie finie), et la revue de presse
+   * des tours clos. `porteLeMarche` : l'article est celui du journal, il raconte
+   * les événements de marché ; les circulaires « tout le marché » se taisent.
+   */
+  gazette: GazetteDuTour;
   lastResult: CompanyRoundResult | null;
   /**
    * Tous les tours RÉSOLUS, du plus ancien au plus récent : de quoi rebâtir le
@@ -143,6 +229,13 @@ export interface GameView {
     result: CompanyRoundResult;
     events: string[];
     decisions: RoundDecisions | null;
+    /**
+     * Ce que l'équipe a écrit pour justifier ses choix AVANT de connaître le
+     * résultat. Réaffiché au tour suivant, à côté du constat : la
+     * confrontation entre ce qu'on avait prévu et ce qui est arrivé est ce
+     * qui s'apprend, et elle se perdait faute d'être rendue.
+     */
+    justification: string | null;
     forecastReview: GameView["forecastReview"];
     sectorKpis: GameView["sectorKpis"];
     competitiveBenchmark: GameView["competitiveBenchmark"];
@@ -206,6 +299,11 @@ export interface GameView {
   roundBriefing: RoundBriefing | null;
   lastEvents: string[];
   history: { round: number; revenue: number; netIncome: number; netTreasury: number }[];
+  /**
+   * Le classement, UNIQUEMENT s'il a été révélé. Vide sinon : en classe et en
+   * concours, c'est l'animateur qui ouvre le rideau, et la vue ne porte pas ce
+   * qu'il n'a pas encore montré.
+   */
   ranking: {
     name: string;
     isPlayer: boolean;
@@ -215,7 +313,11 @@ export interface GameView {
     /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
     defaillant: boolean;
   }[];
-  /** Moyennes 0-100 des dimensions BPI de l'équipe du joueur (6 en v2, doc 08). */
+  /** L'état du rideau : révélé ? et y a-t-il quelqu'un pour le lever ? */
+  classement: { revele: boolean; parLAnimateur: boolean };
+  /** L'IPG de l'équipe, révélé ou non : il mesure sa progression, pas sa place. */
+  playerBpi: number | null;
+  /** Moyennes 0-100 des dimensions IPG de l'équipe du joueur (6 en v2, doc 08). */
   playerDimensions: Partial<Record<string, number>> | null;
   lastDecisions: RoundDecisions | null;
   /**
@@ -252,7 +354,23 @@ export interface GameView {
   }[] | null;
   /** Capacité de production : machine, main-d'œuvre et goulot. */
   capacityFacts: {
+    /** Capacité machine NOMINALE : ce que l'outil rend à 100 % de disponibilité. */
     machineCapacity: number;
+    /**
+     * Disponibilité machine courante (0..1). Le moteur en multiplie la capacité
+     * (`production/index.ts` : `machineCapacity × availability`), donc c'est
+     * elle qui dit ce que l'atelier rend VRAIMENT ce tour. Elle se dégrade sous
+     * le budget d'entretien de référence et se rétablit au-dessus.
+     */
+    availability: number;
+    /** Capacité machine réellement disponible : nominale × disponibilité. */
+    availableMachineCapacity: number;
+    /**
+     * Le budget d'entretien qui sépare l'usure du rétablissement, pour ce tour
+     * et ce métier. Le classeur du cockpit le donnait déjà aux élèves ; l'écran
+     * de décision le taisait, et leur demandait donc un montant sans échelle.
+     */
+    maintenanceReference: number;
     laborCapacity: number;
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
@@ -278,9 +396,9 @@ export interface GameView {
    */
   vocabulary: ScenarioVocabulary;
   /** Le secteur joué, pour l'identité visuelle (icône, couleur). */
+  /** Code du scénario joué : « rejouer » doit pouvoir rouvrir le MÊME métier. */
+  scenarioCode: string;
   sector: import("@/config/scenarios/registry").Sector;
-  /** Le pictogramme du scénario joué (NOVA en un produit et NOVA · gamme n'ont pas le même). */
-  scenarioIcon: string;
   /**
    * Noms des segments du snapshot joué, par code. Sans cela le tableau du
    * marché retomberait sur les codes bruts dès qu'on quitte NOVA.
@@ -296,10 +414,20 @@ export interface GameView {
   gamme: {
     code: string;
     name: string;
+    /**
+     * Le nom à afficher sur écran étroit quand `name` ne tient pas sur un
+     * bouton de téléphone. Absent : `name` est affiché partout.
+     */
+    shortName?: string;
     materialCostPerUnit: number;
     otherVariableCostPerUnit: number;
     hoursPerUnit: number;
     refPrice: number;
+    /**
+     * Taille du marché de la référence (somme de ses segments). Sert à situer
+     * une référence dans la gamme — « fort volume » se déduit, ne s'écrit pas.
+     */
+    marketSize: number;
     segments: { code: string; name: string }[];
     seasonCoef: number;
     stock: number;
@@ -363,6 +491,39 @@ export interface GameView {
     payables: number;
   };
   /**
+   * LE DOSSIER D'ESTIMATION : de quoi calculer, DANS LE NAVIGATEUR et à la
+   * frappe, le résultat que les décisions du tour donneraient si les ventes
+   * estimées par l'équipe se réalisaient (`engine/estimation`).
+   *
+   * Le scénario y est EXPURGÉ de tout ce qui fait la demande (taille des
+   * clientèles, élasticité, sensibilités, paquet d'événements, pool des
+   * commandes, concurrents) : l'estimation n'en a pas besoin, et ce qui n'est
+   * pas envoyé ne peut pas fuir. La GRAINE n'y est jamais : rien ne permet de
+   * rejouer le hasard du tour. Les événements sont ceux que l'équipe connaît
+   * déjà à l'ouverture, le tirage du tour compris (il est retourné face
+   * visible dans « le courrier du tour »), et la commande exceptionnelle est
+   * celle qui lui a été annoncée.
+   *
+   * `null` quand il n'y a rien à estimer : partie finie, ou état d'ouverture
+   * introuvable.
+   */
+  estimation: {
+    scenario: EngineScenarioConfig;
+    state: CompanyState;
+    roundIndex: number;
+    events: EventInstance[];
+    orderOffer: OrderOfferDef | null;
+    /** Comment les ventes d'une référence se répartissent entre ses clientèles. */
+    repartition: Record<string, number>;
+    /**
+     * Ce que le tour passé a donné, référence par référence : vendu et manqué.
+     * C'est l'aide courte posée sous le champ. Vide au premier tour.
+     */
+    reperes: { code: string; tour: number; vendu: number; manque: number }[];
+    /** Les ventes estimées déjà validées pour CE tour (mode classe) ; null sinon. */
+    deposees: Record<string, number> | null;
+  } | null;
+  /**
    * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
    * restauration…), déjà calculés : l'arène ne fait que les mettre en forme.
    */
@@ -420,6 +581,7 @@ export interface GameView {
     quality: boolean;
     maintenance: boolean;
     finance: boolean;
+    creances: boolean;
     insurance: boolean;
     hr: boolean;
     investment: boolean;
@@ -436,6 +598,14 @@ export interface GameView {
   distributableReserves: number;
   /** Saison du tour courant : coefficients ≠ 1 (marché global et segments). */
   seasonNotes: { name: string; coef: number }[];
+  /**
+   * LE PLAFOND D'INVESTISSEMENT DU TOUR (`engine/investment/plafond`) : aux
+   * niveaux sans embauches, on n'achète pas plus de capacité que l'équipe ne
+   * fait tourner. Calculé à tous les niveaux qui ouvrent l'investissement (là
+   * où il ne s'applique pas, l'aide dit seulement d'où il faudra embaucher).
+   * `null` : pas d'investissement à ce niveau ou dans ce scénario.
+   */
+  plafondInvestissement: (PlafondDInvestissement & { niveauDesEmbauches: number | null }) | null;
   /** Investissement proposé par le scénario (échelle de la périodicité). */
   investmentOffer: { costPerCapacityUnit: number; maxPerRound: number } | null;
   /** Équipements typés : catalogue de machines et parc actuel. */
@@ -469,8 +639,6 @@ export interface GameView {
     fullOverdraftLimit: number;
     /** Taux de découvert applicable au tour à jouer. */
     overdraftAnnualRate: number;
-    /** Emprunt demandé et refusé au tour précédent faute de plan. */
-    refusedLoan: number | null;
     /** Fiabilité du dernier plan déposé (0..1) ; null si aucun. */
     lastReliability: number | null;
   } | null;
@@ -506,6 +674,89 @@ export interface GameView {
   costFacts: { materialCostPerUnit: number; otherVariableCostPerUnit: number };
   /** Enveloppe d'augmentation de capital des associés (null = illimitée). */
   capitalAllowance: { total: number; remaining: number } | null;
+  /**
+   * Ce que la banque peut encore prêter au tour à jouer : la dette financière
+   * ne dépasse pas `maxDebtToEquity` fois les capitaux propres. `null` quand
+   * le scénario ne déclare aucun plafond. Une capacité à zéro n'est pas une
+   * anomalie : c'est le mur, et c'est ce qui ouvre la subvention.
+   */
+  loanCapacity: { remaining: number; ratio: number; equity: number; debt: number } | null;
+  /**
+   * LES CONDITIONS DU CRÉDIT, POUR LES CHIFFRER À L'ÉCRAN.
+   *
+   * Le formulaire annonçait « 5 %/an » en dur, alors que le taux vient du
+   * scénario : les deux pouvaient diverger sans que rien ne le signale. Ces
+   * trois nombres suffisent à calculer l'échéance et les intérêts que l'élève
+   * verra avant de valider (voir `config/cout-du-financement`).
+   */
+  financeOffer: {
+    loanAnnualRate: number;
+    /** Durée du contrat, en tours. `null` = remboursement libre (historique). */
+    loanDurationRounds: number | null;
+    /** Durée d'un tour en jours : le prorata des intérêts en dépend. */
+    roundDays: number;
+  } | null;
+  /**
+   * La demande de subvention exceptionnelle déposée par l'équipe pour le tour
+   * en cours, s'il y en a une — avec la réponse de l'animateur quand il a
+   * tranché. `null` hors crise : on ne dépose pas de dossier quand tout va bien.
+   */
+  demandeSubvention: DemandeDeSubvention | null;
+  /**
+   * CE QU'IL FAUT RÉUNIR POUR VALIDER LE TOUR, calculé une seule fois.
+   *
+   * L'écran grise le bouton avec, l'action serveur refuse la décision avec, et
+   * le bandeau de crise dit avec ce qu'il reste à faire. `null` quand aucun
+   * financement de sauvetage n'est exigé — hors crise, ou quand l'animateur a
+   * réglé l'exigence à zéro.
+   */
+  exigenceSauvetage: ExigenceSauvetage | null;
+  /**
+   * L'ÉTAT DE TRÉSORERIE DE L'ÉQUIPE, HORS CLASSEMENT.
+   *
+   * La cessation de paiements n'était dite qu'à deux endroits : une ligne dans
+   * l'onglet Finance d'une carte de tour, et le statut « défaillante » dans le
+   * classement — que l'animateur révèle quand il veut. Une équipe gelée
+   * pouvait donc ne rien voir du tout, et continuer à remplir un formulaire
+   * que le moteur ignorait.
+   *
+   * Cet état-là ne dépend d'aucun rideau : il est à l'équipe, il la regarde.
+   * `null` quand le scénario ne modélise pas la crise (pas de bloc `treasury`)
+   * ou quand aucun tour n'est encore clos.
+   */
+  alerteTresorerie: {
+    /** Le dernier tour clos s'est achevé en cessation de paiements. */
+    crise: boolean;
+    /** L'entreprise est gelée : le nombre de tours de crise a été atteint. */
+    defaillante: boolean;
+    /** Tours de crise consécutifs à ce jour. */
+    toursConsecutifs: number;
+    /** Combien il en faut pour que la défaillance soit prononcée. */
+    toursAvantDefaillance: number;
+    /** Trésorerie nette à la clôture du dernier tour (négative en découvert). */
+    tresorerieNette: number;
+    /** Le découvert consenti pour le tour à jouer. */
+    plafondDecouvert: number;
+    /**
+     * Ce qui manque pour repasser sous le plafond — le montant qu'il faut
+     * trouver. Zéro quand la trésorerie y est déjà.
+     */
+    manque: number;
+    /**
+     * Le tour ne peut pas être validé sans réunir `manque` en emprunt et en
+     * apport. `false` : l'équipe est avertie et reste libre de couler — c'est
+     * le réglage d'une séance courte, où personne ne doit rester bloqué.
+     */
+    financementObligatoire: boolean;
+    /**
+     * Le niveau ouvre-t-il l'emprunt et l'apport des associés ? Fermés (niveaux
+     * 1 à 3), la banque couvre seule par le découvert : l'alerte ne réclame pas
+     * un levier que l'écran ne propose pas.
+     */
+    financementOuvert: boolean;
+    /** Le niveau qui ouvre le financement, pour le dire ; `null` si aucun. */
+    niveauDuFinancement: number | null;
+  } | null;
   /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
   studiesOffer: {
     marketCost: number;
@@ -527,6 +778,17 @@ export interface GameView {
       avgPrice: number | null;
       marketShare: number;
       revenue: number;
+      /**
+       * Le caractère d'une entreprise SIMULÉE, une fois deux tours clos : elle
+       * casse les prix, monte en gamme, pousse le volume… Le moteur le décide
+       * vraiment ; l'élève ne le voyait pas et ne pouvait donc pas apprendre à
+       * lire un adversaire. Null pour une équipe de la classe — elle a des
+       * élèves, pas un profil — et avant deux tours, où ce serait une fiche
+       * technique plutôt qu'une observation.
+       */
+      style: { label: string; aide: string } | null;
+      /** L'emblème de l'équipe (code du catalogue), null sans choix ou pour un bot. */
+      embleme: string | null;
     }[];
     marketAvgPrice: number;
     competitivenessIndex: number;
@@ -738,8 +1000,9 @@ function buildSectorKpis(
 /** Benchmark concurrentiel d'un tour (prix moyen, parts, indice de compétitivité). */
 function buildBenchmark(
   rows: PersistedResultRow[],
-  teamRows: { id: string; name: string }[],
+  teamRows: { id: string; name: string; botProfile?: string | null; embleme?: string | null }[],
   playerTeamId: string,
+  toursClos: number,
 ): GameView["competitiveBenchmark"] {
   if (rows.length === 0) return null;
   const competitors = rows
@@ -748,12 +1011,15 @@ function buildBenchmark(
       const units = detail
         ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
         : 0;
+      const equipe = teamRows.find((t) => t.id === row.teamId);
       return {
-        name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
+        name: teamDisplayName(equipe?.name ?? "?"),
         isPlayer: row.teamId === playerTeamId,
         avgPrice: units > 1 ? Number(row.revenue) / units : null,
         marketShare: Number(row.marketShare),
         revenue: Number(row.revenue),
+        style: styleDuConcurrent(equipe?.botProfile, toursClos),
+        embleme: equipe?.embleme ?? null,
       };
     })
     .sort((a, b) => b.marketShare - a.marketShare);
@@ -856,7 +1122,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     const row = gameResults.find((g) => g.roundId === rnd.id && g.teamId === playerTeam.id);
     if (!row) continue;
     const { result, events } = reconstructResult(row, taxRate);
-    const dec = playerDecisionRows.find((d) => d.roundId === rnd.id)?.payload ?? null;
+    const decisionRowOfRound = playerDecisionRows.find((d) => d.roundId === rnd.id);
+    const dec = decisionRowOfRound?.payload ?? null;
     const prevRnd = resolved[i - 1];
     const prevRow = prevRnd
       ? gameResults.find((g) => g.roundId === prevRnd.id && g.teamId === playerTeam.id)
@@ -868,9 +1135,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       result,
       events,
       decisions: dec,
+      justification: decisionRowOfRound?.justification ?? null,
       forecastReview: buildForecastReview(idx, result, dec?.forecast),
       sectorKpis: buildSectorKpis(result, prevSegments, snapshot, scenarioDef.kpis),
-      competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),
+      competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id, resolved.length),
       rse: computeRseIndex(result),
       accounting: formatAccountingData(result.accounting),
     });
@@ -878,10 +1146,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
 
   // Décisions déjà soumises pour le tour courant (mode classe : en attente de clôture)
   let pendingDecisions: RoundDecisions | null = null;
+  // La ligne elle-même est gardée : elle porte qui a validé et quand, relus
+  // plus bas, une fois la composition des équipes chargée.
+  let pendingDecisionRow: (typeof playerDecisionRows)[number] | null = null;
   const currentRoundRow = gameRounds.find((r) => r.index === game.currentRound);
   if (currentRoundRow && currentRoundRow.status === "open") {
     const row = playerDecisionRows.find((d) => d.roundId === currentRoundRow.id);
-    if (row && row.status === "validated") pendingDecisions = row.payload as RoundDecisions;
+    if (row && row.status === "validated") {
+      pendingDecisions = row.payload as RoundDecisions;
+      pendingDecisionRow = row;
+    }
   }
 
   // dernier état persisté de l'équipe (échéanciers d'emprunts pour l'affichage)
@@ -894,7 +1168,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       .limit(1)
   )[0];
   const currentState = stateRow?.state as
-    | { loans?: { remaining: number; perRound: number }[]; bankTrust?: number }
+    | {
+        loans?: { remaining: number; perRound: number }[];
+        bankTrust?: number;
+        /** Le bilan d'ouverture du tour à jouer : ce que la banque lit. */
+        finance?: { equity: number; financialDebt: number };
+      }
     | undefined;
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
@@ -914,6 +1193,67 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })
     .sort((a, b) => a.rank - b.rank);
   const playerRankingRow = rankingRows.find((r) => r.teamId === playerTeam.id);
+
+  // ── LE RIDEAU SUR LE CLASSEMENT ─────────────────────────────────────────
+  // En classe et en concours, c'est l'animateur qui révèle. Tant qu'il ne l'a
+  // pas fait, la vue de l'élève NE CONTIENT PAS le classement : on ne le cache
+  // pas à l'affichage, on ne l'envoie pas. Le cockpit Excel et l'assistant IA
+  // lisent cette même vue, et sont donc muets eux aussi — sans quoi le rideau
+  // se contournerait en exportant un tableur ou en posant la question.
+  //
+  // En solo, personne n'est là pour ouvrir : le classement face aux bots est la
+  // boucle de retour du jeu, il reste immédiat.
+  const kindDeLaPartie = (game.difficultyProfile as { kind?: GameKind }).kind ?? "solo";
+  // La composition des équipes ne concerne que la classe : en solo, les autres
+  // entreprises sont des bots, et il n'y a personne à rejoindre.
+  const equipesDeLaClasse =
+    kindDeLaPartie === "solo" ? [] : await compositionDesEquipes(gameId);
+  // Le prénom porté par l'appareil. Il se lit dans la composition déjà
+  // chargée : aucune requête de plus pour une ligne d'en-tête.
+  // Qui, dans l'équipe, a validé le tour courant. Une équipe est faite de
+  // trois ou quatre élèves sur autant d'écrans : sans cette ligne, chacun
+  // croit être seul à décider. En solo, l'équipe se résume au joueur et la
+  // mention n'apprendrait rien.
+  const soumissions: GameView["soumissions"] = await (async () => {
+    if (kindDeLaPartie === "solo" || !currentRoundRow || currentRoundRow.status !== "open") {
+      return null;
+    }
+    const humaines = teamRows.filter((t) => t.controller === "human");
+    if (humaines.length < 2) return null;
+    const rendues = await db
+      .select({ teamId: decisions.teamId, status: decisions.status })
+      .from(decisions)
+      .where(eq(decisions.roundId, currentRoundRow.id));
+    return {
+      validees: humaines.filter((t) =>
+        rendues.some((d) => d.teamId === t.id && d.status === "validated"),
+      ).length,
+      total: humaines.length,
+    };
+  })();
+
+  const pendingDecisionsPar: GameView["pendingDecisionsPar"] =
+    pendingDecisionRow?.validatedAt && kindDeLaPartie !== "solo"
+      ? {
+          nom: pseudoAffichable(
+            equipesDeLaClasse
+              .flatMap((e) => e.membres)
+              .find((m) => m.userId === pendingDecisionRow!.validatedBy)?.nom,
+          ),
+          quand: pendingDecisionRow.validatedAt.toISOString(),
+        }
+      : null;
+  const playerPseudo = pseudoAffichable(
+    equipesDeLaClasse.flatMap((e) => e.membres).find((m) => m.userId === userId)?.nom,
+  );
+  const dernierResolu = resolved.slice().sort((a2, b2) => b2.index - a2.index)[0];
+  const classementRevele = classementOuvert({
+    kind: kindDeLaPartie,
+    revelationDuDernierTourClos: dernierResolu?.rankingRevealedAt,
+  });
+  // L'IPG de l'équipe reste sien, révélé ou non : il mesure sa progression,
+  // pas sa place. C'est le RANG qui fait l'événement, donc le rang qu'on garde.
+  const playerBpi = playerRankingRow ? Number(playerRankingRow.bpi) : null;
   const playerDimensions =
     ((playerRankingRow?.detail as { dimensions?: Partial<Record<string, number>> })
       ?.dimensions as Partial<Record<string, number>> | undefined) ?? null;
@@ -1068,37 +1408,17 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     return reports;
   })();
 
-  const competitiveBenchmark: GameView["competitiveBenchmark"] = (() => {
-    if (!lastRound) return null;
-    const lastRows = gameResults.filter((r) => r.roundId === lastRound.id);
-    if (lastRows.length === 0) return null;
-    const competitors = lastRows
-      .map((row) => {
-        const detail = row.marketDetail as Record<string, { sold?: number }> | null;
-        const units = detail
-          ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
-          : 0;
-        return {
-          name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
-          isPlayer: row.teamId === playerTeam.id,
-          avgPrice: units > 1 ? Number(row.revenue) / units : null,
-          marketShare: Number(row.marketShare),
-          revenue: Number(row.revenue),
-        };
-      })
-      .sort((a, b) => b.marketShare - a.marketShare);
-    const withPrice = competitors.filter((c) => c.avgPrice !== null);
-    const marketAvgPrice =
-      withPrice.length > 0
-        ? withPrice.reduce((s, c) => s + c.avgPrice!, 0) / withPrice.length
-        : 0;
-    const player = competitors.find((c) => c.isPlayer);
-    const competitivenessIndex =
-      player && marketAvgPrice > 0 && player.avgPrice !== null
-        ? marketAvgPrice / player.avgPrice
-        : 1;
-    return { competitors, marketAvgPrice, competitivenessIndex };
-  })();
+  // Le benchmark du dernier tour : la MÊME construction que celle des périodes,
+  // appelée ici plutôt que recopiée. Les deux copies avaient déjà commencé à
+  // diverger — le caractère des concurrents n'aurait paru que dans l'une.
+  const competitiveBenchmark: GameView["competitiveBenchmark"] = lastRound
+    ? buildBenchmark(
+        gameResults.filter((r) => r.roundId === lastRound.id),
+        teamRows,
+        playerTeam.id,
+        resolved.length,
+      )
+    : null;
 
   const playWindow = await playWindowFor(
     { opensAt: game.opensAt, closesAt: game.closesAt, competitionStageId: game.competitionStageId },
@@ -1114,22 +1434,239 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     closesAt: playWindow.closesAt ? playWindow.closesAt.toISOString() : null,
   };
 
-  const profile = game.difficultyProfile as { kind?: GameKind };
+  // LE DOSSIER BANCAIRE, CALCULÉ UNE FOIS. L'alerte de trésorerie a besoin du
+  // MÊME plafond de découvert que celui annoncé au formulaire : deux calculs
+  // séparés finiraient par diverger, et l'écran dirait à l'élève de repasser
+  // sous un seuil qui n'est pas celui que la banque applique.
+  const bankFileView = (() => {
+    const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+    const bank = snapshot.finance.bank;
+    if (!bank) return null;
+    const trust = confianceServie((currentState ?? {}) as CompanyState, snapshot);
+    const conditions = conditionsBancaires(
+      trust,
+      {
+        overdraftLimit: snapshot.finance.overdraftLimit,
+        overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,
+      },
+      bank,
+    );
+    return {
+      trust,
+      overdraftLimit: conditions.overdraftLimit,
+      fullOverdraftLimit: snapshot.finance.overdraftLimit,
+      overdraftAnnualRate: conditions.overdraftAnnualRate,
+      lastReliability: lastResult?.bank?.reliability ?? null,
+    };
+  })();
+
+  const alerteView = (() => {
+    const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+    // Pas de bloc `treasury` : le scénario ne modélise aucune cessation de
+    // paiements dure, il n'y a rien à alerter.
+    if (!snapshot.treasury || !lastResult) return null;
+    const streak = (currentState as { crisisStreak?: number } | undefined)?.crisisStreak ?? 0;
+    const defaillante =
+      (currentState as { status?: string } | undefined)?.status === "defaillant";
+    const crise = Boolean(lastResult.treasury?.crisis);
+    if (!crise && !defaillante) return null;
+    // Le plafond du tour À JOUER : c'est celui sous lequel il faut repasser.
+    const plafond = bankFileView?.overdraftLimit ?? snapshot.finance.overdraftLimit;
+    const tresorerie = lastResult.functionalBalance.netTreasury;
+    return {
+      crise,
+      defaillante,
+      toursConsecutifs: streak,
+      toursAvantDefaillance: snapshot.finance.crisisRoundsBeforeFailure ?? 2,
+      tresorerieNette: tresorerie,
+      plafondDecouvert: plafond,
+      manque: Math.max(0, -tresorerie - plafond),
+      financementObligatoire: snapshot.finance.rescueFinancingRequired ?? true,
+      financementOuvert: presetFromProfile(game.difficultyProfile).decisions.finance,
+      niveauDuFinancement: premierNiveauQuiOuvre(
+        "finance",
+        undefined,
+        presetFromProfile(game.difficultyProfile).level,
+      ),
+    };
+  })();
+
+  const loanCapacityView = (() => {
+    const ratio = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxDebtToEquity;
+    if (ratio === undefined) return null;
+    // Les capitaux propres et la dette d'OUVERTURE du tour à jouer : ce sont
+    // ceux que la banque lit quand elle instruit la demande.
+    const finance = currentState?.finance;
+    const equity = finance?.equity ?? 0;
+    const debt = finance?.financialDebt ?? 0;
+    return { remaining: Math.max(0, ratio * equity - debt), ratio, equity, debt };
+  })();
+
+  const capitalAllowanceView = (() => {
+    const cap = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxCapitalIncreaseTotal;
+    if (cap === undefined) return null;
+    const raised = (currentState as { capitalRaised?: number } | undefined)?.capitalRaised ?? 0;
+    return { total: cap, remaining: Math.max(0, cap - raised) };
+  })();
+
+  // LA DEMANDE DE SUBVENTION DU TOUR EN COURS, et l'exigence de sauvetage
+  // calculée UNE FOIS pour tout le monde.
+  //
+  // L'écran grise le bouton avec, l'action serveur refuse la décision avec, et
+  // le bandeau de crise dit avec ce qu'il reste à faire. Les recalculer chacun
+  // de son côté, à partir de trois champs épars, c'est se donner rendez-vous
+  // pour diverger : l'élève lirait un seuil et le serveur en appliquerait un
+  // autre.
+  const demandeSubvention = alerteView?.crise
+    ? await demandeDuTour(playerTeam.id, game.currentRound)
+    : null;
+  // SANS FINANCEMENT À CE NIVEAU, PAS DE VERROU. L'exigence réclame un emprunt
+  // ou un apport : là où le niveau ne les ouvre pas (1 à 3), elle bloquait la
+  // validation devant des leviers absents de l'écran. La banque y répond seule :
+  // le découvert couvre le manque, à son taux, et au-delà de son plafond elle
+  // cède les créances ; la crise et la défaillance suivent leur cours.
+  const financeOuverte = presetFromProfile(game.difficultyProfile).decisions.finance;
+  const exigenceSauvetage =
+    alerteView?.crise && alerteView.financementObligatoire && financeOuverte
+      ? {
+          manque: alerteView.manque,
+          capaciteEmprunt: loanCapacityView?.remaining ?? null,
+          enveloppeApport: capitalAllowanceView?.remaining ?? null,
+          subventionAccordee:
+            demandeSubvention?.statut === "granted"
+              ? (demandeSubvention.montantAccorde ?? 0)
+              : 0,
+          demandeDeposee: demandeSubvention !== null,
+          // En solo, personne n'instruira quoi que ce soit : le verrou se lève
+          // de lui-même plutôt que d'ouvrir un formulaire sans destinataire.
+          avecAnimateur: kindDeLaPartie !== "solo",
+        }
+      : null;
+
+  // ── LE DOSSIER D'ESTIMATION ──────────────────────────────────────────────
+  // Préparé ICI, côté serveur, pour que le navigateur puisse estimer à la
+  // frappe sans rien apprendre du marché : scénario expurgé, état d'ouverture,
+  // événements déjà connus, commande annoncée, répartition constatée. Aucune
+  // graine ne traverse.
+  const dossierDEstimation: GameView["estimation"] = await (async () => {
+    if (game.status === "finished") return null;
+    const ouvertureRound = game.currentRound - 1;
+    const etatsDuTour = await db
+      .select()
+      .from(companyStates)
+      .where(
+        and(
+          eq(companyStates.roundIndex, ouvertureRound),
+          inArray(companyStates.teamId, teamRows.map((t) => t.id)),
+        ),
+      );
+    const moi = etatsDuTour.find((r) => r.teamId === playerTeam.id);
+    if (!moi) return null;
+    // Les entreprises telles que la CLÔTURE les passera au moteur : triées par
+    // identifiant (round-resolution). C'est la condition pour que le tirage lu
+    // d'avance soit celui qui tombera.
+    const compagnies = etatsDuTour
+      .map((r) => ({ id: r.teamId }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const actifs = activeEventsOf(game.difficultyProfile);
+    const annonces = readPendingEvents(game.difficultyProfile);
+    const entrants = [...actifs, ...injectedEvents(snapshot, annonces, actifs)];
+    const tires =
+      compagnies.length === teamRows.length
+        ? peekEventDraw({
+            scenario: snapshot,
+            roundIndex: game.currentRound,
+            companies: compagnies,
+            activeEvents: entrants,
+            seed: game.seed,
+          })
+        : [];
+    // Une carte ciblée sur une AUTRE équipe ne concerne pas ce tour estimé, et
+    // n'a donc rien à faire dans ce que le navigateur reçoit.
+    const miens = [...entrants, ...tires].filter(
+      (e) => e.scope === "market" || e.companyId === playerTeam.id,
+    );
+    const manquesDuDernier = lastResult
+      ? (() => {
+          const reperes: NonNullable<GameView["estimation"]>["reperes"] = [];
+          const tour = resolved.length;
+          const produits = lastResult.products;
+          for (const p of toGamme(snapshot)) {
+            const parReference = produits?.[p.code];
+            if (parReference) {
+              reperes.push({
+                code: p.code,
+                tour,
+                vendu: parReference.sold,
+                manque: parReference.lost,
+              });
+              continue;
+            }
+            const segments = p.market.segments.map((seg) => lastResult!.market.bySegment[seg.code]);
+            reperes.push({
+              code: p.code,
+              tour,
+              vendu: segments.reduce((x, d) => x + (d?.sold ?? 0), 0),
+              manque: segments.reduce((x, d) => x + (d?.lost ?? 0), 0),
+            });
+          }
+          return reperes;
+        })()
+      : [];
+    return {
+      scenario: expurgerLeScenario(snapshot),
+      state: moi.state as CompanyState,
+      roundIndex: game.currentRound,
+      events: miens,
+      orderOffer: (orderOfferForRound(snapshot, game.currentRound, game.seed) ??
+        null) as OrderOfferDef | null,
+      repartition: repartitionDesVentes(snapshot, game.currentRound, lastResult),
+      reperes: manquesDuDernier,
+      deposees: pendingDecisions?.salesEstimate?.byProduct ?? null,
+    };
+  })();
+
   return {
     gameId,
-    kind: profile.kind ?? "solo",
+    kind: kindDeLaPartie,
     status: game.status,
     currentRound: game.currentRound,
+    essai: (() => {
+      const e = lireLEssai(game.essai);
+      if (!e) return null;
+      const { scenario: _scenario, ...affiche } = e;
+      return affiche;
+    })(),
     playLock,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: playerTeam.id,
     playerTeamName: teamDisplayName(playerTeam.name),
-    // L'équipe peut encore se nommer tant qu'elle porte son numéro et que le
-    // premier tour n'est pas clos.
-    peutSeNommer: porteUnNomParDefaut(playerTeam.name) && game.currentRound === 1,
+    playerPseudo,
+    // L'équipe se nomme, et se RENOMME, tant que le premier tour n'est pas
+    // clos. Le panneau ne disparaissait auparavant qu'au premier nom adopté :
+    // une coquille tapée à la hâte — « Les Enteprises du Nrd » — restait au
+    // classement et sur le relevé de notes pendant six trimestres, sans que
+    // personne, élève ou enseignant, puisse la corriger. Le service, lui,
+    // autorisait déjà le changement : c'était l'écran qui se fermait trop tôt.
+    //
+    // Jamais en solo. Le joueur seul reprend une entreprise qui existe, porte
+    // un nom, une histoire et un secteur — NOVA, L'ESCALE, MAILLE & CO —, et
+    // ce nom est la moitié de la mise en situation. Lui proposer de le changer
+    // ouvrirait un écran de plus avant la première décision, pour renommer ce
+    // que le scénario vient de planter.
+    // En concours, ni renommage ni changement d'équipe : le nom vient de
+    // l'inscription et c'est lui qui relie la partie au tournoi (game.service).
+    peutSeNommer:
+      kindDeLaPartie !== "solo" && game.currentRound === 1 && game.mode !== "competition",
+    equipesDeLaClasse,
+    peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
+    estUnConcours: game.mode === "competition",
+    playerTeamEmbleme: playerTeam.embleme ?? null,
     pendingDecisions,
-    announcedEventCards: readPendingEvents(game.difficultyProfile).map((card) => {
+    soumissions,
+    pendingDecisionsPar,
+    courriersAnnonces: readPendingEvents(game.difficultyProfile).map((card) => {
       const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;
       return {
         code: card.code,
@@ -1137,6 +1674,61 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         teamName: target?.name ?? null,
         isMyTeam: card.teamId === playerTeam.id,
       };
+    }),
+    courriersEnCours: (() => {
+      const actifs = (game.difficultyProfile as { activeEvents?: EventInstance[] }).activeEvents;
+      return (Array.isArray(actifs) ? actifs : [])
+        .filter((e) => e.roundsLeft > 0)
+        .map((e) => {
+          const teamId = e.scope === "company" ? (e.companyId ?? null) : null;
+          return {
+            code: e.code,
+            teamId,
+            teamName: teamId ? (teamRows.find((t) => t.id === teamId)?.name ?? null) : null,
+            isMyTeam: teamId === playerTeam.id,
+            roundsLeft: e.roundsLeft,
+          };
+        });
+    })(),
+    upcomingDraw: await (async () => {
+      if (game.status === "finished") return [];
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      // Les entreprises telles que la clôture les passera au moteur : les
+      // états du tour précédent, triés par identifiant (round-resolution).
+      const etats = await db
+        .select({ teamId: companyStates.teamId })
+        .from(companyStates)
+        .where(
+          and(
+            eq(companyStates.roundIndex, game.currentRound - 1),
+            inArray(companyStates.teamId, teamRows.map((t) => t.id)),
+          ),
+        );
+      const companies = etats.map((r) => ({ id: r.teamId })).sort((a, b) => a.id.localeCompare(b.id));
+      if (companies.length !== teamRows.length) return [];
+      const actifs = activeEventsOf(game.difficultyProfile);
+      const tirees = peekEventDraw({
+        scenario: snapshot,
+        roundIndex: game.currentRound,
+        companies,
+        activeEvents: [...actifs, ...injectedEvents(snapshot, readPendingEvents(game.difficultyProfile), actifs)],
+        seed: game.seed,
+      });
+      return tirees
+        .filter((e) => e.scope === "market" || e.companyId === playerTeam.id)
+        .map((e) => ({
+          code: e.code,
+          teamId: e.scope === "company" ? (e.companyId ?? null) : null,
+          isMyTeam: e.scope === "company" && e.companyId === playerTeam.id,
+        }));
+    })(),
+    gazette: await gazetteDeLaPartie({
+      id: game.id,
+      seed: game.seed,
+      currentRound: game.currentRound,
+      status: game.status,
+      difficultyProfile: game.difficultyProfile,
+      scenarioSnapshot: game.scenarioSnapshot,
     }),
     lastResult,
     periods,
@@ -1244,6 +1836,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         vocabulary: definition.vocabulary,
         enabled: {
           finance: preset.decisions.finance,
+          creances: preset.decisions.creances,
           investment: preset.decisions.investment,
           hr: preset.decisions.hr,
         },
@@ -1254,7 +1847,9 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     lastEvents,
     history,
-    ranking,
+    ranking: classementRevele ? ranking : [],
+    classement: { revele: classementRevele, parLAnimateur: kindDeLaPartie !== "solo" },
+    playerBpi,
     playerDimensions,
     lastDecisions,
     // Le point de départ et les valeurs proposées viennent du même calcul que
@@ -1264,6 +1859,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       game.scenarioSnapshot as EngineScenarioConfig,
       stateRow?.state as CompanyState | undefined,
       game.currentRound,
+      leviersFigesDuProfil(game.difficultyProfile),
     ),
     proposedDecisions: (() => {
       return proposedDecisionsFor({
@@ -1271,6 +1867,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         state: stateRow?.state as CompanyState | undefined,
         roundIndex: game.currentRound,
         previousPayload: lastDecisions,
+        leviers: leviersFigesDuProfil(game.difficultyProfile),
       });
     })(),
     insuranceOffer: (() => {
@@ -1287,12 +1884,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const formulas = snapshot.insurance?.formulas;
       if (!formulas || formulas.length === 0) return null;
-      // Le libellé français du deck de cartes, et non la clé technique : c'est
+      // L'objet du courrier en français, et non la clé technique : c'est
       // le seul endroit de l'écran de décision où l'élève lisait « natural
       // disaster, cold wave ». Les mêmes événements lui seront montrés sous
       // leur nom de carte quand ils tomberont.
       const eventLabels = (codes: string[]) =>
-        codes.map((c) => cardByCode.get(c)?.title ?? c.replace(/_/g, " "));
+        codes.map((c) => courrierParCode.get(c)?.objet ?? c.replace(/_/g, " "));
       return formulas.map((f) => ({
         code: f.code,
         name: f.name,
@@ -1315,8 +1912,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       }));
     })(),
     vocabulary: scenarioDef.vocabulary,
+    scenarioCode: snapshot.code,
     sector: scenarioDef.sector,
-    scenarioIcon: scenarioDef.icon,
     // Tous les segments que le moteur simule : en gamme, ceux de chaque
     // produit (le marché du scénario n'en est que le premier).
     segmentNames: Object.fromEntries(
@@ -1352,10 +1949,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         return {
           code: p.code,
           name: p.name,
+          ...(p.shortName ? { shortName: p.shortName } : {}),
           materialCostPerUnit: p.materialCostPerUnit,
           otherVariableCostPerUnit: p.otherVariableCostPerUnit,
           hoursPerUnit: p.hoursPerUnit,
           refPrice: main?.refPrice ?? 0,
+          marketSize: p.market.segments.reduce((t, s) => t + s.size, 0),
           segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
           seasonCoef: p.market.seasonality[idx] ?? 1,
           stock: Math.round(state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0),
@@ -1398,12 +1997,19 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       if (!snapshot.communication) return null;
       const state = stateRow?.state as CompanyState | undefined;
       return {
-        axes: COMMUNICATION_AXES.map((code) => ({ code, ...COMMUNICATION_AXIS_LABELS[code] })),
+        // Pas tous les axes : celui de l'innovation n'est proposé que là où le
+        // secteur a de quoi le tenir (un levier R&D). Ailleurs il ne pourrait
+        // que desservir, et un choix qui ne peut que coûter n'est pas un choix.
+        axes: axesProposables(snapshot).map((code) => ({
+          code,
+          ...COMMUNICATION_AXIS_LABELS[code],
+        })),
         brandScale: snapshot.communication.brandScale,
         brandAwareness: state?.brandAwareness ?? 0,
         lastAxis: state?.lastCommunicationAxis ?? null,
       };
     })(),
+    estimation: dossierDEstimation,
     sectorKpis: (() => {
       if (!lastResult) return [];
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
@@ -1470,24 +2076,26 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const state = stateRow?.state as CompanyState | undefined;
       if (!state) return null;
-      let mc: number;
-      if (snapshot.equipment) {
-        const types = new Map(snapshot.equipment.types.map((t) => [t.code, t]));
-        const all = [...(state.fleet ?? []), ...(state.pendingFleet ?? [])];
-        mc = all.reduce((sum, item) => {
-          const typ = types.get(item.typeCode);
-          return sum + (typ ? item.count * typ.capacityPerUnit : 0);
-        }, 0);
-      } else {
-        mc = state.machineCapacity + (state.pendingCapacity ?? 0);
-      }
-      const lc = (state.headcount * state.hoursPerEmployee * state.productivity) /
-        snapshot.product.hoursPerUnit;
+      // LA CAPACITÉ DE L'ATELIER A UNE SEULE SOURCE (`engine/investment/plafond`) :
+      // celle que le plafond d'investissement lit aussi. Le goulot affiché et la
+      // phrase du refus parlent ainsi des mêmes chiffres.
+      const atelier = capaciteDeLAtelier(snapshot, state);
+      const mc = atelier.machine;
+      const lc = atelier.mainDOeuvre;
+      // LE GOULOT SE COMPARE À CE QUE L'ATELIER REND, PAS À CE QU'IL RENDRAIT
+      // NEUF. Le moteur produit sous `machineCapacity × availability` ; une
+      // équipe descendue à 80 % de disponibilité était annoncée « équilibrée »
+      // alors que la machine l'arrêtait déjà.
+      const dispo = atelier.disponibilite;
+      const mcDispo = atelier.machineDisponible;
       const bottleneck: "machine" | "labor" | "balanced" =
-        mc < lc * 0.95 ? "machine" : lc < mc * 0.95 ? "labor" : "balanced";
+        mcDispo < lc * 0.95 ? "machine" : lc < mcDispo * 0.95 ? "labor" : "balanced";
       const sub = snapshot.subscription;
       return {
         machineCapacity: Math.round(mc),
+        availability: dispo,
+        availableMachineCapacity: Math.round(mcDispo),
+        maintenanceReference: snapshot.production.maintenanceReference,
         laborCapacity: Math.round(lc),
         bottleneck,
         headcount: state.headcount,
@@ -1511,6 +2119,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
     })(),
     enabledDecisions: presetFromProfile(game.difficultyProfile).decisions,
+    plafondInvestissement: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const state = stateRow?.state as CompanyState | undefined;
+      const preset = presetFromProfile(game.difficultyProfile);
+      if (!state || !preset.decisions.investment) return null;
+      const plafond = plafondDInvestissement(snapshot, state, preset.decisions);
+      return plafond.unite
+        ? { ...plafond, niveauDesEmbauches: premierNiveauQuiOuvre("hr", undefined, preset.level) }
+        : null;
+    })(),
     distributableReserves: Math.max(
       0,
       (stateRow?.state as CompanyState | undefined)?.reserves ?? 0,
@@ -1572,32 +2190,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const nextMandatory = loans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
       return { nextMandatory, outstanding };
     })(),
-    bankFile: (() => {
-      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const bank = snapshot.finance.bank;
-      if (!bank) return null;
-      const trust = confianceInitiale((currentState ?? {}) as CompanyState);
-      const conditions = conditionsBancaires(
-        trust,
-        {
-          overdraftLimit: snapshot.finance.overdraftLimit,
-          overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,
-        },
-        bank,
-      );
-      const dernier = lastResult?.bank ?? null;
-      return {
-        trust,
-        overdraftLimit: conditions.overdraftLimit,
-        fullOverdraftLimit: snapshot.finance.overdraftLimit,
-        overdraftAnnualRate: conditions.overdraftAnnualRate,
-        refusedLoan:
-          dernier && dernier.loanRequested > 0 && dernier.loanGranted === 0
-            ? dernier.loanRequested
-            : null,
-        lastReliability: dernier?.reliability ?? null,
-      };
-    })(),
+    bankFile: bankFileView,
     treasuryOffer: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       return snapshot.treasury
@@ -1616,7 +2209,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               const bank = snapshot.finance.bank;
               if (!bank) return snapshot.finance.overdraftLimit;
               return conditionsBancaires(
-                confianceInitiale((currentState ?? {}) as CompanyState),
+                confianceServie((currentState ?? {}) as CompanyState, snapshot),
                 {
                   overdraftLimit: snapshot.finance.overdraftLimit,
                   overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,
@@ -1627,12 +2220,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           }
         : null;
     })(),
-    capitalAllowance: (() => {
-      const cap = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxCapitalIncreaseTotal;
-      if (cap === undefined) return null;
-      const raised = (currentState as { capitalRaised?: number } | undefined)?.capitalRaised ?? 0;
-      return { total: cap, remaining: Math.max(0, cap - raised) };
-    })(),
+    alerteTresorerie: alerteView,
+    loanCapacity: loanCapacityView,
+    financeOffer: {
+      loanAnnualRate: snapshot.finance.loanAnnualRate,
+      loanDurationRounds: snapshot.finance.loanDurationRounds ?? null,
+      roundDays: snapshot.roundDays,
+    },
+    capitalAllowance: capitalAllowanceView,
+    demandeSubvention,
+    exigenceSauvetage,
     costFacts: (() => {
       const product = (game.scenarioSnapshot as EngineScenarioConfig).product;
       return {

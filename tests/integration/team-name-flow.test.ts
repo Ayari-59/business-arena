@@ -21,10 +21,12 @@ import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
+  createSoloGame,
   getGameView,
   joinGameByCode,
   nommerEquipe,
 } from "@/services/game.service";
+import { poserUneLicence } from "./helpers/licence";
 
 let prof: string;
 let gameId: string;
@@ -43,6 +45,8 @@ beforeAll(async () => {
   prof = r.userId;
   const orgId = (await getTeacherOrgId(prof))!;
 
+  // Pas d'essai en classe : l'établissement a une licence de l'arène en cours.
+  await poserUneLicence(orgId, prof);
   const partie = await createClassGame({
     teacherId: prof,
     organizationId: orgId,
@@ -83,8 +87,17 @@ describe("l'équipe se donne un nom", () => {
     await nommerEquipe({ gameId, userId: alice, nom: "  Fromagerie   du Pont " });
     const vue = (await getGameView(gameId, alice))!;
     expect(vue.playerTeamName).toBe("Fromagerie du Pont");
-    // Le panneau disparaît : l'équipe n'est plus anonyme.
-    expect(vue.peutSeNommer).toBe(false);
+    // Le panneau RESTE ouvert : le nom adopté à la hâte se corrige tant que le
+    // premier tour n'est pas clos. Il se fermait ici, et la coquille partait
+    // pour six trimestres.
+    expect(vue.peutSeNommer).toBe(true);
+  });
+
+  it("la coquille se corrige tant que le premier tour n'est pas clos", async () => {
+    await nommerEquipe({ gameId, userId: alice, nom: "Fromagerie du Pon" });
+    expect((await getGameView(gameId, alice))!.playerTeamName).toBe("Fromagerie du Pon");
+    await nommerEquipe({ gameId, userId: alice, nom: "Fromagerie du Pont" });
+    expect((await getGameView(gameId, alice))!.playerTeamName).toBe("Fromagerie du Pont");
   });
 
   it("une autre équipe ne peut pas prendre le même nom", async () => {
@@ -97,6 +110,44 @@ describe("l'équipe se donne un nom", () => {
     await expect(
       nommerEquipe({ gameId, userId: etranger, nom: "Les Pirates" }),
     ).rejects.toThrow(/membre/);
+  });
+
+  it("en solo, rien à nommer : l'entreprise est celle du scénario", async () => {
+    const solo = await createSoloGame(alice, "quarter", 2);
+    const vue = (await getGameView(solo, alice))!;
+    expect(vue.peutSeNommer).toBe(false);
+    // Et la garde tient côté serveur, pas seulement à l'écran.
+    await expect(nommerEquipe({ gameId: solo, userId: alice, nom: "Ma Boîte" })).rejects.toThrow(
+      /solo/,
+    );
+  });
+
+  it("l'équipe se choisit un emblème, et le catalogue fait foi", async () => {
+    // La base ne connaît que du texte : c'est le service qui refuse un code
+    // hors catalogue, sinon l'écran dessinerait n'importe quoi — ou rien, sans
+    // que personne comprenne pourquoi.
+    const avec = await nommerEquipe({
+      gameId,
+      userId: alice,
+      nom: "Fromagerie du Pont",
+      embleme: "eclair",
+    });
+    expect(avec.embleme).toBe("eclair");
+    expect((await getGameView(gameId, alice))!.playerTeamEmbleme).toBe("eclair");
+
+    const inconnu = await nommerEquipe({
+      gameId,
+      userId: alice,
+      nom: "Fromagerie du Pont",
+      embleme: "dragon",
+    });
+    expect(inconnu.embleme).toBeNull();
+
+    // Sans emblème passé (ancien écran, envoi partiel), celui de l'équipe ne
+    // bouge pas : renommer ne doit pas effacer le signe.
+    await nommerEquipe({ gameId, userId: alice, nom: "Fromagerie du Pont", embleme: "etoile" });
+    const renommee = await nommerEquipe({ gameId, userId: alice, nom: "La Fromagerie" });
+    expect(renommee.embleme).toBe("etoile");
   });
 
   it("le nom se fige à la clôture du premier tour", async () => {

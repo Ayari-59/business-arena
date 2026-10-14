@@ -7,7 +7,7 @@ import { and, eq } from "drizzle-orm";
  * 2. Ordre pedagogy → scoring (debriefRound AVANT persistRoundScores)
  * 3. Scoring sans données pédagogiques (map vide → dimension decision_mastery = 50)
  * 4. Mise à jour du classement (ranking)
- * 5. Départage (tie-break) : BPI, puis financialAvg, puis lastTreasury
+ * 5. Départage (tie-break) : IPG, puis financialAvg, puis lastTreasury
  */
 
 vi.mock("@/db", async () => {
@@ -45,14 +45,14 @@ beforeAll(async () => {
   userId = inserted[0]!.id;
 });
 
-describe("1 — persistance des scores BPI (v2)", () => {
-  it("6 dimensions × 2 équipes = 12 scores après un tour, tour marqué bpiVersion 2", async () => {
+describe("1 — persistance des scores IPG (v2)", () => {
+  it("6 dimensions × 2 équipes = 12 scores après un tour, tour marqué bpiVersion 3 (IPG)", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
     const allRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
     const resolvedRound = allRounds.find((r) => r.status === "resolved")!;
-    expect(resolvedRound.bpiVersion).toBe(2);
+    expect(resolvedRound.bpiVersion).toBe(3);
 
     const scoreRows = await db
       .select()
@@ -81,9 +81,10 @@ describe("1 — persistance des scores BPI (v2)", () => {
     const teamIds = [...new Set(scoreRows.map((s) => s.teamId))];
     expect(teamIds).toHaveLength(2);
 
+    // IPG : la responsabilité sociétale a pris le créneau de la rentabilité.
     const expectedDimensions = [
       "economic", "financial", "commercial",
-      "profitability", "pilotage", "decision_mastery",
+      "rse", "pilotage", "decision_mastery",
     ];
     for (const teamId of teamIds) {
       const teamDims = scoreRows
@@ -170,7 +171,7 @@ describe("4 — mise à jour du classement", () => {
     expect(ranks).toEqual([1, 2]);
   });
 
-  it("le BPI de chaque équipe est dans [0, 100]", async () => {
+  it("l'IPG de chaque équipe est dans [0, 100]", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
@@ -267,7 +268,7 @@ describe("6 — marqueur de défaillance dans le classement", () => {
 });
 
 describe("5 — départage (tie-break)", () => {
-  it("le tri suit BPI > financialAvg > lastTreasury", async () => {
+  it("le tri suit IPG > financialAvg > lastTreasury", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
