@@ -924,6 +924,7 @@ function reconstructResult(
     hr: trace.hr ?? undefined,
     investment: trace.investment ?? undefined,
     qualityCosts: trace.qualityCosts ?? undefined,
+    qualityActions: trace.qualityActions ?? undefined,
     debt: trace.debt ?? undefined,
     treasury: trace.treasury ?? undefined,
     bank: trace.bank ?? undefined,

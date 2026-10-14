@@ -119,6 +119,98 @@ const rawBistrot = {
     externalReturnSensitivity: 0,
     maintenanceDefectSensitivity: 0.15,
   },
+  qualityActions: {
+    maxConcurrentActions: 2,
+    actions: [
+      {
+        code: "maitrise_couts_non_qualite",
+        label: "Maîtrise des coûts de non-qualité",
+        levels: [
+          {
+            level: 1,
+            label: "Maîtrise des coûts N1 — suivi des gaspillages alimentaires",
+            cost: 3000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.10, productionCostReduction: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Maîtrise des coûts N2 — tableaux de bord hebdomadaires",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.08, productionCostReduction: 0.04 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Maîtrise des coûts N3 — optimisation des commandes fournisseurs",
+            cost: 7000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.07, productionCostReduction: 0.05, maintenanceSaving: 500 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "amelioration_process",
+        label: "Amélioration du process (cuisine)",
+        levels: [
+          {
+            level: 1,
+            label: "Process N1 — standardisation des recettes",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.12, productionCostReduction: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Process N2 — formation aux techniques culinaires",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.10, productionCostReduction: 0.03, qualityImageBonus: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Process N3 — certification hygiène HACCP renforcée",
+            cost: 9000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.08, qualityImageBonus: 0.05, maintenanceSaving: 800 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "satisfaction_client",
+        label: "Satisfaction client (service en salle)",
+        levels: [
+          {
+            level: 1,
+            label: "Satisfaction N1 — grille d'évaluation du service",
+            cost: 2000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Satisfaction N2 — formation à l'accueil et la fidélisation",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.05, returnRateReduction: 0.10 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Satisfaction N3 — programme de fidélité et suivi avis clients",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.06, returnRateReduction: 0.15 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   marketing: { scale: 7000 },
   finance: {
     loanAnnualRate: 0.058,
@@ -139,6 +231,23 @@ const rawBistrot = {
     // La banque ne prête pas au-delà de deux fois les capitaux propres.
     maxDebtToEquity: 2,
     depreciationPerRound: 6000,
+    // Conditions court terme restauration (paiement comptant majoritaire)
+    discountRate: 0.085,      // 8,5 % annuel
+    discountableRatio: 0.50,  // 50 % (part des clients pros / événements)
+    placementRate: 0.025,     // 2,5 % annuel sur les placements
+    loanCategories: {
+      machines: {
+        // matériel de cuisine : actif nanti, durée allongée
+        maxLoanRatio: 0.80,
+        durationRounds: 24,    // 6 ans (24 trimestres)
+        annualRate: 0.058,
+      },
+      installations: {
+        maxLoanRatio: 0.40,
+        durationRounds: 8,
+        label: "Qualité, H&S, Environnement, Maintenance, brevets",
+      },
+    },
   },
   treasury: {
     discountAnnualRate: 0.075,
@@ -344,6 +453,33 @@ const rawBistrot = {
     maxHiresPerRound: 3,
     maxHeadcount: 18,
   },
+  // RSE (restauration) : sourcing local, réduction du gaspillage alimentaire,
+  // bien-être du personnel. L'impact image est fort sur la clientèle de
+  // quartier (soir_locaux, midi_employes). imageDemandSensitivity élevé car la
+  // réputation locale se construit vite sur les engagements concrets.
+  // socialAttritionRelief plus fort : la restauration souffre d'une tension
+  // salariale permanente — un employeur engagé retient mieux sa brigade.
+  rse: {
+    imageDemandSensitivity: 0.28,
+    imageInertia: 0.55,
+    cleanDefectReductionMax: 0.3,
+    cleanInertia: 0.7,
+    financingTrustBonus: 0.1,
+    socialAttritionRelief: 0.6,
+    cards: {
+      minRound: 2,
+      labelImageThreshold: 0.65,
+      labelDemandBonus: 0.2,
+      labelDuration: 2,
+      badBuzzImageCeiling: 0.3,
+      badBuzzProbability: 0.3,
+      badBuzzDemandMalus: 0.3,
+      aidCleanThreshold: 0.65,
+      aidAmount: 0.8,
+      sanctionProbability: 0.25,
+      fineAmount: 0.8,
+    },
+  },
   events: [
     {
       code: "bistrot_avis_viral",
@@ -526,6 +662,173 @@ const rawBistrot = {
   // Le beurre, la viande et l'énergie flambent au tour 3 : le ratio matières
   // dérape en plein creux d'août, quand la salle est déjà vide.
   scriptedEvents: [{ round: 3, eventCode: "bistrot_matieres_premieres" }],
+  // Actions de maintenance par machine (bistrot — équipements de cuisine et de salle).
+  // Pannes graves en service (four, lave-vaisselle) = impact fort sur la capacité.
+  maintenanceActions: {
+    types: [
+      {
+        code: "preventif",
+        label: "Entretien préventif",
+        levels: [
+          {
+            level: 1,
+            label: "Nettoyage et contrôle",
+            laborCost: 300,
+            downtimeCost: 150,
+            timeHoursN1: 3,
+            timeHoursN2: 3,
+            timeHoursN3: 2,
+            wearReduction: 0.04,
+            breakdownRiskReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Révision des appareils",
+            laborCost: 900,
+            downtimeCost: 500,
+            timeHoursN1: 6,
+            timeHoursN2: 5,
+            timeHoursN3: 3,
+            wearReduction: 0.12,
+            breakdownRiskReduction: 0.22,
+          },
+          {
+            level: 3,
+            label: "Mise à niveau complète",
+            laborCost: 2200,
+            downtimeCost: 1400,
+            timeHoursN1: 14,
+            timeHoursN2: 10,
+            timeHoursN3: 7,
+            wearReduction: 0.3,
+            breakdownRiskReduction: 0.45,
+          },
+        ],
+      },
+      {
+        code: "curatif",
+        label: "Réparation urgente",
+        levels: [
+          {
+            level: 1,
+            label: "Dépannage rapide",
+            laborCost: 700,
+            downtimeCost: 1000,
+            timeHoursN1: 5,
+            timeHoursN2: 4,
+            timeHoursN3: 3,
+            capacityRestoration: 0.5,
+            wearReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Réparation complète",
+            laborCost: 1800,
+            downtimeCost: 2500,
+            timeHoursN1: 10,
+            timeHoursN2: 8,
+            timeHoursN3: 6,
+            capacityRestoration: 0.8,
+            wearReduction: 0.22,
+          },
+          {
+            level: 3,
+            label: "Remplacement d'équipement",
+            laborCost: 4000,
+            downtimeCost: 5000,
+            timeHoursN1: 18,
+            timeHoursN2: 14,
+            timeHoursN3: 10,
+            capacityRestoration: 1.0,
+            wearReduction: 0.55,
+          },
+        ],
+      },
+    ],
+  },
+  healthSafetyActions: {
+    actions: [
+      {
+        code: "hygiene_cuisine",
+        label: "Audit hygiène cuisine (HACCP)",
+        description: "Audit complet des procédures HACCP en cuisine : températures, traçabilité, nettoyage des surfaces.",
+        laborCost: 1800,
+        timeHoursN1: 8,
+        timeHoursN2: 6,
+        timeHoursN3: 4,
+        effects: {
+          accidentRateReduction: 0.12,
+          defectReduction: 0.04,
+          hrImageBonus: 0.06,
+        },
+        isRecurring: true,
+        durationRounds: 2,
+      },
+      {
+        code: "formation_incendie",
+        label: "Formation incendie et évacuation",
+        description: "Formation du personnel aux gestes de sécurité incendie, manipulation d'extincteurs et procédures d'évacuation.",
+        laborCost: 1200,
+        timeHoursN1: 4,
+        timeHoursN2: 4,
+        timeHoursN3: 2,
+        effects: {
+          accidentRateReduction: 0.15,
+          hrImageBonus: 0.04,
+        },
+      },
+      {
+        code: "amenagement_cuisine",
+        label: "Aménagement sécurité cuisine (antidérapants, ventilation)",
+        description: "Pose de revêtements antidérapants, amélioration de la ventilation et des hottes pour réduire les risques de chute et de brûlure.",
+        laborCost: 2000,
+        immobilizationCost: 2500,
+        timeHoursN1: 12,
+        timeHoursN2: 8,
+        timeHoursN3: 6,
+        effects: {
+          attritionReduction: 0.06,
+          accidentRateReduction: 0.2,
+          productivityBonus: 0.03,
+          hrImageBonus: 0.05,
+        },
+        isRecurring: true,
+        durationRounds: 3,
+      },
+      {
+        code: "formation_service",
+        label: "Formation gestes et postures (service en salle)",
+        description: "Formation ergonomique pour le personnel de salle : port des plateaux, gestes répétitifs, postures.",
+        laborCost: 1000,
+        timeHoursN1: 4,
+        timeHoursN2: 4,
+        timeHoursN3: 2,
+        effects: {
+          attritionReduction: 0.05,
+          productivityBonus: 0.02,
+          hrImageBonus: 0.04,
+        },
+      },
+      {
+        code: "vestiaires_personnel",
+        label: "Vestiaires et salle de repos du personnel",
+        description: "Réaménagement des vestiaires et création d'un espace de pause pour améliorer les conditions des employés.",
+        laborCost: 1200,
+        immobilizationCost: 2000,
+        timeHoursN1: 4,
+        timeHoursN2: 2,
+        timeHoursN3: 2,
+        effects: {
+          attritionReduction: 0.08,
+          hrImageBonus: 0.07,
+          productivityBonus: 0.02,
+        },
+        isRecurring: true,
+        durationRounds: 3,
+      },
+    ],
+    maxActionsPerRound: 3,
+  },
   scoring: {
     weights: {
       economic: 0.3,

@@ -90,6 +90,98 @@ const rawNova = {
     maintenanceReference: 4000,
     availabilityDecay: 0.05,
   },
+  qualityActions: {
+    maxConcurrentActions: 2,
+    actions: [
+      {
+        code: "amelioration_composants",
+        label: "Amélioration des composants (qualité audio)",
+        levels: [
+          {
+            level: 1,
+            label: "Composants N1 — sélection de transducteurs haute fidélité",
+            cost: 8000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.05, productionCostReduction: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Composants N2 — intégration DSP de traitement du signal",
+            cost: 12000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.07, productionCostReduction: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Composants N3 — certification audio indépendante et étanchéité IP67",
+            cost: 18000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.10, productionCostReduction: 0.02, maintenanceSaving: 1500 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "amelioration_process_assemblage",
+        label: "Amélioration du process (assemblage)",
+        levels: [
+          {
+            level: 1,
+            label: "Assemblage N1 — standardisation des postes de montage",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { productionCostReduction: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Assemblage N2 — contrôle qualité automatisé en ligne",
+            cost: 10000,
+            durationRounds: 1,
+            effects: { productionCostReduction: 0.04, qualityImageBonus: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Assemblage N3 — lean manufacturing et zéro défaut",
+            cost: 15000,
+            durationRounds: 1,
+            effects: { productionCostReduction: 0.05, qualityImageBonus: 0.04, maintenanceSaving: 2000 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "satisfaction_support",
+        label: "Satisfaction client (support technique)",
+        levels: [
+          {
+            level: 1,
+            label: "Support N1 — FAQ et tutoriels en ligne",
+            cost: 3000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Support N2 — hotline dédiée et garantie 2 ans",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Support N3 — programme ambassadeurs et communauté utilisateurs",
+            cost: 9000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.08 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   marketing: { scale: 12000 },
   finance: {
     loanAnnualRate: 0.05,
@@ -112,6 +204,22 @@ const rawNova = {
     // La banque ne prête pas au-delà de deux fois les capitaux propres.
     maxDebtToEquity: 2,
     depreciationPerRound: 5000,
+    // Conditions court terme exposées aux équipes
+    discountRate: 0.10,       // 10 % annuel sur les créances escomptées
+    discountableRatio: 0.80,  // 80 % des créances clients escomptables
+    placementRate: 0.03,      // 3 % annuel sur les placements
+    // Lignes d'emprunt moyen terme distinctes
+    loanCategories: {
+      machines: {
+        maxLoanRatio: 0.8,     // jusqu'à 80 % du coût machine
+        durationRounds: 16,    // 4 ans (16 trimestres)
+      },
+      installations: {
+        maxLoanRatio: 0.4,     // 40 % des investissements immatériels
+        durationRounds: 8,     // 2 ans (8 trimestres)
+        label: "Qualité, H&S, Environnement, Maintenance, brevets",
+      },
+    },
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements
   fixedCostsPerRound: 91000,
@@ -381,6 +489,15 @@ const rawNova = {
       paymentDelayDays: 22,
       supplyRiskProbability: 0,
       supplyRiskAvailabilityHit: 1,
+      // Indice de cours : volatilité modérée, légère tendance haussière
+      // (composants électroniques sous tension géopolitique sur 6 tours).
+      priceIndex: {
+        volatility: 0.06,
+        trend: 0.01,
+        momentum: 0.55,
+        minMultiplier: 0.82,
+        maxMultiplier: 1.22,
+      },
     },
     {
       code: "lowcost",
@@ -392,6 +509,15 @@ const rawNova = {
       paymentDelayDays: 45,
       supplyRiskProbability: 0.15,
       supplyRiskAvailabilityHit: 0.75,
+      // Indice de cours : très volatile (fret maritime + yuan), sans tendance
+      // marquée mais avec une forte inertie (les cycles de fret durent).
+      priceIndex: {
+        volatility: 0.11,
+        trend: 0.0,
+        momentum: 0.7,
+        minMultiplier: 0.72,
+        maxMultiplier: 1.35,
+      },
     },
     {
       code: "premium",
@@ -523,6 +649,61 @@ const rawNova = {
     financeCost: 800, // ratios complets, structure des coûts, comparaison sectorielle
     projectCost: 1200, // VAN/TRI de l'investissement, arbitrage de la commande du tour
   },
+  // Catalogue enrichi (studiesV2) — marché électronique : forte disponibilité
+  // de l'information, accès à l'ensemble des 6 catégories.
+  studiesV2: {
+    categories: [
+      {
+        code: "produits",
+        label: "Analyse produits concurrents",
+        cost: 2000,
+        description: "Prix, qualité perçue et niveau technique de chaque concurrent sur le marché.",
+        revealsFields: ["price", "qualityLevel", "techLevel"],
+      },
+      {
+        code: "marches",
+        label: "Taille et structure du marché",
+        cost: 1800,
+        description: "Demande potentielle totale et par segment, délais clients moyens et fournisseur.",
+        revealsFields: ["totalPotential", "segmentPotentials", "supplierPaymentDelayDays", "avgCustomerPaymentDelayDays"],
+      },
+      {
+        code: "segments",
+        label: "Parts de marché par segment",
+        cost: 2200,
+        description: "Parts de marché et notoriété de marque de chaque acteur, segment par segment.",
+        revealsFields: ["totalShare", "bySegment", "brandAwareness"],
+      },
+      {
+        code: "remunerations",
+        label: "Politique salariale des concurrents",
+        cost: 1400,
+        description: "Effectif et indice de salaire de chaque concurrent (module RH actif).",
+        revealsFields: ["headcount", "salaryIndex"],
+      },
+      {
+        code: "comportement",
+        label: "Comportement d'achat",
+        cost: 1600,
+        description: "Élasticité-prix, sensibilités marketing et qualité, fidélité et prix de référence par segment.",
+        revealsFields: ["priceElasticity", "marketingSensitivity", "qualitySensitivity", "loyalty", "refPrice"],
+      },
+      {
+        code: "innovations",
+        label: "État des innovations R&D",
+        cost: 2400,
+        description: "Niveau technique et budget R&D de chaque concurrent par référence.",
+        revealsFields: ["techLevel", "rdBudget"],
+      },
+    ],
+    forecastStudy: {
+      horizons: [
+        { months: 3, cost: 1500 },
+        { months: 5, cost: 2500 },
+        { months: 7, cost: 3500 },
+      ],
+    },
+  },
   // Commandes exceptionnelles ENTRE CHAQUE TOUR : l'offre du tour est TIRÉE
   // dans ce pool à la graine de la partie (orderOfferForRound) — la même pour
   // toutes les équipes, mais deux parties ne voient pas la même séquence.
@@ -634,6 +815,216 @@ const rawNova = {
     attritionThreshold: 0.95,
     maxHiresPerRound: 3,
     maxHeadcount: 10,
+  },
+  // RSE (Responsabilité Sociale des Entreprises) : fabrication de produits
+  // technologiques — sourcing responsable, conditions de travail, éco-conception.
+  // Le capital-image relève l'attractivité auprès des passionnés et de CampusTech
+  // (clientèle sensible aux labels) ; le capital « process propre » réduit les
+  // rebuts en production. imageDemandSensitivity plus élevé car le segment
+  // passionnés est sensible à l'image de marque (qualité, engagement).
+  rse: {
+    imageDemandSensitivity: 0.22,
+    imageInertia: 0.65,
+    cleanDefectReductionMax: 0.4,
+    cleanInertia: 0.75,
+    financingTrustBonus: 0.15,
+    socialAttritionRelief: 0.5,
+    cards: {
+      minRound: 3,
+      labelImageThreshold: 0.7,
+      labelDemandBonus: 0.15,
+      labelDuration: 2,
+      badBuzzImageCeiling: 0.25,
+      badBuzzProbability: 0.25,
+      badBuzzDemandMalus: 0.25,
+      aidCleanThreshold: 0.7,
+      aidAmount: 1,
+      sanctionProbability: 0.2,
+      fineAmount: 1,
+    },
+  },
+  // Actions de maintenance par machine (enceinte portable NOVA).
+  // Préventif : éviter la dégradation des lignes d'assemblage semi-auto.
+  // Curatif : remettre en service une machine tombée en panne.
+  maintenanceActions: {
+    types: [
+      {
+        code: "preventif",
+        label: "Maintenance préventive",
+        levels: [
+          {
+            level: 1,
+            label: "Vérification visuelle",
+            laborCost: 500,
+            downtimeCost: 200,
+            timeHoursN1: 4,
+            timeHoursN2: 4,
+            timeHoursN3: 2,
+            wearReduction: 0.05,
+            breakdownRiskReduction: 0.1,
+          },
+          {
+            level: 2,
+            label: "Révision complète",
+            laborCost: 1500,
+            downtimeCost: 800,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            wearReduction: 0.15,
+            breakdownRiskReduction: 0.25,
+          },
+          {
+            level: 3,
+            label: "Refonte préventive",
+            laborCost: 3500,
+            downtimeCost: 2000,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            wearReduction: 0.35,
+            breakdownRiskReduction: 0.5,
+          },
+        ],
+      },
+      {
+        code: "curatif",
+        label: "Maintenance curative",
+        levels: [
+          {
+            level: 1,
+            label: "Réparation partielle",
+            laborCost: 800,
+            downtimeCost: 1200,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            capacityRestoration: 0.5,
+            wearReduction: 0.1,
+          },
+          {
+            level: 2,
+            label: "Réparation complète",
+            laborCost: 2000,
+            downtimeCost: 3000,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            capacityRestoration: 0.8,
+            wearReduction: 0.25,
+          },
+          {
+            level: 3,
+            label: "Remplacement de modules",
+            laborCost: 5000,
+            downtimeCost: 6000,
+            timeHoursN1: 24,
+            timeHoursN2: 20,
+            timeHoursN3: 16,
+            capacityRestoration: 1.0,
+            wearReduction: 0.6,
+          },
+        ],
+      },
+    ],
+  },
+  healthSafetyActions: {
+    actions: [
+      {
+        code: "evacuation",
+        label: "Plan d'évacuation incendie",
+        description: "Révision et exercice du plan d'évacuation incendie de l'atelier.",
+        laborCost: 1500,
+        timeHoursN1: 4,
+        timeHoursN2: 4,
+        timeHoursN3: 2,
+        effects: {
+          accidentRateReduction: 0.15,
+          hrImageBonus: 0.04,
+        },
+      },
+      {
+        code: "formation_secu",
+        label: "Formation à la sécurité",
+        description: "Formation obligatoire aux gestes de premiers secours et aux EPI pour les opérateurs.",
+        laborCost: 1500,
+        timeHoursN1: 8,
+        timeHoursN2: 6,
+        timeHoursN3: 4,
+        effects: {
+          attritionReduction: 0.05,
+          accidentRateReduction: 0.1,
+          productivityBonus: 0.02,
+          hrImageBonus: 0.05,
+        },
+        isRecurring: true,
+        durationRounds: 2,
+      },
+      {
+        code: "audit_cram",
+        label: "Audit CRAM",
+        description: "Audit de sécurité réalisé par la Caisse Régionale d'Assurance Maladie pour identifier les risques.",
+        laborCost: 2500,
+        timeHoursN1: 8,
+        timeHoursN2: 8,
+        timeHoursN3: 4,
+        effects: {
+          accidentRateReduction: 0.2,
+          maintenanceSaving: 1200,
+          hrImageBonus: 0.06,
+        },
+      },
+      {
+        code: "ergonomie",
+        label: "Aménagement ergonomique des postes",
+        description: "Réaménagement des postes de travail pour réduire les TMS et améliorer le confort opérateur.",
+        laborCost: 3000,
+        immobilizationCost: 2000,
+        timeHoursN1: 16,
+        timeHoursN2: 12,
+        timeHoursN3: 8,
+        requiresMachine: false,
+        effects: {
+          attritionReduction: 0.07,
+          productivityBonus: 0.04,
+          defectReduction: 0.03,
+          hrImageBonus: 0.06,
+        },
+        isRecurring: true,
+        durationRounds: 3,
+      },
+      {
+        code: "protection",
+        label: "Équipements de protection individuelle (EPI)",
+        description: "Dotation complète en EPI : lunettes, gants antistatiques, bouchons anti-bruit pour tous les postes.",
+        laborCost: 2000,
+        timeHoursN1: 4,
+        timeHoursN2: 2,
+        timeHoursN3: 2,
+        effects: {
+          accidentRateReduction: 0.12,
+          attritionReduction: 0.03,
+          hrImageBonus: 0.04,
+        },
+        isRecurring: true,
+        durationRounds: 2,
+      },
+      {
+        code: "nettoyage",
+        label: "Protocole 5S et nettoyage industriel",
+        description: "Mise en place de la méthode 5S pour organiser l'atelier et réduire les risques de chute/contact.",
+        laborCost: 1000,
+        timeHoursN1: 8,
+        timeHoursN2: 6,
+        timeHoursN3: 4,
+        effects: {
+          accidentRateReduction: 0.08,
+          defectReduction: 0.02,
+          productivityBonus: 0.02,
+        },
+      },
+    ],
+    maxActionsPerRound: 3,
   },
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
   // Scoring IPG (doc 08 §1) : pondérations imposées, bornes calibrées sur les

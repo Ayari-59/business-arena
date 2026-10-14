@@ -241,11 +241,207 @@ const rawEcommerceGamme = {
   },
   products: GAMME,
   orderOffers: ORDER_OFFERS,
+  // Études de marché — identique au mono.
+  studies: {
+    marketCost: 1600,
+    priceCost: 1400,
+    financeCost: 900,
+    projectCost: 1300,
+  },
+  // Parc entrepôt — identique au mono : les mêmes équipements logistiques
+  // préparent les quatre rayons (décoration, mobilier, luminaires, capsule).
+  equipment: {
+    types: [
+      {
+        code: "preparation_manuelle",
+        name: "Préparation manuelle",
+        capacityPerUnit: 1000,
+        costPerUnit: 5000,
+        depreciationRounds: 12,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 5,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "convoyeur_semi_auto",
+        name: "Convoyeur semi-automatique",
+        capacityPerUnit: 1500,
+        costPerUnit: 10000,
+        depreciationRounds: 16,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 3,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "automate_tri",
+        name: "Automate de tri",
+        capacityPerUnit: 2500,
+        costPerUnit: 22000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "preparation_manuelle", count: 3 },
+      { typeCode: "convoyeur_semi_auto", count: 1 },
+      { typeCode: "automate_tri", count: 1 },
+    ],
+  },
+  // RH — identique au mono.
+  hr: {
+    salaryPerEmployeePerRound: 8200,
+    includedHeadcount: 5,
+    hiringCost: 3000,
+    firingCost: 5500,
+    trainingScale: 3000,
+    trainingSensitivity: 0.06,
+    maxProductivity: 1.3,
+    moraleSensitivity: 0.5,
+    attritionThreshold: 0.95,
+    maxHiresPerRound: 3,
+    maxHeadcount: 14,
+  },
+  // Fournisseurs — identique au mono.
+  suppliers: [
+    {
+      code: "grossiste_ue",
+      name: "Grossiste européen",
+      narrative:
+        "Stock disponible en Europe, réassort sous une semaine, règlement à 45 jours. Le socle fiable du catalogue.",
+      costMultiplier: 1,
+      qualityBonus: 0,
+      paymentDelayDays: 45,
+      supplyRiskProbability: 0.04,
+      supplyRiskAvailabilityHit: 0.9,
+    },
+    {
+      code: "import_direct",
+      name: "Import direct conteneur",
+      narrative:
+        "20 % de moins sur la marchandise, payée à la commande, six semaines de mer et aucun réassort d'urgence possible.",
+      costMultiplier: 0.8,
+      qualityBonus: -0.07,
+      paymentDelayDays: 0,
+      supplyRiskProbability: 0.14,
+      supplyRiskAvailabilityHit: 0.75,
+    },
+    {
+      code: "createurs_fr",
+      name: "Créateurs français en dropshipping",
+      narrative:
+        "26 % plus cher, expédié directement par l'atelier, réglé à 15 jours. Zéro stock à porter, et un discours qui fait revenir les clients.",
+      costMultiplier: 1.26,
+      qualityBonus: 0.12,
+      paymentDelayDays: 15,
+      supplyRiskProbability: 0.06,
+      supplyRiskAvailabilityHit: 0.88,
+    },
+  ],
+  // Investissement capacité — identique au mono.
+  investment: {
+    costPerCapacityUnit: 7,
+    depreciationRounds: 16,
+    maxPerRound: 3000,
+  },
   // Le levier R&D : au-delà du coût de développement, la R&D élève le niveau
   // technique d'un rayon (fiches, photos, sélection) — jusqu'à +12 % de
   // qualité perçue, avec retard, et qui s'érode de moitié par tour sans
   // entretien. Échelle : 8 000 € par trimestre donnent environ +4 % à l'équilibre.
   rd: { techScale: 8000, techSensitivity: 0.08, techMax: 0.12, techInertia: 0.5 },
+  // Grille R&D : trois thèmes structurant l'excellence opérationnelle e-commerce.
+  rdGrid: {
+    themes: [
+      {
+        code: "logistique",
+        label: "Logistique & préparation",
+        levels: [
+          {
+            level: 1,
+            label: "Optimisation picking N1 — tournées et bacs colorés",
+            cost: 6000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.06, capacityBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Batch picking N2 — préparation multi-commandes simultanées",
+            cost: 14000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.08, capacityBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Automatisation tri N3 — convoyeur scan-and-go",
+            cost: 25000,
+            durationRounds: 3,
+            effects: { defectReduction: 0.06, capacityBonus: 0.10, materialCostReduction: 0.03 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "interface",
+        label: "Interface & expérience client",
+        levels: [
+          {
+            level: 1,
+            label: "Fiches produit enrichies N1 — photos 360° et vidéos",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { demandBonus: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Moteur de recommandation N2 — algo affinités",
+            cost: 12000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Personnalisation N3 — page d'accueil sur-mesure",
+            cost: 22000,
+            durationRounds: 3,
+            effects: { demandBonus: 0.08 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "service_client",
+        label: "Service client & SAV",
+        levels: [
+          {
+            level: 1,
+            label: "FAQ intelligente N1 — base de connaissances",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { demandBonus: 0.02, materialCostReduction: 0.01 },
+          },
+          {
+            level: 2,
+            label: "Chat en direct N2 — équipe dédiée 8h-22h",
+            cost: 10000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.05 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Satisfaction garantie N3 — retour 60 jours sans condition",
+            cost: 18000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.07 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   // Le levier communication : la notoriété de PIXEL & CO porte les quatre
   // rayons (jusqu'à +25 %, avec retard, qui s'use sans entretien), et un
   // axe. Le prix parle au trafic payant et aux places de marché, la qualité

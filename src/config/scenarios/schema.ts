@@ -38,6 +38,23 @@ const segmentSchema = z.object({
   seasonality: z.array(z.number().nonnegative()).optional(),
 });
 
+const priceIndexSchema = z
+  .object({
+    /** Écart-type du choc de cours par tour (0.08 = ±8 % typique). */
+    volatility: z.number().min(0).max(0.5),
+    /** Dérive tendancielle par tour (0.01 = +1 % de tendance haussière). */
+    trend: z.number().min(-0.1).max(0.1),
+    /**
+     * Inertie du choc (0 = bruit blanc, 0.95 = cycles très lents).
+     * Une valeur haute produit des tendances durables ; une valeur basse
+     * donne des fluctuations indépendantes d'un tour à l'autre.
+     */
+    momentum: z.number().min(0).max(0.95),
+    minMultiplier: z.number().min(0.5).max(1),
+    maxMultiplier: z.number().min(1).max(2),
+  })
+  .refine((p) => p.minMultiplier < p.maxMultiplier, "priceIndex : minMultiplier doit être < maxMultiplier");
+
 const supplierSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
@@ -47,6 +64,7 @@ const supplierSchema = z.object({
   paymentDelayDays: z.number().int().nonnegative(),
   supplyRiskProbability: z.number().min(0).max(0.3),
   supplyRiskAvailabilityHit: z.number().min(0.5).max(1),
+  priceIndex: priceIndexSchema.optional(),
 });
 
 /**
@@ -159,6 +177,37 @@ export const engineScenarioConfigSchema = z.object({
         minOverdraftShare: z.number().min(0).max(1),
       })
       .optional(),
+    // Conditions court terme exposées aux équipes (information pédagogique).
+    /** Taux d'escompte annuel sur les créances clients (ex : 0.10 = 10 %). */
+    discountRate: z.number().min(0).max(1).optional(),
+    /** Part des créances clients escomptables (ex : 0.80 = 80 %). */
+    discountableRatio: z.number().min(0).max(1).optional(),
+    /** Rémunération annuelle des placements de trésorerie (ex : 0.03 = 3 %). */
+    placementRate: z.number().min(0).max(1).optional(),
+    /**
+     * Catégories d'emprunt moyen terme (machines, installations) : chacune
+     * avec son plafond (% du coût de l'investissement), sa durée propre en
+     * tours et, optionnellement, son taux (à défaut : loanAnnualRate).
+     */
+    loanCategories: z
+      .object({
+        machines: z
+          .object({
+            maxLoanRatio: z.number().min(0).max(1),
+            durationRounds: z.number().int().positive(),
+            annualRate: z.number().min(0).max(1).optional(),
+          })
+          .optional(),
+        installations: z
+          .object({
+            maxLoanRatio: z.number().min(0).max(1),
+            durationRounds: z.number().int().positive(),
+            annualRate: z.number().min(0).max(1).optional(),
+            label: z.string().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   }),
   treasury: z
     .object({
@@ -231,6 +280,9 @@ export const engineScenarioConfigSchema = z.object({
             maintenanceMultiplier: z.number().positive(),
             maxPerRound: z.number().int().positive(),
             resaleRatio: z.number().min(0).max(1).optional(),
+            wearRatePerRound: z.number().min(0).max(1).optional(),
+            breakdownThreshold: z.number().min(0).max(1).optional(),
+            maintenanceRepairRate: z.number().min(0).max(1).optional(),
           }),
         )
         .min(1),
@@ -246,6 +298,36 @@ export const engineScenarioConfigSchema = z.object({
       priceCost: z.number().positive(),
       financeCost: z.number().positive(),
       projectCost: z.number().positive(),
+    })
+    .optional(),
+  // Catalogue d'études enrichi (studiesV2) : taxonomie à 6 catégories + prévision.
+  studiesV2: z
+    .object({
+      categories: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            label: z.string().min(1),
+            cost: z.number().positive(),
+            description: z.string().min(1),
+            revealsFields: z.array(z.string()),
+            isSubscription: z.boolean().optional(),
+          }),
+        )
+        .min(1),
+      forecastStudy: z
+        .object({
+          horizons: z
+            .array(
+              z.object({
+                months: z.number().int().positive(),
+                cost: z.number().positive(),
+              }),
+            )
+            .min(1),
+        })
+        .optional(),
+      maxStudiesPerRound: z.number().int().positive().optional(),
     })
     .optional(),
   // Commandes exceptionnelles entre les tours : rotation déterministe.
@@ -269,6 +351,38 @@ export const engineScenarioConfigSchema = z.object({
       baseDefectRate: z.number().min(0).max(0.2),
       externalReturnSensitivity: z.number().min(0).max(2),
       maintenanceDefectSensitivity: z.number().min(0).max(1).optional(),
+    })
+    .optional(),
+  qualityActions: z
+    .object({
+      actions: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            label: z.string().min(1),
+            levels: z
+              .array(
+                z.object({
+                  level: z.number().int().min(1).max(3),
+                  label: z.string().min(1),
+                  cost: z.number().nonnegative(),
+                  durationRounds: z.number().int().min(1),
+                  effects: z.object({
+                    defectRateReduction: z.number().min(0).max(1).optional(),
+                    returnRateReduction: z.number().min(0).max(1).optional(),
+                    productionCostReduction: z.number().min(0).max(0.5).optional(),
+                    qualityImageBonus: z.number().min(0).max(0.5).optional(),
+                    maintenanceSaving: z.number().nonnegative().optional(),
+                  }),
+                  prerequisiteLevel: z.number().int().min(1).optional(),
+                }),
+              )
+              .min(1)
+              .max(3),
+          }),
+        )
+        .min(1),
+      maxConcurrentActions: z.number().int().positive().optional(),
     })
     .optional(),
   hr: z
@@ -337,6 +451,32 @@ export const engineScenarioConfigSchema = z.object({
       techInertia: z.number().min(0).max(1),
     })
     .optional(),
+  // Grille R&D par thème × niveau : actions concrètes avec effets mesurables.
+  rdGrid: z
+    .object({
+      themes: z.array(
+        z.object({
+          code: z.string().min(1),
+          label: z.string().min(1),
+          levels: z.array(
+            z.object({
+              level: z.number().int().positive(),
+              label: z.string().min(1),
+              cost: z.number().positive(),
+              durationRounds: z.number().int().positive(),
+              effects: z.object({
+                materialCostReduction: z.number().min(0).max(1).optional(),
+                defectReduction: z.number().min(0).max(1).optional(),
+                demandBonus: z.number().min(0).max(1).optional(),
+                capacityBonus: z.number().min(0).max(1).optional(),
+              }),
+              prerequisiteLevel: z.number().int().positive().optional(),
+            }),
+          ),
+        }),
+      ),
+    })
+    .optional(),
   // Communication (marque et axe) : le levier n'existe que si le bloc est déclaré.
   communication: z
     .object({
@@ -347,6 +487,89 @@ export const engineScenarioConfigSchema = z.object({
       axisFit: z.number().min(1).max(3),
       axisMisfit: z.number().min(0).max(1),
       axisSwitchDecay: z.number().min(0).max(1),
+    })
+    .optional(),
+  // Actions de maintenance par machine (préventive / curative).
+  // Inspiré de StratiRAC : 3 niveaux par type, effets sur l'usure, le risque
+  // de panne et la restauration de capacité. Absent = comportement historique.
+  maintenanceActions: z
+    .object({
+      types: z.array(
+        z.object({
+          code: z.string().min(1),
+          label: z.string().min(1),
+          levels: z.array(
+            z.object({
+              level: z.number().int().min(1).max(3),
+              label: z.string().min(1),
+              laborCost: z.number().nonnegative(),
+              downtimeCost: z.number().nonnegative(),
+              timeHoursN1: z.number().nonnegative(),
+              timeHoursN2: z.number().nonnegative(),
+              timeHoursN3: z.number().nonnegative(),
+              wearReduction: z.number().min(0).max(1).optional(),
+              breakdownRiskReduction: z.number().min(0).max(1).optional(),
+              capacityRestoration: z.number().min(0).max(1).optional(),
+            }),
+          ).min(1).max(3),
+        }),
+      ).min(1),
+    })
+    .optional(),
+  // Hygiène & Sécurité (H&S) : catalogue d'actions ponctuelles ou récurrentes
+  // avec effets sur l'attrition RH, la productivité, l'image RSE et les rebuts.
+  healthSafetyActions: z
+    .object({
+      actions: z.array(
+        z.object({
+          code: z.string().min(1),
+          label: z.string().min(1),
+          description: z.string().optional(),
+          laborCost: z.number().nonnegative(),
+          immobilizationCost: z.number().nonnegative().optional(),
+          timeHoursN1: z.number().nonnegative().optional(),
+          timeHoursN2: z.number().nonnegative().optional(),
+          timeHoursN3: z.number().nonnegative().optional(),
+          requiresMachine: z.boolean().optional(),
+          effects: z.object({
+            attritionReduction: z.number().min(0).max(1).optional(),
+            accidentRateReduction: z.number().min(0).max(1).optional(),
+            hrImageBonus: z.number().min(0).max(1).optional(),
+            productivityBonus: z.number().min(0).max(0.3).optional(),
+            maintenanceSaving: z.number().nonnegative().optional(),
+            defectReduction: z.number().min(0).max(0.3).optional(),
+          }),
+          isRecurring: z.boolean().optional(),
+          durationRounds: z.number().int().positive().optional(),
+        }),
+      ).min(1),
+      maxActionsPerRound: z.number().int().positive().optional(),
+    })
+    .optional(),
+  // RSE (Responsabilité Sociale des Entreprises) : le levier n'existe que si
+  // le bloc est déclaré. Absent → DEFAULT_RSE_CONFIG. Les grandeurs sont sans
+  // dimension : normalisées par l'échelle marketing du scénario.
+  rse: z
+    .object({
+      imageDemandSensitivity: z.number().nonnegative(),
+      imageInertia: z.number().min(0).max(1),
+      cleanDefectReductionMax: z.number().min(0).max(1),
+      cleanInertia: z.number().min(0).max(1),
+      financingTrustBonus: z.number().min(0).max(1),
+      socialAttritionRelief: z.number().min(0).max(1),
+      cards: z.object({
+        minRound: z.number().int().positive(),
+        labelImageThreshold: z.number().min(0).max(1),
+        labelDemandBonus: z.number().nonnegative(),
+        labelDuration: z.number().int().positive(),
+        badBuzzImageCeiling: z.number().min(0).max(1),
+        badBuzzProbability: z.number().min(0).max(1),
+        badBuzzDemandMalus: z.number().min(0).max(1),
+        aidCleanThreshold: z.number().min(0).max(1),
+        aidAmount: z.number().nonnegative(),
+        sanctionProbability: z.number().min(0).max(1),
+        fineAmount: z.number().nonnegative(),
+      }),
     })
     .optional(),
 }) satisfies z.ZodType<EngineScenarioConfig>;

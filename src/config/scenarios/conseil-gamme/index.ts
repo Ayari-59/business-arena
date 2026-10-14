@@ -202,11 +202,237 @@ const rawConseilGamme = {
   },
   products: GAMME,
   orderOffers: ORDER_OFFERS,
+  // Études de marché — identique au mono.
+  studies: {
+    marketCost: 2400,
+    priceCost: 2000,
+    financeCost: 1500,
+    projectCost: 2200,
+  },
+  // Catalogue enrichi (studiesV2) — conseil : les RH sont le cœur du modèle ;
+  // comprendre le comportement client et la politique salariale des concurrents
+  // est essentiel pour positionner l'offre et attirer les talents.
+  studiesV2: {
+    categories: [
+      {
+        code: "comportement",
+        label: "Comportement d'achat des donneurs d'ordre",
+        cost: 2600,
+        description: "Élasticité-prix, sensibilité à la qualité et fidélité des segments clients du conseil.",
+        revealsFields: ["priceElasticity", "marketingSensitivity", "qualitySensitivity", "loyalty", "refPrice"],
+      },
+      {
+        code: "remunerations",
+        label: "Politique de rémunération des concurrents",
+        cost: 2800,
+        description: "Effectif et indice de salaire de chaque cabinet concurrent — clé de l'attractivité RH.",
+        revealsFields: ["headcount", "salaryIndex"],
+      },
+      {
+        code: "segments",
+        label: "Parts de marché par pratique",
+        cost: 2200,
+        description: "Parts de marché de chaque cabinet sur les segments audit, transformation et cyber.",
+        revealsFields: ["totalShare", "bySegment"],
+      },
+    ],
+  },
+  // Postes consultants — identiques au mono : les mêmes espaces de travail
+  // accueillent les trois pratiques (audit, transformation, cyber).
+  equipment: {
+    types: [
+      {
+        code: "poste_junior",
+        name: "Poste consultant junior",
+        capacityPerUnit: 250,
+        costPerUnit: 8000,
+        depreciationRounds: 12,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.3,
+      },
+      {
+        code: "poste_confirme",
+        name: "Poste consultant confirmé",
+        capacityPerUnit: 500,
+        costPerUnit: 18000,
+        depreciationRounds: 16,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 3,
+        resaleRatio: 0.45,
+      },
+      {
+        code: "bureau_associe",
+        name: "Bureau associé",
+        capacityPerUnit: 750,
+        costPerUnit: 35000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "poste_junior", count: 2 },
+      { typeCode: "poste_confirme", count: 2 },
+    ],
+  },
+  // RH — identique au mono.
+  hr: {
+    salaryPerEmployeePerRound: 12600,
+    includedHeadcount: 12,
+    hiringCost: 8000,
+    firingCost: 15000,
+    trainingScale: 5000,
+    trainingSensitivity: 0.07,
+    maxProductivity: 1.35,
+    moraleSensitivity: 0.8,
+    attritionThreshold: 0.97,
+    maxHiresPerRound: 3,
+    maxHeadcount: 24,
+  },
+  // Fournisseurs — identique au mono.
+  suppliers: [
+    {
+      code: "standard",
+      name: "Déplacements standard",
+      narrative:
+        "Trains et hôtels à tarif négocié : le mode opératoire habituel du cabinet.",
+      costMultiplier: 1,
+      qualityBonus: 0,
+      paymentDelayDays: 30,
+      supplyRiskProbability: 0.03,
+      supplyRiskAvailabilityHit: 0.92,
+    },
+    {
+      code: "distance",
+      name: "Missions à distance",
+      narrative:
+        "40 % de déplacements en moins, 6 % de marge perçue en moins : les clients voient moins vos équipes, c'est bankable sur des missions techniques, délicat en transformation.",
+      costMultiplier: 0.6,
+      qualityBonus: -0.06,
+      paymentDelayDays: 30,
+      supplyRiskProbability: 0.08,
+      supplyRiskAvailabilityHit: 0.9,
+    },
+    {
+      code: "presence",
+      name: "Présence renforcée",
+      narrative:
+        "35 % de plus en frais de mission, qualité perçue en hausse : les clients vous voient sur le terrain, la confiance monte et les litiges baissent.",
+      costMultiplier: 1.35,
+      qualityBonus: 0.08,
+      paymentDelayDays: 15,
+      supplyRiskProbability: 0.02,
+      supplyRiskAvailabilityHit: 0.95,
+    },
+  ],
+  // Investissement — aménagement de bureaux pour développer la capacité des
+  // trois pratiques (audit, transformation, cyber). Contrairement au mono,
+  // le cabinet gamme peut ouvrir de nouveaux plateaux de travail : ~150 €
+  // par jour-consultant de capacité supplémentaire, amorti sur 20 trimestres.
+  investment: {
+    costPerCapacityUnit: 150,
+    depreciationRounds: 20,
+    maxPerRound: 120,
+  },
   // Le levier R&D : au-delà du coût de développement, la R&D élève le niveau
   // technique d'une offre (méthodes, outils, veille) — jusqu'à +12 % de
   // qualité perçue, avec retard, et qui s'érode de moitié par tour sans
   // entretien. Échelle : 8 000 € par trimestre donnent environ +4 % à l'équilibre.
   rd: { techScale: 8000, techSensitivity: 0.08, techMax: 0.12, techInertia: 0.5 },
+  // Grille R&D : trois thèmes structurant la montée en valeur des offres de conseil.
+  rdGrid: {
+    themes: [
+      {
+        code: "methodologie",
+        label: "Méthodologie & IP",
+        levels: [
+          {
+            level: 1,
+            label: "Capitalisation méthodes N1 — playbooks et templates",
+            cost: 5000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.06, demandBonus: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Cadre propriétaire N2 — framework ATLAS certifié",
+            cost: 12000,
+            durationRounds: 3,
+            effects: { demandBonus: 0.06 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Offre brevetée N3 — accréditation internationale",
+            cost: 22000,
+            durationRounds: 4,
+            effects: { demandBonus: 0.10 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "outils_digitaux",
+        label: "Outils digitaux & automatisation",
+        levels: [
+          {
+            level: 1,
+            label: "Portail client N1 — suivi de mission en ligne",
+            cost: 6000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.03, materialCostReduction: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Analyse de données N2 — dashboards automatisés",
+            cost: 14000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.05, materialCostReduction: 0.04 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "IA appliquée N3 — audit assisté par LLM",
+            cost: 25000,
+            durationRounds: 3,
+            effects: { demandBonus: 0.07, materialCostReduction: 0.05 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "formation_interne",
+        label: "Formation & capital humain",
+        levels: [
+          {
+            level: 1,
+            label: "Académie interne N1 — e-learning et ateliers mensuels",
+            cost: 4000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.05, capacityBonus: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Certification consultants N2 — parcours 60 h + examen",
+            cost: 10000,
+            durationRounds: 3,
+            effects: { defectReduction: 0.08, demandBonus: 0.03 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Centre d'excellence N3 — pôle R&D et veille sectorielle",
+            cost: 20000,
+            durationRounds: 3,
+            effects: { defectReduction: 0.07, demandBonus: 0.06, capacityBonus: 0.05 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   // Le levier communication : la notoriété d'ATLAS porte les trois offres
   // (jusqu'à +25 %, avec retard, qui s'use sans entretien), et un axe. La
   // qualité parle aux grands comptes et aux DSI, l'image aux clients fidèles,

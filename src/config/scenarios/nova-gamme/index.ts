@@ -287,11 +287,173 @@ const rawNovaGamme = {
   // Le catalogue du scénario est celui du One (affichages mono-produit).
   suppliers: COMPOSANTS_ONE,
   orderOffers: ORDER_OFFERS,
+  // Études de marché — légèrement plus élevées que le mono : analyser trois
+  // profils (Go, One, Studio) coûte plus qu'un seul marché unifié.
+  studies: {
+    marketCost: 2000,
+    priceCost: 1500,
+    financeCost: 1000,
+    projectCost: 1800,
+  },
+  // Parc machines — identique au mono : les mêmes lignes d'assemblage
+  // produisent les trois références Nova.
+  equipment: {
+    types: [
+      {
+        code: "manual",
+        name: "Ligne manuelle",
+        capacityPerUnit: 1000,
+        costPerUnit: 15000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 3,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "semi_auto",
+        name: "Ligne semi-automatisée",
+        capacityPerUnit: 1500,
+        costPerUnit: 30000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "auto",
+        name: "Ligne automatisée",
+        capacityPerUnit: 2500,
+        costPerUnit: 55000,
+        depreciationRounds: 32,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.6,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "manual", count: 4 },
+      { typeCode: "semi_auto", count: 2 },
+    ],
+  },
+  // RH — identique au mono.
+  hr: {
+    salaryPerEmployeePerRound: 8000,
+    includedHeadcount: 4,
+    hiringCost: 3000,
+    firingCost: 6000,
+    trainingScale: 3000,
+    trainingSensitivity: 0.05,
+    maxProductivity: 1.25,
+    moraleSensitivity: 0.5,
+    attritionThreshold: 0.95,
+    maxHiresPerRound: 3,
+    maxHeadcount: 10,
+  },
+  // Investissement capacité — identique au mono.
+  investment: {
+    costPerCapacityUnit: 20,
+    depreciationRounds: 16,
+    maxPerRound: 2000,
+  },
   // Le levier R&D : au-delà du coût de développement, la R&D élève le niveau
   // technique d'une référence — jusqu'à +12 % de qualité perçue, avec retard,
   // et qui s'érode de moitié par tour sans entretien. Échelle : 10 000 € par
   // trimestre donnent environ +4 % à l'équilibre.
   rd: { techScale: 10000, techSensitivity: 0.08, techMax: 0.12, techInertia: 0.5 },
+  // Grille R&D par thème et niveau : actions concrètes à effets mesurables.
+  // Trois thèmes structurant la chaîne de valeur NOVA : composants (matière),
+  // assemblage (process) et packaging (emballage).
+  rdGrid: {
+    themes: [
+      {
+        code: "matiere",
+        label: "Composants & matières",
+        levels: [
+          {
+            level: 1,
+            label: "Substitution composants N1 — sourcing alternatif validé",
+            cost: 8000,
+            durationRounds: 2,
+            effects: { materialCostReduction: 0.04 },
+          },
+          {
+            level: 2,
+            label: "Reconception acoustique N2 — nouveaux transducteurs",
+            cost: 18000,
+            durationRounds: 3,
+            effects: { materialCostReduction: 0.06, demandBonus: 0.04 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Matériaux biosourcés N3 — certification éco-conception",
+            cost: 30000,
+            durationRounds: 4,
+            effects: { materialCostReduction: 0.04, demandBonus: 0.08 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "process",
+        label: "Assemblage & process",
+        levels: [
+          {
+            level: 1,
+            label: "Lean assemblage N1 — chantier 5S et flux tirés",
+            cost: 6000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.08, capacityBonus: 0.03 },
+          },
+          {
+            level: 2,
+            label: "Test automatisé N2 — banc de mesure acoustique",
+            cost: 15000,
+            durationRounds: 2,
+            effects: { defectReduction: 0.12 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Ligne semi-automatisée N3 — cellule robotisée",
+            cost: 28000,
+            durationRounds: 3,
+            effects: { defectReduction: 0.10, capacityBonus: 0.08 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "emballage",
+        label: "Emballage & unboxing",
+        levels: [
+          {
+            level: 1,
+            label: "Éco-packaging N1 — carton recyclé, encre végétale",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { materialCostReduction: 0.02, demandBonus: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Expérience unboxing N2 — insert magnétique premium",
+            cost: 10000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.05 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Emballage 100 % réutilisable N3 — boîte collector",
+            cost: 18000,
+            durationRounds: 2,
+            effects: { demandBonus: 0.07, materialCostReduction: 0.01 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   // Le levier communication : un budget de marque qui bâtit la notoriété de
   // NOVA pour toute la gamme (jusqu'à +25 % d'attraction, avec retard, et qui
   // s'use de moitié par tour sans entretien), et un axe de communication. Le
@@ -305,6 +467,89 @@ const rawNovaGamme = {
     axisFit: 1.3,
     axisMisfit: 0.7,
     axisSwitchDecay: 0.6,
+  },
+  // Actions de maintenance par machine (NOVA gamme — même atelier que NOVA mono).
+  maintenanceActions: {
+    types: [
+      {
+        code: "preventif",
+        label: "Maintenance préventive",
+        levels: [
+          {
+            level: 1,
+            label: "Vérification visuelle",
+            laborCost: 500,
+            downtimeCost: 200,
+            timeHoursN1: 4,
+            timeHoursN2: 4,
+            timeHoursN3: 2,
+            wearReduction: 0.05,
+            breakdownRiskReduction: 0.1,
+          },
+          {
+            level: 2,
+            label: "Révision complète",
+            laborCost: 1500,
+            downtimeCost: 800,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            wearReduction: 0.15,
+            breakdownRiskReduction: 0.25,
+          },
+          {
+            level: 3,
+            label: "Refonte préventive",
+            laborCost: 3500,
+            downtimeCost: 2000,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            wearReduction: 0.35,
+            breakdownRiskReduction: 0.5,
+          },
+        ],
+      },
+      {
+        code: "curatif",
+        label: "Maintenance curative",
+        levels: [
+          {
+            level: 1,
+            label: "Réparation partielle",
+            laborCost: 800,
+            downtimeCost: 1200,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            capacityRestoration: 0.5,
+            wearReduction: 0.1,
+          },
+          {
+            level: 2,
+            label: "Réparation complète",
+            laborCost: 2000,
+            downtimeCost: 3000,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            capacityRestoration: 0.8,
+            wearReduction: 0.25,
+          },
+          {
+            level: 3,
+            label: "Remplacement de modules",
+            laborCost: 5000,
+            downtimeCost: 6000,
+            timeHoursN1: 24,
+            timeHoursN2: 20,
+            timeHoursN3: 16,
+            capacityRestoration: 1.0,
+            wearReduction: 0.6,
+          },
+        ],
+      },
+    ],
   },
   scoring: {
     weights: novaScenario.scoring.weights,

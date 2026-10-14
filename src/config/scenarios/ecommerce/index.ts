@@ -134,6 +134,98 @@ const rawEcommerce = {
     baseDefectRate: 0.01,
     externalReturnSensitivity: 0.3,
   },
+  qualityActions: {
+    maxConcurrentActions: 2,
+    actions: [
+      {
+        code: "maitrise_couts_retours",
+        label: "Maîtrise des coûts de non-qualité (retours colis)",
+        levels: [
+          {
+            level: 1,
+            label: "Retours N1 — analyse des causes de retour",
+            cost: 5000,
+            durationRounds: 1,
+            effects: { returnRateReduction: 0.12, productionCostReduction: 0.02 },
+          },
+          {
+            level: 2,
+            label: "Retours N2 — contrôle qualité avant expédition",
+            cost: 8000,
+            durationRounds: 1,
+            effects: { returnRateReduction: 0.15, defectRateReduction: 0.08 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Retours N3 — logistique retour optimisée et réduction gaspillage",
+            cost: 12000,
+            durationRounds: 1,
+            effects: { returnRateReduction: 0.10, defectRateReduction: 0.07, productionCostReduction: 0.03, maintenanceSaving: 1000 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "amelioration_packaging",
+        label: "Amélioration des composants (emballage / packaging)",
+        levels: [
+          {
+            level: 1,
+            label: "Packaging N1 — emballages protecteurs renforcés",
+            cost: 6000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.10, returnRateReduction: 0.08 },
+          },
+          {
+            level: 2,
+            label: "Packaging N2 — packaging éco-responsable et différenciant",
+            cost: 10000,
+            durationRounds: 1,
+            effects: { defectRateReduction: 0.08, qualityImageBonus: 0.04 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Packaging N3 — personnalisation et expérience déballage premium",
+            cost: 15000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.08, returnRateReduction: 0.10 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+      {
+        code: "satisfaction_livraison",
+        label: "Satisfaction client (livraison et service après-vente)",
+        levels: [
+          {
+            level: 1,
+            label: "Livraison N1 — suivi de commande en temps réel",
+            cost: 4000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.04, returnRateReduction: 0.05 },
+          },
+          {
+            level: 2,
+            label: "Livraison N2 — délais garantis et notifications proactives",
+            cost: 7000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.05, returnRateReduction: 0.10 },
+            prerequisiteLevel: 1,
+          },
+          {
+            level: 3,
+            label: "Livraison N3 — service client dédié et politique retour simplifiée",
+            cost: 10000,
+            durationRounds: 1,
+            effects: { qualityImageBonus: 0.07, returnRateReduction: 0.12 },
+            prerequisiteLevel: 2,
+          },
+        ],
+      },
+    ],
+  },
   marketing: { scale: 30000 },
   finance: {
     loanAnnualRate: 0.062,
@@ -153,6 +245,23 @@ const rawEcommerce = {
     // La banque ne prête pas au-delà de deux fois les capitaux propres.
     maxDebtToEquity: 2,
     depreciationPerRound: 5000,
+    // Conditions court terme e-commerce (délais clients plus courts qu'en B2B)
+    discountRate: 0.09,       // 9 % annuel (entrepôt : actif nanti)
+    discountableRatio: 0.70,  // 70 % des créances (part B2B escomptable)
+    placementRate: 0.025,     // 2,5 % annuel sur les placements
+    loanCategories: {
+      machines: {
+        // entrepôt & équipements logistiques : taux légèrement plus élevé
+        maxLoanRatio: 0.75,
+        durationRounds: 16,    // 4 ans
+        annualRate: 0.065,
+      },
+      installations: {
+        maxLoanRatio: 0.35,
+        durationRounds: 8,
+        label: "Qualité, H&S, Environnement, Maintenance, brevets",
+      },
+    },
   },
   treasury: {
     discountAnnualRate: 0.075,
@@ -178,6 +287,14 @@ const rawEcommerce = {
       paymentDelayDays: 45,
       supplyRiskProbability: 0.04,
       supplyRiskAvailabilityHit: 0.9,
+      // Indice de cours : légère volatilité européenne, tendance neutre.
+      priceIndex: {
+        volatility: 0.05,
+        trend: 0.005,
+        momentum: 0.5,
+        minMultiplier: 0.85,
+        maxMultiplier: 1.18,
+      },
     },
     {
       code: "import_direct",
@@ -189,6 +306,14 @@ const rawEcommerce = {
       paymentDelayDays: 0,
       supplyRiskProbability: 0.14,
       supplyRiskAvailabilityHit: 0.75,
+      // Indice de cours : très volatile (fret, change, matières), inertie élevée.
+      priceIndex: {
+        volatility: 0.13,
+        trend: 0.0,
+        momentum: 0.72,
+        minMultiplier: 0.68,
+        maxMultiplier: 1.4,
+      },
     },
     {
       code: "createurs_fr",
@@ -279,6 +404,40 @@ const rawEcommerce = {
     financeCost: 900,
     projectCost: 1300,
   },
+  // Catalogue enrichi (studiesV2) — e-commerce : forte importance du comportement
+  // d'achat et des parts de marché ; prévision utile pour le BFR saisonnier.
+  studiesV2: {
+    categories: [
+      {
+        code: "produits",
+        label: "Analyse produits concurrents",
+        cost: 2100,
+        description: "Prix et qualité perçue des offres concurrentes sur le marché e-commerce.",
+        revealsFields: ["price", "qualityLevel"],
+      },
+      {
+        code: "segments",
+        label: "Parts de marché et notoriété",
+        cost: 2400,
+        description: "Parts de marché et notoriété de marque de chaque acteur, segment par segment.",
+        revealsFields: ["totalShare", "bySegment", "brandAwareness"],
+      },
+      {
+        code: "comportement",
+        label: "Comportement d'achat en ligne",
+        cost: 1800,
+        description: "Élasticité-prix, sensibilités et porte marketing par segment e-commerce.",
+        revealsFields: ["priceElasticity", "marketingSensitivity", "qualitySensitivity", "loyalty", "refPrice"],
+      },
+    ],
+    forecastStudy: {
+      horizons: [
+        { months: 3, cost: 1700 },
+        { months: 5, cost: 2800 },
+        { months: 7, cost: 4000 },
+      ],
+    },
+  },
   orderOffers: [
     {
       code: "ecom_offer_coffrets_ce",
@@ -348,6 +507,32 @@ const rawEcommerce = {
     attritionThreshold: 0.95,
     maxHiresPerRound: 3,
     maxHeadcount: 14,
+  },
+  // RSE (e-commerce) : logistique durable, emballages éco-responsables, chaîne
+  // d'approvisionnement éthique. Les consommateurs du segment « bio/responsable »
+  // y sont directement sensibles. imageDemandSensitivity élevé (acheteurs en
+  // ligne comparent les pratiques RSE) ; cleanDefectReductionMax plus modeste
+  // (les rebuts logistiques sont moins maîtrisables que la production usine).
+  rse: {
+    imageDemandSensitivity: 0.25,
+    imageInertia: 0.6,
+    cleanDefectReductionMax: 0.3,
+    cleanInertia: 0.7,
+    financingTrustBonus: 0.12,
+    socialAttritionRelief: 0.45,
+    cards: {
+      minRound: 3,
+      labelImageThreshold: 0.65,
+      labelDemandBonus: 0.18,
+      labelDuration: 2,
+      badBuzzImageCeiling: 0.25,
+      badBuzzProbability: 0.3,
+      badBuzzDemandMalus: 0.28,
+      aidCleanThreshold: 0.65,
+      aidAmount: 1.2,
+      sanctionProbability: 0.2,
+      fineAmount: 1,
+    },
   },
   events: [
     {
@@ -532,6 +717,173 @@ const rawEcommerce = {
   // une raison sans rapport, et la situation du tour parlait de transport
   // quand la séance parlait de commission.
   scriptedEvents: [{ round: 6, eventCode: "ecom_frais_port" }],
+  // Actions de maintenance par machine (e-commerce — équipements logistiques : chariots, convoyeurs).
+  // Coûts plus élevés en curatif : une panne en entrepôt bloque les expéditions.
+  maintenanceActions: {
+    types: [
+      {
+        code: "preventif",
+        label: "Maintenance préventive",
+        levels: [
+          {
+            level: 1,
+            label: "Inspection logistique",
+            laborCost: 400,
+            downtimeCost: 300,
+            timeHoursN1: 4,
+            timeHoursN2: 3,
+            timeHoursN3: 2,
+            wearReduction: 0.04,
+            breakdownRiskReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Révision des équipements",
+            laborCost: 1200,
+            downtimeCost: 900,
+            timeHoursN1: 8,
+            timeHoursN2: 6,
+            timeHoursN3: 4,
+            wearReduction: 0.12,
+            breakdownRiskReduction: 0.2,
+          },
+          {
+            level: 3,
+            label: "Remise à niveau complète",
+            laborCost: 2800,
+            downtimeCost: 2200,
+            timeHoursN1: 16,
+            timeHoursN2: 12,
+            timeHoursN3: 8,
+            wearReduction: 0.3,
+            breakdownRiskReduction: 0.45,
+          },
+        ],
+      },
+      {
+        code: "curatif",
+        label: "Maintenance curative",
+        levels: [
+          {
+            level: 1,
+            label: "Dépannage d'urgence",
+            laborCost: 900,
+            downtimeCost: 1800,
+            timeHoursN1: 6,
+            timeHoursN2: 5,
+            timeHoursN3: 3,
+            capacityRestoration: 0.5,
+            wearReduction: 0.08,
+          },
+          {
+            level: 2,
+            label: "Réparation standard",
+            laborCost: 2200,
+            downtimeCost: 3500,
+            timeHoursN1: 12,
+            timeHoursN2: 10,
+            timeHoursN3: 7,
+            capacityRestoration: 0.8,
+            wearReduction: 0.2,
+          },
+          {
+            level: 3,
+            label: "Remplacement complet",
+            laborCost: 4500,
+            downtimeCost: 7000,
+            timeHoursN1: 20,
+            timeHoursN2: 16,
+            timeHoursN3: 12,
+            capacityRestoration: 1.0,
+            wearReduction: 0.55,
+          },
+        ],
+      },
+    ],
+  },
+  healthSafetyActions: {
+    actions: [
+      {
+        code: "visite_medicale",
+        label: "Visites médicales renforcées",
+        description: "Mise en place de visites médicales obligatoires pour les opérateurs manutentionnaires, suivi des aptitudes.",
+        laborCost: 1200,
+        timeHoursN1: 4,
+        timeHoursN2: 4,
+        timeHoursN3: 2,
+        effects: {
+          attritionReduction: 0.04,
+          accidentRateReduction: 0.08,
+          hrImageBonus: 0.04,
+        },
+        isRecurring: true,
+        durationRounds: 2,
+      },
+      {
+        code: "formation_manutention",
+        label: "Formation gestes et postures (manutention)",
+        description: "Formation TMS pour tous les caristes et préparateurs de commandes : levage, port de charges, postures.",
+        laborCost: 1800,
+        timeHoursN1: 8,
+        timeHoursN2: 6,
+        timeHoursN3: 4,
+        effects: {
+          attritionReduction: 0.06,
+          accidentRateReduction: 0.12,
+          productivityBonus: 0.03,
+          hrImageBonus: 0.05,
+        },
+        isRecurring: true,
+        durationRounds: 2,
+      },
+      {
+        code: "securite_colis",
+        label: "Sécurisation des zones de picking",
+        description: "Balisage des allées, signalétique au sol, cages de protection pour les zones à haute densité de circulation.",
+        laborCost: 2000,
+        immobilizationCost: 1500,
+        timeHoursN1: 12,
+        timeHoursN2: 8,
+        timeHoursN3: 6,
+        effects: {
+          accidentRateReduction: 0.18,
+          defectReduction: 0.02,
+          hrImageBonus: 0.04,
+        },
+      },
+      {
+        code: "vestiaires_operateurs",
+        label: "Rénovation vestiaires et sanitaires",
+        description: "Rénovation des vestiaires, sanitaires et salle de pause pour améliorer les conditions de travail.",
+        laborCost: 1500,
+        immobilizationCost: 3000,
+        timeHoursN1: 4,
+        timeHoursN2: 2,
+        timeHoursN3: 2,
+        effects: {
+          attritionReduction: 0.07,
+          hrImageBonus: 0.08,
+          productivityBonus: 0.02,
+        },
+        isRecurring: true,
+        durationRounds: 3,
+      },
+      {
+        code: "plan_evacuation",
+        label: "Plan d'évacuation et exercice incendie",
+        description: "Mise à jour du plan d'évacuation de l'entrepôt et exercice incendie avec toutes les équipes.",
+        laborCost: 1000,
+        timeHoursN1: 4,
+        timeHoursN2: 4,
+        timeHoursN3: 2,
+        effects: {
+          accidentRateReduction: 0.1,
+          hrImageBonus: 0.03,
+        },
+      },
+    ],
+    maxActionsPerRound: 3,
+  },
   scoring: {
     weights: {
       economic: 0.3,

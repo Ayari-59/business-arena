@@ -5,11 +5,20 @@ import type {
   EquipmentItem,
   EquipmentTypeDef,
   EventInstance,
+  MachineRecord,
   OrderOfferDef,
   SegmentSalesDetail,
   SimulationInput,
   SimulationOutput,
 } from "../types";
+import {
+  createNewMachines,
+  initMachineFleet,
+  machineFleetCapacity,
+  machineFleetMaintenanceMultiplier,
+  removeMachinesFromFleet,
+  updateMachineFleet,
+} from "../equipment";
 import { createRng, deriveRoundSeed } from "../random";
 import { JournalBuilder } from "../accounting/journal";
 import { axisFitFactor, brandFactor, updateBrandAwareness } from "../market/communication";
@@ -70,6 +79,7 @@ import {
   effectiveModifiers,
   tickEvents,
 } from "../events";
+import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -373,6 +383,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     unitCosts: number[];
     /** Multiplicateur du coût matières par produit (mono : [materialMultiplier]). */
     materialMultipliers: number[];
+    /**
+     * Multiplicateur de l'indice de cours par fournisseur utilisé ce tour
+     * (clé = code fournisseur). 1 si le fournisseur n'a pas de priceIndex.
+     */
+    priceIndexBySupplier: Map<string, number>;
     /** Stocks d'ouverture et de fin de production, par produit. */
     openingStocks: StockLot[];
     productStocks: StockLot[];
@@ -394,6 +409,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     equipDisposalLoss: number;
     equipNewFleet: EquipmentItem[];
     equipPendingFleet: EquipmentItem[];
+    /** Parc individuel actif (ouverture + pendingMachineFleet du tour précédent). */
+    activeMachineFleet: MachineRecord[] | null;
+    /** Parc individuel mis à jour en fin de calcul (devient machineFleet au prochain tour). */
+    nextMachineFleet: MachineRecord[] | null;
+    /** Machines achetées ce tour, en attente de mise en service. */
+    nextPendingMachineFleet: MachineRecord[] | null;
     equipDepreciation: number;
     chosenFormula: import("../types").InsuranceFormulaDef | null;
     supplier: import("../types").SupplierDef | null;
@@ -410,6 +431,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     rseAttritionRelief: number;
     rseNextImageCapital: number;
     rseNextCleanCapital: number;
+    /** Effets agrégés des actions R&D terminées (grille rdGrid). */
+    rdGridEffects: { materialCostReduction: number; defectReduction: number; demandBonus: number; capacityBonus: number };
+    /** Actions R&D de la grille à la clôture du tour (en cours + nouvelles). */
+    rdGridActionsNext: import("../types").RdGridActionState[];
+    /** Coût total des nouvelles actions R&D démarrées ce tour (charge décaissée). */
+    rdGridInvestmentCost: number;
     /**
      * Abonnement (bloc `subscription`, sinon tout à zéro et rien n'est émis) :
      * portefeuille d'ouverture, occupation, taux d'attrition, adhérents restés
@@ -421,6 +448,51 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     subChurnRate: number;
     subRetained: number;
     subServed: number;
+    /** Actions qualité du catalogue : état complété après ce tour. */
+    qualityActionsCompleted: Record<string, number>;
+    /** Actions démarrées ce tour (niveaux achetés). */
+    qualityActionsStarted: { actionCode: string; level: number; cost: number }[];
+    /** Coût total des actions qualité démarrées ce tour. */
+    qualityActionsCost: number;
+    /** Effets permanents cumulés de toutes les actions terminées (incl. ce tour). */
+    qualityActionsEffects: {
+      defectRateReduction: number;
+      returnRateReduction: number;
+      productionCostReduction: number;
+      qualityImageBonus: number;
+      maintenanceSaving: number;
+    };
+    /** Actions de maintenance décidées ce tour, avec leur coût et leurs effets. */
+    maintenanceLog: {
+      round: number;
+      machineId: string;
+      actionCode: string;
+      level: number;
+      laborCost: number;
+      downtimeCost: number;
+    }[];
+    /** Coût total de charge (MOD) des maintenances ce tour. */
+    maintenanceLaborCost: number;
+    /** Coût total d'immobilisation machine des maintenances ce tour. */
+    maintenanceDowntimeCost: number;
+    /** Parc individuel après application des actions de maintenance. */
+    machineFleetAfterMaintenance: import("../types").MachineRecord[] | null;
+    /** Hygiène & Sécurité : effets cumulés actifs ce tour (nouvelles + récurrentes en cours). */
+    hsEffects: {
+      attritionReduction: number;
+      productivityBonus: number;
+      defectReduction: number;
+      maintenanceSaving: number;
+      hrImageBonus: number;
+    };
+    /** Coût de charge H&S décaissé ce tour (laborCost des nouvelles actions). */
+    hsLaborCost: number;
+    /** Coût d'immobilisation H&S ce tour (charge exceptionnelle). */
+    hsImmoCost: number;
+    /** Nombre d'actions H&S engagées ce tour. */
+    hsActionsCount: number;
+    /** Actions H&S récurrentes actives à la clôture du tour. */
+    nextActiveHsActions: { actionCode: string; startedRound: number; remainingRounds: number }[];
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -457,6 +529,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             products: undefined,
             brandMarketingBudget: undefined,
             communicationAxis: undefined,
+            maintenanceDecisions: undefined,
             finance: soumis.finance?.capitalIncrease
               ? { capitalIncrease: soumis.finance.capitalIncrease }
               : undefined,
@@ -483,6 +556,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       products: raw.products,
       brandMarketingBudget: raw.brandMarketingBudget,
       communicationAxis: raw.communicationAxis,
+      qualityActions: raw.qualityActions,
+      rdGridStart: raw.rdGridStart,
+      maintenanceDecisions: raw.maintenanceDecisions,
+      hsActions: raw.hsActions,
     };
     // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
     // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
@@ -497,13 +574,28 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseOpeningImage,
       rseConfig.socialAttritionRelief,
     );
+    // H&S : réduction d'attrition issue des actions RÉCURRENTES DÉJÀ ACTIVES
+    // (capital d'ouverture — même logique différée que l'attrition RSE).
+    // Les nouvelles actions de CE tour sont traitées plus bas mais leur attrition
+    // s'applique aussi dès ce tour (effect immédiat, actions ponctuelles).
+    const hsOpeningAttritionRelief = (state.activeHsActions ?? []).reduce((sum, a) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === a.actionCode);
+      return sum + (def?.effects.attritionReduction ?? 0);
+    }, 0);
+    // Pour les nouvelles actions décidées ce tour, on anticipe aussi leur effet attrition.
+    const hsNewAttritionRelief = (raw.hsActions ?? []).reduce((sum, req) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === req.actionCode);
+      return sum + (def?.effects.attritionReduction ?? 0);
+    }, 0);
+    const hsAttritionRelief = Math.min(0.5, hsOpeningAttritionRelief + hsNewAttritionRelief);
     // RH (doc 02 §4.1) : morale du tour, coûts, mouvements d'effectif à t+1.
+    const combinedAttritionRelief = rseAttritionRelief + hsAttritionRelief;
     const hr = computeHr({
       config:
-        scenario.hr && rseAttritionRelief > 0
+        scenario.hr && combinedAttritionRelief > 0
           ? {
               ...scenario.hr,
-              attritionThreshold: scenario.hr.attritionThreshold * (1 - rseAttritionRelief),
+              attritionThreshold: scenario.hr.attritionThreshold * (1 - combinedAttritionRelief),
             }
           : scenario.hr,
       decisions: raw.hr,
@@ -534,6 +626,34 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : [];
     const companyEvents = insured ? active.filter((e) => !covered.has(e.code)) : active;
     const mods = effectiveModifiers(companyEvents, state.id);
+    // Grille R&D (levier `rdGrid`) : agréger les effets des actions TERMINÉES
+    // (remainingRounds = 0) issues de l'état d'OUVERTURE (effets différés).
+    // Même philosophie que le capital RSE : payer maintenant, gagner plus tard.
+    const rdGridOpening = scenario.rdGrid ? (state.rdGridActions ?? []) : [];
+    const rdGridCompleted = rdGridOpening.filter((a) => a.remainingRounds === 0);
+    const rdGridEffects = (() => {
+      let materialCostReduction = 0;
+      let defectReduction = 0;
+      let demandBonus = 0;
+      let capacityBonus = 0;
+      if (!scenario.rdGrid) return { materialCostReduction, defectReduction, demandBonus, capacityBonus };
+      for (const action of rdGridCompleted) {
+        const theme = scenario.rdGrid.themes.find((t) => t.code === action.themeCode);
+        const lvl = theme?.levels.find((l) => l.level === action.level);
+        if (!lvl) continue;
+        materialCostReduction += lvl.effects.materialCostReduction ?? 0;
+        defectReduction += lvl.effects.defectReduction ?? 0;
+        demandBonus += lvl.effects.demandBonus ?? 0;
+        capacityBonus += lvl.effects.capacityBonus ?? 0;
+      }
+      // Plafonner à des valeurs raisonnables (éviter effets > 100 %)
+      return {
+        materialCostReduction: Math.min(0.8, materialCostReduction),
+        defectReduction: Math.min(0.8, defectReduction),
+        demandBonus: Math.min(0.5, demandBonus),
+        capacityBonus: Math.min(0.5, capacityBonus),
+      };
+    })();
     // Décisions par produit (mono : les scalaires bornés ci-dessus, recopiés).
     const gammeDecisionsBrutes = toGammeDecisions(decisions, gamme);
     // R&D (levier `rd`) : l'état d'ouverture de chaque référence. Une
@@ -578,13 +698,46 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
     const supplyDisruption = supplier ? (disruptionBySupplier.get(supplier.code) ?? false) : false;
     const supplyAvailabilityHit = supplyDisruption ? (supplier?.supplyRiskAvailabilityHit ?? 1) : 1;
-    // Capacité machine : soit calculée du parc typé, soit homogène (legacy).
+    // Capacité machine : soit calculée du parc individuel (MachineRecord),
+    // soit du parc typé par lots, soit homogène (legacy).
+    const typeMap = scenario.equipment
+      ? new Map(scenario.equipment.types.map((t) => [t.code, t]))
+      : null;
+    // Parc individuel actif : ouverture + pendingMachineFleet du tour précédent
+    // (les machines achetées au tour T sont en service au tour T+1).
+    const activeMachineFleet: MachineRecord[] | null = scenario.equipment
+      ? (() => {
+          const base = state.machineFleet
+            ? [...state.machineFleet, ...(state.pendingMachineFleet ?? [])]
+            : initMachineFleet(
+                [...(state.fleet ?? []), ...(state.pendingFleet ?? [])],
+                roundIndex,
+              );
+          return base;
+        })()
+      : null;
+    // H&S : bonus de productivité anticipé (actions récurrentes actives + nouvelles ce tour).
+    const hsEarlyProductivityBonus = Math.min(
+      0.3,
+      (state.activeHsActions ?? []).reduce((sum, a) => {
+        const def = scenario.healthSafetyActions?.actions.find((d) => d.code === a.actionCode);
+        return sum + (def?.effects.productivityBonus ?? 0);
+      }, 0) +
+      (raw.hsActions ?? []).reduce((sum, req) => {
+        const def = scenario.healthSafetyActions?.actions.find((d) => d.code === req.actionCode);
+        return sum + (def?.effects.productivityBonus ?? 0);
+      }, 0),
+    );
     const effectiveMachineCapacity = scenario.equipment
-      ? fleetCapacity(
-          mergeFleet(state.fleet ?? [], state.pendingFleet ?? []),
-          new Map(scenario.equipment.types.map((t) => [t.code, t])),
-        )
+      ? (activeMachineFleet && typeMap
+          ? machineFleetCapacity(activeMachineFleet, typeMap)
+          : fleetCapacity(
+              mergeFleet(state.fleet ?? [], state.pendingFleet ?? []),
+              new Map(scenario.equipment.types.map((t) => [t.code, t])),
+            ))
       : state.machineCapacity + (state.pendingCapacity ?? 0);
+    // Grille R&D : bonus de capacité des actions terminées (ex. : lean process).
+    const effectiveMachineCapacityWithRdGrid = effectiveMachineCapacity * (1 + rdGridEffects.capacityBonus);
     // Mono-produit : la rupture ampute la disponibilité de l'usine (chemin
     // historique). Gamme : elle ampute le plan des SEULES références que le
     // fournisseur défaillant fournit — les autres ne sont pas touchées.
@@ -596,12 +749,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1),
           )
         : gammeDecisions.map((d) => d.productionPlan),
-      machineCapacity: effectiveMachineCapacity,
+      machineCapacity: effectiveMachineCapacityWithRdGrid,
       availability:
         state.availability * mods.availabilityMultiplier * (multi ? 1 : supplyAvailabilityHit),
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
-      productivity: state.productivity * hr.morale,
+      productivity: state.productivity * hr.morale * (1 + hsEarlyProductivityBonus),
     });
     // Qualité produite PAR PRODUIT. En gamme, l'échelle du budget qualité est
     // divisée par le nombre de références : un budget réparti à parts égales
@@ -667,9 +820,40 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       communicationAxis !== undefined &&
       communicationAxis !== state.lastCommunicationAxis;
     const brandNext = comm ? updateBrandAwareness(brandOpening, brandBudget, axisChanged, comm) : 0;
-    const materialMultiplier = mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1);
+    // Indice de cours flottant : un multiplicateur par fournisseur réellement
+    // utilisé ce tour. Calculé sur un flux RNG DÉDIÉ (graine ^ 0x504943 =
+    // "PIC") — n'altère aucun tirage existant.
+    const priceIndexBySupplier = new Map<string, number>();
+    for (const s of productSuppliers) {
+      if (!s || priceIndexBySupplier.has(s.code)) continue;
+      priceIndexBySupplier.set(
+        s.code,
+        s.priceIndex
+          ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex)
+          : 1,
+      );
+    }
+    // Fournisseur scalaire (mono-produit) — peut différer des productSuppliers
+    if (supplier && !priceIndexBySupplier.has(supplier.code)) {
+      priceIndexBySupplier.set(
+        supplier.code,
+        supplier.priceIndex
+          ? computePriceIndexMultiplier(input.seed, supplier.code, supplier.priceIndex, roundIndex)
+          : 1,
+      );
+    }
+    const supplierPriceIdx = priceIndexBySupplier.get(supplier?.code ?? "") ?? 1;
+    // Grille R&D : réduction du coût matières issue des actions terminées
+    const rdGridMaterialFactor = 1 - rdGridEffects.materialCostReduction;
+    const materialMultiplier =
+      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx * rdGridMaterialFactor;
     const materialMultipliers = multi
-      ? productSuppliers.map((s) => mods.materialCostMultiplier * (s?.costMultiplier ?? 1))
+      ? productSuppliers.map((s) =>
+          mods.materialCostMultiplier *
+          (s?.costMultiplier ?? 1) *
+          (priceIndexBySupplier.get(s?.code ?? "") ?? 1) *
+          rdGridMaterialFactor,
+        )
       : [materialMultiplier];
     // Coût variable unitaire de chaque produit (mono : le seul, expression
     // historique inchangée).
@@ -687,7 +871,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const rseInvestment = Math.max(0, raw.rse?.investment ?? 0);
     const rseCost = rseBudget + rseInvestment;
     const rseScale = scenario.marketing.scale;
-    const rseImageFactor = imageAttractionFactor(rseOpeningImage, rseConfig.imageDemandSensitivity);
+    // H&S hrImageBonus (ouverture) : bonus additif sur le facteur image RSE.
+    const hsOpeningHrImageBonus = (state.activeHsActions ?? []).reduce((sum, a) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === a.actionCode);
+      return sum + (def?.effects.hrImageBonus ?? 0);
+    }, 0);
+    const hsNewHrImageBonus = (raw.hsActions ?? []).reduce((sum, req) => {
+      const def = scenario.healthSafetyActions?.actions.find((d) => d.code === req.actionCode);
+      return sum + (def?.effects.hrImageBonus ?? 0);
+    }, 0);
+    const rseImageFactor = imageAttractionFactor(rseOpeningImage, rseConfig.imageDemandSensitivity)
+      + Math.min(0.5, hsOpeningHrImageBonus + hsNewHrImageBonus);
     // Cartes RSE (Lot 2C) : leur effet demande passe par l'attraction (le moteur
     // n'applique pas les modificateurs de demande company-scope ailleurs). On
     // isole les SEULS codes RSE : les autres événements company-scope à modif de
@@ -716,18 +910,226 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseEffort(rseInvestment, rseScale),
       rseConfig.cleanInertia,
     );
+    // Grille R&D : avancement des actions en cours, démarrage des nouvelles.
+    // Seules les actions valides (thème + niveau connu, prérequis satisfaits,
+    // pas déjà en cours ou terminées) sont acceptées.
+    let rdGridInvestmentCost = 0;
+    const rdGridActionsNext: import("../types").RdGridActionState[] = (() => {
+      if (!scenario.rdGrid || state.status === "defaillant") return rdGridOpening;
+      // Avancement : chaque action en cours décrémente son compteur.
+      const advanced = rdGridOpening.map((a) =>
+        a.remainingRounds > 0 ? { ...a, remainingRounds: a.remainingRounds - 1 } : a,
+      );
+      // Nouvelles actions demandées ce tour.
+      const toStart = decisions.rdGridStart ?? [];
+      const result = [...advanced];
+      for (const req of toStart) {
+        const theme = scenario.rdGrid.themes.find((t) => t.code === req.themeCode);
+        const lvlDef = theme?.levels.find((l) => l.level === req.level);
+        if (!theme || !lvlDef) continue;
+        // Déjà en cours ou terminée ?
+        if (result.some((a) => a.themeCode === req.themeCode && a.level === req.level)) continue;
+        // Prérequis : le niveau précédent doit être terminé.
+        if (lvlDef.prerequisiteLevel !== undefined) {
+          const prereq = result.find(
+            (a) => a.themeCode === req.themeCode && a.level === lvlDef.prerequisiteLevel,
+          );
+          if (!prereq || prereq.remainingRounds > 0) continue;
+        }
+        rdGridInvestmentCost += lvlDef.cost;
+        result.push({ themeCode: req.themeCode, level: req.level, remainingRounds: lvlDef.durationRounds, startedRound: roundIndex });
+      }
+      return result;
+    })();
+    // Catalogue d'actions qualité : traitement des nouvelles décisions et
+    // calcul des effets cumulés de toutes les actions terminées.
+    const qaConfig = scenario.qualityActions;
+    const prevQaCompleted = state.qualityActionsCompleted ?? {};
+    const qualityActionsStarted: { actionCode: string; level: number; cost: number }[] = [];
+    let qualityActionsCost = 0;
+    const qualityActionsCompleted: Record<string, number> = { ...prevQaCompleted };
+    if (qaConfig && decisions.qualityActions && state.status !== "defaillant") {
+      const maxConcurrent = qaConfig.maxConcurrentActions ?? 2;
+      for (const req of decisions.qualityActions) {
+        if (qualityActionsStarted.length >= maxConcurrent) break;
+        const actionDef = qaConfig.actions.find((a) => a.code === req.actionCode);
+        if (!actionDef) continue;
+        const levelDef = actionDef.levels.find((l) => l.level === req.level);
+        if (!levelDef) continue;
+        const currentLevel = prevQaCompleted[req.actionCode] ?? 0;
+        // Ne peut acheter qu'un niveau supérieur au niveau actuel.
+        if (req.level <= currentLevel) continue;
+        // Prérequis séquentiel : level N requiert N−1 terminé.
+        if (req.level > currentLevel + 1) continue;
+        if (levelDef.prerequisiteLevel !== undefined && currentLevel < levelDef.prerequisiteLevel) continue;
+        qualityActionsStarted.push({ actionCode: req.actionCode, level: req.level, cost: levelDef.cost });
+        qualityActionsCost += levelDef.cost;
+        qualityActionsCompleted[req.actionCode] = req.level;
+      }
+    }
+    // Effets cumulés de toutes les actions terminées (incl. celles démarrées ce tour).
+    const qualityActionsEffects = {
+      defectRateReduction: 0,
+      returnRateReduction: 0,
+      productionCostReduction: 0,
+      qualityImageBonus: 0,
+      maintenanceSaving: 0,
+    };
+    if (qaConfig) {
+      for (const actionDef of qaConfig.actions) {
+        const completedLevel = qualityActionsCompleted[actionDef.code] ?? 0;
+        for (const levelDef of actionDef.levels) {
+          if (levelDef.level <= completedLevel) {
+            qualityActionsEffects.defectRateReduction += levelDef.effects.defectRateReduction ?? 0;
+            qualityActionsEffects.returnRateReduction += levelDef.effects.returnRateReduction ?? 0;
+            qualityActionsEffects.productionCostReduction += levelDef.effects.productionCostReduction ?? 0;
+            qualityActionsEffects.qualityImageBonus += levelDef.effects.qualityImageBonus ?? 0;
+            qualityActionsEffects.maintenanceSaving += levelDef.effects.maintenanceSaving ?? 0;
+          }
+        }
+      }
+    }
+    // Actions de maintenance par machine (module maintenanceActions).
+    // Pour chaque décision, on trouve la machine dans le parc individuel,
+    // on applique les effets (usure, panne) et on cumule les coûts.
+    // Si le scénario n'a pas de bloc `maintenanceActions` ou si le parc
+    // individuel est absent, on ignore silencieusement.
+    const maConfig = scenario.maintenanceActions;
+    const maintenanceLog: {
+      round: number;
+      machineId: string;
+      actionCode: string;
+      level: number;
+      laborCost: number;
+      downtimeCost: number;
+    }[] = [];
+    let maintenanceLaborCost = 0;
+    let maintenanceDowntimeCost = 0;
+    // On part du parc actif (ouverture + pending du tour précédent intégré dans activeMachineFleet).
+    // La maintenance est appliquée avant la mise à jour de fin de tour.
+    let machineFleetAfterMaintenance: import("../types").MachineRecord[] | null = activeMachineFleet
+      ? [...activeMachineFleet]
+      : null;
+    if (
+      maConfig &&
+      machineFleetAfterMaintenance &&
+      decisions.maintenanceDecisions &&
+      decisions.maintenanceDecisions.length > 0 &&
+      state.status !== "defaillant"
+    ) {
+      for (const dec of decisions.maintenanceDecisions) {
+        const actionTypeDef = maConfig.types.find((t) => t.code === dec.actionCode);
+        if (!actionTypeDef) continue;
+        const levelDef = actionTypeDef.levels.find((l) => l.level === dec.level);
+        if (!levelDef) continue;
+        const machineIdx = machineFleetAfterMaintenance.findIndex((m: MachineRecord) => m.id === dec.machineId);
+        if (machineIdx < 0) continue;
+        const machine: MachineRecord = machineFleetAfterMaintenance[machineIdx]!;
+        // Appliquer les effets sur la machine.
+        let newWear: number = machine.wear;
+        let newIsOperational: boolean = machine.isOperational;
+        if (levelDef.wearReduction !== undefined) {
+          newWear = Math.max(0, newWear - levelDef.wearReduction);
+        }
+        if (levelDef.capacityRestoration !== undefined && !machine.isOperational) {
+          // Restaurer la machine en panne selon le taux de restauration.
+          if (rng.next() < levelDef.capacityRestoration) {
+            newIsOperational = true;
+            // Réduction d'usure liée à la restauration (déjà appliquée ci-dessus si wearReduction présent).
+            if (levelDef.wearReduction !== undefined) {
+              newWear = Math.max(0, machine.wear - levelDef.wearReduction);
+            }
+          }
+        }
+        // Mettre à jour la machine dans le parc.
+        machineFleetAfterMaintenance = machineFleetAfterMaintenance.map((m: MachineRecord, i: number) =>
+          i === machineIdx ? { ...m, wear: newWear, isOperational: newIsOperational } : m,
+        );
+        // Cumuler les coûts.
+        maintenanceLaborCost += levelDef.laborCost;
+        maintenanceDowntimeCost += levelDef.downtimeCost;
+        maintenanceLog.push({
+          round: roundIndex,
+          machineId: dec.machineId,
+          actionCode: dec.actionCode,
+          level: dec.level,
+          laborCost: levelDef.laborCost,
+          downtimeCost: levelDef.downtimeCost,
+        });
+      }
+    }
+    // Hygiène & Sécurité : traitement des actions H&S ce tour.
+    // 1. Accumuler les effets des actions récurrentes encore actives (ouverture).
+    // 2. Traiter les nouvelles décisions hsActions.
+    // 3. Décrémenter / retirer les actions récurrentes en cours.
+    const hsConfig = scenario.healthSafetyActions;
+    const openingHsActions = state.activeHsActions ?? [];
+    const hsEffects = {
+      attritionReduction: 0,
+      productivityBonus: 0,
+      defectReduction: 0,
+      maintenanceSaving: 0,
+      hrImageBonus: 0,
+    };
+    let hsLaborCost = 0;
+    let hsImmoCost = 0;
+    let hsActionsCount = 0;
+    for (const active of openingHsActions) {
+      const def = hsConfig?.actions.find((a) => a.code === active.actionCode);
+      if (!def) continue;
+      hsEffects.attritionReduction += def.effects.attritionReduction ?? 0;
+      hsEffects.productivityBonus += def.effects.productivityBonus ?? 0;
+      hsEffects.defectReduction += def.effects.defectReduction ?? 0;
+      hsEffects.maintenanceSaving += def.effects.maintenanceSaving ?? 0;
+      hsEffects.hrImageBonus += def.effects.hrImageBonus ?? 0;
+    }
+    const nextActiveHsActions: { actionCode: string; startedRound: number; remainingRounds: number }[] = [];
+    if (hsConfig && decisions.hsActions && decisions.hsActions.length > 0 && state.status !== "defaillant") {
+      const maxPerRound = hsConfig.maxActionsPerRound ?? 3;
+      for (const req of decisions.hsActions.slice(0, maxPerRound)) {
+        const def = hsConfig.actions.find((a) => a.code === req.actionCode);
+        if (!def) continue;
+        hsLaborCost += def.laborCost;
+        hsImmoCost += def.immobilizationCost ?? 0;
+        hsActionsCount++;
+        hsEffects.attritionReduction += def.effects.attritionReduction ?? 0;
+        hsEffects.productivityBonus += def.effects.productivityBonus ?? 0;
+        hsEffects.defectReduction += def.effects.defectReduction ?? 0;
+        hsEffects.maintenanceSaving += def.effects.maintenanceSaving ?? 0;
+        hsEffects.hrImageBonus += def.effects.hrImageBonus ?? 0;
+        if (def.isRecurring && (def.durationRounds ?? 0) > 0) {
+          nextActiveHsActions.push({
+            actionCode: def.code,
+            startedRound: roundIndex,
+            remainingRounds: def.durationRounds!,
+          });
+        }
+      }
+    }
+    for (const active of openingHsActions) {
+      const newRemaining = active.remainingRounds - 1;
+      if (newRemaining > 0) {
+        nextActiveHsActions.push({ ...active, remainingRounds: newRemaining });
+      }
+    }
     // Non-qualité interne (doc 02 §4.2) : rebuts fonction de la qualité
     // produite — payés (matières, MOD) mais invendables : seul le net entre
     // en stock, la perte est valorisée au coût variable. Le capital « process
     // propre » RSE en retranche une part (effet différé, capital d'ouverture).
     // Taux de rebut PAR PRODUIT : la qualité produite de chaque référence
     // (mono : le seul, sur la qualité produite historique).
+    // Grille R&D + actions qualité + H&S : réductions des rebuts additives avec RSE
+    // (même plafonnement à 0,8 pour éviter les effets > 100 %).
+    const combinedDefectReduction = Math.min(
+      0.8,
+      rseDefectReduction + rdGridEffects.defectReduction + qualityActionsEffects.defectRateReduction + hsEffects.defectReduction,
+    );
     const productDefectRate = productQuality.map((quality) =>
       scenario.qualityCosts
         ? computeDefectRate({
             baseDefectRate: scenario.qualityCosts.baseDefectRate,
             producedQuality: quality,
-            rseDefectReduction,
+            rseDefectReduction: combinedDefectReduction,
             // La maintenance n'agit sur les rebuts que si le scénario l'active
             // (maintenanceDefectSensitivity > 0) ; sinon facteur neutre, comportement
             // historique. Référence : budget de maintenance de référence du scénario.
@@ -843,6 +1245,43 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       );
       investOutlay = investUnits * scenario.investment.costPerCapacityUnit;
     }
+    // Suivi individuel des machines (StratiRAC) : appliqué seulement quand le
+    // scénario a un bloc equipment ET que le parc individuel est initialisé.
+    let nextMachineFleet: MachineRecord[] | null = null;
+    let nextPendingMachineFleet: MachineRecord[] | null = null;
+    if (scenario.equipment && typeMap) {
+      // 1. Retirer les machines vendues ce tour (FIFO par type, plus anciennes d'abord).
+      // On part du parc APRÈS application des actions de maintenance (usure et pannes
+      // déjà ajustées), sinon l'update de fin de tour ignore leurs effets.
+      const fleetBasedOnMaintenance = machineFleetAfterMaintenance ?? activeMachineFleet ?? [];
+      let updatedFleet = fleetBasedOnMaintenance;
+      for (const sold of equipSold) {
+        updatedFleet = removeMachinesFromFleet(updatedFleet, sold.typeCode, sold.quantity);
+      }
+      // 2. Vieillissement, usure, pannes aléatoires selon budget maintenance.
+      updatedFleet = updateMachineFleet({
+        fleet: updatedFleet,
+        maintenanceBudget: raw.maintenanceBudget ?? 0,
+        maintenanceReference:
+          scenario.production.maintenanceReference *
+          (activeMachineFleet
+            ? machineFleetMaintenanceMultiplier(activeMachineFleet, typeMap)
+            : 1),
+        types: typeMap,
+        rng: () => rng.next(),
+        roundIndex,
+      });
+      nextMachineFleet = updatedFleet;
+      // 3. Créer les nouvelles machines achetées ce tour (disponibles au tour+1).
+      let pending: MachineRecord[] = [];
+      for (const bought of equipBought) {
+        const existingSize = updatedFleet.filter((m) => m.typeCode === bought.typeCode).length;
+        pending = pending.concat(
+          createNewMachines(bought.typeCode, bought.quantity, roundIndex, existingSize),
+        );
+      }
+      nextPendingMachineFleet = pending.length > 0 ? pending : null;
+    }
     // Abonnement : le portefeuille d'ouverture part en partie (attrition
     // fonction de la qualité perçue, du prix et de la saturation du tour) ;
     // le reste sera servi en priorité sur la capacité, au marché.
@@ -886,6 +1325,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       productDisruptions,
       unitCosts,
       materialMultipliers,
+      priceIndexBySupplier,
       openingStocks,
       productStocks,
       productDefectUnits,
@@ -907,6 +1347,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       equipNewFleet,
       equipPendingFleet,
       equipDepreciation,
+      activeMachineFleet,
+      nextMachineFleet,
+      nextPendingMachineFleet,
       chosenFormula,
       supplier,
       supplyDisruption,
@@ -919,11 +1362,27 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseAttritionRelief,
       rseNextImageCapital,
       rseNextCleanCapital,
+      rdGridEffects,
+      rdGridActionsNext,
+      rdGridInvestmentCost,
       subOpening,
       subOccupancy,
       subChurnRate,
       subRetained,
       subServed: 0,
+      qualityActionsCompleted,
+      qualityActionsStarted,
+      qualityActionsCost,
+      qualityActionsEffects,
+      maintenanceLog,
+      maintenanceLaborCost,
+      maintenanceDowntimeCost,
+      machineFleetAfterMaintenance,
+      hsEffects,
+      hsLaborCost,
+      hsImmoCost,
+      hsActionsCount,
+      nextActiveHsActions,
     };
   });
 
@@ -976,9 +1435,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           marketingScale: scenario.marketing.scale,
           // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité ;
           // la notoriété de marque (communication) aussi, à l'adéquation de l'axe.
-          imageFactor: comm
+          // Grille R&D : le bonus de demande s'ajoute comme un facteur d'attractivité.
+          // Actions qualité : qualityImageBonus relève l'attractivité (+X multiplicateur).
+          imageFactor: (comm
             ? w.rseImageFactor * w.rseCardFactor * brandFactor(w.brandOpening, fit)
-            : w.rseImageFactor * w.rseCardFactor,
+            : w.rseImageFactor * w.rseCardFactor) *
+            (1 + w.rdGridEffects.demandBonus) *
+            (1 + w.qualityActionsEffects.qualityImageBonus),
         });
       });
       const shares = allocateShares(
@@ -1133,11 +1596,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // Non-qualité externe : retours clients fonction de la qualité perçue,
     // remboursés au prix de vente (unités détruites — la marge part entière).
     // Le taux de retour est celui de chaque référence (mono : de l'entreprise).
+    // Actions qualité : returnRateReduction réduit la sensibilité aux retours.
+    const effectiveReturnSensitivity = scenario.qualityCosts
+      ? scenario.qualityCosts.externalReturnSensitivity *
+        (1 - Math.min(0.8, w.qualityActionsEffects.returnRateReduction))
+      : 0;
     const productReturnRate = w.productPerceived.map((perceived) =>
       scenario.qualityCosts
         ? Math.min(
             0.3,
-            scenario.qualityCosts.externalReturnSensitivity * Math.max(0, 1 - perceived),
+            effectiveReturnSensitivity * Math.max(0, 1 - perceived),
           )
         : 0,
     );
@@ -1352,10 +1820,37 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           (k) => w.decisions.studies?.[k],
         )
       : [];
-    const studiesCost = studiesPurchased.reduce(
+    const studiesLegacyCost = studiesPurchased.reduce(
       (sum, k) => sum + scenario.studies![`${k}Cost`],
       0,
     );
+
+    // studiesV2 : catégories enrichies (présentes seulement si le scénario
+    // porte un bloc studiesV2). Chaque catégorie achetée est facturée au coût
+    // défini dans le catalogue, et son rapport est construit avec les résultats.
+    const studiesV2Cats = scenario.studiesV2?.categories ?? [];
+    const studiesV2Purchased: string[] = studiesV2Cats
+      .filter((c) => {
+        const d = w.decisions.studies as Record<string, unknown> | undefined;
+        return d?.[c.code] === true;
+      })
+      .map((c) => c.code);
+    const studiesV2Cost = studiesV2Purchased.reduce(
+      (sum, code) => sum + (studiesV2Cats.find((c) => c.code === code)?.cost ?? 0),
+      0,
+    );
+
+    // Étude de prévision (forecastStudy) : horizon en mois → nombre de tours.
+    const forecastHorizonMonths = w.decisions.studies?.forecastHorizon;
+    const forecastHorizonDef =
+      forecastHorizonMonths !== undefined
+        ? scenario.studiesV2?.forecastStudy?.horizons.find(
+            (h) => h.months === forecastHorizonMonths,
+          )
+        : undefined;
+    const forecastStudyCost = forecastHorizonDef?.cost ?? 0;
+
+    const studiesCost = studiesLegacyCost + studiesV2Cost + forecastStudyCost;
 
     // Échéanciers d'emprunts (doc 02 §6.5) : les échéances sont OBLIGATOIRES,
     // le remboursement décidé est un anticipé facultatif. Sans échéancier au
@@ -1455,6 +1950,39 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // les capitaux propres (cash ET dette baissent) mais on le suspend aussi,
     // une entreprise à l'arrêt ne décaissant plus rien.
     const gelee = w.state.status === "defaillant";
+    // Catégories d'emprunt (machines, installations) : chaque catégorie a sa
+    // propre durée. Backward-compatible : absent = 0, comportement inchangé.
+    const loanCats = scenario.finance.loanCategories;
+    const machineLoanReq = Math.max(0, w.decisions.finance?.machineLoan ?? 0);
+    const machineLoanGranted =
+      loanCats?.machines && machineLoanReq > 0 && !gelee && !(bank && !planFourni)
+        ? Math.min(machineLoanReq, w.investOutlay * loanCats.machines.maxLoanRatio)
+        : 0;
+    const installLoanReq = Math.max(0, w.decisions.finance?.installationLoan ?? 0);
+    const installationLoanGranted =
+      loanCats?.installations && installLoanReq > 0 && !gelee && !(bank && !planFourni)
+        ? Math.min(
+            installLoanReq,
+            (w.rseCost + w.qualityActionsCost) * loanCats.installations.maxLoanRatio,
+          )
+        : 0;
+    // Actions qualité : économies sur les coûts variables et la maintenance.
+    // La réduction des coûts variables s'applique sur les coûts variables décaissés (hors matières).
+    const qaVariableSaving = gelee
+      ? 0
+      : sumExact(
+          w.producedPerProduct.map(
+            (q, k) => q * gamme[k]!.otherVariableCostPerUnit * w.qualityActionsEffects.productionCostReduction,
+          ),
+        );
+    const qaMaintenanceSaving = gelee
+      ? 0
+      : Math.min(w.decisions.maintenanceBudget, w.qualityActionsEffects.maintenanceSaving);
+    const qaExceptionalIncome = qaVariableSaving + qaMaintenanceSaving;
+    // H&S : économies maintenance (maintenanceSaving) → produit exceptionnel, comme les actions qualité.
+    const hsMaintSaving = gelee
+      ? 0
+      : Math.min(w.decisions.maintenanceBudget, w.hsEffects.maintenanceSaving);
     // Ce que l'animateur a accordé à CETTE entreprise pour CE tour, en réponse
     // à sa demande de subvention exceptionnelle. Zéro dans l'immense majorité
     // des cas — et alors rien n'est émis nulle part.
@@ -1475,18 +2003,22 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
       rseCost: gelee ? 0 : w.rseCost,
-      // R&D : ligne et flux absents sans levier (rdTotal = 0).
-      ...(w.rdTotal > 0 ? { rdCost: w.rdTotal } : {}),
+      // R&D classique + grille R&D : les deux passent dans la même ligne R&D.
+      ...((w.rdTotal + w.rdGridInvestmentCost) > 0 ? { rdCost: w.rdTotal + w.rdGridInvestmentCost } : {}),
       // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
-      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge,
-      exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome,
+      // Actions qualité : coût ponctuel en charge exceptionnelle ; économies en produit exceptionnel.
+      // Maintenance par machine : laborCost en charges fixes (ligne maintenance) ;
+      // downtimeCost en charge exceptionnelle (immobilisation machine).
+      // H&S : laborCost en charges fixes ; immobilizationCost en charge exceptionnelle.
+      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge + w.qualityActionsCost + w.maintenanceDowntimeCost + w.hsImmoCost,
+      exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome + qaExceptionalIncome + hsMaintSaving,
       // LA SUBVENTION DE SAUVETAGE, ELLE, TRAVERSE LE GEL. Une entreprise
       // défaillante ne dépense plus rien — mais c'est justement à elle que
       // l'animateur accorde une aide, et la lui refuser ici la condamnerait
       // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
       // capital, l'argent entre quel que soit l'état de l'entreprise.
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
-      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + w.maintenanceLaborCost + w.hsLaborCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
@@ -1502,7 +2034,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       taxRate: scenario.finance.taxRate,
       openingTaxLossCarryforward: w.state.taxLossCarryforward ?? 0,
       vatRate: scenario.finance.vatRate ?? 0,
-      newLoan,
+      // Inclure les emprunts de catégorie dans le flux de financement.
+      newLoan: newLoan + machineLoanGranted + installationLoanGranted,
       loanRepayment: gelee ? 0 : mandatoryRepayment + earlyRepayment,
       capitalIncrease,
       dividend,
@@ -1519,7 +2052,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               forcedFactoringFeeRate: scenario.treasury.forcedFactoringFeeRate,
               overdraftLimit: conditions.overdraftLimit,
               placementRequest: Math.max(0, w.decisions.treasury?.placement ?? 0),
-              placementAnnualRate: scenario.treasury.placementAnnualRate,
+              // finance.placementRate prend le dessus sur treasury.placementAnnualRate
+              // si les deux sont définis — les scénarios peuvent exposer le taux
+              // dans la config finance sans dupliquer le bloc treasury.
+              placementAnnualRate:
+                scenario.finance.placementRate ?? scenario.treasury.placementAnnualRate,
             },
           }
         : {}),
@@ -1529,6 +2066,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     if (Math.abs(gap) > 0.01) {
       throw new Error(`Bilan déséquilibré (${gap.toFixed(4)} €) pour ${w.state.id}`);
     }
+
+    // Montant escomptable : information pédagogique exposée aux équipes.
+    const discountableReceivables =
+      scenario.finance.discountableRatio !== undefined
+        ? finance.closing.receivables * scenario.finance.discountableRatio
+        : undefined;
 
     // Jalon B : Enregistrement de la dépréciation (débit 681 / crédit 2185)
     const depreciationAmount = finance.incomeStatement.depreciation;
@@ -1611,6 +2154,28 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       }
       nextMandatory = nextLoans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
     }
+    // Catégories d'emprunt : ajout aux échéanciers avec leur durée propre.
+    // Rétro-compatible : si loanCats absent, les deux blocs sont sautés (0 accordé).
+    if (!gelee) {
+      if (machineLoanGranted > 0) {
+        nextLoans = [
+          ...(nextLoans ?? []),
+          {
+            remaining: machineLoanGranted,
+            perRound: machineLoanGranted / loanCats!.machines!.durationRounds,
+          },
+        ];
+      }
+      if (installationLoanGranted > 0) {
+        nextLoans = [
+          ...(nextLoans ?? []),
+          {
+            remaining: installationLoanGranted,
+            perRound: installationLoanGranted / loanCats!.installations!.durationRounds,
+          },
+        ];
+      }
+    }
 
     // Faillite (V2 couche 2, #5) : cessation de paiements = crise de trésorerie
     // CARACTÉRISÉE (découvert au-delà du plafond ET plus aucune créance à céder,
@@ -1665,6 +2230,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingTotal +
       w.qualityTotal +
       w.rdTotal +
+      w.rdGridInvestmentCost +
       w.decisions.maintenanceBudget;
     // Seuil : en gamme, prix moyen pondéré par les unités vendues et coût
     // variable moyen pondéré par les unités produites (mono : les valeurs du
@@ -1709,6 +2275,137 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         scenario.production.qualityInertia,
       ),
     );
+
+    // studiesV2 : construction des rapports enrichis ─ données révélées
+    // par les catégories achetées ce tour. Accès direct à `working` pour
+    // lire les concurrents ; `potentialBySegment` et `salesBySegment` pour
+    // les volumes et les parts. Tout est calculé AVANT la clôture des résultats.
+    const allSegments = gamme.flatMap((p) => p.market.segments);
+    const studiesV2Data: NonNullable<import("../types").CompanyRoundResult["studies"]>["v2Data"] | undefined =
+      studiesV2Purchased.length > 0 || forecastHorizonDef !== undefined
+        ? {
+            ...(studiesV2Purchased.includes("produits")
+              ? {
+                  produits: {
+                    competitors: working.map((wj) => ({
+                      companyId: wj.state.id,
+                      price: wj.gamme[0]!.price,
+                      qualityLevel: wj.productPerceived[0] ?? 0,
+                      ...(scenario.rd ? { techLevel: wj.productRdOpening[0]?.techLevel ?? 0 } : {}),
+                    })),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("marches")
+              ? {
+                  marches: {
+                    totalPotential: Object.values(potentialBySegment).reduce((a, b) => a + b, 0),
+                    segmentPotentials: { ...potentialBySegment },
+                    supplierPaymentDelayDays: scenario.finance.supplierPaymentDelayDays,
+                    avgCustomerPaymentDelayDays:
+                      allSegments.length > 0
+                        ? allSegments.reduce((s, seg) => s + seg.paymentDelayDays, 0) /
+                          allSegments.length
+                        : 0,
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("segments")
+              ? {
+                  segments: {
+                    competitors: working.map((wj, j) => {
+                      const bySegment: Record<string, number> = {};
+                      for (const seg of allSegments) {
+                        bySegment[seg.code] = salesBySegment.get(seg.code)?.[j]?.share ?? 0;
+                      }
+                      const totalSh =
+                        allSegments.length > 0
+                          ? allSegments.reduce(
+                              (s, seg) => s + (bySegment[seg.code] ?? 0) * potentialBySegment[seg.code]!,
+                              0,
+                            ) /
+                            Math.max(
+                              1,
+                              allSegments.reduce((s, seg) => s + (potentialBySegment[seg.code] ?? 0), 0),
+                            )
+                          : 0;
+                      return {
+                        companyId: wj.state.id,
+                        totalShare: totalSh,
+                        bySegment,
+                        ...(scenario.communication ? { brandAwareness: wj.brandOpening } : {}),
+                      };
+                    }),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("remunerations") && scenario.hr
+              ? {
+                  remunerations: {
+                    competitors: working.map((wj) => ({
+                      companyId: wj.state.id,
+                      headcount: wj.state.headcount,
+                      salaryIndex: wj.hr.salaryIndex,
+                    })),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("comportement")
+              ? {
+                  comportement: {
+                    segments: allSegments.map((seg) => ({
+                      code: seg.code,
+                      priceElasticity: seg.priceElasticity,
+                      marketingSensitivity: seg.marketingSensitivity,
+                      qualitySensitivity: seg.qualitySensitivity,
+                      loyalty: seg.loyalty,
+                      refPrice: seg.refPrice,
+                    })),
+                  },
+                }
+              : {}),
+            ...(studiesV2Purchased.includes("innovations") && scenario.rd
+              ? {
+                  innovations: {
+                    competitors: working.map((wj) => ({
+                      companyId: wj.state.id,
+                      products: gamme.map((p, k) => ({
+                        code: p.code,
+                        techLevel: wj.productRdOpening[k]?.techLevel ?? 0,
+                        rdBudget: wj.gamme[k]!.rdBudget ?? 0,
+                      })),
+                    })),
+                  },
+                }
+              : {}),
+            ...(forecastHorizonDef !== undefined
+              ? (() => {
+                  const roundsPerMonth = scenario.roundDays > 0 ? 30 / scenario.roundDays : 1;
+                  const horizonRounds = Math.max(
+                    1,
+                    Math.round(forecastHorizonDef.months * roundsPerMonth),
+                  );
+                  return {
+                    forecast: {
+                      horizonMonths: forecastHorizonDef.months,
+                      segments: allSegments.map((seg) => ({
+                        code: seg.code,
+                        demandByRound: Array.from({ length: horizonRounds }, (_, n) =>
+                          computePotentialDemand(
+                            seg,
+                            roundIndex + n + 1,
+                            gamme.find((p) => p.market.segments.some((s) => s.code === seg.code))
+                              ?.market.seasonality ?? [],
+                            1,
+                          ) * (0.95 + 0.1 * ((roundIndex + n) % 3 === 0 ? 0.5 : 1)),
+                        ),
+                      })),
+                    },
+                  };
+                })()
+              : {}),
+          }
+        : undefined;
 
     results[w.state.id] = {
       companyId: w.state.id,
@@ -1784,6 +2481,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                           costMultiplier: w.productSuppliers[k]!.costMultiplier,
                           qualityBonus: w.productSuppliers[k]!.qualityBonus,
                           supplyDisruption: w.productDisruptions[k]!,
+                          ...(w.productSuppliers[k]!.priceIndex !== undefined
+                            ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.productSuppliers[k]!.code) ?? 1 }
+                            : {}),
                         },
                       }
                     : {}),
@@ -1848,9 +2548,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
-      ...(studiesPurchased.length > 0
-        ? { studies: { purchased: [...studiesPurchased], cost: studiesCost } }
-        : {}),
+      ...(() => {
+        const allPurchased: string[] = [...studiesPurchased, ...studiesV2Purchased];
+        if (forecastHorizonDef !== undefined) allPurchased.push(`forecast:${forecastHorizonDef.months}m`);
+        if (allPurchased.length === 0 && studiesV2Data === undefined) return {};
+        return {
+          studies: {
+            purchased: allPurchased,
+            cost: studiesCost,
+            ...(studiesV2Data !== undefined ? { v2Data: studiesV2Data } : {}),
+          },
+        };
+      })(),
       ...(capitalCap !== undefined && requestedCapital > 0
         ? {
             capital: {
@@ -1887,7 +2596,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
-      ...(scheduled
+      ...(scheduled || machineLoanGranted > 0 || installationLoanGranted > 0
         ? {
             debt: {
               mandatoryRepayment,
@@ -1895,6 +2604,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               newLoan,
               outstanding: finance.closing.financialDebt,
               nextMandatory,
+              ...(machineLoanGranted > 0 ? { machineLoanGranted } : {}),
+              ...(installationLoanGranted > 0 ? { installationLoanGranted } : {}),
               // Émis SEULEMENT quand la banque a coupé la demande : un champ à
               // zéro sur toutes les parties normales alourdirait le résultat
               // sérialisé et changerait les instantanés dorés pour rien.
@@ -1910,8 +2621,14 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         finance.treasury.forcedFactored > 0 ||
         finance.treasury.placed > 0 ||
         finance.treasury.matured > 0 ||
-        finance.treasury.crisis)
-        ? { treasury: finance.treasury }
+        finance.treasury.crisis ||
+        discountableReceivables !== undefined)
+        ? {
+            treasury: {
+              ...finance.treasury,
+              ...(discountableReceivables !== undefined ? { discountableReceivables } : {}),
+            },
+          }
         : {}),
       ...(scenario.qualityCosts
         ? {
@@ -1921,6 +2638,37 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               externalFailure: refund,
               defectUnits: w.defectUnits,
               returnedUnits,
+            },
+          }
+        : {}),
+      // Catalogue d'actions qualité : émis dès qu'une action est démarrée ce tour
+      // OU que des effets cumulés sont actifs (niveau > 0 sur au moins une action).
+      ...(w.qualityActionsStarted.length > 0 ||
+      Object.values(w.qualityActionsCompleted).some((lvl) => lvl > 0)
+        ? {
+            qualityActions: {
+              started: w.qualityActionsStarted,
+              activeEffects: w.qualityActionsEffects,
+            },
+          }
+        : {}),
+      // Actions de maintenance par machine : émis dès qu'une action a été décidée ce tour.
+      ...(w.maintenanceLog.length > 0
+        ? {
+            maintenanceCost: {
+              laborCost: w.maintenanceLaborCost,
+              downtimeCost: w.maintenanceDowntimeCost,
+              actionsCount: w.maintenanceLog.length,
+            },
+          }
+        : {}),
+      // Grille R&D : émis dès qu'une action est en cours ou terminée.
+      ...(w.rdGridActionsNext.length > 0
+        ? {
+            rdGrid: {
+              actions: w.rdGridActionsNext,
+              effects: w.rdGridEffects,
+              investmentCost: w.rdGridInvestmentCost,
             },
           }
         : {}),
@@ -1937,6 +2685,22 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               defectReduction: w.rseDefectReduction,
               financingBonus: rseFinancingBonus,
               attritionRelief: w.rseAttritionRelief,
+            },
+          }
+        : {}),
+      // H&S : émis dès qu'une action est engagée ce tour OU qu'une récurrente est active.
+      ...(w.hsActionsCount > 0 || w.nextActiveHsActions.length > 0 || (w.state.activeHsActions ?? []).length > 0
+        ? {
+            hsCost: {
+              laborCost: w.hsLaborCost,
+              immobilizationCost: w.hsImmoCost,
+              actionsCount: w.hsActionsCount,
+              effects: {
+                attritionReduction: w.hsEffects.attritionReduction,
+                productivityBonus: w.hsEffects.productivityBonus,
+                defectReduction: w.hsEffects.defectReduction,
+                maintenanceSaving: w.hsEffects.maintenanceSaving,
+              },
             },
           }
         : {}),
@@ -1959,6 +2723,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               costMultiplier: w.supplier.costMultiplier,
               qualityBonus: w.supplier.qualityBonus,
               supplyDisruption: w.supplyDisruption,
+              ...(w.supplier.priceIndex !== undefined
+                ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.supplier.code) ?? 1 }
+                : {}),
             },
           }
         : {}),
@@ -2024,12 +2791,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // Mise à jour du parc et de la capacité machine pour le prochain tour.
     const nextFleetState = scenario.equipment
       ? {
-          machineCapacity: fleetCapacity(
-            w.equipNewFleet,
-            new Map(scenario.equipment.types.map((t) => [t.code, t])),
-          ),
+          machineCapacity: w.nextMachineFleet
+            ? machineFleetCapacity(
+                w.nextMachineFleet,
+                new Map(scenario.equipment.types.map((t) => [t.code, t])),
+              )
+            : fleetCapacity(
+                w.equipNewFleet,
+                new Map(scenario.equipment.types.map((t) => [t.code, t])),
+              ),
           fleet: w.equipNewFleet,
           pendingFleet: w.equipPendingFleet,
+          ...(w.nextMachineFleet !== null
+            ? { machineFleet: w.nextMachineFleet }
+            : {}),
+          ...(w.nextPendingMachineFleet !== null
+            ? { pendingMachineFleet: w.nextPendingMachineFleet }
+            : {}),
           pendingCapacity: undefined,
           extraDepreciationPerRound: undefined,
           pendingDepreciationPerRound: undefined,
@@ -2048,7 +2826,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       headcount: w.hr.nextHeadcount,
       productivity: w.hr.nextProductivity,
       ...nextFleetState,
-      ...(scheduled ? { loans: nextLoans } : {}),
+      ...(scheduled
+        ? { loans: nextLoans }
+        : nextLoans !== undefined && nextLoans.length > 0
+          ? { loans: nextLoans }
+          : {}),
       ...(capitalIncrease > 0 || w.state.capitalRaised !== undefined
         ? { capitalRaised: raisedBefore + capitalIncrease }
         : {}),
@@ -2077,6 +2859,28 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         : {}),
       ...(w.rseNextCleanCapital > 0 || w.state.rseCleanCapital !== undefined
         ? { rseCleanCapital: w.rseNextCleanCapital }
+        : {}),
+      // Grille R&D : suivi des actions en cours et terminées.
+      ...(w.rdGridActionsNext.length > 0 || w.state.rdGridActions !== undefined
+        ? { rdGridActions: w.rdGridActionsNext }
+        : {}),
+      // Catalogue d'actions qualité : niveaux complétés, suivis dès qu'une action
+      // est démarrée (puis maintenus).
+      ...(Object.keys(w.qualityActionsCompleted).length > 0 || w.state.qualityActionsCompleted !== undefined
+        ? { qualityActionsCompleted: w.qualityActionsCompleted }
+        : {}),
+      // Historique de maintenance par machine : cumulé d'un tour à l'autre.
+      ...(w.maintenanceLog.length > 0 || w.state.maintenanceLog !== undefined
+        ? {
+            maintenanceLog: [
+              ...(w.state.maintenanceLog ?? []),
+              ...w.maintenanceLog,
+            ],
+          }
+        : {}),
+      // H&S : actions récurrentes actives pour le tour suivant.
+      ...(w.nextActiveHsActions.length > 0 || w.state.activeHsActions !== undefined
+        ? { activeHsActions: w.nextActiveHsActions.length > 0 ? w.nextActiveHsActions : undefined }
         : {}),
       // Gamme : chaque référence suit sa propre qualité perçue ; celle de
       // l'entreprise en est la moyenne pondérée par les unités produites.
@@ -2110,10 +2914,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         maintenanceBudget: w.decisions.maintenanceBudget,
         maintenanceReference: scenario.production.maintenanceReference * (
           scenario.equipment
-            ? fleetMaintenanceMultiplier(
-                mergeFleet(w.state.fleet ?? [], w.state.pendingFleet ?? []),
-                new Map(scenario.equipment.types.map((t) => [t.code, t])),
-              )
+            ? (w.activeMachineFleet
+                ? machineFleetMaintenanceMultiplier(
+                    w.activeMachineFleet,
+                    new Map(scenario.equipment.types.map((t) => [t.code, t])),
+                  )
+                : fleetMaintenanceMultiplier(
+                    mergeFleet(w.state.fleet ?? [], w.state.pendingFleet ?? []),
+                    new Map(scenario.equipment.types.map((t) => [t.code, t])),
+                  ))
             : 1
         ),
         availabilityDecay: scenario.production.availabilityDecay,
