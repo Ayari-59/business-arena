@@ -75,6 +75,12 @@ export interface FinanceInput {
    * Le plafonnement aux réserves distribuables est fait par l'appelant.
    */
   dividend?: number;
+  /**
+   * Niveau 7 : produits finis achetés au sous-traitant, payés à la livraison.
+   * Ils sont entrés en stock à ce coût : le coût des ventes et la variation de
+   * stock les portent déjà, l'équilibre tient. Absent : rien d'acheté.
+   */
+  sousTraitance?: number;
   /** Investissement du tour : décaissé et immobilisé (net de la revente). */
   investmentOutlay: number;
   /** Perte de cession d'équipement (VNC − produit de cession). */
@@ -177,7 +183,11 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const financingCost = discountCost + factoringCost + forcedCost;
 
     // --- Compte de résultat -----------------------------------------------
-    const variableProductionCost = input.purchases + input.otherVariableCash;
+    const sousTraitance = input.sousTraitance ?? 0;
+    const variableProductionCost =
+      sousTraitance > 0
+        ? input.purchases + input.otherVariableCash + sousTraitance
+        : input.purchases + input.otherVariableCash;
     const commissionCost = input.commissionCost ?? 0;
     const grossMargin = input.revenue - input.cogs - commissionCost;
     const rseCost = input.rseCost ?? 0;
@@ -256,6 +266,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
       tax,
       netIncome,
+      ...(sousTraitance > 0 ? { sousTraitance } : {}),
     };
 
     // --- Créances, dettes fournisseurs, TVA, flux de trésorerie -----------
@@ -279,6 +290,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "affacturage_force", amount: forcedFactored },
       { label: "paiements_fournisseurs", amount: -supplierPayments },
       { label: "couts_variables_decaisses", amount: -input.otherVariableCash },
+      // Niveau 7 : absente sans commande au sous-traitant.
+      ...(sousTraitance > 0 ? [{ label: "achats_sous_traitance", amount: -sousTraitance }] : []),
       // Ligne absente des secteurs sans canal partenaire : un flux à zéro dans
       // le tableau de trésorerie ferait chercher ce qui n'existe pas.
       ...(commissionCost > 0

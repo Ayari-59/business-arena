@@ -10,6 +10,7 @@ import { ebeNormalise, initialiserLeGroupe, valoriser } from "./valorisation";
 import type { ValeurDeLEntreprise } from "./types";
 
 export * from "./types";
+export { coutAuBareme, commandeDuTour, type CommandeDuTour } from "./sous-traitance";
 export {
   actifEconomique,
   detteNette,

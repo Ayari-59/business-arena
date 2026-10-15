@@ -86,7 +86,7 @@ import {
   tickEvents,
 } from "../events";
 import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
-import { simulerLeGroupe } from "../groupe";
+import { commandeDuTour, simulerLeGroupe, type CommandeDuTour } from "../groupe";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -601,6 +601,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     moduleQualityBonus: number;
     /** Coût des programmes R&D du tour (calculé post-marché). */
     rdActionsCost: number;
+    /** Niveau 7 : la commande au sous-traitant, livrée en stock ce tour (null sans commande). */
+    commandeST: CommandeDuTour | null;
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -1046,6 +1048,19 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     const productStocks = production.perProduct.map((q, k) =>
       addToStock(openingStocks[k]!, q - productDefectUnits[k]!, unitCosts[k]!),
     );
+    // NIVEAU 7 : FABRIQUER OU FAIRE FABRIQUER. Les produits finis commandés au
+    // sous-traitant entrent en stock, au coût du barème, avant le marché : ni
+    // heure ni machine, aucun coût fixe. Sans commande (ou hors niveau 7), le
+    // stock d'avant, même objet.
+    const commandeST =
+      scenario.groupe?.sousTraitance && state.status !== "defaillant"
+        ? commandeDuTour(scenario.groupe.sousTraitance, gamme.map((p) => p.code), raw.sousTraitance)
+        : null;
+    const productStocksLivres = commandeST
+      ? productStocks.map((s, k) =>
+          commandeST.unites[k]! > 0 ? addToStock(s, commandeST.unites[k]!, commandeST.couts[k]! / commandeST.unites[k]!) : s,
+        )
+      : productStocks;
     const defectUnits = sumExact(productDefectUnits);
     const scrapValue = sumExact(productScrap);
     // --- Investissement capacitaire ---
@@ -1221,7 +1236,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       materialMultipliers,
       priceIndexBySupplier,
       openingStocks,
-      productStocks,
+      productStocks: productStocksLivres,
       productDefectUnits,
       productScrap,
       materialMultiplier,
@@ -1269,6 +1284,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       rdActionsEffects,
       moduleQualityBonus: Math.min(M.PLAFONDS.qualite, rdActionsEffects.qualityBonus),
       rdActionsCost: 0,
+      commandeST,
     };
   });
 
@@ -1657,6 +1673,19 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     const otherVariableCash =
       sumExact(w.producedPerProduct.map((q, k) => q * (gamme[k]!.otherVariableCostPerUnit * w.facteurAutresVariables))) +
       subcontractCost;
+    // Niveau 7 : les produits finis du sous-traitant, au journal de la gamme.
+    if (multi && w.commandeST) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Achats de sous-traitance",
+        category: "purchase",
+        debitAccount: "604",
+        debitLabel: "Achats de sous-traitance incorporés aux produits",
+        creditAccount: "512",
+        creditLabel: "Banque",
+        amount: w.commandeST.total,
+      });
+    }
     // Marketing : somme des budgets par produit (mono : le scalaire), plus le
     // budget de marque quand le levier communication existe.
     const marketingTotal = scenario.communication
@@ -1932,6 +1961,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       dividend,
       investmentOutlay: w.investOutlay - w.equipSaleProceeds,
       disposalLoss: w.equipDisposalLoss,
+      // Niveau 7 : les produits finis achetés au sous-traitant, payés à la livraison.
+      ...(w.commandeST ? { sousTraitance: w.commandeST.total } : {}),
       ...(scenario.treasury
         ? {
             treasury: {
@@ -2111,7 +2142,11 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         w.gamme.map((d) => d.price),
         productSegmentUnits,
       ),
-      uvc: weightedAverage(w.unitCosts, w.producedPerProduct),
+      // Niveau 7 : les unités sous-traitées entrent au coût variable moyen, à leur prix.
+      uvc: w.commandeST
+        ? (sumExact(w.unitCosts.map((c, k) => c * w.producedPerProduct[k]!)) + w.commandeST.total) /
+          Math.max(1e-9, sumExact(w.producedPerProduct) + sumExact(w.commandeST.unites))
+        : weightedAverage(w.unitCosts, w.producedPerProduct),
       revenue,
     });
 
@@ -2139,7 +2174,13 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     const productNextPerceived = w.productPerceived.map((previous, k) =>
       updatePerceivedQuality(
         previous,
-        w.productQuality[k]! +
+        // Niveau 7 : les unités sous-traitées apportent la qualité du sous-traitant,
+        // au prorata des volumes. Sans commande : la qualité produite, telle quelle.
+        (w.commandeST && w.commandeST.unites[k]! > 0
+          ? (w.productQuality[k]! * w.producedPerProduct[k]! +
+              (scenario.groupe!.sousTraitance![gamme[k]!.code]?.qualite ?? 1) * w.commandeST.unites[k]!) /
+            (w.producedPerProduct[k]! + w.commandeST.unites[k]!)
+          : w.productQuality[k]!) +
           (w.productSuppliers[k]?.qualityBonus ?? 0) +
           (w.productRdOpening[k]?.techLevel ?? 0) +
           // Formation et programmes R&D : la qualité produite gagnée (0 sans module).
@@ -2550,6 +2591,29 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         : {}),
       // Programmes de R&D : coût du tour et effets en vigueur.
       ...(w.rdActionsCost > 0 ? { rdActionsCost: w.rdActionsCost } : {}),
+      // Niveau 7 : la sous-traitance du tour et le levier opérationnel.
+      ...(scenario.groupe
+        ? {
+            groupe: {
+              ...(w.commandeST
+                ? {
+                    sousTraitance: {
+                      parReference: Object.fromEntries(
+                        gamme
+                          .map((p, k) => [p.code, { unites: w.commandeST!.unites[k]!, cout: w.commandeST!.couts[k]! }] as const)
+                          .filter(([, x]) => x.unites > 0),
+                      ),
+                      unites: sumExact(w.commandeST.unites),
+                      cout: w.commandeST.total,
+                    },
+                  }
+                : {}),
+              ...(finance.incomeStatement.operatingIncome > 0
+                ? { levierOperationnel: finance.incomeStatement.grossMargin / finance.incomeStatement.operatingIncome }
+                : {}),
+            },
+          }
+        : {}),
       ...(Object.values(w.rdActionsEffects).some((v) => v !== 0) ? { rdActionsEffects: w.rdActionsEffects } : {}),
       ...((w.decisions.stoppedModuleItems ?? []).length > 0 ? { stoppedModuleItems: w.decisions.stoppedModuleItems } : {}),
       ...(w.insured
