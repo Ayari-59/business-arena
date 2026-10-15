@@ -294,21 +294,12 @@ export function applyPeriodicity(
 /**
  * LES MODULES DU SCÉNARIO SUIVENT LA DURÉE DU TOUR, COMME LES SALAIRES.
  *
- * Un coût PAR TOUR (redevance, préparation d'un plan de crise, coût d'une
- * action de marque, d'un projet, d'une politique RH, d'un programme R&D, d'une
- * formation par salarié, adaptation locale d'un marché, maintenance d'un outil
- * digital) est un flux : × k, arrondi à l'euro comme les primes d'assurance.
- * Une économie par tour (énergie, entretien) de même, et le volume de
- * production qu'un contrat fournisseur engage par tour. Ce qui se paie UNE fois
- * (droit d'entrée, mise en place, lancement, activation, investissement
- * d'entrée, niveau d'une démarche qualité, intervention ponctuelle) ne bouge
- * pas : c'est le même achat quelle que soit la durée du tour.
- *
- * Les options de financement suivent l'emprunt du scénario : même durée
- * réelle (la durée en tours varie en 1/k), taux par tour composé ; le taux
- * reste dans la borne du schéma, faute de quoi le scénario ne se chargerait
- * plus. Les durées des autres modules et leurs tours minimaux restent comptés
- * en tours : la dramaturgie de la partie est conservée.
+ * Un coût PAR TOUR (un programme de R&D) est un flux : × k, arrondi à l'euro
+ * comme les primes d'assurance. Une économie par tour (l'entretien allégé
+ * d'une démarche qualité) de même. Ce qui se paie UNE fois (le niveau d'une
+ * démarche qualité) ne bouge pas : c'est le même achat quelle que soit la
+ * durée du tour. Les durées des programmes restent comptées en tours : la
+ * dramaturgie de la partie est conservée.
  */
 function modulesALaDureeDuTour(scenario: EngineScenarioConfig, k: number): Partial<EngineScenarioConfig> {
   const flux = (x: number) => tarif(x * k);
@@ -329,155 +320,11 @@ function modulesALaDureeDuTour(scenario: EngineScenarioConfig, k: number): Parti
           },
         }
       : {}),
-    ...(s.healthSafetyActions
-      ? {
-          healthSafetyActions: {
-            ...s.healthSafetyActions,
-            actions: s.healthSafetyActions.actions.map((a) =>
-              a.effects.maintenanceSaving
-                ? { ...a, effects: { ...a.effects, maintenanceSaving: flux(a.effects.maintenanceSaving) } }
-                : a,
-            ),
-          },
-        }
-      : {}),
-    ...(s.trainingPrograms
-      ? {
-          trainingPrograms: {
-            ...s.trainingPrograms,
-            programs: s.trainingPrograms.programs.map((p) => ({
-              ...p,
-              costPerEmployee: flux(p.costPerEmployee),
-              effects: { ...p.effects, maintenanceSaving: flux(p.effects.maintenanceSaving) },
-            })),
-          },
-        }
-      : {}),
-    // Le volume d'engagement d'un contrat est une production PAR TOUR : un flux.
-    ...(s.supplierNegotiation
-      ? {
-          supplierNegotiation: {
-            ...s.supplierNegotiation,
-            contracts: s.supplierNegotiation.contracts.map((c) => ({
-              ...c,
-              volumeThreshold: Math.round(c.volumeThreshold * k),
-            })),
-          },
-        }
-      : {}),
-    ...(s.commercialActions
-      ? {
-          commercialActions: {
-            ...s.commercialActions,
-            actions: s.commercialActions.actions.map((a) => ({ ...a, costPerRound: flux(a.costPerRound) })),
-          },
-        }
-      : {}),
-    ...(s.capacityExpansion
-      ? {
-          capacityExpansion: {
-            ...s.capacityExpansion,
-            options: s.capacityExpansion.options.map((o) => ({ ...o, costPerRound: flux(o.costPerRound) })),
-          },
-        }
-      : {}),
-    ...(s.internationalMarkets
-      ? {
-          internationalMarkets: {
-            ...s.internationalMarkets,
-            markets: s.internationalMarkets.markets.map((m) => ({
-              ...m,
-              localAdaptationCost: flux(m.localAdaptationCost),
-            })),
-          },
-        }
-      : {}),
-    ...(s.productInnovation
-      ? {
-          productInnovation: {
-            ...s.productInnovation,
-            innovations: s.productInnovation.innovations.map((i) => ({
-              ...i,
-              devCostPerRound: flux(i.devCostPerRound),
-            })),
-          },
-        }
-      : {}),
-    ...(s.rseProgram
-      ? {
-          rseProgram: {
-            ...s.rseProgram,
-            actions: s.rseProgram.actions.map((a) => ({
-              ...a,
-              costPerRound: flux(a.costPerRound),
-              effects: { ...a.effects, energySaving: flux(a.effects.energySaving) },
-            })),
-          },
-        }
-      : {}),
-    ...(s.advancedHR
-      ? {
-          advancedHR: {
-            ...s.advancedHR,
-            policies: s.advancedHR.policies.map((p) => ({ ...p, costPerRound: flux(p.costPerRound) })),
-          },
-        }
-      : {}),
-    ...(s.crisisManagement
-      ? {
-          crisisManagement: {
-            ...s.crisisManagement,
-            plans: s.crisisManagement.plans.map((p) => ({
-              ...p,
-              preparationCostPerRound: flux(p.preparationCostPerRound),
-            })),
-          },
-        }
-      : {}),
-    ...(s.partnerships
-      ? {
-          partnerships: {
-            ...s.partnerships,
-            options: s.partnerships.options.map((o) => ({ ...o, royaltiesPerRound: flux(o.royaltiesPerRound) })),
-          },
-        }
-      : {}),
-    ...(s.digitalTransformation
-      ? {
-          digitalTransformation: {
-            ...s.digitalTransformation,
-            projects: s.digitalTransformation.projects.map((p) => ({
-              ...p,
-              costPerRound: flux(p.costPerRound),
-              maintenanceCostPerRound: flux(p.maintenanceCostPerRound),
-            })),
-          },
-        }
-      : {}),
-    ...(s.brandManagement
-      ? {
-          brandManagement: {
-            ...s.brandManagement,
-            actions: s.brandManagement.actions.map((a) => ({ ...a, costPerRound: flux(a.costPerRound) })),
-          },
-        }
-      : {}),
     ...(s.rdActions
       ? {
           rdActions: {
             ...s.rdActions,
             actions: s.rdActions.actions.map((a) => ({ ...a, costPerRound: flux(a.costPerRound) })),
-          },
-        }
-      : {}),
-    ...(s.financingOptions
-      ? {
-          financingOptions: {
-            options: s.financingOptions.options.map((o) => ({
-              ...o,
-              interestRatePerRound: Math.min(0.1, compound(o.interestRatePerRound, k)),
-              durationRounds: Math.max(1, Math.round(o.durationRounds / k)),
-            })),
           },
         }
       : {}),

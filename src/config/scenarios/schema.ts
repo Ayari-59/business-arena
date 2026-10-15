@@ -366,7 +366,6 @@ export const engineScenarioConfigSchema = z.object({
                   level: z.number().int().min(1).max(3),
                   label: z.string().min(1),
                   cost: z.number().nonnegative(),
-                  durationRounds: z.number().int().min(1),
                   effects: z.object({
                     defectRateReduction: z.number().min(0).max(1).optional(),
                     returnRateReduction: z.number().min(0).max(1).optional(),
@@ -489,189 +488,6 @@ export const engineScenarioConfigSchema = z.object({
       axisSwitchDecay: z.number().min(0).max(1),
     })
     .optional(),
-  // Actions de maintenance par machine (préventive / curative).
-  // Inspiré de StratiRAC : 3 niveaux par type, effets sur l'usure, le risque
-  // de panne et la restauration de capacité. Absent = comportement historique.
-  maintenanceActions: z
-    .object({
-      types: z.array(
-        z.object({
-          code: z.string().min(1),
-          label: z.string().min(1),
-          levels: z.array(
-            z.object({
-              level: z.number().int().min(1).max(3),
-              label: z.string().min(1),
-              laborCost: z.number().nonnegative(),
-              downtimeCost: z.number().nonnegative(),
-              timeHoursN1: z.number().nonnegative(),
-              timeHoursN2: z.number().nonnegative(),
-              timeHoursN3: z.number().nonnegative(),
-              wearReduction: z.number().min(0).max(1).optional(),
-              breakdownRiskReduction: z.number().min(0).max(1).optional(),
-              capacityRestoration: z.number().min(0).max(1).optional(),
-            }),
-          ).min(1).max(3),
-        }),
-      ).min(1),
-    })
-    .optional(),
-  // Hygiène & Sécurité (H&S) : catalogue d'actions ponctuelles ou récurrentes
-  // avec effets sur l'attrition RH, la productivité, l'image RSE et les rebuts.
-  healthSafetyActions: z
-    .object({
-      actions: z.array(
-        z.object({
-          code: z.string().min(1),
-          label: z.string().min(1),
-          description: z.string().optional(),
-          laborCost: z.number().nonnegative(),
-          immobilizationCost: z.number().nonnegative().optional(),
-          timeHoursN1: z.number().nonnegative().optional(),
-          timeHoursN2: z.number().nonnegative().optional(),
-          timeHoursN3: z.number().nonnegative().optional(),
-          requiresMachine: z.boolean().optional(),
-          effects: z.object({
-            attritionReduction: z.number().min(0).max(1).optional(),
-            accidentRateReduction: z.number().min(0).max(1).optional(),
-            hrImageBonus: z.number().min(0).max(1).optional(),
-            productivityBonus: z.number().min(0).max(0.3).optional(),
-            maintenanceSaving: z.number().nonnegative().optional(),
-            defectReduction: z.number().min(0).max(0.3).optional(),
-          }),
-          isRecurring: z.boolean().optional(),
-          durationRounds: z.number().int().positive().optional(),
-        }),
-      ).min(1),
-      maxActionsPerRound: z.number().int().positive().optional(),
-    })
-    .optional(),
-  // Programmes de formation RH : catalogue des sessions de formation,
-  // effets sur productivité, attrition et qualité.
-  trainingPrograms: z
-    .object({
-      programs: z.array(
-        z.object({
-          id: z.string().min(1),
-          label: z.string().min(1),
-          domaine: z.enum(["production", "commercial", "management", "rh", "technique"]),
-          durationRounds: z.number().int().min(1),
-          costPerEmployee: z.number().min(0),
-          maxEmployeesPerRound: z.number().int().min(1),
-          effects: z.object({
-            productivityBonus: z.number().min(0).max(1).default(0),
-            attritionReduction: z.number().min(0).max(1).default(0),
-            qualityBonus: z.number().min(0).max(1).default(0),
-            safetyBonus: z.number().min(0).max(1).default(0),
-            maintenanceSaving: z.number().min(0).default(0),
-          }),
-        }),
-      ).min(1),
-      maxConcurrentPrograms: z.number().int().min(1).default(2),
-    })
-    .optional(),
-  // Actions commerciales enrichies : promotions, fidélisation, prospection,
-  // avec effets sur demande, loyauté, marge et image.
-  commercialActions: z
-    .object({
-      actions: z.array(
-        z.object({
-          id: z.string().min(1),
-          label: z.string().min(1),
-          type: z.enum(["promotion", "fidelisation", "prospection", "communication"]),
-          targetSegment: z.string().optional(),
-          isRecurring: z.boolean().default(false),
-          durationRounds: z.number().int().min(1).default(1),
-          costPerRound: z.number().min(0),
-          effects: z.object({
-            demandBonus: z.number().min(-0.5).max(1).default(0),
-            loyaltyBonus: z.number().min(0).max(1).default(0),
-            marginImpact: z.number().min(-0.5).max(0).default(0),
-            imageBonus: z.number().min(-1).max(1).default(0),
-            newClientRatio: z.number().min(0).max(0.5).default(0),
-          }),
-        }),
-      ).min(1),
-      maxActionsPerRound: z.number().int().min(1).default(2),
-    })
-    .optional(),
-  // Négociation fournisseurs (vague 5) : contrats de remise volume.
-  supplierNegotiation: z.object({
-    contracts: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      supplierType: z.enum(["matiere", "energie", "logistique", "soustraitance"]),
-      volumeThreshold: z.number().min(0),
-      discountRate: z.number().min(0).max(0.3),
-      contractDurationRounds: z.number().int().min(1),
-      supplyRiskReduction: z.number().min(0).max(1).default(0),
-    })).min(1),
-    maxActiveContracts: z.number().int().min(1).default(2),
-  }).optional(),
-  // Gestion de la capacité (vague 5) : options d'expansion de la capacité de production.
-  capacityExpansion: z.object({
-    options: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["atelier", "equipeNuit", "sousTraitance", "automatisation"]),
-      capacityBonus: z.number().min(0.1).max(2),
-      costPerRound: z.number().min(0),
-      setupCost: z.number().min(0).default(0),
-      minProductionLevel: z.number().min(0).default(0),
-      maxRounds: z.number().int().min(1).default(99),
-    })).min(1),
-    maxActiveOptions: z.number().int().min(1).default(1),
-  }).optional(),
-  // Marché international (vague 5) : expansion vers de nouveaux marchés.
-  internationalMarkets: z.object({
-    markets: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      region: z.enum(["europe", "amerique", "asie", "afrique"]),
-      demandMultiplier: z.number().min(0.5).max(5),
-      baseEntryRound: z.number().int().min(1),
-      entryInvestment: z.number().min(0),
-      exchangeRateVolatility: z.number().min(0).max(0.3).default(0.05),
-      tariffRate: z.number().min(0).max(0.5).default(0),
-      localAdaptationCost: z.number().min(0).default(0),
-    })).min(1),
-    maxActiveMarkets: z.number().int().min(1).default(2),
-  }).optional(),
-  // Innovation produit (vague 5) : développement de nouvelles gammes/services.
-  productInnovation: z.object({
-    innovations: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["gamme", "packaging", "service", "digital"]),
-      developmentRounds: z.number().int().min(1),
-      devCostPerRound: z.number().min(0),
-      launchCost: z.number().min(0).default(0),
-      effects: z.object({
-        priceBonus: z.number().min(0).max(0.5).default(0),
-        demandBonus: z.number().min(0).max(1).default(0),
-        marginBonus: z.number().min(-0.2).max(0.3).default(0),
-        cannibalizationRate: z.number().min(0).max(0.5).default(0),
-      }),
-    })).min(1),
-    maxSimultaneousDev: z.number().int().min(1).default(1),
-  }).optional(),
-  // Programme RSE / empreinte carbone (vague 5) : actions RSE structurées.
-  rseProgram: z.object({
-    actions: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      category: z.enum(["energie", "dechets", "mobilite", "fournisseurs", "social"]),
-      costPerRound: z.number().min(0),
-      implementationRounds: z.number().int().min(1).default(1),
-      effects: z.object({
-        carbonReduction: z.number().min(0).max(1).default(0),
-        imageBonus: z.number().min(0).max(0.3).default(0),
-        employeeSatisfaction: z.number().min(0).max(0.2).default(0),
-        energySaving: z.number().min(0).default(0),
-      }),
-    })).min(1),
-    carbonBudget: z.number().min(0).optional(),
-  }).optional(),
   // RSE (Responsabilité Sociale des Entreprises) : le levier n'existe que si
   // le bloc est déclaré. Absent → DEFAULT_RSE_CONFIG. Les grandeurs sont sans
   // dimension : normalisées par l'échelle marketing du scénario.
@@ -698,14 +514,12 @@ export const engineScenarioConfigSchema = z.object({
       }),
     })
     .optional(),
-  // Catalogue d'actions R&D ponctuelles (vague 1) : projets avec effets sur
-  // coûts, qualité et image. Absent = pas d'actions R&D disponibles.
+  // Programmes de R&D de procédé : des tours de travaux, puis un acquis pour
+  // la partie (coût variable, qualité, image). Absent = pas de programme.
   rdActions: z.object({
     actions: z.array(z.object({
       id: z.string().min(1),
       label: z.string().min(1),
-      theme: z.string().min(1),
-      level: z.number().int().min(1).max(3),
       costPerRound: z.number().min(0),
       durationRounds: z.number().int().min(1),
       effects: z.object({
@@ -715,121 +529,6 @@ export const engineScenarioConfigSchema = z.object({
       }),
     })).min(1),
     maxSimultaneousProjects: z.number().int().min(1).default(2),
-  }).optional(),
-  // Stratégie de prix (vague 6) : multiplicateurs de prix et effets sur la demande et la marge.
-  pricingStrategy: z.object({
-    strategies: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["premium", "penetration", "dynamique", "segmentation", "psychologique"]),
-      priceMultiplier: z.number().min(0.5).max(2),
-      demandImpact: z.number().min(-0.5).max(0.3),
-      marginImpact: z.number().min(-0.3).max(0.5),
-      imageImpact: z.number().min(-0.2).max(0.3).default(0),
-      minRound: z.number().int().min(1).default(1),
-    })).min(1),
-    maxActiveStrategies: z.number().int().min(1).default(1),
-  }).optional(),
-  // RH avancée (vague 6) : politiques RH avec effets sur l'attrition, la productivité et le recrutement.
-  advancedHR: z.object({
-    policies: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["recrutement", "carrieres", "salaires", "teletravail", "bienEtre"]),
-      costPerRound: z.number().min(0),
-      implementationRounds: z.number().int().min(1).default(1),
-      effects: z.object({
-        attritionReduction: z.number().min(0).max(0.5).default(0),
-        productivityBonus: z.number().min(0).max(0.3).default(0),
-        recruitmentBonus: z.number().min(0).max(0.5).default(0),
-        absenteeismReduction: z.number().min(0).max(0.3).default(0),
-      }),
-    })).min(1),
-    maxActivePolicies: z.number().int().min(1).default(3),
-  }).optional(),
-  // Gestion de crise (vague 6) : plans de préparation aux crises avec réduction de l'impact.
-  crisisManagement: z.object({
-    plans: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      crisisType: z.enum(["greve", "rappelProduit", "cyberAttaque", "ruptureFournisseur", "criseSanitaire"]),
-      preparationCostPerRound: z.number().min(0),
-      activationCost: z.number().min(0),
-      effects: z.object({
-        revenueProtection: z.number().min(0).max(1).default(0),
-        recoverySpeedBonus: z.number().min(0).max(1).default(0),
-        imageProtection: z.number().min(0).max(1).default(0),
-      }),
-    })).min(1),
-    crisisEventProbability: z.number().min(0).max(0.2).default(0.05),
-  }).optional(),
-  // Partenariats & alliances (vague 6) : accords commerciaux avec effets sur revenus, coûts et R&D.
-  partnerships: z.object({
-    options: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["codeveloppement", "licence", "jointVenture", "appelOffre", "franchise"]),
-      entryFee: z.number().min(0).default(0),
-      royaltiesPerRound: z.number().min(0).default(0),
-      minRound: z.number().int().min(1).default(1),
-      durationRounds: z.number().int().min(1),
-      effects: z.object({
-        revenueBonus: z.number().min(-0.1).max(1).default(0),
-        costReduction: z.number().min(0).max(0.3).default(0),
-        rdBonus: z.number().min(0).max(0.5).default(0),
-        marketAccessBonus: z.number().min(0).max(0.5).default(0),
-      }),
-    })).min(1),
-    maxActivePartnerships: z.number().int().min(1).default(2),
-  }).optional(),
-  // Transformation digitale (vague 6) : projets IT avec effets sur l'efficacité et la demande.
-  digitalTransformation: z.object({
-    projects: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["erp", "crm", "automatisation", "dataAnalytics", "ecommerce"]),
-      implementationRounds: z.number().int().min(1),
-      costPerRound: z.number().min(0),
-      maintenanceCostPerRound: z.number().min(0).default(0),
-      effects: z.object({
-        efficiencyBonus: z.number().min(0).max(0.4).default(0),
-        costReduction: z.number().min(0).max(0.3).default(0),
-        demandBonus: z.number().min(0).max(0.3).default(0),
-        errorReduction: z.number().min(0).max(0.5).default(0),
-      }),
-    })).min(1),
-    maxSimultaneousProjects: z.number().int().min(1).default(2),
-  }).optional(),
-  // Gestion de marque (vague 6) : actions de renforcement de la marque et de la réputation.
-  brandManagement: z.object({
-    actions: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["reputation", "communicationCrise", "ambassadeurs", "nps", "certificationLabel"]),
-      costPerRound: z.number().min(0),
-      durationRounds: z.number().int().min(1).default(1),
-      isRecurring: z.boolean().default(false),
-      effects: z.object({
-        imageBonus: z.number().min(-0.1).max(0.5).default(0),
-        loyaltyBonus: z.number().min(0).max(0.3).default(0),
-        priceAcceptance: z.number().min(0).max(0.2).default(0),
-        crisisRecovery: z.number().min(0).max(1).default(0),
-      }),
-    })).min(1),
-    maxActionsPerRound: z.number().int().min(1).default(2),
-  }).optional(),
-  // Catalogue d'options de financement (vague 3) : lignes de crédit et emprunts.
-  // Absent = pas d'options de financement structurées disponibles.
-  financingOptions: z.object({
-    options: z.array(z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      type: z.enum(["creditLine", "termLoan"]),
-      maxAmount: z.number().min(0),
-      interestRatePerRound: z.number().min(0).max(0.1),
-      durationRounds: z.number().int().min(1),
-      availableFromRound: z.number().int().min(1).default(1),
-    })).min(1),
   }).optional(),
 }) satisfies z.ZodType<EngineScenarioConfig>;
 

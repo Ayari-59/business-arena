@@ -111,15 +111,12 @@ export function PeriodDecisionsRecap({
 
   // LES MODULES, SOUS LE THÈME DE LEUR ÉTAPE : le récapitulatif reprend le
   // rangement du formulaire (`config/etapes-des-modules`), avec les mêmes titres.
-  // La crise du tour se lit sous « Assurance & risques », avec les plans qui y
-  // répondent : le moteur ne la tire qu'aux parties qui offrent ces plans.
   const groupesDeModules = modules
     ? ETAPES_DU_FORMULAIRE.map((etape) => ({
         etape,
-        titre: titreDeLEtape(etape, { gamme: parProduit.length > 0, risques: true }),
+        titre: titreDeLEtape(etape, { gamme: parProduit.length > 0 }),
         lignes: modules.lignes.filter((l) => ETAPE_DU_MODULE[l.decision] === etape),
-        crise: etape === "assurance" ? modules.crise : null,
-      })).filter((g) => g.lignes.length > 0 || g.crise)
+      })).filter((g) => g.lignes.length > 0)
     : [];
 
   return (
@@ -204,12 +201,6 @@ export function PeriodDecisionsRecap({
             {groupesDeModules.map((g) => (
               <section key={g.etape} data-modules-du-theme={g.etape} aria-label={g.titre}>
                 <p className="libelle mb-1.5">{g.titre}</p>
-                {g.crise ? (
-                  <p data-crise-du-tour="" className="mb-1.5 flex items-start gap-1.5 text-sm text-slate-200">
-                    <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--metier,var(--color-slate-300))]" />
-                    {g.crise}
-                  </p>
-                ) : null}
                 {g.lignes.length > 0 ? (
                   <ul className="space-y-1.5">
                     {g.lignes.map((l) => (

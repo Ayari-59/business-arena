@@ -143,24 +143,21 @@ const rawEcommerce = {
         levels: [
           {
             level: 1,
-            label: "Retours N1 — analyse des causes de retour",
+            label: "Retours N1 : analyse des causes de retour",
             cost: 5000,
-            durationRounds: 1,
             effects: { returnRateReduction: 0.12, productionCostReduction: 0.02 },
           },
           {
             level: 2,
-            label: "Retours N2 — contrôle qualité avant expédition",
-            cost: 8000,
-            durationRounds: 1,
+            label: "Retours N2 : contrôle qualité avant expédition",
+            cost: 1500,
             effects: { returnRateReduction: 0.15, defectRateReduction: 0.08 },
             prerequisiteLevel: 1,
           },
           {
             level: 3,
-            label: "Retours N3 — logistique retour optimisée et réduction gaspillage",
+            label: "Retours N3 : logistique retour optimisée et réduction gaspillage",
             cost: 12000,
-            durationRounds: 1,
             effects: { returnRateReduction: 0.10, defectRateReduction: 0.07, productionCostReduction: 0.03, maintenanceSaving: 1000 },
             prerequisiteLevel: 2,
           },
@@ -168,28 +165,25 @@ const rawEcommerce = {
       },
       {
         code: "amelioration_packaging",
-        label: "Amélioration des composants (emballage / packaging)",
+        label: "Emballage et protection des colis",
         levels: [
           {
             level: 1,
-            label: "Packaging N1 — emballages protecteurs renforcés",
-            cost: 6000,
-            durationRounds: 1,
+            label: "Packaging N1 : emballages protecteurs renforcés",
+            cost: 2000,
             effects: { defectRateReduction: 0.10, returnRateReduction: 0.08 },
           },
           {
             level: 2,
-            label: "Packaging N2 — packaging éco-responsable et différenciant",
+            label: "Packaging N2 : packaging éco-responsable et différenciant",
             cost: 10000,
-            durationRounds: 1,
             effects: { defectRateReduction: 0.08, qualityImageBonus: 0.04 },
             prerequisiteLevel: 1,
           },
           {
             level: 3,
-            label: "Packaging N3 — personnalisation et expérience déballage premium",
+            label: "Packaging N3 : personnalisation et expérience déballage premium",
             cost: 15000,
-            durationRounds: 1,
             effects: { qualityImageBonus: 0.08, returnRateReduction: 0.10 },
             prerequisiteLevel: 2,
           },
@@ -201,24 +195,21 @@ const rawEcommerce = {
         levels: [
           {
             level: 1,
-            label: "Livraison N1 — suivi de commande en temps réel",
+            label: "Livraison N1 : suivi de commande en temps réel",
             cost: 4000,
-            durationRounds: 1,
             effects: { qualityImageBonus: 0.04, returnRateReduction: 0.05 },
           },
           {
             level: 2,
-            label: "Livraison N2 — délais garantis et notifications proactives",
+            label: "Livraison N2 : délais garantis et notifications proactives",
             cost: 7000,
-            durationRounds: 1,
             effects: { qualityImageBonus: 0.05, returnRateReduction: 0.10 },
             prerequisiteLevel: 1,
           },
           {
             level: 3,
-            label: "Livraison N3 — service client dédié et politique retour simplifiée",
+            label: "Livraison N3 : service client dédié et politique retour simplifiée",
             cost: 10000,
-            durationRounds: 1,
             effects: { qualityImageBonus: 0.07, returnRateReduction: 0.12 },
             prerequisiteLevel: 2,
           },
@@ -711,243 +702,7 @@ const rawEcommerce = {
     // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
     ...evenementsDInvestissement("ecom"),
   ],
-  // Les frais de port explosent au dernier tour. Ils tombaient au tour 5, où
-  // le BTS NDRC place sa séance de négociation avec les places de marché :
-  // la classe préparait un argumentaire pendant que ses coûts sautaient pour
-  // une raison sans rapport, et la situation du tour parlait de transport
-  // quand la séance parlait de commission.
-  commercialActions: {
-    maxActionsPerRound: 2,
-    actions: [
-      {
-        id: "flash-sale",
-        label: "Vente flash 48h (-15%)",
-        type: "promotion",
-        isRecurring: false,
-        durationRounds: 1,
-        costPerRound: 2000,
-        effects: { demandBonus: 0.25, loyaltyBonus: 0, marginImpact: -0.15, imageBonus: 0, newClientRatio: 0.10 },
-      },
-      {
-        id: "seo-content",
-        label: "Stratégie SEO et contenus",
-        type: "communication",
-        isRecurring: true,
-        durationRounds: 1,
-        costPerRound: 4000,
-        effects: { demandBonus: 0.08, loyaltyBonus: 0.02, marginImpact: 0, imageBonus: 0.05, newClientRatio: 0.06 },
-      },
-      {
-        id: "parrainage",
-        label: "Programme de parrainage",
-        type: "fidelisation",
-        isRecurring: true,
-        durationRounds: 1,
-        costPerRound: 2500,
-        effects: { demandBonus: 0.06, loyaltyBonus: 0.08, marginImpact: -0.01, imageBonus: 0.02, newClientRatio: 0.09 },
-      },
-    ],
-  },
   scriptedEvents: [{ round: 6, eventCode: "ecom_frais_port" }],
-  // Actions de maintenance par machine (e-commerce — équipements logistiques : chariots, convoyeurs).
-  // Coûts plus élevés en curatif : une panne en entrepôt bloque les expéditions.
-  maintenanceActions: {
-    types: [
-      {
-        code: "preventif",
-        label: "Maintenance préventive",
-        levels: [
-          {
-            level: 1,
-            label: "Inspection logistique",
-            laborCost: 400,
-            downtimeCost: 300,
-            timeHoursN1: 4,
-            timeHoursN2: 3,
-            timeHoursN3: 2,
-            wearReduction: 0.04,
-            breakdownRiskReduction: 0.08,
-          },
-          {
-            level: 2,
-            label: "Révision des équipements",
-            laborCost: 1200,
-            downtimeCost: 900,
-            timeHoursN1: 8,
-            timeHoursN2: 6,
-            timeHoursN3: 4,
-            wearReduction: 0.12,
-            breakdownRiskReduction: 0.2,
-          },
-          {
-            level: 3,
-            label: "Remise à niveau complète",
-            laborCost: 2800,
-            downtimeCost: 2200,
-            timeHoursN1: 16,
-            timeHoursN2: 12,
-            timeHoursN3: 8,
-            wearReduction: 0.3,
-            breakdownRiskReduction: 0.45,
-          },
-        ],
-      },
-      {
-        code: "curatif",
-        label: "Maintenance curative",
-        levels: [
-          {
-            level: 1,
-            label: "Dépannage d'urgence",
-            laborCost: 900,
-            downtimeCost: 1800,
-            timeHoursN1: 6,
-            timeHoursN2: 5,
-            timeHoursN3: 3,
-            capacityRestoration: 0.5,
-            wearReduction: 0.08,
-          },
-          {
-            level: 2,
-            label: "Réparation standard",
-            laborCost: 2200,
-            downtimeCost: 3500,
-            timeHoursN1: 12,
-            timeHoursN2: 10,
-            timeHoursN3: 7,
-            capacityRestoration: 0.8,
-            wearReduction: 0.2,
-          },
-          {
-            level: 3,
-            label: "Remplacement complet",
-            laborCost: 4500,
-            downtimeCost: 7000,
-            timeHoursN1: 20,
-            timeHoursN2: 16,
-            timeHoursN3: 12,
-            capacityRestoration: 1.0,
-            wearReduction: 0.55,
-          },
-        ],
-      },
-    ],
-  },
-  healthSafetyActions: {
-    actions: [
-      {
-        code: "visite_medicale",
-        label: "Visites médicales renforcées",
-        description: "Mise en place de visites médicales obligatoires pour les opérateurs manutentionnaires, suivi des aptitudes.",
-        laborCost: 1200,
-        timeHoursN1: 4,
-        timeHoursN2: 4,
-        timeHoursN3: 2,
-        effects: {
-          attritionReduction: 0.04,
-          accidentRateReduction: 0.08,
-          hrImageBonus: 0.04,
-        },
-        isRecurring: true,
-        durationRounds: 2,
-      },
-      {
-        code: "formation_manutention",
-        label: "Formation gestes et postures (manutention)",
-        description: "Formation TMS pour tous les caristes et préparateurs de commandes : levage, port de charges, postures.",
-        laborCost: 1800,
-        timeHoursN1: 8,
-        timeHoursN2: 6,
-        timeHoursN3: 4,
-        effects: {
-          attritionReduction: 0.06,
-          accidentRateReduction: 0.12,
-          productivityBonus: 0.03,
-          hrImageBonus: 0.05,
-        },
-        isRecurring: true,
-        durationRounds: 2,
-      },
-      {
-        code: "securite_colis",
-        label: "Sécurisation des zones de picking",
-        description: "Balisage des allées, signalétique au sol, cages de protection pour les zones à haute densité de circulation.",
-        laborCost: 2000,
-        immobilizationCost: 1500,
-        timeHoursN1: 12,
-        timeHoursN2: 8,
-        timeHoursN3: 6,
-        effects: {
-          accidentRateReduction: 0.18,
-          defectReduction: 0.02,
-          hrImageBonus: 0.04,
-        },
-      },
-      {
-        code: "vestiaires_operateurs",
-        label: "Rénovation vestiaires et sanitaires",
-        description: "Rénovation des vestiaires, sanitaires et salle de pause pour améliorer les conditions de travail.",
-        laborCost: 1500,
-        immobilizationCost: 3000,
-        timeHoursN1: 4,
-        timeHoursN2: 2,
-        timeHoursN3: 2,
-        effects: {
-          attritionReduction: 0.07,
-          hrImageBonus: 0.08,
-          productivityBonus: 0.02,
-        },
-        isRecurring: true,
-        durationRounds: 3,
-      },
-      {
-        code: "plan_evacuation",
-        label: "Plan d'évacuation et exercice incendie",
-        description: "Mise à jour du plan d'évacuation de l'entrepôt et exercice incendie avec toutes les équipes.",
-        laborCost: 1000,
-        timeHoursN1: 4,
-        timeHoursN2: 4,
-        timeHoursN3: 2,
-        effects: {
-          accidentRateReduction: 0.1,
-          hrImageBonus: 0.03,
-        },
-      },
-    ],
-    maxActionsPerRound: 3,
-  },
-  trainingPrograms: {
-    maxConcurrentPrograms: 2,
-    programs: [
-      {
-        id: "formation-digital",
-        label: "Marketing digital et analytics",
-        domaine: "commercial",
-        durationRounds: 2,
-        costPerEmployee: 700,
-        maxEmployeesPerRound: 8,
-        effects: { productivityBonus: 0.05, attritionReduction: 0.01, qualityBonus: 0, safetyBonus: 0, maintenanceSaving: 0 },
-      },
-      {
-        id: "formation-logistique",
-        label: "Optimisation logistique",
-        domaine: "technique",
-        durationRounds: 3,
-        costPerEmployee: 900,
-        maxEmployeesPerRound: 8,
-        effects: { productivityBonus: 0.07, attritionReduction: 0.02, qualityBonus: 0.02, safetyBonus: 0, maintenanceSaving: 150 },
-      },
-      {
-        id: "formation-service-client",
-        label: "Excellence service client",
-        domaine: "commercial",
-        durationRounds: 2,
-        costPerEmployee: 500,
-        maxEmployeesPerRound: 12,
-        effects: { productivityBonus: 0.02, attritionReduction: 0.04, qualityBonus: 0.03, safetyBonus: 0, maintenanceSaving: 0 },
-      },
-    ],
-  },
   scoring: {
     weights: {
       economic: 0.3,
@@ -967,101 +722,10 @@ const rawEcommerce = {
       utilizationTarget: 0.78,
     },
   },
-  supplierNegotiation: {
-    maxActiveContracts: 2,
-    contracts: [
-      { id: "contrat-logistique", label: "Contrat prestataire logistique", supplierType: "logistique", volumeThreshold: 5000, discountRate: 0.06, contractDurationRounds: 4, supplyRiskReduction: 0.15 },
-      { id: "contrat-soustraitance", label: "Accord sous-traitance picking", supplierType: "soustraitance", volumeThreshold: 0, discountRate: 0.04, contractDurationRounds: 3, supplyRiskReduction: 0.10 },
-    ],
-  },
-  capacityExpansion: {
-    maxActiveOptions: 1,
-    options: [
-      { id: "sousTraitance", label: "Externalisation logistique complémentaire", type: "sousTraitance", capacityBonus: 0.40, costPerRound: 15000, setupCost: 8000, minProductionLevel: 0, maxRounds: 99 },
-    ],
-  },
-  internationalMarkets: {
-    maxActiveMarkets: 2,
-    markets: [
-      { id: "europe", label: "Expansion Europe (Bénélux, DACH)", region: "europe", demandMultiplier: 1.8, baseEntryRound: 2, entryInvestment: 25000, exchangeRateVolatility: 0.04, tariffRate: 0.01, localAdaptationCost: 8000 },
-      { id: "amerique", label: "Marché nord-américain", region: "amerique", demandMultiplier: 3.0, baseEntryRound: 5, entryInvestment: 60000, exchangeRateVolatility: 0.10, tariffRate: 0.06, localAdaptationCost: 20000 },
-    ],
-  },
-  productInnovation: {
-    maxSimultaneousDev: 1,
-    innovations: [
-      { id: "service-premium", label: "Offre premium livraison express", type: "service", developmentRounds: 2, devCostPerRound: 8000, launchCost: 10000, effects: { priceBonus: 0.10, demandBonus: 0.18, marginBonus: 0.04, cannibalizationRate: 0.05 } },
-      { id: "digital-app", label: "Application mobile personnalisée", type: "digital", developmentRounds: 3, devCostPerRound: 15000, launchCost: 25000, effects: { priceBonus: 0.08, demandBonus: 0.22, marginBonus: 0.02, cannibalizationRate: 0.06 } },
-    ],
-  },
-  rseProgram: {
-    carbonBudget: 800,
-    actions: [
-      { id: "rse-mobilite", label: "Flotte de livraison verte", category: "mobilite", costPerRound: 5000, implementationRounds: 2, effects: { carbonReduction: 0.15, imageBonus: 0.06, employeeSatisfaction: 0.02, energySaving: 3000 } },
-      { id: "rse-dechets", label: "Réduction emballages plastiques", category: "dechets", costPerRound: 2500, implementationRounds: 2, effects: { carbonReduction: 0.08, imageBonus: 0.05, employeeSatisfaction: 0.01, energySaving: 0 } },
-      { id: "rse-social", label: "Programme conditions de travail entrepôt", category: "social", costPerRound: 3500, implementationRounds: 1, effects: { carbonReduction: 0.02, imageBonus: 0.04, employeeSatisfaction: 0.07, energySaving: 0 } },
-    ],
-  },
-  pricingStrategy: {
-    maxActiveStrategies: 2,
-    strategies: [
-      { id: "ps-promo-flash", label: "Ventes flash et promotions ciblées", type: "dynamique", priceMultiplier: 0.92, demandImpact: 0.15, marginImpact: -0.06, imageImpact: 0.02, minRound: 1 },
-      { id: "ps-premium-select", label: "Gamme premium sélective", type: "premium", priceMultiplier: 1.12, demandImpact: -0.04, marginImpact: 0.10, imageImpact: 0.06, minRound: 2 },
-      { id: "ps-psycho", label: "Tarification psychologique (9,99 €)", type: "psychologique", priceMultiplier: 0.98, demandImpact: 0.07, marginImpact: 0.02, imageImpact: 0, minRound: 1 },
-    ],
-  },
-  advancedHR: {
-    maxActivePolicies: 2,
-    policies: [
-      { id: "hr-teletravail", label: "Full remote préparateurs", type: "teletravail", costPerRound: 2500, implementationRounds: 1, effects: { attritionReduction: 0.05, productivityBonus: 0.03, recruitmentBonus: 0.08, absenteeismReduction: 0.04 } },
-      { id: "hr-incentive", label: "Intéressement performance logistique", type: "salaires", costPerRound: 7000, implementationRounds: 1, effects: { attritionReduction: 0.03, productivityBonus: 0.10, recruitmentBonus: 0.04, absenteeismReduction: 0.02 } },
-      { id: "hr-upskill", label: "Formation e-commerce et data", type: "carrieres", costPerRound: 5000, implementationRounds: 2, effects: { attritionReduction: 0.04, productivityBonus: 0.08, recruitmentBonus: 0.12, absenteeismReduction: 0.02 } },
-    ],
-  },
-  crisisManagement: {
-    crisisEventProbability: 0.20,
-    plans: [
-      { id: "cm-rupture-stock", label: "Plan de continuité stocks", crisisType: "ruptureFournisseur", preparationCostPerRound: 2500, activationCost: 6000, effects: { revenueProtection: 0.65, recoverySpeedBonus: 0.25, imageProtection: 0.40 } },
-      { id: "cm-fraude", label: "Cellule anti-fraude", crisisType: "cyberAttaque", preparationCostPerRound: 3500, activationCost: 9000, effects: { revenueProtection: 0.75, recoverySpeedBonus: 0.35, imageProtection: 0.60 } },
-      { id: "cm-logistique", label: "Backup prestataire logistique", crisisType: "greve", preparationCostPerRound: 4000, activationCost: 12000, effects: { revenueProtection: 0.80, recoverySpeedBonus: 0.40, imageProtection: 0.35 } },
-    ],
-  },
-  partnerships: {
-    maxActivePartnerships: 2,
-    options: [
-      { id: "part-marketplace", label: "Intégration marketplace partenaire", type: "franchise", entryFee: 10000, royaltiesPerRound: 3000, durationRounds: 4, minRound: 1, effects: { revenueBonus: 0.12, costReduction: 0, rdBonus: 0, marketAccessBonus: 0.15 } },
-      { id: "part-paiement", label: "Partenariat fintech paiement", type: "codeveloppement", entryFee: 8000, royaltiesPerRound: 2000, durationRounds: 3, minRound: 1, effects: { revenueBonus: 0.03, costReduction: 0.02, rdBonus: 0.05, marketAccessBonus: 0.05 } },
-      { id: "part-logistique", label: "Alliance mutualisation entrepôts", type: "jointVenture", entryFee: 18000, royaltiesPerRound: 4500, durationRounds: 5, minRound: 2, effects: { revenueBonus: 0, costReduction: 0.12, rdBonus: 0, marketAccessBonus: 0.04 } },
-    ],
-  },
-  digitalTransformation: {
-    maxSimultaneousProjects: 3,
-    projects: [
-      { id: "dt-ia-prix", label: "IA de pricing dynamique", type: "dataAnalytics", costPerRound: 12000, implementationRounds: 3, maintenanceCostPerRound: 2500, effects: { efficiencyBonus: 0.06, costReduction: 0.03, demandBonus: 0.08, errorReduction: 0.05 } },
-      { id: "dt-appli-mobile", label: "Application mobile clients", type: "ecommerce", costPerRound: 8000, implementationRounds: 2, maintenanceCostPerRound: 1500, effects: { efficiencyBonus: 0.03, costReduction: 0, demandBonus: 0.10, errorReduction: 0 } },
-      { id: "dt-wms", label: "WMS entrepôt intelligent", type: "automatisation", costPerRound: 14000, implementationRounds: 4, maintenanceCostPerRound: 3000, effects: { efficiencyBonus: 0.12, costReduction: 0.10, demandBonus: 0, errorReduction: 0.20 } },
-    ],
-  },
-  brandManagement: {
-    maxActionsPerRound: 2,
-    actions: [
-      { id: "bm-influence", label: "Marketing d'influence", type: "reputation", costPerRound: 7000, durationRounds: 2, isRecurring: false, effects: { imageBonus: 0.08, loyaltyBonus: 0.03, priceAcceptance: 0.02, crisisRecovery: 0 } },
-      { id: "bm-avis", label: "Programme fidélité et avis clients", type: "nps", costPerRound: 4000, durationRounds: 4, isRecurring: true, effects: { imageBonus: 0.04, loyaltyBonus: 0.10, priceAcceptance: 0.04, crisisRecovery: 0.08 } },
-      { id: "bm-content", label: "Stratégie content marketing", type: "ambassadeurs", costPerRound: 5500, durationRounds: 3, isRecurring: false, effects: { imageBonus: 0.07, loyaltyBonus: 0.05, priceAcceptance: 0.03, crisisRecovery: 0.05 } },
-    ],
-  },
   rdActions: {
     maxSimultaneousProjects: 2,
     actions: [
-      { id: "rd-algo-reco", label: "Algorithme de recommandation", theme: "process", level: 2, costPerRound: 15000, durationRounds: 3, effects: { costReduction: 0, qualityBonus: 0.08, imageBonus: 0.05 } },
-      { id: "rd-livraison-verte", label: "Livraison bas carbone", theme: "emballage", level: 1, costPerRound: 8000, durationRounds: 2, effects: { costReduction: 0.03, qualityBonus: 0, imageBonus: 0.12 } },
-      { id: "rd-entrepot-auto", label: "Automatisation entrepôt", theme: "process", level: 3, costPerRound: 20000, durationRounds: 5, effects: { costReduction: 0.15, qualityBonus: 0.05, imageBonus: 0 } },
-    ],
-  },
-  financingOptions: {
-    options: [
-      { id: "credit-treso", label: "Facilité de trésorerie", type: "creditLine", maxAmount: 100000, interestRatePerRound: 0.018, durationRounds: 3, availableFromRound: 1 },
-      { id: "emprunt-infra", label: "Emprunt infrastructure digitale", type: "termLoan", maxAmount: 400000, interestRatePerRound: 0.012, durationRounds: 10, availableFromRound: 2 },
+      { id: "rd-entrepot-auto", label: "Automatisation entrepôt", costPerRound: 20000, durationRounds: 3, effects: { costReduction: 0.15, qualityBonus: 0.05, imageBonus: 0 } },
     ],
   },
 } satisfies EngineScenarioConfig;

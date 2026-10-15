@@ -156,50 +156,15 @@ export const roundDecisionsSchema = z.object({
    * LES MODULES DU SCÉNARIO (catalogues optionnels : `config/modules-saisis`).
    * Un `z.object` supprime les clés qu'il ne connaît pas : sans ces lignes, une
    * case cochée disparaissait ici, avant le moteur, sans un mot. Bornes
-   * techniques seulement ; ce que le scénario offre ce tour (catalogue, tour
-   * minimal, plafonds) est jugé ensuite par `refusDesModules`.
+   * techniques seulement ; ce que le scénario offre ce tour (catalogue, niveau,
+   * plafonds) est jugé ensuite par `refusDesModules`. Les décisions des modules
+   * retirés ne sont plus lues : leurs clés tombent ici.
    */
   qualityActions: z
     .array(z.object({ actionCode: identifiant, level: z.coerce.number().int().min(1).max(10) }))
     .max(MODULES_MAX)
     .optional(),
-  hsActions: z
-    .array(z.object({ actionCode: identifiant, machineId: identifiant.optional() }))
-    .max(MODULES_MAX)
-    .optional(),
-  trainingEnrollments: z
-    .array(
-      z.object({ programId: identifiant, enrolledCount: z.coerce.number().int().min(0).max(1000) }),
-    )
-    .max(MODULES_MAX)
-    .optional(),
-  activeCommercialActionIds: identifiants,
-  activeContractIds: identifiants,
-  activeCapacityOptionIds: identifiants,
-  enteredMarketIds: identifiants,
-  startedInnovationIds: identifiants,
-  activeRseActionIds: identifiants,
-  activePricingStrategyIds: identifiants,
-  activeHRPolicyIds: identifiants,
-  activeCrisisPlanIds: identifiants,
-  activatePartnershipIds: identifiants,
-  startDigitalProjectIds: identifiants,
-  activeBrandActionIds: identifiants,
   startedRdActionIds: identifiants,
-  maintenanceDecisions: z
-    .array(
-      z.object({
-        machineId: identifiant,
-        actionCode: identifiant,
-        level: z.coerce.number().int().min(1).max(3),
-      }),
-    )
-    .max(MODULES_MAX)
-    .optional(),
-  financingDraws: z
-    .array(z.object({ optionId: identifiant, amount: z.coerce.number().min(0).max(100_000_000) }))
-    .max(MODULES_MAX)
-    .optional(),
   /** Ce que l'équipe arrête ce tour ; ce qui peut s'arrêter est jugé par `refusDesModules`. */
   stoppedModuleItems: z
     .array(z.object({ module: identifiant, id: identifiant }))

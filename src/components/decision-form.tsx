@@ -85,6 +85,7 @@ import { ModulesDeDecision } from "@/components/modules-de-decision";
 import { modulesSaisis, type DecisionDeModule } from "@/config/modules-saisis";
 import {
   CARTE_DES_MODULES,
+  etapeDeModule,
   ETAPES_DU_FORMULAIRE,
   ETAPE_DU_MODULE,
   etapesAffichees,
@@ -3136,8 +3137,6 @@ export function DecisionForm({
     },
     modulesOffer,
   );
-  // Les plans de crise offerts : l'étape « Assurance » les porte, et le dit.
-  const risquesOfferts = modulesDeLEtape(modulesOffer, "assurance").length > 0;
   const ICONES_DES_ETAPES: Record<EtapeDuFormulaire, NomDIcone> = {
     vendre: "cible",
     approvisionner: "camion",
@@ -3150,12 +3149,11 @@ export function DecisionForm({
   };
   // En gamme, la première étape ne se limite plus à vendre : elle porte TOUT ce
   // qui se décide sur une référence, budgets compris. L'appeler « Vendre » ferait
-  // chercher ailleurs des champs qui sont là. L'assurance devient « Assurance &
-  // risques » quand les plans de crise y sont offerts.
+  // chercher ailleurs des champs qui sont là.
   const META = Object.fromEntries(
     ETAPES_DU_FORMULAIRE.map((cle) => [
       cle,
-      { titre: titreDeLEtape(cle, { gamme: !!gamme, risques: risquesOfferts }), icone: ICONES_DES_ETAPES[cle] },
+      { titre: titreDeLEtape(cle, { gamme: !!gamme }), icone: ICONES_DES_ETAPES[cle] },
     ]),
   ) as Record<EtapeDuFormulaire, { titre: string; icone: NomDIcone }>;
   const idx = (cle: EtapeDuFormulaire) => etapesVisibles.indexOf(cle);
@@ -3425,7 +3423,9 @@ export function DecisionForm({
       const i = ETAPES_DU_FORMULAIRE.indexOf(etape as EtapeDuFormulaire);
       return i < 0 ? ETAPES_DU_FORMULAIRE.length : i;
     };
-    const desModules = ETAPES_DU_FORMULAIRE.filter((e) => modulesDeLEtape(modulesOffer, e).length > 0).map(
+    const desModules = ETAPES_DU_FORMULAIRE.filter(etapeDeModule)
+      .filter((e) => modulesDeLEtape(modulesOffer, e).length > 0)
+      .map(
       (etape): DefCarte => ({
         cle: carteDesModules(etape),
         etape,

@@ -3,16 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { NomDIcone } from "@/components/icone";
 import { Tiroir } from "@/components/tiroir";
-import { sansMolette } from "@/components/sans-molette";
 import { idDuChamp } from "@/config/refus-de-decision";
 import type { DecisionDeModule } from "@/config/modules-saisis";
 import { modulesDeLEtape, type EtapeDuFormulaire } from "@/config/etapes-des-modules";
 import type { RoundDecisions } from "@/engine/types";
-import { formatEuro, formatUnits } from "@/lib/format";
+import { formatEuro } from "@/lib/format";
 import {
   choixDuModule,
-  saisieDuChoix,
-  type ElementDeModule,
   type ModuleOffert,
   type OffreDesModules,
 } from "@/services/modules-offer";
@@ -22,9 +19,7 @@ import {
  *
  * Une case par élément proposé ce tour, au gabarit des études : le nom et ce
  * que le choix coûte ce tour, puis les effets que le moteur applique, puis la
- * durée et les coûts qui suivront. Un élément qui se décide par un nombre
- * (l'effectif à former, le montant à tirer) porte un champ à la place de la
- * case : vide, rien n'est engagé. Ce qui tourne déjà se lit au-dessus, dans
+ * durée et les coûts qui suivront. Ce qui tourne déjà se lit au-dessus, dans
  * « Déjà engagé », avec une case « Arrêter » quand le module le permet.
  *
  * LE PLAFOND SE VOIT AVANT L'ENVOI : une fois les places du tour prises, les
@@ -47,42 +42,17 @@ import {
 
 const ICONES: Record<DecisionDeModule, NomDIcone> = {
   qualityActions: "etoile",
-  hsActions: "equipes",
-  trainingEnrollments: "formation",
-  activeHRPolicyIds: "personne",
-  maintenanceDecisions: "outil",
-  activeContractIds: "camion",
-  activeCapacityOptionIds: "usine",
-  enteredMarketIds: "monde",
-  startedInnovationIds: "idee",
   startedRdActionIds: "loupe",
-  activeRseActionIds: "feuille",
-  activePricingStrategyIds: "etiquette",
-  activeCommercialActionIds: "cible",
-  activeCrisisPlanIds: "alerte",
-  activatePartnershipIds: "accord",
-  startDigitalProjectIds: "ecran",
-  activeBrandActionIds: "communication",
-  financingDraws: "banque",
 };
 
-/** Un nombre saisi à la française ; NaN si vide ou illisible. */
-const nombre = (v: string) =>
-  v.trim() === "" ? Number.NaN : Number(v.replace(/[\s  ]/g, "").replace(",", "."));
-
-/** Ce que la feuille lit d'un module : les choix pris (et leur quantité), les places libérées. */
+/** Ce que la feuille lit d'un module : les choix cochés, les places libérées. */
 function lire(racine: HTMLElement | null, module: ModuleOffert) {
-  const pris = new Map<string, number>();
+  const pris = new Set<string>();
   let liberees = 0;
   let arrets = 0;
   if (!racine) return { pris, liberees, arrets };
-  for (const el of racine.querySelectorAll<HTMLInputElement>(`input[data-module="${module.decision}"]`)) {
-    if (el.type === "checkbox") {
-      if (el.checked) pris.set(el.name, 1);
-    } else {
-      const n = nombre(el.value);
-      if (Number.isFinite(n) && n > 0) pris.set(el.name, n);
-    }
+  for (const el of racine.querySelectorAll<HTMLInputElement>(`input[data-module="${module.decision}"]:checked`)) {
+    pris.add(el.name);
   }
   for (const el of racine.querySelectorAll<HTMLInputElement>(`input[data-arret="${module.decision}"]:checked`)) {
     arrets++;
@@ -92,10 +62,6 @@ function lire(racine: HTMLElement | null, module: ModuleOffert) {
 }
 
 const accorder = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
-
-function coutDuChoix(el: ElementDeModule, quantite: number): number {
-  return el.saisie ? quantite * el.saisie.coutUnitaire : el.coutDuTour;
-}
 
 function UnModule({
   module,
@@ -115,11 +81,8 @@ function UnModule({
     (choisis?.stoppedModuleItems ?? []).filter((a) => a.module === module.decision).map((a) => a.id),
   );
   const [etat, setEtat] = useState(() => {
-    const pris = new Map<string, number>();
-    for (const el of module.elements) {
-      if (!dejaChoisis.includes(el.id)) continue;
-      pris.set(el.champ, el.saisie ? (saisieDuChoix(choisis ?? {}, module.decision, el.id) ?? 0) : 1);
-    }
+    const pris = new Set<string>();
+    for (const el of module.elements) if (dejaChoisis.includes(el.id)) pris.add(el.champ);
     const liberees = module.enCours.filter((x) => x.arret?.occupe && x.id && dejaArretes.has(x.id)).length;
     const arrets = module.enCours.filter((x) => x.arret && x.id && dejaArretes.has(x.id)).length;
     return { pris, liberees, arrets };
@@ -149,7 +112,7 @@ function UnModule({
   if (enErreur && !deplie) setDeplie(true);
   const coutEngage = module.elements
     .filter((el) => etat.pris.has(el.champ))
-    .reduce((t, el) => t + coutDuChoix(el, etat.pris.get(el.champ) ?? 0), 0);
+    .reduce((t, el) => t + el.coutDuTour, 0);
   const plafond = module.plafond === null ? null : module.plafond + etat.liberees;
   const plein = plafond !== null && etat.pris.size >= plafond;
 
@@ -238,19 +201,11 @@ function UnModule({
                 const erreur = erreurs.get(el.champ);
                 const pris = etat.pris.has(el.champ);
                 const libre = !plein || pris;
-                const valeurDeja = el.saisie ? saisieDuChoix(choisis ?? {}, module.decision, el.id) : null;
-                const enEuros = el.saisie?.unite === "€";
                 const texte = (
                   <span className="min-w-0">
                     <span className="text-sm font-medium text-slate-200">
                       {el.libelle}
-                      {el.saisie
-                        ? el.saisie.coutUnitaire > 0
-                          ? ` · ${formatEuro(el.saisie.coutUnitaire)} par salarié et par tour`
-                          : ""
-                        : el.coutDuTour > 0
-                          ? ` · ${formatEuro(el.coutDuTour)} ce tour`
-                          : " · sans coût"}
+                      {el.coutDuTour > 0 ? ` · ${formatEuro(el.coutDuTour)} ce tour` : " · sans coût"}
                     </span>
                     <span className="mt-0.5 block text-xs text-slate-300">{el.effets.join(" · ")}</span>
                     <span className="mt-0.5 block text-xs text-slate-400">
@@ -265,70 +220,33 @@ function UnModule({
                 );
                 return (
                   <div key={el.champ}>
-                    {el.saisie ? (
-                      <div
-                        data-saisie-de-module=""
-                        data-saisi={pris ? "oui" : undefined}
-                        className={`space-y-2 rounded-xl border bg-slate-900 px-3 py-2.5 transition ${
-                          erreur ? "border-red-400/70" : pris ? "border-slate-300/50" : "border-white/10"
-                        } ${libre ? "" : "opacity-60"}`}
-                      >
-                        {texte}
-                        <label className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-                          <span>
-                            {enEuros ? "Montant à tirer" : "Salariés à former"} (jusqu&apos;à{" "}
-                            {enEuros ? formatEuro(el.saisie.max) : formatUnits(el.saisie.max)})
-                          </span>
-                          <span className="flex w-40 items-center gap-2 champ px-2 py-1.5">
-                          <input
-                            type="number"
-                            onWheel={sansMolette}
-                            inputMode="numeric"
-                            id={idDuChamp(el.champ)}
-                            name={el.champ}
-                            data-module={module.decision}
-                            min={el.saisie.min}
-                            max={el.saisie.max}
-                            step={el.saisie.pas}
-                            defaultValue={valeurDeja ?? ""}
-                            placeholder="0"
-                            disabled={!libre}
-                            aria-describedby={erreur ? `${idDuChamp(el.champ)}-refus` : undefined}
-                            className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none pointer-coarse:min-h-10"
-                          />
-                            <span className="shrink-0 text-xs text-slate-400">{enEuros ? "€" : "salariés"}</span>
-                          </span>
-                        </label>
-                      </div>
-                    ) : (
-                      <label
-                        className={`flex items-start gap-3 bg-slate-900 rounded-xl border px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12 has-[:disabled]:opacity-60 ${
-                          erreur ? "border-red-400/70" : "border-white/10"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          id={idDuChamp(el.champ)}
-                          name={el.champ}
-                          value={el.valeur}
-                          data-module={module.decision}
-                          defaultChecked={dejaChoisis.includes(el.id)}
-                          // Au plafond, les cases encore libres se grisent ; une case
-                          // cochée reste décochable.
-                          disabled={!libre}
-                          onChange={(e) => {
-                            // Le plafond se juge sur le document, cochée comprise.
-                            if (e.target.checked && module.plafond !== null) {
-                              const lu = lire(racine.current, module);
-                              if (lu.pris.size > module.plafond + lu.liberees) e.target.checked = false;
-                            }
-                          }}
-                          aria-describedby={erreur ? `${idDuChamp(el.champ)}-refus` : undefined}
-                          className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
-                        />
-                        {texte}
-                      </label>
-                    )}
+                    <label
+                      className={`flex items-start gap-3 bg-slate-900 rounded-xl border px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12 has-[:disabled]:opacity-60 ${
+                        erreur ? "border-red-400/70" : "border-white/10"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        id={idDuChamp(el.champ)}
+                        name={el.champ}
+                        value={el.valeur}
+                        data-module={module.decision}
+                        defaultChecked={dejaChoisis.includes(el.id)}
+                        // Au plafond, les cases encore libres se grisent ; une case
+                        // cochée reste décochable.
+                        disabled={!libre}
+                        onChange={(e) => {
+                          // Le plafond se juge sur le document, cochée comprise.
+                          if (e.target.checked && module.plafond !== null) {
+                            const lu = lire(racine.current, module);
+                            if (lu.pris.size > module.plafond + lu.liberees) e.target.checked = false;
+                          }
+                        }}
+                        aria-describedby={erreur ? `${idDuChamp(el.champ)}-refus` : undefined}
+                        className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
+                      />
+                      {texte}
+                    </label>
                     {erreur ? (
                       <p id={`${idDuChamp(el.champ)}-refus`} className="mt-1 text-xs text-red-300">
                         {erreur}

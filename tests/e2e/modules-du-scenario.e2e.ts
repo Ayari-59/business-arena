@@ -4,20 +4,20 @@ import { BASE, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 
 /**
- * LES MODULES DU SCÉNARIO, JOUÉS DANS UN VRAI NAVIGATEUR, CHACUN DANS SON ÉTAPE.
+ * LES MODULES DU SCÉNARIO, JOUÉS DANS UN VRAI NAVIGATEUR, À « BUDGÉTER ».
  *
- * Les modules ne s'empilent plus dans une étape « Projets » : chacun se décide à
- * la fin de l'étape de son thème (`config/etapes-des-modules`), replié, et se
- * déplie au clic. Une partie solo NOVA au niveau proposé par défaut (Pilotage)
- * ouvre les démarches qualité (Budgéter), les politiques RH et la formation
- * (Équipe & RSE). Le joueur coche une démarche et une politique RH, provoque deux
- * refus qui le ramènent à la bonne étape, module déplié, puis valide : le
- * récapitulatif range ce qui a été engagé sous le même thème. Au tour suivant,
- * la politique RH s'arrête.
+ * Deux catalogues optionnels restent au jeu : les démarches qualité et les
+ * programmes de R&D. Ils se décident à la fin de l'étape « Budgéter », à côté
+ * du budget qualité et du budget R&D, repliés, et se déplient au clic. Une
+ * partie solo NOVA au niveau proposé par défaut (Pilotage) ouvre les démarches
+ * qualité. Le joueur en coche une, provoque un refus qui le ramène à la bonne
+ * étape, module déplié, puis valide : le récapitulatif la range sous
+ * « Budgéter ». Au tour suivant, le niveau d'après est proposé.
  *
- * Au niveau Stratégie (sous licence), la stratégie de prix se décide dans la
- * première étape (« Vos références », la gamme de NOVA à ce niveau), et un plan
- * de crise dans « Assurance & risques ».
+ * Au niveau Stratégie (sous licence), les programmes de R&D s'y ajoutent ; un
+ * programme lancé se lit dans « Déjà engagé » au tour suivant et s'arrête. Plus
+ * aucune étape ne paraît pour un module retiré, et l'assurance ne s'appelle
+ * plus « Assurance & risques ».
  */
 
 let navigateur: Browser;
@@ -25,7 +25,6 @@ let contexte: BrowserContext;
 let page: Page;
 let urlArene = "";
 let libelle = "";
-let libelleRh = "";
 const CAPTURES = process.env.E2E_CAPTURES ?? "";
 
 beforeAll(async () => {
@@ -116,17 +115,20 @@ async function lancerNova(p: Page, niveau?: number) {
   return url;
 }
 
-describe("les modules du scénario, rangés dans l'étape de leur thème", () => {
-  it("une partie solo NOVA n'a plus d'étape « Projets » : ses modules sont dans Budgéter et Équipe & RSE", async () => {
+describe("les modules du scénario, à « Budgéter »", () => {
+  it("une partie solo NOVA n'a plus d'étape « Projets » : ses modules sont à « Budgéter », et là seulement", async () => {
     urlArene = await lancerNova(page);
     const titres = await titresDesEtapes(page);
     expect(titres).not.toContain("Projets");
-    expect(titres).toEqual(expect.arrayContaining(["Vendre", "Budgéter", "Équipe & RSE"]));
+    expect(titres).toEqual(expect.arrayContaining(["Vendre", "Budgéter"]));
+    expect(titres).not.toContain("Assurance & risques");
     expect(await page.getByText("Quels projets engagez-vous").count()).toBe(0);
     // Le compteur suit la barre.
     expect((await nav(page).locator("[data-compteur-de-la-piste]").innerText()).replace(/\s+/g, " ")).toBe(
       `1 / ${titres.length} parcourue`,
     );
+    // Une seule étape porte des modules.
+    expect(await page.locator("[data-modules-de-decision]").count()).toBe(1);
     await allerA(page, "Budgéter");
     expect(await page.locator('[data-modules-de-decision="budgets"]').isVisible()).toBe(true);
     expect(await lu(page.locator('[data-engagements-du-tour="budgets"]'))).toMatch(/Engagements du tour/i);
@@ -141,6 +143,10 @@ describe("les modules du scénario, rangés dans l'étape de leur thème", () =>
     const cases = qualite.locator('input[type="checkbox"]');
     const n = await cases.count();
     expect(n).toBeGreaterThan(1);
+    // Chaque niveau dit ce qui se fait concrètement, sans tiret en milieu de phrase.
+    const texteDuModule = await lu(qualite);
+    expect(texteDuModule).toMatch(/· niveau 1 : /);
+    expect(texteDuModule).not.toMatch(/ — /);
     const plafond = Number(/(\d+) démarches? au plus par tour/i.exec(await qualite.innerText())?.[1] ?? n);
     for (let i = 0; i < Math.min(plafond, n); i++) await cases.nth(i).check();
     if (n > plafond) expect(await cases.nth(plafond).isDisabled(), "case au-delà du plafond").toBe(true);
@@ -152,63 +158,20 @@ describe("les modules du scénario, rangés dans l'étape de leur thème", () =>
     // L'en-tête compte l'engagement et son coût, déplié comme replié.
     expect(await resume(qualite)).toMatch(/1 engagé/);
     expect(await resume(qualite)).toMatch(/\d[\d ]* €/);
+    if (CAPTURES) await etapeAffichee(page).screenshot({ path: `${CAPTURES}/budgeter-ordinateur.png` });
     await replier(qualite);
     expect(await resume(qualite)).toMatch(/1 engagé/);
-
-    // LA POLITIQUE RH, DANS « ÉQUIPE & RSE ».
-    await allerA(page, "Équipe & RSE");
-    const rh = unModule(page, "activeHRPolicyIds");
-    expect(await rh.count(), "politiques RH absentes d'Équipe & RSE").toBe(1);
-    expect(await rh.isVisible()).toBe(true);
-    expect(await estDeplie(rh)).toBe(false);
-    await deplier(rh);
-    const caseRh = rh.locator('input[type="checkbox"]').first();
-    await caseRh.check();
-    libelleRh = ((await caseRh.locator("xpath=..").innerText()).split(" · ")[0] ?? "").trim();
-    expect(libelleRh.length).toBeGreaterThan(0);
-    expect(await rh.innerText()).toMatch(/Engagé ce tour : .*€/);
-    // La formation se décide par un effectif, dans la même étape.
-    expect(await unModule(page, "trainingEnrollments").locator('input[type="number"]').count()).toBeGreaterThan(0);
-    if (CAPTURES) {
-      await etapeAffichee(page).screenshot({ path: `${CAPTURES}/equipe-ordinateur.png` });
-      await allerA(page, "Budgéter");
-      await etapeAffichee(page).screenshot({ path: `${CAPTURES}/budgeter-ordinateur.png` });
-    }
   }, 60_000);
 
-  it("un effectif refusé ramène à « Équipe & RSE », module de formation déplié, focus sur le champ", async () => {
-    await allerA(page, "Équipe & RSE");
-    const formation = unModule(page, "trainingEnrollments");
-    await deplier(formation);
-    const champ = formation.locator('input[type="number"]').first();
-    const max = Number(await champ.getAttribute("max"));
-    expect(max).toBeGreaterThan(0);
-    await champ.fill(String(max + 1));
-    await replier(formation);
-    await jusquALaValidation(page);
-    expect(await etapeCourante(page)).not.toBe("Équipe & RSE");
-    await page.getByRole("button", { name: /Valider et simuler/ }).first().click();
-    await page.waitForTimeout(600);
-    expect(await etapeCourante(page)).toBe("Équipe & RSE");
-    expect(await estDeplie(formation), "le module fautif se déplie").toBe(true);
-    const nom = await champ.getAttribute("name");
-    expect(await page.evaluate(() => (document.activeElement as HTMLInputElement | null)?.name)).toBe(nom);
-    expect(await page.locator("[data-recapitulatif-des-erreurs]").isVisible()).toBe(true);
-    if (CAPTURES) await formation.screenshot({ path: `${CAPTURES}/refus-formation-ordinateur.png` });
-    await champ.fill("");
-    await page.waitForTimeout(300);
-    expect(await page.locator("[data-recapitulatif-des-erreurs]").count()).toBe(0);
-  }, 60_000);
-
-  it("un arrêt refusé (rien ne tourne) ramène aux politiques RH, module déplié, message dedans", async () => {
-    const rh = unModule(page, "activeHRPolicyIds");
-    await replier(rh);
+  it("un arrêt refusé (rien ne tourne) ramène aux démarches qualité, module déplié, message dedans", async () => {
+    const qualite = unModule(page, "qualityActions");
+    await replier(qualite);
     // Une case « Arrêter » qui ne vise rien : celle d'un formulaire périmé ou forgé.
     await page.evaluate(() => {
       const form = document.querySelector("[data-modules-de-decision]")!.closest("form")!;
       const i = document.createElement("input");
       i.type = "checkbox";
-      i.name = "module.arret.activeHRPolicyIds.fantome";
+      i.name = "module.arret.qualityActions.fantome";
       i.value = "1";
       i.checked = true;
       i.hidden = true;
@@ -219,22 +182,22 @@ describe("les modules du scénario, rangés dans l'étape de leur thème", () =>
     await jusquALaValidation(page);
     await page.getByRole("button", { name: /Valider et simuler/ }).first().click();
     await page.waitForTimeout(600);
-    expect(await etapeCourante(page)).toBe("Équipe & RSE");
-    expect(await estDeplie(rh)).toBe(true);
-    expect(await lu(rh.locator("[data-refus-du-module]"))).toContain("arrêt");
+    expect(await etapeCourante(page)).toBe("Budgéter");
+    expect(await estDeplie(qualite)).toBe(true);
+    expect(await lu(qualite.locator("[data-refus-du-module]"))).toContain("arrêt");
     expect(await lu(page.locator("[data-recapitulatif-des-erreurs]"))).toContain("arrêt");
-    if (CAPTURES) await rh.screenshot({ path: `${CAPTURES}/refus-arret-ordinateur.png` });
+    if (CAPTURES) await qualite.screenshot({ path: `${CAPTURES}/refus-arret-ordinateur.png` });
     // Le lien du récapitulatif y ramène aussi, d'une autre étape.
-    await replier(rh);
-    await allerA(page, "Budgéter");
-    await page.locator('[data-lien-du-refus="module:activeHRPolicyIds"]').click();
+    await replier(qualite);
+    await allerA(page, "Vendre");
+    await page.locator('[data-lien-du-refus="module:qualityActions"]').click();
     await page.waitForTimeout(400);
-    expect(await etapeCourante(page)).toBe("Équipe & RSE");
-    expect(await estDeplie(rh)).toBe(true);
+    expect(await etapeCourante(page)).toBe("Budgéter");
+    expect(await estDeplie(qualite)).toBe(true);
     await page.evaluate(() => document.getElementById("arret-fantome")?.remove());
   }, 60_000);
 
-  it("un brouillon restauré déplie les modules où l'équipe a coché, et eux seuls", async () => {
+  it("un brouillon restauré déplie le module où l'équipe a coché", async () => {
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     await page.evaluate(() => {
@@ -242,18 +205,14 @@ describe("les modules du scénario, rangés dans l'étape de leur thème", () =>
     });
     await page.waitForTimeout(1_200);
     expect(await page.locator("#arret-fantome").count()).toBe(0);
-    await allerA(page, "Équipe & RSE");
-    const rh = unModule(page, "activeHRPolicyIds");
-    expect(await estDeplie(rh), "coché dans le brouillon : déplié").toBe(true);
-    expect(await rh.locator('input[type="checkbox"]').first().isChecked()).toBe(true);
-    expect(await resume(rh)).toMatch(/1 engagé/);
-    expect(await estDeplie(unModule(page, "trainingEnrollments")), "rien de coché : replié").toBe(false);
     await allerA(page, "Budgéter");
-    expect(await estDeplie(unModule(page, "qualityActions"))).toBe(true);
-    expect(await estDeplie(unModule(page, "hsActions"))).toBe(false);
+    const qualite = unModule(page, "qualityActions");
+    expect(await estDeplie(qualite), "coché dans le brouillon : déplié").toBe(true);
+    expect(await qualite.locator('input[type="checkbox"]').first().isChecked()).toBe(true);
+    expect(await resume(qualite)).toMatch(/1 engagé/);
   }, 60_000);
 
-  it("validé, le récapitulatif range chaque module sous le thème de son étape", async () => {
+  it("validé, le récapitulatif range la démarche sous « Budgéter »", async () => {
     const recap = await validerEtRelire(page, urlArene);
     expect(await lu(recap)).toContain("Modules engagés ce tour");
     const budgets = recap.locator('[data-modules-du-theme="budgets"]');
@@ -261,15 +220,11 @@ describe("les modules du scénario, rangés dans l'étape de leur thème", () =>
     expect(await lu(budgets)).toContain("Démarches qualité");
     expect(await lu(budgets)).toContain(libelle);
     expect(await lu(budgets)).toMatch(/Coût du tour \d[\d ]* €/);
-    expect(await lu(budgets)).not.toContain("Politiques RH");
-    const equipe = recap.locator('[data-modules-du-theme="equipe"]');
-    expect(await lu(equipe)).toContain("Équipe & RSE");
-    expect(await lu(equipe)).toContain("Politiques RH");
-    expect(await lu(equipe)).toContain(libelleRh);
+    expect(await recap.locator("[data-modules-du-theme]").count()).toBe(1);
     if (CAPTURES) await recap.screenshot({ path: `${CAPTURES}/recapitulatif-ordinateur.png` });
   }, 240_000);
 
-  it("au tour suivant, la démarche est « déjà engagée » et le niveau d'après est proposé", async () => {
+  it("au tour suivant, la démarche est « déjà engagée » et le niveau d'après est proposé ; sur téléphone, le module est replié", async () => {
     const passer = page.getByRole("button", { name: /Passer au tour 2/ });
     if (await passer.count()) await passer.first().click();
     await page.waitForTimeout(1_000);
@@ -283,16 +238,6 @@ describe("les modules du scénario, rangés dans l'étape de leur thème", () =>
     await deplier(qualite);
     expect(await qualite.locator("[data-modules-en-cours]").innerText()).toContain("niveau 1 atteint");
     expect(await texte(page)).toContain("niveau 2");
-  }, 120_000);
-
-  it("au tour 2, la politique RH se lit dans « Déjà engagé » et s'arrête ; sur téléphone, les modules sont repliés", async () => {
-    await allerA(page, "Équipe & RSE");
-    const rh = unModule(page, "activeHRPolicyIds");
-    expect(await resume(rh)).toMatch(/1 en cours/);
-    await deplier(rh);
-    const engage = rh.locator("[data-modules-en-cours]");
-    expect(await engage.innerText()).toContain(libelleRh);
-    if (CAPTURES) await rh.screenshot({ path: `${CAPTURES}/arret-ordinateur.png` });
 
     // La même partie, sur un téléphone : mêmes cookies, autre écran, en parcours.
     const tel = await navigateur.newContext({
@@ -307,125 +252,92 @@ describe("les modules du scénario, rangés dans l'étape de leur thème", () =>
     await p2.waitForLoadState("networkidle");
     await p2.waitForTimeout(1_200);
     await p2.locator('input[name^="ventesEstimees."]').first().fill("3000");
-    for (const etape of ["budgets", "equipe"]) {
-      for (let k = 0; k < 25 && !(await p2.locator(`[data-modules-de-decision="${etape}"]:visible`).count()); k++) {
-        const suivant = p2.getByRole("button", { name: /^Suivant/ }).last();
-        if (!(await suivant.count())) break;
-        await suivant.click();
-        await p2.waitForTimeout(300);
-      }
-      const bloc = p2.locator(`[data-modules-de-decision="${etape}"]`);
-      expect(await bloc.isVisible(), `carte des modules « ${etape} » sur téléphone`).toBe(true);
-      // Chaque module y est replié : une ligne par module.
-      const ouverts = await bloc.locator("details").evaluateAll((ds) => ds.filter((x) => (x as HTMLDetailsElement).open).length);
-      expect(ouverts).toBe(0);
-      const h = await bloc.evaluate((b) => b.getBoundingClientRect().height);
-      console.log(`[mesure] modules de l'étape ${etape} sur téléphone, repliés : ${Math.round(h)} px`);
-      if (CAPTURES) await p2.screenshot({ path: `${CAPTURES}/${etape}-telephone.png`, fullPage: false });
+    for (let k = 0; k < 25 && !(await p2.locator('[data-modules-de-decision="budgets"]:visible').count()); k++) {
+      const suivant = p2.getByRole("button", { name: /^Suivant/ }).last();
+      if (!(await suivant.count())) break;
+      await suivant.click();
+      await p2.waitForTimeout(300);
     }
-    const rh2 = p2.locator('[data-module-de-decision="activeHRPolicyIds"]');
-    await rh2.locator("summary").first().click();
-    expect(await rh2.locator("details").first().evaluate((d) => (d as HTMLDetailsElement).open)).toBe(true);
-    if (CAPTURES) await p2.screenshot({ path: `${CAPTURES}/arret-telephone.png`, fullPage: false });
+    const bloc = p2.locator('[data-modules-de-decision="budgets"]');
+    expect(await bloc.isVisible(), "carte des modules « budgets » sur téléphone").toBe(true);
+    const ouverts = await bloc
+      .locator("details")
+      .evaluateAll((ds) => ds.filter((x) => (x as HTMLDetailsElement).open).length);
+    expect(ouverts).toBe(0);
+    const h = await bloc.evaluate((b) => b.getBoundingClientRect().height);
+    console.log(`[mesure] modules de l'étape budgets sur téléphone, repliés : ${Math.round(h)} px`);
+    if (CAPTURES) await p2.screenshot({ path: `${CAPTURES}/budgets-telephone.png`, fullPage: false });
+    const q2 = p2.locator('[data-module-de-decision="qualityActions"]');
+    await q2.locator("summary").first().click();
+    expect(await q2.locator("details").first().evaluate((d) => (d as HTMLDetailsElement).open)).toBe(true);
+    if (CAPTURES) await p2.screenshot({ path: `${CAPTURES}/budgets-deplie-telephone.png`, fullPage: false });
     await tel.close();
-
-    await engage.getByLabel("Arrêter").first().check();
-    expect(await resume(rh)).toMatch(/1 arrêt/);
-    const recap = await validerEtRelire(page, urlArene);
-    const equipe = recap.locator('[data-modules-du-theme="equipe"]');
-    expect(await lu(equipe), await lu(recap)).toMatch(new RegExp(`arrêté : ${echapper(libelleRh)}`));
-  }, 300_000);
-
-  it("au tour 3, la politique arrêtée ne tourne plus", async () => {
-    const passer = page.getByRole("button", { name: /Passer au tour 3/ });
-    if (await passer.count()) await passer.first().click();
-    await page.waitForTimeout(1_000);
-    await page.evaluate(() => {
-      location.hash = "decisions";
-    });
-    await page.waitForTimeout(1_000);
-    await page.locator('input[name^="ventesEstimees."]').first().fill("3000");
-    await allerA(page, "Équipe & RSE");
-    const rh = unModule(page, "activeHRPolicyIds");
-    await deplier(rh);
-    const engage = rh.locator("[data-modules-en-cours]");
-    if (await engage.count()) expect(await engage.innerText()).not.toContain(libelleRh);
-    expect(await rh.innerText()).toContain(libelleRh);
-  }, 120_000);
+  }, 180_000);
 });
 
-describe("au niveau Stratégie : la stratégie de prix à la vente, un plan de crise à « Assurance & risques »", () => {
+describe("au niveau Stratégie : un programme de R&D à « Budgéter », lancé puis arrêté", () => {
   let p: Page;
   let ctx: BrowserContext;
   let url = "";
-  let strategie = "";
-  let plan = "";
-  let politique = "";
+  let programme = "";
 
-  it("la stratégie de prix se décide dans la première étape, repliée puis dépliée", async () => {
+  it("les deux modules se décident à « Budgéter » ; aucune étape pour un module retiré", async () => {
     ctx = await navigateur.newContext({ locale: "fr-FR", viewport: { width: 1280, height: 900 } });
     await enseignantSousLicence(ctx);
     p = await ctx.newPage();
     url = await lancerNova(p, 5);
     const titres = await titresDesEtapes(p);
     expect(titres).not.toContain("Projets");
-    expect(titres).toContain("Assurance & risques");
-    expect(titres).toContain("Équipe & RSE");
-    // La première étape (« Vendre », « Vos références » en gamme) porte la stratégie de prix.
-    expect(await etapeCourante(p)).toBe(titres[0]);
-    const prix = unModule(p, "activePricingStrategyIds");
-    expect(await prix.isVisible()).toBe(true);
-    expect(await prix.evaluate((m) => m.closest("[data-etape]")?.getAttribute("data-etape"))).toBe("0");
-    expect(await estDeplie(prix)).toBe(false);
-    if (CAPTURES) {
-      await p.locator('[data-engagements-du-tour="vendre"]').screenshot({ path: `${CAPTURES}/vendre-replie-ordinateur.png` });
+    expect(titres).not.toContain("Assurance & risques");
+    expect(titres).toContain("Budgéter");
+    expect(await p.locator("[data-modules-de-decision]").count()).toBe(1);
+    await allerA(p, "Budgéter");
+    for (const d of ["qualityActions", "startedRdActionIds"]) {
+      expect(await unModule(p, d).isVisible(), d).toBe(true);
+      expect(await estDeplie(unModule(p, d)), d).toBe(false);
     }
-    await deplier(prix);
-    const c = prix.locator('input[type="checkbox"]').first();
+    for (const d of ["activePricingStrategyIds", "activeHRPolicyIds", "activeCrisisPlanIds", "financingDraws"]) {
+      expect(await unModule(p, d).count(), d).toBe(0);
+    }
+    const rd = unModule(p, "startedRdActionIds");
+    await deplier(rd);
+    const c = rd.locator('input[type="checkbox"]').first();
     await c.check();
-    strategie = ((await c.locator("xpath=..").innerText()).split(" · ")[0] ?? "").trim();
-    expect(await resume(prix)).toMatch(/1 engagé/);
-    if (CAPTURES) await prix.screenshot({ path: `${CAPTURES}/strategie-de-prix-ordinateur.png` });
+    programme = ((await c.locator("xpath=..").innerText()).split(" · ")[0] ?? "").trim();
+    expect(programme.length).toBeGreaterThan(0);
+    expect(await resume(rd)).toMatch(/1 engagé/);
+    if (CAPTURES) await etapeAffichee(p).screenshot({ path: `${CAPTURES}/budgeter-strategie-ordinateur.png` });
   }, 240_000);
 
-  it("une politique RH dans « Équipe & RSE », un plan de crise dans « Assurance & risques »", async () => {
-    await allerA(p, "Équipe & RSE");
-    const rh = unModule(p, "activeHRPolicyIds");
-    expect(await rh.isVisible()).toBe(true);
-    await deplier(rh);
-    const c = rh.locator('input[type="checkbox"]').first();
-    await c.check();
-    politique = ((await c.locator("xpath=..").innerText()).split(" · ")[0] ?? "").trim();
-
-    await allerA(p, "Assurance & risques");
-    const crise = unModule(p, "activeCrisisPlanIds");
-    expect(await crise.isVisible()).toBe(true);
-    expect(await estDeplie(crise)).toBe(false);
-    await deplier(crise);
-    const cp = crise.locator('input[type="checkbox"]').first();
-    await cp.check();
-    plan = ((await cp.locator("xpath=..").innerText()).split(" · ")[0] ?? "").trim();
-    expect(await resume(crise)).toMatch(/1 engagé/);
-    if (CAPTURES) await etapeAffichee(p).screenshot({ path: `${CAPTURES}/assurance-et-risques-ordinateur.png` });
-    // Un module ne se range qu'à une étape : aucun n'est en double.
-    for (const d of ["activePricingStrategyIds", "activeHRPolicyIds", "activeCrisisPlanIds"]) {
-      expect(await unModule(p, d).count(), d).toBe(1);
-    }
-  }, 60_000);
-
-  it("validé, chaque choix se lit au récapitulatif sous le bon thème", async () => {
+  it("validé, le programme se lit au récapitulatif sous « Budgéter »", async () => {
     const recap = await validerEtRelire(p, url);
-    const vendre = recap.locator('[data-modules-du-theme="vendre"]');
-    expect(await lu(vendre)).toContain("Stratégie de prix");
-    expect(await lu(vendre)).toContain(strategie);
-    const equipe = recap.locator('[data-modules-du-theme="equipe"]');
-    expect(await lu(equipe)).toContain("Équipe & RSE");
-    expect(await lu(equipe)).toContain(politique);
-    const assurance = recap.locator('[data-modules-du-theme="assurance"]');
-    expect(await lu(assurance)).toContain("Assurance & risques");
-    expect(await lu(assurance)).toContain("Plans de crise");
-    expect(await lu(assurance)).toContain(plan);
+    const budgets = recap.locator('[data-modules-du-theme="budgets"]');
+    expect(await lu(budgets)).toContain("Programmes de R&D");
+    expect(await lu(budgets)).toContain(programme);
     if (CAPTURES) await recap.screenshot({ path: `${CAPTURES}/recapitulatif-strategie-ordinateur.png` });
-    await ctx.close();
   }, 240_000);
+
+  it("au tour 2, le programme est « déjà engagé » et s'arrête ; le récapitulatif le dit arrêté", async () => {
+    const passer = p.getByRole("button", { name: /Passer au tour 2/ });
+    if (await passer.count()) await passer.first().click();
+    await p.waitForTimeout(1_000);
+    await p.evaluate(() => {
+      location.hash = "decisions";
+    });
+    await p.waitForTimeout(1_000);
+    await p.locator('input[name^="ventesEstimees."]').first().fill("3000");
+    await allerA(p, "Budgéter");
+    const rd = unModule(p, "startedRdActionIds");
+    expect(await resume(rd)).toMatch(/1 en cours/);
+    await deplier(rd);
+    const engage = rd.locator("[data-modules-en-cours]");
+    expect(await engage.innerText()).toContain(programme);
+    await engage.getByLabel("Arrêter").first().check();
+    expect(await resume(rd)).toMatch(/1 arrêt/);
+    if (CAPTURES) await rd.screenshot({ path: `${CAPTURES}/arret-ordinateur.png` });
+    const recap = await validerEtRelire(p, url);
+    const budgets = recap.locator('[data-modules-du-theme="budgets"]');
+    expect(await lu(budgets), await lu(recap)).toMatch(new RegExp(`arrêté : ${echapper(programme)}`));
+    await ctx.close();
+  }, 300_000);
 });

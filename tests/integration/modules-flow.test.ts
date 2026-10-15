@@ -4,14 +4,12 @@ import { eq } from "drizzle-orm";
 /**
  * LES MODULES DU SCÉNARIO, DE L'ENVOI AU BILAN, EN BASE.
  *
- * Une équipe coche une stratégie de prix et un projet digital : les choix sont
+ * Une équipe coche une démarche qualité et un programme de R&D : les choix sont
  * enregistrés avec ses décisions, passent au moteur à la clôture
  * (`own.payload as RoundDecisions`), et reviennent dans la vue du tour suivant
  * (le coût au résultat, le bilan « Modules engagés ce tour », et l'offre qui
- * les range dans « Déjà engagé »). Au tour 3, l'équipe arrête sa stratégie de
- * prix et engage des modules rendus jouables depuis : formation, action
- * commerciale, intervention de maintenance, tirage sur une option de
- * financement.
+ * les range dans « Déjà engagé »). Au tour 2, l'équipe arrête son programme et
+ * achète le niveau suivant de sa démarche.
  */
 
 vi.mock("@/db", async () => {
@@ -68,65 +66,51 @@ beforeAll(async () => {
 });
 
 describe("modules du scénario, en classe (NOVA, niveau 6)", () => {
-  it("la vue offre les modules du scénario au tour 1", async () => {
+  it("la vue offre les deux modules du scénario au tour 1, et eux seuls", async () => {
     const view = (await getGameView(gameId, studentId))!;
-    const decisions = view.modulesOffer?.map((m) => m.decision) ?? [];
-    expect(decisions).toContain("activePricingStrategyIds");
-    expect(decisions).toContain("startDigitalProjectIds");
-    // L'export n'ouvre qu'au tour 2 dans NOVA.
-    expect(decisions).not.toContain("enteredMarketIds");
+    expect(view.modulesOffer?.map((m) => m.decision)).toEqual(["qualityActions", "startedRdActionIds"]);
   });
 
   it("les choix enregistrés passent au moteur et reviennent dans la vue", async () => {
     const view = (await getGameView(gameId, studentId))!;
     const payload = roundDecisionsSchema.parse({
       ...view.proposedDecisions,
-      activePricingStrategyIds: ["ps-premium"],
-      startDigitalProjectIds: ["dt-crm"],
+      qualityActions: [{ actionCode: "amelioration_composants", level: 1 }],
+      startedRdActionIds: ["rd-process"],
     });
+    expect(refusDesModules(payload, view.modulesOffer)).toEqual([]);
     await submitTeamDecisions({ gameId, userId: studentId, payload });
     await closeCurrentRound({ gameId, teacherId });
 
     const apres = (await getGameView(gameId, studentId))!;
-    expect(apres.lastResult!.digitalCost).toBeGreaterThan(0);
+    expect(apres.lastResult!.rdActionsCost).toBeGreaterThan(0);
+    expect(apres.lastResult!.qualityActions?.started).toHaveLength(1);
     const bilan = apres.periods.at(-1)!.modules!;
-    expect(bilan.lignes.find((l) => l.titre === "Transformation digitale")!.engage).toEqual([
-      "CRM relation client",
+    expect(bilan.lignes.find((l) => l.titre === "Programmes de R&D")!.engage).toEqual([
+      "Optimisation du process de fabrication",
     ]);
-    expect(bilan.lignes.find((l) => l.titre === "Stratégie de prix")!.engage).toEqual([
-      "Positionnement haut de gamme",
+    expect(bilan.lignes.find((l) => l.titre === "Démarches qualité")!.engage).toEqual([
+      "Amélioration des composants (qualité audio) · niveau 1",
     ]);
     // Au tour 2, ce qui a démarré est « déjà engagé » et ne se recoche pas.
-    const prix = apres.modulesOffer!.find((m) => m.decision === "activePricingStrategyIds")!;
-    expect(prix.enCours.map((x) => x.libelle)).toEqual(["Positionnement haut de gamme"]);
-    expect(prix.elements.map((e) => e.id)).not.toContain("ps-premium");
-    // Et l'export s'ouvre.
-    expect(apres.modulesOffer!.some((m) => m.decision === "enteredMarketIds")).toBe(true);
+    const rd = apres.modulesOffer!.find((m) => m.decision === "startedRdActionIds")!;
+    expect(rd.enCours.map((x) => x.libelle)).toEqual(["Optimisation du process de fabrication"]);
+    expect(rd.elements.map((e) => e.id)).not.toContain("rd-process");
+    const qualite = apres.modulesOffer!.find((m) => m.decision === "qualityActions")!;
+    expect(qualite.elements.find((e) => e.id === "amelioration_composants")!.valeur).toBe("2");
   });
 
-  it("au tour 2, la stratégie de prix est en vigueur dans le résultat", async () => {
-    await closeCurrentRound({ gameId, teacherId }); // reconduction : aucun module relancé
-    const view = (await getGameView(gameId, studentId))!;
-    expect(view.lastResult!.pricingEffects?.priceMultiplier).toBeGreaterThan(1);
-    const digital = view.periods.at(-1)!.modules!.lignes.find((l) => l.titre === "Transformation digitale")!;
-    expect(digital.engage).toEqual([]);
-  });
-
-  it("au tour 3, une stratégie s'arrête, la formation, l'action commerciale, la maintenance et le financement s'engagent", async () => {
+  it("au tour 2, le programme s'arrête et la démarche monte d'un niveau", async () => {
     const view = (await getGameView(gameId, studentId))!;
     const offre = view.modulesOffer!;
-    for (const d of ["trainingEnrollments", "activeCommercialActionIds", "maintenanceDecisions", "financingDraws"]) {
-      expect(offre.map((m) => m.decision), d).toContain(d);
-    }
-    const prix = offre.find((m) => m.decision === "activePricingStrategyIds")!;
-    expect(prix.enCours[0]!.arret?.champ).toBe("module.arret.activePricingStrategyIds.ps-premium");
+    const rd = offre.find((m) => m.decision === "startedRdActionIds")!;
+    expect(rd.enCours[0]!.arret?.champ).toBe("module.arret.startedRdActionIds.rd-process");
     const payload = roundDecisionsSchema.parse({
       ...view.proposedDecisions,
-      stoppedModuleItems: [{ module: "activePricingStrategyIds", id: "ps-premium" }],
-      trainingEnrollments: [{ programId: "formation-lean", enrolledCount: 2 }],
-      activeCommercialActionIds: ["campagne-digitale"],
-      maintenanceDecisions: [{ machineId: "atelier", actionCode: "preventif", level: 1 }],
-      financingDraws: [{ optionId: "credit-court", amount: 30000 }],
+      // La proposition du tour reprend l'envoi précédent : rien ne se relance.
+      startedRdActionIds: undefined,
+      stoppedModuleItems: [{ module: "startedRdActionIds", id: "rd-process" }],
+      qualityActions: [{ actionCode: "amelioration_composants", level: 2 }],
     });
     // Le serveur juge l'envoi comme la feuille : rien à refuser.
     expect(refusDesModules(payload, offre)).toEqual([]);
@@ -135,19 +119,15 @@ describe("modules du scénario, en classe (NOVA, niveau 6)", () => {
 
     const apres = (await getGameView(gameId, studentId))!;
     const r = apres.lastResult!;
-    expect(r.trainingCost).toBe(2 * 800);
-    expect(r.commercialCost).toBe(6000);
-    expect(r.maintenanceCost?.actionsCount).toBeGreaterThan(0);
-    expect(r.debt?.financingDrawn).toEqual([{ optionId: "credit-court", amount: 30000 }]);
-    // La stratégie arrêtée ne joue plus ce tour, et ne se lit plus dans « Déjà engagé ».
-    expect(r.pricingEffects).toBeUndefined();
-    expect(apres.modulesOffer!.find((m) => m.decision === "activePricingStrategyIds")!.enCours).toEqual([]);
+    // Le programme arrêté ne coûte plus ce tour, et ne se lit plus dans « Déjà engagé ».
+    expect(r.rdActionsCost).toBeUndefined();
+    expect(apres.modulesOffer!.find((m) => m.decision === "startedRdActionIds")!.enCours).toEqual([]);
     const bilan = apres.periods.at(-1)!.modules!;
-    expect(bilan.lignes.find((l) => l.titre === "Stratégie de prix")!.arrete).toEqual(["Positionnement haut de gamme"]);
-    expect(bilan.lignes.find((l) => l.titre === "Formation")!.engage).toEqual(["Formation Lean Manufacturing · 2 salariés"]);
-    expect(bilan.lignes.find((l) => l.titre === "Options de financement")!.engage[0]).toContain("Crédit court terme");
-    // La formation et l'action commerciale courent encore : « Déjà engagé », arrêtables.
-    const formation = apres.modulesOffer!.find((m) => m.decision === "trainingEnrollments")!;
-    expect(formation.enCours[0]!.arret).toBeDefined();
+    expect(bilan.lignes.find((l) => l.titre === "Programmes de R&D")!.arrete).toEqual([
+      "Optimisation du process de fabrication",
+    ]);
+    expect(bilan.lignes.find((l) => l.titre === "Démarches qualité")!.engage).toEqual([
+      "Amélioration des composants (qualité audio) · niveau 2",
+    ]);
   });
 });

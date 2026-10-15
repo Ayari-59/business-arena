@@ -22,12 +22,12 @@ import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engin
 /**
  * LES MODULES DU SCÉNARIO, DE LA FEUILLE AU MOTEUR.
  *
- * Six vagues avaient ajouté des catalogues optionnels au moteur sans qu'aucun
- * joueur puisse les choisir. Chaque maillon de la chaîne est gardé ici : le
- * formulaire qui les lit, le schéma qui les laisse passer (un `z.object`
- * supprime en silence ce qu'il ne connaît pas), le snapshot qui les garde,
- * l'offre qui ne propose que ce qui est ouvert, le serveur qui refuse le reste,
- * et le moteur qui les compte.
+ * Deux catalogues optionnels restent au jeu : les démarches qualité et les
+ * programmes de R&D. Chaque maillon de la chaîne est gardé ici : le formulaire
+ * qui les lit, le schéma qui les laisse passer (un `z.object` supprime en
+ * silence ce qu'il ne connaît pas), le snapshot qui les garde, l'offre qui ne
+ * propose que ce qui est ouvert, le serveur qui refuse le reste, et le moteur
+ * qui les compte.
  */
 
 const BASE: RoundDecisions = {
@@ -40,20 +40,7 @@ const BASE: RoundDecisions = {
 
 const MODULES: Partial<RoundDecisions> = {
   qualityActions: [{ actionCode: "amelioration_composants", level: 1 }],
-  hsActions: [{ actionCode: "evacuation" }],
-  trainingEnrollments: [{ programId: "formation-lean", enrolledCount: 3 }],
-  activeCommercialActionIds: ["promo-lancement"],
-  activeContractIds: ["contrat-matiere"],
-  activeCapacityOptionIds: ["equipeNuit"],
-  enteredMarketIds: ["europe"],
-  startedInnovationIds: ["gamme-premium"],
-  activeRseActionIds: ["rse-energie"],
-  activePricingStrategyIds: ["ps-premium"],
-  activeHRPolicyIds: ["hr-flex"],
-  activeCrisisPlanIds: ["cm-cyber"],
-  activatePartnershipIds: ["part-distrib"],
-  startDigitalProjectIds: ["dt-crm"],
-  activeBrandActionIds: ["bm-campagne"],
+  startedRdActionIds: ["rd-process"],
 };
 
 describe("(a) le schéma des décisions garde les choix de module", () => {
@@ -66,12 +53,14 @@ describe("(a) le schéma des décisions garde les choix de module", () => {
 
   it("une liste démesurée est refusée", () => {
     const trop = Array.from({ length: 21 }, (_, i) => `x${i}`);
-    expect(roundDecisionsSchema.safeParse({ ...BASE, activePricingStrategyIds: trop }).success).toBe(false);
+    expect(roundDecisionsSchema.safeParse({ ...BASE, startedRdActionIds: trop }).success).toBe(false);
   });
 
-  it("sans module, rien n'est ajouté", () => {
+  it("sans module, rien n'est ajouté ; la décision d'un module retiré tombe", () => {
     const lu = roundDecisionsSchema.parse(BASE);
     expect(Object.keys(lu).sort()).toEqual(Object.keys(BASE).sort());
+    const ancienne = roundDecisionsSchema.parse({ ...BASE, activePricingStrategyIds: ["ps-premium"] });
+    expect(Object.keys(ancienne).sort()).toEqual(Object.keys(BASE).sort());
   });
 });
 
@@ -79,69 +68,27 @@ describe("(b) le snapshot du scénario garde ses catalogues", () => {
   /** Les clés de chaque élément de catalogue, telles que les types moteur les déclarent. */
   const CLES: Record<string, { liste: string; cles: string[] }> = {
     qualityActions: { liste: "actions", cles: ["code", "label", "levels"] },
-    healthSafetyActions: { liste: "actions", cles: ["code", "label", "laborCost", "effects"] },
-    trainingPrograms: {
-      liste: "programs",
-      cles: ["id", "label", "domaine", "durationRounds", "costPerEmployee", "maxEmployeesPerRound", "effects"],
-    },
-    commercialActions: {
-      liste: "actions",
-      cles: ["id", "label", "type", "isRecurring", "durationRounds", "costPerRound", "effects"],
-    },
-    supplierNegotiation: {
-      liste: "contracts",
-      cles: ["id", "label", "supplierType", "volumeThreshold", "discountRate", "contractDurationRounds", "supplyRiskReduction"],
-    },
-    capacityExpansion: {
-      liste: "options",
-      cles: ["id", "label", "type", "capacityBonus", "costPerRound", "setupCost", "minProductionLevel", "maxRounds"],
-    },
-    internationalMarkets: {
-      liste: "markets",
-      cles: ["id", "label", "region", "demandMultiplier", "baseEntryRound", "entryInvestment", "exchangeRateVolatility", "tariffRate", "localAdaptationCost"],
-    },
-    productInnovation: {
-      liste: "innovations",
-      cles: ["id", "label", "type", "developmentRounds", "devCostPerRound", "launchCost", "effects"],
-    },
-    rseProgram: { liste: "actions", cles: ["id", "label", "category", "costPerRound", "implementationRounds", "effects"] },
-    pricingStrategy: {
-      liste: "strategies",
-      cles: ["id", "label", "type", "priceMultiplier", "demandImpact", "marginImpact", "imageImpact", "minRound"],
-    },
-    advancedHR: { liste: "policies", cles: ["id", "label", "type", "costPerRound", "implementationRounds", "effects"] },
-    crisisManagement: {
-      liste: "plans",
-      cles: ["id", "label", "crisisType", "preparationCostPerRound", "activationCost", "effects"],
-    },
-    partnerships: {
-      liste: "options",
-      cles: ["id", "label", "type", "entryFee", "royaltiesPerRound", "minRound", "durationRounds", "effects"],
-    },
-    digitalTransformation: {
-      liste: "projects",
-      cles: ["id", "label", "type", "implementationRounds", "costPerRound", "maintenanceCostPerRound", "effects"],
-    },
-    brandManagement: {
-      liste: "actions",
-      cles: ["id", "label", "type", "costPerRound", "durationRounds", "isRecurring", "effects"],
-    },
+    rdActions: { liste: "actions", cles: ["id", "label", "costPerRound", "durationRounds", "effects"] },
   };
   const SCENARIOS: [string, EngineScenarioConfig, string[]][] = [
-    ["nova", novaScenario, Object.keys(CLES)],
-    ["ecommerce", ecommerceScenario, Object.keys(CLES)],
-    ["bistrot", bistrotScenario, Object.keys(CLES).filter((k) => k !== "internationalMarkets")],
-    ["conseil", conseilScenario, Object.keys(CLES).filter((k) => !["qualityActions", "supplierNegotiation"].includes(k))],
+    ["nova", novaScenario, ["qualityActions", "rdActions"]],
+    ["ecommerce", ecommerceScenario, ["qualityActions", "rdActions"]],
+    ["bistrot", bistrotScenario, ["qualityActions"]],
+    ["conseil", conseilScenario, []],
   ];
 
   for (const [code, scenario, attendus] of SCENARIOS) {
     it(`${code} : chaque catalogue survit à l'aller-retour en base, champ par champ`, () => {
       // Le snapshot est figé en JSON à la création, puis relu par parseScenarioConfig.
       const relu = parseScenarioConfig(JSON.parse(JSON.stringify(scenario)));
-      for (const bloc of attendus) {
-        const { liste, cles } = CLES[bloc]!;
+      for (const bloc of Object.keys(CLES)) {
         const avant = (scenario as unknown as Record<string, Record<string, unknown[]>>)[bloc];
         const apres = (relu as unknown as Record<string, Record<string, unknown[]>>)[bloc];
+        if (!attendus.includes(bloc)) {
+          expect(avant, `${code}.${bloc} inattendu`).toBeUndefined();
+          continue;
+        }
+        const { liste, cles } = CLES[bloc]!;
         expect(avant, `${code}.${bloc} absent du scénario`).toBeDefined();
         expect(apres, `${code}.${bloc} perdu au chargement`).toEqual(avant);
         for (const el of apres![liste]!) {
@@ -159,11 +106,8 @@ describe("(b) le snapshot du scénario garde ses catalogues", () => {
       concurrents: 3,
       periodicity: "quarter",
     });
-    expect(joue.pricingStrategy).toEqual(novaScenario.pricingStrategy);
-    expect(joue.digitalTransformation).toEqual(novaScenario.digitalTransformation);
-    expect(parseScenarioConfig(JSON.parse(JSON.stringify(joue))).brandManagement).toEqual(
-      novaScenario.brandManagement,
-    );
+    expect(joue.qualityActions).toEqual(novaScenario.qualityActions);
+    expect(parseScenarioConfig(JSON.parse(JSON.stringify(joue))).rdActions).toEqual(novaScenario.rdActions);
   });
 });
 
@@ -184,65 +128,34 @@ function tour(
 }
 
 describe("(c) le moteur compte les modules choisis", () => {
-  it("prix, RH avancée et digital : coûts du tour, puis effets au tour suivant", () => {
+  it("démarche qualité et programme R&D : coûts du tour, puis effets", () => {
     const depart = [novaCompany("a", "A", "human"), novaCompany("b", "B", "human")];
-    const t1 = tour(1, depart, {
-      ...BASE,
-      activePricingStrategyIds: ["ps-premium"],
-      activeHRPolicyIds: ["hr-flex"],
-      startDigitalProjectIds: ["dt-crm"],
-    });
+    const t1 = tour(1, depart, { ...BASE, ...MODULES });
     const r1 = t1.results.a!;
-    const hr = novaScenario.advancedHR!.policies.find((p) => p.id === "hr-flex")!;
-    const crm = novaScenario.digitalTransformation!.projects.find((p) => p.id === "dt-crm")!;
-    expect(r1.hrCost).toBe(hr.costPerRound);
-    expect(r1.digitalCost).toBe(crm.costPerRound);
-    expect(t1.results.b!.hrCost).toBeUndefined();
-    expect(t1.results.b!.digitalCost).toBeUndefined();
-    // Les modules sont des charges fixes du tour.
-    expect(r1.incomeStatement.fixedCosts - t1.results.b!.incomeStatement.fixedCosts).toBeCloseTo(
-      hr.costPerRound + crm.costPerRound,
-      6,
-    );
+    const niveau = novaScenario.qualityActions!.actions.find((a) => a.code === "amelioration_composants")!.levels[0]!;
+    const programme = novaScenario.rdActions!.actions.find((a) => a.id === "rd-process")!;
+    expect(r1.qualityActions?.started).toEqual([{ actionCode: "amelioration_composants", level: 1, cost: niveau.cost }]);
+    expect(r1.rdActionsCost).toBe(programme.costPerRound);
+    expect(t1.results.b!.qualityActions).toBeUndefined();
+    expect(t1.results.b!.rdActionsCost).toBeUndefined();
     const etatA = t1.companies.find((c) => c.id === "a")!;
-    expect(etatA.activePricingStrategies).toEqual(["ps-premium"]);
-    expect(etatA.activeHRPolicies).toEqual([{ id: "hr-flex", roundsActive: 1 }]);
-    expect(etatA.digitalProjectsInProgress).toEqual([{ id: "dt-crm", roundsCompleted: 1 }]);
-
-    // Tour 2 : la stratégie de prix est en vigueur, le projet digital s'achève.
-    const t2 = tour(2, t1.companies, BASE);
-    const r2 = t2.results.a!;
-    const premium = novaScenario.pricingStrategy!.strategies.find((s) => s.id === "ps-premium")!;
-    expect(r2.pricingEffects?.priceMultiplier).toBeCloseTo(premium.priceMultiplier, 10);
-    expect(r2.digitalCost).toBe(crm.costPerRound + crm.maintenanceCostPerRound);
-    expect(r2.digitalEffects?.demandBonus).toBeCloseTo(crm.effects.demandBonus, 10);
-    expect(t2.companies.find((c) => c.id === "a")!.completedDigitalProjects).toEqual(["dt-crm"]);
+    expect(etatA.qualityActionsCompleted).toEqual({ amelioration_composants: 1 });
+    expect(etatA.rdActionsInProgress).toEqual([{ id: "rd-process", roundsCompleted: 1 }]);
   });
 
   it("le bilan du tour dit ce qui a été engagé, ce que cela a coûté et l'effet", () => {
     const depart = [novaCompany("a", "A", "human"), novaCompany("b", "B", "human")];
-    const decisions = { ...BASE, startDigitalProjectIds: ["dt-crm"], activePricingStrategyIds: ["ps-premium"] };
+    const decisions: RoundDecisions = { ...BASE, ...MODULES };
     const t1 = tour(1, depart, decisions);
     const bilan = bilanDesModules(t1.results.a!, decisions, novaScenario)!;
-    const digital = bilan.lignes.find((l) => l.titre === "Transformation digitale")!;
-    expect(digital.engage).toEqual(["CRM relation client"]);
-    expect(digital.cout).toBe(6000);
-    expect(bilan.lignes.find((l) => l.titre === "Stratégie de prix")!.engage).toEqual([
-      "Positionnement haut de gamme",
+    const rd = bilan.lignes.find((l) => l.titre === "Programmes de R&D")!;
+    expect(rd.engage).toEqual(["Optimisation du process de fabrication"]);
+    expect(rd.cout).toBe(novaScenario.rdActions!.actions.find((a) => a.id === "rd-process")!.costPerRound);
+    expect(bilan.lignes.find((l) => l.titre === "Démarches qualité")!.engage).toEqual([
+      "Amélioration des composants (qualité audio) · niveau 1",
     ]);
     // Une entreprise sans module n'a pas de bilan.
     expect(bilanDesModules(t1.results.b!, BASE, novaScenario)).toBeNull();
-  });
-
-  it("une crise ne se dit que là où elle pèse : une perte de chiffre d'affaires, ou un plan activé", () => {
-    const crise = { type: "cyberAttaque", impactDescription: "" };
-    expect(bilanDesModules({ crisisEvent: crise }, BASE, novaScenario)).toBeNull();
-    expect(bilanDesModules({ crisisEvent: crise, crisisCost: 4000 }, BASE, novaScenario)!.crise).toBe(
-      "Crise ce tour : cyberattaque.",
-    );
-    expect(
-      bilanDesModules({ crisisEvent: crise, crisisRevenueLoss: 12000 }, BASE, novaScenario)!.crise!.replace(/[\u00a0\u202f]/g, " "),
-    ).toBe("Crise ce tour : cyberattaque, chiffre d'affaires perdu 12 000 €.");
   });
 });
 
@@ -254,115 +167,51 @@ describe("(d) l'offre des modules", () => {
       tour: tourJoue,
       leviers: niveau ? presetByLevel.get(niveau)!.decisions : null,
     });
-  const ids = (o: OffreDesModules | null, decision: string) =>
-    o?.find((m) => m.decision === decision)?.elements.map((e) => e.id) ?? [];
-
-  it("filtre par tour minimal", () => {
-    expect(ids(offre(1), "activePricingStrategyIds")).toEqual(["ps-premium", "ps-penetration"]);
-    expect(ids(offre(2), "activePricingStrategyIds")).toContain("ps-segmentation");
-    expect(ids(offre(1), "activatePartnershipIds")).not.toContain("part-techno");
-    expect(ids(offre(2), "activatePartnershipIds")).toContain("part-techno");
-    // L'export : le tour d'entrée du marché est son tour minimal.
-    expect(offre(1)?.some((m) => m.decision === "enteredMarketIds")).toBe(false);
-    expect(ids(offre(2), "enteredMarketIds")).toEqual(["europe"]);
-    expect(ids(offre(4), "enteredMarketIds")).toEqual(["europe", "asie"]);
-  });
 
   it("n'offre que les catalogues présents dans le scénario", () => {
     const sansModule: EngineScenarioConfig = { ...novaScenario };
-    for (const k of [
-      "qualityActions",
-      "healthSafetyActions",
-      "capacityExpansion",
-      "internationalMarkets",
-      "productInnovation",
-      "rseProgram",
-      "pricingStrategy",
-      "crisisManagement",
-      "partnerships",
-      "digitalTransformation",
-      "brandManagement",
-      "trainingPrograms",
-      "advancedHR",
-      "maintenanceActions",
-      "supplierNegotiation",
-      "commercialActions",
-      "rdActions",
-      "financingOptions",
-    ] as const)
-      delete sansModule[k];
+    delete sansModule.qualityActions;
+    delete sansModule.rdActions;
     expect(construireOffreDesModules({ scenario: sansModule, etat: {}, tour: 3 })).toBeNull();
-    const seulementLaMarque = { ...sansModule, brandManagement: novaScenario.brandManagement };
-    expect(construireOffreDesModules({ scenario: seulementLaMarque, etat: {}, tour: 3 })!.map((m) => m.decision)).toEqual([
-      "activeBrandActionIds",
-    ]);
-    // Bistrot n'a pas d'export : pas de section, même au dernier tour.
-    expect(
-      construireOffreDesModules({ scenario: bistrotScenario, etat: {}, tour: 8 })!.some(
-        (m) => m.decision === "enteredMarketIds",
-      ),
-    ).toBe(false);
-  });
-
-  it("offre les sept modules rendus jouables, et jamais un élément sans effet appliqué", () => {
-    // La maintenance porte sur le parc de l'entreprise : il faut un parc.
-    const decisions = (offre(8, novaCompany("x", "X", "human")) ?? []).map((m) => m.decision);
-    for (const present of [
-      "trainingEnrollments",
-      "activeCommercialActionIds",
-      "activeContractIds",
-      "activeHRPolicyIds",
-      "maintenanceDecisions",
+    const seulementLaRd = { ...sansModule, rdActions: novaScenario.rdActions };
+    expect(construireOffreDesModules({ scenario: seulementLaRd, etat: {}, tour: 3 })!.map((m) => m.decision)).toEqual([
       "startedRdActionIds",
-      "financingDraws",
-    ]) {
-      expect(decisions).toContain(present);
-    }
-    // Le co-achat ne porte qu'une réduction de coûts que le moteur ne lit pas.
-    expect(ids(offre(8), "activatePartnershipIds")).not.toContain("part-sourcing");
+    ]);
+    // Le conseil n'a plus aucun catalogue ; le bistrot n'a pas de programme R&D.
+    expect(construireOffreDesModules({ scenario: conseilScenario, etat: {}, tour: 3 })).toBeNull();
+    expect(construireOffreDesModules({ scenario: bistrotScenario, etat: {}, tour: 3 })!.map((m) => m.decision)).toEqual([
+      "qualityActions",
+    ]);
   });
 
   it("suit le niveau de la partie", () => {
     expect(offre(3, {}, 1)).toBeNull();
-    // Niveau 2 : la qualité (démarches, contrats d'achat) et la maintenance.
-    expect(offre(3, { fleet: novaCompany("x", "X", "human").fleet }, 2)!.map((m) => m.decision)).toEqual([
-      "qualityActions",
-      "maintenanceDecisions",
-      "activeContractIds",
-    ]);
-    expect(offre(3, {}, 6)!.length).toBeGreaterThan(5);
+    // Niveaux 2 à 4 : la qualité seule ; la R&D s'ouvre au niveau 5.
+    for (const niveau of [2, 3, 4] as const)
+      expect(offre(3, {}, niveau)!.map((m) => m.decision), `niveau ${niveau}`).toEqual(["qualityActions"]);
+    expect(offre(3, {}, 5)!.map((m) => m.decision)).toEqual(["qualityActions", "startedRdActionIds"]);
   });
 
   it("met à part ce qui tourne déjà et déduit les places prises", () => {
     const o = offre(3, {
-      activePricingStrategies: ["ps-premium"],
-      // L'ERP (trois tours) occupe sa place ; le CRM (deux tours) s'achève ce tour et la libère.
-      digitalProjectsInProgress: [
-        { id: "dt-erp", roundsCompleted: 1 },
-        { id: "dt-crm", roundsCompleted: 1 },
+      // Les matériaux (trois tours) occupent leur place ; l'emballage (deux tours) s'achève ce tour et la libère.
+      rdActionsInProgress: [
+        { id: "rd-materiaux", roundsCompleted: 1 },
+        { id: "rd-emballage", roundsCompleted: 1 },
       ],
       qualityActionsCompleted: { amelioration_composants: 1 },
     })!;
-    const prix = o.find((m) => m.decision === "activePricingStrategyIds")!;
-    expect(prix.elements.map((e) => e.id)).not.toContain("ps-premium");
-    expect(prix.enCours).toEqual([
-      {
-        libelle: "Positionnement haut de gamme",
-        etat: "en vigueur",
-        id: "ps-premium",
-        arret: { champ: "module.arret.activePricingStrategyIds.ps-premium", occupe: true },
-      },
-    ]);
-    expect(prix.plafond).toBe(novaScenario.pricingStrategy!.maxActiveStrategies - 1);
-    const digital = o.find((m) => m.decision === "startDigitalProjectIds")!;
-    expect(digital.elements.map((e) => e.id)).not.toContain("dt-crm");
-    expect(digital.plafond).toBe(novaScenario.digitalTransformation!.maxSimultaneousProjects - 1);
+    const rd = o.find((m) => m.decision === "startedRdActionIds")!;
+    expect(rd.elements.map((e) => e.id)).toEqual(["rd-process"]);
+    expect(rd.plafond).toBe(novaScenario.rdActions!.maxSimultaneousProjects - 1);
+    expect(rd.enCours.map((x) => x.libelle)).toEqual(["R&D matériaux biosourcés", "Emballage recyclable"]);
     const qualite = o.find((m) => m.decision === "qualityActions")!;
     expect(qualite.elements.find((e) => e.id === "amelioration_composants")!.valeur).toBe("2");
   });
 
-  it("chaque élément porte un libellé, un coût, une durée et des effets", () => {
-    for (const m of offre(8)!) {
+  it("chaque élément porte un libellé, un coût, une durée et des effets ; un niveau dit ce qui se fait", () => {
+    const o: OffreDesModules = offre(3)!;
+    for (const m of o) {
       for (const el of m.elements) {
         expect(el.libelle.length, el.id).toBeGreaterThan(0);
         expect(el.effets.length, el.id).toBeGreaterThan(0);
@@ -370,6 +219,20 @@ describe("(d) l'offre des modules", () => {
         expect(el.champ).toBe(champDeModule(m.decision, el.id));
       }
     }
+    const libelles = offre(1)!.find((m) => m.decision === "qualityActions")!.elements.map((e) => e.libelle);
+    expect(libelles).toContain("Amélioration du process (assemblage) · niveau 1 : standardisation des postes de montage");
+    for (const l of libelles) expect(l, l).not.toMatch(/ — | - /);
+  });
+
+  it("les rebuts et les retours ne se promettent que là où le scénario les compte", () => {
+    const sansNonQualite: EngineScenarioConfig = { ...ecommerceScenario };
+    delete sansNonQualite.qualityCosts;
+    const effets = (s: EngineScenarioConfig) =>
+      construireOffreDesModules({ scenario: s, etat: {}, tour: 1 })!
+        .find((m) => m.decision === "qualityActions")!
+        .elements.flatMap((e) => e.effets);
+    expect(effets(ecommerceScenario).some((e) => e.startsWith("Retours clients"))).toBe(true);
+    expect(effets(sansNonQualite).some((e) => e.startsWith("Retours clients") || e.startsWith("Rebuts"))).toBe(false);
   });
 });
 
@@ -378,40 +241,35 @@ describe("la lecture du formulaire et le jugement du serveur", () => {
     const f = new FormData();
     f.set("price", "79");
     f.set("productionPlan", "5000");
-    f.set(champDeModule("activePricingStrategyIds", "ps-premium"), "ps-premium");
-    f.set(champDeModule("startDigitalProjectIds", "dt-crm"), "dt-crm");
+    f.set(champDeModule("startedRdActionIds", "rd-process"), "rd-process");
     f.set(champDeModule("qualityActions", "amelioration_composants"), "1");
-    f.set(champDeModule("hsActions", "evacuation"), "evacuation");
+    // Une case d'un module retiré (brouillon d'avant) : rien n'en sort.
+    f.set("module.activePricingStrategyIds.ps-premium", "ps-premium");
     const { decisions } = decisionsSaisies(f);
-    expect(decisions.activePricingStrategyIds).toEqual(["ps-premium"]);
-    expect(decisions.startDigitalProjectIds).toEqual(["dt-crm"]);
+    expect(decisions.startedRdActionIds).toEqual(["rd-process"]);
     expect(decisions.qualityActions).toEqual([{ actionCode: "amelioration_composants", level: 1 }]);
-    expect(decisions.hsActions).toEqual([{ actionCode: "evacuation" }]);
-    expect(roundDecisionsSchema.parse(decisions).startDigitalProjectIds).toEqual(["dt-crm"]);
+    expect("activePricingStrategyIds" in decisions).toBe(false);
+    expect(roundDecisionsSchema.parse(decisions).startedRdActionIds).toEqual(["rd-process"]);
     // Rien coché : aucune clé de module.
     expect(modulesSaisis(new FormData().entries())).toEqual({});
   });
 
   it("refuse un choix hors de l'offre, un plafond dépassé, un module non proposé", () => {
     const o = construireOffreDesModules({ scenario: novaScenario, etat: {}, tour: 1 });
-    expect(refusDesModules({ activePricingStrategyIds: ["ps-premium"] }, o)).toEqual([]);
-    // Tour minimal non atteint.
-    expect(refusDesModules({ activePricingStrategyIds: ["ps-segmentation"] }, o)).toHaveLength(1);
-    // Plafond : la marque prend deux nouvelles actions par tour.
-    const marque = refusDesModules({ activeBrandActionIds: ["bm-campagne", "bm-ambassadeurs", "bm-label"] }, o);
-    expect(marque.map((e) => e.champ)).toEqual([champDeModule("activeBrandActionIds", "bm-label")]);
+    expect(refusDesModules({ startedRdActionIds: ["rd-process"] }, o)).toEqual([]);
+    // Un programme inconnu du catalogue.
+    expect(refusDesModules({ startedRdActionIds: ["rd-inconnu"] }, o)).toHaveLength(1);
+    // Plafond : deux programmes en même temps.
+    const rd = refusDesModules({ startedRdActionIds: ["rd-materiaux", "rd-process", "rd-emballage"] }, o);
+    expect(rd.map((e) => e.champ)).toEqual([champDeModule("startedRdActionIds", "rd-emballage")]);
     // Un niveau qualité qui n'est pas le suivant.
     expect(refusDesModules({ qualityActions: [{ actionCode: "amelioration_composants", level: 2 }] }, o)).toHaveLength(1);
-    // Une intervention de maintenance sur une machine nommée : l'écran ne la propose pas.
-    expect(
-      refusDesModules({ maintenanceDecisions: [{ machineId: "ligne-r0-0", actionCode: "preventif", level: 1 }] }, o),
-    ).not.toHaveLength(0);
     // Une partie sans module refuse tout choix de module.
-    expect(refusDesModules({ activeBrandActionIds: ["bm-campagne"] }, null)).toHaveLength(1);
+    expect(refusDesModules({ startedRdActionIds: ["rd-process"] }, null)).toHaveLength(1);
   });
 
   it("la reconduction d'un tour non rendu ne relance aucun module", () => {
-    const reconduit = carryOverDecisions({ ...BASE, ...MODULES } as RoundDecisions);
+    const reconduit = carryOverDecisions({ ...BASE, ...MODULES });
     for (const cle of Object.keys(MODULES)) {
       expect(reconduit[cle as keyof RoundDecisions], cle).toBeUndefined();
     }

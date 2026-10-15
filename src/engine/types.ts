@@ -195,8 +195,6 @@ export interface QualityActionLevelDef {
   label: string;
   /** Coût ponctuel décaissé au lancement (€). */
   cost: number;
-  /** Durée d'implémentation en tours (1 = effet immédiat, version simplifiée). */
-  durationRounds: number;
   effects: QualityActionEffects;
   /** Niveau prérequis : level N ne peut être démarré que si level N−1 est terminé. */
   prerequisiteLevel?: number;
@@ -214,356 +212,6 @@ export interface QualityActionsConfig {
   actions: QualityActionDef[];
   /** Nombre maximal d'actions pouvant tourner en parallèle. Défaut : 2. */
   maxConcurrentActions?: number;
-}
-
-/** Effets mesurables d'une action H&S. */
-export interface HsActionEffects {
-  /** Réduction du taux d'attrition RH (0..1 : 0.1 = −10 % de turnover). */
-  attritionReduction?: number;
-  /** Réduction du taux d'accidents (informatif, 0..1). */
-  accidentRateReduction?: number;
-  /** Bonus image RH dans le calcul RSE (+X, 0..1). */
-  hrImageBonus?: number;
-  /** Gain de productivité (0..0.3 : 0.04 = +4 %). */
-  productivityBonus?: number;
-  /** Économie sur la maintenance par tour (€ absolus). */
-  maintenanceSaving?: number;
-  /** Réduction du taux de rebuts (0..0.3). */
-  defectReduction?: number;
-}
-
-/** Définition d'une action Hygiène & Sécurité du catalogue. */
-export interface HsActionDef {
-  code: string;
-  label: string;
-  description?: string;
-  /** Charge main-d'œuvre (€, décaissée le tour de l'engagement). */
-  laborCost: number;
-  /** Coût d'immobilisation (€, charge exceptionnelle). */
-  immobilizationCost?: number;
-  /** Temps d'intervention en heures par niveau de technicien. */
-  timeHoursN1?: number;
-  timeHoursN2?: number;
-  timeHoursN3?: number;
-  /** Nécessite une machine spécifique (optionnel). */
-  requiresMachine?: boolean;
-  effects: HsActionEffects;
-  /** true = effet actif pendant `durationRounds` tours suivants. */
-  isRecurring?: boolean;
-  /** Durée en tours si récurrente. */
-  durationRounds?: number;
-}
-
-/** Catalogue d'actions Hygiène & Sécurité (optionnel, activable par scénario). */
-export interface HsActionsConfig {
-  actions: HsActionDef[];
-  /** Nombre maximal d'actions engageables par tour. Défaut : 3. */
-  maxActionsPerRound?: number;
-}
-
-/** Effets d'un programme de formation RH. */
-export interface TrainingProgramEffects {
-  productivityBonus: number;
-  attritionReduction: number;
-  qualityBonus: number;
-  safetyBonus: number;
-  maintenanceSaving: number;
-}
-
-/** Définition d'un programme de formation RH. */
-export interface TrainingProgramDef {
-  id: string;
-  label: string;
-  domaine: "production" | "commercial" | "management" | "rh" | "technique";
-  durationRounds: number;
-  costPerEmployee: number;
-  maxEmployeesPerRound: number;
-  effects: TrainingProgramEffects;
-}
-
-/** Catalogue de programmes de formation RH (optionnel, activable par scénario). */
-export interface TrainingProgramsConfig {
-  programs: TrainingProgramDef[];
-  maxConcurrentPrograms: number;
-}
-
-/** Effets d'une action commerciale enrichie. */
-export interface CommercialActionEffects {
-  demandBonus: number;
-  loyaltyBonus: number;
-  marginImpact: number;
-  imageBonus: number;
-  newClientRatio: number;
-}
-
-/** Définition d'une action commerciale enrichie. */
-export interface CommercialActionDef {
-  id: string;
-  label: string;
-  type: "promotion" | "fidelisation" | "prospection" | "communication";
-  targetSegment?: string;
-  isRecurring: boolean;
-  durationRounds: number;
-  costPerRound: number;
-  effects: CommercialActionEffects;
-}
-
-/** Catalogue d'actions commerciales enrichies (optionnel, activable par scénario). */
-export interface CommercialActionsConfig {
-  actions: CommercialActionDef[];
-  maxActionsPerRound: number;
-}
-
-// ---------------------------------------------------------------------------
-// Vague 5 : Interfaces des 5 nouveaux modules optionnels
-// ---------------------------------------------------------------------------
-
-/** Définition d'un contrat fournisseur pour la négociation (vague 5). */
-export interface SupplierContractDef {
-  id: string;
-  label: string;
-  supplierType: "matiere" | "energie" | "logistique" | "soustraitance";
-  volumeThreshold: number;
-  discountRate: number;
-  contractDurationRounds: number;
-  supplyRiskReduction: number;
-}
-
-/** Catalogue de négociation fournisseurs (vague 5). */
-export interface SupplierNegotiationConfig {
-  contracts: SupplierContractDef[];
-  maxActiveContracts: number;
-}
-
-/** Définition d'une option d'expansion de capacité (vague 5). */
-export interface CapacityOptionDef {
-  id: string;
-  label: string;
-  type: "atelier" | "equipeNuit" | "sousTraitance" | "automatisation";
-  capacityBonus: number;
-  costPerRound: number;
-  setupCost: number;
-  minProductionLevel: number;
-  maxRounds: number;
-}
-
-/** Catalogue d'expansion de capacité (vague 5). */
-export interface CapacityExpansionConfig {
-  options: CapacityOptionDef[];
-  maxActiveOptions: number;
-}
-
-/** Définition d'un marché international (vague 5). */
-export interface InternationalMarketDef {
-  id: string;
-  label: string;
-  region: "europe" | "amerique" | "asie" | "afrique";
-  demandMultiplier: number;
-  baseEntryRound: number;
-  entryInvestment: number;
-  exchangeRateVolatility: number;
-  tariffRate: number;
-  localAdaptationCost: number;
-}
-
-/** Catalogue de marchés internationaux (vague 5). */
-export interface InternationalMarketsConfig {
-  markets: InternationalMarketDef[];
-  maxActiveMarkets: number;
-}
-
-/** Effets d'une innovation produit lancée (vague 5). */
-export interface InnovationEffects {
-  priceBonus: number;
-  demandBonus: number;
-  marginBonus: number;
-  cannibalizationRate: number;
-}
-
-/** Définition d'une innovation produit (vague 5). */
-export interface InnovationDef {
-  id: string;
-  label: string;
-  type: "gamme" | "packaging" | "service" | "digital";
-  developmentRounds: number;
-  devCostPerRound: number;
-  launchCost: number;
-  effects: InnovationEffects;
-}
-
-/** Catalogue d'innovation produit (vague 5). */
-export interface ProductInnovationConfig {
-  innovations: InnovationDef[];
-  maxSimultaneousDev: number;
-}
-
-/** Effets d'une action RSE active (vague 5). */
-export interface RseProgramActionEffects {
-  carbonReduction: number;
-  imageBonus: number;
-  employeeSatisfaction: number;
-  energySaving: number;
-}
-
-/** Définition d'une action du programme RSE structuré (vague 5). */
-export interface RseProgramActionDef {
-  id: string;
-  label: string;
-  category: "energie" | "dechets" | "mobilite" | "fournisseurs" | "social";
-  costPerRound: number;
-  implementationRounds: number;
-  effects: RseProgramActionEffects;
-}
-
-/** Catalogue du programme RSE structuré (vague 5). */
-export interface RseProgramConfig {
-  actions: RseProgramActionDef[];
-  carbonBudget?: number;
-}
-
-// ---------------------------------------------------------------------------
-// Vague 6 : Interfaces des 6 nouveaux modules optionnels
-// ---------------------------------------------------------------------------
-
-/** Définition d'une stratégie de prix (vague 6). */
-export interface PricingStrategyDef {
-  id: string;
-  label: string;
-  type: "premium" | "penetration" | "dynamique" | "segmentation" | "psychologique";
-  priceMultiplier: number;
-  demandImpact: number;
-  marginImpact: number;
-  imageImpact: number;
-  minRound: number;
-}
-
-/** Catalogue de stratégies de prix (vague 6). */
-export interface PricingStrategyConfig {
-  strategies: PricingStrategyDef[];
-  maxActiveStrategies: number;
-}
-
-/** Effets d'une politique RH avancée (vague 6). */
-export interface AdvancedHREffects {
-  attritionReduction: number;
-  productivityBonus: number;
-  recruitmentBonus: number;
-  absenteeismReduction: number;
-}
-
-/** Définition d'une politique RH avancée (vague 6). */
-export interface AdvancedHRPolicyDef {
-  id: string;
-  label: string;
-  type: "recrutement" | "carrieres" | "salaires" | "teletravail" | "bienEtre";
-  costPerRound: number;
-  implementationRounds: number;
-  effects: AdvancedHREffects;
-}
-
-/** Catalogue de politiques RH avancées (vague 6). */
-export interface AdvancedHRConfig {
-  policies: AdvancedHRPolicyDef[];
-  maxActivePolicies: number;
-}
-
-/** Effets d'un plan de gestion de crise (vague 6). */
-export interface CrisisPlanEffects {
-  revenueProtection: number;
-  recoverySpeedBonus: number;
-  imageProtection: number;
-}
-
-/** Définition d'un plan de gestion de crise (vague 6). */
-export interface CrisisPlanDef {
-  id: string;
-  label: string;
-  crisisType: "greve" | "rappelProduit" | "cyberAttaque" | "ruptureFournisseur" | "criseSanitaire";
-  preparationCostPerRound: number;
-  activationCost: number;
-  effects: CrisisPlanEffects;
-}
-
-/** Catalogue de gestion de crise (vague 6). */
-export interface CrisisManagementConfig {
-  plans: CrisisPlanDef[];
-  crisisEventProbability: number;
-}
-
-/** Effets d'un partenariat ou d'une alliance (vague 6). */
-export interface PartnershipEffects {
-  revenueBonus: number;
-  costReduction: number;
-  rdBonus: number;
-  marketAccessBonus: number;
-}
-
-/** Définition d'une option de partenariat (vague 6). */
-export interface PartnershipOptionDef {
-  id: string;
-  label: string;
-  type: "codeveloppement" | "licence" | "jointVenture" | "appelOffre" | "franchise";
-  entryFee: number;
-  royaltiesPerRound: number;
-  minRound: number;
-  durationRounds: number;
-  effects: PartnershipEffects;
-}
-
-/** Catalogue de partenariats & alliances (vague 6). */
-export interface PartnershipsConfig {
-  options: PartnershipOptionDef[];
-  maxActivePartnerships: number;
-}
-
-/** Effets d'un projet de transformation digitale terminé (vague 6). */
-export interface DigitalProjectEffects {
-  efficiencyBonus: number;
-  costReduction: number;
-  demandBonus: number;
-  errorReduction: number;
-}
-
-/** Définition d'un projet de transformation digitale (vague 6). */
-export interface DigitalProjectDef {
-  id: string;
-  label: string;
-  type: "erp" | "crm" | "automatisation" | "dataAnalytics" | "ecommerce";
-  implementationRounds: number;
-  costPerRound: number;
-  maintenanceCostPerRound: number;
-  effects: DigitalProjectEffects;
-}
-
-/** Catalogue de transformation digitale (vague 6). */
-export interface DigitalTransformationConfig {
-  projects: DigitalProjectDef[];
-  maxSimultaneousProjects: number;
-}
-
-/** Effets d'une action de gestion de marque (vague 6). */
-export interface BrandActionEffects {
-  imageBonus: number;
-  loyaltyBonus: number;
-  priceAcceptance: number;
-  crisisRecovery: number;
-}
-
-/** Définition d'une action de gestion de marque (vague 6). */
-export interface BrandActionDef {
-  id: string;
-  label: string;
-  type: "reputation" | "communicationCrise" | "ambassadeurs" | "nps" | "certificationLabel";
-  costPerRound: number;
-  durationRounds: number;
-  isRecurring: boolean;
-  effects: BrandActionEffects;
-}
-
-/** Catalogue de gestion de marque (vague 6). */
-export interface BrandManagementConfig {
-  actions: BrandActionDef[];
-  maxActionsPerRound: number;
 }
 
 /** Type d'alerte de performance. */
@@ -601,8 +249,9 @@ export interface PerformanceMetrics {
 
 /**
  * Une ligne du tableau d'emprunts. Les emprunts ordinaires portent le taux du
- * scénario ; un tirage sur une option de financement (`financingOptions`)
- * porte SON taux par tour et le nom de l'option.
+ * scénario. Une ligne tirée sur une option de financement, avant que ce
+ * module ne soit retiré, garde SON taux par tour et le nom de l'option : les
+ * parties en cours la remboursent et en paient les intérêts à ce taux.
  */
 export interface LoanLine {
   remaining: number;
@@ -611,38 +260,6 @@ export interface LoanLine {
   ratePerRound?: number;
   /** L'option de financement tirée ; absent : un emprunt ordinaire. */
   optionId?: string;
-}
-
-/** Un niveau d'une action de maintenance (préventive ou curative). */
-export interface MaintenanceActionLevel {
-  level: number;
-  label: string;
-  /** Charge main-d'œuvre (€). */
-  laborCost: number;
-  /** Coût d'immobilisation machine pendant l'intervention (€). */
-  downtimeCost: number;
-  /** Temps d'intervention (heures) pour chaque grade de technicien. */
-  timeHoursN1: number;
-  timeHoursN2: number;
-  timeHoursN3: number;
-  /** Réduction de l'usure de la machine (0..1). */
-  wearReduction?: number;
-  /** Réduction de la probabilité de panne ce tour (0..1). */
-  breakdownRiskReduction?: number;
-  /** Taux de restauration de la capacité d'une machine hors-service (0..1). */
-  capacityRestoration?: number;
-}
-
-/** Un type d'action de maintenance (ex. "preventif" | "curatif"). */
-export interface MaintenanceActionType {
-  code: string;
-  label: string;
-  levels: MaintenanceActionLevel[];
-}
-
-/** Configuration du module de maintenance par machine (optionnel, inspiré de StratiRAC). */
-export interface MaintenanceActionsConfig {
-  types: MaintenanceActionType[];
 }
 
 export interface EngineScenarioConfig {
@@ -942,23 +559,6 @@ export interface EngineScenarioConfig {
    */
   qualityActions?: QualityActionsConfig;
   /**
-   * Actions de maintenance par machine (optionnel, inspiré de StratiRAC) :
-   * chaque tour, le joueur peut décider des actions préventives ou curatives
-   * sur des machines individuelles de son parc (`machineFleet`). Absent ou
-   * parc non individuel → décisions ignorées silencieusement.
-   */
-  maintenanceActions?: MaintenanceActionsConfig;
-  /**
-   * Hygiène & Sécurité (optionnel) : catalogue d'actions ponctuelles ou
-   * récurrentes (plan d'évacuation, formation, audit, ergonomie…) avec effets
-   * sur l'attrition RH, la productivité, l'image et les rebuts.
-   */
-  healthSafetyActions?: HsActionsConfig;
-  /** Catalogue de programmes de formation RH (optionnel). */
-  trainingPrograms?: TrainingProgramsConfig;
-  /** Catalogue d'actions commerciales enrichies (optionnel). */
-  commercialActions?: CommercialActionsConfig;
-  /**
    * Fournisseurs de matières premières (optionnel — doc 02 §5bis) : le joueur
    * choisit son fournisseur chaque tour. Le premier de la liste est le
    * fournisseur par défaut (reconduction). Absent = un seul fournisseur
@@ -1144,53 +744,17 @@ export interface EngineScenarioConfig {
     axisSwitchDecay: number;
   };
   enrichedBots?: boolean;
-  /** Négociation fournisseurs (vague 5). */
-  supplierNegotiation?: SupplierNegotiationConfig;
-  /** Expansion de capacité (vague 5). */
-  capacityExpansion?: CapacityExpansionConfig;
-  /** Marchés internationaux (vague 5). */
-  internationalMarkets?: InternationalMarketsConfig;
-  /** Innovation produit (vague 5). */
-  productInnovation?: ProductInnovationConfig;
-  /** Programme RSE structuré (vague 5). */
-  rseProgram?: RseProgramConfig;
-  /** Catalogue d'actions R&D ponctuelles (vague 1). */
+  /** Programmes de R&D de procédé : des tours de travaux, puis un acquis pour la partie. */
   rdActions?: {
     actions: {
       id: string;
       label: string;
-      theme: string;
-      level: number;
       costPerRound: number;
       durationRounds: number;
       effects: { costReduction: number; qualityBonus: number; imageBonus: number };
     }[];
     maxSimultaneousProjects: number;
   };
-  /** Catalogue d'options de financement structurées (vague 3). */
-  financingOptions?: {
-    options: {
-      id: string;
-      label: string;
-      type: "creditLine" | "termLoan";
-      maxAmount: number;
-      interestRatePerRound: number;
-      durationRounds: number;
-      availableFromRound: number;
-    }[];
-  };
-  /** Stratégies de prix (vague 6). */
-  pricingStrategy?: PricingStrategyConfig;
-  /** Politiques RH avancées (vague 6). */
-  advancedHR?: AdvancedHRConfig;
-  /** Gestion de crise (vague 6). */
-  crisisManagement?: CrisisManagementConfig;
-  /** Partenariats & alliances (vague 6). */
-  partnerships?: PartnershipsConfig;
-  /** Transformation digitale (vague 6). */
-  digitalTransformation?: DigitalTransformationConfig;
-  /** Gestion de marque (vague 6). */
-  brandManagement?: BrandManagementConfig;
 }
 
 /**
@@ -1736,62 +1300,6 @@ export interface CompanyState {
    * Absent = aucune action terminée.
    */
   qualityActionsCompleted?: Record<string, number>;
-  /**
-   * Actions H&S récurrentes en cours d'effet (module `healthSafetyActions`).
-   * Chaque entrée persiste `durationRounds` tours, puis est retirée.
-   * Absent si aucune action récurrente n'est active.
-   */
-  activeHsActions?: { actionCode: string; startedRound: number; remainingRounds: number }[];
-  /**
-   * Programmes de formation RH actifs (module `trainingPrograms`).
-   * Chaque entrée persiste `durationRounds` tours, puis est retirée.
-   * Absent si aucun programme n'est en cours.
-   */
-  activeTrainingPrograms?: { programId: string; enrolledCount: number; remainingRounds: number }[];
-  /** Actions commerciales enrichies actives (module `commercialActions`). */
-  activeCommercialActions?: { id: string; remainingRounds: number }[];
-  /** Contrats fournisseurs actifs (module `supplierNegotiation`). */
-  activeSupplierContracts?: { id: string; remainingRounds: number }[];
-  /** Options de capacité actives (module `capacityExpansion`). */
-  activeCapacityOptions?: { id: string; roundsUsed: number }[];
-  /** Marchés internationaux actifs (module `internationalMarkets`). */
-  activeInternationalMarkets?: { id: string; enteredAtRound: number }[];
-  /** Innovations en cours de développement (module `productInnovation`). */
-  innovationsInDev?: { id: string; roundsCompleted: number }[];
-  /** IDs des innovations lancées (module `productInnovation`). */
-  launchedInnovations?: string[];
-  /** Actions RSE actives (module `rseProgram`). */
-  activeRseActions?: { id: string; roundsActive: number }[];
-  /** Empreinte carbone courante (module `rseProgram`). Absent = non suivi. */
-  carbonFootprint?: number;
-  /**
-   * Historique des actions de maintenance décidées par machine (module
-   * `maintenanceActions`). Absent si aucune action n'a encore été engagée.
-   */
-  maintenanceLog?: {
-    round: number;
-    machineId: string;
-    actionCode: string;
-    level: number;
-    laborCost: number;
-    downtimeCost: number;
-  }[];
-  /** Stratégies de prix actives (module `pricingStrategy`). */
-  activePricingStrategies?: string[];
-  /** Politiques RH avancées actives (module `advancedHR`). */
-  activeHRPolicies?: { id: string; roundsActive: number }[];
-  /** Plans de gestion de crise actifs (module `crisisManagement`). */
-  activeCrisisPlans?: string[];
-  /** Crise en cours (module `crisisManagement`). */
-  ongoingCrisis?: { type: string; roundsRemaining: number } | null;
-  /** Partenariats actifs (module `partnerships`). */
-  activePartnerships?: { id: string; remainingRounds: number }[];
-  /** Projets de transformation digitale en cours (module `digitalTransformation`). */
-  digitalProjectsInProgress?: { id: string; roundsCompleted: number }[];
-  /** IDs des projets de transformation digitale terminés (module `digitalTransformation`). */
-  completedDigitalProjects?: string[];
-  /** Actions de gestion de marque actives (module `brandManagement`). */
-  activeBrandActions?: { id: string; remainingRounds: number }[];
   /** Programmes R&D en cours (module `rdActions`). */
   rdActionsInProgress?: { id: string; roundsCompleted: number }[];
   /** IDs des programmes R&D achevés (module `rdActions`) : leurs effets durent. */
@@ -1916,24 +1424,6 @@ export interface RoundDecisions {
    */
   qualityActions?: { actionCode: string; level: number }[];
   /**
-   * Actions de maintenance décidées ce tour, machine par machine (si le scénario
-   * a un bloc `maintenanceActions` et un parc individuel `machineFleet`). Chaque
-   * entrée cible une machine par son `id`, un type d'action (ex. "preventif") et
-   * un niveau (1, 2 ou 3). Actions ponctuelles : jamais reconduites.
-   *
-   * `machineId` vaut `MACHINE_ATELIER` (« atelier ») pour une intervention sur
-   * TOUT l'outil de production : l'action porte alors sur chaque machine
-   * concernée (toutes pour un préventif, celles en panne pour un curatif), et
-   * son coût se compte par machine. C'est la forme que l'écran propose.
-   */
-  maintenanceDecisions?: { machineId: string; actionCode: string; level: number }[];
-  /**
-   * Actions Hygiène & Sécurité engagées ce tour (si le scénario a un catalogue
-   * `healthSafetyActions`). Actions ponctuelles : jamais reconduites
-   * (sauf `isRecurring` = true → ajoutées à `activeHsActions`).
-   */
-  hsActions?: { actionCode: string; machineId?: string }[];
-  /**
    * Investissement capacitaire (si le scénario le propose) : unités de
    * capacité machine achetées ce tour — décaissées maintenant, en service au
    * tour suivant. Action ponctuelle : jamais reconduite.
@@ -2020,47 +1510,13 @@ export interface RoundDecisions {
    * bancaire de toutes les parties sans qu'on l'ait décidé.
    */
   salesEstimate?: SalesEstimate;
-  /** Inscriptions aux programmes de formation ce tour (module `trainingPrograms`). */
-  trainingEnrollments?: { programId: string; enrolledCount: number }[];
-  /** IDs des actions commerciales activées ce tour (module `commercialActions`). */
-  activeCommercialActionIds?: string[];
-  /** IDs des contrats fournisseurs activés ce tour (module `supplierNegotiation`). */
-  activeContractIds?: string[];
-  /** IDs des options de capacité activées ce tour (module `capacityExpansion`). */
-  activeCapacityOptionIds?: string[];
-  /** IDs des marchés internationaux entrés ce tour (module `internationalMarkets`). */
-  enteredMarketIds?: string[];
-  /** IDs des innovations démarrées en développement ce tour (module `productInnovation`). */
-  startedInnovationIds?: string[];
-  /** IDs des actions RSE activées ce tour (module `rseProgram`). */
-  activeRseActionIds?: string[];
-  /** IDs des stratégies de prix activées ce tour (module `pricingStrategy`). */
-  activePricingStrategyIds?: string[];
-  /** IDs des politiques RH avancées activées ce tour (module `advancedHR`). */
-  activeHRPolicyIds?: string[];
-  /** IDs des plans de crise activés ce tour (module `crisisManagement`). */
-  activeCrisisPlanIds?: string[];
-  /** IDs des partenariats activés ce tour (module `partnerships`). */
-  activatePartnershipIds?: string[];
-  /** IDs des projets digitaux démarrés ce tour (module `digitalTransformation`). */
-  startDigitalProjectIds?: string[];
-  /** IDs des actions de marque activées ce tour (module `brandManagement`). */
-  activeBrandActionIds?: string[];
   /** IDs des programmes R&D lancés ce tour (module `rdActions`). */
   startedRdActionIds?: string[];
   /**
-   * Tirages sur les options de financement du scénario (module
-   * `financingOptions`) : un montant par option. Chaque tirage devient une
-   * ligne du tableau d'emprunts (`CompanyState.loans`), à son taux et à sa
-   * durée, remboursée par échéances égales.
-   */
-  financingDraws?: { optionId: string; amount: number }[];
-  /**
-   * Ce que l'équipe ARRÊTE ce tour parmi ce qui tourne déjà : une stratégie de
-   * prix, une action RSE, un plan de crise, un marché à l'export… Le moteur le
-   * retire de l'état à l'ouverture du tour : plus aucun coût ni effet dès ce
-   * tour. Rien n'est remboursé (droit d'entrée d'un partenariat, dépenses
-   * d'un projet en cours). `module` est le nom de la décision qui l'a lancé.
+   * Ce que l'équipe ARRÊTE ce tour parmi ce qui tourne déjà : un programme de
+   * R&D en cours. Le moteur le retire de l'état à l'ouverture du tour : plus
+   * aucun coût ni effet dès ce tour, rien n'est remboursé. `module` est le nom
+   * de la décision qui l'a lancé.
    */
   stoppedModuleItems?: { module: string; id: string }[];
 }
@@ -2387,18 +1843,6 @@ export interface CompanyRoundResult {
     returnedUnits: number;
   };
   /**
-   * Coûts des actions de maintenance par machine ce tour (module
-   * `maintenanceActions`). Absent si aucune action n'a été décidée.
-   */
-  maintenanceCost?: {
-    /** Somme des charges MOD des interventions décidées ce tour. */
-    laborCost: number;
-    /** Somme des coûts d'immobilisation machine des interventions. */
-    downtimeCost: number;
-    /** Nombre d'actions engagées ce tour. */
-    actionsCount: number;
-  };
-  /**
    * Actions qualité du catalogue : niveaux démarrés ce tour et effets cumulés actifs.
    * Présent dès qu'une action est démarrée OU que des effets sont en cours.
    */
@@ -2541,9 +1985,7 @@ export interface CompanyRoundResult {
      * Absent quand la demande a été servie en entier — rien à expliquer.
      */
     loanRefused?: number;
-    /** Tirages accordés ce tour sur les options de financement, par option. */
-    financingDrawn?: { optionId: string; amount: number }[];
-    /** Intérêts du tour sur les lignes à taux propre (options de financement). */
+    /** Intérêts du tour sur les lignes à taux propre (tirages d'avant le retrait des options de financement). */
     financingInterest?: number;
   };
   /** Trésorerie du tour : mobilisations de créances et coûts financiers. */
@@ -2614,78 +2056,10 @@ export interface CompanyRoundResult {
    * Présent en gamme (≥ 2 produits) où les opérations par référence sont détaillées.
    */
   accounting?: Ledger;
-  /**
-   * Coûts et effets H&S du tour (module `healthSafetyActions`). Présent dès
-   * qu'au moins une action est engagée ce tour ou qu'une action récurrente est active.
-   */
-  hsCost?: {
-    laborCost: number;
-    immobilizationCost: number;
-    actionsCount: number;
-    effects: {
-      attritionReduction: number;
-      productivityBonus: number;
-      defectReduction: number;
-      maintenanceSaving: number;
-    };
-  };
-  /** Coût total des formations RH décaissé ce tour (module `trainingPrograms`). */
-  trainingCost?: number;
-  /** Effets agrégés des formations actives ce tour. */
-  trainingEffects?: Partial<TrainingProgramEffects>;
-  /** Coût total des actions commerciales ce tour (module `commercialActions`). */
-  commercialCost?: number;
-  /** Effets agrégés des actions commerciales actives ce tour. */
-  commercialEffects?: Partial<CommercialActionEffects>;
-  /** Économie réalisée sur les matières via contrats fournisseurs (module `supplierNegotiation`). */
-  supplierNegotiationSaving?: number;
-  /** Coût total de l'expansion de capacité ce tour (module `capacityExpansion`). */
-  capacityCost?: number;
-  /** Revenus internationaux générés ce tour (module `internationalMarkets`). */
-  internationalRevenue?: number;
-  /** Coûts liés aux marchés internationaux ce tour (module `internationalMarkets`). */
-  internationalCost?: number;
-  /** Coût total des innovations en développement ce tour (module `productInnovation`). */
-  innovationCost?: number;
-  /** Effets cumulés des innovations lancées actives ce tour (module `productInnovation`). */
-  innovationEffects?: Partial<InnovationEffects>;
-  /** Coût total du programme RSE ce tour (module `rseProgram`). */
-  rseProgramCost?: number;
-  /** Effets cumulés des actions RSE actives ce tour (module `rseProgram`). */
-  rseProgramEffects?: Partial<RseProgramActionEffects>;
-  /** Effets de la stratégie de prix active ce tour (module `pricingStrategy`). */
-  pricingEffects?: { priceMultiplier: number; demandImpact: number; marginImpact: number };
-  /** Coût total des politiques RH avancées ce tour (module `advancedHR`). */
-  hrCost?: number;
-  /** Effets agrégés des politiques RH avancées ce tour (module `advancedHR`). */
-  hrEffects?: Partial<AdvancedHREffects>;
-  /** Coût total de gestion de crise ce tour (module `crisisManagement`). */
-  crisisCost?: number;
-  /** Événement de crise survenu ce tour (module `crisisManagement`). */
-  crisisEvent?: { type: string; impactDescription: string } | null;
-  /** Coût total des partenariats ce tour (module `partnerships`). */
-  partnershipCost?: number;
-  /** Effets agrégés des partenariats actifs ce tour (module `partnerships`). */
-  partnershipEffects?: Partial<PartnershipEffects>;
-  /** Coût total de la transformation digitale ce tour (module `digitalTransformation`). */
-  digitalCost?: number;
-  /** Effets agrégés des projets digitaux terminés ce tour (module `digitalTransformation`). */
-  digitalEffects?: Partial<DigitalProjectEffects>;
-  /** Coût total des actions de marque ce tour (module `brandManagement`). */
-  brandCost?: number;
-  /** Effets agrégés des actions de marque actives ce tour (module `brandManagement`). */
-  brandEffects?: Partial<BrandActionEffects>;
-  /** Chiffre d'affaires perdu dans la crise du tour, après protection (module `crisisManagement`). */
-  crisisRevenueLoss?: number;
   /** Coût des programmes R&D du tour (module `rdActions`). */
   rdActionsCost?: number;
   /** Effets cumulés des programmes R&D achevés, en vigueur ce tour (module `rdActions`). */
   rdActionsEffects?: { costReduction: number; qualityBonus: number; imageBonus: number };
-  /**
-   * Interventions de maintenance du tour (module `maintenanceActions`) : machines
-   * remises en service et usure retirée en moyenne.
-   */
-  maintenanceEffects?: { machinesRestored: number; wearRemoved: number };
   /** Ce que l'équipe a arrêté ce tour (retiré de l'état à l'ouverture). */
   stoppedModuleItems?: { module: string; id: string }[];
   kpis: Record<string, number>;
@@ -2730,43 +2104,9 @@ export interface EngineTrace {
   communication?: CompanyRoundResult["communication"] | null;
   /** Abonnement (bloc `subscription`) : le portefeuille d'adhérents du tour. */
   subscription?: CompanyRoundResult["subscription"] | null;
-  /** H&S : coûts et effets du tour (module `healthSafetyActions`). */
-  hsCost?: CompanyRoundResult["hsCost"] | null;
-  /** Formations RH : coût et effets du tour (module `trainingPrograms`). */
-  trainingCost?: CompanyRoundResult["trainingCost"] | null;
-  trainingEffects?: CompanyRoundResult["trainingEffects"] | null;
-  /**
-   * Modules optionnels (vagues 5 et 6) : coûts et effets du tour, relus par la
-   * vue pour le bilan « Modules engagés ce tour ». Absents sur les lignes
-   * écrites avant eux, et pour tout scénario sans ces catalogues.
-   */
-  capacityCost?: CompanyRoundResult["capacityCost"] | null;
-  internationalRevenue?: CompanyRoundResult["internationalRevenue"] | null;
-  internationalCost?: CompanyRoundResult["internationalCost"] | null;
-  innovationCost?: CompanyRoundResult["innovationCost"] | null;
-  innovationEffects?: CompanyRoundResult["innovationEffects"] | null;
-  rseProgramCost?: CompanyRoundResult["rseProgramCost"] | null;
-  rseProgramEffects?: CompanyRoundResult["rseProgramEffects"] | null;
-  pricingEffects?: CompanyRoundResult["pricingEffects"] | null;
-  crisisCost?: CompanyRoundResult["crisisCost"] | null;
-  crisisEvent?: CompanyRoundResult["crisisEvent"] | null;
-  partnershipCost?: CompanyRoundResult["partnershipCost"] | null;
-  partnershipEffects?: CompanyRoundResult["partnershipEffects"] | null;
-  digitalCost?: CompanyRoundResult["digitalCost"] | null;
-  digitalEffects?: CompanyRoundResult["digitalEffects"] | null;
-  brandCost?: CompanyRoundResult["brandCost"] | null;
-  brandEffects?: CompanyRoundResult["brandEffects"] | null;
-  /** Modules rendus jouables après la PR #192 : coûts et effets du tour. */
-  commercialCost?: CompanyRoundResult["commercialCost"] | null;
-  commercialEffects?: CompanyRoundResult["commercialEffects"] | null;
-  supplierNegotiationSaving?: CompanyRoundResult["supplierNegotiationSaving"] | null;
-  hrCost?: CompanyRoundResult["hrCost"] | null;
-  hrEffects?: CompanyRoundResult["hrEffects"] | null;
-  maintenanceCost?: CompanyRoundResult["maintenanceCost"] | null;
-  maintenanceEffects?: CompanyRoundResult["maintenanceEffects"] | null;
+  /** Programmes de R&D : coût et effets du tour, relus par le bilan des modules. */
   rdActionsCost?: CompanyRoundResult["rdActionsCost"] | null;
   rdActionsEffects?: CompanyRoundResult["rdActionsEffects"] | null;
-  crisisRevenueLoss?: CompanyRoundResult["crisisRevenueLoss"] | null;
   stoppedModuleItems?: CompanyRoundResult["stoppedModuleItems"] | null;
 }
 
@@ -2798,16 +2138,6 @@ export interface SimulationInput {
    * émis, ni au compte de résultat ni au tableau de flux.
    */
   rescueSubsidies?: Record<CompanyId, number>;
-  /**
-   * LES LEVIERS QUE LE NIVEAU DE LA PARTIE OUVRE (`presetFromProfile(...).decisions`).
-   *
-   * Le moteur ignore la difficulté, sauf pour ce qui arrive SANS décision de
-   * l'équipe : une crise (module `crisisManagement`) n'est tirée que si le
-   * module est offert à la partie, par la même règle que l'offre
-   * (`engine/modules/ouverture`). Absents : aucune crise n'est tirée, comme
-   * dans tous les rejeux et tests qui ne disent pas à quel niveau ils jouent.
-   */
-  leviers?: import("./bots/leviers").LeviersOuverts | null;
   /**
    * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
    *
