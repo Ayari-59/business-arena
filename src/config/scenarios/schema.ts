@@ -346,6 +346,7 @@ export const engineScenarioConfigSchema = z.object({
           decoteDEmission: z.number().min(0).max(0.9),
           seuilDeControle: z.number().min(0).max(1),
           tourMin: z.number().int().min(1),
+          tourMinTitres: z.number().int().min(1).optional(),
         })
         .optional(),
       sites: z

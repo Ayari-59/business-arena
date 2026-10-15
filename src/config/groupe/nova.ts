@@ -43,6 +43,7 @@ export const GROUPE_NOVA: ConfigDeGroupe = {
     decoteDEmission: 0.1,
     seuilDeControle: 0.5,
     tourMin: 2,
+    tourMinTitres: 4,
   },
   sites: [
     {

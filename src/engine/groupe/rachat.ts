@@ -160,6 +160,15 @@ export function executerLesRachats(args: {
       refuse(idA, d.cible, nom, "Un liquidateur ne prend pas d'actions : un site se paie en numéraire.");
       continue;
     }
+    if (d.paiement === "titres" && roundIndex < (cfg.tourMinTitres ?? cfg.tourMin)) {
+      refuse(
+        idA,
+        d.cible,
+        nom,
+        `Un paiement en actions se décide à partir du tour ${cfg.tourMinTitres ?? cfg.tourMin} : avant, la valeur de vos actions ne reflète pas encore de résultats réels.`,
+      );
+      continue;
+    }
     // Une part d'entreprise étrangère : parmi celles qu'elle propose.
     const part = d.cible.type === "etranger" ? (d.part ?? 1) : 1;
     if (d.cible.type === "etranger" && !laCibleEtrangere(scenario, d.cible.id)!.parts.some((p) => Math.abs(p - part) < 1e-9)) {

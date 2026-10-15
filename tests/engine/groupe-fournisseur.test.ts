@@ -201,11 +201,17 @@ describe("le rachat d'un fournisseur, et le groupe consolidé", () => {
     expect(t4.results.e3!.groupe!.achats!.standard ?? 0).toBe(0);
   });
 
-  it("payé en actions (la fusion) : les vendeurs reçoivent des actions à la valeur d'ouverture, aucun euro ne sort", () => {
-    const e = tours(2);
+  it("payé en actions (la fusion), à partir du tour où la valeur de l'action reflète des résultats : les vendeurs reçoivent des actions à la valeur d'ouverture, aucun euro ne sort", () => {
+    const tot = tours(2);
+    const trop = avancer(monde, tot, 3, (d) => {
+      d.e0!.rachat = { cible: STANDARD, prixMaximum: 1e9, paiement: "titres" };
+    });
+    expect(trop.results.e0!.groupe!.rachat!.motif).toMatch(new RegExp(`à partir du tour ${monde.groupe!.rachat!.tourMinTitres}`));
+    expect(trop.companies.find((c) => c.id === "e0")!.groupe!.filiales).toHaveLength(0);
+    const e = tours(monde.groupe!.rachat!.tourMinTitres! - 1);
     const A = e.etats[0]!;
     const prix = prixDuFournisseur(monde, e.etats, "standard")!.prix;
-    const out = avancer(monde, e, 3, (d) => {
+    const out = avancer(monde, e, monde.groupe!.rachat!.tourMinTitres!, (d) => {
       d.e0!.rachat = { cible: STANDARD, prixMaximum: prix, paiement: "titres" };
     });
     const r = out.results.e0!;
@@ -240,7 +246,7 @@ describe("le rejeu de mérite d'une partie avec un fournisseur racheté", () => 
     const jouees: RoundDecisions[] = [];
     for (let t = 1; t <= monde.roundsCount; t++) {
       avancer(monde, e, t, (d) => {
-        if (t === 3) d.e0!.rachat = { cible: STANDARD, prixMaximum: 1e9, paiement: "titres" };
+        if (t === 4) d.e0!.rachat = { cible: STANDARD, prixMaximum: 1e9, paiement: "titres" };
         jouees.push(d.e0!);
       });
     }

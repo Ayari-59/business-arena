@@ -188,6 +188,12 @@ export interface ConfigDeGroupe {
     /** Part minimale des actions d'origine après émissions (le contrôle). */
     seuilDeControle: number;
     tourMin: number;
+    /**
+     * Premier tour où une société peut se payer en actions (la fusion) : quand
+     * la valeur de l'action, sur laquelle on émet, reflète des résultats réels.
+     * Absent : dès `tourMin`.
+     */
+    tourMinTitres?: number;
   };
   /** Les sites à l'arrêt à vendre. */
   sites?: SiteFerme[];
