@@ -113,6 +113,7 @@ export function simulerLeGroupe(
     companies,
     ...(synergies && Object.keys(synergies.ventes).length > 0 ? { ventesDuGroupe: synergies.ventes } : {}),
     ...(synergies && Object.keys(synergies.fabrication).length > 0 ? { fabricationDuGroupe: synergies.fabrication } : {}),
+    ...(synergies && Object.keys(synergies.frais).length > 0 ? { fraisDesSynergies: synergies.frais } : {}),
     ...(fournisseurs ? { decisions: fournisseurs.decisions } : {}),
     ...(rachats && Object.keys(rachats.operations).length > 0 ? { operationsDeGroupe: rachats.operations } : {}),
     ...(fournisseurs && Object.keys(fournisseurs.rationnement).length > 0 ? { rationnementDuGroupe: fournisseurs.rationnement } : {}),
@@ -314,8 +315,9 @@ function premiereOuverture(c: CompanyState, cfg: NonNullable<SimulationInput["sc
  * (bornées à sa capacité, réparties au prorata si elles la dépassent), au
  * prix local et au coût de distribution convertis au cours moyen du tour ;
  * les unités qu'elle lui fait fabriquer (bornées à la capacité de son usine),
- * au coût local converti. Au tour du rachat, la moitié de chaque capacité :
- * l'intégration se fait progressivement.
+ * au coût local converti. Chaque synergie employée paie ses frais fixes du
+ * tour. Au tour du rachat, la moitié de chaque capacité : l'intégration se
+ * fait progressivement.
  */
 function synergiesEtrangeres(
   input: SimulationInput,
@@ -324,12 +326,17 @@ function synergiesEtrangeres(
   ventes: Record<string, Record<ProductCode, { quantite: number; prix: number; commission: number }>>;
   fabrication: Record<string, { unites: number[]; couts: number[]; total: number; qualite: number }>;
   rapports: Record<string, Record<ProductCode, { unites: number; cout: number }>>;
+  frais: Record<string, number>;
 } {
   const { scenario, roundIndex } = input;
   const codes = toGamme(scenario).map((p) => p.code);
   const ventes: Record<string, Record<ProductCode, { quantite: number; prix: number; commission: number }>> = {};
   const fabrication: Record<string, { unites: number[]; couts: number[]; total: number; qualite: number }> = {};
   const rapports: Record<string, Record<ProductCode, { unites: number; cout: number }>> = {};
+  const frais: Record<string, number> = {};
+  const payer = (id: string, montant: number) => {
+    if (montant > 0) frais[id] = (frais[id] ?? 0) + montant;
+  };
   const borner = (demande: Record<ProductCode, number>, capacite: number) => {
     const propres = Object.fromEntries(Object.entries(demande).map(([k, q]) => [k, Number.isFinite(Number(q)) ? Math.max(0, Number(q)) : 0]));
     const total = Object.values(propres).reduce((a, b) => a + b, 0);
@@ -353,6 +360,7 @@ function synergiesEtrangeres(
           Object.fromEntries(Object.entries(demandeReseau).filter(([k]) => r.prix[k] !== undefined)),
           r.capacite * montee,
         );
+        if (Object.values(servi).some((q) => q > 0)) payer(c.id, r.coutFixeParTour * moyen);
         for (const [code, q] of Object.entries(servi)) {
           if (q <= 0) continue;
           const prec = ventes[c.id]?.[code];
@@ -376,6 +384,7 @@ function synergiesEtrangeres(
         );
         const unites = codes.map((k) => servi[k] ?? 0);
         if (unites.every((u) => u <= 0)) continue;
+        payer(c.id, f.coutFixeParTour * moyen);
         const couts = codes.map((k, i) => unites[i]! * (f.cout[k] ?? 0) * moyen);
         const prec = fabrication[c.id];
         const tous = prec ? unites.map((u, i) => u + prec.unites[i]!) : unites;
@@ -389,5 +398,5 @@ function synergiesEtrangeres(
       }
     }
   }
-  return { ventes, fabrication, rapports };
+  return { ventes, fabrication, rapports, frais };
 }

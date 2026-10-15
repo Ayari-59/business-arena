@@ -156,7 +156,7 @@ export const GROUPE_NOVA: ConfigDeGroupe = {
       tauxDImpot: 0.25,
       risquePays: { probabilite: 0.05, perteDeVentes: 0.15 },
       parts: [0.51, 0.75, 1],
-      reseau: { capacite: 3_000, prix: { "nova-go": 30, "nova-one": 52, "nova-studio": 112 }, coutParUnite: 5 },
+      reseau: { capacite: 3_000, prix: { "nova-go": 30, "nova-one": 52, "nova-studio": 112 }, coutParUnite: 5, coutFixeParTour: 35_000 },
     },
     {
       id: "fonika",
@@ -178,7 +178,12 @@ export const GROUPE_NOVA: ConfigDeGroupe = {
       tauxDImpot: 0.19,
       risquePays: { probabilite: 0.08, perteDeVentes: 0.2 },
       parts: [0.51, 0.75, 1],
-      fabrication: { capacite: 4_000, cout: { "nova-go": 95, "nova-one": 175, "nova-studio": 320 }, qualite: 0.95 },
+      fabrication: {
+        capacite: 4_000,
+        cout: { "nova-go": 120, "nova-one": 215, "nova-studio": 420 },
+        qualite: 0.95,
+        coutFixeParTour: 60_000,
+      },
     },
     {
       id: "klangwerk",
@@ -199,7 +204,7 @@ export const GROUPE_NOVA: ConfigDeGroupe = {
       tauxDInteretParTour: 0.01,
       tauxDImpot: 0.15,
       parts: [0.51, 0.75, 1],
-      reseau: { capacite: 1_200, prix: { "nova-one": 58, "nova-studio": 128 }, coutParUnite: 6 },
+      reseau: { capacite: 1_200, prix: { "nova-one": 58, "nova-studio": 128 }, coutParUnite: 6, coutFixeParTour: 20_000 },
     },
   ],
   import: {

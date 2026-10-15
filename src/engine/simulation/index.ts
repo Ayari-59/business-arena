@@ -1562,6 +1562,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       : null;
     const reseauRevenue = reseauLivre ? reseauLivre.map((q, k) => q * (reseau![gamme[k]!.code]?.prix ?? 0)) : null;
     if (reseauLivre) commissionCost += sumExact(reseauLivre.map((q, k) => q * (reseau![gamme[k]!.code]?.commission ?? 0)));
+    const fraisDesSynergies = dormant ? 0 : (input.fraisDesSynergies?.[w.state.id] ?? 0);
+    if (fraisDesSynergies > 0) commissionCost += fraisDesSynergies;
     const productSold = productSegmentUnits.map(
       (u, k) =>
         u +
@@ -2673,6 +2675,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                 return acc;
               }, {}),
               ...(input.rationnementDuGroupe?.[w.state.id] ? { rationnement: input.rationnementDuGroupe[w.state.id] } : {}),
+              ...(fraisDesSynergies > 0 ? { fraisDesSynergies } : {}),
               ...(reseauLivre
                 ? {
                     reseau: Object.fromEntries(

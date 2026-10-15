@@ -149,10 +149,18 @@ export interface CibleEtrangere {
   risquePays?: { probabilite: number; perteDeVentes: number };
   /** Les parts qu'on peut en acheter (1 = 100 %). */
   parts: number[];
-  /** Son réseau : unités NOVA qu'il peut écouler par tour, prix local par référence, coût de distribution local par unité. */
-  reseau?: { capacite: number; prix: Record<ProductCode, number>; coutParUnite: number };
-  /** Son usine : unités qu'elle peut fabriquer pour l'équipe par tour, coût local par référence, qualité livrée. */
-  fabrication?: { capacite: number; cout: Record<ProductCode, number>; qualite: number };
+  /**
+   * Son réseau : unités NOVA qu'il peut écouler par tour, prix local par
+   * référence, coût de distribution local par unité, et frais fixes locaux de
+   * chaque tour où l'équipe s'en sert (référencement, promotion).
+   */
+  reseau?: { capacite: number; prix: Record<ProductCode, number>; coutParUnite: number; coutFixeParTour: number };
+  /**
+   * Son usine : unités qu'elle peut fabriquer pour l'équipe par tour, coût
+   * local par référence, qualité livrée, et frais fixes locaux de chaque tour
+   * où l'équipe s'en sert (lancement de série, transport).
+   */
+  fabrication?: { capacite: number; cout: Record<ProductCode, number>; qualite: number; coutFixeParTour: number };
 }
 
 export interface ConfigDeGroupe {
@@ -416,4 +424,6 @@ export interface ResultatDeGroupe {
   reseau?: Record<ProductCode, { demande: number; livre: number; chiffreDAffaires: number }>;
   /** Ce qu'une filiale étrangère a fabriqué pour l'équipe : unités et coût en euros, par référence. */
   fabrication?: Record<ProductCode, { unites: number; cout: number }>;
+  /** Les frais fixes des synergies étrangères employées ce tour, en euros (compris dans les commissions). */
+  fraisDesSynergies?: number;
 }

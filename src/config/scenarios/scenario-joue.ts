@@ -146,8 +146,10 @@ function avecLeGroupe(
               ...(e.risquePays ? { risquePays: { ...e.risquePays, probabilite: 1 - Math.pow(1 - e.risquePays.probabilite, k) } } : {}),
               dureeDAmortissement: e.dureeDAmortissement / k,
               tauxDInteretParTour: e.tauxDInteretParTour * k,
-              ...(e.reseau ? { reseau: { ...e.reseau, capacite: e.reseau.capacite * k } } : {}),
-              ...(e.fabrication ? { fabrication: { ...e.fabrication, capacite: e.fabrication.capacite * k } } : {}),
+              ...(e.reseau ? { reseau: { ...e.reseau, capacite: e.reseau.capacite * k, coutFixeParTour: e.reseau.coutFixeParTour * k } } : {}),
+              ...(e.fabrication
+                ? { fabrication: { ...e.fabrication, capacite: e.fabrication.capacite * k, coutFixeParTour: e.fabrication.coutFixeParTour * k } }
+                : {}),
             })),
           }
         : {}),

@@ -162,6 +162,8 @@ describe("le rachat d'une entreprise étrangère, et le groupe consolidé", () =
     expect(r2.demande).toBeCloseTo(c.reseau!.capacite / 2, 6);
     expect(r2.livre).toBeLessThanOrEqual(r2.demande + 1e-9);
     expect(r2.chiffreDAffaires).toBeCloseTo(r2.livre * c.reseau!.prix["nova-go"]! * coursMoyen(cours, 2), 6);
+    // le réseau employé paie ses frais fixes du tour
+    expect(t2.results.e0!.groupe!.fraisDesSynergies).toBeCloseTo(c.reseau!.coutFixeParTour * coursMoyen(cours, 2), 6);
     // pas de vente sans production : le stock final ne devient jamais négatif
     expect(t2.results.e0!.products!["nova-go"]!.stock.quantity).toBeGreaterThanOrEqual(-1e-9);
     const t3 = avancer(monde, e, 3, (d) => {

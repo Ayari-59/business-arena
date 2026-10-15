@@ -2132,6 +2132,8 @@ export interface SimulationInput {
    * `simulerLeGroupe`.
    */
   fabricationDuGroupe?: Record<CompanyId, { unites: number[]; couts: number[]; total: number; qualite: number }>;
+  /** Niveau 7 : les frais fixes des synergies étrangères employées ce tour, en euros, par entreprise. Posé par `simulerLeGroupe`. */
+  fraisDesSynergies?: Record<CompanyId, number>;
   /**
    * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
    *

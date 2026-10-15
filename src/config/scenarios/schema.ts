@@ -411,10 +411,20 @@ export const engineScenarioConfigSchema = z.object({
             risquePays: z.object({ probabilite: z.number().min(0).max(1), perteDeVentes: z.number().min(0).max(1) }).optional(),
             parts: z.array(z.number().positive().max(1)).min(1),
             reseau: z
-              .object({ capacite: z.number().min(0), prix: z.record(z.string().min(1), z.number().positive()), coutParUnite: z.number().min(0) })
+              .object({
+                capacite: z.number().min(0),
+                prix: z.record(z.string().min(1), z.number().positive()),
+                coutParUnite: z.number().min(0),
+                coutFixeParTour: z.number().min(0),
+              })
               .optional(),
             fabrication: z
-              .object({ capacite: z.number().min(0), cout: z.record(z.string().min(1), z.number().positive()), qualite: z.number().positive() })
+              .object({
+                capacite: z.number().min(0),
+                cout: z.record(z.string().min(1), z.number().positive()),
+                qualite: z.number().positive(),
+                coutFixeParTour: z.number().min(0),
+              })
               .optional(),
           }),
         )
