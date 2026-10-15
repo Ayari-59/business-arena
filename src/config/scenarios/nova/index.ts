@@ -468,15 +468,6 @@ const rawNova = {
       paymentDelayDays: 22,
       supplyRiskProbability: 0,
       supplyRiskAvailabilityHit: 1,
-      // Indice de cours : volatilité modérée, légère tendance haussière
-      // (composants électroniques sous tension géopolitique sur 6 tours).
-      priceIndex: {
-        volatility: 0.06,
-        trend: 0.01,
-        momentum: 0.55,
-        minMultiplier: 0.82,
-        maxMultiplier: 1.22,
-      },
     },
     {
       code: "lowcost",
@@ -488,15 +479,6 @@ const rawNova = {
       paymentDelayDays: 45,
       supplyRiskProbability: 0.15,
       supplyRiskAvailabilityHit: 0.75,
-      // Indice de cours : très volatile (fret maritime + yuan), sans tendance
-      // marquée mais avec une forte inertie (les cycles de fret durent).
-      priceIndex: {
-        volatility: 0.11,
-        trend: 0.0,
-        momentum: 0.7,
-        minMultiplier: 0.72,
-        maxMultiplier: 1.35,
-      },
     },
     {
       code: "premium",

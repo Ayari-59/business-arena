@@ -38,23 +38,6 @@ const segmentSchema = z.object({
   seasonality: z.array(z.number().nonnegative()).optional(),
 });
 
-const priceIndexSchema = z
-  .object({
-    /** Écart-type du choc de cours par tour (0.08 = ±8 % typique). */
-    volatility: z.number().min(0).max(0.5),
-    /** Dérive tendancielle par tour (0.01 = +1 % de tendance haussière). */
-    trend: z.number().min(-0.1).max(0.1),
-    /**
-     * Inertie du choc (0 = bruit blanc, 0.95 = cycles très lents).
-     * Une valeur haute produit des tendances durables ; une valeur basse
-     * donne des fluctuations indépendantes d'un tour à l'autre.
-     */
-    momentum: z.number().min(0).max(0.95),
-    minMultiplier: z.number().min(0.5).max(1),
-    maxMultiplier: z.number().min(1).max(2),
-  })
-  .refine((p) => p.minMultiplier < p.maxMultiplier, "priceIndex : minMultiplier doit être < maxMultiplier");
-
 const supplierSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
@@ -64,7 +47,6 @@ const supplierSchema = z.object({
   paymentDelayDays: z.number().int().nonnegative(),
   supplyRiskProbability: z.number().min(0).max(0.3),
   supplyRiskAvailabilityHit: z.number().min(0.5).max(1),
-  priceIndex: priceIndexSchema.optional(),
 });
 
 /**

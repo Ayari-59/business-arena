@@ -85,7 +85,6 @@ import {
   effectiveModifiers,
   tickEvents,
 } from "../events";
-import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
 import {
   commandeDuTour,
   fusionnerLesCommandes,
@@ -528,8 +527,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     /** Multiplicateur du coût matières par produit (mono : [materialMultiplier]). */
     materialMultipliers: number[];
     /**
-     * Multiplicateur de l'indice de cours par fournisseur utilisé ce tour
-     * (clé = code fournisseur). 1 si le fournisseur n'a pas de priceIndex.
+     * Le cours de l'import du groupe (niveau 7), par code fournisseur ; absent :
+     * 1, le prix du catalogue.
      */
     priceIndexBySupplier: Map<string, number>;
     /** Stocks d'ouverture et de fin de production, par produit. */
@@ -892,29 +891,18 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       communicationAxis !== undefined &&
       communicationAxis !== state.lastCommunicationAxis;
     const brandNext = comm ? updateBrandAwareness(brandOpening, brandBudget, axisChanged, comm) : 0;
-    // Indice de cours flottant : un multiplicateur par fournisseur réellement
-    // utilisé ce tour. Calculé sur un flux RNG DÉDIÉ (graine ^ 0x504943 =
-    // "PIC") — n'altère aucun tirage existant.
+    // L'indice de cours des fournisseurs est retiré : chaque fournisseur vend au
+    // prix de son catalogue. Reste le COURS DE L'IMPORT DU GROUPE (niveau 7) :
+    // son prix suit le cours de sa devise ; l'estimation, qui n'a pas la graine,
+    // le prend au cours de départ.
     const priceIndexBySupplier = new Map<string, number>();
     for (const s of productSuppliers) {
       if (!s || priceIndexBySupplier.has(s.code)) continue;
-      priceIndexBySupplier.set(
-        s.code,
-        (s.priceIndex ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex) : 1) *
-          // Niveau 7 : le prix de l'import suit le cours de sa devise (l'estimation,
-          // qui n'a pas la graine, le prend au cours de départ).
-          (importDuGroupe && importDuGroupe.code === s.code && !estimation ? prixDeLImport(input.seed, importDuGroupe, roundIndex) : 1),
-      );
+      if (importDuGroupe && importDuGroupe.code === s.code && !estimation) {
+        priceIndexBySupplier.set(s.code, prixDeLImport(input.seed, importDuGroupe, roundIndex));
+      }
     }
-    // Fournisseur scalaire (mono-produit) — peut différer des productSuppliers
-    if (supplier && !priceIndexBySupplier.has(supplier.code)) {
-      priceIndexBySupplier.set(
-        supplier.code,
-        supplier.priceIndex
-          ? computePriceIndexMultiplier(input.seed, supplier.code, supplier.priceIndex, roundIndex)
-          : 1,
-      );
-    }
+    // Fournisseur scalaire : le cours de l'import ne vaut que pour une référence qui l'achète.
     const supplierPriceIdx = priceIndexBySupplier.get(supplier?.code ?? "") ?? 1;
     // PROGRAMMES R&D : un programme achevé abaisse tout le coût variable
     // unitaire, matières et autres charges. Sans module : un facteur à 1, le
@@ -2450,8 +2438,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                           costMultiplier: w.productSuppliers[k]!.costMultiplier,
                           qualityBonus: w.productSuppliers[k]!.qualityBonus,
                           supplyDisruption: w.productDisruptions[k]!,
-                          ...(w.productSuppliers[k]!.priceIndex !== undefined ||
-                          scenario.groupe?.import?.code === w.productSuppliers[k]!.code
+                          ...(scenario.groupe?.import?.code === w.productSuppliers[k]!.code
                             ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.productSuppliers[k]!.code) ?? 1 }
                             : {}),
                         },
@@ -2703,9 +2690,6 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
               costMultiplier: w.supplier.costMultiplier,
               qualityBonus: w.supplier.qualityBonus,
               supplyDisruption: w.supplyDisruption,
-              ...(w.supplier.priceIndex !== undefined
-                ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.supplier.code) ?? 1 }
-                : {}),
             },
           }
         : {}),

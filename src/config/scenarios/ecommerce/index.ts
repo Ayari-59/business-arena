@@ -265,14 +265,6 @@ const rawEcommerce = {
       paymentDelayDays: 45,
       supplyRiskProbability: 0.04,
       supplyRiskAvailabilityHit: 0.9,
-      // Indice de cours : légère volatilité européenne, tendance neutre.
-      priceIndex: {
-        volatility: 0.05,
-        trend: 0.005,
-        momentum: 0.5,
-        minMultiplier: 0.85,
-        maxMultiplier: 1.18,
-      },
     },
     {
       code: "import_direct",
@@ -284,14 +276,6 @@ const rawEcommerce = {
       paymentDelayDays: 0,
       supplyRiskProbability: 0.14,
       supplyRiskAvailabilityHit: 0.75,
-      // Indice de cours : très volatile (fret, change, matières), inertie élevée.
-      priceIndex: {
-        volatility: 0.13,
-        trend: 0.0,
-        momentum: 0.72,
-        minMultiplier: 0.68,
-        maxMultiplier: 1.4,
-      },
     },
     {
       code: "createurs_fr",
