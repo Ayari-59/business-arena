@@ -143,7 +143,17 @@ function fusionner(args: {
     : undefined;
 
   const lastMarketShare: Record<string, number> = { ...A.lastMarketShare };
-  for (const [seg, part] of Object.entries(T.lastMarketShare)) lastMarketShare[seg] = Math.min(1, (lastMarketShare[seg] ?? 0) + part);
+  // L'intégration : une part de la clientèle de la cible s'en va avec son
+  // enseigne, une part de son effectif part, une part de ses lignes s'arrête le
+  // temps du tour. Sans réglage : tout est repris.
+  const integ = scenario.groupe!.rachat?.integration;
+  const garde = integ?.clienteleConservee ?? 1;
+  for (const [seg, part] of Object.entries(T.lastMarketShare))
+    lastMarketShare[seg] = Math.min(1, (lastMarketShare[seg] ?? 0) + part * garde);
+  const effectifT = integ ? Math.floor(T.headcount * (1 - integ.departs)) : T.headcount;
+  const machinesT = (T.machineFleet ?? []).map((m, i, tout) =>
+    integ && i < Math.floor(tout.length * integ.lignesArretees) ? { ...m, isOperational: false } : m,
+  );
 
   const capaA = A.machineCapacity;
   const capaT = T.machineCapacity;
@@ -157,17 +167,17 @@ function fusionner(args: {
     ...A,
     machineCapacity: capaA + capaT,
     availability: capaA + capaT > 0 ? (A.availability * capaA + T.availability * capaT) / (capaA + capaT) : A.availability,
-    headcount: A.headcount + T.headcount,
+    headcount: A.headcount + effectifT,
     productivity:
-      A.headcount + T.headcount > 0
-        ? (A.productivity * A.headcount + T.productivity * T.headcount) / (A.headcount + T.headcount)
+      A.headcount + effectifT > 0
+        ? (A.productivity * A.headcount + T.productivity * effectifT) / (A.headcount + effectifT)
         : A.productivity,
     finishedGoods,
     ...(parReference ? { finishedGoodsByProduct: parReference } : {}),
     ...(A.fleet || T.fleet ? { fleet: [...(A.fleet ?? []), ...(T.fleet ?? [])] } : {}),
     ...(A.pendingFleet || T.pendingFleet ? { pendingFleet: [...(A.pendingFleet ?? []), ...(T.pendingFleet ?? [])] } : {}),
     ...(A.machineFleet || T.machineFleet
-      ? { machineFleet: [...(A.machineFleet ?? []), ...(T.machineFleet ?? []).map(prefixe)] }
+      ? { machineFleet: [...(A.machineFleet ?? []), ...machinesT.map(prefixe)] }
       : {}),
     ...(A.pendingMachineFleet || T.pendingMachineFleet
       ? { pendingMachineFleet: [...(A.pendingMachineFleet ?? []), ...(T.pendingMachineFleet ?? []).map(prefixe)] }

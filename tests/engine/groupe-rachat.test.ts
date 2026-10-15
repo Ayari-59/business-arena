@@ -133,6 +133,27 @@ describe("le rachat d'un concurrent, au jour 1", () => {
     expect(apres.groupe!.apports).toBeCloseTo((prixDeCession(T, monde).prix / 2) / (1 - monde.groupe!.rachat!.decoteDEmission), 6);
     expect((apres.loans ?? []).length).toBeGreaterThanOrEqual((A.loans ?? []).length + (T.loans ?? []).length);
   });
+
+  it("l'intégration ne se fait pas en un jour : lignes arrêtées, départs, clientèle en partie perdue", () => {
+    const e = deuxTours();
+    const A = e.etats[0]!;
+    const T = e.etats[1]!;
+    const integ = monde.groupe!.rachat!.integration!;
+    const p = prixDeCession(T, monde);
+    const out = avancer(monde, e, 3, (d) => {
+      d.e0!.rachat = { cible: T.id, prixMaximum: p.prix + 1, paiement: "titres" };
+    });
+    expect(out.results.e0!.groupe!.rachat!.statut).toBe("conclu");
+    const r = out.results.e0!;
+    // La moitié des lignes de la cible tournent au tour du rachat.
+    const arretees = Math.floor((T.machineFleet ?? []).length * integ.lignesArretees);
+    expect(arretees).toBeGreaterThan(0);
+    const capaT = (T.machineFleet ?? []).reduce((s, m) => s + (monde.equipment!.types.find((t) => t.code === m.typeCode)!.capacityPerUnit), 0);
+    expect(r.production.machineCapacity).toBeLessThan(A.machineCapacity * A.availability + capaT);
+    // Une part de l'effectif part : le tour suivant l'acquéreur ouvre avec moins que la somme.
+    const ouverture4 = out.companies.find((c) => c.id === "e0")!;
+    expect(ouverture4.headcount).toBeLessThan(A.headcount + T.headcount);
+  });
 });
 
 describe("une cible défaillante, à découvert, avec stocks et une Studio lancée", () => {

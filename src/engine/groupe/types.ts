@@ -42,6 +42,18 @@ export interface ConfigDeGroupe {
     /** Part minimale des actions d'origine après émissions (le contrôle). */
     seuilDeControle: number;
     tourMin: number;
+    /**
+     * L'intégration d'une société rachetée ne se fait pas en un jour. Absente :
+     * tout est repris tel quel.
+     */
+    integration?: {
+      /** Part des lignes de la cible arrêtées le temps du tour du rachat (elles repartent ensuite si l'entretien suit). */
+      lignesArretees: number;
+      /** Part de l'effectif de la cible qui part au rachat. */
+      departs: number;
+      /** Part de la clientèle de la cible (sa part de marché passée) que l'acquéreur garde. */
+      clienteleConservee: number;
+    };
   };
   /** Sous-traitance par référence (absent : levier fermé ; une référence absente ne se sous-traite pas). */
   sousTraitance?: Record<ProductCode, SousTraitanceDUneReference>;
