@@ -168,3 +168,22 @@ describe("actions, dilution et dividendes", () => {
     expect(balanceGap({ ...b, goodwill: 10 })).toBeCloseTo(10, 9);
   });
 });
+
+describe("ni la levée oisive ni la cession de dernier tour ne font de valeur", () => {
+  const ref = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions).at(-1)!.results.e0!.groupe!.valeur!;
+  it("une augmentation de capital dont l'argent dort en caisse est neutre pour la rentabilité par action", () => {
+    const avec = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
+      if (id === "e0" && tour === 2) d.finance = { ...(d.finance ?? {}), capitalIncrease: 100000 };
+    }).at(-1)!.results.e0!.groupe!.valeur!;
+    expect(avec.apports).toBeCloseTo(100000, 6);
+    expect(Math.abs(avec.rentabiliteTotale - ref.rentabiliteTotale)).toBeLessThan(0.005);
+  });
+  it("vendre des machines au dernier tour ne relève pas la valeur", () => {
+    const avec = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
+      if (id === "e0" && tour === sixAvecGroupe.roundsCount)
+        d.investment = { ...(d.investment ?? {}), equipmentSell: [{ typeCode: "manual", quantity: 4 }] };
+    }).at(-1)!.results.e0!;
+    expect(avec.investment?.saleProceeds ?? 0).toBeGreaterThan(0);
+    expect(avec.groupe!.valeur!.rentabiliteTotale).toBeLessThanOrEqual(ref.rentabiliteTotale + 0.005);
+  });
+});

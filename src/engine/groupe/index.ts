@@ -163,8 +163,13 @@ export function simulerLeGroupe(
       };
       const economie = dernier ? economieDeFinDePartie(disc, g.discretionnaires) : 0;
       // Au dernier tour, la caisse d'une cession de machines ne se compte pas
-      // comme de la valeur : l'outil vendu aurait servi ensuite.
-      const cession = dernier ? (r.investment?.saleProceeds ?? 0) : 0;
+      // comme de la valeur, ni l'impôt que sa moins-value économise : l'outil
+      // vendu aurait servi ensuite.
+      const moinsValue = r.investment?.disposalLoss ?? 0;
+      const cession = dernier
+        ? (r.investment?.saleProceeds ?? 0) +
+          scenario.finance.taxRate * Math.min(moinsValue, Math.max(0, r.incomeStatement.pretaxIncome + moinsValue))
+        : 0;
       const pourLaValeur = economie > 0 ? { ...groupe, ebe: [...g.ebe, ebe - economie] } : groupe;
       const valeur = valoriser({
         groupe: pourLaValeur,
