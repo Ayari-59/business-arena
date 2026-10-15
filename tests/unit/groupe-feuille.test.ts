@@ -82,7 +82,7 @@ function partie(tours: number): Partie {
   return p;
 }
 
-const vue = (p: Partie, tour: number, enCours: RoundDecisions | null = null): VueDuGroupe =>
+const vue = (p: Partie, tour: number): VueDuGroupe =>
   vueDuGroupe({
     scenario: sept,
     graine: GRAINE,
@@ -90,7 +90,6 @@ const vue = (p: Partie, tour: number, enCours: RoundDecisions | null = null): Vu
     etats: p.etats,
     equipeId: "e0",
     resultats: p.resultats,
-    enCours,
   })!;
 
 describe("la feuille lit les décisions du niveau 7", () => {
@@ -101,7 +100,7 @@ describe("la feuille lit les décisions du niveau 7", () => {
     return f;
   };
 
-  it("rachat, audit, sous-traitance et synergies, sous leurs noms", () => {
+  it("rachat, sous-traitance et synergies, sous leurs noms", () => {
     const f = base();
     f.set("rachatCible", "etranger:brightwave");
     f.set("rachatPaiement", "numeraire");
@@ -109,7 +108,6 @@ describe("la feuille lit les décisions du niveau 7", () => {
     f.set("rachatEmprunt", "20000");
     f.set("rachatAugmentation", "");
     f.set("rachatPart", "0.51");
-    f.set("diligence", "site_ferme:sonelec");
     f.set("sousTraitance.nova-go", "500");
     f.set("sousTraitance.nova-one", "");
     f.set("reseauEtranger.brightwave.nova-one", "100");
@@ -122,15 +120,14 @@ describe("la feuille lit les décisions du niveau 7", () => {
       emprunt: 20000,
       part: 0.51,
     });
-    expect(d.diligence).toEqual({ type: "site_ferme", id: "sonelec" });
     expect(d.sousTraitance).toEqual({ "nova-go": 500 });
     expect(d.reseauEtranger).toEqual({ brightwave: { "nova-one": 100 } });
     expect(d.fabricationEtrangere).toEqual({ fonika: { "nova-go": 250 } });
   });
 
-  it("en actions, ni emprunt ni apport ; un site n'a pas de part ; un prix maximum vide n'est pas « sans limite »", () => {
+  it("en actions, ni emprunt ni apport ; un fournisseur n'a pas de part ; un prix maximum vide n'est pas « sans limite »", () => {
     const f = base();
-    f.set("rachatCible", "site_ferme:hexalys");
+    f.set("rachatCible", "fournisseur:acoustika");
     f.set("rachatPaiement", "titres");
     f.set("rachatEmprunt", "20000");
     f.set("rachatPart", "0.51");
@@ -145,9 +142,8 @@ describe("la feuille lit les décisions du niveau 7", () => {
   it("rien de saisi, rien d'ajouté : les autres niveaux envoient exactement ce qu'ils envoyaient", () => {
     const f = base();
     f.set("rachatCible", "");
-    f.set("diligence", "");
     const d = decisionsSaisies(f).decisions;
-    for (const k of ["rachat", "diligence", "sousTraitance", "reseauEtranger", "fabricationEtrangere"]) {
+    for (const k of ["rachat", "sousTraitance", "reseauEtranger", "fabricationEtrangere"]) {
       expect(k in d, k).toBe(false);
     }
   });
@@ -156,7 +152,6 @@ describe("la feuille lit les décisions du niveau 7", () => {
     expect(champDuChemin(["rachat", "prixMaximum"])).toBe("rachatPrixMaximum");
     expect(champDuChemin(["rachat", "augmentationDeCapital"])).toBe("rachatAugmentation");
     expect(champDuChemin(["rachat", "cible", "id"])).toBe("rachatCible");
-    expect(champDuChemin(["diligence", "type"])).toBe("diligence");
     expect(champDuChemin(["sousTraitance", "nova-go"])).toBe("sousTraitance.nova-go");
     expect(champDuChemin(["reseauEtranger", "brightwave", "nova-one"])).toBe("reseauEtranger.brightwave.nova-one");
     const ctx = {
@@ -221,36 +216,33 @@ describe("fabriquer ou faire fabriquer : le seuil d'indifférence", () => {
 });
 
 describe("la vue du groupe", () => {
-  it("ne porte jamais la graine, ni l'état d'un site qu'on n'a pas audité", () => {
+  it("ne porte jamais la graine ; n'offre que des fournisseurs et des entreprises étrangères", () => {
     const p = partie(1);
     const v = vue(p, 2);
     expect(JSON.stringify(v)).not.toContain(String(GRAINE));
-    expect(v.cibles.filter((c) => c.audit !== null)).toEqual([]);
+    expect(new Set(v.cibles.map((c) => c.type))).toEqual(new Set(["fournisseur", "etranger"]));
     expect(v.ouverture!.tour).toBe(2);
     expect(v.ouverture!.situation.cash).toBe(p.etats[0]!.finance.cash);
   });
 
-  it("une cible rachetée est « à vous » chez l'acquéreur, « déjà rachetée » chez les autres ; l'audit ne se lit que chez qui l'a payé", () => {
+  it("une cible rachetée est « à vous » chez l'acquéreur, « déjà rachetée » chez les autres", () => {
     const p = partie(1);
-    const prix = sept.groupe!.sites!.find((s) => s.id === "sonelec")!.prix;
+    const prix = vue(p, 2).cibles.find((c) => c.id === "standard")!.prixDemande!;
     const e0 = p.etats[0]!;
     avancer(p, 2, (d) => {
-      d.e0!.diligence = { type: "site_ferme", id: "hexalys" };
       d.e0!.rachat = {
-        cible: { type: "site_ferme", id: "sonelec" },
+        cible: { type: "fournisseur", id: "standard" },
         prixMaximum: prix,
         paiement: "numeraire",
         emprunt: prix + Math.max(0, e0.finance.overdraft - e0.finance.cash) + 20000,
       };
     });
-    expect(p.prec.e0!.groupe!.rachat!.statut).toBe("conclu");
+    expect(p.prec.e0!.groupe!.rachat!.statut, p.prec.e0!.groupe!.rachat!.motif).toBe("conclu");
     const v = vue(p, 3);
-    expect(v.cibles.find((c) => c.id === "sonelec")!.statut).toBe("a_vous");
-    expect(etatDeLaCible(v.cibles.find((c) => c.id === "hexalys")!).libelle).toBe("Disponible, auditée");
-    expect(v.cibles.find((c) => c.id === "hexalys")!.audit).not.toBeNull();
-    const autre = vueDuGroupe({ scenario: sept, graine: GRAINE, tourEnCours: 3, etats: p.etats, equipeId: "e1", resultats: [], enCours: null })!;
-    expect(autre.cibles.find((c) => c.id === "sonelec")!.statut).toBe("vendue");
-    expect(autre.cibles.find((c) => c.id === "hexalys")!.audit).toBeNull();
+    expect(v.cibles.find((c) => c.id === "standard")!.statut).toBe("a_vous");
+    expect(etatDeLaCible(v.cibles.find((c) => c.id === "acoustika")!).libelle).toBe("Disponible");
+    const autre = vueDuGroupe({ scenario: sept, graine: GRAINE, tourEnCours: 3, etats: p.etats, equipeId: "e1", resultats: [] })!;
+    expect(autre.cibles.find((c) => c.id === "standard")!.statut).toBe("vendue");
   });
 
   it("une enchère perdue se dit sur la cible", () => {
@@ -266,25 +258,21 @@ describe("l'éligibilité affichée avant l'envoi est le jugement du moteur", ()
   const p = partie(1);
   const v = vue(p, 2);
   const e0 = p.etats[0]!;
-  const prixSite = (id: string) => sept.groupe!.sites!.find((s) => s.id === id)!.prix;
+  const prixDe = (id: string) => v.cibles.find((c) => c.id === id)!.prixDemande!;
   const couvrir = Math.max(0, e0.finance.overdraft - e0.finance.cash);
   const brightwave = v.cibles.find((c) => c.id === "brightwave")!;
   const offres: { nom: string; offre: OffreSaisie }[] = [
     {
-      nom: "un site à l'emprunt, découvert couvert",
-      offre: { cible: { type: "site_ferme", id: "sonelec" }, paiement: "numeraire", prixMaximum: prixSite("sonelec"), emprunt: prixSite("sonelec") + couvrir + 20000 },
+      nom: "un fournisseur à l'emprunt, découvert couvert",
+      offre: { cible: { type: "fournisseur", id: "standard" }, paiement: "numeraire", prixMaximum: prixDe("standard"), emprunt: prixDe("standard") + couvrir + 20000 },
     },
     {
       nom: "un prix maximum sous le prix demandé",
-      offre: { cible: { type: "site_ferme", id: "hexalys" }, paiement: "numeraire", prixMaximum: 1, emprunt: prixSite("hexalys") },
+      offre: { cible: { type: "fournisseur", id: "acoustika" }, paiement: "numeraire", prixMaximum: 1, emprunt: prixDe("acoustika") },
     },
     {
       nom: "rien d'emprunté : la trésorerie ou le découvert",
-      offre: { cible: { type: "site_ferme", id: "hexalys" }, paiement: "numeraire", prixMaximum: prixSite("hexalys") },
-    },
-    {
-      nom: "un site payé en actions",
-      offre: { cible: { type: "site_ferme", id: "hexalys" }, paiement: "titres", prixMaximum: prixSite("hexalys") },
+      offre: { cible: { type: "fournisseur", id: "acoustika" }, paiement: "numeraire", prixMaximum: prixDe("acoustika") },
     },
     {
       nom: "une société payée en actions avant le tour où elles s'ouvrent",
@@ -292,7 +280,7 @@ describe("l'éligibilité affichée avant l'envoi est le jugement du moteur", ()
     },
     {
       nom: "un emprunt au-delà du plafond de la banque",
-      offre: { cible: { type: "site_ferme", id: "hexalys" }, paiement: "numeraire", prixMaximum: prixSite("hexalys"), emprunt: 5_000_000 },
+      offre: { cible: { type: "fournisseur", id: "acoustika" }, paiement: "numeraire", prixMaximum: prixDe("acoustika"), emprunt: 5_000_000 },
     },
     {
       nom: "tant d'investisseurs entrants que le contrôle se perd",
@@ -309,9 +297,9 @@ describe("l'éligibilité affichée avant l'envoi est le jugement du moteur", ()
       // peu : le contrôle se juge sur la valeur d'ouverture et la décote.
       nom: "des investisseurs entrants qui feraient passer les associés sous le seuil de contrôle, de peu",
       offre: {
-        cible: { type: "site_ferme", id: "sonelec" },
+        cible: { type: "fournisseur", id: "standard" },
         paiement: "numeraire",
-        prixMaximum: prixSite("sonelec"),
+        prixMaximum: prixDe("standard"),
         // Chiffré sur la configuration et la valeur de clôture du tour 1, pas sur la vue.
         augmentationDeCapital:
           (sept.groupe!.valorisation.actionsInitiales / (sept.groupe!.rachat!.seuilDeControle * 0.8) - e0.groupe!.actions) *
@@ -320,12 +308,13 @@ describe("l'éligibilité affichée avant l'envoi est le jugement du moteur", ()
       },
     },
     {
-      nom: "un site payé par des investisseurs entrants, sous le seuil de contrôle",
+      nom: "un fournisseur payé moitié par des investisseurs entrants, sous le seuil de contrôle",
       offre: {
-        cible: { type: "site_ferme", id: "sonelec" },
+        cible: { type: "fournisseur", id: "standard" },
         paiement: "numeraire",
-        prixMaximum: prixSite("sonelec"),
-        augmentationDeCapital: prixSite("sonelec") + couvrir + 1000,
+        prixMaximum: prixDe("standard"),
+        emprunt: prixDe("standard") / 2 + couvrir + 1000,
+        augmentationDeCapital: prixDe("standard") / 2,
       },
     },
     {
@@ -387,14 +376,14 @@ describe("le résultat estimé au niveau 7", () => {
     // Un rachat décidé ne change rien à l'estimation : elle ne sait pas le simuler, et le dit.
     const rachat = estimerLeTour(
       dossier,
-      { ...decisions, rachat: { cible: { type: "site_ferme", id: "sonelec" }, prixMaximum: 1e6, paiement: "numeraire", emprunt: 1e5 } },
+      { ...decisions, rachat: { cible: { type: "fournisseur", id: "standard" }, prixMaximum: 1e6, paiement: "numeraire", emprunt: 1e5 } },
       ventes,
     );
     expect(rachat.resultatNet).toBe(sans.resultatNet);
     expect(limitesDeLEstimation({})).toBeNull();
-    expect(limitesDeLEstimation({ rachat: "Sonelec" })).toMatch(/ne compte pas le rachat de Sonelec/);
-    expect(limitesDeLEstimation({ rachat: "Sonelec", audit: "Hexalys", synergies: true })).toMatch(
-      /le rachat de Sonelec .+, l'audit de Hexalys et les ventes et la fabrication de vos filiales étrangères/,
+    expect(limitesDeLEstimation({ rachat: "Acoustika" })).toMatch(/ne compte pas le rachat de Acoustika/);
+    expect(limitesDeLEstimation({ rachat: "Acoustika", synergies: true })).toMatch(
+      /le rachat de Acoustika .+ et les ventes et la fabrication de vos filiales étrangères/,
     );
   });
 });

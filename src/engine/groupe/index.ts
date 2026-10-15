@@ -5,7 +5,6 @@ import { laCibleEtrangere, trajectoireDeLEtranger } from "./etranger";
 import { toGamme } from "../gamme";
 import { PROFILS_QUI_PARTENT, commandesAuFournisseur, leFournisseur, quitterLeFournisseur } from "./fournisseur";
 import { executerLesRachats } from "./rachat";
-import { mettreEnRoute } from "./site-ferme";
 import { economieDeFinDePartie, emettre, initialiserLeGroupe, valoriser } from "./valorisation";
 import type { ValeurDeLEntreprise } from "./types";
 
@@ -29,7 +28,6 @@ export {
   type MontageDuRachat,
   type SituationDeLAcquereur,
 } from "./rachat";
-export { chargesDesSites, cleDuSite, etatDuSite, siteAcquis, valeurRecouvrable } from "./site-ferme";
 export { fluxPropre } from "./flux-propre";
 export { agrandir, apporterLeFondsDeRoulement } from "./depart";
 export { coursDeLImport, prixDeLImport, probabiliteDeRupture, ruptureDeLImport } from "./import";
@@ -61,16 +59,15 @@ export {
  *
  *   1. chaque entreprise reçoit, à sa première ouverture, sa taille de départ
  *      du niveau (`agrandir`) puis son état de groupe ;
- *   2. les lignes des sites rachetés dont c'est le tour rejoignent le parc ;
- *   3. sa valeur d'ouverture est calculée (le contrôle d'une émission s'y juge) ;
- *   4. les audits et les rachats décidés se font au jour 1 (`executerLesRachats`) ;
- *   5. les concurrents simulés quittent le fournisseur racheté par un
+ *   2. sa valeur d'ouverture est calculée (le contrôle d'une émission s'y juge) ;
+ *   3. les rachats décidés se font au jour 1 (`executerLesRachats`) ;
+ *   4. les concurrents simulés quittent le fournisseur racheté par un
  *      concurrent, et un fournisseur racheté rationne ses clients au-delà de sa
  *      capacité (`rationner`) ;
- *   6. les filiales étrangères écoulent par leur réseau et fabriquent ce que
+ *   5. les filiales étrangères écoulent par leur réseau et fabriquent ce que
  *      l'équipe leur demande, au cours moyen du tour (`synergiesEtrangeres`) ;
- *   7. le tour ordinaire se joue ;
- *   8. à la clôture, chaque entreprise note ses achats aux fournisseurs, se
+ *   6. le tour ordinaire se joue ;
+ *   7. à la clôture, chaque entreprise note ses achats aux fournisseurs, se
  *      consolide avec ses filiales, allonge son historique d'EBE, émet les
  *      actions de ses apports du tour, compte ses dividendes par action, et
  *      dit sa valeur.
@@ -96,35 +93,33 @@ export function simulerLeGroupe(
   const cfg = scenario.groupe;
   const multiple = cfg?.valorisation.multipleEBE ?? 0;
 
-  // 1. États de groupe ; 2. mise en route des sites.
+  // 1. États de groupe.
   let companies = cfg
-    ? input.companies.map((c) =>
-        mettreEnRoute(c.groupe ? c : premiereOuverture(c, cfg, scenario.roundDays), scenario, roundIndex),
-      )
+    ? input.companies.map((c) => (c.groupe ? c : premiereOuverture(c, cfg, scenario.roundDays)))
     : input.companies;
 
-  // 3. Valeur d'ouverture : celle du groupe consolidé à la dernière clôture, s'il a des filiales.
+  // 2. Valeur d'ouverture : celle du groupe consolidé à la dernière clôture, s'il a des filiales.
   const ouverture = new Map<string, ValeurDeLEntreprise>();
   for (const c of companies) {
     const v = valeurDOuverture(c, scenario);
     if (v) ouverture.set(c.id, v);
   }
 
-  // 4. Audits et rachats au jour 1 (l'estimation ne voit que l'équipe : ni l'un ni l'autre).
+  // 3. Rachats au jour 1 (l'estimation ne voit que l'équipe : elle ne les simule pas).
   const rachats =
     cfg?.rachat && !input.estimation
       ? executerLesRachats({ scenario, roundIndex, companies, decisions: input.decisions, ouverture, graine: input.seed })
       : null;
   if (rachats) companies = rachats.companies;
 
-  // 5. Les fournisseurs rachetés : départs des concurrents simulés, rationnement.
+  // 4. Les fournisseurs rachetés : départs des concurrents simulés, rationnement.
   const fournisseurs = cfg?.fournisseurs && !input.estimation ? rationner(input, companies) : null;
   if (fournisseurs) companies = fournisseurs.companies;
 
-  // 6. Les synergies des filiales étrangères : vendre par leur réseau, faire fabriquer chez elles.
+  // 5. Les synergies des filiales étrangères : vendre par leur réseau, faire fabriquer chez elles.
   const synergies = cfg?.etrangers && !input.estimation ? synergiesEtrangeres(input, companies) : null;
 
-  // 7. Le tour ordinaire.
+  // 6. Le tour ordinaire.
   const sortie = simulerLeTour({
     ...input,
     companies,
@@ -136,7 +131,7 @@ export function simulerLeGroupe(
     ...(fournisseurs && Object.keys(fournisseurs.rationnement).length > 0 ? { rationnementDuGroupe: fournisseurs.rationnement } : {}),
   });
 
-  // 8. Clôture de groupe. D'abord les achats du tour aux fournisseurs
+  // 7. Clôture de groupe. D'abord les achats du tour aux fournisseurs
   // rachetables : leur chiffre d'affaires, que la consolidation lit.
   const results: Record<string, CompanyRoundResult> = { ...sortie.results };
   const codes = (cfg?.fournisseurs ?? []).map((f) => f.code);
@@ -231,7 +226,6 @@ export function simulerLeGroupe(
           ...(r.groupe ?? {}),
           valeur,
           ...(rachats?.rapports[c.id] ? { rachat: rachats.rapports[c.id] } : {}),
-          ...(rachats?.diligences[c.id] ? { diligence: rachats.diligences[c.id] } : {}),
           ...(conso ? { consolide: conso.consolide } : {}),
           ...(synergies?.rapports[c.id] ? { fabrication: synergies.rapports[c.id] } : {}),
         },

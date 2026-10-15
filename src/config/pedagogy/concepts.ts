@@ -815,18 +815,6 @@ export const CONCEPTS: ConceptDef[] = [
     formula: "Écart d'acquisition = prix payé − part acquise × capitaux propres de la cible",
   },
   {
-    code: "asset_vs_share_deal",
-    name: "Rachat d'actifs ou rachat de titres, et diligence",
-    domain: "finance",
-    axis: "risk",
-    definition:
-      "Racheter des actifs (un site, des machines), c'est reprendre des biens ; racheter des titres, c'est reprendre une société entière, ses dettes, ses clients et son passé. L'audit dit ce qu'on achète avant de signer.",
-    intuition:
-      "Un site fermé se vend au prix de ses murs et de ses machines, sans clients : sa capacité ne rapporte que si on la fait tourner. Une société se vend pour ce qu'elle gagne. Dans les deux cas, ce qu'on ne sait pas (lignes hors d'usage, pollution) se découvre après, et se paie.",
-    method:
-      "Avant de racheter, auditez quand c'est possible : un audit coûte peu face à un passif découvert. Chiffrez la remise en état, le délai de mise en route et le plan de production qu'il faudra relever pour employer la capacité reprise.",
-  },
-  {
     code: "vertical_integration",
     name: "Intégration verticale",
     domain: "production",
@@ -996,8 +984,7 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   total_shareholder_return: ["enterprise_value"],
   dilution_issuance: ["enterprise_value"],
   goodwill_impairment: ["enterprise_value"],
-  asset_vs_share_deal: ["goodwill_impairment"],
-  vertical_integration: ["asset_vs_share_deal", "contribution_margin"],
+  vertical_integration: ["goodwill_impairment", "contribution_margin"],
   make_or_buy: ["operating_leverage", "full_unit_cost"],
   consolidation: ["goodwill_impairment"],
   minority_translation: ["consolidation"],
@@ -1089,7 +1076,6 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   total_shareholder_return: 6,
   dilution_issuance: 6,
   goodwill_impairment: 6,
-  asset_vs_share_deal: 6,
   vertical_integration: 6,
   make_or_buy: 6,
   consolidation: 6,

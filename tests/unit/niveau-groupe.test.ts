@@ -81,17 +81,14 @@ describe("le niveau 7, à côté des six niveaux du parcours", () => {
       marketingBudget: 0,
       qualityBudget: 0,
       maintenanceBudget: 0,
-      rachat: { cible: { type: "site_ferme", id: "x" }, prixMaximum: 1, paiement: "numeraire" },
-      diligence: { type: "site_ferme", id: "x" },
+      rachat: { cible: { type: "fournisseur", id: "standard" }, prixMaximum: 1, paiement: "numeraire" },
       sousTraitance: { "nova-go": 100 },
     } as RoundDecisions;
     const six = aLaMesureDuNiveau(d, presetByLevel.get(6)!.decisions);
     expect(six.rachat).toBeUndefined();
-    expect(six.diligence).toBeUndefined();
     expect(six.sousTraitance).toBeUndefined();
     const sept = aLaMesureDuNiveau(d, NIVEAU_GROUPE.decisions);
     expect(sept.rachat).toBeDefined();
-    expect(sept.diligence).toBeDefined();
     expect(sept.sousTraitance).toBeDefined();
   });
 });
@@ -165,9 +162,6 @@ describe("le bloc de groupe du snapshot", () => {
     const t = trim.groupe!.sousTraitance!["nova-one"]!;
     expect(m.plafond).toBeCloseTo((t.plafond * mois.roundDays) / trim.roundDays, 6);
     expect(m.tranches[0]!.prix).toBe(t.tranches[0]!.prix);
-    // les charges d'un site aussi ; son prix, non
-    expect(mois.groupe!.sites![0]!.chargesParTour).toBeCloseTo((trim.groupe!.sites![0]!.chargesParTour * mois.roundDays) / trim.roundDays, 6);
-    expect(mois.groupe!.sites![0]!.prix).toBe(trim.groupe!.sites![0]!.prix);
   });
 
   it("une classe (croissance externe fermée) n'a pas de rachat, mais garde la sous-traitance", () => {
@@ -180,19 +174,17 @@ describe("le bloc de groupe du snapshot", () => {
       leviers: { ...NIVEAU_GROUPE.decisions, croissanceExterne: false },
     });
     expect(classe.groupe?.rachat).toBeUndefined();
-    expect(classe.groupe?.sites).toBeUndefined();
     expect(classe.groupe?.sousTraitance).toBeDefined();
   });
 });
 
 describe("les décisions du niveau 7 passent le schéma", () => {
   const base = { price: 50, productionPlan: 100, marketingBudget: 0, qualityBudget: 0, maintenanceBudget: 0 };
-  it("rachat, audit et sous-traitance, bornés", () => {
-    const site = { type: "site_ferme", id: "hexalys" };
+  it("rachat et sous-traitance, bornés ; un site fermé n'est plus une cible", () => {
+    const site = { type: "fournisseur", id: "acoustika" };
     const ok = roundDecisionsSchema.safeParse({
       ...base,
       rachat: { cible: site, prixMaximum: 200000, paiement: "numeraire", emprunt: 100000, augmentationDeCapital: 50000 },
-      diligence: site,
       sousTraitance: { "nova-go": 1500 },
     });
     expect(ok.success).toBe(true);
@@ -200,7 +192,9 @@ describe("les décisions du niveau 7 passent le schéma", () => {
     expect(roundDecisionsSchema.safeParse({ ...base, rachat: { cible: site, prixMaximum: 1, paiement: "troc" } }).success).toBe(false);
     // une cible se nomme par son type : un identifiant nu ne passe plus
     expect(roundDecisionsSchema.safeParse({ ...base, rachat: { cible: "bot-1", prixMaximum: 1, paiement: "numeraire" } }).success).toBe(false);
-    expect(roundDecisionsSchema.safeParse({ ...base, diligence: { type: "concurrent", id: "bot-1" } }).success).toBe(false);
+    expect(
+      roundDecisionsSchema.safeParse({ ...base, rachat: { cible: { type: "site_ferme", id: "hexalys" }, prixMaximum: 1, paiement: "numeraire" } }).success,
+    ).toBe(false);
     expect(
       roundDecisionsSchema.safeParse({ ...base, rachat: { cible: { type: "fournisseur", id: "standard" }, prixMaximum: 1, paiement: "titres" } }).success,
     ).toBe(true);

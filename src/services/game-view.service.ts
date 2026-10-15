@@ -1228,7 +1228,6 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           etats,
           equipeId: playerTeam.id,
           resultats: periods.map((p) => ({ tour: p.round, result: p.result })),
-          enCours: pendingDecisions,
         });
       })()
     : null;

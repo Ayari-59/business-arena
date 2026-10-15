@@ -163,7 +163,6 @@ const LIBELLES: Readonly<Record<string, string>> = {
   rachatEmprunt: "Emprunt d'acquisition",
   rachatAugmentation: "Apport d'investisseurs entrants",
   rachatPart: "Part achetée",
-  diligence: "Audit d'un site",
 };
 
 const LIBELLES_PAR_REFERENCE: Readonly<Record<string, string>> = {
@@ -411,11 +410,9 @@ export function champDuChemin(
       return deux === "byProduct" && trois ? `${PREFIXE_VENTES_ESTIMEES}${trois}` : null;
     case "studies":
       return null;
-    // Niveau 7 : le montage du rachat a ses cases ; l'audit, sa liste.
+    // Niveau 7 : le montage du rachat a ses cases.
     case "rachat":
       return deux ? (CHAMPS_DU_RACHAT[deux] ?? "rachatCible") : "rachatCible";
-    case "diligence":
-      return "diligence";
     case "sousTraitance":
       return deux ? `sousTraitance.${deux}` : null;
     case "reseauEtranger":

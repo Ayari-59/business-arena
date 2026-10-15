@@ -71,9 +71,8 @@ const CASH_LABELS: Record<string, string> = {
   remboursement_emprunt: "Remboursement d'emprunt",
   // Niveau 7 « Groupe »
   achats_sous_traitance: "Achats de sous-traitance",
-  frais_de_rachat: "Frais de rachat, audit et mise aux normes",
+  frais_de_rachat: "Frais de rachat",
   rachat_prix_paye: "Rachat : prix payé",
-  remise_en_etat_du_site: "Rachat : remise en état du site",
   emprunt_d_acquisition: "Emprunt d'acquisition",
   augmentation_capital_investisseurs: "Augmentation de capital (investisseurs)",
 };
@@ -528,15 +527,6 @@ export function FinancialStatements({
                 valeur={b.fixedAssetsNet}
                 avant={pb?.fixedAssetsNet ?? null}
               />
-              {result.groupe?.rachat?.statut === "conclu" && result.groupe.rachat.site ? (
-                // NIVEAU 7 : un site racheté entre au parc par ses actifs.
-                <Ligne
-                  label={`dont immobilisations reprises (${result.groupe.rachat.nom})`}
-                  valeur={result.groupe.rachat.site.valeurInscrite}
-                  avecEcart={false}
-                  decalee
-                />
-              ) : null}
               {(b.goodwill ?? 0) > 0.5 || (pb?.goodwill ?? 0) > 0.5 ? (
                 <Ligne label="Écart d'acquisition" valeur={b.goodwill ?? 0} avant={pb ? (pb.goodwill ?? 0) : null} />
               ) : null}
@@ -772,7 +762,7 @@ const euroCents = (v: number) =>
 
 /**
  * NIVEAU 7 « GROUPE » : la valeur créée pour l'actionnaire, ce que le tour a
- * racheté, audité ou fait fabriquer, et le groupe consolidé dès qu'il y a une
+ * racheté ou fait fabriquer, et le groupe consolidé dès qu'il y a une
  * filiale (écart d'acquisition, intérêts minoritaires, écart de conversion).
  * Même forme que les autres états : un tableau par panneau, l'écart au tour
  * précédent quand il a un sens.
@@ -791,7 +781,7 @@ function PanneauxDuGroupe({
   const r = groupe.rachat;
   const c = groupe.consolide;
   const pc = precedent?.consolide ?? null;
-  const operations = r || groupe.diligence || groupe.sousTraitance || groupe.reseau || groupe.fabrication;
+  const operations = r || groupe.sousTraitance || groupe.reseau || groupe.fabrication;
   return (
     <>
       {v ? (
@@ -863,15 +853,13 @@ function PanneauxDuGroupe({
 
       {operations ? (
         <Panel
-          title="Rachat, audit et fabrication du tour"
+          title="Rachat et fabrication du tour"
           resume={
             r
               ? r.statut === "conclu"
                 ? `${r.nom} racheté`
                 : `offre sur ${r.nom} refusée`
-              : groupe.diligence
-                ? `audit de ${groupe.diligence.nom}`
-                : "sous-traitance"
+              : "sous-traitance"
           }
         >
           <div className="space-y-2 text-sm text-slate-300" data-operations-du-groupe="">
@@ -905,66 +893,12 @@ function PanneauxDuGroupe({
                   {r.ecart !== undefined ? (
                     <Ligne label="Écart d'acquisition" valeur={r.ecart} avecEcart={false} />
                   ) : null}
-                  {r.site ? (
-                    <Ligne
-                      label={`Lignes qui repartent (${r.site.etat.lignesPerdues} perdue${r.site.etat.lignesPerdues > 1 ? "s" : ""})`}
-                      valeur={r.site.etat.lignesRemisesEnRoute}
-                      format="units"
-                      avecEcart={false}
-                    />
-                  ) : null}
-                  {r.site ? <Ligne label="Remise en état" valeur={r.site.etat.remiseEnEtat} avecEcart={false} /> : null}
-                  {r.site && r.site.etat.passifEnvironnemental > 0 ? (
-                    <Ligne
-                      label="Passif environnemental découvert"
-                      valeur={r.site.etat.passifEnvironnemental}
-                      avecEcart={false}
-                    />
-                  ) : null}
-                  {r.site ? (
-                    <Ligne
-                      label="Immobilisations reprises (valeur inscrite)"
-                      valeur={r.site.valeurInscrite}
-                      avecEcart={false}
-                      fort
-                    />
-                  ) : null}
-                  {r.site && r.site.depreciation > 0.5 ? (
-                    <Ligne
-                      label="dont dépréciation immédiate"
-                      valeur={-r.site.depreciation}
-                      avecEcart={false}
-                      decalee
-                    />
-                  ) : null}
                 </Etat>
               ) : (
                 <p className="encadre-neutre rounded-lg px-3 py-2" data-rachat-refuse="">
                   Offre sur {r.nom} refusée : {r.motif}
                 </p>
               )
-            ) : null}
-            {r?.site && r.statut === "conclu" ? (
-              <p>
-                Mise en route :{" "}
-                {r.site.miseEnRoute
-                  .map((m) => `${m.lignes} ligne${m.lignes > 1 ? "s" : ""} au tour ${m.tour}`)
-                  .join(", ")}
-                . Relevez votre plan de production d&apos;autant pour qu&apos;elles tournent.
-              </p>
-            ) : null}
-            {groupe.diligence ? (
-              <p data-audit-du-tour="">
-                Audit de {groupe.diligence.nom} ({euro(groupe.diligence.cout)}) :{" "}
-                {groupe.diligence.etat.lignesRemisesEnRoute} ligne
-                {groupe.diligence.etat.lignesRemisesEnRoute > 1 ? "s" : ""} repartiraient,{" "}
-                {groupe.diligence.etat.lignesPerdues} perdue{groupe.diligence.etat.lignesPerdues > 1 ? "s" : ""},
-                remise en état {euro(groupe.diligence.etat.remiseEnEtat)},{" "}
-                {groupe.diligence.etat.passifEnvironnemental > 0
-                  ? `passif environnemental ${euro(groupe.diligence.etat.passifEnvironnemental)}`
-                  : "aucun passif environnemental"}
-                .
-              </p>
             ) : null}
             {groupe.sousTraitance ? (
               <p data-sous-traitance-du-tour="">

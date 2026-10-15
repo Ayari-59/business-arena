@@ -61,7 +61,7 @@ export const champDeSousTraitance = (code: string) => `${PREFIXE_SOUS_TRAITANCE}
 /** Le nom du champ d'une synergie : `reseauEtranger.<filiale>.<référence>`. */
 export const champDeSynergie = (prefixe: string, filiale: string, code: string) => `${prefixe}${filiale}.${code}`;
 
-const TYPES_DE_CIBLE: readonly CibleDeRachat["type"][] = ["site_ferme", "fournisseur", "etranger"];
+const TYPES_DE_CIBLE: readonly CibleDeRachat["type"][] = ["fournisseur", "etranger"];
 
 /** Une cible écrite `type:identifiant` dans une liste de choix ; vide ou illisible : rien. */
 export function cibleLue(brut: FormDataEntryValue | null): CibleDeRachat | undefined {
@@ -103,9 +103,8 @@ function parFiliale(data: FormData, prefixe: string): Record<string, Record<Prod
 }
 
 /**
- * Les décisions du niveau 7 : le rachat (une cible choisie, son montage), un
- * audit, les commandes au sous-traitant, les synergies des filiales
- * étrangères. Rien de saisi : rien d'ajouté, pour que les autres niveaux
+ * Les décisions du niveau 7 : le rachat (une cible choisie, son montage), les
+ * commandes au sous-traitant, les synergies des filiales étrangères. Rien de saisi : rien d'ajouté, pour que les autres niveaux
  * restent identiques.
  */
 function decisionsDuGroupe(data: FormData): Partial<RoundDecisions> {
@@ -128,8 +127,6 @@ function decisionsDuGroupe(data: FormData): Partial<RoundDecisions> {
       ...(cible.type === "etranger" && part !== undefined ? { part } : {}),
     };
   }
-  const audit = cibleLue(data.get("diligence"));
-  if (audit) out.diligence = audit;
   const st = parPrefixe(data, PREFIXE_SOUS_TRAITANCE);
   if (st) out.sousTraitance = st;
   const reseau = parFiliale(data, PREFIXE_RESEAU_ETRANGER);
@@ -283,7 +280,7 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
     // Les modules du scénario (actions qualité, projets, partenariats…) : des
     // cases à cocher, chacune sous un nom unique. Rien coché, rien ajouté.
     ...modulesSaisis(formData.entries()),
-    // Le niveau 7 : rachat, audit, sous-traitance, synergies étrangères.
+    // Le niveau 7 : rachat, sous-traitance, synergies étrangères.
     ...decisionsDuGroupe(formData),
   };
   return { decisions, products, volume };

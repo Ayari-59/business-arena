@@ -498,7 +498,6 @@ export const NOTIONS_PAR_ROLE: Record<string, CodeDeResponsable | "tous"> = {
   consolidation: "financier",
   minority_translation: "financier",
   currency_risk: "financier",
-  asset_vs_share_deal: "tous",
   vertical_integration: "tous",
   make_or_buy: "approvisionnement",
 };

@@ -3357,7 +3357,7 @@ export function DecisionForm({
                 cle: "croissance",
                 etape: ETAPE_DU_GROUPE.croissance,
                 nom: "Croissance externe",
-                question: "Rachetez-vous ou auditez-vous une cible ?",
+                question: "Rachetez-vous une entreprise ?",
                 resume: (d: FormData) => quoiDeLaCroissance(d, groupe),
               },
             ]
@@ -4041,7 +4041,6 @@ export function DecisionForm({
                     c ? (groupe.cibles.find((x) => x.type === c.type && x.id === c.id)?.nom ?? c.id) : null;
                   return limitesDeLEstimation({
                     rachat: nom(cibleLue(donneesRecap.get("rachatCible"))),
-                    audit: nom(cibleLue(donneesRecap.get("diligence"))),
                     synergies: [...donneesRecap.entries()].some(
                       ([k, x]) =>
                         (k.startsWith(PREFIXE_RESEAU_ETRANGER) || k.startsWith(PREFIXE_FABRICATION_ETRANGERE)) &&
@@ -4922,11 +4921,10 @@ export function DecisionForm({
         <Family
           carte="croissance"
           icone="immeuble"
-          legend="Croissance externe · racheter, auditer"
+          legend="Croissance externe · racheter une entreprise"
           repli
           deplie={
-            (alreadySubmitted && (!!defaults.rachat || !!defaults.diligence)) ||
-            [...carteDesRefus.keys()].some((k) => k.startsWith("rachat") || k === "diligence")
+            (alreadySubmitted && !!defaults.rachat) || [...carteDesRefus.keys()].some((k) => k.startsWith("rachat"))
           }
           quoi={donneesRecap ? quoiDeLaCroissance(donneesRecap, groupe) : undefined}
         >
@@ -4935,7 +4933,6 @@ export function DecisionForm({
             defaults={defaults}
             alreadySubmitted={alreadySubmitted}
             kind={kind}
-            typesDeLignes={equipmentOffer?.types ?? []}
             erreurs={carteDesRefus}
           />
         </Family>

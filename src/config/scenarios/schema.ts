@@ -122,11 +122,6 @@ const eventSchema = z.object({
   modifiers: z.array(modifierSchema).min(1),
 });
 
-/** Une fourchette d'état caché (niveau 7) : min ≤ max. */
-const fourchette = z
-  .object({ min: z.number().min(0), max: z.number().min(0) })
-  .refine((f) => f.min <= f.max, { message: "min ≤ max" });
-
 export const engineScenarioConfigSchema = z.object({
   code: z.string().min(1),
   version: z.string().min(1),
@@ -348,24 +343,6 @@ export const engineScenarioConfigSchema = z.object({
           tourMin: z.number().int().min(1),
           tourMinTitres: z.number().int().min(1).optional(),
         })
-        .optional(),
-      sites: z
-        .array(
-          z.object({
-            id: z.string().min(1),
-            nom: z.string().min(1),
-            recit: z.string(),
-            lignes: z.array(z.object({ typeCode: z.string().min(1), count: z.number().int().positive() })).min(1),
-            prix: z.number().positive(),
-            remiseEnRoute: fourchette,
-            remiseEnEtatParLigne: fourchette,
-            passifEnvironnemental: z.object({ probabilite: z.number().min(0).max(1), montant: z.number().min(0) }),
-            delai: z.number().int().min(1),
-            usure: z.number().min(0).max(1),
-            chargesParTour: z.number().min(0),
-            coutDeLAudit: z.number().min(0),
-          }),
-        )
         .optional(),
       fournisseurs: z
         .array(

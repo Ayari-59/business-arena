@@ -11,7 +11,6 @@
  */
 
 import type {
-  CibleDeRachat,
   ConfigDeGroupe,
   DecisionDeRachat,
   EtatDeGroupe,
@@ -870,11 +869,6 @@ export interface EquipmentItem {
   acquiredRound: number;
   /** Valeur nette comptable totale restante (pour l'amortissement). */
   bookValue: number;
-  /**
-   * Niveau 7 : la base amortissable d'un lot qui n'a pas été payé au prix du
-   * neuf (les lignes d'un site racheté). Absente : nombre × prix du neuf.
-   */
-  coutDOrigine?: number;
 }
 
 export interface ScoringConfig {
@@ -1276,7 +1270,7 @@ export interface CompanyState {
    * sous le plafond la fait repasser `active`. Absent = active (rétro-compat).
    */
   status?: "active" | "defaillant";
-  /** Niveau 7 : actions, historique d'EBE, sites rachetés. Absent hors niveau 7. */
+  /** Niveau 7 : actions, historique d'EBE, filiales. Absent hors niveau 7. */
   groupe?: EtatDeGroupe;
   /** Tours de crise consécutifs, pour le seuil de défaillance. Absent = 0. */
   crisisStreak?: number;
@@ -1475,8 +1469,6 @@ export interface RoundDecisions {
   stoppedModuleItems?: { module: string; id: string }[];
   /** Niveau 7 : racheter une cible, au jour 1 du tour. Action ponctuelle. */
   rachat?: DecisionDeRachat;
-  /** Niveau 7 : auditer une cible ce tour, pour décider en connaissance de cause au suivant. Action ponctuelle. */
-  diligence?: CibleDeRachat;
   /**
    * Niveau 7 : unités à écouler ce tour par le réseau de chaque filiale
    * étrangère (clé : son identifiant), par référence, prises sur le stock.
@@ -1559,7 +1551,7 @@ export interface IncomeStatement {
    * un geste de sauvetage comme une récompense écologique. Absente si nulle.
    */
   rescueSubsidy?: number;
-  /** Niveau 7 : frais de rachat, audit, passif environnemental d'un site (charge du tour, hors EBE). */
+  /** Niveau 7 : frais de rachat (charge du tour, hors EBE). */
   chargesDeRachat?: number;
   pretaxIncome: number;
   /**
@@ -2109,8 +2101,8 @@ export interface SimulationInput {
    */
   rescueSubsidies?: Record<CompanyId, number>;
   /**
-   * Niveau 7 : ce que les rachats et audits du jour 1 font au tour d'une
-   * entreprise (lignes du tableau de flux, charges, dépréciation). Posé par
+   * Niveau 7 : ce que les rachats du jour 1 font au tour d'une
+   * entreprise (lignes du tableau de flux, charges). Posé par
    * `simulerLeGroupe`, jamais à la main.
    */
   operationsDeGroupe?: Record<CompanyId, OperationDOuverture>;

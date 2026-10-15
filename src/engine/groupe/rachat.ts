@@ -1,6 +1,5 @@
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "../types";
 import { conditionsBancaires, confianceServie } from "../finance/bank";
-import { etatDuSite, siteAcquis } from "./site-ferme";
 import { leFournisseur } from "./fournisseur";
 import { laCibleEtrangere } from "./etranger";
 import { laSociete, prixDeLaSociete } from "./societe";
@@ -8,12 +7,9 @@ import type {
   CibleDeRachat,
   ConfigDeGroupe,
   DecisionDeRachat,
-  TypeDeCible,
   OperationDOuverture,
   PrixDeCession,
-  ResultatDeGroupe,
   ResultatDuRachat,
-  SiteFerme,
   ValeurDeLEntreprise,
 } from "./types";
 
@@ -27,32 +23,22 @@ import type {
  * deux plus hautes offres égales, et personne ne l'emporte. Les autres ne
  * paient rien et leur résultat dit pourquoi.
  *
- * L'audit se décide de même, au jour 1, un tour avant le rachat : il se paie
- * et révèle l'état réel de la cible.
+ * Une cible est une société, rachetée par ses TITRES : un fournisseur
+ * (`fournisseur.ts`) ou une entreprise étrangère (`etranger.ts`, en tout ou en
+ * partie), payable en numéraire ou en actions de l'acquéreur (la fusion : ses
+ * vendeurs reçoivent des actions à la valeur d'ouverture), et consolidée
+ * ensuite (`consolidation.ts`).
  *
- * Deux sortes de cibles : un site à l'arrêt, racheté par ses ACTIFS
- * (`site-ferme.ts`), payé en numéraire ; une société, rachetée par ses TITRES
- * (un fournisseur, `fournisseur.ts` ; une entreprise étrangère, `etranger.ts`,
- * en tout ou en partie), payable aussi en actions de l'acquéreur
- * (la fusion : ses vendeurs reçoivent des actions à la valeur d'ouverture),
- * et consolidée ensuite (`consolidation.ts`).
- *
- * Un rachat ou un audit refusé ne coûte rien et dit pourquoi. Pur : l'état
- * caché d'une cible se tire sur son flux propre, jamais sur celui du tour.
+ * Un rachat refusé ne coûte rien et dit pourquoi. Pur : ce qu'une cible
+ * réalise se tire sur son flux propre, jamais sur celui du tour.
  */
 
 const actif = (c: CompanyState) => c.status !== "defaillant";
 
 export const cleDeLaCible = (c: CibleDeRachat) => `${c.type}:${c.id}`;
 
-/** Un site tel que le scénario le décrit, ou rien. */
-function leSite(scenario: EngineScenarioConfig, c: CibleDeRachat | undefined): SiteFerme | undefined {
-  return c?.type === "site_ferme" ? scenario.groupe?.sites?.find((s) => s.id === c.id) : undefined;
-}
-
 /** Le nom d'une cible, ou rien si le scénario ne la vend pas. */
 function nomDeLaCible(scenario: EngineScenarioConfig, c: CibleDeRachat | undefined): string | undefined {
-  if (c?.type === "site_ferme") return leSite(scenario, c)?.nom;
   if (c?.type === "fournisseur") return leFournisseur(scenario, c.id)?.nom;
   if (c?.type === "etranger") return laCibleEtrangere(scenario, c.id)?.nom;
   return undefined;
@@ -60,18 +46,13 @@ function nomDeLaCible(scenario: EngineScenarioConfig, c: CibleDeRachat | undefin
 
 /** Une cible déjà rachetée par une entreprise de la partie. */
 export function dejaVendue(companies: readonly CompanyState[], c: CibleDeRachat): boolean {
-  return companies.some((x) =>
-    c.type === "site_ferme"
-      ? (x.groupe?.sites ?? []).some((s) => s.id === c.id)
-      : (x.groupe?.filiales ?? []).some((f) => f.type === c.type && f.id === c.id),
-  );
+  return companies.some((x) => (x.groupe?.filiales ?? []).some((f) => f.type === c.type && f.id === c.id));
 }
 
 export interface RachatsDuTour {
   companies: CompanyState[];
   operations: Record<string, OperationDOuverture>;
   rapports: Record<string, ResultatDuRachat>;
-  diligences: Record<string, NonNullable<ResultatDeGroupe["diligence"]>>;
 }
 
 interface Offre {
@@ -81,7 +62,7 @@ interface Offre {
   d: NonNullable<RoundDecisions["rachat"]>;
   prix: number;
   part: number;
-  valeurs?: PrixDeCession;
+  valeurs: PrixDeCession;
   titres: number;
   actionsEmises: number;
   emprunt: number;
@@ -95,25 +76,20 @@ function ajouter(ops: Record<string, OperationDOuverture>, id: string, o: Operat
     ? {
         flux: [...a.flux, ...o.flux],
         chargesDeRachat: a.chargesDeRachat + o.chargesDeRachat,
-        depreciation: a.depreciation + o.depreciation,
       }
     : o;
 }
 
 /**
- * Le paiement proposé, jugé sur la cible et le tour : un site se paie en
- * numéraire, et une société ne se paie en actions qu'à partir du tour où leur
- * valeur reflète des résultats réels. `null` : rien à redire.
+ * Le paiement proposé, jugé sur le tour : une société ne se paie en actions
+ * qu'à partir du tour où leur valeur reflète des résultats réels. `null` :
+ * rien à redire.
  */
 export function motifDuPaiement(
   cfg: NonNullable<ConfigDeGroupe["rachat"]>,
   roundIndex: number,
-  type: TypeDeCible,
   paiement: DecisionDeRachat["paiement"],
 ): string | null {
-  if (paiement === "titres" && type === "site_ferme") {
-    return "Un liquidateur ne prend pas d'actions : un site se paie en numéraire.";
-  }
   const tourMinTitres = cfg.tourMinTitres ?? cfg.tourMin;
   if (paiement === "titres" && roundIndex < tourMinTitres) {
     return `Un paiement en actions se décide à partir du tour ${tourMinTitres} : avant, la valeur de vos actions ne reflète pas encore de résultats réels.`;
@@ -235,28 +211,13 @@ export function executerLesRachats(args: {
 }): RachatsDuTour {
   const { scenario, roundIndex } = args;
   const cfg = scenario.groupe?.rachat;
-  const out: RachatsDuTour = { companies: args.companies, operations: {}, rapports: {}, diligences: {} };
+  const out: RachatsDuTour = { companies: args.companies, operations: {}, rapports: {} };
   if (!cfg) return out;
   const parId = new Map(args.companies.map((c) => [c.id, c]));
   const ids = args.companies.map((c) => c.id).sort((a, b) => a.localeCompare(b));
   const refuse = (idA: string, cible: CibleDeRachat, nom: string, motif: string) => {
     out.rapports[idA] = { statut: "refuse", motif, cible, nom };
   };
-
-  // 0. Les audits : payés au jour 1, l'état réel dit au résultat. Un audit
-  // demandé sur une cible vendue, inconnue, ou déjà auditée ne coûte rien.
-  for (const id of ids) {
-    const c = args.decisions[id]?.diligence;
-    const A = parId.get(id)!;
-    const site = leSite(scenario, c);
-    if (!c || !site || !A.groupe || !actif(A)) continue;
-    if (dejaVendue(args.companies, c) || roundIndex >= scenario.roundsCount) continue;
-    const cle = cleDeLaCible(c);
-    if (A.groupe.diligences.includes(cle)) continue;
-    out.diligences[id] = { cible: c, nom: site.nom, cout: site.coutDeLAudit, etat: etatDuSite(site, args.graine) };
-    ajouter(out.operations, id, { flux: [], chargesDeRachat: site.coutDeLAudit, depreciation: 0 });
-    parId.set(id, { ...A, groupe: { ...A.groupe, diligences: [...A.groupe.diligences, cle] } });
-  }
 
   // 1. Chaque offre, jugée seule.
   const offres: Offre[] = [];
@@ -282,7 +243,7 @@ export function executerLesRachats(args: {
       refuse(idA, d.cible, nom, "Cette cible n'est pas à vendre.");
       continue;
     }
-    const refusDuPaiement = motifDuPaiement(cfg, roundIndex, d.cible.type, d.paiement);
+    const refusDuPaiement = motifDuPaiement(cfg, roundIndex, d.paiement);
     if (refusDuPaiement) {
       refuse(idA, d.cible, nom, refusDuPaiement);
       continue;
@@ -293,9 +254,9 @@ export function executerLesRachats(args: {
       refuse(idA, d.cible, nom, "Cette part n'est pas à vendre.");
       continue;
     }
-    const societe = d.cible.type === "site_ferme" ? null : laSociete(scenario, args.companies, args.graine, d.cible.type, d.cible.id, roundIndex - 1)!;
-    const valeurs = societe ? prixDeLaSociete(scenario, societe, part) : undefined;
-    const prix = valeurs ? valeurs.prix : leSite(scenario, d.cible)!.prix;
+    const societe = laSociete(scenario, args.companies, args.graine, d.cible.type, d.cible.id, roundIndex - 1)!;
+    const valeurs = prixDeLaSociete(scenario, societe, part);
+    const prix = valeurs.prix;
     const bank = scenario.finance.bank;
     const limite = bank
       ? conditionsBancaires(
@@ -325,7 +286,7 @@ export function executerLesRachats(args: {
       continue;
     }
     const { titres, actionsEmises, emprunt, augmentation, numeraire } = montage;
-    offres.push({ idA, cible: d.cible, nom, d, prix, part, ...(valeurs ? { valeurs } : {}), titres, actionsEmises, emprunt, augmentation, numeraire });
+    offres.push({ idA, cible: d.cible, nom, d, prix, part, valeurs, titres, actionsEmises, emprunt, augmentation, numeraire });
   }
 
   // 2. L'enchère : cible par cible, la plus haute offre l'emporte ; à égalité, personne.
@@ -365,58 +326,10 @@ export function executerLesRachats(args: {
       ...(o.emprunt > 0 ? [{ label: "emprunt_d_acquisition", amount: o.emprunt }] : []),
       ...(o.augmentation > 0 ? [{ label: "augmentation_capital_investisseurs", amount: o.augmentation }] : []),
     ];
-    if (o.cible.type === "site_ferme") {
-      // Un rachat d'actifs, au bilan de l'acquéreur.
-      const site = leSite(scenario, o.cible)!;
-      const etat = etatDuSite(site, args.graine);
-      const acquis = siteAcquis(site, etat, scenario, roundIndex);
-      const cout = o.prix + etat.remiseEnEtat;
-      const net = A.finance.cash - A.finance.overdraft + o.emprunt + o.augmentation - cout;
-      parId.set(A.id, {
-        ...A,
-        finance: {
-          ...A.finance,
-          fixedAssetsNet: A.finance.fixedAssetsNet + cout,
-          financialDebt: A.finance.financialDebt + o.emprunt,
-          equity: A.finance.equity + o.augmentation,
-          cash: Math.max(0, net),
-          overdraft: Math.max(0, -net),
-        },
-        loans: emprunts,
-        groupe: { ...A.groupe!, sites: [...A.groupe!.sites, acquis] },
-      });
-      ajouter(out.operations, A.id, {
-        flux: [
-          { label: "rachat_prix_paye", amount: -o.prix },
-          ...(etat.remiseEnEtat > 0 ? [{ label: "remise_en_etat_du_site", amount: -etat.remiseEnEtat }] : []),
-          ...fluxDeFinancement,
-        ],
-        chargesDeRachat: frais + etat.passifEnvironnemental,
-        depreciation: acquis.depreciation,
-      });
-      const miseEnRoute = new Map<number, number>();
-      for (const l of acquis.enAttente) miseEnRoute.set(l.tour, (miseEnRoute.get(l.tour) ?? 0) + l.count);
-      out.rapports[A.id] = {
-        statut: "conclu",
-        cible: o.cible,
-        nom: o.nom,
-        prix: o.prix,
-        paiement: "numeraire",
-        financement,
-        frais,
-        site: {
-          etat,
-          valeurInscrite: acquis.valeurInscrite,
-          depreciation: acquis.depreciation,
-          miseEnRoute: [...miseEnRoute].map(([tour, lignes]) => ({ tour, lignes })),
-        },
-      };
-      continue;
-    }
     // Un rachat de titres : les titres de participation au bilan de
     // l'acquéreur, la société consolidée à la clôture. Son historique d'EBE
     // s'ajoute à celui de l'acquéreur, tour par tour (pro forma).
-    const type = o.cible.type as "fournisseur" | "etranger";
+    const type = o.cible.type;
     const soc = laSociete(scenario, args.companies, args.graine, type, o.cible.id, roundIndex - 1)!;
     const capitaux = soc.comptes[soc.comptes.length - 1]!.capitauxPropres;
     const cours = soc.cours[soc.cours.length - 1]!;
@@ -464,7 +377,6 @@ export function executerLesRachats(args: {
     ajouter(out.operations, A.id, {
       flux: [...(o.prix - o.titres > 0 ? [{ label: "rachat_prix_paye", amount: -(o.prix - o.titres) }] : []), ...fluxDeFinancement],
       chargesDeRachat: frais,
-      depreciation: 0,
     });
     out.rapports[A.id] = {
       statut: "conclu",
@@ -474,7 +386,7 @@ export function executerLesRachats(args: {
       paiement: o.titres > 0 ? "titres" : "numeraire",
       financement,
       frais,
-      ...(o.valeurs ? { valeurs: o.valeurs } : {}),
+      valeurs: o.valeurs,
       ecart,
     };
   }

@@ -15,11 +15,12 @@ import { enseignantSousLicence } from "./helpers/licence";
  *
  *   · un administrateur de la plateforme voit le niveau 7 et lance une partie
  *     solo NOVA à ce niveau ; un visiteur et un enseignant ordinaire, non ;
- *   · tour 1 : l'audit d'un site ; tour 2 : son rachat, le plan relevé, une
- *     commande au sous-traitant ; le résultat montre la valeur par action et
- *     les immobilisations reprises ;
- *   · une partie de classe à deux équipes : la même cible, deux offres, une
- *     enchère perdue, et chacune le lit.
+ *   · tour 1 : le barème du sous-traitant et son seuil ; tour 2 : une
+ *     commande au sous-traitant, le rachat de 51 % d'une entreprise étrangère
+ *     jugé avant l'envoi, le plan relevé pour son réseau ; le résultat montre
+ *     la valeur par action, et le bilan consolidé l'écart d'acquisition ;
+ *   · une partie de classe à deux équipes : le même fournisseur, deux offres,
+ *     une enchère perdue, et chacune le lit.
  *
  * Les captures (ordinateur et téléphone) vont dans `CAPTURES_GROUPE`, ou à
  * défaut dans `test-results/niveau-groupe`.
@@ -198,33 +199,29 @@ describe("une partie solo de niveau 7", () => {
     await capture(page, "02-ouverture-ordinateur");
   }, 180_000);
 
-  it("tour 1 : le barème du sous-traitant et son seuil se lisent ; on audite un site", async () => {
+  it("tour 1 : le barème du sous-traitant et son seuil se lisent ; les rachats s'ouvrent au tour 2", async () => {
     await ouvrirLaFeuille(page, urlArene);
     await allerA(page, "[data-approvisionnement-du-groupe]");
     const seuil = await page.locator('[data-seuil-d-indifference="nova-one"]').innerText();
     expect(seuil).toMatch(/Au-dessus de .+ unités par tour durablement, une ligne en propre coûte moins cher/);
     expect(await page.locator('[data-bareme="nova-go"] li').count()).toBeGreaterThanOrEqual(3);
-    await page.locator('[data-approvisionnement-du-groupe]').scrollIntoViewIfNeeded();
+    await page.locator("[data-approvisionnement-du-groupe]").scrollIntoViewIfNeeded();
     await capture(page, "03-faire-fabriquer-ordinateur");
 
     await allerA(page, "[data-croissance-externe]");
     await deplier(page, "[data-croissance-externe]");
     expect(await page.locator("[data-regles-du-rachat]").innerText()).toMatch(/Les rachats s'ouvrent au tour 2/);
-    await page.selectOption('select[name="diligence"]', "site_ferme:hexalys");
-    await page.locator("[data-croissance-externe]").scrollIntoViewIfNeeded();
-    await capture(page, "04-audit-ordinateur");
+    // Ni site ni audit : des fournisseurs et des entreprises étrangères.
+    expect(await page.locator('[data-cible^="fournisseur:"]').count()).toBeGreaterThanOrEqual(2);
+    expect(await page.locator('[data-cible^="etranger:"]').count()).toBeGreaterThanOrEqual(2);
+    expect(await page.locator('[data-cible^="site_ferme:"], select[name="diligence"]').count()).toBe(0);
     await valider(page, /Valider et simuler/);
     await page.waitForURL(/simule/, { timeout: 180_000 });
     await page.waitForLoadState("networkidle");
   }, 300_000);
 
-  it("tour 2 : l'audit se lit, le rachat se juge avant l'envoi ; le plan monte, une commande part au sous-traitant", async () => {
+  it("tour 2 : une commande au sous-traitant ; 51 % de Brightwave, jugé avant l'envoi, et le plan relevé pour son réseau", async () => {
     await ouvrirLaFeuille(page, urlArene);
-    // Le plan relevé, sur la première étape : la capacité reprise ne tourne pas seule.
-    const plan = page.locator('input[name="product.nova-one.productionPlan"]').first();
-    const avant = Number(await plan.inputValue());
-    await plan.fill(String(avant + 1000));
-
     await allerA(page, "[data-approvisionnement-du-groupe]");
     await page.locator('input[name="sousTraitance.nova-go"]').fill("500");
     expect(await page.locator('[data-cout-de-la-commande="nova-go"]').innerText()).toMatch(/Coût de la commande : .+€/);
@@ -232,41 +229,42 @@ describe("une partie solo de niveau 7", () => {
 
     await allerA(page, "[data-croissance-externe]");
     await deplier(page, "[data-croissance-externe]");
-    const hexalys = page.locator('[data-cible="site_ferme:hexalys"]');
-    expect(await hexalys.locator("[data-etat-de-la-cible]").innerText()).toBe("Disponible, auditée");
-    expect(await hexalys.locator("[data-audit-du-site]").count()).toBe(1);
-
-    await page.selectOption('select[name="rachatCible"]', "site_ferme:hexalys");
+    await page.selectOption('select[name="rachatCible"]', "etranger:brightwave");
     await page.waitForTimeout(300);
-    expect(Number(await page.locator('input[name="rachatPrixMaximum"]').inputValue())).toBeGreaterThan(0);
-    // Le paiement en actions est fermé : un site se paie en numéraire.
-    expect(await page.locator('input[name="rachatPaiement"][value="titres"]').isDisabled()).toBe(true);
-    expect(await page.locator("[data-motif-des-titres]").innerText()).toMatch(/site se paie en numéraire/);
-    // Sans financement, le moteur refuserait : la feuille le dit avant l'envoi.
-    // Le prix maximum prérempli est lu sans frappe ; seul le financement manque.
+    await page.selectOption('select[name="rachatPart"]', "0.51");
     await page.waitForTimeout(400);
-    const sans = await page.locator("[data-eligibilite-du-rachat]").getAttribute("data-eligibilite-du-rachat");
+    const prix = Number(await page.locator('input[name="rachatPrixMaximum"]').inputValue());
+    expect(prix).toBeGreaterThan(0);
+    // Le paiement en actions est fermé avant son tour.
+    expect(await page.locator('input[name="rachatPaiement"][value="titres"]').isDisabled()).toBe(true);
+    expect(await page.locator("[data-motif-des-titres]").innerText()).toMatch(/Fermé avant le tour/);
+    // Le prix maximum prérempli est lu sans frappe ; seul le financement manque.
     expect(await page.locator('[data-critere="prix"]').innerText()).toMatch(/Vous irez jusqu'à/);
-    await page.locator('input[name="rachatEmprunt"]').fill("100000");
+    await page.locator('input[name="rachatEmprunt"]').fill(String(Math.ceil(prix) + 40000));
     await page.waitForTimeout(400);
     const eligibilite = page.locator("[data-eligibilite-du-rachat]");
     expect(await eligibilite.getAttribute("data-eligibilite-du-rachat"), await eligibilite.innerText()).toBe("recevable");
     expect(await eligibilite.innerText()).toMatch(/Contrôle|Trésorerie|Découvert/);
-    expect(await page.locator("[data-rappel-du-plan]").innerText()).toMatch(
-      /relever votre plan de production pour faire tourner la capacité reprise/,
-    );
+    expect(await page.locator("[data-rappel-du-plan]").innerText()).toMatch(/Pensez à relever votre plan de production/);
     // Le résultat estimé dit ce qu'il ne simule pas.
-    expect(await page.locator("[data-limites-de-l-estimation]").innerText()).toMatch(/ne compte pas le rachat de Usine Hexalys/);
+    expect(await page.locator("[data-limites-de-l-estimation]").innerText()).toMatch(
+      /ne compte pas le rachat de Brightwave Audio Ltd/,
+    );
     await page.locator("[data-montage-du-rachat]").scrollIntoViewIfNeeded();
-    await capture(page, "05-rachat-ordinateur");
-    expect(sans === "refusee" || sans === "recevable").toBe(true);
+    await capture(page, "05-financer-investir-ordinateur");
+
+    // Le plan relevé : le réseau de la filiale n'écoule que ce que l'atelier produit en plus.
+    await allerA(page, 'input[name="product.nova-one.productionPlan"]');
+    const plan = page.locator('input[name="product.nova-one.productionPlan"]').first();
+    const avant = Number(await plan.inputValue());
+    await plan.fill(String(avant + 600));
 
     await valider(page, /Valider et simuler/);
     await page.waitForURL(/simule/, { timeout: 180_000 });
     await page.waitForLoadState("networkidle");
   }, 300_000);
 
-  it("le résultat : valeur par action, rentabilité totale, immobilisations reprises", async () => {
+  it("le résultat : valeur par action, rentabilité totale ; le bilan consolidé porte l'écart d'acquisition", async () => {
     await page.goto(`${urlArene}#dernier-resultat`, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(800);
@@ -274,9 +272,7 @@ describe("une partie solo de niveau 7", () => {
     await valeur.waitFor({ state: "attached", timeout: 30_000 });
     expect(await valeur.innerText()).toMatch(/Valeur de l'action[\s\S]*€[\s\S]*Rentabilité totale/i);
     expect(await page.locator("[data-valeur-de-l-action]").first().innerText()).toMatch(/Action .+ € · rentabilité totale/);
-    // Le rachat et la capacité reprise, au panneau du tour et au bilan.
-    const t = await texte(page);
-    expect(t).toMatch(/Hexalys, Vierzon racheté/);
+    expect(await texte(page)).toMatch(/Brightwave Audio Ltd racheté/);
     await valeur.scrollIntoViewIfNeeded();
     await capture(page, "06-resultat-valeur-ordinateur");
     // Les comptes du tour forment un accordéon : un état ouvert ferme les autres.
@@ -284,19 +280,23 @@ describe("une partie solo de niveau 7", () => {
       await page.locator("summary", { hasText: titre }).first().click();
       await page.waitForTimeout(400);
     };
-    await ouvrir("Rachat, audit et fabrication du tour");
+    await ouvrir("Rachat et fabrication du tour");
     const operations = await page.locator("[data-operations-du-groupe]").first().innerText();
-    expect(operations).toMatch(/Immobilisations reprises \(valeur inscrite\)/);
+    expect(operations).toMatch(/Prix payé pour Brightwave Audio Ltd/);
+    expect(operations).toMatch(/Écart d'acquisition/);
     expect(operations).toMatch(/Sous-traitance : 500 unités livrées/);
     await page.locator("[data-operations-du-groupe]").first().scrollIntoViewIfNeeded();
     await capture(page, "07-rachat-au-resultat-ordinateur");
-    await ouvrir("Bilan");
-    expect(await texte(page)).toMatch(/dont immobilisations reprises \(Usine Hexalys, Vierzon\)/);
-    await page.locator("text=/dont immobilisations reprises/").first().scrollIntoViewIfNeeded();
-    await capture(page, "07b-bilan-ordinateur");
+    await ouvrir("Groupe consolidé");
+    const consolide = page.locator("[data-bilan-consolide]").first();
+    const bilan = await consolide.innerText();
+    expect(bilan).toMatch(/Écart d'acquisition\s*[^€\n]*[1-9][^€\n]*€/);
+    expect(bilan).toMatch(/Intérêts minoritaires/);
+    await consolide.scrollIntoViewIfNeeded();
+    await capture(page, "07b-bilan-consolide-ordinateur");
   }, 180_000);
 
-  it("sur téléphone : les cartes « Faire fabriquer » et « Croissance externe », et le résultat", async () => {
+  it("sur téléphone : le résultat, puis « Faire fabriquer » et « Financer & investir »", async () => {
     const tel = await navigateur.newContext({
       ...devices["iPhone 13"],
       viewport: { width: 390, height: 844 },
@@ -320,11 +320,14 @@ describe("une partie solo de niveau 7", () => {
     await q.locator("[data-approvisionnement-du-groupe]").scrollIntoViewIfNeeded();
     await capture(q, "09-faire-fabriquer-telephone");
     await allerA(q, "[data-croissance-externe]");
-    await q.selectOption('select[name="rachatCible"]', "site_ferme:arvel");
+    await deplier(q, "[data-croissance-externe]");
+    // La filiale est à vous ; un fournisseur reste à racheter.
+    expect(await q.locator('[data-cible="etranger:brightwave"] [data-etat-de-la-cible]').innerText()).toBe("À vous");
+    await q.selectOption('select[name="rachatCible"]', "fournisseur:standard");
     await q.waitForTimeout(400);
     expect(await q.locator('[data-critere="prix"]').innerText()).toMatch(/Vous irez jusqu'à/);
     await q.locator("[data-montage-du-rachat]").scrollIntoViewIfNeeded();
-    await capture(q, "10-rachat-telephone");
+    await capture(q, "10-financer-investir-telephone");
     expect(await q.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(392);
     await tel.close();
   }, 240_000);
@@ -370,18 +373,19 @@ describe("une partie de classe à deux équipes : l'enchère", () => {
     await page.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 180_000 });
   }, 300_000);
 
-  it("tour 2 : les deux équipes visent le même site ; la plus haute offre l'emporte", async () => {
+  it("tour 2 : les deux équipes visent le même fournisseur ; la plus haute offre l'emporte", async () => {
     const offres = [0, 5000];
     for (const [i, p] of eleves.entries()) {
       await ouvrirLaFeuille(p, p.url().split("#")[0]!);
       await emprunter(p);
       await allerA(p, "[data-croissance-externe]");
       await deplier(p, "[data-croissance-externe]");
-      await p.selectOption('select[name="rachatCible"]', "site_ferme:sonelec");
-      await p.waitForTimeout(300);
+      await p.selectOption('select[name="rachatCible"]', "fournisseur:standard");
+      await p.waitForTimeout(400);
       const max = p.locator('input[name="rachatPrixMaximum"]');
-      await max.fill(String(Number(await max.inputValue()) + offres[i]!));
-      await p.locator('input[name="rachatEmprunt"]').fill("100000");
+      const prix = Number(await max.inputValue());
+      await max.fill(String(prix + offres[i]!));
+      await p.locator('input[name="rachatEmprunt"]').fill(String(prix + offres[i]! + 40000));
       await p.waitForTimeout(400);
       const e = p.locator("[data-eligibilite-du-rachat]");
       expect(await e.getAttribute("data-eligibilite-du-rachat"), await e.innerText()).toBe("recevable");
@@ -396,23 +400,23 @@ describe("une partie de classe à deux équipes : l'enchère", () => {
     await page.waitForSelector("text=/Clore le tour 3 et simuler/", { timeout: 180_000 });
   }, 400_000);
 
-  it("l'équipe qui a offert moins lit l'enchère perdue ; l'autre a racheté le site", async () => {
+  it("l'équipe qui a offert moins lit l'enchère perdue ; l'autre a racheté le fournisseur", async () => {
     const [perdante, gagnante] = eleves as [Page, Page];
     await ouvrirLaFeuille(perdante, perdante.url().split("#")[0]!);
     await allerA(perdante, "[data-croissance-externe]");
     await deplier(perdante, "[data-croissance-externe]");
-    const sonelec = perdante.locator('[data-cible="site_ferme:sonelec"]');
-    // Rachetée par l'autre équipe : « déjà rachetée », et le motif de l'offre perdue.
-    expect(await sonelec.locator("[data-etat-de-la-cible]").innerText()).toBe("Déjà rachetée");
-    expect(await sonelec.innerText()).toMatch(/Un autre acquéreur a fait une meilleure offre/);
-    await sonelec.scrollIntoViewIfNeeded();
+    const standard = perdante.locator('[data-cible="fournisseur:standard"]');
+    // Racheté par l'autre équipe : « déjà rachetée », et le motif de l'offre perdue.
+    expect(await standard.locator("[data-etat-de-la-cible]").innerText()).toBe("Déjà rachetée");
+    expect(await standard.innerText()).toMatch(/Un autre acquéreur a fait une meilleure offre/);
+    await standard.scrollIntoViewIfNeeded();
     await capture(perdante, "12-classe-enchere-perdue-ordinateur");
 
     await ouvrirLaFeuille(gagnante, gagnante.url().split("#")[0]!);
     await allerA(gagnante, "[data-croissance-externe]");
     await deplier(gagnante, "[data-croissance-externe]");
     expect(
-      await gagnante.locator('[data-cible="site_ferme:sonelec"] [data-etat-de-la-cible]').innerText(),
+      await gagnante.locator('[data-cible="fournisseur:standard"] [data-etat-de-la-cible]').innerText(),
     ).toBe("À vous");
   }, 240_000);
 

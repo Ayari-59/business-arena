@@ -103,11 +103,11 @@ export interface FinanceInput {
    * tableau de flux, parce qu'elle ne raconte pas la même histoire. Absente = 0.
    */
   rescueSubsidy?: number;
-  /** Niveau 7 : frais de rachat, audit, passif environnemental d'un site : charge décaissée du tour. */
+  /** Niveau 7 : frais de rachat, charge décaissée du tour. */
   chargesDeRachat?: number;
   /**
    * Niveau 7 : les mouvements de trésorerie d'un rachat fait au jour 1 (prix
-   * payé, remise en état, emprunt d'acquisition, apport des investisseurs).
+   * payé, emprunt d'acquisition, apport des investisseurs).
    * Le bilan d'ouverture reçu est DÉJÀ celui d'après rachat : ces
    * lignes ouvrent le tableau de flux, et sa trésorerie d'ouverture reste celle
    * de la clôture précédente.

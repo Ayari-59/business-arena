@@ -116,7 +116,7 @@ export function eligibiliteDuRachat(vue: VueDuGroupe, offre: OffreSaisie): Eligi
     },
     cible.statut !== "disponible" ? "Cette cible n'est pas à vendre." : "Cette part n'est pas à vendre.",
   );
-  const refusDuPaiement = motifDuPaiement(cfg, o.tour, cible.type, offre.paiement);
+  const refusDuPaiement = motifDuPaiement(cfg, o.tour, offre.paiement);
   poser(
     {
       cle: "paiement",

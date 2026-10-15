@@ -27,6 +27,7 @@ import { situationByCode } from "@/config/scenarios/registry";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { neutralDecisions } from "@/engine/bots";
 import type { CompanyState, RoundDecisions } from "@/engine/types";
+import { prixDuFournisseur } from "@/engine/groupe";
 import { rejouer } from "@/pedagogy/merite/rejeu";
 import { partieDeLaReference } from "@/pedagogy/merite/reference";
 import { GRAINES_DU_MERITE } from "@/pedagogy/merite/verdict";
@@ -174,7 +175,7 @@ describe("le niveau 7 « Groupe » : création réservée, taille de départ, re
     await expect(createSoloGame(admin, "quarter", 3, 7, true, "hotel")).rejects.toThrow(/NOVA/);
   });
 
-  it("l'état du tour 0 porte la taille de départ ; un audit, un rachat de site, la sous-traitance se rejouent au centime", async () => {
+  it("l'état du tour 0 porte la taille de départ ; un rachat de fournisseur, la sous-traitance se rejouent au centime", async () => {
     const gameId = await createSoloGame(admin, "quarter", 3, 7, true, "nova");
     const [game] = await db.select().from(games).where(eq(games.id, gameId));
     const scenario = parseScenarioConfig(game!.scenarioSnapshot);
@@ -187,22 +188,24 @@ describe("le niveau 7 « Groupe » : création réservée, taille de départ, re
     const etat0 = depart!.state as CompanyState;
     expect(etat0.groupe).toBeDefined();
     expect(etat0.machineCapacity).toBeCloseTo(7000 * facteur, 6);
-    const site = scenario.groupe!.sites![1]!;
     for (let tour = 1; tour <= scenario.roundsCount; tour += 1) {
       const d = await decisionsDuTour(gameId, tour);
-      if (tour === 1) d.diligence = { type: "site_ferme", id: site.id };
       if (tour === 2) {
-        // Emprunter le prix, et de quoi couvrir le découvert du tour 1.
-        const [ouverture] = await db
+        // Le prix demandé à l'ouverture du tour 2, sur les états de toute la partie ;
+        // emprunter le prix, et de quoi couvrir le découvert du tour 1.
+        const ouverture = await db
           .select()
           .from(companyStates)
-          .where(and(eq(companyStates.teamId, equipe!.id), eq(companyStates.roundIndex, 1)));
-        const f = (ouverture!.state as CompanyState).finance;
+          .innerJoin(teams, eq(teams.id, companyStates.teamId))
+          .where(and(eq(teams.gameId, gameId), eq(companyStates.roundIndex, 1)));
+        const etats = ouverture.map((o) => o.company_states.state as CompanyState);
+        const prix = prixDuFournisseur(scenario, etats, "standard")!.prix;
+        const f = ouverture.find((o) => o.teams.id === equipe!.id)!.company_states.state as CompanyState;
         d.rachat = {
-          cible: { type: "site_ferme", id: site.id },
-          prixMaximum: site.prix,
+          cible: { type: "fournisseur", id: "standard" },
+          prixMaximum: prix,
           paiement: "numeraire",
-          emprunt: site.prix + Math.max(0, f.overdraft - f.cash) + 20000,
+          emprunt: prix + Math.max(0, f.finance.overdraft - f.finance.cash) + 20000,
         };
       }
       if (tour >= 3) d.sousTraitance = { "nova-go": 500 };
@@ -214,7 +217,7 @@ describe("le niveau 7 « Groupe » : création réservée, taille de départ, re
       .where(eq(companyStates.teamId, equipe!.id))
       .orderBy(desc(companyStates.roundIndex))
       .limit(1);
-    expect((fin!.state as CompanyState).groupe!.sites).toHaveLength(1);
+    expect((fin!.state as CompanyState).groupe!.filiales.map((x) => x.id)).toEqual(["standard"]);
     const lue = (await lirePartieARejouer(gameId)) as PartieLue;
     expect(typeof lue, String(lue)).toBe("object");
     const rejeu = rejouer(lue.partie, lue.partie.graine);

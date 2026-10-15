@@ -87,7 +87,6 @@ import {
 } from "../events";
 import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
 import {
-  chargesDesSites,
   commandeDuTour,
   fusionnerLesCommandes,
   prixDeLImport,
@@ -383,7 +382,7 @@ function computePerformanceMetrics(
  *
  * NIVEAU 7 « GROUPE » : une partie dont le snapshot porte un bloc `groupe`
  * passe par `simulerLeGroupe`, qui entoure le tour ordinaire (valeur, rachats,
- * audits, mise en route des sites). Toute
+ * consolidation). Toute
  * autre partie appelle le tour ordinaire avec le même objet : le chemin
  * d'avant, au bit près.
  */
@@ -1115,7 +1114,6 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
           if (item.typeCode !== req.typeCode || item.count <= 0) continue;
           const take = Math.min(toSell, item.count);
           const bvPerUnit = item.count > 0 ? item.bookValue / item.count : 0;
-          if (item.coutDOrigine !== undefined && item.count > 0) item.coutDOrigine -= (take * item.coutDOrigine) / item.count;
           soldBookValue += take * bvPerUnit;
           item.count -= take;
           item.bookValue -= take * bvPerUnit;
@@ -1162,7 +1160,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       for (const item of fleet) {
         const typ = typeMap.get(item.typeCode);
         if (!typ || item.bookValue <= 0) continue;
-        const originalCost = item.coutDOrigine ?? item.count * typ.costPerUnit;
+        const originalCost = item.count * typ.costPerUnit;
         const depPerRound = originalCost / typ.depreciationRounds;
         const dep = Math.min(depPerRound, item.bookValue);
         equipDepreciation += dep;
@@ -1980,19 +1978,13 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
       // capital, l'argent entre quel que soit l'état de l'entreprise.
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
-      fixedCosts: gelee
-        ? 0
-        : w.state.groupe && w.state.groupe.sites.length > 0
-          ? scenario.fixedCostsPerRound + chargesDesSites(w.state) + insurancePremium + hrCost + studiesCost
-          : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
         ? 0
         : scenario.equipment
-          ? input.operationsDeGroupe?.[w.state.id]?.depreciation
-            ? w.equipDepreciation + input.operationsDeGroupe[w.state.id]!.depreciation
-            : w.equipDepreciation
+          ? w.equipDepreciation
           : scenario.finance.depreciationPerRound +
             (w.state.extraDepreciationPerRound ?? 0) +
             (w.state.pendingDepreciationPerRound ?? 0),
@@ -2011,7 +2003,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       disposalLoss: w.equipDisposalLoss,
       // Niveau 7 : les produits finis achetés au sous-traitant, payés à la livraison.
       ...(w.commandeST ? { sousTraitance: w.commandeST.total } : {}),
-      // Niveau 7 : le rachat ou l'audit du jour 1 (flux d'ouverture, charges).
+      // Niveau 7 : le rachat du jour 1 (flux d'ouverture, charges).
       ...(input.operationsDeGroupe?.[w.state.id]
         ? {
             operationsDOuverture: input.operationsDeGroupe[w.state.id]!.flux,
@@ -2180,7 +2172,6 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // + budgets discrétionnaires (la prime déplace le seuil : c'est le point).
     const structureCosts =
       scenario.fixedCostsPerRound +
-      (w.state.groupe && w.state.groupe.sites.length > 0 ? chargesDesSites(w.state) : 0) +
       insurancePremium +
       hrCost +
       studiesCost +
@@ -2669,7 +2660,6 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
               ...(finance.incomeStatement.operatingIncome > 0
                 ? { levierOperationnel: finance.incomeStatement.grossMargin / finance.incomeStatement.operatingIncome }
                 : {}),
-              ...(w.state.groupe && w.state.groupe.sites.length > 0 ? { chargesDesSites: chargesDesSites(w.state) } : {}),
               // Les achats du tour, par fournisseur : le chiffre d'affaires d'un fournisseur rachetable.
               achats: w.productSuppliers.reduce<Record<string, number>>((acc, sup, k) => {
                 if (sup) acc[sup.code] = (acc[sup.code] ?? 0) + productPurchases[k]!;

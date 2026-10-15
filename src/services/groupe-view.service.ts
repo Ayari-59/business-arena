@@ -1,4 +1,4 @@
-import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import type { CompanyRoundResult, CompanyState, EngineScenarioConfig } from "@/engine/types";
 import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
 import { toGamme } from "@/engine/gamme";
 import {
@@ -12,7 +12,6 @@ import {
   trajectoireDeLEtranger,
   valeurDOuverture,
   type CibleDeRachat,
-  type EtatDuSite,
   type ResultatDuRachat,
   type SeuilDIndifference,
   type SituationDeLAcquereur,
@@ -25,11 +24,10 @@ import {
  * LA VUE DU NIVEAU 7 « GROUPE », préparée côté serveur pour l'arène.
  *
  * Ce que l'équipe sait, et rien de plus : la série de SA valeur, les cibles à
- * vendre avec ce qu'on en dit publiquement (prix demandé, fourchettes de
- * l'état d'un site, comptes publiés d'une société), l'état réel d'un site
- * seulement si l'équipe l'a audité, ses filiales, et les cours des devises
- * jusqu'au dernier tour clos. La graine n'y est jamais : ni l'état caché d'un
- * site non audité, ni un cours à venir ne peuvent s'en déduire.
+ * vendre avec ce qu'on en dit publiquement (prix demandé, comptes publiés
+ * d'une société), ses filiales, et les cours des devises jusqu'au dernier
+ * tour clos. La graine n'y est jamais : aucun cours à venir ne peut s'en
+ * déduire.
  */
 
 export type StatutDeCible = "disponible" | "a_vous" | "vendue";
@@ -42,21 +40,8 @@ export interface CibleVue {
   statut: StatutDeCible;
   /** Prix demandé à l'ouverture du tour (100 % pour une entreprise étrangère) ; null si vendue. */
   prixDemande: number | null;
-  /** L'audit que l'équipe a fait : l'état réel révélé. */
-  audit: EtatDuSite | null;
-  /** L'équipe a demandé un audit pour le tour en cours. */
-  auditDemande: boolean;
   /** La dernière offre de l'équipe sur cette cible, et ce qu'il en est advenu. */
   derniereOffre: { tour: number; statut: ResultatDuRachat["statut"]; motif: string | null } | null;
-  site?: {
-    lignes: { typeCode: string; count: number }[];
-    remiseEnRoute: { min: number; max: number };
-    remiseEnEtatParLigne: { min: number; max: number };
-    passifEnvironnemental: { probabilite: number; montant: number };
-    delai: number;
-    chargesParTour: number;
-    coutDeLAudit: number;
-  };
   fournisseur?: { capacite: number; dernierChiffreDAffaires: number | null };
   etranger?: {
     pays: string;
@@ -128,8 +113,6 @@ export function vueDuGroupe(args: {
   equipeId: string;
   /** Les résultats de l'équipe, par tour clos. */
   resultats: { tour: number; result: CompanyRoundResult }[];
-  /** La décision de l'équipe pour le tour en cours, si elle est déjà déposée. */
-  enCours: RoundDecisions | null;
 }): VueDuGroupe | null {
   const { scenario } = args;
   const g = scenario.groupe;
@@ -138,19 +121,13 @@ export function vueDuGroupe(args: {
   const moi = args.etats.find((e) => e.id === args.equipeId);
   const resultats = [...args.resultats].sort((a, b) => a.tour - b.tour);
   const valeurs = resultats.flatMap((r) => (r.result.groupe?.valeur ? [{ tour: r.tour, valeur: r.result.groupe.valeur }] : []));
-  const audits = new Map<string, EtatDuSite>();
   const offres = new Map<string, CibleVue["derniereOffre"]>();
   for (const r of resultats) {
-    const d = r.result.groupe?.diligence;
-    if (d) audits.set(cleDeLaCible(d.cible), d.etat);
     const o = r.result.groupe?.rachat;
     if (o?.cible) offres.set(cleDeLaCible(o.cible), { tour: r.tour, statut: o.statut, motif: o.motif ?? null });
   }
   const statut = (c: CibleDeRachat): StatutDeCible => {
-    const aMoi =
-      c.type === "site_ferme"
-        ? (moi?.groupe?.sites ?? []).some((s) => s.id === c.id)
-        : (moi?.groupe?.filiales ?? []).some((f) => f.type === c.type && f.id === c.id);
+    const aMoi = (moi?.groupe?.filiales ?? []).some((f) => f.type === c.type && f.id === c.id);
     if (aMoi) return "a_vous";
     return dejaVendue(args.etats, c) ? "vendue" : "disponible";
   };
@@ -160,28 +137,9 @@ export function vueDuGroupe(args: {
     nom,
     recit,
     statut: statut(c),
-    audit: audits.get(cleDeLaCible(c)) ?? null,
-    auditDemande: args.enCours?.diligence?.type === c.type && args.enCours.diligence.id === c.id,
     derniereOffre: offres.get(cleDeLaCible(c)) ?? null,
   });
   const cibles: CibleVue[] = [];
-  for (const s of g.sites ?? []) {
-    const c: CibleDeRachat = { type: "site_ferme", id: s.id };
-    const b = base(c, s.nom, s.recit);
-    cibles.push({
-      ...b,
-      prixDemande: b.statut === "disponible" ? s.prix : null,
-      site: {
-        lignes: s.lignes,
-        remiseEnRoute: s.remiseEnRoute,
-        remiseEnEtatParLigne: s.remiseEnEtatParLigne,
-        passifEnvironnemental: s.passifEnvironnemental,
-        delai: s.delai,
-        chargesParTour: s.chargesParTour,
-        coutDeLAudit: s.coutDeLAudit,
-      },
-    });
-  }
   for (const f of g.fournisseurs ?? []) {
     const c: CibleDeRachat = { type: "fournisseur", id: f.code };
     const b = base(c, f.nom, f.recit);

@@ -608,19 +608,17 @@ export function LigneEstimeeCompacte({
 
 /**
  * CE QUE L'ESTIMATION NE SIMULE PAS (niveau 7). Elle ne joue que l'entreprise
- * de l'équipe, sans la graine : ni le rachat ni l'audit du jour 1, ni les
- * ventes et la fabrication des filiales étrangères, ni le rationnement d'un
+ * de l'équipe, sans la graine : ni le rachat du jour 1, ni les ventes et la
+ * fabrication des filiales étrangères, ni le rationnement d'un
  * fournisseur partagé. Elle compte, en revanche, les commandes au
  * sous-traitant. `null` quand aucune décision du tour n'en dépend.
  */
 export function limitesDeLEstimation(d: {
   rachat?: string | null;
-  audit?: string | null;
   synergies?: boolean;
 }): string | null {
   const ignores = [
-    d.rachat ? `le rachat de ${d.rachat} (prix, financement, capacité reprise)` : null,
-    d.audit ? `l'audit de ${d.audit}` : null,
+    d.rachat ? `le rachat de ${d.rachat} (prix, financement, filiale)` : null,
     d.synergies ? "les ventes et la fabrication de vos filiales étrangères" : null,
   ].filter((x): x is string => x !== null);
   if (ignores.length === 0) return null;

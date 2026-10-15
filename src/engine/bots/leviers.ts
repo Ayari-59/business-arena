@@ -37,7 +37,7 @@ export interface LeviersOuverts {
   placement: boolean;
   dividend: boolean;
   rd: boolean;
-  /** Niveau 7 : racheter une cible (site à l'arrêt) et l'auditer. Absent : fermé. */
+  /** Niveau 7 : racheter une cible (fournisseur, entreprise étrangère) et employer ses synergies. Absent : fermé. */
   croissanceExterne?: boolean;
   /** Niveau 7 : faire fabriquer par un sous-traitant. Absent : fermé. */
   externalisation?: boolean;
@@ -60,7 +60,6 @@ export function aLaMesureDuNiveau(
   if (!ouverts.rd) delete out.rdBudget;
   if (!ouverts.croissanceExterne) {
     delete out.rachat;
-    delete out.diligence;
     delete out.reseauEtranger;
     delete out.fabricationEtrangere;
   }

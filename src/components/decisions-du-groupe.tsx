@@ -30,7 +30,7 @@ import type { CibleVue, SousTraitanceVue, VueDuGroupe } from "@/services/groupe-
  *     fournisseur import et ses risques ; puis ce que les filiales étrangères
  *     vendent ou fabriquent pour l'équipe.
  *   · « Financer & investir » : la croissance externe. Les cibles et ce qu'on
- *     en sait, l'audit d'un site, le rachat et son montage, et AVANT L'ENVOI
+ *     en sait, le rachat et son montage, et AVANT L'ENVOI
  *     ce que le moteur en dirait (`services/groupe-eligibilite`, des mêmes
  *     fonctions que le jour 1).
  *
@@ -388,7 +388,6 @@ export function ApprovisionnementDuGroupe({
 // ── LA CROISSANCE EXTERNE ──────────────────────────────────────────────────
 
 const NOMS_DES_TYPES: Record<CibleVue["type"], string> = {
-  site_ferme: "Sites à l'arrêt",
   fournisseur: "Fournisseurs",
   etranger: "Entreprises étrangères",
 };
@@ -397,12 +396,10 @@ const NOMS_DES_TYPES: Record<CibleVue["type"], string> = {
 export function etatDeLaCible(c: CibleVue): { libelle: string; ton: "neutre" | "bon" | "mauvais" } {
   if (c.statut === "a_vous") return { libelle: "À vous", ton: "bon" };
   if (c.statut === "vendue") return { libelle: "Déjà rachetée", ton: "mauvais" };
-  if (c.auditDemande) return { libelle: "Audit en cours", ton: "neutre" };
   const o = c.derniereOffre;
   if (o && o.statut === "refuse" && o.motif && /autre acquéreur|même offre/.test(o.motif)) {
     return { libelle: `Enchère perdue au tour ${o.tour}`, ton: "mauvais" };
   }
-  if (c.audit) return { libelle: "Disponible, auditée", ton: "neutre" };
   return { libelle: "Disponible", ton: "neutre" };
 }
 
@@ -412,11 +409,8 @@ const TONS = {
   mauvais: "text-red-300 border-red-400/40",
 } as const;
 
-function FicheDeCible({ c, typesDeLignes }: { c: CibleVue; typesDeLignes: readonly { code: string; name: string }[] }) {
+function FicheDeCible({ c }: { c: CibleVue }) {
   const etat = etatDeLaCible(c);
-  const nomDeLigne = (code: string) => typesDeLignes.find((t) => t.code === code)?.name ?? code;
-  const lignes = (l: { typeCode: string; count: number }[]) =>
-    l.map((x) => `${x.count} × ${nomDeLigne(x.typeCode)}`).join(", ");
   return (
     <div className="panneau-info rounded-xl px-3 py-2.5" data-cible={valeurDeCible(c)}>
       <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-200">
@@ -432,33 +426,6 @@ function FicheDeCible({ c, typesDeLignes }: { c: CibleVue; typesDeLignes: readon
         ) : null}
       </p>
       <p className="mt-0.5 text-sm leading-relaxed text-slate-400">{c.recit}</p>
-      {c.site ? (
-        <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
-          <li>Lignes : {lignes(c.site.lignes)}.</li>
-          <li>
-            Avant audit : de {pourCent(c.site.remiseEnRoute.min)} à {pourCent(c.site.remiseEnRoute.max)} des lignes
-            repartent, chacune pour {formatEuro(c.site.remiseEnEtatParLigne.min)} à{" "}
-            {formatEuro(c.site.remiseEnEtatParLigne.max)} de remise en état ; un passif environnemental de{" "}
-            {formatEuro(c.site.passifEnvironnemental.montant)} possible ({pourCent(c.site.passifEnvironnemental.probabilite)}).
-          </li>
-          <li>
-            Mise en route : la moitié des lignes {c.site.delai} tour{c.site.delai > 1 ? "s" : ""} après le rachat, le reste
-            au tour suivant. Charges du site : {formatEuro(c.site.chargesParTour)} par tour. Audit :{" "}
-            {formatEuro(c.site.coutDeLAudit)}.
-          </li>
-          {c.audit ? (
-            <li className="text-[var(--donnee)]" data-audit-du-site="">
-              Audit : {c.audit.lignesRemisesEnRoute} ligne{c.audit.lignesRemisesEnRoute > 1 ? "s" : ""} repartent (
-              {lignes(c.audit.lignes)}), {c.audit.lignesPerdues} perdue{c.audit.lignesPerdues > 1 ? "s" : ""} ;
-              remise en état {formatEuro(c.audit.remiseEnEtat)} ;{" "}
-              {c.audit.passifEnvironnemental > 0
-                ? `passif environnemental ${formatEuro(c.audit.passifEnvironnemental)}`
-                : "aucun passif environnemental"}
-              .
-            </li>
-          ) : null}
-        </ul>
-      ) : null}
       {c.fournisseur ? (
         <p className="mt-1 text-xs text-slate-300">
           Capacité : {formatUnits(c.fournisseur.capacite)} unités par tour.
@@ -519,10 +486,8 @@ function lireLOffre(racine: HTMLElement | null): OffreLue {
 /** Ce que le repli de la croissance externe annonce. */
 export function quoiDeLaCroissance(d: FormData, vue: VueDuGroupe): string {
   const cible = cibleLue(d.get("rachatCible"));
-  const audit = cibleLue(d.get("diligence"));
   const nom = (c: { type: string; id: string }) => vue.cibles.find((x) => x.type === c.type && x.id === c.id)?.nom ?? c.id;
-  const parties = [cible ? `rachat de ${nom(cible)}` : null, audit ? `audit de ${nom(audit)}` : null].filter(Boolean);
-  return parties.length > 0 ? parties.join(", ") : "Aucune opération";
+  return cible ? `rachat de ${nom(cible)}` : "Aucune opération";
 }
 
 export function CroissanceExterne({
@@ -530,20 +495,17 @@ export function CroissanceExterne({
   defaults,
   alreadySubmitted,
   kind,
-  typesDeLignes,
   erreurs,
 }: {
   vue: VueDuGroupe;
   defaults: RoundDecisions;
   alreadySubmitted: boolean;
   kind: "solo" | "class";
-  typesDeLignes: readonly { code: string; name: string }[];
   erreurs: Erreurs;
 }) {
   const racine = useRef<HTMLDivElement>(null);
   // Rien de choisi d'office : seul un envoi déjà enregistré ce tour revient.
   const envoye = alreadySubmitted ? defaults.rachat : undefined;
-  const auditEnvoye = alreadySubmitted ? defaults.diligence : undefined;
   const [offre, setOffre] = useState<OffreLue>(() => ({
     cible: envoye ? valeurDeCible(envoye.cible) : "",
     paiement: envoye?.paiement ?? "numeraire",
@@ -569,7 +531,6 @@ export function CroissanceExterne({
   const regles = vue.regles;
   if (!regles || !o) return null;
   const disponibles = vue.cibles.filter((c) => c.statut === "disponible");
-  const auditables = disponibles.filter((c) => c.type === "site_ferme" && !c.audit);
   const choisie = vue.cibles.find((c) => valeurDeCible(c) === offre.cible) ?? null;
   const parts = choisie?.etranger?.prixDesParts ?? [];
   const partRetenue = choisie?.type === "etranger" ? (offre.part ?? parts[parts.length - 1]?.part ?? 1) : undefined;
@@ -585,7 +546,7 @@ export function CroissanceExterne({
       })
     : null;
   const titresOuverts = o.tour >= regles.tourMinTitres;
-  const parType = (["site_ferme", "fournisseur", "etranger"] as const)
+  const parType = (["fournisseur", "etranger"] as const)
     .map((t) => ({ t, cibles: vue.cibles.filter((c) => c.type === t) }))
     .filter((x) => x.cibles.length > 0);
 
@@ -593,7 +554,7 @@ export function CroissanceExterne({
     <div ref={racine} className="space-y-3" data-croissance-externe="" onChange={relire} onInput={relire}>
       <p className="text-sm leading-relaxed text-slate-400" data-regles-du-rachat="">
         {o.tour < regles.tourMin
-          ? `Les rachats s'ouvrent au tour ${regles.tourMin} ; un audit se fait dès maintenant.`
+          ? `Les rachats s'ouvrent au tour ${regles.tourMin}.`
           : `Un rachat par tour, conclu au jour 1. Frais de transaction : ${pourCent(regles.fraisDeTransaction)} du prix.`}{" "}
         Le paiement en actions s&apos;ouvre au tour {regles.tourMinTitres}, quand la valeur de vos actions reflète des
         résultats réels. Valeur d&apos;ouverture de votre action : {formatEuroCents(o.valeurParAction)}.
@@ -603,37 +564,10 @@ export function CroissanceExterne({
         <div key={t} className="space-y-1.5">
           <p className="surtitre">{NOMS_DES_TYPES[t]}</p>
           {cibles.map((c) => (
-            <FicheDeCible key={valeurDeCible(c)} c={c} typesDeLignes={typesDeLignes} />
+            <FicheDeCible key={valeurDeCible(c)} c={c} />
           ))}
         </div>
       ))}
-
-      {auditables.length > 0 || auditEnvoye ? (
-        <div>
-          <label className="block">
-            <span className="libelle block font-semibold leading-4 text-slate-300">Auditer un site ce tour</span>
-            <select
-              name="diligence"
-              id={idDuChamp("diligence")}
-              {...attributsDeRefus("diligence", erreurs)}
-              defaultValue={auditEnvoye ? valeurDeCible(auditEnvoye) : ""}
-              className="mt-1 w-full champ px-3 py-2 text-sm text-slate-50"
-            >
-              <option value="">Aucun audit</option>
-              {auditables.map((c) => (
-                <option key={c.id} value={valeurDeCible(c)}>
-                  {c.nom} ({formatEuro(c.site!.coutDeLAudit)})
-                </option>
-              ))}
-            </select>
-          </label>
-          <span className="mt-1 block text-sm text-slate-400">
-            L&apos;audit révèle l&apos;état réel du site au résultat du tour, pour décider en connaissance de cause au
-            suivant.
-          </span>
-          <MessageDeRefus nom="diligence" erreurs={erreurs} />
-        </div>
-      ) : null}
 
       <div>
         <label className="block">
@@ -699,7 +633,7 @@ export function CroissanceExterne({
               </label>
               <label
                 className={`flex items-start gap-2 rounded-xl border border-white/10 px-3 py-2 has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 ${
-                  choisie.type === "site_ferme" || !titresOuverts ? "opacity-60" : ""
+                  !titresOuverts ? "opacity-60" : ""
                 }`}
               >
                 <input
@@ -707,17 +641,15 @@ export function CroissanceExterne({
                   name="rachatPaiement"
                   value="titres"
                   defaultChecked={envoye?.paiement === "titres"}
-                  disabled={choisie.type === "site_ferme" || !titresOuverts}
+                  disabled={!titresOuverts}
                   className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                 />
                 <span className="text-sm text-slate-200">
                   En actions (fusion)
                   <span className="mt-0.5 block text-xs text-slate-400" data-motif-des-titres="">
-                    {choisie.type === "site_ferme"
-                      ? "Un liquidateur ne prend pas d'actions : un site se paie en numéraire."
-                      : !titresOuverts
-                        ? `Fermé avant le tour ${regles.tourMinTitres} : la valeur de vos actions ne reflète pas encore de résultats réels.`
-                        : "Les vendeurs reçoivent des actions nouvelles, à la valeur d'ouverture des vôtres."}
+                    {!titresOuverts
+                      ? `Fermé avant le tour ${regles.tourMinTitres} : la valeur de vos actions ne reflète pas encore de résultats réels.`
+                      : "Les vendeurs reçoivent des actions nouvelles, à la valeur d'ouverture des vôtres."}
                   </span>
                 </span>
               </label>
@@ -789,20 +721,21 @@ export function CroissanceExterne({
             </div>
           ) : null}
 
-          {choisie.type === "site_ferme" ? (
+          {choisie.etranger?.reseau ? (
+            // Le réseau d'une filiale n'écoule que ce qui reste en stock après les ventes de l'équipe.
             <p className="encadre-neutre flex items-start gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-100" data-rappel-du-plan="">
               <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0" />
-              Pensez à relever votre plan de production pour faire tourner la capacité reprise, et à embaucher les
-              opérateurs qu&apos;elle demande.
+              Pensez à relever votre plan de production : le réseau de la filiale n&apos;écoule que ce que votre atelier
+              produit en plus de vos propres ventes.
             </p>
           ) : null}
         </div>
       ) : null}
       <Aide>
         <p className="text-sm leading-relaxed text-slate-400">
-          Un rachat crée de la valeur s&apos;il rapporte plus qu&apos;il ne coûte : prix, frais, remise en état,
-          intérêts de l&apos;emprunt et dilution comprise. Un site reprend des machines, pas des clients : sans plan de
-          production relevé, sa capacité dort et ses charges courent.
+          Un rachat crée de la valeur s&apos;il rapporte plus qu&apos;il ne coûte : prix, frais, intérêts de
+          l&apos;emprunt et dilution comprise. Racheter son fournisseur récupère sa marge sur vos achats ; racheter
+          une entreprise étrangère ouvre son réseau ou son usine, payés en devise.
         </p>
       </Aide>
     </div>

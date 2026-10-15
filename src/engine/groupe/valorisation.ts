@@ -142,8 +142,6 @@ export function initialiserLeGroupe(
     ebe: [],
     discretionnaires: [],
     dividendesParAction: 0,
-    sites: [],
-    diligences: [],
     filiales: [],
     achats: {},
   };
