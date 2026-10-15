@@ -127,15 +127,15 @@ async function ouvrirLaFeuille(p: Page, url: string): Promise<void> {
 }
 
 /**
- * Le tour 1 joué aux valeurs proposées laisse un découvert au-delà de ce que
- * la banque consent : le financement de sauvetage se décide avant tout le
- * reste. Un emprunt ordinaire le couvre.
+ * Si le tour d'avant a laissé un découvert au-delà de ce que la banque
+ * consent, le financement de sauvetage se décide avant tout le reste : un
+ * emprunt ordinaire le couvre. Sinon, rien à emprunter.
  */
 async function emprunter(p: Page): Promise<void> {
   const manque = (await texte(p)).match(/Il manque encore ([\d\s]+) €/);
-  const montant = manque ? Number(manque[1]!.replace(/\s/g, "")) + 5000 : 30000;
+  if (!manque) return;
   await allerA(p, 'input[name="newLoan"]');
-  await p.locator('input[name="newLoan"]').first().fill(String(montant));
+  await p.locator('input[name="newLoan"]').first().fill(String(Number(manque[1]!.replace(/\s/g, "")) + 5000));
 }
 
 /** Un administrateur de la plateforme, sous licence, connecté dans ce contexte. */
@@ -223,7 +223,8 @@ describe("une partie solo de niveau 7", () => {
   it("tour 2 : une commande au sous-traitant ; 51 % de Brightwave, jugé avant l'envoi, et le plan relevé pour son réseau", async () => {
     await ouvrirLaFeuille(page, urlArene);
     await allerA(page, "[data-approvisionnement-du-groupe]");
-    await page.locator('input[name="sousTraitance.nova-go"]').fill("500");
+    // Une commande mesurée : au tour 2, l'atelier remplit déjà le stock d'avant Noël.
+    await page.locator('input[name="sousTraitance.nova-go"]').fill("300");
     expect(await page.locator('[data-cout-de-la-commande="nova-go"]').innerText()).toMatch(/Coût de la commande : .+€/);
     await emprunter(page);
 
@@ -257,7 +258,7 @@ describe("une partie solo de niveau 7", () => {
     await allerA(page, 'input[name="product.nova-one.productionPlan"]');
     const plan = page.locator('input[name="product.nova-one.productionPlan"]').first();
     const avant = Number(await plan.inputValue());
-    await plan.fill(String(avant + 600));
+    await plan.fill(String(avant + 300));
 
     await valider(page, /Valider et simuler/);
     await page.waitForURL(/simule/, { timeout: 180_000 });
@@ -273,6 +274,8 @@ describe("une partie solo de niveau 7", () => {
     expect(await valeur.innerText()).toMatch(/Valeur de l'action[\s\S]*€[\s\S]*Rentabilité totale/i);
     expect(await page.locator("[data-valeur-de-l-action]").first().innerText()).toMatch(/Action .+ € · rentabilité totale/);
     expect(await texte(page)).toMatch(/Brightwave Audio Ltd racheté/);
+    // Un rachat sain : l'emprunt d'acquisition couvre le prix et laisse de quoi tourner.
+    expect(await texte(page)).not.toMatch(/CRISE DE TRÉSORERIE|Crise de trésorerie/);
     await valeur.scrollIntoViewIfNeeded();
     await capture(page, "06-resultat-valeur-ordinateur");
     // Les comptes du tour forment un accordéon : un état ouvert ferme les autres.
@@ -284,7 +287,7 @@ describe("une partie solo de niveau 7", () => {
     const operations = await page.locator("[data-operations-du-groupe]").first().innerText();
     expect(operations).toMatch(/Prix payé pour Brightwave Audio Ltd/);
     expect(operations).toMatch(/Écart d'acquisition/);
-    expect(operations).toMatch(/Sous-traitance : 500 unités livrées/);
+    expect(operations).toMatch(/Sous-traitance : 300 unités livrées/);
     await page.locator("[data-operations-du-groupe]").first().scrollIntoViewIfNeeded();
     await capture(page, "07-rachat-au-resultat-ordinateur");
     await ouvrir("Groupe consolidé");
