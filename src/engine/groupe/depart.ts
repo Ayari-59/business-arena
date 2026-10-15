@@ -58,3 +58,17 @@ export function agrandir(state: CompanyState, facteur: number): CompanyState {
     },
   };
 }
+
+/**
+ * LE FONDS DE ROULEMENT DE DÉPART : un apport des associés, en trésorerie, à
+ * la création. Capitaux propres et disponibilités montent du même montant :
+ * le bilan reste équilibré au centime. Il finance le stock que l'atelier
+ * agrandi constitue avant les pics (voir `ConfigDeGroupe.depart.apport`).
+ */
+export function apporterLeFondsDeRoulement(state: CompanyState, apport: number): CompanyState {
+  if (!(apport > 0)) return state;
+  return {
+    ...state,
+    finance: { ...state.finance, cash: state.finance.cash + apport, equity: state.finance.equity + apport },
+  };
+}

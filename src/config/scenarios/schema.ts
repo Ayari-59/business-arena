@@ -334,7 +334,7 @@ export const engineScenarioConfigSchema = z.object({
    */
   groupe: z
     .object({
-      depart: z.object({ facteur: z.number().positive() }).optional(),
+      depart: z.object({ facteur: z.number().positive(), apport: z.number().nonnegative().optional() }).optional(),
       valorisation: z.object({
         multipleEBE: z.number().positive(),
         actionsInitiales: z.number().positive(),

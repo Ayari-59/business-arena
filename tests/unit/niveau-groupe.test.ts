@@ -146,7 +146,11 @@ describe("le bloc de groupe du snapshot", () => {
       expect(out.results[id]!.production.machineCapacity).toBeCloseTo(e.machineCapacity * f, 6);
       expect(Math.abs(balanceGap(out.results[id]!.balanceSheet))).toBeLessThan(0.01);
     }
-    expect(out.companies[0]!.groupe!.valeurInitialeParAction).toBeCloseTo((e.finance.equity * f) / sept.groupe!.valorisation.actionsInitiales, 6);
+    // Les capitaux propres de départ : ceux de l'entreprise agrandie, plus le fonds de roulement apporté.
+    expect(out.companies[0]!.groupe!.valeurInitialeParAction).toBeCloseTo(
+      (e.finance.equity * f + (sept.groupe!.depart!.apport ?? 0)) / sept.groupe!.valorisation.actionsInitiales,
+      6,
+    );
   });
 
   it("survit au chargement du snapshot à la clôture", () => {

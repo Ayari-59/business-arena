@@ -21,6 +21,16 @@ import type { ConfigDeGroupe } from "@/engine/groupe/types";
  * phase B4) : le plus petit qui garde des lignes entières et approche la
  * demande moyenne sans hâter la faillite des concurrents simulés.
  *
+ * LE FONDS DE ROULEMENT DE DÉPART (`depart.apport`). L'atelier agrandi produit
+ * deux fois plus, mais la demande d'avant les pics n'a pas bougé : il stocke
+ * au premier tour, et paie ce stock comptant. Sa trésorerie de départ, simple
+ * double de celle du scénario, ne le finançait pas : une équipe qui validait
+ * les décisions proposées entrait en crise au premier tour et en défaillance
+ * au deuxième, et la gestion neutre aussi. L'apport des associés à la
+ * création finance ce cycle ; montant choisi au banc (conception, phase D) :
+ * le plus petit, par pas de 25 000 €, qui fait traverser les six tours sans
+ * crise à l'équipe qui valide la proposition, sur douze graines.
+ *
  * Le barème du sous-traitant monte vite au-delà de la première tranche : à
  * des tranches plus douces, sous-traiter au-delà de la demande gagnait dans
  * tous les contextes du banc.
@@ -35,7 +45,7 @@ import type { ConfigDeGroupe } from "@/engine/groupe/types";
  * recouvrable.
  */
 export const GROUPE_NOVA: ConfigDeGroupe = {
-  depart: { facteur: 2 },
+  depart: { facteur: 2, apport: 150_000 },
   valorisation: { multipleEBE: 5, actionsInitiales: 10_000 },
   rachat: {
     primeDeControle: 0.25,

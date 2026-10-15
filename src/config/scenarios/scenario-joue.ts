@@ -120,7 +120,10 @@ function avecLeGroupe(
   return {
     ...agrandirLeScenario(scenario, f),
     groupe: {
-      ...(cfg.depart ? { depart: { ...cfg.depart } } : {}),
+      // Le fonds de roulement de départ suit la durée du tour, comme le stock qu'il finance.
+      ...(cfg.depart
+        ? { depart: { ...cfg.depart, ...(cfg.depart.apport !== undefined ? { apport: cfg.depart.apport * k } : {}) } }
+        : {}),
       valorisation: { ...cfg.valorisation },
       ...(leviers.croissanceExterne && cfg.rachat ? { rachat: { ...cfg.rachat } } : {}),
       ...(leviers.croissanceExterne && cfg.fournisseurs

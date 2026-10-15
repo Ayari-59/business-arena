@@ -170,7 +170,17 @@ export interface ConfigDeGroupe {
    * du scénario qui suit la taille (charges fixes, effectif inclus et
    * plafond, entretien et qualité de référence, découvert) aussi. Absent : 1.
    */
-  depart?: { facteur: number };
+  depart?: {
+    facteur: number;
+    /**
+     * LE FONDS DE ROULEMENT DE DÉPART, en euros au trimestre : un apport des
+     * associés en trésorerie, à la création. L'entreprise agrandie produit
+     * deux fois plus pour une demande qui, hors saison, n'a pas bougé : elle
+     * constitue du stock avant les pics et doit le financer. Sans lui, son
+     * premier tour la mettait en crise de trésorerie. Absent : aucun apport.
+     */
+    apport?: number;
+  };
   valorisation: {
     /** Valeur d'entreprise = multiple × EBE des douze derniers mois. */
     multipleEBE: number;

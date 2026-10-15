@@ -1,6 +1,6 @@
 import type { CompanyRoundResult, CompanyState, ProductCode, RoundDecisions, SimulationInput, SimulationOutput } from "../types";
 import { consolider } from "./consolidation";
-import { agrandir } from "./depart";
+import { agrandir, apporterLeFondsDeRoulement } from "./depart";
 import { laCibleEtrangere, trajectoireDeLEtranger } from "./etranger";
 import { toGamme } from "../gamme";
 import { PROFILS_QUI_PARTENT, commandesAuFournisseur, leFournisseur, quitterLeFournisseur } from "./fournisseur";
@@ -31,7 +31,7 @@ export {
 } from "./rachat";
 export { chargesDesSites, cleDuSite, etatDuSite, siteAcquis, valeurRecouvrable } from "./site-ferme";
 export { fluxPropre } from "./flux-propre";
-export { agrandir } from "./depart";
+export { agrandir, apporterLeFondsDeRoulement } from "./depart";
 export { coursDeLImport, prixDeLImport, probabiliteDeRupture, ruptureDeLImport } from "./import";
 export { comptesDeLEtranger, coursMoyen, trajectoireDeLEtranger, ventesLocales } from "./etranger";
 export { laSociete, prixDeLaSociete, valeurDeLaSociete, type Societe } from "./societe";
@@ -321,13 +321,13 @@ function rationner(
 }
 
 /**
- * La première ouverture d'une entreprise au niveau 7 : sa taille de départ,
+ * La première ouverture d'une entreprise au niveau 7 : sa taille de départ et son fonds de roulement,
  * puis son état de groupe. Les services l'appliquent dès la création, pour
  * que l'état du tour 0 la montre ; le moteur, à une entreprise qui ne porte
  * pas encore d'état de groupe. Jamais deux fois : l'état de groupe le marque.
  */
 export function premiereOuverture(c: CompanyState, cfg: NonNullable<SimulationInput["scenario"]["groupe"]>, roundDays: number): CompanyState {
-  const grande = agrandir(c, cfg.depart?.facteur ?? 1);
+  const grande = apporterLeFondsDeRoulement(agrandir(c, cfg.depart?.facteur ?? 1), cfg.depart?.apport ?? 0);
   return { ...grande, groupe: initialiserLeGroupe(grande, cfg, roundDays) };
 }
 
