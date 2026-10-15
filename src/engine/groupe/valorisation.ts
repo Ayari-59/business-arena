@@ -1,5 +1,5 @@
 import type { BalanceSheet, CompanyState } from "../types";
-import type { ConfigDeGroupe, EtatDeGroupe, ValeurDeLEntreprise } from "./types";
+import type { ConfigDeGroupe, EmissionDuTour, EtatDeGroupe, ValeurDeLEntreprise } from "./types";
 
 /**
  * LA VALEUR DE L'ENTREPRISE, À CHAQUE TOUR (niveau 7).
@@ -10,7 +10,7 @@ import type { ConfigDeGroupe, EtatDeGroupe, ValeurDeLEntreprise } from "./types"
  *   valeur d'entreprise          VE = max(VR, AE)
  *   dette nette                  DN = dettes financières + découvert − disponibilités − placements
  *   valeur des capitaux propres  VCP = max(0, VE − DN)
- *   valeur par action            V = (VCP − apports en numéraire) / actions
+ *   valeur par action            V = VCP / actions
  *   rentabilité totale           RTA = (V + dividendes reçus par action) / V₀ − 1
  *
  * k est le nombre de tours dans l'année (4 au trimestre), w la fenêtre, quatre
@@ -78,23 +78,50 @@ export function valoriser(args: {
   const ve = Math.max(rendement, ae);
   const dn = args.detteEnPlus ? detteNette(b) + args.detteEnPlus : detteNette(b);
   const vcp = Math.max(0, ve - dn);
-  // Les apports en numéraire se convertissent à la valeur de fin de partie :
-  // leurs souscripteurs détiennent ce qu'ils ont apporté, le reste revient aux actions.
-  const apports = g.apports ?? 0;
-  const v = g.actions > 0 ? Math.max(0, vcp - apports) / g.actions : 0;
+  const v = g.actions > 0 ? vcp / g.actions : 0;
   return {
     ebeDouzeMois: ebe,
     valeurDeRendement: rendement,
     valeurEntreprise: ve,
     detteNette: dn,
     valeurCapitauxPropres: vcp,
-    apports,
     actions: g.actions,
     valeurParAction: v,
     rentabiliteTotale: (v + g.dividendesParAction) / g.valeurInitialeParAction - 1,
     dividendesParAction: g.dividendesParAction,
     actifEconomique: ae,
   };
+}
+
+/**
+ * L'ÉMISSION D'ACTIONS DU TOUR. Les apports en numéraire du tour (augmentation
+ * de capital des associés, investisseurs entrants d'un rachat) deviennent des
+ * actions à la valeur de clôture du tour HORS apport :
+ *
+ *   prix   p = (VCP de clôture − apports) / actions d'avant
+ *   émises n = apport des associés / p + apport des investisseurs / (p × (1 − décote))
+ *
+ * Une levée qui dort en caisse est neutre : VCP − C est la valeur qu'aurait
+ * l'entreprise sans elle, et VCP / (N + n) la redonne aux actions d'origine.
+ * Une levée employée fait entrer ses souscripteurs dans la valeur créée ensuite :
+ * les fonds propres ne sont plus gratuits face aux intérêts d'un emprunt.
+ * Plancher du prix : un centième de la valeur initiale par action, pour qu'une
+ * entreprise sans valeur émette beaucoup d'actions, pas une infinité.
+ */
+export function emettre(args: {
+  groupe: Pick<EtatDeGroupe, "actions" | "valeurInitialeParAction">;
+  valeurCapitauxPropres: number;
+  apportDesAssocies: number;
+  apportDesInvestisseurs: number;
+  decote: number;
+}): EmissionDuTour | null {
+  const apport = args.apportDesAssocies + args.apportDesInvestisseurs;
+  if (apport <= 0 || args.groupe.actions <= 0) return null;
+  const plancher = args.groupe.valeurInitialeParAction / 100;
+  const prix = Math.max(plancher, (args.valeurCapitauxPropres - apport) / args.groupe.actions);
+  const actionsEmises =
+    args.apportDesAssocies / prix + args.apportDesInvestisseurs / (prix * (1 - args.decote));
+  return { apport, prixParAction: prix, actionsEmises };
 }
 
 /**

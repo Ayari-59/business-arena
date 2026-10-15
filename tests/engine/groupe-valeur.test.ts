@@ -5,6 +5,7 @@ import { soldUnits } from "@/engine/simulation/runGame";
 import { balanceGap } from "@/engine/finance/statements";
 import {
   ebeDouzeMois,
+  emettre,
   initialiserLeGroupe,
   valoriser,
   detteNette,
@@ -121,7 +122,7 @@ describe("la valeur de départ est la valeur comptable", () => {
 });
 
 describe("actions, dilution et dividendes", () => {
-  it("une augmentation de capital est un apport, converti à la valeur de fin de partie ; un dividende se compte par action", () => {
+  it("une augmentation de capital émet des actions à la valeur de clôture du tour hors apport ; un dividende se compte par action", () => {
     const tours = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
       if (id !== "e0") return;
       if (tour === 2) d.finance = { ...(d.finance ?? {}), capitalIncrease: 50000 };
@@ -129,10 +130,14 @@ describe("actions, dilution et dividendes", () => {
     });
     const g1 = tours[0]!.companies.find((c) => c.id === "e0")!.groupe!;
     const g2 = tours[1]!.companies.find((c) => c.id === "e0")!.groupe!;
-    expect(g2.actions).toBe(g1.actions);
-    expect(g2.apports).toBeCloseTo(50000, 6);
     const v2 = tours[1]!.results.e0!.groupe!.valeur!;
-    expect(v2.valeurParAction).toBeCloseTo(Math.max(0, v2.valeurCapitauxPropres - 50000) / v2.actions, 9);
+    const prix = (v2.valeurCapitauxPropres - 50000) / g1.actions;
+    expect(v2.emission!.apport).toBeCloseTo(50000, 6);
+    expect(v2.emission!.prixParAction).toBeCloseTo(prix, 6);
+    expect(g2.actions).toBeCloseTo(g1.actions + 50000 / prix, 6);
+    expect(v2.actions).toBeCloseTo(g2.actions, 9);
+    // au tour même, la levée ne change pas la valeur d'une action d'origine
+    expect(v2.valeurParAction).toBeCloseTo(prix, 6);
     const g3 = tours[2]!.companies.find((c) => c.id === "e0")!.groupe!;
     const g4 = tours[3]!.companies.find((c) => c.id === "e0")!.groupe!;
     const verse = -tours[3]!.results.e0!.cashFlow.items.filter((i) => i.label === "dividendes_verses").reduce((s, i) => s + i.amount, 0);
@@ -169,14 +174,51 @@ describe("actions, dilution et dividendes", () => {
   });
 });
 
+describe("l'émission au prix de clôture hors apport", () => {
+  const g = { actions: 10000, valeurInitialeParAction: 20 };
+  it("une levée oisive laisse la valeur par action intacte", () => {
+    // 200 000 de capitaux propres sans la levée, 50 000 apportés qui dorment en caisse
+    const e = emettre({ groupe: g, valeurCapitauxPropres: 250000, apportDesAssocies: 50000, apportDesInvestisseurs: 0, decote: 0.1 })!;
+    expect(e.prixParAction).toBeCloseTo(20, 9);
+    expect(250000 / (g.actions + e.actionsEmises)).toBeCloseTo(20, 9);
+  });
+  it("une levée employée partage la valeur créée avec ses souscripteurs", () => {
+    const e = emettre({ groupe: g, valeurCapitauxPropres: 250000, apportDesAssocies: 50000, apportDesInvestisseurs: 0, decote: 0 })!;
+    // l'argent employé crée 30 000 de valeur ensuite : les nouveaux en ont leur part
+    const part = e.actionsEmises / (g.actions + e.actionsEmises);
+    const apres = 280000 / (g.actions + e.actionsEmises);
+    expect(part).toBeCloseTo(0.2, 9);
+    expect(apres * g.actions - 200000).toBeCloseTo(30000 * (1 - part), 6);
+  });
+  it("les investisseurs d'un rachat souscrivent avec la décote ; une entreprise sans valeur émet au plancher", () => {
+    const e = emettre({ groupe: g, valeurCapitauxPropres: 250000, apportDesAssocies: 0, apportDesInvestisseurs: 45000, decote: 0.1 })!;
+    expect(e.prixParAction).toBeCloseTo(20.5, 9);
+    expect(e.actionsEmises).toBeCloseTo(45000 / (20.5 * 0.9), 9);
+    const z = emettre({ groupe: g, valeurCapitauxPropres: 10000, apportDesAssocies: 50000, apportDesInvestisseurs: 0, decote: 0 })!;
+    expect(z.prixParAction).toBeCloseTo(0.2, 9);
+    expect(emettre({ groupe: g, valeurCapitauxPropres: 1, apportDesAssocies: 0, apportDesInvestisseurs: 0, decote: 0 })).toBeNull();
+  });
+});
+
 describe("ni la levée oisive ni la cession de dernier tour ne font de valeur", () => {
   const ref = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions).at(-1)!.results.e0!.groupe!.valeur!;
-  it("une augmentation de capital dont l'argent dort en caisse est neutre pour la rentabilité par action", () => {
-    const avec = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
+  it("une augmentation de capital dont l'argent dort en caisse est neutre au prix du tour ; ensuite, ses souscripteurs ne prennent que leur part de l'écart de valeur", () => {
+    const refTours = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions);
+    const tours = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
       if (id === "e0" && tour === 2) d.finance = { ...(d.finance ?? {}), capitalIncrease: 100000 };
-    }).at(-1)!.results.e0!.groupe!.valeur!;
-    expect(avec.apports).toBeCloseTo(100000, 6);
-    expect(Math.abs(avec.rentabiliteTotale - ref.rentabiliteTotale)).toBeLessThan(0.005);
+    });
+    const vRef2 = refTours[1]!.results.e0!.groupe!.valeur!;
+    const v2 = tours[1]!.results.e0!.groupe!.valeur!;
+    // au tour de la levée, l'action d'origine vaut ce qu'elle vaudrait sans elle
+    expect(v2.valeurParAction / vRef2.valeurParAction - 1).toBeLessThan(0.005);
+    expect(v2.valeurParAction / vRef2.valeurParAction - 1).toBeGreaterThan(-0.005);
+    // à la fin, l'argent dormant est toujours là : les nouveaux ont leur apport
+    // au prix d'émission, plus leur part de ce que l'entreprise a gagné ou perdu depuis
+    const avec = tours.at(-1)!.results.e0!.groupe!.valeur!;
+    const N = refTours[1]!.companies.find((c) => c.id === "e0")!.groupe!.actions;
+    const n = avec.actions - N;
+    const attendu = (N * ref.valeurParAction + n * v2.emission!.prixParAction) / (N + n);
+    expect(Math.abs(avec.valeurParAction / attendu - 1)).toBeLessThan(0.005);
   });
   it("vendre des machines au dernier tour ne relève pas la valeur", () => {
     const avec = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {

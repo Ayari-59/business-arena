@@ -128,9 +128,12 @@ describe("le rachat d'un concurrent, au jour 1", () => {
     expect((apres.fleet ?? []).length).toBe((A.fleet ?? []).length + (T.fleet ?? []).length);
     expect(r.production.machineCapacity).toBeGreaterThan(A.machineCapacity * A.availability);
     expect(apres.groupe!.rachats).toHaveLength(1);
-    // Les investisseurs entrants détiennent leur apport majoré de la décote, converti en fin de partie.
-    expect(apres.groupe!.actions).toBe(A.groupe!.actions);
-    expect(apres.groupe!.apports).toBeCloseTo((prixDeCession(T, monde).prix / 2) / (1 - monde.groupe!.rachat!.decoteDEmission), 6);
+    // Les investisseurs entrants reçoivent leurs actions à la clôture, au prix hors apport, avec la décote.
+    const em = r.groupe!.valeur!.emission!;
+    const C = prixDeCession(T, monde).prix / 2;
+    expect(em.apport).toBeCloseTo(C, 6);
+    expect(em.prixParAction).toBeCloseTo((r.groupe!.valeur!.valeurCapitauxPropres - C) / A.groupe!.actions, 6);
+    expect(apres.groupe!.actions).toBeCloseTo(A.groupe!.actions + C / (em.prixParAction * (1 - monde.groupe!.rachat!.decoteDEmission)), 6);
     expect((apres.loans ?? []).length).toBeGreaterThanOrEqual((A.loans ?? []).length + (T.loans ?? []).length);
   });
 

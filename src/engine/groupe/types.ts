@@ -87,15 +87,6 @@ export interface EtatDeGroupe {
   /** Charges discrétionnaires par tour (marketing, qualité, entretien, RSE, R&D). */
   discretionnaires: number[];
   dividendesParAction: number;
-  /**
-   * Les apports en numéraire faits pendant la partie (augmentation de capital
-   * des associés, investisseurs entrants majorés de leur décote). Ils sont
-   * convertis en actions à la valeur de FIN de partie : leurs souscripteurs
-   * détiennent exactement ce qu'ils ont apporté, et une levée dont l'argent
-   * dort en caisse ne change pas la rentabilité des actions d'origine.
-   * Absent : aucun apport.
-   */
-  apports?: number;
   rachats: RachatConclu[];
 }
 
@@ -110,6 +101,18 @@ export interface DecisionDeRachat {
   augmentationDeCapital?: number;
 }
 
+/**
+ * L'émission d'actions d'un tour (augmentation de capital des associés,
+ * investisseurs entrants d'un rachat). Le prix est la valeur de clôture du tour
+ * HORS apport : (valeur des capitaux propres − apports) / actions d'avant.
+ */
+export interface EmissionDuTour {
+  /** Apports reçus dans le tour (associés et investisseurs). */
+  apport: number;
+  prixParAction: number;
+  actionsEmises: number;
+}
+
 /** La valeur de l'entreprise à la clôture d'un tour. */
 export interface ValeurDeLEntreprise {
   ebeDouzeMois: number;
@@ -119,11 +122,12 @@ export interface ValeurDeLEntreprise {
   valeurEntreprise: number;
   detteNette: number;
   valeurCapitauxPropres: number;
-  /** Ce qui revient aux souscripteurs des apports en numéraire (leur apport). */
-  apports: number;
+  /** Actions après l'émission du tour, s'il y en a une. */
   actions: number;
+  /** Valeur des capitaux propres / actions. */
   valeurParAction: number;
-  /** Valeur par action : (capitaux propres − apports) / actions. */
+  /** L'émission du tour : apports en numéraire, prix par action, actions créées. */
+  emission?: EmissionDuTour;
   /** Rentabilité totale par action depuis le départ : (valeur + dividendes reçus) / valeur initiale − 1. */
   rentabiliteTotale: number;
   dividendesParAction: number;

@@ -7,7 +7,7 @@ import type {
 } from "../types";
 import { toGamme } from "../gamme";
 import { executerLesRachats } from "./rachat";
-import { economieDeFinDePartie, initialiserLeGroupe, valoriser } from "./valorisation";
+import { economieDeFinDePartie, emettre, initialiserLeGroupe, valoriser } from "./valorisation";
 import type { ValeurDeLEntreprise } from "./types";
 
 export * from "./types";
@@ -17,6 +17,7 @@ export {
   actifEconomique,
   detteNette,
   ebeDouzeMois,
+  emettre,
   initialiserLeGroupe,
   parametresDuTest,
   tailleDeLaFenetre,
@@ -146,17 +147,13 @@ export function simulerLeGroupe(
       if (!c.groupe) continue;
       const r = results[c.id]!;
       const g = c.groupe;
-      // L'augmentation de capital ordinaire : un apport, converti à la valeur de fin de partie.
-      const apport = flux(r, "augmentation_capital");
       const actions = g.actions;
       const dividendes = -flux(r, "dividendes_verses");
       const dernier = roundIndex >= scenario.roundsCount;
       const ebe = r.incomeStatement.ebitda;
       const disc = DISCRETIONNAIRES(r);
-      const groupe = {
+      const historique = {
         ...g,
-        actions,
-        ...(apport > 0 || g.apports !== undefined ? { apports: (g.apports ?? 0) + apport } : {}),
         dividendesParAction: g.dividendesParAction + (dividendes > 0 && actions > 0 ? dividendes / actions : 0),
         ebe: [...g.ebe, ebe],
         discretionnaires: [...g.discretionnaires, disc],
@@ -170,14 +167,33 @@ export function simulerLeGroupe(
         ? (r.investment?.saleProceeds ?? 0) +
           scenario.finance.taxRate * Math.min(moinsValue, Math.max(0, r.incomeStatement.pretaxIncome + moinsValue))
         : 0;
-      const pourLaValeur = economie > 0 ? { ...groupe, ebe: [...g.ebe, ebe - economie] } : groupe;
-      const valeur = valoriser({
+      const pourLaValeur = economie > 0 ? { ...historique, ebe: [...g.ebe, ebe - economie] } : historique;
+      const avant = valoriser({
         groupe: pourLaValeur,
         finance: r.balanceSheet,
         roundDays: scenario.roundDays,
         multiple,
         ...(economie + cession > 0 ? { detteEnPlus: economie + cession } : {}),
       });
+      // Les apports du tour deviennent des actions, au prix de clôture hors apport.
+      const emission = emettre({
+        groupe: g,
+        valeurCapitauxPropres: avant.valeurCapitauxPropres,
+        apportDesAssocies: flux(r, "augmentation_capital"),
+        apportDesInvestisseurs: flux(r, "augmentation_capital_investisseurs"),
+        decote: cfg.rachat?.decoteDEmission ?? 0,
+      });
+      const groupe = emission ? { ...historique, actions: actions + emission.actionsEmises } : historique;
+      const valeur = emission
+        ? {
+            ...avant,
+            actions: groupe.actions,
+            valeurParAction: avant.valeurCapitauxPropres / groupe.actions,
+            rentabiliteTotale:
+              (avant.valeurCapitauxPropres / groupe.actions + groupe.dividendesParAction) / g.valeurInitialeParAction - 1,
+            emission,
+          }
+        : avant;
       suivants.set(c.id, { ...c, groupe });
       results[c.id] = {
         ...r,

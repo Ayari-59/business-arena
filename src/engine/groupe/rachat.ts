@@ -71,8 +71,6 @@ function fusionner(args: {
   augmentation: number;
   titres: number;
   actionsEmises: number;
-  /** Créance des investisseurs entrants (apport majoré de la décote). */
-  apport: number;
   paiement: "numeraire" | "titres";
 }): CompanyState {
   const { A, T, scenario } = args;
@@ -200,7 +198,6 @@ function fusionner(args: {
     groupe: {
       ...gA,
       actions: gA.actions + args.actionsEmises,
-      ...(args.apport > 0 || gA.apports !== undefined ? { apports: (gA.apports ?? 0) + args.apport } : {}),
       ebe: proForma(gA.ebe, gT.ebe),
       discretionnaires: proForma(gA.discretionnaires, gT.discretionnaires),
       rachats: [
@@ -278,7 +275,11 @@ interface Offre {
   numeraire: number;
   /** Actions remises aux actionnaires de la cible (paiement en titres). */
   actionsEmises: number;
-  /** Ce que les investisseurs entrants détiendront : leur apport, majoré de la décote. */
+  /**
+   * Ce que les investisseurs entrants détiendraient à la valeur d'ouverture
+   * (leur apport majoré de la décote) : l'estimation qui juge le contrôle. Leurs
+   * actions sont émises à la clôture du tour, au prix hors apport.
+   */
   apport: number;
   vA: number;
 }
@@ -357,7 +358,7 @@ export function executerLesRachats(args: {
     const apport = augmentation > 0 ? augmentation / (1 - cfg.decoteDEmission) : 0;
     const g = A.groupe;
     const actionsInitiales = scenario.groupe!.valorisation.actionsInitiales;
-    const equivalent = actionsEmises + ((g.apports ?? 0) + apport) / vA;
+    const equivalent = actionsEmises + apport / vA;
     if (actionsInitiales / (g.actions + equivalent) < cfg.seuilDeControle - 1e-9) {
       refuse(idA, d.cible, "Vous émettriez tant d'actions que vous perdriez le contrôle de l'entreprise.");
       continue;
@@ -416,7 +417,7 @@ export function executerLesRachats(args: {
   // 3. Les rachats gagnants, dans l'ordre des acquéreurs.
   const prises = new Set<string>();
   for (const o of gagnantes.sort((a, b) => a.idA.localeCompare(b.idA))) {
-    const { A, T, valeurs, paiement, titres, emprunt, augmentation, numeraire, actionsEmises, apport, vA } = o;
+    const { A, T, valeurs, paiement, titres, emprunt, augmentation, numeraire, actionsEmises, vA } = o;
     const restants = args.companies.filter(
       (c) => c.id !== A.id && c.id !== T.id && actif(c) && !prises.has(c.id),
     );
@@ -428,7 +429,7 @@ export function executerLesRachats(args: {
     const ecart = prix - T.finance.equity;
     parId.set(
       A.id,
-      fusionner({ A, T, scenario, roundIndex, prix, ecart, emprunt, augmentation, titres, actionsEmises, apport, paiement }),
+      fusionner({ A, T, scenario, roundIndex, prix, ecart, emprunt, augmentation, titres, actionsEmises, paiement }),
     );
     parId.set(T.id, absorbee(T, A.id, roundIndex));
     prises.add(T.id);
