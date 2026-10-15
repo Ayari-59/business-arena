@@ -99,8 +99,8 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
  * croissance externe ou l'externalisation, et seulement pour un scénario qui
  * en porte un (`config/groupe`). La demande est celle du scénario, saisons,
  * pics et grand compte compris : s'y préparer fait partie du jeu. Les
- * tranches et le plafond du sous-traitant, écrits au trimestre, suivent la
- * périodicité.
+ * tranches et le plafond du sous-traitant, les charges d'un site et son délai
+ * de remise en route, écrits au trimestre, suivent la périodicité.
  */
 function avecLeGroupe(
   scenario: EngineScenarioConfig,
@@ -115,6 +115,15 @@ function avecLeGroupe(
     groupe: {
       valorisation: { ...cfg.valorisation },
       ...(leviers.croissanceExterne && cfg.rachat ? { rachat: { ...cfg.rachat } } : {}),
+      ...(leviers.croissanceExterne && cfg.sites
+        ? {
+            sites: cfg.sites.map((site) => ({
+              ...site,
+              chargesParTour: site.chargesParTour * k,
+              delai: Math.max(1, Math.round(site.delai / k)),
+            })),
+          }
+        : {}),
       ...(leviers.externalisation && cfg.sousTraitance
         ? {
             sousTraitance: Object.fromEntries(

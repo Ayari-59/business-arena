@@ -70,9 +70,9 @@ const CASH_LABELS: Record<string, string> = {
   remboursement_emprunt: "Remboursement d'emprunt",
   // Niveau 7 « Groupe »
   achats_sous_traitance: "Achats de sous-traitance",
-  frais_de_rachat: "Frais et coût d'intégration du rachat",
+  frais_de_rachat: "Frais de rachat, audit et mise aux normes",
   rachat_prix_paye: "Rachat : prix payé",
-  rachat_tresorerie_acquise: "Rachat : trésorerie de la société reprise",
+  remise_en_etat_du_site: "Rachat : remise en état du site",
   emprunt_d_acquisition: "Emprunt d'acquisition",
   augmentation_capital_investisseurs: "Augmentation de capital (investisseurs)",
 };

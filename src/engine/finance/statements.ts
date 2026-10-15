@@ -103,23 +103,16 @@ export interface FinanceInput {
    * tableau de flux, parce qu'elle ne raconte pas la même histoire. Absente = 0.
    */
   rescueSubsidy?: number;
-  /** Niveau 7 : frais de transaction et coût d'intégration d'un rachat, charge décaissée du tour. */
+  /** Niveau 7 : frais de rachat, audit, passif environnemental d'un site : charge décaissée du tour. */
   chargesDeRachat?: number;
   /**
    * Niveau 7 : les mouvements de trésorerie d'un rachat fait au jour 1 (prix
-   * payé, trésorerie acquise, emprunt d'acquisition, apport des investisseurs).
-   * Le bilan d'ouverture reçu est DÉJÀ le bilan consolidé d'après rachat : ces
+   * payé, remise en état, emprunt d'acquisition, apport des investisseurs).
+   * Le bilan d'ouverture reçu est DÉJÀ celui d'après rachat : ces
    * lignes ouvrent le tableau de flux, et sa trésorerie d'ouverture reste celle
    * de la clôture précédente.
    */
   operationsDOuverture?: CashFlowItem[];
-  /**
-   * Niveau 7 : le test de dépréciation de l'écart d'acquisition. Valeur
-   * recouvrable = valeurHorsTour + coefficient × EBE du tour ; dépréciation =
-   * min(écart, max(0, actif économique de clôture − valeur recouvrable)),
-   * non déductible, après l'impôt.
-   */
-  testDeValeur?: { valeurHorsTour: number; coefficient: number };
   /**
    * Gestion de trésorerie (optionnel) : mobilisation de créances demandée et
    * paramètres du scénario. Au-delà du plafond de découvert, un affacturage
@@ -160,8 +153,6 @@ export interface FinanceOutput {
     matured: number;
     placementIncome: number;
   };
-  /** Niveau 7 : le test de dépréciation de l'écart d'acquisition, quand il a été fait. */
-  testDeValeur?: { actifEconomique: number; valeurRecouvrable: number; depreciation: number };
 }
 
 export function computeFinance(input: FinanceInput): FinanceOutput {
@@ -259,34 +250,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const taxableIncome = Math.max(0, pretaxIncome - openingLossCarryforward);
     const closingLossCarryforward = Math.max(0, openingLossCarryforward - pretaxIncome);
     const tax = input.taxRate * taxableIncome;
-    // Niveau 7 : le test de dépréciation de l'écart d'acquisition. L'actif
-    // économique de clôture ne dépend pas du résultat : il se calcule ici.
-    const ecartOuverture = o.goodwill ?? 0;
-    const test = (() => {
-      if (!input.testDeValeur || ecartOuverture <= 0) return null;
-      const actifEconomique =
-        o.fixedAssetsNet -
-        depreciation +
-        input.investmentOutlay -
-        disposalLoss +
-        ecartOuverture +
-        o.inventoryValue +
-        input.inventoryChange +
-        (receivablesGross - (discounted + factored + forcedFactored)) -
-        input.purchases * (1 + vat) * input.payableRatio -
-        vat * (input.revenue - input.purchases);
-      const valeurRecouvrable = Math.max(
-        0,
-        input.testDeValeur.valeurHorsTour + input.testDeValeur.coefficient * ebitda,
-      );
-      return {
-        actifEconomique,
-        valeurRecouvrable,
-        depreciation: Math.min(ecartOuverture, Math.max(0, actifEconomique - valeurRecouvrable)),
-      };
-    })();
-    const depreciationEcart = test?.depreciation ?? 0;
-    const netIncome = depreciationEcart > 0 ? pretaxIncome - tax - depreciationEcart : pretaxIncome - tax;
+    const netIncome = pretaxIncome - tax;
 
     const incomeStatement: IncomeStatement = {
       revenue: input.revenue,
@@ -313,7 +277,6 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       pretaxIncome,
       ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
       tax,
-      ...(depreciationEcart > 0 ? { depreciationEcartDAcquisition: depreciationEcart } : {}),
       netIncome,
       ...(sousTraitance > 0 ? { sousTraitance } : {}),
     };
@@ -388,7 +351,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       overdraft: Math.max(0, -closingNet),
       vatLiability: vatDue,
       // Niveau 7 : l'écart d'acquisition, reporté tel quel.
-      ...(o.goodwill !== undefined ? { goodwill: o.goodwill - depreciationEcart } : {}),
+      ...(o.goodwill !== undefined ? { goodwill: o.goodwill } : {}),
     };
 
     return {
@@ -402,7 +365,6 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
             closing: closingNet,
           }
         : { opening: openingNet, items, closing: closingNet },
-      test,
       receivablesEnd,
       closingNet,
       forcedCost,
@@ -425,7 +387,6 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     incomeStatement: pass.incomeStatement,
     closing: pass.closing,
     taxLossCarryforward: pass.taxLossCarryforward,
-    ...(pass.test ? { testDeValeur: pass.test } : {}),
     cashFlow: pass.cashFlow,
     treasury: {
       discounted,

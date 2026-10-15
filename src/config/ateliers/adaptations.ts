@@ -45,7 +45,7 @@ export const MOTS_DES_LEVIERS: Readonly<Record<keyof LeviersDuNiveau, RegExp>> =
   dividend: /dividende|affectation du résultat/i,
   rd: /recherche et développement|\bR&D\b|prototype|à (bâtir|développer)/i,
   // Niveau 7, à côté du parcours : aucun atelier ne s'y joue, les mots servent à la garde.
-  croissanceExterne: /rachat d'un concurrent|racheter un concurrent|croissance externe|\bfusion\b/i,
+  croissanceExterne: /rachat d'un concurrent|racheter un concurrent|rachat d'un site|croissance externe|\bfusion\b/i,
   externalisation: /sous-trait|externalis/i,
 };
 

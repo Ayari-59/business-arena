@@ -11,6 +11,7 @@
  */
 
 import type {
+  CibleDeRachat,
   ConfigDeGroupe,
   DecisionDeRachat,
   EtatDeGroupe,
@@ -869,6 +870,11 @@ export interface EquipmentItem {
   acquiredRound: number;
   /** Valeur nette comptable totale restante (pour l'amortissement). */
   bookValue: number;
+  /**
+   * Niveau 7 : la base amortissable d'un lot qui n'a pas été payé au prix du
+   * neuf (les lignes d'un site racheté). Absente : nombre × prix du neuf.
+   */
+  coutDOrigine?: number;
 }
 
 export interface ScoringConfig {
@@ -1269,10 +1275,8 @@ export interface CompanyState {
    * plus) SAUF l'augmentation de capital : une recapitalisation qui la ramène
    * sous le plafond la fait repasser `active`. Absent = active (rétro-compat).
    */
-  status?: "active" | "defaillant" | "absorbee";
-  /** Niveau 7 : absorbée par une autre entreprise de la partie, à ce tour. Elle ne joue plus. */
-  absorption?: { par: CompanyId; tour: number };
-  /** Niveau 7 : actions, historique d'EBE, rachats. Absent hors niveau 7. */
+  status?: "active" | "defaillant";
+  /** Niveau 7 : actions, historique d'EBE, sites rachetés. Absent hors niveau 7. */
   groupe?: EtatDeGroupe;
   /** Tours de crise consécutifs, pour le seuil de défaillance. Absent = 0. */
   crisisStreak?: number;
@@ -1469,8 +1473,10 @@ export interface RoundDecisions {
    * de la décision qui l'a lancé.
    */
   stoppedModuleItems?: { module: string; id: string }[];
-  /** Niveau 7 : racheter un concurrent simulé, au jour 1 du tour. Action ponctuelle. */
+  /** Niveau 7 : racheter une cible, au jour 1 du tour. Action ponctuelle. */
   rachat?: DecisionDeRachat;
+  /** Niveau 7 : auditer une cible ce tour, pour décider en connaissance de cause au suivant. Action ponctuelle. */
+  diligence?: CibleDeRachat;
   /** Niveau 7 : produits finis commandés au sous-traitant, par référence. Reconduite comme le plan. */
   sousTraitance?: Record<ProductCode, number>;
 }
@@ -1546,7 +1552,7 @@ export interface IncomeStatement {
    * un geste de sauvetage comme une récompense écologique. Absente si nulle.
    */
   rescueSubsidy?: number;
-  /** Niveau 7 : frais de transaction et coût d'intégration d'un rachat (charge du tour, hors EBE). */
+  /** Niveau 7 : frais de rachat, audit, passif environnemental d'un site (charge du tour, hors EBE). */
   chargesDeRachat?: number;
   pretaxIncome: number;
   /**
@@ -1556,11 +1562,6 @@ export interface IncomeStatement {
    */
   taxLossUsed?: number;
   tax: number;
-  /**
-   * Niveau 7 : dépréciation de l'écart d'acquisition, non déductible, après
-   * l'impôt. Absente si nulle.
-   */
-  depreciationEcartDAcquisition?: number;
   netIncome: number;
   /** Niveau 7 : produits finis achetés au sous-traitant ce tour (compris dans `variableProductionCost`). */
   sousTraitance?: number;
@@ -2101,8 +2102,9 @@ export interface SimulationInput {
    */
   rescueSubsidies?: Record<CompanyId, number>;
   /**
-   * Niveau 7 : ce que les rachats du jour 1 font au tour de l'acquéreur (lignes
-   * du tableau de flux, frais). Posé par `simulerLeGroupe`, jamais à la main.
+   * Niveau 7 : ce que les rachats et audits du jour 1 font au tour d'une
+   * entreprise (lignes du tableau de flux, charges, dépréciation). Posé par
+   * `simulerLeGroupe`, jamais à la main.
    */
   operationsDeGroupe?: Record<CompanyId, OperationDOuverture>;
   /**

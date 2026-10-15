@@ -89,7 +89,7 @@ export const LIBELLES_DES_LEVIERS: Readonly<Record<GroupeDeLeviers, LibelleDuGro
   },
   insurance: { decidez: "L'assurance", gere: "Aucune assurance souscrite", court: "Assurance", phrase: "l'assurance" },
   croissanceExterne: {
-    decidez: "Le rachat d'un concurrent, en numéraire ou en actions",
+    decidez: "Le rachat d'un site à l'arrêt, avec ou sans audit",
     gere: "Aucun rachat : la croissance reste interne",
     court: "Croissance externe", phrase: "la croissance externe",
   },

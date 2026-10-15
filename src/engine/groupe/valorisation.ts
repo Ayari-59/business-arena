@@ -25,8 +25,7 @@ import type { ConfigDeGroupe, EmissionDuTour, EtatDeGroupe, ValeurDeLEntreprise 
  * d'actif économique. Sans ce plancher, toute augmentation de capital du tour
  * 2 se serait faite à une action sans valeur.
  *
- * Après un rachat, l'historique est PRO FORMA : l'EBE de la cible s'ajoute,
- * tour par tour, à celui de l'acquéreur. Pur : rien n'est tiré, rien n'est écrit.
+ * Pur : rien n'est tiré, rien n'est écrit.
  */
 
 export const toursParAn = (roundDays: number): number => 360 / roundDays;
@@ -143,23 +142,9 @@ export function initialiserLeGroupe(
     ebe: [],
     discretionnaires: [],
     dividendesParAction: 0,
-    rachats: [],
+    sites: [],
+    diligences: [],
   };
-}
-
-/**
- * LE TEST DE DÉPRÉCIATION, préparé hors du tour : la valeur recouvrable vaut
- * `valeurHorsTour + coefficient × EBE du tour`, c'est-à-dire la valeur
- * d'entreprise calculée sur la fenêtre qui se clôt avec ce tour.
- */
-export function parametresDuTest(
-  g: Pick<EtatDeGroupe, "ebe" | "ebeReference">,
-  roundDays: number,
-  multiple: number,
-): { valeurHorsTour: number; coefficient: number } {
-  const w = tailleDeLaFenetre(roundDays);
-  const coefficient = (multiple * toursParAn(roundDays)) / w;
-  return { valeurHorsTour: coefficient * sommeDesDerniers(g, w - 1), coefficient };
 }
 
 /**

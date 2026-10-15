@@ -1,25 +1,20 @@
-import type {
-  CompanyRoundResult,
-  CompanyState,
-  SegmentSalesDetail,
-  SimulationInput,
-  SimulationOutput,
-} from "../types";
-import { toGamme } from "../gamme";
+import type { CompanyRoundResult, SimulationInput, SimulationOutput } from "../types";
 import { executerLesRachats } from "./rachat";
+import { mettreEnRoute } from "./site-ferme";
 import { economieDeFinDePartie, emettre, initialiserLeGroupe, valoriser } from "./valorisation";
 import type { ValeurDeLEntreprise } from "./types";
 
 export * from "./types";
 export { coutAuBareme, commandeDuTour, type CommandeDuTour } from "./sous-traitance";
-export { prixDeCession, structureReprise } from "./rachat";
+export { cleDeLaCible, dejaVendue } from "./rachat";
+export { chargesDesSites, cleDuSite, etatDuSite, siteAcquis, valeurRecouvrable } from "./site-ferme";
+export { fluxPropre } from "./flux-propre";
 export {
   actifEconomique,
   detteNette,
   ebeDouzeMois,
   emettre,
   initialiserLeGroupe,
-  parametresDuTest,
   tailleDeLaFenetre,
   toursParAn,
   valoriser,
@@ -29,15 +24,15 @@ export {
  * LE TOUR D'UNE PARTIE DE NIVEAU 7, AUTOUR DU TOUR ORDINAIRE.
  *
  *   1. chaque entreprise reçoit son état de groupe à sa première ouverture ;
- *   2. sa valeur d'ouverture est calculée (le prix d'émission de ses actions) ;
- *   3. les rachats décidés se font au jour 1 (`executerLesRachats`) ;
- *   4. le tour ordinaire se joue SANS les entreprises absorbées : elles ne sont
- *      plus au marché, ne produisent plus, ne décident plus ;
- *   5. à la clôture, chaque entreprise allonge son historique d'EBE, compte ses
- *      émissions et ses dividendes par action, et dit sa valeur.
+ *   2. les lignes des sites rachetés dont c'est le tour rejoignent le parc ;
+ *   3. sa valeur d'ouverture est calculée (le contrôle d'une émission s'y juge) ;
+ *   4. les audits et les rachats décidés se font au jour 1 (`executerLesRachats`) ;
+ *   5. le tour ordinaire se joue ;
+ *   6. à la clôture, chaque entreprise allonge son historique d'EBE, émet les
+ *      actions de ses apports du tour, compte ses dividendes par action, et dit
+ *      sa valeur.
  *
- * Une partie qui ne porte ni bloc `groupe` ni entreprise absorbée ne passe pas
- * ici (voir `simulateRound`).
+ * Une partie qui ne porte pas de bloc `groupe` ne passe pas ici (voir `simulateRound`).
  */
 
 const DISCRETIONNAIRES = (r: CompanyRoundResult) =>
@@ -50,57 +45,6 @@ const DISCRETIONNAIRES = (r: CompanyRoundResult) =>
 const flux = (r: CompanyRoundResult, label: string) =>
   r.cashFlow.items.filter((i) => i.label === label).reduce((s, i) => s + i.amount, 0);
 
-/** Le résultat d'une entreprise absorbée : rien, au marché comme aux comptes. */
-function resultatDUneAbsorbee(input: SimulationInput, state: CompanyState, potentiel: Record<string, number>): CompanyRoundResult {
-  const bySegment: Record<string, SegmentSalesDetail> = {};
-  for (const p of toGamme(input.scenario)) {
-    for (const s of p.market.segments) {
-      bySegment[s.code] = {
-        potential: potentiel[s.code] ?? 0,
-        attraction: 0,
-        share: 0,
-        demandForCompany: 0,
-        sold: 0,
-        lost: 0,
-        revenue: 0,
-        commission: 0,
-      };
-    }
-  }
-  const zero = 0;
-  return {
-    companyId: state.id,
-    incomeStatement: {
-      revenue: zero,
-      productionStocked: zero,
-      cogs: zero,
-      variableProductionCost: zero,
-      grossMargin: zero,
-      marketingCost: zero,
-      qualityCost: zero,
-      maintenanceCost: zero,
-      fixedCosts: zero,
-      ebitda: zero,
-      depreciation: zero,
-      operatingIncome: zero,
-      interest: zero,
-      financialIncome: zero,
-      pretaxIncome: zero,
-      tax: zero,
-      netIncome: zero,
-    },
-    balanceSheet: state.finance,
-    cashFlow: { opening: 0, items: [], closing: 0 },
-    functionalBalance: { frng: 0, bfr: 0, netTreasury: 0 },
-    ratios: { profitability: 0, returnOnCapitalEmployed: 0, returnOnEquity: 0, leverage: 0, debtToEquity: 0, assetTurnover: 0 },
-    market: { bySegment, totalShare: 0 },
-    production: { planned: 0, produced: 0, machineCapacity: 0, laborCapacity: 0, utilizationRate: 0, producedQuality: 0 },
-    breakeven: { unitVariableCost: 0, breakEvenUnits: null, breakEvenRevenue: null, safetyMargin: null, safetyIndex: null },
-    kpis: {},
-    groupe: { absorbee: state.absorption! },
-  };
-}
-
 export function simulerLeGroupe(
   input: SimulationInput,
   simulerLeTour: (input: SimulationInput) => SimulationOutput,
@@ -109,37 +53,34 @@ export function simulerLeGroupe(
   const cfg = scenario.groupe;
   const multiple = cfg?.valorisation.multipleEBE ?? 0;
 
-  // 1. États de groupe.
+  // 1. États de groupe ; 2. mise en route des sites.
   let companies = cfg
     ? input.companies.map((c) =>
-        c.groupe || c.status === "absorbee" ? c : { ...c, groupe: initialiserLeGroupe(c, cfg, scenario.roundDays) },
+        mettreEnRoute(c.groupe ? c : { ...c, groupe: initialiserLeGroupe(c, cfg, scenario.roundDays) }, scenario, roundIndex),
       )
     : input.companies;
 
-  // 2. Valeur d'ouverture.
+  // 3. Valeur d'ouverture.
   const ouverture = new Map<string, ValeurDeLEntreprise>();
   for (const c of companies) {
     if (c.groupe) ouverture.set(c.id, valoriser({ groupe: c.groupe, finance: c.finance, roundDays: scenario.roundDays, multiple }));
   }
 
-  // 3. Rachats au jour 1 (l'estimation ne voit que l'équipe : elle ne rachète pas).
+  // 4. Audits et rachats au jour 1 (l'estimation ne voit que l'équipe : ni l'un ni l'autre).
   const rachats =
     cfg?.rachat && !input.estimation
-      ? executerLesRachats({ scenario, roundIndex, companies, decisions: input.decisions, ouverture })
+      ? executerLesRachats({ scenario, roundIndex, companies, decisions: input.decisions, ouverture, graine: input.seed })
       : null;
   if (rachats) companies = rachats.companies;
 
-  // 4. Le tour ordinaire, sans les absorbées.
-  const actives = companies.filter((c) => c.status !== "absorbee");
-  const decisions = Object.fromEntries(actives.map((c) => [c.id, input.decisions[c.id]!]));
+  // 5. Le tour ordinaire.
   const sortie = simulerLeTour({
     ...input,
-    companies: actives,
-    decisions,
+    companies,
     ...(rachats && Object.keys(rachats.operations).length > 0 ? { operationsDeGroupe: rachats.operations } : {}),
   });
 
-  // 5. Clôture de groupe.
+  // 6. Clôture de groupe.
   const results: Record<string, CompanyRoundResult> = { ...sortie.results };
   const suivants = new Map(sortie.companies.map((c) => [c.id, c]));
   if (cfg) {
@@ -201,18 +142,14 @@ export function simulerLeGroupe(
           ...(r.groupe ?? {}),
           valeur,
           ...(rachats?.rapports[c.id] ? { rachat: rachats.rapports[c.id] } : {}),
+          ...(rachats?.diligences[c.id] ? { diligence: rachats.diligences[c.id] } : {}),
         },
       };
     }
   }
-  for (const c of companies) {
-    if (c.status !== "absorbee") continue;
-    results[c.id] = resultatDUneAbsorbee(input, c, sortie.market.potentialBySegment);
-    suivants.set(c.id, c);
-  }
   return {
     ...sortie,
-    companies: input.companies.map((c) => suivants.get(c.id)!),
+    companies: sortie.companies.map((c) => suivants.get(c.id)!),
     results,
   };
 }

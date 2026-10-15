@@ -86,13 +86,7 @@ import {
   tickEvents,
 } from "../events";
 import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
-import {
-  commandeDuTour,
-  parametresDuTest,
-  simulerLeGroupe,
-  structureReprise,
-  type CommandeDuTour,
-} from "../groupe";
+import { chargesDesSites, commandeDuTour, simulerLeGroupe, type CommandeDuTour } from "../groupe";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -231,18 +225,6 @@ function allocateProduction(args: {
 }
 
 export const ENGINE_VERSION = "0.1.0";
-
-/**
- * Niveau 7 : la référence d'entretien d'une entreprise qui a absorbé des
- * sites. Un parc doublé ne s'entretient pas au budget d'un seul. Sans rachat,
- * la référence du scénario, telle quelle.
- */
-function referenceDEntretien(scenario: EngineScenarioConfig, state: CompanyState): number {
-  const sites = state.groupe?.rachats.length ?? 0;
-  return sites > 0
-    ? scenario.production.maintenanceReference * (1 + sites)
-    : scenario.production.maintenanceReference;
-}
 
 /**
  * Commande exceptionnelle proposée pour un tour. L'ALTERNANCE des archétypes
@@ -391,14 +373,14 @@ function computePerformanceMetrics(
  * aucune E/S, aucun aléa hors PRNG seedé, mêmes entrées ⇒ mêmes sorties.
  * Pipeline : événements → production → stocks → marché → finance → état.
  *
- * NIVEAU 7 « GROUPE » : une partie dont le snapshot porte un bloc `groupe`,
- * ou dont une entreprise a été absorbée, passe par `simulerLeGroupe`, qui
- * entoure le tour ordinaire (valeur, rachats, entreprises absorbées). Toute
+ * NIVEAU 7 « GROUPE » : une partie dont le snapshot porte un bloc `groupe`
+ * passe par `simulerLeGroupe`, qui entoure le tour ordinaire (valeur, rachats,
+ * audits, mise en route des sites). Toute
  * autre partie appelle le tour ordinaire avec le même objet : le chemin
  * d'avant, au bit près.
  */
 export function simulateRound(input: SimulationInput): SimulationOutput {
-  if (input.scenario.groupe || input.companies.some((c) => c.status === "absorbee")) {
+  if (input.scenario.groupe) {
     return simulerLeGroupe(input, simulerLeTour);
   }
   return simulerLeTour(input);
@@ -706,17 +688,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     );
     // RH (doc 02 §4.1) : morale du tour, coûts, mouvements d'effectif à t+1.
     const combinedAttritionRelief = rseAttritionRelief;
-    // Niveau 7 : l'effectif d'une société absorbée est payé par ses charges de
-    // structure reprises ; son plafond s'ajoute. Sans rachat, la config du scénario.
-    const hrConfigDuTour =
-      scenario.hr && state.groupe && state.groupe.rachats.length > 0
-        ? {
-            ...scenario.hr,
-            includedHeadcount:
-              scenario.hr.includedHeadcount + state.groupe.rachats.reduce((n, r) => n + r.effectifInclus, 0),
-            maxHeadcount: scenario.hr.maxHeadcount + state.groupe.rachats.reduce((n, r) => n + r.effectifMax, 0),
-          }
-        : scenario.hr;
+    const hrConfigDuTour = scenario.hr;
     const hr = computeHr({
       config:
         hrConfigDuTour && combinedAttritionRelief > 0
@@ -731,7 +703,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     });
     const hrRelevant =
       scenario.hr !== undefined &&
-      (raw.hr !== undefined || state.headcount !== hrConfigDuTour!.includedHeadcount);
+      (raw.hr !== undefined || state.headcount !== scenario.hr.includedHeadcount);
     // Assurance : résoudre la formule choisie
     const chosenFormula = (() => {
       if (!decisions.insurance || !insuranceOffer) return null;
@@ -1061,7 +1033,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
             // (maintenanceDefectSensitivity > 0) ; sinon facteur neutre, comportement
             // historique. Référence : budget de maintenance de référence du scénario.
             maintenanceBudget: decisions.maintenanceBudget,
-            maintenanceReference: referenceDEntretien(scenario, state),
+            maintenanceReference: scenario.production.maintenanceReference,
             maintenanceDefectSensitivity: scenario.qualityCosts.maintenanceDefectSensitivity,
           })
         : 0,
@@ -1124,6 +1096,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
           if (item.typeCode !== req.typeCode || item.count <= 0) continue;
           const take = Math.min(toSell, item.count);
           const bvPerUnit = item.count > 0 ? item.bookValue / item.count : 0;
+          if (item.coutDOrigine !== undefined && item.count > 0) item.coutDOrigine -= (take * item.coutDOrigine) / item.count;
           soldBookValue += take * bvPerUnit;
           item.count -= take;
           item.bookValue -= take * bvPerUnit;
@@ -1170,7 +1143,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       for (const item of fleet) {
         const typ = typeMap.get(item.typeCode);
         if (!typ || item.bookValue <= 0) continue;
-        const originalCost = item.count * typ.costPerUnit;
+        const originalCost = item.coutDOrigine ?? item.count * typ.costPerUnit;
         const depPerRound = originalCost / typ.depreciationRounds;
         const dep = Math.min(depPerRound, item.bookValue);
         equipDepreciation += dep;
@@ -1200,7 +1173,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         fleet: updatedFleet,
         maintenanceBudget: raw.maintenanceBudget ?? 0,
         maintenanceReference:
-          referenceDEntretien(scenario, state) *
+          scenario.production.maintenanceReference *
           (activeMachineFleet
             ? machineFleetMaintenanceMultiplier(activeMachineFleet, typeMap)
             : 1),
@@ -1968,15 +1941,17 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
       fixedCosts: gelee
         ? 0
-        : w.state.groupe && w.state.groupe.rachats.length > 0
-          ? scenario.fixedCostsPerRound + structureReprise(w.state, roundIndex) + insurancePremium + hrCost + studiesCost
+        : w.state.groupe && w.state.groupe.sites.length > 0
+          ? scenario.fixedCostsPerRound + chargesDesSites(w.state) + insurancePremium + hrCost + studiesCost
           : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
         ? 0
         : scenario.equipment
-          ? w.equipDepreciation
+          ? input.operationsDeGroupe?.[w.state.id]?.depreciation
+            ? w.equipDepreciation + input.operationsDeGroupe[w.state.id]!.depreciation
+            : w.equipDepreciation
           : scenario.finance.depreciationPerRound +
             (w.state.extraDepreciationPerRound ?? 0) +
             (w.state.pendingDepreciationPerRound ?? 0),
@@ -1995,16 +1970,12 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       disposalLoss: w.equipDisposalLoss,
       // Niveau 7 : les produits finis achetés au sous-traitant, payés à la livraison.
       ...(w.commandeST ? { sousTraitance: w.commandeST.total } : {}),
-      // Niveau 7 : le rachat du jour 1 (flux d'ouverture, frais) et le test de
-      // dépréciation de l'écart d'acquisition.
+      // Niveau 7 : le rachat ou l'audit du jour 1 (flux d'ouverture, charges).
       ...(input.operationsDeGroupe?.[w.state.id]
         ? {
             operationsDOuverture: input.operationsDeGroupe[w.state.id]!.flux,
             chargesDeRachat: input.operationsDeGroupe[w.state.id]!.chargesDeRachat,
           }
-        : {}),
-      ...(scenario.groupe && w.state.groupe && (w.state.finance.goodwill ?? 0) > 0
-        ? { testDeValeur: parametresDuTest(w.state.groupe, scenario.roundDays, scenario.groupe.valorisation.multipleEBE) }
         : {}),
       ...(scenario.treasury
         ? {
@@ -2168,7 +2139,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // + budgets discrétionnaires (la prime déplace le seuil : c'est le point).
     const structureCosts =
       scenario.fixedCostsPerRound +
-      (w.state.groupe && w.state.groupe.rachats.length > 0 ? structureReprise(w.state, roundIndex) : 0) +
+      (w.state.groupe && w.state.groupe.sites.length > 0 ? chargesDesSites(w.state) : 0) +
       insurancePremium +
       hrCost +
       studiesCost +
@@ -2655,17 +2626,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
               ...(finance.incomeStatement.operatingIncome > 0
                 ? { levierOperationnel: finance.incomeStatement.grossMargin / finance.incomeStatement.operatingIncome }
                 : {}),
-              ...(finance.testDeValeur
-                ? {
-                    ecart: {
-                      ouverture: w.state.finance.goodwill ?? 0,
-                      depreciation: finance.testDeValeur.depreciation,
-                      cloture: finance.closing.goodwill ?? 0,
-                      actifEconomique: finance.testDeValeur.actifEconomique,
-                      valeurRecouvrable: finance.testDeValeur.valeurRecouvrable,
-                    },
-                  }
-                : {}),
+              ...(w.state.groupe && w.state.groupe.sites.length > 0 ? { chargesDesSites: chargesDesSites(w.state) } : {}),
             },
           }
         : {}),
@@ -2869,7 +2830,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       availability: updateAvailability({
         current: w.state.availability,
         maintenanceBudget: w.decisions.maintenanceBudget,
-        maintenanceReference: referenceDEntretien(scenario, w.state) * (
+        maintenanceReference: scenario.production.maintenanceReference * (
           scenario.equipment
             ? (w.activeMachineFleet
                 ? machineFleetMaintenanceMultiplier(

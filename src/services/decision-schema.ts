@@ -39,6 +39,9 @@ const identifiants = z.array(identifiant).max(MODULES_MAX).optional();
 /** Plafond technique des montants d'un rachat (niveau 7) : la faute de frappe, pas le métier. */
 const PLAFOND_DU_RACHAT = 50_000_000;
 
+/** Une cible de rachat ou d'audit (niveau 7) : son type et son identifiant. */
+const cibleDeRachat = z.object({ type: z.enum(["site_ferme"]), id: identifiant });
+
 export const roundDecisionsSchema = z.object({
   price: z.coerce.number().min(1).max(PRIX_MAX),
   // Zéro reste admis par le schéma : l'action refuse le volume nul AVANT lui,
@@ -168,20 +171,21 @@ export const roundDecisionsSchema = z.object({
     .optional(),
   startedRdActionIds: identifiants,
   /**
-   * NIVEAU 7. Le rachat d'un concurrent (action ponctuelle) et la sous-traitance
+   * NIVEAU 7. Le rachat d'une cible et son audit (actions ponctuelles), la sous-traitance
    * par référence. Bornes techniques ; ce que le niveau ouvre, ce que la cible
    * coûte et ce que la banque prête sont jugés par le moteur, qui refuse en
    * disant pourquoi.
    */
   rachat: z
     .object({
-      cible: identifiant,
+      cible: cibleDeRachat,
       prixMaximum: z.coerce.number().min(0).max(PLAFOND_DU_RACHAT),
       paiement: z.enum(["numeraire", "titres"]),
       emprunt: z.coerce.number().min(0).max(PLAFOND_DU_RACHAT).optional(),
       augmentationDeCapital: z.coerce.number().min(0).max(PLAFOND_DU_RACHAT).optional(),
     })
     .optional(),
+  diligence: cibleDeRachat.optional(),
   sousTraitance: z.record(z.string().min(1), z.coerce.number().min(0).max(VOLUME_MAX)).optional(),
   /** Ce que l'équipe arrête ce tour ; ce qui peut s'arrêter est jugé par `refusDesModules`. */
   stoppedModuleItems: z
