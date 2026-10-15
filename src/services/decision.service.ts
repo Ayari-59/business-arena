@@ -43,6 +43,10 @@ export function carryOverDecisions(prev: RoundDecisions): RoundDecisions {
     activatePartnershipIds: undefined,
     startDigitalProjectIds: undefined,
     activeBrandActionIds: undefined,
+    startedRdActionIds: undefined,
+    financingDraws: undefined,
+    // Un arrêt ne se reconduit pas : il a eu lieu au tour où il a été décidé.
+    stoppedModuleItems: undefined,
   };
 }
 

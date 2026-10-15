@@ -599,6 +599,20 @@ export interface PerformanceMetrics {
   alerts: PerformanceAlert[];
 }
 
+/**
+ * Une ligne du tableau d'emprunts. Les emprunts ordinaires portent le taux du
+ * scénario ; un tirage sur une option de financement (`financingOptions`)
+ * porte SON taux par tour et le nom de l'option.
+ */
+export interface LoanLine {
+  remaining: number;
+  perRound: number;
+  /** Taux par tour propre à cette ligne ; absent : le taux d'emprunt du scénario. */
+  ratePerRound?: number;
+  /** L'option de financement tirée ; absent : un emprunt ordinaire. */
+  optionId?: string;
+}
+
 /** Un niveau d'une action de maintenance (préventive ou curative). */
 export interface MaintenanceActionLevel {
   level: number;
@@ -1677,7 +1691,7 @@ export interface CompanyState {
    * Échéanciers d'emprunts (amortissement constant) : Σ remaining =
    * financialDebt du bilan. Absent = dette à remboursement libre (historique).
    */
-  loans?: { remaining: number; perRound: number }[];
+  loans?: LoanLine[];
   /** Capital déjà apporté depuis le début de la partie (enveloppe des associés). */
   capitalRaised?: number;
   /**
@@ -1778,6 +1792,10 @@ export interface CompanyState {
   completedDigitalProjects?: string[];
   /** Actions de gestion de marque actives (module `brandManagement`). */
   activeBrandActions?: { id: string; remainingRounds: number }[];
+  /** Programmes R&D en cours (module `rdActions`). */
+  rdActionsInProgress?: { id: string; roundsCompleted: number }[];
+  /** IDs des programmes R&D achevés (module `rdActions`) : leurs effets durent. */
+  completedRdActions?: string[];
   /**
    * Défaillance (cessation de paiements, V2 couche 2). Une entreprise passe
    * `defaillant` après deux tours consécutifs de crise de trésorerie
@@ -1902,6 +1920,11 @@ export interface RoundDecisions {
    * a un bloc `maintenanceActions` et un parc individuel `machineFleet`). Chaque
    * entrée cible une machine par son `id`, un type d'action (ex. "preventif") et
    * un niveau (1, 2 ou 3). Actions ponctuelles : jamais reconduites.
+   *
+   * `machineId` vaut `MACHINE_ATELIER` (« atelier ») pour une intervention sur
+   * TOUT l'outil de production : l'action porte alors sur chaque machine
+   * concernée (toutes pour un préventif, celles en panne pour un curatif), et
+   * son coût se compte par machine. C'est la forme que l'écran propose.
    */
   maintenanceDecisions?: { machineId: string; actionCode: string; level: number }[];
   /**
@@ -2023,6 +2046,23 @@ export interface RoundDecisions {
   startDigitalProjectIds?: string[];
   /** IDs des actions de marque activées ce tour (module `brandManagement`). */
   activeBrandActionIds?: string[];
+  /** IDs des programmes R&D lancés ce tour (module `rdActions`). */
+  startedRdActionIds?: string[];
+  /**
+   * Tirages sur les options de financement du scénario (module
+   * `financingOptions`) : un montant par option. Chaque tirage devient une
+   * ligne du tableau d'emprunts (`CompanyState.loans`), à son taux et à sa
+   * durée, remboursée par échéances égales.
+   */
+  financingDraws?: { optionId: string; amount: number }[];
+  /**
+   * Ce que l'équipe ARRÊTE ce tour parmi ce qui tourne déjà : une stratégie de
+   * prix, une action RSE, un plan de crise, un marché à l'export… Le moteur le
+   * retire de l'état à l'ouverture du tour : plus aucun coût ni effet dès ce
+   * tour. Rien n'est remboursé (droit d'entrée d'un partenariat, dépenses
+   * d'un projet en cours). `module` est le nom de la décision qui l'a lancé.
+   */
+  stoppedModuleItems?: { module: string; id: string }[];
 }
 
 /** Ventes estimées d'un tour et résultat estimé correspondant (voir `RoundDecisions.salesEstimate`). */
@@ -2501,6 +2541,10 @@ export interface CompanyRoundResult {
      * Absent quand la demande a été servie en entier — rien à expliquer.
      */
     loanRefused?: number;
+    /** Tirages accordés ce tour sur les options de financement, par option. */
+    financingDrawn?: { optionId: string; amount: number }[];
+    /** Intérêts du tour sur les lignes à taux propre (options de financement). */
+    financingInterest?: number;
   };
   /** Trésorerie du tour : mobilisations de créances et coûts financiers. */
   treasury?: {
@@ -2631,6 +2675,19 @@ export interface CompanyRoundResult {
   brandCost?: number;
   /** Effets agrégés des actions de marque actives ce tour (module `brandManagement`). */
   brandEffects?: Partial<BrandActionEffects>;
+  /** Chiffre d'affaires perdu dans la crise du tour, après protection (module `crisisManagement`). */
+  crisisRevenueLoss?: number;
+  /** Coût des programmes R&D du tour (module `rdActions`). */
+  rdActionsCost?: number;
+  /** Effets cumulés des programmes R&D achevés, en vigueur ce tour (module `rdActions`). */
+  rdActionsEffects?: { costReduction: number; qualityBonus: number; imageBonus: number };
+  /**
+   * Interventions de maintenance du tour (module `maintenanceActions`) : machines
+   * remises en service et usure retirée en moyenne.
+   */
+  maintenanceEffects?: { machinesRestored: number; wearRemoved: number };
+  /** Ce que l'équipe a arrêté ce tour (retiré de l'état à l'ouverture). */
+  stoppedModuleItems?: { module: string; id: string }[];
   kpis: Record<string, number>;
   /** Indicateurs de performance synthétiques calculés par le moteur. */
   performanceMetrics?: PerformanceMetrics;
@@ -2699,6 +2756,18 @@ export interface EngineTrace {
   digitalEffects?: CompanyRoundResult["digitalEffects"] | null;
   brandCost?: CompanyRoundResult["brandCost"] | null;
   brandEffects?: CompanyRoundResult["brandEffects"] | null;
+  /** Modules rendus jouables après la PR #192 : coûts et effets du tour. */
+  commercialCost?: CompanyRoundResult["commercialCost"] | null;
+  commercialEffects?: CompanyRoundResult["commercialEffects"] | null;
+  supplierNegotiationSaving?: CompanyRoundResult["supplierNegotiationSaving"] | null;
+  hrCost?: CompanyRoundResult["hrCost"] | null;
+  hrEffects?: CompanyRoundResult["hrEffects"] | null;
+  maintenanceCost?: CompanyRoundResult["maintenanceCost"] | null;
+  maintenanceEffects?: CompanyRoundResult["maintenanceEffects"] | null;
+  rdActionsCost?: CompanyRoundResult["rdActionsCost"] | null;
+  rdActionsEffects?: CompanyRoundResult["rdActionsEffects"] | null;
+  crisisRevenueLoss?: CompanyRoundResult["crisisRevenueLoss"] | null;
+  stoppedModuleItems?: CompanyRoundResult["stoppedModuleItems"] | null;
 }
 
 export interface EventInstance {
@@ -2729,6 +2798,16 @@ export interface SimulationInput {
    * émis, ni au compte de résultat ni au tableau de flux.
    */
   rescueSubsidies?: Record<CompanyId, number>;
+  /**
+   * LES LEVIERS QUE LE NIVEAU DE LA PARTIE OUVRE (`presetFromProfile(...).decisions`).
+   *
+   * Le moteur ignore la difficulté, sauf pour ce qui arrive SANS décision de
+   * l'équipe : une crise (module `crisisManagement`) n'est tirée que si le
+   * module est offert à la partie, par la même règle que l'offre
+   * (`engine/modules/ouverture`). Absents : aucune crise n'est tirée, comme
+   * dans tous les rejeux et tests qui ne disent pas à quel niveau ils jouent.
+   */
+  leviers?: import("./bots/leviers").LeviersOuverts | null;
   /**
    * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
    *

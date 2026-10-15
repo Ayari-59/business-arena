@@ -82,7 +82,7 @@ import {
   type DefCarte,
 } from "@/components/cartes-de-decision";
 import { ModulesDeDecision } from "@/components/modules-de-decision";
-import { modulesSaisis, PREFIXE_DES_MODULES } from "@/config/modules-saisis";
+import { modulesSaisis } from "@/config/modules-saisis";
 import { refusDesModules } from "@/services/modules-offer";
 import {
   aideDuPlafond,
@@ -3303,8 +3303,18 @@ export function DecisionForm({
                 nom: "Projets",
                 question: "Quels projets engagez-vous ?",
                 resume: (d: FormData) => {
-                  const n = [...d.keys()].filter((k) => k.startsWith(PREFIXE_DES_MODULES)).length;
-                  return n > 0 ? `${n} engagé${n > 1 ? "s" : ""}` : "Aucun";
+                  // Les champs remplis seulement : un effectif ou un montant
+                  // laissé vide n'engage rien, un arrêt se compte à part.
+                  const lu = modulesSaisis(d.entries());
+                  const arrets = lu.stoppedModuleItems?.length ?? 0;
+                  const n = Object.entries(lu)
+                    .filter(([cle]) => cle !== "stoppedModuleItems")
+                    .reduce((t, [, v]) => t + (Array.isArray(v) ? v.length : 0), 0);
+                  const parties = [
+                    n > 0 ? `${n} engagé${n > 1 ? "s" : ""}` : null,
+                    arrets > 0 ? `${arrets} arrêt${arrets > 1 ? "s" : ""}` : null,
+                  ].filter(Boolean);
+                  return parties.length > 0 ? parties.join(", ") : "Aucun";
                 },
               },
             ]

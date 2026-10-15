@@ -3,88 +3,132 @@
 import { useEffect, useRef, useState } from "react";
 import { Icone, type NomDIcone } from "@/components/icone";
 import { Tiroir } from "@/components/tiroir";
+import { sansMolette } from "@/components/sans-molette";
 import { idDuChamp } from "@/config/refus-de-decision";
 import type { DecisionDeModule } from "@/config/modules-saisis";
 import type { RoundDecisions } from "@/engine/types";
-import { formatEuro } from "@/lib/format";
-import { choixDuModule, type ModuleOffert, type OffreDesModules } from "@/services/modules-offer";
+import { formatEuro, formatUnits } from "@/lib/format";
+import {
+  choixDuModule,
+  saisieDuChoix,
+  type ElementDeModule,
+  type ModuleOffert,
+  type OffreDesModules,
+} from "@/services/modules-offer";
 
 /**
  * LES MODULES DU SCÉNARIO, SUR LA FEUILLE DE DÉCISION.
  *
  * Une case par élément proposé ce tour, au gabarit des études : le nom et ce
  * que le choix coûte ce tour, puis les effets que le moteur applique, puis la
- * durée et les coûts qui suivront. Ce qui tourne déjà se lit au-dessus, sans
- * case : on ne relance pas un projet en cours.
+ * durée et les coûts qui suivront. Un élément qui se décide par un nombre
+ * (l'effectif à former, le montant à tirer) porte un champ à la place de la
+ * case : vide, rien n'est engagé. Ce qui tourne déjà se lit au-dessus, dans
+ * « Déjà engagé », avec une case « Arrêter » quand le module le permet.
  *
  * LE PLAFOND SE VOIT AVANT L'ENVOI : une fois les places du tour prises, les
- * autres cases du module se grisent. La feuille rejuge aussi l'ensemble avant
- * l'envoi, du même calcul que le serveur (`refusDesModules`).
+ * autres choix du module se grisent ; un arrêt coché libère sa place. La
+ * feuille rejuge aussi l'ensemble avant l'envoi, du même calcul que le serveur
+ * (`refusDesModules`).
  *
  * Rien n'est coché d'office : un module se DÉMARRE, et ce qui a démarré au
- * tour précédent vit maintenant dans l'état de l'entreprise (« Déjà
- * engagé »). Seul un envoi déjà enregistré ce tour revient coché.
+ * tour précédent vit maintenant dans l'état de l'entreprise. Seul un envoi
+ * déjà enregistré ce tour revient coché.
  */
 
 const ICONES: Record<DecisionDeModule, NomDIcone> = {
   qualityActions: "etoile",
   hsActions: "equipes",
+  trainingEnrollments: "formation",
+  activeHRPolicyIds: "personne",
+  maintenanceDecisions: "outil",
+  activeContractIds: "camion",
   activeCapacityOptionIds: "usine",
   enteredMarketIds: "monde",
   startedInnovationIds: "idee",
+  startedRdActionIds: "loupe",
   activeRseActionIds: "feuille",
   activePricingStrategyIds: "etiquette",
+  activeCommercialActionIds: "cible",
   activeCrisisPlanIds: "alerte",
   activatePartnershipIds: "accord",
   startDigitalProjectIds: "ecran",
   activeBrandActionIds: "communication",
+  financingDraws: "banque",
 };
 
-/** Les cases cochées d'un module, lues sur le document (le brouillon les coche sans événement). */
-function compterLesCases(racine: HTMLElement | null, decision: DecisionDeModule): number {
-  if (!racine) return 0;
-  return racine.querySelectorAll(`input[data-module="${decision}"]:checked`).length;
+/** Un nombre saisi à la française ; NaN si vide ou illisible. */
+const nombre = (v: string) =>
+  v.trim() === "" ? Number.NaN : Number(v.replace(/[\s  ]/g, "").replace(",", "."));
+
+/** Ce que la feuille lit d'un module : les choix pris (et leur quantité), les places libérées. */
+function lire(racine: HTMLElement | null, module: ModuleOffert) {
+  const pris = new Map<string, number>();
+  let liberees = 0;
+  if (!racine) return { pris, liberees };
+  for (const el of racine.querySelectorAll<HTMLInputElement>(`input[data-module="${module.decision}"]`)) {
+    if (el.type === "checkbox") {
+      if (el.checked) pris.set(el.name, 1);
+    } else {
+      const n = nombre(el.value);
+      if (Number.isFinite(n) && n > 0) pris.set(el.name, n);
+    }
+  }
+  for (const el of racine.querySelectorAll<HTMLInputElement>(`input[data-arret="${module.decision}"]:checked`)) {
+    if (el.dataset.occupe === "oui") liberees++;
+  }
+  return { pris, liberees };
+}
+
+function coutDuChoix(el: ElementDeModule, quantite: number): number {
+  return el.saisie ? quantite * el.saisie.coutUnitaire : el.coutDuTour;
 }
 
 function UnModule({
   module,
-  dejaChoisis,
+  choisis,
   erreurs,
 }: {
   module: ModuleOffert;
-  dejaChoisis: string[];
+  choisis: Partial<RoundDecisions> | null;
   erreurs: ReadonlyMap<string, string>;
 }) {
   const racine = useRef<HTMLDivElement>(null);
-  // Les cases cochées, relues sur le document à chaque changement.
-  const [cochees, setCochees] = useState<ReadonlySet<string>>(
-    () => new Set(module.elements.filter((el) => dejaChoisis.includes(el.id)).map((el) => el.champ)),
+  const dejaChoisis = choisis ? choixDuModule(choisis, module.decision) : [];
+  const dejaArretes = new Set(
+    (choisis?.stoppedModuleItems ?? []).filter((a) => a.module === module.decision).map((a) => a.id),
   );
-  const relire = () => {
-    const r = racine.current;
-    if (!r) return;
-    setCochees(
-      new Set(
-        [...r.querySelectorAll<HTMLInputElement>(`input[data-module="${module.decision}"]:checked`)].map(
-          (el) => el.name,
-        ),
-      ),
-    );
-  };
-  // Le brouillon du navigateur recoche les cases APRÈS le montage, sans
+  const [etat, setEtat] = useState(() => {
+    const pris = new Map<string, number>();
+    for (const el of module.elements) {
+      if (!dejaChoisis.includes(el.id)) continue;
+      pris.set(el.champ, el.saisie ? (saisieDuChoix(choisis ?? {}, module.decision, el.id) ?? 0) : 1);
+    }
+    const liberees = module.enCours.filter((x) => x.arret?.occupe && x.id && dejaArretes.has(x.id)).length;
+    return { pris, liberees };
+  });
+  const relire = () => setEtat(lire(racine.current, module));
+  // Le brouillon du navigateur restaure les champs APRÈS le montage, sans
   // événement : on relit une fois la feuille restaurée.
   useEffect(() => {
     const t = setTimeout(relire, 0);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const coutCoche = module.elements
-    .filter((el) => cochees.has(el.champ))
-    .reduce((t, el) => t + el.coutDuTour, 0);
-  const plein = module.plafond !== null && cochees.size >= module.plafond;
+  const coutEngage = module.elements
+    .filter((el) => etat.pris.has(el.champ))
+    .reduce((t, el) => t + coutDuChoix(el, etat.pris.get(el.champ) ?? 0), 0);
+  const plafond = module.plafond === null ? null : module.plafond + etat.liberees;
+  const plein = plafond !== null && etat.pris.size >= plafond;
 
   return (
-    <div ref={racine} data-module-de-decision={module.decision} className="space-y-2" onChange={relire}>
+    <div
+      ref={racine}
+      data-module-de-decision={module.decision}
+      className="space-y-2"
+      onChange={relire}
+      onInput={relire}
+    >
       <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm font-semibold text-slate-200">
         <Icone nom={ICONES[module.decision]} className="h-4 w-4 text-[color:var(--metier,var(--color-slate-300))]" />
         {module.titre}
@@ -93,66 +137,134 @@ function UnModule({
         ) : null}
       </p>
       {module.enCours.length > 0 ? (
-        <p data-modules-en-cours="" className="text-xs text-slate-400">
-          Déjà engagé :{" "}
-          {module.enCours.map((x, i) => (
-            <span key={`${x.libelle}-${i}`}>
-              {i > 0 ? " ; " : ""}
-              <span className="text-slate-300">{x.libelle}</span> ({x.etat})
-            </span>
-          ))}
-          .
-        </p>
+        <div data-modules-en-cours="" className="text-xs text-slate-400">
+          <p>Déjà engagé :</p>
+          <ul className="mt-1 space-y-1">
+            {module.enCours.map((x, i) => (
+              <li
+                key={`${x.libelle}-${i}`}
+                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-white/5 bg-slate-950 px-2.5 py-1.5"
+              >
+                <span className="min-w-0">
+                  <span className="text-slate-300">{x.libelle}</span> ({x.etat})
+                </span>
+                {x.arret && x.id ? (
+                  <label className="inline-flex shrink-0 items-center gap-1.5 text-slate-300 pointer-coarse:min-h-11">
+                    <input
+                      type="checkbox"
+                      id={idDuChamp(x.arret.champ)}
+                      name={x.arret.champ}
+                      value="1"
+                      data-arret={module.decision}
+                      data-occupe={x.arret.occupe ? "oui" : "non"}
+                      defaultChecked={dejaArretes.has(x.id)}
+                      className="h-4 w-4 accent-red-400"
+                    />
+                    Arrêter
+                  </label>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
       {module.elements.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {module.elements.map((el) => {
             const erreur = erreurs.get(el.champ);
+            const pris = etat.pris.has(el.champ);
+            const libre = !plein || pris;
+            const valeurDeja = el.saisie ? saisieDuChoix(choisis ?? {}, module.decision, el.id) : null;
+            const enEuros = el.saisie?.unite === "€";
+            const texte = (
+              <span className="min-w-0">
+                <span className="text-sm font-medium text-slate-200">
+                  {el.libelle}
+                  {el.saisie
+                    ? el.saisie.coutUnitaire > 0
+                      ? ` · ${formatEuro(el.saisie.coutUnitaire)} par salarié et par tour`
+                      : ""
+                    : el.coutDuTour > 0
+                      ? ` · ${formatEuro(el.coutDuTour)} ce tour`
+                      : " · sans coût"}
+                </span>
+                <span className="mt-0.5 block text-xs text-slate-300">{el.effets.join(" · ")}</span>
+                <span className="mt-0.5 block text-xs text-slate-400">
+                  {[
+                    el.duree,
+                    ...el.couts.filter((c) => c.montant > 0).map((c) => `${c.libelle} ${formatEuro(c.montant)}`),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </span>
+            );
             return (
               <div key={el.champ}>
-                <label
-                  className={`flex items-start gap-3 bg-slate-900 rounded-xl border px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12 has-[:disabled]:opacity-60 ${
-                    erreur ? "border-red-400/70" : "border-white/10"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    id={idDuChamp(el.champ)}
-                    name={el.champ}
-                    value={el.valeur}
-                    data-module={module.decision}
-                    defaultChecked={dejaChoisis.includes(el.id)}
-                    // Au plafond, les cases encore libres se grisent ; une case
-                    // cochée reste décochable.
-                    disabled={plein && !cochees.has(el.champ)}
-                    onChange={(e) => {
-                      // Le plafond se juge sur le document, cochée comprise.
-                      if (e.target.checked && module.plafond !== null) {
-                        const n = compterLesCases(racine.current, module.decision);
-                        if (n > module.plafond) e.target.checked = false;
-                      }
-                    }}
-                    aria-describedby={erreur ? `${idDuChamp(el.champ)}-refus` : undefined}
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
-                  />
-                  <span className="min-w-0">
-                    <span className="text-sm font-medium text-slate-200">
-                      {el.libelle}
-                      {el.coutDuTour > 0 ? ` · ${formatEuro(el.coutDuTour)} ce tour` : " · sans coût"}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-300">{el.effets.join(" · ")}</span>
-                    <span className="mt-0.5 block text-xs text-slate-400">
-                      {[
-                        el.duree,
-                        ...el.couts
-                          .filter((c) => c.montant > 0)
-                          .map((c) => `${c.libelle} ${formatEuro(c.montant)}`),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </span>
-                </label>
+                {el.saisie ? (
+                  <div
+                    data-saisie-de-module=""
+                    data-saisi={pris ? "oui" : undefined}
+                    className={`space-y-2 rounded-xl border bg-slate-900 px-3 py-2.5 transition ${
+                      erreur ? "border-red-400/70" : pris ? "border-slate-300/50" : "border-white/10"
+                    } ${libre ? "" : "opacity-60"}`}
+                  >
+                    {texte}
+                    <label className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                      <span>
+                        {enEuros ? "Montant à tirer" : "Salariés à former"} (jusqu&apos;à{" "}
+                        {enEuros ? formatEuro(el.saisie.max) : formatUnits(el.saisie.max)})
+                      </span>
+                      <span className="flex w-40 items-center gap-2 champ px-2 py-1.5">
+                      <input
+                        type="number"
+                        onWheel={sansMolette}
+                        inputMode="numeric"
+                        id={idDuChamp(el.champ)}
+                        name={el.champ}
+                        data-module={module.decision}
+                        min={el.saisie.min}
+                        max={el.saisie.max}
+                        step={el.saisie.pas}
+                        defaultValue={valeurDeja ?? ""}
+                        placeholder="0"
+                        disabled={!libre}
+                        aria-describedby={erreur ? `${idDuChamp(el.champ)}-refus` : undefined}
+                        className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none pointer-coarse:min-h-10"
+                      />
+                        <span className="shrink-0 text-xs text-slate-400">{enEuros ? "€" : "salariés"}</span>
+                      </span>
+                    </label>
+                  </div>
+                ) : (
+                  <label
+                    className={`flex items-start gap-3 bg-slate-900 rounded-xl border px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12 has-[:disabled]:opacity-60 ${
+                      erreur ? "border-red-400/70" : "border-white/10"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      id={idDuChamp(el.champ)}
+                      name={el.champ}
+                      value={el.valeur}
+                      data-module={module.decision}
+                      defaultChecked={dejaChoisis.includes(el.id)}
+                      // Au plafond, les cases encore libres se grisent ; une case
+                      // cochée reste décochable.
+                      disabled={!libre}
+                      onChange={(e) => {
+                        // Le plafond se juge sur le document, cochée comprise.
+                        if (e.target.checked && module.plafond !== null) {
+                          const lu = lire(racine.current, module);
+                          if (lu.pris.size > module.plafond + lu.liberees) e.target.checked = false;
+                        }
+                      }}
+                      aria-describedby={erreur ? `${idDuChamp(el.champ)}-refus` : undefined}
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
+                    />
+                    {texte}
+                  </label>
+                )}
                 {erreur ? (
                   <p id={`${idDuChamp(el.champ)}-refus`} className="mt-1 text-xs text-red-300">
                     {erreur}
@@ -167,12 +279,12 @@ function UnModule({
       )}
       {plein && module.elements.length > 0 ? (
         <p className="text-xs text-slate-400">
-          {module.plafond === 0 ? "Plus aucune place ce tour." : "Toutes les places du tour sont prises."}
+          {plafond === 0 ? "Plus aucune place ce tour." : "Toutes les places du tour sont prises."}
         </p>
       ) : null}
-      {coutCoche > 0 ? (
+      {coutEngage > 0 ? (
         <p role="status" className="text-xs text-slate-300">
-          Engagé ce tour : <strong className="font-semibold text-slate-50">{formatEuro(coutCoche)}</strong>
+          Engagé ce tour : <strong className="font-semibold text-slate-50">{formatEuro(coutEngage)}</strong>
         </p>
       ) : null}
     </div>
@@ -196,7 +308,7 @@ export function ModulesDeDecision({
     <div data-modules-de-decision="" className="space-y-5">
       {offre.map((m) => (
         <div key={m.decision} className="space-y-2">
-          <UnModule module={m} dejaChoisis={choisis ? choixDuModule(choisis, m.decision) : []} erreurs={erreurs} />
+          <UnModule module={m} choisis={choisis} erreurs={erreurs} />
           <Tiroir titre="Comment ça marche" ferme={!telephone} surface="papier">
             <p className="text-sm leading-relaxed text-slate-400">{m.aide}</p>
           </Tiroir>

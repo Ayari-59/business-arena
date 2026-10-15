@@ -970,6 +970,19 @@ function reconstructResult(
     ...(trace.digitalEffects != null ? { digitalEffects: trace.digitalEffects } : {}),
     ...(trace.brandCost != null ? { brandCost: trace.brandCost } : {}),
     ...(trace.brandEffects != null ? { brandEffects: trace.brandEffects } : {}),
+    ...(trace.trainingCost != null ? { trainingCost: trace.trainingCost } : {}),
+    ...(trace.trainingEffects != null ? { trainingEffects: trace.trainingEffects } : {}),
+    ...(trace.commercialCost != null ? { commercialCost: trace.commercialCost } : {}),
+    ...(trace.commercialEffects != null ? { commercialEffects: trace.commercialEffects } : {}),
+    ...(trace.supplierNegotiationSaving != null ? { supplierNegotiationSaving: trace.supplierNegotiationSaving } : {}),
+    ...(trace.hrCost != null ? { hrCost: trace.hrCost } : {}),
+    ...(trace.hrEffects != null ? { hrEffects: trace.hrEffects } : {}),
+    ...(trace.maintenanceCost != null ? { maintenanceCost: trace.maintenanceCost } : {}),
+    ...(trace.maintenanceEffects != null ? { maintenanceEffects: trace.maintenanceEffects } : {}),
+    ...(trace.rdActionsCost != null ? { rdActionsCost: trace.rdActionsCost } : {}),
+    ...(trace.rdActionsEffects != null ? { rdActionsEffects: trace.rdActionsEffects } : {}),
+    ...(trace.crisisRevenueLoss != null ? { crisisRevenueLoss: trace.crisisRevenueLoss } : {}),
+    ...(trace.stoppedModuleItems != null ? { stoppedModuleItems: trace.stoppedModuleItems } : {}),
   };
   return { result, events: trace.events ?? [] };
 }

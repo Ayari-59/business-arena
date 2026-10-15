@@ -47,6 +47,13 @@ export interface FinanceInput {
   loanAnnualRate: number;
   overdraftAnnualRate: number;
   interestMultiplier: number; // événements (hausse des taux)
+  /**
+   * Lignes d'emprunt à taux propre (tirages sur les options de financement) :
+   * leur encours d'ouverture, retiré de la dette au taux du scénario, et leurs
+   * intérêts du tour, à leur taux par tour. Absent : toute la dette au taux du
+   * scénario, le calcul d'avant.
+   */
+  specificDebt?: { encours: number; interets: number };
   taxRate: number;
   /**
    * Déficit fiscal reportable à l'ouverture (report en avant des pertes, doc
@@ -187,11 +194,17 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const disposalLoss = input.disposalLoss ?? 0;
     const operatingIncome = ebitda - depreciation - disposalLoss;
     // charges financières : intérêts de la dette + coûts de mobilisation
-    const interest =
-      (o.financialDebt * input.loanAnnualRate + o.overdraft * input.overdraftAnnualRate) *
-        periodFraction *
-        input.interestMultiplier +
-      financingCost;
+    const interest = input.specificDebt
+      ? ((o.financialDebt - input.specificDebt.encours) * input.loanAnnualRate +
+          o.overdraft * input.overdraftAnnualRate) *
+          periodFraction *
+          input.interestMultiplier +
+        input.specificDebt.interets * input.interestMultiplier +
+        financingCost
+      : (o.financialDebt * input.loanAnnualRate + o.overdraft * input.overdraftAnnualRate) *
+          periodFraction *
+          input.interestMultiplier +
+        financingCost;
     // Résultat exceptionnel (Lot 2C.2) : amende (charge) / éco-subvention
     // (produit) des cartes RSE. Imputé avant l'impôt, décaissé/encaissé ce tour.
     const exceptionalCharge = input.exceptionalCharge ?? 0;

@@ -234,12 +234,15 @@ describe("(c) le moteur compte les modules choisis", () => {
     expect(bilanDesModules(t1.results.b!, BASE, novaScenario)).toBeNull();
   });
 
-  it("une crise ne se dit que si l'équipe a un plan ou un marché à l'export", () => {
+  it("une crise ne se dit que là où elle pèse : une perte de chiffre d'affaires, ou un plan activé", () => {
     const crise = { type: "cyberAttaque", impactDescription: "" };
     expect(bilanDesModules({ crisisEvent: crise }, BASE, novaScenario)).toBeNull();
     expect(bilanDesModules({ crisisEvent: crise, crisisCost: 4000 }, BASE, novaScenario)!.crise).toBe(
       "Crise ce tour : cyberattaque.",
     );
+    expect(
+      bilanDesModules({ crisisEvent: crise, crisisRevenueLoss: 12000 }, BASE, novaScenario)!.crise!.replace(/[\u00a0\u202f]/g, " "),
+    ).toBe("Crise ce tour : cyberattaque, chiffre d'affaires perdu 12 000 €.");
   });
 });
 
@@ -279,6 +282,13 @@ describe("(d) l'offre des modules", () => {
       "partnerships",
       "digitalTransformation",
       "brandManagement",
+      "trainingPrograms",
+      "advancedHR",
+      "maintenanceActions",
+      "supplierNegotiation",
+      "commercialActions",
+      "rdActions",
+      "financingOptions",
     ] as const)
       delete sansModule[k];
     expect(construireOffreDesModules({ scenario: sansModule, etat: {}, tour: 3 })).toBeNull();
@@ -294,10 +304,19 @@ describe("(d) l'offre des modules", () => {
     ).toBe(false);
   });
 
-  it("n'offre jamais les modules sans effet appliqué ni les catalogues sans moteur", () => {
-    const decisions = (offre(8) ?? []).map((m) => m.decision);
-    for (const absent of ["trainingEnrollments", "activeCommercialActionIds", "activeContractIds", "activeHRPolicyIds"]) {
-      expect(decisions).not.toContain(absent);
+  it("offre les sept modules rendus jouables, et jamais un élément sans effet appliqué", () => {
+    // La maintenance porte sur le parc de l'entreprise : il faut un parc.
+    const decisions = (offre(8, novaCompany("x", "X", "human")) ?? []).map((m) => m.decision);
+    for (const present of [
+      "trainingEnrollments",
+      "activeCommercialActionIds",
+      "activeContractIds",
+      "activeHRPolicyIds",
+      "maintenanceDecisions",
+      "startedRdActionIds",
+      "financingDraws",
+    ]) {
+      expect(decisions).toContain(present);
     }
     // Le co-achat ne porte qu'une réduction de coûts que le moteur ne lit pas.
     expect(ids(offre(8), "activatePartnershipIds")).not.toContain("part-sourcing");
@@ -305,7 +324,12 @@ describe("(d) l'offre des modules", () => {
 
   it("suit le niveau de la partie", () => {
     expect(offre(3, {}, 1)).toBeNull();
-    expect(offre(3, {}, 2)!.map((m) => m.decision)).toEqual(["qualityActions"]);
+    // Niveau 2 : la qualité (démarches, contrats d'achat) et la maintenance.
+    expect(offre(3, { fleet: novaCompany("x", "X", "human").fleet }, 2)!.map((m) => m.decision)).toEqual([
+      "qualityActions",
+      "maintenanceDecisions",
+      "activeContractIds",
+    ]);
     expect(offre(3, {}, 6)!.length).toBeGreaterThan(5);
   });
 
@@ -321,7 +345,14 @@ describe("(d) l'offre des modules", () => {
     })!;
     const prix = o.find((m) => m.decision === "activePricingStrategyIds")!;
     expect(prix.elements.map((e) => e.id)).not.toContain("ps-premium");
-    expect(prix.enCours).toEqual([{ libelle: "Positionnement haut de gamme", etat: "en vigueur" }]);
+    expect(prix.enCours).toEqual([
+      {
+        libelle: "Positionnement haut de gamme",
+        etat: "en vigueur",
+        id: "ps-premium",
+        arret: { champ: "module.arret.activePricingStrategyIds.ps-premium", occupe: true },
+      },
+    ]);
     expect(prix.plafond).toBe(novaScenario.pricingStrategy!.maxActiveStrategies - 1);
     const digital = o.find((m) => m.decision === "startDigitalProjectIds")!;
     expect(digital.elements.map((e) => e.id)).not.toContain("dt-crm");
@@ -371,8 +402,10 @@ describe("la lecture du formulaire et le jugement du serveur", () => {
     expect(marque.map((e) => e.champ)).toEqual([champDeModule("activeBrandActionIds", "bm-label")]);
     // Un niveau qualité qui n'est pas le suivant.
     expect(refusDesModules({ qualityActions: [{ actionCode: "amelioration_composants", level: 2 }] }, o)).toHaveLength(1);
-    // Un module que l'écran ne propose pas.
-    expect(refusDesModules({ activeHRPolicyIds: ["hr-flex"] }, o)).toHaveLength(1);
+    // Une intervention de maintenance sur une machine nommée : l'écran ne la propose pas.
+    expect(
+      refusDesModules({ maintenanceDecisions: [{ machineId: "ligne-r0-0", actionCode: "preventif", level: 1 }] }, o),
+    ).not.toHaveLength(0);
     // Une partie sans module refuse tout choix de module.
     expect(refusDesModules({ activeBrandActionIds: ["bm-campagne"] }, null)).toHaveLength(1);
   });

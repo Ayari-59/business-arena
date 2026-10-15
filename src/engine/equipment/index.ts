@@ -62,8 +62,16 @@ export function updateMachineFleet(args: {
   types: Map<string, EquipmentTypeDef>;
   rng: () => number;
   roundIndex: number;
+  /**
+   * Baisse du risque de panne du tour, apportée par une intervention de
+   * maintenance préventive sur l'atelier (module `maintenanceActions`). Elle
+   * réduit la probabilité sans changer le nombre de tirages : le flux
+   * aléatoire reste le même. Absente : 0, le calcul d'avant.
+   */
+  breakdownRiskReduction?: number;
 }): MachineRecord[] {
   const { fleet, maintenanceBudget, maintenanceReference, types, rng, roundIndex } = args;
+  const riskFactor = 1 - Math.min(1, Math.max(0, args.breakdownRiskReduction ?? 0));
   const maintenanceRatio =
     maintenanceReference > 0 ? Math.min(1, maintenanceBudget / maintenanceReference) : 1;
 
@@ -82,7 +90,7 @@ export function updateMachineFleet(args: {
     if (machine.isOperational && newWear > breakdownThreshold) {
       const breakdownProbability =
         ((newWear - breakdownThreshold) / (1 - breakdownThreshold)) * 0.3;
-      if (rng() < breakdownProbability) {
+      if (rng() < breakdownProbability * riskFactor) {
         isOperational = false;
       }
     }

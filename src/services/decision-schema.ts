@@ -185,6 +185,26 @@ export const roundDecisionsSchema = z.object({
   activatePartnershipIds: identifiants,
   startDigitalProjectIds: identifiants,
   activeBrandActionIds: identifiants,
+  startedRdActionIds: identifiants,
+  maintenanceDecisions: z
+    .array(
+      z.object({
+        machineId: identifiant,
+        actionCode: identifiant,
+        level: z.coerce.number().int().min(1).max(3),
+      }),
+    )
+    .max(MODULES_MAX)
+    .optional(),
+  financingDraws: z
+    .array(z.object({ optionId: identifiant, amount: z.coerce.number().min(0).max(100_000_000) }))
+    .max(MODULES_MAX)
+    .optional(),
+  /** Ce que l'équipe arrête ce tour ; ce qui peut s'arrêter est jugé par `refusDesModules`. */
+  stoppedModuleItems: z
+    .array(z.object({ module: identifiant, id: identifiant }))
+    .max(MODULES_MAX * 2)
+    .optional(),
 });
 
 // garde de compatibilité structurelle avec le type moteur

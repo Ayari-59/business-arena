@@ -470,6 +470,9 @@ async function resolveGameRound(
       activeEvents: [...activeEvents, ...injected],
       seed: game.seed,
       ...(Object.keys(subventions).length > 0 ? { rescueSubsidies: subventions } : {}),
+      // Les leviers du niveau : ce que la partie offre (une crise n'arrive
+      // qu'aux parties qui offrent les plans de crise, comme l'offre le dit).
+      leviers: presetFromProfile(game.difficultyProfile).decisions,
     });
 
     // Validation défensive : résultats cohérents post-simulation
@@ -600,6 +603,17 @@ async function resolveGameRound(
               digitalEffects: r.digitalEffects ?? null,
               brandCost: r.brandCost ?? null,
               brandEffects: r.brandEffects ?? null,
+              commercialCost: r.commercialCost ?? null,
+              commercialEffects: r.commercialEffects ?? null,
+              supplierNegotiationSaving: r.supplierNegotiationSaving ?? null,
+              hrCost: r.hrCost ?? null,
+              hrEffects: r.hrEffects ?? null,
+              maintenanceCost: r.maintenanceCost ?? null,
+              maintenanceEffects: r.maintenanceEffects ?? null,
+              rdActionsCost: r.rdActionsCost ?? null,
+              rdActionsEffects: r.rdActionsEffects ?? null,
+              crisisRevenueLoss: r.crisisRevenueLoss ?? null,
+              stoppedModuleItems: r.stoppedModuleItems ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),

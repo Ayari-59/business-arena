@@ -135,6 +135,12 @@ export interface PartieARejouer {
    * répartition d'octobre 2026) : tout, comme alors.
    */
   leviers?: LeviersOuverts | null;
+  /**
+   * Les leviers du niveau tels que la clôture les passe au moteur
+   * (`presetFromProfile(...).decisions`) : une crise n'est tirée qu'aux
+   * parties qui offrent les plans de crise. Absents : aucune crise tirée.
+   */
+  leviersDuNiveau?: LeviersOuverts | null;
 }
 
 /** Qui décide pour le joueur : ses décisions jouées, ou une méthode. */
@@ -296,6 +302,7 @@ export function rejouer(
       decisions,
       activeEvents: evenements,
       seed: graine,
+      ...(partie.leviersDuNiveau ? { leviers: partie.leviersDuNiveau } : {}),
     });
 
     // Les scores du tour, comme `persistRoundScores` les calcule.
