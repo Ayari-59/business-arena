@@ -470,9 +470,6 @@ async function resolveGameRound(
       activeEvents: [...activeEvents, ...injected],
       seed: game.seed,
       ...(Object.keys(subventions).length > 0 ? { rescueSubsidies: subventions } : {}),
-      // Les leviers du niveau : ce que la partie offre (une crise n'arrive
-      // qu'aux parties qui offrent les plans de crise, comme l'offre le dit).
-      leviers: presetFromProfile(game.difficultyProfile).decisions,
     });
 
     // Validation défensive : résultats cohérents post-simulation
@@ -584,35 +581,8 @@ async function resolveGameRound(
               subscription: r.subscription ?? null,
               // Modules optionnels : coûts et effets du tour, relus par le bilan
               // « Modules engagés ce tour » (`services/modules-offer.ts`).
-              hsCost: r.hsCost ?? null,
-              trainingCost: r.trainingCost ?? null,
-              trainingEffects: r.trainingEffects ?? null,
-              capacityCost: r.capacityCost ?? null,
-              internationalRevenue: r.internationalRevenue ?? null,
-              internationalCost: r.internationalCost ?? null,
-              innovationCost: r.innovationCost ?? null,
-              innovationEffects: r.innovationEffects ?? null,
-              rseProgramCost: r.rseProgramCost ?? null,
-              rseProgramEffects: r.rseProgramEffects ?? null,
-              pricingEffects: r.pricingEffects ?? null,
-              crisisCost: r.crisisCost ?? null,
-              crisisEvent: r.crisisEvent ?? null,
-              partnershipCost: r.partnershipCost ?? null,
-              partnershipEffects: r.partnershipEffects ?? null,
-              digitalCost: r.digitalCost ?? null,
-              digitalEffects: r.digitalEffects ?? null,
-              brandCost: r.brandCost ?? null,
-              brandEffects: r.brandEffects ?? null,
-              commercialCost: r.commercialCost ?? null,
-              commercialEffects: r.commercialEffects ?? null,
-              supplierNegotiationSaving: r.supplierNegotiationSaving ?? null,
-              hrCost: r.hrCost ?? null,
-              hrEffects: r.hrEffects ?? null,
-              maintenanceCost: r.maintenanceCost ?? null,
-              maintenanceEffects: r.maintenanceEffects ?? null,
               rdActionsCost: r.rdActionsCost ?? null,
               rdActionsEffects: r.rdActionsEffects ?? null,
-              crisisRevenueLoss: r.crisisRevenueLoss ?? null,
               stoppedModuleItems: r.stoppedModuleItems ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),

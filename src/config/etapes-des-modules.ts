@@ -3,11 +3,10 @@ import { PREFIXE_DES_MODULES, type DecisionDeModule } from "@/config/modules-sai
 /**
  * CHAQUE MODULE DU SCÉNARIO SE DÉCIDE DANS L'ÉTAPE DE SON THÈME.
  *
- * Les dix-huit catalogues optionnels (stratégie de prix, politiques RH, plans
- * de crise…) s'empilaient dans une étape à part, « Projets », sans ordre : le
- * joueur réglait son prix à « Vendre », puis retrouvait la stratégie de prix
- * six écrans plus loin, entre une démarche qualité et un partenariat. Chaque
- * module vit maintenant à la fin de l'étape dont il prolonge les décisions.
+ * Les catalogues optionnels s'empilaient dans une étape à part, « Projets »,
+ * sans ordre. Chaque module vit maintenant à la fin de l'étape dont il
+ * prolonge les décisions : les démarches qualité et les programmes de R&D à
+ * « Budgéter », à côté du budget qualité et du budget R&D.
  *
  * CETTE TABLE EST LA SEULE SOURCE DU CLASSEMENT. Le formulaire de décision y
  * lit où poser chaque module, et le récapitulatif d'un tour clos sous quel
@@ -33,32 +32,14 @@ export const ETAPES_DU_FORMULAIRE = [
 export type EtapeDuFormulaire = (typeof ETAPES_DU_FORMULAIRE)[number];
 
 /** L'étape de chaque module : là où le joueur prend les décisions du même thème. */
-export const ETAPE_DU_MODULE: Record<DecisionDeModule, EtapeDuFormulaire> = {
-  // Vendre : le prix, les clients, la marque, les marchés.
-  activePricingStrategyIds: "vendre",
-  activeCommercialActionIds: "vendre",
-  activeBrandActionIds: "vendre",
-  enteredMarketIds: "vendre",
-  // S'approvisionner : ce qu'on achète, et l'outil qui produit.
-  activeContractIds: "approvisionner",
-  activeCapacityOptionIds: "approvisionner",
-  maintenanceDecisions: "approvisionner",
-  // Budgéter : ce qu'on dépense pour l'offre, la qualité, la recherche.
+export const ETAPE_DU_MODULE = {
+  // Budgéter : ce qu'on dépense pour la qualité et la recherche.
   qualityActions: "budgets",
-  hsActions: "budgets",
   startedRdActionIds: "budgets",
-  startedInnovationIds: "budgets",
-  // Équipe & RSE : les salariés et l'engagement de l'entreprise.
-  trainingEnrollments: "equipe",
-  activeHRPolicyIds: "equipe",
-  activeRseActionIds: "equipe",
-  // Financer & investir : d'où vient l'argent, où il va sur la durée.
-  financingDraws: "financer",
-  activatePartnershipIds: "financer",
-  startDigitalProjectIds: "financer",
-  // Assurance & risques : se préparer à ce qui peut arriver.
-  activeCrisisPlanIds: "assurance",
-};
+} as const satisfies Record<DecisionDeModule, EtapeDuFormulaire>;
+
+/** Les étapes qui portent au moins un module. */
+export type EtapeDuModule = (typeof ETAPE_DU_MODULE)[DecisionDeModule];
 
 /** Les titres des étapes, tels que la barre d'étapes les affiche. */
 const TITRES: Record<EtapeDuFormulaire, string> = {
@@ -74,15 +55,10 @@ const TITRES: Record<EtapeDuFormulaire, string> = {
 
 /**
  * Le titre d'une étape. En gamme, la première porte tout ce qui se décide sur
- * une référence : « Vos références ». L'assurance devient « Assurance &
- * risques » quand les plans de crise y sont offerts.
+ * une référence : « Vos références ».
  */
-export function titreDeLEtape(
-  etape: EtapeDuFormulaire,
-  contexte: { gamme?: boolean; risques?: boolean } = {},
-): string {
+export function titreDeLEtape(etape: EtapeDuFormulaire, contexte: { gamme?: boolean } = {}): string {
   if (etape === "vendre" && contexte.gamme) return "Vos références";
-  if (etape === "assurance" && contexte.risques) return "Assurance & risques";
   return TITRES[etape];
 }
 
@@ -113,16 +89,14 @@ export function etapesAffichees(
  * La carte des modules d'une étape, dans le parcours du téléphone : son nom au
  * récapitulatif, et la question posée en tête d'écran.
  */
-export const CARTE_DES_MODULES: Record<EtapeDuFormulaire, { nom: string; question: string }> = {
-  vendre: { nom: "Engagements commerciaux", question: "Quels engagements commerciaux ?" },
-  approvisionner: { nom: "Achats et production", question: "Qu'engagez-vous pour produire ?" },
+export const CARTE_DES_MODULES: Record<EtapeDuModule, { nom: string; question: string }> = {
   budgets: { nom: "Programmes", question: "Quels programmes lancez-vous ?" },
-  equipe: { nom: "Engagements RH et RSE", question: "Qu'engagez-vous pour l'équipe ?" },
-  financer: { nom: "Financements et projets", question: "Quels financements et projets ?" },
-  tresorerie: { nom: "Engagements de trésorerie", question: "Qu'engagez-vous pour la trésorerie ?" },
-  assurance: { nom: "Plans de crise", question: "Quels plans de crise préparez-vous ?" },
-  prevoir: { nom: "Engagements d'information", question: "Qu'engagez-vous pour vous informer ?" },
 };
+
+/** Une étape porte-t-elle des modules ? (le type de `CARTE_DES_MODULES`). */
+export function etapeDeModule(etape: EtapeDuFormulaire): etape is EtapeDuModule {
+  return etape in CARTE_DES_MODULES;
+}
 
 /** Ce que `moduleDuRefus` lit d'un module offert. */
 interface ModuleRepere {

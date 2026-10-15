@@ -6,9 +6,8 @@ import { jouerSansModule, SECTEURS } from "../helpers/partie-sans-module";
 /**
  * UNE PARTIE SANS MODULE NE BOUGE PAS D'UN CENTIME.
  *
- * Les correctifs du moteur (prix facturé, crise, arrêts, tours minimaux,
- * périodicité) et les sept modules rendus jouables ne doivent rien changer à
- * une partie qui n'en choisit aucun. Le témoin a été enregistré sur le moteur
+ * Les correctifs du moteur, puis le retrait de seize modules, ne doivent rien
+ * changer à une partie qui n'en choisit aucun. Le témoin a été enregistré sur le moteur
  * d'AVANT, au centime, pour les quatre secteurs, au trimestre et au mois :
  * quatre entreprises pilotées par les bots (finance, RH, investissement et
  * trésorerie compris), six tours, compte de résultat, bilan, tableau de flux
@@ -31,12 +30,18 @@ describe("une partie sans module garde ses résultats d'avant, au centime", () =
     }
   }
 
-  it("un niveau qui ne propose pas les plans de crise joue la même partie (nova, bistrot)", () => {
-    // Niveau 3 : l'assurance, et donc les plans de crise, restent fermés.
-    const niveau3 = presetByLevel.get(3)!.decisions;
-    expect(niveau3.insurance).toBe(false);
-    for (const secteur of ["nova", "bistrot"]) {
-      expect(jouerSansModule({ secteur, leviers: niveau3 })).toEqual(TEMOIN[`${secteur}.quarter`]);
+  it("à tout niveau, une partie sans module joue la même partie : plus de crise tirée d'office", () => {
+    // Les plans de crise retirés, le niveau ne fait plus rien tomber sur le
+    // chiffre d'affaires d'une équipe qui n'a rien décidé. Aux niveaux 4 à 6,
+    // la crise du module en emportait 10 % certains tours : ce test était
+    // rouge avant le retrait, pour les quatre secteurs.
+    for (const niveau of [3, 4, 5, 6] as const) {
+      const leviers = presetByLevel.get(niveau)!.decisions;
+      for (const secteur of Object.keys(SECTEURS)) {
+        expect(jouerSansModule({ secteur, leviers }), `${secteur}, niveau ${niveau}`).toEqual(
+          TEMOIN[`${secteur}.quarter`],
+        );
+      }
     }
   });
 
