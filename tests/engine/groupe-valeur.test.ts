@@ -87,10 +87,12 @@ describe("le niveau 7 sans rachat ni sous-traitance rejoue le niveau 6 au centim
     }
   });
   it("et chaque entreprise y dit sa valeur, cohérente avec son bilan", () => {
-    for (const tour of apres) {
+    for (const [t, tour] of apres.entries()) {
       for (const r of Object.values(tour.results)) {
         const v = r.groupe!.valeur!;
-        expect(v.detteNette).toBeCloseTo(detteNette(r.balanceSheet), 6);
+        // Au dernier tour, une économie de charges sous la moyenne compte comme une dette.
+        if (t < apres.length - 1) expect(v.detteNette).toBeCloseTo(detteNette(r.balanceSheet), 6);
+        else expect(v.detteNette).toBeGreaterThanOrEqual(detteNette(r.balanceSheet) - 1e-6);
         expect(v.valeurCapitauxPropres).toBeCloseTo(Math.max(0, v.valeurEntreprise - v.detteNette), 6);
         expect(v.valeurParAction).toBeCloseTo(v.valeurCapitauxPropres / v.actions, 9);
       }
@@ -154,6 +156,8 @@ describe("actions, dilution et dividendes", () => {
     const avec = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, coupe).at(-1)!.results.e0!;
     expect(avec.incomeStatement.ebitda).toBeGreaterThan(ref.incomeStatement.ebitda);
     expect(avec.groupe!.valeur!.valeurEntreprise).toBeLessThanOrEqual(ref.groupe!.valeur!.valeurEntreprise + 1);
+    // ni la caisse qu'elle laisse : une dépense reportée compte comme une dette
+    expect(avec.groupe!.valeur!.valeurCapitauxPropres).toBeLessThanOrEqual(ref.groupe!.valeur!.valeurCapitauxPropres + 1);
   });
 
   it("un bilan avec écart d'acquisition reste équilibré au contrôle", () => {

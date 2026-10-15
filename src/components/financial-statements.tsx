@@ -68,6 +68,13 @@ const CASH_LABELS: Record<string, string> = {
   augmentation_capital: "Augmentation de capital",
   dividendes_verses: "Dividendes versés aux associés",
   remboursement_emprunt: "Remboursement d'emprunt",
+  // Niveau 7 « Groupe »
+  achats_sous_traitance: "Achats de sous-traitance",
+  frais_de_rachat: "Frais et coût d'intégration du rachat",
+  rachat_prix_paye: "Rachat : prix payé",
+  rachat_tresorerie_acquise: "Rachat : trésorerie de la société reprise",
+  emprunt_d_acquisition: "Emprunt d'acquisition",
+  augmentation_capital_investisseurs: "Augmentation de capital (investisseurs)",
 };
 
 /**

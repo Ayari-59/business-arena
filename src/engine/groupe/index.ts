@@ -7,7 +7,7 @@ import type {
 } from "../types";
 import { toGamme } from "../gamme";
 import { executerLesRachats } from "./rachat";
-import { ebeNormalise, initialiserLeGroupe, valoriser } from "./valorisation";
+import { economieDeFinDePartie, initialiserLeGroupe, valoriser } from "./valorisation";
 import type { ValeurDeLEntreprise } from "./types";
 
 export * from "./types";
@@ -162,10 +162,15 @@ export function simulerLeGroupe(
         ebe: [...g.ebe, ebe],
         discretionnaires: [...g.discretionnaires, disc],
       };
-      const pourLaValeur = dernier
-        ? { ...groupe, ebe: [...g.ebe, ebeNormalise(ebe, disc, g.discretionnaires)] }
-        : groupe;
-      const valeur = valoriser({ groupe: pourLaValeur, finance: r.balanceSheet, roundDays: scenario.roundDays, multiple });
+      const economie = dernier ? economieDeFinDePartie(disc, g.discretionnaires) : 0;
+      const pourLaValeur = economie > 0 ? { ...groupe, ebe: [...g.ebe, ebe - economie] } : groupe;
+      const valeur = valoriser({
+        groupe: pourLaValeur,
+        finance: r.balanceSheet,
+        roundDays: scenario.roundDays,
+        multiple,
+        ...(economie > 0 ? { detteEnPlus: economie } : {}),
+      });
       suivants.set(c.id, { ...c, groupe });
       results[c.id] = {
         ...r,

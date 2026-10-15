@@ -68,13 +68,15 @@ export function valoriser(args: {
   finance: BalanceSheet;
   roundDays: number;
   multiple: number;
+  /** Dette nette à ajouter (la normalisation de fin de partie : la caisse d'une économie non reconductible). */
+  detteEnPlus?: number;
 }): ValeurDeLEntreprise {
   const { groupe: g, finance: b } = args;
   const ebe = ebeDouzeMois(g, args.roundDays);
   const rendement = args.multiple * Math.max(0, ebe);
   const ae = actifEconomique(b);
   const ve = Math.max(rendement, ae);
-  const dn = detteNette(b);
+  const dn = args.detteEnPlus ? detteNette(b) + args.detteEnPlus : detteNette(b);
   const vcp = Math.max(0, ve - dn);
   const v = g.actions > 0 ? vcp / g.actions : 0;
   return {
@@ -132,12 +134,13 @@ export function parametresDuTest(
 /**
  * LA NORMALISATION DE FIN DE PARTIE. Au dernier tour, couper le marketing ou la
  * qualité gonflerait l'EBE, donc la valeur, sans rien coûter : il n'y a plus de
- * tour pour en payer la demande perdue. L'EBE retenu pour la valeur retranche
- * donc l'économie faite sous la moyenne des trois tours précédents.
+ * tour pour en payer la demande perdue. L'économie faite sous la moyenne des
+ * trois tours précédents est donc retranchée de l'EBE retenu pour la valeur, et
+ * la caisse qu'elle a laissée compte comme une dette : une dépense reportée.
  */
-export function ebeNormalise(ebe: number, discretionnaire: number, precedents: readonly number[]): number {
+export function economieDeFinDePartie(discretionnaire: number, precedents: readonly number[]): number {
   const derniers = precedents.slice(-3);
-  if (derniers.length === 0) return ebe;
+  if (derniers.length === 0) return 0;
   const moyenne = derniers.reduce((s, x) => s + x, 0) / derniers.length;
-  return ebe - Math.max(0, moyenne - discretionnaire);
+  return Math.max(0, moyenne - discretionnaire);
 }
