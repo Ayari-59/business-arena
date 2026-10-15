@@ -82,6 +82,12 @@ export interface FournisseurRachetable {
   code: string;
   nom: string;
   recit: string;
+  /**
+   * Ses clients hors partie : un chiffre d'affaires par tour au premier tour,
+   * sa saison (un coefficient par tour, repris en boucle) et sa croissance par
+   * tour. Il fonde sa valeur avant que l'équipe n'y passe ses achats.
+   */
+  clientsExterieurs: { chiffreDAffaires: number; saisonnalite: number[]; croissance: number };
   /** Part de son chiffre d'affaires qui paie ses propres achats et sa fabrication. */
   tauxDeCoutVariable: number;
   chargesFixesParTour: number;
@@ -95,6 +101,21 @@ export interface FournisseurRachetable {
   tresorerie: number;
   dette: number;
   tauxDInteretParTour: number;
+}
+
+/**
+ * L'IMPORT, AU NIVEAU 7 : le fournisseur le moins cher à l'unité, mais au
+ * bout d'une longue chaîne. Ses ruptures se tirent sur un flux propre, plus
+ * fréquentes aux pics de la saison (ses délais ne suivent pas Noël), et son
+ * prix est en devise : il suit un cours qui varie à chaque tour.
+ */
+export interface ImportDuGroupe {
+  /** Le code du fournisseur import dans les catalogues du scénario. */
+  code: string;
+  /** Probabilité de rupture d'un tour ordinaire, et d'un tour de pic (saison du marché au moins `seuilDePic`). */
+  rupture: { probabilite: number; probabiliteAuxPics: number; seuilDePic: number };
+  /** Le cours de sa devise : écart-type de son logarithme par tour. */
+  change: { devise: string; volatilite: number };
 }
 
 export interface ConfigDeGroupe {
@@ -127,6 +148,8 @@ export interface ConfigDeGroupe {
   sites?: SiteFerme[];
   /** Les fournisseurs à vendre. */
   fournisseurs?: FournisseurRachetable[];
+  /** Le fournisseur import, rendu risqué au niveau 7 (absent : le fournisseur du scénario, tel quel). */
+  import?: ImportDuGroupe;
   /** Sous-traitance par référence (absent : levier fermé ; une référence absente ne se sous-traite pas). */
   sousTraitance?: Record<ProductCode, SousTraitanceDUneReference>;
 }

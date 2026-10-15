@@ -128,12 +128,14 @@ function avecLeGroupe(
             fournisseurs: cfg.fournisseurs.map((f) => ({
               ...f,
               chargesFixesParTour: f.chargesFixesParTour * k,
+              clientsExterieurs: { ...f.clientsExterieurs, chiffreDAffaires: f.clientsExterieurs.chiffreDAffaires * k },
               capacite: f.capacite * k,
               dureeDAmortissement: f.dureeDAmortissement / k,
               tauxDInteretParTour: f.tauxDInteretParTour * k,
             })),
           }
         : {}),
+      ...(leviers.croissanceExterne && cfg.import ? { import: { ...cfg.import } } : {}),
       ...(leviers.croissanceExterne && cfg.sites
         ? {
             sites: cfg.sites.map((site) => ({

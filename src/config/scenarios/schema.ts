@@ -372,6 +372,11 @@ export const engineScenarioConfigSchema = z.object({
             code: z.string().min(1),
             nom: z.string().min(1),
             recit: z.string(),
+            clientsExterieurs: z.object({
+              chiffreDAffaires: z.number().min(0),
+              saisonnalite: z.array(z.number().min(0)),
+              croissance: z.number(),
+            }),
             tauxDeCoutVariable: z.number().min(0).max(1),
             chargesFixesParTour: z.number().min(0),
             capacite: z.number().positive(),
@@ -383,6 +388,17 @@ export const engineScenarioConfigSchema = z.object({
             tauxDInteretParTour: z.number().min(0),
           }),
         )
+        .optional(),
+      import: z
+        .object({
+          code: z.string().min(1),
+          rupture: z.object({
+            probabilite: z.number().min(0).max(1),
+            probabiliteAuxPics: z.number().min(0).max(1),
+            seuilDePic: z.number().positive(),
+          }),
+          change: z.object({ devise: z.string().min(1), volatilite: z.number().min(0) }),
+        })
         .optional(),
       sousTraitance: z
         .record(

@@ -7,16 +7,18 @@ import type { ComptesDUneFiliale, FournisseurRachetable, PrixDeCession } from ".
  * RACHETER UN FOURNISSEUR (niveau 7) : l'intégration verticale.
  *
  * LE MODÈLE COMPACT. Un fournisseur n'est pas une entreprise de la partie :
- * son chiffre d'affaires d'un tour est la somme des achats que lui font
- * toutes les entreprises de la partie, équipes et concurrents simulés ; son
- * EBE, ce qui reste après son coût variable et ses charges fixes. Il
+ * son chiffre d'affaires d'un tour est celui de ses clients hors partie (sa
+ * saison, sa croissance), plus la somme des achats que lui font toutes les
+ * entreprises de la partie, équipes et concurrents simulés ; son EBE, ce qui
+ * reste après son coût variable et ses charges fixes. Il
  * renouvelle ses immobilisations au rythme où elles s'amortissent, sa dette
  * reste, son besoin en fonds de roulement suit son chiffre d'affaires, et sa
  * trésorerie fait le reste. Tout se recalcule des achats de la partie : pur.
  *
  * SA VALEUR, comme celle des entreprises : le plus haut de son actif net et
  * de sa valeur de rendement (multiple × EBE des douze derniers mois, moins sa
- * dette nette). Le prix demandé y ajoute la prime de contrôle.
+ * dette nette), la fenêtre complétée au départ par l'EBE de ses seuls clients
+ * hors partie. Le prix demandé y ajoute la prime de contrôle.
  *
  * UNE FOIS RACHETÉ, sa capacité est celle qu'on a achetée : quand les
  * commandes la dépassent, il sert le groupe d'abord et rationne les autres au
@@ -41,7 +43,22 @@ export function chiffresDuFournisseur(companies: readonly CompanyState[], code: 
   return Array.from({ length: n }, (_, t) => companies.reduce((s, c) => s + (c.groupe?.achats[code]?.[t] ?? 0), 0));
 }
 
-/** Les comptes du fournisseur, tour par tour, de ses chiffres d'affaires ; [0] est son bilan de départ. */
+/** Le chiffre d'affaires du fournisseur avec ses clients hors partie, au tour `t` (1 = premier tour). */
+export function chiffreExterieur(f: FournisseurRachetable, t: number): number {
+  const c = f.clientsExterieurs;
+  const saison = c.saisonnalite.length > 0 ? c.saisonnalite[(t - 1) % c.saisonnalite.length]! : 1;
+  return c.chiffreDAffaires * saison * Math.pow(1 + c.croissance, t - 1);
+}
+
+/** L'EBE d'un tour moyen avec ses seuls clients hors partie : l'amorce de sa fenêtre de valeur. */
+export function ebeDeReference(f: FournisseurRachetable): number {
+  return f.clientsExterieurs.chiffreDAffaires * (1 - f.tauxDeCoutVariable) - f.chargesFixesParTour;
+}
+
+/**
+ * Les comptes du fournisseur, tour par tour : ses achats de la partie (`chiffres`),
+ * plus ses clients hors partie ; [0] est son bilan de départ.
+ */
 export function comptesDuFournisseur(f: FournisseurRachetable, chiffres: readonly number[], tauxDImpot: number): ComptesDUneFiliale[] {
   const depart: ComptesDUneFiliale = {
     chiffreDAffaires: 0,
@@ -57,7 +74,8 @@ export function comptesDuFournisseur(f: FournisseurRachetable, chiffres: readonl
     capitauxPropres: f.immobilisations + f.tresorerie - f.dette,
   };
   const out = [depart];
-  for (const ca of chiffres) {
+  for (const [i, partie] of chiffres.entries()) {
+    const ca = partie + chiffreExterieur(f, i + 1);
     const p = out[out.length - 1]!;
     const ebe = ca * (1 - f.tauxDeCoutVariable) - f.chargesFixesParTour;
     const amortissement = f.immobilisations / f.dureeDAmortissement;
@@ -99,8 +117,9 @@ export const bilanDUneFiliale = (c: ComptesDUneFiliale, cours = 1) => ({
 /**
  * La valeur d'une société compacte à la clôture d'un tour : le plus haut de
  * son actif économique et de sa valeur de rendement, moins sa dette nette.
- * La fenêtre est complétée, tant qu'elle est courte, par l'EBE qui donne à
- * la société de départ sa valeur comptable. `ebe` en euros.
+ * La fenêtre est complétée, tant qu'elle est courte, par `ebeReference`, à
+ * défaut par l'EBE qui donne à la société de départ sa valeur comptable.
+ * `ebe` en euros.
  */
 export function valeurDUneSociete(args: {
   comptes: ComptesDUneFiliale[];
@@ -109,9 +128,11 @@ export function valeurDUneSociete(args: {
   coursDeDepart: number;
   multiple: number;
   roundDays: number;
+  ebeReference?: number;
 }): { valeur: number; ebeDouzeMois: number } {
   const depart = bilanDUneFiliale(args.comptes[0]!, args.coursDeDepart);
-  const ebeReference = Math.max(0, depart.equity + detteNette(depart)) / (args.multiple * toursParAn(args.roundDays));
+  const ebeReference =
+    args.ebeReference ?? Math.max(0, depart.equity + detteNette(depart)) / (args.multiple * toursParAn(args.roundDays));
   const e = ebeDouzeMois({ ebe: args.ebe, ebeReference }, args.roundDays);
   const b = bilanDUneFiliale(args.comptes[args.comptes.length - 1]!, args.cours);
   const ve = Math.max(args.multiple * Math.max(0, e), actifEconomique(b));
@@ -132,6 +153,7 @@ export function prixDuFournisseur(scenario: EngineScenarioConfig, companies: rea
     coursDeDepart: 1,
     multiple: g.valorisation.multipleEBE,
     roundDays: scenario.roundDays,
+    ebeReference: ebeDeReference(f),
   }).valeur;
   const base = Math.max(actifNet, valeurDeRendement);
   return { actifNet, valeurDeRendement, prix: base > 0 ? base * (1 + (g.rachat?.primeDeControle ?? 0)) : 1 };

@@ -5,7 +5,10 @@ import { soldUnits } from "@/engine/simulation/runGame";
 import { balanceGap } from "@/engine/finance/statements";
 import {
   chiffresDuFournisseur,
+  coursDeLImport,
   comptesDuFournisseur,
+  probabiliteDeRupture,
+  ruptureDeLImport,
   ecartDuBilanConsolide,
   prixDuFournisseur,
   type CibleDeRachat,
@@ -32,8 +35,30 @@ import { rejouer, type PartieARejouer } from "@/pedagogy/merite/rejeu";
 const PROFILS: BotProfile[] = ["balanced", "price_aggressive", "premium", "balanced"];
 const sept = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 7, concurrents: 4, periodicity: "quarter", investmentStories: true });
 const six = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 6, concurrents: 4, periodicity: "quarter", investmentStories: true });
-/** Le monde du 6 avec le bloc de groupe du 7, à la taille du scénario : les mécanismes ne dépendent pas de la taille de départ. */
-const monde: EngineScenarioConfig = { ...six, groupe: { ...sept.groupe!, depart: undefined } };
+/**
+ * Le monde du 6 avec le bloc de groupe du 7, à la taille du scénario ; le
+ * fournisseur standard y est petit (peu de clients hors partie, un petit
+ * bilan), pour qu'une équipe de cette taille puisse le racheter : les
+ * mécanismes n'en dépendent pas.
+ */
+const monde: EngineScenarioConfig = {
+  ...six,
+  groupe: {
+    ...sept.groupe!,
+    depart: undefined,
+    fournisseurs: sept.groupe!.fournisseurs!.map((f) =>
+      f.code === "standard"
+        ? {
+            ...f,
+            clientsExterieurs: { ...f.clientsExterieurs, chiffreDAffaires: 50_000 },
+            immobilisations: 60_000,
+            dette: 30_000,
+            tresorerie: 15_000,
+          }
+        : f,
+    ),
+  },
+};
 const centime = 0.01;
 const STANDARD: CibleDeRachat = { type: "fournisseur", id: "standard" };
 
@@ -95,6 +120,9 @@ describe("le fournisseur, modèle compact", () => {
     const f = monde.groupe!.fournisseurs!.find((x) => x.code === "standard")!;
     const comptes = comptesDuFournisseur(f, ca, monde.finance.taxRate);
     expect(p.actifNet).toBeCloseTo(comptes[2]!.capitauxPropres, 6);
+    // ses clients hors partie s'ajoutent, avec leur saison et leur croissance
+    const ext = f.clientsExterieurs;
+    expect(comptes[2]!.chiffreDAffaires).toBeCloseTo(ca[1]! + ext.chiffreDAffaires * ext.saisonnalite[1]! * (1 + ext.croissance), 6);
     expect(p.prix).toBeCloseTo(Math.max(p.actifNet, p.valeurDeRendement) * (1 + monde.groupe!.rachat!.primeDeControle), 6);
     // ses comptes s'équilibrent : actif = capitaux propres + dette
     for (const c of comptes) expect(c.immobilisations + c.bfr + c.tresorerie - c.capitauxPropres - c.dette).toBeCloseTo(0, 6);
@@ -232,5 +260,49 @@ describe("le rejeu de mérite d'une partie avec un fournisseur racheté", () => 
     const a = rejouer(partie, 2026);
     expect(rejouer(partie, 2026)).toEqual(a);
     expect(() => rejouer(partie, 7)).not.toThrow();
+  });
+});
+
+describe("l'import, au niveau 7 : le moins cher, mais en devise et fragile aux pics", () => {
+  const imp = monde.groupe!.import!;
+  it("son cours suit une marche aléatoire sur son flux propre ; sa rupture est plus probable aux pics", () => {
+    const a = coursDeLImport(2026, imp, 6);
+    expect(a[0]).toBe(1);
+    expect(coursDeLImport(2026, imp, 6)).toEqual(a);
+    expect(coursDeLImport(7, imp, 6)).not.toEqual(a);
+    const pic = monde.market.seasonality.findIndex((x) => x >= imp.rupture.seuilDePic) + 1;
+    expect(probabiliteDeRupture(monde, imp, pic)).toBe(imp.rupture.probabiliteAuxPics);
+    expect(probabiliteDeRupture(monde, imp, 1)).toBe(imp.rupture.probabilite);
+    expect(imp.rupture.probabiliteAuxPics).toBeGreaterThan(imp.rupture.probabilite);
+  });
+
+  it("acheter à l'import ne décale aucun tirage des autres ; son prix suit le cours du tour", () => {
+    const sans = tours(1);
+    const t2 = avancer(monde, sans, 2);
+    const avec = tours(1);
+    const t2i = avancer(monde, avec, 2, (d) => {
+      for (const p of Object.values(d.e0!.products ?? {})) p.supplierChoice = imp.code;
+    });
+    for (const id of ["e1", "e2", "e3"]) expect(t2i.results[id]).toEqual(t2.results[id]);
+    expect(t2i.events).toEqual(t2.events);
+    // et les tours suivants des concurrents restent les mêmes
+    const t3 = avancer(monde, sans, 3);
+    const t3i = avancer(monde, avec, 3, (d) => {
+      for (const p of Object.values(d.e0!.products ?? {})) p.supplierChoice = imp.code;
+    });
+    expect(t3i.events).toEqual(t3.events);
+    // ses ruptures sont celles de son flux propre, tour par tour
+    for (let t = 4; t <= monde.roundsCount; t++) {
+      const out = avancer(monde, avec, t, (d) => {
+        for (const p of Object.values(d.e0!.products ?? {})) p.supplierChoice = imp.code;
+      });
+      expect(out.results.e0!.products!["nova-one"]!.supplier!.supplyDisruption).toBe(ruptureDeLImport(monde, 2026, imp, t, "e0"));
+    }
+    const ruptures = [1, 2, 3, 4, 5, 6].map((t) => ruptureDeLImport(monde, 2026, imp, t, "e0"));
+    expect(ruptures).toEqual([1, 2, 3, 4, 5, 6].map((t) => ruptureDeLImport(monde, 2026, imp, t, "e0")));
+    const c = coursDeLImport(2026, imp, 2);
+    const one = t2i.results.e0!.products!["nova-one"]!.supplier!;
+    expect(one.code).toBe(imp.code);
+    expect(one.priceIndexMultiplier).toBeCloseTo((c[1]! + c[2]!) / 2, 9);
   });
 });

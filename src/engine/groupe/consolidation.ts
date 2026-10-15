@@ -1,6 +1,6 @@
 import type { BalanceSheet, CompanyRoundResult, CompanyState, EngineScenarioConfig } from "../types";
 import { toGamme } from "../gamme";
-import { chiffresDuFournisseur, comptesDuFournisseur, leFournisseur, valeurDUneSociete } from "./fournisseur";
+import { chiffresDuFournisseur, comptesDuFournisseur, ebeDeReference, leFournisseur, valeurDUneSociete } from "./fournisseur";
 import type { Consolidation, Filiale } from "./types";
 
 /**
@@ -100,6 +100,7 @@ export function consolider(args: {
       coursDeDepart: 1,
       multiple,
       roundDays: scenario.roundDays,
+      ebeReference: ebeDeReference(f),
     }).valeur;
     // Le test de dépréciation : ce qu'un acheteur paierait aujourd'hui la part
     // du groupe (sa valeur, prime de contrôle comprise, comme au rachat)

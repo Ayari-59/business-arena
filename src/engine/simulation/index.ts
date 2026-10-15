@@ -86,7 +86,14 @@ import {
   tickEvents,
 } from "../events";
 import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
-import { chargesDesSites, commandeDuTour, simulerLeGroupe, type CommandeDuTour } from "../groupe";
+import {
+  chargesDesSites,
+  commandeDuTour,
+  prixDeLImport,
+  ruptureDeLImport,
+  simulerLeGroupe,
+  type CommandeDuTour,
+} from "../groupe";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -759,13 +766,17 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // La rupture se tire UNE fois par fournisseur réellement utilisé, dans
     // l'ordre de la gamme (mono : le seul tirage historique).
     const disruptionBySupplier = new Map<string, boolean>();
+    // Niveau 7 : l'import risqué tire ses ruptures sur son flux propre.
+    const importDuGroupe = scenario.groupe?.import;
     for (const s of productSuppliers) {
       if (!s || disruptionBySupplier.has(s.code)) continue;
       disruptionBySupplier.set(
         s.code,
-        s.supplyRiskProbability > 0 && !estimation
-          ? rng.next() < s.supplyRiskProbability
-          : false,
+        importDuGroupe && importDuGroupe.code === s.code
+          ? !estimation && ruptureDeLImport(scenario, input.seed, importDuGroupe, roundIndex, state.id)
+          : s.supplyRiskProbability > 0 && !estimation
+            ? rng.next() < s.supplyRiskProbability
+            : false,
       );
     }
     const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
@@ -889,9 +900,9 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       if (!s || priceIndexBySupplier.has(s.code)) continue;
       priceIndexBySupplier.set(
         s.code,
-        s.priceIndex
-          ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex)
-          : 1,
+        (s.priceIndex ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex) : 1) *
+          // Niveau 7 : le prix de l'import suit le cours de sa devise.
+          (importDuGroupe && importDuGroupe.code === s.code ? prixDeLImport(input.seed, importDuGroupe, roundIndex) : 1),
       );
     }
     // Fournisseur scalaire (mono-produit) — peut différer des productSuppliers
@@ -2420,7 +2431,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                           costMultiplier: w.productSuppliers[k]!.costMultiplier,
                           qualityBonus: w.productSuppliers[k]!.qualityBonus,
                           supplyDisruption: w.productDisruptions[k]!,
-                          ...(w.productSuppliers[k]!.priceIndex !== undefined
+                          ...(w.productSuppliers[k]!.priceIndex !== undefined ||
+                          scenario.groupe?.import?.code === w.productSuppliers[k]!.code
                             ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.productSuppliers[k]!.code) ?? 1 }
                             : {}),
                         },

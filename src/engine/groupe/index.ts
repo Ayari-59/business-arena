@@ -13,6 +13,7 @@ export { cleDeLaCible, dejaVendue } from "./rachat";
 export { chargesDesSites, cleDuSite, etatDuSite, siteAcquis, valeurRecouvrable } from "./site-ferme";
 export { fluxPropre } from "./flux-propre";
 export { agrandir } from "./depart";
+export { coursDeLImport, prixDeLImport, probabiliteDeRupture, ruptureDeLImport } from "./import";
 export {
   chiffresDuFournisseur,
   commandesAuFournisseur,
