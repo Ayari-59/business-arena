@@ -902,8 +902,9 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       priceIndexBySupplier.set(
         s.code,
         (s.priceIndex ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex) : 1) *
-          // Niveau 7 : le prix de l'import suit le cours de sa devise.
-          (importDuGroupe && importDuGroupe.code === s.code ? prixDeLImport(input.seed, importDuGroupe, roundIndex) : 1),
+          // Niveau 7 : le prix de l'import suit le cours de sa devise (l'estimation,
+          // qui n'a pas la graine, le prend au cours de départ).
+          (importDuGroupe && importDuGroupe.code === s.code && !estimation ? prixDeLImport(input.seed, importDuGroupe, roundIndex) : 1),
       );
     }
     // Fournisseur scalaire (mono-produit) — peut différer des productSuppliers

@@ -132,7 +132,8 @@ const createGameSchema = z.object({
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
   humanTeamsCount: z.coerce.number().int().min(1).max(8).catch(4),
   botCount: z.coerce.number().int().min(0).max(7).catch(1),
-  level: z.coerce.number().int().min(1).max(6).catch(3),
+  // 7 : le niveau « Groupe », que `createClassGame` réserve à l'administration de la plateforme.
+  level: z.coerce.number().int().min(1).max(7).catch(3),
   // Tours joués : vide ou hors bornes = tous ceux du scénario. Le service
   // rabote de toute façon à ce que le secteur porte.
   roundsCount: z.coerce.number().int().min(1).max(24).optional().catch(undefined),

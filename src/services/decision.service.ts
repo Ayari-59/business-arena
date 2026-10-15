@@ -11,7 +11,7 @@ import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engin
  *
  * Champs ponctuels (remis à undefined) :
  *   hr.hire, hr.fire, hr.trainingBudget,
- *   investment, treasury, finance, acceptOrder, studies,
+ *   investment, treasury, finance, acceptOrder, studies, rachat, diligence,
  *   et les choix de module (actions qualité, hygiène et sécurité,
  *   activations des catalogues optionnels) : ce sont des DÉMARRAGES, que le
  *   moteur garde ensuite dans l'état. Reconduits, ils relanceraient une action
@@ -31,6 +31,10 @@ export function carryOverDecisions(prev: RoundDecisions): RoundDecisions {
     startedRdActionIds: undefined,
     // Un arrêt ne se reconduit pas : il a eu lieu au tour où il a été décidé.
     stoppedModuleItems: undefined,
+    // Niveau 7 : un rachat et un audit sont ponctuels ; reconduits, ils se
+    // rejoueraient. La sous-traitance et les synergies se reconduisent comme le plan.
+    ...(prev.rachat ? { rachat: undefined } : {}),
+    ...(prev.diligence ? { diligence: undefined } : {}),
   };
 }
 

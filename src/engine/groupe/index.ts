@@ -303,8 +303,13 @@ function rationner(
   return { companies: etats, decisions, rationnement, rationnes };
 }
 
-/** La première ouverture d'une entreprise au niveau 7 : sa taille de départ, puis son état de groupe. */
-function premiereOuverture(c: CompanyState, cfg: NonNullable<SimulationInput["scenario"]["groupe"]>, roundDays: number): CompanyState {
+/**
+ * La première ouverture d'une entreprise au niveau 7 : sa taille de départ,
+ * puis son état de groupe. Les services l'appliquent dès la création, pour
+ * que l'état du tour 0 la montre ; le moteur, à une entreprise qui ne porte
+ * pas encore d'état de groupe. Jamais deux fois : l'état de groupe le marque.
+ */
+export function premiereOuverture(c: CompanyState, cfg: NonNullable<SimulationInput["scenario"]["groupe"]>, roundDays: number): CompanyState {
   const grande = agrandir(c, cfg.depart?.facteur ?? 1);
   return { ...grande, groupe: initialiserLeGroupe(grande, cfg, roundDays) };
 }
