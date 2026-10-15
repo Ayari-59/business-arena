@@ -86,6 +86,7 @@ import {
   tickEvents,
 } from "../events";
 import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
+import { simulerLeGroupe } from "../groupe";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -371,8 +372,22 @@ function computePerformanceMetrics(
  * Résolution d'un tour (doc 02 §2). Fonction PURE et DÉTERMINISTE :
  * aucune E/S, aucun aléa hors PRNG seedé, mêmes entrées ⇒ mêmes sorties.
  * Pipeline : événements → production → stocks → marché → finance → état.
+ *
+ * NIVEAU 7 « GROUPE » : une partie dont le snapshot porte un bloc `groupe`,
+ * ou dont une entreprise a été absorbée, passe par `simulerLeGroupe`, qui
+ * entoure le tour ordinaire (valeur, rachats, entreprises absorbées). Toute
+ * autre partie appelle le tour ordinaire avec le même objet : le chemin
+ * d'avant, au bit près.
  */
 export function simulateRound(input: SimulationInput): SimulationOutput {
+  if (input.scenario.groupe || input.companies.some((c) => c.status === "absorbee")) {
+    return simulerLeGroupe(input, simulerLeTour);
+  }
+  return simulerLeTour(input);
+}
+
+/** Le tour ordinaire. */
+function simulerLeTour(input: SimulationInput): SimulationOutput {
   const { scenario, roundIndex } = input;
   const rng = createRng(deriveRoundSeed(input.seed, roundIndex));
   // La gamme : un produit (les secteurs historiques, marché = scenario.market,

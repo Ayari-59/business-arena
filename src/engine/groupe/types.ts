@@ -97,6 +97,9 @@ export interface DecisionDeRachat {
 /** La valeur de l'entreprise à la clôture d'un tour. */
 export interface ValeurDeLEntreprise {
   ebeDouzeMois: number;
+  /** Multiple × EBE des douze derniers mois. */
+  valeurDeRendement: number;
+  /** La plus haute de la valeur de rendement et de l'actif économique. */
   valeurEntreprise: number;
   detteNette: number;
   valeurCapitauxPropres: number;

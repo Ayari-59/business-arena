@@ -15,7 +15,9 @@ export interface Ratios {
 
 export function computeRatios(is: IncomeStatement, b: BalanceSheet, taxRate: number): Ratios {
   const capitalEmployed = b.equity + b.financialDebt;
-  const totalAssets = b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash;
+  const actifs = b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash;
+  // L'écart d'acquisition (niveau 7) n'est additionné que présent.
+  const totalAssets = b.goodwill !== undefined ? actifs + b.goodwill : actifs;
   const roce =
     capitalEmployed > 0 ? (is.operatingIncome * (1 - taxRate)) / capitalEmployed : 0;
   // ROE (Rf). Quand les capitaux propres sont nuls ou négatifs, le ratio

@@ -324,6 +324,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       payables: payablesEnd,
       overdraft: Math.max(0, -closingNet),
       vatLiability: vatDue,
+      // Niveau 7 : l'écart d'acquisition, reporté tel quel.
+      ...(o.goodwill !== undefined ? { goodwill: o.goodwill } : {}),
     };
 
     return {
@@ -369,12 +371,15 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
 
 /** Total actif = total passif (contrôle d'équilibre, testé au centime). */
 export function balanceGap(b: BalanceSheet): number {
-  const assets =
+  const actifs =
     b.fixedAssetsNet +
     b.inventoryValue +
     b.receivables +
     b.cash +
     (b.shortTermInvestment ?? 0);
+  // L'écart d'acquisition (niveau 7) n'est additionné que présent : sans lui,
+  // la somme d'avant, au bit près.
+  const assets = b.goodwill !== undefined ? actifs + b.goodwill : actifs;
   const liabilities =
     b.equity + b.financialDebt + b.payables + b.overdraft + (b.vatLiability ?? 0);
   return assets - liabilities;
