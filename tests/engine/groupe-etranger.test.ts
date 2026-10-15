@@ -138,9 +138,11 @@ describe("le rachat d'une entreprise étrangère, et le groupe consolidé", () =
       d.e0!.rachat = { ...offre(e, BRIGHTWAVE, 0.51, 2), part: 0.3 };
     });
     expect(refus.results.e0!.groupe!.rachat!.motif).toMatch(/part/);
-    const e2 = tours(3);
-    const prix = offre(e2, FONIKA, 0.51, 4).prixMaximum;
-    const out = avancer(monde, e2, 4, (d) => {
+    // La fusion s'ouvre au tour où la valeur des actions reflète des résultats réels.
+    const T = monde.groupe!.rachat!.tourMinTitres!;
+    const e2 = tours(T - 1);
+    const prix = offre(e2, FONIKA, 0.51, T).prixMaximum;
+    const out = avancer(monde, e2, T, (d) => {
       d.e0!.rachat = { cible: FONIKA, prixMaximum: prix, paiement: "titres", part: 0.51 };
     });
     const r = out.results.e0!;
@@ -198,8 +200,8 @@ describe("le rejeu de mérite d'une partie avec une filiale étrangère", () => 
     const jouees: RoundDecisions[] = [];
     for (let t = 1; t <= monde.roundsCount; t++) {
       avancer(monde, e, t, (d) => {
-        if (t === 4) d.e0!.rachat = { cible: FONIKA, prixMaximum: 1e9, paiement: "titres", part: 0.51 };
-        if (t >= 5) d.e0!.fabricationEtrangere = { fonika: { "nova-one": 1000 } };
+        if (t === monde.groupe!.rachat!.tourMinTitres) d.e0!.rachat = { cible: FONIKA, prixMaximum: 1e9, paiement: "titres", part: 0.51 };
+        if (t > monde.groupe!.rachat!.tourMinTitres!) d.e0!.fabricationEtrangere = { fonika: { "nova-one": 1000 } };
         jouees.push(d.e0!);
       });
     }

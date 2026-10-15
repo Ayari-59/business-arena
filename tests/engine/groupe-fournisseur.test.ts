@@ -246,7 +246,7 @@ describe("le rejeu de mérite d'une partie avec un fournisseur racheté", () => 
     const jouees: RoundDecisions[] = [];
     for (let t = 1; t <= monde.roundsCount; t++) {
       avancer(monde, e, t, (d) => {
-        if (t === 4) d.e0!.rachat = { cible: STANDARD, prixMaximum: 1e9, paiement: "titres" };
+        if (t === monde.groupe!.rachat!.tourMinTitres) d.e0!.rachat = { cible: STANDARD, prixMaximum: 1e9, paiement: "titres" };
         jouees.push(d.e0!);
       });
     }
