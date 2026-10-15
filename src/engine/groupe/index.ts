@@ -6,11 +6,13 @@ import type {
   SimulationOutput,
 } from "../types";
 import { toGamme } from "../gamme";
+import { executerLesRachats } from "./rachat";
 import { ebeNormalise, initialiserLeGroupe, valoriser } from "./valorisation";
 import type { ValeurDeLEntreprise } from "./types";
 
 export * from "./types";
 export { coutAuBareme, commandeDuTour, type CommandeDuTour } from "./sous-traitance";
+export { prixDeCession, structureReprise } from "./rachat";
 export {
   actifEconomique,
   detteNette,
@@ -107,7 +109,7 @@ export function simulerLeGroupe(
   const multiple = cfg?.valorisation.multipleEBE ?? 0;
 
   // 1. États de groupe.
-  const companies = cfg
+  let companies = cfg
     ? input.companies.map((c) =>
         c.groupe || c.status === "absorbee" ? c : { ...c, groupe: initialiserLeGroupe(c, cfg, scenario.roundDays) },
       )
@@ -119,6 +121,13 @@ export function simulerLeGroupe(
     if (c.groupe) ouverture.set(c.id, valoriser({ groupe: c.groupe, finance: c.finance, roundDays: scenario.roundDays, multiple }));
   }
 
+  // 3. Rachats au jour 1 (l'estimation ne voit que l'équipe : elle ne rachète pas).
+  const rachats =
+    cfg?.rachat && !input.estimation
+      ? executerLesRachats({ scenario, roundIndex, companies, decisions: input.decisions, ouverture })
+      : null;
+  if (rachats) companies = rachats.companies;
+
   // 4. Le tour ordinaire, sans les absorbées.
   const actives = companies.filter((c) => c.status !== "absorbee");
   const decisions = Object.fromEntries(actives.map((c) => [c.id, input.decisions[c.id]!]));
@@ -126,6 +135,7 @@ export function simulerLeGroupe(
     ...input,
     companies: actives,
     decisions,
+    ...(rachats && Object.keys(rachats.operations).length > 0 ? { operationsDeGroupe: rachats.operations } : {}),
   });
 
   // 5. Clôture de groupe.
@@ -162,6 +172,7 @@ export function simulerLeGroupe(
         groupe: {
           ...(r.groupe ?? {}),
           valeur,
+          ...(rachats?.rapports[c.id] ? { rachat: rachats.rapports[c.id] } : {}),
         },
       };
     }
