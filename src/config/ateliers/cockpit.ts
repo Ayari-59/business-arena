@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import { toGamme, withoutRd, type GammeProduct } from "../../engine/gamme";
 import { tempsDeTravail, type ScenarioDefinition } from "../scenarios/registry";
+import { rdDuNiveau } from "../scenarios/scenario-joue";
 
 /**
  * LE COCKPIT : un classeur d'aide à la décision, référence par référence.
@@ -110,7 +111,9 @@ export interface CockpitSource {
   /**
    * Le niveau de l'atelier n'ouvre pas la R&D : la partie se jouera sans le
    * levier et avec toutes les références livrées prêtes, le cockpit prévoit
-   * la même chose. Sans effet sur un instantané de partie, déjà transformé.
+   * la même chose. S'il l'ouvre, les références que tous les niveaux livrent
+   * prêtes (`REFERENCES_LIVREES_PRETES`) le sont aussi. Sans effet sur un
+   * instantané de partie, déjà composé.
    */
   sansRd?: boolean;
 }
@@ -189,7 +192,14 @@ function demandeMoyenne(
 export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   const definition = source.scenario;
   const brut = source.config ?? definition.scenario;
-  const config = source.sansRd ? withoutRd(brut) : brut;
+  // Un instantané de partie est déjà composé à son niveau ; le scénario du
+  // registre l'est ici comme la création le fera (`rdDuNiveau` : R&D retirée
+  // quand le niveau ne l'ouvre pas, références livrées prêtes à tous les niveaux).
+  const config = source.config
+    ? source.sansRd
+      ? withoutRd(brut)
+      : brut
+    : rdDuNiveau(brut, !source.sansRd);
   const gamme = toGamme(config);
   const etat: CompanyState = definition.company(
     "cockpit",

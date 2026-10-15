@@ -305,19 +305,19 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
   briefing:
     "Votre atelier a une capacité limitée, et vos enceintes n'y rapportent pas la même chose. Quand les commandes dépassent ce qu'il peut sortir, la question n'est plus combien produire, mais quoi produire.",
   context:
-    "L'équipe connaît les deux produits en vente, un prototype de grande enceinte dort dans les cartons, et le carnet est vide. La concurrence tient l'entrée de gamme sur les prix, et le haut de gamme sur les passionnés.",
+    "L'équipe connaît les deux enceintes de la maison, la grande vient de sortir de l'atelier sans un seul client, et le carnet est vide. La concurrence tient l'entrée de gamme sur les prix, et le haut de gamme sur les passionnés.",
   dilemma: {
-    question: "Deux enceintes en vente, un prototype à financer, un seul atelier. Vous faites quoi de votre caisse ?",
+    question: "Trois enceintes en vente, un seul atelier. À qui donnez-vous vos lignes ?",
     routes: [
       {
-        label: "Remplir l'atelier de volume, sans toucher au prototype",
-        gain: "Les lignes tournent à plein, et la caisse ne finance rien d'incertain.",
-        risque: "Marge mince, clients volatils, et un concurrent qui lance la grande enceinte.",
+        label: "Remplir l'atelier de volume, la Go et la One",
+        gain: "Les lignes tournent à plein sur des marchés larges et connus.",
+        risque: "Marge mince, clients volatils, et la grande enceinte laissée aux concurrents.",
       },
       {
-        label: "Financer la grande enceinte dès maintenant",
+        label: "Réserver des lignes à la grande enceinte dès maintenant",
         gain: "Une marge plusieurs fois plus large, et l'avantage du premier arrivé.",
-        risque: "La recherche se paie ce trimestre ; l'enceinte ne se vendra qu'au suivant.",
+        risque: "Un marché petit et exigeant : invendue, elle dort en stock et pèse sur la caisse.",
       },
     ],
   },
@@ -1073,7 +1073,7 @@ export interface ScenarioFamily {
   monoLabel: string;
   gammeLabel: string;
   /**
-   * La référence de la gamme qui se BÂTIT par la R&D (« la Studio à développer »).
+   * La référence de la gamme qui se BÂTIT par la R&D (« le traiteur à bâtir »).
    * Elle ne se dit qu'au niveau qui ouvre la R&D : avant, la référence est livrée
    * prête (`withoutRd`). Absente : la gamme n'a rien à développer.
    */
@@ -1101,12 +1101,12 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     head: NOVA_DEFINITION.code,
     mono: NOVA_DEFINITION.code,
     gamme: NOVA_GAMME_DEFINITION.code,
-    // Le niveau des grands arbitrages ; la Studio se développe, elle, au niveau
-    // qui ouvre la R&D (avant, elle est livrée prête).
+    // Le niveau des grands arbitrages. La Studio y est livrée prête, et à tous
+    // les niveaux au-delà, R&D ouverte ou non (`REFERENCES_LIVREES_PRETES`,
+    // scenario-joue.ts) : rien n'y est à bâtir.
     gammeFromLevel: 4,
     monoLabel: "une seule enceinte",
     gammeLabel: "la gamme Go, One et Studio",
-    aBatir: "la Studio à développer",
   },
   {
     head: BOUTIQUE_DEFINITION.code,

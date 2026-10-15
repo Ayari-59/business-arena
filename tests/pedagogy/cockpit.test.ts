@@ -186,12 +186,20 @@ describe("le cockpit de prévision", () => {
 
 describe("le cockpit de NOVA · gamme : la R&D et la marque", () => {
   // La R&D s'ouvre au niveau Stratégie (5) depuis octobre 2026 : l'atelier DCG
-  // (NOVA · gamme, niveau 5) la porte ; celui du BUT GEA (niveau 4) livre la
-  // Studio prête.
+  // (NOVA · gamme, niveau 5) la porte ; celui du BUT GEA (niveau 4) la ferme. La
+  // Studio est livrée prête aux deux (`REFERENCES_LIVREES_PRETES`).
   const gea = () => ATELIERS.find((a) => a.code === "dcg")!;
 
-  it("la Studio ne se vend pas tant que sa R&D cumulée n'atteint pas son coût", () => {
-    const spec = cockpitAtelier(gea());
+  it("l'atelier DCG prévoit la Studio livrée prête, le levier R&D ouvert", () => {
+    const texte = JSON.stringify(cockpitAtelier(gea()));
+    expect(texte).not.toContain("Vendable ce tour");
+    expect(texte).not.toContain("Coût de développement");
+    expect(texte).toContain("Recherche et développement");
+  });
+
+  it("une Studio à développer (le scénario de base, une partie sans niveau) ne se vend pas tant que sa R&D cumulée n'atteint pas son coût", () => {
+    const definition = scenarioByCode("nova-gamme");
+    const spec = cockpitSpec({ scenario: definition, config: definition.scenario, tours: [1, 2, 3, 4], concurrents: 7 });
     const parametres = spec.feuilles[0]!;
     const libelles = parametres.lignes.map((l) => String(l[0]?.v ?? ""));
     expect(libelles).toContain("Coût de développement · NOVA Studio");
