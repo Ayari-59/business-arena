@@ -17,7 +17,7 @@ const PROFILS: BotProfile[] = ["balanced", "price_aggressive", "premium", "passi
 const composer7 = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 7, concurrents: 4, periodicity: "quarter", investmentStories: true });
 const six = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 6, concurrents: 4, periodicity: "quarter", investmentStories: true });
 /** Le monde du 6 et le bloc de groupe du 7 : le mécanisme, indépendamment du marché calibré du 7. */
-const sept: EngineScenarioConfig = { ...six, groupe: composer7.groupe };
+const sept: EngineScenarioConfig = { ...six, groupe: { ...composer7.groupe!, depart: undefined } };
 
 function jouer(scenario: EngineScenarioConfig, retouche?: (tour: number, id: string, d: RoundDecisions) => void) {
   let etats: CompanyState[] = PROFILS.map((p, i) => novaGammeCompany(`e${i}`, `E${i}`, "bot", p));

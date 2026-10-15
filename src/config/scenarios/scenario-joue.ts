@@ -101,6 +101,12 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
  * pics et grand compte compris : s'y préparer fait partie du jeu. Les
  * tranches et le plafond du sous-traitant, les charges d'un site et son délai
  * de remise en route, écrits au trimestre, suivent la périodicité.
+ *
+ * LA TAILLE DE DÉPART. Les entreprises du niveau 7 démarrent plus grandes
+ * (`groupe.depart`, appliqué à leur état par le moteur) ; la structure du
+ * scénario qui suit la taille d'une entreprise suit le même facteur
+ * (`agrandirLeScenario`), comme les tranches du sous-traitant. Le marché,
+ * lui, reste celui du scénario.
  */
 function avecLeGroupe(
   scenario: EngineScenarioConfig,
@@ -110,9 +116,11 @@ function avecLeGroupe(
   const cfg = GROUPE_PAR_SCENARIO[scenario.code];
   if (!cfg) return scenario;
   const k = scenario.roundDays / 90;
+  const f = cfg.depart?.facteur ?? 1;
   return {
-    ...scenario,
+    ...agrandirLeScenario(scenario, f),
     groupe: {
+      ...(cfg.depart ? { depart: { ...cfg.depart } } : {}),
       valorisation: { ...cfg.valorisation },
       ...(leviers.croissanceExterne && cfg.rachat ? { rachat: { ...cfg.rachat } } : {}),
       ...(leviers.croissanceExterne && cfg.fournisseurs
@@ -142,13 +150,48 @@ function avecLeGroupe(
                 code,
                 {
                   ...ref,
-                  plafond: ref.plafond * k,
-                  tranches: ref.tranches.map((t) => (t.jusqua === undefined ? { ...t } : { ...t, jusqua: t.jusqua * k })),
+                  plafond: ref.plafond * k * f,
+                  tranches: ref.tranches.map((t) => (t.jusqua === undefined ? { ...t } : { ...t, jusqua: t.jusqua * k * f })),
                 },
               ]),
             ),
           }
         : {}),
     },
+  };
+}
+
+/**
+ * La structure du scénario qui suit la taille d'une entreprise, multipliée
+ * par le facteur de départ : effectif inclus (et ses salaires dans les
+ * charges fixes), plafonds d'effectif et d'embauche, budgets d'entretien et
+ * de qualité de référence, découvert autorisé. Le reste des charges fixes, la
+ * structure, ne bouge pas. Le marché (segments, saisons, prix, événements)
+ * ne change pas.
+ */
+export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: number): EngineScenarioConfig {
+  if (facteur === 1) return scenario;
+  // La structure ne double pas avec l'atelier : les charges fixes ne gagnent
+  // que les salaires de l'effectif inclus en plus.
+  const inclusEnPlus = scenario.hr ? Math.round(scenario.hr.includedHeadcount * facteur) - scenario.hr.includedHeadcount : 0;
+  return {
+    ...scenario,
+    fixedCostsPerRound: scenario.fixedCostsPerRound + inclusEnPlus * (scenario.hr?.salaryPerEmployeePerRound ?? 0),
+    production: {
+      ...scenario.production,
+      maintenanceReference: scenario.production.maintenanceReference * facteur,
+      qualityScale: scenario.production.qualityScale * facteur,
+    },
+    finance: { ...scenario.finance, overdraftLimit: scenario.finance.overdraftLimit * facteur },
+    ...(scenario.hr
+      ? {
+          hr: {
+            ...scenario.hr,
+            includedHeadcount: Math.round(scenario.hr.includedHeadcount * facteur),
+            maxHeadcount: Math.round(scenario.hr.maxHeadcount * facteur),
+            maxHiresPerRound: Math.round(scenario.hr.maxHiresPerRound * facteur),
+          },
+        }
+      : {}),
   };
 }

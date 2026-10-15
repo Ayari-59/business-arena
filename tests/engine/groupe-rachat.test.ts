@@ -29,7 +29,8 @@ import { rejouer, type PartieARejouer } from "@/pedagogy/merite/rejeu";
 const PROFILS: BotProfile[] = ["balanced", "price_aggressive", "premium", "balanced"];
 const sept = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 7, concurrents: 4, periodicity: "quarter", investmentStories: true });
 const six = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 6, concurrents: 4, periodicity: "quarter", investmentStories: true });
-const monde: EngineScenarioConfig = { ...six, groupe: sept.groupe };
+/** Le monde du 6 avec le bloc de groupe du 7, à la taille du scénario : les mécanismes ne dépendent pas de la taille de départ. */
+const monde: EngineScenarioConfig = { ...six, groupe: { ...sept.groupe!, depart: undefined } };
 const centime = 0.01;
 const site = (id: string): SiteFerme => monde.groupe!.sites!.find((s) => s.id === id)!;
 const cible = (id: string): CibleDeRachat => ({ type: "site_ferme", id });

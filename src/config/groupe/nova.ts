@@ -12,6 +12,15 @@ import type { ConfigDeGroupe } from "@/engine/groupe/types";
  * La demande est celle de NOVA en gamme, telle quelle (décision du
  * propriétaire) : saisons, Noël et grand compte compris.
  *
+ * LA TAILLE DE DÉPART. Avec l'atelier du scénario, la demande qu'une gestion
+ * neutre reçoit dépasse de loin sa capacité : toute dépense en lignes y
+ * rapporte, et aucune autre croissance ne peut lui être comparée. Au niveau 7,
+ * chaque entreprise démarre donc plus grande (`depart`) : sa capacité est
+ * alors proche de la demande moyenne qu'elle reçoit, et les pics, Noël et le
+ * grand compte, la dépassent toujours. Facteur choisi au banc (conception,
+ * phase B4) : le plus petit qui garde des lignes entières et approche la
+ * demande moyenne sans hâter la faillite des concurrents simulés.
+ *
  * Le barème du sous-traitant monte vite au-delà de la première tranche : à
  * des tranches plus douces, sous-traiter au-delà de la demande gagnait dans
  * tous les contextes du banc.
@@ -26,6 +35,7 @@ import type { ConfigDeGroupe } from "@/engine/groupe/types";
  * recouvrable.
  */
 export const GROUPE_NOVA: ConfigDeGroupe = {
+  depart: { facteur: 2 },
   valorisation: { multipleEBE: 5, actionsInitiales: 10_000 },
   rachat: {
     primeDeControle: 0.25,

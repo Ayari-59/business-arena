@@ -61,7 +61,7 @@ function jouer(
 const six = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 6, concurrents: 4, periodicity: "quarter", investmentStories: true });
 const sept = composerLeScenarioJoue({ scenario: novaGammeScenario, seed: 2026, level: 7, concurrents: 4, periodicity: "quarter", investmentStories: true });
 /** Le monde du 6 avec le bloc de groupe du 7 : même marché, seuls la valeur et les leviers en plus. */
-const sixAvecGroupe: EngineScenarioConfig = { ...six, groupe: sept.groupe };
+const sixAvecGroupe: EngineScenarioConfig = { ...six, groupe: { ...sept.groupe!, depart: undefined } };
 
 const sansGroupe = (r: CompanyRoundResult) => {
   const { groupe: _g, ...reste } = r;

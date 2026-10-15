@@ -98,6 +98,13 @@ export interface FournisseurRachetable {
 }
 
 export interface ConfigDeGroupe {
+  /**
+   * La taille de départ : chaque entreprise démarre ce facteur fois plus
+   * grande que celle du scénario (lignes, effectif, bilan), et la structure
+   * du scénario qui suit la taille (charges fixes, effectif inclus et
+   * plafond, entretien et qualité de référence, découvert) aussi. Absent : 1.
+   */
+  depart?: { facteur: number };
   valorisation: {
     /** Valeur d'entreprise = multiple × EBE des douze derniers mois. */
     multipleEBE: number;

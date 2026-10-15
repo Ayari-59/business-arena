@@ -1,5 +1,6 @@
 import type { CompanyRoundResult, CompanyState, ProductCode, RoundDecisions, SimulationInput, SimulationOutput } from "../types";
 import { consolider } from "./consolidation";
+import { agrandir } from "./depart";
 import { PROFILS_QUI_PARTENT, commandesAuFournisseur, leFournisseur, quitterLeFournisseur } from "./fournisseur";
 import { executerLesRachats } from "./rachat";
 import { mettreEnRoute } from "./site-ferme";
@@ -11,6 +12,7 @@ export { coutAuBareme, commandeDuTour, type CommandeDuTour } from "./sous-traita
 export { cleDeLaCible, dejaVendue } from "./rachat";
 export { chargesDesSites, cleDuSite, etatDuSite, siteAcquis, valeurRecouvrable } from "./site-ferme";
 export { fluxPropre } from "./flux-propre";
+export { agrandir } from "./depart";
 export {
   chiffresDuFournisseur,
   commandesAuFournisseur,
@@ -34,7 +36,8 @@ export {
 /**
  * LE TOUR D'UNE PARTIE DE NIVEAU 7, AUTOUR DU TOUR ORDINAIRE.
  *
- *   1. chaque entreprise reçoit son état de groupe à sa première ouverture ;
+ *   1. chaque entreprise reçoit, à sa première ouverture, sa taille de départ
+ *      du niveau (`agrandir`) puis son état de groupe ;
  *   2. les lignes des sites rachetés dont c'est le tour rejoignent le parc ;
  *   3. sa valeur d'ouverture est calculée (le contrôle d'une émission s'y juge) ;
  *   4. les audits et les rachats décidés se font au jour 1 (`executerLesRachats`) ;
@@ -71,7 +74,7 @@ export function simulerLeGroupe(
   // 1. États de groupe ; 2. mise en route des sites.
   let companies = cfg
     ? input.companies.map((c) =>
-        mettreEnRoute(c.groupe ? c : { ...c, groupe: initialiserLeGroupe(c, cfg, scenario.roundDays) }, scenario, roundIndex),
+        mettreEnRoute(c.groupe ? c : premiereOuverture(c, cfg, scenario.roundDays), scenario, roundIndex),
       )
     : input.companies;
 
@@ -284,4 +287,10 @@ function rationner(
     return { ...owner, groupe: { ...g, filiales } };
   });
   return { companies: etats, decisions, rationnement, rationnes };
+}
+
+/** La première ouverture d'une entreprise au niveau 7 : sa taille de départ, puis son état de groupe. */
+function premiereOuverture(c: CompanyState, cfg: NonNullable<SimulationInput["scenario"]["groupe"]>, roundDays: number): CompanyState {
+  const grande = agrandir(c, cfg.depart?.facteur ?? 1);
+  return { ...grande, groupe: initialiserLeGroupe(grande, cfg, roundDays) };
 }
