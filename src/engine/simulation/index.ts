@@ -553,12 +553,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     rseAttritionRelief: number;
     rseNextImageCapital: number;
     rseNextCleanCapital: number;
-    /** Effets agrégés des actions R&D terminées (grille rdGrid). */
-    rdGridEffects: { materialCostReduction: number; defectReduction: number; demandBonus: number; capacityBonus: number };
-    /** Actions R&D de la grille à la clôture du tour (en cours + nouvelles). */
-    rdGridActionsNext: import("../types").RdGridActionState[];
-    /** Coût total des nouvelles actions R&D démarrées ce tour (charge décaissée). */
-    rdGridInvestmentCost: number;
     /**
      * Abonnement (bloc `subscription`, sinon tout à zéro et rien n'est émis) :
      * portefeuille d'ouverture, occupation, taux d'attrition, adhérents restés
@@ -659,7 +653,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       brandMarketingBudget: raw.brandMarketingBudget,
       communicationAxis: raw.communicationAxis,
       qualityActions: raw.qualityActions,
-      rdGridStart: raw.rdGridStart,
       startedRdActionIds: raw.startedRdActionIds,
       stoppedModuleItems: raw.stoppedModuleItems,
     };
@@ -715,34 +708,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : [];
     const companyEvents = insured ? active.filter((e) => !covered.has(e.code)) : active;
     const mods = effectiveModifiers(companyEvents, state.id);
-    // Grille R&D (levier `rdGrid`) : agréger les effets des actions TERMINÉES
-    // (remainingRounds = 0) issues de l'état d'OUVERTURE (effets différés).
-    // Même philosophie que le capital RSE : payer maintenant, gagner plus tard.
-    const rdGridOpening = scenario.rdGrid ? (state.rdGridActions ?? []) : [];
-    const rdGridCompleted = rdGridOpening.filter((a) => a.remainingRounds === 0);
-    const rdGridEffects = (() => {
-      let materialCostReduction = 0;
-      let defectReduction = 0;
-      let demandBonus = 0;
-      let capacityBonus = 0;
-      if (!scenario.rdGrid) return { materialCostReduction, defectReduction, demandBonus, capacityBonus };
-      for (const action of rdGridCompleted) {
-        const theme = scenario.rdGrid.themes.find((t) => t.code === action.themeCode);
-        const lvl = theme?.levels.find((l) => l.level === action.level);
-        if (!lvl) continue;
-        materialCostReduction += lvl.effects.materialCostReduction ?? 0;
-        defectReduction += lvl.effects.defectReduction ?? 0;
-        demandBonus += lvl.effects.demandBonus ?? 0;
-        capacityBonus += lvl.effects.capacityBonus ?? 0;
-      }
-      // Plafonner à des valeurs raisonnables (éviter effets > 100 %)
-      return {
-        materialCostReduction: Math.min(0.8, materialCostReduction),
-        defectReduction: Math.min(0.8, defectReduction),
-        demandBonus: Math.min(0.5, demandBonus),
-        capacityBonus: Math.min(0.5, capacityBonus),
-      };
-    })();
     // Décisions par produit (mono : les scalaires bornés ci-dessus, recopiés).
     const gammeDecisionsBrutes = toGammeDecisions(decisions, gamme);
     // R&D (levier `rd`) : l'état d'ouverture de chaque référence. Une
@@ -815,8 +780,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               new Map(scenario.equipment.types.map((t) => [t.code, t])),
             ))
       : state.machineCapacity + (state.pendingCapacity ?? 0);
-    // Grille R&D : bonus de capacité des actions terminées (ex. : lean process).
-    const effectiveMachineCapacityWithRdGrid = effectiveMachineCapacity * (1 + rdGridEffects.capacityBonus);
     // Mono-produit : la rupture ampute la disponibilité de l'usine (chemin
     // historique). Gamme : elle ampute le plan des SEULES références que le
     // fournisseur défaillant fournit — les autres ne sont pas touchées.
@@ -828,7 +791,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1),
           )
         : gammeDecisions.map((d) => d.productionPlan),
-      machineCapacity: effectiveMachineCapacityWithRdGrid,
+      machineCapacity: effectiveMachineCapacity,
       availability:
         state.availability * mods.availabilityMultiplier * (multi ? 1 : supplyAvailabilityHit),
       headcount: state.headcount,
@@ -922,8 +885,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       );
     }
     const supplierPriceIdx = priceIndexBySupplier.get(supplier?.code ?? "") ?? 1;
-    // Grille R&D : réduction du coût matières issue des actions terminées
-    const rdGridMaterialFactor = 1 - rdGridEffects.materialCostReduction;
     // PROGRAMMES R&D : un programme achevé abaisse tout le coût variable
     // unitaire, matières et autres charges. Sans module : un facteur à 1, le
     // calcul d'avant.
@@ -931,13 +892,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const facteurMatieresModules = 1 - rdActionsEffects.costReduction;
     const facteurAutresVariables = facteurMatieresModules;
     const materialMultiplier =
-      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx * rdGridMaterialFactor * facteurMatieresModules;
+      mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1) * supplierPriceIdx * facteurMatieresModules;
     const materialMultipliers = multi
       ? productSuppliers.map((s) =>
           mods.materialCostMultiplier *
           (s?.costMultiplier ?? 1) *
           (priceIndexBySupplier.get(s?.code ?? "") ?? 1) *
-          rdGridMaterialFactor *
           facteurMatieresModules,
         )
       : [materialMultiplier];
@@ -986,37 +946,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseEffort(rseInvestment, rseScale),
       rseConfig.cleanInertia,
     );
-    // Grille R&D : avancement des actions en cours, démarrage des nouvelles.
-    // Seules les actions valides (thème + niveau connu, prérequis satisfaits,
-    // pas déjà en cours ou terminées) sont acceptées.
-    let rdGridInvestmentCost = 0;
-    const rdGridActionsNext: import("../types").RdGridActionState[] = (() => {
-      if (!scenario.rdGrid || state.status === "defaillant") return rdGridOpening;
-      // Avancement : chaque action en cours décrémente son compteur.
-      const advanced = rdGridOpening.map((a) =>
-        a.remainingRounds > 0 ? { ...a, remainingRounds: a.remainingRounds - 1 } : a,
-      );
-      // Nouvelles actions demandées ce tour.
-      const toStart = decisions.rdGridStart ?? [];
-      const result = [...advanced];
-      for (const req of toStart) {
-        const theme = scenario.rdGrid.themes.find((t) => t.code === req.themeCode);
-        const lvlDef = theme?.levels.find((l) => l.level === req.level);
-        if (!theme || !lvlDef) continue;
-        // Déjà en cours ou terminée ?
-        if (result.some((a) => a.themeCode === req.themeCode && a.level === req.level)) continue;
-        // Prérequis : le niveau précédent doit être terminé.
-        if (lvlDef.prerequisiteLevel !== undefined) {
-          const prereq = result.find(
-            (a) => a.themeCode === req.themeCode && a.level === lvlDef.prerequisiteLevel,
-          );
-          if (!prereq || prereq.remainingRounds > 0) continue;
-        }
-        rdGridInvestmentCost += lvlDef.cost;
-        result.push({ themeCode: req.themeCode, level: req.level, remainingRounds: lvlDef.durationRounds, startedRound: roundIndex });
-      }
-      return result;
-    })();
     // Catalogue d'actions qualité : traitement des nouvelles décisions et
     // calcul des effets cumulés de toutes les actions terminées.
     const qaConfig = scenario.qualityActions;
@@ -1071,11 +1000,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // propre » RSE en retranche une part (effet différé, capital d'ouverture).
     // Taux de rebut PAR PRODUIT : la qualité produite de chaque référence
     // (mono : le seul, sur la qualité produite historique).
-    // Grille R&D + actions qualité : réductions des rebuts additives avec RSE
-    // (même plafonnement à 0,8 pour éviter les effets > 100 %).
+    // Actions qualité : réduction des rebuts additive avec RSE (même
+    // plafonnement à 0,8 pour éviter les effets > 100 %).
     const combinedDefectReduction = Math.min(
       0.8,
-      rseDefectReduction + rdGridEffects.defectReduction + qualityActionsEffects.defectRateReduction,
+      rseDefectReduction + qualityActionsEffects.defectRateReduction,
     );
     const productDefectRate = productQuality.map((quality) =>
       scenario.qualityCosts
@@ -1312,9 +1241,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseAttritionRelief,
       rseNextImageCapital,
       rseNextCleanCapital,
-      rdGridEffects,
-      rdGridActionsNext,
-      rdGridInvestmentCost,
       subOpening,
       subOccupancy,
       subChurnRate,
@@ -1381,12 +1307,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           marketingScale: scenario.marketing.scale,
           // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité ;
           // la notoriété de marque (communication) aussi, à l'adéquation de l'axe.
-          // Grille R&D : le bonus de demande s'ajoute comme un facteur d'attractivité.
           // Démarches qualité et programmes R&D achevés : un multiplicateur chacun.
           imageFactor: (comm
             ? w.rseImageFactor * w.rseCardFactor * brandFactor(w.brandOpening, fit)
             : w.rseImageFactor * w.rseCardFactor) *
-            (1 + w.rdGridEffects.demandBonus) *
             (1 + w.qualityActionsEffects.qualityImageBonus) *
             (1 + w.rdActionsEffects.imageBonus),
         });
@@ -1922,22 +1846,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       w.state.completedRdActions = rdA.acheves.length > 0 ? rdA.acheves : undefined;
     }
 
-    // Catégories d'emprunt (machines, installations) : chaque catégorie a sa
-    // propre durée. Backward-compatible : absent = 0, comportement inchangé.
-    const loanCats = scenario.finance.loanCategories;
-    const machineLoanReq = Math.max(0, w.decisions.finance?.machineLoan ?? 0);
-    const machineLoanGranted =
-      loanCats?.machines && machineLoanReq > 0 && !gelee && !(bank && !planFourni)
-        ? Math.min(machineLoanReq, w.investOutlay * loanCats.machines.maxLoanRatio)
-        : 0;
-    const installLoanReq = Math.max(0, w.decisions.finance?.installationLoan ?? 0);
-    const installationLoanGranted =
-      loanCats?.installations && installLoanReq > 0 && !gelee && !(bank && !planFourni)
-        ? Math.min(
-            installLoanReq,
-            (w.rseCost + w.qualityActionsCost) * loanCats.installations.maxLoanRatio,
-          )
-        : 0;
     // Actions qualité : économies sur les coûts variables et la maintenance.
     // La réduction des coûts variables s'applique sur les coûts variables décaissés (hors matières).
     const qaVariableSaving = gelee
@@ -1971,10 +1879,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
       rseCost: gelee ? 0 : w.rseCost,
-      // R&D classique + grille R&D : les deux passent dans la même ligne R&D.
-      // Programmes R&D du catalogue (`rdActions`) : sur la même ligne.
-      ...((w.rdTotal + w.rdGridInvestmentCost + w.rdActionsCost) > 0
-        ? { rdCost: w.rdTotal + w.rdGridInvestmentCost + w.rdActionsCost }
+      // R&D classique et programmes R&D du catalogue (`rdActions`) : la même
+      // ligne R&D.
+      ...((w.rdTotal + w.rdActionsCost) > 0
+        ? { rdCost: w.rdTotal + w.rdActionsCost }
         : {}),
       // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
       // Démarches qualité : coût ponctuel en charge exceptionnelle ; économies en produit exceptionnel.
@@ -2002,8 +1910,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       taxRate: scenario.finance.taxRate,
       openingTaxLossCarryforward: w.state.taxLossCarryforward ?? 0,
       vatRate: scenario.finance.vatRate ?? 0,
-      // Inclure les emprunts de catégorie dans le flux de financement.
-      newLoan: newLoan + machineLoanGranted + installationLoanGranted,
+      newLoan,
       ...(lignesPropres.encours > 0 ? { specificDebt: lignesPropres } : {}),
       loanRepayment: gelee ? 0 : mandatoryRepayment + earlyRepayment,
       capitalIncrease,
@@ -2125,28 +2032,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       }
       nextMandatory = nextLoans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
     }
-    // Catégories d'emprunt : ajout aux échéanciers avec leur durée propre.
-    // Rétro-compatible : si loanCats absent, les deux blocs sont sautés (0 accordé).
-    if (!gelee) {
-      if (machineLoanGranted > 0) {
-        nextLoans = [
-          ...(nextLoans ?? []),
-          {
-            remaining: machineLoanGranted,
-            perRound: machineLoanGranted / loanCats!.machines!.durationRounds,
-          },
-        ];
-      }
-      if (installationLoanGranted > 0) {
-        nextLoans = [
-          ...(nextLoans ?? []),
-          {
-            remaining: installationLoanGranted,
-            perRound: installationLoanGranted / loanCats!.installations!.durationRounds,
-          },
-        ];
-      }
-    }
 
     // Faillite (V2 couche 2, #5) : cessation de paiements = crise de trésorerie
     // CARACTÉRISÉE (découvert au-delà du plafond ET plus aucune créance à céder,
@@ -2201,7 +2086,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingTotal +
       w.qualityTotal +
       w.rdTotal +
-      w.rdGridInvestmentCost +
       w.decisions.maintenanceBudget;
     // Seuil : en gamme, prix moyen pondéré par les unités vendues et coût
     // variable moyen pondéré par les unités produites (mono : les valeurs du
@@ -2578,7 +2462,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
-      ...(scheduled || machineLoanGranted > 0 || installationLoanGranted > 0
+      ...(scheduled
         ? {
             debt: {
               mandatoryRepayment,
@@ -2586,8 +2470,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               newLoan,
               outstanding: finance.closing.financialDebt,
               nextMandatory,
-              ...(machineLoanGranted > 0 ? { machineLoanGranted } : {}),
-              ...(installationLoanGranted > 0 ? { installationLoanGranted } : {}),
               ...(lignesPropres.interets > 0 ? { financingInterest: lignesPropres.interets * w.mods.interestMultiplier } : {}),
               // Émis SEULEMENT quand la banque a coupé la demande : un champ à
               // zéro sur toutes les parties normales alourdirait le résultat
@@ -2632,16 +2514,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             qualityActions: {
               started: w.qualityActionsStarted,
               activeEffects: w.qualityActionsEffects,
-            },
-          }
-        : {}),
-      // Grille R&D : émis dès qu'une action est en cours ou terminée.
-      ...(w.rdGridActionsNext.length > 0
-        ? {
-            rdGrid: {
-              actions: w.rdGridActionsNext,
-              effects: w.rdGridEffects,
-              investmentCost: w.rdGridInvestmentCost,
             },
           }
         : {}),
@@ -2827,10 +2699,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         : {}),
       ...(w.rseNextCleanCapital > 0 || w.state.rseCleanCapital !== undefined
         ? { rseCleanCapital: w.rseNextCleanCapital }
-        : {}),
-      // Grille R&D : suivi des actions en cours et terminées.
-      ...(w.rdGridActionsNext.length > 0 || w.state.rdGridActions !== undefined
-        ? { rdGridActions: w.rdGridActionsNext }
         : {}),
       // Catalogue d'actions qualité : niveaux complétés, suivis dès qu'une action
       // est démarrée (puis maintenus).

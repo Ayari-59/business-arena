@@ -14,6 +14,13 @@ import type { CompanyState } from "../types";
  * Seule exception : les lignes d'emprunt tirées sur une option de financement
  * vivent dans `loans`, qui n'est pas listé ici. Elles se remboursent à leur
  * taux jusqu'à leur terme (`modules/effets`, `lignesATauxPropre`).
+ *
+ * La grille R&D (`rdGrid`) a suivi : aucun écran, aucun bot ne l'a jamais
+ * proposée, et elle doublait les programmes R&D. Aucune partie connue ne porte
+ * `rdGridActions` ; la clé est écartée ici par précaution. Les catégories
+ * d'emprunt (`loanCategories`), retirées avec elle, ne laissaient rien dans
+ * l'état : une ligne qu'elles auraient tirée vivrait dans `loans` comme une
+ * ligne de l'emprunt ordinaire, à son échéance et au taux ordinaire.
  */
 export const CHAMPS_DES_MODULES_RETIRES = [
   "activeHsActions",
@@ -35,6 +42,7 @@ export const CHAMPS_DES_MODULES_RETIRES = [
   "digitalProjectsInProgress",
   "completedDigitalProjects",
   "activeBrandActions",
+  "rdGridActions",
 ] as const;
 
 /** L'état sans les champs des modules retirés ; le même objet s'il n'en porte aucun. */
