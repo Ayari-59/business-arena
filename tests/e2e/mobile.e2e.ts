@@ -685,7 +685,9 @@ describe("pendant une partie", () => {
     await page.getByRole("button", { name: /^Continuer/ }).last().click();
     await page.waitForTimeout(400);
     await page.getByText(/Prix usuels/).waitFor({ state: "visible" });
-    await page.getByText(/Coût variable/).waitFor({ state: "visible" });
+    // Le repère du coût variable, et non l'effet d'une démarche qualité (« Coût
+    // variable de production −3 % ») que la feuille porte aussi, dans ses modules.
+    await page.getByText(/^Coût variable \d/).waitFor({ state: "visible" });
     const champ = page.locator('input[name="price"]:visible');
     const curseur = page.locator('input[type="range"]:visible');
     const marge = page.getByText(/^Marge par/).locator("..");

@@ -1185,6 +1185,8 @@ export function refusDesModules(
 
 /** Une ligne du bilan des modules d'un tour clos. */
 export interface LigneDeModule {
+  /** Le module, pour ranger la ligne sous le thème de son étape (`config/etapes-des-modules`). */
+  decision: DecisionDeModule;
   titre: string;
   /** Ce qui a été engagé CE tour (libellés du catalogue). */
   engage: string[];
@@ -1276,8 +1278,8 @@ export function bilanDesModules(
     (ids ?? []).map((id) => liste?.find((x) => x.id === id)?.label ?? id);
   const arretes = (module: DecisionDeModule) =>
     (d.stoppedModuleItems ?? []).filter((a) => a.module === module).map((a) => libelleDansLeCatalogue(s, module, a.id));
-  const pousser = (module: DecisionDeModule | null, l: Omit<LigneDeModule, "arrete">) => {
-    const ligne = { ...l, arrete: module ? arretes(module) : [] };
+  const pousser = (module: DecisionDeModule, l: Omit<LigneDeModule, "arrete" | "decision">) => {
+    const ligne = { ...l, decision: module, arrete: arretes(module) };
     if (ligne.engage.length > 0 || ligne.arrete.length > 0 || (ligne.cout ?? 0) > 0 || ligne.effet) lignes.push(ligne);
   };
   const positif = (x: number | undefined) => (x !== undefined && x > 0 ? x : 0);

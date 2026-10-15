@@ -5,6 +5,7 @@ import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
+import { ETAPES_DU_FORMULAIRE, ETAPE_DU_MODULE, titreDeLEtape } from "@/config/etapes-des-modules";
 
 /**
  * Récapitulatif en lecture seule des décisions d'un tour clos. Sert l'onglet
@@ -108,6 +109,19 @@ export function PeriodDecisionsRecap({
     if (d.rse.investment) chips.push({ icone: "feuille", texte: `Investissement propre ${formatEuro(d.rse.investment)}` });
   }
 
+  // LES MODULES, SOUS LE THÈME DE LEUR ÉTAPE : le récapitulatif reprend le
+  // rangement du formulaire (`config/etapes-des-modules`), avec les mêmes titres.
+  // La crise du tour se lit sous « Assurance & risques », avec les plans qui y
+  // répondent : le moteur ne la tire qu'aux parties qui offrent ces plans.
+  const groupesDeModules = modules
+    ? ETAPES_DU_FORMULAIRE.map((etape) => ({
+        etape,
+        titre: titreDeLEtape(etape, { gamme: parProduit.length > 0, risques: true }),
+        lignes: modules.lignes.filter((l) => ETAPE_DU_MODULE[l.decision] === etape),
+        crise: etape === "assurance" ? modules.crise : null,
+      })).filter((g) => g.lignes.length > 0 || g.crise)
+    : [];
+
   return (
     <div className="space-y-3">
       <p className="text-xs text-slate-400">
@@ -183,37 +197,44 @@ export function PeriodDecisionsRecap({
           </div>
         </div>
       ) : null}
-      {modules ? (
+      {modules && groupesDeModules.length > 0 ? (
         <div data-modules-engages="">
           <p className="mb-2 text-sm font-semibold text-slate-200">Modules engagés ce tour</p>
-          {modules.crise ? (
-            <p className="mb-2 flex items-start gap-1.5 text-sm text-slate-200">
-              <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--metier,var(--color-slate-300))]" />
-              {modules.crise}
-            </p>
-          ) : null}
-          {modules.lignes.length > 0 ? (
-            <ul className="space-y-1.5">
-              {modules.lignes.map((l) => (
-                <li
-                  key={l.titre}
-                  className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-300"
-                >
-                  <span className="font-medium text-slate-100">{l.titre}</span>
-                  {l.engage.length > 0 ? <span> · engagé : {l.engage.join(", ")}</span> : null}
-                  {l.arrete.length > 0 ? <span data-module-arrete=""> · arrêté : {l.arrete.join(", ")}</span> : null}
-                  <span className="mt-0.5 block text-xs text-slate-400">
-                    {[
-                      l.cout !== null && l.cout > 0 ? `Coût du tour ${formatEuro(l.cout)}` : null,
-                      l.effet,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "Sans coût ce tour"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <div className="space-y-3">
+            {groupesDeModules.map((g) => (
+              <section key={g.etape} data-modules-du-theme={g.etape} aria-label={g.titre}>
+                <p className="libelle mb-1.5">{g.titre}</p>
+                {g.crise ? (
+                  <p data-crise-du-tour="" className="mb-1.5 flex items-start gap-1.5 text-sm text-slate-200">
+                    <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--metier,var(--color-slate-300))]" />
+                    {g.crise}
+                  </p>
+                ) : null}
+                {g.lignes.length > 0 ? (
+                  <ul className="space-y-1.5">
+                    {g.lignes.map((l) => (
+                      <li
+                        key={l.titre}
+                        className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-300"
+                      >
+                        <span className="font-medium text-slate-100">{l.titre}</span>
+                        {l.engage.length > 0 ? <span> · engagé : {l.engage.join(", ")}</span> : null}
+                        {l.arrete.length > 0 ? <span data-module-arrete=""> · arrêté : {l.arrete.join(", ")}</span> : null}
+                        <span className="mt-0.5 block text-xs text-slate-400">
+                          {[
+                            l.cout !== null && l.cout > 0 ? `Coût du tour ${formatEuro(l.cout)}` : null,
+                            l.effet,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || "Sans coût ce tour"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+            ))}
+          </div>
         </div>
       ) : null}
     </div>

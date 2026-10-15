@@ -82,7 +82,18 @@ import {
   type DefCarte,
 } from "@/components/cartes-de-decision";
 import { ModulesDeDecision } from "@/components/modules-de-decision";
-import { modulesSaisis } from "@/config/modules-saisis";
+import { modulesSaisis, type DecisionDeModule } from "@/config/modules-saisis";
+import {
+  CARTE_DES_MODULES,
+  ETAPES_DU_FORMULAIRE,
+  ETAPE_DU_MODULE,
+  etapesAffichees,
+  moduleDuRefus,
+  modulesDeLEtape,
+  PREFIXE_D_ARRET,
+  titreDeLEtape,
+  type EtapeDuFormulaire,
+} from "@/config/etapes-des-modules";
 import { refusDesModules } from "@/services/modules-offer";
 import {
   aideDuPlafond,
@@ -118,6 +129,59 @@ type ChampSaisi = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
  * nom ; la feuille le tient à jour (envoi refusé, refus du serveur, correction).
  */
 const RefusDesChamps = createContext<ReadonlyMap<string, string>>(new Map());
+
+/** Un refus posé sur la feuille : du serveur ou non, et le module qu'il vise sans viser de champ. */
+type ErreurPosee = ErreurDeChamp & { serveur?: boolean; module?: DecisionDeModule };
+
+/** La cible d'un refus qui mène à un module plutôt qu'à un champ : `module:<décision>`. */
+const CIBLE_DE_MODULE = "module:";
+
+/** La carte du parcours (téléphone) qui porte les modules d'une étape. */
+const PREFIXE_CARTE_DES_MODULES = "modules-";
+const carteDesModules = (etape: EtapeDuFormulaire) => `${PREFIXE_CARTE_DES_MODULES}${etape}`;
+
+/**
+ * Ce que la carte des modules d'une étape répond, au récapitulatif du parcours :
+ * les choix engagés et les arrêts des modules DE CETTE ÉTAPE (de toutes, sans
+ * étape). Un effectif ou un montant laissé vide n'engage rien.
+ */
+function resumeDesModules(lu: ReturnType<typeof modulesSaisis>, etape: EtapeDuFormulaire | null): string {
+  const garder = (d: string) => etape === null || ETAPE_DU_MODULE[d as DecisionDeModule] === etape;
+  const arrets = (lu.stoppedModuleItems ?? []).filter((a) => garder(a.module)).length;
+  const n = Object.entries(lu)
+    .filter(([cle]) => cle !== "stoppedModuleItems" && garder(cle))
+    .reduce((t, [, v]) => t + (Array.isArray(v) ? v.length : 0), 0);
+  const parties = [
+    n > 0 ? `${n} engagé${n > 1 ? "s" : ""}` : null,
+    arrets > 0 ? `${arrets} arrêt${arrets > 1 ? "s" : ""}` : null,
+  ].filter(Boolean);
+  return parties.length > 0 ? parties.join(", ") : "Aucun";
+}
+
+/**
+ * LES ENGAGEMENTS SE LISENT SUR UNE SEULE LIGNE DU RÉCAPITULATIF DU PARCOURS.
+ *
+ * Chaque étape qui porte des modules a sa carte, mais le récapitulatif d'un
+ * téléphone est une liste de lignes tactiles de 44 px qui doit tenir sur un
+ * écran : une ligne par étape le faisait déborder dès le niveau Pilotage, où
+ * trois étapes portent des modules. Les lignes des modules se fondent donc en
+ * une, à la place de la dernière, comme le financement et l'investissement :
+ * le compte de tout ce qui est engagé, et un toucher qui rouvre la première
+ * carte où quelque chose l'est (la première carte des modules, sinon).
+ */
+function fusionnerLesEngagements<T extends { cle: string; nom: string; valeur: string }>(
+  lignes: T[],
+  donnees: FormData,
+): T[] {
+  const desModules = lignes.filter((l) => l.cle.startsWith(PREFIXE_CARTE_DES_MODULES));
+  if (desModules.length <= 1) return lignes;
+  const derniere = desModules[desModules.length - 1]!;
+  const cible = desModules.find((l) => !/^aucun/i.test(l.valeur)) ?? desModules[0]!;
+  const valeur = resumeDesModules(modulesSaisis(donnees.entries()), null);
+  return lignes
+    .filter((l) => !l.cle.startsWith(PREFIXE_CARTE_DES_MODULES) || l === derniere)
+    .map((l) => (l === derniere ? { ...l, cle: cible.cle, nom: "Engagements du tour", valeur } : l));
+}
 
 /**
  * Ce qu'un champ refusé porte : son identifiant (la cible des liens du
@@ -2476,7 +2540,7 @@ export function DecisionForm({
   // focus que si aucun refus ne vise de champ (un tour clos, une session
   // expirée). Langue et messages : `config/refus-de-decision.ts`.
   const [refus, setRefus] = useState<{
-    erreurs: (ErreurDeChamp & { serveur?: boolean })[];
+    erreurs: ErreurPosee[];
     /** Faux pour le refus d'une carte du parcours : le champ suffit, pas de récapitulatif. */
     recapitulatif: boolean;
     /** Le numéro de l'envoi refusé : le focus ne se pose qu'une fois par refus. */
@@ -2486,17 +2550,30 @@ export function DecisionForm({
   } | null>(null);
   const recapRef = useRef<HTMLDivElement>(null);
   const saisieEnvoyee = useRef<FormData | null>(null);
-  /** Pose un refus neuf : un nouvel envoi, donc un nouveau focus. */
+  const [arretsEnvoyes, setArretsEnvoyes] = useState<[string, FormDataEntryValue][]>([]);
+  /**
+   * Pose un refus neuf : un nouvel envoi, donc un nouveau focus. Un refus de
+   * module qui ne vise aucun champ (un arrêt, un doublon) est rattaché à son
+   * module, lu sur la saisie (`config/etapes-des-modules`) : le joueur est mené
+   * à l'étape du module, déplié, plutôt qu'au seul récapitulatif.
+   */
   const poserLeRefus = (
-    erreurs: (ErreurDeChamp & { serveur?: boolean })[],
+    brutes: (ErreurDeChamp & { serveur?: boolean })[],
     recapitulatif: boolean,
-  ) =>
+    saisie: Iterable<[string, FormDataEntryValue]> | null,
+  ) => {
+    const erreurs: ErreurPosee[] = brutes.map((x) => {
+      const vise = x.champ ? null : moduleDuRefus(x, modulesOffer, saisie);
+      return vise ? { ...x, module: vise } : x;
+    });
+    const parModule = erreurs.find((x) => x.module)?.module;
     setRefus((avant) => ({
       erreurs,
       recapitulatif,
       envoi: (avant?.envoi ?? 0) + 1,
-      cible: erreurs.find((x) => x.champ)?.champ ?? "recap",
+      cible: erreurs.find((x) => x.champ)?.champ ?? (parModule ? `${CIBLE_DE_MODULE}${parModule}` : "recap"),
     }));
+  };
   const contexteDesLibelles: ContexteDesLibelles = {
     vocabulaire: vocabulary,
     references: gamme?.map((p) => ({ code: p.code, name: p.name })) ?? null,
@@ -2591,8 +2668,8 @@ export function DecisionForm({
     return erreurs;
   };
   /** Pose un refus ; le focus suit, une fois l'écran rendu (voir l'effet plus bas). */
-  const signalerLeRefus = (erreurs: ErreurDeChamp[], recapitulatif: boolean) =>
-    poserLeRefus(erreurs, recapitulatif);
+  const signalerLeRefus = (erreurs: ErreurDeChamp[], recapitulatif: boolean, form: HTMLFormElement) =>
+    poserLeRefus(erreurs, recapitulatif, new FormData(form).entries());
   /**
    * UNE CORRECTION EFFACE SON REFUS, à la frappe. Les refus de la feuille sont
    * rejugés ; ceux du serveur tombent quand on touche à leur champ (la règle
@@ -2623,7 +2700,7 @@ export function DecisionForm({
         ? [{ champ: null, message: state.error }]
         : [];
     if (erreurs.length === 0) setRefus(null);
-    else poserLeRefus(erreurs.map((x) => ({ ...x, serveur: true })), true);
+    else poserLeRefus(erreurs.map((x) => ({ ...x, serveur: true })), true, arretsEnvoyes);
   }
 
   // Les pivots (prix, volume) validés sans avoir été touchés : on le dit avant
@@ -2641,7 +2718,7 @@ export function DecisionForm({
       e.preventDefault();
       confirme.current = false;
       setNonTouches(null);
-      signalerLeRefus(erreurs, true);
+      signalerLeRefus(erreurs, true, form);
       return;
     }
     if (refus) setRefus(null);
@@ -2649,6 +2726,11 @@ export function DecisionForm({
     // la feuille (React la remet à zéro quand l'action se termine), et la
     // valeur refusée reste sous les yeux, à côté de son message.
     saisieEnvoyee.current = copierSaisie(new FormData(form));
+    // Les arrêts envoyés, gardés pour rattacher un refus d'arrêt du serveur à
+    // son module (il ne vise aucun champ). Un état, lu au rendu du refus.
+    setArretsEnvoyes(
+      [...saisieEnvoyee.current.entries()].filter(([nom]) => nom.startsWith(PREFIXE_D_ARRET)),
+    );
     if (confirme.current) return;
     const lire = (name: PivotField) =>
       Number((form.elements.namedItem(name) as HTMLInputElement | null)?.value ?? NaN);
@@ -3037,32 +3119,46 @@ export function DecisionForm({
         </PanneauConsulte>
       </div>
     ) : null;
-  const etapesVisibles = [
-    "vendre",
-    approvisionnerVisible ? "approvisionner" : null,
-    budgetsVisible ? "budgets" : null,
-    equipeVisible ? "equipe" : null,
-    financerVisible ? "financer" : null,
-    tresorerieVisible ? "tresorerie" : null,
-    assuranceVisible ? "assurance" : null,
-    modulesOffer ? "projets" : null,
-    "prevoir",
-  ].filter((x): x is string => x !== null);
-  const META: Record<string, { titre: string; icone: NomDIcone }> = {
-    // En gamme, la première étape ne se limite plus à vendre : elle porte TOUT
-    // ce qui se décide sur une référence, budgets compris. L'appeler « Vendre »
-    // ferait chercher ailleurs des champs qui sont là.
-    vendre: { titre: gamme ? "Vos références" : "Vendre", icone: "cible" },
-    approvisionner: { titre: "S'approvisionner", icone: "camion" },
-    budgets: { titre: "Budgéter", icone: "argent" },
-    equipe: { titre: "Équipe & RSE", icone: "equipes" },
-    financer: { titre: "Financer & investir", icone: "banque" },
-    tresorerie: { titre: "Trésorerie", icone: "tresorerie" },
-    assurance: { titre: "Assurance", icone: "assurance" },
-    projets: { titre: "Projets", icone: "idee" },
-    prevoir: { titre: "S'informer & prévoir", icone: "loupe" },
+  // LES MODULES DU SCÉNARIO SE RANGENT DANS L'ÉTAPE DE LEUR THÈME
+  // (`config/etapes-des-modules`) : une étape paraît dès qu'elle a des champs
+  // ouverts à ce niveau OU au moins un module offert. Une étape que seuls des
+  // modules habitent ne montre qu'eux ; une étape sans rien n'apparaît pas.
+  const etapesVisibles: EtapeDuFormulaire[] = etapesAffichees(
+    {
+      vendre: true,
+      approvisionner: approvisionnerVisible,
+      budgets: budgetsVisible,
+      equipe: equipeVisible,
+      financer: financerVisible,
+      tresorerie: tresorerieVisible,
+      assurance: assuranceVisible,
+      prevoir: true,
+    },
+    modulesOffer,
+  );
+  // Les plans de crise offerts : l'étape « Assurance » les porte, et le dit.
+  const risquesOfferts = modulesDeLEtape(modulesOffer, "assurance").length > 0;
+  const ICONES_DES_ETAPES: Record<EtapeDuFormulaire, NomDIcone> = {
+    vendre: "cible",
+    approvisionner: "camion",
+    budgets: "argent",
+    equipe: "equipes",
+    financer: "banque",
+    tresorerie: "tresorerie",
+    assurance: "assurance",
+    prevoir: "loupe",
   };
-  const idx = (cle: string) => etapesVisibles.indexOf(cle);
+  // En gamme, la première étape ne se limite plus à vendre : elle porte TOUT ce
+  // qui se décide sur une référence, budgets compris. L'appeler « Vendre » ferait
+  // chercher ailleurs des champs qui sont là. L'assurance devient « Assurance &
+  // risques » quand les plans de crise y sont offerts.
+  const META = Object.fromEntries(
+    ETAPES_DU_FORMULAIRE.map((cle) => [
+      cle,
+      { titre: titreDeLEtape(cle, { gamme: !!gamme, risques: risquesOfferts }), icone: ICONES_DES_ETAPES[cle] },
+    ]),
+  ) as Record<EtapeDuFormulaire, { titre: string; icone: NomDIcone }>;
+  const idx = (cle: EtapeDuFormulaire) => etapesVisibles.indexOf(cle);
   const total = etapesVisibles.length;
   const courante = Math.min(etape, total - 1);
 
@@ -3295,30 +3391,6 @@ export function DecisionForm({
               },
             ]
           : []),
-        ...(modulesOffer
-          ? [
-              {
-                cle: "projets",
-                etape: "projets",
-                nom: "Projets",
-                question: "Quels projets engagez-vous ?",
-                resume: (d: FormData) => {
-                  // Les champs remplis seulement : un effectif ou un montant
-                  // laissé vide n'engage rien, un arrêt se compte à part.
-                  const lu = modulesSaisis(d.entries());
-                  const arrets = lu.stoppedModuleItems?.length ?? 0;
-                  const n = Object.entries(lu)
-                    .filter(([cle]) => cle !== "stoppedModuleItems")
-                    .reduce((t, [, v]) => t + (Array.isArray(v) ? v.length : 0), 0);
-                  const parties = [
-                    n > 0 ? `${n} engagé${n > 1 ? "s" : ""}` : null,
-                    arrets > 0 ? `${arrets} arrêt${arrets > 1 ? "s" : ""}` : null,
-                  ].filter(Boolean);
-                  return parties.length > 0 ? parties.join(", ") : "Aucun";
-                },
-              },
-            ]
-          : []),
         ...(studiesOffer
           ? [
               {
@@ -3346,10 +3418,32 @@ export function DecisionForm({
         { cle: "recap", etape: "recap", nom: "", question: "Vos décisions du tour" },
       ]
     : [];
+  // LES MODULES, UNE CARTE PAR ÉTAPE qui en porte, posée après les cartes de ses
+  // champs : l'ordre des cartes reste celui des étapes (tri stable).
+  if (modeCartes) {
+    const rang = (etape: string) => {
+      const i = ETAPES_DU_FORMULAIRE.indexOf(etape as EtapeDuFormulaire);
+      return i < 0 ? ETAPES_DU_FORMULAIRE.length : i;
+    };
+    const desModules = ETAPES_DU_FORMULAIRE.filter((e) => modulesDeLEtape(modulesOffer, e).length > 0).map(
+      (etape): DefCarte => ({
+        cle: carteDesModules(etape),
+        etape,
+        nom: CARTE_DES_MODULES[etape].nom,
+        question: CARTE_DES_MODULES[etape].question,
+        resume: (d: FormData) => resumeDesModules(modulesSaisis(d.entries()), etape),
+      }),
+    );
+    const triees = [...cartes, ...desModules]
+      .map((c, ordre) => ({ c, cle: rang(c.etape) + (c.cle.startsWith(PREFIXE_CARTE_DES_MODULES) ? 0.5 : 0), ordre }))
+      .sort((a, b) => a.cle - b.cle || a.ordre - b.ordre)
+      .map((x) => x.c);
+    cartes.splice(0, cartes.length, ...triees);
+  }
   const carteIdx = Math.min(carte, Math.max(0, cartes.length - 1));
   const carteCourante = modeCartes ? cartes[carteIdx] : undefined;
   const derniere = modeCartes ? carteCourante?.cle === "recap" : courante === total - 1;
-  const masquee = (cle: string) =>
+  const masquee = (cle: EtapeDuFormulaire) =>
     modeCartes ? carteCourante?.etape !== cle : courante !== idx(cle);
 
   // ── LA HIÉRARCHIE DE LA FEUILLE ──────────────────────────────────────────
@@ -3473,8 +3567,37 @@ export function DecisionForm({
     );
     return true;
   };
-  // Le focus d'un refus, une fois l'écran rendu : le premier champ fautif, ou
-  // le récapitulatif quand aucun refus ne vise de champ de la feuille.
+  /**
+   * MENER AU MODULE REFUSÉ, quand le refus ne vise aucun de ses champs (un arrêt,
+   * un doublon) : son étape (ou sa carte), le module déplié, son en-tête au
+   * milieu de l'écran et le focus dessus. Faux quand le module n'est pas affiché.
+   */
+  const allerAuModule = (decision: string): boolean => {
+    const bloc = formRef.current?.querySelector<HTMLElement>(
+      `[data-module-de-decision="${CSS.escape(decision)}"]`,
+    );
+    if (!bloc) return false;
+    if (modeCartes) {
+      const cles = (bloc.closest("[data-carte]") as HTMLElement | null)?.dataset.carte?.split(" ") ?? [];
+      const i = cartes.findIndex((c) => cles.includes(c.cle));
+      if (i >= 0 && i !== carteIdx) allerALaCarte(i);
+    } else {
+      const i = Number((bloc.closest("[data-etape]") as HTMLElement | null)?.dataset.etape);
+      if (!Number.isNaN(i) && i !== courante) allerALEtape(i);
+    }
+    const repli = bloc.querySelector("details");
+    if (repli && !repli.open) repli.open = true;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const entete = bloc.querySelector<HTMLElement>("summary") ?? bloc;
+        entete.scrollIntoView({ block: "center" });
+        entete.focus({ preventScroll: true });
+      }),
+    );
+    return true;
+  };
+  // Le focus d'un refus, une fois l'écran rendu : le premier champ fautif, le
+  // module visé, ou le récapitulatif quand aucun refus ne vise la feuille.
   const envoiRefuse = refus?.envoi ?? 0;
   const cibleDuRefus = refus?.cible ?? null;
   const refusDuServeur = refus?.erreurs.some((x) => x.serveur) ?? false;
@@ -3492,6 +3615,8 @@ export function DecisionForm({
         relireLEstimation();
       }, 0);
     }
+    if (cibleDuRefus.startsWith(CIBLE_DE_MODULE) && allerAuModule(cibleDuRefus.slice(CIBLE_DE_MODULE.length)))
+      return;
     if (cibleDuRefus !== "recap" && allerAuChamp(cibleDuRefus)) return;
     const r = recapRef.current;
     if (!r) return;
@@ -3511,6 +3636,31 @@ export function DecisionForm({
   for (const x of refus?.erreurs ?? []) {
     if (x.champ && !carteDesRefus.has(x.champ)) carteDesRefus.set(x.champ, sousLeChamp(x.champ, x.message));
   }
+  // Les refus de module qui ne visent aucun champ, sous leur module.
+  const refusSansChamp = new Map<DecisionDeModule, string[]>();
+  for (const x of refus?.erreurs ?? []) {
+    if (!x.champ && x.module) refusSansChamp.set(x.module, [...(refusSansChamp.get(x.module) ?? []), x.message]);
+  }
+  /**
+   * LES ENGAGEMENTS DU TOUR, en fin d'étape : les modules du scénario rangés sous
+   * ce thème, chacun replié. Rien quand l'étape n'en porte pas. En parcours, ils
+   * ont leur carte, posée après celles des champs de l'étape.
+   */
+  const engagementsDe = (etape: EtapeDuFormulaire) =>
+    modulesOffer && modulesDeLEtape(modulesOffer, etape).length > 0 ? (
+      <Carte cle={carteDesModules(etape)}>
+        <div data-engagements-du-tour={etape} className="space-y-2">
+          {modeCartes ? null : <p className="surtitre pt-1">Engagements du tour</p>}
+          <ModulesDeDecision
+            offre={modulesOffer}
+            etape={etape}
+            choisis={alreadySubmitted ? defaults : null}
+            erreurs={carteDesRefus}
+            refusSansChamp={refusSansChamp}
+          />
+        </div>
+      </Carte>
+    ) : null;
   // LE SAUVETAGE EST UN REFUS EN DIRECT : tant qu'il manque de quoi repasser
   // sous le découvert, « Valider » est grisé ; le nouvel emprunt le dit.
   if (blocageSauvetage && on.finance && !carteDesRefus.has("newLoan")) {
@@ -3534,7 +3684,7 @@ export function DecisionForm({
       // champ, qui prend le focus ; la carte ne s'en va pas.
       const erreurs = verifierLaSaisie(f, (el) => !el.closest("[hidden]"));
       if (erreurs.length > 0) {
-        signalerLeRefus(erreurs, false);
+        signalerLeRefus(erreurs, false, f);
         return;
       }
       if (refus && !refus.recapitulatif) setRefus(null);
@@ -3863,6 +4013,19 @@ export function DecisionForm({
                     onClick={(ev) => {
                       ev.preventDefault();
                       allerAuChamp(x.champ!);
+                    }}
+                    className="underline decoration-1 underline-offset-4 hover:decoration-2"
+                  >
+                    {x.message}
+                  </a>
+                ) : x.module ? (
+                  // Un refus de module sans champ mène au module, à son étape.
+                  <a
+                    href={`#module-${x.module}`}
+                    data-lien-du-refus={`${CIBLE_DE_MODULE}${x.module}`}
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      allerAuModule(x.module!);
                     }}
                     className="underline decoration-1 underline-offset-4 hover:decoration-2"
                   >
@@ -4318,6 +4481,7 @@ export function DecisionForm({
         </Carte>
       ) : null}
       {gamme ? panneauFournisseurs : null}
+      {engagementsDe("vendre")}
       </section>
 
       {/* S'APPROVISIONNER, À PART. Le choix du fournisseur (les boutons radio) pesait
@@ -4331,6 +4495,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {gamme ? null : panneauFournisseurs}
+      {engagementsDe("approvisionner")}
       </section>
 
       {/* Budgéter : les quatre budgets du tour (marketing, qualité, entretien,
@@ -4478,6 +4643,7 @@ export function DecisionForm({
           </div>
         </Family>
       ) : null}
+      {engagementsDe("budgets")}
       </section>
 
       <section
@@ -4513,6 +4679,7 @@ export function DecisionForm({
           </div>
         </Family>
       ) : null}
+      {engagementsDe("equipe")}
       </section>
 
       <section
@@ -4660,6 +4827,7 @@ export function DecisionForm({
           )} />
         </Carte>
       ) : null}
+      {engagementsDe("financer")}
       </section>
 
       <section
@@ -4752,6 +4920,7 @@ export function DecisionForm({
           )}
         </Family>
       ) : null}
+      {engagementsDe("tresorerie")}
       </section>
 
       {/* L'ASSURANCE, À PART. Elle faisait 844 px sous la trésorerie : une famille
@@ -4845,32 +5014,7 @@ export function DecisionForm({
         </label>
         </Carte>
       ) : null}
-      </section>
-
-      {/* LES PROJETS DU SCÉNARIO : les catalogues optionnels (qualité, capacité,
-          export, innovation, marque…), une étape à eux quand le scénario en
-          porte et que le niveau en ouvre. */}
-      <section
-        data-etape={idx("projets")}
-        hidden={masquee("projets")}
-        className="space-y-3"
-      >
-      {modulesOffer ? (
-        <Family
-          carte="projets"
-          icone="idee"
-          legend="Projets du tour · ce que votre entreprise peut engager en plus"
-          repli
-          deplie
-        >
-          <ModulesDeDecision
-            offre={modulesOffer}
-            choisis={alreadySubmitted ? defaults : null}
-            erreurs={carteDesRefus}
-            telephone={telephone}
-          />
-        </Family>
-      ) : null}
+      {engagementsDe("assurance")}
       </section>
 
       <section
@@ -5008,6 +5152,7 @@ export function DecisionForm({
             : "Elle vous reviendra au prochain tour, en face du résultat. L'enseignant la lira au débriefing."}
         </p>
       </Family>
+      {engagementsDe("prevoir")}
       </section>
 
       {/*
@@ -5023,10 +5168,13 @@ export function DecisionForm({
       {modeCartes && carteCourante?.cle === "recap" ? enTeteDuRecapitulatif : null}
       {modeCartes && carteCourante?.cle === "recap" && donneesRecap ? (
         <RecapDesDecisions
-          lignes={fusionnerFinancerEtInvestir(
-            cartes
-              .filter((c) => c.resume)
-              .map((c) => ({ cle: c.cle, nom: c.nom, valeur: c.resume!(donneesRecap) })),
+          lignes={fusionnerLesEngagements(
+            fusionnerFinancerEtInvestir(
+              cartes
+                .filter((c) => c.resume)
+                .map((c) => ({ cle: c.cle, nom: c.nom, valeur: c.resume!(donneesRecap) })),
+            ),
+            donneesRecap,
           )}
           surModifier={(cle) => {
             const i = cartes.findIndex((c) => c.cle === cle);
