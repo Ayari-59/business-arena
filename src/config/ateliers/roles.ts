@@ -489,6 +489,18 @@ export const NOTIONS_PAR_ROLE: Record<string, CodeDeResponsable | "tous"> = {
   income_statement: "financier",
   balance_sheet: "financier",
   dashboard: "tous",
+  // Niveau 7 « Groupe » : la valeur et le groupe au financier, les rachats à
+  // tous, le choix de fabriquer ou faire fabriquer à l'approvisionnement.
+  enterprise_value: "financier",
+  total_shareholder_return: "financier",
+  dilution_issuance: "financier",
+  goodwill_impairment: "financier",
+  consolidation: "financier",
+  minority_translation: "financier",
+  currency_risk: "financier",
+  asset_vs_share_deal: "tous",
+  vertical_integration: "tous",
+  make_or_buy: "approvisionnement",
 };
 
 /** Le responsable d'une notion citée par une séance, ou « tous ». */

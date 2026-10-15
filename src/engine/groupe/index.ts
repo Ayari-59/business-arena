@@ -10,8 +10,25 @@ import { economieDeFinDePartie, emettre, initialiserLeGroupe, valoriser } from "
 import type { ValeurDeLEntreprise } from "./types";
 
 export * from "./types";
-export { coutAuBareme, commandeDuTour, fusionnerLesCommandes, type CommandeDuTour } from "./sous-traitance";
-export { cleDeLaCible, dejaVendue } from "./rachat";
+export {
+  coutAuBareme,
+  commandeDuTour,
+  fusionnerLesCommandes,
+  seuilDIndifference,
+  type CommandeDuTour,
+  type LigneEnPropre,
+  type SeuilDIndifference,
+} from "./sous-traitance";
+export {
+  cleDeLaCible,
+  dejaVendue,
+  chiffrerLeMontage,
+  jugerLeMontage,
+  motifDuPaiement,
+  type ChiffresDuMontage,
+  type MontageDuRachat,
+  type SituationDeLAcquereur,
+} from "./rachat";
 export { chargesDesSites, cleDuSite, etatDuSite, siteAcquis, valeurRecouvrable } from "./site-ferme";
 export { fluxPropre } from "./flux-propre";
 export { agrandir } from "./depart";
@@ -35,6 +52,7 @@ export {
   initialiserLeGroupe,
   tailleDeLaFenetre,
   toursParAn,
+  valeurCreee,
   valoriser,
 } from "./valorisation";
 
@@ -88,9 +106,8 @@ export function simulerLeGroupe(
   // 3. Valeur d'ouverture : celle du groupe consolidé à la dernière clôture, s'il a des filiales.
   const ouverture = new Map<string, ValeurDeLEntreprise>();
   for (const c of companies) {
-    if (!c.groupe) continue;
-    const v = valoriser({ groupe: c.groupe, finance: c.groupe.cloture?.bilan ?? c.finance, roundDays: scenario.roundDays, multiple });
-    ouverture.set(c.id, c.groupe.cloture ? partDuGroupe(v, c.groupe.cloture.valeurDesMinoritaires, c.groupe.valeurInitialeParAction) : v);
+    const v = valeurDOuverture(c, scenario);
+    if (v) ouverture.set(c.id, v);
   }
 
   // 4. Audits et rachats au jour 1 (l'estimation ne voit que l'équipe : ni l'un ni l'autre).
@@ -312,6 +329,24 @@ function rationner(
 export function premiereOuverture(c: CompanyState, cfg: NonNullable<SimulationInput["scenario"]["groupe"]>, roundDays: number): CompanyState {
   const grande = agrandir(c, cfg.depart?.facteur ?? 1);
   return { ...grande, groupe: initialiserLeGroupe(grande, cfg, roundDays) };
+}
+
+/**
+ * La valeur d'une entreprise à l'ouverture d'un tour : celle du groupe
+ * consolidé à la dernière clôture, part du groupe, s'il a des filiales ; sinon
+ * la sienne. Le contrôle d'une émission s'y juge, la fusion s'y émet ; la
+ * feuille de décision la lit de la même fonction. `null` hors niveau 7.
+ */
+export function valeurDOuverture(c: CompanyState, scenario: SimulationInput["scenario"]): ValeurDeLEntreprise | null {
+  const cfg = scenario.groupe;
+  if (!cfg || !c.groupe) return null;
+  const v = valoriser({
+    groupe: c.groupe,
+    finance: c.groupe.cloture?.bilan ?? c.finance,
+    roundDays: scenario.roundDays,
+    multiple: cfg.valorisation.multipleEBE,
+  });
+  return c.groupe.cloture ? partDuGroupe(v, c.groupe.cloture.valeurDesMinoritaires, c.groupe.valeurInitialeParAction) : v;
 }
 
 /**

@@ -30,6 +30,7 @@
  *
  * Tout est pur : mêmes entrées, mêmes sorties.
  */
+import { valeurCreee } from "@/engine/groupe";
 import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile, type LeviersOuverts } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import type {
@@ -369,11 +370,7 @@ export function rejouer(
       tresorerie[id] = auCentime(r.functionalBalance.netTreasury);
       const v = r.groupe?.valeur;
       if (v && scenario.groupe) {
-        const depart = (v.valeurParAction + v.dividendesParAction) / (v.rentabiliteTotale + 1);
-        valeurs[id] = {
-          rta: v.rentabiliteTotale,
-          creee: Number.isFinite(depart) ? v.rentabiliteTotale * depart * scenario.groupe.valorisation.actionsInitiales : 0,
-        };
+        valeurs[id] = { rta: v.rentabiliteTotale, creee: valeurCreee(v, scenario.groupe.valorisation.actionsInitiales) };
       }
     }
     toursRejoues.push(tourRejoue);

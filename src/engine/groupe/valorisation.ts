@@ -162,3 +162,18 @@ export function economieDeFinDePartie(discretionnaire: number, precedents: reado
   const moyenne = derniers.reduce((s, x) => s + x, 0) / derniers.length;
   return Math.max(0, moyenne - discretionnaire);
 }
+
+/**
+ * LA VALEUR CRÉÉE POUR LES ACTIONNAIRES D'ORIGINE, en euros : la rentabilité
+ * totale par action appliquée à la valeur de départ de leurs actions. La
+ * valeur de départ se relit de la valeur du tour : (valeur + dividendes reçus)
+ * / (1 + rentabilité totale). Le classement et le bilan de partie la lisent
+ * de cette même fonction.
+ */
+export function valeurCreee(
+  v: Pick<ValeurDeLEntreprise, "valeurParAction" | "dividendesParAction" | "rentabiliteTotale">,
+  actionsInitiales: number,
+): number {
+  const depart = (v.valeurParAction + v.dividendesParAction) / (v.rentabiliteTotale + 1);
+  return Number.isFinite(depart) ? v.rentabiliteTotale * depart * actionsInitiales : 0;
+}

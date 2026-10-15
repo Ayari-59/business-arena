@@ -1,5 +1,5 @@
 import type { ProductCode } from "../types";
-import type { ConfigDeGroupe, TrancheDeSousTraitance } from "./types";
+import type { ConfigDeGroupe, SousTraitanceDUneReference, TrancheDeSousTraitance } from "./types";
 
 /**
  * FABRIQUER OU FAIRE FABRIQUER (niveau 7).
@@ -88,4 +88,67 @@ export function fusionnerLesCommandes(
       u > 0 ? ((a.qualites?.[k] ?? qualiteDeA(k)) * a.unites[k]! + qb(k) * (b.unites[k] ?? 0)) / u : 1,
     ),
   };
+}
+
+/** Une ligne qu'on pourrait acheter, pour fabriquer en propre. */
+export interface LigneEnPropre {
+  code: string;
+  nom: string;
+  /** Prix d'achat. */
+  cout: number;
+  /** Tours d'amortissement. */
+  amortissement: number;
+  /** Unités qu'elle produit par tour. */
+  capacite: number;
+}
+
+export interface SeuilDIndifference {
+  /** Au-dessus de ce volume par tour, durablement, la ligne en propre coûte moins cher. */
+  unites: number;
+  ligne: { code: string; nom: string };
+  /** Ce que la ligne coûte chaque tour, qu'elle tourne ou non : amortissement et salaires de ses opérateurs. */
+  coutFixeParTour: number;
+  /** Les personnes qu'il faut pour la faire tourner à pleine capacité. */
+  operateurs: number;
+  /** Ce qu'une unité coûte de plus chez le sous-traitant (première tranche) qu'en propre. */
+  ecartParUnite: number;
+}
+
+/**
+ * LE SEUIL D'INDIFFÉRENCE ENTRE FAIRE ET FAIRE FAIRE, pour une référence.
+ *
+ * En propre, une ligne coûte chaque tour son amortissement et les salaires
+ * des personnes qu'il faut pour la faire tourner, plus le coût variable de
+ * chaque unité ; chez le sous-traitant, rien de fixe, mais chaque unité coûte
+ * au moins le prix de sa première tranche. Le seuil est le volume où les deux
+ * se valent : `coût fixe de la ligne / (première tranche − coût variable
+ * interne)`. On retient la ligne au seuil le plus bas, et seulement si elle
+ * peut produire ce volume. `null` quand le sous-traitant ne coûte pas plus
+ * qu'en propre à l'unité, ou qu'aucune ligne n'y arrive.
+ */
+export function seuilDIndifference(args: {
+  ref: SousTraitanceDUneReference;
+  coutVariableInterne: number;
+  heuresParUnite: number;
+  heuresParPersonne: number;
+  salaireParTour: number;
+  lignes: readonly LigneEnPropre[];
+}): SeuilDIndifference | null {
+  const premiere = args.ref.tranches[0]?.prix;
+  if (premiere === undefined) return null;
+  const ecart = premiere - args.coutVariableInterne;
+  if (!(ecart > 0)) return null;
+  let meilleur: SeuilDIndifference | null = null;
+  for (const l of args.lignes) {
+    if (l.amortissement <= 0 || l.capacite <= 0) continue;
+    const operateurs =
+      args.heuresParPersonne > 0 ? Math.ceil((l.capacite * args.heuresParUnite) / args.heuresParPersonne - 1e-9) : 0;
+    const coutFixeParTour = l.cout / l.amortissement + operateurs * args.salaireParTour;
+    const unites = Math.ceil(coutFixeParTour / ecart);
+    if (unites > l.capacite) continue;
+    if (!meilleur || unites < meilleur.unites) {
+      meilleur = { unites, ligne: { code: l.code, nom: l.nom }, coutFixeParTour, operateurs, ecartParUnite: ecart };
+    }
+  }
+  return meilleur;
 }

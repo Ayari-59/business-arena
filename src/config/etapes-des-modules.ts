@@ -38,6 +38,18 @@ export const ETAPE_DU_MODULE = {
   startedRdActionIds: "budgets",
 } as const satisfies Record<DecisionDeModule, EtapeDuFormulaire>;
 
+/**
+ * LES DÉCISIONS DU NIVEAU 7 « GROUPE », rangées de même par thème : faire
+ * fabriquer (sous-traitance, import, synergies des filiales étrangères) avec
+ * l'approvisionnement, la croissance externe (rachat, audit) avec le
+ * financement et l'investissement. Ce ne sont pas des modules du scénario,
+ * mais des leviers du niveau ; la feuille les pose à la fin de leur étape.
+ */
+export const ETAPE_DU_GROUPE = {
+  approvisionnement: "approvisionner",
+  croissance: "financer",
+} as const satisfies Record<string, EtapeDuFormulaire>;
+
 /** Les étapes qui portent au moins un module. */
 export type EtapeDuModule = (typeof ETAPE_DU_MODULE)[DecisionDeModule];
 

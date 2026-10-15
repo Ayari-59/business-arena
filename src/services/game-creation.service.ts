@@ -262,6 +262,26 @@ export class NiveauGroupeReserveError extends Error {
  * en gamme au prototype), ET PAR UN ADMINISTRATEUR DE LA PLATEFORME : la règle
  * de l'écran, appliquée ici pour toute création, quel que soit le formulaire.
  */
+/**
+ * L'un de ces comptes administre-t-il la plateforme ? C'est le drapeau qui
+ * ouvre le niveau 7 « Groupe » pendant l'avant-première : la page `/jouer` le
+ * lit pour montrer le niveau, la création pour l'accepter.
+ */
+export async function administreLaPlateforme(comptes: (string | null | undefined)[]): Promise<boolean> {
+  const ids = comptes.filter((x): x is string => typeof x === "string" && x.length > 0);
+  if (ids.length === 0) return false;
+  const admins = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(inArray(users.id, ids), eq(users.isPlatformAdmin, true)));
+  return admins.length > 0;
+}
+
+/** Les entreprises (codes de `/jouer`) qui se jouent au niveau 7 : celles dont la variante du niveau porte un bloc de groupe. */
+export function entreprisesDuNiveauGroupe(codes: readonly string[]): string[] {
+  return codes.filter((code) => Boolean(GROUPE_PAR_SCENARIO[scenarioCodeForLevel(code, 7)]));
+}
+
 export async function verifierLeNiveauGroupe(args: {
   niveau: number | undefined;
   scenarioCode: string | undefined;
@@ -273,12 +293,7 @@ export async function verifierLeNiveauGroupe(args: {
   if (!GROUPE_PAR_SCENARIO[code]) {
     throw new NiveauGroupeReserveError("Le niveau 7 « Groupe » ne se joue qu'avec NOVA, en gamme.");
   }
-  const ids = args.comptes.filter((x): x is string => typeof x === "string" && x.length > 0);
-  const admins =
-    ids.length > 0
-      ? await db.select({ id: users.id }).from(users).where(and(inArray(users.id, ids), eq(users.isPlatformAdmin, true)))
-      : [];
-  if (admins.length === 0) {
+  if (!(await administreLaPlateforme(args.comptes))) {
     throw new NiveauGroupeReserveError(
       "Le niveau 7 « Groupe » est en avant-première : seul un administrateur de la plateforme peut créer une partie à ce niveau.",
     );

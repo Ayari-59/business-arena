@@ -15,7 +15,7 @@ import type { DecisionSourceMap } from "@/config/decision-source";
 import { coherencePivots } from "@/scoring/coherence";
 import type { CompanyRoundResult, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 import type { LeverDirection } from "@/config/scenarios/situation-kit";
-import type { ValeurDeLEntreprise } from "@/engine/groupe";
+import { valeurCreee, type ValeurDeLEntreprise } from "@/engine/groupe";
 
 // ---------------------------------------------------------------------------
 // Lecture des entrées pédagogiques
@@ -342,12 +342,11 @@ async function valeursDuGroupe(
     const v = l.valeur;
     const tour = indexDe.get(l.roundId) ?? 0;
     if (!v || (out.get(l.teamId)?.tour ?? -1) > tour) continue;
-    const depart = (v.valeurParAction + v.dividendesParAction) / (v.rentabiliteTotale + 1);
     out.set(l.teamId, {
       rentabiliteTotale: v.rentabiliteTotale,
       valeurParAction: v.valeurParAction,
       dividendesParAction: v.dividendesParAction,
-      valeurCreee: Number.isFinite(depart) ? v.rentabiliteTotale * depart * actionsInitiales : 0,
+      valeurCreee: valeurCreee(v, actionsInitiales),
       tour,
     });
   }

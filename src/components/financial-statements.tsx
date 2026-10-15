@@ -1,4 +1,5 @@
 import type { CompanyRoundResult } from "@/engine/types";
+import type { ResultatDeGroupe } from "@/engine/groupe/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { Tiroir } from "@/components/tiroir";
 import {
@@ -334,6 +335,7 @@ export function FinancialStatements({
   const placement = b.shortTermInvestment ?? 0;
   const actifDe = (bilan: typeof b) =>
     bilan.fixedAssetsNet +
+    (bilan.goodwill ?? 0) +
     bilan.inventoryValue +
     bilan.receivables +
     bilan.cash +
@@ -526,6 +528,18 @@ export function FinancialStatements({
                 valeur={b.fixedAssetsNet}
                 avant={pb?.fixedAssetsNet ?? null}
               />
+              {result.groupe?.rachat?.statut === "conclu" && result.groupe.rachat.site ? (
+                // NIVEAU 7 : un site racheté entre au parc par ses actifs.
+                <Ligne
+                  label={`dont immobilisations reprises (${result.groupe.rachat.nom})`}
+                  valeur={result.groupe.rachat.site.valeurInscrite}
+                  avecEcart={false}
+                  decalee
+                />
+              ) : null}
+              {(b.goodwill ?? 0) > 0.5 || (pb?.goodwill ?? 0) > 0.5 ? (
+                <Ligne label="Écart d'acquisition" valeur={b.goodwill ?? 0} avant={pb ? (pb.goodwill ?? 0) : null} />
+              ) : null}
               <Ligne
                 label="Stocks de produits finis"
                 valeur={b.inventoryValue}
@@ -597,6 +611,10 @@ export function FinancialStatements({
           trésorerie nette {euro(result.functionalBalance.netTreasury)}.
         </p>
       </Panel>
+
+      {result.groupe ? (
+        <PanneauxDuGroupe groupe={result.groupe} precedent={precedent?.groupe ?? null} periode={periode} />
+      ) : null}
 
       <Panel
         title="Analyse des coûts"
@@ -746,5 +764,331 @@ export function FinancialStatements({
         </p>
       </Panel>
     </section>
+  );
+}
+
+const euroCents = (v: number) =>
+  `${v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+
+/**
+ * NIVEAU 7 « GROUPE » : la valeur créée pour l'actionnaire, ce que le tour a
+ * racheté, audité ou fait fabriquer, et le groupe consolidé dès qu'il y a une
+ * filiale (écart d'acquisition, intérêts minoritaires, écart de conversion).
+ * Même forme que les autres états : un tableau par panneau, l'écart au tour
+ * précédent quand il a un sens.
+ */
+function PanneauxDuGroupe({
+  groupe,
+  precedent,
+  periode,
+}: {
+  groupe: ResultatDeGroupe;
+  precedent: ResultatDeGroupe | null;
+  periode: string;
+}) {
+  const v = groupe.valeur;
+  const pv = precedent?.valeur ?? null;
+  const r = groupe.rachat;
+  const c = groupe.consolide;
+  const pc = precedent?.consolide ?? null;
+  const operations = r || groupe.diligence || groupe.sousTraitance || groupe.reseau || groupe.fabrication;
+  return (
+    <>
+      {v ? (
+        <Panel
+          title="Valeur de l'entreprise"
+          resume={`${euroCents(v.valeurParAction)} par action · rentabilité totale ${pctSigne(v.rentabiliteTotale)}`}
+        >
+          <Etat periode={periode} legende="De l'EBE à la valeur d'une action, et la rentabilité totale pour l'actionnaire.">
+            <Ligne label="EBE des douze derniers mois" valeur={v.ebeDouzeMois} avant={pv?.ebeDouzeMois ?? null} />
+            <Ligne
+              label="Valeur de rendement (multiple de l'EBE)"
+              valeur={v.valeurDeRendement}
+              avant={pv?.valeurDeRendement ?? null}
+              decalee
+            />
+            <Ligne label="Actif économique" valeur={v.actifEconomique} avant={pv?.actifEconomique ?? null} decalee />
+            <Ligne
+              label="= Valeur d'entreprise (la plus haute)"
+              valeur={v.valeurEntreprise}
+              avant={pv?.valeurEntreprise ?? null}
+              fort
+            />
+            <Ligne label="− Dette nette" valeur={-v.detteNette} avant={pv ? -pv.detteNette : null} decalee />
+            <Ligne
+              label="= Valeur des capitaux propres"
+              valeur={v.valeurCapitauxPropres}
+              avant={pv?.valeurCapitauxPropres ?? null}
+              fort
+            />
+            <Ligne label="Actions en circulation" valeur={v.actions} avant={pv?.actions ?? null} format="units" />
+            {v.emission ? (
+              <Ligne
+                label={`dont émises ce tour, à ${euroCents(v.emission.prixParAction)}`}
+                valeur={v.emission.actionsEmises}
+                format="units"
+                avecEcart={false}
+                decalee
+              />
+            ) : null}
+            <Ligne
+              label="= Valeur par action"
+              valeur={v.valeurParAction}
+              avant={pv?.valeurParAction ?? null}
+              texte={euroCents(v.valeurParAction)}
+              fort
+            />
+            <Ligne
+              label="Dividendes reçus par action, depuis le départ"
+              valeur={v.dividendesParAction}
+              texte={euroCents(v.dividendesParAction)}
+              avecEcart={false}
+            />
+            <Ligne
+              label="Rentabilité totale pour l'actionnaire"
+              valeur={v.rentabiliteTotale}
+              format="percent"
+              texte={pctSigne(v.rentabiliteTotale)}
+              avecEcart={false}
+              fort
+              tone={v.rentabiliteTotale >= 0 ? "good" : "bad"}
+            />
+          </Etat>
+          <p className="mt-2 text-xs text-slate-400">
+            La rentabilité totale compare ce que vaut une action, dividendes reçus compris, à ce qu&apos;elle valait
+            au départ.
+          </p>
+        </Panel>
+      ) : null}
+
+      {operations ? (
+        <Panel
+          title="Rachat, audit et fabrication du tour"
+          resume={
+            r
+              ? r.statut === "conclu"
+                ? `${r.nom} racheté`
+                : `offre sur ${r.nom} refusée`
+              : groupe.diligence
+                ? `audit de ${groupe.diligence.nom}`
+                : "sous-traitance"
+          }
+        >
+          <div className="space-y-2 text-sm text-slate-300" data-operations-du-groupe="">
+            {r ? (
+              r.statut === "conclu" ? (
+                <Etat periode={periode} avecEcart={false} legende={`Le rachat de ${r.nom}.`}>
+                  <Ligne label={`Prix payé pour ${r.nom}`} valeur={r.prix ?? 0} avecEcart={false} fort />
+                  {r.financement && r.financement.numeraire > 0.5 ? (
+                    <Ligne label="dont trésorerie" valeur={r.financement.numeraire} avecEcart={false} decalee />
+                  ) : null}
+                  {r.financement && r.financement.emprunt > 0.5 ? (
+                    <Ligne label="dont emprunt d'acquisition" valeur={r.financement.emprunt} avecEcart={false} decalee />
+                  ) : null}
+                  {r.financement && r.financement.augmentation > 0.5 ? (
+                    <Ligne
+                      label="dont investisseurs entrants"
+                      valeur={r.financement.augmentation}
+                      avecEcart={false}
+                      decalee
+                    />
+                  ) : null}
+                  {r.financement && r.financement.titres > 0.5 ? (
+                    <Ligne
+                      label={`dont actions remises aux vendeurs (${units(r.financement.actionsEmises)})`}
+                      valeur={r.financement.titres}
+                      avecEcart={false}
+                      decalee
+                    />
+                  ) : null}
+                  {r.frais !== undefined ? <Ligne label="Frais de transaction" valeur={r.frais} avecEcart={false} /> : null}
+                  {r.ecart !== undefined ? (
+                    <Ligne label="Écart d'acquisition" valeur={r.ecart} avecEcart={false} />
+                  ) : null}
+                  {r.site ? (
+                    <Ligne
+                      label={`Lignes qui repartent (${r.site.etat.lignesPerdues} perdue${r.site.etat.lignesPerdues > 1 ? "s" : ""})`}
+                      valeur={r.site.etat.lignesRemisesEnRoute}
+                      format="units"
+                      avecEcart={false}
+                    />
+                  ) : null}
+                  {r.site ? <Ligne label="Remise en état" valeur={r.site.etat.remiseEnEtat} avecEcart={false} /> : null}
+                  {r.site && r.site.etat.passifEnvironnemental > 0 ? (
+                    <Ligne
+                      label="Passif environnemental découvert"
+                      valeur={r.site.etat.passifEnvironnemental}
+                      avecEcart={false}
+                    />
+                  ) : null}
+                  {r.site ? (
+                    <Ligne
+                      label="Immobilisations reprises (valeur inscrite)"
+                      valeur={r.site.valeurInscrite}
+                      avecEcart={false}
+                      fort
+                    />
+                  ) : null}
+                  {r.site && r.site.depreciation > 0.5 ? (
+                    <Ligne
+                      label="dont dépréciation immédiate"
+                      valeur={-r.site.depreciation}
+                      avecEcart={false}
+                      decalee
+                    />
+                  ) : null}
+                </Etat>
+              ) : (
+                <p className="encadre-neutre rounded-lg px-3 py-2" data-rachat-refuse="">
+                  Offre sur {r.nom} refusée : {r.motif}
+                </p>
+              )
+            ) : null}
+            {r?.site && r.statut === "conclu" ? (
+              <p>
+                Mise en route :{" "}
+                {r.site.miseEnRoute
+                  .map((m) => `${m.lignes} ligne${m.lignes > 1 ? "s" : ""} au tour ${m.tour}`)
+                  .join(", ")}
+                . Relevez votre plan de production d&apos;autant pour qu&apos;elles tournent.
+              </p>
+            ) : null}
+            {groupe.diligence ? (
+              <p data-audit-du-tour="">
+                Audit de {groupe.diligence.nom} ({euro(groupe.diligence.cout)}) :{" "}
+                {groupe.diligence.etat.lignesRemisesEnRoute} ligne
+                {groupe.diligence.etat.lignesRemisesEnRoute > 1 ? "s" : ""} repartiraient,{" "}
+                {groupe.diligence.etat.lignesPerdues} perdue{groupe.diligence.etat.lignesPerdues > 1 ? "s" : ""},
+                remise en état {euro(groupe.diligence.etat.remiseEnEtat)},{" "}
+                {groupe.diligence.etat.passifEnvironnemental > 0
+                  ? `passif environnemental ${euro(groupe.diligence.etat.passifEnvironnemental)}`
+                  : "aucun passif environnemental"}
+                .
+              </p>
+            ) : null}
+            {groupe.sousTraitance ? (
+              <p data-sous-traitance-du-tour="">
+                Sous-traitance : {units(groupe.sousTraitance.unites)} unités livrées pour{" "}
+                {euro(groupe.sousTraitance.cout)}, soit{" "}
+                {euroCents(groupe.sousTraitance.cout / Math.max(1, groupe.sousTraitance.unites))} l&apos;unité.
+                {groupe.levierOperationnel !== undefined
+                  ? ` Levier opérationnel du tour : ${groupe.levierOperationnel.toFixed(1).replace(".", ",")}.`
+                  : ""}
+              </p>
+            ) : null}
+            {groupe.reseau ? (
+              <p>
+                Ventes par le réseau étranger :{" "}
+                {units(Object.values(groupe.reseau).reduce((t, x) => t + x.livre, 0))} unités,{" "}
+                {euro(Object.values(groupe.reseau).reduce((t, x) => t + x.chiffreDAffaires, 0))} de chiffre
+                d&apos;affaires.
+              </p>
+            ) : null}
+            {groupe.fabrication ? (
+              <p>
+                Fabriqué à l&apos;étranger :{" "}
+                {units(Object.values(groupe.fabrication).reduce((t, x) => t + x.unites, 0))} unités pour{" "}
+                {euro(Object.values(groupe.fabrication).reduce((t, x) => t + x.cout, 0))}.
+              </p>
+            ) : null}
+          </div>
+        </Panel>
+      ) : null}
+
+      {c ? (
+        <Panel title="Groupe consolidé" resume={`résultat net consolidé ${euro(c.resultatNet)}`}>
+          <div className="grid gap-3 sm:grid-cols-2" data-bilan-consolide="">
+            <div>
+              <p className="mb-1 text-sm font-semibold text-slate-200">Actif consolidé</p>
+              <Etat periode={periode} legende="Actif du bilan consolidé : titres éliminés, filiales intégrées.">
+                <Ligne
+                  label="Immobilisations nettes"
+                  valeur={c.bilan.fixedAssetsNet}
+                  avant={pc?.bilan.fixedAssetsNet ?? null}
+                />
+                <Ligne
+                  label="Écart d'acquisition"
+                  valeur={c.bilan.goodwill ?? 0}
+                  avant={pc ? (pc.bilan.goodwill ?? 0) : null}
+                />
+                <Ligne label="Stocks" valeur={c.bilan.inventoryValue} avant={pc?.bilan.inventoryValue ?? null} />
+                <Ligne label="Créances clients" valeur={c.bilan.receivables} avant={pc?.bilan.receivables ?? null} />
+                <Ligne
+                  label="Disponibilités"
+                  valeur={c.bilan.cash + (c.bilan.shortTermInvestment ?? 0)}
+                  avant={pc ? pc.bilan.cash + (pc.bilan.shortTermInvestment ?? 0) : null}
+                />
+              </Etat>
+            </div>
+            <div>
+              <p className="mb-1 text-sm font-semibold text-slate-200">Passif consolidé</p>
+              <Etat periode={periode} legende="Passif du bilan consolidé.">
+                <Ligne label="Capitaux propres, part du groupe" valeur={c.bilan.equity} avant={pc?.bilan.equity ?? null} />
+                <Ligne
+                  label="dont écart de conversion"
+                  valeur={c.ecartDeConversion}
+                  avant={pc?.ecartDeConversion ?? null}
+                  decalee
+                />
+                <Ligne
+                  label="Intérêts minoritaires"
+                  valeur={c.interetsMinoritaires}
+                  avant={pc?.interetsMinoritaires ?? null}
+                />
+                <Ligne label="Dettes financières" valeur={c.bilan.financialDebt} avant={pc?.bilan.financialDebt ?? null} />
+                <Ligne
+                  label="Dettes fournisseurs et TVA"
+                  valeur={c.bilan.payables + (c.bilan.vatLiability ?? 0)}
+                  avant={pc ? pc.bilan.payables + (pc.bilan.vatLiability ?? 0) : null}
+                />
+                {c.bilan.overdraft > 0.5 ? (
+                  <Ligne
+                    label="Concours bancaires (découvert)"
+                    valeur={c.bilan.overdraft}
+                    avant={pc?.bilan.overdraft ?? null}
+                    tone="bad"
+                  />
+                ) : null}
+              </Etat>
+            </div>
+          </div>
+          <Etat periode={periode} legende="Résultat consolidé du tour.">
+            <Ligne label="Chiffre d'affaires consolidé" valeur={c.chiffreDAffaires} avant={pc?.chiffreDAffaires ?? null} />
+            {c.eliminations.ventesInternes > 0.5 ? (
+              <Ligne
+                label="dont ventes internes éliminées"
+                valeur={-c.eliminations.ventesInternes}
+                avecEcart={false}
+                decalee
+              />
+            ) : null}
+            <Ligne label="EBE consolidé" valeur={c.ebe} avant={pc?.ebe ?? null} />
+            <Ligne label="Résultat net consolidé" valeur={c.resultatNet} avant={pc?.resultatNet ?? null} fort />
+            <Ligne
+              label="dont part des minoritaires"
+              valeur={c.partDesMinoritaires}
+              avant={pc?.partDesMinoritaires ?? null}
+              decalee
+            />
+          </Etat>
+          <ul className="mt-2 space-y-1 text-sm text-slate-300" data-filiales="">
+            {c.filiales.map((f) => (
+              <li key={f.id}>
+                {f.nom} : {pct(f.part)} détenus, écart d&apos;acquisition {euro(f.ecart)}
+                {f.depreciationDuTour > 0.5 ? `, déprécié de ${euro(f.depreciationDuTour)} ce tour` : ""}
+                {f.cours.cloture !== 1
+                  ? `, cours de clôture ${f.cours.cloture.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} € et cours moyen ${f.cours.moyen.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} €`
+                  : ""}
+                .
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-slate-400">
+            Bilan au cours de clôture, résultat au cours moyen : la différence va en écart de conversion, dans les
+            capitaux propres.
+          </p>
+        </Panel>
+      ) : null}
+    </>
   );
 }

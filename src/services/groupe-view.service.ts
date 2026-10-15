@@ -1,4 +1,6 @@
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
+import { toGamme } from "@/engine/gamme";
 import {
   cleDeLaCible,
   coursDeLImport,
@@ -6,11 +8,15 @@ import {
   laSociete,
   prixDeLaSociete,
   prixDuFournisseur,
+  seuilDIndifference,
   trajectoireDeLEtranger,
+  valeurDOuverture,
   type CibleDeRachat,
   type EtatDuSite,
   type ResultatDuRachat,
-  type SousTraitanceDUneReference,
+  type SeuilDIndifference,
+  type SituationDeLAcquereur,
+  type TrancheDeSousTraitance,
   type TypeDeCible,
   type ValeurDeLEntreprise,
 } from "@/engine/groupe";
@@ -58,9 +64,25 @@ export interface CibleVue {
     parts: number[];
     /** Euros pour une unité de devise à la dernière clôture. */
     cours: number;
-    reseau: boolean;
-    fabrication: boolean;
+    /** Le prix demandé de chaque part proposée. */
+    prixDesParts: { part: number; prix: number }[];
+    /** Son réseau, en devise locale : unités par tour, prix local par référence, coût par unité, frais fixes du tour employé. */
+    reseau: { capacite: number; prix: Record<string, number>; coutParUnite: number; coutFixeParTour: number } | null;
+    /** Son usine, en devise locale : unités par tour, coût par référence, qualité livrée, frais fixes du tour employé. */
+    fabrication: { capacite: number; cout: Record<string, number>; qualite: number; coutFixeParTour: number } | null;
   };
+}
+
+/** Une référence que le sous-traitant fabrique : son barème, et l'arbitrage face à une ligne en propre. */
+export interface SousTraitanceVue {
+  code: string;
+  nom: string;
+  tranches: TrancheDeSousTraitance[];
+  plafond: number;
+  qualite: number;
+  /** Coût variable d'une unité fabriquée en propre (matière et autres coûts variables). */
+  coutVariableInterne: number;
+  seuil: SeuilDIndifference | null;
 }
 
 export interface VueDuGroupe {
@@ -81,7 +103,19 @@ export interface VueDuGroupe {
   change: { devise: string; pays: string; cours: number[] }[];
   /** L'import risqué : sa devise et ses cours connus, ses risques de rupture. */
   import: { code: string; devise: string; cours: number[]; probabilite: number; probabiliteAuxPics: number } | null;
-  sousTraitance: Record<string, SousTraitanceDUneReference> | null;
+  sousTraitance: SousTraitanceVue[] | null;
+  /**
+   * L'équipe à l'ouverture du tour, telle que le moteur juge son offre : le
+   * tour, le dernier tour, et sa situation (trésorerie, dette, actions, valeur
+   * d'ouverture, découvert autorisé). `null` si son état manque.
+   */
+  ouverture: {
+    tour: number;
+    dernierTour: number;
+    maxDebtToEquity: number | null;
+    situation: SituationDeLAcquereur;
+    valeurParAction: number;
+  } | null;
 }
 
 export function vueDuGroupe(args: {
@@ -174,8 +208,9 @@ export function vueDuGroupe(args: {
         devise: e.devise,
         parts: e.parts,
         cours: cours[clos]!,
-        reseau: Boolean(e.reseau),
-        fabrication: Boolean(e.fabrication),
+        prixDesParts: b.statut === "disponible" ? e.parts.map((part) => ({ part, prix: prixDeLaSociete(scenario, soc, part).prix })) : [],
+        reseau: e.reseau ? { ...e.reseau } : null,
+        fabrication: e.fabrication ? { ...e.fabrication } : null,
       },
     });
   }
@@ -185,6 +220,64 @@ export function vueDuGroupe(args: {
     return { type: f.type, id: f.id, nom: f.nom, part: f.part, tour: f.tour, devise: e?.devise ?? null, cours };
   });
   const imp = g.import;
+  const sousTraitance: SousTraitanceVue[] | null = g.sousTraitance
+    ? toGamme(scenario).flatMap((p) => {
+        const ref = g.sousTraitance![p.code];
+        if (!ref) return [];
+        const coutVariableInterne = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+        return [
+          {
+            code: p.code,
+            nom: p.name,
+            tranches: ref.tranches,
+            plafond: ref.plafond,
+            qualite: ref.qualite,
+            coutVariableInterne,
+            seuil: seuilDIndifference({
+              ref,
+              coutVariableInterne,
+              heuresParUnite: p.hoursPerUnit,
+              heuresParPersonne: moi?.hoursPerEmployee ?? 0,
+              salaireParTour: scenario.hr?.salaryPerEmployeePerRound ?? 0,
+              lignes: (scenario.equipment?.types ?? []).map((t) => ({
+                code: t.code,
+                nom: t.name,
+                cout: t.costPerUnit,
+                amortissement: t.depreciationRounds,
+                capacite: t.capacityPerUnit,
+              })),
+            }),
+          },
+        ];
+      })
+    : null;
+  const ouverture: VueDuGroupe["ouverture"] = (() => {
+    const v = moi ? valeurDOuverture(moi, scenario) : null;
+    if (!moi || !moi.groupe || !v) return null;
+    const bank = scenario.finance.bank;
+    const limite = bank
+      ? conditionsBancaires(
+          confianceServie(moi, scenario),
+          { overdraftLimit: scenario.finance.overdraftLimit, overdraftAnnualRate: scenario.finance.overdraftAnnualRate },
+          bank,
+        ).overdraftLimit
+      : scenario.finance.overdraftLimit;
+    return {
+      tour: args.tourEnCours,
+      dernierTour: scenario.roundsCount,
+      maxDebtToEquity: scenario.finance.maxDebtToEquity ?? null,
+      valeurParAction: v.valeurParAction,
+      situation: {
+        cash: moi.finance.cash,
+        overdraft: moi.finance.overdraft,
+        equity: moi.finance.equity,
+        financialDebt: moi.finance.financialDebt,
+        actions: moi.groupe.actions,
+        valeurParAction: v.valeurParAction,
+        limiteDeDecouvert: limite,
+      },
+    };
+  })();
   const saison = scenario.market.seasonality;
   return {
     valeurs,
@@ -211,6 +304,7 @@ export function vueDuGroupe(args: {
           probabiliteAuxPics: saison.some((x) => x >= imp.rupture.seuilDePic) ? imp.rupture.probabiliteAuxPics : imp.rupture.probabilite,
         }
       : null,
-    sousTraitance: g.sousTraitance ?? null,
+    sousTraitance,
+    ouverture,
   };
 }

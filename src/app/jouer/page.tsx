@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
-import { DIFFICULTY_PRESETS, premierNiveauQuiOuvre } from "@/config/difficulty";
+import { DIFFICULTY_PRESETS, NIVEAU_GROUPE, premierNiveauQuiOuvre } from "@/config/difficulty";
+import { administreLaPlateforme, entreprisesDuNiveauGroupe } from "@/services/game-creation.service";
 import { leviersDuNiveau } from "@/config/decisions";
 import { comparatifDesNiveaux, tableauDuNiveau } from "@/config/tableau-des-niveaux";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
 export default async function JouerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ secteur?: string; niveau?: string; trop?: string; reserve?: string }>;
+  searchParams: Promise<{ secteur?: string; niveau?: string; trop?: string; reserve?: string; groupe?: string }>;
 }) {
   const config = await getPlatformConfig();
   // Celui qui revient retrouve sa partie AVANT d'en configurer une autre.
@@ -55,7 +56,10 @@ export default async function JouerPage({
   const licence = await unCompteSousLicence([userId, session?.userId]);
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
-  const { secteur, niveau, trop, reserve } = await searchParams;
+  const { secteur, niveau, trop, reserve, groupe } = await searchParams;
+  // LE NIVEAU 7 « GROUPE », EN AVANT-PREMIÈRE : montré au seul administrateur de
+  // la plateforme (le serveur le refuse à tout autre, `verifierLeNiveauGroupe`).
+  const admin = await administreLaPlateforme([userId, session?.userId]);
   // Le niveau que le bilan d'une partie conseille (« Et ensuite ») : 1 à 6, sinon rien.
   const niveauDemande = /^[1-6]$/.test(niveau ?? "") ? Number(niveau) : undefined;
   const scenarioChoisi = SCENARIO_CHOICES.some((s) => s.code === secteur)
@@ -139,6 +143,16 @@ export default async function JouerPage({
                 .
               </p>
             ) : null}
+            {groupe ? (
+              <p
+                role="status"
+                data-niveau-groupe-refuse=""
+                className="mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200"
+              >
+                Le niveau 7 « Groupe » est en avant-première : il ne se joue qu&apos;avec NOVA, et seul un
+                administrateur de la plateforme peut lancer une partie à ce niveau. Choisissez un niveau de 1 à 6.
+              </p>
+            ) : null}
             {trop ? (
               <p
                 role="status"
@@ -211,6 +225,18 @@ export default async function JouerPage({
                     tableau: tableauDuNiveau(p.level),
                   }))}
                   comparatif={comparatifDesNiveaux()}
+                  niveauGroupe={
+                    admin
+                      ? {
+                          level: NIVEAU_GROUPE.level,
+                          name: NIVEAU_GROUPE.name,
+                          tagline: NIVEAU_GROUPE.tagline,
+                          decisions: leviersDuNiveau(NIVEAU_GROUPE.level).length,
+                          tableau: tableauDuNiveau(NIVEAU_GROUPE.level, [...DIFFICULTY_PRESETS, NIVEAU_GROUPE]),
+                          entreprises: entreprisesDuNiveauGroupe(SCENARIO_CHOICES.map((s) => s.code)),
+                        }
+                      : null
+                  }
                   defaultScenario={scenarioChoisi}
                   defaultLevel={niveauDemande}
                   lancement={

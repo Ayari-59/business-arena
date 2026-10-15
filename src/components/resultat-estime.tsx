@@ -251,11 +251,17 @@ export function EncartResultatEstime({
   cockpit = null,
   /** Mène au champ des ventes estimées (son étape, puis le focus). */
   allerAuChamp,
+  /**
+   * NIVEAU 7 : ce que l'estimation ne sait pas simuler (`limitesDeLEstimation`),
+   * dit sous le bandeau dès qu'une décision du tour en dépend. `null` : rien à dire.
+   */
+  limites = null,
 }: {
   estime: ResultatEstime | null;
   vocabulary: ScenarioVocabulary;
   cockpit?: React.ReactNode;
   allerAuChamp?: () => void;
+  limites?: string | null;
 }) {
   const cadran = useRef<HTMLElement>(null);
   // LA HAUTEUR DU CADRAN, publiée sur la feuille : un champ qui prend le focus
@@ -341,6 +347,12 @@ export function EncartResultatEstime({
           </dl>
         )}
       </div>
+      {limites ? (
+        <p data-limites-de-l-estimation="" className="mt-1.5 flex items-start gap-1.5 text-sm text-slate-200">
+          <Icone nom="alerte" className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+          <span>{limites}</span>
+        </p>
+      ) : null}
       {vide ? null : (
         // LE DÉTAIL : stock final, alertes, compte ligne à ligne. Son résumé
         // se pose au bout du bandeau sur grand écran (globals.css, « LOT P7 »),
@@ -592,4 +604,26 @@ export function LigneEstimeeCompacte({
     <AnnonceEstimee resume={e} />
     </>
   );
+}
+
+/**
+ * CE QUE L'ESTIMATION NE SIMULE PAS (niveau 7). Elle ne joue que l'entreprise
+ * de l'équipe, sans la graine : ni le rachat ni l'audit du jour 1, ni les
+ * ventes et la fabrication des filiales étrangères, ni le rationnement d'un
+ * fournisseur partagé. Elle compte, en revanche, les commandes au
+ * sous-traitant. `null` quand aucune décision du tour n'en dépend.
+ */
+export function limitesDeLEstimation(d: {
+  rachat?: string | null;
+  audit?: string | null;
+  synergies?: boolean;
+}): string | null {
+  const ignores = [
+    d.rachat ? `le rachat de ${d.rachat} (prix, financement, capacité reprise)` : null,
+    d.audit ? `l'audit de ${d.audit}` : null,
+    d.synergies ? "les ventes et la fabrication de vos filiales étrangères" : null,
+  ].filter((x): x is string => x !== null);
+  if (ignores.length === 0) return null;
+  const liste = ignores.length === 1 ? ignores[0]! : `${ignores.slice(0, -1).join(", ")} et ${ignores.at(-1)!}`;
+  return `Cette estimation ne compte pas ${liste} : elle ne simule que votre entreprise, telle qu'elle est à l'ouverture du tour.`;
 }

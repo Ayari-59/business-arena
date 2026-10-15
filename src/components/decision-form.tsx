@@ -43,9 +43,15 @@ import { ValeurRafraichie } from "@/components/chiffre-qui-arrive";
 import {
   EncartResultatEstime,
   aideDesVentesEstimees,
+  limitesDeLEstimation,
   resumeDeLEstimation,
   useResultatEstime,
 } from "@/components/resultat-estime";
+import {
+  PREFIXE_FABRICATION_ETRANGERE,
+  PREFIXE_RESEAU_ETRANGER,
+  cibleLue,
+} from "@/config/decisions-saisies";
 import { definirEstimationEnCours } from "@/lib/estimation-en-cours";
 import {
   champDesVentesEstimees,
@@ -82,11 +88,18 @@ import {
   type DefCarte,
 } from "@/components/cartes-de-decision";
 import { ModulesDeDecision } from "@/components/modules-de-decision";
+import {
+  ApprovisionnementDuGroupe,
+  CroissanceExterne,
+  quoiDeLApprovisionnement,
+  quoiDeLaCroissance,
+} from "@/components/decisions-du-groupe";
 import { modulesSaisis, type DecisionDeModule } from "@/config/modules-saisis";
 import {
   CARTE_DES_MODULES,
   etapeDeModule,
   ETAPES_DU_FORMULAIRE,
+  ETAPE_DU_GROUPE,
   ETAPE_DU_MODULE,
   etapesAffichees,
   moduleDuRefus,
@@ -2298,7 +2311,14 @@ export function DecisionForm({
   communicationOffer = null,
   modulesOffer = null,
   estimation = null,
+  groupe = null,
 }: {
+  /**
+   * NIVEAU 7 « GROUPE » : les cibles, les règles du rachat, le barème du
+   * sous-traitant, l'import, les filiales (`services/groupe-view.service`).
+   * `null` aux autres niveaux : rien de ce qui suit ne paraît.
+   */
+  groupe?: GameView["groupe"];
   /**
    * LE DOSSIER D'ESTIMATION, préparé par le serveur : de quoi calculer dans le
    * navigateur, à la frappe, le résultat que ces décisions donneraient si les
@@ -3067,10 +3087,20 @@ export function DecisionForm({
   // scalaires cachés qu'elle porte (qualité, entretien) continuent de partir.
   const budgetsVisible = !gamme || on.maintenance || !!communicationOffer;
   const equipeVisible = on.hr || on.rse;
-  const financerVisible = on.finance || (on.investment && !!equipmentOffer);
+  const financerVisible = on.finance || (on.investment && !!equipmentOffer) || !!groupe?.regles;
   // Le choix d'un fournisseur n'a son étape qu'en mono-produit : en gamme il se
   // fait dans le tableau des ventes (voir « S'approvisionner » plus bas).
-  const approvisionnerVisible = !gamme && !!suppliersOffer && suppliersOffer.length > 0;
+  // NIVEAU 7 : la sous-traitance, l'import et les synergies étrangères ont
+  // leur place ici, en gamme comme ailleurs ; la croissance externe, à
+  // « Financer & investir » (`config/etapes-des-modules`, ETAPE_DU_GROUPE).
+  const approvisionnementDuGroupe =
+    !!groupe &&
+    ((groupe.sousTraitance?.length ?? 0) > 0 ||
+      !!groupe.import ||
+      groupe.filiales.some((f) => f.type === "etranger"));
+  const croissanceExterne = !!groupe?.regles && !!groupe.ouverture && groupe.cibles.length > 0;
+  const fournisseursAChoisir = !gamme && !!suppliersOffer && suppliersOffer.length > 0;
+  const approvisionnerVisible = fournisseursAChoisir || approvisionnementDuGroupe;
   const tresorerieVisible = on.dividend || (on.creances && !!treasuryOffer);
   const assuranceVisible =
     on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0);
@@ -3306,6 +3336,29 @@ export function DecisionForm({
                 nom: "RSE",
                 question: "Quel engagement RSE ?",
                 resume: euros("rseBudget"),
+              },
+            ]
+          : []),
+        // NIVEAU 7 : fabriquer ou faire fabriquer, puis la croissance externe.
+        ...(approvisionnementDuGroupe && groupe
+          ? [
+              {
+                cle: "approvisionnement",
+                etape: ETAPE_DU_GROUPE.approvisionnement,
+                nom: "Faire fabriquer",
+                question: "Faites-vous fabriquer ce tour ?",
+                resume: (d: FormData) => quoiDeLApprovisionnement(d),
+              },
+            ]
+          : []),
+        ...(croissanceExterne && groupe
+          ? [
+              {
+                cle: "croissance",
+                etape: ETAPE_DU_GROUPE.croissance,
+                nom: "Croissance externe",
+                question: "Rachetez-vous ou auditez-vous une cible ?",
+                resume: (d: FormData) => quoiDeLaCroissance(d, groupe),
               },
             ]
           : []),
@@ -3981,6 +4034,23 @@ export function DecisionForm({
           estime={estime}
           vocabulary={v}
           allerAuChamp={allerAuChampDesVentes}
+          limites={
+            groupe && donneesRecap
+              ? (() => {
+                  const nom = (c: { type: string; id: string } | undefined) =>
+                    c ? (groupe.cibles.find((x) => x.type === c.type && x.id === c.id)?.nom ?? c.id) : null;
+                  return limitesDeLEstimation({
+                    rachat: nom(cibleLue(donneesRecap.get("rachatCible"))),
+                    audit: nom(cibleLue(donneesRecap.get("diligence"))),
+                    synergies: [...donneesRecap.entries()].some(
+                      ([k, x]) =>
+                        (k.startsWith(PREFIXE_RESEAU_ETRANGER) || k.startsWith(PREFIXE_FABRICATION_ETRANGERE)) &&
+                        Number(String(x).replace(",", ".")) > 0,
+                    ),
+                  });
+                })()
+              : null
+          }
         />
       ) : null}
       {/* LE TÉMOIN DE LA PROPOSITION (lot P4) : tant qu'il part, les ventes
@@ -4495,6 +4565,25 @@ export function DecisionForm({
         className="space-y-3"
       >
       {gamme ? null : panneauFournisseurs}
+      {approvisionnementDuGroupe && groupe ? (
+        // L'étape n'a souvent que lui : il arrive déplié (lot 6D), et son repli dit ce qu'il porte.
+        <Family
+          carte="approvisionnement"
+          icone="usine"
+          legend="Fabriquer ou faire fabriquer"
+          repli
+          deplie
+          quoi={donneesRecap ? quoiDeLApprovisionnement(donneesRecap) : undefined}
+        >
+          <ApprovisionnementDuGroupe
+            vue={groupe}
+            defaults={defaults}
+            references={gamme ?? []}
+            fournisseurs={(gamme ?? []).flatMap((p) => p.suppliers ?? [])}
+            erreurs={carteDesRefus}
+          />
+        </Family>
+      ) : null}
       {engagementsDe("approvisionner")}
       </section>
 
@@ -4826,6 +4915,30 @@ export function DecisionForm({
               .map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 }))
           )} />
         </Carte>
+      ) : null}
+      {croissanceExterne && groupe ? (
+        // Une opération d'un tour sur plusieurs : repliée, comme les modules, sauf
+        // quand un envoi enregistré ou un refus l'habite.
+        <Family
+          carte="croissance"
+          icone="immeuble"
+          legend="Croissance externe · racheter, auditer"
+          repli
+          deplie={
+            (alreadySubmitted && (!!defaults.rachat || !!defaults.diligence)) ||
+            [...carteDesRefus.keys()].some((k) => k.startsWith("rachat") || k === "diligence")
+          }
+          quoi={donneesRecap ? quoiDeLaCroissance(donneesRecap, groupe) : undefined}
+        >
+          <CroissanceExterne
+            vue={groupe}
+            defaults={defaults}
+            alreadySubmitted={alreadySubmitted}
+            kind={kind}
+            typesDeLignes={equipmentOffer?.types ?? []}
+            erreurs={carteDesRefus}
+          />
+        </Family>
       ) : null}
       {engagementsDe("financer")}
       </section>

@@ -1,6 +1,7 @@
 import { readProductFields } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
 import type { ProductCode, ProductDecisions, RoundDecisions } from "@/engine/types";
+import type { CibleDeRachat } from "@/engine/groupe/types";
 import { modulesSaisis } from "@/config/modules-saisis";
 
 /**
@@ -46,6 +47,96 @@ function tableauJson(data: FormData, champ: string): unknown[] | undefined {
   } catch {
     return undefined;
   }
+}
+
+// ── NIVEAU 7 « GROUPE » ─────────────────────────────────────────────────────
+
+/** Préfixes des champs du niveau 7 nommés par référence, et par filiale. */
+export const PREFIXE_SOUS_TRAITANCE = "sousTraitance.";
+export const PREFIXE_RESEAU_ETRANGER = "reseauEtranger.";
+export const PREFIXE_FABRICATION_ETRANGERE = "fabricationEtrangere.";
+
+/** Le nom du champ d'une commande au sous-traitant : `sousTraitance.<référence>`. */
+export const champDeSousTraitance = (code: string) => `${PREFIXE_SOUS_TRAITANCE}${code}`;
+/** Le nom du champ d'une synergie : `reseauEtranger.<filiale>.<référence>`. */
+export const champDeSynergie = (prefixe: string, filiale: string, code: string) => `${prefixe}${filiale}.${code}`;
+
+const TYPES_DE_CIBLE: readonly CibleDeRachat["type"][] = ["site_ferme", "fournisseur", "etranger"];
+
+/** Une cible écrite `type:identifiant` dans une liste de choix ; vide ou illisible : rien. */
+export function cibleLue(brut: FormDataEntryValue | null): CibleDeRachat | undefined {
+  if (typeof brut !== "string") return undefined;
+  const i = brut.indexOf(":");
+  if (i <= 0) return undefined;
+  const type = brut.slice(0, i) as CibleDeRachat["type"];
+  const id = brut.slice(i + 1);
+  return TYPES_DE_CIBLE.includes(type) && id !== "" ? { type, id } : undefined;
+}
+
+/** La valeur d'une cible dans une liste de choix. */
+export const valeurDeCible = (c: CibleDeRachat) => `${c.type}:${c.id}`;
+
+/** Les nombres saisis sous un préfixe : `{ suite du nom: nombre }`, sans les cases vides. */
+function parPrefixe(data: FormData, prefixe: string): Record<string, number> | undefined {
+  const out: Record<string, number> = {};
+  for (const [nom, brut] of data.entries()) {
+    if (!nom.startsWith(prefixe) || typeof brut !== "string") continue;
+    const texte = brut.trim().replace(",", ".");
+    if (texte === "") continue;
+    out[nom.slice(prefixe.length)] = Number(texte);
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** Les mêmes, rangés par filiale puis par référence (`<filiale>.<référence>`). */
+function parFiliale(data: FormData, prefixe: string): Record<string, Record<ProductCode, number>> | undefined {
+  const plat = parPrefixe(data, prefixe);
+  if (!plat) return undefined;
+  const out: Record<string, Record<ProductCode, number>> = {};
+  for (const [cle, n] of Object.entries(plat)) {
+    const i = cle.indexOf(".");
+    if (i <= 0) continue;
+    const filiale = cle.slice(0, i);
+    (out[filiale] ??= {})[cle.slice(i + 1)] = n;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/**
+ * Les décisions du niveau 7 : le rachat (une cible choisie, son montage), un
+ * audit, les commandes au sous-traitant, les synergies des filiales
+ * étrangères. Rien de saisi : rien d'ajouté, pour que les autres niveaux
+ * restent identiques.
+ */
+function decisionsDuGroupe(data: FormData): Partial<RoundDecisions> {
+  const out: Partial<RoundDecisions> = {};
+  const cible = cibleLue(data.get("rachatCible"));
+  if (cible) {
+    const paiement = data.get("rachatPaiement") === "titres" ? "titres" : "numeraire";
+    const emprunt = nombre(data, "rachatEmprunt");
+    const augmentation = nombre(data, "rachatAugmentation");
+    const part = nombre(data, "rachatPart");
+    out.rachat = {
+      cible,
+      // Vide, ce n'est pas « zéro » : le schéma le refuse sur sa case.
+      prixMaximum: nombre(data, "rachatPrixMaximum") ?? NaN,
+      paiement,
+      ...(paiement === "numeraire" && emprunt !== undefined && emprunt > 0 ? { emprunt } : {}),
+      ...(paiement === "numeraire" && augmentation !== undefined && augmentation > 0
+        ? { augmentationDeCapital: augmentation }
+        : {}),
+      ...(cible.type === "etranger" && part !== undefined ? { part } : {}),
+    };
+  }
+  const audit = cibleLue(data.get("diligence"));
+  if (audit) out.diligence = audit;
+  const st = parPrefixe(data, PREFIXE_SOUS_TRAITANCE);
+  if (st) out.sousTraitance = st;
+  const reseau = parFiliale(data, PREFIXE_RESEAU_ETRANGER);
+  if (reseau) out.reseauEtranger = reseau;
+  const fabrication = parFiliale(data, PREFIXE_FABRICATION_ETRANGERE);
+  if (fabrication) out.fabricationEtrangere = fabrication;
+  return out;
 }
 
 export interface DecisionsSaisies {
@@ -192,6 +283,8 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
     // Les modules du scénario (actions qualité, projets, partenariats…) : des
     // cases à cocher, chacune sous un nom unique. Rien coché, rien ajouté.
     ...modulesSaisis(formData.entries()),
+    // Le niveau 7 : rachat, audit, sous-traitance, synergies étrangères.
+    ...decisionsDuGroupe(formData),
   };
   return { decisions, products, volume };
 }

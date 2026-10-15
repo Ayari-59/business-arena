@@ -6,6 +6,9 @@ import { laCibleEtrangere } from "./etranger";
 import { laSociete, prixDeLaSociete } from "./societe";
 import type {
   CibleDeRachat,
+  ConfigDeGroupe,
+  DecisionDeRachat,
+  TypeDeCible,
   OperationDOuverture,
   PrixDeCession,
   ResultatDeGroupe,
@@ -97,6 +100,129 @@ function ajouter(ops: Record<string, OperationDOuverture>, id: string, o: Operat
     : o;
 }
 
+/**
+ * Le paiement proposé, jugé sur la cible et le tour : un site se paie en
+ * numéraire, et une société ne se paie en actions qu'à partir du tour où leur
+ * valeur reflète des résultats réels. `null` : rien à redire.
+ */
+export function motifDuPaiement(
+  cfg: NonNullable<ConfigDeGroupe["rachat"]>,
+  roundIndex: number,
+  type: TypeDeCible,
+  paiement: DecisionDeRachat["paiement"],
+): string | null {
+  if (paiement === "titres" && type === "site_ferme") {
+    return "Un liquidateur ne prend pas d'actions : un site se paie en numéraire.";
+  }
+  const tourMinTitres = cfg.tourMinTitres ?? cfg.tourMin;
+  if (paiement === "titres" && roundIndex < tourMinTitres) {
+    return `Un paiement en actions se décide à partir du tour ${tourMinTitres} : avant, la valeur de vos actions ne reflète pas encore de résultats réels.`;
+  }
+  return null;
+}
+
+/** Ce que le montage d'un rachat demande de connaître de l'acquéreur, à l'ouverture du tour. */
+export interface SituationDeLAcquereur {
+  cash: number;
+  overdraft: number;
+  equity: number;
+  financialDebt: number;
+  /** Actions en circulation. */
+  actions: number;
+  /** Valeur d'ouverture d'une action : le contrôle s'y juge, la fusion s'y émet. */
+  valeurParAction: number;
+  /** Le découvert que la banque autorise ce tour. */
+  limiteDeDecouvert: number;
+}
+
+/** Le montage retenu : ce qui se paie en actions, par emprunt, par les investisseurs, en trésorerie. */
+export interface MontageDuRachat {
+  titres: number;
+  actionsEmises: number;
+  emprunt: number;
+  augmentation: number;
+  numeraire: number;
+}
+
+/** Les chiffres d'un montage, avant tout jugement : ce que la feuille montre, ce que le moteur juge. */
+export interface ChiffresDuMontage extends MontageDuRachat {
+  /** Part des actions que les associés d'origine garderaient (le contrôle). */
+  partDesActionsDOrigine: number;
+  /** Ce que la banque prête au plus pour ce rachat ; `null` sans plafond ou sans emprunt. */
+  plafondDeLaBanque: number | null;
+  /** Trésorerie nette du découvert après le rachat, au jour 1. */
+  tresorerieNetteApres: number;
+}
+
+/** Ce que le montage d'un rachat donnerait, sans le juger. */
+export function chiffrerLeMontage(args: {
+  cfg: NonNullable<ConfigDeGroupe["rachat"]>;
+  actionsInitiales: number;
+  maxDebtToEquity: number | undefined;
+  prix: number;
+  d: Pick<DecisionDeRachat, "paiement" | "emprunt" | "augmentationDeCapital">;
+  acquereur: SituationDeLAcquereur;
+}): ChiffresDuMontage {
+  const { cfg, prix, d, acquereur: A } = args;
+  const titres = d.paiement === "titres" ? prix : 0;
+  const emprunt = titres > 0 ? 0 : Math.max(0, d.emprunt ?? 0);
+  const augmentation = titres > 0 ? 0 : Math.max(0, d.augmentationDeCapital ?? 0);
+  const vA = A.valeurParAction;
+  // Le contrôle se juge à la valeur d'ouverture : les actions remises aux
+  // vendeurs (la fusion, émises à ce prix), et ce que les investisseurs
+  // entrants détiendraient à ce prix, avec leur décote (leurs actions sont
+  // émises à la clôture, au prix hors apport).
+  const actionsEmises = titres > 0 && vA > 0 ? titres / vA : 0;
+  const equivalent = actionsEmises + (augmentation > 0 && vA > 0 ? augmentation / (1 - cfg.decoteDEmission) / vA : 0);
+  const ratioMax = args.maxDebtToEquity;
+  return {
+    titres,
+    actionsEmises,
+    emprunt,
+    augmentation,
+    numeraire: Math.max(0, prix - titres - emprunt - augmentation),
+    partDesActionsDOrigine: args.actionsInitiales / (A.actions + equivalent),
+    plafondDeLaBanque:
+      ratioMax !== undefined && emprunt > 0 ? ratioMax * (A.equity + augmentation + titres) - A.financialDebt : null,
+    tresorerieNetteApres: A.cash - A.overdraft + emprunt + augmentation - (prix - titres),
+  };
+}
+
+/**
+ * LE MONTAGE D'UN RACHAT, JUGÉ SEUL : prix maximum, valeur des actions,
+ * contrôle, trésorerie, plafond de la banque, découvert. Le moteur le juge
+ * ainsi au jour 1 ; la feuille de décision le juge de la même fonction avant
+ * l'envoi, sur l'état d'ouverture, pour dire ce qui ne passerait pas.
+ */
+export function jugerLeMontage(args: Parameters<typeof chiffrerLeMontage>[0] & {
+  d: Pick<DecisionDeRachat, "prixMaximum">;
+}): MontageDuRachat | { motif: string } {
+  const { cfg, prix, d, acquereur: A } = args;
+  if (prix > d.prixMaximum + 1e-6) {
+    return { motif: `Le vendeur demande ${Math.round(prix)} €, au-delà de votre prix maximum.` };
+  }
+  const c = chiffrerLeMontage(args);
+  if ((c.titres > 0 || c.augmentation > 0) && A.valeurParAction <= 0) {
+    return { motif: "Vos actions ne valent rien : personne n'en achète." };
+  }
+  if (c.partDesActionsDOrigine < cfg.seuilDeControle - 1e-9) {
+    return { motif: "Vous émettriez tant d'actions que vous perdriez le contrôle de l'entreprise." };
+  }
+  if (c.numeraire > Math.max(0, A.cash) + 0.005) {
+    return { motif: "Votre trésorerie ne couvre pas la part du prix que ni l'emprunt ni les investisseurs ne financent." };
+  }
+  if (c.plafondDeLaBanque !== null && c.emprunt > c.plafondDeLaBanque + 0.005) {
+    return {
+      motif: `La banque ne prête pas plus de ${Math.max(0, Math.round(c.plafondDeLaBanque))} € pour ce rachat : la dette dépasserait ${args.maxDebtToEquity} fois les capitaux propres.`,
+    };
+  }
+  if (c.tresorerieNetteApres < -A.limiteDeDecouvert - 0.005) {
+    return { motif: "Après le rachat, votre découvert dépasserait ce que la banque autorise : empruntez de quoi le couvrir." };
+  }
+  const { titres, actionsEmises, emprunt, augmentation, numeraire } = c;
+  return { titres, actionsEmises, emprunt, augmentation, numeraire };
+}
+
 export function executerLesRachats(args: {
   scenario: EngineScenarioConfig;
   roundIndex: number;
@@ -156,17 +282,9 @@ export function executerLesRachats(args: {
       refuse(idA, d.cible, nom, "Cette cible n'est pas à vendre.");
       continue;
     }
-    if (d.paiement === "titres" && d.cible.type === "site_ferme") {
-      refuse(idA, d.cible, nom, "Un liquidateur ne prend pas d'actions : un site se paie en numéraire.");
-      continue;
-    }
-    if (d.paiement === "titres" && roundIndex < (cfg.tourMinTitres ?? cfg.tourMin)) {
-      refuse(
-        idA,
-        d.cible,
-        nom,
-        `Un paiement en actions se décide à partir du tour ${cfg.tourMinTitres ?? cfg.tourMin} : avant, la valeur de vos actions ne reflète pas encore de résultats réels.`,
-      );
+    const refusDuPaiement = motifDuPaiement(cfg, roundIndex, d.cible.type, d.paiement);
+    if (refusDuPaiement) {
+      refuse(idA, d.cible, nom, refusDuPaiement);
       continue;
     }
     // Une part d'entreprise étrangère : parmi celles qu'elle propose.
@@ -178,47 +296,6 @@ export function executerLesRachats(args: {
     const societe = d.cible.type === "site_ferme" ? null : laSociete(scenario, args.companies, args.graine, d.cible.type, d.cible.id, roundIndex - 1)!;
     const valeurs = societe ? prixDeLaSociete(scenario, societe, part) : undefined;
     const prix = valeurs ? valeurs.prix : leSite(scenario, d.cible)!.prix;
-    if (prix > d.prixMaximum + 1e-6) {
-      refuse(idA, d.cible, nom, `Le vendeur demande ${Math.round(prix)} €, au-delà de votre prix maximum.`);
-      continue;
-    }
-    const titres = d.paiement === "titres" ? prix : 0;
-    const emprunt = titres > 0 ? 0 : Math.max(0, d.emprunt ?? 0);
-    const augmentation = titres > 0 ? 0 : Math.max(0, d.augmentationDeCapital ?? 0);
-    const vA = args.ouverture.get(A.id)?.valeurParAction ?? 0;
-    if ((titres > 0 || augmentation > 0) && vA <= 0) {
-      refuse(idA, d.cible, nom, "Vos actions ne valent rien : personne n'en achète.");
-      continue;
-    }
-    // Le contrôle se juge à la valeur d'ouverture : les actions remises aux
-    // vendeurs (la fusion, émises à ce prix), et ce que les investisseurs
-    // entrants détiendraient à ce prix, avec leur décote (leurs actions sont
-    // émises à la clôture, au prix hors apport).
-    const actionsEmises = titres > 0 ? titres / vA : 0;
-    const equivalent = actionsEmises + (augmentation > 0 ? augmentation / (1 - cfg.decoteDEmission) / vA : 0);
-    const actionsInitiales = scenario.groupe!.valorisation.actionsInitiales;
-    if (actionsInitiales / (A.groupe.actions + equivalent) < cfg.seuilDeControle - 1e-9) {
-      refuse(idA, d.cible, nom, "Vous émettriez tant d'actions que vous perdriez le contrôle de l'entreprise.");
-      continue;
-    }
-    const numeraire = Math.max(0, prix - titres - emprunt - augmentation);
-    if (numeraire > Math.max(0, A.finance.cash) + 0.005) {
-      refuse(idA, d.cible, nom, "Votre trésorerie ne couvre pas la part du prix que ni l'emprunt ni les investisseurs ne financent.");
-      continue;
-    }
-    const ratioMax = scenario.finance.maxDebtToEquity;
-    if (ratioMax !== undefined && emprunt > 0) {
-      const plafond = ratioMax * (A.finance.equity + augmentation + titres) - A.finance.financialDebt;
-      if (emprunt > plafond + 0.005) {
-        refuse(
-          idA,
-          d.cible,
-          nom,
-          `La banque ne prête pas plus de ${Math.max(0, Math.round(plafond))} € pour ce rachat : la dette dépasserait ${ratioMax} fois les capitaux propres.`,
-        );
-        continue;
-      }
-    }
     const bank = scenario.finance.bank;
     const limite = bank
       ? conditionsBancaires(
@@ -227,11 +304,27 @@ export function executerLesRachats(args: {
           bank,
         ).overdraftLimit
       : scenario.finance.overdraftLimit;
-    const netApres = A.finance.cash - A.finance.overdraft + emprunt + augmentation - (prix - titres);
-    if (netApres < -limite - 0.005) {
-      refuse(idA, d.cible, nom, "Après le rachat, votre découvert dépasserait ce que la banque autorise : empruntez de quoi le couvrir.");
+    const montage = jugerLeMontage({
+      cfg,
+      actionsInitiales: scenario.groupe!.valorisation.actionsInitiales,
+      maxDebtToEquity: scenario.finance.maxDebtToEquity,
+      prix,
+      d,
+      acquereur: {
+        cash: A.finance.cash,
+        overdraft: A.finance.overdraft,
+        equity: A.finance.equity,
+        financialDebt: A.finance.financialDebt,
+        actions: A.groupe.actions,
+        valeurParAction: args.ouverture.get(A.id)?.valeurParAction ?? 0,
+        limiteDeDecouvert: limite,
+      },
+    });
+    if ("motif" in montage) {
+      refuse(idA, d.cible, nom, montage.motif);
       continue;
     }
+    const { titres, actionsEmises, emprunt, augmentation, numeraire } = montage;
     offres.push({ idA, cible: d.cible, nom, d, prix, part, ...(valeurs ? { valeurs } : {}), titres, actionsEmises, emprunt, augmentation, numeraire });
   }
 

@@ -157,6 +157,13 @@ const LIBELLES: Readonly<Record<string, string>> = {
   justification: "Votre note",
   expectedUnits: "Ventes prévues",
   expectedCash: "Trésorerie prévue",
+  rachatCible: "Cible du rachat",
+  rachatPrixMaximum: "Prix maximum du rachat",
+  rachatPaiement: "Paiement du rachat",
+  rachatEmprunt: "Emprunt d'acquisition",
+  rachatAugmentation: "Apport d'investisseurs entrants",
+  rachatPart: "Part achetée",
+  diligence: "Audit d'un site",
 };
 
 const LIBELLES_PAR_REFERENCE: Readonly<Record<string, string>> = {
@@ -185,6 +192,17 @@ export function libelleDuChamp(nom: string, ctx: ContexteDesLibelles): string {
   }
   if (nom === "price") return v.priceLabel;
   if (nom === "productionPlan") return v.productionPlanLabel;
+  const groupe = /^(sousTraitance|reseauEtranger|fabricationEtrangere)\.(?:[^.]+\.)?([^.]+)$/.exec(nom);
+  if (groupe) {
+    const reference = ctx.references?.find((r) => r.code === groupe[2])?.name ?? groupe[2];
+    const base =
+      groupe[1] === "sousTraitance"
+        ? "Sous-traitance"
+        : groupe[1] === "reseauEtranger"
+          ? "Ventes par le réseau étranger"
+          : "Fabrication à l'étranger";
+    return `${base} de ${reference}`;
+  }
   return LIBELLES[nom] ?? "Ce champ";
 }
 
@@ -196,6 +214,7 @@ function uniteDuChamp(nom: string): Unite {
   const champ = parReference?.champ ?? nom;
   if (champ === "productionPlan" || champ === "ventesEstimees" || champ === "expectedUnits") return "unites";
   if (champ === "machineCapacityUnits") return "unites";
+  if (/^(sousTraitance|reseauEtranger|fabricationEtrangere)\./.test(champ)) return "unites";
   if (champ === "hire" || champ === "fire") return "personnes";
   if (champ === "salaryPercent") return "pour-cent";
   return "€";
@@ -392,6 +411,16 @@ export function champDuChemin(
       return deux === "byProduct" && trois ? `${PREFIXE_VENTES_ESTIMEES}${trois}` : null;
     case "studies":
       return null;
+    // Niveau 7 : le montage du rachat a ses cases ; l'audit, sa liste.
+    case "rachat":
+      return deux ? (CHAMPS_DU_RACHAT[deux] ?? "rachatCible") : "rachatCible";
+    case "diligence":
+      return "diligence";
+    case "sousTraitance":
+      return deux ? `sousTraitance.${deux}` : null;
+    case "reseauEtranger":
+    case "fabricationEtrangere":
+      return deux && trois ? `${tete}.${deux}.${trois}` : null;
     default: {
       // En gamme, prix, volume et budgets sont DÉRIVÉS des références : le
       // refus d'un scalaire dérivé vise la première référence.
@@ -403,6 +432,16 @@ export function champDuChemin(
     }
   }
 }
+
+/** Les cases du montage d'un rachat (niveau 7), par chemin du schéma. */
+const CHAMPS_DU_RACHAT: Readonly<Record<string, string>> = {
+  cible: "rachatCible",
+  prixMaximum: "rachatPrixMaximum",
+  paiement: "rachatPaiement",
+  emprunt: "rachatEmprunt",
+  augmentationDeCapital: "rachatAugmentation",
+  part: "rachatPart",
+};
 
 /** Les champs qui n'ont pas de case à l'écran : leur refus se lit au récapitulatif. */
 const SANS_CASE = new Set(["equipmentBuyJson", "equipmentSellJson"]);
