@@ -184,30 +184,6 @@ export const engineScenarioConfigSchema = z.object({
     discountableRatio: z.number().min(0).max(1).optional(),
     /** Rémunération annuelle des placements de trésorerie (ex : 0.03 = 3 %). */
     placementRate: z.number().min(0).max(1).optional(),
-    /**
-     * Catégories d'emprunt moyen terme (machines, installations) : chacune
-     * avec son plafond (% du coût de l'investissement), sa durée propre en
-     * tours et, optionnellement, son taux (à défaut : loanAnnualRate).
-     */
-    loanCategories: z
-      .object({
-        machines: z
-          .object({
-            maxLoanRatio: z.number().min(0).max(1),
-            durationRounds: z.number().int().positive(),
-            annualRate: z.number().min(0).max(1).optional(),
-          })
-          .optional(),
-        installations: z
-          .object({
-            maxLoanRatio: z.number().min(0).max(1),
-            durationRounds: z.number().int().positive(),
-            annualRate: z.number().min(0).max(1).optional(),
-            label: z.string().optional(),
-          })
-          .optional(),
-      })
-      .optional(),
   }),
   treasury: z
     .object({
@@ -450,32 +426,6 @@ export const engineScenarioConfigSchema = z.object({
       techInertia: z.number().min(0).max(1),
     })
     .optional(),
-  // Grille R&D par thème × niveau : actions concrètes avec effets mesurables.
-  rdGrid: z
-    .object({
-      themes: z.array(
-        z.object({
-          code: z.string().min(1),
-          label: z.string().min(1),
-          levels: z.array(
-            z.object({
-              level: z.number().int().positive(),
-              label: z.string().min(1),
-              cost: z.number().positive(),
-              durationRounds: z.number().int().positive(),
-              effects: z.object({
-                materialCostReduction: z.number().min(0).max(1).optional(),
-                defectReduction: z.number().min(0).max(1).optional(),
-                demandBonus: z.number().min(0).max(1).optional(),
-                capacityBonus: z.number().min(0).max(1).optional(),
-              }),
-              prerequisiteLevel: z.number().int().positive().optional(),
-            }),
-          ),
-        }),
-      ),
-    })
-    .optional(),
   // Communication (marque et axe) : le levier n'existe que si le bloc est déclaré.
   communication: z
     .object({
@@ -516,6 +466,10 @@ export const engineScenarioConfigSchema = z.object({
     .optional(),
   // Programmes de R&D de procédé : des tours de travaux, puis un acquis pour
   // la partie (coût variable, qualité, image). Absent = pas de programme.
+  // L'ancienne grille R&D (`rdGrid`) et les catégories d'emprunt
+  // (`finance.loanCategories`) ne sont plus déclarées : aucun écran ne les
+  // proposait. Le snapshot d'une partie ancienne les porte encore ; le parse
+  // les écarte sans erreur.
   rdActions: z.object({
     actions: z.array(z.object({
       id: z.string().min(1),

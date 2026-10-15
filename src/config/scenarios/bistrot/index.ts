@@ -226,19 +226,6 @@ const rawBistrot = {
     discountRate: 0.085,      // 8,5 % annuel
     discountableRatio: 0.50,  // 50 % (part des clients pros / événements)
     placementRate: 0.025,     // 2,5 % annuel sur les placements
-    loanCategories: {
-      machines: {
-        // matériel de cuisine : actif nanti, durée allongée
-        maxLoanRatio: 0.80,
-        durationRounds: 24,    // 6 ans (24 trimestres)
-        annualRate: 0.058,
-      },
-      installations: {
-        maxLoanRatio: 0.40,
-        durationRounds: 8,
-        label: "Qualité, H&S, Environnement, Maintenance, brevets",
-      },
-    },
   },
   treasury: {
     discountAnnualRate: 0.075,

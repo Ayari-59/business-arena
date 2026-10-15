@@ -6,6 +6,7 @@ import { botDecisions, type BotProfile } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import { CHAMPS_DES_MODULES_RETIRES, sansLesModulesRetires } from "@/engine/modules/retires";
 import { construireOffreDesModules } from "@/services/modules-offer";
+import { roundDecisionsSchema } from "@/services/decision-schema";
 import type { CompanyState, EngineScenarioConfig, EventInstance, RoundDecisions } from "@/engine/types";
 
 /**
@@ -52,7 +53,11 @@ const RETIRES = [
 
 const leviers = presetByLevel.get(6)!.decisions;
 
-function jouerLeTourSuivant(scenario: EngineScenarioConfig, companies: CompanyState[], extraE0: object = {}) {
+function jouerLeTourSuivant(
+  scenario: EngineScenarioConfig,
+  companies: CompanyState[],
+  extraE0: object | ((d: RoundDecisions) => RoundDecisions) = {},
+) {
   const decisions: Record<string, RoundDecisions> = {};
   for (const etat of structuredClone(companies)) {
     const profil = (etat.id === "e0" ? "balanced" : (etat.botProfile ?? "balanced")) as BotProfile;
@@ -62,7 +67,8 @@ function jouerLeTourSuivant(scenario: EngineScenarioConfig, companies: CompanySt
       roundIndex: PARTIE.prochainTour,
       leviers,
     });
-    decisions[etat.id] = etat.id === "e0" ? ({ ...d, ...extraE0 } as RoundDecisions) : d;
+    decisions[etat.id] =
+      etat.id !== "e0" ? d : typeof extraE0 === "function" ? extraE0(d) : ({ ...d, ...extraE0 } as RoundDecisions);
   }
   // Le moteur range l'état suivant en partie sur l'état reçu : chaque tour
   // joué part d'une copie, pour que deux tours comparés partent du même état.
@@ -140,5 +146,80 @@ describe("une partie créée avant le retrait des modules", () => {
     const attendu = ligne.remaining - Math.min(ligne.perRound, ligne.remaining);
     if (attendu > 0.005) expect(apres).toEqual({ ...ligne, remaining: attendu });
     else expect(apres).toBeUndefined();
+  });
+});
+
+/**
+ * LA GRILLE R&D ET LES CATÉGORIES D'EMPRUNT, RETIRÉES APRÈS LES SEIZE MODULES.
+ *
+ * Aucun écran ni aucun bot ne les a jamais proposées : `rdGrid` (décision
+ * `rdGridStart`, état `rdGridActions`) et `finance.loanCategories` (décisions
+ * `finance.machineLoan` et `finance.installationLoan`). La même fixture porte
+ * les deux blocs dans son snapshot. Ce qui est gardé : le snapshot se charge,
+ * et une décision ou un état d'avant qui les porterait ne change rien.
+ */
+describe("une partie créée avant le retrait de la grille R&D et des catégories d'emprunt", () => {
+  const achat = { investment: { equipmentBuy: [{ typeCode: "semi_auto", quantity: 1 }] } };
+  // Le plan de trésorerie déposé levait l'ancien verrou des catégories : sans
+  // lui, l'emprunt de catégorie était refusé d'office et le test ne prouvait rien.
+  const plan = { forecast: { expectedCash: 0 } };
+
+  it("la fixture porte la grille et les catégories, et son snapshot se charge sans elles", () => {
+    expect(PARTIE.scenario.rdGrid).toBeDefined();
+    expect((PARTIE.scenario.finance as Record<string, unknown>).loanCategories).toBeDefined();
+    const relu = parseScenarioConfig(PARTIE.scenario) as unknown as Record<string, unknown>;
+    expect(relu.rdGrid).toBeUndefined();
+    expect((relu.finance as Record<string, unknown>).loanCategories).toBeUndefined();
+  });
+
+  it("le schéma des décisions écarte rdGridStart, machineLoan et installationLoan sans erreur", () => {
+    const lu = roundDecisionsSchema.parse({
+      price: 80,
+      productionPlan: 1000,
+      marketingBudget: 0,
+      qualityBudget: 0,
+      maintenanceBudget: 0,
+      rdGridStart: [{ themeCode: "matiere", level: 1 }],
+      finance: { newLoan: 1000, machineLoan: 24000, installationLoan: 5000 },
+    }) as unknown as Record<string, unknown>;
+    expect(lu.rdGridStart).toBeUndefined();
+    expect(lu.finance).toEqual({ newLoan: 1000 });
+  });
+
+  it("une décision et un état d'avant qui les portent ne changent rien au tour", () => {
+    const scenario = parseScenarioConfig(PARTIE.scenario);
+    const anciennes = (d: RoundDecisions) =>
+      ({
+        ...d,
+        ...achat,
+        ...plan,
+        rdGridStart: [
+          { themeCode: "matiere", level: 1 },
+          { themeCode: "emballage", level: 1 },
+        ],
+        finance: { ...(d.finance ?? {}), machineLoan: 24000, installationLoan: 5000 },
+      }) as RoundDecisions;
+    const propres = (d: RoundDecisions) => ({ ...d, ...achat, ...plan }) as RoundDecisions;
+    // Un état d'avant où une action de la grille serait achevée.
+    const etats = PARTIE.companies.map((c) =>
+      c.id === "e0"
+        ? ({ ...c, rdGridActions: [{ themeCode: "process", level: 1, remainingRounds: 0, startedRound: 1 }] } as CompanyState)
+        : c,
+    );
+    const avec = jouerLeTourSuivant(scenario, etats, anciennes);
+    const sans = jouerLeTourSuivant(scenario, PARTIE.companies, propres);
+    for (const c of PARTIE.companies) {
+      const a = avec.results[c.id]!;
+      const s = sans.results[c.id]!;
+      expect(a.incomeStatement, c.id).toEqual(s.incomeStatement);
+      expect(a.balanceSheet, c.id).toEqual(s.balanceSheet);
+      expect(a.debt, c.id).toEqual(s.debt);
+      expect(a.market.totalShare, c.id).toEqual(s.market.totalShare);
+    }
+    for (const etat of avec.companies) {
+      const brut = etat as unknown as Record<string, unknown>;
+      expect(brut.rdGridActions, `${etat.id}.rdGridActions`).toBeUndefined();
+      expect(etat.loans, `${etat.id}.loans`).toEqual(sans.companies.find((c) => c.id === etat.id)!.loans);
+    }
   });
 });

@@ -199,18 +199,6 @@ const rawNova = {
     discountRate: 0.10,       // 10 % annuel sur les créances escomptées
     discountableRatio: 0.80,  // 80 % des créances clients escomptables
     placementRate: 0.03,      // 3 % annuel sur les placements
-    // Lignes d'emprunt moyen terme distinctes
-    loanCategories: {
-      machines: {
-        maxLoanRatio: 0.8,     // jusqu'à 80 % du coût machine
-        durationRounds: 16,    // 4 ans (16 trimestres)
-      },
-      installations: {
-        maxLoanRatio: 0.4,     // 40 % des investissements immatériels
-        durationRounds: 8,     // 2 ans (8 trimestres)
-        label: "Qualité, H&S, Environnement, Maintenance, brevets",
-      },
-    },
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements
   fixedCostsPerRound: 91000,

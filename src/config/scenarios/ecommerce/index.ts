@@ -240,19 +240,6 @@ const rawEcommerce = {
     discountRate: 0.09,       // 9 % annuel (entrepôt : actif nanti)
     discountableRatio: 0.70,  // 70 % des créances (part B2B escomptable)
     placementRate: 0.025,     // 2,5 % annuel sur les placements
-    loanCategories: {
-      machines: {
-        // entrepôt & équipements logistiques : taux légèrement plus élevé
-        maxLoanRatio: 0.75,
-        durationRounds: 16,    // 4 ans
-        annualRate: 0.065,
-      },
-      installations: {
-        maxLoanRatio: 0.35,
-        durationRounds: 8,
-        label: "Qualité, H&S, Environnement, Maintenance, brevets",
-      },
-    },
   },
   treasury: {
     discountAnnualRate: 0.075,

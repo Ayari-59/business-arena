@@ -430,24 +430,6 @@ export interface EngineScenarioConfig {
      * utilisé à la place de `treasury.placementAnnualRate` dans le moteur.
      */
     placementRate?: number;
-    /**
-     * Catégories d'emprunt moyen terme : machines et installations. Absent →
-     * comportement historique (emprunt générique unique).
-     */
-    loanCategories?: {
-      machines?: {
-        maxLoanRatio: number;
-        durationRounds: number;
-        annualRate?: number;
-      };
-      installations?: {
-        maxLoanRatio: number;
-        durationRounds: number;
-        annualRate?: number;
-        /** Libellé pédagogique (ex : "Qualité, H&S, Environnement, brevets"). */
-        label?: string;
-      };
-    };
   };
   /**
    * Outils de gestion de trésorerie (optionnel) : mobilisation du poste
@@ -696,32 +678,6 @@ export interface EngineScenarioConfig {
     techSensitivity: number;
     techMax: number;
     techInertia: number;
-  };
-  /**
-   * Grille R&D par thème et niveau (optionnel, complément du bloc `rd`).
-   * Chaque thème (ex. matière, process, emballage) propose N niveaux d'actions
-   * concrètes : investissement one-shot, durée en tours, effets mesurables.
-   * Le joueur choisit quelles actions démarrer ; elles se déroulent sur
-   * `durationRounds` tours puis s'appliquent définitivement à l'entreprise.
-   */
-  rdGrid?: {
-    themes: Array<{
-      code: string;
-      label: string;
-      levels: Array<{
-        level: number;
-        label: string;
-        cost: number;
-        durationRounds: number;
-        effects: {
-          materialCostReduction?: number;
-          defectReduction?: number;
-          demandBonus?: number;
-          capacityBonus?: number;
-        };
-        prerequisiteLevel?: number;
-      }>;
-    }>;
   };
   /**
    * Communication (levier « marque et axe »). Absent : le marketing reste un
@@ -1098,19 +1054,6 @@ export interface EventModifier {
 // État d'une entreprise
 // ---------------------------------------------------------------------------
 
-/**
- * Une action R&D de la grille en cours d'exécution ou terminée.
- * `remainingRounds` = 0 à la clôture du dernier tour → effets actifs.
- */
-export interface RdGridActionState {
-  themeCode: string;
-  level: number;
-  /** Tours restants avant que l'action soit complète. 0 = terminée. */
-  remainingRounds: number;
-  /** Tour de démarrage (pour traçabilité). */
-  startedRound: number;
-}
-
 export interface BalanceSheet {
   fixedAssetsNet: number;
   inventoryValue: number;
@@ -1289,12 +1232,6 @@ export interface CompanyState {
    */
   rseCleanCapital?: number;
   /**
-   * Actions R&D de la grille (scénarios avec bloc `rdGrid`).
-   * Actions en cours (remainingRounds > 0) et terminées (remainingRounds = 0).
-   * Absent = aucune action démarrée.
-   */
-  rdGridActions?: RdGridActionState[];
-  /**
    * Niveaux d'actions qualité complétés (catalogue `qualityActions`).
    * Clé = code de l'action, valeur = niveau le plus élevé terminé (1, 2 ou 3).
    * Absent = aucune action terminée.
@@ -1375,13 +1312,6 @@ export interface RoundDecisions {
    */
   supplierChoice?: string;
   /**
-   * Actions R&D de la grille à démarrer ce tour (scénarios avec `rdGrid`).
-   * Chaque entrée nomme un thème et un niveau. Action ponctuelle : jamais
-   * reconduite. La décision est ignorée si le prérequis n'est pas satisfait
-   * ou si l'action est déjà en cours / terminée.
-   */
-  rdGridStart?: { themeCode: string; level: number }[];
-  /**
    * Accepter la commande exceptionnelle proposée pour ce tour (si le scénario
    * a un pool `orderOffers`). Action ponctuelle : jamais reconduite.
    */
@@ -1453,10 +1383,6 @@ export interface RoundDecisions {
      * décision se prend, comme une assemblée statue sur l'exercice écoulé.
      */
     dividend?: number;
-    /** Emprunt pour machines ce tour (si loanCategories.machines est défini). */
-    machineLoan?: number;
-    /** Emprunt pour installations ce tour (si loanCategories.installations est défini). */
-    installationLoan?: number;
   };
   /** Trésorerie : montants de créances à mobiliser ce tour (actions ponctuelles). */
   treasury?: {
@@ -1975,10 +1901,6 @@ export interface CompanyRoundResult {
     newLoan: number;
     outstanding: number;
     nextMandatory: number;
-    /** Emprunt machines accordé ce tour (catégorie `loanCategories.machines`). */
-    machineLoanGranted?: number;
-    /** Emprunt installations accordé ce tour (catégorie `loanCategories.installations`). */
-    installationLoanGranted?: number;
     /**
      * Emprunt demandé ce tour, quand la banque n'a pas tout accordé : la
      * différence avec `newLoan` est ce que la capacité d'endettement a refusé.

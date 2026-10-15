@@ -134,17 +134,6 @@ const rawConseil = {
     discountRate: 0.08,
     discountableRatio: 0.65,
     placementRate: 0.02,
-    loanCategories: {
-      machines: {
-        maxLoanRatio: 0.50,
-        durationRounds: 12,    // 3 ans : peu d'équipements lourds
-      },
-      installations: {
-        maxLoanRatio: 0.60,
-        durationRounds: 8,
-        label: "Qualité, H&S, Environnement, Maintenance, brevets",
-      },
-    },
   },
   treasury: {
     discountAnnualRate: 0.07,
