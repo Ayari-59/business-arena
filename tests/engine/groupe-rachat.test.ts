@@ -3,7 +3,7 @@ import { botDecisions, soldByProduct, type BotProfile } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import { soldUnits } from "@/engine/simulation/runGame";
 import { balanceGap } from "@/engine/finance/statements";
-import { prixDuFournisseur, type CibleDeRachat } from "@/engine/groupe";
+import { ecartDuBilanConsolide, laSociete, prixDeLaSociete, prixDuFournisseur, type CibleDeRachat } from "@/engine/groupe";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -15,6 +15,7 @@ import type {
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { NIVEAU_GROUPE } from "@/config/difficulty";
+import { laCibleEtrangere, trajectoireDeLEtranger } from "@/engine/groupe/etranger";
 
 /**
  * LE RACHAT, QUELLE QUE SOIT LA CIBLE (niveau 7) : les règles communes au
@@ -207,4 +208,61 @@ describe("l'enchère : plusieurs équipes sur la même cible", () => {
     expect(sous.results.e0!.groupe!.rachat!.motif).toMatch(/prix maximum/);
     expect(sous.results.e3!.groupe!.rachat!.motif).toMatch(/prix maximum/);
   });
+});
+
+/**
+ * L'ÉCART D'ACQUISITION AU TOUR DU RACHAT, dans le monde du niveau 7 tel
+ * qu'on le joue (départ agrandi compris) : un rachat au prix demandé n'est
+ * pas déprécié à la clôture du tour même, quelle que soit la cible, la part,
+ * la saison ou le change ; seul un risque pays tombé dans le tour (des ventes
+ * réellement perdues) peut le déprécier. Une dépréciation ne dépasse jamais
+ * l'écart d'ouverture ; le bilan consolidé reste équilibré au centime,
+ * intérêts minoritaires compris.
+ */
+describe("l'écart d'acquisition d'un rachat au prix demandé", () => {
+  const CIBLES: { cible: CibleDeRachat; part?: number }[] = [
+    { cible: STANDARD },
+    { cible: { type: "fournisseur", id: "acoustika" } },
+    ...["brightwave", "fonika", "klangwerk"].flatMap((id) =>
+      [0.51, 0.75, 1].map((part) => ({ cible: { type: "etranger" as const, id }, part })),
+    ),
+  ];
+
+  for (const tourDuRachat of [2, 3, 4, 5]) {
+    it(`racheté au tour ${tourDuRachat} : rien de déprécié à sa clôture, jamais plus que l'écart ensuite, bilan consolidé équilibré`, () => {
+      for (const { cible, part } of CIBLES) {
+        const nom = `${cible.id}${part ? ` à ${part * 100} %` : ""}`;
+        const e = depart();
+        for (let t = 1; t < tourDuRachat; t++) avancer(sept, e, t);
+        const A = e.etats[0]!;
+        const soc = laSociete(sept, e.etats, 2026, cible.type, cible.id, tourDuRachat - 1)!;
+        const p = prixDeLaSociete(sept, soc, part ?? 1).prix;
+        const out = avancer(sept, e, tourDuRachat, (d) => {
+          d.e0!.rachat = {
+            cible,
+            prixMaximum: Math.ceil(p),
+            paiement: "numeraire",
+            emprunt: Math.ceil(p) + Math.max(0, A.finance.overdraft - A.finance.cash) + 30_000,
+            ...(part ? { part } : {}),
+          };
+        });
+        const r = out.results.e0!.groupe!;
+        expect(r.rachat!.statut, `${nom} : ${r.rachat!.motif}`).toBe("conclu");
+        const ecart = r.rachat!.ecart!;
+        const cibleEtrangere = cible.type === "etranger" ? laCibleEtrangere(sept, cible.id)! : null;
+        const risque = cibleEtrangere ? trajectoireDeLEtranger(cibleEtrangere, 2026, tourDuRachat).risque[tourDuRachat - 1] : false;
+        if (!risque) expect(r.consolide!.filiales[0]!.depreciationDuTour, nom).toBeLessThan(centime);
+        else expect(r.consolide!.filiales[0]!.depreciationDuTour, nom).toBeLessThanOrEqual(ecart + centime);
+        expect(Math.abs(ecartDuBilanConsolide(r.consolide!)), nom).toBeLessThan(centime);
+        let cumul = 0;
+        for (let t = tourDuRachat + 1; t <= sept.roundsCount; t++) {
+          const c = avancer(sept, e, t).results.e0!.groupe!.consolide!;
+          cumul += c.filiales[0]!.depreciationDuTour;
+          expect(c.filiales[0]!.ecart, nom).toBeGreaterThanOrEqual(-centime);
+          expect(Math.abs(ecartDuBilanConsolide(c)), nom).toBeLessThan(centime);
+        }
+        expect(cumul, nom).toBeLessThanOrEqual(ecart + centime);
+      }
+    }, 120_000);
+  }
 });

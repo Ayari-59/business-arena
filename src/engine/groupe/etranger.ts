@@ -53,11 +53,16 @@ export function trajectoireDeLEtranger(c: CibleEtrangere, graine: number, n: num
 /** Le cours moyen du tour `t` (1 = premier tour). */
 export const coursMoyen = (cours: readonly number[], t: number): number => (cours[t - 1]! + cours[t]!) / 2;
 
+/** Le coefficient de saison de ses ventes locales au tour `t` (1 = premier tour). */
+export function saisonDeLEtranger(c: CibleEtrangere, t: number): number {
+  const v = c.ventes;
+  return v.saisonnalite.length > 0 ? v.saisonnalite[(t - 1) % v.saisonnalite.length]! : 1;
+}
+
 /** Ses ventes locales au tour `t`, hors risque pays. */
 export function ventesLocales(c: CibleEtrangere, t: number): number {
   const v = c.ventes;
-  const saison = v.saisonnalite.length > 0 ? v.saisonnalite[(t - 1) % v.saisonnalite.length]! : 1;
-  return v.chiffreDAffaires * saison * Math.pow(1 + v.croissance, t - 1);
+  return v.chiffreDAffaires * saisonDeLEtranger(c, t) * Math.pow(1 + v.croissance, t - 1);
 }
 
 /** Ses comptes, dans sa devise, tour par tour jusqu'à `n` ; [0] est son bilan de départ. */

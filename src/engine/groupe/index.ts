@@ -32,13 +32,12 @@ export { fluxPropre } from "./flux-propre";
 export { agrandir, apporterLeFondsDeRoulement } from "./depart";
 export { coursDeLImport, prixDeLImport, probabiliteDeRupture, ruptureDeLImport } from "./import";
 export { comptesDeLEtranger, coursMoyen, trajectoireDeLEtranger, ventesLocales } from "./etranger";
-export { laSociete, prixDeLaSociete, valeurDeLaSociete, type Societe } from "./societe";
+export { laSociete, prixDeLaSociete, prixDuFournisseur, valeurDeLaSociete, type Societe } from "./societe";
 export {
   chiffresDuFournisseur,
   commandesAuFournisseur,
   comptesDuFournisseur,
   fournisseurDeLaReference,
-  prixDuFournisseur,
   valeurDUneSociete,
 } from "./fournisseur";
 export { consolider, ecartDuBilanConsolide, margeEnStock } from "./consolidation";

@@ -14,7 +14,10 @@ import type { Consolidation, Filiale } from "./types";
  *   - porte l'écart d'acquisition (prix moins la part des capitaux propres
  *     acquis), non amorti, déprécié quand ce qu'un acheteur paierait la part
  *     du groupe (sa valeur, prime de contrôle comprise, comme au rachat) ne
- *     couvre plus ce qu'il en porte ;
+ *     couvre plus ce qu'il en porte. L'écart d'une filiale étrangère est un
+ *     actif de la filiale : tenu dans sa devise, converti au cours de clôture,
+ *     sa variation de change en écart de conversion ; son test se fait dans
+ *     sa devise, où le change ne déprécie rien ;
  *   - élimine les ventes d'un fournisseur filiale au groupe : ses achats ne
  *     coûtent plus que leur coût, la marge interne revient au groupe ; celle
  *     qui dort encore dans le stock de produits finis est retirée du stock et
@@ -102,12 +105,17 @@ export function consolider(args: {
     const rc = soc.cours[roundIndex]!;
     const rm = (soc.cours[roundIndex - 1]! + rc) / 2;
     const valeur = valeurDeLaSociete(scenario, soc);
-    // Le test de dépréciation : ce qu'un acheteur paierait aujourd'hui la part
-    // du groupe (sa valeur, prime de contrôle comprise, comme au rachat)
-    // couvre-t-il la part des capitaux propres et l'écart qui reste ?
-    const reste = fil.ecart - fil.depreciation;
-    const porte = fil.part * c.capitauxPropres * rc + reste;
-    const depreciation = Math.min(reste, Math.max(0, porte - fil.part * valeur * (1 + prime)));
+    // Le test de dépréciation, dans la devise de la filiale : ce qu'un acheteur
+    // paierait aujourd'hui la part du groupe (sa valeur, prime de contrôle
+    // comprise, comme au rachat) couvre-t-il la part des capitaux propres et
+    // l'écart qui reste ?
+    const resteEnDevise = fil.ecart / fil.coursDAcquisition - fil.depreciation;
+    const porte = fil.part * c.capitauxPropres + resteEnDevise;
+    const depreciationEnDevise = Math.min(resteEnDevise, Math.max(0, porte - (fil.part * valeur * (1 + prime)) / rc));
+    // En euros : l'écart qui reste au cours de clôture, la dépréciation du tour aussi.
+    const reste = resteEnDevise * rc;
+    const depreciation = depreciationEnDevise * rc;
+    const depreciationsPassees = fil.depreciationEnEuros ?? fil.depreciation;
     titres += fil.prixPaye;
     immobilisations += c.immobilisations * rc;
     bfr += c.bfr * rc;
@@ -115,14 +123,16 @@ export function consolider(args: {
     decouvert += Math.max(0, -c.tresorerie) * rc;
     dettes += c.dette * rc;
     variationDesCapitaux +=
-      fil.part * (c.capitauxPropres * rc - fil.capitauxPropresDAcquisition * fil.coursDAcquisition) - (fil.depreciation + depreciation);
+      fil.part * (c.capitauxPropres * rc - fil.capitauxPropresDAcquisition * fil.coursDAcquisition) + (reste - depreciation) - fil.ecart;
     // L'écart de conversion : ce que les capitaux propres ont gagné au cours de
     // clôture, au-delà des résultats convertis au cours moyen de chaque tour.
     const resultatsConvertis = soc.comptes
       .slice(fil.tour, roundIndex + 1)
       .reduce((x, k, i) => x + k.resultat * (soc.cours[fil.tour + i - 1]! + soc.cours[fil.tour + i]!) / 2, 0);
     ecartDeConversion +=
-      fil.part * (c.capitauxPropres * rc - fil.capitauxPropresDAcquisition * fil.coursDAcquisition - resultatsConvertis);
+      fil.part * (c.capitauxPropres * rc - fil.capitauxPropresDAcquisition * fil.coursDAcquisition - resultatsConvertis) +
+      // l'écart d'acquisition converti au cours de clôture, au-delà de son prix et de ses dépréciations passées
+      (reste - depreciation) - (fil.ecart - depreciationsPassees - depreciation);
     ecartNet += reste - depreciation;
     minoritaires += (1 - fil.part) * c.capitauxPropres * rc;
     valeurDesMinoritaires += (1 - fil.part) * valeur;
@@ -143,7 +153,11 @@ export function consolider(args: {
       ecart: reste - depreciation,
       depreciationDuTour: depreciation,
     });
-    return { ...fil, depreciation: fil.depreciation + depreciation };
+    return {
+      ...fil,
+      depreciation: fil.depreciation + depreciationEnDevise,
+      depreciationEnEuros: depreciationsPassees + depreciation,
+    };
   });
   const bilan: BalanceSheet = {
     ...b,

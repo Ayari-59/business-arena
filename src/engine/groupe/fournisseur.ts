@@ -1,7 +1,7 @@
 import type { CompanyState, EngineScenarioConfig, ProductCode, RoundDecisions, SupplierDef } from "../types";
 import { suppliersOf, toGamme } from "../gamme";
 import { actifEconomique, detteNette, ebeDouzeMois, toursParAn } from "./valorisation";
-import type { ComptesDUneFiliale, FournisseurRachetable, PrixDeCession } from "./types";
+import type { ComptesDUneFiliale, FournisseurRachetable } from "./types";
 
 /**
  * RACHETER UN FOURNISSEUR (niveau 7) : l'intégration verticale.
@@ -43,11 +43,16 @@ export function chiffresDuFournisseur(companies: readonly CompanyState[], code: 
   return Array.from({ length: n }, (_, t) => companies.reduce((s, c) => s + (c.groupe?.achats[code]?.[t] ?? 0), 0));
 }
 
+/** Le coefficient de saison de ses clients hors partie au tour `t` (1 = premier tour). */
+export function saisonDuFournisseur(f: FournisseurRachetable, t: number): number {
+  const c = f.clientsExterieurs;
+  return c.saisonnalite.length > 0 ? c.saisonnalite[(t - 1) % c.saisonnalite.length]! : 1;
+}
+
 /** Le chiffre d'affaires du fournisseur avec ses clients hors partie, au tour `t` (1 = premier tour). */
 export function chiffreExterieur(f: FournisseurRachetable, t: number): number {
   const c = f.clientsExterieurs;
-  const saison = c.saisonnalite.length > 0 ? c.saisonnalite[(t - 1) % c.saisonnalite.length]! : 1;
-  return c.chiffreDAffaires * saison * Math.pow(1 + c.croissance, t - 1);
+  return c.chiffreDAffaires * saisonDuFournisseur(f, t) * Math.pow(1 + c.croissance, t - 1);
 }
 
 /** L'EBE d'un tour moyen avec ses seuls clients hors partie : l'amorce de sa fenêtre de valeur. */
@@ -137,26 +142,6 @@ export function valeurDUneSociete(args: {
   const b = bilanDUneFiliale(args.comptes[args.comptes.length - 1]!, args.cours);
   const ve = Math.max(args.multiple * Math.max(0, e), actifEconomique(b));
   return { valeur: Math.max(0, ve - detteNette(b)), ebeDouzeMois: e };
-}
-
-/** Le prix demandé pour le fournisseur à l'ouverture d'un tour : ses comptes jusqu'au tour d'avant. */
-export function prixDuFournisseur(scenario: EngineScenarioConfig, companies: readonly CompanyState[], code: string): PrixDeCession | null {
-  const f = leFournisseur(scenario, code);
-  const g = scenario.groupe;
-  if (!f || !g) return null;
-  const comptes = comptesDuFournisseur(f, chiffresDuFournisseur(companies, code), scenario.finance.taxRate);
-  const actifNet = comptes[comptes.length - 1]!.capitauxPropres;
-  const valeurDeRendement = valeurDUneSociete({
-    comptes,
-    ebe: comptes.slice(1).map((c) => c.ebe),
-    cours: 1,
-    coursDeDepart: 1,
-    multiple: g.valorisation.multipleEBE,
-    roundDays: scenario.roundDays,
-    ebeReference: ebeDeReference(f),
-  }).valeur;
-  const base = Math.max(actifNet, valeurDeRendement);
-  return { actifNet, valeurDeRendement, prix: base > 0 ? base * (1 + (g.rachat?.primeDeControle ?? 0)) : 1 };
 }
 
 /** Le fournisseur auquel une décision achète une référence, résolu comme le moteur le résout. */

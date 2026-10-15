@@ -119,15 +119,24 @@ describe("le rachat d'une entreprise étrangère, et le groupe consolidé", () =
     expect(f.coursDAcquisition).toBeCloseTo(cours[1]!, 9);
     expect(f.ecart).toBeCloseTo(o.prixMaximum - 0.51 * f.capitauxPropresDAcquisition * cours[1]!, 6);
     for (let t = 3; t <= monde.roundsCount; t++) {
-      const r = avancer(monde, e, t).results.e0!;
+      const sortie = avancer(monde, e, t);
+      const r = sortie.results.e0!;
       const conso = r.groupe!.consolide!;
+      // L'écart d'acquisition est tenu en livres : converti au cours de clôture.
+      const fT = sortie.companies.find((x) => x.id === "e0")!.groupe!.filiales[0]!;
+      const ecartEnLivres = f.ecart / cours[1]! - fT.depreciation;
+      expect(conso.bilan.goodwill).toBeCloseTo(ecartEnLivres * cours[t]!, 6);
+      const changeSurLEcart = ecartEnLivres * cours[t]! - (f.ecart - (fT.depreciationEnEuros ?? 0));
       const comptes = comptesDeLEtranger(c, 2026, t);
       const E = comptes[t]!.capitauxPropres;
       expect(conso.interetsMinoritaires).toBeCloseTo(0.49 * E * cours[t]!, 6);
       expect(conso.filiales[0]!.cours.cloture).toBeCloseTo(cours[t]!, 9);
       expect(conso.filiales[0]!.cours.moyen).toBeCloseTo(coursMoyen(cours, t), 9);
       const convertis = comptes.slice(2, t + 1).reduce((x, k, i) => x + k.resultat * coursMoyen(cours, i + 2), 0);
-      expect(conso.ecartDeConversion).toBeCloseTo(0.51 * (E * cours[t]! - f.capitauxPropresDAcquisition * cours[1]! - convertis), 6);
+      expect(conso.ecartDeConversion).toBeCloseTo(
+        0.51 * (E * cours[t]! - f.capitauxPropresDAcquisition * cours[1]! - convertis) + changeSurLEcart,
+        6,
+      );
       expect(conso.partDesMinoritaires).toBeCloseTo(0.49 * comptes[t]!.resultat * coursMoyen(cours, t), 6);
     }
   });

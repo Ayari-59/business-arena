@@ -183,10 +183,12 @@ export interface Filiale {
   part: number;
   /** Prix payé : les titres de participation au bilan de l'acquéreur. */
   prixPaye: number;
-  /** Écart d'acquisition d'origine : prix moins la part des capitaux propres acquis. */
+  /** Écart d'acquisition d'origine, en euros au cours du rachat : prix moins la part des capitaux propres acquis. */
   ecart: number;
-  /** Dépréciations cumulées de l'écart. */
+  /** Dépréciations cumulées de l'écart, dans la devise de la filiale (en euros pour un fournisseur). */
   depreciation: number;
+  /** Les mêmes, en euros au cours de chaque tour où elles ont été passées en charge. */
+  depreciationEnEuros?: number;
   /** Capitaux propres de la filiale au rachat, dans sa devise. */
   capitauxPropresDAcquisition: number;
   /** Euros pour une unité de sa devise au rachat (1 en euros). */
