@@ -1,13 +1,27 @@
 import { aLaMesureDuNiveau, neutralDecisions, type LeviersOuverts } from "@/engine/bots";
-import { isMultiProduct, scalarsOfGamme, suppliersOf, toGamme } from "@/engine/gamme";
-import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import {
+  isMultiProduct,
+  isProductAvailable,
+  rdOpeningOf,
+  scalarsOfGamme,
+  suppliersOf,
+  toGamme,
+} from "@/engine/gamme";
+import type {
+  CompanyRoundResult,
+  CompanyState,
+  EngineScenarioConfig,
+  ProductDecisions,
+  RoundDecisions,
+} from "@/engine/types";
 
 /**
  * Ce que le formulaire PROPOSE à une équipe pour un tour : la référence à
  * laquelle on compare ce qu'elle valide, pour savoir si elle a décidé.
  *
  * Au tour 1, le point de départ du secteur ; ensuite, les décisions du tour
- * précédent. Calculé ici, et une seule fois, parce que le serveur doit
+ * précédent sans leurs dépenses ponctuelles, le plan recalculé sur la demande
+ * constatée (`propositionDuTour`). Calculé ici, et une seule fois, parce que le serveur doit
  * refaire exactement le calcul du formulaire : une valeur proposée que le
  * serveur ne reconnaîtrait pas passerait pour une décision.
  */
@@ -208,18 +222,172 @@ export function sansDepensesPonctuelles(d: RoundDecisions): RoundDecisions {
   });
 }
 
+/** Ce que l'équipe a sous les yeux du tour passé : ses ventes et ses ventes manquées, clientèle par clientèle. */
+export type MarcheDuTourPasse = Record<string, Pick<CompanyRoundResult["market"]["bySegment"][string], "sold" | "lost">>;
+
 /**
- * Les valeurs proposées pour ce tour : le tour précédent, sans ses dépenses
- * ponctuelles (`sansDepensesPonctuelles`), sinon le départ.
+ * LA PROPOSITION D'UN TOUR : UNE BASE RAISONNABLE, CONSTRUITE SUR L'OUVERTURE DU TOUR.
+ *
+ * Au tour 1, le point de départ du secteur (`startingDecisionsFor`). Ensuite,
+ * la décision du tour précédent sans ses dépenses ponctuelles
+ * (`sansDepensesPonctuelles`) : prix, budgets, fournisseur, assurance restent
+ * ceux que l'équipe a choisis. Seul le PLAN DE PRODUCTION se recalcule, et
+ * c'est là que la proposition reconduite menait à la faillite : le plan du
+ * tour 1 (65 % de l'atelier), gelé six tours, sous le point mort de NOVA
+ * pendant que la demande dépassait la capacité ; le plan d'hiver de MAILLE &
+ * CO (37 % de l'atelier) reconduit jusqu'aux pics de saison.
+ *
+ * Le plan proposé, référence par référence, avec ce que l'équipe sait à
+ * l'ouverture et rien d'autre (ni la demande à venir, ni la graine) :
+ *   - la demande qu'elle a reçue au tour passé, vendue ET manquée (la colonne
+ *     « Manqué » de ses résultats) ;
+ *   - corrigée de la saison connue, du tour passé à celui-ci ;
+ *   - moins le stock d'ouverture, qui se vend d'abord ;
+ *   - le tout dans la limite de l'atelier : ses machines et ses heures.
+ * Une référence sans repère (tout juste lancée) repart du point de départ du
+ * secteur. Ce n'est pas une stratégie : la proposition sert la demande
+ * constatée, au prix que l'équipe a fixé, sans gonfler le stock. Elle ne
+ * remplace pas le jugement de l'élève, qui voit la même colonne « Manqué ».
+ *
+ * Abonnement (la salle de sport) : la capacité se réserve aux adhérents, le
+ * plan reconduit reste celui de l'équipe.
+ */
+export function propositionDuTour(args: {
+  snapshot: EngineScenarioConfig;
+  state: CompanyState | undefined;
+  roundIndex: number;
+  previousPayload: RoundDecisions | null | undefined;
+  /** Le détail par clientèle du tour passé de l'équipe ; absent : le plan reconduit. */
+  lastMarket?: MarcheDuTourPasse | null;
+  leviers?: LeviersOuverts | null;
+}): RoundDecisions {
+  const leviers = args.leviers ?? null;
+  if (!args.previousPayload) return premierTour(args.snapshot, args.state, args.roundIndex, leviers);
+  const reconduite = sansDepensesPonctuelles(args.previousPayload);
+  const { snapshot, state, roundIndex, lastMarket } = args;
+  if (!state || !lastMarket || snapshot.subscription) return auPas(reconduite);
+
+  const gamme = toGamme(snapshot);
+  const multi = isMultiProduct(snapshot);
+  const depart = startingDecisionsFor(snapshot, state, roundIndex, leviers);
+  const plans = gamme.map((p) => {
+    if (!isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex)) return 0;
+    let demandee = 0;
+    let attendue = 0;
+    for (const seg of p.market.segments) {
+      const recue = Math.max(0, lastMarket[seg.code]?.sold ?? 0) + Math.max(0, lastMarket[seg.code]?.lost ?? 0);
+      demandee += recue;
+      attendue += recue * saisonDuTour(seg.seasonality ?? p.market.seasonality, roundIndex);
+    }
+    const stock = multi
+      ? (state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0)
+      : state.finishedGoods.quantity;
+    if (demandee <= 0) {
+      // Aucun repère : la référence n'était pas encore en vente. Le départ du secteur.
+      return multi ? (depart.products?.[p.code]?.productionPlan ?? 0) : depart.productionPlan;
+    }
+    return Math.max(0, attendue - stock);
+  });
+  const bornes = bornerALAtelier(plans, gamme, state);
+
+  if (!multi) return auPas({ ...reconduite, productionPlan: bornes[0]! });
+  const products: Record<string, ProductDecisions> = {};
+  gamme.forEach((p, k) => {
+    const avant = reconduite.products?.[p.code];
+    const neuve = depart.products?.[p.code];
+    // Une référence tout juste lancée n'avait ni plan, ni marketing, ni qualité :
+    // elle reçoit ceux du départ du secteur, et son prix de référence.
+    const lancee = !avant || (avant.productionPlan <= 0 && (avant.marketingBudget ?? 0) <= 0);
+    products[p.code] = {
+      ...(lancee && neuve ? neuve : (avant ?? neuve!)),
+      ...(avant?.rdBudget !== undefined ? { rdBudget: avant.rdBudget } : {}),
+      productionPlan: bornes[k]!,
+    };
+  });
+  return auPas({ ...reconduite, products });
+}
+
+/**
+ * Le premier tour : le départ du secteur, à un détail près. En gamme, le plan
+ * de départ anticipe la saison du tour SUIVANT (ratio borné entre 0,5 et 2) :
+ * MAILLE & CO, dont la saison d'automne est la plus faible de l'année, se
+ * voyait proposer 37 % de son atelier au premier tour. Le plan proposé vise
+ * le tour qu'on joue : la même part de l'atelier, référence par référence,
+ * sans ce pari sur la saison qui vient.
+ */
+function premierTour(
+  snapshot: EngineScenarioConfig,
+  state: CompanyState | undefined,
+  roundIndex: number,
+  leviers: LeviersOuverts | null,
+): RoundDecisions {
+  const depart = startingDecisionsFor(snapshot, state, roundIndex, leviers);
+  if (!state || !depart.products || snapshot.subscription) return depart;
+  const gamme = toGamme(snapshot);
+  const disponibles = gamme.map((p) => isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex));
+  const tailles = gamme.map((p, k) =>
+    disponibles[k] ? p.market.segments.reduce((t, seg) => t + seg.size, 0) : 0,
+  );
+  const total = tailles.reduce((a, b) => a + b, 0);
+  const machines = state.machineCapacity * state.availability;
+  const plans = gamme.map((p, k) => {
+    const stock = state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0;
+    return total > 0 ? Math.max(0, machines * PART_DE_DEPART * (tailles[k]! / total) - stock) : 0;
+  });
+  const bornes = bornerALAtelier(plans, gamme, state);
+  return auPas({
+    ...depart,
+    products: Object.fromEntries(
+      gamme.map((p, k) => [p.code, { ...depart.products![p.code]!, productionPlan: bornes[k]! }]),
+    ),
+  });
+}
+
+/** La part de l'atelier que le départ du secteur engage (celle de la gestion neutre : 65 % × 1,05). */
+const PART_DE_DEPART = 0.65 * 1.05;
+
+/** La saison connue du tour, rapportée à celle du tour passé (bornée : un repère, pas un pari). */
+function saisonDuTour(saison: readonly number[], roundIndex: number): number {
+  const ici = saison[roundIndex - 1] ?? 1;
+  const avant = saison[roundIndex - 2] ?? ici;
+  if (avant <= 0) return 1;
+  return Math.min(2, Math.max(0.5, ici / avant));
+}
+
+/** Les plans ramenés à ce que l'atelier peut sortir ce tour : ses machines, puis ses heures. */
+function bornerALAtelier(
+  plans: number[],
+  gamme: ReturnType<typeof toGamme>,
+  state: CompanyState,
+): number[] {
+  const machines = state.machineCapacity * state.availability;
+  const heures = state.headcount * state.hoursPerEmployee * state.productivity;
+  const total = plans.reduce((a, b) => a + b, 0);
+  const heuresDemandees = plans.reduce(
+    (t, x, k) => t + x * gamme[k]!.hoursPerUnit,
+    0,
+  );
+  const coupe = Math.min(
+    1,
+    total > 0 && machines > 0 ? machines / total : 1,
+    heuresDemandees > 0 && heures > 0 ? heures / heuresDemandees : 1,
+  );
+  // Arrondi vers le bas : une valeur proposée ne dépasse jamais la capacité.
+  return plans.map((x) => Math.floor(x * coupe));
+}
+
+/**
+ * Les valeurs proposées pour ce tour (`propositionDuTour`) : au tour 1 le
+ * départ du secteur ; ensuite le tour précédent sans ses dépenses ponctuelles,
+ * le plan recalculé sur la demande constatée.
  */
 export function proposedDecisionsFor(args: {
   snapshot: EngineScenarioConfig;
   state: CompanyState | undefined;
   roundIndex: number;
   previousPayload: RoundDecisions | null | undefined;
+  lastMarket?: MarcheDuTourPasse | null;
   leviers?: LeviersOuverts | null;
 }): RoundDecisions {
-  return args.previousPayload
-    ? auPas(sansDepensesPonctuelles(args.previousPayload))
-    : startingDecisionsFor(args.snapshot, args.state, args.roundIndex, args.leviers ?? null);
+  return propositionDuTour(args);
 }

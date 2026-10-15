@@ -21,7 +21,7 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { createSoloGame, resolveCurrentRound } from "@/services/game.service";
+import { createSoloGame, getGameView, resolveCurrentRound } from "@/services/game.service";
 import { getObservationSeance } from "@/services/observation.service";
 import type { RoundDecisions } from "@/engine/types";
 
@@ -71,15 +71,17 @@ describe("observation de séance", () => {
   it("distingue celui qui décide de celui qui valide la valeur proposée", async () => {
     const gameId = await createSoloGame(prof, "quarter", 3);
     // Le tour 1 avec des valeurs choisies, le tour 2 en reprenant à l'identique
-    // ce que le formulaire proposait — c'est-à-dire le tour précédent.
+    // ce que le formulaire proposait : le tour précédent, son plan recalculé sur
+    // la demande reçue (`propositionDuTour`).
     await resolveCurrentRound({ gameId, userId: prof, playerDecisions: DECIDE });
-    await resolveCurrentRound({ gameId, userId: prof, playerDecisions: DECIDE });
+    const proposees = (await getGameView(gameId, prof))!.proposedDecisions;
+    await resolveCurrentRound({ gameId, userId: prof, playerDecisions: proposees });
 
     const seance = await getObservationSeance(gameId, prof);
     const [tour1, tour2] = seance!.tours;
     // Au tour 1, les valeurs proposées sont celles du secteur : le joueur les a
-    // changées. Au tour 2, la proposition EST le tour précédent, repris tel
-    // quel : c'est un clic, pas une décision.
+    // changées. Au tour 2, la proposition reprise telle quelle : c'est un
+    // clic, pas une décision.
     expect(tour1!.parDefaut).toBe(0);
     expect(tour2!.parDefaut).toBe(1);
   });

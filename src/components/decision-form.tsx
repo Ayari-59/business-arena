@@ -5341,6 +5341,15 @@ export function DecisionForm({
             Vous validez avec les valeurs proposées pour :{" "}
             <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
           </p>
+          {/* D'OÙ VIENT LA PROPOSITION (services/decision-baseline.ts, `propositionDuTour`) :
+              une base prudente, construite sur l'ouverture du tour, jamais une stratégie. */}
+          <p className="mt-1 text-xs text-slate-400">
+            {roundIndex <= 1
+              ? "Ce sont les valeurs de départ du secteur."
+              : capacityFacts?.subscription
+                ? "Ce sont les valeurs de votre dernier tour."
+                : "Le prix est celui de votre dernier tour ; le volume sert la demande reçue au tour passé, ventes manquées comprises, ajustée de la saison et ramenée à votre capacité."}
+          </p>
           <div className="mt-3 flex flex-wrap gap-3">
             <button
               type="button"

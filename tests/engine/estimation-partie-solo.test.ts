@@ -77,6 +77,7 @@ function partieSolo(secteur: string, niveau: number, graine: number) {
               state: etat,
               roundIndex: tour,
               previousPayload: precedente,
+              lastMarket: p?.market.bySegment ?? null,
               leviers,
             })
           : botDecisions(e.profil!, {

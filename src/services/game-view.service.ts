@@ -1931,6 +1931,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         state: stateRow?.state as CompanyState | undefined,
         roundIndex: game.currentRound,
         previousPayload: lastDecisions,
+        // La demande reçue au tour passé, vendue et manquée : ce que l'équipe a sous les yeux.
+        lastMarket: lastResult?.market.bySegment ?? null,
         leviers: leviersFigesDuProfil(game.difficultyProfile),
       });
     })(),
