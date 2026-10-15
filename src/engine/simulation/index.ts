@@ -805,7 +805,9 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       plans: multi
         ? gammeDecisions.map((d, k) =>
             d.productionPlan *
-            (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1),
+            (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1) *
+            // Niveau 7 : un fournisseur racheté, à capacité limitée, rationne ses clients.
+            (input.rationnementDuGroupe?.[state.id]?.[gamme[k]!.code] ?? 1),
           )
         : gammeDecisions.map((d) => d.productionPlan),
       machineCapacity: effectiveMachineCapacity,
@@ -2627,6 +2629,12 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                 ? { levierOperationnel: finance.incomeStatement.grossMargin / finance.incomeStatement.operatingIncome }
                 : {}),
               ...(w.state.groupe && w.state.groupe.sites.length > 0 ? { chargesDesSites: chargesDesSites(w.state) } : {}),
+              // Les achats du tour, par fournisseur : le chiffre d'affaires d'un fournisseur rachetable.
+              achats: w.productSuppliers.reduce<Record<string, number>>((acc, sup, k) => {
+                if (sup) acc[sup.code] = (acc[sup.code] ?? 0) + productPurchases[k]!;
+                return acc;
+              }, {}),
+              ...(input.rationnementDuGroupe?.[w.state.id] ? { rationnement: input.rationnementDuGroupe[w.state.id] } : {}),
             },
           }
         : {}),

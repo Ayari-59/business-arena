@@ -28,6 +28,7 @@ import type { ConfigDeGroupe } from "@/engine/groupe/types";
 export const GROUPE_NOVA: ConfigDeGroupe = {
   valorisation: { multipleEBE: 5, actionsInitiales: 10_000 },
   rachat: {
+    primeDeControle: 0.25,
     fraisDeTransaction: 0.03,
     decoteDEmission: 0.1,
     seuilDeControle: 0.5,
@@ -88,6 +89,38 @@ export const GROUPE_NOVA: ConfigDeGroupe = {
       usure: 0.4,
       chargesParTour: 4_000,
       coutDeLAudit: 6_000,
+    },
+  ],
+  fournisseurs: [
+    {
+      code: "standard",
+      nom: "Fournisseur standard",
+      recit:
+        "Votre fournisseur historique de composants, celui de toute la profession : il vend à tous les fabricants de la partie, concurrents compris, avec une marge de grossiste. Ses clients ne resteront pas tous chez un concurrent.",
+      tauxDeCoutVariable: 0.95,
+      chargesFixesParTour: 8_000,
+      capacite: 650_000,
+      immobilisations: 150_000,
+      dureeDAmortissement: 24,
+      bfr: 0.25,
+      tresorerie: 20_000,
+      dette: 100_000,
+      tauxDInteretParTour: 0.012,
+    },
+    {
+      code: "acoustika",
+      nom: "Acoustika",
+      recit:
+        "Un atelier de transducteurs de studio, appairés à la main : il ne vend qu'aux fabricants qui le choisissent pour la Studio. Petit, réputé, à la merci de ses rares clients.",
+      tauxDeCoutVariable: 0.7,
+      chargesFixesParTour: 3_000,
+      capacite: 150_000,
+      immobilisations: 25_000,
+      dureeDAmortissement: 24,
+      bfr: 0.3,
+      tresorerie: 8_000,
+      dette: 10_000,
+      tauxDInteretParTour: 0.012,
     },
   ],
   sousTraitance: {

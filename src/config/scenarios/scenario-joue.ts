@@ -115,6 +115,17 @@ function avecLeGroupe(
     groupe: {
       valorisation: { ...cfg.valorisation },
       ...(leviers.croissanceExterne && cfg.rachat ? { rachat: { ...cfg.rachat } } : {}),
+      ...(leviers.croissanceExterne && cfg.fournisseurs
+        ? {
+            fournisseurs: cfg.fournisseurs.map((f) => ({
+              ...f,
+              chargesFixesParTour: f.chargesFixesParTour * k,
+              capacite: f.capacite * k,
+              dureeDAmortissement: f.dureeDAmortissement / k,
+              tauxDInteretParTour: f.tauxDInteretParTour * k,
+            })),
+          }
+        : {}),
       ...(leviers.croissanceExterne && cfg.sites
         ? {
             sites: cfg.sites.map((site) => ({

@@ -2108,6 +2108,12 @@ export interface SimulationInput {
    */
   operationsDeGroupe?: Record<CompanyId, OperationDOuverture>;
   /**
+   * Niveau 7 : la part du plan servie, par entreprise et par référence, quand
+   * un fournisseur racheté ne peut pas livrer toutes les commandes. Posé par
+   * `simulerLeGroupe`. Absent : tout est servi.
+   */
+  rationnementDuGroupe?: Record<CompanyId, Record<ProductCode, number>>;
+  /**
    * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
    *
    * Présent, le marché n'est pas joué : chaque entreprise reçoit, segment par

@@ -340,6 +340,7 @@ export const engineScenarioConfigSchema = z.object({
       }),
       rachat: z
         .object({
+          primeDeControle: z.number().min(0),
           fraisDeTransaction: z.number().min(0),
           decoteDEmission: z.number().min(0).max(0.9),
           seuilDeControle: z.number().min(0).max(1),
@@ -361,6 +362,24 @@ export const engineScenarioConfigSchema = z.object({
             usure: z.number().min(0).max(1),
             chargesParTour: z.number().min(0),
             coutDeLAudit: z.number().min(0),
+          }),
+        )
+        .optional(),
+      fournisseurs: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            nom: z.string().min(1),
+            recit: z.string(),
+            tauxDeCoutVariable: z.number().min(0).max(1),
+            chargesFixesParTour: z.number().min(0),
+            capacite: z.number().positive(),
+            immobilisations: z.number().min(0),
+            dureeDAmortissement: z.number().positive(),
+            bfr: z.number().min(0),
+            tresorerie: z.number(),
+            dette: z.number().min(0),
+            tauxDInteretParTour: z.number().min(0),
           }),
         )
         .optional(),

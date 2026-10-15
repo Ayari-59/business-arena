@@ -144,6 +144,8 @@ export function initialiserLeGroupe(
     dividendesParAction: 0,
     sites: [],
     diligences: [],
+    filiales: [],
+    achats: {},
   };
 }
 
