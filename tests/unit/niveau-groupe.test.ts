@@ -153,5 +153,8 @@ describe("les décisions du niveau 7 passent le schéma", () => {
     // une cible se nomme par son type : un identifiant nu ne passe plus
     expect(roundDecisionsSchema.safeParse({ ...base, rachat: { cible: "bot-1", prixMaximum: 1, paiement: "numeraire" } }).success).toBe(false);
     expect(roundDecisionsSchema.safeParse({ ...base, diligence: { type: "concurrent", id: "bot-1" } }).success).toBe(false);
+    expect(
+      roundDecisionsSchema.safeParse({ ...base, rachat: { cible: { type: "fournisseur", id: "standard" }, prixMaximum: 1, paiement: "titres" } }).success,
+    ).toBe(true);
   });
 });

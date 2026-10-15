@@ -40,7 +40,7 @@ const identifiants = z.array(identifiant).max(MODULES_MAX).optional();
 const PLAFOND_DU_RACHAT = 50_000_000;
 
 /** Une cible de rachat ou d'audit (niveau 7) : son type et son identifiant. */
-const cibleDeRachat = z.object({ type: z.enum(["site_ferme"]), id: identifiant });
+const cibleDeRachat = z.object({ type: z.enum(["site_ferme", "fournisseur"]), id: identifiant });
 
 export const roundDecisionsSchema = z.object({
   price: z.coerce.number().min(1).max(PRIX_MAX),
