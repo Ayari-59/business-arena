@@ -584,6 +584,8 @@ async function resolveGameRound(
               rdActionsCost: r.rdActionsCost ?? null,
               rdActionsEffects: r.rdActionsEffects ?? null,
               stoppedModuleItems: r.stoppedModuleItems ?? null,
+              // Niveau 7 : valeur, rachat, écart d'acquisition, sous-traitance.
+              groupe: r.groupe ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),

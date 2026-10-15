@@ -123,11 +123,7 @@ export function groupesDansLOrdre(presets: readonly DifficultyPreset[] = DIFFICU
     const i = presets.findIndex((p) => ouvert(p, g));
     return i < 0 ? presets.length : i;
   };
-  // Un levier qu'aucun des niveaux montrés n'ouvre n'a rien à faire dans leur
-  // tableau : la croissance externe et la sous-traitance n'existent qu'au
-  // niveau 7, qui n'est pas un niveau du parcours.
   return ordre
-    .filter((g) => ouvertureDe(g) < presets.length)
     .map((g, rang) => ({ g, rang, niveau: ouvertureDe(g) }))
     .sort((a, b) => a.niveau - b.niveau || a.rang - b.rang)
     .map((x) => x.g);

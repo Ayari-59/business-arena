@@ -66,11 +66,6 @@ describe("le tableau du niveau choisi", () => {
     for (const p of DIFFICULTY_PRESETS) {
       const t = tableauDuNiveau(p.level)!;
       for (const [cle, ouvert] of Object.entries(p.decisions) as [keyof DifficultyPreset["decisions"], boolean][]) {
-        // Les leviers du niveau 7, qu'aucun niveau du parcours n'ouvre, n'ont rien à y dire.
-        if (!DIFFICULTY_PRESETS.some((q) => q.decisions[cle])) {
-          expect(t.decidez.concat(t.gere).join(" "), `niveau ${p.level}, ${cle}`).not.toContain(LIBELLES_DES_LEVIERS[cle].court);
-          continue;
-        }
         const l = LIBELLES_DES_LEVIERS[cle];
         const decide = t.decidez.includes(l.decidez) || (cle === "investment" && t.decidez.includes(INVESTISSEMENT_PLAFONNE));
         expect(decide, `niveau ${p.level}, ${cle}`).toBe(ouvert);

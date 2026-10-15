@@ -34,24 +34,29 @@ describe("le niveau 7, à côté des six niveaux du parcours", () => {
     expect(NIVEAU_GROUPE.decisions.externalisation).toBe(true);
   });
 
-  it("aucun des six niveaux n'ouvre la croissance externe ni l'externalisation", () => {
+  it("les six niveaux ne portent même pas les leviers du 7 : leurs profils figés restent ceux d'avant", () => {
     for (const p of DIFFICULTY_PRESETS) {
-      expect(p.decisions.croissanceExterne, `niveau ${p.level}`).toBe(false);
-      expect(p.decisions.externalisation, `niveau ${p.level}`).toBe(false);
+      expect("croissanceExterne" in p.decisions, `niveau ${p.level}`).toBe(false);
+      expect("externalisation" in p.decisions, `niveau ${p.level}`).toBe(false);
+      expect(Object.keys(profilDuNiveau(p).decisions)).not.toContain("croissanceExterne");
     }
   });
 
   it("le monde du 7 est celui du 6, plus ses deux leviers", () => {
     const six = presetByLevel.get(6)!;
     expect(NIVEAU_GROUPE.eventProbabilityMultiplier).toBe(six.eventProbabilityMultiplier);
-    expect({ ...NIVEAU_GROUPE.decisions, croissanceExterne: false, externalisation: false }).toEqual(six.decisions);
+    const { croissanceExterne: _c, externalisation: _e, ...reste } = NIVEAU_GROUPE.decisions;
+    void _c;
+    void _e;
+    expect(reste).toEqual(six.decisions);
   });
 
   it("une partie de niveau 7 fige ses leviers ; un profil d'avant les lit fermés", () => {
     const profil = { difficulty: profilDuNiveau(NIVEAU_GROUPE) };
     expect(presetFromProfile(profil).decisions).toEqual(NIVEAU_GROUPE.decisions);
-    const ancien = { difficulty: { level: 6, decisions: { ...presetByLevel.get(6)!.decisions, croissanceExterne: undefined, externalisation: undefined } } };
-    expect(presetFromProfile(ancien).decisions.croissanceExterne).toBe(false);
+    const ancien = { difficulty: { level: 6, decisions: { ...presetByLevel.get(6)!.decisions } } };
+    expect(presetFromProfile(ancien).decisions).toEqual(presetByLevel.get(6)!.decisions);
+    expect(presetFromProfile(ancien).decisions.croissanceExterne).toBeFalsy();
   });
 
   it("le tableau et le comparatif des six niveaux ne parlent pas des leviers du 7", () => {

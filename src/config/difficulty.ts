@@ -98,14 +98,16 @@ export interface DifficultyPreset {
     rd: boolean;
     /**
      * Croissance externe (niveau 7) : racheter un concurrent simulé, en
-     * numéraire ou en actions. Fermée partout ailleurs, et en classe.
+     * numéraire ou en actions. ABSENTE des six niveaux du parcours (et de leurs
+     * profils figés, qui restent ceux d'avant) ; fermée en classe.
      */
-    croissanceExterne: boolean;
+    croissanceExterne?: boolean;
     /**
      * Externaliser ou internaliser (niveau 7) : faire fabriquer des produits
-     * finis par un sous-traitant, au barème, sans coût fixe.
+     * finis par un sous-traitant, au barème, sans coût fixe. Absente des six
+     * niveaux du parcours.
      */
-    externalisation: boolean;
+    externalisation?: boolean;
   };
   /** Multiplicateur des probabilités d'événements aléatoires (les 0 restent 0). */
   eventProbabilityMultiplier: number;
@@ -126,9 +128,10 @@ const FERME: LeviersDuNiveau = {
   placement: false,
   dividend: false,
   rd: false,
-  croissanceExterne: false,
-  externalisation: false,
 };
+
+/** Les leviers du seul niveau 7 : lus dans un profil figé quand ils y sont, jamais ajoutés ailleurs. */
+const LEVIERS_DU_GROUPE = ["croissanceExterne", "externalisation"] as const;
 
 export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
   {
@@ -216,8 +219,6 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
       placement: true,
       dividend: true,
       rd: true,
-      croissanceExterne: false,
-      externalisation: false,
     },
     eventProbabilityMultiplier: 2,
   },
@@ -322,8 +323,6 @@ export const REPARTITION_AVANT_2026_10_11: Readonly<Record<DifficultyPreset["lev
     placement: true,
     dividend: true,
     rd: true,
-    croissanceExterne: false,
-    externalisation: false,
   },
   // Le niveau 7 n'existait pas : une partie qui le porte fige toujours ses leviers.
   7: { ...NIVEAU_GROUPE.decisions },
@@ -351,7 +350,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false, croissanceExterne: false, externalisation: false },
+  decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
   eventProbabilityMultiplier: 1,
 };
 
@@ -359,7 +358,8 @@ export const LEGACY_PRESET: DifficultyPreset = {
 function leviersFiges(brut: unknown): LeviersDuNiveau | null {
   if (!brut || typeof brut !== "object") return null;
   const lus = Object.entries(brut as Record<string, unknown>).filter(
-    ([cle, v]) => cle in FERME && typeof v === "boolean",
+    ([cle, v]) =>
+      (cle in FERME || (LEVIERS_DU_GROUPE as readonly string[]).includes(cle)) && typeof v === "boolean",
   );
   if (lus.length === 0) return null;
   return { ...FERME, ...Object.fromEntries(lus) };
