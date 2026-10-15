@@ -322,6 +322,43 @@ export const engineScenarioConfigSchema = z.object({
     .min(1)
     .optional(),
   subcontracting: z.object({ unitCost: z.number().positive() }).optional(),
+  /**
+   * Niveau 7 « Groupe » (valeur, rachat, sous-traitance), posé par
+   * `composerLeScenarioJoue` au seul niveau 7. Déclaré ici, sans quoi l'objet
+   * non strict le retirerait au chargement du snapshot, à la clôture.
+   */
+  groupe: z
+    .object({
+      facteurDeDemande: z.number().positive().optional(),
+      valorisation: z.object({
+        multipleEBE: z.number().positive(),
+        actionsInitiales: z.number().positive(),
+      }),
+      rachat: z
+        .object({
+          primeDeControle: z.number().min(0),
+          fraisDeTransaction: z.number().min(0),
+          synergieDeStructure: z.number().min(0).max(1),
+          coutDIntegration: z.number().min(0),
+          decoteDEmission: z.number().min(0).max(0.9),
+          seuilDeControle: z.number().min(0).max(1),
+          tourMin: z.number().int().min(1),
+        })
+        .optional(),
+      sousTraitance: z
+        .record(
+          z.string().min(1),
+          z.object({
+            tranches: z
+              .array(z.object({ jusqua: z.number().positive().optional(), prix: z.number().positive() }))
+              .min(1),
+            plafond: z.number().nonnegative(),
+            qualite: z.number().positive(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
   qualityCosts: z
     .object({
       baseDefectRate: z.number().min(0).max(0.2),

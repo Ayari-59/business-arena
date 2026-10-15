@@ -1,5 +1,6 @@
 import type { EngineScenarioConfig } from "@/engine/types";
-import { withoutRd } from "@/engine/gamme";
+import { mapGammeSegments, withoutRd } from "@/engine/gamme";
+import { GROUPE_PAR_SCENARIO } from "@/config/groupe/nova";
 import {
   applyEconomicOverrides,
   applyEventIntensity,
@@ -61,7 +62,7 @@ export interface ReglagesDuScenarioJoue {
 }
 
 export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenarioConfig {
-  const preset = r.level ? presetByLevel.get(r.level as 1 | 2 | 3 | 4 | 5 | 6) : undefined;
+  const preset = r.level ? presetByLevel.get(r.level as DifficultyPreset["level"]) : undefined;
   const base = r.variableWorld ? applyScenarioVariability(r.scenario, r.seed) : r.scenario;
   const snapshot = applyEventIntensity(
     applyPeriodicity(
@@ -89,5 +90,48 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   // développer hors de portée pour toute la partie. Le levier est retiré du
   // snapshot et les références à développer sont livrées prêtes.
   const leviers = r.leviers ?? preset?.decisions;
-  return preset && leviers && !leviers.rd ? withoutRd(avecHistoires) : avecHistoires;
+  const sansRd = preset && leviers && !leviers.rd ? withoutRd(avecHistoires) : avecHistoires;
+  return avecLeGroupe(sansRd, leviers);
+}
+
+/**
+ * LE NIVEAU 7 « GROUPE » : son bloc, posé au seul niveau qui ouvre la
+ * croissance externe ou l'externalisation, et seulement pour un scénario qui
+ * en porte un (`config/groupe`). Le marché de ce niveau a sa propre taille
+ * (`facteurDeDemande`) : il ne touche aucun autre niveau. Les tranches et le
+ * plafond du sous-traitant, écrits au trimestre, suivent la périodicité.
+ */
+function avecLeGroupe(
+  scenario: EngineScenarioConfig,
+  leviers: DifficultyPreset["decisions"] | undefined,
+): EngineScenarioConfig {
+  if (!leviers || !(leviers.croissanceExterne || leviers.externalisation)) return scenario;
+  const cfg = GROUPE_PAR_SCENARIO[scenario.code];
+  if (!cfg) return scenario;
+  const k = scenario.roundDays / 90;
+  const facteur = cfg.facteurDeDemande ?? 1;
+  const marche =
+    facteur === 1 ? scenario : mapGammeSegments(scenario, (s) => ({ ...s, size: s.size * facteur }));
+  return {
+    ...marche,
+    groupe: {
+      ...(cfg.facteurDeDemande !== undefined ? { facteurDeDemande: cfg.facteurDeDemande } : {}),
+      valorisation: { ...cfg.valorisation },
+      ...(leviers.croissanceExterne && cfg.rachat ? { rachat: { ...cfg.rachat } } : {}),
+      ...(leviers.externalisation && cfg.sousTraitance
+        ? {
+            sousTraitance: Object.fromEntries(
+              Object.entries(cfg.sousTraitance).map(([code, ref]) => [
+                code,
+                {
+                  ...ref,
+                  plafond: ref.plafond * k,
+                  tranches: ref.tranches.map((t) => (t.jusqua === undefined ? { ...t } : { ...t, jusqua: t.jusqua * k })),
+                },
+              ]),
+            ),
+          }
+        : {}),
+    },
+  };
 }

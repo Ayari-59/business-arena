@@ -14,7 +14,8 @@ import { DEFAULT_RSE_CONFIG } from "@/engine/rse";
  */
 
 export interface DifficultyPreset {
-  level: 1 | 2 | 3 | 4 | 5 | 6;
+  /** 1 à 6 : le parcours ; 7 : le niveau « Groupe », à part (`NIVEAU_GROUPE`). */
+  level: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   code: string;
   name: string;
   tagline: string;
@@ -95,6 +96,16 @@ export interface DifficultyPreset {
      * les références à développer sont livrées prêtes.
      */
     rd: boolean;
+    /**
+     * Croissance externe (niveau 7) : racheter un concurrent simulé, en
+     * numéraire ou en actions. Fermée partout ailleurs, et en classe.
+     */
+    croissanceExterne: boolean;
+    /**
+     * Externaliser ou internaliser (niveau 7) : faire fabriquer des produits
+     * finis par un sous-traitant, au barème, sans coût fixe.
+     */
+    externalisation: boolean;
   };
   /** Multiplicateur des probabilités d'événements aléatoires (les 0 restent 0). */
   eventProbabilityMultiplier: number;
@@ -115,6 +126,8 @@ const FERME: LeviersDuNiveau = {
   placement: false,
   dividend: false,
   rd: false,
+  croissanceExterne: false,
+  externalisation: false,
 };
 
 export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
@@ -203,12 +216,53 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
       placement: true,
       dividend: true,
       rd: true,
+      croissanceExterne: false,
+      externalisation: false,
     },
     eventProbabilityMultiplier: 2,
   },
 ];
 
-export const presetByLevel = new Map(DIFFICULTY_PRESETS.map((p) => [p.level, p]));
+/**
+ * LE NIVEAU 7 « GROUPE », À CÔTÉ DU PARCOURS (prototype, octobre 2026).
+ *
+ * Les six niveaux du parcours (`DIFFICULTY_PRESETS`) ne le comptent pas : les
+ * ateliers, le manuel, les lettres de mission, les textes des offres et les
+ * bornes de l'examen restent ceux des six niveaux. Il ne se joue qu'avec les
+ * scénarios qui portent un bloc de groupe (`config/groupe`), NOVA en gamme
+ * pour le prototype, en solo, et seul un administrateur peut le créer.
+ *
+ * Son monde est celui de l'Executive (mêmes aléas, aucun indice, mêmes
+ * leviers) ; il y ajoute la croissance externe et l'externalisation, et juge
+ * l'équipe sur la valeur créée pour l'actionnaire.
+ */
+export const NIVEAU_GROUPE: DifficultyPreset = {
+  level: 7,
+  code: "groupe",
+  name: "Groupe",
+  tagline: "Racheter, faire fabriquer, financer : vous êtes jugés sur la valeur créée pour l'actionnaire.",
+  hintMaxLevel: 0,
+  decisions: {
+    quality: true,
+    maintenance: true,
+    finance: true,
+    creances: true,
+    insurance: true,
+    hr: true,
+    investment: true,
+    rse: true,
+    placement: true,
+    dividend: true,
+    rd: true,
+    croissanceExterne: true,
+    externalisation: true,
+  },
+  eventProbabilityMultiplier: 2,
+};
+
+export const presetByLevel = new Map(
+  [...DIFFICULTY_PRESETS, NIVEAU_GROUPE].map((p) => [p.level, p]),
+);
 
 /**
  * LA RÉPARTITION D'AVANT LE 11 OCTOBRE 2026, pour les parties créées avant
@@ -268,7 +322,11 @@ export const REPARTITION_AVANT_2026_10_11: Readonly<Record<DifficultyPreset["lev
     placement: true,
     dividend: true,
     rd: true,
+    croissanceExterne: false,
+    externalisation: false,
   },
+  // Le niveau 7 n'existait pas : une partie qui le porte fige toujours ses leviers.
+  7: { ...NIVEAU_GROUPE.decisions },
 };
 
 /**
@@ -293,7 +351,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+  decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false, croissanceExterne: false, externalisation: false },
   eventProbabilityMultiplier: 1,
 };
 

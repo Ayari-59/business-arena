@@ -10,6 +10,14 @@
  * sont structurés pour lever ces limites sans casser l'API.
  */
 
+import type {
+  ConfigDeGroupe,
+  DecisionDeRachat,
+  EtatDeGroupe,
+  OperationDOuverture,
+  ResultatDeGroupe,
+} from "./groupe/types";
+
 export type CompanyId = string;
 export type SegmentCode = string;
 export type ProductCode = string;
@@ -266,6 +274,12 @@ export interface EngineScenarioConfig {
   code: string;
   version: string;
   roundsCount: number;
+  /**
+   * Niveau 7 « Groupe » : valeur, rachat, sous-traitance. Posé par
+   * `composerLeScenarioJoue` au seul niveau 7 ; absent, le moteur suit son
+   * chemin d'avant.
+   */
+  groupe?: ConfigDeGroupe;
   /** Durée d'un tour en jours (ADR-01) — sert aux délais clients/fournisseurs. */
   roundDays: number;
   market: {
@@ -1071,6 +1085,12 @@ export interface BalanceSheet {
   overdraft: number; // ≥ 0
   /** TVA nette du tour, à décaisser au tour suivant (négatif = crédit de TVA). */
   vatLiability?: number;
+  /**
+   * Écart d'acquisition (niveau 7) : prix payé pour une société rachetée moins
+   * son actif net. Immobilisation incorporelle, non amortie, dépréciée quand
+   * la valeur de l'entreprise ne le couvre plus. Absent sans rachat.
+   */
+  goodwill?: number;
 }
 
 /** Les axes de communication : ce que la marque met en avant. */
@@ -1249,7 +1269,11 @@ export interface CompanyState {
    * plus) SAUF l'augmentation de capital : une recapitalisation qui la ramène
    * sous le plafond la fait repasser `active`. Absent = active (rétro-compat).
    */
-  status?: "active" | "defaillant";
+  status?: "active" | "defaillant" | "absorbee";
+  /** Niveau 7 : absorbée par une autre entreprise de la partie, à ce tour. Elle ne joue plus. */
+  absorption?: { par: CompanyId; tour: number };
+  /** Niveau 7 : actions, historique d'EBE, rachats. Absent hors niveau 7. */
+  groupe?: EtatDeGroupe;
   /** Tours de crise consécutifs, pour le seuil de défaillance. Absent = 0. */
   crisisStreak?: number;
 }
@@ -1445,6 +1469,10 @@ export interface RoundDecisions {
    * de la décision qui l'a lancé.
    */
   stoppedModuleItems?: { module: string; id: string }[];
+  /** Niveau 7 : racheter un concurrent simulé, au jour 1 du tour. Action ponctuelle. */
+  rachat?: DecisionDeRachat;
+  /** Niveau 7 : produits finis commandés au sous-traitant, par référence. Reconduite comme le plan. */
+  sousTraitance?: Record<ProductCode, number>;
 }
 
 /** Ventes estimées d'un tour et résultat estimé correspondant (voir `RoundDecisions.salesEstimate`). */
@@ -1518,6 +1546,8 @@ export interface IncomeStatement {
    * un geste de sauvetage comme une récompense écologique. Absente si nulle.
    */
   rescueSubsidy?: number;
+  /** Niveau 7 : frais de transaction et coût d'intégration d'un rachat (charge du tour, hors EBE). */
+  chargesDeRachat?: number;
   pretaxIncome: number;
   /**
    * Déficit reporté imputé sur le bénéfice de ce tour (report en avant des
@@ -1526,7 +1556,14 @@ export interface IncomeStatement {
    */
   taxLossUsed?: number;
   tax: number;
+  /**
+   * Niveau 7 : dépréciation de l'écart d'acquisition, non déductible, après
+   * l'impôt. Absente si nulle.
+   */
+  depreciationEcartDAcquisition?: number;
   netIncome: number;
+  /** Niveau 7 : produits finis achetés au sous-traitant ce tour (compris dans `variableProductionCost`). */
+  sousTraitance?: number;
 }
 
 export interface CashFlowItem {
@@ -1984,6 +2021,8 @@ export interface CompanyRoundResult {
   rdActionsEffects?: { costReduction: number; qualityBonus: number; imageBonus: number };
   /** Ce que l'équipe a arrêté ce tour (retiré de l'état à l'ouverture). */
   stoppedModuleItems?: { module: string; id: string }[];
+  /** Niveau 7 : valeur, rachat, écart d'acquisition, sous-traitance. */
+  groupe?: ResultatDeGroupe;
   kpis: Record<string, number>;
   /** Indicateurs de performance synthétiques calculés par le moteur. */
   performanceMetrics?: PerformanceMetrics;
@@ -2030,6 +2069,7 @@ export interface EngineTrace {
   rdActionsCost?: CompanyRoundResult["rdActionsCost"] | null;
   rdActionsEffects?: CompanyRoundResult["rdActionsEffects"] | null;
   stoppedModuleItems?: CompanyRoundResult["stoppedModuleItems"] | null;
+  groupe?: CompanyRoundResult["groupe"] | null;
 }
 
 export interface EventInstance {
@@ -2060,6 +2100,11 @@ export interface SimulationInput {
    * émis, ni au compte de résultat ni au tableau de flux.
    */
   rescueSubsidies?: Record<CompanyId, number>;
+  /**
+   * Niveau 7 : ce que les rachats du jour 1 font au tour de l'acquéreur (lignes
+   * du tableau de flux, frais). Posé par `simulerLeGroupe`, jamais à la main.
+   */
+  operationsDeGroupe?: Record<CompanyId, OperationDOuverture>;
   /**
    * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
    *

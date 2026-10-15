@@ -19,7 +19,8 @@ import type { RoundDecisions } from "../types";
  *   financement            zéro emprunt, zéro remboursement anticipé, zéro apport ;
  *   dividende              zéro ;
  *   assurance              aucune ;
- *   R&D                    rien (le snapshot d'un niveau qui la ferme n'en a pas).
+ *   R&D                    rien (le snapshot d'un niveau qui la ferme n'en a pas) ;
+ *   rachat, sous-traitance rien (niveau 7 seulement).
  *
  * Pur, sans la configuration des niveaux : il reçoit les drapeaux.
  */
@@ -35,6 +36,10 @@ export interface LeviersOuverts {
   placement: boolean;
   dividend: boolean;
   rd: boolean;
+  /** Niveau 7 : racheter un concurrent. Absent : fermé. */
+  croissanceExterne?: boolean;
+  /** Niveau 7 : faire fabriquer par un sous-traitant. Absent : fermé. */
+  externalisation?: boolean;
 }
 
 export function aLaMesureDuNiveau(
@@ -52,6 +57,8 @@ export function aLaMesureDuNiveau(
   if (!ouverts.investment) delete out.investment;
   if (!ouverts.rse) delete out.rse;
   if (!ouverts.rd) delete out.rdBudget;
+  if (!ouverts.croissanceExterne) delete out.rachat;
+  if (!ouverts.externalisation) delete out.sousTraitance;
   if (!ouverts.creances) delete out.treasury;
   else if (!ouverts.placement && out.treasury) out.treasury = { ...out.treasury, placement: 0 };
   if (!ouverts.finance || !ouverts.dividend) {

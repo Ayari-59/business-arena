@@ -88,6 +88,16 @@ export const LIBELLES_DES_LEVIERS: Readonly<Record<GroupeDeLeviers, LibelleDuGro
     court: "Placement", phrase: "le placement du surplus",
   },
   insurance: { decidez: "L'assurance", gere: "Aucune assurance souscrite", court: "Assurance", phrase: "l'assurance" },
+  croissanceExterne: {
+    decidez: "Le rachat d'un concurrent, en numéraire ou en actions",
+    gere: "Aucun rachat : la croissance reste interne",
+    court: "Croissance externe", phrase: "la croissance externe",
+  },
+  externalisation: {
+    decidez: "La sous-traitance : fabriquer ou faire fabriquer",
+    gere: "Toute la production dans votre atelier",
+    court: "Sous-traitance", phrase: "la sous-traitance",
+  },
 };
 
 /** L'investissement aux niveaux qui le plafonnent : la règle dite dans le libellé. */
@@ -113,7 +123,11 @@ export function groupesDansLOrdre(presets: readonly DifficultyPreset[] = DIFFICU
     const i = presets.findIndex((p) => ouvert(p, g));
     return i < 0 ? presets.length : i;
   };
+  // Un levier qu'aucun des niveaux montrés n'ouvre n'a rien à faire dans leur
+  // tableau : la croissance externe et la sous-traitance n'existent qu'au
+  // niveau 7, qui n'est pas un niveau du parcours.
   return ordre
+    .filter((g) => ouvertureDe(g) < presets.length)
     .map((g, rang) => ({ g, rang, niveau: ouvertureDe(g) }))
     .sort((a, b) => a.niveau - b.niveau || a.rang - b.rang)
     .map((x) => x.g);
