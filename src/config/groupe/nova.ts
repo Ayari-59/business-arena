@@ -8,25 +8,10 @@ import type { ConfigDeGroupe } from "@/engine/groupe/types";
  * banc du niveau 7 (conception, section 15) : chaque levier doit créer de la
  * valeur dans certains contextes et en détruire dans d'autres.
  *
- * Banc du 15 octobre 2026 (6 tours, 3 et 4 entreprises, prix ×0,9 à ×1,2,
- * graines 2026, 7 et 4242) :
- *  - facteurDeDemande 0,65 : la demande de l'industrie au prix de référence
- *    vaut 1,28 fois sa capacité en moyenne sur la partie (0,57 au premier
- *    trimestre, 2,2 à Noël) ; plus bas, la gestion neutre ne passe plus le
- *    premier tour ;
- *  - barème relevé (Go 30/34/38, One 54/60/66) : au barème d'avant (24/29/36,
- *    46/54/64), sous-traiter la demande du tour précédent gagnait dans les 36
- *    contextes ; au barème retenu, il perd dans 2 à 3 sur 36, et sous-traiter
- *    au-delà (×1,5) perd dans 12.
- *
- * Le facteur de demande est propre au niveau 7 : NOVA en gamme vend deux à
- * trois fois sa capacité à partir du tour 3 ; à ce niveau, où l'on décide de
- * la capacité (racheter, faire fabriquer, investir), un marché qui absorbe tout
- * ferait de chaque unité de capacité une aubaine. Il ne touche aucun autre
- * niveau.
+ * La demande est celle de NOVA en gamme, telle quelle (décision du
+ * propriétaire) : saisons, Noël et grand compte compris.
  */
 export const GROUPE_NOVA: ConfigDeGroupe = {
-  facteurDeDemande: 0.65,
   valorisation: { multipleEBE: 5, actionsInitiales: 10_000 },
   rachat: {
     primeDeControle: 0.25,

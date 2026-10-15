@@ -10,7 +10,6 @@ import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { novaScenario } from "@/config/scenarios/nova";
-import { GROUPE_NOVA } from "@/config/groupe/nova";
 import { aLaMesureDuNiveau } from "@/engine/bots";
 import { comparatifDesNiveaux, tableauDuNiveau } from "@/config/tableau-des-niveaux";
 import { roundDecisionsSchema } from "@/services/decision-schema";
@@ -95,21 +94,12 @@ describe("le bloc de groupe du snapshot", () => {
     expect(composer(novaGammeScenario, 7).groupe).toBeDefined();
   });
 
-  it("le snapshot du 7 est celui du 6, marché propre et bloc de groupe en plus", () => {
+  it("le snapshot du 7 est celui du 6, bloc de groupe en plus : la demande n'est ni lissée ni réduite", () => {
     const six = composer(novaGammeScenario, 6);
     const sept = composer(novaGammeScenario, 7);
-    const f = GROUPE_NOVA.facteurDeDemande!;
     const sansGroupe = { ...sept };
     delete sansGroupe.groupe;
-    const sixAuMarcheDu7 = {
-      ...six,
-      market: { ...six.market, segments: six.market.segments.map((s) => ({ ...s, size: s.size * f })) },
-      products: six.products!.map((p) => ({
-        ...p,
-        market: { ...p.market, segments: p.market.segments.map((s) => ({ ...s, size: s.size * f })) },
-      })),
-    };
-    expect(sansGroupe).toEqual(sixAuMarcheDu7);
+    expect(sansGroupe).toEqual(six);
   });
 
   it("survit au chargement du snapshot à la clôture", () => {

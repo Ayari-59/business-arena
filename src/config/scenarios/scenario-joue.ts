@@ -1,5 +1,5 @@
 import type { EngineScenarioConfig } from "@/engine/types";
-import { mapGammeSegments, withoutRd } from "@/engine/gamme";
+import { withoutRd } from "@/engine/gamme";
 import { GROUPE_PAR_SCENARIO } from "@/config/groupe/nova";
 import {
   applyEconomicOverrides,
@@ -97,9 +97,10 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
 /**
  * LE NIVEAU 7 « GROUPE » : son bloc, posé au seul niveau qui ouvre la
  * croissance externe ou l'externalisation, et seulement pour un scénario qui
- * en porte un (`config/groupe`). Le marché de ce niveau a sa propre taille
- * (`facteurDeDemande`) : il ne touche aucun autre niveau. Les tranches et le
- * plafond du sous-traitant, écrits au trimestre, suivent la périodicité.
+ * en porte un (`config/groupe`). La demande est celle du scénario, saisons,
+ * pics et grand compte compris : s'y préparer fait partie du jeu. Les
+ * tranches et le plafond du sous-traitant, écrits au trimestre, suivent la
+ * périodicité.
  */
 function avecLeGroupe(
   scenario: EngineScenarioConfig,
@@ -109,13 +110,9 @@ function avecLeGroupe(
   const cfg = GROUPE_PAR_SCENARIO[scenario.code];
   if (!cfg) return scenario;
   const k = scenario.roundDays / 90;
-  const facteur = cfg.facteurDeDemande ?? 1;
-  const marche =
-    facteur === 1 ? scenario : mapGammeSegments(scenario, (s) => ({ ...s, size: s.size * facteur }));
   return {
-    ...marche,
+    ...scenario,
     groupe: {
-      ...(cfg.facteurDeDemande !== undefined ? { facteurDeDemande: cfg.facteurDeDemande } : {}),
       valorisation: { ...cfg.valorisation },
       ...(leviers.croissanceExterne && cfg.rachat ? { rachat: { ...cfg.rachat } } : {}),
       ...(leviers.externalisation && cfg.sousTraitance
