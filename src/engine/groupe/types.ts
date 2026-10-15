@@ -25,11 +25,6 @@ export interface SousTraitanceDUneReference {
 }
 
 export interface ConfigDeGroupe {
-  /**
-   * Le facteur de demande propre au niveau 7, DÉJÀ appliqué à la taille des
-   * segments du snapshot (`composerLeScenarioJoue`). Gardé ici pour le dire.
-   */
-  facteurDeDemande?: number;
   valorisation: {
     /** Valeur d'entreprise = multiple × EBE des douze derniers mois. */
     multipleEBE: number;
@@ -80,6 +75,15 @@ export interface EtatDeGroupe {
   /** Charges discrétionnaires par tour (marketing, qualité, entretien, RSE, R&D). */
   discretionnaires: number[];
   dividendesParAction: number;
+  /**
+   * Les apports en numéraire faits pendant la partie (augmentation de capital
+   * des associés, investisseurs entrants majorés de leur décote). Ils sont
+   * convertis en actions à la valeur de FIN de partie : leurs souscripteurs
+   * détiennent exactement ce qu'ils ont apporté, et une levée dont l'argent
+   * dort en caisse ne change pas la rentabilité des actions d'origine.
+   * Absent : aucun apport.
+   */
+  apports?: number;
   rachats: RachatConclu[];
 }
 
@@ -103,8 +107,11 @@ export interface ValeurDeLEntreprise {
   valeurEntreprise: number;
   detteNette: number;
   valeurCapitauxPropres: number;
+  /** Ce qui revient aux souscripteurs des apports en numéraire (leur apport). */
+  apports: number;
   actions: number;
   valeurParAction: number;
+  /** Valeur par action : (capitaux propres − apports) / actions. */
   /** Rentabilité totale par action depuis le départ : (valeur + dividendes reçus) / valeur initiale − 1. */
   rentabiliteTotale: number;
   dividendesParAction: number;

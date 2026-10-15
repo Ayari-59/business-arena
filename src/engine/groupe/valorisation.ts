@@ -10,7 +10,7 @@ import type { ConfigDeGroupe, EtatDeGroupe, ValeurDeLEntreprise } from "./types"
  *   valeur d'entreprise          VE = max(VR, AE)
  *   dette nette                  DN = dettes financières + découvert − disponibilités − placements
  *   valeur des capitaux propres  VCP = max(0, VE − DN)
- *   valeur par action            V = VCP / actions
+ *   valeur par action            V = (VCP − apports en numéraire) / actions
  *   rentabilité totale           RTA = (V + dividendes reçus par action) / V₀ − 1
  *
  * k est le nombre de tours dans l'année (4 au trimestre), w la fenêtre, quatre
@@ -78,13 +78,17 @@ export function valoriser(args: {
   const ve = Math.max(rendement, ae);
   const dn = args.detteEnPlus ? detteNette(b) + args.detteEnPlus : detteNette(b);
   const vcp = Math.max(0, ve - dn);
-  const v = g.actions > 0 ? vcp / g.actions : 0;
+  // Les apports en numéraire se convertissent à la valeur de fin de partie :
+  // leurs souscripteurs détiennent ce qu'ils ont apporté, le reste revient aux actions.
+  const apports = g.apports ?? 0;
+  const v = g.actions > 0 ? Math.max(0, vcp - apports) / g.actions : 0;
   return {
     ebeDouzeMois: ebe,
     valeurDeRendement: rendement,
     valeurEntreprise: ve,
     detteNette: dn,
     valeurCapitauxPropres: vcp,
+    apports,
     actions: g.actions,
     valeurParAction: v,
     rentabiliteTotale: (v + g.dividendesParAction) / g.valeurInitialeParAction - 1,

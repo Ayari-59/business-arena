@@ -121,7 +121,7 @@ describe("la valeur de départ est la valeur comptable", () => {
 });
 
 describe("actions, dilution et dividendes", () => {
-  it("une augmentation de capital émet des actions au prix d'ouverture ; un dividende se compte par action", () => {
+  it("une augmentation de capital est un apport, converti à la valeur de fin de partie ; un dividende se compte par action", () => {
     const tours = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
       if (id !== "e0") return;
       if (tour === 2) d.finance = { ...(d.finance ?? {}), capitalIncrease: 50000 };
@@ -129,8 +129,10 @@ describe("actions, dilution et dividendes", () => {
     });
     const g1 = tours[0]!.companies.find((c) => c.id === "e0")!.groupe!;
     const g2 = tours[1]!.companies.find((c) => c.id === "e0")!.groupe!;
-    const v1 = tours[0]!.results.e0!.groupe!.valeur!.valeurParAction;
-    expect(g2.actions - g1.actions).toBeCloseTo(50000 / v1, 6);
+    expect(g2.actions).toBe(g1.actions);
+    expect(g2.apports).toBeCloseTo(50000, 6);
+    const v2 = tours[1]!.results.e0!.groupe!.valeur!;
+    expect(v2.valeurParAction).toBeCloseTo(Math.max(0, v2.valeurCapitauxPropres - 50000) / v2.actions, 9);
     const g3 = tours[2]!.companies.find((c) => c.id === "e0")!.groupe!;
     const g4 = tours[3]!.companies.find((c) => c.id === "e0")!.groupe!;
     const verse = -tours[3]!.results.e0!.cashFlow.items.filter((i) => i.label === "dividendes_verses").reduce((s, i) => s + i.amount, 0);

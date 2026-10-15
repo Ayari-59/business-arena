@@ -15,6 +15,7 @@ import type {
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { NIVEAU_GROUPE } from "@/config/difficulty";
+import { rejouer, type PartieARejouer } from "@/pedagogy/merite/rejeu";
 
 /**
  * RACHETER UN CONCURRENT (niveau 7) : la cible passe tout entière dans
@@ -127,7 +128,9 @@ describe("le rachat d'un concurrent, au jour 1", () => {
     expect((apres.fleet ?? []).length).toBe((A.fleet ?? []).length + (T.fleet ?? []).length);
     expect(r.production.machineCapacity).toBeGreaterThan(A.machineCapacity * A.availability);
     expect(apres.groupe!.rachats).toHaveLength(1);
-    expect(apres.groupe!.actions).toBeGreaterThan(A.groupe!.actions);
+    // Les investisseurs entrants détiennent leur apport majoré de la décote, converti en fin de partie.
+    expect(apres.groupe!.actions).toBe(A.groupe!.actions);
+    expect(apres.groupe!.apports).toBeCloseTo((prixDeCession(T, monde).prix / 2) / (1 - monde.groupe!.rachat!.decoteDEmission), 6);
     expect((apres.loans ?? []).length).toBeGreaterThanOrEqual((A.loans ?? []).length + (T.loans ?? []).length);
   });
 });
@@ -261,5 +264,114 @@ describe("le test de dépréciation", () => {
     expect(r.balanceSheet.goodwill).toBeCloseTo(5_000_000 - dep, 6);
     expect(r.groupe!.ecart!.valeurRecouvrable).toBeLessThan(r.groupe!.ecart!.actifEconomique);
     expect(Math.abs(balanceGap(r.balanceSheet))).toBeLessThan(centime);
+  });
+});
+
+describe("l'enchère : plusieurs équipes sur la même cible", () => {
+  /** e0 et e3 sont deux équipes de la classe ; e1 et e2, des concurrents simulés. */
+  function classe(): Etat {
+    const e: Etat = {
+      etats: PROFILS.map((p, i) => novaGammeCompany(`e${i}`, `E${i}`, i === 0 || i === 3 ? "human" : "bot", p)),
+      ev: [],
+      prec: {},
+    };
+    avancer(monde, e, 1);
+    avancer(monde, e, 2);
+    return e;
+  }
+  const offre = (_A: CompanyState, T: CompanyState, prixMaximum: number): RoundDecisions["rachat"] => ({
+    cible: T.id,
+    prixMaximum,
+    paiement: "numeraire",
+    emprunt: prixDeCession(T, monde).prix / 2 + Math.max(0, -net(T)),
+    augmentationDeCapital: prixDeCession(T, monde).prix / 2,
+  });
+
+  it("la plus haute offre l'emporte, au prix demandé ; l'autre ne paie rien et sait pourquoi", () => {
+    const e = classe();
+    const T = e.etats[1]!;
+    const prix = prixDeCession(T, monde).prix;
+    const temoin = classe();
+    const sans = avancer(monde, temoin, 3);
+    const out = avancer(monde, e, 3, (d) => {
+      d.e0!.rachat = offre(e.etats[0]!, T, prix + 1000);
+      d.e3!.rachat = offre(e.etats[3]!, T, prix + 5000);
+    });
+    expect(out.results.e3!.groupe!.rachat!.statut).toBe("conclu");
+    expect(out.results.e3!.groupe!.rachat!.prix).toBeCloseTo(prix, 6);
+    expect(out.results.e0!.groupe!.rachat!.motif).toMatch(/meilleure offre/);
+    expect(out.companies.find((c) => c.id === T.id)!.absorption).toEqual({ par: "e3", tour: 3 });
+    // Le perdant n'a rien payé : ses comptes sont ceux d'un tour sans offre, au marché près
+    // (la cible est sortie pour tous).
+    expect(out.results.e0!.cashFlow.items.find((i) => i.label === "rachat_prix_paye")).toBeUndefined();
+    expect(out.results.e0!.incomeStatement.chargesDeRachat).toBeUndefined();
+    expect(out.results.e0!.balanceSheet.goodwill).toBeUndefined();
+    expect(out.results[T.id]!.market.totalShare).toBe(0);
+    expect(sans.results[T.id]!.market.totalShare).toBeGreaterThan(0);
+  });
+
+  it("à égalité, personne ne l'emporte", () => {
+    const e = classe();
+    const T = e.etats[1]!;
+    const prix = prixDeCession(T, monde).prix;
+    const out = avancer(monde, e, 3, (d) => {
+      d.e0!.rachat = offre(e.etats[0]!, T, prix + 2000);
+      d.e3!.rachat = offre(e.etats[3]!, T, prix + 2000);
+    });
+    expect(out.results.e0!.groupe!.rachat!.motif).toMatch(/même offre/);
+    expect(out.results.e3!.groupe!.rachat!.motif).toMatch(/même offre/);
+    expect(out.companies.find((c) => c.id === T.id)!.status).not.toBe("absorbee");
+  });
+
+  it("la plus haute offre sous le prix demandé : personne ne l'emporte", () => {
+    const e = classe();
+    const T = e.etats[1]!;
+    const prix = prixDeCession(T, monde).prix;
+    const out = avancer(monde, e, 3, (d) => {
+      d.e0!.rachat = offre(e.etats[0]!, T, prix - 2000);
+      d.e3!.rachat = offre(e.etats[3]!, T, prix - 1000);
+    });
+    expect(out.results.e0!.groupe!.rachat!.motif).toMatch(/prix maximum/);
+    expect(out.results.e3!.groupe!.rachat!.motif).toMatch(/prix maximum/);
+    expect(out.companies.find((c) => c.id === T.id)!.status).not.toBe("absorbee");
+  });
+});
+
+describe("le rejeu de mérite d'une partie avec rachat", () => {
+  it("rejoue la partie à l'identique sous sa graine, et sans faillir sous une autre", () => {
+    // Les décisions du joueur : la gestion neutre, et un rachat de SoundBox au tour 3.
+    const e = deuxTours();
+    const jouees: RoundDecisions[] = [];
+    const e2: Etat = { etats: PROFILS.map((p, i) => novaGammeCompany(`e${i}`, `E${i}`, i === 0 ? "human" : "bot", p)), ev: [], prec: {} };
+    void e;
+    for (let t = 1; t <= monde.roundsCount; t++) {
+      avancer(monde, e2, t, (d) => {
+        if (t === 3) {
+          // En actions, et sans plafond de prix : le rachat ne dépend ni de la caisse
+          // ni du prix exact, qui changent sous une autre graine.
+          d.e0!.rachat = { cible: e2.etats[1]!.id, prixMaximum: 1e9, paiement: "titres" };
+        }
+        jouees.push(d.e0!);
+      });
+    }
+    const partie: PartieARejouer = {
+      graine: 2026,
+      joueur: "e0",
+      equipes: PROFILS.map((p, i) => ({ id: `e${i}`, controller: i === 0 ? "human" : "bot", botProfile: i === 0 ? null : p })),
+      etatsInitiaux: PROFILS.map((p, i) => novaGammeCompany(`e${i}`, `E${i}`, i === 0 ? "human" : "bot", p)),
+      tours: monde.roundsCount,
+      scenarioPour: () => monde,
+      decisions: jouees,
+      reconduits: jouees.map(() => false),
+      pedagogie: jouees.map(() => ({})),
+      leviers: NIVEAU_GROUPE.decisions,
+    };
+    const a = rejouer(partie, 2026);
+    const b = rejouer(partie, 2026);
+    expect(a).toEqual(b);
+    // SoundBox est sortie du marché au tour 3 du rejeu.
+    expect(a.tours[2]!.parEquipe.e1!.revenue).toBe("0");
+    expect(a.tours[5]!.parEquipe.e1!.revenue).toBe("0");
+    expect(() => rejouer(partie, 7)).not.toThrow();
   });
 });

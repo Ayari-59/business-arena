@@ -71,6 +71,8 @@ function fusionner(args: {
   augmentation: number;
   titres: number;
   actionsEmises: number;
+  /** Créance des investisseurs entrants (apport majoré de la décote). */
+  apport: number;
   paiement: "numeraire" | "titres";
 }): CompanyState {
   const { A, T, scenario } = args;
@@ -188,6 +190,7 @@ function fusionner(args: {
     groupe: {
       ...gA,
       actions: gA.actions + args.actionsEmises,
+      ...(args.apport > 0 || gA.apports !== undefined ? { apports: (gA.apports ?? 0) + args.apport } : {}),
       ebe: proForma(gA.ebe, gT.ebe),
       discretionnaires: proForma(gA.discretionnaires, gT.discretionnaires),
       rachats: [
@@ -252,12 +255,40 @@ export interface RachatsDuTour {
   rapports: Record<string, ResultatDuRachat>;
 }
 
+interface Offre {
+  idA: string;
+  A: CompanyState;
+  T: CompanyState;
+  d: NonNullable<RoundDecisions["rachat"]>;
+  valeurs: PrixDeCession;
+  paiement: "numeraire" | "titres";
+  titres: number;
+  emprunt: number;
+  augmentation: number;
+  numeraire: number;
+  /** Actions remises aux actionnaires de la cible (paiement en titres). */
+  actionsEmises: number;
+  /** Ce que les investisseurs entrants détiendront : leur apport, majoré de la décote. */
+  apport: number;
+  vA: number;
+}
+
+/**
+ * LES RACHATS DU JOUR 1, ET L'ENCHÈRE.
+ *
+ * Chaque offre est d'abord jugée seule (tour, cible, prix maximum, trésorerie,
+ * plafond de la banque, découvert, contrôle). Puis, cible par cible, la plus
+ * haute offre recevable l'emporte, au prix demandé par le vendeur ; deux plus
+ * hautes offres égales, et personne ne l'emporte. Les autres ne paient rien et
+ * leur résultat dit pourquoi. Les rachats gagnants se font dans l'ordre des
+ * acquéreurs ; chacun laisse au moins un concurrent sur le marché.
+ */
 export function executerLesRachats(args: {
   scenario: EngineScenarioConfig;
   roundIndex: number;
   companies: CompanyState[];
   decisions: Record<string, RoundDecisions>;
-  /** Valeur de chaque entreprise à l'ouverture (prix d'émission des actions). */
+  /** Valeur de chaque entreprise à l'ouverture (prix d'émission des actions remises). */
   ouverture: Map<string, ValeurDeLEntreprise>;
 }): RachatsDuTour {
   const { scenario, roundIndex } = args;
@@ -265,45 +296,40 @@ export function executerLesRachats(args: {
   const out: RachatsDuTour = { companies: args.companies, operations: {}, rapports: {} };
   if (!cfg) return out;
   const parId = new Map(args.companies.map((c) => [c.id, c]));
-  const prises = new Set<string>();
   const acquereurs = args.companies
     .filter((c) => args.decisions[c.id]?.rachat)
     .map((c) => c.id)
     .sort((a, b) => a.localeCompare(b));
+  const refuse = (idA: string, cible: string, motif: string) => {
+    out.rapports[idA] = { statut: "refuse", motif, cible, nom: parId.get(cible)?.name ?? cible };
+  };
 
+  // 1. Chaque offre, jugée seule.
+  const offres: Offre[] = [];
   for (const idA of acquereurs) {
     const d = args.decisions[idA]!.rachat!;
     const A = parId.get(idA)!;
     const T = parId.get(d.cible);
-    const nom = T?.name ?? d.cible;
-    const refuse = (motif: string) => {
-      out.rapports[idA] = { statut: "refuse", motif, cible: d.cible, nom };
-    };
     if (roundIndex < cfg.tourMin) {
-      refuse(`Un rachat se décide à partir du tour ${cfg.tourMin} : il faut des comptes pour fixer un prix.`);
+      refuse(idA, d.cible, `Un rachat se décide à partir du tour ${cfg.tourMin} : il faut des comptes pour fixer un prix.`);
       continue;
     }
     if (roundIndex >= scenario.roundsCount) {
-      refuse("Un rachat au dernier tour ne se jugerait sur rien.");
+      refuse(idA, d.cible, "Un rachat au dernier tour ne se jugerait sur rien.");
       continue;
     }
     if (!actif(A) || !A.groupe) {
-      refuse("Une entreprise en défaillance ne rachète pas.");
+      refuse(idA, d.cible, "Une entreprise en défaillance ne rachète pas.");
       continue;
     }
-    if (!T || T.id === A.id || T.controller !== "bot" || T.status === "absorbee" || prises.has(T.id) || !T.groupe) {
-      refuse("Cette entreprise n'est pas à vendre.");
-      continue;
-    }
-    const restants = args.companies.filter((c) => c.id !== A.id && c.id !== T.id && actif(c) && !prises.has(c.id));
-    if (restants.length === 0) {
-      refuse("Il doit rester au moins un concurrent sur le marché.");
+    if (!T || T.id === A.id || T.controller !== "bot" || T.status === "absorbee" || !T.groupe) {
+      refuse(idA, d.cible, "Cette entreprise n'est pas à vendre.");
       continue;
     }
     const valeurs = prixDeCession(T, scenario);
     const prix = valeurs.prix;
     if (prix > d.prixMaximum + 1e-6) {
-      refuse(`Le vendeur demande ${Math.round(prix)} €, au-delà de votre prix maximum.`);
+      refuse(idA, d.cible, `Le vendeur demande ${Math.round(prix)} €, au-delà de votre prix maximum.`);
       continue;
     }
     const vA = args.ouverture.get(A.id)?.valeurParAction ?? 0;
@@ -312,27 +338,34 @@ export function executerLesRachats(args: {
     const emprunt = paiement === "titres" ? 0 : Math.max(0, d.emprunt ?? 0);
     const augmentation = paiement === "titres" ? 0 : Math.max(0, d.augmentationDeCapital ?? 0);
     if ((titres > 0 || augmentation > 0) && vA <= 0) {
-      refuse("Vos actions ne valent rien : personne n'en achète.");
+      refuse(idA, d.cible, "Vos actions ne valent rien : personne n'en achète.");
       continue;
     }
-    const actionsEmises =
-      (titres > 0 ? titres / vA : 0) + (augmentation > 0 ? augmentation / (vA * (1 - cfg.decoteDEmission)) : 0);
+    // Le contrôle se juge à la valeur d'ouverture : actions remises, et ce que
+    // les investisseurs entrants détiendraient à ce prix.
+    const actionsEmises = titres > 0 ? titres / vA : 0;
+    const apport = augmentation > 0 ? augmentation / (1 - cfg.decoteDEmission) : 0;
     const g = A.groupe;
     const actionsInitiales = scenario.groupe!.valorisation.actionsInitiales;
-    if (actionsInitiales / (g.actions + actionsEmises) < cfg.seuilDeControle - 1e-9) {
-      refuse("Vous émettriez tant d'actions que vous perdriez le contrôle de l'entreprise.");
+    const equivalent = actionsEmises + ((g.apports ?? 0) + apport) / vA;
+    if (actionsInitiales / (g.actions + equivalent) < cfg.seuilDeControle - 1e-9) {
+      refuse(idA, d.cible, "Vous émettriez tant d'actions que vous perdriez le contrôle de l'entreprise.");
       continue;
     }
     const numeraire = Math.max(0, prix - titres - emprunt - augmentation);
     if (numeraire > Math.max(0, A.finance.cash) + 0.005) {
-      refuse("Votre trésorerie ne couvre pas la part du prix que ni l'emprunt ni les investisseurs ne financent.");
+      refuse(idA, d.cible, "Votre trésorerie ne couvre pas la part du prix que ni l'emprunt ni les investisseurs ne financent.");
       continue;
     }
     const ratioMax = scenario.finance.maxDebtToEquity;
     if (ratioMax !== undefined && emprunt > 0) {
       const plafond = ratioMax * (A.finance.equity + augmentation + titres) - (A.finance.financialDebt + T.finance.financialDebt);
       if (emprunt > plafond + 0.005) {
-        refuse(`La banque ne prête pas plus de ${Math.max(0, Math.round(plafond))} € pour ce rachat : la dette dépasserait ${ratioMax} fois les capitaux propres.`);
+        refuse(
+          idA,
+          d.cible,
+          `La banque ne prête pas plus de ${Math.max(0, Math.round(plafond))} € pour ce rachat : la dette dépasserait ${ratioMax} fois les capitaux propres.`,
+        );
         continue;
       }
     }
@@ -347,25 +380,46 @@ export function executerLesRachats(args: {
     const netApres =
       A.finance.cash - A.finance.overdraft + (T.finance.cash - T.finance.overdraft) + emprunt + augmentation - (prix - titres);
     if (netApres < -limite - 0.005) {
-      refuse("Après le rachat, votre découvert dépasserait ce que la banque autorise : empruntez de quoi le couvrir.");
+      refuse(idA, d.cible, "Après le rachat, votre découvert dépasserait ce que la banque autorise : empruntez de quoi le couvrir.");
       continue;
     }
+    offres.push({ idA, A, T, d, valeurs, paiement, titres, emprunt, augmentation, numeraire, actionsEmises, apport, vA });
+  }
 
+  // 2. L'enchère : cible par cible, la plus haute offre l'emporte ; à égalité, personne.
+  const gagnantes: Offre[] = [];
+  const parCible = new Map<string, Offre[]>();
+  for (const o of offres) parCible.set(o.T.id, [...(parCible.get(o.T.id) ?? []), o]);
+  for (const [, lot] of parCible) {
+    const haute = Math.max(...lot.map((o) => o.d.prixMaximum));
+    const enTete = lot.filter((o) => o.d.prixMaximum === haute);
+    for (const o of lot) {
+      if (enTete.length > 1 && o.d.prixMaximum === haute) {
+        refuse(o.idA, o.T.id, "Deux acquéreurs ont fait la même offre : le vendeur n'a cédé à aucun.");
+      } else if (o.d.prixMaximum < haute) {
+        refuse(o.idA, o.T.id, "Un autre acquéreur a fait une meilleure offre.");
+      }
+    }
+    if (enTete.length === 1) gagnantes.push(enTete[0]!);
+  }
+
+  // 3. Les rachats gagnants, dans l'ordre des acquéreurs.
+  const prises = new Set<string>();
+  for (const o of gagnantes.sort((a, b) => a.idA.localeCompare(b.idA))) {
+    const { A, T, valeurs, paiement, titres, emprunt, augmentation, numeraire, actionsEmises, apport, vA } = o;
+    const restants = args.companies.filter(
+      (c) => c.id !== A.id && c.id !== T.id && actif(c) && !prises.has(c.id),
+    );
+    if (restants.length === 0) {
+      refuse(o.idA, T.id, "Il doit rester au moins un concurrent sur le marché.");
+      continue;
+    }
+    const prix = valeurs.prix;
     const ecart = prix - T.finance.equity;
-    const fusionne = fusionner({
-      A,
-      T,
-      scenario,
-      roundIndex,
-      prix,
-      ecart,
-      emprunt,
-      augmentation,
-      titres,
-      actionsEmises,
-      paiement,
-    });
-    parId.set(A.id, fusionne);
+    parId.set(
+      A.id,
+      fusionner({ A, T, scenario, roundIndex, prix, ecart, emprunt, augmentation, titres, actionsEmises, apport, paiement }),
+    );
     parId.set(T.id, absorbee(T, A.id, roundIndex));
     prises.add(T.id);
     const synergie = (cfg.synergieDeStructure ?? 0) * scenario.fixedCostsPerRound;
@@ -397,7 +451,17 @@ export function executerLesRachats(args: {
         titres,
         actionsEmises,
         ...(paiement === "titres"
-          ? { parite: (valoriser({ groupe: T.groupe, finance: T.finance, roundDays: scenario.roundDays, multiple: scenario.groupe!.valorisation.multipleEBE }).valeurCapitauxPropres / Math.max(1, T.groupe.actions)) / vA }
+          ? {
+              parite:
+                valoriser({
+                  groupe: T.groupe!,
+                  finance: T.finance,
+                  roundDays: scenario.roundDays,
+                  multiple: scenario.groupe!.valorisation.multipleEBE,
+                }).valeurCapitauxPropres /
+                Math.max(1, T.groupe!.actions) /
+                vA,
+            }
           : {}),
       },
       frais,

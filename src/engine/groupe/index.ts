@@ -145,12 +145,10 @@ export function simulerLeGroupe(
     for (const c of sortie.companies) {
       if (!c.groupe) continue;
       const r = results[c.id]!;
-      const v0 = ouverture.get(c.id)?.valeurParAction ?? 0;
       const g = c.groupe;
-      // Actions émises par l'augmentation de capital ordinaire : au prix d'ouverture.
+      // L'augmentation de capital ordinaire : un apport, converti à la valeur de fin de partie.
       const apport = flux(r, "augmentation_capital");
-      const emises = apport > 0 && v0 > 0 ? apport / v0 : 0;
-      const actions = g.actions + emises;
+      const actions = g.actions;
       const dividendes = -flux(r, "dividendes_verses");
       const dernier = roundIndex >= scenario.roundsCount;
       const ebe = r.incomeStatement.ebitda;
@@ -158,18 +156,22 @@ export function simulerLeGroupe(
       const groupe = {
         ...g,
         actions,
+        ...(apport > 0 || g.apports !== undefined ? { apports: (g.apports ?? 0) + apport } : {}),
         dividendesParAction: g.dividendesParAction + (dividendes > 0 && actions > 0 ? dividendes / actions : 0),
         ebe: [...g.ebe, ebe],
         discretionnaires: [...g.discretionnaires, disc],
       };
       const economie = dernier ? economieDeFinDePartie(disc, g.discretionnaires) : 0;
+      // Au dernier tour, la caisse d'une cession de machines ne se compte pas
+      // comme de la valeur : l'outil vendu aurait servi ensuite.
+      const cession = dernier ? (r.investment?.saleProceeds ?? 0) : 0;
       const pourLaValeur = economie > 0 ? { ...groupe, ebe: [...g.ebe, ebe - economie] } : groupe;
       const valeur = valoriser({
         groupe: pourLaValeur,
         finance: r.balanceSheet,
         roundDays: scenario.roundDays,
         multiple,
-        ...(economie > 0 ? { detteEnPlus: economie } : {}),
+        ...(economie + cession > 0 ? { detteEnPlus: economie + cession } : {}),
       });
       suivants.set(c.id, { ...c, groupe });
       results[c.id] = {
