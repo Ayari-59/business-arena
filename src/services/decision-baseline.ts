@@ -150,10 +150,11 @@ function sansCommunication(d: RoundDecisions): RoundDecisions {
 }
 
 function sansRd(d: RoundDecisions): RoundDecisions {
-  if (d.rdBudget === undefined) return d;
+  const rdParReference = Object.values(d.products ?? {}).some((p) => p.rdBudget !== undefined);
+  if (d.rdBudget === undefined && !rdParReference) return d;
   return {
     ...d,
-    rdBudget: 0,
+    ...(d.rdBudget !== undefined ? { rdBudget: 0 } : {}),
     ...(d.products
       ? {
           products: Object.fromEntries(
@@ -167,7 +168,50 @@ function sansRd(d: RoundDecisions): RoundDecisions {
   };
 }
 
-/** Les valeurs proposées pour ce tour : le tour précédent, sinon le départ. */
+/**
+ * LA PROPOSITION NE RECONDUIT PAS UNE DÉPENSE PONCTUELLE.
+ *
+ * Une dépense ponctuelle vaut pour SON tour : la R&D qui lance une référence
+ * (25 000 € pour la Studio, une fois), une étude, une machine, une embauche,
+ * une formation, un emprunt, un apport, un dividende, un escompte, un
+ * placement, une action qualité, un programme R&D, l'engagement RSE, une
+ * commande exceptionnelle acceptée. Reprise d'un tour sur l'autre, elle se
+ * paierait à chaque tour sans que personne ne l'ait redécidée : une équipe qui
+ * finançait la Studio une fois, puis validait, la refinançait à chaque tour
+ * et finissait en défaillance (12 parties sur 12).
+ *
+ * Ce qui reste : les choix qui durent (prix, plan, budgets marketing, qualité
+ * et entretien, fournisseur, assurance, politique salariale, axe de
+ * communication). Le formulaire ne reprenait déjà aucune de ces dépenses, sauf
+ * la R&D et l'acceptation de la commande : elles sont retirées ici, pour les
+ * deux, le serveur et le formulaire lisant la même proposition.
+ */
+export function sansDepensesPonctuelles(d: RoundDecisions): RoundDecisions {
+  const {
+    hr,
+    investment: _investissement,
+    finance: _financement,
+    treasury: _tresorerie,
+    acceptOrder: _commande,
+    studies: _etudes,
+    qualityActions: _actionsQualite,
+    startedRdActionIds: _programmesRd,
+    stoppedModuleItems: _arrets,
+    rse: _rse,
+    salesEstimate: _ventesEstimees,
+    ...durables
+  } = d;
+  void [_investissement, _financement, _tresorerie, _commande, _etudes, _actionsQualite, _programmesRd, _arrets, _rse, _ventesEstimees];
+  return sansRd({
+    ...durables,
+    ...(hr?.salaryIndex !== undefined ? { hr: { salaryIndex: hr.salaryIndex } } : {}),
+  });
+}
+
+/**
+ * Les valeurs proposées pour ce tour : le tour précédent, sans ses dépenses
+ * ponctuelles (`sansDepensesPonctuelles`), sinon le départ.
+ */
 export function proposedDecisionsFor(args: {
   snapshot: EngineScenarioConfig;
   state: CompanyState | undefined;
@@ -176,6 +220,6 @@ export function proposedDecisionsFor(args: {
   leviers?: LeviersOuverts | null;
 }): RoundDecisions {
   return args.previousPayload
-    ? auPas(args.previousPayload)
+    ? auPas(sansDepensesPonctuelles(args.previousPayload))
     : startingDecisionsFor(args.snapshot, args.state, args.roundIndex, args.leviers ?? null);
 }
