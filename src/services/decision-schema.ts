@@ -40,7 +40,10 @@ const identifiants = z.array(identifiant).max(MODULES_MAX).optional();
 const PLAFOND_DU_RACHAT = 50_000_000;
 
 /** Une cible de rachat ou d'audit (niveau 7) : son type et son identifiant. */
-const cibleDeRachat = z.object({ type: z.enum(["site_ferme", "fournisseur"]), id: identifiant });
+const cibleDeRachat = z.object({ type: z.enum(["site_ferme", "fournisseur", "etranger"]), id: identifiant });
+
+/** Des unités par référence, par filiale (niveau 7). */
+const unitesParFiliale = z.record(identifiant, z.record(z.string().min(1), z.coerce.number().min(0).max(VOLUME_MAX))).optional();
 
 export const roundDecisionsSchema = z.object({
   price: z.coerce.number().min(1).max(PRIX_MAX),
@@ -183,9 +186,12 @@ export const roundDecisionsSchema = z.object({
       paiement: z.enum(["numeraire", "titres"]),
       emprunt: z.coerce.number().min(0).max(PLAFOND_DU_RACHAT).optional(),
       augmentationDeCapital: z.coerce.number().min(0).max(PLAFOND_DU_RACHAT).optional(),
+      part: z.coerce.number().positive().max(1).optional(),
     })
     .optional(),
   diligence: cibleDeRachat.optional(),
+  reseauEtranger: unitesParFiliale,
+  fabricationEtrangere: unitesParFiliale,
   sousTraitance: z.record(z.string().min(1), z.coerce.number().min(0).max(VOLUME_MAX)).optional(),
   /** Ce que l'équipe arrête ce tour ; ce qui peut s'arrêter est jugé par `refusDesModules`. */
   stoppedModuleItems: z

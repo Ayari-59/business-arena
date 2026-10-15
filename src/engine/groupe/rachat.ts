@@ -1,7 +1,9 @@
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "../types";
 import { conditionsBancaires, confianceServie } from "../finance/bank";
 import { etatDuSite, siteAcquis } from "./site-ferme";
-import { chiffresDuFournisseur, comptesDuFournisseur, leFournisseur, prixDuFournisseur } from "./fournisseur";
+import { leFournisseur } from "./fournisseur";
+import { laCibleEtrangere } from "./etranger";
+import { laSociete, prixDeLaSociete } from "./societe";
 import type {
   CibleDeRachat,
   OperationDOuverture,
@@ -27,7 +29,8 @@ import type {
  *
  * Deux sortes de cibles : un site à l'arrêt, racheté par ses ACTIFS
  * (`site-ferme.ts`), payé en numéraire ; une société, rachetée par ses TITRES
- * (un fournisseur, `fournisseur.ts`), payable aussi en actions de l'acquéreur
+ * (un fournisseur, `fournisseur.ts` ; une entreprise étrangère, `etranger.ts`,
+ * en tout ou en partie), payable aussi en actions de l'acquéreur
  * (la fusion : ses vendeurs reçoivent des actions à la valeur d'ouverture),
  * et consolidée ensuite (`consolidation.ts`).
  *
@@ -48,6 +51,7 @@ function leSite(scenario: EngineScenarioConfig, c: CibleDeRachat | undefined): S
 function nomDeLaCible(scenario: EngineScenarioConfig, c: CibleDeRachat | undefined): string | undefined {
   if (c?.type === "site_ferme") return leSite(scenario, c)?.nom;
   if (c?.type === "fournisseur") return leFournisseur(scenario, c.id)?.nom;
+  if (c?.type === "etranger") return laCibleEtrangere(scenario, c.id)?.nom;
   return undefined;
 }
 
@@ -73,6 +77,7 @@ interface Offre {
   nom: string;
   d: NonNullable<RoundDecisions["rachat"]>;
   prix: number;
+  part: number;
   valeurs?: PrixDeCession;
   titres: number;
   actionsEmises: number;
@@ -155,7 +160,14 @@ export function executerLesRachats(args: {
       refuse(idA, d.cible, nom, "Un liquidateur ne prend pas d'actions : un site se paie en numéraire.");
       continue;
     }
-    const valeurs = d.cible.type === "fournisseur" ? prixDuFournisseur(scenario, args.companies, d.cible.id)! : undefined;
+    // Une part d'entreprise étrangère : parmi celles qu'elle propose.
+    const part = d.cible.type === "etranger" ? (d.part ?? 1) : 1;
+    if (d.cible.type === "etranger" && !laCibleEtrangere(scenario, d.cible.id)!.parts.some((p) => Math.abs(p - part) < 1e-9)) {
+      refuse(idA, d.cible, nom, "Cette part n'est pas à vendre.");
+      continue;
+    }
+    const societe = d.cible.type === "site_ferme" ? null : laSociete(scenario, args.companies, args.graine, d.cible.type, d.cible.id, roundIndex - 1)!;
+    const valeurs = societe ? prixDeLaSociete(scenario, societe, part) : undefined;
     const prix = valeurs ? valeurs.prix : leSite(scenario, d.cible)!.prix;
     if (prix > d.prixMaximum + 1e-6) {
       refuse(idA, d.cible, nom, `Le vendeur demande ${Math.round(prix)} €, au-delà de votre prix maximum.`);
@@ -211,7 +223,7 @@ export function executerLesRachats(args: {
       refuse(idA, d.cible, nom, "Après le rachat, votre découvert dépasserait ce que la banque autorise : empruntez de quoi le couvrir.");
       continue;
     }
-    offres.push({ idA, cible: d.cible, nom, d, prix, ...(valeurs ? { valeurs } : {}), titres, actionsEmises, emprunt, augmentation, numeraire });
+    offres.push({ idA, cible: d.cible, nom, d, prix, part, ...(valeurs ? { valeurs } : {}), titres, actionsEmises, emprunt, augmentation, numeraire });
   }
 
   // 2. L'enchère : cible par cible, la plus haute offre l'emporte ; à égalité, personne.
@@ -302,15 +314,17 @@ export function executerLesRachats(args: {
     // Un rachat de titres : les titres de participation au bilan de
     // l'acquéreur, la société consolidée à la clôture. Son historique d'EBE
     // s'ajoute à celui de l'acquéreur, tour par tour (pro forma).
-    const f = leFournisseur(scenario, o.cible.id)!;
-    const comptes = comptesDuFournisseur(f, chiffresDuFournisseur(args.companies, f.code), scenario.finance.taxRate);
-    const capitaux = comptes[comptes.length - 1]!.capitauxPropres;
-    const ebeCible = comptes.slice(1).map((c) => c.ebe);
+    const type = o.cible.type as "fournisseur" | "etranger";
+    const soc = laSociete(scenario, args.companies, args.graine, type, o.cible.id, roundIndex - 1)!;
+    const capitaux = soc.comptes[soc.comptes.length - 1]!.capitauxPropres;
+    const cours = soc.cours[soc.cours.length - 1]!;
+    // Intégration globale : tout son EBE entre au groupe, la part des autres en sort par la valeur.
+    const ebeCible = soc.ebeEuros;
     const g = A.groupe!;
     const n = Math.max(g.ebe.length, ebeCible.length);
     const proForma = Array.from({ length: n }, (_, i) => (g.ebe[g.ebe.length - n + i] ?? 0) + (ebeCible[ebeCible.length - n + i] ?? 0));
     const net = A.finance.cash - A.finance.overdraft + o.emprunt + o.augmentation - (o.prix - o.titres);
-    const ecart = o.prix - capitaux;
+    const ecart = o.prix - o.part * capitaux * cours;
     parId.set(A.id, {
       ...A,
       finance: {
@@ -329,15 +343,16 @@ export function executerLesRachats(args: {
         filiales: [
           ...g.filiales,
           {
-            type: "fournisseur",
-            id: f.code,
-            nom: f.nom,
+            type,
+            id: o.cible.id,
+            nom: soc.nom,
             tour: roundIndex,
-            part: 1,
+            part: o.part,
             prixPaye: o.prix,
             ecart,
             depreciation: 0,
             capitauxPropresDAcquisition: capitaux,
+            coursDAcquisition: cours,
             clientsPartis: [],
             rationnes: [],
           },

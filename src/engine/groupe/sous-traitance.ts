@@ -41,6 +41,8 @@ export interface CommandeDuTour {
   /** Coût de la commande, par référence. */
   couts: number[];
   total: number;
+  /** Qualité des unités livrées, par référence (absente : celle du sous-traitant). */
+  qualites?: number[];
 }
 
 /**
@@ -62,4 +64,28 @@ export function commandeDuTour(
   if (unites.every((u) => u <= 0)) return null;
   const couts = codes.map((c, k) => (unites[k]! > 0 ? coutAuBareme(unites[k]!, cfg[c]!.tranches) : 0));
   return { unites, couts, total: couts.reduce((s, x) => s + x, 0) };
+}
+
+/**
+ * Deux commandes de produits finis du même tour (le sous-traitant, une
+ * filiale étrangère qui fabrique) n'en font qu'une pour le stock : unités et
+ * coûts s'additionnent, la qualité se pondère par les unités.
+ */
+export function fusionnerLesCommandes(
+  a: CommandeDuTour | null,
+  b: (CommandeDuTour & { qualite?: number }) | null,
+  qualiteDeA: (k: number) => number = () => 1,
+): CommandeDuTour | null {
+  if (!b) return a;
+  const qb = (k: number) => b.qualites?.[k] ?? b.qualite ?? 1;
+  if (!a) return { unites: b.unites, couts: b.couts, total: b.total, qualites: b.unites.map((_, k) => qb(k)) };
+  const unites = a.unites.map((u, k) => u + (b.unites[k] ?? 0));
+  return {
+    unites,
+    couts: a.couts.map((c, k) => c + (b.couts[k] ?? 0)),
+    total: a.total + b.total,
+    qualites: unites.map((u, k) =>
+      u > 0 ? ((a.qualites?.[k] ?? qualiteDeA(k)) * a.unites[k]! + qb(k) * (b.unites[k] ?? 0)) / u : 1,
+    ),
+  };
 }

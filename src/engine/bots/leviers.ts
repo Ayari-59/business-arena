@@ -61,6 +61,8 @@ export function aLaMesureDuNiveau(
   if (!ouverts.croissanceExterne) {
     delete out.rachat;
     delete out.diligence;
+    delete out.reseauEtranger;
+    delete out.fabricationEtrangere;
   }
   if (!ouverts.externalisation) delete out.sousTraitance;
   if (!ouverts.creances) delete out.treasury;

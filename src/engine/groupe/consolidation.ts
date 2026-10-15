@@ -1,6 +1,7 @@
 import type { BalanceSheet, CompanyRoundResult, CompanyState, EngineScenarioConfig } from "../types";
 import { toGamme } from "../gamme";
-import { chiffresDuFournisseur, comptesDuFournisseur, ebeDeReference, leFournisseur, valeurDUneSociete } from "./fournisseur";
+import { leFournisseur } from "./fournisseur";
+import { laSociete, valeurDeLaSociete } from "./societe";
 import type { Consolidation, Filiale } from "./types";
 
 /**
@@ -19,7 +20,10 @@ import type { Consolidation, Filiale } from "./types";
  *     qui dort encore dans le stock de produits finis est retirée du stock et
  *     du résultat, jusqu'à ce qu'il se vende ;
  *   - attribue aux autres actionnaires d'une filiale leur part de ses
- *     capitaux propres (intérêts minoritaires) et de son résultat.
+ *     capitaux propres (intérêts minoritaires) et de son résultat ;
+ *   - convertit une filiale étrangère : bilan au cours de clôture, compte de
+ *     résultat au cours moyen du tour, la différence en écart de conversion
+ *     dans les capitaux propres.
  *
  * Bilan consolidé : actif = capitaux propres du groupe + intérêts
  * minoritaires + dettes, au centime (`ecartDuBilanConsolide`).
@@ -65,10 +69,11 @@ export function consolider(args: {
   resultat: CompanyRoundResult;
   /** Toutes les entreprises, achats du tour compris : le chiffre d'affaires des fournisseurs. */
   companies: readonly CompanyState[];
+  graine: number;
+  roundIndex: number;
 }): ConsolidationDuTour {
-  const { scenario, etat, resultat: r } = args;
+  const { scenario, etat, resultat: r, roundIndex } = args;
   const g = etat.groupe!;
-  const multiple = scenario.groupe!.valorisation.multipleEBE;
   const b = r.balanceSheet;
   const marge = margeEnStock(scenario, r, g.filiales);
   const variationDeMarge = marge - (g.margeEnStock ?? 0);
@@ -88,45 +93,56 @@ export function consolider(args: {
   let depreciations = 0;
   let partDesMinoritaires = 0;
   let ventesInternes = 0;
+  let ecartDeConversion = 0;
   const detail: Consolidation["filiales"] = [];
+  const prime = scenario.groupe!.rachat?.primeDeControle ?? 0;
   const filiales = g.filiales.map((fil) => {
-    const f = leFournisseur(scenario, fil.id)!;
-    const comptes = comptesDuFournisseur(f, chiffresDuFournisseur(args.companies, f.code), scenario.finance.taxRate);
-    const c = comptes[comptes.length - 1]!;
-    const valeur = valeurDUneSociete({
-      comptes,
-      ebe: comptes.slice(1).map((x) => x.ebe),
-      cours: 1,
-      coursDeDepart: 1,
-      multiple,
-      roundDays: scenario.roundDays,
-      ebeReference: ebeDeReference(f),
-    }).valeur;
+    const soc = laSociete(scenario, args.companies, args.graine, fil.type, fil.id, roundIndex)!;
+    const c = soc.comptes[soc.comptes.length - 1]!;
+    const rc = soc.cours[roundIndex]!;
+    const rm = (soc.cours[roundIndex - 1]! + rc) / 2;
+    const valeur = valeurDeLaSociete(scenario, soc);
     // Le test de dépréciation : ce qu'un acheteur paierait aujourd'hui la part
     // du groupe (sa valeur, prime de contrôle comprise, comme au rachat)
     // couvre-t-il la part des capitaux propres et l'écart qui reste ?
     const reste = fil.ecart - fil.depreciation;
-    const porte = fil.part * c.capitauxPropres + reste;
-    const recouvrable = fil.part * valeur * (1 + (scenario.groupe!.rachat?.primeDeControle ?? 0));
-    const depreciation = Math.min(reste, Math.max(0, porte - recouvrable));
+    const porte = fil.part * c.capitauxPropres * rc + reste;
+    const depreciation = Math.min(reste, Math.max(0, porte - fil.part * valeur * (1 + prime)));
     titres += fil.prixPaye;
-    immobilisations += c.immobilisations;
-    bfr += c.bfr;
-    tresorerie += Math.max(0, c.tresorerie);
-    decouvert += Math.max(0, -c.tresorerie);
-    dettes += c.dette;
-    variationDesCapitaux += fil.part * (c.capitauxPropres - fil.capitauxPropresDAcquisition) - (fil.depreciation + depreciation);
+    immobilisations += c.immobilisations * rc;
+    bfr += c.bfr * rc;
+    tresorerie += Math.max(0, c.tresorerie) * rc;
+    decouvert += Math.max(0, -c.tresorerie) * rc;
+    dettes += c.dette * rc;
+    variationDesCapitaux +=
+      fil.part * (c.capitauxPropres * rc - fil.capitauxPropresDAcquisition * fil.coursDAcquisition) - (fil.depreciation + depreciation);
+    // L'écart de conversion : ce que les capitaux propres ont gagné au cours de
+    // clôture, au-delà des résultats convertis au cours moyen de chaque tour.
+    const resultatsConvertis = soc.comptes
+      .slice(fil.tour, roundIndex + 1)
+      .reduce((x, k, i) => x + k.resultat * (soc.cours[fil.tour + i - 1]! + soc.cours[fil.tour + i]!) / 2, 0);
+    ecartDeConversion +=
+      fil.part * (c.capitauxPropres * rc - fil.capitauxPropresDAcquisition * fil.coursDAcquisition - resultatsConvertis);
     ecartNet += reste - depreciation;
-    minoritaires += (1 - fil.part) * c.capitauxPropres;
+    minoritaires += (1 - fil.part) * c.capitauxPropres * rc;
     valeurDesMinoritaires += (1 - fil.part) * valeur;
-    const interne = r.groupe?.achats?.[f.code] ?? 0;
+    const interne = fil.type === "fournisseur" ? (r.groupe?.achats?.[fil.id] ?? 0) : 0;
     ventesInternes += interne;
-    ca += c.chiffreDAffaires - interne;
-    ebe += c.ebe;
-    resultat += c.resultat;
+    ca += c.chiffreDAffaires * rm - interne;
+    ebe += c.ebe * rm;
+    resultat += c.resultat * rm;
     depreciations += depreciation;
-    partDesMinoritaires += (1 - fil.part) * c.resultat;
-    detail.push({ id: fil.id, nom: fil.nom, part: fil.part, comptes: c, valeur, ecart: reste - depreciation, depreciationDuTour: depreciation });
+    partDesMinoritaires += (1 - fil.part) * c.resultat * rm;
+    detail.push({
+      id: fil.id,
+      nom: fil.nom,
+      part: fil.part,
+      comptes: c,
+      cours: { cloture: rc, moyen: rm },
+      valeur,
+      ecart: reste - depreciation,
+      depreciationDuTour: depreciation,
+    });
     return { ...fil, depreciation: fil.depreciation + depreciation };
   });
   const bilan: BalanceSheet = {
@@ -150,6 +166,7 @@ export function consolider(args: {
       resultatNet: r.incomeStatement.netIncome + resultat - depreciations - variationDeMarge,
       partDesMinoritaires,
       eliminations: { ventesInternes, margeEnStock: marge },
+      ecartDeConversion,
       filiales: detail,
     },
     ebe: ebeConsolide,

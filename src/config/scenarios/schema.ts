@@ -389,6 +389,36 @@ export const engineScenarioConfigSchema = z.object({
           }),
         )
         .optional(),
+      etrangers: z
+        .array(
+          z.object({
+            id: z.string().min(1),
+            nom: z.string().min(1),
+            pays: z.string().min(1),
+            devise: z.string().min(1),
+            recit: z.string(),
+            change: z.object({ coursInitial: z.number().positive(), volatilite: z.number().min(0) }),
+            ventes: z.object({ chiffreDAffaires: z.number().min(0), saisonnalite: z.array(z.number().min(0)), croissance: z.number() }),
+            tauxDeCoutVariable: z.number().min(0).max(1),
+            chargesFixesParTour: z.number().min(0),
+            immobilisations: z.number().min(0),
+            dureeDAmortissement: z.number().positive(),
+            bfr: z.number().min(0),
+            tresorerie: z.number(),
+            dette: z.number().min(0),
+            tauxDInteretParTour: z.number().min(0),
+            tauxDImpot: z.number().min(0).max(1),
+            risquePays: z.object({ probabilite: z.number().min(0).max(1), perteDeVentes: z.number().min(0).max(1) }).optional(),
+            parts: z.array(z.number().positive().max(1)).min(1),
+            reseau: z
+              .object({ capacite: z.number().min(0), prix: z.record(z.string().min(1), z.number().positive()), coutParUnite: z.number().min(0) })
+              .optional(),
+            fabrication: z
+              .object({ capacite: z.number().min(0), cout: z.record(z.string().min(1), z.number().positive()), qualite: z.number().positive() })
+              .optional(),
+          }),
+        )
+        .optional(),
       import: z
         .object({
           code: z.string().min(1),

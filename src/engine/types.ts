@@ -1477,6 +1477,13 @@ export interface RoundDecisions {
   rachat?: DecisionDeRachat;
   /** Niveau 7 : auditer une cible ce tour, pour décider en connaissance de cause au suivant. Action ponctuelle. */
   diligence?: CibleDeRachat;
+  /**
+   * Niveau 7 : unités à écouler ce tour par le réseau de chaque filiale
+   * étrangère (clé : son identifiant), par référence, prises sur le stock.
+   */
+  reseauEtranger?: Record<string, Record<ProductCode, number>>;
+  /** Niveau 7 : unités à faire fabriquer ce tour par chaque filiale étrangère, par référence, livrées finies. */
+  fabricationEtrangere?: Record<string, Record<ProductCode, number>>;
   /** Niveau 7 : produits finis commandés au sous-traitant, par référence. Reconduite comme le plan. */
   sousTraitance?: Record<ProductCode, number>;
 }
@@ -2113,6 +2120,18 @@ export interface SimulationInput {
    * `simulerLeGroupe`. Absent : tout est servi.
    */
   rationnementDuGroupe?: Record<CompanyId, Record<ProductCode, number>>;
+  /**
+   * Niveau 7 : les ventes demandées au réseau d'une filiale étrangère, par
+   * entreprise et par référence : unités, prix et coût de distribution par
+   * unité, en euros au cours moyen du tour. Posé par `simulerLeGroupe`.
+   */
+  ventesDuGroupe?: Record<CompanyId, Record<ProductCode, { quantite: number; prix: number; commission: number }>>;
+  /**
+   * Niveau 7 : les produits finis qu'une filiale étrangère fabrique pour
+   * l'entreprise, dans l'ordre de la gamme, au coût local converti. Posé par
+   * `simulerLeGroupe`.
+   */
+  fabricationDuGroupe?: Record<CompanyId, { unites: number[]; couts: number[]; total: number; qualite: number }>;
   /**
    * LE TOUR TEL QUE L'ÉQUIPE LE CROIT (résultat estimé, `engine/estimation`).
    *

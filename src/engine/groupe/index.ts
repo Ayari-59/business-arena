@@ -1,6 +1,8 @@
 import type { CompanyRoundResult, CompanyState, ProductCode, RoundDecisions, SimulationInput, SimulationOutput } from "../types";
 import { consolider } from "./consolidation";
 import { agrandir } from "./depart";
+import { laCibleEtrangere, trajectoireDeLEtranger } from "./etranger";
+import { toGamme } from "../gamme";
 import { PROFILS_QUI_PARTENT, commandesAuFournisseur, leFournisseur, quitterLeFournisseur } from "./fournisseur";
 import { executerLesRachats } from "./rachat";
 import { mettreEnRoute } from "./site-ferme";
@@ -8,12 +10,14 @@ import { economieDeFinDePartie, emettre, initialiserLeGroupe, valoriser } from "
 import type { ValeurDeLEntreprise } from "./types";
 
 export * from "./types";
-export { coutAuBareme, commandeDuTour, type CommandeDuTour } from "./sous-traitance";
+export { coutAuBareme, commandeDuTour, fusionnerLesCommandes, type CommandeDuTour } from "./sous-traitance";
 export { cleDeLaCible, dejaVendue } from "./rachat";
 export { chargesDesSites, cleDuSite, etatDuSite, siteAcquis, valeurRecouvrable } from "./site-ferme";
 export { fluxPropre } from "./flux-propre";
 export { agrandir } from "./depart";
 export { coursDeLImport, prixDeLImport, probabiliteDeRupture, ruptureDeLImport } from "./import";
+export { comptesDeLEtranger, coursMoyen, trajectoireDeLEtranger, ventesLocales } from "./etranger";
+export { laSociete, prixDeLaSociete, valeurDeLaSociete, type Societe } from "./societe";
 export {
   chiffresDuFournisseur,
   commandesAuFournisseur,
@@ -45,8 +49,10 @@ export {
  *   5. les concurrents simulés quittent le fournisseur racheté par un
  *      concurrent, et un fournisseur racheté rationne ses clients au-delà de sa
  *      capacité (`rationner`) ;
- *   6. le tour ordinaire se joue ;
- *   7. à la clôture, chaque entreprise note ses achats aux fournisseurs, se
+ *   6. les filiales étrangères écoulent par leur réseau et fabriquent ce que
+ *      l'équipe leur demande, au cours moyen du tour (`synergiesEtrangeres`) ;
+ *   7. le tour ordinaire se joue ;
+ *   8. à la clôture, chaque entreprise note ses achats aux fournisseurs, se
  *      consolide avec ses filiales, allonge son historique d'EBE, émet les
  *      actions de ses apports du tour, compte ses dividendes par action, et
  *      dit sa valeur.
@@ -98,16 +104,21 @@ export function simulerLeGroupe(
   const fournisseurs = cfg?.fournisseurs && !input.estimation ? rationner(input, companies) : null;
   if (fournisseurs) companies = fournisseurs.companies;
 
-  // 6. Le tour ordinaire.
+  // 6. Les synergies des filiales étrangères : vendre par leur réseau, faire fabriquer chez elles.
+  const synergies = cfg?.etrangers && !input.estimation ? synergiesEtrangeres(input, companies) : null;
+
+  // 7. Le tour ordinaire.
   const sortie = simulerLeTour({
     ...input,
     companies,
+    ...(synergies && Object.keys(synergies.ventes).length > 0 ? { ventesDuGroupe: synergies.ventes } : {}),
+    ...(synergies && Object.keys(synergies.fabrication).length > 0 ? { fabricationDuGroupe: synergies.fabrication } : {}),
     ...(fournisseurs ? { decisions: fournisseurs.decisions } : {}),
     ...(rachats && Object.keys(rachats.operations).length > 0 ? { operationsDeGroupe: rachats.operations } : {}),
     ...(fournisseurs && Object.keys(fournisseurs.rationnement).length > 0 ? { rationnementDuGroupe: fournisseurs.rationnement } : {}),
   });
 
-  // 7. Clôture de groupe. D'abord les achats du tour aux fournisseurs
+  // 8. Clôture de groupe. D'abord les achats du tour aux fournisseurs
   // rachetables : leur chiffre d'affaires, que la consolidation lit.
   const results: Record<string, CompanyRoundResult> = { ...sortie.results };
   const codes = (cfg?.fournisseurs ?? []).map((f) => f.code);
@@ -142,7 +153,7 @@ export function simulerLeGroupe(
           ? { ...c0, groupe: { ...c0.groupe, filiales: c0.groupe.filiales.map((f) => ({ ...f, rationnes: [] })) } }
           : c0;
       const g0 = c.groupe!;
-      const conso = g0.filiales.length > 0 ? consolider({ scenario, etat: c, resultat: r, companies: cloturees }) : null;
+      const conso = g0.filiales.length > 0 ? consolider({ scenario, etat: c, resultat: r, companies: cloturees, graine: input.seed, roundIndex }) : null;
       const g = conso ? { ...g0, filiales: conso.filiales, margeEnStock: conso.margeEnStock } : g0;
       const actions = g.actions;
       const dividendes = -flux(r, "dividendes_verses");
@@ -204,6 +215,7 @@ export function simulerLeGroupe(
           ...(rachats?.rapports[c.id] ? { rachat: rachats.rapports[c.id] } : {}),
           ...(rachats?.diligences[c.id] ? { diligence: rachats.diligences[c.id] } : {}),
           ...(conso ? { consolide: conso.consolide } : {}),
+          ...(synergies?.rapports[c.id] ? { fabrication: synergies.rapports[c.id] } : {}),
         },
       };
     }
@@ -294,4 +306,88 @@ function rationner(
 function premiereOuverture(c: CompanyState, cfg: NonNullable<SimulationInput["scenario"]["groupe"]>, roundDays: number): CompanyState {
   const grande = agrandir(c, cfg.depart?.facteur ?? 1);
   return { ...grande, groupe: initialiserLeGroupe(grande, cfg, roundDays) };
+}
+
+/**
+ * LES SYNERGIES DES FILIALES ÉTRANGÈRES, AU JOUR 1. Pour chaque filiale
+ * étrangère d'une entreprise : les unités qu'elle demande à son réseau
+ * (bornées à sa capacité, réparties au prorata si elles la dépassent), au
+ * prix local et au coût de distribution convertis au cours moyen du tour ;
+ * les unités qu'elle lui fait fabriquer (bornées à la capacité de son usine),
+ * au coût local converti. Au tour du rachat, la moitié de chaque capacité :
+ * l'intégration se fait progressivement.
+ */
+function synergiesEtrangeres(
+  input: SimulationInput,
+  companies: CompanyState[],
+): {
+  ventes: Record<string, Record<ProductCode, { quantite: number; prix: number; commission: number }>>;
+  fabrication: Record<string, { unites: number[]; couts: number[]; total: number; qualite: number }>;
+  rapports: Record<string, Record<ProductCode, { unites: number; cout: number }>>;
+} {
+  const { scenario, roundIndex } = input;
+  const codes = toGamme(scenario).map((p) => p.code);
+  const ventes: Record<string, Record<ProductCode, { quantite: number; prix: number; commission: number }>> = {};
+  const fabrication: Record<string, { unites: number[]; couts: number[]; total: number; qualite: number }> = {};
+  const rapports: Record<string, Record<ProductCode, { unites: number; cout: number }>> = {};
+  const borner = (demande: Record<ProductCode, number>, capacite: number) => {
+    const propres = Object.fromEntries(Object.entries(demande).map(([k, q]) => [k, Number.isFinite(Number(q)) ? Math.max(0, Number(q)) : 0]));
+    const total = Object.values(propres).reduce((a, b) => a + b, 0);
+    const k = total > capacite ? capacite / total : 1;
+    return Object.fromEntries(Object.entries(propres).map(([code, q]) => [code, q * k]));
+  };
+  for (const c of companies) {
+    const d = input.decisions[c.id];
+    if (!d || !c.groupe || c.status === "defaillant") continue;
+    for (const fil of c.groupe.filiales) {
+      if (fil.type !== "etranger") continue;
+      const cible = laCibleEtrangere(scenario, fil.id);
+      if (!cible) continue;
+      const { cours } = trajectoireDeLEtranger(cible, input.seed, roundIndex);
+      const moyen = (cours[roundIndex - 1]! + cours[roundIndex]!) / 2;
+      const montee = roundIndex === fil.tour ? 0.5 : 1;
+      const r = cible.reseau;
+      const demandeReseau = d.reseauEtranger?.[fil.id];
+      if (r && demandeReseau) {
+        const servi = borner(
+          Object.fromEntries(Object.entries(demandeReseau).filter(([k]) => r.prix[k] !== undefined)),
+          r.capacite * montee,
+        );
+        for (const [code, q] of Object.entries(servi)) {
+          if (q <= 0) continue;
+          const prec = ventes[c.id]?.[code];
+          const quantite = (prec?.quantite ?? 0) + q;
+          ventes[c.id] = {
+            ...(ventes[c.id] ?? {}),
+            [code]: {
+              quantite,
+              prix: ((prec?.prix ?? 0) * (prec?.quantite ?? 0) + r.prix[code]! * moyen * q) / quantite,
+              commission: ((prec?.commission ?? 0) * (prec?.quantite ?? 0) + r.coutParUnite * moyen * q) / quantite,
+            },
+          };
+        }
+      }
+      const f = cible.fabrication;
+      const demandeUsine = d.fabricationEtrangere?.[fil.id];
+      if (f && demandeUsine) {
+        const servi = borner(
+          Object.fromEntries(Object.entries(demandeUsine).filter(([k]) => f.cout[k] !== undefined)),
+          f.capacite * montee,
+        );
+        const unites = codes.map((k) => servi[k] ?? 0);
+        if (unites.every((u) => u <= 0)) continue;
+        const couts = codes.map((k, i) => unites[i]! * (f.cout[k] ?? 0) * moyen);
+        const prec = fabrication[c.id];
+        const tous = prec ? unites.map((u, i) => u + prec.unites[i]!) : unites;
+        fabrication[c.id] = {
+          unites: tous,
+          couts: prec ? couts.map((x, i) => x + prec.couts[i]!) : couts,
+          total: (prec?.total ?? 0) + couts.reduce((a, b) => a + b, 0),
+          qualite: f.qualite,
+        };
+        rapports[c.id] = Object.fromEntries(codes.map((k, i) => [k, { unites: tous[i]!, cout: fabrication[c.id]!.couts[i]! }]).filter(([, x]) => (x as { unites: number }).unites > 0));
+      }
+    }
+  }
+  return { ventes, fabrication, rapports };
 }

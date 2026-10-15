@@ -118,6 +118,43 @@ export interface ImportDuGroupe {
   change: { devise: string; volatilite: number };
 }
 
+/**
+ * UNE ENTREPRISE ÉTRANGÈRE À RACHETER : un modèle compact, hors euro. Ses
+ * ventes locales ont leur saison et leur croissance, ses coûts sont locaux,
+ * son cours varie à chaque tour sur un flux propre, un risque pays peut
+ * amputer ses ventes d'un tour. Deux synergies, chacune un choix de
+ * l'équipe : écouler des produits NOVA par son réseau (pris sur le stock de
+ * l'équipe), faire fabriquer chez elle (des produits finis livrés en stock).
+ */
+export interface CibleEtrangere {
+  id: string;
+  nom: string;
+  pays: string;
+  devise: string;
+  recit: string;
+  /** Euros pour une unité de devise au départ ; écart-type du logarithme du cours par tour. */
+  change: { coursInitial: number; volatilite: number };
+  /** Ventes locales par tour au premier tour, leur saison (reprise en boucle) et leur croissance par tour. */
+  ventes: { chiffreDAffaires: number; saisonnalite: number[]; croissance: number };
+  tauxDeCoutVariable: number;
+  chargesFixesParTour: number;
+  immobilisations: number;
+  dureeDAmortissement: number;
+  bfr: number;
+  tresorerie: number;
+  dette: number;
+  tauxDInteretParTour: number;
+  tauxDImpot: number;
+  /** Un tour sur `1/probabilite`, en moyenne, le pays ampute ses ventes de cette part. */
+  risquePays?: { probabilite: number; perteDeVentes: number };
+  /** Les parts qu'on peut en acheter (1 = 100 %). */
+  parts: number[];
+  /** Son réseau : unités NOVA qu'il peut écouler par tour, prix local par référence, coût de distribution local par unité. */
+  reseau?: { capacite: number; prix: Record<ProductCode, number>; coutParUnite: number };
+  /** Son usine : unités qu'elle peut fabriquer pour l'équipe par tour, coût local par référence, qualité livrée. */
+  fabrication?: { capacite: number; cout: Record<ProductCode, number>; qualite: number };
+}
+
 export interface ConfigDeGroupe {
   /**
    * La taille de départ : chaque entreprise démarre ce facteur fois plus
@@ -148,6 +185,8 @@ export interface ConfigDeGroupe {
   sites?: SiteFerme[];
   /** Les fournisseurs à vendre. */
   fournisseurs?: FournisseurRachetable[];
+  /** Les entreprises étrangères à vendre. */
+  etrangers?: CibleEtrangere[];
   /** Le fournisseur import, rendu risqué au niveau 7 (absent : le fournisseur du scénario, tel quel). */
   import?: ImportDuGroupe;
   /** Sous-traitance par référence (absent : levier fermé ; une référence absente ne se sous-traite pas). */
@@ -175,7 +214,7 @@ export interface SiteAcquis {
  * de la partie ; l'état ne garde que ce que le rachat a fixé.
  */
 export interface Filiale {
-  type: "fournisseur";
+  type: "fournisseur" | "etranger";
   id: string;
   nom: string;
   tour: number;
@@ -187,7 +226,10 @@ export interface Filiale {
   ecart: number;
   /** Dépréciations cumulées de l'écart. */
   depreciation: number;
+  /** Capitaux propres de la filiale au rachat, dans sa devise. */
   capitauxPropresDAcquisition: number;
+  /** Euros pour une unité de sa devise au rachat (1 en euros). */
+  coursDAcquisition: number;
   /** Les concurrents simulés partis chez un autre fournisseur. */
   clientsPartis: string[];
   /** Les clients rationnés au dernier tour. */
@@ -217,7 +259,7 @@ export interface EtatDeGroupe {
   cloture?: { bilan: BalanceSheet; valeurDesMinoritaires: number };
 }
 
-export type TypeDeCible = "site_ferme" | "fournisseur";
+export type TypeDeCible = "site_ferme" | "fournisseur" | "etranger";
 
 export interface CibleDeRachat {
   type: TypeDeCible;
@@ -233,6 +275,8 @@ export interface DecisionDeRachat {
   emprunt?: number;
   /** Augmentation de capital souscrite par des investisseurs entrants (paiement en numéraire). */
   augmentationDeCapital?: number;
+  /** Entreprise étrangère : la part achetée, parmi celles qu'elle propose (absente : 100 %). */
+  part?: number;
 }
 
 /**
@@ -333,11 +377,19 @@ export interface Consolidation {
   partDesMinoritaires: number;
   /** Ventes d'une filiale au groupe, éliminées ; marge interne restée en stock. */
   eliminations: { ventesInternes: number; margeEnStock: number };
+  /**
+   * Écart de conversion, part du groupe, dans les capitaux propres : ce que le
+   * cours a fait aux capitaux propres d'une filiale étrangère depuis son
+   * rachat (bilan au cours de clôture, résultats au cours moyen).
+   */
+  ecartDeConversion: number;
   filiales: {
     id: string;
     nom: string;
     part: number;
     comptes: ComptesDUneFiliale;
+    /** Cours de clôture et cours moyen du tour (1 en euros). */
+    cours: { cloture: number; moyen: number };
     valeur: number;
     ecart: number;
     depreciationDuTour: number;
@@ -360,4 +412,8 @@ export interface ResultatDeGroupe {
   rationnement?: Record<ProductCode, number>;
   /** Le groupe consolidé, dès qu'il y a une filiale. */
   consolide?: Consolidation;
+  /** Les ventes par le réseau d'une filiale étrangère : demandées, livrées (du stock), chiffre d'affaires en euros. */
+  reseau?: Record<ProductCode, { demande: number; livre: number; chiffreDAffaires: number }>;
+  /** Ce qu'une filiale étrangère a fabriqué pour l'équipe : unités et coût en euros, par référence. */
+  fabrication?: Record<ProductCode, { unites: number; cout: number }>;
 }

@@ -136,6 +136,21 @@ function avecLeGroupe(
           }
         : {}),
       ...(leviers.croissanceExterne && cfg.import ? { import: { ...cfg.import } } : {}),
+      ...(leviers.croissanceExterne && cfg.etrangers
+        ? {
+            etrangers: cfg.etrangers.map((e) => ({
+              ...e,
+              change: { ...e.change, volatilite: e.change.volatilite * Math.sqrt(k) },
+              ventes: { ...e.ventes, chiffreDAffaires: e.ventes.chiffreDAffaires * k },
+              chargesFixesParTour: e.chargesFixesParTour * k,
+              ...(e.risquePays ? { risquePays: { ...e.risquePays, probabilite: 1 - Math.pow(1 - e.risquePays.probabilite, k) } } : {}),
+              dureeDAmortissement: e.dureeDAmortissement / k,
+              tauxDInteretParTour: e.tauxDInteretParTour * k,
+              ...(e.reseau ? { reseau: { ...e.reseau, capacite: e.reseau.capacite * k } } : {}),
+              ...(e.fabrication ? { fabrication: { ...e.fabrication, capacite: e.fabrication.capacite * k } } : {}),
+            })),
+          }
+        : {}),
       ...(leviers.croissanceExterne && cfg.sites
         ? {
             sites: cfg.sites.map((site) => ({

@@ -89,6 +89,7 @@ import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
 import {
   chargesDesSites,
   commandeDuTour,
+  fusionnerLesCommandes,
   prixDeLImport,
   ruptureDeLImport,
   simulerLeGroupe,
@@ -1065,10 +1066,14 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // sous-traitant entrent en stock, au coût du barème, avant le marché : ni
     // heure ni machine, aucun coût fixe. Sans commande (ou hors niveau 7), le
     // stock d'avant, même objet.
-    const commandeST =
+    const commandeST = fusionnerLesCommandes(
       scenario.groupe?.sousTraitance && state.status !== "defaillant"
         ? commandeDuTour(scenario.groupe.sousTraitance, gamme.map((p) => p.code), raw.sousTraitance)
-        : null;
+        : null,
+      // Niveau 7 : ce qu'une filiale étrangère fabrique pour l'équipe, livré fini.
+      state.status !== "defaillant" ? (input.fabricationDuGroupe?.[state.id] ?? null) : null,
+      (k) => scenario.groupe?.sousTraitance?.[gamme[k]!.code]?.qualite ?? 1,
+    );
     const productStocksLivres = commandeST
       ? productStocks.map((s, k) =>
           commandeST.unites[k]! > 0 ? addToStock(s, commandeST.unites[k]!, commandeST.couts[k]! / commandeST.unites[k]!) : s,
@@ -1539,12 +1544,31 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // référence, au prix du tour, réglées comptant. Sans le modèle : zéro,
     // et l'expression historique est conservée telle quelle.
     const retainedRevenue = scenario.subscription ? w.subServed * prixFacture[0]! : 0;
+    // Niveau 7 : les ventes par le réseau d'une filiale étrangère, livrées du
+    // stock qui reste après le marché et les commandes (pas de vente sans
+    // production), au prix local converti au cours moyen du tour.
+    const reseau = dormant ? undefined : input.ventesDuGroupe?.[w.state.id];
+    const reseauLivre = reseau
+      ? gamme.map((p, k) => {
+          const v = reseau[p.code];
+          if (!v || v.quantite <= 0) return 0;
+          const deja =
+            productSegmentUnits[k]! +
+            (k === 0 ? orderDelivered : 0) +
+            (k === offerIndex ? offerDelivered : 0) +
+            (scenario.subscription && k === 0 ? w.subServed : 0);
+          return Math.min(v.quantite, Math.max(0, w.productStocks[k]!.quantity - deja));
+        })
+      : null;
+    const reseauRevenue = reseauLivre ? reseauLivre.map((q, k) => q * (reseau![gamme[k]!.code]?.prix ?? 0)) : null;
+    if (reseauLivre) commissionCost += sumExact(reseauLivre.map((q, k) => q * (reseau![gamme[k]!.code]?.commission ?? 0)));
     const productSold = productSegmentUnits.map(
       (u, k) =>
         u +
         (k === 0 ? orderDelivered : 0) +
         (k === offerIndex ? offerDelivered : 0) +
-        (scenario.subscription && k === 0 ? w.subServed : 0),
+        (scenario.subscription && k === 0 ? w.subServed : 0) +
+        (reseauLivre ? reseauLivre[k]! : 0),
     );
     const soldUnits = sumExact(productSold);
     const productSegmentRevenue = productSegmentUnits.map((u, k) => u * prixFacture[k]!);
@@ -1557,7 +1581,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       : sumExact(productSegmentRevenue) +
         (orderDelivered + subcontracted) * orderUnitPrice +
         offerRevenue -
-        refund;
+        refund +
+        (reseauRevenue ? sumExact(reseauRevenue) : 0);
     // Part du CA à crédit, en euros : segments à leurs délais, commandes
     // fermes d'événement comptant, commande exceptionnelle à SON délai.
     const creditRevenue =
@@ -2206,7 +2231,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         // au prorata des volumes. Sans commande : la qualité produite, telle quelle.
         (w.commandeST && w.commandeST.unites[k]! > 0
           ? (w.productQuality[k]! * w.producedPerProduct[k]! +
-              (scenario.groupe!.sousTraitance![gamme[k]!.code]?.qualite ?? 1) * w.commandeST.unites[k]!) /
+              (w.commandeST.qualites?.[k] ?? scenario.groupe!.sousTraitance?.[gamme[k]!.code]?.qualite ?? 1) * w.commandeST.unites[k]!) /
             (w.producedPerProduct[k]! + w.commandeST.unites[k]!)
           : w.productQuality[k]!) +
           (w.productSuppliers[k]?.qualityBonus ?? 0) +
@@ -2468,7 +2493,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                     productSegmentRevenue[k]! +
                     (k === 0 ? (orderDelivered + subcontracted) * orderUnitPrice : 0) +
                     (k === offerIndex ? offerRevenue : 0) +
-                    (scenario.subscription && k === 0 ? retainedRevenue : 0),
+                    (scenario.subscription && k === 0 ? retainedRevenue : 0) +
+                    (reseauRevenue ? reseauRevenue[k]! : 0),
                   stock: finalStocks[k]!,
                   segments: product.market.segments.map((s) => s.code),
                   // Variance analysis: actual vs. standard costs/revenues (pilot NOVA, optional)
@@ -2647,6 +2673,18 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                 return acc;
               }, {}),
               ...(input.rationnementDuGroupe?.[w.state.id] ? { rationnement: input.rationnementDuGroupe[w.state.id] } : {}),
+              ...(reseauLivre
+                ? {
+                    reseau: Object.fromEntries(
+                      gamme
+                        .map((p, k) => [
+                          p.code,
+                          { demande: reseau![p.code]?.quantite ?? 0, livre: reseauLivre[k]!, chiffreDAffaires: reseauRevenue![k]! },
+                        ] as const)
+                        .filter(([, x]) => x.demande > 0),
+                    ),
+                  }
+                : {}),
             },
           }
         : {}),
