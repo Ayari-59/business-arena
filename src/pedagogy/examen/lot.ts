@@ -126,7 +126,16 @@ export function difficulteDeLaGraine(r: ReglagesDeLExamen, graine: number): Diff
         });
       }
     }
-    const sortie = simulateRound({ scenario, roundIndex: tour, companies: etats, decisions, activeEvents: evenements, seed: graine });
+    // Les leviers du niveau, comme la clôture les passe : mêmes crises possibles.
+    const sortie = simulateRound({
+      scenario,
+      roundIndex: tour,
+      companies: etats,
+      decisions,
+      activeEvents: evenements,
+      seed: graine,
+      ...(leviers ? { leviers } : {}),
+    });
     for (const id of ids) cumule[id] = cumule[id]! + sortie.results[id]!.incomeStatement.netIncome;
     prixHumain = decisions[ids[0]!]!.price > 0 ? decisions[ids[0]!]!.price : undefined;
     precedents = sortie.results;

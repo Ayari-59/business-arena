@@ -296,6 +296,8 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
       // Les concurrents pilotés n'emploient que les leviers du niveau (marché
       // équitable), dans les parties qui les figent : comme à la clôture.
       leviers: leviersFigesDuProfil(profil),
+      // Les leviers que la clôture passe au moteur : mêmes crises possibles.
+      leviersDuNiveau: presetFromProfile(profil).decisions,
     },
     niveau: profil.difficulty?.level ?? profil.level ?? 1,
     preset: presetDeLaPartie,

@@ -88,9 +88,14 @@ export function qualityEffect(perceivedQuality: number, segment: SegmentConfig):
   return Math.pow(perceivedQuality, segment.qualitySensitivity);
 }
 
-/** Effet fidélité : la part acquise au tour précédent protège (doc 02 §3.2). */
-export function loyaltyEffect(lastShare: number, segment: SegmentConfig): number {
-  return 1 + segment.loyalty * Math.max(0, Math.min(1, lastShare));
+/**
+ * Effet fidélité : la part acquise au tour précédent protège (doc 02 §3.2).
+ * `bonus` (actions commerciales de fidélisation) s'ajoute au coefficient de
+ * fidélité du segment ; absent, l'expression d'avant.
+ */
+export function loyaltyEffect(lastShare: number, segment: SegmentConfig, bonus = 0): number {
+  const coefficient = bonus > 0 ? segment.loyalty + bonus : segment.loyalty;
+  return 1 + coefficient * Math.max(0, Math.min(1, lastShare));
 }
 
 /** Score d'attraction global d'une offre pour un segment. */
@@ -107,13 +112,15 @@ export function attractionScore(args: {
    * engagements des tours PASSÉS. Défaut 1 pour tout appelant sans RSE.
    */
   imageFactor?: number;
+  /** Fidélité ajoutée au coefficient du segment (actions commerciales). Défaut 0. */
+  loyaltyBonus?: number;
 }): number {
   const { price, marketingBudget, perceivedQuality, lastShare, segment, marketingScale } = args;
   return (
     priceEffect(price, segment) *
     marketingEffect(marketingBudget, segment, marketingScale) *
     qualityEffect(perceivedQuality, segment) *
-    loyaltyEffect(lastShare, segment) *
+    loyaltyEffect(lastShare, segment, args.loyaltyBonus ?? 0) *
     Math.max(0, args.imageFactor ?? 1)
   );
 }

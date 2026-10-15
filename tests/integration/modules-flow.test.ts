@@ -8,7 +8,10 @@ import { eq } from "drizzle-orm";
  * enregistrés avec ses décisions, passent au moteur à la clôture
  * (`own.payload as RoundDecisions`), et reviennent dans la vue du tour suivant
  * (le coût au résultat, le bilan « Modules engagés ce tour », et l'offre qui
- * les range dans « Déjà engagé »).
+ * les range dans « Déjà engagé »). Au tour 3, l'équipe arrête sa stratégie de
+ * prix et engage des modules rendus jouables depuis : formation, action
+ * commerciale, intervention de maintenance, tirage sur une option de
+ * financement.
  */
 
 vi.mock("@/db", async () => {
@@ -27,6 +30,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { roundDecisionsSchema } from "@/services/decision-schema";
+import { refusDesModules } from "@/services/modules-offer";
 import { poserUneLicence } from "./helpers/licence";
 
 let teacherId: string;
@@ -106,5 +110,44 @@ describe("modules du scénario, en classe (NOVA, niveau 6)", () => {
     expect(view.lastResult!.pricingEffects?.priceMultiplier).toBeGreaterThan(1);
     const digital = view.periods.at(-1)!.modules!.lignes.find((l) => l.titre === "Transformation digitale")!;
     expect(digital.engage).toEqual([]);
+  });
+
+  it("au tour 3, une stratégie s'arrête, la formation, l'action commerciale, la maintenance et le financement s'engagent", async () => {
+    const view = (await getGameView(gameId, studentId))!;
+    const offre = view.modulesOffer!;
+    for (const d of ["trainingEnrollments", "activeCommercialActionIds", "maintenanceDecisions", "financingDraws"]) {
+      expect(offre.map((m) => m.decision), d).toContain(d);
+    }
+    const prix = offre.find((m) => m.decision === "activePricingStrategyIds")!;
+    expect(prix.enCours[0]!.arret?.champ).toBe("module.arret.activePricingStrategyIds.ps-premium");
+    const payload = roundDecisionsSchema.parse({
+      ...view.proposedDecisions,
+      stoppedModuleItems: [{ module: "activePricingStrategyIds", id: "ps-premium" }],
+      trainingEnrollments: [{ programId: "formation-lean", enrolledCount: 2 }],
+      activeCommercialActionIds: ["campagne-digitale"],
+      maintenanceDecisions: [{ machineId: "atelier", actionCode: "preventif", level: 1 }],
+      financingDraws: [{ optionId: "credit-court", amount: 30000 }],
+    });
+    // Le serveur juge l'envoi comme la feuille : rien à refuser.
+    expect(refusDesModules(payload, offre)).toEqual([]);
+    await submitTeamDecisions({ gameId, userId: studentId, payload });
+    await closeCurrentRound({ gameId, teacherId });
+
+    const apres = (await getGameView(gameId, studentId))!;
+    const r = apres.lastResult!;
+    expect(r.trainingCost).toBe(2 * 800);
+    expect(r.commercialCost).toBe(6000);
+    expect(r.maintenanceCost?.actionsCount).toBeGreaterThan(0);
+    expect(r.debt?.financingDrawn).toEqual([{ optionId: "credit-court", amount: 30000 }]);
+    // La stratégie arrêtée ne joue plus ce tour, et ne se lit plus dans « Déjà engagé ».
+    expect(r.pricingEffects).toBeUndefined();
+    expect(apres.modulesOffer!.find((m) => m.decision === "activePricingStrategyIds")!.enCours).toEqual([]);
+    const bilan = apres.periods.at(-1)!.modules!;
+    expect(bilan.lignes.find((l) => l.titre === "Stratégie de prix")!.arrete).toEqual(["Positionnement haut de gamme"]);
+    expect(bilan.lignes.find((l) => l.titre === "Formation")!.engage).toEqual(["Formation Lean Manufacturing · 2 salariés"]);
+    expect(bilan.lignes.find((l) => l.titre === "Options de financement")!.engage[0]).toContain("Crédit court terme");
+    // La formation et l'action commerciale courent encore : « Déjà engagé », arrêtables.
+    const formation = apres.modulesOffer!.find((m) => m.decision === "trainingEnrollments")!;
+    expect(formation.enCours[0]!.arret).toBeDefined();
   });
 });

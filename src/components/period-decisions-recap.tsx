@@ -201,6 +201,7 @@ export function PeriodDecisionsRecap({
                 >
                   <span className="font-medium text-slate-100">{l.titre}</span>
                   {l.engage.length > 0 ? <span> · engagé : {l.engage.join(", ")}</span> : null}
+                  {l.arrete.length > 0 ? <span data-module-arrete=""> · arrêté : {l.arrete.join(", ")}</span> : null}
                   <span className="mt-0.5 block text-xs text-slate-400">
                     {[
                       l.cout !== null && l.cout > 0 ? `Coût du tour ${formatEuro(l.cout)}` : null,
