@@ -1070,6 +1070,13 @@ export const CONDITIONS_DE_VENTE: readonly string[] = [
 ];
 
 /** Les questions qu'on nous pose avant d'acheter. */
+export const NIVEAU_GROUPE_EN_PUBLIC = {
+  /** Le marquage court, à côté d'un niveau 7 fermé ou dans une liste de niveaux. */
+  restriction: "NOVA seulement, en solo",
+  /** Ce que les offres en ouvrent : sur /tarifs, et sous le choix du niveau. */
+  inclus: `Le niveau 7 « Groupe » — racheter, faire fabriquer, créer de la valeur pour l'actionnaire — est inclus dans ${LES_OFFRES_DE_L_ARENE} lui aussi. Il se joue avec NOVA en gamme, et en solo : pas encore en classe.`,
+} as const;
+
 export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
   {
     q: "Les étudiants paient-ils ?",
@@ -1086,6 +1093,10 @@ export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
   {
     q: "Peut-on essayer avec un groupe ?",
     r: `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${LES_OFFRES_DE_L_ARENE}.`,
+  },
+  {
+    q: "Le niveau 7 « Groupe » est-il inclus ?",
+    r: NIVEAU_GROUPE_EN_PUBLIC.inclus,
   },
   {
     q: "Les épisodes manager sont-ils inclus ?",
@@ -1144,13 +1155,6 @@ export function messageNiveauxReserves(vitrine: VitrineSolo): string {
  * seulement et en solo. La phrase le dit donc à part, avec ses deux restrictions,
  * et son numéro n'entre jamais dans l'énumération des six du parcours.
  */
-export const NIVEAU_GROUPE_EN_PUBLIC = {
-  /** Le marquage court, à côté d'un niveau 7 fermé ou dans une liste de niveaux. */
-  restriction: "NOVA seulement, en solo",
-  /** Ce que les offres en ouvrent : sur /tarifs, et sous le choix du niveau. */
-  inclus: `Le niveau 7 « Groupe » — racheter, faire fabriquer, créer de la valeur pour l'actionnaire — est inclus dans ${LES_OFFRES_DE_L_ARENE} lui aussi. Il se joue avec NOVA en gamme, et en solo : pas encore en classe.`,
-} as const;
-
 /**
  * Le refus d'une partie de classe ou d'un concours sans offre de l'arène en cours ; les
  * niveaux du solo sont ceux de la Découverte (réglée dans /admin/offres).
