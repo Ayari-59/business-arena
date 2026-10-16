@@ -251,7 +251,15 @@ describe("l'écart d'acquisition d'un rachat au prix demandé", () => {
         const ecart = r.rachat!.ecart!;
         const cibleEtrangere = cible.type === "etranger" ? laCibleEtrangere(sept, cible.id)! : null;
         const risque = cibleEtrangere ? trajectoireDeLEtranger(cibleEtrangere, 2026, tourDuRachat).risque[tourDuRachat - 1] : false;
-        if (!risque) expect(r.consolide!.filiales[0]!.depreciationDuTour, nom).toBeLessThan(centime);
+        // Rien de déprécié à sa clôture, sauf ce qu'une cible achetée à son
+        // actif net perd pendant le tour : la prime payée sur les capitaux
+        // propres qu'elle a perdus (le fournisseur standard, sans clients hors
+        // de la partie, ne couvre pas toujours ses charges). Une cible qui ne
+        // perd rien n'est pas dépréciée du tout.
+        const filiale = r.consolide!.filiales[0]!;
+        const perdu = Math.max(0, soc.comptes[soc.comptes.length - 1]!.capitauxPropres - filiale.comptes.capitauxPropres);
+        const primeSurLaPerte = sept.groupe!.rachat!.primeDeControle * (part ?? 1) * perdu * filiale.cours.cloture;
+        if (!risque) expect(filiale.depreciationDuTour, nom).toBeLessThanOrEqual(primeSurLaPerte + centime);
         else expect(r.consolide!.filiales[0]!.depreciationDuTour, nom).toBeLessThanOrEqual(ecart + centime);
         expect(Math.abs(ecartDuBilanConsolide(r.consolide!)), nom).toBeLessThan(centime);
         let cumul = 0;

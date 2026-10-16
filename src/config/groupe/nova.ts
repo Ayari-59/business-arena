@@ -51,8 +51,13 @@ export const GROUPE_NOVA: ConfigDeGroupe = {
       code: "standard",
       nom: "Fournisseur standard",
       recit:
-        "Votre fournisseur historique de composants, celui de toute la profession : il vend aux fabricants de la partie, concurrents compris, et à bien d'autres, avec une marge de grossiste. Ses clients de la partie ne resteront pas tous chez un concurrent.",
-      clientsExterieurs: { chiffreDAffaires: 400_000, saisonnalite: [0.9, 0.95, 1, 1.3, 0.9, 1], croissance: 0.01 },
+        "Votre fournisseur historique de composants, celui de toute la profession : il ne vit que des fabricants de la partie, concurrents compris, avec une marge de grossiste. Ses clients de la partie ne resteront pas tous chez un concurrent.",
+      // Aucun client hors de la partie (recalibré quand la Studio est devenue
+      // vendable au niveau 7 : ses composants passent par lui dès le tour 1, et
+      // avec 400 000 € par tour de clients extérieurs son rachat battait la
+      // croissance interne dans tous les contextes du banc ; conception NOVA
+      // Home, phase 2). Son chiffre d'affaires est celui de la partie.
+      clientsExterieurs: { chiffreDAffaires: 0, saisonnalite: [0.9, 0.95, 1, 1.3, 0.9, 1], croissance: 0.01 },
       tauxDeCoutVariable: 0.96,
       chargesFixesParTour: 15_000,
       capacite: 2_500_000,
@@ -214,7 +219,7 @@ export const GROUPE_PAR_SCENARIO: Readonly<Record<string, ConfigDeGroupe>> = {
  *
  * LE MARCHÉ. Les foyers connectés, dont l'adoption est cachée : lente,
  * moyenne ou rapide, tirée par la graine à la composition, révélée par l'étude
- * « marchés ». Et les acheteurs de One qui passent au multipièce : dès qu'une
+ * de marché. Et les acheteurs de One qui passent au multipièce : dès qu'une
  * entreprise vend la Home, 4 % des étudiants et 20 % des passionnés de la One
  * (fois le facteur de l'adoption) migrent vers ce segment. La porte marketing
  * (une catégorie nouvelle se fait connaître) et la fidélité (l'écosystème)
