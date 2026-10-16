@@ -191,6 +191,9 @@ export const engineScenarioConfigSchema = z.object({
   bots: z
     .object({
       premiumPriceRatio: z.number().min(1).max(2).optional(),
+      // Posé par le scénario joué d'une partie créée après le correctif des
+      // concurrents ; jamais écrit à la main dans un secteur.
+      concurrentsAssainis: z.boolean().optional(),
     })
     .optional(),
   // Modèle par abonnement : le portefeuille n'existe que si le bloc est déclaré.

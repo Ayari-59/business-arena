@@ -390,6 +390,9 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     roundsCount: args.roundsCount,
     periodicity: args.periodicity,
     investmentStories: args.investmentStories,
+    // Les concurrents corrigés, figés à la création : une partie déjà
+    // commencée garde les siens jusqu'à son dernier tour.
+    concurrentsAssainis: true,
   });
   // LE TOUR D'ESSAI se joue sur une autre graine et sans événement scripté : tant
   // qu'il dure, la partie porte SON scénario et SA graine, la vraie partie attend
@@ -410,6 +413,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
             roundsCount: args.roundsCount,
             periodicity: args.periodicity,
             investmentStories: args.investmentStories,
+            concurrentsAssainis: true,
           }),
           args.essai.tours,
         )
