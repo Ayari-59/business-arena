@@ -37,7 +37,7 @@ const rawHotel = {
       {
         code: "affaires",
         name: "Clientèle affaires (semaine, note de frais)",
-        size: 3300,
+        size: 3700,
         growth: 0.03,
         // la note de frais regarde peu le prix, mais l'entreprise plafonne
         priceElasticity: -0.7,
@@ -56,7 +56,7 @@ const rawHotel = {
       {
         code: "loisirs",
         name: "Tourisme loisirs (week-ends et vacances)",
-        size: 5000,
+        size: 5600,
         growth: 0.05,
         priceElasticity: -1.75,
         refPrice: 88,
@@ -73,7 +73,7 @@ const rawHotel = {
       {
         code: "groupes",
         name: "Groupes & séminaires (contrat négocié, 45 j)",
-        size: 2700,
+        size: 3000,
         growth: 0.04,
         priceElasticity: -1.5,
         refPrice: 78,
