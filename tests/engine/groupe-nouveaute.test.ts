@@ -250,10 +250,27 @@ describe("les frais de développement immobilisés", () => {
     const echec = fraisDeDeveloppement({ ouverture, cout: 90_000, budget: 0, auMarche: true, abandon: false, duree: 8, contribution: -5_000 });
     // contribution moyenne 12 500 sur 6 tours restants = 75 000 < 67 500 ? non : pas de dépréciation
     expect(echec.depreciation).toBe(0);
-    const pire = fraisDeDeveloppement({ ouverture: { ...ouverture, contributions: [2_000] }, cout: 90_000, budget: 0, auMarche: true, abandon: false, duree: 8, contribution: 0 });
-    // utilité = 1 000 × 6 = 6 000 ; valeur nette après amortissement 67 500 : 61 500 dépréciés
-    expect(pire.depreciation).toBeCloseTo(61_500, 6);
-    expect(pire.immobilise - pire.amorti).toBeCloseTo(6_000, 6);
+    // Au deuxième tour de vente, une contribution faible mais positive ne se teste pas encore.
+    const faible = fraisDeDeveloppement({ ouverture: { ...ouverture, contributions: [2_000] }, cout: 90_000, budget: 0, auMarche: true, abandon: false, duree: 8, contribution: 0 });
+    expect(faible.depreciation).toBe(0);
+    // Au troisième (fin de la fenêtre d'observation) : utilité = 1 000 × 5 = 5 000 ; valeur nette après amortissement 56 250 : 51 250 dépréciés
+    const pire = fraisDeDeveloppement({
+      ouverture: { ...ouverture, amorti: 22_500, contributions: [2_000, 1_000] },
+      cout: 90_000,
+      budget: 0,
+      auMarche: true,
+      abandon: false,
+      duree: 8,
+      contribution: 0,
+    });
+    expect(pire.depreciation).toBeCloseTo(51_250, 6);
+    expect(pire.immobilise - pire.amorti).toBeCloseTo(5_000, 6);
+    // Avant, seule une perte deux tours de suite avance le test : 67 500 de valeur nette, utilité nulle
+    const pertes = fraisDeDeveloppement({ ouverture: { ...ouverture, contributions: [-6_000] }, cout: 90_000, budget: 0, auMarche: true, abandon: false, duree: 8, contribution: -6_000 });
+    expect(pertes.depreciation).toBeCloseTo(67_500, 6);
+    // Le premier tour de vente, si faible soit-il, ne se teste jamais seul
+    const lancement = fraisDeDeveloppement({ ouverture: { ...ouverture, amorti: 0, contributions: undefined }, cout: 90_000, budget: 0, auMarche: true, abandon: false, duree: 8, contribution: -8_000 });
+    expect(lancement.depreciation).toBe(0);
     const abandon = fraisDeDeveloppement({ ouverture, cout: 90_000, budget: 0, auMarche: false, abandon: true, duree: 8 });
     expect(abandon.depreciation).toBeCloseTo(78_750, 6);
     expect(abandon.immobilise - abandon.amorti).toBeCloseTo(0, 9);
@@ -275,6 +292,74 @@ describe("les frais de développement immobilisés", () => {
       expect(Math.abs(balanceGap(t.results.e0!.balanceSheet))).toBeLessThan(0.01);
     }
     expect(tours.at(-1)!.companies.find((c) => c.id === "e0")!.rdByProduct![HOME]!.abandonnee).toBe(true);
+  });
+});
+
+/** Une graine dont l'adoption tirée est `k`, sans retard de certification pour e0. */
+const graineALEtat = (k: number) => {
+  for (let g = 1; g < 500; g++) if (etatDAdoption(g, HOME, 3) === k && !certificationRetardee(g, "e0", HOME, 0.3)) return g;
+  throw new Error(`aucune graine à l'état ${k}`);
+};
+
+/** Un lancement : un tiers au T1, la suite au T2, puis la Home au prix usuel, produite et soutenue. */
+function lancer(graine: number, politique: { plan: number; marketing: number; prix?: number; abandonAu?: number }) {
+  const s = composer(7, graine);
+  return jouer(
+    s,
+    (tour, id, d) => {
+      if (id !== "e0") return;
+      const h = d.products![HOME]!;
+      if (tour === 1) h.rdBudget = 30_000;
+      if (tour === 2) h.rdBudget = 60_000;
+      if (tour >= 3) {
+        h.price = politique.prix ?? 99;
+        h.productionPlan = politique.plan;
+        h.marketingBudget = politique.marketing;
+      }
+      if (politique.abandonAu !== undefined && tour >= politique.abandonAu) h.abandonner = true;
+    },
+    graine,
+  );
+}
+
+describe("la dépréciation de la Home se juge sur une fenêtre d'observation, pas sur le tour du lancement", () => {
+  it("un lancement normal (adoption moyenne ou rapide, prix usuel) n'est déprécié ni à son premier tour de vente ni au suivant", () => {
+    for (const k of [1, 2]) {
+      const g = graineALEtat(k);
+      const tours = lancer(g, { plan: 500, marketing: 8_000 });
+      const premier = tours.findIndex((t) => t.results.e0!.groupe!.nouveautes![HOME]!.auMarche);
+      expect(premier, `état ${k}`).toBe(2);
+      for (const t of [premier, premier + 1]) {
+        const n = tours[t]!.results.e0!.groupe!.nouveautes![HOME]!;
+        expect(n.depreciation, `état ${k}, tour ${t + 1}`).toBe(0);
+        expect(Math.abs(balanceGap(tours[t]!.results.e0!.balanceSheet))).toBeLessThan(0.01);
+      }
+    }
+  });
+
+  it("un lancement manifestement raté (adoption lente, contribution durablement négative) finit déprécié", () => {
+    const g = graineALEtat(0);
+    // une poignée de Home sans marketing : la plateforme coûte plus que la marge, chaque tour
+    const tours = lancer(g, { plan: 80, marketing: 0 });
+    const ns = tours.map((t) => t.results.e0!.groupe!.nouveautes![HOME]!);
+    expect(ns.slice(2).every((n) => n.auMarche)).toBe(true);
+    expect(ns.slice(2, 4).every((n) => n.margeSurCoutVariable - n.plateforme < 0)).toBe(true);
+    const total = ns.reduce((a, n) => a + n.depreciation, 0);
+    expect(total).toBeGreaterThan(0);
+    // pas plus que ce qui était immobilisé, et le bilan au centime
+    expect(ns.at(-1)!.valeurNette).toBeGreaterThanOrEqual(0);
+    expect(ns.at(-1)!.valeurNette).toBeLessThan(90_000 - 90_000 / 8);
+    for (const t of tours) expect(Math.abs(balanceGap(t.results.e0!.balanceSheet))).toBeLessThan(0.01);
+  });
+
+  it("une Home abandonnée après son lancement est dépréciée entièrement", () => {
+    const g = graineALEtat(1);
+    const tours = lancer(g, { plan: 500, marketing: 8_000, abandonAu: 5 });
+    const n5 = tours[4]!.results.e0!.groupe!.nouveautes![HOME]!;
+    expect(n5.abandon).toBe(true);
+    expect(n5.depreciation).toBeGreaterThan(0);
+    expect(n5.valeurNette).toBeCloseTo(0, 6);
+    expect(Math.abs(balanceGap(tours[4]!.results.e0!.balanceSheet))).toBeLessThan(0.01);
   });
 });
 

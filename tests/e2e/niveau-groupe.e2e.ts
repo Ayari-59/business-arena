@@ -442,6 +442,8 @@ describe("une partie solo de niveau 7", () => {
     expect(bilan).toMatch(/Marge sur coût variable de NOVA Home/);
     expect(bilan).toMatch(/Plateforme logicielle\s*[−-]\s*8 000 €/);
     expect(bilan).toMatch(/Valeur nette des frais immobilisés/);
+    // Un lancement normal ne se déprécie pas à son premier tour de vente.
+    expect(bilan).not.toMatch(/Dépréciation/);
     // Vendue : ses foyers connectés se chiffrent, le marché lui a répondu.
     expect(await texte(page)).toMatch(/Foyers connectés/);
     await page.locator("summary", { hasText: "la nouveauté du tour" }).first().evaluate((el) => {

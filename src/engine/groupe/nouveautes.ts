@@ -164,7 +164,19 @@ export function migrer(
  *     moyenne de la référence depuis son lancement (marge sur coût variable
  *     moins plateforme) sur les tours d'amortissement qui restent.
  * Elle est irréversible.
+ *
+ * LE TEST N'A LIEU QU'APRÈS UNE FENÊTRE D'OBSERVATION. Un seul tour de
+ * lancement ne dit rien de la valeur d'utilité : il porte la montée en
+ * charge, la saison, une catégorie qui se fait connaître. Lu seul, il
+ * dépréciait un lancement normal le jour même. Le test se fait donc à partir
+ * du `TOURS_D_OBSERVATION`-ième tour de vente, sur la moyenne des tours
+ * observés ; avant, seul un indice objectif l'avance : une contribution
+ * négative deux tours de suite (des ventes nulles en sont une). L'état
+ * d'adoption, que l'équipe ne connaît pas, n'y entre jamais : une
+ * dépréciation qui le lirait le révélerait.
  */
+export const TOURS_D_OBSERVATION = 3;
+
 export function fraisDeDeveloppement(args: {
   ouverture: ProductRdState | null;
   cout: number;
@@ -202,7 +214,10 @@ export function fraisDeDeveloppement(args: {
     const restants = Math.max(0, args.duree - tours);
     const moyenne = tours > 0 ? contributions!.reduce((a, b) => a + b, 0) / tours : 0;
     const utilite = Math.max(0, moyenne * restants);
-    if (vnc > utilite) {
+    // Le test, après la fenêtre d'observation, ou plus tôt sur une perte constatée deux tours de suite.
+    const pertesDeSuite = tours >= 2 && contributions![tours - 1]! < 0 && contributions![tours - 2]! < 0;
+    const teste = tours >= TOURS_D_OBSERVATION || pertesDeSuite;
+    if (teste && vnc > utilite) {
       depreciation = vnc - utilite;
       vnc = utilite;
     }
