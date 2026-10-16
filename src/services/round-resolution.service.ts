@@ -268,7 +268,11 @@ async function sourceDesPivots(args: {
   const previousResult = previousRound
     ? (
         await db
-          .select({ marketDetail: roundResults.marketDetail })
+          .select({
+            marketDetail: roundResults.marketDetail,
+            engineTrace: roundResults.engineTrace,
+            incomeStatement: roundResults.incomeStatement,
+          })
           .from(roundResults)
           .where(and(eq(roundResults.roundId, previousRound.id), eq(roundResults.teamId, args.teamId)))
       )[0]
@@ -279,6 +283,8 @@ async function sourceDesPivots(args: {
     roundIndex: args.roundIndex,
     previousPayload: previous?.payload as RoundDecisions | undefined,
     lastMarket: (previousResult?.marketDetail ?? null) as CompanyRoundResult["market"]["bySegment"] | null,
+    lastBreakEven: previousResult?.engineTrace?.breakeven?.breakEvenUnits ?? null,
+    lastNetIncome: previousResult?.incomeStatement.netIncome ?? null,
     leviers: args.leviers ?? null,
   });
   return decisionSourceOf(args.payload, proposees);
@@ -381,6 +387,8 @@ async function resolveGameRound(
     const lastSoldByProduct: Record<string, Record<string, number>> = {};
     const previousPayloads: Record<string, RoundDecisions> = {};
     const previousMarkets: Record<string, CompanyRoundResult["market"]["bySegment"]> = {};
+    const previousBreakEven: Record<string, number | null> = {};
+    const previousNetIncome: Record<string, number> = {};
     if (roundIndex > 1) {
       const prevRound = (
         await db
@@ -396,6 +404,8 @@ async function resolveGameRound(
         for (const r of prevResults) {
           const bySegment = (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"];
           previousMarkets[r.teamId] = bySegment;
+          previousBreakEven[r.teamId] = r.engineTrace?.breakeven?.breakEvenUnits ?? null;
+          previousNetIncome[r.teamId] = r.incomeStatement.netIncome;
           // Abonnement : les adhérents conservés sont des ventes du tour ; sans
           // eux, le bot planifierait pour ses seuls nouveaux venus et mettrait
           // sa base dehors.
@@ -527,6 +537,8 @@ async function resolveGameRound(
         roundIndex,
         previousPayload: previousPayloads[t.id],
         lastMarket: previousMarkets[t.id] ?? null,
+        lastBreakEven: previousBreakEven[t.id] ?? null,
+        lastNetIncome: previousNetIncome[t.id] ?? null,
         leviers: leviersFigesDuProfil(game.difficultyProfile),
       });
       proposedByTeam[t.id] = proposed;

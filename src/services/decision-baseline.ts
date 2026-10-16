@@ -1,4 +1,4 @@
-import { aLaMesureDuNiveau, neutralDecisions, type LeviersOuverts } from "@/engine/bots";
+import { aLaMesureDuNiveau, neutralDecisions, soldByProduct, type LeviersOuverts } from "@/engine/bots";
 import {
   isMultiProduct,
   isProductAvailable,
@@ -20,8 +20,8 @@ import type {
  * laquelle on compare ce qu'elle valide, pour savoir si elle a décidé.
  *
  * Au tour 1, le point de départ du secteur ; ensuite, les décisions du tour
- * précédent sans leurs dépenses ponctuelles, le plan recalculé sur la demande
- * constatée (`propositionDuTour`). Calculé ici, et une seule fois, parce que le serveur doit
+ * précédent sans leurs dépenses ponctuelles, le plan recalculé sur les ventes
+ * réalisées (`propositionDuTour`). Calculé ici, et une seule fois, parce que le serveur doit
  * refaire exactement le calcul du formulaire : une valeur proposée que le
  * serveur ne reconnaîtrait pas passerait pour une décision.
  */
@@ -226,31 +226,35 @@ export function sansDepensesPonctuelles(d: RoundDecisions): RoundDecisions {
 export type MarcheDuTourPasse = Record<string, Pick<CompanyRoundResult["market"]["bySegment"][string], "sold" | "lost">>;
 
 /**
- * LA PROPOSITION D'UN TOUR : UNE BASE RAISONNABLE, CONSTRUITE SUR L'OUVERTURE DU TOUR.
+ * LA PROPOSITION D'UN TOUR : UNE BASE NEUTRE, QUI NE MÈNE PAS À LA FAILLITE.
  *
- * Au tour 1, le point de départ du secteur (`startingDecisionsFor`). Ensuite,
- * la décision du tour précédent sans ses dépenses ponctuelles
- * (`sansDepensesPonctuelles`) : prix, budgets, fournisseur, assurance restent
- * ceux que l'équipe a choisis. Seul le PLAN DE PRODUCTION se recalcule, et
- * c'est là que la proposition reconduite menait à la faillite : le plan du
- * tour 1 (65 % de l'atelier), gelé six tours, sous le point mort de NOVA
- * pendant que la demande dépassait la capacité ; le plan d'hiver de MAILLE &
- * CO (37 % de l'atelier) reconduit jusqu'aux pics de saison.
+ * Ni une stratégie ni une aide à gagner : une équipe qui la valide sans rien
+ * changer finit à peu près où finit la gestion neutre du secteur
+ * (`neutralDecisions`, l'étalon de l'examen), loin derrière un bon
+ * gestionnaire (`pedagogy/merite/reference`). Ce qu'elle ne fait plus, c'est
+ * reconduire six tours la gestion neutre du TOUR 1 : un plan à 65 % de
+ * l'atelier, gelé sous le point mort de NOVA pendant que la demande montait.
  *
- * Le plan proposé, référence par référence, avec ce que l'équipe sait à
- * l'ouverture et rien d'autre (ni la demande à venir, ni la graine) :
- *   - la demande qu'elle a reçue au tour passé, vendue ET manquée (la colonne
- *     « Manqué » de ses résultats) ;
- *   - corrigée de la saison connue, du tour passé à celui-ci ;
- *   - moins le stock d'ouverture, qui se vend d'abord ;
- *   - le tout dans la limite de l'atelier : ses machines et ses heures.
- * Une référence sans repère (tout juste lancée) repart du point de départ du
- * secteur. Ce n'est pas une stratégie : la proposition sert la demande
- * constatée, au prix que l'équipe a fixé, sans gonfler le stock. Elle ne
- * remplace pas le jugement de l'élève, qui voit la même colonne « Manqué ».
+ * Au tour 1, le départ du secteur (`startingDecisionsFor`). Ensuite, la
+ * décision du tour précédent sans ses dépenses ponctuelles
+ * (`sansDepensesPonctuelles`) : prix, budgets, fournisseur et assurance
+ * restent ceux de l'équipe, sans aucune hausse de prix. Seul le PLAN se
+ * recalcule, comme la gestion neutre le recalcule à chaque tour : les ventes
+ * RÉALISÉES du tour passé (pas la demande manquée), +5 %, la saison, la moitié
+ * du stock d'ouverture déduite, dans la capacité de l'atelier.
  *
- * Abonnement (la salle de sport) : la capacité se réserve aux adhérents, le
- * plan reconduit reste celui de l'équipe.
+ * Et un seul garde-fou, contre la faillite : le PLANCHER DU POINT MORT. Quand
+ * le tour passé s'est soldé par une perte, que l'entreprise ouvre le tour à
+ * découvert et que des ventes ont manqué, rester sous le point mort serait
+ * perdre encore, à découvert, alors que la demande permettait de le passer.
+ * Le plan monte alors au point mort que les résultats du tour passé
+ * affichent, jamais au-delà de la demande reçue (ventes et ventes manquées, à
+ * la saison du tour) ni de l'atelier. Mesuré : il ne joue qu'en cas de
+ * difficulté, et la proposition finit à quelques pour cent de la gestion
+ * neutre là où elle n'en a pas besoin.
+ *
+ * Ni la demande à venir, ni la graine : rien que ce que l'élève a sous les yeux.
+ * Abonnement (la salle de sport) : le plan reconduit reste celui de l'équipe.
  */
 export function propositionDuTour(args: {
   snapshot: EngineScenarioConfig;
@@ -259,38 +263,58 @@ export function propositionDuTour(args: {
   previousPayload: RoundDecisions | null | undefined;
   /** Le détail par clientèle du tour passé de l'équipe ; absent : le plan reconduit. */
   lastMarket?: MarcheDuTourPasse | null;
+  /** Le point mort du tour passé, en unités (`breakeven.breakEvenUnits` de ses résultats). */
+  lastBreakEven?: number | null;
+  /** Le résultat net du tour passé. */
+  lastNetIncome?: number | null;
   leviers?: LeviersOuverts | null;
 }): RoundDecisions {
   const leviers = args.leviers ?? null;
-  if (!args.previousPayload) return premierTour(args.snapshot, args.state, args.roundIndex, leviers);
+  if (!args.previousPayload) return startingDecisionsFor(args.snapshot, args.state, args.roundIndex, leviers);
   const reconduite = sansDepensesPonctuelles(args.previousPayload);
   const { snapshot, state, roundIndex, lastMarket } = args;
   if (!state || !lastMarket || snapshot.subscription) return auPas(reconduite);
 
   const gamme = toGamme(snapshot);
   const multi = isMultiProduct(snapshot);
-  const depart = startingDecisionsFor(snapshot, state, roundIndex, leviers);
-  const plans = gamme.map((p) => {
-    if (!isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex)) return 0;
-    let demandee = 0;
-    let attendue = 0;
-    for (const seg of p.market.segments) {
-      const recue = Math.max(0, lastMarket[seg.code]?.sold ?? 0) + Math.max(0, lastMarket[seg.code]?.lost ?? 0);
-      demandee += recue;
-      attendue += recue * saisonDuTour(seg.seasonality ?? p.market.seasonality, roundIndex);
-    }
-    const stock = multi
-      ? (state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0)
-      : state.finishedGoods.quantity;
-    if (demandee <= 0) {
-      // Aucun repère : la référence n'était pas encore en vente. Le départ du secteur.
-      return multi ? (depart.products?.[p.code]?.productionPlan ?? 0) : depart.productionPlan;
-    }
-    return Math.max(0, attendue - stock);
+  // LE PLAN DE LA GESTION NEUTRE, sur les ventes réalisées du tour passé.
+  const neutre = neutralDecisions({
+    scenario: snapshot,
+    state,
+    roundIndex,
+    lastSoldUnits: Object.values(lastMarket).reduce((t, x) => t + Math.max(0, x.sold), 0),
+    lastSoldByProduct: soldByProduct(snapshot, lastMarket),
   });
+  const plans = gamme.map((p) =>
+    multi ? (neutre.products?.[p.code]?.productionPlan ?? 0) : neutre.productionPlan,
+  );
+
+  // LE PLANCHER DU POINT MORT, quand la perte, le découvert et la demande l'appellent.
+  const demandes = gamme.map((p) => {
+    if (!isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex)) return 0;
+    const recue = p.market.segments.reduce((t, seg) => {
+      const r = Math.max(0, lastMarket[seg.code]?.sold ?? 0) + Math.max(0, lastMarket[seg.code]?.lost ?? 0);
+      return t + r * saisonDuTour(seg.seasonality ?? p.market.seasonality, roundIndex);
+    }, 0);
+    const stock = multi ? (state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0) : state.finishedGoods.quantity;
+    return Math.max(0, recue - stock);
+  });
+  const pointMort = args.lastBreakEven ?? 0;
+  const total = plans.reduce((a, b) => a + b, 0);
+  const demande = demandes.reduce((a, b) => a + b, 0);
+  const perte = (args.lastNetIncome ?? 0) < 0;
+  const aDecouvert = state.finance.overdraft > 0;
+  if (perte && aDecouvert && pointMort > 0 && total < pointMort && demande > total) {
+    const vise = Math.min(pointMort * 1.02, demande);
+    const nonServie = demandes.map((d, k) => Math.max(0, d - plans[k]!));
+    const somme = nonServie.reduce((a, b) => a + b, 0);
+    // Chaque référence monte en proportion de la demande qu'elle n'aurait pas servie.
+    if (somme > 0) nonServie.forEach((n, k) => (plans[k] = plans[k]! + ((vise - total) * n) / somme));
+  }
   const bornes = bornerALAtelier(plans, gamme, state);
 
   if (!multi) return auPas({ ...reconduite, productionPlan: bornes[0]! });
+  const depart = startingDecisionsFor(snapshot, state, roundIndex, leviers);
   const products: Record<string, ProductDecisions> = {};
   gamme.forEach((p, k) => {
     const avant = reconduite.products?.[p.code];
@@ -306,45 +330,6 @@ export function propositionDuTour(args: {
   });
   return auPas({ ...reconduite, products });
 }
-
-/**
- * Le premier tour : le départ du secteur, à un détail près. En gamme, le plan
- * de départ anticipe la saison du tour SUIVANT (ratio borné entre 0,5 et 2) :
- * MAILLE & CO, dont la saison d'automne est la plus faible de l'année, se
- * voyait proposer 37 % de son atelier au premier tour. Le plan proposé vise
- * le tour qu'on joue : la même part de l'atelier, référence par référence,
- * sans ce pari sur la saison qui vient.
- */
-function premierTour(
-  snapshot: EngineScenarioConfig,
-  state: CompanyState | undefined,
-  roundIndex: number,
-  leviers: LeviersOuverts | null,
-): RoundDecisions {
-  const depart = startingDecisionsFor(snapshot, state, roundIndex, leviers);
-  if (!state || !depart.products || snapshot.subscription) return depart;
-  const gamme = toGamme(snapshot);
-  const disponibles = gamme.map((p) => isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex));
-  const tailles = gamme.map((p, k) =>
-    disponibles[k] ? p.market.segments.reduce((t, seg) => t + seg.size, 0) : 0,
-  );
-  const total = tailles.reduce((a, b) => a + b, 0);
-  const machines = state.machineCapacity * state.availability;
-  const plans = gamme.map((p, k) => {
-    const stock = state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0;
-    return total > 0 ? Math.max(0, machines * PART_DE_DEPART * (tailles[k]! / total) - stock) : 0;
-  });
-  const bornes = bornerALAtelier(plans, gamme, state);
-  return auPas({
-    ...depart,
-    products: Object.fromEntries(
-      gamme.map((p, k) => [p.code, { ...depart.products![p.code]!, productionPlan: bornes[k]! }]),
-    ),
-  });
-}
-
-/** La part de l'atelier que le départ du secteur engage (celle de la gestion neutre : 65 % × 1,05). */
-const PART_DE_DEPART = 0.65 * 1.05;
 
 /** La saison connue du tour, rapportée à celle du tour passé (bornée : un repère, pas un pari). */
 function saisonDuTour(saison: readonly number[], roundIndex: number): number {
@@ -379,7 +364,7 @@ function bornerALAtelier(
 /**
  * Les valeurs proposées pour ce tour (`propositionDuTour`) : au tour 1 le
  * départ du secteur ; ensuite le tour précédent sans ses dépenses ponctuelles,
- * le plan recalculé sur la demande constatée.
+ * le plan recalculé comme celui de la gestion neutre, sur les ventes réalisées.
  */
 export function proposedDecisionsFor(args: {
   snapshot: EngineScenarioConfig;
@@ -387,6 +372,8 @@ export function proposedDecisionsFor(args: {
   roundIndex: number;
   previousPayload: RoundDecisions | null | undefined;
   lastMarket?: MarcheDuTourPasse | null;
+  lastBreakEven?: number | null;
+  lastNetIncome?: number | null;
   leviers?: LeviersOuverts | null;
 }): RoundDecisions {
   return propositionDuTour(args);

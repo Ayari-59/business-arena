@@ -321,6 +321,8 @@ export function rejouer(
         previousPayload: precedentes[e.id],
         // Le détail du tour passé, tel que la base le garde (`marketDetail`).
         lastMarket: resultatsPrecedents[e.id] ? commeEnBase(resultatsPrecedents[e.id]!.market.bySegment) : null,
+        lastBreakEven: resultatsPrecedents[e.id]?.breakeven.breakEvenUnits ?? null,
+        lastNetIncome: resultatsPrecedents[e.id]?.incomeStatement.netIncome ?? null,
         leviers: partie.leviers ?? null,
       });
       const source: DecisionSourceMap = reconduites.has(e.id)

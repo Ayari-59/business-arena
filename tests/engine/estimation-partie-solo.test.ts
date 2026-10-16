@@ -78,6 +78,8 @@ function partieSolo(secteur: string, niveau: number, graine: number) {
               roundIndex: tour,
               previousPayload: precedente,
               lastMarket: p?.market.bySegment ?? null,
+              lastBreakEven: p?.breakeven.breakEvenUnits ?? null,
+              lastNetIncome: p?.incomeStatement.netIncome ?? null,
               leviers,
             })
           : botDecisions(e.profil!, {

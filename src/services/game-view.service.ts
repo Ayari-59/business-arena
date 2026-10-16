@@ -1931,8 +1931,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         state: stateRow?.state as CompanyState | undefined,
         roundIndex: game.currentRound,
         previousPayload: lastDecisions,
-        // La demande reçue au tour passé, vendue et manquée : ce que l'équipe a sous les yeux.
+        // Le tour passé tel que l'équipe le lit : ventes et ventes manquées, point mort, résultat.
         lastMarket: lastResult?.market.bySegment ?? null,
+        lastBreakEven: lastResult?.breakeven?.breakEvenUnits ?? null,
+        lastNetIncome: lastResult?.incomeStatement.netIncome ?? null,
         leviers: leviersFigesDuProfil(game.difficultyProfile),
       });
     })(),
