@@ -14,6 +14,7 @@ import {
   GRILLE_BUSINESS_ARENA_2026,
   GRILLE_DECISION_D_ABORD,
   REFERENCE_GESTION_NEUTRE,
+  REFERENCE_GESTION_NEUTRE_GELEE,
   noterLaCopie,
   referenceDeLaCopie,
   referenceDeLaGrille,
@@ -30,6 +31,11 @@ import {
  *      d'avant le lot « mérite durci » donnait (origin/main 9d33486, mesuré avec le même
  *      montage : la référence d'alors, `decisionDeReference`, était la gestion neutre).
  *      Et le bon gestionnaire, lui, donnerait une autre note : l'étalon compte.
+ *      CES TÉMOINS SONT CEUX DE L'ÉTALON DES GRILLES VERSION 1 (« gestion-neutre », qui
+ *      redécidait sous chacun des trente marchés) : ils le nomment donc, au lieu de suivre
+ *      l'étalon de la grille du jour, qui est gelé depuis la version 2. Aucune valeur
+ *      attendue n'a bougé : un examen ouvert sous une grille version 1 se renote contre
+ *      l'étalon de sa version, et ces notes-là ne doivent jamais dériver.
  *   2. L'ÉTALON EST ÉCRIT DANS LA GRILLE, et la table des grilles publiées le fige : changer
  *      l'étalon d'une grille sans changer sa version fait tomber ce test.
  *   3. LA NOTATION FIGÉE L'ENREGISTRE, avec sa définition ; une notation gardée avant (sans
@@ -182,13 +188,16 @@ describe("l'examen note contre la gestion neutre du secteur : les copies témoin
       const { base, ouverts } = partieEnMemoire(t.niveau, t.entreprise);
       const partie = jouer(base, t.strategie(ouverts));
       [GRILLE_BUSINESS_ARENA_2026, GRILLE_DECISION_D_ABORD].forEach((grille, i) => {
-        const c = noter(grille, partie, ouverts);
+        // L'étalon des grilles version 1 : les pondérations des lignes n'ont pas changé
+        // depuis, seul l'étalon l'a fait, et c'est contre celui-là que ces notes ont été
+        // relevées.
+        const c = noter(grille, partie, ouverts, "gestion-neutre");
         const attendu = t.notes[i]!;
         expect(c.note, `${grille.code} : note`).toBeCloseTo(attendu.note, 1);
         expect(points(c, "battre-la-reference"), `${grille.code} : battre`).toBeCloseTo(attendu.battre, 2);
         expect(points(c, "ecart-a-la-reference"), `${grille.code} : écart`).toBeCloseTo(attendu.ecart, 2);
         expect(points(c, "rang"), `${grille.code} : rang`).toBeCloseTo(attendu.rang, 2);
-        expect(c.grille.reference.code).toBe("gestion-neutre");
+        expect(c.grille.version).toBe(2);
       });
     }, 60_000);
   }
@@ -196,7 +205,7 @@ describe("l'examen note contre la gestion neutre du secteur : les copies témoin
   it("contre un bon gestionnaire, la même copie aurait une autre note : l'étalon compte", () => {
     const { base, ouverts } = partieEnMemoire(3, "nova");
     const partie = jouer(base, plus8(ouverts));
-    const neutre = noter(GRILLE_BUSINESS_ARENA_2026, partie, ouverts);
+    const neutre = noter(GRILLE_BUSINESS_ARENA_2026, partie, ouverts, "gestion-neutre");
     const bon = noter(GRILLE_BUSINESS_ARENA_2026, partie, ouverts, "bon-gestionnaire");
     expect(neutre.note).toBe(100);
     expect(points(bon, "battre-la-reference")).toBe(0);
@@ -209,19 +218,23 @@ describe("l'étalon est écrit dans la grille, et la notation figée l'enregistr
    * LES GRILLES PUBLIÉES ET LEUR ÉTALON. Une grille ne change pas d'étalon sans changer de
    * version : changer l'un sans l'autre fait tomber ce test.
    */
-  const PUBLIEES: Record<string, "gestion-neutre" | "bon-gestionnaire"> = {
-    "business-arena-2026@1": "gestion-neutre",
-    "decision-d-abord@1": "gestion-neutre",
+  const PUBLIEES: Record<string, "gestion-neutre" | "gestion-neutre-gelee" | "bon-gestionnaire"> = {
+    "business-arena-2026@2": "gestion-neutre-gelee",
+    "decision-d-abord@2": "gestion-neutre-gelee",
   };
 
   it("chaque grille publiée nomme son étalon, celui de sa version", () => {
     expect(Object.fromEntries(GRILLES.map((g) => [`${g.code}@${g.version}`, g.reference.code]))).toEqual(PUBLIEES);
-    for (const g of GRILLES) expect(g.reference).toEqual(REFERENCE_GESTION_NEUTRE);
+    for (const g of GRILLES) expect(g.reference).toEqual(REFERENCE_GESTION_NEUTRE_GELEE);
   });
 
   it("la gestion neutre du secteur se nomme et se définit ; aucun libellé ne dit plus « gestion de référence »", () => {
-    expect(REFERENCE_GESTION_NEUTRE.nom).toBe("la gestion neutre du secteur");
-    expect(REFERENCE_GESTION_NEUTRE.definition).toMatch(/^La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour/);
+    for (const r of [REFERENCE_GESTION_NEUTRE, REFERENCE_GESTION_NEUTRE_GELEE]) {
+      expect(r.nom).toBe("la gestion neutre du secteur");
+      expect(r.definition).toMatch(/^La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour/);
+    }
+    // L'étalon des grilles publiées dit aussi qu'il est gelé comme le candidat.
+    expect(REFERENCE_GESTION_NEUTRE_GELEE.definition).toMatch(/elle décide sur le marché joué, et ses décisions sont rejouées telles quelles/);
     for (const g of GRILLES) {
       const textes = [...g.lignes.flatMap((l) => [l.libelle, l.methode]), ...g.justification.map((j) => j.pourquoi)].join("\n");
       expect(textes).not.toMatch(/gestion de référence/);
@@ -237,7 +250,7 @@ describe("l'étalon est écrit dans la grille, et la notation figée l'enregistr
       { sur: 3, joueur: [marche], reference: [{ ...marche, resultat: 500 }], situations: null },
       { questions: false },
     );
-    expect(c.grille).toEqual({ code: "business-arena-2026", version: 1, nom: "Business Arena 2026", reference: REFERENCE_GESTION_NEUTRE });
+    expect(c.grille).toEqual({ code: "business-arena-2026", version: 2, nom: "Business Arena 2026", reference: REFERENCE_GESTION_NEUTRE_GELEE });
     // Une copie de grille ou une notation gardées sans le champ.
     const { reference: _r, ...sansEtalon } = GRILLE_BUSINESS_ARENA_2026;
     void _r;

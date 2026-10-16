@@ -9,7 +9,7 @@ import {
   mesurerLaLigne,
   noteDeDecision,
   noterLaCopie,
-  REFERENCE_GESTION_NEUTRE,
+  REFERENCE_GESTION_NEUTRE_GELEE,
   type MarcheDuRejeu,
   type MesuresDeLaCopie,
 } from "@/config/examen/grille";
@@ -123,7 +123,7 @@ describe("la grille : fixe, publiée, versionnée", () => {
     expect(c.lignes.reduce((s, l) => s + l.points, 0)).toBeCloseTo(c.note, 0);
     expect(c.lignes.reduce((s, l) => s + l.max, 0)).toBeCloseTo(100, 6);
     // La copie notée garde l'étalon contre lequel elle a été notée.
-    expect(c.grille).toEqual({ code: "business-arena-2026", version: 1, nom: "Business Arena 2026", reference: REFERENCE_GESTION_NEUTRE });
+    expect(c.grille).toEqual({ code: "business-arena-2026", version: 2, nom: "Business Arena 2026", reference: REFERENCE_GESTION_NEUTRE_GELEE });
   });
 
   it("bornes de 0 à 100 : la meilleure copie fait 100, la pire 0, un écart immense reste borné", () => {

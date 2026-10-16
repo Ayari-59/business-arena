@@ -436,3 +436,38 @@ export function rejouer(
     tours: toursRejoues,
   };
 }
+
+/**
+ * UNE PARTIE DÉCIDÉE PAR UNE MÉTHODE, PUIS GELÉE : la méthode joue le marché de
+ * la partie (sa graine), tour par tour, avec ce que le joueur voyait ; ses
+ * décisions sont gardées telles que la base les garderait, et la partie rendue
+ * les porte comme si elles avaient été jouées.
+ *
+ * C'est le seul mécanisme par lequel un étalon devient comparable au candidat :
+ * rejouée sous les marchés possibles, cette partie rejoue des décisions FIXES,
+ * exactement comme celles du candidat. Les deux étalons passent par ici
+ * (`partieDeLaReference`, `rejeuxDeLEtalon`), pour qu'aucun n'ait un second
+ * mécanisme à lui.
+ */
+export function partieFigee(
+  partie: PartieARejouer,
+  decider: Extract<DecideurDuJoueur, { type: "methode" }>["decider"],
+): PartieARejouer {
+  const prises: RoundDecisions[] = [];
+  rejouer(partie, partie.graine, {
+    type: "methode",
+    decider: (c) => {
+      const d = decider(c);
+      prises.push(commeEnBase(d));
+      return d;
+    },
+  });
+  return {
+    ...partie,
+    decisions: prises,
+    reconduits: prises.map(() => false),
+    // L'IPG d'un étalon ne juge pas (le critère est le résultat net) : il n'a
+    // répondu à aucune situation.
+    pedagogie: prises.map(() => ({})),
+  };
+}

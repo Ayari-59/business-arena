@@ -23,9 +23,12 @@ import {
  *     que le candidat a joué n'y pèse pas plus qu'un autre : deux candidats aux mêmes
  *     décisions ont la même note, quelle que soit la graine de leur partie.
  *     L'ÉTALON FAIT PARTIE DE LA GRILLE (`reference`) : les grilles publiées notent contre
- *     la gestion neutre du secteur. Le bilan des parties juge, lui, contre « un bon
- *     gestionnaire » ; si l'examen devait en changer, ce serait une nouvelle version de
- *     grille, et la notation figée de chaque copie dit contre quoi elle a été notée.
+ *     la gestion neutre du secteur. IL EST GELÉ COMME LE CANDIDAT : il décide sur le
+ *     marché joué, puis ses décisions sont rejouées telles quelles sous les trente,
+ *     faute de quoi il se réadapterait là où le candidat ne le peut pas. Le bilan des
+ *     parties juge, lui, contre « un bon gestionnaire » ; si l'examen devait en changer,
+ *     ce serait une nouvelle version de grille, et la notation figée de chaque copie dit
+ *     contre quoi elle a été notée.
  *  3. CHAQUE LIGNE EST BORNÉE DE 0 À SON MAXIMUM, et la note de 0 à 100. Une ligne qui ne
  *     s'applique pas (les questions éteintes, aucune situation rencontrée) sort du calcul,
  *     et les points des autres sont rapportés à 100 dans la même proportion.
@@ -60,18 +63,40 @@ export interface LigneDeGrille {
  * sa définition s'impriment dans la grille, le relevé et le rapport d'accréditation.
  */
 export interface ReferenceDeLaGrille {
-  code: "gestion-neutre" | "bon-gestionnaire";
+  code: "gestion-neutre" | "gestion-neutre-gelee" | "bon-gestionnaire";
   nom: string;
   /** Ce qu'elle fait, en une phrase. */
   definition: string;
 }
 
-/** La gestion neutre du secteur : l'étalon des grilles publiées. */
+/**
+ * La gestion neutre du secteur, TELLE QUE LES GRILLES VERSION 1 LA REJOUAIENT : elle
+ * redécidait tour par tour sous chacun des trente marchés, quand le candidat, lui, y était
+ * rejoué avec les décisions prises sur le seul marché qu'il avait joué. Mesurée, cette
+ * asymétrie portait l'essentiel de l'écart de note entre secteurs et presque tout le bruit
+ * entre deux graines d'une même cellule. Aucune grille publiée ne la nomme plus ; elle
+ * reste ici parce qu'une copie notée sous une grille version 1 se renote contre l'étalon de
+ * sa version (règle 1).
+ */
 export const REFERENCE_GESTION_NEUTRE: ReferenceDeLaGrille = {
   code: "gestion-neutre",
   nom: "la gestion neutre du secteur",
   definition:
     "La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour : le prix du marché, un volume qui suit les ventes, un marketing et une qualité au niveau du marché, rien de ce que le niveau n'ouvre pas. Elle ne réagit à personne.",
+};
+
+/**
+ * LA GESTION NEUTRE DU SECTEUR, GELÉE COMME LE CANDIDAT : l'étalon des grilles publiées
+ * depuis leur version 2. La même gestion, et la même façon d'être jugée que le candidat :
+ * elle décide sur le marché joué, puis ses décisions sont rejouées telles quelles sous les
+ * trente marchés possibles. Les deux sont alors jugés à armes égales, et la note ne mesure
+ * plus que les décisions.
+ */
+export const REFERENCE_GESTION_NEUTRE_GELEE: ReferenceDeLaGrille = {
+  code: "gestion-neutre-gelee",
+  nom: "la gestion neutre du secteur",
+  definition:
+    "La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour : le prix du marché, un volume qui suit les ventes, un marketing et une qualité au niveau du marché, rien de ce que le niveau n'ouvre pas. Elle ne réagit à personne. Comme le candidat, elle décide sur le marché joué, et ses décisions sont rejouées telles quelles sur les marchés possibles.",
 };
 
 export interface GrilleDeNotation {
@@ -186,13 +211,18 @@ export const methodeDe = (l: Pick<LigneDeGrille, "methode">, marches: number): s
  *     parce que leur tempérament change d'un marché à l'autre ;
  *   · diagnostics, 10 points, si l'examen pose les questions : la compréhension de la
  *     situation, mesurée à côté de la décision, sans la remplacer.
+ *
+ * VERSION 2 : les points ne bougent pas, l'étalon oui. Il est désormais gelé comme le
+ * candidat (`REFERENCE_GESTION_NEUTRE_GELEE`) ; en version 1 il redécidait sous chacun des
+ * trente marchés. Les notes baissent d'une dizaine de points en moyenne, et surtout elles
+ * cessent de dépendre de la graine tirée : les barèmes de passage se relisent une fois.
  */
 export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
   code: "business-arena-2026",
   nom: "Business Arena 2026",
-  version: 1,
-  publiee: "2026-10-12",
-  reference: REFERENCE_GESTION_NEUTRE,
+  version: 2,
+  publiee: "2026-10-16",
+  reference: REFERENCE_GESTION_NEUTRE_GELEE,
   propos: "La grille par défaut : la qualité des décisions d'abord, la tenue financière ensuite.",
   lignes: [
     ligne("battre-la-reference", 25),
@@ -237,9 +267,9 @@ export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
 export const GRILLE_DECISION_D_ABORD: GrilleDeNotation = {
   code: "decision-d-abord",
   nom: "Décision d'abord",
-  version: 1,
-  publiee: "2026-10-12",
-  reference: REFERENCE_GESTION_NEUTRE,
+  version: 2,
+  publiee: "2026-10-16",
+  reference: REFERENCE_GESTION_NEUTRE_GELEE,
   propos: "Pour mesurer d'abord le jugement : la qualité des décisions pèse plus de la moitié de la note.",
   lignes: [
     ligne("battre-la-reference", 35),

@@ -11,18 +11,19 @@
  *     sa grille publiée nomme (config/examen/grille.ts) : une note d'accréditation
  *     ne change pas d'étalon sans une nouvelle version de grille.
  *
- * Le moteur de rejeu est le même (`rejouer`) : seul change qui décide pour le
- * joueur sous chaque marché.
+ * Le moteur de rejeu est le même (`rejouer`), et la mise en forme de l'étalon
+ * aussi (`partieFigee`) : il décide sur le marché joué, puis ses décisions sont
+ * rejouées telles quelles sous les autres, comme celles du candidat.
  */
 import { neutralDecisions } from "@/engine/bots";
 import { bornerLInvestissement, plafondDInvestissement } from "@/engine/investment/plafond";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 import type { DifficultyPreset } from "@/config/difficulty";
-import { rejouer, type IssueDuRejeu, type PartieARejouer } from "./rejeu";
+import { partieFigee, rejouer, type IssueDuRejeu, type PartieARejouer } from "./rejeu";
 import { partieDeLaReference, selonLeNiveau } from "./reference";
 import { GRAINES_DU_MERITE } from "./verdict";
 
-export type Etalon = "gestion-neutre" | "bon-gestionnaire";
+export type Etalon = "gestion-neutre" | "gestion-neutre-gelee" | "bon-gestionnaire";
 
 /**
  * LA GESTION NEUTRE DU SECTEUR, tour par tour : la gestion que le formulaire
@@ -63,10 +64,22 @@ export function decisionDeLaGestionNeutre(
 /**
  * Les rejeux de l'étalon sous les marchés possibles, dans l'ordre des graines.
  *
- *   · gestion neutre : elle décide sous CHAQUE marché, tour par tour (c'est
- *     ainsi que l'examen l'a toujours jouée) ;
- *   · bon gestionnaire : il joue le marché de la partie, puis ses décisions sont
- *     rejouées telles quelles.
+ * DEUX ÉTALONS SUR TROIS SONT GELÉS, et c'est la règle : chacun décide sur le
+ * marché joué, puis ses décisions sont rejouées TELLES QUELLES sous les autres,
+ * exactement comme celles du candidat (`partieFigee`). Un étalon qui redéciderait
+ * sous chacun des marchés se réadapterait là où le candidat ne le peut pas, et
+ * la note mesurerait cette asymétrie autant que les décisions.
+ *
+ *   · gestion-neutre-gelee : la gestion neutre, décidée sur le marché joué puis
+ *     gelée. C'est l'étalon des grilles publiées depuis leur version 2 ;
+ *   · bon-gestionnaire : la référence du bilan des parties, gelée de même ;
+ *   · gestion-neutre : LA GESTION NEUTRE QUI REDÉCIDE sous chaque marché, tour
+ *     par tour. C'est l'asymétrie ci-dessus, et c'est l'étalon que les grilles
+ *     publiées nommaient jusqu'à leur version 1. Il reste ici parce qu'un
+ *     examen garde une COPIE de sa grille à sa création : une copie notée sous
+ *     une grille version 1 doit se renoter contre l'étalon de cette version-là,
+ *     et pas contre un autre (règle 1 de config/examen/grille.ts). Aucune
+ *     grille publiée ne le nomme plus.
  */
 export function rejeuxDeLEtalon(
   partie: PartieARejouer,
@@ -78,6 +91,9 @@ export function rejeuxDeLEtalon(
     const methode = { type: "methode" as const, decider: (c: Parameters<typeof decisionDeLaGestionNeutre>[0]) => decisionDeLaGestionNeutre(c, ouverts) };
     return graines.map((g) => rejouer(partie, g, methode));
   }
-  const laReference = partieDeLaReference(partie, ouverts);
-  return graines.map((g) => rejouer(laReference, g));
+  const laPartie =
+    etalon === "gestion-neutre-gelee"
+      ? partieFigee(partie, (c) => decisionDeLaGestionNeutre(c, ouverts))
+      : partieDeLaReference(partie, ouverts);
+  return graines.map((g) => rejouer(laPartie, g));
 }
