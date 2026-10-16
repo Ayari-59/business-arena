@@ -16,6 +16,11 @@
  * `messageNiveauxReserves`) : ce module-ci est lu par le formulaire, côté navigateur, et
  * n'importe pas la grille ; la page serveur lui passe ces textes.
  *
+ * CE MODULE PORTE DEUX BORNES, ET IL FAUT LES DISTINGUER : `NIVEAU_MAX` est le
+ * dernier niveau DU PARCOURS (6), celui que lisent l'examen, le mérite, les
+ * licences et les phrases des offres ; `NIVEAU_DU_GROUPE` est le niveau 7, hors
+ * parcours, inclus dans les offres lui aussi mais sur NOVA en gamme et en solo.
+ *
  * Le réglage vit dans /admin et peut encore s'ajuster sans déploiement : relever le
  * niveau maximum, ou rouvrir une entreprise à tous les niveaux (l'ancienne « vitrine »).
  * Seule la création d'une partie est concernée : une partie commencée se termine.
@@ -46,7 +51,39 @@ export interface VitrineSolo {
   niveauMaxAutres: number;
 }
 
+/**
+ * LE DERNIER NIVEAU DU PARCOURS : les six niveaux nommés (`DIFFICULTY_PRESETS`).
+ *
+ * C'est CETTE borne-là, et non « le niveau le plus haut qui existe », que lisent
+ * les bornes d'un sujet d'examen (services/examen.service.ts), le mérite
+ * (services/merite.service.ts), le choix de niveau d'une licence (/admin/offres)
+ * et les phrases des offres (« Les niveaux 4 à 6 sont inclus… »).
+ *
+ * LE NIVEAU 7 « GROUPE » N'EST PAS DEDANS, ET NE DOIT PAS Y ENTRER. La porter à 7
+ * pour « ouvrir le niveau 7 aux offres » aurait ouvert du même geste un septième
+ * sujet d'examen, un septième cran de mérite, un septième choix de licence et la
+ * phrase « les niveaux 4 à 7 sont inclus » — alors que le niveau 7 n'existe que
+ * sur NOVA en gamme, et en solo. Sa règle d'accès vit à part, juste dessous.
+ */
 export const NIVEAU_MAX = 6;
+
+/**
+ * LE NIVEAU 7 « GROUPE », HORS PARCOURS ET SOUS LICENCE.
+ *
+ * Il sort de l'avant-première (décision du propriétaire, octobre 2026) : il n'est
+ * plus réservé à l'administration de la plateforme, il est INCLUS DANS LES OFFRES,
+ * comme les niveaux 4 à 6 — et dans elles seules : aucun réglage de la Découverte
+ * ne l'ouvre (`niveauReserve` ci-dessous le tranche avant tout le reste, vitrine
+ * éteinte ou entreprise rouverte comprises). Deux restrictions tiennent, qui ne
+ * sont pas commerciales et que le serveur applique :
+ *   · NOVA en gamme seulement — seul ce scénario porte un bloc `groupe` ;
+ *   · en SOLO seulement — voir `verifierLeNiveauGroupe`.
+ *
+ * Écrit ici plutôt que lu de `config/difficulty` : ce module est importé par le
+ * formulaire, côté navigateur, et les préréglages tirent le moteur avec eux. Un
+ * test garde l'égalité avec `NIVEAU_GROUPE.level`.
+ */
+export const NIVEAU_DU_GROUPE = 7;
 
 /** Sans licence : niveaux 1 à 3, pour toutes les entreprises. */
 export const VITRINE_SOLO_PAR_DEFAUT: VitrineSolo = {
@@ -85,7 +122,11 @@ export function vitrineAEnregistrer(v: VitrineSolo): VitrineSolo & { version: nu
   return { ...normaliserVitrine({ ...v, version: VERSION_DE_LA_REGLE }), version: VERSION_DE_LA_REGLE };
 }
 
-/** Le niveau le plus haut qu'on peut créer avec cette entreprise ; une licence ouvre tout. */
+/**
+ * Le niveau le plus haut DU PARCOURS qu'on peut créer avec cette entreprise ; une
+ * licence ouvre les six. Le niveau 7 « Groupe » est hors de ce compte : il ne suit
+ * pas le réglage de la Découverte, voir `niveauReserve`.
+ */
 export function niveauMaxPour(vitrine: VitrineSolo, scenarioCode: string, licence = false): number {
   if (licence || !vitrine.active) return NIVEAU_MAX;
   return vitrine.entrepriseOuverte !== "" && scenarioCode === vitrine.entrepriseOuverte
@@ -100,6 +141,11 @@ export function niveauReserve(
   niveau: number,
   licence = false,
 ): boolean {
+  // AU-DELÀ DU PARCOURS (le niveau 7 « Groupe ») : la licence, et rien d'autre.
+  // Tranché AVANT le réglage de la Découverte, pour qu'aucun de ses deux leviers
+  // — la règle éteinte, une entreprise rouverte à tous les niveaux — ne le donne
+  // par effet de bord : ils rouvrent le parcours, pas ce qui est hors de lui.
+  if (niveau > NIVEAU_MAX) return !licence;
   return niveau > niveauMaxPour(vitrine, scenarioCode, licence);
 }
 

@@ -58,7 +58,7 @@ import { type BotProfile } from "@/engine/bots";
 import { premiereOuverture } from "@/engine/groupe";
 import type { CompanyState, EngineScenarioConfig } from "@/engine/types";
 import { GROUPE_PAR_SCENARIO } from "@/config/groupe/nova";
-import { users } from "@/db/schema";
+import { NIVEAU_DU_GROUPE } from "@/config/vitrine-solo";
 import { ENGINE_VERSION } from "@/engine/simulation";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 import {
@@ -249,7 +249,7 @@ function auNiveauGroupe(groupe: EngineScenarioConfig["groupe"], roundDays: numbe
   return groupe ? premiereOuverture(etat, groupe, roundDays) : etat;
 }
 
-/** Le niveau 7 « Groupe » : en avant-première, réservé à l'administration de la plateforme. */
+/** Le niveau 7 « Groupe » hors de ce qu'il sait jouer : une autre entreprise, ou la classe. */
 export class NiveauGroupeReserveError extends Error {
   constructor(message: string) {
     super(message);
@@ -257,45 +257,45 @@ export class NiveauGroupeReserveError extends Error {
   }
 }
 
-/**
- * LE NIVEAU 7 NE SE CRÉE QU'AVEC UN SCÉNARIO QUI PORTE UN BLOC DE GROUPE (NOVA
- * en gamme au prototype), ET PAR UN ADMINISTRATEUR DE LA PLATEFORME : la règle
- * de l'écran, appliquée ici pour toute création, quel que soit le formulaire.
- */
-/**
- * L'un de ces comptes administre-t-il la plateforme ? C'est le drapeau qui
- * ouvre le niveau 7 « Groupe » pendant l'avant-première : la page `/jouer` le
- * lit pour montrer le niveau, la création pour l'accepter.
- */
-export async function administreLaPlateforme(comptes: (string | null | undefined)[]): Promise<boolean> {
-  const ids = comptes.filter((x): x is string => typeof x === "string" && x.length > 0);
-  if (ids.length === 0) return false;
-  const admins = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(inArray(users.id, ids), eq(users.isPlatformAdmin, true)));
-  return admins.length > 0;
-}
-
 /** Les entreprises (codes de `/jouer`) qui se jouent au niveau 7 : celles dont la variante du niveau porte un bloc de groupe. */
 export function entreprisesDuNiveauGroupe(codes: readonly string[]): string[] {
-  return codes.filter((code) => Boolean(GROUPE_PAR_SCENARIO[scenarioCodeForLevel(code, 7)]));
+  return codes.filter((code) => Boolean(GROUPE_PAR_SCENARIO[scenarioCodeForLevel(code, NIVEAU_DU_GROUPE)]));
 }
 
-export async function verifierLeNiveauGroupe(args: {
+/**
+ * LES DEUX GARDES TECHNIQUES DU NIVEAU 7 « GROUPE », appliquées ici pour TOUTE
+ * création, quel que soit le formulaire qui l'envoie. La licence, elle, se
+ * vérifie à côté, avec celle des niveaux 4 à 6 (`verifierLeNiveau`) : depuis
+ * octobre 2026 le niveau 7 est inclus dans les offres, et le drapeau
+ * d'administration de la plateforme ne le commande plus.
+ *
+ * 1. NOVA EN GAMME SEULEMENT. Seul ce scénario porte un bloc `groupe`
+ *    (`config/groupe`) : ailleurs, les leviers du niveau n'ont rien à prendre.
+ *
+ * 2. EN SOLO SEULEMENT (décision du propriétaire, octobre 2026). Ce n'est pas
+ *    une limite commerciale, c'est ce que le moteur sait faire : le rachat du
+ *    fournisseur partagé ne modélise le départ et le rationnement que des
+ *    CONCURRENTS SIMULÉS (`engine/groupe/index.ts` : `c.controller === "bot"`),
+ *    et l'estimation en direct ne simule ni le rachat ni les filiales
+ *    (`limitesDeLEstimation`). Devant plusieurs équipes humaines, une classe
+ *    lirait donc un marché que le moteur ne joue pas pour elles.
+ */
+export function verifierLeNiveauGroupe(args: {
   niveau: number | undefined;
   scenarioCode: string | undefined;
-  /** Les comptes à l'origine de la création : l'un d'eux doit administrer la plateforme. */
-  comptes: (string | null | undefined)[];
-}): Promise<void> {
-  if (args.niveau !== 7) return;
-  const code = scenarioCodeForLevel(args.scenarioCode ?? DEFAULT_SCENARIO_CODE, 7);
+  /** La partie se joue-t-elle en classe (plusieurs équipes humaines) ? */
+  enClasse: boolean;
+}): void {
+  if (args.niveau !== NIVEAU_DU_GROUPE) return;
+  const code = scenarioCodeForLevel(args.scenarioCode ?? DEFAULT_SCENARIO_CODE, NIVEAU_DU_GROUPE);
   if (!GROUPE_PAR_SCENARIO[code]) {
     throw new NiveauGroupeReserveError("Le niveau 7 « Groupe » ne se joue qu'avec NOVA, en gamme.");
   }
-  if (!(await administreLaPlateforme(args.comptes))) {
+  if (args.enClasse) {
     throw new NiveauGroupeReserveError(
-      "Le niveau 7 « Groupe » est en avant-première : seul un administrateur de la plateforme peut créer une partie à ce niveau.",
+      "Le niveau 7 « Groupe » ne se joue qu'en solo pour l'instant : le rachat du fournisseur " +
+        "partagé n'y déplace que des concurrents simulés, et l'estimation en direct ne tient pas " +
+        "compte des rachats. Pour une classe, choisissez un niveau de 1 à 6.",
     );
   }
 }
@@ -677,7 +677,7 @@ export async function createSoloGame(
     scenarioCode,
     licence: () => unCompteSousLicence([userId, options.licencePar]),
   });
-  await verifierLeNiveauGroupe({ niveau: level, scenarioCode, comptes: [userId, options.licencePar] });
+  verifierLeNiveauGroupe({ niveau: level, scenarioCode, enClasse: false });
   if (creatorIp) {
     const [compte] = await db
       .select({ n: sql<number>`count(*)::int` })
@@ -762,7 +762,7 @@ export async function createClassGame(args: {
     scenarioCode: args.scenarioCode,
     licence: () => uneOrganisationSousLicence([args.organizationId]),
   });
-  await verifierLeNiveauGroupe({ niveau: args.level, scenarioCode: args.scenarioCode, comptes: [args.teacherId] });
+  verifierLeNiveauGroupe({ niveau: args.level, scenarioCode: args.scenarioCode, enClasse: true });
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
   const joinCode = makeJoinCode();

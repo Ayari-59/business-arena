@@ -225,13 +225,25 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
 ];
 
 /**
- * LE NIVEAU 7 « GROUPE », À CÔTÉ DU PARCOURS (prototype, octobre 2026).
+ * LE NIVEAU 7 « GROUPE », À CÔTÉ DU PARCOURS.
  *
- * Les six niveaux du parcours (`DIFFICULTY_PRESETS`) ne le comptent pas : les
- * ateliers, le manuel, les lettres de mission, les textes des offres et les
- * bornes de l'examen restent ceux des six niveaux. Il ne se joue qu'avec les
- * scénarios qui portent un bloc de groupe (`config/groupe`), NOVA en gamme
- * pour le prototype, en solo, et seul un administrateur peut le créer.
+ * Les six niveaux du parcours (`DIFFICULTY_PRESETS`) ne le comptent pas, et ce
+ * n'est pas un oubli à rattraper : les ateliers, le manuel, les lettres de
+ * mission, l'énumération des niveaux dans les offres et les bornes d'un sujet
+ * d'examen restent ceux des SIX niveaux (`NIVEAU_MAX`, config/vitrine-solo).
+ * Rien de tout cela n'existe au niveau 7.
+ *
+ * Ce qui le borne, et que le serveur applique à toute création
+ * (`verifierLeNiveauGroupe`) :
+ *   · NOVA EN GAMME SEULEMENT — c'est le seul scénario qui porte un bloc de
+ *     groupe (`config/groupe`), et les leviers du niveau n'ont rien à prendre
+ *     ailleurs ;
+ *   · EN SOLO SEULEMENT — le rachat du fournisseur partagé ne modélise le
+ *     départ et le rationnement que des concurrents simulés.
+ *
+ * Il n'est plus en avant-première (décision du propriétaire, octobre 2026) :
+ * il est inclus dans les offres de l'arène comme les niveaux 4 à 6, et aucun
+ * drapeau d'administration ne le commande plus.
  *
  * Son monde est celui de l'Executive (mêmes aléas, aucun indice, mêmes
  * leviers) ; il y ajoute la croissance externe et l'externalisation, et juge
