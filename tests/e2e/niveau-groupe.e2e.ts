@@ -7,14 +7,14 @@ import { aller, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 
 /**
- * LE NIVEAU 7 « GROUPE », DANS UN NAVIGATEUR (prototype, avant-première).
+ * LE NIVEAU 7 « GROUPE », DANS UN NAVIGATEUR.
  *
  * Ce que les tests unitaires ne voient pas : la feuille de décision qui juge
  * l'offre de rachat dans le navigateur, l'action serveur qui lit les champs du
  * niveau, la fin de tour qui rachète, et les comptes qui le montrent.
  *
- *   · un administrateur de la plateforme voit le niveau 7 et lance une partie
- *     solo NOVA à ce niveau ; un visiteur et un enseignant ordinaire, non ;
+ *   · le niveau 7 se voit sur /jouer pour NOVA : fermé et marqué sans licence,
+ *     ouvert avec ; jamais dans le formulaire de classe ;
  *   · tour 1 : le barème du sous-traitant et son seuil ; tour 2 : une
  *     commande au sous-traitant, le rachat de 51 % d'une entreprise étrangère
  *     jugé avant l'envoi, le plan relevé pour son réseau ; le résultat montre
@@ -23,8 +23,8 @@ import { enseignantSousLicence } from "./helpers/licence";
  *     reste « à découvrir » jusque-là), la fin du développement au tour 2, le
  *     module radio choisi et la première vente au tour 3 (au 4 si la
  *     certification glisse), et ce que la Home a coûté et rapporté ;
- *   · une partie de classe à deux équipes : le même fournisseur, deux offres,
- *     une enchère perdue, et chacune le lit.
+ *   · (en attente) une partie de classe à deux équipes : le niveau 7 ne se joue
+ *     plus en classe, le bloc est gardé tel quel pour le jour où elle rouvre.
  *
  * Les captures (ordinateur et téléphone) vont dans `CAPTURES_GROUPE`, ou à
  * défaut dans `test-results/niveau-groupe`.
@@ -160,29 +160,43 @@ afterAll(async () => {
   await navigateur?.close();
 });
 
-describe("le niveau 7 n'existe que pour l'administrateur", () => {
-  it("un visiteur ne voit que six niveaux", async () => {
+/**
+ * CE QUE CE BLOC GARDE A CHANGÉ (décision du propriétaire, octobre 2026) : le
+ * niveau 7 n'est plus en avant-première. Il n'est plus commandé par le drapeau
+ * d'administration mais par la LICENCE, comme les niveaux 4 à 6 ; il reste
+ * visible sans licence, marqué et fermé (l'étendue est l'argument), et il reste
+ * hors du formulaire de classe, qui n'ouvre que des parties de classe.
+ */
+describe("le niveau 7 suit la licence, et le solo", () => {
+  it("un visiteur le voit, marqué et fermé, avec ce qui l'ouvre", async () => {
     const visiteur = await (await navigateur.newContext({ locale: "fr-FR" })).newPage();
     await aller(visiteur, "/jouer");
     await visiteur.getByRole("button", { name: /NOVA/ }).first().click();
     expect(await visiteur.locator('button[aria-label^="Niveau 6"]').count()).toBe(1);
-    expect(await visiteur.locator('button[aria-label^="Niveau 7"]').count()).toBe(0);
+    // Présent, et marqué de l'offre qui l'ouvre : jamais caché, jamais muet.
+    expect(await visiteur.locator('button[aria-label^="Niveau 7 · Groupe · Offre"]').count()).toBe(1);
+    expect(await visiteur.locator("[data-niveau-groupe-reserve]").innerText()).toMatch(
+      /NOVA en gamme, et en solo/,
+    );
     await visiteur.context().close();
   }, 120_000);
 
-  it("un enseignant sous licence, sans le drapeau, non plus ; ni dans son formulaire de classe", async () => {
+  it("un enseignant sous licence, sans le drapeau, l'ouvre en solo ; jamais dans son formulaire de classe", async () => {
     const ctx = await navigateur.newContext({ locale: "fr-FR" });
     await enseignantSousLicence(ctx);
     const prof = await ctx.newPage();
     await aller(prof, "/jouer");
     await prof.getByRole("button", { name: /NOVA/ }).first().click();
-    expect(await prof.locator('button[aria-label^="Niveau 7"]').count()).toBe(0);
+    // Sous licence, il est ouvert : le marquage de l'offre tombe.
+    expect(await prof.locator('button[aria-label="Niveau 7 · Groupe"]').count()).toBe(1);
+    expect(await prof.locator("[data-niveau-groupe-reserve]").count()).toBe(0);
+    // La classe, elle, reste fermée au niveau 7 : il n'est pas dans la liste.
     await aller(prof, "/teacher");
     expect(await prof.locator('select[name="level"] option[value="7"]').count()).toBe(0);
     await ctx.close();
   }, 120_000);
 
-  it("l'administrateur le voit, pour NOVA seulement", async () => {
+  it("il est là pour NOVA, et ouvert : la partie peut se lancer", async () => {
     await aller(page, "/jouer");
     await page.getByRole("button", { name: /NOVA/ }).first().click();
     expect(await page.locator('button[aria-label^="Niveau 7 · Groupe"]').count()).toBe(1);
@@ -483,7 +497,21 @@ describe("une partie solo de niveau 7", () => {
   }, 600_000);
 });
 
-describe("une partie de classe à deux équipes : l'enchère", () => {
+/**
+ * EN ATTENTE : LE NIVEAU 7 NE SE JOUE PLUS EN CLASSE (décision du propriétaire,
+ * octobre 2026). `verifierLeNiveauGroupe` refuse désormais une partie de classe à
+ * ce niveau, et le formulaire de l'enseignant ne le propose plus : ce parcours ne
+ * peut donc plus se dérouler.
+ *
+ * IL N'EST PAS SUPPRIMÉ, ET CE N'EST PAS UN DÉTAIL. L'enchère entre deux équipes
+ * qui visent la même cible existe, elle est calibrée et elle était vérifiée ici :
+ * c'est le moteur de la classe au niveau 7 qui devient inatteignable, pas un test
+ * devenu faux. Le jour où la classe rouvre — après le correctif de l'estimation et
+ * la modélisation du départ des concurrents HUMAINS du fournisseur partagé
+ * (`engine/groupe/index.ts`, aujourd'hui limité à `controller === "bot"`) — ce
+ * bloc se rallume tel quel.
+ */
+describe.skip("une partie de classe à deux équipes : l'enchère", () => {
   let urlPartie = "";
   let code = "";
   const eleves: Page[] = [];
