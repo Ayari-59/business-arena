@@ -127,12 +127,14 @@ export function QuickConfigFields({
   niveauGroupe = null,
 }: {
   /**
-   * LE NIVEAU 7 « GROUPE », EN AVANT-PREMIÈRE : servi par la page à un
-   * administrateur de la plateforme seulement, avec les entreprises qui le
-   * jouent (NOVA, en gamme). Absent : la règle et les niveaux d'avant, à
-   * l'identique ; personne d'autre ne le voit.
+   * LE NIVEAU 7 « GROUPE », HORS PARCOURS : servi par la page avec les
+   * entreprises qui le jouent (NOVA, en gamme), ses restrictions dites en clair
+   * et ce que les offres en ouvrent (`NIVEAU_GROUPE_EN_PUBLIC`). Il se montre à
+   * tous — inclus dans les offres depuis octobre 2026 : sans licence il est
+   * marqué et fermé comme les niveaux 4 à 6, jamais caché. Absent : les six
+   * niveaux du parcours, à l'identique.
    */
-  niveauGroupe?: (QuickLevel & { entreprises: string[] }) | null;
+  niveauGroupe?: (QuickLevel & { entreprises: string[]; restriction: string; inclus: string }) | null;
   /** Le comparatif des niveaux, dépliable sur ordinateur (`config/tableau-des-niveaux`). */
   comparatif?: ComparatifDesNiveaux;
   scenarios: QuickScenario[];
@@ -179,13 +181,19 @@ export function QuickConfigFields({
   const [comparatifOuvert, setComparatifOuvert] = useState(false);
 
   const regle: VitrineSolo = vitrine ?? VITRINE_SOLO_PAR_DEFAUT;
-  // Le niveau 7 se montre à l'administrateur, pour les entreprises qui le jouent ;
-  // il s'ouvre là où les six autres le sont (sous licence ou vitrine ouverte).
+  // LE NIVEAU 7 « GROUPE » se montre pour les entreprises qui le jouent (NOVA en
+  // gamme), à tous : sans licence il est là, marqué et fermé, comme les niveaux
+  // 4 à 6 — l'étendue est l'argument. Seule une LICENCE l'ouvre : à la différence
+  // des six, ni la règle éteinte ni une entreprise rouverte ne le donnent (la
+  // même règle côté serveur, `niveauReserve`).
   const groupeIci = niveauGroupe !== null && niveauGroupe.entreprises.includes(scenario);
   const levels = groupeIci ? [...niveaux, niveauGroupe] : niveaux;
-  // Le niveau le plus haut jouable avec l'entreprise choisie (6 sous licence, 7 pour l'administrateur).
+  // Le niveau le plus haut jouable avec l'entreprise choisie, dans le parcours.
   const niveauMaxDesSix = niveauMaxPour(regle, scenario, licence);
-  const niveauMax = groupeIci && niveauMaxDesSix >= NIVEAU_MAX ? niveauGroupe.level : niveauMaxDesSix;
+  const niveauMax = groupeIci && licence ? niveauGroupe.level : niveauMaxDesSix;
+  /** Des niveaux du parcours sont-ils fermés ici ? Et le niveau 7, montré mais fermé ? */
+  const sixFermes = niveauMaxDesSix < NIVEAU_MAX;
+  const groupeFerme = groupeIci && !licence ? niveauGroupe : null;
   // Une entreprise ouverte à tous les niveaux, les autres non : chaque carte dit jusqu'où
   // elle se joue. La même borne pour toutes : l'encadré sous le niveau le dit une fois.
   const parCarte = !licence && aDeuxEtages(regle);
@@ -340,6 +348,13 @@ export function QuickConfigFields({
       </div>
       <p className="mt-1 text-lg font-bold text-slate-50">
         Niveau {level} · {cur?.name}
+        {/* Le niveau 7 dit sa restriction là où on le choisit : elle est vraie, et
+            elle n'a rien d'évident face à six niveaux ouverts à toutes les entreprises. */}
+        {niveauGroupe && level === niveauGroupe.level ? (
+          <span className="ml-2 text-sm font-medium text-slate-300" data-restriction-du-groupe="">
+            {niveauGroupe.restriction}
+          </span>
+        ) : null}
       </p>
       <input
         type="range"
@@ -375,23 +390,37 @@ export function QuickConfigFields({
           );
         })}
       </div>
-      {niveauMax < maxLevel ? (
+      {sixFermes || groupeFerme ? (
         // Les niveaux fermés restent visibles (l'étendue est l'argument) et ne sont pas un
         // bouton muet : on dit lesquels, ce qui les ouvre, et où le lire.
         <div
           data-niveaux-reserves
           className="encadre-neutre mt-2 rounded-lg px-3 py-2.5 text-sm leading-snug text-slate-200"
         >
-          <p>
-            <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
-            <strong className="font-semibold text-slate-100" data-offre-des-niveaux="">
-              {niveauxFermes(regle)} · {offre.marque}
-            </strong>{" "}
-            {offre.message}
-            {aDeuxEtages(regle)
-              ? ` ${scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "Une entreprise"} se joue à tous les niveaux.`
-              : null}
-          </p>
+          {sixFermes ? (
+            <p>
+              <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+              <strong className="font-semibold text-slate-100" data-offre-des-niveaux="">
+                {niveauxFermes(regle)} · {offre.marque}
+              </strong>{" "}
+              {offre.message}
+              {aDeuxEtages(regle)
+                ? ` ${scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "Une entreprise"} se joue à tous les niveaux.`
+                : null}
+            </p>
+          ) : null}
+          {groupeFerme ? (
+            // LE NIVEAU 7 SE DIT À PART, jamais fondu dans « les niveaux 4 à 7 » :
+            // les six premiers se jouent sur les neuf entreprises et en classe,
+            // le septième sur NOVA en gamme et en solo.
+            <p className={sixFermes ? "mt-1.5" : ""} data-niveau-groupe-reserve="">
+              <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+              <strong className="font-semibold text-slate-100">
+                Niveau {groupeFerme.level} · {groupeFerme.name} · {offre.marque}
+              </strong>{" "}
+              {groupeFerme.inclus}
+            </p>
+          ) : null}
           {liens ? (
             <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
               <a href={liens.tarifs.href} className="font-semibold text-slate-100 underline decoration-1 underline-offset-4">
