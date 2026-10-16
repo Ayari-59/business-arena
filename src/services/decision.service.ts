@@ -1,40 +1,34 @@
 import { neutralDecisions, type LeviersOuverts } from "@/engine/bots";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
+import { sansDepensesPonctuelles } from "@/services/decision-baseline";
 
 /**
  * Reconduction des décisions du tour précédent quand une équipe humaine
  * n'a pas soumis les siennes.
  *
- * Champs récurrents (preservés) :
- *   price, productionPlan, marketingBudget, qualityBudget, maintenanceBudget,
- *   hr.salaryIndex, supplierChoice, insurance, forecast
+ * La MÊME RÈGLE que la proposition du formulaire (`sansDepensesPonctuelles`,
+ * services/decision-baseline.ts) : une dépense ponctuelle vaut pour SON tour.
+ * Reconduite, elle se paierait encore sans que personne ne l'ait redécidée :
+ * l'équipe absente qui avait financé une référence à bâtir la refinançait à
+ * chaque tour d'absence, comme celle qui validait la proposition.
  *
- * Champs ponctuels (remis à undefined) :
- *   hr.hire, hr.fire, hr.trainingBudget,
- *   investment, treasury, finance, acceptOrder, studies, rachat,
- *   et les choix de module (actions qualité, hygiène et sécurité,
- *   activations des catalogues optionnels) : ce sont des DÉMARRAGES, que le
- *   moteur garde ensuite dans l'état. Reconduits, ils relanceraient une action
- *   ponctuelle ou une action échue que l'équipe n'a pas redécidée.
+ * Champs récurrents (préservés) :
+ *   price, productionPlan, marketingBudget, qualityBudget, maintenanceBudget,
+ *   marque et axe de communication, hr.salaryIndex, supplierChoice,
+ *   insurance, forecast ; le détail par référence (prix, plan, budgets).
+ *
+ * Champs ponctuels (retirés, ou remis à zéro pour la R&D) :
+ *   rdBudget (global et par référence), hr.hire, hr.fire, hr.trainingBudget,
+ *   investment, treasury, finance, acceptOrder, studies, rse, salesEstimate,
+ *   rachat (niveau 7 : reconduit, il se rejouerait ; la sous-traitance, le
+ *   réseau et la fabrication à l'étranger se reconduisent comme le plan),
+ *   et les choix de module (actions qualité, programmes R&D lancés, arrêts) :
+ *   ce sont des DÉMARRAGES, que le moteur garde ensuite dans l'état. Reconduits,
+ *   ils relanceraient une action ponctuelle ou échue que l'équipe n'a pas
+ *   redécidée.
  */
 export function carryOverDecisions(prev: RoundDecisions): RoundDecisions {
-  return {
-    ...prev,
-    hr: prev.hr ? { salaryIndex: prev.hr.salaryIndex } : undefined,
-    supplierChoice: prev.supplierChoice,
-    investment: undefined,
-    treasury: undefined,
-    finance: undefined,
-    acceptOrder: undefined,
-    studies: undefined,
-    qualityActions: undefined,
-    startedRdActionIds: undefined,
-    // Un arrêt ne se reconduit pas : il a eu lieu au tour où il a été décidé.
-    stoppedModuleItems: undefined,
-    // Niveau 7 : un rachat est ponctuel ; reconduit, il se rejouerait. La
-    // sous-traitance et les synergies se reconduisent comme le plan.
-    ...(prev.rachat ? { rachat: undefined } : {}),
-  };
+  return sansDepensesPonctuelles(prev);
 }
 
 /**

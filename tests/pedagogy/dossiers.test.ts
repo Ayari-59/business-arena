@@ -225,15 +225,15 @@ describe("les deux dossiers d'un atelier", () => {
 });
 
 describe("les dossiers de service savent la R&D et la communication", () => {
-  it("NOVA · gamme annonce la Studio à développer, la marque et l'axe ; un secteur sans levier n'en dit rien", () => {
-    // La R&D s'ouvre au niveau 5 : l'atelier DCG (NOVA · gamme, niveau 5) la porte.
+  it("NOVA · gamme annonce la marque et l'axe, et sa Studio livrée prête ; un secteur sans levier n'en dit rien", () => {
+    // La R&D s'ouvre au niveau 5 : l'atelier DCG (NOVA · gamme, niveau 5) la porte. La
+    // Studio y est livrée prête, comme au niveau 6 (`REFERENCES_LIVREES_PRETES`).
     const gea = ATELIERS.find((a) => a.code === "dcg")!;
     const services = dossierEleve(gea).services;
     const par = (code: string) => services.find((s) => s.code === code)!;
     const appro = par("approvisionnement");
-    expect(appro.lignes.find((l) => l.libelle === "À développer avant de vendre : NOVA Studio")!.valeur).toContain("25 000 €");
-    expect(appro.lignes.find((l) => l.libelle === "À développer avant de vendre : NOVA Studio")!.valeur).toContain("au plus tôt au tour 2");
-    expect(appro.lignes.some((l) => l.libelle.startsWith("À développer avant de vendre : NOVA Go"))).toBe(false);
+    expect(appro.lignes.some((l) => l.libelle.startsWith("À développer avant de vendre"))).toBe(false);
+    expect(JSON.stringify(services)).not.toContain("R&D à financer");
     const commercial = par("commercial");
     expect(commercial.mission).toContain("l'axe de communication");
     expect(commercial.lignes.find((l) => l.libelle === "Budget de marque de référence par tour")!.valeur).toContain("4 000 €");
@@ -243,9 +243,10 @@ describe("les dossiers de service savent la R&D et la communication", () => {
     const ligne = (nom: string) => commercial.tableau!.lignes.find((l) => l[0]!.startsWith(nom))!.at(-1)!;
     expect(ligne("Lycéens")).toMatch(/^prix · .*qualité/);
     expect(ligne("Passionnés")).toMatch(/^qualité.* · prix$/);
+    // Rien à financer avant de vendre : pas de question sur la R&D qui se paie avant de vendre.
     const financier = par("financier");
-    expect(financier.lignes.find((l) => l.libelle === "R&D à financer avant de vendre NOVA Studio")!.valeur).toContain("25 000 €");
-    expect(financier.questions).toHaveLength(4);
+    expect(financier.questions).toHaveLength(3);
+    expect(financier.questions.some((q) => q.startsWith("La R&D se paie tout de suite"))).toBe(false);
     // Le tableau de bord de l'équipe a les deux cases.
     expect(dossierEleve(gea).tableauDeBord.decisions).toEqual(
       expect.arrayContaining(["Budget de marque", "Axe de communication", "Recherche et développement"]),
@@ -258,6 +259,29 @@ describe("les dossiers de service savent la R&D et la communication", () => {
     expect(texte).not.toContain("Axe de communication");
     expect(dossierEleve(stmg).tableauDeBord.decisions).not.toContain("Budget de marque");
     expect(dossierEleve(stmg).tableauDeBord.decisions).not.toContain("Axe de communication");
+  });
+
+  it("une référence à bâtir s'annonce : ce qu'elle coûte, et quand elle se vend", () => {
+    // La cyber-sécurité d'ATLAS CONSEIL se bâtit au niveau qui ouvre la R&D.
+    const services = dossiersDeService(scenarioByCode("conseil-gamme"), 4, { sansRd: false });
+    const par = (code: string) => services.find((s) => s.code === code)!;
+    const aBatir = par("approvisionnement").lignes.find((l) => l.libelle === "À développer avant de vendre : Cyber-sécurité")!;
+    expect(aBatir.valeur).toContain("30 000 €");
+    expect(aBatir.valeur).toContain("au plus tôt au tour 2");
+    expect(par("approvisionnement").lignes.filter((l) => l.libelle.startsWith("À développer avant de vendre"))).toHaveLength(1);
+    expect(par("financier").lignes.find((l) => l.libelle === "R&D à financer avant de vendre Cyber-sécurité")!.valeur).toContain("30 000 €");
+    expect(par("financier").questions).toHaveLength(4);
+    // Et la Studio de NOVA, R&D ouverte, est livrée prête aux niveaux 5 et 6 ; au
+    // niveau 7, et sans niveau (le scénario de base), elle reste à développer.
+    for (const niveau of [5, 6]) {
+      const nova = JSON.stringify(dossiersDeService(scenarioByCode("nova-gamme"), 4, { sansRd: false, niveau }));
+      expect(nova, `niveau ${niveau}`).not.toContain("À développer");
+      expect(nova, `niveau ${niveau}`).not.toContain("R&D à financer");
+    }
+    for (const niveau of [7, undefined]) {
+      const nova = JSON.stringify(dossiersDeService(scenarioByCode("nova-gamme"), 4, { sansRd: false, ...(niveau ? { niveau } : {}) }));
+      expect(nova, `niveau ${niveau}`).toContain("À développer avant de vendre : NOVA Studio");
+    }
   });
 
   it("un niveau qui ferme la R&D ne promet aucun développement", () => {

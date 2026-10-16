@@ -1,9 +1,9 @@
 import {
   suppliersOf,
   toGamme,
-  withoutRd,
   offerProductIndex,
 } from "../../engine/gamme";
+import { rdDuNiveau } from "../scenarios/scenario-joue";
 import {
   axisAffinity,
   COMMUNICATION_AXES,
@@ -160,11 +160,10 @@ function axesPourClientele(segment: SegmentConfig): {
 export function dossiersDeService(
   definition: ScenarioDefinition,
   tours: number,
-  options: { sansRd?: boolean } = {},
+  options: { sansRd?: boolean; niveau?: number } = {},
 ): DossierService[] {
-  const config = options.sansRd
-    ? withoutRd(definition.scenario)
-    : definition.scenario;
+  // La R&D telle que la partie la jouera à ce niveau (`rdDuNiveau`).
+  const config = rdDuNiveau(definition.scenario, options.niveau, !options.sansRd);
   const v = definition.vocabulary;
   const etat = definition.company(
     "dossier",

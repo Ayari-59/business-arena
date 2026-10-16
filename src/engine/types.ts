@@ -760,25 +760,6 @@ export interface SupplierDef {
   supplyRiskProbability: number;
   /** Malus de disponibilité si la rupture se matérialise (ex. 0.8 = −20 %). */
   supplyRiskAvailabilityHit: number;
-  /**
-   * INDICE DE COURS (optionnel) : fluctuation du prix des matières premières
-   * de tour en tour, à la manière d'un indice de matières premières. Le cours
-   * suit une marche aléatoire avec dérive et inertie (momentum), bornée par
-   * `minMultiplier` et `maxMultiplier`. Sans ce champ, le coût matières est
-   * fixe (comportement historique).
-   *
-   * `volatility` : écart-type du choc par tour (0.08 = ±8 % typique).
-   * `trend` : dérive par tour (0.01 = +1 % de tendance haussière).
-   * `momentum` : persistance du choc précédent (0 = bruit blanc, 0.7 = forte inertie).
-   * `minMultiplier` / `maxMultiplier` : plancher et plafond du multiplicateur.
-   */
-  priceIndex?: {
-    volatility: number;
-    trend: number;
-    momentum: number;
-    minMultiplier: number;
-    maxMultiplier: number;
-  };
 }
 
 /** Une commande exceptionnelle du pool (voir EngineScenarioConfig.orderOffers). */
@@ -1613,7 +1594,7 @@ export interface ProductRoundResult {
     costMultiplier: number;
     qualityBonus: number;
     supplyDisruption: boolean;
-    /** Multiplicateur de l'indice de cours ce tour (1 = cours de base). Absent si pas d'indice. */
+    /** Le cours de l'import du groupe ce tour (niveau 7 ; 1 = cours de départ). Absent hors import. */
     priceIndexMultiplier?: number;
   };
   /**
@@ -1854,8 +1835,6 @@ export interface CompanyRoundResult {
     costMultiplier: number;
     qualityBonus: number;
     supplyDisruption: boolean;
-    /** Multiplicateur de l'indice de cours ce tour (1 = cours de base). Absent si pas d'indice. */
-    priceIndexMultiplier?: number;
   };
   /** Études achetées ce tour : lesquelles, la facture, et les données révélées. */
   studies?: {

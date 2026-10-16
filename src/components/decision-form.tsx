@@ -5341,6 +5341,15 @@ export function DecisionForm({
             Vous validez avec les valeurs proposées pour :{" "}
             <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
           </p>
+          {/* D'OÙ VIENT LA PROPOSITION (services/decision-baseline.ts, `propositionDuTour`) :
+              une base neutre, jamais une stratégie. */}
+          <p className="mt-1 text-xs text-slate-400">
+            {roundIndex <= 1
+              ? "Ce sont les valeurs de départ du secteur."
+              : capacityFacts?.subscription
+                ? "Ce sont les valeurs de votre dernier tour."
+                : "Le prix et les budgets sont ceux de votre dernier tour ; le volume suit vos ventes du tour passé et la saison, comme le ferait une gestion neutre."}
+          </p>
           <div className="mt-3 flex flex-wrap gap-3">
             <button
               type="button"

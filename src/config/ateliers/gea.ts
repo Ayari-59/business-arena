@@ -51,7 +51,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA se joue ici en trois références, qui se disputent le même atelier : le coût de revient et la marge se calculent enceinte par enceinte, et le mix devient une décision. NOVA porte un coût de production, des charges fixes qui pèsent tant que le volume ne les absorbe pas, des délais de règlement qui creusent le besoin en fonds de roulement, et un compte-clé qui fait bondir la demande au quatrième trimestre. Le niveau retenu ouvre la trésorerie, l'assurance, le recrutement, l'emprunt et l'investissement ; la troisième enceinte y est livrée prête, sa recherche et l'engagement RSE attendent le niveau suivant : la gestion généraliste demande de voir l'entreprise entière, du coût de revient au financement de sa croissance. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice.",
+      "NOVA se joue ici en trois références, qui se disputent le même atelier : le coût de revient et la marge se calculent enceinte par enceinte, et le mix devient une décision. NOVA porte un coût de production, des charges fixes qui pèsent tant que le volume ne les absorbe pas, des délais de règlement qui creusent le besoin en fonds de roulement, et un compte-clé qui fait bondir la demande au quatrième trimestre. Le niveau retenu ouvre la trésorerie, l'assurance, le recrutement, l'emprunt et l'investissement ; la troisième enceinte y est livrée prête, la R&D et l'engagement RSE attendent le niveau suivant : la gestion généraliste demande de voir l'entreprise entière, du coût de revient au financement de sa croissance. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice.",
   },
   seances: [
     {
@@ -151,7 +151,7 @@ export const ATELIER_GEA: AtelierDefinition = {
         "compte de résultat",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable des coûts, une de la production, une du suivi. Imprimez la fiche de coût de revient vierge, une par équipe, avec une colonne par enceinte : la Go de poche, la One qui a fait la marque, et la Studio, la plus haut de gamme, livrée prête à ce niveau et vendable au plus tôt au deuxième trimestre. Les coûts variables vont du simple au plus du triple d'une référence à l'autre, et la marge unitaire de la Studio vaut près de quatre fois celle de la Go : c'est ce que la fiche doit faire apparaître. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
+        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable des coûts, une de la production, une du suivi. Imprimez la fiche de coût de revient vierge, une par équipe, avec une colonne par enceinte : la Go de poche, la One qui a fait la marque, et la Studio, la plus haut de gamme, livrée prête et vendable dès le premier trimestre. Les coûts variables vont du simple au plus du triple d'une référence à l'autre, et la marge unitaire de la Studio vaut près de quatre fois celle de la Go : c'est ce que la fiche doit faire apparaître. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
           minutes: 10,

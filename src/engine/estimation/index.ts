@@ -97,6 +97,17 @@ export interface ResultatEstime {
   tresorerieNette: number;
   /** Le stock final, en unités et en valeur (CUMP). */
   stockFinal: { unites: number; valeur: number };
+  /**
+   * Le point mort du tour, en unités, au prix et aux budgets saisis : charges de
+   * structure ÷ marge sur coût variable, le calcul des résultats du tour.
+   * `null` quand la marge est nulle ou négative (aucun volume ne le couvre).
+   */
+  pointMort: number | null;
+  /**
+   * Ce qui resterait de découvert autorisé en fin de tour (plafond consenti −
+   * découvert utilisé). Négatif : le tour se clorait en crise de trésorerie.
+   */
+  margeSousLeDecouvert: number;
   /** Le compte de résultat estimé, ligne à ligne. */
   compte: IncomeStatement;
   /** Le résultat complet du tour estimé, pour qui veut aller plus loin (tests, serveur). */
@@ -190,6 +201,9 @@ export function estimerLeTour(
       unites: suivant.finishedGoods.quantity,
       valeur: resultat.balanceSheet.inventoryValue,
     },
+    pointMort: resultat.breakeven.breakEvenUnits,
+    margeSousLeDecouvert:
+      (resultat.bank?.overdraftLimit ?? scenario.finance.overdraftLimit) - resultat.balanceSheet.overdraft,
     compte: resultat.incomeStatement,
     resultat,
   };

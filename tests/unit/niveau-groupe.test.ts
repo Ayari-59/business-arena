@@ -101,8 +101,19 @@ describe("le bloc de groupe du snapshot", () => {
   });
 
   it("le snapshot du 7 est celui du 6 agrandi au facteur de départ, bloc de groupe en plus : la demande n'est ni lissée ni réduite", () => {
-    const six = composer(novaGammeScenario, 6);
+    const sixBrut = composer(novaGammeScenario, 6);
     const sept = composer(novaGammeScenario, 7);
+    // Une seule différence de références, décidée par le propriétaire : la Studio,
+    // livrée prête aux niveaux 5 et 6, reste à développer au niveau 7
+    // (`REFERENCES_LIVREES_PRETES`, config/scenarios/scenario-joue.ts).
+    const developpement = novaGammeScenario.products!.find((p) => p.code === "nova-studio")!.development;
+    expect(developpement).toBeDefined();
+    expect(sixBrut.products!.find((p) => p.code === "nova-studio")!.development).toBeUndefined();
+    expect(sept.products!.find((p) => p.code === "nova-studio")!.development).toEqual(developpement);
+    const six = {
+      ...sixBrut,
+      products: sixBrut.products!.map((p) => (p.code === "nova-studio" ? { ...p, development: developpement } : p)),
+    };
     const sansGroupe = { ...sept };
     delete sansGroupe.groupe;
     const f = sept.groupe!.depart!.facteur;

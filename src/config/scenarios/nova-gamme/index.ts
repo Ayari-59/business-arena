@@ -31,7 +31,9 @@ import { novaBots, novaScenario } from "../nova";
  * catalogue de composants. Le One garde le marché et les fournisseurs du
  * NOVA d'origine ; la moitié de ses passionnés, les audiophiles, n'achètent
  * que la Studio — qui n'existe qu'à l'état de prototype à la reprise et se
- * développe à coups de R&D.
+ * développe à coups de R&D. Dans une partie, la Studio est livrée prête aux
+ * niveaux 4 à 6 (`REFERENCES_LIVREES_PRETES`, config/scenarios/scenario-joue.ts) :
+ * le développement ci-dessous vaut pour le scénario de base et le niveau 7.
  */
 
 // --- Les composants, référence par référence -------------------------------

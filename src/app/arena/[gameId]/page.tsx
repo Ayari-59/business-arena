@@ -1367,9 +1367,10 @@ export default async function ArenaPage({
       estimation={view.estimation}
       vocabulary={view.vocabulary}
       periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-      defaults={
-        view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions
-      }
+      // Ce que l'équipe a déjà validé ce tour, sinon LA PROPOSITION du serveur
+      // (decision-baseline) : celle à laquelle la validation sera comparée, et
+      // qui ne reconduit aucune dépense ponctuelle du tour précédent.
+      defaults={view.pendingDecisions ?? view.proposedDecisions}
       proposed={view.proposedDecisions}
       kind={view.kind}
       alreadySubmitted={view.pendingDecisions !== null}
