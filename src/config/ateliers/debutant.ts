@@ -14,6 +14,15 @@ import type { AtelierDefinition } from "./types";
  * référentiel, il donne le goût du pilotage avant que le vocabulaire n'arrive.
  * Les quatre trimestres joués mènent à la grosse saison, où les écarts se
  * creusent et où la découverte prend son sens.
+ *
+ * PAS DE TOUR D'ESSAI, ET C'EST VOULU. Les treize autres fiches ouvrent sur une
+ * séance d'essai sans enjeu ; celle-ci n'en a pas besoin. Le niveau Découverte
+ * ne met à l'écran que le prix, la production et le marketing, chaque séance
+ * n'annonce qu'un levier, et le monde variable est désactivé : l'atelier entier
+ * tient déjà le rôle d'un tour d'essai. En ajouter un ferait répéter la première
+ * séance. Sa séance 1 fonde malgré tout les trois mêmes gestes du socle que les
+ * séances d'essai des autres fiches — présenter l'entreprise, lire l'écran de
+ * décision, lire les comptes — et c'est bien la preuve qu'elle en fait l'office.
  */
 export const ATELIER_DEBUTANT: AtelierDefinition = {
   code: "debutant",
