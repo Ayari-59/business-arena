@@ -389,6 +389,12 @@ export interface GameView {
     productivity: number;
     hoursPerUnit: number;
     /**
+     * CE QUE L'ATELIER A FAIT AU TOUR PASSÉ, et ce qui reste en stock à
+     * l'ouverture : de quoi juger un plan de production sans rien lire du
+     * marché à venir. Absent au premier tour.
+     */
+    tourPasse?: { tour: number; produit: number; utilisation: number; stock: number };
+    /**
      * Abonnement : le portefeuille d'ouverture et ce qu'il en restera au taux
      * d'attrition de base — la place à prévoir avant tout nouveau venu.
      * Absent hors modèle par abonnement.
@@ -2171,6 +2177,20 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         hoursPerEmployee: state.hoursPerEmployee,
         productivity: state.productivity,
         hoursPerUnit: snapshot.product.hoursPerUnit,
+        ...(lastResult
+          ? {
+              tourPasse: {
+                tour: resolved.length,
+                produit: Math.round(lastResult.production.produced),
+                utilisation: lastResult.production.utilizationRate,
+                stock: Math.round(
+                  isMultiProduct(snapshot)
+                    ? Object.values(state.finishedGoodsByProduct ?? {}).reduce((t, s) => t + s.quantity, 0)
+                    : state.finishedGoods.quantity,
+                ),
+              },
+            }
+          : {}),
         ...(sub
           ? {
               subscription: {

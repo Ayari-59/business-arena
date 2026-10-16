@@ -421,6 +421,20 @@ export function ParametersPanels({
         {capacityFacts ? (
           <GoulotEnJauge capacityFacts={capacityFacts} vocabulary={vocabulary} />
         ) : null}
+        {/* LE TOUR PASSÉ DE L'ATELIER : ce qu'il a produit, à quelle part de sa
+            capacité, et ce qui attend en stock. Un repère, pas une consigne. */}
+        {capacityFacts?.tourPasse ? (
+          <p data-atelier-tour-passe className="mt-3 text-sm leading-relaxed text-slate-300">
+            Tour {capacityFacts.tourPasse.tour} : capacité utilisée à{" "}
+            <span className="tabular-nums text-[var(--donnee)]">
+              {Math.round(capacityFacts.tourPasse.utilisation * 100)} %
+            </span>{" "}
+            ({formatUnits(capacityFacts.tourPasse.produit)} {vocabulary.units})
+            {capacityFacts.tourPasse.stock > 0
+              ? ` ; ${formatUnits(capacityFacts.tourPasse.stock)} ${vocabulary.units} en stock à l'ouverture.`
+              : "."}
+          </p>
+        ) : null}
         {/* Une gamme a un coût variable par référence : un seul chiffre mentirait. */}
         {gamme ? (
           <p className="mt-3 text-sm leading-relaxed text-slate-400">

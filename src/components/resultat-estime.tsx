@@ -283,7 +283,9 @@ export function EncartResultatEstime({
   const vide = !estime || estime.ventesEstimees <= 0;
   const manque = !vide && estime.manquantes >= 1;
   const tresorerieNegative = !vide && estime.tresorerieNette < 0;
-  const alertes = (manque ? 1 : 0) + (tresorerieNegative ? 1 : 0);
+  // Au-delà du découvert autorisé, le tour se clôt en crise de trésorerie.
+  const auDelaDuDecouvert = !vide && estime.margeSousLeDecouvert < 0;
+  const alertes = (manque ? 1 : 0) + (tresorerieNegative ? 1 : 0) + (auDelaDuDecouvert ? 1 : 0);
   return (
     <section
       ref={cadran}
@@ -380,6 +382,26 @@ export function EncartResultatEstime({
                 ecrire={formatEuro}
                 className="xl:hidden"
               />
+              {/* DEUX REPÈRES POUR DÉCIDER, AUX VALEURS SAISIES : le volume qui couvre
+                  les charges de structure, et ce qui resterait de découvert autorisé. */}
+              {estime.pointMort !== null ? (
+                <Chiffre
+                  titre="Point mort"
+                  valeur={estime.pointMort}
+                  ecrire={formatUnits}
+                  unite={v.units}
+                />
+              ) : (
+                <div className="min-w-0">
+                  <dt className="libelle text-slate-300">Point mort</dt>
+                  <dd className="mt-0.5 text-sm text-slate-200">jamais atteint à ce prix</dd>
+                </div>
+              )}
+              <Chiffre
+                titre="Marge sous le découvert"
+                valeur={estime.margeSousLeDecouvert}
+                ecrire={formatEuro}
+              />
             </dl>
             {/*
               LES DEUX ALERTES QUI CHANGENT UNE DÉCISION : une estimation qu'on ne
@@ -387,7 +409,7 @@ export function EncartResultatEstime({
               par le TEXTE — une estimation n'est pas un résultat, elle n'a droit ni
               au rouge ni au vert.
             */}
-            {manque || tresorerieNegative ? (
+            {manque || tresorerieNegative || auDelaDuDecouvert ? (
               <ul className="space-y-1 text-sm leading-relaxed text-slate-200">
                 {manque ? (
                   <li className="flex items-start gap-2">
@@ -411,6 +433,18 @@ export function EncartResultatEstime({
                         {formatEuro(estime.tresorerieNette)}
                       </strong>{" "}
                       en fin de tour. Le découvert comble l&apos;écart, et il se paie.
+                    </span>
+                  </li>
+                ) : null}
+                {auDelaDuDecouvert ? (
+                  <li className="flex items-start gap-2">
+                    <Icone nom="alerte" className="mt-0.5 h-4 w-4 text-slate-400" />
+                    <span>
+                      Le découvert dépasserait le plafond autorisé de{" "}
+                      <strong className="font-semibold tabular-nums">
+                        {formatEuro(-estime.margeSousLeDecouvert)}
+                      </strong>{" "}
+                      : le tour se clorait en crise de trésorerie.
                     </span>
                   </li>
                 ) : null}
