@@ -83,6 +83,7 @@ describe("le verdict d'une séance", () => {
 describe("l'estimation d'un tour d'atelier", () => {
   const cg1 = ATELIERS.find((a) => a.code === "cg1")!;
   const debutant = ATELIERS.find((a) => a.code === "debutant")!;
+  const gpme = ATELIERS.find((a) => a.code === "gpme")!;
 
   it("compte la prise en main au premier tour joué, et plus ensuite", () => {
     const [s1, s2] = cg1.seances;
@@ -133,10 +134,15 @@ describe("l'estimation d'un tour d'atelier", () => {
   });
 
   it("la charge d'un atelier porte une ligne par séance jouée", () => {
-    const lignes = chargeDesSeances(cg1);
+    // Le BTS GPME ouvre sur un tour d'essai et finit sur une restitution :
+    // la charge compte l'essai, qui joue un tour comme les autres, et laisse
+    // la restitution de côté, qui n'en joue aucun. Une fiche sans essai ne
+    // montrerait que la seconde moitié de la règle.
+    const lignes = chargeDesSeances(gpme);
     expect(lignes.map((l) => l.seance.numero)).toEqual(
-      cg1.seances.filter((s) => s.tourJoue !== null).map((s) => s.numero),
+      gpme.seances.filter((s) => s.tourJoue !== null || s.essai).map((s) => s.numero),
     );
+    expect(lignes.length).toBeLessThan(gpme.seances.length);
     for (const l of lignes) expect(l.minutesDeJeu).toBeGreaterThan(0);
   });
 });
@@ -145,17 +151,23 @@ describe("ce que les séances jouent, en clair", () => {
   const atelier = (code: string) => ATELIERS.find((a) => a.code === code)!;
 
   it("distingue une séance de restitution d'une séance d'essai", () => {
-    expect(repartitionDesSeancesEnClair(atelier("cg1"))).toBe("Chaque séance joue un tour.");
-    expect(repartitionDesSeancesEnClair(atelier("gpme"))).toBe(
-      "5 séances jouent un tour, la dernière rend compte.",
+    // Les quatre formes que la phrase doit savoir dire. DÉBUTANT ne fait que
+    // jouer ; le concours CAMPUS rend compte à la fin ; CG1 ouvre sur un
+    // essai ; le BTS GPME fait les deux.
+    expect(repartitionDesSeancesEnClair(atelier("debutant"))).toBe("Chaque séance joue un tour.");
+    expect(repartitionDesSeancesEnClair(atelier("campus"))).toBe(
+      "6 séances jouent un tour, la dernière rend compte.",
     );
-    expect(repartitionDesSeancesEnClair(atelier("martel"))).toBe(
+    expect(repartitionDesSeancesEnClair(atelier("cg1"))).toBe(
       "La première joue le tour d'essai, 6 séances jouent un tour.",
+    );
+    expect(repartitionDesSeancesEnClair(atelier("gpme"))).toBe(
+      "La première joue le tour d'essai, 5 séances jouent un tour, la dernière rend compte.",
     );
   });
 
   it("dit le tour d'essai de la fiche, et son absence", () => {
     expect(tourDEssaiEnClair(atelier("martel"))).toBe("Un tour d'essai avant la vraie partie");
-    expect(tourDEssaiEnClair(atelier("cg1"))).toBe("Sans tour d'essai");
+    expect(tourDEssaiEnClair(atelier("debutant"))).toBe("Sans tour d'essai");
   });
 });
