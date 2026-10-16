@@ -10,7 +10,7 @@ import {
  * LA GRILLE DE NOTATION DE L'EXAMEN INDIVIDUEL : FIXE, PUBLIÉE, VERSIONNÉE.
  *
  * Une note d'examen qui sert à l'accréditation doit être la même pour tous, connue avant
- * l'épreuve, et décomposable ligne par ligne. D'où trois règles :
+ * l'épreuve, et décomposable ligne par ligne. D'où quatre règles :
  *
  *  1. LA GRILLE EST NOMMÉE ET VERSIONNÉE. Une grille ne se modifie pas : une pondération
  *     différente est une AUTRE grille (un autre code) ou une version suivante. L'examen en
@@ -32,6 +32,13 @@ import {
  *  3. CHAQUE LIGNE EST BORNÉE DE 0 À SON MAXIMUM, et la note de 0 à 100. Une ligne qui ne
  *     s'applique pas (les questions éteintes, aucune situation rencontrée) sort du calcul,
  *     et les points des autres sont rapportés à 100 dans la même proportion.
+ *  4. LA NOTE MESURE LA QUALITÉ DES DÉCISIONS, PAS LA DIFFICULTÉ DU NIVEAU. Le niveau
+ *     ouvre des leviers et durcit les concurrents ; il n'entre dans aucune ligne, et un
+ *     candidat de niveau 6 n'est pas noté plus sévèrement parce que son jeu était plus
+ *     dur. Il est jugé sur la façon dont il a décidé avec ce qu'il avait. Un écart de
+ *     note entre niveaux à qualité de décisions constante n'est donc pas une progression
+ *     à installer : c'est une dérive à surveiller, et une garde la tient
+ *     (tests/unit/examen-niveaux).
  *
  * Pur : ni base, ni moteur. Les mesures entrent, la copie notée sort.
  */
