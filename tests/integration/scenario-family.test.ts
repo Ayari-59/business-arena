@@ -35,7 +35,7 @@ beforeAll(async () => {
 });
 
 describe("une famille de scénarios se joue selon le niveau", () => {
-  it("NOVA au niveau 1 est une enceinte, au niveau 4 la gamme (la Studio livrée prête), au niveau 5 aussi, la R&D ouverte", async () => {
+  it("NOVA au niveau 1 est une enceinte, au niveau 4 la gamme (la Studio livrée prête), au niveau 5 la Studio à développer", async () => {
     const mono = (await getGameView(await createSoloGame(userId, "quarter", 3, 1, false, "nova"), userId))!;
     expect(mono.gamme).toBeNull();
     expect(mono.scenarioCode).toBe("nova");
@@ -46,9 +46,13 @@ describe("une famille de scénarios se joue selon le niveau", () => {
     const gamme = (await getGameView(await createSoloGame(userId, "quarter", 3, 5, false, "nova"), userId))!;
     expect(gamme.gamme?.map((p) => p.code)).toEqual(["nova-go", "nova-one", "nova-studio"]);
     expect(gamme.scenarioCode).toBe("nova-gamme");
-    // La Studio est livrée prête aux niveaux 5 et 6 (`REFERENCES_LIVREES_PRETES`) :
-    // la R&D ouverte au niveau 5 élève le niveau technique, rien n'y est à bâtir.
-    expect(gamme.gamme!.find((p) => p.code === "nova-studio")!.rd).toMatchObject({ development: null });
+    // Niveau 5 : la R&D s'ouvre, et la Studio redevient le prototype à financer que
+    // le niveau « Stratégie » enseigne (`REFERENCES_LIVREES_PRETES` ne la livre
+    // prête qu'au niveau 7).
+    expect(gamme.gamme!.find((p) => p.code === "nova-studio")!.rd!.development).toMatchObject({
+      cost: 25000,
+      available: false,
+    });
     expect(gamme.rdOffer).not.toBeNull();
   });
 

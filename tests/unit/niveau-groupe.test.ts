@@ -6,7 +6,7 @@ import {
   presetFromProfile,
   profilDuNiveau,
 } from "@/config/difficulty";
-import { agrandirLeScenario, composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { agrandirLeScenario, composerLeScenarioJoue, rdDuNiveau } from "@/config/scenarios/scenario-joue";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { novaScenario } from "@/config/scenarios/nova";
@@ -101,13 +101,17 @@ describe("le bloc de groupe du snapshot", () => {
     expect(composer(novaGammeScenario, 7).groupe).toBeDefined();
   });
 
-  it("le snapshot du 7 est celui du 6 agrandi au facteur de départ, NOVA Home et bloc de groupe en plus : la demande n'est ni lissée ni réduite", () => {
+  it("le snapshot du 7 est celui du 6, Studio livrée prête, agrandi au facteur de départ, NOVA Home et bloc de groupe en plus : la demande n'est ni lissée ni réduite", () => {
     const six = composer(novaGammeScenario, 6);
+    // Le 6 tel que le 7 le reprend : la Studio y est livrée prête (`rdDuNiveau` au
+    // niveau 7), la seule chose que cette table change d'un niveau à l'autre.
+    const sixPrete = rdDuNiveau(six, 7, true);
     const septBrut = composer(novaGammeScenario, 7);
-    // La Studio est livrée prête aux niveaux 5 à 7 (`REFERENCES_LIVREES_PRETES`) ;
-    // au niveau 7, la référence à développer est NOVA Home, sa nouveauté propre.
+    // La Studio est à développer au niveau 6, et livrée prête au niveau 7
+    // (`REFERENCES_LIVREES_PRETES`), où la référence à développer est NOVA Home,
+    // sa nouveauté propre.
     expect(novaGammeScenario.products!.find((p) => p.code === "nova-studio")!.development).toBeDefined();
-    expect(six.products!.find((p) => p.code === "nova-studio")!.development).toBeUndefined();
+    expect(six.products!.find((p) => p.code === "nova-studio")!.development).toBeDefined();
     expect(septBrut.products!.find((p) => p.code === "nova-studio")!.development).toBeUndefined();
     expect(six.products!.some((p) => p.code === "nova-home")).toBe(false);
     const home = septBrut.products!.find((p) => p.code === "nova-home")!;
@@ -118,9 +122,9 @@ describe("le bloc de groupe du snapshot", () => {
     delete sansGroupe.groupe;
     const f = sept.groupe!.depart!.facteur;
     expect(f).toBeGreaterThan(1);
-    expect(sansGroupe).toEqual(agrandirLeScenario(six, f));
+    expect(sansGroupe).toEqual(agrandirLeScenario(sixPrete, f));
     expect(sept.market).toEqual(six.market);
-    expect(sept.products).toEqual(six.products);
+    expect(sept.products).toEqual(sixPrete.products);
     expect(sept.scriptedEvents).toEqual(six.scriptedEvents);
     // la structure suit la taille : l'effectif inclus et ses salaires, pas le reste
     expect(sept.hr!.includedHeadcount).toBe(Math.round(six.hr!.includedHeadcount * f));

@@ -197,6 +197,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   // Un instantané de partie est déjà composé à son niveau ; le scénario du
   // registre l'est ici comme la création le fera (`rdDuNiveau` : R&D retirée
   // quand le niveau ne l'ouvre pas, références livrées prêtes selon le niveau).
+  // L'atelier DCG (NOVA · gamme, niveau 5) annonce donc une Studio à développer.
   const config = source.config
     ? source.sansRd
       ? withoutRd(brut)

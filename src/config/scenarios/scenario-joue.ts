@@ -30,7 +30,7 @@ import { applyScenarioVariability } from "@/config/scenarios/variability";
  * pondérations de l'IPG → taille du marché selon le nombre d'entreprises →
  * nombre de tours → périodicité → intensité d'événements du niveau → histoires
  * d'investissement du niveau → R&D du niveau (`rdDuNiveau` : retirée quand le
- * niveau ne l'ouvre pas, et la Studio de NOVA livrée prête aux niveaux 5 et 6).
+ * niveau ne l'ouvre pas, et la Studio de NOVA livrée prête au niveau 7).
  *
  * Il vivait dans `createGameCore`. Il est sorti ici, pur, parce que deux
  * appelants doivent faire EXACTEMENT le même calcul : la création, et le rejeu
@@ -302,18 +302,31 @@ export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: numb
 /**
  * LES RÉFÉRENCES LIVRÉES PRÊTES AUX NIVEAUX QUI OUVRENT LA R&D, NIVEAU PAR NIVEAU.
  *
- * NOVA en gamme : la Studio, aux niveaux 5, 6 et 7. Au niveau 4, la R&D est fermée
- * et la Studio était déjà livrée prête ; aux niveaux 5 et 6, la R&D s'ouvrait
- * et la Studio devenait un prototype à financer (25 000 €, vendable au tour 2).
- * Mesuré au banc des niveaux 1 à 6 : l'équipe qui valide les propositions ne
- * vendait alors que la Go et la One, et faisait défaillance (10 crises sur 12,
- * dont 5 défaillances, contre aucune au niveau 4) ; les concurrents pilotés
- * aussi (24 sur 24 en crise). Décision du propriétaire : la Studio est en
- * vente dès le tour 1 aux niveaux 5 et 6. Le levier R&D y reste ouvert : il
- * élève le niveau technique de chaque référence.
+ * NOVA en gamme : la Studio, AU NIVEAU 7 SEULEMENT. La règle générale suffit
+ * partout ailleurs : le niveau 4 ferme la R&D et reçoit donc la Studio prête
+ * (une référence hors de portée toute la partie n'aurait pas de sens) ; les
+ * niveaux 5 et 6 l'ouvrent, et la Studio y est le prototype à financer
+ * (25 000 €, vendable au tour 2) que le niveau « Stratégie » enseigne : payer
+ * maintenant pour gagner plus tard.
  *
- * AU NIVEAU 7, LA STUDIO EST LIVRÉE PRÊTE AUSSI (décision du propriétaire) :
- * la référence à développer y est NOVA Home, sa nouveauté propre
+ * ELLE AVAIT ÉTÉ LIVRÉE PRÊTE À CES DEUX NIVEAUX, UN TEMPS, POUR RIEN. Le banc
+ * du diagnostic mesurait alors une équipe qui valide les propositions à 10
+ * crises sur 12, dont 5 défaillances, et 123 000 € de perte cumulée ; la
+ * Studio livrée prête effaçait tout. Mais la cause n'était pas la Studio :
+ * c'était la proposition, qui reconduisait six tours le plan du tour 1, gelé
+ * sous le point mort. Sans la Studio, le point mort de la gamme vaut environ
+ * 5 680 enceintes pour un atelier de 7 000, soit 81 % de l'atelier, quand il
+ * tombe vers 4 700 avec elle : un plan gelé à 4 920 perdait à chaque tour.
+ * La proposition suit le tour depuis (`services/decision-baseline.ts`,
+ * `propositionDuTour`, du même lot), et la Studio à développer ne mène plus à
+ * la faillite : aucune défaillance et au plus une crise sur 24 graines, pour
+ * une perte cumulée faible de 28 000 € environ, contre un gain de 61 000 € en
+ * la finançant au tour 1. C'est la leçon du niveau, et la livrer prête la
+ * supprimait. Garde : `tests/pedagogy/decision-de-la-studio.test.ts` ; le plan
+ * de nouveau gelé, elle redevient rouge aux chiffres du diagnostic.
+ *
+ * AU NIVEAU 7, ELLE RESTE LIVRÉE PRÊTE (décision du propriétaire) : la
+ * référence à développer y est NOVA Home, sa nouveauté propre
  * (`config/groupe/nova.ts`, `NOUVEAUTES_PAR_SCENARIO`), que cette table ne
  * nomme pas.
  *
@@ -323,7 +336,7 @@ export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: numb
 export const REFERENCES_LIVREES_PRETES: Readonly<
   Record<string, { references: readonly string[]; niveaux: readonly number[] }>
 > = {
-  "nova-gamme": { references: ["nova-studio"], niveaux: [5, 6, 7] },
+  "nova-gamme": { references: ["nova-studio"], niveaux: [7] },
 };
 
 /**
