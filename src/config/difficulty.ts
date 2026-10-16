@@ -241,7 +241,7 @@ export const NIVEAU_GROUPE: DifficultyPreset = {
   level: 7,
   code: "groupe",
   name: "Groupe",
-  tagline: "Racheter, faire fabriquer, financer : vous êtes jugés sur la valeur créée pour l'actionnaire.",
+  tagline: "Racheter, faire fabriquer, lancer une nouveauté, financer : vous êtes jugés sur la valeur créée pour l'actionnaire.",
   hintMaxLevel: 0,
   decisions: {
     quality: true,

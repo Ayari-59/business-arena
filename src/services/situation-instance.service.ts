@@ -86,6 +86,9 @@ export async function openSituationsForRound(
     }
   }
 
+  const referencesDeLaPartie = new Set(
+    ((gameRow?.scenarioSnapshot as { products?: { code: string }[] } | null)?.products ?? []).map((p) => p.code),
+  );
   const values: (typeof situationInstances.$inferInsert)[] = [];
   const scripted = definition.situations.filter(
     (s) => "round" in s.trigger && s.trigger.round === roundIndex,
@@ -110,6 +113,13 @@ export async function openSituationsForRound(
       // la situation s'ouvre au tour dit, comme avant.
       const condition = "round" in s.trigger ? s.trigger.requires : undefined;
       if (condition && !detected.has(condition)) continue;
+      // La référence que l'énoncé suppose : dans la partie, et en vente chez
+      // l'équipe au tour joué quand l'énoncé le raconte.
+      if (s.seulementAvec) {
+        const { reference, auMarche } = s.seulementAvec;
+        if (!referencesDeLaPartie.has(reference)) continue;
+        if (auMarche && !result?.groupe?.nouveautes?.[reference]?.auMarche) continue;
+      }
       const situationId = situationIdByCode.get(s.code);
       if (situationId)
         values.push({

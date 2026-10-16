@@ -20,7 +20,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
   pourQui: "Vous enseignez la gestion, l'économie ou le management, et vous voulez faire jouer une classe.",
   resultat:
     "Vous savez créer une partie, la faire rejoindre, animer un tour jusqu'à la révélation, et faire passer un examen individuel.",
-  version: "2026-10-12",
+  version: "2026-10-16",
   enCinqMinutes: [
     "Ouvrez l'espace enseignant et créez votre compte avec « Créer un compte ».",
     "Dans « Mes parties », cliquez sur « Nouvelle partie », gardez les réglages proposés et validez avec « Créer la partie et obtenir le code d'invitation ».",
@@ -437,6 +437,11 @@ export const GUIDE_ENSEIGNANT: Guide = {
       question: "Pourquoi certains niveaux sont-ils fermés ?",
       reponse:
         "Un niveau que votre licence ne couvre pas reste visible dans le choix, marqué du nom de l'offre qui l'ouvre. La création est refusée tant que la licence ne le couvre pas.",
+    },
+    {
+      question: "Une équipe a lancé une référence à développer : comment juger ce choix ?",
+      reponse:
+        "Au résultat qu'elle pouvait prévoir, pas à celui que le marché a tiré. Le marché d'une nouveauté peut décoller ou rester petit, et les élèves ne le savent qu'après l'étude de marché. Comparez trois histoires : l'équipe qui a tout engagé d'un coup, celle qui a engagé une part et acheté l'étude, celle qui n'a rien lancé. Le bilan porte les frais de développement immobilisés et leur amortissement, et le détail du marché sépare les clients nouveaux de ceux venus des autres références.",
     },
     {
       question: "Mes élèves voient-ils qui les a notés ?",

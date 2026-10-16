@@ -111,6 +111,19 @@ const nouveautesDu = (
   leviers: DifficultyPreset["decisions"] | undefined,
 ): readonly DefinitionDUneNouveaute[] => (ouvreLeGroupe(leviers) && scenario.products ? (NOUVEAUTES_PAR_SCENARIO[scenario.code] ?? []) : []);
 
+/**
+ * Les références qu'une partie de ce scénario porte à ce niveau : sa gamme,
+ * et au niveau 7 ses nouveautés. Ce qui se dit avant la partie (le dossier
+ * de l'enseignant) ne promet pas une situation sur une référence absente.
+ */
+export function referencesJouees(scenario: EngineScenarioConfig, niveau: number | undefined): string[] {
+  const preset = niveau ? presetByLevel.get(niveau as DifficultyPreset["level"]) : undefined;
+  return [
+    ...(scenario.products ?? []).map((p) => p.code),
+    ...nouveautesDu(scenario, preset?.decisions).map((d) => d.reference.code),
+  ];
+}
+
 /** L'état d'adoption tiré pour la partie. */
 const etatTire = (d: DefinitionDUneNouveaute, seed: number) => d.adoption.etats[etatDAdoption(seed, d.reference.code, d.adoption.etats.length)]!;
 

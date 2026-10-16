@@ -240,7 +240,7 @@ export function DetailParClientele({
                     <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
                       <div>
                         <dt className="libelle">Taille</dt>
-                        <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
+                        <dd className="tabular-nums text-slate-300">{seg.size === null ? "à découvrir" : formatUnits(seg.size)}</dd>
                       </div>
                       <div>
                         <dt className="libelle">
@@ -290,7 +290,8 @@ export function DetailParClientele({
                     <tr key={seg.name} className="border-t border-white/5">
                       <td className="py-1.5 pr-3">{seg.name}</td>
                       <td className="py-1.5 pr-3 text-right tabular-nums">
-                        {formatUnits(seg.size)}
+                        {/* Le segment d'une nouveauté dont l'adoption est cachée (niveau 7) : l'étude de marché le chiffre. */}
+                        {seg.size === null ? "à découvrir" : formatUnits(seg.size)}
                       </td>
                       <td className="py-1.5 pr-3 text-right tabular-nums">
                         {formatEuro(seg.refPrice)}
@@ -348,7 +349,7 @@ export function ParametersPanels({
   // Le marché en un chiffre : ce qui s'achète en tout, et dans quelle fourchette
   // de prix. C'est ce qu'il faut pour dimensionner un volume ; le détail par
   // clientèle vient juste après, à la demande.
-  const marcheTotal = intro.segments.reduce((t, s) => t + s.size, 0);
+  const marcheTotal = intro.segments.reduce((t, s) => t + (s.size ?? 0), 0);
   const prixUsuels = intro.segments.map((s) => s.refPrice);
   const prixMin = Math.min(...prixUsuels);
   const prixMax = Math.max(...prixUsuels);
@@ -492,7 +493,7 @@ export function ParametersPanels({
               label="Votre part"
               valeur={(() => {
                 const vendu = intro.segments.reduce(
-                  (t, s) => t + (s.yourShare ?? 0) * s.size,
+                  (t, s) => t + (s.yourShare ?? 0) * (s.size ?? 0),
                   0,
                 );
                 return marcheTotal > 0 ? formatPercent(vendu / marcheTotal) : "—";

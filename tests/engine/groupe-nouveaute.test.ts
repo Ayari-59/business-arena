@@ -203,6 +203,21 @@ describe("le développement par étapes", () => {
     // le retard est tiré une fois, pour l'entreprise, sur son propre flux
     expect(certificationRetardee(2026, "e0", HOME, 0.3)).toBe(retard);
   });
+
+  it("le sous-traitant ne livre la Home qu'une fois en vente : commandée avant, rien n'est livré ni payé", () => {
+    const tours = jouer(sept, (tour, id, d) => {
+      if (id !== "e0") return;
+      if (tour === 1) d.products![HOME]!.rdBudget = 90_000;
+      d.sousTraitance = { ...(d.sousTraitance ?? {}), [HOME]: 200 };
+    });
+    for (const t of [1, 2]) {
+      const st = tours[t - 1]!.results.e0!.groupe!.sousTraitance;
+      expect(st?.parReference?.[HOME]?.unites ?? 0, `T${t}`).toBe(0);
+    }
+    const premiere = tours.findIndex((x) => x.results.e0!.groupe!.nouveautes![HOME]!.auMarche);
+    expect(premiere).toBeGreaterThanOrEqual(2);
+    expect(tours[premiere]!.results.e0!.groupe!.sousTraitance!.parReference[HOME]!.unites).toBeGreaterThan(0);
+  });
 });
 
 describe("les frais de développement immobilisés", () => {

@@ -19,7 +19,7 @@ export const GUIDE_ETUDIANT: Guide = {
     "Le guide de l'étudiant : rejoindre une partie avec un code, reprendre avec son code de reprise, lire le tableau de bord et la feuille de décision, décider en équipe, lire les résultats et le courrier, le bilan, mérite ou chance, l'examen et le téléphone.",
   pourQui: "Vous êtes élève ou étudiant, et votre enseignant vous a donné un code de partie ou d'examen.",
   resultat: "Vous savez rejoindre votre équipe, prendre et envoyer vos décisions, et lire ce que le marché vous répond.",
-  version: "2026-10-12",
+  version: "2026-10-16",
   enCinqMinutes: [
     "Ouvrez la page « Rejoindre une partie », tapez le code donné par votre enseignant et votre prénom, puis « Rejoindre la partie ».",
     "Lisez la situation du tour, puis passez à « Décider ».",
@@ -305,6 +305,11 @@ export const GUIDE_ETUDIANT: Guide = {
       reponse:
         "En classe, votre enseignant a la liste des codes de la partie : il peut vous le relire. En solo, il n'y a pas de secours : le code s'affiche dans le menu de la partie, sur l'appareil où vous avez joué.",
       lien: { href: "/reprendre", libelle: "Reprendre ma partie" },
+    },
+    {
+      question: "Une référence reste à développer : quand la lancer ?",
+      reponse:
+        "Sa carte, à l'étape du développement, dit ce qu'il faut engager pour démarrer, le premier tour où elle peut se vendre et le risque que sa mise au point glisse d'un tour. Elle ne dit pas si son marché viendra : l'étude de marché le dit, à la fin du tour où vous l'achetez. Engager une part, étudier, puis finir ou abandonner, c'est payer pour savoir avant de tout miser. Et jugez-la à l'heure d'atelier, en retirant les ventes qu'elle prend à vos autres références.",
     },
     {
       question: "Mon équipe est incomplète.",

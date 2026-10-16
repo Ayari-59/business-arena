@@ -1334,6 +1334,74 @@ function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
   return !!dev && !dev.available;
 }
 
+type ReferenceDeLaGamme = NonNullable<GameView["gamme"]>[number];
+type Developpement = NonNullable<NonNullable<ReferenceDeLaGamme["rd"]>["development"]>;
+
+/**
+ * OÙ EN EST UNE RÉFÉRENCE À BÂTIR, dit en clair. Une référence ordinaire : ce
+ * qui reste à financer. Une nouveauté du niveau 7 (NOVA Home), développée par
+ * étapes : le tiers qui la démarre, la durée avant la première vente, le
+ * risque de retard de certification, la plateforme qu'elle coûtera.
+ */
+export function texteDuChantier(p: ReferenceDeLaGamme, dev: Developpement, roundIndex: number): string[] {
+  const reste = Math.max(0, dev.cost - dev.invested);
+  const e = dev.etapes;
+  if (p.nouveaute?.abandonnee) return [`${p.name} est abandonnée : elle a quitté le marché, ses frais de développement ont été dépréciés.`];
+  if (!e) {
+    return [
+      reste <= 0
+        ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+        : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`,
+    ];
+  }
+  const lignes: string[] = [];
+  if (e.demarreAuTour === null) {
+    lignes.push(
+      dev.invested > 0
+        ? `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : le développement démarre à ${formatEuro(e.demarrage)} engagés (un tiers).`
+        : `Un prototype : ${formatEuro(dev.cost)} de développement. Il démarre quand un tiers (${formatEuro(e.demarrage)}) est engagé ; il faut ensuite ${e.dureeMinimale} tours avant la première vente.`,
+    );
+  } else {
+    lignes.push(
+      reste > 0
+        ? `Développement démarré au tour ${e.demarreAuTour} : ${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)}, il reste ${formatEuro(reste)} à financer.`
+        : `Développement financé (${formatEuro(dev.invested)}), démarré au tour ${e.demarreAuTour}.`,
+    );
+  }
+  lignes.push(
+    e.retardJusquAu !== null
+      ? `La certification radio a pris du retard : pas de vente avant le tour ${e.retardJusquAu + 1}.`
+      : `Première vente au plus tôt au tour ${e.premiereVente}${reste > 0 ? ", si tout le reste est financé ce tour" : ""}${
+          e.risqueDeRetard ? ` ; ${Math.round(e.risqueDeRetard.probabilite * 100)} % de risque que la certification la repousse d'un tour` : ""
+        }.`,
+  );
+  if (p.nouveaute) {
+    lignes.push(
+      `En vente, sa plateforme logicielle (serveurs, mises à jour, assistance) coûtera ${formatEuro(p.nouveaute.plateformeParTour)} par tour. Le développement est immobilisé, puis amorti à partir du lancement.`,
+    );
+  }
+  return lignes;
+}
+
+/**
+ * Abandonner une nouveauté du niveau 7 : elle quitte le marché dès ce tour, sa
+ * plateforme s'arrête, ses frais de développement non amortis sont dépréciés.
+ */
+function AbandonDeLaNouveaute({ p }: { p: ReferenceDeLaGamme }) {
+  if (!p.nouveaute || p.nouveaute.abandonnee) return null;
+  const engage = (p.rd?.development?.invested ?? 0) > 0;
+  if (!engage) return null;
+  return (
+    <label className="flex items-start gap-2 text-sm leading-relaxed text-slate-300">
+      <input type="checkbox" name={productFieldName(p.code, "abandonner")} className="mt-1" data-abandon={p.code} />
+      <span>
+        Abandonner {p.name} : elle quitte le marché dès ce tour, sa plateforme s&apos;arrête, et ce qui reste de ses
+        frais de développement ({formatEuro(p.nouveaute.valeurNette)} à l&apos;ouverture) est déprécié.
+      </span>
+    </label>
+  );
+}
+
 /** La pastille d'une référence en développement, à côté de son nom. */
 function EnDeveloppement() {
   return (
@@ -1422,6 +1490,7 @@ function FaitsFournisseur({
     qualityBonus: number;
     paymentDelayDays: number;
     supplyRiskProbability: number;
+    supplyRiskAtPeaks?: number;
   };
 }) {
   const faits = [`${formatEuroCents(f.materialCostPerUnit)}/u`];
@@ -1433,6 +1502,10 @@ function FaitsFournisseur({
   faits.push(f.paymentDelayDays > 0 ? `règlement ${f.paymentDelayDays} j` : "règlement comptant");
   if (f.supplyRiskProbability > 0) {
     faits.push(`rupture ${Math.round(f.supplyRiskProbability * 100)} %`);
+  }
+  // Niveau 7 : le module radio de la Home rompt plus souvent aux pics de la saison.
+  if (f.supplyRiskAtPeaks !== undefined && f.supplyRiskAtPeaks > f.supplyRiskProbability) {
+    faits.push(`${Math.round(f.supplyRiskAtPeaks * 100)} % aux pics`);
   }
   return <Faits faits={faits} className="mt-1" />;
 }
@@ -1719,9 +1792,12 @@ function GammeReference({
                     name={productFieldName(p.code, "supplierChoice")}
                     aria-label={`Fournisseur · ${p.name}`}
                     defaultValue={faconniers[p.code]}
-                    onChange={(e) =>
-                      setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
-                    }
+                    onChange={(e) => {
+                      // Lu tout de suite : React efface `currentTarget` une fois
+                      // l'événement passé, avant que la mise à jour ne s'exécute.
+                      const choisi = e.currentTarget.value;
+                      setFaconniers((etat) => ({ ...etat, [p.code]: choisi }));
+                    }}
                     className={`w-full champ text-slate-100 outline-none ${enCartes ? "px-3 py-2.5 text-base" : "px-2 py-1.5 text-sm"}`}
                   >
                     {suppliers.map((s) => {
@@ -2009,16 +2085,16 @@ function GammeReference({
               })}
             {chantiers
               .filter((c) => c.p.code === p.code)
-              .map(({ dev }) => {
-                const reste = Math.max(0, dev.cost - dev.invested);
-                return (
-                  <p key={p.code} className="text-base leading-relaxed text-slate-300">
-                    {reste <= 0
-                      ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
-                  </p>
-                );
-              })}
+              .map(({ dev }) => (
+                <div key={p.code} className="space-y-1" data-chantier={p.code}>
+                  {texteDuChantier(p, dev, roundIndex).map((t) => (
+                    <p key={t} className="text-base leading-relaxed text-slate-300">
+                      {t}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            <AbandonDeLaNouveaute p={p} />
           </div>
         ))}
       </div>
@@ -2123,17 +2199,19 @@ function GammeReference({
         </table>
       </div>
 
-      {chantiers.map(({ p, dev }) => {
-        const reste = Math.max(0, dev.cost - dev.invested);
-        return (
-          <p key={p.code} className="text-sm leading-relaxed text-slate-300">
-            <strong className="font-medium">{p.name}</strong> —{" "}
-            {reste <= 0
-              ? `financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-              : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
-          </p>
-        );
-      })}
+      {chantiers.map(({ p, dev }) => (
+        <div key={p.code} className="space-y-0.5" data-chantier={p.code}>
+          {texteDuChantier(p, dev, roundIndex).map((t, i) => (
+            <p key={t} className="text-sm leading-relaxed text-slate-300">
+              {i === 0 ? <strong className="font-medium">{p.name} — </strong> : null}
+              {t}
+            </p>
+          ))}
+        </div>
+      ))}
+      {gamme.map((p) => (
+        <AbandonDeLaNouveaute key={p.code} p={p} />
+      ))}
 
       <Aide>
         <p className="text-sm leading-relaxed text-slate-400">

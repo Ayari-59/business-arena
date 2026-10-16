@@ -860,7 +860,11 @@ export async function getTeacherGameView(
   const presetDuJeu = presetFromProfile(game.difficultyProfile);
   const chargeDuTour = {
     signesDeCadrage: signesDeCadrage(snapshotDefinition),
-    signesDeSituation: signesDeSituation(snapshotDefinition.situations, game.currentRound),
+    signesDeSituation: signesDeSituation(
+      snapshotDefinition.situations,
+      game.currentRound,
+      new Set(((game.scenarioSnapshot as { products?: { code: string }[] } | null)?.products ?? []).map((p) => p.code)),
+    ),
     champs: champsOuverts(presetDuJeu.decisions),
     avecQuiz: quizModeFromProfile(game.difficultyProfile) !== "off",
   };

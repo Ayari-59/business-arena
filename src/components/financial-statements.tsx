@@ -288,6 +288,7 @@ export function FinancialStatements({
   price,
   otherVariableCostPerUnit,
   vocabulary,
+  nomsDesReferences,
 }: {
   result: CompanyRoundResult;
   /**
@@ -305,6 +306,8 @@ export function FinancialStatements({
   /** Le métier nomme lui-même ce qu'il achète : on ne vend pas des matières
    *  premières dans une salle de sport. */
   vocabulary: ScenarioVocabulary;
+  /** Le nom de chaque référence de la gamme, par code (la nouveauté du niveau 7 se nomme). */
+  nomsDesReferences?: Readonly<Record<string, string>>;
 }) {
   const cr = result.incomeStatement;
   const b = result.balanceSheet;
@@ -603,7 +606,12 @@ export function FinancialStatements({
       </Panel>
 
       {result.groupe ? (
-        <PanneauxDuGroupe groupe={result.groupe} precedent={precedent?.groupe ?? null} periode={periode} />
+        <PanneauxDuGroupe
+          groupe={result.groupe}
+          precedent={precedent?.groupe ?? null}
+          periode={periode}
+          nomsDesReferences={nomsDesReferences ?? {}}
+        />
       ) : null}
 
       <Panel
@@ -771,11 +779,17 @@ function PanneauxDuGroupe({
   groupe,
   precedent,
   periode,
+  nomsDesReferences,
 }: {
   groupe: ResultatDeGroupe;
   precedent: ResultatDeGroupe | null;
   periode: string;
+  nomsDesReferences: Readonly<Record<string, string>>;
 }) {
+  // La nouveauté du niveau 7 (NOVA Home), dès qu'elle coûte ou rapporte quelque chose.
+  const nouveautes = Object.entries(groupe.nouveautes ?? {}).filter(
+    ([, n]) => n.auMarche || n.abandon || n.immobilise > 0.5 || n.amortissement > 0.5 || n.depreciation > 0.5,
+  );
   const v = groupe.valeur;
   const pv = precedent?.valeur ?? null;
   const r = groupe.rachat;
@@ -928,6 +942,62 @@ function PanneauxDuGroupe({
           </div>
         </Panel>
       ) : null}
+
+      {nouveautes.map(([code, n]) => {
+        const nom = nomsDesReferences[code] ?? code;
+        return (
+          <Panel
+            key={code}
+            title={`${nom} : la nouveauté du tour`}
+            resume={n.abandon ? "abandonnée" : n.auMarche ? `en vente · marge ${euro(n.margeSurCoutVariable)}` : "en développement"}
+          >
+            <div className="space-y-2 text-sm text-slate-300" data-nouveaute-du-tour={code}>
+              <Etat periode={periode} avecEcart={false} legende={`Ce que ${nom} a coûté et rapporté ce tour.`}>
+                {n.auMarche ? (
+                  <>
+                    <Ligne label={`Marge sur coût variable de ${nom}`} valeur={n.margeSurCoutVariable} avecEcart={false} />
+                    <Ligne label="− Plateforme logicielle" valeur={-n.plateforme} avecEcart={false} decalee />
+                    <Ligne
+                      label="= Ce qu'elle laisse avant amortissement"
+                      valeur={n.margeSurCoutVariable - n.plateforme}
+                      avecEcart={false}
+                      fort
+                      tone={n.margeSurCoutVariable - n.plateforme >= 0 ? "good" : "bad"}
+                    />
+                  </>
+                ) : null}
+                {n.immobilise > 0.5 ? (
+                  <Ligne label="Frais de développement immobilisés ce tour" valeur={n.immobilise} avecEcart={false} />
+                ) : null}
+                {n.amortissement > 0.5 ? (
+                  <Ligne label="Amortissement des frais de développement" valeur={-n.amortissement} avecEcart={false} />
+                ) : null}
+                {n.depreciation > 0.5 ? (
+                  <Ligne label="Dépréciation des frais de développement" valeur={-n.depreciation} avecEcart={false} />
+                ) : null}
+                <Ligne label="Valeur nette des frais immobilisés, à la clôture" valeur={n.valeurNette} avecEcart={false} />
+              </Etat>
+              {n.rupture ? (
+                <p className="encadre-neutre rounded-lg px-3 py-2" data-rupture-du-composant={code}>
+                  Un composant a manqué ce tour : la production de {nom} a été rationnée.
+                </p>
+              ) : null}
+              {n.abandon ? (
+                <p className="encadre-neutre rounded-lg px-3 py-2">
+                  {nom} est abandonnée : ses frais de développement non amortis sont dépréciés en une fois.
+                </p>
+              ) : null}
+              {n.auMarche ? (
+                <p className="text-xs text-slate-400">
+                  Une partie de ces ventes vient de vos autres références : la marge qu&apos;elles ont perdue n&apos;est
+                  pas retranchée ici. Ce que {nom} ajoute vraiment, c&apos;est sa marge moins celle des ventes qu&apos;elle a
+                  remplacées.
+                </p>
+              ) : null}
+            </div>
+          </Panel>
+        );
+      })}
 
       {c ? (
         <Panel title="Groupe consolidé" resume={`résultat net consolidé ${euro(c.resultatNet)}`}>

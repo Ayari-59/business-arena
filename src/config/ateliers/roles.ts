@@ -500,6 +500,10 @@ export const NOTIONS_PAR_ROLE: Record<string, CodeDeResponsable | "tous"> = {
   currency_risk: "financier",
   vertical_integration: "tous",
   make_or_buy: "approvisionnement",
+  // NOVA Home : la cannibalisation au commercial, l'option et l'immobilisation au financier.
+  cannibalization: "commercial",
+  staged_investment: "financier",
+  development_costs: "financier",
 };
 
 /** Le responsable d'une notion citée par une séance, ou « tous ». */

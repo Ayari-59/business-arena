@@ -1141,7 +1141,18 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // stock d'avant, même objet.
     const commandeST = fusionnerLesCommandes(
       scenario.groupe?.sousTraitance && state.status !== "defaillant"
-        ? commandeDuTour(scenario.groupe.sousTraitance, gamme.map((p) => p.code), raw.sousTraitance)
+        ? commandeDuTour(
+            scenario.groupe.sousTraitance,
+            gamme.map((p) => p.code),
+            // Une nouveauté (NOVA Home) ne se fait fabriquer qu'une fois au marché.
+            nouveautes.size > 0 && raw.sousTraitance
+              ? Object.fromEntries(
+                  Object.entries(raw.sousTraitance).filter(
+                    ([code]) => !nouveautes.has(code) || productAvailable[gamme.findIndex((p) => p.code === code)] === true,
+                  ),
+                )
+              : raw.sousTraitance,
+          )
         : null,
       // Niveau 7 : ce qu'une filiale étrangère fabrique pour l'équipe, livré fini.
       state.status !== "defaillant" ? (input.fabricationDuGroupe?.[state.id] ?? null) : null,
@@ -1508,7 +1519,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
   const nextCompanies: CompanyState[] = [];
   let totalSold = 0;
   // Niveau 7 : le marché d'une nouveauté que personne ne vend encore n'entre pas
-  // dans le marché servi (parts de marché) ; l'étude des marchés le montre quand même.
+  // dans le marché servi (parts de marché) ; l'étude de marché le montre quand même.
   const horsMarche = new Set<string>();
   if (nouveautesDuTour)
     for (const p of gamme) if (nouveautes.has(p.code) && !nouveautesDuTour.has(p.code)) for (const seg of p.market.segments) horsMarche.add(seg.code);

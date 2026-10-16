@@ -123,7 +123,7 @@ type ProductNumberField = (typeof PRODUCT_NUMBER_FIELDS)[number];
 
 export function productFieldName(
   code: ProductCode,
-  field: ProductNumberField | "supplierChoice",
+  field: ProductNumberField | "supplierChoice" | "abandonner",
 ): string {
   return `${PRODUCT_FIELD_PREFIX}${code}.${field}`;
 }
@@ -131,7 +131,7 @@ export function productFieldName(
 export function readProductFields(
   entries: Iterable<[string, FormDataEntryValue | string | null]>,
 ): Record<ProductCode, ProductDecisions> | undefined {
-  const out: Record<ProductCode, Partial<Record<ProductNumberField, number>> & { supplierChoice?: string }> = {};
+  const out: Record<ProductCode, Partial<Record<ProductNumberField, number>> & { supplierChoice?: string; abandonner?: boolean }> = {};
   for (const [key, raw] of entries) {
     if (!key.startsWith(PRODUCT_FIELD_PREFIX)) continue;
     const rest = key.slice(PRODUCT_FIELD_PREFIX.length);
@@ -142,6 +142,11 @@ export function readProductFields(
     const text = String(raw ?? "").trim();
     if (field === "supplierChoice") {
       if (text !== "") (out[code] ??= {}).supplierChoice = text;
+      continue;
+    }
+    // Niveau 7 : abandonner une nouveauté (case à cocher, « on » quand cochée).
+    if (field === "abandonner") {
+      if (text === "on" || text === "true") (out[code] ??= {}).abandonner = true;
       continue;
     }
     if (!(PRODUCT_NUMBER_FIELDS as readonly string[]).includes(field)) continue;
@@ -160,6 +165,7 @@ export function readProductFields(
       ...(p.qualityBudget !== undefined ? { qualityBudget: p.qualityBudget } : {}),
       ...(p.supplierChoice !== undefined ? { supplierChoice: p.supplierChoice } : {}),
       ...(p.rdBudget !== undefined ? { rdBudget: p.rdBudget } : {}),
+      ...(p.abandonner ? { abandonner: true } : {}),
     };
   }
   return products;

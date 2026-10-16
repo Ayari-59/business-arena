@@ -724,12 +724,148 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
       { field: "productionPlan", direction: "review", hint: "Les trois plans déterminent les décaissements du tour : chiffrez-les, référence par référence, avant de décider combien placer." },
     ],
   },
+  // --- NIVEAU 7 « GROUPE » : NOVA Home, la référence à développer --------------
+  // Elles ne s'ouvrent que dans une partie qui porte la Home (`seulementAvec`) :
+  // le même scénario se joue des niveaux 4 à 7, et seul le 7 l'ajoute à la gamme.
+  {
+    code: "novag7_t1_home",
+    category: "decision_strategique",
+    title: "Une quatrième enceinte ?",
+    narrative:
+      "Votre bureau d'études a un prototype qui marche : la NOVA Home, une enceinte connectée qu'on pilote depuis son téléphone et qui se joint aux autres Home de la maison. Pour la vendre, il faut finir le développement (90 000 €), la faire certifier, et la produire sur les mêmes lignes que la Go, la One et la Studio. Aucun de vos concurrents n'en a. Personne ne sait non plus si les foyers en voudront.",
+    problem:
+      "Lancer la Home, et quand ? Que vous rapporterait chaque Home vendue, une fois retirées les One qu'elle remplace ? Et que vaudrait le savoir avant de tout engager ?",
+    diagnosticOptions: [
+      { id: "novag7_home_heure", label: "La marge d'une Home se juge par heure d'atelier, comme celle des autres références, pas seulement par enceinte", correct: true },
+      { id: "novag7_home_cannibale", label: "Une Home vendue à un acheteur de One ne rapporte que l'écart de marge entre les deux : c'est la cannibalisation", correct: true },
+      { id: "novag7_home_option", label: "Le développement s'engage avant de connaître le marché : l'information a une valeur, et attendre a un coût", correct: true },
+      { id: "novag7_home_meilleure_marge", label: "La Home laisse plus par enceinte que la One : il faut tout engager dès ce tour", correct: false },
+      { id: "novag7_home_attendre", label: "Une innovation se lance quand son marché est connu, quitte à arriver après Noël", correct: false },
+    ],
+    quiz: [
+      {
+        id: "novag7_cannibalisation",
+        prompt: "Le taux de cannibalisation d'une nouvelle référence, c'est…",
+        options: [
+          { id: "a", label: "La part de ses ventes prise aux autres références de l'entreprise" },
+          { id: "b", label: "La part de marché qu'elle prend aux concurrents" },
+          { id: "c", label: "Le coût de son développement rapporté à son prix" },
+          { id: "d", label: "La baisse de prix qu'elle impose à la gamme" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Une Home vendue à un ancien client de la One laisse 36 − 21 = 15 € de plus à l'entreprise, pas 36 € : la marge de la One qu'elle remplace est perdue. Vendue à un client nouveau, ou pris à un concurrent, elle laisse ses 36 € entiers.",
+      },
+      {
+        id: "novag7_option",
+        prompt: "Engager un tiers du développement ce tour, acheter l'étude de marché, puis décider au tour suivant de finir ou d'abandonner, c'est…",
+        options: [
+          { id: "a", label: "Acheter une option : on paie pour garder le droit de lancer au tour 3, et de renoncer si le marché ne vient pas" },
+          { id: "b", label: "Gaspiller 30 000 € : un développement se finance d'un coup ou pas du tout" },
+          { id: "c", label: "Repousser la décision sans rien payer" },
+          { id: "d", label: "Garantir le succès du lancement" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Les 30 000 € démarrent le développement sans engager les 60 000 € qui restent : la première vente reste possible au tour 3. Si l'étude dit que les foyers ne viennent pas, on abandonne et l'on ne perd que la mise. C'est le prix de l'information, à comparer à ce que coûterait de tout engager pour rien.",
+      },
+    ],
+    modelRelevance: {
+      decision_tree: "optimal",
+      npv: "acceptable",
+      marginal_analysis: "acceptable",
+      breakeven_analysis: "misleading",
+      psych_pricing: "irrelevant",
+    },
+    conceptCodes: ["staged_investment", "cannibalization", "development_costs", "contribution_margin"],
+    hints: hints([
+      "Votre atelier plafonne déjà aux pics : une Home produite, c'est une autre enceinte qui ne l'est pas.",
+      "Combien laisse une Home par heure d'atelier ? Et une One ?",
+      "Le marché des foyers connectés peut décoller, ou rester petit. L'étude de marché vous dirait lequel, à la fin du tour.",
+      "Un arbre de décision, avec la marge par heure d'atelier à chaque branche, répond à la question : tout engager, engager un tiers et étudier, ou ne rien lancer.",
+      "36 € pour 0,45 h, soit 80 € par heure, contre 70 € par heure pour la One : la Home ne remplace la One avec profit que si sa demande est là. Engager 30 000 € ce tour garde le lancement du tour 3 ; l'étude de marché dira s'il faut finir.",
+    ]),
+    trigger: { round: 1 },
+    seulementAvec: { reference: "nova-home" },
+    weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "review", hint: "La Home prendra sa place sur les mêmes lignes que la Go, la One et la Studio : au tour 3 au plus tôt, chaque Home produite y remplacera une autre enceinte." },
+      { field: "marketingBudget", direction: "review", hint: "Une catégorie qui naît se fait connaître : une Home sans budget de lancement se vendra mal, et ce budget se prévoit avant d'engager la suite du développement." },
+    ],
+  },
+  {
+    code: "novag7_home_en_rayon",
+    category: "contexte_marche",
+    title: "Sur le marché, la première",
+    narrative:
+      "Vos premières Home sont en rayon. Les foyers connectés les découvrent, et des acheteurs de One sont passés au multipièce… y compris chez vous : une partie des Home vendues l'a été à des clients qui auraient pris une One. La plateforme qui fait vivre l'application coûte 8 000 € par tour, que la Home se vende ou non. Et Noël arrive : c'est là que le module radio manque le plus souvent.",
+    problem:
+      "Combien la Home vous a-t-elle vraiment rapporté ce tour, une fois retirées les One qu'elle a remplacées et payée sa plateforme ? Faut-il la pousser avant Noël, ou garder l'atelier pour la One ?",
+    diagnosticOptions: [
+      { id: "novag7_marge_incrementale", label: "Ce que la Home rapporte, c'est sa marge moins celle des One qu'elle a prises à l'entreprise, moins la plateforme", correct: true },
+      { id: "novag7_lancement", label: "Sur un marché qui naît, une Home qu'on ne fait pas connaître se vend mal : le budget de lancement fait la demande", correct: true },
+      { id: "novag7_module_pic", label: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque à Noël coûte les ventes du meilleur tour", correct: true },
+      { id: "novag7_36_euros", label: "Chaque Home vendue rapporte 36 € de plus à l'entreprise", correct: false },
+      { id: "novag7_recuperer", label: "Les 90 000 € du développement doivent être récupérés : il faut vendre la Home à tout prix", correct: false },
+    ],
+    quiz: [
+      {
+        id: "novag7_incrementale",
+        prompt: "La marge incrémentale d'un lancement, c'est…",
+        options: [
+          { id: "a", label: "Ce qu'elle ajoute à la marge de l'entreprise, moins la marge des ventes prises aux autres références" },
+          { id: "b", label: "Sa marge sur coût variable, multipliée par ses ventes" },
+          { id: "c", label: "Son chiffre d'affaires" },
+          { id: "d", label: "Sa marge moins ses frais de développement de l'exercice" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "On compare l'entreprise avec et sans la Home. Une Home prise à un concurrent ou à un nouveau foyer ajoute 36 € ; une Home qui remplace une de vos One n'en ajoute que 15. Retranchez la plateforme, qui n'existe que parce que la Home existe.",
+      },
+      {
+        id: "novag7_cout_engage",
+        prompt: "Les 90 000 € de développement, déjà payés, comptent-ils pour décider combien de Home produire ce tour ?",
+        options: [
+          { id: "a", label: "Non : ils sont engagés quoi qu'on décide ; seuls comptent les flux à venir, marges et plateforme" },
+          { id: "b", label: "Oui : il faut vendre assez de Home pour les rembourser ce tour" },
+          { id: "c", label: "Oui : ils s'ajoutent au coût variable de chaque Home" },
+          { id: "d", label: "Seulement s'ils ont été passés en charge" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Un coût engagé ne se rattrape pas en produisant plus. Au bilan, les frais de développement sont immobilisés, puis amortis à partir de la mise en vente : ils reviennent chaque tour en dotation, mais aucune décision de ce tour ne les change. Ce qui se décide, c'est la marge à venir.",
+      },
+    ],
+    modelRelevance: {
+      relevant_costs: "optimal",
+      marginal_analysis: "acceptable",
+      capacity_analysis: "acceptable",
+      breakeven_analysis: "misleading",
+      psych_pricing: "irrelevant",
+    },
+    conceptCodes: ["cannibalization", "development_costs", "contribution_margin", "capacity"],
+    hints: hints([
+      "Regardez vos ventes de One ce tour, et le segment des acheteurs de One passés au multipièce : d'où viennent vos clients de Home ?",
+      "Une Home vendue à un ancien client de votre One ne rapporte que l'écart de marge entre les deux : combien ?",
+      "Les 90 000 € du développement sont payés : ils ne changent rien à ce que rapportera le prochain tour. La plateforme, si.",
+      "Une analyse des coûts pertinents, croisée avec la marge par heure d'atelier, dit ce que la Home ajoute et quoi produire au pic.",
+      "Comptez 36 € par Home prise à un concurrent ou à un nouveau foyer, 15 € par Home qui remplace une de vos One, puis retranchez les 8 000 € de plateforme. Si le solde est positif, donnez à la Home son budget de lancement ; au pic, servez par marge par heure d'atelier (80 € la Home, 70 € la One) dans la limite de la demande.",
+    ]),
+    trigger: { round: 4 },
+    seulementAvec: { reference: "nova-home", auMarche: true },
+    weight: 1,
+    decisionLevers: [
+      { field: "marketingBudget", direction: "up", hint: "Une catégorie nouvelle se fait connaître : sans budget, la Home n'attire qu'une part de ses foyers. Le budget de lancement se juge à la marge incrémentale qu'il apporte." },
+      { field: "productionPlan", direction: "review", hint: "Au pic, l'atelier ne sert pas tout : la Home et la One se départagent à la marge par heure d'atelier, dans la limite de la demande de chacune." },
+      { field: "price", direction: "review", hint: "Un prix sous les 100 € tient le seuil psychologique des foyers ; le baisser encore prend des clients à votre One autant qu'aux concurrents." },
+    ],
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   novag_t1_reprise:
-    "Le seuil de rentabilité, calculé à mix constant, donne un objectif chiffré au premier trimestre : le volume d'enceintes, toutes références confondues, qui couvre exactement les charges de structure. La recherche sur la Studio s'y ajoute en charge, et se juge sur les marges qu'elle apportera.",
+    "Le seuil de rentabilité, calculé à mix constant, donne un objectif chiffré au premier trimestre : le volume d'enceintes, toutes références confondues, qui couvre exactement les charges de structure. La Studio, livrée prête, y pèse par sa marge et par la demande de ses passionnés.",
   novag_t2_trois_marches:
     "L'analyse de l'élasticité mesure la sensibilité au prix de CHAQUE marché de la gamme : c'est elle qui dit où une baisse rapporte du volume et où elle ne fait que coûter de la marge.",
   novag_t3_facteur_rare:
@@ -748,6 +884,10 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "Le seuil de rentabilité, recalculé au mix réellement vendu, dit combien il manque et quel levier (mix, prix, volume) est le plus efficace.",
   novag_detect_capacity_saturated:
     "La VAN compare le coût des lignes d'aujourd'hui aux marges futures actualisées du mix qu'elles produiront ; le seuil de rentabilité, trompeur ici, ignore le temps.",
+  novag7_t1_home:
+    "L'arbre de décision pose les trois branches (tout engager, engager un tiers et étudier, ne rien lancer), chacune avec sa probabilité et sa marge par heure d'atelier : la valeur de l'étude est l'écart entre la meilleure décision prise en sachant et celle prise sans savoir.",
+  novag7_home_en_rayon:
+    "L'analyse des coûts pertinents ne garde que ce qui change avec la décision : la marge de la Home, celle des One qu'elle remplace, la plateforme. Les frais de développement, déjà engagés, n'y entrent pas.",
   novag_detect_idle_cash:
     "Le budget de trésorerie projette les décaissements du tour à venir, composants de chaque référence compris : il est le seul à dire quelle part du solde peut être bloquée sans risquer le découvert.",
 };
