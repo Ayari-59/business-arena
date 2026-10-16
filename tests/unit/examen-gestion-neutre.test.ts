@@ -154,8 +154,10 @@ const AVANT = [
     niveau: 2,
     strategie: plus8,
     notes: [
-      { note: 50.8, battre: 0.93, ecart: 2.68, rang: 8.33 },
-      { note: 38.2, battre: 1.3, ecart: 3.57, rang: 5.56 },
+      // Réancrées après l'élargissement du marché de l'hôtel : seul l'écart à
+      // l'étalon bouge, la gestion neutre n'y perd plus. Décision du propriétaire.
+      { note: 50.1, battre: 0.93, ecart: 1.92, rang: 8.33 },
+      { note: 37.2, battre: 1.3, ecart: 2.56, rang: 5.56 },
     ],
   },
   {
