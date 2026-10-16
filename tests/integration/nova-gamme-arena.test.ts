@@ -8,10 +8,10 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
  * trace persistée et revienne à l'écran. La ligne « Communication » du
  * tableau de bord était vide en partie réelle alors que tous les tests
  * moteur passaient : la trace ne recopiait que des clés listées. Ce test
- * crée une partie NOVA · gamme au niveau qui ouvre la R&D, y engage de la R&D
- * sur la Studio (livrée prête) avec un axe qualité, et vérifie ce que la vue
- * rend ; puis une partie ATLAS CONSEIL · gamme au même niveau, dont la
- * cyber-sécurité se bâtit à coups de R&D.
+ * crée une partie NOVA · gamme au niveau qui ouvre la R&D, finance la Studio
+ * avec un axe qualité, et vérifie ce que la vue rend ; puis une partie
+ * ATLAS CONSEIL · gamme au même niveau, dont la cyber-sécurité se bâtit elle
+ * aussi à coups de R&D.
  */
 
 vi.mock("@/db", async () => {
@@ -41,35 +41,41 @@ beforeAll(async () => {
   // gardée par acces-sans-licence.test.ts).
   await placerSousLicence(userId);
   // Niveau 5 (Stratégie) : la R&D est ouverte (depuis octobre 2026). La Studio de
-  // NOVA y est livrée prête (`REFERENCES_LIVREES_PRETES`) ; la cyber-sécurité
-  // d'ATLAS CONSEIL, elle, s'y bâtit.
+  // NOVA y est le prototype à financer, comme la cyber-sécurité d'ATLAS CONSEIL.
   gameId = await createSoloGame(userId, "quarter", 3, 5, false, "nova-gamme");
   conseilId = await createSoloGame(userId, "quarter", 3, 5, false, "conseil-gamme");
 });
 
 describe("NOVA · gamme dans l'arène", () => {
-  it("la vue expose la Studio livrée prête, le levier R&D et la communication", async () => {
+  it("la vue expose la Studio en développement, le levier R&D et la communication", async () => {
     const view = (await getGameView(gameId, userId))!;
     expect(view.enabledDecisions.rd).toBe(true);
     expect(view.rdOffer).toEqual({ techScale: 10000 });
     const studio = view.gamme!.find((p) => p.code === "nova-studio")!;
-    expect(studio.rd).toEqual({ techLevel: 0, development: null });
+    expect(studio.rd?.development).toEqual({
+      cost: 25000,
+      availableFromRound: 2,
+      invested: 0,
+      available: false,
+      launchRound: null,
+    });
     expect(view.communicationOffer?.axes.map((a) => a.code)).toEqual(["prix", "qualite", "innovation", "image"]);
     expect(view.communicationOffer?.brandAwareness).toBe(0);
     // Rien de proposé en R&D, en marque ni en axe : ce sont les choix de l'équipe.
     expect(view.proposedDecisions.products!["nova-studio"]!.rdBudget).toBe(0);
     expect(view.proposedDecisions.brandMarketingBudget).toBe(0);
     expect(view.proposedDecisions.communicationAxis).toBeUndefined();
-    // La Studio se vend dès le tour 1 : la proposition lui donne une part de l'atelier.
-    expect(view.proposedDecisions.products!["nova-studio"]!.productionPlan).toBeGreaterThan(0);
-    // Le cockpit de l'équipe prévoit la même partie : rien à financer avant de vendre.
+    // Une référence en développement ne se produit pas : rien de proposé pour elle.
+    expect(view.proposedDecisions.products!["nova-studio"]!.productionPlan).toBe(0);
+    // Le cockpit de l'équipe prévoit la même partie : la Studio à financer, la marque à budgéter.
     const cockpit = (await cockpitEquipe(view))!;
-    expect(JSON.stringify(cockpit)).not.toContain("Vendable ce tour");
-    expect(JSON.stringify(cockpit)).not.toContain("Déjà engagé avant le tour 1");
+    const parametres = cockpit.feuilles[0]!;
+    expect(parametres.lignes.find((l) => l[0]?.v === "Déjà engagé avant le tour 1 · NOVA Studio")![1]!.v).toBe(0);
+    expect(JSON.stringify(cockpit)).toContain("Vendable ce tour");
     expect(JSON.stringify(cockpit)).toContain("Budget de marque (à saisir)");
   });
 
-  it("la R&D, la marque et l'axe joués reviennent à l'écran ; la Studio se vend dès le tour 1", async () => {
+  it("la R&D, la marque et l'axe joués reviennent à l'écran, et la Studio se lance au tour 2", async () => {
     const before = (await getGameView(gameId, userId))!;
     const proposed = before.proposedDecisions;
     const t1: RoundDecisions = {
@@ -85,23 +91,24 @@ describe("NOVA · gamme dans l'arène", () => {
     const view = (await getGameView(gameId, userId))!;
     const r = view.periods[0]!.result;
     expect(r.incomeStatement.rdCost).toBe(25000);
-    // Une R&D sur une référence en vente élève son niveau technique.
-    expect(r.products!["nova-studio"]!.rd).toMatchObject({ budget: 25000 });
-    expect(r.products!["nova-studio"]!.rd!.techLevel).toBeGreaterThan(0);
-    expect(r.products!["nova-studio"]!.sold).toBeGreaterThan(0);
+    expect(r.products!["nova-studio"]!.rd?.development).toMatchObject({ invested: 25000, launched: false });
     expect(r.communication).toMatchObject({ axis: "qualite", brandBudget: 3000 });
     expect(r.communication!.brandAwareness).toBeGreaterThan(0);
     // L'axe qualité porte auprès des passionnés, dessert auprès des lycéens.
     expect(r.communication!.fitBySegment["passionnes"]).toBeGreaterThan(1);
     expect(r.communication!.fitBySegment["lyceens"]).toBeLessThan(1);
+    // Le tour suivant : la Studio est vendable, la notoriété et l'axe tenu sont rappelés.
+    const studio = view.gamme!.find((p) => p.code === "nova-studio")!;
+    expect(studio.rd?.development).toMatchObject({ invested: 25000, available: true });
     expect(view.communicationOffer?.brandAwareness).toBeCloseTo(r.communication!.brandAwareness, 9);
     expect(view.communicationOffer?.lastAxis).toBe("qualite");
     // La décision rendue garde son détail ; la proposition du tour 2 ne refinance rien.
     expect(view.periods[0]!.decisions?.communicationAxis).toBe("qualite");
     expect(view.periods[0]!.decisions?.products?.["nova-studio"]?.rdBudget).toBe(25000);
     expect(view.proposedDecisions.products!["nova-studio"]!.rdBudget).toBe(0);
-    // Le cockpit du tour 2 porte la R&D engagée dans l'historique.
+    // Le cockpit du tour 2 sait la Studio lancée et porte la R&D engagée dans l'historique.
     const cockpit = (await cockpitEquipe(view))!;
+    expect(JSON.stringify(cockpit)).not.toContain("Vendable ce tour");
     const historique = cockpit.feuilles.find((f) => f.nom === "Historique")!;
     const rangStudio = historique.lignes.findIndex((l) => l[0]?.v === "NOVA STUDIO");
     const rd = historique.lignes.slice(rangStudio).find((l) => l[0]?.v === "Recherche et développement")!;
