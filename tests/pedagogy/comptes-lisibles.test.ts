@@ -59,6 +59,28 @@ const FICHE_DE_LA_LIGNE: Record<string, string> = {
   "Indice de sécurité": "safety_margin",
   "Trésorerie d'ouverture": "net_treasury",
   "= Trésorerie de clôture": "net_treasury",
+  // Niveau 7 « Groupe » : la valeur, le rachat, le groupe consolidé.
+  "Écart d'acquisition": "goodwill_impairment",
+  "EBE des douze derniers mois": "enterprise_value",
+  "Valeur de rendement (multiple de l'EBE)": "enterprise_value",
+  "Actif économique": "enterprise_value",
+  "= Valeur d'entreprise (la plus haute)": "enterprise_value",
+  "− Dette nette": "enterprise_value",
+  "= Valeur des capitaux propres": "enterprise_value",
+  "Actions en circulation": "dilution_issuance",
+  "= Valeur par action": "enterprise_value",
+  "Dividendes reçus par action, depuis le départ": "total_shareholder_return",
+  "Rentabilité totale pour l'actionnaire": "total_shareholder_return",
+  "dont emprunt d'acquisition": "loan_schedule",
+  "dont investisseurs entrants": "dilution_issuance",
+  "Capitaux propres, part du groupe": "consolidation",
+  "dont écart de conversion": "minority_translation",
+  "Intérêts minoritaires": "minority_translation",
+  "Chiffre d'affaires consolidé": "consolidation",
+  "dont ventes internes éliminées": "vertical_integration",
+  "EBE consolidé": "consolidation",
+  "Résultat net consolidé": "consolidation",
+  "dont part des minoritaires": "minority_translation",
 };
 
 /**
@@ -92,6 +114,11 @@ const SANS_FICHE: string[] = [
   "= Résultat d'exploitation",
   "Production stockée (± Δ stock)",
   "Valeurs mobilières de placement",
+  // Niveau 7 : des sous-totaux du rachat et du bilan consolidé, lus avec leur panneau.
+  "dont trésorerie",
+  "Frais de transaction",
+  "Stocks",
+  "Dettes fournisseurs et TVA",
 ];
 
 const libelles = () => {

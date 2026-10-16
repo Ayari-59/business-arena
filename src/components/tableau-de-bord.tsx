@@ -58,6 +58,11 @@ export interface EnTeteDeLArdoise {
   /** Ce qu'on dit du rang quand il n'est pas révélé. */
   rangVoile?: string | null;
   ipg?: number | null;
+  /**
+   * NIVEAU 7 « GROUPE » : la valeur d'une action et la rentabilité totale pour
+   * l'actionnaire au dernier tour clos. Le rang s'y juge ; l'IPG reste à côté.
+   */
+  valeur?: { parAction: number; rentabiliteTotale: number } | null;
 }
 
 type Sens = "monte" | "baisse" | "stable" | null;
@@ -256,7 +261,7 @@ function Chiffre({
  * reste que là où elle est seule à dire le rang (podium, classement en liste).
  */
 function Rang({ entete }: { entete: EnTeteDeLArdoise }) {
-  const { rang, rangVoile, ipg } = entete;
+  const { rang, rangVoile, ipg, valeur } = entete;
   if (!rang && !rangVoile) return null;
   return (
     <div className="min-w-0 border-white/10 sm:border-l sm:pl-4">
@@ -271,6 +276,16 @@ function Rang({ entete }: { entete: EnTeteDeLArdoise }) {
       ) : (
         <dd className="mt-2 text-sm leading-snug text-slate-300">{rangVoile}</dd>
       )}
+      {valeur ? (
+        <dd className="mt-1.5 text-sm tabular-nums text-slate-200" data-valeur-de-l-action="">
+          Action {formatDecimal(valeur.parAction, 2)} €
+          <span className={valeur.rentabiliteTotale >= 0 ? "text-emerald-300" : "text-red-300"}>
+            {" "}
+            · rentabilité totale {valeur.rentabiliteTotale >= 0 ? "+" : "−"}
+            {formatDecimal(Math.abs(valeur.rentabiliteTotale) * 100, 1)} %
+          </span>
+        </dd>
+      ) : null}
       {ipg !== null && ipg !== undefined ? (
         <dd className="mt-1.5 text-sm tabular-nums text-slate-400">IPG {formatDecimal(ipg, 0)}</dd>
       ) : null}

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { sansMolette } from "@/components/sans-molette";
 import {
   aDeuxEtages,
+  NIVEAU_MAX,
   niveauMaxPour,
   niveauxFermes,
   VITRINE_SOLO_PAR_DEFAUT,
@@ -114,7 +115,7 @@ export const NIVEAU_PAR_DEFAUT = 3;
 
 export function QuickConfigFields({
   scenarios,
-  levels,
+  levels: niveaux,
   defaultScenario,
   defaultLevel,
   vitrine,
@@ -123,7 +124,15 @@ export function QuickConfigFields({
   offre = OFFRE_PAR_DEFAUT,
   lancement,
   comparatif,
+  niveauGroupe = null,
 }: {
+  /**
+   * LE NIVEAU 7 « GROUPE », EN AVANT-PREMIÈRE : servi par la page à un
+   * administrateur de la plateforme seulement, avec les entreprises qui le
+   * jouent (NOVA, en gamme). Absent : la règle et les niveaux d'avant, à
+   * l'identique ; personne d'autre ne le voit.
+   */
+  niveauGroupe?: (QuickLevel & { entreprises: string[] }) | null;
   /** Le comparatif des niveaux, dépliable sur ordinateur (`config/tableau-des-niveaux`). */
   comparatif?: ComparatifDesNiveaux;
   scenarios: QuickScenario[];
@@ -170,8 +179,13 @@ export function QuickConfigFields({
   const [comparatifOuvert, setComparatifOuvert] = useState(false);
 
   const regle: VitrineSolo = vitrine ?? VITRINE_SOLO_PAR_DEFAUT;
-  // Le niveau le plus haut jouable avec l'entreprise choisie (6 sous licence).
-  const niveauMax = niveauMaxPour(regle, scenario, licence);
+  // Le niveau 7 se montre à l'administrateur, pour les entreprises qui le jouent ;
+  // il s'ouvre là où les six autres le sont (sous licence ou vitrine ouverte).
+  const groupeIci = niveauGroupe !== null && niveauGroupe.entreprises.includes(scenario);
+  const levels = groupeIci ? [...niveaux, niveauGroupe] : niveaux;
+  // Le niveau le plus haut jouable avec l'entreprise choisie (6 sous licence, 7 pour l'administrateur).
+  const niveauMaxDesSix = niveauMaxPour(regle, scenario, licence);
+  const niveauMax = groupeIci && niveauMaxDesSix >= NIVEAU_MAX ? niveauGroupe.level : niveauMaxDesSix;
   // Une entreprise ouverte à tous les niveaux, les autres non : chaque carte dit jusqu'où
   // elle se joue. La même borne pour toutes : l'encadré sous le niveau le dit une fois.
   const parCarte = !licence && aDeuxEtages(regle);

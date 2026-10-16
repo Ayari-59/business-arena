@@ -1,3 +1,4 @@
+import { valeurCreee } from "@/engine/groupe";
 import { premierNiveauQuiOuvre } from "@/config/difficulty";
 import { appelleLInvestissement } from "@/config/investissement-par-niveau";
 import { aideDuPlafond } from "@/config/refus-de-decision";
@@ -989,6 +990,11 @@ export default async function ArenaPage({
         ? "Révélé par votre enseignant"
         : null,
     ipg: latestRound !== null ? view.playerBpi : null,
+    // NIVEAU 7 : la valeur d'une action et la rentabilité totale du dernier tour clos.
+    valeur: (() => {
+      const v = periods.at(-1)?.result.groupe?.valeur;
+      return latestRound !== null && v ? { parAction: v.valeurParAction, rentabiliteTotale: v.rentabiliteTotale } : null;
+    })(),
   };
   // L'EN-TÊTE DE L'ARÈNE. Dès le 2ᵉ tour, l'ardoise du dirigeant et ses
   // chiffres. AU TOUR 1 (lot P2), il n'y a encore aucun chiffre : l'ardoise
@@ -1398,6 +1404,7 @@ export default async function ArenaPage({
       rdOffer={view.rdOffer}
       communicationOffer={view.communicationOffer}
       modulesOffer={view.modulesOffer}
+      groupe={view.groupe}
       verrou={
         view.playLock.playable
           ? null
@@ -1584,6 +1591,16 @@ export default async function ArenaPage({
                 ca: p.result.incomeStatement.revenue,
                 resultat: p.result.incomeStatement.netIncome,
                 tresorerie: p.result.functionalBalance.netTreasury,
+                // NIVEAU 7 : la valeur pour l'actionnaire, tour par tour.
+                ...(p.result.groupe?.valeur && view.groupe?.regles
+                  ? {
+                      valeur: {
+                        parAction: p.result.groupe.valeur.valeurParAction,
+                        rentabiliteTotale: p.result.groupe.valeur.rentabiliteTotale,
+                        creee: valeurCreee(p.result.groupe.valeur, view.groupe.regles.actionsInitiales),
+                      },
+                    }
+                  : {}),
               })),
             );
             if (!bilan) return null;
@@ -1606,6 +1623,7 @@ export default async function ArenaPage({
               rang: classementOuvert && moi ? moi.rank : null,
               resultatCumule: bilan.resultatCumule,
               equipe: view.playerTeamName,
+              rentabiliteTotale: bilan.valeur?.rentabiliteTotale ?? null,
             });
             return (
               <BilanDePartie

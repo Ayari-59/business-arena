@@ -807,6 +807,8 @@ export interface TeacherGameView {
     bpi: number;
     /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
     defaillant: boolean;
+    /** NIVEAU 7 « GROUPE » : la rentabilité totale pour l'actionnaire (le rang s'y fait) et la valeur créée. */
+    groupe?: { rentabiliteTotale: number; valeurCreee: number };
   }[];
   /**
    * LES DEMANDES DE SUBVENTION EXCEPTIONNELLE, à instruire ou déjà tranchées.
@@ -959,6 +961,10 @@ export async function getTeacherGameView(
         rank: r.rank,
         bpi: Number(r.bpi),
         defaillant: Boolean((r.detail as { defaillant?: boolean })?.defaillant),
+        ...(() => {
+          const g = (r.detail as { groupe?: { rentabiliteTotale: number; valeurCreee: number } } | null)?.groupe;
+          return g ? { groupe: { rentabiliteTotale: g.rentabiliteTotale, valeurCreee: g.valeurCreee } } : {};
+        })(),
       }))
       .sort((a, b) => a.rank - b.rank),
     // Le service des subventions ne connaît que des identifiants d'équipe : la

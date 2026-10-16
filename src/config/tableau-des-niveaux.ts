@@ -88,6 +88,16 @@ export const LIBELLES_DES_LEVIERS: Readonly<Record<GroupeDeLeviers, LibelleDuGro
     court: "Placement", phrase: "le placement du surplus",
   },
   insurance: { decidez: "L'assurance", gere: "Aucune assurance souscrite", court: "Assurance", phrase: "l'assurance" },
+  croissanceExterne: {
+    decidez: "Le rachat d'un site à l'arrêt, d'un fournisseur ou d'une entreprise étrangère",
+    gere: "Aucun rachat : la croissance reste interne",
+    court: "Croissance externe", phrase: "la croissance externe",
+  },
+  externalisation: {
+    decidez: "La sous-traitance : fabriquer ou faire fabriquer",
+    gere: "Toute la production dans votre atelier",
+    court: "Sous-traitance", phrase: "la sous-traitance",
+  },
 };
 
 /** L'investissement aux niveaux qui le plafonnent : la règle dite dans le libellé. */

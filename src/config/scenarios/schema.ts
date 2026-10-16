@@ -322,6 +322,116 @@ export const engineScenarioConfigSchema = z.object({
     .min(1)
     .optional(),
   subcontracting: z.object({ unitCost: z.number().positive() }).optional(),
+  /**
+   * Niveau 7 « Groupe » (valeur, rachat, sous-traitance), posé par
+   * `composerLeScenarioJoue` au seul niveau 7. Déclaré ici, sans quoi l'objet
+   * non strict le retirerait au chargement du snapshot, à la clôture.
+   */
+  groupe: z
+    .object({
+      depart: z.object({ facteur: z.number().positive(), apport: z.number().nonnegative().optional() }).optional(),
+      valorisation: z.object({
+        multipleEBE: z.number().positive(),
+        actionsInitiales: z.number().positive(),
+      }),
+      rachat: z
+        .object({
+          primeDeControle: z.number().min(0),
+          fraisDeTransaction: z.number().min(0),
+          decoteDEmission: z.number().min(0).max(0.9),
+          seuilDeControle: z.number().min(0).max(1),
+          tourMin: z.number().int().min(1),
+          tourMinTitres: z.number().int().min(1).optional(),
+        })
+        .optional(),
+      fournisseurs: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            nom: z.string().min(1),
+            recit: z.string(),
+            clientsExterieurs: z.object({
+              chiffreDAffaires: z.number().min(0),
+              saisonnalite: z.array(z.number().min(0)),
+              croissance: z.number(),
+            }),
+            tauxDeCoutVariable: z.number().min(0).max(1),
+            chargesFixesParTour: z.number().min(0),
+            capacite: z.number().positive(),
+            immobilisations: z.number().min(0),
+            dureeDAmortissement: z.number().positive(),
+            bfr: z.number().min(0),
+            tresorerie: z.number(),
+            dette: z.number().min(0),
+            tauxDInteretParTour: z.number().min(0),
+          }),
+        )
+        .optional(),
+      etrangers: z
+        .array(
+          z.object({
+            id: z.string().min(1),
+            nom: z.string().min(1),
+            pays: z.string().min(1),
+            devise: z.string().min(1),
+            recit: z.string(),
+            change: z.object({ coursInitial: z.number().positive(), volatilite: z.number().min(0) }),
+            ventes: z.object({ chiffreDAffaires: z.number().min(0), saisonnalite: z.array(z.number().min(0)), croissance: z.number() }),
+            tauxDeCoutVariable: z.number().min(0).max(1),
+            chargesFixesParTour: z.number().min(0),
+            immobilisations: z.number().min(0),
+            dureeDAmortissement: z.number().positive(),
+            bfr: z.number().min(0),
+            tresorerie: z.number(),
+            dette: z.number().min(0),
+            tauxDInteretParTour: z.number().min(0),
+            tauxDImpot: z.number().min(0).max(1),
+            risquePays: z.object({ probabilite: z.number().min(0).max(1), perteDeVentes: z.number().min(0).max(1) }).optional(),
+            parts: z.array(z.number().positive().max(1)).min(1),
+            reseau: z
+              .object({
+                capacite: z.number().min(0),
+                prix: z.record(z.string().min(1), z.number().positive()),
+                coutParUnite: z.number().min(0),
+                coutFixeParTour: z.number().min(0),
+              })
+              .optional(),
+            fabrication: z
+              .object({
+                capacite: z.number().min(0),
+                cout: z.record(z.string().min(1), z.number().positive()),
+                qualite: z.number().positive(),
+                coutFixeParTour: z.number().min(0),
+              })
+              .optional(),
+          }),
+        )
+        .optional(),
+      import: z
+        .object({
+          code: z.string().min(1),
+          rupture: z.object({
+            probabilite: z.number().min(0).max(1),
+            probabiliteAuxPics: z.number().min(0).max(1),
+            seuilDePic: z.number().positive(),
+          }),
+          change: z.object({ devise: z.string().min(1), volatilite: z.number().min(0) }),
+        })
+        .optional(),
+      sousTraitance: z
+        .record(
+          z.string().min(1),
+          z.object({
+            tranches: z
+              .array(z.object({ jusqua: z.number().positive().optional(), prix: z.number().positive() }))
+              .min(1),
+            plafond: z.number().nonnegative(),
+            qualite: z.number().positive(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
   qualityCosts: z
     .object({
       baseDefectRate: z.number().min(0).max(0.2),

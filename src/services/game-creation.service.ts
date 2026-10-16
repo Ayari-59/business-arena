@@ -55,6 +55,10 @@ import {
   verifierLeNiveau,
 } from "@/services/acces.service";
 import { type BotProfile } from "@/engine/bots";
+import { premiereOuverture } from "@/engine/groupe";
+import type { CompanyState, EngineScenarioConfig } from "@/engine/types";
+import { GROUPE_PAR_SCENARIO } from "@/config/groupe/nova";
+import { users } from "@/db/schema";
 import { ENGINE_VERSION } from "@/engine/simulation";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 import {
@@ -237,6 +241,65 @@ export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
   return getOrCreateScenarioId(scenarioByCode(DEFAULT_SCENARIO_CODE));
 }
 
+/**
+ * L'état de départ d'une entreprise au niveau 7 : sa taille de départ et son
+ * état de groupe, posés dès la création. Hors niveau 7, l'état tel quel.
+ */
+function auNiveauGroupe(groupe: EngineScenarioConfig["groupe"], roundDays: number, etat: CompanyState): CompanyState {
+  return groupe ? premiereOuverture(etat, groupe, roundDays) : etat;
+}
+
+/** Le niveau 7 « Groupe » : en avant-première, réservé à l'administration de la plateforme. */
+export class NiveauGroupeReserveError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NiveauGroupeReserveError";
+  }
+}
+
+/**
+ * LE NIVEAU 7 NE SE CRÉE QU'AVEC UN SCÉNARIO QUI PORTE UN BLOC DE GROUPE (NOVA
+ * en gamme au prototype), ET PAR UN ADMINISTRATEUR DE LA PLATEFORME : la règle
+ * de l'écran, appliquée ici pour toute création, quel que soit le formulaire.
+ */
+/**
+ * L'un de ces comptes administre-t-il la plateforme ? C'est le drapeau qui
+ * ouvre le niveau 7 « Groupe » pendant l'avant-première : la page `/jouer` le
+ * lit pour montrer le niveau, la création pour l'accepter.
+ */
+export async function administreLaPlateforme(comptes: (string | null | undefined)[]): Promise<boolean> {
+  const ids = comptes.filter((x): x is string => typeof x === "string" && x.length > 0);
+  if (ids.length === 0) return false;
+  const admins = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(inArray(users.id, ids), eq(users.isPlatformAdmin, true)));
+  return admins.length > 0;
+}
+
+/** Les entreprises (codes de `/jouer`) qui se jouent au niveau 7 : celles dont la variante du niveau porte un bloc de groupe. */
+export function entreprisesDuNiveauGroupe(codes: readonly string[]): string[] {
+  return codes.filter((code) => Boolean(GROUPE_PAR_SCENARIO[scenarioCodeForLevel(code, 7)]));
+}
+
+export async function verifierLeNiveauGroupe(args: {
+  niveau: number | undefined;
+  scenarioCode: string | undefined;
+  /** Les comptes à l'origine de la création : l'un d'eux doit administrer la plateforme. */
+  comptes: (string | null | undefined)[];
+}): Promise<void> {
+  if (args.niveau !== 7) return;
+  const code = scenarioCodeForLevel(args.scenarioCode ?? DEFAULT_SCENARIO_CODE, 7);
+  if (!GROUPE_PAR_SCENARIO[code]) {
+    throw new NiveauGroupeReserveError("Le niveau 7 « Groupe » ne se joue qu'avec NOVA, en gamme.");
+  }
+  if (!(await administreLaPlateforme(args.comptes))) {
+    throw new NiveauGroupeReserveError(
+      "Le niveau 7 « Groupe » est en avant-première : seul un administrateur de la plateforme peut créer une partie à ce niveau.",
+    );
+  }
+}
+
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
 /**
  * L'ÉTAT DE DÉPART D'UNE PARTIE : ses tours, l'état d'ouverture de chaque
@@ -253,6 +316,11 @@ export async function poserLEtatDeDepart(args: {
   definition: ScenarioDefinition;
   periodicity: Periodicity;
   roundsCount: number;
+  /**
+   * Le scénario joué (le snapshot). Au niveau 7, son bloc `groupe` fait
+   * démarrer chaque entreprise à sa taille de départ dès l'état du tour 0.
+   */
+  scenario?: EngineScenarioConfig;
 }): Promise<void> {
   await db.insert(rounds).values(
     Array.from({ length: args.roundsCount }, (_, i) => ({
@@ -262,11 +330,12 @@ export async function poserLEtatDeDepart(args: {
     })),
   );
 
+  const groupe = args.scenario?.groupe;
   await db.insert(companyStates).values(
     args.equipes.map((t) => ({
       teamId: t.id,
       roundIndex: 0,
-      state: applyPeriodicityToCompany(
+      state: auNiveauGroupe(groupe, args.scenario?.roundDays ?? 90, applyPeriodicityToCompany(
         args.definition.company(
           t.id,
           t.name,
@@ -277,7 +346,7 @@ export async function poserLEtatDeDepart(args: {
         // Quand l'unité vendue est une période, la capacité d'accueil est un
         // stock de places et ne suit pas la durée du tour.
         { abonnement: args.definition.scenario.subscription !== undefined },
-      ),
+      )),
     })),
   );
 
@@ -296,7 +365,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   await seedPedagogyReferentials(definition.situations);
   const seed = args.seed ?? randomInt(1, 2 ** 31);
   const preset = args.level
-    ? presetByLevel.get(args.level as 1 | 2 | 3 | 4 | 5 | 6)
+    ? presetByLevel.get(args.level as 1 | 2 | 3 | 4 | 5 | 6 | 7)
     : undefined;
   const sanitized = sanitizeEconomicOverrides(args.economicOverrides);
   const overrides = Object.keys(sanitized).length > 0 ? sanitized : undefined;
@@ -422,6 +491,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     definition,
     periodicity: args.periodicity,
     roundsCount: (scenarioEssai ?? scenarioJoue).roundsCount,
+    scenario: scenarioEssai ?? scenarioJoue,
   });
 
   return {
@@ -521,6 +591,7 @@ export async function reinitialiserPartie(args: {
     definition,
     periodicity,
     roundsCount: snapshot.roundsCount,
+    scenario: game.scenarioSnapshot as EngineScenarioConfig,
   });
 }
 
@@ -602,6 +673,7 @@ export async function createSoloGame(
     scenarioCode,
     licence: () => unCompteSousLicence([userId, options.licencePar]),
   });
+  await verifierLeNiveauGroupe({ niveau: level, scenarioCode, comptes: [userId, options.licencePar] });
   if (creatorIp) {
     const [compte] = await db
       .select({ n: sql<number>`count(*)::int` })
@@ -686,6 +758,7 @@ export async function createClassGame(args: {
     scenarioCode: args.scenarioCode,
     licence: () => uneOrganisationSousLicence([args.organizationId]),
   });
+  await verifierLeNiveauGroupe({ niveau: args.level, scenarioCode: args.scenarioCode, comptes: [args.teacherId] });
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
   const joinCode = makeJoinCode();

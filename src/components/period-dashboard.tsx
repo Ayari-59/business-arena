@@ -1,4 +1,7 @@
-import { formatDecimal, formatEuro, formatPercent, formatUnits } from "@/lib/format";
+import { formatDecimal, formatEuro, formatEuroCents, formatPercent, formatUnits } from "@/lib/format";
+
+/** Un montant signé : « +12 000 € », « −294 € ». */
+const formatEuroSigne = (v: number) => `${Math.round(v) > 0 ? "+" : ""}${formatEuro(v)}`;
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
 import { lectureBancaire } from "@/components/lecture-bancaire";
@@ -337,6 +340,26 @@ export function PeriodDashboard({
               />
             </section>
 
+            {r.groupe?.valeur ? (
+              // NIVEAU 7 « GROUPE » : l'équipe est jugée sur la valeur créée pour l'actionnaire.
+              <section aria-label="Valeur pour l'actionnaire" className="grid grid-cols-2 gap-3" data-valeur-du-tour="">
+                <KpiCard
+                  label="Valeur de l'action"
+                  value={formatEuroCents(r.groupe.valeur.valeurParAction)}
+                  hint={`Valeur d'entreprise : ${formatEuro(r.groupe.valeur.valeurEntreprise)}`}
+                  sparklineData={view.periods
+                    .filter((p) => p.round <= period.round && p.result.groupe?.valeur)
+                    .map((p) => p.result.groupe!.valeur!.valeurParAction)}
+                />
+                <KpiCard
+                  label="Rentabilité totale"
+                  value={`${r.groupe.valeur.rentabiliteTotale >= 0 ? "+" : ""}${formatPercent(r.groupe.valeur.rentabiliteTotale)}`}
+                  tone={r.groupe.valeur.rentabiliteTotale >= 0 ? "good" : "critical"}
+                  hint="Valeur de l'action et dividendes reçus, comparés à la valeur de départ."
+                />
+              </section>
+            ) : null}
+
             {r.subscription ? (
               <section
                 data-testid="portefeuille-tour"
@@ -441,7 +464,10 @@ export function PeriodDashboard({
               <section className="grid gap-3 lg:grid-cols-2">
                 <div className="panneau-info p-3 sm:p-5">
                   <h2 className="mb-2 text-sm font-semibold text-slate-200">
-                    Classement · Indice de performance globale
+                    {/* NIVEAU 7 « GROUPE » : le rang se fait à la rentabilité totale pour l'actionnaire. */}
+                    {view.ranking.some((row) => row.groupe)
+                      ? "Classement · Rentabilité totale pour l'actionnaire"
+                      : "Classement · Indice de performance globale"}
                   </h2>
                   <ol className="space-y-2">
                     {view.ranking.map((row) => (
@@ -464,12 +490,24 @@ export function PeriodDashboard({
                             </span>
                           ) : null}
                         </span>
-                        <span className="tabular-nums">
-                          <span className="font-semibold">{formatDecimal(row.bpi)}</span>
-                          <span className="ml-2 text-xs text-slate-400">
-                            {formatEuro(row.cumulativeNetIncome)} cumulés
+                        {row.groupe ? (
+                          <span className="tabular-nums" data-rentabilite-au-classement="">
+                            <span className="font-semibold">
+                              {row.groupe.rentabiliteTotale >= 0 ? "+" : ""}
+                              {formatPercent(row.groupe.rentabiliteTotale)}
+                            </span>
+                            <span className="ml-2 text-xs text-slate-400">
+                              {formatEuroSigne(row.groupe.valeurCreee)} créés · IPG {formatDecimal(row.bpi)}
+                            </span>
                           </span>
-                        </span>
+                        ) : (
+                          <span className="tabular-nums">
+                            <span className="font-semibold">{formatDecimal(row.bpi)}</span>
+                            <span className="ml-2 text-xs text-slate-400">
+                              {formatEuro(row.cumulativeNetIncome)} cumulés
+                            </span>
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ol>

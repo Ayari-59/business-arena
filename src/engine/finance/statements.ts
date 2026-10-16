@@ -75,6 +75,12 @@ export interface FinanceInput {
    * Le plafonnement aux réserves distribuables est fait par l'appelant.
    */
   dividend?: number;
+  /**
+   * Niveau 7 : produits finis achetés au sous-traitant, payés à la livraison.
+   * Ils sont entrés en stock à ce coût : le coût des ventes et la variation de
+   * stock les portent déjà, l'équilibre tient. Absent : rien d'acheté.
+   */
+  sousTraitance?: number;
   /** Investissement du tour : décaissé et immobilisé (net de la revente). */
   investmentOutlay: number;
   /** Perte de cession d'équipement (VNC − produit de cession). */
@@ -97,6 +103,16 @@ export interface FinanceInput {
    * tableau de flux, parce qu'elle ne raconte pas la même histoire. Absente = 0.
    */
   rescueSubsidy?: number;
+  /** Niveau 7 : frais de rachat, charge décaissée du tour. */
+  chargesDeRachat?: number;
+  /**
+   * Niveau 7 : les mouvements de trésorerie d'un rachat fait au jour 1 (prix
+   * payé, emprunt d'acquisition, apport des investisseurs).
+   * Le bilan d'ouverture reçu est DÉJÀ celui d'après rachat : ces
+   * lignes ouvrent le tableau de flux, et sa trésorerie d'ouverture reste celle
+   * de la clôture précédente.
+   */
+  operationsDOuverture?: CashFlowItem[];
   /**
    * Gestion de trésorerie (optionnel) : mobilisation de créances demandée et
    * paramètres du scénario. Au-delà du plafond de découvert, un affacturage
@@ -177,7 +193,11 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const financingCost = discountCost + factoringCost + forcedCost;
 
     // --- Compte de résultat -----------------------------------------------
-    const variableProductionCost = input.purchases + input.otherVariableCash;
+    const sousTraitance = input.sousTraitance ?? 0;
+    const variableProductionCost =
+      sousTraitance > 0
+        ? input.purchases + input.otherVariableCash + sousTraitance
+        : input.purchases + input.otherVariableCash;
     const commissionCost = input.commissionCost ?? 0;
     const grossMargin = input.revenue - input.cogs - commissionCost;
     const rseCost = input.rseCost ?? 0;
@@ -219,7 +239,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       placementIncome -
       exceptionalCharge +
       exceptionalIncome +
-      rescueSubsidy;
+      rescueSubsidy -
+      (input.chargesDeRachat ?? 0);
     // Report déficitaire : les pertes reportées s'imputent sur le bénéfice
     // imposable avant l'impôt ; le stock diminue de ce qui est imputé et
     // s'accroît de la perte du tour. `closing = max(0, ouverture − résultat)`
@@ -252,10 +273,12 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       ...(exceptionalCharge > 0 ? { exceptionalCharge } : {}),
       ...(exceptionalIncome > 0 ? { exceptionalIncome } : {}),
       ...(rescueSubsidy > 0 ? { rescueSubsidy } : {}),
+      ...((input.chargesDeRachat ?? 0) > 0 ? { chargesDeRachat: input.chargesDeRachat } : {}),
       pretaxIncome,
       ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
       tax,
       netIncome,
+      ...(sousTraitance > 0 ? { sousTraitance } : {}),
     };
 
     // --- Créances, dettes fournisseurs, TVA, flux de trésorerie -----------
@@ -279,6 +302,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "affacturage_force", amount: forcedFactored },
       { label: "paiements_fournisseurs", amount: -supplierPayments },
       { label: "couts_variables_decaisses", amount: -input.otherVariableCash },
+      // Niveau 7 : absente sans commande au sous-traitant.
+      ...(sousTraitance > 0 ? [{ label: "achats_sous_traitance", amount: -sousTraitance }] : []),
       // Ligne absente des secteurs sans canal partenaire : un flux à zéro dans
       // le tableau de trésorerie ferait chercher ce qui n'existe pas.
       ...(commissionCost > 0
@@ -296,6 +321,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "sanction_rse", amount: -exceptionalCharge },
       { label: "subvention_rse", amount: exceptionalIncome },
       { label: "subvention_exceptionnelle", amount: rescueSubsidy },
+      { label: "frais_de_rachat", amount: -(input.chargesDeRachat ?? 0) },
       { label: "impot", amount: -tax },
       { label: "tva_decaissee", amount: -openingVat },
       { label: "investissement", amount: -input.investmentOutlay },
@@ -324,13 +350,21 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       payables: payablesEnd,
       overdraft: Math.max(0, -closingNet),
       vatLiability: vatDue,
+      // Niveau 7 : l'écart d'acquisition, reporté tel quel.
+      ...(o.goodwill !== undefined ? { goodwill: o.goodwill } : {}),
     };
 
     return {
       incomeStatement,
       closing,
       taxLossCarryforward: closingLossCarryforward,
-      cashFlow: { opening: openingNet, items, closing: closingNet },
+      cashFlow: input.operationsDOuverture
+        ? {
+            opening: openingNet - input.operationsDOuverture.reduce((s, i) => s + i.amount, 0),
+            items: [...input.operationsDOuverture, ...items],
+            closing: closingNet,
+          }
+        : { opening: openingNet, items, closing: closingNet },
       receivablesEnd,
       closingNet,
       forcedCost,
@@ -369,12 +403,15 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
 
 /** Total actif = total passif (contrôle d'équilibre, testé au centime). */
 export function balanceGap(b: BalanceSheet): number {
-  const assets =
+  const actifs =
     b.fixedAssetsNet +
     b.inventoryValue +
     b.receivables +
     b.cash +
     (b.shortTermInvestment ?? 0);
+  // L'écart d'acquisition (niveau 7) n'est additionné que présent : sans lui,
+  // la somme d'avant, au bit près.
+  const assets = b.goodwill !== undefined ? actifs + b.goodwill : actifs;
   const liabilities =
     b.equity + b.financialDebt + b.payables + b.overdraft + (b.vatLiability ?? 0);
   return assets - liabilities;

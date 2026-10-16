@@ -1,4 +1,4 @@
-import { DIFFICULTY_PRESETS, type DifficultyPreset } from "./difficulty";
+import { DIFFICULTY_PRESETS, presetByLevel, type DifficultyPreset } from "./difficulty";
 import type { EngineScenarioConfig } from "../engine/types";
 
 /**
@@ -95,7 +95,8 @@ export const LEVIERS: readonly LevierDeDecision[] = [
  * donné les déclare ; sans scénario, ils sont comptés, comme l'étendue.
  */
 export function leviersDuNiveau(niveau: number, scenario?: EngineScenarioConfig): LevierDeDecision[] {
-  const preset = DIFFICULTY_PRESETS.find((p) => p.level === niveau);
+  // Le niveau 7 « Groupe » est hors du parcours : il se lit dans `presetByLevel`.
+  const preset = presetByLevel.get(niveau as DifficultyPreset["level"]);
   if (!preset) return [];
   return LEVIERS.filter(
     (l) =>

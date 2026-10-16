@@ -20,6 +20,12 @@ export interface TourDuBilan {
   ca: number;
   resultat: number;
   tresorerie: number;
+  /**
+   * NIVEAU 7 « GROUPE » : la valeur d'une action, la rentabilité totale pour
+   * l'actionnaire et la valeur créée pour les actionnaires d'origine, en euros,
+   * à la clôture de ce tour. Absent aux autres niveaux.
+   */
+  valeur?: { parAction: number; rentabiliteTotale: number; creee: number };
 }
 
 export interface Bilan {
@@ -48,6 +54,8 @@ export interface Bilan {
   toutEnPerte: boolean;
   /** Les tours, dans l'ordre : la courbe du résultat, tour par tour. */
   parTour: TourDuBilan[];
+  /** NIVEAU 7 : la valeur du dernier tour (action, rentabilité totale, valeur créée) ; `null` ailleurs. */
+  valeur: NonNullable<TourDuBilan["valeur"]> | null;
 }
 
 export function bilanDeLaPartie(tours: readonly TourDuBilan[]): Bilan | null {
@@ -76,6 +84,7 @@ export function bilanDeLaPartie(tours: readonly TourDuBilan[]): Bilan | null {
     beneficiaire: resultatCumule > 0,
     toutEnPerte: meilleurTour.resultat < 0,
     parTour: ordre,
+    valeur: ordre.at(-1)!.valeur ?? null,
   };
 }
 
@@ -104,14 +113,24 @@ export function titreDuBilan({
   rang,
   resultatCumule,
   equipe,
+  rentabiliteTotale = null,
 }: {
   /** La place finale, ou null quand le classement n'est pas (encore) ouvert. */
   rang: number | null;
   resultatCumule: number;
   /** Le nom de l'équipe, tel que la partie l'affiche. */
   equipe: string;
+  /**
+   * NIVEAU 7 « GROUPE » : le classement s'y fait à la rentabilité totale pour
+   * l'actionnaire, et le titre aussi : la victoire attend de la valeur créée.
+   */
+  rentabiliteTotale?: number | null;
 }): { titre: string; victoire: boolean } {
   if (rang !== 1) return { titre: "Partie terminée.", victoire: false };
+  if (rentabiliteTotale !== null) {
+    if (rentabiliteTotale > 0) return { titre: `Victoire ! ${equipe} a créé le plus de valeur.`, victoire: true };
+    return { titre: "En tête du classement, sans valeur créée.", victoire: false };
+  }
   if (resultatCumule > 0) return { titre: `Victoire ! ${equipe} domine le marché.`, victoire: true };
   if (resultatCumule < 0) return { titre: "En tête du classement, mais en perte.", victoire: false };
   return { titre: "En tête du classement, sans bénéfice.", victoire: false };

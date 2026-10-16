@@ -231,6 +231,16 @@ export function BilanDePartie({
             plume="euro"
             teinte="text-slate-50"
           />
+          {bilan.valeur ? (
+            // NIVEAU 7 « GROUPE » : ce que l'équipe a fait de l'argent de ses actionnaires.
+            <Chiffre
+              titre="Valeur créée"
+              note={`rentabilité totale ${bilan.valeur.rentabiliteTotale >= 0 ? "+" : "−"}${(Math.abs(bilan.valeur.rentabiliteTotale) * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} % pour l'actionnaire`}
+              valeur={bilan.valeur.creee}
+              plume="euro-signe"
+              teinte={bilan.valeur.creee > 0 ? "text-emerald-300" : bilan.valeur.creee < 0 ? "text-red-300" : "text-slate-50"}
+            />
+          ) : null}
         </dl>
 
         {/* LA COURBE DES TOURS (lot P2) : le résultat net, tour par tour, sur

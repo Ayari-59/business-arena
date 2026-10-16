@@ -15,6 +15,7 @@ import type { DecisionSourceMap } from "@/config/decision-source";
 import { coherencePivots } from "@/scoring/coherence";
 import type { CompanyRoundResult, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 import type { LeverDirection } from "@/config/scenarios/situation-kit";
+import { valeurCreee, type ValeurDeLEntreprise } from "@/engine/groupe";
 
 // ---------------------------------------------------------------------------
 // Lecture des entrées pédagogiques
@@ -258,9 +259,27 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
     };
   });
 
-  entries.sort(
-    (a, b) => b.bpi - a.bpi || b.financialAvg - a.financialAvg || b.lastTreasury - a.lastTreasury,
-  );
+  // NIVEAU 7 « GROUPE » : le rang se fait à la rentabilité totale pour
+  // l'actionnaire du dernier tour joué (la valeur par action et ses dividendes),
+  // l'IPG restant affiché à côté ; une entreprise défaillante passe après.
+  const groupe = scenario.groupe
+    ? await valeursDuGroupe(roundIds, teamIds, gameRounds, scenario.groupe.valorisation.actionsInitiales)
+    : null;
+  if (groupe) {
+    entries.sort((a, b) => {
+      const va = groupe.get(a.teamId);
+      const vb = groupe.get(b.teamId);
+      return (
+        Number(a.defaillant) - Number(b.defaillant) ||
+        (vb?.rentabiliteTotale ?? -Infinity) - (va?.rentabiliteTotale ?? -Infinity) ||
+        b.bpi - a.bpi
+      );
+    });
+  } else {
+    entries.sort(
+      (a, b) => b.bpi - a.bpi || b.financialAvg - a.financialAvg || b.lastTreasury - a.lastTreasury,
+    );
+  }
   if (entries.length > 0) {
     await db
       .insert(gameRankings)
@@ -275,6 +294,7 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
             roundBpis: entry.roundBpis.map((v) => Math.round(v * 100) / 100),
             dimensions: entry.dimensions,
             defaillant: entry.defaillant,
+            ...(groupe?.get(entry.teamId) ? { groupe: groupe.get(entry.teamId) } : {}),
           },
         })),
       )
@@ -287,4 +307,48 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
         },
       });
   }
+}
+
+/** Ce que le classement du niveau 7 retient de la valeur d'une équipe, au dernier tour joué. */
+export interface ValeurAuClassement {
+  rentabiliteTotale: number;
+  valeurParAction: number;
+  dividendesParAction: number;
+  /** La valeur créée pour les actionnaires d'origine, en euros : rentabilité × valeur de départ. */
+  valeurCreee: number;
+  tour: number;
+}
+
+/** La valeur de chaque équipe au dernier tour joué, lue dans la trace du moteur. */
+async function valeursDuGroupe(
+  roundIds: string[],
+  teamIds: string[],
+  gameRounds: { id: string; index: number }[],
+  /** Les actions d'origine : la valeur créée leur revient. */
+  actionsInitiales: number,
+): Promise<Map<string, ValeurAuClassement>> {
+  const out = new Map<string, ValeurAuClassement>();
+  if (roundIds.length === 0 || teamIds.length === 0) return out;
+  const lignes = await db
+    .select({
+      teamId: roundResults.teamId,
+      roundId: roundResults.roundId,
+      valeur: sql<ValeurDeLEntreprise | null>`${roundResults.engineTrace}->'groupe'->'valeur'`,
+    })
+    .from(roundResults)
+    .where(and(inArray(roundResults.roundId, roundIds), inArray(roundResults.teamId, teamIds)));
+  const indexDe = new Map(gameRounds.map((r) => [r.id, r.index]));
+  for (const l of lignes) {
+    const v = l.valeur;
+    const tour = indexDe.get(l.roundId) ?? 0;
+    if (!v || (out.get(l.teamId)?.tour ?? -1) > tour) continue;
+    out.set(l.teamId, {
+      rentabiliteTotale: v.rentabiliteTotale,
+      valeurParAction: v.valeurParAction,
+      dividendesParAction: v.dividendesParAction,
+      valeurCreee: valeurCreee(v, actionsInitiales),
+      tour,
+    });
+  }
+  return out;
 }

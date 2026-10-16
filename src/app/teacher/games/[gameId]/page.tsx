@@ -10,7 +10,7 @@ import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
-import { compter, formatDecimal, formatEuro } from "@/lib/format";
+import { compter, formatDecimal, formatEuro, formatPercent } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { setAnswerFormatAction, setMissedPolicyAction, setQuizModeAction } from "../../actions";
 import { ANSWER_FORMATS, QUIZ_MODES } from "@/config/difficulty";
@@ -670,12 +670,25 @@ export default async function TeacherGamePage({
                     </span>
                   ) : null}
                 </span>
-                <span className="tabular-nums">
-                  <span className="font-semibold text-slate-100">IPG {formatDecimal(row.bpi)}</span>
-                  <span className="ml-2 text-xs text-slate-400">
-                    {formatEuro(row.cumulativeNetIncome)} cumulés
+                {row.groupe ? (
+                  // NIVEAU 7 « GROUPE » : le rang se fait à la rentabilité totale pour l'actionnaire.
+                  <span className="tabular-nums">
+                    <span className="font-semibold text-slate-100">
+                      Rentabilité totale {row.groupe.rentabiliteTotale >= 0 ? "+" : ""}
+                      {formatPercent(row.groupe.rentabiliteTotale)}
+                    </span>
+                    <span className="ml-2 text-xs text-slate-400">
+                      {formatEuro(row.groupe.valeurCreee)} créés · IPG {formatDecimal(row.bpi)}
+                    </span>
                   </span>
-                </span>
+                ) : (
+                  <span className="tabular-nums">
+                    <span className="font-semibold text-slate-100">IPG {formatDecimal(row.bpi)}</span>
+                    <span className="ml-2 text-xs text-slate-400">
+                      {formatEuro(row.cumulativeNetIncome)} cumulés
+                    </span>
+                  </span>
+                )}
               </li>
             ))}
           </ol>

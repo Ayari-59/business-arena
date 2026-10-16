@@ -30,6 +30,7 @@
  *
  * Tout est pur : mêmes entrées, mêmes sorties.
  */
+import { valeurCreee } from "@/engine/groupe";
 import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile, type LeviersOuverts } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import type {
@@ -172,6 +173,9 @@ export interface IssueDUneEquipe {
   chiffreDAffairesCumule: number;
   tresorerieFinale: number;
   defaillant: boolean;
+  /** Niveau 7 : la rentabilité totale par action du dernier tour (le rang s'y fait) et la valeur créée en euros. */
+  rentabiliteTotale?: number;
+  valeurCreee?: number;
 }
 
 export interface TourRejoue {
@@ -227,6 +231,8 @@ export function rejouer(
   const netCumule: Record<string, number> = {};
   const caCumule: Record<string, number> = {};
   const tresorerie: Record<string, number> = {};
+  /** Niveau 7 : la dernière valeur de chaque entreprise. */
+  const valeurs: Record<string, { rta: number; creee: number }> = {};
   const resultatParTour: number[] = [];
   const poids = scoringWeightsByName(scenario.scoring);
   for (const id of ids) {
@@ -362,6 +368,10 @@ export function rejouer(
       netCumule[id] = netCumule[id]! + auCentime(r.incomeStatement.netIncome);
       caCumule[id] = caCumule[id]! + auCentime(r.incomeStatement.revenue);
       tresorerie[id] = auCentime(r.functionalBalance.netTreasury);
+      const v = r.groupe?.valeur;
+      if (v && scenario.groupe) {
+        valeurs[id] = { rta: v.rentabiliteTotale, creee: valeurCreee(v, scenario.groupe.valorisation.actionsInitiales) };
+      }
     }
     toursRejoues.push(tourRejoue);
     resultatParTour.push(auCentime(sortie.results[partie.joueur]!.incomeStatement.netIncome));
@@ -386,9 +396,20 @@ export function rejouer(
       lastTreasury: tresorerie[id]!,
     };
   });
-  lignes.sort(
-    (a, b) => b.bpi - a.bpi || b.financialAvg - a.financialAvg || b.lastTreasury - a.lastTreasury,
-  );
+  const defaillante = (id: string) => (etats.find((s) => s.id === id)?.status ?? "active") === "defaillant";
+  if (scenario.groupe) {
+    // Niveau 7 : à la rentabilité totale pour l'actionnaire, comme `updateRankings`.
+    lignes.sort(
+      (a, b) =>
+        Number(defaillante(a.id)) - Number(defaillante(b.id)) ||
+        (valeurs[b.id]?.rta ?? -Infinity) - (valeurs[a.id]?.rta ?? -Infinity) ||
+        b.bpi - a.bpi,
+    );
+  } else {
+    lignes.sort(
+      (a, b) => b.bpi - a.bpi || b.financialAvg - a.financialAvg || b.lastTreasury - a.lastTreasury,
+    );
+  }
   const parEquipe: Record<string, IssueDUneEquipe> = {};
   lignes.forEach((l, i) => {
     parEquipe[l.id] = {
@@ -398,7 +419,8 @@ export function rejouer(
       resultatNetCumule: Math.round(netCumule[l.id]! * 100) / 100,
       chiffreDAffairesCumule: Math.round(caCumule[l.id]! * 100) / 100,
       tresorerieFinale: tresorerie[l.id]!,
-      defaillant: (etats.find((s) => s.id === l.id)?.status ?? "active") === "defaillant",
+      defaillant: defaillante(l.id),
+      ...(valeurs[l.id] ? { rentabiliteTotale: valeurs[l.id]!.rta, valeurCreee: Math.round(valeurs[l.id]!.creee * 100) / 100 } : {}),
     };
   });
   return {

@@ -760,6 +760,123 @@ export const CONCEPTS: ConceptDef[] = [
     formula:
       "Trésorerie nette = fonds de roulement − besoin en fonds de roulement",
   },
+  // ── Niveau 7 « Groupe » : la valeur, la croissance externe, le groupe ──────
+  {
+    code: "enterprise_value",
+    name: "Valeur d'entreprise et valeur par action",
+    domain: "finance",
+    axis: "finance",
+    definition:
+      "Ce que vaut l'outil économique tout entier (valeur d'entreprise), puis ce qui en revient aux actionnaires une fois les dettes payées, divisé par le nombre d'actions.",
+    intuition:
+      "Un acheteur paie une entreprise pour ce qu'elle rapportera : on la valorise souvent par un multiple de son EBE. Mais l'acheteur reprend aussi ses dettes : ce qui reste aux associés, c'est la valeur d'entreprise moins la dette nette.",
+    method:
+      "Partez de l'EBE des douze derniers mois, multipliez-le, comparez à l'actif économique (on ne vend pas en dessous de ce que valent les actifs), retirez la dette nette, divisez par les actions en circulation.",
+    formula:
+      "Valeur d'entreprise = max(multiple × EBE, actif économique) ; valeur par action = (valeur d'entreprise − dette nette) / nombre d'actions",
+  },
+  {
+    code: "total_shareholder_return",
+    name: "Rentabilité totale pour l'actionnaire",
+    domain: "profitability",
+    axis: "finance",
+    definition:
+      "Ce qu'une action a rapporté depuis le départ : sa hausse de valeur et les dividendes reçus, rapportés à sa valeur de départ.",
+    intuition:
+      "Un bénéfice qui ne se transforme ni en valeur ni en dividende n'a rien rapporté à l'actionnaire. Inversement, une entreprise peut perdre de l'argent un tour et créer de la valeur, si son EBE à venir s'améliore.",
+    method:
+      "Ajoutez à la valeur actuelle de l'action les dividendes reçus par action depuis le départ, divisez par la valeur de départ, retirez 1. Comparez les équipes sur ce chiffre, pas sur le résultat cumulé.",
+    formula: "RTA = (valeur par action + dividendes reçus par action) / valeur de départ − 1",
+  },
+  {
+    code: "dilution_issuance",
+    name: "Dilution et émission d'actions",
+    domain: "finance",
+    axis: "strategy",
+    definition:
+      "Émettre des actions nouvelles finance l'entreprise sans dette, mais partage sa valeur et son pouvoir entre plus d'actionnaires.",
+    intuition:
+      "Faire entrer des investisseurs, ou payer une cible avec ses propres actions, revient à vendre une part de son entreprise. Émise à bas prix, l'action nouvelle appauvrit les anciens ; émise trop, elle leur fait perdre le contrôle.",
+    method:
+      "Comptez les actions émises (montant levé / prix d'émission), la part que les associés d'origine garderaient, et comparez la valeur par action avant et après l'opération. Une émission crée de la valeur si ce qu'elle finance rapporte plus que ce qu'elle partage.",
+    formula: "Part conservée = actions d'origine / (actions d'origine + actions émises)",
+  },
+  {
+    code: "goodwill_impairment",
+    name: "Écart d'acquisition et dépréciation",
+    domain: "finance",
+    axis: "analysis",
+    definition:
+      "Ce que l'acquéreur paie au-delà de la part de capitaux propres qu'il reprend : il s'inscrit à l'actif du groupe, et se déprécie quand la cible ne vaut plus ce qu'on l'a payée.",
+    intuition:
+      "Payer une société plus que son actif net, c'est parier sur ses résultats à venir. Si le pari tourne mal, le bilan doit le dire : la dépréciation passe en charge, et le résultat du groupe la porte.",
+    method:
+      "Au rachat : écart = prix payé − part acquise × capitaux propres de la cible. À chaque clôture : comparez ce qu'un acheteur paierait la part détenue à ce que le groupe en porte ; l'excédent se déprécie.",
+    formula: "Écart d'acquisition = prix payé − part acquise × capitaux propres de la cible",
+  },
+  {
+    code: "vertical_integration",
+    name: "Intégration verticale",
+    domain: "production",
+    axis: "strategy",
+    definition:
+      "Racheter son fournisseur (en amont) ou son distributeur (en aval) : la marge qu'on lui payait revient au groupe, avec ses charges fixes et ses risques.",
+    intuition:
+      "Posséder son fournisseur sécurise l'approvisionnement et récupère sa marge, mais seulement à proportion de ce qu'on lui achète. Si ses autres clients partent quand il passe chez un concurrent, sa valeur fond.",
+    method:
+      "Comparez la marge que le fournisseur réalise sur vos achats au coût de son rachat (prix, intérêts, dilution) ; tenez compte des clients extérieurs qu'il peut perdre, et éliminez en consolidation les ventes internes.",
+  },
+  {
+    code: "make_or_buy",
+    name: "Fabriquer ou faire fabriquer",
+    domain: "costs",
+    axis: "production",
+    definition:
+      "Produire en propre engage des coûts fixes (lignes, opérateurs) ; sous-traiter les rend variables, plus chers à l'unité. Le seuil d'indifférence dit où les deux se valent.",
+    intuition:
+      "Une ligne en propre coûte chaque tour, qu'elle tourne ou non : elle gagne si le volume est durablement élevé. Le sous-traitant ne coûte rien sans commande : il gagne si le volume est faible ou incertain. Externaliser abaisse le levier opérationnel.",
+    method:
+      "Divisez le coût fixe d'une ligne par tour (amortissement et salaires de ses opérateurs) par l'écart entre le prix du sous-traitant et votre coût variable : au-dessus de ce volume, durablement, la ligne coûte moins cher.",
+    formula:
+      "Seuil d'indifférence = coût fixe de la ligne par tour / (prix unitaire du sous-traitant − coût variable interne)",
+  },
+  {
+    code: "consolidation",
+    name: "Consolidation",
+    domain: "finance",
+    axis: "analysis",
+    definition:
+      "Présenter un groupe comme une seule entreprise : les titres des filiales sont remplacés par leurs actifs et leurs dettes, les échanges internes sont éliminés.",
+    intuition:
+      "Les comptes de la maison mère ne montrent qu'une ligne de titres au prix payé. Le groupe, lui, possède les machines, les stocks et les dettes de ses filiales : c'est ce bilan-là qui dit sa taille réelle et son endettement.",
+    method:
+      "Intégrez à 100 % les actifs et les dettes d'une filiale contrôlée, retirez les titres, inscrivez l'écart d'acquisition, éliminez les ventes intra-groupe et la marge interne restée en stock.",
+  },
+  {
+    code: "minority_translation",
+    name: "Intérêts minoritaires et écart de conversion",
+    domain: "finance",
+    axis: "analysis",
+    definition:
+      "Les intérêts minoritaires sont la part d'une filiale qui appartient à d'autres actionnaires ; l'écart de conversion est ce que le cours de change a fait aux capitaux propres d'une filiale étrangère.",
+    intuition:
+      "Contrôler une filiale à plus de la moitié suffit pour l'intégrer tout entière, mais pas pour s'approprier tout son résultat : les autres actionnaires gardent leur part. Et une filiale en devise vaut plus ou moins en euros selon le cours, sans qu'elle ait rien fait.",
+    method:
+      "Au bilan consolidé, isolez la part des capitaux propres des filiales revenant aux autres actionnaires. Convertissez le bilan d'une filiale étrangère au cours de clôture, son résultat au cours moyen : la différence va en écart de conversion, dans les capitaux propres.",
+    formula: "Intérêts minoritaires = (1 − part détenue) × capitaux propres de la filiale",
+  },
+  {
+    code: "currency_risk",
+    name: "Risque de change",
+    domain: "finance",
+    axis: "risk",
+    definition:
+      "Le risque qu'un mouvement de devise change le prix d'un achat, la valeur d'une vente ou d'une filiale en euros.",
+    intuition:
+      "Un fournisseur moins cher qui facture en dollars peut cesser de l'être si le dollar monte. Une filiale qui gagne bien en zlotys peut rapporter moins en euros si le zloty baisse.",
+    method:
+      "Repérez ce qui est libellé en devise (achats, ventes, filiales), chiffrez l'effet d'un mouvement du cours, et comparez l'économie attendue au risque qu'elle fait courir.",
+  },
 ];
 
 export const conceptByCode = new Map(CONCEPTS.map((c) => [c.code, c]));
@@ -861,6 +978,17 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   cash_budget: ["net_treasury"],
   operating_leverage: ["breakeven"],
   volume_price_variance: ["cost_variance", "revenue"],
+
+  // Niveau 7 « Groupe » (rangées au niveau 6 du parcours, le dernier)
+  enterprise_value: ["ebitda_margin", "balance_sheet"],
+  total_shareholder_return: ["enterprise_value"],
+  dilution_issuance: ["enterprise_value"],
+  goodwill_impairment: ["enterprise_value"],
+  vertical_integration: ["goodwill_impairment", "contribution_margin"],
+  make_or_buy: ["operating_leverage", "full_unit_cost"],
+  consolidation: ["goodwill_impairment"],
+  minority_translation: ["consolidation"],
+  currency_risk: ["net_treasury"],
 };
 
 /** Prérequis d'une notion (codes), liste vide si racine ou notion inconnue. */
@@ -943,6 +1071,16 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   cash_budget: 5,
   operating_leverage: 5,
   volume_price_variance: 5,
+  // Le niveau 7 « Groupe » est hors du parcours : ses notions vont au dernier palier.
+  enterprise_value: 6,
+  total_shareholder_return: 6,
+  dilution_issuance: 6,
+  goodwill_impairment: 6,
+  vertical_integration: 6,
+  make_or_buy: 6,
+  consolidation: 6,
+  minority_translation: 6,
+  currency_risk: 6,
 };
 
 /** Niveau d'une notion (1..6), défaut 1 si notion inconnue. */

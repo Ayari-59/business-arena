@@ -86,6 +86,14 @@ import {
   tickEvents,
 } from "../events";
 import { computePriceIndexMultiplier } from "../suppliers/priceIndex";
+import {
+  commandeDuTour,
+  fusionnerLesCommandes,
+  prixDeLImport,
+  ruptureDeLImport,
+  simulerLeGroupe,
+  type CommandeDuTour,
+} from "../groupe";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -371,8 +379,22 @@ function computePerformanceMetrics(
  * Résolution d'un tour (doc 02 §2). Fonction PURE et DÉTERMINISTE :
  * aucune E/S, aucun aléa hors PRNG seedé, mêmes entrées ⇒ mêmes sorties.
  * Pipeline : événements → production → stocks → marché → finance → état.
+ *
+ * NIVEAU 7 « GROUPE » : une partie dont le snapshot porte un bloc `groupe`
+ * passe par `simulerLeGroupe`, qui entoure le tour ordinaire (valeur, rachats,
+ * consolidation). Toute
+ * autre partie appelle le tour ordinaire avec le même objet : le chemin
+ * d'avant, au bit près.
  */
 export function simulateRound(input: SimulationInput): SimulationOutput {
+  if (input.scenario.groupe) {
+    return simulerLeGroupe(input, simulerLeTour);
+  }
+  return simulerLeTour(input);
+}
+
+/** Le tour ordinaire. */
+function simulerLeTour(input: SimulationInput): SimulationOutput {
   const { scenario, roundIndex } = input;
   const rng = createRng(deriveRoundSeed(input.seed, roundIndex));
   // La gamme : un produit (les secteurs historiques, marché = scenario.market,
@@ -586,6 +608,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     moduleQualityBonus: number;
     /** Coût des programmes R&D du tour (calculé post-marché). */
     rdActionsCost: number;
+    /** Niveau 7 : la commande au sous-traitant, livrée en stock ce tour (null sans commande). */
+    commandeST: CommandeDuTour | null;
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -742,13 +766,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // La rupture se tire UNE fois par fournisseur réellement utilisé, dans
     // l'ordre de la gamme (mono : le seul tirage historique).
     const disruptionBySupplier = new Map<string, boolean>();
+    // Niveau 7 : l'import risqué tire ses ruptures sur son flux propre.
+    const importDuGroupe = scenario.groupe?.import;
     for (const s of productSuppliers) {
       if (!s || disruptionBySupplier.has(s.code)) continue;
       disruptionBySupplier.set(
         s.code,
-        s.supplyRiskProbability > 0 && !estimation
-          ? rng.next() < s.supplyRiskProbability
-          : false,
+        importDuGroupe && importDuGroupe.code === s.code
+          ? !estimation && ruptureDeLImport(scenario, input.seed, importDuGroupe, roundIndex, state.id)
+          : s.supplyRiskProbability > 0 && !estimation
+            ? rng.next() < s.supplyRiskProbability
+            : false,
       );
     }
     const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
@@ -788,7 +816,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       plans: multi
         ? gammeDecisions.map((d, k) =>
             d.productionPlan *
-            (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1),
+            (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1) *
+            // Niveau 7 : un fournisseur racheté, à capacité limitée, rationne ses clients.
+            (input.rationnementDuGroupe?.[state.id]?.[gamme[k]!.code] ?? 1),
           )
         : gammeDecisions.map((d) => d.productionPlan),
       machineCapacity: effectiveMachineCapacity,
@@ -870,9 +900,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       if (!s || priceIndexBySupplier.has(s.code)) continue;
       priceIndexBySupplier.set(
         s.code,
-        s.priceIndex
-          ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex)
-          : 1,
+        (s.priceIndex ? computePriceIndexMultiplier(input.seed, s.code, s.priceIndex, roundIndex) : 1) *
+          // Niveau 7 : le prix de l'import suit le cours de sa devise (l'estimation,
+          // qui n'a pas la graine, le prend au cours de départ).
+          (importDuGroupe && importDuGroupe.code === s.code && !estimation ? prixDeLImport(input.seed, importDuGroupe, roundIndex) : 1),
       );
     }
     // Fournisseur scalaire (mono-produit) — peut différer des productSuppliers
@@ -1031,6 +1062,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const productStocks = production.perProduct.map((q, k) =>
       addToStock(openingStocks[k]!, q - productDefectUnits[k]!, unitCosts[k]!),
     );
+    // NIVEAU 7 : FABRIQUER OU FAIRE FABRIQUER. Les produits finis commandés au
+    // sous-traitant entrent en stock, au coût du barème, avant le marché : ni
+    // heure ni machine, aucun coût fixe. Sans commande (ou hors niveau 7), le
+    // stock d'avant, même objet.
+    const commandeST = fusionnerLesCommandes(
+      scenario.groupe?.sousTraitance && state.status !== "defaillant"
+        ? commandeDuTour(scenario.groupe.sousTraitance, gamme.map((p) => p.code), raw.sousTraitance)
+        : null,
+      // Niveau 7 : ce qu'une filiale étrangère fabrique pour l'équipe, livré fini.
+      state.status !== "defaillant" ? (input.fabricationDuGroupe?.[state.id] ?? null) : null,
+      (k) => scenario.groupe?.sousTraitance?.[gamme[k]!.code]?.qualite ?? 1,
+    );
+    const productStocksLivres = commandeST
+      ? productStocks.map((s, k) =>
+          commandeST.unites[k]! > 0 ? addToStock(s, commandeST.unites[k]!, commandeST.couts[k]! / commandeST.unites[k]!) : s,
+        )
+      : productStocks;
     const defectUnits = sumExact(productDefectUnits);
     const scrapValue = sumExact(productScrap);
     // --- Investissement capacitaire ---
@@ -1206,7 +1254,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       materialMultipliers,
       priceIndexBySupplier,
       openingStocks,
-      productStocks,
+      productStocks: productStocksLivres,
       productDefectUnits,
       productScrap,
       materialMultiplier,
@@ -1254,6 +1302,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rdActionsEffects,
       moduleQualityBonus: Math.min(M.PLAFONDS.qualite, rdActionsEffects.qualityBonus),
       rdActionsCost: 0,
+      commandeST,
     };
   });
 
@@ -1494,12 +1543,33 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // référence, au prix du tour, réglées comptant. Sans le modèle : zéro,
     // et l'expression historique est conservée telle quelle.
     const retainedRevenue = scenario.subscription ? w.subServed * prixFacture[0]! : 0;
+    // Niveau 7 : les ventes par le réseau d'une filiale étrangère, livrées du
+    // stock qui reste après le marché et les commandes (pas de vente sans
+    // production), au prix local converti au cours moyen du tour.
+    const reseau = dormant ? undefined : input.ventesDuGroupe?.[w.state.id];
+    const reseauLivre = reseau
+      ? gamme.map((p, k) => {
+          const v = reseau[p.code];
+          if (!v || v.quantite <= 0) return 0;
+          const deja =
+            productSegmentUnits[k]! +
+            (k === 0 ? orderDelivered : 0) +
+            (k === offerIndex ? offerDelivered : 0) +
+            (scenario.subscription && k === 0 ? w.subServed : 0);
+          return Math.min(v.quantite, Math.max(0, w.productStocks[k]!.quantity - deja));
+        })
+      : null;
+    const reseauRevenue = reseauLivre ? reseauLivre.map((q, k) => q * (reseau![gamme[k]!.code]?.prix ?? 0)) : null;
+    if (reseauLivre) commissionCost += sumExact(reseauLivre.map((q, k) => q * (reseau![gamme[k]!.code]?.commission ?? 0)));
+    const fraisDesSynergies = dormant ? 0 : (input.fraisDesSynergies?.[w.state.id] ?? 0);
+    if (fraisDesSynergies > 0) commissionCost += fraisDesSynergies;
     const productSold = productSegmentUnits.map(
       (u, k) =>
         u +
         (k === 0 ? orderDelivered : 0) +
         (k === offerIndex ? offerDelivered : 0) +
-        (scenario.subscription && k === 0 ? w.subServed : 0),
+        (scenario.subscription && k === 0 ? w.subServed : 0) +
+        (reseauLivre ? reseauLivre[k]! : 0),
     );
     const soldUnits = sumExact(productSold);
     const productSegmentRevenue = productSegmentUnits.map((u, k) => u * prixFacture[k]!);
@@ -1512,7 +1582,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : sumExact(productSegmentRevenue) +
         (orderDelivered + subcontracted) * orderUnitPrice +
         offerRevenue -
-        refund;
+        refund +
+        (reseauRevenue ? sumExact(reseauRevenue) : 0);
     // Part du CA à crédit, en euros : segments à leurs délais, commandes
     // fermes d'événement comptant, commande exceptionnelle à SON délai.
     const creditRevenue =
@@ -1642,6 +1713,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const otherVariableCash =
       sumExact(w.producedPerProduct.map((q, k) => q * (gamme[k]!.otherVariableCostPerUnit * w.facteurAutresVariables))) +
       subcontractCost;
+    // Niveau 7 : les produits finis du sous-traitant, au journal de la gamme.
+    if (multi && w.commandeST) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Achats de sous-traitance",
+        category: "purchase",
+        debitAccount: "604",
+        debitLabel: "Achats de sous-traitance incorporés aux produits",
+        creditAccount: "512",
+        creditLabel: "Banque",
+        amount: w.commandeST.total,
+      });
+    }
     // Marketing : somme des budgets par produit (mono : le scalaire), plus le
     // budget de marque quand le levier communication existe.
     const marketingTotal = scenario.communication
@@ -1917,6 +2001,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       dividend,
       investmentOutlay: w.investOutlay - w.equipSaleProceeds,
       disposalLoss: w.equipDisposalLoss,
+      // Niveau 7 : les produits finis achetés au sous-traitant, payés à la livraison.
+      ...(w.commandeST ? { sousTraitance: w.commandeST.total } : {}),
+      // Niveau 7 : le rachat du jour 1 (flux d'ouverture, charges).
+      ...(input.operationsDeGroupe?.[w.state.id]
+        ? {
+            operationsDOuverture: input.operationsDeGroupe[w.state.id]!.flux,
+            chargesDeRachat: input.operationsDeGroupe[w.state.id]!.chargesDeRachat,
+          }
+        : {}),
       ...(scenario.treasury
         ? {
             treasury: {
@@ -2096,7 +2189,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         w.gamme.map((d) => d.price),
         productSegmentUnits,
       ),
-      uvc: weightedAverage(w.unitCosts, w.producedPerProduct),
+      // Niveau 7 : les unités sous-traitées entrent au coût variable moyen, à leur prix.
+      uvc: w.commandeST
+        ? (sumExact(w.unitCosts.map((c, k) => c * w.producedPerProduct[k]!)) + w.commandeST.total) /
+          Math.max(1e-9, sumExact(w.producedPerProduct) + sumExact(w.commandeST.unites))
+        : weightedAverage(w.unitCosts, w.producedPerProduct),
       revenue,
     });
 
@@ -2124,7 +2221,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const productNextPerceived = w.productPerceived.map((previous, k) =>
       updatePerceivedQuality(
         previous,
-        w.productQuality[k]! +
+        // Niveau 7 : les unités sous-traitées apportent la qualité du sous-traitant,
+        // au prorata des volumes. Sans commande : la qualité produite, telle quelle.
+        (w.commandeST && w.commandeST.unites[k]! > 0
+          ? (w.productQuality[k]! * w.producedPerProduct[k]! +
+              (w.commandeST.qualites?.[k] ?? scenario.groupe!.sousTraitance?.[gamme[k]!.code]?.qualite ?? 1) * w.commandeST.unites[k]!) /
+            (w.producedPerProduct[k]! + w.commandeST.unites[k]!)
+          : w.productQuality[k]!) +
           (w.productSuppliers[k]?.qualityBonus ?? 0) +
           (w.productRdOpening[k]?.techLevel ?? 0) +
           // Formation et programmes R&D : la qualité produite gagnée (0 sans module).
@@ -2347,7 +2450,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                           costMultiplier: w.productSuppliers[k]!.costMultiplier,
                           qualityBonus: w.productSuppliers[k]!.qualityBonus,
                           supplyDisruption: w.productDisruptions[k]!,
-                          ...(w.productSuppliers[k]!.priceIndex !== undefined
+                          ...(w.productSuppliers[k]!.priceIndex !== undefined ||
+                          scenario.groupe?.import?.code === w.productSuppliers[k]!.code
                             ? { priceIndexMultiplier: w.priceIndexBySupplier.get(w.productSuppliers[k]!.code) ?? 1 }
                             : {}),
                         },
@@ -2383,7 +2487,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                     productSegmentRevenue[k]! +
                     (k === 0 ? (orderDelivered + subcontracted) * orderUnitPrice : 0) +
                     (k === offerIndex ? offerRevenue : 0) +
-                    (scenario.subscription && k === 0 ? retainedRevenue : 0),
+                    (scenario.subscription && k === 0 ? retainedRevenue : 0) +
+                    (reseauRevenue ? reseauRevenue[k]! : 0),
                   stock: finalStocks[k]!,
                   segments: product.market.segments.map((s) => s.code),
                   // Variance analysis: actual vs. standard costs/revenues (pilot NOVA, optional)
@@ -2535,6 +2640,48 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         : {}),
       // Programmes de R&D : coût du tour et effets en vigueur.
       ...(w.rdActionsCost > 0 ? { rdActionsCost: w.rdActionsCost } : {}),
+      // Niveau 7 : la sous-traitance du tour et le levier opérationnel.
+      ...(scenario.groupe
+        ? {
+            groupe: {
+              ...(w.commandeST
+                ? {
+                    sousTraitance: {
+                      parReference: Object.fromEntries(
+                        gamme
+                          .map((p, k) => [p.code, { unites: w.commandeST!.unites[k]!, cout: w.commandeST!.couts[k]! }] as const)
+                          .filter(([, x]) => x.unites > 0),
+                      ),
+                      unites: sumExact(w.commandeST.unites),
+                      cout: w.commandeST.total,
+                    },
+                  }
+                : {}),
+              ...(finance.incomeStatement.operatingIncome > 0
+                ? { levierOperationnel: finance.incomeStatement.grossMargin / finance.incomeStatement.operatingIncome }
+                : {}),
+              // Les achats du tour, par fournisseur : le chiffre d'affaires d'un fournisseur rachetable.
+              achats: w.productSuppliers.reduce<Record<string, number>>((acc, sup, k) => {
+                if (sup) acc[sup.code] = (acc[sup.code] ?? 0) + productPurchases[k]!;
+                return acc;
+              }, {}),
+              ...(input.rationnementDuGroupe?.[w.state.id] ? { rationnement: input.rationnementDuGroupe[w.state.id] } : {}),
+              ...(fraisDesSynergies > 0 ? { fraisDesSynergies } : {}),
+              ...(reseauLivre
+                ? {
+                    reseau: Object.fromEntries(
+                      gamme
+                        .map((p, k) => [
+                          p.code,
+                          { demande: reseau![p.code]?.quantite ?? 0, livre: reseauLivre[k]!, chiffreDAffaires: reseauRevenue![k]! },
+                        ] as const)
+                        .filter(([, x]) => x.demande > 0),
+                    ),
+                  }
+                : {}),
+            },
+          }
+        : {}),
       ...(Object.values(w.rdActionsEffects).some((v) => v !== 0) ? { rdActionsEffects: w.rdActionsEffects } : {}),
       ...((w.decisions.stoppedModuleItems ?? []).length > 0 ? { stoppedModuleItems: w.decisions.stoppedModuleItems } : {}),
       ...(w.insured

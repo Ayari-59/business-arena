@@ -229,10 +229,14 @@ describe("la décision se découpe en étapes courtes", () => {
     expect(FORMULAIRE).toContain("{gamme ? null : panneauFournisseurs}");
   });
 
-  it("l'étape des fournisseurs n'existe qu'en mono-produit, avec des fournisseurs à choisir", () => {
+  it("l'étape des fournisseurs n'existe qu'en mono-produit, avec des fournisseurs à choisir, ou pour faire fabriquer au niveau 7", () => {
     expect(FORMULAIRE).toMatch(
-      /approvisionnerVisible = !gamme && !!suppliersOffer && suppliersOffer\.length > 0/,
+      /fournisseursAChoisir = !gamme && !!suppliersOffer && suppliersOffer\.length > 0/,
     );
+    // Le niveau 7 (« Groupe ») y range la sous-traitance, l'import et les
+    // synergies étrangères : seulement quand la vue du groupe les porte.
+    expect(FORMULAIRE).toMatch(/approvisionnerVisible = fournisseursAChoisir \|\| approvisionnementDuGroupe;/);
+    expect(FORMULAIRE).toMatch(/approvisionnementDuGroupe =\s*!!groupe &&/);
   });
 });
 

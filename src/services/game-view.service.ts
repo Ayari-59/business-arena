@@ -70,6 +70,7 @@ import { classementOuvert } from "@/config/rideau-classement";
 import { gazetteDeLaPartie, type GazetteDuTour } from "@/services/gazette.service";
 import { pseudoAffichable } from "@/config/invite";
 import type { GameKind } from "@/services/game-creation.service";
+import { vueDuGroupe, type VueDuGroupe } from "@/services/groupe-view.service";
 
 /** Réexport : le nom affiché se calcule dans la config des noms d'équipe. */
 export { teamDisplayName };
@@ -320,6 +321,8 @@ export interface GameView {
     bpi: number;
     /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
     defaillant: boolean;
+    /** Niveau 7 : la rentabilité totale par action (le rang s'y fait) et la valeur créée en euros. */
+    groupe?: { rentabiliteTotale: number; valeurParAction: number; valeurCreee: number };
   }[];
   /** L'état du rideau : révélé ? et y a-t-il quelqu'un pour le lever ? */
   classement: { revele: boolean; parLAnimateur: boolean };
@@ -515,6 +518,12 @@ export interface GameView {
    * `null` quand il n'y a rien à estimer : partie finie, ou état d'ouverture
    * introuvable.
    */
+  /**
+   * Niveau 7 « Groupe » : la série de la valeur de l'équipe, les cibles à
+   * vendre, ses filiales, les cours des devises, l'import et la
+   * sous-traitance. Null hors niveau 7.
+   */
+  groupe: VueDuGroupe | null;
   estimation: {
     scenario: EngineScenarioConfig;
     state: CompanyState;
@@ -956,6 +965,8 @@ function reconstructResult(
     ...(trace.rdActionsCost != null ? { rdActionsCost: trace.rdActionsCost } : {}),
     ...(trace.rdActionsEffects != null ? { rdActionsEffects: trace.rdActionsEffects } : {}),
     ...(trace.stoppedModuleItems != null ? { stoppedModuleItems: trace.stoppedModuleItems } : {}),
+    // Niveau 7 : valeur, rachat, audit, consolidation ; clé émise seulement si portée.
+    ...(trace.groupe ? { groupe: trace.groupe } : {}),
   };
   return { result, events: trace.events ?? [] };
 }
@@ -1196,6 +1207,31 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       }
     | undefined;
 
+  // NIVEAU 7 : la vue du groupe, lue sur les états d'ouverture de toute la partie.
+  const vueDuGroupeDeLaPartie: GameView["groupe"] = snapshot.groupe
+    ? await (async () => {
+        const etats = (
+          await db
+            .select()
+            .from(companyStates)
+            .where(
+              and(
+                eq(companyStates.roundIndex, game.currentRound - 1),
+                inArray(companyStates.teamId, teamRows.map((t) => t.id)),
+              ),
+            )
+        ).map((r) => r.state as CompanyState);
+        return vueDuGroupe({
+          scenario: snapshot,
+          graine: game.seed,
+          tourEnCours: game.currentRound,
+          etats,
+          equipeId: playerTeam.id,
+          resultats: periods.map((p) => ({ tour: p.round, result: p.result })),
+        });
+      })()
+    : null;
+
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
   const ranking = rankingRows
     .map((r) => {
@@ -1209,6 +1245,14 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         rank: r.rank,
         bpi: Number(r.bpi),
         defaillant: Boolean((r.detail as { defaillant?: boolean })?.defaillant),
+        ...((r.detail as { groupe?: { rentabiliteTotale: number; valeurParAction: number; valeurCreee: number } })?.groupe
+          ? {
+              groupe: (() => {
+                const v = (r.detail as { groupe: { rentabiliteTotale: number; valeurParAction: number; valeurCreee: number } }).groupe;
+                return { rentabiliteTotale: v.rentabiliteTotale, valeurParAction: v.valeurParAction, valeurCreee: v.valeurCreee };
+              })(),
+            }
+          : {}),
       };
     })
     .sort((a, b) => a.rank - b.rank);
@@ -2030,6 +2074,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
     })(),
     estimation: dossierDEstimation,
+    groupe: vueDuGroupeDeLaPartie,
     sectorKpis: (() => {
       if (!lastResult) return [];
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;

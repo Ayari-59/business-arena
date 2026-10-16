@@ -156,6 +156,8 @@ const CONTRACTS: FormContract[] = [
     sources: [
       "src/components/decision-form.tsx",
       "src/components/resultat-estime.tsx",
+      // Le niveau 7 : rachat, audit, sous-traitance, synergies étrangères.
+      "src/components/decisions-du-groupe.tsx",
     ],
     lecteurs: ["src/config/decisions-saisies.ts", "src/config/ventes-estimees.ts"],
     // LE PLAN DE TRÉSORERIE N'EST PLUS DEMANDÉ PAR L'ARÈNE (voir

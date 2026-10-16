@@ -1,0 +1,154 @@
+import type { ProductCode } from "../types";
+import type { ConfigDeGroupe, SousTraitanceDUneReference, TrancheDeSousTraitance } from "./types";
+
+/**
+ * FABRIQUER OU FAIRE FABRIQUER (niveau 7).
+ *
+ * Le sous-traitant livre des produits FINIS, dans le tour, avant le marché :
+ * ils entrent en stock et se vendent comme les autres. Il ne prend ni heure de
+ * main-d'œuvre ni capacité machine, et ne coûte rien sans commande : aucun
+ * coût fixe. Son prix suit un barème par tranches, parce qu'il facture la
+ * capacité qu'il mobilise : la dernière tranche dépasse le prix de vente, et
+ * sous-traiter beaucoup y perd. La commande est ferme, passée avant que la
+ * demande soit connue : ce qui ne se vend pas reste en stock, payé.
+ *
+ * Ce n'est pas la « capacité supplémentaire » retirée : celle-ci vendait un
+ * bonus de capacité machine contre un coût fixe par tour, utilisé ou non, sans
+ * personnel pour le faire tourner.
+ */
+
+/** Le coût d'une commande de `q` unités au barème. */
+export function coutAuBareme(q: number, tranches: readonly TrancheDeSousTraitance[]): number {
+  let reste = Math.max(0, q);
+  let bas = 0;
+  let cout = 0;
+  for (const t of tranches) {
+    if (reste <= 0) break;
+    const largeur = t.jusqua === undefined ? reste : Math.max(0, t.jusqua - bas);
+    const n = Math.min(reste, largeur);
+    cout += n * t.prix;
+    reste -= n;
+    if (t.jusqua !== undefined) bas = t.jusqua;
+  }
+  // Un barème dont la dernière tranche est bornée : au-delà, son prix.
+  if (reste > 0 && tranches.length > 0) cout += reste * tranches[tranches.length - 1]!.prix;
+  return cout;
+}
+
+export interface CommandeDuTour {
+  /** Unités livrées, par référence, dans l'ordre de la gamme. */
+  unites: number[];
+  /** Coût de la commande, par référence. */
+  couts: number[];
+  total: number;
+  /** Qualité des unités livrées, par référence (absente : celle du sous-traitant). */
+  qualites?: number[];
+}
+
+/**
+ * La commande retenue : bornée au plafond du sous-traitant, nulle pour une
+ * référence qu'il ne fait pas. `null` quand rien n'est commandé : le tour suit
+ * alors son chemin d'avant.
+ */
+export function commandeDuTour(
+  cfg: ConfigDeGroupe["sousTraitance"],
+  codes: readonly ProductCode[],
+  decision: Record<ProductCode, number> | undefined,
+): CommandeDuTour | null {
+  if (!cfg || !decision) return null;
+  const unites = codes.map((c) => {
+    const ref = cfg[c];
+    const q = Number(decision[c] ?? 0);
+    return ref && Number.isFinite(q) && q > 0 ? Math.min(q, ref.plafond) : 0;
+  });
+  if (unites.every((u) => u <= 0)) return null;
+  const couts = codes.map((c, k) => (unites[k]! > 0 ? coutAuBareme(unites[k]!, cfg[c]!.tranches) : 0));
+  return { unites, couts, total: couts.reduce((s, x) => s + x, 0) };
+}
+
+/**
+ * Deux commandes de produits finis du même tour (le sous-traitant, une
+ * filiale étrangère qui fabrique) n'en font qu'une pour le stock : unités et
+ * coûts s'additionnent, la qualité se pondère par les unités.
+ */
+export function fusionnerLesCommandes(
+  a: CommandeDuTour | null,
+  b: (CommandeDuTour & { qualite?: number }) | null,
+  qualiteDeA: (k: number) => number = () => 1,
+): CommandeDuTour | null {
+  if (!b) return a;
+  const qb = (k: number) => b.qualites?.[k] ?? b.qualite ?? 1;
+  if (!a) return { unites: b.unites, couts: b.couts, total: b.total, qualites: b.unites.map((_, k) => qb(k)) };
+  const unites = a.unites.map((u, k) => u + (b.unites[k] ?? 0));
+  return {
+    unites,
+    couts: a.couts.map((c, k) => c + (b.couts[k] ?? 0)),
+    total: a.total + b.total,
+    qualites: unites.map((u, k) =>
+      u > 0 ? ((a.qualites?.[k] ?? qualiteDeA(k)) * a.unites[k]! + qb(k) * (b.unites[k] ?? 0)) / u : 1,
+    ),
+  };
+}
+
+/** Une ligne qu'on pourrait acheter, pour fabriquer en propre. */
+export interface LigneEnPropre {
+  code: string;
+  nom: string;
+  /** Prix d'achat. */
+  cout: number;
+  /** Tours d'amortissement. */
+  amortissement: number;
+  /** Unités qu'elle produit par tour. */
+  capacite: number;
+}
+
+export interface SeuilDIndifference {
+  /** Au-dessus de ce volume par tour, durablement, la ligne en propre coûte moins cher. */
+  unites: number;
+  ligne: { code: string; nom: string };
+  /** Ce que la ligne coûte chaque tour, qu'elle tourne ou non : amortissement et salaires de ses opérateurs. */
+  coutFixeParTour: number;
+  /** Les personnes qu'il faut pour la faire tourner à pleine capacité. */
+  operateurs: number;
+  /** Ce qu'une unité coûte de plus chez le sous-traitant (première tranche) qu'en propre. */
+  ecartParUnite: number;
+}
+
+/**
+ * LE SEUIL D'INDIFFÉRENCE ENTRE FAIRE ET FAIRE FAIRE, pour une référence.
+ *
+ * En propre, une ligne coûte chaque tour son amortissement et les salaires
+ * des personnes qu'il faut pour la faire tourner, plus le coût variable de
+ * chaque unité ; chez le sous-traitant, rien de fixe, mais chaque unité coûte
+ * au moins le prix de sa première tranche. Le seuil est le volume où les deux
+ * se valent : `coût fixe de la ligne / (première tranche − coût variable
+ * interne)`. On retient la ligne au seuil le plus bas, et seulement si elle
+ * peut produire ce volume. `null` quand le sous-traitant ne coûte pas plus
+ * qu'en propre à l'unité, ou qu'aucune ligne n'y arrive.
+ */
+export function seuilDIndifference(args: {
+  ref: SousTraitanceDUneReference;
+  coutVariableInterne: number;
+  heuresParUnite: number;
+  heuresParPersonne: number;
+  salaireParTour: number;
+  lignes: readonly LigneEnPropre[];
+}): SeuilDIndifference | null {
+  const premiere = args.ref.tranches[0]?.prix;
+  if (premiere === undefined) return null;
+  const ecart = premiere - args.coutVariableInterne;
+  if (!(ecart > 0)) return null;
+  let meilleur: SeuilDIndifference | null = null;
+  for (const l of args.lignes) {
+    if (l.amortissement <= 0 || l.capacite <= 0) continue;
+    const operateurs =
+      args.heuresParPersonne > 0 ? Math.ceil((l.capacite * args.heuresParUnite) / args.heuresParPersonne - 1e-9) : 0;
+    const coutFixeParTour = l.cout / l.amortissement + operateurs * args.salaireParTour;
+    const unites = Math.ceil(coutFixeParTour / ecart);
+    if (unites > l.capacite) continue;
+    if (!meilleur || unites < meilleur.unites) {
+      meilleur = { unites, ligne: { code: l.code, nom: l.nom }, coutFixeParTour, operateurs, ecartParUnite: ecart };
+    }
+  }
+  return meilleur;
+}

@@ -44,6 +44,7 @@ import {
   DEFAULT_ANSWER_FORMAT,
   DEFAULT_QUIZ_MODE,
   DIFFICULTY_PRESETS,
+  NIVEAU_GROUPE,
   QUIZ_MODES,
 } from "@/config/difficulty";
 import {
@@ -530,6 +531,13 @@ export default async function TeacherDashboard({
                   </option>
                 );
               })}
+              {staff?.isPlatformAdmin ? (
+                // LE NIVEAU 7 « GROUPE », EN AVANT-PREMIÈRE : à l'administrateur de la
+                // plateforme seulement, avec NOVA ; le serveur refuse tout autre cas.
+                <option value={NIVEAU_GROUPE.level}>
+                  {NIVEAU_GROUPE.level} · {NIVEAU_GROUPE.name} : {NIVEAU_GROUPE.tagline} · NOVA seulement, avant-première
+                </option>
+              ) : null}
             </select>
             {niveauMaxSansLicence < NIVEAU_MAX ? (
               <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">

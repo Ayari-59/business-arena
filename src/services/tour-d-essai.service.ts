@@ -261,6 +261,7 @@ export async function commencerLaVraiePartie(args: {
       definition,
       periodicity,
       roundsCount: scenarioReel.roundsCount,
+      scenario: scenarioReel,
     });
   }
 

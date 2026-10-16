@@ -1,5 +1,6 @@
 import type { EngineScenarioConfig } from "@/engine/types";
 import { withoutRd } from "@/engine/gamme";
+import { GROUPE_PAR_SCENARIO } from "@/config/groupe/nova";
 import {
   applyEconomicOverrides,
   applyEventIntensity,
@@ -61,7 +62,7 @@ export interface ReglagesDuScenarioJoue {
 }
 
 export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenarioConfig {
-  const preset = r.level ? presetByLevel.get(r.level as 1 | 2 | 3 | 4 | 5 | 6) : undefined;
+  const preset = r.level ? presetByLevel.get(r.level as DifficultyPreset["level"]) : undefined;
   const base = r.variableWorld ? applyScenarioVariability(r.scenario, r.seed) : r.scenario;
   const snapshot = applyEventIntensity(
     applyPeriodicity(
@@ -89,5 +90,121 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   // développer hors de portée pour toute la partie. Le levier est retiré du
   // snapshot et les références à développer sont livrées prêtes.
   const leviers = r.leviers ?? preset?.decisions;
-  return preset && leviers && !leviers.rd ? withoutRd(avecHistoires) : avecHistoires;
+  const sansRd = preset && leviers && !leviers.rd ? withoutRd(avecHistoires) : avecHistoires;
+  return avecLeGroupe(sansRd, leviers);
+}
+
+/**
+ * LE NIVEAU 7 « GROUPE » : son bloc, posé au seul niveau qui ouvre la
+ * croissance externe ou l'externalisation, et seulement pour un scénario qui
+ * en porte un (`config/groupe`). La demande est celle du scénario, saisons,
+ * pics et grand compte compris : s'y préparer fait partie du jeu. Les
+ * tranches et le plafond du sous-traitant, écrits au trimestre, suivent la
+ * périodicité.
+ *
+ * LA TAILLE DE DÉPART. Les entreprises du niveau 7 démarrent plus grandes
+ * (`groupe.depart`, appliqué à leur état par le moteur) ; la structure du
+ * scénario qui suit la taille d'une entreprise suit le même facteur
+ * (`agrandirLeScenario`), comme les tranches du sous-traitant. Le marché,
+ * lui, reste celui du scénario.
+ */
+function avecLeGroupe(
+  scenario: EngineScenarioConfig,
+  leviers: DifficultyPreset["decisions"] | undefined,
+): EngineScenarioConfig {
+  if (!leviers || !(leviers.croissanceExterne || leviers.externalisation)) return scenario;
+  const cfg = GROUPE_PAR_SCENARIO[scenario.code];
+  if (!cfg) return scenario;
+  const k = scenario.roundDays / 90;
+  const f = cfg.depart?.facteur ?? 1;
+  return {
+    ...agrandirLeScenario(scenario, f),
+    groupe: {
+      // Le fonds de roulement de départ suit la durée du tour, comme le stock qu'il finance.
+      ...(cfg.depart
+        ? { depart: { ...cfg.depart, ...(cfg.depart.apport !== undefined ? { apport: cfg.depart.apport * k } : {}) } }
+        : {}),
+      valorisation: { ...cfg.valorisation },
+      ...(leviers.croissanceExterne && cfg.rachat ? { rachat: { ...cfg.rachat } } : {}),
+      ...(leviers.croissanceExterne && cfg.fournisseurs
+        ? {
+            fournisseurs: cfg.fournisseurs.map((f) => ({
+              ...f,
+              chargesFixesParTour: f.chargesFixesParTour * k,
+              clientsExterieurs: { ...f.clientsExterieurs, chiffreDAffaires: f.clientsExterieurs.chiffreDAffaires * k },
+              capacite: f.capacite * k,
+              dureeDAmortissement: f.dureeDAmortissement / k,
+              tauxDInteretParTour: f.tauxDInteretParTour * k,
+            })),
+          }
+        : {}),
+      ...(leviers.croissanceExterne && cfg.import ? { import: { ...cfg.import } } : {}),
+      ...(leviers.croissanceExterne && cfg.etrangers
+        ? {
+            etrangers: cfg.etrangers.map((e) => ({
+              ...e,
+              change: { ...e.change, volatilite: e.change.volatilite * Math.sqrt(k) },
+              ventes: { ...e.ventes, chiffreDAffaires: e.ventes.chiffreDAffaires * k },
+              chargesFixesParTour: e.chargesFixesParTour * k,
+              ...(e.risquePays ? { risquePays: { ...e.risquePays, probabilite: 1 - Math.pow(1 - e.risquePays.probabilite, k) } } : {}),
+              dureeDAmortissement: e.dureeDAmortissement / k,
+              tauxDInteretParTour: e.tauxDInteretParTour * k,
+              ...(e.reseau ? { reseau: { ...e.reseau, capacite: e.reseau.capacite * k, coutFixeParTour: e.reseau.coutFixeParTour * k } } : {}),
+              ...(e.fabrication
+                ? { fabrication: { ...e.fabrication, capacite: e.fabrication.capacite * k, coutFixeParTour: e.fabrication.coutFixeParTour * k } }
+                : {}),
+            })),
+          }
+        : {}),
+      ...(leviers.externalisation && cfg.sousTraitance
+        ? {
+            sousTraitance: Object.fromEntries(
+              Object.entries(cfg.sousTraitance).map(([code, ref]) => [
+                code,
+                {
+                  ...ref,
+                  plafond: ref.plafond * k * f,
+                  tranches: ref.tranches.map((t) => (t.jusqua === undefined ? { ...t } : { ...t, jusqua: t.jusqua * k * f })),
+                },
+              ]),
+            ),
+          }
+        : {}),
+    },
+  };
+}
+
+/**
+ * La structure du scénario qui suit la taille d'une entreprise, multipliée
+ * par le facteur de départ : effectif inclus (et ses salaires dans les
+ * charges fixes), plafonds d'effectif et d'embauche, budgets d'entretien et
+ * de qualité de référence, découvert autorisé. Le reste des charges fixes, la
+ * structure, ne bouge pas. Le marché (segments, saisons, prix, événements)
+ * ne change pas.
+ */
+export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: number): EngineScenarioConfig {
+  if (facteur === 1) return scenario;
+  // La structure ne double pas avec l'atelier : les charges fixes ne gagnent
+  // que les salaires de l'effectif inclus en plus.
+  const inclusEnPlus = scenario.hr ? Math.round(scenario.hr.includedHeadcount * facteur) - scenario.hr.includedHeadcount : 0;
+  return {
+    ...scenario,
+    fixedCostsPerRound: scenario.fixedCostsPerRound + inclusEnPlus * (scenario.hr?.salaryPerEmployeePerRound ?? 0),
+    production: {
+      ...scenario.production,
+      maintenanceReference: scenario.production.maintenanceReference * facteur,
+      qualityScale: scenario.production.qualityScale * facteur,
+    },
+    finance: { ...scenario.finance, overdraftLimit: scenario.finance.overdraftLimit * facteur },
+    ...(scenario.hr
+      ? {
+          hr: {
+            ...scenario.hr,
+            includedHeadcount: Math.round(scenario.hr.includedHeadcount * facteur),
+            maxHeadcount: Math.round(scenario.hr.maxHeadcount * facteur),
+            maxHiresPerRound: Math.round(scenario.hr.maxHiresPerRound * facteur),
+          },
+        }
+      : {}),
+  };
 }
