@@ -390,6 +390,44 @@ function prixSoutenable(
 }
 
 /**
+ * ON NE REMPLIT PAS UN ENTREPÔT À CRÉDIT.
+ *
+ * Ce qu'un bot produit au-delà de la demande qu'il attend ne part pas chez un
+ * client : il part au stock, et le stock se paie COMPTANT, au tour où il est
+ * fabriqué. Ce qu'il espère vendre est financé par le cycle (les ventes et les
+ * créances) ; le surplus, lui, ne l'est que par la caisse et le découvert, et
+ * par rien d'autre. Un gérant qui voit son entrepôt plein et son compte à
+ * découvert n'en commande pas un deuxième.
+ *
+ * Le défaut mesuré : la croissance planifiait sa capacité entière chez
+ * PIXEL & CO, 7 000 unités pour 5 000 demandées, tour après tour. Le stock
+ * passait de 144 k€ à 287 k€ pendant que la trésorerie nette descendait de
+ * +14 k€ à −66 k€ ; elle déposait le bilan au sixième tour avec un résultat
+ * cumulé POSITIF. Ce n'est pas un arbitrage, c'est une cessation de paiement
+ * financée par l'espoir de vendre. Le cliquet des ventes passées tenait lieu de
+ * garde-fou avant le correctif ; il faut donc dire explicitement ce que la
+ * caisse peut porter.
+ *
+ * La règle, telle qu'elle se dit en classe : LE STOCK DE CLÔTURE VISÉ NE
+ * DÉPASSE PAS CE QUE LA CAISSE PEUT PORTER. Le bot a déjà Q unités en
+ * entrepôt, il espère en vendre S : il ne produit donc au plus que
+ * S + (ce que la caisse et le découvert financent) − Q. Tant que l'entrepôt est
+ * vide, la règle ne dit rien et le profil décide comme il l'entend ; dès qu'il
+ * se remplit sans que la caisse suive, elle ferme le robinet. Un secteur
+ * périssable n'est pas concerné, il n'a pas de stock.
+ *
+ * Elle s'applique EN DERNIER, après le plancher du point mort : une entreprise
+ * qui ne peut plus payer ne court pas après son point mort, elle vide d'abord
+ * son entrepôt. C'est le sens même d'une cessation de paiement.
+ */
+function stockPortable(ctx: BotContext): number {
+  const cv = variableCostPerUnit(ctx.scenario);
+  if (cv <= 0) return Infinity;
+  const enveloppe = ctx.state.finance.cash + ctx.scenario.finance.overdraftLimit;
+  return Math.max(0, enveloppe) / cv - ctx.state.finishedGoods.quantity;
+}
+
+/**
  * LE PLANCHER DU POINT MORT, celui que la proposition donne déjà à l'équipe
  * (`services/decision-baseline.ts`) et que les bots n'avaient pas.
  *
@@ -478,6 +516,7 @@ function adaptivePlan(
     // attendue n'y rapporte rien, même pour atteindre son point mort. Ailleurs,
     // le surplus part en stock et se vendra au tour suivant.
     if (ctx.scenario.perishable) target = Math.min(target, Math.max(plancher, attendue * 1.1));
+    else target = Math.min(target, attendue + stockPortable(ctx));
   }
   // Abonnement : une salle prévoit la place de ses adhérents qui restent —
   // on ne met pas dehors ceux qui ont payé — plus la part visée des nouveaux
@@ -960,6 +999,22 @@ function decisionsDuProfil(profile: BotProfile, ctx: BotContext): RoundDecisions
         // basse, et produire 60 % de sa capacité lui payait comptant un stock
         // qu'il ne vendrait jamais (PIXEL & CO : 4 200 unités planifiées pour
         // 1 945 demandées). Le même calcul que les autres le sert.
+        //
+        // ET IL CONTINUE DE SOMBRER, PAR CHOIX ASSUMÉ. Mesuré au banc (deux
+        // bots passifs, 1 296 bots) : 243 défaillances avant le correctif, 139
+        // après, toutes à l'hôtel et au bistrot. La cause y est mesurée et
+        // n'est PAS celle de la croissance : pas de stock, pas de besoin en
+        // fonds de roulement, la demande qu'il reçoit (2 909 nuitées au premier
+        // tour) dépasse largement son plan (2 451). Il vise son point mort
+        // calculé sur SES budgets, qui sont à zéro, tandis que le niveau lui
+        // impose la qualité et la maintenance neutres des champs cachés : il
+        // atterrit cinq à six mille euros de charges SOUS son équilibre réel,
+        // perd 11 k€ par tour, et ne corrige jamais puisque son rôle est de ne
+        // rien adapter. C'est le concurrent qui reconduit l'an dernier sans
+        // regarder ses comptes, et le voir mourir est précisément ce qu'il
+        // enseigne. Il n'entre au marché qu'à partir de six entreprises en
+        // solo. Si on veut le sauver un jour, c'est la charge cachée qu'il faut
+        // compter dans son point mort, pas son plan qu'il faut brider.
         productionPlan: neuf ? adaptivePlan(ctx, 0.6, { price: prix, ...budgets }) : capacity(ctx) * 0.6,
         ...budgets,
       };
