@@ -111,11 +111,13 @@ export interface CockpitSource {
   /**
    * Le niveau de l'atelier n'ouvre pas la R&D : la partie se jouera sans le
    * levier et avec toutes les références livrées prêtes, le cockpit prévoit
-   * la même chose. S'il l'ouvre, les références que tous les niveaux livrent
-   * prêtes (`REFERENCES_LIVREES_PRETES`) le sont aussi. Sans effet sur un
+   * la même chose. S'il l'ouvre, les références que ce niveau livre prêtes
+   * (`REFERENCES_LIVREES_PRETES`, selon `niveau`) le sont aussi. Sans effet sur un
    * instantané de partie, déjà composé.
    */
   sansRd?: boolean;
+  /** Le niveau de l'atelier : les références livrées prêtes en dépendent (`rdDuNiveau`). */
+  niveau?: number;
 }
 
 /** La lettre de colonne d'un tour : le tour d'indice 0 est en B, A portant les intitulés. */
@@ -194,12 +196,12 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   const brut = source.config ?? definition.scenario;
   // Un instantané de partie est déjà composé à son niveau ; le scénario du
   // registre l'est ici comme la création le fera (`rdDuNiveau` : R&D retirée
-  // quand le niveau ne l'ouvre pas, références livrées prêtes à tous les niveaux).
+  // quand le niveau ne l'ouvre pas, références livrées prêtes selon le niveau).
   const config = source.config
     ? source.sansRd
       ? withoutRd(brut)
       : brut
-    : rdDuNiveau(brut, !source.sansRd);
+    : rdDuNiveau(brut, source.niveau, !source.sansRd);
   const gamme = toGamme(config);
   const etat: CompanyState = definition.company(
     "cockpit",

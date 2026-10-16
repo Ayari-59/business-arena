@@ -192,6 +192,7 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
     gamme: referencesDuDossier(scenario, atelier.reglages.tours),
     services: dossiersDeService(scenario, atelier.reglages.tours, {
       sansRd: !rdOuverte,
+      niveau: atelier.reglages.niveau,
     }),
     tableauDeBord: {
       decisions: leviersDuNiveau(

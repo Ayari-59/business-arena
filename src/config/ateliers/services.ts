@@ -160,10 +160,10 @@ function axesPourClientele(segment: SegmentConfig): {
 export function dossiersDeService(
   definition: ScenarioDefinition,
   tours: number,
-  options: { sansRd?: boolean } = {},
+  options: { sansRd?: boolean; niveau?: number } = {},
 ): DossierService[] {
   // La R&D telle que la partie la jouera à ce niveau (`rdDuNiveau`).
-  const config = rdDuNiveau(definition.scenario, !options.sansRd);
+  const config = rdDuNiveau(definition.scenario, options.niveau, !options.sansRd);
   const v = definition.vocabulary;
   const etat = definition.company(
     "dossier",

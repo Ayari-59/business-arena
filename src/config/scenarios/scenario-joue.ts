@@ -28,7 +28,7 @@ import { applyScenarioVariability } from "@/config/scenarios/variability";
  * pondérations de l'IPG → taille du marché selon le nombre d'entreprises →
  * nombre de tours → périodicité → intensité d'événements du niveau → histoires
  * d'investissement du niveau → R&D du niveau (`rdDuNiveau` : retirée quand le
- * niveau ne l'ouvre pas, et la Studio de NOVA livrée prête à tous les niveaux).
+ * niveau ne l'ouvre pas, et la Studio de NOVA livrée prête aux niveaux 5 et 6).
  *
  * Il vivait dans `createGameCore`. Il est sorti ici, pur, parce que deux
  * appelants doivent faire EXACTEMENT le même calcul : la création, et le rejeu
@@ -88,7 +88,7 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
       ? avecInvestissementParNiveau(snapshot, preset.level, r.calendrier ?? "actuel")
       : snapshot;
   const leviers = r.leviers ?? preset?.decisions;
-  const avecRd = preset && leviers ? rdDuNiveau(avecHistoires, leviers.rd) : avecHistoires;
+  const avecRd = preset && leviers ? rdDuNiveau(avecHistoires, preset.level, leviers.rd) : avecHistoires;
   return avecLeGroupe(avecRd, leviers);
 }
 
@@ -208,37 +208,50 @@ export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: numb
 }
 
 /**
- * LES RÉFÉRENCES LIVRÉES PRÊTES À TOUS LES NIVEAUX, R&D OUVERTE OU NON.
+ * LES RÉFÉRENCES LIVRÉES PRÊTES AUX NIVEAUX QUI OUVRENT LA R&D, NIVEAU PAR NIVEAU.
  *
- * NOVA en gamme : la Studio. Au niveau 4, la R&D est fermée et la Studio était
- * déjà livrée prête ; aux niveaux 5 et 6, la R&D s'ouvrait et la Studio
- * devenait un prototype à financer (25 000 €, vendable au tour 2). Mesuré au
- * banc des niveaux 1 à 6 : l'équipe qui valide les propositions ne vendait
- * alors que la Go et la One, et faisait défaillance (10 crises sur 12, dont 5
- * défaillances, contre aucune au niveau 4) ; les concurrents pilotés aussi
- * (24 sur 24 en crise). Décision du propriétaire : la Studio est en vente dès
- * le tour 1 à tous les niveaux. Le levier R&D reste ouvert aux niveaux qui
- * l'ouvrent : il élève le niveau technique de chaque référence.
+ * NOVA en gamme : la Studio, aux niveaux 5 et 6. Au niveau 4, la R&D est fermée
+ * et la Studio était déjà livrée prête ; aux niveaux 5 et 6, la R&D s'ouvrait
+ * et la Studio devenait un prototype à financer (25 000 €, vendable au tour 2).
+ * Mesuré au banc des niveaux 1 à 6 : l'équipe qui valide les propositions ne
+ * vendait alors que la Go et la One, et faisait défaillance (10 crises sur 12,
+ * dont 5 défaillances, contre aucune au niveau 4) ; les concurrents pilotés
+ * aussi (24 sur 24 en crise). Décision du propriétaire : la Studio est en
+ * vente dès le tour 1 aux niveaux 5 et 6. Le levier R&D y reste ouvert : il
+ * élève le niveau technique de chaque référence.
+ *
+ * AU NIVEAU 7, LA STUDIO RESTE À DÉVELOPPER, comme au calibrage du niveau
+ * « Groupe » (décision du propriétaire), en attendant la référence à bâtir qui
+ * lui sera propre. Son snapshot est celui du niveau 6, R&D comprise, plus le
+ * bloc de groupe : il ne se distingue que par cette table.
  *
  * Le scénario de base garde sa Studio à développer : une partie sans niveau,
  * un scénario publié par un enseignant à partir de lui, ne changent pas.
  */
-export const REFERENCES_LIVREES_PRETES: Readonly<Record<string, readonly string[]>> = {
-  "nova-gamme": ["nova-studio"],
+export const REFERENCES_LIVREES_PRETES: Readonly<
+  Record<string, { references: readonly string[]; niveaux: readonly number[] }>
+> = {
+  "nova-gamme": { references: ["nova-studio"], niveaux: [5, 6] },
 };
 
 /**
  * La R&D du scénario joué, au niveau : un niveau qui ne l'ouvre pas retire le
  * levier du snapshot et livre prêtes les références à développer (une
  * référence hors de portée pour toute la partie n'aurait pas de sens) ; un
- * niveau qui l'ouvre garde le levier, et livre prêtes les seules références de
- * `REFERENCES_LIVREES_PRETES`. Le même calcul sert la création de la partie et
- * ce que les ateliers distribuent avant elle (cockpit, dossiers).
+ * niveau qui l'ouvre garde le levier, et livre prêtes les seules références
+ * que `REFERENCES_LIVREES_PRETES` désigne pour CE niveau. Sans niveau : rien
+ * n'est livré prêt. Le même calcul sert la création de la partie et ce que
+ * les ateliers distribuent avant elle (cockpit, dossiers).
  */
-export function rdDuNiveau(scenario: EngineScenarioConfig, rdOuverte: boolean): EngineScenarioConfig {
+export function rdDuNiveau(
+  scenario: EngineScenarioConfig,
+  niveau: number | undefined,
+  rdOuverte: boolean,
+): EngineScenarioConfig {
   if (!rdOuverte) return withoutRd(scenario);
-  const pretes = REFERENCES_LIVREES_PRETES[scenario.code];
-  if (!pretes || !scenario.products?.some((p) => p.development && pretes.includes(p.code))) return scenario;
+  const table = REFERENCES_LIVREES_PRETES[scenario.code];
+  const pretes = table && niveau !== undefined && table.niveaux.includes(niveau) ? table.references : [];
+  if (!scenario.products?.some((p) => p.development && pretes.includes(p.code))) return scenario;
   return {
     ...scenario,
     products: scenario.products.map((p) => {

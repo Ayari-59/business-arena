@@ -206,7 +206,7 @@ export function dossierDuResponsable(atelier: AtelierDefinition, code: CodeDeRol
   const niveau = atelier.reglages.niveau;
   const tours = atelier.reglages.tours;
   const rdOuverte = DIFFICULTY_PRESETS.find((p) => p.level === niveau)?.decisions.rd ?? false;
-  const services = dossiersDeService(scenario, tours, { sansRd: !rdOuverte });
+  const services = dossiersDeService(scenario, tours, { sansRd: !rdOuverte, niveau });
   const service = services.find((s) => s.code === code) ?? null;
   const decisions = leviersDuResponsable(code, niveau, config);
   const ouverts = new Set(RESPONSABLES.flatMap((r) => leviersDuResponsable(r.code, niveau, config).map((l) => l.champ)));

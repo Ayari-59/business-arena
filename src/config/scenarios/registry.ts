@@ -1101,9 +1101,9 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     head: NOVA_DEFINITION.code,
     mono: NOVA_DEFINITION.code,
     gamme: NOVA_GAMME_DEFINITION.code,
-    // Le niveau des grands arbitrages. La Studio y est livrée prête, et à tous
-    // les niveaux au-delà, R&D ouverte ou non (`REFERENCES_LIVREES_PRETES`,
-    // scenario-joue.ts) : rien n'y est à bâtir.
+    // Le niveau des grands arbitrages. La Studio y est livrée prête, et aux
+    // niveaux 5 et 6, R&D ouverte (`REFERENCES_LIVREES_PRETES`, scenario-joue.ts) ;
+    // au niveau 7 « Groupe », elle reste à développer.
     gammeFromLevel: 4,
     monoLabel: "une seule enceinte",
     gammeLabel: "la gamme Go, One et Studio",

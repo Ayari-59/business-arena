@@ -46,7 +46,7 @@ describe("une famille de scénarios se joue selon le niveau", () => {
     const gamme = (await getGameView(await createSoloGame(userId, "quarter", 3, 5, false, "nova"), userId))!;
     expect(gamme.gamme?.map((p) => p.code)).toEqual(["nova-go", "nova-one", "nova-studio"]);
     expect(gamme.scenarioCode).toBe("nova-gamme");
-    // La Studio est livrée prête à tous les niveaux (`REFERENCES_LIVREES_PRETES`) :
+    // La Studio est livrée prête aux niveaux 5 et 6 (`REFERENCES_LIVREES_PRETES`) :
     // la R&D ouverte au niveau 5 élève le niveau technique, rien n'y est à bâtir.
     expect(gamme.gamme!.find((p) => p.code === "nova-studio")!.rd).toMatchObject({ development: null });
     expect(gamme.rdOffer).not.toBeNull();
