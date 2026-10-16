@@ -243,7 +243,7 @@ const rawConseilGamme = {
     types: [
       {
         code: "poste_junior",
-        name: "Poste consultant junior",
+        name: "Poste junior",
         capacityPerUnit: 250,
         costPerUnit: 8000,
         depreciationRounds: 12,
@@ -253,7 +253,7 @@ const rawConseilGamme = {
       },
       {
         code: "poste_confirme",
-        name: "Poste consultant confirmé",
+        name: "Poste confirmé",
         capacityPerUnit: 500,
         costPerUnit: 18000,
         depreciationRounds: 16,
@@ -297,7 +297,7 @@ const rawConseilGamme = {
       code: "standard",
       name: "Déplacements standard",
       narrative:
-        "Trains et hôtels à tarif négocié : le mode opératoire habituel du cabinet.",
+        "Les consultants se déplacent chez le client aux réunions qui comptent et travaillent au cabinet le reste du temps. Des frais tenus, une présence suffisante.",
       costMultiplier: 1,
       qualityBonus: 0,
       paymentDelayDays: 30,
@@ -308,7 +308,7 @@ const rawConseilGamme = {
       code: "distance",
       name: "Missions à distance",
       narrative:
-        "40 % de déplacements en moins, 6 % de marge perçue en moins : les clients voient moins vos équipes, c'est bankable sur des missions techniques, délicat en transformation.",
+        "Visioconférence d'abord, déplacement seulement quand le client l'exige : 40 % de frais en moins. Les clients qui aiment voir leurs consultants le sentent, et un livrable se défend moins bien à l'écran.",
       costMultiplier: 0.6,
       qualityBonus: -0.06,
       paymentDelayDays: 30,
@@ -317,9 +317,9 @@ const rawConseilGamme = {
     },
     {
       code: "presence",
-      name: "Présence renforcée",
+      name: "Présence renforcée chez le client",
       narrative:
-        "35 % de plus en frais de mission, qualité perçue en hausse : les clients vous voient sur le terrain, la confiance monte et les litiges baissent.",
+        "Des consultants sur site plusieurs jours par semaine, hébergement compris : 35 % de frais en plus, remboursés vite. La proximité se paie et se voit : les grands comptes y sont sensibles.",
       costMultiplier: 1.35,
       qualityBonus: 0.08,
       paymentDelayDays: 15,

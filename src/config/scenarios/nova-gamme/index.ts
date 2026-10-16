@@ -315,7 +315,7 @@ const rawNovaGamme = {
       },
       {
         code: "semi_auto",
-        name: "Ligne semi-automatisée",
+        name: "Ligne semi-automatique",
         capacityPerUnit: 1500,
         costPerUnit: 30000,
         depreciationRounds: 24,

@@ -23,8 +23,10 @@ describe("les crans voisins d'un atelier", () => {
     expect(bas!.ferme).toContain(LIBELLES_DES_LEVIERS.hr.court);
     expect(bas!.ouvre).toEqual([]);
     expect(bas!.bascule).toBeNull();
-    // Les séances 3 et 5 portent sur la trésorerie et les créances, que le niveau 2 ferme.
-    expect(bas!.seances.map((s) => s.numero)).toEqual(expect.arrayContaining([3, 5]));
+    // Les séances 4 et 6 portent sur la trésorerie et les créances, que le
+    // niveau 2 ferme. Elles étaient les 3 et 5 avant que le tour d'essai ne
+    // prenne la tête de la fiche et ne décale la numérotation.
+    expect(bas!.seances.map((s) => s.numero)).toEqual(expect.arrayContaining([4, 6]));
     expect(bas!.minutesParTour.max).toBeLessThan(0);
   });
 
