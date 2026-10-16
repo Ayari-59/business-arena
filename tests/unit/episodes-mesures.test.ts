@@ -115,13 +115,29 @@ describe("les mesures de toutes les décisions, sur le meilleur chemin", () => {
   });
 });
 
+/**
+ * CE QUE CES TROIS MESURES COÛTENT EN TEMPS. Chacune rejoue toute la
+ * bibliothèque d'épisodes, et chaque décision y est remesurée sur les trente
+ * tirages du bilan : c'est le prix de la garde, pas un défaut à corriger.
+ *
+ * Les délais sont donc dimensionnés pour la suite complète, pas pour le
+ * fichier lancé seul. Sur une machine à quatre cœurs, la plus lourde des
+ * trois tient en moins d'une minute quand elle est seule, et dépassait son
+ * ancien délai d'une minute dès que les autres fichiers se partageaient les
+ * mêmes cœurs : elle échouait alors sans rien révéler du produit. Les
+ * abaisser pour « voir rouge plus vite » ne ferait que rendre la suite
+ * instable ; les mesures elles-mêmes restent entières.
+ */
+const DELAI_DUNE_PASSE = 120_000;
+const DELAI_DE_TOUS_LES_CHEMINS = 240_000;
+
 describe("les mesures d'une partie", () => {
   it("donnent une qualité de 1 à chaque décision de la meilleure référence", () => {
     for (const ep of EPISODES) {
       const m = mesurer(ep, partie(ep, ep.references[0]!.chemin));
       for (const d of m.decisions) expect(d.choisie.qualite, `${ep.code} D${d.d + 1}`).toBe(1);
     }
-  }, 30_000);
+  }, DELAI_DUNE_PASSE);
 
   it("donnent une qualité basse aux réflexes, même pris à la suite", () => {
     // Chaque décision qui offre un réflexe le prend ; les autres suivent la meilleure référence.
@@ -143,7 +159,7 @@ describe("les mesures d'une partie", () => {
       qualites.push(...q);
     }
     expect(qualites.reduce((a, b) => a + b) / qualites.length).toBeLessThan(0.3);
-  }, 30_000);
+  }, DELAI_DUNE_PASSE);
 
   it("jugent chaque décision comme le bilan, sur des chemins variés", () => {
     for (const ep of EPISODES) {
@@ -168,7 +184,7 @@ describe("les mesures d'une partie", () => {
         expect(mesures.tirage.obtenu).toBeCloseTo(bilan.trimestre.objectif, 6);
       }
     }
-  }, 60_000);
+  }, DELAI_DE_TOUS_LES_CHEMINS);
 
   it("ne dépendent du tirage joué que par sa place", () => {
     const ep = EPISODES[0]!;
