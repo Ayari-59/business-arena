@@ -122,7 +122,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
       {
         code: "lire-les-comptes",
         enonce:
-          "Je lis les documents de synthèse d'une entreprise : j'y repère ce qu'elle a vendu et ce qu'elle a gagné, et je vois ce que ce résultat ajoute à ce qu'elle possède, une fois déduit ce qu'elle doit.",
+          "Je lis les documents de synthèse d'une entreprise : ce qu'elle a vendu, ce qu'elle a gagné, et de combien elle s'est enrichie.",
         origines: [
           "martel:1:2",
           "debutant:1:2",
