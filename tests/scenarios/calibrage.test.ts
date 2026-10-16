@@ -49,10 +49,25 @@ function partie(code: string, strategie: BotProfile) {
   });
   const resultats = run.rounds.map((r) => r.results["player"]!);
   const dernier = run.rounds[run.rounds.length - 1]!.companies.find((c) => c.id === "player")!;
+  // Les concurrents simulés de la table, lus comme le joueur : la donnée
+  // était déjà là, personne ne la regardait (voir la garde plus bas).
+  const concurrents = companies
+    .filter((c) => c.id !== "player")
+    .map((c) => ({
+      id: c.id,
+      profil: c.botProfile as BotProfile,
+      crises: run.rounds.filter((r) => Boolean(r.results[c.id]?.treasury?.crisis)).length,
+      defaillantAuTour: run.rounds.findIndex((r) =>
+        r.companies.some((x) => x.id === c.id && x.status === "defaillant"),
+      ),
+      cumul: run.rounds.reduce((t, r) => t + (r.results[c.id]?.incomeStatement.netIncome ?? 0), 0),
+    }));
   return {
     cumul: resultats.reduce((t, r) => t + r.incomeStatement.netIncome, 0),
     parTour: resultats.reduce((t, r) => t + r.incomeStatement.netIncome, 0) / resultats.length,
     capitauxPropres: dernier.finance.equity,
+    concurrents,
+    tours: run.rounds.length,
   };
 }
 
@@ -111,6 +126,62 @@ describe("calibrage économique des secteurs", () => {
         `${d.code} : ${Math.round(ecart / 1000)} k€ séparent la meilleure de la pire`,
       ).toBeLessThan(250000);
     }
+  });
+});
+
+/**
+ * UN CONCURRENT QUI SE SUICIDE N'ENSEIGNE RIEN.
+ *
+ * Ce fichier jouait déjà les deux concurrents simulés de chaque secteur à côté
+ * de la stratégie mesurée, et il lisait la seule ligne du « joueur ». La donnée
+ * manquante n'en était pas une : instrumenté dans ses propres conditions, il
+ * sortait déjà `grand-hotel CRISE DEF −262 k€` et `table-marches CRISE DEF
+ * −110 k€` à chacune de ses cinq exécutions. L'assertion manquait, voilà tout.
+ *
+ * Un concurrent a le droit de perdre de l'argent : c'est même ce qui rend sa
+ * stratégie lisible à l'élève. Il n'a pas le droit de SORTIR DU JEU, ni de
+ * passer la partie à découvert. Une entreprise défaillante est gelée : elle ne
+ * vend plus, ne produit plus, son IPG se fige et sa demande se reporte sur les
+ * autres. Il n'y a alors plus de concurrence à lire pendant la moitié de la
+ * partie, et le classement récompense celui qui a survécu, pas celui qui a bien
+ * joué.
+ *
+ * La limite retenue, et mesurée ici :
+ *  - aucune défaillance d'un concurrent simulé, dans aucun secteur ;
+ *  - pas de crise de trésorerie sur plus de la moitié des tours, ce qui laisse
+ *    passer le trou de départ d'une stratégie coûteuse et refuse le découvert
+ *    permanent.
+ *
+ * Les secteurs où une ruine de concurrent serait ASSUMÉE s'écrivent dans
+ * `RUINES_ASSUMEES`, avec leur raison. La table est vide : aucune ne l'est.
+ */
+const RUINES_ASSUMEES: Readonly<Record<string, readonly BotProfile[]>> = {};
+
+describe("les concurrents simulés tiennent leur rôle", () => {
+  it("aucun concurrent simulé ne sort du jeu ni ne vit à découvert", () => {
+    const fautes: string[] = [];
+    for (const d of SCENARIOS) {
+      const assumees = RUINES_ASSUMEES[d.code] ?? [];
+      for (const s of STRATEGIES) {
+        const r = partie(d.code, s);
+        for (const c of r.concurrents) {
+          if (assumees.includes(c.profil)) continue;
+          if (c.defaillantAuTour >= 0) {
+            fautes.push(
+              `${d.code} (face à ${s}) : ${c.id} (${c.profil}) dépose le bilan au tour ${c.defaillantAuTour + 1} sur ${r.tours}, ${Math.round(c.cumul / 1000)} k€ cumulés`,
+            );
+          } else if (c.crises > r.tours / 2) {
+            fautes.push(
+              `${d.code} (face à ${s}) : ${c.id} (${c.profil}) passe ${c.crises} tours sur ${r.tours} en crise de trésorerie`,
+            );
+          }
+        }
+      }
+    }
+    expect(
+      fautes,
+      `des concurrents simulés se ruinent par construction :\n${fautes.join("\n")}`,
+    ).toEqual([]);
   });
 });
 
