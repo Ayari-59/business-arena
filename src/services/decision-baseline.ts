@@ -7,6 +7,7 @@ import {
   suppliersOf,
   toGamme,
 } from "@/engine/gamme";
+import { estUneNouveaute } from "@/engine/groupe/nouveautes";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -139,23 +140,30 @@ export function startingDecisionsFor(
   // élever son niveau technique est la décision de l'équipe, pas du bot
   // équilibré qui sert de neutre pour le reste. Ni la marque, ni l'axe de
   // communication : le marketing proposé revient tout entier aux références.
+  // Niveau 7 : une nouveauté pas encore au marché (NOVA Home) ne reçoit aucune
+  // part du budget de marque reversé aux références.
+  const horsMarche = new Set(
+    toGamme(snapshot)
+      .filter((p) => estUneNouveaute(snapshot, p.code) && !isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex))
+      .map((p) => p.code),
+  );
   return auPas(
-    sansRd(sansCommunication(aLaMesureDuNiveau(neutralDecisions({ scenario: snapshot, state, roundIndex }), leviers))),
+    sansRd(sansCommunication(aLaMesureDuNiveau(neutralDecisions({ scenario: snapshot, state, roundIndex }), leviers), horsMarche)),
   );
 }
 
-function sansCommunication(d: RoundDecisions): RoundDecisions {
+function sansCommunication(d: RoundDecisions, horsMarche: ReadonlySet<string> = new Set()): RoundDecisions {
   const { communicationAxis: _axe, ...reste } = d;
   void _axe;
   if (d.brandMarketingBudget === undefined || !d.products) return reste;
-  const n = Object.keys(d.products).length;
+  const n = Object.keys(d.products).filter((code) => !horsMarche.has(code)).length;
   return {
     ...reste,
     brandMarketingBudget: 0,
     products: Object.fromEntries(
       Object.entries(d.products).map(([code, p]) => [
         code,
-        p.marketingBudget !== undefined
+        p.marketingBudget !== undefined && !horsMarche.has(code)
           ? { ...p, marketingBudget: p.marketingBudget + (d.brandMarketingBudget ?? 0) / n }
           : p,
       ]),

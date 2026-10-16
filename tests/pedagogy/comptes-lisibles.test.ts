@@ -59,6 +59,13 @@ const FICHE_DE_LA_LIGNE: Record<string, string> = {
   "Indice de sécurité": "safety_margin",
   "Trésorerie d'ouverture": "net_treasury",
   "= Trésorerie de clôture": "net_treasury",
+  // Niveau 7 « Groupe » : la nouveauté du tour (NOVA Home).
+  "− Plateforme logicielle": "fixed_costs",
+  "= Ce qu'elle laisse avant amortissement": "contribution_margin",
+  "Frais de développement immobilisés ce tour": "development_costs",
+  "Amortissement des frais de développement": "development_costs",
+  "Dépréciation des frais de développement": "development_costs",
+  "Valeur nette des frais immobilisés, à la clôture": "development_costs",
   // Niveau 7 « Groupe » : la valeur, le rachat, le groupe consolidé.
   "Écart d'acquisition": "goodwill_impairment",
   "EBE des douze derniers mois": "enterprise_value",

@@ -29,6 +29,16 @@ export {
   type SituationDeLAcquereur,
 } from "./rachat";
 export { fluxPropre } from "./flux-propre";
+export {
+  certificationRetardee,
+  estUneNouveaute,
+  etatDAdoption,
+  fraisDeDeveloppement,
+  migrer,
+  nouveautesDeLaGamme,
+  probabiliteDeRuptureDuComposant,
+  ruptureDuComposant,
+} from "./nouveautes";
 export { agrandir, apporterLeFondsDeRoulement } from "./depart";
 export { coursDeLImport, prixDeLImport, probabiliteDeRupture, ruptureDeLImport } from "./import";
 export { comptesDeLEtranger, coursMoyen, trajectoireDeLEtranger, ventesLocales } from "./etranger";
@@ -218,7 +228,18 @@ export function simulerLeGroupe(
             emission,
           }
         : avant;
-      suivants.set(c.id, { ...c, groupe });
+      // Les nouveautés qu'une autre entreprise active a vendues ce tour : ce
+      // qu'un concurrent voit en rayon (la règle des suiveurs y lit son signal).
+      const vues = (cfg.nouveautes ?? [])
+        .map((n) => n.code)
+        .filter((code) =>
+          cloturees.some(
+            (o) => o.id !== c.id && o.status !== "defaillant" && o.rdByProduct?.[code]?.launched === true && o.rdByProduct[code]!.abandonnee !== true,
+          ),
+        );
+      const { nouveautesAuMarche: _vuesAvant, ...sansVues } = groupe;
+      void _vuesAvant;
+      suivants.set(c.id, { ...c, groupe: vues.length > 0 ? { ...sansVues, nouveautesAuMarche: vues } : _vuesAvant ? sansVues : groupe });
       results[c.id] = {
         ...r,
         groupe: {

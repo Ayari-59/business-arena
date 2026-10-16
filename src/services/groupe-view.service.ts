@@ -1,6 +1,7 @@
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig } from "@/engine/types";
 import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
-import { toGamme } from "@/engine/gamme";
+import { isProductAvailable, rdOpeningOf, toGamme } from "@/engine/gamme";
+import { estUneNouveaute } from "@/engine/groupe/nouveautes";
 import {
   cleDeLaCible,
   coursDeLImport,
@@ -68,6 +69,8 @@ export interface SousTraitanceVue {
   /** Coût variable d'une unité fabriquée en propre (matière et autres coûts variables). */
   coutVariableInterne: number;
   seuil: SeuilDIndifference | null;
+  /** Niveau 7 : une nouveauté pas encore au marché (NOVA Home) ne se fait pas encore fabriquer. */
+  pasEncoreEnVente?: true;
 }
 
 export interface VueDuGroupe {
@@ -183,10 +186,13 @@ export function vueDuGroupe(args: {
         const ref = g.sousTraitance![p.code];
         if (!ref) return [];
         const coutVariableInterne = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+        const pasEncoreEnVente =
+          estUneNouveaute(scenario, p.code) && !isProductAvailable(p, rdOpeningOf(scenario, moi ?? {}, p.code), args.tourEnCours);
         return [
           {
             code: p.code,
             nom: p.name,
+            ...(pasEncoreEnVente ? { pasEncoreEnVente: true as const } : {}),
             tranches: ref.tranches,
             plafond: ref.plafond,
             qualite: ref.qualite,

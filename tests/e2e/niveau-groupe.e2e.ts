@@ -19,6 +19,10 @@ import { enseignantSousLicence } from "./helpers/licence";
  *     commande au sous-traitant, le rachat de 51 % d'une entreprise étrangère
  *     jugé avant l'envoi, le plan relevé pour son réseau ; le résultat montre
  *     la valeur par action, et le bilan consolidé l'écart d'acquisition ;
+ *   · NOVA Home : un tiers engagé et l'étude de marché au tour 1 (l'adoption
+ *     reste « à découvrir » jusque-là), la fin du développement au tour 2, le
+ *     module radio choisi et la première vente au tour 3 (au 4 si la
+ *     certification glisse), et ce que la Home a coûté et rapporté ;
  *   · une partie de classe à deux équipes : le même fournisseur, deux offres,
  *     une enchère perdue, et chacune le lit.
  *
@@ -205,6 +209,8 @@ describe("une partie solo de niveau 7", () => {
     const seuil = await page.locator('[data-seuil-d-indifference="nova-one"]').innerText();
     expect(seuil).toMatch(/Au-dessus de .+ unités par tour durablement, une ligne en propre coûte moins cher/);
     expect(await page.locator('[data-bareme="nova-go"] li').count()).toBeGreaterThanOrEqual(3);
+    // La Home a son barème, mais le sous-traitant ne la livre qu'une fois en vente.
+    expect(await page.locator('[data-pas-encore-en-vente="nova-home"]').innerText()).toMatch(/NOVA Home n'est pas encore en vente/);
     await page.locator("[data-approvisionnement-du-groupe]").scrollIntoViewIfNeeded();
     await capture(page, "03-faire-fabriquer-ordinateur");
 
@@ -215,10 +221,52 @@ describe("une partie solo de niveau 7", () => {
     expect(await page.locator('[data-cible^="fournisseur:"]').count()).toBeGreaterThanOrEqual(2);
     expect(await page.locator('[data-cible^="etranger:"]').count()).toBeGreaterThanOrEqual(2);
     expect(await page.locator('[data-cible^="site_ferme:"], select[name="diligence"]').count()).toBe(0);
+
+    // NOVA Home : un prototype. Un tiers engagé démarre le développement ;
+    // l'adoption des foyers connectés reste « à découvrir » jusqu'à l'étude.
+    await allerA(page, '[data-chantier="nova-home"]');
+    const chantier = page.locator('[data-chantier="nova-home"]');
+    const dit = (await chantier.innerText()).replace(/[\u00a0\u202f]/g, " ");
+    expect(dit).toMatch(/Un prototype : 90 000 € de développement\. Il démarre quand un tiers \(30 000 €\) est engagé/);
+    expect(dit).toMatch(/Première vente au plus tôt au tour 3[\s\S]*30 % de risque/);
+    expect(dit).toMatch(/plateforme logicielle .* coûtera 8 000 € par tour/);
+    expect(await page.locator('[data-abandon="nova-home"]').count(), "rien à abandonner avant le démarrage").toBe(0);
+    await page.locator('input[name="product.nova-home.rdBudget"]').first().fill("30000");
+    expect(await page.content()).toContain("à découvrir");
+    await chantier.evaluate((el) => el.scrollIntoView({ block: "end" }));
+    await page.waitForTimeout(300);
+    await capture(page, "04-home-developpement-ordinateur");
+    await allerA(page, 'input[name="studyMarket"]');
+    await deplier(page, 'input[name="studyMarket"]');
+    await page.locator('input[name="studyMarket"]').check();
+
+    // Le même chantier, sur téléphone : la carte de la Home.
+    const tel = await navigateur.newContext({
+      ...devices["iPhone 13"],
+      viewport: { width: 390, height: 844 },
+      locale: "fr-FR",
+      storageState: await admin.storageState(),
+    });
+    const q = await tel.newPage();
+    await ouvrirLaFeuille(q, urlArene);
+    await allerA(q, '[data-chantier="nova-home"]');
+    // Une carte par référence : on avance jusqu'à celle de la Home.
+    for (let k = 0; k < 8 && !(await q.locator('[data-chantier="nova-home"]').isVisible().catch(() => false)); k++) {
+      await q.getByRole("button", { name: /^Continuer/ }).last().click();
+      await q.waitForTimeout(400);
+    }
+    expect(await q.locator('[data-chantier="nova-home"]').isVisible(), "la carte de la Home").toBe(true);
+    // La carte glisse en place : on la centre sans attendre qu'elle soit immobile.
+    await q.locator('[data-chantier="nova-home"]').evaluate((el) => el.scrollIntoView({ block: "center" }));
+    await q.waitForTimeout(600);
+    await capture(q, "04b-home-developpement-telephone");
+    expect(await q.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(392);
+    await tel.close();
+
     await valider(page, /Valider et simuler/);
     await page.waitForURL(/simule/, { timeout: 180_000 });
     await page.waitForLoadState("networkidle");
-  }, 300_000);
+  }, 400_000);
 
   it("tour 2 : une commande au sous-traitant ; 51 % de Brightwave, jugé avant l'envoi, et le plan relevé pour son réseau", async () => {
     await ouvrirLaFeuille(page, urlArene);
@@ -227,6 +275,19 @@ describe("une partie solo de niveau 7", () => {
     await page.locator('input[name="sousTraitance.nova-go"]').fill("300");
     expect(await page.locator('[data-cout-de-la-commande="nova-go"]').innerText()).toMatch(/Coût de la commande : .+€/);
     await emprunter(page);
+
+    // NOVA Home : l'étude de marché du tour 1 a chiffré les foyers connectés ;
+    // le développement, démarré, se finit (60 000 €), financé par un emprunt.
+    expect(await page.content()).not.toContain("à découvrir");
+    await allerA(page, '[data-chantier="nova-home"]');
+    expect((await page.locator('[data-chantier="nova-home"]').innerText()).replace(/[\u00a0\u202f]/g, " ")).toMatch(
+      /Développement démarré au tour 1 : 30 000 € engagés sur 90 000 €, il reste 60 000 € à financer/,
+    );
+    expect(await page.locator('[data-abandon="nova-home"]').count(), "un développement démarré s'abandonne").toBe(1);
+    await page.locator('input[name="product.nova-home.rdBudget"]').first().fill("60000");
+    await allerA(page, 'input[name="newLoan"]');
+    const pret = page.locator('input[name="newLoan"]').first();
+    await pret.fill(String(Number((await pret.inputValue()) || 0) + 70000));
 
     await allerA(page, "[data-croissance-externe]");
     await deplier(page, "[data-croissance-externe]");
@@ -334,6 +395,92 @@ describe("une partie solo de niveau 7", () => {
     expect(await q.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(392);
     await tel.close();
   }, 240_000);
+
+  it("NOVA Home : le module radio se choisit, et la Home se vend dès le tour 3 (au 4 si la certification glisse)", async () => {
+    let tour = 3;
+    for (;;) {
+      await ouvrirLaFeuille(page, urlArene);
+      await emprunter(page);
+      await allerA(page, 'select[name="product.nova-home.supplierChoice"]');
+      const radio = page.locator('select[name="product.nova-home.supplierChoice"]').first();
+      const offres = (await radio.locator("option").allInnerTexts()).join(" | ");
+      expect(offres).toMatch(/Taikon Wireless/);
+      expect(offres).toMatch(/Silicéa Modules/);
+      // Encore un chantier : la certification a glissé d'un tour (30 % de risque), une fois au plus.
+      if ((await page.locator('[data-chantier="nova-home"]').count()) > 0) {
+        expect(await page.locator('[data-chantier="nova-home"]').innerText()).toMatch(/La certification radio a pris du retard : pas de vente avant le tour 4/);
+        expect(tour, "un seul tour de retard").toBe(3);
+        await valider(page, /Valider et simuler/);
+        await page.waitForURL(/simule/, { timeout: 180_000 });
+        await page.waitForLoadState("networkidle");
+        tour++;
+        continue;
+      }
+      // Taikon rompt aux pics ; Silicéa, 5 % plus cher, jamais.
+      await radio.selectOption("taikon");
+      await page.waitForTimeout(300);
+      expect(await texte(page)).toMatch(/% aux pics/);
+      await radio.selectOption("silicea");
+      await allerA(page, 'input[name="product.nova-home.productionPlan"]');
+      await page.locator('input[name="product.nova-home.productionPlan"]').first().fill("500");
+      await page.locator('input[name="product.nova-home.marketingBudget"]').first().fill("8000");
+      await radio.scrollIntoViewIfNeeded();
+      await capture(page, "14-home-module-radio-ordinateur");
+      await valider(page, /Valider et simuler/);
+      await page.waitForURL(/simule/, { timeout: 180_000 });
+      await page.waitForLoadState("networkidle");
+      break;
+    }
+
+    await page.goto(`${urlArene}#dernier-resultat`, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(800);
+    await page.locator("summary", { hasText: "la nouveauté du tour" }).first().click();
+    await page.waitForTimeout(400);
+    const home = page.locator('[data-nouveaute-du-tour="nova-home"]').first();
+    const bilan = (await home.innerText()).replace(/[\u00a0\u202f]/g, " ");
+    expect(bilan).toMatch(/Marge sur coût variable de NOVA Home/);
+    expect(bilan).toMatch(/Plateforme logicielle\s*[−-]\s*8 000 €/);
+    expect(bilan).toMatch(/Valeur nette des frais immobilisés/);
+    // Un lancement normal ne se déprécie pas à son premier tour de vente.
+    expect(bilan).not.toMatch(/Dépréciation/);
+    // Vendue : ses foyers connectés se chiffrent, le marché lui a répondu.
+    expect(await texte(page)).toMatch(/Foyers connectés/);
+    await page.locator("summary", { hasText: "la nouveauté du tour" }).first().evaluate((el) => {
+      el.scrollIntoView({ block: "start" });
+      window.scrollBy(0, -110);
+    });
+    await page.waitForTimeout(300);
+    await capture(page, "15-resultat-home-ordinateur");
+
+    const tel = await navigateur.newContext({
+      ...devices["iPhone 13"],
+      viewport: { width: 390, height: 844 },
+      locale: "fr-FR",
+      storageState: await admin.storageState(),
+    });
+    const q = await tel.newPage();
+    await q.goto(`${urlArene}#dernier-resultat`, { waitUntil: "domcontentloaded" });
+    await q.waitForLoadState("networkidle");
+    await q.waitForTimeout(800);
+    // Sur téléphone, les comptes sont un onglet du tableau de bord.
+    const onglet = q.getByRole("tab", { name: /^Finance/ }).first();
+    if (await onglet.isVisible().catch(() => false)) {
+      await onglet.click();
+      await q.waitForTimeout(500);
+    }
+    const titre = q.locator("summary", { hasText: "la nouveauté du tour" }).first();
+    await titre.click();
+    await q.waitForTimeout(400);
+    await titre.evaluate((el) => {
+      el.scrollIntoView({ block: "start" });
+      window.scrollBy(0, -110);
+    });
+    await q.waitForTimeout(300);
+    await capture(q, "16-resultat-home-telephone");
+    expect(await q.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(392);
+    await tel.close();
+  }, 600_000);
 });
 
 describe("une partie de classe à deux équipes : l'enchère", () => {

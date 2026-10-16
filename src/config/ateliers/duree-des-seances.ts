@@ -6,6 +6,7 @@ import {
   type DifficultyPreset,
 } from "../difficulty";
 import { scenarioByCode } from "../scenarios/registry";
+import { referencesJouees } from "../scenarios/scenario-joue";
 import {
   champsOuverts,
   dureeDuTour,
@@ -102,7 +103,7 @@ export function estimationDuTour(
   const premierTour = s.essai ? true : !avecEssai && s.tourJoue === premierJoue;
   return dureeDuTour({
     signesDeCadrage: signesDeCadrage(def),
-    signesDeSituation: signesDeSituation(def.situations, tour),
+    signesDeSituation: signesDeSituation(def.situations, tour, new Set(referencesJouees(def.scenario, a.reglages.niveau))),
     champs: champsOuverts(preset.decisions),
     premierTour,
     avecQuiz: avecQuestions(a),

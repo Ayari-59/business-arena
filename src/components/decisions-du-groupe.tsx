@@ -185,6 +185,12 @@ function UneReferenceSousTraitee({
       <p className="mt-2 text-sm leading-snug text-[var(--donnee)]" data-seuil-d-indifference={r.code}>
         {phraseDuSeuil(r)}
       </p>
+      {r.pasEncoreEnVente ? (
+        <p className="mt-1 text-sm leading-snug text-slate-400" data-pas-encore-en-vente={r.code}>
+          {r.nom} n&apos;est pas encore en vente : le sous-traitant ne la livre qu&apos;à partir de sa première vente.
+          Une commande passée avant est sans effet.
+        </p>
+      ) : null}
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         <ChampNombre
           name={nom}

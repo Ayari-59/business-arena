@@ -128,11 +128,15 @@ export function signesDeSituation(
     problem?: string;
     diagnosticOptions?: { label?: string }[];
     trigger?: { round?: number } | { detect?: string };
+    seulementAvec?: { reference: string };
   }[],
   round: number,
+  /** Les références de la partie : une situation qui en suppose une absente ne s'ouvre pas. */
+  references?: ReadonlySet<string>,
 ): number {
   return situations
     .filter((s) => (s.trigger as { round?: number } | undefined)?.round === round)
+    .filter((s) => !s.seulementAvec || !references || references.has(s.seulementAvec.reference))
     .reduce(
       (total, s) =>
         total + signes(s.narrative) + signes(s.problem) + signes(s.diagnosticOptions),

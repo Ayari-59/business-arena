@@ -11,6 +11,7 @@ import type {
   SegmentConfig,
 } from "../types";
 import { mapGammeSegments, toGamme } from "../gamme";
+import { estUneNouveaute } from "../groupe/nouveautes";
 import { simulateRound } from "../simulation";
 
 /**
@@ -249,9 +250,13 @@ export function repartitionDesVentes(
   for (const p of toGamme(scenario)) {
     const vendus = p.market.segments.map((s) => dernier?.market.bySegment[s.code]?.sold ?? 0);
     const total = vendus.reduce((a, b) => a + b, 0);
+    // Niveau 7 : la taille d'une clientèle de nouveauté (NOVA Home) dit son
+    // adoption, que l'équipe ne connaît pas. Avant ses premières ventes, ses
+    // clientèles se partagent à parts égales.
+    const nouveaute = estUneNouveaute(scenario, p.code);
     p.market.segments.forEach((s, i) => {
       const saison = s.seasonality?.[roundIndex - 1] ?? 1;
-      repartition[s.code] = total > 0 ? vendus[i]! / total : Math.max(0, s.size * saison);
+      repartition[s.code] = total > 0 ? vendus[i]! / total : nouveaute ? 1 : Math.max(0, s.size * saison);
     });
     // Les poids de taille sont ramenés à une proportion : seule la part sort.
     if (total <= 0) {
@@ -306,5 +311,14 @@ export function expurgerLeScenario(scenario: EngineScenarioConfig): EngineScenar
     scriptedEvents: [],
     orderOffers: undefined,
     bots: undefined,
+    // Niveau 7 : la migration d'une nouveauté porte le facteur de son adoption.
+    ...(scenario.groupe?.nouveautes
+      ? {
+          groupe: {
+            ...scenario.groupe,
+            nouveautes: scenario.groupe.nouveautes.map((n) => ({ ...n, migration: { ...n.migration, parts: {} } })),
+          },
+        }
+      : {}),
   };
 }

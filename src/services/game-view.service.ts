@@ -37,6 +37,7 @@ import { activeEventsOf, injectedEvents } from "@/services/round-resolution.serv
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
 import { expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
+import { marcheSansAdoption, segmentsDAdoptionCaches } from "@/services/adoption-cachee";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
 import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
@@ -461,6 +462,8 @@ export interface GameView {
       qualityBonus: number;
       paymentDelayDays: number;
       supplyRiskProbability: number;
+      /** Niveau 7 : le risque de rupture aux pics de la saison (composant critique d'une nouveauté). */
+      supplyRiskAtPeaks?: number;
       materialCostPerUnit: number;
     }[] | null;
     /**
@@ -476,8 +479,33 @@ export interface GameView {
         invested: number;
         available: boolean;
         launchRound: number | null;
+        /**
+         * Niveau 7 : le développement par étapes d'une nouveauté (NOVA Home).
+         * Absent pour une référence ordinaire.
+         */
+        etapes?: {
+          /** Le montant qui démarre le développement (un tiers du coût). */
+          demarrage: number;
+          /** Le tour où il a démarré, null avant. */
+          demarreAuTour: number | null;
+          /** Tours au moins entre le démarrage et la première vente. */
+          dureeMinimale: number;
+          /** Le premier tour où elle pourra se vendre, si tout le reste est financé ce tour. */
+          premiereVente: number;
+          /** Probabilité d'un retard de certification, et sa durée. */
+          risqueDeRetard: { probabilite: number; tours: number } | null;
+          /** Le retard tiré : la vente glisse jusqu'à ce tour compris. Null sans retard connu. */
+          retardJusquAu: number | null;
+        };
       } | null;
     } | null;
+    /** Niveau 7 : une nouveauté (NOVA Home), sa plateforme et ses frais immobilisés. */
+    nouveaute?: {
+      plateformeParTour: number;
+      abandonnee: boolean;
+      fraisImmobilises: number;
+      valeurNette: number;
+    };
   }[] | null;
   /**
    * Le levier R&D du scénario (échelle du budget par tour), `null` sans
@@ -589,7 +617,8 @@ export interface GameView {
      */
     segments: {
       name: string;
-      size: number;
+      /** Null : le segment d'une nouveauté dont l'adoption est encore cachée (niveau 7). */
+      size: number | null;
       refPrice: number;
       paymentDelayDays: number;
       /** Votre part sur ce segment au tour écoulé. Null au tour 1. */
@@ -1092,10 +1121,21 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   const resolved = gameRounds.filter((r) => r.status === "resolved");
   const roundIndexById = new Map(gameRounds.map((r) => [r.id, r.index]));
 
-  const gameResults = await db
+  const lignesDuTour = await db
     .select()
     .from(roundResults)
     .where(inArray(roundResults.roundId, gameRounds.map((r) => r.id)));
+  // Niveau 7 : l'adoption d'une nouveauté (NOVA Home) reste cachée à l'équipe
+  // tant qu'elle n'a ni acheté l'étude de marché ni vendu la nouveauté : le
+  // potentiel de ses segments, sur chaque ligne de la partie, est tu.
+  const segmentsCaches = segmentsDAdoptionCaches(
+    snapshot,
+    lignesDuTour.filter((r) => r.teamId === playerTeam.id),
+  );
+  const gameResults =
+    segmentsCaches.size > 0
+      ? lignesDuTour.map((r) => ({ ...r, marketDetail: marcheSansAdoption(r.marketDetail, segmentsCaches) }))
+      : lignesDuTour;
 
   const history = gameResults
     .filter((r) => r.teamId === playerTeam.id)
@@ -2028,7 +2068,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           otherVariableCostPerUnit: p.otherVariableCostPerUnit,
           hoursPerUnit: p.hoursPerUnit,
           refPrice: main?.refPrice ?? 0,
-          marketSize: p.market.segments.reduce((t, s) => t + s.size, 0),
+          // Le marché d'une nouveauté dont l'adoption est cachée ne se chiffre pas.
+          marketSize: p.market.segments.reduce((t, s) => (segmentsCaches.has(s.code) ? t : t + s.size), 0),
           segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
           seasonCoef: p.market.seasonality[idx] ?? 1,
           stock: Math.round(state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0),
@@ -2040,7 +2081,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               costMultiplier: s.costMultiplier,
               qualityBonus: s.qualityBonus,
               paymentDelayDays: s.paymentDelayDays,
-              supplyRiskProbability: s.supplyRiskProbability,
+              // Niveau 7 : le composant critique d'une nouveauté rompt sur son propre flux.
+              ...(() => {
+                const r = snapshot.groupe?.nouveautes?.find((n) => n.code === p.code)?.ruptures?.find((x) => x.fournisseur === s.code);
+                return r
+                  ? { supplyRiskProbability: r.probabilite, supplyRiskAtPeaks: r.probabiliteAuxPics }
+                  : { supplyRiskProbability: s.supplyRiskProbability };
+              })(),
               materialCostPerUnit: Math.round(p.materialCostPerUnit * s.costMultiplier * 100) / 100,
             })) ?? null,
           rd: (() => {
@@ -2055,8 +2102,45 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
                     invested: rd.invested,
                     available: isProductAvailable(p, rd, game.currentRound),
                     launchRound: rd.launchRound ?? null,
+                    ...(p.development.dureeMinimale !== undefined
+                      ? {
+                          etapes: (() => {
+                            const dev = p.development!;
+                            const demarrage = (dev.seuilDeDemarrage ?? 0) * dev.cost;
+                            const demarre = rd.demarreAuTour ?? null;
+                            const duree = dev.dureeMinimale!;
+                            const premiereVente = Math.max(
+                              dev.availableFromRound ?? 1,
+                              (demarre ?? game.currentRound) + duree,
+                              game.currentRound + 1,
+                              (rd.retardJusquAu ?? 0) + 1,
+                            );
+                            return {
+                              demarrage,
+                              demarreAuTour: demarre,
+                              dureeMinimale: duree,
+                              premiereVente,
+                              risqueDeRetard: dev.risqueDeRetard ?? null,
+                              retardJusquAu: rd.retardJusquAu ?? null,
+                            };
+                          })(),
+                        }
+                      : {}),
                   }
                 : null,
+            };
+          })(),
+          ...(() => {
+            const n = snapshot.groupe?.nouveautes?.find((x) => x.code === p.code);
+            if (!n) return {};
+            const rd = state?.rdByProduct?.[p.code];
+            return {
+              nouveaute: {
+                plateformeParTour: n.plateforme.coutFixeParTour,
+                abandonnee: rd?.abandonnee === true,
+                fraisImmobilises: rd?.immobilise ?? 0,
+                valeurNette: (rd?.immobilise ?? 0) - (rd?.amorti ?? 0),
+              },
             };
           })(),
         };
@@ -2137,7 +2221,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           .flatMap((p) => p.market.segments)
           .map((seg) => ({
             name: seg.name,
-            size: Math.round(seg.size),
+            // L'adoption d'une nouveauté cachée : sa taille est à découvrir.
+            size: segmentsCaches.has(seg.code) ? null : Math.round(seg.size),
             refPrice: seg.refPrice,
             paymentDelayDays: seg.paymentDelayDays,
             yourShare: lastResult?.market.bySegment[seg.code]?.share ?? null,

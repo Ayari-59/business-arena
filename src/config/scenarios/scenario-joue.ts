@@ -1,6 +1,8 @@
 import type { EngineScenarioConfig } from "@/engine/types";
 import { withoutRd } from "@/engine/gamme";
-import { GROUPE_PAR_SCENARIO } from "@/config/groupe/nova";
+import { GROUPE_PAR_SCENARIO, NOUVEAUTES_PAR_SCENARIO } from "@/config/groupe/nova";
+import { etatDAdoption } from "@/engine/groupe/nouveautes";
+import type { DefinitionDUneNouveaute } from "@/engine/groupe/types";
 import {
   applyEconomicOverrides,
   applyEventIntensity,
@@ -64,7 +66,15 @@ export interface ReglagesDuScenarioJoue {
 
 export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenarioConfig {
   const preset = r.level ? presetByLevel.get(r.level as DifficultyPreset["level"]) : undefined;
-  const base = r.variableWorld ? applyScenarioVariability(r.scenario, r.seed) : r.scenario;
+  const leviers = r.leviers ?? preset?.decisions;
+  // Les nouveautés du niveau 7 entrent dans la gamme AVANT les réglages qui
+  // dimensionnent les marchés (taille de la classe, périodicité) : elles les
+  // suivent comme les autres références.
+  const base = avecLesNouveautes(
+    r.variableWorld ? applyScenarioVariability(r.scenario, r.seed) : r.scenario,
+    leviers,
+    r.seed,
+  );
   const snapshot = applyEventIntensity(
     applyPeriodicity(
       applyRoundsCount(
@@ -87,9 +97,68 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
     preset && r.investmentStories
       ? avecInvestissementParNiveau(snapshot, preset.level, r.calendrier ?? "actuel")
       : snapshot;
-  const leviers = r.leviers ?? preset?.decisions;
   const avecRd = preset && leviers ? rdDuNiveau(avecHistoires, preset.level, leviers.rd) : avecHistoires;
-  return avecLeGroupe(avecRd, leviers);
+  return avecLeGroupe(avecRd, leviers, r.seed);
+}
+
+/** Le niveau ouvre-t-il le niveau 7 « Groupe » (croissance externe ou externalisation) ? */
+const ouvreLeGroupe = (leviers: DifficultyPreset["decisions"] | undefined): boolean =>
+  Boolean(leviers && (leviers.croissanceExterne || leviers.externalisation));
+
+/** Les nouveautés du scénario, au niveau 7 seulement. */
+const nouveautesDu = (
+  scenario: EngineScenarioConfig,
+  leviers: DifficultyPreset["decisions"] | undefined,
+): readonly DefinitionDUneNouveaute[] => (ouvreLeGroupe(leviers) && scenario.products ? (NOUVEAUTES_PAR_SCENARIO[scenario.code] ?? []) : []);
+
+/**
+ * Les références qu'une partie de ce scénario porte à ce niveau : sa gamme,
+ * et au niveau 7 ses nouveautés. Ce qui se dit avant la partie (le dossier
+ * de l'enseignant) ne promet pas une situation sur une référence absente.
+ */
+export function referencesJouees(scenario: EngineScenarioConfig, niveau: number | undefined): string[] {
+  const preset = niveau ? presetByLevel.get(niveau as DifficultyPreset["level"]) : undefined;
+  return [
+    ...(scenario.products ?? []).map((p) => p.code),
+    ...nouveautesDu(scenario, preset?.decisions).map((d) => d.reference.code),
+  ];
+}
+
+/** L'état d'adoption tiré pour la partie. */
+const etatTire = (d: DefinitionDUneNouveaute, seed: number) => d.adoption.etats[etatDAdoption(seed, d.reference.code, d.adoption.etats.length)]!;
+
+/**
+ * LES NOUVEAUTÉS DU NIVEAU 7 (NOVA Home) : la référence à développer propre au
+ * niveau, ajoutée à la gamme. Son segment d'adoption prend la taille et la
+ * croissance de l'état tiré par la graine (lente, moyenne ou rapide) : le
+ * rejeu du bilan, qui recompose le monde d'une autre graine, la rejoue sur
+ * un autre état. Aucun autre niveau, aucun autre scénario n'est touché.
+ */
+function avecLesNouveautes(
+  scenario: EngineScenarioConfig,
+  leviers: DifficultyPreset["decisions"] | undefined,
+  seed: number,
+): EngineScenarioConfig {
+  const defs = nouveautesDu(scenario, leviers).filter((d) => !scenario.products!.some((p) => p.code === d.reference.code));
+  if (defs.length === 0) return scenario;
+  return {
+    ...scenario,
+    products: [
+      ...scenario.products!,
+      ...defs.map((d) => {
+        const etat = etatTire(d, seed);
+        return {
+          ...d.reference,
+          market: {
+            ...d.reference.market,
+            segments: d.reference.market.segments.map((s) =>
+              s.code === d.adoption.segment ? { ...s, size: etat.taille, growth: etat.croissance } : s,
+            ),
+          },
+        };
+      }),
+    ],
+  };
 }
 
 /**
@@ -109,8 +178,9 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
 function avecLeGroupe(
   scenario: EngineScenarioConfig,
   leviers: DifficultyPreset["decisions"] | undefined,
+  seed: number,
 ): EngineScenarioConfig {
-  if (!leviers || !(leviers.croissanceExterne || leviers.externalisation)) return scenario;
+  if (!leviers || !ouvreLeGroupe(leviers)) return scenario;
   const cfg = GROUPE_PAR_SCENARIO[scenario.code];
   if (!cfg) return scenario;
   const k = scenario.roundDays / 90;
@@ -168,6 +238,28 @@ function avecLeGroupe(
             ),
           }
         : {}),
+      // Les nouveautés de la gamme (NOVA Home) : la migration au facteur de
+      // l'adoption tirée, la plateforme et l'amortissement à la durée du tour.
+      ...(() => {
+        const nouveautes = nouveautesDu(scenario, leviers)
+          .filter((d) => scenario.products!.some((p) => p.code === d.reference.code))
+          .map((d) => {
+            const etat = etatTire(d, seed);
+            return {
+              ...d.regles,
+              code: d.reference.code,
+              migration: {
+                ...d.regles.migration,
+                parts: Object.fromEntries(
+                  Object.entries(d.regles.migration.parts).map(([c, part]) => [c, Math.min(1, part * etat.migration)]),
+                ),
+              },
+              plateforme: { coutFixeParTour: d.regles.plateforme.coutFixeParTour * k },
+              immobilisation: { dureeDAmortissement: Math.max(1, Math.round(d.regles.immobilisation.dureeDAmortissement / k)) },
+            };
+          });
+        return nouveautes.length > 0 ? { nouveautes } : {};
+      })(),
     },
   };
 }
@@ -210,7 +302,7 @@ export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: numb
 /**
  * LES RÉFÉRENCES LIVRÉES PRÊTES AUX NIVEAUX QUI OUVRENT LA R&D, NIVEAU PAR NIVEAU.
  *
- * NOVA en gamme : la Studio, aux niveaux 5 et 6. Au niveau 4, la R&D est fermée
+ * NOVA en gamme : la Studio, aux niveaux 5, 6 et 7. Au niveau 4, la R&D est fermée
  * et la Studio était déjà livrée prête ; aux niveaux 5 et 6, la R&D s'ouvrait
  * et la Studio devenait un prototype à financer (25 000 €, vendable au tour 2).
  * Mesuré au banc des niveaux 1 à 6 : l'équipe qui valide les propositions ne
@@ -220,10 +312,10 @@ export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: numb
  * vente dès le tour 1 aux niveaux 5 et 6. Le levier R&D y reste ouvert : il
  * élève le niveau technique de chaque référence.
  *
- * AU NIVEAU 7, LA STUDIO RESTE À DÉVELOPPER, comme au calibrage du niveau
- * « Groupe » (décision du propriétaire), en attendant la référence à bâtir qui
- * lui sera propre. Son snapshot est celui du niveau 6, R&D comprise, plus le
- * bloc de groupe : il ne se distingue que par cette table.
+ * AU NIVEAU 7, LA STUDIO EST LIVRÉE PRÊTE AUSSI (décision du propriétaire) :
+ * la référence à développer y est NOVA Home, sa nouveauté propre
+ * (`config/groupe/nova.ts`, `NOUVEAUTES_PAR_SCENARIO`), que cette table ne
+ * nomme pas.
  *
  * Le scénario de base garde sa Studio à développer : une partie sans niveau,
  * un scénario publié par un enseignant à partir de lui, ne changent pas.
@@ -231,7 +323,7 @@ export function agrandirLeScenario(scenario: EngineScenarioConfig, facteur: numb
 export const REFERENCES_LIVREES_PRETES: Readonly<
   Record<string, { references: readonly string[]; niveaux: readonly number[] }>
 > = {
-  "nova-gamme": { references: ["nova-studio"], niveaux: [5, 6] },
+  "nova-gamme": { references: ["nova-studio"], niveaux: [5, 6, 7] },
 };
 
 /**

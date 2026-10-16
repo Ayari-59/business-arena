@@ -136,6 +136,16 @@ export interface SituationDef {
    * n'enseigne pas le paradoxe : il apprend à ne pas lire ses résultats.
    */
   trigger: { round: number; requires?: DetectCode } | { detect: DetectCode };
+  /**
+   * LA RÉFÉRENCE QUE L'ÉNONCÉ SUPPOSE. Une situation qui parle de NOVA Home
+   * n'a de sens que dans une partie qui la porte (le niveau 7) : le même
+   * scénario se joue des niveaux 4 à 7, et le tour dit ne suffit pas. Avec
+   * `auMarche`, il faut de plus que la référence ait été en vente chez
+   * l'équipe au tour qui vient d'être joué : « vos premières Home sont en
+   * rayon » ne se raconte pas à une équipe qui ne l'a pas lancée. Absente :
+   * rien ne change.
+   */
+  seulementAvec?: { reference: string; auMarche?: boolean };
   weight: number;
   decisionLevers: DecisionLever[];
   /**

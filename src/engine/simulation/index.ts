@@ -93,6 +93,15 @@ import {
   simulerLeGroupe,
   type CommandeDuTour,
 } from "../groupe";
+import {
+  etapesDuDeveloppement,
+  fraisDeDeveloppement,
+  migrer,
+  nouveautesAuMarche,
+  nouveautesDeLaGamme,
+  ruptureDuComposant,
+} from "../groupe/nouveautes";
+import type { ResultatDUneNouveaute } from "../groupe/types";
 
 // --- Helpers pour le parc d'équipements typés ---
 
@@ -402,6 +411,9 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
   // aux résultats : rien n'est émis en mono-produit.
   const gamme = toGamme(scenario);
   const multi = gamme.length > 1;
+  // Niveau 7 : les nouveautés de la gamme (NOVA Home). Vide partout ailleurs :
+  // aucune des branches qui en dépendent ne s'exécute alors.
+  const nouveautes = nouveautesDeLaGamme(scenario, gamme);
 
   // Journal comptable (Jalon B du plan fondation comptable) : en gamme, on
   // enregistre chaque flux (achat, vente, paie, amortissement, financement).
@@ -476,6 +488,20 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       );
     }
   }
+  // Niveau 7 : la migration (cannibalisation). Une nouveauté au marché ce tour
+  // prend une part du potentiel des segments d'origine ; sinon son segment de
+  // migration ne reçoit rien. Une entreprise qui l'abandonne ce tour n'y compte pas.
+  const nouveautesDuTour =
+    nouveautes.size > 0
+      ? nouveautesAuMarche(
+          scenario,
+          gamme,
+          input.companies.filter((c) => !Object.entries(input.decisions[c.id]?.products ?? {}).some(([code, d]) => nouveautes.has(code) && d.abandonner)),
+          roundIndex,
+          nouveautes,
+        )
+      : null;
+  if (nouveautesDuTour) for (const n of nouveautes.values()) migrer(potentialBySegment, n, nouveautesDuTour.has(n.code));
 
   // 3. Production, qualité et stock disponible par entreprise (doc 02 §4-5).
   interface Working {
@@ -609,6 +635,10 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     rdActionsCost: number;
     /** Niveau 7 : la commande au sous-traitant, livrée en stock ce tour (null sans commande). */
     commandeST: CommandeDuTour | null;
+    /** Niveau 7 : les nouveautés abandonnées ce tour, par référence. */
+    abandons: boolean[];
+    /** Niveau 7 : rupture du composant critique d'une nouveauté, par référence. */
+    rupturesDuComposant: boolean[];
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -739,15 +769,40 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // le coût) et jamais avant son tour de disponibilité. Sans bloc `rd`,
     // tout est disponible et rien n'est calculé : chemin historique.
     const productRdOpening = gamme.map((p) => rdOpeningOf(scenario, state, p.code));
-    const productAvailable = gamme.map((p, k) => isProductAvailable(p, productRdOpening[k]!, roundIndex));
+    // Niveau 7 : abandonner une nouveauté la retire du marché dès ce tour.
+    const abandons = gamme.map(
+      (p) =>
+        nouveautes.has(p.code) &&
+        state.status !== "defaillant" &&
+        decisions.products?.[p.code]?.abandonner === true &&
+        rdOpeningOf(scenario, state, p.code)?.abandonnee !== true,
+    );
+    const productAvailable = gamme.map(
+      (p, k) => isProductAvailable(p, productRdOpening[k]!, roundIndex) && !abandons[k],
+    );
     // Une référence en développement ne se produit pas : son plan tombe à
     // zéro, sa R&D reste (c'est elle qui la fera naître). Faillite : plus de
-    // R&D non plus, l'entreprise est gelée.
-    const gammeDecisions = gammeDecisionsBrutes.map((d, k) => ({
-      ...d,
-      productionPlan: productAvailable[k] ? d.productionPlan : 0,
-      rdBudget: scenario.rd && state.status !== "defaillant" ? d.rdBudget : 0,
-    }));
+    // R&D non plus, l'entreprise est gelée. Une nouveauté du niveau 7 hors
+    // marché ne dépense rien d'autre que sa R&D (ni marketing, ni qualité) ;
+    // abandonnée, plus rien.
+    const gammeDecisions = gammeDecisionsBrutes.map((d, k) =>
+      nouveautes.has(gamme[k]!.code) && !productAvailable[k]
+        ? {
+            ...d,
+            productionPlan: 0,
+            marketingBudget: 0,
+            qualityBudget: 0,
+            rdBudget:
+              scenario.rd && state.status !== "defaillant" && !abandons[k] && productRdOpening[k]?.abandonnee !== true
+                ? d.rdBudget
+                : 0,
+          }
+        : {
+            ...d,
+            productionPlan: productAvailable[k] ? d.productionPlan : 0,
+            rdBudget: scenario.rd && state.status !== "defaillant" ? d.rdBudget : 0,
+          },
+    );
     const rdTotal = scenario.rd ? sumExact(gammeDecisions.map((d) => d.rdBudget)) : 0;
     // Fournisseur choisi (doc 02 §5bis) : coût, qualité, délai, risque de
     // rupture. Mono-produit : le fournisseur scalaire. Gamme : chaque
@@ -778,7 +833,20 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
             : false,
       );
     }
-    const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
+    // Niveau 7 : le composant critique d'une nouveauté (le module radio de la
+    // Home) rompt sur son propre flux, seulement quand la référence se produit.
+    const rupturesDuComposant = gamme.map((p, k) => {
+      const n = nouveautes.get(p.code);
+      const s = productSuppliers[k];
+      const r = n?.ruptures?.find((x) => x.fournisseur === s?.code);
+      if (!r || estimation || !productAvailable[k] || gammeDecisions[k]!.productionPlan <= 0) return false;
+      const saisons = p.market.seasonality;
+      const saison = saisons[(roundIndex - 1) % Math.max(1, saisons.length)] ?? 1;
+      return ruptureDuComposant(input.seed, r, saison, roundIndex, state.id);
+    });
+    const productDisruptions = productSuppliers.map(
+      (s, k) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false) || rupturesDuComposant[k]!,
+    );
     const supplyDisruption = supplier ? (disruptionBySupplier.get(supplier.code) ?? false) : false;
     const supplyAvailabilityHit = supplyDisruption ? (supplier?.supplyRiskAvailabilityHit ?? 1) : 1;
     // Capacité machine : soit calculée du parc individuel (MachineRecord),
@@ -831,8 +899,9 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // divisée par le nombre de références : un budget réparti à parts égales
     // donne à chacune exactement la qualité que le scalaire donnait à
     // l'entreprise ; concentré sur une référence, il la distingue.
+    // Niveau 7 : une nouveauté ne change pas l'échelle des autres références.
     const qualityScale = multi
-      ? scenario.production.qualityScale / gamme.length
+      ? scenario.production.qualityScale / (gamme.length - nouveautes.size)
       : scenario.production.qualityScale;
     const productQuality = gammeDecisions.map((d) =>
       computeProducedQuality({
@@ -867,7 +936,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       const techLevel = cfg.techInertia * rd.techLevel + (1 - cfg.techInertia) * target;
       const invested = rd.invested + budget;
       const launched = productAvailable[k]!;
-      return {
+      const suivant = {
         invested,
         launched,
         ...(launched
@@ -877,6 +946,22 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
             : {}),
         techLevel,
       };
+      if (!nouveautes.has(gamme[k]!.code)) return suivant;
+      // Niveau 7 : une nouveauté garde ses étapes, son retard, ses frais
+      // immobilisés (complétés à la clôture) et son abandon.
+      const { invested: _i, launched: _l, launchRound: _r, techLevel: _t, ...propres } = rd;
+      void _i; void _l; void _r; void _t;
+      const avecPropres = { ...suivant, ...propres, ...(abandons[k] ? { abandonnee: true } : {}) };
+      return estimation
+        ? avecPropres
+        : etapesDuDeveloppement({
+            produit: gamme[k]!,
+            suivant: avecPropres,
+            roundIndex,
+            graine: input.seed,
+            entreprise: state.id,
+            code: gamme[k]!.code,
+          });
     });
     // Communication (levier `communication`) : la notoriété d'ouverture, l'axe
     // et le budget de marque du tour (gamme seulement : en mono, le marketing
@@ -1056,7 +1141,18 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // stock d'avant, même objet.
     const commandeST = fusionnerLesCommandes(
       scenario.groupe?.sousTraitance && state.status !== "defaillant"
-        ? commandeDuTour(scenario.groupe.sousTraitance, gamme.map((p) => p.code), raw.sousTraitance)
+        ? commandeDuTour(
+            scenario.groupe.sousTraitance,
+            gamme.map((p) => p.code),
+            // Une nouveauté (NOVA Home) ne se fait fabriquer qu'une fois au marché.
+            nouveautes.size > 0 && raw.sousTraitance
+              ? Object.fromEntries(
+                  Object.entries(raw.sousTraitance).filter(
+                    ([code]) => !nouveautes.has(code) || productAvailable[gamme.findIndex((p) => p.code === code)] === true,
+                  ),
+                )
+              : raw.sousTraitance,
+          )
         : null,
       // Niveau 7 : ce qu'une filiale étrangère fabrique pour l'équipe, livré fini.
       state.status !== "defaillant" ? (input.fabricationDuGroupe?.[state.id] ?? null) : null,
@@ -1291,6 +1387,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       moduleQualityBonus: Math.min(M.PLAFONDS.qualite, rdActionsEffects.qualityBonus),
       rdActionsCost: 0,
       commandeST,
+      abandons,
+      rupturesDuComposant,
     };
   });
 
@@ -1420,7 +1518,15 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
   const results: Record<string, CompanyRoundResult> = {};
   const nextCompanies: CompanyState[] = [];
   let totalSold = 0;
-  const totalPotential = Object.values(potentialBySegment).reduce((a, b) => a + b, 0);
+  // Niveau 7 : le marché d'une nouveauté que personne ne vend encore n'entre pas
+  // dans le marché servi (parts de marché) ; l'étude de marché le montre quand même.
+  const horsMarche = new Set<string>();
+  if (nouveautesDuTour)
+    for (const p of gamme) if (nouveautes.has(p.code) && !nouveautesDuTour.has(p.code)) for (const seg of p.market.segments) horsMarche.add(seg.code);
+  const totalPotential =
+    horsMarche.size > 0
+      ? Object.entries(potentialBySegment).reduce((a, [code, b]) => (horsMarche.has(code) ? a : a + b), 0)
+      : Object.values(potentialBySegment).reduce((a, b) => a + b, 0);
   // Commande exceptionnelle du tour (doc 02 §5.1) : la même pour tous,
   // tirée à la graine de la partie (alternance crédit / comptant garantie).
   const roundOffer = estimation
@@ -1935,6 +2041,46 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // à sa demande de subvention exceptionnelle. Zéro dans l'immense majorité
     // des cas — et alors rien n'est émis nulle part.
     const subventionSauvetage = Math.max(0, input.rescueSubsidies?.[w.state.id] ?? 0);
+    // Niveau 7 : les nouveautés. Leur plateforme (charge fixe de chaque tour au
+    // marché), leurs frais de développement immobilisés, amortis à partir du
+    // lancement, et dépréciés si l'abandon ou l'échec le justifie. Sans
+    // nouveauté dans la gamme, tout reste à zéro et rien n'est émis.
+    const compteDesNouveautes = new Map<number, ResultatDUneNouveaute & { rd: ReturnType<typeof fraisDeDeveloppement> }>();
+    if (nouveautes.size > 0) {
+      gamme.forEach((p, k) => {
+        const n = nouveautes.get(p.code);
+        if (!n) return;
+        const auMarche = w.productAvailable[k]! && !gelee;
+        const plateforme = auMarche ? n.plateforme.coutFixeParTour : 0;
+        const ventes = productSegmentRevenue[k]! + (reseauRevenue ? reseauRevenue[k]! : 0);
+        const margeSurCoutVariable = ventes - removals[k]!.cost;
+        const rd = fraisDeDeveloppement({
+          ouverture: w.productRdOpening[k] ?? null,
+          cout: p.development?.cost ?? 0,
+          budget: w.gamme[k]!.rdBudget,
+          auMarche,
+          abandon: w.abandons[k]!,
+          duree: n.immobilisation.dureeDAmortissement,
+          ...(auMarche ? { contribution: margeSurCoutVariable - plateforme } : {}),
+        });
+        compteDesNouveautes.set(k, {
+          auMarche,
+          immobilise: rd.immobiliseCeTour,
+          amortissement: rd.amortissement,
+          depreciation: rd.depreciation,
+          valeurNette: rd.immobilise - rd.amorti,
+          plateforme,
+          margeSurCoutVariable,
+          ...(w.abandons[k] ? { abandon: true } : {}),
+          ...(w.rupturesDuComposant[k] ? { rupture: true } : {}),
+          rd,
+        });
+      });
+    }
+    const nv = [...compteDesNouveautes.values()];
+    const immobiliseDuTour = nv.length > 0 ? sumExact(nv.map((x) => x.immobilise)) : 0;
+    const amortiDuTour = nv.length > 0 ? sumExact(nv.map((x) => x.amortissement + x.depreciation)) : 0;
+    const plateformeDuTour = nv.length > 0 ? sumExact(nv.map((x) => x.plateforme)) : 0;
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -1953,8 +2099,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       rseCost: gelee ? 0 : w.rseCost,
       // R&D classique et programmes R&D du catalogue (`rdActions`) : la même
       // ligne R&D.
-      ...((w.rdTotal + w.rdActionsCost) > 0
-        ? { rdCost: w.rdTotal + w.rdActionsCost }
+      ...((w.rdTotal + w.rdActionsCost - immobiliseDuTour) > 0
+        ? { rdCost: w.rdTotal + w.rdActionsCost - immobiliseDuTour }
         : {}),
       // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
       // Démarches qualité : coût ponctuel en charge exceptionnelle ; économies en produit exceptionnel.
@@ -1966,16 +2112,16 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
       // capital, l'argent entre quel que soit l'état de l'entreprise.
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
-      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + plateformeDuTour,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
         ? 0
-        : scenario.equipment
-          ? w.equipDepreciation
-          : scenario.finance.depreciationPerRound +
-            (w.state.extraDepreciationPerRound ?? 0) +
-            (w.state.pendingDepreciationPerRound ?? 0),
+        : (scenario.equipment
+            ? w.equipDepreciation
+            : scenario.finance.depreciationPerRound +
+              (w.state.extraDepreciationPerRound ?? 0) +
+              (w.state.pendingDepreciationPerRound ?? 0)) + amortiDuTour,
       loanAnnualRate: gelee ? 0 : scenario.finance.loanAnnualRate,
       overdraftAnnualRate: gelee ? 0 : conditions.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
@@ -1987,7 +2133,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       loanRepayment: gelee ? 0 : mandatoryRepayment + earlyRepayment,
       capitalIncrease,
       dividend,
-      investmentOutlay: w.investOutlay - w.equipSaleProceeds,
+      investmentOutlay: w.investOutlay - w.equipSaleProceeds + immobiliseDuTour,
       disposalLoss: w.equipDisposalLoss,
       // Niveau 7 : les produits finis achetés au sous-traitant, payés à la livraison.
       ...(w.commandeST ? { sousTraitance: w.commandeST.total } : {}),
@@ -2031,7 +2177,34 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         : undefined;
 
     // Jalon B : Enregistrement de la dépréciation (débit 681 / crédit 2185)
-    const depreciationAmount = finance.incomeStatement.depreciation;
+    // Niveau 7 : les frais de développement immobilisés (203 / 512), leur
+    // amortissement et leur dépréciation (6811 / 2803), à part du parc.
+    if (multi && immobiliseDuTour > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Frais de développement immobilisés",
+        category: "other",
+        debitAccount: "203",
+        debitLabel: "Frais de développement",
+        creditAccount: "512",
+        creditLabel: "Banque",
+        amount: immobiliseDuTour,
+      });
+    }
+    const amortiIncorporel = Math.min(amortiDuTour, finance.incomeStatement.depreciation);
+    if (multi && amortiIncorporel > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Amortissement et dépréciation des frais de développement",
+        category: "depreciation",
+        debitAccount: "6811",
+        debitLabel: "Dotations aux amortissements et dépréciations - immobilisations incorporelles",
+        creditAccount: "2803",
+        creditLabel: "Amortissements et dépréciations des frais de développement",
+        amount: amortiIncorporel,
+      });
+    }
+    const depreciationAmount = finance.incomeStatement.depreciation - amortiIncorporel;
     if (multi && depreciationAmount > 0) {
       journalByCompany.get(w.state.id)!.record({
         day: 1,
@@ -2163,10 +2336,11 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       insurancePremium +
       hrCost +
       studiesCost +
+      plateformeDuTour +
       finance.incomeStatement.depreciation +
       marketingTotal +
       w.qualityTotal +
-      w.rdTotal +
+      (w.rdTotal - immobiliseDuTour) +
       w.decisions.maintenanceBudget;
     // Seuil : en gamme, prix moyen pondéré par les unités vendues et coût
     // variable moyen pondéré par les unités produites (mono : les valeurs du
@@ -2247,7 +2421,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
             ...(studiesV2Purchased.includes("marches")
               ? {
                   marches: {
-                    totalPotential: Object.values(potentialBySegment).reduce((a, b) => a + b, 0),
+                    totalPotential,
                     segmentPotentials: { ...potentialBySegment },
                     supplierPaymentDelayDays: scenario.finance.supplierPaymentDelayDays,
                     avgCustomerPaymentDelayDays:
@@ -2274,7 +2448,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                             ) /
                             Math.max(
                               1,
-                              allSegments.reduce((s, seg) => s + (potentialBySegment[seg.code] ?? 0), 0),
+                              allSegments.reduce((s, seg) => (horsMarche.has(seg.code) ? s : s + (potentialBySegment[seg.code] ?? 0)), 0),
                             )
                           : 0;
                       return {
@@ -2649,11 +2823,23 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
                 : {}),
               // Les achats du tour, par fournisseur : le chiffre d'affaires d'un fournisseur rachetable.
               achats: w.productSuppliers.reduce<Record<string, number>>((acc, sup, k) => {
-                if (sup) acc[sup.code] = (acc[sup.code] ?? 0) + productPurchases[k]!;
+                // Une nouveauté qui ne se produit pas n'a pas encore de fournisseur.
+                if (sup && !(nouveautes.has(gamme[k]!.code) && productPurchases[k]! === 0)) acc[sup.code] = (acc[sup.code] ?? 0) + productPurchases[k]!;
                 return acc;
               }, {}),
               ...(input.rationnementDuGroupe?.[w.state.id] ? { rationnement: input.rationnementDuGroupe[w.state.id] } : {}),
               ...(fraisDesSynergies > 0 ? { fraisDesSynergies } : {}),
+              ...(compteDesNouveautes.size > 0
+                ? {
+                    nouveautes: Object.fromEntries(
+                      [...compteDesNouveautes.entries()].map(([k, x]) => {
+                        const { rd: _rd, ...resultat } = x;
+                        void _rd;
+                        return [gamme[k]!.code, resultat];
+                      }),
+                    ),
+                  }
+                : {}),
               ...(reseauLivre
                 ? {
                     reseau: Object.fromEntries(
@@ -2852,7 +3038,20 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       ...(scenario.rd
         ? {
             rdByProduct: Object.fromEntries(
-              gamme.map((product, k) => [product.code, w.productRdNext[k]!]),
+              gamme.map((product, k) => {
+                const compte = compteDesNouveautes.get(k);
+                // Niveau 7 : les frais immobilisés d'une nouveauté, à la clôture.
+                return [
+                  product.code,
+                  compte
+                    ? {
+                        ...w.productRdNext[k]!,
+                        ...(compte.rd.immobilise > 0 ? { immobilise: compte.rd.immobilise, amorti: compte.rd.amorti } : {}),
+                        ...(compte.rd.contributions ? { contributions: compte.rd.contributions } : {}),
+                      }
+                    : w.productRdNext[k]!,
+                ];
+              }),
             ),
           }
         : {}),

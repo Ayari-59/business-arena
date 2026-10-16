@@ -877,6 +877,49 @@ export const CONCEPTS: ConceptDef[] = [
     method:
       "Repérez ce qui est libellé en devise (achats, ventes, filiales), chiffrez l'effet d'un mouvement du cours, et comparez l'économie attendue au risque qu'elle fait courir.",
   },
+  // ── Niveau 7 « Groupe » : NOVA Home, l'innovation sur un marché nouveau ────
+  {
+    code: "cannibalization",
+    name: "Cannibalisation et marge incrémentale",
+    domain: "market",
+    axis: "strategy",
+    definition:
+      "Une nouvelle référence prend une partie de ses ventes aux références que l'entreprise vend déjà : c'est la cannibalisation. Ce qu'elle rapporte vraiment, c'est sa marge moins celle des ventes qu'elle remplace.",
+    intuition:
+      "Une Home vendue à quelqu'un qui aurait acheté une One ne rapporte que l'écart entre les deux marges. Et si l'atelier est déjà plein, chaque heure donnée à la Home est une heure retirée à une autre référence. Ne pas la lancer ne protège pas pour autant la One : quand un concurrent sort la sienne, ses acheteurs partent quand même.",
+    method:
+      "Comptez les ventes nouvelles et les ventes prises aux autres références (le taux de cannibalisation), puis la marge par heure d'atelier de chacune. La marge incrémentale se lit à la marge, sur le facteur rare, pas sur le prix.",
+    formula:
+      "Marge incrémentale = ventes nouvelles × marge de la nouveauté − ventes cannibalisées × (marge de la référence remplacée − marge de la nouveauté)",
+  },
+  {
+    code: "staged_investment",
+    name: "Investir par étapes : l'option de lancer",
+    domain: "finance",
+    axis: "strategy",
+    definition:
+      "Engager une partie d'un investissement pour garder le droit de le poursuivre, et décider de la suite quand on en sait plus : c'est une option réelle.",
+    intuition:
+      "Tout engager à l'aveugle gagne quand le marché décolle et perd lourdement quand il ne décolle pas. Attendre de savoir coûte du temps : un lancement repoussé rate Noël. Engager un tiers pour démarrer, étudier le marché, puis finir ou abandonner, c'est payer un peu pour ne pas parier tout.",
+    method:
+      "Comparez trois chemins : tout engager tout de suite, attendre l'information, engager une première étape et décider ensuite. Chiffrez ce que coûte l'étape (et l'étude) et ce qu'elle évite dans le mauvais cas.",
+    formula:
+      "Valeur de l'option = valeur avec la décision différée − valeur de l'engagement immédiat (étape et étude comprises)",
+  },
+  {
+    code: "development_costs",
+    name: "Frais de développement : charge ou immobilisation",
+    domain: "finance",
+    axis: "finance",
+    definition:
+      "Les dépenses de développement d'un produit se comptabilisent en charge, ou s'inscrivent à l'actif (frais de développement, compte 203) quand le projet est faisable et rentable, puis s'amortissent.",
+    intuition:
+      "Immobiliser le développement de la Home, c'est dire qu'il rapportera sur plusieurs années : il quitte le compte de résultat du tour, entre au bilan, et revient en amortissements à partir du lancement. Si le produit échoue ou est abandonné, ce qui reste à l'actif se déprécie.",
+    method:
+      "Vérifiez les critères (faisabilité technique, intention et moyens de l'achever, avantages futurs probables, dépenses mesurables). Immobilisez, amortissez sur la durée d'utilité à partir de la mise en service, et testez chaque clôture que la valeur d'utilité couvre ce qui reste.",
+    formula:
+      "Valeur nette = frais immobilisés − amortissements − dépréciations ; dépréciation = valeur nette − valeur d'utilité, si elle est positive",
+  },
 ];
 
 export const conceptByCode = new Map(CONCEPTS.map((c) => [c.code, c]));
@@ -989,6 +1032,9 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   consolidation: ["goodwill_impairment"],
   minority_translation: ["consolidation"],
   currency_risk: ["net_treasury"],
+  cannibalization: ["contribution_margin", "demand_market_share"],
+  staged_investment: ["discounting"],
+  development_costs: ["depreciation", "balance_sheet"],
 };
 
 /** Prérequis d'une notion (codes), liste vide si racine ou notion inconnue. */
@@ -1081,6 +1127,9 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   consolidation: 6,
   minority_translation: 6,
   currency_risk: 6,
+  cannibalization: 6,
+  staged_investment: 6,
+  development_costs: 6,
 };
 
 /** Niveau d'une notion (1..6), défaut 1 si notion inconnue. */

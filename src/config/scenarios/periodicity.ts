@@ -172,6 +172,19 @@ export function applyPeriodicity(
                   development: {
                     ...p.development,
                     availableFromRound: Math.max(1, Math.round((p.development.availableFromRound - 1) / k) + 1),
+                    // Niveau 7 (NOVA Home) : la durée minimale et le retard
+                    // sont des durées réelles, recomptées en tours.
+                    ...(p.development.dureeMinimale !== undefined
+                      ? { dureeMinimale: Math.max(1, Math.round(p.development.dureeMinimale / k)) }
+                      : {}),
+                    ...(p.development.risqueDeRetard
+                      ? {
+                          risqueDeRetard: {
+                            ...p.development.risqueDeRetard,
+                            tours: Math.max(1, Math.round(p.development.risqueDeRetard.tours / k)),
+                          },
+                        }
+                      : {}),
                   },
                 }
               : p,

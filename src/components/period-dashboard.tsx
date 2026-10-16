@@ -777,6 +777,7 @@ export function PeriodDashboard({
               // de résultat, bilan et flux), ou `null` au premier tour.
               precedent={resultatPrecedent}
               periode={periodLabel(view.roundDays, period.round)}
+              nomsDesReferences={Object.fromEntries((view.gamme ?? []).map((g) => [g.code, g.name]))}
               price={period.decisions?.price ?? null}
               // Gamme : la part « autres coûts variables » est la moyenne des
               // références, pondérée par ce que chacune a mis en rayon, pour

@@ -271,17 +271,16 @@ describe("les dossiers de service savent la R&D et la communication", () => {
     expect(par("approvisionnement").lignes.filter((l) => l.libelle.startsWith("À développer avant de vendre"))).toHaveLength(1);
     expect(par("financier").lignes.find((l) => l.libelle === "R&D à financer avant de vendre Cyber-sécurité")!.valeur).toContain("30 000 €");
     expect(par("financier").questions).toHaveLength(4);
-    // Et la Studio de NOVA, R&D ouverte, est livrée prête aux niveaux 5 et 6 ; au
-    // niveau 7, et sans niveau (le scénario de base), elle reste à développer.
-    for (const niveau of [5, 6]) {
+    // Et la Studio de NOVA, R&D ouverte, est livrée prête aux niveaux 5, 6 et 7
+    // (au niveau 7, la référence à développer est NOVA Home) ; sans niveau (le
+    // scénario de base), elle reste à développer.
+    for (const niveau of [5, 6, 7]) {
       const nova = JSON.stringify(dossiersDeService(scenarioByCode("nova-gamme"), 4, { sansRd: false, niveau }));
-      expect(nova, `niveau ${niveau}`).not.toContain("À développer");
-      expect(nova, `niveau ${niveau}`).not.toContain("R&D à financer");
+      expect(nova, `niveau ${niveau}`).not.toContain("À développer avant de vendre : NOVA Studio");
+      expect(nova, `niveau ${niveau}`).not.toContain("R&D à financer avant de vendre NOVA Studio");
     }
-    for (const niveau of [7, undefined]) {
-      const nova = JSON.stringify(dossiersDeService(scenarioByCode("nova-gamme"), 4, { sansRd: false, ...(niveau ? { niveau } : {}) }));
-      expect(nova, `niveau ${niveau}`).toContain("À développer avant de vendre : NOVA Studio");
-    }
+    const base = JSON.stringify(dossiersDeService(scenarioByCode("nova-gamme"), 4, { sansRd: false }));
+    expect(base).toContain("À développer avant de vendre : NOVA Studio");
   });
 
   it("un niveau qui ferme la R&D ne promet aucun développement", () => {

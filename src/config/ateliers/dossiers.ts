@@ -4,6 +4,7 @@ import { scenarioByCode, type ScenarioDefinition } from "../scenarios/registry";
 import { leviersDuNiveau } from "../decisions";
 import { DIFFICULTY_PRESETS } from "../difficulty";
 import type { SituationDef } from "../scenarios/situation-kit";
+import { referencesJouees } from "../scenarios/scenario-joue";
 import type { NombreDeToursDEssai } from "../tour-d-essai";
 import {
   dossiersDeService,
@@ -222,8 +223,11 @@ export function dossierEnseignant(
   atelier: AtelierDefinition,
 ): DossierEnseignant {
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  const references = new Set(referencesJouees(scenario.scenario, atelier.reglages.niveau));
   const retenues = scenario.situations.filter(
-    (s) => !("round" in s.trigger) || s.trigger.round <= atelier.reglages.tours,
+    (s) =>
+      (!("round" in s.trigger) || s.trigger.round <= atelier.reglages.tours) &&
+      (!s.seulementAvec || references.has(s.seulementAvec.reference)),
   );
   const rang = (s: SituationDef) =>
     "round" in s.trigger ? s.trigger.round : 99;

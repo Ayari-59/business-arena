@@ -66,6 +66,8 @@ export const roundDecisionsSchema = z.object({
         qualityBudget: nombre(R.qualityBudget!).optional(),
         supplierChoice: z.string().min(1).optional(),
         rdBudget: nombre(R.rdBudget!).optional(),
+        // Niveau 7 : abandonner la nouveauté (NOVA Home).
+        abandonner: z.boolean().optional(),
       }),
     )
     .optional(),
