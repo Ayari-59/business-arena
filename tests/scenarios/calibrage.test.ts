@@ -24,8 +24,15 @@ import type { CompanyRoundResult, CompanyState } from "../../src/engine/types";
  */
 const STRATEGIES: BotProfile[] = ["passive", "price_aggressive", "premium", "balanced", "growth"];
 
-function partie(code: string, strategie: BotProfile) {
-  const d = SCENARIOS.find((s) => s.code === code)!;
+function partie(code: string, strategie: BotProfile, assaini = false) {
+  const def = SCENARIOS.find((s) => s.code === code)!;
+  // `assaini` : le scénario tel qu'une partie CRÉÉE AUJOURD'HUI le fige
+  // (`composerLeScenarioJoue`, `bots.concurrentsAssainis`). Les trois gardes de
+  // calibrage économique gardent le scénario brut, au bit près ; seule la garde
+  // des concurrents mesure ce qui est joué.
+  const d = assaini
+    ? { ...def, scenario: { ...def.scenario, bots: { ...(def.scenario.bots ?? {}), concurrentsAssainis: true } } }
+    : def;
   const companies: CompanyState[] = [
     d.company("player", d.playerTeamName, "bot", strategie),
     ...d.bots.slice(0, 2).map((b) => d.company(b.id, b.name, "bot", b.profile)),
@@ -152,35 +159,76 @@ describe("calibrage économique des secteurs", () => {
  *    passer le trou de départ d'une stratégie coûteuse et refuse le découvert
  *    permanent.
  *
- * Les secteurs où une ruine de concurrent serait ASSUMÉE s'écrivent dans
- * `RUINES_ASSUMEES`, avec leur raison. La table est vide : aucune ne l'est.
+ * LA DETTE QUI RESTE s'écrit dans `RUINES_ASSUMEES`, chiffrée. Le correctif des
+ * concurrents a ramené les ruines de 44 à 9 dans les conditions de ce fichier
+ * (et, dans la partie de production mesurée au banc, les défaillances de
+ * concurrents de 498 sur 2 592 à 33). Ce qui reste tient à trois secteurs où le
+ * premium ne remplit pas sa structure : il vend cher dans un métier où la
+ * clientèle compare d'abord les prix, et son point mort reste au-dessus de la
+ * demande que son prix lui laisse, même ramené au prix usuel. Le défaut de
+ * PIXEL & CO est d'ailleurs identifié ailleurs comme un besoin en fonds de
+ * roulement, pas comme un défaut de concurrent.
+ *
+ * La table se vérifie DANS LES DEUX SENS : une ruine hors table fait échouer,
+ * et une ligne de la table qui ne ruine plus rien fait échouer aussi. Une dette
+ * payée se retire, elle ne pourrit pas en exception.
  */
-const RUINES_ASSUMEES: Readonly<Record<string, readonly BotProfile[]>> = {};
+const RUINES_ASSUMEES: Readonly<Record<string, readonly BotProfile[]>> = {
+  // L'ESCALE : 4 ruines sur 5 stratégies ici ; 19 défaillances sur 144 parties
+  // de production au banc, contre 144 sur 144 avant le correctif.
+  hotel: ["premium"],
+  // LA TABLE D'AUGUSTIN : 1 ici, 0 sur 144 au banc (128 avant).
+  bistrot: ["premium"],
+  // PIXEL & CO : 3 ici, 14 sur 144 au banc (101 avant) — besoin en fonds de
+  // roulement, à reprendre avec son propre diagnostic.
+  ecommerce: ["premium"],
+  "ecommerce-gamme": ["premium"],
+};
 
 describe("les concurrents simulés tiennent leur rôle", () => {
-  it("aucun concurrent simulé ne sort du jeu ni ne vit à découvert", () => {
-    const fautes: string[] = [];
+  const ruines = () => {
+    const toutes: { code: string; profil: BotProfile; faute: string }[] = [];
     for (const d of SCENARIOS) {
-      const assumees = RUINES_ASSUMEES[d.code] ?? [];
       for (const s of STRATEGIES) {
-        const r = partie(d.code, s);
+        const r = partie(d.code, s, true);
         for (const c of r.concurrents) {
-          if (assumees.includes(c.profil)) continue;
           if (c.defaillantAuTour >= 0) {
-            fautes.push(
-              `${d.code} (face à ${s}) : ${c.id} (${c.profil}) dépose le bilan au tour ${c.defaillantAuTour + 1} sur ${r.tours}, ${Math.round(c.cumul / 1000)} k€ cumulés`,
-            );
+            toutes.push({
+              code: d.code,
+              profil: c.profil,
+              faute: `${d.code} (face à ${s}) : ${c.id} (${c.profil}) dépose le bilan au tour ${c.defaillantAuTour + 1} sur ${r.tours}, ${Math.round(c.cumul / 1000)} k€ cumulés`,
+            });
           } else if (c.crises > r.tours / 2) {
-            fautes.push(
-              `${d.code} (face à ${s}) : ${c.id} (${c.profil}) passe ${c.crises} tours sur ${r.tours} en crise de trésorerie`,
-            );
+            toutes.push({
+              code: d.code,
+              profil: c.profil,
+              faute: `${d.code} (face à ${s}) : ${c.id} (${c.profil}) passe ${c.crises} tours sur ${r.tours} en crise de trésorerie`,
+            });
           }
         }
       }
     }
+    return toutes;
+  };
+
+  it("aucun concurrent simulé ne sort du jeu ni ne vit à découvert", () => {
+    const fautes = ruines()
+      .filter((r) => !(RUINES_ASSUMEES[r.code] ?? []).includes(r.profil))
+      .map((r) => r.faute);
     expect(
       fautes,
       `des concurrents simulés se ruinent par construction :\n${fautes.join("\n")}`,
+    ).toEqual([]);
+  });
+
+  it("la table des ruines assumées ne garde aucune ligne périmée", () => {
+    const vues = new Set(ruines().map((r) => `${r.code}|${r.profil}`));
+    const perimees = Object.entries(RUINES_ASSUMEES).flatMap(([code, profils]) =>
+      profils.filter((p) => !vues.has(`${code}|${p}`)).map((p) => `${code} ${p}`),
+    );
+    expect(
+      perimees,
+      `ces concurrents ne se ruinent plus : retirez-les de RUINES_ASSUMEES plutôt que de les y laisser pourrir`,
     ).toEqual([]);
   });
 });

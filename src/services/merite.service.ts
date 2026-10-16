@@ -255,6 +255,9 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           // les leviers et le calendrier de son époque.
           leviers: presetDeLaPartie?.decisions,
           calendrier: profil.difficulty?.decisions ? "actuel" : "avant-2026-10-11",
+          // Les concurrents de la partie, tels qu'elle les a figés : une
+          // partie d'avant le correctif se rejoue avec SES concurrents.
+          concurrentsAssainis: snapshot.bots?.concurrentsAssainis === true,
         }),
       ),
     );

@@ -488,6 +488,16 @@ export interface EngineScenarioConfig {
    */
   bots?: {
     premiumPriceRatio?: number;
+    /**
+     * LES CONCURRENTS ASSAINIS, posé par `composerLeScenarioJoue` à la
+     * création d'une partie (donc figé dans son instantané). Sans lui, les
+     * bots décident exactement comme ils l'ont toujours fait, au bit près :
+     * les parties en cours gardent leurs concurrents, les témoins au centime
+     * et la note d'examen ne bougent pas. Avec lui, un bot planifie sur la
+     * demande que sa propre politique commerciale lui laisse et ne vend pas
+     * sous son coût complet (`engine/bots`).
+     */
+    concurrentsAssainis?: boolean;
   };
   /**
    * Modèle par ABONNEMENT (optionnel) : l'entreprise porte un portefeuille

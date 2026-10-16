@@ -1,4 +1,5 @@
 import { computePotentialDemand } from "../market/demand";
+import { attractionScore } from "../market/attraction";
 import type {
   CompanyState,
   EngineScenarioConfig,
@@ -6,6 +7,7 @@ import type {
   ProductCode,
   ProductDecisions,
   RoundDecisions,
+  SegmentConfig,
   CommunicationAxis,
 } from "../types";
 import { fleetMaintenanceMultiplier } from "../simulation";
@@ -137,12 +139,18 @@ function reactToHumanPrice(price: number, ctx: BotContext): number {
  * capacité ni de la demande prévue × 1,2. Ce qui a fait plonger SoundBox à
  * −30 900 € : un plan de production démesuré, sans garde-fou de caisse.
  */
-function applyFinancialGuardRail(base: RoundDecisions, ctx: BotContext): void {
+function applyFinancialGuardRail(base: RoundDecisions, ctx: BotContext, neuf: boolean): void {
   // Production : bornée par la capacité et la demande prévue × 1,2 (la demande
   // prévue est l'écoulement du tour précédent ; au T1, la seule capacité). C'est
   // ce qui empêche le plan démesuré qui a fait plonger SoundBox.
   const cap = capacity(ctx);
-  const forecast = ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * 1.2 : cap;
+  // LE CLIQUET, et pourquoi il disparaît dans une partie assainie. Plafonner le
+  // plan aux ventes du tour passé × 1,2 protège d'un plan démesuré quand le
+  // plan ne regarde pas le marché ; mais il enferme alors le bot dans son
+  // erreur de départ (hôtel : 4 411 nuitées, puis 2 085, puis 1 668, puis la
+  // défaillance, frais fixes inchangés). Assaini, le plan vise déjà la demande
+  // que le prix du bot lui laisse : la capacité suffit à le borner.
+  const forecast = !neuf && ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * 1.2 : cap;
   base.productionPlan = Math.max(0, Math.min(base.productionPlan, cap, forecast));
 
   // Dépenses discrétionnaires (marketing, qualité, maintenance) : pas au-delà de
@@ -193,15 +201,284 @@ function seasonalRatio(season: number[], roundIndex: number, floor: number, ceil
   return Math.min(ceil, Math.max(floor, current > 0 ? next / current : 1));
 }
 
-/** Plan de production : viser les ventes passées ajustées de la saison, sans gonfler le stock. */
-function adaptivePlan(ctx: BotContext, aggressiveness: number): number {
+/**
+ * LES CONCURRENTS ASSAINIS : le réglage figé à la création de la partie
+ * (`config/scenarios/scenario-joue.ts`, `concurrentsAssainis`). Faux ou
+ * absent, tout ce qui suit est sans effet et le bot décide exactement comme il
+ * l'a toujours fait, au bit près : c'est ce qui laisse les parties en cours
+ * finir avec LEURS concurrents, et ce qui tient les deux témoins au centime et
+ * la note d'examen.
+ */
+function assaini(ctx: BotContext): boolean {
+  return ctx.scenario.bots?.concurrentsAssainis === true;
+}
+
+/**
+ * ET « BALANCED » N'EN FAIT PAS PARTIE, jamais.
+ *
+ * Ce profil n'est pas qu'un concurrent : c'est `neutralDecisions`, donc la
+ * gestion neutre du secteur, donc CE QUE LE FORMULAIRE PROPOSE À L'ÉLÈVE
+ * (`services/decision-baseline.ts`) et ce que joue une équipe absente, et
+ * l'étalon de la note d'examen. Le corriger reviendrait à corriger la
+ * proposition faite au joueur en même temps que ses concurrents : mesuré, la
+ * proposition du transport passait de 232 k€ à 574 k€ de résultat cumulé, et
+ * l'équipe qui valide finissait PLUS souvent première, pas moins. La gestion
+ * neutre se discute ailleurs, pas ici.
+ */
+function assainiPour(ctx: BotContext, profile: BotProfile): boolean {
+  return profile !== "balanced" && assaini(ctx);
+}
+
+/**
+ * LA DEMANDE QU'UN BOT PEUT ATTENDRE, À SON PROPRE PRIX.
+ *
+ * Le défaut que ceci corrige : au premier tour, le plan valait
+ * `capacité × 0,65 × tempérament`, quel que soit le prix que le bot venait de
+ * fixer. Le premium vend 30 % plus cher et planifiait le même volume que tout
+ * le monde : à l'hôtel, 4 411 nuitées produites pour 1 738 demandées, 102 k€
+ * de perte au premier tour, puis le garde-fou (« ventes passées × 1,2 »)
+ * refermait le cliquet sur l'erreur de départ et la partie se terminait par un
+ * dépôt de bilan. Mesuré : 498 défaillances de concurrents sur 2 592.
+ *
+ * L'estimation, avec ce dont le moteur dispose déjà : la part visée du secteur
+ * (`scoring.benchmarks.marketShareTarget`, celle qu'une entreprise obtient en
+ * jouant l'offre de référence), corrigée du rapport entre l'attraction de SON
+ * offre et celle de cette offre de référence, à l'intensité concurrentielle du
+ * segment. Un bot n'a pas accès aux décisions de ses concurrents : il estime,
+ * il ne sait pas, et il se trompe donc encore. C'est voulu.
+ */
+function demandeAttendue(args: {
+  segments: readonly SegmentConfig[];
+  seasonality: number[];
+  roundIndex: number;
+  price: number;
+  marketingBudget: number;
+  marketingScale: number;
+  competitionIntensity: number;
+  perceivedQuality: number;
+  partVisee: number;
+}): number {
+  let total = 0;
+  for (const segment of args.segments) {
+    const potentiel = computePotentialDemand(segment, args.roundIndex, args.seasonality, 1);
+    if (potentiel <= 0) continue;
+    const commun = { lastShare: 0, segment, marketingScale: args.marketingScale };
+    const mienne = attractionScore({
+      ...commun,
+      price: args.price,
+      marketingBudget: args.marketingBudget,
+      perceivedQuality: args.perceivedQuality,
+    });
+    // L'offre de référence du segment : son prix usuel, un marketing à la
+    // moitié de l'échelle (la gestion neutre) et la qualité de référence.
+    const reference = attractionScore({
+      ...commun,
+      price: segment.refPrice,
+      marketingBudget: 0.5 * args.marketingScale,
+      perceivedQuality: 1,
+    });
+    const gamma = segment.competitionIntensity ?? args.competitionIntensity;
+    // Bornes serrées : l'estimation sert à éviter l'absurde (produire deux fois
+    // ce que le marché peut prendre), pas à viser juste.
+    const facteur =
+      reference > 0 && mienne > 0 ? Math.min(1.5, Math.max(0.05, Math.pow(mienne / reference, gamma))) : 1;
+    total += potentiel * args.partVisee * facteur;
+  }
+  return total;
+}
+
+/**
+ * AUCUN PROFIL CONDAMNÉ PAR CONSTRUCTION : le prix ne descend pas sous le coût
+ * complet du bot, estimé à 90 % de sa capacité.
+ *
+ * Le défaut que ceci corrige : `price_aggressive` vendait chez NOVA à
+ * 0,88 × 59 € = 51,92 €, pour 38 € de coût variable, et portait 107 500 € de
+ * charges au trimestre. Son point mort valait 7 723 unités pour 7 000 de
+ * capacité : aucun volume ne le rendait bénéficiaire, son erreur n'était pas
+ * une décision mais une impossibilité, et une impossibilité n'enseigne rien.
+ *
+ * Le plancher est le coût complet SANS MARGE : à 90 % de sa capacité le bot
+ * rentre tout juste dans ses frais, et il perd dès qu'il vend moins. Il reste
+ * donc un concurrent qui se trompe, pas un concurrent qui se suicide. Là où le
+ * prix du profil était déjà au-dessus de son coût complet, le plancher ne
+ * change rien, et c'est le cas des huit autres secteurs.
+ */
+function prixAuCoutComplet(
+  ctx: BotContext,
+  prix: number,
+  budgets: { marketingBudget?: number; qualityBudget?: number; maintenanceBudget?: number },
+): number {
+  return Math.max(prix, coutCompletUnitaire(ctx, budgets));
+}
+
+/** Le coût complet unitaire d'un bot, à 90 % de sa capacité. */
+function coutCompletUnitaire(
+  ctx: BotContext,
+  budgets: { marketingBudget?: number; qualityBudget?: number; maintenanceBudget?: number },
+): number {
+  const cap = capacity(ctx);
+  if (!Number.isFinite(cap) || cap <= 0) return 0;
+  const charges =
+    ctx.scenario.fixedCostsPerRound +
+    (budgets.marketingBudget ?? 0) +
+    (budgets.qualityBudget ?? 0) +
+    (budgets.maintenanceBudget ?? 0);
+  return variableCostPerUnit(ctx.scenario) + charges / (cap * 0.9);
+}
+
+/**
+ * LE PRIX QUE LE BOT JOUERA CE TOUR, décidé AVANT son plan.
+ *
+ * Il réagit au prix de l'équipe humaine, renonce au supplément que son marché
+ * ne porte pas, puis ne descend pas sous son coût complet. L'ordre compte : la
+ * réaction au prix s'appliquait en dernier, après le plan, si bien que le bot
+ * planifiait au prix affiché et vendait au prix réagi. À l'hôtel il visait
+ * 2 051 nuitées pour un point mort de 2 629 à son prix réel, et aucun volume ne
+ * pouvait plus le sauver. Hors partie assainie, rien ne change : la réaction
+ * reste appliquée en dernier, comme avant.
+ */
+function prixDuTour(
+  ctx: BotContext,
+  neuf: boolean,
+  affiche: number,
+  ref: number,
+  budgets: { marketingBudget?: number; qualityBudget?: number; maintenanceBudget?: number },
+): number {
+  if (!neuf) return affiche;
+  return prixAuCoutComplet(ctx, prixSoutenable(ctx, reactToHumanPrice(affiche, ctx), ref, budgets), budgets);
+}
+
+/**
+ * UN PRIX QU'AUCUN VOLUME NE RENTABILISE N'EST PAS UNE STRATÉGIE.
+ *
+ * Le pendant du plancher de coût, par le haut. Le premium d'un secteur où la
+ * structure est lourde et la clientèle sensible au prix pose un supplément de
+ * 30 % qui lui laisse 1 736 nuitées attendues pour un point mort de 2 091 : il
+ * ne manque pas de rigueur, il n'a aucune décision gagnante à prendre. Mesuré :
+ * aucune valeur de `premiumPriceRatio` ne sauvait l'hôtel, parce que le défaut
+ * n'est pas le chiffre mais l'absence de retour entre le prix et le volume.
+ *
+ * Le bot cherche donc le PLUS HAUT prix, entre son coût complet et le prix
+ * qu'il voudrait afficher, auquel la demande qu'il attend couvre son point
+ * mort. Il ne descend jamais sous le prix usuel du secteur : un premium reste
+ * un premium, il renonce seulement à un supplément que son marché ne porte pas.
+ * Un profil qui vend déjà au prix usuel ou en dessous n'est pas concerné, son
+ * prix est sa borne basse.
+ */
+function prixSoutenable(
+  ctx: BotContext,
+  prix: number,
+  ref: number,
+  budgets: { marketingBudget?: number; qualityBudget?: number; maintenanceBudget?: number },
+): number {
+  const basse = Math.max(coutCompletUnitaire(ctx, budgets), Math.min(prix, ref));
+  if (!(prix > basse) || ctx.scenario.subscription) return prix;
+  const couvre = (p: number): boolean =>
+    demandeAttendueMono(ctx, { price: p, marketingBudget: budgets.marketingBudget ?? 0 }) >=
+    pointMortEnUnites(ctx, p, budgets);
+  if (couvre(prix)) return prix;
+  let bas = basse;
+  let haut = prix;
+  // Douze pas de dichotomie : la précision au centime suffit, et le calcul
+  // reste pur et déterministe.
+  for (let i = 0; i < 12; i++) {
+    const milieu = (bas + haut) / 2;
+    if (couvre(milieu)) bas = milieu;
+    else haut = milieu;
+  }
+  return bas;
+}
+
+/**
+ * LE PLANCHER DU POINT MORT, celui que la proposition donne déjà à l'équipe
+ * (`services/decision-baseline.ts`) et que les bots n'avaient pas.
+ *
+ * Une estimation de demande se trompe des DEUX côtés : l'ancien plan produisait
+ * deux fois trop, un plan calé sur la seule estimation produit parfois deux
+ * fois trop peu, et un bot qui ne couvre pas ses frais fixes ferme aussi
+ * sûrement qu'un bot qui remplit son stock. Un gérant qui voit sa structure
+ * coûter 158 800 € par tour vise au moins le volume qui la paie.
+ *
+ * Le plancher est borné à 90 % de la capacité, et le plancher de prix le rend
+ * toujours atteignable : un prix au moins égal au coût complet à 90 % de la
+ * capacité place mécaniquement le point mort sous ces 90 %. Les deux correctifs
+ * se tiennent l'un l'autre.
+ */
+function pointMortEnUnites(
+  ctx: BotContext,
+  prix: number,
+  budgets: { marketingBudget?: number; qualityBudget?: number; maintenanceBudget?: number },
+): number {
+  const cap = capacity(ctx);
+  if (!Number.isFinite(cap) || cap <= 0) return 0;
+  const marge = prix - variableCostPerUnit(ctx.scenario);
+  if (marge <= 0) return 0;
+  const charges =
+    ctx.scenario.fixedCostsPerRound +
+    (budgets.marketingBudget ?? 0) +
+    (budgets.qualityBudget ?? 0) +
+    (budgets.maintenanceBudget ?? 0);
+  return Math.min(cap * 0.9, charges / marge);
+}
+
+/** La demande attendue d'un bot en mono-produit, à sa politique commerciale. */
+function demandeAttendueMono(
+  ctx: BotContext,
+  politique: { price: number; marketingBudget: number },
+): number {
+  return demandeAttendue({
+    segments: ctx.scenario.market.segments,
+    seasonality: ctx.scenario.market.seasonality,
+    roundIndex: ctx.roundIndex,
+    price: politique.price,
+    marketingBudget: politique.marketingBudget,
+    marketingScale: ctx.scenario.marketing.scale,
+    competitionIntensity: ctx.scenario.market.competitionIntensity,
+    perceivedQuality: ctx.state.perceivedQuality,
+    partVisee: ctx.scenario.scoring.benchmarks.marketShareTarget,
+  });
+}
+
+/**
+ * Plan de production : viser les ventes passées ajustées de la saison, sans
+ * gonfler le stock. Partie assainie : viser AUSSI la demande que sa propre
+ * politique commerciale lui laisse — au premier tour, c'est la seule
+ * information qu'il ait ; aux suivants, elle corrige la mémoire de ses ventes,
+ * moitié-moitié, pour qu'un tour raté ne l'enferme pas dans son erreur — et ne
+ * jamais viser sous le volume qui paie sa structure.
+ */
+function adaptivePlan(
+  ctx: BotContext,
+  aggressiveness: number,
+  politique?: {
+    price: number;
+    marketingBudget: number;
+    qualityBudget?: number;
+    maintenanceBudget?: number;
+  },
+): number {
   const cap = capacity(ctx);
   const stock = ctx.state.finishedGoods.quantity;
-  const base =
-    ctx.lastSoldUnits !== undefined
-      ? ctx.lastSoldUnits * aggressiveness
-      : cap * 0.65 * aggressiveness;
-  const target = base * seasonalFactor(ctx);
+  const memoire = ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * aggressiveness : undefined;
+  const attendue =
+    politique && !ctx.scenario.subscription ? demandeAttendueMono(ctx, politique) * aggressiveness : undefined;
+  // La saison s'applique à la MÉMOIRE (les ventes passées, qu'il faut reporter
+  // d'un tour à l'autre) et non à l'estimation : `computePotentialDemand` la
+  // compte déjà pour le tour visé, la compter deux fois faisait produire 3 887
+  // nuitées pour 2 861 demandées, perdues puisqu'une chambre ne se stocke pas.
+  const memoireSaison = memoire === undefined ? undefined : memoire * seasonalFactor(ctx);
+  let target: number;
+  if (attendue === undefined) {
+    target = memoireSaison ?? cap * 0.65 * aggressiveness * seasonalFactor(ctx);
+  } else {
+    const plancher = pointMortEnUnites(ctx, politique!.price, politique!);
+    target = Math.max(memoireSaison === undefined ? attendue : (memoireSaison + attendue) / 2, plancher);
+    // UNE CHAMBRE NE SE STOCKE PAS. Dans un service périssable, la capacité
+    // produite et non vendue est perdue sèche : viser au-delà de la demande
+    // attendue n'y rapporte rien, même pour atteindre son point mort. Ailleurs,
+    // le surplus part en stock et se vendra au tour suivant.
+    if (ctx.scenario.perishable) target = Math.min(target, Math.max(plancher, attendue * 1.1));
+  }
   // Abonnement : une salle prévoit la place de ses adhérents qui restent —
   // on ne met pas dehors ceux qui ont payé — plus la part visée des nouveaux
   // que la saison amène, à son tempérament. Sans le modèle : expression
@@ -463,6 +740,7 @@ function gammeDecisions(
   const meanHours = gamme.reduce((sum, p, k) => sum + p.hoursPerUnit * weights[k]!, 0);
   const cap = Math.min(machineCap, meanHours > 0 ? laborHours / meanHours : Infinity);
   const aggressiveness = AGGRESSIVENESS[profile];
+  const neuf = assainiPour(ctx, profile);
 
   // R&D (levier `rd`) : une référence en développement ne se produit ni ne se
   // vend ; le bot ne lui met ni plan, ni marketing, ni qualité — seulement la
@@ -476,14 +754,44 @@ function gammeDecisions(
   const weightsAlive = weights.map((w, k) =>
     available[k] ? (aliveTotal > 0 ? w / aliveTotal : 1 / gamme.length) : 0,
   );
+  // Le prix de chaque référence, décidé avant les plans : c'est lui qui dit la
+  // demande qu'elle peut attendre, et la marge qui paie la structure.
+  const prixParProduit = gamme.map((p) =>
+    Math.max((p.materialCostPerUnit + p.otherVariableCostPerUnit) * 1.1, productRefPrice(p) * priceRatio),
+  );
+  // Partie assainie : la demande attendue RÉFÉRENCE PAR RÉFÉRENCE, au prix et
+  // au marketing que cette référence recevra.
+  const attendues = gamme.map((p, k) => {
+    if (!neuf || !available[k]) return undefined;
+    return demandeAttendue({
+      segments: p.market.segments,
+      seasonality: p.market.seasonality,
+      roundIndex: ctx.roundIndex,
+      price: prixParProduit[k]!,
+      marketingBudget: (base.marketingBudget ?? 0) * (1 - brandShare(profile, ctx)) * weightsAlive[k]!,
+      marketingScale: ctx.scenario.marketing.scale,
+      competitionIntensity: p.market.competitionIntensity,
+      perceivedQuality: ctx.state.perceivedQualityByProduct?.[p.code] ?? ctx.state.perceivedQuality,
+      partVisee: ctx.scenario.scoring.benchmarks.marketShareTarget,
+    });
+  });
   const targets = gamme.map((p, k) => {
     if (!available[k]) return 0;
-    if (profile === "passive") return cap * aggressiveness * weightsAlive[k]!;
+    const attendue = attendues[k];
+    if (profile === "passive")
+      return attendue === undefined ? cap * aggressiveness * weightsAlive[k]! : attendue * aggressiveness;
     const stock = ctx.state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0;
     // Zéro vente au tour passé n'est pas une information : la référence
     // n'était pas encore lancée, ou n'a rien vendu — on repart du marché.
     const lastSold = ctx.lastSoldByProduct?.[p.code];
-    const basis = lastSold ? lastSold * aggressiveness : cap * 0.65 * aggressiveness * weightsAlive[k]!;
+    const basis =
+      attendue !== undefined
+        ? lastSold
+          ? (lastSold * aggressiveness + attendue * aggressiveness) / 2
+          : attendue * aggressiveness
+        : lastSold
+          ? lastSold * aggressiveness
+          : cap * 0.65 * aggressiveness * weightsAlive[k]!;
     // Les accessoires d'une gamme peuvent doubler d'un tour à l'autre : la
     // fourchette d'anticipation est plus large qu'en mono-produit.
     const season = seasonalRatio(p.market.seasonality, ctx.roundIndex, 0.5, 2);
@@ -493,8 +801,30 @@ function gammeDecisions(
   // Capacité partagée : la même coupe proportionnelle que le moteur. Et le
   // garde-fou de caisse mono-produit (pas plus de 1,2 fois les ventes passées)
   // devient 1,6 fois : une gamme saisonnière varie davantage qu'un produit.
-  const ceiling = Math.min(cap, ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * 1.6 : cap);
-  const cut = total > ceiling && total > 0 ? ceiling / total : 1;
+  const ceiling = Math.min(
+    cap,
+    !neuf && ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * 1.6 : cap,
+  );
+  let cut = total > ceiling && total > 0 ? ceiling / total : 1;
+  // LE PLANCHER DU POINT MORT EN GAMME, à la marge moyenne de l'atelier. Sans
+  // lui, l'hôtel en gamme visait 1 452 nuitées pour une structure de 157 000 €
+  // par tour et 2 731 demandées : il manquait de volume, pas de clients.
+  if (neuf && total > 0) {
+    const marge = gamme.reduce(
+      (sum, p, k) =>
+        sum + (targets[k]! / total) * (prixParProduit[k]! - p.materialCostPerUnit - p.otherVariableCostPerUnit),
+      0,
+    );
+    if (marge > 0) {
+      const charges =
+        ctx.scenario.fixedCostsPerRound +
+        (base.marketingBudget ?? 0) +
+        (base.qualityBudget ?? 0) +
+        (base.maintenanceBudget ?? 0);
+      const pointMort = Math.min(cap * 0.9, charges / marge);
+      if (total * cut < pointMort) cut = Math.min(cap / total, pointMort / total);
+    }
+  }
 
   // La qualité suit le plan : une référence qui pèse deux fois plus dans la
   // production reçoit deux fois plus de budget qualité (à défaut de plan, au
@@ -512,7 +842,7 @@ function gammeDecisions(
       p.suppliers && ctx.scenario.enrichedBots ? pickSupplier(profile, p.suppliers) : base.supplierChoice;
     const rdBudget = ctx.scenario.rd ? botRdBudget(profile, ctx, p, available[k]!) : undefined;
     products[p.code] = {
-      price: Math.max(floor, productRefPrice(p) * priceRatio),
+      price: Math.max(floor, prixParProduit[k]!),
       productionPlan: targets[k]! * cut,
       // Communication : la part de marque est retirée du marketing spécifique.
       marketingBudget: (base.marketingBudget ?? 0) * (1 - brandShare(profile, ctx)) * weightsAlive[k]!,
@@ -613,42 +943,55 @@ function decisionsDuProfil(profile: BotProfile, ctx: BotContext): RoundDecisions
   const maintenance = ctx.scenario.production.maintenanceReference * maintenanceMul;
   const mkt = ctx.scenario.marketing.scale;
   const qual = ctx.scenario.production.qualityScale;
+  // La gestion neutre (« balanced ») reste hors du correctif : voir `assainiPour`.
+  const neuf = assainiPour(ctx, profile);
   let base: RoundDecisions;
+  // Le prix et les budgets se décident AVANT le plan : c'est eux qui disent
+  // quelle demande le bot peut attendre. Le profil pose son prix d'affichage,
+  // `prixDuTour` le rend tenable (partie assainie seulement), et le plan vise
+  // ce que ce prix lui laisse, sans descendre sous son point mort.
   switch (profile) {
-    case "passive":
+    case "passive": {
+      const budgets = { marketingBudget: 0, qualityBudget: 0, maintenanceBudget: maintenance * 0.5 };
+      const prix = prixDuTour(ctx, neuf, ref, ref, budgets);
       base = {
-        price: ref,
-        productionPlan: capacity(ctx) * 0.6,
-        marketingBudget: 0,
-        qualityBudget: 0,
-        maintenanceBudget: maintenance * 0.5,
+        price: prix,
+        // Le passif ne fait aucun marketing : sa demande est structurellement
+        // basse, et produire 60 % de sa capacité lui payait comptant un stock
+        // qu'il ne vendrait jamais (PIXEL & CO : 4 200 unités planifiées pour
+        // 1 945 demandées). Le même calcul que les autres le sert.
+        productionPlan: neuf ? adaptivePlan(ctx, 0.6, { price: prix, ...budgets }) : capacity(ctx) * 0.6,
+        ...budgets,
       };
       break;
-    case "price_aggressive":
+    }
+    case "price_aggressive": {
+      const budgets = { marketingBudget: 0.75 * mkt, qualityBudget: 0, maintenanceBudget: maintenance };
+      const prix = prixDuTour(ctx, neuf, ref * 0.88, ref, budgets);
       base = {
-        price: ref * 0.88,
-        productionPlan: adaptivePlan(ctx, 1.15),
-        marketingBudget: 0.75 * mkt,
-        qualityBudget: 0,
-        maintenanceBudget: maintenance,
+        price: prix,
+        productionPlan: neuf ? adaptivePlan(ctx, 1.15, { price: prix, ...budgets }) : adaptivePlan(ctx, 1.15),
+        ...budgets,
       };
       break;
+    }
     case "premium": {
       // Le supplément de prix du premium est celui du métier : 30 % là où la
       // qualité se paie, moins là où les clients comparent d'abord les prix
       // (mesuré : à 1,3 le premium perd 285 k€ dans le bâtiment et 455 k€ dans
       // le transport, faute de volume, quelle que soit sa dépense).
       const premium = ctx.scenario.bots?.premiumPriceRatio ?? 1.3;
+      const budgets = { marketingBudget: 0.5 * mkt, qualityBudget: 1.5 * qual, maintenanceBudget: maintenance };
+      const prix = prixDuTour(ctx, neuf, ref * premium, ref, budgets);
       base = {
-        price: ref * premium,
-        productionPlan: adaptivePlan(ctx, 1.0),
-        marketingBudget: 0.5 * mkt,
-        qualityBudget: 1.5 * qual,
-        maintenanceBudget: maintenance,
+        price: prix,
+        productionPlan: neuf ? adaptivePlan(ctx, 1.0, { price: prix, ...budgets }) : adaptivePlan(ctx, 1.0),
+        ...budgets,
       };
       break;
     }
     case "balanced":
+      // Inchangé, au bit près : c'est la gestion neutre du secteur.
       base = {
         price: ref,
         productionPlan: adaptivePlan(ctx, 1.05),
@@ -657,15 +1000,16 @@ function decisionsDuProfil(profile: BotProfile, ctx: BotContext): RoundDecisions
         maintenanceBudget: maintenance,
       };
       break;
-    case "growth":
+    case "growth": {
+      const budgets = { marketingBudget: (7 / 6) * mkt, qualityBudget: 0.5 * qual, maintenanceBudget: maintenance };
+      const prix = prixDuTour(ctx, neuf, ref * 0.95, ref, budgets);
       base = {
-        price: ref * 0.95,
-        productionPlan: adaptivePlan(ctx, 1.25),
-        marketingBudget: (7 / 6) * mkt,
-        qualityBudget: 0.5 * qual,
-        maintenanceBudget: maintenance,
+        price: prix,
+        productionPlan: neuf ? adaptivePlan(ctx, 1.25, { price: prix, ...budgets }) : adaptivePlan(ctx, 1.25),
+        ...budgets,
       };
       break;
+    }
   }
   // R&D en mono-produit (levier `rd`) : l'entretien du niveau technique chez
   // ceux qui vendent la qualité. En gamme, la R&D se décide par référence.
@@ -675,8 +1019,10 @@ function decisionsDuProfil(profile: BotProfile, ctx: BotContext): RoundDecisions
   const enriched = ctx.scenario.enrichedBots ? enrichDecisions(profile, ctx, base) : base;
   // Réaction au prix humain puis garde-fou financier (V1-4), appliqués en dernier
   // pour cadrer la décision finale, quelle que soit la stratégie.
-  enriched.price = reactToHumanPrice(enriched.price, ctx);
-  applyFinancialGuardRail(enriched, ctx);
+  // Partie assainie : le prix a déjà réagi et pris ses bornes plus haut, pour
+  // que le plan le connaisse. Sinon, le chemin d'avant, inchangé.
+  if (!neuf) enriched.price = reactToHumanPrice(enriched.price, ctx);
+  applyFinancialGuardRail(enriched, ctx, neuf);
   // Gamme : la décision se décline par produit ; les scalaires restent la
   // lecture agrégée (plan = somme des plans). Mono-produit : rien n'est ajouté.
   if (isMultiProduct(ctx.scenario)) {
