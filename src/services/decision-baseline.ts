@@ -189,8 +189,8 @@ function sansRd(d: RoundDecisions): RoundDecisions {
  * (25 000 € pour la Studio, une fois), une étude, une machine, une embauche,
  * une formation, un emprunt, un apport, un dividende, un escompte, un
  * placement, une action qualité, un programme R&D, l'engagement RSE, une
- * commande exceptionnelle acceptée. Reprise d'un tour sur l'autre, elle se
- * paierait à chaque tour sans que personne ne l'ait redécidée : une équipe qui
+ * commande exceptionnelle acceptée, un rachat (niveau 7). Reprise d'un tour
+ * sur l'autre, elle se paierait à chaque tour sans que personne ne l'ait redécidée : une équipe qui
  * finançait la Studio une fois, puis validait, la refinançait à chaque tour
  * et finissait en défaillance (12 parties sur 12).
  *
@@ -213,9 +213,10 @@ export function sansDepensesPonctuelles(d: RoundDecisions): RoundDecisions {
     stoppedModuleItems: _arrets,
     rse: _rse,
     salesEstimate: _ventesEstimees,
+    rachat: _rachat,
     ...durables
   } = d;
-  void [_investissement, _financement, _tresorerie, _commande, _etudes, _actionsQualite, _programmesRd, _arrets, _rse, _ventesEstimees];
+  void [_investissement, _financement, _tresorerie, _commande, _etudes, _actionsQualite, _programmesRd, _arrets, _rse, _ventesEstimees, _rachat];
   return sansRd({
     ...durables,
     ...(hr?.salaryIndex !== undefined ? { hr: { salaryIndex: hr.salaryIndex } } : {}),
