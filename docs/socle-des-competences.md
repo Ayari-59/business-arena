@@ -7,8 +7,8 @@ Ne pas le corriger à la main : il se réécrit depuis `src/config/competences.t
 | --- | --- |
 | familles | 15 |
 | gestes | 86 |
-| phrases d'atelier | 272 dans 16 ateliers |
-| reprises par un geste | 272 |
+| phrases d'atelier | 311 dans 16 ateliers |
+| reprises par un geste | 311 |
 | laissées de côté | 0 |
 
 ## Ce qui a été tranché, et pourquoi (2)
@@ -20,22 +20,22 @@ mois et sera tranchée dans l'autre sens, sans que personne ne sache qu'elle ava
 
 ### `charge-ou-decaissement`
 
-fitness:4:2 relie en plus le besoin en fonds de roulement négatif au financement du cycle, et aurait donc pu aller à besoin-en-fonds-de-roulement. Une phrase n'appartient qu'à un geste, sans quoi toute couverture de référentiel la compterait deux fois : elle reste où est son acte de tête, la distinction, et l'énoncé mentionne la suite.
+fitness:5:2 relie en plus le besoin en fonds de roulement négatif au financement du cycle, et aurait donc pu aller à besoin-en-fonds-de-roulement. Une phrase n'appartient qu'à un geste, sans quoi toute couverture de référentiel la compterait deux fois : elle reste où est son acte de tête, la distinction, et l'énoncé mentionne la suite.
 
-- `cg1:3:0` Je distingue une charge d'un décaissement, et un produit d'un encaissement.
-- `cg1:4:1` Je lis la production stockée au compte de résultat et je dis ce qu'elle est : un produit qui n'a rien encaissé.
-- `fitness:4:2` Je distingue un produit encaissé d'un produit acquis, et je relie le besoin en fonds de roulement négatif au financement du cycle.
+- `cg1:4:0` Je distingue une charge d'un décaissement, et un produit d'un encaissement.
+- `cg1:5:1` Je lis la production stockée au compte de résultat et je dis ce qu'elle est : un produit qui n'a rien encaissé.
+- `fitness:5:2` Je distingue un produit encaissé d'un produit acquis, et je relie le besoin en fonds de roulement négatif au financement du cycle.
 
 ### `ce-qui-erode-la-marge`
 
-ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le même, ce qui part de la marge et le volume qu'il faut pour le rattraper, donc le geste ne se scinde pas : c'est son code qui promettait trop, et il a été renommé.
+ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le même, ce qui part de la marge et le volume qu'il faut pour le rattraper, donc le geste ne se scinde pas : c'est son code qui promettait trop, et il a été renommé.
 
 - `debutant:3:0` Je décide d'une promotion et j'en attends un effet précis.
 - `debutant:3:1` Je comprends qu'une remise doit être compensée par davantage de ventes.
-- `mco:3:0` Je calcule l'effet d'une remise sur ma marge unitaire et sur le volume qu'il faut vendre pour la compenser.
-- `ndrc:3:0` Je chiffre ce qu'un retour produit retire à la marge d'une commande.
-- `gpme:5:0` Je calcule ce qu'une remise retire à la marge et le volume qu'il faudrait pour la compenser.
-- `mhr:2:0` Je mesure l'effet d'une baisse de tarif sur le remplissage qu'il faut gagner pour la compenser.
+- `mco:4:0` Je calcule l'effet d'une remise sur ma marge unitaire et sur le volume qu'il faut vendre pour la compenser.
+- `ndrc:4:0` Je chiffre ce qu'un retour produit retire à la marge d'une commande.
+- `gpme:6:0` Je calcule ce qu'une remise retire à la marge et le volume qu'il faudrait pour la compenser.
+- `mhr:3:0` Je mesure l'effet d'une baisse de tarif sur le remplissage qu'il faut gagner pour la compenser.
 
 ## Le socle, famille par famille
 
@@ -47,30 +47,69 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 > Je présente l'entreprise que je dirige en une page : ce qu'elle vend, à qui, et avec quels moyens.
 
-1 phrases, 1 diplômes.
+14 phrases, 10 diplômes.
 
 - `martel:1:0` Je présente une entreprise du bâtiment en une page : ce qu'elle vend, à qui, avec quels compagnons et quel matériel.
+- `stmg:1:0` Je présente une entreprise de fabrication en quelques lignes : ce qu'elle produit, pour qui, et les trois décisions qu'elle prend chaque trimestre.
+- `cg1:1:0` Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, pour qui, avec quelle capacité de production.
+- `mco:1:0` Je présente un point de vente en une page : ses références, sa saisonnalité, ses fournisseurs et les charges qui tombent chaque trimestre.
+- `mco2:1:0` Je présente un restaurant en une page : ses offres, sa capacité d'accueil mensuelle et les charges qui tombent chaque mois.
+- `ndrc:1:0` Je présente un pure player en une page : ses trois clientèles, ses canaux d'acquisition et les charges qui tombent chaque trimestre.
+- `fitness:1:0` Je présente une salle de fitness en une page : ses clientèles, sa capacité d'accueil, ses leviers d'acquisition et de fidélisation.
+- `gpme:1:0` Je présente un cabinet de conseil en une page : ses offres, sa capacité en journées et les charges qui tombent chaque trimestre.
+- `mhr:1:0` Je présente un hôtel en une page : ses clientèles, sa capacité en chambres, ses tarifs et les charges qui tombent chaque trimestre.
+- `bistrot:1:0` Je présente un restaurant en une page : ses offres, sa capacité d'accueil et les charges qui tombent chaque trimestre.
+- `gea:1:0` Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, sa capacité de production et les charges qui structurent son coût.
+- `dcg:1:0` Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, sa capacité et les leviers financiers ouverts au niveau Stratégie.
+- `dcg-rse:1:0` Je présente une entreprise manufacturière en une page : ce qu'elle fabrique, ses fournisseurs responsables et les leviers RSE disponibles.
+- `avance:1:0` Je présente une entreprise de transport en une page : ce qu'elle transporte, pour qui, avec quelle flotte et quels délais de règlement.
 
 #### `lire-l-ecran-de-decision`
 
 > Je repère, sur un écran de décision, ce qui se décide à chaque période et ce qui reste fixé.
 
-1 phrases, 1 diplômes.
+14 phrases, 10 diplômes.
 
 - `martel:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `stmg:1:1` Je repère, sur l'écran de décision, ce que mon équipe peut modifier et ce que le jeu fixe.
+- `cg1:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `mco:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `mco2:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque mois et ce que le niveau de la partie laisse fixé.
+- `ndrc:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `fitness:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `gpme:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `mhr:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `bistrot:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `gea:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le niveau de la partie laisse fixé.
+- `dcg:1:1` Je repère, sur l'écran de décision, les choix de production, de financement et d'investissement disponibles.
+- `dcg-rse:1:1` Je repère, sur l'écran de décision, les choix stratégiques, les engagements RSE et les indicateurs de performance disponibles.
+- `avance:1:1` Je repère, sur l'écran de décision, ce qui se décide chaque trimestre et ce que le monde variable peut modifier.
 
 #### `lire-les-comptes`
 
 > Je lis les documents de synthèse d'une entreprise et j'en tire ce qu'elle possède, ce qu'elle doit, et ce qui lui reste.
 
-6 phrases, 4 diplômes.
+19 phrases, 11 diplômes.
 
 - `martel:1:2` Je lis un premier compte de résultat et un premier tableau de flux, et je distingue ce qui a été vendu, ce qui a été gagné et ce qui est entré en caisse.
 - `debutant:1:2` Je lis un résultat de fin de trimestre et j'y retrouve ma marge.
-- `stmg:1:0` Je repère, dans la situation d'une entreprise, ce qu'elle vend, ce que cela lui coûte et ce qu'il lui reste.
-- `stmg:1:2` Je lis un compte de résultat simple et j'y retrouve la décision que mon équipe a prise.
-- `cg1:1:0` Je lis un bilan d'ouverture et j'en tire ce que l'entreprise possède, ce qu'elle doit et ce qui lui reste.
-- `gpme:1:0` Je lis les documents de synthèse d'une PME et j'en tire ce qu'elle possède et ce qu'on lui doit.
+- `stmg:1:2` Je lis un premier résultat et je distingue ce qui a été vendu, ce qui a été gagné et ce qu'il reste en caisse.
+- `cg1:1:2` Je lis un premier compte de résultat et je distingue les produits vendus, le résultat et la trésorerie de fin de trimestre.
+- `mco:1:2` Je lis un premier compte de résultat et je distingue le chiffre d'affaires, la marge commerciale et le résultat.
+- `mco2:1:2` Je lis un premier compte de résultat mensuel et je distingue chiffre d'affaires, ratio matières et résultat.
+- `ndrc:1:2` Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le coût d'acquisition et la marge par clientèle.
+- `fitness:1:2` Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le coût d'acquisition et le résultat.
+- `gpme:1:2` Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le résultat et la trésorerie du cabinet.
+- `mhr:1:2` Je lis un premier compte de résultat et je distingue le chiffre d'affaires, le taux d'occupation et le résultat.
+- `bistrot:1:2` Je lis un premier compte de résultat et j'y retrouve le chiffre d'affaires, le ratio matières et le résultat.
+- `gea:1:2` Je lis un premier compte de résultat et un premier bilan simplifié, et je distingue résultat, trésorerie et structure financière.
+- `dcg:1:2` Je lis un premier compte de résultat et un premier bilan simplifié, et je distingue résultat, trésorerie et structure financière.
+- `dcg-rse:1:2` Je lis un premier compte de résultat et je distingue résultat économique et performance RSE.
+- `avance:1:2` Je lis un premier compte de résultat et un premier tableau de flux, et je distingue ce qui a été facturé, ce qui a été gagné et ce qui est entré en caisse.
+- `stmg:2:0` Je repère, dans la situation d'une entreprise, ce qu'elle vend, ce que cela lui coûte et ce qu'il lui reste.
+- `stmg:2:2` Je lis un compte de résultat simple et j'y retrouve la décision que mon équipe a prise.
+- `cg1:2:0` Je lis un bilan d'ouverture et j'en tire ce que l'entreprise possède, ce qu'elle doit et ce qui lui reste.
+- `gpme:2:0` Je lis les documents de synthèse d'une PME et j'en tire ce qu'elle possède et ce qu'on lui doit.
 
 #### `variable-ou-fixe`
 
@@ -79,10 +118,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 5 phrases, 5 diplômes.
 
 - `martel:2:0` Je sépare, sur le compte de résultat d'un trimestre, les matériaux et les frais de chantier qui suivent la surface traitée des salaires et du dépôt qui tombent quoi qu'il arrive.
-- `stmg:2:0` Je distingue une charge qui augmente avec les ventes d'une charge qui tombe tous les trimestres.
-- `cg1:2:0` Je distingue une charge variable d'une charge de structure sur un compte de résultat réel.
-- `gea:1:0` Je distingue les charges fixes des charges variables dans les comptes d'une entreprise.
-- `dcg:2:0` Je sépare les charges variables des charges fixes à partir de documents qui ne les distinguent pas.
+- `stmg:3:0` Je distingue une charge qui augmente avec les ventes d'une charge qui tombe tous les trimestres.
+- `cg1:3:0` Je distingue une charge variable d'une charge de structure sur un compte de résultat réel.
+- `gea:2:0` Je distingue les charges fixes des charges variables dans les comptes d'une entreprise.
+- `dcg:3:0` Je sépare les charges variables des charges fixes à partir de documents qui ne les distinguent pas.
 
 #### `reperer-la-contrainte`
 
@@ -90,8 +129,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 2 diplômes.
 
-- `cg1:1:1` Je repère la contrainte qui limite l'activité, et je la distingue d'un simple manque de moyens.
-- `gpme:1:1` Je repère que la ressource d'un cabinet est le temps de ses équipes, et qu'il ne se stocke pas.
+- `cg1:2:1` Je repère la contrainte qui limite l'activité, et je la distingue d'un simple manque de moyens.
+- `gpme:2:1` Je repère que la ressource d'un cabinet est le temps de ses équipes, et qu'il ne se stocke pas.
 
 #### `hierarchiser-un-diagnostic`
 
@@ -99,10 +138,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 4 phrases, 4 diplômes.
 
-- `cg1:1:2` Je formule un diagnostic écrit, hiérarchisé, sans recopier les documents.
-- `ndrc:1:2` Je formule un premier plan d'action commercial, chiffré et hiérarchisé.
-- `gpme:1:2` Je rédige une note de diagnostic hiérarchisée, destinée à un dirigeant qui n'a pas le temps de tout lire.
-- `dcg:1:2` Je hiérarchise les problèmes financiers d'une entreprise au lieu de les énumérer.
+- `cg1:2:2` Je formule un diagnostic écrit, hiérarchisé, sans recopier les documents.
+- `ndrc:2:2` Je formule un premier plan d'action commercial, chiffré et hiérarchisé.
+- `gpme:2:2` Je rédige une note de diagnostic hiérarchisée, destinée à un dirigeant qui n'a pas le temps de tout lire.
+- `dcg:2:2` Je hiérarchise les problèmes financiers d'une entreprise au lieu de les énumérer.
 
 #### `charge-ou-decaissement`
 
@@ -110,9 +149,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 2 diplômes.
 
-- `cg1:3:0` Je distingue une charge d'un décaissement, et un produit d'un encaissement.
-- `cg1:4:1` Je lis la production stockée au compte de résultat et je dis ce qu'elle est : un produit qui n'a rien encaissé.
-- `fitness:4:2` Je distingue un produit encaissé d'un produit acquis, et je relie le besoin en fonds de roulement négatif au financement du cycle.
+- `cg1:4:0` Je distingue une charge d'un décaissement, et un produit d'un encaissement.
+- `cg1:5:1` Je lis la production stockée au compte de résultat et je dis ce qu'elle est : un produit qui n'a rien encaissé.
+- `fitness:5:2` Je distingue un produit encaissé d'un produit acquis, et je relie le besoin en fonds de roulement négatif au financement du cycle.
 
 #### `tenir-ensemble`
 
@@ -120,9 +159,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 2 diplômes.
 
-- `gea:4:2` Je tiens ensemble la production, la marge et la trésorerie d'un trimestre de pointe.
-- `gea:5:0` Je construis un diagnostic financier qui relie l'activité, la rentabilité et la trésorerie.
-- `avance:6:0` Je construis un diagnostic stratégique qui relie la rentabilité, la trésorerie et la résistance au risque.
+- `gea:5:2` Je tiens ensemble la production, la marge et la trésorerie d'un trimestre de pointe.
+- `gea:6:0` Je construis un diagnostic financier qui relie l'activité, la rentabilité et la trésorerie.
+- `avance:7:0` Je construis un diagnostic stratégique qui relie la rentabilité, la trésorerie et la résistance au risque.
 
 ### Calculer un coût, une marge, un seuil
 
@@ -135,11 +174,11 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 7 phrases, 6 diplômes.
 
 - `debutant:1:0` Je calcule la différence entre un prix d'achat et un prix de vente.
-- `cg1:2:1` Je calcule une marge sur coût variable unitaire et un taux de marge.
-- `mco:1:0` Je calcule une marge unitaire et un taux de marque à partir d'un prix d'achat et d'un prix de vente.
-- `mco2:1:0` Je calcule le ratio matières et la marge sur coût variable d'un couvert à partir des comptes de l'unité.
-- `mhr:1:0` Je calcule un prix moyen par chambre et un taux d'occupation à partir des nuitées vendues et des chambres disponibles.
-- `bistrot:1:0` Je calcule le ratio matières de chaque offre et je le situe par rapport à ce que vise la profession.
+- `cg1:3:1` Je calcule une marge sur coût variable unitaire et un taux de marge.
+- `mco:2:0` Je calcule une marge unitaire et un taux de marque à partir d'un prix d'achat et d'un prix de vente.
+- `mco2:2:0` Je calcule le ratio matières et la marge sur coût variable d'un couvert à partir des comptes de l'unité.
+- `mhr:2:0` Je calcule un prix moyen par chambre et un taux d'occupation à partir des nuitées vendues et des chambres disponibles.
+- `bistrot:2:0` Je calcule le ratio matières de chaque offre et je le situe par rapport à ce que vise la profession.
 - `campus:1:1` Je calcule le coût variable d'une enceinte et la marge qu'un prix de vente en dégage.
 
 #### `soldes-intermediaires`
@@ -148,7 +187,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg:1:1` Je calcule les soldes intermédiaires de gestion et je repère celui qui explique le résultat.
+- `dcg:2:1` Je calcule les soldes intermédiaires de gestion et je repère celui qui explique le résultat.
 
 #### `cout-de-revient`
 
@@ -156,9 +195,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 3 diplômes.
 
-- `cg1:4:0` Je calcule un coût unitaire moyen pondéré à partir du stock initial et des entrées du trimestre.
-- `gea:1:1` Je calcule un coût de revient unitaire par référence et la marge qu'un prix de vente en dégage.
-- `avance:1:0` Je calcule un coût de revient à la palette à partir des charges d'un transporteur.
+- `cg1:5:0` Je calcule un coût unitaire moyen pondéré à partir du stock initial et des entrées du trimestre.
+- `gea:2:1` Je calcule un coût de revient unitaire par référence et la marge qu'un prix de vente en dégage.
+- `avance:2:0` Je calcule un coût de revient à la palette à partir des charges d'un transporteur.
 
 #### `couts-pertinents`
 
@@ -167,8 +206,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 3 phrases, 2 diplômes.
 
 - `martel:3:0` Je distingue, dans le prix de revient complet d'un chantier, ce que la décision de signer fait varier de ce qui est engagé de toute façon.
-- `avance:2:0` Je distingue, dans le coût de revient complet d'une palette, ce qui est engagé de toute façon de ce que la décision ajoute.
-- `avance:2:1` Je calcule la marge qu'un lot payé sous le coût complet laisse tout de même, et je la compare à celle d'un retour à vide.
+- `avance:3:0` Je distingue, dans le coût de revient complet d'une palette, ce qui est engagé de toute façon de ce que la décision ajoute.
+- `avance:3:1` Je calcule la marge qu'un lot payé sous le coût complet laisse tout de même, et je la compare à celle d'un retour à vide.
 
 #### `seuil-de-rentabilite`
 
@@ -177,17 +216,17 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 12 phrases, 9 diplômes.
 
 - `martel:2:1` Je calcule la marge sur coût variable d'un mètre carré rénové et le nombre de mètres carrés à livrer pour couvrir la structure du trimestre.
-- `stmg:2:1` Je calcule combien d'unités mon entreprise doit vendre pour ne rien perdre.
-- `cg1:2:2` Je calcule un seuil de rentabilité en volume et en valeur, et j'en déduis une marge de sécurité.
-- `mco:1:1` Je détermine le nombre d'articles à vendre pour couvrir les charges de structure du trimestre.
-- `mco2:1:1` Je détermine le nombre de couverts qui couvre les charges d'un mois, et je le ramène à une journée type.
-- `mco2:3:0` Je mesure ce qu'un mois creux fait au résultat d'une unité à charges fixes, et la marge de sécurité qui m'en sépare.
-- `fitness:1:1` Je calcule la marge récurrente d'un adhérent et le nombre d'adhérents au seuil de rentabilité.
-- `fitness:3:1` Je mesure ce qu'une charge fixe fait à un trimestre creux, et la marge de sécurité qui me sépare du seuil.
-- `mhr:1:1` Je détermine le taux de remplissage qui couvre les charges de structure d'un trimestre.
-- `bistrot:1:1` Je calcule la marge sur coût variable d'un couvert, offre par offre, et le seuil de rentabilité de l'établissement au mix que je prévois.
-- `gea:1:2` Je détermine le volume de production qui absorbe les charges fixes du trimestre, au mix que je prévois de vendre.
-- `dcg:2:1` Je calcule un seuil de rentabilité, une marge de sécurité et un levier opérationnel.
+- `stmg:3:1` Je calcule combien d'unités mon entreprise doit vendre pour ne rien perdre.
+- `cg1:3:2` Je calcule un seuil de rentabilité en volume et en valeur, et j'en déduis une marge de sécurité.
+- `mco:2:1` Je détermine le nombre d'articles à vendre pour couvrir les charges de structure du trimestre.
+- `mco2:2:1` Je détermine le nombre de couverts qui couvre les charges d'un mois, et je le ramène à une journée type.
+- `mco2:4:0` Je mesure ce qu'un mois creux fait au résultat d'une unité à charges fixes, et la marge de sécurité qui m'en sépare.
+- `fitness:2:1` Je calcule la marge récurrente d'un adhérent et le nombre d'adhérents au seuil de rentabilité.
+- `fitness:4:1` Je mesure ce qu'une charge fixe fait à un trimestre creux, et la marge de sécurité qui me sépare du seuil.
+- `mhr:2:1` Je détermine le taux de remplissage qui couvre les charges de structure d'un trimestre.
+- `bistrot:2:1` Je calcule la marge sur coût variable d'un couvert, offre par offre, et le seuil de rentabilité de l'établissement au mix que je prévois.
+- `gea:2:2` Je détermine le volume de production qui absorbe les charges fixes du trimestre, au mix que je prévois de vendre.
+- `dcg:3:1` Je calcule un seuil de rentabilité, une marge de sécurité et un levier opérationnel.
 
 #### `ce-qui-erode-la-marge`
 
@@ -197,10 +236,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 - `debutant:3:0` Je décide d'une promotion et j'en attends un effet précis.
 - `debutant:3:1` Je comprends qu'une remise doit être compensée par davantage de ventes.
-- `mco:3:0` Je calcule l'effet d'une remise sur ma marge unitaire et sur le volume qu'il faut vendre pour la compenser.
-- `ndrc:3:0` Je chiffre ce qu'un retour produit retire à la marge d'une commande.
-- `gpme:5:0` Je calcule ce qu'une remise retire à la marge et le volume qu'il faudrait pour la compenser.
-- `mhr:2:0` Je mesure l'effet d'une baisse de tarif sur le remplissage qu'il faut gagner pour la compenser.
+- `mco:4:0` Je calcule l'effet d'une remise sur ma marge unitaire et sur le volume qu'il faut vendre pour la compenser.
+- `ndrc:4:0` Je chiffre ce qu'un retour produit retire à la marge d'une commande.
+- `gpme:6:0` Je calcule ce qu'une remise retire à la marge et le volume qu'il faudrait pour la compenser.
+- `mhr:3:0` Je mesure l'effet d'une baisse de tarif sur le remplissage qu'il faut gagner pour la compenser.
 
 #### `resultat-ou-rentabilite`
 
@@ -230,9 +269,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 - `martel:2:2` Je fixe un prix au mètre carré en sachant ce que chaque euro de plus fait au seuil et ce que trois devis concurrents font à la demande.
 - `debutant:1:1` Je fixe un prix de vente et j'en explique la raison en une phrase.
-- `stmg:1:1` Je fixe un prix de vente et je dis sur quoi je me suis appuyé pour le fixer.
-- `cg1:2:3` Je fixe un prix de vente en tenant compte du seuil et de la réaction des clients.
-- `mhr:3:1` Je fixe un tarif de haute saison adapté à la clientèle qui domine, sans transposer celui qui convenait à la clientèle d'avant.
+- `stmg:2:1` Je fixe un prix de vente et je dis sur quoi je me suis appuyé pour le fixer.
+- `cg1:3:3` Je fixe un prix de vente en tenant compte du seuil et de la réaction des clients.
+- `mhr:4:1` Je fixe un tarif de haute saison adapté à la clientèle qui domine, sans transposer celui qui convenait à la clientèle d'avant.
 
 #### `decider-un-volume`
 
@@ -242,10 +281,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 - `debutant:2:0` Je choisis une quantité de marchandise à commander pour un trimestre.
 - `debutant:4:1` Je décide un prix et une quantité ensemble pour un trimestre qui compte.
-- `mco:4:2` Je dimensionne un approvisionnement en acceptant explicitement un risque.
-- `mco2:1:2` Je fixe un prix et un volume à préparer en sachant ce que coûte un couvert jeté.
-- `ndrc:4:2` Je dimensionne un budget d'acquisition et le stock qui va avec, pour le trimestre où chaque commande manquée coûte le plus.
-- `fitness:1:2` Je fixe un prix et un volume de places à vendre en tenant compte de la capacité d'accueil réelle.
+- `mco:5:2` Je dimensionne un approvisionnement en acceptant explicitement un risque.
+- `mco2:2:2` Je fixe un prix et un volume à préparer en sachant ce que coûte un couvert jeté.
+- `ndrc:5:2` Je dimensionne un budget d'acquisition et le stock qui va avec, pour le trimestre où chaque commande manquée coûte le plus.
+- `fitness:2:2` Je fixe un prix et un volume de places à vendre en tenant compte de la capacité d'accueil réelle.
 - `campus:3:2` Je règle un volume de production en assumant de quel côté je prends le risque.
 
 #### `rupture-ou-surstock`
@@ -255,9 +294,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 5 phrases, 5 diplômes.
 
 - `debutant:2:1` Je comprends ce que coûte un rayon vide et ce que coûte un rayon qui ne se vend pas.
-- `stmg:3:2` Je choisis de produire plus que je ne vends, et j'explique ce que ce stock me coûte et ce qu'il me rapportera.
-- `mco:4:1` J'évalue ce que coûte une rupture de stock et ce que coûte un surstock.
-- `bistrot:1:2` Je fixe des couverts à préparer en pesant le client refusé contre la denrée jetée.
+- `stmg:4:2` Je choisis de produire plus que je ne vends, et j'explique ce que ce stock me coûte et ce qu'il me rapportera.
+- `mco:5:1` J'évalue ce que coûte une rupture de stock et ce que coûte un surstock.
+- `bistrot:2:2` Je fixe des couverts à préparer en pesant le client refusé contre la denrée jetée.
 - `campus:3:1` Je chiffre le coût d'un stock d'invendus et celui d'une demande que je n'ai pas pu servir.
 
 #### `repercuter-une-hausse`
@@ -266,12 +305,12 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 7 phrases, 5 diplômes.
 
-- `mco2:3:1` Je répercute une hausse du prix des denrées en tenant compte de la sensibilité de chaque clientèle.
-- `mhr:2:1` Je distingue les clientèles qui réservent au prix affiché de celles qui ne viennent qu'à prix cassé.
-- `bistrot:3:0` Je mesure ce qu'une hausse des denrées fait au ratio matières, à la marge par couvert et au seuil de l'établissement.
-- `bistrot:3:1` Je répercute une hausse de coût différemment selon l'élasticité de chaque clientèle, et je retravaille la carte quand le prix ne suffit pas.
-- `avance:3:0` Je mesure ce qu'une hausse du carburant fait à la marge d'une palette et au poids du carburant dans le prix.
-- `avance:3:1` Je répercute une hausse de coût différemment selon la sensibilité au prix de chaque clientèle.
+- `mco2:4:1` Je répercute une hausse du prix des denrées en tenant compte de la sensibilité de chaque clientèle.
+- `mhr:3:1` Je distingue les clientèles qui réservent au prix affiché de celles qui ne viennent qu'à prix cassé.
+- `bistrot:4:0` Je mesure ce qu'une hausse des denrées fait au ratio matières, à la marge par couvert et au seuil de l'établissement.
+- `bistrot:4:1` Je répercute une hausse de coût différemment selon l'élasticité de chaque clientèle, et je retravaille la carte quand le prix ne suffit pas.
+- `avance:4:0` Je mesure ce qu'une hausse du carburant fait à la marge d'une palette et au poids du carburant dans le prix.
+- `avance:4:1` Je répercute une hausse de coût différemment selon la sensibilité au prix de chaque clientèle.
 - `campus:5:1` Je répercute une hausse du prix des matières en tenant compte de la sensibilité de chaque clientèle.
 
 #### `prix-plancher`
@@ -280,7 +319,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `avance:2:2` Je fixe un prix plancher qui tient compte du risque commercial d'habituer le marché à un tarif bas.
+- `avance:3:2` Je fixe un prix plancher qui tient compte du risque commercial d'habituer le marché à un tarif bas.
 
 ### Anticiper la demande
 
@@ -294,11 +333,11 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 - `debutant:2:2` Je relis mon trimestre précédent pour décider du suivant.
 - `debutant:4:0` J'anticipe une forte demande à partir de mes trimestres précédents.
-- `mco:4:0` J'anticipe un volume de ventes à partir de la saisonnalité et de mes trimestres précédents.
-- `ndrc:4:0` J'anticipe un volume de commandes à partir des trimestres joués et de la saison.
-- `fitness:3:0` J'anticipe un creux saisonnier à partir de la saisonnalité de chaque clientèle et de mes trimestres précédents.
-- `mhr:3:0` J'anticipe une bascule de clientèles à partir de la saisonnalité de chaque segment et de mes trimestres précédents.
-- `gea:4:0` J'anticipe un volume de production à partir de la saisonnalité et de mes trimestres précédents.
+- `mco:5:0` J'anticipe un volume de ventes à partir de la saisonnalité et de mes trimestres précédents.
+- `ndrc:5:0` J'anticipe un volume de commandes à partir des trimestres joués et de la saison.
+- `fitness:4:0` J'anticipe un creux saisonnier à partir de la saisonnalité de chaque clientèle et de mes trimestres précédents.
+- `mhr:4:0` J'anticipe une bascule de clientèles à partir de la saisonnalité de chaque segment et de mes trimestres précédents.
+- `gea:5:0` J'anticipe un volume de production à partir de la saisonnalité et de mes trimestres précédents.
 - `campus:3:0` J'estime la demande d'un trimestre à partir des trimestres joués et des décisions prises.
 
 #### `prix-et-demande`
@@ -315,7 +354,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `stmg:3:0` Je repère l'arrivée d'un client qui change la taille du marché, et je dis ce qu'elle exige de mon entreprise.
+- `stmg:4:0` Je repère l'arrivée d'un client qui change la taille du marché, et je dis ce qu'elle exige de mon entreprise.
 
 ### Piloter la trésorerie
 
@@ -328,11 +367,11 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 7 phrases, 7 diplômes.
 
 - `martel:5:0` Je construis le budget de trésorerie du trimestre, encaissement par encaissement, en datant la retenue de garantie et les mandatements au jour où l'argent arrive.
-- `cg1:3:1` Je construis un budget de trésorerie à partir de décisions prévues et de délais de règlement.
-- `fitness:4:1` Je construis un plan de trésorerie de trimestre et j'y repère ce qu'un encaissement d'avance déplace.
-- `mhr:4:0` Je construis un plan de trésorerie de trimestre à partir de mes encaissements et de mes charges fixes.
-- `gea:2:1` Je construis un plan de trésorerie de trimestre à partir des encaissements et des décaissements.
-- `avance:4:1` Je construis un plan de trésorerie de trimestre de pointe et j'y repère le point de tension.
+- `cg1:4:1` Je construis un budget de trésorerie à partir de décisions prévues et de délais de règlement.
+- `fitness:5:1` Je construis un plan de trésorerie de trimestre et j'y repère ce qu'un encaissement d'avance déplace.
+- `mhr:5:0` Je construis un plan de trésorerie de trimestre à partir de mes encaissements et de mes charges fixes.
+- `gea:3:1` Je construis un plan de trésorerie de trimestre à partir des encaissements et des décaissements.
+- `avance:5:1` Je construis un plan de trésorerie de trimestre de pointe et j'y repère le point de tension.
 - `campus:4:1` Je construis un plan de trésorerie de trimestre et j'y repère le point de tension.
 
 #### `chiffrer-un-besoin-de-financement`
@@ -341,7 +380,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `cg1:3:2` Je présente un besoin de trésorerie chiffré et daté, et la façon de le couvrir.
+- `cg1:4:2` Je présente un besoin de trésorerie chiffré et daté, et la façon de le couvrir.
 
 #### `resultat-contre-caisse`
 
@@ -349,9 +388,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 3 diplômes.
 
-- `cg1:4:2` Je retrouve, poste par poste, où est passé l'argent d'un trimestre bénéficiaire : stock, créances, TVA à décaisser.
-- `mhr:4:1` Je mesure l'effet d'un trimestre creux sur la caisse d'un établissement à charges lourdes.
-- `gea:2:2` J'explique un écart entre le résultat comptable et le solde de trésorerie.
+- `cg1:5:2` Je retrouve, poste par poste, où est passé l'argent d'un trimestre bénéficiaire : stock, créances, TVA à décaisser.
+- `mhr:5:1` Je mesure l'effet d'un trimestre creux sur la caisse d'un établissement à charges lourdes.
+- `gea:3:2` J'explique un écart entre le résultat comptable et le solde de trésorerie.
 
 #### `effet-d-un-delai`
 
@@ -360,15 +399,15 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 10 phrases, 5 diplômes.
 
 - `martel:4:1` Je traduis le délai de règlement de chaque clientèle en euros immobilisés sur un trimestre de chantiers.
-- `mco:2:1` Je mesure l'effet d'un délai de règlement fournisseur sur la trésorerie du magasin.
-- `mco2:2:1` Je mesure l'effet d'un délai de règlement sur la trésorerie d'un mois, à résultat inchangé.
-- `mco2:4:1` Je relie le chiffre d'affaires d'un mois à l'encaissement du mois suivant, selon le délai de chaque clientèle.
-- `gpme:2:0` Je calcule le délai moyen de règlement de mes clients et je le traduis en euros immobilisés.
-- `fitness:4:0` Je compare une offre annuelle encaissée d'avance à une offre trimestrielle sur le prix, la trésorerie et la fidélité.
-- `mhr:3:2` Je relie le mix de clientèles du trimestre à son encaissement : qui paie comptant, qui paie à trente ou quarante-cinq jours.
-- `bistrot:2:2` Je mesure ce qu'un paiement comptant fait à la trésorerie d'un établissement dont le résultat ne change pas.
-- `bistrot:4:2` Je relie le mix servi à la trésorerie du trimestre : les banquets se règlent à trente jours, le midi et le soir comptant.
-- `mco2:5:0` Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.
+- `mco:3:1` Je mesure l'effet d'un délai de règlement fournisseur sur la trésorerie du magasin.
+- `mco2:3:1` Je mesure l'effet d'un délai de règlement sur la trésorerie d'un mois, à résultat inchangé.
+- `mco2:5:1` Je relie le chiffre d'affaires d'un mois à l'encaissement du mois suivant, selon le délai de chaque clientèle.
+- `gpme:3:0` Je calcule le délai moyen de règlement de mes clients et je le traduis en euros immobilisés.
+- `fitness:5:0` Je compare une offre annuelle encaissée d'avance à une offre trimestrielle sur le prix, la trésorerie et la fidélité.
+- `mhr:4:2` Je relie le mix de clientèles du trimestre à son encaissement : qui paie comptant, qui paie à trente ou quarante-cinq jours.
+- `bistrot:3:2` Je mesure ce qu'un paiement comptant fait à la trésorerie d'un établissement dont le résultat ne change pas.
+- `bistrot:5:2` Je relie le mix servi à la trésorerie du trimestre : les banquets se règlent à trente jours, le midi et le soir comptant.
+- `mco2:6:0` Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.
 
 #### `besoin-en-fonds-de-roulement`
 
@@ -377,10 +416,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 6 phrases, 5 diplômes.
 
 - `martel:4:0` Je retrouve dans le bilan de mon entreprise ce que les clients lui doivent, ce que les chantiers commencés immobilisent et ce que les fournisseurs lui avancent.
-- `gea:2:0` Je lis un bilan et j'y repère le besoin en fonds de roulement d'une entreprise.
-- `gea:4:1` Je mesure l'effet d'une forte croissance des ventes sur le besoin en fonds de roulement.
-- `dcg:1:0` Je construis un bilan fonctionnel et j'en tire le fonds de roulement, le besoin en fonds de roulement et la trésorerie nette.
-- `avance:4:0` Je relie le besoin en fonds de roulement d'un transporteur aux délais de règlement de ses clientèles et de ses fournisseurs.
+- `gea:3:0` Je lis un bilan et j'y repère le besoin en fonds de roulement d'une entreprise.
+- `gea:5:1` Je mesure l'effet d'une forte croissance des ventes sur le besoin en fonds de roulement.
+- `dcg:2:0` Je construis un bilan fonctionnel et j'en tire le fonds de roulement, le besoin en fonds de roulement et la trésorerie nette.
+- `avance:5:0` Je relie le besoin en fonds de roulement d'un transporteur aux délais de règlement de ses clientèles et de ses fournisseurs.
 - `campus:4:0` Je relie le besoin en fonds de roulement d'une entreprise aux délais de règlement de ses clientèles.
 
 #### `financer-le-court-terme`
@@ -390,15 +429,15 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 11 phrases, 6 diplômes.
 
 - `martel:4:2` Je choisis entre attendre, escompter et céder une créance en comparant ce que chaque solution coûte à ce qu'elle évite.
-- `cg1:4:3` Je propose une action qui libère de la trésorerie et je dis ce qu'elle coûte.
-- `cg1:5:2` Je calcule le coût d'un escompte et celui d'un affacturage sur mes propres créances, au prorata du trimestre.
-- `cg1:5:3` Je choisis de mobiliser ou non mes créances, et je justifie mon choix par le calcul.
-- `mco2:4:2` Je décide d'une couverture du besoin de trésorerie et j'en assume le coût.
-- `mco2:5:1` Je chiffre le coût d'un financement court terme et je le rapporte à ce qu'il a évité.
-- `gpme:2:1` Je choisis entre attendre, relancer, escompter ou céder une créance, en comparant ce que chaque solution coûte.
-- `mhr:4:2` Je décide d'une couverture du besoin de trésorerie et j'en assume le coût.
-- `avance:4:2` Je compare l'escompte et l'affacturage sur leur coût, et je mesure le risque d'un chiffre d'affaires concentré sur un client.
-- `avance:5:2` Je décide d'un placement des excédents de trésorerie en gardant une réserve de sécurité chiffrée.
+- `cg1:5:3` Je propose une action qui libère de la trésorerie et je dis ce qu'elle coûte.
+- `cg1:6:2` Je calcule le coût d'un escompte et celui d'un affacturage sur mes propres créances, au prorata du trimestre.
+- `cg1:6:3` Je choisis de mobiliser ou non mes créances, et je justifie mon choix par le calcul.
+- `mco2:5:2` Je décide d'une couverture du besoin de trésorerie et j'en assume le coût.
+- `mco2:6:1` Je chiffre le coût d'un financement court terme et je le rapporte à ce qu'il a évité.
+- `gpme:3:1` Je choisis entre attendre, relancer, escompter ou céder une créance, en comparant ce que chaque solution coûte.
+- `mhr:5:2` Je décide d'une couverture du besoin de trésorerie et j'en assume le coût.
+- `avance:5:2` Je compare l'escompte et l'affacturage sur leur coût, et je mesure le risque d'un chiffre d'affaires concentré sur un client.
+- `avance:6:2` Je décide d'un placement des excédents de trésorerie en gardant une réserve de sécurité chiffrée.
 - `campus:4:2` Je compare le coût d'un découvert, d'un escompte et d'un affacturage avant de choisir.
 
 #### `tva`
@@ -407,8 +446,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 1 diplômes.
 
-- `cg1:5:0` Je calcule une TVA collectée, une TVA déductible et une TVA à décaisser.
-- `cg1:5:1` J'explique pourquoi une taxe neutre pour le résultat pèse sur la trésorerie.
+- `cg1:6:0` Je calcule une TVA collectée, une TVA déductible et une TVA à décaisser.
+- `cg1:6:1` J'explique pourquoi une taxe neutre pour le résultat pèse sur la trésorerie.
 
 ### Arbitrer sous contrainte de capacité
 
@@ -420,10 +459,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 4 phrases, 3 diplômes.
 
-- `stmg:3:1` Je calcule ce que ma capacité de production me permet de vendre au maximum dans un trimestre.
-- `ndrc:4:1` Je vérifie que ma capacité de préparation suit le trafic que j'achète.
-- `fitness:5:0` Je repère laquelle des deux capacités bloque, la surface ou l'encadrement, et je borne mes ventes à la plus petite.
-- `bistrot:4:0` Je repère laquelle des deux capacités bloque, les places ou les heures de brigade, selon le mix que je sers.
+- `stmg:4:1` Je calcule ce que ma capacité de production me permet de vendre au maximum dans un trimestre.
+- `ndrc:5:1` Je vérifie que ma capacité de préparation suit le trafic que j'achète.
+- `fitness:6:0` Je repère laquelle des deux capacités bloque, la surface ou l'encadrement, et je borne mes ventes à la plus petite.
+- `bistrot:5:0` Je repère laquelle des deux capacités bloque, les places ou les heures de brigade, selon le mix que je sers.
 
 #### `marge-par-unite-rare`
 
@@ -431,8 +470,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 2 diplômes.
 
-- `bistrot:4:1` J'arbitre entre des offres qui n'ont ni la même marge ni le même temps de brigade par couvert, quand tout ne peut pas être servi.
-- `gea:3:0` Je classe les références d'une gamme par leur marge rapportée à l'unité de capacité qu'elles consomment quand cette capacité manque.
+- `bistrot:5:1` J'arbitre entre des offres qui n'ont ni la même marge ni le même temps de brigade par couvert, quand tout ne peut pas être servi.
+- `gea:4:0` Je classe les références d'une gamme par leur marge rapportée à l'unité de capacité qu'elles consomment quand cette capacité manque.
 
 #### `cout-de-la-saturation`
 
@@ -440,8 +479,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 2 diplômes.
 
-- `fitness:5:1` Je chiffre ce que la saturation coûte en attrition et en valeur vie, contre ce que rapportent les inscriptions supplémentaires.
-- `gea:3:1` J'évalue le manque à gagner d'une capacité de production saturée face à une demande qui monte.
+- `fitness:6:1` Je chiffre ce que la saturation coûte en attrition et en valeur vie, contre ce que rapportent les inscriptions supplémentaires.
+- `gea:4:1` J'évalue le manque à gagner d'une capacité de production saturée face à une demande qui monte.
 
 #### `arbitrer-entre-clienteles`
 
@@ -449,7 +488,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `mco2:4:0` J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.
+- `mco2:5:0` J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.
 
 ### Investir et recruter
 
@@ -469,10 +508,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 5 phrases, 4 diplômes.
 
-- `gea:3:2` Je compare le coût d'une ligne de production à la marge supplémentaire qu'elle rend possible, en tenant compte du trimestre de retard avant sa mise en service.
-- `dcg:3:0` J'évalue un projet d'investissement à partir des flux qu'il génère et non de son coût seul.
-- `dcg-rse:3:1` Je décide d'un investissement propre en comparant son décaissement immédiat à la baisse durable des rebuts.
-- `avance:5:0` Je retiens, dans un projet de renouvellement, les seuls flux que la décision change : entretien évité, carburant économisé, revente des anciens véhicules.
+- `gea:4:2` Je compare le coût d'une ligne de production à la marge supplémentaire qu'elle rend possible, en tenant compte du trimestre de retard avant sa mise en service.
+- `dcg:4:0` J'évalue un projet d'investissement à partir des flux qu'il génère et non de son coût seul.
+- `dcg-rse:4:1` Je décide d'un investissement propre en comparant son décaissement immédiat à la baisse durable des rebuts.
+- `avance:6:0` Je retiens, dans un projet de renouvellement, les seuls flux que la décision change : entretien évité, carburant économisé, revente des anciens véhicules.
 - `campus:5:2` Je décide d'un budget de qualité et d'entretien en le rapportant à ce qu'il évite de perdre.
 
 #### `valeur-d-aujourd-hui`
@@ -482,7 +521,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 2 phrases, 2 diplômes.
 
 - `martel:7:0` Je compare acheter et louer un engin sur les seuls flux que la décision change, et je ramène les économies futures à leur valeur d'aujourd'hui.
-- `avance:5:1` Je ramène des flux étalés sur plusieurs années à leur valeur d'aujourd'hui, et je décide sur leur somme.
+- `avance:6:1` Je ramène des flux étalés sur plusieurs années à leur valeur d'aujourd'hui, et je décide sur leur somme.
 
 #### `quand-recruter`
 
@@ -492,11 +531,11 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 - `martel:6:0` Je calcule le coût complet d'un compagnon de plus et la surface qu'il doit livrer pour se payer.
 - `martel:6:1` Je compare embaucher, sous-traiter et refuser sur le même horizon, en comptant le trimestre où un recrutement ne produit rien encore.
-- `gpme:4:0` Je calcule le nombre de journées qu'un consultant supplémentaire doit vendre pour se payer.
-- `gpme:4:1` Je situe le moment où recruter, entre la surcharge qui fait perdre des clients et l'embauche qui devance le carnet.
-- `gpme:4:2` Je prépare une décision d'embauche argumentée devant un dirigeant qui la financera.
-- `bistrot:3:2` Je dimensionne une brigade et une cuisine pour une saison que je ne verrai qu'au trimestre suivant.
-- `avance:3:2` Je dimensionne un véhicule et un recrutement pour un pic que je ne verrai qu'au trimestre suivant.
+- `gpme:5:0` Je calcule le nombre de journées qu'un consultant supplémentaire doit vendre pour se payer.
+- `gpme:5:1` Je situe le moment où recruter, entre la surcharge qui fait perdre des clients et l'embauche qui devance le carnet.
+- `gpme:5:2` Je prépare une décision d'embauche argumentée devant un dirigeant qui la financera.
+- `bistrot:4:2` Je dimensionne une brigade et une cuisine pour une saison que je ne verrai qu'au trimestre suivant.
+- `avance:4:2` Je dimensionne un véhicule et un recrutement pour un pic que je ne verrai qu'au trimestre suivant.
 
 #### `choisir-un-financement`
 
@@ -504,7 +543,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg:3:1` Je compare des modes de financement sur leur coût et sur ce qu'ils font à la structure du bilan.
+- `dcg:4:1` Je compare des modes de financement sur leur coût et sur ce qu'ils font à la structure du bilan.
 
 ### Conquérir et garder une clientèle
 
@@ -516,9 +555,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 2 diplômes.
 
-- `ndrc:1:0` Je distingue une clientèle qu'il faut acheter d'une clientèle qui revient d'elle-même.
-- `fitness:1:0` Je distingue un chiffre d'affaires qu'il faut refaire chaque trimestre d'un chiffre d'affaires qui se reconduit tant que le client reste.
-- `avance:1:2` Je décide d'un premier équilibre entre une clientèle régulière et une clientèle volatile.
+- `ndrc:2:0` Je distingue une clientèle qu'il faut acheter d'une clientèle qui revient d'elle-même.
+- `fitness:2:0` Je distingue un chiffre d'affaires qu'il faut refaire chaque trimestre d'un chiffre d'affaires qui se reconduit tant que le client reste.
+- `avance:2:2` Je décide d'un premier équilibre entre une clientèle régulière et une clientèle volatile.
 
 #### `cout-d-acquisition`
 
@@ -526,8 +565,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 1 diplômes.
 
-- `ndrc:2:0` Je calcule un coût d'acquisition client à partir d'un budget engagé et de clients réellement venus.
-- `ndrc:2:1` Je compare ce coût à la marge dégagée par une commande, et j'en tire une conclusion.
+- `ndrc:3:0` Je calcule un coût d'acquisition client à partir d'un budget engagé et de clients réellement venus.
+- `ndrc:3:1` Je compare ce coût à la marge dégagée par une commande, et j'en tire une conclusion.
 
 #### `valeur-dans-la-duree`
 
@@ -535,9 +574,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 1 diplômes.
 
-- `ndrc:2:2` Je distingue un client rentable dès la première commande d'un client rentable seulement s'il revient.
-- `fitness:2:0` Je mesure un taux d'attrition et je le décompose par clientèle, les inscrits de janvier ne restant pas comme les pratiquants réguliers.
-- `fitness:2:1` Je calcule la valeur vie d'un client comme la somme des marges qu'il rapportera avant de partir.
+- `ndrc:3:2` Je distingue un client rentable dès la première commande d'un client rentable seulement s'il revient.
+- `fitness:3:0` Je mesure un taux d'attrition et je le décompose par clientèle, les inscrits de janvier ne restant pas comme les pratiquants réguliers.
+- `fitness:3:1` Je calcule la valeur vie d'un client comme la somme des marges qu'il rapportera avant de partir.
 
 #### `recruter-ou-retenir`
 
@@ -545,11 +584,11 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 5 phrases, 2 diplômes.
 
-- `mco:3:2` Je distingue une opération qui recrute des clientes d'une opération qui déplace des ventes.
-- `mco2:3:2` Je choisis les actions commerciales d'un mois creux et je chiffre ce que j'en attends.
-- `ndrc:3:2` Je propose une politique de service, avec ce qu'elle coûte et ce qu'elle évite.
-- `fitness:2:2` Je choisis un levier de rétention en comparant ce qu'il coûte maintenant à ce qu'il rapporte sur la durée.
-- `fitness:3:2` Je choisis les actions de relation client d'un trimestre creux, en distinguant ce qui retient de ce qui recrute.
+- `mco:4:2` Je distingue une opération qui recrute des clientes d'une opération qui déplace des ventes.
+- `mco2:4:2` Je choisis les actions commerciales d'un mois creux et je chiffre ce que j'en attends.
+- `ndrc:4:2` Je propose une politique de service, avec ce qu'elle coûte et ce qu'elle évite.
+- `fitness:3:2` Je choisis un levier de rétention en comparant ce qu'il coûte maintenant à ce qu'il rapporte sur la durée.
+- `fitness:4:2` Je choisis les actions de relation client d'un trimestre creux, en distinguant ce qui retient de ce qui recrute.
 
 #### `qualite-et-frequentation`
 
@@ -557,9 +596,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 3 diplômes.
 
-- `mco2:2:2` Je relie la qualité des denrées à la fréquentation du service du soir.
-- `ndrc:3:1` Je relie le niveau de service rendu à la fidélité de la clientèle du trimestre suivant.
-- `bistrot:2:1` Je relie la qualité des denrées à la fréquentation de la carte du soir, par la réputation qu'elle construit.
+- `mco2:3:2` Je relie la qualité des denrées à la fréquentation du service du soir.
+- `ndrc:4:1` Je relie le niveau de service rendu à la fidélité de la clientèle du trimestre suivant.
+- `bistrot:3:1` Je relie la qualité des denrées à la fréquentation de la carte du soir, par la réputation qu'elle construit.
 
 #### `dependance-a-un-client`
 
@@ -567,7 +606,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `gpme:5:1` J'évalue ce que représente un client dans mon activité avant de décider de le perdre.
+- `gpme:6:1` J'évalue ce que représente un client dans mon activité avant de décider de le perdre.
 
 #### `situer-son-offre`
 
@@ -575,8 +614,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 2 diplômes.
 
-- `mco:1:2` Je situe l'assortiment du magasin par rapport aux clientèles qui le fréquentent.
-- `mhr:1:2` Je situe l'offre de l'hôtel par rapport aux clientèles qui le fréquentent.
+- `mco:2:2` Je situe l'assortiment du magasin par rapport aux clientèles qui le fréquentent.
+- `mhr:2:2` Je situe l'offre de l'hôtel par rapport aux clientèles qui le fréquentent.
 
 ### Acheter et négocier
 
@@ -588,11 +627,11 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 5 phrases, 4 diplômes.
 
-- `mco:2:0` Je compare des offres fournisseurs sur autre chose que leur prix.
-- `mco2:2:0` Je compare des fournisseurs sur le prix, la qualité, le délai de règlement et le risque de rupture.
-- `fitness:5:2` Je sélectionne un partenariat, comité d'entreprise, mutuelle, club, en le jugeant sur sa marge, son délai de règlement et la place qu'il prend.
-- `bistrot:2:0` Je compare des fournisseurs sur plusieurs critères, prix, qualité, délai et fiabilité, et je pondère.
-- `dcg-rse:3:0` Je choisis un fournisseur en pesant son coût, sa qualité et l'empreinte que le rapport lui attribue d'après ces deux critères.
+- `mco:3:0` Je compare des offres fournisseurs sur autre chose que leur prix.
+- `mco2:3:0` Je compare des fournisseurs sur le prix, la qualité, le délai de règlement et le risque de rupture.
+- `fitness:6:2` Je sélectionne un partenariat, comité d'entreprise, mutuelle, club, en le jugeant sur sa marge, son délai de règlement et la place qu'il prend.
+- `bistrot:3:0` Je compare des fournisseurs sur plusieurs critères, prix, qualité, délai et fiabilité, et je pondère.
+- `dcg-rse:4:0` Je choisis un fournisseur en pesant son coût, sa qualité et l'empreinte que le rapport lui attribue d'après ces deux critères.
 
 #### `preparer-une-negociation`
 
@@ -600,7 +639,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `ndrc:5:2` Je prépare une négociation en identifiant ce que j'apporte au partenaire.
+- `ndrc:6:2` Je prépare une négociation en identifiant ce que j'apporte au partenaire.
 
 #### `repondre-sans-rompre`
 
@@ -609,7 +648,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 2 phrases, 1 diplômes.
 
 - `martel:3:2` Je rédige une réponse au devis qui dit le prix accepté, la condition posée et ce que l'entreprise y gagne.
-- `gpme:5:2` Je construis une réponse commerciale qui n'est ni l'acceptation ni le refus sec.
+- `gpme:6:2` Je construis une réponse commerciale qui n'est ni l'acceptation ni le refus sec.
 
 #### `ce-que-preleve-un-canal`
 
@@ -617,10 +656,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 4 phrases, 2 diplômes.
 
-- `ndrc:1:1` Je repère ce qu'un canal de vente prélève avant que la marge n'arrive dans l'entreprise.
-- `ndrc:5:0` Je calcule la marge qui reste après la commission d'un partenaire.
-- `ndrc:5:1` Je compare un volume apporté par un tiers à un volume conquis en direct.
-- `avance:1:1` Je compare la marge d'un contrat industriel à celle d'un chargement de la bourse de fret.
+- `ndrc:2:1` Je repère ce qu'un canal de vente prélève avant que la marge n'arrive dans l'entreprise.
+- `ndrc:6:0` Je calcule la marge qui reste après la commission d'un partenaire.
+- `ndrc:6:1` Je compare un volume apporté par un tiers à un volume conquis en direct.
+- `avance:2:1` Je compare la marge d'un contrat industriel à celle d'un chargement de la bourse de fret.
 
 ### Nommer et arbitrer un risque
 
@@ -632,7 +671,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `gpme:3:1` Je chiffre l'impact d'un risque plutôt que de le qualifier de fort ou faible.
+- `gpme:4:1` Je chiffre l'impact d'un risque plutôt que de le qualifier de fort ou faible.
 
 #### `identifier-les-risques`
 
@@ -641,7 +680,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 2 phrases, 1 diplômes.
 
 - `martel:5:1` J'identifie les risques d'une entreprise de rénovation, du fournisseur qui livre en retard au client qui paie dans un an, et je chiffre ce que chacun coûterait.
-- `gpme:3:0` J'identifie les risques propres à une petite structure, dont la dépendance à un donneur d'ordres.
+- `gpme:4:0` J'identifie les risques propres à une petite structure, dont la dépendance à un donneur d'ordres.
 
 #### `supporter-reduire-transferer`
 
@@ -650,7 +689,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 2 phrases, 1 diplômes.
 
 - `martel:5:2` J'arbitre entre supporter un risque, le réduire par le choix d'un fournisseur et le transférer à un assureur, en comparant la prime à ce qu'elle évite.
-- `gpme:3:2` J'arbitre entre supporter un risque, le réduire et le transférer à un assureur.
+- `gpme:4:2` J'arbitre entre supporter un risque, le réduire et le transférer à un assureur.
 
 #### `reputation-ou-finance`
 
@@ -658,7 +697,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg-rse:5:1` Je distingue un risque de réputation d'un risque financier et j'estime la portée de chacun.
+- `dcg-rse:6:1` Je distingue un risque de réputation d'un risque financier et j'estime la portée de chacun.
 
 #### `decider-avec-le-risque`
 
@@ -666,8 +705,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 1 diplômes.
 
-- `dcg:2:2` Je relie le niveau du levier au risque que prend l'entreprise quand la demande baisse.
-- `dcg-rse:5:2` Je décide en dernier tour en tenant compte du risque autant que du rendement.
+- `dcg:3:2` Je relie le niveau du levier au risque que prend l'entreprise quand la demande baisse.
+- `dcg-rse:6:2` Je décide en dernier tour en tenant compte du risque autant que du rendement.
 
 ### Prévoir, puis se confronter au réel
 
@@ -679,9 +718,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 1 diplômes.
 
-- `dcg:3:2` Je construis un plan de trésorerie et un budget de trimestre dont j'écris les hypothèses avant de connaître le réel.
-- `dcg:4:0` Je construis un budget de trimestre à partir des exercices écoulés et d'hypothèses que je nomme.
-- `dcg-rse:4:2` J'intègre ces retours différés dans un plan de financement et une politique d'effectif.
+- `dcg:4:2` Je construis un plan de trésorerie et un budget de trimestre dont j'écris les hypothèses avant de connaître le réel.
+- `dcg:5:0` Je construis un budget de trimestre à partir des exercices écoulés et d'hypothèses que je nomme.
+- `dcg-rse:5:2` J'intègre ces retours différés dans un plan de financement et une politique d'effectif.
 
 #### `annoncer-l-effet-attendu`
 
@@ -689,7 +728,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `stmg:2:2` Je modifie une décision et j'annonce à l'avance l'effet que j'en attends sur le résultat.
+- `stmg:3:2` Je modifie une décision et j'annonce à l'avance l'effet que j'en attends sur le résultat.
 
 #### `decomposer-un-ecart`
 
@@ -698,7 +737,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 2 phrases, 2 diplômes.
 
 - `campus:2:0` Je décompose un écart de coût entre ce qui vient du volume et ce qui vient du prix des charges.
-- `dcg:4:1` Je décompose un écart global en écart sur prix, sur volume et sur coûts.
+- `dcg:5:1` Je décompose un écart global en écart sur prix, sur volume et sur coûts.
 
 #### `decision-ou-marche`
 
@@ -706,7 +745,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg:4:2` Je distingue un écart imputable à une décision d'un écart imputable au marché.
+- `dcg:5:2` Je distingue un écart imputable à une décision d'un écart imputable au marché.
 
 #### `mesurer-l-effet-d-une-action`
 
@@ -715,8 +754,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 3 phrases, 3 diplômes.
 
 - `debutant:3:2` Je compare un trimestre avec promotion à un trimestre sans.
-- `cg1:3:3` Je mesure l'écart entre ma prévision et le réalisé, et j'en cherche la cause.
-- `mco2:5:2` Je corrige une politique commerciale à partir de ce que les deux mois précédents ont montré.
+- `cg1:4:3` Je mesure l'écart entre ma prévision et le réalisé, et j'en cherche la cause.
+- `mco2:6:2` Je corrige une politique commerciale à partir de ce que les deux mois précédents ont montré.
 
 ### Rendre compte
 
@@ -729,13 +768,13 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 8 phrases, 5 diplômes.
 
 - `martel:7:1` Je construis le tableau de bord des six trimestres sur une page, avec les indicateurs du métier et pas seulement le résultat.
-- `mco:5:0` Je construis un tableau de bord commercial qui tient sur une page et qui se lit.
-- `mco2:6:0` Je construis un tableau de bord mensuel qui tient sur une page et qui se lit.
-- `ndrc:6:0` Je construis un tableau de bord commercial qui tient sur une page et qui se lit.
-- `fitness:6:0` Je construis un tableau de bord de la relation client qui tient sur une page et qui se lit.
-- `gpme:6:0` Je construis un tableau de bord de PME qui tient sur une page et qui se lit.
-- `mhr:5:0` Je construis un tableau de bord de direction qui tient sur une page et qui se lit.
-- `bistrot:5:0` Je construis un tableau de bord d'exploitation qui tient sur une page et qui se lit.
+- `mco:6:0` Je construis un tableau de bord commercial qui tient sur une page et qui se lit.
+- `mco2:7:0` Je construis un tableau de bord mensuel qui tient sur une page et qui se lit.
+- `ndrc:7:0` Je construis un tableau de bord commercial qui tient sur une page et qui se lit.
+- `fitness:7:0` Je construis un tableau de bord de la relation client qui tient sur une page et qui se lit.
+- `gpme:7:0` Je construis un tableau de bord de PME qui tient sur une page et qui se lit.
+- `mhr:6:0` Je construis un tableau de bord de direction qui tient sur une page et qui se lit.
+- `bistrot:6:0` Je construis un tableau de bord d'exploitation qui tient sur une page et qui se lit.
 
 #### `choisir-ses-indicateurs`
 
@@ -743,15 +782,15 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 9 phrases, 7 diplômes.
 
-- `stmg:4:0` Je choisis, parmi les indicateurs disponibles, les trois qui expliquent le mieux le résultat de mon entreprise.
-- `mco:5:1` Je choisis les indicateurs qui expliquent mon résultat, et j'écarte ceux qui l'habillent.
-- `mco2:6:1` Je choisis les indicateurs qui expliquent mon résultat et j'écarte ceux qui l'habillent.
-- `ndrc:6:1` Je choisis les indicateurs qui expliquent la performance, et j'écarte ceux qui la décorent.
-- `fitness:6:1` Je choisis les indicateurs qui expliquent mon portefeuille, et j'écarte ceux qui l'habillent.
-- `mhr:5:1` Je choisis les indicateurs qui expliquent mon résultat, et j'écarte ceux qui l'habillent.
-- `bistrot:5:1` Je choisis les indicateurs qui expliquent mon résultat, ratio matières, ticket moyen, taux de remplissage, et j'écarte ceux qui l'habillent.
-- `gea:5:1` Je choisis les indicateurs qui expliquent la situation de l'entreprise, et j'écarte ceux qui l'habillent.
-- `avance:6:1` Je choisis les indicateurs qui expliquent une trajectoire, et j'écarte ceux qui l'habillent.
+- `stmg:5:0` Je choisis, parmi les indicateurs disponibles, les trois qui expliquent le mieux le résultat de mon entreprise.
+- `mco:6:1` Je choisis les indicateurs qui expliquent mon résultat, et j'écarte ceux qui l'habillent.
+- `mco2:7:1` Je choisis les indicateurs qui expliquent mon résultat et j'écarte ceux qui l'habillent.
+- `ndrc:7:1` Je choisis les indicateurs qui expliquent la performance, et j'écarte ceux qui la décorent.
+- `fitness:7:1` Je choisis les indicateurs qui expliquent mon portefeuille, et j'écarte ceux qui l'habillent.
+- `mhr:6:1` Je choisis les indicateurs qui expliquent mon résultat, et j'écarte ceux qui l'habillent.
+- `bistrot:6:1` Je choisis les indicateurs qui expliquent mon résultat, ratio matières, ticket moyen, taux de remplissage, et j'écarte ceux qui l'habillent.
+- `gea:6:1` Je choisis les indicateurs qui expliquent la situation de l'entreprise, et j'écarte ceux qui l'habillent.
+- `avance:7:1` Je choisis les indicateurs qui expliquent une trajectoire, et j'écarte ceux qui l'habillent.
 
 #### `ecrire-une-note`
 
@@ -760,9 +799,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 4 phrases, 4 diplômes.
 
 - `debutant:4:2` Je fais le bilan d'une année de gestion en quelques phrases.
-- `cg1:6:2` Je rédige une note de gestion qui explique des résultats plutôt que de les décrire.
-- `gpme:2:2` Je rédige une procédure de relance applicable par une PME sans service de recouvrement.
-- `dcg:5:0` Je rédige un rapport de gestion qui relie décisions, écarts et situation financière.
+- `cg1:7:2` Je rédige une note de gestion qui explique des résultats plutôt que de les décrire.
+- `gpme:3:2` Je rédige une procédure de relance applicable par une PME sans service de recouvrement.
+- `dcg:6:0` Je rédige un rapport de gestion qui relie décisions, écarts et situation financière.
 
 #### `presenter-a-l-oral`
 
@@ -771,15 +810,15 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 10 phrases, 8 diplômes.
 
 - `martel:7:2` Je présente oralement six trimestres de gestion à un dirigeant et je réponds à ses objections avec des chiffres.
-- `stmg:4:1` Je présente oralement une décision de gestion et ses conséquences chiffrées sur un exercice complet.
-- `cg1:6:3` Je présente une analyse à l'oral et je réponds à une question chiffrée.
-- `mco:5:2` Je présente oralement une gestion, ses réussites et ses erreurs, devant un jury.
-- `mco2:6:2` Je présente oralement six mois d'exploitation, leurs réussites et leurs erreurs.
-- `ndrc:6:2` Je présente oralement une gestion commerciale, ses réussites et ses erreurs, devant un jury.
-- `fitness:6:2` Je présente oralement cinq trimestres de pilotage, leurs réussites et leurs erreurs, devant un jury.
-- `mhr:5:2` Je présente oralement une année de direction, ses réussites et ses erreurs, devant un jury.
-- `bistrot:5:2` Je présente oralement quatre trimestres d'exploitation, leurs réussites et leurs erreurs, devant un jury.
-- `gea:5:2` Je présente oralement une gestion, ses réussites et ses erreurs, devant un jury.
+- `stmg:5:1` Je présente oralement une décision de gestion et ses conséquences chiffrées sur un exercice complet.
+- `cg1:7:3` Je présente une analyse à l'oral et je réponds à une question chiffrée.
+- `mco:6:2` Je présente oralement une gestion, ses réussites et ses erreurs, devant un jury.
+- `mco2:7:2` Je présente oralement six mois d'exploitation, leurs réussites et leurs erreurs.
+- `ndrc:7:2` Je présente oralement une gestion commerciale, ses réussites et ses erreurs, devant un jury.
+- `fitness:7:2` Je présente oralement cinq trimestres de pilotage, leurs réussites et leurs erreurs, devant un jury.
+- `mhr:6:2` Je présente oralement une année de direction, ses réussites et ses erreurs, devant un jury.
+- `bistrot:6:2` Je présente oralement quatre trimestres d'exploitation, leurs réussites et leurs erreurs, devant un jury.
+- `gea:6:2` Je présente oralement une gestion, ses réussites et ses erreurs, devant un jury.
 
 #### `repondre-aux-objections`
 
@@ -787,10 +826,10 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 4 phrases, 3 diplômes.
 
-- `gpme:6:2` Je présente oralement une gestion et je réponds aux objections d'un dirigeant.
-- `dcg:5:2` Je réponds à des questions portant sur mes méthodes de calcul, pas seulement sur mes chiffres.
-- `dcg-rse:6:2` Je soutiens un rapport et je réponds aux objections d'un jury sans esquiver les arbitrages perdants.
-- `avance:6:2` Je défends oralement une stratégie et ses arbitrages devant un jury qui conteste.
+- `gpme:7:2` Je présente oralement une gestion et je réponds aux objections d'un dirigeant.
+- `dcg:6:2` Je réponds à des questions portant sur mes méthodes de calcul, pas seulement sur mes chiffres.
+- `dcg-rse:7:2` Je soutiens un rapport et je réponds aux objections d'un jury sans esquiver les arbitrages perdants.
+- `avance:7:2` Je défends oralement une stratégie et ses arbitrages devant un jury qui conteste.
 
 #### `assumer-une-erreur`
 
@@ -798,8 +837,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 3 diplômes.
 
-- `stmg:4:2` Je reconnais une erreur de gestion et je dis ce que je ferais autrement, sans chercher d'excuse extérieure.
-- `dcg:5:1` J'assume publiquement une hypothèse qui s'est révélée fausse et j'en tire une conséquence.
+- `stmg:5:2` Je reconnais une erreur de gestion et je dis ce que je ferais autrement, sans chercher d'excuse extérieure.
+- `dcg:6:1` J'assume publiquement une hypothèse qui s'est révélée fausse et j'en tire une conséquence.
 - `campus:7:2` Je reçois un classement et j'en tire ce que je referais autrement.
 
 #### `relier-decisions-et-resultats`
@@ -808,7 +847,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `gpme:6:1` Je relie les décisions prises et les résultats obtenus, sans en attribuer le mérite au hasard.
+- `gpme:7:1` Je relie les décisions prises et les résultats obtenus, sans en attribuer le mérite au hasard.
 
 #### `rendre-compte-de-sa-part`
 
@@ -844,8 +883,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 3 diplômes.
 
-- `mco:2:2` Je défends un choix d'approvisionnement devant des collègues qui ont choisi autrement.
-- `mhr:2:2` Je défends une politique tarifaire devant des collègues qui ont choisi autrement.
+- `mco:3:2` Je défends un choix d'approvisionnement devant des collègues qui ont choisi autrement.
+- `mhr:3:2` Je défends une politique tarifaire devant des collègues qui ont choisi autrement.
 - `campus:2:2` Je défends devant un comité une proposition qui vient de mon poste.
 
 #### `decider-sous-contrainte`
@@ -874,7 +913,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg-rse:1:0` Je lis un indice extra-financier et j'explique ce que mesure chacun de ses trois piliers.
+- `dcg-rse:2:0` Je lis un indice extra-financier et j'explique ce que mesure chacun de ses trois piliers.
 
 #### `empreinte-d-une-decision`
 
@@ -882,7 +921,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg-rse:1:1` Je relie une décision de gestion à son empreinte environnementale, sociale ou de gouvernance.
+- `dcg-rse:2:1` Je relie une décision de gestion à son empreinte environnementale, sociale ou de gouvernance.
 
 #### `depense-ou-engagement`
 
@@ -890,9 +929,9 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 3 phrases, 1 diplômes.
 
-- `dcg-rse:1:2` Je justifie un premier montant d'engagement en le confrontant à la marge qu'il ampute.
-- `dcg-rse:2:0` Je distingue une dépense qui agit dans le trimestre d'un engagement qui se capitalise dans la durée.
-- `dcg-rse:2:2` Je décide de maintenir ou d'ajuster un engagement en raisonnant sur l'horizon de la partie.
+- `dcg-rse:2:2` Je justifie un premier montant d'engagement en le confrontant à la marge qu'il ampute.
+- `dcg-rse:3:0` Je distingue une dépense qui agit dans le trimestre d'un engagement qui se capitalise dans la durée.
+- `dcg-rse:3:2` Je décide de maintenir ou d'ajuster un engagement en raisonnant sur l'horizon de la partie.
 
 #### `effets-differes-d-un-engagement`
 
@@ -900,8 +939,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 1 diplômes.
 
-- `dcg-rse:3:2` Je suis l'évolution du taux de rebuts et je l'impute aux décisions qui l'ont fait bouger.
-- `dcg-rse:4:1` Je relie un engagement social à un turnover réduit et aux coûts de recrutement évités.
+- `dcg-rse:4:2` Je suis l'évolution du taux de rebuts et je l'impute aux décisions qui l'ont fait bouger.
+- `dcg-rse:5:1` Je relie un engagement social à un turnover réduit et aux coûts de recrutement évités.
 
 #### `capital-d-image`
 
@@ -909,8 +948,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 1 diplômes.
 
-- `dcg-rse:2:1` Je lis l'effet différé d'un capital d'image sur la part de marché.
-- `dcg-rse:4:0` Je relie un capital d'image à la confiance de la banque et à des conditions de découvert plus favorables.
+- `dcg-rse:3:1` Je lis l'effet différé d'un capital d'image sur la part de marché.
+- `dcg-rse:5:0` Je relie un capital d'image à la confiance de la banque et à des conditions de découvert plus favorables.
 
 #### `commenter-une-trajectoire-esg`
 
@@ -918,7 +957,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg-rse:6:1` Je commente une trajectoire ESG et une empreinte en distinguant la mesure de l'engagement qui l'a produite.
+- `dcg-rse:7:1` Je commente une trajectoire ESG et une empreinte en distinguant la mesure de l'engagement qui l'a produite.
 
 #### `parties-prenantes`
 
@@ -926,7 +965,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `dcg-rse:5:0` J'anticipe une réaction des parties prenantes à partir du standing RSE atteint.
+- `dcg-rse:6:0` J'anticipe une réaction des parties prenantes à partir du standing RSE atteint.
 
 ### Travailler la donnée
 
@@ -938,7 +977,7 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `cg1:6:0` J'exporte des données de gestion et je les contrôle avant de les utiliser.
+- `cg1:7:0` J'exporte des données de gestion et je les contrôle avant de les utiliser.
 
 #### `construire-une-serie`
 
@@ -946,8 +985,8 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 2 phrases, 2 diplômes.
 
-- `cg1:6:1` Je construis une série sur plusieurs périodes et j'en tire une évolution.
-- `dcg-rse:6:0` Je consolide des indicateurs extra-financiers sur plusieurs exercices en une synthèse lisible.
+- `cg1:7:1` Je construis une série sur plusieurs périodes et j'en tire une évolution.
+- `dcg-rse:7:0` Je consolide des indicateurs extra-financiers sur plusieurs exercices en une synthèse lisible.
 
 #### `lire-un-classement`
 
@@ -971,5 +1010,5 @@ ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `mco:3:1` Je lis un taux de transformation et j'en tire ce qui se passe en rayon.
+- `mco:4:1` Je lis un taux de transformation et j'en tire ce qui se passe en rayon.
 

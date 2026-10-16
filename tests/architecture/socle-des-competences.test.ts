@@ -11,7 +11,7 @@ import {
 /**
  * LE SOCLE NE PERD AUCUNE COMPÉTENCE EN ROUTE.
  *
- * Les treize ateliers écrivent 251 compétences pour 247 textes distincts :
+ * Chaque atelier écrit ses propres compétences, presque toutes distinctes :
  * chacun réécrit les siennes, même quand le geste est le même. Le socle les
  * rassemble, et c'est là que se joue le risque : une phrase qu'aucun geste ne
  * reprend est une compétence qui disparaîtra le jour de la migration, sans
@@ -85,7 +85,7 @@ describe("le socle de compétences", () => {
       ).toBeGreaterThan(0);
       // La première personne n'est pas un style : c'est la forme qu'attend un
       // passeport professionnel, et elle oblige à nommer un acte plutôt qu'un
-      // chapitre. Les 251 phrases d'origine la respectent toutes.
+      // chapitre. Les phrases d'origine la respectent toutes.
       expect(g.enonce, `${g.code} : « ${g.enonce} »`).toMatch(/^(Je |J'|Je')/);
       expect(g.code, `${g.code} n'est pas un code lisible`).toMatch(
         /^[a-z][a-z0-9-]*$/,
