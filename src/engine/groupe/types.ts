@@ -1,4 +1,4 @@
-import type { BalanceSheet, CashFlowItem, ProductCode } from "../types";
+import type { BalanceSheet, CashFlowItem, ProductCode, ProductDef, SegmentCode } from "../types";
 
 /**
  * LE NIVEAU 7 « GROUPE » : les types du moteur.
@@ -167,6 +167,74 @@ export interface ConfigDeGroupe {
   import?: ImportDuGroupe;
   /** Sous-traitance par référence (absent : levier fermé ; une référence absente ne se sous-traite pas). */
   sousTraitance?: Record<ProductCode, SousTraitanceDUneReference>;
+  /**
+   * LES NOUVEAUTÉS DU NIVEAU 7 (NOVA Home) : une référence à développer
+   * propre au niveau, ajoutée à la gamme par `composerLeScenarioJoue`. Le
+   * bloc dit au moteur ce qui la distingue d'une référence ordinaire. Une
+   * nouveauté absente de la gamme est ignorée.
+   */
+  nouveautes?: NouveauteDuGroupe[];
+}
+
+/** Une nouveauté du niveau 7, telle que le snapshot la porte (adoption déjà tirée). */
+export interface NouveauteDuGroupe {
+  /** Le code de la référence dans la gamme. */
+  code: ProductCode;
+  /**
+   * LA CANNIBALISATION. Dès qu'une entreprise active vend la nouveauté, une
+   * part du potentiel de chaque segment listé de la référence `depuis` passe
+   * au segment `vers` de la nouveauté. Le potentiel total est conservé.
+   */
+  migration: { depuis: ProductCode; vers: SegmentCode; parts: Record<SegmentCode, number> };
+  /** La plateforme logicielle : charge fixe de chaque tour où la nouveauté est au marché. */
+  plateforme: { coutFixeParTour: number };
+  /**
+   * Le composant critique : les ruptures de ces fournisseurs, tirées sur un
+   * flux propre par entreprise et par tour, plus fréquentes aux pics de la
+   * saison de la nouveauté.
+   */
+  ruptures?: { fournisseur: string; probabilite: number; probabiliteAuxPics: number; seuilDePic: number }[];
+  /** Les profils de concurrents simulés qui la développent une fois qu'un autre l'a mise au marché. */
+  suiveurs: string[];
+  /** Les frais de développement immobilisés, amortis sur cette durée (en tours) à partir du lancement. */
+  immobilisation: { dureeDAmortissement: number };
+}
+
+/**
+ * LA DÉFINITION D'UNE NOUVEAUTÉ (configuration, base trimestrielle) : la
+ * référence telle qu'elle entre dans la gamme, son adoption cachée (un état
+ * tiré par la graine à la composition) et ses règles. `composerLeScenarioJoue`
+ * en tire la référence du snapshot et son entrée `groupe.nouveautes`.
+ */
+export interface DefinitionDUneNouveaute {
+  reference: ProductDef;
+  adoption: {
+    /** Le segment de la référence dont la taille et la croissance dépendent de l'état. */
+    segment: SegmentCode;
+    /** Les états possibles, également probables : taille de base, croissance par tour, facteur de migration. */
+    etats: { nom: string; taille: number; croissance: number; migration: number }[];
+  };
+  /** Les règles, migration avant facteur d'adoption, plateforme au trimestre, amortissement en trimestres. */
+  regles: Omit<NouveauteDuGroupe, "code">;
+}
+
+/** Ce que le tour dit d'une nouveauté, pour une entreprise. */
+export interface ResultatDUneNouveaute {
+  /** Vendable ce tour. */
+  auMarche: boolean;
+  /** Frais de développement immobilisés ce tour. */
+  immobilise: number;
+  amortissement: number;
+  depreciation: number;
+  /** Valeur nette de clôture des frais immobilisés. */
+  valeurNette: number;
+  plateforme: number;
+  /** Marge sur coût variable de la référence ce tour. */
+  margeSurCoutVariable: number;
+  /** Abandonnée ce tour. */
+  abandon?: boolean;
+  /** Le module radio a rompu ce tour. */
+  rupture?: boolean;
 }
 
 /**
@@ -217,6 +285,8 @@ export interface EtatDeGroupe {
   margeEnStock?: number;
   /** Le bilan consolidé de la dernière clôture et la valeur des minoritaires : la valeur d'ouverture du tour suivant. */
   cloture?: { bilan: BalanceSheet; valeurDesMinoritaires: number };
+  /** Les nouveautés qu'une AUTRE entreprise active a vendues au dernier tour (ce que voit un concurrent). */
+  nouveautesAuMarche?: ProductCode[];
 }
 
 export type TypeDeCible = "fournisseur" | "etranger";
@@ -349,6 +419,8 @@ export interface Consolidation {
 
 export interface ResultatDeGroupe {
   valeur?: ValeurDeLEntreprise;
+  /** Les nouveautés du niveau 7, par code. */
+  nouveautes?: Record<ProductCode, ResultatDUneNouveaute>;
   rachat?: ResultatDuRachat;
   sousTraitance?: { parReference: Record<ProductCode, { unites: number; cout: number }>; unites: number; cout: number };
   /** Marge sur coût variable / résultat d'exploitation (absent si ce dernier n'est pas positif). */

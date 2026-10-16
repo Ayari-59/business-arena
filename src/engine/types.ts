@@ -990,6 +990,20 @@ export interface ProductDevelopmentDef {
   cost: number;
   /** Tour de lancement au plus tôt (1 = dès l'ouverture, coût couvert). */
   availableFromRound?: number;
+  /**
+   * LE DÉVELOPPEMENT PAR ÉTAPES (niveau 7, NOVA Home). Le développement
+   * démarre au tour où la R&D cumulée atteint cette part du coût ; absent :
+   * pas d'étape, le comportement d'avant.
+   */
+  seuilDeDemarrage?: number;
+  /** Tours au moins entre le démarrage et la première vente (absent : aucun). */
+  dureeMinimale?: number;
+  /**
+   * Le risque de retard (certification) : au premier tour où la référence
+   * serait vendable, elle l'est `tours` plus tard avec cette probabilité,
+   * tirée une fois par entreprise sur un flux propre. Absent : aucun retard.
+   */
+  risqueDeRetard?: { probabilite: number; tours: number };
 }
 
 export interface ProductDef {
@@ -1086,6 +1100,20 @@ export interface ProductRdState {
   launchRound?: number;
   /** Niveau technique acquis (bonus de qualité perçue, 0 = référence). */
   techLevel: number;
+  /** Développement par étapes : le tour où il a démarré (seuil atteint). */
+  demarreAuTour?: number;
+  /** Retard de certification : la référence n'est pas vendable jusqu'à ce tour compris. */
+  retardJusquAu?: number;
+  /** Le retard a été tiré (une seule fois). */
+  certificationTiree?: boolean;
+  /** Niveau 7 : frais de développement immobilisés (cumul, brut). */
+  immobilise?: number;
+  /** Niveau 7 : amortissements et dépréciations cumulés de ces frais. */
+  amorti?: number;
+  /** Niveau 7 : la référence est abandonnée (retirée du marché, plus de R&D). */
+  abandonnee?: boolean;
+  /** Niveau 7 : la contribution de la référence par tour depuis son lancement (MCV − plateforme). */
+  contributions?: number[];
 }
 
 /**
@@ -1275,6 +1303,12 @@ export interface ProductDecisions {
   supplierChoice?: string;
   /** Budget R&D de la référence (scénarios avec bloc `rd` ; absent : part égale du scalaire). */
   rdBudget?: number;
+  /**
+   * Niveau 7 : abandonner la nouveauté (NOVA Home). Elle quitte le marché dès
+   * ce tour, sa plateforme s'arrête, ses frais de développement non amortis
+   * sont dépréciés. Sans effet sur une référence qui n'est pas une nouveauté.
+   */
+  abandonner?: boolean;
 }
 
 export interface RoundDecisions {

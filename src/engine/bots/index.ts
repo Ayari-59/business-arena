@@ -14,6 +14,7 @@ import { aLaMesureDuNiveau, type LeviersOuverts } from "./leviers";
 
 export { aLaMesureDuNiveau, type LeviersOuverts } from "./leviers";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, toGamme, type GammeProduct } from "../gamme";
+import { nouveautesDeLaGamme } from "../groupe/nouveautes";
 import type { SupplierDef } from "../types";
 
 /**
@@ -437,7 +438,23 @@ function gammeDecisions(
   const ref = mainRefPrice(ctx.scenario);
   const priceRatio = ref > 0 ? base.price / ref : 1;
 
-  const sizes = gamme.map((p) => p.market.segments.reduce((sum, s) => sum + s.size, 0));
+  // Niveau 7 : une nouveauté (NOVA Home) ne pèse dans l'atelier du bot
+  // qu'une fois au marché, et alors pour le marché qu'elle attend : ses
+  // segments propres et la part du potentiel qui migrera vers elle. Avant,
+  // elle ne change rien au plan des autres références.
+  const nouveautes = nouveautesDeLaGamme(ctx.scenario, gamme);
+  const sizes = gamme.map((p) => {
+    const n = nouveautes.get(p.code);
+    if (!n) return p.market.segments.reduce((sum, s) => sum + s.size, 0);
+    if (!isProductAvailable(p, rdOpeningOf(ctx.scenario, ctx.state, p.code), ctx.roundIndex)) return 0;
+    const source = gamme.find((x) => x.code === n.migration.depuis);
+    const propres = p.market.segments.filter((s) => s.code !== n.migration.vers).reduce((sum, s) => sum + s.size, 0);
+    const attendus = Object.entries(n.migration.parts).reduce(
+      (sum, [code, part]) => sum + part * (source?.market.segments.find((s) => s.code === code)?.size ?? 0),
+      0,
+    );
+    return propres + attendus;
+  });
   const totalSize = sizes.reduce((a, b) => a + b, 0);
   const weights = sizes.map((s) => (totalSize > 0 ? s / totalSize : 1 / gamme.length));
 
@@ -520,6 +537,17 @@ function gammeDecisions(
 function botRdBudget(profile: BotProfile, ctx: BotContext, p: GammeProduct, available: boolean): number {
   const cfg = ctx.scenario.rd!;
   const rd = rdOpeningOf(ctx.scenario, ctx.state, p.code);
+  // Niveau 7 : une nouveauté (NOVA Home). Aucun concurrent simulé ne l'ouvre :
+  // les profils suiveurs la développent, d'un coup, dès qu'une autre entreprise
+  // l'a mise au marché ; les autres jamais. Abandonnée, plus rien.
+  const nouveaute = nouveautesDeLaGamme(ctx.scenario, [p]).get(p.code);
+  if (nouveaute && !available) {
+    if (rd?.abandonnee || !nouveaute.suiveurs.includes(profile)) return 0;
+    if (!(ctx.state.groupe?.nouveautesAuMarche ?? []).includes(p.code)) return 0;
+    const remaining = Math.max(0, (p.development?.cost ?? 0) - (rd?.invested ?? 0));
+    const enveloppe = ctx.state.finance.cash + ctx.scenario.finance.overdraftLimit;
+    return Math.max(0, Math.min(remaining, 0.5 * enveloppe));
+  }
   if (!available && p.development) {
     const cost = p.development.cost;
     const remaining = Math.max(0, cost - (rd?.invested ?? 0));

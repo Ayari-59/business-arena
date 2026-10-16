@@ -76,6 +76,12 @@ const productDefSchema = z.object({
     .object({
       cost: z.number().nonnegative(),
       availableFromRound: z.number().int().min(1).optional(),
+      // Niveau 7 (NOVA Home) : le développement par étapes et son retard.
+      seuilDeDemarrage: z.number().min(0).max(1).optional(),
+      dureeMinimale: z.number().int().min(0).optional(),
+      risqueDeRetard: z
+        .object({ probabilite: z.number().min(0).max(1), tours: z.number().int().min(1) })
+        .optional(),
     })
     .optional(),
 });
@@ -409,6 +415,31 @@ export const engineScenarioConfigSchema = z.object({
               .min(1),
             plafond: z.number().nonnegative(),
             qualite: z.number().positive(),
+          }),
+        )
+        .optional(),
+      nouveautes: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            migration: z.object({
+              depuis: z.string().min(1),
+              vers: z.string().min(1),
+              parts: z.record(z.string().min(1), z.number().min(0).max(1)),
+            }),
+            plateforme: z.object({ coutFixeParTour: z.number().min(0) }),
+            ruptures: z
+              .array(
+                z.object({
+                  fournisseur: z.string().min(1),
+                  probabilite: z.number().min(0).max(1),
+                  probabiliteAuxPics: z.number().min(0).max(1),
+                  seuilDePic: z.number().positive(),
+                }),
+              )
+              .optional(),
+            suiveurs: z.array(z.string().min(1)),
+            immobilisation: z.object({ dureeDAmortissement: z.number().positive() }),
           }),
         )
         .optional(),

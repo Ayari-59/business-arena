@@ -82,7 +82,18 @@ export function isProductAvailable(
 ): boolean {
   const dev = product.development;
   if (!dev || !rd) return true;
-  return rd.launched || (rd.invested >= dev.cost && roundIndex >= (dev.availableFromRound ?? 1));
+  // Niveau 7 : une nouveauté abandonnée a quitté le marché pour de bon.
+  if (rd.abandonnee) return false;
+  if (rd.launched) return true;
+  if (!(rd.invested >= dev.cost && roundIndex >= (dev.availableFromRound ?? 1))) return false;
+  // Le développement par étapes (niveau 7, NOVA Home) : une durée minimale
+  // depuis le démarrage, et le retard de certification tiré pour l'entreprise.
+  // Une référence sans ces réglages ne passe pas ici.
+  if (dev.dureeMinimale !== undefined && (rd.demarreAuTour === undefined || roundIndex < rd.demarreAuTour + dev.dureeMinimale)) {
+    return false;
+  }
+  if (rd.retardJusquAu !== undefined && roundIndex <= rd.retardJusquAu) return false;
+  return true;
 }
 
 /** Décisions d'un produit, alignées sur l'ordre de la gamme. */
