@@ -62,6 +62,16 @@ export interface ReglagesDuScenarioJoue {
   leviers?: DifficultyPreset["decisions"];
   /** Le calendrier des histoires d'investissement ; absent : l'actuel. */
   calendrier?: CalendrierDesHistoires;
+  /**
+   * LES CONCURRENTS ASSAINIS. Vrai pour une partie créée après le correctif
+   * des concurrents simulés (`engine/bots`) : son instantané porte le réglage,
+   * ses bots planifient sur la demande que leur prix leur laisse et ne vendent
+   * pas sous leur coût complet. Absent ou faux : le chemin d'avant, au bit
+   * près. C'est ce qui protège les parties EN COURS (leur instantané ne porte
+   * pas le réglage), les deux témoins au centime et la note d'examen, qui se
+   * rejoue sur le marché de son lot.
+   */
+  concurrentsAssainis?: boolean;
 }
 
 export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenarioConfig {
@@ -98,7 +108,21 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
       ? avecInvestissementParNiveau(snapshot, preset.level, r.calendrier ?? "actuel")
       : snapshot;
   const avecRd = preset && leviers ? rdDuNiveau(avecHistoires, preset.level, leviers.rd) : avecHistoires;
-  return avecLeGroupe(avecRd, leviers, r.seed);
+  return avecLesConcurrentsAssainis(avecLeGroupe(avecRd, leviers, r.seed), r.concurrentsAssainis);
+}
+
+/**
+ * Le réglage des concurrents, posé dans l'instantané comme le bloc `groupe` :
+ * une partie le porte ou ne le porte pas pour toute sa durée. Absent, l'objet
+ * est rendu tel quel, sans même une clé `bots` ajoutée : un scénario
+ * historique reste identique au bit près, et c'est la condition des témoins.
+ */
+function avecLesConcurrentsAssainis(
+  scenario: EngineScenarioConfig,
+  assainis: boolean | undefined,
+): EngineScenarioConfig {
+  if (assainis !== true) return scenario;
+  return { ...scenario, bots: { ...(scenario.bots ?? {}), concurrentsAssainis: true } };
 }
 
 /** Le niveau ouvre-t-il le niveau 7 « Groupe » (croissance externe ou externalisation) ? */

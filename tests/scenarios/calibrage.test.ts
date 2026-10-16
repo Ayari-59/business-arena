@@ -24,8 +24,15 @@ import type { CompanyRoundResult, CompanyState } from "../../src/engine/types";
  */
 const STRATEGIES: BotProfile[] = ["passive", "price_aggressive", "premium", "balanced", "growth"];
 
-function partie(code: string, strategie: BotProfile) {
-  const d = SCENARIOS.find((s) => s.code === code)!;
+function partie(code: string, strategie: BotProfile, assaini = false) {
+  const def = SCENARIOS.find((s) => s.code === code)!;
+  // `assaini` : le scénario tel qu'une partie CRÉÉE AUJOURD'HUI le fige
+  // (`composerLeScenarioJoue`, `bots.concurrentsAssainis`). Les trois gardes de
+  // calibrage économique gardent le scénario brut, au bit près ; seule la garde
+  // des concurrents mesure ce qui est joué.
+  const d = assaini
+    ? { ...def, scenario: { ...def.scenario, bots: { ...(def.scenario.bots ?? {}), concurrentsAssainis: true } } }
+    : def;
   const companies: CompanyState[] = [
     d.company("player", d.playerTeamName, "bot", strategie),
     ...d.bots.slice(0, 2).map((b) => d.company(b.id, b.name, "bot", b.profile)),
@@ -49,10 +56,25 @@ function partie(code: string, strategie: BotProfile) {
   });
   const resultats = run.rounds.map((r) => r.results["player"]!);
   const dernier = run.rounds[run.rounds.length - 1]!.companies.find((c) => c.id === "player")!;
+  // Les concurrents simulés de la table, lus comme le joueur : la donnée
+  // était déjà là, personne ne la regardait (voir la garde plus bas).
+  const concurrents = companies
+    .filter((c) => c.id !== "player")
+    .map((c) => ({
+      id: c.id,
+      profil: c.botProfile as BotProfile,
+      crises: run.rounds.filter((r) => Boolean(r.results[c.id]?.treasury?.crisis)).length,
+      defaillantAuTour: run.rounds.findIndex((r) =>
+        r.companies.some((x) => x.id === c.id && x.status === "defaillant"),
+      ),
+      cumul: run.rounds.reduce((t, r) => t + (r.results[c.id]?.incomeStatement.netIncome ?? 0), 0),
+    }));
   return {
     cumul: resultats.reduce((t, r) => t + r.incomeStatement.netIncome, 0),
     parTour: resultats.reduce((t, r) => t + r.incomeStatement.netIncome, 0) / resultats.length,
     capitauxPropres: dernier.finance.equity,
+    concurrents,
+    tours: run.rounds.length,
   };
 }
 
@@ -111,6 +133,103 @@ describe("calibrage économique des secteurs", () => {
         `${d.code} : ${Math.round(ecart / 1000)} k€ séparent la meilleure de la pire`,
       ).toBeLessThan(250000);
     }
+  });
+});
+
+/**
+ * UN CONCURRENT QUI SE SUICIDE N'ENSEIGNE RIEN.
+ *
+ * Ce fichier jouait déjà les deux concurrents simulés de chaque secteur à côté
+ * de la stratégie mesurée, et il lisait la seule ligne du « joueur ». La donnée
+ * manquante n'en était pas une : instrumenté dans ses propres conditions, il
+ * sortait déjà `grand-hotel CRISE DEF −262 k€` et `table-marches CRISE DEF
+ * −110 k€` à chacune de ses cinq exécutions. L'assertion manquait, voilà tout.
+ *
+ * Un concurrent a le droit de perdre de l'argent : c'est même ce qui rend sa
+ * stratégie lisible à l'élève. Il n'a pas le droit de SORTIR DU JEU, ni de
+ * passer la partie à découvert. Une entreprise défaillante est gelée : elle ne
+ * vend plus, ne produit plus, son IPG se fige et sa demande se reporte sur les
+ * autres. Il n'y a alors plus de concurrence à lire pendant la moitié de la
+ * partie, et le classement récompense celui qui a survécu, pas celui qui a bien
+ * joué.
+ *
+ * La limite retenue, et mesurée ici :
+ *  - aucune défaillance d'un concurrent simulé, dans aucun secteur ;
+ *  - pas de crise de trésorerie sur plus de la moitié des tours, ce qui laisse
+ *    passer le trou de départ d'une stratégie coûteuse et refuse le découvert
+ *    permanent.
+ *
+ * LA DETTE QUI RESTE s'écrit dans `RUINES_ASSUMEES`, chiffrée. Le correctif des
+ * concurrents a ramené les ruines de 44 à 9 dans les conditions de ce fichier
+ * (et, dans la partie de production mesurée au banc, les défaillances de
+ * concurrents de 498 sur 2 592 à 33). Ce qui reste tient à trois secteurs où le
+ * premium ne remplit pas sa structure : il vend cher dans un métier où la
+ * clientèle compare d'abord les prix, et son point mort reste au-dessus de la
+ * demande que son prix lui laisse, même ramené au prix usuel. Le défaut de
+ * PIXEL & CO est d'ailleurs identifié ailleurs comme un besoin en fonds de
+ * roulement, pas comme un défaut de concurrent.
+ *
+ * La table se vérifie DANS LES DEUX SENS : une ruine hors table fait échouer,
+ * et une ligne de la table qui ne ruine plus rien fait échouer aussi. Une dette
+ * payée se retire, elle ne pourrit pas en exception.
+ */
+const RUINES_ASSUMEES: Readonly<Record<string, readonly BotProfile[]>> = {
+  // L'ESCALE : 4 ruines sur 5 stratégies ici ; 19 défaillances sur 144 parties
+  // de production au banc, contre 144 sur 144 avant le correctif.
+  hotel: ["premium"],
+  // LA TABLE D'AUGUSTIN : 1 ici, 0 sur 144 au banc (128 avant).
+  bistrot: ["premium"],
+  // PIXEL & CO : 3 ici, 14 sur 144 au banc (101 avant) — besoin en fonds de
+  // roulement, à reprendre avec son propre diagnostic.
+  ecommerce: ["premium"],
+  "ecommerce-gamme": ["premium"],
+};
+
+describe("les concurrents simulés tiennent leur rôle", () => {
+  const ruines = () => {
+    const toutes: { code: string; profil: BotProfile; faute: string }[] = [];
+    for (const d of SCENARIOS) {
+      for (const s of STRATEGIES) {
+        const r = partie(d.code, s, true);
+        for (const c of r.concurrents) {
+          if (c.defaillantAuTour >= 0) {
+            toutes.push({
+              code: d.code,
+              profil: c.profil,
+              faute: `${d.code} (face à ${s}) : ${c.id} (${c.profil}) dépose le bilan au tour ${c.defaillantAuTour + 1} sur ${r.tours}, ${Math.round(c.cumul / 1000)} k€ cumulés`,
+            });
+          } else if (c.crises > r.tours / 2) {
+            toutes.push({
+              code: d.code,
+              profil: c.profil,
+              faute: `${d.code} (face à ${s}) : ${c.id} (${c.profil}) passe ${c.crises} tours sur ${r.tours} en crise de trésorerie`,
+            });
+          }
+        }
+      }
+    }
+    return toutes;
+  };
+
+  it("aucun concurrent simulé ne sort du jeu ni ne vit à découvert", () => {
+    const fautes = ruines()
+      .filter((r) => !(RUINES_ASSUMEES[r.code] ?? []).includes(r.profil))
+      .map((r) => r.faute);
+    expect(
+      fautes,
+      `des concurrents simulés se ruinent par construction :\n${fautes.join("\n")}`,
+    ).toEqual([]);
+  });
+
+  it("la table des ruines assumées ne garde aucune ligne périmée", () => {
+    const vues = new Set(ruines().map((r) => `${r.code}|${r.profil}`));
+    const perimees = Object.entries(RUINES_ASSUMEES).flatMap(([code, profils]) =>
+      profils.filter((p) => !vues.has(`${code}|${p}`)).map((p) => `${code} ${p}`),
+    );
+    expect(
+      perimees,
+      `ces concurrents ne se ruinent plus : retirez-les de RUINES_ASSUMEES plutôt que de les y laisser pourrir`,
+    ).toEqual([]);
   });
 });
 
