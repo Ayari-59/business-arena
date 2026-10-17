@@ -44,7 +44,6 @@ import {
   DEFAULT_ANSWER_FORMAT,
   DEFAULT_QUIZ_MODE,
   DIFFICULTY_PRESETS,
-  NIVEAU_GROUPE,
   QUIZ_MODES,
 } from "@/config/difficulty";
 import {
@@ -531,13 +530,12 @@ export default async function TeacherDashboard({
                   </option>
                 );
               })}
-              {staff?.isPlatformAdmin ? (
-                // LE NIVEAU 7 « GROUPE », EN AVANT-PREMIÈRE : à l'administrateur de la
-                // plateforme seulement, avec NOVA ; le serveur refuse tout autre cas.
-                <option value={NIVEAU_GROUPE.level}>
-                  {NIVEAU_GROUPE.level} · {NIVEAU_GROUPE.name} : {NIVEAU_GROUPE.tagline} · NOVA seulement, avant-première
-                </option>
-              ) : null}
+              {/* PAS DE NIVEAU 7 ICI (décision du propriétaire, octobre 2026). Ce
+                  formulaire ouvre des PARTIES DE CLASSE, et le niveau 7 « Groupe » ne
+                  se joue qu'en solo : le rachat du fournisseur partagé ne déplace que
+                  des concurrents simulés, et l'estimation en direct ignore les rachats
+                  (`verifierLeNiveauGroupe`, qui refuse la classe quoi qu'en dise cet
+                  écran). L'enseignant le trouve sur /jouer, avec NOVA en gamme. */}
             </select>
             {niveauMaxSansLicence < NIVEAU_MAX ? (
               <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">

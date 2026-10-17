@@ -12,7 +12,7 @@ import { getSession } from "@/lib/session";
 
 const periodicitySchema = z.enum(["month", "quarter", "year"]).catch("quarter");
 const companiesSchema = z.coerce.number().int().min(2).max(8).catch(3);
-/** 7 : le niveau « Groupe », que `createSoloGame` réserve à l'administration de la plateforme. */
+/** 7 : le niveau « Groupe », hors parcours : `createSoloGame` exige une licence et NOVA en gamme. */
 const levelSchema = z.coerce.number().int().min(1).max(7).catch(3);
 const roundsCountSchema = z.coerce.number().int().min(1).max(24).optional().catch(undefined);
 /** Secteur choisi : un code inconnu retombe sur le scénario par défaut. */

@@ -20,7 +20,7 @@ import {
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DEFAULT_SCENARIO_CODE, isBuiltInScenarioCode } from "@/config/scenarios/registry";
-import { niveauReserve } from "@/config/vitrine-solo";
+import { NIVEAU_MAX, niveauReserve } from "@/config/vitrine-solo";
 import {
   CONDITIONS,
   ENTREPRISE_DES_CONCOURS,
@@ -28,6 +28,7 @@ import {
   entrepriseDuSecteur,
   horsLicence,
   messageNiveauxReserves,
+  NIVEAU_GROUPE_EN_PUBLIC,
   refusDeLaClasse,
   type HorsLicence,
   type OffreDeLArene,
@@ -376,6 +377,11 @@ export async function etatDeLOffre(userId: string, now: Date = new Date()): Prom
 /**
  * Lève si ce niveau est fermé à qui crée la partie. `licence` est établie par
  * l'appelant, côté serveur, à partir de l'organisation ou du compte qui crée.
+ *
+ * LE NIVEAU 7 « GROUPE » passe ici comme les niveaux 4 à 6 : inclus dans les
+ * offres depuis octobre 2026, et dans elles seules (`niveauReserve` le tranche
+ * avant le réglage de la Découverte). Seule la phrase du refus diffère : ses
+ * deux restrictions, NOVA en gamme et le solo, ne sont pas celles du parcours.
  */
 export async function verifierLeNiveau(args: {
   niveau: number | undefined;
@@ -387,7 +393,9 @@ export async function verifierLeNiveau(args: {
   const code = args.scenarioCode ?? DEFAULT_SCENARIO_CODE;
   if (!niveauReserve(vitrineSolo, code, args.niveau)) return;
   if (await args.licence()) return;
-  throw new NiveauReserveError(messageNiveauxReserves(vitrineSolo));
+  throw new NiveauReserveError(
+    args.niveau > NIVEAU_MAX ? NIVEAU_GROUPE_EN_PUBLIC.inclus : messageNiveauxReserves(vitrineSolo),
+  );
 }
 
 /* ---------------------------------------------------------------------------

@@ -72,7 +72,7 @@ import type {
   RoundDecisions,
 } from "@/engine/types";
 import type { DifficultyPreset } from "@/config/difficulty";
-import { commeEnBase, rejouer, type PartieARejouer } from "./rejeu";
+import { partieFigee, type PartieARejouer } from "./rejeu";
 
 /** Le nom de la référence dans les phrases du bilan. */
 export const NOM_DE_LA_REFERENCE = "un bon gestionnaire";
@@ -412,21 +412,5 @@ export function partieDeLaReference(
   partie: PartieARejouer,
   ouverts: Parameters<typeof decisionDeReference>[1],
 ): PartieARejouer {
-  const prises: RoundDecisions[] = [];
-  rejouer(partie, partie.graine, {
-    type: "methode",
-    decider: (c) => {
-      const d = decisionDeReference(c, ouverts);
-      prises.push(commeEnBase(d));
-      return d;
-    },
-  });
-  return {
-    ...partie,
-    decisions: prises,
-    reconduits: prises.map(() => false),
-    // L'IPG de la référence ne juge pas (le critère est le résultat net) :
-    // elle n'a répondu à aucune situation.
-    pedagogie: prises.map(() => ({})),
-  };
+  return partieFigee(partie, (c) => decisionDeReference(c, ouverts));
 }

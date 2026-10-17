@@ -38,7 +38,7 @@ const groupes = hotelSegments.find((s) => s.code === "groupes")!;
  * bots.
  */
 const STANDARD_MARKET = {
-  segments: [{ ...loisirs, size: 3300 }, { ...groupes, size: 2500 }],
+  segments: [{ ...loisirs, size: 3700 }, { ...groupes, size: 2800 }],
   seasonality: hotelScenario.market.seasonality,
   outsideAttraction: hotelScenario.market.outsideAttraction,
   competitionIntensity: hotelScenario.market.competitionIntensity,
@@ -71,7 +71,7 @@ const GAMME: ProductDef[] = [
           // la clientèle affaires de l'hôtel d'origine, qui prend la supérieure
           // sur note de frais : mêmes ressorts, un plafond d'entreprise plus haut
           ...affaires,
-          size: 2500,
+          size: 2800,
           refPrice: 118,
           minAcceptablePrice: 68,
           psychThresholds: [{ threshold: 125, penalty: 0.88 }],
@@ -82,7 +82,7 @@ const GAMME: ProductDef[] = [
           // 800 et non 700 : c'est ce qui laisse à une stratégie de croissance (volume
           // et marketing) de quoi battre l'inertie sur six trimestres, garde tenue
           // par le test de calibration. À 700, elle perdait de trois pour cent.
-          size: 800,
+          size: 900,
           growth: 0.05,
           priceElasticity: -1.4,
           refPrice: 112,
@@ -114,7 +114,7 @@ const GAMME: ProductDef[] = [
         {
           code: "direction",
           name: "Direction et invités d'entreprise (30 j)",
-          size: 300,
+          size: 336,
           growth: 0.03,
           priceElasticity: -0.6,
           refPrice: 215,
@@ -130,7 +130,7 @@ const GAMME: ProductDef[] = [
         {
           code: "occasions",
           name: "Grandes occasions (noces, anniversaires, sensibles à l'image)",
-          size: 300,
+          size: 336,
           growth: 0.04,
           priceElasticity: -1.2,
           refPrice: 200,

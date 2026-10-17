@@ -319,7 +319,7 @@ describe("la publication", () => {
         scoreMaximum: 100,
         activityProgress: "Completed",
         gradingProgress: "FullyGraded",
-        comment: "Business Arena · grille Business Arena 2026 v1",
+        comment: "Business Arena · grille Business Arena 2026 v2",
       });
       expect(Number.isNaN(Date.parse(s!.timestamp as string))).toBe(false);
     }

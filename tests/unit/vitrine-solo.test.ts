@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { messageNiveauxReserves } from "@/config/tarifs";
+import { DIFFICULTY_PRESETS, NIVEAU_GROUPE } from "@/config/difficulty";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import {
   aDeuxEtages,
   ENTREPRISE_VITRINE_PAR_DEFAUT,
+  NIVEAU_DU_GROUPE,
+  NIVEAU_MAX,
   niveauMaxPour,
   niveauReserve,
   niveauxFermes,
@@ -56,6 +59,37 @@ describe("par défaut : niveaux 1 à 3, pour toutes les entreprises, sans licenc
   it("l'entreprise de l'ancienne vitrine reste celle du registre, si l'admin la rouvre", () => {
     expect(ENTREPRISE_VITRINE_PAR_DEFAUT).toBe(DEFAULT_SCENARIO_CODE);
     expect(SCENARIO_CHOICES.some((s) => s.code === ENTREPRISE_VITRINE_PAR_DEFAUT)).toBe(true);
+  });
+});
+
+/**
+ * LES DEUX BORNES DU MODULE, QUI NE DISENT PAS LA MÊME CHOSE. `NIVEAU_MAX` est le
+ * dernier niveau DU PARCOURS : l'examen, le mérite, le choix de niveau d'une licence
+ * et les phrases des offres le lisent. `NIVEAU_DU_GROUPE` est le niveau 7, hors
+ * parcours, inclus dans les offres mais sur NOVA en gamme et en solo. Les confondre
+ * ouvrirait un septième sujet d'examen et « les niveaux 4 à 7 sont inclus ».
+ */
+describe("le parcours s'arrête à six, le niveau 7 vit à côté", () => {
+  it("NIVEAU_MAX est le dernier des six préréglages du parcours", () => {
+    expect(NIVEAU_MAX).toBe(DIFFICULTY_PRESETS[DIFFICULTY_PRESETS.length - 1]!.level);
+    expect(DIFFICULTY_PRESETS.some((p) => p.level === NIVEAU_DU_GROUPE)).toBe(false);
+  });
+
+  it("NIVEAU_DU_GROUPE est bien le niveau du préréglage « Groupe »", () => {
+    expect(NIVEAU_DU_GROUPE).toBe(NIVEAU_GROUPE.level);
+    expect(NIVEAU_DU_GROUPE).toBeGreaterThan(NIVEAU_MAX);
+  });
+
+  it("le niveau 7 ne s'ouvre qu'avec une licence, quel que soit le réglage", () => {
+    for (const v of [
+      VITRINE_SOLO_PAR_DEFAUT,
+      allumee,
+      { active: false, entrepriseOuverte: "", niveauMaxAutres: 6 },
+      { active: true, entrepriseOuverte: "nova", niveauMaxAutres: 6 },
+    ] satisfies VitrineSolo[]) {
+      expect(niveauReserve(v, "nova", NIVEAU_DU_GROUPE), JSON.stringify(v)).toBe(true);
+      expect(niveauReserve(v, "nova", NIVEAU_DU_GROUPE, true), JSON.stringify(v)).toBe(false);
+    }
   });
 });
 

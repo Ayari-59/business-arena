@@ -27,6 +27,9 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { accesAuxEpisodes, ClasseReserveError, NiveauReserveError } from "@/services/acces.service";
+import { NiveauGroupeReserveError } from "@/services/game-creation.service";
+import { NIVEAU_GROUPE_EN_PUBLIC } from "@/config/tarifs";
+import { niveauReserve } from "@/config/vitrine-solo";
 import { REFUS_DE_LA_CLASSE } from "@/config/tarifs";
 import { episodeOuvert, EPISODES_DE_DEMO, niveauxDeLEpisode } from "@/config/episodes/demos";
 import { creerCohorte, rattacherCohorte, rejoindreCohorte } from "@/services/cohortes.service";
@@ -162,6 +165,82 @@ describe("la partie de classe", () => {
     const clos = await closeCurrentRound({ gameId: partie.gameId, teacherId: e.userId });
     expect(clos.roundIndex).toBe(1);
     expect(await niveauDe(partie.gameId)).toBe(5);
+  });
+});
+
+/**
+ * LE NIVEAU 7 « GROUPE » : INCLUS DANS LES OFFRES, EN SOLO, AVEC NOVA EN GAMME.
+ *
+ * Décision du propriétaire (octobre 2026) : il sort de l'avant-première. Le drapeau
+ * d'administration de la plateforme ne le commande plus — c'est la licence, comme
+ * pour les niveaux 4 à 6. Deux gardes techniques restent, et ce sont elles que le
+ * serveur doit tenir quel que soit l'écran :
+ *   · NOVA en gamme seulement (seul scénario qui porte un bloc `groupe`) ;
+ *   · en solo seulement : en classe, le rachat du fournisseur partagé ne déplace
+ *     que des concurrents simulés.
+ */
+describe("le niveau 7 « Groupe »", () => {
+  it("sans licence, l'enseignant ne crée pas de partie solo au niveau 7", async () => {
+    await expect(
+      createSoloGame(invite, "quarter", 2, 7, false, "nova", undefined, null, {
+        licencePar: sansLicence.userId,
+      }),
+    ).rejects.toBeInstanceOf(NiveauReserveError);
+    // Le refus dit ce qu'il faut, et ses deux restrictions : pas « les niveaux 4 à 6 ».
+    await expect(
+      createSoloGame(invite, "quarter", 2, 7, false, "nova", undefined, null, {
+        licencePar: sansLicence.userId,
+      }),
+    ).rejects.toThrow(NIVEAU_GROUPE_EN_PUBLIC.inclus);
+  });
+
+  it("aucun réglage de la Découverte ne l'ouvre sans licence (règle éteinte, entreprise rouverte)", () => {
+    // Les deux leviers d'admin rouvrent le PARCOURS, jamais ce qui est hors de lui.
+    const eteinte = { active: false, entrepriseOuverte: "", niveauMaxAutres: 6 };
+    const novaOuverte = { active: true, entrepriseOuverte: "nova", niveauMaxAutres: 3 };
+    expect(niveauReserve(eteinte, "nova", 7)).toBe(true);
+    expect(niveauReserve(novaOuverte, "nova", 7)).toBe(true);
+    expect(niveauReserve(eteinte, "nova", 6)).toBe(false);
+    expect(niveauReserve(novaOuverte, "nova", 7, true)).toBe(false);
+  });
+
+  it("avec licence, l'enseignant crée une partie solo au niveau 7", async () => {
+    const id = await createSoloGame(invite, "quarter", 2, 7, false, "nova", undefined, null, {
+      licencePar: sousLicence.userId,
+    });
+    expect(await niveauDe(id)).toBe(7);
+  });
+
+  it("avec licence, une partie de CLASSE au niveau 7 est refusée, et le refus dit pourquoi", async () => {
+    const essai = createClassGame({
+      teacherId: sousLicence.userId,
+      organizationId: sousLicence.orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 2,
+      botCount: 1,
+      level: 7,
+      scenarioCode: "nova",
+    });
+    await expect(essai).rejects.toBeInstanceOf(NiveauGroupeReserveError);
+    await expect(
+      createClassGame({
+        teacherId: sousLicence.userId,
+        organizationId: sousLicence.orgId,
+        periodicity: "quarter",
+        humanTeamsCount: 2,
+        botCount: 1,
+        level: 7,
+        scenarioCode: "nova",
+      }),
+    ).rejects.toThrow(/ne se joue qu'en solo pour l'instant/);
+  });
+
+  it("la garde technique tient : sans bloc de groupe, le niveau 7 est refusé même sous licence", async () => {
+    await expect(
+      createSoloGame(invite, "quarter", 2, 7, false, "hotel", undefined, null, {
+        licencePar: sousLicence.userId,
+      }),
+    ).rejects.toThrow(/ne se joue qu'avec NOVA, en gamme/);
   });
 });
 

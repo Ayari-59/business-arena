@@ -87,7 +87,7 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 #### `lire-les-comptes`
 
-> Je lis les documents de synthèse d'une entreprise et j'en tire ce qu'elle possède, ce qu'elle doit, et ce qui lui reste.
+> Je lis les documents de synthèse d'une entreprise : ce qu'elle a vendu, ce qu'elle a gagné, et de combien elle s'est enrichie.
 
 19 phrases, 11 diplômes.
 

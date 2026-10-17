@@ -43,7 +43,7 @@ import { attribuerCodeDeReprise, reprendreSaPlace } from "@/services/reprise.ser
 import { ExamenReserveError, LicenceDepasseeError } from "@/services/acces.service";
 import { neutralDecisions } from "@/engine/bots";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
-import { REFERENCE_GESTION_NEUTRE, noteDeDecision, noterLaCopie } from "@/config/examen/grille";
+import { REFERENCE_GESTION_NEUTRE_GELEE, noteDeDecision, noterLaCopie } from "@/config/examen/grille";
 import { rejeuPourLExamen } from "@/services/merite.service";
 import type { CompanyState, RoundDecisions } from "@/engine/types";
 import { etablissementSousLicence } from "./helpers/licence";
@@ -249,14 +249,14 @@ describe("deux candidats passent l'examen", () => {
   it("LA COPIE EST NOTÉE CONTRE LA GESTION NEUTRE DU SECTEUR, l'étalon que sa grille figée nomme, et la notation le garde", async () => {
     const [examen] = await db.select().from(examens).where(eq(examens.id, examenId));
     // La copie figée de la grille écrit son étalon.
-    expect((examen!.grille as { reference?: unknown }).reference).toEqual(REFERENCE_GESTION_NEUTRE);
+    expect((examen!.grille as { reference?: unknown }).reference).toEqual(REFERENCE_GESTION_NEUTRE_GELEE);
     const [ca] = await db.select().from(examenCandidats).where(eq(examenCandidats.gameId, partieA));
     const gardee = ca!.notation as NotationGardee;
     expect(gardee.etat).toBe("notee");
     if (gardee.etat !== "notee") return;
-    expect(gardee.grille.reference).toEqual(REFERENCE_GESTION_NEUTRE);
+    expect(gardee.grille.reference).toEqual(REFERENCE_GESTION_NEUTRE_GELEE);
     // La note gardée est celle du rejeu contre la gestion neutre, au centième de point.
-    const neutre = await rejeuPourLExamen(partieA, "gestion-neutre");
+    const neutre = await rejeuPourLExamen(partieA, "gestion-neutre-gelee");
     expect(neutre.etat).toBe("rejeu");
     if (neutre.etat !== "rejeu") return;
     const attendue = noterLaCopie(

@@ -170,8 +170,15 @@ describe("le niveau 7 « Groupe » : création réservée, taille de départ, re
     await placerSousLicence(admin);
   });
 
-  it("seul un administrateur de la plateforme le crée, et seulement avec NOVA", async () => {
-    await expect(createSoloGame(userId, "quarter", 3, 7, true, "nova")).rejects.toThrow(/administrateur/);
+  // LE DRAPEAU D'ADMINISTRATION NE LE COMMANDE PLUS (décision du propriétaire,
+  // octobre 2026 : le niveau 7 sort de l'avant-première et entre dans les offres).
+  // Ce que ce test gardait — « seul un administrateur le crée » — a été retiré
+  // délibérément ; ce qui reste gardé, ce sont les deux limites techniques, et le
+  // fait qu'une licence est bien exigée. Le détail en solo comme en classe :
+  // tests/integration/acces-sans-licence.test.ts.
+  it("un enseignant sous licence, sans le drapeau d'administration, le crée ; et seulement avec NOVA", async () => {
+    const gameId = await createSoloGame(userId, "quarter", 3, 7, true, "nova");
+    expect(gameId).toBeTruthy();
     await expect(createSoloGame(admin, "quarter", 3, 7, true, "hotel")).rejects.toThrow(/NOVA/);
   });
 

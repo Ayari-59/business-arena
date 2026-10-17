@@ -19,6 +19,14 @@ import type { AtelierDefinition } from "./types";
  * donne au plus jeune un pouvoir réel, celui de bloquer ce qu'il ne comprend
  * pas.
  *
+ * PAS DE TOUR D'ESSAI, ET C'EST VOULU. Les treize fiches de classe ouvrent sur
+ * une séance d'essai sans enjeu. Un concours ne peut pas : il tient sur deux
+ * journées banalisées, et surtout la règle du concours veut qu'une décision
+ * validée ne se reprenne plus. Un tour pour rien contredirait ce qui fait tenir
+ * l'exercice. La première séance sert donc à constituer les équipes et à
+ * prendre les postes, ce qui joue le même rôle d'échauffement sans suspendre
+ * l'enjeu.
+ *
  * CE QUE LE MODE CONCOURS IMPOSE, ET QU'AUCUN RÉGLAGE NE CHANGE.
  * Un concours se joue sur NOVA, le fabricant d'enceintes, et sur lui seul : le
  * produit ne propose pas encore de choisir le secteur d'un championnat. Les

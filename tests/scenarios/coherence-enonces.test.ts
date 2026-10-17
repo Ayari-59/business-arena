@@ -95,6 +95,56 @@ describe("LA TABLE D'AUGUSTIN : les chiffres des énoncés sortent de la configu
   });
 });
 
+describe("L'ESCALE : les charges de structure et le seuil cités sont ceux du scénario", () => {
+  /**
+   * Le seuil d'occupation est LA leçon du secteur : un énoncé qui le calcule sur des
+   * charges que le moteur n'applique plus enseigne un faux. Les deux variantes de
+   * l'hôtel citent la même structure décaissée, et l'hôtel en un seul prix en tire son
+   * seuil. Les options fausses des quiz sont hors garde : elles sont fausses exprès.
+   */
+
+  /** Les énoncés, sans les options de quiz : l'énoncé, les indices et les explications. */
+  const sansOptions = (code: string): string =>
+    scenarioByCode(code)
+      .situations.flatMap((x) => [x.narrative, x.problem, ...x.hints.map((h) => h.text), ...x.quiz.flatMap((q) => [q.prompt, q.explain])])
+      .join(" ");
+
+  /** Les montants en euros cités à portée du mot « structure ». */
+  const structuresCitees = (t: string): number[] => {
+    const out: number[] = [];
+    for (const m of t.matchAll(/(\d{1,3}) (\d{3}) €/g)) {
+      const autour = t.slice(Math.max(0, (m.index ?? 0) - 70), (m.index ?? 0) + 70);
+      if (/structure/.test(autour)) out.push(Number(`${m[1]}${m[2]}`));
+    }
+    return out;
+  };
+
+  for (const code of ["hotel", "hotel-gamme"]) {
+    it(`${code} : la structure décaissée citée est celle du scénario`, () => {
+      const d = scenarioByCode(code);
+      const cites = structuresCitees(textes(code));
+      expect(cites.length, "une situation cite les charges de structure").toBeGreaterThan(0);
+      for (const v of cites) expect(v, `${code} : « ${v} € » cité près du mot structure`).toBe(d.scenario.fixedCostsPerRound);
+    });
+  }
+
+  it("hotel : le seuil cité est la structure décaissée divisée par la marge par nuitée", () => {
+    const d = scenarioByCode("hotel");
+    const s = d.scenario;
+    const marge = 95 - (s.product.materialCostPerUnit + s.product.otherVariableCostPerUnit);
+    expect(marge).toBe(74);
+    const capacite = d.company("t", "T", "human").machineCapacity;
+    const seuil = s.fixedCostsPerRound / marge;
+    const couples = [...sansOptions("hotel").matchAll(/(\d{1,3}) (\d{3}) nuitées[^.]*?(\d{2}) %/g)];
+    expect(couples.length, "le seuil est cité avec son taux d'occupation").toBeGreaterThan(0);
+    for (const m of couples) {
+      const nuitees = Number(`${m[1]}${m[2]}`);
+      expect(Math.abs(nuitees - seuil), `« ${m[0]} » : seuil ${Math.round(seuil)}`).toBeLessThanOrEqual(15);
+      expect(Number(m[3]), `« ${m[0]} » : taux d'occupation`).toBe(Math.round((nuitees / capacite) * 100));
+    }
+  });
+});
+
 describe("aucune offre de commande ne vend sous le coût variable de SA référence, et en gamme chacune nomme la sienne", () => {
   for (const d of SCENARIOS) {
     it(`${d.code}`, () => {

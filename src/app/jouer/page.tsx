@@ -3,7 +3,7 @@ import Link from "next/link";
 import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS, NIVEAU_GROUPE, premierNiveauQuiOuvre } from "@/config/difficulty";
-import { administreLaPlateforme, entreprisesDuNiveauGroupe } from "@/services/game-creation.service";
+import { entreprisesDuNiveauGroupe } from "@/services/game-creation.service";
 import { leviersDuNiveau } from "@/config/decisions";
 import { comparatifDesNiveaux, tableauDuNiveau } from "@/config/tableau-des-niveaux";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
@@ -15,7 +15,7 @@ import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
 import { getGuestUserId } from "@/lib/guest";
 import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
-import { MARQUE_DE_L_ARENE, messageNiveauxReserves } from "@/config/tarifs";
+import { MARQUE_DE_L_ARENE, messageNiveauxReserves, NIVEAU_GROUPE_EN_PUBLIC } from "@/config/tarifs";
 import { getSession } from "@/lib/session";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
@@ -57,9 +57,6 @@ export default async function JouerPage({
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
   const { secteur, niveau, trop, reserve, groupe } = await searchParams;
-  // LE NIVEAU 7 « GROUPE », EN AVANT-PREMIÈRE : montré au seul administrateur de
-  // la plateforme (le serveur le refuse à tout autre, `verifierLeNiveauGroupe`).
-  const admin = await administreLaPlateforme([userId, session?.userId]);
   // Le niveau que le bilan d'une partie conseille (« Et ensuite ») : 1 à 6, sinon rien.
   const niveauDemande = /^[1-6]$/.test(niveau ?? "") ? Number(niveau) : undefined;
   const scenarioChoisi = SCENARIO_CHOICES.some((s) => s.code === secteur)
@@ -149,8 +146,7 @@ export default async function JouerPage({
                 data-niveau-groupe-refuse=""
                 className="mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200"
               >
-                Le niveau 7 « Groupe » est en avant-première : il ne se joue qu&apos;avec NOVA, et seul un
-                administrateur de la plateforme peut lancer une partie à ce niveau. Choisissez un niveau de 1 à 6.
+                {NIVEAU_GROUPE_EN_PUBLIC.inclus} Choisissez NOVA, ou un niveau de 1 à 6.
               </p>
             ) : null}
             {trop ? (
@@ -225,18 +221,21 @@ export default async function JouerPage({
                     tableau: tableauDuNiveau(p.level),
                   }))}
                   comparatif={comparatifDesNiveaux()}
-                  niveauGroupe={
-                    admin
-                      ? {
-                          level: NIVEAU_GROUPE.level,
-                          name: NIVEAU_GROUPE.name,
-                          tagline: NIVEAU_GROUPE.tagline,
-                          decisions: leviersDuNiveau(NIVEAU_GROUPE.level).length,
-                          tableau: tableauDuNiveau(NIVEAU_GROUPE.level, [...DIFFICULTY_PRESETS, NIVEAU_GROUPE]),
-                          entreprises: entreprisesDuNiveauGroupe(SCENARIO_CHOICES.map((s) => s.code)),
-                        }
-                      : null
-                  }
+                  // LE NIVEAU 7 « GROUPE » EST MONTRÉ À TOUS, pour les entreprises qui le
+                  // jouent : inclus dans les offres depuis octobre 2026, il suit la règle
+                  // des niveaux fermés (visible, marqué, le lien vers les offres à côté)
+                  // au lieu d'être caché. Sans licence, le formulaire le ferme ; avec, il
+                  // l'ouvre, et le serveur tranche de toute façon.
+                  niveauGroupe={{
+                    level: NIVEAU_GROUPE.level,
+                    name: NIVEAU_GROUPE.name,
+                    tagline: NIVEAU_GROUPE.tagline,
+                    decisions: leviersDuNiveau(NIVEAU_GROUPE.level).length,
+                    tableau: tableauDuNiveau(NIVEAU_GROUPE.level, [...DIFFICULTY_PRESETS, NIVEAU_GROUPE]),
+                    entreprises: entreprisesDuNiveauGroupe(SCENARIO_CHOICES.map((s) => s.code)),
+                    restriction: NIVEAU_GROUPE_EN_PUBLIC.restriction,
+                    inclus: NIVEAU_GROUPE_EN_PUBLIC.inclus,
+                  }}
                   defaultScenario={scenarioChoisi}
                   defaultLevel={niveauDemande}
                   lancement={
