@@ -95,7 +95,8 @@ export const LEVIERS: readonly LevierDeDecision[] = [
  * donné les déclare ; sans scénario, ils sont comptés, comme l'étendue.
  */
 export function leviersDuNiveau(niveau: number, scenario?: EngineScenarioConfig): LevierDeDecision[] {
-  // Le niveau 7 « Groupe » est hors du parcours : il se lit dans `presetByLevel`.
+  // Lu par NUMÉRO : les six niveaux du parcours, et le 7 gelé des parties
+  // créées avant son retrait, qui comptent leurs leviers comme les autres.
   const preset = presetByLevel.get(niveau as DifficultyPreset["level"]);
   if (!preset) return [];
   return LEVIERS.filter(

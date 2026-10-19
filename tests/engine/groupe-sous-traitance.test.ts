@@ -7,7 +7,7 @@ import { coutAuBareme, commandeDuTour } from "@/engine/groupe";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, EventInstance, RoundDecisions } from "@/engine/types";
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
-import { NIVEAU_GROUPE } from "@/config/difficulty";
+import { NIVEAU_7_RETIRE } from "@/config/difficulty";
 
 /**
  * FABRIQUER OU FAIRE FABRIQUER (niveau 7) : des produits finis en stock, au
@@ -34,7 +34,7 @@ function jouer(scenario: EngineScenarioConfig, retouche?: (tour: number, id: str
         roundIndex: tour,
         lastSoldUnits: p ? soldUnits(p) : undefined,
         lastSoldByProduct: p ? soldByProduct(scenario, p.market.bySegment) : undefined,
-        leviers: NIVEAU_GROUPE.decisions,
+        leviers: NIVEAU_7_RETIRE.decisions,
       });
       retouche?.(tour, e.id, d);
       decisions[e.id] = d;

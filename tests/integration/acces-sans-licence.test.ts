@@ -27,8 +27,6 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { accesAuxEpisodes, ClasseReserveError, NiveauReserveError } from "@/services/acces.service";
-import { NiveauGroupeReserveError } from "@/services/game-creation.service";
-import { NIVEAU_GROUPE_EN_PUBLIC } from "@/config/tarifs";
 import { niveauReserve } from "@/config/vitrine-solo";
 import { REFUS_DE_LA_CLASSE } from "@/config/tarifs";
 import { episodeOuvert, EPISODES_DE_DEMO, niveauxDeLEpisode } from "@/config/episodes/demos";
@@ -169,59 +167,40 @@ describe("la partie de classe", () => {
 });
 
 /**
- * LE NIVEAU 7 « GROUPE » : INCLUS DANS LES OFFRES, EN SOLO, AVEC NOVA EN GAMME.
+ * LE NIVEAU 7 « GROUPE » EST RETIRÉ : PLUS RIEN NE SE CRÉE AU-DELÀ DES SIX.
  *
- * Décision du propriétaire (octobre 2026) : il sort de l'avant-première. Le drapeau
- * d'administration de la plateforme ne le commande plus — c'est la licence, comme
- * pour les niveaux 4 à 6. Deux gardes techniques restent, et ce sont elles que le
- * serveur doit tenir quel que soit l'écran :
- *   · NOVA en gamme seulement (seul scénario qui porte un bloc `groupe`) ;
- *   · en solo seulement : en classe, le rachat du fournisseur partagé ne déplace
- *     que des concurrents simulés.
+ * Décision du propriétaire (octobre 2026) : le niveau est retiré du produit. Il
+ * avait été ouvert aux offres deux jours plus tôt ; cette ouverture est défaite.
+ * Ce que le serveur doit tenir, quel que soit l'écran et quelle que soit la
+ * licence : un niveau au-delà du parcours ne crée pas de partie, en solo comme
+ * en classe. La licence ouvre les niveaux du parcours, elle ne fait pas exister
+ * un niveau que le produit ne propose plus.
+ *
+ * Les parties DÉJÀ CRÉÉES au niveau 7 se jouent et se rejouent : rien ici ne les
+ * touche (seule la création se vérifie ici), et c'est gardé au centime par
+ * tests/unit/partie-de-niveau-7-d-avant.test.ts.
  */
-describe("le niveau 7 « Groupe »", () => {
-  it("sans licence, l'enseignant ne crée pas de partie solo au niveau 7", async () => {
-    await expect(
+describe("au-delà des six niveaux, plus rien ne se crée", () => {
+  it("sans licence, aucune partie solo au niveau 7, avec le message des niveaux fermés", async () => {
+    const essai = () =>
       createSoloGame(invite, "quarter", 2, 7, false, "nova", undefined, null, {
         licencePar: sansLicence.userId,
-      }),
-    ).rejects.toBeInstanceOf(NiveauReserveError);
-    // Le refus dit ce qu'il faut, et ses deux restrictions : pas « les niveaux 4 à 6 ».
-    await expect(
-      createSoloGame(invite, "quarter", 2, 7, false, "nova", undefined, null, {
-        licencePar: sansLicence.userId,
-      }),
-    ).rejects.toThrow(NIVEAU_GROUPE_EN_PUBLIC.inclus);
+      });
+    await expect(essai()).rejects.toBeInstanceOf(NiveauReserveError);
+    await expect(essai()).rejects.toThrow(MESSAGE);
   });
 
-  it("aucun réglage de la Découverte ne l'ouvre sans licence (règle éteinte, entreprise rouverte)", () => {
-    // Les deux leviers d'admin rouvrent le PARCOURS, jamais ce qui est hors de lui.
-    const eteinte = { active: false, entrepriseOuverte: "", niveauMaxAutres: 6 };
-    const novaOuverte = { active: true, entrepriseOuverte: "nova", niveauMaxAutres: 3 };
-    expect(niveauReserve(eteinte, "nova", 7)).toBe(true);
-    expect(niveauReserve(novaOuverte, "nova", 7)).toBe(true);
-    expect(niveauReserve(eteinte, "nova", 6)).toBe(false);
-    expect(niveauReserve(novaOuverte, "nova", 7, true)).toBe(false);
+  it("AVEC licence non plus : une licence ouvre les six niveaux, pas un septième", async () => {
+    for (const code of ["nova", "hotel"]) {
+      await expect(
+        createSoloGame(invite, "quarter", 2, 7, false, code, undefined, null, {
+          licencePar: sousLicence.userId,
+        }),
+      ).rejects.toBeInstanceOf(NiveauReserveError);
+    }
   });
 
-  it("avec licence, l'enseignant crée une partie solo au niveau 7", async () => {
-    const id = await createSoloGame(invite, "quarter", 2, 7, false, "nova", undefined, null, {
-      licencePar: sousLicence.userId,
-    });
-    expect(await niveauDe(id)).toBe(7);
-  });
-
-  it("avec licence, une partie de CLASSE au niveau 7 est refusée, et le refus dit pourquoi", async () => {
-    const essai = createClassGame({
-      teacherId: sousLicence.userId,
-      organizationId: sousLicence.orgId,
-      periodicity: "quarter",
-      humanTeamsCount: 2,
-      botCount: 1,
-      level: 7,
-      scenarioCode: "nova",
-    });
-    await expect(essai).rejects.toBeInstanceOf(NiveauGroupeReserveError);
+  it("en classe non plus, sous licence", async () => {
     await expect(
       createClassGame({
         teacherId: sousLicence.userId,
@@ -232,15 +211,17 @@ describe("le niveau 7 « Groupe »", () => {
         level: 7,
         scenarioCode: "nova",
       }),
-    ).rejects.toThrow(/ne se joue qu'en solo pour l'instant/);
+    ).rejects.toBeInstanceOf(NiveauReserveError);
   });
 
-  it("la garde technique tient : sans bloc de groupe, le niveau 7 est refusé même sous licence", async () => {
-    await expect(
-      createSoloGame(invite, "quarter", 2, 7, false, "hotel", undefined, null, {
-        licencePar: sousLicence.userId,
-      }),
-    ).rejects.toThrow(/ne se joue qu'avec NOVA, en gamme/);
+  it("aucun réglage de la Découverte ne rouvre le septième niveau", () => {
+    // Les deux leviers d'admin rouvrent les SIX niveaux, ils n'en créent pas un septième.
+    const eteinte = { active: false, entrepriseOuverte: "", niveauMaxAutres: 6 };
+    const novaOuverte = { active: true, entrepriseOuverte: "nova", niveauMaxAutres: 3 };
+    expect(niveauReserve(eteinte, "nova", 7)).toBe(true);
+    expect(niveauReserve(novaOuverte, "nova", 7)).toBe(true);
+    expect(niveauReserve(eteinte, "nova", 7, true)).toBe(true);
+    expect(niveauReserve(eteinte, "nova", 6)).toBe(false);
   });
 });
 

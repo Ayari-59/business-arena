@@ -40,6 +40,7 @@ import {
   type PartieLue,
 } from "@/services/merite.service";
 import { placerSousLicence } from "./helpers/licence";
+import { ouvrirUnePartieDeNiveau7 } from "./helpers/partie-de-niveau-7";
 
 let userId: string;
 
@@ -158,7 +159,20 @@ describe("la garde de vérité : sous sa graine, le rejeu retrouve la partie au 
   }, 120_000);
 });
 
-describe("le niveau 7 « Groupe » : création réservée, taille de départ, rejeu au centime", () => {
+/**
+ * UNE PARTIE DE NIVEAU 7 « GROUPE » D'AVANT LE RETRAIT DU NIVEAU SE JOUE, SE
+ * CLÔT ET SE REJOUE AU CENTIME.
+ *
+ * Le niveau est retiré du produit (décision du propriétaire, octobre 2026) : la
+ * création le refuse, et c'est gardé ailleurs (acces-sans-licence.test.ts). Ce
+ * que ce bloc garde, c'est l'autre moitié de la décision, celle qui ne se
+ * négocie pas : une partie DÉJÀ CRÉÉE à ce niveau se joue jusqu'au bout — taille
+ * de départ au tour 0, rachat d'un fournisseur au tour 2, sous-traitance
+ * ensuite — et le rejeu pur la retrouve au centime, jusqu'à la rentabilité
+ * totale pour l'actionnaire. Elle s'ouvre par le cœur commun de création, comme
+ * avant le retrait (`ouvrirUnePartieDeNiveau7`).
+ */
+describe("une partie de niveau 7 d'avant le retrait : taille de départ, rejeu au centime", () => {
   let admin: string;
   beforeAll(async () => {
     admin = (
@@ -170,20 +184,8 @@ describe("le niveau 7 « Groupe » : création réservée, taille de départ, re
     await placerSousLicence(admin);
   });
 
-  // LE DRAPEAU D'ADMINISTRATION NE LE COMMANDE PLUS (décision du propriétaire,
-  // octobre 2026 : le niveau 7 sort de l'avant-première et entre dans les offres).
-  // Ce que ce test gardait — « seul un administrateur le crée » — a été retiré
-  // délibérément ; ce qui reste gardé, ce sont les deux limites techniques, et le
-  // fait qu'une licence est bien exigée. Le détail en solo comme en classe :
-  // tests/integration/acces-sans-licence.test.ts.
-  it("un enseignant sous licence, sans le drapeau d'administration, le crée ; et seulement avec NOVA", async () => {
-    const gameId = await createSoloGame(userId, "quarter", 3, 7, true, "nova");
-    expect(gameId).toBeTruthy();
-    await expect(createSoloGame(admin, "quarter", 3, 7, true, "hotel")).rejects.toThrow(/NOVA/);
-  });
-
   it("l'état du tour 0 porte la taille de départ ; un rachat de fournisseur, la sous-traitance se rejouent au centime", async () => {
-    const gameId = await createSoloGame(admin, "quarter", 3, 7, true, "nova");
+    const gameId = await ouvrirUnePartieDeNiveau7({ userId: admin, companiesCount: 3, variableWorld: true });
     const [game] = await db.select().from(games).where(eq(games.id, gameId));
     const scenario = parseScenarioConfig(game!.scenarioSnapshot);
     const facteur = scenario.groupe!.depart!.facteur;

@@ -14,7 +14,7 @@ import type {
 } from "@/engine/types";
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
-import { NIVEAU_GROUPE } from "@/config/difficulty";
+import { NIVEAU_7_RETIRE } from "@/config/difficulty";
 import { laCibleEtrangere, trajectoireDeLEtranger } from "@/engine/groupe/etranger";
 
 /**
@@ -69,7 +69,7 @@ function decider(s: EngineScenarioConfig, e: Etat, tour: number): Record<string,
       roundIndex: tour,
       lastSoldUnits: p ? soldUnits(p) : undefined,
       lastSoldByProduct: p ? soldByProduct(s, p.market.bySegment) : undefined,
-      leviers: NIVEAU_GROUPE.decisions,
+      leviers: NIVEAU_7_RETIRE.decisions,
     });
   }
   return decisions;
