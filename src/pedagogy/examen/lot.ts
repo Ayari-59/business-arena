@@ -31,10 +31,28 @@ import { botDecisions, botPersonalityFromSeed, neutralDecisions, soldByProduct, 
 import { simulateRound } from "@/engine/simulation";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, EventInstance, RoundDecisions } from "@/engine/types";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
-import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
+import { applyPeriodicityToCompany, type Periodicity } from "@/config/scenarios/periodicity";
 import { presetByLevel, profilDuNiveau } from "@/config/difficulty";
 import { investissementPlafonne } from "@/engine/investment/plafond";
 import type { ScenarioDefinition } from "@/config/scenarios/registry";
+
+/**
+ * LA PÉRIODICITÉ D'UN EXAMEN : UNE SEULE VALEUR, LUE DEUX FOIS.
+ *
+ * Le lot mesure l'équivalence de difficulté en SIMULANT la partie du candidat ; il doit
+ * donc la simuler dans le monde que le candidat jouera. Le lot et la création de la
+ * partie posaient tous deux `periodicity: "quarter"` en dur, chacun pour soi : rien ne
+ * garantissait qu'ils parlent du même monde, et le jour où l'examen offre un sélecteur,
+ * le lot aurait continué de mesurer au trimestre une copie jouée au mois — où le hasard,
+ * les flux par tour et la saisonnalité ne sont pas les mêmes. L'équivalence annoncée à
+ * l'enseignant aurait porté sur un autre jeu que celui passé par ses élèves.
+ *
+ * Tant que le produit n'offre pas de sélecteur à l'examen (la saisie n'a pas de champ,
+ * la table `examens` n'a pas de colonne), cette valeur est le trimestre. C'est une
+ * DÉCISION PRODUIT que de l'ouvrir ; le jour où elle est prise, la périodicité se lira
+ * sur la ligne d'examen à ce seul endroit, et le lot suivra sans autre changement.
+ */
+export const PERIODICITE_DE_L_EXAMEN: Periodicity = "quarter";
 
 /** Le nombre de graines d'un lot. */
 export const TAILLE_DU_LOT = 6;
@@ -47,6 +65,8 @@ export interface ReglagesDeLExamen {
   tours: number;
   /** Le nombre de concurrents pilotés. */
   bots: number;
+  /** La périodicité de la partie examinée : le lot mesure dans CE monde. */
+  periodicite: Periodicity;
 }
 
 export interface DifficulteDUneGraine {
@@ -73,7 +93,7 @@ export function scenarioDeLExamen(r: ReglagesDeLExamen, graine: number): EngineS
     level: r.niveau,
     concurrents: r.bots + 1,
     roundsCount: r.tours,
-    periodicity: "quarter",
+    periodicity: r.periodicite,
     investmentStories: true,
   });
 }
@@ -94,7 +114,7 @@ export function difficulteDeLaGraine(r: ReglagesDeLExamen, graine: number): Diff
       i === 0
         ? r.definition.company(id, r.definition.playerTeamName, "human")
         : r.definition.company(id, bots[i - 1]!.name, "bot", bots[i - 1]!.profile),
-      "quarter",
+      r.periodicite,
       { abonnement },
     ),
   );

@@ -29,7 +29,8 @@ import {
 } from "@/config/examen/comparaisons";
 import { cellule, csvDeLExamen, nomDuFichier } from "@/config/examen/export";
 import { normaliserCodeDExamen, normaliserNumero, phraseDuRecu } from "@/config/examen/textes";
-import { choisirLeLot, graineDuRang, difficulteDeLaGraine, scenarioDeLExamen } from "@/pedagogy/examen/lot";
+import { choisirLeLot, graineDuRang, difficulteDeLaGraine, scenarioDeLExamen, PERIODICITE_DE_L_EXAMEN } from "@/pedagogy/examen/lot";
+import type { Periodicity } from "@/config/scenarios/periodicity";
 import { scenarioByCode } from "@/config/scenarios/registry";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
 import { neutralDecisions } from "@/engine/bots";
@@ -167,7 +168,7 @@ describe("la neutralisation du hasard", () => {
    */
   function partieDExamen(graine: number, ordre: "candidat-d-abord" | "candidat-en-dernier" = "candidat-d-abord"): PartieARejouer {
     const definition = scenarioByCode("nova");
-    const r = { definition, niveau: 4, tours: 6, bots: 3 };
+    const r = { definition, niveau: 4, tours: 6, bots: 3, periodicite: "quarter" as const };
     const ids = ["a", "b", "c", "d"].map((x) => `${x}0000000-0000-4000-8000-000000000000`);
     const idDuCandidat = ordre === "candidat-d-abord" ? ids[0]! : ids[3]!;
     const idsDesBots = ids.filter((x) => x !== idDuCandidat);
@@ -332,7 +333,7 @@ describe("le lot de graines : la règle d'équivalence", () => {
   });
 
   it("la difficulté d'une graine se mesure dans les réglages de l'examen, de façon déterministe", () => {
-    const r = { definition: scenarioByCode("nova"), niveau: 2, tours: 3, bots: 3 };
+    const r = { definition: scenarioByCode("nova"), niveau: 2, tours: 3, bots: 3, periodicite: "quarter" as const };
     const a = difficulteDeLaGraine(r, 99);
     expect(difficulteDeLaGraine(r, 99)).toEqual(a);
     expect(a.rang).toBeGreaterThanOrEqual(1);
@@ -362,5 +363,40 @@ describe("l'export et les mots", () => {
     expect(normaliserCodeDExamen("EX-K7M2P0")).toBeNull();
     expect(normaliserNumero(" 21 00 01a ")).toBe("210001A");
     expect(phraseDuRecu(new Date("2026-10-12T12:05:00Z"))).toBe("Examen remis le 12 octobre 2026 à\u00a014\u00a0h\u00a005");
+  });
+});
+
+/**
+ * LE LOT MESURE DANS LE MONDE QUE LE CANDIDAT JOUERA.
+ *
+ * `scenarioDeLExamen` posait `periodicity: "quarter"` en dur : la difficulté d'une
+ * graine se mesurait sur un monde trimestriel quelle que soit la périodicité de la
+ * partie examinée. La périodicité fait désormais partie des réglages de l'examen, et
+ * c'est elle que le lot emploie — scénario comme état initial des entreprises.
+ */
+describe("le lot d'examen suit la périodicité de la partie examinée", () => {
+  const reglages = (periodicite: Periodicity) => ({
+    definition: scenarioByCode("nova"),
+    niveau: 2,
+    tours: 3,
+    bots: 3,
+    periodicite,
+  });
+
+  it("le scénario du lot porte la durée de tour de l'examen", () => {
+    expect(scenarioDeLExamen(reglages("month"), 1).roundDays).toBe(30);
+    expect(scenarioDeLExamen(reglages("quarter"), 1).roundDays).toBe(90);
+    expect(scenarioDeLExamen(reglages("year"), 1).roundDays).toBe(360);
+  });
+
+  it("au mois, la mesure de difficulté n'est pas celle du trimestre", () => {
+    const mois = difficulteDeLaGraine(reglages("month"), 99);
+    const trimestre = difficulteDeLaGraine(reglages("quarter"), 99);
+    expect(mois).toEqual(difficulteDeLaGraine(reglages("month"), 99)); // déterministe
+    expect(mois.resultat).not.toBeCloseTo(trimestre.resultat, 2);
+  });
+
+  it("la périodicité de l'examen est celle qui crée la partie du candidat", () => {
+    expect(PERIODICITE_DE_L_EXAMEN).toBe("quarter");
   });
 });

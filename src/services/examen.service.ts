@@ -45,7 +45,7 @@ import {
 import { atteint, competencesEvaluees, type CodeDeCompetence } from "@/config/examen/competences";
 import { cleDeComparaison, comparer, type Comparaison } from "@/config/examen/comparaisons";
 import { csvDeLExamen } from "@/config/examen/export";
-import { composerUnLot, graineDuRang, type LotDeGraines } from "@/pedagogy/examen/lot";
+import { composerUnLot, graineDuRang, PERIODICITE_DE_L_EXAMEN, type LotDeGraines } from "@/pedagogy/examen/lot";
 import type { RoundDecisions } from "@/engine/types";
 import { synchroniserLesNotesDeLExamen } from "@/lti/ags/envois";
 
@@ -169,7 +169,14 @@ export async function creerExamen(enseignantId: string, s: SaisieDExamen): Promi
   if (s.modeGraine === "lot") {
     const definition = scenarioByCode(scenarioCodeForLevel(s.scenarioCode, s.niveau));
     equite = composerUnLot(
-      { definition, niveau: s.niveau, tours: s.tours, bots: concurrentsDe(s.scenarioCode, s.niveau) },
+      {
+        definition,
+        niveau: s.niveau,
+        tours: s.tours,
+        bots: concurrentsDe(s.scenarioCode, s.niveau),
+        // Le lot mesure dans le monde que les candidats joueront : même valeur ci-dessous.
+        periodicite: PERIODICITE_DE_L_EXAMEN,
+      },
       tirer,
     );
     graines = equite.graines;
@@ -474,7 +481,7 @@ export async function commencerLExamen(args: {
   const { gameId, teams: equipes } = await createGameCore({
     organizationId: examen.organizationId,
     createdBy: args.userId,
-    periodicity: "quarter",
+    periodicity: PERIODICITE_DE_L_EXAMEN,
     kind: "solo",
     humanTeams: [{ name: definition.playerTeamName }],
     botCount: concurrentsDe(examen.scenarioCode, examen.niveau),
