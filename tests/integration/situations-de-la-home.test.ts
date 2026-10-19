@@ -13,14 +13,19 @@ import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { neutralDecisions } from "@/engine/bots";
 import type { CompanyState, EngineTrace, RoundDecisions } from "@/engine/types";
 import { placerSousLicence } from "./helpers/licence";
+import { ouvrirUnePartieDeNiveau7 } from "./helpers/partie-de-niveau-7";
 
 /**
  * LES SITUATIONS DE NOVA HOME NE S'OUVRENT QUE LÀ OÙ LA HOME EXISTE.
  *
- * Le scénario NOVA gamme se joue des niveaux 4 à 7 ; seul le 7 ajoute la Home
- * à la gamme. « Une quatrième enceinte ? » s'ouvre au tour 1 d'une partie de
- * niveau 7, jamais au niveau 6. « Sur le marché, la première » s'ouvre au
+ * Le scénario NOVA gamme se joue des niveaux 4 à 6 ; seul le 7 ajoutait la
+ * Home à la gamme. « Une quatrième enceinte ? » s'ouvre au tour 1 d'une partie
+ * de niveau 7, jamais au niveau 6. « Sur le marché, la première » s'ouvre au
  * tour 4 à l'équipe dont la Home était en vente au tour 3, et à elle seule.
+ *
+ * Le niveau 7 est retiré du produit (décision du propriétaire, octobre 2026) :
+ * les parties qui s'ouvrent ici sont celles qui existent déjà à ce niveau et
+ * continuent de se jouer (`ouvrirUnePartieDeNiveau7`).
  */
 const HOME = "nova-home";
 let admin: string;
@@ -58,12 +63,12 @@ describe("les situations de NOVA Home", () => {
   it("au niveau 6, aucune situation de la Home ; au niveau 7, la quatrième enceinte au tour 1", async () => {
     const six = await createSoloGame(admin, "quarter", 3, 6, false, "nova");
     expect((await codesOuverts(six, 1)).filter((c) => c.startsWith("novag7_"))).toEqual([]);
-    const sept = await createSoloGame(admin, "quarter", 3, 7, false, "nova");
+    const sept = await ouvrirUnePartieDeNiveau7({ userId: admin });
     expect(await codesOuverts(sept, 1)).toContain("novag7_t1_home");
   }, 120_000);
 
   it("« Sur le marché, la première » s'ouvre au tour 4 quand la Home était en vente au tour 3", async () => {
-    const gameId = await createSoloGame(admin, "quarter", 3, 7, false, "nova");
+    const gameId = await ouvrirUnePartieDeNiveau7({ userId: admin });
     // La certification ne glisse pas dans cette partie : la Home est en vente au tour 3.
     const [game] = await db.select().from(games).where(eq(games.id, gameId));
     const s = parseScenarioConfig(game!.scenarioSnapshot);

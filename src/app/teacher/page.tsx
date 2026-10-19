@@ -530,12 +530,6 @@ export default async function TeacherDashboard({
                   </option>
                 );
               })}
-              {/* PAS DE NIVEAU 7 ICI (décision du propriétaire, octobre 2026). Ce
-                  formulaire ouvre des PARTIES DE CLASSE, et le niveau 7 « Groupe » ne
-                  se joue qu'en solo : le rachat du fournisseur partagé ne déplace que
-                  des concurrents simulés, et l'estimation en direct ignore les rachats
-                  (`verifierLeNiveauGroupe`, qui refuse la classe quoi qu'en dise cet
-                  écran). L'enseignant le trouve sur /jouer, avec NOVA en gamme. */}
             </select>
             {niveauMaxSansLicence < NIVEAU_MAX ? (
               <span className="mt-1 block text-sm text-slate-400" data-niveaux-reserves="">

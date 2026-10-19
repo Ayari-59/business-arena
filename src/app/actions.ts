@@ -5,15 +5,15 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getOrCreateGuestUserId } from "@/lib/guest";
 import { createSoloGame } from "@/services/game.service";
-import { NiveauGroupeReserveError, TropDePartiesError } from "@/services/game-creation.service";
+import { TropDePartiesError } from "@/services/game-creation.service";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
 import { NiveauReserveError } from "@/services/acces.service";
 import { getSession } from "@/lib/session";
 
 const periodicitySchema = z.enum(["month", "quarter", "year"]).catch("quarter");
 const companiesSchema = z.coerce.number().int().min(2).max(8).catch(3);
-/** 7 : le niveau « Groupe », hors parcours : `createSoloGame` exige une licence et NOVA en gamme. */
-const levelSchema = z.coerce.number().int().min(1).max(7).catch(3);
+/** 1 à 6 : les six niveaux du parcours, et il n'y en a pas d'autre (`NIVEAU_MAX`). */
+const levelSchema = z.coerce.number().int().min(1).max(6).catch(3);
 const roundsCountSchema = z.coerce.number().int().min(1).max(24).optional().catch(undefined);
 /** Secteur choisi : un code inconnu retombe sur le scénario par défaut. */
 const scenarioSchema = z
@@ -54,7 +54,6 @@ export async function startGameAction(formData: FormData): Promise<void> {
     // revient sur la page, qui dit pourquoi. Toute autre panne remonte.
     if (e instanceof TropDePartiesError) redirect("/jouer?trop=1");
     if (e instanceof NiveauReserveError) redirect("/jouer?reserve=1");
-    if (e instanceof NiveauGroupeReserveError) redirect("/jouer?groupe=1");
     throw e;
   }
   redirect(`/arena/${gameId}`);

@@ -14,7 +14,12 @@ import { DEFAULT_RSE_CONFIG } from "@/engine/rse";
  */
 
 export interface DifficultyPreset {
-  /** 1 à 6 : le parcours ; 7 : le niveau « Groupe », à part (`NIVEAU_GROUPE`). */
+  /**
+   * 1 à 6 : le parcours. Le 7 existe encore dans ce type, et seulement pour
+   * cela : les parties créées au niveau 7 « Groupe » avant son retrait du
+   * produit relisent leur profil (`NIVEAU_7_RETIRE`, plus bas). Aucun écran ne
+   * le propose, aucune création ne l'accepte.
+   */
   level: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   code: string;
   name: string;
@@ -97,15 +102,17 @@ export interface DifficultyPreset {
      */
     rd: boolean;
     /**
-     * Croissance externe (niveau 7) : racheter un concurrent simulé, en
-     * numéraire ou en actions. ABSENTE des six niveaux du parcours (et de leurs
-     * profils figés, qui restent ceux d'avant) ; fermée en classe.
+     * Croissance externe : racheter un concurrent simulé, en numéraire ou en
+     * actions. ABSENTE des six niveaux du parcours (et de leurs profils figés,
+     * qui restent ceux d'avant). Seules les parties créées au niveau 7
+     * « Groupe », avant son retrait du produit, la portent encore — figée dans
+     * leur profil. Le moteur qui la joue est gardé (`engine/groupe`).
      */
     croissanceExterne?: boolean;
     /**
-     * Externaliser ou internaliser (niveau 7) : faire fabriquer des produits
-     * finis par un sous-traitant, au barème, sans coût fixe. Absente des six
-     * niveaux du parcours.
+     * Externaliser ou internaliser : faire fabriquer des produits finis par un
+     * sous-traitant, au barème, sans coût fixe. Absente des six niveaux du
+     * parcours, comme la croissance externe, et pour la même raison.
      */
     externalisation?: boolean;
   };
@@ -130,8 +137,13 @@ const FERME: LeviersDuNiveau = {
   rd: false,
 };
 
-/** Les leviers du seul niveau 7 : lus dans un profil figé quand ils y sont, jamais ajoutés ailleurs. */
-const LEVIERS_DU_GROUPE = ["croissanceExterne", "externalisation"] as const;
+/**
+ * Les leviers que seul le niveau 7 « Groupe » ouvrait. Le niveau est retiré du
+ * produit ; cette liste reste parce qu'un profil FIGÉ les porte encore, et
+ * qu'un levier qu'on ne sait plus lire serait un levier perdu au milieu d'une
+ * partie. Lus dans un profil figé quand ils y sont, jamais ajoutés ailleurs.
+ */
+const LEVIERS_DU_NIVEAU_7_RETIRE = ["croissanceExterne", "externalisation"] as const;
 
 export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
   {
@@ -225,31 +237,42 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
 ];
 
 /**
- * LE NIVEAU 7 « GROUPE », À CÔTÉ DU PARCOURS.
+ * LE NIVEAU 7 « GROUPE », RETIRÉ DU PRODUIT — ET CE QUI EN RESTE ICI.
  *
- * Les six niveaux du parcours (`DIFFICULTY_PRESETS`) ne le comptent pas, et ce
- * n'est pas un oubli à rattraper : les ateliers, le manuel, les lettres de
- * mission, l'énumération des niveaux dans les offres et les bornes d'un sujet
- * d'examen restent ceux des SIX niveaux (`NIVEAU_MAX`, config/vitrine-solo).
- * Rien de tout cela n'existe au niveau 7.
+ * Décision du propriétaire (octobre 2026) : le niveau est retiré. Il n'était
+ * qu'un septième palier mal posé — jouable sur NOVA en gamme seulement, en solo
+ * seulement, et obligeant à une note de bas de page partout : une constante à
+ * côté de `NIVEAU_MAX`, une phrase à part sur /tarifs, un commentaire ici pour
+ * expliquer que les ateliers, le manuel et l'examen restaient à six. Aucun
+ * écran ne le propose plus, aucune création ne l'accepte plus (le niveau envoyé
+ * est borné à six dès les actions, `app/actions.ts` et `app/teacher/actions.ts`).
  *
- * Ce qui le borne, et que le serveur applique à toute création
- * (`verifierLeNiveauGroupe`) :
- *   · NOVA EN GAMME SEULEMENT — c'est le seul scénario qui porte un bloc de
- *     groupe (`config/groupe`), et les leviers du niveau n'ont rien à prendre
- *     ailleurs ;
- *   · EN SOLO SEULEMENT — le rachat du fournisseur partagé ne modélise le
- *     départ et le rationnement que des concurrents simulés.
+ * CE PRÉRÉGLAGE N'EST PLUS UN NIVEAU DU PRODUIT : c'est le GEL des parties qui
+ * le portent. Une partie créée au niveau 7 avant le retrait continue de se
+ * jouer et de se rejouer, et pour cela deux choses doivent rester lisibles :
+ *   · SON MONDE — aucun indice, aléas doublés : sans ce préréglage,
+ *     `presetFromProfile` ne retrouverait plus le niveau 7 et retomberait sur
+ *     `LEGACY_PRESET` (niveau 3, tous les indices, aléas simples), c'est-à-dire
+ *     une autre partie que celle qui a été commencée ;
+ *   · SES LEVIERS — la liste figée dans son `difficultyProfile`, croissance
+ *     externe et externalisation comprises (`REPARTITION_AVANT_2026_10_11`,
+ *     clé 7, et `LEVIERS_DU_NIVEAU_7_RETIRE`).
  *
- * Il n'est plus en avant-première (décision du propriétaire, octobre 2026) :
- * il est inclus dans les offres de l'arène comme les niveaux 4 à 6, et aucun
- * drapeau d'administration ne le commande plus.
+ * Il n'est donc PAS exporté comme un niveau à proposer, et rien ne doit le
+ * remettre dans `DIFFICULTY_PRESETS` : les six niveaux du parcours restent six,
+ * et les ateliers, le manuel, les lettres de mission, l'énumération des niveaux
+ * dans les offres et les bornes d'un sujet d'examen restent ceux des SIX
+ * (`NIVEAU_MAX`, config/vitrine-solo).
  *
- * Son monde est celui de l'Executive (mêmes aléas, aucun indice, mêmes
- * leviers) ; il y ajoute la croissance externe et l'externalisation, et juge
- * l'équipe sur la valeur créée pour l'actionnaire.
+ * LE MOTEUR, LUI, EST GARDÉ (`engine/groupe`, `config/groupe`) : consolidation,
+ * écart d'acquisition, valeur pour l'actionnaire, externalisation sont des
+ * notions à redistribuer sur les niveaux existants. Les parties figées le
+ * tirent encore, et les tests du moteur l'exercent par ce préréglage.
+ *
+ * Garde : tests/unit/partie-de-niveau-7-d-avant.test.ts (une partie de niveau 7
+ * d'avant le retrait rejouée au centime).
  */
-export const NIVEAU_GROUPE: DifficultyPreset = {
+export const NIVEAU_7_RETIRE: DifficultyPreset = {
   level: 7,
   code: "groupe",
   name: "Groupe",
@@ -273,8 +296,13 @@ export const NIVEAU_GROUPE: DifficultyPreset = {
   eventProbabilityMultiplier: 2,
 };
 
+/**
+ * Les préréglages lus PAR NUMÉRO : les six du parcours, et le 7 gelé des
+ * parties qui le portent (voir `NIVEAU_7_RETIRE`). Ce que cette table contient
+ * n'est donc pas ce qui se propose : les écrans énumèrent `DIFFICULTY_PRESETS`.
+ */
 export const presetByLevel = new Map(
-  [...DIFFICULTY_PRESETS, NIVEAU_GROUPE].map((p) => [p.level, p]),
+  [...DIFFICULTY_PRESETS, NIVEAU_7_RETIRE].map((p) => [p.level, p]),
 );
 
 /**
@@ -336,8 +364,11 @@ export const REPARTITION_AVANT_2026_10_11: Readonly<Record<DifficultyPreset["lev
     dividend: true,
     rd: true,
   },
-  // Le niveau 7 n'existait pas : une partie qui le porte fige toujours ses leviers.
-  7: { ...NIVEAU_GROUPE.decisions },
+  // Le niveau 7 n'existait pas, et il est depuis retiré du produit : une partie
+  // qui le porte fige toujours ses leviers, et c'est par eux qu'elle se rejoue.
+  // Cette ligne est le dernier recours, pour un profil de niveau 7 écrit sans
+  // sa liste de leviers : elle rend ceux du niveau, jamais ceux d'un autre.
+  7: { ...NIVEAU_7_RETIRE.decisions },
 };
 
 /**
@@ -371,7 +402,7 @@ function leviersFiges(brut: unknown): LeviersDuNiveau | null {
   if (!brut || typeof brut !== "object") return null;
   const lus = Object.entries(brut as Record<string, unknown>).filter(
     ([cle, v]) =>
-      (cle in FERME || (LEVIERS_DU_GROUPE as readonly string[]).includes(cle)) && typeof v === "boolean",
+      (cle in FERME || (LEVIERS_DU_NIVEAU_7_RETIRE as readonly string[]).includes(cle)) && typeof v === "boolean",
   );
   if (lus.length === 0) return null;
   return { ...FERME, ...Object.fromEntries(lus) };

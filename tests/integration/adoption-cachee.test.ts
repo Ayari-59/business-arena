@@ -8,12 +8,13 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { companyStates, games, roundResults, teams, users } from "@/db/schema";
-import { createSoloGame, getGameView, resolveCurrentRound } from "@/services/game.service";
+import { getGameView, resolveCurrentRound } from "@/services/game.service";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { NOVA_HOME } from "@/config/groupe/nova";
 import { neutralDecisions } from "@/engine/bots";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 import { placerSousLicence } from "./helpers/licence";
+import { ouvrirUnePartieDeNiveau7 } from "./helpers/partie-de-niveau-7";
 
 /**
  * L'ADOPTION DE NOVA HOME RESTE CACHÉE (niveau 7).
@@ -25,6 +26,10 @@ import { placerSousLicence } from "./helpers/licence";
  * dépendre : la même partie, rejouée sous un autre état d'adoption, rend la
  * MÊME vue (scénario envoyé au navigateur et dossier d'estimation compris),
  * avant comme après le premier tour. Après l'étude, la vue le dit.
+ *
+ * Le niveau 7 est retiré du produit (décision du propriétaire, octobre 2026) :
+ * la partie ouverte ici est celle qui existe déjà à ce niveau et continue de se
+ * jouer (`ouvrirUnePartieDeNiveau7`).
  */
 const HOME = "nova-home";
 let admin: string;
@@ -87,7 +92,7 @@ const vue = async (gameId: string) => JSON.stringify(await getGameView(gameId, a
 
 describe("l'adoption de NOVA Home reste cachée tant que l'équipe ne l'a pas étudiée", () => {
   it("la vue, le scénario envoyé au navigateur et le dossier d'estimation ne dépendent pas de l'état d'adoption ; l'étude de marché le révèle", async () => {
-    const gameId = await createSoloGame(admin, "quarter", 3, 7, false, "nova");
+    const gameId = await ouvrirUnePartieDeNiveau7({ userId: admin });
     const [game] = await db.select().from(games).where(eq(games.id, gameId));
     const s = parseScenarioConfig(game!.scenarioSnapshot);
     expect(s.products!.some((p) => p.code === HOME)).toBe(true);

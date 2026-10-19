@@ -28,7 +28,6 @@ import {
   entrepriseDuSecteur,
   horsLicence,
   messageNiveauxReserves,
-  NIVEAU_GROUPE_EN_PUBLIC,
   refusDeLaClasse,
   type HorsLicence,
   type OffreDeLArene,
@@ -378,10 +377,12 @@ export async function etatDeLOffre(userId: string, now: Date = new Date()): Prom
  * Lève si ce niveau est fermé à qui crée la partie. `licence` est établie par
  * l'appelant, côté serveur, à partir de l'organisation ou du compte qui crée.
  *
- * LE NIVEAU 7 « GROUPE » passe ici comme les niveaux 4 à 6 : inclus dans les
- * offres depuis octobre 2026, et dans elles seules (`niveauReserve` le tranche
- * avant le réglage de la Découverte). Seule la phrase du refus diffère : ses
- * deux restrictions, NOVA en gamme et le solo, ne sont pas celles du parcours.
+ * AU-DELÀ DU PARCOURS, PERSONNE NE CRÉE, PAS MÊME SOUS LICENCE. Un septième
+ * niveau « Groupe » a été ouvert aux offres quelques jours ; il est retiré
+ * (décision du propriétaire, octobre 2026), et une licence ouvre les niveaux du
+ * parcours, elle ne fait pas exister un niveau que le produit ne propose plus.
+ * Les parties déjà créées au niveau 7 ne passent pas ici : seule la CRÉATION
+ * s'y vérifie, et elles se jouent et se rejouent (config/difficulty.ts).
  */
 export async function verifierLeNiveau(args: {
   niveau: number | undefined;
@@ -392,10 +393,8 @@ export async function verifierLeNiveau(args: {
   const { vitrineSolo } = await getPlatformConfig();
   const code = args.scenarioCode ?? DEFAULT_SCENARIO_CODE;
   if (!niveauReserve(vitrineSolo, code, args.niveau)) return;
-  if (await args.licence()) return;
-  throw new NiveauReserveError(
-    args.niveau > NIVEAU_MAX ? NIVEAU_GROUPE_EN_PUBLIC.inclus : messageNiveauxReserves(vitrineSolo),
-  );
+  if (args.niveau <= NIVEAU_MAX && (await args.licence())) return;
+  throw new NiveauReserveError(messageNiveauxReserves(vitrineSolo));
 }
 
 /* ---------------------------------------------------------------------------

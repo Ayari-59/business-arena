@@ -23,7 +23,7 @@ import type {
 } from "@/engine/types";
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
-import { NIVEAU_GROUPE } from "@/config/difficulty";
+import { NIVEAU_7_RETIRE } from "@/config/difficulty";
 import { rejouer, type PartieARejouer } from "@/pedagogy/merite/rejeu";
 
 /**
@@ -78,7 +78,7 @@ function avancer(s: EngineScenarioConfig, e: Etat, tour: number, retouche?: (d: 
       roundIndex: tour,
       lastSoldUnits: p ? soldUnits(p) : undefined,
       lastSoldByProduct: p ? soldByProduct(s, p.market.bySegment) : undefined,
-      leviers: NIVEAU_GROUPE.decisions,
+      leviers: NIVEAU_7_RETIRE.decisions,
     });
   }
   retouche?.(decisions);
@@ -261,7 +261,7 @@ describe("le rejeu de mérite d'une partie avec un fournisseur racheté", () => 
       decisions: jouees,
       reconduits: jouees.map(() => false),
       pedagogie: jouees.map(() => ({})),
-      leviers: NIVEAU_GROUPE.decisions,
+      leviers: NIVEAU_7_RETIRE.decisions,
     };
     const a = rejouer(partie, 2026);
     expect(rejouer(partie, 2026)).toEqual(a);

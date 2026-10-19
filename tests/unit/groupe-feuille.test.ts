@@ -6,7 +6,7 @@ import { seuilDIndifference } from "@/engine/groupe";
 import type { CompanyRoundResult, CompanyState, EventInstance, RoundDecisions } from "@/engine/types";
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
-import { NIVEAU_GROUPE } from "@/config/difficulty";
+import { NIVEAU_7_RETIRE } from "@/config/difficulty";
 import { decisionsSaisies } from "@/config/decisions-saisies";
 import { champDuChemin, libelleDuChamp } from "@/config/refus-de-decision";
 import { vueDuGroupe, type VueDuGroupe } from "@/services/groupe-view.service";
@@ -50,7 +50,7 @@ function decider(p: Partie, tour: number): Record<string, RoundDecisions> {
       roundIndex: tour,
       lastSoldUnits: prec ? soldUnits(prec) : undefined,
       lastSoldByProduct: prec ? soldByProduct(sept, prec.market.bySegment) : undefined,
-      leviers: NIVEAU_GROUPE.decisions,
+      leviers: NIVEAU_7_RETIRE.decisions,
     });
   }
   return out;

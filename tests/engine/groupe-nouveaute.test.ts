@@ -17,7 +17,7 @@ import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gam
 import { novaScenario } from "@/config/scenarios/nova";
 import { conseilGammeScenario } from "@/config/scenarios/conseil-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
-import { NIVEAU_GROUPE, presetByLevel } from "@/config/difficulty";
+import { NIVEAU_7_RETIRE, presetByLevel } from "@/config/difficulty";
 import { NOVA_HOME } from "@/config/groupe/nova";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { auCentime } from "../helpers/partie-nova-gamme";
@@ -51,7 +51,7 @@ function jouer(
   retouche?: (tour: number, id: string, d: RoundDecisions, e: CompanyState) => void,
   graine = 2026,
 ) {
-  const leviers = NIVEAU_GROUPE.decisions;
+  const leviers = NIVEAU_7_RETIRE.decisions;
   let etats: CompanyState[] = PROFILS.map((p, i) => premiereOuverture(novaGammeCompany(`e${i}`, `E${i}`, "bot", p), scenario.groupe!, scenario.roundDays));
   let ev: EventInstance[] = [];
   let prec: Record<string, CompanyRoundResult> = {};
@@ -157,7 +157,7 @@ describe("la proposition du formulaire ne voit pas une Home qui n'est pas au mar
           lastMarket: k[t - 1]!.results[c.id]!.market.bySegment,
           lastBreakEven: k[t - 1]!.results[c.id]!.breakeven.breakEvenUnits,
           lastNetIncome: k[t - 1]!.results[c.id]!.incomeStatement.netIncome,
-          leviers: NIVEAU_GROUPE.decisions,
+          leviers: NIVEAU_7_RETIRE.decisions,
         });
         const pa = proposedDecisionsFor(args(sept, c, avec));
         const ps = proposedDecisionsFor(args(sansHome(sept), cs, sans));
@@ -167,7 +167,7 @@ describe("la proposition du formulaire ne voit pas une Home qui n'est pas au mar
     }
     // et au tour 1
     const e = premiereOuverture(novaGammeCompany("e0", "E0", "human"), sept.groupe!, sept.roundDays);
-    const t1 = (snapshot: EngineScenarioConfig) => proposedDecisionsFor({ snapshot, state: e, roundIndex: 1, previousPayload: null, leviers: NIVEAU_GROUPE.decisions });
+    const t1 = (snapshot: EngineScenarioConfig) => proposedDecisionsFor({ snapshot, state: e, roundIndex: 1, previousPayload: null, leviers: NIVEAU_7_RETIRE.decisions });
     expect(auCentime(sansLaHome(t1(sept)))).toEqual(auCentime(sansLaHome(t1(sansHome(sept)))));
   });
 });

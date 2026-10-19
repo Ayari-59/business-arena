@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
-import { DIFFICULTY_PRESETS, NIVEAU_GROUPE, premierNiveauQuiOuvre } from "@/config/difficulty";
-import { entreprisesDuNiveauGroupe } from "@/services/game-creation.service";
+import { DIFFICULTY_PRESETS, premierNiveauQuiOuvre } from "@/config/difficulty";
 import { leviersDuNiveau } from "@/config/decisions";
 import { comparatifDesNiveaux, tableauDuNiveau } from "@/config/tableau-des-niveaux";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
@@ -15,7 +14,7 @@ import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
 import { getGuestUserId } from "@/lib/guest";
 import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
-import { MARQUE_DE_L_ARENE, messageNiveauxReserves, NIVEAU_GROUPE_EN_PUBLIC } from "@/config/tarifs";
+import { MARQUE_DE_L_ARENE, messageNiveauxReserves } from "@/config/tarifs";
 import { getSession } from "@/lib/session";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { promesseEntreprise, teinteDuMetier } from "@/config/scenarios/presentation";
@@ -44,7 +43,7 @@ export const metadata: Metadata = {
 export default async function JouerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ secteur?: string; niveau?: string; trop?: string; reserve?: string; groupe?: string }>;
+  searchParams: Promise<{ secteur?: string; niveau?: string; trop?: string; reserve?: string }>;
 }) {
   const config = await getPlatformConfig();
   // Celui qui revient retrouve sa partie AVANT d'en configurer une autre.
@@ -56,7 +55,7 @@ export default async function JouerPage({
   const licence = await unCompteSousLicence([userId, session?.userId]);
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
-  const { secteur, niveau, trop, reserve, groupe } = await searchParams;
+  const { secteur, niveau, trop, reserve } = await searchParams;
   // Le niveau que le bilan d'une partie conseille (« Et ensuite ») : 1 à 6, sinon rien.
   const niveauDemande = /^[1-6]$/.test(niveau ?? "") ? Number(niveau) : undefined;
   const scenarioChoisi = SCENARIO_CHOICES.some((s) => s.code === secteur)
@@ -140,15 +139,6 @@ export default async function JouerPage({
                 .
               </p>
             ) : null}
-            {groupe ? (
-              <p
-                role="status"
-                data-niveau-groupe-refuse=""
-                className="mb-4 rounded-xl encadre-neutre p-4 text-base text-slate-200"
-              >
-                {NIVEAU_GROUPE_EN_PUBLIC.inclus} Choisissez NOVA, ou un niveau de 1 à 6.
-              </p>
-            ) : null}
             {trop ? (
               <p
                 role="status"
@@ -221,21 +211,6 @@ export default async function JouerPage({
                     tableau: tableauDuNiveau(p.level),
                   }))}
                   comparatif={comparatifDesNiveaux()}
-                  // LE NIVEAU 7 « GROUPE » EST MONTRÉ À TOUS, pour les entreprises qui le
-                  // jouent : inclus dans les offres depuis octobre 2026, il suit la règle
-                  // des niveaux fermés (visible, marqué, le lien vers les offres à côté)
-                  // au lieu d'être caché. Sans licence, le formulaire le ferme ; avec, il
-                  // l'ouvre, et le serveur tranche de toute façon.
-                  niveauGroupe={{
-                    level: NIVEAU_GROUPE.level,
-                    name: NIVEAU_GROUPE.name,
-                    tagline: NIVEAU_GROUPE.tagline,
-                    decisions: leviersDuNiveau(NIVEAU_GROUPE.level).length,
-                    tableau: tableauDuNiveau(NIVEAU_GROUPE.level, [...DIFFICULTY_PRESETS, NIVEAU_GROUPE]),
-                    entreprises: entreprisesDuNiveauGroupe(SCENARIO_CHOICES.map((s) => s.code)),
-                    restriction: NIVEAU_GROUPE_EN_PUBLIC.restriction,
-                    inclus: NIVEAU_GROUPE_EN_PUBLIC.inclus,
-                  }}
                   defaultScenario={scenarioChoisi}
                   defaultLevel={niveauDemande}
                   lancement={

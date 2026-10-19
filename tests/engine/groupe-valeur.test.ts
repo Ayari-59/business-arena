@@ -14,7 +14,7 @@ import {
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, EventInstance, RoundDecisions } from "@/engine/types";
 import { novaGammeCompany, novaGammeScenario } from "@/config/scenarios/nova-gamme";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
-import { NIVEAU_GROUPE, presetByLevel } from "@/config/difficulty";
+import { NIVEAU_7_RETIRE, presetByLevel } from "@/config/difficulty";
 import { auCentime } from "../helpers/partie-nova-gamme";
 
 /**
@@ -76,7 +76,7 @@ const etatSansGroupe = (c: CompanyState) => {
 
 describe("le niveau 7 sans rachat ni sous-traitance rejoue le niveau 6 au centime", () => {
   const avant = jouer(six);
-  const apres = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions);
+  const apres = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions);
   it("mêmes comptes, mêmes bilans, mêmes flux, mêmes parts, tour par tour", () => {
     for (let t = 0; t < avant.length; t++) {
       for (const id of Object.keys(avant[t]!.results)) {
@@ -123,7 +123,7 @@ describe("la valeur de départ est la valeur comptable", () => {
 
 describe("actions, dilution et dividendes", () => {
   it("une augmentation de capital émet des actions à la valeur de clôture du tour hors apport ; un dividende se compte par action", () => {
-    const tours = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
+    const tours = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions, (tour, id, d) => {
       if (id !== "e0") return;
       if (tour === 2) d.finance = { ...(d.finance ?? {}), capitalIncrease: 50000 };
       if (tour === 4) d.finance = { ...(d.finance ?? {}), dividend: 10000 };
@@ -159,8 +159,8 @@ describe("actions, dilution et dividendes", () => {
         p.qualityBudget = 0;
       }
     };
-    const ref = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions).at(-1)!.results.e0!;
-    const avec = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, coupe).at(-1)!.results.e0!;
+    const ref = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions).at(-1)!.results.e0!;
+    const avec = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions, coupe).at(-1)!.results.e0!;
     expect(avec.incomeStatement.ebitda).toBeGreaterThan(ref.incomeStatement.ebitda);
     expect(avec.groupe!.valeur!.valeurEntreprise).toBeLessThanOrEqual(ref.groupe!.valeur!.valeurEntreprise + 1);
     // ni la caisse qu'elle laisse : une dépense reportée compte comme une dette
@@ -201,10 +201,10 @@ describe("l'émission au prix de clôture hors apport", () => {
 });
 
 describe("ni la levée oisive ni la cession de dernier tour ne font de valeur", () => {
-  const ref = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions).at(-1)!.results.e0!.groupe!.valeur!;
+  const ref = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions).at(-1)!.results.e0!.groupe!.valeur!;
   it("une augmentation de capital dont l'argent dort en caisse est neutre au prix du tour ; ensuite, ses souscripteurs ne prennent que leur part de l'écart de valeur", () => {
-    const refTours = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions);
-    const tours = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
+    const refTours = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions);
+    const tours = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions, (tour, id, d) => {
       if (id === "e0" && tour === 2) d.finance = { ...(d.finance ?? {}), capitalIncrease: 100000 };
     });
     const vRef2 = refTours[1]!.results.e0!.groupe!.valeur!;
@@ -221,7 +221,7 @@ describe("ni la levée oisive ni la cession de dernier tour ne font de valeur", 
     expect(Math.abs(avec.valeurParAction / attendu - 1)).toBeLessThan(0.005);
   });
   it("vendre des machines au dernier tour ne relève pas la valeur", () => {
-    const avec = jouer(sixAvecGroupe, NIVEAU_GROUPE.decisions, (tour, id, d) => {
+    const avec = jouer(sixAvecGroupe, NIVEAU_7_RETIRE.decisions, (tour, id, d) => {
       if (id === "e0" && tour === sixAvecGroupe.roundsCount)
         d.investment = { ...(d.investment ?? {}), equipmentSell: [{ typeCode: "manual", quantity: 4 }] };
     }).at(-1)!.results.e0!;

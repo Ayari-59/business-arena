@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DIFFICULTY_PRESETS,
-  NIVEAU_GROUPE,
+  NIVEAU_7_RETIRE,
   presetByLevel,
   presetFromProfile,
   profilDuNiveau,
@@ -20,24 +20,37 @@ import { simulateRound } from "@/engine/simulation";
 import { balanceGap } from "@/engine/finance/statements";
 
 /** Une décision neutre et sobre du tour 1. */
-const NIVEAU_GROUPE_DECISION: RoundDecisions = { price: 60, productionPlan: 0, marketingBudget: 0, qualityBudget: 0, maintenanceBudget: 0 };
+const DECISION_NEUTRE: RoundDecisions = { price: 60, productionPlan: 0, marketingBudget: 0, qualityBudget: 0, maintenanceBudget: 0 };
 
 /**
- * LE NIVEAU 7 « GROUPE », À CÔTÉ DU PARCOURS.
+ * LE NIVEAU 7 « GROUPE » EST RETIRÉ ; CE QUI RESTE DE LUI NE DÉBORDE PAS.
  *
- * Il ne doit rien changer aux six niveaux : ni leur liste, ni leurs leviers, ni
- * leur tableau ; et son bloc de groupe n'existe que dans un snapshot de niveau
- * 7 d'un scénario qui en porte un.
+ * Le niveau est retiré du produit (décision du propriétaire, octobre 2026) : il
+ * ne se propose ni ne se crée plus nulle part. Deux choses lui survivent, et ce
+ * fichier garde qu'elles restent à leur place :
+ *
+ *   · LE GEL DES PARTIES QUI LE PORTENT (`NIVEAU_7_RETIRE`, lu PAR NUMÉRO dans
+ *     `presetByLevel`, jamais énuméré dans `DIFFICULTY_PRESETS`) : les six
+ *     niveaux restent six, leurs leviers, leurs profils figés et leur tableau
+ *     ignorent le rachat et l'externalisation.
+ *   · LE MOTEUR DU GROUPE, gardé pour être redistribué plus tard
+ *     (`engine/groupe`, `config/groupe`) : son bloc n'apparaît que dans un
+ *     snapshot de niveau 7 d'un scénario qui en porte un, et il s'y comporte
+ *     comme il s'y est toujours comporté — c'est ce qui permet aux parties déjà
+ *     créées de se rejouer (tests/unit/partie-de-niveau-7-d-avant.test.ts).
  */
 const composer = (scenario: typeof novaGammeScenario, level: number, concurrents = 4) =>
   composerLeScenarioJoue({ scenario, seed: 2026, level, concurrents, periodicity: "quarter", investmentStories: true });
 
-describe("le niveau 7, à côté des six niveaux du parcours", () => {
-  it("les six niveaux restent six ; le 7 se lit par son numéro", () => {
+describe("le niveau 7 retiré ne déborde pas sur les six", () => {
+  it("les six niveaux restent six ; le 7 ne se lit que par son numéro, pour les parties qui le portent", () => {
     expect(DIFFICULTY_PRESETS.map((p) => p.level)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(presetByLevel.get(7)).toBe(NIVEAU_GROUPE);
-    expect(NIVEAU_GROUPE.decisions.croissanceExterne).toBe(true);
-    expect(NIVEAU_GROUPE.decisions.externalisation).toBe(true);
+    // Il n'est PAS dans la liste qu'énumèrent les écrans : il n'est que dans la
+    // table lue par numéro, celle dont `presetFromProfile` se sert.
+    expect(DIFFICULTY_PRESETS).not.toContain(NIVEAU_7_RETIRE);
+    expect(presetByLevel.get(7)).toBe(NIVEAU_7_RETIRE);
+    expect(NIVEAU_7_RETIRE.decisions.croissanceExterne).toBe(true);
+    expect(NIVEAU_7_RETIRE.decisions.externalisation).toBe(true);
   });
 
   it("les six niveaux ne portent même pas les leviers du 7 : leurs profils figés restent ceux d'avant", () => {
@@ -50,16 +63,16 @@ describe("le niveau 7, à côté des six niveaux du parcours", () => {
 
   it("le monde du 7 est celui du 6, plus ses deux leviers", () => {
     const six = presetByLevel.get(6)!;
-    expect(NIVEAU_GROUPE.eventProbabilityMultiplier).toBe(six.eventProbabilityMultiplier);
-    const { croissanceExterne: _c, externalisation: _e, ...reste } = NIVEAU_GROUPE.decisions;
+    expect(NIVEAU_7_RETIRE.eventProbabilityMultiplier).toBe(six.eventProbabilityMultiplier);
+    const { croissanceExterne: _c, externalisation: _e, ...reste } = NIVEAU_7_RETIRE.decisions;
     void _c;
     void _e;
     expect(reste).toEqual(six.decisions);
   });
 
-  it("une partie de niveau 7 fige ses leviers ; un profil d'avant les lit fermés", () => {
-    const profil = { difficulty: profilDuNiveau(NIVEAU_GROUPE) };
-    expect(presetFromProfile(profil).decisions).toEqual(NIVEAU_GROUPE.decisions);
+  it("une partie de niveau 7 fige ses leviers et les relit ; un profil d'avant les lit fermés", () => {
+    const profil = { difficulty: profilDuNiveau(NIVEAU_7_RETIRE) };
+    expect(presetFromProfile(profil).decisions).toEqual(NIVEAU_7_RETIRE.decisions);
     const ancien = { difficulty: { level: 6, decisions: { ...presetByLevel.get(6)!.decisions } } };
     expect(presetFromProfile(ancien).decisions).toEqual(presetByLevel.get(6)!.decisions);
     expect(presetFromProfile(ancien).decisions.croissanceExterne).toBeFalsy();
@@ -88,7 +101,7 @@ describe("le niveau 7, à côté des six niveaux du parcours", () => {
     const six = aLaMesureDuNiveau(d, presetByLevel.get(6)!.decisions);
     expect(six.rachat).toBeUndefined();
     expect(six.sousTraitance).toBeUndefined();
-    const sept = aLaMesureDuNiveau(d, NIVEAU_GROUPE.decisions);
+    const sept = aLaMesureDuNiveau(d, NIVEAU_7_RETIRE.decisions);
     expect(sept.rachat).toBeDefined();
     expect(sept.sousTraitance).toBeDefined();
   });
@@ -150,7 +163,7 @@ describe("le bloc de groupe du snapshot", () => {
       scenario: sept,
       roundIndex: 1,
       companies: [e, bots],
-      decisions: { e0: NIVEAU_GROUPE_DECISION, e1: NIVEAU_GROUPE_DECISION },
+      decisions: { e0: DECISION_NEUTRE, e1: DECISION_NEUTRE },
       activeEvents: [],
       seed: 2026,
     });
@@ -186,7 +199,7 @@ describe("le bloc de groupe du snapshot", () => {
       level: 7,
       concurrents: 4,
       periodicity: "quarter",
-      leviers: { ...NIVEAU_GROUPE.decisions, croissanceExterne: false },
+      leviers: { ...NIVEAU_7_RETIRE.decisions, croissanceExterne: false },
     });
     expect(classe.groupe?.rachat).toBeUndefined();
     expect(classe.groupe?.sousTraitance).toBeDefined();
