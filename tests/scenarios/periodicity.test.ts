@@ -9,6 +9,7 @@ import { novaBots, novaCompany, novaScenario } from "../../src/config/scenarios/
 import { botDecisions, type BotProfile } from "../../src/engine/bots";
 import { runGame, soldUnits } from "../../src/engine/simulation/runGame";
 import { parseScenarioConfig } from "../../src/config/scenarios/schema";
+import { SCENARIOS } from "../../src/config/scenarios/registry";
 
 describe("périodicité (ADR-01) : redimensionnement du scénario", () => {
   it("mensuel : flux ÷ 3, croissance composée, délais inchangés", () => {
@@ -93,4 +94,49 @@ describe("périodicité : parties complètes jouables au mois et à l'année", (
       }
     });
   }
+});
+
+/**
+ * LE HASARD DU MONDE NE DOIT PAS DÉPENDRE DE LA DURÉE DU TOUR.
+ *
+ * `probability` est une probabilité de tirage PAR TOUR. Laissée telle quelle,
+ * elle fait d'une partie mensuelle un monde trois fois plus agité qu'une partie
+ * trimestrielle sur la même année civile (mesuré : 3,1 à 3,6 chocs par an au
+ * mois contre 0,60 à 0,80 au trimestre) et d'une partie annuelle un monde
+ * presque immobile (0,00 à 0,05). Elle se compose donc comme un taux de perte.
+ */
+describe("périodicité : la probabilité des événements se compose", () => {
+  const annuelle = (p: number, toursParAn: number) => 1 - Math.pow(1 - p, toursParAn);
+
+  it("la chance annuelle de chaque carte est la même aux trois périodicités", () => {
+    for (const def of SCENARIOS) {
+      const trimestre = def.scenario;
+      const mois = applyPeriodicity(trimestre, "month");
+      const annee = applyPeriodicity(trimestre, "year");
+      for (const [i, e] of trimestre.events.entries()) {
+        const repere = `${def.code}/${e.code}`;
+        expect(annuelle(mois.events[i]!.probability, 12), repere).toBeCloseTo(
+          annuelle(e.probability, 4),
+          9,
+        );
+        expect(annuelle(annee.events[i]!.probability, 1), repere).toBeCloseTo(
+          annuelle(e.probability, 4),
+          9,
+        );
+      }
+    }
+  });
+
+  it("une carte réservée à l'enseignant (p = 0) n'est jamais tirée, quelle que soit la durée", () => {
+    const reservees = SCENARIOS.flatMap((d) => d.scenario.events.filter((e) => e.probability <= 0));
+    expect(reservees.length).toBeGreaterThan(0);
+    for (const p of ["month", "year"] as const) {
+      for (const def of SCENARIOS) {
+        const redimensionne = applyPeriodicity(def.scenario, p);
+        for (const [i, e] of def.scenario.events.entries()) {
+          if (e.probability <= 0) expect(redimensionne.events[i]!.probability).toBe(0);
+        }
+      }
+    }
+  });
 });

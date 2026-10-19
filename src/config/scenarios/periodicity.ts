@@ -12,6 +12,9 @@ import { mapGammeSegments } from "../../engine/gamme";
  * - grandeurs de flux par tour (demande de base, coûts fixes, amortissements,
  *   capacités machine et heures, références de budgets) : × k ;
  * - taux de croissance par tour : composés — (1+g)^k − 1 ;
+ * - taux de PERTE et probabilités de tirage par tour : composés comme ce qui
+ *   reste — 1 − (1 − p)^k, pour que la chance annuelle d'un choc ne dépende
+ *   pas du découpage du temps ;
  * - délais de paiement (en jours) et taux annuels : INCHANGÉS — leur poids
  *   relatif varie donc naturellement avec la durée du tour (un client à 80 j
  *   pèse plus lourd au mois qu'à l'année : c'est voulu et pédagogique).
@@ -250,8 +253,21 @@ export function applyPeriodicity(
       : {}),
     // Les modificateurs en unités (« order », « order_subcontract ») sont des
     // flux : × k. Les prix imposés (« order_price ») ne changent pas.
+    //
+    // LA PROBABILITÉ DE TIRAGE EST UN TAUX PAR TOUR : ELLE SE COMPOSE.
+    //
+    // `probability` est la chance qu'une carte sorte À CHAQUE TOUR. Laissée
+    // telle quelle, elle attache le hasard du monde au découpage du temps :
+    // une même année civile tirait 3,1 à 3,6 chocs en douze tours mensuels
+    // contre 0,60 à 0,80 en quatre tours trimestriels (de trois à onze fois
+    // plus), et presque rien en un tour annuel (0,00 à 0,05). L'élève au mois
+    // subissait un monde beaucoup plus agité que son voisin au trimestre, sans
+    // que rien ne l'annonce. Ce qui doit se conserver est la chance ANNUELLE :
+    // on compose donc comme un taux de perte, 1 − (1 − p)^k. Une carte à
+    // probabilité nulle (celles réservées à la main de l'enseignant) le reste.
     events: scenario.events.map((e) => ({
       ...e,
+      probability: composerPerte(e.probability, k),
       modifiers: e.modifiers.map((m) =>
         m.target === "order" || m.target === "order_subcontract"
           ? { ...m, value: m.value * k }
