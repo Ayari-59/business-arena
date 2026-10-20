@@ -7,6 +7,7 @@ import type {
   SimulationOutput,
 } from "../types";
 import { simulateRound } from "./index";
+import { ventesDuTour } from "../bots";
 
 /**
  * Boucle de partie complète (étape 5) : enchaîne les tours en portant l'état
@@ -69,12 +70,7 @@ export function runGame(args: {
   return { rounds, finalCompanies: companies };
 }
 
-/** Unités vendues par une entreprise sur un tour (agrégat utile aux bots). */
+/** Unités vendues par une entreprise sur un tour, adhérents conservés compris (`ventesDuTour`). */
 export function soldUnits(result: CompanyRoundResult): number {
-  // Abonnement : les adhérents conservés sont des ventes du tour au même
-  // titre que les nouveaux venus du marché.
-  return (
-    Object.values(result.market.bySegment).reduce((sum, s) => sum + s.sold, 0) +
-    (result.subscription?.retained ?? 0)
-  );
+  return ventesDuTour(result.market.bySegment, result.subscription);
 }

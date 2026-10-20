@@ -8,11 +8,10 @@ import {
   profilDuNiveau,
   type DifficultyPreset,
 } from "@/config/difficulty";
-import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, soldByProduct, ventesDuTour, type BotProfile } from "@/engine/bots";
 import { peekEventDraw } from "@/engine/events";
 import { investissementPlafonne } from "@/engine/investment/plafond";
 import { simulateRound } from "@/engine/simulation";
-import { soldUnits } from "@/engine/simulation/runGame";
 import { subventionQuiDegele } from "@/engine/estimation/degel";
 import { auPas, proposedDecisionsFor } from "@/services/decision-baseline";
 import { montantDemandable } from "@/services/sauvetage";
@@ -121,7 +120,7 @@ function partie(code: string, niveau: number, graine: number, prixDuTour1: numbe
         scenario,
         state: etat,
         roundIndex: tour,
-        lastSoldUnits: r ? soldUnits(r) : undefined,
+        lastSoldUnits: r ? ventesDuTour(r.market.bySegment, r.subscription) : undefined,
         lastSoldByProduct: r ? soldByProduct(scenario, r.market.bySegment) : undefined,
         humanAvgPrice: precedente ? precedente.price : undefined,
         personality: botPersonalityFromSeed(graine, e.profil),
