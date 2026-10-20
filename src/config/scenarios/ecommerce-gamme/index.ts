@@ -229,6 +229,9 @@ const ORDER_OFFERS = (ecommerceScenario.orderOffers ?? []).map((o) => {
 
 const rawEcommerceGamme = {
   ...ecommerceScenario,
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro en gamme non plus.
+  qualiteProposee: 0,
   code: "ecommerce-gamme",
   version: "0.1.0",
   market: DECO_MARKET,

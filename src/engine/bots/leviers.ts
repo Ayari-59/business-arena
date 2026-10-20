@@ -4,8 +4,8 @@ import type { RoundDecisions } from "../types";
  * UN MARCHÉ ÉQUITABLE : CHACUN DÉCIDE AVEC LES LEVIERS DU NIVEAU.
  *
  * Le joueur ne voit à l'écran que les leviers que son niveau ouvre ; les autres
- * partent avec la valeur que la feuille propose (la gestion neutre du secteur),
- * ou ne partent pas. Les concurrents pilotés, l'équipe absente et la gestion de
+ * partent avec la valeur de la gestion neutre du secteur (le champ caché, même
+ * là où la qualité proposée à l'écran en diffère), ou ne partent pas. Les concurrents pilotés, l'équipe absente et la gestion de
  * référence de « mérite ou chance » décidaient, eux, avec tout : un bot
  * « premium » soignait sa qualité au niveau 1, où le joueur ne le peut pas.
  *

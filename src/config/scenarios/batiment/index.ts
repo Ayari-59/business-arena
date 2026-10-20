@@ -103,6 +103,9 @@ const rawBatiment = {
     // 4,2 h de compagnon par mètre carré entièrement rénové
     hoursPerUnit: 4.2,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
+  qualiteProposee: 0,
   production: {
     // « qualité » = finitions, respect des délais, propreté du chantier
     qualitySensitivity: 0.3,

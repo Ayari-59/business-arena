@@ -151,7 +151,7 @@ describe("mérite ou chance, de la partie au bilan", () => {
     // 1er le plus souvent sur les marchés rejoués : le verdict le dit d'abord.
     if (gagneSonMarche(m.fourchette)) expect(m.verdict).toMatch(/^(Chance|Leçon)\. .*[Vv]ous gagnez votre marché \(1re place sur \d+ des 30\), mais /);
     // La référence se nomme, et la ligne qui dit ce qu'elle fait est là.
-    expect(m.quiEstLaReference).toMatch(/^Un bon gestionnaire part de la gestion proposée/);
+    expect(m.quiEstLaReference).toMatch(/^Un bon gestionnaire part de la gestion neutre du secteur/);
     expect(m.rangeeReference).toBe("Un bon gestionnaire");
     expect(m.fourchette).toMatch(/^Sur 30 marchés possibles, avec vos décisions : /);
     expect(m.pointsJoueur).toBe(30);

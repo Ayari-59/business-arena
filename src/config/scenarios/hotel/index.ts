@@ -101,6 +101,9 @@ const rawHotel = {
     // 0,75 h de travail (étage + réception) par nuitée vendue
     hoursPerUnit: 0.75,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
+  qualiteProposee: 0,
   production: {
     // « qualité » = entretien des chambres, literie, accueil
     qualitySensitivity: 0.22,

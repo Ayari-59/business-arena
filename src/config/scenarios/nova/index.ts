@@ -83,6 +83,9 @@ const rawNova = {
     otherVariableCostPerUnit: 16, // MOD 11 € + énergie/divers 5 €
     hoursPerUnit: 0.3,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
+  qualiteProposee: 0,
   production: {
     qualitySensitivity: 0.15,
     qualityScale: 6000,
