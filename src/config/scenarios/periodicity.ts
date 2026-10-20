@@ -19,6 +19,31 @@ import { mapGammeSegments } from "../../engine/gamme";
  *   relatif varie donc naturellement avec la durée du tour (un client à 80 j
  *   pèse plus lourd au mois qu'à l'année : c'est voulu et pédagogique).
  *
+ * LA SAISONNALITÉ NE CHANGE PAS AVEC LA PÉRIODICITÉ — C'EST UNE DÉCISION.
+ *
+ * Un tableau de saisonnalité se lit UNE VALEUR PAR TOUR (`saisonDuTour`,
+ * engine/market/demand.ts), au mois comme au trimestre ou à l'année. Il porte la
+ * dramaturgie de la partie au même titre que les situations, les événements
+ * scriptés et le tour du pic (`tourDuPic`) : tous sont comptés en tours, et c'est
+ * ce qui les garde d'accord entre eux. Au mois, le pic du tour 4 reste au tour 4,
+ * là où la situation qui le raconte l'attend ; seule l'échelle des volumes suit
+ * la durée du tour (la taille des segments, × k ci-dessous). Sa lecture
+ * calendaire — dans 66 des 86 tableaux, quatre trimestres d'une année suivis de
+ * la répétition des deux premiers — n'est vraie qu'au trimestre : c'est de
+ * l'habillage (ADR-01), pas une règle du moteur.
+ *
+ * Pourquoi ne pas étaler chaque trimestre sur trois mois, ou ramener l'année à
+ * la moyenne de ses quatre trimestres ? Parce que (1) le pic quitterait le tour
+ * où la situation et l'événement scripté le racontent ; (2) vingt tableaux sur
+ * quatre-vingt-six ne sont pas une année répétée mais un arc écrit tour par tour
+ * (le référencement de CampusTech chez NOVA, les produits des gammes), qu'un
+ * étalement détruirait ; (3) un profil mensuel fidèle n'est pas un étirement
+ * mécanique, c'est du contenu à écrire et à recalibrer secteur par secteur.
+ *
+ * La garde de cette décision n'est donc pas ici mais à la création : une
+ * partie ne se joue jamais sur plus de tours que ses tableaux n'ont de valeurs
+ * (`applyRoundsCount`, config/scenarios/rounds.ts). Jamais de lecture modulo.
+ *
  * QUAND L'UNITÉ VENDUE EST UNE PÉRIODE (scénarios à `subscription`).
  *
  * Un adhérent paie un TOUR d'abonnement et consomme un TOUR d'encadrement :
@@ -108,6 +133,7 @@ export function applyPeriodicity(
 
   // Demande de base et croissance : sur le marché du scénario et, en gamme,
   // sur celui de chaque produit (les seuls segments que le moteur simule).
+  // Les tableaux de saisonnalité ne sont PAS touchés : voir l'en-tête.
   // Dans un scénario par abonnement, le prix d'un segment est celui d'un TOUR
   // d'abonnement : il suit la durée du tour, comme ses seuils.
   const redimensionne = mapGammeSegments(scenario, (s) => ({

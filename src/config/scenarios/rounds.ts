@@ -23,12 +23,47 @@ export function toursDeLaPartie(scenario: EngineScenarioConfig, demande: number 
   return Math.min(scenario.roundsCount, Math.max(1, Math.trunc(demande)));
 }
 
-/** Une variante du scénario jouée sur un nombre de tours choisi. */
+/**
+ * LE NOMBRE DE TOURS QUE LA SAISONNALITÉ D'UN SCÉNARIO ÉCRIT : la longueur de son plus
+ * court tableau (marché, segments, et en gamme chaque produit et ses segments).
+ *
+ * Un tableau se lit une valeur par tour (`engine/market/demand.ts`, `saisonDuTour`). Une
+ * partie plus longue que lui se jouerait, au-delà, sur une saison inventée : la demande
+ * retombait à 1 en silence, pendant que l'import du niveau 7 bouclait sur le début du
+ * tableau. Allonger une partie, c'est d'abord écrire la saison des tours ajoutés.
+ */
+export function couvertureDeLaSaisonnalite(scenario: EngineScenarioConfig): number {
+  const longueurs = [
+    scenario.market.seasonality.length,
+    ...scenario.market.segments.flatMap((g) => (g.seasonality ? [g.seasonality.length] : [])),
+    ...(scenario.products ?? []).flatMap((p) => [
+      ...(p.market.seasonality ? [p.market.seasonality.length] : []),
+      ...p.market.segments.flatMap((g) => (g.seasonality ? [g.seasonality.length] : [])),
+    ]),
+  ];
+  return Math.min(...longueurs);
+}
+
+/**
+ * Une variante du scénario jouée sur un nombre de tours choisi.
+ *
+ * REFUSE, avec la raison, une partie plus longue que la saisonnalité de son scénario :
+ * c'est le seul endroit par où passe toute création de partie
+ * (`composerLeScenarioJoue`), et refuser ici vaut mieux qu'une saison silencieusement
+ * inventée sur les derniers tours.
+ */
 export function applyRoundsCount(
   scenario: EngineScenarioConfig,
   demande: number | undefined,
 ): EngineScenarioConfig {
   const tours = toursDeLaPartie(scenario, demande);
+  const couverture = couvertureDeLaSaisonnalite(scenario);
+  if (tours > couverture) {
+    throw new Error(
+      `Partie de ${tours} tours refusée : la saisonnalité du scénario « ${scenario.code} » n'en écrit que ${couverture}. ` +
+        "Chaque tableau de saisonnalité doit porter une valeur par tour joué.",
+    );
+  }
   if (tours === scenario.roundsCount) return scenario;
   return { ...scenario, roundsCount: tours };
 }
