@@ -2588,8 +2588,10 @@ export function DecisionForm({
     availability: number;
     /** Capacité machine réellement disponible : nominale × disponibilité. */
     availableMachineCapacity: number;
-    /** Le budget d'entretien sous lequel la disponibilité se dégrade. */
+    /** Le budget d'entretien de référence du métier, tel que le scénario l'écrit. */
     maintenanceReference: number;
+    /** Le budget sous lequel la disponibilité se dégrade, calculé par le moteur. */
+    seuilDEntretien?: number;
     laborCapacity: number;
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;

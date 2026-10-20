@@ -7,9 +7,10 @@
  * champ du tour dont l'effet ne se voit pas le tour où on le dépense.
  *
  * LES DEUX CHIFFRES EXISTENT POURTANT. Le scénario porte un budget de référence
- * (`production.maintenanceReference`, de 3 000 € pour une boutique à 9 000 €
- * pour un hôtel) : en dessous, la disponibilité s'use ; au-dessus, elle se
- * rétablit. Et l'état de l'entreprise porte la disponibilité du moment, celle
+ * (`production.maintenanceReference`) ; le moteur le multiplie par l'exigence
+ * d'entretien du parc, et la disponibilité s'use sous les deux tiers de cette
+ * référence effective, se rétablit au-dessus (`seuilDEntretien`). C'est ce
+ * seuil-là que la phrase dit. Et l'état de l'entreprise porte la disponibilité du moment, celle
  * qui multiplie la capacité dans le moteur. Le classeur du cockpit donnait déjà
  * le premier aux élèves, sous le nom « Budget maintenance de référence par
  * tour » ; l'écran de décision, lui, les taisait tous les deux.
@@ -20,8 +21,14 @@
 
 /** Ce que l'écran sait de l'atelier au moment où le budget se décide. */
 export interface EtatDeLAtelier {
-  /** Le budget qui sépare l'usure du rétablissement, pour ce tour et ce métier. */
+  /** Le budget de référence du métier, tel que le scénario l'écrit. */
   maintenanceReference: number;
+  /**
+   * Le budget qui sépare RÉELLEMENT l'usure du rétablissement, calculé par le
+   * moteur (`seuilDEntretien` sur la référence effective du parc). Absent
+   * (appelant qui ne le connaît pas), la référence en tient lieu.
+   */
+  seuilDEntretien?: number;
   /** Disponibilité machine courante (0..1). */
   availability: number;
 }
@@ -36,7 +43,16 @@ export function aideDuBudgetEntretien(etat: EtatDeLAtelier | null | undefined): 
   // Sans état d'atelier (partie sans capacité machine, instantané ancien), on
   // garde la phrase générale : mieux vaut une règle vraie qu'un chiffre inventé.
   if (!etat) return "Une maintenance insuffisante dégrade la disponibilité machine.";
-  const seuil = Math.round(etat.maintenanceReference).toLocaleString("fr-FR");
+  // LE SEUIL DU MOTEUR, PAS LA RÉFÉRENCE DU SCÉNARIO. La disponibilité ne
+  // baisse que sous les deux tiers de la référence EFFECTIVE (parc compris) :
+  // la phrase annonçait la référence brute, 4 000 € chez NOVA, quand le vrai
+  // seuil était 3 124 €. Arrondi à l'euro supérieur : au montant affiché,
+  // rien ne se dégrade.
+  const seuil = (
+    etat.seuilDEntretien !== undefined
+      ? Math.ceil(etat.seuilDEntretien)
+      : Math.round(etat.maintenanceReference)
+  ).toLocaleString("fr-FR");
   const pourcent = Math.round(etat.availability * 100);
   const etatDit =
     etat.availability < DISPONIBILITE_ENTIERE

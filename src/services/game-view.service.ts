@@ -1,3 +1,5 @@
+import { seuilDEntretien } from "@/engine/production";
+import { parcActifDuTour, referenceDEntretien } from "@/engine/simulation";
 import { cadreDeLaDefaillance, type CadreDeLaDefaillance } from "@/config/defaillance";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
@@ -385,6 +387,14 @@ export interface GameView {
      * de décision le taisait, et leur demandait donc un montant sans échelle.
      */
     maintenanceReference: number;
+    /**
+     * LE VRAI SEUIL : le budget sous lequel la disponibilité baisse, au-dessus
+     * duquel elle remonte. Calculé par le moteur (`seuilDEntretien` sur la
+     * référence effective du tour, parc compris), et non recopié du scénario :
+     * chez NOVA, 3 124 € et non les 4 000 € de la référence. Toujours servi
+     * par la vue ; optionnel pour les écrans qui ne le connaissent pas.
+     */
+    seuilDEntretien?: number;
     laborCapacity: number;
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
@@ -2268,6 +2278,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         availability: dispo,
         availableMachineCapacity: Math.round(mcDispo),
         maintenanceReference: snapshot.production.maintenanceReference,
+        seuilDEntretien: seuilDEntretien(
+          referenceDEntretien(
+            snapshot,
+            parcActifDuTour(snapshot, state, game.currentRound),
+            state,
+          ),
+        ),
         laborCapacity: Math.round(lc),
         bottleneck,
         headcount: state.headcount,

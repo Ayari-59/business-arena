@@ -93,8 +93,29 @@ export function updatePerceivedQuality(
 }
 
 /**
- * Disponibilité machine : se dégrade si la maintenance est sous le budget de
- * référence, se rétablit (vers 1) sinon (doc 02 §4).
+ * Ce que l'entretien répare, rapporté à ce que l'absence d'entretien use :
+ * un euro de budget rétablit la moitié de l'usure qu'un euro manquant cause.
+ */
+export const RETABLISSEMENT_PAR_ENTRETIEN = 0.5;
+
+/**
+ * LE BUDGET OÙ LA DISPONIBILITÉ CESSE DE BAISSER, pour une référence
+ * effective donnée (référence du métier × exigence d'entretien du parc).
+ *
+ * `updateAvailability` fait varier la disponibilité de
+ * `decay × ((1 + RETABLISSEMENT) × r − 1)`, avec `r = budget ÷ référence` :
+ * la variation s'annule en `r = 1 ÷ (1 + RETABLISSEMENT)`, soit les deux tiers
+ * de la référence. En dessous elle baisse, au-dessus elle remonte, jusqu'à 1.
+ * L'aide du champ d'entretien annonçait la référence du scénario comme seuil :
+ * chez NOVA 4 000 €, quand le vrai seuil était 3 124 €.
+ */
+export function seuilDEntretien(referenceEffective: number): number {
+  return referenceEffective / (1 + RETABLISSEMENT_PAR_ENTRETIEN);
+}
+
+/**
+ * Disponibilité machine : se dégrade si la maintenance est sous le seuil
+ * (`seuilDEntretien`), se rétablit (vers 1) au-dessus (doc 02 §4).
  */
 export function updateAvailability(args: {
   current: number;
@@ -108,6 +129,9 @@ export function updateAvailability(args: {
     args.maintenanceReference > 0
       ? Math.min(1, args.maintenanceBudget / args.maintenanceReference)
       : 1;
-  const next = args.current - args.availabilityDecay * (1 - ratio) + 0.5 * args.availabilityDecay * ratio;
+  const next =
+    args.current -
+    args.availabilityDecay * (1 - ratio) +
+    RETABLISSEMENT_PAR_ENTRETIEN * args.availabilityDecay * ratio;
   return Math.min(1, Math.max(floor, next));
 }
