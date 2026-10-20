@@ -3,6 +3,7 @@ import { devices, type Browser, type BrowserContext, type Page } from "playwrigh
 import { aller, BASE, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { mesurerContraste } from "./helpers/contraste";
+import { GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
 
 /**
  * L'EXAMEN INDIVIDUEL, DANS UN VRAI NAVIGATEUR, SUR LE BUILD DE PRODUCTION ET SA BASE.
@@ -185,7 +186,11 @@ describe("un examen, de la création à la publication", () => {
     code = (await prof.locator("#code-de-l-examen").textContent())!.trim();
     expect(code).toMatch(/^EX-[A-Z2-9]{6}$/);
     expect((await prof.locator("[data-lien-de-l-examen]").textContent())!.trim()).toBe(`${BASE}/examen/${code}`);
-    expect(await texte(prof)).toContain("Business Arena 2026, version 1");
+    // La version se lit de la grille : écrite à la main, elle était restée à 1
+    // quand la grille est passée en version 2 (étalon gelé).
+    expect(await texte(prof)).toContain(
+      `${GRILLE_BUSINESS_ARENA_2026.nom}, version ${GRILLE_BUSINESS_ARENA_2026.version}`,
+    );
     expect((await pleinsVisibles(prof)).length).toBeLessThanOrEqual(1);
     await sansTexteIllisible(prof);
     // À 390 : la même page, sans défilement de côté.
@@ -315,7 +320,9 @@ describe("un examen, de la création à la publication", () => {
     expect(await a.locator("[data-releve-des-competences] li").count()).toBe(6);
     expect(await a.locator("[data-detail-de-la-note] li").count()).toBe(6);
     // Noté contre la gestion neutre du secteur, nommée et définie ; plus de « gestion de référence ».
-    expect(await a.locator('[data-etalon-de-la-note="gestion-neutre"]').count()).toBe(1);
+    // Le code de l'étalon se lit de la grille, comme sa version : depuis la version 2, il est gelé.
+    const etalon = GRILLE_BUSINESS_ARENA_2026.reference.code;
+    expect(await a.locator(`[data-etalon-de-la-note="${etalon}"]`).count()).toBe(1);
     const releve = await texte(a);
     expect(releve).toMatch(/à côté de la gestion neutre du secteur\./);
     expect(releve).toMatch(/La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour/);
