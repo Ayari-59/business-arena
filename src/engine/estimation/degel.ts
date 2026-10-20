@@ -28,8 +28,11 @@ import { simulateRound } from "../simulation";
  * subvention (l'impôt n'en reprend jamais qu'une part) : la recherche par
  * dichotomie est donc exacte.
  *
- * Le montant rendu est arrondi à la centaine d'euros supérieure : c'est celui
- * que l'équipe se voit proposer, et que l'animateur accorde d'un geste.
+ * Le montant rendu est arrondi à la centaine d'euros supérieure. C'est le
+ * MINIMUM, affiché comme tel : moins, l'entreprise reste à l'arrêt. Ce que
+ * l'équipe se voit proposer, et que l'animateur accorde d'un geste, y ajoute
+ * le coussin qui l'empêche de retomber au tour suivant
+ * (`subventionProposeeAuDegel`, `services/sauvetage.ts`).
  *
  * `null` : l'entreprise n'est pas défaillante, le scénario ne modélise pas la
  * cessation de paiements, ou aucun montant raisonnable n'y suffit.

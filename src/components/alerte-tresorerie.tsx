@@ -226,6 +226,7 @@ function Recours({
         reste={exigence ? resteApresLeviers(exigence) : alerte.manque}
         cadre={exigence ? "leviers_epuises" : "sans_financement"}
         defaillante={alerte.defaillante}
+        minimum={alerte.defaillante ? (alerte.subventionQuiDegele ?? null) : null}
       />
     );
   }

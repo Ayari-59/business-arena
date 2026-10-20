@@ -40,7 +40,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { demandesDeLaPartie, trancherDemande } from "@/services/subvention.service";
-import { montantDemandable } from "@/services/sauvetage";
+import { montantDemandable, subventionProposeeAuDegel } from "@/services/sauvetage";
 import type { RoundDecisions } from "@/engine/types";
 import { poserUneLicence } from "./helpers/licence";
 
@@ -114,6 +114,11 @@ describe("une équipe défaillante au niveau 2", () => {
     expect(propose).not.toBeNull();
     // Plus que le « manque » de la dernière clôture : c'est le point.
     expect(propose!).toBeGreaterThan(alerte.manque);
+    // Le minimum qui dégèle, et le coussin qui évite de retomber aussitôt : le
+    // plafond de la demande est le montant proposé, coussin compris.
+    expect(alerte.subventionQuiDegele).toBeGreaterThan(0);
+    expect(propose).toBe(subventionProposeeAuDegel(alerte.subventionQuiDegele!));
+    expect(propose!).toBeGreaterThan(alerte.subventionQuiDegele!);
 
     const fd = new FormData();
     fd.set("montant", String(propose));
