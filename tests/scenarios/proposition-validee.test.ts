@@ -3,12 +3,12 @@ import { SCENARIO_CHOICES, NOVA_DEFINITION, scenarioByCode, scenarioCodeForLevel
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { presetByLevel } from "@/config/difficulty";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
-import { botDecisions, botPersonalityFromSeed, neutralDecisions, soldByProduct, type BotProfile } from "@/engine/bots";
+import { aLaMesureDuNiveau, botDecisions, botPersonalityFromSeed, neutralDecisions, soldByProduct, type BotProfile } from "@/engine/bots";
 import { decisionDeLaGestionNeutre } from "@/pedagogy/merite/etalons";
 import { decisionDeReference } from "@/pedagogy/merite/reference";
 import { simulateRound } from "@/engine/simulation";
 import { expurgerLeScenario } from "@/engine/estimation";
-import { proposedDecisionsFor, type MarcheDuTourPasse } from "@/services/decision-baseline";
+import { avecLaQualiteProposee, proposedDecisionsFor, type MarcheDuTourPasse } from "@/services/decision-baseline";
 import type { CompanyRoundResult, CompanyState, EventInstance, RoundDecisions } from "@/engine/types";
 
 /**
@@ -27,15 +27,22 @@ import type { CompanyRoundResult, CompanyState, EventInstance, RoundDecisions } 
  * formulaire lui propose. Aucune défaillance, aucune crise de trésorerie.
  *
  * Et la proposition reste NEUTRE (décision du propriétaire) : une équipe qui se
- * contente de valider finit à peu près où finit la gestion neutre du secteur,
- * l'étalon de l'examen, et loin derrière un bon gestionnaire.
+ * contente de valider finit à peu près où finit la gestion neutre du secteur
+ * tenue à la qualité que le formulaire propose (`qualiteProposee`, la seule
+ * valeur où la proposition s'en écarte au départ), et loin derrière un bon
+ * gestionnaire.
  */
 
 const GRAINES = [8_919, 32_676, 64_352, 96_028];
 const vendu = (r?: CompanyRoundResult) =>
   r ? Object.values(r.market.bySegment).reduce((s, x) => s + x.sold, 0) + (r.subscription?.retained ?? 0) : undefined;
 
-function partieValidee(secteur: string, niveau: number, graine: number, politique: "propose" | "neutre" | "bon" = "propose") {
+function partieValidee(
+  secteur: string,
+  niveau: number,
+  graine: number,
+  politique: "propose" | "neutre-a-la-qualite-proposee" | "bon" = "propose",
+) {
   const def = scenarioByCode(scenarioCodeForLevel(secteur, niveau));
   const leviers = presetByLevel.get(niveau as 1 | 2 | 3 | 4 | 5 | 6)!.decisions;
   const scenario = composerLeScenarioJoue({
@@ -74,8 +81,11 @@ function partieValidee(secteur: string, niveau: number, graine: number, politiqu
         lastSoldByProduct: p ? soldByProduct(scenario, p.market.bySegment) : undefined,
       };
       decisions[e.id] =
-        e.ctl === "human" && politique === "neutre"
-          ? decisionDeLaGestionNeutre(ctx, leviers)
+        e.ctl === "human" && politique === "neutre-a-la-qualite-proposee"
+          ? (() => {
+              const neutre = decisionDeLaGestionNeutre(ctx, leviers);
+              return aLaMesureDuNiveau(avecLaQualiteProposee(scenario, neutre), leviers, neutre);
+            })()
           : e.ctl === "human" && politique === "bon"
             ? decisionDeReference({ ...ctx, ...(p ? { resultatPrecedent: p } : {}), ...(precedente ? { decisionPrecedente: precedente } : {}) }, leviers)
             : e.ctl === "human"
@@ -143,10 +153,10 @@ describe("une proposition neutre : ni une stratégie, ni une aide à gagner", ()
     ["batiment", 4],
   ];
   for (const [secteur, niveau] of CAS) {
-    it(`${secteur}, niveau ${niveau} : à ±15 % de la gestion neutre, loin du bon gestionnaire`, () => {
-      const somme = (politique: "propose" | "neutre" | "bon") =>
+    it(`${secteur}, niveau ${niveau} : à ±15 % de la gestion neutre à la qualité proposée, loin du bon gestionnaire`, () => {
+      const somme = (politique: "propose" | "neutre-a-la-qualite-proposee" | "bon") =>
         GRAINES.reduce((t, g) => t + partieValidee(secteur, niveau, g, politique).cumul, 0) / GRAINES.length;
-      const [proposee, neutre, bon] = [somme("propose"), somme("neutre"), somme("bon")];
+      const [proposee, neutre, bon] = [somme("propose"), somme("neutre-a-la-qualite-proposee"), somme("bon")];
       expect(Math.abs(proposee - neutre), `proposée ${Math.round(proposee)} €, neutre ${Math.round(neutre)} €`).toBeLessThanOrEqual(
         Math.max(0.15 * Math.abs(neutre), 15_000),
       );

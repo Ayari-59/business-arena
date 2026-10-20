@@ -1,4 +1,10 @@
-import { aLaMesureDuNiveau, neutralDecisions, soldByProduct, type LeviersOuverts } from "@/engine/bots";
+import {
+  aLaMesureDuNiveau,
+  neutralDecisions,
+  PART_DE_QUALITE_NEUTRE,
+  soldByProduct,
+  type LeviersOuverts,
+} from "@/engine/bots";
 import {
   isMultiProduct,
   isProductAvailable,
@@ -86,6 +92,55 @@ export function auPas(d: RoundDecisions): RoundDecisions {
   };
 }
 
+/**
+ * LA QUALITÉ QUE LE FORMULAIRE PROPOSE, en part de `production.qualityScale`.
+ *
+ * Celle que le scénario joué dit (`qualiteProposee`, engine/types.ts, où se
+ * lisent la décision et la mesure qui la fondent), sinon celle de la gestion
+ * neutre : une partie créée avant ce champ garde la proposition de sa création.
+ * Un niveau qui ferme la qualité garde, lui, la part neutre : le champ caché
+ * porte la valeur de la gestion neutre, la même que celle des concurrents
+ * pilotés (`aLaMesureDuNiveau`, le marché équitable).
+ */
+export function partDeQualiteProposee(
+  snapshot: EngineScenarioConfig,
+  leviers: LeviersOuverts | null = null,
+): number {
+  if (leviers && !leviers.quality) return PART_DE_QUALITE_NEUTRE;
+  return snapshot.qualiteProposee ?? PART_DE_QUALITE_NEUTRE;
+}
+
+/**
+ * La gestion neutre du tour, sa qualité ramenée à celle que le formulaire
+ * propose. Rien d'autre ne bouge : ni le prix, ni le plan (calculé par la
+ * gestion neutre sur SES budgets), ni le marketing, ni la maintenance. En
+ * gamme, chaque référence garde sa part du budget neutre, au même rapport.
+ * Sans `qualiteProposee` dans le scénario joué, la décision est rendue telle
+ * quelle, au bit près.
+ *
+ * Le niveau n'y est pas appliqué : l'appelant passe le résultat à
+ * `aLaMesureDuNiveau` avec la gestion neutre pour défaut, et un levier qualité
+ * fermé y retrouve la valeur neutre du champ caché.
+ */
+export function avecLaQualiteProposee(snapshot: EngineScenarioConfig, neutre: RoundDecisions): RoundDecisions {
+  if (snapshot.qualiteProposee === undefined) return neutre;
+  const rapport = snapshot.qualiteProposee / PART_DE_QUALITE_NEUTRE;
+  return {
+    ...neutre,
+    qualityBudget: neutre.qualityBudget * rapport,
+    ...(neutre.products
+      ? {
+          products: Object.fromEntries(
+            Object.entries(neutre.products).map(([code, p]) => [
+              code,
+              p.qualityBudget !== undefined ? { ...p, qualityBudget: p.qualityBudget * rapport } : p,
+            ]),
+          ),
+        }
+      : {}),
+  };
+}
+
 /** Le point de départ du secteur, servi quand il n'y a rien à reconduire. */
 export function startingDecisionsFor(
   snapshot: EngineScenarioConfig,
@@ -102,6 +157,8 @@ export function startingDecisionsFor(
     // zéro, marketing et qualité répartis à parts égales, fournisseur de
     // référence pour toutes.
     const gamme = toGamme(snapshot);
+    // La qualité proposée, celle du scénario joué (`partDeQualiteProposee`).
+    const qualite = partDeQualiteProposee(snapshot, leviers) * snapshot.production.qualityScale;
     const products = isMultiProduct(snapshot)
       ? Object.fromEntries(
           gamme.map((p) => {
@@ -115,7 +172,7 @@ export function startingDecisionsFor(
                 price: dominant?.refPrice ?? 50,
                 productionPlan: 0,
                 marketingBudget: (0.5 * snapshot.marketing.scale) / gamme.length,
-                qualityBudget: (0.5 * snapshot.production.qualityScale) / gamme.length,
+                qualityBudget: qualite / gamme.length,
                 ...(supplier !== undefined ? { supplierChoice: supplier } : {}),
                 // R&D : rien de proposé, la décision d'investir est celle de l'équipe.
                 ...(snapshot.rd ? { rdBudget: 0 } : {}),
@@ -128,7 +185,7 @@ export function startingDecisionsFor(
       price: main?.refPrice ?? 50,
       productionPlan: 0,
       marketingBudget: 0.5 * snapshot.marketing.scale,
-      qualityBudget: 0.5 * snapshot.production.qualityScale,
+      qualityBudget: qualite,
       maintenanceBudget: snapshot.production.maintenanceReference,
       ...(snapshot.rd ? { rdBudget: 0 } : {}),
       // Communication : la marque et l'axe sont un choix de l'équipe, rien de proposé.
@@ -147,8 +204,13 @@ export function startingDecisionsFor(
       .filter((p) => estUneNouveaute(snapshot, p.code) && !isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex))
       .map((p) => p.code),
   );
+  // La gestion neutre, sa qualité ramenée à celle que le formulaire propose ; un
+  // levier fermé garde la valeur neutre, celle du champ caché.
+  const neutre = neutralDecisions({ scenario: snapshot, state, roundIndex });
   return auPas(
-    sansRd(sansCommunication(aLaMesureDuNiveau(neutralDecisions({ scenario: snapshot, state, roundIndex }), leviers), horsMarche)),
+    sansRd(
+      sansCommunication(aLaMesureDuNiveau(avecLaQualiteProposee(snapshot, neutre), leviers, neutre), horsMarche),
+    ),
   );
 }
 
@@ -239,12 +301,14 @@ export type MarcheDuTourPasse = Record<string, Pick<CompanyRoundResult["market"]
  *
  * Ni une stratégie ni une aide à gagner : une équipe qui la valide sans rien
  * changer finit à peu près où finit la gestion neutre du secteur
- * (`neutralDecisions`, l'étalon de l'examen), loin derrière un bon
+ * (`neutralDecisions`, l'étalon de l'examen), un peu au-dessus là où la
+ * qualité proposée est plus basse que la sienne (`qualiteProposee`), loin derrière un bon
  * gestionnaire (`pedagogy/merite/reference`). Ce qu'elle ne fait plus, c'est
  * reconduire six tours la gestion neutre du TOUR 1 : un plan à 65 % de
  * l'atelier, gelé sous le point mort de NOVA pendant que la demande montait.
  *
- * Au tour 1, le départ du secteur (`startingDecisionsFor`). Ensuite, la
+ * Au tour 1, le départ du secteur (`startingDecisionsFor`) : la gestion
+ * neutre, à la qualité près (`avecLaQualiteProposee`). Ensuite, la
  * décision du tour précédent sans ses dépenses ponctuelles
  * (`sansDepensesPonctuelles`) : prix, budgets, fournisseur et assurance
  * restent ceux de l'équipe, sans aucune hausse de prix. Seul le PLAN se
@@ -286,7 +350,8 @@ export function propositionDuTour(args: {
 
   const gamme = toGamme(snapshot);
   const multi = isMultiProduct(snapshot);
-  // LE PLAN DE LA GESTION NEUTRE, sur les ventes réalisées du tour passé.
+  // LE PLAN DE LA GESTION NEUTRE, sur les ventes réalisées du tour passé : seul
+  // le plan en est lu, la qualité proposée n'y entre donc pas.
   const neutre = neutralDecisions({
     scenario: snapshot,
     state,

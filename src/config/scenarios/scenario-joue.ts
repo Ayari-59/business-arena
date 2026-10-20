@@ -74,6 +74,28 @@ export interface ReglagesDuScenarioJoue {
   concurrentsAssainis?: boolean;
 }
 
+/**
+ * LA QUALITÉ PROPOSÉE D'UNE PARTIE DÉJÀ COMMENCÉE : celle de son instantané,
+ * pas celle du registre d'aujourd'hui (`qualiteProposee`, engine/types.ts).
+ *
+ * Le rejeu du bilan recompose le monde d'autres graines depuis le scénario du
+ * registre, et juge chaque tour rejoué face à ce que le formulaire proposait
+ * (`proposedDecisionsFor`) : il doit relire la proposition que l'élève a
+ * réellement vue. Une partie d'avant ce champ se recompose donc SANS lui, et
+ * retrouve son instantané à l'identique, condition pour que son monde varie
+ * encore d'une graine à l'autre (`services/merite.service.ts`).
+ */
+export function avecLaQualiteProposeeDe(
+  scenario: EngineScenarioConfig,
+  instantane: Pick<EngineScenarioConfig, "qualiteProposee">,
+): EngineScenarioConfig {
+  const { qualiteProposee: _duRegistre, ...sansElle } = scenario;
+  void _duRegistre;
+  return instantane.qualiteProposee === undefined
+    ? sansElle
+    : { ...sansElle, qualiteProposee: instantane.qualiteProposee };
+}
+
 export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenarioConfig {
   const preset = r.level ? presetByLevel.get(r.level as DifficultyPreset["level"]) : undefined;
   const leviers = r.leviers ?? preset?.decisions;

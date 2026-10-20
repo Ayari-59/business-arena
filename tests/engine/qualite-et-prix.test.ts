@@ -18,7 +18,10 @@ import type { CompanyState, EventInstance, RoundDecisions } from "@/engine/types
  *
  * Chacune se mesure ici, sur les quinze secteurs, au niveau 2 (celui qui
  * ouvre la qualité), sur douze tours, face aux concurrents pilotés, toutes
- * les autres décisions étant celles que le formulaire propose. Si un
+ * les autres décisions étant celles de la gestion neutre du secteur
+ * (`neutralDecisions`, dont la qualité est le point de comparaison ; la
+ * qualité que le formulaire propose a sa propre mesure, en partie solo :
+ * `tests/engine/qualite-proposee-mesure.test.ts`). Si un
  * recalibrage rend l'une d'elles fausse, ce test tombe : c'est l'aide qu'il
  * faut alors réécrire, pas ce test.
  */

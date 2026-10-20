@@ -5431,7 +5431,7 @@ export function DecisionForm({
               une base neutre, jamais une stratégie. */}
           <p className="mt-1 text-xs text-slate-400">
             {roundIndex <= 1
-              ? "Ce sont les valeurs de départ du secteur."
+              ? "Ce sont les valeurs proposées au départ : une base à ajuster, pas une stratégie."
               : capacityFacts?.subscription
                 ? "Ce sont les valeurs de votre dernier tour."
                 : "Le prix et les budgets sont ceux de votre dernier tour ; le volume suit vos ventes du tour passé et la saison, comme le ferait une gestion neutre."}

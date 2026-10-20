@@ -115,6 +115,9 @@ const rawEcommerce = {
     otherVariableCostPerUnit: 11,
     hoursPerUnit: 0.25,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
+  qualiteProposee: 0,
   production: {
     // « qualité » = photos, fiches produit, service client, délai de livraison
     qualitySensitivity: 0.26,

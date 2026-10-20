@@ -99,6 +99,9 @@ const rawConseil = {
     // l'unité de capacité EST la journée : 1 jour de consultant = 1 jour vendu
     hoursPerUnit: 1,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
+  qualiteProposee: 0,
   production: {
     // « qualité » = investissement méthodologique, veille, capitalisation
     qualitySensitivity: 0.3,

@@ -313,6 +313,40 @@ export interface EngineScenarioConfig {
    * par code de segment.
    */
   products?: ProductDef[];
+  /**
+   * LA QUALITÉ QUE LE FORMULAIRE PROPOSE, en part de `production.qualityScale`.
+   *
+   * Le moteur ne la lit pas : seule la proposition du formulaire la lit
+   * (`services/decision-baseline.ts`, au départ du secteur et pour une
+   * référence tout juste lancée), et l'équipe absente du premier tour, qui
+   * reçoit ce que le formulaire lui aurait proposé. Le prix, le volume et les
+   * autres budgets proposés restent ceux de la gestion neutre du secteur
+   * (`neutralDecisions`), et la qualité proposée se répartit entre les
+   * références comme la sienne. La gestion neutre elle-même ne change pas :
+   * l'étalon de l'examen, le bon gestionnaire du mérite, les concurrents pilotés
+   * et le champ caché d'un levier fermé continuent de la jouer.
+   *
+   * La décision du propriétaire, et la mesure qui la fonde. En partie solo
+   * fidèle (deux concurrents, le pipeline de création, six tours), au prix
+   * proposé et sans rien changer d'autre, le budget qualité de la gestion
+   * neutre ne fait pas mieux que zéro qualité dans tous les scénarios du
+   * registre sauf un : la dépense ne revient pas en ventes. Le formulaire y
+   * propose donc zéro. Au bistrot mono-produit seul, il fait mieux que zéro sur toutes les
+   * graines mesurées : la proposition y garde la part de la gestion neutre. La
+   * salle de sport est le cas limite : l'écart y est négligeable dans un sens
+   * comme dans l'autre, et la proposition y est à zéro.
+   * `tests/engine/qualite-proposee-mesure.test.ts` refait cette mesure.
+   *
+   * UNE DONNÉE DU SCÉNARIO, figée dans l'instantané de la partie à sa création
+   * (`composerLeScenarioJoue`, `parseScenarioConfig`), plutôt qu'une liste de
+   * codes dans le service : une partie en cours garde la proposition sous
+   * laquelle elle a commencé. Absente (une partie créée avant ce champ) : la
+   * qualité de la gestion neutre, le comportement d'avant au bit près. Le
+   * rejeu du bilan la relit dans l'instantané joué
+   * (`services/merite.service.ts`), pour juger chaque tour face à la
+   * proposition que l'élève a réellement vue.
+   */
+  qualiteProposee?: number;
   production: {
     /** Effet du budget qualité : producedQuality = 1 + sens × ln(1 + budget/scale). */
     qualitySensitivity: number;
