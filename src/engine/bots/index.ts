@@ -732,6 +732,27 @@ export function soldByProduct(
   return out;
 }
 
+/**
+ * LES VENTES D'UN TOUR, telles que `lastSoldUnits` les attend : les unités
+ * vendues sur toutes les clientèles, plus, en abonnement, les adhérents
+ * conservés. Ceux-là sont des ventes du tour au même titre que les nouveaux
+ * venus : sans eux, une gestion qui planifie sur ses ventes ne prévoit de
+ * place que pour ses nouveaux adhérents et met sa base dehors (la salle de
+ * sport, défaillante au quatrième tour dans le banc de l'audit qui les avait
+ * oubliés).
+ *
+ * Le seul calcul de cette convention : la clôture d'une partie, l'étalon de
+ * l'examen, le rejeu du mérite et la boucle de partie le lisent ici, chacun
+ * dans le détail qu'il tient (le résultat du moteur, ou la ligne relue de la
+ * base). L'ordre de la somme est celui du détail passé.
+ */
+export function ventesDuTour(
+  bySegment: Record<string, { sold: number }>,
+  abonnement?: { retained: number } | null,
+): number {
+  return Object.values(bySegment).reduce((s, d) => s + d.sold, 0) + (abonnement?.retained ?? 0);
+}
+
 const AGGRESSIVENESS: Record<BotProfile, number> = {
   passive: 0.6,
   price_aggressive: 1.15,

@@ -10,6 +10,7 @@ import { sansMolette } from "@/components/sans-molette";
 import { formatEuro } from "@/lib/format";
 import type { TeacherGameView } from "@/services/game.service";
 import { Icone } from "@/components/icone";
+import { COUSSIN_DU_DEGEL } from "@/services/sauvetage";
 
 const initial: TrancherSubventionState = { error: null };
 
@@ -51,9 +52,10 @@ export function SubventionsPanel({
         Une équipe ne dépose un dossier que lorsqu&apos;elle est au pied du mur : sa banque a
         cessé de prêter et l&apos;enveloppe de ses associés est vide, ou, aux niveaux sans
         financement, son entreprise est à l&apos;arrêt. À une entreprise à l&apos;arrêt, le formulaire propose
-        le montant qui la remet en marche, impôt compris : accordé en entier, il la fait repartir
-        à la clôture. À vous de décider si son histoire vaut une aide — en totalité, en partie, ou pas
-        du tout.
+        le montant qui la remet en marche, impôt compris, plus{" "}
+        {Math.round((COUSSIN_DU_DEGEL - 1) * 100)} % pour qu&apos;elle ne retombe pas au tour
+        suivant : accordé en entier, il la fait repartir à la clôture. À vous de décider si son
+        histoire vaut une aide : en totalité, en partie, ou pas du tout.
       </p>
 
       {enAttente.length > 0 ? (

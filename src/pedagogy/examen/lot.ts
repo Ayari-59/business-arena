@@ -27,7 +27,7 @@
  * d'examen (le candidat d'abord, puis les concurrents dans l'ordre du registre), parce que
  * le moteur consomme les entreprises dans cet ordre pour ses tirages ciblés.
  */
-import { botDecisions, botPersonalityFromSeed, neutralDecisions, soldByProduct, type BotProfile } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, neutralDecisions, soldByProduct, ventesDuTour, type BotProfile } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, EventInstance, RoundDecisions } from "@/engine/types";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
@@ -99,7 +99,7 @@ export function scenarioDeLExamen(r: ReglagesDeLExamen, graine: number): EngineS
 }
 
 const vendu = (r: CompanyRoundResult | undefined) =>
-  r ? Object.values(r.market.bySegment).reduce((s, d) => s + d.sold, 0) + (r.subscription?.retained ?? 0) : undefined;
+  r ? ventesDuTour(r.market.bySegment, r.subscription) : undefined;
 
 /** Ce que la gestion neutre obtient sous une graine, face aux concurrents de l'examen. */
 export function difficulteDeLaGraine(r: ReglagesDeLExamen, graine: number): DifficulteDUneGraine {

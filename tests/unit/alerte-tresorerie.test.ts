@@ -10,6 +10,8 @@ vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 
 const { AlerteTresorerie } = await import("@/components/alerte-tresorerie");
+const { COUSSIN_DU_DEGEL, subventionProposeeAuDegel } = await import("@/services/sauvetage");
+const { formatEuro } = await import("@/lib/format");
 type GameView = import("@/services/game-view.service").GameView;
 
 /**
@@ -187,8 +189,14 @@ describe("AlerteTresorerie", () => {
     });
     const html = rendu(gelee);
     expect(html).toContain("Demande de subvention exceptionnelle");
-    expect(html).toContain('max="58300"');
-    expect(html).toContain('value="58300"');
+    // Le montant proposé, et plafonné, est le minimum qui dégèle plus le
+    // coussin ; le minimum reste affiché, en dessous duquel elle reste gelée.
+    const propose = subventionProposeeAuDegel(58300);
+    expect(propose).toBeGreaterThan(58300);
+    expect(html).toContain(`max="${propose}"`);
+    expect(html).toContain(`value="${propose}"`);
+    expect(html).toContain(formatEuro(58300));
+    expect(html).toContain(`${Math.round((COUSSIN_DU_DEGEL - 1) * 100)} %`);
     expect(html).toContain("remettre en marche");
     expect(html).not.toContain("jusqu&#x27;à la fin de la partie");
     // En solo, personne n'instruira : pas de formulaire, et l'arrêt est dit.

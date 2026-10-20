@@ -22,7 +22,7 @@ import {
   COURRIERS_ENTREPRISE_CODES,
   COURRIERS_MARCHE_CODES,
 } from "@/config/courriers/registre";
-import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, soldByProduct, ventesDuTour, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { assertPlayable } from "@/services/play-lock";
 import { proposedDecisionsFor } from "@/services/decision-baseline";
@@ -118,10 +118,6 @@ export function injectedEvents(
 }
 
 const toMoney = (v: number) => (Math.round(v * 100) / 100).toString();
-
-function sumSold(bySegment: CompanyRoundResult["market"]["bySegment"]): number {
-  return Object.values(bySegment).reduce((s, d) => s + d.sold, 0);
-}
 
 /** Équipe (humaine) d'un utilisateur dans une partie, avec la liste complète des équipes. */
 export async function findUserTeam(gameId: string, userId: string) {
@@ -408,8 +404,8 @@ async function resolveGameRound(
           previousNetIncome[r.teamId] = r.incomeStatement.netIncome;
           // Abonnement : les adhérents conservés sont des ventes du tour ; sans
           // eux, le bot planifierait pour ses seuls nouveaux venus et mettrait
-          // sa base dehors.
-          lastSold[r.teamId] = sumSold(bySegment) + (r.engineTrace?.subscription?.retained ?? 0);
+          // sa base dehors (`ventesDuTour`).
+          lastSold[r.teamId] = ventesDuTour(bySegment, r.engineTrace?.subscription);
           // Gamme : les bots suivent leurs ventes référence par référence.
           const parProduit = soldByProduct(scenario, bySegment);
           if (parProduit) lastSoldByProduct[r.teamId] = parProduit;

@@ -8,6 +8,7 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { sansMolette } from "@/components/sans-molette";
 import { formatEuro } from "@/lib/format";
 import { Icone } from "@/components/icone";
+import { COUSSIN_DU_DEGEL, subventionProposeeAuDegel } from "@/services/sauvetage";
 
 const initial: DemandeSubventionState = { error: null };
 
@@ -22,9 +23,10 @@ const initial: DemandeSubventionState = { error: null };
  *
  * Elle écrit ici ce qu'elle demande et pourquoi. Le montant est proposé (ce
  * qui manque, et pour une entreprise à l'arrêt ce qui la remet réellement en
- * marche, impôt compris) mais modifiable à la baisse : demander moins que le
- * nécessaire est un choix, parfois le bon si l'on croit pouvoir vendre un
- * actif. Le motif est obligatoire et libre : c'est sur lui que l'animateur
+ * marche, impôt compris, plus le coussin qui l'empêche de retomber aussitôt)
+ * mais modifiable à la baisse : demander moins que le nécessaire est un choix,
+ * parfois le bon si l'on croit pouvoir vendre un actif. Le minimum qui
+ * dégèle est affiché à part : en dessous, l'entreprise reste à l'arrêt. Le motif est obligatoire et libre : c'est sur lui que l'animateur
  * tranchera, et l'écrire oblige à formuler un plan.
  *
  * Déposer la demande lève le verrou du tour — non parce que l'argent est
@@ -36,6 +38,7 @@ export function DemandeSubvention({
   reste,
   cadre,
   defaillante,
+  minimum = null,
 }: {
   gameId: string;
   /** Le montant proposé, et le plafond de la demande (`montantDemandable`). */
@@ -50,9 +53,17 @@ export function DemandeSubvention({
    * plus. `sans_financement` : le niveau n'en ouvre aucun.
    */
   cadre: "leviers_epuises" | "sans_financement";
-  /** L'entreprise est à l'arrêt : le montant proposé est celui qui la dégèle. */
+  /** L'entreprise est à l'arrêt : le montant proposé est celui qui la dégèle, coussin compris. */
   defaillante: boolean;
+  /**
+   * Défaillante : le minimum qui la dégèle (`subventionQuiDegele`), sans le
+   * coussin. `null` hors défaillance.
+   */
+  minimum?: number | null;
 }) {
+  // Le coussin se dit en pourcentage, lu de la constante : jamais écrit à la main.
+  const coussin = Math.round((COUSSIN_DU_DEGEL - 1) * 100);
+  const avecCoussin = minimum !== null && montant === subventionProposeeAuDegel(minimum);
   const action = demanderSubventionAction.bind(null, gameId);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(action, initial, {
     label: "demande de subvention",
@@ -74,7 +85,7 @@ export function DemandeSubvention({
           utilisant jusqu&apos;au bout, il manquerait{" "}
           <strong className="tabular-nums text-slate-100">{formatEuro(reste)}</strong>. Il vous
           reste une porte : demander une aide exceptionnelle à votre animateur. Il l&apos;accorde
-          ou la refuse — dites-lui ce qu&apos;elle permettrait.
+          ou la refuse, dites-lui ce qu&apos;elle permettrait.
         </p>
       ) : (
         <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
@@ -83,14 +94,35 @@ export function DemandeSubvention({
           qu&apos;elle permettrait.
         </p>
       )}
-      {defaillante && montant > reste + 1 ? (
+      {defaillante && minimum !== null && minimum > 0 ? (
         <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
-          Le montant proposé,{" "}
-          <strong className="tabular-nums text-slate-100">{formatEuro(montant)}</strong>, est
-          celui qui remet l&apos;entreprise en marche à la clôture de ce tour. Il dépasse les{" "}
-          <span className="tabular-nums">{formatEuro(reste)}</span> qui manquaient à la dernière
-          clôture : un tour d&apos;arrêt creuse encore le découvert, et une subvention est
-          imposée comme un produit. Moins, et l&apos;entreprise reste à l&apos;arrêt.
+          Il faut au moins{" "}
+          <strong className="tabular-nums text-slate-100">{formatEuro(minimum)}</strong> pour
+          remettre l&apos;entreprise en marche à la clôture de ce tour
+          {minimum > reste + 1 ? (
+            <>
+              , plus que les <span className="tabular-nums">{formatEuro(reste)}</span> qui
+              manquaient à la dernière clôture : un tour d&apos;arrêt creuse encore le découvert,
+              et une subvention est imposée comme un produit
+            </>
+          ) : null}
+          . Moins, et l&apos;entreprise reste à l&apos;arrêt.{" "}
+          {montant > minimum + 1 ? (
+            avecCoussin ? (
+              <>
+                Le montant proposé,{" "}
+                <strong className="tabular-nums text-slate-100">{formatEuro(montant)}</strong>, y
+                ajoute {coussin} % : repartie au ras du découvert autorisé, l&apos;entreprise
+                retomberait en crise à la moindre perte du tour suivant.
+              </>
+            ) : (
+              <>
+                Le montant proposé,{" "}
+                <strong className="tabular-nums text-slate-100">{formatEuro(montant)}</strong>,
+                couvre aussi ce qui manque pour repasser sous le découvert autorisé.
+              </>
+            )
+          ) : null}
         </p>
       ) : null}
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,180px)_1fr]">

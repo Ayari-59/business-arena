@@ -31,7 +31,7 @@
  * Tout est pur : mêmes entrées, mêmes sorties.
  */
 import { valeurCreee } from "@/engine/groupe";
-import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile, type LeviersOuverts } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, soldByProduct, ventesDuTour, type BotProfile, type LeviersOuverts } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import type {
   CompanyRoundResult,
@@ -201,10 +201,6 @@ export interface IssueDuRejeu {
 
 const toMoney = (v: number) => (Math.round(v * 100) / 100).toString();
 
-function venduSur(bySegment: CompanyRoundResult["market"]["bySegment"]): number {
-  return Object.values(bySegment).reduce((s, d) => s + d.sold, 0);
-}
-
 /**
  * Rejoue la partie sous une graine. Pour le joueur, ses décisions jouées
  * (`{ type: "joueur" }`) ou une méthode qui décide à sa place, tour après tour,
@@ -251,7 +247,7 @@ export function rejouer(
     const venduParProduit: Record<string, Record<string, number>> = {};
     for (const [id, r] of Object.entries(resultatsPrecedents)) {
       const bySegment = commeEnBase(r.market.bySegment);
-      vendu[id] = venduSur(bySegment) + (commeEnBase(r.subscription ?? null)?.retained ?? 0);
+      vendu[id] = ventesDuTour(bySegment, commeEnBase(r.subscription ?? null));
       const parProduit = soldByProduct(scenario, bySegment);
       if (parProduit) venduParProduit[id] = parProduit;
     }
