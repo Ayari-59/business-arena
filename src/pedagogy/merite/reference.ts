@@ -19,10 +19,12 @@
  *   · son propre tour passé : ventes, ventes manquées, stock, prix pratiqué ;
  *   · la saison du tour à jouer (« Saison du tour ») et celles des tours déjà
  *     joués, jamais celles des tours à venir (`sansAvenir`) ;
- *   · la gestion neutre du secteur, sur ce même scénario privé de l'avenir :
- *     le point de départ de ce que le formulaire propose, qualité comprise
- *     telle que la gestion neutre la tient (la méthode ne lit pas
- *     `qualiteProposee`, et son verdict ne bouge pas avec elle).
+ *   · ce que le formulaire lui propose : la gestion neutre du secteur, sur ce
+ *     même scénario privé de l'avenir, avec la qualité que le scénario fait
+ *     proposer (`qualiteProposee`). Décision du propriétaire : quand le
+ *     formulaire a cessé de proposer une qualité qui ne paie pas, un bon
+ *     gestionnaire resté sur l'ancienne était battu par qui gardait le
+ *     formulaire tel quel. Une partie créée avant ce champ garde son verdict.
  *
  * Elle ne lit ni la graine, ni les tirages, ni les décisions des concurrents.
  * Ses règles, référence par référence :
@@ -76,6 +78,7 @@ import type {
 } from "@/engine/types";
 import type { DifficultyPreset } from "@/config/difficulty";
 import { partieFigee, type PartieARejouer } from "./rejeu";
+import { avecLaQualiteProposee } from "@/services/decision-baseline";
 
 /** Le nom de la référence dans les phrases du bilan. */
 export const NOM_DE_LA_REFERENCE = "un bon gestionnaire";
@@ -272,9 +275,9 @@ export function decisionDuBonGestionnaire(
   ctx: ContexteDeLaReference,
   reglages: ReglagesDuGestionnaire = REGLAGES_DE_LA_REFERENCE,
 ): { decision: RoundDecisions; neutre: RoundDecisions } {
-  // La méthode part de la gestion neutre (et non de la proposition du
-  // formulaire, qui en change la qualité) ; elle la calcule sur le scénario
-  // privé de l'avenir, pour ne rien lire d'un tour à venir.
+  // La méthode part de la gestion neutre, calculée sur le scénario privé de
+  // l'avenir pour ne rien lire d'un tour à venir ; `neutre` reste ce que porte
+  // un champ fermé.
   const scenario = sansAvenir(ctx.scenario, ctx.roundIndex);
   const neutre = neutralDecisions({
     scenario,
@@ -283,7 +286,10 @@ export function decisionDuBonGestionnaire(
     lastSoldUnits: ctx.lastSoldUnits,
     lastSoldByProduct: ctx.lastSoldByProduct,
   });
-  const d: RoundDecisions = structuredClone(neutre);
+  // Sa qualité est celle que le formulaire propose (`qualiteProposee`) : un
+  // bon gestionnaire part de ce que l'élève voit, et garder le formulaire tel
+  // quel ne doit pas suffire à le battre (décision du propriétaire).
+  const d: RoundDecisions = structuredClone(avecLaQualiteProposee(scenario, neutre));
   const premier = !ctx.resultatPrecedent || !ctx.decisionPrecedente;
   const lectures = lireLeTourPasse(ctx);
   const gamme = toGamme(scenario);
@@ -320,11 +326,11 @@ export function decisionDuBonGestionnaire(
   const total = Object.values(plans).reduce((s, v) => s + v, 0);
   const coupe = total > atelier && total > 0 ? atelier / total : 1;
 
-  // MARKETING selon la saison du tour, QUALITÉ au niveau neutre.
+  // MARKETING selon la saison du tour, QUALITÉ celle que le formulaire propose.
   const facteurMarketing = Math.min(1.3, Math.max(0.7, saisonAu(scenario.market.seasonality, ctx.roundIndex)));
   if (multi && neutre.products) {
     const products: Record<string, ProductDecisions> = {};
-    for (const [code, p] of Object.entries(neutre.products)) {
+    for (const [code, p] of Object.entries(d.products ?? neutre.products)) {
       products[code] = {
         ...p,
         price: prix[code] ?? p.price,

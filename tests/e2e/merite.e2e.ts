@@ -144,12 +144,17 @@ describe("mérite ou chance, de la partie au bilan", () => {
     await page.locator("[data-cloture-de-l-exercice]").waitFor({ timeout: 60_000 });
     const m = await lireLeMerite(page);
     expect(m.blocs).toEqual(["decisions", "constats", "ensuite"]);
-    // Un seul geste (+8 % au premier tour) ne fait pas des décisions solides.
-    expect(["chance", "lecon"]).toContain(m.cas);
-    expect(m.verdict).toMatch(/^(Chance|Leçon)\. /);
+    // Un seul geste (+8 % au premier tour) ne fait presque jamais des décisions solides.
+    // Presque : le marché de la partie est tiré au hasard, et sur une poignée de marchés
+    // le geste suffit (mesuré : 2 sur 20 à NOVA niveau 3). Ce que la stratégie vaut se
+    // garde sur un marché fixé (tests/unit/merite.test.ts, « +8 % de prix fragile ») ;
+    // ici, l'écran doit dire ce que le verdict a tranché, quel que soit le tirage.
+    const solides = m.cas === "merite" || m.cas === "malchance";
+    expect(["merite", "malchance", "chance", "lecon"]).toContain(m.cas);
+    expect(m.verdict).toMatch(solides ? /^(Mérité|Malchance)\. / : /^(Chance|Leçon)\. /);
     expect(m.verdict).toMatch(/qu'un bon gestionnaire/);
     // 1er le plus souvent sur les marchés rejoués : le verdict le dit d'abord.
-    if (gagneSonMarche(m.fourchette)) expect(m.verdict).toMatch(/^(Chance|Leçon)\. .*[Vv]ous gagnez votre marché \(1re place sur \d+ des 30\), mais /);
+    if (!solides && gagneSonMarche(m.fourchette)) expect(m.verdict).toMatch(/^(Chance|Leçon)\. .*[Vv]ous gagnez votre marché \(1re place sur \d+ des 30\), mais /);
     // La référence se nomme, et la ligne qui dit ce qu'elle fait est là.
     expect(m.quiEstLaReference).toMatch(/^Un bon gestionnaire part de la gestion neutre du secteur/);
     expect(m.rangeeReference).toBe("Un bon gestionnaire");
@@ -226,9 +231,17 @@ describe("mérite ou chance, de la partie au bilan", () => {
   it("et ensuite : des décisions fragiles ne font pas monter, et le niveau conseillé se lance", async () => {
     await page.goto(urlArene, { waitUntil: "networkidle" });
     const m = await lireLeMerite(page);
-    // On reste au niveau 3 (autre métier) ou on descend au 2 : jamais au-delà,
-    // donc jamais un niveau fermé sans licence. Le niveau fermé, montré sans se
-    // lancer, est gardé par tests/unit/merite-de-la-partie-vue.test.ts.
+    // Des décisions solides font monter d'un niveau, même entreprise : le niveau 4,
+    // fermé sans licence, se montre sans se lancer (son rendu est gardé par
+    // tests/unit/merite-de-la-partie-vue.test.ts). Sinon on reste au niveau 3
+    // (autre métier) ou on descend au 2.
+    if (m.cas === "merite" || m.cas === "malchance") {
+      expect(m.niveau).toBe(4);
+      expect(m.ferme).toMatch(/^Niveau 4 fermé sans licence\./);
+      expect(m.tarifs).toBeTruthy();
+      expect(m.lien).toBeNull();
+      return;
+    }
     expect([2, 3]).toContain(m.niveau);
     // Qui gagne son marché n'est jamais renvoyé au niveau inférieur : même
     // niveau, une autre entreprise, et le texte ne se contredit pas.

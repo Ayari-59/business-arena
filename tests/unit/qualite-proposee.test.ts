@@ -4,13 +4,13 @@ import { avecLaQualiteProposeeDe, composerLeScenarioJoue } from "@/config/scenar
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { presetByLevel } from "@/config/difficulty";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
-import { botDecisions, neutralDecisions, PART_DE_QUALITE_NEUTRE, type BotProfile } from "@/engine/bots";
+import { aLaMesureDuNiveau, botDecisions, neutralDecisions, PART_DE_QUALITE_NEUTRE, type BotProfile } from "@/engine/bots";
 import { decisionDeLaGestionNeutre } from "@/pedagogy/merite/etalons";
 import { decisionDeReference } from "@/pedagogy/merite/reference";
 import { difficulteDeLaGraine } from "@/pedagogy/examen/lot";
 import { toGamme } from "@/engine/gamme";
 import { fallbackDecisions } from "@/services/decision.service";
-import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
+import { avecLaQualiteProposee, proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 
 /**
@@ -136,7 +136,7 @@ describe("la qualité proposée est une donnée de chaque scénario", () => {
         );
       });
 
-      it("l'étalon de l'examen, le bon gestionnaire et les concurrents ne la lisent pas", () => {
+      it("l'étalon de l'examen et les concurrents ne la lisent pas", () => {
         const ctx = (s: EngineScenarioConfig, id = "a-equipe", profil?: BotProfile) => ({
           scenario: s,
           state: ouverture(def, id, profil),
@@ -147,13 +147,32 @@ describe("la qualité proposée est une donnée de chaque scénario", () => {
         const lu = (s: EngineScenarioConfig) => ({
           neutre: neutralDecisions(ctx(s)),
           etalon: decisionDeLaGestionNeutre(ctx(s), leviers),
-          bon: decisionDeReference(ctx(s), leviers),
           concurrents: def.bots.map((b) => botDecisions(b.profile as BotProfile, ctx(s, b.id, b.profile as BotProfile))),
         });
         const reference = lu(sansLeChamp(snapshot));
         for (const s of mondes) expect(lu(s)).toEqual(reference);
         // Et la gestion neutre garde sa qualité, là où le formulaire n'en propose pas.
         expect(reference.etalon.qualityBudget).toBeGreaterThan(0);
+      });
+
+      it("le bon gestionnaire du mérite part de la qualité que le formulaire propose, et de rien d'autre", () => {
+        // Décision du propriétaire : garder le formulaire tel quel ne doit pas suffire à
+        // battre le bon gestionnaire. Sans le champ, il garde la qualité neutre (une
+        // partie d'avant ne change pas de verdict) ; avec, il suit la proposition.
+        const ctx = (s: EngineScenarioConfig) => ({ scenario: s, state: ouverture(def), roundIndex: 1, leviers });
+        const avant = decisionDeReference(ctx(sansLeChamp(snapshot)), leviers);
+        const apres = decisionDeReference(ctx(snapshot), leviers);
+        const proposee = avecLaQualiteProposee(snapshot, neutralDecisions(ctx(snapshot)));
+        const qualite = (d: RoundDecisions) => [d.qualityBudget, ...Object.values(d.products ?? {}).map((p) => p.qualityBudget)];
+        if (leviers.quality) expect(qualite(apres)).toEqual(qualite(aLaMesureDuNiveau(proposee, leviers, neutralDecisions(ctx(snapshot)))));
+        // Rien d'autre que la qualité ne bouge.
+        const sansQualite = (d: RoundDecisions) => {
+          const c = structuredClone(d) as RoundDecisions;
+          c.qualityBudget = 0;
+          for (const p of Object.values(c.products ?? {})) if (p.qualityBudget !== undefined) p.qualityBudget = 0;
+          return c;
+        };
+        expect(sansQualite(apres)).toEqual(sansQualite(avant));
       });
     });
   }
