@@ -9,7 +9,9 @@ vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 
 const { MeriteDeLaPartieVue } = await import("@/components/merite-de-la-partie");
 const { GRAINES_DU_MERITE, verdictDuMerite } = await import("@/pedagogy/merite/verdict");
-const { PHRASE_DE_LA_REFERENCE } = await import("@/pedagogy/merite/reference");
+const { PHRASE_DE_LA_REFERENCE, PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE, phraseDeLaReference } = await import(
+  "@/pedagogy/merite/reference"
+);
 type IssueDuRejeu = import("@/pedagogy/merite/rejeu").IssueDuRejeu;
 type SuiteAffichee = import("@/components/merite-de-la-partie").SuiteAffichee;
 
@@ -70,6 +72,18 @@ describe("la vue du bilan : la référence se nomme et dit ce qu'elle fait", () 
     expect(html).toContain("data-qui-est-la-reference");
     expect(html).toContain(PHRASE_DE_LA_REFERENCE.replace(/'/g, "&#x27;"));
     expect(html).not.toMatch(/[Gg]estion de référence/);
+  });
+
+  it("une partie à la demande : la ligne dit ce que fait SON bon gestionnaire, sans chiffre ni seuil", () => {
+    expect(phraseDeLaReference({ propositionALaDemande: true })).toBe(PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE);
+    expect(phraseDeLaReference({})).toBe(PHRASE_DE_LA_REFERENCE);
+    expect(PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE).not.toBe(PHRASE_DE_LA_REFERENCE);
+    for (const phrase of [PHRASE_DE_LA_REFERENCE, PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE]) expect(phrase).not.toMatch(/\d/);
+    const html = renderToStaticMarkup(
+      createElement(MeriteDeLaPartieVue, { verdict, suite: suite(false), phrase: PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE }),
+    );
+    expect(html).toContain(PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE.replace(/'/g, "&#x27;"));
+    expect(html).not.toContain(PHRASE_DE_LA_REFERENCE.replace(/'/g, "&#x27;"));
   });
 
   it("la distribution nomme ses deux rangées en toutes lettres", () => {
