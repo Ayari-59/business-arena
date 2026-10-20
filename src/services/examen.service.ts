@@ -22,11 +22,14 @@ import { rejeuPourLExamen } from "@/services/merite.service";
 import { SCENARIO_CHOICES, scenarioByCode, scenarioCodeForLevel } from "@/config/scenarios/registry";
 import { NIVEAU_MAX } from "@/config/vitrine-solo";
 import {
+  grilleGardee,
   grilleParCode,
   noterLaCopie,
   referenceDeLaGrille,
+  seuilsDeLaCompetenceNotee,
   type CopieNotee,
   type GrilleDeNotation,
+  type GrilleGardee,
   type MesuresDeLaCopie,
 } from "@/config/examen/grille";
 import {
@@ -220,12 +223,10 @@ export async function creerExamen(enseignantId: string, s: SaisieDExamen): Promi
 
 /**
  * La grille FIGÉE d'un examen (sa copie), jamais celle du code. Une copie gardée avant que
- * la grille n'écrive son étalon le reçoit tel qu'il était : la gestion neutre du secteur.
+ * la grille n'écrive son étalon le reçoit tel qu'il était : la gestion neutre du secteur ;
+ * avant qu'elle n'écrive ses seuils (version 3), les seuils fixes d'alors.
  */
-export const grilleDeLExamen = (e: Pick<LigneDExamen, "grille">): GrilleDeNotation => {
-  const g = e.grille as GrilleDeNotation;
-  return { ...g, reference: referenceDeLaGrille(g) };
-};
+export const grilleDeLExamen = (e: Pick<LigneDExamen, "grille">): GrilleDeNotation => grilleGardee(e.grille as GrilleGardee);
 
 export interface ExamenListe {
   id: string;
@@ -623,6 +624,11 @@ export interface CompetenceDeLaPromotion {
   moyenne: number;
   /** La part des candidats notés qui atteignent le seuil (« acquis » ou mieux). */
   atteinte: number;
+  /**
+   * Le seuil d'atteinte, lu de la grille de l'examen : fixe, ou pour une compétence
+   * relative la moyenne des seuils de ses copies notées (chacune a le sien).
+   */
+  seuil: number;
   evalues: number;
 }
 
@@ -721,6 +727,7 @@ export async function suiviDeLExamen(
     n: notes.filter((x) => (i === 9 ? x >= 90 : x >= i * 10 && x < i * 10 + 10)).length,
   }));
   const evaluees = competencesEvaluees(examen.questions);
+  const seuils = grilleDeLExamen(examen).seuils;
   const competences: CompetenceDeLaPromotion[] = evaluees.map((comp) => {
     const parts = notees
       .map((c) => (c.notation?.etat === "notee" ? c.notation.competences.find((x) => x.code === comp.code) : undefined))
@@ -731,6 +738,9 @@ export async function suiviDeLExamen(
       objectif: comp.objectif,
       moyenne: parts.length ? parts.reduce((s, x) => s + x.part, 0) / parts.length : 0,
       atteinte: parts.length ? parts.filter((x) => atteint(x.niveau)).length / parts.length : 0,
+      seuil: parts.length
+        ? parts.reduce((s, x) => s + seuilsDeLaCompetenceNotee(x, seuils).acquis, 0) / parts.length
+        : seuils.fixes.acquis,
       evalues: parts.length,
     };
   });

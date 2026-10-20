@@ -123,8 +123,14 @@ describe("la grille : fixe, publiée, versionnée", () => {
     expect(c.lignes).toHaveLength(7);
     expect(c.lignes.reduce((s, l) => s + l.points, 0)).toBeCloseTo(c.note, 0);
     expect(c.lignes.reduce((s, l) => s + l.max, 0)).toBeCloseTo(100, 6);
-    // La copie notée garde l'étalon contre lequel elle a été notée.
-    expect(c.grille).toEqual({ code: "business-arena-2026", version: 2, nom: "Business Arena 2026", reference: REFERENCE_GESTION_NEUTRE_GELEE });
+    // La copie notée garde l'étalon contre lequel elle a été notée, et les seuils de ses niveaux.
+    expect(c.grille).toEqual({
+      code: "business-arena-2026",
+      version: GRILLE_BUSINESS_ARENA_2026.version,
+      nom: "Business Arena 2026",
+      reference: REFERENCE_GESTION_NEUTRE_GELEE,
+      seuils: GRILLE_BUSINESS_ARENA_2026.seuils,
+    });
   });
 
   it("bornes de 0 à 100 : la meilleure copie fait 100, la pire 0, un écart immense reste borné", () => {
@@ -237,15 +243,16 @@ describe("la neutralisation du hasard", () => {
 
 describe("les niveaux de compétence et leurs seuils écrits", () => {
   it("non acquis, en cours, acquis, maîtrisé", () => {
-    expect(niveauDeCompetence(0)).toBe("non-acquis");
-    expect(niveauDeCompetence(SEUILS_DE_NIVEAU.enCours - 0.001)).toBe("non-acquis");
-    expect(niveauDeCompetence(SEUILS_DE_NIVEAU.enCours)).toBe("en-cours");
-    expect(niveauDeCompetence(SEUILS_DE_NIVEAU.acquis - 0.001)).toBe("en-cours");
-    expect(niveauDeCompetence(SEUILS_DE_NIVEAU.acquis)).toBe("acquis");
-    expect(niveauDeCompetence(SEUILS_DE_NIVEAU.maitrise - 0.001)).toBe("acquis");
-    expect(niveauDeCompetence(SEUILS_DE_NIVEAU.maitrise)).toBe("maitrise");
-    expect(niveauDeCompetence(1)).toBe("maitrise");
-    expect(niveauDeCompetence(Number.NaN)).toBe("non-acquis");
+    const s = SEUILS_DE_NIVEAU;
+    expect(niveauDeCompetence(0, s)).toBe("non-acquis");
+    expect(niveauDeCompetence(s.enCours - 0.001, s)).toBe("non-acquis");
+    expect(niveauDeCompetence(s.enCours, s)).toBe("en-cours");
+    expect(niveauDeCompetence(s.acquis - 0.001, s)).toBe("en-cours");
+    expect(niveauDeCompetence(s.acquis, s)).toBe("acquis");
+    expect(niveauDeCompetence(s.maitrise - 0.001, s)).toBe("acquis");
+    expect(niveauDeCompetence(s.maitrise, s)).toBe("maitrise");
+    expect(niveauDeCompetence(1, s)).toBe("maitrise");
+    expect(niveauDeCompetence(Number.NaN, s)).toBe("non-acquis");
     expect([atteint("acquis"), atteint("maitrise"), atteint("en-cours"), atteint("non-acquis")]).toEqual([true, true, false, false]);
   });
 

@@ -1,10 +1,18 @@
-import { SEUILS_DE_NIVEAU, nomDuNiveau, type NiveauDeCompetence } from "@/config/examen/competences";
+import {
+  nomDuNiveau,
+  pourcentDuSeuil,
+  type NiveauDeCompetence,
+  type Seuils,
+  type SeuilsDeLaGrille,
+} from "@/config/examen/competences";
+import { seuilsDeLaCompetenceNotee } from "@/config/examen/grille";
 
 /**
  * LES GRAPHIQUES DE L'EXAMEN INDIVIDUEL : la distribution des notes, les compétences de la
  * promotion, le relevé d'un candidat. Les couleurs sont des jetons de la palette des
  * données (garde : tests/architecture/palette-des-donnees.test.ts) ; chaque graphique
  * porte aussi ses valeurs en texte (un tableau lisible sans la couleur, et à l'impression).
+ * Le trait de seuil se lit des seuils de la grille de l'examen, jamais d'une constante.
  */
 
 const pourcent = (x: number) => `${Math.round(x * 100)} %`;
@@ -46,7 +54,7 @@ export function HistogrammeDesNotes({ histogramme }: { histogramme: readonly { d
 export function CompetencesDeLaPromotion({
   competences,
 }: {
-  competences: readonly { code: string; nom: string; moyenne: number; atteinte: number; evalues: number }[];
+  competences: readonly { code: string; nom: string; moyenne: number; atteinte: number; seuil: number; evalues: number }[];
 }) {
   return (
     <ul data-competences-de-la-promotion="" className="grid gap-3">
@@ -58,7 +66,7 @@ export function CompetencesDeLaPromotion({
               moyenne {pourcent(c.moyenne)} · {pourcent(c.atteinte)} au seuil
             </span>
           </p>
-          <Barre part={c.moyenne} />
+          <Barre part={c.moyenne} seuil={c.seuil} />
         </li>
       ))}
     </ul>
@@ -66,36 +74,47 @@ export function CompetencesDeLaPromotion({
 }
 
 /** Une barre de 0 à 100 %, le seuil d'atteinte marqué d'un trait. */
-function Barre({ part }: { part: number }) {
+function Barre({ part, seuil }: { part: number; seuil: number }) {
   const p = Math.min(1, Math.max(0, part));
+  const x = Math.min(1, Math.max(0, seuil)) * 100;
   return (
-    <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden className="h-2.5 w-full">
+    <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden className="h-2.5 w-full" data-seuil={x}>
       <rect x={0} y={0} width={100} height={8} rx={2} fill="var(--voile-neutre)" />
       <rect x={0} y={0} width={p * 100} height={8} rx={2} fill="var(--donnee)" />
-      <line x1={SEUILS_DE_NIVEAU.acquis * 100} x2={SEUILS_DE_NIVEAU.acquis * 100} y1={0} y2={8} stroke="var(--donnee-2)" strokeWidth={0.8} />
+      <line x1={x} x2={x} y1={0} y2={8} stroke="var(--donnee-2)" strokeWidth={0.8} />
     </svg>
   );
 }
 
-/** Le relevé d'un candidat : une ligne par compétence, sa part et son niveau. */
+/**
+ * Le relevé d'un candidat : une ligne par compétence, sa part et son niveau. `seuils` : ceux
+ * de la grille qui a noté la copie. Une compétence relative dit aussi son seuil, propre à la
+ * copie (la part de l'étalon sur les mêmes marchés, plus l'écart de la grille).
+ */
 export function ReleveDesCompetences({
   competences,
+  seuils,
 }: {
-  competences: readonly { code: string; nom: string; part: number; niveau: NiveauDeCompetence }[];
+  competences: readonly { code: string; nom: string; part: number; niveau: NiveauDeCompetence; seuils?: Seuils; partDeLaReference?: number }[];
+  seuils: SeuilsDeLaGrille;
 }) {
   return (
     <ul data-releve-des-competences="" className="grid gap-3">
-      {competences.map((c) => (
-        <li key={c.code} data-competence={c.code} data-niveau={c.niveau} className="grid gap-1">
-          <p className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
-            <span className="font-semibold text-slate-100">{c.nom}</span>
-            <span className="tabular-nums text-slate-300">
-              {pourcent(c.part)} · <strong className="font-semibold text-slate-100">{nomDuNiveau(c.niveau)}</strong>
-            </span>
-          </p>
-          <Barre part={c.part} />
-        </li>
-      ))}
+      {competences.map((c) => {
+        const s = seuilsDeLaCompetenceNotee(c, seuils);
+        return (
+          <li key={c.code} data-competence={c.code} data-niveau={c.niveau} className="grid gap-1">
+            <p className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+              <span className="font-semibold text-slate-100">{c.nom}</span>
+              <span className="tabular-nums text-slate-300">
+                {pourcent(c.part)} · <strong className="font-semibold text-slate-100">{nomDuNiveau(c.niveau)}</strong>
+                {c.partDeLaReference !== undefined ? ` · ${nomDuNiveau("acquis").toLowerCase()} dès ${pourcentDuSeuil(s.acquis)}` : null}
+              </span>
+            </p>
+            <Barre part={c.part} seuil={s.acquis} />
+          </li>
+        );
+      })}
     </ul>
   );
 }
