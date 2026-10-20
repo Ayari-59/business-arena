@@ -261,6 +261,9 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           // Les concurrents de la partie, tels qu'elle les a figés : une
           // partie d'avant le correctif se rejoue avec SES concurrents.
           concurrentsAssainis: snapshot.bots?.concurrentsAssainis === true,
+          // Le parc de la partie, tel qu'elle l'a figé : une partie d'avant le correctif
+          // se rejoue avec la règle sous laquelle elle a été jouée.
+          parcSansDoublon: snapshot.parcSansDoublon === true,
         }),
       ),
     );

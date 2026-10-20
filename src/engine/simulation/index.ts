@@ -2992,8 +2992,14 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
           ...(w.nextMachineFleet !== null
             ? { machineFleet: w.nextMachineFleet }
             : {}),
-          ...(w.nextPendingMachineFleet !== null
-            ? { pendingMachineFleet: w.nextPendingMachineFleet }
+          // Les machines en attente du tour passé sont entrées dans `machineFleet`
+          // (le parc actif les compte, `parcActifDuTour`). Avec `parcSansDoublon`
+          // (partie créée après le correctif), la file d'attente repart de ce seul
+          // tour, VIDE quand rien n'a été acheté. Sans lui, le chemin d'avant : la
+          // file omise gardait celle du tour passé, recomptée à chaque tour suivant.
+          ...(w.nextMachineFleet !== null &&
+          (scenario.parcSansDoublon === true || w.nextPendingMachineFleet !== null)
+            ? { pendingMachineFleet: w.nextPendingMachineFleet ?? undefined }
             : {}),
           pendingCapacity: undefined,
           extraDepreciationPerRound: undefined,
