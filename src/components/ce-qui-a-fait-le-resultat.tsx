@@ -1,6 +1,10 @@
 import type { CSSProperties } from "react";
 import { formatEuro } from "@/lib/format";
-import type { CauseDuResultat, DecompositionDuResultat } from "@/components/lecture-du-resultat";
+import {
+  estUnAlea,
+  type CauseDuResultat,
+  type DecompositionDuResultat,
+} from "@/components/lecture-du-resultat";
 
 /**
  * « CE QUI A FAIT LE RÉSULTAT » : OÙ SONT PASSÉES VOS VENTES ?
@@ -181,7 +185,11 @@ export function CeQuiAFaitLeResultat({
   // Au rituel, les DEUX causes les plus fortes : l'écran du marché qui répond
   // doit garder son action dans la fenêtre. La synthèse d'un tour clos, qu'on
   // lit à loisir, en porte jusqu'à trois.
-  const retenues = rituel ? causes.slice(0, 2) : causes;
+  // Les aléas du tour s'y ajoutent toujours : un élève qui a subi une panne
+  // ou une rupture doit la lire ici, au moment où il fait le lien.
+  const retenues = rituel
+    ? [...causes.filter((c) => !estUnAlea(c)).slice(0, 2), ...causes.filter(estUnAlea)]
+    : causes;
   const lecture = lectureDuResultat(decomposition.resultat);
   const benefice = g.reste !== null;
   const solde = (g.reste ?? g.manque)!;

@@ -1,3 +1,4 @@
+import { BandeauDesDefaillantes } from "@/components/bandeau-des-defaillantes";
 import { BoutonCopierLeMessage } from "@/components/bouton-copier-le-message";
 import { messageDeLaPartie } from "@/lib/message-cahier-de-textes";
 import Link from "next/link";
@@ -415,29 +416,10 @@ export default async function TeacherGamePage({
         </section>
       ) : null}
 
-      {defaillantes.length > 0 ? (
-        <section className="rounded-xl encadre-perte p-3 sm:p-5">
-          <h2 className="text-sm font-semibold text-red-300">
-            <Icone nom="alerte" className="mr-1.5 h-4 w-4" />
-            {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
-          </h2>
-          <p className="mt-1 text-xs text-red-200">
-            Deux tours consécutifs de cessation de paiements. L&apos;activité est gelée (ni
-            production, ni charges) et la note financière tombe à zéro. Seule une augmentation de
-            capital qui ramène le découvert sous le plafond fait repartir l&apos;entreprise.
-          </p>
-          <ul className="mt-2 flex flex-wrap gap-2">
-            {defaillantes.map((row) => (
-              <li
-                key={row.name}
-                className="rounded-full encadre-perte px-3 py-1 text-xs font-semibold text-red-200"
-              >
-                {row.name}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <BandeauDesDefaillantes
+        noms={defaillantes.map((row) => row.name)}
+        cadre={view.defaillance}
+      />
 
       {/*
         L'ORDRE DE LA SÉANCE. D'abord ce tour : qui a validé, et le geste de

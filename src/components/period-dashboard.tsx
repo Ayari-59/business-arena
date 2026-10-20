@@ -1,3 +1,4 @@
+import { constatDeLaDefaillance, remedeALaDefaillance } from "@/config/defaillance";
 import { formatDecimal, formatEuro, formatEuroCents, formatPercent, formatUnits } from "@/lib/format";
 
 /** Un montant signé : « +12 000 € », « −294 € ». */
@@ -29,7 +30,11 @@ import { Tiroir } from "@/components/tiroir";
 import { Icone, type NomDIcone } from "@/components/icone";
 import { RevelationDuTour } from "@/components/revelation-du-tour";
 import { CeQuiAFaitLeResultat } from "@/components/ce-qui-a-fait-le-resultat";
-import { causesDuResultat, decompositionDuResultat } from "@/components/lecture-du-resultat";
+import {
+  causesDuResultat,
+  decompositionDuResultat,
+  indicationDeProduction,
+} from "@/components/lecture-du-resultat";
 import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { reussitesFranchies, lireLeTour } from "@/scoring/reussites";
@@ -258,6 +263,7 @@ export function PeriodDashboard({
                     prixDuMarche: period.competitiveBenchmark?.marketAvgPrice ?? null,
                     estimation: period.decisions?.salesEstimate ?? null,
                     unites: view.vocabulary.units,
+                    aleas: period.aleas ?? [],
                   })}
                 />
               }
@@ -336,7 +342,7 @@ export function PeriodDashboard({
               <KpiCard
                 label={view.vocabulary.productionLabel}
                 value={`${formatUnits(r.production.produced)} ${view.vocabulary.units}`}
-                hint={`Utilisation : ${formatPercent(r.production.utilizationRate)}`}
+                hint={indicationDeProduction(r)}
               />
             </section>
 
@@ -483,7 +489,7 @@ export function PeriodDashboard({
                           {row.defaillant ? (
                             <span
                               className="rounded-full encadre-perte px-2 py-0.5 text-xs font-semibold text-red-300"
-                              title="Entreprise défaillante : deux tours de cessation de paiements. Activité gelée jusqu'à recapitalisation."
+                              title={`Entreprise défaillante. ${constatDeLaDefaillance(view.defaillance.toursAvantDefaillance)} ${remedeALaDefaillance(view.defaillance, "equipe")}`}
                             >
                               <Icone nom="alerte" className="mr-1 h-3 w-3" />
                               Défaillante

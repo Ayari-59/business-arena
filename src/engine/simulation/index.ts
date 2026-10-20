@@ -135,6 +135,48 @@ export function fleetMaintenanceMultiplier(
   return totalCapacity > 0 ? weightedSum / totalCapacity : 1;
 }
 
+/**
+ * Parc individuel actif du tour : ouverture + `pendingMachineFleet` du tour
+ * précédent (les machines achetées au tour T sont en service au tour T+1).
+ * `null` sans parc d'équipements.
+ */
+export function parcActifDuTour(
+  scenario: EngineScenarioConfig,
+  state: CompanyState,
+  roundIndex: number,
+): MachineRecord[] | null {
+  if (!scenario.equipment) return null;
+  return state.machineFleet
+    ? [...state.machineFleet, ...(state.pendingMachineFleet ?? [])]
+    : initMachineFleet([...(state.fleet ?? []), ...(state.pendingFleet ?? [])], roundIndex);
+}
+
+/**
+ * LA RÉFÉRENCE D'ENTRETIEN EFFECTIVE DU TOUR : celle du métier, multipliée par
+ * l'exigence d'entretien du parc en service. C'est elle que la clôture
+ * rapporte au budget pour faire évoluer la disponibilité, et l'écran qui en
+ * dit le seuil la lit ici, à la même source.
+ */
+export function referenceDEntretien(
+  scenario: EngineScenarioConfig,
+  parcActif: MachineRecord[] | null,
+  state: CompanyState,
+): number {
+  return scenario.production.maintenanceReference * (
+    scenario.equipment
+      ? (parcActif
+          ? machineFleetMaintenanceMultiplier(
+              parcActif,
+              new Map(scenario.equipment.types.map((t) => [t.code, t])),
+            )
+          : fleetMaintenanceMultiplier(
+              mergeFleet(state.fleet ?? [], state.pendingFleet ?? []),
+              new Map(scenario.equipment.types.map((t) => [t.code, t])),
+            ))
+      : 1
+  );
+}
+
 function fleetCountOf(fleet: EquipmentItem[], typeCode: string): number {
   return fleet.reduce((s, f) => s + (f.typeCode === typeCode ? f.count : 0), 0);
 }
@@ -856,17 +898,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       : null;
     // Parc individuel actif : ouverture + pendingMachineFleet du tour précédent
     // (les machines achetées au tour T sont en service au tour T+1).
-    const activeMachineFleet: MachineRecord[] | null = scenario.equipment
-      ? (() => {
-          const base = state.machineFleet
-            ? [...state.machineFleet, ...(state.pendingMachineFleet ?? [])]
-            : initMachineFleet(
-                [...(state.fleet ?? []), ...(state.pendingFleet ?? [])],
-                roundIndex,
-              );
-          return base;
-        })()
-      : null;
+    const activeMachineFleet = parcActifDuTour(scenario, state, roundIndex);
     const effectiveMachineCapacity = scenario.equipment
       ? (activeMachineFleet && typeMap
           ? machineFleetCapacity(activeMachineFleet, typeMap)
@@ -3065,19 +3097,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       availability: updateAvailability({
         current: w.state.availability,
         maintenanceBudget: w.decisions.maintenanceBudget,
-        maintenanceReference: scenario.production.maintenanceReference * (
-          scenario.equipment
-            ? (w.activeMachineFleet
-                ? machineFleetMaintenanceMultiplier(
-                    w.activeMachineFleet,
-                    new Map(scenario.equipment.types.map((t) => [t.code, t])),
-                  )
-                : fleetMaintenanceMultiplier(
-                    mergeFleet(w.state.fleet ?? [], w.state.pendingFleet ?? []),
-                    new Map(scenario.equipment.types.map((t) => [t.code, t])),
-                  ))
-            : 1
-        ),
+        maintenanceReference: referenceDEntretien(scenario, w.activeMachineFleet, w.state),
         availabilityDecay: scenario.production.availabilityDecay,
         availabilityFloor: scenario.production.availabilityFloor,
       }),

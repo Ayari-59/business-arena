@@ -146,10 +146,59 @@ export function verdictAuMaximum(exigence: ExigenceSauvetage): VerdictSauvetage 
 /**
  * Ce qu'une subvention aurait à couvrir : ce qui manquerait encore une fois
  * tous les leviers utilisés à fond. Zéro quand l'équipe peut s'en sortir seule.
- * C'est le montant proposé dans le formulaire de demande, et son plafond —
- * on ne demande pas plus que ce qui manque.
+ * C'est le plancher du montant proposé dans le formulaire de demande
+ * (`montantDemandable`), qui le relève à ce qui dégèle une entreprise
+ * défaillante.
  */
 export function resteApresLeviers(exigence: ExigenceSauvetage): number {
   const verdict = verdictAuMaximum(exigence);
   return verdict.issue === "suffisant" ? 0 : verdict.reste;
+}
+
+
+/**
+ * LE MONTANT QU'UNE ÉQUIPE PEUT DEMANDER EN SUBVENTION, et donc si elle peut
+ * en demander une. `null` : pas de formulaire.
+ *
+ * Deux portes, une seule règle, tenue ici pour l'écran comme pour l'action
+ * serveur :
+ *
+ *  · NIVEAUX QUI OUVRENT LE FINANCEMENT : la porte s'ouvre au pied du mur,
+ *    emprunt et apport des associés épuisés (`verdictAuMaximum`).
+ *  · NIVEAUX 1 À 3 : aucun financement ne s'y décide. Une équipe en crise y a
+ *    encore son exploitation pour se redresser ; une équipe DÉFAILLANTE n'a
+ *    plus rien, ses décisions ne sont même plus simulées. C'est à elle, et à
+ *    elle seule, que la porte s'ouvre, faute de quoi elle restait à l'arrêt
+ *    jusqu'à la fin de la partie sans que personne, ni elle ni l'enseignant,
+ *    ait un geste à faire.
+ *
+ * LE MONTANT couvre ce qui remet réellement l'entreprise en marche quand elle
+ * est défaillante (`subventionQuiDegele`, mesuré par le moteur : le
+ * premier tour d'arrêt creuse encore le découvert, et la subvention est
+ * imposée). Le « manque » de la dernière
+ * clôture n'y suffisait jamais : accordé en entier, il laissait l'équipe
+ * gelée. Il reste le plancher quand l'entreprise n'est pas gelée.
+ *
+ * Pas d'animateur (partie solo) : personne n'instruira la demande, la porte
+ * reste fermée.
+ */
+export function montantDemandable(args: {
+  alerte: {
+    defaillante: boolean;
+    financementOuvert: boolean;
+    subventionQuiDegele?: number | null;
+    avecAnimateur?: boolean;
+  } | null;
+  exigence: ExigenceSauvetage | null;
+}): number | null {
+  const { alerte, exigence } = args;
+  if (!alerte) return null;
+  const degel = alerte.defaillante ? Math.max(0, alerte.subventionQuiDegele ?? 0) : 0;
+  if (exigence) {
+    if (verdictAuMaximum(exigence).issue !== "leviers_epuises") return null;
+    return Math.max(Math.ceil(resteApresLeviers(exigence)), degel);
+  }
+  if (alerte.financementOuvert || !alerte.defaillante) return null;
+  if (alerte.avecAnimateur === false) return null;
+  return degel > 0 ? degel : null;
 }

@@ -16,11 +16,13 @@ const initial: DemandeSubventionState = { error: null };
  *
  * Il n'apparaît que là : en crise de trésorerie, financement de sauvetage
  * exigé, et emprunt et apport des associés insuffisants même utilisés jusqu'au
- * bout. À ce point, l'équipe n'a plus rien à décider — et jusqu'ici elle
+ * bout ; ou, aux niveaux qui n'ouvrent aucun financement, l'entreprise
+ * défaillante. À ce point, l'équipe n'a plus rien à décider — et jusqu'ici elle
  * restait devant un formulaire qu'elle ne pouvait pas satisfaire, sans issue.
  *
- * Elle écrit ici ce qu'elle demande et pourquoi. Le montant est proposé (c'est
- * exactement ce qui manque) mais modifiable à la baisse : demander moins que le
+ * Elle écrit ici ce qu'elle demande et pourquoi. Le montant est proposé (ce
+ * qui manque, et pour une entreprise à l'arrêt ce qui la remet réellement en
+ * marche, impôt compris) mais modifiable à la baisse : demander moins que le
  * nécessaire est un choix, parfois le bon si l'on croit pouvoir vendre un
  * actif. Le motif est obligatoire et libre : c'est sur lui que l'animateur
  * tranchera, et l'écrire oblige à formuler un plan.
@@ -30,11 +32,26 @@ const initial: DemandeSubventionState = { error: null };
  */
 export function DemandeSubvention({
   gameId,
-  manque,
+  montant,
+  reste,
+  cadre,
+  defaillante,
 }: {
   gameId: string;
-  /** Ce qui manquerait encore, tous leviers utilisés à fond. */
-  manque: number;
+  /** Le montant proposé, et le plafond de la demande (`montantDemandable`). */
+  montant: number;
+  /**
+   * Ce qui manquait à la dernière clôture pour repasser sous le découvert
+   * autorisé, tous leviers utilisés à fond.
+   */
+  reste: number;
+  /**
+   * `leviers_epuises` : emprunt et apport existent à ce niveau et ne suffisent
+   * plus. `sans_financement` : le niveau n'en ouvre aucun.
+   */
+  cadre: "leviers_epuises" | "sans_financement";
+  /** L'entreprise est à l'arrêt : le montant proposé est celui qui la dégèle. */
+  defaillante: boolean;
 }) {
   const action = demanderSubventionAction.bind(null, gameId);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(action, initial, {
@@ -51,13 +68,31 @@ export function DemandeSubvention({
         <Icone nom="alerte" className="mr-1.5 h-3.5 w-3.5" />
         Demande de subvention exceptionnelle
       </p>
-      <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
-        Votre banque ne prête plus et l&apos;enveloppe de vos associés est vide : même en les
-        utilisant jusqu&apos;au bout, il manquerait{" "}
-        <strong className="tabular-nums text-slate-100">{formatEuro(manque)}</strong>. Il vous
-        reste une porte : demander une aide exceptionnelle à votre animateur. Il l&apos;accorde
-        ou la refuse — dites-lui ce qu&apos;elle permettrait.
-      </p>
+      {cadre === "leviers_epuises" ? (
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+          Votre banque ne prête plus et l&apos;enveloppe de vos associés est vide : même en les
+          utilisant jusqu&apos;au bout, il manquerait{" "}
+          <strong className="tabular-nums text-slate-100">{formatEuro(reste)}</strong>. Il vous
+          reste une porte : demander une aide exceptionnelle à votre animateur. Il l&apos;accorde
+          ou la refuse — dites-lui ce qu&apos;elle permettrait.
+        </p>
+      ) : (
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+          À ce niveau, aucun financement ne se décide. Il vous reste une porte : demander une aide
+          exceptionnelle à votre animateur. Il l&apos;accorde ou la refuse, dites-lui ce
+          qu&apos;elle permettrait.
+        </p>
+      )}
+      {defaillante && montant > reste + 1 ? (
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+          Le montant proposé,{" "}
+          <strong className="tabular-nums text-slate-100">{formatEuro(montant)}</strong>, est
+          celui qui remet l&apos;entreprise en marche à la clôture de ce tour. Il dépasse les{" "}
+          <span className="tabular-nums">{formatEuro(reste)}</span> qui manquaient à la dernière
+          clôture : un tour d&apos;arrêt creuse encore le découvert, et une subvention est
+          imposée comme un produit. Moins, et l&apos;entreprise reste à l&apos;arrêt.
+        </p>
+      ) : null}
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,180px)_1fr]">
         <label className="block">
           <span className="libelle block">
@@ -71,8 +106,8 @@ export function DemandeSubvention({
               required
               step={1}
               min={1}
-              max={Math.ceil(manque)}
-              defaultValue={Math.ceil(manque)}
+              max={Math.ceil(montant)}
+              defaultValue={Math.ceil(montant)}
               className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
             />
             <span className="shrink-0 text-xs text-slate-400">€</span>

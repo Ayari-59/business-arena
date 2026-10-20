@@ -2,8 +2,9 @@ import { formatEuro } from "@/lib/format";
 import type { GameView } from "@/services/game-view.service";
 import { DemandeSubvention } from "@/components/demande-subvention";
 import { Jauge } from "@/components/jauge";
-import { resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
+import { montantDemandable, resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
 import { Icone } from "@/components/icone";
+import { remedeALaDefaillance } from "@/config/defaillance";
 
 /**
  * L'ALERTE QU'UNE ÉQUIPE EN CESSATION DE PAIEMENTS NE VOYAIT PAS.
@@ -47,8 +48,15 @@ export function AlerteTresorerie({
   demande?: GameView["demandeSubvention"];
 }) {
   const restants = Math.max(0, alerte.toursAvantDefaillance - alerte.toursConsecutifs);
+  const demandable = montantDemandable({ alerte, exigence: exigence ?? null });
   const recours = (
-    <Recours gameId={gameId} exigence={exigence ?? null} demande={demande ?? null} />
+    <Recours
+      gameId={gameId}
+      alerte={alerte}
+      exigence={exigence ?? null}
+      demande={demande ?? null}
+      demandable={demandable}
+    />
   );
 
   if (alerte.defaillante) {
@@ -67,21 +75,22 @@ export function AlerteTresorerie({
           sont plus simulées. {alerte.toursConsecutifs} tours de suite sous le plafond de
           découvert sans plus une créance à céder.
         </p>
-        {alerte.financementOuvert ? (
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
-            Une seule chose la relève : un apport qui ramène la trésorerie au-dessus de{" "}
-            <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
-            Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
-          </p>
-        ) : (
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
-            Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong> pour
-            repasser sous le découvert autorisé. À ce niveau, ni emprunt ni apport des associés
-            ne se décident
-            {alerte.niveauDuFinancement ? ` (ils s'ouvrent au niveau ${alerte.niveauDuFinancement})` : ""} :
-            l&apos;entreprise reste à l&apos;arrêt jusqu&apos;à la fin de la partie.
-          </p>
-        )}
+        {/* Le remède est celui que lit l'enseignant au même instant
+            (`config/defaillance.ts`) : les deux bandeaux ne peuvent plus se
+            contredire devant la classe. */}
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
+          Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong> pour
+          repasser sous le découvert autorisé de{" "}
+          <strong className="tabular-nums">{formatEuro(alerte.plafondDecouvert)}</strong>.{" "}
+          {remedeALaDefaillance(
+            {
+              financementOuvert: alerte.financementOuvert,
+              niveauDuFinancement: alerte.niveauDuFinancement,
+              avecAnimateur: alerte.avecAnimateur !== false,
+            },
+            "equipe",
+          )}
+        </p>
         {recours}
       </section>
     );
@@ -154,18 +163,25 @@ export function AlerteTresorerie({
  * Il ne s'affiche que là où il a un sens. Tant que l'équipe peut encore
  * emprunter ou faire appel à ses associés, rien ici : la porte de l'aide
  * exceptionnelle ne s'ouvre pas à qui n'a pas d'abord poussé les siennes.
+ * Aux niveaux sans financement, elle s'ouvre à l'équipe défaillante, qui n'a
+ * plus aucune décision qui compte (`montantDemandable`).
  * Ensuite, trois états — le formulaire, l'attente, la réponse —, et un
  * quatrième cas, la partie solo, où il n'y a simplement personne à solliciter :
  * le dire est plus honnête qu'un formulaire sans destinataire.
  */
 function Recours({
   gameId,
+  alerte,
   exigence,
   demande,
+  demandable,
 }: {
   gameId: string;
+  alerte: NonNullable<GameView["alerteTresorerie"]>;
   exigence: GameView["exigenceSauvetage"];
   demande: GameView["demandeSubvention"];
+  /** Le montant proposé et plafonné ; `null` : pas de demande possible (`montantDemandable`). */
+  demandable: number | null;
 }) {
   if (demande) {
     if (demande.statut === "pending") {
@@ -202,11 +218,19 @@ function Recours({
     );
   }
 
+  if (demandable !== null) {
+    return (
+      <DemandeSubvention
+        gameId={gameId}
+        montant={demandable}
+        reste={exigence ? resteApresLeviers(exigence) : alerte.manque}
+        cadre={exigence ? "leviers_epuises" : "sans_financement"}
+        defaillante={alerte.defaillante}
+      />
+    );
+  }
   if (!exigence) return null;
   const verdict = verdictAuMaximum(exigence);
-  if (verdict.issue === "leviers_epuises") {
-    return <DemandeSubvention gameId={gameId} manque={resteApresLeviers(exigence)} />;
-  }
   if (verdict.issue === "sans_recours") {
     return (
       <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
