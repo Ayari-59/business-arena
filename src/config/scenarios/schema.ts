@@ -134,6 +134,9 @@ export const engineScenarioConfigSchema = z.object({
   // quoi le parse la retirerait et le serveur jugerait la validation d'une
   // équipe face à une autre proposition que celle de son écran.
   qualiteProposee: z.number().min(0).optional(),
+  // Celle d'une partie à la demande, quand elle diffère (engine/types.ts) : déclarée
+  // de même, pour qu'un scénario enseignant qui la porte la garde.
+  qualiteProposeeALaDemande: z.number().min(0).optional(),
   // Posé par le scénario joué d'une partie créée après le correctif du parc ; jamais
   // écrit à la main dans un secteur.
   parcSansDoublon: z.boolean().optional(),

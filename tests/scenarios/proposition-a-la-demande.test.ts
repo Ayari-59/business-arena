@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { NOVA_DEFINITION, scenarioByCode, scenarioCodeForLevel } from "@/config/scenarios/registry";
-import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { avecLaQualiteProposeeDe, composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
 import { leviersFigesDuProfil, presetByLevel, profilDuNiveau, type DifficultyPreset } from "@/config/difficulty";
@@ -123,6 +123,56 @@ describe("le drapeau se pose à la création d'une partie, et nulle part ailleur
     expect(creation.match(/propositionALaDemande: true/g)?.length).toBe(2);
     const rejeu = readFileSync("src/services/merite.service.ts", "utf8");
     expect(rejeu).toMatch(/propositionALaDemande: snapshot\.propositionALaDemande === true/);
+  });
+});
+
+describe("la qualité proposée d'une partie à la demande (`qualiteProposeeALaDemande`)", () => {
+  const transport = scenarioByCode("transport").scenario;
+  const reglages = {
+    scenario: transport,
+    seed: 11,
+    variableWorld: true,
+    level: 2,
+    concurrents: 3,
+    periodicity: "quarter" as const,
+  };
+
+  it("avec le drapeau, le scénario joué la porte comme SA qualité proposée ; sans lui, celle d'avant ; la clé du registre ne passe jamais", () => {
+    const aLaDemande = transport.qualiteProposeeALaDemande!;
+    expect(aLaDemande, "le transport en donne une autre").not.toBe(transport.qualiteProposee);
+    const avec = composerLeScenarioJoue({ ...reglages, propositionALaDemande: true });
+    const sans = composerLeScenarioJoue(reglages);
+    expect(avec.qualiteProposee).toBe(aLaDemande);
+    expect(sans.qualiteProposee).toBe(transport.qualiteProposee);
+    expect("qualiteProposeeALaDemande" in avec).toBe(false);
+    expect("qualiteProposeeALaDemande" in sans).toBe(false);
+    // Le bilan recompose le monde d'une partie depuis son instantané, et le retrouve
+    // tel que la base le garde.
+    const recompose = (instantane: EngineScenarioConfig, drapeau: boolean) =>
+      composerLeScenarioJoue({
+        ...reglages,
+        scenario: avecLaQualiteProposeeDe(transport, instantane),
+        ...(drapeau ? { propositionALaDemande: true } : {}),
+      });
+    expect(JSON.stringify(commeEnBase(recompose(avec, true)))).toBe(JSON.stringify(commeEnBase(avec)));
+    expect(JSON.stringify(commeEnBase(recompose(sans, false)))).toBe(JSON.stringify(commeEnBase(sans)));
+    // Une partie créée sous une autre qualité du registre retrouve la sienne, pas celle d'aujourd'hui.
+    expect(recompose({ ...avec, qualiteProposee: aLaDemande / 2 }, true).qualiteProposee).toBe(aLaDemande / 2);
+  });
+
+  it("au transport, le formulaire d'une partie à drapeau la propose, et le bon gestionnaire la tient", () => {
+    for (const niveau of [2, 4]) {
+      const { base, ouverts, formulaire } = cadre("transport", niveau, 20260101, true);
+      const echelle = base.scenarioPour(base.graine).production.qualityScale;
+      const qualites: [number, number][] = [];
+      partieFigee(base, (c) => {
+        const bon = decisionDeReference(c, ouverts);
+        qualites.push([formulaire(c).qualityBudget, bon.qualityBudget]);
+        return bon;
+      });
+      expect(qualites[0]![0], `niveau ${niveau}, tour 1`).toBeCloseTo(transport.qualiteProposeeALaDemande! * echelle, 6);
+      for (const [propose, tenu] of qualites) expect(tenu, `niveau ${niveau}`).toBe(propose);
+    }
   });
 });
 

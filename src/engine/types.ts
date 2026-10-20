@@ -348,6 +348,24 @@ export interface EngineScenarioConfig {
    */
   qualiteProposee?: number;
   /**
+   * LA QUALITÉ QUE LE FORMULAIRE PROPOSE DANS UNE PARTIE À LA DEMANDE
+   * (`propositionALaDemande`), quand elle diffère de `qualiteProposee`. Une donnée
+   * du registre, lue par `composerLeScenarioJoue` avec le drapeau seulement : la
+   * partie à drapeau la reçoit comme SA `qualiteProposee`, que tous les lecteurs
+   * relisent sans rien savoir de ce champ. La clé ne passe jamais dans le scénario
+   * joué : sans le drapeau, il reste celui d'avant au bit près. Absente : la même
+   * qualité qu'une partie sans drapeau.
+   *
+   * La mesure qui la fonde est celle de `qualiteProposee`, rejouée avec le drapeau
+   * (`tests/engine/qualite-proposee-mesure.test.ts`). Au transport, le plan à la
+   * demande remplit la flotte, et l'ancien budget qualité, la part de la gestion
+   * neutre, y fait de nouveau mieux que zéro sur la moyenne des graines : la partie
+   * à drapeau le propose (décision du propriétaire). Ailleurs, le sens du verdict ne
+   * change pas, sauf à l'hôtel, où l'écart devient négligeable (sous la tolérance de
+   * la salle de sport) : il y garde zéro.
+   */
+  qualiteProposeeALaDemande?: number;
+  /**
    * LE PARC SANS DOUBLON, posé par `composerLeScenarioJoue` à la création d'une partie
    * (donc figé dans son instantané). Une machine achetée entre au parc au tour suivant
    * (`pendingMachineFleet`) ; la file d'attente n'était pas vidée quand rien n'était
