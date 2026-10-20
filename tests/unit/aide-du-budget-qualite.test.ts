@@ -55,14 +55,14 @@ describe("l'aide du budget qualité, au niveau 2", () => {
   const lu = texte(renderToStaticMarkup(createElement(DecisionForm, props)));
 
   it("dit ce qu'elle rapporte : rebuts, retours, qualité perçue qui monte avec retard", () => {
-    expect(lu).toContain("moins de rebuts et de retours");
+    expect(lu).toContain("Moins de rebuts et de retours");
     expect(lu).toMatch(/qualité perçue qui monte lentement/);
+    // Et seulement chez la clientèle qui y tient : pas une promesse générale.
+    expect(lu).toMatch(/chez les clients qui y tiennent/);
   });
 
   it("dit la condition : elle se paie par le prix, pas à prix inchangé", () => {
-    expect(lu).toMatch(/à prix inchangé, le surcroît de clients couvre rarement la dépense/);
-    expect(lu).toMatch(/vendre plus cher/);
-    // Et seulement là où la clientèle y tient : pas une promesse générale.
-    expect(lu).toMatch(/là où ils y tiennent/);
+    expect(lu).toMatch(/À prix inchangé, elle couvre rarement sa dépense/);
+    expect(lu).toMatch(/elle paie en vendant plus cher/);
   });
 });

@@ -15,12 +15,15 @@
  * l'examen, du mérite et des témoins. Ce qu'il faudrait pour que la qualité
  * redevienne un arbitrage au prix proposé est une décision du propriétaire.
  *
+ * Elle tient en trois lignes sur un téléphone : la carte des budgets doit
+ * tenir sur un écran (`tests/e2e/mobile.e2e.ts`), et la version longue la
+ * faisait déborder.
+ *
  * Chaque affirmation de cette aide est tenue par un test qui la mesure dans
  * le moteur (`tests/engine/qualite-et-prix.test.ts`) : si un recalibrage la
  * rend fausse, c'est cette phrase qu'il faut réécrire.
  */
 export const AIDE_DU_BUDGET_QUALITE =
-  "Ce qu'elle rapporte : moins de rebuts et de retours, et une qualité perçue qui monte " +
-  "lentement, tour après tour, auprès des clients qui y tiennent. Mais à prix inchangé, le " +
-  "surcroît de clients couvre rarement la dépense : elle devient rentable quand elle vous " +
-  "permet de vendre plus cher sans perdre ces clients, et seulement là où ils y tiennent.";
+  "Moins de rebuts et de retours, une qualité perçue qui monte lentement chez les clients " +
+  "qui y tiennent. À prix inchangé, elle couvre rarement sa dépense : elle paie en vendant " +
+  "plus cher.";
