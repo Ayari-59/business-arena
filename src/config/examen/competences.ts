@@ -243,17 +243,18 @@ export function seuilDAtteinteRelatifDit(s: SeuilsDeLaGrille, nomDeLaReference: 
 export function niveauxRelatifsDits(s: SeuilsDeLaGrille, nomDeLaReference: string): string | null {
   if (!s.relatifs || s.relatifs.competences.length === 0) return null;
   const e = s.relatifs.ecarts;
-  const niveau = (n: NiveauDeCompetence, x: number) => `${nomDuNiveau(n).toLowerCase()} dès cette part ${ecartDit(x)}`;
-  return `${majuscule(competencesDites(s.relatifs.competences))}, les seuils se comptent à partir de la part que ${nomDeLaReference} obtient sur les mêmes marchés : ${niveau("en-cours", e.enCours)}, ${niveau("acquis", e.acquis)}, ${niveau("maitrise", e.maitrise)}, entre ${pourcentDuSeuil(0)} et ${pourcentDuSeuil(1)}.`;
+  const niveau = (n: NiveauDeCompetence, x: number) => `${nomDuNiveau(n).toLowerCase()} ${ecartDit(x)}`;
+  // Court : la phrase tient dans la méthode d'un rapport d'accréditation imprimé sur UNE page.
+  return `${majuscule(competencesDites(s.relatifs.competences))}, les seuils partent de la part de ${nomDeLaReference} sur les mêmes marchés : ${niveau("en-cours", e.enCours)}, ${niveau("acquis", e.acquis)}, ${niveau("maitrise", e.maitrise)}.`;
 }
 
 /**
  * Le seuil d'atteinte, entre parenthèses dans la méthode : « 60 % » ; pour une grille à
- * compétences relatives, « 60 % ; en stratégie et en marketing et prix, la part de la
- * gestion neutre du secteur plus 10 points ».
+ * compétences relatives, « 60 %, ou plus 10 points là où le seuil est relatif » (la phrase
+ * qui précède dit à partir de quoi).
  */
-export function seuilDAtteinteDit(s: SeuilsDeLaGrille, nomDeLaReference: string): string {
+export function seuilDAtteinteDit(s: SeuilsDeLaGrille): string {
   const fixe = pourcentDuSeuil(s.fixes.acquis);
   if (!s.relatifs || s.relatifs.competences.length === 0) return fixe;
-  return `${fixe} ; ${competencesDites(s.relatifs.competences)}, la part de ${nomDeLaReference} ${ecartDit(s.relatifs.ecarts.acquis)}`;
+  return `${fixe}, ou ${ecartDit(s.relatifs.ecarts.acquis)} là où le seuil est relatif`;
 }

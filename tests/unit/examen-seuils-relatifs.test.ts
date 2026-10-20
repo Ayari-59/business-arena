@@ -271,7 +271,7 @@ describe("les seuils se disent et se tracent depuis la grille de l'examen", () =
   it("un examen version 2 dit « 60 % », comme avant ; un examen version 3 dit aussi les seuils relatifs", () => {
     expect(pourcentDuSeuil(v2.seuils.fixes.acquis)).toBe("60 %");
     expect(niveauxDits(v2.seuils.fixes)).toBe("non acquis sous 40 %, en cours dès 40 %, acquis dès 60 %, maîtrisé dès 80 %");
-    expect(seuilDAtteinteDit(v2.seuils, v2.reference.nom)).toBe("60 %");
+    expect(seuilDAtteinteDit(v2.seuils)).toBe("60 %");
     expect(seuilDAtteinteRelatifDit(v2.seuils, v2.reference.nom)).toBeNull();
     expect(niveauxRelatifsDits(v2.seuils, v2.reference.nom)).toBeNull();
 
@@ -280,10 +280,10 @@ describe("les seuils se disent et se tracent depuis la grille de l'examen", () =
       "En stratégie et en marketing et prix, le seuil se compte à partir de la part que la gestion neutre du secteur obtient sur les mêmes marchés, plus 10 points.",
     );
     expect(niveauxRelatifsDits(v3.seuils, v3.reference.nom)).toBe(
-      "En stratégie et en marketing et prix, les seuils se comptent à partir de la part que la gestion neutre du secteur obtient sur les mêmes marchés : en cours dès cette part moins 10 points, acquis dès cette part plus 10 points, maîtrisé dès cette part plus 30 points, entre 0 % et 100 %.",
+      "En stratégie et en marketing et prix, les seuils partent de la part de la gestion neutre du secteur sur les mêmes marchés : en cours moins 10 points, acquis plus 10 points, maîtrisé plus 30 points.",
     );
-    expect(seuilDAtteinteDit(v3.seuils, v3.reference.nom)).toBe(
-      "60 % ; en stratégie et en marketing et prix, la part de la gestion neutre du secteur plus 10 points",
+    expect(seuilDAtteinteDit(v3.seuils)).toBe(
+      "60 %, ou plus 10 points là où le seuil est relatif",
     );
   });
 

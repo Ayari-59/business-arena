@@ -362,7 +362,7 @@ describe("un examen, de la création à la publication", () => {
     expect(t).toContain(espaces(`rattachés : ${niveauxDits(GRILLE_BUSINESS_ARENA_2026.seuils.fixes)}.`));
     const niveauxRelatifs = niveauxRelatifsDits(GRILLE_BUSINESS_ARENA_2026.seuils, etalon.nom);
     if (niveauxRelatifs) expect(t).toContain(espaces(niveauxRelatifs));
-    expect(t).toContain(espaces(`(${seuilDAtteinteDit(GRILLE_BUSINESS_ARENA_2026.seuils, etalon.nom)}).`));
+    expect(t).toContain(espaces(`(${seuilDAtteinteDit(GRILLE_BUSINESS_ARENA_2026.seuils)}).`));
     expect(t).not.toMatch(/gestion de référence/);
     expect(t).not.toMatch(/Alice|Bruno|210001/);
     expect(t).not.toMatch(/reconnu par l'AACSB|accrédité par/i);
