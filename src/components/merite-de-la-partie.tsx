@@ -82,7 +82,7 @@ export async function MeriteDeLaPartieAuBilan({
         }
       : null,
   };
-  return <MeriteDeLaPartieVue verdict={v} suite={suite} />;
+  return <MeriteDeLaPartieVue verdict={v} suite={suite} phrase={merite.phraseDeLaReference} />;
 }
 
 /** Ce qui tient la place pendant le calcul. */
@@ -135,9 +135,12 @@ const ORDRE_DES_CAS: readonly { cas: CasDuMerite; solides: boolean; favorable: b
 export function MeriteDeLaPartieVue({
   verdict: v,
   suite,
+  phrase = PHRASE_DE_LA_REFERENCE,
 }: {
   verdict: VerdictDuMerite;
   suite: SuiteAffichee;
+  /** Ce que fait le bon gestionnaire de la partie (`phraseDeLaReference`) ; absent : la ligne d'avant. */
+  phrase?: string;
 }) {
   return (
     <section
@@ -158,7 +161,7 @@ export function MeriteDeLaPartieVue({
           tient aux décisions.
         </p>
         <p data-qui-est-la-reference="" className="max-w-3xl text-sm leading-relaxed text-slate-400">
-          {PHRASE_DE_LA_REFERENCE}
+          {phrase}
         </p>
       </header>
 

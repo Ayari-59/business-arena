@@ -137,6 +137,9 @@ export const engineScenarioConfigSchema = z.object({
   // Posé par le scénario joué d'une partie créée après le correctif du parc ; jamais
   // écrit à la main dans un secteur.
   parcSansDoublon: z.boolean().optional(),
+  // Posé de même par le scénario joué d'une partie créée avec la proposition à la
+  // demande (engine/types.ts) ; jamais écrit à la main dans un secteur.
+  propositionALaDemande: z.boolean().optional(),
   production: z.object({
     qualitySensitivity: z.number().nonnegative(),
     qualityScale: z.number().positive(),

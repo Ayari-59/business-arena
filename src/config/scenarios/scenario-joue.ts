@@ -77,6 +77,12 @@ export interface ReglagesDuScenarioJoue {
    * créée après le correctif ; absent, le chemin d'avant au bit près.
    */
   parcSansDoublon?: boolean;
+  /**
+   * LA PROPOSITION À LA DEMANDE (`propositionALaDemande`, engine/types.ts) : vrai pour
+   * une partie créée avec elle ; absent, le formulaire et le bon gestionnaire d'avant,
+   * au bit près.
+   */
+  propositionALaDemande?: boolean;
 }
 
 /**
@@ -138,7 +144,8 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   const joue = avecLesConcurrentsAssainis(avecLeGroupe(avecRd, leviers, r.seed), r.concurrentsAssainis);
   // Absent, l'objet est rendu tel quel, sans clé ajoutée : un scénario historique reste
   // identique au bit près, comme pour les concurrents.
-  return r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
+  const avecLeParc = r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
+  return r.propositionALaDemande === true ? { ...avecLeParc, propositionALaDemande: true } : avecLeParc;
 }
 
 /**

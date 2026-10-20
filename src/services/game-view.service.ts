@@ -38,7 +38,7 @@ import { courrierParCode } from "@/config/courriers/registre";
 import type { EventInstance } from "@/engine/types";
 import { peekEventDraw } from "@/engine/events";
 import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
-import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
+import { departDuFormulaire, proposedDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
 import { expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
 import { subventionQuiDegele } from "@/engine/estimation/degel";
@@ -410,6 +410,12 @@ export interface GameView {
     hoursPerEmployee: number;
     productivity: number;
     hoursPerUnit: number;
+    /**
+     * Le volume proposé vise la demande du tour passé (`propositionALaDemande`,
+     * engine/types.ts) : la feuille le dit sous la question des valeurs gardées.
+     * Absent : une partie d'avant, dont le volume suit les ventes.
+     */
+    volumeALaDemande?: boolean;
     /**
      * CE QUE L'ATELIER A FAIT AU TOUR PASSÉ, et ce qui reste en stock à
      * l'ouverture : de quoi juger un plan de production sans rien lire du
@@ -2002,7 +2008,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     // Le point de départ et les valeurs proposées viennent du même calcul que
     // celui du serveur (decision-baseline) : ce que le formulaire propose est
     // exactement ce à quoi la validation sera comparée.
-    startingDecisions: startingDecisionsFor(
+    startingDecisions: departDuFormulaire(
       game.scenarioSnapshot as EngineScenarioConfig,
       stateRow?.state as CompanyState | undefined,
       game.currentRound,
@@ -2306,6 +2312,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         hoursPerEmployee: state.hoursPerEmployee,
         productivity: state.productivity,
         hoursPerUnit: snapshot.product.hoursPerUnit,
+        ...(snapshot.propositionALaDemande === true ? { volumeALaDemande: true } : {}),
         ...(lastResult
           ? {
               tourPasse: {

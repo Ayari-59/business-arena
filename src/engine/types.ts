@@ -358,6 +358,29 @@ export interface EngineScenarioConfig {
    * propriétaire).
    */
   parcSansDoublon?: boolean;
+  /**
+   * LA PROPOSITION À LA DEMANDE, posée par `composerLeScenarioJoue` à la création d'une
+   * partie (donc figée dans son instantané). Le moteur ne la lit pas. Deux lecteurs :
+   *
+   *  · le formulaire (`propositionDuTour`, services/decision-baseline.ts) : à partir du
+   *    tour 2, le plan proposé vaut la DEMANDE du tour passé (ventes et ventes manquées,
+   *    clientèle par clientèle), corrigée de la saison du tour à jouer par rapport à
+   *    celle du tour passé, moins le stock, dans l'atelier ; et le départ du tour 1 est
+   *    mis en phase lui aussi (sans la saison du tour suivant). Sans le drapeau, le plan
+   *    suit les ventes réalisées et la saison s'applique avec un tour d'avance : une
+   *    demande non servie n'y remontait jamais (rapport « mesure-volume »).
+   *  · le bon gestionnaire du mérite (`pedagogy/merite/reference.ts`), qui part de cette
+   *    proposition et ne s'en écarte que sur un signal net : sans lui, valider le
+   *    formulaire suffisait à être jugé « solide » dans une partie sur trois au niveau 2
+   *    (rapport « mesure-gestionnaire »).
+   *
+   * Un seul drapeau pour les deux, parce que la garde porte sur le couple. Ni la gestion
+   * neutre (`neutralDecisions`), ni l'étalon de l'examen, ni les concurrents pilotés ne
+   * changent. Absent : le chemin d'avant au bit près, pour que les parties commencées
+   * avant gardent leur proposition, leur garde de vérité et leur verdict (décision du
+   * propriétaire).
+   */
+  propositionALaDemande?: boolean;
   production: {
     /** Effet du budget qualité : producedQuality = 1 + sens × ln(1 + budget/scale). */
     qualitySensitivity: number;
