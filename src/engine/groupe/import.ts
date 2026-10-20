@@ -1,5 +1,6 @@
 import type { EngineScenarioConfig } from "../types";
 import { fluxPropre } from "./flux-propre";
+import { saisonDuTour } from "../market/demand";
 import type { ImportDuGroupe } from "./types";
 
 /**
@@ -40,7 +41,9 @@ export function prixDeLImport(graine: number, imp: ImportDuGroupe, roundIndex: n
 
 /** La probabilité de rupture du tour : plus forte aux pics de la saison du marché. */
 export function probabiliteDeRupture(scenario: EngineScenarioConfig, imp: ImportDuGroupe, roundIndex: number): number {
-  const saison = scenario.market.seasonality[(roundIndex - 1) % Math.max(1, scenario.market.seasonality.length)] ?? 1;
+  // La même lecture que la demande (`saisonDuTour`) : jamais modulo la longueur du
+  // tableau. Boucler faisait voir à l'import un pic que la demande ne voyait pas.
+  const saison = saisonDuTour(scenario.market.seasonality, roundIndex);
   return saison >= imp.rupture.seuilDePic ? imp.rupture.probabiliteAuxPics : imp.rupture.probabilite;
 }
 
