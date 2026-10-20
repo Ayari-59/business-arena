@@ -59,6 +59,7 @@ import {
   ventesEstimeesParDefaut as defautDesVentesEstimees,
 } from "@/config/ventes-estimees";
 import { aideDuBudgetEntretien } from "@/config/entretien";
+import { AIDE_DU_BUDGET_QUALITE } from "@/config/qualite";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
@@ -2227,6 +2228,11 @@ function GammeReference({
           {quality ? " ; qualité : la qualité perçue" : ""}
           {avecRd ? " ; R&D : le niveau technique, avec retard" : ""}.
         </p>
+        {quality ? (
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            Budget qualité. {AIDE_DU_BUDGET_QUALITE}
+          </p>
+        ) : null}
       </Aide>
     </div>
   );
@@ -4701,7 +4707,7 @@ export function DecisionForm({
                 hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
               {on.quality ? (
                 <Field name="qualityBudget" label="Budget qualité" libelle="Qualité" defaultValue={defaults.qualityBudget} suffix="€"
-                  hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
+                  hint={AIDE_DU_BUDGET_QUALITE} />
               ) : (
                 <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
               )}
