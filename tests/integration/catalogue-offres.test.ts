@@ -75,6 +75,8 @@ async function enseignant(admin = false): Promise<{ userId: string; orgId: strin
     schoolName: `Lycée du catalogue ${n}`,
   });
   if ("error" in r) throw new Error(r.error);
+  // L'adresse confirmée : sans elle, l'établissement ne reçoit pas de licence (migration 0046).
+  await db.update(users).set({ emailConfirmeLe: new Date() }).where(eq(users.id, r.userId));
   if (admin) await db.update(users).set({ isPlatformAdmin: true }).where(eq(users.id, r.userId));
   return { userId: r.userId, orgId: (await getTeacherOrgId(r.userId))! };
 }

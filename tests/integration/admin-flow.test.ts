@@ -39,6 +39,7 @@ import {
   THEME_DU_SITE_PAR_DEFAUT,
 } from "@/config/theme-du-site";
 import { poserUneLicence } from "./helpers/licence";
+import { confirmerParJeton, DUREE_DU_LIEN_MS, jetonDeConfirmation } from "@/services/confirmation-email.service";
 
 let platformAdminId: string;
 let orgId: string;
@@ -56,6 +57,13 @@ beforeAll(async () => {
   });
   if ("error" in result) throw new Error(result.error);
   platformAdminId = result.userId;
+  // L'adresse listée ne donne les droits qu'une fois confirmée (migration 0046) : le lien
+  // reçu à l'inscription est ouvert.
+  const jeton = jetonDeConfirmation(
+    { id: platformAdminId, email: "direction@business-arena.fr" },
+    new Date(Date.now() + DUREE_DU_LIEN_MS),
+  );
+  expect(await confirmerParJeton(jeton)).toEqual({ etat: "confirme" });
 });
 
 describe("admin général", () => {

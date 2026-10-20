@@ -316,7 +316,9 @@ describe("le formulaire de licence de /admin, offre par offre", () => {
     const page = await c.newPage();
     await aller(page, "/admin");
     const bloc = page.locator("div.rounded-xl.bg-slate-950", { hasText: nom }).first();
-    await bloc.locator("details", { hasText: "Licence" }).locator("summary").click();
+    // Sans licence, le bloc est déplié d'office : le formulaire se voit sans chercher.
+    const blocLicence = bloc.locator("details", { hasText: "Licence" });
+    expect(await blocLicence.evaluate((d) => (d as HTMLDetailsElement).open)).toBe(true);
     const formulaire = bloc.locator("[data-formulaire-licence]");
     // Les offres du catalogue (/admin/offres) qui ouvrent l'arène ou les épisodes.
     const lesOptions = (await formulaire.locator('select[name="offre"] option').allInnerTexts()).map((t) =>
@@ -369,7 +371,10 @@ describe("le formulaire de licence de /admin, offre par offre", () => {
     // La liste dit le paramétrage, lisible.
     await aller(page, "/admin");
     const bloc2 = page.locator("div.rounded-xl.bg-slate-950", { hasText: nom }).first();
-    await bloc2.locator("details", { hasText: "Licence" }).locator("summary").click();
+    // Licence en cours et sans souci : le bloc est replié, on le déplie pour lire.
+    const blocLicence2 = bloc2.locator("details", { hasText: "Licence" });
+    expect(await blocLicence2.evaluate((d) => (d as HTMLDetailsElement).open)).toBe(false);
+    await blocLicence2.locator("summary").click();
     expect(await lire(bloc2.locator("[data-perimetre-licence]").first())).toBe(
       "Offre Classe · L'ESCALE · niveau 4 Arbitrage",
     );

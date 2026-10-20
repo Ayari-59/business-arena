@@ -258,7 +258,9 @@ describe("/admin/offres", () => {
     const page = await admin.newPage();
     await aller(page, "/admin");
     const bloc = page.locator("div.rounded-xl.bg-slate-950", { hasText: nom }).first();
-    await bloc.locator("details", { hasText: "Licence" }).locator("summary").click();
+    // Sans licence, le bloc est déplié d'office : le formulaire se voit sans chercher.
+    const blocLicence = bloc.locator("details", { hasText: "Licence" });
+    expect(await blocLicence.evaluate((d) => (d as HTMLDetailsElement).open)).toBe(true);
     const formulaire = bloc.locator("[data-formulaire-licence]");
     await formulaire.locator('select[name="offre"]').selectOption("campus");
     await formulaire.locator('input[name="nature"][value="offerte"]').check();

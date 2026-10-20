@@ -51,7 +51,7 @@ const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/etablissement/parties/page.tsx", formulaires: 1 }, // l'étudiant connecté par son établissement saisit un code
   { file: "src/app/admin/renater/page.tsx", formulaires: 3 }, // relecture de l'agrégat, rattachement, retrait
   { file: "src/app/admin/lti/page.tsx", formulaires: 5 }, // jeton, révocation, déploiement, activation, inscription manuelle
-  { file: "src/app/teacher/compte/page.tsx", formulaires: 1 }, // réglage des nouveautés (déconnexion en <form> direct)
+  { file: "src/app/teacher/compte/page.tsx", formulaires: 2 }, // réglage des nouveautés, renvoi du lien de confirmation (déconnexion en <form> direct)
   { file: "src/app/admin/inscrits/page.tsx", formulaires: 3 }, // réglages des inscriptions, création et révocation d'un code (recherche en GET, export par lien)
   { file: "src/app/admin/inscrits/[id]/page.tsx", formulaires: 4 }, // retrait, rattachement, réactivation, désactivation
   { file: "src/app/teacher/cohortes/[id]/page.tsx", formulaires: 3 }, // nom, nouveau code, clôture ou réouverture // nom de la partie, questions posées, format des réponses, situations manquées, planning de la partie, planning des tours, révélation du classement, codes de reprise manquants, rangement, remise à zéro, suppression (clôture via CloseRoundForm client)

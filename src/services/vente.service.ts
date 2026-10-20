@@ -1,6 +1,7 @@
 import { setOrgLicence, type ConditionsDeVente, type RemiseDeLicence } from "@/services/licence.service";
 import { lireLEtatDuCatalogue } from "@/services/catalogue.service";
 import { requirePlatformAdmin } from "@/services/admin.service";
+import { adressesAConfirmerPourLaLicence, refusDeLicencePourAdresse } from "@/services/confirmation-email.service";
 import {
   carteDeTarif,
   erreurDeRemise,
@@ -73,6 +74,10 @@ export async function attribuerUneLicence(
   s: SaisieDeLicence,
 ): Promise<{ licenceId: string }> {
   await requirePlatformAdmin(adminId);
+  // Pas de licence à un établissement dont aucun administrateur n'a prouvé son adresse :
+  // n'importe qui pouvait s'inscrire au nom d'un collègue (migration 0046).
+  const aConfirmer = await adressesAConfirmerPourLaLicence(organizationId);
+  if (aConfirmer.length > 0) throw new Error(refusDeLicencePourAdresse(aConfirmer));
   const { catalogue, decouverte, essai } = await lireLEtatDuCatalogue();
   const offre = catalogue.offres.find((o) => o.code === s.offre);
   if (!offre) throw new Error("Choisissez une offre du catalogue.");

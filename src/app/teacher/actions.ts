@@ -58,6 +58,7 @@ import { synchroniserLaPartie } from "@/lti/ags/envois";
 import { plusTard } from "@/lti/ags/plus-tard";
 import { lireLeChoixDEssai } from "@/config/tour-d-essai";
 import { BasculeRefuseeError, commencerLaVraiePartie } from "@/services/tour-d-essai.service";
+import { envoyerLeLienDeConfirmation } from "@/services/confirmation-email.service";
 
 export interface FormState {
   error: string | null;
@@ -86,6 +87,16 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   const { nouveautes, ...compte } = parsed.data;
   const result = await registerTeacher({ ...compte, nouveautes: nouveautes === "oui" });
   if ("error" in result) return { error: result.error };
+  // Le lien de confirmation de l'adresse (migration 0046). Un compte entré par un code
+  // d'invitation n'en a pas besoin : le code lui a été remis. Un envoi qui échoue ne
+  // défait pas l'inscription ; « Mon compte » propose de renvoyer le lien.
+  if (!compte.inviteCode.trim()) {
+    try {
+      await envoyerLeLienDeConfirmation(result.userId);
+    } catch (e) {
+      console.error("[confirmation] envoi à l'inscription impossible :", e);
+    }
+  }
   await setSession(result.userId, "teacher");
   redirect("/teacher");
 }
