@@ -30,7 +30,11 @@ import { Tiroir } from "@/components/tiroir";
 import { Icone, type NomDIcone } from "@/components/icone";
 import { RevelationDuTour } from "@/components/revelation-du-tour";
 import { CeQuiAFaitLeResultat } from "@/components/ce-qui-a-fait-le-resultat";
-import { causesDuResultat, decompositionDuResultat } from "@/components/lecture-du-resultat";
+import {
+  causesDuResultat,
+  decompositionDuResultat,
+  indicationDeProduction,
+} from "@/components/lecture-du-resultat";
 import { PastilleDeRang, classeLigneDeRang } from "@/components/rang";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { reussitesFranchies, lireLeTour } from "@/scoring/reussites";
@@ -259,6 +263,7 @@ export function PeriodDashboard({
                     prixDuMarche: period.competitiveBenchmark?.marketAvgPrice ?? null,
                     estimation: period.decisions?.salesEstimate ?? null,
                     unites: view.vocabulary.units,
+                    aleas: period.aleas ?? [],
                   })}
                 />
               }
@@ -337,7 +342,7 @@ export function PeriodDashboard({
               <KpiCard
                 label={view.vocabulary.productionLabel}
                 value={`${formatUnits(r.production.produced)} ${view.vocabulary.units}`}
-                hint={`Utilisation : ${formatPercent(r.production.utilizationRate)}`}
+                hint={indicationDeProduction(r)}
               />
             </section>
 

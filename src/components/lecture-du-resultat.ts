@@ -1,5 +1,11 @@
-import type { CompanyRoundResult, IncomeStatement, SalesEstimate } from "@/engine/types";
-import { formatEuro, formatUnits } from "@/lib/format";
+import type {
+  CompanyRoundResult,
+  EngineScenarioConfig,
+  IncomeStatement,
+  SalesEstimate,
+} from "@/engine/types";
+import { courrierParCode } from "@/config/courriers/registre";
+import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { unitesVendues } from "@/components/ecart-d-estimation";
 import { structureDuTour } from "@/pedagogy/verdict-du-tour";
 
@@ -127,7 +133,7 @@ export function decompositionDuResultat(cr: IncomeStatement): DecompositionDuRes
 
 /** Une cause chiffrée du résultat : un nom court, une phrase, et sa force relative. */
 export interface CauseDuResultat {
-  cle: "ventes-manquees" | "prix" | "estimation";
+  cle: "ventes-manquees" | "prix" | "estimation" | `alea:${string}`;
   titre: string;
   texte: string;
   /** L'écart relatif qui la classe (0,23 pour 23 %). */
@@ -145,6 +151,7 @@ export function causesDuResultat({
   prixDuMarche,
   estimation,
   unites,
+  aleas = [],
 }: {
   result: CompanyRoundResult;
   /** Le prix moyen pratiqué par l'équipe ce tour (benchmark du tour), s'il est connu. */
@@ -155,6 +162,12 @@ export function causesDuResultat({
   estimation: SalesEstimate | null | undefined;
   /** Le nom des unités du métier : « enceintes », « nuitées ». */
   unites: string;
+  /**
+   * Les aléas du tour (`aleasDuTour`, préparés côté serveur, qui connaît le
+   * scénario). Ils s'AJOUTENT aux trois causes les plus fortes, sans en
+   * prendre la place : un aléa n'est jamais écarté par un écart de prix.
+   */
+  aleas?: readonly AleaDuTour[];
 }): CauseDuResultat[] {
   const causes: CauseDuResultat[] = [];
   const segments = Object.values(result.market.bySegment);
@@ -209,5 +222,159 @@ export function causesDuResultat({
     }
   }
 
-  return causes.sort((a, b) => b.force - a.force).slice(0, 3);
+  return [
+    ...causes.sort((a, b) => b.force - a.force).slice(0, 3),
+    ...aleas.map((a) => ({
+      cle: `alea:${a.cle}` as const,
+      titre: "Aléa du tour",
+      texte: a.texte,
+      force: a.force,
+    })),
+  ];
+}
+
+/** Une cause est-elle un aléa du tour ? */
+export const estUnAlea = (c: CauseDuResultat) => c.cle.startsWith("alea:");
+
+/**
+ * UN ALÉA DU TOUR, NOMMÉ ET, QUAND LES COMPTES LE DISENT, CHIFFRÉ.
+ *
+ * « Ce qui a fait le résultat » ne nommait jamais l'aléa : un élève dont la
+ * production chutait à cause d'une panne ou d'une rupture lisait « Prix : 59 €
+ * contre 59 € » et rien d'autre. Les événements de marché étaient annoncés en
+ * début de tour, par le courrier ; mais pas au moment où l'élève lit son
+ * résultat, c'est-à-dire au moment où il pourrait faire le lien. Et la rupture
+ * d'approvisionnement, tirée à la clôture, n'était dite nulle part en
+ * mono-produit.
+ *
+ * L'EFFET N'EST CHIFFRÉ QUE LÀ OÙ IL SE LIT SANS REJOUER LE MARCHÉ :
+ *
+ *  · une disponibilité amputée (panne, vague de froid, rupture en
+ *    mono-produit) : le moteur produit `min(plan, capacité machine, capacité
+ *    de main-d'œuvre)`, et la capacité machine du tour porte le facteur de
+ *    l'aléa ; la diviser par ce facteur rend la capacité qu'on aurait eue
+ *    sans lui, donc la production. Le test compare au tour rejoué, aléa
+ *    neutralisé : c'est le chiffre du moteur ;
+ *  · une amende ou une aide inscrite au scénario : son montant.
+ *
+ * Une variation de la demande ne se chiffre pas : il faudrait rejouer le
+ * marché. L'aléa est alors nommé avec l'effet que son courrier annonce, et
+ * rien d'inventé.
+ */
+export interface AleaDuTour {
+  /** Le code de l'événement, ou « rupture ». */
+  cle: string;
+  texte: string;
+  /** Ce que l'aléa a pesé, rapporté au tour (0 quand il ne se mesure pas). */
+  force: number;
+}
+
+/** Ce qu'un facteur de disponibilité a fait à la production du tour (mono-produit). */
+function effetSurLaProduction(
+  result: CompanyRoundResult,
+  facteur: number,
+  unites: string,
+): { texte: string; force: number } | null {
+  if (!(facteur > 0) || facteur === 1) return null;
+  const p = result.production;
+  const sans = Math.max(0, Math.min(p.planned, p.machineCapacity / facteur, p.laborCapacity));
+  const ecart = sans - p.produced;
+  if (Math.abs(ecart) < 0.5) {
+    return {
+      texte: "aucun sur la production, le plan restait sous la capacité de l'atelier",
+      force: 0,
+    };
+  }
+  return {
+    texte: `une production ${ecart > 0 ? "amputée" : "accrue"} de ${formatUnits(Math.abs(ecart))} ${unites}`,
+    force: Math.abs(ecart) / Math.max(1, sans),
+  };
+}
+
+export function aleasDuTour({
+  scenario,
+  result,
+  codes,
+  unites,
+}: {
+  scenario: Pick<EngineScenarioConfig, "events" | "suppliers">;
+  result: CompanyRoundResult;
+  /** Les événements apparus ce tour qui concernent l'équipe (trace du tour). */
+  codes: readonly string[];
+  unites: string;
+}): AleaDuTour[] {
+  const mono = !result.products;
+  const aleas: AleaDuTour[] = [];
+  const ca = Math.max(1, Math.abs(result.incomeStatement.revenue));
+
+  for (const code of new Set(codes)) {
+    const courrier = courrierParCode.get(code);
+    const nom = `« ${courrier?.objet ?? code} »`;
+    const annonce = courrier?.effet ? ` : ${courrier.effet}` : "";
+    const def = scenario.events.find((e) => e.code === code);
+    let mesure: { texte: string; force: number } | null = null;
+    if (result.insurance?.neutralizedEvents.includes(code)) {
+      mesure = { texte: "aucun, votre assurance l'a neutralisé", force: 0 };
+    } else if (def) {
+      const somme = (cible: string) =>
+        def.modifiers
+          .filter((m) => m.target === cible && m.op === "add")
+          .reduce((t, m) => t + m.value, 0);
+      const amende = somme("financial_penalty");
+      const aide = somme("financial_aid");
+      const disponibilite = def.modifiers
+        .filter((m) => m.target === "availability" && m.op === "mul")
+        .reduce((t, m) => t * m.value, 1);
+      if (amende > 0) {
+        mesure = { texte: `${formatEuro(amende)} de charge exceptionnelle`, force: amende / ca };
+      } else if (aide > 0) {
+        mesure = { texte: `${formatEuro(aide)} de produit exceptionnel`, force: aide / ca };
+      } else if (mono) {
+        mesure = effetSurLaProduction(result, disponibilite, unites);
+      }
+    }
+    aleas.push({
+      cle: code,
+      texte: `${nom}${annonce}.${mesure ? ` Effet : ${mesure.texte}.` : ""}`,
+      force: mesure?.force ?? 0,
+    });
+  }
+
+  // LA RUPTURE D'APPROVISIONNEMENT, tirée à la clôture et jamais annoncée.
+  if (mono && result.supplier?.supplyDisruption) {
+    const fournisseur = scenario.suppliers?.find((f) => f.code === result.supplier!.code);
+    const mesure = fournisseur
+      ? effetSurLaProduction(result, fournisseur.supplyRiskAvailabilityHit, unites)
+      : null;
+    aleas.push({
+      cle: "rupture",
+      texte: `rupture d'approvisionnement chez ${result.supplier.name}.${mesure ? ` Effet : ${mesure.texte}.` : ""}`,
+      force: mesure?.force ?? 0,
+    });
+  } else if (!mono && result.products) {
+    const touchees = Object.entries(result.products)
+      .filter(([, p]) => p.supplier?.supplyDisruption)
+      .map(([, p]) => p.supplier!.name);
+    if (touchees.length > 0) {
+      aleas.push({
+        cle: "rupture",
+        texte: `rupture d'approvisionnement chez ${[...new Set(touchees)].join(", ")} : la production des références qu'il fournit est amputée.`,
+        force: 0,
+      });
+    }
+  }
+  return aleas;
+}
+
+/**
+ * L'indication sous la tuile de production d'un tour clos. En mono-produit, la
+ * rupture d'approvisionnement n'était dite NULLE PART (le tableau des
+ * références, qui la signale, n'existe qu'en gamme) : elle l'est ici, là où
+ * l'élève regarde ce que son atelier a produit.
+ */
+export function indicationDeProduction(result: CompanyRoundResult): string {
+  const utilisation = `Utilisation : ${formatPercent(result.production.utilizationRate)}`;
+  return !result.products && result.supplier?.supplyDisruption
+    ? `Rupture d'approvisionnement chez ${result.supplier.name} · ${utilisation}`
+    : utilisation;
 }

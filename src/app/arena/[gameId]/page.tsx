@@ -241,6 +241,7 @@ export default async function ArenaPage({
               prixDuMarche: tourJoue.competitiveBenchmark?.marketAvgPrice ?? null,
               estimation: tourJoue.decisions?.salesEstimate ?? null,
               unites: view.vocabulary.units,
+              aleas: tourJoue.aleas ?? [],
             })}
           />
         }

@@ -1,3 +1,4 @@
+import { aleasDuTour, type AleaDuTour } from "@/components/lecture-du-resultat";
 import { seuilDEntretien } from "@/engine/production";
 import { parcActifDuTour, referenceDEntretien } from "@/engine/simulation";
 import { cadreDeLaDefaillance, type CadreDeLaDefaillance } from "@/config/defaillance";
@@ -257,6 +258,14 @@ export interface GameView {
     accounting?: GameView["accounting"];
     /** Les modules du scénario engagés ou en vigueur ce tour, et la crise s'il y en a eu une. */
     modules: BilanDesModules | null;
+    /**
+     * LES ALÉAS DU TOUR, nommés et chiffrés quand les comptes le disent
+     * (`aleasDuTour`) : les événements apparus ce tour qui concernent l'équipe,
+     * et la rupture d'approvisionnement tirée à la clôture. Préparés ici, qui
+     * connaît le scénario ; « Ce qui a fait le résultat » les ajoute aux causes.
+     * Optionnel pour les écrans qui ne les connaissent pas.
+     */
+    aleas?: AleaDuTour[];
   }[];
   /**
    * Rapport extra-financier (Lot 3) : synthèse DPEF SIMPLIFIÉE et indicative sur
@@ -1240,6 +1249,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       rse: computeRseIndex(result),
       accounting: formatAccountingData(result.accounting),
       modules: bilanDesModules(result, dec, snapshot),
+      aleas: aleasDuTour({
+        scenario: snapshot,
+        result,
+        codes: events,
+        unites: scenarioDef.vocabulary.units,
+      }),
     });
   }
 
