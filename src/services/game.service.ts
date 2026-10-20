@@ -1,3 +1,4 @@
+import { cadreDeLaDefaillance, type CadreDeLaDefaillance } from "@/config/defaillance";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { enEssai, lireLEssai, type TourDEssai } from "@/config/tour-d-essai";
@@ -757,6 +758,8 @@ export interface TeacherGameView {
    * variable nulle part.
    */
   difficulty: { level: number; name: string; hintMaxLevel: number };
+  /** Ce qui fait repartir une entreprise défaillante dans CETTE partie (`config/defaillance`). */
+  defaillance: CadreDeLaDefaillance;
   variableWorld: boolean;
   /**
    * De quoi estimer le temps qu'un tour demande aux élèves, avant la première
@@ -920,6 +923,7 @@ export async function getTeacherGameView(
       const preset = presetFromProfile(game.difficultyProfile);
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
     })(),
+    defaillance: cadreDeLaDefaillance(game),
     variableWorld:
       (game.difficultyProfile as { variableWorld?: boolean } | null)?.variableWorld === true,
     chargeDuTour,

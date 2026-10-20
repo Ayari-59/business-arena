@@ -1,3 +1,4 @@
+import { cadreDeLaDefaillance, type CadreDeLaDefaillance } from "@/config/defaillance";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { lireLEssai, type TourDEssai } from "@/config/tour-d-essai";
@@ -629,6 +630,8 @@ export interface GameView {
   };
   /** Niveau de difficulté (préréglage en données, doc 08 §2). */
   difficulty: { level: number; name: string; hintMaxLevel: number };
+  /** Ce qui fait repartir une entreprise défaillante dans CETTE partie (`config/defaillance`). */
+  defaillance: CadreDeLaDefaillance;
   /** Décisions exposées à ce niveau (prix/production/marketing : toujours). */
   enabledDecisions: {
     quality: boolean;
@@ -2301,6 +2304,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const preset = presetFromProfile(game.difficultyProfile);
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
     })(),
+    defaillance: cadreDeLaDefaillance(game),
     enabledDecisions: presetFromProfile(game.difficultyProfile).decisions,
     plafondInvestissement: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;

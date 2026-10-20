@@ -1,3 +1,4 @@
+import { constatDeLaDefaillance, remedeALaDefaillance } from "@/config/defaillance";
 import { formatDecimal, formatEuro, formatEuroCents, formatPercent, formatUnits } from "@/lib/format";
 
 /** Un montant signé : « +12 000 € », « −294 € ». */
@@ -483,7 +484,7 @@ export function PeriodDashboard({
                           {row.defaillant ? (
                             <span
                               className="rounded-full encadre-perte px-2 py-0.5 text-xs font-semibold text-red-300"
-                              title="Entreprise défaillante : deux tours de cessation de paiements. Activité gelée jusqu'à recapitalisation."
+                              title={`Entreprise défaillante. ${constatDeLaDefaillance(view.defaillance.toursAvantDefaillance)} ${remedeALaDefaillance(view.defaillance, "equipe")}`}
                             >
                               <Icone nom="alerte" className="mr-1 h-3 w-3" />
                               Défaillante

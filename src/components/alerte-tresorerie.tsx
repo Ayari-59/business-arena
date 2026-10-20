@@ -4,6 +4,7 @@ import { DemandeSubvention } from "@/components/demande-subvention";
 import { Jauge } from "@/components/jauge";
 import { montantDemandable, resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
 import { Icone } from "@/components/icone";
+import { remedeALaDefaillance } from "@/config/defaillance";
 
 /**
  * L'ALERTE QU'UNE ÉQUIPE EN CESSATION DE PAIEMENTS NE VOYAIT PAS.
@@ -74,23 +75,22 @@ export function AlerteTresorerie({
           sont plus simulées. {alerte.toursConsecutifs} tours de suite sous le plafond de
           découvert sans plus une créance à céder.
         </p>
-        {alerte.financementOuvert ? (
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
-            Une seule chose la relève : un apport qui ramène la trésorerie au-dessus de{" "}
-            <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
-            Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
-          </p>
-        ) : (
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
-            Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong> pour
-            repasser sous le découvert autorisé. À ce niveau, ni emprunt ni apport des associés
-            ne se décident
-            {alerte.niveauDuFinancement ? ` (ils s'ouvrent au niveau ${alerte.niveauDuFinancement})` : ""} :
-            {alerte.avecAnimateur === false
-              ? " l'entreprise reste à l'arrêt jusqu'à la fin de la partie."
-              : " seule une subvention exceptionnelle, accordée par votre animateur, peut la remettre en marche."}
-          </p>
-        )}
+        {/* Le remède est celui que lit l'enseignant au même instant
+            (`config/defaillance.ts`) : les deux bandeaux ne peuvent plus se
+            contredire devant la classe. */}
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
+          Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong> pour
+          repasser sous le découvert autorisé de{" "}
+          <strong className="tabular-nums">{formatEuro(alerte.plafondDecouvert)}</strong>.{" "}
+          {remedeALaDefaillance(
+            {
+              financementOuvert: alerte.financementOuvert,
+              niveauDuFinancement: alerte.niveauDuFinancement,
+              avecAnimateur: alerte.avecAnimateur !== false,
+            },
+            "equipe",
+          )}
+        </p>
         {recours}
       </section>
     );
