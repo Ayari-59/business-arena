@@ -173,4 +173,30 @@ describe("AlerteTresorerie", () => {
     expect(gelee).not.toContain("Une seule chose la relève");
     expect(gelee).toContain("ni emprunt ni apport des associés");
   });
+  it("défaillante sans financement au niveau joué, elle ouvre la demande au montant qui la dégèle", () => {
+    // Niveaux 1 à 3 : l'équipe gelée n'avait AUCUN geste, et l'enseignant
+    // non plus. La porte s'ouvre, au montant que le moteur a mesuré, pas au
+    // manque de la dernière clôture.
+    const gelee = alerte({
+      defaillante: true,
+      toursConsecutifs: 2,
+      financementOuvert: false,
+      niveauDuFinancement: 4,
+      manque: 46000,
+      subventionQuiDegele: 58300,
+    });
+    const html = rendu(gelee);
+    expect(html).toContain("Demande de subvention exceptionnelle");
+    expect(html).toContain('max="58300"');
+    expect(html).toContain('value="58300"');
+    expect(html).toContain("remettre en marche");
+    expect(html).not.toContain("jusqu&#x27;à la fin de la partie");
+    // En solo, personne n'instruira : pas de formulaire, et l'arrêt est dit.
+    const solo = rendu({ ...gelee, avecAnimateur: false });
+    expect(solo).not.toContain('name="montant"');
+    expect(solo).toContain("jusqu&#x27;à la fin de la partie");
+    // En crise seulement, l'exploitation peut encore redresser : pas de porte.
+    const enCrise = rendu(alerte({ financementOuvert: false, niveauDuFinancement: 4 }));
+    expect(enCrise).not.toContain('name="montant"');
+  });
 });

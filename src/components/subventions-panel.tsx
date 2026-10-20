@@ -49,8 +49,11 @@ export function SubventionsPanel({
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-slate-400">
         Une équipe ne dépose un dossier que lorsqu&apos;elle est au pied du mur : sa banque a
-        cessé de prêter et l&apos;enveloppe de ses associés est vide. À vous de décider si son
-        histoire vaut une aide — en totalité, en partie, ou pas du tout.
+        cessé de prêter et l&apos;enveloppe de ses associés est vide, ou, aux niveaux sans
+        financement, son entreprise est à l&apos;arrêt. À une entreprise à l&apos;arrêt, le formulaire propose
+        le montant qui la remet en marche, impôt compris : accordé en entier, il la fait repartir
+        à la clôture. À vous de décider si son histoire vaut une aide — en totalité, en partie, ou pas
+        du tout.
       </p>
 
       {enAttente.length > 0 ? (

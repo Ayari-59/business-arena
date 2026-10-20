@@ -13,7 +13,7 @@ import { formatEuro } from "@/lib/format";
 import {
   bloqueLaValidation,
   messageSauvetage,
-  resteApresLeviers,
+  montantDemandable,
   verdictAuMaximum,
   verdictSauvetage,
 } from "@/services/sauvetage";
@@ -428,9 +428,11 @@ export interface DemandeSubventionState {
  *
  * La garde qui compte est ici : on ne dépose un dossier QUE si le mur est
  * réel — en crise, financement de sauvetage exigé, et emprunt et apport
- * insuffisants même utilisés jusqu'au bout. Sans cela, ce serait un bouton
- * « demander de l'argent » ouvert à toute équipe qui trouve son tour difficile,
- * et l'animateur croulerait sous des dossiers sans objet.
+ * insuffisants même utilisés jusqu'au bout ; ou, aux niveaux sans financement,
+ * l'entreprise défaillante. Sans cela, ce serait un bouton « demander de
+ * l'argent » ouvert à toute équipe qui trouve son tour difficile, et
+ * l'animateur croulerait sous des dossiers sans objet. La règle est celle de
+ * l'écran (`montantDemandable`) : l'un ne propose pas ce que l'autre refuse.
  */
 export async function demanderSubventionAction(
   gameId: string,
@@ -441,30 +443,33 @@ export async function demanderSubventionAction(
   if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
 
   const vue = await getGameView(gameId, userId);
-  const exigence = vue?.exigenceSauvetage;
-  if (!vue || !exigence) {
+  if (!vue || !vue.alerteTresorerie) {
     return { error: "Aucun financement de sauvetage n'est exigé de votre équipe." };
   }
-  if (exigence.avecAnimateur === false) {
+  if (vue.kind === "solo") {
     return { error: "En partie solo, il n'y a pas d'animateur à solliciter." };
   }
-  if (verdictAuMaximum(exigence).issue !== "leviers_epuises") {
-    return {
-      error:
-        "Votre emprunt et l'apport de vos associés peuvent encore couvrir ce qui manque : " +
-        "utilisez-les avant de demander une aide.",
-    };
+  const exigence = vue.exigenceSauvetage;
+  const plafond = montantDemandable({ alerte: vue.alerteTresorerie, exigence });
+  if (plafond === null) {
+    if (exigence && verdictAuMaximum(exigence).issue === "manque") {
+      return {
+        error:
+          "Votre emprunt et l'apport de vos associés peuvent encore couvrir ce qui manque : " +
+          "utilisez-les avant de demander une aide.",
+      };
+    }
+    return { error: "Aucun financement de sauvetage n'est exigé de votre équipe." };
   }
 
-  const plafond = resteApresLeviers(exigence);
   const montant = Number(String(formData.get("montant") ?? "").replace(",", "."));
   if (!Number.isFinite(montant) || montant <= 0) {
     return { error: "Indiquez le montant que vous demandez." };
   }
-  // On ne demande pas plus que ce qui manque : le dossier porte sur un trou
+  // On ne demande pas plus que ce qu'il faut : le dossier porte sur un trou
   // précis, pas sur un confort de trésorerie.
   if (montant > plafond + 1) {
-    return { error: `Vous ne pouvez pas demander plus que ce qui manque (${formatEuro(plafond)}).` };
+    return { error: `Vous ne pouvez pas demander plus que ce qu'il faut (${formatEuro(plafond)}).` };
   }
 
   try {

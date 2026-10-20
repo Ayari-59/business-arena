@@ -37,6 +37,7 @@ import { activeEventsOf, injectedEvents } from "@/services/round-resolution.serv
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
 import { expurgerLeScenario, repartitionDesVentes } from "@/engine/estimation";
+import { subventionQuiDegele } from "@/engine/estimation/degel";
 import { marcheSansAdoption, segmentsDAdoptionCaches } from "@/services/adoption-cachee";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
 import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
@@ -808,6 +809,14 @@ export interface GameView {
     financementOuvert: boolean;
     /** Le niveau qui ouvre le financement, pour le dire ; `null` si aucun. */
     niveauDuFinancement: number | null;
+    /**
+     * Défaillante : la subvention qui la remet RÉELLEMENT en marche à la
+     * clôture du tour joué, mesurée par le moteur (`subventionQuiDegele`).
+     * `null` hors défaillance.
+     */
+    subventionQuiDegele?: number | null;
+    /** Un animateur peut-il instruire une demande ? Non en solo. */
+    avecAnimateur?: boolean;
   } | null;
   /**
    * LES MODULES DU SCÉNARIO proposés ce tour (actions qualité, capacité,
@@ -2394,7 +2403,26 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           }
         : null;
     })(),
-    alerteTresorerie: alerteView,
+    alerteTresorerie: alerteView
+      ? {
+          ...alerteView,
+          // MESURÉE, PAS DÉDUITE : le moteur joue le tour de l'entreprise
+          // gelée avec une subvention candidate et retient la plus petite qui
+          // la fait repartir. Le « manque » de la dernière clôture ignorait
+          // ce que creuse encore le premier tour d'arrêt et l'impôt sur la
+          // subvention : accordé en entier, il laissait l'équipe gelée.
+          subventionQuiDegele:
+            alerteView.defaillante && dossierDEstimation
+              ? subventionQuiDegele({
+                  scenario: snapshot,
+                  state: dossierDEstimation.state,
+                  roundIndex: game.currentRound,
+                  events: dossierDEstimation.events,
+                })
+              : null,
+          avecAnimateur: kindDeLaPartie !== "solo",
+        }
+      : null,
     loanCapacity: loanCapacityView,
     financeOffer: {
       loanAnnualRate: snapshot.finance.loanAnnualRate,
