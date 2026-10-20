@@ -31,6 +31,22 @@ const loisirs = hotelSegments.find((s) => s.code === "loisirs")!;
 const groupes = hotelSegments.find((s) => s.code === "groupes")!;
 
 /**
+ * LA CROISSANCE QUI DONNE SON SENS À L'INVESTISSEMENT (décision du propriétaire).
+ *
+ * Les 60 chambres de l'hôtel d'origine n'étaient jamais pleines : la demande restait
+ * sous le parc, la situation « capacité saturée » ne s'ouvrait jamais, et agrandir
+ * coûtait toujours. Chaque clientèle de L'ESCALE croît donc de ce supplément par tour,
+ * en plus de sa croissance d'origine : le parc suffit au début et sature vers le milieu
+ * de la partie, si bien qu'une chambre achetée au bon moment se paie. Mesuré en partie
+ * fidèle (solo, 24 graines, avec le parc corrigé) : chambre standard achetée au signal,
+ * gagnante dans toutes les graines au niveau 4 ; ni faillite pour qui garde le
+ * formulaire, ni pour la gestion neutre ou le bon gestionnaire. L'hôtel en mono-produit
+ * ne bouge pas.
+ */
+const CROISSANCE_EN_PLUS = 0.11;
+const enCroissance = <T extends { growth: number }>(s: T): T => ({ ...s, growth: s.growth + CROISSANCE_EN_PLUS });
+
+/**
  * Le marché de la chambre standard, cœur de gamme : le tourisme de loisirs
  * de l'hôtel d'origine (moins ceux qui montent en supérieure) et les groupes,
  * aux mêmes ressorts. C'est aussi le marché « du scénario » (`market`) :
@@ -38,7 +54,7 @@ const groupes = hotelSegments.find((s) => s.code === "groupes")!;
  * bots.
  */
 const STANDARD_MARKET = {
-  segments: [{ ...loisirs, size: 3700 }, { ...groupes, size: 2800 }],
+  segments: [enCroissance({ ...loisirs, size: 3700 }), enCroissance({ ...groupes, size: 2800 })],
   seasonality: hotelScenario.market.seasonality,
   outsideAttraction: hotelScenario.market.outsideAttraction,
   competitionIntensity: hotelScenario.market.competitionIntensity,
@@ -67,7 +83,7 @@ const GAMME: ProductDef[] = [
     hoursPerUnit: 0.85,
     market: {
       segments: [
-        {
+        enCroissance({
           // la clientèle affaires de l'hôtel d'origine, qui prend la supérieure
           // sur note de frais : mêmes ressorts, un plafond d'entreprise plus haut
           ...affaires,
@@ -75,8 +91,8 @@ const GAMME: ProductDef[] = [
           refPrice: 118,
           minAcceptablePrice: 68,
           psychThresholds: [{ threshold: 125, penalty: 0.88 }],
-        },
-        {
+        }),
+        enCroissance({
           code: "escapades",
           name: "Escapades en couple (week-ends, sensibles au confort)",
           // 800 et non 700 : c'est ce qui laisse à une stratégie de croissance (volume
@@ -95,7 +111,7 @@ const GAMME: ProductDef[] = [
           paymentDelayDays: 0,
           // les week-ends de printemps et d'automne, l'été un peu moins
           seasonality: [0.8, 1.2, 1.4, 1.1, 0.8, 1.2],
-        },
+        }),
       ],
       seasonality: [0.95, 1.15, 0.9, 1.05, 0.95, 1.15],
       outsideAttraction: 0.5,
@@ -111,7 +127,7 @@ const GAMME: ProductDef[] = [
     hoursPerUnit: 1.3,
     market: {
       segments: [
-        {
+        enCroissance({
           code: "direction",
           name: "Direction et invités d'entreprise (30 j)",
           size: 336,
@@ -126,8 +142,8 @@ const GAMME: ProductDef[] = [
           priceEffectBounds: { min: 0.35, max: 2 },
           paymentDelayDays: 30,
           seasonality: [1.1, 1.15, 0.5, 1.05, 1.1, 1.15],
-        },
-        {
+        }),
+        enCroissance({
           code: "occasions",
           name: "Grandes occasions (noces, anniversaires, sensibles à l'image)",
           size: 336,
@@ -142,7 +158,7 @@ const GAMME: ProductDef[] = [
           priceEffectBounds: { min: 0.2, max: 3 },
           paymentDelayDays: 0,
           seasonality: [0.7, 1.2, 1.5, 1.0, 0.7, 1.1],
-        },
+        }),
       ],
       seasonality: [0.95, 1.15, 1.0, 1.05, 0.95, 1.15],
       outsideAttraction: 0.45,

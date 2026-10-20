@@ -83,7 +83,11 @@ describe("L'ESCALE · gamme — la gamme", () => {
     expect(standard.hoursPerUnit).toBe(hotelScenario.product.hoursPerUnit);
     const segment = (code: string) => hotelScenario.market.segments.find((s) => s.code === code)!;
     const loisirs = standard.market.segments.find((s) => s.code === "loisirs")!;
-    expect({ ...loisirs, size: 0 }).toEqual({ ...segment("loisirs"), size: 0 });
+    // Mêmes ressorts que la clientèle de l'hôtel d'origine, sauf la taille et la croissance :
+    // L'ESCALE en gamme croît plus vite, pour que le parc sature et que l'investissement
+    // ait un sens (décision du propriétaire).
+    expect({ ...loisirs, size: 0, growth: 0 }).toEqual({ ...segment("loisirs"), size: 0, growth: 0 });
+    expect(loisirs.growth).toBeGreaterThan(segment("loisirs").growth);
     // La clientèle affaires prend la supérieure, aux mêmes ressorts, un plafond plus haut.
     const affaires = toGamme(hotelGammeScenario)[1]!.market.segments.find((s) => s.code === "affaires")!;
     expect(affaires.priceElasticity).toBe(segment("affaires").priceElasticity);
