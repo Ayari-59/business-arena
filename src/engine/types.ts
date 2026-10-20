@@ -347,6 +347,17 @@ export interface EngineScenarioConfig {
    * proposition que l'élève a réellement vue.
    */
   qualiteProposee?: number;
+  /**
+   * LE PARC SANS DOUBLON, posé par `composerLeScenarioJoue` à la création d'une partie
+   * (donc figé dans son instantané). Une machine achetée entre au parc au tour suivant
+   * (`pendingMachineFleet`) ; la file d'attente n'était pas vidée quand rien n'était
+   * acheté ensuite, si bien que la même machine s'ajoutait au parc à CHAQUE tour (le
+   * bilan, lui, n'en comptait qu'une). Vrai : la file repart vide, la machine compte une
+   * fois. Absent : le chemin d'avant, au bit près, pour que les parties commencées avant
+   * le correctif finissent sous la même règle et se rejouent à l'identique (décision du
+   * propriétaire).
+   */
+  parcSansDoublon?: boolean;
   production: {
     /** Effet du budget qualité : producedQuality = 1 + sens × ln(1 + budget/scale). */
     qualitySensitivity: number;

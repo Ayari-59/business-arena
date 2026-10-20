@@ -72,6 +72,11 @@ export interface ReglagesDuScenarioJoue {
    * rejoue sur le marché de son lot.
    */
   concurrentsAssainis?: boolean;
+  /**
+   * LE PARC SANS DOUBLON (`parcSansDoublon`, engine/types.ts) : vrai pour une partie
+   * créée après le correctif ; absent, le chemin d'avant au bit près.
+   */
+  parcSansDoublon?: boolean;
 }
 
 /**
@@ -130,7 +135,10 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
       ? avecInvestissementParNiveau(snapshot, preset.level, r.calendrier ?? "actuel")
       : snapshot;
   const avecRd = preset && leviers ? rdDuNiveau(avecHistoires, preset.level, leviers.rd) : avecHistoires;
-  return avecLesConcurrentsAssainis(avecLeGroupe(avecRd, leviers, r.seed), r.concurrentsAssainis);
+  const joue = avecLesConcurrentsAssainis(avecLeGroupe(avecRd, leviers, r.seed), r.concurrentsAssainis);
+  // Absent, l'objet est rendu tel quel, sans clé ajoutée : un scénario historique reste
+  // identique au bit près, comme pour les concurrents.
+  return r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
 }
 
 /**
