@@ -11,7 +11,8 @@ import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { logoutAction } from "../actions";
-import { reglerNouveautesAction } from "./actions";
+import { reglerNouveautesAction, renvoyerLeLienAction } from "./actions";
+import { DUREE_DU_LIEN_DITE, etatDeLAdresse } from "@/services/confirmation-email.service";
 
 export const metadata: Metadata = {
   title: "Mon compte",
@@ -34,19 +35,42 @@ const FAITS: Record<string, string> = {
   non: "C'est noté : vous ne recevrez plus les nouveautés.",
 };
 
+/** Ce que dit la page après « Renvoyer le lien » (`renvoyerLeLienAction`). */
+const LIENS: Record<string, (minutes?: string) => { texte: string; ok: boolean }> = {
+  envoye: () => ({
+    texte: `C'est parti : ouvrez le lien reçu dans votre messagerie. Il reste valable ${DUREE_DU_LIEN_DITE}.`,
+    ok: true,
+  }),
+  deja_confirme: () => ({ texte: "Votre adresse est déjà confirmée.", ok: true }),
+  trop_tot: (minutes) => ({
+    texte: `Un lien vient de partir. Attendez ${minutes ?? "quelques"} minute${minutes === "1" ? "" : "s"} avant d'en demander un autre, et pensez aux courriers indésirables.`,
+    ok: false,
+  }),
+  non_envoye: () => ({
+    texte: "Le lien n'a pas pu partir. Réessayez dans un moment ; si cela dure, écrivez à l'adresse de contact des mentions légales.",
+    ok: false,
+  }),
+};
+
 const ROLES: Record<string, string> = { org_admin: "administrateur", teacher: "enseignant", student: "élève" };
 
 const jour = (d: Date) =>
   d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
 
-export default async function MonComptePage({ searchParams }: { searchParams: Promise<{ fait?: string }> }) {
+export default async function MonComptePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ fait?: string; lien?: string; minutes?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
-  const [{ fait }, staff, consentement] = await Promise.all([
+  const [{ fait, lien, minutes }, staff, consentement, etatAdresse] = await Promise.all([
     searchParams,
     getStaffContext(session.userId),
     consentementDuCompte(session.userId),
+    etatDeLAdresse(session.userId),
   ]);
+  const retourDuLien = lien && LIENS[lien] ? LIENS[lien](minutes) : null;
   if (!staff || !consentement) redirect("/teacher/login");
   const isOrgAdmin = staff.organizations.some((o) => o.role === "org_admin");
   const { etat, adresse } = consentement;
@@ -81,6 +105,12 @@ export default async function MonComptePage({ searchParams }: { searchParams: Pr
             <dt className="text-slate-400">Adresse e-mail</dt>
             <dd className="break-all text-slate-100">{adresse ?? "aucune (votre plateforme de cours ou votre établissement ne l'a pas transmise)"}</dd>
           </div>
+          {etatAdresse?.confirmeLe ? (
+            <div className="grid gap-0.5 sm:grid-cols-[12rem_1fr] sm:gap-3">
+              <dt className="text-slate-400">Adresse confirmée</dt>
+              <dd className="text-slate-100" data-adresse-confirmee="">le {jour(etatAdresse.confirmeLe)}</dd>
+            </div>
+          ) : null}
           <div className="grid gap-0.5 sm:grid-cols-[12rem_1fr] sm:gap-3">
             <dt className="text-slate-400">Établissement</dt>
             <dd className="text-slate-100">
@@ -90,6 +120,30 @@ export default async function MonComptePage({ searchParams }: { searchParams: Pr
             </dd>
           </div>
         </dl>
+
+        {etatAdresse && !etatAdresse.etablie ? (
+          <section
+            id="adresse"
+            aria-label="Confirmer votre adresse"
+            className="carte grid gap-3 p-4 sm:p-6"
+            data-adresse-a-confirmer=""
+          >
+            <p className="text-sm text-slate-200">
+              Votre adresse n&apos;est pas encore confirmée. Vous pouvez jouer sans attendre ; il faut seulement
+              une adresse confirmée pour que votre établissement reçoive une licence.
+            </p>
+            {retourDuLien ? (
+              <p role="status" className={`text-sm ${retourDuLien.ok ? "text-emerald-300" : "text-amber-200"}`}>
+                {retourDuLien.texte}
+              </p>
+            ) : null}
+            <GuardedForm action={renvoyerLeLienAction} label="envoi du lien de confirmation">
+              <SubmitButton pendingLabel="Envoi…" className={bouton({ variante: "secondaire" })}>
+                Renvoyer le lien de confirmation
+              </SubmitButton>
+            </GuardedForm>
+          </section>
+        ) : null}
 
         <Rubrique>Nouveautés de Business Arena</Rubrique>
         <section id="nouveautes" aria-label="Nouveautés de Business Arena" className="carte grid gap-4 p-4 sm:p-6" data-reglage-nouveautes="">

@@ -55,6 +55,15 @@ export const users = pgTable("users", {
    * libre, LTI, RENATER, ou compte d'avant 0040.
    */
   invitationId: uuid("invitation_id").references((): AnyPgColumn => orgInvites.id, { onDelete: "set null" }),
+  /**
+   * L'ADRESSE CONFIRMÉE (migration 0046, services/confirmation-email.service.ts) : la date
+   * où le titulaire a ouvert le lien reçu à cette adresse. Nulle : jamais confirmée. Sans
+   * elle, un compte ne devient pas administrateur de la plateforme et son établissement ne
+   * reçoit pas de licence. L'essai, lui, reste ouvert.
+   */
+  emailConfirmeLe: timestamp("email_confirme_le", { withTimezone: true }),
+  /** Le dernier lien de confirmation envoyé : un nouvel envoi attend quelques minutes. */
+  confirmationEnvoyeeLe: timestamp("confirmation_envoyee_le", { withTimezone: true }),
   ...timestamps,
 });
 

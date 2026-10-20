@@ -4,6 +4,7 @@ import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { horsArchivesDEssai } from "@/services/archives-d-essai";
+import { adressesAConfirmer } from "@/lib/adresse-etablie";
 import {
   getLicenceStatus,
   type LicenceStatus,
@@ -255,18 +256,41 @@ export async function updatePlatformConfig(
   return next;
 }
 
-/**
- * Amorçage de l'admin général : les e-mails listés dans ADMIN_EMAILS
- * (variable d'environnement, séparés par des virgules) sont promus
- * automatiquement à la connexion/inscription.
- */
-export async function promoteIfBootstrapAdmin(userId: string, email: string): Promise<void> {
-  const list = (process.env.ADMIN_EMAILS ?? "")
+/** Les adresses d'ADMIN_EMAILS (variable d'environnement, séparées par des virgules). */
+export function adressesDesAdmins(liste: string | undefined = process.env.ADMIN_EMAILS): string[] {
+  return (liste ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  if (list.includes(email.toLowerCase())) {
+}
+
+/**
+ * LES DROITS D'ADMINISTRATEUR DE LA PLATEFORME SUIVENT ADMIN_EMAILS, à chaque connexion et
+ * dans les deux sens (décision du propriétaire) :
+ *   · une adresse de la liste devient administrateur, si elle est CONFIRMÉE : sans quoi
+ *     n'importe qui s'inscrivant le premier avec cette adresse prenait la plateforme ;
+ *   · une adresse retirée de la liste perd ses droits à sa prochaine connexion.
+ * Une liste vide ou absente ne retire rien à personne : une variable effacée par erreur
+ * ne doit pas fermer l'administration à son propriétaire. Un administrateur déjà en place
+ * et toujours listé le reste, confirmé ou non : la règle ne vaut que pour une promotion.
+ */
+export async function synchroniserLesDroitsDAdmin(userId: string, email: string): Promise<void> {
+  const liste = adressesDesAdmins();
+  if (liste.length === 0) return;
+  const compte = (
+    await db
+      .select({ admin: users.isPlatformAdmin, confirmeLe: users.emailConfirmeLe })
+      .from(users)
+      .where(eq(users.id, userId))
+  )[0];
+  if (!compte) return;
+  const listee = liste.includes(email.trim().toLowerCase());
+  if (listee && !compte.admin && compte.confirmeLe) {
     await db.update(users).set({ isPlatformAdmin: true }).where(eq(users.id, userId));
+    console.info(`[admin] droits d'administrateur donnés à ${userId} (adresse listée et confirmée)`);
+  } else if (!listee && compte.admin) {
+    await db.update(users).set({ isPlatformAdmin: false }).where(eq(users.id, userId));
+    console.info(`[admin] droits d'administrateur retirés à ${userId} (adresse absente d'ADMIN_EMAILS)`);
   }
 }
 
@@ -336,6 +360,11 @@ export interface PlatformOverview {
     licence: LicenceStatus;
     /** Historique des licences : une vente ne s'efface pas. */
     licences: OrgLicence[];
+    /**
+     * Les adresses de ses administrateurs, toutes à confirmer avant qu'une licence lui
+     * soit attribuée (lib/adresse-etablie.ts). Vide : rien n'attend.
+     */
+    adressesAConfirmer: string[];
   }[];
   config: PlatformConfig;
 }
@@ -365,6 +394,23 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
   ]);
   const userCount = userCountRows[0]!.count;
   const competitionCount = competitionCountRows[0]!.count;
+
+  const idsDesAdmins = [...new Set(memberRows.filter((m) => m.role === "org_admin").map((m) => m.userId))];
+  const comptesDesAdmins = new Map(
+    (idsDesAdmins.length === 0
+      ? []
+      : await db
+          .select({
+            id: users.id,
+            email: users.email,
+            emailConfirmeLe: users.emailConfirmeLe,
+            provenance: users.provenance,
+            invitationId: users.invitationId,
+          })
+          .from(users)
+          .where(inArray(users.id, idsDesAdmins))
+    ).map((u) => [u.id, u]),
+  );
 
   const licencesByOrg = new Map<string, typeof allLicences>();
   for (const lic of allLicences) {
@@ -444,6 +490,9 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
             .map((inv) => ({ id: inv.id, code: inv.code, active: inv.active })),
           licence,
           licences,
+          adressesAConfirmer: adressesAConfirmer(
+            members.filter((m) => m.role === "org_admin").flatMap((m) => comptesDesAdmins.get(m.userId) ?? []),
+          ),
         };
       })
       .sort((a, b) => b.games - a.games),

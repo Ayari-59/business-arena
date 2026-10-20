@@ -56,6 +56,7 @@ import { mesurerLAnalyseSolo } from "@/services/mesure-analyse.service";
 import { SEUIL_RENDU_TARDIF_MINUTES } from "@/pedagogy/mesure-analyse";
 import { Icone } from "@/components/icone";
 import { EnTeteAdmin } from "@/components/en-tete-admin";
+import { refusDeLicencePourAdresse } from "@/lib/adresse-etablie";
 
 export const dynamic = "force-dynamic";
 
@@ -855,7 +856,19 @@ export default async function AdminPage({
               ) : null}
 
               {org.kind !== "public" ? (
-                <details className="mt-3 rounded-lg border border-white/10 bg-slate-900/60 p-3">
+                // Déplié d'office quand il y a quelque chose à faire : pas de licence, une
+                // licence à venir, expirée, bientôt expirée ou bloquante, ou une adresse
+                // à confirmer avant d'en attribuer une. Replié quand tout va bien.
+                <details
+                  className="mt-3 rounded-lg border border-white/10 bg-slate-900/60 p-3"
+                  data-bloc-licence={org.licence.state}
+                  open={
+                    org.licence.state !== "active" ||
+                    org.licence.blocking !== null ||
+                    org.adressesAConfirmer.length > 0 ||
+                    undefined
+                  }
+                >
                   <summary className="cursor-pointer text-xs text-slate-400">
                     Licence ·{" "}
                     <span className={ETAT_LICENCE[org.licence.state]?.couleur ?? "text-slate-400"}>
@@ -913,6 +926,11 @@ export default async function AdminPage({
                     </ul>
                   ) : null}
 
+                  {org.adressesAConfirmer.length > 0 ? (
+                    <p className="mt-3 rounded-lg encadre-perte px-3 py-2 text-xs text-red-200" data-licence-en-attente-d-adresse="">
+                      {refusDeLicencePourAdresse(org.adressesAConfirmer)}
+                    </p>
+                  ) : (
                   <FormulaireDeLicence
                     action={setLicenceAction.bind(null, org.organizationId)}
                     offres={offresDeLicence}
@@ -923,6 +941,7 @@ export default async function AdminPage({
                     motifsDeGratuite={Object.entries(MOTIFS_DE_GRATUITE).map(([code, libelle]) => ({ code, libelle }))}
                     essai={essai}
                   />
+                  )}
                   <p className="mt-2 text-sm leading-relaxed text-slate-400">
                     L&apos;offre choisie au catalogue (<Link href="/admin/offres" className="underline underline-offset-4">Offres
                     et tarifs</Link>) pose le périmètre, les limites et le prix ; la licence en garde une

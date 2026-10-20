@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { loginAttempts, organizationMembers, organizations, users } from "@/db/schema";
 import {
   getPlatformConfig,
-  promoteIfBootstrapAdmin,
+  synchroniserLesDroitsDAdmin,
   resolveInvite,
 } from "@/services/admin.service";
 import { assertCanAddTeacher } from "@/services/licence.service";
@@ -120,7 +120,7 @@ export async function registerTeacher(args: {
     .where(eq(users.id, userId));
   await consentementALaCreation(userId, args.nouveautes === true);
 
-  await promoteIfBootstrapAdmin(userId, email);
+  await synchroniserLesDroitsDAdmin(userId, email);
   return { userId };
 }
 
@@ -193,7 +193,7 @@ export async function loginTeacher(args: {
     .delete(loginAttempts)
     .where(ip ? or(eq(loginAttempts.email, email), eq(loginAttempts.ip, ip)) : eq(loginAttempts.email, email));
   await db.update(users).set({ derniereConnexionLe: new Date(now) }).where(eq(users.id, row.id));
-  await promoteIfBootstrapAdmin(row.id, email);
+  await synchroniserLesDroitsDAdmin(row.id, email);
   return { userId: row.id, sessionVersion: row.sessionVersion };
 }
 

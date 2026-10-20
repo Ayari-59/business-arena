@@ -101,7 +101,7 @@ async function poser(c: Client, orgId: string, perimetre: PerimetreE2E): Promise
 }
 
 /** Le jeton de session enseignant, signé comme le fait `lib/session.ts`. */
-function jetonDeSession(userId: string): string {
+export function jetonDeSession(userId: string): string {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error("AUTH_SECRET manquant : il signe la session de l'enseignant");
   const now = Date.now();
