@@ -371,8 +371,8 @@ export interface EngineScenarioConfig {
    *    demande non servie n'y remontait jamais (rapport « mesure-volume »).
    *  · le bon gestionnaire du mérite (`pedagogy/merite/reference.ts`), qui part de cette
    *    proposition et ne s'en écarte que sur un signal net : sans lui, valider le
-   *    formulaire suffisait à être jugé « solide » dans une partie sur trois au niveau 2
-   *    (rapport « mesure-gestionnaire »).
+   *    formulaire suffisait à être jugé « solide » dans une partie sur trois aux niveaux
+   *    2 et 4 (rapport « mesure-gestionnaire »).
    *
    * Un seul drapeau pour les deux, parce que la garde porte sur le couple. Ni la gestion
    * neutre (`neutralDecisions`), ni l'étalon de l'examen, ni les concurrents pilotés ne
