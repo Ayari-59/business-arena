@@ -175,9 +175,19 @@ export function resteApresLeviers(exigence: ExigenceSauvetage): number {
  * LE MONTANT couvre ce qui remet réellement l'entreprise en marche quand elle
  * est défaillante (`subventionQuiDegele`, mesuré par le moteur : le
  * premier tour d'arrêt creuse encore le découvert, et la subvention est
- * imposée). Le « manque » de la dernière
+ * imposée), avec le coussin qui l'empêche de retomber aussitôt
+ * (`subventionProposeeAuDegel`). Le « manque » de la dernière
  * clôture n'y suffisait jamais : accordé en entier, il laissait l'équipe
  * gelée. Il reste le plancher quand l'entreprise n'est pas gelée.
+ *
+ * C'est aussi LE PLAFOND de la demande : le champ du formulaire et l'action
+ * serveur refusent au-delà. Le coussin relève donc le plafond avec lui, sans
+ * quoi le montant proposé serait refusé tel quel ; il ne le dépasse jamais,
+ * puisqu'il l'est. La seule borne au-dessus est la colonne qui garde le
+ * montant (`aid_requests.amount`, 12 chiffres avant la virgule) : la
+ * recherche du minimum s'arrête bien avant (`subventionQuiDegele` rend `null`
+ * au-delà de son plafond de recherche), et le coussin appliqué au plus grand
+ * minimum qu'elle puisse rendre y tient encore.
  *
  * Pas d'animateur (partie solo) : personne n'instruira la demande, la porte
  * reste fermée.
@@ -193,7 +203,8 @@ export function montantDemandable(args: {
 }): number | null {
   const { alerte, exigence } = args;
   if (!alerte) return null;
-  const degel = alerte.defaillante ? Math.max(0, alerte.subventionQuiDegele ?? 0) : 0;
+  const minimum = alerte.defaillante ? Math.max(0, alerte.subventionQuiDegele ?? 0) : 0;
+  const degel = subventionProposeeAuDegel(minimum);
   if (exigence) {
     if (verdictAuMaximum(exigence).issue !== "leviers_epuises") return null;
     return Math.max(Math.ceil(resteApresLeviers(exigence)), degel);
@@ -201,4 +212,33 @@ export function montantDemandable(args: {
   if (alerte.financementOuvert || !alerte.defaillante) return null;
   if (alerte.avecAnimateur === false) return null;
   return degel > 0 ? degel : null;
+}
+
+/**
+ * LE COUSSIN DU DÉGEL : ce que la subvention proposée ajoute au minimum qui
+ * dégèle, en multiple de ce minimum.
+ *
+ * Le minimum (`subventionQuiDegele`) amène la clôture du tour gelé juste sous
+ * le plafond de découvert ; la moindre perte du tour suivant refait une crise,
+ * et deux crises de suite refont une défaillance. Mesuré sur 24 graines, six
+ * tours, en partie fidèle (l'équipe valide la proposition après une erreur de
+ * prix au tour 1, puis reçoit la subvention dès qu'elle ouvre un tour
+ * défaillante), la proposition relisant le dernier tour joué et non le tour
+ * gelé : au minimum, NOVA niveau 2 retombe dans 12 cas sur 12 (prix × 0,85) et
+ * 22 sur 22 (× 0,80), le bistrot dans 2 sur 16 ; à × 1,25 rien ne change ; à
+ * × 1,5, 1 sur 12, 2 sur 22 et 0 sur 16, soit environ un demi-tour de charges
+ * fixes de plus chez NOVA. À × 2, plus aucune rechute, mais un demi-minimum
+ * de plus accordé à chaque équipe pour les quelques cas qui restaient.
+ * La garde : `tests/engine/rechute-apres-degel.test.ts`.
+ */
+export const COUSSIN_DU_DEGEL = 1.5;
+
+/**
+ * La subvention que le formulaire PROPOSE à une entreprise défaillante : le
+ * minimum qui la dégèle, multiplié par le coussin, arrondi comme lui à la
+ * centaine d'euros supérieure. Zéro sans minimum.
+ */
+export function subventionProposeeAuDegel(minimum: number): number {
+  if (!(minimum > 0)) return 0;
+  return Math.ceil((minimum * COUSSIN_DU_DEGEL) / 100) * 100;
 }

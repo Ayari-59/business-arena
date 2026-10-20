@@ -297,6 +297,43 @@ export function sansDepensesPonctuelles(d: RoundDecisions): RoundDecisions {
 export type MarcheDuTourPasse = Record<string, Pick<CompanyRoundResult["market"]["bySegment"][string], "sold" | "lost">>;
 
 /**
+ * LE TOUR PASSÉ ÉTAIT-IL GELÉ ? Un tour gelé est un tour que l'entreprise a
+ * OUVERT défaillante (`CompanyState.status`, posé à la clôture du tour
+ * d'avant, dont le résultat porte `defaillant`). Le moteur la tient alors hors
+ * du marché : attraction nulle sur chaque clientèle, donc aucune demande
+ * reçue, ni vente ni vente manquée (`engine/simulation`, l'allocation des
+ * parts), et ni production ni charge.
+ *
+ * Ce tour-là ne porte AUCUNE marque propre dans ce que la proposition reçoit.
+ * Le `defaillant` d'un résultat dit l'état à la clôture, donc le gel du tour
+ * SUIVANT ; et la subvention qui dégèle rend l'entreprise `active` à la
+ * clôture même du tour gelé, si bien que ni l'état d'ouverture du tour à
+ * jouer ni le résultat du tour gelé ne disent plus rien de la défaillance.
+ * Reste la trace que le gel laisse au marché, et qu'il est seul à laisser :
+ * une demande reçue nulle sur toutes les clientèles. Une entreprise au marché
+ * en reçoit toujours, même à un prix absurde ou sans rien à vendre (ce sont
+ * alors des ventes manquées). Vérifié sur tous les secteurs du registre, à
+ * tous les niveaux, proposition et gestion neutre : aucun tour joué
+ * normalement sans demande reçue, aucun tour gelé avec.
+ *
+ * Le lire comme un tour joué ferait planifier sur ses ventes nulles : un plan
+ * nul, qui remettait en crise l'équipe tout juste dégelée deux tours plus tard
+ * (NOVA et bistrot, dans tous les cas mesurés). La proposition le saute donc
+ * et reconduit le plan de la décision précédente, celle du tour gelé, que le
+ * moteur n'a pas simulée : la proposition tirée du dernier tour joué
+ * normalement quand l'équipe l'a validée, la décision de ce tour-là reconduite
+ * quand elle n'a rien rendu. Sans décision précédente, le point de départ du
+ * secteur.
+ */
+export function estUnTourGele(lastMarket: MarcheDuTourPasse): boolean {
+  const clienteles = Object.values(lastMarket);
+  return (
+    clienteles.length > 0 &&
+    clienteles.every((x) => Math.max(0, x.sold ?? 0) + Math.max(0, x.lost ?? 0) <= 0)
+  );
+}
+
+/**
  * LA PROPOSITION D'UN TOUR : UNE BASE NEUTRE, QUI NE MÈNE PAS À LA FAILLITE.
  *
  * Ni une stratégie ni une aide à gagner : une équipe qui la valide sans rien
@@ -328,6 +365,8 @@ export type MarcheDuTourPasse = Record<string, Pick<CompanyRoundResult["market"]
  *
  * Ni la demande à venir, ni la graine : rien que ce que l'élève a sous les yeux.
  * Abonnement (la salle de sport) : le plan reconduit reste celui de l'équipe.
+ * Après un tour gelé aussi (`estUnTourGele`) : ses ventes nulles ne disent
+ * rien de la demande, et planifier dessus remettait l'équipe dégelée en crise.
  */
 export function propositionDuTour(args: {
   snapshot: EngineScenarioConfig;
@@ -346,7 +385,11 @@ export function propositionDuTour(args: {
   if (!args.previousPayload) return startingDecisionsFor(args.snapshot, args.state, args.roundIndex, leviers);
   const reconduite = sansDepensesPonctuelles(args.previousPayload);
   const { snapshot, state, roundIndex, lastMarket } = args;
-  if (!state || !lastMarket || snapshot.subscription) return auPas(reconduite);
+  // Un tour gelé ne se lit pas (`estUnTourGele`) : le plan reconduit est celui
+  // que le dernier tour joué normalement a laissé.
+  if (!state || !lastMarket || snapshot.subscription || estUnTourGele(lastMarket)) {
+    return auPas(reconduite);
+  }
 
   const gamme = toGamme(snapshot);
   const multi = isMultiProduct(snapshot);
