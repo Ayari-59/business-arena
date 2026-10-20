@@ -237,6 +237,9 @@ const ORDER_OFFERS = (bistrotScenario.orderOffers ?? []).map((o) => {
 
 const rawBistrotGamme = {
   ...bistrotScenario,
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro en gamme non plus.
+  qualiteProposee: 0,
   code: "bistrot-gamme",
   version: "0.1.0",
   market: MIDI_MARKET,

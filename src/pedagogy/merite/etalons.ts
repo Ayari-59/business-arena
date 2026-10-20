@@ -26,8 +26,10 @@ import { GRAINES_DU_MERITE } from "./verdict";
 export type Etalon = "gestion-neutre" | "gestion-neutre-gelee" | "bon-gestionnaire";
 
 /**
- * LA GESTION NEUTRE DU SECTEUR, tour par tour : la gestion que le formulaire
- * propose (`neutralDecisions`, profil « balanced » des bots), tenue à chaque tour.
+ * LA GESTION NEUTRE DU SECTEUR, tour par tour : `neutralDecisions`, profil
+ * « balanced » des bots, tenue à chaque tour. Le formulaire en part, mais
+ * propose la qualité que dit le scénario (`qualiteProposee`, engine/types.ts) :
+ * l'étalon, lui, garde la sienne.
  * Le prix de référence du marché, un volume qui suit les ventes du tour passé et
  * la saison, un marketing et une qualité au niveau du marché, la maintenance de
  * référence ; rien de ce que le niveau n'ouvre pas, et l'investissement plafonné

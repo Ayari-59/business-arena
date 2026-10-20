@@ -199,7 +199,9 @@ describe("l'examen note contre la gestion neutre du secteur : les copies témoin
         expect(points(c, "battre-la-reference"), `${grille.code} : battre`).toBeCloseTo(attendu.battre, 2);
         expect(points(c, "ecart-a-la-reference"), `${grille.code} : écart`).toBeCloseTo(attendu.ecart, 2);
         expect(points(c, "rang"), `${grille.code} : rang`).toBeCloseTo(attendu.rang, 2);
-        expect(c.grille.version).toBe(2);
+        // Version 3 : les seuils de niveau entrent dans la grille, ni les points ni l'étalon
+        // ne bougent, et ces notes non plus.
+        expect(c.grille.version).toBe(3);
       });
     }, 60_000);
   }
@@ -217,26 +219,47 @@ describe("l'examen note contre la gestion neutre du secteur : les copies témoin
 
 describe("l'étalon est écrit dans la grille, et la notation figée l'enregistre", () => {
   /**
-   * LES GRILLES PUBLIÉES ET LEUR ÉTALON. Une grille ne change pas d'étalon sans changer de
-   * version : changer l'un sans l'autre fait tomber ce test.
+   * LES GRILLES PUBLIÉES, VERSION PAR VERSION, ET LEUR ÉTALON. Une grille ne change pas
+   * d'étalon sans changer de version, et une version publiée ne se retire pas de cette
+   * table : des examens la gardent. Changer l'étalon d'une grille sans changer sa version,
+   * ou publier une version sans l'écrire ici, fait tomber ce test.
    */
   const PUBLIEES: Record<string, "gestion-neutre" | "gestion-neutre-gelee" | "bon-gestionnaire"> = {
+    "business-arena-2026@1": "gestion-neutre",
+    "decision-d-abord@1": "gestion-neutre",
     "business-arena-2026@2": "gestion-neutre-gelee",
     "decision-d-abord@2": "gestion-neutre-gelee",
+    // Version 3 : les seuils de niveau entrent dans la grille ; même étalon.
+    "business-arena-2026@3": "gestion-neutre-gelee",
+    "decision-d-abord@3": "gestion-neutre-gelee",
   };
 
-  it("chaque grille publiée nomme son étalon, celui de sa version", () => {
-    expect(Object.fromEntries(GRILLES.map((g) => [`${g.code}@${g.version}`, g.reference.code]))).toEqual(PUBLIEES);
-    for (const g of GRILLES) expect(g.reference).toEqual(REFERENCE_GESTION_NEUTRE_GELEE);
+  it("chaque grille publiée nomme son étalon, celui de sa version, et c'est sa dernière version", () => {
+    for (const g of GRILLES) {
+      expect(PUBLIEES[`${g.code}@${g.version}`], `${g.code}@${g.version}`).toBe(g.reference.code);
+      const versions = Object.keys(PUBLIEES)
+        .filter((k) => k.startsWith(`${g.code}@`))
+        .map((k) => Number(k.split("@")[1]));
+      expect(Math.max(...versions), `${g.code} : la version publiée est la dernière de la table`).toBe(g.version);
+      expect(g.reference).toEqual(REFERENCE_GESTION_NEUTRE_GELEE);
+    }
+    expect(GRILLES.map((g) => `${g.code}@${g.version}`)).toEqual(["business-arena-2026@3", "decision-d-abord@3"]);
   });
 
   it("la gestion neutre du secteur se nomme et se définit ; aucun libellé ne dit plus « gestion de référence »", () => {
     for (const r of [REFERENCE_GESTION_NEUTRE, REFERENCE_GESTION_NEUTRE_GELEE]) {
       expect(r.nom).toBe("la gestion neutre du secteur");
-      expect(r.definition).toMatch(/^La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour/);
     }
-    // L'étalon des grilles publiées dit aussi qu'il est gelé comme le candidat.
-    expect(REFERENCE_GESTION_NEUTRE_GELEE.definition).toMatch(/elle décide sur le marché joué, et ses décisions sont rejouées telles quelles/);
+    // L'étalon des grilles version 1 garde sa phrase : elle était vraie quand il a servi.
+    expect(REFERENCE_GESTION_NEUTRE.definition).toBe(
+      "La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour : le prix du marché, un volume qui suit les ventes, un marketing et une qualité au niveau du marché, rien de ce que le niveau n'ouvre pas. Elle ne réagit à personne.",
+    );
+    // Depuis la version 3, l'étalon se définit par ce qu'il fait, plus par le formulaire :
+    // le formulaire peut proposer autre chose sans que l'étalon change. Mot pour mot.
+    expect(REFERENCE_GESTION_NEUTRE_GELEE.definition).toBe(
+      "La gestion neutre du secteur applique la même règle à chaque tour : le prix du marché, un volume qui suit les ventes, un marketing et une qualité au niveau du marché, rien de ce que le niveau n'ouvre pas. Elle ne réagit à personne. Comme le candidat, elle décide sur le marché joué, et ses décisions sont rejouées telles quelles sur les marchés possibles.",
+    );
+    expect(REFERENCE_GESTION_NEUTRE_GELEE.definition).not.toMatch(/formulaire/);
     for (const g of GRILLES) {
       const textes = [...g.lignes.flatMap((l) => [l.libelle, l.methode]), ...g.justification.map((j) => j.pourquoi)].join("\n");
       expect(textes).not.toMatch(/gestion de référence/);
@@ -252,7 +275,13 @@ describe("l'étalon est écrit dans la grille, et la notation figée l'enregistr
       { sur: 3, joueur: [marche], reference: [{ ...marche, resultat: 500 }], situations: null },
       { questions: false },
     );
-    expect(c.grille).toEqual({ code: "business-arena-2026", version: 2, nom: "Business Arena 2026", reference: REFERENCE_GESTION_NEUTRE_GELEE });
+    expect(c.grille).toEqual({
+      code: "business-arena-2026",
+      version: 3,
+      nom: "Business Arena 2026",
+      reference: REFERENCE_GESTION_NEUTRE_GELEE,
+      seuils: GRILLE_BUSINESS_ARENA_2026.seuils,
+    });
     // Une copie de grille ou une notation gardées sans le champ.
     const { reference: _r, ...sansEtalon } = GRILLE_BUSINESS_ARENA_2026;
     void _r;

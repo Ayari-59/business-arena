@@ -217,9 +217,10 @@ function assaini(ctx: BotContext): boolean {
  * ET « BALANCED » N'EN FAIT PAS PARTIE, jamais.
  *
  * Ce profil n'est pas qu'un concurrent : c'est `neutralDecisions`, donc la
- * gestion neutre du secteur, donc CE QUE LE FORMULAIRE PROPOSE À L'ÉLÈVE
- * (`services/decision-baseline.ts`) et ce que joue une équipe absente, et
- * l'étalon de la note d'examen. Le corriger reviendrait à corriger la
+ * gestion neutre du secteur, donc LE POINT DE DÉPART DE CE QUE LE FORMULAIRE
+ * PROPOSE À L'ÉLÈVE (`services/decision-baseline.ts`, qui n'en change que la
+ * qualité) et de ce que joue une équipe absente, et l'étalon de la note
+ * d'examen. Le corriger reviendrait à corriger la
  * proposition faite au joueur en même temps que ses concurrents : mesuré, la
  * proposition du transport passait de 232 k€ à 574 k€ de résultat cumulé, et
  * l'équipe qui valide finissait PLUS souvent première, pas moins. La gestion
@@ -537,10 +538,22 @@ function adaptivePlan(
 }
 
 /**
+ * La part de `production.qualityScale` que la gestion neutre consacre à la
+ * qualité. Exportée pour la proposition du formulaire, qui s'en écarte là où
+ * le scénario le dit (`qualiteProposee`, engine/types.ts) et doit savoir de
+ * combien.
+ */
+export const PART_DE_QUALITE_NEUTRE = 0.5;
+
+/**
  * La gestion neutre du secteur joué.
  *
- * Deux usages, et un seul calcul : ce que le formulaire propose à l'élève au
- * tour 1, et ce que joue une équipe qui n'a rien rendu. Les deux étaient figés
+ * Deux usages au départ, et un seul calcul : ce que le formulaire propose à
+ * l'élève au tour 1, et ce que joue une équipe qui n'a rien rendu. La
+ * proposition en part toujours, mais sa qualité est celle que le scénario dit
+ * (`qualiteProposee`, services/decision-baseline.ts) : la gestion neutre
+ * reste l'étalon de l'examen, le bon gestionnaire du mérite et le concurrent
+ * équilibré, et ne change pas avec elle. Les deux usages étaient figés
  * sur NOVA, un fabricant d'enceintes à 59 €, quel que soit le métier. Une
  * équipe absente d'un cabinet de conseil se voyait donc facturer la journée
  * 59 € et planifier 4 800 jours pour une capacité de 720 : pas une
@@ -1051,7 +1064,7 @@ function decisionsDuProfil(profile: BotProfile, ctx: BotContext): RoundDecisions
         price: ref,
         productionPlan: adaptivePlan(ctx, 1.05),
         marketingBudget: 0.5 * mkt,
-        qualityBudget: 0.5 * qual,
+        qualityBudget: PART_DE_QUALITE_NEUTRE * qual,
         maintenanceBudget: maintenance,
       };
       break;

@@ -127,6 +127,9 @@ const rawTransport = {
     // 0,42 h de conduite et de manutention par palette livrée
     hoursPerUnit: 0.42,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
+  qualiteProposee: 0,
   production: {
     // « qualité » = ponctualité, suivi, état du matériel, marchandise intacte
     qualitySensitivity: 0.34,

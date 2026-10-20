@@ -277,6 +277,9 @@ const ORDER_OFFERS = (novaScenario.orderOffers ?? []).map((o) => {
 
 const rawNovaGamme = {
   ...novaScenario,
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro en gamme non plus.
+  qualiteProposee: 0,
   code: "nova-gamme",
   version: "0.1.0",
   market: ONE_MARKET,

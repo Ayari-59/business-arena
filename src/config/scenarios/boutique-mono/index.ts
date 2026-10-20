@@ -98,6 +98,9 @@ const rawBoutique = {
     otherVariableCostPerUnit: 3.5,
     hoursPerUnit: 0.12,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
+  qualiteProposee: 0,
   production: {
     // « qualité » = soin de la sélection et du merchandising
     qualitySensitivity: 0.18,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { avecLaQualiteProposee } from "@/services/decision-baseline";
 import { scenarioByCode, scenarioCodeForLevel } from "@/config/scenarios/registry";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
@@ -297,9 +298,13 @@ describe("la référence ne lit rien du futur", () => {
  * le calcule (la partie jouée sous sa graine, la référence qui joue la même).
  */
 describe("les stratégies témoins tombent dans la bonne case", () => {
-  /** La neutre, prix relevé de 8 % à chaque tour : un seul geste. */
+  /**
+   * Ce que le formulaire propose (la neutre, à la qualité que le scénario fait proposer),
+   * prix relevé de 8 % à chaque tour : un seul geste, sur le formulaire tel qu'il s'affiche.
+   */
   const prixPlus8 = (o: LeviersDuNiveau) => (c: Contexte) => {
-    const d = aLaMesureDuNiveau(neutralDecisions(c), o);
+    const neutre = neutralDecisions(c);
+    const d = aLaMesureDuNiveau(avecLaQualiteProposee(c.scenario, neutre), o, neutre);
     return {
       ...d,
       price: d.price * 1.08,
@@ -363,7 +368,7 @@ describe("les stratégies témoins tombent dans la bonne case", () => {
   };
 
   for (const entreprise of ["nova", "ecommerce", "conseil"]) {
-    for (const niveau of [1, 2]) {
+    for (const niveau of [1, 2, 3]) {
       it(`${entreprise}, niveau ${niveau} : +8 % de prix fragile, la raisonnée solide, sous le coût jamais`, () => {
         const { base, ouverts } = partieEnMemoire(niveau, entreprise);
         const naive = verdictDe(base, ouverts, prixPlus8(ouverts));

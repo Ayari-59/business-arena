@@ -11,9 +11,10 @@
  * vendant plus cher sans perdre ces clients, et seulement là où ils y
  * tiennent : au conseil, elle ne paie à aucun prix.
  *
- * La valeur pré-remplie ne change pas : c'est la gestion neutre, étalon de
- * l'examen, du mérite et des témoins. Ce qu'il faudrait pour que la qualité
- * redevienne un arbitrage au prix proposé est une décision du propriétaire.
+ * La valeur pré-remplie suit cette mesure : là où le budget de la gestion
+ * neutre ne fait pas mieux que zéro au prix proposé, le formulaire propose
+ * zéro (`qualiteProposee`, engine/types.ts, décision du propriétaire). La
+ * gestion neutre, étalon de l'examen, du mérite et des témoins, garde le sien.
  *
  * Elle tient en trois lignes sur un téléphone : la carte des budgets doit
  * tenir sur un écran (`tests/e2e/mobile.e2e.ts`), et la version longue la

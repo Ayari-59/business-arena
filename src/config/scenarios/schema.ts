@@ -130,6 +130,10 @@ export const engineScenarioConfigSchema = z.object({
   // Gamme : cette clé DOIT être déclarée ici, sans quoi le parse la retirerait
   // en silence et une partie à gamme retomberait en mono-produit.
   products: z.array(productDefSchema).min(2).optional(),
+  // La qualité que le formulaire propose (engine/types.ts) : DÉCLARÉE ici, sans
+  // quoi le parse la retirerait et le serveur jugerait la validation d'une
+  // équipe face à une autre proposition que celle de son écran.
+  qualiteProposee: z.number().min(0).optional(),
   production: z.object({
     qualitySensitivity: z.number().nonnegative(),
     qualityScale: z.number().positive(),

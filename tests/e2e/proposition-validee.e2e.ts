@@ -64,7 +64,7 @@ async function validerLaProposition(p: Page): Promise<void> {
   // La feuille dit d'où vient la proposition, sous la question.
   const origine = (await texte(p)).toLowerCase();
   expect(origine).toMatch(
-    plans.length === 1 ? /valeurs de départ du secteur/ : /le volume suit vos ventes du tour passé et la saison/,
+    plans.length === 1 ? /valeurs proposées au départ/ : /le volume suit vos ventes du tour passé et la saison/,
   );
   await garder.first().click();
   await p.waitForURL(/simule/, { timeout: 180_000 });

@@ -119,6 +119,9 @@ const rawFitness = {
     // 1,5 h d'encadrement et d'accueil par adhérent et par trimestre
     hoursPerUnit: 1.5,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
+  // le budget de la gestion neutre ne fait ici qu'un écart négligeable avec zéro.
+  qualiteProposee: 0,
   production: {
     // « qualité » = cours collectifs, coaching, propreté, matériel récent
     qualitySensitivity: 0.28,

@@ -1,6 +1,6 @@
-import { neutralDecisions, type LeviersOuverts } from "@/engine/bots";
+import { aLaMesureDuNiveau, neutralDecisions, type LeviersOuverts } from "@/engine/bots";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
-import { sansDepensesPonctuelles } from "@/services/decision-baseline";
+import { avecLaQualiteProposee, sansDepensesPonctuelles } from "@/services/decision-baseline";
 
 /**
  * Reconduction des décisions du tour précédent quand une équipe humaine
@@ -33,7 +33,10 @@ export function carryOverDecisions(prev: RoundDecisions): RoundDecisions {
 
 /**
  * Décisions par défaut quand aucune soumission ni historique n'existe.
- * Basées sur les décisions neutres du secteur joué, avec un emprunt nul.
+ * Basées sur les décisions neutres du secteur joué, avec un emprunt nul, et
+ * la qualité que le formulaire lui aurait proposée (`avecLaQualiteProposee`) :
+ * l'équipe absente reçoit la proposition de son écran, pas une autre. Un
+ * levier qualité fermé garde la valeur neutre, celle du champ caché.
  */
 export function fallbackDecisions(
   scenario: EngineScenarioConfig,
@@ -43,5 +46,6 @@ export function fallbackDecisions(
   leviers: LeviersOuverts | null = null,
 ): RoundDecisions {
   const neutre = neutralDecisions({ scenario, state, roundIndex, leviers });
-  return { ...neutre, finance: { ...(neutre.finance ?? {}), newLoan: 0, loanRepayment: 0 } };
+  const proposee = aLaMesureDuNiveau(avecLaQualiteProposee(scenario, neutre), leviers, neutre);
+  return { ...proposee, finance: { ...(proposee.finance ?? {}), newLoan: 0, loanRepayment: 0 } };
 }

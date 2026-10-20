@@ -13,7 +13,7 @@ import {
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { methodeDe, justificationDe } from "@/config/examen/grille";
 import { ETATS_DE_LA_COPIE, IDENTIFICATIONS } from "@/config/examen/textes";
-import { SEUIL_D_ATTEINTE_EN_POURCENT, nomDuNiveau, NIVEAU_D_ATTEINTE } from "@/config/examen/competences";
+import { nomDuNiveau, NIVEAU_D_ATTEINTE, pourcentDuSeuil, seuilDAtteinteRelatifDit } from "@/config/examen/competences";
 import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
 import type { LotDeGraines } from "@/pedagogy/examen/lot";
 import { compter } from "@/lib/format";
@@ -90,6 +90,8 @@ export default async function ExamenPage({
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const def = SCENARIO_CHOICES.find((d) => d.code === examen.scenarioCode);
   const grille = grilleDeLExamen(examen);
+  // Les seuils de la grille de l'examen : un examen noté sous une grille d'avant garde les siens.
+  const seuilRelatif = seuilDAtteinteRelatifDit(grille.seuils, grille.reference.nom);
   const lien = `${origine}/examen/${examen.code}`;
   const enCours = suivi.copies.filter((c) => c.etat === "en-cours").length;
   const remises = suivi.copies.filter((c) => c.etat !== "en-cours").length;
@@ -286,8 +288,9 @@ export default async function ExamenPage({
                 La promotion, par compétence
               </h3>
               <p className="text-sm text-slate-400">
-                Seuil d&apos;atteinte : « {nomDuNiveau(NIVEAU_D_ATTEINTE)} », {SEUIL_D_ATTEINTE_EN_POURCENT} des points rattachés
+                Seuil d&apos;atteinte : « {nomDuNiveau(NIVEAU_D_ATTEINTE)} », {pourcentDuSeuil(grille.seuils.fixes.acquis)} des points rattachés
                 (le trait sur chaque barre).
+                {seuilRelatif ? ` ${seuilRelatif} Sur ces barres, le trait marque la moyenne des seuils des copies.` : null}
               </p>
               <CompetencesDeLaPromotion competences={suivi.competences} />
             </section>

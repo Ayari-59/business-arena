@@ -4,6 +4,10 @@ import { aller, BASE, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { mesurerContraste } from "./helpers/contraste";
 import { GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
+import { niveauxDits, niveauxRelatifsDits, pourcentDuSeuil, seuilDAtteinteDit, seuilDAtteinteRelatifDit } from "@/config/examen/competences";
+
+/** Les espaces insécables comme `texte` les rend : des espaces simples. */
+const espaces = (s: string) => s.replace(/[  ]/g, " ");
 
 /**
  * L'EXAMEN INDIVIDUEL, DANS UN VRAI NAVIGATEUR, SUR LE BUILD DE PRODUCTION ET SA BASE.
@@ -325,7 +329,14 @@ describe("un examen, de la création à la publication", () => {
     expect(await a.locator(`[data-etalon-de-la-note="${etalon}"]`).count()).toBe(1);
     const releve = await texte(a);
     expect(releve).toMatch(/à côté de la gestion neutre du secteur\./);
-    expect(releve).toMatch(/La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour/);
+    // La définition de l'étalon et les seuils se lisent de la grille, comme sa version :
+    // écrits à la main, ils deviendraient faux à la version suivante.
+    expect(releve).toContain(espaces(GRILLE_BUSINESS_ARENA_2026.reference.definition));
+    expect(releve).toContain(
+      espaces(`atteint à partir de ${pourcentDuSeuil(GRILLE_BUSINESS_ARENA_2026.seuils.fixes.acquis)} des points rattachés à la compétence.`),
+    );
+    const relatif = seuilDAtteinteRelatifDit(GRILLE_BUSINESS_ARENA_2026.seuils, GRILLE_BUSINESS_ARENA_2026.reference.nom);
+    if (relatif) expect(releve).toContain(espaces(relatif));
     expect(releve).toContain("Décisions qui battent la gestion neutre du secteur");
     expect(releve).not.toMatch(/gestion de référence/);
     await sansTexteIllisible(a);
@@ -345,7 +356,13 @@ describe("un examen, de la création à la publication", () => {
     expect(await prof.locator("[data-resultats-par-competence] tbody tr").count()).toBe(6);
     const t = await texte(prof);
     expect(t).toContain("conçu pour nourrir un dossier d'accréditation");
-    expect(t).toMatch(/à côté de la gestion neutre du secteur : la note juge les décisions, pas le tirage\. La gestion neutre du secteur part/);
+    const etalon = GRILLE_BUSINESS_ARENA_2026.reference;
+    expect(t).toContain(espaces(`à côté de ${etalon.nom} : la note juge les décisions, pas le tirage. ${etalon.definition}`));
+    // La méthode dit les seuils de la grille de l'examen, lus de la donnée.
+    expect(t).toContain(espaces(`rattachés : ${niveauxDits(GRILLE_BUSINESS_ARENA_2026.seuils.fixes)}.`));
+    const niveauxRelatifs = niveauxRelatifsDits(GRILLE_BUSINESS_ARENA_2026.seuils, etalon.nom);
+    if (niveauxRelatifs) expect(t).toContain(espaces(niveauxRelatifs));
+    expect(t).toContain(espaces(`(${seuilDAtteinteDit(GRILLE_BUSINESS_ARENA_2026.seuils)}).`));
     expect(t).not.toMatch(/gestion de référence/);
     expect(t).not.toMatch(/Alice|Bruno|210001/);
     expect(t).not.toMatch(/reconnu par l'AACSB|accrédité par/i);

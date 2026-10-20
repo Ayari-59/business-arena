@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { copieRetenueDuCandidat, examenParCode } from "@/services/examen.service";
 import { normaliserCodeDExamen, phraseDuRecu } from "@/config/examen/textes";
-import { NIVEAUX_DE_COMPETENCE, SEUIL_D_ATTEINTE_EN_POURCENT } from "@/config/examen/competences";
-import { referenceDeLaCopie } from "@/config/examen/grille";
+import { NIVEAUX_DE_COMPETENCE, pourcentDuSeuil, seuilDAtteinteRelatifDit } from "@/config/examen/competences";
+import { referenceDeLaCopie, seuilsDeLaCopie } from "@/config/examen/grille";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PrintButton } from "@/components/print-button";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
@@ -50,6 +50,8 @@ export default async function ResultatDuCandidatPage({ params }: { params: Promi
   }
 
   const n = copie.notation;
+  // Les seuils de la grille qui a noté la copie (celle de l'examen), jamais des constantes.
+  const relatif = n?.etat === "notee" ? seuilDAtteinteRelatifDit(seuilsDeLaCopie(n), referenceDeLaCopie(n).nom) : null;
   return (
     <main id="main" className="pb-16" data-copie-du-candidat="" data-publie={copie.publie ? "oui" : "non"}>
       <EnTeteDePage
@@ -74,9 +76,10 @@ export default async function ResultatDuCandidatPage({ params }: { params: Promi
               </h2>
               <p className="text-sm text-slate-400">
                 Niveaux : {NIVEAUX_DE_COMPETENCE.map((x) => x.nom.toLowerCase()).join(", ")}. L&apos;objectif est atteint à
-                partir de {SEUIL_D_ATTEINTE_EN_POURCENT} des points rattachés à la compétence.
+                partir de {pourcentDuSeuil(seuilsDeLaCopie(n).fixes.acquis)} des points rattachés à la compétence.
+                {relatif ? ` ${relatif}` : null}
               </p>
-              <ReleveDesCompetences competences={n.competences} />
+              <ReleveDesCompetences competences={n.competences} seuils={seuilsDeLaCopie(n)} />
             </section>
             <section aria-labelledby="detail-titre" className="carte grid gap-3 p-4 sm:p-6">
               <h2 id="detail-titre" className="titre-carte text-slate-100">

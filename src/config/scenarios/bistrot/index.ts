@@ -98,6 +98,9 @@ const rawBistrot = {
     // 0,5 h de brigade (cuisine + salle) par couvert servi
     hoursPerUnit: 0.5,
   },
+  // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : la
+  // part de la gestion neutre, qui fait mieux que zéro dans ce seul secteur.
+  qualiteProposee: 0.5,
   production: {
     // « qualité » = soin de la carte, produits, dressage
     qualitySensitivity: 0.24,

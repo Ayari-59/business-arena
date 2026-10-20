@@ -12,7 +12,7 @@ import {
 } from "@/db/schema";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { SCENARIO_CHOICES, familyOf } from "@/config/scenarios/registry";
-import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { avecLaQualiteProposeeDe, composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { periodLabel, type Periodicity } from "@/config/scenarios/periodicity";
 import { leviersFigesDuProfil, presetByLevel, presetFromProfile, type EconomicOverrides, type ScoringWeightOverrides } from "@/config/difficulty";
 import { NIVEAU_MAX } from "@/config/vitrine-solo";
@@ -237,11 +237,14 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
   // Le niveau et SES leviers : ceux figés à la création, ou ceux de son époque
   // pour une partie d'avant la répartition d'octobre 2026.
   const presetDeLaPartie = level ? presetFromProfile(profil) : undefined;
+  // La qualité proposée de la partie, celle que l'élève a vue : celle de son
+  // instantané, pas celle du registre d'aujourd'hui (`avecLaQualiteProposeeDe`).
+  const scenarioDeLaPartie = avecLaQualiteProposeeDe(definition.scenario, snapshot);
   const composer = (graine: number): EngineScenarioConfig =>
     parseScenarioConfig(
       commeEnBase(
         composerLeScenarioJoue({
-          scenario: definition.scenario,
+          scenario: scenarioDeLaPartie,
           seed: graine,
           variableWorld: profil.variableWorld === true,
           level,

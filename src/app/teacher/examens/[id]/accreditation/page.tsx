@@ -8,9 +8,11 @@ import { methodeDe } from "@/config/examen/grille";
 import {
   NIVEAUX_DE_COMPETENCE,
   NIVEAU_D_ATTEINTE,
-  SEUIL_D_ATTEINTE_EN_POURCENT,
   competencesEvaluees,
+  niveauxDits,
+  niveauxRelatifsDits,
   nomDuNiveau,
+  seuilDAtteinteDit,
 } from "@/config/examen/competences";
 import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
 import { PrintButton } from "@/components/print-button";
@@ -40,19 +42,19 @@ export const dynamic = "force-dynamic";
 const styles = `
   .rapport { max-width: 190mm; margin: 0 auto; padding: 10mm 8mm; font-size: 8.8pt; line-height: 1.38; }
   .rapport h1 { font-size: 15pt; line-height: 1.2; margin: 0; }
-  .rapport h2 { font-size: 10pt; margin: 3.6mm 0 1.2mm; }
+  .rapport h2 { font-size: 10pt; margin: 3mm 0 1mm; }
   .rapport .kicker { font-size: 7.5pt; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 3px; }
   .rapport table { width: 100%; border-collapse: collapse; }
   .rapport th, .rapport td { padding: 0.8mm 1.4mm; border-bottom: 0.25mm solid currentColor; vertical-align: top; text-align: left; }
   .rapport td.methode { font-size: 8pt; }
   .rapport td.n, .rapport th.n { text-align: right; font-variant-numeric: tabular-nums; }
   .rapport ul { margin: 0; padding-left: 4mm; }
-  .rapport .pied { margin-top: 3.5mm; font-size: 7.5pt; }
+  .rapport .pied { margin-top: 2.5mm; font-size: 7.5pt; }
   @media print {
     @page { size: A4 portrait; margin: 0; }
     .no-print { display: none !important; }
     body { background: #fff; }
-    .rapport { padding: 9mm 12mm; }
+    .rapport { padding: 7mm 12mm; }
   }
 `;
 
@@ -67,6 +69,8 @@ export default async function RapportDAccreditationPage({ params }: { params: Pr
   if (!suivi) notFound();
   const { examen, notees } = suivi;
   const grille = grilleDeLExamen(examen);
+  // La méthode dit les seuils de la grille de l'examen : ceux qui ont compté ses étudiants.
+  const niveauxRelatifs = niveauxRelatifsDits(grille.seuils, grille.reference.nom);
   const def = SCENARIO_CHOICES.find((d) => d.code === examen.scenarioCode);
   const evaluees = competencesEvaluees(examen.questions);
   const remises = suivi.copies.filter((c) => c.remisLe).map((c) => c.remisLe!.getTime());
@@ -122,8 +126,8 @@ export default async function RapportDAccreditationPage({ params }: { params: Pr
           {grille.reference.definition} La grille
           « {grille.nom} » (version {grille.version}, publiée le {date(new Date(`${grille.publiee}T12:00:00Z`))}) est fixée avant l&apos;épreuve.
           Chaque ligne nourrit une ou deux compétences ; le niveau d&apos;une compétence est la part des points
-          rattachés : {NIVEAUX_DE_COMPETENCE.map((n, i) => `${n.nom.toLowerCase()} ${i === 0 ? `sous ${Math.round(NIVEAUX_DE_COMPETENCE[1]!.depuis * 100)} %` : `dès ${Math.round(n.depuis * 100)} %`}`).join(", ")}.
-          Seuil d&apos;atteinte de l&apos;objectif : « {nomDuNiveau(NIVEAU_D_ATTEINTE)} » ({SEUIL_D_ATTEINTE_EN_POURCENT}).
+          rattachés : {niveauxDits(grille.seuils.fixes)}.{niveauxRelatifs ? ` ${niveauxRelatifs}` : null}{" "}
+          Seuil d&apos;atteinte de l&apos;objectif : « {nomDuNiveau(NIVEAU_D_ATTEINTE)} » ({seuilDAtteinteDit(grille.seuils)}).
         </p>
 
         <h2 className="text-slate-100">3. Grille de notation</h2>
