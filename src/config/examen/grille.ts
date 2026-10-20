@@ -1,9 +1,15 @@
 import {
+  SEUILS_DE_NIVEAU,
+  SEUILS_D_AVANT_LA_VERSION_3,
   competenceParCode,
   competencesEvaluees,
+  estRelative,
   niveauDeCompetence,
+  seuilsDeLaCompetence,
   type CodeDeCompetence,
   type NiveauDeCompetence,
+  type Seuils,
+  type SeuilsDeLaGrille,
 } from "./competences";
 
 /**
@@ -15,7 +21,9 @@ import {
  *  1. LA GRILLE EST NOMMÉE ET VERSIONNÉE. Une grille ne se modifie pas : une pondération
  *     différente est une AUTRE grille (un autre code) ou une version suivante. L'examen en
  *     garde une COPIE à sa création (`examens.grille`) : rien de ce qui change ici ensuite
- *     ne touche un examen ouvert.
+ *     ne touche un examen ouvert. Depuis la version 3, LES SEUILS DE NIVEAU voyagent dans
+ *     cette copie (`seuils`) : une copie de grille plus ancienne, qui ne les porte pas, se
+ *     lit et note avec les seuils fixes d'alors (`seuilsDeLaGrille`).
  *  2. LA NOTE JUGE LES DÉCISIONS, PAS LE TIRAGE. Toutes les lignes, sauf le diagnostic, se
  *     mesurent sur les trente marchés possibles où les décisions du candidat sont rejouées
  *     telles quelles, à côté de L'ÉTALON QUE LA GRILLE NOMME rejoué sur les mêmes (le rejeu
@@ -98,12 +106,19 @@ export const REFERENCE_GESTION_NEUTRE: ReferenceDeLaGrille = {
  * elle décide sur le marché joué, puis ses décisions sont rejouées telles quelles sous les
  * trente marchés possibles. Les deux sont alors jugés à armes égales, et la note ne mesure
  * plus que les décisions.
+ *
+ * SA DÉFINITION DIT CE QU'ELLE FAIT, depuis la version 3, et plus d'où elle part : les
+ * grilles version 2 disaient qu'elle « part de la gestion que le formulaire propose ».
+ * C'était vrai alors ; mais le formulaire peut proposer autre chose sans que l'étalon
+ * change (`decisionDeLaGestionNeutre`, pedagogy/merite/etalons.ts, ne lit pas le
+ * formulaire). Une copie de grille version 2 garde sa phrase : elle était vraie quand elle a
+ * servi.
  */
 export const REFERENCE_GESTION_NEUTRE_GELEE: ReferenceDeLaGrille = {
   code: "gestion-neutre-gelee",
   nom: "la gestion neutre du secteur",
   definition:
-    "La gestion neutre du secteur part de la gestion que le formulaire propose et la tient à chaque tour : le prix du marché, un volume qui suit les ventes, un marketing et une qualité au niveau du marché, rien de ce que le niveau n'ouvre pas. Elle ne réagit à personne. Comme le candidat, elle décide sur le marché joué, et ses décisions sont rejouées telles quelles sur les marchés possibles.",
+    "La gestion neutre du secteur applique la même règle à chaque tour : le prix du marché, un volume qui suit les ventes, un marketing et une qualité au niveau du marché, rien de ce que le niveau n'ouvre pas. Elle ne réagit à personne. Comme le candidat, elle décide sur le marché joué, et ses décisions sont rejouées telles quelles sur les marchés possibles.",
 };
 
 export interface GrilleDeNotation {
@@ -112,6 +127,11 @@ export interface GrilleDeNotation {
   version: number;
   /** L'étalon : en changer impose une nouvelle version de la grille. */
   reference: ReferenceDeLaGrille;
+  /**
+   * Les seuils de niveau des compétences, écrits dans la grille depuis sa version 3 : en
+   * changer impose, comme pour l'étalon, une nouvelle version.
+   */
+  seuils: SeuilsDeLaGrille;
   /** La date de publication de cette version (AAAA-MM-JJ). */
   publiee: string;
   /** Ce que la grille privilégie, en une phrase (le choix de l'enseignant). */
@@ -205,6 +225,23 @@ export const methodeDe = (l: Pick<LigneDeGrille, "methode">, marches: number): s
  * ------------------------------------------------------------------------- */
 
 /**
+ * LES SEUILS DES GRILLES VERSION 3. La stratégie et le marketing mêlent l'écart à la
+ * gestion neutre et le rang face aux concurrents, une mesure absolue : la gestion neutre y
+ * obtient de moins d'un quart à plus des trois quarts des points selon le secteur, et un
+ * seuil fixe la disait « acquise » dans certains secteurs quand il refusait ailleurs des
+ * copies qui la battaient nettement. Leurs seuils se comptent donc à partir de la part
+ * qu'elle obtient sur les mêmes marchés : en cours dix points sous elle, acquis dix points
+ * au-dessus, maîtrisé trente au-dessus. Les autres compétences gardent les seuils fixes ;
+ * pour les opérations, c'est la même règle, la gestion neutre y valant toujours la moitié
+ * des points. Mesure et décision du propriétaire : le rapport « Recaler les seuils de
+ * compétence de l'examen sur la gestion neutre » (règle R).
+ */
+const SEUILS_DE_LA_VERSION_3: SeuilsDeLaGrille = {
+  fixes: SEUILS_DE_NIVEAU,
+  relatifs: { competences: ["strategie", "marketing-prix"], ecarts: { enCours: -0.1, acquis: 0.1, maitrise: 0.3 } },
+};
+
+/**
  * « BUSINESS ARENA 2026 », LA GRILLE PAR DÉFAUT.
  *
  *   · qualité des décisions, 40 points (25 + 15) : c'est ce qu'un examen de simulation
@@ -223,13 +260,18 @@ export const methodeDe = (l: Pick<LigneDeGrille, "methode">, marches: number): s
  * candidat (`REFERENCE_GESTION_NEUTRE_GELEE`) ; en version 1 il redécidait sous chacun des
  * trente marchés. Les notes baissent d'une dizaine de points en moyenne, et surtout elles
  * cessent de dépendre de la graine tirée : les barèmes de passage se relisent une fois.
+ *
+ * VERSION 3 : ni les points ni l'étalon ne bougent, les notes non plus. La grille écrit ses
+ * seuils de niveau (`SEUILS_DE_LA_VERSION_3`) : la stratégie et le marketing se lisent par
+ * rapport à la gestion neutre. Et l'étalon se définit par ce qu'il fait.
  */
 export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
   code: "business-arena-2026",
   nom: "Business Arena 2026",
-  version: 2,
-  publiee: "2026-10-16",
+  version: 3,
+  publiee: "2026-10-20",
   reference: REFERENCE_GESTION_NEUTRE_GELEE,
+  seuils: SEUILS_DE_LA_VERSION_3,
   propos: "La grille par défaut : la qualité des décisions d'abord, la tenue financière ensuite.",
   lignes: [
     ligne("battre-la-reference", 25),
@@ -270,13 +312,16 @@ export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
 /**
  * « DÉCISION D'ABORD » : pour un programme qui veut mesurer d'abord le jugement, la
  * qualité des décisions pèse plus de la moitié de la note, la tenue financière moins.
+ * Ses versions suivent celles de la grille par défaut : 2 pour l'étalon gelé, 3 pour les
+ * seuils écrits.
  */
 export const GRILLE_DECISION_D_ABORD: GrilleDeNotation = {
   code: "decision-d-abord",
   nom: "Décision d'abord",
-  version: 2,
-  publiee: "2026-10-16",
+  version: 3,
+  publiee: "2026-10-20",
   reference: REFERENCE_GESTION_NEUTRE_GELEE,
+  seuils: SEUILS_DE_LA_VERSION_3,
   propos: "Pour mesurer d'abord le jugement : la qualité des décisions pèse plus de la moitié de la note.",
   lignes: [
     ligne("battre-la-reference", 35),
@@ -326,8 +371,26 @@ export const grilleParCode = (code: string | null | undefined): GrilleDeNotation
  * L'étalon d'une grille figée. Une copie gardée avant que la grille ne l'écrive n'a pas le
  * champ : elle a été publiée, et notée, contre la gestion neutre du secteur.
  */
-export const referenceDeLaGrille = (g: Omit<GrilleDeNotation, "reference"> & { reference?: ReferenceDeLaGrille }): ReferenceDeLaGrille =>
-  g.reference ?? REFERENCE_GESTION_NEUTRE;
+export const referenceDeLaGrille = (g: GrilleGardee): ReferenceDeLaGrille => g.reference ?? REFERENCE_GESTION_NEUTRE;
+
+/** Une grille telle qu'un examen la garde : l'étalon et les seuils peuvent y manquer. */
+export type GrilleGardee = Omit<GrilleDeNotation, "reference" | "seuils"> & {
+  reference?: ReferenceDeLaGrille;
+  seuils?: SeuilsDeLaGrille;
+};
+
+/**
+ * Les seuils d'une grille figée. Une copie gardée avant la version 3 n'a pas le champ :
+ * elle a été publiée, et ses copies notées, avec les seuils fixes d'alors.
+ */
+export const seuilsDeLaGrille = (g: GrilleGardee): SeuilsDeLaGrille => g.seuils ?? SEUILS_D_AVANT_LA_VERSION_3;
+
+/** La copie gardée d'une grille, complétée de ce qu'elle valait quand elle ne l'écrivait pas. */
+export const grilleGardee = (g: GrilleGardee): GrilleDeNotation => ({
+  ...g,
+  reference: referenceDeLaGrille(g),
+  seuils: seuilsDeLaGrille(g),
+});
 
 /** Une grille est bien formée : ses points font 100, chaque ligne rattache des compétences qui somment à 1. */
 export function erreursDeLaGrille(g: GrilleDeNotation): string[] {
@@ -343,6 +406,15 @@ export function erreursDeLaGrille(g: GrilleDeNotation): string[] {
     }
   }
   if (new Set(g.lignes.map((l) => l.code)).size !== g.lignes.length) e.push(`${g.code} : une ligne figure deux fois.`);
+  const { fixes, relatifs } = g.seuils;
+  const croissants = (s: Seuils) => s.enCours < s.acquis && s.acquis < s.maitrise;
+  if (!croissants(fixes) || fixes.enCours <= 0 || fixes.maitrise > 1) e.push(`${g.code} : ses seuils fixes ne vont pas croissant dans ]0, 1].`);
+  if (relatifs) {
+    if (!croissants(relatifs.ecarts)) e.push(`${g.code} : ses écarts relatifs ne vont pas croissant.`);
+    for (const c of relatifs.competences) {
+      if (!competenceParCode(c)) e.push(`${g.code} : la compétence relative ${c} n'existe pas.`);
+    }
+  }
   return e;
 }
 
@@ -463,13 +535,20 @@ export interface CompetenceNotee {
   /** La part tenue des lignes rattachées, de 0 à 1. */
   part: number;
   niveau: NiveauDeCompetence;
+  /**
+   * Les seuils qui ont donné ce niveau. Une notation gardée avant qu'elle ne les écrive n'a
+   * pas le champ : ce sont les seuils fixes de sa grille (`seuilsDeLaCompetenceNotee`).
+   */
+  seuils?: Seuils;
+  /** Pour une compétence relative, la part que l'étalon obtient sur les mêmes marchés. */
+  partDeLaReference?: number;
 }
 
 export interface CopieNotee {
   /** La note sur 100, une décimale. */
   note: number;
-  /** La grille, sa version, et l'étalon contre lequel la copie a été notée. */
-  grille: { code: string; version: number; nom: string; reference: ReferenceDeLaGrille };
+  /** La grille, sa version, l'étalon contre lequel la copie a été notée et les seuils de ses niveaux. */
+  grille: { code: string; version: number; nom: string; reference: ReferenceDeLaGrille; seuils: SeuilsDeLaGrille };
   lignes: LigneNotee[];
   /** Les lignes de la grille qui ne s'appliquaient pas, et pourquoi. */
   horsCalcul: { code: CodeDeLigne; libelle: string; raison: string }[];
@@ -478,16 +557,35 @@ export interface CopieNotee {
 
 const auCentieme = (x: number) => Math.round(x * 100) / 100;
 
+/** La part tenue d'une compétence sur des lignes mesurées ; null : aucune ne la nourrit. */
+function partDeLaCompetence(
+  code: CodeDeCompetence,
+  mesurees: readonly { l: LigneDeGrille; mesure: { part: number } }[],
+): number | null {
+  let obtenu = 0;
+  let possible = 0;
+  for (const { l, mesure } of mesurees) {
+    const r = l.competences.find((x) => x.code === code);
+    if (!r) continue;
+    obtenu += r.part * l.points * mesure.part;
+    possible += r.part * l.points;
+  }
+  return possible > 0 ? obtenu / possible : null;
+}
+
 /**
  * NOTER UNE COPIE. `questions` : l'examen pose-t-il les questions de diagnostic ? Les
  * lignes qui ne s'appliquent pas sortent du calcul, et les points des autres sont
- * rapportés à 100.
+ * rapportés à 100. Les niveaux se lisent des seuils de la grille passée (la copie figée de
+ * l'examen) ; une compétence relative se compare à la part que l'étalon obtient sur les
+ * mêmes lignes et les mêmes marchés, mesurée sur `mesures.reference` sans rejeu de plus.
  */
 export function noterLaCopie(
-  grille: GrilleDeNotation,
+  grille: GrilleGardee,
   mesures: MesuresDeLaCopie,
   options: { questions: boolean },
 ): CopieNotee {
+  const seuils = seuilsDeLaGrille(grille);
   const actives: { l: LigneDeGrille; mesure: { part: number; detail: string } }[] = [];
   const horsCalcul: CopieNotee["horsCalcul"] = [];
   for (const l of grille.lignes) {
@@ -516,19 +614,31 @@ export function noterLaCopie(
   const somme = actives.reduce((s, a) => s + a.mesure.part * a.l.points * facteur, 0);
   const note = Math.min(100, Math.max(0, Math.round(somme * 10) / 10));
 
+  // L'étalon noté comme une copie, sur les mêmes lignes : ses décisions à la place de
+  // celles du candidat. Il ne répond à aucune question : la ligne des diagnostics sort.
+  let actifsDeLaReference: { l: LigneDeGrille; mesure: { part: number } }[] | null = null;
+  const deLaReference = () => {
+    if (!actifsDeLaReference) {
+      const m: MesuresDeLaCopie = { ...mesures, joueur: mesures.reference, situations: null };
+      actifsDeLaReference = actives.flatMap(({ l }) => {
+        const mesure = mesurerLaLigne(l.code, m);
+        return mesure ? [{ l, mesure }] : [];
+      });
+    }
+    return actifsDeLaReference;
+  };
+
   const competences: CompetenceNotee[] = [];
   for (const c of competencesEvaluees(options.questions)) {
-    let obtenu = 0;
-    let possible = 0;
-    for (const { l, mesure } of actives) {
-      const r = l.competences.find((x) => x.code === c.code);
-      if (!r) continue;
-      obtenu += r.part * l.points * mesure.part;
-      possible += r.part * l.points;
+    const p = partDeLaCompetence(c.code, actives);
+    if (p === null) continue;
+    if (estRelative(seuils, c.code)) {
+      const r = partDeLaCompetence(c.code, deLaReference()) ?? 0;
+      const s = seuilsDeLaCompetence(seuils, c.code, r);
+      competences.push({ code: c.code, nom: c.nom, part: p, niveau: niveauDeCompetence(p, s), seuils: { ...s }, partDeLaReference: r });
+    } else {
+      competences.push({ code: c.code, nom: c.nom, part: p, niveau: niveauDeCompetence(p, seuils.fixes), seuils: { ...seuils.fixes } });
     }
-    if (possible <= 0) continue;
-    const p = obtenu / possible;
-    competences.push({ code: c.code, nom: c.nom, part: p, niveau: niveauDeCompetence(p) });
   }
   return {
     note,
@@ -537,6 +647,7 @@ export function noterLaCopie(
       version: grille.version,
       nom: grille.nom,
       reference: { ...referenceDeLaGrille(grille) },
+      seuils: structuredClone(seuils),
     },
     lignes,
     horsCalcul,
@@ -548,10 +659,28 @@ export function noterLaCopie(
  * L'étalon d'une copie notée. Une notation gardée avant qu'elle ne l'écrive a été notée
  * contre la gestion neutre du secteur (c'était l'étalon des grilles publiées).
  */
-export const referenceDeLaCopie = (c: {
-  grille: Omit<CopieNotee["grille"], "reference"> & { reference?: ReferenceDeLaGrille };
-}): ReferenceDeLaGrille =>
+export const referenceDeLaCopie = (c: { grille: GrilleDeLaCopieGardee }): ReferenceDeLaGrille =>
   c.grille.reference ?? REFERENCE_GESTION_NEUTRE;
+
+/** La grille d'une notation gardée : l'étalon et les seuils peuvent y manquer. */
+export type GrilleDeLaCopieGardee = Omit<CopieNotee["grille"], "reference" | "seuils"> & {
+  reference?: ReferenceDeLaGrille;
+  seuils?: SeuilsDeLaGrille;
+};
+
+/**
+ * Les seuils d'une copie notée. Une notation gardée avant la version 3 n'a pas le champ :
+ * elle a été notée avec les seuils fixes d'alors.
+ */
+export const seuilsDeLaCopie = (c: { grille: GrilleDeLaCopieGardee }): SeuilsDeLaGrille =>
+  c.grille.seuils ?? SEUILS_D_AVANT_LA_VERSION_3;
+
+/**
+ * Les seuils qui ont donné le niveau d'une compétence notée : ceux que la notation a
+ * gardés, sinon les seuils fixes de la grille qui l'a notée.
+ */
+export const seuilsDeLaCompetenceNotee = (c: Pick<CompetenceNotee, "part" | "seuils">, s: SeuilsDeLaGrille): Seuils =>
+  c.seuils ?? s.fixes;
 
 /**
  * La part des décisions qui battent l'étalon, seule (« la note de décision ») : ce que

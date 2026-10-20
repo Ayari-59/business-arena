@@ -43,7 +43,7 @@ import { attribuerCodeDeReprise, reprendreSaPlace } from "@/services/reprise.ser
 import { ExamenReserveError, LicenceDepasseeError } from "@/services/acces.service";
 import { neutralDecisions } from "@/engine/bots";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
-import { REFERENCE_GESTION_NEUTRE_GELEE, noteDeDecision, noterLaCopie } from "@/config/examen/grille";
+import { GRILLE_BUSINESS_ARENA_2026, REFERENCE_GESTION_NEUTRE_GELEE, noteDeDecision, noterLaCopie } from "@/config/examen/grille";
 import { rejeuPourLExamen } from "@/services/merite.service";
 import type { CompanyState, RoundDecisions } from "@/engine/types";
 import { etablissementSousLicence } from "./helpers/licence";
@@ -266,6 +266,14 @@ describe("deux candidats passent l'examen", () => {
     );
     expect(gardee.note).toBe(attendue.note);
     expect(gardee.lignes).toEqual(attendue.lignes);
+    // Les seuils voyagent dans la copie de la grille et dans la notation ; les niveaux
+    // gardés sont ceux de ces seuils, la stratégie comptée à partir de la gestion neutre.
+    expect((examen!.grille as { seuils?: unknown }).seuils).toEqual(GRILLE_BUSINESS_ARENA_2026.seuils);
+    expect(gardee.grille.seuils).toEqual(GRILLE_BUSINESS_ARENA_2026.seuils);
+    expect(gardee.competences).toEqual(attendue.competences);
+    const strategie = gardee.competences.find((c) => c.code === "strategie")!;
+    expect(strategie.partDeLaReference).toBeGreaterThanOrEqual(0);
+    expect(strategie.seuils!.acquis).toBeCloseTo(Math.min(1, strategie.partDeLaReference! + 0.1), 9);
     // Pas celle du bon gestionnaire, l'étalon du bilan : sur cette partie, il fait autre chose.
     const bon = await rejeuPourLExamen(partieA, "bon-gestionnaire");
     if (bon.etat !== "rejeu") throw new Error(bon.message);
@@ -280,6 +288,15 @@ describe("deux candidats passent l'examen", () => {
     expect(suivi.histogramme.reduce((s, h) => s + h.n, 0)).toBe(2);
     expect(suivi.competences.map((c) => c.code)).not.toContain("diagnostic");
     expect(suivi.competences.length).toBe(6);
+    // Le trait de chaque barre : le seuil fixe de la grille, ou pour une compétence
+    // relative la moyenne des seuils des copies notées.
+    for (const c of suivi.competences) {
+      const seuils = suivi.notees.map((n) => (n.notation?.etat === "notee" ? n.notation.competences.find((x) => x.code === c.code)!.seuils!.acquis : NaN));
+      const attendu = ["strategie", "marketing-prix"].includes(c.code)
+        ? seuils.reduce((s, x) => s + x, 0) / seuils.length
+        : GRILLE_BUSINESS_ARENA_2026.seuils.fixes.acquis;
+      expect(c.seuil, c.code).toBeCloseTo(attendu, 9);
+    }
     const [ca] = await db.select().from(examenCandidats).where(eq(examenCandidats.gameId, partieA));
     const d = (await decisionsDuCandidat(prof.userId, examenId, ca!.id))!;
     expect(d.tours).toHaveLength(SAISIE.tours);

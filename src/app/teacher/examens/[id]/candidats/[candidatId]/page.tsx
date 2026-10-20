@@ -8,7 +8,7 @@ import { IDENTIFICATIONS, phraseDuRecu } from "@/config/examen/textes";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ReleveDesCompetences } from "@/components/examen/graphiques-de-l-examen";
-import { referenceDeLaCopie } from "@/config/examen/grille";
+import { referenceDeLaCopie, seuilsDeLaCopie } from "@/config/examen/grille";
 
 export const metadata: Metadata = {
   title: "Décisions d'un candidat",
@@ -79,7 +79,7 @@ export default async function DecisionsDuCandidatPage({
                 </li>
               ))}
             </ul>
-            <ReleveDesCompetences competences={notation.competences} />
+            <ReleveDesCompetences competences={notation.competences} seuils={seuilsDeLaCopie(notation)} />
           </section>
         ) : notation?.etat === "sans-note" ? (
           <p className="rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300">{notation.message}</p>

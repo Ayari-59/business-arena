@@ -100,6 +100,7 @@ import { createClassGame, resolveCurrentRound } from "@/services/game.service";
 import { publierExamenAction, renvoyerLesNotesAction, retirerPublicationAction } from "@/app/teacher/examens/actions";
 import { closeRoundAction, commencerLaVraiePartieAction } from "@/app/teacher/actions";
 import { neutralDecisions } from "@/engine/bots";
+import { GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import type { CompanyState } from "@/engine/types";
 import { etablissementSousLicence } from "./helpers/licence";
@@ -319,7 +320,8 @@ describe("la publication", () => {
         scoreMaximum: 100,
         activityProgress: "Completed",
         gradingProgress: "FullyGraded",
-        comment: "Business Arena · grille Business Arena 2026 v2",
+        // La version se lit de la grille : écrite à la main, elle devient fausse à la suivante.
+        comment: `Business Arena · grille ${GRILLE_BUSINESS_ARENA_2026.nom} v${GRILLE_BUSINESS_ARENA_2026.version}`,
       });
       expect(Number.isNaN(Date.parse(s!.timestamp as string))).toBe(false);
     }
