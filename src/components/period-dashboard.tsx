@@ -9,7 +9,7 @@ import { lectureBancaire } from "@/components/lecture-bancaire";
 import { ligneTresorerie } from "@/components/ligne-tresorerie";
 import { destinataireDuCourrier } from "@/config/courriers/destinataire";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
-import { courrierParCode } from "@/config/courriers/registre";
+import { objetDuCourrier } from "@/config/courriers/de-la-partie";
 import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart, MarketShareChart } from "@/components/charts";
 import { StudyReportsPanel } from "@/components/study-reports";
@@ -284,7 +284,7 @@ export function PeriodDashboard({
                 Courrier du{" "}
                 {periodLabel(view.roundDays, period.round).toLowerCase()} :{" "}
                 <span className="text-slate-300">
-                  {period.events.map((code) => courrierParCode.get(code)?.objet ?? code).join(" · ")}
+                  {period.events.map((code) => objetDuCourrier(code, view.roundDays) ?? code).join(" · ")}
                 </span>
               </p>
             ) : period.events.length > 0 ? (
@@ -299,6 +299,7 @@ export function PeriodDashboard({
                       key={code}
                       code={code}
                       assurance={view.enabledDecisions.insurance}
+                      jours={view.roundDays}
                       delayMs={i * 450}
                       adresse={destinataireDuCourrier({
                         kind: view.kind,
@@ -918,7 +919,7 @@ export function PeriodDashboard({
                 Assurance souscrite ({formatEuro(r.insurance.premium)}).{" "}
                 {r.insurance.neutralizedEvents.length > 0
                   ? `Sinistre couvert ce tour : ${r.insurance.neutralizedEvents
-                      .map((c) => courrierParCode.get(c)?.objet ?? c)
+                      .map((c) => objetDuCourrier(c, view.roundDays) ?? c)
                       .join(", ")}. Effets neutralisés.`
                   : "Aucun sinistre couvert ce tour."}
               </Constat>

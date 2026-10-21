@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { fitnessScenario } from "@/config/scenarios/fitness";
 
 /**
  * LA LIASSE DE VOLT FITNESS — salle de sport par abonnement.
@@ -8,7 +10,8 @@ import type { CourrierDef } from "../types";
  * rembourse, un coach qui part avec ses élèves, un concurrent qui ouvre. Ce
  * sont des mouvements de portefeuille avant d'être des événements.
  */
-export const FITNESS_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "fitness_rentree_sportive",
     expediteur: "Note interne · Accueil du club",
@@ -61,7 +64,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     signataire: "Le responsable du planning",
     effet: "Demande des pratiquants réguliers +30 % ce tour",
     enJeu:
-      "Dans un modèle par abonnement, ce qui retient vaut plus que ce qui attire : un régulier paie tous les trimestres.",
+      "Dans un modèle par abonnement, ce qui retient vaut plus que ce qui attire : un régulier paie tous les {{trimestres}}.",
     nature: "market",
     pli: "interne",
     icone: "personne",
@@ -72,7 +75,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Fournisseur d'énergie Caloris · Service entreprises",
     objet: "Régularisation et nouveau barème de votre contrat",
     corps:
-      "Votre consommation trimestrielle — chauffage, eau chaude sanitaire, ventilation et alimentation des appareils — est facturée au nouveau barème, en hausse de vingt-huit pour cent. La régularisation figure sur la facture jointe.",
+      "Votre consommation {{trimestrielle}} — chauffage, eau chaude sanitaire, ventilation et alimentation des appareils — est facturée au nouveau barème, en hausse de vingt-huit pour cent. La régularisation figure sur la facture jointe.",
     signataire: "Le conseiller entreprises",
     effet: "Coût variable par adhérent +28 % pendant 2 tours",
     enJeu:
@@ -102,10 +105,10 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Direction des engagements",
     objet: "Renégociation de votre crédit d'équipement",
     corps:
-      "Notre comité des risques classe l'exploitation de salles de sport parmi les activités volatiles. Le taux de votre crédit d'équipement est relevé pour les deux prochains trimestres, à échéancier inchangé.",
+      "Notre comité des risques classe l'exploitation de salles de sport parmi les activités volatiles. Le taux de votre crédit d'équipement est relevé pour les deux prochains {{trimestres}}, à échéancier inchangé.",
     signataire: "Le directeur des engagements",
     effet: "Taux d'intérêt ×1,5 pendant 2 tours",
-    enJeu: "Un parc de machines financé à crédit se rembourse même les trimestres où la salle est vide.",
+    enJeu: "Un parc de machines financé à crédit se rembourse même les {{trimestres}} où la salle est vide.",
     nature: "macro",
     pli: "recommande",
     icone: "banque",
@@ -172,7 +175,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Révision favorable de vos conditions de financement",
     corps:
-      "Votre taux de rétention, supérieur à la moyenne du secteur, nous conduit à considérer vos abonnements comme un revenu prévisible. Les conditions de votre crédit sont revues à la baisse pour deux trimestres.",
+      "Votre taux de rétention, supérieur à la moyenne du secteur, nous conduit à considérer vos abonnements comme un revenu prévisible. Les conditions de votre crédit sont revues à la baisse pour deux {{trimestres}}.",
     signataire: "Votre chargé d'affaires",
     effet: "Taux d'intérêt ×0,7 pendant 2 tours (une salle ciblée)",
     enJeu: "Un revenu récurrent est la meilleure garantie qui soit : il est prévisible, donc finançable.",
@@ -184,12 +187,12 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
   {
     code: "fitness_contrat_surprise",
     expediteur: "Fabrique Delorme · Direction des ressources humaines",
-    objet: "Convention de partenariat pour nos 200 salariés",
+    objet: "Convention de partenariat pour nos {{entier: commande_fitness_contrat_surprise}} salariés",
     corps:
-      "Nous souhaitons offrir à nos deux cents salariés un accès à votre club à compter de janvier, réglé en une fois pour le trimestre. Nous attendons votre confirmation de capacité d'accueil avant signature.",
+      "Nous souhaitons offrir à nos {{lettres: commande_fitness_contrat_surprise}} salariés un accès à votre club à compter de janvier, réglé en une fois pour {{le trimestre}}. Nous attendons votre confirmation de capacité d'accueil avant signature.",
     signataire: "Le directeur des ressources humaines",
     effet:
-      "+200 adhérents (échelle trimestre) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
+      "+{{entier: commande_fitness_contrat_surprise}} adhérents (échelle {{trimestre}}) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
     enJeu: "Encore faut-il pouvoir les accueillir : sur-vendre sans encadrement fait fuir les adhérents en place.",
     nature: "market",
     pli: "simple",
@@ -216,7 +219,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Bureau de contrôle Sécuritas Bâti",
     objet: "Rapport après court-circuit du tableau général",
     corps:
-      "Le tableau général a subi un court-circuit et l'alimentation du plateau est coupée. Nous prononçons l'interdiction d'exploiter les appareils concernés jusqu'à remise en conformité, soit deux trimestres au vu des devis.",
+      "Le tableau général a subi un court-circuit et l'alimentation du plateau est coupée. Nous prononçons l'interdiction d'exploiter les appareils concernés jusqu'à remise en conformité, soit deux {{trimestres}} au vu des devis.",
     signataire: "Le contrôleur technique",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & maintenance préventive",
@@ -329,7 +332,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Association des entreprises de la zone des Trois Ponts · Commission vie au travail",
     objet: "Réflexion sur des abonnements sportifs collectifs",
     corps:
-      "Plusieurs de nos adhérents envisagent d'aider leurs salariés à s'inscrire dans une salle de sport du bassin. Un groupe de travail se réunit jeudi et trois clubs seront consultés. Rien n'est arrêté, mais le projet pourrait se concrétiser dès le trimestre prochain, pour quelques centaines de salariés de la zone.",
+      "Plusieurs de nos adhérents envisagent d'aider leurs salariés à s'inscrire dans une salle de sport du bassin. Un groupe de travail se réunit jeudi et trois clubs seront consultés. Rien n'est arrêté, mais le projet pourrait se concrétiser dès {{le trimestre}} prochain, pour quelques centaines de salariés de la zone.",
     signataire: "La chargée de mission",
     effet: "Demande globale +8 % ce tour",
     enJeu:
@@ -344,11 +347,11 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Association des entreprises de la zone des Trois Ponts · Présidence",
     objet: "Convention d'abonnements collectifs pour nos salariés",
     corps:
-      "L'assemblée de nos adhérents a voté la convention : près de quatre cents salariés de la zone bénéficieront d'une participation de leur employeur à leur abonnement sportif, pour les trois trimestres à venir. Les clubs du bassin sont référencés. Les inscriptions s'ouvrent la semaine prochaine, avec une fréquentation attendue à la pause de midi et après dix-huit heures.",
+      "L'assemblée de nos adhérents a voté la convention : près de quatre cents salariés de la zone bénéficieront d'une participation de leur employeur à leur abonnement sportif, pour les trois {{trimestres}} à venir. Les clubs du bassin sont référencés. Les inscriptions s'ouvrent la semaine prochaine, avec une fréquentation attendue à la pause de midi et après dix-huit heures.",
     signataire: "Le président de l'association",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
-      "Pouvez-vous accueillir ce volume aux heures de pointe ? Étendre les horaires, s'appuyer sur un partenaire ou investir dans des places : lequel coûte le moins sur trois trimestres ?",
+      "Pouvez-vous accueillir ce volume aux heures de pointe ? Étendre les horaires, s'appuyer sur un partenaire ou investir dans des places : lequel coûte le moins sur trois {{trimestres}} ?",
     nature: "market",
     pli: "simple",
     icone: "accord",
@@ -359,7 +362,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Campagne temporaire sur les crédits d'équipement",
     corps:
-      "Notre établissement ouvre une campagne sur les crédits d'équipement destinés aux professionnels du département : les taux sont abaissés de quarante pour cent pendant deux trimestres. Appareils de cardio, machines de musculation et aménagement de studios entrent dans le champ de l'offre. Au-delà de cette période, les dossiers seront étudiés au tarif en vigueur.",
+      "Notre établissement ouvre une campagne sur les crédits d'équipement destinés aux professionnels du département : les taux sont abaissés de quarante pour cent pendant deux {{trimestres}}. Appareils de cardio, machines de musculation et aménagement de studios entrent dans le champ de l'offre. Au-delà de cette période, les dossiers seront étudiés au tarif en vigueur.",
     signataire: "Votre chargé d'affaires",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -374,7 +377,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Syndicat des exploitants de salles de sport",
     objet: "Annonce d'investissement d'un opérateur voisin",
     corps:
-      "Le groupe Vauquelin Sport annonce l'ouverture, à six kilomètres de votre club, d'un plateau de musculation de huit cents mètres carrés et de deux studios de cours collectifs. Son tarif de lancement, inférieur de près d'un quart aux prix du bassin, vise les mêmes salariés et les mêmes familles. Nos adhérents s'attendent à un partage de la clientèle sur plusieurs trimestres.",
+      "Le groupe Vauquelin Sport annonce l'ouverture, à six kilomètres de votre club, d'un plateau de musculation de huit cents mètres carrés et de deux studios de cours collectifs. Son tarif de lancement, inférieur de près d'un quart aux prix du bassin, vise les mêmes salariés et les mêmes familles. Nos adhérents s'attendent à un partage de la clientèle sur plusieurs {{trimestres}}.",
     signataire: "Le secrétaire du syndicat",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
@@ -389,7 +392,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     expediteur: "Association des entreprises de la zone des Trois Ponts · Secrétariat général",
     objet: "Révision du volume de la convention d'abonnements",
     corps:
-      "Deux de nos plus importants adhérents ont suspendu leurs recrutements et une troisième entreprise quitte la zone. La participation des employeurs est ramenée à un peu plus de la moitié du volume voté, et les nouvelles inscriptions sont suspendues. Les salariés déjà inscrits conservent leur abonnement jusqu'à la fin du trimestre en cours.",
+      "Deux de nos plus importants adhérents ont suspendu leurs recrutements et une troisième entreprise quitte la zone. La participation des employeurs est ramenée à un peu plus de la moitié du volume voté, et les nouvelles inscriptions sont suspendues. Les salariés déjà inscrits conservent leur abonnement jusqu'à la fin {{du trimestre}} en cours.",
     signataire: "Le secrétaire général",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -400,3 +403,6 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const FITNESS_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, fitnessScenario);

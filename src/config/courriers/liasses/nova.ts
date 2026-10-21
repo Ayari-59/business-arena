@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { novaScenario } from "@/config/scenarios/nova";
 
 /**
  * LA LIASSE DE NOVA — fabricant d'enceintes nomades.
@@ -9,13 +11,14 @@ import type { CourrierDef } from "../types";
  * le droit des affaires. Les revoir d'un trimestre à l'autre fait un monde
  * plutôt qu'une suite d'aléas.
  */
-export const NOVA_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "raw_material_spike",
     expediteur: "Électro-Composants Rhin · Direction commerciale",
-    objet: "Revalorisation de nos tarifs au 1er du trimestre",
+    objet: "Revalorisation de nos tarifs au 1er {{du trimestre}}",
     corps:
-      "Les cours du cuivre et des terres rares ont progressé de plus de vingt pour cent depuis notre dernier barème. Nous ne pouvons plus absorber cette hausse et la répercutons sur l'ensemble de nos références, pour les deux prochains trimestres.",
+      "Les cours du cuivre et des terres rares ont progressé de plus de vingt pour cent depuis notre dernier barème. Nous ne pouvons plus absorber cette hausse et la répercutons sur l'ensemble de nos références, pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur commercial",
     effet: "Coût des matières +20 % pendant 2 tours",
     enJeu: "Votre marge sur coût variable se comprime : où passe votre seuil de rentabilité ?",
@@ -71,7 +74,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Observatoire régional de la consommation",
     objet: "Note de conjoncture — recul de la consommation des ménages",
     corps:
-      "Le pouvoir d'achat recule pour le deuxième trimestre consécutif. Les achats d'équipement non indispensable sont les premiers reportés : notre panel enregistre une baisse de dix pour cent sur l'électronique de loisir.",
+      "Le pouvoir d'achat recule pour le deuxième {{trimestre}} consécutif. Les achats d'équipement non indispensable sont les premiers reportés : notre panel enregistre une baisse de dix pour cent sur l'électronique de loisir.",
     signataire: "Le directeur d'études",
     effet: "Demande globale −10 % pendant 2 tours",
     enJeu: "Votre marge de sécurité absorbe-t-elle une baisse de 10 % des ventes ?",
@@ -113,7 +116,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Banque Régionale du Nord · Agence entreprises",
     objet: "Révision des conditions de vos concours bancaires",
     corps:
-      "La banque centrale a relevé ses taux directeurs de soixante-quinze points de base. Conformément à l'article 4 de notre convention, le taux applicable à vos financements en cours est révisé à la hausse pour les deux prochains trimestres.",
+      "La banque centrale a relevé ses taux directeurs de soixante-quinze points de base. Conformément à l'article 4 de notre convention, le taux applicable à vos financements en cours est révisé à la hausse pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur d'agence",
     effet: "Charges d'intérêts ×1,5 pendant 2 tours",
     enJeu: "L'effet de levier joue dans les deux sens : dette chère, rentabilité fragile.",
@@ -127,7 +130,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Banque Régionale du Nord · Agence entreprises",
     objet: "Baisse du taux applicable à vos financements",
     corps:
-      "La détente monétaire engagée ce trimestre nous permet de réviser à la baisse le coût de vos concours. Nous restons à votre disposition pour étudier un financement complémentaire si vos projets d'investissement le justifient.",
+      "La détente monétaire engagée {{ce trimestre}} nous permet de réviser à la baisse le coût de vos concours. Nous restons à votre disposition pour étudier un financement complémentaire si vos projets d'investissement le justifient.",
     signataire: "Le directeur d'agence",
     effet: "Charges d'intérêts ×0,6 pendant 2 tours",
     enJeu: "Le bon moment pour financer par emprunt… si le projet crée de la valeur.",
@@ -141,7 +144,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Électro-Composants Rhin · Direction commerciale",
     objet: "Offre de déstockage sur nos fins de série",
     corps:
-      "Nos entrepôts doivent être libérés avant la fin du trimestre. Nous consentons pour cette seule période une remise exceptionnelle sur les composants concernés, dans la limite des quantités disponibles.",
+      "Nos entrepôts doivent être libérés avant la fin {{du trimestre}}. Nous consentons pour cette seule période une remise exceptionnelle sur les composants concernés, dans la limite des quantités disponibles.",
     signataire: "Le directeur commercial",
     effet: "Coût des matières −10 % ce tour",
     enJeu: "Marge sur coût variable élargie : produire plus, ou marger plus ?",
@@ -155,7 +158,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Cabinet Vasseur · Avocats d'affaires",
     objet: "Litige contractuel avec votre fournisseur de composants",
     corps:
-      "Votre fournisseur conteste les conditions de la commande passée au trimestre écoulé et suspend ses livraisons jusqu'au règlement du différend. En l'absence d'un second fournisseur référencé, l'approvisionnement de substitution se fera aux conditions du marché au comptant.",
+      "Votre fournisseur conteste les conditions de la commande passée {{au trimestre}} écoulé et suspend ses livraisons jusqu'au règlement du différend. En l'absence d'un second fournisseur référencé, l'approvisionnement de substitution se fera aux conditions du marché au comptant.",
     signataire: "Maître Vasseur",
     effet: "Coût des matières +15 % ce tour (une entreprise tirée au sort)",
     enJeu: "Dépendre d'un seul fournisseur est un risque qui se paie.",
@@ -183,7 +186,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Note interne · Délégation du personnel",
     objet: "Organisation exceptionnelle pour tenir les délais",
     corps:
-      "Les équipes se sont entendues sur un roulement volontaire pour absorber le retard accumulé. Les heures supplémentaires sont acceptées et l'atelier tournera au-delà de sa cadence habituelle ce trimestre.",
+      "Les équipes se sont entendues sur un roulement volontaire pour absorber le retard accumulé. Les heures supplémentaires sont acceptées et l'atelier tournera au-delà de sa cadence habituelle {{ce trimestre}}.",
     signataire: "Le délégué du personnel",
     effet: "Disponibilité machine +8 % ce tour (équipe ciblée)",
     enJeu: "La capacité n'est pas qu'une machine : c'est aussi un collectif.",
@@ -197,7 +200,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Ébénisterie Vanhove · Gérance",
     objet: "Geste commercial sur vos caissons acoustiques",
     corps:
-      "Nous travaillons ensemble depuis douze ans et vos volumes n'ont jamais faibli. Nous appliquons sur ce trimestre une remise sur l'ensemble de vos caissons, sans contrepartie et sans modification de nos délais.",
+      "Nous travaillons ensemble depuis douze ans et vos volumes n'ont jamais faibli. Nous appliquons sur {{ce trimestre}} une remise sur l'ensemble de vos caissons, sans contrepartie et sans modification de nos délais.",
     signataire: "Le gérant",
     effet: "Coût des matières −8 % ce tour (équipe ciblée)",
     enJeu: "La relation fournisseur est un actif : elle élargit la marge sur coût variable.",
@@ -211,7 +214,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Banque Régionale du Nord · Agence entreprises",
     objet: "Révision de vos conditions à la suite de notre entretien",
     corps:
-      "L'examen de vos derniers comptes et la trajectoire présentée lors de notre rendez-vous nous conduisent à revoir favorablement le taux de vos encours. Cette révision vaut pour les deux prochains trimestres et sera reconduite si la tendance se confirme.",
+      "L'examen de vos derniers comptes et la trajectoire présentée lors de notre rendez-vous nous conduisent à revoir favorablement le taux de vos encours. Cette révision vaut pour les deux prochains {{trimestres}} et sera reconduite si la tendance se confirme.",
     signataire: "Votre chargé d'affaires",
     effet: "Charges d'intérêts ×0,7 pendant 2 tours (équipe ciblée)",
     enJeu: "La confiance bancaire se construit : elle se lit dans vos comptes.",
@@ -225,7 +228,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Banque Régionale du Nord · Service des incidents de paiement",
     objet: "Mise en demeure — dépassements répétés de votre autorisation",
     corps:
-      "Votre compte a présenté un solde débiteur non autorisé à cinq reprises ce trimestre. Nous vous mettons en demeure de régulariser ; dans l'intervalle, les commissions d'intervention et le taux majoré s'appliquent à l'ensemble de vos encours.",
+      "Votre compte a présenté un solde débiteur non autorisé à cinq reprises {{ce trimestre}}. Nous vous mettons en demeure de régulariser ; dans l'intervalle, les commissions d'intervention et le taux majoré s'appliquent à l'ensemble de vos encours.",
     signataire: "Le responsable du service",
     effet: "Charges d'intérêts ×1,4 pendant 2 tours (équipe ciblée)",
     enJeu: "Une trésorerie mal pilotée coûte deux fois : le découvert, puis la sanction.",
@@ -239,7 +242,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "NordSound Distribution · Direction des achats",
     objet: "Référencement de votre gamme dans notre réseau européen",
     corps:
-      "Notre comité d'achats a retenu vos enceintes pour six cents points de vente en Belgique, aux Pays-Bas et en Allemagne. Le référencement prend effet immédiatement et porte sur les deux prochains trimestres.",
+      "Notre comité d'achats a retenu vos enceintes pour six cents points de vente en Belgique, aux Pays-Bas et en Allemagne. Le référencement prend effet immédiatement et porte sur les deux prochains {{trimestres}}.",
     signataire: "La directrice des achats",
     effet: "Demande globale +15 % pendant 2 tours",
     enJeu: "Un nouveau marché se sert avec de la capacité : qui peut produire plus, vendra plus.",
@@ -280,11 +283,11 @@ export const NOVA_COURRIERS: CourrierDef[] = [
   {
     code: "tight_order",
     expediteur: "Centrale d'achat Priméo · Approvisionnements",
-    objet: "Proposition de commande ferme — 500 unités",
+    objet: "Proposition de commande ferme — {{entier: commande_tight_order}} unités",
     corps:
-      "Nous vous proposons cinq cents unités au prix unitaire de cinquante-cinq euros, livrables sur le trimestre. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
+      "Nous vous proposons {{lettres: commande_tight_order}} unités au prix unitaire de cinquante-cinq euros, livrables sur {{le trimestre}}. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
     signataire: "Le directeur des approvisionnements",
-    effet: "+500 unités à 55 €/u imposés (échelle trimestre), dans la limite du stock",
+    effet: "+{{entier: commande_tight_order}} unités à 55 €/u imposés (échelle {{trimestre}}), dans la limite du stock",
     enJeu: "55 € couvre-t-il votre coût variable ? Les coûts pertinents décident, pas l'habitude.",
     nature: "market",
     pli: "recommande",
@@ -294,11 +297,11 @@ export const NOVA_COURRIERS: CourrierDef[] = [
   {
     code: "xxl_order",
     expediteur: "Plateforme Vendora · Direction des achats",
-    objet: "Commande ferme de 2 500 unités pour notre opération de fin d'année",
+    objet: "Commande ferme de {{entier: commande_xxl_order}} unités pour notre opération de fin d'année",
     corps:
-      "Notre opération de fin d'année portera sur deux mille cinq cents de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
+      "Notre opération de fin d'année portera sur {{lettres: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
     signataire: "Le directeur des achats",
-    effet: "+2 500 unités à 61 €/u (échelle trimestre), sous-traitance possible à 52 €/u",
+    effet: "+{{entier: commande_xxl_order}} unités à 61 €/u (échelle {{trimestre}}), sous-traitance possible à 52 €/u",
     enJeu: "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai.",
     nature: "market",
     pli: "recommande",
@@ -308,12 +311,12 @@ export const NOVA_COURRIERS: CourrierDef[] = [
   {
     code: "big_order",
     expediteur: "Groupe hôtelier Rivages · Direction des achats",
-    objet: "Équipement de nos chambres — commande ferme de 600 unités",
+    objet: "Équipement de nos chambres — commande ferme de {{entier: commande_big_order}} unités",
     corps:
-      "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur six cents unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur le trimestre.",
+      "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur {{lettres: commande_big_order}} unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur {{le trimestre}}.",
     signataire: "La directrice des achats",
     effet:
-      "+600 unités (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite du stock",
+      "+{{entier: commande_big_order}} unités (échelle {{trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
     enJeu:
       "Une opportunité ne se saisit qu'avec du stock ou de la capacité disponible : l'anticipation paie.",
     nature: "market",
@@ -326,7 +329,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Maintenance Legrand · Service après-vente",
     objet: "Rapport d'intervention — avarie majeure sur votre chaîne",
     corps:
-      "Le roulement principal a cédé et endommagé l'entraînement de la chaîne. La pièce est à fabriquer : comptez deux trimestres avant le retour à la cadence nominale. Notre rapport relève l'absence de graissage périodique depuis la mise en service.",
+      "Le roulement principal a cédé et endommagé l'entraînement de la chaîne. La pièce est à fabriquer : comptez deux {{trimestres}} avant le retour à la cadence nominale. Notre rapport relève l'absence de graissage périodique depuis la mise en service.",
     signataire: "Le responsable technique",
     effet: "Disponibilité machine −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu:
@@ -443,7 +446,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Agence Berthaud · Veille et relations presse",
     objet: "Un essai en rayon signalé chez le réseau Altimax",
     corps:
-      "Le réseau Altimax, qui compte quatre-vingts magasins d'électronique dans le nord, met vos enceintes en tête de gondole dans douze de ses points de vente depuis lundi. Son responsable du rayon audio a confié à un confrère que l'essai pourrait s'élargir le trimestre prochain si les ventes tiennent. Aucun volume n'a été avancé.",
+      "Le réseau Altimax, qui compte quatre-vingts magasins d'électronique dans le nord, met vos enceintes en tête de gondole dans douze de ses points de vente depuis lundi. Son responsable du rayon audio a confié à un confrère que l'essai pourrait s'élargir {{le trimestre}} prochain si les ventes tiennent. Aucun volume n'a été avancé.",
     signataire: "Votre chargée de compte",
     effet: "Demande globale +8 % ce tour",
     enJeu:
@@ -456,9 +459,9 @@ export const NOVA_COURRIERS: CourrierDef[] = [
   {
     code: "nova_inv_grand_compte",
     expediteur: "Altimax Distribution · Direction des achats",
-    objet: "Référencement de vos enceintes sur trois trimestres",
+    objet: "Référencement de vos enceintes sur trois {{trimestres}}",
     corps:
-      "À l'issue de l'essai conduit dans douze magasins, notre comité confirme le référencement de vos enceintes dans l'ensemble de nos quatre-vingts points de vente. Le volume convenu dépasse d'environ un tiers vos ventes actuelles et court sur les trois prochains trimestres. Les livraisons se feront par palettes, magasin par magasin.",
+      "À l'issue de l'essai conduit dans douze magasins, notre comité confirme le référencement de vos enceintes dans l'ensemble de nos quatre-vingts points de vente. Le volume convenu dépasse d'environ un tiers vos ventes actuelles et court sur les trois prochains {{trimestres}}. Les livraisons se feront par palettes, magasin par magasin.",
     signataire: "Le directeur des achats",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
@@ -473,7 +476,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Banque Régionale du Nord · Agence entreprises",
     objet: "Campagne sur les crédits d'équipement industriels",
     corps:
-      "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux entreprises industrielles de la région : machines, lignes d'assemblage, outillage. Le taux de ces financements est réduit de quarante pour cent pendant deux trimestres, puis les conditions habituelles de la banque reprennent.",
+      "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux entreprises industrielles de la région : machines, lignes d'assemblage, outillage. Le taux de ces financements est réduit de quarante pour cent pendant deux {{trimestres}}, puis les conditions habituelles de la banque reprennent.",
     signataire: "Le directeur d'agence",
     effet: "Charges d'intérêts ×0,6 pendant 2 tours",
     enJeu:
@@ -503,7 +506,7 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     expediteur: "Altimax Distribution · Direction des approvisionnements",
     objet: "Révision des quantités convenues pour votre référencement",
     corps:
-      "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année. Nous révisons donc à la baisse le volume convenu pour les deux trimestres restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
+      "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année. Nous révisons donc à la baisse le volume convenu pour les deux {{trimestres}} restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
     signataire: "La responsable des approvisionnements",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -514,3 +517,6 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const NOVA_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, novaScenario);
