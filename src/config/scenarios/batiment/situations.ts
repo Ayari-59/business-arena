@@ -112,7 +112,7 @@ const SOURCES: SituationDef[] = [
     category: "decision_strategique",
     title: "Le devis qu'il ne faudrait pas signer",
     narrative:
-      "Un promoteur propose un lot de finitions à 268 € le mètre carré. Votre prix de revient complet ressort à 325 €, structure comprise. Votre conducteur de travaux veut refuser. Mais vos équipes ont deux semaines creuses en février, et elles seront payées de toute façon.",
+      "Un promoteur propose un lot de finitions à 268 € le mètre carré. Votre prix de revient complet ressort à 325 €, structure comprise. Votre conducteur de travaux veut refuser. {{Mais vos équipes ont deux semaines creuses en février, et elles seront payées de toute façon.}}",
     problem:
       "Ce chantier appauvrit-il l'entreprise, ou vaut-il mieux que le vide ?",
     diagnosticOptions: [
@@ -182,7 +182,7 @@ const SOURCES: SituationDef[] = [
     conceptCodes: ["variable_costs", "fixed_costs", "contribution_margin", "capacity"],
     hints: hints([
       "Demandez-vous ce qui change vraiment si vous refusez ce chantier.",
-      "Les compagnons seront payés en février, chantier ou pas chantier.",
+      "{{Les compagnons seront payés en février, chantier ou pas chantier.}}",
       "Le prix de revient complet répartit une structure qui, elle, ne bouge pas avec la décision.",
       "268 − 210 = 58 € par mètre carré qui n'existeraient pas sans ce chantier.",
       "La réponse s'inverse le jour où vos équipes sont pleines : il faudra alors comparer 58 € à la marge du chantier qu'on refuse pour celui-ci.",

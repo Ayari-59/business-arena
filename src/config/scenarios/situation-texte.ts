@@ -130,7 +130,440 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     year: "mois par mois, pas exercice par exercice",
   },
   // --- fin du groupe batiment-boutique-ecommerce ---
+  // --- groupe fitness-nova-batiment-transport : le récit des saisons ---
+  // La saisonnalité se lit une valeur par tour à toutes les durées (ADR-01) : au mois,
+  // le tour 3 de VOLT FITNESS n'est pas juillet ; à l'année, il n'est pas l'été. Au mois
+  // et à l'année, le récit dit donc ce que le tour EST pour le moteur (le creux, le pic,
+  // la vague d'inscriptions), jamais le moment du calendrier. Aucune nouvelle sorte de
+  // jeton : une tournure de la table, dont la clé est le texte au trimestre, rendu tel
+  // quel. Une phrase entière quand elle ne porte ni chiffre (garde : un mot de durée
+  // n'en porte aucun) ni autre jeton ; sinon, le plus court passage qui date.
+  // Garde : tests/scenarios/saisons-fitness-nova-batiment-transport.test.ts.
+  //
+  // VOLT FITNESS. Marché [1,5 ; 0,9 ; 0,5 ; 1,0 ; 1,5 ; 0,9] : la vague des bonnes
+  // résolutions aux tours 1 et 5, le creux au tour 3 (l'attrition y monte de moitié),
+  // la reprise au tour 4.
+  "mais l'été arrive": { month: "mais le creux de la saison viendra", year: "mais le creux de la saison viendra" },
+  "inscrits de janvier": { month: "inscrits des bonnes résolutions", year: "inscrits des bonnes résolutions" },
+  "Comparez deux adhérents : celui de janvier qui part en avril, et le régulier présent depuis six ans.": {
+    month: "Comparez deux adhérents : celui des bonnes résolutions qui part sitôt l'élan retombé, et le régulier présent depuis six ans.",
+    year: "Comparez deux adhérents : celui des bonnes résolutions qui part sitôt l'élan retombé, et le régulier présent depuis six ans.",
+  },
+  "Le creux de l'été": { month: "Le creux de la saison", year: "Le creux de la saison" },
+  "Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite.": {
+    month: "Plein creux. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents des bonnes résolutions ne s'est pas réinscrite.",
+    year: "Plein creux. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents des bonnes résolutions ne s'est pas réinscrite.",
+  },
+  "Licencier l'équipe pour l'été et réembaucher en septembre": {
+    month: "Licencier l'équipe pour le creux et réembaucher à la reprise",
+    year: "Licencier l'équipe pour le creux et réembaucher à la reprise",
+  },
+  "La demande chute de moitié en juillet. De combien baissent vos charges de structure ?": {
+    month: "La demande chute de moitié au creux. De combien baissent vos charges de structure ?",
+    year: "La demande chute de moitié au creux. De combien baissent vos charges de structure ?",
+  },
+  "Tout le reste continue de courir : c'est ce qui rend le creux d'été si dangereux.": {
+    month: "Tout le reste continue de courir : c'est ce qui rend le creux de la saison si dangereux.",
+    year: "Tout le reste continue de courir : c'est ce qui rend le creux de la saison si dangereux.",
+  },
+  "Un été qui en fait partir": { month: "Un creux qui en fait partir", year: "Un creux qui en fait partir" },
+  "Le creux de l'été se prépare avant : une campagne ciblée au printemps ou une offre estivale peut limiter la chute des inscriptions.": {
+    month: "Le creux se prépare avant : une campagne ciblée au tour qui le précède ou une offre pensée pour le creux peut limiter la chute des inscriptions.",
+    year: "Le creux se prépare avant : une campagne ciblée au tour qui le précède ou une offre pensée pour le creux peut limiter la chute des inscriptions.",
+  },
+  "un tarif estival réduit": { month: "un tarif réduit pour le creux", year: "un tarif réduit pour le creux" },
+  "L'été est le moment idéal pour l'entretien lourd, mais ne coupez pas la maintenance visible : les adhérents qui restent jugent la salle vide plus sévèrement.": {
+    month: "Le creux est le moment idéal pour l'entretien lourd, mais ne coupez pas la maintenance visible : les adhérents qui restent jugent la salle vide plus sévèrement.",
+    year: "Le creux est le moment idéal pour l'entretien lourd, mais ne coupez pas la maintenance visible : les adhérents qui restent jugent la salle vide plus sévèrement.",
+  },
+  "Le chiffre d'affaires d'un abonnement annuel encaissé en janvier…": {
+    month: "Le chiffre d'affaires d'un abonnement annuel encaissé à l'inscription…",
+    year: "Le chiffre d'affaires d'un abonnement annuel encaissé à l'inscription…",
+  },
+  "ou une seule fois en janvier ?": { month: "ou une seule fois, à l'inscription ?", year: "ou une seule fois, à l'inscription ?" },
+  "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas en mars.": {
+    month: "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas au creux.",
+    year: "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas au creux.",
+  },
+  "Janvier a rempli la caisse": { month: "La vague d'inscriptions a rempli la caisse", year: "La vague d'inscriptions a rempli la caisse" },
+  "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert.": {
+    month: "La vague des bonnes résolutions a fait entrer beaucoup d'argent d'un coup : plus d'un mois et demi de charges de structure, sans découvert.",
+    year: "La vague des bonnes résolutions a fait entrer beaucoup d'argent d'un coup : plus d'un exercice et demi de charges de structure, sans découvert.",
+  },
+  "Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.": {
+    month: "Cet argent doit pourtant faire vivre la salle jusqu'à la prochaine vague d'inscriptions, y compris pendant le creux où plus personne ne s'inscrit.",
+    year: "Cet argent doit pourtant faire vivre la salle jusqu'à la prochaine vague d'inscriptions, y compris pendant le creux où plus personne ne s'inscrit.",
+  },
+  "Bloquer cette somme reviendrait à financer janvier avec l'argent de novembre, qui n'est pas encore gagné.": {
+    month: "Bloquer cette somme reviendrait à engager dès maintenant l'argent des derniers mois de l'abonnement, qui n'est pas encore gagné.",
+    year: "Bloquer cette somme reviendrait à engager dès maintenant l'argent des derniers mois de l'abonnement, qui n'est pas encore gagné.",
+  },
+  "Projetez l'année entière, et surtout le creux de l'été : les charges tombent tous les mois, les inscriptions non.": {
+    month: "Projetez l'année entière, et surtout le creux de la saison : les charges tombent tous les mois, les inscriptions non.",
+    year: "Projetez l'année entière, et surtout le creux de la saison : les charges tombent tous les mois, les inscriptions non.",
+  },
+  "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements du trimestre, été compris.": {
+    month: "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements du mois, creux compris.",
+    year: "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements de l'exercice, creux compris.",
+  },
+  "Le budget de trésorerie étale sur l'année les charges que l'encaissement de janvier doit couvrir.": {
+    month: "Le budget de trésorerie étale sur l'année les charges que l'encaissement de la vague d'inscriptions doit couvrir.",
+    year: "Le budget de trésorerie étale sur l'année les charges que l'encaissement de la vague d'inscriptions doit couvrir.",
+  },
+  // Les courriers de VOLT FITNESS se tirent à n'importe quel tour : ils ne disent
+  // aucune saison, sauf la hausse d'énergie, posée au tour 3, celui du creux.
+  "Affluence du premier lundi de janvier": {
+    month: "Affluence d'un lundi de bonnes résolutions",
+    year: "Affluence d'un lundi de bonnes résolutions",
+  },
+  "Ces adhérents-là remplissent la salle et repartent au printemps : les inscrire coûte, les garder rapporte.": {
+    month: "Ces adhérents-là remplissent la salle et repartent quand l'élan retombe : les inscrire coûte, les garder rapporte.",
+    year: "Ces adhérents-là remplissent la salle et repartent quand l'élan retombe : les inscrire coûte, les garder rapporte.",
+  },
+  "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.": {
+    month: "Une charge qui grimpe quand la salle est vide : au creux, elle tombe sans aucun abonnement pour la couvrir.",
+    year: "Une charge qui grimpe quand la salle est vide : au creux, elle tombe sans aucun abonnement pour la couvrir.",
+  },
+  "L'été cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.": {
+    month: "Une vague de chaleur cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
+    year: "Une vague de chaleur cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
+  },
+  "à compter de janvier": { month: "dès à présent", year: "dès à présent" },
+  "Les inscriptions sont ouvertes pour l'édition de printemps, trois mois avant le départ.": {
+    month: "Les inscriptions sont ouvertes pour la prochaine édition, trois mois avant le départ.",
+    year: "Les inscriptions sont ouvertes pour la prochaine édition, trois mois avant le départ.",
+  },
+  "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là en juin.": {
+    month: "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là une fois la course passée.",
+    year: "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là une fois la course passée.",
+  },
+  "Notre enquête montre que les primo-pratiquants, ceux qui s'inscrivent en janvier, sont les premiers à préférer le domicile.": {
+    month: "Notre enquête montre que les primo-pratiquants, ceux des bonnes résolutions, sont les premiers à préférer le domicile.",
+    year: "Notre enquête montre que les primo-pratiquants, ceux des bonnes résolutions, sont les premiers à préférer le domicile.",
+  },
+  //
+  // NOVA et NOVA · GAMME. Le pic au tour 4 (marché à 1,35, la Go à 1,9, le module radio
+  // y rompt plus souvent), le contrecoup au tour 5. L'arc CampusTech n'est pas une
+  // saison : il reste tel quel, sauf l'appel d'offres qui datait sa lettre de la rentrée.
+  "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic de fin d'année ?": {
+    month: "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic du tour suivant ?",
+    year: "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic du tour suivant ?",
+  },
+  "qu'elle rapportera d'ici Noël": { month: "qu'elle rapportera d'ici le pic", year: "qu'elle rapportera d'ici le pic" },
+  "Quelle référence produire en priorité, et que préparer avant le pic de fin d'année ?": {
+    month: "Quelle référence produire en priorité, et que préparer avant le pic du tour suivant ?",
+    year: "Quelle référence produire en priorité, et que préparer avant le pic du tour suivant ?",
+  },
+  "Il faut produire AVANT le pic pour constituer du stock, sur les références qui se vendront à Noël": {
+    month: "Il faut produire AVANT le pic pour constituer du stock, sur les références qui se vendront au pic",
+    year: "Il faut produire AVANT le pic pour constituer du stock, sur les références qui se vendront au pic",
+  },
+  "Le stock immobilise du cash, mais il sauve les ventes : et sur une gamme, on stocke ce qui se vendra à Noël, la Go des cadeaux avant tout.": {
+    month: "Le stock immobilise du cash, mais il sauve les ventes : et sur une gamme, on stocke ce qui se vendra au pic, la Go des cadeaux avant tout.",
+    year: "Le stock immobilise du cash, mais il sauve les ventes : et sur une gamme, on stocke ce qui se vendra au pic, la Go des cadeaux avant tout.",
+  },
+  "pour stocker la Go et la One avant Noël": { month: "pour stocker la Go et la One avant le pic", year: "pour stocker la Go et la One avant le pic" },
+  "Trimestre record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.": {
+    month: "Mois record : le pic des cadeaux a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.",
+    year: "Exercice record : le pic des cadeaux a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.",
+  },
+  "La saisonnalité n'est pas la même sur chaque référence : la Go double à Noël, pas la Studio": {
+    month: "La saisonnalité n'est pas la même sur chaque référence : la Go double au pic, pas la Studio",
+    year: "La saisonnalité n'est pas la même sur chaque référence : la Go double au pic, pas la Studio",
+  },
+  "La caisse pleine d'après-Noël": { month: "La caisse pleine, une fois le pic passé", year: "La caisse pleine, une fois le pic passé" },
+  "Une innovation se lance quand son marché est connu, quitte à arriver après Noël": {
+    month: "Une innovation se lance quand son marché est connu, quitte à arriver après le pic",
+    year: "Une innovation se lance quand son marché est connu, quitte à arriver après le pic",
+  },
+  "Et Noël arrive : c'est là que le module radio manque le plus souvent.": {
+    month: "Et le pic est là : c'est là que le module radio manque le plus souvent.",
+    year: "Et le pic est là : c'est là que le module radio manque le plus souvent.",
+  },
+  "Faut-il la pousser avant Noël, ou garder l'atelier pour la One ?": {
+    month: "Faut-il la pousser en plein pic, ou garder l'atelier pour la One ?",
+    year: "Faut-il la pousser en plein pic, ou garder l'atelier pour la One ?",
+  },
+  "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque à Noël coûte les ventes du meilleur tour": {
+    month: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
+    year: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
+  },
+  // Les courriers de NOVA se tirent à n'importe quel tour, sauf ceux de l'arc
+  // d'investissement : le retournement tombe au tour 5, au sortir du pic.
+  "Salon de la Rentrée Étudiante · Commissariat général": {
+    month: "Salon de l'Étudiant · Commissariat général",
+    year: "Salon de l'Étudiant · Commissariat général",
+  },
+  "notre opération de fin d'année": { month: "notre grande opération commerciale", year: "notre grande opération commerciale" },
+  "référencement audio de la rentrée": {
+    month: "renouvellement du référencement audio",
+    year: "renouvellement du référencement audio",
+  },
+  "Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants.": {
+    month: "Notre enseigne renouvelle son rayon audio et consulte quatre fabricants.",
+    year: "Notre enseigne renouvelle son rayon audio et consulte quatre fabricants.",
+  },
+  "La distinction paraîtra en couverture du numéro de rentrée ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.": {
+    month: "La distinction paraîtra en couverture de notre prochain numéro ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.",
+    year: "La distinction paraîtra en couverture de notre prochain numéro ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.",
+  },
+  "Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.": {
+    month: "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.",
+    year: "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.",
+  },
+  "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année.": {
+    month: "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont encore élevés au sortir du pic.",
+    year: "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont encore élevés au sortir du pic.",
+  },
+  //
+  // MARTEL & FILS. Les deux semaines creuses du devis sont un trou de planning, pas
+  // une saison : le tour 2 est l'un des plus chargés (1,15).
+  "Mais vos équipes ont deux semaines creuses en février, et elles seront payées de toute façon.": {
+    month: "Mais vos équipes ont deux semaines creuses entre deux chantiers, et elles seront payées de toute façon.",
+    year: "Mais vos équipes ont deux semaines creuses entre deux chantiers, et elles seront payées de toute façon.",
+  },
+  "Les compagnons seront payés en février, chantier ou pas chantier.": {
+    month: "Les compagnons seront payés pendant ces deux semaines, chantier ou pas chantier.",
+    year: "Les compagnons seront payés pendant ces deux semaines, chantier ou pas chantier.",
+  },
+  //
+  // ROUTE & CIE. Ses courriers se tirent à n'importe quel tour : le pic du donneur
+  // d'ordres est le sien, pas une date ; le péage se revalorise à sa date.
+  "Appel à capacité pour le pic de fin d'année": {
+    month: "Appel à capacité pour notre pic d'activité",
+    year: "Appel à capacité pour notre pic d'activité",
+  },
+  "Nos entrepôts passeront en trois-huit du quinze novembre au vingt-quatre décembre.": {
+    month: "Nos entrepôts passeront en trois-huit pendant les six semaines de notre pic d'activité.",
+    year: "Nos entrepôts passeront en trois-huit pendant les six semaines de notre pic d'activité.",
+  },
+  "au premier janvier": { month: "à la date de revalorisation", year: "à la date de revalorisation" },
+  // --- fin du groupe fitness-nova-batiment-transport ---
+  // --- hotel-bistrot-conseil : le récit des saisons ------------------------
+  // Au trimestre, le tour 3 de L'ESCALE est l'été, celui du bistrot et du cabinet le
+  // creux d'août, le tour 4 du bistrot décembre. Au mois et à l'année, la saisonnalité
+  // se lit encore une valeur par tour (ADR-01) : le tour reste le pic ou le creux, il
+  // n'est plus une date. Ces phrases disent donc ce que le tour EST, la même forme aux
+  // deux durées (`aLaSaison`, en bas du bloc). Une phrase entière par jeton ; quand
+  // elle porte un chiffre, le jeton s'arrête avant lui, car un mot de durée n'en porte
+  // aucun. Chaque affirmation est vérifiée au tableau de saisonnalité
+  // (tests/scenarios/saisons-hotel-bistrot-conseil.test.ts).
+  // L'ESCALE, et sa gamme : le tour 3 est le pic, les tours creux suivent.
+  "L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement.":
+    aLaSaison("Votre tour le plus chargé approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement."),
+  "L'été approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent.":
+    aLaSaison("Votre tour le plus chargé approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent."),
+  "Vos concurrents affichent déjà leurs tarifs de juillet.": aLaSaison("Vos concurrents affichent déjà leurs tarifs de haute saison."),
+  "Vos concurrents affichent déjà leurs tarifs de juillet, chambre par chambre.":
+    aLaSaison("Vos concurrents affichent déjà leurs tarifs de haute saison, chambre par chambre."),
+  "Le mix de clientèle change : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement":
+    aLaSaison("Le mix de clientèle change : le segment qui domine la haute saison n'a ni la même élasticité ni le même délai de paiement"),
+  "Le mix de clientèle change par type de chambre : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement":
+    aLaSaison("Le mix de clientèle change par type de chambre : le segment qui domine la haute saison n'a ni la même élasticité ni le même délai de paiement"),
+  "L'été, la clientèle loisirs": aLaSaison("En haute saison, la clientèle loisirs"),
+  "L'été, les affaires tombent": aLaSaison("À ce tour, les affaires tombent"),
+  "La forte demande estivale": aLaSaison("La forte demande de la haute saison"),
+  "Décider en juillet pour juillet, c'est décider trop tard.": aLaSaison("Décider pendant le pic pour le pic, c'est décider trop tard."),
+  "Une capacité créée pour trois semaines d'été se paie douze mois par an, en amortissements et en charges.":
+    aLaSaison("Une capacité créée pour trois semaines de pic se paie douze mois par an, en amortissements et en charges."),
+  "Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours).":
+    aLaSaison("Avant d'investir, distinguez saturation SAISONNIÈRE (un pic de haute saison) et saturation DURABLE (tous les tours)."),
+  "Le solde de septembre n'est pas un excédent : c'est ce qui doit faire passer l'hiver.":
+    aLaSaison("Le solde de fin de haute saison n'est pas un excédent : c'est ce qui doit faire passer la saison creuse."),
+  "Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.":
+    aLaSaison("Seul lui distingue un vrai excédent de ce qui doit faire passer la saison creuse."),
+  "Le compte plein de fin de saison, et trois chambres à faire passer l'hiver":
+    aLaSaison("Le compte plein de fin de saison, et trois chambres à faire passer la saison creuse"),
+  "et l'hiver ne vendra ni suites ni escapades": aLaSaison("et les tours creux ne vendront ni suites ni escapades"),
+  "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de l'hiver ne ressemble pas à celui de l'été ?":
+    aLaSaison("Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de la saison creuse ne ressemble pas à celui de la haute saison ?"),
+  "avec le mix de chambres que l'hiver vendra vraiment": aLaSaison("avec le mix de chambres que la saison creuse vendra vraiment"),
+  // LA TABLE D'AUGUSTIN, et sa gamme : le tour 3 est le creux, le tour 4 le pic des banquets.
+  "Nous sommes en août, la salle est à moitié vide et les bureaux du quartier sont fermés.":
+    aLaSaison("Vous êtes au plus creux de l'activité : la salle est à moitié vide et les bureaux du quartier se sont vidés."),
+  "Nous sommes en août, la salle est à moitié vide, les bureaux du quartier sont fermés et les banquets attendent décembre.":
+    aLaSaison("Vous êtes au plus creux de l'activité : la salle est à moitié vide, les bureaux du quartier se sont vidés et les banquets attendent leur plus gros tour."),
+  "en plein creux d'août, c'est hors d'atteinte.": aLaSaison("en plein creux de l'activité, c'est hors d'atteinte."),
+  "Le mois d'août amplifie tout": aLaSaison("Le creux de l'activité amplifie tout"),
+  "En août, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.":
+    aLaSaison("Au creux de l'activité, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères."),
+  // Le jeton porte « ce trimestre » en toutes lettres : au mois, dire que le budget annuel
+  // tombe sur un mois, à l'année qu'il tombe sur l'année, ne dirait plus rien du pic.
+  "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre":
+    aLaSaison("Votre plus gros tour arrive : les repas d'entreprise et les banquets y dépensent plus qu'à aucun autre tour"),
+  "La demande de décembre bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.":
+    aLaSaison("La demande de votre plus gros tour bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues."),
+  "Anticipez l'entretien pour éviter une panne en plein rush de décembre.":
+    aLaSaison("Anticipez l'entretien pour éviter une panne en plein rush des banquets."),
+  // La verrière : le moteur ajoute sa capacité à chaque tour ; c'est le temps qu'il fait, pas la date, qui vide la terrasse.
+  "mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe.":
+    aLaSaison("mais seulement quand le temps s'y prête : par grand froid, personne ne s'y installe."),
+  // ATLAS CONSEIL, et sa gamme : le tour 3 est le creux, celui des marchés publics aussi.
+  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide.":
+    aLaSaison("Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, le carnet se vide."),
+  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.":
+    aLaSaison("Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti."),
+  // Les DSI creusent le moins au tour 3 de la gamme (`dsi`) : c'est ce qui reste vrai de « ne connaît pas les congés ».
+  "Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.":
+    aLaSaison("Ce tour creux est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader."),
+  "qui vendrait à des DSI qui ne connaissent pas les congés": aLaSaison("qui vendrait à des DSI qui achètent en toute saison"),
+  // Les courriers de L'ESCALE et de LA TABLE D'AUGUSTIN : un courrier tombe à n'importe quel tour.
+  "Été indien — hausse des réservations de dernière minute":
+    aLaSaison("Beau temps hors saison : hausse des réservations de dernière minute"),
+  "Première édition du festival d'été": aLaSaison("Première édition du festival de musique"),
+  "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne.":
+    aLaSaison("Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses prochains circuits."),
+  "Révision des volumes de notre programmation d'automne": aLaSaison("Révision des volumes de notre programmation"),
+  // Le tarif d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date.
+  "Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année.":
+    aLaSaison("Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier, le temps de reconstituer sa clientèle."),
+  "Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année.":
+    aLaSaison("Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier, le temps de reconstituer sa clientèle."),
+  "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place.":
+    aLaSaison("Le groupe Montclar Ingénierie emménagera prochainement dans l'immeuble voisin de la place."),
+  // --- fin hotel-bistrot-conseil -------------------------------------------
+  // --- groupe boutique-ecommerce : le récit des saisons ---------------------
+  // MAILLE & CO et PIXEL & CO racontaient Noël, les soldes, les fêtes et la
+  // rentrée. La saisonnalité se lit une valeur par tour à toutes les durées
+  // (`periodicity.ts`) : au mois et à l'année, le tour 4 reste le pic, mais il
+  // n'est pas décembre. La phrase entière est le jeton, écrite telle qu'au
+  // trimestre ; elle dit, au mois et à l'année, ce que le tour EST pour le
+  // moteur (le pic, le tour qui le suit), vérifié sur les tableaux de chaque
+  // scénario. Aucune sorte de jeton nouvelle : une chaîne seule vaut pour le mois
+  // et pour l'année, un couple quand l'une des deux formes sonnerait faux.
+  // Garde : tests/scenarios/saisons-boutique-ecommerce.test.ts.
+  ...Object.fromEntries(
+    Object.entries({
+      // MAILLE & CO, gamme et mono : le tour 4 est le plus haut de la boutique (1,5 ;
+      // 1,45 en mono) et de chaque référence (jusqu'à 2,3 sur les accessoires), sauf
+      // le cardigan, pièce de mi-saison dont le récit ne dit pas le pic.
+      "Le trimestre qui fait l'année": "Le plus gros tour de la partie",
+      "La maille se vend l'hiver : au quatrième trimestre, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.":
+        "C'est le plus gros tour de la maille : les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.",
+      "Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année.":
+        "Ce tour pèse près d'une fois et demie un tour ordinaire, et les comités d'entreprise y passent leurs plus grosses commandes.",
+      "La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple.":
+        "La marge par pièce ne tranche que lorsque les références se disputent une place limitée, comme la réserve au tour du pic.",
+      "Combien commander pour Noël, de quelle référence, et à quel risque ?":
+        "Combien commander pour ce pic, de quelle référence, et à quel risque ?",
+      "Combien commander pour Noël, et que risquez-vous en vous trompant dans un sens ou dans l'autre ?":
+        "Combien commander pour ce pic, et que risquez-vous en vous trompant dans un sens ou dans l'autre ?",
+      "Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort jusqu'au printemps":
+        "Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort une fois le pic passé",
+      "Attendre les premières ventes de décembre pour se réapprovisionner":
+        "Attendre les premières ventes du pic pour se réapprovisionner",
+      "Attendre de voir les premières ventes de décembre pour se réapprovisionner":
+        "Attendre de voir les premières ventes du pic pour se réapprovisionner",
+      "À Noël": "Au tour du pic",
+      "À Noël votre trafic passe": "Au tour du pic, votre trafic passe",
+      "la demande de Noël la dépasse": "la demande du pic la dépasse",
+      "À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.":
+        "Au tour du pic, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.",
+      // Le tour 5 suit le pic dans tous les tableaux.
+      "Le trimestre de Noël vient de vider votre trésorerie dans le réassort.":
+        "Le tour du pic vient de vider votre trésorerie dans le réassort.",
+      // Une situation détectée tombe à n'importe quel tour : « du pic » la nomme sans la dater.
+      "Le réassort de Noël": "Le réassort du pic",
+      // Le déstockage du tour 3 : le tour 4, juste après, est le pic de la maille
+      // (les écharpes et les bonnets y font plus du double d'un tour ordinaire).
+      "Solder, ou garder pour l'an prochain": "Solder, ou garder pour la prochaine collection",
+      "de la collection de printemps": "de la dernière collection",
+      "refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la collection aura tourné":
+        "refuser, c'est occuper une réserve pendant des tours, le temps que la collection tourne",
+      "refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la mode aura tourné":
+        "refuser, c'est occuper une réserve pendant des tours, le temps que la mode tourne",
+      "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets de l'hiver, qui tourneront deux fois d'ici le printemps":
+        "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets, qui se vendent plus du double au tour du pic, juste après",
+      "Le mètre de linéaire qu'elles occupent porterait la collection suivante, qui tournerait deux fois d'ici le printemps":
+        "Le mètre de linéaire qu'elles occupent porterait la collection suivante, celle du pic qui arrive au tour suivant",
+      "une vente incertaine dans un an": "une vente incertaine à la collection suivante",
+      "Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort une saison entière est un emplacement qui n'a rien vendu, alors que les accessoires de l'hiver y tourneraient.":
+        "Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort des tours entiers est un emplacement qui n'a rien vendu, alors que les accessoires du pic y tourneraient.",
+      "La place libérée par le déstockage accueille les références de l'hiver, qui tourneront : pensez rotation du stock, pas récupération du coût d'achat.":
+        "La place libérée par le déstockage accueille les références du pic qui arrive, qui tourneront : pensez rotation du stock, pas récupération du coût d'achat.",
+      // Au tour 6 d'une partie au mois, la boutique a six mois : pas encore les
+      // comptes d'une année. À l'année, le tour EST l'année.
+      "Votre banquier reçoit les comptes de l'année.": {
+        month: "Votre banquier reçoit vos derniers comptes.",
+        year: "Votre banquier reçoit les comptes de l'année.",
+      },
+      "Les achats de la collection de Noël se paient aux façonniers avant que Noël ne rapporte quoi que ce soit":
+        "Les achats de la collection du pic se paient aux façonniers avant que le pic ne rapporte quoi que ce soit",
+      "Les achats de la collection de Noël se paient avant que Noël ne rapporte quoi que ce soit":
+        "Les achats de la collection du pic se paient avant que le pic ne rapporte quoi que ce soit",
+      // La trésorerie qui dort est détectée à n'importe quel tour : rien n'y date le tour.
+      "La caisse pleine d'après-soldes": "La caisse pleine entre deux collections",
+      "Les soldes ont vidé la réserve et rempli le compte": "Vos ventes ont vidé la réserve et rempli le compte",
+      "La collection d'automne, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.":
+        "La collection suivante, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.",
+      "La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.":
+        "La collection suivante, elle, se commande dans quelques semaines et se paie avant d'être vendue.",
+      "Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…":
+        "Dans un commerce saisonnier, un solde de trésorerie élevé entre deux collections signifie surtout que…",
+
+      // PIXEL & CO et sa gamme : le tour 4 est le plus haut de chaque tableau
+      // (1,6 ; 1,45 à 1,7 selon le rayon).
+      "Black Friday et fêtes": "Le plus gros tour de la partie",
+      "Black Friday et fêtes, sur quatre rayons": "Le plus gros tour de la partie, sur quatre rayons",
+      "Vos concurrents ont réservé leurs espaces publicitaires depuis septembre":
+        "Vos concurrents ont réservé leurs espaces publicitaires depuis des semaines",
+      "Il suffit d'avoir du stock : à Noël, tout se vend": "Il suffit d'avoir du stock : au tour du pic, tout se vend",
+      "Beaucoup d'e-commerçants rentables meurent en décembre.":
+        "Beaucoup d'e-commerçants rentables meurent au plus fort de leur saison.",
+      "Les enchères publicitaires montent en période de fêtes.": "Les enchères publicitaires montent au tour du pic.",
+      // La trésorerie qui dort tombe à n'importe quel tour, et le tour qui suit le
+      // pic (0,9) n'est pas le plus creux du tableau (0,85 au tour 3) : on ne
+      // promet ni creux ni pic, seulement des ventes qui ne se répètent pas d'office.
+      "L'après-fêtes": "Le compte plein",
+      "L'après-fêtes, et la capsule qui attend": "Le compte plein, et la capsule qui attend",
+      "Le pic des fêtes a rempli le compte": "Vos ventes ont rempli le compte",
+      "Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.":
+        "Rien ne dit que le tour qui s'ouvre vendra autant, et les retours des dernières ventes ne sont pas tous remboursés.",
+      "Le trimestre qui s'ouvre est le plus creux de l'année, les retours de décembre ne sont pas tous remboursés":
+        "Rien ne dit que le tour qui s'ouvre vendra autant, les retours des dernières ventes ne sont pas tous remboursés",
+      // La question pose elle-même « après un pic de ventes ».
+      "Le solde de janvier porte encore les remboursements de décembre.":
+        "Le solde du tour d'après porte encore les remboursements du pic.",
+      "Projetez le trimestre creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.":
+        "Projetez le tour qui vient : publicité pour maintenir le trafic, règlement des fournisseurs, et remboursement des derniers retours.",
+      "Projetez le trimestre creux, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.":
+        "Projetez le tour qui vient, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs, et remboursement des derniers retours.",
+      "Le trimestre creux ne justifie pas un stock élevé.": "Un compte plein ne justifie pas un stock élevé.",
+
+      // Les courriers des deux liasses : l'animateur les pose au tour qu'il veut,
+      // la lettre ne date donc rien. Les étapes d'investissement tombent aux tours
+      // 4 (le concurrent) et 5 (le retournement), où rien ne fait l'automne.
+      "Saison des cadeaux avancée de trois semaines": "Vos clientes fidèles achètent plus tôt que d'habitude",
+      "Les magazines féminins ont lancé la saison plus tôt que d'habitude.":
+        "Les magazines féminins ont lancé les nouvelles collections plus tôt que d'habitude.",
+      "pour notre arbre de Noël": "pour la dotation de nos salariés",
+      "Implantation du marché de Noël devant votre boutique": "Implantation d'un marché artisanal devant votre boutique",
+      "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille.":
+        "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération dans les semaines qui viennent et renouvelle l'ensemble de sa ligne de maille.",
+      "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.":
+        "Le temps reste plus doux que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.",
+      "Financement de votre stock de fin d'année": "Financement de votre stock de saison",
+      "Préparation de l'opération commerciale de fin novembre": "Préparation de la grande opération commerciale du secteur",
+      "redéploie son espace de tête de rayon vers la rentrée scolaire":
+        "redéploie son espace de tête de rayon vers d'autres catégories",
+    } satisfies Record<string, string | { month: string; year: string }>).map(([cle, forme]) => [
+      cle,
+      typeof forme === "string" ? { month: forme, year: forme } : forme,
+    ]),
+  ),
+  // --- fin du groupe boutique-ecommerce : le récit des saisons --------------
 };
+
+// --- hotel-bistrot-conseil ---------------------------------------------------
+/**
+ * Une phrase du récit des saisons, la même au mois et à l'année : elle dit ce que le
+ * tour est pour le moteur (le pic, le creux), qui ne dépend pas de la durée du tour.
+ * Une déclaration de fonction, hissée : la table ci-dessus la lit au chargement.
+ */
+function aLaSaison(phrase: string): { month: string; year: string } {
+  return { month: phrase, year: phrase };
+}
+// --- fin hotel-bistrot-conseil -----------------------------------------------
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
@@ -352,7 +785,26 @@ const GRANDEURS: Record<string, Grandeur> = {
     if (!s.hr) throw new Error("Situation : le jeton « embauche » suppose un module RH");
     return s.hr.hiringCost;
   },
+  // --- hotel-bistrot-conseil : le prix de la capacité, lu du parc ---------------
+  /**
+   * Le prix d'une unité de capacité PAR TOUR quand le scénario achète sa capacité en
+   * équipements typés, que le moteur lit alors (`engine/investment/plafond.ts`) : le
+   * coût d'un type divisé par sa capacité par tour, du type le moins cher au plus cher.
+   * À L'ESCALE, de la chambre standard à la suite premium. Hors abonnement,
+   * `applyPeriodicity` met la capacité à la durée du tour, et le prix suit (÷ k).
+   */
+  cout_capacite_parc_min: (s) => Math.min(...prixDeLaCapacite(s)),
+  cout_capacite_parc_max: (s) => Math.max(...prixDeLaCapacite(s)),
+  // --- fin hotel-bistrot-conseil -------------------------------------------------
 };
+
+// --- hotel-bistrot-conseil ---------------------------------------------------
+/** Le prix d'une unité de capacité par tour, type d'équipement par type. */
+function prixDeLaCapacite(s: EngineScenarioConfig): number[] {
+  if (!s.equipment?.types.length) throw new Error("Situation : ce jeton suppose un parc d'équipements typés");
+  return s.equipment.types.map((t) => t.costPerUnit / t.capacityPerUnit);
+}
+// --- fin hotel-bistrot-conseil -----------------------------------------------
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
   /** Un taux de perte écrit au trimestre, ramené à la durée du tour par la règle du moteur. */

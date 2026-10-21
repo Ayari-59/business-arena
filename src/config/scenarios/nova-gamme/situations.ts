@@ -73,7 +73,7 @@ const SOURCES: SituationDef[] = [
       "Combien laisse une Go une fois ses composants et sa main-d'œuvre payés ? Et une Studio ?",
       "Il existe un volume précis, toutes références confondues, à partir duquel vous cessez de perdre de l'argent — et il dépend de ce que vous vendez.",
       "Une analyse du seuil de rentabilité à mix constant donnerait un objectif chiffré à votre premier {{trimestre}}.",
-      "Calculez la marge moyenne d'une enceinte au mix prévu (15 € la Go, 21 € la One, 59 € la Studio une fois lancée), puis divisez les charges de structure par cette marge. Et comparez le coût de développement de la Studio aux marges qu'elle rapportera d'ici Noël : financée dès ce tour, elle se vend {{au_tour: vente_studio}}.",
+      "Calculez la marge moyenne d'une enceinte au mix prévu (15 € la Go, 21 € la One, 59 € la Studio une fois lancée), puis divisez les charges de structure par cette marge. Et comparez le coût de développement de la Studio aux marges {{qu'elle rapportera d'ici Noël}} : financée dès ce tour, elle se vend {{au_tour: vente_studio}}.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -155,10 +155,10 @@ const SOURCES: SituationDef[] = [
     narrative:
       "La demande décolle, la Studio est sur le marché chez ceux qui l'ont développée, et CampusTech vous ouvre ses rayons pour la One. Mais l'atelier a plafonné : les plans additionnés dépassaient ce que les lignes peuvent sortir, la coupe a été proportionnelle, et des clients sont repartis les mains vides… sur la Studio comme sur la Go.",
     problem:
-      "Votre marché demande plus que votre atelier ne produit. Quelle référence produire en priorité, et que préparer avant le pic de fin d'année ?",
+      "Votre marché demande plus que votre atelier ne produit. {{Quelle référence produire en priorité, et que préparer avant le pic de fin d'année ?}}",
     diagnosticOptions: [
       { id: "novag_marge_par_capacite", label: "Quand la capacité manque, on classe les références par marge rapportée à l'unité de capacité qu'elles consomment", correct: true },
-      { id: "novag_stock_avant_pic", label: "Il faut produire AVANT le pic pour constituer du stock, sur les références qui se vendront à Noël", correct: true },
+      { id: "novag_stock_avant_pic", label: "{{Il faut produire AVANT le pic pour constituer du stock, sur les références qui se vendront à Noël}}", correct: true },
       { id: "novag_prix_go", label: "Il suffit d'augmenter fortement le prix de la Go pour retrouver de la place", correct: false },
       { id: "novag_coupe_egale", label: "La coupe proportionnelle de l'atelier est la bonne règle : elle est équitable entre les références", correct: false },
     ],
@@ -187,7 +187,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Quand le pic dépasse la capacité d'un tour, la seule issue est de produire à l'avance. Le stock immobilise du cash, mais il sauve les ventes : et sur une gamme, on stocke ce qui se vendra à Noël, la Go des cadeaux avant tout.",
+          "Quand le pic dépasse la capacité d'un tour, la seule issue est de produire à l'avance. {{Le stock immobilise du cash, mais il sauve les ventes : et sur une gamme, on stocke ce qui se vendra à Noël, la Go des cadeaux avant tout.}}",
       },
     ],
     modelRelevance: {
@@ -203,7 +203,7 @@ const SOURCES: SituationDef[] = [
       "Vos trois plans additionnés ont-ils atteint votre plafond ? Qui a été coupé, et de combien ?",
       "Quand l'atelier est le goulot, chaque enceinte produite en prend la place d'une autre : que rapporte cette place selon la référence ?",
       "Une analyse de capacité, croisée avec la marge de chaque référence et la saisonnalité, dirait quoi produire dès maintenant.",
-      "Classez les références par marge par enceinte (59 € la Studio, 21 € la One, 15 € la Go), servez la demande dans cet ordre, et produisez au plafond dès ce tour pour stocker la Go et la One avant Noël.",
+      "Classez les références par marge par enceinte (59 € la Studio, 21 € la One, 15 € la Go), servez la demande dans cet ordre, et produisez au plafond dès ce tour {{pour stocker la Go et la One avant Noël}}.",
     ]),
     trigger: { round: 3 },
     weight: 1,
@@ -217,7 +217,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Le paradoxe du succès",
     narrative:
-      "{{Trimestre}} record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio. Le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge. La grande distribution règle à soixante jours, CampusTech à quatre-vingts, et les composants, eux, ont été payés.",
+      "{{Trimestre record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.}} Le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge. La grande distribution règle à soixante jours, CampusTech à quatre-vingts, et les composants, eux, ont été payés.",
     problem:
       "Votre entreprise gagne de l'argent mais n'en a plus en caisse. Identifiez les causes de ce paradoxe, référence par référence.",
     diagnosticOptions: [
@@ -488,7 +488,7 @@ const SOURCES: SituationDef[] = [
       "Pourquoi manque-t-on d'une référence alors qu'on en stocke une autre, et comment répartir la production au prochain tour ?",
     diagnosticOptions: [
       { id: "novag_so_mix", label: "Les plans par référence ne suivaient pas les demandes par référence", correct: true },
-      { id: "novag_so_saison", label: "La saisonnalité n'est pas la même sur chaque référence : la Go double à Noël, pas la Studio", correct: true },
+      { id: "novag_so_saison", label: "{{La saisonnalité n'est pas la même sur chaque référence : la Go double à Noël, pas la Studio}}", correct: true },
       { id: "novag_so_capacite", label: "L'atelier manque de capacité, il faut investir", correct: false },
       { id: "novag_so_prix", label: "Il faut baisser le prix de la référence stockée pour l'écouler à tout prix", correct: false },
     ],
@@ -669,7 +669,7 @@ const SOURCES: SituationDef[] = [
   {
     code: "novag_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "La caisse pleine d'après-Noël",
+    title: "{{La caisse pleine d'après-Noël}}",
     narrative:
       "Les ventes du pic ont été encaissées, CampusTech et la grande distribution ont fini par payer, et le compte affiche plus d'un {{trimestre}} de charges de structure d'avance, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 12 %. Les composants des trois références, eux, se paient avant que la première enceinte ne soit vendue, et la Studio en consomme le plus.",
     problem:
@@ -744,7 +744,7 @@ const SOURCES: SituationDef[] = [
       { id: "novag7_home_cannibale", label: "Une Home vendue à un acheteur de One ne rapporte que l'écart de marge entre les deux : c'est la cannibalisation", correct: true },
       { id: "novag7_home_option", label: "Le développement s'engage avant de connaître le marché : l'information a une valeur, et attendre a un coût", correct: true },
       { id: "novag7_home_meilleure_marge", label: "La Home laisse plus par enceinte que la One : il faut tout engager dès ce tour", correct: false },
-      { id: "novag7_home_attendre", label: "Une innovation se lance quand son marché est connu, quitte à arriver après Noël", correct: false },
+      { id: "novag7_home_attendre", label: "{{Une innovation se lance quand son marché est connu, quitte à arriver après Noël}}", correct: false },
     ],
     quiz: [
       {
@@ -802,13 +802,13 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Sur le marché, la première",
     narrative:
-      "Vos premières Home sont en rayon. Les foyers connectés les découvrent, et des acheteurs de One sont passés au multipièce… y compris chez vous : une partie des Home vendues l'a été à des clients qui auraient pris une One. La plateforme qui fait vivre l'application coûte {{entier: plateforme_home}} € par tour, que la Home se vende ou non. Et Noël arrive : c'est là que le module radio manque le plus souvent.",
+      "Vos premières Home sont en rayon. Les foyers connectés les découvrent, et des acheteurs de One sont passés au multipièce… y compris chez vous : une partie des Home vendues l'a été à des clients qui auraient pris une One. La plateforme qui fait vivre l'application coûte {{entier: plateforme_home}} € par tour, que la Home se vende ou non. {{Et Noël arrive : c'est là que le module radio manque le plus souvent.}}",
     problem:
-      "Combien la Home vous a-t-elle vraiment rapporté ce tour, une fois retirées les One qu'elle a remplacées et payée sa plateforme ? Faut-il la pousser avant Noël, ou garder l'atelier pour la One ?",
+      "Combien la Home vous a-t-elle vraiment rapporté ce tour, une fois retirées les One qu'elle a remplacées et payée sa plateforme ? {{Faut-il la pousser avant Noël, ou garder l'atelier pour la One ?}}",
     diagnosticOptions: [
       { id: "novag7_marge_incrementale", label: "Ce que la Home rapporte, c'est sa marge moins celle des One qu'elle a prises à l'entreprise, moins la plateforme", correct: true },
       { id: "novag7_lancement", label: "Sur un marché qui naît, une Home qu'on ne fait pas connaître se vend mal : le budget de lancement fait la demande", correct: true },
-      { id: "novag7_module_pic", label: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque à Noël coûte les ventes du meilleur tour", correct: true },
+      { id: "novag7_module_pic", label: "{{Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque à Noël coûte les ventes du meilleur tour}}", correct: true },
       { id: "novag7_36_euros", label: "Chaque Home vendue rapporte 36 € de plus à l'entreprise", correct: false },
       { id: "novag7_recuperer", label: "Les 90 000 € du développement doivent être récupérés : il faut vendre la Home à tout prix", correct: false },
     ],

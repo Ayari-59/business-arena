@@ -51,7 +51,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   bistrot_t3_matieres: {
     title: "Le beurre a pris 24 %, sur quatre cartes",
     narrative:
-      "Votre grossiste annonce une hausse brutale sur la moitié de vos cartes : beurre, viande, énergie. Nous sommes en août, la salle est à moitié vide, les bureaux du quartier sont fermés et les banquets attendent décembre. Seuls les buffets traiteur, si vous en avez, continuent de partir.",
+      "Votre grossiste annonce une hausse brutale sur la moitié de vos cartes : beurre, viande, énergie. {{Nous sommes en août, la salle est à moitié vide, les bureaux du quartier sont fermés et les banquets attendent décembre.}} Seuls les buffets traiteur, si vous en avez, continuent de partir.",
     problem:
       "Votre ratio matières dérape au pire moment, offre par offre. Que faites-vous de vos cartes et de vos prix ?",
     diagnosticLabels: [
@@ -64,7 +64,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "La hausse frappe une charge variable : quelle grandeur du compte de résultat bouge en premier, et sur quelle offre le plus ?",
       "Vingt-quatre pour cent sur les denrées : 1,80 € de plus par couvert du midi, 2,90 € le soir, 2,40 € en banquet. La marge se comprime partout, mais pas de la même façon.",
       "Deux issues : répercuter sur le ticket, ou reconstruire la carte pour retrouver de la marge à prix constant ; et une troisième en gamme, déplacer le mix vers l'offre dont la marge résiste le mieux.",
-      "Le mois d'août amplifie tout : les déjeuners d'affaires tombent à 0,6 et les banquets à 0,5. Seule l'activité traiteur, si elle est bâtie, garde ses clients.",
+      "{{Le mois d'août amplifie tout}} : les déjeuners d'affaires tombent à 0,6 et les banquets à 0,5. Seule l'activité traiteur, si elle est bâtie, garde ses clients.",
       "Répercutez offre par offre : élasticité −1,5 le midi contre −1,2 le soir et −0,9 chez les gourmets. Une hausse uniforme est toujours sous-optimale quand les élasticités diffèrent.",
     ],
     modelExplain:
@@ -73,7 +73,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   bistrot_t4_banquets: {
     title: "La saison des banquets, et le reste de la carte",
     narrative:
-      "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur {{ce trimestre}}, règlent à 30 jours et privatisent la salle des soirs entiers. Chaque soir donné aux banquets est un soir retiré à la carte, et la cuisine ne sert qu'une fois : {{entier: capacite_parc}} couverts, toutes offres confondues.",
+      "{{Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre}}, règlent à 30 jours et privatisent la salle des soirs entiers. Chaque soir donné aux banquets est un soir retiré à la carte, et la cuisine ne sert qu'une fois : {{entier: capacite_parc}} couverts, toutes offres confondues.",
     problem:
       "Combien de couverts préparer par offre pour absorber le pic, que sacrifiez-vous, et que risquez-vous en préparant trop ?",
     diagnosticLabels: [
