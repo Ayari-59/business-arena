@@ -328,7 +328,7 @@ const rawTransport = {
     },
     {
       code: "transport_offer_ecommerce",
-      title: "Pic de fin d'année d'un e-commerçant",
+      title: "Pic d'activité d'un e-commerçant",
       narrative:
         "Un e-commerçant explose ses volumes sur deux mois et cherche de la capacité tout de suite. Il paie vite parce qu'il n'a pas le choix, mais il saturera vos quais.",
       units: 4200,

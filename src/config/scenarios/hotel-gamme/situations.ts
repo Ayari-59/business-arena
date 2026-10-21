@@ -117,14 +117,14 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "L'analyse des écarts sépare ce que le volume explique, ce que le prix explique, et ce que le mix explique. Un chiffre d'affaires conforme peut recouvrir trois erreurs qui se compensent.",
   },
   hotel_detect_idle_cash: {
-    title: "{{Le compte plein de fin de saison, et trois chambres à faire passer l'hiver}}",
+    title: "Le compte plein, et trois chambres aux saisons différentes",
     narrative:
-      "La saison forte est passée : les suites des grandes occasions et les supérieures des escapades ont fait le plein, et le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, saison creuse comprise, {{et l'hiver ne vendra ni suites ni escapades}}.",
+      "Le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, que les chambres soient pleines ou vides, et chaque type de chambre a sa propre saison.",
     problem:
-      "{{Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de l'hiver ne ressemble pas à celui de l'été ?}}",
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix des tours à venir ne ressemblera pas forcément à celui qui l'a rempli ?",
     diagnosticLabels: [
       "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
-      "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, {{avec le mix de chambres que l'hiver vendra vraiment}}",
+      "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, avec le mix de chambres que les tours à venir vendront vraiment",
       "Puisque le placement rapporte, autant y mettre la totalité du solde",
       "Placer améliore le résultat d'exploitation de l'entreprise",
     ],
@@ -132,11 +132,11 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Comparez votre solde aux charges d'un seul {{trimestre}} : combien {{de trimestres}} pourriez-vous tenir sans vendre une nuitée ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "Projetez la saison creuse chambre par chambre : la standard des groupes et la supérieure des affaires reviennent, les suites et les escapades s'effacent. Salaires, énergie, entretien et échéance du crédit tombent quand même.",
+      "Projetez les tours qui viennent chambre par chambre : les groupes, les affaires, les escapades et les grandes occasions ne culminent pas tous au même tour. Salaires, énergie, entretien et échéance du crédit tombent quand même.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
-      "Le budget de trésorerie projette la saison creuse à venir, chambre par chambre, échéance du crédit comprise. {{Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.}}",
+      "Le budget de trésorerie projette les tours à venir, chambre par chambre, échéance du crédit comprise. Seul lui distingue un vrai excédent de ce qui doit faire passer la saison creuse.",
   },
 };
 

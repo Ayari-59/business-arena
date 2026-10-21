@@ -93,7 +93,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_detect_idle_cash: {
     title: "Le compte se remplit, le carnet se vide, et la cyber-sécurité attend",
     narrative:
-      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cyber-sécurité, {{qui vendrait à des DSI qui ne connaissent pas les congés}}, n'est pas encore financée.",
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cyber-sécurité, qui vendrait à des DSI qui achètent en toute saison, n'est pas encore financée.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans l'offre cyber-sécurité, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [

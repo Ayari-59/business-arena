@@ -483,7 +483,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "{{Une capacité créée pour trois semaines d'été se paie douze mois par an, en amortissements et en charges.}} La saisonnalité se gère par le prix ; la croissance durable, par l'investissement.",
+          "Une capacité créée pour trois semaines de pic se paie douze mois par an, en amortissements et en charges. La saisonnalité se gère par le prix ; la croissance durable, par l'investissement.",
       },
     ],
     modelRelevance: {
@@ -497,7 +497,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
       "Regardez votre taux d'utilisation : à quel niveau êtes-vous, et sur combien de tours ?",
       "Refuser un client, c'est perdre 74 € de marge, mais c'est aussi le signe que votre prix est trop bas.",
       "Quand la capacité est saturée, le prix devient le seul levier gratuit : il ne coûte rien à mettre en œuvre.",
-      "{{Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours).}} La première se gère par le prix.",
+      "Avant d'investir, distinguez saturation SAISONNIÈRE (un pic de haute saison) et saturation DURABLE (tous les tours). La première se gère par le prix.",
       "Si la saturation est durable, comparez le coût de la capacité (de {{entier: cout_capacite_parc_min}} à {{entier: cout_capacite_parc_max}} € par nuitée {{trimestrielle}} selon le type de chambre) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
     ]),
     trigger: { detect: "capacity_saturated" },
@@ -671,9 +671,9 @@ export const HOTEL_SOURCES: SituationDef[] = [
   {
     code: "hotel_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "Le compte plein de fin de saison",
+    title: "Le compte plein d'un métier saisonnier",
     narrative:
-      "La saison forte est passée et le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, saison creuse comprise.",
+      "Le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, que les chambres soient pleines ou vides.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -723,7 +723,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "L'activité est saisonnière, les charges ne le sont pas. {{Le solde de septembre n'est pas un excédent : c'est ce qui doit faire passer l'hiver.}}",
+          "L'activité est saisonnière, les charges ne le sont pas. Le solde de fin de haute saison n'est pas un excédent : c'est ce qui doit faire passer la saison creuse.",
       },
     ],
     modelRelevance: {
@@ -737,7 +737,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
       "Comparez votre solde aux charges d'un seul {{trimestre}} : combien {{de trimestres}} pourriez-vous tenir sans vendre une nuitée ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "Projetez la saison creuse qui vient : salaires, énergie, entretien et échéance du crédit tombent alors que le remplissage s'effondre.",
+      "Projetez les tours qui viennent : salaires, énergie, entretien et échéance du crédit tombent même quand le remplissage s'effondre.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
@@ -753,7 +753,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   hotel_detect_idle_cash:
-    "Le budget de trésorerie projette la saison creuse à venir, échéance du crédit comprise. {{Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.}}",
+    "Le budget de trésorerie projette les tours à venir, échéance du crédit comprise. Seul lui distingue un vrai excédent de ce qui doit faire passer la saison creuse.",
   hotel_t4_plateformes:
     "L'analyse marginale compare ce que chaque nuitée supplémentaire rapporte à ce qu'elle coûte vraiment. La structure étant déjà payée, une nuitée commissionnée reste très largement bénéficiaire.",
   hotel_t6_ecarts:

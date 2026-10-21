@@ -506,7 +506,7 @@ const SOURCES: SituationDef[] = [
       "Comparez deux choses dans vos états : le résultat net du tour, et la variation de votre trésorerie.",
       "Regardez ce qui a bougé au bilan entre l'ouverture et la clôture : le stock, les créances, les dettes fournisseurs.",
       "Le résultat est une opinion, la trésorerie est un fait. Entre les deux, il y a le besoin en fonds de roulement.",
-      "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. {{Le réassort de Noël}} et les comités d'entreprise à 45 jours travaillent dans le même sens.",
+      "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. Le réassort du pic et les comités d'entreprise à 45 jours travaillent dans le même sens.",
       "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock. Le troisième, allonger le crédit fournisseur, se négocie : il ne se décrète pas.",
     ]),
     trigger: { detect: "profitable_illiquid" },
@@ -689,9 +689,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "bmono_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "{{La caisse pleine d'après-soldes}}",
+    title: "La caisse pleine entre deux collections",
     narrative:
-      "{{Les soldes ont vidé la réserve et rempli le compte}} : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. {{La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.}}",
+      "Vos ventes ont vidé la réserve et rempli le compte : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. La collection suivante, elle, se commande dans quelques semaines et se paie avant d'être vendue.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -732,7 +732,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "boutique_saison_achats",
-        prompt: "{{Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…}}",
+        prompt: "Dans un commerce saisonnier, un solde de trésorerie élevé entre deux collections signifie surtout que…",
         options: [
           { id: "a", label: "Le stock s'est transformé en argent, et cet argent va repartir en stock à la commande suivante" },
           { id: "b", label: "L'entreprise a dégagé un résultat exceptionnel sur {{le trimestre}}" },

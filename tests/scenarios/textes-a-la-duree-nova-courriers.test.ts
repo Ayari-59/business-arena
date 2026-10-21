@@ -11,6 +11,7 @@ import { situationDeLaPartie, textesDe } from "../../src/config/scenarios/situat
 import { isProductAvailable } from "../../src/engine/gamme";
 import type { EngineScenarioConfig, ProductDef } from "../../src/engine/types";
 import type { SituationDef } from "../../src/config/scenarios/situation-kit";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * LES SITUATIONS DE NOVA ET DE NOVA · GAMME SUIVENT LA DURÉE DU TOUR DE LEUR PARTIE.
@@ -31,7 +32,10 @@ import type { SituationDef } from "../../src/config/scenarios/situation-kit";
  *    n'atteint l'écran ;
  *  · qu'au trimestre, le texte est octet pour octet celui d'avant les jetons
  *    (tests/fixtures/situations-nova-courriers-au-trimestre.json, relevé sur
- *    1c6bc002 avant toute modification).
+ *    1c6bc002 avant toute modification), aux seules corrections près des
+ *    situations détectées de NOVA · GAMME, qui supposaient au trimestre même un
+ *    pic passé que le tour n'avait pas (décision du propriétaire,
+ *    `corrections-des-dates.ts`).
  */
 
 const DUREES: Periodicity[] = ["month", "quarter", "year"];
@@ -196,9 +200,9 @@ describe("NOVA et NOVA · GAMME : chaque situation se rend à la durée du tour 
   it("au trimestre, le texte est octet pour octet celui d'avant les jetons", () => {
     expect(Object.keys(AVANT).sort()).toEqual(SITUATIONS.map((d) => d.code).sort());
     for (const def of SITUATIONS) {
-      expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(AVANT[def.code]);
+      expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(corrigerLesDates(def.code, AVANT[def.code]!));
       // Le registre porte le texte au trimestre : catalogue, éditeur et référentiel semé le lisent.
-      expect(textesDe(def), def.code).toEqual(AVANT[def.code]);
+      expect(textesDe(def), def.code).toEqual(corrigerLesDates(def.code, AVANT[def.code]!));
     }
   });
 

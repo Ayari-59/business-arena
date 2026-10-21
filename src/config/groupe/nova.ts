@@ -240,7 +240,7 @@ export const NOVA_HOME: DefinitionDUneNouveaute = {
         code: "taikon",
         name: "Taikon Wireless",
         narrative:
-          "Le module Wi-Fi et Bluetooth de référence, certifié, au prix du marché. Une seule usine, à Taïwan : quand la demande mondiale de puces s'emballe, à Noël surtout, ses livraisons sont rationnées et la ligne Home s'arrête en partie.",
+          "Le module Wi-Fi et Bluetooth de référence, certifié, au prix du marché. Une seule usine, à Taïwan : quand la demande mondiale de puces s'emballe, aux pics de ventes surtout, ses livraisons sont rationnées et la ligne Home s'arrête en partie.",
         costMultiplier: 1,
         qualityBonus: 0,
         paymentDelayDays: 30,

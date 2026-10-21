@@ -264,9 +264,9 @@ const rawBoutique = {
   orderOffers: [
     {
       code: "boutique_offer_ce_noel",
-      title: "Comité d'entreprise · dotation de Noël",
+      title: "Comité d'entreprise · dotation des salariés",
       narrative:
-        "Le CSE d'une clinique privée veut habiller ses dotations de fin d'année. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
+        "Le CSE d'une clinique privée veut habiller les dotations de ses salariés. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
       units: 600,
       price: 41,
       paymentDelayDays: 60,

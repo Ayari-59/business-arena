@@ -304,7 +304,7 @@ const rawBatiment = {
       code: "batiment_offer_collectivite",
       title: "Collectivité · groupe scolaire",
       narrative:
-        "La commune rénove son groupe scolaire et impose le calendrier des vacances d'été. Prix tiré, planning intouchable, et le mandatement viendra bien après la rentrée.",
+        "La commune rénove son groupe scolaire et impose un calendrier calé sur la fermeture des classes. Prix tiré, planning intouchable, et le mandatement viendra bien après la réception des travaux.",
       units: 1100,
       price: 284,
       paymentDelayDays: 90,

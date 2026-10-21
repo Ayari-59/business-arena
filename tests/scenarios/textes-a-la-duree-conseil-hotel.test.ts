@@ -10,6 +10,7 @@ import {
 import { SCENARIOS } from "../../src/config/scenarios/registry";
 import { jetonsDe, situationDeLaPartie, sourceDe, textesDe } from "../../src/config/scenarios/situation-texte";
 import type { EngineScenarioConfig } from "../../src/engine/types";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * ATLAS CONSEIL ET L'ESCALE SE LISENT À LA DURÉE DU TOUR DE LEUR PARTIE.
@@ -29,7 +30,9 @@ import type { EngineScenarioConfig } from "../../src/engine/types";
  *    n'atteint l'écran ;
  *  · qu'au trimestre, le texte est octet pour octet celui d'avant les jetons
  *    (tests/fixtures/situations-conseil-hotel-au-trimestre.json, relevé sur 1c6bc002),
- *    aux corrections près que nomme `CORRECTIONS`.
+ *    aux corrections près que nomme `CORRECTIONS`, et à celles des situations
+ *    détectées, qui supposaient au trimestre même une saison que le tour n'avait
+ *    pas (décision du propriétaire, `corrections-des-dates.ts`).
  */
 
 const DUREES: Periodicity[] = ["month", "quarter", "year"];
@@ -57,9 +60,12 @@ const CORRECTIONS: { cles: string[]; avant: string; apres: string }[] = [
   },
 ];
 
-/** Le texte au trimestre attendu : la fixture, corrections nommées appliquées. */
+/** Le texte au trimestre attendu : la fixture, corrections nommées appliquées, celles des dates comprises. */
 const attenduAuTrimestre = (cle: string): string[] =>
-  AVANT[cle]!.map((t) => CORRECTIONS.filter((c) => c.cles.includes(cle)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t));
+  corrigerLesDates(
+    cle,
+    AVANT[cle]!.map((t) => CORRECTIONS.filter((c) => c.cles.includes(cle)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t)),
+  );
 
 /** Le prix d'une nuitée de capacité par tour, du type de chambre le moins cher au plus cher : coût ÷ capacité. */
 const prixDuParc = (s: EngineScenarioConfig) => {

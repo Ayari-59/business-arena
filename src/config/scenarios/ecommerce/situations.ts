@@ -667,9 +667,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "ecom_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "{{L'après-fêtes}}",
+    title: "Le compte plein",
     narrative:
-      "{{Le pic des fêtes a rempli le compte}} : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.}}",
+      "Vos ventes ont rempli le compte : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. Rien ne dit que le tour qui s'ouvre vendra autant, et les retours des dernières ventes ne sont pas tous remboursés.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -719,7 +719,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Une commande encaissée n'est pas une commande acquise tant que le délai de rétractation court. {{Le solde de janvier porte encore les remboursements de décembre.}}",
+          "Une commande encaissée n'est pas une commande acquise tant que le délai de rétractation court. Le solde du tour d'après porte encore les remboursements du pic.",
       },
     ],
     modelRelevance: {
@@ -733,13 +733,13 @@ const SOURCES: SituationDef[] = [
       "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous vraiment ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "{{Projetez le trimestre creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.}}",
+      "Projetez le tour qui vient : publicité pour maintenir le trafic, règlement des fournisseurs, et remboursement des derniers retours.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
     decisionLevers: [
-      { field: "productionPlan", direction: "down", hint: "{{Le trimestre creux ne justifie pas un stock élevé.}} Réduisez les achats pour ne pas immobiliser du cash qui pourrait être placé ou gardé en réserve." },
+      { field: "productionPlan", direction: "down", hint: "Un compte plein ne justifie pas un stock élevé. Réduisez les achats pour ne pas immobiliser du cash qui pourrait être placé ou gardé en réserve." },
       { field: "maintenanceBudget", direction: "review", hint: "L'excédent de trésorerie peut financer un investissement logistique ou plateforme, à condition de conserver assez de liquidités pour {{le trimestre}} à venir." },
     ],
   },
