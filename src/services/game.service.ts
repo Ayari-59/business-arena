@@ -28,6 +28,7 @@ import {
 } from "@/config/difficulty";
 import { pseudoAffichable } from "@/config/invite";
 import { champsOuverts, signesDeCadrage, signesDeSituation } from "@/config/duree-du-tour";
+import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { emblemeParCode } from "@/config/emblemes";
 import { validerNomEquipe } from "@/config/nom-equipe";
 import { PERSONALITY_LABELS, botPersonalityFromSeed } from "@/engine/bots";
@@ -863,8 +864,11 @@ export async function getTeacherGameView(
   const presetDuJeu = presetFromProfile(game.difficultyProfile);
   const chargeDuTour = {
     signesDeCadrage: signesDeCadrage(snapshotDefinition),
+    // Le texte que les élèves de CETTE partie liront, à la durée de son tour.
     signesDeSituation: signesDeSituation(
-      snapshotDefinition.situations,
+      snapshotDefinition.situations.map((s) =>
+        situationDeLaPartie(s, dureeDuTourDe(game.scenarioSnapshot)),
+      ),
       game.currentRound,
       new Set(((game.scenarioSnapshot as { products?: { code: string }[] } | null)?.products ?? []).map((p) => p.code)),
     ),

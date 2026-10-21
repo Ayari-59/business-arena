@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { games, hintUsages, players, rounds, roundResults, situationInstances, situations, teams } from "@/db/schema";
 import { situationByCode } from "@/config/scenarios/registry";
+import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { presetFromProfile } from "@/config/difficulty";
 import { buildTriggerContext, detectSituations, nomsDuMarche } from "@/pedagogy/detection";
@@ -186,7 +187,16 @@ export async function loadInstanceForUser(instanceId: string, userId: string) {
     }
   }
   if (!def) throw new Error("Définition de situation manquante");
-  return { instance, situationRow, def, game: gameRow };
+  // Le texte de SA partie : au mois, les montants et les mots du mois. Tout ce
+  // qui passe par ici le lit ainsi, indices, diagnostic, rattrapage, et la
+  // lecture des réponses ouvertes, qui rapproche l'écrit de l'élève des
+  // libellés qu'il a eus sous les yeux.
+  return {
+    instance,
+    situationRow,
+    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot)),
+    game: gameRow,
+  };
 }
 
 export async function unlockedLevels(instanceId: string): Promise<number[]> {

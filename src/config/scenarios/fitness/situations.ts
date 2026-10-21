@@ -1,18 +1,30 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { fitnessScenario } from "./index";
 
 /**
  * Situations pédagogiques de VOLT FITNESS (modèle par abonnement).
  *
  * Le fil rouge du secteur : le client ne s'achète pas une fois, il se garde.
  * Un point d'attrition en moins vaut plus qu'un point de prix en plus.
+ *
+ * L'UNITÉ VENDUE EST UN TOUR D'ABONNEMENT : le prix, la marge, les charges de
+ * structure et l'attrition d'un tour suivent la durée du tour (ADR-01). Les
+ * énoncés les citent donc par jetons (`situation-texte.ts`), lus du scénario mis
+ * à la durée de la partie : au mois, l'adhérent paie 35 € et en laisse 30, et
+ * c'est ce que dit le texte. Ce qui ne bouge pas avec la durée reste écrit en
+ * clair, et la garde le vérifie par le calcul : le seuil en adhérents (charges et
+ * marge suivent le même facteur), la capacité (une place est un stock),
+ * l'abonnement annuel (quatre trimestres, douze mois ou un an font 420 €), les
+ * taux annuels du banquier, l'aménagement de la seconde salle.
  */
-export const FITNESS_SITUATIONS: SituationDef[] = [
+const SOURCES: SituationDef[] = [
   {
     code: "fitness_t1_recurrent",
     category: "prise_de_poste",
     title: "Mille six cents adhérents et un crédit",
     narrative:
-      "Vous reprenez VOLT FITNESS : 1 200 m², huit salariés, un parc de machines financé à crédit et 1 600 adhérents qui paient 105 € par trimestre. Le chiffre d'affaires du prochain trimestre est déjà connu, à ceux qui partiront près.",
+      "Vous reprenez VOLT FITNESS : 1 200 m², huit salariés, un parc de machines financé à crédit et 1 600 adhérents qui paient {{entier: abonnement}} € {{par trimestre}}. Le chiffre d'affaires du prochain {{trimestre}} est déjà connu, à ceux qui partiront près.",
     problem:
       "Qu'est-ce qu'un revenu récurrent change à la façon de piloter l'entreprise ?",
     diagnosticOptions: [
@@ -41,12 +53,12 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         id: "marge_adherent",
         prompt:
-          "Un abonnement à 105 € le trimestre coûte 15 € en variable. Que rapporte un adhérent à la couverture des charges ?",
+          "Un abonnement à {{entier: abonnement}} € {{le trimestre}} coûte {{entier: variable}} € en variable. Que rapporte un adhérent à la couverture des charges ?",
         options: [
-          { id: "a", label: "90 € par trimestre, et autant à chaque trimestre où il reste" },
-          { id: "b", label: "105 € une seule fois" },
-          { id: "c", label: "15 € par trimestre" },
-          { id: "d", label: "90 €, une seule fois à l'inscription" },
+          { id: "a", label: "{{entier: marge}} € {{par trimestre}}, et autant à chaque {{trimestre}} où il reste" },
+          { id: "b", label: "{{entier: abonnement}} € une seule fois" },
+          { id: "c", label: "{{entier: variable}} € {{par trimestre}}" },
+          { id: "d", label: "{{entier: marge}} €, une seule fois à l'inscription" },
         ],
         correctOptionId: "a",
         explain:
@@ -55,7 +67,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         id: "seuil_adherents",
         prompt:
-          "Avec 105 000 € de charges de structure décaissées et 90 € de marge par adhérent, combien faut-il d'adhérents pour équilibrer ?",
+          "Avec {{entier: charges}} € de charges de structure décaissées et {{entier: marge}} € de marge par adhérent, combien faut-il d'adhérents pour équilibrer ?",
         options: [
           { id: "a", label: "Environ 1 170, soit 53 % de la capacité" },
           { id: "b", label: "Environ 2 200, soit la capacité entière" },
@@ -64,7 +76,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "105 000 ÷ 90 ≈ 1 167 adhérents sur 2 200 places. Au-delà, chaque adhérent supplémentaire apporte 90 € presque intégralement en résultat.",
+          "{{entier: charges}} ÷ {{entier: marge}} ≈ 1 167 adhérents sur 2 200 places. Au-delà, chaque adhérent supplémentaire apporte {{entier: marge}} € presque intégralement en résultat.",
       },
     ],
     modelRelevance: {
@@ -77,9 +89,9 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Distinguez ce que coûte UN adhérent de plus de ce que coûte la salle, pleine ou vide.",
       "Le loyer, les coachs et le crédit tombent identiquement que vous ayez 800 ou 2 000 adhérents.",
-      "Chaque adhérent laisse 105 − 15 = 90 € par trimestre pour couvrir cette structure.",
-      "Seuil = 105 000 ÷ 90 ≈ 1 170 adhérents. Vous en avez 1 600 : la marge de sécurité existe, 430 adhérents, mais l'été arrive.",
-      "Et surtout : ces 90 € reviennent CHAQUE trimestre tant que l'adhérent reste. C'est ce qui distingue ce modèle de tous les autres.",
+      "Chaque adhérent laisse {{entier: abonnement}} − {{entier: variable}} = {{entier: marge}} € {{par trimestre}} pour couvrir cette structure.",
+      "Seuil = {{entier: charges}} ÷ {{entier: marge}} ≈ 1 170 adhérents. Vous en avez 1 600 : la marge de sécurité existe, 430 adhérents, mais l'été arrive.",
+      "Et surtout : ces {{entier: marge}} € reviennent CHAQUE {{trimestre}} tant que l'adhérent reste. C'est ce qui distingue ce modèle de tous les autres.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -87,7 +99,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         field: "price",
         direction: "review",
-        hint: "Votre prix fixe la marge par adhérent (105 − 15 = 90 €). Dans un modèle récurrent, chaque euro de marge se répète trimestre après trimestre : évaluez son impact cumulé avant de le modifier.",
+        hint: "Votre prix fixe la marge par adhérent ({{entier: abonnement}} − {{entier: variable}} = {{entier: marge}} €). Dans un modèle récurrent, chaque euro de marge se répète {{trimestre}} après {{trimestre}} : évaluez son impact cumulé avant de le modifier.",
       },
       {
         field: "productionPlan",
@@ -107,7 +119,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     diagnosticOptions: [
       {
         id: "ltv",
-        label: "Un adhérent vaut la somme des marges qu'il rapportera avant de partir, pas celle d'un seul trimestre",
+        label: "Un adhérent vaut la somme des marges qu'il rapportera avant de partir, pas celle d'un seul {{trimestre}}",
         correct: true,
       },
       {
@@ -117,7 +129,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       },
       {
         id: "same_thing",
-        label: "Un adhérent conservé et un adhérent acquis se valent : tous deux paient 105 €",
+        label: "Un adhérent conservé et un adhérent acquis se valent : tous deux paient {{entier: abonnement}} €",
         correct: false,
       },
       {
@@ -130,30 +142,30 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         id: "ltv_calcul",
         prompt:
-          "Un adhérent rapporte 90 € de marge par trimestre et le taux d'attrition trimestriel est de 15 %. Quelle est sa valeur vie ?",
+          "Un adhérent rapporte {{entier: marge}} € de marge {{par trimestre}} et le taux d'attrition {{trimestriel}} est de {{taux: attrition}} %. Quelle est sa valeur vie ?",
         options: [
-          { id: "a", label: "600 €, il reste en moyenne un peu plus de six trimestres" },
-          { id: "b", label: "90 €, un seul trimestre" },
-          { id: "c", label: "13,50 €" },
-          { id: "d", label: "1 350 €" },
+          { id: "a", label: "{{entier: marge / attrition}} €, il reste en moyenne un peu plus de {{mots: 1 / attrition}} {{trimestres}}" },
+          { id: "b", label: "{{entier: marge}} €, un seul {{trimestre}}" },
+          { id: "c", label: "{{centimes: marge * attrition}} €" },
+          { id: "d", label: "{{entier: marge * attrition * 100}} €" },
         ],
         correctOptionId: "a",
         explain:
-          "Valeur vie = marge ÷ taux d'attrition = 90 ÷ 0,15 = 600 €. Un adhérent n'est pas une vente : c'est une série de marges dont la longueur dépend de la rétention.",
+          "Valeur vie = marge ÷ taux d'attrition = {{entier: marge}} ÷ {{decimal: attrition}} = {{entier: marge / attrition}} €. Un adhérent n'est pas une vente : c'est une série de marges dont la longueur dépend de la rétention.",
       },
       {
         id: "effet_levier_churn",
         prompt:
-          "Vous ramenez l'attrition de 15 % à 10 %. Que devient la valeur vie d'un adhérent ?",
+          "Vous ramenez l'attrition de {{taux: attrition}} % à {{taux: perte(0.10)}} %. Que devient la valeur vie d'un adhérent ?",
         options: [
-          { id: "a", label: "Elle passe de 600 € à 900 €, soit +50 %" },
-          { id: "b", label: "Elle augmente de 5 %" },
-          { id: "c", label: "Elle ne change pas : la marge trimestrielle est identique" },
+          { id: "a", label: "Elle passe de {{entier: marge / attrition}} € à {{entier: marge / perte(0.10)}} €, soit +{{pourcent: arrondi(marge / perte(0.10)) / arrondi(marge / attrition) - 1}} %" },
+          { id: "b", label: "Elle augmente de {{taux: attrition - perte(0.10)}} %" },
+          { id: "c", label: "Elle ne change pas : la marge {{trimestrielle}} est identique" },
           { id: "d", label: "Elle double" },
         ],
         correctOptionId: "a",
         explain:
-          "90 ÷ 0,10 = 900 €. Cinq points d'attrition en moins valent 300 € par adhérent : aucun budget publicitaire n'offre un tel rendement.",
+          "{{entier: marge}} ÷ {{decimal: perte(0.10)}} = {{entier: marge / perte(0.10)}} €. {{Points: attrition - perte(0.10)}} d'attrition en moins {{accord: attrition - perte(0.10) | vaut | valent}} {{entier: arrondi(marge / perte(0.10)) - arrondi(marge / attrition)}} € par adhérent : aucun budget publicitaire n'offre un tel rendement.",
       },
     ],
     modelRelevance: {
@@ -165,10 +177,10 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     conceptCodes: ["discounting", "contribution_margin", "segmentation", "profitability_vs_return"],
     hints: hints([
       "Comparez deux adhérents : celui de janvier qui part en avril, et le régulier présent depuis six ans.",
-      "Ils paient le même prix. Ce qui les distingue, c'est le NOMBRE de trimestres qu'ils paieront.",
+      "Ils paient le même prix. Ce qui les distingue, c'est le NOMBRE {{de trimestres}} qu'ils paieront.",
       "Un adhérent n'est donc pas une vente ponctuelle : c'est une suite de marges futures, plus ou moins longue.",
-      "Évaluer une suite de flux futurs, c'est exactement ce que fait la valeur actuelle nette. Valeur vie ≈ marge trimestrielle ÷ taux d'attrition.",
-      "À 90 € de marge : 600 € si l'attrition est de 15 %, 900 € si elle tombe à 10 %. Le levier de la rétention est bien plus puissant que celui du prix.",
+      "Évaluer une suite de flux futurs, c'est exactement ce que fait la valeur actuelle nette. Valeur vie ≈ marge {{trimestrielle}} ÷ taux d'attrition.",
+      "À {{entier: marge}} € de marge : {{entier: marge / attrition}} € si l'attrition est de {{taux: attrition}} %, {{entier: marge / perte(0.10)}} € si elle tombe à {{taux: perte(0.10)}} %. Le levier de la rétention est bien plus puissant que celui du prix.",
     ]),
     trigger: { round: 2 },
     weight: 1.5,
@@ -176,7 +188,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         field: "qualityBudget",
         direction: "up",
-        hint: "Améliorer l'encadrement et les équipements réduit l'attrition. Cinq points de rétention en plus valent 300 € par adhérent — bien plus qu'une campagne publicitaire.",
+        hint: "Améliorer l'encadrement et les équipements réduit l'attrition. {{Points: attrition - perte(0.10)}} de rétention en plus {{accord: attrition - perte(0.10) | vaut | valent}} {{entier: arrondi(marge / perte(0.10)) - arrondi(marge / attrition)}} € par adhérent — bien plus qu'une campagne publicitaire.",
       },
       {
         field: "maintenanceBudget",
@@ -195,9 +207,9 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Le creux de l'été",
     narrative:
-      "Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite. Le loyer, les salaires et l'échéance du crédit, eux, tombent comme chaque trimestre.",
+      "Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite. Le loyer, les salaires et l'échéance du crédit, eux, tombent comme chaque {{trimestre}}.",
     problem:
-      "Comment traverser un trimestre où la demande s'effondre alors que les charges ne bougent pas ?",
+      "Comment traverser un {{trimestre}} où la demande s'effondre alors que les charges ne bougent pas ?",
     diagnosticOptions: [
       {
         id: "fixed_costs_stay",
@@ -206,7 +218,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       },
       {
         id: "anticipate",
-        label: "Un creux saisonnier se prépare au trimestre précédent, pas pendant",
+        label: "Un creux saisonnier se prépare {{au trimestre}} précédent, pas pendant",
         correct: true,
       },
       {
@@ -228,12 +240,12 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
         options: [
           { id: "a", label: "Elles ne baissent pas : loyer, salaires et crédit sont indépendants de la fréquentation" },
           { id: "b", label: "De moitié également" },
-          { id: "c", label: "De 15 €, le coût variable par adhérent" },
+          { id: "c", label: "De {{entier: variable}} €, le coût variable par adhérent" },
           { id: "d", label: "Proportionnellement au taux de remplissage" },
         ],
         correctOptionId: "a",
         explain:
-          "Seuls les 15 € de coût variable par adhérent disparaissent avec lui. Tout le reste continue de courir : c'est ce qui rend le creux d'été si dangereux.",
+          "Seuls les {{entier: variable}} € de coût variable par adhérent disparaissent avec lui. Tout le reste continue de courir : c'est ce qui rend le creux d'été si dangereux.",
       },
       {
         id: "marge_securite",
@@ -243,11 +255,11 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
           { id: "a", label: "De combien l'activité peut reculer avant de basculer sous le seuil de rentabilité" },
           { id: "b", label: "Le montant du découvert autorisé" },
           { id: "c", label: "Le nombre de places libres sur le plateau" },
-          { id: "d", label: "La trésorerie disponible en fin de trimestre" },
+          { id: "d", label: "La trésorerie disponible en fin {{de trimestre}}" },
         ],
         correctOptionId: "a",
         explain:
-          "Avec 1 600 adhérents et un seuil à 1 170, la marge de sécurité est de 430 adhérents. Un été qui en fait partir 500 fait basculer le trimestre.",
+          "Avec 1 600 adhérents et un seuil à 1 170, la marge de sécurité est de 430 adhérents. Un été qui en fait partir 500 fait basculer {{le trimestre}}.",
       },
     ],
     modelRelevance: {
@@ -260,9 +272,9 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Regardez la saisonnalité de chaque segment : lequel s'effondre, lequel résiste ?",
       "Les inscrits de janvier tombent à 0,25 de leur niveau. Les réguliers, eux, restent à 0,75.",
-      "Vos charges, elles, sont à 1,0 toute l'année. Seuls les 15 € de variable par adhérent disparaissent.",
+      "Vos charges, elles, sont à 1,0 toute l'année. Seuls les {{entier: variable}} € de variable par adhérent disparaissent.",
       "Calculez votre marge de sécurité : combien d'adhérents pouvez-vous perdre avant de passer sous le seuil de 1 170 ?",
-      "Les vraies réponses se jouent AVANT : fidéliser les inscrits de janvier, signer des contrats entreprises moins saisonniers, ou vendre des engagements annuels plutôt que trimestriels.",
+      "Les vraies réponses se jouent AVANT : fidéliser les inscrits de janvier, signer des contrats entreprises moins saisonniers, ou vendre des {{engagements annuels plutôt que trimestriels}}.",
     ]),
     trigger: { round: 3 },
     weight: 1.5,
@@ -275,7 +287,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         field: "price",
         direction: "review",
-        hint: "Une formule annuelle ou un tarif estival réduit protège contre l'hémorragie saisonnière en engageant les adhérents au-delà du trimestre.",
+        hint: "Une formule annuelle ou un tarif estival réduit protège contre l'hémorragie saisonnière en engageant les adhérents au-delà {{du trimestre}}.",
       },
       {
         field: "maintenanceBudget",
@@ -318,16 +330,16 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         id: "cout_cache_saturation",
         prompt:
-          "Vous inscrivez 300 adhérents de plus mais l'attrition passe de 10 % à 16 %. Que devient la valeur vie (marge 90 €) ?",
+          "Vous inscrivez 300 adhérents de plus mais l'attrition passe de {{taux: perte(0.10)}} % à {{taux: perte(0.16)}} %. Que devient la valeur vie (marge {{entier: marge}} €) ?",
         options: [
-          { id: "a", label: "Elle tombe de 900 € à 563 €, soit −37 % sur CHAQUE adhérent" },
+          { id: "a", label: "Elle tombe de {{entier: marge / perte(0.10)}} € à {{entier: marge / perte(0.16)}} €, soit −{{pourcent: 1 - arrondi(marge / perte(0.16)) / arrondi(marge / perte(0.10))}} % sur CHAQUE adhérent" },
           { id: "b", label: "Elle augmente grâce aux 300 nouveaux" },
           { id: "c", label: "Elle ne change pas : la marge est identique" },
-          { id: "d", label: "Elle baisse de 6 %" },
+          { id: "d", label: "Elle baisse de {{taux: perte(0.16) - perte(0.10)}} %" },
         ],
         correctOptionId: "a",
         explain:
-          "90 ÷ 0,16 = 563 €. La dégradation ne touche pas que les nouveaux : elle frappe toute la base. C'est pourquoi sur-vendre peut détruire plus de valeur qu'il n'en crée.",
+          "{{entier: marge}} ÷ {{decimal: perte(0.16)}} = {{entier: marge / perte(0.16)}} €. La dégradation ne touche pas que les nouveaux : elle frappe toute la base. C'est pourquoi sur-vendre peut détruire plus de valeur qu'il n'en crée.",
       },
       {
         id: "contrainte_double",
@@ -353,8 +365,8 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     conceptCodes: ["capacity", "productivity", "discounting", "demand_market_share"],
     hints: hints([
       "Regardez votre taux de remplissage, puis vos deux plafonds : la surface et l'encadrement.",
-      "Un abonnement vendu à un adhérent qui ne peut pas s'entraîner reste encaissé, ce trimestre-ci seulement.",
-      "La saturation ne coûte rien immédiatement : elle se paie au trimestre suivant, en résiliations.",
+      "Un abonnement vendu à un adhérent qui ne peut pas s'entraîner reste encaissé, {{ce trimestre-ci}} seulement.",
+      "La saturation ne coûte rien immédiatement : elle se paie {{au trimestre}} suivant, en résiliations.",
       "Et elle ne frappe pas que les nouveaux : toute la base subit la dégradation, donc toute la base voit sa valeur vie baisser.",
       "Trois voies : investir dans un plateau supplémentaire, recruter des coachs, ou étaler la fréquentation par le tarif (créneaux creux moins chers).",
     ]),
@@ -383,7 +395,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     category: "alerte_comptable",
     title: "Sous le seuil",
     narrative:
-      "Le trimestre s'achève en perte. La salle a ouvert tous les jours, les coachs étaient présents, le matériel fonctionnait, mais les adhérents n'étaient pas assez nombreux.",
+      "{{Le trimestre}} s'achève en perte. La salle a ouvert tous les jours, les coachs étaient présents, le matériel fonctionnait, mais les adhérents n'étaient pas assez nombreux.",
     problem:
       "Recruter de nouveaux adhérents, retenir les anciens, ou réduire la structure : lequel agit le plus vite, et lequel le plus fort ?",
     diagnosticOptions: [
@@ -412,16 +424,16 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         id: "ecart_adherents",
         prompt:
-          "Il manque 27 000 € pour équilibrer et chaque adhérent rapporte 90 € de marge. Combien d'adhérents manquent ?",
+          "Il manque {{entier: marge * 300}} € pour équilibrer et chaque adhérent rapporte {{entier: marge}} € de marge. Combien d'adhérents manquent ?",
         options: [
           { id: "a", label: "300" },
-          { id: "b", label: "27 000" },
-          { id: "c", label: "2 430 000" },
-          { id: "d", label: "90" },
+          { id: "b", label: "{{entier: marge * 300}}" },
+          { id: "c", label: "{{entier: marge * 300 * marge}}" },
+          { id: "d", label: "{{entier: marge}}" },
         ],
         correctOptionId: "a",
         explain:
-          "27 000 ÷ 90 = 300 adhérents. Convertir un écart en euros en un écart en clients rend la décision concrète : 300, c'est atteignable ; 3 000 ne le serait pas.",
+          "{{entier: marge * 300}} ÷ {{entier: marge}} = 300 adhérents. Convertir un écart en euros en un écart en clients rend la décision concrète : 300, c'est atteignable ; 3 000 ne le serait pas.",
       },
       {
         id: "cout_coach",
@@ -447,10 +459,10 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     conceptCodes: ["breakeven", "safety_margin", "contribution_margin", "fixed_costs"],
     hints: hints([
       "Reprenez le compte de résultat : de combien manquez-vous exactement ?",
-      "Divisez cet écart par 90 € : vous obtenez le nombre d'adhérents manquants.",
+      "Divisez cet écart par {{entier: marge}} € : vous obtenez le nombre d'adhérents manquants.",
       "Trois leviers comme partout : la marge par adhérent, le nombre d'adhérents, la structure. Mais ici, un quatrième les traverse tous : l'attrition.",
       "Retenir un adhérent existant ne coûte rien en acquisition et agit sur toute la base. Recruter coûte, et ne remplace qu'un départ.",
-      "Attention au faux ami : couper l'encadrement ou l'entretien améliore ce trimestre-ci et dégrade la rétention de tous les suivants.",
+      "Attention au faux ami : couper l'encadrement ou l'entretien améliore {{ce trimestre-ci}} et dégrade la rétention de tous les suivants.",
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
@@ -477,7 +489,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Douze mois encaissés d'avance",
     narrative:
-      "Votre responsable commercial propose une formule annuelle : 340 € réglés en une fois, contre 105 € par trimestre aujourd'hui, soit 420 € sur l'année. Vous perdez 80 € par adhérent, mais vous encaissez tout au premier jour, et l'adhérent ne peut plus partir en cours d'année.",
+      "Votre responsable commercial propose une formule annuelle : 340 € réglés en une fois, contre {{entier: abonnement}} € {{par trimestre}} aujourd'hui, soit 420 € sur l'année. Vous perdez 80 € par adhérent, mais vous encaissez tout au premier jour, et l'adhérent ne peut plus partir en cours d'année.",
     problem:
       "Que gagne réellement la salle à se faire payer d'avance, au-delà du chiffre d'affaires ?",
     diagnosticOptions: [
@@ -539,7 +551,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     conceptCodes: ["bfr", "frng", "net_treasury", "discounting"],
     hints: hints([
       "Comparez d'abord ce que rapporte un adhérent sur l'année dans les deux formules : 420 € contre 340 €.",
-      "Puis regardez QUAND cet argent arrive : quatre fois dans l'année, ou une seule fois en janvier ?",
+      "Puis regardez QUAND cet argent arrive : {{mots_f: tours_par_an}} fois dans l'année, ou une seule fois en janvier ?",
       "Un encaissement anticipé, c'est de l'argent disponible pour payer les charges avant même d'avoir fourni la prestation.",
       "Cette avance des clients réduit votre besoin en fonds de roulement, parfois jusqu'à le rendre négatif : ce sont eux qui financent la salle.",
       "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas en mars. Comparez ce gain aux 80 € de remise.",
@@ -555,7 +567,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Des adhérents engagés pour douze mois rendent la fréquentation plus prévisible. Ajustez votre capacité à une base stable plutôt qu'à des flux trimestriels.",
+        hint: "Des adhérents engagés pour douze mois rendent la fréquentation plus prévisible. Ajustez votre capacité à une base stable plutôt qu'à des flux {{trimestriels}}.",
       },
     ],
   },
@@ -564,7 +576,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Une seconde salle, ou pas",
     narrative:
-      "Un local se libère dans le quartier voisin : 220 000 € d'aménagement. Vous ne savez pas si la demande y est. Votre étude interne dit qu'il y a environ deux chances sur trois d'atteindre 1 400 adhérents, et une sur trois de plafonner à 600, auquel cas la salle perdrait de l'argent chaque trimestre. Le second site ne s'ouvre pas dans la partie : l'exercice se raisonne sur le papier, et seul l'agrandissement de votre plateau actuel se décide dans vos investissements.",
+      "Un local se libère dans le quartier voisin : 220 000 € d'aménagement. Vous ne savez pas si la demande y est. Votre étude interne dit qu'il y a environ deux chances sur trois d'atteindre 1 400 adhérents, et une sur trois de plafonner à 600, auquel cas la salle perdrait de l'argent chaque {{trimestre}}. Le second site ne s'ouvre pas dans la partie : l'exercice se raisonne sur le papier, et seul l'agrandissement de votre plateau actuel se décide dans vos investissements.",
     problem:
       "Comment décider d'un investissement dont le résultat dépend d'un événement incertain ?",
     diagnosticOptions: [
@@ -656,7 +668,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "Janvier a rempli la caisse",
     narrative:
-      "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 13 %. Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.",
+      "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -667,7 +679,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       },
       {
         id: "garder_de_quoi_payer",
-        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        label: "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir",
         correct: true,
       },
       {
@@ -687,7 +699,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 13 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -717,7 +729,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde aux charges de structure d'un trimestre : combien de trimestres la salle pourrait-elle ouvrir sans une inscription de plus ?",
+      "Comparez votre solde aux charges de structure d'un {{trimestre}} : combien {{de trimestres}} la salle pourrait-elle ouvrir sans une inscription de plus ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez l'année entière, et surtout le creux de l'été : les charges tombent tous les mois, les inscriptions non.",
@@ -734,7 +746,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         field: "qualityBudget",
         direction: "review",
-        hint: "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements du trimestre, été compris.",
+        hint: "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements {{du trimestre}}, été compris.",
       },
     ],
   },
@@ -751,7 +763,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   fitness_t1_recurrent:
     "Le seuil de rentabilité traduit le modèle récurrent en une question simple : combien d'adhérents faut-il pour couvrir une structure qui ne bouge jamais ?",
   fitness_t2_attrition:
-    "Un adhérent est une SUITE de marges futures, pas une vente : c'est exactement ce qu'évalue la valeur actuelle nette. Le seuil de rentabilité, lui, ne raisonne que sur un trimestre.",
+    "Un adhérent est une SUITE de marges futures, pas une vente : c'est exactement ce qu'évalue la valeur actuelle nette. Le seuil de rentabilité, lui, ne raisonne que sur un {{trimestre}}.",
   fitness_t3_ete:
     "Le seuil de rentabilité et la marge de sécurité chiffrent ce que la saison peut emporter avant que l'exercice ne bascule.",
   fitness_t5_saturation:
@@ -760,4 +772,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "Le seuil de rentabilité convertit l'écart en nombre d'adhérents et rend la décision concrète, levier par levier.",
 };
 
-attachModelQuestions(FITNESS_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const FITNESS_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, fitnessScenario);

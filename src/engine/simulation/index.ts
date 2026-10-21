@@ -320,6 +320,7 @@ function computePerformanceMetrics(
   closing: { equity: number; financialDebt: number; cash: number },
   revenue: number,
   netIncome: number,
+  roundDays: number,
 ): PerformanceMetrics {
   const alerts: PerformanceAlert[] = [];
 
@@ -328,7 +329,10 @@ function computePerformanceMetrics(
   const debt = closing.financialDebt ?? 0;
   const cash = closing.cash ?? 0;
   const debtRatio = equity > 0 ? debt / equity : debt > 0 ? 2 : 0;
-  const quarterlyRevenue = revenue / 4;
+  // Le chiffre du tour ramené au trimestre (×90/jours) : la constante d'avant ignorait
+  // la durée du tour, et le ratio de trésorerie d'une partie au mois se lisait sur un
+  // dénominateur trois fois trop petit. Au trimestre, rien ne change.
+  const quarterlyRevenue = (revenue * (90 / roundDays)) / 4;
   const cashRatio = quarterlyRevenue > 0 ? cash / quarterlyRevenue : 0;
 
   if (cash < 0) {
@@ -2568,6 +2572,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       finance.closing,
       revenue,
       finance.incomeStatement.netIncome,
+      scenario.roundDays,
     );
 
     results[w.state.id] = {

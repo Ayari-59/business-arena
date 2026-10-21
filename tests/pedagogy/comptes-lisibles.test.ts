@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CONCEPTS, conceptByCode } from "../../src/config/pedagogy/concepts";
+import { libelleDeLEbeRetenu } from "../../src/engine/groupe/valorisation";
 
 /**
  * CHAQUE CHIFFRE DES COMPTES DE L'ÉLÈVE A UNE FICHE, OU EST DÉCLARÉ SANS.
@@ -69,6 +70,7 @@ const FICHE_DE_LA_LIGNE: Record<string, string> = {
   // Niveau 7 « Groupe » : la valeur, le rachat, le groupe consolidé.
   "Écart d'acquisition": "goodwill_impairment",
   "EBE des douze derniers mois": "enterprise_value",
+  "EBE des quatre derniers mois, annualisé": "enterprise_value",
   "Valeur de rendement (multiple de l'EBE)": "enterprise_value",
   "Actif économique": "enterprise_value",
   "= Valeur d'entreprise (la plus haute)": "enterprise_value",
@@ -130,7 +132,10 @@ const SANS_FICHE: string[] = [
 
 const libelles = () => {
   const src = readFileSync("src/components/financial-statements.tsx", "utf8");
-  return [...new Set([...src.matchAll(/label="([^"]+)"/g)].map((m) => m[1]!))];
+  // Le libellé de l'EBE du niveau 7 se calcule selon la durée du tour : la garde lit
+  // ceux qu'il prend au mois, au trimestre et à l'année.
+  const calcules = src.includes("label={libelleDeLEbeRetenu(") ? [30, 90, 360].map(libelleDeLEbeRetenu) : [];
+  return [...new Set([...[...src.matchAll(/label="([^"]+)"/g)].map((m) => m[1]!), ...calcules])];
 };
 
 describe("les comptes de l'élève se lisent", () => {

@@ -107,8 +107,12 @@ const compound = (ratePerQuarter: number, k: number) => Math.pow(1 + ratePerQuar
  * Ce n'est pas la même composition qu'une croissance : ce qui se compose est
  * la part qui RESTE. Quinze pour cent par trimestre font 5,27 % par mois, et
  * non cinq.
+ *
+ * Exportée pour les énoncés (`situation-texte.ts`) : un taux d'attrition cité
+ * dans une situation se ramène à la durée du tour par la même règle que le
+ * moteur, sans quoi le texte et le compte de résultat divergeraient.
  */
-const composerPerte = (tauxParTour: number, k: number) =>
+export const composerPerte =(tauxParTour: number, k: number) =>
   1 - Math.pow(1 - Math.min(1, Math.max(0, tauxParTour)), k);
 
 /**

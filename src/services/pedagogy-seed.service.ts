@@ -70,6 +70,14 @@ export async function seedPedagogyReferentials(
     )
     .onConflictDoNothing({ target: decisionModels.code });
 
+  // LE RÉFÉRENTIEL PORTE LE TEXTE AU TRIMESTRE. Une ligne vaut pour toutes les
+  // parties qui partagent le code, au mois comme à l'année : elle ne peut donc
+  // porter le texte d'aucune en particulier. Le registre la donne au trimestre
+  // (`situationsAuTrimestre`, config/scenarios/situation-texte.ts), soit
+  // exactement ce que les bases déjà semées contiennent. Ce qu'un élève lit
+  // vient de la définition rendue pour SA partie (`situationDeLaPartie`), jamais
+  // de ces colonnes : l'indice en base n'est qu'un dernier recours, quand la
+  // définition n'a pas le niveau demandé.
   await db
     .insert(situations)
     .values(

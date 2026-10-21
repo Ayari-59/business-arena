@@ -1,5 +1,6 @@
 import type { CompanyRoundResult } from "@/engine/types";
 import type { ResultatDeGroupe } from "@/engine/groupe/types";
+import { libelleDeLEbeRetenu } from "@/engine/groupe/valorisation";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { Tiroir } from "@/components/tiroir";
 import {
@@ -289,6 +290,7 @@ export function FinancialStatements({
   otherVariableCostPerUnit,
   vocabulary,
   nomsDesReferences,
+  roundDays = 90,
 }: {
   result: CompanyRoundResult;
   /**
@@ -308,6 +310,8 @@ export function FinancialStatements({
   vocabulary: ScenarioVocabulary;
   /** Le nom de chaque référence de la gamme, par code (la nouveauté du niveau 7 se nomme). */
   nomsDesReferences?: Readonly<Record<string, string>>;
+  /** La durée d'un tour : l'EBE qui fait la valeur du niveau 7 se nomme selon sa fenêtre. */
+  roundDays?: number;
 }) {
   const cr = result.incomeStatement;
   const b = result.balanceSheet;
@@ -611,6 +615,7 @@ export function FinancialStatements({
           precedent={precedent?.groupe ?? null}
           periode={periode}
           nomsDesReferences={nomsDesReferences ?? {}}
+          roundDays={roundDays}
         />
       ) : null}
 
@@ -780,11 +785,13 @@ function PanneauxDuGroupe({
   precedent,
   periode,
   nomsDesReferences,
+  roundDays,
 }: {
   groupe: ResultatDeGroupe;
   precedent: ResultatDeGroupe | null;
   periode: string;
   nomsDesReferences: Readonly<Record<string, string>>;
+  roundDays: number;
 }) {
   // La nouveauté du niveau 7 (NOVA Home), dès qu'elle coûte ou rapporte quelque chose.
   const nouveautes = Object.entries(groupe.nouveautes ?? {}).filter(
@@ -804,7 +811,7 @@ function PanneauxDuGroupe({
           resume={`${euroCents(v.valeurParAction)} par action · rentabilité totale ${pctSigne(v.rentabiliteTotale)}`}
         >
           <Etat periode={periode} legende="De l'EBE à la valeur d'une action, et la rentabilité totale pour l'actionnaire.">
-            <Ligne label="EBE des douze derniers mois" valeur={v.ebeDouzeMois} avant={pv?.ebeDouzeMois ?? null} />
+            <Ligne label={libelleDeLEbeRetenu(roundDays)} valeur={v.ebeDouzeMois} avant={pv?.ebeDouzeMois ?? null} />
             <Ligne
               label="Valeur de rendement (multiple de l'EBE)"
               valeur={v.valeurDeRendement}

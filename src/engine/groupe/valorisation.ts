@@ -46,6 +46,22 @@ export function ebeDouzeMois(g: Pick<EtatDeGroupe, "ebe" | "ebeReference">, roun
   return (sommeDesDerniers(g, w) * toursParAn(roundDays)) / w;
 }
 
+const NOMBRES_DE_MOIS: Readonly<Record<number, string>> = { 1: "un", 2: "deux", 3: "trois", 4: "quatre", 6: "six", 12: "douze" };
+
+/**
+ * LE NOM DE L'EBE QUI FAIT LA VALEUR, dit selon la fenêtre réellement retenue.
+ *
+ * Au trimestre et à l'année, la fenêtre couvre douze mois. Au mois, elle n'en couvre
+ * que `tailleDeLaFenetre(30)` (la valeur resterait sinon figée sur l'EBE de référence
+ * pendant toute une partie de six mois), annualisés : l'appeler « des douze derniers
+ * mois » promettait à l'élève une année que le calcul ne lit pas.
+ */
+export function libelleDeLEbeRetenu(roundDays: number): string {
+  const mois = Math.round((tailleDeLaFenetre(roundDays) * roundDays) / 30);
+  const dit = NOMBRES_DE_MOIS[mois] ?? String(mois);
+  return mois === 12 ? "EBE des douze derniers mois" : `EBE des ${dit} derniers mois, annualisé`;
+}
+
 export function detteNette(b: BalanceSheet): number {
   return b.financialDebt + b.overdraft - b.cash - (b.shortTermInvestment ?? 0);
 }
