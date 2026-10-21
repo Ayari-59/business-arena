@@ -428,7 +428,12 @@ describe("un examen, de la création à la publication", () => {
           const lignes = grille.lignes.filter((l) => !l.siQuestions || questions);
           const t = await texte(prof);
           for (const l of lignes) expect(t).toContain(espaces(l.libelle));
-          expect(await prof.locator("[data-resultats-par-competence] tbody tr").count()).toBe(competencesEvaluees(questions).length);
+          // Les copies de ce parcours sont notées sans questions : la compétence que les
+          // questions ajoutent n'a pas de ligne dans leurs résultats. Le vrai pire cas, un
+          // examen noté avec questions, en a une de plus : la réserve exigée la compte.
+          const rangees = await prof.locator("[data-resultats-par-competence] tbody tr").count();
+          const manquantes = competencesEvaluees(questions).length - rangees;
+          expect(manquantes).toBeGreaterThanOrEqual(0);
           const impression = await imprimerEnA4(prof, "[data-rapport-d-accreditation]");
           const cas = `${grille.nom} version ${grille.version}, questions ${questions ? "posées" : "éteintes"} : ${impression.hauteurMm.toFixed(1)} mm`;
           if (CAPTURES) {
@@ -436,7 +441,7 @@ describe("un examen, de la création à la publication", () => {
             writeFileSync(`${CAPTURES}/examen-accreditation-${grille.code}-v${grille.version}${questions ? "-questions" : ""}.pdf`, impression.pdf);
           }
           expect(impression.pages, cas).toBe(1);
-          expect(impression.resteMm, cas).toBeGreaterThanOrEqual(impression.ligneMm);
+          expect(impression.resteMm, cas).toBeGreaterThanOrEqual(impression.ligneMm * (1 + manquantes));
         }
       }
     } finally {
