@@ -238,6 +238,11 @@ const GRANDEURS: Record<string, Grandeur> = {
     return s.investment.depreciationRounds;
   },
   /** La capacité qu'un investissement peut ajouter au plus en un tour : un flux par tour. */
+  /** Le nombre de véhicules (ou de machines) du parc de départ, tous types confondus. */
+  vehicules: (s) => {
+    if (!s.equipment) throw new Error("Situation : le jeton « vehicules » suppose un parc d'équipements");
+    return s.equipment.initialFleet.reduce((total, f) => total + f.count, 0);
+  },
   investissement_plafond: (s) => {
     if (!s.investment) throw new Error("Situation : le jeton « investissement_plafond » suppose un investissement");
     return s.investment.maxPerRound;

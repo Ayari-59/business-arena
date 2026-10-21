@@ -979,7 +979,7 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
   title: "ROUTE & CIE · Remplissez les camions",
   sector: "transport",
   shortName: "ROUTE & CIE",
-  tagline: "Transporteur routier régional, sept porteurs.",
+  tagline: "Transporteur routier régional : fourgon, porteurs et semi-remorque.",
   briefing:
     "Vos camions partent chaque matin, chargés ou non, et le gazole, les péages et le chauffeur se paient de la même façon dans les deux cas. Une place vide au départ est perdue pour toujours.",
   context:

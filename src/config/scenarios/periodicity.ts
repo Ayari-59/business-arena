@@ -275,14 +275,23 @@ export function applyPeriodicity(
     // délais de règlement (jours réels) inchangés.
     ...(scenario.orderOffers
       ? {
-          orderOffers: scenario.orderOffers.map((o) => ({
-            ...o,
-            units: o.units * k,
-          })),
+          // Par abonnement, une unité est un ADHÉRENT qui paie un tour : le
+          // nombre d'inscrits d'un contrat ne dépend pas de la durée du tour,
+          // son prix par tour si (comme le prix de référence). Les inscrits
+          // multipliés par k étaient, à l'année, quatre fois ceux du trimestre
+          // (plus que la salle n'en accueille) à un prix resté trimestriel.
+          orderOffers: scenario.orderOffers.map((o) =>
+            abonnement ? { ...o, price: tarif(o.price * k) } : { ...o, units: o.units * k },
+          ),
         }
       : {}),
     // Les modificateurs en unités (« order », « order_subcontract ») sont des
-    // flux : × k. Les prix imposés (« order_price ») ne changent pas.
+    // flux : × k. Les prix imposés (« order_price ») ne changent pas. Par
+    // abonnement, c'est l'inverse, pour la raison dite des contrats ci-dessus :
+    // les adhérents d'une commande ferme ne bougent pas, et le prix imposé d'un
+    // tour d'abonnement suit la durée du tour. Sans cela, la commande comptait
+    // la durée deux fois (des adhérents × k payés au prix du tour, déjà × k) :
+    // à l'année, elle rapportait seize fois son montant trimestriel.
     //
     // LA PROBABILITÉ DE TIRAGE EST UN TAUX PAR TOUR : ELLE SE COMPOSE.
     //
@@ -298,11 +307,10 @@ export function applyPeriodicity(
     events: scenario.events.map((e) => ({
       ...e,
       probability: composerPerte(e.probability, k),
-      modifiers: e.modifiers.map((m) =>
-        m.target === "order" || m.target === "order_subcontract"
-          ? { ...m, value: m.value * k }
-          : m,
-      ),
+      modifiers: e.modifiers.map((m) => {
+        if (abonnement) return m.target === "order_price" ? { ...m, value: tarif(m.value * k) } : m;
+        return m.target === "order" || m.target === "order_subcontract" ? { ...m, value: m.value * k } : m;
+      }),
     })),
     // Investissement : une même machine physique vaut le même prix quelle que
     // soit la périodicité — le coût par unité de capacité PAR TOUR varie en

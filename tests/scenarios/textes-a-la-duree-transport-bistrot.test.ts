@@ -57,6 +57,14 @@ const CORRECTIONS: { codes: string[]; avant: string; apres: string }[] = [
     avant: "augmente le BFR du montant de vos achats trimestriels.",
     apres: "augmente le BFR de 21 jours d'achats.",
   },
+  {
+    // Le parc de départ compte un fourgon, trois porteurs et une semi-remorque
+    // (`equipment.initialFleet`) : cinq véhicules, et non « sept porteurs », chiffre
+    // d'un ancien réglage. Le nombre se lit désormais du parc.
+    codes: ["transport_t1_revient"],
+    avant: "Vous reprenez ROUTE & CIE : sept porteurs,",
+    apres: "Vous reprenez ROUTE & CIE : cinq véhicules,",
+  },
 ];
 
 /** Le texte au trimestre attendu : la fixture, corrections nommées appliquées. */

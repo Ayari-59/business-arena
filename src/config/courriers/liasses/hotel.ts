@@ -189,9 +189,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_groupe_impromptu",
     expediteur: "Autocars Vasseur · Direction",
-    objet: "Demande d'hébergement en urgence pour quarante passagers",
+    objet: "Demande d'hébergement en urgence pour nos circuits",
     corps:
-      "Notre autocar est immobilisé sur l'autoroute à la suite d'une avarie. Quarante passagers doivent être logés ce soir. Nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
+      "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : {{lettres: commande_hotel_groupe_impromptu}} nuitées {{ce trimestre}}, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
     signataire: "Le responsable d'exploitation",
     effet:
       "+{{entier: commande_hotel_groupe_impromptu}} nuitées (échelle {{trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",

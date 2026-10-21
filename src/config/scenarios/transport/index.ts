@@ -583,7 +583,7 @@ export function transportCompany(
     controller,
     botProfile,
     perceivedQuality: 1,
-    // sept porteurs et leurs remorques : 10 000 palettes par trimestre
+    // le parc de départ (un fourgon, trois porteurs, une semi-remorque) : 10 000 palettes par trimestre
     machineCapacity: 10000,
     availability: 1,
     headcount: 10,
