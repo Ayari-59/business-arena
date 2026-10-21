@@ -349,6 +349,8 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     concurrentsAssainis: true,
     // Le parc corrigé, figé de même : une machine achetée compte une fois.
     parcSansDoublon: true,
+    // La proposition à la demande et le bon gestionnaire qui la tient, figés de même.
+    propositionALaDemande: true,
   });
   // LE TOUR D'ESSAI se joue sur une autre graine et sans événement scripté : tant
   // qu'il dure, la partie porte SON scénario et SA graine, la vraie partie attend
@@ -371,6 +373,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
             investmentStories: args.investmentStories,
             concurrentsAssainis: true,
             parcSansDoublon: true,
+            propositionALaDemande: true,
           }),
           args.essai.tours,
         )

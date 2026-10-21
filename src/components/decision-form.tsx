@@ -2602,6 +2602,8 @@ export function DecisionForm({
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
     productivity: number;
+    /** Le volume proposé vise la demande du tour passé (`propositionALaDemande`). */
+    volumeALaDemande?: boolean;
     subscription?: {
       members: number;
       expectedRetained: number;
@@ -5428,13 +5430,16 @@ export function DecisionForm({
             <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
           </p>
           {/* D'OÙ VIENT LA PROPOSITION (services/decision-baseline.ts, `propositionDuTour`) :
-              une base neutre, jamais une stratégie. */}
+              une base, jamais une stratégie. Une partie à la demande (`propositionALaDemande`)
+              planifie sur la demande reçue ; une partie d'avant, sur les ventes. */}
           <p className="mt-1 text-xs text-slate-400">
             {roundIndex <= 1
               ? "Ce sont les valeurs proposées au départ : une base à ajuster, pas une stratégie."
               : capacityFacts?.subscription
                 ? "Ce sont les valeurs de votre dernier tour."
-                : "Le prix et les budgets sont ceux de votre dernier tour ; le volume suit vos ventes du tour passé et la saison, comme le ferait une gestion neutre."}
+                : capacityFacts?.volumeALaDemande
+                  ? "Le prix et les budgets sont ceux de votre dernier tour ; le volume vise la demande du tour passé (vos ventes et vos ventes manquées), à la saison du tour, moins votre stock, dans la capacité de l'atelier."
+                  : "Le prix et les budgets sont ceux de votre dernier tour ; le volume suit vos ventes du tour passé et la saison, comme le ferait une gestion neutre."}
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
             <button

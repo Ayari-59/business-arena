@@ -37,9 +37,8 @@ import type {
  * `createSoloGame`), sur douze graines, aux niveaux 5 et 6 :
  *
  *   1. ne pas développer la Studio ne tue pas : aucune défaillance, les crises
- *      restent rares, et le résultat cumulé est FAIBLE, ni florissant ni
- *      catastrophique ;
- *   2. financer la Studio au tour 1 rapporte NETTEMENT plus ;
+ *      restent rares, et le résultat cumulé n'est pas catastrophique ;
+ *   2. financer la Studio au tour 1 rapporte NETTEMENT plus que s'en passer ;
  *   3. la financer trop tard (tour 5) ne rapporte plus rien : la décision a un
  *      bon moment ;
  *   4. le bon gestionnaire reste au-dessus, et la gestion neutre, qui finance
@@ -48,6 +47,13 @@ import type {
  * Ce banc est volontairement grossier : il mesure des ORDRES DE GRANDEUR et
  * des bornes larges, pas des centimes. Le témoin au centime est
  * `nova-gamme-non-regression`.
+ *
+ * Il se joue deux fois : sans le drapeau, et pour une partie à la proposition à
+ * la demande (`propositionALaDemande`, engine/types.ts). Le formulaire à la demande
+ * fait mieux sans la Studio que l'ancien, si bien qu'une borne fixe sur le résultat
+ * « sans la Studio » ne disait plus la décision : décision du propriétaire, le banc
+ * garde ce qui compte, l'écart. La Studio au tour 1 rapporte nettement plus que
+ * s'en passer, et tard ne paie pas, avec le drapeau comme sans lui.
  */
 
 const GRAINES = Array.from({ length: 12 }, (_, g) => 1000 + (g + 1) * 7919);
@@ -71,7 +77,7 @@ interface Bilan {
  * sa politique, les deux concurrents jouent `botDecisions` avec la personnalité
  * de la graine, le prix humain du tour passé et les leviers figés du niveau.
  */
-function partieSolo(niveau: number, graine: number, politique: Politique) {
+function partieSolo(niveau: number, graine: number, politique: Politique, drapeau: boolean) {
   const def = scenarioByCode(scenarioCodeForLevel("nova", niveau));
   const leviers = presetByLevel.get(niveau as DifficultyPreset["level"])!.decisions;
   const snapshot = composerLeScenarioJoue({
@@ -82,6 +88,7 @@ function partieSolo(niveau: number, graine: number, politique: Politique) {
     concurrents: 3,
     periodicity: "quarter",
     investmentStories: true,
+    ...(drapeau ? { propositionALaDemande: true } : {}),
   });
   const equipes = [
     { id: "a-equipe", nom: def.playerTeamName, humaine: true, profil: undefined as BotProfile | undefined },
@@ -183,10 +190,10 @@ function partieSolo(niveau: number, graine: number, politique: Politique) {
   return { crise, defaillante, resultat };
 }
 
-function banc(niveau: number, politique: Politique): Bilan {
+function banc(niveau: number, politique: Politique, drapeau: boolean): Bilan {
   const bilan: Bilan = { parties: 0, crises: 0, defaillances: 0, resultat: 0 };
   for (const graine of GRAINES) {
-    const p = partieSolo(niveau, graine, politique);
+    const p = partieSolo(niveau, graine, politique, drapeau);
     bilan.parties++;
     if (p.crise) bilan.crises++;
     if (p.defaillante) bilan.defaillances++;
@@ -206,16 +213,18 @@ describe("la Studio se développe aux niveaux 5 et 6 : la décision du niveau «
     expect(studio(rdDuNiveau(novaGammeScenario, 7, true))).toBeUndefined();
   });
 
-  for (const niveau of NIVEAUX) {
-    it(`niveau ${niveau} : sans la Studio on survit faiblement, avec elle au tour 1 on gagne nettement plus, trop tard ne rapporte plus`, () => {
-      const sans = banc(niveau, "propose");
-      const tot = banc(niveau, "studioT1");
-      const tard = banc(niveau, "studioT5");
+  for (const { niveau, drapeau, partie } of NIVEAUX.flatMap((niveau) => [
+    { niveau, drapeau: false, partie: "" },
+    { niveau, drapeau: true, partie: ", partie à la demande" },
+  ])) {
+    it(`niveau ${niveau}${partie} : sans la Studio on survit, avec elle au tour 1 on gagne nettement plus, trop tard ne rapporte plus`, () => {
+      const sans = banc(niveau, "propose", drapeau);
+      const tot = banc(niveau, "studioT1", drapeau);
+      const tard = banc(niveau, "studioT5", drapeau);
 
-      // 1. Ne pas la développer donne un résultat FAIBLE, pas la mort.
+      // 1. Ne pas la développer ne tue pas.
       expect(sans.defaillances).toBe(0);
       expect(sans.crises).toBeLessThanOrEqual(1);
-      expect(sans.resultat).toBeLessThan(30_000);
       expect(sans.resultat).toBeGreaterThan(-60_000);
 
       // 2. La financer au tour 1 rapporte nettement plus, sans crise.
@@ -228,10 +237,10 @@ describe("la Studio se développe aux niveaux 5 et 6 : la décision du niveau «
       expect(tard.resultat).toBeLessThan(tot.resultat - 60_000);
     });
 
-    it(`niveau ${niveau} : le bon gestionnaire reste au-dessus, la gestion neutre ne tombe pas`, () => {
-      const sans = banc(niveau, "propose");
-      const neutre = banc(niveau, "neutre");
-      const gestionnaire = banc(niveau, "gestionnaire");
+    it(`niveau ${niveau}${partie} : le bon gestionnaire reste au-dessus, la gestion neutre ne tombe pas`, () => {
+      const sans = banc(niveau, "propose", drapeau);
+      const neutre = banc(niveau, "neutre", drapeau);
+      const gestionnaire = banc(niveau, "gestionnaire", drapeau);
       expect(neutre.defaillances).toBe(0);
       expect(neutre.crises).toBe(0);
       expect(gestionnaire.defaillances).toBe(0);

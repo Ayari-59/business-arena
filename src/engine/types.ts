@@ -348,6 +348,24 @@ export interface EngineScenarioConfig {
    */
   qualiteProposee?: number;
   /**
+   * LA QUALITÉ QUE LE FORMULAIRE PROPOSE DANS UNE PARTIE À LA DEMANDE
+   * (`propositionALaDemande`), quand elle diffère de `qualiteProposee`. Une donnée
+   * du registre, lue par `composerLeScenarioJoue` avec le drapeau seulement : la
+   * partie à drapeau la reçoit comme SA `qualiteProposee`, que tous les lecteurs
+   * relisent sans rien savoir de ce champ. La clé ne passe jamais dans le scénario
+   * joué : sans le drapeau, il reste celui d'avant au bit près. Absente : la même
+   * qualité qu'une partie sans drapeau.
+   *
+   * La mesure qui la fonde est celle de `qualiteProposee`, rejouée avec le drapeau
+   * (`tests/engine/qualite-proposee-mesure.test.ts`). Au transport, le plan à la
+   * demande remplit la flotte, et l'ancien budget qualité, la part de la gestion
+   * neutre, y fait de nouveau mieux que zéro sur la moyenne des graines : la partie
+   * à drapeau le propose (décision du propriétaire). Ailleurs, le sens du verdict ne
+   * change pas, sauf à l'hôtel, où l'écart devient négligeable (sous la tolérance de
+   * la salle de sport) : il y garde zéro.
+   */
+  qualiteProposeeALaDemande?: number;
+  /**
    * LE PARC SANS DOUBLON, posé par `composerLeScenarioJoue` à la création d'une partie
    * (donc figé dans son instantané). Une machine achetée entre au parc au tour suivant
    * (`pendingMachineFleet`) ; la file d'attente n'était pas vidée quand rien n'était
@@ -358,6 +376,29 @@ export interface EngineScenarioConfig {
    * propriétaire).
    */
   parcSansDoublon?: boolean;
+  /**
+   * LA PROPOSITION À LA DEMANDE, posée par `composerLeScenarioJoue` à la création d'une
+   * partie (donc figée dans son instantané). Le moteur ne la lit pas. Deux lecteurs :
+   *
+   *  · le formulaire (`propositionDuTour`, services/decision-baseline.ts) : à partir du
+   *    tour 2, le plan proposé vaut la DEMANDE du tour passé (ventes et ventes manquées,
+   *    clientèle par clientèle), corrigée de la saison du tour à jouer par rapport à
+   *    celle du tour passé, moins le stock, dans l'atelier ; et le départ du tour 1 est
+   *    mis en phase lui aussi (sans la saison du tour suivant). Sans le drapeau, le plan
+   *    suit les ventes réalisées et la saison s'applique avec un tour d'avance : une
+   *    demande non servie n'y remontait jamais (rapport « mesure-volume »).
+   *  · le bon gestionnaire du mérite (`pedagogy/merite/reference.ts`), qui part de cette
+   *    proposition et ne s'en écarte que sur un signal net : sans lui, valider le
+   *    formulaire suffisait à être jugé « solide » dans une partie sur trois aux niveaux
+   *    2 et 4 (rapport « mesure-gestionnaire »).
+   *
+   * Un seul drapeau pour les deux, parce que la garde porte sur le couple. Ni la gestion
+   * neutre (`neutralDecisions`), ni l'étalon de l'examen, ni les concurrents pilotés ne
+   * changent. Absent : le chemin d'avant au bit près, pour que les parties commencées
+   * avant gardent leur proposition, leur garde de vérité et leur verdict (décision du
+   * propriétaire).
+   */
+  propositionALaDemande?: boolean;
   production: {
     /** Effet du budget qualité : producedQuality = 1 + sens × ln(1 + budget/scale). */
     qualitySensitivity: number;

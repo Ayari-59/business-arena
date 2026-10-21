@@ -65,7 +65,7 @@ interface Bilan {
   subventionnees: number;
 }
 
-function partie(code: string, niveau: number, graine: number, prixDuTour1: number, bilan: Bilan) {
+function partie(code: string, niveau: number, graine: number, prixDuTour1: number, bilan: Bilan, aLaDemande = false) {
   const def = scenarioByCode(code);
   const preset = presetByLevel.get(niveau as DifficultyPreset["level"])!;
   const leviers = leviersFigesDuProfil({ difficulty: profilDuNiveau(preset) });
@@ -79,6 +79,7 @@ function partie(code: string, niveau: number, graine: number, prixDuTour1: numbe
     periodicity: "quarter",
     investmentStories: true,
     concurrentsAssainis: true,
+    ...(aLaDemande ? { propositionALaDemande: true } : {}),
   });
   const equipes = [
     { id: "a-equipe", nom: def.playerTeamName, profil: undefined as BotProfile | undefined },
@@ -188,11 +189,36 @@ const CAS: { code: string; niveau: number; prix: number }[] = [
   { code: "bistrot", niveau: 2, prix: 0.75 },
 ];
 
+/**
+ * LES PARTIES À LA DEMANDE (`propositionALaDemande`) : le formulaire propose la demande du
+ * tour passé, et son tour 1 lit la saison du tour joué. Au prix × 0,85 du banc ci-dessus,
+ * presque aucune équipe n'y tombe : le banc ne mord plus. Il mord aux prix ci-dessous.
+ *
+ * Écarté, et voulu : NOVA niveau 1 au prix × 0,75. À ce prix, le point mort dépasse de
+ * loin l'atelier, et l'équipe qui garde son prix perd à chaque tour quel que soit son
+ * plan ; le coussin la porte deux tours, pas plus. Le tour 1 mis en phase produit un peu
+ * moins, la défaillance arrive un tour plus tôt, et le coussin s'épuise avant la fin de la
+ * partie. La rechute y dit vrai : une subvention ne sauve pas un prix qui perd, il faut le
+ * corriger (décision du propriétaire, mesure jointe au lot).
+ */
+const CAS_A_LA_DEMANDE: { code: string; niveau: number; prix: number }[] = [
+  { code: "nova", niveau: 1, prix: 0.8 },
+  { code: "nova", niveau: 2, prix: 0.8 },
+  { code: "nova", niveau: 3, prix: 0.8 },
+  { code: "nova", niveau: 2, prix: 0.75 },
+  { code: "nova", niveau: 3, prix: 0.75 },
+];
+
+const lesCas = [
+  ...CAS.map((c) => ({ ...c, aLaDemande: false })),
+  ...CAS_A_LA_DEMANDE.map((c) => ({ ...c, aLaDemande: true })),
+];
+
 describe("après la subvention de dégel, l'équipe qui garde la proposition ne retombe pas", () => {
-  for (const cas of CAS) {
-    it(`${cas.code}, niveau ${cas.niveau}, prix × ${cas.prix} au tour 1`, () => {
+  for (const cas of lesCas) {
+    it(`${cas.code}, niveau ${cas.niveau}, prix × ${cas.prix} au tour 1${cas.aLaDemande ? ", partie à la demande" : ""}`, () => {
       const bilan: Bilan = { exposees: 0, rechutes: 0, minimumExact: 0, subventionnees: 0 };
-      for (const graine of GRAINES) partie(cas.code, cas.niveau, graine, cas.prix, bilan);
+      for (const graine of GRAINES) partie(cas.code, cas.niveau, graine, cas.prix, bilan, cas.aLaDemande);
       // Le scénario mord : assez d'équipes tombent, sont dégelées et ont le
       // temps de retomber pour que le taux veuille dire quelque chose.
       expect(bilan.exposees).toBeGreaterThanOrEqual(10);

@@ -22,6 +22,7 @@ import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { readExpectedLevers, readPedagogyInputs } from "@/services/scoring.service";
 import { commeEnBase, rejouer, type IssueDuRejeu, type PartieARejouer, type PedagogieDuTour } from "@/pedagogy/merite/rejeu";
 import { rejeuxDeLEtalon, type Etalon } from "@/pedagogy/merite/etalons";
+import { phraseDeLaReference } from "@/pedagogy/merite/reference";
 import { investissementPlafonne } from "@/engine/investment/plafond";
 import { GRAINES_DU_MERITE, marcheRejoue, verdictDuMerite, type MarcheRejoue, type VerdictDuMerite } from "@/pedagogy/merite/verdict";
 
@@ -64,8 +65,14 @@ import { GRAINES_DU_MERITE, marcheRejoue, verdictDuMerite, type MarcheRejoue, ty
  *      son marché. Les parties déjà jouées se recalculent
  *      avec lui : leurs décisions n'ont pas changé, l'étalon est plus juste, et
  *      rien n'était gardé ailleurs qu'en mémoire.
+ *   3  pour une partie à la proposition à la demande (`propositionALaDemande`,
+ *      engine/types.ts), un bon gestionnaire qui tient le formulaire et ne s'en
+ *      écarte que sur un signal net (`leFormulaireTenu`). Une partie d'avant garde
+ *      son bon gestionnaire au centime, donc son verdict ; la version change parce
+ *      que la référence a changé, et le cache, en mémoire seulement, n'a rien à
+ *      migrer.
  */
-export const VERSION_DU_MERITE = 2;
+export const VERSION_DU_MERITE = 3;
 export const cleDuMerite = (gameId: string) => `${gameId}:${ENGINE_VERSION}:${VERSION_DU_MERITE}`;
 
 export type RaisonSansVerdict =
@@ -91,6 +98,8 @@ export type MeriteDeLaPartie =
   | {
       etat: "verdict";
       verdict: VerdictDuMerite;
+      /** Ce que fait le bon gestionnaire de cette partie, en une ligne (`phraseDeLaReference`). */
+      phraseDeLaReference: string;
       /** Le monde (texture du marché) a-t-il pu être retiré à chaque marché, ou seulement les tirages ? */
       mondeRetire: boolean;
       niveau: number;
@@ -264,6 +273,8 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           // Le parc de la partie, tel qu'elle l'a figé : une partie d'avant le correctif
           // se rejoue avec la règle sous laquelle elle a été jouée.
           parcSansDoublon: snapshot.parcSansDoublon === true,
+          // La proposition de la partie et son bon gestionnaire, tels qu'elle les a figés.
+          propositionALaDemande: snapshot.propositionALaDemande === true,
         }),
       ),
     );
@@ -397,6 +408,7 @@ export async function calculerLeMerite(gameId: string): Promise<MeriteDeLaPartie
   return {
     etat: "verdict",
     verdict,
+    phraseDeLaReference: phraseDeLaReference(lue.partie.scenarioPour(lue.partie.graine)),
     mondeRetire: lue.mondeRetire,
     niveau: lue.niveau,
     duree: Math.round(performance.now() - debut),
