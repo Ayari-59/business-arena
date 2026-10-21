@@ -130,6 +130,136 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     year: "mois par mois, pas exercice par exercice",
   },
   // --- fin du groupe batiment-boutique-ecommerce ---
+  // --- groupe boutique-ecommerce : le récit des saisons ---------------------
+  // MAILLE & CO et PIXEL & CO racontaient Noël, les soldes, les fêtes et la
+  // rentrée. La saisonnalité se lit une valeur par tour à toutes les durées
+  // (`periodicity.ts`) : au mois et à l'année, le tour 4 reste le pic, mais il
+  // n'est pas décembre. La phrase entière est le jeton, écrite telle qu'au
+  // trimestre ; elle dit, au mois et à l'année, ce que le tour EST pour le
+  // moteur (le pic, le tour qui le suit), vérifié sur les tableaux de chaque
+  // scénario. Aucune sorte de jeton nouvelle : une chaîne seule vaut pour le mois
+  // et pour l'année, un couple quand l'une des deux formes sonnerait faux.
+  // Garde : tests/scenarios/saisons-boutique-ecommerce.test.ts.
+  ...Object.fromEntries(
+    Object.entries({
+      // MAILLE & CO, gamme et mono : le tour 4 est le plus haut de la boutique (1,5 ;
+      // 1,45 en mono) et de chaque référence (jusqu'à 2,3 sur les accessoires), sauf
+      // le cardigan, pièce de mi-saison dont le récit ne dit pas le pic.
+      "Le trimestre qui fait l'année": "Le plus gros tour de la partie",
+      "La maille se vend l'hiver : au quatrième trimestre, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.":
+        "C'est le plus gros tour de la maille : les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.",
+      "Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année.":
+        "Ce tour pèse près d'une fois et demie un tour ordinaire, et les comités d'entreprise y passent leurs plus grosses commandes.",
+      "La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple.":
+        "La marge par pièce ne tranche que lorsque les références se disputent une place limitée, comme la réserve au tour du pic.",
+      "Combien commander pour Noël, de quelle référence, et à quel risque ?":
+        "Combien commander pour ce pic, de quelle référence, et à quel risque ?",
+      "Combien commander pour Noël, et que risquez-vous en vous trompant dans un sens ou dans l'autre ?":
+        "Combien commander pour ce pic, et que risquez-vous en vous trompant dans un sens ou dans l'autre ?",
+      "Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort jusqu'au printemps":
+        "Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort une fois le pic passé",
+      "Attendre les premières ventes de décembre pour se réapprovisionner":
+        "Attendre les premières ventes du pic pour se réapprovisionner",
+      "Attendre de voir les premières ventes de décembre pour se réapprovisionner":
+        "Attendre de voir les premières ventes du pic pour se réapprovisionner",
+      "À Noël": "Au tour du pic",
+      "À Noël votre trafic passe": "Au tour du pic, votre trafic passe",
+      "la demande de Noël la dépasse": "la demande du pic la dépasse",
+      "À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.":
+        "Au tour du pic, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.",
+      // Le tour 5 suit le pic dans tous les tableaux.
+      "Le trimestre de Noël vient de vider votre trésorerie dans le réassort.":
+        "Le tour du pic vient de vider votre trésorerie dans le réassort.",
+      // Une situation détectée tombe à n'importe quel tour : « du pic » la nomme sans la dater.
+      "Le réassort de Noël": "Le réassort du pic",
+      // Le déstockage du tour 3 : le tour 4, juste après, est le pic de la maille
+      // (les écharpes et les bonnets y font plus du double d'un tour ordinaire).
+      "Solder, ou garder pour l'an prochain": "Solder, ou garder pour la prochaine collection",
+      "de la collection de printemps": "de la dernière collection",
+      "refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la collection aura tourné":
+        "refuser, c'est occuper une réserve pendant des tours, le temps que la collection tourne",
+      "refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la mode aura tourné":
+        "refuser, c'est occuper une réserve pendant des tours, le temps que la mode tourne",
+      "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets de l'hiver, qui tourneront deux fois d'ici le printemps":
+        "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets, qui se vendent plus du double au tour du pic, juste après",
+      "Le mètre de linéaire qu'elles occupent porterait la collection suivante, qui tournerait deux fois d'ici le printemps":
+        "Le mètre de linéaire qu'elles occupent porterait la collection suivante, celle du pic qui arrive au tour suivant",
+      "une vente incertaine dans un an": "une vente incertaine à la collection suivante",
+      "Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort une saison entière est un emplacement qui n'a rien vendu, alors que les accessoires de l'hiver y tourneraient.":
+        "Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort des tours entiers est un emplacement qui n'a rien vendu, alors que les accessoires du pic y tourneraient.",
+      "La place libérée par le déstockage accueille les références de l'hiver, qui tourneront : pensez rotation du stock, pas récupération du coût d'achat.":
+        "La place libérée par le déstockage accueille les références du pic qui arrive, qui tourneront : pensez rotation du stock, pas récupération du coût d'achat.",
+      // Au tour 6 d'une partie au mois, la boutique a six mois : pas encore les
+      // comptes d'une année. À l'année, le tour EST l'année.
+      "Votre banquier reçoit les comptes de l'année.": {
+        month: "Votre banquier reçoit vos derniers comptes.",
+        year: "Votre banquier reçoit les comptes de l'année.",
+      },
+      "Les achats de la collection de Noël se paient aux façonniers avant que Noël ne rapporte quoi que ce soit":
+        "Les achats de la collection du pic se paient aux façonniers avant que le pic ne rapporte quoi que ce soit",
+      "Les achats de la collection de Noël se paient avant que Noël ne rapporte quoi que ce soit":
+        "Les achats de la collection du pic se paient avant que le pic ne rapporte quoi que ce soit",
+      // La trésorerie qui dort est détectée à n'importe quel tour : rien n'y date le tour.
+      "La caisse pleine d'après-soldes": "La caisse pleine entre deux collections",
+      "Les soldes ont vidé la réserve et rempli le compte": "Vos ventes ont vidé la réserve et rempli le compte",
+      "La collection d'automne, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.":
+        "La collection suivante, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.",
+      "La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.":
+        "La collection suivante, elle, se commande dans quelques semaines et se paie avant d'être vendue.",
+      "Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…":
+        "Dans un commerce saisonnier, un solde de trésorerie élevé entre deux collections signifie surtout que…",
+
+      // PIXEL & CO et sa gamme : le tour 4 est le plus haut de chaque tableau
+      // (1,6 ; 1,45 à 1,7 selon le rayon).
+      "Black Friday et fêtes": "Le plus gros tour de la partie",
+      "Black Friday et fêtes, sur quatre rayons": "Le plus gros tour de la partie, sur quatre rayons",
+      "Vos concurrents ont réservé leurs espaces publicitaires depuis septembre":
+        "Vos concurrents ont réservé leurs espaces publicitaires depuis des semaines",
+      "Il suffit d'avoir du stock : à Noël, tout se vend": "Il suffit d'avoir du stock : au tour du pic, tout se vend",
+      "Beaucoup d'e-commerçants rentables meurent en décembre.":
+        "Beaucoup d'e-commerçants rentables meurent au plus fort de leur saison.",
+      "Les enchères publicitaires montent en période de fêtes.": "Les enchères publicitaires montent au tour du pic.",
+      // La trésorerie qui dort tombe à n'importe quel tour, et le tour qui suit le
+      // pic (0,9) n'est pas le plus creux du tableau (0,85 au tour 3) : on ne
+      // promet ni creux ni pic, seulement des ventes qui ne se répètent pas d'office.
+      "L'après-fêtes": "Le compte plein",
+      "L'après-fêtes, et la capsule qui attend": "Le compte plein, et la capsule qui attend",
+      "Le pic des fêtes a rempli le compte": "Vos ventes ont rempli le compte",
+      "Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.":
+        "Rien ne dit que le tour qui s'ouvre vendra autant, et les retours des dernières ventes ne sont pas tous remboursés.",
+      "Le trimestre qui s'ouvre est le plus creux de l'année, les retours de décembre ne sont pas tous remboursés":
+        "Rien ne dit que le tour qui s'ouvre vendra autant, les retours des dernières ventes ne sont pas tous remboursés",
+      // La question pose elle-même « après un pic de ventes ».
+      "Le solde de janvier porte encore les remboursements de décembre.":
+        "Le solde du tour d'après porte encore les remboursements du pic.",
+      "Projetez le trimestre creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.":
+        "Projetez le tour qui vient : publicité pour maintenir le trafic, règlement des fournisseurs, et remboursement des derniers retours.",
+      "Projetez le trimestre creux, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.":
+        "Projetez le tour qui vient, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs, et remboursement des derniers retours.",
+      "Le trimestre creux ne justifie pas un stock élevé.": "Un compte plein ne justifie pas un stock élevé.",
+
+      // Les courriers des deux liasses : l'animateur les pose au tour qu'il veut,
+      // la lettre ne date donc rien. Les étapes d'investissement tombent aux tours
+      // 4 (le concurrent) et 5 (le retournement), où rien ne fait l'automne.
+      "Saison des cadeaux avancée de trois semaines": "Vos clientes fidèles achètent plus tôt que d'habitude",
+      "Les magazines féminins ont lancé la saison plus tôt que d'habitude.":
+        "Les magazines féminins ont lancé les nouvelles collections plus tôt que d'habitude.",
+      "pour notre arbre de Noël": "pour la dotation de nos salariés",
+      "Implantation du marché de Noël devant votre boutique": "Implantation d'un marché artisanal devant votre boutique",
+      "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille.":
+        "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération dans les semaines qui viennent et renouvelle l'ensemble de sa ligne de maille.",
+      "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.":
+        "Le temps reste plus doux que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.",
+      "Financement de votre stock de fin d'année": "Financement de votre stock de saison",
+      "Préparation de l'opération commerciale de fin novembre": "Préparation de la grande opération commerciale du secteur",
+      "redéploie son espace de tête de rayon vers la rentrée scolaire":
+        "redéploie son espace de tête de rayon vers d'autres catégories",
+    } satisfies Record<string, string | { month: string; year: string }>).map(([cle, forme]) => [
+      cle,
+      typeof forme === "string" ? { month: forme, year: forme } : forme,
+    ]),
+  ),
+  // --- fin du groupe boutique-ecommerce : le récit des saisons --------------
 };
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);

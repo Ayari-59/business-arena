@@ -185,9 +185,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "ecom_t4_pic",
     category: "contexte_marche",
-    title: "Black Friday et fêtes",
+    title: "{{Black Friday et fêtes}}",
     narrative:
-      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, pas une de plus.",
+      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire. {{Vos concurrents ont réservé leurs espaces publicitaires depuis septembre}}, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, pas une de plus.",
     problem:
       "Comment préparer un pic qui exige à la fois du stock, de la capacité d'expédition et du budget d'acquisition ?",
     diagnosticOptions: [
@@ -208,7 +208,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "stock_enough",
-        label: "Il suffit d'avoir du stock : à Noël, tout se vend",
+        label: "{{Il suffit d'avoir du stock : à Noël, tout se vend}}",
         correct: false,
       },
     ],
@@ -239,7 +239,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le pic est un piège de trésorerie classique : on paie tout d'avance, on encaisse une partie plus tard. Beaucoup d'e-commerçants rentables meurent en décembre.",
+          "Le pic est un piège de trésorerie classique : on paie tout d'avance, on encaisse une partie plus tard. {{Beaucoup d'e-commerçants rentables meurent en décembre.}}",
       },
     ],
     modelRelevance: {
@@ -260,7 +260,7 @@ const SOURCES: SituationDef[] = [
     weight: 1.5,
     decisionLevers: [
       { field: "productionPlan", direction: "up", hint: "Le pic exige du stock supplémentaire, mais uniquement à hauteur de ce que l'entrepôt peut expédier. Inutile d'acheter au-delà de la capacité de préparation." },
-      { field: "marketingBudget", direction: "up", hint: "Les enchères publicitaires montent en période de fêtes. Réservez un budget d'acquisition suffisant pour capter la demande saisonnière." },
+      { field: "marketingBudget", direction: "up", hint: "{{Les enchères publicitaires montent en période de fêtes.}} Réservez un budget d'acquisition suffisant pour capter la demande saisonnière." },
       { field: "maintenanceBudget", direction: "review", hint: "La capacité de l'entrepôt est le goulot d'étranglement. Vérifiez si un investissement logistique permet de desserrer cette contrainte avant le pic." },
     ],
   },
@@ -667,9 +667,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "ecom_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "L'après-fêtes",
+    title: "{{L'après-fêtes}}",
     narrative:
-      "Le pic des fêtes a rempli le compte : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre}} qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.",
+      "{{Le pic des fêtes a rempli le compte}} : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.}}",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -719,7 +719,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Une commande encaissée n'est pas une commande acquise tant que le délai de rétractation court. Le solde de janvier porte encore les remboursements de décembre.",
+          "Une commande encaissée n'est pas une commande acquise tant que le délai de rétractation court. {{Le solde de janvier porte encore les remboursements de décembre.}}",
       },
     ],
     modelRelevance: {
@@ -733,13 +733,13 @@ const SOURCES: SituationDef[] = [
       "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous vraiment ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "Projetez {{le trimestre}} creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
+      "{{Projetez le trimestre creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.}}",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
     decisionLevers: [
-      { field: "productionPlan", direction: "down", hint: "{{Le trimestre}} creux ne justifie pas un stock élevé. Réduisez les achats pour ne pas immobiliser du cash qui pourrait être placé ou gardé en réserve." },
+      { field: "productionPlan", direction: "down", hint: "{{Le trimestre creux ne justifie pas un stock élevé.}} Réduisez les achats pour ne pas immobiliser du cash qui pourrait être placé ou gardé en réserve." },
       { field: "maintenanceBudget", direction: "review", hint: "L'excédent de trésorerie peut financer un investissement logistique ou plateforme, à condition de conserver assez de liquidités pour {{le trimestre}} à venir." },
     ],
   },

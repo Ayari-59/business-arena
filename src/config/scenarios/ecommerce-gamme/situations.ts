@@ -47,16 +47,16 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Le seuil de rentabilité pose la question du métier dans les bons termes, rayon par rayon : combien de commandes faut-il, une fois la publicité payée, et à quel mix ?",
   },
   ecom_t4_pic: {
-    title: "Black Friday et fêtes, sur quatre rayons",
+    title: "{{Black Friday et fêtes, sur quatre rayons}}",
     narrative:
-      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire, et les luminaires s'y vendent presque le double. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, un coussin comme un fauteuil, pas une de plus.",
+      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire, et les luminaires s'y vendent presque le double. {{Vos concurrents ont réservé leurs espaces publicitaires depuis septembre}}, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, un coussin comme un fauteuil, pas une de plus.",
     problem:
       "Comment préparer un pic qui exige à la fois du stock par rayon, de la capacité d'expédition et du budget d'acquisition, et quel rayon servir en premier si la place manque ?",
     diagnosticLabels: [
       "Trois contraintes simultanées : la marchandise de chaque rayon, la capacité de préparation commune et le budget publicitaire",
       "Tout se décaisse AVANT d'encaisser : stock acheté rayon par rayon, publicité payée, commandes livrées ensuite",
       "Il suffit d'augmenter le budget publicitaire : la demande fera le reste",
-      "Il suffit d'avoir du stock : à Noël, tout se vend",
+      "{{Il suffit d'avoir du stock : à Noël, tout se vend}}",
     ],
     hintTexts: [
       "Regardez la saisonnalité de chaque rayon : quel coefficient s'applique au quatrième {{trimestre}} en décoration, en mobilier, en luminaires ?",
@@ -91,9 +91,9 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "L'analyse des coûts pertinents ne retient que ce qui CHANGE avec le canal : la commission de chaque rayon, et rien d'autre. Les charges de structure sont les mêmes que la commande vienne du site ou de la place de marché.",
   },
   ecom_detect_idle_cash: {
-    title: "L'après-fêtes, et la capsule qui attend",
+    title: "{{L'après-fêtes, et la capsule qui attend}}",
     narrative:
-      "Le pic des fêtes a rempli le compte : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre}} qui s'ouvre est le plus creux de l'année, les retours de décembre ne sont pas tous remboursés, et le projet de collection de créateurs attend toujours ses 20 000 €.",
+      "{{Le pic des fêtes a rempli le compte}} : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre qui s'ouvre est le plus creux de l'année, les retours de décembre ne sont pas tous remboursés}}, et le projet de collection de créateurs attend toujours ses 20 000 €.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans la capsule, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [
@@ -106,7 +106,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous vraiment ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; une commande de la capsule laisse 40 € de marge, mais seulement une fois la collection bâtie.",
       "Attention : le placement est bloqué jusqu'au tour suivant, et la R&D de la capsule est une charge du tour. Ni l'un ni l'autre ne réglera ce qui tombera d'ici là.",
-      "Projetez {{le trimestre}} creux, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
+      "{{Projetez le trimestre creux, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.}}",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:

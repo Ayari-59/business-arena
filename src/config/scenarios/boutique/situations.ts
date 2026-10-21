@@ -96,7 +96,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Chaque référence a sa clientèle : personne n'achète cinq pulls mérinos faute de bonnets. Un bonnet vendu rapporte 14 € que la boutique n'aurait pas eus. La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple. C'est la logique de l'assortiment.",
+          "Chaque référence a sa clientèle : personne n'achète cinq pulls mérinos faute de bonnets. Un bonnet vendu rapporte 14 € que la boutique n'aurait pas eus. {{La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple.}} C'est la logique de l'assortiment.",
       },
     ],
     modelRelevance: {
@@ -213,15 +213,15 @@ const SOURCES: SituationDef[] = [
   {
     code: "boutique_t4_noel",
     category: "contexte_marche",
-    title: "{{Le trimestre}} qui fait l'année",
+    title: "{{Le trimestre qui fait l'année}}",
     narrative:
-      "La maille se vend l'hiver : au quatrième {{trimestre}}, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations. Votre façonnier veut vos volumes maintenant, référence par référence, et ne reprendra rien. Votre réserve, elle, ne grandit pas.",
+      "{{La maille se vend l'hiver : au quatrième trimestre, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.}} Votre façonnier veut vos volumes maintenant, référence par référence, et ne reprendra rien. Votre réserve, elle, ne grandit pas.",
     problem:
-      "Combien commander pour Noël, de quelle référence, et à quel risque ?",
+      "{{Combien commander pour Noël, de quelle référence, et à quel risque ?}}",
     diagnosticOptions: [
       {
         id: "both_risks",
-        label: "Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort jusqu'au printemps",
+        label: "{{Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort jusqu'au printemps}}",
         correct: true,
       },
       {
@@ -242,7 +242,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "wait_and_see",
-        label: "Attendre les premières ventes de décembre pour se réapprovisionner",
+        label: "{{Attendre les premières ventes de décembre pour se réapprovisionner}}",
         correct: false,
       },
     ],
@@ -250,7 +250,7 @@ const SOURCES: SituationDef[] = [
       {
         id: "transformation_noel",
         prompt:
-          "À Noël, 5 800 visiteurs au lieu de 4 000, mais le taux de transformation tombe de 30 à 25 % faute de réassort. Panier moyen inchangé, 62 € : que coûte cette baisse ?",
+          "{{À Noël}}, 5 800 visiteurs au lieu de 4 000, mais le taux de transformation tombe de 30 à 25 % faute de réassort. Panier moyen inchangé, 62 € : que coûte cette baisse ?",
         options: [
           { id: "a", label: "17 980 € : 290 clients entrés et repartis les mains vides" },
           { id: "b", label: "Rien : le nombre de clients servis augmente quand même" },
@@ -264,7 +264,7 @@ const SOURCES: SituationDef[] = [
       {
         id: "mix_capacite",
         prompt:
-          "Votre réserve traite {{entier: capacite_parc}} pièces {{par trimestre}} et la demande de Noël la dépasse. Le bonnet laisse 14 € par pièce, l'écharpe 19 €, le pull col rond 30,50 €, le cardigan 41 €, le pull mérinos 68 €. Comment répartir la commande ?",
+          "Votre réserve traite {{entier: capacite_parc}} pièces {{par trimestre}} et {{la demande de Noël la dépasse}}. Le bonnet laisse 14 € par pièce, l'écharpe 19 €, le pull col rond 30,50 €, le cardigan 41 €, le pull mérinos 68 €. Comment répartir la commande ?",
         options: [
           {
             id: "a",
@@ -299,7 +299,7 @@ const SOURCES: SituationDef[] = [
     decisionLevers: [
       { field: "productionPlan", direction: "up", hint: "Le pic saisonnier exige un stock supérieur à la normale : dimensionnez la commande de chaque référence sur sa demande anticipée, dans la limite de votre capacité de traitement, en servant d'abord les marges les plus fortes." },
       { field: "marketingBudget", direction: "review", hint: "Le trafic du pic est déjà acquis par la saison, mais le taux de transformation et le panier moyen dépendent de l'animation en boutique : chaque point de conversion perdu coûte des milliers d'euros." },
-      { field: "price", direction: "review", hint: "À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen." },
+      { field: "price", direction: "review", hint: "{{À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.}}" },
     ],
   },
   {
@@ -307,7 +307,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "La laine a flambé",
     narrative:
-      "Votre façonnier annonce +18 % sur la prochaine collection : la laine mérinos et le coton ont flambé, le fret aussi. Vos étiquettes, elles, sont imprimées. {{Le trimestre}} de Noël vient de vider votre trésorerie dans le réassort.",
+      "Votre façonnier annonce +18 % sur la prochaine collection : la laine mérinos et le coton ont flambé, le fret aussi. Vos étiquettes, elles, sont imprimées. {{Le trimestre de Noël vient de vider votre trésorerie dans le réassort.}}",
     problem:
       "Répercutez-vous la hausse sur vos prix de vente, ou l'absorbez-vous sur votre marge ?",
     diagnosticOptions: [
@@ -541,7 +541,7 @@ const SOURCES: SituationDef[] = [
       "Comparez deux choses dans vos états : le résultat net du tour, et la variation de votre trésorerie.",
       "Regardez ce qui a bougé au bilan entre l'ouverture et la clôture : le stock, les créances, les dettes fournisseurs.",
       "Le résultat est une opinion, la trésorerie est un fait. Entre les deux, il y a le besoin en fonds de roulement.",
-      "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. Le réassort de Noël, les cadeaux d'affaires à 60 jours et les comités d'entreprise à 45 jours travaillent dans le même sens.",
+      "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. {{Le réassort de Noël}}, les cadeaux d'affaires à 60 jours et les comités d'entreprise à 45 jours travaillent dans le même sens.",
       "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock — en commençant par la référence qui tourne le moins. Le troisième, allonger le crédit façonnier, se négocie : il ne se décrète pas.",
     ]),
     trigger: { detect: "profitable_illiquid" },
@@ -555,9 +555,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "boutique_t3_soldes",
     category: "decision_strategique",
-    title: "Solder, ou garder pour l'an prochain",
+    title: "{{Solder, ou garder pour l'an prochain}}",
     narrative:
-      "Il reste 400 pulls col rond de la collection de printemps, achetés 25 € l'unité et affichés 59 €. Ils ne partiront plus au tarif plein. Un déstockeur en offre 30 € l'unité, tout de suite. Accepter, c'est décider une démarque ; refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la collection aura tourné.",
+      "Il reste 400 pulls col rond {{de la collection de printemps}}, achetés 25 € l'unité et affichés 59 €. Ils ne partiront plus au tarif plein. Un déstockeur en offre 30 € l'unité, tout de suite. Accepter, c'est décider une démarque ; {{refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la collection aura tourné}}.",
     problem:
       "Vendre à 30 € une pièce payée 25 €, est-ce une bonne affaire ou une perte ?",
     diagnosticOptions: [
@@ -574,7 +574,7 @@ const SOURCES: SituationDef[] = [
       {
         id: "rotation",
         label:
-          "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets de l'hiver, qui tourneront deux fois d'ici le printemps",
+          "{{Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets de l'hiver, qui tourneront deux fois d'ici le printemps}}",
         correct: true,
       },
       {
@@ -631,15 +631,15 @@ const SOURCES: SituationDef[] = [
     hints: hints([
       "Posez-vous une seule question : que change ma décision d'aujourd'hui, en euros qui entrent ou qui sortent ?",
       "Le prix d'achat de 25 € a été payé il y a des mois. Refuser 30 € ne vous les rendra pas.",
-      "Les deux options réelles sont : 30 € tout de suite, ou une vente incertaine dans un an, place occupée entre-temps.",
+      "Les deux options réelles sont : 30 € tout de suite, ou {{une vente incertaine dans un an}}, place occupée entre-temps.",
       "Un coût déjà engagé ne doit jamais entrer dans un arbitrage : il est le même quelle que soit l'option retenue.",
-      "Comparez les seuls flux que la décision modifie : 30 € encaissés contre une réserve libérée. Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort une saison entière est un emplacement qui n'a rien vendu, alors que les accessoires de l'hiver y tourneraient.",
+      "Comparez les seuls flux que la décision modifie : 30 € encaissés contre une réserve libérée. {{Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort une saison entière est un emplacement qui n'a rien vendu, alors que les accessoires de l'hiver y tourneraient.}}",
     ]),
     trigger: { round: 3 },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "down", hint: "Baisser le prix des invendus libère de la trésorerie et de l'espace en réserve : le coût d'achat est engagé, seul l'encaissement futur compte encore." },
-      { field: "productionPlan", direction: "review", hint: "La place libérée par le déstockage accueille les références de l'hiver, qui tourneront : pensez rotation du stock, pas récupération du coût d'achat." },
+      { field: "productionPlan", direction: "review", hint: "{{La place libérée par le déstockage accueille les références de l'hiver, qui tourneront : pensez rotation du stock, pas récupération du coût d'achat.}}" },
     ],
   },
   {
@@ -647,7 +647,7 @@ const SOURCES: SituationDef[] = [
     category: "decision_strategique",
     title: "L'argent dort dans la réserve",
     narrative:
-      "Votre banquier reçoit les comptes de l'année. La boutique dégage un résultat honorable, mais il constate que le stock et les créances immobilisent une somme considérable, et que cet argent ne rapporte rien tant qu'il n'est pas vendu ni encaissé. Il vous demande le budget de trésorerie du prochain exercice.",
+      "{{Votre banquier reçoit les comptes de l'année.}} La boutique dégage un résultat honorable, mais il constate que le stock et les créances immobilisent une somme considérable, et que cet argent ne rapporte rien tant qu'il n'est pas vendu ni encaissé. Il vous demande le budget de trésorerie du prochain exercice.",
     problem:
       "Comment prévoir les mois où la caisse sera tendue, avant d'y être ?",
     diagnosticOptions: [
@@ -658,7 +658,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "saison",
-        label: "Les achats de la collection de Noël se paient aux façonniers avant que Noël ne rapporte quoi que ce soit",
+        label: "{{Les achats de la collection de Noël se paient aux façonniers avant que Noël ne rapporte quoi que ce soit}}",
         correct: true,
       },
       {
@@ -724,9 +724,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "boutique_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "La caisse pleine d'après-soldes",
+    title: "{{La caisse pleine d'après-soldes}}",
     narrative:
-      "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. La collection d'automne, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.",
+      "{{Les soldes ont vidé la réserve et rempli le compte}} : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. {{La collection d'automne, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.}}",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -767,7 +767,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "boutique_saison_achats",
-        prompt: "Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…",
+        prompt: "{{Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…}}",
         options: [
           { id: "a", label: "Le stock s'est transformé en argent, et cet argent va repartir en stock à la commande suivante" },
           { id: "b", label: "L'entreprise a dégagé un résultat exceptionnel sur {{le trimestre}}" },
