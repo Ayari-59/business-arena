@@ -90,7 +90,9 @@ const COMMANDES: Record<string, Partial<Record<Periodicity, [number, string]>>> 
   batiment_chantier_surprise: { month: [60, ""], quarter: [180, ""], year: [720, ""] },
   transport_lot_surprise: { month: [300, "Trois cents palettes"], quarter: [900, "Neuf cents palettes"], year: [3600, "Trois mille six cents palettes"] },
   bistrot_banquet_surprise: { month: [73, "soixante-treize couverts"], quarter: [220, "deux cent vingt couverts"], year: [880, "huit cent quatre-vingts couverts"] },
-  fitness_contrat_surprise: { month: [67, "soixante-sept salariés"], quarter: [200, "deux cents salariés"], year: [800, "huit cents salariés"] },
+  // Par abonnement, les adhérents d'une commande ne dépendent pas de la durée du tour
+  // (tests/engine/commande-par-abonnement.test.ts) : seul le prix d'un tour la suit.
+  fitness_contrat_surprise: { month: [200, "deux cents salariés"], quarter: [200, "deux cents salariés"], year: [200, "deux cents salariés"] },
 };
 
 describe("chaque courrier se rend à la durée du tour de sa partie", () => {
