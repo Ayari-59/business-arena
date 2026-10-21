@@ -70,8 +70,13 @@ import { NOVA_HOME } from "../groupe/nova";
 // Les mots de durée
 // ---------------------------------------------------------------------------
 
-/** Ce que devient, au mois et à l'année, une tournure écrite au trimestre. */
-const MOTS: Record<string, { month: string; year: string }> = {
+/**
+ * Ce que devient, au mois et à l'année, une tournure écrite au trimestre. La clé
+ * est le texte au trimestre, sauf quand elle ne peut pas l'être : `quarter` le
+ * porte alors (« quatre trimestres » rend « 4 trimestres », sans chiffre dans la
+ * clé d'un mot).
+ */
+const MOTS: Record<string, { month: string; year: string; quarter?: string }> = {
   trimestre: { month: "mois", year: "exercice" },
   trimestres: { month: "mois", year: "exercices" },
   "par trimestre": { month: "par mois", year: "par an" },
@@ -98,7 +103,8 @@ const MOTS: Record<string, { month: string; year: string }> = {
   // --- fin transport-bistrot -----------------------------------------------
   // --- conseil-hotel ---
   // Un flux annuel écrit comme quatre tours d'un trimestre : douze tours d'un mois, un seul d'un an.
-  "4 trimestres": { month: "12 mois", year: "1 exercice" },
+  // La formule l'écrit en chiffres (« × 4 trimestres ») ; la clé, en lettres.
+  "quatre trimestres": { quarter: "4 trimestres", month: "12 mois", year: "1 exercice" },
   // --- nova-courriers : les tournures des situations NOVA et des courriers ---
   "ce trimestre-là": { month: "ce mois-là", year: "cet exercice-là" },
   // --- groupe batiment-boutique-ecommerce ---
@@ -118,10 +124,11 @@ const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 function motDeDuree(cle: string, periodicite: Periodicity): string | undefined {
   const exact = MOTS[cle];
-  if (exact) return periodicite === "quarter" ? cle : exact[periodicite];
+  if (exact) return periodicite === "quarter" ? (exact.quarter ?? cle) : exact[periodicite];
   const minuscule = cle.charAt(0).toLowerCase() + cle.slice(1);
-  if (minuscule === cle || !MOTS[minuscule]) return undefined;
-  return periodicite === "quarter" ? cle : capitaliser(MOTS[minuscule]![periodicite]);
+  const mot = minuscule === cle ? undefined : MOTS[minuscule];
+  if (!mot) return undefined;
+  return periodicite === "quarter" ? (mot.quarter ? capitaliser(mot.quarter) : cle) : capitaliser(mot[periodicite]);
 }
 
 // ---------------------------------------------------------------------------
@@ -496,6 +503,19 @@ function approcheCentaine(x: number): string {
   return `${net(x) <= n ? "près de" : "un peu plus de"} ${entier(n)}`;
 }
 
+/**
+ * Un écart rapporté à la mission longue du récit (le quotient par sa durée) :
+ * « moins d'une mission longue » quand il y tient, « plus de deux missions
+ * longues » quand il en dépasse deux. ATLAS CONSEIL manque son seuil de 41 jours
+ * au trimestre, mais de 165 à l'année, quand la mission longue en fait 60.
+ */
+function missionsLongues(x: number): string {
+  const n = Math.floor(net(x));
+  if (n < 1) return "moins d'une mission longue";
+  if (n < 2) return "plus d'une mission longue";
+  return `plus de ${enMots(n, false)} missions longues`;
+}
+
 // --- fin retouches -----------------------------------------------------------
 
 const FORMATS: Record<string, (x: number) => string> = {
@@ -527,6 +547,8 @@ const FORMATS: Record<string, (x: number) => string> = {
   environ_dizaine: environ(10),
   /** Un résultat à la centaine, « près de 4 000 » ou « un peu plus de 1 300 ». */
   approche_centaine: approcheCentaine,
+  /** Un écart compté en missions longues (son quotient par leur durée) : « moins d'une mission longue ». */
+  missions_longues: missionsLongues,
   // --- fin retouches -------------------------------------------------------
 
   // --- nova-courriers ---------------------------------------------------------

@@ -427,7 +427,7 @@ export const CONSEIL_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "{{entier: flux(380)}} ÷ {{entier: capacite}} ≈ 53 %. Il manque environ {{entier: arrondi(charges / 470) - arrondi(flux(380))}} jours pour atteindre les {{entier: charges / 470}} du seuil, soit moins d'une mission longue. L'écart chiffré rend la décision concrète.",
+          "{{entier: flux(380)}} ÷ {{entier: capacite}} ≈ 53 %. Il manque environ {{entier: arrondi(charges / 470) - arrondi(flux(380))}} jours pour atteindre les {{entier: charges / 470}} du seuil, soit {{missions_longues: (arrondi(charges / 470) - arrondi(flux(380))) / 60}}. L'écart chiffré rend la décision concrète.",
       },
       {
         id: "prospection_retard",
