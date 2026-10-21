@@ -322,7 +322,8 @@ describe("un examen, de la création à la publication", () => {
     await aller(a, `/examen/${code}/resultat`);
     expect(await a.getByRole("heading", { level: 1 }).textContent()).toMatch(/^Votre note : [\d,]+ sur 100$/);
     expect(await a.locator("[data-releve-des-competences] li").count()).toBe(6);
-    expect(await a.locator("[data-detail-de-la-note] li").count()).toBe(6);
+    // Une ligne par ligne active de la grille (questions éteintes : sans les diagnostics).
+    expect(await a.locator("[data-detail-de-la-note] li").count()).toBe(GRILLE_BUSINESS_ARENA_2026.lignes.filter((x) => !x.siQuestions).length);
     // Noté contre la gestion neutre du secteur, nommée et définie ; plus de « gestion de référence ».
     // Le code de l'étalon se lit de la grille, comme sa version : depuis la version 2, il est gelé.
     const etalon = GRILLE_BUSINESS_ARENA_2026.reference.code;
