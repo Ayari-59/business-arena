@@ -7,6 +7,12 @@ import {
   type Periodicity,
 } from "./periodicity";
 import type { SituationDef } from "./situation-kit";
+// conseil-hotel : l'entreprise de départ, d'où se lisent les jours-consultants et les nuitées.
+import { applyPeriodicityToCompany } from "./periodicity";
+import { conseilCompany } from "./conseil";
+import { conseilGammeCompany } from "./conseil-gamme";
+import { hotelCompany } from "./hotel";
+import { hotelGammeCompany } from "./hotel-gamme";
 
 /**
  * LE TEXTE D'UNE SITUATION SE REND À LA DURÉE DU TOUR DE SA PARTIE.
@@ -83,6 +89,9 @@ const MOTS: Record<string, { month: string; year: string }> = {
     month: "engagements annuels plutôt que mensuels",
     year: "engagements pluriannuels plutôt qu'annuels",
   },
+  // --- conseil-hotel ---
+  // Un flux annuel écrit comme quatre tours d'un trimestre : douze tours d'un mois, un seul d'un an.
+  "4 trimestres": { month: "12 mois", year: "1 exercice" },
 };
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -116,6 +125,29 @@ const abonnementDe = (s: EngineScenarioConfig) => {
   return s.subscription;
 };
 
+// --- conseil-hotel ---
+/** Les entreprises de départ dont une situation lit la capacité. */
+const ENTREPRISES_DE_DEPART: Record<string, typeof conseilCompany> = {
+  conseil: conseilCompany,
+  "conseil-gamme": conseilGammeCompany,
+  hotel: hotelCompany,
+  "hotel-gamme": hotelGammeCompany,
+};
+
+/** L'entreprise de départ du scénario, mise à la durée de son tour par la règle du moteur. */
+function entrepriseDeDepart(s: EngineScenarioConfig) {
+  const fabrique = ENTREPRISES_DE_DEPART[s.code];
+  if (!fabrique) throw new Error(`Situation : aucune entreprise de départ connue pour « ${s.code} »`);
+  return applyPeriodicityToCompany(fabrique("situation", "situation", "human"), periodicityFromRoundDays(s.roundDays), {
+    abonnement: s.subscription !== undefined,
+  });
+}
+
+const investissementDe = (s: EngineScenarioConfig) => {
+  if (!s.investment) throw new Error("Situation : ce jeton suppose un scénario à investissement capacitaire");
+  return s.investment;
+};
+
 /** Les grandeurs qu'un énoncé peut citer, lues du scénario mis à la durée du tour. */
 const GRANDEURS: Record<string, Grandeur> = {
   /** Le prix d'un tour d'abonnement (référence du scénario). */
@@ -130,6 +162,29 @@ const GRANDEURS: Record<string, Grandeur> = {
   attrition: (s) => tauxLu(abonnementDe(s).baseChurnRate),
   /** Le nombre de tours dans une année. */
   tours_par_an: (s) => 360 / s.roundDays,
+  // --- conseil-hotel ---
+  /** Les jours d'un tour : les nuits qu'une chambre offre, au calendrier du moteur (30, 90, 360). */
+  jours_du_tour: (s) => s.roundDays,
+  /**
+   * Ce que l'entreprise de départ peut vendre en un tour : le plus petit de son parc
+   * et des heures de son équipe, comme le moteur produit (`engine/production`). Les
+   * 720 jours-consultants d'ATLAS CONSEIL, les 5 400 nuitées de L'ESCALE au trimestre.
+   */
+  capacite: (s) => {
+    const e = entrepriseDeDepart(s);
+    return Math.min(e.machineCapacity, (e.headcount * e.hoursPerEmployee) / s.product.hoursPerUnit);
+  },
+  /** Les heures d'un salarié sur un tour ; au conseil, l'unité est la journée : ses jours ouvrés. */
+  heures_par_salarie: (s) => entrepriseDeDepart(s).hoursPerEmployee,
+  /** Le salaire chargé d'un salarié sur un tour. */
+  salaire: (s) => {
+    if (!s.hr) throw new Error("Situation : le jeton « salaire » suppose un scénario à effectif");
+    return s.hr.salaryPerEmployeePerRound;
+  },
+  /** Le prix d'une unité de capacité PAR TOUR achetée en investissement. */
+  cout_capacite: (s) => investissementDe(s).costPerCapacityUnit,
+  /** La durée d'amortissement d'un investissement capacitaire, en tours. */
+  duree_investissement: (s) => investissementDe(s).depreciationRounds,
 };
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
