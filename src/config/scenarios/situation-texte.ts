@@ -114,6 +114,11 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   "sur ce trimestre": { month: "sur ce mois", year: "sur cet exercice" },
   // L'échelle d'une commande d'office : « (échelle exercice) » se dit « (échelle annuelle) ».
   "échelle trimestre": { month: "échelle mois", year: "échelle annuelle" },
+  // VOLT FITNESS : l'adhérent paie à chaque tour, et chaque mois quand le tour dure un an
+  // (`echeance`) ; sans quoi la formule annuelle ne se comparerait plus à rien.
+  "par trimestre aujourd'hui": { month: "par mois aujourd'hui", year: "par mois aujourd'hui" },
+  // Un engagement d'un an ne dépasse pas l'exercice quand le tour dure un an : il le couvre.
+  "au-delà du trimestre": { month: "au-delà du mois", year: "sur tout l'exercice" },
   // --- groupe batiment-boutique-ecommerce ---
   // Une part du tour, à la même cadence : deux mois de location sur trois en
   // font vingt jours sur trente, et huit mois sur douze.
@@ -158,6 +163,9 @@ const abonnementDe = (s: EngineScenarioConfig) => {
   if (!s.subscription) throw new Error("Situation : le jeton « abonnement » suppose un scénario par abonnement");
   return s.subscription;
 };
+
+/** Les échéances d'un abonnement dans l'année : une par tour, une par mois quand le tour dure un an. */
+const echeancesParAn = (s: EngineScenarioConfig) => (s.roundDays >= 360 ? 12 : 360 / s.roundDays);
 
 // --- conseil-hotel ---
 /** Les entreprises de départ dont une situation lit la capacité. */
@@ -226,6 +234,15 @@ const GRANDEURS: Record<string, Grandeur> = {
   attrition: (s) => tauxLu(abonnementDe(s).baseChurnRate),
   /** Le nombre de tours dans une année. */
   tours_par_an: (s) => 360 / s.roundDays,
+  // --- retouches : ce que l'adhérent paie à chaque échéance ---
+  /**
+   * Les échéances d'un abonnement dans l'année : une par tour, et une par mois quand le
+   * tour dure un an. La formule annuelle de VOLT FITNESS se compare à ce que l'adhérent
+   * paie « aujourd'hui » : à l'année, payer une fois par tour ne la distinguerait de rien.
+   */
+  echeances_par_an: (s) => echeancesParAn(s),
+  /** Ce que l'adhérent paie à chaque échéance : l'abonnement d'une année divisé par leur nombre. */
+  echeance: (s) => (abonnementDe(s).refPrice * (360 / s.roundDays)) / echeancesParAn(s),
   // --- transport-bistrot ---------------------------------------------------
   /**
    * La capacité du parc de départ, par tour : les machines (camions, cuisines) du parc

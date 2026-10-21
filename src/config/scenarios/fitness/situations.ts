@@ -287,7 +287,7 @@ const SOURCES: SituationDef[] = [
       {
         field: "price",
         direction: "review",
-        hint: "Une formule annuelle ou un tarif estival réduit protège contre l'hémorragie saisonnière en engageant les adhérents au-delà {{du trimestre}}.",
+        hint: "Une formule annuelle ou un tarif estival réduit protège contre l'hémorragie saisonnière en engageant les adhérents {{au-delà du trimestre}}.",
       },
       {
         field: "maintenanceBudget",
@@ -489,7 +489,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Douze mois encaissés d'avance",
     narrative:
-      "Votre responsable commercial propose une formule annuelle : 340 € réglés en une fois, contre {{entier: abonnement}} € {{par trimestre}} aujourd'hui, soit 420 € sur l'année. Vous perdez 80 € par adhérent, mais vous encaissez tout au premier jour, et l'adhérent ne peut plus partir en cours d'année.",
+      "Votre responsable commercial propose une formule annuelle : 340 € réglés en une fois, contre {{entier: echeance}} € {{par trimestre aujourd'hui}}, soit 420 € sur l'année. Vous perdez 80 € par adhérent, mais vous encaissez tout au premier jour, et l'adhérent ne peut plus partir en cours d'année.",
     problem:
       "Que gagne réellement la salle à se faire payer d'avance, au-delà du chiffre d'affaires ?",
     diagnosticOptions: [
@@ -551,7 +551,7 @@ const SOURCES: SituationDef[] = [
     conceptCodes: ["bfr", "frng", "net_treasury", "discounting"],
     hints: hints([
       "Comparez d'abord ce que rapporte un adhérent sur l'année dans les deux formules : 420 € contre 340 €.",
-      "Puis regardez QUAND cet argent arrive : {{mots_f: tours_par_an}} fois dans l'année, ou une seule fois en janvier ?",
+      "Puis regardez QUAND cet argent arrive : {{mots_f: echeances_par_an}} fois dans l'année, ou une seule fois en janvier ?",
       "Un encaissement anticipé, c'est de l'argent disponible pour payer les charges avant même d'avoir fourni la prestation.",
       "Cette avance des clients réduit votre besoin en fonds de roulement, parfois jusqu'à le rendre négatif : ce sont eux qui financent la salle.",
       "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas en mars. Comparez ce gain aux 80 € de remise.",

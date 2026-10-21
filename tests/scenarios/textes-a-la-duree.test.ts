@@ -74,6 +74,8 @@ function montantsAttendus(s: EngineScenarioConfig): Set<string> {
     milliers(marge * 300 * marge),
     milliers(marge * attrition * 100),
     (marge * attrition).toFixed(2).replace(".", ","),
+    // L'échéance que paie un adhérent : un tour, ou un mois quand le tour dure un an.
+    milliers(s.roundDays >= 360 ? prix / 12 : prix),
   ]);
 }
 
@@ -144,6 +146,36 @@ describe("VOLT FITNESS : chaque situation se rend à la durée du tour de sa par
     expect(taux).toBe(0.053);
     expect(t2.quiz[0]!.prompt).toContain("le taux d'attrition mensuel est de 5,3 %");
     expect(t2.quiz[0]!.explain).toContain(`30 ÷ 0,053 = ${Math.round(30 / taux)} €`);
+  });
+
+  it("à l'année, la formule annuelle garde son objet : payer d'avance plutôt que chaque mois", () => {
+    // Quand un tour dure un an, « 420 € par an aujourd'hui, soit 420 € sur l'année » et
+    // « une fois dans l'année, ou une seule fois en janvier ? » ne comparaient plus rien.
+    // Le récit fait payer l'adhérent à chaque tour, et chaque mois quand le tour dure un
+    // an : la formule annuelle se compare alors à douze mensualités.
+    const annuel = (periodicity: Periodicity) =>
+      situationDeLaPartie(fitness.situations.find((d) => d.code === "fitness_t4_annuel")!, PERIODICITY_DAYS[periodicity]);
+    const attendu: Record<Periodicity, [string, string]> = {
+      month: ["contre 35 € par mois aujourd'hui, soit 420 € sur l'année", "douze fois dans l'année, ou une seule fois en janvier ?"],
+      quarter: ["contre 105 € par trimestre aujourd'hui, soit 420 € sur l'année", "quatre fois dans l'année, ou une seule fois en janvier ?"],
+      year: ["contre 35 € par mois aujourd'hui, soit 420 € sur l'année", "douze fois dans l'année, ou une seule fois en janvier ?"],
+    };
+    for (const periodicity of DUREES) {
+      const s = joue(periodicity);
+      const toursParAn = 360 / s.roundDays;
+      const echeances = toursParAn === 1 ? 12 : toursParAn;
+      // Les mensualités font l'abonnement annuel du moteur, à toute durée.
+      expect(Math.round((s.subscription!.refPrice * toursParAn) / echeances) * echeances, periodicity).toBe(420);
+      const t4 = annuel(periodicity);
+      expect(t4.narrative, periodicity).toContain(attendu[periodicity][0]);
+      expect(t4.hints[1]!.text, periodicity).toContain(attendu[periodicity][1]);
+      expect(textesDe(t4).join(" "), periodicity).not.toMatch(/420 € par an aujourd'hui|une fois dans l'année, ou une seule/);
+    }
+    // Un engagement d'un an ne court pas « au-delà de l'exercice » quand le tour dure un an.
+    const ete = (periodicity: Periodicity) =>
+      situationDeLaPartie(fitness.situations.find((d) => d.code === "fitness_t3_ete")!, PERIODICITY_DAYS[periodicity]);
+    expect(textesDe(ete("year")).join(" ")).toContain("en engageant les adhérents sur tout l'exercice.");
+    expect(textesDe(ete("month")).join(" ")).toContain("en engageant les adhérents au-delà du mois.");
   });
 
   it("les invariants : ce que l'énoncé écrit en clair vaut à toutes les durées", () => {
