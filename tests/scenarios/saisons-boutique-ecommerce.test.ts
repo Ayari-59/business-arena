@@ -10,6 +10,7 @@ import { situationDeLaPartie, textesDe } from "@/config/scenarios/situation-text
 import { LIASSES } from "@/config/courriers/registre";
 import { courrierDeLaPartie } from "@/config/courriers/de-la-partie";
 import { textesDuCourrier } from "@/config/courriers/texte";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * MAILLE & CO ET PIXEL & CO : AU MOIS ET À L'ANNÉE, LE RÉCIT NE NOMME PLUS UN
@@ -29,7 +30,9 @@ import { textesDuCourrier } from "@/config/courriers/texte";
  *    d'année » ne reste, hors des exceptions nommées une par une ;
  *  · qu'au trimestre, le texte est octet pour octet celui des relevés
  *    (tests/fixtures/situations-batiment-boutique-ecommerce-au-trimestre.json et
- *    tests/fixtures/courriers-au-trimestre.json).
+ *    tests/fixtures/courriers-au-trimestre.json), aux seules corrections près des
+ *    situations détectées, qui supposaient au trimestre même une saison que le
+ *    tour n'avait pas (décision du propriétaire, `corrections-des-dates.ts`).
  */
 
 const SCENARIOS = ["boutique", "boutique-mono", "ecommerce", "ecommerce-gamme"] as const;
@@ -134,7 +137,7 @@ describe("au trimestre, le texte est celui des relevés, octet pour octet", () =
       expect(situations.map((s) => s.code).sort()).toEqual(Object.keys(SITUATIONS_AVANT[code]!).sort());
       for (const def of situations) {
         expect(textesDe(situationDeLaPartie(def, PERIODICITY_DAYS.quarter)), def.code).toEqual(
-          SITUATIONS_AVANT[code]![def.code],
+          corrigerLesDates(def.code, SITUATIONS_AVANT[code]![def.code]!),
         );
       }
     });
@@ -145,10 +148,10 @@ describe("au trimestre, le texte est celui des relevés, octet pour octet", () =
         for (const [cle, textes] of Object.entries(lettres(c.code, PERIODICITY_DAYS.quarter))) {
           // La variante sans assurance n'est relevée que là où elle existe.
           if (!COURRIERS_AVANT[cle] && cle.endsWith("(sans assurance)")) {
-            expect(textes, cle).toEqual(COURRIERS_AVANT[c.code]);
+            expect(textes, cle).toEqual(corrigerLesDates(c.code, COURRIERS_AVANT[c.code]!));
             continue;
           }
-          expect(textes, cle).toEqual(COURRIERS_AVANT[cle]);
+          expect(textes, cle).toEqual(corrigerLesDates(cle, COURRIERS_AVANT[cle]!));
         }
       }
     });

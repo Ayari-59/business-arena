@@ -17,7 +17,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Centrale des marchés publics · Service des avis",
     objet: "Publication groupée d'avis de marchés d'études",
     corps:
-      "La clôture budgétaire des collectivités approche : quarante et un avis de marchés d'assistance et d'études sont publiés cette semaine sur le département. Les délais de remise sont courts.",
+      "Les collectivités lancent leurs consultations : quarante et un avis de marchés d'assistance et d'études sont publiés cette semaine sur le département. Les délais de remise sont courts.",
     signataire: "Le service des avis",
     effet: "Demande du secteur public +40 % ce tour",
     enJeu:

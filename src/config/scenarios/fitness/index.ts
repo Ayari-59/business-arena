@@ -52,7 +52,7 @@ const rawFitness = {
     segments: [
       {
         code: "resolutions",
-        name: "Bonnes résolutions (janvier, volatils)",
+        name: "Bonnes résolutions (par vagues, volatils)",
         size: 1000,
         growth: 0.04,
         // ceux-là comparent les prix de toutes les salles de la ville

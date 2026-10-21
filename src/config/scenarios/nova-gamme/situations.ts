@@ -488,7 +488,7 @@ const SOURCES: SituationDef[] = [
       "Pourquoi manque-t-on d'une référence alors qu'on en stocke une autre, et comment répartir la production au prochain tour ?",
     diagnosticOptions: [
       { id: "novag_so_mix", label: "Les plans par référence ne suivaient pas les demandes par référence", correct: true },
-      { id: "novag_so_saison", label: "{{La saisonnalité n'est pas la même sur chaque référence : la Go double à Noël, pas la Studio}}", correct: true },
+      { id: "novag_so_saison", label: "La saisonnalité n'est pas la même sur chaque référence : la Go double au pic, pas la Studio", correct: true },
       { id: "novag_so_capacite", label: "L'atelier manque de capacité, il faut investir", correct: false },
       { id: "novag_so_prix", label: "Il faut baisser le prix de la référence stockée pour l'écouler à tout prix", correct: false },
     ],
@@ -669,9 +669,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "novag_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "{{La caisse pleine d'après-Noël}}",
+    title: "La caisse pleine, et trois références à financer",
     narrative:
-      "Les ventes du pic ont été encaissées, CampusTech et la grande distribution ont fini par payer, et le compte affiche plus d'un {{trimestre}} de charges de structure d'avance, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 12 %. Les composants des trois références, eux, se paient avant que la première enceinte ne soit vendue, et la Studio en consomme le plus.",
+      "Vos ventes ont été encaissées, vos clients à terme ont fini par payer, et le compte affiche plus d'un {{trimestre}} de charges de structure d'avance, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 12 %. Les composants des trois références, eux, se paient avant que la première enceinte ne soit vendue, et la Studio en consomme le plus.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [

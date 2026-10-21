@@ -91,9 +91,9 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "L'analyse des coûts pertinents ne retient que ce qui CHANGE avec le canal : la commission de chaque rayon, et rien d'autre. Les charges de structure sont les mêmes que la commande vienne du site ou de la place de marché.",
   },
   ecom_detect_idle_cash: {
-    title: "{{L'après-fêtes, et la capsule qui attend}}",
+    title: "Le compte plein, et la capsule qui attend",
     narrative:
-      "{{Le pic des fêtes a rempli le compte}} : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre qui s'ouvre est le plus creux de l'année, les retours de décembre ne sont pas tous remboursés}}, et le projet de collection de créateurs attend toujours ses 20 000 €.",
+      "Vos ventes ont rempli le compte : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. Rien ne dit que le tour qui s'ouvre vendra autant, les retours des dernières ventes ne sont pas tous remboursés, et le projet de collection de créateurs attend toujours ses 20 000 €.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans la capsule, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [
@@ -106,7 +106,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous vraiment ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; une commande de la capsule laisse 40 € de marge, mais seulement une fois la collection bâtie.",
       "Attention : le placement est bloqué jusqu'au tour suivant, et la R&D de la capsule est une charge du tour. Ni l'un ni l'autre ne réglera ce qui tombera d'ici là.",
-      "{{Projetez le trimestre creux, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.}}",
+      "Projetez le tour qui vient, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs, et remboursement des derniers retours.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:

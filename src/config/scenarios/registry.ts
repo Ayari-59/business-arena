@@ -737,7 +737,7 @@ export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
       },
       {
         label: "Bâtir la cyber-sécurité",
-        gain: "Le tarif le plus haut du cabinet, sur des clients qui achètent en été.",
+        gain: "Le tarif le plus haut du cabinet, sur des clients qui achètent encore au creux.",
         risque: "Un budget engagé avant la première mission, et des salaires qui tombent.",
       },
     ],
@@ -871,7 +871,7 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
   briefing:
     "Vos adhérents paient un abonnement chaque trimestre : vous ne les gagnez pas une fois, vous les gardez ou vous les perdez. Chaque départ vous enlève tous les trimestres suivants.",
   context:
-    "La salle est bien équipée et le quartier est en croissance. Mais elle se remplissait en janvier sans se soucier de la suite, et beaucoup d'adhérents ne renouvelaient pas.",
+    "La salle est bien équipée et le quartier est en croissance. Mais elle se remplissait à chaque vague de bonnes résolutions sans se soucier de la suite, et beaucoup d'adhérents ne renouvelaient pas.",
   dilemma: {
     question: "Aller chercher de nouveaux adhérents, ou garder ceux que vous avez ?",
     routes: [

@@ -27,6 +27,7 @@ import { CourrierRecommande, EnveloppeOuverte, Lettre, Message } from "@/compone
 import { BandeauCourriers } from "@/components/bandeau-courriers";
 import { aleasDuTour } from "@/components/lecture-du-resultat";
 import type { CompanyRoundResult, EngineScenarioConfig } from "@/engine/types";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * LE TEXTE D'UN COURRIER SUIT LA DURÉE DU TOUR DE SA PARTIE.
@@ -45,7 +46,9 @@ import type { CompanyRoundResult, EngineScenarioConfig } from "@/engine/types";
  *  · qu'aucun « trimestre » ne reste au mois ni à l'année, et qu'aucun jeton
  *    n'atteint l'écran, variante sans assurance comprise ;
  *  · qu'au trimestre, chaque champ est octet pour octet celui d'avant les
- *    jetons (tests/fixtures/courriers-au-trimestre.json, relevé sur 1c6bc002) ;
+ *    jetons (tests/fixtures/courriers-au-trimestre.json, relevé sur 1c6bc002),
+ *    aux corrections nommées près, dont celles des dates fausses au trimestre
+ *    même (`corrections-des-dates.ts`, décision du propriétaire) ;
  *  · que chaque chemin d'affichage rend le courrier de SA partie.
  */
 
@@ -78,8 +81,11 @@ const CORRECTIONS: { code: string; avant: string; apres: string }[] = [
 ];
 
 const attenduAuTrimestre = (cle: string): string[] =>
-  AVANT[cle]!.map((t) =>
-    CORRECTIONS.filter((c) => cle === c.code || cle.startsWith(`${c.code} `)).reduce((acc, c) => acc.replace(c.avant, c.apres), t),
+  corrigerLesDates(
+    cle,
+    AVANT[cle]!.map((t) =>
+      CORRECTIONS.filter((c) => cle === c.code || cle.startsWith(`${c.code} `)).reduce((acc, c) => acc.replace(c.avant, c.apres), t),
+    ),
   );
 
 const TOUS: CourrierDef[] = [...COURRIERS, ...COURRIERS_DE_ROUTINE, ...LETTRES_DE_MISSION, ...COURRIERS_EN_RETOUR];

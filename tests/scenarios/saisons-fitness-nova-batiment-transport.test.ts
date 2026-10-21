@@ -7,6 +7,7 @@ import { LIASSES } from "@/config/courriers/registre";
 import { VARIANTES_SANS_ASSURANCE } from "@/config/courriers/sans-assurance";
 import { courrierALaDuree, textesDuCourrier } from "@/config/courriers/texte";
 import { courrierDeLaPartie } from "@/config/courriers/de-la-partie";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * LE RÉCIT DES SAISONS SUIT LA DURÉE DU TOUR : VOLT FITNESS, NOVA, NOVA · GAMME,
@@ -160,7 +161,11 @@ const AVANT_COURRIERS = fixture<Record<string, string[]>>("courriers-au-trimestr
  * Les corrections que les gardes de durée ont déjà nommées sur ces relevés, et
  * seulement elles (tests/scenarios/textes-a-la-duree-batiment-boutique-ecommerce.test.ts
  * et textes-a-la-duree-transport-bistrot.test.ts, où chacune est justifiée).
- * Elles ne touchent aucun mot du calendrier.
+ * Elles ne touchent aucun mot du calendrier. S'y ajoutent les corrections des
+ * dates fausses au trimestre même (décision du propriétaire), nommées une fois
+ * pour toutes dans `corrections-des-dates.ts` : « février » au tour 2 de
+ * batiment_t2_devis, « la fin d'année » au tour 5 de nova_inv_retournement, et
+ * les situations détectées, qui tombent à n'importe quel tour.
  */
 const CORRECTIONS: Record<string, [string, string][]> = {
   batiment_t1_marge: [
@@ -180,7 +185,10 @@ const CORRECTIONS: Record<string, [string, string][]> = {
 };
 
 const corrige = (code: string, textes: string[]) =>
-  textes.map((t) => (CORRECTIONS[code] ?? []).reduce((acc, [avant, apres]) => acc.split(avant).join(apres), t));
+  corrigerLesDates(
+    code,
+    textes.map((t) => (CORRECTIONS[code] ?? []).reduce((acc, [avant, apres]) => acc.split(avant).join(apres), t)),
+  );
 
 const RELEVES: Record<(typeof SCENARIOS)[number], Record<string, string[]>> = {
   fitness: AVANT_FITNESS,
@@ -205,12 +213,12 @@ describe("au trimestre, le texte du groupe est octet pour octet celui des relev�
   for (const l of CODES_DES_LIASSES) {
     it(`la liasse ${l}`, () => {
       for (const c of liasse(l)) {
-        expect(textesDuCourrier(courrierALaDuree(c, 90)), c.code).toEqual(AVANT_COURRIERS[c.code]);
-        expect(textesDuCourrier(c), c.code).toEqual(AVANT_COURRIERS[c.code]);
+        expect(textesDuCourrier(courrierALaDuree(c, 90)), c.code).toEqual(corrigerLesDates(c.code, AVANT_COURRIERS[c.code]!));
+        expect(textesDuCourrier(c), c.code).toEqual(corrigerLesDates(c.code, AVANT_COURRIERS[c.code]!));
         if (VARIANTES_SANS_ASSURANCE[c.code]) {
           const cle = `${c.code} (sans assurance)`;
           expect(textesDuCourrier(courrierDeLaPartie(c.code, { jours: 90, assurance: false })!), cle).toEqual(
-            AVANT_COURRIERS[cle],
+            corrigerLesDates(cle, AVANT_COURRIERS[cle]!),
           );
         }
       }

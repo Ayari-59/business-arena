@@ -365,9 +365,9 @@ const rawBistrot = {
   orderOffers: [
     {
       code: "bistrot_offer_mariage",
-      title: "Saison des mariages",
+      title: "Mariages · agence de réception",
       narrative:
-        "Une agence de réception vous confie les mariages de la saison : salle privatisée, menu unique, acompte à la réservation et solde sur facture. Chaque service se joue en une fois, sans rattrapage possible.",
+        "Une agence de réception vous confie ses prochains mariages : salle privatisée, menu unique, acompte à la réservation et solde sur facture. Chaque service se joue en une fois, sans rattrapage possible.",
       units: 260,
       price: 46,
       paymentDelayDays: 30,

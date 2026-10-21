@@ -506,7 +506,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Altimax Distribution · Direction des approvisionnements",
     objet: "Révision des quantités convenues pour votre référencement",
     corps:
-      "{{Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année.}} Nous révisons donc à la baisse le volume convenu pour les deux {{trimestres}} restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
+      "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont encore élevés au sortir du pic. Nous révisons donc à la baisse le volume convenu pour les deux {{trimestres}} restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
     signataire: "La responsable des approvisionnements",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:

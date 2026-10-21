@@ -666,9 +666,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "fitness_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "{{Janvier a rempli la caisse}}",
+    title: "La caisse pleine d'avance",
     narrative:
-      "{{Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert.}} Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. {{Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.}}",
+      "Les abonnements payés d'avance ont fait entrer beaucoup d'argent d'un coup : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Cet argent doit pourtant faire vivre la salle pendant toute la durée de ces abonnements, et les charges, elles, tombent à chaque tour.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -718,7 +718,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "L'adhérent a payé pour douze mois d'ouverture, de chauffage et d'encadrement. {{Bloquer cette somme reviendrait à financer janvier avec l'argent de novembre, qui n'est pas encore gagné.}}",
+          "L'adhérent a payé pour douze mois d'ouverture, de chauffage et d'encadrement. Bloquer cette somme reviendrait à engager dès maintenant l'argent des derniers mois de l'abonnement, qui n'est pas encore gagné.",
       },
     ],
     modelRelevance: {
@@ -732,7 +732,7 @@ const SOURCES: SituationDef[] = [
       "Comparez votre solde aux charges de structure d'un {{trimestre}} : combien {{de trimestres}} la salle pourrait-elle ouvrir sans une inscription de plus ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "{{Projetez l'année entière, et surtout le creux de l'été : les charges tombent tous les mois, les inscriptions non.}}",
+      "Projetez l'année entière, et surtout les tours creux : les charges tombent tous les mois, les inscriptions non.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
@@ -746,7 +746,7 @@ const SOURCES: SituationDef[] = [
       {
         field: "qualityBudget",
         direction: "review",
-        hint: "{{Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements du trimestre, été compris.}}",
+        hint: "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements des tours à venir.",
       },
     ],
   },
@@ -755,7 +755,7 @@ const SOURCES: SituationDef[] = [
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   fitness_detect_idle_cash:
-    "{{Le budget de trésorerie étale sur l'année les charges que l'encaissement de janvier doit couvrir.}} Seul lui montre que ce solde n'est pas un excédent, mais une avance à faire durer.",
+    "Le budget de trésorerie étale sur l'année les charges que cet encaissement d'avance doit couvrir. Seul lui montre que ce solde n'est pas un excédent, mais une avance à faire durer.",
   fitness_t4_annuel:
     "L'analyse FRNG / BFR montre ce que le compte de résultat cache : encaissé d'avance, l'abonnement fait financer l'exploitation par les adhérents eux-mêmes.",
   fitness_t6_seconde_salle:

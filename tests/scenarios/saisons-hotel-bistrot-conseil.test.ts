@@ -7,6 +7,7 @@ import { LIASSES } from "../../src/config/courriers/registre";
 import { VARIANTES_SANS_ASSURANCE } from "../../src/config/courriers/sans-assurance";
 import { courrierALaDuree, textesDuCourrier } from "../../src/config/courriers/texte";
 import { courrierDeLaPartie } from "../../src/config/courriers/de-la-partie";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * L'ESCALE, LA TABLE D'AUGUSTIN ET ATLAS CONSEIL NE DATENT PLUS UN TOUR AU MOIS NI À L'ANNÉE.
@@ -157,6 +158,10 @@ const AVANT_COURRIERS = fixture("courriers-au-trimestre.json");
 /**
  * Les corrections du texte au trimestre, nommées et justifiées dans la garde de leur
  * groupe ; reprises ici pour comparer à la même fixture. Aucune ne vient des saisons.
+ * S'y ajoutent, par `corrige`, celles des dates fausses au trimestre même (décision
+ * du propriétaire) : le traiteur du tour 3 de la gamme du bistrot, la clôture
+ * budgétaire du courrier `conseil_appel_offres_gagne`, et les situations détectées,
+ * qui tombent à n'importe quel tour (`corrections-des-dates.ts`).
  */
 const CORRECTIONS: { cles: string[]; avant: string; apres: string; garde: string }[] = [
   {
@@ -188,8 +193,11 @@ const CORRECTIONS: { cles: string[]; avant: string; apres: string; garde: string
 ];
 
 const corrige = (cle: string, textes: string[]) =>
-  textes.map((t) =>
-    CORRECTIONS.filter((c) => c.cles.includes(cle)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t),
+  corrigerLesDates(
+    cle,
+    textes.map((t) =>
+      CORRECTIONS.filter((c) => c.cles.includes(cle)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t),
+    ),
   );
 
 describe("au trimestre, le texte est octet pour octet celui des fixtures", () => {

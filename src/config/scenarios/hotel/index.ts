@@ -268,7 +268,7 @@ const rawHotel = {
       code: "hotel_offer_congres",
       title: "Congrès régional de cardiologie",
       narrative:
-        "Le palais des congrès vous adresse les participants de son congrès d'automne : un bloc de nuitées à réserver sur ce trimestre, pris sur votre capacité et servi une fois votre clientèle habituelle installée. Facturation centralisée, réglée à l'échéance du contrat.",
+        "Le palais des congrès vous adresse les participants de son prochain congrès : un bloc de nuitées à réserver sur ce trimestre, pris sur votre capacité et servi une fois votre clientèle habituelle installée. Facturation centralisée, réglée à l'échéance du contrat.",
       units: 900,
       price: 84,
       paymentDelayDays: 60,

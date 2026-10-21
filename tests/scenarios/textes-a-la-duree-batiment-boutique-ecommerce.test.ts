@@ -9,6 +9,7 @@ import {
 } from "../../src/config/scenarios/periodicity";
 import { situationDeLaPartie, textesDe } from "../../src/config/scenarios/situation-texte";
 import type { EngineScenarioConfig } from "../../src/engine/types";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * MARTEL & FILS, MAILLE & CO ET PIXEL & CO : CHAQUE SITUATION SE REND À LA
@@ -26,7 +27,10 @@ import type { EngineScenarioConfig } from "../../src/engine/types";
  *    n'atteint l'écran ;
  *  · qu'au trimestre, le texte est octet pour octet celui relevé sur 1c6bc002
  *    (tests/fixtures/situations-batiment-boutique-ecommerce-au-trimestre.json),
- *    aux deux corrections près que nomme `CORRECTIONS`.
+ *    aux deux corrections près que nomme `CORRECTIONS`, et à celles des dates
+ *    fausses au trimestre même (`corrections-des-dates.ts`, décision du
+ *    propriétaire : « février » au tour 2 de MARTEL & FILS, les situations
+ *    détectées de MAILLE & CO et de PIXEL & CO).
  */
 
 const DUREES: Periodicity[] = ["month", "quarter", "year"];
@@ -183,10 +187,11 @@ for (const code of GROUPE) {
           expect(t, `${def.code}[${i}] porte l'erreur relevée`).toContain(c[0]);
           return t.replace(c[0], c[1]);
         });
-        expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(attendu);
+        const corrige = corrigerLesDates(def.code, attendu);
+        expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(corrige);
         // Le registre porte le texte au trimestre : c'est lui que lisent le
         // catalogue, l'éditeur et le référentiel semé.
-        expect(textesDe(def), def.code).toEqual(attendu);
+        expect(textesDe(def), def.code).toEqual(corrige);
       }
     });
   });

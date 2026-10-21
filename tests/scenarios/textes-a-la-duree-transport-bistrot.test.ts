@@ -9,6 +9,7 @@ import {
 } from "../../src/config/scenarios/periodicity";
 import { situationDeLaPartie, textesDe } from "../../src/config/scenarios/situation-texte";
 import type { CompanyState, EngineScenarioConfig } from "../../src/engine/types";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * ROUTE & CIE ET LA TABLE D'AUGUSTIN SE LISENT À LA DURÉE DU TOUR DE LEUR PARTIE.
@@ -29,7 +30,9 @@ import type { CompanyState, EngineScenarioConfig } from "../../src/engine/types"
  *    n'atteint l'écran ;
  *  · qu'au trimestre, le texte est octet pour octet celui d'avant les jetons
  *    (tests/fixtures/situations-transport-bistrot-au-trimestre.json, relevé sur
- *    1c6bc002 avant toute modification), aux corrections nommées près.
+ *    1c6bc002 avant toute modification), aux corrections nommées près, dont
+ *    celle du traiteur au tour 3 de LA TABLE D'AUGUSTIN · gamme, qui le disait à
+ *    l'abri du creux (décision du propriétaire, `corrections-des-dates.ts`).
  */
 
 const DUREES: Periodicity[] = ["month", "quarter", "year"];
@@ -85,8 +88,11 @@ const CORRECTIONS: { codes: string[]; avant: string; apres: string }[] = [
 
 /** Le texte au trimestre attendu : la fixture, corrections nommées appliquées (chaque occurrence). */
 function attenduAuTrimestre(code: string): string[] {
-  return AVANT[code]!.map((t) =>
-    CORRECTIONS.filter((c) => c.codes.includes(code)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t),
+  return corrigerLesDates(
+    code,
+    AVANT[code]!.map((t) =>
+      CORRECTIONS.filter((c) => c.codes.includes(code)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t),
+    ),
   );
 }
 

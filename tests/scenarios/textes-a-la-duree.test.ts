@@ -16,6 +16,7 @@ import {
 import { dossierEnseignant } from "../../src/config/ateliers/dossiers";
 import { ATELIERS } from "../../src/config/ateliers";
 import type { EngineScenarioConfig } from "../../src/engine/types";
+import { corrigerLesDates } from "./corrections-des-dates";
 
 /**
  * LE TEXTE D'UNE SITUATION SUIT LA DURÉE DU TOUR DE SA PARTIE.
@@ -30,7 +31,10 @@ import type { EngineScenarioConfig } from "../../src/engine/types";
  *  · qu'aucun « trimestre » ne reste au mois ni à l'année, et qu'aucun jeton
  *    n'atteint l'écran ;
  *  · qu'au trimestre, le texte est octet pour octet celui d'avant les jetons
- *    (tests/fixtures/situations-fitness-au-trimestre.json, relevé sur 5357b884).
+ *    (tests/fixtures/situations-fitness-au-trimestre.json, relevé sur 5357b884),
+ *    aux seules corrections près de la trésorerie détectée, qui supposait au
+ *    trimestre même la vague de janvier et l'été à venir à n'importe quel tour
+ *    (décision du propriétaire, `corrections-des-dates.ts`).
  */
 
 const DUREES: Periodicity[] = ["month", "quarter", "year"];
@@ -120,10 +124,10 @@ describe("VOLT FITNESS : chaque situation se rend à la durée du tour de sa par
   it("au trimestre, le texte est octet pour octet celui d'avant les jetons", () => {
     expect(Object.keys(AVANT).sort()).toEqual(fitness.situations.map((d) => d.code).sort());
     for (const def of fitness.situations) {
-      expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(AVANT[def.code]);
+      expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(corrigerLesDates(def.code, AVANT[def.code]!));
       // Le registre porte le texte au trimestre : c'est lui que lisent le
       // catalogue, l'éditeur et le référentiel semé.
-      expect(textesDe(def), def.code).toEqual(AVANT[def.code]);
+      expect(textesDe(def), def.code).toEqual(corrigerLesDates(def.code, AVANT[def.code]!));
     }
   });
 

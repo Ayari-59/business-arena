@@ -186,7 +186,7 @@ const TRICOTEUR_ACCESSOIRES: SupplierDef = {
   code: "accessoiriste",
   name: "Tricoteur d'accessoires du Nord",
   narrative:
-    "Un atelier spécialisé dans les bonnets et les écharpes, en grande série : 10 % moins cher, réglé à 30 jours, une maille un peu plus lâche et un carnet de commandes qui déborde avant Noël.",
+    "Un atelier spécialisé dans les bonnets et les écharpes, en grande série : 10 % moins cher, réglé à 30 jours, une maille un peu plus lâche et un carnet de commandes qui déborde avant le pic.",
   costMultiplier: 0.9,
   qualityBonus: -0.02,
   paymentDelayDays: 30,
@@ -197,7 +197,7 @@ const DESTOCKEUR_ACCESSOIRES: SupplierDef = {
   code: "destockeur",
   name: "Fins de série d'accessoires",
   narrative:
-    "Des lots de bonnets et d'écharpes de la saison passée à −22 %, payés comptant, aux coloris qu'il reste : pour le volume de Noël, pas pour la vitrine.",
+    "Des lots de bonnets et d'écharpes de la saison passée à −22 %, payés comptant, aux coloris qu'il reste : pour le volume du pic, pas pour la vitrine.",
   costMultiplier: 0.78,
   qualityBonus: -0.08,
   paymentDelayDays: 0,
@@ -297,7 +297,7 @@ const GAMME: ProductDef[] = [
         }),
         entreprises({
           code: "echarpe_ce",
-          name: "Comités d'entreprise · écharpe (dotations de Noël)",
+          name: "Comités d'entreprise · écharpe",
           size: 1700,
           refPrice: 33,
           seasonality: [0.4, 0.3, 0.8, 2.5, 0.4, 0.3],
@@ -326,7 +326,7 @@ const GAMME: ProductDef[] = [
         }),
         entreprises({
           code: "bonnet_ce",
-          name: "Comités d'entreprise · bonnet (dotations de Noël)",
+          name: "Comités d'entreprise · bonnet",
           size: 1500,
           refPrice: 24,
           seasonality: [0.4, 0.3, 0.8, 2.5, 0.4, 0.3],
@@ -556,9 +556,9 @@ const rawBoutique = {
     {
       code: "boutique_offer_ce_noel",
       productCode: "pull-col-rond",
-      title: "Comité d'entreprise · dotation de Noël",
+      title: "Comité d'entreprise · dotation des salariés",
       narrative:
-        "Le CSE d'une clinique privée veut offrir un pull à chacun de ses salariés pour les fêtes. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
+        "Le CSE d'une clinique privée veut offrir un pull à chacun de ses salariés. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
       units: 600,
       price: 52,
       paymentDelayDays: 60,
