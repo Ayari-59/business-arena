@@ -85,7 +85,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
     hintTexts: [
       "Regardez la saisonnalité du segment banquets : quel coefficient s'applique au quatrième {{trimestre}}, et que font les autres offres pendant ce temps ?",
       "Les banquets grimpent à 1,85 fois leur niveau ordinaire ; la carte du soir monte aussi, la formule du midi à peine.",
-      "Vos deux plafonds sont proches : {{entier: capacite_parc}} couverts en salle et cuisine, {{nombre: 10 * flux(455)}} heures de brigade ({{entier: 10 * flux(455) / 0.5}} couverts à une demi-heure chacun), mais un banquet demande 0,45 h et un couvert du soir 0,6 h : le mix décide de la contrainte active.",
+      "Vos deux plafonds sont proches : {{entier: capacite_parc}} couverts en salle et cuisine, {{environ_dizaine: 10 * flux(455)}} heures de brigade ({{entier: 10 * arrondi(flux(455)) / 0.5}} couverts à une demi-heure chacun), mais un banquet demande 0,45 h et un couvert du soir 0,6 h : le mix décide de la contrainte active.",
       "Préparer plus que ce que vous servirez coûte les denrées perdues, sans aucune contrepartie : rien ne se stocke, sur aucune offre.",
       "Estimez la demande du tour offre par offre, comparez la somme aux deux plafonds, et n'oubliez pas que les banquets règlent à 30 jours et le traiteur à 45 ou 60 : le résultat arrive avant l'encaissement.",
     ],

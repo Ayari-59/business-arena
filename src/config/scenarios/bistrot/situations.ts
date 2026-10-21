@@ -342,16 +342,16 @@ export const BISTROT_SOURCES: SituationDef[] = [
       {
         id: "contrainte_active",
         prompt:
-          "Votre salle permet {{entier: capacite_parc}} couverts {{par trimestre}}. À 0,5 h de brigade par couvert et 10 salariés à {{nombre: flux(455)}} h, quelle est la capacité de travail ?",
+          "Votre salle permet {{entier: capacite_parc}} couverts {{par trimestre}}. À 0,5 h de brigade par couvert et 10 salariés à {{environ: flux(455)}} h, quelle est la capacité de travail ?",
         options: [
-          { id: "a", label: "{{entier: 10 * flux(455) / 0.5}} couverts : les deux contraintes se valent presque" },
-          { id: "b", label: "{{entier: 10 * flux(455)}} couverts : la brigade est très limitante" },
-          { id: "c", label: "{{entier: 10 * flux(455) / 0.25}} couverts : la brigade n'est jamais limitante" },
-          { id: "d", label: "{{entier: 10 * flux(455) * 0.5}} couverts" },
+          { id: "a", label: "{{entier: 10 * arrondi(flux(455)) / 0.5}} couverts : les deux contraintes se valent presque" },
+          { id: "b", label: "{{entier: 10 * arrondi(flux(455))}} couverts : la brigade est très limitante" },
+          { id: "c", label: "{{entier: 10 * arrondi(flux(455)) / 0.25}} couverts : la brigade n'est jamais limitante" },
+          { id: "d", label: "{{entier: 10 * arrondi(flux(455)) * 0.5}} couverts" },
         ],
         correctOptionId: "a",
         explain:
-          "10 × {{nombre: flux(455)}} ÷ 0,5 = {{entier: 10 * flux(455) / 0.5}} couverts. Les deux plafonds sont quasiment identiques : ajouter des chaises sans renforcer la brigade ne servirait à rien, et l'inverse non plus.",
+          "10 × {{entier: arrondi(flux(455))}} ÷ 0,5 = {{entier: 10 * arrondi(flux(455)) / 0.5}} couverts. Les deux plafonds sont quasiment identiques : ajouter des chaises sans renforcer la brigade ne servirait à rien, et l'inverse non plus.",
       },
     ],
     modelRelevance: {
@@ -364,7 +364,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
     hints: hints([
       "Regardez la saisonnalité du segment banquets : quel coefficient s'applique au quatrième {{trimestre}} ?",
       "Les banquets grimpent à 1,85 fois leur niveau ordinaire, sur un {{trimestre}} déjà à 1,25 en global.",
-      "Vos deux plafonds sont proches : {{entier: capacite_parc}} couverts en salle, {{entier: 10 * flux(455) / 0.5}} en heures de brigade. L'un ne sert à rien sans l'autre.",
+      "Vos deux plafonds sont proches : {{entier: capacite_parc}} couverts en salle, {{entier: 10 * arrondi(flux(455)) / 0.5}} en heures de brigade. L'un ne sert à rien sans l'autre.",
       "Préparer plus que ce que vous servirez coûte les denrées perdues, sans aucune contrepartie : rien ne se stocke.",
       "Estimez la demande du tour, comparez-la aux deux plafonds, et n'oubliez pas que les banquets règlent à 30 jours : le résultat arrive avant l'encaissement.",
     ]),
@@ -426,7 +426,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "2 % de 33 € = 0,66 €. Sur {{entier: flux(6000)}} couverts, cela fait près de {{entier: centaine(0.66 * flux(6000))}} € {{par trimestre}}, sans toucher au prix ni à la fréquentation. C'est pourquoi le ratio matières se surveille chaque semaine.",
+          "2 % de 33 € = 0,66 €. Sur {{entier: flux(6000)}} couverts, cela fait {{approche_centaine: 0.66 * flux(6000)}} € {{par trimestre}}, sans toucher au prix ni à la fréquentation. C'est pourquoi le ratio matières se surveille chaque semaine.",
       },
       {
         id: "charges_rigides",

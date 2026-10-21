@@ -103,12 +103,6 @@ const entreprise = (code: Code, periodicity: Periodicity): CompanyState =>
 
 const net = (x: number) => Number(x.toFixed(9));
 const milliers = (n: number) => String(Math.round(net(n))).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-const auCentieme = (x: number) => {
-  const v = Math.round(net(x) * 100) / 100;
-  if (Number.isInteger(v)) return milliers(v);
-  const [e, d] = v.toFixed(2).replace(/0$/, "").split(".");
-  return `${milliers(Number(e))},${d}`;
-};
 const virgule = (x: number, decimales: number) => x.toFixed(decimales).replace(".", ",");
 const dix = (x: number) => Math.round(net(x) / 10) * 10;
 const cinquante = (x: number) => Math.round(net(x) / 50) * 50;
@@ -192,8 +186,11 @@ function nombresAttendus(code: Code, periodicity: Periodicity): Set<string> {
   ajoute(frequentation, (margeCash - marge) * frequentation);
   ajoute(dix(charges / margeHausse), charges / margeHausse, cent(charges / margeHausse - charges / marge));
   ajoute(cent(flux(3900)), cent(flux(7200)), (marge - margeHausse) * frequentation);
-  ajoute(e.machineCapacity, brigade / parCouvert, brigade, brigade / (parCouvert / 2), brigade * parCouvert);
-  n.add(auCentieme(heures));
+  // Les heures d'un salarié telles que l'énoncé les affiche, à l'heure près (« environ
+  // 152 h » au mois, 151,67 au moteur) : le calcul demandé part de ce nombre affiché.
+  const heuresLues = Math.round(net(heures));
+  const brigadeLue = e.headcount * heuresLues;
+  ajoute(e.machineCapacity, heuresLues, brigadeLue / parCouvert, brigadeLue, brigadeLue / (parCouvert / 2), brigadeLue * parCouvert);
   ajoute(cent(0.02 * ticket * frequentation), flux(1000), flux(64));
   ajoute(terrasse.maxPerRound, 48000 / terrasse.depreciationRounds);
   // Ce que la durée ne change pas : le couvert et ses ratios, la brigade de départ.
@@ -220,7 +217,8 @@ function nombresAttendus(code: Code, periodicity: Periodicity): Set<string> {
   ajoute(48000, 300, 100, 1);
   if (code === "bistrot-gamme") {
     ajoute(dix(flux(4400)));
-    n.add(auCentieme(brigade));
+    // Les heures de la brigade, à la dizaine (dix fois les heures affichées d'un salarié).
+    ajoute(dix(brigade));
     // Les quatre cartes : leur prix, leurs denrées, leur marge, leur temps de brigade, ce
     // que la flambée leur ajoute (des grandeurs d'unité), et leurs délais de règlement.
     const euros = (x: number) => (Number.isInteger(x) ? milliers(x) : virgule(x, 2));
@@ -345,7 +343,25 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
     expect(t1.hints[4]!.text).toContain("Seuil = 30 000 ÷ 20 = 1 500 couverts par mois, soit 70 par jour sur 21 jours");
     const t4 = rendue("bistrot", "bistrot_t4_banquets", "month");
     expect(t4.quiz[1]!.prompt).toContain("Votre salle permet 3 000 couverts par mois");
-    expect(t4.quiz[1]!.explain).toContain("10 × 151,67 ÷ 0,5 = 3 033 couverts");
+    // 455 h par trimestre font 151,67 h par mois : l'énoncé dit « environ 152 h », et le
+    // calcul qu'il demande tombe juste avec ce nombre affiché.
+    expect(t4.quiz[1]!.prompt).toContain("10 salariés à environ 152 h,");
+    expect(t4.quiz[1]!.explain).toContain("10 × 152 ÷ 0,5 = 3 040 couverts");
+    // L'indice des deux plafonds dit le même nombre que l'option juste.
+    expect(t4.hints[2]!.text).toContain("3 000 couverts en salle, 3 040 en heures de brigade");
+    expect(t4.quiz[1]!.options.map((o) => o.label)).toEqual([
+      "3 040 couverts : les deux contraintes se valent presque",
+      "1 520 couverts : la brigade est très limitante",
+      "6 080 couverts : la brigade n'est jamais limitante",
+      "760 couverts",
+    ]);
+    // Là où l'heure tombe juste, ni « environ » ni arrondi.
+    const t4an = rendue("bistrot", "bistrot_t4_banquets", "year");
+    expect(t4an.quiz[1]!.prompt).toContain("10 salariés à 1 820 h,");
+    expect(t4an.quiz[1]!.explain).toContain("10 × 1 820 ÷ 0,5 = 36 400 couverts");
+    for (const periodicity of DUREES) {
+      expect(textesDe(rendue("bistrot", "bistrot_t4_banquets", periodicity)).join(" "), periodicity).not.toMatch(/\d,\d\d h/);
+    }
     const t5 = rendue("bistrot", "bistrot_t5_terrasse", "month");
     expect(t5.narrative).toContain("48 000 €, amortis sur trente-six mois. Elle ajouterait environ 600 couverts par mois");
     expect(t5.quiz.at(-1)!.explain).toContain("ignore les trente-cinq suivants");
@@ -358,7 +374,20 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
     expect(t1.hints[3]!.text).toContain("Charges de structure décaissées = 30 000 € par mois");
     expect(t1.quiz[1]!.explain).toContain("les 30 000 € de charges de structure du mois");
     const t4 = rendue("bistrot-gamme", "bistrotg_t4_banquets", "month");
-    expect(t4.hints[2]!.text).toContain("3 000 couverts en salle et cuisine, 1 516,67 heures de brigade (3 033 couverts");
+    expect(t4.hints[2]!.text).toContain("3 000 couverts en salle et cuisine, environ 1 520 heures de brigade (3 040 couverts");
+    expect(rendue("bistrot-gamme", "bistrotg_t4_banquets", "year").hints[2]!.text).toContain(
+      "36 000 couverts en salle et cuisine, 18 200 heures de brigade (36 400 couverts",
+    );
+  });
+
+  it("LA TABLE D'AUGUSTIN : deux points de ratio rapportent ce que le calcul affiché donne", () => {
+    // 0,66 € × 6 000 couverts = 3 960 € : « près de 4 000 € » au trimestre. Au mois,
+    // 0,66 × 2 000 = 1 320 € et à l'année 0,66 × 24 000 = 15 840 € : un peu PLUS que la
+    // centaine dite, et « près de » aurait dit un peu moins.
+    const phrase = (periodicity: Periodicity) => rendue("bistrot", "bistrot_detect_below_breakeven", periodicity).quiz[0]!.explain;
+    expect(phrase("quarter")).toContain("Sur 6 000 couverts, cela fait près de 4 000 € par trimestre");
+    expect(phrase("month")).toContain("Sur 2 000 couverts, cela fait un peu plus de 1 300 € par mois");
+    expect(phrase("year")).toContain("Sur 24 000 couverts, cela fait un peu plus de 15 800 € par an");
   });
 
   it("les invariants : ce que l'énoncé écrit en clair vaut à toutes les durées", () => {

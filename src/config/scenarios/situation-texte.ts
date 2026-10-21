@@ -470,15 +470,33 @@ function enLettres(x: number): string {
   return reste === 0 ? mille : `${mille} ${centaines(reste, false)}`;
 }
 
-/** Un nombre au centième au plus, sans zéro inutile : « 455 », « 151,67 », « 1 820 ». */
-function nombre(x: number): string {
-  const v = Math.round(net(x) * 100) / 100;
-  if (Number.isInteger(v)) return entier(v);
-  const [ent, dec] = avecVirgule(Math.abs(v), 0, 2).split(",");
-  return `${v < 0 ? "-" : ""}${milliers(Number(ent))},${dec}`;
+// --- fin transport-bistrot -------------------------------------------------
+
+// --- retouches ---------------------------------------------------------------
+
+/**
+ * Un nombre que le récit lit, arrondi au pas donné : tel quel quand il tombe juste,
+ * précédé d'« environ » sinon. Les 455 heures d'un salarié par trimestre font
+ * 151,67 h au mois : l'énoncé dit « environ 152 h », et le calcul qu'il demande
+ * part de 152 (`arrondi(…)`), pour tomber juste avec le nombre affiché. La brigade
+ * de dix fait alors « environ 1 520 heures » (au pas de la dizaine), soit
+ * 3 040 couverts, les mêmes que dix fois 152 heures.
+ */
+const environ = (pas: number) => (x: number): string => {
+  const n = Math.round(net(x) / pas) * pas;
+  return net(x) === n ? entier(n) : `environ ${entier(n)}`;
+};
+
+/**
+ * Un résultat dit à la centaine : « près de 4 000 » pour 3 960, mais « un peu plus
+ * de 1 300 » pour 1 320, que « près de » dirait un peu moins qu'il n'est.
+ */
+function approcheCentaine(x: number): string {
+  const n = Math.round(net(x) / 100) * 100;
+  return `${net(x) <= n ? "près de" : "un peu plus de"} ${entier(n)}`;
 }
 
-// --- fin transport-bistrot -------------------------------------------------
+// --- fin retouches -----------------------------------------------------------
 
 const FORMATS: Record<string, (x: number) => string> = {
   /** Un montant à l'euro : « 105 000 ». */
@@ -501,9 +519,15 @@ const FORMATS: Record<string, (x: number) => string> = {
   // --- transport-bistrot ---------------------------------------------------
   /** Un entier en toutes lettres, jusqu'à 999 999 : « sept mille quatre cents ». */
   lettres: enLettres,
-  /** Un nombre au centième au plus : « 455 » au trimestre, « 151,67 » au mois. */
-  nombre,
   // --- fin transport-bistrot -----------------------------------------------
+  // --- retouches -----------------------------------------------------------
+  /** Un nombre à l'unité, « environ » quand il ne tombe pas juste : « 455 », « environ 152 ». */
+  environ: environ(1),
+  /** Le même à la dizaine : « 4 550 », « environ 1 520 ». */
+  environ_dizaine: environ(10),
+  /** Un résultat à la centaine, « près de 4 000 » ou « un peu plus de 1 300 ». */
+  approche_centaine: approcheCentaine,
+  // --- fin retouches -------------------------------------------------------
 
   // --- nova-courriers ---------------------------------------------------------
   /** Le même, en tête de phrase : « Neuf cents palettes ». */
