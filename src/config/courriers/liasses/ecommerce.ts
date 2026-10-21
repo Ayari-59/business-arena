@@ -172,7 +172,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_banque_conciliante",
     expediteur: "Banque des Professions · Agence entreprises",
-    objet: "Financement de votre stock de saison",
+    objet: "Accord de financement de votre stock",
     corps:
       "Votre taux de retour maîtrisé et la récurrence de votre clientèle nous conduisent à accepter le financement de votre stock de saison, à des conditions préférentielles valables deux {{trimestres}}.",
     signataire: "Votre chargée d'affaires",

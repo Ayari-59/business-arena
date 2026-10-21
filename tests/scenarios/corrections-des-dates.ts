@@ -386,8 +386,8 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
   {
     codes: ["ecom_banque_conciliante"],
     avant: "Financement de votre stock de fin d'année",
-    apres: "Financement de votre stock de saison",
-    pourquoi: `${TIRE} ; le corps dit déjà « votre stock de saison »`,
+    apres: "Accord de financement de votre stock",
+    pourquoi: `${TIRE} ; l'objet dit l'accord de la banque, le corps le détaille sans le répéter`,
   },
   {
     codes: ["ecom_black_friday"],
