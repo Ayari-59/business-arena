@@ -36,6 +36,18 @@ import type { CompanyRoundResult, CompanyState, EventInstance, RoundDecisions } 
  *
  * En moyenne et non graine par graine : à l'hôtel et au bistrot en gamme,
  * l'écart d'une graine isolée frôle zéro, alors que la moyenne est nette.
+ *
+ * LA MÊME MESURE, AVEC LE DRAPEAU (`propositionALaDemande`), dans une partie créée
+ * comme aujourd'hui (parc sans doublon, proposition à la demande). Le plan suit
+ * alors la demande, et la mesure change de sens au transport : la flotte se
+ * remplit, et l'ancien budget y fait de nouveau mieux que zéro. Décision du
+ * propriétaire : la partie à drapeau y propose la part neutre
+ * (`qualiteProposeeALaDemande`, engine/types.ts), et la garde du transport est
+ * celle du bistrot. À l'hôtel, l'ancien budget passe à peine devant zéro : un
+ * écart négligeable, sous le même centième que la salle de sport, qui en devient
+ * le second cas limite ; il y garde zéro. Ailleurs, rien ne change de sens. La
+ * qualité proposée attendue est celle que le scénario joué porte vraiment, lue de
+ * `composerLeScenarioJoue`.
  */
 
 const GRAINES = [11, 2_027, 90_001, 424_242, 777_777, 31_415];
@@ -45,7 +57,7 @@ const vendu = (r: CompanyRoundResult) =>
   Object.values(r.market.bySegment).reduce((t, x) => t + x.sold, 0) + (r.subscription?.retained ?? 0);
 
 /** Le résultat net cumulé de l'équipe qui valide la proposition, sous une qualité proposée donnée. */
-function partieSolo(code: string, graine: number, qualiteProposee: number): number {
+function partieSolo(code: string, graine: number, qualiteProposee: number, drapeau: boolean): number {
   const def = scenarioByCode(code);
   const niveau = niveauDe(code);
   const preset = presetByLevel.get(niveau as DifficultyPreset["level"])!;
@@ -61,6 +73,7 @@ function partieSolo(code: string, graine: number, qualiteProposee: number): numb
       periodicity: "quarter",
       investmentStories: true,
       concurrentsAssainis: true,
+      ...(drapeau ? { parcSansDoublon: true, propositionALaDemande: true } : {}),
     }),
     qualiteProposee,
   };
@@ -115,30 +128,47 @@ function partieSolo(code: string, graine: number, qualiteProposee: number): numb
   return cumul;
 }
 
-const moyenne = (code: string, qualite: number) =>
-  GRAINES.reduce((t, g) => t + partieSolo(code, g, qualite), 0) / GRAINES.length;
+const moyenne = (code: string, qualite: number, drapeau: boolean) =>
+  GRAINES.reduce((t, g) => t + partieSolo(code, g, qualite, drapeau), 0) / GRAINES.length;
 
-/** Le cas limite, où la garde porte sur la taille de l'écart et non sur son signe. */
-const CAS_LIMITE = "fitness";
 /** Négligeable : sous un centième du résultat cumulé à qualité nulle (voir l'en-tête). */
 const NEGLIGEABLE = 0.01;
 
-describe("la qualité proposée, mesurée en partie solo fidèle", () => {
+/** Les deux parties : sans le drapeau, et avec, chacune avec ses cas limites, où la garde porte sur la taille de l'écart et non sur son signe. */
+const VARIANTES = [
+  { drapeau: false, nom: "sans le drapeau", casLimites: new Set(["fitness"]) },
+  { drapeau: true, nom: "avec la proposition à la demande", casLimites: new Set(["fitness", "hotel"]) },
+];
+
+/** La qualité que le scénario joué propose vraiment, avec ou sans le drapeau. */
+const qualiteDuJeu = (code: string, drapeau: boolean) =>
+  composerLeScenarioJoue({
+    scenario: scenarioByCode(code).scenario,
+    seed: GRAINES[0]!,
+    variableWorld: true,
+    level: niveauDe(code),
+    concurrents: 3,
+    periodicity: "quarter",
+    ...(drapeau ? { propositionALaDemande: true } : {}),
+  }).qualiteProposee!;
+
+describe.each(VARIANTES)("la qualité proposée, mesurée en partie solo fidèle, $nom", ({ drapeau, casLimites }) => {
   for (const def of SCENARIOS) {
-    const proposee = def.scenario.qualiteProposee!;
+    const proposee = qualiteDuJeu(def.code, drapeau);
+    const limite = casLimites.has(def.code);
     const titre =
-      def.code === CAS_LIMITE
+      limite
         ? `${def.code} : l'ancien budget qualité ne fait qu'un écart négligeable avec zéro`
         : proposee === 0
           ? `${def.code} : l'ancien budget qualité ne fait pas mieux que zéro`
           : `${def.code} : la part gardée fait au moins aussi bien que zéro`;
     it(titre, () => {
-      const zero = moyenne(def.code, 0);
-      const ancien = moyenne(def.code, PART_DE_QUALITE_NEUTRE);
+      const zero = moyenne(def.code, 0, drapeau);
+      const ancien = moyenne(def.code, PART_DE_QUALITE_NEUTRE, drapeau);
       const lu = `ancien budget ${Math.round(ancien)} €, zéro ${Math.round(zero)} €`;
       // La donnée joue bien : les deux parties diffèrent, sans quoi la garde passerait à vide.
       expect(ancien, lu).not.toBe(zero);
-      if (def.code === CAS_LIMITE) {
+      if (limite) {
         expect(proposee, "le cas limite propose zéro").toBe(0);
         expect(Math.abs(ancien - zero), lu).toBeLessThanOrEqual(NEGLIGEABLE * Math.abs(zero));
       } else if (proposee === 0) {

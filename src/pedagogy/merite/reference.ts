@@ -64,6 +64,11 @@
  * fermé à la méthode, au même défaut que celui que le formulaire envoie ; un
  * investissement plafonné pour lui l'est pour elle.
  *
+ * UNE PARTIE À LA PROPOSITION À LA DEMANDE (`propositionALaDemande`,
+ * engine/types.ts) a un autre bon gestionnaire : celui qui tient le formulaire et ne
+ * s'en écarte que sur un signal net (`leFormulaireTenu`, plus bas). Les règles
+ * ci-dessus restent, au centime, celles des parties d'avant.
+ *
  * Déterministe et pure : même tour, même décision.
  */
 import { aLaMesureDuNiveau, neutralDecisions, variableCostPerUnit } from "@/engine/bots";
@@ -78,7 +83,8 @@ import type {
 } from "@/engine/types";
 import type { DifficultyPreset } from "@/config/difficulty";
 import { partieFigee, type PartieARejouer } from "./rejeu";
-import { avecLaQualiteProposee } from "@/services/decision-baseline";
+import { sansAvenir } from "@/engine/market/sans-avenir";
+import { avecLaQualiteProposee, propositionDuTour } from "@/services/decision-baseline";
 
 /** Le nom de la référence dans les phrases du bilan. */
 export const NOM_DE_LA_REFERENCE = "un bon gestionnaire";
@@ -89,6 +95,17 @@ export const NOM_DE_LA_REFERENCE = "un bon gestionnaire";
  */
 export const PHRASE_DE_LA_REFERENCE =
   "Un bon gestionnaire part de la gestion neutre du secteur et la tient tour par tour avec ce que vous voyiez : il produit selon la demande observée, relève son prix quand l'atelier ne suit plus, le baisse quand le stock reste, et règle son marketing sur la saison.";
+
+/**
+ * La même ligne pour une partie à la demande (`propositionALaDemande`), dont le bon
+ * gestionnaire tient le formulaire (`leFormulaireTenu`) : ni chiffre ni seuil non plus.
+ */
+export const PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE =
+  "Un bon gestionnaire part de ce que le formulaire vous proposait et le tient tour par tour avec ce que vous voyiez. Il relève son prix quand la demande dépasse nettement ce que l'atelier peut offrir, le baisse quand l'offre reste, le ramène sinon vers le prix du secteur, et ajoute ce que le formulaire ne propose pas : la recherche, une embauche ou une machine quand l'atelier bride.";
+
+/** Ce que fait la référence de CETTE partie : celle de son instantané. */
+export const phraseDeLaReference = (scenario: Pick<EngineScenarioConfig, "propositionALaDemande">): string =>
+  scenario.propositionALaDemande === true ? PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE : PHRASE_DE_LA_REFERENCE;
 
 /** « que » et « de » devant un nom, élidés devant une voyelle : « qu'un bon gestionnaire ». */
 const elide = (mot: "que" | "de", x: string) => (/^[aeiouyhéèêàâîôû]/i.test(x) ? `${mot.slice(0, -1)}'${x}` : `${mot} ${x}`);
@@ -136,38 +153,10 @@ export function selonLeNiveau(
 }
 
 /**
- * LE SCÉNARIO SANS L'AVENIR : les saisons des tours à venir remplacées par
- * celle du tour à jouer. Le joueur ne voit que la saison du tour qu'il joue ; la
- * méthode non plus. Rien d'autre ne change.
+ * LE SCÉNARIO SANS L'AVENIR (`engine/market/sans-avenir.ts`) : les saisons des
+ * tours à venir remplacées par celle du tour à jouer.
  */
-export function sansAvenir(scenario: EngineScenarioConfig, roundIndex: number): EngineScenarioConfig {
-  const couper = (s: number[]): number[] => {
-    const ici = s[roundIndex - 1] ?? s[s.length - 1] ?? 1;
-    return s.map((v, i) => (i < roundIndex ? v : ici));
-  };
-  const segments = (segs: EngineScenarioConfig["market"]["segments"]) =>
-    segs.map((g) => (g.seasonality ? { ...g, seasonality: couper(g.seasonality) } : g));
-  return {
-    ...scenario,
-    market: {
-      ...scenario.market,
-      seasonality: couper(scenario.market.seasonality),
-      segments: segments(scenario.market.segments),
-    },
-    ...(scenario.products
-      ? {
-          products: scenario.products.map((p) => ({
-            ...p,
-            market: {
-              ...p.market,
-              ...(p.market.seasonality ? { seasonality: couper(p.market.seasonality) } : {}),
-              segments: segments(p.market.segments),
-            },
-          })),
-        }
-      : {}),
-  };
-}
+export { sansAvenir };
 
 export interface ContexteDeLaReference {
   scenario: EngineScenarioConfig;
@@ -274,7 +263,10 @@ function sensDuPrix(
 export function decisionDuBonGestionnaire(
   ctx: ContexteDeLaReference,
   reglages: ReglagesDuGestionnaire = REGLAGES_DE_LA_REFERENCE,
+  /** Les leviers du niveau : le formulaire que tient le bon gestionnaire d'une partie à la demande les porte. */
+  ouverts: DifficultyPreset["decisions"] | null = null,
 ): { decision: RoundDecisions; neutre: RoundDecisions } {
+  if (ctx.scenario.propositionALaDemande === true) return leFormulaireTenu(ctx, reglages, ouverts);
   // La méthode part de la gestion neutre, calculée sur le scénario privé de
   // l'avenir pour ne rien lire d'un tour à venir ; `neutre` reste ce que porte
   // un champ fermé.
@@ -351,6 +343,22 @@ export function decisionDuBonGestionnaire(
     d.marketingBudget = neutre.marketingBudget * facteurMarketing;
   }
 
+  equipeMachineEtCreances(d, ctx, scenario, lectures, { premier, machine, mainDOeuvre, reglages });
+  return { decision: d, neutre };
+}
+
+/**
+ * ÉQUIPE, MACHINE, CRÉANCES : les mêmes règles pour le bon gestionnaire d'avant et
+ * pour celui qui tient le formulaire à la demande (`d` est complétée en place).
+ */
+function equipeMachineEtCreances(
+  d: RoundDecisions,
+  ctx: ContexteDeLaReference,
+  scenario: EngineScenarioConfig,
+  lectures: Map<string, Lecture>,
+  o: { premier: boolean; machine: number; mainDOeuvre: number; reglages: ReglagesDuGestionnaire },
+): void {
+  const { premier, machine, mainDOeuvre, reglages } = o;
   // ÉQUIPE : une embauche quand la main-d'œuvre bride et que des ventes ont manqué.
   if (scenario.hr && !premier) {
     const manque = [...lectures.values()].reduce((s, l) => s + l.manque, 0);
@@ -395,7 +403,182 @@ export function decisionDuBonGestionnaire(
   if (scenario.treasury && ctx.state.finance.overdraft > 0 && ctx.state.finance.receivables > 0) {
     d.treasury = { ...(d.treasury ?? {}), discount: ctx.state.finance.receivables * scenario.treasury.discountMaxShare };
   }
-  return { decision: d, neutre };
+}
+
+/**
+ * LES SEUILS DE L'EXCÈS NET (partie à la demande) : le prix ne se relève que quand
+ * la demande attendue dépasse l'atelier de plus que cela. Plus haut pour une activité
+ * périssable : une place vide ne se revend pas, il faut un excès net avant de la
+ * renchérir. Fixés a priori, les mêmes partout (rapport « mesure-gestionnaire »).
+ */
+export const EXCES_NET = { stockable: 1.2, perissable: 1.5 } as const;
+
+/**
+ * LE BON GESTIONNAIRE D'UNE PARTIE À LA DEMANDE (`propositionALaDemande`,
+ * engine/types.ts) : LE FORMULAIRE TENU, RELEVÉ SUR UN EXCÈS NET.
+ *
+ * Mesuré (rapport « mesure-gestionnaire ») : face au formulaire qui planifie sur la
+ * demande, le bon gestionnaire d'avant perdait dans les secteurs où une règle de volume
+ * correcte suffit (transport, e-commerce, hôtel, bistrot, bâtiment) ; valider le
+ * formulaire y était jugé « solide ». Trois de ses règles le faisaient perdre : un
+ * relèvement de prix sur une rupture qu'il avait lui-même créée (un plan du tour 1
+ * sous l'atelier), un prix sans ancre qui ne revenait jamais, et un volume à la saison
+ * du marché du produit plutôt qu'à celle de chaque clientèle. Il part donc du
+ * formulaire, et ne s'en écarte que sur un signal net :
+ *
+ *   BASE      la proposition du formulaire, telle que l'élève la voit
+ *             (`propositionDuTour`), aux leviers du niveau, sa propre décision du
+ *             tour passé reconduite ; un champ que le niveau ferme y prend la valeur
+ *             du formulaire (sinon un écart d'un euro ferait le verdict) ;
+ *   PRIX      relevé d'un pas quand la référence a manqué des ventes au tour passé ET
+ *             que la demande attendue du tour (ventes et ventes manquées, à la saison
+ *             de chaque clientèle, moins le stock) dépasse l'atelier d'un excès net
+ *             (`EXCES_NET`) ; sinon baissé d'un pas quand l'offre reste (un stock que
+ *             le plan n'absorbe pas, une offre périssable invendue) ; sinon ramené
+ *             d'un pas vers le prix de référence du secteur, par en haut comme par en
+ *             bas ; jamais sous le coût variable + 15 % ; un abonnement garde la règle
+ *             d'occupation ;
+ *   VOLUME    le plan du formulaire, divisé par le pas de prix ;
+ *   MARKETING celui du formulaire, sans modulation par la saison ;
+ *   R&D       celle de la gestion neutre (lancer et entretenir les références), que
+ *             le formulaire ne propose pas ;
+ *   le reste comme le bon gestionnaire d'avant : l'embauche, la machine et son
+ *   emprunt, l'escompte.
+ *
+ * Là où rien ne commande un écart, il EST le formulaire, au centime ; l'égalité ne
+ * compte pas comme battue (`sontSolides`). Il ne lit, comme avant, que son propre tour
+ * passé, la saison du tour et des tours joués, et ce que le formulaire lui montre.
+ */
+function leFormulaireTenu(
+  ctx: ContexteDeLaReference,
+  reglages: ReglagesDuGestionnaire,
+  ouverts: DifficultyPreset["decisions"] | null,
+): { decision: RoundDecisions; neutre: RoundDecisions } {
+  const scenario = sansAvenir(ctx.scenario, ctx.roundIndex);
+  // La gestion neutre ne donne plus que le prix de référence, le plan d'un abonnement
+  // et la R&D.
+  const neutre = neutralDecisions({
+    scenario,
+    state: ctx.state,
+    roundIndex: ctx.roundIndex,
+    lastSoldUnits: ctx.lastSoldUnits,
+    lastSoldByProduct: ctx.lastSoldByProduct,
+  });
+  const r = ctx.resultatPrecedent;
+  const premier = !r || !ctx.decisionPrecedente;
+  const formulaire = !r || !ctx.decisionPrecedente
+    ? propositionDuTour({ snapshot: scenario, state: ctx.state, roundIndex: ctx.roundIndex, previousPayload: null, leviers: ouverts })
+    : propositionDuTour({
+        snapshot: scenario,
+        state: ctx.state,
+        roundIndex: ctx.roundIndex,
+        previousPayload: ctx.decisionPrecedente,
+        lastMarket: r.market.bySegment,
+        lastBreakEven: r.breakeven.breakEvenUnits,
+        lastNetIncome: r.incomeStatement.netIncome,
+        leviers: ouverts,
+      });
+  const d: RoundDecisions = structuredClone(formulaire);
+  const lectures = lireLeTourPasse(ctx);
+  const gamme = toGamme(scenario);
+  const multi = isMultiProduct(scenario);
+  const abonnement = scenario.subscription !== undefined;
+  const { machine, mainDOeuvre, atelier } = capacites(scenario, ctx.state);
+  const lecturePrix = {
+    perissable: scenario.perishable === true,
+    aPlein: (r?.production.produced ?? 0) >= 0.9 * atelier,
+    occupation: abonnement ? r?.subscription?.occupancy : undefined,
+  };
+
+  // LA DEMANDE ATTENDUE du tour, référence par référence : ce que chaque clientèle a
+  // demandé au tour passé, à sa saison du tour rapportée à celle du tour passé.
+  const saisonDuTour = (s: readonly number[] | undefined) => {
+    const ici = saisonAu(s, ctx.roundIndex);
+    const avant = saisonAu(s, ctx.roundIndex - 1);
+    return avant <= 0 ? 1 : Math.min(2, Math.max(0.5, ici / avant));
+  };
+  const attendue: Record<string, number> = {};
+  for (const p of gamme) {
+    let a = 0;
+    if (r) {
+      for (const seg of p.market.segments) {
+        const x = r.market.bySegment[seg.code];
+        if (x) a += (Math.max(0, x.sold) + Math.max(0, x.lost)) * saisonDuTour(seg.seasonality ?? p.market.seasonality);
+      }
+      if (!multi && r.subscription) a += r.subscription.retained + r.subscription.unserved;
+    }
+    attendue[p.code] = a;
+  }
+  const attendueTotale =
+    Object.values(attendue).reduce((a, b) => a + b, 0) - gamme.reduce((t, p) => t + lectures.get(p.code)!.stock, 0);
+  const excesNet =
+    attendueTotale > (lecturePrix.perissable ? EXCES_NET.perissable : EXCES_NET.stockable) * atelier;
+
+  // PRIX ET VOLUME, référence par référence.
+  const plans: Record<string, number> = {};
+  const prix: Record<string, number> = {};
+  for (const p of gamme) {
+    const l = lectures.get(p.code)!;
+    const prixNeutre = multi ? (neutre.products?.[p.code]?.price ?? neutre.price) : neutre.price;
+    const coutVariable = multi ? p.materialCostPerUnit + p.otherVariableCostPerUnit : variableCostPerUnit(scenario);
+    let k = premier ? 1 : 1 + sensDuPrix(l, lecturePrix) * reglages.pas;
+    if (!premier && !abonnement && l.prix !== undefined) {
+      const manquees = l.manque > 0.05 * Math.max(1, l.vendu + l.manque);
+      let sens = sensDuPrix(l, lecturePrix);
+      // Un stock que le plan absorbe déjà (pas plus que la demande attendue) ne commande pas de baisse.
+      if (!lecturePrix.perissable && sens < 0 && l.stock <= attendue[p.code]!) sens = 0;
+      if (excesNet && manquees) k = 1 + reglages.pas;
+      else if (sens < 0) k = 1 - reglages.pas;
+      else if (l.prix > prixNeutre * 1.0001) k = Math.max(prixNeutre / l.prix, 1 - reglages.pas);
+      else if (l.prix < prixNeutre * 0.9999) k = Math.min(prixNeutre / l.prix, 1 + reglages.pas);
+      else k = 1;
+    }
+    prix[p.code] = premier || l.prix === undefined ? prixNeutre : Math.max(coutVariable * 1.15, l.prix * k);
+    const planNeutre = multi ? (neutre.products?.[p.code]?.productionPlan ?? 0) : neutre.productionPlan;
+    if (abonnement) plans[p.code] = planNeutre;
+    else {
+      const planDuFormulaire = multi
+        ? (formulaire.products?.[p.code]?.productionPlan ?? planNeutre)
+        : formulaire.productionPlan;
+      plans[p.code] = planDuFormulaire / k;
+    }
+  }
+  const total = Object.values(plans).reduce((s, v) => s + v, 0);
+  const coupe = total > atelier && total > 0 ? atelier / total : 1;
+
+  // MARKETING ET QUALITÉ : ceux du formulaire.
+  if (multi && neutre.products) {
+    const products: Record<string, ProductDecisions> = {};
+    for (const [code, p] of Object.entries(d.products ?? neutre.products)) {
+      products[code] = {
+        ...p,
+        price: prix[code] ?? p.price,
+        productionPlan: (plans[code] ?? p.productionPlan) * coupe,
+        marketingBudget: p.marketingBudget ?? 0,
+      };
+    }
+    const s = scalarsOfGamme(products);
+    d.products = products;
+    d.price = s.price;
+    d.productionPlan = s.productionPlan;
+    d.marketingBudget = formulaire.marketingBudget;
+    if (formulaire.brandMarketingBudget !== undefined) d.brandMarketingBudget = formulaire.brandMarketingBudget;
+  } else {
+    const code = gamme[0]!.code;
+    d.price = prix[code]!;
+    d.productionPlan = Math.min(atelier, plans[code]!);
+    d.marketingBudget = formulaire.marketingBudget;
+  }
+
+  // R&D : celle de la gestion neutre, que le formulaire ne propose jamais.
+  if (neutre.rdBudget !== undefined) d.rdBudget = neutre.rdBudget;
+  if (d.products && neutre.products) {
+    for (const [code, p] of Object.entries(neutre.products)) {
+      if (p.rdBudget !== undefined && d.products[code]) d.products[code] = { ...d.products[code]!, rdBudget: p.rdBudget };
+    }
+  }
+  equipeMachineEtCreances(d, ctx, scenario, lectures, { premier, machine, mainDOeuvre, reglages });
+  return { decision: d, neutre: formulaire };
 }
 
 /** La décision de la méthode de référence pour un tour. */
@@ -404,7 +587,7 @@ export function decisionDeReference(
   ouverts: DifficultyPreset["decisions"] | null,
   reglages: ReglagesDuGestionnaire = REGLAGES_DE_LA_REFERENCE,
 ): RoundDecisions {
-  const { decision: brute, neutre } = decisionDuBonGestionnaire(ctx, reglages);
+  const { decision: brute, neutre } = decisionDuBonGestionnaire(ctx, reglages, ouverts);
   const decision = selonLeNiveau(brute, ouverts, neutre);
   // LE PLAFOND D'INVESTISSEMENT : la méthode n'achète pas plus de capacité que
   // le joueur ne le peut au même niveau (`engine/investment/plafond`).

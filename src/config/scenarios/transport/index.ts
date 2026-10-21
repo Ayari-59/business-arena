@@ -130,6 +130,10 @@ const rawTransport = {
   // La qualité que le formulaire propose (`qualiteProposee`, engine/types.ts) : zéro,
   // le budget de la gestion neutre ne fait pas mieux que zéro dans ce secteur.
   qualiteProposee: 0,
+  // Celle d'une partie à la demande (`qualiteProposeeALaDemande`) : la part de la
+  // gestion neutre. Le plan à la demande remplit la flotte, et ce budget y fait de
+  // nouveau mieux que zéro (la même mesure, rejouée avec le drapeau).
+  qualiteProposeeALaDemande: 0.5,
   production: {
     // « qualité » = ponctualité, suivi, état du matériel, marchandise intacte
     qualitySensitivity: 0.34,

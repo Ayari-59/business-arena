@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { avecLaQualiteProposee } from "@/services/decision-baseline";
+import { avecLaQualiteProposee, proposedDecisionsFor } from "@/services/decision-baseline";
 import { scenarioByCode, scenarioCodeForLevel } from "@/config/scenarios/registry";
 import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
@@ -37,8 +37,12 @@ import {
  * tests/integration/merite.test.ts, parce qu'elle a besoin du vrai pipeline.
  */
 
-/** Une partie en mémoire, comme une partie solo : trois entreprises, monde variable, leviers figés. */
-function partieEnMemoire(niveau = 3, entreprise = "nova", graine = 4242) {
+/**
+ * Une partie en mémoire, comme une partie solo : trois entreprises, monde variable, leviers figés.
+ * `aLaDemande` : une partie créée avec la proposition à la demande (`propositionALaDemande`),
+ * dont le bon gestionnaire tient le formulaire.
+ */
+function partieEnMemoire(niveau = 3, entreprise = "nova", graine = 4242, aLaDemande = false) {
   const def = scenarioByCode(scenarioCodeForLevel(entreprise, niveau));
   const ouverts = presetByLevel.get(niveau as 3)!.decisions;
   const equipes = [
@@ -60,6 +64,7 @@ function partieEnMemoire(niveau = 3, entreprise = "nova", graine = 4242) {
             periodicity: "quarter",
             investmentStories: true,
             leviers: ouverts,
+            ...(aLaDemande ? { propositionALaDemande: true } : {}),
           }),
         ),
       );
@@ -278,6 +283,43 @@ describe("la référence ne lit rien du futur", () => {
     }
   });
 
+  it("une partie à la demande aussi : les saisons à venir changées, la décision du tour est la même", () => {
+    const { base: b, ouverts: o } = partieEnMemoire(4, "nova", 4242, true);
+    expect(b.scenarioPour(b.graine).propositionALaDemande).toBe(true);
+    const contextes: Contexte[] = [];
+    rejouer(b, 9, {
+      type: "methode",
+      decider: (c) => {
+        contextes.push(structuredClone(c));
+        return decisionDeReference(c, o);
+      },
+    });
+    for (const c of contextes) {
+      const brouille = (s: number[]) => s.map((v, i) => (i >= c.roundIndex ? v * 3 + 1 : v));
+      const avenir: EngineScenarioConfig = {
+        ...c.scenario,
+        market: {
+          ...c.scenario.market,
+          seasonality: brouille(c.scenario.market.seasonality),
+          segments: c.scenario.market.segments.map((g) => (g.seasonality ? { ...g, seasonality: brouille(g.seasonality) } : g)),
+        },
+        ...(c.scenario.products
+          ? {
+              products: c.scenario.products.map((p) => ({
+                ...p,
+                market: {
+                  ...p.market,
+                  ...(p.market.seasonality ? { seasonality: brouille(p.market.seasonality) } : {}),
+                  segments: p.market.segments.map((g) => (g.seasonality ? { ...g, seasonality: brouille(g.seasonality) } : g)),
+                },
+              })),
+            }
+          : {}),
+      };
+      expect(decisionDeReference({ ...c, scenario: avenir }, o)).toEqual(decisionDeReference(c, o));
+    }
+  });
+
   it("la garde sait tomber : la gestion neutre, elle, lit la saison du tour suivant", () => {
     const { base: b } = partieEnMemoire(1, "nova");
     const s = b.scenarioPour(b.graine);
@@ -378,6 +420,89 @@ describe("les stratégies témoins tombent dans la bonne case", () => {
         expect(bonne.solides, `raisonnée : ${bonne.battues}/30, ${Math.round(bonne.ecart.relatif * 100)} %`).toBe(true);
         expect(mauvaise.solides).toBe(false);
         expect(mauvaise.battues).toBe(0);
+      }, 60_000);
+    }
+  }
+});
+
+/**
+ * LES MÊMES TÉMOINS DANS UNE PARTIE À LA DEMANDE (`propositionALaDemande`), dont le
+ * formulaire planifie sur la demande et dont le bon gestionnaire le tient (rapport
+ * « mesure-gestionnaire », mesuré dans cette configuration exacte) : le formulaire validé
+ * tel quel est fragile, +8 % de prix aussi, la raisonnée reste solide. Un témoin
+ * fragile : la raisonnée à l'e-commerce, aux niveaux 2 et 3, bat le bon gestionnaire sur
+ * 20 marchés sur 30, pile au seuil.
+ */
+describe("les stratégies témoins d'une partie à la demande", () => {
+  const prixPlus8 = (o: LeviersDuNiveau) => (c: Contexte) => {
+    const neutre = neutralDecisions(c);
+    const d = aLaMesureDuNiveau(avecLaQualiteProposee(c.scenario, neutre), o, neutre);
+    return {
+      ...d,
+      price: d.price * 1.08,
+      ...(d.products
+        ? { products: Object.fromEntries(Object.entries(d.products).map(([k, p]) => [k, { ...p, price: p.price * 1.08 }])) }
+        : {}),
+    };
+  };
+  const raisonnee = (o: LeviersDuNiveau) => (c: Contexte) => {
+    const d = aLaMesureDuNiveau(neutralDecisions(c), o);
+    const r = c.resultatPrecedent;
+    const prec = c.decisionPrecedente;
+    if (!r || !prec) return d;
+    const vendu = Object.values(r.market.bySegment).reduce((s, x) => s + x.sold, 0);
+    const manque = Object.values(r.market.bySegment).reduce((s, x) => s + x.lost, 0);
+    const stock = c.state.finishedGoods.quantity;
+    const k = manque > 0.05 * Math.max(1, vendu) ? 1.06 : stock > 0.25 * Math.max(1, vendu) ? 0.94 : 1;
+    const saison = c.scenario.market.seasonality;
+    const ratio = (saison[c.roundIndex - 1] ?? 1) / Math.max(0.01, saison[c.roundIndex - 2] ?? 1);
+    const capacite = Math.min(
+      c.state.machineCapacity * c.state.availability,
+      (c.state.headcount * c.state.hoursPerEmployee * c.state.productivity) / c.scenario.product.hoursPerUnit,
+    );
+    return {
+      ...d,
+      price: Math.max(variableCostPerUnit(c.scenario) * 1.15, prec.price * k),
+      productionPlan: Math.min(capacite, Math.max(0, (vendu + manque) * ratio * 1.05 - stock)),
+    };
+  };
+  const formulaire = (o: LeviersDuNiveau) => (c: Contexte) =>
+    proposedDecisionsFor({
+      snapshot: c.scenario,
+      state: c.state,
+      roundIndex: c.roundIndex,
+      previousPayload: c.decisionPrecedente ?? null,
+      lastMarket: c.resultatPrecedent?.market.bySegment ?? null,
+      lastBreakEven: c.resultatPrecedent?.breakeven.breakEvenUnits ?? null,
+      lastNetIncome: c.resultatPrecedent?.incomeStatement.netIncome ?? null,
+      leviers: o,
+    });
+  const battues = (base: PartieARejouer, ouverts: LeviersDuNiveau, strategie: (c: Contexte) => RoundDecisions) => {
+    const partie = jouer(base, strategie);
+    const reference = partieDeLaReference(base, ouverts);
+    return verdictDuMerite({
+      joue: rejouer(partie, base.graine),
+      joueur: GRAINES_DU_MERITE.map((g) => rejouer(partie, g)),
+      reference: GRAINES_DU_MERITE.map((g) => rejouer(reference, g)),
+      libelles: Array.from({ length: base.tours }, (_, i) => `Tour ${i + 1}`),
+      niveau: 1,
+      niveauMax: 6,
+      entreprise: "nova",
+      entreprises: ["nova"],
+    });
+  };
+
+  for (const entreprise of ["nova", "ecommerce", "conseil"]) {
+    for (const niveau of [1, 2, 3]) {
+      it(`${entreprise}, niveau ${niveau} : le formulaire validé et +8 % fragiles, la raisonnée solide`, () => {
+        const { base, ouverts } = partieEnMemoire(niveau, entreprise, 4242, true);
+        expect(base.scenarioPour(base.graine).propositionALaDemande).toBe(true);
+        const valider = battues(base, ouverts, formulaire(ouverts));
+        const naive = battues(base, ouverts, prixPlus8(ouverts));
+        const bonne = battues(base, ouverts, raisonnee(ouverts));
+        expect(valider.solides, `formulaire : ${valider.battues}/30`).toBe(false);
+        expect(naive.solides, `+8 % : ${naive.battues}/30`).toBe(false);
+        expect(bonne.solides, `raisonnée : ${bonne.battues}/30`).toBe(true);
       }, 60_000);
     }
   }

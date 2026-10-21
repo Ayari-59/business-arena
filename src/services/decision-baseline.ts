@@ -14,6 +14,7 @@ import {
   toGamme,
 } from "@/engine/gamme";
 import { estUneNouveaute } from "@/engine/groupe/nouveautes";
+import { sansAvenir } from "@/engine/market/sans-avenir";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -139,6 +140,29 @@ export function avecLaQualiteProposee(snapshot: EngineScenarioConfig, neutre: Ro
         }
       : {}),
   };
+}
+
+/**
+ * LE DÉPART QUE LE FORMULAIRE PROPOSE, au tour où il n'y a rien à reconduire :
+ * `startingDecisionsFor`. Une partie à la proposition à la demande
+ * (`propositionALaDemande`, engine/types.ts) le calcule sur le scénario privé de
+ * l'avenir (`sansAvenir`) : la gestion neutre y lit la saison du tour SUIVANT
+ * (« produire avant le pic »), si bien que le plan du tour 1 visait déjà le tour
+ * 2, le même décalage d'un tour que le plan corrige ensuite. Sans le drapeau, le
+ * départ d'avant au bit près.
+ */
+export function departDuFormulaire(
+  snapshot: EngineScenarioConfig,
+  state: CompanyState | undefined,
+  roundIndex: number,
+  leviers: LeviersOuverts | null = null,
+): RoundDecisions {
+  return startingDecisionsFor(
+    snapshot.propositionALaDemande === true ? sansAvenir(snapshot, roundIndex) : snapshot,
+    state,
+    roundIndex,
+    leviers,
+  );
 }
 
 /** Le point de départ du secteur, servi quand il n'y a rien à reconduire. */
@@ -363,6 +387,19 @@ export function estUnTourGele(lastMarket: MarcheDuTourPasse): boolean {
  * difficulté, et la proposition finit à quelques pour cent de la gestion
  * neutre là où elle n'en a pas besoin.
  *
+ * LA PROPOSITION À LA DEMANDE (`propositionALaDemande`, engine/types.ts), pour les
+ * parties créées avec elle. Le plan des ventes réalisées s'entretient lui-même : quand
+ * la demande dépasse le plan, les ventes valent le plan, et le plan suivant ne dépend
+ * plus que de lui (rapport « mesure-volume », 14 secteurs sur 15). Et la saison de la
+ * gestion neutre a un tour d'avance : le plan baissait au pic et montait au creux. Le
+ * plan vaut donc la DEMANDE reçue au tour passé, ventes et ventes manquées, clientèle
+ * par clientèle, à la saison du tour à jouer rapportée à celle du tour passé, moins
+ * tout le stock ; puis le même plancher du point mort et la même coupe à l'atelier. Le
+ * départ du tour 1 est mis en phase de même (`departDuFormulaire`). Le prix et les
+ * budgets ne changent pas, ni la gestion neutre, l'étalon de l'examen et les
+ * concurrents pilotés. Le bon gestionnaire du mérite tient alors cette proposition
+ * (`pedagogy/merite/reference.ts`) : valider seul n'y est plus jugé « solide ».
+ *
  * Ni la demande à venir, ni la graine : rien que ce que l'élève a sous les yeux.
  * Abonnement (la salle de sport) : le plan reconduit reste celui de l'équipe.
  * Après un tour gelé aussi (`estUnTourGele`) : ses ventes nulles ne disent
@@ -382,7 +419,7 @@ export function propositionDuTour(args: {
   leviers?: LeviersOuverts | null;
 }): RoundDecisions {
   const leviers = args.leviers ?? null;
-  if (!args.previousPayload) return startingDecisionsFor(args.snapshot, args.state, args.roundIndex, leviers);
+  if (!args.previousPayload) return departDuFormulaire(args.snapshot, args.state, args.roundIndex, leviers);
   const reconduite = sansDepensesPonctuelles(args.previousPayload);
   const { snapshot, state, roundIndex, lastMarket } = args;
   // Un tour gelé ne se lit pas (`estUnTourGele`) : le plan reconduit est celui
@@ -416,6 +453,24 @@ export function propositionDuTour(args: {
     const stock = multi ? (state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0) : state.finishedGoods.quantity;
     return Math.max(0, recue - stock);
   });
+  // LA PROPOSITION À LA DEMANDE (`propositionALaDemande`, engine/types.ts) : le plan
+  // de chaque référence est la demande qu'elle a reçue au tour passé, à la saison du
+  // tour à jouer, moins tout son stock. La demande déjà calculée pour le plancher
+  // du point mort (`demandes`), justement. Une référence qui n'a rien reçu (pas encore
+  // lancée) garde le plan neutre ; une référence hors marché, rien.
+  if (snapshot.propositionALaDemande === true) {
+    gamme.forEach((p, k) => {
+      if (!isProductAvailable(p, rdOpeningOf(snapshot, state, p.code), roundIndex)) {
+        plans[k] = 0;
+        return;
+      }
+      const recue = p.market.segments.reduce(
+        (t, seg) => t + Math.max(0, lastMarket[seg.code]?.sold ?? 0) + Math.max(0, lastMarket[seg.code]?.lost ?? 0),
+        0,
+      );
+      if (recue > 0) plans[k] = demandes[k]!;
+    });
+  }
   const pointMort = args.lastBreakEven ?? 0;
   const total = plans.reduce((a, b) => a + b, 0);
   const demande = demandes.reduce((a, b) => a + b, 0);

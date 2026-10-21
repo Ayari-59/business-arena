@@ -77,6 +77,12 @@ export interface ReglagesDuScenarioJoue {
    * créée après le correctif ; absent, le chemin d'avant au bit près.
    */
   parcSansDoublon?: boolean;
+  /**
+   * LA PROPOSITION À LA DEMANDE (`propositionALaDemande`, engine/types.ts) : vrai pour
+   * une partie créée avec elle ; absent, le formulaire et le bon gestionnaire d'avant,
+   * au bit près.
+   */
+  propositionALaDemande?: boolean;
 }
 
 /**
@@ -89,13 +95,18 @@ export interface ReglagesDuScenarioJoue {
  * réellement vue. Une partie d'avant ce champ se recompose donc SANS lui, et
  * retrouve son instantané à l'identique, condition pour que son monde varie
  * encore d'une graine à l'autre (`services/merite.service.ts`).
+ *
+ * Celle d'une partie à la demande (`qualiteProposeeALaDemande`) est retirée du
+ * registre elle aussi : l'instantané porte déjà, comme sa `qualiteProposee`, la
+ * qualité que la partie a proposée.
  */
 export function avecLaQualiteProposeeDe(
   scenario: EngineScenarioConfig,
   instantane: Pick<EngineScenarioConfig, "qualiteProposee">,
 ): EngineScenarioConfig {
-  const { qualiteProposee: _duRegistre, ...sansElle } = scenario;
+  const { qualiteProposee: _duRegistre, qualiteProposeeALaDemande: _aLaDemande, ...sansElle } = scenario;
   void _duRegistre;
+  void _aLaDemande;
   return instantane.qualiteProposee === undefined
     ? sansElle
     : { ...sansElle, qualiteProposee: instantane.qualiteProposee };
@@ -138,7 +149,23 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   const joue = avecLesConcurrentsAssainis(avecLeGroupe(avecRd, leviers, r.seed), r.concurrentsAssainis);
   // Absent, l'objet est rendu tel quel, sans clé ajoutée : un scénario historique reste
   // identique au bit près, comme pour les concurrents.
-  return r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
+  const avecLeParc = r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
+  return r.propositionALaDemande === true
+    ? { ...laQualiteProposeeDuJeu(avecLeParc, true), propositionALaDemande: true }
+    : laQualiteProposeeDuJeu(avecLeParc, false);
+}
+
+/**
+ * LA QUALITÉ PROPOSÉE DE LA PARTIE, selon son drapeau. Avec la proposition à la
+ * demande, celle que le registre donne pour elle (`qualiteProposeeALaDemande`,
+ * engine/types.ts) devient SA `qualiteProposee`, si le registre en donne une. Dans
+ * les deux cas, la clé de registre ne passe pas dans le scénario joué ; un scénario
+ * qui ne la porte pas est rendu tel quel.
+ */
+function laQualiteProposeeDuJeu(scenario: EngineScenarioConfig, aLaDemande: boolean): EngineScenarioConfig {
+  if (!("qualiteProposeeALaDemande" in scenario)) return scenario;
+  const { qualiteProposeeALaDemande: qualite, ...sansElle } = scenario;
+  return aLaDemande && qualite !== undefined ? { ...sansElle, qualiteProposee: qualite } : sansElle;
 }
 
 /**

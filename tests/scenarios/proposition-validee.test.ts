@@ -31,6 +31,13 @@ import type { CompanyRoundResult, CompanyState, EventInstance, RoundDecisions } 
  * tenue à la qualité que le formulaire propose (`qualiteProposee`, la seule
  * valeur où la proposition s'en écarte au départ), et loin derrière un bon
  * gestionnaire.
+ *
+ * Ces parties sont composées SANS la proposition à la demande
+ * (`propositionALaDemande`, engine/types.ts) : la règle « à ±15 % de la gestion
+ * neutre » vaut pour les parties d'avant le drapeau, dont le formulaire planifie sur
+ * les ventes réalisées. Pour une partie créée avec lui, le formulaire lit la demande
+ * et n'est plus neutre : son garde-fou est le verdict du mérite
+ * (`proposition-validee-merite.test.ts`).
  */
 
 const GRAINES = [8_919, 32_676, 64_352, 96_028];
