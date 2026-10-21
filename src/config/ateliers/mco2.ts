@@ -376,7 +376,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "découvert et coût du financement court terme",
       ],
       preparation:
-        "Les groupes sont à près du double de leur niveau ce mois-ci, la hausse des denrées court encore, et la capacité reste de 3 000 couverts quand la brigade en couvre 3 033. Le point de la séance tient en une phrase à ne pas dire d'avance : un banquet vendu en septembre s'encaisse en octobre, parce que les groupes règlent à trente jours, soit exactement un tour. Préparez la fiche de plan de septembre, où l'équipe écrira le chiffre d'affaires attendu ET l'encaissement attendu, qui ne sont pas le même nombre. La commande exceptionnelle, quand elle tombe, tranche la question : un allotement comptant à bas prix, ou un contrat mieux payé mais réglé plus tard.",
+        "Les groupes sont à près du double de leur niveau ce mois-ci, la hausse des denrées court encore, et la capacité reste de 3 000 couverts quand la brigade en couvre à peine plus. Le point de la séance tient en une phrase à ne pas dire d'avance : un banquet vendu en septembre s'encaisse en octobre, parce que les groupes règlent à trente jours, soit exactement un tour. Préparez la fiche de plan de septembre, où l'équipe écrira le chiffre d'affaires attendu ET l'encaissement attendu, qui ne sont pas le même nombre. La commande exceptionnelle, quand elle tombe, tranche la question : un allotement comptant à bas prix, ou un contrat mieux payé mais réglé plus tard.",
       deroule: [
         {
           minutes: 15,
