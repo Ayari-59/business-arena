@@ -1,6 +1,8 @@
-import { CONSEIL_SITUATIONS } from "../conseil/situations";
+import { CONSEIL_SOURCES } from "../conseil/situations";
 import { patchSituationText, type SituationTextPatch } from "../situation-patch";
 import type { SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { conseilGammeScenario } from "./index";
 
 /**
  * Situations pédagogiques d'ATLAS CONSEIL · GAMME.
@@ -13,6 +15,10 @@ import type { SituationDef } from "../situation-kit";
  * bâtit avant de se vendre. Les situations sont HÉRITÉES du cabinet : même
  * structure, sous d'autres codes ; le texte de celles que le mix change est
  * réécrit, les autres sont reprises telles quelles.
+ *
+ * Elles héritent des SOURCES à jetons du cabinet, et non de son texte rendu : la
+ * gamme se rend ensuite à la durée de SA partie, comme le cabinet
+ * (`situation-texte.ts`).
  */
 
 const CODE = (code: string) => code.replace(/^conseil_/, "conseilg_");
@@ -21,7 +27,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_t1_reprise: {
     title: "Douze consultants, trois offres et un projet",
     narrative:
-      "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, 180 000 € de factures en attente et presque rien à l'actif immobilisé. Le cabinet vend deux offres, l'audit et la conformité pour les PME et le secteur public, la stratégie pour les grands comptes, et garde dans ses cartons un projet de pratique de cyber-sécurité : il faudra le financer avant de la vendre. Le trimestre offre 720 jours-consultants, à répartir entre les offres.",
+      "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, 180 000 € de factures en attente et presque rien à l'actif immobilisé. Le cabinet vend deux offres, l'audit et la conformité pour les PME et le secteur public, la stratégie pour les grands comptes, et garde dans ses cartons un projet de pratique de cyber-sécurité : il faudra le financer avant de la vendre. {{Le trimestre}} offre {{entier: capacite}} jours-consultants, à répartir entre les offres.",
     problem:
       "Dans un cabinet, qu'est-ce qui détermine le résultat, pourquoi le chiffre d'affaires ne suffit-il pas à le dire, et que vaut une offre qui n'existe pas encore ?",
     diagnosticLabels: [
@@ -32,10 +38,10 @@ const PATCHES: Record<string, SituationTextPatch> = {
     ],
     hintTexts: [
       "Comptez d'abord ce que le cabinet peut vendre : combien de consultants, combien de jours ouvrés chacun ? Une journée d'audit et une journée de stratégie consomment le même consultant.",
-      "Un jour de consultant non vendu ne se rattrape pas au trimestre suivant : il disparaît, et l'offre cyber-sécurité ne vend rien tant qu'elle n'est pas bâtie.",
+      "Un jour de consultant non vendu ne se rattrape pas {{au trimestre}} suivant : il disparaît, et l'offre cyber-sécurité ne vend rien tant qu'elle n'est pas bâtie.",
       "Vos charges de structure sont pour l'essentiel des SALAIRES : elles ne baissent pas quand le carnet se vide, et elles ne dépendent pas de l'offre vendue.",
-      "Marge par jour : audit 560 − 90 = 470 €, stratégie 780 − 115 = 665 €, cyber-sécurité 850 − 100 = 750 € une fois lancée. Charges de structure décaissées = 198 000 € par trimestre.",
-      "Le seuil se calcule à mix constant : 198 000 € divisés par la marge MOYENNE d'une journée vendue au mix prévu. Plus de stratégie dans le mix, moins de jours à vendre pour équilibrer ; et la R&D de la cyber-sécurité est une charge du tour, à horizon.",
+      "Marge par jour : audit 560 − 90 = 470 €, stratégie 780 − 115 = 665 €, cyber-sécurité 850 − 100 = 750 € une fois lancée. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
+      "Le seuil se calcule à mix constant : {{entier: charges}} € divisés par la marge MOYENNE d'une journée vendue au mix prévu. Plus de stratégie dans le mix, moins de jours à vendre pour équilibrer ; et la R&D de la cyber-sécurité est une charge du tour, à horizon.",
     ],
     modelExplain:
       "Le seuil de rentabilité traduit la question du métier en taux d'occupation : combien de jours faut-il facturer pour couvrir des salaires qui tombent de toute façon ? Avec trois offres, il se calcule à mix constant, et le mix devient une décision.",
@@ -43,7 +49,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_t3_banc: {
     title: "Des consultants sur le banc, et trois offres pour les occuper",
     narrative:
-      "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti. Quatre de vos douze consultants n'ont aucune mission ce trimestre. Leurs salaires, eux, tombent normalement, et seuls les DSI continuent d'acheter, si vous avez une offre cyber-sécurité à leur vendre.",
+      "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti. Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement, et seuls les DSI continuent d'acheter, si vous avez une offre cyber-sécurité à leur vendre.",
     problem:
       "Faut-il baisser vos tarifs pour remplir le banc, sur quelle offre, ou tenir vos prix et accepter le creux ?",
     diagnosticLabels: [
@@ -57,7 +63,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Comparez deux scénarios pour chaque offre : mission à tarif réduit, ou aucune mission. Qu'est-ce qui change réellement dans vos charges ?",
       "Le salaire du consultant est engagé quoi qu'il arrive : c'est un coût non pertinent pour cette décision-ci.",
       "Seuls les frais de mission varient, 90 € en audit, 115 € en stratégie, 100 € en cyber-sécurité. Toute mission au-dessus de ce seuil améliore le résultat du tour.",
-      "Mais attention au tarif de référence : brader une fois sauve un trimestre, brader systématiquement détruit le taux journalier moyen de l'offre, et d'abord celle qu'on brade. Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.",
+      "Mais attention au tarif de référence : brader une fois sauve un {{trimestre}}, brader systématiquement détruit le taux journalier moyen de l'offre, et d'abord celle qu'on brade. Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.",
     ],
     modelExplain:
       "L'analyse des coûts pertinents isole ce que la décision change vraiment, les frais de mission de l'offre concernée, et écarte le salaire, engagé de toute façon. Elle se fait offre par offre : brader l'audit ne brade pas la stratégie.",
@@ -87,20 +93,20 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_detect_idle_cash: {
     title: "Le compte se remplit, le carnet se vide, et la cyber-sécurité attend",
     narrative:
-      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cyber-sécurité, qui vendrait à des DSI qui ne connaissent pas les congés, n'est pas encore financée.",
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cyber-sécurité, qui vendrait à des DSI qui ne connaissent pas les congés, n'est pas encore financée.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans l'offre cyber-sécurité, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [
       "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner, à 2 % en placement ou en marges futures dans une offre neuve",
-      "Le montant bloqué ou investi ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir, salaires compris",
+      "Le montant bloqué ou investi ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, salaires compris",
       "Puisque le placement rapporte, autant y mettre la totalité du solde",
       "Placer améliore le résultat d'exploitation de l'entreprise",
     ],
     hintTexts: [
-      "Comparez votre solde aux charges de structure d'un trimestre : combien de trimestres de salaires pourriez-vous payer sans facturer un seul jour ?",
+      "Comparez votre solde aux charges de structure d'un {{trimestre}} : combien {{de trimestres}} de salaires pourriez-vous payer sans facturer un seul jour ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; une offre cyber-sécurité lancée rapporte 750 € par journée vendue, mais seulement une fois bâtie.",
       "Attention : le placement est bloqué jusqu'au tour suivant, et la R&D est une charge du tour. Ni l'un ni l'autre ne réglera ce qui tombera d'ici là.",
-      "Projetez le trimestre à venir avec le carnet TEL QU'IL EST, offre par offre : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
+      "Projetez {{le trimestre}} à venir avec le carnet TEL QU'IL EST, offre par offre : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
@@ -108,8 +114,11 @@ const PATCHES: Record<string, SituationTextPatch> = {
   },
 };
 
-export const CONSEIL_GAMME_SITUATIONS: SituationDef[] = CONSEIL_SITUATIONS.map((s) => {
+const SOURCES: SituationDef[] = CONSEIL_SOURCES.map((s) => {
   const patch = PATCHES[s.code];
   const renamed: SituationDef = { ...s, code: CODE(s.code) };
   return patch ? patchSituationText(renamed, patch) : renamed;
 });
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const CONSEIL_GAMME_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, conseilGammeScenario);

@@ -1,6 +1,8 @@
-import { HOTEL_SITUATIONS } from "../hotel/situations";
+import { HOTEL_SOURCES } from "../hotel/situations";
 import { patchSituationText, type SituationTextPatch } from "../situation-patch";
 import type { SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { hotelGammeScenario } from "./index";
 
 /**
  * Situations pédagogiques de L'ESCALE · GAMME.
@@ -17,6 +19,10 @@ import type { SituationDef } from "../situation-kit";
  * modèles, options, indices, notions), sous d'autres codes, et le texte de
  * celles que le mix change est réécrit ; les autres sont reprises telles
  * quelles, le raisonnement y étant le même en un ou trois prix.
+ *
+ * Elles héritent des SOURCES à jetons de l'hôtel, et non de son texte rendu : la
+ * gamme se rend ensuite à la durée de SA partie, comme l'hôtel
+ * (`situation-texte.ts`).
  */
 
 const CODE = (code: string) => code.replace(/^hotel_/, "hotelg_");
@@ -25,20 +31,20 @@ const PATCHES: Record<string, SituationTextPatch> = {
   hotel_t1_reprise: {
     title: "Soixante chambres, trois prix",
     narrative:
-      "Vous reprenez L'ESCALE : 60 chambres, quatorze salariés, 900 000 € de crédit immobilier. L'ancien exploitant vendait « la nuitée » à un prix moyen ; vous vendez trois chambres, la standard des vacanciers et des groupes, la supérieure des clients d'affaires et des escapades, la suite des grandes occasions. Le trimestre offre 5 400 nuitées à répartir entre les trois. Pas une de plus, pas une reportable.",
+      "Vous reprenez L'ESCALE : 60 chambres, quatorze salariés, 900 000 € de crédit immobilier. L'ancien exploitant vendait « la nuitée » à un prix moyen ; vous vendez trois chambres, la standard des vacanciers et des groupes, la supérieure des clients d'affaires et des escapades, la suite des grandes occasions. {{Le trimestre}} offre {{entier: capacite}} nuitées à répartir entre les trois. Pas une de plus, pas une reportable.",
     problem:
       "Qu'est-ce qui distingue une nuitée invendue d'un article invendu, et pourquoi le prix moyen ne suffit-il plus quand on vend trois chambres ?",
     diagnosticLabels: [
       "Elle est définitivement perdue : une nuit ne se stocke pas et ne se revend jamais, quel que soit le type de chambre",
       "Les charges de structure tombent que les chambres soient occupées ou non, et elles sont communes aux trois types",
-      "Elle se reporte sur le trimestre suivant, comme un stock",
+      "Elle se reporte sur {{le trimestre}} suivant, comme un stock",
       "Elle ne coûte rien puisqu'on n'a rien dépensé pour elle",
     ],
     hintTexts: [
-      "Comptez ce que l'hôtel peut vendre au maximum sur un trimestre : 60 chambres × 90 nuits, tous types confondus.",
+      "Comptez ce que l'hôtel peut vendre au maximum sur un {{trimestre}} : 60 chambres × {{entier: jours_du_tour}} nuits, tous types confondus.",
       "Une chambre vide ce soir ne se vendra pas deux fois demain. La capacité est offerte chaque jour et expire chaque nuit, pour la suite comme pour la standard.",
       "Vos charges de structure (salaires, énergie, taxes, assurances) ne dépendent ni du nombre de clients ni du type de chambre vendu.",
-      "Marge par nuitée : standard 88 − 21 = 67 €, supérieure 125 − 26 = 99 €, suite 220 − 39 = 181 €. Charges de structure décaissées = 158 000 € par trimestre.",
+      "Marge par nuitée : standard 88 − 21 = 67 €, supérieure 125 − 26 = 99 €, suite 220 − 39 = 181 €. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
       "Le seuil se calcule à mix constant : charges de structure divisées par la marge MOYENNE d'une nuitée vendue au mix prévu. Plus de suites dans le mix, moins de nuitées à vendre pour équilibrer.",
     ],
     modelExplain:
@@ -113,17 +119,17 @@ const PATCHES: Record<string, SituationTextPatch> = {
   hotel_detect_idle_cash: {
     title: "Le compte plein de fin de saison, et trois chambres à faire passer l'hiver",
     narrative:
-      "La saison forte est passée : les suites des grandes occasions et les supérieures des escapades ont fait le plein, et le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque trimestre, saison creuse comprise, et l'hiver ne vendra ni suites ni escapades.",
+      "La saison forte est passée : les suites des grandes occasions et les supérieures des escapades ont fait le plein, et le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, saison creuse comprise, et l'hiver ne vendra ni suites ni escapades.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de l'hiver ne ressemble pas à celui de l'été ?",
     diagnosticLabels: [
       "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
-      "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir, avec le mix de chambres que l'hiver vendra vraiment",
+      "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, avec le mix de chambres que l'hiver vendra vraiment",
       "Puisque le placement rapporte, autant y mettre la totalité du solde",
       "Placer améliore le résultat d'exploitation de l'entreprise",
     ],
     hintTexts: [
-      "Comparez votre solde aux charges d'un seul trimestre : combien de trimestres pourriez-vous tenir sans vendre une nuitée ?",
+      "Comparez votre solde aux charges d'un seul {{trimestre}} : combien {{de trimestres}} pourriez-vous tenir sans vendre une nuitée ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez la saison creuse chambre par chambre : la standard des groupes et la supérieure des affaires reviennent, les suites et les escapades s'effacent. Salaires, énergie, entretien et échéance du crédit tombent quand même.",
@@ -134,8 +140,11 @@ const PATCHES: Record<string, SituationTextPatch> = {
   },
 };
 
-export const HOTEL_GAMME_SITUATIONS: SituationDef[] = HOTEL_SITUATIONS.map((s) => {
+const SOURCES: SituationDef[] = HOTEL_SOURCES.map((s) => {
   const patch = PATCHES[s.code];
   const renamed: SituationDef = { ...s, code: CODE(s.code) };
   return patch ? patchSituationText(renamed, patch) : renamed;
 });
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const HOTEL_GAMME_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, hotelGammeScenario);

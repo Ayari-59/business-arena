@@ -1,4 +1,6 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { hotelScenario } from "./index";
 
 /**
  * Situations pédagogiques de L'ESCALE (hôtellerie).
@@ -6,14 +8,23 @@ import { attachModelQuestions, hints, type SituationDef } from "../situation-kit
  * Le fil rouge du secteur : une capacité rigide et périssable face à des
  * charges de structure écrasantes. Tout se joue sur le taux d'occupation et
  * sur le prix — jamais sur le stock, qui n'existe pas.
+ *
+ * LES NUITÉES OFFERTES ET LES CHARGES SONT DES FLUX PAR TOUR : une chambre offre
+ * autant de nuits que le tour compte de jours (ADR-01). Les énoncés les
+ * citent donc par jetons (`situation-texte.ts`), lus du scénario et de l'hôtel de
+ * départ mis à la durée de la partie, comme le prix par tour d'une nuitée de
+ * capacité achetée. Ce que la durée ne change pas reste écrit en clair, et la
+ * garde le vérifie par le calcul (tests/scenarios/textes-a-la-duree-conseil-hotel.test.ts) :
+ * le prix et la marge d'une nuitée, le taux d'occupation d'équilibre, le prix
+ * de la rénovation et sa durée en années, les flux annuels qu'elle rapporte.
  */
-export const HOTEL_SITUATIONS: SituationDef[] = [
+export const HOTEL_SOURCES: SituationDef[] = [
   {
     code: "hotel_t1_reprise",
     category: "prise_de_poste",
     title: "Soixante chambres et un crédit",
     narrative:
-      "Vous reprenez L'ESCALE : 60 chambres, quatorze salariés, 900 000 € de crédit immobilier et une clientèle partagée entre affaires en semaine et tourisme le week-end. Le trimestre offre 5 400 nuitées à vendre. Pas une de plus, pas une reportable.",
+      "Vous reprenez L'ESCALE : 60 chambres, quatorze salariés, 900 000 € de crédit immobilier et une clientèle partagée entre affaires en semaine et tourisme le week-end. {{Le trimestre}} offre {{entier: capacite}} nuitées à vendre. Pas une de plus, pas une reportable.",
     problem:
       "Qu'est-ce qui distingue fondamentalement une nuitée invendue d'un article invendu dans un magasin ?",
     diagnosticOptions: [
@@ -29,7 +40,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
       },
       {
         id: "resell_later",
-        label: "Elle se reporte sur le trimestre suivant, comme un stock",
+        label: "Elle se reporte sur {{le trimestre}} suivant, comme un stock",
         correct: false,
       },
       {
@@ -56,16 +67,16 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
       {
         id: "taux_equilibre",
         prompt:
-          "Avec 158 000 € de charges de structure décaissées par trimestre et 74 € de marge par nuitée, combien de nuitées faut-il vendre pour équilibrer ?",
+          "Avec {{entier: charges}} € de charges de structure décaissées {{par trimestre}} et 74 € de marge par nuitée, combien de nuitées faut-il vendre pour équilibrer ?",
         options: [
-          { id: "a", label: "Environ 2 140, soit 40 % d'occupation" },
-          { id: "b", label: "Environ 5 400, soit 100 % d'occupation" },
-          { id: "c", label: "Environ 1 660, soit 31 % d'occupation" },
-          { id: "d", label: "Environ 3 500, soit 65 % d'occupation" },
+          { id: "a", label: "Environ {{entier: arrondi(charges / 74 / 10) * 10}}, soit 40 % d'occupation" },
+          { id: "b", label: "Environ {{entier: capacite}}, soit 100 % d'occupation" },
+          { id: "c", label: "Environ {{entier: arrondi(charges / 95 / 10) * 10}}, soit 31 % d'occupation" },
+          { id: "d", label: "Environ {{entier: arrondi(flux(3500) / 10) * 10}}, soit 65 % d'occupation" },
         ],
         correctOptionId: "a",
         explain:
-          "158 000 ÷ 74 ≈ 2 140 nuitées sur 5 400 offertes, soit ~40 %. En ajoutant les budgets commerciaux et d'entretien, le seuil réel monte vers 52 % : c'est le taux d'occupation d'équilibre, l'indicateur que tout hôtelier surveille.",
+          "{{entier: charges}} ÷ 74 ≈ {{entier: arrondi(charges / 74 / 10) * 10}} nuitées sur {{entier: capacite}} offertes, soit ~40 %. En ajoutant les budgets commerciaux et d'entretien, le seuil réel monte vers 52 % : c'est le taux d'occupation d'équilibre, l'indicateur que tout hôtelier surveille.",
       },
     ],
     modelRelevance: {
@@ -76,11 +87,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["contribution_margin", "fixed_costs", "breakeven", "capacity"],
     hints: hints([
-      "Comptez ce que l'hôtel peut vendre au maximum sur un trimestre : 60 chambres × 90 nuits.",
+      "Comptez ce que l'hôtel peut vendre au maximum sur un {{trimestre}} : 60 chambres × {{entier: jours_du_tour}} nuits.",
       "Une chambre vide ce soir ne se vendra pas deux fois demain. La capacité est offerte chaque jour et expire chaque nuit.",
       "Vos charges de structure (salaires, énergie, taxes, assurances) ne dépendent pas du nombre de clients.",
-      "Marge par nuitée = 95 − 21 = 74 €. Charges de structure décaissées = 158 000 € par trimestre.",
-      "Seuil = 158 000 ÷ 74 ≈ 2 140 nuitées, soit 40 % d'occupation. Au-delà, chaque nuitée apporte 74 € presque intégralement en résultat : c'est le levier d'exploitation de l'hôtellerie.",
+      "Marge par nuitée = 95 − 21 = 74 €. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
+      "Seuil = {{entier: charges}} ÷ 74 ≈ {{entier: arrondi(charges / 74 / 10) * 10}} nuitées, soit 40 % d'occupation. Au-delà, chaque nuitée apporte 74 € presque intégralement en résultat : c'est le levier d'exploitation de l'hôtellerie.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -129,7 +140,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
           { id: "a", label: "Le coût variable de 21 €, seul coût que la décision fait apparaître" },
           { id: "b", label: "Le coût complet, charges de structure réparties comprises" },
           { id: "c", label: "Le prix de revient de la construction de l'hôtel" },
-          { id: "d", label: "L'amortissement trimestriel du bâtiment" },
+          { id: "d", label: "L'amortissement {{trimestriel}} du bâtiment" },
         ],
         correctOptionId: "a",
         explain:
@@ -147,7 +158,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Une élasticité faible signifie que cette clientèle ne fuit pas pour quelques euros, mais elle observe. Brader une nuit sauve un trimestre ; brader chaque semaine détruit le prix moyen de tous les suivants.",
+          "Une élasticité faible signifie que cette clientèle ne fuit pas pour quelques euros, mais elle observe. Brader une nuit sauve un {{trimestre}} ; brader chaque semaine détruit le prix moyen de tous les suivants.",
       },
     ],
     modelRelevance: {
@@ -258,7 +269,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Dix chambres condamnées",
     narrative:
-      "Dix chambres du deuxième étage sont hors service depuis des années : salles de bains hors normes, moquettes fatiguées. Les rouvrir coûterait 90 000 €, amortis sur dix ans. Elles ajouteraient 900 nuitées vendables par trimestre.",
+      "Dix chambres du deuxième étage sont hors service depuis des années : salles de bains hors normes, moquettes fatiguées. Les rouvrir coûterait 90 000 €, amortis sur dix ans. Elles ajouteraient {{entier: 10 * jours_du_tour}} nuitées vendables {{par trimestre}}.",
     problem:
       "Cet investissement vaut-il d'être fait, et sur quoi le jugez-vous ?",
     diagnosticOptions: [
@@ -300,11 +311,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
       {
         id: "flux_pertinent",
         prompt:
-          "Si ces 900 nuitées supplémentaires ne se remplissent qu'à 60 %, quel flux annuel supplémentaire faut-il retenir ?",
+          "Si ces {{entier: 10 * jours_du_tour}} nuitées supplémentaires ne se remplissent qu'à 60 %, quel flux annuel supplémentaire faut-il retenir ?",
         options: [
-          { id: "a", label: "900 × 0,60 × 74 € × 4 trimestres ≈ 159 800 €" },
-          { id: "b", label: "900 × 95 € × 4 trimestres ≈ 342 000 €" },
-          { id: "c", label: "900 × 74 € × 4 trimestres ≈ 266 400 €" },
+          { id: "a", label: "{{entier: 10 * jours_du_tour}} × 0,60 × 74 € × {{4 trimestres}} ≈ 159 800 €" },
+          { id: "b", label: "{{entier: 10 * jours_du_tour}} × 95 € × {{4 trimestres}} ≈ 342 000 €" },
+          { id: "c", label: "{{entier: 10 * jours_du_tour}} × 74 € × {{4 trimestres}} ≈ 266 400 €" },
           { id: "d", label: "90 000 € ÷ 10 ans = 9 000 €" },
         ],
         correctOptionId: "a",
@@ -323,14 +334,14 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
       "Observez d'abord vos derniers tours : avez-vous refusé des clients faute de chambres, ou avez-vous eu du mal à remplir ?",
       "Un investissement ne se juge pas sur le chiffre d'affaires qu'il permet, mais sur la marge supplémentaire qu'il dégage.",
       "Le décaissement est immédiat, les flux s'étalent sur des années. Comparer directement les deux serait ignorer le temps.",
-      "La VAN actualise les flux futurs à un taux : 90 000 € aujourd'hui contre 900 nuitées × taux d'occupation × 74 € par trimestre, pendant quarante trimestres.",
+      "La VAN actualise les flux futurs à un taux : 90 000 € aujourd'hui contre {{entier: 10 * jours_du_tour}} nuitées × taux d'occupation × 74 € {{par trimestre}}, pendant {{mots: duree_investissement}} {{trimestres}}.",
       "Testez plusieurs taux d'occupation : à 80 % l'opération est excellente, à 40 % elle détruit de la valeur. C'est une analyse de sensibilité qui doit accompagner votre VAN.",
     ]),
     trigger: { round: 5 },
     weight: 1.5,
     decisionLevers: [
       { field: "maintenanceBudget", direction: "up", hint: "Les 90 000 € de rénovation passent par le budget d'entretien. C'est un investissement capacitaire à juger sur les flux futurs actualisés, pas sur le coût immédiat." },
-      { field: "productionPlan", direction: "up", hint: "Dix chambres rouvertes ajoutent 900 nuitées par trimestre à votre offre. Augmentez les chambres préparées pour exploiter cette nouvelle capacité." },
+      { field: "productionPlan", direction: "up", hint: "Dix chambres rouvertes ajoutent {{entier: 10 * jours_du_tour}} nuitées {{par trimestre}} à votre offre. Augmentez les chambres préparées pour exploiter cette nouvelle capacité." },
       { field: "price", direction: "review", hint: "Des chambres rénovées peuvent justifier un tarif supérieur, mais la VAN dépend du taux d'occupation attendu, pas du prix affiché." },
     ],
   },
@@ -339,7 +350,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     category: "alerte_comptable",
     title: "Sous le taux d'occupation d'équilibre",
     narrative:
-      "Le trimestre s'achève en perte d'exploitation. L'hôtel a tourné, le personnel était là, les chambres étaient propres, mais trop d'entre elles sont restées vides trop souvent.",
+      "{{Le trimestre}} s'achève en perte d'exploitation. L'hôtel a tourné, le personnel était là, les chambres étaient propres, mais trop d'entre elles sont restées vides trop souvent.",
     problem:
       "Vous êtes sous votre taux d'occupation d'équilibre. Baisser les prix pour remplir, ou les tenir pour préserver la marge ?",
     diagnosticOptions: [
@@ -384,7 +395,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
         prompt: "La marge de sécurité mesure :",
         options: [
           { id: "a", label: "L'écart entre l'activité réalisée et le seuil de rentabilité" },
-          { id: "b", label: "La trésorerie disponible en fin de trimestre" },
+          { id: "b", label: "La trésorerie disponible en fin {{de trimestre}}" },
           { id: "c", label: "Le nombre de chambres inoccupées" },
           { id: "d", label: "Le montant du découvert autorisé" },
         ],
@@ -401,7 +412,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["breakeven", "safety_margin", "contribution_margin", "price_elasticity"],
     hints: hints([
-      "Calculez votre taux d'occupation réel du tour : nuitées vendues ÷ 5 400.",
+      "Calculez votre taux d'occupation réel du tour : nuitées vendues ÷ {{entier: capacite}}.",
       "Comparez-le à votre taux d'équilibre : environ 52 % une fois les budgets commerciaux financés.",
       "L'écart, converti en nuitées, vous dit ce qu'il manque. Reste à savoir par quel levier le combler.",
       "Baisser le prix agit sur deux grandeurs opposées : la marge unitaire baisse, le volume monte. C'est l'élasticité du segment visé qui décide.",
@@ -466,7 +477,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
           "Avant d'investir 90 000 € dans de nouvelles chambres, que faut-il vérifier en priorité ?",
         options: [
           { id: "a", label: "Que la saturation est durable et non un simple pic saisonnier" },
-          { id: "b", label: "Que le résultat net du trimestre est positif" },
+          { id: "b", label: "Que le résultat net {{du trimestre}} est positif" },
           { id: "c", label: "Que le prix affiché est le plus élevé de la ville" },
           { id: "d", label: "Que les concurrents investissent aussi" },
         ],
@@ -487,7 +498,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
       "Refuser un client, c'est perdre 74 € de marge, mais c'est aussi le signe que votre prix est trop bas.",
       "Quand la capacité est saturée, le prix devient le seul levier gratuit : il ne coûte rien à mettre en œuvre.",
       "Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours). La première se gère par le prix.",
-      "Si la saturation est durable, comparez le coût de la capacité (100 € par nuitée trimestrielle) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
+      "Si la saturation est durable, comparez le coût de la capacité ({{entier: cout_capacite}} € par nuitée {{trimestrielle}}) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
@@ -662,7 +673,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "Le compte plein de fin de saison",
     narrative:
-      "La saison forte est passée et le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque trimestre, saison creuse comprise.",
+      "La saison forte est passée et le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, saison creuse comprise.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -673,7 +684,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
       },
       {
         id: "garder_de_quoi_payer",
-        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        label: "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir",
         correct: true,
       },
       {
@@ -693,7 +704,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 12 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -723,7 +734,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde aux charges d'un seul trimestre : combien de trimestres pourriez-vous tenir sans vendre une nuitée ?",
+      "Comparez votre solde aux charges d'un seul {{trimestre}} : combien {{de trimestres}} pourriez-vous tenir sans vendre une nuitée ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez la saison creuse qui vient : salaires, énergie, entretien et échéance du crédit tombent alors que le remplissage s'effondre.",
@@ -761,4 +772,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "L'analyse de capacité distingue la saturation saisonnière, qui se gère par le prix, de la saturation durable, qui justifie d'investir.",
 };
 
-attachModelQuestions(HOTEL_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(HOTEL_SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const HOTEL_SITUATIONS: SituationDef[] = situationsAuTrimestre(HOTEL_SOURCES, hotelScenario);
