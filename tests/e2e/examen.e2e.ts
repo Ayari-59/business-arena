@@ -379,6 +379,7 @@ describe("un examen, de la création à la publication", () => {
     expect(t).not.toMatch(/gestion de référence/);
     expect(t).not.toMatch(/Alice|Bruno|210001/);
     expect(t).not.toMatch(/reconnu par l'AACSB|accrédité par/i);
+    await sansTexteIllisible(prof);
     await prof.emulateMedia({ media: "print" });
     expect(await prof.locator(".no-print").first().isVisible()).toBe(false);
     await capture(prof, "examen-accreditation-impression-1280");
@@ -393,6 +394,7 @@ describe("un examen, de la création à la publication", () => {
     await mobile.addCookies(await ctxProf.cookies());
     const m = await mobile.newPage();
     await aller(m, `/teacher/examens/${examenId}/accreditation`);
+    expect(await debordement(m)).toBeLessThanOrEqual(0);
     await capture(m, "examen-accreditation-390");
     await mobile.close();
   }, 120_000);

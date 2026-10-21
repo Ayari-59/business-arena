@@ -105,7 +105,7 @@ export default async function RapportDAccreditationPage({ params }: { params: Pr
           Retour à l&apos;examen
         </Link>
         <PrintButton label="Imprimer le rapport" />
-        <p className="ml-auto text-xs text-slate-600">Imprimez ou enregistrez en PDF. Une page, sans nom d&apos;étudiant.</p>
+        <p className="ml-auto text-xs text-slate-500">Imprimez ou enregistrez en PDF. Une page, sans nom d&apos;étudiant.</p>
       </header>
 
       <article className="rapport" data-rapport-d-accreditation="">
