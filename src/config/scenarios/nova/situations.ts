@@ -678,7 +678,7 @@ const SOURCES: SituationDef[] = [
     category: "alerte_operationnelle",
     title: "L'atelier au taquet",
     narrative:
-      "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose {{entier: investissement_max}} unités de capacité {{trimestrielle}} supplémentaire pour {{entier: investissement_max * cout_capacite}} €, amortis sur {{entier: amortissement_investissement}} {{trimestres}}. Un sous-traitant, lui, facture 52 € l'unité finie. Au prix usuel du marché, 59 €, une enceinte dégage environ 21 € de marge sur coût variable (38 € de coût variable) ; à votre prix, refaites le calcul.",
+      "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose {{environ: investissement_max}} unités de capacité {{trimestrielle}} supplémentaire pour {{entier: investissement_max * cout_capacite}} €, amortis sur {{entier: amortissement_investissement}} {{trimestres}}. Un sous-traitant, lui, facture 52 € l'unité finie. Au prix usuel du marché, 59 €, une enceinte dégage environ 21 € de marge sur coût variable (38 € de coût variable) ; à votre prix, refaites le calcul.",
     problem:
       "Investir, sous-traiter, ou laisser filer la demande : sur quel CALCUL fondez-vous la réponse, plutôt que sur l'intuition ?",
     diagnosticOptions: [
