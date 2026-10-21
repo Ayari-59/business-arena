@@ -160,6 +160,12 @@ const AVANT_COURRIERS = fixture("courriers-au-trimestre.json");
  */
 const CORRECTIONS: { cles: string[]; avant: string; apres: string; garde: string }[] = [
   {
+    garde: "textes-a-la-duree-conseil-hotel.test.ts",
+    cles: ["hotel/hotel_detect_capacity_saturated", "hotel-gamme/hotelg_detect_capacity_saturated"],
+    avant: "comparez le coût de la capacité (100 € par nuitée trimestrielle)",
+    apres: "comparez le coût de la capacité (de 89 à 115 € par nuitée trimestrielle selon le type de chambre)",
+  },
+  {
     garde: "textes-a-la-duree-transport-bistrot.test.ts",
     cles: ["bistrot/bistrot_t2_fournisseur", "bistrot-gamme/bistrotg_t2_fournisseur"],
     avant: "augmente le BFR du montant de vos achats trimestriels.",

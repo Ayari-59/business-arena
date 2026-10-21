@@ -446,7 +446,26 @@ const GRANDEURS: Record<string, Grandeur> = {
     if (!s.hr) throw new Error("Situation : le jeton « embauche » suppose un module RH");
     return s.hr.hiringCost;
   },
+  // --- hotel-bistrot-conseil : le prix de la capacité, lu du parc ---------------
+  /**
+   * Le prix d'une unité de capacité PAR TOUR quand le scénario achète sa capacité en
+   * équipements typés, que le moteur lit alors (`engine/investment/plafond.ts`) : le
+   * coût d'un type divisé par sa capacité par tour, du type le moins cher au plus cher.
+   * À L'ESCALE, de la chambre standard à la suite premium. Hors abonnement,
+   * `applyPeriodicity` met la capacité à la durée du tour, et le prix suit (÷ k).
+   */
+  cout_capacite_parc_min: (s) => Math.min(...prixDeLaCapacite(s)),
+  cout_capacite_parc_max: (s) => Math.max(...prixDeLaCapacite(s)),
+  // --- fin hotel-bistrot-conseil -------------------------------------------------
 };
+
+// --- hotel-bistrot-conseil ---------------------------------------------------
+/** Le prix d'une unité de capacité par tour, type d'équipement par type. */
+function prixDeLaCapacite(s: EngineScenarioConfig): number[] {
+  if (!s.equipment?.types.length) throw new Error("Situation : ce jeton suppose un parc d'équipements typés");
+  return s.equipment.types.map((t) => t.costPerUnit / t.capacityPerUnit);
+}
+// --- fin hotel-bistrot-conseil -----------------------------------------------
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
   /** Un taux de perte écrit au trimestre, ramené à la durée du tour par la règle du moteur. */

@@ -498,7 +498,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
       "Refuser un client, c'est perdre 74 € de marge, mais c'est aussi le signe que votre prix est trop bas.",
       "Quand la capacité est saturée, le prix devient le seul levier gratuit : il ne coûte rien à mettre en œuvre.",
       "{{Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours).}} La première se gère par le prix.",
-      "Si la saturation est durable, comparez le coût de la capacité ({{entier: cout_capacite}} € par nuitée {{trimestrielle}}) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
+      "Si la saturation est durable, comparez le coût de la capacité (de {{entier: cout_capacite_parc_min}} à {{entier: cout_capacite_parc_max}} € par nuitée {{trimestrielle}} selon le type de chambre) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
