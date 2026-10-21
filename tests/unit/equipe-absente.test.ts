@@ -23,7 +23,7 @@ const sansEmprunt = (d: RoundDecisions): RoundDecisions => ({
 for (const code of ["bistrot", "nova", "nova-gamme"]) {
   describe(`${code} : l'équipe absente du premier tour`, () => {
     const def = scenarioByCode(code);
-    const reglages = { scenario: def.scenario, seed: 4242, variableWorld: true, level: 2, concurrents: 3 };
+    const reglages = { scenario: def.scenario, seed: 4242, variableWorld: true, level: 2, concurrents: 3, periodicity: "quarter" as const };
     const etat = def.company("a-equipe", def.playerTeamName, "human");
 
     it("partie à la demande : exactement la proposition de son écran, emprunt nul", () => {
