@@ -23,6 +23,7 @@ import {
   scenarioByCode,
   situationByCode,
 } from "@/config/scenarios/registry";
+import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { presetFromProfile, quizModeFromProfile } from "@/config/difficulty";
 import { NIVEAU_STANDARD, optionsDuDiagnostic } from "@/config/analyse-par-niveau";
 import { askedQuestions, modelCtxOf } from "@/services/debrief.service";
@@ -104,7 +105,13 @@ async function loadInstanceForUser(instanceId: string, userId: string) {
   const gameRow = teamRow
     ? (await db.select().from(games).where(eq(games.id, teamRow.gameId)))[0]
     : undefined;
-  return { instance, situationRow, def, game: gameRow };
+  // L'indice que l'élève débloque se lit à la durée du tour de SA partie.
+  return {
+    instance,
+    situationRow,
+    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot)),
+    game: gameRow,
+  };
 }
 
 async function unlockedLevels(instanceId: string): Promise<number[]> {

@@ -7,6 +7,8 @@ import {
 } from "../difficulty";
 import { scenarioByCode } from "../scenarios/registry";
 import { referencesJouees } from "../scenarios/scenario-joue";
+import { PERIODICITY_DAYS } from "../scenarios/periodicity";
+import { situationDeLaPartie } from "../scenarios/situation-texte";
 import {
   champsOuverts,
   dureeDuTour,
@@ -103,7 +105,12 @@ export function estimationDuTour(
   const premierTour = s.essai ? true : !avecEssai && s.tourJoue === premierJoue;
   return dureeDuTour({
     signesDeCadrage: signesDeCadrage(def),
-    signesDeSituation: signesDeSituation(def.situations, tour, new Set(referencesJouees(def.scenario, a.reglages.niveau))),
+    // Le texte que l'atelier fera lire, à la durée de tour qu'il fixe.
+    signesDeSituation: signesDeSituation(
+      def.situations.map((x) => situationDeLaPartie(x, PERIODICITY_DAYS[a.reglages.periodicite])),
+      tour,
+      new Set(referencesJouees(def.scenario, a.reglages.niveau)),
+    ),
     champs: champsOuverts(preset.decisions),
     premierTour,
     avecQuiz: avecQuestions(a),

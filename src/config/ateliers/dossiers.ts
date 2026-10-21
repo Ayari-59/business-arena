@@ -5,6 +5,8 @@ import { leviersDuNiveau } from "../decisions";
 import { DIFFICULTY_PRESETS } from "../difficulty";
 import type { SituationDef } from "../scenarios/situation-kit";
 import { referencesJouees } from "../scenarios/scenario-joue";
+import { PERIODICITY_DAYS } from "../scenarios/periodicity";
+import { situationDeLaPartie } from "../scenarios/situation-texte";
 import type { NombreDeToursDEssai } from "../tour-d-essai";
 import {
   dossiersDeService,
@@ -224,7 +226,10 @@ export function dossierEnseignant(
 ): DossierEnseignant {
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
   const references = new Set(referencesJouees(scenario.scenario, atelier.reglages.niveau));
-  const retenues = scenario.situations.filter(
+  // Le dossier se lit à la durée de tour que l'atelier fixe : un atelier au
+  // mois annonce les montants et les mots du mois.
+  const duree = PERIODICITY_DAYS[atelier.reglages.periodicite];
+  const retenues = scenario.situations.map((s) => situationDeLaPartie(s, duree)).filter(
     (s) =>
       (!("round" in s.trigger) || s.trigger.round <= atelier.reglages.tours) &&
       (!s.seulementAvec || references.has(s.seulementAvec.reference)),
