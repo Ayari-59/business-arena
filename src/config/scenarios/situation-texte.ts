@@ -7,6 +7,8 @@ import {
   type Periodicity,
 } from "./periodicity";
 import type { SituationDef } from "./situation-kit";
+import { isProductAvailable } from "../../engine/gamme";
+import { NOVA_HOME } from "../groupe/nova";
 
 /**
  * LE TEXTE D'UNE SITUATION SE REND À LA DURÉE DU TOUR DE SA PARTIE.
@@ -83,6 +85,8 @@ const MOTS: Record<string, { month: string; year: string }> = {
     month: "engagements annuels plutôt que mensuels",
     year: "engagements pluriannuels plutôt qu'annuels",
   },
+  // --- nova-courriers : les tournures des situations NOVA et des courriers ---
+  "ce trimestre-là": { month: "ce mois-là", year: "cet exercice-là" },
 };
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -116,6 +120,40 @@ const abonnementDe = (s: EngineScenarioConfig) => {
   return s.subscription;
 };
 
+// --- nova-courriers : de quoi lire l'investissement, la R&D et les commandes -----
+
+const investissementDe = (s: EngineScenarioConfig) => {
+  if (!s.investment) throw new Error("Situation : ce scénario n'a pas d'investissement capacitaire");
+  return s.investment;
+};
+
+/**
+ * Le premier tour où une référence en développement se vend, par la règle même
+ * du moteur (`isProductAvailable`) : la R&D cumulée des tours PASSÉS doit
+ * couvrir son coût, le tour de disponibilité être atteint, et, pour un
+ * développement par étapes, la durée minimale écoulée depuis le démarrage.
+ * `partFinancee(t)` dit quelle part du coût est engagée à la fin du tour t ; le
+ * démarrage est au tour 1, celui où l'énoncé engage la première tranche. Le
+ * retard de certification, un tirage, n'y entre pas : l'énoncé le dit à part.
+ */
+function premiereVente(s: EngineScenarioConfig, code: string, partFinancee: (tour: number) => number): number {
+  const produit = s.products?.find((p) => p.code === code);
+  const dev = produit?.development;
+  if (!dev) throw new Error(`Situation : la référence « ${code} » n'est pas à développer dans ce scénario`);
+  for (let tour = 2; tour <= 100; tour++) {
+    const rd = { invested: dev.cost * partFinancee(tour - 1), launched: false, techLevel: 0, demarreAuTour: 1 };
+    if (isProductAvailable({ development: dev }, rd, tour)) return tour;
+  }
+  throw new Error(`Situation : la référence « ${code} » ne se vend jamais`);
+}
+
+/** Les unités d'une commande d'office (cible `order`) de l'événement nommé, dans ce scénario. */
+function unitesDeCommande(s: EngineScenarioConfig, code: string): number {
+  const modificateurs = s.events.find((e) => e.code === code)?.modifiers.filter((m) => m.target === "order") ?? [];
+  if (modificateurs.length === 0) throw new Error(`Situation : « ${code} » n'est pas une commande d'office de ce scénario`);
+  return modificateurs.reduce((total, m) => total + m.value, 0);
+}
+
 /** Les grandeurs qu'un énoncé peut citer, lues du scénario mis à la durée du tour. */
 const GRANDEURS: Record<string, Grandeur> = {
   /** Le prix d'un tour d'abonnement (référence du scénario). */
@@ -130,6 +168,42 @@ const GRANDEURS: Record<string, Grandeur> = {
   attrition: (s) => tauxLu(abonnementDe(s).baseChurnRate),
   /** Le nombre de tours dans une année. */
   tours_par_an: (s) => 360 / s.roundDays,
+
+  // --- nova-courriers : les situations NOVA et les courriers ------------------
+  /** La capacité de l'atelier au départ : le parc initial, ligne par ligne, à la durée du tour. */
+  capacite_initiale: (s) => {
+    if (!s.equipment) throw new Error("Situation : le jeton « capacite_initiale » suppose un parc d'équipements");
+    const types = new Map(s.equipment.types.map((t) => [t.code, t]));
+    return s.equipment.initialFleet.reduce((total, l) => total + l.count * types.get(l.typeCode)!.capacityPerUnit, 0);
+  },
+  /** Le plus gros investissement capacitaire d'un tour, en unités de capacité par tour. */
+  investissement_max: (s) => investissementDe(s).maxPerRound,
+  /** Le prix d'une unité de capacité par tour : la machine coûte le même prix, la capacité par tour suit la durée. */
+  cout_capacite: (s) => investissementDe(s).costPerCapacityUnit,
+  /** La durée d'amortissement de cet investissement, en tours. */
+  amortissement_investissement: (s) => investissementDe(s).depreciationRounds,
+  /** Le taux d'actualisation par tour de l'étude de projet : le taux d'emprunt annuel au prorata du tour. */
+  actualisation_du_tour: (s) => (s.finance.loanAnnualRate * s.roundDays) / 360,
+  /** Le premier tour où se vend la Studio de NOVA · GAMME, financée en entier au tour 1. */
+  vente_studio: (s) => premiereVente(s, "nova-studio", () => 1),
+  /** Le premier tour où se vend la NOVA Home, financée en entier au tour 1 : son lancement au plus tôt. */
+  home_au_plus_tot: (s) => premiereVente(s, "nova-home", () => 1),
+  /** Le premier tour où se vend la NOVA Home financée par étapes : un tiers au tour 1, le reste au tour 2. */
+  home_par_etapes: (s) => premiereVente(s, "nova-home", (tour) => (tour >= 2 ? 1 : 1 / 3)),
+  /** La plateforme de la NOVA Home, par tour : × jours / 90, comme le niveau 7 la pose (`avecLeGroupe`). */
+  plateforme_home: (s) => (NOVA_HOME.regles.plateforme.coutFixeParTour * s.roundDays) / 90,
+  /** Les unités des commandes d'office, telles que le moteur les applique (`applyPeriodicity` : × jours / 90). */
+  commande_tight_order: (s) => unitesDeCommande(s, "tight_order"),
+  commande_xxl_order: (s) => unitesDeCommande(s, "xxl_order"),
+  commande_big_order: (s) => unitesDeCommande(s, "big_order"),
+  commande_boutique_commande_ce: (s) => unitesDeCommande(s, "boutique_commande_ce"),
+  commande_conseil_mission_urgente: (s) => unitesDeCommande(s, "conseil_mission_urgente"),
+  commande_hotel_groupe_impromptu: (s) => unitesDeCommande(s, "hotel_groupe_impromptu"),
+  commande_ecom_btob: (s) => unitesDeCommande(s, "ecom_commande_b2b"),
+  commande_batiment_chantier_surprise: (s) => unitesDeCommande(s, "batiment_chantier_surprise"),
+  commande_transport_lot_surprise: (s) => unitesDeCommande(s, "transport_lot_surprise"),
+  commande_bistrot_banquet_surprise: (s) => unitesDeCommande(s, "bistrot_banquet_surprise"),
+  commande_fitness_contrat_surprise: (s) => unitesDeCommande(s, "fitness_contrat_surprise"),
 };
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
@@ -232,6 +306,35 @@ function enMots(n: number, feminin: boolean): string {
   return `${tete}-${enMots(reste, feminin)}`;
 }
 
+// --- nova-courriers : les grands nombres en toutes lettres ---------------------
+
+/**
+ * Les centaines, en orthographe traditionnelle : « cent », « deux cents »,
+ * « deux cent vingt ». `final` dit si rien ne suit : « deux cents » mais
+ * « deux cent mille », « quatre-vingts » mais « quatre-vingt mille ».
+ */
+function centaines(n: number, final: boolean): string {
+  const c = Math.floor(n / 100);
+  const reste = n % 100;
+  const fin = reste === 0 ? "" : enMots(reste, false);
+  const finale = !final && fin.endsWith("vingts") ? fin.slice(0, -1) : fin;
+  if (c === 0) return finale;
+  const tete = c === 1 ? "cent" : `${UNITES[c]} cent${reste === 0 && final ? "s" : ""}`;
+  return reste === 0 ? tete : `${tete} ${finale}`;
+}
+
+/** Un entier de 0 à 999 999 en toutes lettres (orthographe traditionnelle) ; au-delà, en chiffres. */
+function enLettres(n: number): string {
+  if (!Number.isInteger(n) || n < 0 || n > 999_999) return milliers(n);
+  if (n === 0) return "zéro";
+  const m = Math.floor(n / 1000);
+  const reste = n % 1000;
+  const fin = reste === 0 ? "" : centaines(reste, true);
+  if (m === 0) return fin;
+  const tete = m === 1 ? "mille" : `${centaines(m, false)} mille`;
+  return reste === 0 ? tete : `${tete} ${fin}`;
+}
+
 /** Des points d'écart : en toutes lettres quand c'est un entier, sinon au dixième ; singulier sous deux. */
 function points(x: number): string {
   const v = Math.round(net(x * 100) * 10) / 10;
@@ -257,6 +360,16 @@ const FORMATS: Record<string, (x: number) => string> = {
   /** Un écart de taux en points : « cinq points », « 1,8 point ». */
   points,
   Points: (x) => capitaliser(points(x)),
+
+  // --- nova-courriers ---------------------------------------------------------
+  /** Un nombre entier en toutes lettres, au-delà de cent : « cinq cents », « deux mille cinq cents ». */
+  lettres: (x) => enLettres(Math.round(net(x))),
+  /** Le même, en tête de phrase : « Neuf cents palettes ». */
+  Lettres: (x) => capitaliser(enLettres(Math.round(net(x)))),
+  /** Un taux en pour cent, au centième : « 1,25 », « 0,42 », « 5 ». */
+  taux_centieme: (x) => avecVirgule(Math.round(net(x * 100) * 100) / 100, 0, 2),
+  /** Le tour où une chose arrive, depuis le premier : « au suivant » pour le deuxième, « au tour 4 » au-delà. */
+  au_tour: (x) => (Math.round(net(x)) === 2 ? "au suivant" : `au tour ${Math.round(net(x))}`),
 };
 
 // ---------------------------------------------------------------------------

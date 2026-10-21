@@ -12,6 +12,8 @@
  */
 
 import { attachModelQuestions, hints } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { novaScenario } from "./index";
 import type {
   DecisionLever,
   DetectCode,
@@ -32,7 +34,8 @@ export type {
   SituationHintDef,
 };
 
-export const NOVA_SITUATIONS: SituationDef[] = [
+/** Les sources à jetons : le registre en garde le rendu au trimestre (`NOVA_SITUATIONS`). */
+const SOURCES: SituationDef[] = [
   {
     code: "nova_t1_takeover",
     category: "prise_de_poste",
@@ -86,7 +89,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       "Regardez vos charges : certaines tombent chaque période, que vous vendiez ou non.",
       "Combien chaque enceinte vendue laisse-t-elle une fois ses coûts variables payés ?",
       "Il existe un volume de ventes précis à partir duquel vous cessez de perdre de l'argent.",
-      "Une analyse du seuil de rentabilité donnerait un objectif chiffré à votre premier trimestre.",
+      "Une analyse du seuil de rentabilité donnerait un objectif chiffré à votre premier {{trimestre}}.",
       "Divisez les charges de structure par la marge sur coût variable unitaire (prix − 38 €) : c'est votre seuil en volume.",
     ]),
     trigger: { round: 1 },
@@ -282,7 +285,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       "Votre production a-t-elle atteint votre plan… ou votre plafond ?",
       "Capacité machine, disponibilité, main-d'œuvre : la contrainte la plus serrée décide de tout.",
       "Une analyse de capacité, croisée avec la saisonnalité, dirait quoi produire dès maintenant.",
-      "Produisez au plafond dès ce tour pour stocker : le pic du tour 4 dépassera largement vos 7 000 unités.",
+      "Produisez au plafond dès ce tour pour stocker : le pic du tour 4 dépassera largement vos {{entier: capacite_initiale}} unités.",
     ]),
     trigger: { round: 3 },
     weight: 1,
@@ -296,7 +299,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Le paradoxe du succès",
     narrative:
-      "Trimestre record : le pic saisonnier et la grosse commande CampusTech gonflent votre chiffre d'affaires, le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge.",
+      "{{Trimestre}} record : le pic saisonnier et la grosse commande CampusTech gonflent votre chiffre d'affaires, le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge.",
     problem:
       "Votre entreprise gagne de l'argent mais n'en a plus en caisse. Identifiez les causes possibles de ce paradoxe.",
     diagnosticOptions: [
@@ -675,7 +678,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     category: "alerte_operationnelle",
     title: "L'atelier au taquet",
     narrative:
-      "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Au prix usuel du marché, 59 €, une enceinte dégage environ 21 € de marge sur coût variable (38 € de coût variable) ; à votre prix, refaites le calcul.",
+      "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose {{entier: investissement_max}} unités de capacité {{trimestrielle}} supplémentaire pour {{entier: investissement_max * cout_capacite}} €, amortis sur {{entier: amortissement_investissement}} {{trimestres}}. Un sous-traitant, lui, facture 52 € l'unité finie. Au prix usuel du marché, 59 €, une enceinte dégage environ 21 € de marge sur coût variable (38 € de coût variable) ; à votre prix, refaites le calcul.",
     problem:
       "Investir, sous-traiter, ou laisser filer la demande : sur quel CALCUL fondez-vous la réponse, plutôt que sur l'intuition ?",
     diagnosticOptions: [
@@ -725,7 +728,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       "L'investissement coûte aujourd'hui ; ses gains tombent sur plusieurs tours. Comment comparer des euros d'aujourd'hui et des euros de demain ?",
       "Un euro dans un an vaut moins qu'un euro aujourd'hui : c'est l'actualisation, et votre taux d'emprunt donne le taux de référence.",
       "La VAN actualise les flux futurs et les compare au capital investi ; le TRI est le taux qui l'annule ; les coûts pertinents comparent investir et sous-traiter.",
-      "VAN ≈ −40 000 + Σ (unités supplémentaires vendues × marge unitaire) / (1 + 1,25 %)^t sur 16 trimestres — la marge, c'est votre prix moins 38 € (21 € au prix usuel de 59 €). VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : votre prix moins 52 € par unité sous-traitée (7 € à 59 €), sans immobiliser un euro.",
+      "VAN ≈ −{{entier: investissement_max * cout_capacite}} + Σ (unités supplémentaires vendues × marge unitaire) / (1 + {{taux_centieme: actualisation_du_tour}} %)^t sur {{entier: amortissement_investissement}} {{trimestres}} — la marge, c'est votre prix moins 38 € (21 € au prix usuel de 59 €). VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : votre prix moins 52 € par unité sous-traitée (7 € à 59 €), sans immobiliser un euro.",
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
@@ -740,7 +743,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "L'argent qui dort",
     narrative:
-      "Le trimestre s'est bien passé. Votre compte affiche plus d'un tour et demi de charges de structure, aucun découvert, et cet argent ne fait rien. Votre banquier propose de placer une partie du solde : il vous le bloque jusqu'au trimestre suivant et vous le rend avec 2 % l'an. Le même banquier facture votre découvert 12 %.",
+      "{{Le trimestre}} s'est bien passé. Votre compte affiche plus d'un tour et demi de charges de structure, aucun découvert, et cet argent ne fait rien. Votre banquier propose de placer une partie du solde : il vous le bloque jusqu'{{au trimestre}} suivant et vous le rend avec 2 % l'an. Le même banquier facture votre découvert 12 %.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -751,7 +754,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       },
       {
         id: "garder_de_quoi_payer",
-        label: "Le montant bloqué ne pourra payer aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        label: "Le montant bloqué ne pourra payer aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir",
         correct: true,
       },
       {
@@ -771,7 +774,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 12 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -801,9 +804,9 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde de trésorerie aux charges de structure d'un seul trimestre : de combien de tours d'avance disposez-vous ?",
+      "Comparez votre solde de trésorerie aux charges de structure d'un seul {{trimestre}} : de combien de tours d'avance disposez-vous ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
-      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera ni les matières, ni les salaires, ni l'échéance d'emprunt de ce trimestre.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera ni les matières, ni les salaires, ni l'échéance d'emprunt de {{ce trimestre}}.",
       "Projetez donc les décaissements du tour à venir avant de décider du montant : c'est un budget de trésorerie, même sommaire.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
@@ -824,9 +827,9 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   {
     code: "detect_served_without_waste",
     category: "reussite",
-    title: "Le trimestre où tout est parti",
+    title: "{{Le trimestre}} où tout est parti",
     narrative:
-      "L'atelier a tourné haut, vous n'avez presque rien refusé, et il ne reste presque rien en stock. Ce trimestre-là, votre plan collait à la demande. Ni la vente que vous n'avez pas manquée, ni l'enceinte que vous n'avez pas fabriquée pour rien n'apparaissent dans vos comptes : c'est la seule performance du métier qui ne se lit nulle part au compte de résultat.",
+      "L'atelier a tourné haut, vous n'avez presque rien refusé, et il ne reste presque rien en stock. {{Ce trimestre-là}}, votre plan collait à la demande. Ni la vente que vous n'avez pas manquée, ni l'enceinte que vous n'avez pas fabriquée pour rien n'apparaissent dans vos comptes : c'est la seule performance du métier qui ne se lit nulle part au compte de résultat.",
     problem:
       "Qu'est-ce qui a produit cet ajustement, et qu'est-ce qui vous dirait qu'il se reproduira ?",
     diagnosticOptions: [
@@ -852,7 +855,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       },
       {
         id: "preuve_de_methode",
-        label: "Un trimestre ajusté prouve à lui seul que la méthode de prévision est bonne",
+        label: "Un {{trimestre}} ajusté prouve à lui seul que la méthode de prévision est bonne",
         correct: false,
       },
     ],
@@ -862,7 +865,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         prompt: "Où lit-on qu'un plan de production a été bien dimensionné ?",
         options: [
           { id: "a", label: "Dans les volumes : demande refusée et invendu, rapportés aux ventes" },
-          { id: "b", label: "Dans le résultat net du trimestre" },
+          { id: "b", label: "Dans le résultat net {{du trimestre}}" },
           { id: "c", label: "Dans le taux d'utilisation de la machine, à lui seul" },
           { id: "d", label: "Dans la marge sur coût variable" },
         ],
@@ -872,16 +875,16 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       },
       {
         id: "nova_cout_invendu",
-        prompt: "Une enceinte produite et non vendue ce trimestre…",
+        prompt: "Une enceinte produite et non vendue {{ce trimestre}}…",
         options: [
           { id: "a", label: "Reste en stock à son coût de production : l'argent est sorti, la charge attend la vente" },
-          { id: "b", label: "Est passée en charge du trimestre, comme les autres" },
+          { id: "b", label: "Est passée en charge {{du trimestre}}, comme les autres" },
           { id: "c", label: "Ne coûte rien tant qu'elle n'est pas soldée" },
           { id: "d", label: "Diminue le résultat à hauteur de son prix de vente" },
         ],
         correctOptionId: "a",
         explain:
-          "C'est le piège du stock : la trésorerie est déjà partie en matières et en main-d'œuvre, mais le compte de résultat attend la vente pour enregistrer la charge. Un trimestre peut donc paraître bon tout en ayant immobilisé votre caisse.",
+          "C'est le piège du stock : la trésorerie est déjà partie en matières et en main-d'œuvre, mais le compte de résultat attend la vente pour enregistrer la charge. Un {{trimestre}} peut donc paraître bon tout en ayant immobilisé votre caisse.",
       },
     ],
     modelRelevance: {
@@ -895,7 +898,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       "Reprenez les deux volumes du tour : combien de clients sont repartis sans acheter, combien d'enceintes sont restées.",
       "Rapportez chacun à vos ventes. Sous quelques pour cent, l'écart n'est plus du hasard.",
       "Demandez-vous ce que vous aviez prévu AVANT le tour : la demande attendue, ou la capacité disponible ? Les deux ne donnent pas le même plan.",
-      "Un ajustement réussi tient à trois choses : la prévision de demande, le prix qui l'oriente, et la saison. Laquelle a joué ce trimestre ?",
+      "Un ajustement réussi tient à trois choses : la prévision de demande, le prix qui l'oriente, et la saison. Laquelle a joué {{ce trimestre}} ?",
       "La question n'est pas d'avoir eu raison, mais de savoir sur quoi. Notez la règle que vous avez suivie : au prochain tour, elle se vérifiera ou non.",
     ]),
     trigger: { detect: "served_without_waste" },
@@ -909,9 +912,9 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     category: "reussite",
     title: "La tête hors de l'eau",
     narrative:
-      "Le trimestre précédent s'est terminé dans le rouge, en perte ou en trésorerie négative. Celui-ci, non. L'entreprise est repassée du bon côté, et c'est le moment le plus fragile de la partie : rien ne dit encore si vous avez corrigé la cause ou si le marché vous a fait une fleur.",
+      "{{Le trimestre}} précédent s'est terminé dans le rouge, en perte ou en trésorerie négative. Celui-ci, non. L'entreprise est repassée du bon côté, et c'est le moment le plus fragile de la partie : rien ne dit encore si vous avez corrigé la cause ou si le marché vous a fait une fleur.",
     problem:
-      "Qu'est-ce qui a produit ce redressement, et qu'est-ce qui vous dirait qu'il tiendra au trimestre suivant ?",
+      "Qu'est-ce qui a produit ce redressement, et qu'est-ce qui vous dirait qu'il tiendra {{au trimestre}} suivant ?",
     diagnosticOptions: [
       {
         id: "levier_identifie",
@@ -930,7 +933,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       },
       {
         id: "crise_finie",
-        label: "Un trimestre positif referme la crise : les décisions d'urgence peuvent être abandonnées",
+        label: "Un {{trimestre}} positif referme la crise : les décisions d'urgence peuvent être abandonnées",
         correct: false,
       },
       {
@@ -959,7 +962,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         options: [
           { id: "a", label: "Le fait de pouvoir nommer le levier actionné et de le retrouver dans les chiffres" },
           { id: "b", label: "L'ampleur du redressement : plus il est fort, plus il est durable" },
-          { id: "c", label: "Le nombre de décisions modifiées au cours du trimestre" },
+          { id: "c", label: "Le nombre de décisions modifiées au cours {{du trimestre}}" },
           { id: "d", label: "Le retour du résultat au-dessus du seuil de rentabilité" },
         ],
         correctOptionId: "a",
@@ -975,11 +978,11 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "breakeven", "contribution_margin", "income_statement", "cash_budget"],
     hints: hints([
-      "Mettez côte à côte les deux trimestres : résultat net et trésorerie nette. Lequel des deux s'est redressé, et de combien ?",
+      "Mettez côte à côte les deux {{trimestres}} : résultat net et trésorerie nette. Lequel des deux s'est redressé, et de combien ?",
       "Un résultat se redresse par la marge ou par les charges ; une trésorerie, par les encaissements ou par un financement. Ce ne sont pas les mêmes leviers.",
-      "Reprenez vos décisions du trimestre : prix, volume, budgets, emprunt. Laquelle a changé par rapport au précédent ?",
+      "Reprenez vos décisions {{du trimestre}} : prix, volume, budgets, emprunt. Laquelle a changé par rapport au précédent ?",
       "Vérifiez que l'effet se lit bien là où il devrait : une hausse de prix se voit dans la marge unitaire, un emprunt dans la trésorerie et nulle part ailleurs.",
-      "Si aucune de vos décisions n'explique l'écart, c'est le marché qui a travaillé pour vous : saison, concurrent, événement. Alors la prudence reste de mise au trimestre suivant.",
+      "Si aucune de vos décisions n'explique l'écart, c'est le marché qui a travaillé pour vous : saison, concurrent, événement. Alors la prudence reste de mise {{au trimestre}} suivant.",
     ]),
     trigger: { detect: "recovered" },
     weight: 1,
@@ -1004,7 +1007,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   detect_idle_cash:
     "Le budget de trésorerie projette les décaissements du tour à venir : il est le seul à dire quelle part du solde peut être bloquée sans risquer le découvert. Le seuil de rentabilité, lui, ne parle jamais de trésorerie.",
   nova_t1_takeover:
-    "Le seuil de rentabilité donne un objectif chiffré au premier trimestre : le volume de ventes qui couvre exactement les charges de structure.",
+    "Le seuil de rentabilité donne un objectif chiffré au premier {{trimestre}} : le volume de ventes qui couvre exactement les charges de structure.",
   nova_t2_variance_decomposition:
     "La décomposition des écarts de coûts (prix matière, efficacité) identifie précisément où le surcoût s'est produit : fournisseur, rebut, ou volume. Aucun autre outil ne le dit aussi clairement.",
   nova_t2_price_war:
@@ -1027,6 +1030,9 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "La VAN compare le coût d'aujourd'hui aux flux futurs actualisés ; le seuil de rentabilité, trompeur ici, ignore le temps.",
 };
 
-attachModelQuestions(NOVA_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const NOVA_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, novaScenario);
 
 export const situationByCode = new Map(NOVA_SITUATIONS.map((s) => [s.code, s]));
