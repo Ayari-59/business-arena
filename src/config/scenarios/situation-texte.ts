@@ -185,41 +185,17 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     month: "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas au creux.",
     year: "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas au creux.",
   },
-  // Les courriers de VOLT FITNESS se tirent à n'importe quel tour : ils ne disent
-  // aucune saison, sauf la hausse d'énergie, posée au tour 3, celui du creux.
-  "Affluence du premier lundi de janvier": {
-    month: "Affluence d'un lundi de bonnes résolutions",
-    year: "Affluence d'un lundi de bonnes résolutions",
-  },
-  "Ces adhérents-là remplissent la salle et repartent au printemps : les inscrire coûte, les garder rapporte.": {
-    month: "Ces adhérents-là remplissent la salle et repartent quand l'élan retombe : les inscrire coûte, les garder rapporte.",
-    year: "Ces adhérents-là remplissent la salle et repartent quand l'élan retombe : les inscrire coûte, les garder rapporte.",
-  },
+  // La hausse d'énergie est posée au tour 3, celui du creux : au trimestre, l'été y est
+  // vrai. Les autres courriers de VOLT FITNESS se tirent à n'importe quel tour et ne
+  // datent rien, à aucune durée (garde : tests/scenarios/saisons-textes-neutres.test.ts).
   "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.": {
     month: "Une charge qui grimpe quand la salle est vide : au creux, elle tombe sans aucun abonnement pour la couvrir.",
     year: "Une charge qui grimpe quand la salle est vide : au creux, elle tombe sans aucun abonnement pour la couvrir.",
   },
-  "L'été cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.": {
-    month: "Une vague de chaleur cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
-    year: "Une vague de chaleur cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
-  },
-  "à compter de janvier": { month: "dès à présent", year: "dès à présent" },
-  "Les inscriptions sont ouvertes pour l'édition de printemps, trois mois avant le départ.": {
-    month: "Les inscriptions sont ouvertes pour la prochaine édition, trois mois avant le départ.",
-    year: "Les inscriptions sont ouvertes pour la prochaine édition, trois mois avant le départ.",
-  },
-  "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là en juin.": {
-    month: "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là une fois la course passée.",
-    year: "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là une fois la course passée.",
-  },
-  "Notre enquête montre que les primo-pratiquants, ceux qui s'inscrivent en janvier, sont les premiers à préférer le domicile.": {
-    month: "Notre enquête montre que les primo-pratiquants, ceux des bonnes résolutions, sont les premiers à préférer le domicile.",
-    year: "Notre enquête montre que les primo-pratiquants, ceux des bonnes résolutions, sont les premiers à préférer le domicile.",
-  },
   //
   // NOVA et NOVA · GAMME. Le pic au tour 4 (marché à 1,35, la Go à 1,9, le module radio
   // y rompt plus souvent), le contrecoup au tour 5. L'arc CampusTech n'est pas une
-  // saison : il reste tel quel, sauf l'appel d'offres qui datait sa lettre de la rentrée.
+  // saison : il reste tel quel.
   "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic de fin d'année ?": {
     month: "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic du tour suivant ?",
     year: "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic du tour suivant ?",
@@ -258,41 +234,12 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     month: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
     year: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
   },
-  // Les courriers de NOVA se tirent à n'importe quel tour, sauf ceux de l'arc
-  // d'investissement : le retournement tombe au tour 5, au sortir du pic.
-  "Salon de la Rentrée Étudiante · Commissariat général": {
-    month: "Salon de l'Étudiant · Commissariat général",
-    year: "Salon de l'Étudiant · Commissariat général",
-  },
-  "notre opération de fin d'année": { month: "notre grande opération commerciale", year: "notre grande opération commerciale" },
-  "référencement audio de la rentrée": {
-    month: "renouvellement du référencement audio",
-    year: "renouvellement du référencement audio",
-  },
-  "Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants.": {
-    month: "Notre enseigne renouvelle son rayon audio et consulte quatre fabricants.",
-    year: "Notre enseigne renouvelle son rayon audio et consulte quatre fabricants.",
-  },
-  "La distinction paraîtra en couverture du numéro de rentrée ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.": {
-    month: "La distinction paraîtra en couverture de notre prochain numéro ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.",
-    year: "La distinction paraîtra en couverture de notre prochain numéro ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.",
-  },
+  // Le concurrent de l'arc d'investissement tombe au tour 4 : au trimestre, l'automne y
+  // est vrai. Les courriers tirés de NOVA ne datent rien, à aucune durée.
   "Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.": {
     month: "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.",
     year: "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.",
   },
-  //
-  // ROUTE & CIE. Ses courriers se tirent à n'importe quel tour : le pic du donneur
-  // d'ordres est le sien, pas une date ; le péage se revalorise à sa date.
-  "Appel à capacité pour le pic de fin d'année": {
-    month: "Appel à capacité pour notre pic d'activité",
-    year: "Appel à capacité pour notre pic d'activité",
-  },
-  "Nos entrepôts passeront en trois-huit du quinze novembre au vingt-quatre décembre.": {
-    month: "Nos entrepôts passeront en trois-huit pendant les six semaines de notre pic d'activité.",
-    year: "Nos entrepôts passeront en trois-huit pendant les six semaines de notre pic d'activité.",
-  },
-  "au premier janvier": { month: "à la date de revalorisation", year: "à la date de revalorisation" },
   // --- fin du groupe fitness-nova-batiment-transport ---
   // --- hotel-bistrot-conseil : le récit des saisons ------------------------
   // Au trimestre, le tour 3 de L'ESCALE est l'été, celui du bistrot et du cabinet le
@@ -347,13 +294,11 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   // Les DSI creusent le moins au tour 3 de la gamme (`dsi`) : c'est ce qui reste vrai de « ne connaît pas les congés ».
   "Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.":
     aLaSaison("Ce tour creux est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader."),
-  // Les courriers de L'ESCALE et de LA TABLE D'AUGUSTIN : un courrier tombe à n'importe quel tour.
-  "Été indien — hausse des réservations de dernière minute":
-    aLaSaison("Beau temps hors saison : hausse des réservations de dernière minute"),
-  "Première édition du festival d'été": aLaSaison("Première édition du festival de musique"),
+  // Les étapes d'investissement de L'ESCALE et de LA TABLE D'AUGUSTIN tombent à un tour
+  // fixe, où leur date est vraie au trimestre (le signal au tour 2, le concurrent au tour 4).
+  // Leurs courriers tirés ne datent rien, à aucune durée.
   "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne.":
     aLaSaison("Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses prochains circuits."),
-  "Révision des volumes de notre programmation d'automne": aLaSaison("Révision des volumes de notre programmation"),
   // Le tarif d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date.
   "Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année.":
     aLaSaison("Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier, le temps de reconstituer sa clientèle."),
@@ -441,31 +386,24 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
         "Beaucoup d'e-commerçants rentables meurent au plus fort de leur saison.",
       "Les enchères publicitaires montent en période de fêtes.": "Les enchères publicitaires montent au tour du pic.",
 
-      // Les courriers des deux liasses : l'animateur les pose au tour qu'il veut,
-      // la lettre ne date donc rien. Les étapes d'investissement tombent aux tours
-      // 4 (le concurrent) et 5 (le retournement), où rien ne fait l'automne.
-      "Saison des cadeaux avancée de trois semaines": "Vos clientes fidèles achètent plus tôt que d'habitude",
-      "Les magazines féminins ont lancé la saison plus tôt que d'habitude.":
-        "Les magazines féminins ont lancé les nouvelles collections plus tôt que d'habitude.",
-      "pour notre arbre de Noël": "pour la dotation de nos salariés",
-      "Implantation du marché de Noël devant votre boutique": "Implantation d'un marché artisanal devant votre boutique",
+      // Les étapes d'investissement des deux liasses tombent aux tours 4 (le
+      // concurrent) et 5 (le retournement) : au mois et à l'année, rien n'y fait
+      // l'automne. Les courriers tirés, que l'animateur peut aussi poser au tour qu'il
+      // veut, ne datent rien, à aucune durée.
       "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille.":
         "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération dans les semaines qui viennent et renouvelle l'ensemble de sa ligne de maille.",
       "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.":
         "Le temps reste plus doux que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.",
-      "Financement de votre stock de fin d'année": "Financement de votre stock de saison",
-      "Préparation de l'opération commerciale de fin novembre": "Préparation de la grande opération commerciale du secteur",
-      "redéploie son espace de tête de rayon vers la rentrée scolaire":
-        "redéploie son espace de tête de rayon vers d'autres catégories",
     } satisfies Record<string, string | { month: string; year: string }>).map(([cle, forme]) => [
       cle,
       typeof forme === "string" ? { month: forme, year: forme } : forme,
     ]),
   ),
   // --- fin du groupe boutique-ecommerce : le récit des saisons --------------
-  // Les situations détectées (elles tombent à n'importe quel tour) et les textes datés à
-  // tort au trimestre même ne passent plus par cette table : leur texte ne date rien, à
-  // aucune durée (garde : tests/scenarios/saisons-textes-neutres.test.ts).
+  // Les situations détectées et les courriers tirés au sort (ils tombent à n'importe quel
+  // tour), comme les textes datés à tort au trimestre même, ne passent plus par cette
+  // table : leur texte ne date rien, à aucune durée (garde :
+  // tests/scenarios/saisons-textes-neutres.test.ts).
 };
 
 // --- hotel-bistrot-conseil ---------------------------------------------------

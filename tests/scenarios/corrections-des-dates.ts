@@ -33,6 +33,7 @@ export interface CorrectionDeDate {
 }
 
 const DETECTEE = "situation détectée : elle tombe à n'importe quel tour, la saison qu'elle supposait était souvent fausse";
+const TIRE = "courrier tiré au sort, ou posé par l'enseignant : il tombe à n'importe quel tour, la date qu'il portait était souvent fausse";
 
 export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
   // --- Les deux dates fausses au tour où elles tombent -----------------------
@@ -298,6 +299,176 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
     avant: "le solde couvre les décaissements du trimestre, été compris.",
     apres: "le solde couvre les décaissements des tours à venir.",
     pourquoi: DETECTEE,
+  },
+  // --- Les courriers tirés au sort ------------------------------------------
+  // Décision du propriétaire (« On traite les 27 courriers ») : un courrier tiré, ou
+  // posé par l'enseignant au tour qu'il veut, tombe à n'importe quel tour ; sa date
+  // était fausse à la plupart d'entre eux, au trimestre compris. Le métier et
+  // l'événement restent, seule la date part.
+  {
+    codes: ["student_fair"],
+    avant: "Salon de la Rentrée Étudiante · Commissariat général",
+    apres: "Salon de l'Étudiant · Commissariat général",
+    pourquoi: `${TIRE} ; le salon reste un salon d'étudiants`,
+  },
+  {
+    codes: ["xxl_order"],
+    avant: "pour notre opération de fin d'année",
+    apres: "pour notre grande opération commerciale",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["xxl_order"],
+    avant: "Notre opération de fin d'année portera",
+    apres: "Notre grande opération commerciale portera",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["nova_campus_tender"],
+    avant: "Appel d'offres — référencement audio de la rentrée",
+    apres: "Appel d'offres — renouvellement du référencement audio",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["nova_campus_tender"],
+    avant: "Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants.",
+    apres: "Notre enseigne renouvelle son rayon audio et consulte quatre fabricants.",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["nova_press_award"],
+    avant: "La distinction paraîtra en couverture du numéro de rentrée ;",
+    apres: "La distinction paraîtra en couverture de notre prochain numéro ;",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["boutique_pretexte_fete"],
+    avant: "Saison des cadeaux avancée de trois semaines",
+    apres: "Vos clientes fidèles achètent plus tôt que d'habitude",
+    pourquoi: `${TIRE} ; l'objet dit l'effet, la demande des clientes fidèles`,
+  },
+  {
+    codes: ["boutique_pretexte_fete"],
+    avant: "Les magazines féminins ont lancé la saison plus tôt que d'habitude.",
+    apres: "Les magazines féminins ont lancé les nouvelles collections plus tôt que d'habitude.",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["boutique_commande_ce"],
+    avant: "pulls pour notre arbre de Noël",
+    apres: "pulls pour la dotation de nos salariés",
+    pourquoi: `${TIRE} ; la dotation du comité, comme l'offre de commande du même client`,
+  },
+  {
+    codes: ["boutique_marche_noel"],
+    avant: "Implantation du marché de Noël devant votre boutique",
+    apres: "Implantation d'un marché artisanal devant votre boutique",
+    pourquoi: `${TIRE} ; le marché, ses chalets et ses passants restent, comme dans la gazette`,
+  },
+  {
+    codes: ["hotel_meteo_radieuse"],
+    avant: "Été indien — hausse des réservations de dernière minute",
+    apres: "Beau temps annoncé : hausse des réservations de dernière minute",
+    pourquoi: `${TIRE} ; « hors saison », la forme d'hier au mois et à l'année, était faux au tour 3, le pic de L'ESCALE`,
+  },
+  {
+    codes: ["hotel_meteo_radieuse"],
+    avant: "Trois semaines de beau temps hors saison sont annoncées",
+    apres: "Trois semaines de beau temps sont annoncées",
+    pourquoi: `${TIRE} ; au tour 3, le pic de L'ESCALE, le beau temps n'est pas hors saison`,
+  },
+  {
+    codes: ["hotel_festival"],
+    avant: "Première édition du festival d'été",
+    apres: "Première édition d'un festival de musique",
+    pourquoi: `${TIRE} ; le corps dit déjà « un festival de musique »`,
+  },
+  {
+    codes: ["ecom_banque_conciliante"],
+    avant: "Financement de votre stock de fin d'année",
+    apres: "Financement de votre stock de saison",
+    pourquoi: `${TIRE} ; le corps dit déjà « votre stock de saison »`,
+  },
+  {
+    codes: ["ecom_black_friday"],
+    avant: "Préparation de l'opération commerciale de fin novembre",
+    apres: "Préparation de la grande opération commerciale du secteur",
+    pourquoi: `${TIRE} ; l'opération et ses quatre jours restent, comme dans la gazette`,
+  },
+  {
+    codes: ["fitness_rentree_sportive"],
+    avant: "Affluence du premier lundi de janvier",
+    apres: "Affluence d'un lundi de bonnes résolutions",
+    pourquoi: `${TIRE} ; l'effet porte sur le segment des bonnes résolutions`,
+  },
+  {
+    codes: ["fitness_rentree_sportive"],
+    avant: "Ces adhérents-là remplissent la salle et repartent au printemps :",
+    apres: "Ces adhérents-là remplissent la salle et repartent quand l'élan retombe :",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["fitness_canicule"],
+    avant: "L'été cumule tout :",
+    apres: "Une vague de chaleur cumule tout :",
+    pourquoi: `${TIRE} (dès le tour 2) ; la canicule reste, la saison du calendrier part`,
+  },
+  {
+    codes: ["fitness_contrat_surprise"],
+    avant: "un accès à votre club à compter de janvier,",
+    apres: "un accès à votre club dès à présent,",
+    pourquoi: `${TIRE} ; les adhérents sont inscrits d'office au tour du courrier`,
+  },
+  {
+    codes: ["fitness_marathon"],
+    avant: "Les inscriptions sont ouvertes pour l'édition de printemps,",
+    apres: "Les inscriptions sont ouvertes pour la prochaine édition,",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["fitness_marathon"],
+    avant: "c'est combien seront encore là en juin.",
+    apres: "c'est combien seront encore là une fois la course passée.",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["fitness_appli_gratuite"],
+    avant: "les primo-pratiquants, ceux qui s'inscrivent en janvier,",
+    apres: "les primo-pratiquants, ceux des bonnes résolutions,",
+    pourquoi: `${TIRE} ; l'effet porte sur la demande des bonnes résolutions`,
+  },
+  {
+    codes: ["transport_pic_ecommerce"],
+    avant: "Appel à capacité pour le pic de fin d'année",
+    apres: "Appel à capacité pour notre pic d'activité",
+    pourquoi: `${TIRE} (dès le tour 2) ; le pic du donneur d'ordres est le sien`,
+  },
+  {
+    codes: ["transport_pic_ecommerce"],
+    avant: "Nos entrepôts passeront en trois-huit du quinze novembre au vingt-quatre décembre.",
+    apres: "Nos entrepôts passeront en trois-huit pendant les six semaines de notre pic d'activité.",
+    pourquoi: TIRE,
+  },
+  {
+    codes: ["transport_peages"],
+    avant: "augmentent de six pour cent au premier janvier",
+    apres: "augmentent de six pour cent à la date de revalorisation",
+    pourquoi: `${TIRE} ; la hausse s'applique au tour du courrier, l'effet le dit`,
+  },
+  // --- Deux étapes d'investissement, datées à tort à leur tour fixe ---------
+  {
+    codes: ["hotel_inv_retournement"],
+    avant: "Révision des volumes de notre programmation d'automne",
+    apres: "Révision des volumes de notre programmation",
+    pourquoi:
+      "le retournement tombe au tour 5 et réduit le contingent pendant deux tours, le sien et le suivant (de janvier à juin au trimestre) : aucun n'est l'automne",
+  },
+  {
+    codes: ["ecom_inv_retournement"],
+    avant: "redéploie son espace de tête de rayon vers la rentrée scolaire",
+    apres: "redéploie son espace de tête de rayon vers d'autres catégories",
+    pourquoi:
+      "le retournement tombe au tour 5 (janvier à mars au trimestre) et vaut pour ce tour et le suivant : la rentrée scolaire est loin de l'un comme de l'autre",
   },
 ];
 

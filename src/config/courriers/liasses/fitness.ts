@@ -15,13 +15,13 @@ const SOURCES: CourrierDef[] = [
   {
     code: "fitness_rentree_sportive",
     expediteur: "Note interne · Accueil du club",
-    objet: "{{Affluence du premier lundi de janvier}}",
+    objet: "Affluence d'un lundi de bonnes résolutions",
     corps:
       "La file d'attente déborde sur le parking depuis l'ouverture. Nous enregistrons trois fois plus de demandes d'inscription qu'un lundi ordinaire, presque toutes sur la formule d'essai.",
     signataire: "La responsable d'accueil",
     effet: "Demande du segment « résolutions » +35 % ce tour",
     enJeu:
-      "{{Ces adhérents-là remplissent la salle et repartent au printemps : les inscrire coûte, les garder rapporte.}}",
+      "Ces adhérents-là remplissent la salle et repartent quand l'élan retombe : les inscrire coûte, les garder rapporte.",
     nature: "market",
     pli: "interne",
     icone: "hausse",
@@ -122,7 +122,7 @@ const SOURCES: CourrierDef[] = [
       "Le département est placé en vigilance canicule pour la semaine. Il est recommandé de limiter la fréquentation aux heures les plus chaudes et d'interrompre les activités si la température intérieure dépasse trente degrés.",
     signataire: "Le directeur de cabinet",
     effet: "Capacité d'accueil −12 % ce tour",
-    enJeu: "{{L'été cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.}}",
+    enJeu: "Une vague de chaleur cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
     nature: "market",
     pli: "simple",
     icone: "meteo",
@@ -189,7 +189,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Fabrique Delorme · Direction des ressources humaines",
     objet: "Convention de partenariat pour nos {{entier: commande_fitness_contrat_surprise}} salariés",
     corps:
-      "Nous souhaitons offrir à nos {{lettres: commande_fitness_contrat_surprise}} salariés un accès à votre club {{à compter de janvier}}, réglé en une fois pour {{le trimestre}}. Nous attendons votre confirmation de capacité d'accueil avant signature.",
+      "Nous souhaitons offrir à nos {{lettres: commande_fitness_contrat_surprise}} salariés un accès à votre club dès à présent, réglé en une fois pour {{le trimestre}}. Nous attendons votre confirmation de capacité d'accueil avant signature.",
     signataire: "Le directeur des ressources humaines",
     effet:
       "+{{entier: commande_fitness_contrat_surprise}} adhérents ({{échelle trimestre}}) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
@@ -204,11 +204,11 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Comité d'organisation du marathon de la ville",
     objet: "Ouverture des inscriptions — douze mille coureurs attendus",
     corps:
-      "{{Les inscriptions sont ouvertes pour l'édition de printemps, trois mois avant le départ.}} Les clubs partenaires constatent chaque année une hausse marquée des demandes de préparation sur cette période.",
+      "Les inscriptions sont ouvertes pour la prochaine édition, trois mois avant le départ. Les clubs partenaires constatent chaque année une hausse marquée des demandes de préparation sur cette période.",
     signataire: "Le président du comité",
     effet: "Demande globale +28 % ce tour",
     enJeu:
-      "{{Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là en juin.}}",
+      "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là une fois la course passée.",
     nature: "market",
     pli: "simple",
     icone: "planning",
@@ -275,7 +275,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Observatoire des pratiques sportives",
     objet: "Note de tendance — essor des séances à domicile",
     corps:
-      "Une application de séances guidées gratuites dépasse cinq millions d'utilisateurs. {{Notre enquête montre que les primo-pratiquants, ceux qui s'inscrivent en janvier, sont les premiers à préférer le domicile.}}",
+      "Une application de séances guidées gratuites dépasse cinq millions d'utilisateurs. Notre enquête montre que les primo-pratiquants, ceux des bonnes résolutions, sont les premiers à préférer le domicile.",
     signataire: "Le directeur d'études",
     effet: "Demande des bonnes résolutions −20 % pendant 2 tours",
     enJeu: "Le concurrent le plus dangereux n'est pas toujours une salle : c'est celui qui remplace le besoin.",

@@ -44,9 +44,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_pic_ecommerce",
     expediteur: "Centrale logistique Nordis · Direction des transports",
-    objet: "{{Appel à capacité pour le pic de fin d'année}}",
+    objet: "Appel à capacité pour notre pic d'activité",
     corps:
-      "{{Nos entrepôts passeront en trois-huit du quinze novembre au vingt-quatre décembre.}} Nous recherchons de la capacité auprès de l'ensemble de nos transporteurs référencés, aux conditions habituelles.",
+      "Nos entrepôts passeront en trois-huit pendant les six semaines de notre pic d'activité. Nous recherchons de la capacité auprès de l'ensemble de nos transporteurs référencés, aux conditions habituelles.",
     signataire: "Le directeur des transports",
     effet: "Demande de la distribution +35 % ce tour",
     enJeu: "Un pic ne se sert qu'avec une flotte disponible : la capacité se décide un {{trimestre}} à l'avance.",
@@ -302,7 +302,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Société d'autoroutes du Nord · Service des abonnements",
     objet: "Revalorisation annuelle des tarifs de péage",
     corps:
-      "Les tarifs applicables aux véhicules de classe 4 augmentent de six pour cent {{au premier janvier}} sur l'ensemble du réseau. Votre badge d'abonnement sera facturé au nouveau barème sans intervention de votre part.",
+      "Les tarifs applicables aux véhicules de classe 4 augmentent de six pour cent à la date de revalorisation sur l'ensemble du réseau. Votre badge d'abonnement sera facturé au nouveau barème sans intervention de votre part.",
     signataire: "Le service des abonnements",
     effet: "Coût variable par tournée +6 % pendant 2 tours",
     enJeu:

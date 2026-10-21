@@ -172,7 +172,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_banque_conciliante",
     expediteur: "Banque des Professions · Agence entreprises",
-    objet: "{{Financement de votre stock de fin d'année}}",
+    objet: "Financement de votre stock de saison",
     corps:
       "Votre taux de retour maîtrisé et la récurrence de votre clientèle nous conduisent à accepter le financement de votre stock de saison, à des conditions préférentielles valables deux {{trimestres}}.",
     signataire: "Votre chargée d'affaires",
@@ -201,7 +201,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_black_friday",
     expediteur: "Fédération du commerce en ligne · Note aux adhérents",
-    objet: "{{Préparation de l'opération commerciale de fin novembre}}",
+    objet: "Préparation de la grande opération commerciale du secteur",
     corps:
       "Les quatre jours de l'opération concentrent près d'un dixième du chiffre d'affaires annuel du secteur. Les principaux acteurs ont déjà lancé leurs campagnes de préchauffe. Les stocks doivent être en place la semaine précédente.",
     signataire: "Le délégué général",
@@ -392,7 +392,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Place de marché Alcôve · Direction des catégories",
     objet: "Révision du programme de mise en avant Décoration",
     corps:
-      "Au terme de l'examen {{trimestriel}}, la place de marché Alcôve {{redéploie son espace de tête de rayon vers la rentrée scolaire}} et réduit le programme de mise en avant de la décoration. Les boutiques référencées conservent leur fiche, mais le trafic issu de la catégorie sera nettement moindre pendant les deux {{trimestres}} suivants.",
+      "Au terme de l'examen {{trimestriel}}, la place de marché Alcôve redéploie son espace de tête de rayon vers d'autres catégories et réduit le programme de mise en avant de la décoration. Les boutiques référencées conservent leur fiche, mais le trafic issu de la catégorie sera nettement moindre pendant les deux {{trimestres}} suivants.",
     signataire: "La directrice des catégories",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
