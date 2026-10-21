@@ -46,7 +46,18 @@ const AVANT = JSON.parse(
  * fixture garde le texte d'avant, et c'est ici, et nulle part ailleurs, que le
  * texte au trimestre a le droit de s'en écarter.
  */
-const CORRECTIONS: { codes: string[]; avant: string; apres: string }[] = [];
+const CORRECTIONS: { codes: string[]; avant: string; apres: string }[] = [
+  {
+    // Passer du grossiste à 21 jours au cash & carry comptant supprime la dette
+    // fournisseurs, qui vaut les achats × min(1, 21 ÷ jours du tour) (`payableRatio`,
+    // engine/finance/statements.ts) : 21 jours d'achats, soit moins du quart des achats
+    // d'un trimestre, et non leur totalité. À l'année, « vos achats annuels » aurait
+    // été dix-sept fois trop.
+    codes: ["bistrot_t2_fournisseur", "bistrotg_t2_fournisseur"],
+    avant: "augmente le BFR du montant de vos achats trimestriels.",
+    apres: "augmente le BFR de 21 jours d'achats.",
+  },
+];
 
 /** Le texte au trimestre attendu : la fixture, corrections nommées appliquées. */
 function attenduAuTrimestre(code: string): string[] {

@@ -183,7 +183,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
       "Le gain de 14 % est immédiat et chiffrable. Le coût, celui de la qualité perçue, est différé et indirect.",
       "Comparer des critères qui ne se mesurent pas dans la même unité, c'est le travail d'une matrice multicritère.",
       "Chiffrez le gain : 1,40 € par couvert, soit ~{{entier: 1.4 * flux(6000)}} € {{par trimestre}} à {{entier: flux(6000)}} couverts. Comparez à ce que coûte une baisse de fréquentation du soir.",
-      "N'oubliez pas la trésorerie : passer de 21 jours à comptant supprime une dette fournisseurs, donc augmente le BFR du montant de vos achats {{trimestriels}}.",
+      "N'oubliez pas la trésorerie : passer de 21 jours à comptant supprime une dette fournisseurs, donc augmente le BFR de 21 jours d'achats.",
     ]),
     trigger: { round: 2 },
     weight: 1,
