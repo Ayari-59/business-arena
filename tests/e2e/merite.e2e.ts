@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { BASE, ouvrirNavigateur, texte } from "./helpers/browser";
 import { mesurerContraste } from "./helpers/contraste";
+import { PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE } from "@/pedagogy/merite/reference";
 
 /**
  * MÉRITE OU CHANCE, DANS UN NAVIGATEUR : une partie solo jouée jusqu'au bilan,
@@ -156,7 +157,9 @@ describe("mérite ou chance, de la partie au bilan", () => {
     // 1er le plus souvent sur les marchés rejoués : le verdict le dit d'abord.
     if (!solides && gagneSonMarche(m.fourchette)) expect(m.verdict).toMatch(/^(Chance|Leçon)\. .*[Vv]ous gagnez votre marché \(1re place sur \d+ des 30\), mais /);
     // La référence se nomme, et la ligne qui dit ce qu'elle fait est là.
-    expect(m.quiEstLaReference).toMatch(/^Un bon gestionnaire part de la gestion neutre du secteur/);
+    // Une partie créée aujourd'hui est une partie à la demande : son bilan dit ce que fait
+    // SON bon gestionnaire, lu de la donnée (`PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE`).
+    expect(m.quiEstLaReference).toBe(PHRASE_DE_LA_REFERENCE_A_LA_DEMANDE);
     expect(m.rangeeReference).toBe("Un bon gestionnaire");
     expect(m.fourchette).toMatch(/^Sur 30 marchés possibles, avec vos décisions : /);
     expect(m.pointsJoueur).toBe(30);
