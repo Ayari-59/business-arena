@@ -118,9 +118,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_pretexte_fete",
     expediteur: "Centrale de la maille · Note de tendance",
-    objet: "Saison des cadeaux avancée de trois semaines",
+    objet: "{{Saison des cadeaux avancée de trois semaines}}",
     corps:
-      "Les magazines féminins ont lancé la saison plus tôt que d'habitude. Nos adhérents constatent une arrivée précoce des clientes fidèles, liste en main, sur les pulls et les cardigans.",
+      "{{Les magazines féminins ont lancé la saison plus tôt que d'habitude.}} Nos adhérents constatent une arrivée précoce des clientes fidèles, liste en main, sur les pulls et les cardigans.",
     signataire: "Le service tendances",
     effet: "Demande des clientes fidèles +22 % ce tour (pulls et cardigans)",
     enJeu:
@@ -175,7 +175,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_commande_ce",
     expediteur: "CSE des Papeteries de la Lys",
-    objet: "Commande ferme — {{entier: commande_boutique_commande_ce}} pulls pour notre arbre de Noël",
+    objet: "Commande ferme — {{entier: commande_boutique_commande_ce}} pulls {{pour notre arbre de Noël}}",
     corps:
       "Notre comité souhaite offrir un pull à chacun de nos {{lettres: commande_boutique_commande_ce}} salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
     signataire: "Le secrétaire du comité",
@@ -304,7 +304,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_marche_noel",
     expediteur: "Mairie · Direction du commerce",
-    objet: "Implantation du marché de Noël devant votre boutique",
+    objet: "{{Implantation du marché de Noël devant votre boutique}}",
     corps:
       "Les chalets seront installés sur votre section de rue pour trois semaines. Les éditions précédentes ont amené dix mille passants supplémentaires chaque week-end. L'accès à votre vitrine reste dégagé.",
     signataire: "L'adjointe au commerce",
@@ -365,7 +365,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Chambre de commerce et d'industrie · Observatoire du commerce",
     objet: "Les Tricots Valmont annoncent trois ouvertures dans l'agglomération",
     corps:
-      "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille. Elle annonce des prix d'appel inférieurs d'environ un cinquième à ceux pratiqués dans les rues commerçantes. Notre observatoire s'attend à un déplacement d'une partie de la clientèle.",
+      "{{L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille.}} Elle annonce des prix d'appel inférieurs d'environ un cinquième à ceux pratiqués dans les rues commerçantes. Notre observatoire s'attend à un déplacement d'une partie de la clientèle.",
     signataire: "Le responsable de l'observatoire",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
@@ -380,7 +380,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Galeries Montclair · Direction du merchandising",
     objet: "Ajustement des quantités convenues pour votre collection",
     corps:
-      "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement. Nous ajustons donc à la baisse les quantités convenues pour les deux {{trimestres}} restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
+      "{{La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.}} Nous ajustons donc à la baisse les quantités convenues pour les deux {{trimestres}} restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
     signataire: "La responsable du merchandising",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:

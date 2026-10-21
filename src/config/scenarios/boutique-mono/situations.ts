@@ -187,15 +187,15 @@ const SOURCES: SituationDef[] = [
   {
     code: "bmono_t4_noel",
     category: "contexte_marche",
-    title: "{{Le trimestre}} qui fait l'année",
+    title: "{{Le trimestre qui fait l'année}}",
     narrative:
-      "Le quatrième {{trimestre}} pèse près d'une fois et demie un {{trimestre}} ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année. Votre grossiste veut vos volumes maintenant : les délais de livraison sont de six semaines, et il ne reprendra rien.",
+      "{{Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année.}} Votre grossiste veut vos volumes maintenant : les délais de livraison sont de six semaines, et il ne reprendra rien.",
     problem:
-      "Combien commander pour Noël, et que risquez-vous en vous trompant dans un sens ou dans l'autre ?",
+      "{{Combien commander pour Noël, et que risquez-vous en vous trompant dans un sens ou dans l'autre ?}}",
     diagnosticOptions: [
       {
         id: "both_risks",
-        label: "Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort jusqu'au printemps",
+        label: "{{Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort jusqu'au printemps}}",
         correct: true,
       },
       {
@@ -216,7 +216,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "wait_and_see",
-        label: "Attendre de voir les premières ventes de décembre pour se réapprovisionner",
+        label: "{{Attendre de voir les premières ventes de décembre pour se réapprovisionner}}",
         correct: false,
       },
     ],
@@ -224,7 +224,7 @@ const SOURCES: SituationDef[] = [
       {
         id: "transformation_noel",
         prompt:
-          "À Noël votre trafic passe de 4 000 à 5 800 visiteurs, mais votre taux de transformation tombe de 30 à 25 % faute de réassort. À panier moyen inchangé de 62 €, que coûte cette baisse ?",
+          "{{À Noël votre trafic passe}} de 4 000 à 5 800 visiteurs, mais votre taux de transformation tombe de 30 à 25 % faute de réassort. À panier moyen inchangé de 62 €, que coûte cette baisse ?",
         options: [
           { id: "a", label: "17 980 € : 290 clients entrés et repartis les mains vides" },
           { id: "b", label: "Rien, puisque le nombre de clients servis augmente quand même" },
@@ -269,7 +269,7 @@ const SOURCES: SituationDef[] = [
     decisionLevers: [
       { field: "productionPlan", direction: "up", hint: "Le pic saisonnier exige un stock supérieur à la normale : dimensionnez la commande sur la demande anticipée, dans la limite de votre capacité de traitement." },
       { field: "marketingBudget", direction: "review", hint: "Le trafic du pic est déjà acquis par la saison, mais le taux de transformation et le panier moyen dépendent de l'animation en boutique : chaque point de conversion perdu coûte des milliers d'euros." },
-      { field: "price", direction: "review", hint: "À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen." },
+      { field: "price", direction: "review", hint: "{{À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.}}" },
     ],
   },
   {
@@ -277,7 +277,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Le coton a flambé",
     narrative:
-      "Votre grossiste annonce +18 % sur la prochaine collection : mauvaise récolte, fret en hausse. Vos étiquettes, elles, sont imprimées. {{Le trimestre}} de Noël vient de vider votre trésorerie dans le réassort.",
+      "Votre grossiste annonce +18 % sur la prochaine collection : mauvaise récolte, fret en hausse. Vos étiquettes, elles, sont imprimées. {{Le trimestre de Noël vient de vider votre trésorerie dans le réassort.}}",
     problem:
       "Répercutez-vous la hausse sur vos prix de vente, ou l'absorbez-vous sur votre marge ?",
     diagnosticOptions: [
@@ -506,7 +506,7 @@ const SOURCES: SituationDef[] = [
       "Comparez deux choses dans vos états : le résultat net du tour, et la variation de votre trésorerie.",
       "Regardez ce qui a bougé au bilan entre l'ouverture et la clôture : le stock, les créances, les dettes fournisseurs.",
       "Le résultat est une opinion, la trésorerie est un fait. Entre les deux, il y a le besoin en fonds de roulement.",
-      "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. Le réassort de Noël et les comités d'entreprise à 45 jours travaillent dans le même sens.",
+      "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. {{Le réassort de Noël}} et les comités d'entreprise à 45 jours travaillent dans le même sens.",
       "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock. Le troisième, allonger le crédit fournisseur, se négocie : il ne se décrète pas.",
     ]),
     trigger: { detect: "profitable_illiquid" },
@@ -520,9 +520,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "bmono_t3_soldes",
     category: "decision_strategique",
-    title: "Solder, ou garder pour l'an prochain",
+    title: "{{Solder, ou garder pour l'an prochain}}",
     narrative:
-      "Il reste 400 pièces de la collection de printemps, achetées 18 € l'unité et affichées 45 €. Elles ne partiront plus au tarif plein. Un client déstockeur en offre 22 € l'unité, tout de suite. Accepter, c'est décider une démarque ; refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la mode aura tourné.",
+      "Il reste 400 pièces {{de la collection de printemps}}, achetées 18 € l'unité et affichées 45 €. Elles ne partiront plus au tarif plein. Un client déstockeur en offre 22 € l'unité, tout de suite. Accepter, c'est décider une démarque ; {{refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la mode aura tourné}}.",
     problem:
       "Vendre à 22 € une pièce payée 18 €, est-ce une bonne affaire ou une perte ?",
     diagnosticOptions: [
@@ -539,7 +539,7 @@ const SOURCES: SituationDef[] = [
       {
         id: "rotation",
         label:
-          "Le mètre de linéaire qu'elles occupent porterait la collection suivante, qui tournerait deux fois d'ici le printemps",
+          "{{Le mètre de linéaire qu'elles occupent porterait la collection suivante, qui tournerait deux fois d'ici le printemps}}",
         correct: true,
       },
       {
@@ -596,7 +596,7 @@ const SOURCES: SituationDef[] = [
     hints: hints([
       "Posez-vous une seule question : que change ma décision d'aujourd'hui, en euros qui entrent ou qui sortent ?",
       "Le prix d'achat de 18 € a été payé il y a des mois. Refuser 22 € ne vous les rendra pas.",
-      "Les deux options réelles sont : 22 € tout de suite, ou une vente incertaine dans un an, place occupée entre-temps.",
+      "Les deux options réelles sont : 22 € tout de suite, ou {{une vente incertaine dans un an}}, place occupée entre-temps.",
       "Un coût déjà engagé ne doit jamais entrer dans un arbitrage : il est le même quelle que soit l'option retenue.",
       "Comparez les seuls flux que la décision modifie : 22 € encaissés contre une réserve libérée. Et regardez la rotation, qui est l'argument du commerçant : une pièce qui dort une saison entière est un emplacement qui n'a rien vendu, alors que la collection suivante y tournerait.",
     ]),
@@ -612,7 +612,7 @@ const SOURCES: SituationDef[] = [
     category: "decision_strategique",
     title: "L'argent dort dans la réserve",
     narrative:
-      "Votre banquier reçoit les comptes de l'année. La boutique dégage un résultat honorable, mais il constate que le stock et les créances immobilisent une somme considérable, et que cet argent ne rapporte rien tant qu'il n'est pas vendu ni encaissé. Il vous demande le budget de trésorerie du prochain exercice.",
+      "{{Votre banquier reçoit les comptes de l'année.}} La boutique dégage un résultat honorable, mais il constate que le stock et les créances immobilisent une somme considérable, et que cet argent ne rapporte rien tant qu'il n'est pas vendu ni encaissé. Il vous demande le budget de trésorerie du prochain exercice.",
     problem:
       "Comment prévoir les mois où la caisse sera tendue, avant d'y être ?",
     diagnosticOptions: [
@@ -623,7 +623,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "saison",
-        label: "Les achats de la collection de Noël se paient avant que Noël ne rapporte quoi que ce soit",
+        label: "{{Les achats de la collection de Noël se paient avant que Noël ne rapporte quoi que ce soit}}",
         correct: true,
       },
       {
@@ -689,9 +689,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "bmono_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "La caisse pleine d'après-soldes",
+    title: "{{La caisse pleine d'après-soldes}}",
     narrative:
-      "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.",
+      "{{Les soldes ont vidé la réserve et rempli le compte}} : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. {{La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.}}",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -732,7 +732,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "boutique_saison_achats",
-        prompt: "Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…",
+        prompt: "{{Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…}}",
         options: [
           { id: "a", label: "Le stock s'est transformé en argent, et cet argent va repartir en stock à la commande suivante" },
           { id: "b", label: "L'entreprise a dégagé un résultat exceptionnel sur {{le trimestre}}" },
