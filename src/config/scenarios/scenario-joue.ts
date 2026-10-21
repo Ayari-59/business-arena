@@ -86,6 +86,20 @@ export interface ReglagesDuScenarioJoue {
 }
 
 /**
+ * LES CORRECTIFS QU'UNE PARTIE CRÉÉE AUJOURD'HUI FIGE DANS SON INSTANTANÉ. Une seule
+ * liste, lue par la création de partie (`services/game-creation.service.ts`) et par le
+ * lot de l'examen (`pedagogy/examen/lot.ts`), qui mesure la difficulté d'une graine en
+ * simulant la partie du candidat : chacun posait ses drapeaux pour soi, et le lot mesurait
+ * encore contre les anciens concurrents et l'ancien parc une partie qui jouait les
+ * nouveaux. Un correctif ajouté ici vaut pour les deux à la fois.
+ */
+export const CORRECTIFS_DES_PARTIES_NOUVELLES = {
+  concurrentsAssainis: true,
+  parcSansDoublon: true,
+  propositionALaDemande: true,
+} as const satisfies Partial<ReglagesDuScenarioJoue>;
+
+/**
  * LA QUALITÉ PROPOSÉE D'UNE PARTIE DÉJÀ COMMENCÉE : celle de son instantané,
  * pas celle du registre d'aujourd'hui (`qualiteProposee`, engine/types.ts).
  *

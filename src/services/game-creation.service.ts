@@ -45,7 +45,7 @@ import {
   applyPeriodicityToCompany,
   type Periodicity,
 } from "@/config/scenarios/periodicity";
-import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "@/config/scenarios/scenario-joue";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import {
@@ -344,13 +344,10 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     roundsCount: args.roundsCount,
     periodicity: args.periodicity,
     investmentStories: args.investmentStories,
-    // Les concurrents corrigés, figés à la création : une partie déjà
+    // Les concurrents corrigés, le parc sans doublon, la proposition à la demande et
+    // le bon gestionnaire qui la tient, figés à la création : une partie déjà
     // commencée garde les siens jusqu'à son dernier tour.
-    concurrentsAssainis: true,
-    // Le parc corrigé, figé de même : une machine achetée compte une fois.
-    parcSansDoublon: true,
-    // La proposition à la demande et le bon gestionnaire qui la tient, figés de même.
-    propositionALaDemande: true,
+    ...CORRECTIFS_DES_PARTIES_NOUVELLES,
   });
   // LE TOUR D'ESSAI se joue sur une autre graine et sans événement scripté : tant
   // qu'il dure, la partie porte SON scénario et SA graine, la vraie partie attend
@@ -371,9 +368,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
             roundsCount: args.roundsCount,
             periodicity: args.periodicity,
             investmentStories: args.investmentStories,
-            concurrentsAssainis: true,
-            parcSansDoublon: true,
-            propositionALaDemande: true,
+            ...CORRECTIFS_DES_PARTIES_NOUVELLES,
           }),
           args.essai.tours,
         )

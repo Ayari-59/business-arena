@@ -610,7 +610,7 @@ function issue(graine: number, resultat: number, rang = 2, parTour?: number[]): 
   const tours = parTour ?? [resultat / 2, resultat / 2];
   return {
     graine,
-    joueur: { ipg: 50, rang, resultatNetCumule: resultat, chiffreDAffairesCumule: 100_000, tresorerieFinale: 1000, defaillant: false },
+    joueur: { ipg: 50, rang, resultatNetCumule: resultat, chiffreDAffairesCumule: 100_000, tresorerieFinale: 1000, tresorerieLaPlusBasse: 1000, defaillant: false },
     sur: 3,
     resultatParTour: tours,
     parEquipe: {},

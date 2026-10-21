@@ -1,6 +1,6 @@
 import { aLaMesureDuNiveau, neutralDecisions, type LeviersOuverts } from "@/engine/bots";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
-import { avecLaQualiteProposee, sansDepensesPonctuelles } from "@/services/decision-baseline";
+import { avecLaQualiteProposee, departDuFormulaire, sansDepensesPonctuelles } from "@/services/decision-baseline";
 
 /**
  * Reconduction des décisions du tour précédent quand une équipe humaine
@@ -32,11 +32,16 @@ export function carryOverDecisions(prev: RoundDecisions): RoundDecisions {
 }
 
 /**
- * Décisions par défaut quand aucune soumission ni historique n'existe.
- * Basées sur les décisions neutres du secteur joué, avec un emprunt nul, et
- * la qualité que le formulaire lui aurait proposée (`avecLaQualiteProposee`) :
- * l'équipe absente reçoit la proposition de son écran, pas une autre. Un
- * levier qualité fermé garde la valeur neutre, celle du champ caché.
+ * Décisions par défaut quand aucune soumission ni historique n'existe, avec un
+ * emprunt nul : l'équipe absente reçoit la proposition de son écran, pas une autre.
+ *
+ * Une partie à la demande (`propositionALaDemande`, figé à la création) reçoit
+ * exactement ce que son formulaire propose quand il n'a rien à reconduire
+ * (`departDuFormulaire`) : le plan sans l'avenir, sans R&D ni communication. La
+ * gestion neutre qu'elle recevait avant n'était pas en phase avec son écran.
+ * Une partie d'avant garde le chemin d'avant, au bit près : les décisions neutres
+ * du secteur, la qualité que le formulaire lui aurait proposée
+ * (`avecLaQualiteProposee`), un levier qualité fermé gardant la valeur neutre.
  */
 export function fallbackDecisions(
   scenario: EngineScenarioConfig,
@@ -45,7 +50,10 @@ export function fallbackDecisions(
   /** Les leviers figés de la partie : l'équipe absente ne décide qu'avec eux. */
   leviers: LeviersOuverts | null = null,
 ): RoundDecisions {
-  const neutre = neutralDecisions({ scenario, state, roundIndex, leviers });
-  const proposee = aLaMesureDuNiveau(avecLaQualiteProposee(scenario, neutre), leviers, neutre);
+  const proposee = (() => {
+    if (scenario.propositionALaDemande === true) return departDuFormulaire(scenario, state, roundIndex, leviers);
+    const neutre = neutralDecisions({ scenario, state, roundIndex, leviers });
+    return aLaMesureDuNiveau(avecLaQualiteProposee(scenario, neutre), leviers, neutre);
+  })();
   return { ...proposee, finance: { ...(proposee.finance ?? {}), newLoan: 0, loanRepayment: 0 } };
 }

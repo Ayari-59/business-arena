@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { simulateRound } from "@/engine/simulation";
 import { neutralDecisions } from "@/engine/bots";
 import { SCENARIOS } from "@/config/scenarios/registry";
-import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "@/config/scenarios/scenario-joue";
 import type { CompanyState, EngineScenarioConfig } from "@/engine/types";
 
 /**
@@ -62,7 +62,10 @@ describe("le réglage se pose à la création d'une partie, et nulle part ailleu
 
   it("la création d'une partie le demande, et le rejeu relit celui de la partie", () => {
     const creation = readFileSync("src/services/game-creation.service.ts", "utf8");
-    expect(creation.match(/parcSansDoublon: true/g)?.length).toBe(2);
+    // La création pose les correctifs des parties nouvelles, pour la partie et son tour
+    // d'essai ; ce correctif en fait partie (le lot de l'examen lit la même liste).
+    expect(creation.match(/\.\.\.CORRECTIFS_DES_PARTIES_NOUVELLES/g)?.length).toBe(2);
+    expect(CORRECTIFS_DES_PARTIES_NOUVELLES.parcSansDoublon).toBe(true);
     const rejeu = readFileSync("src/services/merite.service.ts", "utf8");
     expect(rejeu).toMatch(/parcSansDoublon: snapshot\.parcSansDoublon === true/);
   });

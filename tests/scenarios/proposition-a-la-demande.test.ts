@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { NOVA_DEFINITION, scenarioByCode, scenarioCodeForLevel } from "@/config/scenarios/registry";
-import { avecLaQualiteProposeeDe, composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { avecLaQualiteProposeeDe, composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "@/config/scenarios/scenario-joue";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
 import { leviersFigesDuProfil, presetByLevel, profilDuNiveau, type DifficultyPreset } from "@/config/difficulty";
@@ -120,7 +120,10 @@ describe("le drapeau se pose à la création d'une partie, et nulle part ailleur
 
   it("la création d'une partie le demande, pour la partie et son tour d'essai, et le bilan relit celui de la partie", () => {
     const creation = readFileSync("src/services/game-creation.service.ts", "utf8");
-    expect(creation.match(/propositionALaDemande: true/g)?.length).toBe(2);
+    // La création pose les correctifs des parties nouvelles, pour la partie et son tour
+    // d'essai ; ce correctif en fait partie (le lot de l'examen lit la même liste).
+    expect(creation.match(/\.\.\.CORRECTIFS_DES_PARTIES_NOUVELLES/g)?.length).toBe(2);
+    expect(CORRECTIFS_DES_PARTIES_NOUVELLES.propositionALaDemande).toBe(true);
     const rejeu = readFileSync("src/services/merite.service.ts", "utf8");
     expect(rejeu).toMatch(/propositionALaDemande: snapshot\.propositionALaDemande === true/);
   });

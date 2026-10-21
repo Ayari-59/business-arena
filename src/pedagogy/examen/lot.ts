@@ -30,7 +30,7 @@
 import { botDecisions, botPersonalityFromSeed, neutralDecisions, soldByProduct, ventesDuTour, type BotProfile } from "@/engine/bots";
 import { simulateRound } from "@/engine/simulation";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, EventInstance, RoundDecisions } from "@/engine/types";
-import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "@/config/scenarios/scenario-joue";
 import { applyPeriodicityToCompany, type Periodicity } from "@/config/scenarios/periodicity";
 import { presetByLevel, profilDuNiveau } from "@/config/difficulty";
 import { investissementPlafonne } from "@/engine/investment/plafond";
@@ -95,6 +95,8 @@ export function scenarioDeLExamen(r: ReglagesDeLExamen, graine: number): EngineS
     roundsCount: r.tours,
     periodicity: r.periodicite,
     investmentStories: true,
+    // Les correctifs que la partie du candidat fige à sa création : le lot mesure CE jeu.
+    ...CORRECTIFS_DES_PARTIES_NOUVELLES,
   });
 }
 

@@ -11,6 +11,7 @@ import { rejeuxDeLEtalon } from "@/pedagogy/merite/etalons";
 import { GRAINES_DU_MERITE, marcheRejoue } from "@/pedagogy/merite/verdict";
 import {
   GRILLES,
+  GRILLES_VERSION_3,
   GRILLE_BUSINESS_ARENA_2026,
   GRILLE_DECISION_D_ABORD,
   REFERENCE_GESTION_NEUTRE,
@@ -189,19 +190,29 @@ describe("l'examen note contre la gestion neutre du secteur : les copies témoin
     it(`${t.nom} : la même note qu'avant le lot, ligne par ligne`, () => {
       const { base, ouverts } = partieEnMemoire(t.niveau, t.entreprise);
       const partie = jouer(base, t.strategie(ouverts));
-      [GRILLE_BUSINESS_ARENA_2026, GRILLE_DECISION_D_ABORD].forEach((grille, i) => {
-        // L'étalon des grilles version 1 : les pondérations des lignes n'ont pas changé
-        // depuis, seul l'étalon l'a fait, et c'est contre celui-là que ces notes ont été
-        // relevées.
+      // CES NOTES SONT CELLES DES GRILLES VERSION 1 À 3, dont les pondérations n'ont pas
+      // changé : seul l'étalon l'a fait (contre lequel ces notes ont été relevées), puis les
+      // seuils. La version 4 change la tenue financière, et donc la note entière ; les
+      // examens créés avant gardent leur copie de la version 3, et ces notes-là ne doivent
+      // jamais dériver. Elles se relèvent donc sur la version 3, telle que publiée.
+      GRILLES_VERSION_3.forEach((grille, i) => {
         const c = noter(grille, partie, ouverts, "gestion-neutre");
         const attendu = t.notes[i]!;
         expect(c.note, `${grille.code} : note`).toBeCloseTo(attendu.note, 1);
         expect(points(c, "battre-la-reference"), `${grille.code} : battre`).toBeCloseTo(attendu.battre, 2);
         expect(points(c, "ecart-a-la-reference"), `${grille.code} : écart`).toBeCloseTo(attendu.ecart, 2);
         expect(points(c, "rang"), `${grille.code} : rang`).toBeCloseTo(attendu.rang, 2);
-        // Version 3 : les seuils de niveau entrent dans la grille, ni les points ni l'étalon
-        // ne bougent, et ces notes non plus.
         expect(c.grille.version).toBe(3);
+      });
+      // La version 4 ne touche que la tenue financière : la qualité des décisions et le rang
+      // gardent, au centième, les points des témoins.
+      [GRILLE_BUSINESS_ARENA_2026, GRILLE_DECISION_D_ABORD].forEach((grille, i) => {
+        const c = noter(grille, partie, ouverts, "gestion-neutre");
+        const attendu = t.notes[i]!;
+        expect(points(c, "battre-la-reference"), `${grille.code} v4 : battre`).toBeCloseTo(attendu.battre, 2);
+        expect(points(c, "ecart-a-la-reference"), `${grille.code} v4 : écart`).toBeCloseTo(attendu.ecart, 2);
+        expect(points(c, "rang"), `${grille.code} v4 : rang`).toBeCloseTo(attendu.rang, 2);
+        expect(c.grille.version).toBe(4);
       });
     }, 60_000);
   }
@@ -232,6 +243,9 @@ describe("l'étalon est écrit dans la grille, et la notation figée l'enregistr
     // Version 3 : les seuils de niveau entrent dans la grille ; même étalon.
     "business-arena-2026@3": "gestion-neutre-gelee",
     "decision-d-abord@3": "gestion-neutre-gelee",
+    // Version 4 : deux lignes graduées dans la tenue financière ; même étalon.
+    "business-arena-2026@4": "gestion-neutre-gelee",
+    "decision-d-abord@4": "gestion-neutre-gelee",
   };
 
   it("chaque grille publiée nomme son étalon, celui de sa version, et c'est sa dernière version", () => {
@@ -243,7 +257,9 @@ describe("l'étalon est écrit dans la grille, et la notation figée l'enregistr
       expect(Math.max(...versions), `${g.code} : la version publiée est la dernière de la table`).toBe(g.version);
       expect(g.reference).toEqual(REFERENCE_GESTION_NEUTRE_GELEE);
     }
-    expect(GRILLES.map((g) => `${g.code}@${g.version}`)).toEqual(["business-arena-2026@3", "decision-d-abord@3"]);
+    expect(GRILLES.map((g) => `${g.code}@${g.version}`)).toEqual(["business-arena-2026@4", "decision-d-abord@4"]);
+    // La version d'avant reste écrite, avec le même étalon : des examens la gardent.
+    for (const g of GRILLES_VERSION_3) expect(PUBLIEES[`${g.code}@${g.version}`], `${g.code}@${g.version}`).toBe(g.reference.code);
   });
 
   it("la gestion neutre du secteur se nomme et se définit ; aucun libellé ne dit plus « gestion de référence »", () => {
@@ -269,7 +285,7 @@ describe("l'étalon est écrit dans la grille, et la notation figée l'enregistr
   });
 
   it("la copie notée garde l'étalon, avec sa définition ; une notation d'avant se lit contre la gestion neutre", () => {
-    const marche = { resultat: 1000, tresorerie: 10, defaillant: false, rang: 1 };
+    const marche = { resultat: 1000, tresorerie: 10, tresorerieLaPlusBasse: 10, chiffreDAffaires: 5000, defaillant: false, rang: 1 };
     const c = noterLaCopie(
       GRILLE_BUSINESS_ARENA_2026,
       { sur: 3, joueur: [marche], reference: [{ ...marche, resultat: 500 }], situations: null },
@@ -277,7 +293,7 @@ describe("l'étalon est écrit dans la grille, et la notation figée l'enregistr
     );
     expect(c.grille).toEqual({
       code: "business-arena-2026",
-      version: 3,
+      version: 4,
       nom: "Business Arena 2026",
       reference: REFERENCE_GESTION_NEUTRE_GELEE,
       seuils: GRILLE_BUSINESS_ARENA_2026.seuils,
