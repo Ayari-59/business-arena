@@ -1,6 +1,8 @@
-import { ECOMMERCE_SITUATIONS } from "../ecommerce/situations";
+import { ECOMMERCE_SOURCES } from "../ecommerce/situations";
 import { patchSituationText, type SituationTextPatch } from "../situation-patch";
 import type { SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { ecommerceGammeScenario } from "./index";
 
 /**
  * Situations pédagogiques de PIXEL & CO · GAMME.
@@ -13,6 +15,10 @@ import type { SituationDef } from "../situation-kit";
  * une collection qui se bâtit avant de se vendre. Les situations sont
  * HÉRITÉES du pure player : même structure, sous d'autres codes ; le texte de
  * celles que le mix change est réécrit, les autres sont reprises telles quelles.
+ *
+ * L'HÉRITAGE PORTE SUR LES SOURCES À JETONS, pas sur le texte rendu du pure
+ * player : chaque situation, reprise ou réécrite, se rend ensuite pour le
+ * scénario de la gamme et à la durée du tour de SA partie (`situation-texte.ts`).
  */
 
 const CODE = (code: string) => code.replace(/^ecom(merce)?_/, "ecomg_");
@@ -43,7 +49,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   ecom_t4_pic: {
     title: "Black Friday et fêtes, sur quatre rayons",
     narrative:
-      "Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire, et les luminaires s'y vendent presque le double. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare 7 000 commandes par trimestre, un coussin comme un fauteuil, pas une de plus.",
+      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire, et les luminaires s'y vendent presque le double. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare {{entier: capacite}} commandes {{par trimestre}}, un coussin comme un fauteuil, pas une de plus.",
     problem:
       "Comment préparer un pic qui exige à la fois du stock par rayon, de la capacité d'expédition et du budget d'acquisition, et quel rayon servir en premier si la place manque ?",
     diagnosticLabels: [
@@ -53,8 +59,8 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Il suffit d'avoir du stock : à Noël, tout se vend",
     ],
     hintTexts: [
-      "Regardez la saisonnalité de chaque rayon : quel coefficient s'applique au quatrième trimestre en décoration, en mobilier, en luminaires ?",
-      "Le pic vaut 1,6 fois un trimestre ordinaire en décoration, 1,45 en mobilier, 1,7 en luminaires. Comparez la somme à ce que votre entrepôt sait traiter.",
+      "Regardez la saisonnalité de chaque rayon : quel coefficient s'applique au quatrième {{trimestre}} en décoration, en mobilier, en luminaires ?",
+      "Le pic vaut 1,6 fois un {{trimestre}} ordinaire en décoration, 1,45 en mobilier, 1,7 en luminaires. Comparez la somme à ce que votre entrepôt sait traiter.",
       "Trois plafonds à vérifier ensemble : le stock disponible de chaque rayon, la capacité de préparation, commune à tous, et le budget d'acquisition qui déclenche les commandes.",
       "La contrainte la plus serrée décide de tout : si l'entrepôt sature, chaque commande de mobilier prise laisse 48 € et chaque commande de décoration 19 €. Le mix du pic est une décision.",
       "Et n'oubliez pas le calendrier des flux : le stock et la publicité se paient ce tour-ci, une partie des ventes s'encaisse au suivant, sur chaque place de marché.",
@@ -87,20 +93,20 @@ const PATCHES: Record<string, SituationTextPatch> = {
   ecom_detect_idle_cash: {
     title: "L'après-fêtes, et la capsule qui attend",
     narrative:
-      "Le pic des fêtes a rempli le compte : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 14 %. Le trimestre qui s'ouvre est le plus creux de l'année, les retours de décembre ne sont pas tous remboursés, et le projet de collection de créateurs attend toujours ses 20 000 €.",
+      "Le pic des fêtes a rempli le compte : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre}} qui s'ouvre est le plus creux de l'année, les retours de décembre ne sont pas tous remboursés, et le projet de collection de créateurs attend toujours ses 20 000 €.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans la capsule, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [
       "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner, que le placement ou un projet peut combler",
-      "Le montant bloqué ou investi ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir, rayon par rayon",
+      "Le montant bloqué ou investi ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, rayon par rayon",
       "Puisque le placement rapporte, autant y mettre la totalité du solde",
       "Placer améliore le résultat d'exploitation de l'entreprise",
     ],
     hintTexts: [
-      "Comparez votre solde aux charges de structure d'un trimestre : de combien de trimestres d'avance disposez-vous vraiment ?",
+      "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous vraiment ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; une commande de la capsule laisse 40 € de marge, mais seulement une fois la collection bâtie.",
       "Attention : le placement est bloqué jusqu'au tour suivant, et la R&D de la capsule est une charge du tour. Ni l'un ni l'autre ne réglera ce qui tombera d'ici là.",
-      "Projetez le trimestre creux, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
+      "Projetez {{le trimestre}} creux, rayon par rayon : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
@@ -108,8 +114,11 @@ const PATCHES: Record<string, SituationTextPatch> = {
   },
 };
 
-export const ECOMMERCE_GAMME_SITUATIONS: SituationDef[] = ECOMMERCE_SITUATIONS.map((s) => {
+const SOURCES: SituationDef[] = ECOMMERCE_SOURCES.map((s) => {
   const patch = PATCHES[s.code];
   const renamed: SituationDef = { ...s, code: CODE(s.code) };
   return patch ? patchSituationText(renamed, patch) : renamed;
 });
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const ECOMMERCE_GAMME_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, ecommerceGammeScenario);

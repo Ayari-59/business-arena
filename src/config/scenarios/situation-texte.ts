@@ -83,6 +83,17 @@ const MOTS: Record<string, { month: string; year: string }> = {
     month: "engagements annuels plutôt que mensuels",
     year: "engagements pluriannuels plutôt qu'annuels",
   },
+  // --- groupe batiment-boutique-ecommerce ---
+  // Une part du tour, à la même cadence : deux mois de location sur trois en
+  // font vingt jours sur trente, et huit mois sur douze.
+  "deux mois par trimestre": { month: "vingt jours par mois", year: "huit mois par an" },
+  "qu'un mois par trimestre": { month: "que dix jours par mois", year: "que quatre mois par an" },
+  // Un budget plus fin que le tour : un cran sous la durée du tour.
+  "mois par mois, pas trimestre par trimestre": {
+    month: "semaine par semaine, pas mois par mois",
+    year: "mois par mois, pas exercice par exercice",
+  },
+  // --- fin du groupe batiment-boutique-ecommerce ---
 };
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -130,6 +141,32 @@ const GRANDEURS: Record<string, Grandeur> = {
   attrition: (s) => tauxLu(abonnementDe(s).baseChurnRate),
   /** Le nombre de tours dans une année. */
   tours_par_an: (s) => 360 / s.roundDays,
+  // --- groupe batiment-boutique-ecommerce ---
+  /**
+   * La capacité du parc de départ pour un tour : nombre × capacité de chaque type
+   * d'équipement. C'est la règle du moteur, qui calcule la capacité machine depuis
+   * le parc quand le scénario en a un.
+   */
+  capacite: (s) => {
+    if (!s.equipment) throw new Error("Situation : le jeton « capacite » suppose un parc d'équipements");
+    const types = new Map(s.equipment.types.map((t) => [t.code, t.capacityPerUnit]));
+    return s.equipment.initialFleet.reduce((total, e) => {
+      const parMachine = types.get(e.typeCode);
+      if (parMachine === undefined) throw new Error(`Situation : équipement inconnu « ${e.typeCode} »`);
+      return total + e.count * parMachine;
+    }, 0);
+  },
+  /** Le salaire d'un salarié pour un tour. */
+  salaire: (s) => {
+    if (!s.hr) throw new Error("Situation : le jeton « salaire » suppose un module RH");
+    return s.hr.salaryPerEmployeePerRound;
+  },
+  /** Le coût d'une embauche : un ponctuel, que la durée du tour ne change pas. */
+  embauche: (s) => {
+    if (!s.hr) throw new Error("Situation : le jeton « embauche » suppose un module RH");
+    return s.hr.hiringCost;
+  },
+  // --- fin du groupe batiment-boutique-ecommerce ---
 };
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
@@ -144,6 +181,12 @@ const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> 
    * par `flux`.
    */
   flux: (x, s) => (x * s.roundDays) / 90,
+  // --- groupe batiment-boutique-ecommerce ---
+  /** À la dizaine la plus proche, comme un énoncé arrondit un seuil : « environ 990 m² ». */
+  dizaine: (x) => Math.round(net(x) / 10) * 10,
+  /** L'entier supérieur : un seuil en unités ne s'atteint qu'à l'unité entière suivante. */
+  plafond: (x) => Math.ceil(net(x)),
+  // --- fin du groupe batiment-boutique-ecommerce ---
 };
 
 /** Une petite arithmétique : nombres, grandeurs, fonctions, + − × ÷ et parenthèses. */
@@ -239,6 +282,28 @@ function points(x: number): string {
   return `${nombre} ${Math.abs(v) < 2 ? "point" : "points"}`;
 }
 
+// --- groupe batiment-boutique-ecommerce ---
+/**
+ * Un entier en toutes lettres jusqu'au million exclu (orthographe traditionnelle) :
+ * « six cents », « deux mille quatre cents ». « Cent » prend la marque du pluriel
+ * quand il finit le nombre, jamais devant « mille ».
+ */
+function enLettres(n: number, final = true): string {
+  if (!Number.isInteger(n) || n < 0 || n >= 1_000_000) return String(n);
+  if (n < 100) return enMots(n, false);
+  if (n < 1000) {
+    const centaines = Math.floor(n / 100);
+    const reste = n % 100;
+    const tete = centaines === 1 ? "cent" : `${enMots(centaines, false)} cent${reste === 0 && final ? "s" : ""}`;
+    return reste === 0 ? tete : `${tete} ${enMots(reste, false)}`;
+  }
+  const milliers = Math.floor(n / 1000);
+  const reste = n % 1000;
+  const tete = milliers === 1 ? "mille" : `${enLettres(milliers, false)} mille`;
+  return reste === 0 ? tete : `${tete} ${enLettres(reste, final)}`;
+}
+// --- fin du groupe batiment-boutique-ecommerce ---
+
 const FORMATS: Record<string, (x: number) => string> = {
   /** Un montant à l'euro : « 105 000 ». */
   entier,
@@ -257,6 +322,12 @@ const FORMATS: Record<string, (x: number) => string> = {
   /** Un écart de taux en points : « cinq points », « 1,8 point ». */
   points,
   Points: (x) => capitaliser(points(x)),
+  // --- groupe batiment-boutique-ecommerce ---
+  /** Un entier en toutes lettres, centaines et milliers compris : « six cents ». */
+  lettres: (x) => enLettres(Math.floor(net(x))),
+  /** Le même, en tête de phrase : « Six cents ». */
+  Lettres: (x) => capitaliser(enLettres(Math.floor(net(x)))),
+  // --- fin du groupe batiment-boutique-ecommerce ---
 };
 
 // ---------------------------------------------------------------------------
