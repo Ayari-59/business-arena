@@ -180,7 +180,7 @@ const SOURCES: CourrierDef[] = [
       "Notre comité souhaite offrir un pull à chacun de nos {{lettres: commande_boutique_commande_ce}} salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
     signataire: "Le secrétaire du comité",
     effet:
-      "+{{entier: commande_boutique_commande_ce}} pulls col rond (échelle {{trimestre}}) vendus d'office ce tour, réglés comptant, dans la limite du stock",
+      "+{{entier: commande_boutique_commande_ce}} pulls col rond ({{échelle trimestre}}) vendus d'office ce tour, réglés comptant, dans la limite du stock",
     enJeu:
       "L'opportunité ne se saisit qu'avec de la marchandise en réserve : le stock a un coût, et parfois une valeur.",
     nature: "market",

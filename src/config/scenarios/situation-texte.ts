@@ -107,6 +107,13 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   "quatre trimestres": { quarter: "4 trimestres", month: "12 mois", year: "1 exercice" },
   // --- nova-courriers : les tournures des situations NOVA et des courriers ---
   "ce trimestre-là": { month: "ce mois-là", year: "cet exercice-là" },
+  // --- retouches ---
+  // Un tour d'un an se clôt sur les comptes annuels : la situation n'y est plus « intermédiaire ».
+  "situation intermédiaire": { month: "situation intermédiaire", year: "situation comptable" },
+  // « Aucun effet sur ce mois-ci » : le « -ci » n'y désigne rien que « ce mois » ne dise.
+  "sur ce trimestre": { month: "sur ce mois", year: "sur cet exercice" },
+  // L'échelle d'une commande d'office : « (échelle exercice) » se dit « (échelle annuelle) ».
+  "échelle trimestre": { month: "échelle mois", year: "échelle annuelle" },
   // --- groupe batiment-boutique-ecommerce ---
   // Une part du tour, à la même cadence : deux mois de location sur trois en
   // font vingt jours sur trente, et huit mois sur douze.

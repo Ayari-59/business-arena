@@ -191,7 +191,7 @@ const SOURCES: CourrierDef[] = [
       "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer {{lettres: commande_bistrot_banquet_surprise}} couverts samedi. Nous réglons comptant le jour même.",
     signataire: "Pour la famille, M. Delporte",
     effet:
-      "+{{entier: commande_bistrot_banquet_surprise}} couverts (échelle {{trimestre}}) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
+      "+{{entier: commande_bistrot_banquet_surprise}} couverts ({{échelle trimestre}}) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
     enJeu: "Dire oui suppose des denrées, une brigade et de la place : trois contraintes, une seule opportunité.",
     nature: "market",
     pli: "email",

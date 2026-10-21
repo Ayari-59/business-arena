@@ -287,7 +287,7 @@ const SOURCES: CourrierDef[] = [
     corps:
       "Nous vous proposons {{lettres: commande_tight_order}} unités au prix unitaire de cinquante-cinq euros, livrables sur {{le trimestre}}. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
     signataire: "Le directeur des approvisionnements",
-    effet: "+{{entier: commande_tight_order}} unités à 55 €/u imposés (échelle {{trimestre}}), dans la limite du stock",
+    effet: "+{{entier: commande_tight_order}} unités à 55 €/u imposés ({{échelle trimestre}}), dans la limite du stock",
     enJeu: "55 € couvre-t-il votre coût variable ? Les coûts pertinents décident, pas l'habitude.",
     nature: "market",
     pli: "recommande",
@@ -301,7 +301,7 @@ const SOURCES: CourrierDef[] = [
     corps:
       "Notre opération de fin d'année portera sur {{lettres: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
     signataire: "Le directeur des achats",
-    effet: "+{{entier: commande_xxl_order}} unités à 61 €/u (échelle {{trimestre}}), sous-traitance possible à 52 €/u",
+    effet: "+{{entier: commande_xxl_order}} unités à 61 €/u ({{échelle trimestre}}), sous-traitance possible à 52 €/u",
     enJeu: "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai.",
     nature: "market",
     pli: "recommande",
@@ -316,7 +316,7 @@ const SOURCES: CourrierDef[] = [
       "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur {{lettres: commande_big_order}} unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur {{le trimestre}}.",
     signataire: "La directrice des achats",
     effet:
-      "+{{entier: commande_big_order}} unités (échelle {{trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
+      "+{{entier: commande_big_order}} unités ({{échelle trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
     enJeu:
       "Une opportunité ne se saisit qu'avec du stock ou de la capacité disponible : l'anticipation paie.",
     nature: "market",

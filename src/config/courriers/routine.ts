@@ -28,13 +28,13 @@ const SOURCES: CourrierDef[] = [
   {
     code: "routine_situation_comptable",
     expediteur: "Cabinet Delvaux · Expertise comptable",
-    objet: "Situation intermédiaire au terme {{du trimestre}}",
+    objet: "{{Situation intermédiaire}} au terme {{du trimestre}}",
     corps:
       "Vous trouverez ci-joint la situation arrêtée à la fin {{du trimestre}}. Le rapprochement bancaire est en concordance et aucune anomalie ne ressort de nos contrôles. Nous restons à votre disposition avant la prochaine clôture.",
     signataire: "Votre expert-comptable",
-    effet: "Aucun effet sur {{ce trimestre}}",
+    effet: "Aucun effet {{sur ce trimestre}}",
     enJeu:
-      "Une situation intermédiaire ne se subit pas : c'est le moment de vérifier que les comptes disent ce que vous croyez avoir fait.",
+      "Une {{situation intermédiaire}} ne se subit pas : c'est le moment de vérifier que les comptes disent ce que vous croyez avoir fait.",
     nature: "internal",
     pli: "simple",
     icone: "resultats",
@@ -47,7 +47,7 @@ const SOURCES: CourrierDef[] = [
     corps:
       "Vous êtes à jour de vos déclarations et du paiement de vos cotisations à la date de la présente. L'attestation jointe est valable six mois et vous sera demandée par tout donneur d'ordres pour un marché supérieur à cinq mille euros.",
     signataire: "Le service des entreprises",
-    effet: "Aucun effet sur {{ce trimestre}}",
+    effet: "Aucun effet {{sur ce trimestre}}",
     enJeu:
       "Sans attestation de vigilance, pas de marché : être à jour de ses cotisations est aussi une condition commerciale.",
     nature: "macro",
@@ -62,7 +62,7 @@ const SOURCES: CourrierDef[] = [
     corps:
       "Vos comptes annuels ont été déposés et enregistrés au registre du commerce et des sociétés. Ils sont désormais consultables par tout tiers qui en fait la demande, sauf option pour la confidentialité.",
     signataire: "Le greffier",
-    effet: "Aucun effet sur {{ce trimestre}}",
+    effet: "Aucun effet {{sur ce trimestre}}",
     enJeu:
       "Vos comptes sont publics : vos concurrents, vos fournisseurs et vos clients peuvent les lire comme vous lisez les leurs.",
     nature: "macro",
@@ -77,7 +77,7 @@ const SOURCES: CourrierDef[] = [
     corps:
       "Votre prime annuelle est appelée à la date d'échéance figurant sur l'avis joint. Les garanties et les franchises restent inchangées. Toute modification de votre activité doit nous être signalée sous quinze jours.",
     signataire: "Le service des contrats",
-    effet: "Aucun effet sur {{ce trimestre}}",
+    effet: "Aucun effet {{sur ce trimestre}}",
     enJeu:
       "La prime se paie tous les ans, le sinistre arrive une fois : c'est cet écart-là que l'assurance vend, et qu'on juge trop cher jusqu'au jour où il sert.",
     nature: "internal",
@@ -92,7 +92,7 @@ const SOURCES: CourrierDef[] = [
     corps:
       "Vous trouverez le détail des mouvements de la période ainsi que l'arrêté des agios et commissions. Sauf réclamation de votre part sous un mois, cet arrêté sera réputé approuvé.",
     signataire: "Le service des relevés",
-    effet: "Aucun effet sur {{ce trimestre}}",
+    effet: "Aucun effet {{sur ce trimestre}}",
     enJeu:
       "Un arrêté de compte non contesté devient définitif : les frais qu'on ne lit pas sont des frais qu'on accepte.",
     nature: "internal",
@@ -107,7 +107,7 @@ const SOURCES: CourrierDef[] = [
     corps:
       "Votre déclaration a été enregistrée et le paiement correspondant encaissé. Aucune observation n'est formulée à ce stade. Le droit de reprise de l'administration court jusqu'à la fin de la troisième année suivant celle de l'exigibilité.",
     signataire: "L'inspecteur des finances publiques",
-    effet: "Aucun effet sur {{ce trimestre}}",
+    effet: "Aucun effet {{sur ce trimestre}}",
     enJeu:
       "La TVA que vous encaissez ne vous appartient jamais : elle transite par votre trésorerie, et la confondre avec du résultat est l'erreur classique.",
     nature: "macro",

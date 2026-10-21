@@ -192,7 +192,7 @@ const SOURCES: CourrierDef[] = [
       "Nous souhaitons offrir à nos {{lettres: commande_fitness_contrat_surprise}} salariés un accès à votre club à compter de janvier, réglé en une fois pour {{le trimestre}}. Nous attendons votre confirmation de capacité d'accueil avant signature.",
     signataire: "Le directeur des ressources humaines",
     effet:
-      "+{{entier: commande_fitness_contrat_surprise}} adhérents (échelle {{trimestre}}) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
+      "+{{entier: commande_fitness_contrat_surprise}} adhérents ({{échelle trimestre}}) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
     enJeu: "Encore faut-il pouvoir les accueillir : sur-vendre sans encadrement fait fuir les adhérents en place.",
     nature: "market",
     pli: "simple",
