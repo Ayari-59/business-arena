@@ -1,10 +1,19 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { Client } from "pg";
 import { devices, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { aller, BASE, ouvrirNavigateur, texte } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { mesurerContraste } from "./helpers/contraste";
-import { GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
-import { niveauxDits, niveauxRelatifsDits, pourcentDuSeuil, seuilDAtteinteDit, seuilDAtteinteRelatifDit } from "@/config/examen/competences";
+import { imprimerEnA4 } from "./helpers/impression";
+import { GRILLES, GRILLES_VERSION_3, GRILLE_BUSINESS_ARENA_2026 } from "@/config/examen/grille";
+import {
+  competencesEvaluees,
+  niveauxDits,
+  niveauxRelatifsDits,
+  pourcentDuSeuil,
+  seuilDAtteinteDit,
+  seuilDAtteinteRelatifDit,
+} from "@/config/examen/competences";
 
 /** Les espaces insécables comme `texte` les rend : des espaces simples. */
 const espaces = (s: string) => s.replace(/[  ]/g, " ");
@@ -19,8 +28,9 @@ const espaces = (s: string) => s.replace(/[  ]/g, " ");
  * estimé » (éteint par l'enseignant) ; à la fin, un reçu, pas de note. L'enseignant suit
  * en direct, voit les résultats (notes, distribution, compétences), exporte, publie ; chaque
  * candidat voit alors sa note et son relevé ; une seconde tentative est refusée. Le rapport
- * d'accréditation s'imprime sur une page. Un seul bouton plein par écran, aucun texte sous
- * le seuil de contraste, aucun défilement de côté à 390.
+ * d'accréditation s'imprime sur une page, avec chaque grille en vigueur, questions posées
+ * ou non. Un seul bouton plein par écran, aucun texte sous le seuil de contraste, aucun
+ * défilement de côté à 390.
  *
  * Captures : `CAPTURES=<dossier>`.
  */
@@ -369,24 +379,82 @@ describe("un examen, de la création à la publication", () => {
     expect(t).not.toMatch(/gestion de référence/);
     expect(t).not.toMatch(/Alice|Bruno|210001/);
     expect(t).not.toMatch(/reconnu par l'AACSB|accrédité par/i);
+    await sansTexteIllisible(prof);
     await prof.emulateMedia({ media: "print" });
     expect(await prof.locator(".no-print").first().isVisible()).toBe(false);
     await capture(prof, "examen-accreditation-impression-1280");
-    const pdf = await prof.pdf({ format: "A4", printBackground: true, preferCSSPageSize: true });
+    await prof.emulateMedia({ media: "screen" });
+    const impression = await imprimerEnA4(prof, "[data-rapport-d-accreditation]");
     if (CAPTURES) {
       const { writeFileSync } = await import("node:fs");
-      writeFileSync(`${CAPTURES}/examen-accreditation.pdf`, pdf);
+      writeFileSync(`${CAPTURES}/examen-accreditation.pdf`, impression.pdf);
     }
-    const pages = (pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length;
-    expect(pages).toBe(1);
-    await prof.emulateMedia({ media: "screen" });
+    expect(impression.pages).toBe(1);
     const mobile = await contexte(true);
     await mobile.addCookies(await ctxProf.cookies());
     const m = await mobile.newPage();
     await aller(m, `/teacher/examens/${examenId}/accreditation`);
+    expect(await debordement(m)).toBeLessThanOrEqual(0);
     await capture(m, "examen-accreditation-390");
     await mobile.close();
   }, 120_000);
+
+  /**
+   * LE PIRE CAS, QUESTIONS POSÉES. Le parcours crée son examen questions éteintes : la
+   * grille imprimée y perd sa ligne de diagnostics et le relevé sa compétence. Le rapport
+   * tenait sur une page ainsi et passait à deux questions posées, sans qu'aucun parcours
+   * ne le voie. L'examen est donc reposé en base, comme le ferait sa création, avec
+   * chaque grille qu'un examen nouveau peut choisir et chaque grille version 3 que gardent
+   * les examens créés avant, questions posées ou non. Ses deux copies notées restent les
+   * siennes : la compétence ajoutée y paraît sans copie évaluée, ce qui ne change pas la
+   * hauteur de sa ligne. Chaque fois, une page, et la place d'une ligne de plus dessous.
+   */
+  it("le rapport tient sur une page avec chaque grille, questions posées ou non, une ligne en réserve", async () => {
+    const c = new Client({ connectionString: process.env.DATABASE_URL });
+    await c.connect();
+    const { rows } = await c.query("select questions, grille_code, grille_version, grille from examens where id = $1", [examenId]);
+    const avant = rows[0];
+    try {
+      for (const grille of [...GRILLES, ...GRILLES_VERSION_3]) {
+        for (const questions of [false, true]) {
+          await c.query("update examens set questions = $2, grille_code = $3, grille_version = $4, grille = $5 where id = $1", [
+            examenId,
+            questions,
+            grille.code,
+            grille.version,
+            JSON.stringify(grille),
+          ]);
+          await aller(prof, `/teacher/examens/${examenId}/accreditation`);
+          const lignes = grille.lignes.filter((l) => !l.siQuestions || questions);
+          const t = await texte(prof);
+          for (const l of lignes) expect(t).toContain(espaces(l.libelle));
+          // Les copies de ce parcours sont notées sans questions : la compétence que les
+          // questions ajoutent n'a pas de ligne dans leurs résultats. Le vrai pire cas, un
+          // examen noté avec questions, en a une de plus : la réserve exigée la compte.
+          const rangees = await prof.locator("[data-resultats-par-competence] tbody tr").count();
+          const manquantes = competencesEvaluees(questions).length - rangees;
+          expect(manquantes).toBeGreaterThanOrEqual(0);
+          const impression = await imprimerEnA4(prof, "[data-rapport-d-accreditation]");
+          const cas = `${grille.nom} version ${grille.version}, questions ${questions ? "posées" : "éteintes"} : ${impression.hauteurMm.toFixed(1)} mm`;
+          if (CAPTURES) {
+            const { writeFileSync } = await import("node:fs");
+            writeFileSync(`${CAPTURES}/examen-accreditation-${grille.code}-v${grille.version}${questions ? "-questions" : ""}.pdf`, impression.pdf);
+          }
+          expect(impression.pages, cas).toBe(1);
+          expect(impression.resteMm, cas).toBeGreaterThanOrEqual(impression.ligneMm * (1 + manquantes));
+        }
+      }
+    } finally {
+      await c.query("update examens set questions = $2, grille_code = $3, grille_version = $4, grille = $5 where id = $1", [
+        examenId,
+        avant.questions,
+        avant.grille_code,
+        avant.grille_version,
+        JSON.stringify(avant.grille),
+      ]);
+      await c.end();
+    }
+  }, 240_000);
 
   it("une seule tentative : la copie remise ne se recommence pas", async () => {
     const a = await ctxA.newPage();

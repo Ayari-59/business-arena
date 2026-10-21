@@ -37,6 +37,15 @@ export const dynamic = "force-dynamic";
  *
  * Page de papier : thème clair, encre dans le bas de l'échelle, papier dans le haut
  * (tests/architecture/pages-de-papier.test.ts).
+ *
+ * LA PAGE TIENT PAR SA MISE EN PAGE, PAS PAR SES MARGES. Marges et interligne ont déjà été
+ * resserrés deux fois ; la grille version 4, questions posées, débordait encore. La grille
+ * était un tableau à trois colonnes dont le libellé, trop étroit, prenait deux lignes à
+ * chaque rangée, si courte que fût sa mesure. Elle est désormais une liste sur deux
+ * colonnes à l'impression : les points en marge, le libellé suivi de sa mesure dans le même
+ * paragraphe. Même corps de texte ; la place gagnée est celle des blancs. Le parcours
+ * (tests/e2e/examen.e2e.ts) imprime chaque grille, questions posées ou non, et veut une
+ * page avec la place d'une ligne de plus.
  */
 
 const styles = `
@@ -46,9 +55,13 @@ const styles = `
   .rapport .kicker { font-size: 7.5pt; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 3px; }
   .rapport table { width: 100%; border-collapse: collapse; }
   .rapport th, .rapport td { padding: 0.45mm 1.4mm; border-bottom: 0.25mm solid currentColor; vertical-align: top; text-align: left; }
-  .rapport td.methode { font-size: 8pt; }
+  .rapport .methode { font-size: 8pt; }
   .rapport td.n, .rapport th.n { text-align: right; font-variant-numeric: tabular-nums; }
   .rapport ul { margin: 0; padding-left: 4mm; }
+  .rapport ul.grille { list-style: none; padding: 0; column-gap: 6mm; border-top: 0.25mm solid currentColor; }
+  .rapport .grille li { display: grid; grid-template-columns: 8.5mm 1fr; column-gap: 1.4mm; padding: 0.45mm 0; border-bottom: 0.25mm solid currentColor; break-inside: avoid; }
+  .rapport .grille .points { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  @media (min-width: 40rem), print { .rapport ul.grille { columns: 2; } }
   .rapport .pied { margin-top: 2.5mm; font-size: 7.5pt; }
   @media print {
     @page { size: A4 portrait; margin: 0; }
@@ -92,7 +105,7 @@ export default async function RapportDAccreditationPage({ params }: { params: Pr
           Retour à l&apos;examen
         </Link>
         <PrintButton label="Imprimer le rapport" />
-        <p className="ml-auto text-xs text-slate-600">Imprimez ou enregistrez en PDF. Une page, sans nom d&apos;étudiant.</p>
+        <p className="ml-auto text-xs text-slate-500">Imprimez ou enregistrez en PDF. Une page, sans nom d&apos;étudiant.</p>
       </header>
 
       <article className="rapport" data-rapport-d-accreditation="">
@@ -131,26 +144,18 @@ export default async function RapportDAccreditationPage({ params }: { params: Pr
         </p>
 
         <h2 className="text-slate-100">3. Grille de notation</h2>
-        <table className="text-slate-300">
-          <thead>
-            <tr className="text-slate-100">
-              <th>Ligne</th>
-              <th>Mesure</th>
-              <th className="n">Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            {grille.lignes
-              .filter((l) => !l.siQuestions || examen.questions)
-              .map((l) => (
-                <tr key={l.code}>
-                  <td className="text-slate-100">{l.libelle}</td>
-                  <td className="methode">{methodeDe(l, marches)}</td>
-                  <td className="n">{l.points}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+        <ul className="grille text-slate-300">
+          {grille.lignes
+            .filter((l) => !l.siQuestions || examen.questions)
+            .map((l) => (
+              <li key={l.code}>
+                <span className="points text-slate-100">{l.points} pts</span>
+                <span>
+                  <strong className="text-slate-100">{l.libelle}.</strong> <span className="methode">{methodeDe(l, marches)}</span>
+                </span>
+              </li>
+            ))}
+        </ul>
         {!examen.questions ? (
           <p className="mt-1 text-slate-500">Questions de diagnostic non posées : leurs points sont répartis sur les autres lignes en proportion.</p>
         ) : null}
