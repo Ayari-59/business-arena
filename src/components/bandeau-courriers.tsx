@@ -1,4 +1,4 @@
-import { courrierParCode } from "@/config/courriers/registre";
+import { courrierDeLaPartie } from "@/config/courriers/de-la-partie";
 import { Icone } from "@/components/icone";
 
 /**
@@ -36,8 +36,11 @@ export function courriersQuiMeConcernent(
 export function BandeauCourriers({
   courriers,
   detailHref = "#situation",
+  jours,
 }: {
   courriers: readonly CourrierAnnonce[];
+  /** La durée d'un tour de la partie, en jours : l'objet et l'effet se lisent à elle. */
+  jours?: number;
   /** Où lire la lettre entière : l'onglet Situation, par défaut. */
   detailHref?: string;
 }) {
@@ -59,7 +62,7 @@ export function BandeauCourriers({
       </p>
       <ul className="mt-2 space-y-1.5">
         {visibles.map((courrier) => {
-          const def = courrierParCode.get(courrier.code);
+          const def = courrierDeLaPartie(courrier.code, { jours });
           const cible = courrier.teamId === null ? "Tout le marché" : "Votre entreprise";
           return (
             <li

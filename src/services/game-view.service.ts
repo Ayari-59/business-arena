@@ -34,7 +34,7 @@ import {
   peutChoisirSonEquipe,
   type EquipeEtSesMembres,
 } from "@/services/affectation.service";
-import { courrierParCode } from "@/config/courriers/registre";
+import { objetDuCourrier } from "@/config/courriers/de-la-partie";
 import type { EventInstance } from "@/engine/types";
 import { peekEventDraw } from "@/engine/events";
 import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
@@ -2046,7 +2046,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       // disaster, cold wave ». Les mêmes événements lui seront montrés sous
       // leur nom de carte quand ils tomberont.
       const eventLabels = (codes: string[]) =>
-        codes.map((c) => courrierParCode.get(c)?.objet ?? c.replace(/_/g, " "));
+        codes.map((c) => objetDuCourrier(c, snapshot.roundDays) ?? c.replace(/_/g, " "));
       return formulas.map((f) => ({
         code: f.code,
         name: f.name,

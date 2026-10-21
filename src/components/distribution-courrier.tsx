@@ -4,6 +4,7 @@ import { useState } from "react";
 import { distribuerCourrierAction, type DistributionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { courriersPourCodes } from "@/config/courriers/registre";
+import { courrierALaDuree } from "@/config/courriers/texte";
 import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
 import { Icone } from "@/components/icone";
 
@@ -26,6 +27,7 @@ export function DistributionCourrier({
   teams,
   scenarioEventCodes,
   scenarioCode,
+  jours,
 }: {
   gameId: string;
   courriersEnAttente: { code: string; teamId: string | null; teamName: string | null }[];
@@ -34,6 +36,8 @@ export function DistributionCourrier({
   scenarioEventCodes: string[];
   /** Secteur joué — pour imprimer la bonne liasse. */
   scenarioCode: string;
+  /** La durée d'un tour de la partie, en jours : les courriers se lisent, et s'impriment, à elle. */
+  jours?: number;
 }) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     distribuerCourrierAction.bind(null, gameId),
@@ -48,7 +52,7 @@ export function DistributionCourrier({
   const toutPlein = courriersEnAttente.length >= MAX_EN_ATTENTE;
 
   const adresse = destinataire !== "";
-  const liasse = courriersPourCodes(scenarioEventCodes);
+  const liasse = courriersPourCodes(scenarioEventCodes).map((c) => courrierALaDuree(c, jours));
   const distribuables = liasse.filter(
     (c) =>
       c.scope === (adresse ? "team" : "market") &&
@@ -63,7 +67,7 @@ export function DistributionCourrier({
           Le courrier à distribuer
         </h2>
         <a
-          href={`/teacher/courriers/print?scenario=${encodeURIComponent(scenarioCode)}`}
+          href={`/teacher/courriers/print?scenario=${encodeURIComponent(scenarioCode)}${jours ? `&jours=${jours}` : ""}`}
           target="_blank"
           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
         >
@@ -89,6 +93,7 @@ export function DistributionCourrier({
               <CourrierRecommande
                 key={`${courrier.code}-${courrier.teamId ?? "market"}`}
                 code={courrier.code}
+                jours={jours}
                 delayMs={i * 450}
                 annonce
                 destinataire={courrier.teamName ? `→ ${courrier.teamName}` : "Tout le marché"}

@@ -4,7 +4,7 @@ import type {
   IncomeStatement,
   SalesEstimate,
 } from "@/engine/types";
-import { courrierParCode } from "@/config/courriers/registre";
+import { courrierDeLaPartie } from "@/config/courriers/de-la-partie";
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { unitesVendues } from "@/components/ecart-d-estimation";
 import { structureDuTour } from "@/pedagogy/verdict-du-tour";
@@ -297,7 +297,7 @@ export function aleasDuTour({
   codes,
   unites,
 }: {
-  scenario: Pick<EngineScenarioConfig, "events" | "suppliers">;
+  scenario: Pick<EngineScenarioConfig, "events" | "suppliers" | "roundDays">;
   result: CompanyRoundResult;
   /** Les événements apparus ce tour qui concernent l'équipe (trace du tour). */
   codes: readonly string[];
@@ -308,7 +308,8 @@ export function aleasDuTour({
   const ca = Math.max(1, Math.abs(result.incomeStatement.revenue));
 
   for (const code of new Set(codes)) {
-    const courrier = courrierParCode.get(code);
+    // Le courrier tel que la partie l'a reçu : à la durée de son tour.
+    const courrier = courrierDeLaPartie(code, { jours: scenario.roundDays });
     const nom = `« ${courrier?.objet ?? code} »`;
     const annonce = courrier?.effet ? ` : ${courrier.effet}` : "";
     const def = scenario.events.find((e) => e.code === code);

@@ -22,7 +22,7 @@ import { periodLabel } from "@/config/scenarios/periodicity";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { MandatDeLEquipe } from "@/components/mandat-de-lequipe";
 import { reponsesAuxDecisions } from "@/config/courriers/reponses";
-import { courrierParCode } from "@/config/courriers/registre";
+import { objetDuCourrier } from "@/config/courriers/de-la-partie";
 import { destinataireDuCourrier } from "@/config/courriers/destinataire";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
@@ -494,6 +494,7 @@ export default async function ArenaPage({
                 key={`${courrier.code}-${courrier.teamId ?? "market"}`}
                 code={courrier.code}
                 assurance={view.enabledDecisions.insurance}
+                jours={view.roundDays}
                 delayMs={i * 450}
                 annonce
                 destinataire={
@@ -543,6 +544,7 @@ export default async function ArenaPage({
                   key={`${courrier.code}-${courrier.teamId ?? "market"}`}
                   code={courrier.code}
                   assurance={view.enabledDecisions.insurance}
+                  jours={view.roundDays}
                   delayMs={i * 450}
                   destinataire={`${
                     courrier.teamId ? "Votre entreprise" : "Tout le marché"
@@ -733,6 +735,7 @@ export default async function ArenaPage({
                                 key={c.code}
                                 code={c.code}
                                 assurance={view.enabledDecisions.insurance}
+                                jours={view.roundDays}
                                 delayMs={i * 450}
                                 adresse={adresseDuCourrier}
                                 quand={periodLabel(view.roundDays, view.currentRound)}
@@ -1259,6 +1262,7 @@ export default async function ArenaPage({
                       gazette={view.gazette}
                       noteDInvestissement={noteDInvestissement}
                       assurance={view.enabledDecisions.insurance}
+                      jours={view.roundDays}
                     />
                     {revueDePresse ? <div className="mt-4">{revueDePresse}</div> : null}
                   </div>
@@ -1380,7 +1384,7 @@ export default async function ArenaPage({
           ? {
               premium: view.insuranceOffer.premium,
               coveredLabels: view.insuranceOffer.coveredEventCodes.map(
-                (c) => courrierParCode.get(c)?.objet ?? c,
+                (c) => objetDuCourrier(c, view.roundDays) ?? c,
               ),
             }
           : null
@@ -1567,7 +1571,7 @@ export default async function ArenaPage({
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
       {!telephone && !finished && courriersAnnonces.length > 0 ? (
         <div>
-          <BandeauCourriers courriers={courriersAnnonces} />
+          <BandeauCourriers courriers={courriersAnnonces} jours={view.roundDays} />
         </div>
       ) : null}
 

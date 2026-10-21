@@ -5,11 +5,11 @@ import {
   dureeDuCourrier,
   type CourrierDef,
 } from "@/config/courriers/types";
-import { courrierParCode, positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
-import { courrierSelonLAssurance } from "@/config/courriers/sans-assurance";
-import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers/routine";
-import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mission";
-import { COURRIERS_EN_RETOUR, estUnCourrierEnRetour } from "@/config/courriers/reponses";
+import { positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
+import { estUnCourrierDeRoutine } from "@/config/courriers/routine";
+import { estUneLettreDeMission } from "@/config/courriers/mission";
+import { estUnCourrierEnRetour } from "@/config/courriers/reponses";
+import { courrierDeLaPartie } from "@/config/courriers/de-la-partie";
 import { attentionDuPli, type DestinataireDuCourrier } from "@/config/courriers/destinataire";
 import { BrandMark } from "@/components/brand-mark";
 import { Icone } from "@/components/icone";
@@ -47,27 +47,13 @@ import {
  */
 
 /**
- * Le courrier d'un code, qu'il vienne d'une liasse ou de la routine. Les
- * courriers de routine ne sont pas au registre — ils ne sont jamais tirés —,
- * mais ils se lisent et s'impriment comme les autres.
+ * Le courrier d'un code, qu'il vienne d'une liasse, de la routine, des mandats
+ * ou des réponses, tel que SA partie le montre : à la durée de son tour
+ * (`jours`, le trimestre sans elle) et, quand le niveau n'ouvre pas
+ * l'assurance, dans sa variante sans elle (`config/courriers/de-la-partie`).
  */
-const routineParCode = new Map(COURRIERS_DE_ROUTINE.map((c) => [c.code, c]));
-/** Les mandats ne sont pas au registre non plus : ils ne se tirent jamais. */
-const missionParCode = new Map(LETTRES_DE_MISSION.map((c) => [c.code, c]));
-/** Les réponses non plus : elles ne se tirent pas, elles se méritent. */
-const retourParCode = new Map(COURRIERS_EN_RETOUR.map((c) => [c.code, c]));
-
-function courrier(code: string, assurance = true): CourrierDef | undefined {
-  // Une partie dont le niveau n'ouvre pas l'assurance lit la variante sans elle
-  // (`config/courriers/sans-assurance`) : même effet, sans parler d'un contrat
-  // que l'équipe ne peut pas souscrire.
-  return courrierSelonLAssurance(
-    courrierParCode.get(code) ??
-      routineParCode.get(code) ??
-      missionParCode.get(code) ??
-      retourParCode.get(code),
-    assurance,
-  );
+function courrier(code: string, assurance = true, jours?: number): CourrierDef | undefined {
+  return courrierDeLaPartie(code, { assurance, jours });
 }
 
 /**
@@ -115,9 +101,12 @@ export function Enveloppe({
   adresse,
   className = "",
   assurance = true,
+  jours,
 }: {
   /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
   assurance?: boolean;
+  /** La durée d'un tour de la partie, en jours : le texte se rend à elle (le trimestre sans elle). */
+  jours?: number;
   /** Le courrier contenu, s'il est connu : il donne le timbre et le cachet. */
   code?: string;
   /** La liasse imprimée en pied d'enveloppe. */
@@ -132,7 +121,7 @@ export function Enveloppe({
   adresse?: DestinataireDuCourrier;
   className?: string;
 }) {
-  const c = code ? courrier(code, assurance) : undefined;
+  const c = code ? courrier(code, assurance, jours) : undefined;
   const nature = c ? NATURES[c.nature] : null;
   const interne = c?.pli === "interne";
   const bande = c ? BANDE_DU_PLI[c.pli] : null;
@@ -243,9 +232,12 @@ export function Lettre({
   quand,
   surligne = false,
   assurance = true,
+  jours,
 }: {
   /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
   assurance?: boolean;
+  /** La durée d'un tour de la partie, en jours : le texte se rend à elle (le trimestre sans elle). */
+  jours?: number;
   code: string;
   /** Courrier annoncé par l'enseignant, pas encore appliqué. */
   annonce?: boolean;
@@ -257,7 +249,7 @@ export function Lettre({
   /** Vrai quand le courrier s'adresse à l'entreprise de celui qui le lit. */
   surligne?: boolean;
 }) {
-  const c = courrier(code, assurance);
+  const c = courrier(code, assurance, jours);
   if (!c) return null;
   const nature = NATURES[c.nature];
   const reference = referenceDuCourrier(code);
@@ -419,16 +411,19 @@ export function Courriel({
   adresse,
   className = "",
   assurance = true,
+  jours,
 }: {
   /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
   assurance?: boolean;
+  /** La durée d'un tour de la partie, en jours : le texte se rend à elle (le trimestre sans elle). */
+  jours?: number;
   code?: string;
   destinataire?: string;
   /** L'entreprise destinataire : la ligne « À » porte son nom. */
   adresse?: DestinataireDuCourrier;
   className?: string;
 }) {
-  const c = code ? courrier(code, assurance) : undefined;
+  const c = code ? courrier(code, assurance, jours) : undefined;
   const nature = c ? NATURES[c.nature] : null;
   const reference = code ? referenceDuCourrier(code) : null;
 
@@ -518,9 +513,12 @@ export function Message({
   adresse,
   surligne = false,
   assurance = true,
+  jours,
 }: {
   /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
   assurance?: boolean;
+  /** La durée d'un tour de la partie, en jours : le texte se rend à elle (le trimestre sans elle). */
+  jours?: number;
   code: string;
   annonce?: boolean;
   destinataire?: string;
@@ -528,7 +526,7 @@ export function Message({
   adresse?: DestinataireDuCourrier;
   surligne?: boolean;
 }) {
-  const c = courrier(code, assurance);
+  const c = courrier(code, assurance, jours);
   if (!c) return null;
   const nature = NATURES[c.nature];
   const reference = referenceDuCourrier(code);
@@ -707,15 +705,18 @@ export function EnveloppeOuverte({
   destinataire,
   adresse,
   assurance = true,
+  jours,
 }: {
   /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
   assurance?: boolean;
+  /** La durée d'un tour de la partie, en jours : le texte se rend à elle (le trimestre sans elle). */
+  jours?: number;
   code: string;
   destinataire?: string;
   /** L'entreprise destinataire : son nom, puis le service visé. */
   adresse?: DestinataireDuCourrier;
 }) {
-  const c = courrier(code, assurance);
+  const c = courrier(code, assurance, jours);
   if (!c || c.pli === "email") return null;
   const interne = c.pli === "interne";
   return (
@@ -793,9 +794,12 @@ export function CourrierRecommande({
   quand,
   surligne = false,
   assurance = true,
+  jours,
 }: {
   /** Le niveau de la partie ouvre-t-il l'assurance ? Fermée : la variante sans elle. */
   assurance?: boolean;
+  /** La durée d'un tour de la partie, en jours : le texte se rend à elle (le trimestre sans elle). */
+  jours?: number;
   code: string;
   delayMs?: number;
   annonce?: boolean;
@@ -810,7 +814,7 @@ export function CourrierRecommande({
   quand?: string;
   surligne?: boolean;
 }) {
-  const c = courrier(code, assurance);
+  const c = courrier(code, assurance, jours);
   if (!c) {
     return (
       <div className="rounded-lg encadre-neutre px-3 py-2 text-xs text-slate-200">
@@ -831,6 +835,7 @@ export function CourrierRecommande({
           <Courriel
             code={code}
             assurance={assurance}
+            jours={jours}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}
             className="h-full"
@@ -839,6 +844,7 @@ export function CourrierRecommande({
           <Enveloppe
             code={code}
             assurance={assurance}
+            jours={jours}
             liasse={position?.liasse}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}
@@ -849,6 +855,7 @@ export function CourrierRecommande({
           <Message
             code={code}
             assurance={assurance}
+            jours={jours}
             annonce={annonce}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}
@@ -858,6 +865,7 @@ export function CourrierRecommande({
           <Lettre
             code={code}
             assurance={assurance}
+            jours={jours}
             annonce={annonce}
             destinataire={destinataire}
             {...(adresse ? { adresse } : {})}

@@ -184,7 +184,7 @@ describe("VOLT FITNESS : chaque situation se rend à la durée du tour de sa par
 
 describe("les quatorze autres scénarios ne bougent à aucune durée", () => {
   // Les scénarios qui portent des jetons ont chacun leur garde (textes-a-la-duree-<groupe>.test.ts).
-  const avecJetons = ["fitness", "transport", "bistrot", "bistrot-gamme", "conseil", "conseil-gamme", "hotel", "hotel-gamme"];
+  const avecJetons = ["fitness", "transport", "bistrot", "bistrot-gamme", "conseil", "conseil-gamme", "hotel", "hotel-gamme", "nova", "nova-gamme"];
   for (const d of SCENARIOS.filter((x) => !avecJetons.includes(x.code))) {
     it(`${d.code} : sans jeton, la situation de la partie est celle du registre`, () => {
       for (const def of d.situations) {

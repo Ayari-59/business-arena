@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { hotelScenario } from "@/config/scenarios/hotel";
 
 /**
  * LA LIASSE DE L'ESCALE — hôtel indépendant.
@@ -8,7 +10,8 @@ import type { CourrierDef } from "../types";
  * ligne. Ses courriers viennent donc surtout de gens qui la jugent ou qui lui
  * amènent — ou lui retirent — des clients.
  */
-export const HOTEL_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "hotel_evenement_local",
     expediteur: "Office de tourisme · Direction des congrès",
@@ -43,7 +46,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Plateforme Réservatio · Direction des partenariats",
     objet: "Modification unilatérale de nos conditions de commission",
     corps:
-      "À compter du prochain trimestre, la commission prélevée sur les réservations passe de quinze à dix-huit pour cent. Le maintien de votre référencement vaut acceptation. À défaut, votre fiche sera retirée.",
+      "À compter du prochain {{trimestre}}, la commission prélevée sur les réservations passe de quinze à dix-huit pour cent. Le maintien de votre référencement vaut acceptation. À défaut, votre fiche sera retirée.",
     signataire: "Le directeur des partenariats",
     effet: "Coût variable par nuitée +16 % pendant 2 tours",
     enJeu:
@@ -102,7 +105,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Fournisseur d'énergie Caloris · Service entreprises",
     objet: "Renouvellement de votre contrat de fourniture",
     corps:
-      "Votre contrat arrive à échéance. Les prix du gaz et de l'électricité ayant progressé de quarante pour cent, le nouveau barème s'applique dès la première facture du trimestre. Chauffage, blanchisserie et cuisine sont concernés.",
+      "Votre contrat arrive à échéance. Les prix du gaz et de l'électricité ayant progressé de quarante pour cent, le nouveau barème s'applique dès la première facture {{du trimestre}}. Chauffage, blanchisserie et cuisine sont concernés.",
     signataire: "Le conseiller entreprises",
     effet: "Coût variable par nuitée +22 % pendant 2 tours",
     enJeu: "Une charge variable qui grimpe déplace mécaniquement le taux d'occupation d'équilibre vers le haut.",
@@ -116,7 +119,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit Hôtelier · Direction des engagements",
     objet: "Durcissement de nos conditions sur le secteur hôtelier",
     corps:
-      "Notre comité des risques classe désormais l'hôtellerie parmi les secteurs cycliques. Les taux applicables à nos encours du secteur sont relevés pour les deux prochains trimestres, sans exception.",
+      "Notre comité des risques classe désormais l'hôtellerie parmi les secteurs cycliques. Les taux applicables à nos encours du secteur sont relevés pour les deux prochains {{trimestres}}, sans exception.",
     signataire: "Le directeur des engagements",
     effet: "Taux d'intérêt ×1,45 pendant 2 tours",
     enJeu: "Un hôtel est financé par de la dette longue : une hausse des taux se paie sur des années.",
@@ -174,7 +177,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit Hôtelier · Agence entreprises",
     objet: "Réaménagement de votre crédit immobilier",
     corps:
-      "Vos taux d'occupation des quatre derniers trimestres nous conduisent à réaménager votre échéancier à des conditions plus favorables. La nouvelle grille est jointe et s'applique dès la prochaine échéance.",
+      "Vos taux d'occupation des quatre derniers {{trimestres}} nous conduisent à réaménager votre échéancier à des conditions plus favorables. La nouvelle grille est jointe et s'applique dès la prochaine échéance.",
     signataire: "Votre chargé d'affaires",
     effet: "Taux d'intérêt ×0,7 pendant 2 tours (un établissement ciblé)",
     enJeu: "Un actif hôtelier bien exploité rassure : la garantie, c'est la trajectoire, pas seulement les murs.",
@@ -191,7 +194,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
       "Notre autocar est immobilisé sur l'autoroute à la suite d'une avarie. Quarante passagers doivent être logés ce soir. Nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
     signataire: "Le responsable d'exploitation",
     effet:
-      "+400 nuitées (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",
+      "+{{entier: commande_hotel_groupe_impromptu}} nuitées (échelle {{trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",
     enJeu: "L'aubaine ne profite qu'à ceux qui ont gardé des chambres disponibles : tout brader tôt a un coût caché.",
     nature: "market",
     pli: "email",
@@ -217,7 +220,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Froid Industriel Marchal · Rapport d'expertise",
     objet: "Défaillance du groupe froid central",
     corps:
-      "Le compresseur du groupe central est hors d'usage et la machine n'est plus fabriquée. Le remplacement complet demande deux trimestres, délai de commande inclus. Les étages exposés au sud sont inexploitables en attendant.",
+      "Le compresseur du groupe central est hors d'usage et la machine n'est plus fabriquée. Le remplacement complet demande deux {{trimestres}}, délai de commande inclus. Les étages exposés au sud sont inexploitables en attendant.",
     signataire: "L'expert frigoriste",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & maintenance préventive",
@@ -259,7 +262,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Syndicat hôtelier départemental",
     objet: "Ouverture d'un établissement de chaîne à deux rues",
     corps:
-      "Cent vingt chambres neuves ouvriront le mois prochain, petit-déjeuner inclus et tarif de lancement affiché pour un trimestre. La capacité du quartier augmente d'un quart sans que la demande bouge.",
+      "Cent vingt chambres neuves ouvriront le mois prochain, petit-déjeuner inclus et tarif de lancement affiché pour un {{trimestre}}. La capacité du quartier augmente d'un quart sans que la demande bouge.",
     signataire: "Le président du syndicat",
     effet: "Demande globale −15 % pendant 2 tours",
     enJeu:
@@ -333,7 +336,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Office de tourisme · Service de la promotion",
     objet: "Visite de repérage d'un voyagiste le mois prochain",
     corps:
-      "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne. Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès le trimestre prochain.",
+      "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne. Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès {{le trimestre}} prochain.",
     signataire: "La chargée de promotion",
     effet: "Demande globale +8 % ce tour",
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
@@ -347,7 +350,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Sillage Voyages · Direction commerciale",
     objet: "Contingent de chambres pour notre programmation de l'année",
     corps:
-      "À l'issue de notre visite de repérage, notre comité retient votre ville pour ses séminaires d'entreprise et ses délégations. Des groupes de vingt à quarante personnes arriveront chaque semaine pendant les trois trimestres à venir. Nous répartissons ces réservations entre les hôtels du centre, pour environ trente pour cent de nuitées en plus sur l'agglomération.",
+      "À l'issue de notre visite de repérage, notre comité retient votre ville pour ses séminaires d'entreprise et ses délégations. Des groupes de vingt à quarante personnes arriveront chaque semaine pendant les trois {{trimestres}} à venir. Nous répartissons ces réservations entre les hôtels du centre, pour environ trente pour cent de nuitées en plus sur l'agglomération.",
     signataire: "Le directeur commercial",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
@@ -362,7 +365,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit Hôtelier · Direction du développement",
     objet: "Campagne temporaire sur les crédits d'équipement",
     corps:
-      "Pour accompagner la rénovation du parc hôtelier de la région, notre banque ouvre une campagne sur les crédits d'équipement : literie, mise aux normes, création de chambres. Les taux sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains trimestres. La grille habituelle s'appliquera de nouveau ensuite.",
+      "Pour accompagner la rénovation du parc hôtelier de la région, notre banque ouvre une campagne sur les crédits d'équipement : literie, mise aux normes, création de chambres. Les taux sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains {{trimestres}}. La grille habituelle s'appliquera de nouveau ensuite.",
     signataire: "Le directeur du développement",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -392,7 +395,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     expediteur: "Sillage Voyages · Direction des opérations",
     objet: "Révision des volumes de notre programmation d'automne",
     corps:
-      "La saison de séminaires s'achève plus tôt que prévu et deux délégations ont reporté leur venue. Nos départs vers votre ville passent d'un groupe par semaine à un groupe toutes les deux semaines. Le contingent de chambres initialement convenu est donc ramené à environ la moitié pour les deux prochains trimestres.",
+      "La saison de séminaires s'achève plus tôt que prévu et deux délégations ont reporté leur venue. Nos départs vers votre ville passent d'un groupe par semaine à un groupe toutes les deux semaines. Le contingent de chambres initialement convenu est donc ramené à environ la moitié pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur des opérations",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -403,3 +406,6 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const HOTEL_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, hotelScenario);

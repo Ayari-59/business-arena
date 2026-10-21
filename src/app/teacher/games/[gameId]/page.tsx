@@ -575,6 +575,7 @@ export default async function TeacherGamePage({
             .map((t) => ({ teamId: t.teamId, name: t.name }))}
           scenarioEventCodes={view.scenarioEventCodes}
           scenarioCode={view.scenarioCode}
+          jours={view.roundDays}
         />
       ) : null}
 

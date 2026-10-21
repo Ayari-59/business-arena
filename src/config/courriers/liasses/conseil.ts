@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { conseilScenario } from "@/config/scenarios/conseil";
 
 /**
  * LA LIASSE D'ATLAS CONSEIL — cabinet de conseil régional.
@@ -8,7 +10,8 @@ import type { CourrierDef } from "../types";
  * d'intention. C'est le secteur où l'expéditeur compte le plus, parce que la
  * capacité de production y porte un nom et un préavis.
  */
-export const CONSEIL_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "conseil_appel_offres_gagne",
     expediteur: "Centrale des marchés publics · Service des avis",
@@ -44,7 +47,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Fédération du conseil · Note aux adhérents",
     objet: "Gel des budgets de conseil annoncé par les donneurs d'ordres",
     corps:
-      "Notre enquête trimestrielle indique que sept directions générales sur dix suspendent les dépenses non engagées jusqu'à nouvel ordre. Les missions signées sont honorées ; les consultations en cours sont interrompues.",
+      "Notre enquête {{trimestrielle}} indique que sept directions générales sur dix suspendent les dépenses non engagées jusqu'à nouvel ordre. Les missions signées sont honorées ; les consultations en cours sont interrompues.",
     signataire: "Le délégué général",
     effet: "Demande globale −15 % pendant 2 tours",
     enJeu: "Les salaires tombent même quand le carnet est vide : c'est tout le risque d'une structure de coûts rigide.",
@@ -73,7 +76,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Agence de voyages d'affaires Novaris",
     objet: "Revalorisation des tarifs négociés pour votre compte",
     corps:
-      "Les tarifs professionnels du rail, de l'hôtellerie et de la restauration progressent de dix-huit pour cent sur l'ensemble de nos destinations. Vos accords-cadres sont révisés en conséquence pour les deux prochains trimestres.",
+      "Les tarifs professionnels du rail, de l'hôtellerie et de la restauration progressent de dix-huit pour cent sur l'ensemble de nos destinations. Vos accords-cadres sont révisés en conséquence pour les deux prochains {{trimestres}}.",
     signataire: "Votre chargée de compte",
     effet: "Frais variables par jour-conseil +18 % pendant 2 tours",
     enJeu:
@@ -103,7 +106,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Direction des engagements",
     objet: "Révision des conditions de votre ligne de trésorerie",
     corps:
-      "Votre activité ne présente aucun actif nantissable et votre poste clients constitue l'essentiel de votre bilan. Nous relevons le taux de votre ligne de trésorerie pour les deux prochains trimestres.",
+      "Votre activité ne présente aucun actif nantissable et votre poste clients constitue l'essentiel de votre bilan. Nous relevons le taux de votre ligne de trésorerie pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur des engagements",
     effet: "Taux d'intérêt ×1,5 pendant 2 tours",
     enJeu: "Un métier sans immobilisations finance son BFR par le découvert : le poste clients devient le vrai sujet.",
@@ -175,7 +178,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Mise en place d'un financement de votre poste clients",
     corps:
-      "La production de votre carnet de commandes signé nous permet de vous proposer une mobilisation de créances à des conditions préférentielles, pour les deux prochains trimestres.",
+      "La production de votre carnet de commandes signé nous permet de vous proposer une mobilisation de créances à des conditions préférentielles, pour les deux prochains {{trimestres}}.",
     signataire: "Votre chargé d'affaires",
     effet: "Taux d'intérêt ×0,7 pendant 2 tours (un cabinet ciblé)",
     enJeu: "Un carnet de commandes est une garantie : dans les services, on finance la confiance, pas les murs.",
@@ -192,7 +195,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
       "Notre directeur financier a quitté ses fonctions à trois semaines de la clôture. Nous cherchons une équipe capable d'intervenir immédiatement et réglons comptant. Votre réponse nous est nécessaire sous quarante-huit heures.",
     signataire: "Le président",
     effet:
-      "+70 jours-conseil (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite des jours disponibles",
+      "+{{entier: commande_conseil_mission_urgente}} jours-conseil (échelle {{trimestre}}) vendus d'office ce tour, réglés comptant, dans la limite des jours disponibles",
     enJeu: "Un cabinet à 100 % d'occupation ne peut pas dire oui : garder de la marge de manœuvre a une valeur.",
     nature: "market",
     pli: "email",
@@ -218,7 +221,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Prestataire informatique Axone · Direction technique",
     objet: "Défaillance matérielle de votre serveur de fichiers",
     corps:
-      "La grappe de disques a lâché en totalité. Livrables, modèles de proposition et base clients sont inaccessibles. La restauration depuis les sauvegardes hors site demandera deux trimestres pour être complète.",
+      "La grappe de disques a lâché en totalité. Livrables, modèles de proposition et base clients sont inaccessibles. La restauration depuis les sauvegardes hors site demandera deux {{trimestres}} pour être complète.",
     signataire: "Le directeur technique",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & plan de continuité d'activité",
@@ -332,7 +335,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Chambre de commerce · Club des grands comptes",
     objet: "Consultation préalable des cabinets de la région",
     corps:
-      "Le groupe Delorme, dont le siège est à Saint-Aubin, nous a demandé la liste des cabinets régionaux capables d'intervenir sur des audits de processus. Des entretiens exploratoires sont prévus dans les semaines qui viennent. Rien n'est arrêté, ni le périmètre ni le volume : un accord-cadre pourrait suivre le trimestre prochain.",
+      "Le groupe Delorme, dont le siège est à Saint-Aubin, nous a demandé la liste des cabinets régionaux capables d'intervenir sur des audits de processus. Des entretiens exploratoires sont prévus dans les semaines qui viennent. Rien n'est arrêté, ni le périmètre ni le volume : un accord-cadre pourrait suivre {{le trimestre}} prochain.",
     signataire: "Le chargé des grands comptes",
     effet: "Demande globale +8 % ce tour",
     enJeu:
@@ -347,7 +350,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Groupe Delorme · Direction des achats",
     objet: "Ouverture d'un accord-cadre de missions d'audit et d'accompagnement",
     corps:
-      "Le groupe ouvre un accord-cadre pour les trois trimestres à venir, réservé aux cabinets référencés de la région : environ deux cents jours d'audit et d'accompagnement par trimestre, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
+      "Le groupe ouvre un accord-cadre pour les trois {{trimestres}} à venir, réservé aux cabinets référencés de la région : environ {{lettres: flux(200)}} jours d'audit et d'accompagnement {{par trimestre}}, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
     signataire: "Le directeur des achats",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
@@ -362,7 +365,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Direction des entreprises",
     objet: "Campagne temporaire sur les crédits d'équipement professionnels",
     corps:
-      "Pour deux trimestres, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle couvre le matériel informatique, l'aménagement de locaux et les outils de travail à distance. Les dossiers complets déposés avant la fin du second trimestre sont concernés.",
+      "Pour deux {{trimestres}}, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle couvre le matériel informatique, l'aménagement de locaux et les outils de travail à distance. Les dossiers complets déposés avant la fin du second {{trimestre}} sont concernés.",
     signataire: "Le directeur des entreprises",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -392,7 +395,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     expediteur: "Groupe Delorme · Direction financière",
     objet: "Révision du volume de l'accord-cadre de missions",
     corps:
-      "À la suite de l'arrêté budgétaire du groupe, le volume de l'accord-cadre est revu à la baisse : les ordres de mission des deux prochains trimestres sont ramenés à un peu plus de la moitié des prévisions initiales. Les missions déjà engagées à Saint-Aubin et à Valbonne se poursuivent selon leur calendrier.",
+      "À la suite de l'arrêté budgétaire du groupe, le volume de l'accord-cadre est revu à la baisse : les ordres de mission des deux prochains {{trimestres}} sont ramenés à un peu plus de la moitié des prévisions initiales. Les missions déjà engagées à Saint-Aubin et à Valbonne se poursuivent selon leur calendrier.",
     signataire: "Le directeur financier",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -403,3 +406,6 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const CONSEIL_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, conseilScenario);

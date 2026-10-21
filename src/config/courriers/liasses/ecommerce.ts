@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { ecommerceScenario } from "@/config/scenarios/ecommerce";
 
 /**
  * LA LIASSE DE PIXEL & CO — vente en ligne.
@@ -8,7 +10,8 @@ import type { CourrierDef } from "../types";
  * des courriers qui ne se négocient pas — ils annoncent une décision déjà
  * prise ailleurs, et c'est précisément la leçon du secteur.
  */
-export const ECOMMERCE_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "ecom_algo_publicitaire",
     expediteur: "Régie publicitaire Audiences · Notification partenaire",
@@ -86,7 +89,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Transporteur Delahaye · Direction commerciale",
     objet: "Nouvelle grille tarifaire et surcharges de saison",
     corps:
-      "L'évolution du carburant et des taxes nous conduit à réviser l'ensemble de notre grille, surcharges de haute saison comprises. Le nouveau barème s'applique à tous vos envois pour les deux prochains trimestres.",
+      "L'évolution du carburant et des taxes nous conduit à réviser l'ensemble de notre grille, surcharges de haute saison comprises. Le nouveau barème s'applique à tous vos envois pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur commercial",
     effet: "Coût variable par commande +20 % pendant 2 tours",
     enJeu:
@@ -101,7 +104,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Direction des engagements",
     objet: "Révision de vos conditions — absence d'actif nantissable",
     corps:
-      "Votre bilan ne présente ni immobilier ni équipement mobilisable en garantie ; votre stock constitue votre seul actif significatif. Les conditions de votre ligne de financement sont durcies pour deux trimestres.",
+      "Votre bilan ne présente ni immobilier ni équipement mobilisable en garantie ; votre stock constitue votre seul actif significatif. Les conditions de votre ligne de financement sont durcies pour deux {{trimestres}}.",
     signataire: "Le directeur des engagements",
     effet: "Taux d'intérêt ×1,5 pendant 2 tours",
     enJeu: "Un pure player finance son stock par le découvert : le coût de l'argent devient un coût d'exploitation.",
@@ -171,7 +174,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Financement de votre stock de fin d'année",
     corps:
-      "Votre taux de retour maîtrisé et la récurrence de votre clientèle nous conduisent à accepter le financement de votre stock de saison, à des conditions préférentielles valables deux trimestres.",
+      "Votre taux de retour maîtrisé et la récurrence de votre clientèle nous conduisent à accepter le financement de votre stock de saison, à des conditions préférentielles valables deux {{trimestres}}.",
     signataire: "Votre chargée d'affaires",
     effet: "Taux d'intérêt ×0,7 pendant 2 tours (une enseigne ciblée)",
     enJeu: "Une base de clients qui revient est une garantie : elle vaut mieux qu'un entrepôt à l'actif.",
@@ -185,10 +188,10 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Aménagements Carrel · Direction des achats",
     objet: "Commande unique — équipement de trois plateaux de bureaux",
     corps:
-      "Nous équipons trois plateaux et vous passons une commande ferme de sept cents articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
+      "Nous équipons trois plateaux et vous passons une commande ferme de {{lettres: commande_ecom_btob}} articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
     signataire: "Le directeur des achats",
     effet:
-      "+700 commandes (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite du stock",
+      "+{{entier: commande_ecom_btob}} commandes (échelle {{trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
     enJeu: "Une commande B2B ne coûte rien en acquisition : la marge y est mécaniquement supérieure.",
     nature: "market",
     pli: "recommande",
@@ -215,7 +218,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Convoyeurs Lasalle · Service après-vente",
     objet: "Rapport d'intervention — blocage du convoyeur de tri",
     corps:
-      "Le moteur d'entraînement principal est grillé et le châssis a subi des contraintes. La remise en cadence nominale demandera deux trimestres. La préparation manuelle reste possible, à un rythme très inférieur.",
+      "Le moteur d'entraînement principal est grillé et le châssis a subi des contraintes. La remise en cadence nominale demandera deux {{trimestres}}. La préparation manuelle reste possible, à un rythme très inférieur.",
     signataire: "Le responsable après-vente",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & maintenance préventive",
@@ -229,7 +232,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Éditeur Stocklog · Service abonnés",
     objet: "Fin de maintenance de votre logiciel de gestion d'entrepôt",
     corps:
-      "Votre version n'est plus maintenue et ne suit plus votre volume de commandes. Les erreurs de prélèvement et la surconsommation d'emballages constatées chez nos abonnés non migrés s'aggravent trimestre après trimestre.",
+      "Votre version n'est plus maintenue et ne suit plus votre volume de commandes. Les erreurs de prélèvement et la surconsommation d'emballages constatées chez nos abonnés non migrés s'aggravent {{trimestre}} après {{trimestre}}.",
     signataire: "Le responsable du support",
     effet: "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Cycle de vie des actifs & veille technologique",
@@ -314,7 +317,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Direction générale des douanes · Bureau des particuliers et du commerce",
     objet: "Entrée en vigueur des droits sur les colis importés",
     corps:
-      "À compter du prochain trimestre, tout colis importé hors Union européenne supporte des droits et des frais de dédouanement, sans seuil d'exonération. Vos déclarations devront être déposées à chaque envoi.",
+      "À compter du prochain {{trimestre}}, tout colis importé hors Union européenne supporte des droits et des frais de dédouanement, sans seuil d'exonération. Vos déclarations devront être déposées à chaque envoi.",
     signataire: "Le chef de bureau",
     effet: "Coût d'achat +8 % pendant 2 tours",
     enJeu:
@@ -329,7 +332,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Régie publicitaire Audiences · Note de marché",
     objet: "Test de mise en avant décoration sur la place de marché Alcôve",
     corps:
-      "Nos données montrent que la place de marché Alcôve prépare un test de mise en avant de la décoration d'intérieur, en tête de rayon, avec quelques vendeurs sélectionnés. Le test durerait trois semaines et pourrait être élargi le trimestre prochain, sans qu'aucun calendrier ni aucun volume ne soit annoncé à ce jour.",
+      "Nos données montrent que la place de marché Alcôve prépare un test de mise en avant de la décoration d'intérieur, en tête de rayon, avec quelques vendeurs sélectionnés. Le test durerait trois semaines et pourrait être élargi {{le trimestre}} prochain, sans qu'aucun calendrier ni aucun volume ne soit annoncé à ce jour.",
     signataire: "L'équipe Partenaires",
     effet: "Demande globale +8 % ce tour",
     enJeu:
@@ -342,9 +345,9 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
   {
     code: "ecom_inv_grand_compte",
     expediteur: "Place de marché Alcôve · Direction des partenariats vendeurs",
-    objet: "Référencement en tête de rayon Décoration pour trois trimestres",
+    objet: "Référencement en tête de rayon Décoration pour trois {{trimestres}}",
     corps:
-      "À l'issue du test, la place de marché Alcôve référence les boutiques de décoration retenues en tête de rayon, avec bandeau saisonnier et mise en avant dans sa lettre d'information. Nos prévisions tablent sur plus de trente pour cent de commandes supplémentaires sur la catégorie, pour les trois trimestres à venir, avec un délai d'expédition de quarante-huit heures.",
+      "À l'issue du test, la place de marché Alcôve référence les boutiques de décoration retenues en tête de rayon, avec bandeau saisonnier et mise en avant dans sa lettre d'information. Nos prévisions tablent sur plus de trente pour cent de commandes supplémentaires sur la catégorie, pour les trois {{trimestres}} à venir, avec un délai d'expédition de quarante-huit heures.",
     signataire: "Le directeur des partenariats vendeurs",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
@@ -359,7 +362,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Direction des entreprises",
     objet: "Campagne temporaire sur les crédits d'équipement logistique",
     corps:
-      "Pour deux trimestres, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle s'adresse aux entreprises de vente à distance et couvre rayonnages, entrepôts et matériel de préparation de commandes. Les dossiers complets déposés avant la fin du second trimestre sont concernés.",
+      "Pour deux {{trimestres}}, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle s'adresse aux entreprises de vente à distance et couvre rayonnages, entrepôts et matériel de préparation de commandes. Les dossiers complets déposés avant la fin du second {{trimestre}} sont concernés.",
     signataire: "Le directeur des entreprises",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -374,7 +377,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Fédération du commerce en ligne · Note aux adhérents",
     objet: "Ouverture d'un second entrepôt par la boutique Maison Vélane",
     corps:
-      "La boutique Maison Vélane annonce l'ouverture d'un second entrepôt de douze mille mètres carrés près de Lyon, équipé d'une ligne de préparation automatisée. Elle l'accompagne d'une politique de prix agressive, avec quinze pour cent de remise permanente sur ses références d'entrée de gamme. Nos adhérents anticipent un partage du marché sur deux trimestres.",
+      "La boutique Maison Vélane annonce l'ouverture d'un second entrepôt de douze mille mètres carrés près de Lyon, équipé d'une ligne de préparation automatisée. Elle l'accompagne d'une politique de prix agressive, avec quinze pour cent de remise permanente sur ses références d'entrée de gamme. Nos adhérents anticipent un partage du marché sur deux {{trimestres}}.",
     signataire: "Le délégué général",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
@@ -389,7 +392,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     expediteur: "Place de marché Alcôve · Direction des catégories",
     objet: "Révision du programme de mise en avant Décoration",
     corps:
-      "Au terme de l'examen trimestriel, la place de marché Alcôve redéploie son espace de tête de rayon vers la rentrée scolaire et réduit le programme de mise en avant de la décoration. Les boutiques référencées conservent leur fiche, mais le trafic issu de la catégorie sera nettement moindre pendant les deux trimestres suivants.",
+      "Au terme de l'examen {{trimestriel}}, la place de marché Alcôve redéploie son espace de tête de rayon vers la rentrée scolaire et réduit le programme de mise en avant de la décoration. Les boutiques référencées conservent leur fiche, mais le trafic issu de la catégorie sera nettement moindre pendant les deux {{trimestres}} suivants.",
     signataire: "La directrice des catégories",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -400,3 +403,6 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const ECOMMERCE_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, ecommerceScenario);

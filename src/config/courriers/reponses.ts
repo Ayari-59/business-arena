@@ -1,5 +1,6 @@
 import type { RoundDecisions } from "@/engine/types";
 import type { CourrierDef } from "./types";
+import { courriersTransversesAuTrimestre } from "./texte";
 
 /**
  * LES COURRIERS EN RETOUR : une décision est adressée à quelqu'un.
@@ -56,11 +57,12 @@ export function qualiteDuTour(d: RoundDecisions): number {
   return somme > 0 ? somme : d.qualityBudget;
 }
 
-export const COURRIERS_EN_RETOUR: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "retour_licenciement",
     expediteur: "Cabinet Lermite · Avocats, pour le compte de son client",
-    objet: "Contestation du licenciement notifié le trimestre écoulé",
+    objet: "Contestation du licenciement notifié {{le trimestre}} écoulé",
     corps:
       "Notre client conteste le motif énoncé dans la lettre que vous lui avez adressée et saisit le conseil de prud'hommes. Le préavis court à compter de la notification. Nous vous invitons à transmettre le dossier à votre assureur de protection juridique.",
     signataire: "L'avocat au barreau",
@@ -90,7 +92,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
   {
     code: "retour_hausse_prix",
     expediteur: "Association de clients professionnels",
-    objet: "Votre augmentation tarifaire du trimestre écoulé",
+    objet: "Votre augmentation tarifaire {{du trimestre}} écoulé",
     corps:
       "Les entreprises que nous représentons nous signalent une hausse sensible de vos tarifs, sans que la prestation ait changé. Plusieurs d'entre elles consultent la concurrence et nous demandent de vous en informer avant de reporter leurs commandes.",
     signataire: "La déléguée générale",
@@ -107,7 +109,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
     expediteur: "Note interne · Commercial",
     objet: "Effet de votre baisse de tarif sur nos marges",
     corps:
-      "La baisse décidée le trimestre écoulé a été bien reçue par la clientèle, et les volumes suivent. Mais chaque unité vendue rapporte moins : à volume égal, nous encaissons davantage et gagnons moins. Il faudra vendre sensiblement plus pour retrouver la marge d'avant.",
+      "La baisse décidée {{le trimestre}} écoulé a été bien reçue par la clientèle, et les volumes suivent. Mais chaque unité vendue rapporte moins : à volume égal, nous encaissons davantage et gagnons moins. Il faudra vendre sensiblement plus pour retrouver la marge d'avant.",
     signataire: "Le responsable commercial",
     effet: EFFET,
     enJeu:
@@ -152,11 +154,11 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
     expediteur: "Votre banque · Service des engagements",
     objet: "Déblocage des fonds et échéancier de remboursement",
     corps:
-      "Le financement que vous avez sollicité est débloqué sur votre compte. Les échéances seront prélevées automatiquement à chaque fin de trimestre, capital et intérêts compris, et ce quel que soit le niveau de votre activité.",
+      "Le financement que vous avez sollicité est débloqué sur votre compte. Les échéances seront prélevées automatiquement à chaque fin {{de trimestre}}, capital et intérêts compris, et ce quel que soit le niveau de votre activité.",
     signataire: "Le chargé d'affaires entreprises",
     effet: EFFET,
     enJeu:
-      "Un emprunt soulage la trésorerie le jour où on le prend et la grève tous les trimestres suivants. L'échéance ne se négocie pas quand elle tombe.",
+      "Un emprunt soulage la trésorerie le jour où on le prend et la grève tous les {{trimestres}} suivants. L'échéance ne se négocie pas quand elle tombe.",
     nature: "internal",
     pli: "simple",
     icone: "banque",
@@ -167,7 +169,7 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
     expediteur: "Note interne · Les associés",
     objet: "Réception de la distribution décidée",
     corps:
-      "Nous avons bien reçu la distribution que vous avez proposée et nous vous en remercions. Nous notons qu'elle est prise sur les réserves constituées les trimestres passés, et donc qu'elle ne sera plus disponible pour financer ce que vous entreprendrez ensuite.",
+      "Nous avons bien reçu la distribution que vous avez proposée et nous vous en remercions. Nous notons qu'elle est prise sur les réserves constituées les {{trimestres}} passés, et donc qu'elle ne sera plus disponible pour financer ce que vous entreprendrez ensuite.",
     signataire: "Les associés",
     effet: EFFET,
     enJeu:
@@ -193,6 +195,9 @@ export const COURRIERS_EN_RETOUR: CourrierDef[] = [
     scope: "team",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ./texte.ts). */
+export const COURRIERS_EN_RETOUR: CourrierDef[] = courriersTransversesAuTrimestre(SOURCES);
 
 const parCode = new Map(COURRIERS_EN_RETOUR.map((c) => [c.code, c]));
 

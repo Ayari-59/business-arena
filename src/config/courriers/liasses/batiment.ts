@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { batimentScenario } from "@/config/scenarios/batiment";
 
 /**
  * LA LIASSE DE MARTEL & FILS — entreprise de rénovation.
@@ -8,7 +10,8 @@ import type { CourrierDef } from "../types";
  * matériaux, syndics, collectivités, assureurs, bureau de contrôle — et les
  * intempéries, qui ne préviennent que par bulletin.
  */
-export const BATIMENT_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "batiment_aide_renovation",
     expediteur: "Agence nationale de l'habitat · Service des aides",
@@ -99,7 +102,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Révision des conditions de l'ensemble de vos concours",
     corps:
-      "Les délais de règlement constatés sur vos marchés publics allongent votre besoin de financement. Nous relevons en conséquence le taux de votre découvert et de votre ligne de mobilisation de créances, pour les deux prochains trimestres.",
+      "Les délais de règlement constatés sur vos marchés publics allongent votre besoin de financement. Nous relevons en conséquence le taux de votre découvert et de votre ligne de mobilisation de créances, pour les deux prochains {{trimestres}}.",
     signataire: "Votre chargé d'affaires",
     effet: "Taux d'intérêt ×1,5 pendant 2 tours",
     enJeu: "Un métier qui finance trois mois de clients paie chaque point de taux beaucoup plus cher qu'un autre.",
@@ -171,7 +174,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Renégociation de votre découvert au vu de vos derniers bilans",
     corps:
-      "L'examen de vos comptes montre un endettement largement couvert par vos capitaux propres. Nous révisons à la baisse le coût de votre découvert pour les deux prochains trimestres.",
+      "L'examen de vos comptes montre un endettement largement couvert par vos capitaux propres. Nous révisons à la baisse le coût de votre découvert pour les deux prochains {{trimestres}}.",
     signataire: "Votre chargé d'affaires",
     effet: "Taux d'intérêt ×0,7 pendant 2 tours (une entreprise)",
     enJeu:
@@ -188,7 +191,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     corps:
       "L'entreprise retenue pour notre ravalement s'est désistée la veille du démarrage. L'échafaudage est monté et la copropriété a voté les fonds. Nous cherchons une reprise immédiate du marché, aux conditions initiales.",
     signataire: "Le gestionnaire d'immeuble",
-    effet: "Commande ferme de 180 m² ce tour (une entreprise tirée au sort)",
+    effet: "Commande ferme de {{entier: commande_batiment_chantier_surprise}} m² ce tour (une entreprise tirée au sort)",
     enJeu: "Une commande ferme se sert sur la capacité restante : acceptez-la si les équipes suivent, pas avant.",
     nature: "market",
     pli: "simple",
@@ -200,7 +203,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Levage Carpentier · Service après-vente",
     objet: "Rapport d'intervention — avarie hydraulique de votre mini-grue",
     corps:
-      "Le circuit hydraulique principal est hors d'usage et le vérin de flèche doit être remplacé. Les pièces sont à commander à l'étranger : deux trimestres avant remise en service. Le chantier est à l'arrêt.",
+      "Le circuit hydraulique principal est hors d'usage et le vérin de flèche doit être remplacé. Les pièces sont à commander à l'étranger : deux {{trimestres}} avant remise en service. Le chantier est à l'arrêt.",
     signataire: "Le responsable technique",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & maintenance préventive",
@@ -228,7 +231,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "M. Ternois, artisan · Cessation d'activité",
     objet: "Cession de ma nacelle et de mon fourgon avant départ en retraite",
     corps:
-      "Je cesse mon activité à la fin du trimestre et cède mon matériel, révisé et régulièrement entretenu, à un confrère plutôt qu'à un marchand. Le prix demandé est nettement inférieur à la cote.",
+      "Je cesse mon activité à la fin {{du trimestre}} et cède mon matériel, révisé et régulièrement entretenu, à un confrère plutôt qu'à un marchand. Le prix demandé est nettement inférieur à la cote.",
     signataire: "M. Ternois",
     effet: "Disponibilité +12 % ce tour (équipe ciblée)",
     enJeu: "Décision d'investissement & coût d'opportunité",
@@ -301,7 +304,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Direction départementale des territoires",
     objet: "Entrée en vigueur de la nouvelle réglementation thermique",
     corps:
-      "Les épaisseurs minimales d'isolant et la certification des menuiseries sont relevées pour tous les chantiers de rénovation déposés à compter du trimestre prochain. Les matériaux conformes sont plus coûteux et leur emploi est obligatoire.",
+      "Les épaisseurs minimales d'isolant et la certification des menuiseries sont relevées pour tous les chantiers de rénovation déposés à compter {{du trimestre}} prochain. Les matériaux conformes sont plus coûteux et leur emploi est obligatoire.",
     signataire: "Le chef du service habitat",
     effet: "Coût des matériaux +10 % pendant 2 tours",
     enJeu:
@@ -316,7 +319,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Atelier Delcourt Architectes · Études de faisabilité",
     objet: "Étude préalable à un programme de rénovation de résidences",
     corps:
-      "Nous achevons pour l'Office public de l'habitat de la Haute-Lys l'étude de plusieurs résidences. Des lots de second œuvre, isolation, menuiseries et plâtrerie, y seraient concernés. Rien n'est arrêté : le conseil d'administration doit se prononcer, et une consultation pourrait être lancée le trimestre prochain pour plusieurs centaines de logements.",
+      "Nous achevons pour l'Office public de l'habitat de la Haute-Lys l'étude de plusieurs résidences. Des lots de second œuvre, isolation, menuiseries et plâtrerie, y seraient concernés. Rien n'est arrêté : le conseil d'administration doit se prononcer, et une consultation pourrait être lancée {{le trimestre}} prochain pour plusieurs centaines de logements.",
     signataire: "L'architecte associé",
     effet: "Demande globale +8 % ce tour",
     enJeu:
@@ -331,11 +334,11 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Office public de l'habitat de la Haute-Lys · Direction du patrimoine",
     objet: "Approbation du programme de rénovation des résidences",
     corps:
-      "Le conseil d'administration a approuvé la rénovation de quatre résidences, soit près de trois cents logements, à engager sur les trois trimestres à venir. Les lots de second œuvre seront confiés par bons de commande à des entreprises du département, dont la vôtre. Les ordres de service seront échelonnés, les premiers chantiers démarrant dès le mois prochain.",
+      "Le conseil d'administration a approuvé la rénovation de quatre résidences, soit près de trois cents logements, à engager sur les trois {{trimestres}} à venir. Les lots de second œuvre seront confiés par bons de commande à des entreprises du département, dont la vôtre. Les ordres de service seront échelonnés, les premiers chantiers démarrant dès le mois prochain.",
     signataire: "Le directeur du patrimoine",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
-      "Pouvez-vous tenir ce volume ? Mobiliser plus d'équipes, sous-traiter ou investir dans du matériel : lequel coûte le moins sur trois trimestres ?",
+      "Pouvez-vous tenir ce volume ? Mobiliser plus d'équipes, sous-traiter ou investir dans du matériel : lequel coûte le moins sur trois {{trimestres}} ?",
     nature: "market",
     pli: "simple",
     icone: "accord",
@@ -346,7 +349,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Campagne temporaire sur les crédits d'équipement",
     corps:
-      "Notre établissement abaisse de quarante pour cent le taux des crédits d'équipement consentis aux entreprises du bâtiment, pour une période de deux trimestres. Nacelles, engins, véhicules utilitaires et outillage lourd entrent dans le champ de l'offre. Les garanties et les durées d'amortissement restent celles de nos conditions habituelles, et les dossiers ultérieurs seront étudiés au tarif courant.",
+      "Notre établissement abaisse de quarante pour cent le taux des crédits d'équipement consentis aux entreprises du bâtiment, pour une période de deux {{trimestres}}. Nacelles, engins, véhicules utilitaires et outillage lourd entrent dans le champ de l'offre. Les garanties et les durées d'amortissement restent celles de nos conditions habituelles, et les dossiers ultérieurs seront étudiés au tarif courant.",
     signataire: "Votre chargé d'affaires",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -361,7 +364,7 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     expediteur: "Fédération du bâtiment · Service économique",
     objet: "Investissement d'une entreprise concurrente sur le département",
     corps:
-      "La société Verdier-Lanoë annonce l'acquisition de deux nacelles, l'ouverture d'un second atelier de préfabrication et le recrutement de huit compagnons. Elle affiche des tarifs inférieurs de dix à quinze pour cent sur l'isolation et la plâtrerie, afin d'occuper vite ses nouvelles équipes. Nos adhérents anticipent un partage des consultations sur les deux prochains trimestres.",
+      "La société Verdier-Lanoë annonce l'acquisition de deux nacelles, l'ouverture d'un second atelier de préfabrication et le recrutement de huit compagnons. Elle affiche des tarifs inférieurs de dix à quinze pour cent sur l'isolation et la plâtrerie, afin d'occuper vite ses nouvelles équipes. Nos adhérents anticipent un partage des consultations sur les deux prochains {{trimestres}}.",
     signataire: "Le délégué économique",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
@@ -387,3 +390,6 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const BATIMENT_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, batimentScenario);
