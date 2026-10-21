@@ -88,7 +88,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_meteo_radieuse",
     expediteur: "Office de tourisme · Observatoire des flux",
-    objet: "Été indien — hausse des réservations de dernière minute",
+    objet: "{{Été indien — hausse des réservations de dernière minute}}",
     corps:
       "Trois semaines de beau temps hors saison sont annoncées sur toute la côte. Nos relevés montrent une poussée des réservations à moins de quarante-huit heures, à des prix supérieurs à la moyenne de saison.",
     signataire: "Le chargé d'observation",
@@ -204,7 +204,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_festival",
     expediteur: "Office de tourisme · Direction des grands événements",
-    objet: "Première édition du festival d'été",
+    objet: "{{Première édition du festival d'été}}",
     corps:
       "La ville accueillera un festival de musique sur quatre jours, avec quarante mille visiteurs attendus. La capacité hôtelière de l'agglomération représente le tiers de ce besoin.",
     signataire: "Le directeur des grands événements",
@@ -336,7 +336,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Office de tourisme · Service de la promotion",
     objet: "Visite de repérage d'un voyagiste le mois prochain",
     corps:
-      "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne. Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès {{le trimestre}} prochain.",
+      "{{Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne.}} Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès {{le trimestre}} prochain.",
     signataire: "La chargée de promotion",
     effet: "Demande globale +8 % ce tour",
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
@@ -380,7 +380,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Gazette de l'hôtellerie régionale · Rédaction",
     objet: "Un hôtel de la place de la gare rouvre et affiche ses prix",
     corps:
-      "La maison Larrivet, trois étoiles de la place de la gare, rouvre après une rénovation complète et l'ajout de deux salles de séminaire. Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année. Les professionnels s'attendent à un partage de la clientèle d'affaires entre les établissements du centre.",
+      "La maison Larrivet, trois étoiles de la place de la gare, rouvre après une rénovation complète et l'ajout de deux salles de séminaire. {{Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année.}} Les professionnels s'attendent à un partage de la clientèle d'affaires entre les établissements du centre.",
     signataire: "Le rédacteur en chef",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
@@ -393,7 +393,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_inv_retournement",
     expediteur: "Sillage Voyages · Direction des opérations",
-    objet: "Révision des volumes de notre programmation d'automne",
+    objet: "{{Révision des volumes de notre programmation d'automne}}",
     corps:
       "La saison de séminaires s'achève plus tôt que prévu et deux délégations ont reporté leur venue. Nos départs vers votre ville passent d'un groupe par semaine à un groupe toutes les deux semaines. Le contingent de chambres initialement convenu est donc ramené à environ la moitié pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur des opérations",

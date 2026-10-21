@@ -333,7 +333,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Association des commerçants du quartier d'affaires",
     objet: "Installation prochaine d'un bureau d'études dans la rue",
     corps:
-      "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place. Son secrétariat général consulte déjà les restaurateurs du quartier pour ses déjeuners d'affaires et ses réceptions. Aucune décision n'est prise, mais le volume pourrait se chiffrer en dizaines de couverts par semaine dès {{le trimestre}} prochain.",
+      "{{Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place.}} Son secrétariat général consulte déjà les restaurateurs du quartier pour ses déjeuners d'affaires et ses réceptions. Aucune décision n'est prise, mais le volume pourrait se chiffrer en dizaines de couverts par semaine dès {{le trimestre}} prochain.",
     signataire: "Le président de l'association",
     effet: "Demande globale +8 % ce tour",
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
@@ -377,7 +377,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Syndicat des restaurateurs de l'agglomération",
     objet: "Réouverture de la brasserie Verchère avec une seconde salle",
     corps:
-      "La brasserie Verchère, au bout de l'avenue, rouvre avec une seconde salle de cent vingt couverts et une cuisine entièrement rééquipée. Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année. La clientèle d'affaires devrait se répartir autrement entre les maisons du secteur.",
+      "La brasserie Verchère, au bout de l'avenue, rouvre avec une seconde salle de cent vingt couverts et une cuisine entièrement rééquipée. {{Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année.}} La clientèle d'affaires devrait se répartir autrement entre les maisons du secteur.",
     signataire: "Le président du syndicat",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
