@@ -9,8 +9,9 @@ import {
   EnveloppeOuverte,
   grilleDeCourriers,
 } from "@/components/courrier";
-import { courrierParCode } from "@/config/courriers/registre";
 import { courrierDeRoutine } from "@/config/courriers/routine";
+import { courrierDeLaPartie, objetDuCourrier } from "@/config/courriers/de-la-partie";
+import { phraseALaDuree } from "@/config/courriers/texte";
 import type { DestinataireDuCourrier } from "@/config/courriers/destinataire";
 import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
 import { Icone } from "@/components/icone";
@@ -69,9 +70,12 @@ export function CourrierDuTour({
   classe: classeInitial = false,
   noteDInvestissement = null,
   assurance = true,
+  jours,
 }: {
   /** Le niveau ouvre-t-il l'assurance ? Fermée, les courriers se lisent sans elle. */
   assurance?: boolean;
+  /** La durée d'un tour de la partie, en jours : les courriers se lisent à elle (le trimestre sans elle). */
+  jours?: number;
   /**
    * UN COURRIER QUI APPELLE L'INVESTISSEMENT, À UN NIVEAU QUI LE PLAFONNE. Les
    * histoires d'investissement (« pouvez-vous servir ce volume ? … investir »)
@@ -129,6 +133,7 @@ export function CourrierDuTour({
     article !== null && (article.auteur === "enseignant" || article.sujets.some((x) => x.sujet !== "calme"));
   // Le courrier de routine : ce que le facteur apporte un trimestre calme.
   const routine = courrierDeRoutine(gameId, round, assurance);
+  const objetDeLaRoutine = courrierDeLaPartie(routine.code, { jours, assurance })?.objet ?? routine.objet;
   const vide = plis.length === 0;
 
   // Classé : une ligne, et de quoi relire. Le courrier a dit ce qu'il avait à dire.
@@ -145,8 +150,8 @@ export function CourrierDuTour({
             {[
               article ? `${NOM_DU_JOURNAL}, « ${article.titre} »` : null,
               ...(vide
-                ? [routine.objet]
-                : plis.map((p) => courrierParCode.get(p.code)?.objet ?? p.code)),
+                ? [objetDeLaRoutine]
+                : plis.map((p) => objetDuCourrier(p.code, jours) ?? p.code)),
             ]
               .filter(Boolean)
               .join(" · ")}
@@ -201,8 +206,8 @@ export function CourrierDuTour({
           {ouvert
             ? vide
               ? presseAnnonce
-                ? "La presse dit ce qui attend tout le marché ; votre courrier, lui, n'engage rien ce trimestre."
-                : "Rien qui engage ce trimestre : le courrier se classe, et la décision reprend la main."
+                ? phraseALaDuree("La presse dit ce qui attend tout le marché ; votre courrier, lui, n'engage rien {{ce trimestre}}.", jours)
+                : phraseALaDuree("Rien qui engage {{ce trimestre}} : le courrier se classe, et la décision reprend la main.", jours)
               : `${plis.length > 1 ? `${plis.length} courriers pèsent` : "Un courrier pèse"} sur ce tour : décidez en le sachant.`
             : "Le facteur est passé. Ouvrez le courrier avant de décider."}
         </p>
@@ -259,7 +264,7 @@ export function CourrierDuTour({
           <div className={seul && !enParcours ? "courrier-pose-seul" : ""}>
           <div className={seul && !enParcours ? "courrier-pose-seul-grille" : ""}>
           {seul && !enParcours ? (
-            <EnveloppeOuverte code={premier} adresse={adresse} assurance={assurance} />
+            <EnveloppeOuverte code={premier} adresse={adresse} assurance={assurance} jours={jours} />
           ) : null}
           <div className={seul ? "mx-auto w-full sm:max-w-[40rem]" : ""}>
             {/*
@@ -269,13 +274,14 @@ export function CourrierDuTour({
             */}
             <div className={grilleDeCourriers(vide ? 1 : plis.length, "posee")}>
               {vide ? (
-                <CourrierRecommande code={routine.code} adresse={adresse} quand={quand} assurance={assurance} />
+                <CourrierRecommande code={routine.code} adresse={adresse} quand={quand} assurance={assurance} jours={jours} />
               ) : (
                 plis.map((p, i) => (
                   <CourrierRecommande
                     key={`${p.code}-${p.teamId ?? "market"}`}
                     code={p.code}
                     assurance={assurance}
+                    jours={jours}
                     delayMs={i * 500}
                     destinataire={portee(p.teamId)}
                     adresse={adresse}

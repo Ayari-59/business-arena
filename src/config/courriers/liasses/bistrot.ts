@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { bistrotScenario } from "@/config/scenarios/bistrot";
 
 /**
  * LA LIASSE DE LA TABLE D'AUGUSTIN — bistrot de quartier.
@@ -9,7 +11,8 @@ import type { CourrierDef } from "../types";
  * métier en risque élevé. Les courriers favorables viennent d'un guide, d'un
  * client ou de la mairie.
  */
-export const BISTROT_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "bistrot_avis_viral",
     expediteur: "Note interne · Réservations",
@@ -85,7 +88,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     expediteur: "Grossiste Vandamme · Direction commerciale",
     objet: "Révision de nos tarifs — beurre, crème et viande",
     corps:
-      "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles. Le nouveau barème court sur deux trimestres.",
+      "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles. Le nouveau barème court sur deux {{trimestres}}.",
     signataire: "Le directeur commercial",
     effet: "Coût matières +24 % pendant 2 tours",
     enJeu:
@@ -114,7 +117,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit du Commerce · Direction des risques",
     objet: "Révision de votre autorisation de découvert",
     corps:
-      "Notre comité classe la restauration traditionnelle en risque élevé. Votre autorisation est réduite et le taux applicable relevé pour les deux prochains trimestres. Un réexamen sera possible sur présentation de vos comptes annuels.",
+      "Notre comité classe la restauration traditionnelle en risque élevé. Votre autorisation est réduite et le taux applicable relevé pour les deux prochains {{trimestres}}. Un réexamen sera possible sur présentation de vos comptes annuels.",
     signataire: "Le directeur des risques",
     effet: "Taux d'intérêt ×1,5 pendant 2 tours",
     enJeu: "Un métier à faible marge supporte mal le coût du découvert : la trésorerie se pilote au jour le jour.",
@@ -183,12 +186,12 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
   {
     code: "bistrot_banquet_surprise",
     expediteur: "Famille Delporte · Repas de mariage",
-    objet: "Demande urgente — repas de 220 couverts dans trois jours",
+    objet: "Demande urgente — repas de {{entier: commande_bistrot_banquet_surprise}} couverts dans trois jours",
     corps:
-      "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer deux cent vingt couverts samedi. Nous réglons comptant le jour même.",
+      "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer {{lettres: commande_bistrot_banquet_surprise}} couverts samedi. Nous réglons comptant le jour même.",
     signataire: "Pour la famille, M. Delporte",
     effet:
-      "+220 couverts (échelle trimestre) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
+      "+{{entier: commande_bistrot_banquet_surprise}} couverts (échelle {{trimestre}}) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
     enJeu: "Dire oui suppose des denrées, une brigade et de la place : trois contraintes, une seule opportunité.",
     nature: "market",
     pli: "email",
@@ -215,7 +218,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     expediteur: "Cuisines Professionnelles Lheureux · Service après-vente",
     objet: "Rapport d'intervention — four principal hors service",
     corps:
-      "La sole et la résistance principale sont hors d'usage. La pièce n'est plus référencée : le remplacement de l'appareil s'impose, avec un délai de deux trimestres. La moitié de votre carte est concernée.",
+      "La sole et la résistance principale sont hors d'usage. La pièce n'est plus référencée : le remplacement de l'appareil s'impose, avec un délai de deux {{trimestres}}. La moitié de votre carte est concernée.",
     signataire: "Le responsable après-vente",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & maintenance préventive",
@@ -330,7 +333,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     expediteur: "Association des commerçants du quartier d'affaires",
     objet: "Installation prochaine d'un bureau d'études dans la rue",
     corps:
-      "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place. Son secrétariat général consulte déjà les restaurateurs du quartier pour ses déjeuners d'affaires et ses réceptions. Aucune décision n'est prise, mais le volume pourrait se chiffrer en dizaines de couverts par semaine dès le trimestre prochain.",
+      "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place. Son secrétariat général consulte déjà les restaurateurs du quartier pour ses déjeuners d'affaires et ses réceptions. Aucune décision n'est prise, mais le volume pourrait se chiffrer en dizaines de couverts par semaine dès {{le trimestre}} prochain.",
     signataire: "Le président de l'association",
     effet: "Demande globale +8 % ce tour",
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
@@ -344,7 +347,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     expediteur: "Montclar Ingénierie · Direction des services généraux",
     objet: "Déjeuners d'affaires et banquets pour l'année à venir",
     corps:
-      "Notre installation est achevée et nous arrêtons notre organisation : un déjeuner d'affaires de vingt-cinq couverts chaque midi de semaine et un banquet de quatre-vingts couverts par mois, pendant les trois trimestres à venir. Nous répartissons ces réservations entre les tables du quartier, soit environ trente pour cent de couverts en plus pour l'ensemble des maisons.",
+      "Notre installation est achevée et nous arrêtons notre organisation : un déjeuner d'affaires de vingt-cinq couverts chaque midi de semaine et un banquet de quatre-vingts couverts par mois, pendant les trois {{trimestres}} à venir. Nous répartissons ces réservations entre les tables du quartier, soit environ trente pour cent de couverts en plus pour l'ensemble des maisons.",
     signataire: "Le directeur des services généraux",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
@@ -359,7 +362,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit du Commerce · Direction des professionnels",
     objet: "Campagne temporaire sur les crédits d'équipement",
     corps:
-      "Notre banque ouvre une campagne en faveur de l'équipement des restaurateurs : cuisine, chambre froide, mobilier de salle. Les taux des crédits d'équipement sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains trimestres. La grille habituelle s'appliquera de nouveau ensuite.",
+      "Notre banque ouvre une campagne en faveur de l'équipement des restaurateurs : cuisine, chambre froide, mobilier de salle. Les taux des crédits d'équipement sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains {{trimestres}}. La grille habituelle s'appliquera de nouveau ensuite.",
     signataire: "Le directeur des professionnels",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -389,7 +392,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     expediteur: "Montclar Ingénierie · Direction financière",
     objet: "Révision de nos commandes de restauration",
     corps:
-      "Dans le cadre d'un plan de maîtrise des dépenses, nos banquets passent d'un par mois à un tous les deux mois. Nos déjeuners d'affaires sont ramenés de vingt-cinq à une douzaine de couverts par midi, et une partie de nos équipes déjeune désormais sur place. Cette révision s'applique pour les deux prochains trimestres.",
+      "Dans le cadre d'un plan de maîtrise des dépenses, nos banquets passent d'un par mois à un tous les deux mois. Nos déjeuners d'affaires sont ramenés de vingt-cinq à une douzaine de couverts par midi, et une partie de nos équipes déjeune désormais sur place. Cette révision s'applique pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur financier",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -400,3 +403,6 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const BISTROT_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, bistrotScenario);

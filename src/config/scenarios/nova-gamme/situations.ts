@@ -12,8 +12,12 @@
 
 import { attachModelQuestions, hints } from "../situation-kit";
 import type { SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { NOVA_HOME } from "../../groupe/nova";
+import { novaGammeScenario } from "./index";
 
-export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
+/** Les sources à jetons : le registre en garde le rendu au trimestre (`NOVA_GAMME_SITUATIONS`). */
+const SOURCES: SituationDef[] = [
   {
     code: "novag_t1_reprise",
     category: "prise_de_poste",
@@ -65,11 +69,11 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["revenue", "fixed_costs", "variable_costs", "contribution_margin", "breakeven"],
     hints: hints([
-      "Regardez vos charges : certaines tombent chaque trimestre, que vous vendiez des Go, des One ou rien du tout.",
+      "Regardez vos charges : certaines tombent chaque {{trimestre}}, que vous vendiez des Go, des One ou rien du tout.",
       "Combien laisse une Go une fois ses composants et sa main-d'œuvre payés ? Et une Studio ?",
       "Il existe un volume précis, toutes références confondues, à partir duquel vous cessez de perdre de l'argent — et il dépend de ce que vous vendez.",
-      "Une analyse du seuil de rentabilité à mix constant donnerait un objectif chiffré à votre premier trimestre.",
-      "Calculez la marge moyenne d'une enceinte au mix prévu (15 € la Go, 21 € la One, 59 € la Studio une fois lancée), puis divisez les charges de structure par cette marge. Et comparez le coût de développement de la Studio aux marges qu'elle rapportera d'ici Noël : financée dès ce tour, elle se vend au suivant.",
+      "Une analyse du seuil de rentabilité à mix constant donnerait un objectif chiffré à votre premier {{trimestre}}.",
+      "Calculez la marge moyenne d'une enceinte au mix prévu (15 € la Go, 21 € la One, 59 € la Studio une fois lancée), puis divisez les charges de structure par cette marge. Et comparez le coût de développement de la Studio aux marges qu'elle rapportera d'ici Noël : financée dès ce tour, elle se vend {{au_tour: vente_studio}}.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -213,7 +217,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Le paradoxe du succès",
     narrative:
-      "Trimestre record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio. Le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge. La grande distribution règle à soixante jours, CampusTech à quatre-vingts, et les composants, eux, ont été payés.",
+      "{{Trimestre}} record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio. Le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge. La grande distribution règle à soixante jours, CampusTech à quatre-vingts, et les composants, eux, ont été payés.",
     problem:
       "Votre entreprise gagne de l'argent mais n'en a plus en caisse. Identifiez les causes de ce paradoxe, référence par référence.",
     diagnosticOptions: [
@@ -539,7 +543,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
   {
     code: "novag_detect_below_breakeven",
     category: "alerte_comptable",
-    title: "Le trimestre s'est terminé dans le rouge",
+    title: "{{Le trimestre}} s'est terminé dans le rouge",
     narrative:
       "Le résultat du tour est négatif : la marge dégagée par les trois références n'a pas couvert les charges de structure. Ce n'est pas forcément une question de volume : un atelier plein de Go peut perdre de l'argent là où un atelier moins rempli de Studio en gagne.",
     problem:
@@ -650,7 +654,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     conceptCodes: ["capacity", "discounting", "irr_payback", "contribution_margin"],
     hints: hints([
       "Vos lignes ont-elles produit tout ce que les trois marchés demandaient ? Combien de ventes manquées, et sur quelle référence ?",
-      "Investir aujourd'hui, c'est décaisser maintenant pour vendre plus tard : combien de trimestres reste-t-il pour rentabiliser ?",
+      "Investir aujourd'hui, c'est décaisser maintenant pour vendre plus tard : combien {{de trimestres}} reste-t-il pour rentabiliser ?",
       "Avant d'agrandir, demandez-vous si l'atelier actuel produit le bon mix : une place donnée à la Go rapporte cinq fois moins qu'une place donnée à la Studio.",
       "Une VAN comparerait le coût des lignes aux marges futures actualisées du mix qu'elles produiront.",
       "Calculez d'abord ce que rapporte un remix à capacité constante ; puis la VAN des lignes supplémentaires sur les tours restants, au mix le plus rentable que leur demande permet.",
@@ -667,12 +671,12 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "La caisse pleine d'après-Noël",
     narrative:
-      "Les ventes du pic ont été encaissées, CampusTech et la grande distribution ont fini par payer, et le compte affiche plus d'un trimestre de charges de structure d'avance, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an. Il facture par ailleurs votre découvert 12 %. Les composants des trois références, eux, se paient avant que la première enceinte ne soit vendue, et la Studio en consomme le plus.",
+      "Les ventes du pic ont été encaissées, CampusTech et la grande distribution ont fini par payer, et le compte affiche plus d'un {{trimestre}} de charges de structure d'avance, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 12 %. Les composants des trois références, eux, se paient avant que la première enceinte ne soit vendue, et la Studio en consomme le plus.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
       { id: "novag_ic_cout_opportunite", label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner", correct: true },
-      { id: "novag_ic_garder", label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir, mix compris", correct: true },
+      { id: "novag_ic_garder", label: "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, mix compris", correct: true },
       { id: "novag_ic_tout", label: "Puisque le placement rapporte, autant y mettre la totalité du solde", correct: false },
       { id: "novag_ic_exploitation", label: "Placer améliore le résultat d'exploitation de l'entreprise", correct: false },
     ],
@@ -682,7 +686,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 12 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -712,9 +716,9 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde aux charges de structure d'un seul trimestre : de combien de tours d'avance disposez-vous ?",
+      "Comparez votre solde aux charges de structure d'un seul {{trimestre}} : de combien de tours d'avance disposez-vous ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
-      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera ni les composants, ni les salaires, ni l'échéance d'emprunt de ce trimestre.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera ni les composants, ni les salaires, ni l'échéance d'emprunt de {{ce trimestre}}.",
       "Projetez donc les décaissements du tour à venir, référence par référence, avant de décider du montant : c'est un budget de trésorerie, même sommaire.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
@@ -760,14 +764,14 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
         id: "novag7_option",
         prompt: "Engager un tiers du développement ce tour, acheter l'étude de marché, puis décider au tour suivant de finir ou d'abandonner, c'est…",
         options: [
-          { id: "a", label: "Acheter une option : on paie pour garder le droit de lancer au tour 3, et de renoncer si le marché ne vient pas" },
+          { id: "a", label: "Acheter une option : on paie pour garder le droit de lancer au tour {{entier: home_par_etapes}}, et de renoncer si le marché ne vient pas" },
           { id: "b", label: "Gaspiller 30 000 € : un développement se finance d'un coup ou pas du tout" },
           { id: "c", label: "Repousser la décision sans rien payer" },
           { id: "d", label: "Garantir le succès du lancement" },
         ],
         correctOptionId: "a",
         explain:
-          "Les 30 000 € démarrent le développement sans engager les 60 000 € qui restent : la première vente reste possible au tour 3. Si l'étude dit que les foyers ne viennent pas, on abandonne et l'on ne perd que la mise. C'est le prix de l'information, à comparer à ce que coûterait de tout engager pour rien.",
+          "Les 30 000 € démarrent le développement sans engager les 60 000 € qui restent : la première vente reste possible au tour {{entier: home_par_etapes}}. Si l'étude dit que les foyers ne viennent pas, on abandonne et l'on ne perd que la mise. C'est le prix de l'information, à comparer à ce que coûterait de tout engager pour rien.",
       },
     ],
     modelRelevance: {
@@ -783,13 +787,13 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
       "Combien laisse une Home par heure d'atelier ? Et une One ?",
       "Le marché des foyers connectés peut décoller, ou rester petit. L'étude de marché vous dirait lequel, à la fin du tour.",
       "Un arbre de décision, avec la marge par heure d'atelier à chaque branche, répond à la question : tout engager, engager un tiers et étudier, ou ne rien lancer.",
-      "36 € pour 0,45 h, soit 80 € par heure, contre 70 € par heure pour la One : la Home ne remplace la One avec profit que si sa demande est là. Engager 30 000 € ce tour garde le lancement du tour 3 ; l'étude de marché dira s'il faut finir.",
+      "36 € pour 0,45 h, soit 80 € par heure, contre 70 € par heure pour la One : la Home ne remplace la One avec profit que si sa demande est là. Engager 30 000 € ce tour garde le lancement du tour {{entier: home_par_etapes}} ; l'étude de marché dira s'il faut finir.",
     ]),
     trigger: { round: 1 },
     seulementAvec: { reference: "nova-home" },
     weight: 1,
     decisionLevers: [
-      { field: "productionPlan", direction: "review", hint: "La Home prendra sa place sur les mêmes lignes que la Go, la One et la Studio : au tour 3 au plus tôt, chaque Home produite y remplacera une autre enceinte." },
+      { field: "productionPlan", direction: "review", hint: "La Home prendra sa place sur les mêmes lignes que la Go, la One et la Studio : au tour {{entier: home_au_plus_tot}} au plus tôt, chaque Home produite y remplacera une autre enceinte." },
       { field: "marketingBudget", direction: "review", hint: "Une catégorie qui naît se fait connaître : une Home sans budget de lancement se vendra mal, et ce budget se prévoit avant d'engager la suite du développement." },
     ],
   },
@@ -798,7 +802,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Sur le marché, la première",
     narrative:
-      "Vos premières Home sont en rayon. Les foyers connectés les découvrent, et des acheteurs de One sont passés au multipièce… y compris chez vous : une partie des Home vendues l'a été à des clients qui auraient pris une One. La plateforme qui fait vivre l'application coûte 8 000 € par tour, que la Home se vende ou non. Et Noël arrive : c'est là que le module radio manque le plus souvent.",
+      "Vos premières Home sont en rayon. Les foyers connectés les découvrent, et des acheteurs de One sont passés au multipièce… y compris chez vous : une partie des Home vendues l'a été à des clients qui auraient pris une One. La plateforme qui fait vivre l'application coûte {{entier: plateforme_home}} € par tour, que la Home se vende ou non. Et Noël arrive : c'est là que le module radio manque le plus souvent.",
     problem:
       "Combien la Home vous a-t-elle vraiment rapporté ce tour, une fois retirées les One qu'elle a remplacées et payée sa plateforme ? Faut-il la pousser avant Noël, ou garder l'atelier pour la One ?",
     diagnosticOptions: [
@@ -849,7 +853,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
       "Une Home vendue à un ancien client de votre One ne rapporte que l'écart de marge entre les deux : combien ?",
       "Les 90 000 € du développement sont payés : ils ne changent rien à ce que rapportera le prochain tour. La plateforme, si.",
       "Une analyse des coûts pertinents, croisée avec la marge par heure d'atelier, dit ce que la Home ajoute et quoi produire au pic.",
-      "Comptez 36 € par Home prise à un concurrent ou à un nouveau foyer, 15 € par Home qui remplace une de vos One, puis retranchez les 8 000 € de plateforme. Si le solde est positif, donnez à la Home son budget de lancement ; au pic, servez par marge par heure d'atelier (80 € la Home, 70 € la One) dans la limite de la demande.",
+      "Comptez 36 € par Home prise à un concurrent ou à un nouveau foyer, 15 € par Home qui remplace une de vos One, puis retranchez les {{entier: plateforme_home}} € de plateforme. Si le solde est positif, donnez à la Home son budget de lancement ; au pic, servez par marge par heure d'atelier (80 € la Home, 70 € la One) dans la limite de la demande.",
     ]),
     trigger: { round: 4 },
     seulementAvec: { reference: "nova-home", auMarche: true },
@@ -865,7 +869,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   novag_t1_reprise:
-    "Le seuil de rentabilité, calculé à mix constant, donne un objectif chiffré au premier trimestre : le volume d'enceintes, toutes références confondues, qui couvre exactement les charges de structure. La recherche sur la Studio s'y ajoute en charge, et se juge sur les marges qu'elle apportera.",
+    "Le seuil de rentabilité, calculé à mix constant, donne un objectif chiffré au premier {{trimestre}} : le volume d'enceintes, toutes références confondues, qui couvre exactement les charges de structure. La recherche sur la Studio s'y ajoute en charge, et se juge sur les marges qu'elle apportera.",
   novag_t2_trois_marches:
     "L'analyse de l'élasticité mesure la sensibilité au prix de CHAQUE marché de la gamme : c'est elle qui dit où une baisse rapporte du volume et où elle ne fait que coûter de la marge.",
   novag_t3_facteur_rare:
@@ -892,4 +896,18 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "Le budget de trésorerie projette les décaissements du tour à venir, composants de chaque référence compris : il est le seul à dire quelle part du solde peut être bloquée sans risquer le découvert.",
 };
 
-attachModelQuestions(NOVA_GAMME_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(SOURCES, MODEL_EXPLAIN);
+
+/**
+ * LE SCÉNARIO DONT LES ÉNONCÉS LISENT LEURS TOURS. La NOVA Home n'est pas dans
+ * le registre : le niveau 7 l'ajoute à la gamme (`avecLesNouveautes`,
+ * scenario-joue.ts) AVANT la mise à la durée du tour, qui recompte alors en
+ * tours son tour de disponibilité et sa durée minimale de développement
+ * (`applyPeriodicity`). Les énoncés qui la datent la lisent donc ici, ajoutée
+ * de la même façon, et le rendu à chaque durée passe par la même règle. Aucune
+ * autre grandeur de ces énoncés ne dépend de la Home.
+ */
+const avecLaHome = { ...novaGammeScenario, products: [...novaGammeScenario.products!, NOVA_HOME.reference] };
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const NOVA_GAMME_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, avecLaHome);

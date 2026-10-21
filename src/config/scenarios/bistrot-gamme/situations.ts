@@ -1,6 +1,8 @@
-import { BISTROT_SITUATIONS } from "../bistrot/situations";
+import { BISTROT_SOURCES } from "../bistrot/situations";
 import { patchSituationText, type SituationTextPatch } from "../situation-patch";
 import type { SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { bistrotGammeScenario } from "./index";
 
 /**
  * Situations pédagogiques de LA TABLE D'AUGUSTIN · GAMME.
@@ -13,6 +15,12 @@ import type { SituationDef } from "../situation-kit";
  * situations sont HÉRITÉES du bistrot : même structure, sous d'autres codes ;
  * le texte de celles que le mix change est réécrit, les autres sont reprises
  * telles quelles.
+ *
+ * Elles héritent des SOURCES à jetons du bistrot, et non de son rendu : le texte
+ * suit la durée du tour des parties de la gamme (`situation-texte.ts`), lu dans
+ * le scénario de la gamme. Ses charges de structure, sa cuisine et sa terrasse
+ * sont celles du bistrot ; au trimestre, le texte hérité est donc octet pour octet
+ * celui d'avant.
  */
 
 const CODE = (code: string) => code.replace(/^bistrot_/, "bistrotg_");
@@ -34,8 +42,8 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Séparez ce que vous payez pour CHAQUE assiette servie de ce que vous payez chaque mois quoi qu'il arrive. Une assiette du midi et une assiette du soir ne coûtent pas la même chose.",
       "Les denrées suivent les couverts ; la brigade, le loyer et l'énergie de base tombent même une salle vide, et ils sont communs aux quatre offres.",
       "Le ratio matières rapporte le coût des denrées au prix de vente : 7,50 € sur 27 € le midi (28 %), 12 € sur 38 € le soir (32 %), 10 € sur 33 € en banquet (30 %).",
-      "Marge par couvert : midi 27 − 9,50 = 17,50 €, soir 38 − 15 = 23 €, banquets 33 − 12,50 = 20,50 €. Charges de structure décaissées = 90 000 € par trimestre.",
-      "Seuil = 90 000 ÷ marge MOYENNE d'un couvert au mix prévu, soit environ 4 400 couverts au mix habituel : 70 par jour sur 64 jours d'ouverture. Plus de soir dans le mix, moins de couverts à servir pour équilibrer ; et le traiteur ne vend rien tant qu'il n'est pas bâti.",
+      "Marge par couvert : midi 27 − 9,50 = 17,50 €, soir 38 − 15 = 23 €, banquets 33 − 12,50 = 20,50 €. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
+      "Seuil = {{entier: charges}} ÷ marge MOYENNE d'un couvert au mix prévu, soit environ {{entier: dizaine(flux(4400))}} couverts au mix habituel : 70 par jour sur {{entier: flux(64)}} jours d'ouverture. Plus de soir dans le mix, moins de couverts à servir pour équilibrer ; et le traiteur ne vend rien tant qu'il n'est pas bâti.",
     ],
     modelExplain:
       "Le seuil de rentabilité traduit le ratio matières en une question opérationnelle : combien de couverts par jour faut-il servir pour ne plus perdre d'argent ? Avec quatre offres, il se calcule à mix constant, et le mix devient une décision.",
@@ -65,7 +73,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   bistrot_t4_banquets: {
     title: "La saison des banquets, et le reste de la carte",
     narrative:
-      "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre, règlent à 30 jours et privatisent la salle des soirs entiers. Chaque soir donné aux banquets est un soir retiré à la carte, et la cuisine ne sert qu'une fois : 9 000 couverts, toutes offres confondues.",
+      "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur {{ce trimestre}}, règlent à 30 jours et privatisent la salle des soirs entiers. Chaque soir donné aux banquets est un soir retiré à la carte, et la cuisine ne sert qu'une fois : {{entier: capacite_parc}} couverts, toutes offres confondues.",
     problem:
       "Combien de couverts préparer par offre pour absorber le pic, que sacrifiez-vous, et que risquez-vous en préparant trop ?",
     diagnosticLabels: [
@@ -75,9 +83,9 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Seule la salle limite le nombre de couverts : la brigade suivra",
     ],
     hintTexts: [
-      "Regardez la saisonnalité du segment banquets : quel coefficient s'applique au quatrième trimestre, et que font les autres offres pendant ce temps ?",
+      "Regardez la saisonnalité du segment banquets : quel coefficient s'applique au quatrième {{trimestre}}, et que font les autres offres pendant ce temps ?",
       "Les banquets grimpent à 1,85 fois leur niveau ordinaire ; la carte du soir monte aussi, la formule du midi à peine.",
-      "Vos deux plafonds sont proches : 9 000 couverts en salle et cuisine, 4 550 heures de brigade (9 100 couverts à une demi-heure chacun), mais un banquet demande 0,45 h et un couvert du soir 0,6 h : le mix décide de la contrainte active.",
+      "Vos deux plafonds sont proches : {{entier: capacite_parc}} couverts en salle et cuisine, {{nombre: 10 * flux(455)}} heures de brigade ({{entier: 10 * flux(455) / 0.5}} couverts à une demi-heure chacun), mais un banquet demande 0,45 h et un couvert du soir 0,6 h : le mix décide de la contrainte active.",
       "Préparer plus que ce que vous servirez coûte les denrées perdues, sans aucune contrepartie : rien ne se stocke, sur aucune offre.",
       "Estimez la demande du tour offre par offre, comparez la somme aux deux plafonds, et n'oubliez pas que les banquets règlent à 30 jours et le traiteur à 45 ou 60 : le résultat arrive avant l'encaissement.",
     ],
@@ -87,20 +95,20 @@ const PATCHES: Record<string, SituationTextPatch> = {
   bistrot_detect_idle_cash: {
     title: "La caisse fait le plein, et le traiteur attend",
     narrative:
-      "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture votre découvert 14 %. Vos fournisseurs seront réglés à vingt et un jours comme d'habitude, et le projet traiteur, lui, attend toujours ses 18 000 €.",
+      "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture votre découvert 14 %. Vos fournisseurs seront réglés à vingt et un jours comme d'habitude, et le projet traiteur, lui, attend toujours ses 18 000 €.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans le traiteur, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [
       "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner, que le placement ou un projet peut combler",
-      "Le montant bloqué ou investi ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir, offre par offre",
+      "Le montant bloqué ou investi ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, offre par offre",
       "Puisque le placement rapporte, autant y mettre la totalité du solde",
       "Placer améliore le résultat d'exploitation de l'entreprise",
     ],
     hintTexts: [
-      "Comparez votre solde aux charges de structure d'un trimestre : de combien de trimestres d'avance disposez-vous ?",
+      "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; un buffet traiteur laisse 15 € de marge, mais seulement une fois l'activité bâtie.",
       "Attention : le placement est bloqué jusqu'au tour suivant, et la R&D du traiteur est une charge du tour. Ni l'un ni l'autre ne réglera ce qui tombera d'ici là.",
-      "Projetez les décaissements du trimestre, offre par offre : denrées du midi, du soir et des banquets, salaires de la brigade, loyer. Une partie de ce que vous voyez en caisse appartient déjà à vos fournisseurs.",
+      "Projetez les décaissements {{du trimestre}}, offre par offre : denrées du midi, du soir et des banquets, salaires de la brigade, loyer. Une partie de ce que vous voyez en caisse appartient déjà à vos fournisseurs.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
@@ -108,8 +116,11 @@ const PATCHES: Record<string, SituationTextPatch> = {
   },
 };
 
-export const BISTROT_GAMME_SITUATIONS: SituationDef[] = BISTROT_SITUATIONS.map((s) => {
+const SOURCES: SituationDef[] = BISTROT_SOURCES.map((s) => {
   const patch = PATCHES[s.code];
   const renamed: SituationDef = { ...s, code: CODE(s.code) };
   return patch ? patchSituationText(renamed, patch) : renamed;
 });
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const BISTROT_GAMME_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, bistrotGammeScenario);

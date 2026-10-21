@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
@@ -182,15 +183,24 @@ describe("VOLT FITNESS : chaque situation se rend à la durée du tour de sa par
   });
 });
 
-describe("les quatorze autres scénarios ne bougent à aucune durée", () => {
-  for (const d of SCENARIOS.filter((x) => x.code !== "fitness")) {
-    it(`${d.code} : sans jeton, la situation de la partie est celle du registre`, () => {
-      for (const def of d.situations) {
-        for (const periodicity of DUREES) {
-          expect(situationDeLaPartie(def, PERIODICITY_DAYS[periodicity])).toBe(def);
-        }
-        for (const t of textesDe(def)) expect(t).not.toMatch(/\{\{|\}\}/);
-      }
+describe("chaque scénario intégré a sa garde à la durée du tour", () => {
+  // Les quinze scénarios portent des jetons ; chacun est gardé par le fichier de son groupe.
+  // Un scénario ajouté sans garde ferait lire le trimestre à une partie au mois, sans que rien le dise.
+  const GARDES: Record<string, string> = {
+    fitness: "textes-a-la-duree.test.ts",
+    ...Object.fromEntries(["transport", "bistrot", "bistrot-gamme"].map((c) => [c, "textes-a-la-duree-transport-bistrot.test.ts"])),
+    ...Object.fromEntries(["conseil", "conseil-gamme", "hotel", "hotel-gamme"].map((c) => [c, "textes-a-la-duree-conseil-hotel.test.ts"])),
+    ...Object.fromEntries(["nova", "nova-gamme"].map((c) => [c, "textes-a-la-duree-nova-courriers.test.ts"])),
+    ...Object.fromEntries(
+      ["batiment", "boutique", "boutique-mono", "ecommerce", "ecommerce-gamme"].map((c) => [c, "textes-a-la-duree-batiment-boutique-ecommerce.test.ts"]),
+    ),
+  };
+  for (const d of SCENARIOS) {
+    it(`${d.code} : une garde le rend aux trois durées, et sa partie au mois lit d'autres textes`, () => {
+      const fichier = GARDES[d.code];
+      expect(fichier, `${d.code} n'a pas de garde à la durée du tour`).toBeDefined();
+      expect(existsSync(`tests/scenarios/${fichier}`)).toBe(true);
+      expect(d.situations.some((def) => situationDeLaPartie(def, PERIODICITY_DAYS.month) !== def)).toBe(true);
     });
   }
 });

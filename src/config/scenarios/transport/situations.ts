@@ -1,20 +1,34 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { transportScenario } from "./index";
 
 /**
  * Situations pédagogiques de ROUTE & CIE (transport routier).
  *
  * Le fil rouge du secteur : le camion part de toute façon. Tout le métier
  * consiste à décider ce qu'on met dedans, et à quel prix, avant qu'il ne parte.
+ *
+ * LES ÉNONCÉS SUIVENT LA DURÉE DU TOUR (ADR-01, `situation-texte.ts`). Hors
+ * abonnement, le moteur garde les prix et les coûts d'une palette, et met à la
+ * durée du tour ce qui se compte par tour : les charges de structure, les
+ * amortissements, la capacité de la flotte. Ce que le scénario porte se lit par
+ * ses grandeurs (`charges`, `capacite_parc`, `amortissements`) ; ce que le récit
+ * seul chiffre par tour (le trafic actuel, un entretien, un contrat) passe par
+ * `flux`. Le seuil en palettes n'est donc PAS un invariant : 3 800 palettes au
+ * trimestre, 1 270 au mois. Restent écrits en clair, et la garde le vérifie :
+ * les montants d'une palette (74 €, 18 €, 7 €, 49 €, 25 €), les taux de
+ * remplissage (38 %, quatre cinquièmes, soixante pour cent), les délais en
+ * jours, les taux annuels et les montants ponctuels (315 000 € de porteurs).
  */
-export const TRANSPORT_SITUATIONS: SituationDef[] = [
+const SOURCES: SituationDef[] = [
   {
     code: "transport_t1_revient",
     category: "prise_de_poste",
     title: "Ce que coûte vraiment une palette",
     narrative:
-      "Vous reprenez ROUTE & CIE : sept porteurs, dix chauffeurs, un dépôt. La palette se facture 74 € en moyenne. Le gazole et les péages coûtent 18 €, l'entretien et les pneumatiques 7 €. Tout le reste, la conduite comprise, tombe chaque trimestre à l'identique.",
+      "Vous reprenez ROUTE & CIE : sept porteurs, dix chauffeurs, un dépôt. La palette se facture 74 € en moyenne. Le gazole et les péages coûtent 18 €, l'entretien et les pneumatiques 7 €. Tout le reste, la conduite comprise, tombe chaque {{trimestre}} à l'identique.",
     problem:
-      "Combien de palettes faut-il charger dans le trimestre pour couvrir la structure ?",
+      "Combien de palettes faut-il charger dans {{le trimestre}} pour couvrir la structure ?",
     diagnosticOptions: [
       {
         id: "chauffeurs_fixes",
@@ -55,16 +69,16 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       {
         id: "seuil_palettes",
         prompt:
-          "Avec 186 000 € de charges de structure décaissées, à partir de combien de palettes le trimestre devient-il bénéficiaire ?",
+          "Avec {{entier: charges}} € de charges de structure décaissées, à partir de combien de palettes {{le trimestre}} devient-il bénéficiaire ?",
         options: [
-          { id: "a", label: "Environ 3 800, soit 38 % de la capacité de la flotte" },
-          { id: "b", label: "Environ 10 000, la flotte au complet" },
-          { id: "c", label: "Environ 2 500" },
-          { id: "d", label: "Environ 7 400, le rythme actuel" },
+          { id: "a", label: "Environ {{entier: dizaine(charges / 49)}}, soit 38 % de la capacité de la flotte" },
+          { id: "b", label: "Environ {{entier: capacite_parc}}, la flotte au complet" },
+          { id: "c", label: "Environ {{entier: centaine(charges / 74)}}" },
+          { id: "d", label: "Environ {{entier: dizaine(flux(7400))}}, le rythme actuel" },
         ],
         correctOptionId: "a",
         explain:
-          "186 000 ÷ 49 ≈ 3 796 palettes. Ce seuil ne couvre que les charges décaissées : les amortissements de la flotte, les budgets d'entretien et de qualité et les intérêts s'y ajoutent, et portent le vrai point mort près de 4 900 palettes. Sous ce seuil, les camions roulent et l'entreprise perd de l'argent en roulant : c'est la situation la plus dangereuse du métier.",
+          "{{entier: charges}} ÷ 49 ≈ {{entier: charges / 49}} palettes. Ce seuil ne couvre que les charges décaissées : les amortissements de la flotte, les budgets d'entretien et de qualité et les intérêts s'y ajoutent, et portent le vrai point mort près de {{entier: dizaine(flux(4900))}} palettes. Sous ce seuil, les camions roulent et l'entreprise perd de l'argent en roulant : c'est la situation la plus dangereuse du métier.",
       },
     ],
     modelRelevance: {
@@ -78,8 +92,8 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       "Séparez ce qui dépend des kilomètres de ce qui tombe tous les mois.",
       "Un chauffeur est payé qu'il transporte vingt palettes ou trente.",
       "Chaque palette laisse 74 − 18 − 7 = 49 € pour la structure.",
-      "Seuil décaissé = 186 000 ÷ 49 ≈ 3 800 palettes par trimestre.",
-      "Rapporté à 10 000 palettes de capacité, il faut donc remplir les camions à 38 % rien que pour couvrir ce qui se décaisse, et près de la moitié pour couvrir aussi la flotte.",
+      "Seuil décaissé = {{entier: charges}} ÷ 49 ≈ {{entier: dizaine(charges / 49)}} palettes {{par trimestre}}.",
+      "Rapporté à {{entier: capacite_parc}} palettes de capacité, il faut donc remplir les camions à 38 % rien que pour couvrir ce qui se décaisse, et près de la moitié pour couvrir aussi la flotte.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -87,7 +101,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "up",
-        hint: "Le seuil de rentabilité fixe un plancher de palettes à charger. Planifiez suffisamment de tournées pour dépasser les 3 800 palettes du trimestre, sans quoi les camions roulent à perte.",
+        hint: "Le seuil de rentabilité fixe un plancher de palettes à charger. Planifiez suffisamment de tournées pour dépasser les {{entier: dizaine(charges / 49)}} palettes {{du trimestre}}, sans quoi les camions roulent à perte.",
       },
       {
         field: "price",
@@ -164,7 +178,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Vendre au coût marginal est juste sur la marge, faux sur la masse. À 52 € pour tout le trafic, les 27 € de marge multipliés par les sept mille quatre cents palettes du trimestre donnent 199 800 €, quand la structure et la flotte en réclament 212 000 : l'entreprise passerait juste en dessous, et ses chauffeurs avec elle.",
+          "Vendre au coût marginal est juste sur la marge, faux sur la masse. À 52 € pour tout le trafic, les 27 € de marge multipliés par les {{lettres: dizaine(flux(7400))}} palettes {{du trimestre}} donnent {{entier: 27 * dizaine(flux(7400))}} €, quand la structure et la flotte en réclament {{entier: charges + amortissements}} : l'entreprise passerait juste en dessous, et ses chauffeurs avec elle.",
       },
     ],
     modelRelevance: {
@@ -203,7 +217,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     narrative:
       "Le carburant a bondi de dix-huit pour cent en six semaines. Personne dans l'entreprise n'a rien décidé, et pourtant chaque palette coûte désormais 3,24 € de plus. Vos contrats industriels sont signés pour l'année, la bourse de fret, elle, s'ajuste en quelques jours.",
     problem:
-      "De combien le résultat du trimestre bouge-t-il, et que faire des contrats déjà signés ?",
+      "De combien le résultat {{du trimestre}} bouge-t-il, et que faire des contrats déjà signés ?",
     diagnosticOptions: [
       {
         id: "effet_massif",
@@ -238,16 +252,16 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       {
         id: "nouveau_seuil",
         prompt:
-          "Avec une marge unitaire tombée à 45,76 €, quel devient le seuil de rentabilité décaissé du trimestre ?",
+          "Avec une marge unitaire tombée à 45,76 €, quel devient le seuil de rentabilité décaissé {{du trimestre}} ?",
         options: [
-          { id: "a", label: "Environ 4 050 palettes, contre 3 800 auparavant" },
+          { id: "a", label: "Environ {{entier: cinquantaine(charges / 45.76)}} palettes, contre {{entier: dizaine(charges / 49)}} auparavant" },
           { id: "b", label: "Il ne change pas : le seuil dépend des charges fixes" },
-          { id: "c", label: "Environ 3 300 palettes" },
-          { id: "d", label: "Environ 10 000 palettes" },
+          { id: "c", label: "Environ {{entier: centaine(charges / 56)}} palettes" },
+          { id: "d", label: "Environ {{entier: capacite_parc}} palettes" },
         ],
         correctOptionId: "a",
         explain:
-          "186 000 ÷ 45,76 ≈ 4 065. Le seuil ne bouge que de deux cent cinquante palettes, et c'est le résultat qu'il faut regarder : 3,24 € multipliés par les sept mille palettes du trimestre, c'est près de la moitié du bénéfice trimestriel effacée par une ligne que personne n'a décidée.",
+          "{{entier: charges}} ÷ 45,76 ≈ {{entier: charges / 45.76}}. Le seuil ne bouge que de {{lettres: cinquantaine(charges / 45.76) - dizaine(charges / 49)}} palettes, et c'est le résultat qu'il faut regarder : 3,24 € multipliés par les {{lettres: centaine(flux(7000))}} palettes {{du trimestre}}, c'est près de la moitié du bénéfice {{trimestriel}} effacée par une ligne que personne n'a décidée.",
       },
       {
         id: "sensibilite",
@@ -275,10 +289,10 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["variable_costs", "contribution_margin", "breakeven", "safety_margin"],
     hints: hints([
-      "Le surcoût porte sur chaque palette : multipliez-le par le volume du trimestre.",
+      "Le surcoût porte sur chaque palette : multipliez-le par le volume {{du trimestre}}.",
       "La marge unitaire passe de 49 à 45,76 €.",
       "Les charges de structure, elles, n'ont pas bougé.",
-      "Nouveau seuil décaissé = 186 000 ÷ 45,76 ≈ 4 050 palettes.",
+      "Nouveau seuil décaissé = {{entier: charges}} ÷ 45,76 ≈ {{entier: cinquantaine(charges / 45.76)}} palettes.",
       "Reste la question commerciale : qui supporte ce risque à l'avenir, vous ou votre client ? C'est ce que règle une clause d'indexation.",
     ]),
     trigger: { round: 3 },
@@ -301,7 +315,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Le grand compte qui paie à soixante jours",
     narrative:
-      "Votre plus gros client industriel représente près du tiers du trafic et règle à soixante jours. Le gazole, lui, se paie à quinze jours en carte accréditive, et les chauffeurs le 30 de chaque mois. Le trimestre est bénéficiaire, et pourtant le découvert se creuse.",
+      "Votre plus gros client industriel représente près du tiers du trafic et règle à soixante jours. Le gazole, lui, se paie à quinze jours en carte accréditive, et les chauffeurs le 30 de chaque mois. {{Le trimestre}} est bénéficiaire, et pourtant le découvert se creuse.",
     problem:
       "Que faut-il regarder pour comprendre, et quels leviers existent sur le poste clients ?",
     diagnosticOptions: [
@@ -325,7 +339,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "resultat_faux",
-        label: "Le résultat doit être faux : un trimestre bénéficiaire remplit toujours la caisse",
+        label: "Le résultat doit être faux : un {{trimestre}} bénéficiaire remplit toujours la caisse",
         correct: false,
       },
       {
@@ -404,7 +418,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Renouveler la flotte ou la réparer",
     narrative:
-      "Trois de vos porteurs ont passé les huit cents mille kilomètres. Leur entretien coûte 21 000 € par trimestre et grimpe, leurs pannes immobilisent des tournées. Les remplacer coûterait 315 000 €, financés sur six ans, pour un entretien retombant à 5 500 € et une consommation en baisse de neuf pour cent.",
+      "Trois de vos porteurs ont passé les huit cents mille kilomètres. Leur entretien coûte {{entier: flux(21000)}} € {{par trimestre}} et grimpe, leurs pannes immobilisent des tournées. Les remplacer coûterait 315 000 €, financés sur six ans, pour un entretien retombant à {{entier: flux(5500)}} € et une consommation en baisse de neuf pour cent.",
     problem:
       "Le renouvellement crée-t-il de la valeur, et sur quels flux le démontrer ?",
     diagnosticOptions: [
@@ -440,16 +454,16 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       {
         id: "economie_annuelle",
         prompt:
-          "Quelle économie d'entretien le renouvellement procure-t-il chaque trimestre ?",
+          "Quelle économie d'entretien le renouvellement procure-t-il chaque {{trimestre}} ?",
         options: [
-          { id: "a", label: "15 500 €, soit 21 000 − 5 500, avant même l'effet sur le gazole" },
-          { id: "b", label: "21 000 €, la totalité de l'entretien actuel" },
-          { id: "c", label: "5 500 €, le nouvel entretien" },
+          { id: "a", label: "{{entier: flux(21000) - flux(5500)}} €, soit {{entier: flux(21000)}} − {{entier: flux(5500)}}, avant même l'effet sur le gazole" },
+          { id: "b", label: "{{entier: flux(21000)}} €, la totalité de l'entretien actuel" },
+          { id: "c", label: "{{entier: flux(5500)}} €, le nouvel entretien" },
           { id: "d", label: "Aucune : l'entretien est une charge de structure" },
         ],
         correctOptionId: "a",
         explain:
-          "Seul l'écart compte. Ces 15 500 € trimestriels, plus l'économie de carburant et les tournées qui ne sont plus immobilisées, forment les flux d'entrée du projet.",
+          "Seul l'écart compte. Ces {{entier: flux(21000) - flux(5500)}} € {{trimestriels}}, plus l'économie de carburant et les tournées qui ne sont plus immobilisées, forment les flux d'entrée du projet.",
       },
       {
         id: "van_vs_payback",
@@ -478,7 +492,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["discounting", "irr_payback", "profitability_vs_return", "capacity"],
     hints: hints([
       "Ne retenez que ce qui change entre garder et remplacer.",
-      "L'entretien passe de 21 000 à 5 500 € par trimestre.",
+      "L'entretien passe de {{entier: flux(21000)}} à {{entier: flux(5500)}} € {{par trimestre}}.",
       "Ajoutez l'économie de gazole et les tournées qui ne sont plus perdues en panne.",
       "L'amortissement n'est pas un flux : l'argent sort à l'achat, une seule fois.",
       "Actualisez ces flux au coût de votre financement, et comparez au décaissement initial diminué de la revente des anciens porteurs.",
@@ -489,7 +503,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       {
         field: "maintenanceBudget",
         direction: "down",
-        hint: "Des porteurs neufs font passer l'entretien de 21 000 à 5 500 € par trimestre. Le renouvellement libère du budget maintenance pour le reste de la flotte.",
+        hint: "Des porteurs neufs font passer l'entretien de {{entier: flux(21000)}} à {{entier: flux(5500)}} € {{par trimestre}}. Le renouvellement libère du budget maintenance pour le reste de la flotte.",
       },
       {
         field: "qualityBudget",
@@ -503,7 +517,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Le contrat qu'il faut savoir refuser",
     narrative:
-      "Un distributeur propose un contrat trimestriel de deux mille huit cents palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène mille quatre cents palettes par trimestre à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
+      "Un distributeur propose un contrat {{trimestriel}} de {{lettres: 2 * arrondi(flux(1400))}} palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène {{lettres: arrondi(flux(1400))}} palettes {{par trimestre}} à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
     problem:
       "Que coûte réellement ce contrat, une fois la flotte prise en compte ?",
     diagnosticOptions: [
@@ -538,7 +552,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         options: [
           {
             id: "a",
-            label: "44 800 € contre 59 360 €, soit 14 560 € de moins par porteur et par trimestre",
+            label: "{{entier: 32 * arrondi(flux(1400))}} € contre {{entier: 53 * arrondi(arrondi(flux(1400)) * 4 / 5)}} €, soit {{entier: 53 * arrondi(arrondi(flux(1400)) * 4 / 5) - 32 * arrondi(flux(1400))}} € de moins par porteur et {{par trimestre}}",
           },
           { id: "b", label: "Autant : ce que le prix perd, le remplissage le rattrape" },
           { id: "c", label: "Davantage : le camion roule enfin plein" },
@@ -546,7 +560,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Sous contrat, le porteur roule plein : mille quatre cents palettes à 32 € de marge, ce qui fait 44 800 €. Aujourd'hui il roule aux quatre cinquièmes : mille cent vingt palettes à 53 € de marge, ce qui fait 59 360 €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
+          "Sous contrat, le porteur roule plein : {{lettres: arrondi(flux(1400))}} palettes à 32 € de marge, ce qui fait {{entier: 32 * arrondi(flux(1400))}} €. Aujourd'hui il roule aux quatre cinquièmes : {{lettres: arrondi(arrondi(flux(1400)) * 4 / 5)}} palettes à 53 € de marge, ce qui fait {{entier: 53 * arrondi(arrondi(flux(1400)) * 4 / 5)}} €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
       },
       {
         id: "quand_accepter",
@@ -563,7 +577,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le contrat rapporte 44 800 € par porteur. Le trafic actuel rapporte 53 € par palette, donc il repasse devant dès que le porteur emmène 845 palettes, c'est-à-dire dès soixante pour cent de remplissage. La même affaire est bonne ou mauvaise selon ce seul chiffre, et c'est pourquoi la décision commerciale ne se prend jamais sans regarder d'abord la capacité.",
+          "Le contrat rapporte {{entier: 32 * arrondi(flux(1400))}} € par porteur. Le trafic actuel rapporte 53 € par palette, donc il repasse devant dès que le porteur emmène {{entier: 32 * arrondi(flux(1400)) / 53}} palettes, c'est-à-dire dès soixante pour cent de remplissage. La même affaire est bonne ou mauvaise selon ce seul chiffre, et c'est pourquoi la décision commerciale ne se prend jamais sans regarder d'abord la capacité.",
       },
     ],
     modelRelevance: {
@@ -576,8 +590,8 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Demandez-vous ce que feraient ces deux porteurs sans ce contrat.",
       "Votre flotte est remplie à quatre-vingts pour cent : la capacité n'est pas libre.",
-      "Un porteur sous contrat emmène mille quatre cents palettes à 32 €, soit 57 − 25, de marge.",
-      "Sans le contrat, il en emmène mille cent vingt à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
+      "Un porteur sous contrat emmène {{lettres: arrondi(flux(1400))}} palettes à 32 €, soit 57 − 25, de marge.",
+      "Sans le contrat, il en emmène {{lettres: arrondi(arrondi(flux(1400)) * 4 / 5)}} à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
       "Et notez que la réponse s'inverserait sous soixante pour cent de remplissage : la même affaire n'a pas la même valeur selon le camion qu'elle occupe.",
     ]),
     trigger: { round: 6 },
@@ -605,7 +619,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "L'affacturage a rempli le compte",
     narrative:
-      "Vous avez cédé une partie du poste clients pour passer un cap, et le compte affiche aujourd'hui un solde confortable. Il serait tentant d'y voir un excédent à placer. Mais cet argent est le produit de créances déjà vendues : il ne reviendra pas une seconde fois, et il doit couvrir le gazole des prochaines semaines, les salaires de fin de mois et l'échéance du crédit de flotte. Le placer à trois mois immobiliserait exactement ce qui doit faire rouler les camions.",
+      "Vous avez cédé une partie du poste clients pour passer un cap, et le compte affiche aujourd'hui un solde confortable. Il serait tentant d'y voir un excédent à placer. Mais cet argent est le produit de créances déjà vendues : il ne reviendra pas une seconde fois, et il doit couvrir le gazole des prochaines semaines, les salaires de fin de mois et l'échéance du crédit de flotte. Le placer {{à trois mois}} immobiliserait exactement ce qui doit faire rouler les camions.",
     problem:
       "Ce solde est-il disponible, et comment savoir quelle part l'est vraiment ?",
     diagnosticOptions: [
@@ -628,7 +642,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "resultat",
-        label: "Cet encaissement améliore le résultat du trimestre",
+        label: "Cet encaissement améliore le résultat {{du trimestre}}",
         correct: false,
       },
     ],
@@ -702,7 +716,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     category: "alerte_comptable",
     title: "Les camions roulent, l'entreprise perd",
     narrative:
-      "Le trafic du trimestre est passé sous le seuil de rentabilité. Les camions ont pourtant roulé, les chauffeurs ont fait leurs heures, et le carnet n'était pas vide. C'est la situation la plus traître du transport : l'activité donne l'illusion de la santé.",
+      "Le trafic {{du trimestre}} est passé sous le seuil de rentabilité. Les camions ont pourtant roulé, les chauffeurs ont fait leurs heures, et le carnet n'était pas vide. C'est la situation la plus traître du transport : l'activité donne l'illusion de la santé.",
     problem:
       "De combien manque-t-il, et sur quel levier agir en premier ?",
     diagnosticOptions: [
@@ -725,7 +739,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "licencier",
-        label: "Réduire l'effectif est la seule réponse à un trimestre déficitaire",
+        label: "Réduire l'effectif est la seule réponse à un {{trimestre}} déficitaire",
         correct: false,
       },
     ],
@@ -763,7 +777,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Elle transforme le seuil en indicateur de fragilité. Une marge de sécurité de cinq pour cent dans un métier saisonnier annonce un trimestre déficitaire dès la première mauvaise saison.",
+          "Elle transforme le seuil en indicateur de fragilité. Une marge de sécurité de cinq pour cent dans un métier saisonnier annonce un {{trimestre}} déficitaire dès la première mauvaise saison.",
       },
     ],
     modelRelevance: {
@@ -822,4 +836,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "Le seuil de rentabilité convertit l'écart en nombre de palettes et rend la décision concrète, levier par levier.",
 };
 
-attachModelQuestions(TRANSPORT_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const TRANSPORT_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, transportScenario);

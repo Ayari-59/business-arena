@@ -1,4 +1,6 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { conseilScenario } from "./index";
 
 /**
  * Situations pédagogiques d'ATLAS CONSEIL (services intellectuels).
@@ -6,14 +8,23 @@ import { attachModelQuestions, hints, type SituationDef } from "../situation-kit
  * Le fil rouge du secteur : le taux d'occupation et le poste clients. La
  * capacité ne s'achète pas, elle se recrute ; et le résultat ne devient de
  * la trésorerie que soixante jours plus tard.
+ *
+ * LA CAPACITÉ, LES CHARGES ET LES SALAIRES SONT DES FLUX PAR TOUR : au mois, le
+ * cabinet vend le tiers de ses jours-consultants trimestriels et décaisse le
+ * tiers de sa structure (ADR-01). Les énoncés les citent donc par jetons
+ * (`situation-texte.ts`), lus du scénario et de l'entreprise de départ mis à la
+ * durée de la partie. Ce que la durée ne change pas reste écrit en clair, et la
+ * garde le vérifie par le calcul (tests/scenarios/textes-a-la-duree-conseil-hotel.test.ts) :
+ * le TJM et ses frais, le salaire d'une journée, le taux d'occupation
+ * d'équilibre, les coûts d'embauche et de licenciement, les taux du banquier.
  */
-export const CONSEIL_SITUATIONS: SituationDef[] = [
+export const CONSEIL_SOURCES: SituationDef[] = [
   {
     code: "conseil_t1_reprise",
     category: "prise_de_poste",
     title: "Douze consultants et un carnet",
     narrative:
-      "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, un carnet de commandes correct, 180 000 € de factures en attente de règlement et presque rien à l'actif immobilisé. Le trimestre offre 720 jours-consultants à vendre.",
+      "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, un carnet de commandes correct, 180 000 € de factures en attente de règlement et presque rien à l'actif immobilisé. {{Le trimestre}} offre {{entier: capacite}} jours-consultants à vendre.",
     problem:
       "Dans un cabinet, qu'est-ce qui détermine le résultat, et pourquoi le chiffre d'affaires ne suffit-il pas à le dire ?",
     diagnosticOptions: [
@@ -42,30 +53,30 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         id: "capacite_jours",
         prompt:
-          "Douze consultants disposant chacun de 60 jours ouvrés par trimestre : quelle est la capacité vendable ?",
+          "Douze consultants disposant chacun de {{entier: heures_par_salarie}} jours ouvrés {{par trimestre}} : quelle est la capacité vendable ?",
         options: [
-          { id: "a", label: "720 jours" },
-          { id: "b", label: "1 440 jours" },
-          { id: "c", label: "60 jours" },
+          { id: "a", label: "{{entier: capacite}} jours" },
+          { id: "b", label: "{{entier: 2 * capacite}} jours" },
+          { id: "c", label: "{{entier: heures_par_salarie}} jours" },
           { id: "d", label: "Illimitée : il suffit de faire des heures supplémentaires" },
         ],
         correctOptionId: "a",
         explain:
-          "12 × 60 = 720 jours. Cette capacité expire chaque trimestre : un jour non vendu ne se reporte pas, exactement comme une chambre d'hôtel vide.",
+          "12 × {{entier: heures_par_salarie}} = {{entier: capacite}} jours. Cette capacité expire chaque {{trimestre}} : un jour non vendu ne se reporte pas, exactement comme une chambre d'hôtel vide.",
       },
       {
         id: "taux_equilibre",
         prompt:
-          "Avec 470 € de marge par jour vendu et 198 000 € de charges de structure décaissées, quel taux d'occupation faut-il atteindre pour équilibrer ?",
+          "Avec 470 € de marge par jour vendu et {{entier: charges}} € de charges de structure décaissées, quel taux d'occupation faut-il atteindre pour équilibrer ?",
         options: [
-          { id: "a", label: "Environ 58 % (421 jours sur 720)" },
-          { id: "b", label: "Environ 100 % (720 jours sur 720)" },
-          { id: "c", label: "Environ 30 % (216 jours sur 720)" },
-          { id: "d", label: "Environ 80 % (576 jours sur 720)" },
+          { id: "a", label: "Environ 58 % ({{entier: charges / 470}} jours sur {{entier: capacite}})" },
+          { id: "b", label: "Environ 100 % ({{entier: capacite}} jours sur {{entier: capacite}})" },
+          { id: "c", label: "Environ 30 % ({{entier: capacite * 0.3}} jours sur {{entier: capacite}})" },
+          { id: "d", label: "Environ 80 % ({{entier: capacite * 0.8}} jours sur {{entier: capacite}})" },
         ],
         correctOptionId: "a",
         explain:
-          "198 000 ÷ 470 ≈ 421 jours, soit 58 % de 720. En ajoutant la prospection et l'outillage, le seuil réel monte vers 65 % : sous ce niveau, le cabinet perd de l'argent quelle que soit la qualité de ses missions.",
+          "{{entier: charges}} ÷ 470 ≈ {{entier: charges / 470}} jours, soit 58 % de {{entier: capacite}}. En ajoutant la prospection et l'outillage, le seuil réel monte vers 65 % : sous ce niveau, le cabinet perd de l'argent quelle que soit la qualité de ses missions.",
       },
     ],
     modelRelevance: {
@@ -77,10 +88,10 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     conceptCodes: ["capacity", "contribution_margin", "fixed_costs", "breakeven"],
     hints: hints([
       "Comptez d'abord ce que le cabinet peut vendre : combien de consultants, combien de jours ouvrés chacun ?",
-      "Un jour de consultant non vendu ne se rattrape pas au trimestre suivant : il disparaît.",
+      "Un jour de consultant non vendu ne se rattrape pas {{au trimestre}} suivant : il disparaît.",
       "Vos charges de structure sont pour l'essentiel des SALAIRES : elles ne baissent pas quand le carnet se vide.",
-      "Marge par jour = 560 − 90 = 470 €. Charges de structure décaissées = 198 000 € par trimestre.",
-      "Seuil = 198 000 ÷ 470 ≈ 421 jours sur 720, soit 58 % d'occupation. Le taux d'occupation est au conseil ce que le taux de remplissage est à l'hôtellerie.",
+      "Marge par jour = 560 − 90 = 470 €. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
+      "Seuil = {{entier: charges}} ÷ 470 ≈ {{entier: charges / 470}} jours sur {{entier: capacite}}, soit 58 % d'occupation. Le taux d'occupation est au conseil ce que le taux de remplissage est à l'hôtellerie.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -88,7 +99,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Évaluez combien de jours-consultants vous pouvez réellement vendre ce trimestre : un jour non vendu ne se rattrape pas, et c'est là que se joue votre résultat.",
+        hint: "Évaluez combien de jours-consultants vous pouvez réellement vendre {{ce trimestre}} : un jour non vendu ne se rattrape pas, et c'est là que se joue votre résultat.",
       },
       {
         field: "price",
@@ -190,7 +201,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     category: "alerte_operationnelle",
     title: "Des consultants sur le banc",
     narrative:
-      "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide. Quatre de vos douze consultants n'ont aucune mission ce trimestre. Leurs salaires, eux, tombent normalement.",
+      "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide. Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement.",
     problem:
       "Faut-il baisser vos tarifs pour remplir le banc, ou tenir vos prix et accepter le creux ?",
     diagnosticOptions: [
@@ -257,7 +268,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       "Comparez deux scénarios : mission à tarif réduit, ou aucune mission. Qu'est-ce qui change réellement dans vos charges ?",
       "Le salaire du consultant est engagé quoi qu'il arrive : c'est un coût non pertinent pour cette décision-ci.",
       "Seuls les 90 € de frais de mission varient. Toute mission au-dessus de ce seuil améliore le résultat du tour.",
-      "Mais attention au tarif de référence : brader une fois sauve un trimestre, brader systématiquement détruit le taux journalier moyen de toutes les missions suivantes.",
+      "Mais attention au tarif de référence : brader une fois sauve un {{trimestre}}, brader systématiquement détruit le taux journalier moyen de toutes les missions suivantes.",
     ]),
     trigger: { round: 3 },
     weight: 1.5,
@@ -270,7 +281,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         field: "marketingBudget",
         direction: "up",
-        hint: "Investir en prospection maintenant prépare le carnet du trimestre suivant : c'est une charge immédiate pour un effet différé, mais le creux est le pire moment pour couper.",
+        hint: "Investir en prospection maintenant prépare le carnet {{du trimestre}} suivant : c'est une charge immédiate pour un effet différé, mais le creux est le pire moment pour couper.",
       },
       {
         field: "productionPlan",
@@ -284,7 +295,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Le marché s'ouvre : êtes-vous prêts ?",
     narrative:
-      "Un décret impose un audit à toutes les entreprises de plus de 250 salariés. Le marché s'ouvre pour tout le monde en même temps. Recruter un consultant coûte 8 000 €, et il ne produira qu'au trimestre suivant.",
+      "Un décret impose un audit à toutes les entreprises de plus de 250 salariés. Le marché s'ouvre pour tout le monde en même temps. Recruter un consultant coûte 8 000 €, et il ne produira qu'{{au trimestre}} suivant.",
     problem:
       "Une opportunité de marché ne se saisit qu'avec de la capacité disponible. Comment décidez-vous d'embaucher ?",
     diagnosticOptions: [
@@ -327,12 +338,12 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         id: "cout_recrutement",
         prompt:
-          "Vous recrutez trois consultants pour 8 000 € chacun. Quel est l'effet sur le trimestre en cours ?",
+          "Vous recrutez trois consultants pour 8 000 € chacun. Quel est l'effet sur {{le trimestre}} en cours ?",
         options: [
           { id: "a", label: "24 000 € de charges immédiates, et aucune capacité supplémentaire avant le tour suivant" },
-          { id: "b", label: "24 000 € de charges et 180 jours vendables de plus dès ce tour" },
+          { id: "b", label: "24 000 € de charges et {{entier: 3 * heures_par_salarie}} jours vendables de plus dès ce tour" },
           { id: "c", label: "Aucune charge : le recrutement s'amortit" },
-          { id: "d", label: "180 jours de plus, sans coût immédiat" },
+          { id: "d", label: "{{entier: 3 * heures_par_salarie}} jours de plus, sans coût immédiat" },
         ],
         correctOptionId: "a",
         explain:
@@ -351,7 +362,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       "La demande supplémentaire ne vaut que si vous avez les jours-consultants pour la servir.",
       "Ici, aucun investissement capacitaire n'est possible : le seul levier est le recrutement, ou la formation qui améliore la productivité.",
       "Le coût de recrutement est immédiat (8 000 € par consultant), l'effet sur la capacité arrive au tour SUIVANT.",
-      "Chiffrez : un consultant apporte 60 jours par trimestre. À 65 % d'occupation et 470 € de marge, cela fait ~18 300 € par trimestre, contre 12 600 € de salaire. La marge est réelle, mais mince si l'occupation ne suit pas.",
+      "Chiffrez : un consultant apporte {{entier: heures_par_salarie}} jours {{par trimestre}}. À 65 % d'occupation et 470 € de marge, cela fait ~{{entier: arrondi(heures_par_salarie * 0.65 * 470 / 100) * 100}} € {{par trimestre}}, contre {{entier: salaire}} € de salaire. La marge est réelle, mais mince si l'occupation ne suit pas.",
     ]),
     trigger: { round: 4 },
     weight: 1.5,
@@ -407,7 +418,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         id: "occupation_calc",
         prompt:
-          "Vous avez vendu 380 jours sur 720 disponibles. Quel est votre taux d'occupation, et où vous situez-vous ?",
+          "Vous avez vendu {{entier: flux(380)}} jours sur {{entier: capacite}} disponibles. Quel est votre taux d'occupation, et où vous situez-vous ?",
         options: [
           { id: "a", label: "53 %, sous le seuil d'équilibre de ~58 %" },
           { id: "b", label: "53 %, au-dessus du seuil d'équilibre" },
@@ -416,20 +427,20 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "380 ÷ 720 ≈ 53 %. Il manque environ 41 jours pour atteindre les 421 du seuil, soit moins d'une mission longue. L'écart chiffré rend la décision concrète.",
+          "{{entier: flux(380)}} ÷ {{entier: capacite}} ≈ 53 %. Il manque environ {{entier: arrondi(charges / 470) - arrondi(flux(380))}} jours pour atteindre les {{entier: charges / 470}} du seuil, soit moins d'une mission longue. L'écart chiffré rend la décision concrète.",
       },
       {
         id: "prospection_retard",
         prompt: "Le budget de prospection agit sur le carnet de commandes :",
         options: [
           { id: "a", label: "Avec retard : c'est une charge immédiate pour un chiffre d'affaires différé" },
-          { id: "b", label: "Immédiatement, dès le trimestre où il est engagé" },
+          { id: "b", label: "Immédiatement, dès {{le trimestre}} où il est engagé" },
           { id: "c", label: "Jamais : la prospection est une charge sans contrepartie" },
           { id: "d", label: "Proportionnellement au taux journalier moyen" },
         ],
         correctOptionId: "a",
         explain:
-          "C'est ce qui rend la décision difficile : couper la prospection améliore le trimestre en cours et détériore les suivants. Le creux est exactement le moment où il faudrait prospecter davantage.",
+          "C'est ce qui rend la décision difficile : couper la prospection améliore {{le trimestre}} en cours et détériore les suivants. Le creux est exactement le moment où il faudrait prospecter davantage.",
       },
     ],
     modelRelevance: {
@@ -440,11 +451,11 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["breakeven", "capacity", "safety_margin", "contribution_margin"],
     hints: hints([
-      "Calculez votre taux d'occupation réel : jours vendus ÷ 720.",
+      "Calculez votre taux d'occupation réel : jours vendus ÷ {{entier: capacite}}.",
       "Comparez-le au taux d'équilibre, environ 58 % avant budgets, 65 % une fois la prospection financée.",
       "Convertissez l'écart en jours : combien de jours-consultants manquent pour équilibrer ?",
       "Remplir le banc à tarif réduit reste préférable au banc vide, tant que le tarif dépasse 90 € de frais variables.",
-      "Attention au piège du creux : couper la prospection redresse le trimestre en cours et creuse les suivants. C'est une charge immédiate pour un effet différé.",
+      "Attention au piège du creux : couper la prospection redresse {{le trimestre}} en cours et creuse les suivants. C'est une charge immédiate pour un effet différé.",
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
@@ -457,7 +468,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         field: "marketingBudget",
         direction: "up",
-        hint: "Augmentez la prospection pour remplir le carnet, même si l'effet est différé. Couper maintenant creuse le creux du trimestre suivant.",
+        hint: "Augmentez la prospection pour remplir le carnet, même si l'effet est différé. Couper maintenant creuse le creux {{du trimestre}} suivant.",
       },
       {
         field: "productionPlan",
@@ -471,7 +482,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     category: "alerte_comptable",
     title: "Bénéficiaire et à découvert",
     narrative:
-      "Le trimestre est bénéficiaire, le carnet est plein, les consultants sont staffés. Et pourtant, vous êtes à découvert : les grands comptes règlent à 60 jours, et vous venez d'en signer trois.",
+      "{{Le trimestre}} est bénéficiaire, le carnet est plein, les consultants sont staffés. Et pourtant, vous êtes à découvert : les grands comptes règlent à 60 jours, et vous venez d'en signer trois.",
     problem:
       "Pourquoi la croissance d'un cabinet assèche-t-elle sa trésorerie au lieu de l'alimenter ?",
     diagnosticOptions: [
@@ -500,7 +511,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         id: "croissance_bfr",
         prompt:
-          "Un cabinet double son activité en un trimestre, à délais de paiement inchangés. Que devient son besoin en fonds de roulement ?",
+          "Un cabinet double son activité en un {{trimestre}}, à délais de paiement inchangés. Que devient son besoin en fonds de roulement ?",
         options: [
           { id: "a", label: "Il double à peu près : le BFR croît avec l'activité" },
           { id: "b", label: "Il diminue de moitié" },
@@ -637,7 +648,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Vérifiez si le consultant visé a d'autres missions possibles ce trimestre : accepter cette mission, c'est renoncer à toute mission mieux payée sur la même période.",
+        hint: "Vérifiez si le consultant visé a d'autres missions possibles {{ce trimestre}} : accepter cette mission, c'est renoncer à toute mission mieux payée sur la même période.",
       },
     ],
   },
@@ -738,7 +749,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "Le compte se remplit, le carnet se vide",
     narrative:
-      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet de commandes, lui, est plus creux qu'il ne l'a été depuis longtemps.",
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet de commandes, lui, est plus creux qu'il ne l'a été depuis longtemps.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -749,7 +760,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       },
       {
         id: "garder_de_quoi_payer",
-        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        label: "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir",
         correct: true,
       },
       {
@@ -769,7 +780,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 13 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -799,10 +810,10 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde aux charges de structure d'un trimestre : combien de trimestres de salaires pourriez-vous payer sans facturer un seul jour ?",
+      "Comparez votre solde aux charges de structure d'un {{trimestre}} : combien {{de trimestres}} de salaires pourriez-vous payer sans facturer un seul jour ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "Projetez le trimestre à venir avec le carnet TEL QU'IL EST : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
+      "Projetez {{le trimestre}} à venir avec le carnet TEL QU'IL EST : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
@@ -821,7 +832,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Projetez vos missions du trimestre suivant : le cash d'aujourd'hui devra financer les salaires même si le carnet reste creux. Ne bloquez que l'excédent qui survit à cette projection.",
+        hint: "Projetez vos missions {{du trimestre}} suivant : le cash d'aujourd'hui devra financer les salaires même si le carnet reste creux. Ne bloquez que l'excédent qui survit à cette projection.",
       },
     ],
   },
@@ -849,4 +860,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "L'analyse FRNG / BFR montre que c'est le poste clients qui a bougé, pas le résultat : TN = FRNG − BFR.",
 };
 
-attachModelQuestions(CONSEIL_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(CONSEIL_SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const CONSEIL_SITUATIONS: SituationDef[] = situationsAuTrimestre(CONSEIL_SOURCES, conseilScenario);

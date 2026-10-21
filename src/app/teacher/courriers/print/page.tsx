@@ -90,9 +90,12 @@ function PliImprime({
   courrier,
   liasse,
   nomDeLaLiasse,
+  jours,
 }: {
   courrier: CourrierDef;
   liasse: Liasse;
+  /** La durée d'un tour de la partie, en jours : la liasse s'imprime à elle. */
+  jours?: number;
   /** Nom imprimé en pied d'enveloppe quand le courrier n'est pas au registre. */
   nomDeLaLiasse?: string | null;
 }) {
@@ -111,10 +114,11 @@ function PliImprime({
     <div className="print-pair">
       <div className="print-half print-back">
         {parCourriel ? (
-          <Courriel code={courrier.code} destinataire={destinataire} className="h-full" />
+          <Courriel code={courrier.code} destinataire={destinataire} jours={jours} className="h-full" />
         ) : (
           <Enveloppe
             code={courrier.code}
+            jours={jours}
             liasse={position?.liasse ?? nomDeLaLiasse}
             destinataire={destinataire}
             className="h-full"
@@ -123,9 +127,9 @@ function PliImprime({
       </div>
       <div className="print-half print-front">
         {parCourriel ? (
-          <Message code={courrier.code} destinataire={destinataire} />
+          <Message code={courrier.code} destinataire={destinataire} jours={jours} />
         ) : (
-          <Lettre code={courrier.code} />
+          <Lettre code={courrier.code} jours={jours} />
         )}
       </div>
     </div>
@@ -192,6 +196,13 @@ function LiasseAImprimer() {
   const router = useRouter();
   const choix = params.get("scenario") ?? LIASSES_AU_CHOIX[0]?.code ?? "";
   /*
+   * LA DURÉE DU TOUR DE LA PARTIE. Le lien de la page de partie la passe
+   * (`?jours=30`) : la liasse s'imprime alors avec les mots et les quantités de
+   * la partie, comme à l'écran. Sans elle (le guide), le texte au trimestre.
+   */
+  const joursLus = Number(params.get("jours"));
+  const jours = Number.isFinite(joursLus) && joursLus > 0 ? joursLus : undefined;
+  /*
    * LA LIASSE DE ROUTINE, à part.
    *
    * Les six courriers de routine ne sont attachés à aucun scénario : ils ne
@@ -244,6 +255,7 @@ function LiasseAImprimer() {
         courrier={courrier}
         liasse={liasse}
         nomDeLaLiasse={nomDeLaLiasse}
+        jours={jours}
       />
     ));
     if (avecVierge) {
@@ -285,7 +297,9 @@ function LiasseAImprimer() {
             <select
               id="liasse"
               value={choix}
-              onChange={(e) => router.replace(`/teacher/courriers/print?scenario=${e.target.value}`)}
+              onChange={(e) =>
+                router.replace(`/teacher/courriers/print?scenario=${e.target.value}${jours ? `&jours=${jours}` : ""}`)
+              }
             >
               {LIASSES_AU_CHOIX.map((l) => (
                 <option key={l.code} value={l.code}>

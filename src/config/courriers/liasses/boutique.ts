@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { boutiqueScenario } from "@/config/scenarios/boutique";
 
 /**
  * LA LIASSE DE MAILLE & CO — boutique de maille en rue commerçante.
@@ -8,7 +10,8 @@ import type { CourrierDef } from "../types";
  * l'expert-comptable. Presque tous les expéditeurs sont à moins d'un
  * kilomètre, et c'est ce qui donne à ce secteur son échelle.
  */
-export const BOUTIQUE_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "boutique_travaux_voirie",
     expediteur: "Mairie · Direction de la voirie",
@@ -88,7 +91,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Atelier Lemaire · Façonnier maille",
     objet: "Nouveau barème pour la prochaine collection",
     corps:
-      "La laine mérinos et le coton ont fortement progressé, le fret également. Nous ne pouvons plus tenir nos prix et vous transmettons le barème applicable à votre prochaine collection, valable deux trimestres.",
+      "La laine mérinos et le coton ont fortement progressé, le fret également. Nous ne pouvons plus tenir nos prix et vous transmettons le barème applicable à votre prochaine collection, valable deux {{trimestres}}.",
     signataire: "La gérante",
     effet: "Coût d'achat +18 % pendant 2 tours",
     enJeu:
@@ -103,7 +106,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit du Commerce · Agence de quartier",
     objet: "Modification des conditions applicables au petit commerce",
     corps:
-      "Nos conditions de financement sont revues pour l'ensemble des commerces de détail de la place. Le taux de votre autorisation de découvert est majoré pour les deux prochains trimestres, sans modification du plafond accordé.",
+      "Nos conditions de financement sont revues pour l'ensemble des commerces de détail de la place. Le taux de votre autorisation de découvert est majoré pour les deux prochains {{trimestres}}, sans modification du plafond accordé.",
     signataire: "Le directeur d'agence",
     effet: "Taux d'intérêt ×1,5 pendant 2 tours",
     enJeu: "Un découvert qui coûte cher transforme un problème de trésorerie en problème de résultat.",
@@ -160,10 +163,10 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit du Commerce · Agence de quartier",
     objet: "Renégociation de votre autorisation de découvert",
     corps:
-      "L'examen de vos derniers comptes nous conduit à revoir les conditions de votre découvert à la baisse, pour les deux prochains trimestres. Nous saluons la régularité de votre gestion sur les périodes écoulées.",
+      "L'examen de vos derniers comptes nous conduit à revoir les conditions de votre découvert à la baisse, pour les deux prochains {{trimestres}}. Nous saluons la régularité de votre gestion sur les périodes écoulées.",
     signataire: "Le directeur d'agence",
     effet: "Taux d'intérêt ×0,7 pendant 2 tours (une enseigne ciblée)",
-    enJeu: "La confiance bancaire se gagne sur des trimestres de gestion saine, pas sur une promesse.",
+    enJeu: "La confiance bancaire se gagne sur des {{trimestres}} de gestion saine, pas sur une promesse.",
     nature: "macro",
     pli: "simple",
     icone: "banque",
@@ -172,12 +175,12 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
   {
     code: "boutique_commande_ce",
     expediteur: "CSE des Papeteries de la Lys",
-    objet: "Commande ferme — 500 pulls pour notre arbre de Noël",
+    objet: "Commande ferme — {{entier: commande_boutique_commande_ce}} pulls pour notre arbre de Noël",
     corps:
-      "Notre comité souhaite offrir un pull à chacun de nos cinq cents salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
+      "Notre comité souhaite offrir un pull à chacun de nos {{lettres: commande_boutique_commande_ce}} salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
     signataire: "Le secrétaire du comité",
     effet:
-      "+500 pulls col rond (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite du stock",
+      "+{{entier: commande_boutique_commande_ce}} pulls col rond (échelle {{trimestre}}) vendus d'office ce tour, réglés comptant, dans la limite du stock",
     enJeu:
       "L'opportunité ne se saisit qu'avec de la marchandise en réserve : le stock a un coût, et parfois une valeur.",
     nature: "market",
@@ -204,7 +207,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Bureau de contrôle Sécuritas Bâti",
     objet: "Rapport après effondrement d'un rayonnage",
     corps:
-      "Le rayonnage central a cédé sous la charge. Nous constatons des marchandises abîmées et prononçons l'interdiction d'accès aux allées concernées jusqu'à remise en conformité, soit deux trimestres au vu des délais du fabricant.",
+      "Le rayonnage central a cédé sous la charge. Nous constatons des marchandises abîmées et prononçons l'interdiction d'accès aux allées concernées jusqu'à remise en conformité, soit deux {{trimestres}} au vu des délais du fabricant.",
     signataire: "Le contrôleur technique",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & maintenance du mobilier commercial",
@@ -218,7 +221,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Éditeur CaissePro · Service abonnés",
     objet: "Fin de maintenance de votre logiciel de caisse",
     corps:
-      "Votre version ne recevra plus de mise à jour à compter de ce trimestre. Les écarts d'inventaire et les erreurs de réassort constatés chez nos abonnés non migrés s'accentuent avec le temps. Une offre de migration est jointe.",
+      "Votre version ne recevra plus de mise à jour à compter de {{ce trimestre}}. Les écarts d'inventaire et les erreurs de réassort constatés chez nos abonnés non migrés s'accentuent avec le temps. Une offre de migration est jointe.",
     signataire: "Le responsable du support",
     effet: "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Cycle de vie des actifs & veille technologique",
@@ -306,7 +309,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
       "Les chalets seront installés sur votre section de rue pour trois semaines. Les éditions précédentes ont amené dix mille passants supplémentaires chaque week-end. L'accès à votre vitrine reste dégagé.",
     signataire: "L'adjointe au commerce",
     effet: "Demande globale +20 % ce tour",
-    enJeu: "Un pic de passage ne se sert qu'avec du stock : c'est au trimestre d'avant qu'il se prépare.",
+    enJeu: "Un pic de passage ne se sert qu'avec du stock : c'est {{au trimestre}} d'avant qu'il se prépare.",
     nature: "market",
     pli: "simple",
     icone: "planning",
@@ -332,7 +335,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Galeries Montclair · Direction des achats mode",
     objet: "Référencement de votre collection pour la saison à venir",
     corps:
-      "Notre comité d'achats retient votre collection de maille pour un espace dédié dans tous nos magasins de la région. Les quantités convenues dépassent d'environ un tiers vos ventes actuelles et couvrent les trois prochains trimestres. Les livraisons s'échelonneront par vagues, magasin par magasin, à partir du réassort de la semaine prochaine.",
+      "Notre comité d'achats retient votre collection de maille pour un espace dédié dans tous nos magasins de la région. Les quantités convenues dépassent d'environ un tiers vos ventes actuelles et couvrent les trois prochains {{trimestres}}. Les livraisons s'échelonneront par vagues, magasin par magasin, à partir du réassort de la semaine prochaine.",
     signataire: "La directrice des achats mode",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
@@ -347,7 +350,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Crédit du Commerce · Agence de quartier",
     objet: "Campagne sur les crédits d'équipement du commerce de détail",
     corps:
-      "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux commerces de détail : agencement, mobilier, matériel de caisse, extension de la réserve. Le taux de ces financements est réduit de quarante pour cent pendant deux trimestres, puis les conditions habituelles de la place reprennent.",
+      "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux commerces de détail : agencement, mobilier, matériel de caisse, extension de la réserve. Le taux de ces financements est réduit de quarante pour cent pendant deux {{trimestres}}, puis les conditions habituelles de la place reprennent.",
     signataire: "Le directeur d'agence",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -377,7 +380,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     expediteur: "Galeries Montclair · Direction du merchandising",
     objet: "Ajustement des quantités convenues pour votre collection",
     corps:
-      "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement. Nous ajustons donc à la baisse les quantités convenues pour les deux trimestres restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
+      "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement. Nous ajustons donc à la baisse les quantités convenues pour les deux {{trimestres}} restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
     signataire: "La responsable du merchandising",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -388,3 +391,6 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const BOUTIQUE_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, boutiqueScenario);

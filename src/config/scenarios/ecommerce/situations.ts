@@ -1,4 +1,6 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { ecommerceScenario } from "./index";
 
 /**
  * Situations pédagogiques de PIXEL & CO (e-commerce).
@@ -6,8 +8,18 @@ import { attachModelQuestions, hints, type SituationDef } from "../situation-kit
  * Le fil rouge du secteur : le trafic s'achète. La question du métier n'est
  * jamais « quelle est ma marge ? » mais « ma marge par commande couvre-t-elle
  * ce que m'a coûté ce client ? ».
+ *
+ * LE TEXTE SUIT LA DURÉE DU TOUR (`situation-texte.ts`). La capacité de
+ * préparation de l'entrepôt se lit du scénario mis à la durée de la partie, et
+ * le stock acheté pour le pic, que seul le récit porte, passe par `flux`. Ce
+ * qui ne bouge pas avec la durée reste écrit en clair, et la garde le vérifie
+ * par le calcul : panier, coûts et marges par commande, coût d'acquisition,
+ * commission, coefficient saisonnier, taux annuels du banquier.
+ *
+ * PIXEL & CO · GAMME hérite de ces sources (`ECOMMERCE_SOURCES`) et les rend
+ * pour SON scénario : une partie de la gamme lit sa propre durée de tour.
  */
-export const ECOMMERCE_SITUATIONS: SituationDef[] = [
+const SOURCES: SituationDef[] = [
   {
     code: "ecom_t1_acquisition",
     category: "prise_de_poste",
@@ -146,7 +158,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "C'est une charge immédiate pour un chiffre d'affaires différé. Couper la qualité embellit le trimestre en cours et vide la base fidèle des suivants.",
+          "C'est une charge immédiate pour un chiffre d'affaires différé. Couper la qualité embellit {{le trimestre}} en cours et vide la base fidèle des suivants.",
       },
     ],
     modelRelevance: {
@@ -175,7 +187,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Black Friday et fêtes",
     narrative:
-      "Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare 7 000 commandes par trimestre, pas une de plus.",
+      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, pas une de plus.",
     problem:
       "Comment préparer un pic qui exige à la fois du stock, de la capacité d'expédition et du budget d'acquisition ?",
     diagnosticOptions: [
@@ -204,16 +216,16 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       {
         id: "goulot",
         prompt:
-          "Vous achetez pour 9 000 commandes de stock mais l'entrepôt n'en prépare que 7 000. Combien vendrez-vous au mieux ?",
+          "Vous achetez pour {{entier: flux(9000)}} commandes de stock mais l'entrepôt n'en prépare que {{entier: capacite_parc}}. Combien vendrez-vous au mieux ?",
         options: [
-          { id: "a", label: "7 000 : la contrainte la plus serrée décide" },
-          { id: "b", label: "9 000 : le stock est disponible" },
-          { id: "c", label: "16 000 : les deux s'additionnent" },
-          { id: "d", label: "8 000, la moyenne des deux" },
+          { id: "a", label: "{{entier: capacite_parc}} : la contrainte la plus serrée décide" },
+          { id: "b", label: "{{entier: flux(9000)}} : le stock est disponible" },
+          { id: "c", label: "{{entier: flux(9000) + capacite_parc}} : les deux s'additionnent" },
+          { id: "d", label: "{{entier: (flux(9000) + capacite_parc) / 2}}, la moyenne des deux" },
         ],
         correctOptionId: "a",
         explain:
-          "Une chaîne vaut son maillon le plus faible. Les 2 000 commandes de stock excédentaire ne seront pas expédiées, mais elles auront été payées.",
+          "Une chaîne vaut son maillon le plus faible. Les {{entier: flux(9000) - capacite_parc}} commandes de stock excédentaire ne seront pas expédiées, mais elles auront été payées.",
       },
       {
         id: "decaissement",
@@ -238,8 +250,8 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["seasonality", "capacity", "stock", "bfr"],
     hints: hints([
-      "Regardez la saisonnalité : quel coefficient s'applique au quatrième trimestre ?",
-      "Le pic vaut 1,6 fois un trimestre ordinaire. Comparez cette demande à ce que votre entrepôt sait traiter.",
+      "Regardez la saisonnalité : quel coefficient s'applique au quatrième {{trimestre}} ?",
+      "Le pic vaut 1,6 fois un {{trimestre}} ordinaire. Comparez cette demande à ce que votre entrepôt sait traiter.",
       "Trois plafonds à vérifier ensemble : le stock disponible, la capacité de préparation, et le budget d'acquisition qui déclenche les commandes.",
       "La contrainte la plus serrée décide de tout : acheter du stock au-delà de la capacité d'expédition, c'est immobiliser de la trésorerie pour rien.",
       "Et n'oubliez pas le calendrier des flux : le stock et la publicité se paient ce tour-ci, une partie des ventes s'encaisse au suivant.",
@@ -300,7 +312,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       {
         id: "part_de_marge",
         prompt:
-          "Le trimestre se solde par 1 500 commandes en direct et 500 par la place de marché. Quelle part de votre marge vient du canal partenaire ?",
+          "{{Le trimestre}} se solde par 1 500 commandes en direct et 500 par la place de marché. Quelle part de votre marge vient du canal partenaire ?",
         options: [
           { id: "a", label: "Environ 19,5 %, alors qu'il fait le quart des commandes" },
           { id: "b", label: "25 %, comme sa part des commandes" },
@@ -336,7 +348,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   {
     code: "ecom_detect_below_breakeven",
     category: "alerte_comptable",
-    title: "Le trimestre est déficitaire",
+    title: "{{Le trimestre}} est déficitaire",
     narrative:
       "Le chiffre d'affaires a progressé, les commandes aussi, et le résultat d'exploitation est négatif. Le tableau de bord publicitaire, lui, affiche de bons chiffres.",
     problem:
@@ -622,7 +634,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
         options: [
           { id: "a", label: "Il égale la marge que cette commande dégage une fois tous ses autres coûts payés" },
           { id: "b", label: "Il égale le prix de vente affiché" },
-          { id: "c", label: "Il dépasse le budget publicitaire du trimestre" },
+          { id: "c", label: "Il dépasse le budget publicitaire {{du trimestre}}" },
           { id: "d", label: "Il représente plus de 10 % du chiffre d'affaires" },
         ],
         correctOptionId: "a",
@@ -657,7 +669,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "L'après-fêtes",
     narrative:
-      "Le pic des fêtes a rempli le compte : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 14 %. Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.",
+      "Le pic des fêtes a rempli le compte : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 14 %. {{Le trimestre}} qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -668,7 +680,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       },
       {
         id: "garder_de_quoi_payer",
-        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        label: "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir",
         correct: true,
       },
       {
@@ -688,7 +700,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 14 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -700,9 +712,9 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
         id: "ecom_retours_a_venir",
         prompt: "Après un pic de ventes, une part du solde encaissé est déjà engagée parce que…",
         options: [
-          { id: "a", label: "Les retours du pic seront remboursés au trimestre suivant, et les fournisseurs réglés à échéance" },
+          { id: "a", label: "Les retours du pic seront remboursés {{au trimestre}} suivant, et les fournisseurs réglés à échéance" },
           { id: "b", label: "Les plateformes reprennent leur commission un an plus tard" },
-          { id: "c", label: "La publicité du pic se paie avec un trimestre de décalage" },
+          { id: "c", label: "La publicité du pic se paie avec un {{trimestre}} de décalage" },
           { id: "d", label: "L'impôt sur les sociétés est prélevé au moment de la vente" },
         ],
         correctOptionId: "a",
@@ -718,17 +730,17 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde aux charges de structure d'un trimestre : de combien de trimestres d'avance disposez-vous vraiment ?",
+      "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous vraiment ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "Projetez le trimestre creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
+      "Projetez {{le trimestre}} creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
     decisionLevers: [
-      { field: "productionPlan", direction: "down", hint: "Le trimestre creux ne justifie pas un stock élevé. Réduisez les achats pour ne pas immobiliser du cash qui pourrait être placé ou gardé en réserve." },
-      { field: "maintenanceBudget", direction: "review", hint: "L'excédent de trésorerie peut financer un investissement logistique ou plateforme, à condition de conserver assez de liquidités pour le trimestre à venir." },
+      { field: "productionPlan", direction: "down", hint: "{{Le trimestre}} creux ne justifie pas un stock élevé. Réduisez les achats pour ne pas immobiliser du cash qui pourrait être placé ou gardé en réserve." },
+      { field: "maintenanceBudget", direction: "review", hint: "L'excédent de trésorerie peut financer un investissement logistique ou plateforme, à condition de conserver assez de liquidités pour {{le trimestre}} à venir." },
     ],
   },
 ];
@@ -755,4 +767,10 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "L'analyse FRNG / BFR explique seule qu'une entreprise rentable manque de trésorerie : c'est le stock qui a bougé, pas le résultat.",
 };
 
-attachModelQuestions(ECOMMERCE_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(SOURCES, MODEL_EXPLAIN);
+
+/** Les sources à jetons, que PIXEL & CO · GAMME reprend et rend pour son propre scénario. */
+export const ECOMMERCE_SOURCES: readonly SituationDef[] = SOURCES;
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const ECOMMERCE_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, ecommerceScenario);

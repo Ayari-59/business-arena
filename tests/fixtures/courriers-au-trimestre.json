@@ -1,0 +1,2298 @@
+{
+  "rse_label": [
+    "Organisme certificateur Véritas Sociale",
+    "Attribution du label Entreprise responsable",
+    "À l'issue de l'audit conduit dans vos locaux, le comité de labellisation a retenu votre candidature. Le label vous est attribué pour trois ans et peut être apposé sur vos supports commerciaux. Il sera réexaminé si vos engagements venaient à faiblir.",
+    "La présidente du comité",
+    "Attractivité renforcée pendant plusieurs tours",
+    "Un capital de marque se construit lentement — l'engagement RSE d'hier soutient la demande d'aujourd'hui."
+  ],
+  "rse_bad_buzz": [
+    "Rédaction du quotidien régional · Service enquêtes",
+    "Demande de droit de réponse avant publication",
+    "Notre enquête à paraître compare vos engagements affichés et vos pratiques constatées, et relève plusieurs écarts. Conformément à nos règles, nous vous offrons la possibilité de répondre avant la parution, prévue en fin de semaine.",
+    "Le chef du service enquêtes",
+    "Demande en baisse ce tour",
+    "On ne s'affiche pas responsable à moitié : un standing entre-deux expose plus qu'il ne protège."
+  ],
+  "rse_sanction": [
+    "Direction régionale de l'environnement · Pôle contrôles",
+    "Notification de sanction administrative",
+    "Le contrôle inopiné du mois écoulé a établi un écart entre vos déclarations et la situation constatée sur site. Une amende administrative vous est notifiée, exigible sous trente jours. Les voies et délais de recours figurent au verso.",
+    "L'inspectrice des installations classées",
+    "Amende — charge exceptionnelle ce tour",
+    "Le risque RSE n'est pas que d'image : la réglementation a un coût, comptabilisé hors exploitation."
+  ],
+  "rse_subvention": [
+    "Agence de la transition écologique · Service des aides",
+    "Décision d'attribution d'une aide à l'investissement propre",
+    "Votre dossier a été retenu au titre du soutien aux procédés sobres. L'aide sera versée en une fois, sur justification de la dépense engagée. Elle constitue une subvention d'exploitation et devra être comptabilisée comme telle.",
+    "La directrice régionale",
+    "Aide — produit exceptionnel ce tour",
+    "L'investissement responsable peut être cofinancé : une subvention améliore le résultat hors exploitation."
+  ],
+  "raw_material_spike": [
+    "Électro-Composants Rhin · Direction commerciale",
+    "Revalorisation de nos tarifs au 1er du trimestre",
+    "Les cours du cuivre et des terres rares ont progressé de plus de vingt pour cent depuis notre dernier barème. Nous ne pouvons plus absorber cette hausse et la répercutons sur l'ensemble de nos références, pour les deux prochains trimestres.",
+    "Le directeur commercial",
+    "Coût des matières +20 % pendant 2 tours",
+    "Votre marge sur coût variable se comprime : où passe votre seuil de rentabilité ?"
+  ],
+  "machine_breakdown": [
+    "Note interne · Atelier d'assemblage",
+    "Arrêt de la ligne principale à la prise de poste",
+    "La ligne s'est arrêtée ce matin et n'est pas repartie. Le technicien évoque un défaut d'entretien sur le convoyeur ; la remise en route prendra plusieurs jours. Je vous transmets le constat pour décision.",
+    "Le chef d'atelier",
+    "Disponibilité machine −15 % ce tour (une entreprise tirée au sort)",
+    "La maintenance était-elle à la hauteur ? La capacité est une ressource fragile."
+  ],
+  "viral_campaign": [
+    "Agence Berthaud · Veille et relations presse",
+    "Forte exposition de vos enceintes sur les réseaux",
+    "Une vidéo tournée par un créateur suivi par plus d'un million de personnes met vos enceintes en scène. Les recherches sur votre marque ont doublé en quarante-huit heures. Vérifiez vos stocks sans attendre.",
+    "Votre chargée de compte",
+    "Demande globale +8 % ce tour",
+    "Un pic de demande ne profite qu'à ceux qui ont du stock : anticipation !"
+  ],
+  "competitor_bankruptcy": [
+    "Fédération de l'électronique grand public",
+    "Liquidation judiciaire de la société SONOR",
+    "Notre adhérent SONOR, présent depuis trente ans sur le marché des enceintes, a déposé son bilan. Ses cent quarante revendeurs cherchent dès à présent un fournisseur référencé. Nous tenons la liste à disposition de nos membres.",
+    "Le délégué général",
+    "Demande globale +12 % pendant 2 tours",
+    "Une part de marché se prend au moment où elle se libère, pas après."
+  ],
+  "economic_downturn": [
+    "Observatoire régional de la consommation",
+    "Note de conjoncture — recul de la consommation des ménages",
+    "Le pouvoir d'achat recule pour le deuxième trimestre consécutif. Les achats d'équipement non indispensable sont les premiers reportés : notre panel enregistre une baisse de dix pour cent sur l'électronique de loisir.",
+    "Le directeur d'études",
+    "Demande globale −10 % pendant 2 tours",
+    "Votre marge de sécurité absorbe-t-elle une baisse de 10 % des ventes ?"
+  ],
+  "student_fair": [
+    "Salon de la Rentrée Étudiante · Commissariat général",
+    "Votre gamme au village high-tech du salon",
+    "Le salon ouvrira ses portes à quarante mille étudiants. Le village high-tech, où figurent vos enceintes nomades, sera l'un des trois pôles mis en avant dans la communication de l'événement.",
+    "La commissaire générale",
+    "Demande du segment Étudiants +25 % ce tour",
+    "Un segment élastique au prix : la bonne offre au bon moment."
+  ],
+  "premium_trend": [
+    "Revue L'Écoute · Rédaction",
+    "Parution de notre dossier « le retour du son de studio »",
+    "Notre prochain numéro consacre douze pages au regain d'intérêt pour les enceintes haut de gamme, et vos modèles y figurent parmi les références citées. Nos lecteurs, exigeants et peu sensibles au prix, se déplacent chez les revendeurs dans les jours qui suivent la parution.",
+    "Le rédacteur en chef",
+    "Demande du segment Passionnés +30 % ce tour",
+    "Le premium se gagne par la qualité perçue, pas par le prix seul."
+  ],
+  "rate_hike": [
+    "Banque Régionale du Nord · Agence entreprises",
+    "Révision des conditions de vos concours bancaires",
+    "La banque centrale a relevé ses taux directeurs de soixante-quinze points de base. Conformément à l'article 4 de notre convention, le taux applicable à vos financements en cours est révisé à la hausse pour les deux prochains trimestres.",
+    "Le directeur d'agence",
+    "Charges d'intérêts ×1,5 pendant 2 tours",
+    "L'effet de levier joue dans les deux sens : dette chère, rentabilité fragile."
+  ],
+  "rate_cut": [
+    "Banque Régionale du Nord · Agence entreprises",
+    "Baisse du taux applicable à vos financements",
+    "La détente monétaire engagée ce trimestre nous permet de réviser à la baisse le coût de vos concours. Nous restons à votre disposition pour étudier un financement complémentaire si vos projets d'investissement le justifient.",
+    "Le directeur d'agence",
+    "Charges d'intérêts ×0,6 pendant 2 tours",
+    "Le bon moment pour financer par emprunt… si le projet crée de la valeur."
+  ],
+  "supplier_discount": [
+    "Électro-Composants Rhin · Direction commerciale",
+    "Offre de déstockage sur nos fins de série",
+    "Nos entrepôts doivent être libérés avant la fin du trimestre. Nous consentons pour cette seule période une remise exceptionnelle sur les composants concernés, dans la limite des quantités disponibles.",
+    "Le directeur commercial",
+    "Coût des matières −10 % ce tour",
+    "Marge sur coût variable élargie : produire plus, ou marger plus ?"
+  ],
+  "supplier_dispute": [
+    "Cabinet Vasseur · Avocats d'affaires",
+    "Litige contractuel avec votre fournisseur de composants",
+    "Votre fournisseur conteste les conditions de la commande passée au trimestre écoulé et suspend ses livraisons jusqu'au règlement du différend. En l'absence d'un second fournisseur référencé, l'approvisionnement de substitution se fera aux conditions du marché au comptant.",
+    "Maître Vasseur",
+    "Coût des matières +15 % ce tour (une entreprise tirée au sort)",
+    "Dépendre d'un seul fournisseur est un risque qui se paie."
+  ],
+  "cold_wave": [
+    "Préfecture · Cellule de crise départementale",
+    "Épisode de grand froid — restrictions de circulation",
+    "Un épisode de froid intense frappe la région pour plusieurs jours. La circulation des poids lourds est restreinte, les livraisons sont retardées et les ateliers non chauffés doivent réduire leur activité.",
+    "Le directeur de cabinet",
+    "Disponibilité machine −10 % ce tour (tout le marché)",
+    "Quand tout le monde produit moins, qui a du stock vend."
+  ],
+  "team_overtime": [
+    "Note interne · Délégation du personnel",
+    "Organisation exceptionnelle pour tenir les délais",
+    "Les équipes se sont entendues sur un roulement volontaire pour absorber le retard accumulé. Les heures supplémentaires sont acceptées et l'atelier tournera au-delà de sa cadence habituelle ce trimestre.",
+    "Le délégué du personnel",
+    "Disponibilité machine +8 % ce tour (équipe ciblée)",
+    "La capacité n'est pas qu'une machine : c'est aussi un collectif."
+  ],
+  "local_supplier_deal": [
+    "Ébénisterie Vanhove · Gérance",
+    "Geste commercial sur vos caissons acoustiques",
+    "Nous travaillons ensemble depuis douze ans et vos volumes n'ont jamais faibli. Nous appliquons sur ce trimestre une remise sur l'ensemble de vos caissons, sans contrepartie et sans modification de nos délais.",
+    "Le gérant",
+    "Coût des matières −8 % ce tour (équipe ciblée)",
+    "La relation fournisseur est un actif : elle élargit la marge sur coût variable."
+  ],
+  "banker_goodwill": [
+    "Banque Régionale du Nord · Agence entreprises",
+    "Révision de vos conditions à la suite de notre entretien",
+    "L'examen de vos derniers comptes et la trajectoire présentée lors de notre rendez-vous nous conduisent à revoir favorablement le taux de vos encours. Cette révision vaut pour les deux prochains trimestres et sera reconduite si la tendance se confirme.",
+    "Votre chargé d'affaires",
+    "Charges d'intérêts ×0,7 pendant 2 tours (équipe ciblée)",
+    "La confiance bancaire se construit : elle se lit dans vos comptes."
+  ],
+  "bank_penalties": [
+    "Banque Régionale du Nord · Service des incidents de paiement",
+    "Mise en demeure — dépassements répétés de votre autorisation",
+    "Votre compte a présenté un solde débiteur non autorisé à cinq reprises ce trimestre. Nous vous mettons en demeure de régulariser ; dans l'intervalle, les commissions d'intervention et le taux majoré s'appliquent à l'ensemble de vos encours.",
+    "Le responsable du service",
+    "Charges d'intérêts ×1,4 pendant 2 tours (équipe ciblée)",
+    "Une trésorerie mal pilotée coûte deux fois : le découvert, puis la sanction."
+  ],
+  "export_market": [
+    "NordSound Distribution · Direction des achats",
+    "Référencement de votre gamme dans notre réseau européen",
+    "Notre comité d'achats a retenu vos enceintes pour six cents points de vente en Belgique, aux Pays-Bas et en Allemagne. Le référencement prend effet immédiatement et porte sur les deux prochains trimestres.",
+    "La directrice des achats",
+    "Demande globale +15 % pendant 2 tours",
+    "Un nouveau marché se sert avec de la capacité : qui peut produire plus, vendra plus."
+  ],
+  "natural_disaster": [
+    "Préfecture · Cellule de crise départementale",
+    "Reconnaissance de l'état de catastrophe naturelle",
+    "La tempête qui a traversé la zone industrielle a provoqué des inondations importantes. L'arrêté est publié : les entreprises assurées disposent de dix jours pour déclarer leur sinistre. Les autres supporteront seules leurs pertes d'exploitation.",
+    "Le préfet",
+    "Disponibilité −28 % et matières +12 % ce tour, sauf pour les assurés",
+    "L'assurance échange un coût certain (la prime) contre un risque incertain : c'est un arbitrage d'espérance."
+  ],
+  "natural_disaster (sans assurance)": [
+    "Préfecture · Cellule de crise départementale",
+    "Reconnaissance de l'état de catastrophe naturelle",
+    "La tempête qui a traversé la zone industrielle a provoqué des inondations importantes. L'arrêté est publié : les entreprises sinistrées disposent de dix jours pour déclarer leurs pertes auprès des services de l'État.",
+    "Le préfet",
+    "Disponibilité −28 % et matières +12 % ce tour",
+    "Un coup dur qu'aucune garantie ne couvre se paie sur la marge et la trésorerie du tour : c'est là qu'il faut regarder."
+  ],
+  "cyberattack": [
+    "Axone Informatique · Cellule de sécurité",
+    "Incident de sécurité — chiffrement de votre gestion de production",
+    "Un rançongiciel a chiffré vos serveurs de production dans la nuit. Nous écartons toute négociation avec les attaquants et restaurons depuis les dernières sauvegardes. L'atelier fonctionnera en mode dégradé jusqu'au rétablissement.",
+    "Le responsable de la sécurité",
+    "Disponibilité machine −12 % ce tour (équipe ciblée)",
+    "La continuité d'activité est un actif invisible, jusqu'au jour où elle manque."
+  ],
+  "tight_order": [
+    "Centrale d'achat Priméo · Approvisionnements",
+    "Proposition de commande ferme — 500 unités",
+    "Nous vous proposons cinq cents unités au prix unitaire de cinquante-cinq euros, livrables sur le trimestre. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
+    "Le directeur des approvisionnements",
+    "+500 unités à 55 €/u imposés (échelle trimestre), dans la limite du stock",
+    "55 € couvre-t-il votre coût variable ? Les coûts pertinents décident, pas l'habitude."
+  ],
+  "xxl_order": [
+    "Plateforme Vendora · Direction des achats",
+    "Commande ferme de 2 500 unités pour notre opération de fin d'année",
+    "Notre opération de fin d'année portera sur deux mille cinq cents de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
+    "Le directeur des achats",
+    "+2 500 unités à 61 €/u (échelle trimestre), sous-traitance possible à 52 €/u",
+    "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai."
+  ],
+  "big_order": [
+    "Groupe hôtelier Rivages · Direction des achats",
+    "Équipement de nos chambres — commande ferme de 600 unités",
+    "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur six cents unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur le trimestre.",
+    "La directrice des achats",
+    "+600 unités (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite du stock",
+    "Une opportunité ne se saisit qu'avec du stock ou de la capacité disponible : l'anticipation paie."
+  ],
+  "major_breakdown": [
+    "Maintenance Legrand · Service après-vente",
+    "Rapport d'intervention — avarie majeure sur votre chaîne",
+    "Le roulement principal a cédé et endommagé l'entraînement de la chaîne. La pièce est à fabriquer : comptez deux trimestres avant le retour à la cadence nominale. Notre rapport relève l'absence de graissage périodique depuis la mise en service.",
+    "Le responsable technique",
+    "Disponibilité machine −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "La maintenance préventive coûte. Ne pas la faire coûte bien plus — en capacité perdue et en ventes manquées."
+  ],
+  "tech_obsolescence": [
+    "Électro-Composants Rhin · Direction technique",
+    "Fin de commercialisation de la génération précédente",
+    "La nouvelle norme européenne rend obsolète la génération de composants sur laquelle vos machines sont réglées. Les pièces restantes sont facturées au tarif de fin de série et vos équipements perdront en rendement jusqu'à leur mise à niveau.",
+    "Le directeur technique",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "L'investissement ne sert pas qu'à produire plus : il sert aussi à ne pas produire moins."
+  ],
+  "used_equipment_deal": [
+    "Étude Marchand · Commissaire-priseur judiciaire",
+    "Vente aux enchères d'une ligne de montage — liquidation SONOR",
+    "Dans le cadre de la liquidation de la société SONOR, une ligne de montage de six ans, révisée, est mise en vente. La mise à prix représente le quart de sa valeur à neuf. La vente a lieu sous quinzaine, sur place et par voie électronique.",
+    "Le commissaire-priseur",
+    "Disponibilité machine +12 % ce tour (équipe ciblée)",
+    "Racheter un actif d'occasion : un investissement rapide, mais quel effet sur la capacité réelle ?"
+  ],
+  "nova_price_war": [
+    "Agence Berthaud · Veille concurrentielle",
+    "Campagne de baisse de prix annoncée par SoundBox",
+    "SoundBox affiche moins quinze pour cent sur toute sa gamme, en vitrine, en ligne et sur quatre cents panneaux dans la région. Les comparateurs ont déjà répercuté les nouveaux prix, et vos revendeurs nous signalent des demandes d'alignement.",
+    "Votre chargée de compte",
+    "Demande globale −12 % pendant 2 tours",
+    "S'aligner coûte de la marge, tenir coûte du volume : chiffrez les deux avant de choisir, ne suivez pas par réflexe."
+  ],
+  "nova_counterfeit": [
+    "Cabinet Vasseur · Propriété industrielle",
+    "Contrefaçons de vos modèles sur les places de marché",
+    "Nous avons relevé près de deux mille annonces proposant des copies de vos enceintes à la moitié de votre prix. Les procédures de retrait sont engagées, mais elles prendront des semaines. Le public étudiant, très sensible au prix, ne distingue pas toujours la copie de l'original.",
+    "Maître Vasseur",
+    "Demande des Étudiants −20 % ce tour",
+    "Un segment sensible au prix se détourne vite : ce que vaut votre marque se mesure au moment où on la copie."
+  ],
+  "nova_campus_tender": [
+    "CampusTech · Direction des achats",
+    "Appel d'offres — référencement audio de la rentrée",
+    "Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants. Le marché porte sur l'ensemble de nos magasins. Nous rappelons que notre commission de référencement s'applique à chaque unité vendue.",
+    "Le directeur des achats",
+    "Demande du canal CampusTech +30 % ce tour",
+    "Un canal partenaire prélève sa commission : le volume est là, la marge par unité, moins."
+  ],
+  "nova_engineer_leaves": [
+    "Note interne · Service du personnel",
+    "Démission de votre ingénieur acoustique",
+    "Monsieur Leroy nous a remis sa démission ; il rejoint la société Auris à l'issue de son préavis. Les réglages d'accord et les essais d'écoute qu'il assurait seul devront être repris par l'atelier, avec le ralentissement que cela suppose.",
+    "La responsable du personnel",
+    "Disponibilité machine −10 % pendant 2 tours",
+    "Une compétence clé est une capacité : quand elle part, l'atelier produit moins sans qu'aucune machine ne tombe."
+  ],
+  "nova_press_award": [
+    "Revue L'Écoute · Rédaction",
+    "Attribution de notre Coup de cœur de l'année",
+    "Le jury de notre rédaction a distingué votre modèle parmi cent quatorze appareils testés cette année. La distinction paraîtra en couverture du numéro de rentrée ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.",
+    "Le rédacteur en chef",
+    "Demande de votre entreprise +10 % pendant 2 tours",
+    "La qualité perçue se paie d'avance et se récolte plus tard : c'est le rendement différé du budget qualité."
+  ],
+  "nova_inv_signal": [
+    "Agence Berthaud · Veille et relations presse",
+    "Un essai en rayon signalé chez le réseau Altimax",
+    "Le réseau Altimax, qui compte quatre-vingts magasins d'électronique dans le nord, met vos enceintes en tête de gondole dans douze de ses points de vente depuis lundi. Son responsable du rayon audio a confié à un confrère que l'essai pourrait s'élargir le trimestre prochain si les ventes tiennent. Aucun volume n'a été avancé.",
+    "Votre chargée de compte",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "nova_inv_grand_compte": [
+    "Altimax Distribution · Direction des achats",
+    "Référencement de vos enceintes sur trois trimestres",
+    "À l'issue de l'essai conduit dans douze magasins, notre comité confirme le référencement de vos enceintes dans l'ensemble de nos quatre-vingts points de vente. Le volume convenu dépasse d'environ un tiers vos ventes actuelles et court sur les trois prochains trimestres. Les livraisons se feront par palettes, magasin par magasin.",
+    "Le directeur des achats",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?"
+  ],
+  "nova_inv_taux": [
+    "Banque Régionale du Nord · Agence entreprises",
+    "Campagne sur les crédits d'équipement industriels",
+    "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux entreprises industrielles de la région : machines, lignes d'assemblage, outillage. Le taux de ces financements est réduit de quarante pour cent pendant deux trimestres, puis les conditions habituelles de la banque reprennent.",
+    "Le directeur d'agence",
+    "Charges d'intérêts ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "nova_inv_concurrent": [
+    "Fédération de l'électronique grand public",
+    "Kelvox Acoustique annonce une seconde ligne d'assemblage",
+    "Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades. Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
+    "Le délégué général",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "nova_inv_retournement": [
+    "Altimax Distribution · Direction des approvisionnements",
+    "Révision des quantités convenues pour votre référencement",
+    "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année. Nous révisons donc à la baisse le volume convenu pour les deux trimestres restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
+    "La responsable des approvisionnements",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes."
+  ],
+  "boutique_travaux_voirie": [
+    "Mairie · Direction de la voirie",
+    "Réfection de la chaussée — arrêté de circulation",
+    "Les travaux de réfection débuteront lundi pour une durée de dix-huit mois. Les barrières de chantier seront installées au droit de votre vitrine et le stationnement supprimé sur toute la section.",
+    "L'adjoint aux travaux",
+    "Demande globale −18 % pendant 2 tours",
+    "Vos charges de structure, elles, ne baissent pas d'un centime : combien d'articles faut-il désormais vendre pour tenir ?"
+  ],
+  "boutique_influenceur": [
+    "Agence Trame · Relations d'influence",
+    "Retombées de la visite d'une créatrice dans votre boutique",
+    "La vidéo tournée dans vos cabines a dépassé le million de vues avant le dîner. Nous enregistrons une hausse considérable des recherches sur votre enseigne. L'affluence sera immédiate et ne durera pas.",
+    "Votre chargée de compte",
+    "Demande des passants +30 % ce tour, sur toutes les références",
+    "Un pic ne profite qu'à celles qui ont du stock en réserve : l'anticipation vaut mieux que la chance."
+  ],
+  "boutique_demarque": [
+    "Cabinet Delvaux · Expertise comptable",
+    "Observations sur votre inventaire de fin de période",
+    "Le rapprochement entre vos entrées et vos sorties fait apparaître un écart de deux cents pièces, des bonnets pour l'essentiel. Vol à l'étalage et erreurs de caisse se partagent probablement cette démarque. Elle est intégrée au coût de vos ventes.",
+    "Votre expert-comptable",
+    "Coût d'achat effectif +9 % ce tour (une enseigne tirée au sort)",
+    "La marchandise perdue est payée mais jamais vendue : elle s'ajoute au coût de ce que vous vendez."
+  ],
+  "boutique_rupture_appro": [
+    "Transitaire Vermeulen · Service clients",
+    "Immobilisation de votre conteneur au port",
+    "Votre conteneur est retenu au terminal dans l'attente d'un contrôle documentaire. Les trois quarts de votre réassort ne seront pas livrés avant six semaines. Nous ne sommes pas en mesure d'accélérer la procédure.",
+    "Le responsable d'exploitation",
+    "Capacité de traitement −16 % ce tour (une enseigne tirée au sort)",
+    "Le rayon vide ne se rattrape pas : la vente manquée d'aujourd'hui ne revient pas demain."
+  ],
+  "boutique_ecommerce": [
+    "Association des commerçants du centre-ville",
+    "Arrivée d'une plateforme de livraison rapide sur la commune",
+    "Une plateforme annonce la livraison en deux heures sur l'ensemble de la ville. Nos relevés de fréquentation montrent déjà un recul du flux en semaine dans toute la rue. Une réunion d'information se tiendra jeudi.",
+    "La présidente de l'association",
+    "Demande globale −10 % pendant 2 tours",
+    "Quand le marché se contracte, on baisse les prix ou on soigne ce que le web ne sait pas vendre. Les deux coûtent."
+  ],
+  "boutique_coton": [
+    "Atelier Lemaire · Façonnier maille",
+    "Nouveau barème pour la prochaine collection",
+    "La laine mérinos et le coton ont fortement progressé, le fret également. Nous ne pouvons plus tenir nos prix et vous transmettons le barème applicable à votre prochaine collection, valable deux trimestres.",
+    "La gérante",
+    "Coût d'achat +18 % pendant 2 tours",
+    "Le coefficient multiplicateur se comprime : répercuter sur le prix de vente, ou accepter de vendre moins cher que prévu ?"
+  ],
+  "boutique_credit_resserre": [
+    "Crédit du Commerce · Agence de quartier",
+    "Modification des conditions applicables au petit commerce",
+    "Nos conditions de financement sont revues pour l'ensemble des commerces de détail de la place. Le taux de votre autorisation de découvert est majoré pour les deux prochains trimestres, sans modification du plafond accordé.",
+    "Le directeur d'agence",
+    "Taux d'intérêt ×1,5 pendant 2 tours",
+    "Un découvert qui coûte cher transforme un problème de trésorerie en problème de résultat."
+  ],
+  "boutique_pretexte_fete": [
+    "Centrale de la maille · Note de tendance",
+    "Saison des cadeaux avancée de trois semaines",
+    "Les magazines féminins ont lancé la saison plus tôt que d'habitude. Nos adhérents constatent une arrivée précoce des clientes fidèles, liste en main, sur les pulls et les cardigans.",
+    "Le service tendances",
+    "Demande des clientes fidèles +22 % ce tour (pulls et cardigans)",
+    "La fidélité se paie d'avance : les clientes qui reviennent sont celles qu'on a bien servies au tour précédent."
+  ],
+  "boutique_degat_des_eaux": [
+    "Syndic Berthier · Gestion de copropriété",
+    "Déclaration de sinistre — dégât des eaux",
+    "Le chauffe-eau du logement situé au-dessus de votre local a fui durant la nuit. Le constat amiable est joint. La moitié de votre stock est déclarée impropre à la vente ; l'indemnisation dépendra de la garantie souscrite.",
+    "Le gestionnaire d'immeuble",
+    "Capacité −30 % et coût d'achat +10 % ce tour (une enseigne ciblée)",
+    "C'est exactement le sinistre que couvre la multirisque commerce : la prime était-elle si chère ?"
+  ],
+  "boutique_degat_des_eaux (sans assurance)": [
+    "Syndic Berthier · Gestion de copropriété",
+    "Déclaration de sinistre — dégât des eaux",
+    "Le chauffe-eau du logement situé au-dessus de votre local a fui durant la nuit. Le constat amiable est joint. La moitié de votre stock est déclarée impropre à la vente.",
+    "Le gestionnaire d'immeuble",
+    "Capacité −30 % et coût d'achat +10 % ce tour (une enseigne ciblée)",
+    "Un stock abîmé se perd deux fois : ce qu'il a coûté, et ce qu'il aurait rapporté."
+  ],
+  "boutique_vitrine_primee": [
+    "Association des commerçants du centre-ville",
+    "Attribution du prix de la plus belle vitrine",
+    "Le jury vous décerne son prix annuel à l'unanimité. La remise aura lieu samedi en présence de la presse locale, dont la photographie paraîtra en une du journal de la semaine.",
+    "La présidente de l'association",
+    "Capacité de traitement +8 % ce tour (une enseigne ciblée)",
+    "Le soin apporté au point de vente est un investissement commercial : il se voit dans le flux client."
+  ],
+  "boutique_banque_conciliante": [
+    "Crédit du Commerce · Agence de quartier",
+    "Renégociation de votre autorisation de découvert",
+    "L'examen de vos derniers comptes nous conduit à revoir les conditions de votre découvert à la baisse, pour les deux prochains trimestres. Nous saluons la régularité de votre gestion sur les périodes écoulées.",
+    "Le directeur d'agence",
+    "Taux d'intérêt ×0,7 pendant 2 tours (une enseigne ciblée)",
+    "La confiance bancaire se gagne sur des trimestres de gestion saine, pas sur une promesse."
+  ],
+  "boutique_commande_ce": [
+    "CSE des Papeteries de la Lys",
+    "Commande ferme — 500 pulls pour notre arbre de Noël",
+    "Notre comité souhaite offrir un pull à chacun de nos cinq cents salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
+    "Le secrétaire du comité",
+    "+500 pulls col rond (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite du stock",
+    "L'opportunité ne se saisit qu'avec de la marchandise en réserve : le stock a un coût, et parfois une valeur."
+  ],
+  "boutique_rue_pietonne": [
+    "Mairie · Direction du commerce",
+    "Mise en service de la zone piétonne",
+    "Les travaux sont livrés : pavés neufs, jardinières et terrasses autorisées sur toute la rue. Nos comptages font état d'un flux du samedi multiplié par deux depuis la réouverture.",
+    "L'adjointe au commerce",
+    "Demande globale +16 % pendant 2 tours",
+    "L'emplacement est le premier actif d'un commerce, et le seul qu'on ne trouve pas au bilan."
+  ],
+  "boutique_major_breakdown": [
+    "Bureau de contrôle Sécuritas Bâti",
+    "Rapport après effondrement d'un rayonnage",
+    "Le rayonnage central a cédé sous la charge. Nous constatons des marchandises abîmées et prononçons l'interdiction d'accès aux allées concernées jusqu'à remise en conformité, soit deux trimestres au vu des délais du fabricant.",
+    "Le contrôleur technique",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & maintenance du mobilier commercial"
+  ],
+  "boutique_tech_obsolescence": [
+    "Éditeur CaissePro · Service abonnés",
+    "Fin de maintenance de votre logiciel de caisse",
+    "Votre version ne recevra plus de mise à jour à compter de ce trimestre. Les écarts d'inventaire et les erreurs de réassort constatés chez nos abonnés non migrés s'accentuent avec le temps. Une offre de migration est jointe.",
+    "Le responsable du support",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "boutique_used_equipment_deal": [
+    "Enseigne Bertin · Liquidation de mobilier",
+    "Cession de notre mobilier de magasin avant fermeture",
+    "Nous cessons notre activité et cédons présentoirs, portants et mannequins, tous en très bon état, à un quart de leur valeur. L'enlèvement est à votre charge et doit intervenir avant la fin du mois.",
+    "Le gérant",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "boutique_fast_fashion": [
+    "Association des commerçants du centre-ville",
+    "Ouverture d'une enseigne de fast fashion au 12 de la rue",
+    "L'ancien local du photographe accueillera une enseigne de mode à renouvellement hebdomadaire, sur quatre cents mètres carrés. Prix d'appel annoncés en vitrine dès l'ouverture. Le rythme de la rue va changer.",
+    "La présidente de l'association",
+    "Demande globale −14 % pendant 2 tours",
+    "Face à un concurrent qui joue le volume, on ne gagne pas au prix : on gagne sur ce qu'il ne fait pas."
+  ],
+  "boutique_soldes_concurrent": [
+    "Agence Trame · Veille commerciale",
+    "Ventes privées anticipées chez votre voisine",
+    "La boutique du 8 a lancé ses ventes privées deux semaines avant la date d'usage, avec affichage sur rue et envoi à son fichier clients. Les passants y entrent d'abord ; votre clientèle fidèle, elle, ne bouge pas.",
+    "Votre chargée de compte",
+    "Demande des passants −20 % ce tour",
+    "Les clientes fidèles restent, les passants suivent l'affiche : votre chiffre dépend de la part de chacun."
+  ],
+  "boutique_vendeuse_star": [
+    "Note interne · Encadrement du magasin",
+    "Résultats de votre nouvelle vendeuse à l'issue de sa période d'essai",
+    "Elle connaît les clientes par leur prénom et son panier moyen dépasse de moitié celui de l'équipe, sans qu'aucun prix n'ait été baissé. Je propose la confirmation de son embauche.",
+    "La responsable de magasin",
+    "Demande de votre boutique +8 % pendant 2 tours",
+    "La relation client est un actif qui ne figure à aucun bilan, et qui pèse sur le chiffre d'affaires."
+  ],
+  "boutique_greve_transporteur": [
+    "Transporteur Delahaye · Direction",
+    "Mouvement social — suspension des livraisons",
+    "Un mouvement social touche notre plateforme depuis lundi. Vos colis en provenance du façonnier restent à quai et seront livrés avec une semaine de retard au minimum. Nous vous prions de nous en excuser.",
+    "Le directeur d'exploitation",
+    "Mise en rayon −15 % ce tour",
+    "La rupture ne vient pas toujours de la demande : la chaîne d'approvisionnement a ses propres pannes."
+  ],
+  "boutique_marche_noel": [
+    "Mairie · Direction du commerce",
+    "Implantation du marché de Noël devant votre boutique",
+    "Les chalets seront installés sur votre section de rue pour trois semaines. Les éditions précédentes ont amené dix mille passants supplémentaires chaque week-end. L'accès à votre vitrine reste dégagé.",
+    "L'adjointe au commerce",
+    "Demande globale +20 % ce tour",
+    "Un pic de passage ne se sert qu'avec du stock : c'est au trimestre d'avant qu'il se prépare."
+  ],
+  "boutique_inv_signal": [
+    "Agence Trame · Veille commerciale",
+    "Une acheteuse des Galeries Montclair dans votre boutique",
+    "Une acheteuse des Galeries Montclair a passé une heure dans votre boutique samedi, puis a demandé à notre agence qui vous représentait. Elle prépare le rayon maille de la saison prochaine et évoquerait un espace dédié à votre collection. Rien n'est arrêté, aucune quantité n'a été avancée, et la décision se prendrait avec le comité d'achats.",
+    "Votre chargée de compte",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "boutique_inv_grand_compte": [
+    "Galeries Montclair · Direction des achats mode",
+    "Référencement de votre collection pour la saison à venir",
+    "Notre comité d'achats retient votre collection de maille pour un espace dédié dans tous nos magasins de la région. Les quantités convenues dépassent d'environ un tiers vos ventes actuelles et couvrent les trois prochains trimestres. Les livraisons s'échelonneront par vagues, magasin par magasin, à partir du réassort de la semaine prochaine.",
+    "La directrice des achats mode",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous servir ce volume ? Acheter plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?"
+  ],
+  "boutique_inv_taux": [
+    "Crédit du Commerce · Agence de quartier",
+    "Campagne sur les crédits d'équipement du commerce de détail",
+    "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux commerces de détail : agencement, mobilier, matériel de caisse, extension de la réserve. Le taux de ces financements est réduit de quarante pour cent pendant deux trimestres, puis les conditions habituelles de la place reprennent.",
+    "Le directeur d'agence",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "boutique_inv_concurrent": [
+    "Chambre de commerce et d'industrie · Observatoire du commerce",
+    "Les Tricots Valmont annoncent trois ouvertures dans l'agglomération",
+    "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille. Elle annonce des prix d'appel inférieurs d'environ un cinquième à ceux pratiqués dans les rues commerçantes. Notre observatoire s'attend à un déplacement d'une partie de la clientèle.",
+    "Le responsable de l'observatoire",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "boutique_inv_retournement": [
+    "Galeries Montclair · Direction du merchandising",
+    "Ajustement des quantités convenues pour votre collection",
+    "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement. Nous ajustons donc à la baisse les quantités convenues pour les deux trimestres restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
+    "La responsable du merchandising",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes."
+  ],
+  "hotel_evenement_local": [
+    "Office de tourisme · Direction des congrès",
+    "Salon professionnel au parc des expositions",
+    "Le salon accueillera quatre cents exposants pendant cinq jours. Nous avons transmis vos disponibilités aux organisateurs : l'ensemble du parc hôtelier de l'agglomération sera sollicité.",
+    "La directrice des congrès",
+    "Demande globale +22 % ce tour",
+    "Quand la demande dépasse la capacité, le prix devient le seul levier : c'est là que se gagne une saison."
+  ],
+  "hotel_avis_negatif": [
+    "Plateforme Réservatio · Qualité et relation client",
+    "Alerte sur la note de votre établissement",
+    "Trois commentaires portant sur la propreté des chambres ont fait passer votre note sous la barre des sept. En dessous de ce seuil, votre établissement sort des premières pages de résultats.",
+    "Le service qualité",
+    "Capacité commerciale −10 % pendant 2 tours (un établissement tiré au sort)",
+    "En hôtellerie, la réputation est un actif : elle se dégrade vite et se reconstruit lentement."
+  ],
+  "hotel_commission_ota": [
+    "Plateforme Réservatio · Direction des partenariats",
+    "Modification unilatérale de nos conditions de commission",
+    "À compter du prochain trimestre, la commission prélevée sur les réservations passe de quinze à dix-huit pour cent. Le maintien de votre référencement vaut acceptation. À défaut, votre fiche sera retirée.",
+    "Le directeur des partenariats",
+    "Coût variable par nuitée +16 % pendant 2 tours",
+    "Chaque nuitée vendue par la plateforme rapporte moins : votre marge unitaire fond sans que le prix affiché bouge."
+  ],
+  "hotel_greve_transports": [
+    "Syndicat hôtelier départemental",
+    "Mouvement social dans les transports — conséquences sur nos réservations",
+    "Le préavis couvre huit jours et concerne le rail comme l'aérien. Nos adhérents enregistrent déjà des annulations massives sur la clientèle affaires, qui ne peut plus rejoindre la ville.",
+    "Le président du syndicat",
+    "Demande de la clientèle affaires −28 % ce tour",
+    "Un hôtel qui ne vit que d'une clientèle meurt avec elle : la diversification des segments est une assurance."
+  ],
+  "hotel_panne_chaudiere": [
+    "Chauffage Delattre · Service d'urgence",
+    "Intervention sur votre chaudière — étage sans eau chaude",
+    "L'échangeur est percé et la pièce n'est pas en stock. L'étage desservi restera sans eau chaude trois jours au mieux. Nous vous confirmerons la date dès réception de la commande.",
+    "Le responsable d'intervention",
+    "Capacité −20 % ce tour (un établissement tiré au sort)",
+    "La maintenance était-elle au niveau ? Les chambres condamnées ce soir ne se revendront jamais."
+  ],
+  "hotel_meteo_radieuse": [
+    "Office de tourisme · Observatoire des flux",
+    "Été indien — hausse des réservations de dernière minute",
+    "Trois semaines de beau temps hors saison sont annoncées sur toute la côte. Nos relevés montrent une poussée des réservations à moins de quarante-huit heures, à des prix supérieurs à la moyenne de saison.",
+    "Le chargé d'observation",
+    "Demande touristique +28 % ce tour",
+    "La demande de dernière minute se capte au prix fort, encore faut-il ne pas avoir tout bradé un mois plus tôt."
+  ],
+  "hotel_energie": [
+    "Fournisseur d'énergie Caloris · Service entreprises",
+    "Renouvellement de votre contrat de fourniture",
+    "Votre contrat arrive à échéance. Les prix du gaz et de l'électricité ayant progressé de quarante pour cent, le nouveau barème s'applique dès la première facture du trimestre. Chauffage, blanchisserie et cuisine sont concernés.",
+    "Le conseiller entreprises",
+    "Coût variable par nuitée +22 % pendant 2 tours",
+    "Une charge variable qui grimpe déplace mécaniquement le taux d'occupation d'équilibre vers le haut."
+  ],
+  "hotel_credit_resserre": [
+    "Crédit Hôtelier · Direction des engagements",
+    "Durcissement de nos conditions sur le secteur hôtelier",
+    "Notre comité des risques classe désormais l'hôtellerie parmi les secteurs cycliques. Les taux applicables à nos encours du secteur sont relevés pour les deux prochains trimestres, sans exception.",
+    "Le directeur des engagements",
+    "Taux d'intérêt ×1,45 pendant 2 tours",
+    "Un hôtel est financé par de la dette longue : une hausse des taux se paie sur des années."
+  ],
+  "hotel_degat_des_eaux": [
+    "Assurances du Littoral · Service sinistres",
+    "Déclaration de sinistre — rupture de canalisation",
+    "L'expert est passé : douze chambres sont hors service et les plafonds de l'étage inférieur sont à reprendre. La prise en charge de la perte d'exploitation dépend de la formule souscrite ; le détail figure à votre contrat.",
+    "La gestionnaire de sinistres",
+    "Capacité −32 % et coût variable +12 % ce tour (un établissement ciblé)",
+    "C'est le sinistre type de la multirisque hôtelière : la perte d'exploitation coûte plus cher que les travaux."
+  ],
+  "hotel_degat_des_eaux (sans assurance)": [
+    "Cabinet Ferrand · Expertise des dommages",
+    "Déclaration de sinistre — rupture de canalisation",
+    "L'expert est passé : douze chambres sont hors service et les plafonds de l'étage inférieur sont à reprendre.",
+    "L'expert",
+    "Capacité −32 % et coût variable +12 % ce tour (un établissement ciblé)",
+    "La perte d'exploitation coûte plus cher que les travaux : une chambre fermée ne se revend pas le lendemain."
+  ],
+  "hotel_cyber_reservation": [
+    "Prestataire BookEngine · Direction technique",
+    "Interruption de service à la suite d'une attaque informatique",
+    "Nos serveurs ont subi une attaque par déni de service. Votre moteur de réservation en ligne est indisponible et le restera quatre jours, le temps de la remise en état. Seul le téléphone permet encore de réserver.",
+    "Le directeur technique",
+    "Capacité commerciale −25 % ce tour (un établissement ciblé)",
+    "Dépendre d'un outil unique, c'est lui confier son chiffre d'affaires : la formule tous risques le couvre."
+  ],
+  "hotel_etoile_supplementaire": [
+    "Commission de classement des hébergements touristiques",
+    "Décision de classement — attribution d'une étoile supplémentaire",
+    "À l'issue de la visite d'inspection, la commission relève la qualité des rénovations conduites et vous attribue une étoile supplémentaire. Le nouveau classement prend effet immédiatement et vaut pour cinq ans.",
+    "La présidente de la commission",
+    "Capacité commerciale +6 % pendant 2 tours (un établissement ciblé)",
+    "L'entretien et la rénovation ne sont pas des charges subies : ils achètent du pouvoir de fixer les prix."
+  ],
+  "hotel_banque_conciliante": [
+    "Crédit Hôtelier · Agence entreprises",
+    "Réaménagement de votre crédit immobilier",
+    "Vos taux d'occupation des quatre derniers trimestres nous conduisent à réaménager votre échéancier à des conditions plus favorables. La nouvelle grille est jointe et s'applique dès la prochaine échéance.",
+    "Votre chargé d'affaires",
+    "Taux d'intérêt ×0,7 pendant 2 tours (un établissement ciblé)",
+    "Un actif hôtelier bien exploité rassure : la garantie, c'est la trajectoire, pas seulement les murs."
+  ],
+  "hotel_groupe_impromptu": [
+    "Autocars Vasseur · Direction",
+    "Demande d'hébergement en urgence pour quarante passagers",
+    "Notre autocar est immobilisé sur l'autoroute à la suite d'une avarie. Quarante passagers doivent être logés ce soir. Nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
+    "Le responsable d'exploitation",
+    "+400 nuitées (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",
+    "L'aubaine ne profite qu'à ceux qui ont gardé des chambres disponibles : tout brader tôt a un coût caché."
+  ],
+  "hotel_festival": [
+    "Office de tourisme · Direction des grands événements",
+    "Première édition du festival d'été",
+    "La ville accueillera un festival de musique sur quatre jours, avec quarante mille visiteurs attendus. La capacité hôtelière de l'agglomération représente le tiers de ce besoin.",
+    "Le directeur des grands événements",
+    "Demande globale +30 % ce tour",
+    "Une nuit complète à prix fort vaut trois nuits bradées : le yield management se joue sur ces semaines-là."
+  ],
+  "hotel_major_breakdown": [
+    "Froid Industriel Marchal · Rapport d'expertise",
+    "Défaillance du groupe froid central",
+    "Le compresseur du groupe central est hors d'usage et la machine n'est plus fabriquée. Le remplacement complet demande deux trimestres, délai de commande inclus. Les étages exposés au sud sont inexploitables en attendant.",
+    "L'expert frigoriste",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & maintenance préventive"
+  ],
+  "hotel_tech_obsolescence": [
+    "Domotique Hôtelière Sénéchal · Service maintenance",
+    "Fin de support de vos serrures connectées",
+    "La génération installée dans votre établissement n'est plus suivie par le fabricant. Les pannes de badges et les blocages de porte vont se multiplier, et chaque intervention sera facturée en tarif hors contrat.",
+    "Le responsable maintenance",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "hotel_used_equipment_deal": [
+    "Étude Marchand · Commissaire-priseur judiciaire",
+    "Vente du mobilier d'un hôtel de charme en liquidation",
+    "Literie, luminaires et équipements de salle de bains, tous de gamme supérieure et de moins de trois ans, sont mis en vente en un seul lot. L'enlèvement doit intervenir sous quinzaine.",
+    "Le commissaire-priseur",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "hotel_nouvel_hotel": [
+    "Syndicat hôtelier départemental",
+    "Ouverture d'un établissement de chaîne à deux rues",
+    "Cent vingt chambres neuves ouvriront le mois prochain, petit-déjeuner inclus et tarif de lancement affiché pour un trimestre. La capacité du quartier augmente d'un quart sans que la demande bouge.",
+    "Le président du syndicat",
+    "Demande globale −15 % pendant 2 tours",
+    "Une capacité nouvelle sur un marché stable se prend sur les voisins : le taux d'occupation d'équilibre remonte."
+  ],
+  "hotel_locations_particuliers": [
+    "Observatoire local de l'hébergement",
+    "Progression des meublés de tourisme dans votre quartier",
+    "Le recensement annuel dénombre désormais plus d'appartements en location de courte durée que de chambres d'hôtel sur votre secteur. La clientèle loisirs, la plus sensible au prix, est la première concernée.",
+    "Le chargé d'études",
+    "Demande du tourisme loisirs −20 % pendant 2 tours",
+    "Le segment le plus sensible au prix est le premier à partir : la clientèle affaires, elle, achète autre chose qu'un lit."
+  ],
+  "hotel_congres": [
+    "Société savante de cardiologie · Comité d'organisation",
+    "Congrès annuel — demande de contingent de chambres",
+    "Notre congrès réunira trois mille praticiens pendant quatre jours. Nous recherchons un contingent de chambres auprès de chaque établissement de la ville, la capacité disponible étant inférieure au besoin.",
+    "La secrétaire générale",
+    "Demande de la clientèle affaires +35 % ce tour",
+    "Quand la demande dépasse la capacité, la question n'est plus de remplir mais à quel prix."
+  ],
+  "hotel_chef_reconnu": [
+    "Guide gastronomique régional · Rédaction",
+    "Entrée de votre restaurant dans notre sélection",
+    "L'arrivée d'un chef reconnu à la tête de votre table nous conduit à l'inscrire dans notre sélection annuelle. Nos lecteurs réservent volontiers une chambre pour dîner sans avoir à reprendre la route.",
+    "Le rédacteur en chef",
+    "Demande de votre hôtel +10 % pendant 2 tours",
+    "Une activité annexe peut tirer l'activité principale : la marge se lit sur l'ensemble, pas service par service."
+  ],
+  "hotel_legionelle": [
+    "Agence régionale de santé · Service santé-environnement",
+    "Mise en demeure — présence de légionelles dans votre réseau d'eau",
+    "Les prélèvements effectués dépassent le seuil réglementaire. Nous vous mettons en demeure de fermer l'étage concerné et de procéder à la désinfection complète du réseau. Un contrôle de conformité sera diligenté avant toute réouverture.",
+    "L'ingénieur sanitaire",
+    "Chambres disponibles −40 % ce tour",
+    "Une chambre fermée coûte ses charges fixes sans rien rapporter : la disponibilité est la première ressource d'un hôtel."
+  ],
+  "hotel_inv_signal": [
+    "Office de tourisme · Service de la promotion",
+    "Visite de repérage d'un voyagiste le mois prochain",
+    "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne. Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès le trimestre prochain.",
+    "La chargée de promotion",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "hotel_inv_grand_compte": [
+    "Sillage Voyages · Direction commerciale",
+    "Contingent de chambres pour notre programmation de l'année",
+    "À l'issue de notre visite de repérage, notre comité retient votre ville pour ses séminaires d'entreprise et ses délégations. Des groupes de vingt à quarante personnes arriveront chaque semaine pendant les trois trimestres à venir. Nous répartissons ces réservations entre les hôtels du centre, pour environ trente pour cent de nuitées en plus sur l'agglomération.",
+    "Le directeur commercial",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous loger ce volume ? Rouvrir des chambres, adresser le surplus à un confrère ou investir : lequel coûte le moins sur trois tours ?"
+  ],
+  "hotel_inv_taux": [
+    "Crédit Hôtelier · Direction du développement",
+    "Campagne temporaire sur les crédits d'équipement",
+    "Pour accompagner la rénovation du parc hôtelier de la région, notre banque ouvre une campagne sur les crédits d'équipement : literie, mise aux normes, création de chambres. Les taux sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains trimestres. La grille habituelle s'appliquera de nouveau ensuite.",
+    "Le directeur du développement",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "hotel_inv_concurrent": [
+    "Gazette de l'hôtellerie régionale · Rédaction",
+    "Un hôtel de la place de la gare rouvre et affiche ses prix",
+    "La maison Larrivet, trois étoiles de la place de la gare, rouvre après une rénovation complète et l'ajout de deux salles de séminaire. Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année. Les professionnels s'attendent à un partage de la clientèle d'affaires entre les établissements du centre.",
+    "Le rédacteur en chef",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "hotel_inv_retournement": [
+    "Sillage Voyages · Direction des opérations",
+    "Révision des volumes de notre programmation d'automne",
+    "La saison de séminaires s'achève plus tôt que prévu et deux délégations ont reporté leur venue. Nos départs vers votre ville passent d'un groupe par semaine à un groupe toutes les deux semaines. Le contingent de chambres initialement convenu est donc ramené à environ la moitié pour les deux prochains trimestres.",
+    "Le directeur des opérations",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les réservations."
+  ],
+  "bistrot_avis_viral": [
+    "Note interne · Réservations",
+    "Affluence à la suite du passage de votre dessert sur les réseaux",
+    "La photographie de notre dessert signature a dépassé deux cent mille vues. Le téléphone ne s'arrête plus depuis hier soir et le carnet du soir est complet jusqu'à la fin de la semaine.",
+    "La responsable de salle",
+    "Demande du soir +30 % ce tour",
+    "Refuser du monde faute de places ou de brigade, c'est transformer un succès en clients perdus."
+  ],
+  "bistrot_inspection": [
+    "Direction départementale de la protection des populations",
+    "Rapport de contrôle sanitaire et mesures à mettre en œuvre",
+    "Le contrôle inopiné du jeudi a relevé des manquements sur la traçabilité et la chaîne du froid. Les mises aux normes listées en annexe sont exigibles sans délai. Une contre-visite interviendra sans préavis.",
+    "L'inspectrice de la sécurité sanitaire",
+    "Capacité de service −18 % ce tour (une table tirée au sort)",
+    "L'hygiène n'est pas une charge optionnelle : ce qu'on économise dessus se paie en fermeture."
+  ],
+  "bistrot_panne_froid": [
+    "Froid Marchal · Service d'urgence",
+    "Intervention sur votre chambre froide positive",
+    "Le groupe s'est arrêté dans la nuit de vendredi et la température est remontée durant tout le week-end. L'intégralité des denrées stockées est à détruire. L'attestation de destruction est jointe pour votre assureur.",
+    "Le technicien frigoriste",
+    "Capacité −15 % et coût matières +14 % ce tour (une table tirée au sort)",
+    "En restauration, la marchandise perdue est payée deux fois : à l'achat, puis en service annulé."
+  ],
+  "bistrot_panne_froid (sans assurance)": [
+    "Froid Marchal · Service d'urgence",
+    "Intervention sur votre chambre froide positive",
+    "Le groupe s'est arrêté dans la nuit de vendredi et la température est remontée durant tout le week-end. L'intégralité des denrées stockées est à détruire. L'attestation de destruction est jointe.",
+    "Le technicien frigoriste",
+    "Capacité −15 % et coût matières +14 % ce tour (une table tirée au sort)",
+    "En restauration, la marchandise perdue est payée deux fois : à l'achat, puis en service annulé."
+  ],
+  "bistrot_bureaux_vides": [
+    "Association des commerçants du quartier d'affaires",
+    "Passage au télétravail de deux entreprises du quartier",
+    "Les deux plus gros employeurs de la rue passent à quatre jours de télétravail par semaine. Nos relevés annoncent une chute immédiate de la fréquentation du midi pour l'ensemble des établissements.",
+    "Le président de l'association",
+    "Demande des déjeuners d'affaires −25 % ce tour",
+    "Le midi paie le loyer, le soir fait la marge : perdre un service, c'est perdre l'équilibre du modèle."
+  ],
+  "bistrot_commission_livraison": [
+    "Plateforme Livrapide · Direction des partenariats",
+    "Nouvelle grille de commission applicable aux restaurants partenaires",
+    "La commission prélevée sur chaque commande livrée passe à trente pour cent. Le maintien de votre présence sur l'application vaut acceptation de la nouvelle grille ; un retrait entraînerait la perte du volume associé.",
+    "Le responsable des partenariats",
+    "Coût variable par couvert +10 % pendant 2 tours",
+    "Un canal qui apporte du volume mais dévore la marge : le chiffre d'affaires n'est pas le résultat."
+  ],
+  "bistrot_matieres_premieres": [
+    "Grossiste Vandamme · Direction commerciale",
+    "Révision de nos tarifs — beurre, crème et viande",
+    "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles. Le nouveau barème court sur deux trimestres.",
+    "Le directeur commercial",
+    "Coût matières +24 % pendant 2 tours",
+    "Le ratio matières dérape : augmenter le ticket, réduire les portions ou changer la carte : il faut choisir."
+  ],
+  "bistrot_terrasse": [
+    "Mairie · Service des occupations du domaine public",
+    "Extension exceptionnelle de votre terrasse",
+    "Compte tenu de la période de beau temps annoncée, nous autorisons l'extension de votre terrasse sur trois places de stationnement pour trois semaines. L'autorisation est gratuite et non reconductible de droit.",
+    "Le chef de service",
+    "Demande globale +15 % ce tour",
+    "Les places en plus ne servent à rien sans la brigade pour les servir : la capacité est double."
+  ],
+  "bistrot_credit_resserre": [
+    "Crédit du Commerce · Direction des risques",
+    "Révision de votre autorisation de découvert",
+    "Notre comité classe la restauration traditionnelle en risque élevé. Votre autorisation est réduite et le taux applicable relevé pour les deux prochains trimestres. Un réexamen sera possible sur présentation de vos comptes annuels.",
+    "Le directeur des risques",
+    "Taux d'intérêt ×1,5 pendant 2 tours",
+    "Un métier à faible marge supporte mal le coût du découvert : la trésorerie se pilote au jour le jour."
+  ],
+  "bistrot_degat_des_eaux": [
+    "Assurances du Littoral · Service sinistres",
+    "Déclaration de sinistre — inondation de votre cuisine",
+    "La canalisation située sous le passe a cédé. L'expert relève une cuisine inondée et une salle inexploitable le temps du séchage. La perte d'exploitation n'est indemnisée que si la garantie correspondante a été souscrite.",
+    "Le gestionnaire de sinistres",
+    "Capacité −35 % et coût matières +10 % ce tour (une table ciblée)",
+    "La perte d'exploitation est l'essentiel du dommage : c'est elle que couvre la formule étendue."
+  ],
+  "bistrot_degat_des_eaux (sans assurance)": [
+    "Cabinet Ferrand · Expertise des dommages",
+    "Déclaration de sinistre — inondation de votre cuisine",
+    "La canalisation située sous le passe a cédé. Nous relevons une cuisine inondée et une salle inexploitable le temps du séchage.",
+    "L'expert",
+    "Capacité −35 % et coût matières +10 % ce tour (une table ciblée)",
+    "La perte d'exploitation est l'essentiel du dommage : une salle fermée ne vend rien, et les charges courent."
+  ],
+  "bistrot_fermeture_administrative": [
+    "Préfecture · Bureau de la police administrative",
+    "Arrêté de fermeture administrative — quinze jours",
+    "À la suite du rapport de contrôle, la fermeture de votre établissement est prononcée pour quinze jours à compter de la notification. L'arrêté doit être affiché sur votre devanture pendant toute la durée de la mesure.",
+    "Le chef de bureau",
+    "Capacité −45 % ce tour (une table ciblée)",
+    "Les salaires et le loyer continuent de courir : c'est la définition même d'une charge de structure."
+  ],
+  "bistrot_guide_gastronomique": [
+    "Guide gastronomique régional · Rédaction",
+    "Votre table dans notre prochaine édition",
+    "Notre inspecteur est passé deux fois, sans se faire connaître. Votre maison figurera dans l'édition à paraître, avec le mot « générosité ». Les établissements cités voient leur carnet se remplir sur six semaines.",
+    "Le rédacteur en chef",
+    "Capacité commerciale +8 % pendant 2 tours (une table ciblée)",
+    "Le budget qualité paie avec retard, mais il paie : la réputation est un investissement à rendement différé."
+  ],
+  "bistrot_banque_conciliante": [
+    "Crédit du Commerce · Agence de quartier",
+    "Allongement de votre crédit d'équipement",
+    "Vos ratios de gestion, et notamment la maîtrise de votre ratio matières, nous conduisent à allonger la durée de votre crédit d'équipement et à desserrer votre découvert. Les nouvelles conditions sont jointes.",
+    "Votre chargée d'affaires",
+    "Taux d'intérêt ×0,7 pendant 2 tours (une table ciblée)",
+    "Un ratio matières maîtrisé se lit dans les comptes : c'est ce que regarde d'abord un banquier."
+  ],
+  "bistrot_banquet_surprise": [
+    "Famille Delporte · Repas de mariage",
+    "Demande urgente — repas de 220 couverts dans trois jours",
+    "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer deux cent vingt couverts samedi. Nous réglons comptant le jour même.",
+    "Pour la famille, M. Delporte",
+    "+220 couverts (échelle trimestre) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
+    "Dire oui suppose des denrées, une brigade et de la place : trois contraintes, une seule opportunité."
+  ],
+  "bistrot_festival_ville": [
+    "Mairie · Direction de l'animation",
+    "Programme de la fête de la ville — votre rue sur le parcours",
+    "Les festivités se tiendront sur trois jours et le parcours principal empruntera votre rue. Les éditions passées ont amené une affluence continue du midi à la fermeture, avec un pic le samedi soir.",
+    "La directrice de l'animation",
+    "Demande globale +25 % ce tour",
+    "Sur-préparer coûte le prix des denrées jetées, sous-préparer coûte les clients refusés. Où placer le curseur ?"
+  ],
+  "bistrot_major_breakdown": [
+    "Cuisines Professionnelles Lheureux · Service après-vente",
+    "Rapport d'intervention — four principal hors service",
+    "La sole et la résistance principale sont hors d'usage. La pièce n'est plus référencée : le remplacement de l'appareil s'impose, avec un délai de deux trimestres. La moitié de votre carte est concernée.",
+    "Le responsable après-vente",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & maintenance préventive"
+  ],
+  "bistrot_tech_obsolescence": [
+    "Cuisines Professionnelles Lheureux · Diagnostic énergétique",
+    "Diagnostic de votre matériel de cuisson",
+    "Vos plaques et votre four accusent quinze ans de service. Leur rendement thermique a chuté d'un tiers : les temps de cuisson s'allongent et votre facture d'énergie progresse à volume constant.",
+    "Le technicien conseil",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "bistrot_used_equipment_deal": [
+    "Étude Marchand · Commissaire-priseur judiciaire",
+    "Vente du matériel d'une table étoilée cessant son activité",
+    "Piano de cuisson, cellule de refroidissement et batterie inox, entretenus et de moins de quatre ans, sont proposés en lot unique. La mise à prix est très inférieure au neuf ; l'enlèvement est à votre charge.",
+    "Le commissaire-priseur",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "bistrot_food_truck": [
+    "Mairie · Service des occupations du domaine public",
+    "Autorisation d'un commerce ambulant sur la place",
+    "Une activité de restauration rapide ambulante est autorisée sur la place les midis de semaine, à cinquante mètres de votre terrasse. L'autorisation est délivrée pour un an, renouvelable.",
+    "Le chef de service",
+    "Demande des déjeuners d'affaires −18 % pendant 2 tours",
+    "La formule du midi vend du temps autant que de la cuisine : c'est là que le concurrent frappe."
+  ],
+  "bistrot_concurrent_etoile": [
+    "Guide gastronomique régional · Rédaction",
+    "Distinction attribuée à un établissement de votre rue",
+    "Nous informons les professionnels du quartier que la table du 14 reçoit une étoile dans notre édition à paraître. L'affluence se reportera sur elle pendant plusieurs semaines, y compris de la part des habitués du voisinage.",
+    "Le rédacteur en chef",
+    "Demande de la clientèle locale du soir −15 % pendant 2 tours",
+    "On ne se bat pas sur le terrain d'un concurrent mieux armé : la fidélité se construit sur ce qu'il n'offre pas."
+  ],
+  "bistrot_marche_hebdo": [
+    "Mairie · Direction du commerce",
+    "Transfert du marché hebdomadaire sur votre rue",
+    "À compter de samedi, les quatre-vingts étals du marché seront installés sur votre section de rue. Le comptage de la dernière édition fait état de six mille passages entre huit heures et treize heures.",
+    "L'adjointe au commerce",
+    "Demande globale +12 % pendant 2 tours",
+    "Le passage est une ressource gratuite : ce qu'on en tire dépend de la capacité à servir vite."
+  ],
+  "bistrot_chef_absent": [
+    "Caisse d'assurance maladie · Service des indemnités",
+    "Arrêt de travail de votre chef de cuisine",
+    "L'arrêt prescrit court sur six semaines pour fracture. Les indemnités journalières vous seront versées selon les modalités habituelles. Aucune reprise anticipée ne peut être envisagée sans avis médical.",
+    "Le service des indemnités journalières",
+    "Couverts servis −20 % ce tour",
+    "Une entreprise qui tient sur une personne a une capacité fragile : le remplacement se prépare avant l'accident."
+  ],
+  "bistrot_critique_elogieuse": [
+    "Chronique Les Tables de la ville",
+    "Publication de notre chronique sur votre maison",
+    "Notre article paraîtra demain matin. Il retient votre blanquette et le rapport qualité-prix de votre formule du soir. Notre audience est locale, fidèle, et réserve dans la semaine qui suit la parution.",
+    "Le chroniqueur",
+    "Demande de votre bistrot +10 % pendant 2 tours",
+    "La réputation se gagne assiette par assiette et se perd en un service : la qualité est un investissement."
+  ],
+  "bistrot_inv_signal": [
+    "Association des commerçants du quartier d'affaires",
+    "Installation prochaine d'un bureau d'études dans la rue",
+    "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place. Son secrétariat général consulte déjà les restaurateurs du quartier pour ses déjeuners d'affaires et ses réceptions. Aucune décision n'est prise, mais le volume pourrait se chiffrer en dizaines de couverts par semaine dès le trimestre prochain.",
+    "Le président de l'association",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "bistrot_inv_grand_compte": [
+    "Montclar Ingénierie · Direction des services généraux",
+    "Déjeuners d'affaires et banquets pour l'année à venir",
+    "Notre installation est achevée et nous arrêtons notre organisation : un déjeuner d'affaires de vingt-cinq couverts chaque midi de semaine et un banquet de quatre-vingts couverts par mois, pendant les trois trimestres à venir. Nous répartissons ces réservations entre les tables du quartier, soit environ trente pour cent de couverts en plus pour l'ensemble des maisons.",
+    "Le directeur des services généraux",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous servir ce volume ? Étendre la capacité, confier une partie à un confrère ou investir : lequel coûte le moins sur trois tours ?"
+  ],
+  "bistrot_inv_taux": [
+    "Crédit du Commerce · Direction des professionnels",
+    "Campagne temporaire sur les crédits d'équipement",
+    "Notre banque ouvre une campagne en faveur de l'équipement des restaurateurs : cuisine, chambre froide, mobilier de salle. Les taux des crédits d'équipement sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains trimestres. La grille habituelle s'appliquera de nouveau ensuite.",
+    "Le directeur des professionnels",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "bistrot_inv_concurrent": [
+    "Syndicat des restaurateurs de l'agglomération",
+    "Réouverture de la brasserie Verchère avec une seconde salle",
+    "La brasserie Verchère, au bout de l'avenue, rouvre avec une seconde salle de cent vingt couverts et une cuisine entièrement rééquipée. Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année. La clientèle d'affaires devrait se répartir autrement entre les maisons du secteur.",
+    "Le président du syndicat",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "bistrot_inv_retournement": [
+    "Montclar Ingénierie · Direction financière",
+    "Révision de nos commandes de restauration",
+    "Dans le cadre d'un plan de maîtrise des dépenses, nos banquets passent d'un par mois à un tous les deux mois. Nos déjeuners d'affaires sont ramenés de vingt-cinq à une douzaine de couverts par midi, et une partie de nos équipes déjeune désormais sur place. Cette révision s'applique pour les deux prochains trimestres.",
+    "Le directeur financier",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes."
+  ],
+  "conseil_appel_offres_gagne": [
+    "Centrale des marchés publics · Service des avis",
+    "Publication groupée d'avis de marchés d'études",
+    "La clôture budgétaire des collectivités approche : quarante et un avis de marchés d'assistance et d'études sont publiés cette semaine sur le département. Les délais de remise sont courts.",
+    "Le service des avis",
+    "Demande du secteur public +40 % ce tour",
+    "Répondre suppose des consultants disponibles : un carnet plein est une bonne nouvelle qu'on ne peut pas toujours saisir."
+  ],
+  "conseil_depart_consultant": [
+    "Lettre de démission · M. Aubert, consultant senior",
+    "Démission et demande de dispense de préavis",
+    "Je vous présente ma démission et vous demande d'être dispensé de préavis. Deux missions me sont confiées à ce jour, chez des clients avec lesquels je travaille depuis trois ans. Je reste disponible pour organiser leur reprise.",
+    "M. Aubert",
+    "Capacité de production −14 % pendant 2 tours (un cabinet tiré au sort)",
+    "Dans les services, la capacité part le soir avec les salariés : la politique salariale est une décision industrielle."
+  ],
+  "conseil_gel_budgets": [
+    "Fédération du conseil · Note aux adhérents",
+    "Gel des budgets de conseil annoncé par les donneurs d'ordres",
+    "Notre enquête trimestrielle indique que sept directions générales sur dix suspendent les dépenses non engagées jusqu'à nouvel ordre. Les missions signées sont honorées ; les consultations en cours sont interrompues.",
+    "Le délégué général",
+    "Demande globale −15 % pendant 2 tours",
+    "Les salaires tombent même quand le carnet est vide : c'est tout le risque d'une structure de coûts rigide."
+  ],
+  "conseil_recommandation": [
+    "Groupe Vallois · Direction générale",
+    "Recommandation de votre cabinet auprès de nos partenaires",
+    "La mission que vous avez conduite chez nous a été citée en exemple lors de notre dernier comité de direction. Nous avons transmis vos coordonnées à deux groupes de notre secteur, qui vous contacteront dans les jours qui viennent.",
+    "Le directeur général",
+    "Demande des grands comptes +35 % ce tour",
+    "La qualité livrée est le premier canal commercial du conseil : elle rapporte au tour suivant, pas au tour même."
+  ],
+  "conseil_frais_mission": [
+    "Agence de voyages d'affaires Novaris",
+    "Revalorisation des tarifs négociés pour votre compte",
+    "Les tarifs professionnels du rail, de l'hôtellerie et de la restauration progressent de dix-huit pour cent sur l'ensemble de nos destinations. Vos accords-cadres sont révisés en conséquence pour les deux prochains trimestres.",
+    "Votre chargée de compte",
+    "Frais variables par jour-conseil +18 % pendant 2 tours",
+    "Des frais refacturés au forfait qui dérapent, ce sont des points de marge perdus sur chaque journée vendue."
+  ],
+  "conseil_reglementation": [
+    "Fédération du conseil · Veille réglementaire",
+    "Nouveau décret imposant un audit aux entreprises de plus de 250 salariés",
+    "Le décret paru au Journal officiel impose un audit de conformité dans les douze mois à toutes les entreprises de plus de deux cent cinquante salariés. Le marché s'ouvre pour l'ensemble de la profession, au même moment.",
+    "Le responsable de la veille",
+    "Demande globale +20 % pendant 2 tours",
+    "Le marché s'ouvre pour tout le monde en même temps : le gagnant est celui qui a les consultants disponibles."
+  ],
+  "conseil_credit_resserre": [
+    "Banque des Professions · Direction des engagements",
+    "Révision des conditions de votre ligne de trésorerie",
+    "Votre activité ne présente aucun actif nantissable et votre poste clients constitue l'essentiel de votre bilan. Nous relevons le taux de votre ligne de trésorerie pour les deux prochains trimestres.",
+    "Le directeur des engagements",
+    "Taux d'intérêt ×1,5 pendant 2 tours",
+    "Un métier sans immobilisations finance son BFR par le découvert : le poste clients devient le vrai sujet."
+  ],
+  "conseil_cabinet_parisien": [
+    "Fédération du conseil · Note aux adhérents",
+    "Implantation d'un cabinet national sur notre territoire",
+    "Un cabinet parisien ouvre un bureau en ville avec quinze consultants et une grille tarifaire agressive sur le segment des PME. Ses références nationales figurent déjà dans les consultations en cours.",
+    "Le délégué général",
+    "Demande des PME −18 % pendant 2 tours",
+    "Face à un concurrent mieux armé, s'aligner sur les prix ou se différencier : les deux stratégies ne coûtent pas au même endroit."
+  ],
+  "conseil_litige_client": [
+    "Cabinet Lermite · Avocats, pour le compte de son client",
+    "Contestation du livrable et suspension du solde de la mission",
+    "Notre cliente conteste la conformité du livrable remis et suspend le règlement du solde. Une déclaration a été adressée à votre assureur de responsabilité civile professionnelle. Nous restons ouverts à une solution amiable.",
+    "Maître Lermite",
+    "Capacité −20 % et frais variables +15 % pendant 2 tours (un cabinet ciblé)",
+    "C'est exactement le risque que couvre la responsabilité civile professionnelle : la prime valait-elle son prix ?"
+  ],
+  "conseil_litige_client (sans assurance)": [
+    "Cabinet Lermite · Avocats, pour le compte de son client",
+    "Contestation du livrable et suspension du solde de la mission",
+    "Notre cliente conteste la conformité du livrable remis et suspend le règlement du solde. Nous restons ouverts à une solution amiable.",
+    "Maître Lermite",
+    "Capacité −20 % et frais variables +15 % pendant 2 tours (un cabinet ciblé)",
+    "C'est exactement le risque que couvre la responsabilité civile professionnelle : la prime valait-elle son prix ?"
+  ],
+  "conseil_cyberattaque": [
+    "Prestataire informatique Axone · Cellule de sécurité",
+    "Incident majeur — chiffrement de vos livrables et bases clients",
+    "Un rançongiciel a chiffré l'ensemble de vos dossiers. La dernière sauvegarde exploitable remonte à trois semaines : les travaux postérieurs sont perdus et devront être refaits.",
+    "Le responsable de la sécurité",
+    "Capacité −28 % ce tour (un cabinet ciblé)",
+    "Dans un métier dont tout l'actif est immatériel, la donnée EST l'outil de production."
+  ],
+  "conseil_prix_de_la_profession": [
+    "Fédération du conseil · Jury du prix annuel",
+    "Attribution du prix de la profession à votre méthodologie",
+    "Le jury distingue votre démarche d'accompagnement, jugée reproductible et rigoureuse. La remise du prix sera relayée par la presse spécialisée et figurera dans notre annuaire pendant un an.",
+    "La présidente du jury",
+    "Capacité commerciale +7 % pendant 2 tours (un cabinet ciblé)",
+    "L'investissement méthodologique n'apparaît nulle part au bilan : il se lit dans le taux d'occupation."
+  ],
+  "conseil_banque_conciliante": [
+    "Banque des Professions · Agence entreprises",
+    "Mise en place d'un financement de votre poste clients",
+    "La production de votre carnet de commandes signé nous permet de vous proposer une mobilisation de créances à des conditions préférentielles, pour les deux prochains trimestres.",
+    "Votre chargé d'affaires",
+    "Taux d'intérêt ×0,7 pendant 2 tours (un cabinet ciblé)",
+    "Un carnet de commandes est une garantie : dans les services, on finance la confiance, pas les murs."
+  ],
+  "conseil_mission_urgente": [
+    "Groupe Sarrazin · Présidence",
+    "Demande de mission en urgence — direction financière par intérim",
+    "Notre directeur financier a quitté ses fonctions à trois semaines de la clôture. Nous cherchons une équipe capable d'intervenir immédiatement et réglons comptant. Votre réponse nous est nécessaire sous quarante-huit heures.",
+    "Le président",
+    "+70 jours-conseil (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite des jours disponibles",
+    "Un cabinet à 100 % d'occupation ne peut pas dire oui : garder de la marge de manœuvre a une valeur."
+  ],
+  "conseil_salon_professionnel": [
+    "Salon régional des décideurs · Commissariat",
+    "Ouverture des inscriptions exposants",
+    "Deux jours de stands et de conférences réuniront les dirigeants et directeurs financiers de la région. L'édition précédente a rassemblé mille deux cents visiteurs qualifiés. Le plan de stand est joint.",
+    "Le commissaire du salon",
+    "Demande globale +18 % ce tour",
+    "La prospection est une charge immédiate pour un chiffre d'affaires différé : c'est un pari, pas une dépense."
+  ],
+  "conseil_major_breakdown": [
+    "Prestataire informatique Axone · Direction technique",
+    "Défaillance matérielle de votre serveur de fichiers",
+    "La grappe de disques a lâché en totalité. Livrables, modèles de proposition et base clients sont inaccessibles. La restauration depuis les sauvegardes hors site demandera deux trimestres pour être complète.",
+    "Le directeur technique",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & plan de continuité d'activité"
+  ],
+  "conseil_tech_obsolescence": [
+    "Prestataire informatique Axone · Service abonnés",
+    "Fin de maintenance de votre parc et de vos licences",
+    "Les postes installés il y a sept ans ne sont plus couverts, et l'éditeur cesse le support des licences correspondantes. Le temps perdu par consultant et le coût du support hors contrat vont augmenter sensiblement.",
+    "Le responsable du support",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "conseil_used_equipment_deal": [
+    "Cabinet Ferrand · Restructuration",
+    "Cession de nos stations de travail et licences transférables",
+    "Nous réduisons nos effectifs et cédons vingt stations de travail de gamme professionnelle, avec les licences transférables attachées. Le prix demandé représente le tiers de la valeur à neuf.",
+    "L'associé gérant",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "conseil_plateforme_freelance": [
+    "Fédération du conseil · Observatoire des pratiques",
+    "Progression des plateformes de consultants indépendants",
+    "Les plateformes de mise en relation affichent des tarifs journaliers inférieurs de moitié aux nôtres, sans structure ni garantie. Nos adhérents constatent que les PME comparent désormais le prix avant la méthode.",
+    "Le responsable de l'observatoire",
+    "Demande des PME régionales −20 % pendant 2 tours",
+    "Face à un prix plus bas, on vend autre chose que du temps : la garantie, la continuité, l'équipe."
+  ],
+  "conseil_grand_cabinet_public": [
+    "Centrale des marchés publics · Service des avis",
+    "Résultats des dernières consultations du département",
+    "Les trois derniers marchés d'assistance ont été attribués à une équipe nationale, sur des critères de références antérieures. Les avis à venir reprennent les mêmes exigences de références.",
+    "Le service des avis",
+    "Demande des marchés publics −25 % ce tour",
+    "Sur un marché à appel d'offres, la référence pèse plus que le prix : c'est un actif qui se construit mission après mission."
+  ],
+  "conseil_partenariat_editeur": [
+    "Éditeur Solveris · Direction des partenariats",
+    "Proposition d'accord de prescription",
+    "Nous recherchons un intégrateur régional à recommander à chacun de nos nouveaux clients pour la phase de déploiement. Votre cabinet est notre premier choix ; l'accord prévoit une exclusivité départementale.",
+    "La directrice des partenariats",
+    "Demande de votre cabinet +12 % pendant 2 tours",
+    "Un canal d'apport d'affaires vaut un commercial : il coûte une commission ou une exclusivité, jamais rien."
+  ],
+  "conseil_debauchage": [
+    "Note interne · Direction des ressources humaines",
+    "Départs simultanés de deux consultants seniors",
+    "Deux de nos seniors ont été approchés par un confrère et démissionnent le même jour. Leurs missions en cours vont ralentir et le délai moyen de recrutement sur ces profils dépasse quatre mois.",
+    "La responsable des ressources humaines",
+    "Capacité de production −15 % pendant 2 tours",
+    "Dans les services, la capacité est humaine : elle part le vendredi soir, et la concurrence le sait."
+  ],
+  "conseil_plan_relance": [
+    "Région · Direction du développement économique",
+    "Dispositif de cofinancement des missions de conseil aux PME",
+    "La Région prend en charge la moitié du coût des missions de conseil aux PME pour les six prochains mois. Les cabinets référencés, dont le vôtre, recevront les demandes des entreprises éligibles.",
+    "La directrice du développement économique",
+    "Demande des PME régionales +30 % pendant 2 tours",
+    "Une subvention crée de la demande ; elle ne crée pas de consultants : la contrainte se déplace vers la capacité."
+  ],
+  "conseil_inv_signal": [
+    "Chambre de commerce · Club des grands comptes",
+    "Consultation préalable des cabinets de la région",
+    "Le groupe Delorme, dont le siège est à Saint-Aubin, nous a demandé la liste des cabinets régionaux capables d'intervenir sur des audits de processus. Des entretiens exploratoires sont prévus dans les semaines qui viennent. Rien n'est arrêté, ni le périmètre ni le volume : un accord-cadre pourrait suivre le trimestre prochain.",
+    "Le chargé des grands comptes",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : recruter ou s'équiper à l'avance coûte, mais attendre peut coûter plus."
+  ],
+  "conseil_inv_grand_compte": [
+    "Groupe Delorme · Direction des achats",
+    "Ouverture d'un accord-cadre de missions d'audit et d'accompagnement",
+    "Le groupe ouvre un accord-cadre pour les trois trimestres à venir, réservé aux cabinets référencés de la région : environ deux cents jours d'audit et d'accompagnement par trimestre, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
+    "Le directeur des achats",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous servir ce volume ? Recruter, sous-traiter ou vous équiper : lequel coûte le moins sur trois tours ?"
+  ],
+  "conseil_inv_taux": [
+    "Banque des Professions · Direction des entreprises",
+    "Campagne temporaire sur les crédits d'équipement professionnels",
+    "Pour deux trimestres, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle couvre le matériel informatique, l'aménagement de locaux et les outils de travail à distance. Les dossiers complets déposés avant la fin du second trimestre sont concernés.",
+    "Le directeur des entreprises",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "conseil_inv_concurrent": [
+    "Revue Management Régional · Rubrique économie",
+    "Vexilis Conseil annonce une antenne de vingt consultants en ville",
+    "Le cabinet Vexilis Conseil ouvre une antenne de vingt consultants dans le quartier d'affaires et recrute une quinzaine de profils seniors. Pour son lancement, il affiche des tarifs journaliers inférieurs d'un cinquième à ceux du marché. Plusieurs directions d'achat auraient déjà demandé des propositions.",
+    "Le journaliste économique",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "conseil_inv_retournement": [
+    "Groupe Delorme · Direction financière",
+    "Révision du volume de l'accord-cadre de missions",
+    "À la suite de l'arrêté budgétaire du groupe, le volume de l'accord-cadre est revu à la baisse : les ordres de mission des deux prochains trimestres sont ramenés à un peu plus de la moitié des prévisions initiales. Les missions déjà engagées à Saint-Aubin et à Valbonne se poursuivent selon leur calendrier.",
+    "Le directeur financier",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes."
+  ],
+  "ecom_algo_publicitaire": [
+    "Régie publicitaire Audiences · Notification partenaire",
+    "Évolution de notre modèle d'enchères publicitaires",
+    "Notre système d'enchères évolue au profit des annonceurs à fort historique. Le coût par clic de vos campagnes est réévalué en conséquence, dès le prochain cycle de facturation. Aucune action n'est requise de votre part.",
+    "L'équipe Partenaires",
+    "Demande des nouveaux clients −28 % pendant 2 tours",
+    "Votre trafic dépend d'un intermédiaire qui fixe ses règles seul : la base de clients fidèles est la seule qui vous appartienne."
+  ],
+  "ecom_vague_retours": [
+    "Note interne · Service après-vente",
+    "Taux de retour anormal sur le dernier lot reçu",
+    "Les teintes livrées ne correspondent pas aux visuels du site. Un client sur quatre renvoie son colis en invoquant la non-conformité, ce qui nous est opposable. Le double transport et la remise en stock sont à notre charge.",
+    "La responsable du service après-vente",
+    "Coût variable par commande +16 % ce tour (une enseigne tirée au sort)",
+    "Un retour coûte deux transports et une remise en stock, pour zéro chiffre d'affaires : c'est de la marge pure qui part."
+  ],
+  "ecom_transporteur": [
+    "Transporteur Delahaye · Direction d'exploitation",
+    "Mouvement social — blocage de nos dépôts",
+    "Nos plateformes sont bloquées depuis lundi et le resteront une semaine au moins. Vos colis déjà enlevés attendent sur nos quais. Nous ne prenons plus d'enlèvement jusqu'à nouvel ordre.",
+    "Le directeur d'exploitation",
+    "Capacité d'expédition −20 % ce tour",
+    "Vous avez encaissé, mais vous n'avez pas livré : la promesse de délai fait partie du produit."
+  ],
+  "ecom_influenceur": [
+    "Agence Trame · Relations d'influence",
+    "Retombées de la vidéo de déballage publiée hier",
+    "La vidéo a dépassé deux millions de vues en une nuit. Votre serveur a tenu, de justesse. L'affluence se maintiendra quelques jours : seule la disponibilité en stock limitera les ventes.",
+    "Votre chargée de compte",
+    "Demande globale +26 % ce tour",
+    "Un pic gratuit ne profite qu'à ceux qui ont le stock ET la capacité de préparer : l'aubaine se prépare."
+  ],
+  "ecom_marketplace_commission": [
+    "Marketplace Vendora · Conditions vendeurs",
+    "Modification de la commission applicable aux vendeurs tiers",
+    "La commission passe de douze à dix-huit pour cent au prochain cycle. La poursuite de vos ventes sur la plateforme vaut acceptation. Le retrait de votre boutique reste possible, sans transfert de votre historique d'avis.",
+    "L'équipe Vendeurs",
+    "Demande marketplace −18 % pendant 2 tours",
+    "Un canal qui apporte du volume mais dicte ses conditions : dépendre d'un seul intermédiaire a un prix."
+  ],
+  "ecom_frais_port": [
+    "Transporteur Delahaye · Direction commerciale",
+    "Nouvelle grille tarifaire et surcharges de saison",
+    "L'évolution du carburant et des taxes nous conduit à réviser l'ensemble de notre grille, surcharges de haute saison comprises. Le nouveau barème s'applique à tous vos envois pour les deux prochains trimestres.",
+    "Le directeur commercial",
+    "Coût variable par commande +20 % pendant 2 tours",
+    "La marge par commande se comprime sans que le prix affiché bouge : offrir les frais de port n'est jamais gratuit."
+  ],
+  "ecom_credit_resserre": [
+    "Banque des Professions · Direction des engagements",
+    "Révision de vos conditions — absence d'actif nantissable",
+    "Votre bilan ne présente ni immobilier ni équipement mobilisable en garantie ; votre stock constitue votre seul actif significatif. Les conditions de votre ligne de financement sont durcies pour deux trimestres.",
+    "Le directeur des engagements",
+    "Taux d'intérêt ×1,5 pendant 2 tours",
+    "Un pure player finance son stock par le découvert : le coût de l'argent devient un coût d'exploitation."
+  ],
+  "ecom_rupture_appro": [
+    "Transitaire Vermeulen · Service clients",
+    "Immobilisation de votre conteneur — contrôle douanier",
+    "Après six semaines de mer, votre conteneur est retenu pour contrôle documentaire. Les trois références qui composent l'essentiel de vos ventes s'y trouvent. Nous ne pouvons pas nous engager sur une date de mise à disposition.",
+    "Le responsable d'exploitation",
+    "Capacité d'expédition −18 % ce tour (une enseigne tirée au sort)",
+    "L'import direct coûte moins cher à l'achat et beaucoup plus cher en délai : le prix n'est pas le seul critère."
+  ],
+  "ecom_cyberattaque": [
+    "Hébergeur Axone · Cellule de sécurité",
+    "Incident critique — boutique hors ligne et base clients chiffrée",
+    "Un rançongiciel a chiffré votre boutique et votre base clients. Le site est retiré du réseau le temps de l'assainissement. Chaque heure d'indisponibilité se traduit par des commandes passées ailleurs.",
+    "Le responsable de la sécurité",
+    "Capacité −38 % ce tour (une enseigne ciblée)",
+    "Quand la boutique EST le site, l'assurance cyber n'est pas une option de confort."
+  ],
+  "ecom_cyberattaque (sans assurance)": [
+    "Hébergeur Axone · Cellule de sécurité",
+    "Incident critique — boutique hors ligne et base clients chiffrée",
+    "Un rançongiciel a chiffré votre boutique et votre base clients. Le site est retiré du réseau le temps de l'assainissement. Chaque heure d'indisponibilité se traduit par des commandes passées ailleurs.",
+    "Le responsable de la sécurité",
+    "Capacité −38 % ce tour (une enseigne ciblée)",
+    "Quand la boutique EST le site, chaque heure hors ligne est un chiffre d'affaires perdu pour de bon."
+  ],
+  "ecom_entrepot": [
+    "Assurances du Littoral · Service sinistres",
+    "Déclaration de sinistre — infiltration en toiture de votre entrepôt",
+    "L'expert constate qu'un tiers de votre stock est impropre à la vente et que le reste présente des traces d'humidité. La garantie « marchandises stockées » s'applique selon les plafonds et franchises de votre contrat.",
+    "La gestionnaire de sinistres",
+    "Capacité −30 % et coût variable +12 % ce tour (une enseigne ciblée)",
+    "Le stock d'un pure player est son actif principal : ce que couvre la formule étendue."
+  ],
+  "ecom_entrepot (sans assurance)": [
+    "Cabinet Ferrand · Expertise des dommages",
+    "Déclaration de sinistre — infiltration en toiture de votre entrepôt",
+    "Nous constatons qu'un tiers de votre stock est impropre à la vente et que le reste présente des traces d'humidité.",
+    "L'expert",
+    "Capacité −30 % et coût variable +12 % ce tour (une enseigne ciblée)",
+    "Le stock d'un pure player est son actif principal : abîmé, c'est de la trésorerie immobilisée qui ne reviendra pas."
+  ],
+  "ecom_presse": [
+    "Magazine Intérieurs · Rédaction",
+    "Sélection de trois de vos produits dans notre numéro à paraître",
+    "Notre dossier de saison retient trois de vos références, en double page, avec l'adresse de votre site. Nos lecteurs viennent directement, sans passer par un moteur de recherche ni par une publicité.",
+    "La rédactrice en chef",
+    "Capacité commerciale +7 % pendant 2 tours (une enseigne ciblée)",
+    "Un client qui vient sans publicité coûte zéro euro d'acquisition : c'est là que se trouve la vraie marge."
+  ],
+  "ecom_banque_conciliante": [
+    "Banque des Professions · Agence entreprises",
+    "Financement de votre stock de fin d'année",
+    "Votre taux de retour maîtrisé et la récurrence de votre clientèle nous conduisent à accepter le financement de votre stock de saison, à des conditions préférentielles valables deux trimestres.",
+    "Votre chargée d'affaires",
+    "Taux d'intérêt ×0,7 pendant 2 tours (une enseigne ciblée)",
+    "Une base de clients qui revient est une garantie : elle vaut mieux qu'un entrepôt à l'actif."
+  ],
+  "ecom_commande_b2b": [
+    "Aménagements Carrel · Direction des achats",
+    "Commande unique — équipement de trois plateaux de bureaux",
+    "Nous équipons trois plateaux et vous passons une commande ferme de sept cents articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
+    "Le directeur des achats",
+    "+700 commandes (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite du stock",
+    "Une commande B2B ne coûte rien en acquisition : la marge y est mécaniquement supérieure."
+  ],
+  "ecom_black_friday": [
+    "Fédération du commerce en ligne · Note aux adhérents",
+    "Préparation de l'opération commerciale de fin novembre",
+    "Les quatre jours de l'opération concentrent près d'un dixième du chiffre d'affaires annuel du secteur. Les principaux acteurs ont déjà lancé leurs campagnes de préchauffe. Les stocks doivent être en place la semaine précédente.",
+    "Le délégué général",
+    "Demande globale +45 % ce tour",
+    "Tout le monde a la même hausse de demande : l'écart se fait sur le stock disponible et la capacité d'expédition."
+  ],
+  "ecom_major_breakdown": [
+    "Convoyeurs Lasalle · Service après-vente",
+    "Rapport d'intervention — blocage du convoyeur de tri",
+    "Le moteur d'entraînement principal est grillé et le châssis a subi des contraintes. La remise en cadence nominale demandera deux trimestres. La préparation manuelle reste possible, à un rythme très inférieur.",
+    "Le responsable après-vente",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & maintenance préventive"
+  ],
+  "ecom_tech_obsolescence": [
+    "Éditeur Stocklog · Service abonnés",
+    "Fin de maintenance de votre logiciel de gestion d'entrepôt",
+    "Votre version n'est plus maintenue et ne suit plus votre volume de commandes. Les erreurs de prélèvement et la surconsommation d'emballages constatées chez nos abonnés non migrés s'aggravent trimestre après trimestre.",
+    "Le responsable du support",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "ecom_used_equipment_deal": [
+    "Administrateur judiciaire Brunet",
+    "Cession d'équipements logistiques — procédure de redressement",
+    "Dans le cadre du redressement d'un e-commerçant voisin, transpalettes électriques et convoyeur automatisé sont cédés en lot. Le matériel a trois ans et l'enlèvement doit intervenir sous dix jours.",
+    "L'administrateur judiciaire",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "ecom_geant_promo": [
+    "Régie publicitaire Audiences · Note de marché",
+    "Tension sur les enchères pendant les journées promotionnelles",
+    "Le principal acteur du secteur tient ses quarante-huit heures de remises massives. Sur cette période, le coût d'acquisition observé double à taux de conversion constant sur l'ensemble de nos annonceurs.",
+    "L'équipe Partenaires",
+    "Demande des nouveaux clients −25 % ce tour",
+    "Un coût d'acquisition qui double le temps d'une promo concurrente : il vaut parfois mieux couper que suivre."
+  ],
+  "ecom_livraison_gratuite": [
+    "Fédération du commerce en ligne · Observatoire",
+    "Passage d'un concurrent à la livraison gratuite sans minimum",
+    "Un acteur de votre segment supprime toute condition de montant sur la livraison. Notre observatoire constate que le report concerne d'abord les petits paniers, les plus sensibles aux frais d'expédition.",
+    "Le responsable de l'observatoire",
+    "Demande globale −10 % pendant 2 tours",
+    "La livraison gratuite n'est pas gratuite : quelqu'un la paie, et ce n'est pas toujours le client."
+  ],
+  "ecom_avis_cinq_etoiles": [
+    "Plateforme d'avis vérifiés · Rapport mensuel",
+    "Progression de votre note et de votre taux de recommandation",
+    "Votre note moyenne progresse de sept dixièmes en un mois, les commentaires citant très majoritairement votre service après-vente. Le taux de clients déclarant vous recommander atteint son plus haut niveau.",
+    "Le service statistiques",
+    "Demande des clients récurrents de votre boutique +20 % pendant 2 tours",
+    "Un client fidèle coûte dix fois moins qu'un client acquis : la rétention est la publicité la moins chère."
+  ],
+  "ecom_panne_paiement": [
+    "Prestataire de paiement Monetis · Direction technique",
+    "Interruption de service sur notre passerelle de paiement",
+    "Notre passerelle est indisponible depuis ce matin et le rétablissement complet est annoncé sous trois jours. Aucune transaction par carte ne peut aboutir. Les paniers constitués sur votre site sont abandonnés au règlement.",
+    "Le directeur technique",
+    "Commandes servies −30 % ce tour",
+    "Une boutique en ligne dépend de prestataires qu'elle ne contrôle pas : le risque opérationnel se contractualise."
+  ],
+  "ecom_taxe_colis": [
+    "Direction générale des douanes · Bureau des particuliers et du commerce",
+    "Entrée en vigueur des droits sur les colis importés",
+    "À compter du prochain trimestre, tout colis importé hors Union européenne supporte des droits et des frais de dédouanement, sans seuil d'exonération. Vos déclarations devront être déposées à chaque envoi.",
+    "Le chef de bureau",
+    "Coût d'achat +8 % pendant 2 tours",
+    "Une taxe sur les achats est un coût variable : elle remonte le seuil, et la question est de la répercuter ou non."
+  ],
+  "ecom_inv_signal": [
+    "Régie publicitaire Audiences · Note de marché",
+    "Test de mise en avant décoration sur la place de marché Alcôve",
+    "Nos données montrent que la place de marché Alcôve prépare un test de mise en avant de la décoration d'intérieur, en tête de rayon, avec quelques vendeurs sélectionnés. Le test durerait trois semaines et pourrait être élargi le trimestre prochain, sans qu'aucun calendrier ni aucun volume ne soit annoncé à ce jour.",
+    "L'équipe Partenaires",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "ecom_inv_grand_compte": [
+    "Place de marché Alcôve · Direction des partenariats vendeurs",
+    "Référencement en tête de rayon Décoration pour trois trimestres",
+    "À l'issue du test, la place de marché Alcôve référence les boutiques de décoration retenues en tête de rayon, avec bandeau saisonnier et mise en avant dans sa lettre d'information. Nos prévisions tablent sur plus de trente pour cent de commandes supplémentaires sur la catégorie, pour les trois trimestres à venir, avec un délai d'expédition de quarante-huit heures.",
+    "Le directeur des partenariats vendeurs",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?"
+  ],
+  "ecom_inv_taux": [
+    "Banque des Professions · Direction des entreprises",
+    "Campagne temporaire sur les crédits d'équipement logistique",
+    "Pour deux trimestres, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle s'adresse aux entreprises de vente à distance et couvre rayonnages, entrepôts et matériel de préparation de commandes. Les dossiers complets déposés avant la fin du second trimestre sont concernés.",
+    "Le directeur des entreprises",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "ecom_inv_concurrent": [
+    "Fédération du commerce en ligne · Note aux adhérents",
+    "Ouverture d'un second entrepôt par la boutique Maison Vélane",
+    "La boutique Maison Vélane annonce l'ouverture d'un second entrepôt de douze mille mètres carrés près de Lyon, équipé d'une ligne de préparation automatisée. Elle l'accompagne d'une politique de prix agressive, avec quinze pour cent de remise permanente sur ses références d'entrée de gamme. Nos adhérents anticipent un partage du marché sur deux trimestres.",
+    "Le délégué général",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "ecom_inv_retournement": [
+    "Place de marché Alcôve · Direction des catégories",
+    "Révision du programme de mise en avant Décoration",
+    "Au terme de l'examen trimestriel, la place de marché Alcôve redéploie son espace de tête de rayon vers la rentrée scolaire et réduit le programme de mise en avant de la décoration. Les boutiques référencées conservent leur fiche, mais le trafic issu de la catégorie sera nettement moindre pendant les deux trimestres suivants.",
+    "La directrice des catégories",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes."
+  ],
+  "fitness_rentree_sportive": [
+    "Note interne · Accueil du club",
+    "Affluence du premier lundi de janvier",
+    "La file d'attente déborde sur le parking depuis l'ouverture. Nous enregistrons trois fois plus de demandes d'inscription qu'un lundi ordinaire, presque toutes sur la formule d'essai.",
+    "La responsable d'accueil",
+    "Demande du segment « résolutions » +35 % ce tour",
+    "Ces adhérents-là remplissent la salle et repartent au printemps : les inscrire coûte, les garder rapporte."
+  ],
+  "fitness_low_cost": [
+    "Syndicat des exploitants de salles de sport",
+    "Ouverture d'un club sans personnel à votre adresse voisine",
+    "Un opérateur à bas prix ouvre en face de votre club : dix-neuf euros quatre-vingt-dix par mois, accès continu, aucun encadrement sur place. Son affichage est visible depuis votre parking.",
+    "Le secrétaire du syndicat",
+    "Demande globale −16 % pendant 2 tours",
+    "Face à un concurrent qui casse les prix, s'aligner détruit la marge : reste ce qu'il ne sait pas offrir."
+  ],
+  "fitness_panne_parc": [
+    "Cardio Équipements Rousseau · Service après-vente",
+    "Indisponibilité de pièces — six tapis et quatre vélos",
+    "Les cartes électroniques de ces séries sont en rupture chez le constructeur. Nos délais d'approvisionnement sont de trois semaines. Les appareils concernés doivent être condamnés et signalés d'ici là.",
+    "Le responsable après-vente",
+    "Capacité d'accueil −20 % ce tour (une salle tirée au sort)",
+    "Une machine à l'arrêt se voit tout de suite, et se retrouve dans les avis, puis dans les résiliations."
+  ],
+  "fitness_coach_star": [
+    "Note interne · Planning des cours collectifs",
+    "Saturation des créneaux d'un de nos éducateurs",
+    "Ses cours affichent complet trois semaines à l'avance et la liste d'attente s'allonge. Plusieurs adhérents déclarent avoir renouvelé leur abonnement pour ces créneaux précis.",
+    "Le responsable du planning",
+    "Demande des pratiquants réguliers +30 % ce tour",
+    "Dans un modèle par abonnement, ce qui retient vaut plus que ce qui attire : un régulier paie tous les trimestres."
+  ],
+  "fitness_energie": [
+    "Fournisseur d'énergie Caloris · Service entreprises",
+    "Régularisation et nouveau barème de votre contrat",
+    "Votre consommation trimestrielle — chauffage, eau chaude sanitaire, ventilation et alimentation des appareils — est facturée au nouveau barème, en hausse de vingt-huit pour cent. La régularisation figure sur la facture jointe.",
+    "Le conseiller entreprises",
+    "Coût variable par adhérent +28 % pendant 2 tours",
+    "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir."
+  ],
+  "fitness_teletravail": [
+    "Groupe Mercier · Direction des ressources humaines",
+    "Non-renouvellement de notre convention de partenariat",
+    "Nos salariés étant passés en télétravail quatre jours sur cinq, la fréquentation de votre club par nos équipes est devenue marginale. Nous ne renouvellerons pas la convention à son échéance.",
+    "La directrice des ressources humaines",
+    "Demande des contrats entreprises −22 % pendant 2 tours",
+    "Perdre un contrat corporate, c'est perdre d'un coup ce que trente inscriptions individuelles rapportent."
+  ],
+  "fitness_credit_resserre": [
+    "Banque des Professions · Direction des engagements",
+    "Renégociation de votre crédit d'équipement",
+    "Notre comité des risques classe l'exploitation de salles de sport parmi les activités volatiles. Le taux de votre crédit d'équipement est relevé pour les deux prochains trimestres, à échéancier inchangé.",
+    "Le directeur des engagements",
+    "Taux d'intérêt ×1,5 pendant 2 tours",
+    "Un parc de machines financé à crédit se rembourse même les trimestres où la salle est vide."
+  ],
+  "fitness_canicule": [
+    "Préfecture · Cellule de veille sanitaire",
+    "Épisode caniculaire — recommandations aux établissements sportifs",
+    "Le département est placé en vigilance canicule pour la semaine. Il est recommandé de limiter la fréquentation aux heures les plus chaudes et d'interrompre les activités si la température intérieure dépasse trente degrés.",
+    "Le directeur de cabinet",
+    "Capacité d'accueil −12 % ce tour",
+    "L'été cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas."
+  ],
+  "fitness_accident": [
+    "Cabinet Lermite · Avocats, pour son client adhérent",
+    "Accident survenu sur votre plateau de musculation",
+    "Notre client a été blessé par une barre dont le réglage n'était pas conforme. Un arrêt de travail de six semaines lui a été prescrit. Nous vous invitons à déclarer le sinistre à votre assureur de responsabilité civile.",
+    "Maître Lermite",
+    "Capacité −22 % et coût variable +14 % pendant 2 tours (une salle ciblée)",
+    "C'est exactement ce que couvre la responsabilité civile exploitant : la prime valait-elle son prix ?"
+  ],
+  "fitness_accident (sans assurance)": [
+    "Cabinet Lermite · Avocats, pour son client adhérent",
+    "Accident survenu sur votre plateau de musculation",
+    "Notre client a été blessé par une barre dont le réglage n'était pas conforme. Un arrêt de travail de six semaines lui a été prescrit. Nous vous demandons de prendre attache avec notre cabinet.",
+    "Maître Lermite",
+    "Capacité −22 % et coût variable +14 % pendant 2 tours (une salle ciblée)",
+    "C'est exactement ce que couvre la responsabilité civile exploitant : la prime valait-elle son prix ?"
+  ],
+  "fitness_degat_des_eaux": [
+    "Assurances du Littoral · Service sinistres",
+    "Déclaration de sinistre — vestiaires et douches hors service",
+    "La rupture de la canalisation d'alimentation a inondé les vestiaires. L'expert prononce leur condamnation jusqu'à réfection complète. L'accès à la salle sans douche n'est pas envisageable en pratique.",
+    "Le gestionnaire de sinistres",
+    "Capacité −34 % ce tour (une salle ciblée)",
+    "La perte d'exploitation dépasse largement le coût des travaux : c'est elle qu'il faut assurer."
+  ],
+  "fitness_degat_des_eaux (sans assurance)": [
+    "Cabinet Ferrand · Expertise des dommages",
+    "Déclaration de sinistre — vestiaires et douches hors service",
+    "La rupture de la canalisation d'alimentation a inondé les vestiaires. L'expert prononce leur condamnation jusqu'à réfection complète. L'accès à la salle sans douche n'est pas envisageable en pratique.",
+    "L'expert",
+    "Capacité −34 % ce tour (une salle ciblée)",
+    "La perte d'exploitation dépasse largement le coût des travaux : une salle sans vestiaires perd ses adhérents."
+  ],
+  "fitness_reportage": [
+    "Quotidien régional · Rédaction locale",
+    "Parution de notre reportage sur votre programme seniors",
+    "Notre page « initiatives » est consacrée à votre programme destiné aux plus de soixante ans, avec photographies et témoignages d'adhérents. La parution est prévue samedi, jour de plus forte diffusion.",
+    "La cheffe d'édition",
+    "Capacité commerciale +8 % pendant 2 tours (une salle ciblée)",
+    "Ces adhérents-là arrivent sans budget d'acquisition, et ce sont souvent les plus fidèles."
+  ],
+  "fitness_banque_conciliante": [
+    "Banque des Professions · Agence entreprises",
+    "Révision favorable de vos conditions de financement",
+    "Votre taux de rétention, supérieur à la moyenne du secteur, nous conduit à considérer vos abonnements comme un revenu prévisible. Les conditions de votre crédit sont revues à la baisse pour deux trimestres.",
+    "Votre chargé d'affaires",
+    "Taux d'intérêt ×0,7 pendant 2 tours (une salle ciblée)",
+    "Un revenu récurrent est la meilleure garantie qui soit : il est prévisible, donc finançable."
+  ],
+  "fitness_contrat_surprise": [
+    "Fabrique Delorme · Direction des ressources humaines",
+    "Convention de partenariat pour nos 200 salariés",
+    "Nous souhaitons offrir à nos deux cents salariés un accès à votre club à compter de janvier, réglé en une fois pour le trimestre. Nous attendons votre confirmation de capacité d'accueil avant signature.",
+    "Le directeur des ressources humaines",
+    "+200 adhérents (échelle trimestre) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
+    "Encore faut-il pouvoir les accueillir : sur-vendre sans encadrement fait fuir les adhérents en place."
+  ],
+  "fitness_marathon": [
+    "Comité d'organisation du marathon de la ville",
+    "Ouverture des inscriptions — douze mille coureurs attendus",
+    "Les inscriptions sont ouvertes pour l'édition de printemps, trois mois avant le départ. Les clubs partenaires constatent chaque année une hausse marquée des demandes de préparation sur cette période.",
+    "Le président du comité",
+    "Demande globale +28 % ce tour",
+    "Un afflux ponctuel dans un modèle par abonnement : ce qui compte, c'est combien seront encore là en juin."
+  ],
+  "fitness_major_breakdown": [
+    "Bureau de contrôle Sécuritas Bâti",
+    "Rapport après court-circuit du tableau général",
+    "Le tableau général a subi un court-circuit et l'alimentation du plateau est coupée. Nous prononçons l'interdiction d'exploiter les appareils concernés jusqu'à remise en conformité, soit deux trimestres au vu des devis.",
+    "Le contrôleur technique",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & maintenance préventive"
+  ],
+  "fitness_tech_obsolescence": [
+    "Cardio Équipements Rousseau · Support logiciel",
+    "Fin de compatibilité de l'application de vos machines",
+    "L'application embarquée de votre génération d'appareils n'est plus compatible avec les téléphones récents. Nos autres clients constatent une hausse des réclamations et un surcoût de maintenance à chaque intervention.",
+    "Le responsable du support",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "fitness_used_equipment_deal": [
+    "Étude Marchand · Commissaire-priseur judiciaire",
+    "Vente du parc d'une salle en liquidation",
+    "Tapis de course, presses et vélos elliptiques, encore couverts par la garantie constructeur, sont proposés en lot unique. La mise à prix est très inférieure au neuf ; l'enlèvement doit intervenir sous quinzaine.",
+    "Le commissaire-priseur",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "fitness_chaine_nationale": [
+    "Syndicat des exploitants de salles de sport",
+    "Implantation d'un club premium d'enseigne nationale",
+    "Deux mille mètres carrés, piscine et espace bien-être ouvriront à trois kilomètres, pour vingt euros de plus par mois. Les clubs voisins constatent d'abord des visites de leurs adhérents réguliers, puis des résiliations.",
+    "Le secrétaire du syndicat",
+    "Demande des pratiquants réguliers −15 % pendant 2 tours",
+    "Le concurrent premium ne prend que ceux qui en ont les moyens : reste à savoir s'il vous en laisse assez."
+  ],
+  "fitness_appli_gratuite": [
+    "Observatoire des pratiques sportives",
+    "Note de tendance — essor des séances à domicile",
+    "Une application de séances guidées gratuites dépasse cinq millions d'utilisateurs. Notre enquête montre que les primo-pratiquants, ceux qui s'inscrivent en janvier, sont les premiers à préférer le domicile.",
+    "Le directeur d'études",
+    "Demande des bonnes résolutions −20 % pendant 2 tours",
+    "Le concurrent le plus dangereux n'est pas toujours une salle : c'est celui qui remplace le besoin."
+  ],
+  "fitness_mutuelle": [
+    "Mutuelle régionale Prévoyance du Nord",
+    "Prise en charge de l'abonnement sportif de nos adhérents",
+    "Notre conseil d'administration a décidé de rembourser la moitié de l'abonnement en salle pour l'ensemble de nos adhérents. Votre club figure parmi les établissements référencés du département.",
+    "Le directeur général",
+    "Demande des entreprises +30 % pendant 2 tours",
+    "Quand un tiers paie, le prix cesse d'être le frein : c'est la capacité d'accueil qui le devient."
+  ],
+  "fitness_coach_depart": [
+    "Lettre de démission · Mme Fernandes, éducatrice sportive",
+    "Démission et rupture de mon contrat à l'issue du préavis",
+    "Je quitte le club pour rejoindre l'établissement situé en face, qui me propose des conditions supérieures. J'informerai mes groupes de cours de mon départ et de ma nouvelle affectation.",
+    "Mme Fernandes",
+    "Demande de votre salle −10 % pendant 2 tours",
+    "Une salle qui dépend d'une personne dépend de ses choix : la fidélité doit aller à l'enseigne, pas au coach."
+  ],
+  "fitness_portes_ouvertes": [
+    "Note interne · Accueil du club",
+    "Bilan du week-end portes ouvertes",
+    "Deux cents visiteurs se sont présentés sur les deux jours, dont la moitié a effectué une séance d'essai complète. Une file s'est formée à l'accueil dès l'ouverture du lundi pour les inscriptions.",
+    "La responsable d'accueil",
+    "Demande de votre salle +12 % ce tour",
+    "Un essai gratuit coûte une séance et rapporte un abonnement : c'est le coût d'acquisition le plus lisible."
+  ],
+  "fitness_inv_signal": [
+    "Association des entreprises de la zone des Trois Ponts · Commission vie au travail",
+    "Réflexion sur des abonnements sportifs collectifs",
+    "Plusieurs de nos adhérents envisagent d'aider leurs salariés à s'inscrire dans une salle de sport du bassin. Un groupe de travail se réunit jeudi et trois clubs seront consultés. Rien n'est arrêté, mais le projet pourrait se concrétiser dès le trimestre prochain, pour quelques centaines de salariés de la zone.",
+    "La chargée de mission",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "fitness_inv_grand_compte": [
+    "Association des entreprises de la zone des Trois Ponts · Présidence",
+    "Convention d'abonnements collectifs pour nos salariés",
+    "L'assemblée de nos adhérents a voté la convention : près de quatre cents salariés de la zone bénéficieront d'une participation de leur employeur à leur abonnement sportif, pour les trois trimestres à venir. Les clubs du bassin sont référencés. Les inscriptions s'ouvrent la semaine prochaine, avec une fréquentation attendue à la pause de midi et après dix-huit heures.",
+    "Le président de l'association",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous accueillir ce volume aux heures de pointe ? Étendre les horaires, s'appuyer sur un partenaire ou investir dans des places : lequel coûte le moins sur trois trimestres ?"
+  ],
+  "fitness_inv_taux": [
+    "Banque des Professions · Agence entreprises",
+    "Campagne temporaire sur les crédits d'équipement",
+    "Notre établissement ouvre une campagne sur les crédits d'équipement destinés aux professionnels du département : les taux sont abaissés de quarante pour cent pendant deux trimestres. Appareils de cardio, machines de musculation et aménagement de studios entrent dans le champ de l'offre. Au-delà de cette période, les dossiers seront étudiés au tarif en vigueur.",
+    "Votre chargé d'affaires",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "fitness_inv_concurrent": [
+    "Syndicat des exploitants de salles de sport",
+    "Annonce d'investissement d'un opérateur voisin",
+    "Le groupe Vauquelin Sport annonce l'ouverture, à six kilomètres de votre club, d'un plateau de musculation de huit cents mètres carrés et de deux studios de cours collectifs. Son tarif de lancement, inférieur de près d'un quart aux prix du bassin, vise les mêmes salariés et les mêmes familles. Nos adhérents s'attendent à un partage de la clientèle sur plusieurs trimestres.",
+    "Le secrétaire du syndicat",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "fitness_inv_retournement": [
+    "Association des entreprises de la zone des Trois Ponts · Secrétariat général",
+    "Révision du volume de la convention d'abonnements",
+    "Deux de nos plus importants adhérents ont suspendu leurs recrutements et une troisième entreprise quitte la zone. La participation des employeurs est ramenée à un peu plus de la moitié du volume voté, et les nouvelles inscriptions sont suspendues. Les salariés déjà inscrits conservent leur abonnement jusqu'à la fin du trimestre en cours.",
+    "Le secrétaire général",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les abonnements."
+  ],
+  "batiment_aide_renovation": [
+    "Agence nationale de l'habitat · Service des aides",
+    "Reconduction du dispositif d'aide à la rénovation énergétique",
+    "Le dispositif est reconduit pour l'année, avec un barème inchangé et des conditions d'éligibilité élargies. Les entreprises qualifiées, dont la vôtre, seront citées dans l'annuaire remis aux particuliers.",
+    "La déléguée régionale",
+    "Demande des particuliers +32 % pendant 2 tours",
+    "Une demande qui gonfle d'un coup teste d'abord votre capacité, pas votre force commerciale."
+  ],
+  "batiment_penurie_materiaux": [
+    "Négoce Dhondt Matériaux · Direction commerciale",
+    "Allongement des délais et révision des tarifs sur l'isolant",
+    "Nos fournisseurs annoncent huit semaines de délai sur l'ensemble des isolants et une hausse immédiate des prix. Vos commandes en cours sont facturées au tarif du jour de livraison, conformément à nos conditions générales.",
+    "Le directeur commercial",
+    "Coût des matériaux +22 % pendant 2 tours",
+    "Les devis signés le sont à prix ferme : la hausse se prend entièrement sur votre marge."
+  ],
+  "batiment_intemperies": [
+    "Caisse des congés et intempéries du bâtiment",
+    "Déclaration d'arrêt pour intempéries",
+    "La période de pluie et de gel annoncée justifie l'arrêt des chantiers extérieurs. Les heures perdues doivent être déclarées dans les huit jours ; les salaires restent dus aux compagnons pendant l'arrêt.",
+    "Le service des déclarations",
+    "Disponibilité des chantiers −18 % ce tour",
+    "Les compagnons sont payés pendant l'arrêt : une journée d'intempérie coûte le salaire sans la recette."
+  ],
+  "batiment_appel_offres": [
+    "Centrale des marchés publics · Service des avis",
+    "Publication de trois programmes de rénovation",
+    "Trois collectivités du département publient la même semaine leurs programmes de rénovation de bâtiments scolaires. Les délais de remise sont courts et les paiements interviendront à soixante jours fin de mois.",
+    "Le service des avis",
+    "Demande des marchés publics +40 % ce tour",
+    "Du volume à prix tiré, payé très tard : la question n'est pas de gagner, mais de savoir le financer."
+  ],
+  "batiment_credit_immobilier": [
+    "Fédération du bâtiment · Note de conjoncture",
+    "Effondrement des mises en chantier chez les particuliers",
+    "La hausse des taux et le durcissement des conditions d'octroi conduisent les ménages à reporter leurs projets de travaux. Nos adhérents enregistrent une chute des demandes de devis sur l'ensemble du département.",
+    "Le secrétaire général",
+    "Demande globale −22 % pendant 2 tours",
+    "Quand la demande recule, le seuil de rentabilité ne bouge pas : c'est la marge de sécurité qui s'évapore."
+  ],
+  "batiment_concurrent_liquide": [
+    "Administrateur judiciaire Brunet",
+    "Liquidation d'une entreprise du secteur — chantiers en cours",
+    "L'entreprise du bourg voisin est en liquidation. Ses chantiers en cours cherchent un repreneur pour achèvement. Les dossiers techniques sont consultables à l'étude ; la reprise emporte la responsabilité de l'ouvrage.",
+    "L'administrateur judiciaire",
+    "Demande globale +18 % pendant 2 tours",
+    "Reprendre le chantier d'un autre, c'est hériter de ses malfaçons : regardez avant de signer."
+  ],
+  "batiment_credit_resserre": [
+    "Banque des Professions · Agence entreprises",
+    "Révision des conditions de l'ensemble de vos concours",
+    "Les délais de règlement constatés sur vos marchés publics allongent votre besoin de financement. Nous relevons en conséquence le taux de votre découvert et de votre ligne de mobilisation de créances, pour les deux prochains trimestres.",
+    "Votre chargé d'affaires",
+    "Taux d'intérêt ×1,5 pendant 2 tours",
+    "Un métier qui finance trois mois de clients paie chaque point de taux beaucoup plus cher qu'un autre."
+  ],
+  "batiment_sinistre_chantier": [
+    "Assurances du Littoral · Service sinistres",
+    "Déclaration de sinistre — dégât des eaux sur votre chantier",
+    "Une canalisation percée lors des travaux a inondé deux niveaux. L'expertise contradictoire est fixée à demain. Les travaux sont suspendus jusqu'à ses conclusions et la reprise des ouvrages détériorés vous incombera.",
+    "Le gestionnaire de sinistres",
+    "Disponibilité −26 % et coût des matériaux +16 % pendant 2 tours (une entreprise)",
+    "C'est exactement ce que couvre une responsabilité civile professionnelle : la prime se juge ici."
+  ],
+  "batiment_sinistre_chantier (sans assurance)": [
+    "Cabinet Ferrand · Expertise des dommages",
+    "Déclaration de sinistre — dégât des eaux sur votre chantier",
+    "Une canalisation percée lors des travaux a inondé deux niveaux. L'expertise contradictoire est fixée à demain. Les travaux sont suspendus jusqu'à ses conclusions et la reprise des ouvrages détériorés vous incombera.",
+    "L'expert",
+    "Disponibilité −26 % et coût des matériaux +16 % pendant 2 tours (une entreprise)",
+    "Un chantier suspendu coûte deux fois : les ouvrages à reprendre, et les équipes qui attendent."
+  ],
+  "batiment_vol_materiel": [
+    "Gendarmerie nationale · Brigade de proximité",
+    "Récépissé de dépôt de plainte — vol d'outillage",
+    "Votre plainte pour effraction du fourgon et vol de perforateurs, scies et niveaux laser a été enregistrée. Aucune piste n'est ouverte à ce stade. Ce récépissé vous est délivré pour votre déclaration d'assurance.",
+    "Le chef de brigade",
+    "Disponibilité −30 % ce tour (une entreprise tirée au sort)",
+    "Sans outillage, les compagnons sont payés à attendre : la capacité est plus fragile qu'elle n'en a l'air."
+  ],
+  "batiment_vol_materiel (sans assurance)": [
+    "Gendarmerie nationale · Brigade de proximité",
+    "Récépissé de dépôt de plainte — vol d'outillage",
+    "Votre plainte pour effraction du fourgon et vol de perforateurs, scies et niveaux laser a été enregistrée. Aucune piste n'est ouverte à ce stade. Ce récépissé vous est délivré pour vos démarches.",
+    "Le chef de brigade",
+    "Disponibilité −30 % ce tour (une entreprise tirée au sort)",
+    "Sans outillage, les compagnons sont payés à attendre : la capacité est plus fragile qu'elle n'en a l'air."
+  ],
+  "batiment_malfacon": [
+    "Syndic Berthier · Gestion de copropriété",
+    "Mise en demeure de reprise — décollement du carrelage",
+    "Le carrelage posé lors de votre intervention se décolle sur l'ensemble des parties communes. Nous vous mettons en demeure de procéder à la dépose et à la repose intégrales à vos frais, au titre de la garantie de parfait achèvement.",
+    "Le gestionnaire d'immeuble",
+    "Coût des matériaux +20 % pendant 2 tours (une entreprise tirée au sort)",
+    "La non-qualité se paie deux fois : la reprise, puis les chantiers que la réputation ne rapporte plus."
+  ],
+  "batiment_reference_prestige": [
+    "Revue Architectures régionales · Rédaction",
+    "Publication de votre chantier dans notre prochain numéro",
+    "L'architecte de l'opération nous a proposé votre réalisation pour notre dossier sur la rénovation du bâti ancien. Six pages lui seront consacrées, avec la mention de votre entreprise en légende de chaque photographie.",
+    "Le rédacteur en chef",
+    "Disponibilité commerciale +6 % pendant 2 tours (une entreprise)",
+    "Dans le bâtiment, la réputation se construit lentement et vaut plus qu'un budget de publicité."
+  ],
+  "batiment_banque_conciliante": [
+    "Banque des Professions · Agence entreprises",
+    "Renégociation de votre découvert au vu de vos derniers bilans",
+    "L'examen de vos comptes montre un endettement largement couvert par vos capitaux propres. Nous révisons à la baisse le coût de votre découvert pour les deux prochains trimestres.",
+    "Votre chargé d'affaires",
+    "Taux d'intérêt ×0,7 pendant 2 tours (une entreprise)",
+    "Ce sont les capitaux propres qui portent la dette : tant qu'ils la couvrent, la banque suit. C'est exactement la limite qu'elle vous applique quand vous empruntez."
+  ],
+  "batiment_chantier_surprise": [
+    "Syndic Berthier · Gestion de copropriété",
+    "Consultation en urgence — défaillance de l'entreprise retenue",
+    "L'entreprise retenue pour notre ravalement s'est désistée la veille du démarrage. L'échafaudage est monté et la copropriété a voté les fonds. Nous cherchons une reprise immédiate du marché, aux conditions initiales.",
+    "Le gestionnaire d'immeuble",
+    "Commande ferme de 180 m² ce tour (une entreprise tirée au sort)",
+    "Une commande ferme se sert sur la capacité restante : acceptez-la si les équipes suivent, pas avant."
+  ],
+  "batiment_major_breakdown": [
+    "Levage Carpentier · Service après-vente",
+    "Rapport d'intervention — avarie hydraulique de votre mini-grue",
+    "Le circuit hydraulique principal est hors d'usage et le vérin de flèche doit être remplacé. Les pièces sont à commander à l'étranger : deux trimestres avant remise en service. Le chantier est à l'arrêt.",
+    "Le responsable technique",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & maintenance préventive"
+  ],
+  "batiment_tech_obsolescence": [
+    "Contrôle technique des engins · Rapport de visite",
+    "Non-conformité antipollution de vos engins de chantier",
+    "Vos engins ne satisfont plus aux normes d'émission applicables aux chantiers urbains. Leur consommation dépasse d'un tiers celle des modèles actuels et les pièces détachées deviennent difficiles à obtenir.",
+    "Le contrôleur",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "batiment_used_equipment_deal": [
+    "M. Ternois, artisan · Cessation d'activité",
+    "Cession de ma nacelle et de mon fourgon avant départ en retraite",
+    "Je cesse mon activité à la fin du trimestre et cède mon matériel, révisé et régulièrement entretenu, à un confrère plutôt qu'à un marchand. Le prix demandé est nettement inférieur à la cote.",
+    "M. Ternois",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "batiment_artisan_low_cost": [
+    "Fédération du bâtiment · Observatoire des devis",
+    "Devis anormalement bas constatés chez les particuliers",
+    "Un artisan récemment installé propose des devis inférieurs de vingt pour cent aux prix du marché, sans attestation d'assurance décennale valide. Les particuliers, qui ne vérifient pas ces attestations, comparent les seuls montants.",
+    "Le secrétaire général",
+    "Demande des particuliers −18 % pendant 2 tours",
+    "Un devis moins cher cache souvent une charge en moins : la vôtre se paie, et c'est ce qu'il faut savoir expliquer."
+  ],
+  "batiment_major_petits_marches": [
+    "Centrale des marchés publics · Service des avis",
+    "Résultats des derniers lots de rénovation",
+    "Faute de grands programmes, un groupe national soumissionne désormais sur les lots inférieurs à cent mille euros. Il a remporté les trois dernières consultations du département sur le critère des références.",
+    "Le service des avis",
+    "Demande des marchés publics −25 % ce tour",
+    "Sur appel d'offres, la taille rassure l'acheteur : la réponse d'une PME est la réactivité et la proximité."
+  ],
+  "batiment_bouche_a_oreille": [
+    "Chambre des syndics de copropriété",
+    "Inscription de votre entreprise sur notre liste de recommandation",
+    "La réception sans réserve de votre dernier ravalement a été signalée par le syndic concerné. Trois de nos adhérents souhaitent vous consulter pour leurs programmes de l'année à venir.",
+    "Le président de la chambre",
+    "Demande des syndics de votre entreprise +25 % pendant 2 tours",
+    "Un chantier bien fini est un commercial gratuit : la qualité se rentabilise sur le suivant."
+  ],
+  "batiment_conducteur_absent": [
+    "Médecine du travail du bâtiment",
+    "Avis d'inaptitude temporaire de votre conducteur de travaux",
+    "L'examen conclut à une inaptitude temporaire de six semaines, sans aménagement de poste possible. Aucune reprise anticipée ne peut être autorisée. Une visite de préreprise sera organisée avant son retour.",
+    "Le médecin du travail",
+    "Capacité des équipes −15 % pendant 2 tours",
+    "La capacité d'une entreprise de bâtiment, c'est aussi celui qui organise : un goulot invisible sur le planning."
+  ],
+  "batiment_norme_thermique": [
+    "Direction départementale des territoires",
+    "Entrée en vigueur de la nouvelle réglementation thermique",
+    "Les épaisseurs minimales d'isolant et la certification des menuiseries sont relevées pour tous les chantiers de rénovation déposés à compter du trimestre prochain. Les matériaux conformes sont plus coûteux et leur emploi est obligatoire.",
+    "Le chef du service habitat",
+    "Coût des matériaux +10 % pendant 2 tours",
+    "Une norme relève le coût variable de tous les concurrents à la fois : celui qui la répercute le premier perd des devis, le dernier perd de la marge."
+  ],
+  "batiment_inv_signal": [
+    "Atelier Delcourt Architectes · Études de faisabilité",
+    "Étude préalable à un programme de rénovation de résidences",
+    "Nous achevons pour l'Office public de l'habitat de la Haute-Lys l'étude de plusieurs résidences. Des lots de second œuvre, isolation, menuiseries et plâtrerie, y seraient concernés. Rien n'est arrêté : le conseil d'administration doit se prononcer, et une consultation pourrait être lancée le trimestre prochain pour plusieurs centaines de logements.",
+    "L'architecte associé",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "batiment_inv_grand_compte": [
+    "Office public de l'habitat de la Haute-Lys · Direction du patrimoine",
+    "Approbation du programme de rénovation des résidences",
+    "Le conseil d'administration a approuvé la rénovation de quatre résidences, soit près de trois cents logements, à engager sur les trois trimestres à venir. Les lots de second œuvre seront confiés par bons de commande à des entreprises du département, dont la vôtre. Les ordres de service seront échelonnés, les premiers chantiers démarrant dès le mois prochain.",
+    "Le directeur du patrimoine",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous tenir ce volume ? Mobiliser plus d'équipes, sous-traiter ou investir dans du matériel : lequel coûte le moins sur trois trimestres ?"
+  ],
+  "batiment_inv_taux": [
+    "Banque des Professions · Agence entreprises",
+    "Campagne temporaire sur les crédits d'équipement",
+    "Notre établissement abaisse de quarante pour cent le taux des crédits d'équipement consentis aux entreprises du bâtiment, pour une période de deux trimestres. Nacelles, engins, véhicules utilitaires et outillage lourd entrent dans le champ de l'offre. Les garanties et les durées d'amortissement restent celles de nos conditions habituelles, et les dossiers ultérieurs seront étudiés au tarif courant.",
+    "Votre chargé d'affaires",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "batiment_inv_concurrent": [
+    "Fédération du bâtiment · Service économique",
+    "Investissement d'une entreprise concurrente sur le département",
+    "La société Verdier-Lanoë annonce l'acquisition de deux nacelles, l'ouverture d'un second atelier de préfabrication et le recrutement de huit compagnons. Elle affiche des tarifs inférieurs de dix à quinze pour cent sur l'isolation et la plâtrerie, afin d'occuper vite ses nouvelles équipes. Nos adhérents anticipent un partage des consultations sur les deux prochains trimestres.",
+    "Le délégué économique",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "batiment_inv_retournement": [
+    "Office public de l'habitat de la Haute-Lys · Service des marchés",
+    "Révision du plan pluriannuel de rénovation",
+    "Après la baisse de ses ressources, le conseil d'administration a révisé son plan de patrimoine. Deux des quatre résidences prévues sont reportées, et les bons de commande en cours sont ramenés à un peu plus de la moitié des quantités initialement notifiées. Les ordres de service déjà émis restent exécutés.",
+    "La responsable des marchés",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes."
+  ],
+  "transport_gazole": [
+    "Centrale d'achat carburants Rouliers",
+    "Évolution de l'indice gazole applicable à vos enlèvements",
+    "L'indice de référence progresse de dix-huit pour cent en six semaines. Vos cartes carburant sont facturées au nouvel indice dès ce mois. La clause de révision de vos contrats de transport peut être activée sur justificatif.",
+    "Le service adhérents",
+    "Coût du carburant +18 % pendant 2 tours",
+    "Une hausse du coût variable remonte mécaniquement le seuil : combien de palettes en plus faut-il charger ?"
+  ],
+  "transport_penurie_chauffeurs": [
+    "Note interne · Exploitation",
+    "Deux démissions de conducteurs et annonces sans réponse",
+    "Deux de nos conducteurs rejoignent un concurrent qui propose une rémunération supérieure. Nos annonces sont sans réponse depuis cinq semaines. Deux véhicules resteront au dépôt faute de conducteur.",
+    "Le responsable d'exploitation",
+    "Disponibilité de la flotte −14 % pendant 2 tours",
+    "Un camion sans chauffeur ne roule pas : la contrainte n'est pas toujours celle qu'on amortit."
+  ],
+  "transport_pic_ecommerce": [
+    "Centrale logistique Nordis · Direction des transports",
+    "Appel à capacité pour le pic de fin d'année",
+    "Nos entrepôts passeront en trois-huit du quinze novembre au vingt-quatre décembre. Nous recherchons de la capacité auprès de l'ensemble de nos transporteurs référencés, aux conditions habituelles.",
+    "Le directeur des transports",
+    "Demande de la distribution +35 % ce tour",
+    "Un pic ne se sert qu'avec une flotte disponible : la capacité se décide un trimestre à l'avance."
+  ],
+  "transport_blocage_routier": [
+    "Préfecture · Direction de la sécurité routière",
+    "Filtrage des accès à la métropole pendant quatre jours",
+    "Un mouvement de blocage filtre les accès à la métropole du lundi au jeudi. Aucune dérogation n'est prévue pour le transport de marchandises. Les itinéraires de contournement ajoutent en moyenne quatre-vingts kilomètres.",
+    "Le directeur de cabinet",
+    "Disponibilité de la flotte −22 % ce tour",
+    "Le gazole a été brûlé, les chauffeurs payés, et rien n'a été livré : la perte est intégrale."
+  ],
+  "transport_relocalisation": [
+    "Agence de développement économique régionale",
+    "Implantation d'une unité de production sur le territoire",
+    "Un industriel rapatrie sa production dans la région et recherche un transporteur local pour ses flux entrants et sortants. Nous transmettons votre dossier ainsi que celui des autres opérateurs référencés.",
+    "La directrice de l'agence",
+    "Demande des industriels +22 % pendant 2 tours",
+    "Un contrat régulier vaut mieux qu'un beau prix ponctuel : il remplit les camions tous les jours."
+  ],
+  "transport_guerre_des_prix": [
+    "Bourse de fret Cargolink · Note de marché",
+    "Effondrement des cotations sur les lots régionaux",
+    "L'arrivée d'opérateurs d'Europe de l'Est fait chuter les cotations sur l'ensemble des lots au départ de la région. Les prix relevés cette semaine sont inférieurs au coût de revient moyen de la profession.",
+    "Le service études",
+    "Demande de l'affrètement −25 % pendant 2 tours",
+    "S'aligner sur un prix qui ne couvre pas la structure remplit les camions et vide la trésorerie."
+  ],
+  "transport_credit_resserre": [
+    "Loueur financier Trucklease · Direction des engagements",
+    "Révision des conditions de renouvellement de votre flotte",
+    "Les conditions applicables aux dossiers de financement de véhicules industriels sont durcies pour l'ensemble de notre portefeuille. Votre projet de renouvellement est concerné dès la prochaine échéance.",
+    "Le directeur des engagements",
+    "Taux d'intérêt ×1,5 pendant 2 tours",
+    "Un métier qui immobilise un million en camions ressent chaque point de taux dans son résultat."
+  ],
+  "transport_accident": [
+    "Assurances du Littoral · Service sinistres",
+    "Déclaration de sinistre — accident de circulation",
+    "Votre conducteur est indemne, le porteur est immobilisé et la marchandise transportée est endommagée. L'expertise est fixée à jeudi. La prise en charge des marchandises dépend de la garantie souscrite.",
+    "Le gestionnaire de sinistres",
+    "Disponibilité −24 % et coût variable +12 % pendant 2 tours (une entreprise)",
+    "C'est ce que couvre l'assurance marchandise transportée : la prime se juge le jour du sinistre."
+  ],
+  "transport_accident (sans assurance)": [
+    "Cabinet Ferrand · Expertise des dommages",
+    "Déclaration de sinistre — accident de circulation",
+    "Votre conducteur est indemne, le porteur est immobilisé et la marchandise transportée est endommagée. L'expertise est fixée à jeudi.",
+    "L'expert",
+    "Disponibilité −24 % et coût variable +12 % pendant 2 tours (une entreprise)",
+    "Un véhicule immobilisé, c'est de la capacité perdue : une flotte se dimensionne aussi pour les coups durs."
+  ],
+  "transport_panne_flotte": [
+    "Garage Poirier Poids Lourds · Atelier",
+    "Immobilisation de trois porteurs — délai sur les pièces",
+    "Trois de vos porteurs sont entrés à l'atelier la même semaine, deux pour la transmission et un pour le circuit de freinage. Les pièces sont annoncées à quinze jours par le constructeur.",
+    "Le chef d'atelier",
+    "Disponibilité de la flotte −28 % ce tour (une entreprise tirée au sort)",
+    "L'entretien différé coûte moins cher aujourd'hui et beaucoup plus cher le jour de la panne."
+  ],
+  "transport_vol_remorque": [
+    "Gendarmerie nationale · Brigade de recherches",
+    "Récépissé de dépôt de plainte — vol d'une remorque chargée",
+    "Votre plainte pour le vol d'une remorque et de son chargement sur votre parking a été enregistrée. Les images de vidéoprotection sont en cours d'exploitation. Ce récépissé vous est délivré pour vos démarches d'assurance.",
+    "Le commandant de brigade",
+    "Disponibilité −20 % ce tour (une entreprise tirée au sort)",
+    "Le préjudice dépasse la remorque : c'est la confiance d'un client qui fait un tiers du trafic."
+  ],
+  "transport_vol_remorque (sans assurance)": [
+    "Gendarmerie nationale · Brigade de recherches",
+    "Récépissé de dépôt de plainte — vol d'une remorque chargée",
+    "Votre plainte pour le vol d'une remorque et de son chargement sur votre parking a été enregistrée. Les images de vidéoprotection sont en cours d'exploitation. Ce récépissé vous est délivré pour vos démarches.",
+    "Le commandant de brigade",
+    "Disponibilité −20 % ce tour (une entreprise tirée au sort)",
+    "Le préjudice dépasse la remorque : c'est la confiance d'un client qui fait un tiers du trafic."
+  ],
+  "transport_label_qualite": [
+    "Organisme certificateur Véritas Transport",
+    "Décision de certification — ponctualité des livraisons",
+    "Votre taux de livraisons dans le créneau annoncé dépasse le seuil requis sur quatre trimestres consécutifs. La certification vous est accordée et pourra être produite dans vos réponses aux appels d'offres industriels.",
+    "Le responsable de la certification",
+    "Disponibilité commerciale +7 % pendant 2 tours (une entreprise)",
+    "Dans le transport, la ponctualité est le produit : elle se vend plus cher qu'un rabais ne rapporte."
+  ],
+  "transport_banque_conciliante": [
+    "Banque des Professions · Agence entreprises",
+    "Révision de vos conditions de découvert",
+    "Vos derniers comptes montrent un endettement contenu sous vos capitaux propres et des règlements clients qui rentrent dans les délais. Nous abaissons le coût de votre découvert pour les deux prochains trimestres.",
+    "Votre chargée d'affaires",
+    "Taux d'intérêt ×0,7 pendant 2 tours (une entreprise)",
+    "La banque ne prête pas contre une promesse, elle lit vos comptes : c'est le rapport entre votre dette et vos capitaux propres qui décide de ce qu'elle consent."
+  ],
+  "transport_lot_surprise": [
+    "Chargeur Delvigne · Service expéditions",
+    "Demande d'enlèvement en urgence pour demain matin",
+    "Notre transporteur habituel s'est décommandé en fin de journée. Neuf cents palettes doivent partir demain à six heures. Nous acceptons vos conditions tarifaires sous réserve d'une confirmation immédiate.",
+    "Le responsable des expéditions",
+    "Commande ferme de 900 palettes ce tour (une entreprise tirée au sort)",
+    "Une commande ferme se sert sur la capacité restante : elle n'a de valeur que si les camions sont libres."
+  ],
+  "transport_major_breakdown": [
+    "Garage Poirier Poids Lourds · Atelier",
+    "Rapport d'expertise — casse moteur sur autoroute",
+    "Le moteur a cédé en pleine charge et l'expertise conclut à un défaut de suivi des vidanges. La réfection complète, moteur d'échange inclus, immobilisera le véhicule sur deux trimestres.",
+    "Le chef d'atelier",
+    "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    "Risque opérationnel & maintenance préventive"
+  ],
+  "transport_tech_obsolescence": [
+    "Métropole · Service des zones à faibles émissions",
+    "Restriction d'accès pour les véhicules de votre catégorie",
+    "À compter du prochain trimestre, les véhicules de la catégorie de vos plus anciens porteurs ne sont plus autorisés dans le périmètre de la zone. Aucune dérogation professionnelle n'est prévue.",
+    "Le chef de service",
+    "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    "Cycle de vie des actifs & veille technologique"
+  ],
+  "transport_used_equipment_deal": [
+    "Transports Cauchy · Cessation d'activité",
+    "Cession d'un porteur révisé, contrôle technique à jour",
+    "Nous cessons notre activité et cédons un porteur de quatre ans, entretenu en concession et contrôlé le mois dernier. Le prix demandé est nettement inférieur à la cote, l'enlèvement à votre charge.",
+    "Le gérant",
+    "Disponibilité +12 % ce tour (équipe ciblée)",
+    "Décision d'investissement & coût d'opportunité"
+  ],
+  "transport_concurrent_est": [
+    "Bourse de fret Cargolink · Note de marché",
+    "Nouvel opérateur étranger sur les lots au départ de la région",
+    "Un transporteur immatriculé à l'étranger positionne quinze véhicules sur nos lots régionaux, à des tarifs inférieurs de vingt pour cent. Sur la bourse, l'attribution se fait au seul prix affiché.",
+    "Le service études",
+    "Demande de l'affrètement −20 % pendant 2 tours",
+    "Sur la bourse, seul le prix compte : c'est le segment le plus exposé, et celui qu'on ne peut pas défendre par la qualité."
+  ],
+  "transport_distribution_internalise": [
+    "Centrale logistique Nordis · Direction des transports",
+    "Internalisation progressive de nos flux régionaux",
+    "Notre groupe fait l'acquisition de sa propre flotte et recrute des conducteurs. Vos tournées régulières seront réduites à compter du prochain trimestre, puis réexaminées à l'échéance du contrat.",
+    "Le directeur des transports",
+    "Demande de la grande distribution −15 % pendant 2 tours",
+    "Un client qui pèse un tiers du chiffre est un risque : le jour où il internalise, la flotte roule à vide."
+  ],
+  "transport_contrat_cadre": [
+    "Aciéries Vandevelde · Direction des achats",
+    "Notification d'attribution — contrat-cadre de transport régional",
+    "À l'issue de la consultation, nous vous attribuons l'ensemble de nos flux régionaux pour une durée de deux ans, reconductible. Le volume prévisionnel et les engagements de service figurent en annexe.",
+    "Le directeur des achats",
+    "Demande des industriels de votre entreprise +20 % pendant 2 tours",
+    "Un contrat-cadre lisse l'activité et sécurise la trésorerie : c'est ce qu'une banque aime lire."
+  ],
+  "transport_controle_routier": [
+    "Direction régionale des contrôles des transports terrestres",
+    "Procès-verbal — immobilisation de trois véhicules",
+    "Le contrôle a relevé une usure des pneumatiques inférieure au minimum légal sur trois de vos véhicules. Leur immobilisation est prononcée jusqu'à remise en état constatée par un professionnel agréé.",
+    "Le contrôleur des transports terrestres",
+    "Disponibilité de la flotte −15 % ce tour",
+    "La maintenance qu'on n'a pas faite finit par se faire, au moment choisi par quelqu'un d'autre."
+  ],
+  "transport_peages": [
+    "Société d'autoroutes du Nord · Service des abonnements",
+    "Revalorisation annuelle des tarifs de péage",
+    "Les tarifs applicables aux véhicules de classe 4 augmentent de six pour cent au premier janvier sur l'ensemble du réseau. Votre badge d'abonnement sera facturé au nouveau barème sans intervention de votre part.",
+    "Le service des abonnements",
+    "Coût variable par tournée +6 % pendant 2 tours",
+    "Un coût variable qui monte se répercute sur le tarif, ou se paie sur la marge : la seule question est de savoir dans quel délai."
+  ],
+  "transport_inv_signal": [
+    "Mérien Logistique · Service exploitation",
+    "Pilote de flux entre la plateforme de Valmont et le littoral",
+    "Nous testons dès la semaine prochaine un nouveau flux entre notre plateforme de Valmont et nos magasins du littoral, à raison de trois ou quatre départs par semaine. Si le pilote est concluant, le volume pourrait dépasser quatre-vingts palettes par jour dès le trimestre prochain. Rien n'est arrêté à ce stade : nous consultons plusieurs transporteurs de la région.",
+    "Le responsable d'exploitation",
+    "Demande globale +8 % ce tour",
+    "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus."
+  ],
+  "transport_inv_grand_compte": [
+    "Mérien Logistique · Direction des transports",
+    "Confirmation du flux régulier Valmont – littoral",
+    "Le pilote est concluant et notre direction valide le flux régulier au départ de Valmont : environ quatre-vingts palettes par jour ouvré, du lundi au samedi, pour les trois trimestres à venir. Les enlèvements se font à quai entre quatre et six heures du matin. Le volume est confirmé par écrit et le cahier des charges détaillé suit sous huitaine.",
+    "Le directeur des transports",
+    "Demande globale +30 % pendant 3 tours",
+    "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?"
+  ],
+  "transport_inv_taux": [
+    "Banque des Professions · Agence entreprises",
+    "Campagne temporaire sur les crédits d'équipement professionnels",
+    "Notre agence ouvre une campagne sur les crédits d'équipement destinés aux véhicules industriels, aux remorques et aux matériels de quai. Les taux appliqués aux dossiers acceptés sont réduits de quarante pour cent pendant deux trimestres. Les demandes sont instruites dans l'ordre d'arrivée, après l'examen habituel de vos comptes.",
+    "Votre chargée d'affaires",
+    "Taux d'intérêt ×0,6 pendant 2 tours",
+    "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir."
+  ],
+  "transport_inv_concurrent": [
+    "Union professionnelle du transport routier · Lettre d'information",
+    "Arrivée d'un opérateur doté d'une flotte neuve sur la région",
+    "Le groupe Havrin Express annonce l'acquisition de vingt ensembles routiers neufs et l'ouverture d'un quai de messagerie à Valmont. Il affiche, pour ses premiers contrats, des tarifs inférieurs d'environ dix pour cent à ceux du marché régional. Plusieurs chargeurs ont déjà reçu son offre, et le partage des lots s'annonce plus serré.",
+    "Le délégué régional",
+    "Demande globale −8 % pendant 2 tours",
+    "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?"
+  ],
+  "transport_inv_retournement": [
+    "Mérien Logistique · Direction des achats",
+    "Révision du programme de transport du prochain trimestre",
+    "À la suite de la réorganisation de nos approvisionnements, le flux au départ de Valmont est ramené d'environ quatre-vingts à une cinquantaine de palettes par jour. Une partie du volume est désormais servie depuis notre stock tampon, ce qui réduit les expéditions sans modifier les destinations. Le contrat est révisé en conséquence par avenant, à compter du trimestre prochain.",
+    "Le directeur des achats",
+    "Demande globale −12 % pendant 2 tours",
+    "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes."
+  ],
+  "routine_situation_comptable": [
+    "Cabinet Delvaux · Expertise comptable",
+    "Situation intermédiaire au terme du trimestre",
+    "Vous trouverez ci-joint la situation arrêtée à la fin du trimestre. Le rapprochement bancaire est en concordance et aucune anomalie ne ressort de nos contrôles. Nous restons à votre disposition avant la prochaine clôture.",
+    "Votre expert-comptable",
+    "Aucun effet sur ce trimestre",
+    "Une situation intermédiaire ne se subit pas : c'est le moment de vérifier que les comptes disent ce que vous croyez avoir fait."
+  ],
+  "routine_attestation_vigilance": [
+    "Organisme de recouvrement des cotisations sociales",
+    "Délivrance de votre attestation de vigilance",
+    "Vous êtes à jour de vos déclarations et du paiement de vos cotisations à la date de la présente. L'attestation jointe est valable six mois et vous sera demandée par tout donneur d'ordres pour un marché supérieur à cinq mille euros.",
+    "Le service des entreprises",
+    "Aucun effet sur ce trimestre",
+    "Sans attestation de vigilance, pas de marché : être à jour de ses cotisations est aussi une condition commerciale."
+  ],
+  "routine_depot_des_comptes": [
+    "Greffe du tribunal de commerce",
+    "Accusé de réception du dépôt de vos comptes annuels",
+    "Vos comptes annuels ont été déposés et enregistrés au registre du commerce et des sociétés. Ils sont désormais consultables par tout tiers qui en fait la demande, sauf option pour la confidentialité.",
+    "Le greffier",
+    "Aucun effet sur ce trimestre",
+    "Vos comptes sont publics : vos concurrents, vos fournisseurs et vos clients peuvent les lire comme vous lisez les leurs."
+  ],
+  "routine_echeance_assurance": [
+    "Assurances du Littoral · Service des contrats",
+    "Avis d'échéance de votre contrat multirisque",
+    "Votre prime annuelle est appelée à la date d'échéance figurant sur l'avis joint. Les garanties et les franchises restent inchangées. Toute modification de votre activité doit nous être signalée sous quinze jours.",
+    "Le service des contrats",
+    "Aucun effet sur ce trimestre",
+    "La prime se paie tous les ans, le sinistre arrive une fois : c'est cet écart-là que l'assurance vend, et qu'on juge trop cher jusqu'au jour où il sert."
+  ],
+  "routine_releve_bancaire": [
+    "Agence bancaire · Service des relevés",
+    "Relevé trimestriel et arrêté de compte",
+    "Vous trouverez le détail des mouvements de la période ainsi que l'arrêté des agios et commissions. Sauf réclamation de votre part sous un mois, cet arrêté sera réputé approuvé.",
+    "Le service des relevés",
+    "Aucun effet sur ce trimestre",
+    "Un arrêté de compte non contesté devient définitif : les frais qu'on ne lit pas sont des frais qu'on accepte."
+  ],
+  "routine_tva": [
+    "Service des impôts des entreprises",
+    "Accusé de réception de votre déclaration de TVA",
+    "Votre déclaration a été enregistrée et le paiement correspondant encaissé. Aucune observation n'est formulée à ce stade. Le droit de reprise de l'administration court jusqu'à la fin de la troisième année suivant celle de l'exigibilité.",
+    "L'inspecteur des finances publiques",
+    "Aucun effet sur ce trimestre",
+    "La TVA que vous encaissez ne vous appartient jamais : elle transite par votre trésorerie, et la confondre avec du résultat est l'erreur classique."
+  ],
+  "mission_niveau_1": [
+    "Note interne · Les associés",
+    "Votre mandat — direction de l'entreprise",
+    "Nous vous confions la conduite de la maison à compter de ce tour. Vous décidez du prix auquel vous vendez, du volume que vous engagez et de ce que vous dépensez pour vous faire connaître ; le reste demeure de notre ressort.",
+    "Les associés",
+    "Aucun effet sur les comptes",
+    "Trois leviers seulement, et ils suffisent à gagner ou à perdre : le prix fait la marge, le volume fait le risque, le marketing fait la demande."
+  ],
+  "mission_niveau_2": [
+    "Note interne · Les associés",
+    "Votre mandat — direction et moyens de production",
+    "Nous vous confions la conduite de la maison, prix et volume compris. S'y ajoute ce que vous mettez dans le produit : la qualité se budgète, la maintenance aussi, et ces deux dépenses-là se paient au tour suivant.",
+    "Les associés",
+    "Aucun effet sur les comptes",
+    "Qualité et maintenance sont les deux premières dépenses qu'on sacrifie quand la trésorerie serre, et les deux premières qui se rappellent à vous."
+  ],
+  "mission_niveau_3": [
+    "Note interne · Les associés",
+    "Votre mandat — direction, production et finances",
+    "Nous vous confions l'offre, l'outil et désormais les finances : c'est vous qui décidez comment l'entreprise se finance et comment elle se couvre contre les coups durs. Notre banque et notre assureur s'adresseront à vous.",
+    "Les associés",
+    "Aucun effet sur les comptes",
+    "Une entreprise ne meurt pas de perdre de l'argent, elle meurt de ne plus en avoir en caisse. Le financement se décide avant d'en avoir besoin."
+  ],
+  "mission_niveau_4": [
+    "Note interne · Les associés",
+    "Votre mandat — direction générale",
+    "Nous vous confions la direction générale : tout ce qui engage la maison relève de vous. Les femmes et les hommes que nous employons, les investissements qui nous porteront demain et nos engagements environnementaux y compris.",
+    "Les associés",
+    "Aucun effet sur les comptes",
+    "Embaucher, investir, s'engager : trois décisions qui coûtent maintenant et ne rapportent que plus tard. C'est l'arbitrage du temps."
+  ],
+  "mission_niveau_5": [
+    "Note interne · Les associés",
+    "Votre mandat — direction générale et gestion de trésorerie",
+    "Nous vous confions la direction générale, y compris l'emploi de nos excédents. Une trésorerie qui dort ne rapporte rien, une trésorerie placée ne se dépense plus : l'arbitrage vous revient.",
+    "Les associés",
+    "Aucun effet sur les comptes",
+    "Placer trop, c'est payer un découvert à 9 % en détenant un placement à 2 %. L'excédent d'aujourd'hui est le besoin de demain."
+  ],
+  "mission_niveau_6": [
+    "Note interne · Les associés",
+    "Votre mandat — direction générale et affectation du résultat",
+    "Nous vous confions la direction générale, et vous nous répondrez aussi sur nos parts. C'est vous qui proposerez ce qui nous est distribué et ce qui reste en réserve pour armer l'entreprise ; nous jugerons sur les comptes.",
+    "Les associés",
+    "Aucun effet sur les comptes",
+    "Distribuer, c'est récompenser les associés ; mettre en réserve, c'est financer la suite sans emprunter. On ne peut pas faire les deux avec le même euro."
+  ],
+  "retour_licenciement": [
+    "Cabinet Lermite · Avocats, pour le compte de son client",
+    "Contestation du licenciement notifié le trimestre écoulé",
+    "Notre client conteste le motif énoncé dans la lettre que vous lui avez adressée et saisit le conseil de prud'hommes. Le préavis court à compter de la notification. Nous vous invitons à transmettre le dossier à votre assureur de protection juridique.",
+    "L'avocat au barreau",
+    "Aucun effet sur les comptes",
+    "Un licenciement n'est pas une ligne qu'on retire d'un tableau : il se motive, il se notifie, et il se conteste."
+  ],
+  "retour_embauche": [
+    "Note interne · Encadrement",
+    "Accueil des personnes recrutées",
+    "Les recrutements que vous avez décidés sont en cours d'intégration. Ils ne seront pleinement opérationnels qu'au terme de leur prise de poste : d'ici là, ils mobilisent du temps d'encadrement sans produire à la cadence des anciens.",
+    "Le responsable d'exploitation",
+    "Aucun effet sur les comptes",
+    "Embaucher coûte tout de suite et rapporte plus tard. C'est pour cela que le moteur ne met les nouveaux au travail qu'au tour suivant."
+  ],
+  "retour_hausse_prix": [
+    "Association de clients professionnels",
+    "Votre augmentation tarifaire du trimestre écoulé",
+    "Les entreprises que nous représentons nous signalent une hausse sensible de vos tarifs, sans que la prestation ait changé. Plusieurs d'entre elles consultent la concurrence et nous demandent de vous en informer avant de reporter leurs commandes.",
+    "La déléguée générale",
+    "Aucun effet sur les comptes",
+    "Une hausse de prix se voit toujours. La question n'est pas si le client la remarque, mais s'il a ailleurs où aller."
+  ],
+  "retour_baisse_prix": [
+    "Note interne · Commercial",
+    "Effet de votre baisse de tarif sur nos marges",
+    "La baisse décidée le trimestre écoulé a été bien reçue par la clientèle, et les volumes suivent. Mais chaque unité vendue rapporte moins : à volume égal, nous encaissons davantage et gagnons moins. Il faudra vendre sensiblement plus pour retrouver la marge d'avant.",
+    "Le responsable commercial",
+    "Aucun effet sur les comptes",
+    "Baisser le prix augmente presque toujours le volume. Cela n'augmente le résultat que si le volume gagné couvre la marge perdue."
+  ],
+  "retour_maintenance_coupee": [
+    "Maintenance · Rapport de visite périodique",
+    "Report de l'entretien — état constaté de votre matériel",
+    "Aucun entretien n'a été engagé sur la période écoulée. Nous relevons des jeux anormaux et une usure accélérée sur les organes les plus sollicités. En l'état, la prochaine avarie ne sera plus une réparation mais un remplacement.",
+    "Le technicien de maintenance",
+    "Aucun effet sur les comptes",
+    "L'entretien est la dépense la plus facile à supprimer et la plus chère à rattraper : elle ne se voit pas ce tour-ci, elle se paie au suivant."
+  ],
+  "retour_qualite_coupee": [
+    "Service clients · Synthèse des réclamations",
+    "Hausse des retours depuis la période écoulée",
+    "Les réclamations ont nettement progressé depuis que le budget qualité n'est plus doté. Les motifs se ressemblent et portent tous sur la finition. Nous traitons au cas par cas, mais nos clients réguliers commencent à le dire autour d'eux.",
+    "La responsable du service clients",
+    "Aucun effet sur les comptes",
+    "La qualité se coupe en un tour et se reconstruit en plusieurs : la réputation met plus de temps à remonter qu'à descendre."
+  ],
+  "retour_emprunt": [
+    "Votre banque · Service des engagements",
+    "Déblocage des fonds et échéancier de remboursement",
+    "Le financement que vous avez sollicité est débloqué sur votre compte. Les échéances seront prélevées automatiquement à chaque fin de trimestre, capital et intérêts compris, et ce quel que soit le niveau de votre activité.",
+    "Le chargé d'affaires entreprises",
+    "Aucun effet sur les comptes",
+    "Un emprunt soulage la trésorerie le jour où on le prend et la grève tous les trimestres suivants. L'échéance ne se négocie pas quand elle tombe."
+  ],
+  "retour_dividende": [
+    "Note interne · Les associés",
+    "Réception de la distribution décidée",
+    "Nous avons bien reçu la distribution que vous avez proposée et nous vous en remercions. Nous notons qu'elle est prise sur les réserves constituées les trimestres passés, et donc qu'elle ne sera plus disponible pour financer ce que vous entreprendrez ensuite.",
+    "Les associés",
+    "Aucun effet sur les comptes",
+    "On ne distribue pas deux fois le même euro : ce qui part aux associés ne finance plus l'entreprise."
+  ],
+  "retour_rse": [
+    "Direction des achats responsables d'un client",
+    "Prise en compte de votre démarche dans notre référencement",
+    "Les engagements que vous avez pris sur la période écoulée ont été portés à notre connaissance. Ils sont pris en compte dans la notation de nos fournisseurs. Nous vous rappelons qu'un engagement interrompu pèse plus lourd, dans cette notation, qu'un engagement jamais pris.",
+    "La direction des achats",
+    "Aucun effet sur les comptes",
+    "Un engagement ne vaut que s'il tient dans la durée : celui qu'on abandonne coûte plus cher que celui qu'on n'a pas pris."
+  ]
+}

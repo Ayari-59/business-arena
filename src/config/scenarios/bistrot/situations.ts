@@ -1,12 +1,27 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { bistrotScenario } from "./index";
 
 /**
  * Situations pédagogiques de LA TABLE D'AUGUSTIN (restauration).
  *
  * Le fil rouge du secteur : le ratio matières, et la double péremption —
  * le couvert non servi comme la denrée préparée non vendue sont perdus.
+ *
+ * LES ÉNONCÉS SUIVENT LA DURÉE DU TOUR (ADR-01, `situation-texte.ts`). Hors
+ * abonnement, le ticket, les denrées et la marge d'un couvert ne bougent pas ;
+ * les charges de structure, la capacité de la cuisine, les heures de la brigade
+ * et la terrasse, si. Ce que le scénario porte se lit par ses grandeurs
+ * (`charges`, `capacite_parc`, `investissement_duree`, `investissement_plafond`) ;
+ * ce que le récit seul chiffre par tour (la fréquentation actuelle, les jours
+ * d'ouverture, les heures d'un salarié, que porte l'état de l'entreprise et non
+ * le scénario) passe par `flux`. Le seuil en couverts suit donc la durée ; les
+ * couverts par jour d'ouverture, eux, n'en dépendent pas.
+ *
+ * LES SOURCES SONT EXPORTÉES : LA TABLE D'AUGUSTIN · GAMME en hérite, et les rend à
+ * la durée de SES parties (`bistrot-gamme/situations.ts`).
  */
-export const BISTROT_SITUATIONS: SituationDef[] = [
+export const BISTROT_SOURCES: SituationDef[] = [
   {
     code: "bistrot_t1_reprise",
     category: "prise_de_poste",
@@ -64,7 +79,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "33 − 10 − 3 = 20 €. C'est ce montant, et lui seul, qui vient couvrir les 90 000 € de charges de structure du trimestre.",
+          "33 − 10 − 3 = 20 €. C'est ce montant, et lui seul, qui vient couvrir les {{entier: charges}} € de charges de structure {{du trimestre}}.",
       },
     ],
     modelRelevance: {
@@ -78,8 +93,8 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Séparez ce que vous payez pour CHAQUE assiette servie de ce que vous payez chaque mois quoi qu'il arrive.",
       "Les denrées suivent les couverts ; la brigade, le loyer et l'énergie de base tombent même une salle vide.",
       "Le ratio matières rapporte le coût des denrées au prix de vente : c'est le premier chiffre que regarde un restaurateur chaque semaine.",
-      "Marge par couvert = 33 − 10 − 3 = 20 €. Charges de structure décaissées = 90 000 € par trimestre.",
-      "Seuil = 90 000 ÷ 20 = 4 500 couverts par trimestre, soit 70 par jour sur 64 jours d'ouverture : un service plein chaque jour. En dessous, le trimestre est déficitaire quelle que soit la qualité de la cuisine.",
+      "Marge par couvert = 33 − 10 − 3 = 20 €. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
+      "Seuil = {{entier: charges}} ÷ 20 = {{entier: charges / 20}} couverts {{par trimestre}}, soit 70 par jour sur {{entier: flux(64)}} jours d'ouverture : un service plein chaque jour. En dessous, {{le trimestre}} est déficitaire quelle que soit la qualité de la cuisine.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -87,7 +102,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Le nombre de couverts à préparer dépend directement du seuil de rentabilité : en dessous de 70 par jour d'ouverture, le trimestre est déficitaire.",
+        hint: "Le nombre de couverts à préparer dépend directement du seuil de rentabilité : en dessous de 70 par jour d'ouverture, {{le trimestre}} est déficitaire.",
       },
       {
         field: "price",
@@ -132,14 +147,14 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         prompt:
           "Le cash & carry fait passer les denrées de 10 € à 8,60 € par couvert. Que devient le seuil de rentabilité, charges de structure inchangées ?",
         options: [
-          { id: "a", label: "Il descend d'environ 4 500 à environ 4 200 couverts" },
-          { id: "b", label: "Il monte à environ 5 200 couverts" },
+          { id: "a", label: "Il descend d'environ {{entier: charges / 20}} à environ {{entier: centaine(charges / 21.4)}} couverts" },
+          { id: "b", label: "Il monte à environ {{entier: centaine(flux(5200))}} couverts" },
           { id: "c", label: "Il ne change pas" },
-          { id: "d", label: "Il descend à environ 2 800 couverts" },
+          { id: "d", label: "Il descend à environ {{entier: centaine(flux(2800))}} couverts" },
         ],
         correctOptionId: "a",
         explain:
-          "La marge par couvert passe de 20 € à 21,40 €. Seuil = 90 000 ÷ 21,40 ≈ 4 206 couverts. Le gain est réel, reste à savoir ce qu'il coûte en fréquentation.",
+          "La marge par couvert passe de 20 € à 21,40 €. Seuil = {{entier: charges}} ÷ 21,40 ≈ {{entier: charges / 21.4}} couverts. Le gain est réel, reste à savoir ce qu'il coûte en fréquentation.",
       },
       {
         id: "avis_inertie",
@@ -167,8 +182,8 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Mettez les trois offres en colonnes : prix des denrées, qualité perçue, délai de règlement, temps de votre brigade.",
       "Le gain de 14 % est immédiat et chiffrable. Le coût, celui de la qualité perçue, est différé et indirect.",
       "Comparer des critères qui ne se mesurent pas dans la même unité, c'est le travail d'une matrice multicritère.",
-      "Chiffrez le gain : 1,40 € par couvert, soit ~8 400 € par trimestre à 6 000 couverts. Comparez à ce que coûte une baisse de fréquentation du soir.",
-      "N'oubliez pas la trésorerie : passer de 21 jours à comptant supprime une dette fournisseurs, donc augmente le BFR du montant de vos achats trimestriels.",
+      "Chiffrez le gain : 1,40 € par couvert, soit ~{{entier: 1.4 * flux(6000)}} € {{par trimestre}} à {{entier: flux(6000)}} couverts. Comparez à ce que coûte une baisse de fréquentation du soir.",
+      "N'oubliez pas la trésorerie : passer de 21 jours à comptant supprime une dette fournisseurs, donc augmente le BFR de 21 jours d'achats.",
     ]),
     trigger: { round: 2 },
     weight: 1,
@@ -221,14 +236,14 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         prompt:
           "Les denrées passent de 10 € à 12,40 € par couvert. Combien de couverts faut-il désormais servir pour équilibrer, à prix et charges inchangés ?",
         options: [
-          { id: "a", label: "Environ 5 110 au lieu de 4 500" },
-          { id: "b", label: "Environ 4 500, inchangé" },
-          { id: "c", label: "Environ 3 900" },
-          { id: "d", label: "Environ 7 200" },
+          { id: "a", label: "Environ {{entier: dizaine(charges / 17.6)}} au lieu de {{entier: charges / 20}}" },
+          { id: "b", label: "Environ {{entier: charges / 20}}, inchangé" },
+          { id: "c", label: "Environ {{entier: centaine(flux(3900))}}" },
+          { id: "d", label: "Environ {{entier: centaine(flux(7200))}}" },
         ],
         correctOptionId: "a",
         explain:
-          "La marge tombe de 20 € à 17,60 €. Seuil = 90 000 ÷ 17,60 ≈ 5 114 couverts. Soit 600 couverts de plus à servir : en plein creux d'août, c'est hors d'atteinte.",
+          "La marge tombe de 20 € à 17,60 €. Seuil = {{entier: charges}} ÷ 17,60 ≈ {{entier: charges / 17.6}} couverts. Soit {{entier: centaine(charges / 17.6 - charges / 20)}} couverts de plus à servir : en plein creux d'août, c'est hors d'atteinte.",
       },
       {
         id: "elasticite_midi",
@@ -254,7 +269,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["price_elasticity", "contribution_margin", "breakeven", "seasonality"],
     hints: hints([
       "La hausse frappe une charge variable : quelle grandeur du compte de résultat bouge en premier ?",
-      "Votre marge par couvert se comprime de 2,40 €. À 6 000 couverts, c'est 14 400 € de résultat qui s'évaporent par trimestre.",
+      "Votre marge par couvert se comprime de 2,40 €. À {{entier: flux(6000)}} couverts, c'est {{entier: 2.4 * flux(6000)}} € de résultat qui s'évaporent {{par trimestre}}.",
       "Deux issues : répercuter sur le ticket, ou reconstruire la carte pour retrouver de la marge à prix constant.",
       "Le mois d'août amplifie tout : les déjeuners d'affaires tombent à 0,6 et les banquets à 0,5. Le volume ne viendra pas compenser.",
       "Répercutez segment par segment : élasticité −1,5 le midi contre −1,2 le soir. Une hausse uniforme est toujours sous-optimale quand les élasticités diffèrent.",
@@ -284,7 +299,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "La saison des banquets",
     narrative:
-      "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre. Ils règlent à 30 jours, réservent des semaines à l'avance, et remplissent la salle un soir entier.",
+      "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur {{ce trimestre}}. Ils règlent à 30 jours, réservent des semaines à l'avance, et remplissent la salle un soir entier.",
     problem:
       "Combien de couverts préparer pour absorber le pic, et que risquez-vous en préparant trop ?",
     diagnosticOptions: [
@@ -315,10 +330,10 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         prompt:
           "Vous préparez 300 couverts de plus que ce que vous servez. Que deviennent les denrées correspondantes ?",
         options: [
-          { id: "a", label: "Elles sont perdues et passent en charges du trimestre" },
+          { id: "a", label: "Elles sont perdues et passent en charges {{du trimestre}}" },
           { id: "b", label: "Elles restent en stock à l'actif du bilan" },
           { id: "c", label: "Elles sont déduites du chiffre d'affaires" },
-          { id: "d", label: "Elles sont reportées sur le trimestre suivant" },
+          { id: "d", label: "Elles sont reportées sur {{le trimestre}} suivant" },
         ],
         correctOptionId: "a",
         explain:
@@ -327,16 +342,16 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       {
         id: "contrainte_active",
         prompt:
-          "Votre salle permet 9 000 couverts par trimestre. À 0,5 h de brigade par couvert et 10 salariés à 455 h, quelle est la capacité de travail ?",
+          "Votre salle permet {{entier: capacite_parc}} couverts {{par trimestre}}. À 0,5 h de brigade par couvert et 10 salariés à {{nombre: flux(455)}} h, quelle est la capacité de travail ?",
         options: [
-          { id: "a", label: "9 100 couverts : les deux contraintes se valent presque" },
-          { id: "b", label: "4 550 couverts : la brigade est très limitante" },
-          { id: "c", label: "18 200 couverts : la brigade n'est jamais limitante" },
-          { id: "d", label: "2 275 couverts" },
+          { id: "a", label: "{{entier: 10 * flux(455) / 0.5}} couverts : les deux contraintes se valent presque" },
+          { id: "b", label: "{{entier: 10 * flux(455)}} couverts : la brigade est très limitante" },
+          { id: "c", label: "{{entier: 10 * flux(455) / 0.25}} couverts : la brigade n'est jamais limitante" },
+          { id: "d", label: "{{entier: 10 * flux(455) * 0.5}} couverts" },
         ],
         correctOptionId: "a",
         explain:
-          "10 × 455 ÷ 0,5 = 9 100 couverts. Les deux plafonds sont quasiment identiques : ajouter des chaises sans renforcer la brigade ne servirait à rien, et l'inverse non plus.",
+          "10 × {{nombre: flux(455)}} ÷ 0,5 = {{entier: 10 * flux(455) / 0.5}} couverts. Les deux plafonds sont quasiment identiques : ajouter des chaises sans renforcer la brigade ne servirait à rien, et l'inverse non plus.",
       },
     ],
     modelRelevance: {
@@ -347,9 +362,9 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["capacity", "seasonality", "variable_costs", "bfr"],
     hints: hints([
-      "Regardez la saisonnalité du segment banquets : quel coefficient s'applique au quatrième trimestre ?",
-      "Les banquets grimpent à 1,85 fois leur niveau ordinaire, sur un trimestre déjà à 1,25 en global.",
-      "Vos deux plafonds sont proches : 9 000 couverts en salle, 9 100 en heures de brigade. L'un ne sert à rien sans l'autre.",
+      "Regardez la saisonnalité du segment banquets : quel coefficient s'applique au quatrième {{trimestre}} ?",
+      "Les banquets grimpent à 1,85 fois leur niveau ordinaire, sur un {{trimestre}} déjà à 1,25 en global.",
+      "Vos deux plafonds sont proches : {{entier: capacite_parc}} couverts en salle, {{entier: 10 * flux(455) / 0.5}} en heures de brigade. L'un ne sert à rien sans l'autre.",
       "Préparer plus que ce que vous servirez coûte les denrées perdues, sans aucune contrepartie : rien ne se stocke.",
       "Estimez la demande du tour, comparez-la aux deux plafonds, et n'oubliez pas que les banquets règlent à 30 jours : le résultat arrive avant l'encaissement.",
     ]),
@@ -373,7 +388,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     category: "alerte_comptable",
     title: "Le service ne couvre plus ses frais",
     narrative:
-      "Le trimestre est déficitaire. La cuisine a bien tourné, les avis sont corrects, mais le compte d'exploitation ne suit pas.",
+      "{{Le trimestre}} est déficitaire. La cuisine a bien tourné, les avis sont corrects, mais le compte d'exploitation ne suit pas.",
     problem:
       "Ratio matières, ticket moyen, fréquentation, charges de structure : par où commencer ?",
     diagnosticOptions: [
@@ -411,7 +426,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "2 % de 33 € = 0,66 €. Sur 6 000 couverts, cela fait près de 4 000 € par trimestre, sans toucher au prix ni à la fréquentation. C'est pourquoi le ratio matières se surveille chaque semaine.",
+          "2 % de 33 € = 0,66 €. Sur {{entier: flux(6000)}} couverts, cela fait près de {{entier: centaine(0.66 * flux(6000))}} € {{par trimestre}}, sans toucher au prix ni à la fréquentation. C'est pourquoi le ratio matières se surveille chaque semaine.",
       },
       {
         id: "charges_rigides",
@@ -440,7 +455,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Divisez cet écart par votre marge par couvert : vous obtenez le nombre de couverts manquants.",
       "Trois leviers, comme partout : la marge unitaire, les volumes, les charges de structure. Mais leurs délais d'action diffèrent radicalement.",
       "Dans ce métier, le ratio matières est le levier le plus rapide : il ne demande ni nouveau client ni hausse de prix visible.",
-      "Seuil = 90 000 ÷ marge par couvert. Comparez à vos couverts réels : si l'écart dépasse 1 000 couverts, aucun levier unique ne suffira : il faudra les combiner.",
+      "Seuil = {{entier: charges}} ÷ marge par couvert. Comparez à vos couverts réels : si l'écart dépasse {{entier: flux(1000)}} couverts, aucun levier unique ne suffira : il faudra les combiner.",
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
@@ -453,7 +468,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       {
         field: "qualityBudget",
         direction: "review",
-        hint: "Deux points de ratio matières gagnés par un travail sur la carte rapportent environ 4 000 € par trimestre, sans toucher au prix ni à la fréquentation.",
+        hint: "Deux points de ratio matières gagnés par un travail sur la carte rapportent environ {{entier: centaine(0.66 * flux(6000))}} € {{par trimestre}}, sans toucher au prix ni à la fréquentation.",
       },
       {
         field: "marketingBudget",
@@ -467,7 +482,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "La terrasse sous verrière",
     narrative:
-      "Le bailleur propose de couvrir et de chauffer la terrasse : 48 000 €, amortis sur douze trimestres. Elle ajouterait environ 1 800 couverts par trimestre, mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe. Chaque couvert laisse une vingtaine d'euros de marge.",
+      "Le bailleur propose de couvrir et de chauffer la terrasse : 48 000 €, amortis sur {{mots: investissement_duree}} {{trimestres}}. Elle ajouterait environ {{entier: investissement_plafond}} couverts {{par trimestre}}, mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe. Chaque couvert laisse une vingtaine d'euros de marge.",
     problem:
       "Cet investissement rapporte-t-il plus qu'il ne coûte, et sur quoi le jugez-vous ?",
     diagnosticOptions: [
@@ -488,7 +503,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "amortissement_flux",
-        label: "Ce sont les 4 000 € d'amortissement par trimestre qu'il faut comparer aux marges",
+        label: "Ce sont les {{entier: 48000 / investissement_duree}} € d'amortissement {{par trimestre}} qu'il faut comparer aux marges",
         correct: false,
       },
     ],
@@ -531,8 +546,8 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Combien de couverts la verrière ajoute-t-elle réellement sur une année entière, saison creuse comprise ?",
       "Multipliez ces couverts par la marge unitaire : voilà le flux annuel que l'investissement rapporte.",
       "Comparez ce flux au décaissement de 48 000 €, mais pas euro pour euro : les marges arrivent plus tard, et ce délai a un prix.",
-      "Actualisez chaque trimestre à votre taux d'emprunt, puis retranchez les 48 000 €. Si le total reste positif, l'investissement crée de la valeur.",
-      "VAN = Σ (flux du trimestre ÷ (1 + taux)^n) − investissement initial. L'amortissement n'entre nulle part : il ne se décaisse pas.",
+      "Actualisez chaque {{trimestre}} à votre taux d'emprunt, puis retranchez les 48 000 €. Si le total reste positif, l'investissement crée de la valeur.",
+      "VAN = Σ (flux {{du trimestre}} ÷ (1 + taux)^n) − investissement initial. L'amortissement n'entre nulle part : il ne se décaisse pas.",
     ]),
     trigger: { round: 5 },
     weight: 1,
@@ -540,7 +555,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "up",
-        hint: "La verrière ajoute environ 1 800 couverts par trimestre en saison : préparez-vous à servir davantage si l'investissement est retenu.",
+        hint: "La verrière ajoute environ {{entier: investissement_plafond}} couverts {{par trimestre}} en saison : préparez-vous à servir davantage si l'investissement est retenu.",
       },
       {
         field: "maintenanceBudget",
@@ -618,7 +633,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Regardez d'abord vos capitaux propres au bilan : c'est l'argent immobilisé dans l'affaire.",
       "Rapportez votre résultat net à ces capitaux propres, puis faites de même pour le voisin.",
       "Un résultat plus élevé obtenu avec deux fois plus de capitaux n'est pas une meilleure performance : c'est un plus gros pari.",
-      "Ajoutez la marge de sécurité : à résultat égal, l'établissement le plus loin de son seuil encaissera mieux un mauvais trimestre.",
+      "Ajoutez la marge de sécurité : à résultat égal, l'établissement le plus loin de son seuil encaissera mieux un mauvais {{trimestre}}.",
       "Rentabilité financière = résultat net ÷ capitaux propres. C'est le seul chiffre qui réponde à la question de votre associé.",
     ]),
     trigger: { round: 6 },
@@ -641,7 +656,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "La caisse fait le plein",
     narrative:
-      "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture votre découvert 14 %. Vos fournisseurs, eux, seront réglés à vingt et un jours comme d'habitude.",
+      "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture votre découvert 14 %. Vos fournisseurs, eux, seront réglés à vingt et un jours comme d'habitude.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -652,7 +667,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "garder_de_quoi_payer",
-        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        label: "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir",
         correct: true,
       },
       {
@@ -672,7 +687,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 14 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -702,10 +717,10 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde aux charges de structure d'un trimestre : de combien de trimestres d'avance disposez-vous ?",
+      "Comparez votre solde aux charges de structure d'un {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "Projetez les décaissements du trimestre : denrées, salaires de la brigade, loyer. Une partie de ce que vous voyez en caisse appartient déjà à vos fournisseurs.",
+      "Projetez les décaissements {{du trimestre}} : denrées, salaires de la brigade, loyer. Une partie de ce que vous voyez en caisse appartient déjà à vos fournisseurs.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
@@ -724,7 +739,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Projetez les couverts du prochain trimestre : la trésorerie nécessaire pour les denrées fixe le montant que vous pouvez réellement immobiliser.",
+        hint: "Projetez les couverts du prochain {{trimestre}} : la trésorerie nécessaire pour les denrées fixe le montant que vous pouvez réellement immobiliser.",
       },
     ],
   },
@@ -735,7 +750,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   bistrot_detect_idle_cash:
     "Le budget de trésorerie sépare ce que la caisse détient de ce qu'elle doit déjà. Dans un métier encaissé au comptant, c'est le seul document qui empêche de confondre avance et excédent.",
   bistrot_t5_terrasse:
-    "La VAN met face à face un décaissement d'aujourd'hui et des marges de demain, en tenant compte du temps qui les sépare. Le seuil de rentabilité, lui, raisonne sur un tour et ignore les onze suivants.",
+    "La VAN met face à face un décaissement d'aujourd'hui et des marges de demain, en tenant compte du temps qui les sépare. Le seuil de rentabilité, lui, raisonne sur un tour et ignore les {{mots: investissement_duree - 1}} suivants.",
   bistrot_t6_valeur:
     "L'analyse de rentabilité rapporte le résultat aux capitaux engagés. C'est ce rapport, et non le résultat seul, qui répond à la question de votre associé.",
   bistrot_t1_reprise:
@@ -750,4 +765,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "Le seuil de rentabilité chiffre l'écart en couverts et hiérarchise les leviers selon leur délai d'action.",
 };
 
-attachModelQuestions(BISTROT_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(BISTROT_SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const BISTROT_SITUATIONS: SituationDef[] = situationsAuTrimestre(BISTROT_SOURCES, bistrotScenario);

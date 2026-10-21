@@ -1,4 +1,6 @@
 import type { CourrierDef } from "../types";
+import { courriersAuTrimestre } from "../texte";
+import { transportScenario } from "@/config/scenarios/transport";
 
 /**
  * LA LIASSE DE ROUTE & CIE — transport routier régional.
@@ -8,7 +10,8 @@ import type { CourrierDef } from "../types";
  * et du loueur. On y lit constamment la même tension — des camions immobilisés
  * d'un côté, des palettes qui attendent de l'autre.
  */
-export const TRANSPORT_COURRIERS: CourrierDef[] = [
+/** Les sources à jetons ; la liste exportée en porte le rendu au trimestre. */
+const SOURCES: CourrierDef[] = [
   {
     code: "transport_gazole",
     expediteur: "Centrale d'achat carburants Rouliers",
@@ -46,7 +49,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
       "Nos entrepôts passeront en trois-huit du quinze novembre au vingt-quatre décembre. Nous recherchons de la capacité auprès de l'ensemble de nos transporteurs référencés, aux conditions habituelles.",
     signataire: "Le directeur des transports",
     effet: "Demande de la distribution +35 % ce tour",
-    enJeu: "Un pic ne se sert qu'avec une flotte disponible : la capacité se décide un trimestre à l'avance.",
+    enJeu: "Un pic ne se sert qu'avec une flotte disponible : la capacité se décide un {{trimestre}} à l'avance.",
     nature: "market",
     pli: "simple",
     icone: "planning",
@@ -155,7 +158,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Organisme certificateur Véritas Transport",
     objet: "Décision de certification — ponctualité des livraisons",
     corps:
-      "Votre taux de livraisons dans le créneau annoncé dépasse le seuil requis sur quatre trimestres consécutifs. La certification vous est accordée et pourra être produite dans vos réponses aux appels d'offres industriels.",
+      "Votre taux de livraisons dans le créneau annoncé dépasse le seuil requis sur quatre {{trimestres}} consécutifs. La certification vous est accordée et pourra être produite dans vos réponses aux appels d'offres industriels.",
     signataire: "Le responsable de la certification",
     effet: "Disponibilité commerciale +7 % pendant 2 tours (une entreprise)",
     enJeu: "Dans le transport, la ponctualité est le produit : elle se vend plus cher qu'un rabais ne rapporte.",
@@ -169,7 +172,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Révision de vos conditions de découvert",
     corps:
-      "Vos derniers comptes montrent un endettement contenu sous vos capitaux propres et des règlements clients qui rentrent dans les délais. Nous abaissons le coût de votre découvert pour les deux prochains trimestres.",
+      "Vos derniers comptes montrent un endettement contenu sous vos capitaux propres et des règlements clients qui rentrent dans les délais. Nous abaissons le coût de votre découvert pour les deux prochains {{trimestres}}.",
     signataire: "Votre chargée d'affaires",
     effet: "Taux d'intérêt ×0,7 pendant 2 tours (une entreprise)",
     enJeu:
@@ -184,9 +187,9 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Chargeur Delvigne · Service expéditions",
     objet: "Demande d'enlèvement en urgence pour demain matin",
     corps:
-      "Notre transporteur habituel s'est décommandé en fin de journée. Neuf cents palettes doivent partir demain à six heures. Nous acceptons vos conditions tarifaires sous réserve d'une confirmation immédiate.",
+      "Notre transporteur habituel s'est décommandé en fin de journée. {{Lettres: commande_transport_lot_surprise}} palettes doivent partir demain à six heures. Nous acceptons vos conditions tarifaires sous réserve d'une confirmation immédiate.",
     signataire: "Le responsable des expéditions",
-    effet: "Commande ferme de 900 palettes ce tour (une entreprise tirée au sort)",
+    effet: "Commande ferme de {{entier: commande_transport_lot_surprise}} palettes ce tour (une entreprise tirée au sort)",
     enJeu:
       "Une commande ferme se sert sur la capacité restante : elle n'a de valeur que si les camions sont libres.",
     nature: "market",
@@ -199,7 +202,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Garage Poirier Poids Lourds · Atelier",
     objet: "Rapport d'expertise — casse moteur sur autoroute",
     corps:
-      "Le moteur a cédé en pleine charge et l'expertise conclut à un défaut de suivi des vidanges. La réfection complète, moteur d'échange inclus, immobilisera le véhicule sur deux trimestres.",
+      "Le moteur a cédé en pleine charge et l'expertise conclut à un défaut de suivi des vidanges. La réfection complète, moteur d'échange inclus, immobilisera le véhicule sur deux {{trimestres}}.",
     signataire: "Le chef d'atelier",
     effet: "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Risque opérationnel & maintenance préventive",
@@ -213,7 +216,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Métropole · Service des zones à faibles émissions",
     objet: "Restriction d'accès pour les véhicules de votre catégorie",
     corps:
-      "À compter du prochain trimestre, les véhicules de la catégorie de vos plus anciens porteurs ne sont plus autorisés dans le périmètre de la zone. Aucune dérogation professionnelle n'est prévue.",
+      "À compter du prochain {{trimestre}}, les véhicules de la catégorie de vos plus anciens porteurs ne sont plus autorisés dans le périmètre de la zone. Aucune dérogation professionnelle n'est prévue.",
     signataire: "Le chef de service",
     effet: "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu: "Cycle de vie des actifs & veille technologique",
@@ -256,7 +259,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Centrale logistique Nordis · Direction des transports",
     objet: "Internalisation progressive de nos flux régionaux",
     corps:
-      "Notre groupe fait l'acquisition de sa propre flotte et recrute des conducteurs. Vos tournées régulières seront réduites à compter du prochain trimestre, puis réexaminées à l'échéance du contrat.",
+      "Notre groupe fait l'acquisition de sa propre flotte et recrute des conducteurs. Vos tournées régulières seront réduites à compter du prochain {{trimestre}}, puis réexaminées à l'échéance du contrat.",
     signataire: "Le directeur des transports",
     effet: "Demande de la grande distribution −15 % pendant 2 tours",
     enJeu:
@@ -314,7 +317,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Mérien Logistique · Service exploitation",
     objet: "Pilote de flux entre la plateforme de Valmont et le littoral",
     corps:
-      "Nous testons dès la semaine prochaine un nouveau flux entre notre plateforme de Valmont et nos magasins du littoral, à raison de trois ou quatre départs par semaine. Si le pilote est concluant, le volume pourrait dépasser quatre-vingts palettes par jour dès le trimestre prochain. Rien n'est arrêté à ce stade : nous consultons plusieurs transporteurs de la région.",
+      "Nous testons dès la semaine prochaine un nouveau flux entre notre plateforme de Valmont et nos magasins du littoral, à raison de trois ou quatre départs par semaine. Si le pilote est concluant, le volume pourrait dépasser quatre-vingts palettes par jour dès {{le trimestre}} prochain. Rien n'est arrêté à ce stade : nous consultons plusieurs transporteurs de la région.",
     signataire: "Le responsable d'exploitation",
     effet: "Demande globale +8 % ce tour",
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
@@ -328,7 +331,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Mérien Logistique · Direction des transports",
     objet: "Confirmation du flux régulier Valmont – littoral",
     corps:
-      "Le pilote est concluant et notre direction valide le flux régulier au départ de Valmont : environ quatre-vingts palettes par jour ouvré, du lundi au samedi, pour les trois trimestres à venir. Les enlèvements se font à quai entre quatre et six heures du matin. Le volume est confirmé par écrit et le cahier des charges détaillé suit sous huitaine.",
+      "Le pilote est concluant et notre direction valide le flux régulier au départ de Valmont : environ quatre-vingts palettes par jour ouvré, du lundi au samedi, pour les trois {{trimestres}} à venir. Les enlèvements se font à quai entre quatre et six heures du matin. Le volume est confirmé par écrit et le cahier des charges détaillé suit sous huitaine.",
     signataire: "Le directeur des transports",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:
@@ -343,7 +346,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     expediteur: "Banque des Professions · Agence entreprises",
     objet: "Campagne temporaire sur les crédits d'équipement professionnels",
     corps:
-      "Notre agence ouvre une campagne sur les crédits d'équipement destinés aux véhicules industriels, aux remorques et aux matériels de quai. Les taux appliqués aux dossiers acceptés sont réduits de quarante pour cent pendant deux trimestres. Les demandes sont instruites dans l'ordre d'arrivée, après l'examen habituel de vos comptes.",
+      "Notre agence ouvre une campagne sur les crédits d'équipement destinés aux véhicules industriels, aux remorques et aux matériels de quai. Les taux appliqués aux dossiers acceptés sont réduits de quarante pour cent pendant deux {{trimestres}}. Les demandes sont instruites dans l'ordre d'arrivée, après l'examen habituel de vos comptes.",
     signataire: "Votre chargée d'affaires",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:
@@ -371,9 +374,9 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
   {
     code: "transport_inv_retournement",
     expediteur: "Mérien Logistique · Direction des achats",
-    objet: "Révision du programme de transport du prochain trimestre",
+    objet: "Révision du programme de transport du prochain {{trimestre}}",
     corps:
-      "À la suite de la réorganisation de nos approvisionnements, le flux au départ de Valmont est ramené d'environ quatre-vingts à une cinquantaine de palettes par jour. Une partie du volume est désormais servie depuis notre stock tampon, ce qui réduit les expéditions sans modifier les destinations. Le contrat est révisé en conséquence par avenant, à compter du trimestre prochain.",
+      "À la suite de la réorganisation de nos approvisionnements, le flux au départ de Valmont est ramené d'environ quatre-vingts à une cinquantaine de palettes par jour. Une partie du volume est désormais servie depuis notre stock tampon, ce qui réduit les expéditions sans modifier les destinations. Le contrat est révisé en conséquence par avenant, à compter {{du trimestre}} prochain.",
     signataire: "Le directeur des achats",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:
@@ -384,3 +387,6 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     scope: "market",
   },
 ];
+
+/** Le texte au trimestre ; une partie le rend à sa durée (`courrierALaDuree`, ../texte.ts). */
+export const TRANSPORT_COURRIERS: CourrierDef[] = courriersAuTrimestre(SOURCES, transportScenario);
