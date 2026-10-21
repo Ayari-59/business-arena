@@ -183,7 +183,7 @@ describe("VOLT FITNESS : chaque situation se rend à la durée du tour de sa par
 });
 
 describe("les quatorze autres scénarios ne bougent à aucune durée", () => {
-  for (const d of SCENARIOS.filter((x) => x.code !== "fitness")) {
+  for (const d of SCENARIOS.filter((x) => !["fitness", "transport", "bistrot", "bistrot-gamme"].includes(x.code))) {
     it(`${d.code} : sans jeton, la situation de la partie est celle du registre`, () => {
       for (const def of d.situations) {
         for (const periodicity of DUREES) {

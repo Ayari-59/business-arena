@@ -83,6 +83,11 @@ const MOTS: Record<string, { month: string; year: string }> = {
     month: "engagements annuels plutôt que mensuels",
     year: "engagements pluriannuels plutôt qu'annuels",
   },
+  // --- transport-bistrot ---------------------------------------------------
+  // Un placement est bloqué UN tour (`placement_arrive_a_terme`, finance/statements.ts) :
+  // « à trois mois » au trimestre, c'est « jusqu'au tour suivant ».
+  "à trois mois": { month: "à un mois", year: "à un an" },
+  // --- fin transport-bistrot -----------------------------------------------
 };
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -130,6 +135,37 @@ const GRANDEURS: Record<string, Grandeur> = {
   attrition: (s) => tauxLu(abonnementDe(s).baseChurnRate),
   /** Le nombre de tours dans une année. */
   tours_par_an: (s) => 360 / s.roundDays,
+  // --- transport-bistrot ---------------------------------------------------
+  /**
+   * La capacité du parc de départ, par tour : les machines (camions, cuisines) du parc
+   * initial, chacune à sa capacité par tour. Hors abonnement, `applyPeriodicity` la met
+   * à la durée du tour (× k) : 10 000 palettes au trimestre, 3 333 au mois.
+   */
+  capacite_parc: (s) => {
+    if (!s.equipment) throw new Error("Situation : le jeton « capacite_parc » suppose un parc d'équipements");
+    const types = new Map(s.equipment.types.map((t) => [t.code, t.capacityPerUnit]));
+    return s.equipment.initialFleet.reduce((total, f) => {
+      const capacite = types.get(f.typeCode);
+      if (capacite === undefined) throw new Error(`Situation : type d'équipement inconnu « ${f.typeCode} »`);
+      return total + f.count * capacite;
+    }, 0);
+  },
+  /** Les amortissements d'un tour (`finance.depreciationPerRound`). */
+  amortissements: (s) => s.finance.depreciationPerRound,
+  /**
+   * La durée d'amortissement d'un investissement de capacité, en tours. Une durée réelle :
+   * elle se compte en tours de la nouvelle durée (12 trimestres, 36 mois, 3 exercices).
+   */
+  investissement_duree: (s) => {
+    if (!s.investment) throw new Error("Situation : le jeton « investissement_duree » suppose un investissement");
+    return s.investment.depreciationRounds;
+  },
+  /** La capacité qu'un investissement peut ajouter au plus en un tour : un flux par tour. */
+  investissement_plafond: (s) => {
+    if (!s.investment) throw new Error("Situation : le jeton « investissement_plafond » suppose un investissement");
+    return s.investment.maxPerRound;
+  },
+  // --- fin transport-bistrot -----------------------------------------------
 };
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
@@ -144,6 +180,16 @@ const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> 
    * par `flux`.
    */
   flux: (x, s) => (x * s.roundDays) / 90,
+  // --- transport-bistrot ---------------------------------------------------
+  // Les « environ » d'un énoncé : le même arrondi à toutes les durées. Chacun rend, au
+  // trimestre, le chiffre que le texte écrivait (3 800, 4 050, 4 200…).
+  /** Arrondi à la dizaine. */
+  dizaine: (x) => Math.round(net(x) / 10) * 10,
+  /** Arrondi à la cinquantaine. */
+  cinquantaine: (x) => Math.round(net(x) / 50) * 50,
+  /** Arrondi à la centaine. */
+  centaine: (x) => Math.round(net(x) / 100) * 100,
+  // --- fin transport-bistrot -----------------------------------------------
 };
 
 /** Une petite arithmétique : nombres, grandeurs, fonctions, + − × ÷ et parenthèses. */
@@ -239,6 +285,43 @@ function points(x: number): string {
   return `${nombre} ${Math.abs(v) < 2 ? "point" : "points"}`;
 }
 
+// --- transport-bistrot -----------------------------------------------------
+
+/** Un entier de 0 à 999, en toutes lettres ; `devant` : suivi de « mille », qui fige « cent » et « vingt ». */
+function centaines(n: number, devant: boolean): string {
+  const c = Math.floor(n / 100);
+  const reste = n % 100;
+  let mots = reste === 0 && c > 0 ? "" : enMots(reste, false);
+  if (devant && mots.endsWith("quatre-vingts")) mots = mots.slice(0, -1);
+  if (c === 0) return mots;
+  const cent = c === 1 ? "cent" : `${enMots(c, false)} cent${reste === 0 && !devant ? "s" : ""}`;
+  return mots ? `${cent} ${mots}` : cent;
+}
+
+/**
+ * Un entier de 0 à 999 999 en toutes lettres (orthographe traditionnelle) : « sept mille
+ * quatre cents », « mille cent vingt », « deux mille quatre cent soixante-dix ».
+ */
+function enLettres(x: number): string {
+  const n = Math.round(net(x));
+  if (n < 0 || n > 999_999) return entier(n);
+  const m = Math.floor(n / 1000);
+  const reste = n % 1000;
+  if (m === 0) return centaines(reste, false);
+  const mille = m === 1 ? "mille" : `${centaines(m, true)} mille`;
+  return reste === 0 ? mille : `${mille} ${centaines(reste, false)}`;
+}
+
+/** Un nombre au centième au plus, sans zéro inutile : « 455 », « 151,67 », « 1 820 ». */
+function nombre(x: number): string {
+  const v = Math.round(net(x) * 100) / 100;
+  if (Number.isInteger(v)) return entier(v);
+  const [ent, dec] = avecVirgule(Math.abs(v), 0, 2).split(",");
+  return `${v < 0 ? "-" : ""}${milliers(Number(ent))},${dec}`;
+}
+
+// --- fin transport-bistrot -------------------------------------------------
+
 const FORMATS: Record<string, (x: number) => string> = {
   /** Un montant à l'euro : « 105 000 ». */
   entier,
@@ -257,6 +340,12 @@ const FORMATS: Record<string, (x: number) => string> = {
   /** Un écart de taux en points : « cinq points », « 1,8 point ». */
   points,
   Points: (x) => capitaliser(points(x)),
+  // --- transport-bistrot ---------------------------------------------------
+  /** Un entier en toutes lettres, jusqu'à 999 999 : « sept mille quatre cents ». */
+  lettres: enLettres,
+  /** Un nombre au centième au plus : « 455 » au trimestre, « 151,67 » au mois. */
+  nombre,
+  // --- fin transport-bistrot -----------------------------------------------
 };
 
 // ---------------------------------------------------------------------------
