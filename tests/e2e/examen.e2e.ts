@@ -363,6 +363,8 @@ describe("un examen, de la création à la publication", () => {
     const niveauxRelatifs = niveauxRelatifsDits(GRILLE_BUSINESS_ARENA_2026.seuils, etalon.nom);
     if (niveauxRelatifs) expect(t).toContain(espaces(niveauxRelatifs));
     expect(t).toContain(espaces(`(${seuilDAtteinteDit(GRILLE_BUSINESS_ARENA_2026.seuils)}).`));
+    // La grille imprimée est celle de l'examen, ligne par ligne, lignes graduées comprises.
+    for (const l of GRILLE_BUSINESS_ARENA_2026.lignes.filter((x) => !x.siQuestions)) expect(t).toContain(espaces(l.libelle));
     expect(t).not.toMatch(/gestion de référence/);
     expect(t).not.toMatch(/Alice|Bruno|210001/);
     expect(t).not.toMatch(/reconnu par l'AACSB|accrédité par/i);
