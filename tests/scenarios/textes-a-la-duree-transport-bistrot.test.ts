@@ -65,14 +65,33 @@ const CORRECTIONS: { codes: string[]; avant: string; apres: string }[] = [
     avant: "Vous reprenez ROUTE & CIE : sept porteurs,",
     apres: "Vous reprenez ROUTE & CIE : cinq véhicules,",
   },
+  // Le porteur du contrat refusé emmenait 1 400 palettes par trimestre ; la configuration
+  // en donne 2 000 à un `porteur_12t` (`equipment.types`), et c'est sur elle que le
+  // moteur compte la capacité de la flotte. Le récit lit désormais cette capacité, et
+  // toute l'arithmétique de la situation suit : un contrat de quatre mille palettes, un
+  // porteur qui rapporte 64 000 € sous contrat contre 84 800 € aujourd'hui.
+  ...(
+    [
+      ["deux mille huit cents palettes", "quatre mille palettes"],
+      ["mille quatre cents palettes", "deux mille palettes"],
+      ["mille cent vingt", "mille six cents"],
+      ["44 800 €", "64 000 €"],
+      ["59 360 €", "84 800 €"],
+      ["14 560 €", "20 800 €"],
+      ["emmène 845 palettes", "emmène 1 208 palettes"],
+    ] as const
+  ).map(([avant, apres]) => ({ codes: ["transport_t6_contrat_refuse"], avant, apres })),
 ];
 
-/** Le texte au trimestre attendu : la fixture, corrections nommées appliquées. */
+/** Le texte au trimestre attendu : la fixture, corrections nommées appliquées (chaque occurrence). */
 function attenduAuTrimestre(code: string): string[] {
   return AVANT[code]!.map((t) =>
-    CORRECTIONS.filter((c) => c.codes.includes(code)).reduce((acc, c) => acc.replace(c.avant, c.apres), t),
+    CORRECTIONS.filter((c) => c.codes.includes(code)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t),
   );
 }
+
+/** La capacité d'un porteur 12 t sur un tour, telle que le scénario joué la porte. */
+const porteur = (s: EngineScenarioConfig) => s.equipment!.types.find((t) => t.code === "porteur_12t")!.capacityPerUnit;
 
 /** L'instantané qu'une partie fige à cette durée, monde figé. */
 const joue = (code: Code, periodicity: Periodicity): EngineScenarioConfig =>
@@ -138,8 +157,8 @@ function nombresAttendus(code: Code, periodicity: Periodicity): Set<string> {
     const seuilApres = charges / margeApres;
     // Le trafic du récit, et ce qu'il laisse : un flux par tour.
     const trafic = dix(flux(7400));
-    // Un porteur du récit, plein ou aux quatre cinquièmes.
-    const plein = Math.round(net(flux(1400)));
+    // Un porteur du parc, plein ou aux quatre cinquièmes.
+    const plein = Math.round(net(porteur(s)));
     const quatreCinquiemes = Math.round(net((plein * 4) / 5));
     ajoute(charges, seuil, dix(seuil), cinquante(seuilApres), seuilApres);
     ajoute(cent(charges / (prix - gazole)), cent(charges / prix), capacite, trafic, dix(flux(4900)));
@@ -296,7 +315,7 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
   it("ROUTE & CIE : le contrat refusé se recalcule avec les palettes qu'il affiche", () => {
     for (const periodicity of DUREES) {
       const t6 = rendue("transport", "transport_t6_contrat_refuse", periodicity);
-      const plein = Math.round(net((1400 * PERIODICITY_DAYS[periodicity]) / 90));
+      const plein = Math.round(net(porteur(joue("transport", periodicity))));
       const reste = Math.round(net((plein * 4) / 5));
       expect(t6.quiz[0]!.options[0]!.label, periodicity).toContain(
         `${milliers(32 * plein)} € contre ${milliers(53 * reste)} €, soit ${milliers(53 * reste - 32 * plein)} € de moins`,
@@ -305,8 +324,15 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
       expect(Math.round(((32 * plein) / 53 / plein) * 100), periodicity).toBe(60);
     }
     const mois = rendue("transport", "transport_t6_contrat_refuse", "month");
-    expect(mois.narrative).toContain("un contrat mensuel de neuf cent trente-quatre palettes à 57 €");
-    expect(mois.narrative).toContain("Un porteur emmène quatre cent soixante-sept palettes par mois");
+    expect(mois.narrative).toContain("un contrat mensuel de mille trois cent trente-quatre palettes à 57 €");
+    expect(mois.narrative).toContain("Un porteur emmène six cent soixante-sept palettes par mois");
+    // Le porteur du récit est celui du parc : 2 000 palettes au trimestre, et non 1 400.
+    const trimestre = rendue("transport", "transport_t6_contrat_refuse", "quarter");
+    expect(porteur(joue("transport", "quarter"))).toBe(2000);
+    expect(trimestre.narrative).toContain("Un porteur emmène deux mille palettes par trimestre");
+    expect(rendue("transport", "transport_t6_contrat_refuse", "year").narrative).toContain(
+      "Un porteur emmène huit mille palettes par an",
+    );
   });
 
   it("ROUTE & CIE : un placement est bloqué un tour, quelle que soit sa durée", () => {

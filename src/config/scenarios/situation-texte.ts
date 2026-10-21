@@ -247,6 +247,16 @@ const GRANDEURS: Record<string, Grandeur> = {
     if (!s.investment) throw new Error("Situation : le jeton « investissement_plafond » suppose un investissement");
     return s.investment.maxPerRound;
   },
+  /**
+   * Ce qu'un porteur 12 t emmène en un tour à pleine charge : la capacité de son type
+   * dans le parc (`equipment.types`), celle sur laquelle le moteur compte la flotte.
+   * Hors abonnement, `applyPeriodicity` la met à la durée du tour (× k).
+   */
+  capacite_porteur: (s) => {
+    const porteur = s.equipment?.types.find((t) => t.code === "porteur_12t");
+    if (!porteur) throw new Error("Situation : le jeton « capacite_porteur » suppose un porteur 12 t dans le parc");
+    return porteur.capacityPerUnit;
+  },
   // --- fin transport-bistrot -----------------------------------------------
   // --- conseil-hotel ---
   /** Les jours d'un tour : les nuits qu'une chambre offre, au calendrier du moteur (30, 90, 360). */

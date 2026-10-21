@@ -12,8 +12,8 @@ import { transportScenario } from "./index";
  * abonnement, le moteur garde les prix et les coûts d'une palette, et met à la
  * durée du tour ce qui se compte par tour : les charges de structure, les
  * amortissements, la capacité de la flotte. Ce que le scénario porte se lit par
- * ses grandeurs (`charges`, `capacite_parc`, `amortissements`) ; ce que le récit
- * seul chiffre par tour (le trafic actuel, un entretien, un contrat) passe par
+ * ses grandeurs (`charges`, `capacite_parc`, `capacite_porteur`, `amortissements`) ;
+ * ce que le récit seul chiffre par tour (le trafic actuel, un entretien) passe par
  * `flux`. Le seuil en palettes n'est donc PAS un invariant : 3 800 palettes au
  * trimestre, 1 270 au mois. Restent écrits en clair, et la garde le vérifie :
  * les montants d'une palette (74 €, 18 €, 7 €, 49 €, 25 €), les taux de
@@ -517,7 +517,7 @@ const SOURCES: SituationDef[] = [
     category: "decision_strategique",
     title: "Le contrat qu'il faut savoir refuser",
     narrative:
-      "Un distributeur propose un contrat {{trimestriel}} de {{lettres: 2 * arrondi(flux(1400))}} palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène {{lettres: arrondi(flux(1400))}} palettes {{par trimestre}} à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
+      "Un distributeur propose un contrat {{trimestriel}} de {{lettres: 2 * arrondi(capacite_porteur)}} palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène {{lettres: arrondi(capacite_porteur)}} palettes {{par trimestre}} à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
     problem:
       "Que coûte réellement ce contrat, une fois la flotte prise en compte ?",
     diagnosticOptions: [
@@ -552,7 +552,7 @@ const SOURCES: SituationDef[] = [
         options: [
           {
             id: "a",
-            label: "{{entier: 32 * arrondi(flux(1400))}} € contre {{entier: 53 * arrondi(arrondi(flux(1400)) * 4 / 5)}} €, soit {{entier: 53 * arrondi(arrondi(flux(1400)) * 4 / 5) - 32 * arrondi(flux(1400))}} € de moins par porteur et {{par trimestre}}",
+            label: "{{entier: 32 * arrondi(capacite_porteur)}} € contre {{entier: 53 * arrondi(arrondi(capacite_porteur) * 4 / 5)}} €, soit {{entier: 53 * arrondi(arrondi(capacite_porteur) * 4 / 5) - 32 * arrondi(capacite_porteur)}} € de moins par porteur et {{par trimestre}}",
           },
           { id: "b", label: "Autant : ce que le prix perd, le remplissage le rattrape" },
           { id: "c", label: "Davantage : le camion roule enfin plein" },
@@ -560,7 +560,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Sous contrat, le porteur roule plein : {{lettres: arrondi(flux(1400))}} palettes à 32 € de marge, ce qui fait {{entier: 32 * arrondi(flux(1400))}} €. Aujourd'hui il roule aux quatre cinquièmes : {{lettres: arrondi(arrondi(flux(1400)) * 4 / 5)}} palettes à 53 € de marge, ce qui fait {{entier: 53 * arrondi(arrondi(flux(1400)) * 4 / 5)}} €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
+          "Sous contrat, le porteur roule plein : {{lettres: arrondi(capacite_porteur)}} palettes à 32 € de marge, ce qui fait {{entier: 32 * arrondi(capacite_porteur)}} €. Aujourd'hui il roule aux quatre cinquièmes : {{lettres: arrondi(arrondi(capacite_porteur) * 4 / 5)}} palettes à 53 € de marge, ce qui fait {{entier: 53 * arrondi(arrondi(capacite_porteur) * 4 / 5)}} €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
       },
       {
         id: "quand_accepter",
@@ -577,7 +577,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le contrat rapporte {{entier: 32 * arrondi(flux(1400))}} € par porteur. Le trafic actuel rapporte 53 € par palette, donc il repasse devant dès que le porteur emmène {{entier: 32 * arrondi(flux(1400)) / 53}} palettes, c'est-à-dire dès soixante pour cent de remplissage. La même affaire est bonne ou mauvaise selon ce seul chiffre, et c'est pourquoi la décision commerciale ne se prend jamais sans regarder d'abord la capacité.",
+          "Le contrat rapporte {{entier: 32 * arrondi(capacite_porteur)}} € par porteur. Le trafic actuel rapporte 53 € par palette, donc il repasse devant dès que le porteur emmène {{entier: 32 * arrondi(capacite_porteur) / 53}} palettes, c'est-à-dire dès soixante pour cent de remplissage. La même affaire est bonne ou mauvaise selon ce seul chiffre, et c'est pourquoi la décision commerciale ne se prend jamais sans regarder d'abord la capacité.",
       },
     ],
     modelRelevance: {
@@ -590,8 +590,8 @@ const SOURCES: SituationDef[] = [
     hints: hints([
       "Demandez-vous ce que feraient ces deux porteurs sans ce contrat.",
       "Votre flotte est remplie à quatre-vingts pour cent : la capacité n'est pas libre.",
-      "Un porteur sous contrat emmène {{lettres: arrondi(flux(1400))}} palettes à 32 €, soit 57 − 25, de marge.",
-      "Sans le contrat, il en emmène {{lettres: arrondi(arrondi(flux(1400)) * 4 / 5)}} à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
+      "Un porteur sous contrat emmène {{lettres: arrondi(capacite_porteur)}} palettes à 32 €, soit 57 − 25, de marge.",
+      "Sans le contrat, il en emmène {{lettres: arrondi(arrondi(capacite_porteur) * 4 / 5)}} à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
       "Et notez que la réponse s'inverserait sous soixante pour cent de remplissage : la même affaire n'a pas la même valeur selon le camion qu'elle occupe.",
     ]),
     trigger: { round: 6 },
