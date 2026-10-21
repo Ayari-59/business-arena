@@ -101,6 +101,17 @@ const MOTS: Record<string, { month: string; year: string }> = {
   "4 trimestres": { month: "12 mois", year: "1 exercice" },
   // --- nova-courriers : les tournures des situations NOVA et des courriers ---
   "ce trimestre-là": { month: "ce mois-là", year: "cet exercice-là" },
+  // --- groupe batiment-boutique-ecommerce ---
+  // Une part du tour, à la même cadence : deux mois de location sur trois en
+  // font vingt jours sur trente, et huit mois sur douze.
+  "deux mois par trimestre": { month: "vingt jours par mois", year: "huit mois par an" },
+  "qu'un mois par trimestre": { month: "que dix jours par mois", year: "que quatre mois par an" },
+  // Un budget plus fin que le tour : un cran sous la durée du tour.
+  "mois par mois, pas trimestre par trimestre": {
+    month: "semaine par semaine, pas mois par mois",
+    year: "mois par mois, pas exercice par exercice",
+  },
+  // --- fin du groupe batiment-boutique-ecommerce ---
 };
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -289,6 +300,12 @@ const GRANDEURS: Record<string, Grandeur> = {
   commande_transport_lot_surprise: (s) => unitesDeCommande(s, "transport_lot_surprise"),
   commande_bistrot_banquet_surprise: (s) => unitesDeCommande(s, "bistrot_banquet_surprise"),
   commande_fitness_contrat_surprise: (s) => unitesDeCommande(s, "fitness_contrat_surprise"),
+  // --- groupe batiment-boutique-ecommerce (capacité du parc : `capacite_parc`, salaire : `salaire`) ---
+  /** Le coût d'une embauche : un ponctuel, que la durée du tour ne change pas. */
+  embauche: (s) => {
+    if (!s.hr) throw new Error("Situation : le jeton « embauche » suppose un module RH");
+    return s.hr.hiringCost;
+  },
 };
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
@@ -313,6 +330,9 @@ const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> 
   /** Arrondi à la centaine. */
   centaine: (x) => Math.round(net(x) / 100) * 100,
   // --- fin transport-bistrot -----------------------------------------------
+  // --- groupe batiment-boutique-ecommerce (l'arrondi à la dizaine : `dizaine`) ---
+  /** L'entier supérieur : un seuil en unités ne s'atteint qu'à l'unité entière suivante. */
+  plafond: (x) => Math.ceil(net(x)),
 };
 
 /** Une petite arithmétique : nombres, grandeurs, fonctions, + − × ÷ et parenthèses. */

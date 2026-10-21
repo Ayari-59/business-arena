@@ -1,20 +1,30 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { batimentScenario } from "./index";
 
 /**
  * Situations pédagogiques de MARTEL & FILS (bâtiment, rénovation).
  *
  * Le fil rouge du secteur : l'entreprise paie tout d'avance et encaisse en
  * dernier. Un chantier gagné mal financé coûte plus cher qu'un chantier perdu.
+ *
+ * LE TEXTE SUIT LA DURÉE DU TOUR (`situation-texte.ts`). Les charges de
+ * structure, la capacité du parc, le salaire d'un compagnon et le seuil qui en
+ * découle se lisent du scénario mis à la durée de la partie ; les volumes et
+ * les loyers que seul le récit porte passent par `flux`. Ce qui ne bouge pas
+ * avec la durée reste écrit en clair, et la garde le vérifie par le calcul :
+ * prix et coûts au mètre carré, marge unitaire, part de la capacité, prix de
+ * la nacelle et sa durée en années.
  */
-export const BATIMENT_SITUATIONS: SituationDef[] = [
+const SOURCES: SituationDef[] = [
   {
     code: "batiment_t1_marge",
     category: "prise_de_poste",
     title: "Quatorze compagnons et un dépôt",
     narrative:
-      "Vous reprenez MARTEL & FILS : quatorze compagnons, un dépôt, des échafaudages, et un carnet qui se remplit au coup par coup. Le mètre carré rénové se facture 380 €, il coûte 168 € de matériaux et 42 € de frais de chantier. Le reste tombe tous les trimestres, que les équipes travaillent ou non.",
+      "Vous reprenez MARTEL & FILS : quatorze compagnons, un dépôt, des échafaudages, et un carnet qui se remplit au coup par coup. Le mètre carré rénové se facture 380 €, il coûte 168 € de matériaux et 42 € de frais de chantier. Le reste tombe tous les {{trimestres}}, que les équipes travaillent ou non.",
     problem:
-      "Combien de mètres carrés faut-il livrer dans le trimestre pour ne rien perdre ?",
+      "Combien de mètres carrés faut-il livrer dans {{le trimestre}} pour ne rien perdre ?",
     diagnosticOptions: [
       {
         id: "structure_fixe",
@@ -56,16 +66,16 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       {
         id: "seuil_m2",
         prompt:
-          "Avec 168 000 € de charges de structure décaissées par trimestre, à partir de quelle surface l'exercice devient-il bénéficiaire ?",
+          "Avec {{entier: charges}} € de charges de structure décaissées {{par trimestre}}, à partir de quelle surface l'exercice devient-il bénéficiaire ?",
         options: [
-          { id: "a", label: "Environ 990 m², soit les deux tiers de la capacité" },
-          { id: "b", label: "Environ 1 500 m², la capacité entière" },
-          { id: "c", label: "Environ 360 m²" },
-          { id: "d", label: "Environ 1 200 m², le rythme actuel" },
+          { id: "a", label: "Environ {{entier: dizaine(charges / 170)}} m², soit les deux tiers de la capacité" },
+          { id: "b", label: "Environ {{entier: capacite_parc}} m², la capacité entière" },
+          { id: "c", label: "Environ {{entier: flux(360)}} m²" },
+          { id: "d", label: "Environ {{entier: flux(1200)}} m², le rythme actuel" },
         ],
         correctOptionId: "a",
         explain:
-          "168 000 ÷ 170 ≈ 988 m². En dessous, chaque mètre carré manquant coûte 170 € de résultat ; au-dessus, il en rapporte autant.",
+          "{{entier: charges}} ÷ 170 ≈ {{entier: charges / 170}} m². En dessous, chaque mètre carré manquant coûte 170 € de résultat ; au-dessus, il en rapporte autant.",
       },
     ],
     modelRelevance: {
@@ -77,10 +87,10 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["contribution_margin", "fixed_costs", "breakeven", "variable_costs"],
     hints: hints([
       "Séparez ce qui suit la surface traitée de ce qui tombe quoi qu'il arrive.",
-      "Les salaires des compagnons ne bougent pas d'un euro entre un trimestre chargé et un trimestre creux.",
+      "Les salaires des compagnons ne bougent pas d'un euro entre un {{trimestre}} chargé et un {{trimestre}} creux.",
       "Chaque mètre carré laisse 380 − 168 − 42 = 170 € pour la structure.",
-      "Seuil = 168 000 ÷ 170 ≈ 990 m². Comparez-le à votre capacité de 1 500 m².",
-      "Vous travaillez donc à 54 % de capacité rien que pour équilibrer. Tout ce qui est au-dessus part presque entièrement en résultat.",
+      "Seuil = {{entier: charges}} ÷ 170 ≈ {{entier: dizaine(charges / 170)}} m². Comparez-le à votre capacité de {{entier: capacite_parc}} m².",
+      "Vous travaillez donc à {{pourcent: charges / 170 / capacite_parc}} % de capacité rien que pour équilibrer. Tout ce qui est au-dessus part presque entièrement en résultat.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -88,7 +98,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "up",
-        hint: "Le seuil de rentabilité fixe le minimum de mètres carrés à livrer. Planifiez assez de chantiers pour dépasser les 810 m² par trimestre, sinon la structure mange le résultat.",
+        hint: "Le seuil de rentabilité fixe le minimum de mètres carrés à livrer. Planifiez assez de chantiers pour dépasser les {{entier: dizaine(charges / 170)}} m² {{par trimestre}}, sinon la structure mange le résultat.",
       },
       {
         field: "price",
@@ -139,7 +149,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
           { id: "a", label: "Les seuls coûts qui changent selon la décision : les 210 € variables" },
           { id: "b", label: "Le prix de revient complet de 325 €" },
           { id: "c", label: "Les matériaux uniquement" },
-          { id: "d", label: "La totalité des charges de structure du trimestre" },
+          { id: "d", label: "La totalité des charges de structure {{du trimestre}}" },
         ],
         correctOptionId: "a",
         explain:
@@ -197,7 +207,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     category: "alerte_comptable",
     title: "Un carnet plein et un compte à sec",
     narrative:
-      "Le trimestre est le meilleur depuis longtemps : les équipes n'ont pas arrêté, le résultat est positif. Pourtant votre comptable vous appelle : le compte est en découvert, et la traite des matériaux se présente lundi. Vos clients, eux, règlent entre trente et quatre-vingt-dix jours.",
+      "{{Le trimestre}} est le meilleur depuis longtemps : les équipes n'ont pas arrêté, le résultat est positif. Pourtant votre comptable vous appelle : le compte est en découvert, et la traite des matériaux se présente lundi. Vos clients, eux, règlent entre trente et quatre-vingt-dix jours.",
     problem:
       "Comment une entreprise qui gagne de l'argent peut-elle ne plus en avoir en caisse ?",
     diagnosticOptions: [
@@ -364,7 +374,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
               "Le produit est acquis en totalité, mais cinq pour cent restent en créance pendant un an",
           },
           { id: "b", label: "Le chiffre d'affaires est amputé de cinq pour cent" },
-          { id: "c", label: "C'est une charge exceptionnelle du trimestre" },
+          { id: "c", label: "C'est une charge exceptionnelle {{du trimestre}}" },
           { id: "d", label: "C'est une dette envers le maître d'ouvrage" },
         ],
         correctOptionId: "a",
@@ -397,7 +407,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Planifiez les chantiers en décalant les dates de lancement pour lisser les besoins de trésorerie mois par mois, pas trimestre par trimestre.",
+        hint: "Planifiez les chantiers en décalant les dates de lancement pour lisser les besoins de trésorerie {{mois par mois, pas trimestre par trimestre}}.",
       },
       {
         field: "maintenanceBudget",
@@ -411,7 +421,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Embaucher, sous-traiter ou refuser",
     narrative:
-      "Le carnet déborde de six cents mètres carrés que vos équipes ne pourront pas absorber. Un confrère propose de les prendre en sous-traitance à 245 € le mètre carré. Embaucher deux compagnons coûterait 19 200 € par trimestre, plus 6 400 € de recrutement, et ils ne seraient opérationnels qu'au tour suivant.",
+      "Le carnet déborde de {{lettres: flux(600)}} mètres carrés que vos équipes ne pourront pas absorber. Un confrère propose de les prendre en sous-traitance à 245 € le mètre carré. Embaucher deux compagnons coûterait {{entier: 2 * salaire}} € {{par trimestre}}, plus {{entier: 2 * embauche}} € de recrutement, et ils ne seraient opérationnels qu'au tour suivant.",
     problem:
       "Sous-traiter, embaucher ou laisser filer : que dit le calcul, et sur quel horizon ?",
     diagnosticOptions: [
@@ -424,13 +434,13 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       {
         id: "embauche_engage",
         label:
-          "Embaucher est une charge de structure : elle pèsera aussi les trimestres où le carnet se videra",
+          "Embaucher est une charge de structure : elle pèsera aussi les {{trimestres}} où le carnet se videra",
         correct: true,
       },
       {
         id: "delai_embauche",
         label:
-          "L'embauche ne produit rien ce trimestre : elle ne répond pas au besoin immédiat",
+          "L'embauche ne produit rien {{ce trimestre}} : elle ne répond pas au besoin immédiat",
         correct: true,
       },
       {
@@ -466,9 +476,9 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
           {
             id: "a",
             label:
-              "Sur plusieurs trimestres : c'est un engagement durable qu'un carnet plein un seul trimestre ne justifie pas",
+              "Sur plusieurs {{trimestres}} : c'est un engagement durable qu'un carnet plein un seul {{trimestre}} ne justifie pas",
           },
-          { id: "b", label: "Sur le trimestre en cours uniquement" },
+          { id: "b", label: "Sur {{le trimestre}} en cours uniquement" },
           { id: "c", label: "Sur la durée du chantier concerné" },
           { id: "d", label: "L'horizon n'entre pas dans le calcul" },
         ],
@@ -487,9 +497,9 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Comparez chaque option à ce qui se passe si vous ne faites rien.",
       "Sous-traiter rapporte moins par mètre carré, mais sur une surface que vous ne pouviez pas traiter.",
-      "L'embauche ne produit rien ce trimestre : le recrutement prend du temps.",
-      "127 € de marge sur six cents mètres carrés, contre zéro si vous refusez.",
-      "Et posez-vous la vraie question : ce carnet plein durera-t-il assez pour porter deux salaires trimestre après trimestre ?",
+      "L'embauche ne produit rien {{ce trimestre}} : le recrutement prend du temps.",
+      "127 € de marge sur {{lettres: flux(600)}} mètres carrés, contre zéro si vous refusez.",
+      "Et posez-vous la vraie question : ce carnet plein durera-t-il assez pour porter deux salaires {{trimestre}} après {{trimestre}} ?",
     ]),
     trigger: { round: 5 },
     weight: 1,
@@ -497,7 +507,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "up",
-        hint: "Six cents mètres carrés refusés rapportent zéro. Sous-traiter les livre à 127 € de marge unitaire sans engager l'entreprise au-delà du chantier.",
+        hint: "{{Lettres: flux(600)}} mètres carrés refusés rapportent zéro. Sous-traiter les livre à 127 € de marge unitaire sans engager l'entreprise au-delà du chantier.",
       },
       {
         field: "price",
@@ -516,7 +526,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "La nacelle ou la location",
     narrative:
-      "Vous louez une nacelle deux mois par trimestre, pour 11 000 € à chaque fois. L'acheter coûterait 96 000 €, amortissables sur six ans, avec 1 800 € d'entretien par trimestre. Votre banquier suivrait, à condition que le calcul tienne debout devant lui.",
+      "Vous louez une nacelle {{deux mois par trimestre}}, pour {{entier: flux(11000)}} € à chaque fois. L'acheter coûterait 96 000 €, amortissables sur six ans, avec {{entier: flux(1800)}} € d'entretien {{par trimestre}}. Votre banquier suivrait, à condition que le calcul tienne debout devant lui.",
     problem:
       "L'achat crée-t-il de la valeur, et à quelles conditions le calcul reste-t-il valable ?",
     diagnosticOptions: [
@@ -591,7 +601,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       "L'économie annuelle de location est le flux d'entrée du projet.",
       "L'entretien vient en déduction, l'amortissement non : ce n'est pas une sortie d'argent.",
       "Actualisez ces flux au taux que vous coûte votre financement.",
-      "Et testez la fragilité du calcul : si vous ne louiez la nacelle qu'un mois par trimestre, la conclusion tiendrait-elle encore ?",
+      "Et testez la fragilité du calcul : si vous ne louiez la nacelle {{qu'un mois par trimestre}}, la conclusion tiendrait-elle encore ?",
     ]),
     trigger: { round: 6 },
     weight: 1,
@@ -599,12 +609,12 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       {
         field: "maintenanceBudget",
         direction: "up",
-        hint: "Acheter la nacelle transfère la charge de la location vers l'entretien. Prévoyez 1 800 € par trimestre, et vérifiez que cette ligne ne sera pas sacrifiée un trimestre creux.",
+        hint: "Acheter la nacelle transfère la charge de la location vers l'entretien. Prévoyez {{entier: flux(1800)}} € {{par trimestre}}, et vérifiez que cette ligne ne sera pas sacrifiée un {{trimestre}} creux.",
       },
       {
         field: "productionPlan",
         direction: "review",
-        hint: "L'investissement ne se justifie que si la nacelle tourne deux mois par trimestre, durablement. Revoyez votre plan de chantiers sur six ans, pas sur un seul trimestre.",
+        hint: "L'investissement ne se justifie que si la nacelle tourne {{deux mois par trimestre}}, durablement. Revoyez votre plan de chantiers sur six ans, pas sur un seul {{trimestre}}.",
       },
     ],
   },
@@ -646,7 +656,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
         prompt: "Comptablement, qu'est-ce qu'un acompte reçu sur un chantier non commencé ?",
         options: [
           { id: "a", label: "Une dette envers le client, tant que la prestation n'est pas réalisée" },
-          { id: "b", label: "Un produit acquis au trimestre de l'encaissement" },
+          { id: "b", label: "Un produit acquis {{au trimestre}} de l'encaissement" },
           { id: "c", label: "Une créance client" },
           { id: "d", label: "Un apport en capital" },
         ],
@@ -749,20 +759,20 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le panneau de capacité affiche les deux plafonds en mètres carrés par trimestre. Celui du bas est le seul qui décide ; investir sur l'autre ne change rien.",
+          "Le panneau de capacité affiche les deux plafonds en mètres carrés {{par trimestre}}. Celui du bas est le seul qui décide ; investir sur l'autre ne change rien.",
       },
       {
         id: "delai_capacite",
         prompt: "Quel décalage sépare la décision d'investir de son effet sur la production ?",
         options: [
-          { id: "a", label: "Le matériel acheté ce trimestre n'est en service qu'au suivant" },
+          { id: "a", label: "Le matériel acheté {{ce trimestre}} n'est en service qu'au suivant" },
           { id: "b", label: "L'effet est immédiat dès le paiement" },
-          { id: "c", label: "Il faut deux trimestres complets" },
+          { id: "c", label: "Il faut deux {{trimestres}} complets" },
           { id: "d", label: "Aucun décalage : la capacité suit la demande" },
         ],
         correctOptionId: "a",
         explain:
-          "Une capacité se décide avant d'en avoir besoin. Attendre la saturation pour investir, c'est perdre un trimestre entier de chantiers refusés.",
+          "Une capacité se décide avant d'en avoir besoin. Attendre la saturation pour investir, c'est perdre un {{trimestre}} entier de chantiers refusés.",
       },
     ],
     modelRelevance: {
@@ -774,10 +784,10 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["capacity", "productivity", "contribution_margin"],
     hints: hints([
       "Ouvrez le panneau de capacité : il donne les deux plafonds.",
-      "Les heures de compagnons et le matériel s'expriment tous deux en mètres carrés par trimestre.",
+      "Les heures de compagnons et le matériel s'expriment tous deux en mètres carrés {{par trimestre}}.",
       "Le plus bas des deux est le seul qui décide de ce que vous pouvez livrer.",
       "Investir sur l'autre ne produira pas un mètre carré supplémentaire.",
-      "Et rappelez-vous que le matériel acheté ce trimestre n'entre en service qu'au suivant : la décision se prend un tour à l'avance.",
+      "Et rappelez-vous que le matériel acheté {{ce trimestre}} n'entre en service qu'au suivant : la décision se prend un tour à l'avance.",
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 0.8,
@@ -821,4 +831,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "L'analyse de capacité met les deux plafonds dans la même unité et désigne le goulot. Sans elle, on investit là où ça ne débloque rien.",
 };
 
-attachModelQuestions(BATIMENT_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const BATIMENT_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, batimentScenario);

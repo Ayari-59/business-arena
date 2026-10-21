@@ -1,4 +1,6 @@
 import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { situationsAuTrimestre } from "../situation-texte";
+import { boutiqueScenario } from "./index";
 
 /**
  * Situations pédagogiques de MAILLE & CO (commerce de détail, gamme de cinq
@@ -19,8 +21,15 @@ import { attachModelQuestions, hints, type SituationDef } from "../situation-kit
  *   bonnet         25 € · achat 9,50 € + 1,50 € · MCV 14 €
  *   84 000 € de charges de structure décaissées par trimestre, 7 500 pièces
  *   de capacité de traitement.
+ *
+ * LE TEXTE SUIT LA DURÉE DU TOUR (`situation-texte.ts`). Les charges de
+ * structure, la capacité de traitement et les seuils en pièces qui en
+ * découlent se lisent du scénario mis à la durée de la partie. Ce qui ne bouge
+ * pas avec la durée reste écrit en clair, et la garde le vérifie par le
+ * calcul : prix, coûts et marges à la pièce, élasticités, coefficients
+ * saisonniers, taux annuels du banquier, stock de la collection passée.
  */
-export const BOUTIQUE_SITUATIONS: SituationDef[] = [
+const SOURCES: SituationDef[] = [
   {
     code: "boutique_t1_reprise",
     category: "prise_de_poste",
@@ -37,7 +46,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       },
       {
         id: "cover_fixed",
-        label: "L'ensemble des marges dégagées, toutes références confondues, doit couvrir le loyer et les salaires du trimestre",
+        label: "L'ensemble des marges dégagées, toutes références confondues, doit couvrir le loyer et les salaires {{du trimestre}}",
         correct: true,
       },
       {
@@ -108,8 +117,8 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       "Regardez votre compte de résultat : deux blocs de charges s'y comportent très différemment quand vos ventes varient.",
       "Le loyer et les salaires tombent que vous vendiez 10 ou 10 000 pièces. Le coût d'achat au façonnier, lui, suit les quantités.",
       "Chaque pièce vendue laisse « prix − coût d'achat − frais variables » pour éponger les charges de structure : 30,50 € sur un pull col rond, 14 € sur un bonnet, 68 € sur un pull mérinos.",
-      "Marge sur coût variable unitaire du pull col rond = 59 − 25 − 3,50 = 30,50 €. Vos charges de structure décaissées sont de 84 000 € par trimestre.",
-      "Seuil de rentabilité = 84 000 ÷ 30,50 ≈ 2 754 pulls par trimestre si vous ne vendiez que des pulls ; au mix de référence de la boutique (marge moyenne 29,35 €), 84 000 ÷ 29,35 ≈ 2 862 pièces. En dessous, la boutique perd de l'argent quoi que vous fassiez en vitrine.",
+      "Marge sur coût variable unitaire du pull col rond = 59 − 25 − 3,50 = 30,50 €. Vos charges de structure décaissées sont de {{entier: charges}} € {{par trimestre}}.",
+      "Seuil de rentabilité = {{entier: charges}} ÷ 30,50 ≈ {{entier: charges / 30.5}} pulls {{par trimestre}} si vous ne vendiez que des pulls ; au mix de référence de la boutique (marge moyenne 29,35 €), {{entier: charges}} ÷ 29,35 ≈ {{entier: charges / 29.35}} pièces. En dessous, la boutique perd de l'argent quoi que vous fassiez en vitrine.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -204,9 +213,9 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   {
     code: "boutique_t4_noel",
     category: "contexte_marche",
-    title: "Le trimestre qui fait l'année",
+    title: "{{Le trimestre}} qui fait l'année",
     narrative:
-      "La maille se vend l'hiver : au quatrième trimestre, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations. Votre façonnier veut vos volumes maintenant, référence par référence, et ne reprendra rien. Votre réserve, elle, ne grandit pas.",
+      "La maille se vend l'hiver : au quatrième {{trimestre}}, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations. Votre façonnier veut vos volumes maintenant, référence par référence, et ne reprendra rien. Votre réserve, elle, ne grandit pas.",
     problem:
       "Combien commander pour Noël, de quelle référence, et à quel risque ?",
     diagnosticOptions: [
@@ -223,7 +232,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       {
         id: "rare_factor",
         label:
-          "La réserve est la ressource rare du trimestre : quand la demande la dépasse, la marge par pièce départage les références",
+          "La réserve est la ressource rare {{du trimestre}} : quand la demande la dépasse, la marge par pièce départage les références",
         correct: true,
       },
       {
@@ -255,7 +264,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       {
         id: "mix_capacite",
         prompt:
-          "Votre réserve traite 7 500 pièces par trimestre et la demande de Noël la dépasse. Le bonnet laisse 14 € par pièce, l'écharpe 19 €, le pull col rond 30,50 €, le cardigan 41 €, le pull mérinos 68 €. Comment répartir la commande ?",
+          "Votre réserve traite {{entier: capacite_parc}} pièces {{par trimestre}} et la demande de Noël la dépasse. Le bonnet laisse 14 € par pièce, l'écharpe 19 €, le pull col rond 30,50 €, le cardigan 41 €, le pull mérinos 68 €. Comment répartir la commande ?",
         options: [
           {
             id: "a",
@@ -279,10 +288,10 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["conversion_rate", "average_basket", "seasonality", "stock", "bfr", "capacity", "assortment", "contribution_margin"],
     hints: hints([
-      "Regardez la saisonnalité de chaque référence : quel coefficient s'applique au quatrième trimestre, pour un pull et pour un bonnet ?",
-      "Le pull vaut environ 1,5 fois un trimestre ordinaire, les accessoires plus du double, et les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour.",
+      "Regardez la saisonnalité de chaque référence : quel coefficient s'applique au quatrième {{trimestre}}, pour un pull et pour un bonnet ?",
+      "Le pull vaut environ 1,5 fois un {{trimestre}} ordinaire, les accessoires plus du double, et les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour.",
       "Deux erreurs symétriques, mais pas de même coût : la rupture perd une marge à jamais, le surstock immobilise de la trésorerie et se soldera. Et le volume commandé n'est que la moitié du sujet : le trafic du pic ne rapporte que ce que vous en transformez, et que ce que chaque client emporte.",
-      "Votre capacité de traitement trimestrielle est de 7 500 pièces, toutes références confondues : elle borne ce que la boutique peut écouler, quelles que soient vos commandes. Quand la demande la dépasse, classez les références par marge par pièce.",
+      "Votre capacité de traitement {{trimestrielle}} est de {{entier: capacite_parc}} pièces, toutes références confondues : elle borne ce que la boutique peut écouler, quelles que soient vos commandes. Quand la demande la dépasse, classez les références par marge par pièce.",
       "Estimez la demande du tour, référence par référence, à partir de vos ventes du tour précédent et du coefficient saisonnier de chacune ; comparez la somme à votre capacité ; servez en priorité les marges les plus fortes jusqu'à leur demande ; et vérifiez que votre trésorerie supporte le décaissement anticipé.",
     ]),
     trigger: { round: 4 },
@@ -298,7 +307,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "La laine a flambé",
     narrative:
-      "Votre façonnier annonce +18 % sur la prochaine collection : la laine mérinos et le coton ont flambé, le fret aussi. Vos étiquettes, elles, sont imprimées. Le trimestre de Noël vient de vider votre trésorerie dans le réassort.",
+      "Votre façonnier annonce +18 % sur la prochaine collection : la laine mérinos et le coton ont flambé, le fret aussi. Vos étiquettes, elles, sont imprimées. {{Le trimestre}} de Noël vient de vider votre trésorerie dans le réassort.",
     problem:
       "Répercutez-vous la hausse sur vos prix de vente, ou l'absorbez-vous sur votre marge ?",
     diagnosticOptions: [
@@ -344,14 +353,14 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         prompt:
           "Vous absorbez la hausse sans toucher à vos prix. Le coût d'achat du pull col rond passe de 25 € à 29,50 €. Que devient votre seuil de rentabilité, à charges de structure inchangées, si vous ne vendiez que des pulls ?",
         options: [
-          { id: "a", label: "Il monte : il faut vendre environ 3 230 pulls au lieu de 2 754" },
+          { id: "a", label: "Il monte : il faut vendre environ {{entier: dizaine(charges / 26)}} pulls au lieu de {{entier: charges / 30.5}}" },
           { id: "b", label: "Il baisse : la marge unitaire compte moins" },
           { id: "c", label: "Il ne bouge pas : les charges de structure sont identiques" },
           { id: "d", label: "Il devient impossible à atteindre" },
         ],
         correctOptionId: "a",
         explain:
-          "La marge unitaire tombe de 30,50 € à 26 €. Seuil = 84 000 ÷ 26 ≈ 3 231 pulls. Absorber une hausse d'achat, c'est déplacer son seuil vers le haut sans que le client s'en aperçoive.",
+          "La marge unitaire tombe de 30,50 € à 26 €. Seuil = {{entier: charges}} ÷ 26 ≈ {{entier: charges / 26}} pulls. Absorber une hausse d'achat, c'est déplacer son seuil vers le haut sans que le client s'en aperçoive.",
       },
     ],
     modelRelevance: {
@@ -363,10 +372,10 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     conceptCodes: ["markup_coefficient", "psych_price", "price_elasticity", "contribution_margin", "breakeven", "margin_rates"],
     hints: hints([
       "La hausse touche votre coût d'achat, pas vos charges de structure. Quelle grandeur du compte de résultat bouge en premier ?",
-      "Votre marge sur coût variable unitaire se comprime de 4,50 € par pull col rond, et d'autant plus que la pièce est chère : près de 10 € sur un pull mérinos. Multipliez par vos volumes trimestriels.",
+      "Votre marge sur coût variable unitaire se comprime de 4,50 € par pull col rond, et d'autant plus que la pièce est chère : près de 10 € sur un pull mérinos. Multipliez par vos volumes {{trimestriels}}.",
       "Le réflexe du métier est de tenir son coefficient : 29,50 € × 2,4 mène le pull près de 70 €. Regardez alors où ce prix vous mène sur chaque segment avant de l'afficher.",
       "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les passants. Et les passants portent un seuil psychologique à 60 € sur le pull : tenir votre coefficient vous fait passer de 59 à près de 70 €, donc franchir ce seuil chez la clientèle qui y est déjà la plus sensible.",
-      "Chiffrez les deux branches : absorber porte le seuil de 2 754 à ~3 230 pulls ; répercuter 5 % coûte ~10 % de volume chez les passants. Comparez les marges totales, pas les pourcentages — et référence par référence : le mérinos, vendu aux fidèles, supporte la hausse ; le bonnet, vendu aux passants, ne la supporte pas.",
+      "Chiffrez les deux branches : absorber porte le seuil de {{entier: charges / 30.5}} à ~{{entier: dizaine(charges / 26)}} pulls ; répercuter 5 % coûte ~10 % de volume chez les passants. Comparez les marges totales, pas les pourcentages — et référence par référence : le mérinos, vendu aux fidèles, supporte la hausse ; le bonnet, vendu aux passants, ne la supporte pas.",
     ]),
     trigger: { round: 5 },
     weight: 1.5,
@@ -379,9 +388,9 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   {
     code: "boutique_detect_below_breakeven",
     category: "alerte_comptable",
-    title: "Le trimestre s'est terminé dans le rouge",
+    title: "{{Le trimestre}} s'est terminé dans le rouge",
     narrative:
-      "Les comptes du trimestre sont sortis : le résultat d'exploitation est négatif. La boutique a pourtant été ouverte tous les jours, les vendeuses ont fait leur travail, et la vitrine était soignée.",
+      "Les comptes {{du trimestre}} sont sortis : le résultat d'exploitation est négatif. La boutique a pourtant été ouverte tous les jours, les vendeuses ont fait leur travail, et la vitrine était soignée.",
     problem:
       "Vous n'avez pas atteint le seuil de rentabilité. Quels leviers avez-vous réellement, et lequel agit le plus vite ?",
     diagnosticOptions: [
@@ -407,7 +416,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       },
       {
         id: "wait",
-        label: "Le prochain trimestre compensera de lui-même",
+        label: "Le prochain {{trimestre}} compensera de lui-même",
         correct: false,
       },
     ],
@@ -452,7 +461,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       "Divisez cet écart par votre marge sur coût variable unitaire moyenne : vous obtenez le nombre de pièces manquantes.",
       "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc : le numérateur, le dénominateur, ou les quantités vendues — et le mix, qui change le dénominateur sans toucher aux étiquettes.",
       "Attention au levier prix : il agit sur la marge unitaire ET sur les volumes, en sens contraire. C'est l'élasticité qui arbitre.",
-      "Avec 84 000 € de charges décaissées et 29,35 € de marge moyenne au mix de référence, le seuil est à ~2 862 pièces ; il monte si vous vendez surtout des bonnets, il descend si vous vendez des cardigans. Comparez à vos ventes réelles : l'écart en pièces vous dit quel levier est atteignable ce trimestre.",
+      "Avec {{entier: charges}} € de charges décaissées et 29,35 € de marge moyenne au mix de référence, le seuil est à ~{{entier: charges / 29.35}} pièces ; il monte si vous vendez surtout des bonnets, il descend si vous vendez des cardigans. Comparez à vos ventes réelles : l'écart en pièces vous dit quel levier est atteignable {{ce trimestre}}.",
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
@@ -467,7 +476,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     category: "alerte_comptable",
     title: "Rentable, et pourtant à découvert",
     narrative:
-      "Votre expert-comptable est formel : le trimestre est bénéficiaire. Votre banquier l'est tout autant : vous êtes à découvert. La réserve est pleine, et les comités d'entreprise règlent à 45 jours.",
+      "Votre expert-comptable est formel : {{le trimestre}} est bénéficiaire. Votre banquier l'est tout autant : vous êtes à découvert. La réserve est pleine, et les comités d'entreprise règlent à 45 jours.",
     problem:
       "Comment une boutique qui gagne de l'argent peut-elle manquer de trésorerie ?",
     diagnosticOptions: [
@@ -500,7 +509,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
           { id: "a", label: "Du stock en réserve et des créances clients, diminués des dettes fournisseurs" },
           { id: "b", label: "Du résultat net cumulé" },
           { id: "c", label: "Des immobilisations et des emprunts" },
-          { id: "d", label: "Du chiffre d'affaires du trimestre" },
+          { id: "d", label: "Du chiffre d'affaires {{du trimestre}}" },
         ],
         correctOptionId: "a",
         explain:
@@ -717,7 +726,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "La caisse pleine d'après-soldes",
     narrative:
-      "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. La collection d'automne, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.",
+      "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. La collection d'automne, elle, se commande aux façonniers dans quelques semaines et se paie avant d'être vendue.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -728,7 +737,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       },
       {
         id: "garder_de_quoi_payer",
-        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        label: "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir",
         correct: true,
       },
       {
@@ -748,7 +757,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
           { id: "a", label: "Ouvrir un découvert à 13 % tout en détenant un placement à 2 %" },
-          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "b", label: "Perdre le capital placé si {{le trimestre}} est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
@@ -761,7 +770,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         prompt: "Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…",
         options: [
           { id: "a", label: "Le stock s'est transformé en argent, et cet argent va repartir en stock à la commande suivante" },
-          { id: "b", label: "L'entreprise a dégagé un résultat exceptionnel sur le trimestre" },
+          { id: "b", label: "L'entreprise a dégagé un résultat exceptionnel sur {{le trimestre}}" },
           { id: "c", label: "Les charges de structure ont diminué" },
           { id: "d", label: "Le besoin en fonds de roulement a définitivement disparu" },
         ],
@@ -778,7 +787,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
     hints: hints([
-      "Comparez votre solde aux charges de structure d'un seul trimestre : de combien de trimestres d'avance disposez-vous ?",
+      "Comparez votre solde aux charges de structure d'un seul {{trimestre}} : de combien {{de trimestres}} d'avance disposez-vous ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez surtout la commande de la collection suivante : elle se paie aux façonniers avant qu'une seule pièce ne soit vendue.",
@@ -788,7 +797,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     weight: 0.8,
     decisionLevers: [
       { field: "productionPlan", direction: "review", hint: "La commande de la collection suivante va ponctionner la caisse : chiffrez-la avant de décider combien placer, pour ne pas financer un placement à 2 % par un découvert à 13 %." },
-      { field: "maintenanceBudget", direction: "review", hint: "Les charges fixes du trimestre à venir sortiront quoi qu'il arrive : soustrayez-les du solde disponible avant d'envisager un placement." },
+      { field: "maintenanceBudget", direction: "review", hint: "Les charges fixes {{du trimestre}} à venir sortiront quoi qu'il arrive : soustrayez-les du solde disponible avant d'envisager un placement." },
     ],
   },
 ];
@@ -815,4 +824,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "L'analyse FRNG / BFR est l'outil de ce diagnostic : TN = FRNG − BFR, et c'est le BFR qui a bougé, pas le résultat.",
 };
 
-attachModelQuestions(BOUTIQUE_SITUATIONS, MODEL_EXPLAIN);
+attachModelQuestions(SOURCES, MODEL_EXPLAIN);
+
+/** Le texte au trimestre, celui du registre ; une partie le rend à sa durée (`situationDeLaPartie`). */
+export const BOUTIQUE_SITUATIONS: SituationDef[] = situationsAuTrimestre(SOURCES, boutiqueScenario);
