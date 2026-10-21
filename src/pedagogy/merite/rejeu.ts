@@ -172,6 +172,11 @@ export interface IssueDUneEquipe {
   /** Le chiffre d'affaires cumulé : l'échelle d'un écart quand le résultat est proche de zéro. */
   chiffreDAffairesCumule: number;
   tresorerieFinale: number;
+  /**
+   * La trésorerie nette la plus basse des tours de la partie (fin de chaque tour) : le
+   * creux que les décisions ont fait traverser à l'entreprise.
+   */
+  tresorerieLaPlusBasse: number;
   defaillant: boolean;
   /** Niveau 7 : la rentabilité totale par action du dernier tour (le rang s'y fait) et la valeur créée en euros. */
   rentabiliteTotale?: number;
@@ -227,6 +232,7 @@ export function rejouer(
   const netCumule: Record<string, number> = {};
   const caCumule: Record<string, number> = {};
   const tresorerie: Record<string, number> = {};
+  const creux: Record<string, number> = {};
   /** Niveau 7 : la dernière valeur de chaque entreprise. */
   const valeurs: Record<string, { rta: number; creee: number }> = {};
   const resultatParTour: number[] = [];
@@ -237,6 +243,7 @@ export function rejouer(
     netCumule[id] = 0;
     caCumule[id] = 0;
     tresorerie[id] = 0;
+    creux[id] = Infinity;
   }
 
   for (let tour = 1; tour <= partie.tours; tour += 1) {
@@ -368,6 +375,7 @@ export function rejouer(
       netCumule[id] = netCumule[id]! + auCentime(r.incomeStatement.netIncome);
       caCumule[id] = caCumule[id]! + auCentime(r.incomeStatement.revenue);
       tresorerie[id] = auCentime(r.functionalBalance.netTreasury);
+      creux[id] = Math.min(creux[id]!, tresorerie[id]!);
       const v = r.groupe?.valeur;
       if (v && scenario.groupe) {
         valeurs[id] = { rta: v.rentabiliteTotale, creee: valeurCreee(v, scenario.groupe.valorisation.actionsInitiales) };
@@ -419,6 +427,7 @@ export function rejouer(
       resultatNetCumule: Math.round(netCumule[l.id]! * 100) / 100,
       chiffreDAffairesCumule: Math.round(caCumule[l.id]! * 100) / 100,
       tresorerieFinale: tresorerie[l.id]!,
+      tresorerieLaPlusBasse: Number.isFinite(creux[l.id]!) ? creux[l.id]! : tresorerie[l.id]!,
       defaillant: defaillante(l.id),
       ...(valeurs[l.id] ? { rentabiliteTotale: valeurs[l.id]!.rta, valeurCreee: Math.round(valeurs[l.id]!.creee * 100) / 100 } : {}),
     };

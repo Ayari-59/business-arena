@@ -267,6 +267,10 @@ export interface MarcheRejoue {
   ipg: number;
   rang: number;
   tresorerie: number;
+  /** La trésorerie nette la plus basse des tours (le creux). */
+  tresorerieLaPlusBasse: number;
+  /** Le chiffre d'affaires cumulé de la partie. */
+  chiffreDAffaires: number;
   defaillant: boolean;
 }
 
@@ -277,6 +281,8 @@ export const marcheRejoue = (r: IssueDuRejeu): MarcheRejoue => ({
   ipg: r.joueur.ipg,
   rang: r.joueur.rang,
   tresorerie: r.joueur.tresorerieFinale,
+  tresorerieLaPlusBasse: r.joueur.tresorerieLaPlusBasse,
+  chiffreDAffaires: r.joueur.chiffreDAffairesCumule,
   defaillant: r.joueur.defaillant,
 });
 

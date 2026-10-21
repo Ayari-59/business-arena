@@ -27,7 +27,7 @@ type SuiteAffichee = import("@/components/merite-de-la-partie").SuiteAffichee;
 
 const issue = (graine: number, resultat: number, rang = 2): IssueDuRejeu => ({
   graine,
-  joueur: { ipg: 50, rang, resultatNetCumule: resultat, chiffreDAffairesCumule: 400_000, tresorerieFinale: 0, defaillant: false },
+  joueur: { ipg: 50, rang, resultatNetCumule: resultat, chiffreDAffairesCumule: 400_000, tresorerieFinale: 0, tresorerieLaPlusBasse: 0, defaillant: false },
   sur: 3,
   resultatParTour: [resultat / 2, resultat / 2],
   parEquipe: {},
