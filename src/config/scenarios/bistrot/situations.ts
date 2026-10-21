@@ -205,7 +205,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Le beurre a pris 24 %",
     narrative:
-      "Votre grossiste annonce une hausse brutale sur la moitié de votre carte : beurre, viande, énergie. Nous sommes en août, la salle est à moitié vide et les bureaux du quartier sont fermés.",
+      "Votre grossiste annonce une hausse brutale sur la moitié de votre carte : beurre, viande, énergie. {{Nous sommes en août, la salle est à moitié vide et les bureaux du quartier sont fermés.}}",
     problem:
       "Votre ratio matières dérape au pire moment. Que faites-vous de votre carte et de vos prix ?",
     diagnosticOptions: [
@@ -243,7 +243,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "La marge tombe de 20 € à 17,60 €. Seuil = {{entier: charges}} ÷ 17,60 ≈ {{entier: charges / 17.6}} couverts. Soit {{entier: centaine(charges / 17.6 - charges / 20)}} couverts de plus à servir : en plein creux d'août, c'est hors d'atteinte.",
+          "La marge tombe de 20 € à 17,60 €. Seuil = {{entier: charges}} ÷ 17,60 ≈ {{entier: charges / 17.6}} couverts. Soit {{entier: centaine(charges / 17.6 - charges / 20)}} couverts de plus à servir : {{en plein creux d'août, c'est hors d'atteinte.}}",
       },
       {
         id: "elasticite_midi",
@@ -271,7 +271,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
       "La hausse frappe une charge variable : quelle grandeur du compte de résultat bouge en premier ?",
       "Votre marge par couvert se comprime de 2,40 €. À {{entier: flux(6000)}} couverts, c'est {{entier: 2.4 * flux(6000)}} € de résultat qui s'évaporent {{par trimestre}}.",
       "Deux issues : répercuter sur le ticket, ou reconstruire la carte pour retrouver de la marge à prix constant.",
-      "Le mois d'août amplifie tout : les déjeuners d'affaires tombent à 0,6 et les banquets à 0,5. Le volume ne viendra pas compenser.",
+      "{{Le mois d'août amplifie tout}} : les déjeuners d'affaires tombent à 0,6 et les banquets à 0,5. Le volume ne viendra pas compenser.",
       "Répercutez segment par segment : élasticité −1,5 le midi contre −1,2 le soir. Une hausse uniforme est toujours sous-optimale quand les élasticités diffèrent.",
     ]),
     trigger: { round: 3 },
@@ -285,7 +285,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "down",
-        hint: "En août, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.",
+        hint: "{{En août, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.}}",
       },
       {
         field: "qualityBudget",
@@ -299,7 +299,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "La saison des banquets",
     narrative:
-      "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur {{ce trimestre}}. Ils règlent à 30 jours, réservent des semaines à l'avance, et remplissent la salle un soir entier.",
+      "{{Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre}}. Ils règlent à 30 jours, réservent des semaines à l'avance, et remplissent la salle un soir entier.",
     problem:
       "Combien de couverts préparer pour absorber le pic, et que risquez-vous en préparant trop ?",
     diagnosticOptions: [
@@ -374,12 +374,12 @@ export const BISTROT_SOURCES: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "up",
-        hint: "La demande de décembre bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.",
+        hint: "{{La demande de décembre bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.}}",
       },
       {
         field: "maintenanceBudget",
         direction: "review",
-        hint: "Un pic de service sollicite fortement la cuisine. Anticipez l'entretien pour éviter une panne en plein rush de décembre.",
+        hint: "Un pic de service sollicite fortement la cuisine. {{Anticipez l'entretien pour éviter une panne en plein rush de décembre.}}",
       },
     ],
   },
@@ -482,7 +482,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
     category: "decision_strategique",
     title: "La terrasse sous verrière",
     narrative:
-      "Le bailleur propose de couvrir et de chauffer la terrasse : 48 000 €, amortis sur {{mots: investissement_duree}} {{trimestres}}. Elle ajouterait environ {{entier: investissement_plafond}} couverts {{par trimestre}}, mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe. Chaque couvert laisse une vingtaine d'euros de marge.",
+      "Le bailleur propose de couvrir et de chauffer la terrasse : 48 000 €, amortis sur {{mots: investissement_duree}} {{trimestres}}. Elle ajouterait environ {{entier: investissement_plafond}} couverts {{par trimestre}}, {{mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe.}} Chaque couvert laisse une vingtaine d'euros de marge.",
     problem:
       "Cet investissement rapporte-t-il plus qu'il ne coûte, et sur quoi le jugez-vous ?",
     diagnosticOptions: [

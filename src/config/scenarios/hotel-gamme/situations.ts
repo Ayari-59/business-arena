@@ -75,18 +75,18 @@ const PATCHES: Record<string, SituationTextPatch> = {
   hotel_t3_saison: {
     title: "La haute saison change le mix",
     narrative:
-      "L'été approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent. Les grandes occasions, elles, font leur saison sur les suites. Vos concurrents affichent déjà leurs tarifs de juillet, chambre par chambre.",
+      "{{L'été approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent.}} Les grandes occasions, elles, font leur saison sur les suites. {{Vos concurrents affichent déjà leurs tarifs de juillet, chambre par chambre.}}",
     problem:
       "Comment vos trois tarifs et vos effectifs doivent-ils suivre une demande qui change de nature et de mix, pas seulement de volume ?",
     diagnosticLabels: [
-      "Le mix de clientèle change par type de chambre : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement",
+      "{{Le mix de clientèle change par type de chambre : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement}}",
       "Les embauches doivent être décidées avant le pic : elles ne produisent leur effet qu'au tour suivant, et une suite demande plus d'heures qu'une standard",
       "Les trois tarifs doivent rester identiques toute l'année, par souci d'équité",
       "La capacité augmente naturellement en haute saison",
     ],
     hintTexts: [
       "Regardez la saisonnalité de chaque segment séparément, chambre par chambre, pas seulement la saisonnalité globale.",
-      "L'été, les affaires tombent à 0,5 sur la supérieure, mais les loisirs grimpent à 2,0 sur la standard et les grandes occasions à 1,5 sur la suite. Ce n'est pas un pic : c'est un autre mix.",
+      "{{L'été, les affaires tombent}} à 0,5 sur la supérieure, mais les loisirs grimpent à 2,0 sur la standard et les grandes occasions à 1,5 sur la suite. Ce n'est pas un pic : c'est un autre mix.",
       "Chaque segment a son élasticité et son délai de paiement : le mix vendu détermine à la fois votre latitude tarifaire et votre trésorerie.",
       "Côté capacité, 0,75 h de travail par nuitée standard, 1,3 h par suite : à 14 salariés, la main-d'œuvre peut devenir contraignante avant les chambres, surtout si le mix monte.",
       "Décidez les embauches AU TOUR PRÉCÉDENT le pic : le coût de recrutement est immédiat, l'effet sur la capacité arrive au tour suivant.",
@@ -117,14 +117,14 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "L'analyse des écarts sépare ce que le volume explique, ce que le prix explique, et ce que le mix explique. Un chiffre d'affaires conforme peut recouvrir trois erreurs qui se compensent.",
   },
   hotel_detect_idle_cash: {
-    title: "Le compte plein de fin de saison, et trois chambres à faire passer l'hiver",
+    title: "{{Le compte plein de fin de saison, et trois chambres à faire passer l'hiver}}",
     narrative:
-      "La saison forte est passée : les suites des grandes occasions et les supérieures des escapades ont fait le plein, et le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, saison creuse comprise, et l'hiver ne vendra ni suites ni escapades.",
+      "La saison forte est passée : les suites des grandes occasions et les supérieures des escapades ont fait le plein, et le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque {{trimestre}}, saison creuse comprise, {{et l'hiver ne vendra ni suites ni escapades}}.",
     problem:
-      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de l'hiver ne ressemble pas à celui de l'été ?",
+      "{{Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de l'hiver ne ressemble pas à celui de l'été ?}}",
     diagnosticLabels: [
       "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
-      "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, avec le mix de chambres que l'hiver vendra vraiment",
+      "Le montant bloqué ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, {{avec le mix de chambres que l'hiver vendra vraiment}}",
       "Puisque le placement rapporte, autant y mettre la totalité du solde",
       "Placer améliore le résultat d'exploitation de l'entreprise",
     ],
@@ -136,7 +136,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
-      "Le budget de trésorerie projette la saison creuse à venir, chambre par chambre, échéance du crédit comprise. Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.",
+      "Le budget de trésorerie projette la saison creuse à venir, chambre par chambre, échéance du crédit comprise. {{Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.}}",
   },
 };
 

@@ -339,7 +339,101 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   },
   "au premier janvier": { month: "à la date de revalorisation", year: "à la date de revalorisation" },
   // --- fin du groupe fitness-nova-batiment-transport ---
+  // --- hotel-bistrot-conseil : le récit des saisons ------------------------
+  // Au trimestre, le tour 3 de L'ESCALE est l'été, celui du bistrot et du cabinet le
+  // creux d'août, le tour 4 du bistrot décembre. Au mois et à l'année, la saisonnalité
+  // se lit encore une valeur par tour (ADR-01) : le tour reste le pic ou le creux, il
+  // n'est plus une date. Ces phrases disent donc ce que le tour EST, la même forme aux
+  // deux durées (`aLaSaison`, en bas du bloc). Une phrase entière par jeton ; quand
+  // elle porte un chiffre, le jeton s'arrête avant lui, car un mot de durée n'en porte
+  // aucun. Chaque affirmation est vérifiée au tableau de saisonnalité
+  // (tests/scenarios/saisons-hotel-bistrot-conseil.test.ts).
+  // L'ESCALE, et sa gamme : le tour 3 est le pic, les tours creux suivent.
+  "L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement.":
+    aLaSaison("Votre tour le plus chargé approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement."),
+  "L'été approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent.":
+    aLaSaison("Votre tour le plus chargé approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent."),
+  "Vos concurrents affichent déjà leurs tarifs de juillet.": aLaSaison("Vos concurrents affichent déjà leurs tarifs de haute saison."),
+  "Vos concurrents affichent déjà leurs tarifs de juillet, chambre par chambre.":
+    aLaSaison("Vos concurrents affichent déjà leurs tarifs de haute saison, chambre par chambre."),
+  "Le mix de clientèle change : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement":
+    aLaSaison("Le mix de clientèle change : le segment qui domine la haute saison n'a ni la même élasticité ni le même délai de paiement"),
+  "Le mix de clientèle change par type de chambre : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement":
+    aLaSaison("Le mix de clientèle change par type de chambre : le segment qui domine la haute saison n'a ni la même élasticité ni le même délai de paiement"),
+  "L'été, la clientèle loisirs": aLaSaison("En haute saison, la clientèle loisirs"),
+  "L'été, les affaires tombent": aLaSaison("À ce tour, les affaires tombent"),
+  "La forte demande estivale": aLaSaison("La forte demande de la haute saison"),
+  "Décider en juillet pour juillet, c'est décider trop tard.": aLaSaison("Décider pendant le pic pour le pic, c'est décider trop tard."),
+  "Une capacité créée pour trois semaines d'été se paie douze mois par an, en amortissements et en charges.":
+    aLaSaison("Une capacité créée pour trois semaines de pic se paie douze mois par an, en amortissements et en charges."),
+  "Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours).":
+    aLaSaison("Avant d'investir, distinguez saturation SAISONNIÈRE (un pic de haute saison) et saturation DURABLE (tous les tours)."),
+  "Le solde de septembre n'est pas un excédent : c'est ce qui doit faire passer l'hiver.":
+    aLaSaison("Le solde de fin de haute saison n'est pas un excédent : c'est ce qui doit faire passer la saison creuse."),
+  "Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.":
+    aLaSaison("Seul lui distingue un vrai excédent de ce qui doit faire passer la saison creuse."),
+  "Le compte plein de fin de saison, et trois chambres à faire passer l'hiver":
+    aLaSaison("Le compte plein de fin de saison, et trois chambres à faire passer la saison creuse"),
+  "et l'hiver ne vendra ni suites ni escapades": aLaSaison("et les tours creux ne vendront ni suites ni escapades"),
+  "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de l'hiver ne ressemble pas à celui de l'été ?":
+    aLaSaison("Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de la saison creuse ne ressemble pas à celui de la haute saison ?"),
+  "avec le mix de chambres que l'hiver vendra vraiment": aLaSaison("avec le mix de chambres que la saison creuse vendra vraiment"),
+  // LA TABLE D'AUGUSTIN, et sa gamme : le tour 3 est le creux, le tour 4 le pic des banquets.
+  "Nous sommes en août, la salle est à moitié vide et les bureaux du quartier sont fermés.":
+    aLaSaison("Vous êtes au plus creux de l'activité : la salle est à moitié vide et les bureaux du quartier se sont vidés."),
+  "Nous sommes en août, la salle est à moitié vide, les bureaux du quartier sont fermés et les banquets attendent décembre.":
+    aLaSaison("Vous êtes au plus creux de l'activité : la salle est à moitié vide, les bureaux du quartier se sont vidés et les banquets attendent leur plus gros tour."),
+  "en plein creux d'août, c'est hors d'atteinte.": aLaSaison("en plein creux de l'activité, c'est hors d'atteinte."),
+  "Le mois d'août amplifie tout": aLaSaison("Le creux de l'activité amplifie tout"),
+  "En août, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.":
+    aLaSaison("Au creux de l'activité, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères."),
+  // Le jeton porte « ce trimestre » en toutes lettres : au mois, dire que le budget annuel
+  // tombe sur un mois, à l'année qu'il tombe sur l'année, ne dirait plus rien du pic.
+  "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre":
+    aLaSaison("Votre plus gros tour arrive : les repas d'entreprise et les banquets y dépensent plus qu'à aucun autre tour"),
+  "La demande de décembre bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.":
+    aLaSaison("La demande de votre plus gros tour bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues."),
+  "Anticipez l'entretien pour éviter une panne en plein rush de décembre.":
+    aLaSaison("Anticipez l'entretien pour éviter une panne en plein rush des banquets."),
+  // La verrière : le moteur ajoute sa capacité à chaque tour ; c'est le temps qu'il fait, pas la date, qui vide la terrasse.
+  "mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe.":
+    aLaSaison("mais seulement quand le temps s'y prête : par grand froid, personne ne s'y installe."),
+  // ATLAS CONSEIL, et sa gamme : le tour 3 est le creux, celui des marchés publics aussi.
+  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide.":
+    aLaSaison("Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, le carnet se vide."),
+  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.":
+    aLaSaison("Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti."),
+  // Les DSI creusent le moins au tour 3 de la gamme (`dsi`) : c'est ce qui reste vrai de « ne connaît pas les congés ».
+  "Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.":
+    aLaSaison("Ce tour creux est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader."),
+  "qui vendrait à des DSI qui ne connaissent pas les congés": aLaSaison("qui vendrait à des DSI qui achètent en toute saison"),
+  // Les courriers de L'ESCALE et de LA TABLE D'AUGUSTIN : un courrier tombe à n'importe quel tour.
+  "Été indien — hausse des réservations de dernière minute":
+    aLaSaison("Beau temps hors saison : hausse des réservations de dernière minute"),
+  "Première édition du festival d'été": aLaSaison("Première édition du festival de musique"),
+  "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne.":
+    aLaSaison("Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses prochains circuits."),
+  "Révision des volumes de notre programmation d'automne": aLaSaison("Révision des volumes de notre programmation"),
+  // Le tarif d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date.
+  "Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année.":
+    aLaSaison("Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier, le temps de reconstituer sa clientèle."),
+  "Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année.":
+    aLaSaison("Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier, le temps de reconstituer sa clientèle."),
+  "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place.":
+    aLaSaison("Le groupe Montclar Ingénierie emménagera prochainement dans l'immeuble voisin de la place."),
+  // --- fin hotel-bistrot-conseil -------------------------------------------
 };
+
+// --- hotel-bistrot-conseil ---------------------------------------------------
+/**
+ * Une phrase du récit des saisons, la même au mois et à l'année : elle dit ce que le
+ * tour est pour le moteur (le pic, le creux), qui ne dépend pas de la durée du tour.
+ * Une déclaration de fonction, hissée : la table ci-dessus la lit au chargement.
+ */
+function aLaSaison(phrase: string): { month: string; year: string } {
+  return { month: phrase, year: phrase };
+}
+// --- fin hotel-bistrot-conseil -----------------------------------------------
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
@@ -561,7 +655,26 @@ const GRANDEURS: Record<string, Grandeur> = {
     if (!s.hr) throw new Error("Situation : le jeton « embauche » suppose un module RH");
     return s.hr.hiringCost;
   },
+  // --- hotel-bistrot-conseil : le prix de la capacité, lu du parc ---------------
+  /**
+   * Le prix d'une unité de capacité PAR TOUR quand le scénario achète sa capacité en
+   * équipements typés, que le moteur lit alors (`engine/investment/plafond.ts`) : le
+   * coût d'un type divisé par sa capacité par tour, du type le moins cher au plus cher.
+   * À L'ESCALE, de la chambre standard à la suite premium. Hors abonnement,
+   * `applyPeriodicity` met la capacité à la durée du tour, et le prix suit (÷ k).
+   */
+  cout_capacite_parc_min: (s) => Math.min(...prixDeLaCapacite(s)),
+  cout_capacite_parc_max: (s) => Math.max(...prixDeLaCapacite(s)),
+  // --- fin hotel-bistrot-conseil -------------------------------------------------
 };
+
+// --- hotel-bistrot-conseil ---------------------------------------------------
+/** Le prix d'une unité de capacité par tour, type d'équipement par type. */
+function prixDeLaCapacite(s: EngineScenarioConfig): number[] {
+  if (!s.equipment?.types.length) throw new Error("Situation : ce jeton suppose un parc d'équipements typés");
+  return s.equipment.types.map((t) => t.costPerUnit / t.capacityPerUnit);
+}
+// --- fin hotel-bistrot-conseil -----------------------------------------------
 
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
   /** Un taux de perte écrit au trimestre, ramené à la durée du tour par la règle du moteur. */

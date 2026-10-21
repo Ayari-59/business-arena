@@ -28,7 +28,8 @@ import type { EngineScenarioConfig } from "../../src/engine/types";
  *  · qu'aucun « trimestre » ne reste au mois ni à l'année, et qu'aucun jeton
  *    n'atteint l'écran ;
  *  · qu'au trimestre, le texte est octet pour octet celui d'avant les jetons
- *    (tests/fixtures/situations-conseil-hotel-au-trimestre.json, relevé sur 1c6bc002).
+ *    (tests/fixtures/situations-conseil-hotel-au-trimestre.json, relevé sur 1c6bc002),
+ *    aux corrections près que nomme `CORRECTIONS`.
  */
 
 const DUREES: Periodicity[] = ["month", "quarter", "year"];
@@ -36,6 +37,35 @@ const NOM: Record<Periodicity, string> = { month: "au mois", quarter: "au trimes
 const AVANT = JSON.parse(
   readFileSync(new URL("../fixtures/situations-conseil-hotel-au-trimestre.json", import.meta.url), "utf-8"),
 ) as Record<string, string[]>;
+
+/**
+ * LES ERREURS QUE LE TEXTE CONTENAIT DÉJÀ AU TRIMESTRE, corrigées et nommées : la
+ * fixture garde le texte d'avant, et c'est ici, et nulle part ailleurs, que le texte
+ * au trimestre a le droit de s'en écarter.
+ */
+const CORRECTIONS: { cles: string[]; avant: string; apres: string }[] = [
+  {
+    // L'ESCALE achète sa capacité en chambres typées (`equipment.types`), et le moteur
+    // lit ce parc quand il existe (`engine/investment/plafond.ts`). Le prix d'une
+    // nuitée de capacité n'est donc pas un : la standard la vend 89 € (80 000 € ÷ 900),
+    // la rénovée 100 € (180 000 € ÷ 1 800), la suite premium 115 € (310 000 € ÷ 2 700).
+    // L'énoncé ne citait que la rénovée ; il cite désormais la fourchette lue du parc,
+    // à toute durée (test « le prix d'une nuitée de capacité » ci-dessous).
+    cles: ["hotel/hotel_detect_capacity_saturated", "hotel-gamme/hotelg_detect_capacity_saturated"],
+    avant: "comparez le coût de la capacité (100 € par nuitée trimestrielle)",
+    apres: "comparez le coût de la capacité (de 89 à 115 € par nuitée trimestrielle selon le type de chambre)",
+  },
+];
+
+/** Le texte au trimestre attendu : la fixture, corrections nommées appliquées. */
+const attenduAuTrimestre = (cle: string): string[] =>
+  AVANT[cle]!.map((t) => CORRECTIONS.filter((c) => c.cles.includes(cle)).reduce((acc, c) => acc.split(c.avant).join(c.apres), t));
+
+/** Le prix d'une nuitée de capacité par tour, du type de chambre le moins cher au plus cher : coût ÷ capacité. */
+const prixDuParc = (s: EngineScenarioConfig) => {
+  const prix = s.equipment!.types.map((t) => t.costPerUnit / t.capacityPerUnit);
+  return { min: Math.min(...prix), max: Math.max(...prix) };
+};
 
 /** L'instantané qu'une partie fige à cette durée, monde figé. */
 const joue = (code: string, periodicity: Periodicity): EngineScenarioConfig =>
@@ -138,7 +168,8 @@ const HOTEL: Famille = {
         auxDizaines((NUITEES_65 * s.roundDays) / 90),
         s.roundDays,
         10 * s.roundDays,
-        s.investment!.costPerCapacityUnit,
+        prixDuParc(s).min,
+        prixDuParc(s).max,
         s.investment!.depreciationRounds,
         360 / s.roundDays,
       ].map(milliers),
@@ -155,7 +186,7 @@ const HOTEL: Famille = {
     "0", "17", "18", "58", "37", "140", "101", "105", "82", "85,50", "64,50", "17,5", "15", "0,60",
     "31", "40", "52", "65", "80", "100", "88", "125", "220", "67", "99", "181",
   ]),
-  homonymes: ["100", "40"],
+  homonymes: ["40"],
 };
 
 const nombres = (t: string) => [...t.matchAll(/\d{1,3}(?: \d{3})*(?:,\d+)?/g)].map((m) => m[0]);
@@ -192,9 +223,9 @@ for (const famille of [CONSEIL, HOTEL]) {
         const codes = Object.keys(AVANT).filter((k) => k.startsWith(`${code}/`));
         expect(codes.sort()).toEqual(d.situations.map((s) => `${code}/${s.code}`).sort());
         for (const def of d.situations) {
-          expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(AVANT[`${code}/${def.code}`]);
+          expect(textesDe(situationDeLaPartie(def, 90)), def.code).toEqual(attenduAuTrimestre(`${code}/${def.code}`));
           // Le registre porte le texte au trimestre : catalogue, éditeur, référentiel semé.
-          expect(textesDe(def), def.code).toEqual(AVANT[`${code}/${def.code}`]);
+          expect(textesDe(def), def.code).toEqual(attenduAuTrimestre(`${code}/${def.code}`));
         }
       });
     });
@@ -235,8 +266,10 @@ describe("les homonymes : ce que le test des nombres ne distingue pas", () => {
     for (const [code, prefixe] of [["hotel", "hotel"], ["hotel-gamme", "hotelg"]] as const) {
       it(`${code} ${NOM[periodicity]} : le prix d'une nuitée de capacité et la durée de la rénovation suivent le tour`, () => {
         const s = joue(code, periodicity);
+        // La fourchette du parc : de la chambre standard à la suite premium.
+        const { min, max } = prixDuParc(s);
         expect(rendu(code, `${prefixe}_detect_capacity_saturated`, periodicity)).toContain(
-          `(${milliers(s.investment!.costPerCapacityUnit)} € par nuitée`,
+          `(de ${milliers(min)} à ${milliers(max)} € par nuitée`,
         );
         // Dix ans d'amortissement, comptés en tours de la partie.
         const pendant = { month: "pendant 120 mois", quarter: "pendant quarante trimestres", year: "pendant dix exercices" };
@@ -257,6 +290,13 @@ describe("au mois, les énoncés disent ce que le moteur offre et facture", () =
     expect(t1).toContain("Le mois offre 240 jours-consultants à vendre.");
     expect(t1).toContain("Seuil = 66 000 ÷ 470 ≈ 140 jours sur 240, soit 58 % d'occupation.");
     expect(rendu("conseil", "conseil_t4_recrutement", "month")).toContain("contre 4 200 € de salaire");
+  });
+
+  it("L'ESCALE : de 89 à 115 € la nuitée trimestrielle de capacité, de 267 à 344 € la mensuelle, de 22 à 29 € l'annuelle", () => {
+    const attendu = { quarter: "(de 89 à 115 € par nuitée trimestrielle", month: "(de 267 à 344 € par nuitée mensuelle", year: "(de 22 à 29 € par nuitée annuelle" };
+    for (const periodicity of DUREES) {
+      expect(rendu("hotel", "hotel_detect_capacity_saturated", periodicity)).toContain(attendu[periodicity]);
+    }
   });
 
   it("L'ESCALE : 1 800 nuitées, 60 chambres × 30 nuits, une rénovation de 300 nuitées par mois", () => {
@@ -329,10 +369,15 @@ describe("les invariants : ce que l'énoncé écrit en clair vaut à toutes les 
         // La rénovation : dix chambres, 90 000 € au prix du moteur, dix ans.
         expect(10 * s.roundDays * s.investment!.costPerCapacityUnit, code).toBe(90000);
         expect((s.investment!.depreciationRounds * s.roundDays) / 360, code).toBe(10);
-        // Le moteur vend la capacité de l'hôtel en chambres typées : le prix cité d'une
-        // nuitée de capacité est celui de la chambre rénovée, à toute durée.
-        const renovee = s.equipment!.types.find((t) => t.code === "chambre_renovee")!;
-        expect(renovee.costPerUnit / renovee.capacityPerUnit, code).toBe(s.investment!.costPerCapacityUnit);
+        // Le moteur vend la capacité de l'hôtel en chambres typées : le prix d'une nuitée
+        // de capacité va de la standard à la suite premium, et le bloc `investment` n'en
+        // est que le milieu (la rénovée), à toute durée.
+        const prix = (c: string) => {
+          const t = s.equipment!.types.find((x) => x.code === c)!;
+          return t.costPerUnit / t.capacityPerUnit;
+        };
+        expect(prixDuParc(s), code).toEqual({ min: prix("chambre_standard"), max: prix("suite_premium") });
+        expect(prix("chambre_renovee"), code).toBe(s.investment!.costPerCapacityUnit);
         expect(90000 / 10).toBe(9000);
         const annuel = 10 * s.roundDays * (360 / s.roundDays);
         expect(Math.round((annuel * 0.6 * 74) / 100) * 100).toBe(159800);

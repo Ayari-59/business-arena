@@ -201,7 +201,7 @@ export const CONSEIL_SOURCES: SituationDef[] = [
     category: "alerte_operationnelle",
     title: "Des consultants sur le banc",
     narrative:
-      "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide. Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement.",
+      "{{L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide.}} Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement.",
     problem:
       "Faut-il baisser vos tarifs pour remplir le banc, ou tenir vos prix et accepter le creux ?",
     diagnosticOptions: [

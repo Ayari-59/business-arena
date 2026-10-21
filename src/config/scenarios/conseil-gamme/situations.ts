@@ -49,7 +49,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_t3_banc: {
     title: "Des consultants sur le banc, et trois offres pour les occuper",
     narrative:
-      "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti. Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement, et seuls les DSI continuent d'acheter, si vous avez une offre cyber-sécurité à leur vendre.",
+      "{{L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.}} Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement, et seuls les DSI continuent d'acheter, si vous avez une offre cyber-sécurité à leur vendre.",
     problem:
       "Faut-il baisser vos tarifs pour remplir le banc, sur quelle offre, ou tenir vos prix et accepter le creux ?",
     diagnosticLabels: [
@@ -63,7 +63,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Comparez deux scénarios pour chaque offre : mission à tarif réduit, ou aucune mission. Qu'est-ce qui change réellement dans vos charges ?",
       "Le salaire du consultant est engagé quoi qu'il arrive : c'est un coût non pertinent pour cette décision-ci.",
       "Seuls les frais de mission varient, 90 € en audit, 115 € en stratégie, 100 € en cyber-sécurité. Toute mission au-dessus de ce seuil améliore le résultat du tour.",
-      "Mais attention au tarif de référence : brader une fois sauve un {{trimestre}}, brader systématiquement détruit le taux journalier moyen de l'offre, et d'abord celle qu'on brade. Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.",
+      "Mais attention au tarif de référence : brader une fois sauve un {{trimestre}}, brader systématiquement détruit le taux journalier moyen de l'offre, et d'abord celle qu'on brade. {{Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.}}",
     ],
     modelExplain:
       "L'analyse des coûts pertinents isole ce que la décision change vraiment, les frais de mission de l'offre concernée, et écarte le salaire, engagé de toute façon. Elle se fait offre par offre : brader l'audit ne brade pas la stratégie.",
@@ -93,7 +93,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_detect_idle_cash: {
     title: "Le compte se remplit, le carnet se vide, et la cyber-sécurité attend",
     narrative:
-      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cyber-sécurité, qui vendrait à des DSI qui ne connaissent pas les congés, n'est pas encore financée.",
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cyber-sécurité, {{qui vendrait à des DSI qui ne connaissent pas les congés}}, n'est pas encore financée.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans l'offre cyber-sécurité, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [

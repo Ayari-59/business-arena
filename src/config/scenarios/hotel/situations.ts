@@ -187,13 +187,13 @@ export const HOTEL_SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "La haute saison arrive",
     narrative:
-      "L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement. Vos concurrents affichent déjà leurs tarifs de juillet.",
+      "{{L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement.}} {{Vos concurrents affichent déjà leurs tarifs de juillet.}}",
     problem:
       "Comment votre politique tarifaire et vos effectifs doivent-ils suivre une demande qui change de nature, pas seulement de volume ?",
     diagnosticOptions: [
       {
         id: "mix_change",
-        label: "Le mix de clientèle change : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement",
+        label: "{{Le mix de clientèle change : le segment qui domine l'été n'a ni la même élasticité ni le même délai de paiement}}",
         correct: true,
       },
       {
@@ -216,7 +216,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
       {
         id: "elasticite_mix",
         prompt:
-          "L'été, la clientèle loisirs (élasticité −1,75) domine au lieu des affaires (−0,7). Quelle conséquence sur votre marge de manœuvre tarifaire ?",
+          "{{L'été, la clientèle loisirs}} (élasticité −1,75) domine au lieu des affaires (−0,7). Quelle conséquence sur votre marge de manœuvre tarifaire ?",
         options: [
           { id: "a", label: "Elle se réduit : une hausse de prix coûte désormais beaucoup plus de volume" },
           { id: "b", label: "Elle augmente : la demande est plus forte, donc on peut tout se permettre" },
@@ -239,7 +239,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "C'est l'asymétrie fondamentale des ressources humaines : on paie le recrutement tout de suite, on récolte la capacité plus tard. Décider en juillet pour juillet, c'est décider trop tard.",
+          "C'est l'asymétrie fondamentale des ressources humaines : on paie le recrutement tout de suite, on récolte la capacité plus tard. {{Décider en juillet pour juillet, c'est décider trop tard.}}",
       },
     ],
     modelRelevance: {
@@ -251,7 +251,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
     conceptCodes: ["seasonality", "segmentation", "capacity", "price_elasticity"],
     hints: hints([
       "Regardez la saisonnalité de chaque segment séparément, pas seulement la saisonnalité globale.",
-      "L'été, les affaires tombent à 0,5 et les séminaires à 0,3, mais le tourisme grimpe à 2,0. Ce n'est pas un pic : c'est un changement de clientèle.",
+      "{{L'été, les affaires tombent}} à 0,5 et les séminaires à 0,3, mais le tourisme grimpe à 2,0. Ce n'est pas un pic : c'est un changement de clientèle.",
       "Chaque segment a son élasticité et son délai de paiement : le mix détermine à la fois votre latitude tarifaire et votre trésorerie.",
       "Côté capacité, 0,75 h de travail par nuitée : à 14 salariés, la main-d'œuvre peut devenir contraignante avant les chambres.",
       "Décidez les embauches AU TOUR PRÉCÉDENT le pic : le coût de recrutement est immédiat, l'effet sur la capacité arrive au tour suivant.",
@@ -259,7 +259,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
     trigger: { round: 3 },
     weight: 1.5,
     decisionLevers: [
-      { field: "price", direction: "up", hint: "La forte demande estivale permet de monter les prix, mais la clientèle loisirs (élasticité −1,75) sanctionne les excès plus durement que les affaires." },
+      { field: "price", direction: "up", hint: "{{La forte demande estivale}} permet de monter les prix, mais la clientèle loisirs (élasticité −1,75) sanctionne les excès plus durement que les affaires." },
       { field: "productionPlan", direction: "up", hint: "Préparez le maximum de chambres pour capter le pic de demande touristique. Une chambre non prête en haute saison est une perte définitive." },
       { field: "marketingBudget", direction: "review", hint: "Le segment loisirs ne se capte pas comme le segment affaires. Revoyez vos canaux et votre budget promotionnel pour cibler les vacanciers." },
     ],
@@ -483,7 +483,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Une capacité créée pour trois semaines d'été se paie douze mois par an, en amortissements et en charges. La saisonnalité se gère par le prix ; la croissance durable, par l'investissement.",
+          "{{Une capacité créée pour trois semaines d'été se paie douze mois par an, en amortissements et en charges.}} La saisonnalité se gère par le prix ; la croissance durable, par l'investissement.",
       },
     ],
     modelRelevance: {
@@ -497,8 +497,8 @@ export const HOTEL_SOURCES: SituationDef[] = [
       "Regardez votre taux d'utilisation : à quel niveau êtes-vous, et sur combien de tours ?",
       "Refuser un client, c'est perdre 74 € de marge, mais c'est aussi le signe que votre prix est trop bas.",
       "Quand la capacité est saturée, le prix devient le seul levier gratuit : il ne coûte rien à mettre en œuvre.",
-      "Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours). La première se gère par le prix.",
-      "Si la saturation est durable, comparez le coût de la capacité ({{entier: cout_capacite}} € par nuitée {{trimestrielle}}) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
+      "{{Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours).}} La première se gère par le prix.",
+      "Si la saturation est durable, comparez le coût de la capacité (de {{entier: cout_capacite_parc_min}} à {{entier: cout_capacite_parc_max}} € par nuitée {{trimestrielle}} selon le type de chambre) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
@@ -723,7 +723,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "L'activité est saisonnière, les charges ne le sont pas. Le solde de septembre n'est pas un excédent : c'est ce qui doit faire passer l'hiver.",
+          "L'activité est saisonnière, les charges ne le sont pas. {{Le solde de septembre n'est pas un excédent : c'est ce qui doit faire passer l'hiver.}}",
       },
     ],
     modelRelevance: {
@@ -753,7 +753,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   hotel_detect_idle_cash:
-    "Le budget de trésorerie projette la saison creuse à venir, échéance du crédit comprise. Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.",
+    "Le budget de trésorerie projette la saison creuse à venir, échéance du crédit comprise. {{Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.}}",
   hotel_t4_plateformes:
     "L'analyse marginale compare ce que chaque nuitée supplémentaire rapporte à ce qu'elle coûte vraiment. La structure étant déjà payée, une nuitée commissionnée reste très largement bénéficiaire.",
   hotel_t6_ecarts:
