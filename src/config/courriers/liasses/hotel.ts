@@ -194,7 +194,7 @@ const SOURCES: CourrierDef[] = [
       "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : {{lettres: commande_hotel_groupe_impromptu}} nuitées {{ce trimestre}}, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
     signataire: "Le responsable d'exploitation",
     effet:
-      "+{{entier: commande_hotel_groupe_impromptu}} nuitées (échelle {{trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",
+      "+{{entier: commande_hotel_groupe_impromptu}} nuitées ({{échelle trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",
     enJeu: "L'aubaine ne profite qu'à ceux qui ont gardé des chambres disponibles : tout brader tôt a un coût caché.",
     nature: "market",
     pli: "email",

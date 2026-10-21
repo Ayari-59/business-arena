@@ -206,6 +206,30 @@ describe("chaque courrier se rend à la durée du tour de sa partie", () => {
     );
   });
 
+  it("à l'année et au mois, la routine et les commandes se lisent sans tournure forcée", () => {
+    // Un tour d'un an se clôt sur des comptes annuels : il n'y a pas de situation
+    // « intermédiaire » au terme de l'exercice.
+    const comptable = (jours: number) => courrierDeLaPartie("routine_situation_comptable", { jours })!;
+    expect(comptable(360).objet).toBe("Situation comptable au terme de l'exercice");
+    expect(comptable(360).enJeu).toMatch(/^Une situation comptable ne se subit pas :/);
+    expect(comptable(30).enJeu).toMatch(/^Une situation intermédiaire ne se subit pas :/);
+    // « Aucun effet sur ce mois-ci » : le « -ci » ne désigne rien que « ce mois » ne dise.
+    for (const c of COURRIERS_DE_ROUTINE) {
+      expect(courrierDeLaPartie(c.code, { jours: 30 })!.effet, c.code).toBe("Aucun effet sur ce mois");
+      expect(courrierDeLaPartie(c.code, { jours: 360 })!.effet, c.code).toBe("Aucun effet sur cet exercice");
+      expect(courrierDeLaPartie(c.code, { jours: 90 })!.effet, c.code).toBe("Aucun effet sur ce trimestre");
+    }
+    // « (échelle exercice) » : à l'année, la commande se dit « à l'échelle annuelle ».
+    for (const c of COURRIERS.filter((x) => /\(échelle trimestre\)/.test(x.effet))) {
+      expect(courrierDeLaPartie(c.code, { jours: 360 })!.effet, c.code).toContain("(échelle annuelle)");
+      expect(courrierDeLaPartie(c.code, { jours: 30 })!.effet, c.code).toContain("(échelle mois)");
+    }
+    // Toutes les commandes d'office la disent, sauf les deux qui écrivent « ce tour ».
+    expect(COURRIERS.filter((x) => /\(échelle trimestre\)/.test(x.effet)).map((x) => x.code).sort()).toEqual(
+      Object.keys(COMMANDES).filter((c) => !["batiment_chantier_surprise", "transport_lot_surprise"].includes(c)).sort(),
+    );
+  });
+
   it("les courriers transverses et les variantes sans assurance ne portent aucun montant", () => {
     for (const c of [...COURRIERS_DE_ROUTINE, ...COURRIERS_EN_RETOUR, ...LETTRES_DE_MISSION]) {
       for (const t of textesDuCourrier(sourceDuCourrier(c))) {

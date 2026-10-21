@@ -154,7 +154,10 @@ describe("NOVA et NOVA · GAMME : chaque situation se rend à la durée du tour 
           nova.situations.find((d) => d.code === "detect_capacity_saturated")!,
           PERIODICITY_DAYS[periodicity],
         );
-        expect(sat.narrative).toContain(`propose ${milliers(m.lignes)} unités de capacité`);
+        // 2 000 unités par trimestre font 666,67 par mois : le moteur n'en ajoute pas 667.
+        const juste = Number.isInteger(Number(m.lignes.toFixed(9)));
+        expect(sat.narrative).toContain(`propose ${juste ? "" : "environ "}${milliers(m.lignes)} unités de capacité`);
+        expect(juste, periodicity).toBe(periodicity !== "month");
         expect(sat.narrative).toContain(`pour ${milliers(m.decaissement)} €, amortis sur ${m.toursDAmortissement} `);
         expect(sat.hints[4]!.text).toContain(
           `VAN ≈ −${milliers(m.decaissement)} + Σ (unités supplémentaires vendues × marge unitaire) / (1 + ${auCentieme(m.tauxDuTour)} %)^t sur ${m.toursDAmortissement} `,

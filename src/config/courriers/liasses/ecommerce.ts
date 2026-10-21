@@ -191,7 +191,7 @@ const SOURCES: CourrierDef[] = [
       "Nous équipons trois plateaux et vous passons une commande ferme de {{lettres: commande_ecom_btob}} articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
     signataire: "Le directeur des achats",
     effet:
-      "+{{entier: commande_ecom_btob}} commandes (échelle {{trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
+      "+{{entier: commande_ecom_btob}} commandes ({{échelle trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
     enJeu: "Une commande B2B ne coûte rien en acquisition : la marge y est mécaniquement supérieure.",
     nature: "market",
     pli: "recommande",

@@ -352,7 +352,9 @@ describe("l'arithmétique écrite dans les situations", () => {
     const d = SCENARIOS.find((s) => s.code === "transport")!;
     const route =
       d.scenario.product.materialCostPerUnit + d.scenario.product.otherVariableCostPerUnit;
-    const parPorteur = 1400;
+    // Ce qu'un porteur 12 t emmène par trimestre : la capacité de son type dans le parc,
+    // et non un chiffre écrit ici (la fiche a longtemps dit 1 400 quand le parc en donne 2 000).
+    const parPorteur = d.scenario.equipment!.types.find((t) => t.code === "porteur_12t")!.capacityPerUnit;
     const remplissage = 0.8;
     const sousContrat = parPorteur * (57 - route);
     const aujourdHui = parPorteur * remplissage * (78 - route);

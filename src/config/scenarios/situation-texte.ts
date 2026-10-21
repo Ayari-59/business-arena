@@ -70,8 +70,13 @@ import { NOVA_HOME } from "../groupe/nova";
 // Les mots de durée
 // ---------------------------------------------------------------------------
 
-/** Ce que devient, au mois et à l'année, une tournure écrite au trimestre. */
-const MOTS: Record<string, { month: string; year: string }> = {
+/**
+ * Ce que devient, au mois et à l'année, une tournure écrite au trimestre. La clé
+ * est le texte au trimestre, sauf quand elle ne peut pas l'être : `quarter` le
+ * porte alors (« quatre trimestres » rend « 4 trimestres », sans chiffre dans la
+ * clé d'un mot).
+ */
+const MOTS: Record<string, { month: string; year: string; quarter?: string }> = {
   trimestre: { month: "mois", year: "exercice" },
   trimestres: { month: "mois", year: "exercices" },
   "par trimestre": { month: "par mois", year: "par an" },
@@ -98,9 +103,22 @@ const MOTS: Record<string, { month: string; year: string }> = {
   // --- fin transport-bistrot -----------------------------------------------
   // --- conseil-hotel ---
   // Un flux annuel écrit comme quatre tours d'un trimestre : douze tours d'un mois, un seul d'un an.
-  "4 trimestres": { month: "12 mois", year: "1 exercice" },
+  // La formule l'écrit en chiffres (« × 4 trimestres ») ; la clé, en lettres.
+  "quatre trimestres": { quarter: "4 trimestres", month: "12 mois", year: "1 exercice" },
   // --- nova-courriers : les tournures des situations NOVA et des courriers ---
   "ce trimestre-là": { month: "ce mois-là", year: "cet exercice-là" },
+  // --- retouches ---
+  // Un tour d'un an se clôt sur les comptes annuels : la situation n'y est plus « intermédiaire ».
+  "situation intermédiaire": { month: "situation intermédiaire", year: "situation comptable" },
+  // « Aucun effet sur ce mois-ci » : le « -ci » n'y désigne rien que « ce mois » ne dise.
+  "sur ce trimestre": { month: "sur ce mois", year: "sur cet exercice" },
+  // L'échelle d'une commande d'office : « (échelle exercice) » se dit « (échelle annuelle) ».
+  "échelle trimestre": { month: "échelle mois", year: "échelle annuelle" },
+  // VOLT FITNESS : l'adhérent paie à chaque tour, et chaque mois quand le tour dure un an
+  // (`echeance`) ; sans quoi la formule annuelle ne se comparerait plus à rien.
+  "par trimestre aujourd'hui": { month: "par mois aujourd'hui", year: "par mois aujourd'hui" },
+  // Un engagement d'un an ne dépasse pas l'exercice quand le tour dure un an : il le couvre.
+  "au-delà du trimestre": { month: "au-delà du mois", year: "sur tout l'exercice" },
   // --- groupe batiment-boutique-ecommerce ---
   // Une part du tour, à la même cadence : deux mois de location sur trois en
   // font vingt jours sur trente, et huit mois sur douze.
@@ -118,10 +136,11 @@ const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 function motDeDuree(cle: string, periodicite: Periodicity): string | undefined {
   const exact = MOTS[cle];
-  if (exact) return periodicite === "quarter" ? cle : exact[periodicite];
+  if (exact) return periodicite === "quarter" ? (exact.quarter ?? cle) : exact[periodicite];
   const minuscule = cle.charAt(0).toLowerCase() + cle.slice(1);
-  if (minuscule === cle || !MOTS[minuscule]) return undefined;
-  return periodicite === "quarter" ? cle : capitaliser(MOTS[minuscule]![periodicite]);
+  const mot = minuscule === cle ? undefined : MOTS[minuscule];
+  if (!mot) return undefined;
+  return periodicite === "quarter" ? (mot.quarter ? capitaliser(mot.quarter) : cle) : capitaliser(mot[periodicite]);
 }
 
 // ---------------------------------------------------------------------------
@@ -144,6 +163,9 @@ const abonnementDe = (s: EngineScenarioConfig) => {
   if (!s.subscription) throw new Error("Situation : le jeton « abonnement » suppose un scénario par abonnement");
   return s.subscription;
 };
+
+/** Les échéances d'un abonnement dans l'année : une par tour, une par mois quand le tour dure un an. */
+const echeancesParAn = (s: EngineScenarioConfig) => (s.roundDays >= 360 ? 12 : 360 / s.roundDays);
 
 // --- conseil-hotel ---
 /** Les entreprises de départ dont une situation lit la capacité. */
@@ -212,6 +234,15 @@ const GRANDEURS: Record<string, Grandeur> = {
   attrition: (s) => tauxLu(abonnementDe(s).baseChurnRate),
   /** Le nombre de tours dans une année. */
   tours_par_an: (s) => 360 / s.roundDays,
+  // --- retouches : ce que l'adhérent paie à chaque échéance ---
+  /**
+   * Les échéances d'un abonnement dans l'année : une par tour, et une par mois quand le
+   * tour dure un an. La formule annuelle de VOLT FITNESS se compare à ce que l'adhérent
+   * paie « aujourd'hui » : à l'année, payer une fois par tour ne la distinguerait de rien.
+   */
+  echeances_par_an: (s) => echeancesParAn(s),
+  /** Ce que l'adhérent paie à chaque échéance : l'abonnement d'une année divisé par leur nombre. */
+  echeance: (s) => (abonnementDe(s).refPrice * (360 / s.roundDays)) / echeancesParAn(s),
   // --- transport-bistrot ---------------------------------------------------
   /**
    * La capacité du parc de départ, par tour : les machines (camions, cuisines) du parc
@@ -246,6 +277,16 @@ const GRANDEURS: Record<string, Grandeur> = {
   investissement_plafond: (s) => {
     if (!s.investment) throw new Error("Situation : le jeton « investissement_plafond » suppose un investissement");
     return s.investment.maxPerRound;
+  },
+  /**
+   * Ce qu'un porteur 12 t emmène en un tour à pleine charge : la capacité de son type
+   * dans le parc (`equipment.types`), celle sur laquelle le moteur compte la flotte.
+   * Hors abonnement, `applyPeriodicity` la met à la durée du tour (× k).
+   */
+  capacite_porteur: (s) => {
+    const porteur = s.equipment?.types.find((t) => t.code === "porteur_12t");
+    if (!porteur) throw new Error("Situation : le jeton « capacite_porteur » suppose un porteur 12 t dans le parc");
+    return porteur.capacityPerUnit;
   },
   // --- fin transport-bistrot -----------------------------------------------
   // --- conseil-hotel ---
@@ -460,15 +501,46 @@ function enLettres(x: number): string {
   return reste === 0 ? mille : `${mille} ${centaines(reste, false)}`;
 }
 
-/** Un nombre au centième au plus, sans zéro inutile : « 455 », « 151,67 », « 1 820 ». */
-function nombre(x: number): string {
-  const v = Math.round(net(x) * 100) / 100;
-  if (Number.isInteger(v)) return entier(v);
-  const [ent, dec] = avecVirgule(Math.abs(v), 0, 2).split(",");
-  return `${v < 0 ? "-" : ""}${milliers(Number(ent))},${dec}`;
+// --- fin transport-bistrot -------------------------------------------------
+
+// --- retouches ---------------------------------------------------------------
+
+/**
+ * Un nombre que le récit lit, arrondi au pas donné : tel quel quand il tombe juste,
+ * précédé d'« environ » sinon. Les 455 heures d'un salarié par trimestre font
+ * 151,67 h au mois : l'énoncé dit « environ 152 h », et le calcul qu'il demande
+ * part de 152 (`arrondi(…)`), pour tomber juste avec le nombre affiché. La brigade
+ * de dix fait alors « environ 1 520 heures » (au pas de la dizaine), soit
+ * 3 040 couverts, les mêmes que dix fois 152 heures.
+ */
+const environ = (pas: number) => (x: number): string => {
+  const n = Math.round(net(x) / pas) * pas;
+  return net(x) === n ? entier(n) : `environ ${entier(n)}`;
+};
+
+/**
+ * Un résultat dit à la centaine : « près de 4 000 » pour 3 960, mais « un peu plus
+ * de 1 300 » pour 1 320, que « près de » dirait un peu moins qu'il n'est.
+ */
+function approcheCentaine(x: number): string {
+  const n = Math.round(net(x) / 100) * 100;
+  return `${net(x) <= n ? "près de" : "un peu plus de"} ${entier(n)}`;
 }
 
-// --- fin transport-bistrot -------------------------------------------------
+/**
+ * Un écart rapporté à la mission longue du récit (le quotient par sa durée) :
+ * « moins d'une mission longue » quand il y tient, « plus de deux missions
+ * longues » quand il en dépasse deux. ATLAS CONSEIL manque son seuil de 41 jours
+ * au trimestre, mais de 165 à l'année, quand la mission longue en fait 60.
+ */
+function missionsLongues(x: number): string {
+  const n = Math.floor(net(x));
+  if (n < 1) return "moins d'une mission longue";
+  if (n < 2) return "plus d'une mission longue";
+  return `plus de ${enMots(n, false)} missions longues`;
+}
+
+// --- fin retouches -----------------------------------------------------------
 
 const FORMATS: Record<string, (x: number) => string> = {
   /** Un montant à l'euro : « 105 000 ». */
@@ -491,9 +563,17 @@ const FORMATS: Record<string, (x: number) => string> = {
   // --- transport-bistrot ---------------------------------------------------
   /** Un entier en toutes lettres, jusqu'à 999 999 : « sept mille quatre cents ». */
   lettres: enLettres,
-  /** Un nombre au centième au plus : « 455 » au trimestre, « 151,67 » au mois. */
-  nombre,
   // --- fin transport-bistrot -----------------------------------------------
+  // --- retouches -----------------------------------------------------------
+  /** Un nombre à l'unité, « environ » quand il ne tombe pas juste : « 455 », « environ 152 ». */
+  environ: environ(1),
+  /** Le même à la dizaine : « 4 550 », « environ 1 520 ». */
+  environ_dizaine: environ(10),
+  /** Un résultat à la centaine, « près de 4 000 » ou « un peu plus de 1 300 ». */
+  approche_centaine: approcheCentaine,
+  /** Un écart compté en missions longues (son quotient par leur durée) : « moins d'une mission longue ». */
+  missions_longues: missionsLongues,
+  // --- fin retouches -------------------------------------------------------
 
   // --- nova-courriers ---------------------------------------------------------
   /** Le même, en tête de phrase : « Neuf cents palettes ». */

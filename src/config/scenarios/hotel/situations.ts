@@ -313,9 +313,9 @@ export const HOTEL_SOURCES: SituationDef[] = [
         prompt:
           "Si ces {{entier: 10 * jours_du_tour}} nuitées supplémentaires ne se remplissent qu'à 60 %, quel flux annuel supplémentaire faut-il retenir ?",
         options: [
-          { id: "a", label: "{{entier: 10 * jours_du_tour}} × 0,60 × 74 € × {{4 trimestres}} ≈ 159 800 €" },
-          { id: "b", label: "{{entier: 10 * jours_du_tour}} × 95 € × {{4 trimestres}} ≈ 342 000 €" },
-          { id: "c", label: "{{entier: 10 * jours_du_tour}} × 74 € × {{4 trimestres}} ≈ 266 400 €" },
+          { id: "a", label: "{{entier: 10 * jours_du_tour}} × 0,60 × 74 € × {{quatre trimestres}} ≈ 159 800 €" },
+          { id: "b", label: "{{entier: 10 * jours_du_tour}} × 95 € × {{quatre trimestres}} ≈ 342 000 €" },
+          { id: "c", label: "{{entier: 10 * jours_du_tour}} × 74 € × {{quatre trimestres}} ≈ 266 400 €" },
           { id: "d", label: "90 000 € ÷ 10 ans = 9 000 €" },
         ],
         correctOptionId: "a",

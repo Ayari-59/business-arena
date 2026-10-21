@@ -195,7 +195,7 @@ const SOURCES: CourrierDef[] = [
       "Notre directeur financier a quitté ses fonctions à trois semaines de la clôture. Nous cherchons une équipe capable d'intervenir immédiatement et réglons comptant. Votre réponse nous est nécessaire sous quarante-huit heures.",
     signataire: "Le président",
     effet:
-      "+{{entier: commande_conseil_mission_urgente}} jours-conseil (échelle {{trimestre}}) vendus d'office ce tour, réglés comptant, dans la limite des jours disponibles",
+      "+{{entier: commande_conseil_mission_urgente}} jours-conseil ({{échelle trimestre}}) vendus d'office ce tour, réglés comptant, dans la limite des jours disponibles",
     enJeu: "Un cabinet à 100 % d'occupation ne peut pas dire oui : garder de la marge de manœuvre a une valeur.",
     nature: "market",
     pli: "email",

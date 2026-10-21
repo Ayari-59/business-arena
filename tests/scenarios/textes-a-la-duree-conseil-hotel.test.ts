@@ -7,7 +7,8 @@ import {
   PERIODICITY_DAYS,
   type Periodicity,
 } from "../../src/config/scenarios/periodicity";
-import { situationDeLaPartie, textesDe } from "../../src/config/scenarios/situation-texte";
+import { SCENARIOS } from "../../src/config/scenarios/registry";
+import { jetonsDe, situationDeLaPartie, sourceDe, textesDe } from "../../src/config/scenarios/situation-texte";
 import type { EngineScenarioConfig } from "../../src/engine/types";
 
 /**
@@ -358,4 +359,38 @@ describe("les invariants : ce que l'énoncé écrit en clair vaut à toutes les 
       expect(chambre("suite").market.segments.find((x) => x.code === "occasions")!.seasonality![2]).toBe(1.5);
     });
   }
+});
+
+describe("ce que l'écart au seuil vaut en missions longues, à chaque durée", () => {
+  // La mission longue du récit fait soixante jours (`conseil_t5_mission_rabais`), à toute
+  // durée. L'écart au seuil, lui, suit le tour : 13 jours au mois, 41 au trimestre, 165 à
+  // l'année. « Soit moins d'une mission longue » était faux à l'année.
+  const MISSION_LONGUE = 60;
+  const attendu = { month: "moins d'une mission longue", quarter: "moins d'une mission longue", year: "plus de deux missions longues" };
+  for (const periodicity of DUREES) {
+    for (const [code, prefixe] of [["conseil", "conseil"], ["conseil-gamme", "conseilg"]] as const) {
+      it(`${code} ${NOM[periodicity]}`, () => {
+        const s = joue(code, periodicity);
+        const ecart = Math.round(s.fixedCostsPerRound / 470) - Math.round((JOURS_VENDUS * s.roundDays) / 90);
+        const missions = ecart / MISSION_LONGUE;
+        expect(missions < 1 ? "moins" : Math.floor(missions), periodicity).toBe(periodicity === "year" ? 2 : "moins");
+        expect(rendu(code, `${prefixe}_detect_below_breakeven`, periodicity)).toContain(
+          `Il manque environ ${milliers(ecart)} jours pour atteindre les ${milliers(s.fixedCostsPerRound / 470)} du seuil, soit ${attendu[periodicity]}.`,
+        );
+      });
+    }
+  }
+});
+
+describe("un mot de durée ne porte aucun chiffre", () => {
+  // « × {{4 trimestres}} » portait un chiffre dans la clé d'un mot de durée. Les chiffres
+  // d'un énoncé se lisent par une expression (`{{entier: …}}`) ; un mot de durée n'en
+  // porte aucun, même quand il rend « 4 trimestres » au trimestre.
+  it("dans les sources à jetons des quinze scénarios", () => {
+    const mots = SCENARIOS.flatMap((d) =>
+      d.situations.flatMap((def) => textesDe(sourceDe(def)).flatMap(jetonsDe).filter((j) => !j.includes(":"))),
+    );
+    expect(mots.length).toBeGreaterThan(100);
+    expect(mots.filter((j) => /\d/.test(j))).toEqual([]);
+  });
 });
