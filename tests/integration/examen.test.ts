@@ -44,6 +44,7 @@ import { ExamenReserveError, LicenceDepasseeError } from "@/services/acces.servi
 import { neutralDecisions } from "@/engine/bots";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { GRILLE_BUSINESS_ARENA_2026, REFERENCE_GESTION_NEUTRE_GELEE, noteDeDecision, noterLaCopie } from "@/config/examen/grille";
+import { estRelative } from "@/config/examen/competences";
 import { rejeuPourLExamen } from "@/services/merite.service";
 import type { CompanyState, RoundDecisions } from "@/engine/types";
 import { etablissementSousLicence } from "./helpers/licence";
@@ -292,7 +293,9 @@ describe("deux candidats passent l'examen", () => {
     // relative la moyenne des seuils des copies notées.
     for (const c of suivi.competences) {
       const seuils = suivi.notees.map((n) => (n.notation?.etat === "notee" ? n.notation.competences.find((x) => x.code === c.code)!.seuils!.acquis : NaN));
-      const attendu = ["strategie", "marketing-prix"].includes(c.code)
+      // Les compétences relatives se lisent de la grille de l'examen (deux en version 3,
+      // quatre depuis la version 4).
+      const attendu = estRelative(GRILLE_BUSINESS_ARENA_2026.seuils, c.code)
         ? seuils.reduce((s, x) => s + x, 0) / seuils.length
         : GRILLE_BUSINESS_ARENA_2026.seuils.fixes.acquis;
       expect(c.seuil, c.code).toBeCloseTo(attendu, 9);
