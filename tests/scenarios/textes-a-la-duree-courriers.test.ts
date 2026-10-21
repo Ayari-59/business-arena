@@ -55,6 +55,33 @@ const AVANT = JSON.parse(
   readFileSync(new URL("../fixtures/courriers-au-trimestre.json", import.meta.url), "utf-8"),
 ) as Record<string, string[]>;
 
+/**
+ * Les erreurs que le texte portait DÉJÀ au trimestre, corrigées et nommées : la fixture
+ * garde le texte d'avant, la garde y applique ces remplacements.
+ */
+const CORRECTIONS: { code: string; avant: string; apres: string }[] = [
+  // Le moteur vend 400 nuitées au trimestre (`hotel_groupe_impromptu`) : quarante
+  // passagers « logés ce soir » n'en faisaient que quarante. Le récit dit désormais les
+  // nuitées que le moteur vend, à toutes les durées.
+  {
+    code: "hotel_groupe_impromptu",
+    avant: "Demande d'hébergement en urgence pour quarante passagers",
+    apres: "Demande d'hébergement en urgence pour nos circuits",
+  },
+  {
+    code: "hotel_groupe_impromptu",
+    avant:
+      "Notre autocar est immobilisé sur l'autoroute à la suite d'une avarie. Quarante passagers doivent être logés ce soir. Nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
+    apres:
+      "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : quatre cents nuitées ce trimestre, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
+  },
+];
+
+const attenduAuTrimestre = (cle: string): string[] =>
+  AVANT[cle]!.map((t) =>
+    CORRECTIONS.filter((c) => cle === c.code || cle.startsWith(`${c.code} `)).reduce((acc, c) => acc.replace(c.avant, c.apres), t),
+  );
+
 const TOUS: CourrierDef[] = [...COURRIERS, ...COURRIERS_DE_ROUTINE, ...LETTRES_DE_MISSION, ...COURRIERS_EN_RETOUR];
 const milliers = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
@@ -85,7 +112,11 @@ const COMMANDES: Record<string, Partial<Record<Periodicity, [number, string]>>> 
     year: [2000, "deux mille salariés"],
   },
   conseil_mission_urgente: { month: [23, ""], quarter: [70, ""], year: [280, ""] },
-  hotel_groupe_impromptu: { month: [133, ""], quarter: [400, ""], year: [1600, ""] },
+  hotel_groupe_impromptu: {
+    month: [133, "cent trente-trois nuitées ce mois-ci"],
+    quarter: [400, "quatre cents nuitées ce trimestre"],
+    year: [1600, "mille six cents nuitées cet exercice"],
+  },
   ecom_commande_b2b: { month: [233, "deux cent trente-trois articles"], quarter: [700, "sept cents articles"], year: [2800, "deux mille huit cents articles"] },
   batiment_chantier_surprise: { month: [60, ""], quarter: [180, ""], year: [720, ""] },
   transport_lot_surprise: { month: [300, "Trois cents palettes"], quarter: [900, "Neuf cents palettes"], year: [3600, "Trois mille six cents palettes"] },
@@ -145,13 +176,13 @@ describe("chaque courrier se rend à la durée du tour de sa partie", () => {
   it("au trimestre, chaque champ est octet pour octet celui d'avant les jetons", () => {
     const attendus = new Set(Object.keys(AVANT));
     for (const c of TOUS) {
-      expect(textesDuCourrier(courrierALaDuree(c, 90)), c.code).toEqual(AVANT[c.code]);
+      expect(textesDuCourrier(courrierALaDuree(c, 90)), c.code).toEqual(attenduAuTrimestre(c.code));
       // Les listes portent le texte au trimestre : la liasse imprimée sans durée le lit.
-      expect(textesDuCourrier(c), c.code).toEqual(AVANT[c.code]);
+      expect(textesDuCourrier(c), c.code).toEqual(attenduAuTrimestre(c.code));
       attendus.delete(c.code);
       if (VARIANTES_SANS_ASSURANCE[c.code]) {
         const cle = `${c.code} (sans assurance)`;
-        expect(textesDuCourrier(courrierDeLaPartie(c.code, { jours: 90, assurance: false })!), cle).toEqual(AVANT[cle]);
+        expect(textesDuCourrier(courrierDeLaPartie(c.code, { jours: 90, assurance: false })!), cle).toEqual(attenduAuTrimestre(cle));
         attendus.delete(cle);
       }
     }

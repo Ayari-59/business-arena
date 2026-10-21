@@ -26,7 +26,7 @@ const SOURCES: SituationDef[] = [
     category: "prise_de_poste",
     title: "Ce que coûte vraiment une palette",
     narrative:
-      "Vous reprenez ROUTE & CIE : sept porteurs, dix chauffeurs, un dépôt. La palette se facture 74 € en moyenne. Le gazole et les péages coûtent 18 €, l'entretien et les pneumatiques 7 €. Tout le reste, la conduite comprise, tombe chaque {{trimestre}} à l'identique.",
+      "Vous reprenez ROUTE & CIE : {{mots: vehicules}} véhicules, dix chauffeurs, un dépôt. La palette se facture 74 € en moyenne. Le gazole et les péages coûtent 18 €, l'entretien et les pneumatiques 7 €. Tout le reste, la conduite comprise, tombe chaque {{trimestre}} à l'identique.",
     problem:
       "Combien de palettes faut-il charger dans {{le trimestre}} pour couvrir la structure ?",
     diagnosticOptions: [
