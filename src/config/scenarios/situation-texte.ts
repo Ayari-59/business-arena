@@ -137,6 +137,13 @@ const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> 
   perte: (x, s) => tauxLu(composerPerte(x, s.roundDays / 90)),
   /** Un montant arrondi à l'unité, quand l'énoncé calcule avec un nombre qu'il a déjà arrondi. */
   arrondi: (x) => Math.round(net(x)),
+  /**
+   * Un flux du récit écrit au trimestre (un montant ou un volume par tour que le scénario
+   * ne porte pas : une offre, un contrat), mis à la durée du tour comme le moteur met les
+   * siens (× jours / 90). Un chiffre que le scénario porte se lit par sa grandeur, jamais
+   * par `flux`.
+   */
+  flux: (x, s) => (x * s.roundDays) / 90,
 };
 
 /** Une petite arithmétique : nombres, grandeurs, fonctions, + − × ÷ et parenthèses. */
