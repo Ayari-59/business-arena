@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   GRILLES,
   GRILLE_BUSINESS_ARENA_2026,
+  GRILLE_BUSINESS_ARENA_2026_VERSION_3,
   GRILLE_PAR_DEFAUT,
   erreursDeLaGrille,
   justificationDe,
@@ -47,6 +48,8 @@ import type { CompanyState, RoundDecisions } from "@/engine/types";
 const marche = (resultat: number, p: Partial<MarcheDuRejeu> = {}): MarcheDuRejeu => ({
   resultat,
   tresorerie: 1000,
+  tresorerieLaPlusBasse: 1000,
+  chiffreDAffaires: 100_000,
   defaillant: false,
   rang: 1,
   ...p,
@@ -120,7 +123,7 @@ describe("la grille : fixe, publiée, versionnée", () => {
     const ref = Array.from({ length: 30 }, (_, i) => marche(i * 37 - 200));
     const joueur = ref.map((r, i) => marche(r.resultat + (i % 3 === 0 ? -50 : 80), { rang: 1 + (i % 4) }));
     const c = noterLaCopie(GRILLE_BUSINESS_ARENA_2026, mesures(joueur, ref, 4, [0.8, 0.6]), { questions: true });
-    expect(c.lignes).toHaveLength(7);
+    expect(c.lignes).toHaveLength(GRILLE_BUSINESS_ARENA_2026.lignes.length);
     expect(c.lignes.reduce((s, l) => s + l.points, 0)).toBeCloseTo(c.note, 0);
     expect(c.lignes.reduce((s, l) => s + l.max, 0)).toBeCloseTo(100, 6);
     // La copie notée garde l'étalon contre lequel elle a été notée, et les seuils de ses niveaux.
@@ -135,8 +138,8 @@ describe("la grille : fixe, publiée, versionnée", () => {
 
   it("bornes de 0 à 100 : la meilleure copie fait 100, la pire 0, un écart immense reste borné", () => {
     const ref = Array.from({ length: 30 }, (_, i) => marche(1000 + i));
-    const parfait = ref.map((r) => marche(r.resultat + 1e9, { rang: 1, tresorerie: 5 }));
-    const pire = ref.map(() => marche(-1e9, { rang: 4, tresorerie: -5, defaillant: true }));
+    const parfait = ref.map((r) => marche(r.resultat + 1e9, { rang: 1, tresorerie: 5, tresorerieLaPlusBasse: 1e9 }));
+    const pire = ref.map(() => marche(-1e9, { rang: 4, tresorerie: -5, tresorerieLaPlusBasse: -1e9, defaillant: true }));
     expect(noterLaCopie(GRILLE_BUSINESS_ARENA_2026, mesures(parfait, ref, 4, [1]), { questions: true }).note).toBe(100);
     expect(noterLaCopie(GRILLE_BUSINESS_ARENA_2026, mesures(pire, ref, 4, [0]), { questions: true }).note).toBe(0);
     for (const g of GRILLES) {
@@ -215,6 +218,8 @@ describe("la neutralisation du hasard", () => {
     const versMarche = (x: ReturnType<typeof rejouer>): MarcheDuRejeu => ({
       resultat: x.joueur.resultatNetCumule,
       tresorerie: x.joueur.tresorerieFinale,
+      tresorerieLaPlusBasse: x.joueur.tresorerieLaPlusBasse,
+      chiffreDAffaires: x.joueur.chiffreDAffairesCumule,
       defaillant: x.joueur.defaillant,
       rang: x.joueur.rang,
     });
@@ -273,12 +278,19 @@ describe("les niveaux de compétence et leurs seuils écrits", () => {
     const ref = Array.from({ length: 10 }, () => marche(100));
     // Toujours au-dessus de la référence, jamais défaillant, trésorerie négative partout.
     const joueur = ref.map(() => marche(200, { tresorerie: -1 }));
-    const c = noterLaCopie(GRILLE_BUSINESS_ARENA_2026, mesures(joueur, ref), { questions: false });
+    // Version 3, telle que les examens créés avant la gardent : solvabilité 15 points
+    // tenus, trésorerie positive 10 × 0,5 perdus : 15 / 20, sous des seuils fixes.
+    const c = noterLaCopie(GRILLE_BUSINESS_ARENA_2026_VERSION_3, mesures(joueur, ref), { questions: false });
     const tres = c.competences.find((x) => x.code === "tresorerie")!;
-    // Solvabilité 15 points tenus, trésorerie positive 10 × 0,5 perdus : 15 / 20.
     expect(tres.part).toBeCloseTo(15 / 20, 9);
     expect(tres.niveau).toBe("acquis");
     expect(c.competences.find((x) => x.code === "decision-incertitude")!.niveau).toBe("maitrise");
+    // Version 4 : la même part pondérée, lue des points de la grille ; le creux, à égalité
+    // avec l'étalon sur chaque marché, tient la moitié de sa ligne.
+    const v4 = noterLaCopie(GRILLE_BUSINESS_ARENA_2026, mesures(joueur, ref), { questions: false });
+    const pts = (code: string) => GRILLE_BUSINESS_ARENA_2026.lignes.find((l) => l.code === code)!.points;
+    const attendue = (pts("solvabilite") + 0.5 * pts("creux-de-tresorerie")) / (pts("solvabilite") + 0.5 * pts("tresorerie-positive") + pts("creux-de-tresorerie"));
+    expect(v4.competences.find((x) => x.code === "tresorerie")!.part).toBeCloseTo(attendue, 9);
   });
 });
 

@@ -15,7 +15,9 @@ import { decisionDeLaGestionNeutre, rejeuxDeLEtalon } from "@/pedagogy/merite/et
 import { GRAINES_DU_MERITE, marcheRejoue } from "@/pedagogy/merite/verdict";
 import {
   GRILLES,
+  GRILLES_VERSION_3,
   GRILLE_BUSINESS_ARENA_2026,
+  GRILLE_BUSINESS_ARENA_2026_VERSION_3,
   REFERENCE_GESTION_NEUTRE_GELEE,
   erreursDeLaGrille,
   grilleGardee,
@@ -61,10 +63,12 @@ import { CompetencesDeLaPromotion, ReleveDesCompetences } from "@/components/exa
  */
 
 const RELATIVES: readonly CodeDeCompetence[] = ["strategie", "marketing-prix"];
+/** Depuis la version 4, la trésorerie et l'analyse financière aussi (tests/unit/examen-grille-v4). */
+const RELATIVES_V4: readonly CodeDeCompetence[] = [...RELATIVES, "tresorerie", "analyse-financiere"];
 
 /** La grille par défaut telle qu'un examen créé en version 2 la garde : sans seuils. */
 function grilleGardeeEnVersion2(): GrilleGardee {
-  const { seuils: _s, ...sansSeuils } = structuredClone(GRILLE_BUSINESS_ARENA_2026);
+  const { seuils: _s, ...sansSeuils } = structuredClone(GRILLE_BUSINESS_ARENA_2026_VERSION_3);
   void _s;
   return {
     ...sansSeuils,
@@ -175,30 +179,38 @@ describe("la grille publiée : la gestion neutre n'est jamais « acquise » en s
     it(`${cas.entreprise} niveau ${cas.niveau} : la copie de gestion neutre est en cours, la copie qui la bat nettement est acquise`, () => {
       const neutre = copieAutourDeLaNeutre(cas.niveau, cas.entreprise, 1);
       const mesures = mesurer(neutre.partie, neutre.ouverts);
-      const v3 = noterLaCopie(GRILLE_BUSINESS_ARENA_2026, mesures, { questions: false });
       const v2 = noterLaCopie(grilleGardeeEnVersion2(), mesures, { questions: false });
-      for (const code of RELATIVES) {
-        const c = competence(v3, code);
-        // Une copie identique à l'étalon a exactement sa part : l'ancre.
-        expect(c.part, `${code} : la part de la copie est celle de l'étalon`).toBe(c.partDeLaReference);
-        expect(c.niveau, `${code} : grille version 3`).toBe("en-cours");
-        // Les seuils fixes l'auraient dite acquise : la garde porte sur un marché où ils trompaient.
-        expect(atteint(competence(v2, code).niveau), `${code} : grille version 2`).toBe(true);
-      }
-
       const meilleure = copieAutourDeLaNeutre(cas.niveau, cas.entreprise, 1.05);
-      const m = noterLaCopie(GRILLE_BUSINESS_ARENA_2026, mesurer(meilleure.partie, meilleure.ouverts), { questions: false });
-      expect(competence(m, "decision-incertitude").part, "elle bat la gestion neutre sur la plupart des marchés").toBeGreaterThan(0.8);
-      for (const code of RELATIVES) {
-        expect(atteint(competence(m, code).niveau), `${code} : ${competence(m, code).part} pour un seuil de ${competence(m, code).seuils?.acquis}`).toBe(true);
+      const mesuresMeilleure = mesurer(meilleure.partie, meilleure.ouverts);
+      for (const grille of [GRILLE_BUSINESS_ARENA_2026_VERSION_3, GRILLE_BUSINESS_ARENA_2026]) {
+        const publiee = noterLaCopie(grille, mesures, { questions: false });
+        for (const code of RELATIVES) {
+          const c = competence(publiee, code);
+          // Une copie identique à l'étalon a exactement sa part : l'ancre.
+          expect(c.part, `${code} : la part de la copie est celle de l'étalon`).toBe(c.partDeLaReference);
+          expect(c.niveau, `${code} : grille version ${grille.version}`).toBe("en-cours");
+          // Les seuils fixes l'auraient dite acquise : la garde porte sur un marché où ils trompaient.
+          expect(atteint(competence(v2, code).niveau), `${code} : grille version 2`).toBe(true);
+        }
+
+        const m = noterLaCopie(grille, mesuresMeilleure, { questions: false });
+        expect(competence(m, "decision-incertitude").part, "elle bat la gestion neutre sur la plupart des marchés").toBeGreaterThan(0.8);
+        for (const code of RELATIVES) {
+          expect(atteint(competence(m, code).niveau), `${code} : ${competence(m, code).part} pour un seuil de ${competence(m, code).seuils?.acquis}`).toBe(true);
+        }
       }
     }, 120_000);
   }
 
-  it("les grilles publiées écrivent leurs seuils, relatifs en stratégie et en marketing, et ils sont bien formés", () => {
-    for (const g of GRILLES) {
+  it("les grilles publiées écrivent leurs seuils, relatifs en stratégie et en marketing (et en finance depuis la version 4), et ils sont bien formés", () => {
+    for (const g of GRILLES_VERSION_3) {
       expect(erreursDeLaGrille(g), g.code).toEqual([]);
       expect(g.seuils.relatifs?.competences, g.code).toEqual(RELATIVES);
+    }
+    for (const g of GRILLES) {
+      expect(erreursDeLaGrille(g), g.code).toEqual([]);
+      expect(g.seuils.relatifs?.competences, g.code).toEqual(RELATIVES_V4);
+      expect(g.seuils.relatifs?.ecarts, g.code).toEqual(GRILLE_BUSINESS_ARENA_2026_VERSION_3.seuils.relatifs?.ecarts);
       // Les opérations gardent les seuils fixes : la gestion neutre y vaut la moitié des
       // points, et les seuils fixes sont déjà comptés à partir d'elle.
       expect(g.seuils.relatifs?.competences, g.code).not.toContain("operations");
@@ -241,7 +253,7 @@ describe("une copie de grille d'avant la version 3 garde les seuils fixes d'alor
       expect(c.seuils).toEqual({ enCours: 0.4, acquis: 0.6, maitrise: 0.8 });
       expect(c.partDeLaReference).toBeUndefined();
     }
-    const enV3 = noterLaCopie(GRILLE_BUSINESS_ARENA_2026, COMME_L_ETALON, { questions: false });
+    const enV3 = noterLaCopie(GRILLE_BUSINESS_ARENA_2026_VERSION_3, COMME_L_ETALON, { questions: false });
     for (const code of RELATIVES) expect(competence(enV3, code).niveau, code).toBe("en-cours");
     // Mêmes points : la note ne dépend pas de la version.
     expect(enV3.note).toBe(copie.note);
@@ -266,7 +278,8 @@ const traits = (html: string) => [...html.matchAll(/<line x1="([\d.]+)"/g)].map(
 
 describe("les seuils se disent et se tracent depuis la grille de l'examen", () => {
   const v2 = grilleGardee(grilleGardeeEnVersion2());
-  const v3 = grilleGardee(GRILLE_BUSINESS_ARENA_2026);
+  const v3 = grilleGardee(GRILLE_BUSINESS_ARENA_2026_VERSION_3);
+  const v4 = grilleGardee(GRILLE_BUSINESS_ARENA_2026);
 
   it("un examen version 2 dit « 60 % », comme avant ; un examen version 3 dit aussi les seuils relatifs", () => {
     expect(pourcentDuSeuil(v2.seuils.fixes.acquis)).toBe("60 %");
@@ -285,6 +298,12 @@ describe("les seuils se disent et se tracent depuis la grille de l'examen", () =
     expect(seuilDAtteinteDit(v3.seuils)).toBe(
       "60 %, ou plus 10 points là où le seuil est relatif",
     );
+
+    // Version 4 : les mêmes écarts, deux compétences de plus.
+    expect(niveauxRelatifsDits(v4.seuils, v4.reference.nom)).toBe(
+      "En stratégie, en marketing et prix, en pilotage de la trésorerie et en analyse financière, les seuils partent de la part de la gestion neutre du secteur sur les mêmes marchés : en cours moins 10 points, acquis plus 10 points, maîtrisé plus 30 points.",
+    );
+    expect(seuilDAtteinteDit(v4.seuils)).toBe("60 %, ou plus 10 points là où le seuil est relatif");
   });
 
   it("le relevé trace le seuil de la grille qui a noté la copie : 60 partout en version 2, le seuil relatif de la copie en version 3", () => {
@@ -300,7 +319,7 @@ describe("les seuils se disent et se tracent depuis la grille de l'examen", () =
       expect(html).not.toMatch(/acquis dès/);
     }
 
-    const apres = noterLaCopie(GRILLE_BUSINESS_ARENA_2026, COMME_L_ETALON, { questions: false });
+    const apres = noterLaCopie(GRILLE_BUSINESS_ARENA_2026_VERSION_3, COMME_L_ETALON, { questions: false });
     const html = renderToStaticMarkup(createElement(ReleveDesCompetences, { competences: apres.competences, seuils: seuilsDeLaCopie(apres) }));
     const attendus = apres.competences.map((c) => (RELATIVES.includes(c.code) ? c.partDeLaReference! + 0.1 : 0.6) * 100);
     traits(html).forEach((x, i) => expect(x, apres.competences[i]!.code).toBeCloseTo(attendus[i]!, 6));

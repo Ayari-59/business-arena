@@ -118,12 +118,15 @@ export interface Seuils {
  *
  * Ce que la gestion neutre du secteur (l'étalon de la grille) obtient sur une ligne dépend
  * de la ligne. Sur « battre », jouer comme elle vaut zéro : une égalité ne bat rien. Sur
- * l'écart moyen, jouer comme elle vaut exactement la moitié des points. Les lignes
- * financières et le rang ne se mesurent pas contre elle : elle les remplit comme n'importe
- * quel candidat, et y obtient de presque rien à presque tout selon le secteur. Ces seuils fixes
- * ne disent donc « mieux que la gestion neutre » que pour la décision et les opérations ;
- * c'est pourquoi la stratégie et le marketing se lisent, depuis la version 3 des grilles,
- * par rapport à la part de la gestion neutre (`SeuilsDeLaGrille`).
+ * l'écart moyen, et depuis la version 4 sur le creux de trésorerie et la marge nette,
+ * jouer comme elle vaut exactement la moitié des points. Les lignes en oui ou non
+ * (solvabilité, trésorerie positive, rentabilité) et le rang ne se mesurent pas contre
+ * elle : elle les remplit comme n'importe quel candidat, et y obtient de presque rien à
+ * presque tout selon le secteur. Ces seuils fixes ne disent donc « mieux que la gestion
+ * neutre » que pour la décision et les opérations ; c'est pourquoi la stratégie et le
+ * marketing se lisent, depuis la version 3 des grilles, par rapport à la part de la
+ * gestion neutre (`SeuilsDeLaGrille`), et la trésorerie et l'analyse financière depuis la
+ * version 4.
  */
 export const SEUILS_DE_NIVEAU: Seuils = { enCours: 0.4, acquis: 0.6, maitrise: 0.8 };
 

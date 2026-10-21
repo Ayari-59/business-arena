@@ -40,12 +40,12 @@ export const dynamic = "force-dynamic";
  */
 
 const styles = `
-  .rapport { max-width: 190mm; margin: 0 auto; padding: 10mm 8mm; font-size: 8.8pt; line-height: 1.38; }
+  .rapport { max-width: 190mm; margin: 0 auto; padding: 10mm 8mm; font-size: 8.8pt; line-height: 1.33; }
   .rapport h1 { font-size: 15pt; line-height: 1.2; margin: 0; }
-  .rapport h2 { font-size: 10pt; margin: 3mm 0 1mm; }
+  .rapport h2 { font-size: 10pt; margin: 2.4mm 0 0.8mm; }
   .rapport .kicker { font-size: 7.5pt; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 3px; }
   .rapport table { width: 100%; border-collapse: collapse; }
-  .rapport th, .rapport td { padding: 0.8mm 1.4mm; border-bottom: 0.25mm solid currentColor; vertical-align: top; text-align: left; }
+  .rapport th, .rapport td { padding: 0.45mm 1.4mm; border-bottom: 0.25mm solid currentColor; vertical-align: top; text-align: left; }
   .rapport td.methode { font-size: 8pt; }
   .rapport td.n, .rapport th.n { text-align: right; font-variant-numeric: tabular-nums; }
   .rapport ul { margin: 0; padding-left: 4mm; }

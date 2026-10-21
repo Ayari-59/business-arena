@@ -57,6 +57,8 @@ export type CodeDeLigne =
   | "solvabilite"
   | "tresorerie-positive"
   | "rentabilite"
+  | "creux-de-tresorerie"
+  | "marge-nette"
   | "rang"
   | "diagnostics";
 
@@ -191,6 +193,23 @@ const LIGNES: Record<CodeDeLigne, Omit<LigneDeGrille, "points">> = {
     methode: "La part des {marches} marchés où le résultat net cumulé de la partie est positif.",
     competences: [{ code: "analyse-financiere", part: 1 }],
   },
+  // Les deux lignes graduées de la tenue financière, depuis la version 4 : comme la ligne
+  // « battre », une part des marchés, mais une égalité y vaut la moitié, comme un écart nul
+  // sur la ligne d'écart. Une copie qui joue la gestion neutre y a donc la moitié des points.
+  "creux-de-tresorerie": {
+    code: "creux-de-tresorerie",
+    libelle: "Creux de trésorerie face à la gestion neutre du secteur",
+    methode:
+      "La part des {marches} marchés où la trésorerie nette la plus basse des tours reste au-dessus de celle de la gestion neutre du secteur ; une égalité compte pour moitié.",
+    competences: [{ code: "tresorerie", part: 1 }],
+  },
+  "marge-nette": {
+    code: "marge-nette",
+    libelle: "Marge nette face à la gestion neutre du secteur",
+    methode:
+      "La part des {marches} marchés où le résultat net cumulé rapporté au chiffre d'affaires cumulé dépasse celui de la gestion neutre du secteur ; une égalité compte pour moitié.",
+    competences: [{ code: "analyse-financiere", part: 1 }],
+  },
   rang: {
     code: "rang",
     libelle: "Performance relative : rang face aux concurrents",
@@ -265,7 +284,7 @@ const SEUILS_DE_LA_VERSION_3: SeuilsDeLaGrille = {
  * seuils de niveau (`SEUILS_DE_LA_VERSION_3`) : la stratégie et le marketing se lisent par
  * rapport à la gestion neutre. Et l'étalon se définit par ce qu'il fait.
  */
-export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
+export const GRILLE_BUSINESS_ARENA_2026_VERSION_3: GrilleDeNotation = {
   code: "business-arena-2026",
   nom: "Business Arena 2026",
   version: 3,
@@ -315,7 +334,7 @@ export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
  * Ses versions suivent celles de la grille par défaut : 2 pour l'étalon gelé, 3 pour les
  * seuils écrits.
  */
-export const GRILLE_DECISION_D_ABORD: GrilleDeNotation = {
+export const GRILLE_DECISION_D_ABORD_VERSION_3: GrilleDeNotation = {
   code: "decision-d-abord",
   nom: "Décision d'abord",
   version: 3,
@@ -351,6 +370,101 @@ export const GRILLE_DECISION_D_ABORD: GrilleDeNotation = {
   ],
 };
 
+
+/* ---------------------------------------------------------------------------
+ * LA VERSION 4 : DEUX LIGNES GRADUÉES DANS LA TENUE FINANCIÈRE.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * LES SEUILS DES GRILLES VERSION 4 : ceux de la version 3, et la trésorerie et l'analyse
+ * financière se lisent à leur tour par rapport à la gestion neutre. En version 3 elles ne
+ * se nourrissaient que de lignes en oui ou non (solvabilité, trésorerie positive en fin de
+ * partie, résultat positif) que la gestion neutre remplit presque toujours : elle y était
+ * maîtrisée, comme les copies meilleures et les moins bonnes, et ces deux compétences ne
+ * disaient rien au jury. Avec les deux lignes graduées, la part de la gestion neutre y
+ * descend sous le plafond, et « acquis » veut dire « mieux qu'elle », comme en stratégie.
+ * Mesure et décision du propriétaire : le rapport « Grille version 4 » (deux lignes
+ * graduées).
+ */
+const SEUILS_DE_LA_VERSION_4: SeuilsDeLaGrille = {
+  fixes: SEUILS_DE_NIVEAU,
+  relatifs: {
+    competences: ["strategie", "marketing-prix", "tresorerie", "analyse-financiere"],
+    ecarts: SEUILS_DE_LA_VERSION_3.relatifs!.ecarts,
+  },
+};
+
+/**
+ * « BUSINESS ARENA 2026 », VERSION 4. La qualité des décisions, la performance relative et
+ * les diagnostics ne bougent pas. La tenue financière garde son total, et deux lignes
+ * graduées y entrent, comparées à la gestion neutre du secteur sur les mêmes marchés : le
+ * creux de trésorerie (la compétence trésorerie) et la marge nette (l'analyse
+ * financière). Les lignes en oui ou non restent, plus légères ; la solvabilité reste la
+ * plus lourde de la famille.
+ *
+ * Les poids se lisent de la mesure : la part de la gestion neutre doit descendre assez sous
+ * le plafond dans chacune des deux compétences pour que « dix points au-dessus d'elle »
+ * reste atteignable autrement que par une copie parfaite, et la note de la gestion neutre
+ * ne baisser que de quelques points. Les notes des copies changent : la version 3 reste
+ * celle des examens créés avant, qui la gardent.
+ */
+export const GRILLE_BUSINESS_ARENA_2026: GrilleDeNotation = {
+  ...GRILLE_BUSINESS_ARENA_2026_VERSION_3,
+  version: 4,
+  publiee: "2026-10-21",
+  seuils: SEUILS_DE_LA_VERSION_4,
+  lignes: [
+    ligne("battre-la-reference", 25),
+    ligne("ecart-a-la-reference", 15),
+    ligne("solvabilite", 11),
+    ligne("tresorerie-positive", 7),
+    ligne("rentabilite", 7),
+    ligne("creux-de-tresorerie", 5),
+    ligne("marge-nette", 5),
+    ligne("rang", 15),
+    ligne("diagnostics", 10),
+  ],
+  justification: [
+    GRILLE_BUSINESS_ARENA_2026_VERSION_3.justification[0]!,
+    {
+      famille: "Tenue financière",
+      lignes: ["solvabilite", "tresorerie-positive", "rentabilite", "creux-de-tresorerie", "marge-nette"],
+      pourquoi:
+        "ne jamais mettre l'entreprise en défaut pèse le plus, puis finir avec de la trésorerie et gagner de l'argent. Le creux de trésorerie et la marge nette se comparent à la gestion neutre du secteur : ce sont eux qui disent si l'argent a été mieux tenu qu'elle ne le tient. C'est ce qu'un jury attend d'un futur manager.",
+    },
+    ...GRILLE_BUSINESS_ARENA_2026_VERSION_3.justification.slice(2),
+  ],
+};
+
+/** « DÉCISION D'ABORD », VERSION 4 : les mêmes deux lignes, dans sa tenue financière. */
+export const GRILLE_DECISION_D_ABORD: GrilleDeNotation = {
+  ...GRILLE_DECISION_D_ABORD_VERSION_3,
+  version: 4,
+  publiee: "2026-10-21",
+  seuils: SEUILS_DE_LA_VERSION_4,
+  lignes: [
+    ligne("battre-la-reference", 35),
+    ligne("ecart-a-la-reference", 20),
+    ligne("solvabilite", 7),
+    ligne("tresorerie-positive", 3),
+    ligne("rentabilite", 7),
+    ligne("creux-de-tresorerie", 4),
+    ligne("marge-nette", 4),
+    ligne("rang", 10),
+    ligne("diagnostics", 10),
+  ],
+  justification: [
+    GRILLE_DECISION_D_ABORD_VERSION_3.justification[0]!,
+    {
+      famille: "Tenue financière",
+      lignes: ["solvabilite", "tresorerie-positive", "rentabilite", "creux-de-tresorerie", "marge-nette"],
+      pourquoi:
+        "la solvabilité, la trésorerie finale et la rentabilité restent exigées, avec moins de poids ; le creux de trésorerie et la marge nette se comparent à la gestion neutre du secteur.",
+    },
+    ...GRILLE_DECISION_D_ABORD_VERSION_3.justification.slice(2),
+  ],
+};
+
 /** « Qualité des décisions (40 points : 25 + 15) : … », lu des lignes. */
 export function justificationDe(g: GrilleDeNotation): string[] {
   return g.justification.map((j) => {
@@ -361,7 +475,15 @@ export function justificationDe(g: GrilleDeNotation): string[] {
   });
 }
 
+/** Les grilles qu'un examen nouveau peut choisir : la dernière version de chacune. */
 export const GRILLES: readonly GrilleDeNotation[] = [GRILLE_BUSINESS_ARENA_2026, GRILLE_DECISION_D_ABORD];
+
+/**
+ * Les grilles version 3, telles que publiées le 20 octobre 2026. Un examen créé avant la
+ * version 4 en garde la copie (`examens.grille`) et c'est elle qui note ses copies, même
+ * après ; ces définitions servent aux gardes qui le vérifient.
+ */
+export const GRILLES_VERSION_3: readonly GrilleDeNotation[] = [GRILLE_BUSINESS_ARENA_2026_VERSION_3, GRILLE_DECISION_D_ABORD_VERSION_3];
 export const GRILLE_PAR_DEFAUT = GRILLE_BUSINESS_ARENA_2026.code;
 
 export const grilleParCode = (code: string | null | undefined): GrilleDeNotation | null =>
@@ -428,6 +550,13 @@ export interface MarcheDuRejeu {
   tresorerie: number;
   defaillant: boolean;
   rang: number;
+  /**
+   * La trésorerie nette la plus basse des tours, et le chiffre d'affaires cumulé : les deux
+   * lignes graduées de la version 4 les lisent. Le rejeu les rend toujours ; une mesure qui
+   * ne les porte pas ne note qu'une grille qui ne les demande pas.
+   */
+  tresorerieLaPlusBasse?: number;
+  chiffreDAffaires?: number;
 }
 
 /** Ce qu'il faut pour noter une copie : les rejeux et, s'il y a lieu, les situations. */
@@ -444,6 +573,36 @@ export interface MesuresDeLaCopie {
 
 /** Deux résultats plus proches qu'un centime sont égaux (comme le verdict de mérite). */
 const CENTIME = 0.005;
+/** Deux marges nettes plus proches qu'un millionième sont égales. */
+const MARGE_EGALE = 1e-6;
+
+/** La marge nette d'un marché : le résultat cumulé rapporté au chiffre d'affaires cumulé. */
+const margeNette = (m: MarcheDuRejeu): number => {
+  const ca = m.chiffreDAffaires;
+  if (ca === undefined) throw new Error("Rejeux incomplets : la copie ne se note pas.");
+  if (ca > 0) return m.resultat / ca;
+  // Sans chiffre d'affaires, une perte est la pire marge qui soit, un résultat nul ne vaut rien.
+  return m.resultat < 0 ? -Infinity : 0;
+};
+const creuxDe = (m: MarcheDuRejeu): number => {
+  if (m.tresorerieLaPlusBasse === undefined) throw new Error("Rejeux incomplets : la copie ne se note pas.");
+  return m.tresorerieLaPlusBasse;
+};
+
+/**
+ * Marché par marché, la copie fait-elle mieux que l'étalon ? Mieux : un ; moins bien : zéro ;
+ * à égalité : la moitié. Une copie qui joue l'étalon tient donc la moitié de la ligne.
+ */
+function partMieuxQueLaReference(joueur: readonly number[], reference: readonly number[], egal: number) {
+  let mieux = 0;
+  let egaux = 0;
+  joueur.forEach((x, i) => {
+    const r = reference[i]!;
+    if (x > r + egal) mieux += 1;
+    else if (!(x < r - egal)) egaux += 1;
+  });
+  return { mieux, egaux, part: part(mieux + egaux / 2, joueur.length) };
+}
 
 const borne = (x: number) => (Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0);
 const moyenne = (xs: readonly number[]) => (xs.length === 0 ? 0 : xs.reduce((s, x) => s + x, 0) / xs.length);
@@ -455,6 +614,9 @@ const part = (n: number, sur: number) => (sur === 0 ? 0 : n / sur);
 
 const euros = (v: number) =>
   `${Math.round(v) > 0 ? "+" : ""}${Math.round(v).toLocaleString("fr-FR").replace(/ /g, " ")} €`;
+const montant = (v: number) => `${Math.round(v).toLocaleString("fr-FR").replace(/ /g, " ")} €`;
+const pourcentage = (v: number) =>
+  Number.isFinite(v) ? `${(v * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1, minimumFractionDigits: 1 })} %` : "sans objet";
 const decimale = (v: number) => v.toLocaleString("fr-FR", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 
 /** La part tenue d'une ligne (0 à 1), et ce qui l'explique ; null : la ligne ne s'applique pas. */
@@ -494,6 +656,24 @@ export function mesurerLaLigne(
     case "rentabilite": {
       const k = m.joueur.filter((j) => j.resultat > CENTIME).length;
       return { part: part(k, n), detail: `${k} marchés sur ${n}` };
+    }
+    case "creux-de-tresorerie": {
+      const j = m.joueur.map(creuxDe);
+      const r = m.reference.map(creuxDe);
+      const { mieux, egaux, part: p } = partMieuxQueLaReference(j, r, CENTIME);
+      return {
+        part: p,
+        detail: `${mieux} marchés sur ${n}${egaux ? `, ${egaux} à égalité` : ""} ; creux moyen ${montant(moyenne(j))} contre ${montant(moyenne(r))}`,
+      };
+    }
+    case "marge-nette": {
+      const j = m.joueur.map(margeNette);
+      const r = m.reference.map(margeNette);
+      const { mieux, egaux, part: p } = partMieuxQueLaReference(j, r, MARGE_EGALE);
+      return {
+        part: p,
+        detail: `${mieux} marchés sur ${n}${egaux ? `, ${egaux} à égalité` : ""} ; marge moyenne ${pourcentage(moyenne(j))} contre ${pourcentage(moyenne(r))}`,
+      };
     }
     case "rang": {
       const valeur = m.sur <= 1 ? 1 : moyenne(m.joueur.map((j) => (m.sur - j.rang) / (m.sur - 1)));
