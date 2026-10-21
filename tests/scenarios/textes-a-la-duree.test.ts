@@ -153,12 +153,14 @@ describe("VOLT FITNESS : chaque situation se rend à la durée du tour de sa par
     // « une fois dans l'année, ou une seule fois en janvier ? » ne comparaient plus rien.
     // Le récit fait payer l'adhérent à chaque tour, et chaque mois quand le tour dure un
     // an : la formule annuelle se compare alors à douze mensualités.
+    // Au mois et à l'année, l'encaissement unique se fait « à l'inscription », et non
+    // « en janvier » (garde : tests/scenarios/saisons-fitness-nova-batiment-transport.test.ts).
     const annuel = (periodicity: Periodicity) =>
       situationDeLaPartie(fitness.situations.find((d) => d.code === "fitness_t4_annuel")!, PERIODICITY_DAYS[periodicity]);
     const attendu: Record<Periodicity, [string, string]> = {
-      month: ["contre 35 € par mois aujourd'hui, soit 420 € sur l'année", "douze fois dans l'année, ou une seule fois en janvier ?"],
+      month: ["contre 35 € par mois aujourd'hui, soit 420 € sur l'année", "douze fois dans l'année, ou une seule fois, à l'inscription ?"],
       quarter: ["contre 105 € par trimestre aujourd'hui, soit 420 € sur l'année", "quatre fois dans l'année, ou une seule fois en janvier ?"],
-      year: ["contre 35 € par mois aujourd'hui, soit 420 € sur l'année", "douze fois dans l'année, ou une seule fois en janvier ?"],
+      year: ["contre 35 € par mois aujourd'hui, soit 420 € sur l'année", "douze fois dans l'année, ou une seule fois, à l'inscription ?"],
     };
     for (const periodicity of DUREES) {
       const s = joue(periodicity);

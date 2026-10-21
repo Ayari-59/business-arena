@@ -90,7 +90,7 @@ const SOURCES: SituationDef[] = [
       "Distinguez ce que coûte UN adhérent de plus de ce que coûte la salle, pleine ou vide.",
       "Le loyer, les coachs et le crédit tombent identiquement que vous ayez 800 ou 2 000 adhérents.",
       "Chaque adhérent laisse {{entier: abonnement}} − {{entier: variable}} = {{entier: marge}} € {{par trimestre}} pour couvrir cette structure.",
-      "Seuil = {{entier: charges}} ÷ {{entier: marge}} ≈ 1 170 adhérents. Vous en avez 1 600 : la marge de sécurité existe, 430 adhérents, mais l'été arrive.",
+      "Seuil = {{entier: charges}} ÷ {{entier: marge}} ≈ 1 170 adhérents. Vous en avez 1 600 : la marge de sécurité existe, 430 adhérents, {{mais l'été arrive}}.",
       "Et surtout : ces {{entier: marge}} € reviennent CHAQUE {{trimestre}} tant que l'adhérent reste. C'est ce qui distingue ce modèle de tous les autres.",
     ]),
     trigger: { round: 1 },
@@ -113,7 +113,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Ceux qui ne reviennent pas",
     narrative:
-      "Le tableau des renouvellements est sorti. Sur les 400 inscrits de janvier, 62 renouvellent. Chez les pratiquants réguliers, en revanche, neuf sur dix restent, et certains sont là depuis six ans.",
+      "Le tableau des renouvellements est sorti. Sur les 400 {{inscrits de janvier}}, 62 renouvellent. Chez les pratiquants réguliers, en revanche, neuf sur dix restent, et certains sont là depuis six ans.",
     problem:
       "Combien vaut un adhérent conservé, comparé à un adhérent qu'il faut aller chercher ?",
     diagnosticOptions: [
@@ -176,7 +176,7 @@ const SOURCES: SituationDef[] = [
     },
     conceptCodes: ["discounting", "contribution_margin", "segmentation", "profitability_vs_return"],
     hints: hints([
-      "Comparez deux adhérents : celui de janvier qui part en avril, et le régulier présent depuis six ans.",
+      "{{Comparez deux adhérents : celui de janvier qui part en avril, et le régulier présent depuis six ans.}}",
       "Ils paient le même prix. Ce qui les distingue, c'est le NOMBRE {{de trimestres}} qu'ils paieront.",
       "Un adhérent n'est donc pas une vente ponctuelle : c'est une suite de marges futures, plus ou moins longue.",
       "Évaluer une suite de flux futurs, c'est exactement ce que fait la valeur actuelle nette. Valeur vie ≈ marge {{trimestrielle}} ÷ taux d'attrition.",
@@ -205,9 +205,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "fitness_t3_ete",
     category: "contexte_marche",
-    title: "Le creux de l'été",
+    title: "{{Le creux de l'été}}",
     narrative:
-      "Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite. Le loyer, les salaires et l'échéance du crédit, eux, tombent comme chaque {{trimestre}}.",
+      "{{Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite.}} Le loyer, les salaires et l'échéance du crédit, eux, tombent comme chaque {{trimestre}}.",
     problem:
       "Comment traverser un {{trimestre}} où la demande s'effondre alors que les charges ne bougent pas ?",
     diagnosticOptions: [
@@ -223,7 +223,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "fire_staff",
-        label: "Licencier l'équipe pour l'été et réembaucher en septembre",
+        label: "{{Licencier l'équipe pour l'été et réembaucher en septembre}}",
         correct: false,
       },
       {
@@ -236,7 +236,7 @@ const SOURCES: SituationDef[] = [
       {
         id: "saisonnalite_charges",
         prompt:
-          "La demande chute de moitié en juillet. De combien baissent vos charges de structure ?",
+          "{{La demande chute de moitié en juillet. De combien baissent vos charges de structure ?}}",
         options: [
           { id: "a", label: "Elles ne baissent pas : loyer, salaires et crédit sont indépendants de la fréquentation" },
           { id: "b", label: "De moitié également" },
@@ -245,7 +245,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Seuls les {{entier: variable}} € de coût variable par adhérent disparaissent avec lui. Tout le reste continue de courir : c'est ce qui rend le creux d'été si dangereux.",
+          "Seuls les {{entier: variable}} € de coût variable par adhérent disparaissent avec lui. {{Tout le reste continue de courir : c'est ce qui rend le creux d'été si dangereux.}}",
       },
       {
         id: "marge_securite",
@@ -259,7 +259,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Avec 1 600 adhérents et un seuil à 1 170, la marge de sécurité est de 430 adhérents. Un été qui en fait partir 500 fait basculer {{le trimestre}}.",
+          "Avec 1 600 adhérents et un seuil à 1 170, la marge de sécurité est de 430 adhérents. {{Un été qui en fait partir}} 500 fait basculer {{le trimestre}}.",
       },
     ],
     modelRelevance: {
@@ -271,10 +271,10 @@ const SOURCES: SituationDef[] = [
     conceptCodes: ["seasonality", "fixed_costs", "safety_margin", "breakeven"],
     hints: hints([
       "Regardez la saisonnalité de chaque segment : lequel s'effondre, lequel résiste ?",
-      "Les inscrits de janvier tombent à 0,25 de leur niveau. Les réguliers, eux, restent à 0,75.",
+      "Les {{inscrits de janvier}} tombent à 0,25 de leur niveau. Les réguliers, eux, restent à 0,75.",
       "Vos charges, elles, sont à 1,0 toute l'année. Seuls les {{entier: variable}} € de variable par adhérent disparaissent.",
       "Calculez votre marge de sécurité : combien d'adhérents pouvez-vous perdre avant de passer sous le seuil de 1 170 ?",
-      "Les vraies réponses se jouent AVANT : fidéliser les inscrits de janvier, signer des contrats entreprises moins saisonniers, ou vendre des {{engagements annuels plutôt que trimestriels}}.",
+      "Les vraies réponses se jouent AVANT : fidéliser les {{inscrits de janvier}}, signer des contrats entreprises moins saisonniers, ou vendre des {{engagements annuels plutôt que trimestriels}}.",
     ]),
     trigger: { round: 3 },
     weight: 1.5,
@@ -282,17 +282,17 @@ const SOURCES: SituationDef[] = [
       {
         field: "marketingBudget",
         direction: "up",
-        hint: "Le creux de l'été se prépare avant : une campagne ciblée au printemps ou une offre estivale peut limiter la chute des inscriptions.",
+        hint: "{{Le creux de l'été se prépare avant : une campagne ciblée au printemps ou une offre estivale peut limiter la chute des inscriptions.}}",
       },
       {
         field: "price",
         direction: "review",
-        hint: "Une formule annuelle ou un tarif estival réduit protège contre l'hémorragie saisonnière en engageant les adhérents {{au-delà du trimestre}}.",
+        hint: "Une formule annuelle ou {{un tarif estival réduit}} protège contre l'hémorragie saisonnière en engageant les adhérents {{au-delà du trimestre}}.",
       },
       {
         field: "maintenanceBudget",
         direction: "review",
-        hint: "L'été est le moment idéal pour l'entretien lourd, mais ne coupez pas la maintenance visible : les adhérents qui restent jugent la salle vide plus sévèrement.",
+        hint: "{{L'été est le moment idéal pour l'entretien lourd, mais ne coupez pas la maintenance visible : les adhérents qui restent jugent la salle vide plus sévèrement.}}",
       },
     ],
   },
@@ -530,7 +530,7 @@ const SOURCES: SituationDef[] = [
       },
       {
         id: "fitness_produit_avance",
-        prompt: "Le chiffre d'affaires d'un abonnement annuel encaissé en janvier…",
+        prompt: "{{Le chiffre d'affaires d'un abonnement annuel encaissé en janvier…}}",
         options: [
           { id: "a", label: "Se rattache aux périodes pendant lesquelles la prestation est fournie, même si la trésorerie arrive tout de suite" },
           { id: "b", label: "Est intégralement acquis au résultat dès l'encaissement" },
@@ -551,10 +551,10 @@ const SOURCES: SituationDef[] = [
     conceptCodes: ["bfr", "frng", "net_treasury", "discounting"],
     hints: hints([
       "Comparez d'abord ce que rapporte un adhérent sur l'année dans les deux formules : 420 € contre 340 €.",
-      "Puis regardez QUAND cet argent arrive : {{mots_f: echeances_par_an}} fois dans l'année, ou une seule fois en janvier ?",
+      "Puis regardez QUAND cet argent arrive : {{mots_f: echeances_par_an}} fois dans l'année, {{ou une seule fois en janvier ?}}",
       "Un encaissement anticipé, c'est de l'argent disponible pour payer les charges avant même d'avoir fourni la prestation.",
       "Cette avance des clients réduit votre besoin en fonds de roulement, parfois jusqu'à le rendre négatif : ce sont eux qui financent la salle.",
-      "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas en mars. Comparez ce gain aux 80 € de remise.",
+      "{{Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas en mars.}} Comparez ce gain aux 80 € de remise.",
     ]),
     trigger: { round: 4 },
     weight: 1,
@@ -666,9 +666,9 @@ const SOURCES: SituationDef[] = [
   {
     code: "fitness_detect_idle_cash",
     category: "tresorerie_dormante",
-    title: "Janvier a rempli la caisse",
+    title: "{{Janvier a rempli la caisse}}",
     narrative:
-      "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.",
+      "{{Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert.}} Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. {{Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.}}",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -718,7 +718,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "L'adhérent a payé pour douze mois d'ouverture, de chauffage et d'encadrement. Bloquer cette somme reviendrait à financer janvier avec l'argent de novembre, qui n'est pas encore gagné.",
+          "L'adhérent a payé pour douze mois d'ouverture, de chauffage et d'encadrement. {{Bloquer cette somme reviendrait à financer janvier avec l'argent de novembre, qui n'est pas encore gagné.}}",
       },
     ],
     modelRelevance: {
@@ -732,7 +732,7 @@ const SOURCES: SituationDef[] = [
       "Comparez votre solde aux charges de structure d'un {{trimestre}} : combien {{de trimestres}} la salle pourrait-elle ouvrir sans une inscription de plus ?",
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
-      "Projetez l'année entière, et surtout le creux de l'été : les charges tombent tous les mois, les inscriptions non.",
+      "{{Projetez l'année entière, et surtout le creux de l'été : les charges tombent tous les mois, les inscriptions non.}}",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
@@ -746,7 +746,7 @@ const SOURCES: SituationDef[] = [
       {
         field: "qualityBudget",
         direction: "review",
-        hint: "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements {{du trimestre}}, été compris.",
+        hint: "{{Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements du trimestre, été compris.}}",
       },
     ],
   },
@@ -755,7 +755,7 @@ const SOURCES: SituationDef[] = [
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   fitness_detect_idle_cash:
-    "Le budget de trésorerie étale sur l'année les charges que l'encaissement de janvier doit couvrir. Seul lui montre que ce solde n'est pas un excédent, mais une avance à faire durer.",
+    "{{Le budget de trésorerie étale sur l'année les charges que l'encaissement de janvier doit couvrir.}} Seul lui montre que ce solde n'est pas un excédent, mais une avance à faire durer.",
   fitness_t4_annuel:
     "L'analyse FRNG / BFR montre ce que le compte de résultat cache : encaissé d'avance, l'abonnement fait financer l'exploitation par les adhérents eux-mêmes.",
   fitness_t6_seconde_salle:

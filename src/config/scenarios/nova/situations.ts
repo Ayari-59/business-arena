@@ -237,7 +237,7 @@ const SOURCES: SituationDef[] = [
     narrative:
       "La demande décolle : marketing, croissance du marché… et la chaîne CampusTech vous ouvre ses rayons. Mais l'atelier a plafonné et des clients sont repartis les mains vides.",
     problem:
-      "Votre marché demande plus que vous ne produisez. Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic de fin d'année ?",
+      "Votre marché demande plus que vous ne produisez. {{Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic de fin d'année ?}}",
     diagnosticOptions: [
       { id: "machine_limit", label: "La capacité machine (et sa disponibilité) plafonne la production", correct: true },
       { id: "anticipate_stock", label: "Il faut produire AVANT le pic pour constituer du stock", correct: true },

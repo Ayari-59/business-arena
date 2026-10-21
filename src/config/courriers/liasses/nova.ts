@@ -85,7 +85,7 @@ const SOURCES: CourrierDef[] = [
   },
   {
     code: "student_fair",
-    expediteur: "Salon de la Rentrée Étudiante · Commissariat général",
+    expediteur: "{{Salon de la Rentrée Étudiante · Commissariat général}}",
     objet: "Votre gamme au village high-tech du salon",
     corps:
       "Le salon ouvrira ses portes à quarante mille étudiants. Le village high-tech, où figurent vos enceintes nomades, sera l'un des trois pôles mis en avant dans la communication de l'événement.",
@@ -297,9 +297,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "xxl_order",
     expediteur: "Plateforme Vendora · Direction des achats",
-    objet: "Commande ferme de {{entier: commande_xxl_order}} unités pour notre opération de fin d'année",
+    objet: "Commande ferme de {{entier: commande_xxl_order}} unités pour {{notre opération de fin d'année}}",
     corps:
-      "Notre opération de fin d'année portera sur {{lettres: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
+      "{{Notre opération de fin d'année}} portera sur {{lettres: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
     signataire: "Le directeur des achats",
     effet: "+{{entier: commande_xxl_order}} unités à 61 €/u ({{échelle trimestre}}), sous-traitance possible à 52 €/u",
     enJeu: "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai.",
@@ -400,9 +400,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "nova_campus_tender",
     expediteur: "CampusTech · Direction des achats",
-    objet: "Appel d'offres — référencement audio de la rentrée",
+    objet: "Appel d'offres — {{référencement audio de la rentrée}}",
     corps:
-      "Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants. Le marché porte sur l'ensemble de nos magasins. Nous rappelons que notre commission de référencement s'applique à chaque unité vendue.",
+      "{{Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants.}} Le marché porte sur l'ensemble de nos magasins. Nous rappelons que notre commission de référencement s'applique à chaque unité vendue.",
     signataire: "Le directeur des achats",
     effet: "Demande du canal CampusTech +30 % ce tour",
     enJeu: "Un canal partenaire prélève sa commission : le volume est là, la marge par unité, moins.",
@@ -431,7 +431,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Revue L'Écoute · Rédaction",
     objet: "Attribution de notre Coup de cœur de l'année",
     corps:
-      "Le jury de notre rédaction a distingué votre modèle parmi cent quatorze appareils testés cette année. La distinction paraîtra en couverture du numéro de rentrée ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.",
+      "Le jury de notre rédaction a distingué votre modèle parmi cent quatorze appareils testés cette année. {{La distinction paraîtra en couverture du numéro de rentrée ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.}}",
     signataire: "Le rédacteur en chef",
     effet: "Demande de votre entreprise +10 % pendant 2 tours",
     enJeu:
@@ -491,7 +491,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Fédération de l'électronique grand public",
     objet: "Kelvox Acoustique annonce une seconde ligne d'assemblage",
     corps:
-      "Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades. Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
+      "{{Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.}} Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
     signataire: "Le délégué général",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
@@ -506,7 +506,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Altimax Distribution · Direction des approvisionnements",
     objet: "Révision des quantités convenues pour votre référencement",
     corps:
-      "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année. Nous révisons donc à la baisse le volume convenu pour les deux {{trimestres}} restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
+      "{{Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année.}} Nous révisons donc à la baisse le volume convenu pour les deux {{trimestres}} restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
     signataire: "La responsable des approvisionnements",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:

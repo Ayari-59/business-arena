@@ -279,7 +279,8 @@ describe("chaque chemin d'affichage rend le courrier de SA partie", () => {
   });
 
   it("les objets cités (tableau de bord, assurance, courrier classé) et la lecture du résultat", () => {
-    expect(objetDuCourrier("xxl_order", 30)).toBe("Commande ferme de 833 unités pour notre opération de fin d'année");
+    // Au mois, l'objet ne date plus l'opération (garde : saisons-fitness-nova-batiment-transport.test.ts).
+    expect(objetDuCourrier("xxl_order", 30)).toBe("Commande ferme de 833 unités pour notre grande opération commerciale");
     expect(objetDuCourrier("xxl_order")).toBe("Commande ferme de 2 500 unités pour notre opération de fin d'année");
     expect(objetDuCourrier("inconnu", 30)).toBeUndefined();
     const result = { incomeStatement: { revenue: 1000 } } as unknown as CompanyRoundResult;
