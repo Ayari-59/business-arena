@@ -22,7 +22,7 @@ import { PastillesDeNavigation } from "@/components/pastilles-de-navigation";
  * partagé des espaces : la page courante est marquée, on voit où l'on est et
  * où l'on peut aller sans lire une liste de liens.
  */
-export type PageEnseignant = "parties" | "examens" | "cohortes" | "scenarios" | "usage" | "aide";
+export type PageEnseignant = "parties" | "examens" | "cohortes" | "cours" | "scenarios" | "usage" | "aide";
 
 export function EnTeteEnseignant({
   surtitre = "Espace enseignant",

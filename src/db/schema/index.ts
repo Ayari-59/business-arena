@@ -17,3 +17,4 @@ export * from "./offres";
 export * from "./examens";
 export * from "./lti-notes";
 export * from "./pairs";
+export * from "./cours";

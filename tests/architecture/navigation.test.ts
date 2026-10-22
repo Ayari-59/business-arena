@@ -252,6 +252,7 @@ describe("plan du site", () => {
       "Mes parties",
       "Mes examens",
       "Mes cohortes",
+      "Mes classes du cours",
       "Mes scénarios",
       "Carnet d'usage",
       "Aide",

@@ -372,6 +372,7 @@ export const NAVIGATION_ENSEIGNANT: readonly Pastille[] = [
   { code: "parties", href: "/teacher", libelle: "Mes parties" },
   { code: "examens", href: "/teacher/examens", libelle: "Mes examens" },
   { code: "cohortes", href: "/teacher/cohortes", libelle: "Mes cohortes" },
+  { code: "cours", href: "/teacher/cours", libelle: "Mes classes du cours" },
   { code: "scenarios", href: "/teacher/scenarios", libelle: "Mes scénarios" },
   { code: "usage", href: "/teacher/usage", libelle: "Carnet d'usage" },
   { code: "aide", href: "/guides/enseignant", libelle: "Aide" },
