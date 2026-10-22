@@ -3,10 +3,12 @@ import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { TOURS_MAX_AU_TRIMESTRE } from "../../src/config/scenarios/rounds";
+import { MOIS_MAX } from "../../src/config/scenarios/calendrier-mensuel";
 
 /**
  * LE NOMBRE DE TOURS LIBRE (décision du propriétaire) : au trimestre, jusqu'à douze
- * tours ; au mois et à l'année, une partie ne s'allonge pas.
+ * tours ; au mois, sur le calendrier, jusqu'à dix-huit ; à l'année, une partie ne
+ * s'allonge pas.
  *
  * Sur /jouer, les durées longues ne se proposent qu'au trimestre. Dans l'espace
  * enseignant, le champ est libre : une partie de douze tours se crée et le dit, et une
@@ -24,8 +26,8 @@ afterAll(async () => {
 
 const debordement = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
-describe("/jouer : les durées longues, au trimestre seulement", () => {
-  it("la tuile des douze tours s'offre au trimestre, disparaît au mois, et le choix retombe sur la partie écrite", async () => {
+describe("/jouer : les durées longues, au trimestre et au mois", () => {
+  it("la tuile des douze tours s'offre au trimestre, disparaît à l'année, et le choix retombe sur la partie écrite ; au mois, dix-huit", async () => {
     const page = await navigateur.newPage({ viewport: { width: 390, height: 844 } });
     await aller(page, "/jouer");
     await page.getByRole("button", { name: /Options du marché/ }).click();
@@ -34,9 +36,13 @@ describe("/jouer : les durées longues, au trimestre seulement", () => {
     expect(await douze.getAttribute("aria-pressed")).toBe("true");
     expect(await page.locator('input[name="roundsCount"]').inputValue()).toBe(String(TOURS_MAX_AU_TRIMESTRE));
     expect(await debordement(page)).toBeLessThanOrEqual(0);
-    await page.getByRole("button", { name: /Un mois/ }).click();
+    await page.getByRole("button", { name: /Une année/ }).click();
     expect(await douze.count()).toBe(0);
     expect(await page.locator('input[name="roundsCount"]').inputValue()).toBe("");
+    await page.getByRole("button", { name: /Un mois/ }).click();
+    const dixHuit = page.getByRole("button", { name: `${MOIS_MAX} tours`, exact: true });
+    await dixHuit.click();
+    expect(await page.locator('input[name="roundsCount"]').inputValue()).toBe(String(MOIS_MAX));
     await page.close();
   }, 60_000);
 });
@@ -50,7 +56,7 @@ describe("l'espace enseignant : un champ libre", () => {
     prof = await ctx.newPage();
   }, 60_000);
 
-  async function nouvellePartie(tours: string, periodicite: "quarter" | "month"): Promise<void> {
+  async function nouvellePartie(tours: string, periodicite: "quarter" | "month" | "year", moisDeDepart?: string): Promise<void> {
     await aller(prof, "/teacher");
     if ((await prof.locator("#nouvelle-partie[open]").count()) === 0) {
       await prof.locator("#nouvelle-partie > summary").click();
@@ -59,6 +65,7 @@ describe("l'espace enseignant : un champ libre", () => {
     await prof.selectOption('select[name="botCount"]', "1");
     await prof.selectOption('select[name="periodicity"]', periodicite);
     await prof.locator('input[name="roundsCount"]').fill(tours);
+    if (moisDeDepart) await prof.selectOption('select[name="moisDeDepart"]', moisDeDepart);
     await prof.getByRole("button", { name: /Créer la partie/ }).click();
   }
 
@@ -68,8 +75,14 @@ describe("l'espace enseignant : un champ libre", () => {
     await expect.poll(() => prof.locator("main").innerText()).toContain(`/${TOURS_MAX_AU_TRIMESTRE}`);
   }, 120_000);
 
-  it("douze tours au mois : refusée, avec la raison", async () => {
-    await nouvellePartie(String(TOURS_MAX_AU_TRIMESTRE), "month");
+  it("dix-huit mois à partir de juin : la partie se crée et annonce ses dix-huit tours", async () => {
+    await nouvellePartie(String(MOIS_MAX), "month", "6");
+    await prof.waitForURL(/\/teacher\/games\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+    await expect.poll(() => prof.locator("main").innerText()).toContain(`/${MOIS_MAX}`);
+  }, 120_000);
+
+  it("douze tours à l'année : refusée, avec la raison", async () => {
+    await nouvellePartie(String(TOURS_MAX_AU_TRIMESTRE), "year");
     await expect.poll(() => prof.locator("body").innerText(), { timeout: 30_000 }).toMatch(/seul le trimestre/);
     expect(prof.url()).not.toMatch(/\/teacher\/games\/[0-9a-f-]{36}$/);
   }, 120_000);

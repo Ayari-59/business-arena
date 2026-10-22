@@ -3,7 +3,8 @@ import { formationsEnToutesLettres } from "../formations";
 import { scenarioByCode, type ScenarioDefinition } from "../scenarios/registry";
 import { leviersDuNiveau } from "../decisions";
 import { DIFFICULTY_PRESETS } from "../difficulty";
-import type { SituationDef } from "../scenarios/situation-kit";
+import { tourDOuverture, type SituationDef } from "../scenarios/situation-kit";
+import { nomDuMois } from "../scenarios/calendrier-mensuel";
 import { referencesJouees } from "../scenarios/scenario-joue";
 import { PERIODICITY_DAYS } from "../scenarios/periodicity";
 import { situationDeLaPartie } from "../scenarios/situation-texte";
@@ -229,13 +230,18 @@ export function dossierEnseignant(
   // Le dossier se lit à la durée de tour que l'atelier fixe : un atelier au
   // mois annonce les montants et les mots du mois.
   const duree = PERIODICITY_DAYS[atelier.reglages.periodicite];
+  // Le tour où la situation s'ouvre dans la partie de l'atelier : au mois, sur le
+  // calendrier, au premier mois de son trimestre (`tourDOuverture`).
+  const moisDeDepart =
+    atelier.reglages.periodicite === "month" ? (atelier.reglages.moisDeDepart ?? 1) : undefined;
+  const tourDe = (s: SituationDef) =>
+    tourDOuverture(s.trigger, atelier.reglages.tours, scenario.scenario.roundsCount, moisDeDepart);
   const retenues = scenario.situations.map((s) => situationDeLaPartie(s, duree)).filter(
     (s) =>
-      (!("round" in s.trigger) || s.trigger.round <= atelier.reglages.tours) &&
+      (!("round" in s.trigger) || tourDe(s) !== null && tourDe(s)! <= atelier.reglages.tours) &&
       (!s.seulementAvec || references.has(s.seulementAvec.reference)),
   );
-  const rang = (s: SituationDef) =>
-    "round" in s.trigger ? s.trigger.round : 99;
+  const rang = (s: SituationDef) => tourDe(s) ?? 99;
 
   return {
     atelier,
@@ -246,7 +252,9 @@ export function dossierEnseignant(
         situation,
         quand:
           "round" in situation.trigger
-            ? `Tour ${situation.trigger.round}`
+            ? moisDeDepart !== undefined
+              ? `Tour ${tourDe(situation)} (${nomDuMois(tourDe(situation)!, moisDeDepart)})`
+              : `Tour ${tourDe(situation)}`
             : "Quand l'entreprise en arrive là",
         attendus: situation.diagnosticOptions
           .filter((o) => o.correct)

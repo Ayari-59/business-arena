@@ -144,6 +144,11 @@ export interface AtelierDefinition {
     scenarioCode: string;
     periodicite: "month" | "quarter" | "year";
     periodiciteLabel: string;
+    /**
+     * Au mois, le mois où la partie commence (1 = janvier ; `calendrier-mensuel.ts`).
+     * Absent : janvier, comme la création sans autre choix.
+     */
+    moisDeDepart?: number;
     niveau: number;
     niveauNom: string;
     equipes: number;

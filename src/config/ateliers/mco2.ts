@@ -46,6 +46,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
     scenarioCode: "bistrot",
     periodicite: "month",
     periodiciteLabel: "Un mois par tour",
+    moisDeDepart: 6,
     niveau: 3,
     niveauNom: "Pilotage",
     equipes: 5,
