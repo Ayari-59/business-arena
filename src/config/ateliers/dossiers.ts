@@ -247,7 +247,7 @@ export function dossierEnseignant(
     atelier.reglages.periodicite === "month" ? (atelier.reglages.moisDeDepart ?? 1) : undefined;
   const tourDe = (s: SituationDef) =>
     tourDOuverture(s.trigger, atelier.reglages.tours, scenario.scenario.roundsCount, moisDeDepart);
-  const retenues = scenario.situations.map((s) => situationDeLaPartie(s, duree)).filter(
+  const retenues = scenario.situations.map((s) => situationDeLaPartie(s, duree, moisDeDepart)).filter(
     (s) =>
       (!("round" in s.trigger) || tourDe(s) !== null && tourDe(s)! <= atelier.reglages.tours) &&
       (!s.seulementAvec || references.has(s.seulementAvec.reference)),

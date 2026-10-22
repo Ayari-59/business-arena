@@ -110,7 +110,13 @@ export function estimationDuTour(
     // au mois sur le calendrier, au premier mois de son trimestre ; la partie
     // passe les mêmes tours (`services/game.service.ts`).
     signesDeSituation: signesDeSituation(
-      def.situations.map((x) => situationDeLaPartie(x, PERIODICITY_DAYS[a.reglages.periodicite])),
+      def.situations.map((x) =>
+        situationDeLaPartie(
+          x,
+          PERIODICITY_DAYS[a.reglages.periodicite],
+          a.reglages.periodicite === "month" ? (a.reglages.moisDeDepart ?? 1) : undefined,
+        ),
+      ),
       tour,
       new Set(referencesJouees(def.scenario, a.reglages.niveau)),
       {
