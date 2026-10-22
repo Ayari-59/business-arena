@@ -10,9 +10,9 @@ import { MOIS_MAX } from "../../src/config/scenarios/calendrier-mensuel";
  * tours ; au mois, sur le calendrier, jusqu'à dix-huit ; à l'année, une partie ne
  * s'allonge pas.
  *
- * Sur /jouer, les durées longues ne se proposent qu'au trimestre. Dans l'espace
- * enseignant, le champ est libre : une partie de douze tours se crée et le dit, et une
- * partie de douze mois est refusée avec la raison.
+ * Sur /jouer, les durées longues ne se proposent qu'au trimestre et au mois. Dans
+ * l'espace enseignant, le champ est libre : une partie de douze tours ou de dix-huit
+ * mois se crée et le dit, une partie de douze ans est refusée avec la raison.
  */
 let navigateur: Browser;
 

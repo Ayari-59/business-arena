@@ -723,6 +723,8 @@ export interface TeacherGameView {
   currentRound: number;
   roundsCount: number;
   roundDays: number;
+  /** Au mois sur le calendrier, le mois où la partie commence (`calendrier-mensuel.ts`). */
+  moisDeDepart: number | null;
   /** Fenêtre globale de jeu (planning), en ISO ou null. */
   opensAt: string | null;
   closesAt: string | null;
@@ -899,6 +901,7 @@ export async function getTeacherGameView(
     currentRound: game.currentRound,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
+    moisDeDepart: (game.scenarioSnapshot as { moisDeDepart?: number }).moisDeDepart ?? null,
     opensAt: game.opensAt ? game.opensAt.toISOString() : null,
     closesAt: game.closesAt ? game.closesAt.toISOString() : null,
     planCapped: Boolean(

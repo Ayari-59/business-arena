@@ -13,6 +13,7 @@ import { compositionDesEquipes } from "@/services/affectation.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { compter, formatDecimal, formatEuro, formatPercent } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { nomDuMois } from "@/config/scenarios/calendrier-mensuel";
 import { setAnswerFormatAction, setMissedPolicyAction, setQuizModeAction } from "../../actions";
 import { ANSWER_FORMATS, QUIZ_MODES } from "@/config/difficulty";
 import { estParDefaut } from "@/config/decision-source";
@@ -241,6 +242,10 @@ export default async function TeacherGamePage({
                   ? "Essai terminé"
                   : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`}
             </p>
+            {/* Au mois sur le calendrier, le mois du tour (`calendrier-mensuel.ts`). */}
+            {!finished && !essaiTermine && view.moisDeDepart !== null ? (
+              <p className="mt-1 text-sm text-slate-300">{nomDuMois(view.currentRound, view.moisDeDepart)}</p>
+            ) : null}
           </div>
           {!finished && !essaiTermine ? (
             <dl className="flex flex-wrap gap-x-8 gap-y-3">
