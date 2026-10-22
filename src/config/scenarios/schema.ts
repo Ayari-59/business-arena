@@ -121,6 +121,9 @@ export const engineScenarioConfigSchema = z.object({
   version: z.string().min(1),
   roundsCount: z.number().int().min(1).max(24),
   roundDays: z.number().int().positive(),
+  // Une partie au mois sur le calendrier (`config/scenarios/calendrier-mensuel.ts`) : déclaré
+  // ici, sans quoi l'objet non strict le retirerait au chargement de l'instantané.
+  moisDeDepart: z.number().int().min(1).max(12).optional(),
   market: z.object({
     segments: z.array(segmentSchema).min(1),
     seasonality: z.array(z.number().nonnegative()).min(1),

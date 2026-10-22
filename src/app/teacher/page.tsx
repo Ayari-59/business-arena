@@ -71,6 +71,7 @@ import { ATTENTES } from "@/config/cloture";
 import { bouton } from "@/components/bouton";
 import { Icone } from "@/components/icone";
 import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
+import { MOIS_MAX, MOIS_PAR_DEFAUT, NOMS_DES_MOIS } from "@/config/scenarios/calendrier-mensuel";
 import { ChampNombre } from "@/components/examen/champ-nombre";
 
 export const dynamic = "force-dynamic";
@@ -432,13 +433,13 @@ export default async function TeacherDashboard({
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Tours joués
             </span>
-            {/* LIBRE (décision du propriétaire) : vide, la partie écrite du secteur ; au
-                trimestre, jusqu'à douze tours. Au-delà, le service refuse avec la raison
-                (`services/game-creation.service.ts`). */}
+            {/* LIBRE (décision du propriétaire) : vide, la partie écrite du secteur (au mois,
+                une année) ; au trimestre, jusqu'à douze tours, au mois dix-huit. Au-delà, le
+                service refuse avec la raison (`services/game-creation.service.ts`). */}
             <ChampNombre
               name="roundsCount"
               min={1}
-              max={TOURS_MAX_AU_TRIMESTRE}
+              max={Math.max(TOURS_MAX_AU_TRIMESTRE, MOIS_MAX)}
               step={1}
               inputMode="numeric"
               placeholder="Toute la partie"
@@ -450,8 +451,24 @@ export default async function TeacherDashboard({
               {TOURS_MAX_AU_TRIMESTRE} tours. Après la partie écrite, les équipes gèrent leur
               entreprise sur l&apos;année du métier qui se répète : plus de nouvelle situation à
               analyser, mais les événements, les courriers et les situations nées de leurs
-              résultats continuent. Au mois et à l&apos;année, une partie ne s&apos;allonge pas.
+              résultats continuent. Au mois, la partie suit le calendrier : {MOIS_PAR_DEFAUT} mois
+              sans autre choix, {MOIS_MAX} au plus, et chaque situation arrive au premier mois de
+              son trimestre. À l&apos;année, une partie ne s&apos;allonge pas.
             </span>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Mois de départ (partie au mois)
+            </span>
+            {/* LE CALENDRIER DES PARTIES AU MOIS (config/scenarios/calendrier-mensuel.ts) :
+                ignoré au trimestre et à l'année. */}
+            <select name="moisDeDepart" defaultValue="1" className="mt-1 w-full champ px-3 py-2 text-sm">
+              {NOMS_DES_MOIS.map((m, i) => (
+                <option key={m} value={i + 1}>
+                  {m.charAt(0).toUpperCase() + m.slice(1)}
+                </option>
+              ))}
+            </select>
           </label>
 
           {/* LE TOUR D'ESSAI (config/tour-d-essai.ts) : un ou deux tours pour de faux

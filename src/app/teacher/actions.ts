@@ -149,6 +149,8 @@ const createGameSchema = z.object({
   // périodicité permet (au trimestre, `TOURS_MAX_AU_TRIMESTRE`), le service refuse avec
   // la raison (`services/game-creation.service.ts`).
   roundsCount: z.coerce.number().int().min(1).max(24).optional().catch(undefined),
+  // Au mois : le mois où commence la partie (1 = janvier ; `config/scenarios/calendrier-mensuel.ts`).
+  moisDeDepart: z.coerce.number().int().min(1).max(12).catch(1),
   // Secteur joué : un secteur intégré OU un scénario enseignant. La
   // vérification d'autorisation (propriété du scénario) se fait dans l'action ;
   // un code non lançable retombe sur le scénario par défaut.
@@ -199,6 +201,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     botCount: formData.get("botCount"),
     level: formData.get("level"),
     roundsCount: formData.get("roundsCount") || undefined,
+    moisDeDepart: formData.get("moisDeDepart") ?? undefined,
     scenarioCode: formData.get("scenarioCode"),
     quizMode: formData.get("quizMode"),
     answerFormat: formData.get("answerFormat"),
@@ -265,6 +268,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       quizMode: parsed.quizMode,
       answerFormat: parsed.answerFormat,
       roundsCount: parsed.roundsCount,
+      moisDeDepart: parsed.moisDeDepart,
       // Aucun (le défaut), 1 ou 2 tours d'essai avant la vraie partie.
       essai: lireLeChoixDEssai(formData.get("toursDEssai"), formData.get("enchainementDeLEssai")),
     }));

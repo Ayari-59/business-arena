@@ -39,6 +39,7 @@ import {
 } from "@/config/difficulty";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
+import { MOIS_MAX, NOMS_DES_MOIS } from "@/config/scenarios/calendrier-mensuel";
 import { ChampNombre } from "@/components/examen/champ-nombre";
 import {
   creerCohorteAction,
@@ -284,16 +285,27 @@ export default async function ActiviteLtiPage({
                 <label className="block">
                   <span className={LIBELLE}>Tours joués</span>
                   {/* Libre, comme dans l'espace enseignant : vide, la partie écrite du
-                      secteur ; au trimestre seulement, jusqu'à douze tours. */}
+                      secteur (au mois, une année) ; au trimestre, jusqu'à douze tours, au
+                      mois dix-huit. */}
                   <ChampNombre
                     name="roundsCount"
                     min={1}
-                    max={TOURS_MAX_AU_TRIMESTRE}
+                    max={Math.max(TOURS_MAX_AU_TRIMESTRE, MOIS_MAX)}
                     step={1}
                     inputMode="numeric"
                     placeholder="Toute la partie"
                     className={CHAMP}
                   />
+                </label>
+                <label className="block">
+                  <span className={LIBELLE}>Mois de départ (partie au mois)</span>
+                  <select name="moisDeDepart" defaultValue="1" className={CHAMP}>
+                    {NOMS_DES_MOIS.map((m, n) => (
+                      <option key={m} value={n + 1}>
+                        {m.charAt(0).toUpperCase() + m.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="block sm:col-span-2">
                   <span className={LIBELLE}>Niveau de difficulté</span>

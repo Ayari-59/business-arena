@@ -282,6 +282,14 @@ export interface EngineScenarioConfig {
   groupe?: ConfigDeGroupe;
   /** Durée d'un tour en jours (ADR-01) — sert aux délais clients/fournisseurs. */
   roundDays: number;
+  /**
+   * LE MOIS OÙ COMMENCE UNE PARTIE AU MOIS SUR LE CALENDRIER (1 = janvier ;
+   * `config/scenarios/calendrier-mensuel.ts`). Ses tableaux de saison sont alors mois par
+   * mois, et ce qui est écrit pour un trimestre tombe au premier mois de ce trimestre.
+   * Absent : une partie au trimestre ou à l'année, ou une partie au mois d'avant ce
+   * calendrier, qui relit une saison de trimestre à chaque mois.
+   */
+  moisDeDepart?: number;
   market: {
     segments: SegmentConfig[];
     /** Coefficients saisonniers, un par tour (moyenne ≈ 1). */

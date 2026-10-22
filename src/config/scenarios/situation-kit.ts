@@ -1,5 +1,6 @@
 import { modelByCode } from "../pedagogy/models";
 import { createRng } from "../../engine/random";
+import { tourDuTrimestre } from "./calendrier-mensuel";
 import {
   distracteursDuModele,
   modeleAvecAide,
@@ -360,18 +361,28 @@ export function attachModelQuestions(
 
 /**
  * LE TOUR OÙ S'OUVRE UNE SITUATION À TOUR FIXE dans une partie de `toursJoues` tours,
- * dont le scénario en écrit `toursEcrits` ; `null` pour une situation détectée.
+ * dont le scénario en écrit `toursEcrits` ; `null` pour une situation détectée, ou qui
+ * ne tombe pas dans la partie.
  *
- * Le tour dit, sauf pour une situation de fin de partie dans une partie prolongée
- * (`config/scenarios/rounds.ts`) : « Dernier tour : votre conseil d'administration
- * attend un cap assumé » ne se raconte pas au sixième tour d'une partie de douze. Une
- * partie raccourcie ne la déplace pas : elle reste celle d'avant, au bit près.
+ * Le tour dit, sauf :
+ * - pour une situation de fin de partie dans une partie prolongée
+ *   (`config/scenarios/rounds.ts`) : « Dernier tour : votre conseil d'administration
+ *   attend un cap assumé » ne se raconte pas au sixième tour d'une partie de douze. Une
+ *   partie raccourcie ne la déplace pas : elle reste celle d'avant, au bit près ;
+ * - dans une partie au mois sur le calendrier (`moisDeDepart`,
+ *   `config/scenarios/calendrier-mensuel.ts`) : le tour dit est un trimestre, la
+ *   situation s'ouvre au premier mois de ce trimestre, et celle de fin de partie au
+ *   dernier mois.
  */
 export function tourDOuverture(
   trigger: SituationDef["trigger"],
   toursJoues: number,
   toursEcrits: number,
+  moisDeDepart?: number,
 ): number | null {
   if (!("round" in trigger)) return null;
+  if (moisDeDepart !== undefined) {
+    return trigger.finDePartie ? toursJoues : tourDuTrimestre(trigger.round, moisDeDepart, toursJoues);
+  }
   return trigger.finDePartie && toursJoues > toursEcrits ? toursJoues : trigger.round;
 }

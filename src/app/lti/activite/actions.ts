@@ -73,6 +73,8 @@ const schemaDePartie = z.object({
   botCount: z.coerce.number().int().min(0).max(7).catch(1),
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
   roundsCount: z.coerce.number().int().min(1).max(24).optional().catch(undefined),
+  // Au mois : le mois où commence la partie (1 = janvier ; `config/scenarios/calendrier-mensuel.ts`).
+  moisDeDepart: z.coerce.number().int().min(1).max(12).catch(1),
   level: z.coerce.number().int().min(1).max(6).catch(3),
   quizMode: z.enum(["full", "model", "off"]).catch(DEFAULT_QUIZ_MODE),
   answerFormat: z.enum(["qcm", "open"]).catch(DEFAULT_ANSWER_FORMAT),
@@ -87,6 +89,7 @@ export async function creerPartieAction(formData: FormData): Promise<void> {
     botCount: formData.get("botCount"),
     periodicity: formData.get("periodicity"),
     roundsCount: formData.get("roundsCount") || undefined,
+    moisDeDepart: formData.get("moisDeDepart") ?? undefined,
     level: formData.get("level"),
     quizMode: formData.get("quizMode"),
     answerFormat: formData.get("answerFormat"),
@@ -109,6 +112,7 @@ export async function creerPartieAction(formData: FormData): Promise<void> {
       quizMode: r.quizMode,
       answerFormat: r.answerFormat,
       roundsCount: r.roundsCount,
+      moisDeDepart: r.moisDeDepart,
       // Aucun (le défaut), 1 ou 2 tours d'essai avant la vraie partie (config/tour-d-essai.ts).
       essai: lireLeChoixDEssai(formData.get("toursDEssai"), formData.get("enchainementDeLEssai")),
     }));

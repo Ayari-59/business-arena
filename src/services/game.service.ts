@@ -874,6 +874,7 @@ export async function getTeacherGameView(
       {
         joues: (game.scenarioSnapshot as { roundsCount?: number } | null)?.roundsCount ?? snapshotDefinition.scenario.roundsCount,
         ecrits: snapshotDefinition.scenario.roundsCount,
+        moisDeDepart: (game.scenarioSnapshot as { moisDeDepart?: number } | null)?.moisDeDepart,
       },
     ),
     champs: champsOuverts(presetDuJeu.decisions),
