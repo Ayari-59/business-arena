@@ -45,7 +45,23 @@ export interface Cas {
   venteComptant: Facture & CompteDuMetier & { qui: string; date: number };
   venteCredit: Facture & CompteDuMetier & { client: string; date: number; delai: number; echeance: number };
   loyer: { montant: number; date: number };
-  personnel: { montant: number; effectif: number; date: number };
+  /**
+   * La paie de janvier : le brut, ce que le salarié en reçoit (le net), ce que
+   * l'entreprise ajoute (les cotisations patronales), et la date où les
+   * cotisations se paient à l'URSSAF.
+   */
+  personnel: {
+    effectif: number;
+    brut: number;
+    tauxSalarial: number;
+    cotisationsSalariales: number;
+    net: number;
+    tauxPatronal: number;
+    cotisationsPatronales: number;
+    cout: number;
+    date: number;
+    dateUrssaf: number;
+  };
   dates: { capital: number; emprunt: number };
 }
 
@@ -57,6 +73,38 @@ const PART_DE_REPLI = 0.2;
 
 const auCent = (x: number) => Math.round(x / 100) * 100;
 const parDix = (x: number) => Math.max(10, Math.round(x / 10) * 10);
+
+/**
+ * LES TAUX DE COTISATIONS DE LA PAIE : des ordres de grandeur d'un salarié non cadre du
+ * secteur privé, avant les allègements de charges. La part salariale se retient sur le
+ * brut ; la part patronale s'y ajoute, à la charge de l'entreprise.
+ */
+export const TAUX_SALARIAL = 0.22;
+export const TAUX_PATRONAL = 0.42;
+/** Les cotisations du mois se paient à l'URSSAF le 15 du mois suivant (moins de 50 salariés). */
+const JOUR_URSSAF = 31 + 15;
+
+/**
+ * La paie du mois, du coût que la simulation donne pour le personnel : ce coût est
+ * le brut plus les cotisations patronales ; le brut s'en déduit, arrondi à la centaine.
+ */
+function paie(effectif: number, coutDuMois: number): Cas["personnel"] {
+  const brut = auCent(coutDuMois / (1 + TAUX_PATRONAL));
+  const cotisationsSalariales = Math.round(brut * TAUX_SALARIAL);
+  const cotisationsPatronales = Math.round(brut * TAUX_PATRONAL);
+  return {
+    effectif,
+    brut,
+    tauxSalarial: TAUX_SALARIAL,
+    cotisationsSalariales,
+    net: brut - cotisationsSalariales,
+    tauxPatronal: TAUX_PATRONAL,
+    cotisationsPatronales,
+    cout: brut + cotisationsPatronales,
+    date: 28,
+    dateUrssaf: JOUR_URSSAF,
+  };
+}
 
 function facture(quantite: number, prixUnitaire: number, tauxTva: number): Facture {
   const ht = auCentime(quantite * prixUnitaire);
@@ -171,7 +219,7 @@ export function casDeLEntreprise(code: string): Cas {
       delai: delaiClient,
       echeance: dateVente + delaiClient,
     },
-    personnel: { montant: auCent((depart.headcount * hr.salaryPerEmployeePerRound) / 3), effectif: depart.headcount, date: 28 },
+    personnel: paie(depart.headcount, (depart.headcount * hr.salaryPerEmployeePerRound) / 3),
     venteComptant: {
       ...facture(qComptant, prix(comptant), metier.vente.tauxTva),
       compte: metier.vente.compte,

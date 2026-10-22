@@ -12,6 +12,25 @@ import type { Chapitre, EtatDuCours } from "../../config/cours/types";
  * journal, le même pour toute la classe.
  */
 
+/**
+ * Le chapitre tel qu'il se joue dans cette entreprise : les règlements (les étapes qui
+ * portent une échéance) prennent l'ordre de leurs dates, à leurs places. Le fournisseur
+ * de NOVA se paie avant l'URSSAF, celui de MAILLE & CO après : le journal reste
+ * chronologique dans les deux cas. Les autres fonctions de ce fichier attendent un
+ * chapitre ainsi ordonné.
+ */
+export function chapitreDuCas(chapitre: Chapitre, cas: Cas): Chapitre {
+  const places = chapitre.etapes.flatMap((e, i) => (e.type === "ecriture" && e.echeance ? [i] : []));
+  const jour = (i: number) => {
+    const e = chapitre.etapes[i]!;
+    return e.type === "ecriture" && e.echeance ? e.echeance(cas) : 0;
+  };
+  const triees = [...places].sort((a, b) => jour(a) - jour(b));
+  const etapes = [...chapitre.etapes];
+  places.forEach((place, k) => (etapes[place] = chapitre.etapes[triees[k]!]!));
+  return { ...chapitre, etapes };
+}
+
 /** Les écritures des étapes qui précèdent l'étape `index` (exclue). */
 export function journalAvant(chapitre: Chapitre, cas: Cas, index: number): Ecriture[] {
   return chapitre.etapes.slice(0, index).flatMap((e) => (e.type === "ecriture" ? [enEcriture(e.ecriture(cas))] : []));

@@ -55,6 +55,11 @@ export interface EtapeEcriture extends Base {
   /** L'explication, avec les chiffres du cas, une fois l'écriture passée. */
   explication: (c: Cas, e: EtatDuCours) => string[];
   vue?: Vue;
+  /**
+   * Le jour de l'échéance, pour un règlement : les règlements d'un chapitre se suivent
+   * dans l'ordre de leurs dates, qui dépendent de l'entreprise (`chapitreDuCas`).
+   */
+  echeance?: (c: Cas) => number;
 }
 
 export interface OptionDeChoix {
