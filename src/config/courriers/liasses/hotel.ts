@@ -336,7 +336,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Office de tourisme · Service de la promotion",
     objet: "Visite de repérage d'un voyagiste le mois prochain",
     corps:
-      "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses prochains circuits. Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès {{le trimestre}} prochain.",
+      "{{Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne.}} Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès {{le trimestre}} prochain.",
     signataire: "La chargée de promotion",
     effet: "Demande globale +8 % ce tour",
     enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
@@ -380,7 +380,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Gazette de l'hôtellerie régionale · Rédaction",
     objet: "Un hôtel de la place de la gare rouvre et affiche ses prix",
     corps:
-      "La maison Larrivet, trois étoiles de la place de la gare, rouvre après une rénovation complète et l'ajout de deux salles de séminaire. Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier, le temps de reconstituer sa clientèle. Les professionnels s'attendent à un partage de la clientèle d'affaires entre les établissements du centre.",
+      "La maison Larrivet, trois étoiles de la place de la gare, rouvre après une rénovation complète et l'ajout de deux salles de séminaire. {{Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année.}} Les professionnels s'attendent à un partage de la clientèle d'affaires entre les établissements du centre.",
     signataire: "Le rédacteur en chef",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:

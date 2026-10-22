@@ -366,6 +366,21 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     ]),
   ),
   // --- fin du groupe boutique-ecommerce : le récit des saisons --------------
+  // --- les courriers à tour fixe : leur date, vraie au trimestre à leur tour ---
+  // Décision du propriétaire : le trimestre est la référence. Ces courriers (étapes
+  // d'investissement, hausse d'énergie de VOLT FITNESS) tombent à un tour fixe où leur
+  // date est vraie au trimestre ; elle reste. Au mois et à l'année, le tour n'est plus
+  // cette date (ADR-01) : la forme sans date. Posés à la main par l'enseignant hors de
+  // leur tour, ils peuvent dater faux : c'est une limite annoncée, pas corrigée.
+  "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place.": aLaSaison("Le groupe Montclar Ingénierie emménagera prochainement dans l'immeuble voisin de la place."),
+  "Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année.": aLaSaison("Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier, le temps de reconstituer sa clientèle."),
+  "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille.": aLaSaison("L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération dans les semaines qui viennent et renouvelle l'ensemble de sa ligne de maille."),
+  "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.": aLaSaison("Nos ventes de maille restent en deçà des hypothèses retenues au référencement."),
+  "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.": aLaSaison("Une charge qui grimpe ne se répercute pas d'elle-même : tant que l'abonnement ne bouge pas, c'est la marge de chaque adhérent qui la paie."),
+  "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne.": aLaSaison("Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses prochains circuits."),
+  "Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année.": aLaSaison("Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier, le temps de reconstituer sa clientèle."),
+  "Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.": aLaSaison("Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades."),
+  // --- fin des courriers à tour fixe ---
   // Les situations détectées et les courriers, tous (tirés au sort, ou posés par
   // l'enseignant au tour qu'il veut, étapes d'investissement et événements scriptés
   // compris), comme les textes datés à tort au trimestre même, ne passent plus par

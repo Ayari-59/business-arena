@@ -491,7 +491,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Fédération de l'électronique grand public",
     objet: "Kelvox Acoustique annonce une seconde ligne d'assemblage",
     corps:
-      "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades. Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
+      "{{Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.}} Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
     signataire: "Le délégué général",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
