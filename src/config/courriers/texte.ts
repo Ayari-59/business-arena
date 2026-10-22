@@ -25,8 +25,9 @@ import type { CourrierDef } from "./types";
  * quantité que le scénario porte se lit par sa grandeur
  * (`{{entier: commande_tight_order}}`, `{{lettres: …}}` quand la lettre l'écrit
  * en toutes lettres) ; un chiffre du seul récit passe par `flux(…)`. Le nombre
- * de tours d'un effet (« pendant 2 tours ») ne bouge pas : le moteur compte la
- * durée d'un événement en tours.
+ * de tours d'un effet (« pendant 2 tours ») ne bouge pas au trimestre ni à l'année ;
+ * au mois, sur le calendrier, un événement dure le temps réel et l'effet se dit en
+ * mois (« pendant 6 mois », `enTempsReel`).
  *
  * D'OÙ SE LISENT LES QUANTITÉS. Du scénario de la liasse, mis à la durée du tour
  * par `applyPeriodicity` : la règle du moteur, pas une copie. Le monde variable,
@@ -71,7 +72,9 @@ interface Rendus {
 /** Le rendu au trimestre que portent les listes → sa source et ses rendus à chaque durée. */
 const RENDUS = new WeakMap<CourrierDef, Rendus>();
 
-const aJetons = (c: CourrierDef) => textesDuCourrier(c).some((t) => t.includes("{{"));
+// Une durée d'effet en tours (« pendant 2 tours ») se rend aussi : au mois, elle se dit
+// en mois de temps réel (`enTempsReel`, config/scenarios/calendrier-mensuel.ts).
+const aJetons = (c: CourrierDef) => textesDuCourrier(c).some((t) => t.includes("{{") || /\bpendant \d+ tours?\b/.test(t));
 
 function retenir(source: CourrierDef, parDuree: Record<Periodicity, CourrierDef>): CourrierDef {
   RENDUS.set(parDuree.quarter, { source, parDuree });

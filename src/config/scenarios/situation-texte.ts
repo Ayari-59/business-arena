@@ -16,7 +16,7 @@ import { hotelGammeCompany } from "./hotel-gamme";
 import { isProductAvailable } from "../../engine/gamme";
 import { NOVA_HOME } from "../groupe/nova";
 import { applyRoundsCount } from "./rounds";
-import { auCalendrierMensuel, MOIS_MAX, tourDuTrimestre, trimestresDeLaPartie } from "./calendrier-mensuel";
+import { auCalendrierMensuel, enTempsReel, MOIS_MAX, tourDuTrimestre, trimestresDeLaPartie } from "./calendrier-mensuel";
 
 /**
  * LE TEXTE D'UNE SITUATION SE REND À LA DURÉE DU TOUR DE SA PARTIE.
@@ -1046,9 +1046,13 @@ const JETON = /\{\{([^{}]+)\}\}/g;
  * celui où le texte se lit, pour le coefficient de saison (`saisonLue`) ; absent, ce
  * jeton lève.
  */
-export function rendreTexte(texte: string, scenario: EngineScenarioConfig, tour?: number): string {
-  if (!texte.includes("{{")) return texte;
+export function rendreTexte(brut: string, scenario: EngineScenarioConfig, tour?: number): string {
   const periodicite = periodicityFromRoundDays(scenario.roundDays);
+  // Au mois, une durée écrite en trimestres se dit en mois de temps réel (`enTempsReel`) :
+  // toute partie au mois née depuis le calendrier y dure le temps réel. Une partie au mois
+  // d'avant le calendrier lit les mêmes mots, comme ceux de la saison : limite annoncée.
+  const texte = periodicite === "month" ? enTempsReel(brut) : brut;
+  if (!texte.includes("{{")) return texte;
   return texte.replace(JETON, (_, brut: string) => {
     const contenu = brut.trim();
     const deuxPoints = contenu.indexOf(":");

@@ -279,7 +279,18 @@ export function auCalendrierMensuel(
       const tour = tourDuTrimestre(s.round, moisDeDepart, mois);
       return tour === null ? [] : [{ ...s, round: tour }];
     }),
-    ...(scenario.rse ? { rse: { ...scenario.rse, cards: { ...scenario.rse.cards, minRound: pasAvant(scenario.rse.cards.minRound) } } } : {}),
+    ...(scenario.rse
+      ? {
+          rse: {
+            ...scenario.rse,
+            cards: {
+              ...scenario.rse.cards,
+              minRound: pasAvant(scenario.rse.cards.minRound),
+              labelDuration: duree(scenario.rse.cards.labelDuration),
+            },
+          },
+        }
+      : {}),
     ...(scenario.rdActions
       ? {
           rdActions: {
@@ -289,4 +300,35 @@ export function auCalendrierMensuel(
         }
       : {}),
   };
+}
+
+/**
+ * UNE DURÉE ÉCRITE EN TRIMESTRES, DITE EN MOIS DE TEMPS RÉEL (décision du propriétaire :
+ * au mois sur le calendrier, un événement dure le temps réel). Le texte d'un courrier ou
+ * d'une situation compte une durée en trimestres, ou en tours d'effet : « deux prochains
+ * {{trimestres}} », « pendant 2 tours ». Au mois de toujours, le jeton rendait « deux
+ * prochains mois », vrai quand un événement durait deux tours. Sur le calendrier, il en
+ * dure six : le nombre se triple et l'unité devient le mois. Une durée sans nombre
+ * (« plusieurs trimestres ») et un trimestre au singulier (un flux, « par trimestre »)
+ * passent par les mots du mois, comme avant.
+ */
+const NOMBRES = ["un", "deux", "trois", "quatre", "cinq", "six"] as const;
+const TRIPLES = ["trois", "six", "neuf", "douze", "quinze", "dix-huit"] as const;
+
+const triple = (mot: string): string => {
+  const i = NOMBRES.indexOf(mot.toLowerCase() as (typeof NOMBRES)[number]);
+  const t = TRIPLES[i]!;
+  return mot[0] === mot[0]!.toUpperCase() ? t[0]!.toUpperCase() + t.slice(1) : t;
+};
+
+const DUREE_EN_TRIMESTRES = new RegExp(
+  `\\b(${NOMBRES.join("|")})( (?:prochains|derniers))? \\{\\{trimestres\\}\\}`,
+  "gi",
+);
+const DUREE_EN_TOURS = /\bpendant (\d+) tours?\b/g;
+
+export function enTempsReel(texte: string): string {
+  return texte
+    .replace(DUREE_EN_TRIMESTRES, (_, nombre: string, adjectif: string | undefined) => `${triple(nombre)}${adjectif ?? ""} mois`)
+    .replace(DUREE_EN_TOURS, (_, n: string) => `pendant ${3 * Number(n)} mois`);
 }
