@@ -636,7 +636,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
       "Ajoutez la marge de sécurité : à résultat égal, l'établissement le plus loin de son seuil encaissera mieux un mauvais {{trimestre}}.",
       "Rentabilité financière = résultat net ÷ capitaux propres. C'est le seul chiffre qui réponde à la question de votre associé.",
     ]),
-    trigger: { round: 6 },
+    trigger: { round: 6, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       {

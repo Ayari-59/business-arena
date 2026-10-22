@@ -140,7 +140,7 @@ const SOURCES: SituationDef[] = [
       "Une analyse de l'élasticité, référence par référence, dirait où une baisse rapporte et où elle ne fait que coûter.",
       "Baissez là où l'élasticité dépasse 1 en valeur absolue (la Go, la One sous ses seuils) ; tenez le prix de la Studio, et soignez plutôt sa qualité. Puis donnez au budget l'axe qui parle à la clientèle visée : le prix n'est crédible que si vous êtes vraiment moins cher, et changer d'axe chaque tour use la notoriété.",
     ]),
-    trigger: { round: 2 },
+    trigger: { round: 2, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "review", hint: "Trois marchés, trois élasticités : une baisse qui paie sur la Go coûte de la marge sur la Studio sans rien rapporter en volume." },
@@ -205,7 +205,7 @@ const SOURCES: SituationDef[] = [
       "Une analyse de capacité, croisée avec la marge de chaque référence et la saisonnalité, dirait quoi produire dès maintenant.",
       "Classez les références par marge par enceinte (59 € la Studio, 21 € la One, 15 € la Go), servez la demande dans cet ordre, et produisez au plafond dès ce tour {{pour stocker la Go et la One avant Noël}}.",
     ]),
-    trigger: { round: 3 },
+    trigger: { round: 3, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "productionPlan", direction: "up", hint: "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus — en commençant par la référence qui rapporte le plus par enceinte." },

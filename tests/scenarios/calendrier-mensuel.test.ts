@@ -13,6 +13,7 @@ import {
   trimestreDuTour,
 } from "../../src/config/scenarios/calendrier-mensuel";
 import type { EngineScenarioConfig, SegmentConfig } from "../../src/engine/types";
+import { situationDeLaPartie } from "../../src/config/scenarios/situation-texte";
 
 /**
  * LE CALENDRIER DES PARTIES AU MOIS (décision du propriétaire) : la saison du trimestre,
@@ -159,5 +160,43 @@ describe("la durée d'une partie au mois", () => {
     expect(toursDeLaPartie(nova, 40, "month", true)).toBe(MOIS_MAX);
     expect(toursDeLaPartie(nova, undefined, "month")).toBe(nova.roundsCount);
     expect(toursMaxDeLaPartie(nova, "year")).toBe(nova.roundsCount);
+  });
+});
+
+describe("une situation qui raconte un tour déjà joué ne s'ouvre jamais au premier mois", () => {
+  /**
+   * Les tournures qui supposent un tour joué dans CETTE partie : un mois écoulé, un
+   * atelier qui a plafonné, des comptes reçus, une saison finie. Une situation dont le
+   * récit au mois en porte une est marquée `supposeUnTourJoue` (décision du propriétaire).
+   */
+  const PASSE = /écoulé|a plafonné|derniers comptes|vient de vider|est finie|a déjà progressé|renouvellements est sorti|ne s'est pas réinscrite|le mois est bénéficiaire|le résultat est bon|a dégagé un résultat|a tranché/i;
+
+  it("chaque récit au mois qui raconte un tour joué porte la marque, et chaque marque a son récit", () => {
+    for (const def of SCENARIOS) {
+      for (const s of def.situations) {
+        if (!("round" in s.trigger) || s.trigger.round < 2 || s.trigger.finDePartie || s.trigger.requires || s.seulementAvec) continue;
+        const rendue = situationDeLaPartie(s, 30, 1);
+        const raconte = PASSE.test(`${rendue.narrative} ${rendue.problem}`);
+        expect(s.trigger.supposeUnTourJoue === true, `${def.code} · ${s.code} : ${rendue.narrative.slice(0, 90)}`).toBe(raconte);
+      }
+    }
+  });
+
+  it("pour chaque mois de départ : jamais au premier mois ; au deuxième s'il est encore dans son trimestre, sinon pas du tout", () => {
+    for (const def of SCENARIOS) {
+      for (const s of def.situations.filter((x) => "round" in x.trigger && x.trigger.supposeUnTourJoue)) {
+        const trigger = s.trigger as { round: number; supposeUnTourJoue: true };
+        for (let depart = 1; depart <= 12; depart += 1) {
+          const tour = tourDOuverture(trigger, MOIS_MAX, 6, depart);
+          expect(tour, `${s.code}, départ ${depart}`).not.toBe(1);
+          if (tour !== null) expect(trimestreDuTour(tour, depart), `${s.code}, départ ${depart}`).toBe(trigger.round);
+        }
+      }
+    }
+    // NOVA, « Le mois écoulé est bouclé » (trimestre 2) : départ en avril, au deuxième mois
+    // (mai) ; départ en juin, jamais (juillet est un autre trimestre) ; départ en janvier, avril.
+    const nova = SCENARIOS.find((d) => d.code === "nova")!;
+    const ecart = nova.situations.find((s) => s.code === "nova_t2_variance_decomposition")!;
+    expect([4, 6, 1].map((d) => tourDOuverture(ecart.trigger, 12, 6, d))).toEqual([2, null, 4]);
   });
 });

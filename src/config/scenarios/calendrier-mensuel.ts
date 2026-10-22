@@ -186,6 +186,24 @@ export function tourDuTrimestre(trimestre: number, moisDeDepart: number, mois: n
   return tour !== null && tour <= mois ? tour : null;
 }
 
+/**
+ * LE TOUR OÙ S'OUVRE UNE SITUATION ÉCRITE POUR LE TOUR `round` DU TRIMESTRE, dans une
+ * partie au mois : celui de `tourDuTrimestre`, sauf pour une situation dont le récit
+ * raconte un tour déjà joué (`supposeUnTourJoue`, décision du propriétaire). Celle-là ne
+ * s'ouvre jamais au premier mois, où rien n'a encore été joué : elle passe au deuxième
+ * s'il appartient encore à son trimestre (sa saison est la sienne), sinon elle ne se joue
+ * pas dans cette partie.
+ */
+export function tourDeLaSituation(
+  trigger: { round: number; supposeUnTourJoue?: true },
+  moisDeDepart: number,
+  mois: number,
+): number | null {
+  const tour = tourDuTrimestre(trigger.round, moisDeDepart, mois);
+  if (tour !== 1 || !trigger.supposeUnTourJoue) return tour;
+  return mois >= 2 && trimestreDuTour(2, moisDeDepart) === trigger.round ? 2 : null;
+}
+
 /** Le dernier tour d'une partie au mois qui appartient encore au tour `trimestre` du trimestre. */
 const dernierMoisDuTrimestre = (trimestre: number, moisDeDepart: number) => 3 * trimestre - (moisDeDepart - 1);
 

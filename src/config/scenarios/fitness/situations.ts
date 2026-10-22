@@ -182,7 +182,7 @@ const SOURCES: SituationDef[] = [
       "Évaluer une suite de flux futurs, c'est exactement ce que fait la valeur actuelle nette. Valeur vie ≈ marge {{trimestrielle}} ÷ taux d'attrition.",
       "À {{entier: marge}} € de marge : {{entier: marge / attrition}} € si l'attrition est de {{taux: attrition}} %, {{entier: marge / perte(0.10)}} € si elle tombe à {{taux: perte(0.10)}} %. Le levier de la rétention est bien plus puissant que celui du prix.",
     ]),
-    trigger: { round: 2 },
+    trigger: { round: 2, supposeUnTourJoue: true },
     weight: 1.5,
     decisionLevers: [
       {
@@ -276,7 +276,7 @@ const SOURCES: SituationDef[] = [
       "Calculez votre marge de sécurité : combien d'adhérents pouvez-vous perdre avant de passer sous le seuil de 1 170 ?",
       "Les vraies réponses se jouent AVANT : fidéliser les {{inscrits de janvier}}, signer des contrats entreprises moins saisonniers, ou vendre des {{engagements annuels plutôt que trimestriels}}.",
     ]),
-    trigger: { round: 3 },
+    trigger: { round: 3, supposeUnTourJoue: true },
     weight: 1.5,
     decisionLevers: [
       {

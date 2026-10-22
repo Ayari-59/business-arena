@@ -347,7 +347,7 @@ const SOURCES: SituationDef[] = [
       "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les chalands. Et les chalands portent un seuil psychologique à 50 € : tenir votre coefficient vous fait passer de 45 à 53,10 €, donc franchir ce seuil chez la clientèle qui y est déjà la plus sensible.",
       "Chiffrez les deux branches : absorber porte le seuil de {{entier: plafond(charges / 23.5)}} à ~{{entier: dizaine(charges / 20.26)}} articles ; répercuter 5 % coûte ~10 % de volume chez les chalands. Comparez les marges totales, pas les pourcentages.",
     ]),
-    trigger: { round: 5 },
+    trigger: { round: 5, supposeUnTourJoue: true },
     weight: 1.5,
     decisionLevers: [
       { field: "price", direction: "up", hint: "Répercuter la hausse du coût d'achat sur le prix de vente préserve la marge unitaire, mais l'élasticité-prix vous dit combien de volume cela coûte sur chaque segment." },
@@ -679,7 +679,7 @@ const SOURCES: SituationDef[] = [
       "Le solde cumulé de ces deux lignes, mois après mois, est le budget de trésorerie. Son point le plus bas est votre besoin de financement.",
       "Un résultat prévisionnel positif ne dit rien du mois où vous manquerez de caisse : seul le budget de trésorerie le montre.",
     ]),
-    trigger: { round: 6 },
+    trigger: { round: 6, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "productionPlan", direction: "review", hint: "La commande de la prochaine collection est le premier décaissement à projeter : son montant et son calendrier déterminent combien de trésorerie doit rester disponible." },

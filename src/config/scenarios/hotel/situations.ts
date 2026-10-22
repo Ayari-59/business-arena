@@ -660,7 +660,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
       "Regardez le SENS de vos écarts sur les six tours. Toujours au-dessus ? Toujours en dessous ?",
       "Un écart constant dans le même sens n'est pas de la malchance : c'est votre méthode qui est biaisée, et elle se corrige.",
     ]),
-    trigger: { round: 6 },
+    trigger: { round: 6, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "review", hint: "L'écart de prix moyen révèle si votre politique tarifaire s'est appliquée comme prévu. Un prix réalisé systématiquement inférieur signale un biais à corriger." },

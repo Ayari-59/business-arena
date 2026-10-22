@@ -656,7 +656,7 @@ const SOURCES: SituationDef[] = [
       "Repérez celle qui vous fait basculer sous le seuil : c'est elle qui doit gouverner le budget, pas la moyenne.",
       "Une décision robuste tient dans les trois scénarios. Si elle ne tient que dans le meilleur, c'est un pari, et il faut le nommer comme tel.",
     ]),
-    trigger: { round: 6 },
+    trigger: { round: 6, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "marketingBudget", direction: "review", hint: "Si le coût d'acquisition monte de 60 %, le budget actuel devient peut-être déficitaire. Testez plusieurs hypothèses avant de fixer le montant." },

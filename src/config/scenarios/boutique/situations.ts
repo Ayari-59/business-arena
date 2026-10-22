@@ -377,7 +377,7 @@ const SOURCES: SituationDef[] = [
       "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les passants. Et les passants portent un seuil psychologique à 60 € sur le pull : tenir votre coefficient vous fait passer de 59 à près de 70 €, donc franchir ce seuil chez la clientèle qui y est déjà la plus sensible.",
       "Chiffrez les deux branches : absorber porte le seuil de {{entier: charges / 30.5}} à ~{{entier: dizaine(charges / 26)}} pulls ; répercuter 5 % coûte ~10 % de volume chez les passants. Comparez les marges totales, pas les pourcentages — et référence par référence : le mérinos, vendu aux fidèles, supporte la hausse ; le bonnet, vendu aux passants, ne la supporte pas.",
     ]),
-    trigger: { round: 5 },
+    trigger: { round: 5, supposeUnTourJoue: true },
     weight: 1.5,
     decisionLevers: [
       { field: "price", direction: "up", hint: "Répercuter la hausse du coût d'achat sur le prix de vente préserve la marge unitaire, mais l'élasticité-prix vous dit combien de volume cela coûte sur chaque segment : pas le même arbitrage sur le mérinos et sur le bonnet." },
@@ -714,7 +714,7 @@ const SOURCES: SituationDef[] = [
       "Le solde cumulé de ces deux lignes, mois après mois, est le budget de trésorerie. Son point le plus bas est votre besoin de financement.",
       "Un résultat prévisionnel positif ne dit rien du mois où vous manquerez de caisse : seul le budget de trésorerie le montre.",
     ]),
-    trigger: { round: 6 },
+    trigger: { round: 6, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "productionPlan", direction: "review", hint: "La commande de la prochaine collection est le premier décaissement à projeter : son montant et son calendrier déterminent combien de trésorerie doit rester disponible." },
