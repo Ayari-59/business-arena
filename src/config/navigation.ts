@@ -202,6 +202,11 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         aide: "Des déroulés de séance prêts à animer, avec leurs livrables et leur grille d'évaluation.",
       },
       {
+        href: "/cours",
+        libelle: "Cours par la simulation",
+        aide: "La comptabilité et le contrôle de gestion sur un cas simulé, pas à pas : l'élève passe les écritures et construit lui-même son bilan.",
+      },
+      {
         href: "/parcours",
         libelle: "Référentiels par diplôme",
         aide: "Votre référentiel bloc par bloc, pour chaque diplôme qui a un atelier : où chacun se travaille, et ce qui n'est qu'effleuré.",

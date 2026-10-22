@@ -211,9 +211,10 @@ describe("la grille tarifaire", () => {
     // c'est la comptabilité des entreprises simulées, pas un tarif. On cherche ici les
     // formes d'un PRIX : « 490 € HT », « HT / an », « HT par an », « € TTC », « TVA 20 % en sus ».
     const PRIX_TAXE = /€\s?(?:HT|TTC)\b|\bHT\s?\/\s?an\b|\bHT par an\b|TVA \$\{|TVA 20\s?% en sus|prixTTC|PRIX_HT/;
-    // Les contenus de jeu (épisodes, scénarios, moteur, pédagogie) chiffrent les affaires
-    // des entreprises simulées, en HT comme dans la vraie vie : ils sont hors du champ.
-    const JEU = /^(?:config\/episodes|config\/scenarios|engine|pedagogy)\//;
+    // Les contenus de jeu (épisodes, scénarios, cours de comptabilité, moteur, pédagogie)
+    // chiffrent les affaires des entreprises simulées, en HT comme dans la vraie vie : ils
+    // sont hors du champ.
+    const JEU = /^(?:config\/episodes|config\/scenarios|config\/cours|engine|pedagogy)\//;
     const fautifs = fichiers(SRC)
       .filter((f) => !JEU.test(f.slice(SRC.length + 1)))
       .filter((f) => PRIX_TAXE.test(code(readFileSync(f, "utf8"))))
