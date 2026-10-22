@@ -25,6 +25,7 @@ export const PAGES_PUBLIQUES = [
   "/parcours",
   "/fonctionnalites",
   "/notions",
+  "/cours",
   "/guide",
   "/guides",
   "/manuel",

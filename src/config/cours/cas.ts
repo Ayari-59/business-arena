@@ -1,0 +1,185 @@
+import { botDecisions, type BotProfile } from "../../engine/bots";
+import { runGame } from "../../engine/simulation/runGame";
+import type { CompanyRoundResult, CompanyState } from "../../engine/types";
+import { scenarioByCode } from "../scenarios/registry";
+import { nomEntreprise } from "../scenarios/presentation";
+import { auCentime } from "../../pedagogy/cours/etats";
+import { METIERS, type CompteDuMetier } from "./metiers";
+
+/**
+ * LE CAS D'UNE ENTREPRISE : LES MONTANTS DU COURS, TIRÉS DE LA SIMULATION.
+ *
+ * Aucun chiffre du cours ne s'écrit à la main. Les apports et l'emprunt sont ceux
+ * du bilan d'ouverture de l'entreprise dans l'arène ; l'équipement acheté est le
+ * premier de son parc, au prix du catalogue d'équipements ; le loyer et le
+ * personnel viennent de ses coûts fixes et de ses salaires ; les quantités vendues
+ * et leurs prix, du PREMIER TRIMESTRE SIMULÉ par le moteur (une gestion équilibrée
+ * face aux concurrents du scénario, graine fixe), ramené à un mois.
+ *
+ * Les ventes se partagent comme dans la simulation : les clients qui paient sur-le-
+ * champ (segments sans délai de paiement) et les clients professionnels qui paient
+ * à échéance (le délai de leur segment). Le fournisseur est payé au délai du
+ * scénario. Le cas est donc déterministe : même entreprise, mêmes montants, pour
+ * tous les élèves et pour la correction.
+ */
+
+export interface Facture {
+  quantite: number;
+  prixUnitaire: number;
+  ht: number;
+  tauxTva: number;
+  tva: number;
+  ttc: number;
+}
+
+export interface Cas {
+  code: string;
+  entreprise: string;
+  unite: string;
+  unites: string;
+  capital: number;
+  emprunt: number;
+  immobilisation: Facture & CompteDuMetier & { designation: string; date: number };
+  achat: Facture &
+    CompteDuMetier & { designation: string; fournisseur: string; date: number; delai: number; echeance: number };
+  venteComptant: Facture & CompteDuMetier & { qui: string; date: number };
+  venteCredit: Facture & CompteDuMetier & { client: string; date: number; delai: number; echeance: number };
+  loyer: { montant: number; date: number };
+  personnel: { montant: number; effectif: number; date: number };
+  dates: { capital: number; emprunt: number };
+}
+
+/** La graine du trimestre simulé : le même cas pour tous. */
+export const GRAINE_DU_COURS = 20260101;
+
+/** La part des ventes gardée pour la façon de payer que le premier trimestre n'a pas connue. */
+const PART_DE_REPLI = 0.2;
+
+const auCent = (x: number) => Math.round(x / 100) * 100;
+const parDix = (x: number) => Math.max(10, Math.round(x / 10) * 10);
+
+function facture(quantite: number, prixUnitaire: number, tauxTva: number): Facture {
+  const ht = auCentime(quantite * prixUnitaire);
+  const tva = auCentime(ht * tauxTva);
+  return { quantite, prixUnitaire, ht, tauxTva, tva, ttc: auCentime(ht + tva) };
+}
+
+/** Le premier trimestre de l'entreprise, joué par le moteur. */
+function premierTrimestre(code: string): { joueur: CompanyRoundResult; depart: CompanyState } {
+  const def = scenarioByCode(code);
+  const scenario = { ...def.scenario, roundsCount: 1 };
+  const entreprises: CompanyState[] = [
+    def.company("joueur", def.playerTeamName, "bot", "balanced"),
+    ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
+  ];
+  const partie = runGame({
+    scenario,
+    initialCompanies: entreprises,
+    seed: GRAINE_DU_COURS,
+    providers: Object.fromEntries(
+      entreprises.map((e) => [
+        e.id,
+        // Un seul tour : pas de tour précédent à lire.
+        (ctx: { state: CompanyState; roundIndex: number }) =>
+          botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex }),
+      ]),
+    ),
+  });
+  const joueur = partie.rounds[0]!.results["joueur"]!;
+  return { joueur, depart: entreprises[0]! };
+}
+
+const caches = new Map<string, Cas>();
+
+export function casDeLEntreprise(code: string): Cas {
+  const deja = caches.get(code);
+  if (deja) return deja;
+  const metier = METIERS[code];
+  if (!metier) throw new Error(`Pas de cas de cours pour l'entreprise ${code}`);
+  const def = scenarioByCode(code);
+  const s = def.scenario;
+  const { joueur, depart } = premierTrimestre(code);
+
+  // Les ventes du trimestre, par façon de payer, ramenées à un mois.
+  const delais = new Map(s.market.segments.map((g) => [g.code, g.paymentDelayDays ?? 0]));
+  let comptant = { u: 0, ca: 0 };
+  let credit = { u: 0, ca: 0 };
+  for (const [seg, v] of Object.entries(joueur.market.bySegment)) {
+    if ((delais.get(seg) ?? 0) === 0) comptant = { u: comptant.u + v.sold, ca: comptant.ca + v.revenue };
+    else credit = { u: credit.u + v.sold, ca: credit.ca + v.revenue };
+  }
+  // Le délai du client professionnel : le plus long des segments qui paient à échéance.
+  const delaiClient = Math.max(...s.market.segments.map((g) => g.paymentDelayDays ?? 0));
+  // UN CHAPITRE A TOUJOURS SES DEUX VENTES. Une entreprise dont le premier trimestre
+  // n'a vendu que d'une seule façon (NOVA ne vend à CampusTech qu'à partir du
+  // troisième tour ; un cabinet de conseil n'a pas de client au comptant) en garde
+  // une part pour l'autre, au même prix moyen : le total du mois reste celui de la
+  // simulation.
+  const total = { u: comptant.u + credit.u, ca: comptant.ca + credit.ca };
+  if (comptant.u === 0 || credit.u === 0) {
+    const part = { u: total.u * PART_DE_REPLI, ca: total.ca * PART_DE_REPLI };
+    const reste = { u: total.u - part.u, ca: total.ca - part.ca };
+    [comptant, credit] = comptant.u === 0 ? [part, reste] : [reste, part];
+  }
+  const prix = (g: { u: number; ca: number }) => Math.round(g.ca / g.u);
+  const qComptant = parDix(comptant.u / 3);
+  const qCredit = parDix(credit.u / 3);
+  const quantite = qComptant + qCredit;
+
+  const flotte = depart.fleet?.[0];
+  const type = s.equipment?.types.find((t) => t.code === flotte?.typeCode);
+  if (!flotte || !type) throw new Error(`L'entreprise ${code} n'a pas de parc d'équipement`);
+
+  const hr = s.hr!;
+  const delaiFournisseur = s.finance.supplierPaymentDelayDays;
+  // Le fournisseur se paie au mois suivant : l'achat se date pour que son échéance y tombe.
+  const dateAchat = Math.max(10, 32 - delaiFournisseur);
+  // Le client paie après le fournisseur : le chapitre règle la dette, puis encaisse la créance.
+  const dateVente = Math.max(20, dateAchat + delaiFournisseur - delaiClient + 1);
+
+  const cas: Cas = {
+    code,
+    entreprise: nomEntreprise(def),
+    unite: def.vocabulary.unit,
+    unites: def.vocabulary.units,
+    capital: depart.finance.equity,
+    emprunt: depart.finance.financialDebt,
+    dates: { capital: 2, emprunt: 3 },
+    loyer: { montant: auCent((s.fixedCostsPerRound - hr.includedHeadcount * hr.salaryPerEmployeePerRound) / 3), date: 5 },
+    immobilisation: {
+      ...facture(flotte.count, type.costPerUnit, 0.2),
+      ...metier.immobilisation,
+      designation: type.name,
+      date: 6,
+    },
+    achat: {
+      ...facture(quantite, s.product.materialCostPerUnit, metier.achat.tauxTva),
+      compte: metier.achat.compte,
+      acceptes: metier.achat.acceptes,
+      designation: metier.achat.designation(quantite.toLocaleString("fr-FR")),
+      fournisseur: metier.achat.fournisseur,
+      date: dateAchat,
+      delai: delaiFournisseur,
+      echeance: dateAchat + delaiFournisseur,
+    },
+    venteCredit: {
+      ...facture(qCredit, prix(credit), metier.vente.tauxTva),
+      compte: metier.vente.compte,
+      acceptes: metier.vente.acceptes,
+      client: metier.vente.client,
+      date: dateVente,
+      delai: delaiClient,
+      echeance: dateVente + delaiClient,
+    },
+    personnel: { montant: auCent((depart.headcount * hr.salaryPerEmployeePerRound) / 3), effectif: depart.headcount, date: 28 },
+    venteComptant: {
+      ...facture(qComptant, prix(comptant), metier.vente.tauxTva),
+      compte: metier.vente.compte,
+      acceptes: metier.vente.acceptes,
+      qui: metier.vente.comptant,
+      date: 31,
+    },
+  };
+  caches.set(code, cas);
+  return cas;
+}
