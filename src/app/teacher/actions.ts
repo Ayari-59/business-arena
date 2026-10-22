@@ -145,8 +145,9 @@ const createGameSchema = z.object({
   botCount: z.coerce.number().int().min(0).max(7).catch(1),
   // 1 à 6 : les six niveaux du parcours, et il n'y en a pas d'autre (`NIVEAU_MAX`).
   level: z.coerce.number().int().min(1).max(6).catch(3),
-  // Tours joués : vide ou hors bornes = tous ceux du scénario. Le service
-  // rabote de toute façon à ce que le secteur porte.
+  // Tours joués : vide ou hors bornes = tous ceux du scénario. Au-delà de ce que la
+  // périodicité permet (au trimestre, `TOURS_MAX_AU_TRIMESTRE`), le service refuse avec
+  // la raison (`services/game-creation.service.ts`).
   roundsCount: z.coerce.number().int().min(1).max(24).optional().catch(undefined),
   // Secteur joué : un secteur intégré OU un scénario enseignant. La
   // vérification d'autorisation (propriété du scénario) se fait dans l'action ;

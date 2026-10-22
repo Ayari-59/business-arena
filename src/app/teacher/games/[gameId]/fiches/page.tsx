@@ -163,7 +163,10 @@ export default async function FichesPage({
         </h1>
         <p className="chapeau text-slate-500">
           {pourLEleve
-            ? `${view.roundsCount} tours à jouer. À chaque tour : une situation à lire, un diagnostic, des décisions. La simulation répond, et vous recommencez avec ce que vous avez appris.`
+            ? view.roundsCount > definition.scenario.roundsCount
+              ? // Une partie prolongée (`config/scenarios/rounds.ts`) : après les tours écrits, des tours de gestion.
+                `${view.roundsCount} tours à jouer. Pendant les ${definition.scenario.roundsCount} premiers : une situation à lire, un diagnostic, des décisions. Ensuite, vous gérez votre entreprise sur la même année qui revient, avec ce que vous avez appris.`
+              : `${view.roundsCount} tours à jouer. À chaque tour : une situation à lire, un diagnostic, des décisions. La simulation répond, et vous recommencez avec ce que vous avez appris.`
             : `${view.roundsCount} tours, ${faits.equipes} ${faits.equipes > 1 ? "équipes" : "équipe"}, ${faits.champs} décisions ouvertes. Cette fiche dit ce qu'on fait et depuis quel écran ; les réglages, eux, vivent dans la page de partie avec leur aide.`}
         </p>
 

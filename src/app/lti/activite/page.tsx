@@ -38,6 +38,8 @@ import {
   QUIZ_MODES,
 } from "@/config/difficulty";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
+import { ChampNombre } from "@/components/examen/champ-nombre";
 import {
   creerCohorteAction,
   creerPartieAction,
@@ -281,14 +283,17 @@ export default async function ActiviteLtiPage({
                 </label>
                 <label className="block">
                   <span className={LIBELLE}>Tours joués</span>
-                  <select name="roundsCount" defaultValue="" className={CHAMP}>
-                    <option value="">Toute la partie</option>
-                    {[3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n} tours
-                      </option>
-                    ))}
-                  </select>
+                  {/* Libre, comme dans l'espace enseignant : vide, la partie écrite du
+                      secteur ; au trimestre seulement, jusqu'à douze tours. */}
+                  <ChampNombre
+                    name="roundsCount"
+                    min={1}
+                    max={TOURS_MAX_AU_TRIMESTRE}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="Toute la partie"
+                    className={CHAMP}
+                  />
                 </label>
                 <label className="block sm:col-span-2">
                   <span className={LIBELLE}>Niveau de difficulté</span>

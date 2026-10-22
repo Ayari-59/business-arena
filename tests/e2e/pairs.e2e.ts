@@ -91,7 +91,7 @@ describe("l'évaluation entre coéquipiers", () => {
     }
     await prof.selectOption('select[name="humanTeamsCount"]', "1");
     await prof.selectOption('select[name="botCount"]', "1");
-    await prof.selectOption('select[name="roundsCount"]', "3");
+    await prof.locator('input[name="roundsCount"]').fill("3");
     await prof.locator('input[name="evaluationDesPairs"]').check();
     await prof.getByRole("button", { name: /Créer la partie/ }).click();
     await prof.waitForURL(/\/teacher\/games\/[0-9a-f-]{36}$/, { timeout: 60_000 });
