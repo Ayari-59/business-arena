@@ -365,7 +365,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Chambre de commerce et d'industrie · Observatoire du commerce",
     objet: "Les Tricots Valmont annoncent trois ouvertures dans l'agglomération",
     corps:
-      "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération dans les semaines qui viennent et renouvelle l'ensemble de sa ligne de maille. Elle annonce des prix d'appel inférieurs d'environ un cinquième à ceux pratiqués dans les rues commerçantes. Notre observatoire s'attend à un déplacement d'une partie de la clientèle.",
+      "{{L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille.}} Elle annonce des prix d'appel inférieurs d'environ un cinquième à ceux pratiqués dans les rues commerçantes. Notre observatoire s'attend à un déplacement d'une partie de la clientèle.",
     signataire: "Le responsable de l'observatoire",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:
@@ -380,7 +380,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Galeries Montclair · Direction du merchandising",
     objet: "Ajustement des quantités convenues pour votre collection",
     corps:
-      "Nos ventes de maille restent en deçà des hypothèses retenues au référencement. Nous ajustons donc à la baisse les quantités convenues pour les deux {{trimestres}} restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
+      "{{La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.}} Nous ajustons donc à la baisse les quantités convenues pour les deux {{trimestres}} restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
     signataire: "La responsable du merchandising",
     effet: "Demande globale −12 % pendant 2 tours",
     enJeu:

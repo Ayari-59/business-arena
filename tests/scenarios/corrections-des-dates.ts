@@ -34,8 +34,6 @@ export interface CorrectionDeDate {
 
 const DETECTEE = "situation détectée : elle tombe à n'importe quel tour, la saison qu'elle supposait était souvent fausse";
 const TIRE = "courrier tiré au sort, ou posé par l'enseignant : il tombe à n'importe quel tour, la date qu'il portait était souvent fausse";
-const POSE =
-  "courrier à tour fixe, que l'enseignant pose aussi au tour qu'il veut : la date, vraie à son tour, devenait fausse à tous les autres";
 const METEO =
   "récit météo d'un événement tiré à plusieurs tours, le calendrier de la partie bouclant : le temps qu'il racontait supposait une saison";
 
@@ -452,60 +450,6 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
     avant: "augmentent de six pour cent au premier janvier",
     apres: "augmentent de six pour cent à la date de revalorisation",
     pourquoi: `${TIRE} ; la hausse s'applique au tour du courrier, l'effet le dit`,
-  },
-  // --- Les courriers à tour fixe, posés à la main ----------------------------
-  // Décision du propriétaire (« On règle ces 2 là ») : l'enseignant pose un courrier
-  // à tour fixe au tour qu'il veut (`distribuerUnCourrier`). Ces sept gardaient au
-  // trimestre une date vraie à leur tour seul ; ils prennent la forme qu'ils avaient
-  // déjà au mois et à l'année.
-  {
-    codes: ["nova_inv_concurrent"],
-    avant: "inaugurera cet automne une seconde ligne",
-    apres: "inaugurera prochainement une seconde ligne",
-    pourquoi: `${POSE} ; l'automne n'était vrai qu'au tour 4`,
-  },
-  {
-    codes: ["boutique_inv_concurrent"],
-    avant: "dans l'agglomération d'ici la fin de l'automne et renouvelle",
-    apres: "dans l'agglomération dans les semaines qui viennent et renouvelle",
-    pourquoi: `${POSE} ; la fin de l'automne n'était vraie qu'au tour 4`,
-  },
-  {
-    codes: ["hotel_inv_signal"],
-    avant: "ajouter notre ville à ses circuits d'automne.",
-    apres: "ajouter notre ville à ses prochains circuits.",
-    pourquoi: `${POSE} ; les circuits d'automne n'étaient à venir qu'au tour 2`,
-  },
-  {
-    codes: ["hotel_inv_concurrent"],
-    avant: "à ceux du quartier jusqu'à la fin de l'année.",
-    apres: "à ceux du quartier, le temps de reconstituer sa clientèle.",
-    pourquoi: `${POSE} ; le tarif d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date`,
-  },
-  {
-    codes: ["bistrot_inv_signal"],
-    avant: "emménagera à la rentrée dans l'immeuble voisin",
-    apres: "emménagera prochainement dans l'immeuble voisin",
-    pourquoi: `${POSE} ; la rentrée ne tombait au tour suivant qu'au tour 2`,
-  },
-  {
-    codes: ["bistrot_inv_concurrent"],
-    avant: "à celles du quartier jusqu'à la fin de l'année.",
-    apres: "à celles du quartier, le temps de reconstituer sa clientèle.",
-    pourquoi: `${POSE} ; la formule d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date`,
-  },
-  {
-    codes: ["fitness_energie"],
-    avant: "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.",
-    apres:
-      "Une charge qui grimpe ne se répercute pas d'elle-même : tant que l'abonnement ne bouge pas, c'est la marge de chaque adhérent qui la paie.",
-    pourquoi: `${POSE} ; posée au tour 1, la salle n'est pas vide, et l'effet porte sur le coût variable par adhérent`,
-  },
-  {
-    codes: ["boutique_inv_retournement"],
-    avant: "La saison est plus douce que prévu et nos ventes de maille",
-    apres: "Nos ventes de maille",
-    pourquoi: `${POSE} ; une saison douce ne baisse la maille qu'en hiver, et la baisse des ventes suffit à l'effet`,
   },
   // --- Les récits météo -------------------------------------------------------
   // Même décision : l'événement garde son effet, son tirage et ses tours ; seul le

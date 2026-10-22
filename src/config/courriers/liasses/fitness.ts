@@ -79,7 +79,7 @@ const SOURCES: CourrierDef[] = [
     signataire: "Le conseiller entreprises",
     effet: "Coût variable par adhérent +28 % pendant 2 tours",
     enJeu:
-      "Une charge qui grimpe ne se répercute pas d'elle-même : tant que l'abonnement ne bouge pas, c'est la marge de chaque adhérent qui la paie.",
+      "{{Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.}}",
     nature: "macro",
     pli: "email",
     icone: "hausse",

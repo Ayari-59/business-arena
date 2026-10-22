@@ -463,6 +463,69 @@ const EXCEPTIONS_DES_COURRIERS: { code: string; texte: string; mot: string; rais
   },
 ];
 
+/**
+ * LES DATES QUE GARDE, AU TRIMESTRE, UN COURRIER À TOUR FIXE : vraies au tour où
+ * il tombe, lu au calendrier de la partie au trimestre (tour 1 de janvier à mars,
+ * tour 2 d'avril à juin, tour 3 de juillet à septembre, tour 4 d'octobre à
+ * décembre, tour 5 de janvier à mars). Au mois et à l'année, elles ne datent
+ * rien (gardes `saisons-*.test.ts` des groupes, et ci-dessous).
+ *
+ * Décision du propriétaire : le trimestre est la référence. Ces dates restent, bien que
+ * l'enseignant puisse poser ces courriers à la main au tour qu'il veut : posés hors de
+ * leur tour, ils dateraient faux ; c'est une limite annoncée, pas une correction.
+ */
+const DATES_A_TOUR_FIXE: { code: string; tour: number; mot: string; raison: string }[] = [
+  {
+    code: "nova_inv_concurrent",
+    tour: 4,
+    mot: "automne",
+    raison: "au tour 4 (octobre à décembre), la ligne que Kelvox « inaugurera cet automne » ouvre pendant le tour",
+  },
+  {
+    code: "boutique_inv_concurrent",
+    tour: 4,
+    mot: "automne",
+    raison: "au tour 4 (octobre à décembre), « d'ici la fin de l'automne » tombe avant la fin du tour",
+  },
+  {
+    code: "hotel_inv_signal",
+    tour: 2,
+    mot: "automne",
+    raison:
+      "au tour 2 (avril à juin), les circuits d'automne sont à venir, et le contingent arrive au tour 3, comme l'annonce « dès le trimestre prochain »",
+  },
+  {
+    code: "hotel_inv_concurrent",
+    tour: 4,
+    mot: "fin de l'année",
+    raison: "au tour 4 (octobre à décembre), la fin de l'année est la fin du tour",
+  },
+  {
+    code: "bistrot_inv_signal",
+    tour: 2,
+    mot: "rentrée",
+    raison: "au tour 2 (avril à juin), la rentrée tombe au tour suivant, celui où Montclar arrive (le grand compte du tour 3)",
+  },
+  {
+    code: "bistrot_inv_concurrent",
+    tour: 4,
+    mot: "fin de l'année",
+    raison: "au tour 4 (octobre à décembre), la fin de l'année est la fin du tour",
+  },
+  {
+    code: "fitness_energie",
+    tour: 3,
+    mot: "été",
+    raison: "scripté au tour 3 (juillet à septembre), le creux de la salle à son tableau de saisonnalité",
+  },
+  {
+    code: "boutique_inv_retournement",
+    tour: 5,
+    mot: "plus douce que prévu",
+    raison: "au tour 5 (janvier à mars), un hiver plus doux que prévu freine la maille, ce que dit le distributeur",
+  },
+];
+
 /** Ce qu'un courrier ne peut pas supposer non plus : la saison du tour, quelle qu'elle soit. */
 const SUPPOSITIONS_DU_TIRAGE = new RegExp(`${SUPPOSITIONS.source}|hors saison`, "iu");
 
@@ -499,6 +562,7 @@ describe("un courrier tombe à n'importe quel tour, tiré au sort ou posé à la
         textesDuCourrierA(code, periodicity).flatMap((t) =>
           motsDuCalendrier(t)
             .filter((m) => !EXCEPTIONS_DES_COURRIERS.some((e) => e.code === code && e.texte === t && e.mot === m))
+            .filter((m) => periodicity !== "quarter" || !DATES_A_TOUR_FIXE.some((d) => d.code === code && d.mot === m))
             .map((m) => `${code} : « ${m} » dans « ${t} »`),
         ),
       );
@@ -575,7 +639,11 @@ describe("un récit météo ne suppose aucune saison, à aucune durée", () => {
   for (const periodicity of DUREES) {
     it(`${NOM[periodicity]}, aucun courrier ne raconte un temps de saison`, () => {
       const restes = TOUS.flatMap((code) =>
-        textesDuCourrierA(code, periodicity).flatMap((t) => meteoDe(t).map((m) => `${code} : « ${m} » dans « ${t} »`)),
+        textesDuCourrierA(code, periodicity).flatMap((t) =>
+          meteoDe(t)
+            .filter((m) => periodicity !== "quarter" || !DATES_A_TOUR_FIXE.some((d) => d.code === code && d.mot === m))
+            .map((m) => `${code} : « ${m} » dans « ${t} »`),
+        ),
       );
       expect([...new Set(restes)]).toEqual([]);
     });
@@ -601,5 +669,16 @@ describe("un récit météo ne suppose aucune saison, à aucune durée", () => {
         "Gel des budgets de conseil ; la chaîne du froid ; une chambre froide ; le groupe froid central ; chauffage, eau chaude sanitaire ; trois semaines de beau temps ; des pluies diluviennes",
       ),
     ).toEqual([]);
+  });
+});
+
+describe("un courrier à tour fixe garde, au trimestre, la date vraie à son tour", () => {
+  it("chaque date gardée tombe encore à son tour, et seulement à lui, et sert encore", () => {
+    for (const d of DATES_A_TOUR_FIXE) {
+      expect(FIXES, d.code).toContain(d.code);
+      expect([...TOURS_FIXES.get(d.code)!], d.code).toEqual([d.tour]);
+      const auTrimestre = textesDuCourrierA(d.code, "quarter");
+      expect(auTrimestre.flatMap((t) => [...motsDuCalendrier(t), ...meteoDe(t)]), d.code).toContain(d.mot);
+    }
   });
 });
