@@ -118,9 +118,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_pretexte_fete",
     expediteur: "Centrale de la maille · Note de tendance",
-    objet: "{{Saison des cadeaux avancée de trois semaines}}",
+    objet: "Vos clientes fidèles achètent plus tôt que d'habitude",
     corps:
-      "{{Les magazines féminins ont lancé la saison plus tôt que d'habitude.}} Nos adhérents constatent une arrivée précoce des clientes fidèles, liste en main, sur les pulls et les cardigans.",
+      "Les magazines féminins ont lancé les nouvelles collections plus tôt que d'habitude. Nos adhérents constatent une arrivée précoce des clientes fidèles, liste en main, sur les pulls et les cardigans.",
     signataire: "Le service tendances",
     effet: "Demande des clientes fidèles +22 % ce tour (pulls et cardigans)",
     enJeu:
@@ -175,7 +175,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_commande_ce",
     expediteur: "CSE des Papeteries de la Lys",
-    objet: "Commande ferme — {{entier: commande_boutique_commande_ce}} pulls {{pour notre arbre de Noël}}",
+    objet: "Commande ferme — {{entier: commande_boutique_commande_ce}} pulls pour la dotation de nos salariés",
     corps:
       "Notre comité souhaite offrir un pull à chacun de nos {{lettres: commande_boutique_commande_ce}} salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
     signataire: "Le secrétaire du comité",
@@ -304,7 +304,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_marche_noel",
     expediteur: "Mairie · Direction du commerce",
-    objet: "{{Implantation du marché de Noël devant votre boutique}}",
+    objet: "Implantation d'un marché artisanal devant votre boutique",
     corps:
       "Les chalets seront installés sur votre section de rue pour trois semaines. Les éditions précédentes ont amené dix mille passants supplémentaires chaque week-end. L'accès à votre vitrine reste dégagé.",
     signataire: "L'adjointe au commerce",

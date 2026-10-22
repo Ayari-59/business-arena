@@ -85,7 +85,7 @@ const SOURCES: CourrierDef[] = [
   },
   {
     code: "student_fair",
-    expediteur: "{{Salon de la Rentrée Étudiante · Commissariat général}}",
+    expediteur: "Salon de l'Étudiant · Commissariat général",
     objet: "Votre gamme au village high-tech du salon",
     corps:
       "Le salon ouvrira ses portes à quarante mille étudiants. Le village high-tech, où figurent vos enceintes nomades, sera l'un des trois pôles mis en avant dans la communication de l'événement.",
@@ -297,9 +297,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "xxl_order",
     expediteur: "Plateforme Vendora · Direction des achats",
-    objet: "Commande ferme de {{entier: commande_xxl_order}} unités pour {{notre opération de fin d'année}}",
+    objet: "Commande ferme de {{entier: commande_xxl_order}} unités pour notre grande opération commerciale",
     corps:
-      "{{Notre opération de fin d'année}} portera sur {{lettres: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
+      "Notre grande opération commerciale portera sur {{lettres: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
     signataire: "Le directeur des achats",
     effet: "+{{entier: commande_xxl_order}} unités à 61 €/u ({{échelle trimestre}}), sous-traitance possible à 52 €/u",
     enJeu: "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai.",
@@ -400,9 +400,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "nova_campus_tender",
     expediteur: "CampusTech · Direction des achats",
-    objet: "Appel d'offres — {{référencement audio de la rentrée}}",
+    objet: "Appel d'offres — renouvellement du référencement audio",
     corps:
-      "{{Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants.}} Le marché porte sur l'ensemble de nos magasins. Nous rappelons que notre commission de référencement s'applique à chaque unité vendue.",
+      "Notre enseigne renouvelle son rayon audio et consulte quatre fabricants. Le marché porte sur l'ensemble de nos magasins. Nous rappelons que notre commission de référencement s'applique à chaque unité vendue.",
     signataire: "Le directeur des achats",
     effet: "Demande du canal CampusTech +30 % ce tour",
     enJeu: "Un canal partenaire prélève sa commission : le volume est là, la marge par unité, moins.",
@@ -431,7 +431,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Revue L'Écoute · Rédaction",
     objet: "Attribution de notre Coup de cœur de l'année",
     corps:
-      "Le jury de notre rédaction a distingué votre modèle parmi cent quatorze appareils testés cette année. {{La distinction paraîtra en couverture du numéro de rentrée ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.}}",
+      "Le jury de notre rédaction a distingué votre modèle parmi cent quatorze appareils testés cette année. La distinction paraîtra en couverture de notre prochain numéro ; nos lecteurs et les revendeurs indépendants y prêtent une attention réelle.",
     signataire: "Le rédacteur en chef",
     effet: "Demande de votre entreprise +10 % pendant 2 tours",
     enJeu:

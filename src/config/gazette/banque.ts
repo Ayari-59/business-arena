@@ -311,7 +311,7 @@ export const MOTIFS: Record<string, MotifDeLEvenement> = {
   hotel_evenement_local: { motif: "un salon professionnel au parc des expositions" },
   hotel_commission_ota: { motif: "la hausse des commissions des plateformes de réservation" },
   hotel_greve_transports: { motif: "un mouvement social dans les transports", rubrique: "Social" },
-  hotel_meteo_radieuse: { motif: "un beau temps hors saison qui prolonge les séjours" },
+  hotel_meteo_radieuse: { motif: "un beau temps durable qui prolonge les séjours" },
   hotel_energie: { motif: "le renouvellement des contrats d'énergie à prix fort" },
   hotel_credit_resserre: { motif: "le durcissement du crédit au secteur hôtelier" },
   hotel_festival: { motif: "la première édition d'un festival de musique", rubrique: "Tourisme" },

@@ -88,9 +88,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_meteo_radieuse",
     expediteur: "Office de tourisme · Observatoire des flux",
-    objet: "{{Été indien — hausse des réservations de dernière minute}}",
+    objet: "Beau temps annoncé : hausse des réservations de dernière minute",
     corps:
-      "Trois semaines de beau temps hors saison sont annoncées sur toute la côte. Nos relevés montrent une poussée des réservations à moins de quarante-huit heures, à des prix supérieurs à la moyenne de saison.",
+      "Trois semaines de beau temps sont annoncées sur toute la côte. Nos relevés montrent une poussée des réservations à moins de quarante-huit heures, à des prix supérieurs à la moyenne de saison.",
     signataire: "Le chargé d'observation",
     effet: "Demande touristique +28 % ce tour",
     enJeu:
@@ -204,7 +204,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_festival",
     expediteur: "Office de tourisme · Direction des grands événements",
-    objet: "{{Première édition du festival d'été}}",
+    objet: "Première édition d'un festival de musique",
     corps:
       "La ville accueillera un festival de musique sur quatre jours, avec quarante mille visiteurs attendus. La capacité hôtelière de l'agglomération représente le tiers de ce besoin.",
     signataire: "Le directeur des grands événements",
@@ -393,7 +393,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_inv_retournement",
     expediteur: "Sillage Voyages · Direction des opérations",
-    objet: "{{Révision des volumes de notre programmation d'automne}}",
+    objet: "Révision des volumes de notre programmation",
     corps:
       "La saison de séminaires s'achève plus tôt que prévu et deux délégations ont reporté leur venue. Nos départs vers votre ville passent d'un groupe par semaine à un groupe toutes les deux semaines. Le contingent de chambres initialement convenu est donc ramené à environ la moitié pour les deux prochains {{trimestres}}.",
     signataire: "Le directeur des opérations",

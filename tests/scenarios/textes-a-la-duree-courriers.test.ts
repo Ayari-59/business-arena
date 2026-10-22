@@ -285,9 +285,11 @@ describe("chaque chemin d'affichage rend le courrier de SA partie", () => {
   });
 
   it("les objets cités (tableau de bord, assurance, courrier classé) et la lecture du résultat", () => {
-    // Au mois, l'objet ne date plus l'opération (garde : saisons-fitness-nova-batiment-transport.test.ts).
+    // L'objet ne date l'opération à aucune durée : le courrier se tire à n'importe quel
+    // tour (garde : saisons-textes-neutres.test.ts ; correction au trimestre nommée dans
+    // corrections-des-dates.ts). Seule la quantité suit la durée du tour.
     expect(objetDuCourrier("xxl_order", 30)).toBe("Commande ferme de 833 unités pour notre grande opération commerciale");
-    expect(objetDuCourrier("xxl_order")).toBe("Commande ferme de 2 500 unités pour notre opération de fin d'année");
+    expect(objetDuCourrier("xxl_order")).toBe("Commande ferme de 2 500 unités pour notre grande opération commerciale");
     expect(objetDuCourrier("inconnu", 30)).toBeUndefined();
     const result = { incomeStatement: { revenue: 1000 } } as unknown as CompanyRoundResult;
     const [alea] = aleasDuTour({ scenario: { events: [], suppliers: [], roundDays: 30 }, result, codes: ["big_order"], unites: "enceintes" });
