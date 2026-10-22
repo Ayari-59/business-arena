@@ -27,7 +27,7 @@ export interface Piece {
 }
 
 /** Ce que l'étape montre une fois réussie. */
-export type Vue = "bilan" | "resultat" | "bilan-et-resultat" | "tva" | "grand-livre";
+export type Vue = "bilan" | "resultat" | "bilan-et-resultat" | "tva" | "grand-livre" | "paie";
 
 interface Base {
   id: string;

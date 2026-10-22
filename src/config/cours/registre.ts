@@ -1,4 +1,5 @@
 import { CREATION_PREMIER_BILAN } from "./chapitres/creation-premier-bilan";
+import { LA_PAIE } from "./chapitres/la-paie";
 import { SEUIL_DE_RENTABILITE } from "./chapitres/seuil-de-rentabilite";
 import type { Chapitre } from "./types";
 
@@ -51,6 +52,6 @@ export const PROGRAMME: Record<CodeParcours, Record<Chapitre["palier"], readonly
   },
 };
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, SEUIL_DE_RENTABILITE];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LA_PAIE, SEUIL_DE_RENTABILITE];
 
 export const chapitreParCode = (code: string) => CHAPITRES.find((c) => c.code === code);

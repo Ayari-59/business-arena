@@ -108,6 +108,7 @@ export function bilan(s: Record<string, number>): Bilan {
 
   poser(actif, "Immobilisations", somme((c) => c.startsWith("2")), 1);
   poser(actif, "Clients", somme((c) => c.startsWith("411")), 1);
+  poser(actif, "Avances au personnel", somme((c) => c.startsWith("425")), 1);
   const tva = tvaNette(s);
   const comptesTva = Object.keys(s).filter((c) => nature(c) === "tva" && s[c] !== 0).sort();
   if (tva < 0) actif.push({ libelle: "Créance de TVA sur l'État", montant: -tva, comptes: comptesTva });
@@ -118,7 +119,8 @@ export function bilan(s: Record<string, number>): Bilan {
   if (resultat !== 0) passif.push({ libelle: "Résultat de l'exercice", montant: resultat, comptes: [] });
   poser(passif, "Emprunts", somme((c) => c.startsWith("16")), -1);
   poser(passif, "Fournisseurs", somme((c) => c.startsWith("40")), -1);
-  poser(passif, "Dettes sociales", somme((c) => c.startsWith("42") || c.startsWith("43")), -1);
+  poser(passif, "Dettes sociales", somme((c) => (c.startsWith("42") || c.startsWith("43")) && nature(c) === "passif"), -1);
+  poser(passif, "Dettes fiscales", somme((c) => c.startsWith("44") && nature(c) === "passif"), -1);
   if (tva > 0) passif.push({ libelle: "TVA due à l'État", montant: tva, comptes: comptesTva });
   if (tresorerie.montant < 0) poser(passif, "Découvert bancaire", tresorerie, -1);
 

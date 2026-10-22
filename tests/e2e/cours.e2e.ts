@@ -231,3 +231,52 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
     await ctx.close();
   }, 240_000);
 });
+
+describe("la paie, chapitre réservé du palier 3", () => {
+  it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute et montre les comptes de la paie", async () => {
+    const libre = await nouvellePage();
+    await aller(libre, "/cours/la-paie?entreprise=hotel");
+    expect(await libre.locator("main").innerText()).toContain("réservé aux établissements sous licence");
+    await libre.context().close();
+
+    const code = "hotel";
+    const cas = casDeLEntreprise(code);
+    const chapitre = chapitreDuCas(CHAPITRES.find((c) => c.code === "la-paie")!, cas);
+    const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctx);
+    const page = await ctx.newPage();
+    await aller(page, `/cours/${chapitre.code}?entreprise=${code}`);
+    for (const [i, etape] of chapitre.etapes.entries()) {
+      await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
+      const avant = etatAvant(chapitre, cas, i);
+      if (etape.type === "ecriture") {
+        for (const [k, l] of enSaisie(etape.ecriture(cas)).entries()) {
+          await page.getByLabel(`Compte, ligne ${k + 1}`, { exact: true }).fill(l.compte);
+          if (l.debit) await page.getByLabel(`Débit, ligne ${k + 1}`, { exact: true }).fill(l.debit);
+          if (l.credit) await page.getByLabel(`Crédit, ligne ${k + 1}`, { exact: true }).fill(l.credit);
+        }
+        await page.getByRole("button", { name: "Valider l'écriture" }).click();
+        await expect.poll(() => page.getByText("Écriture juste.").count()).toBe(1);
+        if (etape.vue === "paie") expect(await page.getByRole("figure", { name: "Les comptes de la paie" }).count()).toBe(1);
+      } else if (etape.type === "tri") {
+        for (const el of etape.elements(cas)) {
+          const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
+          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle }).click();
+        }
+        await page.getByRole("button", { name: "Vérifier" }).click();
+      } else if (etape.type === "montants") {
+        for (const c of etape.champs(cas, avant)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
+        await page.getByRole("button", { name: "Vérifier" }).click();
+      } else if (etape.type === "choix") {
+        await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
+      }
+      const dernier = i === chapitre.etapes.length - 1;
+      await page.getByRole("button", { name: dernier ? "Terminer le chapitre" : "Étape suivante" }).click();
+    }
+    const notees = chapitre.etapes.filter((e) => e.type !== "lecture").length;
+    await expect
+      .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
+      .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
+    await ctx.close();
+  }, 240_000);
+});
