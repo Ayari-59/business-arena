@@ -9,6 +9,8 @@ import { NOM_DU_JOURNAL } from "../gazette/types";
 import { BPI_V2_DIMENSIONS, INDICE, scoringWeightsV2, V2_DIMENSION_LABELS } from "../../scoring/bpi";
 import type { NombreDeToursDEssai } from "../tour-d-essai";
 import { dossiersDeService, type DossierService, type LigneService } from "./services";
+import { partieDeLAtelier } from "./partie-de-l-atelier";
+import { nomDuMois } from "../scenarios/calendrier-mensuel";
 import {
   leviersDuResponsable,
   listeDeControle,
@@ -104,7 +106,8 @@ export interface DossierDuResponsable {
   aDemander: string[];
   aVerifier: string[];
   /** 7. Sa feuille de décision, tours en colonnes. */
-  feuille: { decisions: string[]; indicateurs: string[]; tours: number[] };
+  /** Au mois sur le calendrier, `mois` nomme le mois de chaque tour ; absent sinon. */
+  feuille: { decisions: string[]; indicateurs: string[]; tours: number[]; mois?: string[] };
   /** 8. La répartition selon l'effectif que la fiche conseille. */
   repartition: string[];
   /** La direction seule : le mandat, ce qu'elle porte, la liste de contrôle, la synthèse. */
@@ -199,7 +202,9 @@ export function dossiersDesResponsables(atelier: AtelierDefinition): DossierDuRe
 export function dossierDuResponsable(atelier: AtelierDefinition, code: CodeDeRole): DossierDuResponsable {
   const role = roleByCode.get(code);
   if (!role) throw new Error(`Rôle inconnu : ${code}`);
-  const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  // La partie que l'atelier créera, à sa durée de tour et sur son calendrier
+  // (`partieDeLAtelier`) ; au trimestre, le registre lui même.
+  const scenario = partieDeLAtelier(atelier);
   const config = scenario.scenario;
   const v = scenario.vocabulary;
   const temps = tempsDeTravail(v);
@@ -246,6 +251,8 @@ export function dossierDuResponsable(atelier: AtelierDefinition, code: CodeDeRol
     scenario: config,
   });
   const toursJoues = Array.from({ length: tours }, (_, i) => i + 1);
+  const moisDeDepart = config.moisDeDepart;
+  const mois = moisDeDepart !== undefined ? { mois: toursJoues.map((t) => nomDuMois(t, moisDeDepart)) } : {};
 
   if (code === "direction") {
     const poids = scoringWeightsV2(config.scoring);
@@ -279,7 +286,7 @@ export function dossierDuResponsable(atelier: AtelierDefinition, code: CodeDeRol
         (r) => `Demandez ${r.interlocuteur} ce qu'il attend de ses décisions du tour, en une phrase : c'est la matière de la note de justification, et ce qu'on relira au tour suivant à côté du constat.`,
       ),
       aVerifier: [],
-      feuille: { decisions: [], indicateurs, tours: toursJoues },
+      feuille: { decisions: [], indicateurs, tours: toursJoues, ...mois },
       repartition,
       direction: {
         mandat,
@@ -308,7 +315,7 @@ export function dossierDuResponsable(atelier: AtelierDefinition, code: CodeDeRol
     seances,
     aDemander: questionsAuxAutres(responsable, { v, ouverts, temps }),
     aVerifier: [...service!.questions],
-    feuille: { decisions: decisions.map((d) => d.nom), indicateurs, tours: toursJoues },
+    feuille: { decisions: decisions.map((d) => d.nom), indicateurs, tours: toursJoues, ...mois },
     repartition,
     direction: null,
   };

@@ -3,6 +3,9 @@ import { toGamme, withoutRd, type GammeProduct } from "../../engine/gamme";
 import { facteurDeCroissance } from "../../engine/market/demand";
 import { tempsDeTravail, type ScenarioDefinition } from "../scenarios/registry";
 import { rdDuNiveau } from "../scenarios/scenario-joue";
+import { applyPeriodicityToCompany, periodicityFromRoundDays } from "../scenarios/periodicity";
+import { nomDuMois } from "../scenarios/calendrier-mensuel";
+import { heuresParPersonne } from "./services";
 
 /**
  * LE COCKPIT : un classeur d'aide à la décision, référence par référence.
@@ -205,12 +208,19 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
       : brut
     : rdDuNiveau(brut, source.niveau, !source.sansRd);
   const gamme = toGamme(config);
-  const etat: CompanyState = definition.company(
-    "cockpit",
-    definition.playerTeamName,
-    "human",
+  // L'état de départ suit la durée de tour du scénario joué, comme à la création
+  // de la partie (`applyPeriodicityToCompany`) : au mois, la capacité et les
+  // heures d'un mois, pas d'un trimestre. Au trimestre, l'état du registre.
+  const etat: CompanyState = applyPeriodicityToCompany(
+    definition.company("cockpit", definition.playerTeamName, "human"),
+    periodicityFromRoundDays(config.roundDays),
+    { abonnement: config.subscription !== undefined },
   );
   const tours = source.tours;
+  // Au mois sur le calendrier, chaque tour porte le nom de son mois.
+  const moisDeDepart = config.moisDeDepart;
+  const enteteDuTour = (tour: number) =>
+    moisDeDepart === undefined ? `Tour ${tour}` : `Tour ${tour} (${nomDuMois(tour, moisDeDepart)})`;
   const v = definition.vocabulary;
   const temps = tempsDeTravail(v);
   // La demande de base d'une entreprise moyenne. Un scénario du registre est
@@ -269,7 +279,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
     `${temps.Pluriel} de main-d'œuvre disponibles par tour`,
     Math.round(etat.headcount * etat.hoursPerEmployee * etat.productivity),
     "unites",
-    `${etat.headcount} personnes × ${etat.hoursPerEmployee} ${temps.abrege}`,
+    `${etat.headcount} personnes × ${heuresParPersonne(etat.hoursPerEmployee)} ${temps.abrege}`,
   );
   poser(
     "fixes",
@@ -369,7 +379,9 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
     t("Coût variable", "entete"),
     t(`${temps.Pluriel} par unité`, "entete"),
     t(`${v.leftoverLabel} à l'ouverture`, "entete"),
-    ...tours.map((tour) => t(`Saison T${tour}`, "entete")),
+    ...tours.map((tour) =>
+      t(moisDeDepart === undefined ? `Saison T${tour}` : `Saison ${nomDuMois(tour, moisDeDepart)}`, "entete"),
+    ),
   ]);
   const ligneGamme: Record<string, number> = {};
   for (const p of gamme) {
@@ -461,7 +473,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   L.push([]);
   L.push([
     t("", "entete"),
-    ...tours.map((tour) => t(`Tour ${tour}`, "entete")),
+    ...tours.map((tour) => t(enteteDuTour(tour), "entete")),
   ]);
 
   const dernier = hist?.tours.at(-1);
@@ -775,7 +787,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   R.push([]);
   R.push([
     t("", "entete"),
-    ...tours.map((tour) => t(`Tour ${tour}`, "entete")),
+    ...tours.map((tour) => t(enteteDuTour(tour), "entete")),
   ]);
   R.push([t("COMPTE DE RÉSULTAT PRÉVISIONNEL", "section")]);
   poserR(

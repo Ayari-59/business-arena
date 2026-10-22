@@ -8,6 +8,7 @@ import { nomDuMois } from "../scenarios/calendrier-mensuel";
 import { referencesJouees } from "../scenarios/scenario-joue";
 import { PERIODICITY_DAYS } from "../scenarios/periodicity";
 import { situationDeLaPartie } from "../scenarios/situation-texte";
+import { partieDeLAtelier } from "./partie-de-l-atelier";
 import type { NombreDeToursDEssai } from "../tour-d-essai";
 import {
   dossiersDeService,
@@ -114,6 +115,11 @@ export interface DossierEleve {
     decisions: string[];
     resultats: string[];
     tours: number[];
+    /**
+     * Au mois sur le calendrier, le mois de chaque tour (« juin »), dans l'ordre des
+     * tours ; absent au trimestre et à l'année.
+     */
+    mois?: string[];
   };
 }
 
@@ -149,7 +155,11 @@ export interface DossierEnseignant {
 
 /** Les séances d'un atelier, vues par l'élève. */
 export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
-  const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  // Les chiffres sont ceux de la partie que l'atelier créera, à sa durée de tour et
+  // sur son calendrier (`partieDeLAtelier`) ; au trimestre, le registre lui même.
+  const scenario = partieDeLAtelier(atelier);
+  const moisDeDepart = scenario.scenario.moisDeDepart;
+  const tours = Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1);
   // Un niveau qui n'ouvre pas la R&D joue les références livrées prêtes : le
   // dossier ne doit pas annoncer un développement que la partie n'aura pas.
   const rdOuverte =
@@ -208,7 +218,8 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
         ...scenario.kpis.map((k) => k.label),
         "Place au classement",
       ],
-      tours: Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1),
+      tours,
+      ...(moisDeDepart !== undefined ? { mois: tours.map((t) => nomDuMois(t, moisDeDepart)) } : {}),
     },
   };
 }
@@ -307,7 +318,7 @@ const colonne = (index: number) => String.fromCharCode(66 + index);
 
 export function tableauDeBordCsv(atelier: AtelierDefinition): string {
   const dossier = dossierEleve(atelier);
-  const { decisions, resultats, tours } = dossier.tableauDeBord;
+  const { decisions, resultats, tours, mois } = dossier.tableauDeBord;
   const lignes: string[][] = [];
   const vide = tours.map(() => "");
 
@@ -315,7 +326,7 @@ export function tableauDeBordCsv(atelier: AtelierDefinition): string {
   lignes.push([dossier.entreprise.titre, ...vide]);
   lignes.push(["Équipe :", ...vide]);
   lignes.push([]);
-  lignes.push(["", ...tours.map((t) => `Tour ${t}`)]);
+  lignes.push(["", ...tours.map((t, i) => (mois ? `Tour ${t} (${mois[i]})` : `Tour ${t}`))]);
 
   lignes.push(["CE QUE NOUS DÉCIDONS", ...vide]);
   const premiereDecision = lignes.length + 1;
