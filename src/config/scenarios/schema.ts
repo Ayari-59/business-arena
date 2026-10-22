@@ -605,6 +605,8 @@ export const engineScenarioConfigSchema = z.object({
         badBuzzImageCeiling: z.number().min(0).max(1),
         badBuzzProbability: z.number().min(0).max(1),
         badBuzzDemandMalus: z.number().min(0).max(1),
+        // Au mois sur le calendrier, trois tours (`calendrier-mensuel.ts`) ; absente, un.
+        badBuzzDuration: z.number().int().min(1).optional(),
         aidCleanThreshold: z.number().min(0).max(1),
         aidAmount: z.number().nonnegative(),
         sanctionProbability: z.number().min(0).max(1),

@@ -119,7 +119,7 @@ export function evaluateRseCards(args: {
       cards.push({
         code: RSE_CARD_CODES.badBuzz,
         demandFactor: Math.max(0, 1 - Math.max(0, config.badBuzzDemandMalus)),
-        duration: 1,
+        duration: Math.max(1, config.badBuzzDuration ?? 1),
       });
     }
     if (sanctionRoll < config.sanctionProbability) {

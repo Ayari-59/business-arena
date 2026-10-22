@@ -1,4 +1,6 @@
-import type { EngineScenarioConfig, SegmentConfig } from "../../engine/types";
+import type { EngineScenarioConfig, RseEngineConfig, SegmentConfig } from "../../engine/types";
+import { DEFAULT_RSE_CONFIG } from "../../engine/rse";
+import { composerPerte } from "./periodicity";
 
 /**
  * LE CALENDRIER DES PARTIES AU MOIS (décision du propriétaire, octobre 2026).
@@ -207,6 +209,28 @@ export function tourDeLaSituation(
 /** Le dernier tour d'une partie au mois qui appartient encore au tour `trimestre` du trimestre. */
 const dernierMoisDuTrimestre = (trimestre: number, moisDeDepart: number) => 3 * trimestre - (moisDeDepart - 1);
 
+/** Un trimestre en mois. */
+const K_DU_MOIS = 1 / 3;
+
+/** Les cartes RSE d'une partie au mois sur le calendrier (`auCalendrierMensuel`). */
+function rseAuCalendrier(rse: RseEngineConfig): RseEngineConfig {
+  const c = rse.cards;
+  // Pas de carte avant q − 1 trimestres de jeu : un capital RSE se bâtit en temps réel.
+  const pasAvantMois = (q: number) => 3 * (q - 1) + 1;
+  return {
+    ...rse,
+    cards: {
+      ...c,
+      minRound: pasAvantMois(c.minRound),
+      labelDuration: 3 * c.labelDuration,
+      badBuzzProbability: composerPerte(c.badBuzzProbability, K_DU_MOIS),
+      badBuzzDuration: 3 * (c.badBuzzDuration ?? 1),
+      sanctionProbability: composerPerte(c.sanctionProbability, K_DU_MOIS),
+      fineAmount: c.fineAmount / K_DU_MOIS,
+    },
+  };
+}
+
 /** Le nombre de trimestres qu'une partie de `mois` mois touche, depuis janvier de la première année. */
 export const trimestresDeLaPartie = (mois: number, moisDeDepart: number) => trimestreDuTour(mois, moisDeDepart);
 
@@ -255,7 +279,9 @@ export function auCalendrierMensuel(
   // Une durée écrite en trimestres, comptée en mois.
   const duree = (trimestres: number) => trimestres * 3;
   // Un « pas avant le tour du trimestre q » : pas avant le premier mois de q.
-  const pasAvant = (q: number) => Math.max(1, 3 * (q - 1) - (moisDeDepart - 1) + 1);
+  // « Pas avant le tour q » compte le temps de jeu depuis le départ (l'horizon où une
+  // situation a pu se construire), pas une date : q − 1 trimestres joués, en mois.
+  const pasAvant = (q: number) => 3 * (q - 1) + 1;
   return {
     ...scenario,
     roundsCount: mois,
@@ -297,18 +323,12 @@ export function auCalendrierMensuel(
       const tour = tourDuTrimestre(s.round, moisDeDepart, mois);
       return tour === null ? [] : [{ ...s, round: tour }];
     }),
-    ...(scenario.rse
-      ? {
-          rse: {
-            ...scenario.rse,
-            cards: {
-              ...scenario.rse.cards,
-              minRound: pasAvant(scenario.rse.cards.minRound),
-              labelDuration: duree(scenario.rse.cards.labelDuration),
-            },
-          },
-        }
-      : {}),
+    // Les cartes RSE, sur le calendrier comme les autres événements : pas avant le premier
+    // mois du trimestre dit ; un label, une mauvaise presse durent le temps réel ; une
+    // mauvaise presse et une amende gardent leur chance PAR AN (une carte tirée chaque
+    // mois avec la chance d'un trimestre tomberait trois fois plus souvent), et l'amende
+    // garde son montant d'un trimestre. Un scénario sans bloc RSE a celui du moteur.
+    rse: rseAuCalendrier(scenario.rse ?? DEFAULT_RSE_CONFIG),
     ...(scenario.rdActions
       ? {
           rdActions: {
