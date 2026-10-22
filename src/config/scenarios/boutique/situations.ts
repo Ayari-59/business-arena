@@ -288,8 +288,8 @@ const SOURCES: SituationDef[] = [
     },
     conceptCodes: ["conversion_rate", "average_basket", "seasonality", "stock", "bfr", "capacity", "assortment", "contribution_margin"],
     hints: hints([
-      "Regardez la saisonnalité de chaque référence : quel coefficient s'applique au quatrième {{trimestre}}, pour un pull et pour un bonnet ?",
-      "Le pull vaut environ 1,5 fois un {{trimestre}} ordinaire, les accessoires plus du double, et les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour.",
+      "Regardez la saisonnalité de chaque référence : quel coefficient s'applique {{au quatrième trimestre}}, pour un pull et pour un bonnet ?",
+      "Le pull vaut environ {{coefficient: saison_pull_col_rond}} fois un {{trimestre}} ordinaire, {{les accessoires plus du double}}, et {{les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour}}.",
       "Deux erreurs symétriques, mais pas de même coût : la rupture perd une marge à jamais, le surstock immobilise de la trésorerie et se soldera. Et le volume commandé n'est que la moitié du sujet : le trafic du pic ne rapporte que ce que vous en transformez, et que ce que chaque client emporte.",
       "Votre capacité de traitement {{trimestrielle}} est de {{entier: capacite_parc}} pièces, toutes références confondues : elle borne ce que la boutique peut écouler, quelles que soient vos commandes. Quand la demande la dépasse, classez les références par marge par pièce.",
       "Estimez la demande du tour, référence par référence, à partir de vos ventes du tour précédent et du coefficient saisonnier de chacune ; comparez la somme à votre capacité ; servez en priorité les marges les plus fortes jusqu'à leur demande ; et vérifiez que votre trésorerie supporte le décaissement anticipé.",

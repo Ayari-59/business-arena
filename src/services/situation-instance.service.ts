@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { games, hintUsages, players, rounds, roundResults, situationInstances, situations, teams } from "@/db/schema";
 import { situationByCode } from "@/config/scenarios/registry";
-import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
+import { dureeDuTourDe, moisDeDepartDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { tourDOuverture } from "@/config/scenarios/situation-kit";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { presetFromProfile } from "@/config/difficulty";
@@ -201,7 +201,7 @@ export async function loadInstanceForUser(instanceId: string, userId: string) {
   return {
     instance,
     situationRow,
-    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot)),
+    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot), moisDeDepartDe(gameRow?.scenarioSnapshot)),
     game: gameRow,
   };
 }

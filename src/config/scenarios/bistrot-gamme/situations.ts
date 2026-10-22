@@ -64,7 +64,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "La hausse frappe une charge variable : quelle grandeur du compte de résultat bouge en premier, et sur quelle offre le plus ?",
       "Vingt-quatre pour cent sur les denrées : 1,80 € de plus par couvert du midi, 2,90 € le soir, 2,40 € en banquet. La marge se comprime partout, mais pas de la même façon.",
       "Deux issues : répercuter sur le ticket, ou reconstruire la carte pour retrouver de la marge à prix constant ; et une troisième en gamme, déplacer le mix vers l'offre dont la marge résiste le mieux.",
-      "{{Le mois d'août amplifie tout}} : les déjeuners d'affaires tombent à 0,6 et les banquets à 0,5. L'activité traiteur, si elle est bâtie, n'y échappe pas : elle creuse au moins autant que les déjeuners d'affaires.",
+      "{{Le mois d'août amplifie tout}} : les déjeuners d'affaires tombent à {{coefficient: saison_midi_affaires}} et les banquets à {{coefficient: saison_groupes}}. L'activité traiteur, si elle est bâtie, n'y échappe pas : elle creuse au moins autant que les déjeuners d'affaires.",
       "Répercutez offre par offre : élasticité −1,5 le midi contre −1,2 le soir et −0,9 chez les gourmets. Une hausse uniforme est toujours sous-optimale quand les élasticités diffèrent.",
     ],
     modelExplain:
@@ -83,8 +83,8 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Seule la salle limite le nombre de couverts : la brigade suivra",
     ],
     hintTexts: [
-      "Regardez la saisonnalité du segment banquets : quel coefficient s'applique au quatrième {{trimestre}}, et que font les autres offres pendant ce temps ?",
-      "Les banquets grimpent à 1,85 fois leur niveau ordinaire ; la carte du soir monte aussi, la formule du midi à peine.",
+      "Regardez la saisonnalité du segment banquets : quel coefficient s'applique {{au quatrième trimestre}}, et que font les autres offres pendant ce temps ?",
+      "Les banquets grimpent à {{coefficient: saison_groupes}} fois leur niveau ordinaire ; la carte du soir monte aussi, la formule du midi à peine.",
       "Vos deux plafonds sont proches : {{entier: capacite_parc}} couverts en salle et cuisine, {{environ_dizaine: 10 * flux(455)}} heures de brigade ({{entier: 10 * arrondi(flux(455)) / 0.5}} couverts à une demi-heure chacun), mais un banquet demande 0,45 h et un couvert du soir 0,6 h : le mix décide de la contrainte active.",
       "Préparer plus que ce que vous servirez coûte les denrées perdues, sans aucune contrepartie : rien ne se stocke, sur aucune offre.",
       "Estimez la demande du tour offre par offre, comparez la somme aux deux plafonds, et n'oubliez pas que les banquets règlent à 30 jours et le traiteur à 45 ou 60 : le résultat arrive avant l'encaissement.",

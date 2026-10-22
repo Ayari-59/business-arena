@@ -185,7 +185,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
   {
     code: "hotel_t3_saison",
     category: "contexte_marche",
-    title: "La haute saison arrive",
+    title: "{{La haute saison arrive}}",
     narrative:
       "{{L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement.}} {{Vos concurrents affichent déjà leurs tarifs de juillet.}}",
     problem:
@@ -251,7 +251,7 @@ export const HOTEL_SOURCES: SituationDef[] = [
     conceptCodes: ["seasonality", "segmentation", "capacity", "price_elasticity"],
     hints: hints([
       "Regardez la saisonnalité de chaque segment séparément, pas seulement la saisonnalité globale.",
-      "{{L'été, les affaires tombent}} à 0,5 et les séminaires à 0,3, mais le tourisme grimpe à 2,0. Ce n'est pas un pic : c'est un changement de clientèle.",
+      "{{L'été, les affaires tombent}} à {{coefficient: saison_affaires}} et les séminaires à {{coefficient: saison_groupes}}, mais le tourisme grimpe à {{coefficient: saison_loisirs}}. Ce n'est pas un pic : c'est un changement de clientèle.",
       "Chaque segment a son élasticité et son délai de paiement : le mix détermine à la fois votre latitude tarifaire et votre trésorerie.",
       "Côté capacité, 0,75 h de travail par nuitée : à 14 salariés, la main-d'œuvre peut devenir contraignante avant les chambres.",
       "Décidez les embauches AU TOUR PRÉCÉDENT le pic : le coût de recrutement est immédiat, l'effet sur la capacité arrive au tour suivant.",

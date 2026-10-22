@@ -365,7 +365,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Banque des Professions · Direction des entreprises",
     objet: "Campagne temporaire sur les crédits d'équipement professionnels",
     corps:
-      "Pour deux {{trimestres}}, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle couvre le matériel informatique, l'aménagement de locaux et les outils de travail à distance. Les dossiers complets déposés avant la fin du second {{trimestre}} sont concernés.",
+      "Pour deux {{trimestres}}, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle couvre le matériel informatique, l'aménagement de locaux et les outils de travail à distance. Les dossiers complets déposés {{avant la fin du second trimestre}} sont concernés.",
     signataire: "Le directeur des entreprises",
     effet: "Taux d'intérêt ×0,6 pendant 2 tours",
     enJeu:

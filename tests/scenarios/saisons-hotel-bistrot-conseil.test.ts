@@ -24,7 +24,8 @@ import { corrigerLesDates } from "./corrections-des-dates";
  *  · qu'au trimestre, le texte est octet pour octet celui des fixtures, aux
  *    corrections près que les gardes des textes à la durée nomment ;
  *  · que ce que le récit affirme d'un tour à la place de la date (le pic, le creux)
- *    est vrai au tableau de saisonnalité du scénario, le même à toute durée.
+ *    est vrai au tableau de saisonnalité du scénario, à l'année ; au mois sur le
+ *    calendrier, la garde tests/scenarios/textes-au-calendrier.test.ts le vérifie.
  */
 
 const CODES = ["hotel", "hotel-gamme", "bistrot", "bistrot-gamme", "conseil", "conseil-gamme"] as const;
@@ -256,7 +257,7 @@ const offre = (code: string, produit: string) =>
   scenarioByCode(code).scenario.products!.find((p) => p.code === produit)!.market!.seasonality!;
 
 /**
- * Chaque affirmation qui remplace une date : où elle se lit, au mois et à l'année,
+ * Chaque affirmation qui remplace une date : où elle se lit, à l'année,
  * et ce que le tableau de saisonnalité doit montrer pour qu'elle soit vraie.
  */
 const AFFIRMATIONS: { code: string; situation: string; tour: number; texte: string; vrai: () => boolean; pourquoi: string }[] = [
@@ -299,12 +300,15 @@ const AFFIRMATIONS: { code: string; situation: string; tour: number; texte: stri
   },
 ];
 
-describe("ce qui remplace la date est vrai au tableau de saisonnalité, à toute durée", () => {
+describe("ce qui remplace la date est vrai au tableau de saisonnalité, à l'année", () => {
   for (const a of AFFIRMATIONS) {
     it(`${a.situation} : « ${a.texte} »`, () => {
       const def = scenarioByCode(a.code).situations.find((s) => s.code === a.situation)!;
       expect(def.trigger, a.situation).toEqual({ round: a.tour });
-      for (const p of AILLEURS) {
+      // À l'année : au mois sur le calendrier, la situation s'ouvre au premier mois de son
+      // trimestre, sur une saison répartie par mois, et ce qu'elle affirme se vérifie mois de
+      // départ par mois de départ (tests/scenarios/textes-au-calendrier.test.ts).
+      for (const p of ["year"] as Periodicity[]) {
         expect(textesDe(situationDeLaPartie(def, PERIODICITY_DAYS[p])).join("\n"), `${a.situation} ${NOM[p]}`).toContain(a.texte);
       }
       expect(a.vrai(), a.pourquoi).toBe(true);

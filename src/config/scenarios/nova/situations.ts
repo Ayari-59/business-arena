@@ -104,7 +104,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Décomposer le surcoût",
     narrative:
-      "Le premier tour est bouclé. Vos coûts de production affichent un écart avec le plan : les matières ont coûté plus cher que prévu, ou le rebut a monté plus que prévu, ou les deux.",
+      "{{Le premier tour est bouclé.}} Vos coûts de production affichent un écart avec le plan : les matières ont coûté plus cher que prévu, ou le rebut a monté plus que prévu, ou les deux.",
     problem:
       "Vos surcoûts viennent de où exactement, et comment envisager le tour prochain pour les maîtriser ?",
     diagnosticOptions: [
@@ -170,7 +170,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Le prix fait la demande",
     narrative:
-      "Vos ventes du premier tour sont tombées. Sur le segment étudiant, SoundBox affiche un prix agressif et rafle des parts de marché, pendant que les passionnés, eux, n'ont presque pas bougé.",
+      "{{Vos ventes du premier tour sont tombées.}} Sur le segment étudiant, SoundBox affiche un prix agressif et rafle des parts de marché, pendant que les passionnés, eux, n'ont presque pas bougé.",
     problem:
       "Pourquoi vos segments réagissent-ils si différemment, et comment fixer votre prix pour le prochain tour ?",
     diagnosticOptions: [
@@ -285,7 +285,7 @@ const SOURCES: SituationDef[] = [
       "Votre production a-t-elle atteint votre plan… ou votre plafond ?",
       "Capacité machine, disponibilité, main-d'œuvre : la contrainte la plus serrée décide de tout.",
       "Une analyse de capacité, croisée avec la saisonnalité, dirait quoi produire dès maintenant.",
-      "Produisez au plafond dès ce tour pour stocker : le pic du tour 4 dépassera largement vos {{entier: capacite_initiale}} unités.",
+      "Produisez au plafond dès ce tour pour stocker : {{le pic du tour quatre}} dépassera largement vos {{entier: capacite_initiale}} unités.",
     ]),
     trigger: { round: 3 },
     weight: 1,
@@ -299,7 +299,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Le paradoxe du succès",
     narrative:
-      "{{Trimestre}} record : le pic saisonnier et la grosse commande CampusTech gonflent votre chiffre d'affaires, le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge.",
+      "{{Trimestre record : le pic saisonnier et la grosse commande CampusTech gonflent votre chiffre d'affaires}}, le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge.",
     problem:
       "Votre entreprise gagne de l'argent mais n'en a plus en caisse. Identifiez les causes possibles de ce paradoxe.",
     diagnosticOptions: [

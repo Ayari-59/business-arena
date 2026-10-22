@@ -221,7 +221,11 @@ describe("au mois et à l'année, ce que le récit dit du tour est vrai sur les 
     { motif: /au tour du pic, juste après|qui arrive au tour suivant|du pic qui arrive/, tour: (pic) => pic - 1 },
   ];
 
-  for (const periodicity of DUREES) {
+  // À l'année seulement : au mois sur le calendrier, la situation du pic s'ouvre en octobre
+  // (ou au premier mois d'une partie commencée en novembre, en décembre), et ce qu'elle dit
+  // de la saison se vérifie mois de départ par mois de départ, sur la partie composée
+  // (tests/scenarios/textes-au-calendrier.test.ts).
+  for (const periodicity of ["year"] as Periodicity[]) {
     it(`${NOM[periodicity]}, chaque phrase qui situe le tour tombe au tour qu'elle dit`, () => {
       const vues = new Set<RegExp>();
       for (const code of SCENARIOS) {

@@ -49,7 +49,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   ecom_t4_pic: {
     title: "{{Black Friday et fêtes, sur quatre rayons}}",
     narrative:
-      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire, et les luminaires s'y vendent presque le double. {{Vos concurrents ont réservé leurs espaces publicitaires depuis septembre}}, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, un coussin comme un fauteuil, pas une de plus.",
+      "{{Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire, et les luminaires s'y vendent presque le double.}} {{Vos concurrents ont réservé leurs espaces publicitaires depuis septembre}}, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, un coussin comme un fauteuil, pas une de plus.",
     problem:
       "Comment préparer un pic qui exige à la fois du stock par rayon, de la capacité d'expédition et du budget d'acquisition, et quel rayon servir en premier si la place manque ?",
     diagnosticLabels: [
@@ -59,8 +59,8 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "{{Il suffit d'avoir du stock : à Noël, tout se vend}}",
     ],
     hintTexts: [
-      "Regardez la saisonnalité de chaque rayon : quel coefficient s'applique au quatrième {{trimestre}} en décoration, en mobilier, en luminaires ?",
-      "Le pic vaut 1,6 fois un {{trimestre}} ordinaire en décoration, 1,45 en mobilier, 1,7 en luminaires. Comparez la somme à ce que votre entrepôt sait traiter.",
+      "Regardez la saisonnalité de chaque rayon : quel coefficient s'applique {{au quatrième trimestre}} en décoration, en mobilier, en luminaires ?",
+      "{{Le pic vaut}} {{coefficient: saison_decoration}} fois un {{trimestre}} ordinaire en décoration, {{coefficient: saison_mobilier}} en mobilier, {{coefficient: saison_luminaires}} en luminaires. Comparez la somme à ce que votre entrepôt sait traiter.",
       "Trois plafonds à vérifier ensemble : le stock disponible de chaque rayon, la capacité de préparation, commune à tous, et le budget d'acquisition qui déclenche les commandes.",
       "La contrainte la plus serrée décide de tout : si l'entrepôt sature, chaque commande de mobilier prise laisse 48 € et chaque commande de décoration 19 €. Le mix du pic est une décision.",
       "Et n'oubliez pas le calendrier des flux : le stock et la publicité se paient ce tour-ci, une partie des ventes s'encaisse au suivant, sur chaque place de marché.",

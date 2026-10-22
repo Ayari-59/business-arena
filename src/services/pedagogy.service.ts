@@ -23,7 +23,7 @@ import {
   scenarioByCode,
   situationByCode,
 } from "@/config/scenarios/registry";
-import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
+import { dureeDuTourDe, moisDeDepartDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { presetFromProfile, quizModeFromProfile } from "@/config/difficulty";
 import { NIVEAU_STANDARD, optionsDuDiagnostic } from "@/config/analyse-par-niveau";
 import { askedQuestions, modelCtxOf } from "@/services/debrief.service";
@@ -109,7 +109,7 @@ async function loadInstanceForUser(instanceId: string, userId: string) {
   return {
     instance,
     situationRow,
-    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot)),
+    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot), moisDeDepartDe(gameRow?.scenarioSnapshot)),
     game: gameRow,
   };
 }

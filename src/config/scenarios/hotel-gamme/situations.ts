@@ -86,7 +86,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
     ],
     hintTexts: [
       "Regardez la saisonnalité de chaque segment séparément, chambre par chambre, pas seulement la saisonnalité globale.",
-      "{{L'été, les affaires tombent}} à 0,5 sur la supérieure, mais les loisirs grimpent à 2,0 sur la standard et les grandes occasions à 1,5 sur la suite. Ce n'est pas un pic : c'est un autre mix.",
+      "{{L'été, les affaires tombent}} à {{coefficient: saison_affaires}} sur la supérieure, mais les loisirs grimpent à {{coefficient: saison_loisirs}} sur la standard et les grandes occasions à {{coefficient: saison_occasions}} sur la suite. Ce n'est pas un pic : c'est un autre mix.",
       "Chaque segment a son élasticité et son délai de paiement : le mix vendu détermine à la fois votre latitude tarifaire et votre trésorerie.",
       "Côté capacité, 0,75 h de travail par nuitée standard, 1,3 h par suite : à 14 salariés, la main-d'œuvre peut devenir contraignante avant les chambres, surtout si le mix monte.",
       "Décidez les embauches AU TOUR PRÉCÉDENT le pic : le coût de recrutement est immédiat, l'effet sur la capacité arrive au tour suivant.",

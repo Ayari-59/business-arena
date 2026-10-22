@@ -209,7 +209,7 @@ const SOURCES: SituationDef[] = [
     narrative:
       "{{Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite.}} Le loyer, les salaires et l'échéance du crédit, eux, tombent comme chaque {{trimestre}}.",
     problem:
-      "Comment traverser un {{trimestre}} où la demande s'effondre alors que les charges ne bougent pas ?",
+      "{{Comment traverser un trimestre où la demande s'effondre alors que les charges ne bougent pas ?}}",
     diagnosticOptions: [
       {
         id: "fixed_costs_stay",
@@ -239,7 +239,7 @@ const SOURCES: SituationDef[] = [
           "{{La demande chute de moitié en juillet. De combien baissent vos charges de structure ?}}",
         options: [
           { id: "a", label: "Elles ne baissent pas : loyer, salaires et crédit sont indépendants de la fréquentation" },
-          { id: "b", label: "De moitié également" },
+          { id: "b", label: "{{De moitié également}}" },
           { id: "c", label: "De {{entier: variable}} €, le coût variable par adhérent" },
           { id: "d", label: "Proportionnellement au taux de remplissage" },
         ],
@@ -271,7 +271,7 @@ const SOURCES: SituationDef[] = [
     conceptCodes: ["seasonality", "fixed_costs", "safety_margin", "breakeven"],
     hints: hints([
       "Regardez la saisonnalité de chaque segment : lequel s'effondre, lequel résiste ?",
-      "Les {{inscrits de janvier}} tombent à 0,25 de leur niveau. Les réguliers, eux, restent à 0,75.",
+      "Les {{inscrits de janvier}} tombent à {{coefficient: saison_resolutions}} de leur niveau. Les réguliers, eux, restent à {{coefficient: saison_reguliers}}.",
       "Vos charges, elles, sont à 1,0 toute l'année. Seuls les {{entier: variable}} € de variable par adhérent disparaissent.",
       "Calculez votre marge de sécurité : combien d'adhérents pouvez-vous perdre avant de passer sous le seuil de 1 170 ?",
       "Les vraies réponses se jouent AVANT : fidéliser les {{inscrits de janvier}}, signer des contrats entreprises moins saisonniers, ou vendre des {{engagements annuels plutôt que trimestriels}}.",
