@@ -5,6 +5,8 @@ import { parseScenarioConfig } from "../../src/config/scenarios/schema";
 import { prolongerLaSaison, TOURS_MAX_AU_TRIMESTRE } from "../../src/config/scenarios/rounds";
 import { computePotentialDemand, facteurDeCroissance } from "../../src/engine/market/demand";
 import type { EngineScenarioConfig, SegmentConfig } from "../../src/engine/types";
+import { tourDOuverture } from "../../src/config/scenarios/situation-kit";
+import { signesDeSituation } from "../../src/config/duree-du-tour";
 
 /**
  * UNE PARTIE PLUS LONGUE QUE SON SCÉNARIO (décision du propriétaire : jusqu'à douze
@@ -138,5 +140,38 @@ describe("un tableau qui raconte une ouverture écrit l'année qui suit", () => 
     expect(() => prolongerLaSaison([1, 2, 3], 8)).toThrow(/année entière/);
     expect(() => prolongerLaSaison([1, 1, 1, 1, 1, 1], 8, [1, 1, 1])).toThrow(/4 trimestres/);
     expect(prolongerLaSaison([1, 2, 3, 4, 5, 6], 6)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+});
+
+describe("une situation de fin de partie s'ouvre au dernier tour joué", () => {
+  it("toute situation à tour fixe qui raconte le dernier tour porte la marque, et elle seule", () => {
+    const raconte = (s: (typeof SCENARIOS)[number]["situations"][number]) =>
+      /dernier tour/i.test(`${s.narrative} ${s.problem}`);
+    for (const def of SCENARIOS) {
+      for (const s of def.situations) {
+        if (!("round" in s.trigger)) continue;
+        expect(s.trigger.finDePartie === true, `${def.code} · ${s.code}`).toBe(raconte(s));
+      }
+    }
+  });
+
+  it("« Le grand oral » de NOVA : tour 6 sur six tours, tour 12 sur douze ; jamais déplacé dans une partie raccourcie", () => {
+    for (const code of ["nova", "nova-gamme"]) {
+      const def = SCENARIOS.find((d) => d.code === code)!;
+      const oral = def.situations.find((s) => "round" in s.trigger && s.trigger.finDePartie)!;
+      expect(tourDOuverture(oral.trigger, 6, 6), code).toBe(6);
+      expect(tourDOuverture(oral.trigger, 12, 6), code).toBe(12);
+      expect(tourDOuverture(oral.trigger, 9, 6), code).toBe(9);
+      expect(tourDOuverture(oral.trigger, 4, 6), code).toBe(6);
+      // Les autres situations à tour fixe gardent leur tour.
+      for (const s of def.situations.filter((x) => x !== oral && "round" in x.trigger)) {
+        expect(tourDOuverture(s.trigger, 12, 6), s.code).toBe((s.trigger as { round: number }).round);
+      }
+      // L'estimation de la durée du tour suit la situation déplacée.
+      const tours = { joues: 12, ecrits: 6 };
+      expect(signesDeSituation([oral], 12, undefined, tours)).toBeGreaterThan(0);
+      expect(signesDeSituation([oral], 6, undefined, tours)).toBe(0);
+      expect(signesDeSituation([oral], 6)).toBeGreaterThan(0);
+    }
   });
 });

@@ -871,6 +871,10 @@ export async function getTeacherGameView(
       ),
       game.currentRound,
       new Set(((game.scenarioSnapshot as { products?: { code: string }[] } | null)?.products ?? []).map((p) => p.code)),
+      {
+        joues: (game.scenarioSnapshot as { roundsCount?: number } | null)?.roundsCount ?? snapshotDefinition.scenario.roundsCount,
+        ecrits: snapshotDefinition.scenario.roundsCount,
+      },
     ),
     champs: champsOuverts(presetDuJeu.decisions),
     avecQuiz: quizModeFromProfile(game.difficultyProfile) !== "off",

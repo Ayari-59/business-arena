@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { games, hintUsages, players, rounds, roundResults, situationInstances, situations, teams } from "@/db/schema";
 import { situationByCode } from "@/config/scenarios/registry";
 import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
+import { tourDOuverture } from "@/config/scenarios/situation-kit";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { presetFromProfile } from "@/config/difficulty";
 import { buildTriggerContext, detectSituations, nomsDuMarche } from "@/pedagogy/detection";
@@ -91,8 +92,12 @@ export async function openSituationsForRound(
     ((gameRow?.scenarioSnapshot as { products?: { code: string }[] } | null)?.products ?? []).map((p) => p.code),
   );
   const values: (typeof situationInstances.$inferInsert)[] = [];
+  // Une partie prolongée (`config/scenarios/rounds.ts`) ouvre ses situations de fin de
+  // partie à son dernier tour (`tourDOuverture`).
+  const toursJoues =
+    (gameRow?.scenarioSnapshot as { roundsCount?: number } | null)?.roundsCount ?? definition.scenario.roundsCount;
   const scripted = definition.situations.filter(
-    (s) => "round" in s.trigger && s.trigger.round === roundIndex,
+    (s) => tourDOuverture(s.trigger, toursJoues, definition.scenario.roundsCount) === roundIndex,
   );
   for (const team of humanTeams) {
     const result = previousResults?.[team.id];
