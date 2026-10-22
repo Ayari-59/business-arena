@@ -181,7 +181,7 @@ export const CONSEIL_SOURCES: SituationDef[] = [
       "TN = FRNG − BFR. Ici, le BFR est presque intégralement composé de créances : c'est là, et nulle part ailleurs, que se joue votre trésorerie.",
       "Trois leviers : négocier des acomptes, facturer plus tôt (à l'avancement plutôt qu'à la livraison), ou mobiliser le poste clients à un coût. Le troisième est immédiat mais se paie.",
     ]),
-    trigger: { round: 2 },
+    trigger: { round: 2, supposeUnTourJoue: true },
     weight: 1.5,
     decisionLevers: [
       {

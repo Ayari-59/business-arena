@@ -1,6 +1,6 @@
 import { modelByCode } from "../pedagogy/models";
 import { createRng } from "../../engine/random";
-import { tourDuTrimestre } from "./calendrier-mensuel";
+import { tourDeLaSituation } from "./calendrier-mensuel";
 import {
   distracteursDuModele,
   modeleAvecAide,
@@ -139,8 +139,12 @@ export interface SituationDef {
    * `finDePartie` marque une situation qui raconte le dernier tour (« Le grand oral ») :
    * dans une partie prolongée au-delà des tours écrits, elle s'ouvre au dernier tour
    * joué plutôt qu'au tour dit (`tourDOuverture`).
+   *
+   * `supposeUnTourJoue` marque une situation dont le récit raconte un tour déjà joué
+   * (« Le mois écoulé est bouclé », « vos derniers comptes ») : dans une partie au mois
+   * sur le calendrier, elle ne s'ouvre jamais au premier mois (`tourDeLaSituation`).
    */
-  trigger: { round: number; requires?: DetectCode; finDePartie?: true } | { detect: DetectCode };
+  trigger: { round: number; requires?: DetectCode; finDePartie?: true; supposeUnTourJoue?: true } | { detect: DetectCode };
   /**
    * LA RÉFÉRENCE QUE L'ÉNONCÉ SUPPOSE. Une situation qui parle de NOVA Home
    * n'a de sens que dans une partie qui la porte (le niveau 7) : le même
@@ -382,7 +386,7 @@ export function tourDOuverture(
 ): number | null {
   if (!("round" in trigger)) return null;
   if (moisDeDepart !== undefined) {
-    return trigger.finDePartie ? toursJoues : tourDuTrimestre(trigger.round, moisDeDepart, toursJoues);
+    return trigger.finDePartie ? toursJoues : tourDeLaSituation(trigger, moisDeDepart, toursJoues);
   }
   return trigger.finDePartie && toursJoues > toursEcrits ? toursJoues : trigger.round;
 }

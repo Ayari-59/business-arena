@@ -398,7 +398,7 @@ const SOURCES: SituationDef[] = [
       "Trésorerie nette = fonds de roulement − besoin : votre besoin a grossi avec le trafic.",
       "Deux leviers existent sur ce poste : raccourcir le délai négocié, ou mobiliser la créance en comparant honnêtement escompte et affacturage au prorata des jours financés.",
     ]),
-    trigger: { round: 4 },
+    trigger: { round: 4, supposeUnTourJoue: true },
     weight: 1.2,
     decisionLevers: [
       {

@@ -157,7 +157,7 @@ const SOURCES: SituationDef[] = [
       "Décomposer ces écarts n'est pas cosmétique : cela dit OÙ agir. Fournisseur ? Qualité de production ? Récréer le planning.",
       "Écart total = (coût réel − 22) × unités + rebut × 22 pour matière, plus (rebut × 16) pour la main-d'œuvre. Levier : améliorer la qualité, ajuster la production au volume réaliste.",
     ]),
-    trigger: { round: 2 },
+    trigger: { round: 2, supposeUnTourJoue: true },
     weight: 0.9,
     decisionLevers: [
       { field: "qualityBudget", direction: "up", hint: "La qualité produit réduit le rebut et donc l'écart d'efficacité : un investissement qui paie en surcoût évité." },
@@ -223,7 +223,7 @@ const SOURCES: SituationDef[] = [
       "Une analyse d'élasticité, complétée par les seuils de prix psychologiques, éclairerait votre choix.",
       "Testez un prix juste sous un seuil (59,90 plutôt que 60) et estimez e = %ΔQ / %ΔP par segment pour choisir.",
     ]),
-    trigger: { round: 2 },
+    trigger: { round: 2, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "review", hint: "L'élasticité varie par segment : un même mouvement de prix n'a pas le même effet sur les étudiants et les passionnés." },
@@ -287,7 +287,7 @@ const SOURCES: SituationDef[] = [
       "Une analyse de capacité, croisée avec la saisonnalité, dirait quoi produire dès maintenant.",
       "Produisez au plafond dès ce tour pour stocker : {{le pic du tour quatre}} dépassera largement vos {{entier: capacite_initiale}} unités.",
     ]),
-    trigger: { round: 3 },
+    trigger: { round: 3, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
       { field: "productionPlan", direction: "up", hint: "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus." },

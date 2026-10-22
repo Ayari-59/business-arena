@@ -16,7 +16,7 @@ import { hotelGammeCompany } from "./hotel-gamme";
 import { isProductAvailable } from "../../engine/gamme";
 import { NOVA_HOME } from "../groupe/nova";
 import { applyRoundsCount } from "./rounds";
-import { auCalendrierMensuel, enTempsReel, MOIS_MAX, tourDuTrimestre, trimestresDeLaPartie } from "./calendrier-mensuel";
+import { auCalendrierMensuel, enTempsReel, MOIS_MAX, tourDeLaSituation, trimestresDeLaPartie } from "./calendrier-mensuel";
 
 /**
  * LE TEXTE D'UNE SITUATION SE REND À LA DURÉE DU TOUR DE SA PARTIE.
@@ -1193,7 +1193,10 @@ export function situationDeLaPartie(def: SituationDef, roundDays: number, moisDe
   const deja = rendus.auCalendrier.get(moisDeDepart);
   if (deja) return deja;
   const ecrit = tourEcrit(rendus.source);
-  const tour = ecrit === undefined ? null : tourDuTrimestre(ecrit, moisDeDepart, MOIS_MAX);
+  const tour =
+    ecrit === undefined || !("round" in rendus.source.trigger)
+      ? null
+      : tourDeLaSituation(rendus.source.trigger, moisDeDepart, MOIS_MAX);
   // Une situation qui ne s'ouvre à aucun mois de cette partie n'a pas de mois où se lire.
   const rendue =
     tour === null ? rendus.parDuree.month : rendreSituation(rendus.source, auCalendrier(rendus.scenario, moisDeDepart), tour);
