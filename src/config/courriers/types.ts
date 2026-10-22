@@ -157,6 +157,8 @@ export const BANDE_DU_PLI: Record<TypeDePli, { mention: string; classe: string }
  * un tour sinon. C'est ce que dessinent les pastilles de durée.
  */
 export function dureeDuCourrier(courrier: Pick<CourrierDef, "effet">): number {
-  const m = courrier.effet.match(/pendant (\d+) tours?/i);
+  // Au mois, l'effet se dit en mois de temps réel (« pendant 6 mois », `enTempsReel`) :
+  // un mois y est un tour.
+  const m = courrier.effet.match(/pendant (\d+) (?:tours?|mois)\b/i);
   return m ? Number(m[1]) : 1;
 }

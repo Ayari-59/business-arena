@@ -18,7 +18,8 @@ import {
 } from "@/config/investissement-par-niveau";
 import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { applyPeriodicity, type Periodicity } from "@/config/scenarios/periodicity";
-import { applyRoundsCount } from "@/config/scenarios/rounds";
+import { applyRoundsCount, toursDeLaPartie } from "@/config/scenarios/rounds";
+import { auCalendrierMensuel, trimestresDeLaPartie } from "@/config/scenarios/calendrier-mensuel";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
 
 /**
@@ -53,6 +54,11 @@ export interface ReglagesDuScenarioJoue {
   concurrents: number;
   roundsCount?: number;
   periodicity: Periodicity;
+  /**
+   * Au mois : le mois où commence la partie, sur le calendrier (`calendrier-mensuel.ts`).
+   * Absent au mois : la partie d'avant le calendrier, au bit près (son rejeu).
+   */
+  moisDeDepart?: number;
   investmentStories?: boolean;
   /**
    * Les leviers de la partie, quand ils diffèrent des préréglages actuels (une
@@ -137,6 +143,13 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
     leviers,
     r.seed,
   );
+  // AU MOIS SUR LE CALENDRIER, la partie se compose au trimestre sur les trimestres
+  // qu'elle touche, puis se rend mois par mois (`auCalendrierMensuel`, après les
+  // histoires d'investissement, écrites elles aussi en trimestres).
+  const calendrier =
+    r.periodicity === "month" && r.moisDeDepart !== undefined
+      ? { moisDeDepart: r.moisDeDepart, mois: toursDeLaPartie(base, r.roundsCount, "month", true) }
+      : null;
   const snapshot = applyEventIntensity(
     applyPeriodicity(
       applyRoundsCount(
@@ -147,8 +160,8 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
           ),
           r.concurrents,
         ),
-        r.roundsCount,
-        r.periodicity,
+        calendrier ? trimestresDeLaPartie(calendrier.mois, calendrier.moisDeDepart) : r.roundsCount,
+        calendrier ? "quarter" : r.periodicity,
       ),
       r.periodicity,
     ),
@@ -156,10 +169,13 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   );
   // Les histoires qui appellent l'investissement, posées selon le niveau. Une partie sans
   // niveau (aucun préréglage) garde le calendrier de son scénario, comme avant.
-  const avecHistoires =
+  const avecLesEtapes =
     preset && r.investmentStories
       ? avecInvestissementParNiveau(snapshot, preset.level, r.calendrier ?? "actuel")
       : snapshot;
+  const avecHistoires = calendrier
+    ? auCalendrierMensuel(avecLesEtapes, calendrier.moisDeDepart, calendrier.mois)
+    : avecLesEtapes;
   const avecRd = preset && leviers ? rdDuNiveau(avecHistoires, preset.level, leviers.rd) : avecHistoires;
   const joue = avecLesConcurrentsAssainis(avecLeGroupe(avecRd, leviers, r.seed), r.concurrentsAssainis);
   // Absent, l'objet est rendu tel quel, sans clé ajoutée : un scénario historique reste

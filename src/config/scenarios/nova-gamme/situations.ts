@@ -87,7 +87,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Trois marchés, trois réactions",
     narrative:
-      "Le premier tour a tranché. Sur la Go, SoundBox a baissé son prix de quelques euros, l'a crié partout, et les lycéens ont suivi en masse ; sur la One, les étudiants ont bougé aussi, moins vite. Chez les passionnés, rien : ils ont acheté au prix fort, chez celui qui parlait de qualité et avait la meilleure réputation.",
+      "{{Le premier tour a tranché.}} Sur la Go, SoundBox a baissé son prix de quelques euros, l'a crié partout, et les lycéens ont suivi en masse ; sur la One, les étudiants ont bougé aussi, moins vite. Chez les passionnés, rien : ils ont acheté au prix fort, chez celui qui parlait de qualité et avait la meilleure réputation.",
     problem:
       "Pourquoi les références ne réagissent-elles pas de la même façon au prix, comment fixer chacun des prix, et sur quel axe communiquer pour le prochain tour ?",
     diagnosticOptions: [

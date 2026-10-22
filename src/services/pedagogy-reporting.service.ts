@@ -19,7 +19,7 @@ import {
 } from "@/db/schema";
 import { SCENARIOS, DEFAULT_SCENARIO_CODE, situationByCode } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
-import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
+import { dureeDuTourDe, moisDeDepartDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { answerFormatFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { decrireSource, lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import { playerStrength } from "@/pedagogy/adaptivity";
@@ -106,12 +106,14 @@ export async function getTeamSituations(
 
   const current: SituationView[] = [];
   const debriefedMap = new Map<number, SituationView[]>();
-  // Le texte de SA partie : une même situation sert au mois, au trimestre et à l'année.
+  // Le texte de SA partie : une même situation sert au mois, au trimestre et à l'année,
+  // et au mois sur le calendrier, elle se lit au mois où elle s'ouvre.
   const dureeDuTour = dureeDuTourDe(game.scenarioSnapshot);
+  const moisDeDepart = moisDeDepartDe(game.scenarioSnapshot);
   for (const instance of instances) {
     const duRegistre = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!duRegistre) continue;
-    const def = situationDeLaPartie(duRegistre, dureeDuTour);
+    const def = situationDeLaPartie(duRegistre, dureeDuTour, moisDeDepart);
     const levels = levelsByInstance.get(instance.id) ?? [];
     const view = toView(
       instance,
@@ -631,7 +633,9 @@ export async function getGameGradeSheet(
     const lignes = ownes.map((inst) => {
       const code = codeById.get(inst.situationId) ?? "";
       const duRegistre = situationByCode.get(code);
-      const def = duRegistre && situationDeLaPartie(duRegistre, dureeDuTourDe(game.scenarioSnapshot));
+      const def =
+        duRegistre &&
+        situationDeLaPartie(duRegistre, dureeDuTourDe(game.scenarioSnapshot), moisDeDepartDe(game.scenarioSnapshot));
       const diagnosis = inst.diagnosis as
         | { finalScore?: number; score?: number; selected?: string[] }
         | null;

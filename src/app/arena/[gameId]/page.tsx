@@ -19,6 +19,7 @@ import { SaisonDuTour } from "@/components/saison-du-tour";
 import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { nomDuMois } from "@/config/scenarios/calendrier-mensuel";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { MandatDeLEquipe } from "@/components/mandat-de-lequipe";
 import { reponsesAuxDecisions } from "@/config/courriers/reponses";
@@ -130,8 +131,17 @@ export async function generateMetadata({
   const ou =
     view.status === "finished"
       ? "Partie terminée"
-      : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}`;
+      : `${periodLabel(view.roundDays, view.currentRound)}/${view.roundsCount}${leMois(view, view.currentRound)}`;
   return { title: `${view.intro.company} · ${ou}` };
+}
+
+/**
+ * LE MOIS DU TOUR, dans une partie au mois sur le calendrier (`calendrier-mensuel.ts`) :
+ * « · août ». L'élève qui traverse le creux d'août doit savoir qu'il y est. Rien
+ * ailleurs : un tour de trimestre ou d'année ne nomme pas de date.
+ */
+function leMois(view: { moisDeDepart: number | null }, tour: number): string {
+  return view.moisDeDepart === null ? "" : ` · ${nomDuMois(tour, view.moisDeDepart)}`;
 }
 
 export default async function ArenaPage({
@@ -457,7 +467,8 @@ export default async function ArenaPage({
         // LOT 6A : « où vous en êtes » est un texte de situation à lire — papier.
         <section className="space-y-2 papier rounded-xl p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-100">
-            {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
+            {periodLabel(view.roundDays, view.currentRound)}
+            {leMois(view, view.currentRound)} · où vous en êtes
           </h2>
           <p className="text-sm leading-relaxed">{view.roundBriefing.headline}</p>
           {/*

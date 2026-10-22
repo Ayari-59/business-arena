@@ -148,11 +148,27 @@ describe("chaque courrier se rend à la durée du tour de sa partie", () => {
         }
       });
 
-      it("la durée d'un effet reste comptée en tours, comme le moteur la compte", () => {
-        for (const c of TOUS) expect(dureeDuCourrier(courrierALaDuree(c, jours)), c.code).toBe(dureeDuCourrier(c));
+      it("la durée d'un effet est celle que le moteur compte : en tours, et au mois sur le calendrier en mois de temps réel", () => {
+        // Décision du propriétaire : au mois, sur le calendrier, un événement dure le temps
+        // réel (`calendrier-mensuel.ts`) ; un trimestre y fait trois tours.
+        const facteur = periodicity === "month" ? 3 : 1;
+        // Un effet qui dit sa durée (« pendant 2 tours ») ; les autres (« ce tour »,
+        // « plusieurs tours ») ne la chiffrent pas.
+        const chiffre = (c: CourrierDef) => /pendant \d+ tours?/.test(c.effet);
+        for (const c of TOUS.filter(chiffre)) {
+          expect(dureeDuCourrier(courrierALaDuree(c, jours)), c.code).toBe(facteur * dureeDuCourrier(c));
+        }
         for (const d of SCENARIOS) {
-          const s = joue(d.scenario, periodicity);
-          for (const e of s.events) expect(e.duration, `${d.code} ${e.code}`).toBe(d.scenario.events.find((x) => x.code === e.code)!.duration);
+          const s = composerLeScenarioJoue({
+            scenario: d.scenario,
+            seed: 11,
+            concurrents: 3,
+            periodicity,
+            ...(periodicity === "month" ? { moisDeDepart: 1 } : {}),
+          });
+          for (const e of s.events) {
+            expect(e.duration, `${d.code} ${e.code}`).toBe(facteur * d.scenario.events.find((x) => x.code === e.code)!.duration);
+          }
         }
       });
 
@@ -198,7 +214,7 @@ describe("chaque courrier se rend à la durée du tour de sa partie", () => {
   it("au mois, l'accord-cadre du récit est mis à la durée du tour, et les mots aussi", () => {
     // Un chiffre du seul récit, écrit par trimestre : `flux(…)`, comme le moteur met ses flux.
     expect(courrierDeLaPartie("conseil_inv_grand_compte", { jours: 30 })!.corps).toContain(
-      "pour les trois mois à venir, réservé aux cabinets référencés de la région : environ soixante-sept jours d'audit et d'accompagnement par mois",
+      "pour les neuf mois à venir, réservé aux cabinets référencés de la région : environ soixante-sept jours d'audit et d'accompagnement par mois",
     );
     expect(courrierDeLaPartie("conseil_inv_grand_compte", { jours: 360 })!.corps).toContain(
       "environ huit cents jours d'audit et d'accompagnement par an",
@@ -265,7 +281,8 @@ describe("chaque chemin d'affichage rend le courrier de SA partie", () => {
     expect(courriel).toContain("Revalorisation de nos tarifs au 1er de l'exercice");
     expect(courriel).toContain("pour les deux prochains exercices");
     const pli = html(createElement(CourrierRecommande, { code: "rate_hike", jours: 30 }));
-    expect(pli).toContain("pour les deux prochains mois");
+    // Au mois, une durée écrite en trimestres se dit en mois de temps réel (`enTempsReel`).
+    expect(pli).toContain("pour les six prochains mois");
     expect(pli).not.toMatch(/trimestr/i);
     // La variante sans assurance garde la durée de la partie.
     const sans = html(createElement(CourrierRecommande, { code: "natural_disaster", jours: 30, assurance: false }));

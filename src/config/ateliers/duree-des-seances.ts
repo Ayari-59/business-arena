@@ -105,11 +105,25 @@ export function estimationDuTour(
   const premierTour = s.essai ? true : !avecEssai && s.tourJoue === premierJoue;
   return dureeDuTour({
     signesDeCadrage: signesDeCadrage(def),
-    // Le texte que l'atelier fera lire, à la durée de tour qu'il fixe.
+    // Le texte que l'atelier fera lire, à la durée de tour qu'il fixe, et la
+    // situation qui s'ouvre au tour joué comme dans la partie (`tourDOuverture`) :
+    // au mois sur le calendrier, au premier mois de son trimestre ; la partie
+    // passe les mêmes tours (`services/game.service.ts`).
     signesDeSituation: signesDeSituation(
-      def.situations.map((x) => situationDeLaPartie(x, PERIODICITY_DAYS[a.reglages.periodicite])),
+      def.situations.map((x) =>
+        situationDeLaPartie(
+          x,
+          PERIODICITY_DAYS[a.reglages.periodicite],
+          a.reglages.periodicite === "month" ? (a.reglages.moisDeDepart ?? 1) : undefined,
+        ),
+      ),
       tour,
       new Set(referencesJouees(def.scenario, a.reglages.niveau)),
+      {
+        joues: a.reglages.tours,
+        ecrits: def.scenario.roundsCount,
+        moisDeDepart: a.reglages.periodicite === "month" ? (a.reglages.moisDeDepart ?? 1) : undefined,
+      },
     ),
     champs: champsOuverts(preset.decisions),
     premierTour,

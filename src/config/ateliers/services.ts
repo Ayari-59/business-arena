@@ -11,6 +11,7 @@ import {
 } from "../../engine/market/communication";
 import type { CommunicationAxis, SegmentConfig } from "../../engine/types";
 import { tempsDeTravail } from "../scenarios/registry";
+import { nomDuMois } from "../scenarios/calendrier-mensuel";
 import type { ScenarioDefinition } from "../scenarios/registry";
 
 /**
@@ -68,6 +69,12 @@ const entier = (v: number) =>
   Math.round(v).toLocaleString("fr-FR").replace(/[  ]/g, " ");
 const pct = (v: number) => `${Math.round(v * 100)} %`;
 const jours = (d: number) => (d > 0 ? `à ${d} jours` : "comptant");
+/**
+ * Les heures d'une personne par tour : entières au trimestre, écrites telles
+ * quelles ; au mois, le tiers d'un trimestre, à une décimale.
+ */
+export const heuresParPersonne = (h: number) =>
+  Number.isInteger(h) ? String(h) : h.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 
 /** La gamme du scénario, prix et coûts par référence (une seule en mono-produit). */
 export function referencesDuDossier(
@@ -180,6 +187,11 @@ export function dossiersDeService(
     })),
   );
   const pic = tourFort(definition, tours);
+  // Au mois sur le calendrier, le pic est un mois nommé (« octobre ») : le tour
+  // seul ne dit pas à l'équipe quand la salle se remplit.
+  const moisDeDepart = definition.scenario.moisDeDepart;
+  const auCalendrier = moisDeDepart !== undefined;
+  const moisDuPic = auCalendrier ? nomDuMois(pic, moisDeDepart) : null;
   const heures = etat.headcount * etat.hoursPerEmployee;
   // L'heure partout, le jour là où c'est l'unité du métier (le conseil).
   const temps = tempsDeTravail(v);
@@ -287,7 +299,9 @@ export function dossiersDeService(
             },
           ]
         : []),
-      { libelle: "Tour de la demande la plus forte", valeur: `tour ${pic}` },
+      auCalendrier
+        ? { libelle: "Mois de la demande la plus forte", valeur: `${moisDuPic} (tour ${pic})` }
+        : { libelle: "Tour de la demande la plus forte", valeur: `tour ${pic}` },
       ...(config.orderOffers ?? []).slice(0, 3).map((o) => ({
         libelle: `Commande exceptionnelle possible : ${o.title}`,
         valeur: `${entier(o.units)} ${v.units} à ${euro(o.price)}, règlement ${jours(o.paymentDelayDays)}${
@@ -303,7 +317,7 @@ export function dossiersDeService(
         "Demande de base par tour",
         "Prix usuel",
         "Règlement",
-        `Saison (tour ${pic})`,
+        auCalendrier ? `Saison (${moisDuPic})` : `Saison (tour ${pic})`,
         ...(communication ? ["Axe qui porte · axe qui dessert"] : []),
       ],
       lignes: clienteles.map((c) => [
@@ -346,7 +360,7 @@ export function dossiersDeService(
       { libelle: "Effectif", valeur: `${etat.headcount} personnes` },
       {
         libelle: `${temps.Pluriel} disponibles par tour`,
-        valeur: `${entier(heures)} ${temps.abrege} (${etat.hoursPerEmployee} ${temps.abrege} par personne)`,
+        valeur: `${entier(heures)} ${temps.abrege} (${heuresParPersonne(etat.hoursPerEmployee)} ${temps.abrege} par personne)`,
       },
       ...(config.hr
         ? [

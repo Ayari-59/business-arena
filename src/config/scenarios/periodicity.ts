@@ -19,7 +19,12 @@ import { mapGammeSegments } from "../../engine/gamme";
  *   relatif varie donc naturellement avec la durée du tour (un client à 80 j
  *   pèse plus lourd au mois qu'à l'année : c'est voulu et pédagogique).
  *
- * LA SAISONNALITÉ NE CHANGE PAS AVEC LA PÉRIODICITÉ — C'EST UNE DÉCISION.
+ * LA SAISONNALITÉ NE CHANGE PAS AVEC LA PÉRIODICITÉ — C'EST UNE DÉCISION, révisée
+ * pour le mois (octobre 2026) : une partie au mois née depuis porte un mois de départ
+ * et suit le calendrier (`calendrier-mensuel.ts`), qui répartit la saison de chaque
+ * trimestre entre ses trois mois et place au premier mois de son trimestre ce qui est
+ * écrit pour lui. Ce qui suit vaut pour le trimestre, l'année, et les parties au mois
+ * d'avant le calendrier.
  *
  * Un tableau de saisonnalité se lit UNE VALEUR PAR TOUR (`saisonDuTour`,
  * engine/market/demand.ts), au mois comme au trimestre ou à l'année. Il porte la

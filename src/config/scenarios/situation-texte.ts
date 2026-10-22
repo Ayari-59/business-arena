@@ -15,6 +15,8 @@ import { hotelCompany } from "./hotel";
 import { hotelGammeCompany } from "./hotel-gamme";
 import { isProductAvailable } from "../../engine/gamme";
 import { NOVA_HOME } from "../groupe/nova";
+import { applyRoundsCount } from "./rounds";
+import { auCalendrierMensuel, enTempsReel, MOIS_MAX, tourDuTrimestre, trimestresDeLaPartie } from "./calendrier-mensuel";
 
 /**
  * LE TEXTE D'UNE SITUATION SE REND À LA DURÉE DU TOUR DE SA PARTIE.
@@ -101,6 +103,9 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   // « à trois mois » au trimestre, c'est « jusqu'au tour suivant ».
   "à trois mois": { month: "à un mois", year: "à un an" },
   // --- fin transport-bistrot -----------------------------------------------
+  // Une campagne de crédit : « avant la fin du second mois » donnait un rang de mois, et la
+  // campagne, au mois sur le calendrier, dure en temps réel (`calendrier-mensuel.ts`).
+  "avant la fin du second trimestre": { month: "avant la fin de la campagne", year: "avant la fin du second exercice" },
   // --- conseil-hotel ---
   // Un flux annuel écrit comme quatre tours d'un trimestre : douze tours d'un mois, un seul d'un an.
   // La formule l'écrit en chiffres (« × 4 trimestres ») ; la clé, en lettres.
@@ -151,7 +156,7 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   },
   "Le creux de l'été": { month: "Le creux de la saison", year: "Le creux de la saison" },
   "Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite.": {
-    month: "Plein creux. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents des bonnes résolutions ne s'est pas réinscrite.",
+    month: "Saison creuse. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents des bonnes résolutions ne s'est pas réinscrite.",
     year: "Plein creux. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents des bonnes résolutions ne s'est pas réinscrite.",
   },
   "Licencier l'équipe pour l'été et réembaucher en septembre": {
@@ -159,8 +164,14 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     year: "Licencier l'équipe pour le creux et réembaucher à la reprise",
   },
   "La demande chute de moitié en juillet. De combien baissent vos charges de structure ?": {
-    month: "La demande chute de moitié au creux. De combien baissent vos charges de structure ?",
+    month: "La demande chute en saison creuse. De combien baissent vos charges de structure ?",
     year: "La demande chute de moitié au creux. De combien baissent vos charges de structure ?",
+  },
+  // L'option qui reprenait « de moitié » : au mois, l'énoncé ne dit plus de combien.
+  "De moitié également": { month: "Dans la même proportion", year: "De moitié également" },
+  "Comment traverser un trimestre où la demande s'effondre alors que les charges ne bougent pas ?": {
+    month: "Comment traverser une saison où la demande s'effondre alors que les charges ne bougent pas ?",
+    year: "Comment traverser un exercice où la demande s'effondre alors que les charges ne bougent pas ?",
   },
   "Tout le reste continue de courir : c'est ce qui rend le creux d'été si dangereux.": {
     month: "Tout le reste continue de courir : c'est ce qui rend le creux de la saison si dangereux.",
@@ -190,12 +201,12 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   // y rompt plus souvent), le contrecoup au tour 5. L'arc CampusTech n'est pas une
   // saison : il reste tel quel.
   "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic de fin d'année ?": {
-    month: "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic du tour suivant ?",
+    month: "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic à venir ?",
     year: "Qu'est-ce qui limite réellement votre production, et que pouvez-vous y faire avant le pic du tour suivant ?",
   },
   "qu'elle rapportera d'ici Noël": { month: "qu'elle rapportera d'ici le pic", year: "qu'elle rapportera d'ici le pic" },
   "Quelle référence produire en priorité, et que préparer avant le pic de fin d'année ?": {
-    month: "Quelle référence produire en priorité, et que préparer avant le pic du tour suivant ?",
+    month: "Quelle référence produire en priorité, et que préparer avant le pic à venir ?",
     year: "Quelle référence produire en priorité, et que préparer avant le pic du tour suivant ?",
   },
   "Il faut produire AVANT le pic pour constituer du stock, sur les références qui se vendront à Noël": {
@@ -208,25 +219,45 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   },
   "pour stocker la Go et la One avant Noël": { month: "pour stocker la Go et la One avant le pic", year: "pour stocker la Go et la One avant le pic" },
   "Trimestre record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.": {
-    month: "Mois record : le pic des cadeaux a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.",
+    month: "La haute saison s'ouvre : CampusTech a passé sa grosse commande de One, et la grande distribution remplit ses rayons de Go.",
     year: "Exercice record : le pic des cadeaux a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.",
   },
+  // NOVA : le paradoxe du succès s'ouvre au premier mois des fêtes, pas à leur sommet.
+  "Trimestre record : le pic saisonnier et la grosse commande CampusTech gonflent votre chiffre d'affaires": {
+    month: "La haute saison s'ouvre et la grosse commande CampusTech gonfle votre chiffre d'affaires",
+    year: "Exercice record : le pic saisonnier et la grosse commande CampusTech gonflent votre chiffre d'affaires",
+  },
+  // Le tour du trimestre 2 suit le premier ; au mois sur le calendrier, la situation s'ouvre
+  // en avril (ou au premier mois d'une partie commencée en mai ou en juin) : le mois qui
+  // vient de se clore n'est le premier que d'une partie commencée en mars.
+  "Le premier tour est bouclé.": { month: "Le mois écoulé est bouclé.", year: "Le premier tour est bouclé." },
+  "Vos ventes du premier tour sont tombées.": {
+    month: "Vos ventes du mois écoulé sont tombées.",
+    year: "Vos ventes du premier tour sont tombées.",
+  },
+  "Le premier tour a tranché.": { month: "Le mois écoulé a tranché.", year: "Le premier tour a tranché." },
+  // Le pic que la production doit précéder : au trimestre, le tour qui suit ; au mois, des mois plus loin.
+  "le pic du tour quatre": { quarter: "le pic du tour 4", month: "le pic à venir", year: "le pic du tour 4" },
   "Une innovation se lance quand son marché est connu, quitte à arriver après Noël": {
     month: "Une innovation se lance quand son marché est connu, quitte à arriver après le pic",
     year: "Une innovation se lance quand son marché est connu, quitte à arriver après le pic",
   },
   "Et Noël arrive : c'est là que le module radio manque le plus souvent.": {
-    month: "Et le pic est là : c'est là que le module radio manque le plus souvent.",
+    month: "Et la haute saison s'ouvre : c'est là que le module radio manque le plus souvent.",
     year: "Et le pic est là : c'est là que le module radio manque le plus souvent.",
   },
   "Faut-il la pousser avant Noël, ou garder l'atelier pour la One ?": {
-    month: "Faut-il la pousser en plein pic, ou garder l'atelier pour la One ?",
+    month: "Faut-il la pousser en haute saison, ou garder l'atelier pour la One ?",
     year: "Faut-il la pousser en plein pic, ou garder l'atelier pour la One ?",
   },
   "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque à Noël coûte les ventes du meilleur tour": {
     month: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
     year: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
   },
+  // MARTEL & FILS : le carnet du cinquième tour. Au mois sur le calendrier, il s'ouvre en
+  // janvier, le mois du gel, sous un mois ordinaire ; c'est la saison qui s'ouvre, celle du
+  // premier trimestre, qui déborde.
+  "Le carnet déborde": { month: "Le carnet de la saison qui s'ouvre déborde", year: "Le carnet déborde" },
   // --- fin du groupe fitness-nova-batiment-transport ---
   // --- hotel-bistrot-conseil : le récit des saisons ------------------------
   // Au trimestre, le tour 3 de L'ESCALE est l'été, celui du bistrot et du cabinet le
@@ -238,10 +269,19 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   // aucun. Chaque affirmation est vérifiée au tableau de saisonnalité
   // (tests/scenarios/saisons-hotel-bistrot-conseil.test.ts).
   // L'ESCALE, et sa gamme : le tour 3 est le pic, les tours creux suivent.
-  "L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement.":
-    aLaSaison("Votre tour le plus chargé approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement."),
-  "L'été approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent.":
-    aLaSaison("Votre tour le plus chargé approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent."),
+  // Au mois sur le calendrier, la situation s'ouvre en juillet, ou au premier mois d'une partie
+  // commencée en août ou en septembre : le plus chargé est août, et septembre en sort. Ce qui
+  // reste vrai des trois mois : la haute saison, les loisirs au-dessus d'une fois et demie,
+  // les affaires et les séminaires sous leur niveau ordinaire.
+  "L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement.": {
+    month: "La haute saison est là : le tourisme de loisirs bondit, la clientèle affaires recule et les séminaires se font rares.",
+    year: "Votre tour le plus chargé approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement.",
+  },
+  "L'été approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent.": {
+    month: "La haute saison est là : le tourisme de loisirs bondit sur les standard, les escapades remplissent les supérieures, la clientèle affaires recule et les séminaires se font rares.",
+    year: "Votre tour le plus chargé approche : le tourisme de loisirs double sur les standard, les escapades remplissent les supérieures, la clientèle affaires s'effondre et les séminaires disparaissent.",
+  },
+  "La haute saison arrive": { month: "La haute saison est là", year: "La haute saison arrive" },
   "Vos concurrents affichent déjà leurs tarifs de juillet.": aLaSaison("Vos concurrents affichent déjà leurs tarifs de haute saison."),
   "Vos concurrents affichent déjà leurs tarifs de juillet, chambre par chambre.":
     aLaSaison("Vos concurrents affichent déjà leurs tarifs de haute saison, chambre par chambre."),
@@ -252,35 +292,67 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   "L'été, la clientèle loisirs": aLaSaison("En haute saison, la clientèle loisirs"),
   "L'été, les affaires tombent": aLaSaison("À ce tour, les affaires tombent"),
   "La forte demande estivale": aLaSaison("La forte demande de la haute saison"),
-  "Décider en juillet pour juillet, c'est décider trop tard.": aLaSaison("Décider pendant le pic pour le pic, c'est décider trop tard."),
+  "Décider en juillet pour juillet, c'est décider trop tard.": {
+    month: "Décider en pleine saison pour la saison, c'est décider trop tard.",
+    year: "Décider pendant le pic pour le pic, c'est décider trop tard.",
+  },
   // LA TABLE D'AUGUSTIN, et sa gamme : le tour 3 est le creux, le tour 4 le pic des banquets.
-  "Nous sommes en août, la salle est à moitié vide et les bureaux du quartier sont fermés.":
-    aLaSaison("Vous êtes au plus creux de l'activité : la salle est à moitié vide et les bureaux du quartier se sont vidés."),
-  "Nous sommes en août, la salle est à moitié vide, les bureaux du quartier sont fermés et les banquets attendent décembre.":
-    aLaSaison("Vous êtes au plus creux de l'activité : la salle est à moitié vide, les bureaux du quartier se sont vidés et les banquets attendent leur plus gros tour."),
-  "en plein creux d'août, c'est hors d'atteinte.": aLaSaison("en plein creux de l'activité, c'est hors d'atteinte."),
-  "Le mois d'août amplifie tout": aLaSaison("Le creux de l'activité amplifie tout"),
-  "En août, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.":
-    aLaSaison("Au creux de l'activité, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères."),
+  // Au mois sur le calendrier, la situation des denrées s'ouvre en juillet (ou au premier
+  // mois d'une partie commencée en août ou en septembre) : le plus creux est août. Les trois
+  // mois sont la saison creuse, le midi d'affaires sous son niveau ordinaire. Celle des
+  // banquets s'ouvre en octobre (ou en novembre, en décembre) : le plus gros mois est
+  // décembre, mais les trois sont la saison où les banquets dépensent le plus.
+  "Nous sommes en août, la salle est à moitié vide et les bureaux du quartier sont fermés.": {
+    month: "Vous êtes en saison creuse : la salle se clairsème et les bureaux du quartier se vident.",
+    year: "Vous êtes au plus creux de l'activité : la salle est à moitié vide et les bureaux du quartier se sont vidés.",
+  },
+  "Nous sommes en août, la salle est à moitié vide, les bureaux du quartier sont fermés et les banquets attendent décembre.": {
+    month: "Vous êtes en saison creuse : la salle se clairsème, les bureaux du quartier se vident et les banquets attendent leur saison.",
+    year: "Vous êtes au plus creux de l'activité : la salle est à moitié vide, les bureaux du quartier se sont vidés et les banquets attendent leur plus gros tour.",
+  },
+  "en plein creux d'août, c'est hors d'atteinte.": {
+    month: "en saison creuse, c'est hors d'atteinte.",
+    year: "en plein creux de l'activité, c'est hors d'atteinte.",
+  },
+  "Le mois d'août amplifie tout": { month: "La saison creuse amplifie tout", year: "Le creux de l'activité amplifie tout" },
+  "En août, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.": {
+    month: "En saison creuse, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.",
+    year: "Au creux de l'activité, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.",
+  },
   // Le jeton porte « ce trimestre » en toutes lettres : au mois, dire que le budget annuel
   // tombe sur un mois, à l'année qu'il tombe sur l'année, ne dirait plus rien du pic.
-  "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre":
-    aLaSaison("Votre plus gros tour arrive : les repas d'entreprise et les banquets y dépensent plus qu'à aucun autre tour"),
-  "La demande de décembre bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.":
-    aLaSaison("La demande de votre plus gros tour bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues."),
+  "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre": {
+    month: "La saison des banquets est là : les repas d'entreprise et les banquets y dépensent plus qu'en aucune autre saison",
+    year: "Votre plus gros tour arrive : les repas d'entreprise et les banquets y dépensent plus qu'à aucun autre tour",
+  },
+  "La demande de décembre bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.": {
+    month: "La demande de la saison des banquets bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.",
+    year: "La demande de votre plus gros tour bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.",
+  },
+  // Le coefficient que l'indice demande de lire : au trimestre, celui du quatrième ; au mois,
+  // celui du mois où la situation s'ouvre, que l'indice suivant cite (`saisonLue`).
+  "au quatrième trimestre": { month: "ce mois-ci", year: "au quatrième exercice" },
   "Anticipez l'entretien pour éviter une panne en plein rush de décembre.":
     aLaSaison("Anticipez l'entretien pour éviter une panne en plein rush des banquets."),
   // La verrière : le moteur ajoute sa capacité à chaque tour ; c'est le temps qu'il fait, pas la date, qui vide la terrasse.
   "mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe.":
     aLaSaison("mais seulement quand le temps s'y prête : par grand froid, personne ne s'y installe."),
   // ATLAS CONSEIL, et sa gamme : le tour 3 est le creux, celui des marchés publics aussi.
-  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide.":
-    aLaSaison("Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, le carnet se vide."),
-  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.":
-    aLaSaison("Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti."),
+  // Au mois sur le calendrier, juillet, août ou septembre : le plus creux est août, mais les
+  // trois mois sont la saison creuse du cabinet, chaque offre sous son niveau ordinaire.
+  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide.": {
+    month: "La saison creuse : les décideurs lèvent le pied, les marchés publics ne se notifient plus, le carnet se vide.",
+    year: "Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, le carnet se vide.",
+  },
+  "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.": {
+    month: "La saison creuse : les décideurs lèvent le pied, les marchés publics ne se notifient plus, la stratégie et l'audit tournent au ralenti.",
+    year: "Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.",
+  },
   // Les DSI creusent le moins au tour 3 de la gamme (`dsi`) : c'est ce qui reste vrai de « ne connaît pas les congés ».
-  "Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.":
-    aLaSaison("Ce tour creux est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader."),
+  "Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.": {
+    month: "La saison creuse est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader.",
+    year: "Ce tour creux est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader.",
+  },
   // --- fin hotel-bistrot-conseil -------------------------------------------
   // --- groupe boutique-ecommerce : le récit des saisons ---------------------
   // MAILLE & CO et PIXEL & CO racontaient Noël, les soldes, les fêtes et la
@@ -297,11 +369,41 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
       // MAILLE & CO, gamme et mono : le tour 4 est le plus haut de la boutique (1,5 ;
       // 1,45 en mono) et de chaque référence (jusqu'à 2,3 sur les accessoires), sauf
       // le cardigan, pièce de mi-saison dont le récit ne dit pas le pic.
-      "Le trimestre qui fait l'année": "Le plus gros tour de la partie",
-      "La maille se vend l'hiver : au quatrième trimestre, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.":
-        "C'est le plus gros tour de la maille : les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.",
-      "Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année.":
-        "Ce tour pèse près d'une fois et demie un tour ordinaire, et les comités d'entreprise y passent leurs plus grosses commandes.",
+      //
+      // AU MOIS SUR LE CALENDRIER, la situation du pic s'ouvre en octobre, ou au premier mois
+      // d'une partie commencée en novembre ou en décembre : le plus gros mois de la maille
+      // est décembre (septembre en mono-produit, la rentrée y pèse plus), celui de PIXEL &
+      // CO novembre. Ce qui est vrai des trois : c'est la saison qui fait l'année. Ce qu'elle
+      // pèse se dit de la saison entière, dont les trois mois font ensemble le trimestre
+      // (`calendrier-mensuel.ts`) ; ce que pèse le mois, l'indice le lit dans la partie
+      // (`saisonLue`). Une forme par durée : l'année garde la sienne.
+      "Le trimestre qui fait l'année": { month: "La saison qui fait l'année", year: "Le plus gros tour de la partie" },
+      "La maille se vend l'hiver : au quatrième trimestre, les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.": {
+        month:
+          "C'est la saison qui fait la maille : les pulls y partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.",
+        year: "C'est le plus gros tour de la maille : les pulls partent une fois et demie plus vite, les écharpes et les bonnets plus de deux fois, et les comités d'entreprise passent leurs dotations.",
+      },
+      "Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année.": {
+        month: "Cette saison pèse près d'une fois et demie une saison ordinaire, et les comités d'entreprise y passent leurs plus grosses commandes.",
+        year: "Ce tour pèse près d'une fois et demie un tour ordinaire, et les comités d'entreprise y passent leurs plus grosses commandes.",
+      },
+      "Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire.": {
+        month: "Cette saison pèse plus d'une fois et demie une saison ordinaire.",
+        year: "Le quatrième exercice pèse plus d'une fois et demie un exercice ordinaire.",
+      },
+      "Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire, et les luminaires s'y vendent presque le double.": {
+        month: "Cette saison pèse plus d'une fois et demie une saison ordinaire, et les luminaires s'y vendent presque le double.",
+        year: "Le quatrième exercice pèse plus d'une fois et demie un exercice ordinaire, et les luminaires s'y vendent presque le double.",
+      },
+      // L'indice du pic : au mois, le coefficient lu est celui du mois, pas celui du pic.
+      "Le pic vaut": { month: "Ce mois vaut", year: "Le pic vaut" },
+      "les accessoires plus du double": { month: "les accessoires davantage", year: "les accessoires plus du double" },
+      "les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour": {
+        month: "les comités d'entreprise concentrent l'essentiel de leur budget sur cette saison",
+        year: "les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour",
+      },
+      // Le coefficient d'un mois se rapporte à un mois ordinaire, pas au mois d'avant.
+      "vos ventes du tour précédent": { month: "vos ventes d'un mois ordinaire", year: "vos ventes du tour précédent" },
       "La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple.":
         "La marge par pièce ne tranche que lorsque les références se disputent une place limitée, comme la réserve au tour du pic.",
       "Combien commander pour Noël, de quelle référence, et à quel risque ?":
@@ -320,8 +422,12 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
       "À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.":
         "Au tour du pic, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen.",
       // Le tour 5 suit le pic dans tous les tableaux.
-      "Le trimestre de Noël vient de vider votre trésorerie dans le réassort.":
-        "Le tour du pic vient de vider votre trésorerie dans le réassort.",
+      // Janvier : le plus gros mois de la maille mono-produit est septembre, mais la saison
+      // forte, celle d'octobre à décembre, vient de se clore.
+      "Le trimestre de Noël vient de vider votre trésorerie dans le réassort.": {
+        month: "La saison forte vient de vider votre trésorerie dans le réassort.",
+        year: "Le tour du pic vient de vider votre trésorerie dans le réassort.",
+      },
       // Le déstockage du tour 3 : le tour 4, juste après, est le pic de la maille
       // (les écharpes et les bonnets y font plus du double d'un tour ordinaire).
       "Solder, ou garder pour l'an prochain": "Solder, ou garder pour la prochaine collection",
@@ -330,10 +436,16 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
         "refuser, c'est occuper une réserve pendant des tours, le temps que la collection tourne",
       "refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la mode aura tourné":
         "refuser, c'est occuper une réserve pendant des tours, le temps que la mode tourne",
-      "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets de l'hiver, qui tourneront deux fois d'ici le printemps":
-        "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets, qui se vendent plus du double au tour du pic, juste après",
-      "Le mètre de linéaire qu'elles occupent porterait la collection suivante, qui tournerait deux fois d'ici le printemps":
-        "Le mètre de linéaire qu'elles occupent porterait la collection suivante, celle du pic qui arrive au tour suivant",
+      // Au mois, le déstockage s'ouvre en juillet, août ou septembre : la saison forte suit,
+      // pas au mois suivant.
+      "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets de l'hiver, qui tourneront deux fois d'ici le printemps": {
+        month: "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets, qui se vendent plus du double dans la saison forte qui suit",
+        year: "Le mètre de linéaire qu'ils occupent porterait les écharpes et les bonnets, qui se vendent plus du double au tour du pic, juste après",
+      },
+      "Le mètre de linéaire qu'elles occupent porterait la collection suivante, qui tournerait deux fois d'ici le printemps": {
+        month: "Le mètre de linéaire qu'elles occupent porterait la collection suivante, celle de la saison forte qui suit",
+        year: "Le mètre de linéaire qu'elles occupent porterait la collection suivante, celle du pic qui arrive au tour suivant",
+      },
       "une vente incertaine dans un an": "une vente incertaine à la collection suivante",
       "Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort une saison entière est un emplacement qui n'a rien vendu, alors que les accessoires de l'hiver y tourneraient.":
         "Et regardez la rotation, qui est l'argument du commerçant : un pull qui dort des tours entiers est un emplacement qui n'a rien vendu, alors que les accessoires du pic y tourneraient.",
@@ -352,8 +464,11 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
 
       // PIXEL & CO et sa gamme : le tour 4 est le plus haut de chaque tableau
       // (1,6 ; 1,45 à 1,7 selon le rayon).
-      "Black Friday et fêtes": "Le plus gros tour de la partie",
-      "Black Friday et fêtes, sur quatre rayons": "Le plus gros tour de la partie, sur quatre rayons",
+      "Black Friday et fêtes": { month: "La saison qui fait l'année", year: "Le plus gros tour de la partie" },
+      "Black Friday et fêtes, sur quatre rayons": {
+        month: "La saison qui fait l'année, sur quatre rayons",
+        year: "Le plus gros tour de la partie, sur quatre rayons",
+      },
       "Vos concurrents ont réservé leurs espaces publicitaires depuis septembre":
         "Vos concurrents ont réservé leurs espaces publicitaires depuis des semaines",
       "Il suffit d'avoir du stock : à Noël, tout se vend": "Il suffit d'avoir du stock : au tour du pic, tout se vend",
@@ -640,6 +755,52 @@ function prixDeLaCapacite(s: EngineScenarioConfig): number[] {
 }
 // --- fin hotel-bistrot-conseil -----------------------------------------------
 
+// --- le calendrier des parties au mois : le coefficient de saison du tour -----
+/**
+ * LE COEFFICIENT DE SAISON DU TOUR OÙ LE TEXTE SE LIT : `{{coefficient: saison}}`,
+ * `{{coefficient: saison_groupes}}`, `{{coefficient: saison_banquets}}`.
+ *
+ * Une sorte de grandeur de plus, et la seule qui dépende du TOUR où le texte se lit, et
+ * non du seul scénario. Au trimestre et à l'année, la saisonnalité se lit une valeur par
+ * tour, et une situation à tour fixe s'ouvre au tour qu'elle dit : « 1,85 fois leur
+ * niveau ordinaire » se recopiait donc du tableau. Sur le calendrier des parties au mois
+ * (`calendrier-mensuel.ts`), la même situation s'ouvre au premier mois de son trimestre,
+ * ou au mois 1 si ce trimestre est en cours au départ, et la saison de ce mois est celle
+ * du trimestre répartie par le profil du métier : les banquets font 1,67 en octobre et
+ * 2,22 en décembre, pas les 1,85 du trimestre. Le chiffre dépend du mois de départ que
+ * l'enseignant choisit : il ne se lit que dans le scénario de la partie, au tour où la
+ * situation s'ouvre (`situationDeLaPartie`).
+ *
+ * `saison` lit le marché ; `saison_<code>` une référence (son marché) ou une clientèle (la
+ * sienne, ou celle de son marché), comme le moteur les lit. Un code à tirets s'écrit avec
+ * des soulignés (`saison_pull_col_rond`). Le tour vient du rendu : celui que la situation
+ * dit, ou, au mois sur le calendrier, celui où elle s'ouvre. Une situation détectée ou de
+ * fin de partie n'a pas de tour écrit : le jeton y lève, dès le chargement.
+ */
+function saisonLue(nom: string, s: EngineScenarioConfig, tour: number | undefined): number | undefined {
+  if (nom !== "saison" && !nom.startsWith("saison_")) return undefined;
+  if (tour === undefined) throw new Error(`Situation : le jeton « ${nom} » suppose une situation à tour fixe`);
+  const tableau = nom === "saison" ? s.market.seasonality : tableauDeSaison(s, nom.slice("saison_".length));
+  const valeur = tableau[tour - 1];
+  if (valeur === undefined) throw new Error(`Situation : « ${nom} » n'a pas de saison au tour ${tour} de « ${s.code} »`);
+  return valeur;
+}
+
+/** Le tableau de saison qu'une référence ou une clientèle lit : le sien, ou celui de son marché. */
+function tableauDeSaison(s: EngineScenarioConfig, code: string): readonly number[] {
+  const nomme = (c: string) => c.replace(/-/g, "_") === code;
+  const produit = s.products?.find((p) => nomme(p.code));
+  if (produit) return produit.market.seasonality ?? s.market.seasonality;
+  const segment = s.market.segments.find((g) => nomme(g.code));
+  if (segment) return segment.seasonality ?? s.market.seasonality;
+  for (const p of s.products ?? []) {
+    const g = p.market.segments.find((x) => nomme(x.code));
+    if (g) return g.seasonality ?? p.market.seasonality ?? s.market.seasonality;
+  }
+  throw new Error(`Situation : ni référence ni clientèle « ${code} » dans « ${s.code} »`);
+}
+// --- fin du calendrier des parties au mois ------------------------------------
+
 const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> = {
   /** Un taux de perte écrit au trimestre, ramené à la durée du tour par la règle du moteur. */
   perte: (x, s) => tauxLu(composerPerte(x, s.roundDays / 90)),
@@ -668,7 +829,7 @@ const FONCTIONS: Record<string, (x: number, s: EngineScenarioConfig) => number> 
 };
 
 /** Une petite arithmétique : nombres, grandeurs, fonctions, + − × ÷ et parenthèses. */
-function evaluer(source: string, s: EngineScenarioConfig): number {
+function evaluer(source: string, s: EngineScenarioConfig, tour?: number): number {
   const jetons = source.match(/\d+(?:\.\d+)?|[a-z_]+|[-+*/()]/g) ?? [];
   if (jetons.join("") !== source.replace(/\s+/g, "")) {
     throw new Error(`Situation : expression illisible « ${source} »`);
@@ -695,8 +856,10 @@ function evaluer(source: string, s: EngineScenarioConfig): number {
       return f(v, s);
     }
     const g = GRANDEURS[t];
-    if (!g) throw new Error(`Situation : grandeur inconnue « ${t} »`);
-    return g(s);
+    if (g) return g(s);
+    const saison = saisonLue(t, s, tour);
+    if (saison === undefined) throw new Error(`Situation : grandeur inconnue « ${t} »`);
+    return saison;
   };
   const produit = (): number => {
     let v = facteur();
@@ -866,6 +1029,8 @@ const FORMATS: Record<string, (x: number) => string> = {
   Lettres: (x) => capitaliser(enLettres(x)),
   /** Un taux en pour cent, au centième : « 1,25 », « 0,42 », « 5 ». */
   taux_centieme: (x) => avecVirgule(Math.round(net(x * 100) * 100) / 100, 0, 2),
+  /** Un coefficient de saison, au centième, une décimale au moins : « 1,85 », « 0,5 », « 2,0 ». */
+  coefficient: (x) => avecVirgule(Math.round(net(x * 100)) / 100, 1, 2),
   /** Le tour où une chose arrive, depuis le premier : « au suivant » pour le deuxième, « au tour 4 » au-delà. */
   au_tour: (x) => (Math.round(net(x)) === 2 ? "au suivant" : `au tour ${Math.round(net(x))}`),
 };
@@ -876,10 +1041,18 @@ const FORMATS: Record<string, (x: number) => string> = {
 
 const JETON = /\{\{([^{}]+)\}\}/g;
 
-/** Le texte, ses jetons rendus pour ce scénario (déjà mis à la durée du tour). */
-export function rendreTexte(texte: string, scenario: EngineScenarioConfig): string {
-  if (!texte.includes("{{")) return texte;
+/**
+ * Le texte, ses jetons rendus pour ce scénario (déjà mis à la durée du tour). `tour` :
+ * celui où le texte se lit, pour le coefficient de saison (`saisonLue`) ; absent, ce
+ * jeton lève.
+ */
+export function rendreTexte(brut: string, scenario: EngineScenarioConfig, tour?: number): string {
   const periodicite = periodicityFromRoundDays(scenario.roundDays);
+  // Au mois, une durée écrite en trimestres se dit en mois de temps réel (`enTempsReel`) :
+  // toute partie au mois née depuis le calendrier y dure le temps réel. Une partie au mois
+  // d'avant le calendrier lit les mêmes mots, comme ceux de la saison : limite annoncée.
+  const texte = periodicite === "month" ? enTempsReel(brut) : brut;
+  if (!texte.includes("{{")) return texte;
   return texte.replace(JETON, (_, brut: string) => {
     const contenu = brut.trim();
     const deuxPoints = contenu.indexOf(":");
@@ -890,10 +1063,10 @@ export function rendreTexte(texte: string, scenario: EngineScenarioConfig): stri
       if (!expression || singulier === undefined || pluriel === undefined) {
         throw new Error(`Situation : accord mal écrit {{${brut}}}`);
       }
-      const v = Math.round(net(evaluer(expression, scenario) * 100) * 10) / 10;
+      const v = Math.round(net(evaluer(expression, scenario, tour) * 100) * 10) / 10;
       return Math.abs(v) < 2 ? singulier : pluriel;
     }
-    if (format && FORMATS[format]) return FORMATS[format]!(evaluer(contenu.slice(deuxPoints + 1).trim(), scenario));
+    if (format && FORMATS[format]) return FORMATS[format]!(evaluer(contenu.slice(deuxPoints + 1).trim(), scenario, tour));
     const mot = motDeDuree(contenu, periodicite);
     if (mot === undefined) throw new Error(`Situation : jeton inconnu {{${brut}}}`);
     return mot;
@@ -903,9 +1076,16 @@ export function rendreTexte(texte: string, scenario: EngineScenarioConfig): stri
 /** Les jetons d'un texte brut. */
 export const jetonsDe = (texte: string): string[] => [...texte.matchAll(JETON)].map((m) => m[1]!.trim());
 
-/** Tous les champs textuels d'une situation, rendus : ceux que l'élève ou l'enseignant lit. */
-export function rendreSituation(def: SituationDef, scenario: EngineScenarioConfig): SituationDef {
-  const r = (t: string) => rendreTexte(t, scenario);
+/**
+ * Tous les champs textuels d'une situation, rendus : ceux que l'élève ou l'enseignant lit.
+ * `tour` : celui où elle se lit ; absent, celui qu'elle dit (`tourEcrit`).
+ */
+export function rendreSituation(
+  def: SituationDef,
+  scenario: EngineScenarioConfig,
+  tour: number | undefined = tourEcrit(def),
+): SituationDef {
+  const r = (t: string) => rendreTexte(t, scenario, tour);
   return {
     ...def,
     title: r(def.title),
@@ -947,6 +1127,10 @@ export function textesDe(def: SituationDef): string[] {
 interface Rendus {
   source: SituationDef;
   parDuree: Record<Periodicity, SituationDef>;
+  /** Le scénario du registre, d'où se compose la partie au mois sur le calendrier. */
+  scenario: EngineScenarioConfig;
+  /** Au mois sur le calendrier, le rendu de chaque mois de départ, fait à la première lecture. */
+  auCalendrier: Map<number, SituationDef>;
 }
 
 /** Le rendu au trimestre que porte le registre → sa source et ses rendus à chaque durée. */
@@ -971,6 +1155,8 @@ export function situationsAuTrimestre(sources: SituationDef[], scenario: EngineS
         month: rendreSituation(source, auMois),
         year: rendreSituation(source, aLAnnee),
       },
+      scenario,
+      auCalendrier: new Map(),
     });
     return trimestre;
   });
@@ -982,15 +1168,62 @@ export function dureeDuTourDe(instantane: unknown): number {
   return typeof jours === "number" && jours > 0 ? jours : PERIODICITY_DAYS.quarter;
 }
 
+/** Le mois de départ d'une partie au mois sur le calendrier, lu dans son instantané ; absent pour toute autre partie. */
+export function moisDeDepartDe(instantane: unknown): number | undefined {
+  const mois = (instantane as { moisDeDepart?: unknown } | null | undefined)?.moisDeDepart;
+  return typeof mois === "number" ? mois : undefined;
+}
+
 /**
  * La situation telle que SA partie la montre. `def` est celle du registre (ou
  * d'un scénario d'enseignant, rendue telle quelle : son texte est déjà écrit).
  * Au trimestre, c'est le même objet : rien ne change, au bit près.
+ *
+ * `moisDeDepart` : celui d'une partie au mois sur le calendrier (`moisDeDepartDe`). Ses
+ * mots sont ceux du mois ; ses coefficients de saison se lisent dans le scénario de la
+ * partie, au tour où la situation s'ouvre (`saisonLue`). Absent au mois (une partie
+ * d'avant le calendrier, un chemin sans partie), le rendu au mois de toujours, où le
+ * tour du trimestre est aussi celui du mois.
  */
-export function situationDeLaPartie(def: SituationDef, roundDays: number): SituationDef {
+export function situationDeLaPartie(def: SituationDef, roundDays: number, moisDeDepart?: number): SituationDef {
   const rendus = RENDUS.get(def);
   if (!rendus) return def;
-  return rendus.parDuree[periodicityFromRoundDays(roundDays)];
+  const periodicite = periodicityFromRoundDays(roundDays);
+  if (periodicite !== "month" || moisDeDepart === undefined) return rendus.parDuree[periodicite];
+  const deja = rendus.auCalendrier.get(moisDeDepart);
+  if (deja) return deja;
+  const ecrit = tourEcrit(rendus.source);
+  const tour = ecrit === undefined ? null : tourDuTrimestre(ecrit, moisDeDepart, MOIS_MAX);
+  // Une situation qui ne s'ouvre à aucun mois de cette partie n'a pas de mois où se lire.
+  const rendue =
+    tour === null ? rendus.parDuree.month : rendreSituation(rendus.source, auCalendrier(rendus.scenario, moisDeDepart), tour);
+  rendus.auCalendrier.set(moisDeDepart, rendue);
+  return rendue;
+}
+
+/** Le tour qu'une situation dit : celui de son déclencheur, sauf détectée ou de fin de partie. */
+function tourEcrit(def: SituationDef): number | undefined {
+  return "round" in def.trigger && !def.trigger.finDePartie ? def.trigger.round : undefined;
+}
+
+/** Le scénario au mois sur le calendrier, de ce mois de départ, par mois de départ et par scénario. */
+const CALENDRIERS = new WeakMap<EngineScenarioConfig, Map<number, EngineScenarioConfig>>();
+
+/**
+ * Le scénario d'une partie au mois sur le calendrier, composé comme la création le compose
+ * (`composerLeScenarioJoue`) : au trimestre sur les trimestres que la plus longue partie
+ * touche, mis au mois, puis rendu mois par mois (`auCalendrierMensuel`). Les montants y
+ * sont ceux du mois, comme au rendu de toujours ; la saison, celle de chaque mois.
+ */
+function auCalendrier(scenario: EngineScenarioConfig, moisDeDepart: number): EngineScenarioConfig {
+  const parMois = CALENDRIERS.get(scenario) ?? new Map<number, EngineScenarioConfig>();
+  CALENDRIERS.set(scenario, parMois);
+  const deja = parMois.get(moisDeDepart);
+  if (deja) return deja;
+  const trimestres = applyRoundsCount(scenario, trimestresDeLaPartie(MOIS_MAX, moisDeDepart), "quarter");
+  const compose = auCalendrierMensuel(applyPeriodicity(trimestres, "month"), moisDeDepart, MOIS_MAX);
+  parMois.set(moisDeDepart, compose);
+  return compose;
 }
 
 /** La source à jetons d'une situation du registre ; la situation elle-même si elle n'en a pas. */

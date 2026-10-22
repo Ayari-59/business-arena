@@ -21,6 +21,7 @@ import { companyStates, gameRankings, games, rounds, situationInstances, situati
 import { createSoloGame, resolveCurrentRound } from "@/services/game.service";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
+import { MOIS_MAX, MOIS_PAR_DEFAUT } from "@/config/scenarios/calendrier-mensuel";
 import { scenarioByCode } from "@/config/scenarios/registry";
 import { neutralDecisions } from "@/engine/bots";
 import type { CompanyState } from "@/engine/types";
@@ -98,12 +99,57 @@ describe("une partie de NOVA en douze tours, au trimestre", () => {
   }, 600_000);
 });
 
-describe("au mois et à l'année, une partie ne s'allonge pas : refusée avec la raison", () => {
-  for (const p of ["month", "year"] as const) {
-    it(p, async () => {
-      await expect(createSoloGame(userId, p, 3, 3, true, "nova", TOURS_MAX_AU_TRIMESTRE)).rejects.toThrow(
-        /seul le trimestre/,
-      );
-    });
-  }
+describe("au-delà de ce que la périodicité permet : refusée avec la raison", () => {
+  it("à l'année, douze tours", async () => {
+    await expect(createSoloGame(userId, "year", 3, 3, true, "nova", TOURS_MAX_AU_TRIMESTRE)).rejects.toThrow(
+      /seul le trimestre/,
+    );
+  });
+  it(`au mois, ${MOIS_MAX + 1} mois`, async () => {
+    await expect(createSoloGame(userId, "month", 3, 3, true, "nova", MOIS_MAX + 1)).rejects.toThrow(
+      new RegExp(`${MOIS_MAX} mois au plus`),
+    );
+  });
+});
+
+/** Les situations à tour fixe ouvertes dans la partie : code et tour. */
+async function situationsEcrites(gameId: string): Promise<{ code: string; tour: number }[]> {
+  return db
+    .select({ code: situations.code, tour: rounds.index })
+    .from(situationInstances)
+    .innerJoin(situations, eq(situations.id, situationInstances.situationId))
+    .innerJoin(rounds, eq(rounds.id, situationInstances.roundId))
+    .where(and(eq(rounds.gameId, gameId), eq(situationInstances.origin, "scripted")));
+}
+
+describe("une partie au mois, sur le calendrier", () => {
+  it(`le bistrot sans autre choix : ${MOIS_PAR_DEFAUT} mois depuis janvier, une situation au premier mois de chaque trimestre, rejeu au centime`, async () => {
+    const gameId = await createSoloGame(userId, "month", 3, 3, true, "bistrot");
+    expect(await jouerJusquauBout(gameId)).toBe(MOIS_PAR_DEFAUT);
+    const [game] = await db.select().from(games).where(eq(games.id, gameId));
+    expect(game!.status).toBe("finished");
+    expect((game!.scenarioSnapshot as { moisDeDepart?: number }).moisDeDepart).toBe(1);
+    const ouvertes = await situationsEcrites(gameId);
+    expect([...new Set(ouvertes.map((o) => o.tour))].sort((a, b) => a - b)).toEqual([1, 4, 7, 10]);
+    const lue = (await lirePartieARejouer(gameId)) as PartieLue;
+    expect(typeof lue, String(lue)).toBe("object");
+    expect(lue.mondeRetire).toBe(true);
+    expect(ecartAvecLaPartie(lue, rejouer(lue.partie, lue.partie.graine))).toBeNull();
+    expect((await meriteDeLaPartie(gameId)).etat).toBe("verdict");
+  }, 600_000);
+
+  it("le bistrot de juin à novembre : les trimestres 2, 3 et 4 en juin, juillet et octobre ; la flambée des denrées en juillet, trois mois", async () => {
+    const gameId = await createSoloGame(userId, "month", 3, 3, false, "bistrot", 6, null, { moisDeDepart: 6 });
+    const [game] = await db.select().from(games).where(eq(games.id, gameId));
+    const scenario = parseScenarioConfig(game!.scenarioSnapshot);
+    expect(scenario.roundsCount).toBe(6);
+    const flambee = scenario.scriptedEvents.find((s) => s.eventCode === "bistrot_matieres_premieres")!;
+    expect(flambee.round).toBe(2);
+    expect(scenario.events.find((e) => e.code === "bistrot_matieres_premieres")!.duration).toBe(
+      3 * scenarioByCode("bistrot").scenario.events.find((e) => e.code === "bistrot_matieres_premieres")!.duration,
+    );
+    await jouerJusquauBout(gameId);
+    const ouvertes = await situationsEcrites(gameId);
+    expect([...new Set(ouvertes.map((o) => o.tour))].sort((a, b) => a - b)).toEqual([1, 2, 5]);
+  }, 600_000);
 });

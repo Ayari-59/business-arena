@@ -421,7 +421,7 @@ const SOURCES: SituationDef[] = [
     category: "decision_strategique",
     title: "Embaucher, sous-traiter ou refuser",
     narrative:
-      "Le carnet déborde de {{lettres: flux(600)}} mètres carrés que vos équipes ne pourront pas absorber. Un confrère propose de les prendre en sous-traitance à 245 € le mètre carré. Embaucher deux compagnons coûterait {{entier: 2 * salaire}} € {{par trimestre}}, plus {{entier: 2 * embauche}} € de recrutement, et ils ne seraient opérationnels qu'au tour suivant.",
+      "{{Le carnet déborde}} de {{lettres: flux(600)}} mètres carrés que vos équipes ne pourront pas absorber. Un confrère propose de les prendre en sous-traitance à 245 € le mètre carré. Embaucher deux compagnons coûterait {{entier: 2 * salaire}} € {{par trimestre}}, plus {{entier: 2 * embauche}} € de recrutement, et ils ne seraient opérationnels qu'au tour suivant.",
     problem:
       "Sous-traiter, embaucher ou laisser filer : que dit le calcul, et sur quel horizon ?",
     diagnosticOptions: [

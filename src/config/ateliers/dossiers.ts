@@ -3,10 +3,12 @@ import { formationsEnToutesLettres } from "../formations";
 import { scenarioByCode, type ScenarioDefinition } from "../scenarios/registry";
 import { leviersDuNiveau } from "../decisions";
 import { DIFFICULTY_PRESETS } from "../difficulty";
-import type { SituationDef } from "../scenarios/situation-kit";
+import { tourDOuverture, type SituationDef } from "../scenarios/situation-kit";
+import { nomDuMois } from "../scenarios/calendrier-mensuel";
 import { referencesJouees } from "../scenarios/scenario-joue";
 import { PERIODICITY_DAYS } from "../scenarios/periodicity";
 import { situationDeLaPartie } from "../scenarios/situation-texte";
+import { partieDeLAtelier } from "./partie-de-l-atelier";
 import type { NombreDeToursDEssai } from "../tour-d-essai";
 import {
   dossiersDeService,
@@ -113,6 +115,11 @@ export interface DossierEleve {
     decisions: string[];
     resultats: string[];
     tours: number[];
+    /**
+     * Au mois sur le calendrier, le mois de chaque tour (« juin »), dans l'ordre des
+     * tours ; absent au trimestre et à l'année.
+     */
+    mois?: string[];
   };
 }
 
@@ -148,7 +155,11 @@ export interface DossierEnseignant {
 
 /** Les séances d'un atelier, vues par l'élève. */
 export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
-  const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  // Les chiffres sont ceux de la partie que l'atelier créera, à sa durée de tour et
+  // sur son calendrier (`partieDeLAtelier`) ; au trimestre, le registre lui même.
+  const scenario = partieDeLAtelier(atelier);
+  const moisDeDepart = scenario.scenario.moisDeDepart;
+  const tours = Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1);
   // Un niveau qui n'ouvre pas la R&D joue les références livrées prêtes : le
   // dossier ne doit pas annoncer un développement que la partie n'aura pas.
   const rdOuverte =
@@ -207,7 +218,8 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
         ...scenario.kpis.map((k) => k.label),
         "Place au classement",
       ],
-      tours: Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1),
+      tours,
+      ...(moisDeDepart !== undefined ? { mois: tours.map((t) => nomDuMois(t, moisDeDepart)) } : {}),
     },
   };
 }
@@ -229,13 +241,18 @@ export function dossierEnseignant(
   // Le dossier se lit à la durée de tour que l'atelier fixe : un atelier au
   // mois annonce les montants et les mots du mois.
   const duree = PERIODICITY_DAYS[atelier.reglages.periodicite];
-  const retenues = scenario.situations.map((s) => situationDeLaPartie(s, duree)).filter(
+  // Le tour où la situation s'ouvre dans la partie de l'atelier : au mois, sur le
+  // calendrier, au premier mois de son trimestre (`tourDOuverture`).
+  const moisDeDepart =
+    atelier.reglages.periodicite === "month" ? (atelier.reglages.moisDeDepart ?? 1) : undefined;
+  const tourDe = (s: SituationDef) =>
+    tourDOuverture(s.trigger, atelier.reglages.tours, scenario.scenario.roundsCount, moisDeDepart);
+  const retenues = scenario.situations.map((s) => situationDeLaPartie(s, duree, moisDeDepart)).filter(
     (s) =>
-      (!("round" in s.trigger) || s.trigger.round <= atelier.reglages.tours) &&
+      (!("round" in s.trigger) || tourDe(s) !== null && tourDe(s)! <= atelier.reglages.tours) &&
       (!s.seulementAvec || references.has(s.seulementAvec.reference)),
   );
-  const rang = (s: SituationDef) =>
-    "round" in s.trigger ? s.trigger.round : 99;
+  const rang = (s: SituationDef) => tourDe(s) ?? 99;
 
   return {
     atelier,
@@ -246,7 +263,9 @@ export function dossierEnseignant(
         situation,
         quand:
           "round" in situation.trigger
-            ? `Tour ${situation.trigger.round}`
+            ? moisDeDepart !== undefined
+              ? `Tour ${tourDe(situation)} (${nomDuMois(tourDe(situation)!, moisDeDepart)})`
+              : `Tour ${tourDe(situation)}`
             : "Quand l'entreprise en arrive là",
         attendus: situation.diagnosticOptions
           .filter((o) => o.correct)
@@ -299,7 +318,7 @@ const colonne = (index: number) => String.fromCharCode(66 + index);
 
 export function tableauDeBordCsv(atelier: AtelierDefinition): string {
   const dossier = dossierEleve(atelier);
-  const { decisions, resultats, tours } = dossier.tableauDeBord;
+  const { decisions, resultats, tours, mois } = dossier.tableauDeBord;
   const lignes: string[][] = [];
   const vide = tours.map(() => "");
 
@@ -307,7 +326,7 @@ export function tableauDeBordCsv(atelier: AtelierDefinition): string {
   lignes.push([dossier.entreprise.titre, ...vide]);
   lignes.push(["Équipe :", ...vide]);
   lignes.push([]);
-  lignes.push(["", ...tours.map((t) => `Tour ${t}`)]);
+  lignes.push(["", ...tours.map((t, i) => (mois ? `Tour ${t} (${mois[i]})` : `Tour ${t}`))]);
 
   lignes.push(["CE QUE NOUS DÉCIDONS", ...vide]);
   const premiereDecision = lignes.length + 1;

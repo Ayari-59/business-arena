@@ -10,19 +10,32 @@ import type { AtelierDefinition } from "./types";
  * la paie tombe tous les mois, les groupes règlent à trente jours, et une
  * décision de carte se lit sur le compte du mois suivant.
  *
- * CE QUE LE MOIS CHANGE, ET QU'IL FAUT DIRE. Les scénarios sont calibrés au
- * trimestre : la plateforme divise tous les flux par trois quand le tour vaut
- * un mois. Les charges de structure passent donc de 90 000 à 30 000 €, la
- * capacité de 9 000 à 3 000 couverts, et le seuil de 4 500 à 1 500 couverts —
- * le même établissement, la même journée type de soixante-dix couverts. Ce qui
- * ne change PAS, ce sont les délais en jours : les groupes restent à trente
- * jours, c'est-à-dire exactement un tour. Un banquet vendu en septembre
- * s'encaisse en octobre, et cela se voit à l'écran au lieu de se raconter.
+ * CE QUE LE MOIS CHANGE, ET QU'IL FAUT DIRE. La création demande deux réglages
+ * et non un : « Un mois par tour », puis « Mois de départ : juin ». Les
+ * scénarios sont calibrés au trimestre : la plateforme divise tous les flux par
+ * trois quand le tour vaut un mois. Les charges de structure passent donc de
+ * 90 000 à 30 000 €, la capacité de 9 000 à 3 000 couverts, et le seuil de
+ * 4 500 à 1 500 couverts : le même établissement, la même journée type de
+ * soixante-dix couverts. Ce qui ne change PAS, ce sont les délais en jours :
+ * les groupes restent à trente jours, c'est-à-dire exactement un tour. Un
+ * banquet vendu en octobre s'encaisse en novembre, et cela se voit à l'écran
+ * au lieu de se raconter.
  *
- * Les six tours se lisent alors comme six mois, de juin à novembre : le creux
- * d'août est au troisième, la rentrée des groupes au quatrième. La flambée des
- * denrées que le scénario déclenche au troisième tour tombe donc en plein
- * creux, et dure jusqu'à la rentrée.
+ * LE CALENDRIER (`config/scenarios/calendrier-mensuel.ts`). Une partie au mois
+ * suit les mois : celle-ci commence en juin et joue six tours, de juin à
+ * novembre. La saison d'un mois est celle de son trimestre, répartie par le
+ * profil du bistrot : le midi d'affaires et les banquets reculent dès juillet
+ * et se vident presque en août, tout remonte en septembre sans retrouver juin,
+ * et les banquets culminent en octobre et en novembre. Ce que le scénario écrit
+ * pour un trimestre tombe au premier mois de ce trimestre : la situation du
+ * fournisseur en juin (le trimestre en cours au départ ouvre au premier mois,
+ * essai compris), celle des denrées en juillet, celle des banquets en octobre.
+ * La reprise appartient au premier trimestre, déjà passé en juin ; la terrasse
+ * et la valeur du bistrot tombent après novembre : aucune ne s'ouvre. La
+ * flambée des denrées, écrite au troisième trimestre pour deux trimestres,
+ * commence donc en juillet et dure jusqu'à la fin de l'atelier. Les autres
+ * mois n'ont pas de situation écrite : seules celles que les résultats
+ * déclenchent (un mois sous zéro, une caisse qui dort) peuvent s'y ouvrir.
  */
 export const ATELIER_MCO2: AtelierDefinition = {
   code: "mco2",
@@ -34,7 +47,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de deux heures, un mois par séance. Chaque équipe dirige le même bistrot de juin à novembre, lit son compte de résultat mensuel, traverse le creux d'août avec des charges qui ne partent pas en vacances, encaisse en octobre ce que septembre a vendu, et rend à chaque séance un document de pilotage mensuel.",
+    "Six séances de deux heures, un mois par séance. Chaque équipe dirige le même bistrot de juin à novembre, lit son compte de résultat mensuel, traverse le creux d'août avec des charges qui ne partent pas en vacances, encaisse en novembre ce qu'octobre a vendu, et rend à chaque séance un document de pilotage mensuel.",
   resume:
     "Six mois à la tête d'un bistrot, au rythme réel d'une unité commerciale. Un tour par mois, des groupes réglés à trente jours, un tableau de bord pour finir.",
   difficulte: 3,
@@ -46,6 +59,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
     scenarioCode: "bistrot",
     periodicite: "month",
     periodiciteLabel: "Un mois par tour",
+    moisDeDepart: 6,
     niveau: 3,
     niveauNom: "Pilotage",
     equipes: 5,
@@ -57,7 +71,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
     tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
-      "Choisissez « Un mois par tour » à la création : c'est le réglage qui porte tout l'atelier, et la seule fiche du registre qui le demande. La plateforme redimensionne alors le scénario, calibré au trimestre, en divisant les flux par trois : 30 000 € de charges de structure par mois au lieu de 90 000, 2 000 € d'amortissements, une capacité de 3 000 couverts, un seuil autour de 1 500 couverts, soit la même journée type de soixante-dix couverts. Les délais en jours, eux, ne bougent pas : les groupes règlent à trente jours, c'est-à-dire un tour entier, les fournisseurs à vingt et un jours. Le niveau retenu ouvre le poste clients et la brigade, que l'atelier laisse à son effectif de départ, sans l'emprunt, l'équipement de la cuisine ni l'assurance : en deuxième année, le pilotage d'une unité se joue sur la carte, le remplissage et la caisse. Un manque de trésorerie, la banque le couvre seule, par le découvert. Réglez la TVA à 10 %, le taux de la restauration sur place, dans les paramètres économiques. Le monde variable est décoché pour que toutes vos classes affrontent le même semestre.",
+      "Choisissez « Un mois par tour » à la création, puis « Mois de départ : juin » et six tours joués : ce sont les réglages qui portent tout l'atelier, et la seule fiche du registre qui les demande. Sans le mois de départ, la partie commencerait en janvier et vivrait d'autres mois que ceux de la fiche ; sans le nombre de tours, elle durerait plus longtemps que vos séances. La partie suit alors le calendrier : chaque mois prend la saison de son trimestre, répartie selon le métier, et ce que le scénario écrit pour un trimestre tombe au premier mois de ce trimestre. La plateforme redimensionne aussi le scénario, calibré au trimestre, en divisant les flux par trois : 30 000 € de charges de structure par mois au lieu de 90 000, 2 000 € d'amortissements, une capacité de 3 000 couverts, un seuil autour de 1 500 couverts, soit la même journée type de soixante-dix couverts. Les délais en jours, eux, ne bougent pas : les groupes règlent à trente jours, c'est-à-dire un tour entier, les fournisseurs à vingt et un jours. Le niveau retenu ouvre le poste clients et la brigade, que l'atelier laisse à son effectif de départ, sans l'emprunt, l'équipement de la cuisine ni l'assurance : en deuxième année, le pilotage d'une unité se joue sur la carte, le remplissage et la caisse. Un manque de trésorerie, la banque le couvre seule, par le découvert. Réglez la TVA à 10 %, le taux de la restauration sur place, dans les paramètres économiques. Le monde variable est décoché pour que toutes vos classes affrontent le même semestre.",
   },
   seances: [
     {
@@ -84,13 +98,13 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "compte de résultat et trésorerie d'une unité de restauration",
       ],
       preparation:
-        "Créez la partie depuis votre espace avec ces réglages : scénario bistrot, un mois par tour, niveau Pilotage, six tours, cinq équipes, deux concurrents machine, TVA activée à 10 %, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du restaurant, vierge. Rappel : ici c'est un mois par tour, et non un trimestre.",
+        "Créez la partie depuis votre espace avec ces réglages : scénario bistrot, un mois par tour, mois de départ juin, niveau Pilotage, six tours joués, cinq équipes, deux concurrents machine, TVA activée à 10 %, monde variable décoché, questions de connaissances activées, et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, rôles tournants d'une séance à l'autre. Imprimez la fiche d'identité du restaurant, vierge. Rappel : ici c'est un mois par tour, et non un trimestre, et le premier mois est juin.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : sept séances, un mois d'essai qui ne compte pas puis six mois, un seul restaurant, un document rendu à chaque fin de séance. Un mois par tour, ce qui change le rythme : les couverts du mois, les charges du mois, le résultat du mois. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+            "Vous annoncez la règle : sept séances, un mois d'essai qui ne compte pas puis six mois, de juin à novembre, un seul restaurant, un document rendu à chaque fin de séance. Un mois par tour, ce qui change le rythme : les couverts du mois, les charges du mois, le résultat du mois. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
         },
         {
           minutes: 25,
@@ -102,7 +116,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
           minutes: 25,
           titre: "Le mois d'essai",
           detail:
-            "Le bandeau de l'arène dit que rien ne compte. Chaque équipe lit la situation du mois, choisit ses offres et leur tarif, saisit ses décisions pour ce mois. Vous ne corrigez rien : un tarif ou un mix mal calibré est exactement ce que l'essai est fait pour absorber.",
+            "Le bandeau de l'arène dit que rien ne compte. L'essai se joue sur un mois de juin, et l'arène y pose déjà la question du fournisseur, qui reviendra pour de bon au premier vrai mois. Chaque équipe lit cette situation, choisit ses offres et leur tarif, saisit ses décisions pour ce mois. Vous ne corrigez rien : un tarif ou un mix mal calibré est exactement ce que l'essai est fait pour absorber.",
         },
         {
           minutes: 20,
@@ -120,7 +134,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
           minutes: 20,
           titre: "La vraie partie commence",
           detail:
-            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et lisent la situation du premier mois, cette fois pour de vrai.",
+            "Les équipes terminent leur fiche d'identité. Vous appuyez sur « Commencer la vraie partie » depuis l'ardoise, vous confirmez, et toutes les entreprises repartent de l'état initial. Les équipes voient le bandeau de départ et retrouvent la situation de juin, cette fois pour de vrai.",
         },
       ],
       livrable:
@@ -135,148 +149,153 @@ export const ATELIER_MCO2: AtelierDefinition = {
     },
     {
       numero: 2,
-      titre: "Juin, le compte du mois",
+      titre: "Juin, le fournisseur et la caisse du mois",
       dureeMinutes: 120,
       tourJoue: 1,
-      processus: [
-        "Bloc 3 · Assurer la gestion opérationnelle",
-        "Bloc 2 · Animer et dynamiser l'offre commerciale",
-      ],
-      objectif:
-        "Lire un compte de résultat mensuel, en tirer le ratio matières, la marge par couvert et le nombre de couverts qui couvre les charges du mois, puis fixer un premier prix et un premier volume.",
-      competences: [
-        "Je calcule le ratio matières et la marge sur coût variable d'un couvert à partir des comptes de l'unité.",
-        "Je détermine le nombre de couverts qui couvre les charges d'un mois, et je le ramène à une journée type.",
-        "Je fixe un prix et un volume à préparer en sachant ce que coûte un couvert jeté.",
-      ],
-      notions: [
-        "ratio matières",
-        "marge sur coût variable",
-        "seuil de rentabilité",
-        "charges fixes et charges variables",
-        "denrées périssables et invendus",
-      ],
-      preparation:
-        "Créez la partie avec « Un mois par tour » et vérifiez-le avant d'inviter les équipes : le reste de l'atelier en dépend. Constituez les équipes de trois. Imprimez la fiche de pilotage mensuel vierge, une par équipe et par séance. Les chiffres que les équipes doivent retrouver seules : 10 € de denrées et 3 € d'autres charges variables par couvert, soit 13 € ; un ticket moyen autour de 33 € et donc 20 € de marge ; 30 000 € de charges de structure par mois et 2 000 € d'amortissements ; une capacité de 3 000 couverts par mois. Le seuil tombe autour de 1 500 couverts, soit la moitié de la capacité et soixante-dix couverts par jour d'ouverture. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
-      deroule: [
-        {
-          minutes: 15,
-          titre: "Le cadre et le rythme",
-          detail:
-            "Vous annoncez la règle : six séances, six mois, de juin à novembre, un document de pilotage rendu à chaque fin de séance. Vous insistez sur le rythme : ici un tour est un mois, et tout ce qui se décide se relit trente jours plus tard.",
-        },
-        {
-          minutes: 25,
-          titre: "Lire le compte du mois",
-          detail:
-            "Chaque équipe relève ce que l'unité dépense pour produire un couvert, ce que coûte un mois d'ouverture que la salle soit pleine ou vide, et ce qu'elle doit à la banque chaque mois. Vous circulez sans corriger : une équipe qui oublie une charge le découvrira dans son résultat.",
-        },
-        {
-          minutes: 25,
-          titre: "Du ratio au seuil",
-          detail:
-            "L'équipe calcule son ratio matières, sa marge par couvert, puis le nombre de couverts qui couvre le mois, et le divise par ses jours d'ouverture. Le chiffre obtenu est celui qu'un responsable d'unité surveille tous les jours.",
-        },
-        {
-          minutes: 25,
-          titre: "Décisions du mois",
-          detail:
-            "L'arène pose au premier mois un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit son prix et ses couverts à préparer, en sachant que le surplus part à la poubelle le soir même.",
-        },
-        {
-          minutes: 15,
-          titre: "Clôture et résultats",
-          detail:
-            "Vous clôturez le mois. Chaque équipe reçoit son compte de résultat, son ratio matières réalisé, ses denrées perdues et sa place au classement.",
-        },
-        {
-          minutes: 15,
-          titre: "Débriefing",
-          detail:
-            "Deux équipes affichent leur seuil et leur résultat. Vous faites remarquer qu'un mois ne pardonne pas comme un trimestre : il n'y a pas de bon mois pour rattraper le mauvais dans le même tour.",
-        },
-      ],
-      livrable:
-        "La fiche de pilotage mensuel : le ratio matières du mois, la marge par couvert, le seuil en couverts et son équivalent en couverts par jour, le prix et le volume retenus avec leur justification, et le résultat constaté après clôture.",
-      tracePasseport:
-        "J'ai déterminé le nombre de couverts qui couvre les charges d'un mois d'exploitation à partir du ratio matières que j'avais calculé.",
-      evaluation: [
-        "Le ratio matières est calculé sur les comptes du jeu, pas estimé.",
-        "Le seuil est ramené à une journée type, pas laissé en total mensuel.",
-        "Le volume à préparer est justifié par le coût du couvert jeté autant que par le client refusé.",
-      ],
-    },
-    {
-      numero: 3,
-      titre: "Juillet, le fournisseur et la caisse",
-      dureeMinutes: 120,
-      tourJoue: 2,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
         "Bloc 1 · Développer la relation client et assurer la vente conseil",
       ],
       objectif:
-        "Choisir un fournisseur de denrées en tenant ensemble son prix, la qualité qu'il fait à la carte et son délai de règlement, puis mesurer ce qu'un paiement comptant fait à la caisse d'un mois.",
+        "Lire le compte du mois et en tirer le ratio matières et la marge par couvert, puis choisir un fournisseur de denrées en tenant ensemble son prix, la qualité qu'il fait à la carte et son délai de règlement, et mesurer ce qu'un paiement comptant fait à la caisse du mois.",
       competences: [
+        "Je calcule le ratio matières et la marge sur coût variable d'un couvert à partir des comptes de l'unité.",
         "Je compare des fournisseurs sur le prix, la qualité, le délai de règlement et le risque de rupture.",
         "Je mesure l'effet d'un délai de règlement sur la trésorerie d'un mois, à résultat inchangé.",
-        "Je relie la qualité des denrées à la fréquentation du service du soir.",
       ],
       notions: [
+        "ratio matières",
+        "marge sur coût variable",
         "choix multicritère d'un fournisseur",
         "délai de règlement fournisseur",
         "besoin en fonds de roulement",
-        "trésorerie et plan de trésorerie",
-        "qualité perçue et réputation",
       ],
       preparation:
-        "Relisez les trois fournisseurs avec leurs chiffres : le grossiste au prix de référence, réglé à vingt et un jours ; le cash & carry à 14 % de moins, payé comptant, qui abaisse la qualité perçue et tombe en rupture une fois sur dix ; les producteurs en circuit court à 20 % de plus, réglés à quinze jours. Au mois, ces délais pèsent lourd : vingt et un jours, c'est les deux tiers du tour, et le comptant vide la caisse dans le tour même. Préparez un plan de trésorerie mensuel vierge où chaque équipe inscrira le solde qu'elle attend AVANT la clôture.",
+        "Vérifiez sur l'arène que la partie est bien au mois et qu'elle commence en juin : le mois du tour s'affiche à côté de son numéro. Les chiffres que les équipes doivent retrouver seules : 10 € de denrées et 3 € d'autres charges variables par couvert, soit 13 € ; un ticket moyen autour de 33 € et donc 20 € de marge ; 30 000 € de charges de structure par mois et 2 000 € d'amortissements ; une capacité de 3 000 couverts par mois. Relisez ensuite les trois fournisseurs avec leurs chiffres : le grossiste au prix de référence, réglé à vingt et un jours ; le cash & carry à 14 % de moins, payé comptant, qui abaisse la qualité perçue et tombe en rupture une fois sur dix ; les producteurs en circuit court à 20 % de plus, réglés à quinze jours. Au mois, ces délais pèsent lourd : vingt et un jours, c'est les deux tiers du tour, et le comptant vide la caisse dans le tour même. La situation du fournisseur, que les équipes ont lue pendant l'essai, s'ouvre de nouveau ce mois-ci. Imprimez la fiche de pilotage mensuel vierge, une par équipe et par séance, et prévoyez une ligne où chaque équipe inscrira le solde qu'elle attend AVANT la clôture.",
       deroule: [
         {
           minutes: 15,
-          titre: "Retour sur juin",
+          titre: "Le cadre et le rythme",
           detail:
-            "Chaque équipe confronte son seuil et son résultat, en une phrase, et dit combien de couverts elle a jetés.",
+            "Vous annoncez la règle : six séances, six mois, de juin à novembre, un document de pilotage rendu à chaque fin de séance. Vous insistez sur le rythme : ici un tour est un mois, et tout ce qui se décide se relit trente jours plus tard. Vous prévenez aussi que l'arène ne pose pas une situation chaque mois : certains mois, c'est le compte seul qui parle.",
         },
         {
-          minutes: 30,
+          minutes: 20,
+          titre: "Lire le compte du mois",
+          detail:
+            "Chaque équipe relève ce que l'unité dépense pour produire un couvert et ce que coûte un mois d'ouverture, que la salle soit pleine ou vide, puis calcule son ratio matières et sa marge par couvert. Vous circulez sans corriger : une équipe qui oublie une charge le découvrira dans son résultat.",
+        },
+        {
+          minutes: 25,
           titre: "Trois fournisseurs, quatre critères",
           detail:
             "Les équipes remplissent la matrice : prix, qualité, délai, fiabilité, pondérés par ce qui compte pour leur carte. Le cash & carry fait gagner 1,40 € par couvert, soit 2 800 € sur un mois à 2 000 couverts, et fait perdre des dîners qu'on ne voit pas tout de suite.",
         },
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Ce que le délai fait à la caisse",
           detail:
-            "Chaque équipe projette son solde de fin de mois avec chacun des trois délais. Le résultat ne bouge pas, la caisse si : c'est le besoin en fonds de roulement, et au mois il se voit d'un tour à l'autre au lieu de se noyer dans un trimestre.",
+            "Chaque équipe projette son solde de fin de mois avec chacun des trois délais, à achats égaux. Le résultat ne bouge pas, la caisse si : c'est le besoin en fonds de roulement, et au mois il se lit à la clôture même au lieu de se noyer dans un trimestre.",
         },
         {
           minutes: 20,
           titre: "Décisions du mois",
           detail:
-            "L'équipe arrête son fournisseur, son prix, ses couverts et, si elle en a besoin, sa couverture de trésorerie, puis écrit le solde qu'elle attend.",
+            "L'équipe répond à la situation du fournisseur, arrête son fournisseur, son prix et ses couverts à préparer, puis écrit le solde qu'elle attend.",
         },
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez. Le solde réalisé apparaît à côté du solde prévu, et le ratio matières de chaque équipe porte la marque de son fournisseur.",
         },
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Débriefing",
           detail:
-            "On compare une équipe passée au comptant et une équipe restée à vingt et un jours, sur le résultat et sur la caisse. La fréquentation du soir n'a pas encore bougé : vous l'annoncez et vous donnez rendez-vous au mois suivant.",
+            "On compare une équipe passée au comptant et une équipe restée à vingt et un jours : la première a gagné un peu de résultat et perdu nettement plus de caisse. La fréquentation du soir n'a pas bougé : la réputation se dégrade d'abord, les dîners suivent ensuite. Vous donnez rendez-vous aux mois suivants.",
         },
       ],
       livrable:
-        "La note fournisseur : la matrice multicritère pondérée avec le fournisseur retenu, l'effet attendu sur le ratio matières, le solde de fin de mois projeté pour chacun des trois délais de règlement, la couverture retenue avec son coût, et l'écart au solde réalisé.",
+        "La note fournisseur : le ratio matières et la marge par couvert, la matrice multicritère pondérée avec le fournisseur retenu, le solde de fin de mois projeté pour chacun des trois délais de règlement, et l'écart au solde réalisé.",
       tracePasseport:
         "J'ai chiffré ce qu'un délai de règlement fournisseur fait à la trésorerie d'un mois, à résultat inchangé.",
       evaluation: [
+        "Le ratio matières est calculé sur les comptes du jeu, pas estimé.",
         "La matrice pondère les critères selon la carte de l'unité, pas à parts égales par défaut.",
-        "L'effet du délai sur la caisse est chiffré, et distingué de l'effet sur le résultat.",
-        "Le solde attendu est écrit avant la clôture, donc opposable.",
+        "L'effet du délai sur la caisse est chiffré et distingué de l'effet sur le résultat, et le solde attendu est écrit avant la clôture, donc opposable.",
+      ],
+    },
+    {
+      numero: 3,
+      titre: "Juillet, les denrées flambent et le seuil monte",
+      dureeMinutes: 120,
+      tourJoue: 2,
+      processus: [
+        "Bloc 3 · Assurer la gestion opérationnelle",
+        "Bloc 2 · Animer et dynamiser l'offre commerciale",
+      ],
+      objectif:
+        "Recalculer le nombre de couverts qui couvre les charges du mois quand les denrées prennent 24 %, le ramener à une journée type, puis fixer un prix et un volume à préparer dans un mois où la salle commence à se vider.",
+      competences: [
+        "Je détermine le nombre de couverts qui couvre les charges d'un mois, et je le ramène à une journée type.",
+        "Je fixe un prix et un volume à préparer en sachant ce que coûte un couvert jeté.",
+        "Je relie la qualité des denrées à la fréquentation du service du soir.",
+      ],
+      notions: [
+        "seuil de rentabilité",
+        "charges fixes et charges variables",
+        "denrées périssables et invendus",
+        "qualité perçue et réputation",
+      ],
+      preparation:
+        "Le scénario fait flamber les denrées de 24 % à partir de ce mois, et la hausse court jusqu'à la fin de l'atelier : annoncez-le en ouverture, sinon l'écart sera imputé à la prévision et non au choc. L'arène ouvre ce mois-ci la situation des denrées. La saison commence aussi à descendre : le midi d'affaires et les banquets reculent nettement dès juillet, avant le vrai creux d'août. Les chiffres que les équipes doivent retrouver : avant la hausse, 20 € de marge par couvert et un seuil autour de 1 500 couverts, soit la moitié de la capacité et soixante-dix couverts par jour d'ouverture ; après la hausse, une marge plus mince et un seuil plus haut, qu'elles calculent seules. Prévoyez que cette séance se passe sans aucune correction de votre part sur le calcul du seuil.",
+      deroule: [
+        {
+          minutes: 15,
+          titre: "Retour sur juin",
+          detail:
+            "Chaque équipe confronte son solde prévu et son solde réalisé, en une phrase, et dit combien de couverts elle a jetés.",
+        },
+        {
+          minutes: 25,
+          titre: "Du ratio au seuil, avant et après la hausse",
+          detail:
+            "L'équipe recalcule son ratio matières et sa marge par couvert avec les denrées du mois, puis le nombre de couverts qui couvre le mois avant et après la hausse, et le divise par ses jours d'ouverture. Le chiffre obtenu est celui qu'un responsable d'unité surveille tous les jours.",
+        },
+        {
+          minutes: 25,
+          titre: "Préparer ce qui se vendra",
+          detail:
+            "La demande recule et chaque couvert jeté coûte désormais plus cher. L'équipe estime ses couverts du mois par clientèle et choisit sa réponse à la hausse : la répercuter sur le prix, retravailler la carte, ou changer de fournisseur. Les équipes passées au cash & carry relient leur choix de juin à leurs dîners : l'effet est lent, à peine visible en juillet, et elles écrivent ce qu'elles en attendent pour août.",
+        },
+        {
+          minutes: 20,
+          titre: "Décisions du mois",
+          detail:
+            "L'équipe répond à la situation des denrées, puis saisit son prix et ses couverts à préparer, en sachant que le surplus part à la poubelle le soir même.",
+        },
+        {
+          minutes: 15,
+          titre: "Clôture et résultats",
+          detail:
+            "Vous clôturez le mois. Chaque équipe reçoit son compte de résultat, son ratio matières réalisé, ses denrées perdues et sa place au classement. Beaucoup finissent juillet sous zéro : la hausse et le recul de la saison se cumulent.",
+        },
+        {
+          minutes: 20,
+          titre: "Débriefing",
+          detail:
+            "Deux équipes affichent leur seuil d'après la hausse et leur résultat. Vous faites remarquer qu'un mois ne pardonne pas comme un trimestre : il n'y a pas de bon mois pour rattraper le mauvais dans le même tour. La question qui reste ouverte : que deviendra ce seuil en août, quand la salle se videra pour de bon.",
+        },
+      ],
+      livrable:
+        "La fiche de pilotage de juillet : la marge par couvert et le seuil en couverts avant et après la hausse, leur équivalent en couverts par jour, la réponse retenue à la hausse, le prix et le volume retenus avec leur justification, et le résultat constaté après clôture.",
+      tracePasseport:
+        "J'ai déterminé le nombre de couverts qui couvre les charges d'un mois d'exploitation avant et après une hausse du prix des denrées.",
+      evaluation: [
+        "Le seuil est recalculé avec les denrées du mois, pas recopié de juin.",
+        "Le seuil est ramené à une journée type, pas laissé en total mensuel.",
+        "Le volume à préparer est justifié par le coût du couvert jeté autant que par le client refusé.",
       ],
     },
     {
@@ -289,7 +308,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "Bloc 2 · Animer et dynamiser l'offre commerciale",
       ],
       objectif:
-        "Traverser le mois creux où le midi tombe à six dixièmes de son niveau et les groupes à la moitié, avec des charges de structure inchangées et une flambée des denrées qui commence ce mois-là.",
+        "Traverser le mois le plus creux de l'année, où le midi d'affaires et les banquets se vident presque et où le soir faiblit lui aussi, avec des charges de structure inchangées et des denrées restées chères depuis juillet.",
       competences: [
         "Je mesure ce qu'un mois creux fait au résultat d'une unité à charges fixes, et la marge de sécurité qui m'en sépare.",
         "Je répercute une hausse du prix des denrées en tenant compte de la sensibilité de chaque clientèle.",
@@ -303,13 +322,13 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "budget de communication",
       ],
       preparation:
-        "C'est le mois qui apprend le plus, et le plus dur. Le scénario fait flamber les denrées de 24 % à partir de ce tour, et pour deux mois : annoncez-le en ouverture, sinon l'écart sera imputé à la prévision et non au choc. La saison fait le reste : le midi tombe à six dixièmes, les groupes à la moitié, quand les charges de structure restent à 30 000 € et la banque à son échéance. Préparez un tableau où chaque équipe inscrira son résultat attendu, et rappelez que la marge de sécurité se compte ici en couverts, pas en pourcentage.",
+        "C'est le mois qui apprend le plus, et le plus dur. Aucune situation ne s'ouvre à date fixe : c'est le compte qui fait la leçon. La hausse des denrées, commencée en juillet, court toujours. La saison fait le reste : le midi d'affaires et les banquets perdent l'essentiel de leur clientèle, le soir recule aussi, quand les charges de structure restent à 30 000 € et la banque à son échéance. Une équipe qui a fini juillet sous zéro peut voir s'ouvrir la situation « Le service ne couvre plus ses frais » : elle vient de ses résultats, pas du calendrier. Préparez un tableau où chaque équipe inscrira son résultat attendu, et rappelez que la marge de sécurité se compte ici en couverts, pas en pourcentage.",
       deroule: [
         {
           minutes: 15,
           titre: "Ce que dit le mois",
           detail:
-            "Vous rappelez sans donner de chiffre que le mois qui s'ouvre n'est pas un mois ordinaire, et que les denrées viennent d'augmenter. Les équipes retrouvent seules l'ampleur du creux dans les informations du jeu.",
+            "Vous rappelez sans donner de chiffre que le mois qui s'ouvre est le plus creux de l'année, et que les denrées n'ont pas baissé. Les équipes retrouvent seules l'ampleur du creux dans les informations du jeu, clientèle par clientèle.",
         },
         {
           minutes: 30,
@@ -333,13 +352,13 @@ export const ATELIER_MCO2: AtelierDefinition = {
           minutes: 15,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le mois creux. Plusieurs équipes passent sous zéro pour la première fois, et c'est le moment de dire qu'un mois négatif n'est pas une faute de gestion en soi.",
+            "Vous clôturez le mois creux. Presque toutes les équipes passent sous zéro, certaines pour le deuxième mois de suite, et c'est le moment de dire qu'un mois négatif n'est pas une faute de gestion en soi.",
         },
         {
           minutes: 15,
           titre: "Débriefing",
           detail:
-            "On compare l'équipe qui a le moins perdu et celle qui a le plus vendu. La question qui reste ouverte : un mois creux se gagne-t-il en août ou se prépare-t-il en juillet.",
+            "On compare l'équipe qui a le moins perdu et celle qui a le plus vendu, et les équipes passées au cash & carry regardent si leurs dîners ont suivi. La question qui reste ouverte : un mois creux se gagne-t-il en août ou se prépare-t-il en juillet, et que fera-t-il à la caisse de septembre.",
         },
       ],
       livrable:
@@ -354,29 +373,29 @@ export const ATELIER_MCO2: AtelierDefinition = {
     },
     {
       numero: 5,
-      titre: "Septembre, les groupes reviennent et paient dans trente jours",
+      titre: "Septembre, la rentrée du midi et la caisse au plus bas",
       dureeMinutes: 120,
       tourJoue: 4,
       processus: [
-        "Bloc 1 · Développer la relation client et assurer la vente conseil",
         "Bloc 3 · Assurer la gestion opérationnelle",
+        "Bloc 2 · Animer et dynamiser l'offre commerciale",
       ],
       objectif:
-        "Servir le mois où les banquets font près du double, avec une capacité qui ne s'étire pas, et voir qu'un mois record en ventes peut être un mois serré en caisse quand les groupes règlent à trente jours.",
+        "Relancer l'unité au mois où le midi d'affaires revient, corriger sa politique commerciale à partir de juillet et d'août, et décider comment couvrir une caisse que l'été a vidée, en chiffrant ce que coûte cette couverture.",
       competences: [
-        "J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.",
-        "Je relie le chiffre d'affaires d'un mois à l'encaissement du mois suivant, selon le délai de chaque clientèle.",
+        "Je corrige une politique commerciale à partir de ce que les deux mois précédents ont montré.",
+        "Je chiffre le coût d'un financement court terme et je le rapporte à ce qu'il a évité.",
         "Je décide d'une couverture du besoin de trésorerie et j'en assume le coût.",
       ],
       notions: [
-        "capacité et saturation",
-        "arbitrage entre clientèles",
-        "délai de règlement client",
-        "besoin en fonds de roulement",
+        "saisonnalité de la demande",
+        "trésorerie nette",
         "découvert et coût du financement court terme",
+        "escompte et affacturage",
+        "besoin en fonds de roulement",
       ],
       preparation:
-        "Les groupes sont à près du double de leur niveau ce mois-ci, la hausse des denrées court encore, et la capacité reste de 3 000 couverts quand la brigade en couvre à peine plus. Le point de la séance tient en une phrase à ne pas dire d'avance : un banquet vendu en septembre s'encaisse en octobre, parce que les groupes règlent à trente jours, soit exactement un tour. Préparez la fiche de plan de septembre, où l'équipe écrira le chiffre d'affaires attendu ET l'encaissement attendu, qui ne sont pas le même nombre. La commande exceptionnelle, quand elle tombe, tranche la question : un allotement comptant à bas prix, ou un contrat mieux payé mais réglé plus tard.",
+        "La rentrée tient en deux mouvements que les équipes doivent voir séparément. Le midi d'affaires, le soir et les banquets remontent ensemble, sans retrouver encore leur niveau de juin : c'est le mois où la carte se recale. Mais chez les équipes que l'été a mises dans le rouge, la caisse touche souvent son point bas maintenant : août a perdu de l'argent, ses achats se paient en partie en septembre, et les banquets de la rentrée ne s'encaisseront qu'en octobre. Aucune situation ne s'ouvre à date fixe ; celle du résultat sous zéro peut s'ouvrir chez les équipes qui ont fini août dans le rouge. Rappelez les taux du jeu : le découvert autorisé est de 20 000 € à 14 % l'an quand la banque a pleine confiance, l'escompte coûte 7,5 % l'an, l'affacturage 3 % de la créance cédée. Préparez un tableau à trois colonnes : le besoin de caisse du mois, la couverture retenue, ce qu'elle coûte.",
       deroule: [
         {
           minutes: 15,
@@ -385,16 +404,89 @@ export const ATELIER_MCO2: AtelierDefinition = {
             "Chaque équipe fait le point de sa caisse après août et dit avec quoi elle aborde la rentrée.",
         },
         {
-          minutes: 30,
+          minutes: 25,
+          titre: "La rentrée, chiffres en main",
+          detail:
+            "Les équipes relisent juillet et août côte à côte, clientèle par clientèle, et décident ce qu'elles corrigent pour la rentrée : le prix d'une formule du midi qui revient, le volume à préparer, le budget de communication. Chaque correction s'appuie sur un fait des deux mois écoulés.",
+        },
+        {
+          minutes: 25,
+          titre: "Couvrir le mois",
+          detail:
+            "Chaque équipe projette son solde de fin de mois, puis compare trois façons de couvrir le trou : laisser jouer le découvert, escompter ses créances, les céder en affacturage. Elle chiffre le coût de chacune sur le mois, pas en taux annuel, et le rapporte à la rupture qu'elle évite. Certaines découvrent qu'elles s'apprêtent à payer un découvert pour un encaissement qui n'a qu'un mois de retard.",
+        },
+        {
+          minutes: 20,
+          titre: "Décisions du mois",
+          detail:
+            "Saisie du prix, des couverts, de la communication et de la couverture de trésorerie. Le solde attendu reste écrit sur la fiche.",
+        },
+        {
+          minutes: 15,
+          titre: "Clôture et résultats",
+          detail:
+            "Vous clôturez. Le résultat remonte souvent plus vite que la caisse : c'est ce décalage que les deux séances suivantes vont suivre jusqu'au bout.",
+        },
+        {
+          minutes: 20,
+          titre: "Débriefing",
+          detail:
+            "On compare une équipe qui a couvert large et une équipe qui a serré. La question qui reste ouverte : combien vaut de dormir tranquille.",
+        },
+      ],
+      livrable:
+        "La note de rentrée : les corrections commerciales décidées avec le fait de juillet ou d'août qui fonde chacune, le solde de fin de mois projeté, la couverture retenue avec son coût sur le mois rapporté à la rupture évitée, et l'écart au solde réalisé.",
+      tracePasseport:
+        "J'ai rapporté le coût d'un financement court terme à la rupture de trésorerie qu'il évitait.",
+      evaluation: [
+        "La correction commerciale s'appuie sur un fait des deux mois écoulés.",
+        "Le coût de la couverture est chiffré sur le mois, pas évoqué en taux annuel.",
+        "La couverture retenue est comparée aux deux autres avec des chiffres, et le solde attendu est écrit avant la clôture.",
+      ],
+    },
+    {
+      numero: 6,
+      titre: "Octobre, les banquets doublent et paient dans trente jours",
+      dureeMinutes: 120,
+      tourJoue: 5,
+      processus: [
+        "Bloc 1 · Développer la relation client et assurer la vente conseil",
+        "Bloc 3 · Assurer la gestion opérationnelle",
+      ],
+      objectif:
+        "Servir le mois où les banquets font plus que doubler, avec une capacité qui ne s'étire pas, vérifier que les ventes de septembre sont bien rentrées, et voir qu'un mois bénéficiaire peut laisser la caisse au même point quand les groupes règlent à trente jours.",
+      competences: [
+        "Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.",
+        "Je relie le chiffre d'affaires d'un mois à l'encaissement du mois suivant, selon le délai de chaque clientèle.",
+        "J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.",
+      ],
+      notions: [
+        "capacité et saturation",
+        "arbitrage entre clientèles",
+        "délai de règlement client",
+        "encaissement et décaissement",
+        "besoin en fonds de roulement",
+      ],
+      preparation:
+        "Les banquets font plus que doubler d'un mois à l'autre, le soir repasse au-dessus de son niveau de juin, la hausse des denrées court encore, et la capacité reste de 3 000 couverts quand la brigade en couvre à peine plus. L'arène ouvre ce mois-ci la situation des banquets : combien préparer pour absorber le pic, et ce que coûte de préparer trop. Le point de la séance tient en une phrase à ne pas dire d'avance : un banquet vendu en octobre s'encaisse en novembre, parce que les groupes règlent à trente jours, soit exactement un tour. Préparez la fiche de plan d'octobre, où l'équipe écrira le chiffre d'affaires attendu ET l'encaissement attendu, qui ne sont pas le même nombre. La commande exceptionnelle, quand elle tombe, tranche la question : un allotement comptant à bas prix, ou un contrat mieux payé mais réglé plus tard.",
+      deroule: [
+        {
+          minutes: 15,
+          titre: "Ce que septembre a laissé",
+          detail:
+            "Chaque équipe relit sa note de rentrée, dit ce qu'elle attend en caisse ce mois-ci au titre des banquets de septembre, puis vérifie à l'écran qu'ils sont entrés.",
+        },
+        {
+          minutes: 25,
           titre: "Qui servir quand tout ne rentre pas",
           detail:
             "Les équipes confrontent la demande du mois à leur capacité, puis classent leurs clientèles par marge et par délai de règlement. Servir le mieux payé n'est pas toujours servir le plus vite payé, et c'est l'arbitrage de la séance.",
         },
         {
           minutes: 25,
-          titre: "Vendre en septembre, encaisser en octobre",
+          titre: "Vendre en octobre, encaisser en novembre",
           detail:
-            "Chaque équipe écrit côte à côte son chiffre d'affaires attendu et son encaissement attendu, puis le solde qui en découle. Celles qui remplissent de banquets découvrent un mois record dont la caisse ne verra la couleur qu'au tour suivant.",
+            "Chaque équipe écrit côte à côte son chiffre d'affaires attendu et son encaissement attendu, puis le solde qui en découle. Celles qui remplissent de banquets découvrent un mois bénéficiaire dont la caisse ne verra la couleur qu'au tour suivant.",
         },
         {
           minutes: 20,
@@ -409,93 +501,20 @@ export const ATELIER_MCO2: AtelierDefinition = {
             "Vous clôturez. Le chiffre d'affaires, le résultat et le solde de caisse apparaissent ensemble, et ils ne racontent pas la même histoire.",
         },
         {
-          minutes: 15,
+          minutes: 20,
           titre: "Débriefing",
           detail:
-            "Une équipe bénéficiaire et à découvert fait la démonstration à votre place. Vous notez au tableau ce qu'elle encaissera le mois prochain : c'est le sujet de la séance suivante.",
+            "Une équipe bénéficiaire dont la caisse n'a pas monté fait la démonstration à votre place. Vous notez au tableau ce qu'elle encaissera le mois prochain : c'est par là que commencera la dernière séance.",
         },
       ],
       livrable:
-        "Le plan de septembre : la demande par clientèle face à la capacité, le classement des clientèles par marge et par délai, le chiffre d'affaires attendu distingué de l'encaissement attendu, la couverture retenue avec son coût, et l'écart au solde réalisé.",
+        "Le plan d'octobre : l'encaissement des banquets de septembre constaté, la demande par clientèle face à la capacité, le classement des clientèles par marge et par délai, le chiffre d'affaires attendu distingué de l'encaissement attendu, et l'écart au solde réalisé.",
       tracePasseport:
         "J'ai distingué le chiffre d'affaires d'un mois de son encaissement en tenant compte du délai de règlement de chaque clientèle.",
       evaluation: [
+        "L'encaissement du mois est rapproché du chiffre d'affaires de septembre, ligne à ligne.",
         "Les clientèles sont classées par marge ET par délai, pas par le seul prix.",
         "Le chiffre d'affaires attendu et l'encaissement attendu sont deux nombres distincts et justifiés.",
-        "La couverture retenue est chiffrée avec son coût, et non seulement citée.",
-      ],
-    },
-    {
-      numero: 6,
-      titre: "Octobre, encaisser ce que septembre a vendu",
-      dureeMinutes: 120,
-      tourJoue: 5,
-      processus: [
-        "Bloc 3 · Assurer la gestion opérationnelle",
-        "Bloc 2 · Animer et dynamiser l'offre commerciale",
-      ],
-      objectif:
-        "Vérifier que les créances de septembre rentrent bien, mesurer ce qu'ont coûté au passage le découvert et l'escompte, et décider si la couverture du besoin de trésorerie valait son prix.",
-      competences: [
-        "Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.",
-        "Je chiffre le coût d'un financement court terme et je le rapporte à ce qu'il a évité.",
-        "Je corrige une politique commerciale à partir de ce que les deux mois précédents ont montré.",
-      ],
-      notions: [
-        "encaissement et décaissement",
-        "trésorerie nette",
-        "coût du découvert",
-        "escompte et affacturage",
-        "tableau de bord d'exploitation",
-      ],
-      preparation:
-        "C'est la séance où la trésorerie se referme : les créances de septembre arrivent, la hausse des denrées est retombée, et les équipes peuvent enfin juger leurs décisions de couverture. Préparez un tableau à trois colonnes, ce qui a été vendu en septembre, ce qui rentre en octobre, ce que le financement a coûté. Rappelez les taux du jeu : le découvert autorisé est de 20 000 € à 14 % l'an, l'escompte coûte 7,5 % l'an, l'affacturage 3 % de la créance cédée.",
-      deroule: [
-        {
-          minutes: 15,
-          titre: "Ce que septembre a laissé",
-          detail:
-            "Chaque équipe relit son plan de septembre et dit ce qu'elle attend en caisse ce mois-ci, avant d'ouvrir ses résultats.",
-        },
-        {
-          minutes: 30,
-          titre: "Les créances rentrent, le coût reste",
-          detail:
-            "Les équipes remplissent le tableau à trois colonnes et calculent ce que leur couverture a coûté sur le mois. Certaines découvrent qu'elles ont payé un découvert pour un encaissement qui n'avait qu'un mois de retard.",
-        },
-        {
-          minutes: 25,
-          titre: "Corriger la carte et le remplissage",
-          detail:
-            "À la lumière de deux mois contrastés, l'équipe ajuste sa politique : quelle clientèle privilégier, à quel prix, avec quel budget de communication. Elle écrit ce qu'elle attend de chaque correction.",
-        },
-        {
-          minutes: 20,
-          titre: "Décisions du mois",
-          detail:
-            "Saisie complète, couverture comprise. Chaque équipe inscrit son solde attendu de fin de mois.",
-        },
-        {
-          minutes: 15,
-          titre: "Clôture et résultats",
-          detail:
-            "Vous clôturez l'avant-dernier mois. Le coût cumulé du financement depuis juin s'affiche dans le compte de résultat de chacune.",
-        },
-        {
-          minutes: 15,
-          titre: "Débriefing",
-          detail:
-            "On compare une équipe qui a couvert large et une équipe qui a serré. La question qui reste ouverte : combien vaut de dormir tranquille.",
-        },
-      ],
-      livrable:
-        "La note de trésorerie : ce qui a été vendu en septembre, ce qui est rentré en octobre, le coût du financement court terme sur le mois, la correction de politique commerciale décidée, et l'écart au solde attendu.",
-      tracePasseport:
-        "J'ai rapporté le coût d'un financement court terme à la rupture de trésorerie qu'il avait évitée.",
-      evaluation: [
-        "L'encaissement du mois est rapproché du chiffre d'affaires du mois précédent, ligne à ligne.",
-        "Le coût du financement est chiffré sur le mois, pas évoqué en taux annuel.",
-        "La correction commerciale s'appuie sur un fait des deux mois écoulés.",
       ],
     },
     {
@@ -508,7 +527,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "Bloc 2 · Animer et dynamiser l'offre commerciale",
       ],
       objectif:
-        "Jouer le dernier mois, puis construire le tableau de bord des six mois et le présenter comme on rend compte à la direction d'un réseau.",
+        "Constater l'encaissement des banquets d'octobre, jouer le dernier mois, puis construire le tableau de bord des six mois et le présenter comme on rend compte à la direction d'un réseau.",
       competences: [
         "Je construis un tableau de bord mensuel qui tient sur une page et qui se lit.",
         "Je choisis les indicateurs qui expliquent mon résultat et j'écarte ceux qui l'habillent.",
@@ -522,13 +541,13 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "compte rendu de gestion",
       ],
       preparation:
-        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation. Prévoyez un ordre de passage tiré au sort et un chronomètre : trois minutes par équipe, pas une de plus. Demandez que le tableau de bord porte les six mois en colonnes, c'est ce qui fait apparaître le creux d'août et le décalage d'encaissement d'octobre sans qu'on ait à les expliquer.",
+        "Annoncez la présentation à la séance précédente et donnez la grille d'évaluation. Prévoyez un ordre de passage tiré au sort et un chronomètre : trois minutes par équipe, pas une de plus. Demandez que le tableau de bord porte les six mois en colonnes : c'est ce qui fait apparaître le creux d'août, la hausse des denrées qui court de juillet à novembre et le décalage d'encaissement entre octobre et novembre sans qu'on ait à les expliquer. Rappelez que la partie s'arrête avec des créances : les banquets de novembre ne seront payés qu'en décembre, et le tableau doit le dire.",
       deroule: [
         {
           minutes: 15,
           titre: "Le dernier mois",
           detail:
-            "Chaque équipe décide son dernier mois avec le classement sous les yeux, et dit en une phrase si elle consolide ou si elle tente.",
+            "Chaque équipe constate ce que les banquets d'octobre ont fait rentrer en caisse, puis décide son dernier mois avec le classement sous les yeux, et dit en une phrase si elle consolide ou si elle tente.",
         },
         {
           minutes: 20,
@@ -589,7 +608,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       nom: "Semaine bloquée",
       quand: "En semaine d'atelier de professionnalisation.",
       comment:
-        "Trois séances par jour sur deux jours. La tension est forte et le débriefing court, mais le décalage entre la vente de septembre et l'encaissement d'octobre se vit alors dans la même journée, ce qui le grave mieux qu'un rappel.",
+        "Trois séances par jour sur deux jours. La tension est forte et le débriefing court, mais le décalage entre la vente d'octobre et l'encaissement de novembre se vit alors dans la même journée, ce qui le grave mieux qu'un rappel.",
     },
   ],
   evaluationFinale: [
@@ -607,13 +626,18 @@ export const ATELIER_MCO2: AtelierDefinition = {
     {
       question: "Pourquoi jouer au mois plutôt qu'au trimestre ?",
       reponse:
-        "Parce que c'est le rythme du métier, et parce que le trimestre efface ce que cet atelier veut montrer. Les groupes règlent à trente jours : au trimestre, ce délai se noie dans le tour et personne ne le voit ; au mois, il est un tour entier, et la classe constate qu'un mois record en ventes peut être un mois serré en caisse. C'est la seule fiche du registre qui demande « Un mois par tour », et ce réglage n'est pas un détail de création : il est le sujet.",
+        "Parce que c'est le rythme du métier, et parce que le trimestre efface ce que cet atelier veut montrer. Les groupes règlent à trente jours : au trimestre, ce délai se noie dans le tour et personne ne le voit ; au mois, il est un tour entier, et la classe constate qu'un mois bénéficiaire peut laisser la caisse au même point. C'est la seule fiche du registre qui demande « Un mois par tour », et ce réglage n'est pas un détail de création : il est le sujet.",
+    },
+    {
+      question: "Pourquoi commencer en juin, et pourquoi pas une situation chaque mois ?",
+      reponse:
+        "Parce que la partie suit le calendrier, et que juin ouvre six mois qui traversent tout ce que l'atelier veut montrer : l'été qui se vide, le creux d'août, la rentrée de septembre, les banquets d'automne. Ce que le scénario écrit pour un trimestre tombe au premier mois de ce trimestre : la question du fournisseur s'ouvre en juin, la hausse des denrées en juillet, la saison des banquets en octobre. Les autres mois sont des mois de gestion, où seules les situations nées des résultats peuvent surgir. C'est le rythme réel d'une unité : la plupart des mois, rien d'extraordinaire n'arrive, et c'est là que se joue la caisse.",
     },
     {
       question:
         "Les chiffres du scénario changent-ils quand on passe au mois ?",
       reponse:
-        "Oui, et c'est voulu. La plateforme divise tous les flux par trois : 30 000 € de charges de structure au lieu de 90 000, 3 000 couverts de capacité, un seuil autour de 1 500 couverts. L'établissement est le même, sa journée type aussi, soixante-dix couverts. Ce qui ne change pas, ce sont les délais en jours et les taux annuels : c'est exactement ce qui fait le poids relatif d'un délai de trente jours sur un tour d'un mois.",
+        "Oui, et c'est voulu. La plateforme divise tous les flux par trois : 30 000 € de charges de structure au lieu de 90 000, 3 000 couverts de capacité, un seuil autour de 1 500 couverts. L'établissement est le même, sa journée type aussi, soixante-dix couverts. Ce qui ne change pas, ce sont les délais en jours et les taux annuels : c'est exactement ce qui fait le poids relatif d'un délai de trente jours sur un tour d'un mois. La saison, elle, suit le calendrier : chaque mois prend la saison de son trimestre, répartie selon le métier, si bien qu'août vide le midi et les banquets, et qu'octobre et novembre portent les repas de fin d'année.",
     },
     {
       question: "Quel écart avec l'atelier de première année ?",

@@ -1,6 +1,7 @@
 import type { EngineScenarioConfig, SegmentConfig } from "../../engine/types";
 import { toGamme } from "../../engine/gamme";
 import type { Periodicity } from "./periodicity";
+import { MOIS_MAX, MOIS_PAR_DEFAUT } from "./calendrier-mensuel";
 
 /**
  * Le nombre de tours d'une partie.
@@ -16,8 +17,9 @@ import type { Periodicity } from "./periodicity";
  * allongée, au trimestre seulement (décision du propriétaire) : les situations et
  * les événements scriptés d'un scénario sont écrits pour ses `roundsCount` tours,
  * au-delà la classe joue des TOURS DE GESTION, sur l'année du métier qui se répète
- * (`prolongerLaPartie`). Au mois et à l'année, une partie ne s'allonge pas : douze
- * mois feraient défiler trois ans de saisons, douze ans dépasseraient les prêts.
+ * (`prolongerLaPartie`). Au mois, elle suit le calendrier (`calendrier-mensuel.ts`) :
+ * une année par défaut, dix-huit mois au plus. À l'année, une partie ne s'allonge pas :
+ * douze ans dépasseraient les prêts.
  * Sans demande, la partie garde la durée de son scénario : les tournois, la
  * démonstration et « toute la partie » ne changent pas.
  */
@@ -25,22 +27,35 @@ import type { Periodicity } from "./periodicity";
 /** Le plus long qu'une partie au trimestre puisse durer : trois ans. */
 export const TOURS_MAX_AU_TRIMESTRE = 12;
 
-/** Le plus long qu'une partie de ce scénario puisse durer à cette périodicité. */
-export function toursMaxDeLaPartie(scenario: EngineScenarioConfig, periodicity: Periodicity): number {
-  return periodicity === "quarter" ? Math.max(scenario.roundsCount, TOURS_MAX_AU_TRIMESTRE) : scenario.roundsCount;
+/**
+ * Le plus long qu'une partie de ce scénario puisse durer à cette périodicité. Au mois sur
+ * le calendrier (`calendrier-mensuel.ts`), en mois ; au mois d'avant le calendrier et à
+ * l'année, la durée du scénario.
+ */
+export function toursMaxDeLaPartie(
+  scenario: EngineScenarioConfig,
+  periodicity: Periodicity,
+  calendrierMensuel = false,
+): number {
+  if (periodicity === "quarter") return Math.max(scenario.roundsCount, TOURS_MAX_AU_TRIMESTRE);
+  if (periodicity === "month" && calendrierMensuel) return MOIS_MAX;
+  return scenario.roundsCount;
 }
 
 /**
  * Le nombre de tours retenu : jamais plus que le maximum de la périodicité, jamais
- * moins d'un ; sans demande, la durée du scénario.
+ * moins d'un ; sans demande, la durée du scénario (au mois sur le calendrier, une année).
  */
 export function toursDeLaPartie(
   scenario: EngineScenarioConfig,
   demande: number | undefined,
   periodicity: Periodicity,
+  calendrierMensuel = false,
 ): number {
-  if (demande === undefined || !Number.isFinite(demande)) return scenario.roundsCount;
-  return Math.min(toursMaxDeLaPartie(scenario, periodicity), Math.max(1, Math.trunc(demande)));
+  if (demande === undefined || !Number.isFinite(demande)) {
+    return periodicity === "month" && calendrierMensuel ? MOIS_PAR_DEFAUT : scenario.roundsCount;
+  }
+  return Math.min(toursMaxDeLaPartie(scenario, periodicity, calendrierMensuel), Math.max(1, Math.trunc(demande)));
 }
 
 /**

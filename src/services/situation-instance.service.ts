@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { games, hintUsages, players, rounds, roundResults, situationInstances, situations, teams } from "@/db/schema";
 import { situationByCode } from "@/config/scenarios/registry";
-import { dureeDuTourDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
+import { dureeDuTourDe, moisDeDepartDe, situationDeLaPartie } from "@/config/scenarios/situation-texte";
 import { tourDOuverture } from "@/config/scenarios/situation-kit";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { presetFromProfile } from "@/config/difficulty";
@@ -93,11 +93,13 @@ export async function openSituationsForRound(
   );
   const values: (typeof situationInstances.$inferInsert)[] = [];
   // Une partie prolongée (`config/scenarios/rounds.ts`) ouvre ses situations de fin de
-  // partie à son dernier tour (`tourDOuverture`).
-  const toursJoues =
-    (gameRow?.scenarioSnapshot as { roundsCount?: number } | null)?.roundsCount ?? definition.scenario.roundsCount;
+  // partie à son dernier tour (`tourDOuverture`) ; une partie au mois sur le calendrier,
+  // chacune au premier mois de son trimestre.
+  const instantane = gameRow?.scenarioSnapshot as { roundsCount?: number; moisDeDepart?: number } | null;
+  const toursJoues = instantane?.roundsCount ?? definition.scenario.roundsCount;
   const scripted = definition.situations.filter(
-    (s) => tourDOuverture(s.trigger, toursJoues, definition.scenario.roundsCount) === roundIndex,
+    (s) =>
+      tourDOuverture(s.trigger, toursJoues, definition.scenario.roundsCount, instantane?.moisDeDepart) === roundIndex,
   );
   for (const team of humanTeams) {
     const result = previousResults?.[team.id];
@@ -199,7 +201,7 @@ export async function loadInstanceForUser(instanceId: string, userId: string) {
   return {
     instance,
     situationRow,
-    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot)),
+    def: situationDeLaPartie(def, dureeDuTourDe(gameRow?.scenarioSnapshot), moisDeDepartDe(gameRow?.scenarioSnapshot)),
     game: gameRow,
   };
 }

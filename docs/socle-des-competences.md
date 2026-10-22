@@ -219,7 +219,7 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 - `stmg:3:1` Je calcule combien d'unités mon entreprise doit vendre pour ne rien perdre.
 - `cg1:3:2` Je calcule un seuil de rentabilité en volume et en valeur, et j'en déduis une marge de sécurité.
 - `mco:2:1` Je détermine le nombre d'articles à vendre pour couvrir les charges de structure du trimestre.
-- `mco2:2:1` Je détermine le nombre de couverts qui couvre les charges d'un mois, et je le ramène à une journée type.
+- `mco2:3:0` Je détermine le nombre de couverts qui couvre les charges d'un mois, et je le ramène à une journée type.
 - `mco2:4:0` Je mesure ce qu'un mois creux fait au résultat d'une unité à charges fixes, et la marge de sécurité qui m'en sépare.
 - `fitness:2:1` Je calcule la marge récurrente d'un adhérent et le nombre d'adhérents au seuil de rentabilité.
 - `fitness:4:1` Je mesure ce qu'une charge fixe fait à un trimestre creux, et la marge de sécurité qui me sépare du seuil.
@@ -282,7 +282,7 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 - `debutant:2:0` Je choisis une quantité de marchandise à commander pour un trimestre.
 - `debutant:4:1` Je décide un prix et une quantité ensemble pour un trimestre qui compte.
 - `mco:5:2` Je dimensionne un approvisionnement en acceptant explicitement un risque.
-- `mco2:2:2` Je fixe un prix et un volume à préparer en sachant ce que coûte un couvert jeté.
+- `mco2:3:1` Je fixe un prix et un volume à préparer en sachant ce que coûte un couvert jeté.
 - `ndrc:5:2` Je dimensionne un budget d'acquisition et le stock qui va avec, pour le trimestre où chaque commande manquée coûte le plus.
 - `fitness:2:2` Je fixe un prix et un volume de places à vendre en tenant compte de la capacité d'accueil réelle.
 - `campus:3:2` Je règle un volume de production en assumant de quel côté je prends le risque.
@@ -400,8 +400,8 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 - `martel:4:1` Je traduis le délai de règlement de chaque clientèle en euros immobilisés sur un trimestre de chantiers.
 - `mco:3:1` Je mesure l'effet d'un délai de règlement fournisseur sur la trésorerie du magasin.
-- `mco2:3:1` Je mesure l'effet d'un délai de règlement sur la trésorerie d'un mois, à résultat inchangé.
-- `mco2:5:1` Je relie le chiffre d'affaires d'un mois à l'encaissement du mois suivant, selon le délai de chaque clientèle.
+- `mco2:2:2` Je mesure l'effet d'un délai de règlement sur la trésorerie d'un mois, à résultat inchangé.
+- `mco2:6:1` Je relie le chiffre d'affaires d'un mois à l'encaissement du mois suivant, selon le délai de chaque clientèle.
 - `gpme:3:0` Je calcule le délai moyen de règlement de mes clients et je le traduis en euros immobilisés.
 - `fitness:5:0` Je compare une offre annuelle encaissée d'avance à une offre trimestrielle sur le prix, la trésorerie et la fidélité.
 - `mhr:4:2` Je relie le mix de clientèles du trimestre à son encaissement : qui paie comptant, qui paie à trente ou quarante-cinq jours.
@@ -433,7 +433,7 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 - `cg1:6:2` Je calcule le coût d'un escompte et celui d'un affacturage sur mes propres créances, au prorata du trimestre.
 - `cg1:6:3` Je choisis de mobiliser ou non mes créances, et je justifie mon choix par le calcul.
 - `mco2:5:2` Je décide d'une couverture du besoin de trésorerie et j'en assume le coût.
-- `mco2:6:1` Je chiffre le coût d'un financement court terme et je le rapporte à ce qu'il a évité.
+- `mco2:5:1` Je chiffre le coût d'un financement court terme et je le rapporte à ce qu'il a évité.
 - `gpme:3:1` Je choisis entre attendre, relancer, escompter ou céder une créance, en comparant ce que chaque solution coûte.
 - `mhr:5:2` Je décide d'une couverture du besoin de trésorerie et j'en assume le coût.
 - `avance:5:2` Je compare l'escompte et l'affacturage sur leur coût, et je mesure le risque d'un chiffre d'affaires concentré sur un client.
@@ -488,7 +488,7 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 1 phrases, 1 diplômes.
 
-- `mco2:5:0` J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.
+- `mco2:6:2` J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.
 
 ### Investir et recruter
 
@@ -628,7 +628,7 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 5 phrases, 4 diplômes.
 
 - `mco:3:0` Je compare des offres fournisseurs sur autre chose que leur prix.
-- `mco2:3:0` Je compare des fournisseurs sur le prix, la qualité, le délai de règlement et le risque de rupture.
+- `mco2:2:1` Je compare des fournisseurs sur le prix, la qualité, le délai de règlement et le risque de rupture.
 - `fitness:6:2` Je sélectionne un partenariat, comité d'entreprise, mutuelle, club, en le jugeant sur sa marge, son délai de règlement et la place qu'il prend.
 - `bistrot:3:0` Je compare des fournisseurs sur plusieurs critères, prix, qualité, délai et fiabilité, et je pondère.
 - `dcg-rse:4:0` Je choisis un fournisseur en pesant son coût, sa qualité et l'empreinte que le rapport lui attribue d'après ces deux critères.
@@ -755,7 +755,7 @@ ndrc:4:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le m�
 
 - `debutant:3:2` Je compare un trimestre avec promotion à un trimestre sans.
 - `cg1:4:3` Je mesure l'écart entre ma prévision et le réalisé, et j'en cherche la cause.
-- `mco2:6:2` Je corrige une politique commerciale à partir de ce que les deux mois précédents ont montré.
+- `mco2:5:0` Je corrige une politique commerciale à partir de ce que les deux mois précédents ont montré.
 
 ### Rendre compte
 

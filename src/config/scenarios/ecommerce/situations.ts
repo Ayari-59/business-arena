@@ -187,7 +187,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "{{Black Friday et fêtes}}",
     narrative:
-      "Le quatrième {{trimestre}} pèse plus d'une fois et demie un {{trimestre}} ordinaire. {{Vos concurrents ont réservé leurs espaces publicitaires depuis septembre}}, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, pas une de plus.",
+      "{{Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire.}} {{Vos concurrents ont réservé leurs espaces publicitaires depuis septembre}}, et votre entrepôt prépare {{entier: capacite_parc}} commandes {{par trimestre}}, pas une de plus.",
     problem:
       "Comment préparer un pic qui exige à la fois du stock, de la capacité d'expédition et du budget d'acquisition ?",
     diagnosticOptions: [
@@ -250,8 +250,8 @@ const SOURCES: SituationDef[] = [
     },
     conceptCodes: ["seasonality", "capacity", "stock", "bfr"],
     hints: hints([
-      "Regardez la saisonnalité : quel coefficient s'applique au quatrième {{trimestre}} ?",
-      "Le pic vaut 1,6 fois un {{trimestre}} ordinaire. Comparez cette demande à ce que votre entrepôt sait traiter.",
+      "Regardez la saisonnalité : quel coefficient s'applique {{au quatrième trimestre}} ?",
+      "{{Le pic vaut}} {{coefficient: saison}} fois un {{trimestre}} ordinaire. Comparez cette demande à ce que votre entrepôt sait traiter.",
       "Trois plafonds à vérifier ensemble : le stock disponible, la capacité de préparation, et le budget d'acquisition qui déclenche les commandes.",
       "La contrainte la plus serrée décide de tout : acheter du stock au-delà de la capacité d'expédition, c'est immobiliser de la trésorerie pour rien.",
       "Et n'oubliez pas le calendrier des flux : le stock et la publicité se paient ce tour-ci, une partie des ventes s'encaisse au suivant.",

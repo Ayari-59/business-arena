@@ -151,6 +151,8 @@ export interface GameView {
   };
   roundsCount: number;
   roundDays: number;
+  /** Au mois sur le calendrier, le mois où la partie commence (`calendrier-mensuel.ts`). */
+  moisDeDepart: number | null;
   playerTeamId: string;
   playerTeamName: string;
   /**
@@ -1793,6 +1795,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     playLock,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
+    moisDeDepart: (game.scenarioSnapshot as { moisDeDepart?: number }).moisDeDepart ?? null,
     playerTeamId: playerTeam.id,
     playerTeamName: teamDisplayName(playerTeam.name),
     playerPseudo,

@@ -14,6 +14,7 @@ import { TuileDuLieu } from "@/components/tuile-du-lieu";
 import type { Sector } from "@/config/scenarios/registry";
 import type { ComparatifDesNiveaux, TableauDuNiveau } from "@/config/tableau-des-niveaux";
 import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
+import { MOIS_MAX } from "@/config/scenarios/calendrier-mensuel";
 
 /** Sans texte passé par la page : une marque neutre (les noms vivent dans config/tarifs.ts). */
 const OFFRE_PAR_DEFAUT = { marque: "Offre payante", message: "Ces niveaux sont inclus dans les offres payantes." };
@@ -95,19 +96,23 @@ const COMPANIES = [
 ] as const;
 
 /**
- * Les durées proposées. Les plus longues (`auTrimestre`) ne s'offrent qu'au trimestre :
- * au mois et à l'année, une partie ne s'allonge pas (`config/scenarios/rounds.ts`).
+ * Les durées proposées. Une durée qui ne vaut qu'à certaines périodicités (`seulement`)
+ * ne s'offre qu'à elles : au trimestre, une partie va jusqu'à douze tours ; au mois, sur
+ * le calendrier, jusqu'à dix-huit (`config/scenarios/rounds.ts`, `calendrier-mensuel.ts`).
  */
-const ROUNDS: readonly { value: string; label: string; auTrimestre?: true }[] = [
+const ROUNDS: readonly { value: string; label: string; seulement?: readonly string[] }[] = [
   { value: "", label: "Toute la partie" },
   { value: "3", label: "3 tours" },
   { value: "4", label: "4 tours" },
   { value: "5", label: "5 tours" },
   { value: "6", label: "6 tours" },
-  { value: "8", label: "8 tours", auTrimestre: true },
-  { value: String(TOURS_MAX_AU_TRIMESTRE), label: `${TOURS_MAX_AU_TRIMESTRE} tours`, auTrimestre: true },
+  { value: "8", label: "8 tours", seulement: ["quarter"] },
+  { value: String(TOURS_MAX_AU_TRIMESTRE), label: `${TOURS_MAX_AU_TRIMESTRE} tours`, seulement: ["quarter", "month"] },
+  { value: String(MOIS_MAX), label: `${MOIS_MAX} tours`, seulement: ["month"] },
 ];
 
+/** La durée s'offre-t-elle à cette périodicité ? */
+const offerte = (r: (typeof ROUNDS)[number], periode: string) => !r.seulement || r.seulement.includes(periode);
 /**
  * L'OPTION COCHÉE D'UNE CARTE D'ENTREPRISE (lot P2) : un filet orange plein de
  * deux pixels (le bord et son anneau), sans voile. La garde
@@ -460,8 +465,9 @@ export function QuickConfigFields({
                 type="button"
                 onClick={() => {
                   setPeriod(p.value);
-                  // Une durée qui ne vaut qu'au trimestre retombe sur la partie écrite.
-                  if (p.value !== "quarter" && ROUNDS.find((r) => r.value === rounds)?.auTrimestre) setRounds("");
+                  // Une durée qui ne vaut pas à la nouvelle périodicité retombe sur la partie écrite.
+                  const choisie = ROUNDS.find((r) => r.value === rounds);
+                  if (choisie && !offerte(choisie, p.value)) setRounds("");
                 }}
                 aria-pressed={p.value === period}
                 className={`${tile} ${p.value === period ? tileOn : ""}`}
@@ -493,7 +499,7 @@ export function QuickConfigFields({
 
           <p className={`mt-4 ${label}`}>Nombre de tours</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {ROUNDS.filter((r) => !r.auTrimestre || period === "quarter").map((r) => (
+            {ROUNDS.filter((r) => offerte(r, period)).map((r) => (
               <button
                 key={r.value || "all"}
                 type="button"

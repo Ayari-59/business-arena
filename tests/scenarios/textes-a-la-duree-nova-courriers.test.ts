@@ -153,7 +153,9 @@ describe("NOVA et NOVA · GAMME : chaque situation se rend à la durée du tour 
 
       it("l'atelier, l'investissement et l'étude de projet sont ceux du moteur", () => {
         const t3 = situationDeLaPartie(nova.situations.find((d) => d.code === "nova_t3_capacity")!, PERIODICITY_DAYS[periodicity]);
-        expect(t3.hints[4]!.text).toContain(`le pic du tour 4 dépassera largement vos ${milliers(m.capacite)} unités`);
+        // Au mois sur le calendrier, le pic n'est pas le tour qui suit (textes-au-calendrier.test.ts).
+        const pic = periodicity === "month" ? "le pic à venir" : "le pic du tour 4";
+        expect(t3.hints[4]!.text).toContain(`${pic} dépassera largement vos ${milliers(m.capacite)} unités`);
         const sat = situationDeLaPartie(
           nova.situations.find((d) => d.code === "detect_capacity_saturated")!,
           PERIODICITY_DAYS[periodicity],

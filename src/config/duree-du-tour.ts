@@ -1,3 +1,4 @@
+import { tourDOuverture } from "./scenarios/situation-kit";
 /**
  * COMBIEN DE TEMPS PREND UN TOUR.
  *
@@ -134,16 +135,15 @@ export function signesDeSituation(
   /** Les références de la partie : une situation qui en suppose une absente ne s'ouvre pas. */
   references?: ReadonlySet<string>,
   /**
-   * Les tours de la partie et ceux que son scénario écrit : une partie prolongée ouvre
-   * ses situations de fin de partie à son dernier tour (`tourDOuverture`). Absents : le
-   * tour dit.
+   * Les tours de la partie, ceux que son scénario écrit, et son mois de départ au mois :
+   * une situation s'ouvre au tour que dit `tourDOuverture`. Absents : le tour dit.
    */
-  tours?: { joues: number; ecrits: number },
+  tours?: { joues: number; ecrits: number; moisDeDepart?: number },
 ): number {
-  const tourDe = (t: { round?: number; finDePartie?: true }): number | undefined =>
-    t.finDePartie && tours && tours.joues > tours.ecrits ? tours.joues : t.round;
+  const tourDe = (t: { round: number; finDePartie?: true }): number | null =>
+    tours ? tourDOuverture(t, tours.joues, tours.ecrits, tours.moisDeDepart) : t.round;
   return situations
-    .filter((s) => s.trigger && "round" in s.trigger && tourDe(s.trigger) === round)
+    .filter((s) => s.trigger && "round" in s.trigger && s.trigger.round !== undefined && tourDe(s.trigger as { round: number; finDePartie?: true }) === round)
     .filter((s) => !s.seulementAvec || !references || references.has(s.seulementAvec.reference))
     .reduce(
       (total, s) =>

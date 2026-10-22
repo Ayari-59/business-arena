@@ -191,6 +191,12 @@ export interface CreateGameArgs {
    */
   roundsCount?: number;
   /**
+   * Au mois, le mois où commence la partie (1 = janvier), sur le calendrier
+   * (`config/scenarios/calendrier-mensuel.ts`). Absent au mois : janvier. Ignoré au
+   * trimestre et à l'année.
+   */
+  moisDeDepart?: number;
+  /**
    * L'adresse d'origine, pour les seules parties nées d'un formulaire public.
    * Elle ne sert qu'à compter (voir `PLAFOND_PARTIES_PAR_IP_PAR_HEURE`) ;
    * absente pour une partie créée par un enseignant identifié.
@@ -334,12 +340,17 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   // LA DURÉE DEMANDÉE, au-delà de ce que la périodicité permet : refusée avec la raison,
   // plutôt que rabotée en silence (`config/scenarios/rounds.ts`). Seul le trimestre
   // s'allonge au-delà des tours écrits du scénario.
-  const toursMax = toursMaxDeLaPartie(definition.scenario, args.periodicity);
+  // Toute partie au mois naît sur le calendrier, en janvier sans autre choix.
+  const moisDeDepart =
+    args.periodicity === "month" ? Math.min(12, Math.max(1, Math.trunc(args.moisDeDepart ?? 1))) : undefined;
+  const toursMax = toursMaxDeLaPartie(definition.scenario, args.periodicity, moisDeDepart !== undefined);
   if (args.roundsCount !== undefined && args.roundsCount > toursMax) {
     throw new Error(
       args.periodicity === "quarter"
         ? `Une partie au trimestre dure ${toursMax} tours au plus.`
-        : `Au mois et à l'année, une partie dure ${toursMax} tours au plus : seul le trimestre va jusqu'à ${TOURS_MAX_AU_TRIMESTRE} tours.`,
+        : args.periodicity === "month"
+          ? `Une partie au mois dure ${toursMax} mois au plus.`
+          : `À l'année, une partie dure ${toursMax} tours au plus : seul le trimestre va jusqu'à ${TOURS_MAX_AU_TRIMESTRE} tours.`,
     );
   }
   // Le pipeline du snapshot vit dans `config/scenarios/scenario-joue.ts` : le
@@ -355,6 +366,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     concurrents,
     roundsCount: args.roundsCount,
     periodicity: args.periodicity,
+    moisDeDepart,
     investmentStories: args.investmentStories,
     // Les concurrents corrigés, le parc sans doublon, la proposition à la demande et
     // le bon gestionnaire qui la tient, figés à la création : une partie déjà
@@ -379,6 +391,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
             concurrents,
             roundsCount: args.roundsCount,
             periodicity: args.periodicity,
+            moisDeDepart,
             investmentStories: args.investmentStories,
             ...CORRECTIFS_DES_PARTIES_NOUVELLES,
           }),
@@ -631,7 +644,7 @@ export async function createSoloGame(
    * organisation sous licence, il ouvre les niveaux fermés. Établi côté serveur par
    * l'appelant (la session), jamais lu du formulaire.
    */
-  options: { licencePar?: string | null } = {},
+  options: { licencePar?: string | null; moisDeDepart?: number } = {},
 ): Promise<string> {
   const config = await getPlatformConfig();
   if (!config.allowPublicPlay) {
@@ -674,6 +687,7 @@ export async function createSoloGame(
     investmentStories: true,
     scenarioCode,
     roundsCount,
+    moisDeDepart: options.moisDeDepart,
     quizMode: "model",
     answerFormat: config.soloAnswerFormat,
     creatorIp,
@@ -705,6 +719,8 @@ export async function createClassGame(args: {
   answerFormat?: AnswerFormat;
   /** Tours joués. Absent = tous ceux du scénario ; jamais plus. */
   roundsCount?: number;
+  /** Au mois, le mois où commence la partie (1 = janvier). */
+  moisDeDepart?: number;
   /** Graine imposée (monde de démonstration) ; absente = tirage au hasard. */
   seed?: number;
   /** Un ou deux tours d'essai avant la vraie partie ; absent = aucun. */
@@ -748,6 +764,7 @@ export async function createClassGame(args: {
     quizMode: args.quizMode,
     answerFormat: args.answerFormat,
     roundsCount: args.roundsCount,
+    moisDeDepart: args.moisDeDepart,
     seed: args.seed,
     essai: args.essai,
   });

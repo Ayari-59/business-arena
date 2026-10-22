@@ -1,3 +1,4 @@
+import { NOMS_DES_MOIS } from "@/config/scenarios/calendrier-mensuel";
 import type { Metadata } from "next";
 import {
   formationsEnToutesLettres,
@@ -116,6 +117,12 @@ const SOMMAIRE = [
   ["prolongements", "Prolongements"],
   ["faq", "Questions d'enseignants"],
 ] as const;
+
+/** La périodicité de l'atelier ; au mois, avec son mois de départ (`calendrier-mensuel.ts`). */
+function periodiciteEnClair(atelier: { reglages: { periodicite: string; periodiciteLabel: string; moisDeDepart?: number } }): string {
+  const r = atelier.reglages;
+  return r.periodicite === "month" ? `${r.periodiciteLabel}, à partir de ${NOMS_DES_MOIS[(r.moisDeDepart ?? 1) - 1]}` : r.periodiciteLabel;
+}
 
 export default async function AtelierPage({
   params,
@@ -337,7 +344,7 @@ export default async function AtelierPage({
                     ["Entreprise dirigée", scenario.title],
                     ["Secteur", SECTOR_LABELS[scenario.sector]],
                     ["Ce que l'entreprise vend", scenario.vocabulary.units],
-                    ["Périodicité", atelier.reglages.periodiciteLabel],
+                    ["Périodicité", periodiciteEnClair(atelier)],
                     [
                       "Niveau du jeu",
                       `${atelier.reglages.niveau} · ${atelier.reglages.niveauNom}`,
@@ -386,7 +393,7 @@ export default async function AtelierPage({
               {(
                 [
                   ["Entreprise", scenario.title],
-                  ["Périodicité", atelier.reglages.periodiciteLabel],
+                  ["Périodicité", periodiciteEnClair(atelier)],
                   [
                     "Niveau",
                     `${atelier.reglages.niveau} · ${atelier.reglages.niveauNom}${niveau ? ` : ${niveau.tagline}` : ""}`,

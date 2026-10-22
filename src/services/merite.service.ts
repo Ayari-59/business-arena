@@ -262,6 +262,8 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           concurrents: equipes.length,
           roundsCount: snapshot.roundsCount,
           periodicity: profil.periodicity ?? "quarter",
+          // Au mois, le calendrier de la partie ; absent, celui d'avant, au bit près.
+          moisDeDepart: snapshot.moisDeDepart,
           investmentStories: profil.investmentStories === true,
           // Une partie d'avant la répartition d'octobre 2026 se recompose avec
           // les leviers et le calendrier de son époque.

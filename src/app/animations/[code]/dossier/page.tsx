@@ -68,6 +68,8 @@ export default async function DossierElevePage({
   const repartition = dossiers[0]!.repartition;
   const periodicite =
     PERIODICITY_LABELS[dossier.periodicite].singular.toLowerCase();
+  // Au mois sur le calendrier, le mois de chaque tour ; absent au trimestre.
+  const mois = dossier.tableauDeBord.mois;
 
   return (
     <main
@@ -134,10 +136,22 @@ export default async function DossierElevePage({
           {entreprise.contexte}
         </p>
         <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
-          Vous la dirigez pendant {dossier.tours} tours, un {periodicite} par
-          tour. Vous n&apos;êtes pas seul sur le marché : les autres équipes
-          vendent aux mêmes clients que vous, et ce que vous ne prenez pas,
-          quelqu&apos;un le prend.
+          {/* Au mois sur le calendrier, la partie dit de quel mois à quel mois elle va. */}
+          {mois ? (
+            <>
+              Vous la dirigez pendant {dossier.tours} tours, un {periodicite} par
+              tour, de {mois[0]} à {mois[mois.length - 1]}. Vous n&apos;êtes pas
+              seul sur le marché : les autres équipes vendent aux mêmes clients
+              que vous, et ce que vous ne prenez pas, quelqu&apos;un le prend.
+            </>
+          ) : (
+            <>
+              Vous la dirigez pendant {dossier.tours} tours, un {periodicite} par
+              tour. Vous n&apos;êtes pas seul sur le marché : les autres équipes
+              vendent aux mêmes clients que vous, et ce que vous ne prenez pas,
+              quelqu&apos;un le prend.
+            </>
+          )}
         </p>
         {/* LE TOUR D'ESSAI (config/tour-d-essai) : l'élève doit savoir, avant
             d'entrer dans l'arène, que le premier tour qu'il joue ne compte pas
@@ -183,12 +197,12 @@ export default async function DossierElevePage({
                 <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">
                   Stock à l&apos;ouverture
                 </th>
-                {dossier.tableauDeBord.tours.map((t) => (
+                {dossier.tableauDeBord.tours.map((t, i) => (
                   <th
                     key={t}
                     className="border-b border-white/10 py-1.5 pr-2 text-right font-medium print:border-black/30"
                   >
-                    Saison T{t}
+                    {mois ? <>Saison {mois[i]}</> : <>Saison T{t}</>}
                   </th>
                 ))}
               </tr>
@@ -432,12 +446,12 @@ export default async function DossierElevePage({
                 <th className="border border-white/15 px-2 py-1.5 text-left font-semibold text-slate-300 print:border-black/40 print:text-black">
                   Équipe :
                 </th>
-                {dossier.tableauDeBord.tours.map((t) => (
+                {dossier.tableauDeBord.tours.map((t, i) => (
                   <th
                     key={t}
                     className="w-24 border border-white/15 px-2 py-1.5 font-semibold text-slate-300 print:border-black/40 print:text-black"
                   >
-                    Tour {t}
+                    {mois ? <>Tour {t} ({mois[i]})</> : <>Tour {t}</>}
                   </th>
                 ))}
               </tr>

@@ -18,6 +18,8 @@ import {
 import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
 import { formatDuTournoi, LIMITES_CONCOURS } from "../../src/config/concours";
 import { TOURS_D_ESSAI } from "../../src/config/tour-d-essai";
+import { NOMS_DES_MOIS, nomDuMois } from "../../src/config/scenarios/calendrier-mensuel";
+import { tourDOuverture } from "../../src/config/scenarios/situation-kit";
 import { FORMATIONS } from "../../src/config/formations";
 import {
   chargeDesSeances,
@@ -868,6 +870,37 @@ describe("ateliers professionnels", () => {
         niveaux,
         `${a.code} (${a.formations.join(", ")}, ${a.annee}) : niveau ${a.reglages.niveau}`,
       ).toContain(a.reglages.niveau);
+    }
+  });
+
+  it("une fiche au mois suit le calendrier de sa partie", () => {
+    // Une partie au mois suit le calendrier (`config/scenarios/calendrier-mensuel.ts`) :
+    // elle commence au mois de départ de la fiche, et ce que le scénario écrit pour un
+    // trimestre s'ouvre au premier mois de ce trimestre. L'atelier MCO était écrit sur
+    // l'ancien découpage, où chaque mois relisait la saison d'un trimestre entier et
+    // ouvrait sa situation : ses mois et ses situations sont devenus faux sans que rien
+    // ne le signale. Le titre d'une séance qui nomme un mois nomme celui que la partie
+    // joue ; une séance qui annonce la situation du mois, ou son absence, dit ce que la
+    // partie ouvrira à ce tour.
+    for (const a of ATELIERS) {
+      if (a.reglages.periodicite !== "month") continue;
+      const depart = a.reglages.moisDeDepart ?? 1;
+      const def = scenarioByCode(a.reglages.scenarioCode);
+      for (const s of a.seances) {
+        if (s.tourJoue === null) continue;
+        const contexte = `${a.code}/séance ${s.numero} (tour ${s.tourJoue})`;
+        const nomme = NOMS_DES_MOIS.find((m) => s.titre.toLowerCase().startsWith(m));
+        if (nomme) expect(nomme, `${contexte} : « ${s.titre} »`).toBe(nomDuMois(s.tourJoue, depart));
+        const ouvertes = def.situations
+          .filter((x) => tourDOuverture(x.trigger, a.reglages.tours, def.scenario.roundsCount, depart) === s.tourJoue)
+          .map((x) => x.code);
+        if (/aucune situation ne s'ouvre à date fixe/i.test(s.preparation)) {
+          expect(ouvertes, `${contexte} : annonce un mois sans situation`).toEqual([]);
+        }
+        if (/l'arène ouvre ce mois-ci la situation/i.test(s.preparation)) {
+          expect(ouvertes.length, `${contexte} : annonce une situation que la partie n'ouvre pas`).toBeGreaterThan(0);
+        }
+      }
     }
   });
 

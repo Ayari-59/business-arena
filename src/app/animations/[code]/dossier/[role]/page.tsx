@@ -69,6 +69,8 @@ export default async function DossierDuResponsablePage({
   if (!atelier || !poste) notFound();
   const dossier = dossierDuResponsable(atelier, poste.code);
   const periodicite = PERIODICITY_LABELS[atelier.reglages.periodicite].singular.toLowerCase();
+  // Au mois sur le calendrier, le mois de chaque tour ; absent au trimestre.
+  const mois = dossier.feuille.mois;
 
   return (
     <main
@@ -131,8 +133,18 @@ export default async function DossierDuResponsablePage({
         </h2>
         <p className={`mt-2 ${TEXTE}`}>{dossier.mission}</p>
         <p className={`mt-3 ${NOTE}`}>
-          Vous dirigez {dossier.entete.entreprise} pendant {dossier.feuille.tours.length} tours, un{" "}
-          {periodicite} par tour, avec {poste.code === "direction" ? "les quatre responsables" : "les autres responsables et la direction générale"}.
+          {mois ? (
+            <>
+              Vous dirigez {dossier.entete.entreprise} pendant {dossier.feuille.tours.length} tours, un{" "}
+              {periodicite} par tour de {mois[0]} à {mois[mois.length - 1]}, avec{" "}
+              {poste.code === "direction" ? "les quatre responsables" : "les autres responsables et la direction générale"}.
+            </>
+          ) : (
+            <>
+              Vous dirigez {dossier.entete.entreprise} pendant {dossier.feuille.tours.length} tours, un{" "}
+              {periodicite} par tour, avec {poste.code === "direction" ? "les quatre responsables" : "les autres responsables et la direction générale"}.
+            </>
+          )}
         </p>
       </section>
 
@@ -232,12 +244,12 @@ export default async function DossierDuResponsablePage({
                 <th className="border border-white/15 px-2 py-1.5 text-left font-semibold text-slate-300 print:border-black/40 print:text-black">
                   Équipe :
                 </th>
-                {dossier.feuille.tours.map((t) => (
+                {dossier.feuille.tours.map((t, i) => (
                   <th
                     key={t}
                     className="w-24 border border-white/15 px-2 py-1.5 font-semibold text-slate-300 print:border-black/40 print:text-black"
                   >
-                    Tour {t}
+                    {mois ? <>Tour {t} ({mois[i]})</> : <>Tour {t}</>}
                   </th>
                 ))}
               </tr>
