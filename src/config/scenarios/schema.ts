@@ -36,6 +36,12 @@ const segmentSchema = z.object({
   commissionRate: z.number().gte(0).lt(1).optional(),
   marketingGate: z.number().min(0).max(1).optional(),
   seasonality: z.array(z.number().nonnegative()).optional(),
+  // L'année qui se répète dans une partie prolongée (`config/scenarios/rounds.ts`) :
+  // quatre trimestres.
+  saisonDesAnneesSuivantes: z.array(z.number().nonnegative()).length(4).optional(),
+  // Posé par une partie prolongée (`config/scenarios/rounds.ts`) : déclaré ici, sans quoi
+  // l'objet non strict le retirerait au chargement du snapshot, et le marché recroîtrait.
+  croissanceJusquAuTour: z.number().int().min(1).optional(),
 });
 
 const supplierSchema = z.object({

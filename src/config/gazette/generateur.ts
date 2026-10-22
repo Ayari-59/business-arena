@@ -1,5 +1,6 @@
 import type { EngineScenarioConfig, EventInstance, EventModifier } from "@/engine/types";
 import { toGamme } from "@/engine/gamme";
+import { facteurDeCroissance } from "@/engine/market/demand";
 import type { Sector } from "@/config/scenarios/registry";
 import { PERIODICITY_LABELS, periodicityFromRoundDays } from "@/config/scenarios/periodicity";
 import { courrierParCode } from "@/config/courriers/registre";
@@ -158,7 +159,7 @@ export function tendanceDeSaison(scenario: EngineScenarioConfig, tour: number): 
     for (const p of toGamme(scenario)) {
       for (const s of p.market.segments) {
         const coef = saison ? ((s.seasonality ?? p.market.seasonality ?? scenario.market.seasonality)[t - 1] ?? 1) : 1;
-        total += s.size * Math.pow(1 + s.growth, t - 1) * coef;
+        total += s.size * facteurDeCroissance(s, t) * coef;
       }
     }
     return total;

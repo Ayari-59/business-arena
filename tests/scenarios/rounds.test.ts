@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
-import { applyRoundsCount, toursDeLaPartie } from "../../src/config/scenarios/rounds";
+import {
+  applyRoundsCount,
+  TOURS_MAX_AU_TRIMESTRE,
+  toursDeLaPartie,
+  toursMaxDeLaPartie,
+} from "../../src/config/scenarios/rounds";
 
 /**
  * La durée d'une partie.
@@ -13,25 +18,30 @@ import { applyRoundsCount, toursDeLaPartie } from "../../src/config/scenarios/ro
  * complet, et une fiche qui annonçait un troisième nombre encore.
  */
 describe("durée d'une partie", () => {
-  it("une partie se raccourcit et ne s'allonge jamais", () => {
+  it("une partie se raccourcit partout, et ne s'allonge qu'au trimestre, jusqu'à douze tours", () => {
     for (const d of SCENARIOS) {
-      const max = d.scenario.roundsCount;
-      expect(toursDeLaPartie(d.scenario, 4), `${d.code}`).toBe(Math.min(4, max));
-      expect(toursDeLaPartie(d.scenario, 1), `${d.code}`).toBe(1);
-      // Au delà du secteur, les équipes joueraient des tours sans situation ni
-      // événement écrits pour eux : la demande est rabotée, pas honorée.
-      expect(toursDeLaPartie(d.scenario, max + 5), `${d.code}`).toBe(max);
-      expect(toursDeLaPartie(d.scenario, 0), `${d.code}`).toBe(1);
-      expect(toursDeLaPartie(d.scenario, -3), `${d.code}`).toBe(1);
-      expect(toursDeLaPartie(d.scenario, Number.NaN), `${d.code}`).toBe(max);
-      // Absent : la durée du secteur, comportement d'avant ce réglage.
-      expect(toursDeLaPartie(d.scenario, undefined), `${d.code}`).toBe(max);
+      const ecrits = d.scenario.roundsCount;
+      for (const p of ["month", "quarter", "year"] as const) {
+        const max = p === "quarter" ? TOURS_MAX_AU_TRIMESTRE : ecrits;
+        expect(toursMaxDeLaPartie(d.scenario, p), `${d.code} ${p}`).toBe(max);
+        expect(toursDeLaPartie(d.scenario, 4, p), `${d.code} ${p}`).toBe(Math.min(4, max));
+        expect(toursDeLaPartie(d.scenario, 1, p), `${d.code} ${p}`).toBe(1);
+        expect(toursDeLaPartie(d.scenario, 9, p), `${d.code} ${p}`).toBe(Math.min(9, max));
+        // Au-delà du maximum, la demande est rabotée, pas honorée.
+        expect(toursDeLaPartie(d.scenario, max + 5, p), `${d.code} ${p}`).toBe(max);
+        expect(toursDeLaPartie(d.scenario, 0, p), `${d.code} ${p}`).toBe(1);
+        expect(toursDeLaPartie(d.scenario, -3, p), `${d.code} ${p}`).toBe(1);
+        // Sans demande : la durée du scénario, à toutes les périodicités (tournois,
+        // démonstration, « toute la partie »).
+        expect(toursDeLaPartie(d.scenario, Number.NaN, p), `${d.code} ${p}`).toBe(ecrits);
+        expect(toursDeLaPartie(d.scenario, undefined, p), `${d.code} ${p}`).toBe(ecrits);
+      }
     }
   });
 
   it("seul le nombre de tours change", () => {
     for (const d of SCENARIOS) {
-      const court = applyRoundsCount(d.scenario, 3);
+      const court = applyRoundsCount(d.scenario, 3, "quarter");
       expect(court.roundsCount).toBe(3);
       expect(court.market).toEqual(d.scenario.market);
       expect(court.product).toEqual(d.scenario.product);
