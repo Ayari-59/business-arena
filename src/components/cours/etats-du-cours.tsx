@@ -160,6 +160,36 @@ export function CompteEnT({ journal, compte }: { journal: readonly Ecriture[]; c
   );
 }
 
+/** Ce que la paie avance aux salariés et ce qu'elle laisse à payer, destinataire par destinataire. */
+export function VuePaie({ soldes, avant }: { soldes: Record<string, number>; avant?: Record<string, number> }) {
+  const ligne = (s: Record<string, number>, c: string, signe: 1 | -1): LigneDEtat[] =>
+    (s[c] ?? 0) * signe > 0 ? [{ libelle: `${c} ${intituleDe(c)}`, montant: signe * s[c]!, comptes: [c] }] : [];
+  const avances = (s: Record<string, number>) => ligne(s, "425", 1);
+  const dettes = (s: Record<string, number>) => ["421", "431", "437", "442"].flatMap((c) => ligne(s, c, -1));
+  const total = (l: LigneDEtat[]) => l.reduce((t, x) => t + x.montant, 0);
+  return (
+    <figure className="grid gap-2" aria-label="Les comptes de la paie">
+      <figcaption className="text-sm font-semibold">Les comptes de la paie</figcaption>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Colonne
+          titre="Avancé aux salariés"
+          lignes={avances(soldes)}
+          total={total(avances(soldes))}
+          libelleTotal="À retenir sur la paie"
+          avant={avant ? avances(avant) : undefined}
+        />
+        <Colonne
+          titre="Encore dû, et à qui"
+          lignes={dettes(soldes)}
+          total={total(dettes(soldes))}
+          libelleTotal="Total à payer"
+          avant={avant ? dettes(avant) : undefined}
+        />
+      </div>
+    </figure>
+  );
+}
+
 /** Le journal tenu jusque-là, écriture par écriture. */
 export function Journal({ journal }: { journal: readonly Ecriture[] }) {
   if (journal.length === 0) return <p className="text-sm text-slate-400">Le journal est vide : rien n&apos;est encore passé.</p>;
@@ -218,5 +248,7 @@ export function VueDEtape({
       return <VueTva soldes={soldes} />;
     case "grand-livre":
       return <CompteEnT journal={journal} compte="512" />;
+    case "paie":
+      return <VuePaie soldes={soldes} avant={avant} />;
   }
 }
