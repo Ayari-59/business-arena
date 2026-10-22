@@ -81,6 +81,12 @@ export interface ChampDeMontant {
   attendu: number;
   /** Comment on le calcule : se lit après la réponse. */
   calcul: string;
+  /**
+   * L'écart admis, en plus ou en moins (0,01 par défaut : le centime). Un seuil de
+   * rentabilité en valeur dépend de l'arrondi du taux de marge que l'élève a gardé :
+   * l'euro près suffit à dire qu'il a compris.
+   */
+  tolerance?: number;
 }
 
 export interface EtapeMontants extends Base {
@@ -102,7 +108,40 @@ export interface EtapeComparaison extends Base {
   explication: (c: Cas, avant: EtatDuCours, apres: EtatDuCours) => string[];
 }
 
-export type Etape = EtapeLecture | EtapeEcriture | EtapeChoix | EtapeMontants | EtapeComparaison;
+/** Ranger des éléments dans des catégories : les charges, en variables ou fixes. */
+export interface EtapeTri extends Base {
+  type: "tri";
+  question: (c: Cas) => string;
+  categories: readonly { code: string; libelle: string }[];
+  elements: (c: Cas) => { libelle: string; montant: number; categorie: string; pourquoi: string }[];
+  explication: (c: Cas) => string[];
+}
+
+/**
+ * La simulation à manipuler : un curseur sur une quantité, et ce que l'entreprise gagne ou
+ * perd à chaque position. L'élève cherche la position demandée (le seuil) ; le graphique
+ * montre les deux droites qui se croisent.
+ */
+export interface EtapeCurseur extends Base {
+  type: "curseur";
+  question: (c: Cas) => string;
+  /** La quantité cherchée, et jusqu'où va le curseur. */
+  cible: (c: Cas) => { attendu: number; max: number };
+  /** Ce que vaut chaque grandeur pour une quantité donnée. */
+  lecture: (c: Cas, quantite: number) => { libelle: string; montant: number; fort?: boolean }[];
+  /** Les deux droites du graphique : le produit et le coût, pour une quantité. */
+  droites: (c: Cas) => { produit: (q: number) => number; cout: (q: number) => number; libelles: [string, string] };
+  explication: (c: Cas) => string[];
+}
+
+export type Etape =
+  | EtapeLecture
+  | EtapeEcriture
+  | EtapeChoix
+  | EtapeMontants
+  | EtapeComparaison
+  | EtapeTri
+  | EtapeCurseur;
 
 export interface Chapitre {
   code: string;

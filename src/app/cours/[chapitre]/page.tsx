@@ -8,7 +8,7 @@ import { casDeLEntreprise } from "@/config/cours/cas";
 import { chapitreParCode } from "@/config/cours/registre";
 import { getSession } from "@/lib/session";
 import { getGuestUserId } from "@/lib/guest";
-import { classeDeLEleve } from "@/services/cours.service";
+import { classeDeLEleve, classeSousLicence } from "@/services/cours.service";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { ENTREPRISES } from "../entreprises";
 
@@ -52,8 +52,10 @@ export default async function ChapitrePage({
     ENTREPRISES.find((e) => e.code === (classeDeLEleveLue?.entreprise ?? entreprise)) ?? ENTREPRISES[0]!;
 
   if (!chapitre.libre) {
-    const session = await getSession();
-    const ouvert = session ? await unCompteSousLicence([session.userId]) : false;
+    // L'enseignant par son compte, l'élève par sa classe : l'un ou l'autre sous licence.
+    const [session, invite] = await Promise.all([getSession(), getGuestUserId()]);
+    const ouvert =
+      (session ? await unCompteSousLicence([session.userId]) : false) || (invite ? await classeSousLicence(invite) : false);
     if (!ouvert) {
       return (
         <>
@@ -61,7 +63,8 @@ export default async function ChapitrePage({
             <p className="surtitre">Le cours par la simulation</p>
             <h1 className="text-3xl font-bold text-slate-50">{chapitre.titre}</h1>
             <p className="text-base text-slate-300">
-              Ce chapitre est réservé aux établissements sous licence. Le premier chapitre du cours, lui, est libre.
+              Ce chapitre est réservé aux établissements sous licence : il s&apos;ouvre aux enseignants de
+              l&apos;établissement, et à leurs élèves par leur classe. Le premier chapitre du cours, lui, est libre.
             </p>
             <p>
               <Link href="/cours" className={bouton({ taille: "m" })}>

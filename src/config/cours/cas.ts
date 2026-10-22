@@ -63,6 +63,22 @@ export interface Cas {
     dateUrssaf: number;
   };
   dates: { capital: number; emprunt: number };
+  /**
+   * Le même mois vu par le contrôle de gestion : les ventes du mois, leur prix moyen, les
+   * coûts variables par unité, les charges fixes du mois (dont l'usure de l'équipement).
+   */
+  gestion: {
+    quantite: number;
+    chiffreDAffaires: number;
+    prixMoyen: number;
+    matiereParUnite: number;
+    autresParUnite: number;
+    autresCoutsVariables: string;
+    coutVariableUnitaire: number;
+    amortissement: number;
+    dureeAmortissementMois: number;
+    chargesFixes: number;
+  };
 }
 
 /** La graine du trimestre simulé : le même cas pour tous. */
@@ -185,7 +201,7 @@ export function casDeLEntreprise(code: string): Cas {
   // Le client paie après le fournisseur : le chapitre règle la dette, puis encaisse la créance.
   const dateVente = Math.max(20, dateAchat + delaiFournisseur - delaiClient + 1);
 
-  const cas: Cas = {
+  const cas: Omit<Cas, "gestion"> & Partial<Pick<Cas, "gestion">> = {
     code,
     entreprise: nomEntreprise(def),
     unite: def.vocabulary.unit,
@@ -228,6 +244,22 @@ export function casDeLEntreprise(code: string): Cas {
       date: 31,
     },
   };
-  caches.set(code, cas);
-  return cas;
+  const quantiteVendue = cas.venteComptant.quantite + cas.venteCredit.quantite;
+  const chiffreDAffaires = auCentime(cas.venteComptant.ht + cas.venteCredit.ht);
+  const dureeAmortissementMois = type.depreciationRounds * 3;
+  const amortissement = Math.round(cas.immobilisation.ht / dureeAmortissementMois);
+  cas.gestion = {
+    quantite: quantiteVendue,
+    chiffreDAffaires,
+    prixMoyen: auCentime(chiffreDAffaires / quantiteVendue),
+    matiereParUnite: s.product.materialCostPerUnit,
+    autresParUnite: s.product.otherVariableCostPerUnit,
+    autresCoutsVariables: metier.autresCoutsVariables,
+    coutVariableUnitaire: auCentime(s.product.materialCostPerUnit + s.product.otherVariableCostPerUnit),
+    amortissement,
+    dureeAmortissementMois,
+    chargesFixes: cas.loyer.montant + cas.personnel.cout + amortissement,
+  };
+  caches.set(code, cas as Cas);
+  return cas as Cas;
 }

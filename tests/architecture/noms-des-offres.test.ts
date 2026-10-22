@@ -31,8 +31,11 @@ function fichiers(racine: string): string[] {
 
 const TOUS = fichiers(SRC).map((f) => ({ chemin: f.slice(SRC.length + 1), texte: readFileSync(f, "utf8") }));
 
-/** Les contenus de jeu : on y commande des audits et l'on y paie par carte, en fiction. */
-const JEU = /^(?:config\/episodes\/(?!demos\.ts)|config\/scenarios\/|engine\/|pedagogy\/)/;
+/**
+ * Les contenus de jeu : on y commande des audits et l'on y paie par carte, en fiction.
+ * Les cas du cours de comptabilité (config/cours) aussi : leurs clients paient par carte.
+ */
+const JEU = /^(?:config\/episodes\/(?!demos\.ts)|config\/scenarios\/|config\/cours\/|engine\/|pedagogy\/)/;
 
 const ANCIENS_NOMS: { quoi: string; motif: RegExp }[] = [
   { quoi: "offre Enseignant", motif: /offres? Enseignant\b/i },

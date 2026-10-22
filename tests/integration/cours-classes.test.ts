@@ -19,7 +19,9 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { CHAPITRES } from "@/config/cours/registre";
+import { placerSousLicence } from "./helpers/licence";
 import {
+  classeSousLicence,
   classeDeLEleve,
   classeDeLEnseignant,
   cloreClasse,
@@ -113,5 +115,17 @@ describe("une classe du cours", () => {
     expect(await rejoindreClasse(nouveau, classe.code, "Trop tard")).toEqual({ ok: false, refus: "close" });
     expect((await rejoindreClasse(deja, classe.code, "Déjà là")).ok).toBe(true);
     await cloreClasse({ enseignantId: prof, classeId: classe.id, close: false });
+  });
+
+  it("un chapitre réservé s'ouvre à l'élève par sa classe, quand son enseignant est sous licence", async () => {
+    const profSousLicence = await utilisateur();
+    await placerSousLicence(profSousLicence);
+    const ouverte = (await creerClasse({ enseignantId: profSousLicence, nom: "Sous licence" }))!;
+    const eleve = await utilisateur();
+    expect(await classeSousLicence(eleve)).toBe(false);
+    await rejoindreClasse(eleve, classe.code, "Sans licence");
+    expect(await classeSousLicence(eleve)).toBe(false);
+    await rejoindreClasse(eleve, ouverte.code, "Avec licence");
+    expect(await classeSousLicence(eleve)).toBe(true);
   });
 });
