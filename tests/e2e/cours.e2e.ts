@@ -5,7 +5,7 @@ import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES } from "../../src/config/cours/registre";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
-import { etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
+import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
 
 /**
  * LE COURS PAR LA SIMULATION, JOUÉ DANS LE NAVIGATEUR.
@@ -56,6 +56,7 @@ describe("le chapitre pilote, joué sans faute", () => {
   it("chez LA TABLE D'AUGUSTIN : chaque étape réussie du premier coup, jusqu'au bilan", async () => {
     const code = "bistrot";
     const cas = casDeLEntreprise(code);
+    const chapitre = chapitreDuCas(CHAPITRES[0]!, cas);
     const page = await nouvellePage();
     await aller(page, chemin(code));
     for (const [i, etape] of chapitre.etapes.entries()) {

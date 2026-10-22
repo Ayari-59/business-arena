@@ -18,7 +18,7 @@ import type {
   Piece,
 } from "@/config/cours/types";
 import { corriger, enSaisie, lireMontant, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
-import { etatAvant, indexDeLEtape, journalAvant } from "@/pedagogy/cours/deroule";
+import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagogy/cours/deroule";
 import type { Ecriture } from "@/pedagogy/cours/etats";
 import { Journal, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
 import { SaisieEcriture } from "./saisie-ecriture";
@@ -636,7 +636,8 @@ export function ChapitreGuide({
   entreprises: { code: string; nom: string }[];
   classe: boolean;
 }) {
-  const chapitre = useMemo(() => chapitreParCode(code)!, [code]);
+  // Le chapitre dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
+  const chapitre = useMemo(() => chapitreDuCas(chapitreParCode(code)!, cas), [code, cas]);
   const [suivi, changer, lu] = useSuivi(`cours:${code}:${cas.code}`);
   const [vue, setVue] = useState<number | null>(null);
   const n = chapitre.etapes.length;

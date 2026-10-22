@@ -12,7 +12,7 @@ import type { Chapitre, EtatDuCours, Piece } from "../types";
  * apports, l'emprunt, le loyer, l'équipement, un achat et deux ventes, la paie,
  * puis le compte de résultat, la TVA et le bilan du 31 janvier, que l'élève
  * construit lui-même à partir de son journal. On finit par les échéances : le
- * fournisseur payé, le client qui règle, et le constat qui ouvre la suite du
+ * fournisseur et l'URSSAF payés, le client qui règle, et le constat qui ouvre la suite du
  * cours : le résultat n'a pas bougé, la trésorerie si.
  *
  * Tous les montants viennent du cas de l'entreprise choisie (`cas.ts`).
@@ -59,6 +59,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     "Passer une écriture en partie double dans le journal",
     "Distinguer une charge, une immobilisation et un simple règlement",
     "Calculer et enregistrer la TVA déductible et la TVA collectée",
+    "Enregistrer la paie : salaires bruts, cotisations, net à payer, règlement à l'URSSAF",
     "Construire le compte de résultat et le bilan à partir du journal",
     "Expliquer pourquoi le résultat n'est pas la trésorerie",
   ],
@@ -372,26 +373,132 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       ],
     },
     {
-      id: "personnel",
+      id: "bulletin",
+      type: "montants",
+      titre: "La paie de janvier",
+      notions: ["fixed_costs"],
+      question: (c) =>
+        `Les ${qte(c.personnel.effectif)} salariés de ${c.entreprise} ont gagné ${eur(c.personnel.brut)} bruts en janvier. Les cotisations salariales, retenues sur le brut, en font ${pct(c.personnel.tauxSalarial)} ; les cotisations patronales, que l'entreprise paie en plus, ${pct(c.personnel.tauxPatronal)}. Calculez le récapitulatif de la paie.`,
+      champs: (c) => {
+        const p = c.personnel;
+        return [
+          { libelle: "Cotisations salariales", attendu: p.cotisationsSalariales, calcul: `${eur(p.brut)} × ${pct(p.tauxSalarial)} = ${eur(p.cotisationsSalariales)}` },
+          { libelle: "Net à payer aux salariés", attendu: p.net, calcul: `${eur(p.brut)} − ${eur(p.cotisationsSalariales)} = ${eur(p.net)}` },
+          { libelle: "Cotisations patronales", attendu: p.cotisationsPatronales, calcul: `${eur(p.brut)} × ${pct(p.tauxPatronal)} = ${eur(p.cotisationsPatronales)}` },
+          { libelle: "Coût total pour l'entreprise", attendu: p.cout, calcul: `${eur(p.brut)} + ${eur(p.cotisationsPatronales)} = ${eur(p.cout)}` },
+        ];
+      },
+      explication: (c) => [
+        `Le brut, ${eur(c.personnel.brut)}, est le salaire du contrat. Le salarié n'en reçoit que le net, ${eur(c.personnel.net)} : ses cotisations sont retenues et versées pour lui aux organismes sociaux.`,
+        `L'entreprise, elle, paie le brut et ses propres cotisations : le personnel lui coûte ${eur(c.personnel.cout)}. Les cotisations, salariales et patronales, se règlent à l'URSSAF le ${date(c.personnel.dateUrssaf)}.`,
+      ],
+    },
+    {
+      id: "paie",
       type: "ecriture",
-      titre: "Le personnel",
+      titre: "Les salaires du mois",
       notions: ["fixed_costs"],
       evenement: (c) =>
-        `Le ${date(c.personnel.date)}, les ${qte(c.personnel.effectif)} salariés sont payés : le coût du personnel de janvier, salaires et cotisations, est de ${eur(c.personnel.montant)}, réglé par la banque. Dans ce premier chapitre, on l'enregistre en une seule charge ; la paie détaillée (brut, cotisations, net à payer) vient au palier 3.`,
+        `Le ${date(c.personnel.date)}, le journal de paie de janvier est arrêté : ${eur(c.personnel.brut)} de salaires bruts, dont ${eur(c.personnel.cotisationsSalariales)} de cotisations salariales retenues et ${eur(c.personnel.net)} de net à payer.`,
+      piece: (c) => ({
+        nature: "Journal de paie de janvier",
+        de: c.entreprise,
+        a: `Ses ${qte(c.personnel.effectif)} salariés`,
+        date: date(c.personnel.date),
+        lignes: [
+          { libelle: "Salaires bruts", montant: c.personnel.brut },
+          { libelle: `Cotisations salariales (${pct(c.personnel.tauxSalarial)})`, montant: c.personnel.cotisationsSalariales },
+          { libelle: `Cotisations patronales (${pct(c.personnel.tauxPatronal)})`, montant: c.personnel.cotisationsPatronales },
+        ],
+        totaux: [
+          { libelle: "Net à payer aux salariés", montant: c.personnel.net, fort: true },
+          { libelle: "Coût total pour l'entreprise", montant: c.personnel.cout },
+        ],
+      }),
       ecriture: (c) => ({
         date: date(c.personnel.date),
-        libelle: "Personnel de janvier",
+        libelle: "Salaires de janvier",
         lignes: [
-          { role: "le coût du personnel", compte: "641", sens: "debit", montant: c.personnel.montant, indice: "le coût du personnel du mois" },
-          { role: "le paiement par la banque", compte: "512", sens: "credit", montant: c.personnel.montant, indice: "le coût du personnel du mois" },
+          { role: "les salaires bruts", compte: "641", sens: "debit", montant: c.personnel.brut, indice: "le total des salaires bruts" },
+          { role: "les cotisations salariales dues aux organismes sociaux", compte: "431", acceptes: ["437"], sens: "credit", montant: c.personnel.cotisationsSalariales, indice: "la part retenue sur le brut" },
+          { role: "le net dû aux salariés", compte: "421", sens: "credit", montant: c.personnel.net, indice: "ce que les salariés recevront" },
         ],
       }),
       indices: () => [
-        "Le travail du mois est consommé : une charge, classe 6 (les charges de personnel).",
-        "La banque paie.",
+        "La charge, c'est le salaire brut : classe 6, les rémunérations du personnel.",
+        "Rien n'est encore payé. L'entreprise doit le net à ses salariés (compte 421) et les cotisations retenues aux organismes sociaux (compte 431).",
       ],
       explication: (c) => [
-        `Le coût du personnel est une charge de ${eur(c.personnel.montant)}, au débit du 641 (${intituleDe("641")}). Elle sort aussitôt de la banque.`,
+        `La charge de l'entreprise est le brut, ${eur(c.personnel.brut)}, au débit du 641. Elle se partage en deux dettes : le net dû aux salariés (421) et les cotisations salariales dues à l'URSSAF (431).`,
+      ],
+      vue: "bilan-et-resultat",
+    },
+    {
+      id: "cotisations-patronales",
+      type: "ecriture",
+      titre: "Les cotisations patronales",
+      notions: ["fixed_costs"],
+      evenement: (c) =>
+        `Le même jour, l'entreprise enregistre ses propres cotisations sur les salaires de janvier : ${eur(c.personnel.cotisationsPatronales)}, à verser à l'URSSAF le ${date(c.personnel.dateUrssaf)}.`,
+      ecriture: (c) => ({
+        date: date(c.personnel.date),
+        libelle: "Cotisations patronales de janvier",
+        lignes: [
+          { role: "les cotisations patronales", compte: "645", sens: "debit", montant: c.personnel.cotisationsPatronales, indice: "la part patronale du journal de paie" },
+          { role: "la dette envers les organismes sociaux", compte: "431", acceptes: ["437"], sens: "credit", montant: c.personnel.cotisationsPatronales, indice: "la part patronale du journal de paie" },
+        ],
+      }),
+      indices: () => [
+        "Ces cotisations sont une charge de l'entreprise, à côté des salaires : classe 6, les charges de sécurité sociale.",
+        "Elles se paieront plus tard : une dette envers les organismes sociaux, la même que pour les cotisations salariales.",
+      ],
+      explication: (c) => [
+        `Une deuxième charge de personnel, ${eur(c.personnel.cotisationsPatronales)}, au débit du 645. L'URSSAF attend désormais ${eur(c.personnel.cotisationsSalariales + c.personnel.cotisationsPatronales)} : les cotisations salariales et patronales réunies.`,
+      ],
+      vue: "resultat",
+    },
+    {
+      id: "versement-salaires",
+      type: "ecriture",
+      titre: "Le versement des salaires",
+      notions: ["fixed_costs"],
+      evenement: (c) => `Le ${date(c.personnel.date)}, ${c.entreprise} vire leur net à payer aux salariés : ${eur(c.personnel.net)}.`,
+      ecriture: (c) => ({
+        date: date(c.personnel.date),
+        libelle: "Virement des salaires nets",
+        lignes: [
+          { role: "la dette envers les salariés qui s'éteint", compte: "421", sens: "debit", montant: c.personnel.net, indice: "le net à payer" },
+          { role: "le paiement par la banque", compte: "512", sens: "credit", montant: c.personnel.net, indice: "le net à payer" },
+        ],
+      }),
+      indices: () => ["La dette envers les salariés disparaît : le compte 421 passe au débit.", "La banque paie."],
+      explication: (c) => [
+        `Seul le net, ${eur(c.personnel.net)}, sort aujourd'hui de la banque. Les cotisations restent dues à l'URSSAF jusqu'au ${date(c.personnel.dateUrssaf)} : c'est une dette sociale, au passif.`,
+      ],
+      vue: "bilan",
+    },
+    {
+      id: "cout-du-personnel",
+      type: "choix",
+      titre: "Le coût du personnel",
+      notions: ["fixed_costs", "income_statement"],
+      question: (c) => `Que coûte le personnel de janvier à ${c.entreprise}, dans son compte de résultat ?`,
+      options: (c) => [
+        {
+          texte: `${eur(c.personnel.net)} : le net versé aux salariés.`,
+          juste: false,
+          retour: "Le net est ce que les salariés reçoivent. L'entreprise paie aussi leurs cotisations, retenues sur le brut, et les siennes.",
+        },
+        {
+          texte: `${eur(c.personnel.brut)} : les salaires bruts.`,
+          juste: false,
+          retour: "Il manque les cotisations patronales, que l'entreprise paie en plus du brut (compte 645).",
+        },
+        {
+          texte: `${eur(c.personnel.cout)} : le brut et les cotisations patronales.`,
+          juste: true,
+          retour: "C'est cela : 641 et 645 réunis. Ce que la banque a versé ce jour-là, le net, n'en est qu'une partie.",
+        },
       ],
       vue: "resultat",
     },
@@ -502,7 +609,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       titre: "Le bilan au 31 janvier",
       notions: ["balance_sheet"],
       question: () =>
-        "Construisez le bilan au 31 janvier. À l'actif : les immobilisations, les créances (clients, TVA si l'État vous doit), la banque. Au passif : le capital, le résultat, les dettes (emprunt, fournisseur, TVA si vous la devez).",
+        "Construisez le bilan au 31 janvier. À l'actif : les immobilisations, les créances (clients, TVA si l'État vous doit), la banque. Au passif : le capital, le résultat, les dettes (emprunt, fournisseur, organismes sociaux, TVA si vous la devez).",
       champs: (_c, e) => {
         const b = bilan(e.soldes);
         return [
@@ -535,7 +642,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
             "Le résultat compte une vente ou un achat quand la facture naît ; la banque, quand on paie. Et l'équipement est payé sans être une charge.",
           juste: true,
           retour:
-            "C'est cela : la créance du client, la dette du fournisseur, l'équipement et la TVA font tout l'écart. Le résultat mesure l'enrichissement, la trésorerie l'argent disponible.",
+            "C'est cela : la créance du client, les dettes du fournisseur et de l'URSSAF, l'équipement et la TVA font tout l'écart. Le résultat mesure l'enrichissement, la trésorerie l'argent disponible.",
         },
         {
           texte: "Il y a une erreur dans le journal.",
@@ -555,16 +662,24 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       type: "lecture",
       titre: "Les échéances",
       notions: ["payment_terms"],
-      texte: (c) => [
-        `Le temps passe. Le ${date(c.achat.echeance)}, la facture de ${c.achat.fournisseur} arrive à échéance. Le ${date(c.venteCredit.echeance)}, c'est celle de ${c.venteCredit.client}.`,
-        "Ces deux règlements ne sont ni des achats ni des ventes : ils soldent une dette et une créance déjà enregistrées. Passez-les, puis regardez ce qu'ils changent.",
-      ],
+      texte: (c) => {
+        const reglements = [
+          { jour: c.achat.echeance, texte: `la facture de ${c.achat.fournisseur} arrive à échéance` },
+          { jour: c.personnel.dateUrssaf, texte: "les cotisations de janvier se paient à l'URSSAF" },
+          { jour: c.venteCredit.echeance, texte: `${c.venteCredit.client} doit régler sa facture` },
+        ].sort((a, b) => a.jour - b.jour);
+        return [
+          `Le temps passe. ${reglements.map((r) => `Le ${date(r.jour)}, ${r.texte}`).join(". ")}.`,
+          "Ces règlements ne sont ni des achats, ni des ventes, ni des charges de personnel : ils soldent des dettes et une créance déjà enregistrées. Passez-les dans l'ordre des dates, puis regardez ce qu'ils changent.",
+        ];
+      },
     },
     {
       id: "paiement-fournisseur",
       type: "ecriture",
       titre: "Le fournisseur est payé",
       notions: ["payment_terms"],
+      echeance: (c) => c.achat.echeance,
       evenement: (c) => `Le ${date(c.achat.echeance)}, ${c.entreprise} paie ${c.achat.fournisseur} par virement : ${eur(c.achat.ttc)}.`,
       ecriture: (c) => ({
         date: date(c.achat.echeance),
@@ -584,10 +699,31 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       vue: "bilan",
     },
     {
+      id: "paiement-urssaf",
+      type: "ecriture",
+      titre: "L'URSSAF est payée",
+      notions: ["payment_terms"],
+      echeance: (c) => c.personnel.dateUrssaf,
+      evenement: (c) =>
+        `Le ${date(c.personnel.dateUrssaf)}, ${c.entreprise} verse à l'URSSAF les cotisations de janvier : ${eur(c.personnel.cotisationsSalariales + c.personnel.cotisationsPatronales)}, salariales et patronales réunies.`,
+      ecriture: (c) => ({
+        date: date(c.personnel.dateUrssaf),
+        libelle: "Cotisations de janvier à l'URSSAF",
+        lignes: [
+          { role: "la dette sociale qui s'éteint", compte: "431", acceptes: ["437"], sens: "debit", montant: c.personnel.cotisationsSalariales + c.personnel.cotisationsPatronales, indice: "les cotisations salariales et patronales réunies" },
+          { role: "le paiement par la banque", compte: "512", sens: "credit", montant: c.personnel.cotisationsSalariales + c.personnel.cotisationsPatronales, indice: "les cotisations salariales et patronales réunies" },
+        ],
+      }),
+      indices: () => ["La dette envers l'URSSAF disparaît : le compte 431 passe au débit.", "La banque paie."],
+      explication: () => ["La dette sociale est soldée. Aucune charge nouvelle : les cotisations avaient été enregistrées avec la paie de janvier."],
+      vue: "bilan",
+    },
+    {
       id: "encaissement-client",
       type: "ecriture",
       titre: "Le client paie",
       notions: ["payment_terms"],
+      echeance: (c) => c.venteCredit.echeance,
       evenement: (c) => `Le ${date(c.venteCredit.echeance)}, ${c.venteCredit.client} règle sa facture par virement : ${eur(c.venteCredit.ttc)}.`,
       ecriture: (c) => ({
         date: date(c.venteCredit.echeance),
@@ -606,8 +742,9 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       type: "comparaison",
       titre: "Ce qui a changé",
       notions: ["net_treasury", "income_statement", "balance_sheet"],
-      question: (c) => `Entre le 31 janvier et le ${date(c.venteCredit.echeance)}, le résultat de janvier a-t-il changé ?`,
-      avantLEtape: "paiement-fournisseur",
+      question: (c) =>
+        `Entre le 31 janvier et le ${date(Math.max(c.achat.echeance, c.venteCredit.echeance, c.personnel.dateUrssaf))}, le résultat de janvier a-t-il changé ?`,
+      avantLEtape: "echeances",
       libelles: { avant: "Au 31 janvier", apres: "Après les échéances" },
       options: (c) => [
         { texte: "Oui, il a augmenté : le client a payé.", juste: false, retour: "Le client a payé une vente déjà comptée en janvier : la payer ne la compte pas une deuxième fois." },
@@ -616,13 +753,13 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
           juste: true,
           retour: `C'est la leçon du chapitre : le résultat de ${c.entreprise} est né des factures ; les règlements ne font que transformer une créance ou une dette en argent.`,
         },
-        { texte: "Oui, il a baissé : le fournisseur a été payé.", juste: false, retour: "La charge de l'achat était déjà comptée à la facture. Le paiement ne fait qu'éteindre la dette." },
+        { texte: "Oui, il a baissé : le fournisseur et l'URSSAF ont été payés.", juste: false, retour: "L'achat et les cotisations étaient déjà comptés en janvier. Les payer ne fait qu'éteindre les dettes." },
       ],
       explication: (_c, avant, apres) => {
         const a = bilan(avant.soldes);
         const b = bilan(apres.soldes);
         return [
-          `Le résultat reste à ${eur(a.resultat)}. La banque passe de ${eur(avant.soldes["512"] ?? 0)} à ${eur(apres.soldes["512"] ?? 0)}, les clients et le fournisseur sont soldés.`,
+          `Le résultat reste à ${eur(a.resultat)}. La banque passe de ${eur(avant.soldes["512"] ?? 0)} à ${eur(apres.soldes["512"] ?? 0)}, le client, le fournisseur et l'URSSAF sont soldés.`,
           `Le total du bilan, lui, passe de ${eur(a.totalActif)} à ${eur(b.totalActif)} : payer une dette fait baisser l'actif et le passif ensemble.`,
         ];
       },
@@ -634,7 +771,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       notions: ["balance_sheet", "income_statement"],
       texte: (c) => [
         `Vous avez tenu le premier mois de ${c.entreprise} : chaque opération dans le journal, puis le compte de résultat, la TVA et le bilan, construits à partir de vos propres écritures.`,
-        "Le bilan de janvier n'est pas encore celui d'un comptable : il y manque l'usure de l'équipement, les intérêts de l'emprunt, les stocks et le détail de la paie. C'est le palier 3 : les opérations courantes et les travaux de fin de période.",
+        "Le bilan de janvier n'est pas encore celui d'un comptable : il y manque l'usure de l'équipement, les intérêts de l'emprunt et les stocks. C'est le palier 3 : les opérations courantes et les travaux de fin de période.",
         `Dans l'arène, ${c.entreprise} démarre avec ce capital et cet emprunt : vous pouvez la diriger, et lire ses comptes trimestre après trimestre.`,
       ],
       repere: () =>

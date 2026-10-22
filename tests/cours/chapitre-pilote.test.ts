@@ -6,7 +6,7 @@ import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { corriger, enEcriture, enSaisie } from "../../src/pedagogy/cours/correcteur";
 import { bilan, compteDeResultat, equilibree } from "../../src/pedagogy/cours/etats";
 import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
-import { etatAvant, etatApres, indexDeLEtape, journalAvant } from "../../src/pedagogy/cours/deroule";
+import { chapitreDuCas, etatAvant, etatApres, indexDeLEtape, journalAvant } from "../../src/pedagogy/cours/deroule";
 import type { Etape } from "../../src/config/cours/types";
 import type { Cas } from "../../src/config/cours/cas";
 
@@ -20,11 +20,11 @@ import type { Cas } from "../../src/config/cours/cas";
  * texte ne sort un « undefined » ou un « NaN ».
  */
 
-const chapitre = CHAPITRES[0]!;
+const pilote = CHAPITRES[0]!;
 const codesDesNotions = new Set(CONCEPTS.map((c) => c.code));
 
 /** Tout le texte qu'une étape peut afficher, dans l'état où l'élève l'aborde. */
-function textesDe(e: Etape, cas: Cas, i: number): string[] {
+function textesDe(chapitre: typeof pilote, e: Etape, cas: Cas, i: number): string[] {
   const avant = etatAvant(chapitre, cas, i);
   const apres = etatApres(chapitre, cas, i);
   switch (e.type) {
@@ -58,6 +58,7 @@ function textesDe(e: Etape, cas: Cas, i: number): string[] {
 
 describe.each(ENTREPRISES_DU_COURS)("le chapitre pilote chez %s", (code) => {
   const cas = casDeLEntreprise(code);
+  const chapitre = chapitreDuCas(pilote, cas);
 
   it("le cas a ses deux ventes, un achat, un équipement, et des dates qui se suivent", () => {
     expect(cas.venteComptant.quantite).toBeGreaterThan(0);
@@ -68,8 +69,18 @@ describe.each(ENTREPRISES_DU_COURS)("le chapitre pilote chez %s", (code) => {
     expect(cas.achat.echeance).toBeGreaterThan(31);
     expect(cas.venteCredit.echeance).toBeGreaterThan(cas.achat.echeance);
     expect(cas.venteCredit.date).toBeLessThan(cas.personnel.date);
+    // La paie : le brut se partage entre net et cotisations, le coût ajoute la part patronale.
+    const p = cas.personnel;
+    expect(p.net + p.cotisationsSalariales).toBe(p.brut);
+    expect(p.cout).toBe(p.brut + p.cotisationsPatronales);
+    expect(p.dateUrssaf).toBeGreaterThan(31);
     const journal = journalAvant(chapitre, cas, chapitre.etapes.length);
-    const jours = chapitre.etapes.flatMap((e) => (e.type === "ecriture" ? [e.ecriture(cas)] : []));
+    // Le journal reste chronologique, règlements compris, quelle que soit l'entreprise.
+    const jours = chapitre.etapes.flatMap((e) =>
+      e.type === "ecriture" ? [e.echeance?.(cas) ?? Number.NaN] : [],
+    );
+    const echeances = jours.filter((j) => !Number.isNaN(j));
+    expect(echeances).toEqual([...echeances].sort((a, b) => a - b));
     expect(journal).toHaveLength(jours.length);
   });
 
@@ -96,7 +107,7 @@ describe.each(ENTREPRISES_DU_COURS)("le chapitre pilote chez %s", (code) => {
   });
 
   it("les échéances ne changent pas le résultat de janvier", () => {
-    const k = indexDeLEtape(chapitre, "paiement-fournisseur");
+    const k = indexDeLEtape(chapitre, "echeances");
     const finJanvier = compteDeResultat(etatAvant(chapitre, cas, k).soldes);
     const fin = compteDeResultat(etatAvant(chapitre, cas, chapitre.etapes.length).soldes);
     expect(fin.resultat).toBe(finJanvier.resultat);
@@ -105,7 +116,7 @@ describe.each(ENTREPRISES_DU_COURS)("le chapitre pilote chez %s", (code) => {
 
   it("aucun texte ne sort undefined ou NaN ; chaque question a une seule bonne réponse ; chaque montant demandé est un nombre", () => {
     chapitre.etapes.forEach((e, i) => {
-      for (const t of textesDe(e, cas, i)) expect(t, `${e.id} : ${t}`).not.toMatch(/undefined|NaN|\[object/);
+      for (const t of textesDe(chapitre, e, cas, i)) expect(t, `${e.id} : ${t}`).not.toMatch(/undefined|NaN|\[object/);
       const avant = etatAvant(chapitre, cas, i);
       if (e.type === "choix") expect(e.options(cas, avant).filter((o) => o.juste), e.id).toHaveLength(1);
       if (e.type === "montants") for (const c of e.champs(cas, avant)) expect(Number.isFinite(c.attendu), e.id).toBe(true);
@@ -114,13 +125,14 @@ describe.each(ENTREPRISES_DU_COURS)("le chapitre pilote chez %s", (code) => {
 });
 
 describe("le chapitre pilote, quelle que soit l'entreprise", () => {
+  const chapitre = pilote;
   it("ses notions sont des fiches du site, et ses identifiants d'étape sont uniques", () => {
     for (const e of chapitre.etapes) for (const n of e.notions ?? []) expect(codesDesNotions.has(n), `${e.id} : ${n}`).toBe(true);
     expect(new Set(chapitre.etapes.map((e) => e.id)).size).toBe(chapitre.etapes.length);
   });
 
   it("est libre d'accès (décision du propriétaire : le premier chapitre sert de démonstration)", () => {
-    expect(chapitre.libre).toBe(true);
+    expect(pilote.libre).toBe(true);
     expect(CHAPITRES.filter((c) => c.libre)).toHaveLength(1);
   });
 
