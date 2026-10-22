@@ -34,6 +34,10 @@ export interface CorrectionDeDate {
 
 const DETECTEE = "situation détectée : elle tombe à n'importe quel tour, la saison qu'elle supposait était souvent fausse";
 const TIRE = "courrier tiré au sort, ou posé par l'enseignant : il tombe à n'importe quel tour, la date qu'il portait était souvent fausse";
+const POSE =
+  "courrier à tour fixe, que l'enseignant pose aussi au tour qu'il veut : la date, vraie à son tour, devenait fausse à tous les autres";
+const METEO =
+  "récit météo d'un événement tiré à plusieurs tours, le calendrier de la partie bouclant : le temps qu'il racontait supposait une saison";
 
 export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
   // --- Les deux dates fausses au tour où elles tombent -----------------------
@@ -408,12 +412,6 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
     pourquoi: TIRE,
   },
   {
-    codes: ["fitness_canicule"],
-    avant: "L'été cumule tout :",
-    apres: "Une vague de chaleur cumule tout :",
-    pourquoi: `${TIRE} (dès le tour 2) ; la canicule reste, la saison du calendrier part`,
-  },
-  {
     codes: ["fitness_contrat_surprise"],
     avant: "un accès à votre club à compter de janvier,",
     apres: "un accès à votre club dès à présent,",
@@ -454,6 +452,103 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
     avant: "augmentent de six pour cent au premier janvier",
     apres: "augmentent de six pour cent à la date de revalorisation",
     pourquoi: `${TIRE} ; la hausse s'applique au tour du courrier, l'effet le dit`,
+  },
+  // --- Les courriers à tour fixe, posés à la main ----------------------------
+  // Décision du propriétaire (« On règle ces 2 là ») : l'enseignant pose un courrier
+  // à tour fixe au tour qu'il veut (`distribuerUnCourrier`). Ces sept gardaient au
+  // trimestre une date vraie à leur tour seul ; ils prennent la forme qu'ils avaient
+  // déjà au mois et à l'année.
+  {
+    codes: ["nova_inv_concurrent"],
+    avant: "inaugurera cet automne une seconde ligne",
+    apres: "inaugurera prochainement une seconde ligne",
+    pourquoi: `${POSE} ; l'automne n'était vrai qu'au tour 4`,
+  },
+  {
+    codes: ["boutique_inv_concurrent"],
+    avant: "dans l'agglomération d'ici la fin de l'automne et renouvelle",
+    apres: "dans l'agglomération dans les semaines qui viennent et renouvelle",
+    pourquoi: `${POSE} ; la fin de l'automne n'était vraie qu'au tour 4`,
+  },
+  {
+    codes: ["hotel_inv_signal"],
+    avant: "ajouter notre ville à ses circuits d'automne.",
+    apres: "ajouter notre ville à ses prochains circuits.",
+    pourquoi: `${POSE} ; les circuits d'automne n'étaient à venir qu'au tour 2`,
+  },
+  {
+    codes: ["hotel_inv_concurrent"],
+    avant: "à ceux du quartier jusqu'à la fin de l'année.",
+    apres: "à ceux du quartier, le temps de reconstituer sa clientèle.",
+    pourquoi: `${POSE} ; le tarif d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date`,
+  },
+  {
+    codes: ["bistrot_inv_signal"],
+    avant: "emménagera à la rentrée dans l'immeuble voisin",
+    apres: "emménagera prochainement dans l'immeuble voisin",
+    pourquoi: `${POSE} ; la rentrée ne tombait au tour suivant qu'au tour 2`,
+  },
+  {
+    codes: ["bistrot_inv_concurrent"],
+    avant: "à celles du quartier jusqu'à la fin de l'année.",
+    apres: "à celles du quartier, le temps de reconstituer sa clientèle.",
+    pourquoi: `${POSE} ; la formule d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date`,
+  },
+  {
+    codes: ["fitness_energie"],
+    avant: "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.",
+    apres:
+      "Une charge qui grimpe ne se répercute pas d'elle-même : tant que l'abonnement ne bouge pas, c'est la marge de chaque adhérent qui la paie.",
+    pourquoi: `${POSE} ; posée au tour 1, la salle n'est pas vide, et l'effet porte sur le coût variable par adhérent`,
+  },
+  {
+    codes: ["boutique_inv_retournement"],
+    avant: "La saison est plus douce que prévu et nos ventes de maille",
+    apres: "Nos ventes de maille",
+    pourquoi: `${POSE} ; une saison douce ne baisse la maille qu'en hiver, et la baisse des ventes suffit à l'effet`,
+  },
+  // --- Les récits météo -------------------------------------------------------
+  // Même décision : l'événement garde son effet, son tirage et ses tours ; seul le
+  // récit change, pour un temps possible en toute saison qui justifie le même effet.
+  {
+    codes: ["fitness_canicule"],
+    avant: "Épisode caniculaire — recommandations aux établissements sportifs",
+    apres: "Pollution de l'air : recommandations aux établissements sportifs",
+    pourquoi: `${METEO} (dès le tour 2, donc au tour 5) ; un épisode de pollution de l'air réduit l'accueil de même, en toute saison`,
+  },
+  {
+    codes: ["fitness_canicule"],
+    avant:
+      "Le département est placé en vigilance canicule pour la semaine. Il est recommandé de limiter la fréquentation aux heures les plus chaudes et d'interrompre les activités si la température intérieure dépasse trente degrés.",
+    apres:
+      "Le département est placé en alerte pour un épisode de pollution de l'air toute la semaine. Il est recommandé de réduire l'intensité des séances, de limiter la fréquentation des plateaux et des cours collectifs, et de déconseiller la pratique aux personnes sensibles.",
+    pourquoi: METEO,
+  },
+  {
+    codes: ["fitness_canicule"],
+    avant: "L'été cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
+    apres: "Une salle qui accueille moins ne coûte pas moins : le loyer et les salaires tombent comme à chaque tour.",
+    pourquoi: `${METEO} ; l'effet ne porte que sur la capacité d'accueil, pas sur l'énergie`,
+  },
+  {
+    codes: ["cold_wave"],
+    avant: "Épisode de grand froid — restrictions de circulation",
+    apres: "Vigilance intempéries : restrictions de circulation",
+    pourquoi: `${METEO} (dès le tour 2, donc en plein été au trimestre) ; des intempéries arrêtent les poids lourds en toute saison`,
+  },
+  {
+    codes: ["cold_wave"],
+    avant:
+      "Un épisode de froid intense frappe la région pour plusieurs jours. La circulation des poids lourds est restreinte, les livraisons sont retardées et les ateliers non chauffés doivent réduire leur activité.",
+    apres:
+      "Un épisode de pluies diluviennes et de vents violents frappe la région pour plusieurs jours. La circulation des poids lourds est restreinte, les livraisons sont retardées et des coupures de courant ralentissent les ateliers.",
+    pourquoi: `${METEO} ; les coupures de courant justifient la même perte de disponibilité des machines`,
+  },
+  {
+    codes: ["batiment_intemperies"],
+    avant: "La période de pluie et de gel annoncée",
+    apres: "La période de fortes pluies et de vents violents annoncée",
+    pourquoi: `${METEO} (dès le tour 2) ; la pluie et le vent arrêtent un chantier en toute saison, le gel non`,
   },
   // --- Deux étapes d'investissement, datées à tort à leur tour fixe ---------
   {

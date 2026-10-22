@@ -45,7 +45,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Caisse des congés et intempéries du bâtiment",
     objet: "Déclaration d'arrêt pour intempéries",
     corps:
-      "La période de pluie et de gel annoncée justifie l'arrêt des chantiers extérieurs. Les heures perdues doivent être déclarées dans les huit jours ; les salaires restent dus aux compagnons pendant l'arrêt.",
+      "La période de fortes pluies et de vents violents annoncée justifie l'arrêt des chantiers extérieurs. Les heures perdues doivent être déclarées dans les huit jours ; les salaires restent dus aux compagnons pendant l'arrêt.",
     signataire: "Le service des déclarations",
     effet: "Disponibilité des chantiers −18 % ce tour",
     enJeu: "Les compagnons sont payés pendant l'arrêt : une journée d'intempérie coûte le salaire sans la recette.",

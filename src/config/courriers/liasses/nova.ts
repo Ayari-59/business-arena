@@ -170,9 +170,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "cold_wave",
     expediteur: "Préfecture · Cellule de crise départementale",
-    objet: "Épisode de grand froid — restrictions de circulation",
+    objet: "Vigilance intempéries : restrictions de circulation",
     corps:
-      "Un épisode de froid intense frappe la région pour plusieurs jours. La circulation des poids lourds est restreinte, les livraisons sont retardées et les ateliers non chauffés doivent réduire leur activité.",
+      "Un épisode de pluies diluviennes et de vents violents frappe la région pour plusieurs jours. La circulation des poids lourds est restreinte, les livraisons sont retardées et des coupures de courant ralentissent les ateliers.",
     signataire: "Le directeur de cabinet",
     effet: "Disponibilité machine −10 % ce tour (tout le marché)",
     enJeu: "Quand tout le monde produit moins, qui a du stock vend.",
@@ -491,7 +491,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Fédération de l'électronique grand public",
     objet: "Kelvox Acoustique annonce une seconde ligne d'assemblage",
     corps:
-      "{{Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.}} Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
+      "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades. Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
     signataire: "Le délégué général",
     effet: "Demande globale −8 % pendant 2 tours",
     enJeu:

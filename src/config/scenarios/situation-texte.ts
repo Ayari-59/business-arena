@@ -185,13 +185,6 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     month: "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas au creux.",
     year: "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas au creux.",
   },
-  // La hausse d'énergie est posée au tour 3, celui du creux : au trimestre, l'été y est
-  // vrai. Les autres courriers de VOLT FITNESS se tirent à n'importe quel tour et ne
-  // datent rien, à aucune durée (garde : tests/scenarios/saisons-textes-neutres.test.ts).
-  "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.": {
-    month: "Une charge qui grimpe quand la salle est vide : au creux, elle tombe sans aucun abonnement pour la couvrir.",
-    year: "Une charge qui grimpe quand la salle est vide : au creux, elle tombe sans aucun abonnement pour la couvrir.",
-  },
   //
   // NOVA et NOVA · GAMME. Le pic au tour 4 (marché à 1,35, la Go à 1,9, le module radio
   // y rompt plus souvent), le contrecoup au tour 5. L'arc CampusTech n'est pas une
@@ -233,12 +226,6 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque à Noël coûte les ventes du meilleur tour": {
     month: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
     year: "Un fournisseur se juge aussi à sa tenue aux pics : un module qui manque au pic coûte les ventes du meilleur tour",
-  },
-  // Le concurrent de l'arc d'investissement tombe au tour 4 : au trimestre, l'automne y
-  // est vrai. Les courriers tirés de NOVA ne datent rien, à aucune durée.
-  "Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.": {
-    month: "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.",
-    year: "Notre adhérent Kelvox Acoustique inaugurera prochainement une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades.",
   },
   // --- fin du groupe fitness-nova-batiment-transport ---
   // --- hotel-bistrot-conseil : le récit des saisons ------------------------
@@ -294,18 +281,6 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
   // Les DSI creusent le moins au tour 3 de la gamme (`dsi`) : c'est ce qui reste vrai de « ne connaît pas les congés ».
   "Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.":
     aLaSaison("Ce tour creux est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader."),
-  // Les étapes d'investissement de L'ESCALE et de LA TABLE D'AUGUSTIN tombent à un tour
-  // fixe, où leur date est vraie au trimestre (le signal au tour 2, le concurrent au tour 4).
-  // Leurs courriers tirés ne datent rien, à aucune durée.
-  "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne.":
-    aLaSaison("Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses prochains circuits."),
-  // Le tarif d'appel dure le temps de l'effet (deux tours), pas jusqu'à une date.
-  "Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année.":
-    aLaSaison("Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier, le temps de reconstituer sa clientèle."),
-  "Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année.":
-    aLaSaison("Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier, le temps de reconstituer sa clientèle."),
-  "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place.":
-    aLaSaison("Le groupe Montclar Ingénierie emménagera prochainement dans l'immeuble voisin de la place."),
   // --- fin hotel-bistrot-conseil -------------------------------------------
   // --- groupe boutique-ecommerce : le récit des saisons ---------------------
   // MAILLE & CO et PIXEL & CO racontaient Noël, les soldes, les fêtes et la
@@ -385,24 +360,16 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
       "Beaucoup d'e-commerçants rentables meurent en décembre.":
         "Beaucoup d'e-commerçants rentables meurent au plus fort de leur saison.",
       "Les enchères publicitaires montent en période de fêtes.": "Les enchères publicitaires montent au tour du pic.",
-
-      // Les étapes d'investissement des deux liasses tombent aux tours 4 (le
-      // concurrent) et 5 (le retournement) : au mois et à l'année, rien n'y fait
-      // l'automne. Les courriers tirés, que l'animateur peut aussi poser au tour qu'il
-      // veut, ne datent rien, à aucune durée.
-      "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille.":
-        "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération dans les semaines qui viennent et renouvelle l'ensemble de sa ligne de maille.",
-      "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.":
-        "Le temps reste plus doux que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement.",
     } satisfies Record<string, string | { month: string; year: string }>).map(([cle, forme]) => [
       cle,
       typeof forme === "string" ? { month: forme, year: forme } : forme,
     ]),
   ),
   // --- fin du groupe boutique-ecommerce : le récit des saisons --------------
-  // Les situations détectées et les courriers tirés au sort (ils tombent à n'importe quel
-  // tour), comme les textes datés à tort au trimestre même, ne passent plus par cette
-  // table : leur texte ne date rien, à aucune durée (garde :
+  // Les situations détectées et les courriers, tous (tirés au sort, ou posés par
+  // l'enseignant au tour qu'il veut, étapes d'investissement et événements scriptés
+  // compris), comme les textes datés à tort au trimestre même, ne passent plus par
+  // cette table : leur texte ne date rien, à aucune durée (garde :
   // tests/scenarios/saisons-textes-neutres.test.ts).
 };
 

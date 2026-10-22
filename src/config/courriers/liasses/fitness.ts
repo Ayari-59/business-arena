@@ -79,7 +79,7 @@ const SOURCES: CourrierDef[] = [
     signataire: "Le conseiller entreprises",
     effet: "Coût variable par adhérent +28 % pendant 2 tours",
     enJeu:
-      "{{Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir.}}",
+      "Une charge qui grimpe ne se répercute pas d'elle-même : tant que l'abonnement ne bouge pas, c'est la marge de chaque adhérent qui la paie.",
     nature: "macro",
     pli: "email",
     icone: "hausse",
@@ -117,12 +117,12 @@ const SOURCES: CourrierDef[] = [
   {
     code: "fitness_canicule",
     expediteur: "Préfecture · Cellule de veille sanitaire",
-    objet: "Épisode caniculaire — recommandations aux établissements sportifs",
+    objet: "Pollution de l'air : recommandations aux établissements sportifs",
     corps:
-      "Le département est placé en vigilance canicule pour la semaine. Il est recommandé de limiter la fréquentation aux heures les plus chaudes et d'interrompre les activités si la température intérieure dépasse trente degrés.",
+      "Le département est placé en alerte pour un épisode de pollution de l'air toute la semaine. Il est recommandé de réduire l'intensité des séances, de limiter la fréquentation des plateaux et des cours collectifs, et de déconseiller la pratique aux personnes sensibles.",
     signataire: "Le directeur de cabinet",
     effet: "Capacité d'accueil −12 % ce tour",
-    enJeu: "Une vague de chaleur cumule tout : moins d'adhérents, plus d'énergie, et des charges qui ne bougent pas.",
+    enJeu: "Une salle qui accueille moins ne coûte pas moins : le loyer et les salaires tombent comme à chaque tour.",
     nature: "market",
     pli: "simple",
     icone: "meteo",

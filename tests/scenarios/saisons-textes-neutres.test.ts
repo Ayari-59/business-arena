@@ -9,7 +9,7 @@ import { applyPeriodicity, PERIODICITY_DAYS, type Periodicity } from "@/config/s
 import { situationDeLaPartie, textesDe } from "@/config/scenarios/situation-texte";
 import { courrierDeLaPartie } from "@/config/courriers/de-la-partie";
 import { textesDuCourrier } from "@/config/courriers/texte";
-import { COURRIERS, LIASSES } from "@/config/courriers/registre";
+import { COURRIERS, COURRIERS_ENTREPRISE_CODES, COURRIERS_MARCHE_CODES, LIASSES } from "@/config/courriers/registre";
 import { COURRIERS_DE_ROUTINE } from "@/config/courriers/routine";
 import { COURRIERS_EN_RETOUR } from "@/config/courriers/reponses";
 import { ETAPES_D_INVESTISSEMENT } from "@/config/investissement-par-niveau";
@@ -22,8 +22,8 @@ import { CORRECTIONS_DES_DATES } from "./corrections-des-dates";
  *
  * Le récit des situations et des courriers se rend à la durée du tour : au
  * trimestre il garde ses dates, au mois et à l'année il dit ce que le tour est
- * pour le moteur (gardes `saisons-*.test.ts` de chaque groupe). Trois sortes de
- * textes échappent à ce mécanisme, et une date y est fausse au trimestre même :
+ * pour le moteur (gardes `saisons-*.test.ts` de chaque groupe). Des textes
+ * échappent à ce mécanisme, et une date y est fausse au trimestre même :
  *
  *  · LES TEXTES DE CONFIGURATION AFFICHÉS : noms de segments et de références,
  *    offres de commande, fournisseurs, accueil et dilemme du registre, module de
@@ -38,11 +38,15 @@ import { CORRECTIONS_DES_DATES } from "./corrections-des-dates";
  *    même : « février » au tour 2 de MARTEL & FILS, « l'approche de la fin
  *    d'année » au tour 5 de NOVA, « la clôture budgétaire » d'un courrier tiré à
  *    tout tour ;
- *  · LES COURRIERS TIRÉS AU SORT, ou posés par l'enseignant au tour qu'il veut :
- *    « le marché de Noël », « l'opération de fin novembre », « le premier lundi
- *    de janvier » tombaient au tour 3 comme au tour 4, au trimestre compris. Ceux
- *    qui tombent à un tour fixe (étapes d'investissement, événements scriptés)
- *    gardent au trimestre la date qui est vraie à ce tour, nommée ici une par une.
+ *  · LES COURRIERS, TOUS : un courrier tiré au sort, ou posé par l'enseignant au
+ *    tour qu'il veut, tombait au tour 3 comme au tour 4 avec « le marché de
+ *    Noël » ou « le premier lundi de janvier », au trimestre compris. Ceux qui
+ *    tombent d'eux-mêmes à un tour fixe (étapes d'investissement, événements
+ *    scriptés) se posent aussi à la main, à n'importe quel tour : « cet
+ *    automne » ou « l'été » y devenaient faux. Aucun courrier ne garde de date ;
+ *  · LES RÉCITS MÉTÉO DES COURRIERS ET DE LA GAZETTE : une canicule tirée au
+ *    tour 5 tombait en plein hiver au trimestre, un grand froid en plein été.
+ *    L'événement garde son effet, son récit ne suppose plus aucune saison.
  *
  * Pour tous ceux-là, la forme retenue ne date rien et reste vraie à toutes les
  * durées, trimestre compris. Cette garde le vérifie, et vérifie que ce qui
@@ -404,17 +408,22 @@ describe("les corrections des dates au trimestre (corrections-des-dates.ts)", ()
 });
 
 // ---------------------------------------------------------------------------
-// 6. Les courriers tirés au sort
+// 6. Les courriers, tirés au sort ou posés à la main
 // ---------------------------------------------------------------------------
 
 /**
- * LES TOURS FIXES : un courrier tombe à un tour dit quand il est une étape
- * d'investissement (`ETAPES_D_INVESTISSEMENT`, posée par le calendrier du niveau)
- * ou un événement scripté d'un scénario, et qu'aucun scénario ne le tire au sort
- * (probabilité nulle partout). Tous les autres se tirent, ou se posent, à
+ * LES TOURS FIXES : un courrier tombe de lui-même à un tour dit quand il est une
+ * étape d'investissement (`ETAPES_D_INVESTISSEMENT`, posée par le calendrier du
+ * niveau) ou un événement scripté d'un scénario, et qu'aucun scénario ne le tire
+ * au sort (probabilité nulle partout). Tous les autres se tirent, ou se posent, à
  * n'importe quel tour : les événements à probabilité non nulle, ceux que seul
  * l'enseignant pose (probabilité nulle, aucun tour dit), et les courriers de
  * routine et en retour, qui tombent à chaque tour.
+ *
+ * Décision du propriétaire (« On règle ces 2 là ») : l'enseignant pose aussi un
+ * courrier à tour fixe au tour qu'il veut (`distribuerUnCourrier`, en mode
+ * apprentissage). Aucun courrier ne garde donc de date, à tour fixe ou non : la
+ * distinction ne sert plus qu'à vérifier que le relevé atteint bien les deux.
  */
 const TOURS_FIXES = new Map<string, Set<number>>();
 const poser = (code: string, tour: number) => TOURS_FIXES.set(code, (TOURS_FIXES.get(code) ?? new Set()).add(tour));
@@ -428,9 +437,8 @@ const tireQuelquePart = (code: string) =>
 const aTourFixe = (code: string) => TOURS_FIXES.has(code) && !tireQuelquePart(code);
 
 const LIASSE_DE = new Map(LIASSES.flatMap((l) => l.courriers.map((c) => [c.code, l.code] as const)));
-const TIRES = [...COURRIERS, ...COURRIERS_DE_ROUTINE, ...COURRIERS_EN_RETOUR]
-  .map((c) => c.code)
-  .filter((code) => !aTourFixe(code));
+const TOUS = [...COURRIERS, ...COURRIERS_DE_ROUTINE, ...COURRIERS_EN_RETOUR].map((c) => c.code);
+const TIRES = TOUS.filter((code) => !aTourFixe(code));
 const FIXES = COURRIERS.map((c) => c.code).filter(aTourFixe);
 
 /** Tous les textes d'un courrier à une durée, avec et sans l'assurance. */
@@ -443,10 +451,10 @@ const textesDuCourrierA = (code: string, periodicity: Periodicity) => {
 };
 
 /**
- * LES MOTS DU CALENDRIER QUI RESTENT À JUSTE TITRE dans un courrier tiré, un
- * par un : le texte exact, le mot, la raison.
+ * LES MOTS DU CALENDRIER QUI RESTENT À JUSTE TITRE dans un courrier, un par un :
+ * le texte exact, le mot, la raison.
  */
-const EXCEPTIONS_TIREES: { code: string; texte: string; mot: string; raison: string }[] = [
+const EXCEPTIONS_DES_COURRIERS: { code: string; texte: string; mot: string; raison: string }[] = [
   {
     code: "batiment_intemperies",
     texte: "Caisse des congés et intempéries du bâtiment",
@@ -455,63 +463,10 @@ const EXCEPTIONS_TIREES: { code: string; texte: string; mot: string; raison: str
   },
 ];
 
-/**
- * LES DATES QUE GARDE, AU TRIMESTRE, UN COURRIER À TOUR FIXE : vraies au tour où
- * il tombe, lu au calendrier de la partie au trimestre (tour 1 de janvier à mars,
- * tour 2 d'avril à juin, tour 3 de juillet à septembre, tour 4 d'octobre à
- * décembre, tour 5 de janvier à mars). Au mois et à l'année, elles ne datent
- * rien (gardes `saisons-*.test.ts` des groupes, et ci-dessous).
- */
-const DATES_A_TOUR_FIXE: { code: string; tour: number; mot: string; raison: string }[] = [
-  {
-    code: "nova_inv_concurrent",
-    tour: 4,
-    mot: "automne",
-    raison: "au tour 4 (octobre à décembre), la ligne que Kelvox « inaugurera cet automne » ouvre pendant le tour",
-  },
-  {
-    code: "boutique_inv_concurrent",
-    tour: 4,
-    mot: "automne",
-    raison: "au tour 4 (octobre à décembre), « d'ici la fin de l'automne » tombe avant la fin du tour",
-  },
-  {
-    code: "hotel_inv_signal",
-    tour: 2,
-    mot: "automne",
-    raison:
-      "au tour 2 (avril à juin), les circuits d'automne sont à venir, et le contingent arrive au tour 3, comme l'annonce « dès le trimestre prochain »",
-  },
-  {
-    code: "hotel_inv_concurrent",
-    tour: 4,
-    mot: "fin de l'année",
-    raison: "au tour 4 (octobre à décembre), la fin de l'année est la fin du tour",
-  },
-  {
-    code: "bistrot_inv_signal",
-    tour: 2,
-    mot: "rentrée",
-    raison: "au tour 2 (avril à juin), la rentrée tombe au tour suivant, celui où Montclar arrive (le grand compte du tour 3)",
-  },
-  {
-    code: "bistrot_inv_concurrent",
-    tour: 4,
-    mot: "fin de l'année",
-    raison: "au tour 4 (octobre à décembre), la fin de l'année est la fin du tour",
-  },
-  {
-    code: "fitness_energie",
-    tour: 3,
-    mot: "été",
-    raison: "scripté au tour 3 (juillet à septembre), le creux de la salle à son tableau de saisonnalité",
-  },
-];
-
-/** Ce qu'un courrier tiré ne peut pas supposer non plus : la saison du tour, quelle qu'elle soit. */
+/** Ce qu'un courrier ne peut pas supposer non plus : la saison du tour, quelle qu'elle soit. */
 const SUPPOSITIONS_DU_TIRAGE = new RegExp(`${SUPPOSITIONS.source}|hors saison`, "iu");
 
-describe("un courrier tiré au sort tombe à n'importe quel tour : il ne date rien, à aucune durée", () => {
+describe("un courrier tombe à n'importe quel tour, tiré au sort ou posé à la main : il ne date rien, à aucune durée", () => {
   it("le relevé distingue bien les courriers tirés des courriers à tour fixe", () => {
     for (const l of LIASSES) {
       if (l.code === "rse") continue;
@@ -527,20 +482,31 @@ describe("un courrier tiré au sort tombe à n'importe quel tour : il ne date ri
     expect(TIRES).toContain(COURRIERS_DE_ROUTINE[0]!.code);
   });
 
+  it("l'enseignant peut poser un courrier à tour fixe à n'importe quel tour : il est dans la liasse qu'il distribue", () => {
+    // `distribuerUnCourrier` puise dans la liasse du marché (ou des entreprises), parmi
+    // les événements du scénario de la partie. Si ce test échoue parce que la porte se
+    // ferme, les dates vraies à un seul tour redeviennent possibles : à rediscuter.
+    const distribuables = new Set([...COURRIERS_MARCHE_CODES, ...COURRIERS_ENTREPRISE_CODES]);
+    const restes = FIXES.filter(
+      (code) => !distribuables.has(code) || !SCENARIOS.some((d) => d.scenario.events.some((e) => e.code === code)),
+    );
+    expect(restes).toEqual([]);
+  });
+
   for (const periodicity of DUREES) {
-    it(`${NOM[periodicity]}, aucun courrier tiré ne nomme un moment du calendrier`, () => {
-      const restes = TIRES.flatMap((code) =>
+    it(`${NOM[periodicity]}, aucun courrier ne nomme un moment du calendrier, à tour fixe ou non`, () => {
+      const restes = TOUS.flatMap((code) =>
         textesDuCourrierA(code, periodicity).flatMap((t) =>
           motsDuCalendrier(t)
-            .filter((m) => !EXCEPTIONS_TIREES.some((e) => e.code === code && e.texte === t && e.mot === m))
+            .filter((m) => !EXCEPTIONS_DES_COURRIERS.some((e) => e.code === code && e.texte === t && e.mot === m))
             .map((m) => `${code} : « ${m} » dans « ${t} »`),
         ),
       );
       expect([...new Set(restes)]).toEqual([]);
     });
 
-    it(`${NOM[periodicity]}, aucun courrier tiré ne suppose la saison du tour`, () => {
-      const restes = TIRES.flatMap((code) =>
+    it(`${NOM[periodicity]}, aucun courrier ne suppose la saison du tour`, () => {
+      const restes = TOUS.flatMap((code) =>
         textesDuCourrierA(code, periodicity)
           .filter((t) => SUPPOSITIONS_DU_TIRAGE.test(t))
           .map((t) => `${code} : « ${t.match(SUPPOSITIONS_DU_TIRAGE)![0]} » dans « ${t} »`),
@@ -549,16 +515,16 @@ describe("un courrier tiré au sort tombe à n'importe quel tour : il ne date ri
     });
   }
 
-  it("le motif de la gazette d'un événement tiré ne suppose pas davantage la saison du tour", () => {
-    const restes = TIRES.filter((code) => SUPPOSITIONS_DU_TIRAGE.test(GAZETTE.MOTIFS[code]?.motif ?? "")).map(
-      (code) => `${code} : « ${GAZETTE.MOTIFS[code]!.motif} »`,
-    );
+  it("le motif de la gazette d'un événement ne suppose pas davantage la saison du tour", () => {
+    const restes = Object.entries({ ...GAZETTE.MOTIFS, ...GAZETTE.MOTIFS_D_INVESTISSEMENT })
+      .filter(([, m]) => SUPPOSITIONS_DU_TIRAGE.test(m.motif) || motsDuCalendrier(m.motif).length > 0)
+      .map(([code, m]) => `${code} : « ${m.motif} »`);
     expect(restes).toEqual([]);
   });
 
   it("chaque exception sert encore", () => {
-    for (const e of EXCEPTIONS_TIREES) {
-      expect(TIRES, e.code).toContain(e.code);
+    for (const e of EXCEPTIONS_DES_COURRIERS) {
+      expect(TOUS, e.code).toContain(e.code);
       const textes = DUREES.flatMap((p) => textesDuCourrierA(e.code, p));
       expect(textes, e.code).toContain(e.texte);
       expect(motsDuCalendrier(e.texte), e.texte).toContain(e.mot);
@@ -566,32 +532,74 @@ describe("un courrier tiré au sort tombe à n'importe quel tour : il ne date ri
   });
 });
 
-describe("un courrier à tour fixe ne garde, au trimestre, que la date vraie à son tour", () => {
-  it("au trimestre, chaque mot du calendrier d'un courrier à tour fixe est nommé avec son tour", () => {
-    const restes = FIXES.flatMap((code) =>
-      textesDuCourrierA(code, "quarter").flatMap((t) =>
-        motsDuCalendrier(t)
-          .filter((m) => !DATES_A_TOUR_FIXE.some((d) => d.code === code && d.mot === m))
-          .map((m) => `${code} : « ${m} » dans « ${t} »`),
-      ),
-    );
-    expect([...new Set(restes)]).toEqual([]);
-  });
+// ---------------------------------------------------------------------------
+// 7. Les récits météo
+// ---------------------------------------------------------------------------
 
-  for (const periodicity of ["month", "year"] as const) {
-    it(`${NOM[periodicity]}, aucun courrier à tour fixe ne nomme un moment du calendrier`, () => {
-      const restes = FIXES.flatMap((code) =>
-        textesDuCourrierA(code, periodicity).flatMap((t) => motsDuCalendrier(t).map((m) => `${code} : « ${m} » dans « ${t} »`)),
+/**
+ * UN TEMPS QUI SUPPOSE UNE SAISON. Un événement météo se tire à plusieurs tours,
+ * et le calendrier de la partie boucle : la canicule de VOLT FITNESS, permise dès
+ * le tour 2, tombait au tour 5 (de janvier à mars au trimestre), le grand froid de
+ * NOVA en plein été. Ce que le récit garde : un temps possible en toute saison
+ * (intempéries, pluies, vents violents, pollution de l'air, beau temps), qui
+ * justifie le même effet.
+ *
+ * Les faux positifs écartés : le gel des budgets ou des prix (« gel » suivi de
+ * « des », « du », « de »), la chaîne du froid, la chambre ou le groupe froid,
+ * le chauffage et l'eau chaude d'une facture d'énergie (aucun ne suppose le temps
+ * qu'il fait).
+ */
+const METEO_DE_SAISON = mot(
+  [
+    "canicul\\p{L}*",
+    "vagues? de (?:chaleur|froid)",
+    "fortes? chaleurs?",
+    "chaleurs? estivales?",
+    "grands? froids?",
+    "froids? (?:intenses?|polaires?|glacials?)",
+    "gel(?!\\s+(?:des|du|de)\\s)",
+    "gelées?",
+    "neiges?",
+    "enneig\\p{L}*",
+    "verglas",
+    "températures? (?:négatives|glaciales|caniculaires)",
+    "heures les plus chaudes",
+    "plus (?:doux|douce) que prévu",
+    "douceur",
+  ].join("|"),
+);
+
+const meteoDe = (t: string): string[] => [...t.matchAll(METEO_DE_SAISON)].map((m) => m[0].toLowerCase());
+
+describe("un récit météo ne suppose aucune saison, à aucune durée", () => {
+  for (const periodicity of DUREES) {
+    it(`${NOM[periodicity]}, aucun courrier ne raconte un temps de saison`, () => {
+      const restes = TOUS.flatMap((code) =>
+        textesDuCourrierA(code, periodicity).flatMap((t) => meteoDe(t).map((m) => `${code} : « ${m} » dans « ${t} »`)),
       );
       expect([...new Set(restes)]).toEqual([]);
     });
   }
 
-  it("chaque date gardée tombe encore à son tour, et seulement à lui, et sert encore", () => {
-    for (const d of DATES_A_TOUR_FIXE) {
-      expect(aTourFixe(d.code), d.code).toBe(true);
-      expect([...TOURS_FIXES.get(d.code)!], d.code).toEqual([d.tour]);
-      expect(textesDuCourrierA(d.code, "quarter").flatMap(motsDuCalendrier), d.code).toContain(d.mot);
-    }
+  it("ni aucun motif de la gazette", () => {
+    const restes = Object.entries({ ...GAZETTE.MOTIFS, ...GAZETTE.MOTIFS_D_INVESTISSEMENT }).flatMap(([code, m]) =>
+      meteoDe(m.motif).map((x) => `${code} : « ${x} » dans « ${m.motif} »`),
+    );
+    expect(restes).toEqual([]);
+  });
+
+  it("la garde voit ce qu'elle doit voir, et laisse passer ce qui ne parle pas du temps", () => {
+    expect(meteoDe("Épisode caniculaire, recommandations aux établissements sportifs")).toEqual(["caniculaire"]);
+    expect(meteoDe("Le département est placé en vigilance canicule pour la semaine.")).toEqual(["canicule"]);
+    expect(meteoDe("Épisode de grand froid, restrictions de circulation")).toEqual(["grand froid"]);
+    expect(meteoDe("Un épisode de froid intense frappe la région")).toEqual(["froid intense"]);
+    expect(meteoDe("La période de pluie et de gel annoncée")).toEqual(["gel"]);
+    expect(meteoDe("Une vague de chaleur cumule tout")).toEqual(["vague de chaleur"]);
+    expect(meteoDe("La saison est plus douce que prévu")).toEqual(["plus douce que prévu"]);
+    expect(
+      meteoDe(
+        "Gel des budgets de conseil ; la chaîne du froid ; une chambre froide ; le groupe froid central ; chauffage, eau chaude sanitaire ; trois semaines de beau temps ; des pluies diluviennes",
+      ),
+    ).toEqual([]);
   });
 });

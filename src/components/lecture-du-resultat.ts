@@ -249,7 +249,7 @@ export const estUnAlea = (c: CauseDuResultat) => c.cle.startsWith("alea:");
  *
  * L'EFFET N'EST CHIFFRÉ QUE LÀ OÙ IL SE LIT SANS REJOUER LE MARCHÉ :
  *
- *  · une disponibilité amputée (panne, vague de froid, rupture en
+ *  · une disponibilité amputée (panne, intempéries, rupture en
  *    mono-produit) : le moteur produit `min(plan, capacité machine, capacité
  *    de main-d'œuvre)`, et la capacité machine du tour porte le facteur de
  *    l'aléa ; la diviser par ce facteur rend la capacité qu'on aurait eue
