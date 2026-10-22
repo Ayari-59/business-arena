@@ -116,7 +116,7 @@ describe("la rupture d'approvisionnement, en mono-produit (e-commerce)", () => {
   });
 });
 
-describe("un événement du tour (vague de froid chez NOVA)", () => {
+describe("un événement du tour (intempéries chez NOVA)", () => {
   const { scenario, result, nouveaux } = tourJoue("nova", 18, 3);
   const temoin = tourJoue("nova", 18, 3, (s) => ({
     ...s,
@@ -127,7 +127,7 @@ describe("un événement du tour (vague de froid chez NOVA)", () => {
     ),
   })).result;
 
-  it("le tour rejoué est bien celui de la vague de froid", () => {
+  it("le tour rejoué est bien celui des intempéries", () => {
     expect(nouveaux).toContain("cold_wave");
   });
 
