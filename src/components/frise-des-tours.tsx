@@ -38,7 +38,9 @@ export function FriseDesTours({
 
   return (
     <ol
-      className="flex items-center gap-1"
+      // Une partie prolongée compte jusqu'à douze tours : la frise passe à la ligne
+      // plutôt que de déborder un téléphone.
+      className="flex flex-wrap items-center gap-1"
       aria-label={
         finished
           ? `Partie terminée : ${roundsCount} tours joués`

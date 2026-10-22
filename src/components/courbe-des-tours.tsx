@@ -167,6 +167,12 @@ function Trace({
   const y = (v: number) =>
     marge.haut + ((haut - v) * (H - marge.haut - marge.bas)) / (haut - bas || 1);
   const dernier = tours.length - 1;
+  // UNE ÉTIQUETTE DE TOUR SUR DEUX quand elles se chevaucheraient (une partie prolongée
+  // compte jusqu'à douze tours : « T12 » fait 22 px). On garde toujours le dernier, et
+  // les autres de deux en deux en remontant depuis lui. Six tours ne changent pas.
+  const ecart = (L - marge.gauche - marge.droite) / Math.max(1, dernier);
+  const unSurDeux = ecart < 32;
+  const etiquetee = (i: number) => !unSurDeux || (dernier - i) % 2 === 0;
   const trace = tours.map((t, i) => `${x(i).toFixed(1)},${y(t.valeur).toFixed(1)}`).join(" ");
   return (
     <svg
@@ -222,14 +228,16 @@ function Trace({
             strokeWidth={2}
             data-dernier-point={i === dernier ? "" : undefined}
           />
-          <text
-            x={x(i)}
-            y={H - 8}
-            textAnchor="middle"
-            className={`text-sm ${i === dernier ? "fill-slate-100 font-semibold" : "fill-slate-300"}`}
-          >
-            {`T${t.round}`}
-          </text>
+          {etiquetee(i) ? (
+            <text
+              x={x(i)}
+              y={H - 8}
+              textAnchor="middle"
+              className={`text-sm ${i === dernier ? "fill-slate-100 font-semibold" : "fill-slate-300"}`}
+            >
+              {`T${t.round}`}
+            </text>
+          ) : null}
         </g>
       ))}
       {/* La seule valeur écrite : celle du dernier tour, au bout de la ligne. */}

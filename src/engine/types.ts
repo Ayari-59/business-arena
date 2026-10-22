@@ -1056,6 +1056,19 @@ export interface SegmentConfig {
    * fait apparaître/disparaître le segment (ex. compte-clé à partir du tour 3).
    */
   seasonality?: number[];
+  /**
+   * L'année qui se répète après les tours écrits, quand ce n'est pas celle des quatre
+   * derniers (`config/scenarios/rounds.ts`, `prolongerLaSaison`) : quatre valeurs, dans
+   * l'ordre des tours qui suivent le dernier tour écrit. Lue à la composition d'une
+   * partie prolongée, et seulement là.
+   */
+  saisonDesAnneesSuivantes?: number[];
+  /**
+   * Le dernier tour où le segment croît (`engine/market/demand.ts`, `facteurDeCroissance`).
+   * Posé par une partie prolongée au dernier tour écrit de son scénario ; absent, le
+   * segment croît à chaque tour, comme avant.
+   */
+  croissanceJusquAuTour?: number;
   /** Intensité concurrentielle γ du segment (défaut : market.competitionIntensity). */
   competitionIntensity?: number;
 }

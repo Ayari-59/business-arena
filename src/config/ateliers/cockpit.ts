@@ -1,5 +1,6 @@
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import { toGamme, withoutRd, type GammeProduct } from "../../engine/gamme";
+import { facteurDeCroissance } from "../../engine/market/demand";
 import { tempsDeTravail, type ScenarioDefinition } from "../scenarios/registry";
 import { rdDuNiveau } from "../scenarios/scenario-joue";
 
@@ -185,7 +186,7 @@ function demandeMoyenne(
   const idx = tour - 1;
   const total = p.market.segments.reduce((sum, s) => {
     const saison = s.seasonality?.[idx] ?? p.market.seasonality[idx] ?? 1;
-    const croissance = Math.pow(1 + s.growth, idx);
+    const croissance = facteurDeCroissance(s, tour);
     return sum + s.size * saison * croissance;
   }, 0);
   return Math.round(total / Math.max(1, diviseur));

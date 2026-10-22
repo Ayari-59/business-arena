@@ -70,6 +70,8 @@ import { FriseDesTours } from "@/components/frise-des-tours";
 import { ATTENTES } from "@/config/cloture";
 import { bouton } from "@/components/bouton";
 import { Icone } from "@/components/icone";
+import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
+import { ChampNombre } from "@/components/examen/champ-nombre";
 
 export const dynamic = "force-dynamic";
 
@@ -430,22 +432,25 @@ export default async function TeacherDashboard({
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Tours joués
             </span>
-            <select
+            {/* LIBRE (décision du propriétaire) : vide, la partie écrite du secteur ; au
+                trimestre, jusqu'à douze tours. Au-delà, le service refuse avec la raison
+                (`services/game-creation.service.ts`). */}
+            <ChampNombre
               name="roundsCount"
-              defaultValue=""
+              min={1}
+              max={TOURS_MAX_AU_TRIMESTRE}
+              step={1}
+              inputMode="numeric"
+              placeholder="Toute la partie"
               className="mt-1 w-full champ px-3 py-2 text-sm"
-            >
-              <option value="">Toute la partie</option>
-              {[3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n} tours
-                </option>
-              ))}
-            </select>
+            />
             <span className="mt-1 block text-sm text-slate-400">
-              Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
-              s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
-              pour un nombre de tours, au-delà, les équipes joueraient sans matière.
+              Laissez vide pour jouer toute la partie écrite du secteur. Une partie se raccourcit
+              pour tenir dans vos séances ; au trimestre, elle s&apos;allonge jusqu&apos;à{" "}
+              {TOURS_MAX_AU_TRIMESTRE} tours. Après la partie écrite, les équipes gèrent leur
+              entreprise sur l&apos;année du métier qui se répète : plus de nouvelle situation à
+              analyser, mais les événements, les courriers et les situations nées de leurs
+              résultats continuent. Au mois et à l&apos;année, une partie ne s&apos;allonge pas.
             </span>
           </label>
 

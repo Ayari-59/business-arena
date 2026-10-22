@@ -71,6 +71,10 @@ const rawNova = {
         paymentDelayDays: 80,
         // le compte-clé démarre au tour 3 et passe sa grosse commande au pic T4 (doc 07 §2)
         seasonality: [0, 0, 0.25, 1.4, 1, 1],
+        // Une partie prolongée (`config/scenarios/rounds.ts`) : le tour 3 était son
+        // lancement, pas un troisième trimestre ordinaire. Ensuite, chaque année : un
+        // troisième trimestre courant, la grosse commande au pic, puis deux trimestres courants.
+        saisonDesAnneesSuivantes: [1, 1.4, 1, 1],
       },
     ],
     seasonality: [0.9, 0.95, 1.0, 1.35, 0.9, 1.0],

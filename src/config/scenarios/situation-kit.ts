@@ -134,8 +134,12 @@ export interface SituationDef {
    * quelles que soient les performances, et racontait un record à une équipe
    * qui venait de perdre 108 000 €. Un énoncé que les chiffres démentent
    * n'enseigne pas le paradoxe : il apprend à ne pas lire ses résultats.
+   *
+   * `finDePartie` marque une situation qui raconte le dernier tour (« Le grand oral ») :
+   * dans une partie prolongée au-delà des tours écrits, elle s'ouvre au dernier tour
+   * joué plutôt qu'au tour dit (`tourDOuverture`).
    */
-  trigger: { round: number; requires?: DetectCode } | { detect: DetectCode };
+  trigger: { round: number; requires?: DetectCode; finDePartie?: true } | { detect: DetectCode };
   /**
    * LA RÉFÉRENCE QUE L'ÉNONCÉ SUPPOSE. Une situation qui parle de NOVA Home
    * n'a de sens que dans une partie qui la porte (le niveau 7) : le même
@@ -352,4 +356,22 @@ export function attachModelQuestions(
       modelQuestion(s.modelRelevance, explain, { level: NIVEAU_STANDARD, seed: 0, distractorPool: s.distractorPool }),
     );
   }
+}
+
+/**
+ * LE TOUR OÙ S'OUVRE UNE SITUATION À TOUR FIXE dans une partie de `toursJoues` tours,
+ * dont le scénario en écrit `toursEcrits` ; `null` pour une situation détectée.
+ *
+ * Le tour dit, sauf pour une situation de fin de partie dans une partie prolongée
+ * (`config/scenarios/rounds.ts`) : « Dernier tour : votre conseil d'administration
+ * attend un cap assumé » ne se raconte pas au sixième tour d'une partie de douze. Une
+ * partie raccourcie ne la déplace pas : elle reste celle d'avant, au bit près.
+ */
+export function tourDOuverture(
+  trigger: SituationDef["trigger"],
+  toursJoues: number,
+  toursEcrits: number,
+): number | null {
+  if (!("round" in trigger)) return null;
+  return trigger.finDePartie && toursJoues > toursEcrits ? toursJoues : trigger.round;
 }

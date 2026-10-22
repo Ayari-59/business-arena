@@ -3,6 +3,7 @@ import {
   BPI_DIMENSIONS,
   computeRoundScores,
   gameBpi,
+  poidsDuTour,
   normalizeToBenchmark,
   peerPercentile,
   strategyCoherence,
@@ -181,6 +182,19 @@ describe("IPG de partie (doc 08 §1.4)", () => {
       ]),
     ).toBeCloseTo(60, 9);
     expect(gameBpi([])).toBe(0);
+  });
+
+  it("partie prolongée : au-delà du sixième, chaque tour pèse comme lui ; jusqu'au sixième, rien ne change", () => {
+    const tours = (n: number, note: (i: number) => number) => Array.from({ length: n }, (_, i) => ({ index: i + 1, bpi: note(i + 1) }));
+    // Six tours : le poids de chaque tour est son indice, comme avant.
+    const six = tours(6, (i) => i * 10);
+    expect(gameBpi(six)).toBeCloseTo(six.reduce((s, r) => s + r.index * r.bpi, 0) / 21, 9);
+    // Douze tours, les six premiers à 100 et les six suivants à 0 : les premiers pèsent
+    // 21 sur 21 + 6 × 6 = 57, soit 37 %, et non 21 sur 78 (27 %).
+    expect(gameBpi(tours(12, (i) => (i <= 6 ? 100 : 0)))).toBeCloseTo((21 / 57) * 100, 9);
+    expect(poidsDuTour(6)).toBe(6);
+    expect(poidsDuTour(7)).toBe(6);
+    expect(poidsDuTour(12)).toBe(6);
   });
 
   it("poids par indice RÉEL : un tour sauté ne décale pas les suivants", () => {

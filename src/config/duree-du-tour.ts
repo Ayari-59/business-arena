@@ -127,15 +127,23 @@ export function signesDeSituation(
     narrative?: string;
     problem?: string;
     diagnosticOptions?: { label?: string }[];
-    trigger?: { round?: number } | { detect?: string };
+    trigger?: { round?: number; finDePartie?: true } | { detect?: string };
     seulementAvec?: { reference: string };
   }[],
   round: number,
   /** Les références de la partie : une situation qui en suppose une absente ne s'ouvre pas. */
   references?: ReadonlySet<string>,
+  /**
+   * Les tours de la partie et ceux que son scénario écrit : une partie prolongée ouvre
+   * ses situations de fin de partie à son dernier tour (`tourDOuverture`). Absents : le
+   * tour dit.
+   */
+  tours?: { joues: number; ecrits: number },
 ): number {
+  const tourDe = (t: { round?: number; finDePartie?: true }): number | undefined =>
+    t.finDePartie && tours && tours.joues > tours.ecrits ? tours.joues : t.round;
   return situations
-    .filter((s) => (s.trigger as { round?: number } | undefined)?.round === round)
+    .filter((s) => s.trigger && "round" in s.trigger && tourDe(s.trigger) === round)
     .filter((s) => !s.seulementAvec || !references || references.has(s.seulementAvec.reference))
     .reduce(
       (total, s) =>

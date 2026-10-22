@@ -13,6 +13,7 @@ import { Icone } from "@/components/icone";
 import { TuileDuLieu } from "@/components/tuile-du-lieu";
 import type { Sector } from "@/config/scenarios/registry";
 import type { ComparatifDesNiveaux, TableauDuNiveau } from "@/config/tableau-des-niveaux";
+import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
 
 /** Sans texte passé par la page : une marque neutre (les noms vivent dans config/tarifs.ts). */
 const OFFRE_PAR_DEFAUT = { marque: "Offre payante", message: "Ces niveaux sont inclus dans les offres payantes." };
@@ -93,13 +94,19 @@ const COMPANIES = [
   { value: "8", hint: "guerre de tous contre tous" },
 ] as const;
 
-const ROUNDS = [
+/**
+ * Les durées proposées. Les plus longues (`auTrimestre`) ne s'offrent qu'au trimestre :
+ * au mois et à l'année, une partie ne s'allonge pas (`config/scenarios/rounds.ts`).
+ */
+const ROUNDS: readonly { value: string; label: string; auTrimestre?: true }[] = [
   { value: "", label: "Toute la partie" },
   { value: "3", label: "3 tours" },
   { value: "4", label: "4 tours" },
   { value: "5", label: "5 tours" },
   { value: "6", label: "6 tours" },
-] as const;
+  { value: "8", label: "8 tours", auTrimestre: true },
+  { value: String(TOURS_MAX_AU_TRIMESTRE), label: `${TOURS_MAX_AU_TRIMESTRE} tours`, auTrimestre: true },
+];
 
 /**
  * L'OPTION COCHÉE D'UNE CARTE D'ENTREPRISE (lot P2) : un filet orange plein de
@@ -451,7 +458,11 @@ export function QuickConfigFields({
               <button
                 key={p.value}
                 type="button"
-                onClick={() => setPeriod(p.value)}
+                onClick={() => {
+                  setPeriod(p.value);
+                  // Une durée qui ne vaut qu'au trimestre retombe sur la partie écrite.
+                  if (p.value !== "quarter" && ROUNDS.find((r) => r.value === rounds)?.auTrimestre) setRounds("");
+                }}
                 aria-pressed={p.value === period}
                 className={`${tile} ${p.value === period ? tileOn : ""}`}
               >
@@ -482,7 +493,7 @@ export function QuickConfigFields({
 
           <p className={`mt-4 ${label}`}>Nombre de tours</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {ROUNDS.map((r) => (
+            {ROUNDS.filter((r) => !r.auTrimestre || period === "quarter").map((r) => (
               <button
                 key={r.value || "all"}
                 type="button"

@@ -46,6 +46,7 @@ import {
   type Periodicity,
 } from "@/config/scenarios/periodicity";
 import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "@/config/scenarios/scenario-joue";
+import { TOURS_MAX_AU_TRIMESTRE, toursMaxDeLaPartie } from "@/config/scenarios/rounds";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import {
@@ -330,6 +331,17 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   // une classe nombreuse partage un gâteau calibré pour trois concurrents et
   // aucune équipe n'atteint son seuil. Voir market-scale.ts.
   const concurrents = args.humanTeams.length + botCount;
+  // LA DURÉE DEMANDÉE, au-delà de ce que la périodicité permet : refusée avec la raison,
+  // plutôt que rabotée en silence (`config/scenarios/rounds.ts`). Seul le trimestre
+  // s'allonge au-delà des tours écrits du scénario.
+  const toursMax = toursMaxDeLaPartie(definition.scenario, args.periodicity);
+  if (args.roundsCount !== undefined && args.roundsCount > toursMax) {
+    throw new Error(
+      args.periodicity === "quarter"
+        ? `Une partie au trimestre dure ${toursMax} tours au plus.`
+        : `Au mois et à l'année, une partie dure ${toursMax} tours au plus : seul le trimestre va jusqu'à ${TOURS_MAX_AU_TRIMESTRE} tours.`,
+    );
+  }
   // Le pipeline du snapshot vit dans `config/scenarios/scenario-joue.ts` : le
   // rejeu du bilan (pedagogy/merite) recompose le monde d'une autre graine avec
   // exactement le même calcul.

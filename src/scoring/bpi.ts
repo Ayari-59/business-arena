@@ -221,7 +221,8 @@ export function computeRoundScores(
 
 /**
  * IPG de partie (doc 08 §1.4) : moyenne des IPG de tours à poids croissants
- * (le tour d'indice T pèse T — on juge la trajectoire, pas le départ).
+ * (le tour d'indice T pèse T, jusqu'au sixième : `poidsDuTour` ; on juge la
+ * trajectoire, pas le départ).
  *
  * Le poids suit l'INDICE RÉEL du tour (1-based, tel que posé à la création de
  * partie), pas la position dans la liste : un tour non scoré au milieu (équipe
@@ -231,9 +232,22 @@ export function computeRoundScores(
  */
 export function gameBpi(rounds: { index: number; bpi: number }[]): number {
   if (rounds.length === 0) return 0;
-  const totalWeight = rounds.reduce((sum, r) => sum + r.index, 0);
+  const totalWeight = rounds.reduce((sum, r) => sum + poidsDuTour(r.index), 0);
   if (totalWeight <= 0) return 0;
-  return rounds.reduce((sum, r) => sum + (r.index / totalWeight) * r.bpi, 0);
+  return rounds.reduce((sum, r) => sum + (poidsDuTour(r.index) / totalWeight) * r.bpi, 0);
+}
+
+/**
+ * LE TOUR DONT LE POIDS NE CROÎT PLUS (décision du propriétaire) : dans une partie
+ * prolongée au-delà de six tours (`config/scenarios/rounds.ts`), chaque tour suivant
+ * pèse comme le sixième. Sans ce plafond, sur douze tours, les six premiers, les seuls
+ * qui portent des situations écrites, ne pèseraient plus que 27 % de la note.
+ */
+export const TOUR_DU_POIDS_MAXIMAL = 6;
+
+/** Le poids d'un tour dans l'IPG de partie : son indice, plafonné au sixième. */
+export function poidsDuTour(index: number): number {
+  return Math.min(index, TOUR_DU_POIDS_MAXIMAL);
 }
 
 export function scoringWeights(config: ScoringConfig): Record<BpiDimension, number> {

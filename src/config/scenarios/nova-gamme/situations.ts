@@ -404,7 +404,7 @@ const SOURCES: SituationDef[] = [
       "Une matrice multicritère structurerait votre arbitrage final, mix par mix.",
       "Listez trois mix (gamme complète, sans la Go, tout Studio), notez-les de 1 à 5 sur marge / part de marché / trésorerie, pondérez selon votre situation, choisissez la meilleure note pondérée.",
     ]),
-    trigger: { round: 6 },
+    trigger: { round: 6, finDePartie: true },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "review", hint: "Trois prix, un positionnement : ils traduisent votre cap et engagent le résultat." },

@@ -49,8 +49,10 @@ describe("la saisonnalité : une seule lecture, par tour", () => {
 
   it("une partie plus longue que ses tableaux est REFUSÉE à la création, avec la raison", () => {
     const nova = SCENARIOS.find((d) => d.code === "nova")!.scenario;
-    expect(() => applyRoundsCount({ ...nova, roundsCount: 12 }, 12)).toThrow(/saisonnalité/);
-    expect(() => applyRoundsCount({ ...nova, roundsCount: 12 }, 6)).not.toThrow();
+    // Un scénario qui annonce douze tours écrits n'en a que six de saison : rien à
+    // prolonger, puisque ses tours 7 à 12 se disent écrits.
+    expect(() => applyRoundsCount({ ...nova, roundsCount: 12 }, 12, "quarter")).toThrow(/saisonnalité/);
+    expect(() => applyRoundsCount({ ...nova, roundsCount: 12 }, 6, "quarter")).not.toThrow();
   });
 
   it("la demande et l'import du niveau 7 lisent le même coefficient à chaque tour", () => {

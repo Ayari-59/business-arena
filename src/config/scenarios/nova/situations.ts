@@ -486,7 +486,7 @@ const SOURCES: SituationDef[] = [
       "Une matrice multicritère structurerait votre arbitrage final.",
       "Listez 3 options, notez-les de 1 à 5 sur marge / part de marché / trésorerie, pondérez selon votre situation, choisissez la meilleure note pondérée.",
     ]),
-    trigger: { round: 6 },
+    trigger: { round: 6, finDePartie: true },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "review", hint: "Le prix est le levier le plus visible : il traduit votre positionnement et engage le résultat." },

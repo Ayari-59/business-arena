@@ -148,6 +148,7 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
           r.concurrents,
         ),
         r.roundsCount,
+        r.periodicity,
       ),
       r.periodicity,
     ),
