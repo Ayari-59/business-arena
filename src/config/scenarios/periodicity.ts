@@ -1,5 +1,6 @@
 import type { EngineScenarioConfig } from "../../engine/types";
 import { mapGammeSegments } from "../../engine/gamme";
+import { DEFAULT_RSE_CONFIG } from "../../engine/rse";
 
 /**
  * Périodicité d'une partie (ADR-01) : un tour peut représenter un mois, un
@@ -192,6 +193,28 @@ export function applyPeriodicity(
       maintenanceReference: scenario.production.maintenanceReference * k,
     },
     marketing: { scale: scenario.marketing.scale * k },
+    // Cartes RSE à l'année : la mauvaise presse et l'amende gardent leur chance
+    // ANNUELLE, comme les événements (tirées une fois l'an avec la chance d'un
+    // trimestre, elles sortaient près de trois fois moins souvent). L'amende tirée
+    // vaut un trimestre : son montant suit l'échelle du marketing, qui compte
+    // l'année. Une mauvaise presse dure un tour, donc l'année, comme un événement.
+    // Au mois, c'est le calendrier qui s'en charge (`auCalendrierMensuel`).
+    ...(periodicity === "year"
+      ? (() => {
+          const rse = scenario.rse ?? DEFAULT_RSE_CONFIG;
+          return {
+            rse: {
+              ...rse,
+              cards: {
+                ...rse.cards,
+                badBuzzProbability: composerPerte(rse.cards.badBuzzProbability, k),
+                sanctionProbability: composerPerte(rse.cards.sanctionProbability, k),
+                fineAmount: rse.cards.fineAmount / k,
+              },
+            },
+          };
+        })()
+      : {}),
     // R&D : l'échelle du budget est un flux par tour (× k) ; le coût de
     // développement d'une référence est un total, il ne bouge pas ; son tour
     // de disponibilité est une date réelle, il se compte en tours de la

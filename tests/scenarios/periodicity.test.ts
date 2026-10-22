@@ -10,6 +10,7 @@ import { botDecisions, type BotProfile } from "../../src/engine/bots";
 import { runGame, soldUnits } from "../../src/engine/simulation/runGame";
 import { parseScenarioConfig } from "../../src/config/scenarios/schema";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
+import { DEFAULT_RSE_CONFIG } from "../../src/engine/rse";
 
 describe("périodicité (ADR-01) : redimensionnement du scénario", () => {
   it("mensuel : flux ÷ 3, croissance composée, délais inchangés", () => {
@@ -124,6 +125,24 @@ describe("périodicité : la probabilité des événements se compose", () => {
           9,
         );
       }
+    }
+  });
+
+  it("à l'année, la mauvaise presse et l'amende RSE gardent leur chance annuelle ; l'amende vaut un trimestre", () => {
+    for (const def of SCENARIOS) {
+      const q = (def.scenario.rse ?? DEFAULT_RSE_CONFIG).cards;
+      const a = applyPeriodicity(def.scenario, "year").rse!.cards;
+      expect(annuelle(a.badBuzzProbability, 1), def.code).toBeCloseTo(annuelle(q.badBuzzProbability, 4), 9);
+      expect(annuelle(a.sanctionProbability, 1), def.code).toBeCloseTo(annuelle(q.sanctionProbability, 4), 9);
+      // Le cas mord : la chance d'une année dépasse celle d'un trimestre.
+      expect(a.badBuzzProbability, def.code).toBeGreaterThan(q.badBuzzProbability);
+      // Une amende tirée vaut un trimestre : l'échelle du marketing, elle, compte l'année.
+      expect(a.fineAmount * applyPeriodicity(def.scenario, "year").marketing.scale, def.code).toBeCloseTo(
+        q.fineAmount * def.scenario.marketing.scale,
+        6,
+      );
+      // Au mois, le calendrier s'en charge (`auCalendrierMensuel`) : ici, rien ne bouge.
+      expect(applyPeriodicity(def.scenario, "month").rse, def.code).toEqual(def.scenario.rse);
     }
   });
 
