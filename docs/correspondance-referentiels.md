@@ -112,7 +112,7 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 | Analyser et piloter une entreprise industrielle | BUT GEA | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · STMG 9/10 · BTS CG 5/6 · BTS MCO 3/4 · DCG 3/4 · BTS GPME 2/4 |
 | Quatre exercices chez Nova : budget, écarts, rapport de gestion | DCG | BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · BTS NDRC 2/3 · BTS CG 3/6 · BTS MCO 2/4 · BTS MHR 2/4 · BTS MHR · B et C 2/4 |
 | RSE et performance : un engagement qui se pilote | DCG | BTS NDRC 3/3 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BUT GEA 3/4 · BTS CG 3/6 · BTS MHR 2/4 · STMG 4/10 |
-| Piloter sous incertitude une entreprise de transport | Toutes filières, après un premier atelier | BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · STMG 7/10 |
+| Piloter sous incertitude une entreprise de transport | Toutes filières, après un premier atelier | BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · BTS MCO 3/4 · STMG 7/10 |
 | Diriger une entreprise en équipe inter-filières | STMG, BTS CG, BTS MCO et BTS NDRC | BUT GEA 4/4 · DCG 4/4 · BTS MHR 3/4 · BTS MHR · B et C 3/4 · BTS GPME 2/4 |
 
 ## La table, diplôme par diplôme
@@ -289,12 +289,11 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 21 gestes liés.
 
-- `effet-d-un-delai` *(mco:3, mco2:3, mco2:5, mco2:6 ; 2 blocs nommés)*
-- `seuil-de-rentabilite` *(mco:2, mco2:2, mco2:4 ; 2 blocs nommés)*
+- `effet-d-un-delai` *(mco:3, mco2:2, mco2:6 ; 2 blocs nommés)*
+- `seuil-de-rentabilite` *(mco:2, mco2:3, mco2:4 ; 2 blocs nommés)*
 - `choisir-ses-indicateurs` *(mco:6, mco2:7 ; 2 blocs nommés)*
-- `comparer-des-fournisseurs` *(mco:3, mco2:3 ; 2 blocs nommés)*
-- `decider-un-volume` *(mco:5, mco2:2 ; 2 blocs nommés)*
-- `financer-le-court-terme` *(mco2:5, mco2:6 ; 2 blocs nommés)*
+- `comparer-des-fournisseurs` *(mco:3, mco2:2 ; 2 blocs nommés)*
+- `decider-un-volume` *(mco:5, mco2:3 ; 2 blocs nommés)*
 - `lire-l-ecran-de-decision` *(mco:1, mco2:1 ; 2 blocs nommés)*
 - `lire-les-comptes` *(mco:1, mco2:1 ; 2 blocs nommés)*
 - `marge-unitaire` *(mco:2, mco2:2 ; 2 blocs nommés)*
@@ -302,9 +301,10 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 - `presenter-l-entreprise` *(mco:1, mco2:1 ; 2 blocs nommés)*
 - `tableau-de-bord` *(mco:6, mco2:7 ; 2 blocs nommés)*
 - `anticiper-un-volume` *(mco:5 ; 2 blocs nommés)*
-- `arbitrer-entre-clienteles` *(mco2:5 ; 2 blocs nommés)*
+- `arbitrer-entre-clienteles` *(mco2:6 ; 2 blocs nommés)*
 - `defendre-un-choix` *(mco:3 ; 2 blocs nommés)*
-- `mesurer-l-effet-d-une-action` *(mco2:6 ; 2 blocs nommés)*
+- `financer-le-court-terme` *(mco2:5 ; 2 blocs nommés)*
+- `mesurer-l-effet-d-une-action` *(mco2:5 ; 2 blocs nommés)*
 - `qualite-et-frequentation` *(mco2:3 ; 2 blocs nommés)*
 - `recruter-ou-retenir` *(mco2:4 ; 2 blocs nommés)*
 - `repercuter-une-hausse` *(mco2:4 ; 2 blocs nommés)*
@@ -313,14 +313,12 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 #### Bloc 2 · Animer et dynamiser l'offre commerciale
 
-21 gestes liés.
+22 gestes liés.
 
-- `seuil-de-rentabilite` *(mco:2, mco2:2, mco2:4 ; 2 blocs nommés)*
-- `decider-un-volume` *(mco:5, mco2:2 ; 2 blocs nommés)*
-- `effet-d-un-delai` *(mco:3, mco2:6 ; 2 blocs nommés)*
+- `seuil-de-rentabilite` *(mco:2, mco2:3, mco2:4 ; 2 blocs nommés)*
+- `decider-un-volume` *(mco:5, mco2:3 ; 2 blocs nommés)*
 - `lire-l-ecran-de-decision` *(mco:1, mco2:1 ; 2 blocs nommés)*
 - `lire-les-comptes` *(mco:1, mco2:1 ; 2 blocs nommés)*
-- `marge-unitaire` *(mco:2, mco2:2 ; 2 blocs nommés)*
 - `presenter-l-entreprise` *(mco:1, mco2:1 ; 2 blocs nommés)*
 - `recruter-ou-retenir` *(mco:4, mco2:4 ; 2 blocs nommés)*
 - `anticiper-un-volume` *(mco:5 ; 2 blocs nommés)*
@@ -328,10 +326,13 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 - `choisir-ses-indicateurs` *(mco2:7 ; 2 blocs nommés)*
 - `comparer-des-fournisseurs` *(mco:3 ; 2 blocs nommés)*
 - `defendre-un-choix` *(mco:3 ; 2 blocs nommés)*
-- `financer-le-court-terme` *(mco2:6 ; 2 blocs nommés)*
+- `effet-d-un-delai` *(mco:3 ; 2 blocs nommés)*
+- `financer-le-court-terme` *(mco2:5 ; 2 blocs nommés)*
 - `lire-un-indicateur` *(mco:4 ; 2 blocs nommés)*
-- `mesurer-l-effet-d-une-action` *(mco2:6 ; 2 blocs nommés)*
+- `marge-unitaire` *(mco:2 ; 2 blocs nommés)*
+- `mesurer-l-effet-d-une-action` *(mco2:5 ; 2 blocs nommés)*
 - `presenter-a-l-oral` *(mco2:7 ; 2 blocs nommés)*
+- `qualite-et-frequentation` *(mco2:3 ; 2 blocs nommés)*
 - `repercuter-une-hausse` *(mco2:4 ; 2 blocs nommés)*
 - `rupture-ou-surstock` *(mco:5 ; 2 blocs nommés)*
 - `situer-son-offre` *(mco:2 ; 2 blocs nommés)*
@@ -339,15 +340,14 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 #### Bloc 1 · Développer la relation client et assurer la vente conseil
 
-8 gestes liés.
+7 gestes liés.
 
-- `effet-d-un-delai` *(mco2:3, mco2:5 ; 2 blocs nommés)*
-- `arbitrer-entre-clienteles` *(mco2:5 ; 2 blocs nommés)*
+- `effet-d-un-delai` *(mco2:2, mco2:6 ; 2 blocs nommés)*
+- `arbitrer-entre-clienteles` *(mco2:6 ; 2 blocs nommés)*
 - `ce-qui-erode-la-marge` *(mco:4 ; 2 blocs nommés)*
-- `comparer-des-fournisseurs` *(mco2:3 ; 2 blocs nommés)*
-- `financer-le-court-terme` *(mco2:5 ; 2 blocs nommés)*
+- `comparer-des-fournisseurs` *(mco2:2 ; 2 blocs nommés)*
 - `lire-un-indicateur` *(mco:4 ; 2 blocs nommés)*
-- `qualite-et-frequentation` *(mco2:3 ; 2 blocs nommés)*
+- `marge-unitaire` *(mco2:2 ; 2 blocs nommés)*
 - `recruter-ou-retenir` *(mco:4 ; 2 blocs nommés)*
 
 #### Bloc 4 · Manager l'équipe commerciale
