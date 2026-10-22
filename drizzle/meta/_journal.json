@@ -337,6 +337,13 @@
       "when": 1791268557440,
       "tag": "0046_adresse_confirmee",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791354957440,
+      "tag": "0047_cours_en_classe",
+      "breakpoints": true
     }
   ]
 }

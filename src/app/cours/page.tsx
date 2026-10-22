@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { bouton } from "@/components/bouton";
+import { SubmitButton } from "@/components/submit-button";
 import { PiedDePage } from "@/components/pied-de-page";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME } from "@/config/cours/registre";
+import { getGuestUserId } from "@/lib/guest";
+import { classeDeLEleve } from "@/services/cours.service";
 import { ENTREPRISES } from "./entreprises";
+import { quitterClasseAction } from "./actions";
+
+/** La classe de l'élève se lit à chaque ouverture : la page se rend à la demande. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Le cours par la simulation : comptabilité et contrôle de gestion",
@@ -24,8 +31,11 @@ export const metadata: Metadata = {
  * Le premier chapitre est libre ; la suite est réservée aux établissements sous
  * licence. La carte du cours dit ce qui vient, palier par palier.
  */
-export default function CoursPage() {
+export default async function CoursPage({ searchParams }: { searchParams: Promise<{ classe?: string }> }) {
   const pilote = CHAPITRES.find((c) => c.libre)!;
+  const [{ classe: annonce }, userId] = await Promise.all([searchParams, getGuestUserId()]);
+  const classe = userId ? await classeDeLEleve(userId) : null;
+  const imposee = classe?.entreprise ? ENTREPRISES.find((e) => e.code === classe.entreprise) : undefined;
   return (
     <>
       <main id="main">
@@ -41,6 +51,31 @@ export default function CoursPage() {
           }
         />
         <div className={`${COLONNE_DE_PAGE} grid gap-12 pb-16 pt-2`}>
+          {/* L'ÉLÈVE D'UNE CLASSE le lit d'abord : sa classe, son nom, et l'entreprise que
+              l'enseignant a choisie pour tous, s'il en a choisi une. */}
+          {classe ? (
+            <section className="encadre-neutre grid gap-2 rounded-lg px-4 py-3 text-sm" data-classe-du-cours="">
+              <p>
+                {annonce === "rejointe" ? "Inscription enregistrée. " : ""}Vous suivez le cours avec la classe{" "}
+                <strong className="font-semibold">« {classe.classe} »</strong>, sous le nom{" "}
+                <strong className="font-semibold">{classe.eleve}</strong> : votre enseignant voit où vous en êtes.
+                {imposee ? ` Votre enseignant a choisi l'entreprise ${imposee.nom} pour toute la classe.` : ""}
+              </p>
+              <form action={quitterClasseAction}>
+                <SubmitButton pendingLabel="Départ…" className={bouton({ variante: "lien", taille: "s" })}>
+                  Quitter la classe
+                </SubmitButton>
+              </form>
+            </section>
+          ) : (
+            <p className="text-sm text-slate-400">
+              {annonce === "quittee" ? "Vous avez quitté votre classe. " : ""}Votre enseignant vous a donné un code
+              de classe ?{" "}
+              <Link href="/cours/rejoindre" className="underline underline-offset-4 hover:text-slate-200">
+                Rejoindre une classe
+              </Link>
+            </p>
+          )}
           <section aria-labelledby="pilote" className="carte grid gap-5 p-5 sm:p-6">
             <div className="grid gap-1">
               <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">

@@ -7,6 +7,8 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { chapitreParCode } from "@/config/cours/registre";
 import { getSession } from "@/lib/session";
+import { getGuestUserId } from "@/lib/guest";
+import { classeDeLEleve } from "@/services/cours.service";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { ENTREPRISES } from "../entreprises";
 
@@ -42,7 +44,12 @@ export default async function ChapitrePage({
   const [{ chapitre: code }, { entreprise, classe }] = await Promise.all([params, searchParams]);
   const chapitre = chapitreParCode(code);
   if (!chapitre) notFound();
-  const choisie = ENTREPRISES.find((e) => e.code === entreprise) ?? ENTREPRISES[0]!;
+  // L'ÉLÈVE D'UNE CLASSE remonte sa progression à son enseignant ; une entreprise imposée
+  // à la classe l'emporte sur celle de l'adresse.
+  const userId = await getGuestUserId();
+  const classeDeLEleveLue = userId ? await classeDeLEleve(userId) : null;
+  const choisie =
+    ENTREPRISES.find((e) => e.code === (classeDeLEleveLue?.entreprise ?? entreprise)) ?? ENTREPRISES[0]!;
 
   if (!chapitre.libre) {
     const session = await getSession();
@@ -77,6 +84,7 @@ export default async function ChapitrePage({
           cas={cas}
           entreprises={ENTREPRISES.map(({ code: c, nom }) => ({ code: c, nom }))}
           classe={classe !== undefined}
+          enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
       </main>
       <PiedDePage />

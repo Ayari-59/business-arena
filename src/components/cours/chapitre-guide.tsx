@@ -22,6 +22,7 @@ import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagog
 import type { Ecriture } from "@/pedagogy/cours/etats";
 import { Journal, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
 import { SaisieEcriture } from "./saisie-ecriture";
+import { enregistrerProgressionAction } from "@/app/cours/actions";
 
 /**
  * UN CHAPITRE DU COURS, JOUÉ PAS À PAS.
@@ -199,7 +200,8 @@ interface PropsDEtape<E> {
   index: number;
   suivi: SuiviDEtape | undefined;
   classe: boolean;
-  noter: (m: Partial<SuiviDEtape> & { essai?: boolean }) => void;
+  /** Noter un essai ; `remarques` dit à l'enseignant ce qui n'allait pas (en classe). */
+  noter: (m: Partial<SuiviDEtape> & { essai?: boolean; remarques?: string[] }) => void;
   suite: () => void;
 }
 
@@ -257,7 +259,7 @@ function EtapeDEcriture({ etape, cas, chapitre, index, suivi, classe, noter, sui
           onValider={(saisie) => {
             const c = corriger(saisie, attendue);
             setCorrection(c);
-            noter({ essai: true, ...(c.juste ? { reussi: true } : {}) });
+            noter({ essai: true, ...(c.juste ? { reussi: true } : { remarques: c.remarques }) });
           }}
         />
       </section>
@@ -362,7 +364,10 @@ function EtapeDeChoix({ etape, cas, chapitre, index, suivi, classe, noter, suite
         fait={fait}
         onChoisir={(i) => {
           setChoisie(i);
-          noter({ essai: true, ...(options[i]!.juste ? { reussi: true } : {}) });
+          noter({
+            essai: true,
+            ...(options[i]!.juste ? { reussi: true } : { remarques: [`A répondu : « ${options[i]!.texte} »`] }),
+          });
         }}
       />
       {!fait && classe && (
@@ -404,7 +409,12 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
             return x !== null && !Number.isNaN(x) && Math.abs(x - c.attendu) < 0.01;
           });
           setVerifie(v);
-          noter({ essai: true, ...(v.every(Boolean) ? { reussi: true } : {}) });
+          noter({
+            essai: true,
+            ...(v.every(Boolean)
+              ? { reussi: true }
+              : { remarques: champs.filter((_, i) => !v[i]).map((c) => `${c.libelle} : montant faux`) }),
+          });
         }}
       >
         {champs.map((c, i) => (
@@ -482,7 +492,10 @@ function EtapeDeComparaison({ etape, cas, chapitre, index, suivi, classe, noter,
         fait={fait}
         onChoisir={(i) => {
           setChoisie(i);
-          noter({ essai: true, ...(options[i]!.juste ? { reussi: true } : {}) });
+          noter({
+            essai: true,
+            ...(options[i]!.juste ? { reussi: true } : { remarques: [`A répondu : « ${options[i]!.texte} »`] }),
+          });
         }}
       />
       {!fait && classe && (
@@ -630,11 +643,14 @@ export function ChapitreGuide({
   cas,
   entreprises,
   classe,
+  enClasse = null,
 }: {
   code: string;
   cas: Cas;
   entreprises: { code: string; nom: string }[];
   classe: boolean;
+  /** La classe de l'élève, s'il en suit une : sa progression remonte à l'enseignant. */
+  enClasse?: { classe: string; eleve: string } | null;
 }) {
   // Le chapitre dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
   const chapitre = useMemo(() => chapitreDuCas(chapitreParCode(code)!, cas), [code, cas]);
@@ -647,7 +663,26 @@ export function ChapitreGuide({
   const parcours = PARCOURS.find((p) => p.code === chapitre.parcours)!;
   const palier = PALIERS.find((p) => p.palier === chapitre.palier)!;
 
-  const noter = (id: string) => (m: Partial<SuiviDEtape> & { essai?: boolean }) =>
+  // EN CLASSE, chaque geste remonte : la progression entière (elle est petite) et, pour un
+  // essai manqué, les remarques du correcteur. Hors classe, rien ne quitte l'appareil.
+  // Chaque geste est un envoi daté par son numéro ; l'erreur d'un essai manqué voyage avec lui.
+  const [envoi, setEnvoi] = useState<{ n: number; erreur?: { etape: string; remarques: string[] } }>({ n: 0 });
+  useEffect(() => {
+    if (envoi.n === 0 || !enClasse) return;
+    void enregistrerProgressionAction({
+      chapitre: code,
+      entreprise: cas.code,
+      etape: suivi.index,
+      etapes: suivi.etapes,
+      erreur: envoi.erreur,
+    });
+    // Une remontée par geste : `envoi` seul la déclenche, la progression est lue à jour.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envoi]);
+  const geste = (erreur?: { etape: string; remarques: string[] }) => setEnvoi((e) => ({ n: e.n + 1, erreur }));
+
+  const noter = (id: string) => (m: Partial<SuiviDEtape> & { essai?: boolean; remarques?: string[] }) => {
+    geste(m.remarques?.length ? { etape: id, remarques: m.remarques } : undefined);
     changer((s) => {
       const avant = s.etapes[id] ?? { essais: 0, reussi: false, aide: false };
       // Une étape réussie le reste : revenir la relire ne la rejoue pas.
@@ -664,13 +699,16 @@ export function ChapitreGuide({
         },
       };
     });
+  };
   const suite = () => {
     setVue(null);
+    geste();
     changer((s) => ({ ...s, index: Math.max(s.index, courant + 1) }));
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const recommencer = () => {
     setVue(null);
+    geste();
     changer(() => NEUF);
   };
 
@@ -695,6 +733,11 @@ export function ChapitreGuide({
         </p>
         <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs font-semibold text-slate-300">{cas.entreprise}</span>
         {classe && <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400">Mode classe</span>}
+        {enClasse && (
+          <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400" data-en-classe="">
+            {enClasse.classe} · {enClasse.eleve}
+          </span>
+        )}
         <span className="ml-auto text-sm tabular-nums text-slate-400">
           {fini ? "Terminé" : `Étape ${courant + 1} sur ${n}`}
         </span>

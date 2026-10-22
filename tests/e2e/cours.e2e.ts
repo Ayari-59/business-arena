@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
+import { enseignantSousLicence } from "./helpers/licence";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES } from "../../src/config/cours/registre";
@@ -138,4 +139,52 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.context().close();
   }, 120_000);
+});
+
+describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur remonte", () => {
+  it("une classe sur L'ESCALE : l'élève la rejoint, se trompe, et l'enseignant le voit", async () => {
+    const ctxProf = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctxProf);
+    const prof = await ctxProf.newPage();
+    await aller(prof, "/teacher/cours");
+    await prof.getByLabel("Nom de la classe").fill("BTS CG 1 e2e");
+    await prof.getByLabel("Entreprise du cas").selectOption("hotel");
+    await prof.getByRole("button", { name: "Créer la classe" }).click();
+    await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
+    const code = (await prof.locator("[data-code-de-classe]").innerText()).trim();
+    expect(code).toMatch(/^BTSCG1-/);
+
+    const eleve = await nouvellePage();
+    await aller(eleve, `/cours/rejoindre?code=${code}`);
+    await eleve.getByLabel("Prénom ou pseudonyme").fill("Camille");
+    await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();
+    await eleve.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });
+    expect(await eleve.locator("[data-classe-du-cours]").innerText()).toContain("BTS CG 1 e2e");
+
+    // L'entreprise imposée l'emporte sur celle de l'adresse.
+    await aller(eleve, chemin("nova"));
+    await expect.poll(() => eleve.locator("[data-en-classe]").innerText()).toContain("Camille");
+    expect(await eleve.locator("main").innerText()).toContain("L'ESCALE");
+    await eleve.getByRole("button", { name: "Étape suivante" }).click();
+    const cas = casDeLEntreprise("hotel");
+    await eleve.getByLabel("Compte, ligne 1", { exact: true }).fill("101");
+    await eleve.getByLabel("Débit, ligne 1", { exact: true }).fill(String(cas.capital));
+    await eleve.getByLabel("Compte, ligne 2", { exact: true }).fill("512");
+    await eleve.getByLabel("Crédit, ligne 2", { exact: true }).fill(String(cas.capital));
+    await eleve.getByRole("button", { name: "Valider l'écriture" }).click();
+    await expect.poll(() => eleve.locator("main").innerText()).toContain("se passe au débit");
+
+    await expect
+      .poll(
+        async () => {
+          await prof.reload();
+          return prof.locator("[data-etape='apport']").innerText();
+        },
+        { timeout: 30_000 },
+      )
+      .toContain("L'argent reçu en banque se passe au débit.");
+    expect(await prof.locator("[data-eleve='Camille']").count()).toBe(1);
+    await ctxProf.close();
+    await eleve.context().close();
+  }, 180_000);
 });

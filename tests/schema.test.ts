@@ -22,6 +22,8 @@ const EXPECTED_TABLES = [
   "competitions", "competition_stages", "competition_entries", "competition_members",
   "episode_parties", "episode_cohortes", "episode_membres", "episode_reprises",
   "episode_objectifs",
+  // Le cours par la simulation, suivi en classe (migration 0047, /teacher/cours).
+  "cours_classes", "cours_eleves", "cours_progressions",
   "lti_plateformes", "lti_jetons_inscription", "lti_nonces", "lti_tickets", "lti_liens",
   "lti_comptes", "lti_refus",
   // Le retour des notes dans le carnet de la plateforme (migration 0043, lti/ags).
