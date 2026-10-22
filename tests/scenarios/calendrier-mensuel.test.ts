@@ -14,6 +14,7 @@ import {
 } from "../../src/config/scenarios/calendrier-mensuel";
 import type { EngineScenarioConfig, SegmentConfig } from "../../src/engine/types";
 import { situationDeLaPartie } from "../../src/config/scenarios/situation-texte";
+import { DEFAULT_RSE_CONFIG } from "../../src/engine/rse";
 
 /**
  * LE CALENDRIER DES PARTIES AU MOIS (décision du propriétaire) : la saison du trimestre,
@@ -199,4 +200,27 @@ describe("une situation qui raconte un tour déjà joué ne s'ouvre jamais au pr
     const ecart = nova.situations.find((s) => s.code === "nova_t2_variance_decomposition")!;
     expect([4, 6, 1].map((d) => tourDOuverture(ecart.trigger, 12, 6, d))).toEqual([2, null, 4]);
   });
+});
+
+describe("les cartes RSE au mois, sur le calendrier : la même chance par an, le temps réel", () => {
+  for (const def of SCENARIOS.slice(0, 4)) {
+    it(`${def.code} : mauvaise presse et amende gardent leur chance annuelle ; la mauvaise presse dure trois mois, l'amende vaut un trimestre`, () => {
+      const trimestre = composerLeScenarioJoue({ ...reglages(def), periodicity: "quarter" });
+      const mois = composerLeScenarioJoue(reglages(def, { moisDeDepart: 6 }));
+      const q = (trimestre.rse ?? DEFAULT_RSE_CONFIG).cards;
+      const m = mois.rse!.cards;
+      const parAn = (p: number, tours: number) => 1 - Math.pow(1 - p, tours);
+      expect(parAn(m.badBuzzProbability, 12)).toBeCloseTo(parAn(q.badBuzzProbability, 4), 9);
+      expect(parAn(m.sanctionProbability, 12)).toBeCloseTo(parAn(q.sanctionProbability, 4), 9);
+      // Le cas mord : la chance d'un mois est sous celle d'un trimestre.
+      expect(m.badBuzzProbability).toBeLessThan(q.badBuzzProbability);
+      expect(m.badBuzzDuration).toBe(3 * (q.badBuzzDuration ?? 1));
+      expect(m.labelDuration).toBe(3 * q.labelDuration);
+      expect(m.fineAmount).toBeCloseTo(3 * q.fineAmount, 9);
+      // « Pas avant le tour q » : q − 1 trimestres de jeu depuis le départ, quel que soit le mois.
+      expect(m.minRound).toBe(3 * (q.minRound - 1) + 1);
+      // Au trimestre, rien ne bouge.
+      expect(trimestre.rse?.cards.badBuzzDuration).toBeUndefined();
+    });
+  }
 });

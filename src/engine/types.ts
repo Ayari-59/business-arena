@@ -172,6 +172,11 @@ export interface RseEngineConfig {
     badBuzzProbability: number;
     /** Malus de demande du bad buzz (0,25 = −25 %), un tour. */
     badBuzzDemandMalus: number;
+    /**
+     * Durée du bad buzz, en tours (absente : un). Au mois sur le calendrier, trois : le
+     * temps réel d'un trimestre (`config/scenarios/calendrier-mensuel.ts`).
+     */
+    badBuzzDuration?: number;
     /** 💶 Éco-subvention : capital « process propre » ≥ ce seuil → aide (Lot 2C.2). */
     aidCleanThreshold: number;
     /** Montant de l'éco-subvention, en MULTIPLE de l'échelle marketing du scénario. */
