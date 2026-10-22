@@ -21,6 +21,8 @@ export interface CompteDuMetier {
 }
 
 export interface DonneesDuMetier {
+  /** Ce que recouvrent les coûts variables autres que l'achat, par unité vendue. */
+  autresCoutsVariables: string;
   /** L'équipement acheté à la création : son compte. */
   immobilisation: CompteDuMetier;
   /** Ce que l'entreprise achète pour produire ou vendre, au singulier générique. */
@@ -43,6 +45,7 @@ const IMMO_MATERIEL: CompteDuMetier = { compte: "2154", acceptes: ["215", "2155"
 
 export const METIERS: Record<string, DonneesDuMetier> = {
   nova: {
+    autresCoutsVariables: "emballage, transport et énergie de la chaîne",
     immobilisation: IMMO_MATERIEL,
     achat: {
       compte: "601",
@@ -60,6 +63,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   boutique: {
+    autresCoutsVariables: "emballages, étiquettes et frais de carte bancaire",
     immobilisation: { compte: "2184", acceptes: ["218", "2181"] },
     achat: {
       compte: "607",
@@ -77,6 +81,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   hotel: {
+    autresCoutsVariables: "blanchisserie, énergie et frais de réservation",
     immobilisation: { compte: "2181", acceptes: ["218", "2135"] },
     achat: {
       compte: "6063",
@@ -94,6 +99,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   bistrot: {
+    autresCoutsVariables: "énergie de cuisine, boissons offertes et frais de carte",
     immobilisation: IMMO_MATERIEL,
     achat: {
       compte: "601",
@@ -111,6 +117,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   conseil: {
+    autresCoutsVariables: "déplacements et frais de mission",
     immobilisation: { compte: "2183", acceptes: ["218"] },
     achat: {
       compte: "604",
@@ -128,6 +135,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   ecommerce: {
+    autresCoutsVariables: "préparation, emballage et livraison",
     immobilisation: { compte: "2154", acceptes: ["215", "2181", "218"] },
     achat: {
       compte: "607",
@@ -145,6 +153,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   fitness: {
+    autresCoutsVariables: "énergie, eau et serviettes par adhérent",
     immobilisation: { compte: "2154", acceptes: ["215", "2184", "218"] },
     achat: {
       compte: "6063",
@@ -162,6 +171,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   batiment: {
+    autresCoutsVariables: "location de petit matériel, carburant et évacuation des déchets",
     immobilisation: { compte: "2155", acceptes: ["215", "2154"] },
     achat: {
       compte: "601",
@@ -179,6 +189,7 @@ export const METIERS: Record<string, DonneesDuMetier> = {
     },
   },
   transport: {
+    autresCoutsVariables: "péages, pneus et entretien au kilomètre",
     immobilisation: { compte: "2182", acceptes: ["218"] },
     achat: {
       compte: "6061",

@@ -53,6 +53,8 @@ function textesDe(chapitre: typeof pilote, e: Etape, cas: Cas, i: number): strin
       const fin = etatAvant(chapitre, cas, chapitre.etapes.length);
       return [e.question(cas), ...e.options(cas, av, fin).flatMap((o) => [o.texte, o.retour]), ...e.explication(cas, av, fin)];
     }
+    default:
+      return [];
   }
 }
 

@@ -6,6 +6,7 @@ import { ALPHABET_REPRISE } from "@/config/reprise";
 import { chapitreParCode } from "@/config/cours/registre";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import type { ProgressionLue } from "@/pedagogy/cours/suivi";
+import { unCompteSousLicence } from "@/services/acces.service";
 
 /**
  * LES CLASSES DU COURS PAR LA SIMULATION.
@@ -227,4 +228,18 @@ export async function enregistrerProgression(userId: string, envoi: ProgressionE
       set: { entreprise, etape, etapes, erreurs, majLe: new Date() },
     });
   return true;
+}
+
+/**
+ * Un chapitre réservé s'ouvre à l'élève par sa classe : quand l'enseignant qui l'a créée
+ * est rattaché à un établissement sous licence de l'arène. L'élève n'a pas de compte ;
+ * c'est la licence de son enseignant qui le couvre.
+ */
+export async function classeSousLicence(userId: string): Promise<boolean> {
+  const [m] = await db
+    .select({ creePar: coursClasses.creePar })
+    .from(coursEleves)
+    .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
+    .where(eq(coursEleves.userId, userId));
+  return m ? unCompteSousLicence([m.creePar]) : false;
 }

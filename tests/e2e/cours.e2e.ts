@@ -188,3 +188,46 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await eleve.context().close();
   }, 180_000);
 });
+
+describe("le seuil de rentabilité, chapitre réservé", () => {
+  it("sans licence, le chapitre dit qu'il est réservé ; sous licence, il se joue de bout en bout sans faute", async () => {
+    const libre = await nouvellePage();
+    await aller(libre, "/cours/seuil-de-rentabilite?entreprise=bistrot");
+    expect(await libre.locator("main").innerText()).toContain("réservé aux établissements sous licence");
+    await libre.context().close();
+
+    const code = "bistrot";
+    const cas = casDeLEntreprise(code);
+    const chapitre = CHAPITRES.find((c) => c.code === "seuil-de-rentabilite")!;
+    const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctx);
+    const page = await ctx.newPage();
+    await aller(page, `/cours/${chapitre.code}?entreprise=${code}`);
+    const etat = { soldes: {} };
+    for (const [i, etape] of chapitre.etapes.entries()) {
+      await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
+      if (etape.type === "tri") {
+        for (const el of etape.elements(cas)) {
+          const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
+          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle }).click();
+        }
+        await page.getByRole("button", { name: "Vérifier" }).click();
+      } else if (etape.type === "montants") {
+        for (const c of etape.champs(cas, etat)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
+        await page.getByRole("button", { name: "Vérifier" }).click();
+      } else if (etape.type === "choix") {
+        await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte }).click();
+      } else if (etape.type === "curseur") {
+        await page.getByLabel("Ventes du mois, au clavier").fill(String(etape.cible(cas).attendu));
+        await page.getByRole("button", { name: "Valider cette position" }).click();
+      }
+      const dernier = i === chapitre.etapes.length - 1;
+      await page.getByRole("button", { name: dernier ? "Terminer le chapitre" : "Étape suivante" }).click();
+    }
+    const notees = chapitre.etapes.filter((e) => e.type !== "lecture").length;
+    await expect
+      .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
+      .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
+    await ctx.close();
+  }, 240_000);
+});
