@@ -1,5 +1,6 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
+import { accord, accordPluriel } from "../accords";
 import type { Cas } from "../cas";
 import type { Chapitre } from "../types";
 
@@ -85,7 +86,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
         const g = chiffresDeGestion(c);
         return [
           `En janvier, ${c.entreprise} a vendu ${qte(g.quantite)} ${c.unites}, pour ${eur(g.chiffreDAffaires)} hors taxes : un prix moyen de ${eur(g.prixMoyen)}.`,
-          `Le dirigeant pose une seule question : à partir de combien de ${c.unites} vendus par mois l'entreprise gagne-t-elle de l'argent ? La comptabilité générale dit ce qui s'est passé ; le contrôle de gestion aide à décider ce qui va se passer.`,
+          `Le dirigeant pose une seule question : à partir de combien de ${c.unites} ${accordPluriel(c, "vendu")} par mois l'entreprise gagne-t-elle de l'argent ? La comptabilité générale dit ce qui s'est passé ; le contrôle de gestion aide à décider ce qui va se passer.`,
           "Pour répondre, il faut d'abord savoir quelles charges grandissent avec les ventes, et lesquelles restent les mêmes quoi qu'on vende.",
         ];
       },
@@ -168,7 +169,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
       explication: (c) => {
         const g = chiffresDeGestion(c);
         return [
-          `Chaque ${c.unite} vendu laisse ${eur(g.margeUnitaire)} une fois payés ses coûts variables. C'est cette marge, et elle seule, qui sert à payer les charges fixes ; ce qui reste ensuite est le bénéfice.`,
+          `Chaque ${c.unite} ${accord(c, "vendu")} laisse ${eur(g.margeUnitaire)} une fois payés ses coûts variables. C'est cette marge, et elle seule, qui sert à payer les charges fixes ; ce qui reste ensuite est le bénéfice.`,
           `Le taux, ${pct(g.taux)}, dit la même chose pour 1 € de chiffre d'affaires : ${pct(g.taux)} de chaque euro vendu restent pour couvrir les charges fixes.`,
         ];
       },
@@ -179,7 +180,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
       titre: "Le compte de résultat différentiel",
       notions: ["contribution_margin", "income_statement"],
       question: (c) =>
-        `Présentez le résultat de janvier en séparant charges variables et charges fixes : ${qte(c.gestion.quantite)} ${c.unites} vendus.`,
+        `Présentez le résultat de janvier en séparant charges variables et charges fixes : ${qte(c.gestion.quantite)} ${c.unites} ${accordPluriel(c, "vendu")}.`,
       champs: (c) => {
         const g = chiffresDeGestion(c);
         return [
@@ -205,7 +206,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
       type: "choix",
       titre: "Une vente de plus",
       notions: ["contribution_margin"],
-      question: (c) => `Si ${c.entreprise} vend un ${c.unite} de plus en janvier, de combien son résultat augmente-t-il ?`,
+      question: (c) => `Si ${c.entreprise} vend ${accord(c, "un")} ${c.unite} de plus en janvier, de combien son résultat augmente-t-il ?`,
       options: (c) => {
         const g = chiffresDeGestion(c);
         return [
