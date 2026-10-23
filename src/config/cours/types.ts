@@ -30,6 +30,13 @@ export interface Piece {
 /** Ce que l'étape montre une fois réussie. */
 export type Vue = "bilan" | "resultat" | "bilan-et-resultat" | "tva" | "grand-livre" | "paie" | "immobilisation";
 
+/** Un tableau de chiffres du cas, montré avec l'étape : des colonnes, des lignes de valeurs déjà écrites. */
+export interface TableauDeDonnees {
+  titre: string;
+  colonnes: readonly string[];
+  lignes: readonly { libelle: string; valeurs: readonly string[] }[];
+}
+
 interface Base {
   id: string;
   /** Le titre court de l'étape, pour le sommaire. */
@@ -41,6 +48,8 @@ interface Base {
    * où il y a un stock) : `chapitreDuCas` retire les autres. Absent : partout.
    */
   si?: (c: Cas) => boolean;
+  /** Un tableau de chiffres du cas, montré avant la question (lecture, choix, montants). */
+  tableau?: (c: Cas) => TableauDeDonnees;
 }
 
 export interface EtapeLecture extends Base {
