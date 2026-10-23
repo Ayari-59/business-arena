@@ -1,5 +1,6 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
+import { accord, accordPluriel } from "../accords";
 import type { Cas } from "../cas";
 import {
   ASSIETTE_D_APPROVISIONNEMENT,
@@ -128,7 +129,7 @@ export const COUT_COMPLET: Chapitre = {
       texte: (c) => {
         const k = coutComplet(c);
         return [
-          `Dans « Le seuil de rentabilité », les charges de ${c.entreprise} se rangeaient en variables et fixes, pour savoir combien vendre. Cette fois, on veut savoir ce que coûte, tout compris, chacun des ${qte(k.quantite)} ${c.unites} vendus en janvier.`,
+          `Dans « Le seuil de rentabilité », les charges de ${c.entreprise} se rangeaient en variables et fixes, pour savoir combien vendre. Cette fois, on veut savoir ce que coûte, tout compris, ${accord(c, "chacun")} des ${qte(k.quantite)} ${c.unites} ${accordPluriel(c, "vendu")} en janvier.`,
           "La méthode des coûts complets range les charges autrement. Les charges directes se rattachent au produit sans calcul : les achats qu'il consomme. Les charges indirectes servent à toute l'entreprise : il faut les répartir, par des centres d'analyse, avant de les imputer aux produits.",
           "Les charges sont celles de l'arène ; les clés de répartition, que l'arène ne connaît pas, sont celles du cours.",
         ];
@@ -294,7 +295,7 @@ export const COUT_COMPLET: Chapitre = {
       explication: (c) => {
         const k = coutComplet(c);
         return [
-          `Chaque ${c.unite} vendu coûte ${eur(auCentime(k.coutDeRevientUnitaire))} tout compris, pour un prix moyen de ${eur(k.prixMoyen)}. ${k.prixMoyen >= k.coutDeRevientUnitaire ? "Le prix couvre le coût complet." : "Le prix ne couvre pas le coût complet."}`,
+          `Chaque ${c.unite} ${accord(c, "vendu")} coûte ${eur(auCentime(k.coutDeRevientUnitaire))} tout compris, pour un prix moyen de ${eur(k.prixMoyen)}. ${k.prixMoyen >= k.coutDeRevientUnitaire ? "Le prix couvre le coût complet." : "Le prix ne couvre pas le coût complet."}`,
         ];
       },
     },
