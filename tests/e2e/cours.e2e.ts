@@ -209,7 +209,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
       if (etape.type === "tri") {
         for (const el of etape.elements(cas)) {
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
-          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle }).click();
+          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
         await page.getByRole("button", { name: "Vérifier" }).click();
       } else if (etape.type === "montants") {
@@ -240,6 +240,8 @@ describe.each([
   { code: "la-cloture", entreprise: "boutique" },
   { code: "la-cloture", entreprise: "bistrot" },
   { code: "remises-et-reglements", entreprise: "conseil" },
+  { code: "cout-complet", entreprise: "fitness" },
+  { code: "cout-complet", entreprise: "nova" },
 ])("le chapitre réservé $code chez $entreprise, au palier 3", ({ code: chapitreCode, entreprise }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
@@ -269,7 +271,7 @@ describe.each([
       } else if (etape.type === "tri") {
         for (const el of etape.elements(cas)) {
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
-          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle }).click();
+          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
         await page.getByRole("button", { name: "Vérifier" }).click();
       } else if (etape.type === "montants") {
