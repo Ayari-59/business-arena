@@ -16,6 +16,7 @@ import { DEPRECIATIONS_ET_PROVISIONS } from "./chapitres/depreciations-et-provis
 import { REGULARISATIONS } from "./chapitres/regularisations";
 import { SOLDES_INTERMEDIAIRES } from "./chapitres/soldes-intermediaires";
 import { BILAN_FONCTIONNEL } from "./chapitres/bilan-fonctionnel";
+import { LES_FLUX } from "./chapitres/les-flux";
 import type { Chapitre } from "./types";
 
 /**
@@ -67,6 +68,6 @@ export const PROGRAMME: Record<CodeParcours, Record<Chapitre["palier"], readonly
   },
 };
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER];
 
 export const chapitreParCode = (code: string) => CHAPITRES.find((c) => c.code === code);
