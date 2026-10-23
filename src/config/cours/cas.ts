@@ -39,7 +39,11 @@ export interface Cas {
   unites: string;
   capital: number;
   emprunt: number;
-  immobilisation: Facture & CompteDuMetier & { designation: string; date: number };
+  /**
+   * L'équipement acheté à la création. Sa revente se fait, dans l'arène, à une fraction de
+   * sa valeur nette comptable : `ratioDeRevente`, celle du catalogue d'équipements.
+   */
+  immobilisation: Facture & CompteDuMetier & { designation: string; date: number; ratioDeRevente: number };
   achat: Facture &
     CompteDuMetier & { designation: string; fournisseur: string; date: number; delai: number; echeance: number };
   venteComptant: Facture & CompteDuMetier & { qui: string; date: number };
@@ -230,6 +234,8 @@ export function casDeLEntreprise(code: string): Cas {
       ...metier.immobilisation,
       designation: type.name,
       date: 6,
+      // Le même repli que le moteur quand le catalogue ne dit rien.
+      ratioDeRevente: type.resaleRatio ?? 0.5,
     },
     achat: {
       ...facture(quantite, s.product.materialCostPerUnit, metier.achat.tauxTva),

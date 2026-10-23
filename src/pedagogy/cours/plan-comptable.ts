@@ -37,6 +37,18 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "2182", intitule: "Matériel de transport", nature: "actif" },
   { numero: "2183", intitule: "Matériel de bureau et informatique", nature: "actif" },
   { numero: "2184", intitule: "Mobilier", nature: "actif" },
+  // Comptes d'amortissement : en soustraction de l'immobilisation qu'ils suivent.
+  { numero: "281", intitule: "Amortissements des immobilisations corporelles", nature: "actif" },
+  { numero: "2813", intitule: "Amortissements des constructions", nature: "actif" },
+  { numero: "28135", intitule: "Amortissements des installations générales, agencements des constructions", nature: "actif" },
+  { numero: "2815", intitule: "Amortissements des installations techniques, matériel et outillage", nature: "actif" },
+  { numero: "28154", intitule: "Amortissements du matériel industriel", nature: "actif" },
+  { numero: "28155", intitule: "Amortissements de l'outillage industriel", nature: "actif" },
+  { numero: "2818", intitule: "Amortissements des autres immobilisations corporelles", nature: "actif" },
+  { numero: "28181", intitule: "Amortissements des installations générales, agencements divers", nature: "actif" },
+  { numero: "28182", intitule: "Amortissements du matériel de transport", nature: "actif" },
+  { numero: "28183", intitule: "Amortissements du matériel de bureau et informatique", nature: "actif" },
+  { numero: "28184", intitule: "Amortissements du mobilier", nature: "actif" },
   // Classe 4 : tiers
   { numero: "401", intitule: "Fournisseurs", nature: "passif" },
   { numero: "404", intitule: "Fournisseurs d'immobilisations", nature: "passif" },
@@ -68,6 +80,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "661", intitule: "Charges d'intérêts", nature: "charge" },
   { numero: "6611", intitule: "Intérêts des emprunts et dettes", nature: "charge" },
   { numero: "681", intitule: "Dotations aux amortissements", nature: "charge" },
+  { numero: "6811", intitule: "Dotations aux amortissements des immobilisations incorporelles et corporelles", nature: "charge" },
   // Classe 7 : produits
   { numero: "701", intitule: "Ventes de produits finis", nature: "produit" },
   { numero: "704", intitule: "Travaux", nature: "produit" },
