@@ -59,8 +59,10 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   // Classe 4 : tiers
   { numero: "401", intitule: "Fournisseurs", nature: "passif" },
   { numero: "404", intitule: "Fournisseurs d'immobilisations", nature: "passif" },
+  { numero: "408", intitule: "Fournisseurs, factures non parvenues", nature: "passif" },
   { numero: "411", intitule: "Clients", nature: "actif" },
   { numero: "416", intitule: "Clients douteux ou litigieux", nature: "actif" },
+  { numero: "418", intitule: "Clients, produits non encore facturés", nature: "actif" },
   { numero: "421", intitule: "Personnel, rémunérations dues", nature: "passif" },
   { numero: "425", intitule: "Personnel, avances et acomptes", nature: "actif" },
   { numero: "431", intitule: "Sécurité sociale", nature: "passif" },
@@ -69,8 +71,12 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "444", intitule: "État, impôts sur les bénéfices", nature: "passif" },
   { numero: "44562", intitule: "TVA déductible sur immobilisations", nature: "tva" },
   { numero: "44566", intitule: "TVA déductible sur autres biens et services", nature: "tva" },
+  { numero: "44586", intitule: "TVA sur factures non parvenues", nature: "tva" },
   { numero: "44571", intitule: "TVA collectée", nature: "tva" },
+  { numero: "44587", intitule: "TVA sur factures à établir", nature: "tva" },
   { numero: "44551", intitule: "TVA à décaisser", nature: "tva" },
+  { numero: "486", intitule: "Charges constatées d'avance", nature: "actif" },
+  { numero: "487", intitule: "Produits constatés d'avance", nature: "passif" },
   // Dépréciations des comptes de tiers : en soustraction des créances qu'elles suivent.
   { numero: "491", intitule: "Dépréciations des comptes de clients", nature: "actif" },
   // Classe 5 : trésorerie
@@ -89,6 +95,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "61", intitule: "Services extérieurs (loyer et frais de structure)", nature: "charge" },
   { numero: "613", intitule: "Locations", nature: "charge" },
   { numero: "615", intitule: "Entretien et réparations", nature: "charge" },
+  { numero: "616", intitule: "Primes d'assurances", nature: "charge" },
   { numero: "62", intitule: "Autres services extérieurs", nature: "charge" },
   { numero: "622", intitule: "Rémunérations d'intermédiaires et honoraires", nature: "charge" },
   { numero: "623", intitule: "Publicité, publications, relations publiques", nature: "charge" },

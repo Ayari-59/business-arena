@@ -4,7 +4,7 @@ import type { Cas } from "../cas";
 import { MOIS_PROBABLES, MOIS_RECLAMES, PART_RECOUVREE, TAUX_DE_PERTE_ESTIME, creanceDouteuse, litige } from "../provisions";
 import type { Chapitre } from "../types";
 import { planDAmortissement } from "./immobilisations";
-import { balance, cloture } from "./la-cloture";
+import { balanceApresInventaire, cloture } from "./la-cloture";
 
 /**
  * CHAPITRE : DÉPRÉCIATIONS ET PROVISIONS (comptabilité générale, palier 4).
@@ -39,16 +39,8 @@ export function resultatApresProvisions(c: Cas) {
  * déjà passés, et la créance de fin d'année sortie de la banque, TVA comprise.
  */
 function ouverture(c: Cas): Ecriture {
-  const k = cloture(c);
   const d = creanceDouteuse(c);
-  const lignes = [...balance(c).lignes];
-  lignes.push({ compte: "6811", debit: k.dotation, credit: 0 }, { compte: k.compteAmortissement, debit: 0, credit: k.dotation });
-  if (k.stock && k.stock.initial > 0) {
-    lignes.push({ compte: k.comptesDuStock.variation, debit: k.stock.initial, credit: 0 }, { compte: k.comptesDuStock.stock, debit: 0, credit: k.stock.initial });
-  }
-  if (k.stock && k.stock.final > 0) {
-    lignes.push({ compte: k.comptesDuStock.stock, debit: k.stock.final, credit: 0 }, { compte: k.comptesDuStock.variation, debit: 0, credit: k.stock.final });
-  }
+  const lignes = [...balanceApresInventaire(c)];
   lignes.push({ compte: "411", debit: d.ttc, credit: 0 }, { compte: "44571", debit: 0, credit: d.tva }, { compte: "512", debit: 0, credit: d.ht });
   return { date: "31 décembre", libelle: "Balance après amortissements et stock : l'année de l'arène, et ce que les clients doivent encore", lignes };
 }

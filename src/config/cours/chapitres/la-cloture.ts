@@ -1,5 +1,5 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
-import { auCentime, type Ecriture } from "../../../pedagogy/cours/etats";
+import { auCentime, type Ecriture, type Ligne } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { dateDuCours as date } from "../dates";
 import { compteDAmortissement } from "./immobilisations";
@@ -82,6 +82,23 @@ export function balance(c: Cas): Ecriture {
   const banque = auCentime(k.ventes - debits);
   lignes.push({ compte: "512", debit: banque > 0 ? banque : 0, credit: banque < 0 ? -banque : 0 });
   return { date: "31 décembre", libelle: "Balance avant inventaire : l'année de l'arène, en grandes masses", lignes };
+}
+
+/**
+ * La balance une fois les travaux d'inventaire de ce chapitre passés : la dotation et le
+ * stock. Les chapitres du palier suivant (dépréciations, régularisations) partent de là.
+ */
+export function balanceApresInventaire(c: Cas): Ligne[] {
+  const k = cloture(c);
+  const lignes = [...balance(c).lignes];
+  lignes.push({ compte: "6811", debit: k.dotation, credit: 0 }, { compte: k.compteAmortissement, debit: 0, credit: k.dotation });
+  if (k.stock && k.stock.initial > 0) {
+    lignes.push({ compte: k.comptesDuStock.variation, debit: k.stock.initial, credit: 0 }, { compte: k.comptesDuStock.stock, debit: 0, credit: k.stock.initial });
+  }
+  if (k.stock && k.stock.final > 0) {
+    lignes.push({ compte: k.comptesDuStock.stock, debit: k.stock.final, credit: 0 }, { compte: k.comptesDuStock.variation, debit: 0, credit: k.stock.final });
+  }
+  return lignes;
 }
 
 export const LA_CLOTURE: Chapitre = {
