@@ -63,7 +63,7 @@ export function cloture(c: Cas) {
 }
 
 /** La balance avant inventaire, en une écriture : la banque solde les comptes de bilan. */
-function balance(c: Cas): Ecriture {
+export function balance(c: Cas): Ecriture {
   const k = cloture(c);
   const charges: [string, number][] = [
     [c.achat.compte, k.achats],

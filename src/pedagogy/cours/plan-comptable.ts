@@ -24,6 +24,8 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   // Classe 1 : capitaux
   { numero: "101", intitule: "Capital", nature: "passif" },
   { numero: "108", intitule: "Compte de l'exploitant", nature: "passif" },
+  { numero: "151", intitule: "Provisions pour risques", nature: "passif" },
+  { numero: "1511", intitule: "Provisions pour litiges", nature: "passif" },
   { numero: "164", intitule: "Emprunts auprès des établissements de crédit", nature: "passif" },
   { numero: "1641", intitule: "Emprunts bancaires", nature: "passif" },
   { numero: "1688", intitule: "Intérêts courus sur emprunts", nature: "passif" },
@@ -58,6 +60,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "401", intitule: "Fournisseurs", nature: "passif" },
   { numero: "404", intitule: "Fournisseurs d'immobilisations", nature: "passif" },
   { numero: "411", intitule: "Clients", nature: "actif" },
+  { numero: "416", intitule: "Clients douteux ou litigieux", nature: "actif" },
   { numero: "421", intitule: "Personnel, rémunérations dues", nature: "passif" },
   { numero: "425", intitule: "Personnel, avances et acomptes", nature: "actif" },
   { numero: "431", intitule: "Sécurité sociale", nature: "passif" },
@@ -68,6 +71,8 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "44566", intitule: "TVA déductible sur autres biens et services", nature: "tva" },
   { numero: "44571", intitule: "TVA collectée", nature: "tva" },
   { numero: "44551", intitule: "TVA à décaisser", nature: "tva" },
+  // Dépréciations des comptes de tiers : en soustraction des créances qu'elles suivent.
+  { numero: "491", intitule: "Dépréciations des comptes de clients", nature: "actif" },
   // Classe 5 : trésorerie
   { numero: "512", intitule: "Banque", nature: "tresorerie" },
   { numero: "530", intitule: "Caisse", nature: "tresorerie" },
@@ -91,12 +96,15 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "6132", intitule: "Locations immobilières", nature: "charge" },
   { numero: "641", intitule: "Rémunérations du personnel", nature: "charge" },
   { numero: "645", intitule: "Charges de sécurité sociale et de prévoyance", nature: "charge" },
+  { numero: "654", intitule: "Pertes sur créances irrécouvrables", nature: "charge" },
   { numero: "661", intitule: "Charges d'intérêts", nature: "charge" },
   { numero: "665", intitule: "Escomptes accordés", nature: "charge" },
   { numero: "6611", intitule: "Intérêts des emprunts et dettes", nature: "charge" },
-  { numero: "681", intitule: "Dotations aux amortissements", nature: "charge" },
+  { numero: "681", intitule: "Dotations aux amortissements, dépréciations et provisions", nature: "charge" },
   { numero: "695", intitule: "Impôts sur les bénéfices", nature: "charge" },
   { numero: "6811", intitule: "Dotations aux amortissements des immobilisations incorporelles et corporelles", nature: "charge" },
+  { numero: "6815", intitule: "Dotations aux provisions d'exploitation", nature: "charge" },
+  { numero: "6817", intitule: "Dotations aux dépréciations des actifs circulants", nature: "charge" },
   // Classe 7 : produits
   { numero: "701", intitule: "Ventes de produits finis", nature: "produit" },
   { numero: "765", intitule: "Escomptes obtenus", nature: "produit" },
@@ -104,6 +112,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "704", intitule: "Travaux", nature: "produit" },
   { numero: "706", intitule: "Prestations de services", nature: "produit" },
   { numero: "707", intitule: "Ventes de marchandises", nature: "produit" },
+  { numero: "781", intitule: "Reprises sur amortissements, dépréciations et provisions", nature: "produit" },
+  { numero: "7815", intitule: "Reprises sur provisions d'exploitation", nature: "produit" },
+  { numero: "7817", intitule: "Reprises sur dépréciations des actifs circulants", nature: "produit" },
 ];
 
 const PAR_NUMERO = new Map(PLAN_DU_COURS.map((c) => [c.numero, c]));

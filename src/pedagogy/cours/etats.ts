@@ -108,7 +108,8 @@ export function bilan(s: Record<string, number>): Bilan {
 
   poser(actif, "Immobilisations", somme((c) => c.startsWith("2")), 1);
   poser(actif, "Stocks", somme((c) => c.startsWith("3")), 1);
-  poser(actif, "Clients", somme((c) => c.startsWith("411")), 1);
+  // Les clients, douteux compris, nets de leur dépréciation.
+  poser(actif, "Clients", somme((c) => c.startsWith("411") || c.startsWith("416") || c.startsWith("491")), 1);
   poser(actif, "Avances au personnel", somme((c) => c.startsWith("425")), 1);
   const tva = tvaNette(s);
   const comptesTva = Object.keys(s).filter((c) => nature(c) === "tva" && s[c] !== 0).sort();
@@ -118,6 +119,7 @@ export function bilan(s: Record<string, number>): Bilan {
 
   poser(passif, "Capital", somme((c) => c.startsWith("10")), -1);
   if (resultat !== 0) passif.push({ libelle: "Résultat de l'exercice", montant: resultat, comptes: [] });
+  poser(passif, "Provisions", somme((c) => c.startsWith("15")), -1);
   poser(passif, "Emprunts", somme((c) => c.startsWith("16")), -1);
   poser(passif, "Fournisseurs", somme((c) => c.startsWith("40")), -1);
   poser(passif, "Dettes sociales", somme((c) => (c.startsWith("42") || c.startsWith("43")) && nature(c) === "passif"), -1);
