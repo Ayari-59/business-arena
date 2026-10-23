@@ -232,16 +232,19 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
   }, 240_000);
 });
 
-describe("la paie, chapitre réservé du palier 3", () => {
-  it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute et montre les comptes de la paie", async () => {
+describe.each([
+  { code: "la-paie", entreprise: "hotel" },
+  { code: "l-emprunt", entreprise: "transport" },
+])("le chapitre réservé $code, au palier 3", ({ code: chapitreCode, entreprise }) => {
+  it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
-    await aller(libre, "/cours/la-paie?entreprise=hotel");
+    await aller(libre, `/cours/${chapitreCode}?entreprise=${entreprise}`);
     expect(await libre.locator("main").innerText()).toContain("réservé aux établissements sous licence");
     await libre.context().close();
 
-    const code = "hotel";
+    const code = entreprise;
     const cas = casDeLEntreprise(code);
-    const chapitre = chapitreDuCas(CHAPITRES.find((c) => c.code === "la-paie")!, cas);
+    const chapitre = chapitreDuCas(CHAPITRES.find((c) => c.code === chapitreCode)!, cas);
     const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
     await enseignantSousLicence(ctx);
     const page = await ctx.newPage();
