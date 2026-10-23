@@ -107,6 +107,7 @@ export function bilan(s: Record<string, number>): Bilan {
   const resultat = compteDeResultat(s).resultat;
 
   poser(actif, "Immobilisations", somme((c) => c.startsWith("2")), 1);
+  poser(actif, "Stocks", somme((c) => c.startsWith("3")), 1);
   poser(actif, "Clients", somme((c) => c.startsWith("411")), 1);
   poser(actif, "Avances au personnel", somme((c) => c.startsWith("425")), 1);
   const tva = tvaNette(s);

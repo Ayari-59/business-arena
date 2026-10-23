@@ -265,6 +265,7 @@ describe("le bilan de l'épisode", () => {
     ...extra,
   });
 
+  // Trois analyses complètes : plus de 4 s seul, au-delà des 5 s par défaut quand toute la suite tourne.
   it("juge bonnes les décisions du meilleur chemin, quel que soit le hasard", () => {
     for (const graine of [2, 11, 4242]) {
       const a = analyser(EPISODE_TURNOVER, partie(MEILLEUR, { graine }));
@@ -273,7 +274,7 @@ describe("le bilan de l'épisode", () => {
         `graine ${graine}`,
       ).toBe(true);
     }
-  });
+  }, 30_000);
 
   it("à qui a suivi tous les réflexes, propose de traiter la raison de partir", () => {
     const p = partie(REFLEXE);

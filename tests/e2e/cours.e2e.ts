@@ -236,6 +236,7 @@ describe.each([
   { code: "la-paie", entreprise: "hotel" },
   { code: "l-emprunt", entreprise: "transport" },
   { code: "immobilisations", entreprise: "batiment" },
+  { code: "les-stocks", entreprise: "ecommerce" },
 ])("le chapitre réservé $code, au palier 3", ({ code: chapitreCode, entreprise }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
@@ -283,4 +284,22 @@ describe.each([
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
     await ctx.close();
   }, 240_000);
+});
+
+describe("un chapitre qui ne vaut pas pour toutes les entreprises", () => {
+  it("demandé chez un hôtel, « Les stocks » dit pourquoi et se joue chez une entreprise qui a un stock", async () => {
+    const chapitre = CHAPITRES.find((c) => c.code === "les-stocks")!;
+    const ctx = await navigateur.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR" });
+    await enseignantSousLicence(ctx);
+    const page = await ctx.newPage();
+    await aller(page, "/cours/les-stocks?entreprise=hotel");
+    const note = page.locator("[data-entreprise-remplacee]");
+    await expect.poll(() => note.count()).toBe(1);
+    expect(await note.innerText()).toContain("ne joue pas ce chapitre");
+    const cas = casDeLEntreprise(chapitre.entreprises!.codes[0]!);
+    expect(await note.innerText()).toContain(cas.entreprise);
+    await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(chapitre.etapes[0]!.titre);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await ctx.close();
+  }, 120_000);
 });
