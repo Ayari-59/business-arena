@@ -220,7 +220,7 @@ const FINS_DES_TRIMESTRES = [90, 181, 273, 365];
 
 /** Les quatre trimestres de l'arène, joués une fois par entreprise, dans le réglage du cours. */
 const annees = new Map<string, { partie: ReturnType<typeof runGame>; depart: CompanyState }>();
-function anneeJouee(code: string) {
+export function anneeJouee(code: string) {
   const deja = annees.get(code);
   if (deja) return deja;
   const def = scenarioByCode(code);
