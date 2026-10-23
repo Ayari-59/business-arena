@@ -73,6 +73,8 @@ export interface Cas {
    * qui produit à la demande n'en a pas).
    */
   stock: StockDuTrimestre | null;
+  /** L'année de l'arène, quatre trimestres, en grandes masses : la matière de la clôture. */
+  annee: AnneeDeLArene;
   /**
    * Le contrat de l'emprunt, celui que l'entreprise rembourse dans l'arène : le taux
    * annuel du scénario, et l'échéancier du moteur (une échéance par trimestre, le même
@@ -112,6 +114,32 @@ export interface StockDuTrimestre {
   /** Le coût d'achat des marchandises vendues : stock initial, plus achats, moins stock final. */
   coutDAchatDesVendues: number;
   ventes: Facture;
+}
+
+/**
+ * L'ANNÉE DE L'ARÈNE EN GRANDES MASSES : les quatre trimestres additionnés, rangés comme
+ * une balance avant inventaire. Le coût variable des unités produites ou achetées se partage
+ * entre les achats et les autres coûts variables au prorata de leurs coûts unitaires ; le
+ * personnel est celui de l'effectif de départ, le reste des charges fixes est le loyer et
+ * les frais de structure. La dotation et la variation du stock sont les travaux d'inventaire.
+ */
+export interface AnneeDeLArene {
+  ventes: number;
+  achats: number;
+  autresCoutsVariables: number;
+  commissions: number;
+  publicite: number;
+  qualite: number;
+  entretien: number;
+  personnel: number;
+  loyerEtFrais: number;
+  interets: number;
+  dotation: number;
+  /** Le stock du 1er janvier et du 31 décembre, valorisé par l'arène ; absent pour un service. */
+  stock: { nature: "marchandises" | "en-cours"; initial: number; final: number } | null;
+  tauxIS: number;
+  /** Ce que l'arène affiche pour l'année : son impôt se calcule trimestre par trimestre. */
+  arene: { resultatAvantImpot: number; impot: number; resultatNet: number };
 }
 
 /** La graine du trimestre simulé : le même cas pour tous. */
@@ -190,15 +218,12 @@ function premierTrimestre(code: string): { joueur: CompanyRoundResult; depart: C
 const DEBUTS_DES_TRIMESTRES = [1, 91, 182, 274];
 const FINS_DES_TRIMESTRES = [90, 181, 273, 365];
 
-/**
- * L'ANNÉE DE L'ARÈNE, POUR LE STOCK : quatre trimestres joués par le moteur, dans le même
- * réglage que le premier trimestre du cours. Les quantités (stock d'ouverture, unités
- * achetées, unités vendues) sont celles du moteur ; la valeur est celle de la comptabilité,
- * au prix d'achat des marchandises et au coût moyen pondéré.
- */
-function stockDuTrimestre(code: string, tauxAchat: number, tauxVente: number): StockDuTrimestre | null {
+/** Les quatre trimestres de l'arène, joués une fois par entreprise, dans le réglage du cours. */
+const annees = new Map<string, { partie: ReturnType<typeof runGame>; depart: CompanyState }>();
+function anneeJouee(code: string) {
+  const deja = annees.get(code);
+  if (deja) return deja;
   const def = scenarioByCode(code);
-  if (def.scenario.perishable) return null;
   const scenario = { ...def.scenario, roundsCount: FINS_DES_TRIMESTRES.length };
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
@@ -216,8 +241,64 @@ function stockDuTrimestre(code: string, tauxAchat: number, tauxVente: number): S
       ]),
     ),
   });
+  const jouee = { partie, depart: entreprises[0]! };
+  annees.set(code, jouee);
+  return jouee;
+}
+
+function anneeDeLArene(code: string, achat: string): AnneeDeLArene {
+  const def = scenarioByCode(code);
+  const s = def.scenario;
+  const { partie, depart } = anneeJouee(code);
+  const somme = (f: (r: CompanyRoundResult) => number) =>
+    auCentime(partie.rounds.reduce((t, tour) => t + f(tour.results["joueur"]!), 0));
+  const is = (r: CompanyRoundResult) => r.incomeStatement;
+  const variable = somme((r) => is(r).variableProductionCost);
+  const m = s.product.materialCostPerUnit;
+  const o = s.product.otherVariableCostPerUnit;
+  const achats = auCentime((variable * m) / (m + o));
+  const hr = s.hr!;
+  const personnel = auCentime(hr.includedHeadcount * hr.salaryPerEmployeePerRound * partie.rounds.length);
+  const fixes = somme((r) => is(r).fixedCosts);
+  const variation = somme((r) => is(r).productionStocked);
+  const initial = auCentime(depart.finishedGoods.quantity * depart.finishedGoods.unitCost);
+  return {
+    ventes: somme((r) => is(r).revenue),
+    achats,
+    autresCoutsVariables: auCentime(variable - achats),
+    commissions: somme((r) => is(r).commissionCost ?? 0),
+    publicite: somme((r) => is(r).marketingCost),
+    qualite: somme((r) => is(r).qualityCost),
+    entretien: somme((r) => is(r).maintenanceCost),
+    personnel,
+    loyerEtFrais: auCentime(fixes - personnel),
+    interets: somme((r) => is(r).interest),
+    dotation: somme((r) => is(r).depreciation),
+    stock:
+      initial > 0 || variation !== 0
+        ? { nature: achat.startsWith("607") ? "marchandises" : "en-cours", initial, final: Math.max(0, auCentime(initial + variation)) }
+        : null,
+    tauxIS: s.finance.taxRate,
+    arene: {
+      resultatAvantImpot: somme((r) => is(r).pretaxIncome),
+      impot: somme((r) => is(r).tax),
+      resultatNet: somme((r) => is(r).netIncome),
+    },
+  };
+}
+
+/**
+ * L'ANNÉE DE L'ARÈNE, POUR LE STOCK : les quatre trimestres joués par le moteur. Les
+ * quantités (stock d'ouverture, unités achetées, unités vendues) sont celles du moteur ; la
+ * valeur est celle de la comptabilité, au prix d'achat des marchandises et au coût moyen
+ * pondéré.
+ */
+function stockDuTrimestre(code: string, tauxAchat: number, tauxVente: number): StockDuTrimestre | null {
+  const def = scenarioByCode(code);
+  if (def.scenario.perishable) return null;
+  const { partie, depart: departDeLAnnee } = anneeJouee(code);
   const prix = def.scenario.product.materialCostPerUnit;
-  const depart = entreprises[0]!.finishedGoods;
+  const depart = departDeLAnnee.finishedGoods;
   let initial = { quantite: Math.round(depart.quantity), valeur: auCentime(depart.quantity * depart.unitCost) };
   for (const [k, tour] of partie.rounds.entries()) {
     const r = tour.results["joueur"]!;
@@ -309,6 +390,7 @@ export function casDeLEntreprise(code: string): Cas {
     emprunt: depart.finance.financialDebt,
     dates: { capital: 2, emprunt: 3 },
     stock: stockDuTrimestre(code, metier.achat.tauxTva, metier.vente.tauxTva),
+    annee: anneeDeLArene(code, metier.achat.compte),
     pret: {
       tauxAnnuel: s.finance.loanAnnualRate,
       nombreEcheances: Math.round(depart.finance.financialDebt / pret.perRound),
