@@ -55,7 +55,7 @@ describe("le correcteur d'écritures", () => {
 
   it("signale un montant faux par son indice", () => {
     const c = corriger([ligne("601", "1200"), ligne("44566", "200"), ligne("401", "", "1400")], ACHAT);
-    expect(c.remarques.join(" ")).toMatch(/L'achat : le montant ne convient pas. Pensez à le hors taxes/);
+    expect(c.remarques.join(" ")).toMatch(/L'achat : le montant ne convient pas. Pensez au hors taxes/);
   });
 
   it("reconnaît un compte de la bonne famille qui ne convient pas", () => {
