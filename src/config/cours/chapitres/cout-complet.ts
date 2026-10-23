@@ -307,20 +307,12 @@ export const COUT_COMPLET: Chapitre = {
       champs: (c) => {
         const k = coutComplet(c);
         return [
-          // Une perte se saisit en positif : le clavier numérique d'un téléphone n'a pas de signe moins.
-          k.resultat >= 0
-            ? {
-                libelle: "Résultat analytique du mois : bénéfice",
-                attendu: k.resultat,
-                calcul: `${eur(k.chiffreDAffaires)} − ${eur(k.coutDeRevient)} = ${eur(k.resultat)}`,
-                tolerance: 0.05,
-              }
-            : {
-                libelle: "Résultat analytique du mois : perte (en montant positif)",
-                attendu: -k.resultat,
-                calcul: `${eur(k.coutDeRevient)} − ${eur(k.chiffreDAffaires)} = ${eur(-k.resultat)} de perte`,
-                tolerance: 0.05,
-              },
+          {
+            libelle: "Résultat analytique du mois",
+            attendu: k.resultat,
+            calcul: `${eur(k.chiffreDAffaires)} − ${eur(k.coutDeRevient)} = ${eur(k.resultat)}`,
+            tolerance: 0.05,
+          },
         ];
       },
       explication: (c) => {

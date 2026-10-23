@@ -54,12 +54,21 @@ export interface Correction {
   notes: string[];
 }
 
-/** Un montant écrit à la française ou non : « 1 234,50 », « 1234.5 », « 1 234 € ». Vide : null. */
+/** Un montant écrit à la française ou non : « 1 234,50 », « 1234.5 », « 1 234 € », « −80 ». Vide : null. */
 export function lireMontant(texte: string): number | null {
-  const net = texte.replace(/[\s  €]/g, "").replace(",", ".");
+  const net = texte.replace(/[\s  €]/g, "").replace(",", ".").replace("−", "-");
   if (net === "") return null;
   if (!/^-?\d+(\.\d+)?$/.test(net)) return Number.NaN;
   return auCentime(Number(net));
+}
+
+/**
+ * Le montant saisi, de signe changé. Le clavier numérique d'un téléphone n'a pas de signe
+ * moins : un bouton, à côté de chaque champ, le met ou l'enlève.
+ */
+export function changerDeSigne(texte: string): string {
+  const t = texte.trim();
+  return /^[-−]/.test(t) ? t.slice(1).trimStart() : `-${t}`;
 }
 
 const LE_SENS: Record<Sens, string> = { debit: "au débit", credit: "au crédit" };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { corriger, enSaisie, lireMontant, type EcritureAttendue } from "../../src/pedagogy/cours/correcteur";
+import { changerDeSigne, corriger, enSaisie, lireMontant, type EcritureAttendue } from "../../src/pedagogy/cours/correcteur";
 
 /** Un achat à crédit avec TVA : trois rôles, un compte voisin admis pour l'achat. */
 const ACHAT: EcritureAttendue = {
@@ -21,6 +21,16 @@ describe("le correcteur d'écritures", () => {
     expect(lireMontant("1 000")).toBe(1000);
     expect(lireMontant("")).toBeNull();
     expect(lireMontant("douze")).toBeNaN();
+    expect(lireMontant("−80,5")).toBe(-80.5);
+  });
+
+  it("change le signe d'un montant saisi, pour le téléphone qui n'a pas de touche moins", () => {
+    expect(changerDeSigne("10 202")).toBe("-10 202");
+    expect(changerDeSigne("-10 202")).toBe("10 202");
+    expect(changerDeSigne("−10 202")).toBe("10 202");
+    expect(changerDeSigne("")).toBe("-");
+    expect(lireMontant(changerDeSigne(changerDeSigne("1 234,50")))).toBe(1234.5);
+    expect(lireMontant(changerDeSigne("1 234,50"))).toBe(-1234.5);
   });
 
   it("accepte la correction elle-même", () => {

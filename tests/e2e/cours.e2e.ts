@@ -240,9 +240,11 @@ describe.each([
   { code: "la-cloture", entreprise: "boutique" },
   { code: "la-cloture", entreprise: "bistrot" },
   { code: "remises-et-reglements", entreprise: "conseil" },
-  { code: "cout-complet", entreprise: "fitness" },
   { code: "cout-complet", entreprise: "nova" },
-])("le chapitre réservé $code chez $entreprise, au palier 3", ({ code: chapitreCode, entreprise }) => {
+  // Au téléphone, des montants négatifs : l'élève tape les chiffres, puis le bouton de signe.
+  { code: "cout-complet", entreprise: "fitness", telephone: true },
+  { code: "la-cloture", entreprise: "nova", telephone: true },
+] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise, au palier 3", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
     await aller(libre, `/cours/${chapitreCode}?entreprise=${entreprise}`);
@@ -252,7 +254,11 @@ describe.each([
     const code = entreprise;
     const cas = casDeLEntreprise(code);
     const chapitre = chapitreDuCas(CHAPITRES.find((c) => c.code === chapitreCode)!, cas);
-    const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    const ctx = await navigateur.newContext({
+      viewport: telephone ? { width: 390, height: 844 } : { width: 1280, height: 900 },
+      hasTouch: telephone ?? false,
+      locale: "fr-FR",
+    });
     await enseignantSousLicence(ctx);
     const page = await ctx.newPage();
     await aller(page, `/cours/${chapitre.code}?entreprise=${code}`);
@@ -275,7 +281,14 @@ describe.each([
         }
         await page.getByRole("button", { name: "Vérifier" }).click();
       } else if (etape.type === "montants") {
-        for (const c of etape.champs(cas, avant)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
+        for (const c of etape.champs(cas, avant)) {
+          if (!telephone) {
+            await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
+            continue;
+          }
+          await page.getByLabel(c.libelle, { exact: true }).pressSequentially(virgule(Math.abs(c.attendu)));
+          if (c.attendu < 0) await page.getByRole("button", { name: `Changer le signe : ${c.libelle}`, exact: true }).tap();
+        }
         await page.getByRole("button", { name: "Vérifier" }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
@@ -287,6 +300,7 @@ describe.each([
     await expect
       .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
+    if (telephone) expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await ctx.close();
   }, 240_000);
 });
