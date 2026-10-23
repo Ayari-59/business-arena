@@ -89,6 +89,10 @@ export function enSaisie(a: EcritureAttendue): LigneSaisie[] {
 
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/** « à » devant l'indice, contracté comme en français : au montant, aux cotisations, à la TVA. */
+const aDevant = (indice: string) =>
+  indice.startsWith("le ") ? `au ${indice.slice(3)}` : indice.startsWith("les ") ? `aux ${indice.slice(4)}` : `à ${indice}`;
+
 export function corriger(saisie: readonly LigneSaisie[], attendue: EcritureAttendue): Correction {
   const remarques: string[] = [];
   const notes: string[] = [];
@@ -158,7 +162,7 @@ export function corriger(saisie: readonly LigneSaisie[], attendue: EcritureAtten
     if (duMauvais !== 0) {
       remarques.push(`${majuscule(a.role)} se passe ${LE_SENS[a.sens]}.`);
     } else if (Math.abs(duBonCote - a.montant) > 0.005) {
-      remarques.push(`${majuscule(a.role)} : le montant ne convient pas. Pensez à ${a.indice}.`);
+      remarques.push(`${majuscule(a.role)} : le montant ne convient pas. Pensez ${aDevant(a.indice)}.`);
     }
     const autre = siennes.find((l) => l.compte !== a.compte);
     if (autre) {

@@ -239,6 +239,7 @@ describe.each([
   { code: "les-stocks", entreprise: "ecommerce" },
   { code: "la-cloture", entreprise: "boutique" },
   { code: "la-cloture", entreprise: "bistrot" },
+  { code: "remises-et-reglements", entreprise: "conseil" },
 ])("le chapitre réservé $code chez $entreprise, au palier 3", ({ code: chapitreCode, entreprise }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
