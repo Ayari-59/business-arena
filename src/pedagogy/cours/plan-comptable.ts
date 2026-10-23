@@ -37,6 +37,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "2182", intitule: "Matériel de transport", nature: "actif" },
   { numero: "2183", intitule: "Matériel de bureau et informatique", nature: "actif" },
   { numero: "2184", intitule: "Mobilier", nature: "actif" },
+  // Classe 3 : stocks
+  { numero: "37", intitule: "Stocks de marchandises", nature: "actif" },
+  { numero: "370", intitule: "Stocks de marchandises", nature: "actif" },
   // Comptes d'amortissement : en soustraction de l'immobilisation qu'ils suivent.
   { numero: "281", intitule: "Amortissements des immobilisations corporelles", nature: "actif" },
   { numero: "2813", intitule: "Amortissements des constructions", nature: "actif" },
@@ -72,6 +75,8 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "606", intitule: "Achats non stockés de matières et fournitures", nature: "charge" },
   { numero: "6061", intitule: "Fournitures non stockables (eau, énergie, carburant)", nature: "charge" },
   { numero: "6063", intitule: "Fournitures d'entretien et de petit équipement", nature: "charge" },
+  { numero: "603", intitule: "Variations des stocks (approvisionnements et marchandises)", nature: "charge" },
+  { numero: "6037", intitule: "Variation des stocks de marchandises", nature: "charge" },
   { numero: "607", intitule: "Achats de marchandises", nature: "charge" },
   { numero: "613", intitule: "Locations", nature: "charge" },
   { numero: "6132", intitule: "Locations immobilières", nature: "charge" },

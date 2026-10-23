@@ -48,8 +48,13 @@ export default async function ChapitrePage({
   // à la classe l'emporte sur celle de l'adresse.
   const userId = await getGuestUserId();
   const classeDeLEleveLue = userId ? await classeDeLEleve(userId) : null;
-  const choisie =
-    ENTREPRISES.find((e) => e.code === (classeDeLEleveLue?.entreprise ?? entreprise)) ?? ENTREPRISES[0]!;
+  // UN CHAPITRE QUI NE VAUT PAS POUR TOUTES LES ENTREPRISES (un service ne se stocke pas)
+  // se joue dans l'une des siennes, même pour une classe qui en a imposé une autre : la
+  // page dit pourquoi.
+  const possibles = ENTREPRISES.filter((e) => !chapitre.entreprises || chapitre.entreprises.codes.includes(e.code));
+  const demandee = ENTREPRISES.find((e) => e.code === (classeDeLEleveLue?.entreprise ?? entreprise));
+  const choisie = possibles.find((e) => e.code === demandee?.code) ?? possibles[0]!;
+  const remplacee = demandee && demandee.code !== choisie.code ? demandee : null;
 
   if (!chapitre.libre) {
     // L'enseignant par son compte, l'élève par sa classe : l'un ou l'autre sous licence.
@@ -82,10 +87,15 @@ export default async function ChapitrePage({
   return (
     <>
       <main id="main" data-metier={choisie.teinte} className="relative overflow-x-clip">
+        {remplacee && chapitre.entreprises && (
+          <p data-entreprise-remplacee="" className="mx-auto max-w-6xl px-4 pt-6 text-sm text-slate-300 sm:px-6">
+            {remplacee.nom} ne joue pas ce chapitre : {chapitre.entreprises.pourquoi} Il se joue ici chez {choisie.nom}.
+          </p>
+        )}
         <ChapitreGuide
           code={chapitre.code}
           cas={cas}
-          entreprises={ENTREPRISES.map(({ code: c, nom }) => ({ code: c, nom }))}
+          entreprises={possibles.map(({ code: c, nom }) => ({ code: c, nom }))}
           classe={classe !== undefined}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />

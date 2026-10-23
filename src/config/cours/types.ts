@@ -153,5 +153,11 @@ export interface Chapitre {
   objectifs: readonly string[];
   /** Libre d'accès, sans licence. */
   libre: boolean;
+  /**
+   * Les seules entreprises où le chapitre se joue, quand il ne vaut pas pour toutes (un
+   * service ne se stocke pas), et pourquoi, en une phrase dite à l'élève qui en arrive
+   * d'une autre. Absent : les entreprises du cours, toutes.
+   */
+  entreprises?: { codes: readonly string[]; pourquoi: string };
   etapes: readonly Etape[];
 }

@@ -158,7 +158,11 @@ export default async function CoursPage({ searchParams }: { searchParams: Promis
                             {ouverts.map((c) => (
                               <span key={c.code} className="flex flex-wrap items-baseline gap-x-2">
                                 <Link
-                                  href={`/cours/${c.code}?entreprise=${imposee?.code ?? ENTREPRISES[0]!.code}`}
+                                  href={`/cours/${c.code}?entreprise=${
+                                    c.entreprises && !c.entreprises.codes.includes(imposee?.code ?? ENTREPRISES[0]!.code)
+                                      ? c.entreprises.codes[0]
+                                      : (imposee?.code ?? ENTREPRISES[0]!.code)
+                                  }`}
                                   className="font-semibold underline underline-offset-4 hover:text-slate-50"
                                 >
                                   {c.titre}

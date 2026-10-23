@@ -68,6 +68,12 @@ export interface Cas {
   };
   dates: { capital: number; emprunt: number };
   /**
+   * Le stock de marchandises sur un trimestre de l'arène, pour une entreprise qui en garde
+   * un au début et à la fin (absent sinon : un service ne se stocke pas, et une entreprise
+   * qui produit à la demande n'en a pas).
+   */
+  stock: StockDuTrimestre | null;
+  /**
    * Le contrat de l'emprunt, celui que l'entreprise rembourse dans l'arène : le taux
    * annuel du scénario, et l'échéancier du moteur (une échéance par trimestre, le même
    * capital remboursé à chacune : l'amortissement constant).
@@ -89,6 +95,23 @@ export interface Cas {
     dureeAmortissementMois: number;
     chargesFixes: number;
   };
+}
+
+export interface StockDuTrimestre {
+  /** Le trimestre de l'année (1 à 4) : le premier qui commence et finit avec du stock. */
+  trimestre: number;
+  /** Les jours du cours (1 = 1er janvier) où il commence et finit. */
+  debut: number;
+  fin: number;
+  initial: { quantite: number; valeur: number };
+  achats: Facture;
+  vendues: number;
+  /** Le coût unitaire moyen pondéré du trimestre (stock initial et entrées). */
+  cump: number;
+  final: { quantite: number; valeur: number };
+  /** Le coût d'achat des marchandises vendues : stock initial, plus achats, moins stock final. */
+  coutDAchatDesVendues: number;
+  ventes: Facture;
 }
 
 /** La graine du trimestre simulé : le même cas pour tous. */
@@ -163,6 +186,68 @@ function premierTrimestre(code: string): { joueur: CompanyRoundResult; depart: C
   return { joueur, depart: entreprises[0]! };
 }
 
+/** Les débuts et fins de trimestre, en jours du cours. */
+const DEBUTS_DES_TRIMESTRES = [1, 91, 182, 274];
+const FINS_DES_TRIMESTRES = [90, 181, 273, 365];
+
+/**
+ * L'ANNÉE DE L'ARÈNE, POUR LE STOCK : quatre trimestres joués par le moteur, dans le même
+ * réglage que le premier trimestre du cours. Les quantités (stock d'ouverture, unités
+ * achetées, unités vendues) sont celles du moteur ; la valeur est celle de la comptabilité,
+ * au prix d'achat des marchandises et au coût moyen pondéré.
+ */
+function stockDuTrimestre(code: string, tauxAchat: number, tauxVente: number): StockDuTrimestre | null {
+  const def = scenarioByCode(code);
+  if (def.scenario.perishable) return null;
+  const scenario = { ...def.scenario, roundsCount: FINS_DES_TRIMESTRES.length };
+  const entreprises: CompanyState[] = [
+    def.company("joueur", def.playerTeamName, "bot", "balanced"),
+    ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
+  ];
+  const partie = runGame({
+    scenario,
+    initialCompanies: entreprises,
+    seed: GRAINE_DU_COURS,
+    providers: Object.fromEntries(
+      entreprises.map((e) => [
+        e.id,
+        (ctx: { state: CompanyState; roundIndex: number }) =>
+          botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex }),
+      ]),
+    ),
+  });
+  const prix = def.scenario.product.materialCostPerUnit;
+  const depart = entreprises[0]!.finishedGoods;
+  let initial = { quantite: Math.round(depart.quantity), valeur: auCentime(depart.quantity * depart.unitCost) };
+  for (const [k, tour] of partie.rounds.entries()) {
+    const r = tour.results["joueur"]!;
+    const achetees = Math.round(r.production.produced);
+    const segments = Object.values(r.market.bySegment);
+    const vendues = Math.round(segments.reduce((t, v) => t + v.sold, 0));
+    const achats = facture(achetees, prix, tauxAchat);
+    const quantiteFinale = Math.max(0, initial.quantite + achetees - vendues);
+    const cump = auCentime((initial.valeur + achats.ht) / (initial.quantite + achetees || 1));
+    const final = { quantite: quantiteFinale, valeur: auCentime(quantiteFinale * cump) };
+    if (initial.quantite > 0 && final.quantite > 0) {
+      const chiffre = segments.reduce((t, v) => t + v.revenue, 0);
+      return {
+        trimestre: k + 1,
+        debut: DEBUTS_DES_TRIMESTRES[k]!,
+        fin: FINS_DES_TRIMESTRES[k]!,
+        initial,
+        achats,
+        vendues,
+        cump,
+        final,
+        coutDAchatDesVendues: auCentime(initial.valeur + achats.ht - final.valeur),
+        ventes: facture(vendues, auCentime(chiffre / vendues), tauxVente),
+      };
+    }
+    initial = final;
+  }
+  return null;
+}
+
 const caches = new Map<string, Cas>();
 
 export function casDeLEntreprise(code: string): Cas {
@@ -223,6 +308,7 @@ export function casDeLEntreprise(code: string): Cas {
     capital: depart.finance.equity,
     emprunt: depart.finance.financialDebt,
     dates: { capital: 2, emprunt: 3 },
+    stock: stockDuTrimestre(code, metier.achat.tauxTva, metier.vente.tauxTva),
     pret: {
       tauxAnnuel: s.finance.loanAnnualRate,
       nombreEcheances: Math.round(depart.finance.financialDebt / pret.perRound),
