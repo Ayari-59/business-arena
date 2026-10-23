@@ -110,6 +110,8 @@ const SANS_FICHE: string[] = [
   "− Engagement RSE",
   "− Recherche et développement",
   "− Impôt sur les sociétés",
+  // Sur l'exercice, l'acompte rendu d'un tour de perte : la même notion que la ligne d'impôt.
+  "+ Impôt rendu (acomptes de l'exercice en trop)",
   "dont déficit antérieur imputé (report)",
   "− Charges financières (intérêts, agios, mobilisations)",
   "+ Produits financiers (placement)",

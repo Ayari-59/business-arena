@@ -505,12 +505,12 @@ export function FinancialStatements({
               decalee
             />
           ) : null}
-          <Ligne
-            label="− Impôt sur les sociétés"
-            valeur={-cr.tax}
-            avant={pcr ? -pcr.tax : null}
-            decalee
-          />
+          {/* Sur l'exercice, un tour de perte après un bon tour fait rendre des acomptes. */}
+          {cr.tax < 0 ? (
+            <Ligne label="+ Impôt rendu (acomptes de l'exercice en trop)" valeur={-cr.tax} avant={pcr ? -pcr.tax : null} decalee />
+          ) : (
+            <Ligne label="− Impôt sur les sociétés" valeur={-cr.tax} avant={pcr ? -pcr.tax : null} decalee />
+          )}
           <Ligne
             label="= RÉSULTAT NET"
             valeur={cr.netIncome}

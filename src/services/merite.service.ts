@@ -275,6 +275,8 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           // Le parc de la partie, tel qu'elle l'a figé : une partie d'avant le correctif
           // se rejoue avec la règle sous laquelle elle a été jouée.
           parcSansDoublon: snapshot.parcSansDoublon === true,
+          // L'impôt de la partie, tel qu'elle l'a figé : sur l'exercice, ou tour par tour.
+          impotSurLExercice: snapshot.impotSurLExercice === true,
           // La proposition de la partie et son bon gestionnaire, tels qu'elle les a figés.
           propositionALaDemande: snapshot.propositionALaDemande === true,
         }),

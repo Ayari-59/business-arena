@@ -84,6 +84,11 @@ export interface ReglagesDuScenarioJoue {
    */
   parcSansDoublon?: boolean;
   /**
+   * L'IMPÔT SUR L'EXERCICE (`impotSurLExercice`, engine/types.ts) : vrai pour une partie
+   * créée après le correctif ; absent, l'impôt de chaque tour, au bit près.
+   */
+  impotSurLExercice?: boolean;
+  /**
    * LA PROPOSITION À LA DEMANDE (`propositionALaDemande`, engine/types.ts) : vrai pour
    * une partie créée avec elle ; absent, le formulaire et le bon gestionnaire d'avant,
    * au bit près.
@@ -102,6 +107,7 @@ export interface ReglagesDuScenarioJoue {
 export const CORRECTIFS_DES_PARTIES_NOUVELLES = {
   concurrentsAssainis: true,
   parcSansDoublon: true,
+  impotSurLExercice: true,
   propositionALaDemande: true,
 } as const satisfies Partial<ReglagesDuScenarioJoue>;
 
@@ -180,7 +186,8 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   const joue = avecLesConcurrentsAssainis(avecLeGroupe(avecRd, leviers, r.seed), r.concurrentsAssainis);
   // Absent, l'objet est rendu tel quel, sans clé ajoutée : un scénario historique reste
   // identique au bit près, comme pour les concurrents.
-  const avecLeParc = r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
+  const avecLeParcSeul = r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
+  const avecLeParc = r.impotSurLExercice === true ? { ...avecLeParcSeul, impotSurLExercice: true } : avecLeParcSeul;
   return r.propositionALaDemande === true
     ? { ...laQualiteProposeeDuJeu(avecLeParc, true), propositionALaDemande: true }
     : laQualiteProposeeDuJeu(avecLeParc, false);

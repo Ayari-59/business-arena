@@ -440,6 +440,27 @@ function computePerformanceMetrics(
  * autre partie appelle le tour ordinaire avec le même objet : le chemin
  * d'avant, au bit près.
  */
+/** L'année commerciale du moteur : les jours d'un tour la découpent en tours. */
+const JOURS_D_UN_EXERCICE = 360;
+
+/**
+ * L'EXERCICE FISCAL À L'OUVERTURE DU TOUR (`impotSurLExercice`). L'exercice compte les
+ * tours d'une année depuis le premier tour de la partie : au trimestre, les tours 1 à 4,
+ * puis 5 à 8. Son premier tour repart d'un cumul nul et fige le déficit reportable de
+ * l'exercice d'avant ; les suivants reprennent l'exercice où le tour précédent l'a laissé.
+ */
+export function exerciceDOuverture(
+  scenario: Pick<EngineScenarioConfig, "roundDays">,
+  roundIndex: number,
+  state: Pick<CompanyState, "exerciceFiscal" | "taxLossCarryforward">,
+): { avantImpot: number; impot: number; report: number } {
+  const toursParExercice = Math.max(1, Math.round(JOURS_D_UN_EXERCICE / scenario.roundDays));
+  const premier = (roundIndex - 1) % toursParExercice === 0;
+  return premier || !state.exerciceFiscal
+    ? { avantImpot: 0, impot: 0, report: state.taxLossCarryforward ?? 0 }
+    : state.exerciceFiscal;
+}
+
 export function simulateRound(input: SimulationInput): SimulationOutput {
   if (input.scenario.groupe) {
     return simulerLeGroupe(input, simulerLeTour);
@@ -2163,6 +2184,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
       openingTaxLossCarryforward: w.state.taxLossCarryforward ?? 0,
+      ...(scenario.impotSurLExercice === true ? { exercice: exerciceDOuverture(scenario, roundIndex, w.state) } : {}),
       vatRate: scenario.finance.vatRate ?? 0,
       newLoan,
       ...(lignesPropres.encours > 0 ? { specificDebt: lignesPropres } : {}),
@@ -3050,6 +3072,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       ...(finance.taxLossCarryforward > 0 || w.state.taxLossCarryforward !== undefined
         ? { taxLossCarryforward: finance.taxLossCarryforward }
         : {}),
+      ...(finance.exercice ? { exerciceFiscal: finance.exercice } : {}),
       ...(bank ? { bankTrust: confianceApres } : {}),
       // Capitaux RSE (Lot 2) : suivis seulement dès qu'un capital existe (puis
       // maintenus, même retombés à 0 par inertie) — les parties sans engagement

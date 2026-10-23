@@ -15,9 +15,9 @@ import type { Chapitre } from "../types";
  * un), rattache à l'exercice ce qui lui appartient, calcule le résultat avant impôt, l'impôt
  * sur les sociétés et le résultat net.
  *
- * L'IMPÔT SE CALCULE SUR L'ANNÉE, comme le veut la loi. L'arène, elle, le calcule trimestre
- * par trimestre : une entreprise en perte sur l'année peut y avoir payé l'impôt d'un bon
- * trimestre. Le chapitre le dit à la fin, chiffres à l'appui.
+ * L'IMPÔT SE CALCULE SUR L'ANNÉE, comme le veut la loi, et l'arène fait de même : chaque
+ * trimestre y verse un acompte sur l'impôt de l'exercice, régularisé au trimestre suivant
+ * (`impotSurLExercice`). Le chapitre le fait constater à la fin, chiffres à l'appui.
  *
  * Les intérêts courus : dans l'arène, les intérêts se paient à la fin de chaque trimestre,
  * il n'y a rien à rattacher au 31 décembre. Le chapitre fait calculer ce qu'il faudrait
@@ -401,8 +401,8 @@ export const LA_CLOTURE: Chapitre = {
             ? `Avant impôt, vous retrouvez le résultat de l'arène pour l'année : ${eur(k.arene.resultatAvantImpot)}.`
             : `Avant impôt, vous retrouvez le résultat de l'arène pour l'année, ${eur(k.arene.resultatAvantImpot)}, à ${eur(Math.abs(k.resultatAvantImpot - k.arene.resultatAvantImpot))} près : l'arène valorise son stock au centime de coût moyen, le cours à l'euro.`,
           Math.abs(ecart) < 1
-            ? `L'impôt aussi : ${eur(k.arene.impot)}.`
-            : `Pas l'impôt : l'arène en compte ${eur(k.arene.impot)}, vous ${eur(k.impot)}. L'arène calcule l'impôt trimestre par trimestre, pour qu'il pèse sur chaque décision ; un bon trimestre y paie son impôt même si l'année finit moins bien. La loi, elle, regarde l'année entière : c'est votre calcul qui est le bon.`,
+            ? `L'impôt aussi, à l'arrondi de l'euro près : ${eur(k.arene.impot)}. L'arène verse chaque trimestre un acompte, l'impôt du résultat cumulé depuis le début de l'année moins les acomptes déjà versés ; un trimestre de perte fait rendre ce qui a été payé en trop. Au bout de l'année, elle a payé l'impôt de l'année, comme une vraie entreprise.`
+            : `Pas l'impôt : l'arène en compte ${eur(k.arene.impot)}, vous ${eur(k.impot)}. La loi regarde l'année entière : c'est votre calcul qui est le bon.`,
         ];
       },
     },
