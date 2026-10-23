@@ -244,6 +244,8 @@ describe.each([
   // Au téléphone, des montants négatifs : l'élève tape les chiffres, puis le bouton de signe.
   { code: "cout-complet", entreprise: "fitness", telephone: true },
   { code: "la-cloture", entreprise: "nova", telephone: true },
+  { code: "cout-par-produit", entreprise: "ecommerce" },
+  { code: "cout-par-produit", entreprise: "boutique", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise, au palier 3", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
