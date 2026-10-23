@@ -66,6 +66,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "641", intitule: "Rémunérations du personnel", nature: "charge" },
   { numero: "645", intitule: "Charges de sécurité sociale et de prévoyance", nature: "charge" },
   { numero: "661", intitule: "Charges d'intérêts", nature: "charge" },
+  { numero: "6611", intitule: "Intérêts des emprunts et dettes", nature: "charge" },
   { numero: "681", intitule: "Dotations aux amortissements", nature: "charge" },
   // Classe 7 : produits
   { numero: "701", intitule: "Ventes de produits finis", nature: "produit" },

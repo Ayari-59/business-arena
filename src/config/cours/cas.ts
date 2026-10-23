@@ -64,6 +64,12 @@ export interface Cas {
   };
   dates: { capital: number; emprunt: number };
   /**
+   * Le contrat de l'emprunt, celui que l'entreprise rembourse dans l'arène : le taux
+   * annuel du scénario, et l'échéancier du moteur (une échéance par trimestre, le même
+   * capital remboursé à chacune : l'amortissement constant).
+   */
+  pret: { tauxAnnuel: number; nombreEcheances: number; capitalParEcheance: number };
+  /**
    * Le même mois vu par le contrôle de gestion : les ventes du mois, leur prix moyen, les
    * coûts variables par unité, les charges fixes du mois (dont l'usure de l'équipement).
    */
@@ -195,6 +201,10 @@ export function casDeLEntreprise(code: string): Cas {
   if (!flotte || !type) throw new Error(`L'entreprise ${code} n'a pas de parc d'équipement`);
 
   const hr = s.hr!;
+  const pret = depart.loans?.[0];
+  if (!pret || depart.loans!.length !== 1 || pret.remaining !== depart.finance.financialDebt) {
+    throw new Error(`L'entreprise ${code} n'a pas un emprunt unique à échéancier`);
+  }
   const delaiFournisseur = s.finance.supplierPaymentDelayDays;
   // Le fournisseur se paie au mois suivant : l'achat se date pour que son échéance y tombe.
   const dateAchat = Math.max(10, 32 - delaiFournisseur);
@@ -209,6 +219,11 @@ export function casDeLEntreprise(code: string): Cas {
     capital: depart.finance.equity,
     emprunt: depart.finance.financialDebt,
     dates: { capital: 2, emprunt: 3 },
+    pret: {
+      tauxAnnuel: s.finance.loanAnnualRate,
+      nombreEcheances: Math.round(depart.finance.financialDebt / pret.perRound),
+      capitalParEcheance: pret.perRound,
+    },
     loyer: { montant: auCent((s.fixedCostsPerRound - hr.includedHeadcount * hr.salaryPerEmployeePerRound) / 3), date: 5 },
     immobilisation: {
       ...facture(flotte.count, type.costPerUnit, 0.2),
