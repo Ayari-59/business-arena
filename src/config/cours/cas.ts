@@ -138,7 +138,7 @@ export interface AnneeDeLArene {
   /** Le stock du 1er janvier et du 31 décembre, valorisé par l'arène ; absent pour un service. */
   stock: { nature: "marchandises" | "en-cours"; initial: number; final: number } | null;
   tauxIS: number;
-  /** Ce que l'arène affiche pour l'année : son impôt se calcule trimestre par trimestre. */
+  /** Ce que l'arène affiche pour l'année : des acomptes chaque trimestre, l'impôt de l'année au bout. */
   arene: { resultatAvantImpot: number; impot: number; resultatNet: number };
 }
 
@@ -224,7 +224,8 @@ function anneeJouee(code: string) {
   const deja = annees.get(code);
   if (deja) return deja;
   const def = scenarioByCode(code);
-  const scenario = { ...def.scenario, roundsCount: FINS_DES_TRIMESTRES.length };
+  // L'année de l'arène telle qu'une partie créée aujourd'hui la joue : l'impôt sur l'exercice.
+  const scenario = { ...def.scenario, roundsCount: FINS_DES_TRIMESTRES.length, impotSurLExercice: true };
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
     ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),

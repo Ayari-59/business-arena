@@ -98,10 +98,10 @@ describe("la clôture, quelle que soit l'entreprise", () => {
     expect(k.icne).toBeCloseTo((echeance(cas, 4).interets * 87) / 90, 2);
   });
 
-  it("les deux cas de l'impôt existent : des entreprises imposées, d'autres en perte ; et l'arène s'écarte de l'impôt annuel quelque part", () => {
+  it("les deux cas de l'impôt existent : des entreprises imposées, d'autres en perte ; et l'arène paie partout l'impôt de l'année", () => {
     const k = ENTREPRISES_DU_COURS.map((c) => cloture(casDeLEntreprise(c)));
     expect(k.some((x) => x.impot > 0)).toBe(true);
     expect(k.some((x) => x.impot === 0)).toBe(true);
-    expect(k.some((x) => Math.abs(x.arene.impot - x.impot) >= 1)).toBe(true);
+    for (const x of k) expect(Math.abs(x.arene.impot - x.impot)).toBeLessThan(1);
   });
 });

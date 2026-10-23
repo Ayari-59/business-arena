@@ -390,6 +390,19 @@ export interface EngineScenarioConfig {
    */
   parcSansDoublon?: boolean;
   /**
+   * L'IMPÔT SUR L'EXERCICE, posé par `composerLeScenarioJoue` à la création d'une partie
+   * (donc figé dans son instantané). L'impôt sur les sociétés se calcule sur l'année ;
+   * l'arène le prenait trimestre par trimestre, si bien qu'une entreprise en perte sur
+   * l'année payait l'impôt de ses bons trimestres. Vrai : chaque tour paie un acompte,
+   * l'impôt du cumul de l'exercice moins les acomptes déjà versés ; un tour de perte après
+   * un bon tour fait rendre l'excédent (un acompte négatif), et l'exercice finit sur
+   * l'impôt de son résultat. L'exercice compte les tours d'une année (quatre au trimestre,
+   * douze au mois), depuis le premier tour de la partie. Absent : l'impôt de chaque tour,
+   * le chemin d'avant, au bit près, pour les parties commencées avant le correctif et les
+   * témoins (décision du propriétaire).
+   */
+  impotSurLExercice?: boolean;
+  /**
    * LA PROPOSITION À LA DEMANDE, posée par `composerLeScenarioJoue` à la création d'une
    * partie (donc figée dans son instantané). Le moteur ne la lit pas. Deux lecteurs :
    *
@@ -1366,6 +1379,12 @@ export interface CompanyState {
    * zéro, jamais négatif. Absent = aucun déficit à reporter.
    */
   taxLossCarryforward?: number;
+  /**
+   * L'exercice fiscal en cours (`impotSurLExercice`) : le résultat avant impôt cumulé depuis
+   * son premier tour, l'impôt déjà versé en acomptes, et le déficit reportable qu'il a
+   * trouvé en s'ouvrant. Absent : pas d'impôt sur l'exercice, ou pas encore de tour joué.
+   */
+  exerciceFiscal?: { avantImpot: number; impot: number; report: number };
   /**
    * Confiance de la banque (0..1), construite sur la fiabilité des plans de
    * trésorerie déposés aux tours passés. Absente = confiance pleine : une

@@ -255,7 +255,13 @@ export function lignesDuCompte(cr: IncomeStatement): LigneDeCompte[] {
     label: "− Déficit reporté imputé",
     decalee: true,
   });
-  poser({ cle: "tax", label: "− Impôt sur les sociétés", valeur: moins(cr.tax), decalee: true });
+  // Sur l'exercice, un acompte peut être rendu : un tour de perte après un bon tour.
+  poser({
+    cle: "tax",
+    label: cr.tax < 0 ? "+ Impôt rendu (acomptes de l'exercice en trop)" : "− Impôt sur les sociétés",
+    valeur: moins(cr.tax),
+    decalee: true,
+  });
   poser({ cle: "netIncome", label: "= RÉSULTAT NET", valeur: cr.netIncome, fort: true });
   return lignes;
 }

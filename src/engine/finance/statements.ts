@@ -63,6 +63,12 @@ export interface FinanceInput {
    * à l'échelle du jeu, l'omettre est donc exact ET plus simple.
    */
   openingTaxLossCarryforward?: number;
+  /**
+   * L'exercice fiscal à l'ouverture du tour (`impotSurLExercice`) : l'impôt du tour devient
+   * l'acompte qui porte l'impôt du cumul de l'exercice, et le report reste celui que
+   * l'exercice a trouvé en s'ouvrant. Absent : l'impôt du seul tour, le calcul d'avant.
+   */
+  exercice?: { avantImpot: number; impot: number; report: number };
   /** Taux de TVA (0 = désactivée) — voir EngineScenarioConfig.finance.vatRate. */
   vatRate: number;
   newLoan: number;
@@ -142,6 +148,8 @@ export interface FinanceOutput {
   closing: BalanceSheet;
   /** Déficit fiscal reportable de clôture, à réinjecter au tour suivant. */
   taxLossCarryforward: number;
+  /** L'exercice fiscal à la clôture du tour, quand l'impôt se calcule sur l'exercice. */
+  exercice?: { avantImpot: number; impot: number; report: number };
   cashFlow: { opening: number; items: CashFlowItem[]; closing: number };
   treasury: {
     discounted: number;
@@ -246,10 +254,22 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     // s'accroît de la perte du tour. `closing = max(0, ouverture − résultat)`
     // couvre les deux cas d'un seul trait.
     const openingLossCarryforward = input.openingTaxLossCarryforward ?? 0;
-    const taxLossUsed = Math.min(openingLossCarryforward, Math.max(0, pretaxIncome));
+    // SUR L'EXERCICE : l'impôt dû est celui du résultat cumulé de l'exercice, après le
+    // report qu'il a trouvé en s'ouvrant ; le tour en verse la part qui manque encore. Un
+    // tour de perte après un bon tour rend l'excédent : l'acompte devient négatif.
+    const ex = input.exercice;
+    const cumul = ex ? ex.avantImpot + pretaxIncome : 0;
+    const impotDuCumul = ex ? input.taxRate * Math.max(0, cumul - ex.report) : 0;
+    const imputeAvant = ex ? Math.min(ex.report, Math.max(0, ex.avantImpot)) : 0;
+    const taxLossUsed = ex
+      ? Math.max(0, Math.min(ex.report, Math.max(0, cumul)) - imputeAvant)
+      : Math.min(openingLossCarryforward, Math.max(0, pretaxIncome));
     const taxableIncome = Math.max(0, pretaxIncome - openingLossCarryforward);
-    const closingLossCarryforward = Math.max(0, openingLossCarryforward - pretaxIncome);
-    const tax = input.taxRate * taxableIncome;
+    const closingLossCarryforward = ex
+      ? Math.max(0, ex.report - cumul)
+      : Math.max(0, openingLossCarryforward - pretaxIncome);
+    const tax = ex ? impotDuCumul - ex.impot : input.taxRate * taxableIncome;
+    const exerciceDeCloture = ex ? { avantImpot: cumul, impot: impotDuCumul, report: ex.report } : undefined;
     const netIncome = pretaxIncome - tax;
 
     const incomeStatement: IncomeStatement = {
@@ -358,6 +378,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       incomeStatement,
       closing,
       taxLossCarryforward: closingLossCarryforward,
+      ...(exerciceDeCloture ? { exercice: exerciceDeCloture } : {}),
       cashFlow: input.operationsDOuverture
         ? {
             opening: openingNet - input.operationsDOuverture.reduce((s, i) => s + i.amount, 0),
@@ -387,6 +408,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     incomeStatement: pass.incomeStatement,
     closing: pass.closing,
     taxLossCarryforward: pass.taxLossCarryforward,
+    ...(pass.exercice ? { exercice: pass.exercice } : {}),
     cashFlow: pass.cashFlow,
     treasury: {
       discounted,

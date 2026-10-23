@@ -16,6 +16,7 @@ describe("le lot de l'examen compose le monde avec les correctifs des parties no
   it("la liste des correctifs est celle qu'on attend (un ajout se voit ici)", () => {
     expect(Object.keys(CORRECTIFS_DES_PARTIES_NOUVELLES).sort()).toEqual([
       "concurrentsAssainis",
+      "impotSurLExercice",
       "parcSansDoublon",
       "propositionALaDemande",
     ]);
@@ -29,6 +30,7 @@ describe("le lot de l'examen compose le monde avec les correctifs des parties no
       );
       expect(s.bots?.concurrentsAssainis).toBe(true);
       expect(s.parcSansDoublon).toBe(true);
+      expect(s.impotSurLExercice).toBe(true);
       expect(s.propositionALaDemande).toBe(true);
     });
   }
