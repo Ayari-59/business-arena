@@ -1,7 +1,7 @@
 import { montantEcrit } from "@/pedagogy/cours/correcteur";
 import { bilan, compteDeResultat, mouvements, tvaNette, type Ecriture, type LigneDEtat } from "@/pedagogy/cours/etats";
 import { intituleDe } from "@/pedagogy/cours/plan-comptable";
-import type { Vue } from "@/config/cours/types";
+import type { TableauDeDonnees, Vue } from "@/config/cours/types";
 
 /**
  * CE QUE LA SIMULATION MONTRE APRÈS CHAQUE ÉTAPE : LES ÉTATS DE L'ENTREPRISE.
@@ -58,6 +58,45 @@ function Colonne({
         </tfoot>
       </table>
     </div>
+  );
+}
+
+/** Un tableau de chiffres du cas (`TableauDeDonnees`) : défile en largeur sur un téléphone, la page non. */
+export function TableauDuCas({ tableau }: { tableau: TableauDeDonnees }) {
+  return (
+    <figure className="grid max-w-3xl gap-2" data-tableau-du-cas="">
+      <figcaption className="text-sm font-semibold">{tableau.titre}</figcaption>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-300">
+              <th scope="col" className="py-1.5 pr-3 text-left text-xs font-semibold uppercase tracking-etiquette text-slate-400">
+                <span className="sr-only">Indicateur</span>
+              </th>
+              {tableau.colonnes.map((c) => (
+                <th key={c} scope="col" className="whitespace-nowrap px-2 py-1.5 text-right text-xs font-semibold uppercase tracking-etiquette text-slate-400">
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tableau.lignes.map((l) => (
+              <tr key={l.libelle} className="border-b border-slate-200 last:border-0">
+                <th scope="row" className="py-1.5 pr-3 text-left font-normal">
+                  {l.libelle}
+                </th>
+                {l.valeurs.map((v, i) => (
+                  <td key={i} className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">
+                    {v}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </figure>
   );
 }
 

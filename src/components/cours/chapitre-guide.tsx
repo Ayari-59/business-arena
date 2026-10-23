@@ -23,7 +23,7 @@ import type {
 import { changerDeSigne, corriger, enSaisie, lireMontant, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagogy/cours/deroule";
 import type { Ecriture } from "@/pedagogy/cours/etats";
-import { Journal, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
+import { Journal, TableauDuCas, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
 import { SaisieEcriture } from "./saisie-ecriture";
 import { enregistrerProgressionAction } from "@/app/cours/actions";
 
@@ -222,6 +222,7 @@ function Lecture({ etape, cas, noter, suite, chapitre, index }: PropsDEtape<Etap
   return (
     <>
       <Paragraphes textes={etape.texte(cas)} />
+      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
       {etape.repere && <Repere texte={etape.repere(cas)} />}
       <BoutonSuite
         dernier={index === chapitre.etapes.length - 1}
@@ -360,6 +361,7 @@ function EtapeDeChoix({ etape, cas, chapitre, index, suivi, classe, noter, suite
   const fait = suivi?.reussi ?? false;
   return (
     <>
+      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
       <p className="max-w-2xl text-lg font-semibold leading-snug">{etape.question(cas, avant)}</p>
       <Options
         options={options}
@@ -403,6 +405,7 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
   return (
     <>
+      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
       <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas, avant)}</p>
       <form
         className="grid max-w-xl gap-3"
