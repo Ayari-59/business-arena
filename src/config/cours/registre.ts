@@ -9,6 +9,7 @@ import { SEUIL_DE_RENTABILITE } from "./chapitres/seuil-de-rentabilite";
 import { COUT_COMPLET } from "./chapitres/cout-complet";
 import { COUT_PAR_PRODUIT } from "./chapitres/cout-par-produit";
 import { BUDGET_DE_TRESORERIE } from "./chapitres/budget-de-tresorerie";
+import { ANALYSE_DES_ECARTS } from "./chapitres/analyse-des-ecarts";
 import type { Chapitre } from "./types";
 
 /**
@@ -60,6 +61,6 @@ export const PROGRAMME: Record<CodeParcours, Record<Chapitre["palier"], readonly
   },
 };
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS];
 
 export const chapitreParCode = (code: string) => CHAPITRES.find((c) => c.code === code);

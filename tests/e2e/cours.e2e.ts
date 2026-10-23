@@ -248,6 +248,8 @@ describe.each([
   { code: "cout-par-produit", entreprise: "boutique", telephone: true },
   { code: "budget-de-tresorerie", entreprise: "ecommerce", telephone: true },
   { code: "budget-de-tresorerie", entreprise: "transport" },
+  { code: "analyse-des-ecarts", entreprise: "boutique", telephone: true },
+  { code: "analyse-des-ecarts", entreprise: "hotel" },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
