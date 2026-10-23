@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
@@ -20,7 +20,7 @@ import type {
   OptionDeChoix,
   Piece,
 } from "@/config/cours/types";
-import { corriger, enSaisie, lireMontant, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
+import { changerDeSigne, corriger, enSaisie, lireMontant, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagogy/cours/deroule";
 import type { Ecriture } from "@/pedagogy/cours/etats";
 import { Journal, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
@@ -397,6 +397,7 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
   const champs = etape.champs(cas, avant);
   const [valeurs, setValeurs] = useState<string[]>(() => champs.map(() => ""));
   const [verifie, setVerifie] = useState<boolean[] | null>(null);
+  const racine = useId();
   const fait = suivi?.reussi ?? false;
   const essais = suivi?.essais ?? 0;
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
@@ -421,22 +422,37 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
         }}
       >
         {champs.map((c, i) => (
-          <label key={c.libelle} className="grid gap-1 sm:grid-cols-[minmax(0,1fr)_12rem] sm:items-center sm:gap-3">
-            <span className="text-sm">{c.libelle}</span>
+          // Le bouton de signe reste hors du libellé : le nom du champ est son libellé, rien de plus.
+          <div key={c.libelle} className="grid gap-1 sm:grid-cols-[minmax(0,1fr)_15rem] sm:items-center sm:gap-3">
+            <label htmlFor={`${racine}-${i}`} className="text-sm">
+              {c.libelle}
+            </label>
             <span className="flex items-center gap-2">
               <input
-                className="champ w-full px-2.5 py-2 text-right tabular-nums"
+                id={`${racine}-${i}`}
+                className="champ w-full min-w-0 px-2.5 py-2 text-right tabular-nums"
                 inputMode="decimal"
                 autoComplete="off"
                 value={fait && !valeurs[i] ? String(c.attendu).replace(".", ",") : valeurs[i]}
                 disabled={fait}
                 onChange={(e) => setValeurs((vs) => vs.map((x, j) => (j === i ? e.target.value : x)))}
               />
+              {/* Sur chaque champ, pour ne rien dire du signe attendu : un téléphone n'a pas de touche moins. */}
+              <button
+                type="button"
+                className="champ shrink-0 px-2.5 py-2 text-sm tabular-nums pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+                aria-label={`Changer le signe : ${c.libelle}`}
+                title="Changer le signe"
+                disabled={fait}
+                onClick={() => setValeurs((vs) => vs.map((x, j) => (j === i ? changerDeSigne(x) : x)))}
+              >
+                +/−
+              </button>
               <span className="w-5 text-sm" aria-label={verifie ? (verifie[i] ? "juste" : "faux") : undefined}>
                 {verifie ? (verifie[i] ? "✓" : "✗") : ""}
               </span>
             </span>
-          </label>
+          </div>
         ))}
         {!fait && (
           <div className="flex flex-wrap gap-3">

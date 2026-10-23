@@ -77,13 +77,9 @@ describe.each(ENTREPRISES_DU_COURS)("le coût complet chez %s", (code) => {
     const meme = chapitre.etapes.find((e) => e.id === "meme-resultat")!;
     if (meme.type !== "choix") throw new Error("choix attendu");
     expect(meme.question(cas, etat)).toContain(montantEcrit(g.resultat));
-    // Le champ du résultat se saisit sans signe moins : une perte s'écrit en positif.
     const champ = chapitre.etapes.find((e) => e.id === "resultat-analytique")!;
     if (champ.type !== "montants") throw new Error("montants attendu");
-    const r = champ.champs(cas, etat)[0]!;
-    expect(r.attendu).toBeGreaterThanOrEqual(0);
-    expect(r.attendu).toBeCloseTo(Math.abs(g.resultat), 2);
-    expect(r.libelle).toContain(g.resultat >= 0 ? "bénéfice" : "perte");
+    expect(champ.champs(cas, etat)[0]!.attendu).toBeCloseTo(g.resultat, 2);
   });
 
   it("la commande se paie entre le coût variable et le coût complet, et elle rapporte", () => {
