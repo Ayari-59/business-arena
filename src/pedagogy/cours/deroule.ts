@@ -20,20 +20,23 @@ import type { Chapitre, EtatDuCours } from "../../config/cours/types";
  * chapitre ainsi ordonné.
  */
 export function chapitreDuCas(chapitre: Chapitre, cas: Cas): Chapitre {
-  const places = chapitre.etapes.flatMap((e, i) => (e.type === "ecriture" && e.echeance ? [i] : []));
+  // Les étapes sans objet dans cette entreprise s'en vont d'abord.
+  const presentes = chapitre.etapes.filter((e) => !e.si || e.si(cas));
+  const places = presentes.flatMap((e, i) => (e.type === "ecriture" && e.echeance ? [i] : []));
   const jour = (i: number) => {
-    const e = chapitre.etapes[i]!;
+    const e = presentes[i]!;
     return e.type === "ecriture" && e.echeance ? e.echeance(cas) : 0;
   };
   const triees = [...places].sort((a, b) => jour(a) - jour(b));
-  const etapes = [...chapitre.etapes];
-  places.forEach((place, k) => (etapes[place] = chapitre.etapes[triees[k]!]!));
+  const etapes = [...presentes];
+  places.forEach((place, k) => (etapes[place] = presentes[triees[k]!]!));
   return { ...chapitre, etapes };
 }
 
-/** Les écritures des étapes qui précèdent l'étape `index` (exclue). */
+/** Les écritures des étapes qui précèdent l'étape `index` (exclue), après la balance d'ouverture s'il y en a une. */
 export function journalAvant(chapitre: Chapitre, cas: Cas, index: number): Ecriture[] {
-  return chapitre.etapes.slice(0, index).flatMap((e) => (e.type === "ecriture" ? [enEcriture(e.ecriture(cas))] : []));
+  const ouverture = chapitre.ouverture ? [chapitre.ouverture(cas)] : [];
+  return [...ouverture, ...chapitre.etapes.slice(0, index).flatMap((e) => (e.type === "ecriture" ? [enEcriture(e.ecriture(cas))] : []))];
 }
 
 export function etatAvant(chapitre: Chapitre, cas: Cas, index: number): EtatDuCours {

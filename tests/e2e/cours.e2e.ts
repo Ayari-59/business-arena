@@ -237,7 +237,9 @@ describe.each([
   { code: "l-emprunt", entreprise: "transport" },
   { code: "immobilisations", entreprise: "batiment" },
   { code: "les-stocks", entreprise: "ecommerce" },
-])("le chapitre réservé $code, au palier 3", ({ code: chapitreCode, entreprise }) => {
+  { code: "la-cloture", entreprise: "boutique" },
+  { code: "la-cloture", entreprise: "bistrot" },
+])("le chapitre réservé $code chez $entreprise, au palier 3", ({ code: chapitreCode, entreprise }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
     await aller(libre, `/cours/${chapitreCode}?entreprise=${entreprise}`);

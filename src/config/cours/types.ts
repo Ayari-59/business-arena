@@ -1,4 +1,5 @@
 import type { EcritureAttendue } from "../../pedagogy/cours/correcteur";
+import type { Ecriture } from "../../pedagogy/cours/etats";
 import type { Cas } from "./cas";
 
 /**
@@ -35,6 +36,11 @@ interface Base {
   titre: string;
   /** Les fiches notions que l'étape fait vivre (`/notions#code`). */
   notions?: readonly string[];
+  /**
+   * L'étape n'existe que dans les entreprises où elle a un objet (une écriture de stock là
+   * où il y a un stock) : `chapitreDuCas` retire les autres. Absent : partout.
+   */
+  si?: (c: Cas) => boolean;
 }
 
 export interface EtapeLecture extends Base {
@@ -159,5 +165,10 @@ export interface Chapitre {
    * d'une autre. Absent : les entreprises du cours, toutes.
    */
   entreprises?: { codes: readonly string[]; pourquoi: string };
+  /**
+   * Le journal tel que l'élève le trouve en ouvrant le chapitre : une balance, déjà passée,
+   * à laquelle ses écritures s'ajoutent. Absent : un journal vide.
+   */
+  ouverture?: (c: Cas) => Ecriture;
   etapes: readonly Etape[];
 }

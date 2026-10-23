@@ -4,7 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { classeDeLEnseignant } from "@/services/cours.service";
+import { casDeLEntreprise } from "@/config/cours/cas";
 import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
+import { chapitreDuCas } from "@/pedagogy/cours/deroule";
 import { vueDeLaClasse, type LigneDEleve } from "@/pedagogy/cours/suivi";
 import { SITE_URL } from "@/config/site";
 import { compter } from "@/lib/format";
@@ -49,13 +51,22 @@ export default async function ClasseDuCoursPage({
   const [{ id }, { chapitre: demande, creee, fait }] = await Promise.all([params, searchParams]);
   const session = await getSession();
   if (!session) redirect("/teacher/login");
-  const chapitre = chapitreParCode(demande ?? "") ?? CHAPITRES[0]!;
+  const choisi = chapitreParCode(demande ?? "") ?? CHAPITRES[0]!;
   const [lu, staff] = await Promise.all([
-    /^[0-9a-f-]{36}$/.test(id) ? classeDeLEnseignant(session.userId, id, chapitre.code) : null,
+    /^[0-9a-f-]{36}$/.test(id) ? classeDeLEnseignant(session.userId, id, choisi.code) : null,
     getStaffContext(session.userId),
   ]);
   if (!lu) notFound();
   const { classe, progressions } = lu;
+  // Une classe qui joue une seule entreprise voit le chapitre tel qu'il s'y joue : ses
+  // étapes dans l'ordre et le nombre de cette entreprise (celle du chapitre, s'il ne vaut
+  // pas pour l'entreprise imposée).
+  const deLaClasse = classe.entreprise
+    ? choisi.entreprises && !choisi.entreprises.codes.includes(classe.entreprise)
+      ? choisi.entreprises.codes[0]!
+      : classe.entreprise
+    : null;
+  const chapitre = deLaClasse ? chapitreDuCas(choisi, casDeLEntreprise(deLaClasse)) : choisi;
   const vue = vueDeLaClasse(chapitre, progressions);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const lien = `${SITE_URL}/cours/rejoindre?code=${classe.code}`;
