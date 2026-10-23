@@ -190,6 +190,32 @@ export function VuePaie({ soldes, avant }: { soldes: Record<string, number>; ava
   );
 }
 
+/** L'immobilisation comme le bilan la présente : sa valeur brute, ses amortissements, sa valeur nette. */
+export function VueImmobilisation({ soldes, avant }: { soldes: Record<string, number>; avant?: Record<string, number> }) {
+  const lignes = (s: Record<string, number>): LigneDEtat[] => {
+    const somme = (f: (c: string) => boolean) => Object.keys(s).filter(f).reduce((t, c) => t + s[c]!, 0);
+    const brut = somme((c) => c.startsWith("2") && !c.startsWith("28"));
+    const amortissements = -somme((c) => c.startsWith("28"));
+    return [
+      { libelle: "Valeur brute", montant: brut, comptes: [] },
+      { libelle: "Amortissements cumulés", montant: amortissements, comptes: [] },
+    ];
+  };
+  const l = lignes(soldes);
+  return (
+    <figure className="grid max-w-md gap-2" aria-label="L'immobilisation au bilan">
+      <figcaption className="text-sm font-semibold">L&apos;immobilisation au bilan</figcaption>
+      <Colonne
+        titre="Actif immobilisé"
+        lignes={l}
+        total={l[0]!.montant - l[1]!.montant}
+        libelleTotal="Valeur nette comptable"
+        avant={avant ? lignes(avant) : undefined}
+      />
+    </figure>
+  );
+}
+
 /** Le journal tenu jusque-là, écriture par écriture. */
 export function Journal({ journal }: { journal: readonly Ecriture[] }) {
   if (journal.length === 0) return <p className="text-sm text-slate-400">Le journal est vide : rien n&apos;est encore passé.</p>;
@@ -250,5 +276,7 @@ export function VueDEtape({
       return <CompteEnT journal={journal} compte="512" />;
     case "paie":
       return <VuePaie soldes={soldes} avant={avant} />;
+    case "immobilisation":
+      return <VueImmobilisation soldes={soldes} avant={avant} />;
   }
 }

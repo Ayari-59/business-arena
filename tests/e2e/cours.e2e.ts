@@ -235,6 +235,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
 describe.each([
   { code: "la-paie", entreprise: "hotel" },
   { code: "l-emprunt", entreprise: "transport" },
+  { code: "immobilisations", entreprise: "batiment" },
 ])("le chapitre réservé $code, au palier 3", ({ code: chapitreCode, entreprise }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
