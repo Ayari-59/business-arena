@@ -265,6 +265,8 @@ describe.each([
   { code: "bilan-fonctionnel-et-bfr", entreprise: "nova", telephone: true },
   { code: "les-flux-de-l-entreprise", entreprise: "hotel" },
   { code: "les-flux-de-l-entreprise", entreprise: "fitness", telephone: true },
+  { code: "charges-produits-encaissements", entreprise: "ecommerce" },
+  { code: "charges-produits-encaissements", entreprise: "conseil", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
