@@ -1,5 +1,6 @@
 import type { Cas } from "./cas";
 import { fournisseursDe } from "./chapitres/taux-de-marque";
+import { ECART_DE_PRIX } from "./decision";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
@@ -426,6 +427,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Quel indicateur a bougé le premier, et dans quel sens ? Quelle décision avez-vous prise en le voyant, et l'a-t-elle remis dans le vert au tour suivant ?",
   }),
+  "negocier-le-prix": (c) => {
+    const { prix } = feuilleDe(c, 2);
+    return {
+      niveau: 2,
+      faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un second en baissant « ${prix} » de ${Math.round(ECART_DE_PRIX * 100)} %.`,
+      lieux: ["analyse-des-couts", "marche-du-tour"],
+      chercher:
+        "Votre prix baissé reste-t-il au-dessus du coût complet unitaire de l'analyse des coûts ? Les ventes ont-elles monté assez pour compenser la marge cédée sur chaque unité ?",
+    };
+  },
   "valeur-d-un-client": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez le portefeuille d'adhérents (partis, nouveaux, occupation), puis le taux d'attrition et la valeur vie client.`,
