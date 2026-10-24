@@ -41,13 +41,14 @@ async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
 }
 
 describe("/cours : la carte du cours et le chapitre libre", () => {
-  it("propose le chapitre pilote dans chacune des entreprises du cours, sans déborder sur téléphone", async () => {
+  it("propose le chapitre pilote dans chacune des entreprises du cours, aucun palier en préparation, sans déborder sur téléphone", async () => {
     const page = await nouvellePage(390, 844);
     await aller(page, "/cours");
     for (const code of ENTREPRISES_DU_COURS) {
       expect(await page.locator(`a[href="${chemin(code)}"]`).count(), code).toBeGreaterThan(0);
     }
-    expect(await page.getByText("En préparation").count()).toBeGreaterThan(0);
+    // Le cours est complet : chaque palier de chaque parcours ouvre au moins un chapitre.
+    expect(await page.getByText("En préparation").count()).toBe(0);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.context().close();
   }, 60_000);
@@ -267,6 +268,8 @@ describe.each([
   { code: "les-flux-de-l-entreprise", entreprise: "fitness", telephone: true },
   { code: "charges-produits-encaissements", entreprise: "ecommerce" },
   { code: "charges-produits-encaissements", entreprise: "conseil", telephone: true },
+  { code: "prix-cout-et-marge", entreprise: "bistrot" },
+  { code: "prix-cout-et-marge", entreprise: "transport", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
