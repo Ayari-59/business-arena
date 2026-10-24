@@ -1,6 +1,5 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
-import { accordPluriel } from "../accords";
 import type { Cas, StockDuTrimestre } from "../cas";
 import type { Chapitre } from "../types";
 
@@ -69,7 +68,7 @@ const tableauDuTrimestre = (c: Cas) => {
     lignes: [
       { libelle: "Stock initial", valeurs: [qte(s.initial.quantite), eur(s.initial.valeur)] },
       { libelle: "Achats du trimestre", valeurs: [qte(s.achats.quantite), eur(s.achats.ht)] },
-      { libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} ${accordPluriel(c, "vendu")}`, valeurs: [qte(s.vendues), "?"] },
+      { libelle: "Unités vendues", valeurs: [qte(s.vendues), "?"] },
       { libelle: "Stock final", valeurs: [qte(s.final.quantite), eur(s.final.valeur)] },
     ],
   };
@@ -104,7 +103,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         const s = stockDe(c);
         const st = stockDuPointDeVente(c);
         return [
-          `Au début du trimestre ${s.trimestre}, ${c.entreprise} a ${qte(s.initial.quantite)} ${c.unites} en réserve. Elle en achète ${qte(s.achats.quantite)} et en vend ${qte(s.vendues)} en ${qte(st.jours)} jours. Le tableau donne les chiffres de l'arène, valorisés au coût moyen pondéré.`,
+          `Au début du trimestre ${s.trimestre}, ${c.entreprise} a ${qte(s.initial.quantite)} unités en réserve. Elle en achète ${qte(s.achats.quantite)} et en vend ${qte(s.vendues)} en ${qte(st.jours)} jours. Le tableau donne les chiffres de l'arène, valorisés au coût moyen pondéré.`,
           "Un article en réserve, c'est de l'argent payé au fournisseur et pas encore revenu par la caisse. Le commerçant veut assez de stock pour ne pas manquer de ventes, et pas plus.",
         ];
       },
@@ -190,7 +189,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["stock"],
       question: (c) => {
         const st = stockDuPointDeVente(c);
-        return `À la fin du trimestre, il reste ${qte(st.s.final.quantite)} ${c.unites} en réserve. Calculez les ventes moyennes par jour du trimestre (au centième), puis combien de jours ce stock final tiendra à ce rythme (au jour).`;
+        return `À la fin du trimestre, il reste ${qte(st.s.final.quantite)} unités en réserve. Calculez les ventes moyennes par jour du trimestre (au centième), puis combien de jours ce stock final tiendra à ce rythme (au jour).`;
       },
       champs: (c) => {
         const st = stockDuPointDeVente(c);
@@ -242,9 +241,9 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["stock_rotation", "payment_terms"],
       question: (c) => {
         const st = stockDuPointDeVente(c);
-        return `Les ventes du trimestre ne changent pas. Faites varier le stock final, et placez le curseur sur le plus gros stock final, en ${c.unites}, pour lequel la durée de stockage ne dépasse pas les ${qte(st.delai)} jours de crédit du fournisseur.`;
+        return `Les ventes du trimestre ne changent pas. Faites varier le stock final, et placez le curseur sur le plus gros stock final, en unités, pour lequel la durée de stockage ne dépasse pas les ${qte(st.delai)} jours de crédit du fournisseur.`;
       },
-      grandeur: (c) => ({ libelle: "Stock final", unite: c.unites }),
+      grandeur: () => ({ libelle: "Stock final", unite: "unités" }),
       sens: "plus-grande",
       cible: (c) => {
         const st = stockDuPointDeVente(c);
@@ -270,7 +269,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       explication: (c) => {
         const st = stockDuPointDeVente(c);
         return [
-          `Avec ${qte(st.stockFinalFinance)} ${c.unites} en fin de trimestre au lieu de ${qte(st.s.final.quantite)}, la durée de stockage retombe à ${qte(st.delai)} jours : chaque article serait vendu avant d'être payé. Moins de stock, c'est aussi plus de risque de rupture : tout l'art du commerçant est entre les deux.`,
+          `Avec ${qte(st.stockFinalFinance)} unités en fin de trimestre au lieu de ${qte(st.s.final.quantite)}, la durée de stockage retombe à ${qte(st.delai)} jours : chaque unité serait vendue avant d'être payée. Moins de stock, c'est aussi plus de risque de rupture : tout l'art du commerçant est entre les deux.`,
         ];
       },
     },
