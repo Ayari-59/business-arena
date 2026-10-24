@@ -6,6 +6,7 @@ import { ChapitreGuide } from "@/components/cours/chapitre-guide";
 import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { chapitreParCode } from "@/config/cours/registre";
+import { missionAffichee } from "@/config/cours/jouez";
 import { getSession } from "@/lib/session";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve, classeSousLicence } from "@/services/cours.service";
@@ -97,6 +98,7 @@ export default async function ChapitrePage({
           cas={cas}
           entreprises={possibles.map(({ code: c, nom }) => ({ code: c, nom }))}
           classe={classe !== undefined}
+          mission={missionAffichee(chapitre.code, cas)}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
       </main>

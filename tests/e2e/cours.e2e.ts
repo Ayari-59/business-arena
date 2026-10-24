@@ -91,6 +91,14 @@ describe("le chapitre pilote, joué sans faute", () => {
     await expect
       .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
+
+    // Et maintenant, jouez-le : la partie s'ouvre chez la même entreprise, au niveau de la mission.
+    const mission = page.locator("[data-jouez-le]");
+    expect(await mission.innerText()).toContain("Résultats › Finance › Bilan");
+    const jouer = mission.getByRole("link", { name: `Jouer ${cas.entreprise} au niveau 1` });
+    expect(await jouer.getAttribute("href")).toBe(`/jouer?secteur=${code}&niveau=1`);
+    await jouer.click();
+    await page.waitForURL(/\/jouer\?secteur=bistrot&niveau=1/, { timeout: 60_000 });
     await page.context().close();
   }, 240_000);
 });

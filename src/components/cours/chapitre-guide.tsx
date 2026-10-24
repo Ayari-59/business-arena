@@ -7,6 +7,7 @@ import { sansMolette } from "@/components/sans-molette";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { PALIERS, PARCOURS, chapitreParCode } from "@/config/cours/registre";
 import type { Cas } from "@/config/cours/cas";
+import type { MissionAffichee } from "@/config/cours/jouez";
 import type {
   Chapitre,
   EtapeChoix,
@@ -867,6 +868,42 @@ function Sommaire({
   );
 }
 
+/**
+ * LE CHAPITRE, REPRIS DANS L'ARÈNE. Le geste à faire, les écrans où lire ce qu'il produit,
+ * la question à rapporter, et la partie qui s'ouvre sur la même entreprise, au bon niveau.
+ */
+function EtMaintenantJouezLe({ mission, cas }: { mission: MissionAffichee; cas: Cas }) {
+  return (
+    <section className="carte grid gap-3 p-4 sm:p-5" aria-labelledby="jouez-le" data-jouez-le="">
+      <div className="grid gap-1">
+        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">Dans l&apos;arène</p>
+        <h3 id="jouez-le" className="text-xl font-bold text-slate-50">
+          Et maintenant, jouez-le
+        </h3>
+      </div>
+      <p className="max-w-2xl text-slate-200">{mission.faire}</p>
+      <div className="grid gap-1">
+        <p className="text-sm font-semibold text-slate-100">Où regarder</p>
+        <ul className="grid gap-0.5 text-sm text-slate-300">
+          {mission.ou.map((chemin) => (
+            <li key={chemin}>{chemin}</li>
+          ))}
+        </ul>
+      </div>
+      <div className="grid gap-1">
+        <p className="text-sm font-semibold text-slate-100">Ce que vous y cherchez</p>
+        <p className="max-w-2xl text-slate-200">{mission.chercher}</p>
+      </div>
+      <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Link href={mission.adresse} className={bouton({ taille: "m" })}>
+          Jouer {cas.entreprise} au niveau {mission.niveau}
+        </Link>
+        {mission.reservee && <span className="text-sm text-slate-400">{mission.reservee}</span>}
+      </p>
+    </section>
+  );
+}
+
 function FinDuChapitre({
   chapitre,
   cas,
@@ -874,6 +911,7 @@ function FinDuChapitre({
   entreprises,
   recommencer,
   classe,
+  mission,
 }: {
   chapitre: Chapitre;
   cas: Cas;
@@ -881,6 +919,7 @@ function FinDuChapitre({
   entreprises: { code: string; nom: string }[];
   recommencer: () => void;
   classe: boolean;
+  mission: MissionAffichee | null;
 }) {
   const notees = chapitre.etapes.filter((e) => e.type !== "lecture");
   const duPremierCoup = notees.filter((e) => {
@@ -906,6 +945,7 @@ function FinDuChapitre({
           ))}
         </ul>
       </section>
+      {mission && <EtMaintenantJouezLe mission={mission} cas={cas} />}
       <Notions codes={notions} />
       <details className="papier rounded-xl p-4">
         <summary className="cursor-pointer font-semibold">Le journal complet du chapitre</summary>
@@ -946,12 +986,15 @@ export function ChapitreGuide({
   cas,
   entreprises,
   classe,
+  mission = null,
   enClasse = null,
 }: {
   code: string;
   cas: Cas;
   entreprises: { code: string; nom: string }[];
   classe: boolean;
+  /** Ce que le chapitre propose de rejouer dans l'arène, préparé par la page. */
+  mission?: MissionAffichee | null;
   /** La classe de l'élève, s'il en suit une : sa progression remonte à l'enseignant. */
   enClasse?: { classe: string; eleve: string } | null;
 }) {
@@ -1046,7 +1089,7 @@ export function ChapitreGuide({
         </span>
       </div>
       {!lu ? null : fini && vue === null ? (
-        <FinDuChapitre chapitre={chapitre} cas={cas} suivi={suivi} entreprises={entreprises} recommencer={recommencer} classe={classe} />
+        <FinDuChapitre chapitre={chapitre} cas={cas} suivi={suivi} entreprises={entreprises} recommencer={recommencer} classe={classe} mission={mission} />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <section className="grid min-w-0 gap-5" aria-live="polite" key={etape.id}>
