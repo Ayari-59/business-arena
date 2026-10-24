@@ -454,6 +454,7 @@ export const NOTIONS_PAR_ROLE: Record<string, CodeDeResponsable | "tous"> = {
   customer_acquisition_cost: "commercial",
   churn_rate: "commercial",
   customer_lifetime_value: "commercial",
+  price_floor: "commercial",
   occupancy_revpar: "commercial",
   brand_capital: "commercial",
   standard_costing: "approvisionnement",

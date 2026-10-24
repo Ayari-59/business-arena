@@ -632,6 +632,20 @@ export const CONCEPTS: ConceptDef[] = [
       "Valeur vie client = marge par client et par période / taux d'attrition par période",
   },
   {
+    code: "price_floor",
+    name: "Prix plancher et marge de manœuvre",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "Le prix sous lequel une vente fait perdre de l'argent, et l'écart entre ce plancher et le prix catalogue, où se joue la négociation.",
+    intuition:
+      "Un commercial qui entre en négociation sans connaître son plancher cède au feeling. Il y en a deux : le coût complet, sous lequel on ne peut pas vendre à tous les clients, et le coût variable, sous lequel on ne vend jamais, même une affaire en plus qui remplit une capacité libre.",
+    method:
+      "Calculez le coût complet d'une unité, coût variable plus charges fixes divisées par la quantité vendue. La marge de manœuvre est l'écart avec le prix catalogue ; rapportée à ce prix, elle donne la remise maximale. Sous le coût complet, n'acceptez qu'une affaire qui s'ajoute à l'activité sans prendre la place d'un client au prix catalogue.",
+    formula:
+      "Marge de manœuvre = prix catalogue − coût complet unitaire ; remise maximale = marge de manœuvre / prix catalogue",
+  },
+  {
     code: "payment_terms",
     name: "Délais de règlement et poste clients",
     domain: "finance",
@@ -1041,6 +1055,7 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   customer_acquisition_cost: ["demand_market_share", "contribution_margin"],
   churn_rate: ["demand_market_share"],
   customer_lifetime_value: ["churn_rate", "contribution_margin"],
+  price_floor: ["variable_costs", "full_unit_cost"],
   weighted_average_cost: ["stock", "variable_costs"],
   occupancy_revpar: ["capacity", "revenue"],
   payment_terms: ["bfr"],
@@ -1139,6 +1154,7 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   customer_acquisition_cost: 3,
   churn_rate: 3,
   customer_lifetime_value: 3,
+  price_floor: 3,
   weighted_average_cost: 3,
   occupancy_revpar: 3,
   payment_terms: 4,
