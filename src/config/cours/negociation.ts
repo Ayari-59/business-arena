@@ -43,3 +43,11 @@ export const PART_DES_COMPTES_D_UN_PORTEFEUILLE_CONCENTRE = 30;
  * la concentration du reste du portefeuille.
  */
 export const PART_D_UN_COMPTE_QUI_FAIT_COURIR_UN_RISQUE = 25;
+
+/**
+ * La baisse du taux de service, en points, à partir de laquelle un trimestre qui décroche
+ * s'explique par l'offre plutôt que par la demande : cinq points. En dessous, l'écart tient aux
+ * arrondis et aux à-coups d'un trimestre ; au-delà, des clients venus d'eux-mêmes sont repartis
+ * sans être servis.
+ */
+export const BAISSE_DU_SERVICE_QUI_SIGNALE_L_OFFRE = 5;
