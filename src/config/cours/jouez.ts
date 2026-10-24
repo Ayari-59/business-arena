@@ -498,6 +498,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "La demande adressée a-t-elle baissé plus que la petite hausse de prix ne le laissait prévoir ? Quelle clientèle a le plus réagi ?",
     };
   },
+  "demande-et-prix": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis un second en montant « ${prix} » de ${Math.round(ECART_DE_PRIX * 100)} %.`,
+      lieux: ["marche-du-tour", "compte-de-resultat"],
+      chercher:
+        "De combien la demande adressée a-t-elle baissé ? Calculez votre élasticité : est-elle proche de celle du chapitre ? Votre chiffre d'affaires a-t-il monté ou baissé ?",
+    };
+  },
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
