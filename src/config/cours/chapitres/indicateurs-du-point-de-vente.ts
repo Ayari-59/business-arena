@@ -33,14 +33,14 @@ const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 const dE = (mot: string) => (/^[aeiouyéèê]/i.test(mot) ? `d'${mot}` : `de ${mot}`);
 
 /** Le nom de l'indicateur du panier, tel que l'arène l'affiche pour ce métier. */
-function nomDuPanier(c: Cas): string {
+export function nomDuPanier(c: Cas): string {
   const kpi = scenarioByCode(c.code).kpis.find((k) => k.key === "panier_moyen" || k.key === "ticket_moyen");
   if (!kpi) throw new Error(`Pas d'indicateur de panier pour ${c.code}`);
   return kpi.label;
 }
 
 /** Ce que l'on compte comme un client : un passage en caisse, une commande, un couvert. */
-function clientDe(c: Cas) {
+export function clientDe(c: Cas) {
   if (c.code === "boutique") return { singulier: "passage en caisse", pluriel: "passages en caisse", unitesParClient: ARTICLES_PAR_TICKET };
   return { singulier: c.unite, pluriel: c.unites, unitesParClient: 1 };
 }
