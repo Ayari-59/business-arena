@@ -464,6 +464,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Quelle part de vos commandes vient de la place de marché, et quelle part de votre marge, une fois la commission payée ? La commission par commande est-elle plus basse ou plus haute que le coût d'acquisition des indicateurs ?",
   }),
+  "portefeuille-abc": (c) => {
+    const niveau = niveauDeLaGamme(c.code)!;
+    return {
+      niveau,
+      faire: `${partie(c, niveau)} Jouez un tour, puis relevez les ventes de chaque clientèle, référence par référence.`,
+      lieux: ["marche-du-tour", "references"],
+      chercher:
+        "Classez vos clientèles par chiffre d'affaires : combien en faut-il pour faire 80 % des ventes ? La référence qui laisse la meilleure marge par unité est-elle celle de votre plus gros compte ?",
+    };
+  },
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */

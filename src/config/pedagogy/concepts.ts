@@ -646,6 +646,20 @@ export const CONCEPTS: ConceptDef[] = [
       "Marge de manœuvre = prix catalogue − coût complet unitaire ; remise maximale = marge de manœuvre / prix catalogue",
   },
   {
+    code: "customer_portfolio",
+    name: "Portefeuille clients et méthode ABC",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "L'ensemble des comptes d'un commercial, classés selon ce qu'ils pèsent dans le chiffre d'affaires pour répartir le temps qu'on leur consacre.",
+    intuition:
+      "Le temps d'un commercial est sa ressource la plus rare. Quelques comptes font souvent l'essentiel des ventes : ce sont eux qu'on visite, qu'on suit de près et qu'on ne peut pas perdre. Les petits comptes rapportent aussi, mais se servent à distance, à moindre coût.",
+    method:
+      "Triez les comptes par chiffre d'affaires décroissant, calculez la part de chacun puis les parts cumulées. Coupez à 80 % pour la classe A et à 95 % pour la classe B ; le reste forme la classe C. Refaites ensuite le classement par la marge : un gros compte peut peu rapporter, et le classement se refait à chaque période.",
+    formula:
+      "Part cumulée d'un compte = somme des chiffres d'affaires jusqu'à lui / chiffre d'affaires total",
+  },
+  {
     code: "payment_terms",
     name: "Délais de règlement et poste clients",
     domain: "finance",
@@ -1056,6 +1070,7 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   churn_rate: ["demand_market_share"],
   customer_lifetime_value: ["churn_rate", "contribution_margin"],
   price_floor: ["variable_costs", "full_unit_cost"],
+  customer_portfolio: ["revenue", "contribution_margin"],
   weighted_average_cost: ["stock", "variable_costs"],
   occupancy_revpar: ["capacity", "revenue"],
   payment_terms: ["bfr"],
@@ -1155,6 +1170,7 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   churn_rate: 3,
   customer_lifetime_value: 3,
   price_floor: 3,
+  customer_portfolio: 4,
   weighted_average_cost: 3,
   occupancy_revpar: 3,
   payment_terms: 4,
