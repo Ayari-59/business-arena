@@ -1,20 +1,31 @@
 import { expect, it } from "vitest";
-import { CHAPITRES, PALIERS, PARCOURS, chapitreParCode } from "../../src/config/cours/registre";
+import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME, chapitreParCode, paliersDuParcours } from "../../src/config/cours/registre";
 
 /**
- * LA CARTE DU COURS EST COMPLÈTE.
+ * LA CARTE DU COURS DIT VRAI.
  *
- * Chaque palier de chaque parcours ouvre au moins un chapitre (la page /cours n'affiche plus
- * « En préparation ») ; chaque chapitre a un code unique ; le premier, le seul libre, est le
- * chapitre pilote.
+ * Un parcours achevé ouvre un chapitre à chaque palier de sa carte (la page /cours n'affiche
+ * plus « En préparation » pour lui) ; un parcours qui se construit le dit, et aucun chapitre
+ * ne tombe sur un palier que sa carte ne montre pas. Chaque chapitre a un code unique ; le
+ * premier, le seul libre, est le chapitre pilote.
  */
 
-it("chaque palier de chaque parcours ouvre au moins un chapitre", () => {
-  for (const p of PARCOURS) {
-    for (const pa of PALIERS) {
-      expect(CHAPITRES.some((c) => c.parcours === p.code && c.palier === pa.palier), `${p.code}, palier ${pa.palier}`).toBe(true);
-    }
+const ouvre = (code: string, palier: number) => CHAPITRES.some((c) => c.parcours === code && c.palier === palier);
+
+it("un parcours achevé ouvre un chapitre à chaque palier de sa carte, et les deux premiers couvrent les quatre", () => {
+  for (const p of PARCOURS.filter((x) => !x.enPreparation)) {
+    for (const pa of paliersDuParcours(p.code)) expect(ouvre(p.code, pa.palier), `${p.code}, palier ${pa.palier}`).toBe(true);
   }
+  for (const code of ["comptabilite-generale", "controle-de-gestion"] as const) {
+    expect(paliersDuParcours(code)).toEqual(PALIERS);
+  }
+});
+
+it("un parcours en préparation a encore un palier à ouvrir, et aucun chapitre hors de sa carte", () => {
+  for (const p of PARCOURS.filter((x) => x.enPreparation)) {
+    expect(paliersDuParcours(p.code).some((pa) => !ouvre(p.code, pa.palier)), p.code).toBe(true);
+  }
+  for (const c of CHAPITRES) expect(PROGRAMME[c.parcours][c.palier], `${c.code} : palier ${c.palier} de ${c.parcours}`).toBeDefined();
 });
 
 it("chaque chapitre a un code unique, et seul le premier est libre", () => {

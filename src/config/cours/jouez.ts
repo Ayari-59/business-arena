@@ -1,4 +1,5 @@
 import type { Cas } from "./cas";
+import { fournisseursDe } from "./chapitres/taux-de-marque";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
@@ -302,6 +303,17 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       lieux: ["analyse-des-couts", "compte-de-resultat"],
       chercher:
         "La marge sur coût variable totale a-t-elle grandi ? C'est elle, et non le chiffre d'affaires, qui dit si la baisse de prix valait la peine.",
+    };
+  },
+  "taux-de-marque-et-coefficient": (c) => {
+    // Les fournisseurs du scénario que le niveau 1 fait jouer : leurs noms peuvent différer de ceux du chapitre.
+    const f = fournisseursDe(scenarioCodeForLevel(c.code, 1));
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour avec « ${f.reference.name} », puis un second où, dans « S'approvisionner », vous choisissez « ${f.moinsCher.name} » sans changer votre prix de vente.`,
+      lieux: ["analyse-des-couts", "budget-de-tresorerie"],
+      chercher:
+        "Dans l'analyse des coûts, retrouvez le coût d'achat d'une unité à chaque tour, et calculez votre taux de marque avec votre prix de vente. De combien a-t-il monté ? Dans le budget de trésorerie, les paiements fournisseurs sont-ils arrivés plus tôt ?",
     };
   },
 };

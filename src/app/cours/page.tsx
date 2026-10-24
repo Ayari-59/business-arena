@@ -4,7 +4,7 @@ import { bouton } from "@/components/bouton";
 import { SubmitButton } from "@/components/submit-button";
 import { PiedDePage } from "@/components/pied-de-page";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
-import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME } from "@/config/cours/registre";
+import { CHAPITRES, PARCOURS, PROGRAMME, paliersDuParcours } from "@/config/cours/registre";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
 import { ENTREPRISES } from "./entreprises";
@@ -14,7 +14,7 @@ import { quitterClasseAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Le cours par la simulation : comptabilité et contrôle de gestion",
+  title: "Le cours par la simulation : comptabilité, contrôle de gestion et BTS MCO",
   description:
     "Un cas d'entreprise simulé, guidé étape par étape : l'élève passe lui-même les écritures, répond aux questions et construit son compte de résultat et son bilan.",
   alternates: { canonical: "/cours" },
@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 /**
  * LE COURS PAR LA SIMULATION (décision du propriétaire, octobre 2026).
  *
- * Deux parcours, la comptabilité générale et le contrôle de gestion, en quatre
- * paliers du lycée au DCG. Chaque chapitre est un cas simulé que l'élève suit pas
+ * Trois parcours, la comptabilité générale, le contrôle de gestion et le BTS MCO, en
+ * quatre paliers du lycée au DCG. Chaque chapitre est un cas simulé que l'élève suit pas
  * à pas : il passe les écritures, répond, calcule, et la simulation lui montre ce
  * que chaque opération change dans les comptes de l'entreprise qu'il a choisie.
  *
@@ -41,7 +41,7 @@ export default async function CoursPage({ searchParams }: { searchParams: Promis
       <main id="main">
         <EnTeteDePage
           surtitre="Le cours par la simulation"
-          titre="Comptabilité et contrôle de gestion, sur un cas qui vit"
+          titre="Comptabilité, gestion et commerce, sur un cas qui vit"
           chapeau={
             <>
               Un cas d&apos;entreprise simulé, guidé étape par étape. L&apos;élève passe lui-même les écritures,
@@ -138,7 +138,7 @@ export default async function CoursPage({ searchParams }: { searchParams: Promis
                   <p className="text-sm text-slate-400">{p.resume}</p>
                 </div>
                 <ol className="grid gap-2 sm:grid-cols-2">
-                  {PALIERS.map((pa) => {
+                  {paliersDuParcours(p.code).map((pa) => {
                     const ouverts = CHAPITRES.filter((c) => c.parcours === p.code && c.palier === pa.palier);
                     return (
                       <li key={pa.palier} className="carte grid gap-2 p-4">
@@ -146,10 +146,10 @@ export default async function CoursPage({ searchParams }: { searchParams: Promis
                           <span className="font-semibold text-slate-100">
                             Palier {pa.palier} · {pa.titre}
                           </span>
-                          <span className="text-xs text-slate-400">{pa.public}</span>
+                          <span className="text-xs text-slate-400">{p.publics?.[pa.palier] ?? pa.public}</span>
                         </p>
                         <ul className="grid gap-1 text-sm text-slate-300">
-                          {PROGRAMME[p.code][pa.palier].map((t) => (
+                          {(PROGRAMME[p.code][pa.palier] ?? []).map((t) => (
                             <li key={t}>{t}</li>
                           ))}
                         </ul>
