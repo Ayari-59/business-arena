@@ -529,6 +529,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez les produits, les charges de l'activité, les intérêts et le résultat du tour. L'activité seule a-t-elle gagné de l'argent, avant les intérêts et l'impôt ?",
   }),
+  "lire-le-bilan": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan.`,
+    lieux: ["bilan"],
+    chercher:
+      "Retrouvez ce que l'entreprise possède et ce qu'elle doit à la fin du tour. Les deux côtés sont-ils égaux ? Quelle part de l'argent vient des associés ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
