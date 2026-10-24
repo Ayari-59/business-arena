@@ -1,6 +1,7 @@
 import type { Cas } from "./cas";
 import { fournisseursDe } from "./chapitres/taux-de-marque";
 import { ECART_DE_PRIX } from "./decision";
+import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
@@ -470,10 +471,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       niveau,
       faire: `${partie(c, niveau)} Jouez un tour, puis relevez les ventes de chaque clientèle, référence par référence.`,
       lieux: ["marche-du-tour", "references"],
-      chercher:
-        "Classez vos clientèles par chiffre d'affaires : combien en faut-il pour faire 80 % des ventes ? La référence qui laisse la meilleure marge par unité est-elle celle de votre plus gros compte ?",
+      chercher: `Classez vos clientèles par chiffre d'affaires : combien en faut-il pour faire ${SEUILS_ABC.a} % des ventes ? La référence qui laisse la meilleure marge par unité est-elle celle de votre plus gros compte ?`,
     };
   },
+  "tableau-de-bord-commercial": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
+    lieux: ["marche-du-tour", "plan-face-au-realise", "compte-de-resultat"],
+    chercher:
+      "À quel tour vos ventes ont-elles servi la plus petite part de la demande ? Le chiffre d'affaires a-t-il baissé parce que les clients manquaient, ou parce que vous ne pouviez pas les servir ? Quelle décision avez-vous prise ensuite ?",
+  }),
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
