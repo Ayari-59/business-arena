@@ -450,6 +450,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["portefeuille", "indicateurs"],
     chercher: `Au tour où l'occupation dépasse ${Math.round((scenarioByCode(c.code).scenario.subscription?.crowdingThreshold ?? 0) * 100)} %, l'attrition monte-t-elle ? De combien la valeur vie client baisse-t-elle alors ? Quelle décision la ferait redescendre : moins d'inscriptions, plus d'encadrement, ou plus de place ?`,
   }),
+  "cout-d-acquisition": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un second en augmentant « Budget marketing » de moitié.`,
+    lieux: ["indicateurs", "marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Combien de nouveaux clients le budget en plus a-t-il amenés, et que coûte chacun d'eux ? La marge gagnée a-t-elle payé le budget ajouté ? Comparez le coût d'acquisition affiché dans les indicateurs aux deux tours.",
+  }),
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */

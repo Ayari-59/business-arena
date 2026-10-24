@@ -1,6 +1,6 @@
 import { botDecisions, type BotProfile } from "../../engine/bots";
 import { runGame, soldUnits } from "../../engine/simulation/runGame";
-import type { CompanyState, RoundDecisions } from "../../engine/types";
+import type { CompanyRoundResult, CompanyState, RoundDecisions } from "../../engine/types";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
@@ -48,7 +48,11 @@ function aPrix(d: RoundDecisions, facteur: number): RoundDecisions {
   };
 }
 
-function jouer(code: string, facteur: number): Variante {
+/**
+ * Le premier trimestre de l'année du cours, rejoué avec la décision de l'entreprise changée par
+ * `changer` (le prix ici, le budget de la campagne ailleurs) ; les concurrents jouent les leurs.
+ */
+export function rejouerLePremierTrimestre(code: string, changer: (d: RoundDecisions) => RoundDecisions): CompanyRoundResult {
   const def = scenarioByCode(code);
   const scenario = { ...def.scenario, roundsCount: 1, impotSurLExercice: true };
   const entreprises: CompanyState[] = [
@@ -64,12 +68,16 @@ function jouer(code: string, facteur: number): Variante {
         e.id,
         (ctx: { state: CompanyState; roundIndex: number }) => {
           const d = botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex });
-          return e.id === "joueur" ? aPrix(d, facteur) : d;
+          return e.id === "joueur" ? changer(d) : d;
         },
       ]),
     ),
   });
-  const r = partie.rounds[0]!.results["joueur"]!;
+  return partie.rounds[0]!.results["joueur"]!;
+}
+
+function jouer(code: string, facteur: number): Variante {
+  const r = rejouerLePremierTrimestre(code, (d) => aPrix(d, facteur));
   const is = r.incomeStatement;
   const quantite = Math.round(soldUnits(r));
   return {
