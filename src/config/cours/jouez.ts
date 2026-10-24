@@ -515,6 +515,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Combien de ventes le budget en plus a-t-il apportées, et que coûte chacune ? La marge gagnée a-t-elle payé la publicité ajoutée, ou votre offre ne pouvait-elle plus suivre ?",
   }),
+  "canaux-de-distribution": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours, puis relevez à chaque tour les ventes de chaque clientèle, intermédiaire compris.`,
+    lieux: ["marche-du-tour", "compte-de-resultat", "bilan"],
+    chercher:
+      "Quelle part de vos ventes passe par l'intermédiaire, et à quel tour ? Retrouvez au compte de résultat ce qu'il prélève, et au bilan ce qu'il vous doit encore.",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
