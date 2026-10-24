@@ -384,6 +384,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Dans l'analyse des coûts, retrouvez le seuil de rentabilité et l'indice de sécurité à chaque tour. De combien le seuil a-t-il monté avec le prix plus bas ? Le panier moyen est-il passé sous le panier plancher que vous aviez calculé ?",
     };
   },
+  "promotion-qui-paie": (c) => {
+    const { prix, volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour avec un « ${prix} » 10 % plus bas, sans rien changer d'autre ; puis un second, toujours en promotion, où vous mettez plus dans « ${volume} ».`,
+      lieux: ["marche-du-tour", "analyse-des-couts"],
+      chercher:
+        "Au premier tour, les ventes manquées ont-elles grimpé ? Au second, avec de quoi servir, la promotion a-t-elle vendu le volume nécessaire ? Comparez la marge sur coût variable des deux tours.",
+    };
+  },
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
