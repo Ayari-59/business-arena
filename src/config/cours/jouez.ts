@@ -340,6 +340,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Comparez les indicateurs du métier d'un tour à l'autre : lequel a bougé avec votre geste, et de combien ? Recalculez-le à la main à partir des ventes du tour, comme dans le chapitre.",
     };
   },
+  "stock-du-point-de-vente": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second où vous mettez dans « ${volume} » nettement moins que les ventes estimées.`,
+      lieux: ["bilan", "compte-de-resultat"],
+      chercher:
+        "Au bilan, retrouvez les stocks de produits finis à la fin de chaque tour. Calculez le stock moyen du second tour, puis sa rotation avec le coût variable des ventes du compte de résultat. Le stock a-t-il tourné plus vite ? Et les ventes, ont-elles souffert ?",
+    };
+  },
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
