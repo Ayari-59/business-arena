@@ -354,6 +354,8 @@ describe.each([
   { code: "tableau-de-bord-du-manager", entreprise: "bistrot" },
   { code: "negocier-le-prix", entreprise: "conseil" },
   { code: "negocier-le-prix", entreprise: "batiment", telephone: true },
+  { code: "remises-et-conditions", entreprise: "transport" },
+  { code: "remises-et-conditions", entreprise: "conseil", telephone: true },
   { code: "valeur-d-un-client", entreprise: "fitness" },
   { code: "valeur-d-un-client", entreprise: "fitness", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
