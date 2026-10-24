@@ -374,6 +374,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Comparez votre budget au réalisé, poste par poste. Puis retrouvez, dans le budget de trésorerie, les paiements fournisseurs du tour, et au bilan les dettes fournisseurs : la moitié environ des achats y est-elle restée due ?",
     };
   },
+  "seuil-du-point-de-vente": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second avec un « ${prix} » plus bas d'environ 10 %.`,
+      lieux: ["analyse-des-couts", "indicateurs"],
+      chercher:
+        "Dans l'analyse des coûts, retrouvez le seuil de rentabilité et l'indice de sécurité à chaque tour. De combien le seuil a-t-il monté avec le prix plus bas ? Le panier moyen est-il passé sous le panier plancher que vous aviez calculé ?",
+    };
+  },
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */

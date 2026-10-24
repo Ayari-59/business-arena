@@ -18,3 +18,10 @@
  * ou un panier plus rempli), pas pour prédire ce que le magasin atteindra.
  */
 export const OBJECTIF_DE_HAUSSE = 0.1;
+
+/**
+ * Les jours d'un mois, pour dater le point mort : le mois commercial de trente jours,
+ * convention des calculs de délais et de point mort. Le cas étant un mois moyen de l'arène
+ * (le trimestre divisé par trois), il n'a pas de calendrier à lui.
+ */
+export const JOURS_DU_MOIS = 30;
