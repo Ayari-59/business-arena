@@ -14,3 +14,32 @@
  * chapitre s'en sert pour distinguer les deux planchers, pas pour dire ce qu'un client propose.
  */
 export const CONTRE_PROPOSITION = 0.5;
+
+/**
+ * Les seuils de la méthode ABC, en part cumulée du chiffre d'affaires : la classe A réunit les
+ * comptes qui font les premiers 80 %, la classe B ceux qui mènent à 95 %, la classe C le reste.
+ * C'est la convention la plus répandue dans les manuels de BTS ; d'autres découpages existent
+ * (70 et 90), et le chapitre ne dit pas qu'un portefeuille « doit » s'y conformer.
+ */
+export const SEUILS_ABC = { a: 80, b: 95 } as const;
+
+/**
+ * Le nombre de comptes en dessous duquel un classement en trois classes ne dit rien : avec trois
+ * ou quatre lignes, la classe C n'existe pas. Le chapitre ABC ne se joue que dans les entreprises
+ * dont la gamme en compte au moins autant.
+ */
+export const COMPTES_POUR_UN_CLASSEMENT = 8;
+
+/**
+ * Le portefeuille est dit concentré quand sa classe A réunit au plus trois comptes sur dix :
+ * les « 20/80 » des manuels, avec la marge qu'appelle un ordre de grandeur. Au-delà, les
+ * ventes se répartissent sur trop de comptes pour qu'un seul fasse courir un risque.
+ */
+export const PART_DES_COMPTES_D_UN_PORTEFEUILLE_CONCENTRE = 30;
+
+/**
+ * La part du chiffre d'affaires au-delà de laquelle un compte, à lui seul, fait courir un risque :
+ * un quart des ventes. Le perdre amputerait l'activité d'un trimestre sur quatre, quelle que soit
+ * la concentration du reste du portefeuille.
+ */
+export const PART_D_UN_COMPTE_QUI_FAIT_COURIR_UN_RISQUE = 25;

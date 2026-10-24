@@ -35,12 +35,29 @@ export interface ReferenceDuMois {
   heuresParUnite: number;
 }
 
+/**
+ * Une ligne du portefeuille : une clientèle d'une référence (chaque référence a ses propres
+ * clientèles dans l'arène). Ce que l'arène connaît de plus fin sur les clients : elle ne suit
+ * pas de client un par un.
+ */
+export interface CompteDuPortefeuille {
+  code: string;
+  nom: string;
+  reference: string;
+  quantite: number;
+  chiffreDAffaires: number;
+  /** Ce qu'il reste une fois payés le coût variable des unités et la commission d'un partenaire. */
+  marge: number;
+}
+
 export interface GammeDuMois {
   /** Le niveau de l'arène à partir duquel l'entreprise joue sa gamme. */
   niveau: number;
   /** Ce que la gamme fait jouer, en clair (« la gamme Go, One et Studio »). */
   libelle: string;
   references: ReferenceDuMois[];
+  /** Les clientèles de chaque référence, celles qui ont acheté dans le mois. */
+  comptes: CompteDuPortefeuille[];
   /** Les charges communes du mois, que rien ne rattache à une seule référence. */
   communes: { structure: number; entretien: number; usure: number };
 }
@@ -93,11 +110,29 @@ export function gammeDuMois(code: string): GammeDuMois | null {
       },
     ];
   });
+  const comptes = (scenario.products ?? []).flatMap((d) =>
+    d.market.segments.flatMap((seg): CompteDuPortefeuille[] => {
+      const v = joueur.market.bySegment[seg.code];
+      const cv = joueur.products?.[d.code]?.unitVariableCost;
+      if (!v || v.sold < 0.5 || cv === undefined) return [];
+      return [
+        {
+          code: seg.code,
+          nom: seg.name,
+          reference: d.shortName ?? d.name,
+          quantite: Math.round(v.sold / 3),
+          chiffreDAffaires: Math.round(v.revenue / 3),
+          marge: Math.round((v.revenue - v.sold * cv - (v.commission ?? 0)) / 3),
+        },
+      ];
+    }),
+  );
   const cr = joueur.incomeStatement;
   const gamme: GammeDuMois = {
     niveau: famille.gammeFromLevel,
     libelle: famille.gammeLabel,
     references,
+    comptes,
     communes: { structure: parTrois(cr.fixedCosts), entretien: parTrois(cr.maintenanceCost), usure: parTrois(cr.depreciation) },
   };
   gammes.set(code, gamme);
