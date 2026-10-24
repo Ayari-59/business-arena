@@ -36,10 +36,11 @@ import { COUT_D_ACQUISITION } from "./chapitres/cout-d-acquisition";
 import { COMMISSIONS_DES_PARTENAIRES } from "./chapitres/commissions-des-partenaires";
 import { PORTEFEUILLE_ABC } from "./chapitres/portefeuille-abc";
 import { TABLEAU_DE_BORD_COMMERCIAL } from "./chapitres/tableau-de-bord-commercial";
+import { MARCHE_ET_PART_DE_MARCHE } from "./chapitres/marche-et-part-de-marche";
 import type { Chapitre } from "./types";
 
 /**
- * LE COURS PAR LA SIMULATION : QUATRE PARCOURS, QUATRE PALIERS.
+ * LE COURS PAR LA SIMULATION : CINQ PARCOURS, QUATRE PALIERS.
  *
  * Un palier n'est pas un niveau du jeu (les niveaux 1 à 7 de l'arène) : c'est une
  * marche du programme, du lycée au DCG. Un chapitre appartient à un parcours et à
@@ -47,8 +48,8 @@ import type { Chapitre } from "./types";
  * celles qu'il nomme.
  *
  * LE PARCOURS D'UNE FORMATION. Les deux premiers suivent la discipline ; les suivants
- * suivent un BTS (MCO, NDRC), et ne couvrent que les paliers où ce BTS a quelque chose à
- * apprendre, sous les mots de la formation. Tant qu'il se construit, la carte dit ce qui vient.
+ * suivent une formation (le BTS MCO, le BTS NDRC, la mercatique du bac STMG), et ne couvrent
+ * que les paliers où elle a quelque chose à apprendre, sous ses mots. Tant qu'il se construit, la carte dit ce qui vient.
  *
  * ACCÈS (décision du propriétaire) : le premier chapitre est libre, il sert de
  * démonstration ; la suite du cours est réservée aux établissements sous licence.
@@ -91,6 +92,14 @@ export const PARCOURS: readonly Parcours[] = [
       "La négociation, la valeur d'un client et le pilotage de l'activité commerciale : ce qu'une affaire, un client, une campagne ou un canal rapporte, sur les chiffres de l'arène.",
     publics: { 2: "BTS NDRC, 1re année", 3: "BTS NDRC", 4: "BTS NDRC, 2e année" },
   },
+  {
+    code: "stmg",
+    titre: "Bac STMG · Mercatique",
+    resume:
+      "Le marché, les clients, le prix, la communication et la distribution : les questions du mercaticien, sur les chiffres de l'arène, au niveau du lycée.",
+    publics: { 1: "Terminale STMG, mercatique" },
+    enPreparation: true,
+  },
 ];
 
 export const PALIERS: readonly { palier: Chapitre["palier"]; titre: string; public: string }[] = [
@@ -124,11 +133,21 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
     3: ["La valeur d'un client : attrition et valeur vie", "Le coût d'acquisition et la rentabilité d'une campagne", "Les commissions des canaux partenaires"],
     4: ["Le portefeuille clients : la méthode ABC", "Le tableau de bord commercial"],
   },
+  stmg: {
+    1: [
+      "Le marché et la part de marché",
+      "Segmenter et cibler",
+      "Le prix psychologique",
+      "La demande répond au prix",
+      "Ce que rapporte la communication",
+      "Les canaux de distribution",
+    ],
+  },
 };
 
 /** Les paliers que la carte montre pour un parcours, dans l'ordre. */
 export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE];
 
 export const chapitreParCode = (code: string) => CHAPITRES.find((c) => c.code === code);
