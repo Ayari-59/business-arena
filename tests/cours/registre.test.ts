@@ -21,9 +21,11 @@ it("un parcours achevé ouvre un chapitre à chaque palier de sa carte, et les d
   }
 });
 
-it("un parcours en préparation a encore un palier à ouvrir, et aucun chapitre hors de sa carte", () => {
+it("un parcours en préparation a encore des chapitres à écrire, et aucun chapitre hors de sa carte", () => {
+  const ouverts = (code: string, palier: number) => CHAPITRES.filter((c) => c.parcours === code && c.palier === palier).length;
   for (const p of PARCOURS.filter((x) => x.enPreparation)) {
-    expect(paliersDuParcours(p.code).some((pa) => !ouvre(p.code, pa.palier)), p.code).toBe(true);
+    const restants = paliersDuParcours(p.code).some((pa) => ouverts(p.code, pa.palier) < (PROGRAMME[p.code][pa.palier] ?? []).length);
+    expect(restants, `${p.code} : tout son programme a un chapitre, il n'est plus en préparation`).toBe(true);
   }
   for (const c of CHAPITRES) expect(PROGRAMME[c.parcours][c.palier], `${c.code} : palier ${c.palier} de ${c.parcours}`).toBeDefined();
 });
