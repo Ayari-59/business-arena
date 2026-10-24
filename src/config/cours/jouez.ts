@@ -550,6 +550,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Rapportez le résultat du tour aux capitaux propres du bilan : pour 100 € laissés par les associés, combien l'entreprise a-t-elle gagné ? Est-ce plus ou moins que le taux de son emprunt ?",
   }),
+  "fonds-de-roulement-et-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan.`,
+    lieux: ["bilan"],
+    chercher:
+      "Calculez le fonds de roulement et le besoin en fonds de roulement du bilan, puis la trésorerie. Lequel des deux a le plus bougé d'un tour à l'autre, et qu'est-ce qui l'a fait bouger ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
