@@ -508,6 +508,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "De combien la demande adressée a-t-elle baissé ? Calculez votre élasticité : est-elle proche de celle du chapitre ? Votre chiffre d'affaires a-t-il monté ou baissé ?",
     };
   },
+  "ce-que-rapporte-la-communication": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis un second en doublant « Budget marketing ».`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Combien de ventes le budget en plus a-t-il apportées, et que coûte chacune ? La marge gagnée a-t-elle payé la publicité ajoutée, ou votre offre ne pouvait-elle plus suivre ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
