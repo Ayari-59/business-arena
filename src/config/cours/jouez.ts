@@ -437,6 +437,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Votre prix baissé reste-t-il au-dessus du coût complet unitaire de l'analyse des coûts ? Les ventes ont-elles monté assez pour compenser la marge cédée sur chaque unité ?",
     };
   },
+  "remises-et-conditions": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un tour, puis comparez ce que vos clients vous doivent à ce que vous avez vendu.`,
+    lieux: ["compte-de-resultat", "bilan", "budget-de-tresorerie"],
+    chercher:
+      "Le chiffre d'affaires du compte de résultat est-il entré en caisse ? Retrouvez au bilan les créances clients : combien de jours de ventes représentent-elles, et que coûterait leur financement au taux de votre emprunt ?",
+  }),
   "valeur-d-un-client": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez le portefeuille d'adhérents (partis, nouveaux, occupation), puis le taux d'attrition et la valeur vie client.`,
