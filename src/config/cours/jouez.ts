@@ -98,6 +98,13 @@ export const LIEUX_DE_L_ARENE = {
       { fichier: "src/components/period-dashboard.tsx", texte: 'aria-label="Indicateurs du métier"' },
     ],
   },
+  "marche-du-tour": {
+    chemin: "Résultats › Marché › Marché du tour écoulé",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Marché"' },
+      { fichier: "src/components/period-dashboard.tsx", texte: "Marché du tour écoulé" },
+    ],
+  },
   "plan-face-au-realise": {
     chemin: "Résultats › Marché › Votre plan face au réalisé",
     reperes: [
@@ -350,6 +357,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Au bilan, retrouvez les stocks de produits finis à la fin de chaque tour. Calculez le stock moyen du second tour, puis sa rotation avec le coût variable des ventes du compte de résultat. Le stock a-t-il tourné plus vite ? Et les ventes, ont-elles souffert ?",
     };
   },
+  "prevoir-les-ventes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} À chaque tour, notez la demande de chaque clientèle. Avant le quatrième tour, saisissez votre prévision dans « Ventes estimées », bâtie sur la demande des trois premiers tours et la saison.`,
+    lieux: ["marche-du-tour", "plan-face-au-realise"],
+    chercher:
+      "Au quatrième tour, comparez votre prévision à la demande réelle, puis aux ventes. De combien vous êtes-vous trompé ? Les ventes ont-elles été plafonnées par votre stock ou votre capacité ?",
+  }),
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
