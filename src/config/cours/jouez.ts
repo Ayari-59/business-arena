@@ -557,6 +557,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Calculez le fonds de roulement et le besoin en fonds de roulement du bilan, puis la trésorerie. Lequel des deux a le plus bougé d'un tour à l'autre, et qu'est-ce qui l'a fait bouger ?",
   }),
+  "financer-l-entreprise": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Ajoutez au résultat du tour la dotation aux amortissements : c'est l'argent que l'activité a dégagé. Suffirait-il à payer un nouvel équipement ? Sinon, que pèsent les emprunts face aux capitaux propres ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
