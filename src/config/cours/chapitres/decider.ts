@@ -145,7 +145,7 @@ export const DECIDER: Chapitre = {
       notions: ["contribution_margin", "breakeven"],
       question: (c) => {
         const b = base(c);
-        return `À −${pct(ECART_DE_PRIX)}, chaque ${c.unite} rapporte moins. Calculez la marge par ${c.unite} au prix baissé (marge unitaire du trimestre moins ${pct(ECART_DE_PRIX)} de ${eur(b.prix)}), puis ce qu'il faudrait vendre pour garder ${eur(b.marge)} de marge.`;
+        return `À −${pct(ECART_DE_PRIX)}, chaque ${c.unite} rapporte moins. Calculez la marge par ${c.unite} au prix baissé : la marge unitaire du trimestre moins ${pct(ECART_DE_PRIX)} de ${eur(b.prix)}.`;
       },
       champs: (c) => {
         const b = base(c);
@@ -157,14 +157,50 @@ export const DECIDER: Chapitre = {
             calcul: `${eur(v.margeUnitaire)} − ${pct(ECART_DE_PRIX)} × ${eur(b.prix)} = ${eur(v.margeBaissee)}`,
             tolerance: 0.02,
           },
-          {
-            libelle: `${c.unites[0]!.toUpperCase()}${c.unites.slice(1)} à vendre pour garder la même marge`,
-            attendu: v.quantite,
-            calcul: `${eur(b.marge)} ÷ ${eur(v.margeBaissee)} ≈ ${qte(v.quantite)} ${c.unites}, arrondi à l'unité supérieure`,
-            tolerance: Math.max(2, Math.round(v.quantite * 0.002)),
-          },
         ];
       },
+      explication: (c) => {
+        const v = volumeNecessaire(c);
+        return [`Chaque ${c.unite} ${accord(c, "vendu")} au prix baissé ne laisse plus que ${eur(v.margeBaissee)}, au lieu de ${eur(v.margeUnitaire)}. Combien faut-il en vendre pour s'y retrouver ?`];
+      },
+    },
+    {
+      id: "volume-au-curseur",
+      type: "curseur",
+      titre: "Le volume qu'il faudrait",
+      notions: ["contribution_margin", "price_elasticity"],
+      question: (c) => {
+        const b = base(c);
+        return `Faites varier les ventes du trimestre au prix baissé. Placez le curseur sur la plus petite quantité qui garde au moins la marge du trimestre, ${eur(b.marge)}.`;
+      },
+      grandeur: (c) => ({ libelle: "Ventes du trimestre au prix baissé", unite: c.unites }),
+      cible: (c) => {
+        const b = base(c);
+        const v = volumeNecessaire(c);
+        return { attendu: v.quantite, min: Math.floor(b.quantite / 10) * 10, max: Math.ceil((v.quantite * 1.3) / 10) * 10 };
+      },
+      lecture: (c, q) => {
+        const b = base(c);
+        const v = volumeNecessaire(c);
+        const marge = auCentime(q * v.margeBaissee);
+        return [
+          { libelle: `Marge par ${c.unite} au prix baissé`, montant: v.margeBaissee },
+          { libelle: "Marge au prix baissé", montant: marge },
+          { libelle: "Marge du trimestre, au prix actuel", montant: b.marge },
+          { libelle: "Écart", montant: auCentime(marge - b.marge), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const b = base(c);
+        const v = volumeNecessaire(c);
+        return { produit: (q) => q * v.margeBaissee, cout: () => b.marge, libelles: ["Marge au prix baissé", "Marge du trimestre"] };
+      },
+      zones: ["Marge gardée", "Marge perdue"],
+      rates: () => ({
+        dessous: "À ce volume, la baisse de prix fait perdre de la marge.",
+        dessus: "Moins de ventes suffiraient encore : cherchez la plus petite quantité.",
+      }),
+      montrer: "Montrer le volume",
       explication: (c) => {
         const b = base(c);
         const v = volumeNecessaire(c);

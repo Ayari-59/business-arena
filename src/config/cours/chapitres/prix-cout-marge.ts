@@ -25,6 +25,17 @@ const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits:
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
+/**
+ * Le prix plancher : le plus bas, à l'euro, qui couvre les charges fixes du mois quand les
+ * quantités ne bougent pas. Le curseur va du coût d'une unité à un tiers au-dessus du plus
+ * grand des deux prix, l'actuel et le plancher.
+ */
+export function prixPlancher(c: Cas) {
+  const m = prixCoutMarge(c);
+  const plancher = Math.ceil(m.cout + m.chargesFixes / m.quantite - 1e-9);
+  return { ...m, plancher, min: Math.floor(m.cout), max: Math.ceil(Math.max(plancher, m.prix) * 1.3) };
+}
+
 /** Le prix, le coût et la marge d'une unité, et ceux du mois. */
 export function prixCoutMarge(c: Cas) {
   const g = c.gestion;
@@ -152,6 +163,50 @@ export const PRIX_COUT_MARGE: Chapitre = {
             ? `La marge couvre les charges fixes, et il reste ${eur(m.resultat)} : ${c.entreprise} gagne de l'argent ce mois-ci.`
             : `La marge ne couvre pas les charges fixes : il manque ${eur(-m.resultat)}. Avec un taux de marge de ${pct(m.tauxDeMarge)}, ${c.entreprise} perd pourtant de l'argent ce mois-ci : elle ne vend pas assez.`,
           "Combien faut-il vendre pour que la marge couvre tout juste les charges fixes ? C'est le seuil de rentabilité, au palier suivant.",
+        ];
+      },
+    },
+    {
+      id: "prix-plancher",
+      type: "curseur",
+      titre: "Le prix plancher",
+      notions: ["margin_rates", "breakeven"],
+      question: (c) => {
+        const m = prixCoutMarge(c);
+        return `Les quantités restent les mêmes : ${qte(m.quantite)} ${c.unites} par mois. Faites varier le prix d'une unité, et placez le curseur sur le prix le plus bas, à l'euro, qui ne fait pas perdre d'argent à ${c.entreprise}.`;
+      },
+      grandeur: () => ({ libelle: "Prix d'une unité", unite: "€" }),
+      cible: (c) => {
+        const p = prixPlancher(c);
+        return { attendu: p.plancher, min: p.min, max: p.max };
+      },
+      lecture: (c, prix) => {
+        const m = prixCoutMarge(c);
+        const marge = auCentime(prix - m.cout);
+        const margeDuMois = auCentime(marge * m.quantite);
+        return [
+          { libelle: "Marge d'une unité", montant: marge },
+          { libelle: "Marge du mois", montant: margeDuMois },
+          { libelle: "Charges fixes", montant: m.chargesFixes },
+          { libelle: "Résultat du mois", montant: auCentime(margeDuMois - m.chargesFixes), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const m = prixCoutMarge(c);
+        return { produit: (prix) => (prix - m.cout) * m.quantite, cout: () => m.chargesFixes, libelles: ["Marge du mois", "Charges fixes"] };
+      },
+      rates: () => ({
+        dessous: "À ce prix, la marge du mois ne paie pas les charges fixes.",
+        dessus: "Plus bas, la marge paie encore les charges fixes : cherchez le prix le plus bas.",
+      }),
+      montrer: "Montrer le prix plancher",
+      explication: (c) => {
+        const p = prixPlancher(c);
+        return [
+          p.plancher <= p.prix
+            ? `Sous ${eur(p.plancher)}, ${c.entreprise} perd de l'argent à quantités égales. Son prix actuel, ${eur(p.prix)}, lui laisse ${eur(auCentime(p.prix - p.plancher))} de marge de manœuvre.`
+            : `À quantités égales, il faudrait vendre au moins ${eur(p.plancher)} pour ne pas perdre d'argent : le prix actuel, ${eur(p.prix)}, est trop bas pour ce volume. L'autre issue est de vendre davantage.`,
+          "Les deux droites se croisent au prix plancher : la marge du mois monte avec le prix, les charges fixes ne bougent pas.",
         ];
       },
     },

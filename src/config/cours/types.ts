@@ -140,8 +140,24 @@ export interface EtapeTri extends Base {
 export interface EtapeCurseur extends Base {
   type: "curseur";
   question: (c: Cas) => string;
-  /** La quantité cherchée, et jusqu'où va le curseur. */
-  cible: (c: Cas) => { attendu: number; max: number };
+  /** La position cherchée, et les bornes du curseur (à partir de zéro, sauf `min`). */
+  cible: (c: Cas) => { attendu: number; max: number; min?: number };
+  /**
+   * Ce que le curseur fait varier : son nom et son unité. Absent : les ventes du mois, dans
+   * l'unité de l'entreprise, comme au seuil de rentabilité.
+   */
+  grandeur?: (c: Cas) => { libelle: string; unite: string };
+  /**
+   * La position cherchée est la plus petite où le produit couvre le coût (le seuil, par
+   * défaut), ou la plus grande (un délai qu'on peut accorder sans découvert).
+   */
+  sens?: "plus-petite" | "plus-grande";
+  /** Ce que l'élève lit quand il valide trop bas ou trop haut. Absent : les mots du seuil. */
+  rates?: (c: Cas) => { dessous: string; dessus: string };
+  /** Le nom des deux zones du graphique, selon que le produit couvre le coût ou non. */
+  zones?: readonly [string, string];
+  /** Le bouton qui montre la réponse. Absent : « Montrer le seuil ». */
+  montrer?: string;
   /** Ce que vaut chaque grandeur pour une quantité donnée. */
   lecture: (c: Cas, quantite: number) => { libelle: string; montant: number; fort?: boolean }[];
   /** Les deux droites du graphique : le produit et le coût, pour une quantité. */
