@@ -536,6 +536,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez ce que l'entreprise possède et ce qu'elle doit à la fin du tour. Les deux côtés sont-ils égaux ? Quelle part de l'argent vient des associés ?",
   }),
+  "valeur-ajoutee-et-partage": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez ce que l'entreprise a acheté à d'autres et ce qu'elle a vendu. Combien de valeur a-t-elle créée elle-même, et qui en reçoit la plus grande part : le personnel, la banque, l'État ou l'entreprise ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
