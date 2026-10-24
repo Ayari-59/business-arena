@@ -364,6 +364,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Au quatrième tour, comparez votre prévision à la demande réelle, puis aux ventes. De combien vous êtes-vous trompé ? Les ventes ont-elles été plafonnées par votre stock ou votre capacité ?",
   }),
+  "budget-du-point-de-vente": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Avant de valider un tour, écrivez votre budget : les ventes estimées, et ce que vous mettez dans « ${volume} ». Saisissez les mêmes ventes dans « Ventes estimées », puis jouez le tour.`,
+      lieux: ["plan-face-au-realise", "budget-de-tresorerie", "bilan"],
+      chercher:
+        "Comparez votre budget au réalisé, poste par poste. Puis retrouvez, dans le budget de trésorerie, les paiements fournisseurs du tour, et au bilan les dettes fournisseurs : la moitié environ des achats y est-elle restée due ?",
+    };
+  },
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
