@@ -186,9 +186,59 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
       )
       .toContain("L'argent reçu en banque se passe au débit.");
     expect(await prof.locator("[data-eleve='Camille']").count()).toBe(1);
+
+    // Au mur : l'étape projetée, la remarque comptée, aucun nom d'élève.
+    await prof.getByRole("link", { name: "Projeter l'étape « Les apports des associés »" }).click();
+    await prof.waitForURL(/\/projection\?/, { timeout: 60_000 });
+    await expect.poll(() => prof.locator("[data-remarques-projetees]").innerText()).toContain("L'argent reçu en banque se passe au débit.");
+    expect(await prof.locator("[data-remarques-projetees]").innerText()).toContain("1 élève");
+    expect(await prof.locator("main").innerText()).not.toContain("Camille");
+
+    // L'élève corrige, avance, se trompe à la question à choix, puis trouve.
+    await eleve.getByLabel("Compte, ligne 1", { exact: true }).fill("512");
+    await eleve.getByLabel("Compte, ligne 2", { exact: true }).fill("101");
+    await eleve.getByRole("button", { name: "Valider l'écriture" }).click();
+    await expect.poll(() => eleve.getByText("Écriture juste.").count()).toBe(1);
+    await eleve.getByRole("button", { name: "Étape suivante" }).click();
+    const emprunt = chapitreDuCas(chapitre, cas).etapes.find((e) => e.id === "emprunt")!;
+    if (emprunt.type !== "ecriture") throw new Error("L'étape « emprunt » n'est plus une écriture.");
+    for (const [k, l] of enSaisie(emprunt.ecriture(cas)).entries()) {
+      await eleve.getByLabel(`Compte, ligne ${k + 1}`, { exact: true }).fill(l.compte);
+      if (l.debit) await eleve.getByLabel(`Débit, ligne ${k + 1}`, { exact: true }).fill(l.debit);
+      if (l.credit) await eleve.getByLabel(`Crédit, ligne ${k + 1}`, { exact: true }).fill(l.credit);
+    }
+    await eleve.getByRole("button", { name: "Valider l'écriture" }).click();
+    await expect.poll(() => eleve.getByText("Écriture juste.").count()).toBe(1);
+    await eleve.getByRole("button", { name: "Étape suivante" }).click();
+    const fausse = "Oui : emprunter coûte de l'argent.";
+    const juste = "Non : c'est une ressource, une dette qu'il faudra rembourser.";
+    await eleve.getByRole("radio", { name: fausse }).click();
+    await eleve.getByRole("radio", { name: juste }).click();
+    await expect.poll(() => eleve.getByRole("button", { name: "Étape suivante" }).count()).toBe(1);
+
+    // La projection de la question compte chaque réponse, et ne montre la bonne que sur demande.
+    const projection = new URL(prof.url());
+    projection.searchParams.set("etape", "emprunt-charge");
+    await aller(prof, `${projection.pathname}${projection.search}`);
+    const reponse = (texte: string) => prof.locator(`[data-reponse="${texte}"]`);
+    await expect
+      .poll(
+        async () => {
+          await prof.reload();
+          return [await reponse(fausse).getAttribute("data-eleves"), await reponse(juste).getAttribute("data-eleves")];
+        },
+        { timeout: 30_000 },
+      )
+      .toEqual(["1", "1"]);
+    expect(await reponse("Non : c'est un produit, l'entreprise s'enrichit.").getAttribute("data-eleves")).toBe("0");
+    expect(await prof.locator("[data-juste]").count()).toBe(0);
+    await prof.getByRole("link", { name: "Montrer la réponse" }).click();
+    await expect.poll(() => reponse(juste).getAttribute("data-juste")).toBe("true");
+    expect(await reponse(fausse).getAttribute("data-juste")).toBe("false");
+    expect(await prof.locator("main").innerText()).not.toContain("Camille");
     await ctxProf.close();
     await eleve.context().close();
-  }, 180_000);
+  }, 240_000);
 });
 
 describe("le seuil de rentabilité, chapitre réservé", () => {

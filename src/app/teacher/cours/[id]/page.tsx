@@ -183,13 +183,29 @@ export default async function ClasseDuCoursPage({
         )}
 
         <Rubrique>Ce qui bloque, étape par étape</Rubrique>
+        <p className="-mt-4 text-sm text-slate-400">
+          Au vidéoprojecteur, une étape et les réponses de la classe, en direct et sans nom d&apos;élève :{" "}
+          <Link href={`/teacher/cours/${classe.id}/projection?chapitre=${chapitre.code}`} className="text-slate-200 underline underline-offset-2">
+            projeter le chapitre
+          </Link>
+          .
+        </p>
         <ol className="grid gap-2" data-etapes-du-cours="">
           {vue.etapes
             .filter((e) => e.notee)
             .map((e) => (
               <li key={e.id} className="carte grid gap-1.5 px-3 py-3 sm:px-4" data-etape={e.id}>
                 <p className="flex flex-wrap items-baseline justify-between gap-x-4">
-                  <span className="font-semibold text-slate-100">{e.titre}</span>
+                  <span className="flex flex-wrap items-baseline gap-x-3">
+                    <span className="font-semibold text-slate-100">{e.titre}</span>
+                    <Link
+                      href={`/teacher/cours/${classe.id}/projection?chapitre=${chapitre.code}&etape=${e.id}`}
+                      className="text-sm text-slate-400 underline underline-offset-2 hover:text-slate-200"
+                      aria-label={`Projeter l'étape « ${e.titre} »`}
+                    >
+                      Projeter
+                    </Link>
+                  </span>
                   <span className="text-sm tabular-nums text-slate-400">
                     {e.premierCoup} du premier coup · {e.aidees} avec la correction · {e.atteinte} l&apos;ont atteinte
                   </span>
