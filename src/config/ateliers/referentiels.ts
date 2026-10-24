@@ -39,6 +39,13 @@ export interface Referentiel {
    * ou les préfixer autrement : c'est le fond qui est comparé, pas la lettre.
    */
   entrees: readonly string[];
+  /**
+   * Quand le texte réunit plusieurs programmes : le titre de chacun et le
+   * nombre d'entrées qu'il compte, dans l'ordre des entrées. Les thèmes du
+   * lycée se numérotent programme par programme, si bien qu'un « Thème 1 »
+   * seul ne dit pas duquel il s'agit.
+   */
+  parties?: readonly { titre: string; entrees: number }[];
 }
 
 const REFERENTIEL_NDRC: Referentiel = {
@@ -132,6 +139,11 @@ export const REFERENTIELS: Record<string, Referentiel> = {
       "Thème 1 · Les organisations et l'activité de production de biens et de services",
       "Thème 2 · Les organisations et les acteurs",
       "Thème 3 · Les organisations et la société",
+    ],
+    parties: [
+      { titre: "Première, sciences de gestion et numérique", entrees: 4 },
+      { titre: "Première, management", entrees: 3 },
+      { titre: "Terminale, enseignement commun", entrees: 3 },
     ],
   },
   gpme: {
@@ -293,6 +305,15 @@ export function blocOfficiel(
   const referentiel = REFERENTIELS[referentielCode];
   if (!referentiel) return null;
   const trouves = referentiel.entrees.filter((e) => memeBloc(bloc, e));
-  // Deux correspondances ne valent pas mieux qu'aucune : on ne devine pas.
-  return trouves.length === 1 ? trouves[0]! : null;
+  if (trouves.length === 1) return trouves[0]!;
+  // DEUX CORRESPONDANCES, DONT UNE MOT POUR MOT. « Comptabilité » se retrouve
+  // dans « Comptabilité approfondie », si bien que l'UE9 du DCG désignait aussi
+  // l'UE10 et ne se résolvait jamais. Le segment identique n'est pas une
+  // devinette : c'est le même intitulé. Hors de ce cas, deux correspondances ne
+  // valent pas mieux qu'aucune, et on ne devine pas.
+  const cites = segmentsComparables(bloc);
+  const exacts = trouves.filter((e) =>
+    segmentsComparables(e).some((s) => cites.includes(s)),
+  );
+  return exacts.length === 1 ? exacts[0]! : null;
 }

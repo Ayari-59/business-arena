@@ -6,6 +6,10 @@ import { licenceDeLEnseignant } from "./helpers/licence";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { adosseAUnReferentiel } from "../../src/config/ateliers/referentiels";
 import { FORMATIONS, publicDeLAtelier } from "../../src/config/formations";
+import {
+  formationsAvecUnePage,
+  tableauDeCouverture,
+} from "../../src/config/couverture";
 import { SCENARIO_CHOICES } from "../../src/config/scenarios/registry";
 import { nomEntreprise } from "../../src/config/scenarios/presentation";
 
@@ -694,6 +698,75 @@ describe("parcours enseignant et élève", () => {
     }
   });
 
+  it("chaque diplôme a sa page, dont le tableau suit le texte et mène au cours", async () => {
+    // LA PAGE PART DU TEXTE, ENTRÉE PAR ENTRÉE. Un bloc que rien ne travaille
+    // s'y lit comme tel au lieu de manquer : le DCG compte treize unités, et
+    // la page les montre toutes.
+    for (const f of formationsAvecUnePage()) {
+      await aller(prof, `/parcours/${f.code}`);
+      const { lignes } = tableauDeCouverture(f.code);
+      expect(
+        await prof.locator("tr[data-bloc]").count(),
+        `${f.code} : une ligne par entrée du tableau`,
+      ).toBe(lignes.length);
+      expect(await prof.locator('tr[data-couvert="non"]').count(), f.code).toBe(
+        lignes.filter((l) => !l.couverture).length,
+      );
+      expect(await prof.locator("h1").innerText()).toBe(f.nom);
+    }
+    const dcg = tableauDeCouverture("dcg").lignes;
+    expect(
+      dcg.filter((l) => !l.couverture).length,
+      "le DCG n'a plus d'unité que rien ne travaille : choisir un autre témoin",
+    ).toBeGreaterThan(0);
+
+    // Un chapitre cité dans le tableau mène à son chapitre.
+    await aller(prof, "/parcours/bts-mco");
+    const lien = prof
+      .locator('tr[data-bloc] a[href^="/cours/"]', { hasText: "Le stock du point de vente" })
+      .first();
+    await lien.click();
+    await prof.waitForURL(/\/cours\/stock-du-point-de-vente/);
+    expect(await prof.locator("h1").innerText()).toContain("Le stock du point de vente");
+
+    // Et la page des parcours mène à celle du diplôme.
+    await aller(prof, "/parcours");
+    expect(
+      await prof.locator('a[href^="/parcours/"]').count(),
+      "un lien par diplôme vers sa page",
+    ).toBeGreaterThanOrEqual(formationsAvecUnePage().length);
+  });
+
+  it("le tableau d'un diplôme ne déborde pas sur un téléphone", async () => {
+    // Quatre colonnes ne tiennent pas à 390 px : chaque ligne s'empile, et
+    // chaque cellule dit son nom. Le DCG et le bac STMG ont les tableaux les
+    // plus longs, et les intitulés les plus longs.
+    const onglet = await navigateur.newPage();
+    await onglet.setViewportSize({ width: 390, height: 844 });
+    try {
+      for (const code of ["dcg", "stmg", "bts-cg"]) {
+        await aller(onglet, `/parcours/${code}`);
+        const debord = await onglet.evaluate(() => {
+          const trop: string[] = [];
+          for (const el of document.querySelectorAll("main *")) {
+            const b = el.getBoundingClientRect();
+            if (b.width > 0 && (b.right > 391 || b.left < -1)) {
+              trop.push(`${el.tagName}.${el.className.toString().slice(0, 40)}`);
+            }
+          }
+          return {
+            trop: trop.slice(0, 5),
+            scroll: document.documentElement.scrollWidth,
+          };
+        });
+        expect(debord.trop, `${code} : éléments hors cadre :\n${debord.trop.join("\n")}`).toEqual([]);
+        expect(debord.scroll, `${code} : la page défile latéralement`).toBeLessThanOrEqual(391);
+      }
+    } finally {
+      await onglet.close();
+    }
+  });
+
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à
@@ -707,6 +780,9 @@ describe("parcours enseignant et élève", () => {
       "/animations/cg1",
       "/guide",
       "/parcours",
+      "/parcours/bts-mco",
+      "/parcours/dcg",
+      "/parcours/stmg",
       "/concepts",
       "/teacher/usage",
     ]) {

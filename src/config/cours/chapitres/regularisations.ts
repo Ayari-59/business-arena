@@ -75,6 +75,10 @@ export const REGULARISATIONS: Chapitre = {
   code: "regularisations-de-fin-d-exercice",
   parcours: "comptabilite-generale",
   palier: 4,
+  blocs: [
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "Régularisations de fin d'exercice",
   accroche:
     "Une assurance payée pour un an, un achat livré sans facture, une vente faite et pas encore facturée : au 31 décembre, chaque année ne garde que ce qui lui appartient.",

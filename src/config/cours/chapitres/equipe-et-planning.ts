@@ -69,6 +69,9 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
   code: "equipe-et-planning",
   parcours: "mco",
   palier: 4,
+  blocs: [
+    "BTS MCO Bloc 4 · Manager l'équipe commerciale",
+  ],
   titre: "L'équipe et son planning",
   accroche:
     "Ce que coûte une heure de l'équipe, ce qu'elle fait vendre, et si elle limite les ventes. Puis ce qu'une embauche doit rapporter pour se payer.",

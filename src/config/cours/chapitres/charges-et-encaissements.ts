@@ -65,6 +65,10 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
   code: "charges-produits-encaissements",
   parcours: "comptabilite-generale",
   palier: 1,
+  blocs: [
+    "STMG Thème 3 · Création de valeur et performance",
+    "STMG Thème 4 · Temps et risque",
+  ],
   titre: "Charges et produits, encaissements et décaissements",
   accroche:
     "Une opération peut enrichir l'entreprise sans lui rapporter un euro ce mois-ci, ou lui coûter de l'argent sans l'appauvrir. Deux questions à poser à chaque fois, et la différence entre le résultat et la trésorerie.",

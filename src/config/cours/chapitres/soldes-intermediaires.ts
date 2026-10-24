@@ -90,6 +90,10 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
   code: "soldes-intermediaires-de-gestion",
   parcours: "comptabilite-generale",
   palier: 4,
+  blocs: [
+    "BTS CG P6 · Analyse de la situation financière",
+    "DCG UE6 · Finance d'entreprise",
+  ],
   titre: "Soldes intermédiaires de gestion et CAF",
   accroche:
     "Le résultat dit combien l'année a laissé ; les soldes disent où elle l'a gagné ou perdu. Puis la capacité d'autofinancement : ce que l'activité a produit pour l'entreprise, et pourquoi ce n'est pas sa trésorerie.",

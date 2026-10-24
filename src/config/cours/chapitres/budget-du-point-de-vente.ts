@@ -60,6 +60,9 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
   code: "budget-du-point-de-vente",
   parcours: "mco",
   palier: 3,
+  blocs: [
+    "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+  ],
   titre: "Le budget du point de vente",
   accroche:
     "Le trimestre chiffré avant qu'il commence : ce qu'on vendra, ce qu'il faut acheter pour le vendre, la marge attendue, et ce que les achats feront sortir de la caisse.",

@@ -83,6 +83,9 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
   code: "negocier-le-prix",
   parcours: "ndrc",
   palier: 2,
+  blocs: [
+    "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+  ],
   titre: "Négocier le prix : marge de manœuvre et prix plancher",
   accroche:
     "Le client demande une remise. Jusqu'où descendre sans perdre d'argent ? Quand accepter un prix sous le coût complet ? Et quels clients tiennent le mieux le prix ?",

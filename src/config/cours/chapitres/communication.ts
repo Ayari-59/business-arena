@@ -53,6 +53,7 @@ export const COMMUNICATION: Chapitre = {
   code: "ce-que-rapporte-la-communication",
   parcours: "stmg",
   palier: 1,
+  blocs: [],
   titre: "Ce que rapporte la communication",
   accroche:
     "La publicité coûte tout de suite, et ne rapporte que si elle fait vendre assez. Combien coûte chaque vente gagnée, et jusqu'où vaut-il la peine de dépenser ?",

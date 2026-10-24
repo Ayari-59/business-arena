@@ -89,6 +89,9 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
   code: "tableau-de-bord-commercial",
   parcours: "ndrc",
   palier: 4,
+  blocs: [
+    "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+  ],
   titre: "Le tableau de bord commercial",
   accroche:
     "Quatre trimestres, six indicateurs. Repérer celui qui décroche, en trouver la cause, chiffrer ce qu'il coûte, et savoir quel indicateur regarder en premier.",

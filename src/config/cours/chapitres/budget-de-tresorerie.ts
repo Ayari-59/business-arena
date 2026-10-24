@@ -36,6 +36,10 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
   code: "budget-de-tresorerie",
   parcours: "controle-de-gestion",
   palier: 4,
+  blocs: [
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
+  ],
   titre: "Le budget de trésorerie",
   accroche:
     "Prévoir l'argent du trimestre qui vient, avec les délais des clients et du fournisseur, puis laisser l'arène le jouer : le prévu face au réalisé.",

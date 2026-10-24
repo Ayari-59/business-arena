@@ -73,6 +73,10 @@ export const COUT_PAR_PRODUIT: Chapitre = {
   code: "cout-par-produit",
   parcours: "controle-de-gestion",
   palier: 3,
+  blocs: [
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
+  ],
   titre: "Coût par produit",
   accroche:
     "Une entreprise qui vend plusieurs références : ce que coûte chacune, ce qu'elle rapporte, et pourquoi la moins rentable ne se supprime pas toujours.",

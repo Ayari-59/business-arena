@@ -91,6 +91,9 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
   code: "marche-et-part-de-marche",
   parcours: "stmg",
   palier: 1,
+  blocs: [
+    "STMG Thème 3 · Création de valeur et performance",
+  ],
   titre: "Le marché et la part de marché",
   accroche:
     "Combien pèse le marché, quelle place l'entreprise y tient face à ses concurrents, et pourquoi une entreprise qui vend autant peut perdre du terrain.",

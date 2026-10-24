@@ -74,6 +74,9 @@ export const PORTEFEUILLE_ABC: Chapitre = {
   code: "portefeuille-abc",
   parcours: "ndrc",
   palier: 4,
+  blocs: [
+    "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+  ],
   titre: "Le portefeuille clients : la méthode ABC",
   accroche:
     "Tous les comptes ne pèsent pas le même poids. Les classer, mesurer ce que pèsent les plus gros, les confronter à la marge, et décider du temps que chacun mérite.",

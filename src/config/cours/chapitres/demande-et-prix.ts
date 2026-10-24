@@ -50,6 +50,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
   code: "demande-et-prix",
   parcours: "stmg",
   palier: 1,
+  blocs: [],
   titre: "La demande répond au prix",
   accroche:
     "Quand le prix monte, la demande baisse. De combien ? L'élasticité le dit en un nombre, et dit si une hausse de prix fera gagner ou perdre du chiffre d'affaires.",

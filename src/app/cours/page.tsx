@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { PiedDePage } from "@/components/pied-de-page";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { CHAPITRES, PARCOURS, PROGRAMME, paliersDuParcours } from "@/config/cours/registre";
+import { formationParCode } from "@/config/formations";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
 import { ENTREPRISES } from "./entreprises";
@@ -136,6 +137,18 @@ export default async function CoursPage({ searchParams }: { searchParams: Promis
                 <div>
                   <h3 className="text-lg font-semibold text-slate-100">{p.titre}</h3>
                   <p className="text-sm text-slate-400">{p.resume}</p>
+                  {/* Le parcours d'une formation mène au tableau de son référentiel, où ses chapitres
+                      côtoient les séances des ateliers, bloc par bloc. */}
+                  {p.formation && formationParCode(p.formation) ? (
+                    <p className="mt-1 text-sm">
+                      <Link
+                        href={`/parcours/${p.formation}`}
+                        className="text-amber-300 underline-offset-4 hover:underline"
+                      >
+                        Couverture du référentiel · {formationParCode(p.formation)!.sigle}
+                      </Link>
+                    </p>
+                  ) : null}
                 </div>
                 <ol className="grid gap-2 sm:grid-cols-2">
                   {paliersDuParcours(p.code).map((pa) => {

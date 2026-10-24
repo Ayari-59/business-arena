@@ -156,6 +156,10 @@ export const BILAN_FONCTIONNEL: Chapitre = {
   code: "bilan-fonctionnel-et-bfr",
   parcours: "comptabilite-generale",
   palier: 4,
+  blocs: [
+    "BTS CG P6 · Analyse de la situation financière",
+    "DCG UE6 · Finance d'entreprise",
+  ],
   titre: "Bilan fonctionnel et BFR",
   accroche:
     "Le bilan de l'arène relu par fonction : ce qui finance durablement l'entreprise, ce que son exploitation retient, ce qui reste en banque. Et pourquoi la trésorerie vaut toujours l'un moins l'autre.",

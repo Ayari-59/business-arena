@@ -74,6 +74,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
   code: "canaux-de-distribution",
   parcours: "stmg",
   palier: 1,
+  blocs: [],
   titre: "Les canaux de distribution",
   accroche:
     "Vendre soi-même ou passer par un intermédiaire ? Le canal direct garde toute la marge, l'intermédiaire apporte des clients et se paie. Ce qu'il coûte, et ce qu'il rapporte.",

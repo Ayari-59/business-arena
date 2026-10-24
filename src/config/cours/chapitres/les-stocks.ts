@@ -48,6 +48,10 @@ export const LES_STOCKS: Chapitre = {
   code: "les-stocks",
   parcours: "comptabilite-generale",
   palier: 3,
+  blocs: [
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "Les stocks",
   accroche:
     "Ce qui reste en rayon à la fin du trimestre : l'inventaire, la variation des stocks, et pourquoi les achats ne sont pas le coût de ce qu'on a vendu.",

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { ATELIERS } from "@/config/ateliers";
 import { ROLES } from "@/config/ateliers/roles";
+import { formationsAvecUnePage } from "@/config/couverture";
 import { GUIDES, cheminDuGuide } from "@/config/guides";
 import { SITE_URL } from "@/config/site";
 import { getPublicCompetitionCodes } from "@/services/competition.service";
@@ -101,5 +102,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...pages, ...guides, ...ateliers, ...(await concoursPublies())];
+  // La page de chaque diplôme servi : son tableau de couverture (/parcours/<formation>).
+  const diplomes: MetadataRoute.Sitemap = formationsAvecUnePage().map((f) => ({
+    url: `${SITE_URL}/parcours/${f.code}`,
+    lastModified: DATE_DE_BUILD,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...pages, ...guides, ...diplomes, ...ateliers, ...(await concoursPublies())];
 }

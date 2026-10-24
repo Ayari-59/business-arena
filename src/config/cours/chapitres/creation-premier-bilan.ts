@@ -52,6 +52,13 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
   code: "creation-premier-bilan",
   parcours: "comptabilite-generale",
   palier: 2,
+  blocs: [
+    "BTS CG P1 · Contrôle et traitement comptable des opérations commerciales",
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "BTS CG P3 · Gestion des obligations fiscales",
+    "BTS CG P4 · Gestion des relations sociales",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "De la création au premier bilan",
   accroche:
     "Un mois de la vie d'une entreprise qu'on crée : vous passez chaque écriture, puis vous construisez vous-même son compte de résultat et son bilan.",

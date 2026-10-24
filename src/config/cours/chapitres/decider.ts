@@ -80,6 +80,10 @@ export const DECIDER: Chapitre = {
   code: "decider-prix-fabriquer-acheter",
   parcours: "controle-de-gestion",
   palier: 4,
+  blocs: [
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
+  ],
   titre: "Décider : prix, fabriquer ou acheter",
   accroche:
     "Monter ou baisser son prix, fabriquer ou faire fabriquer : prévoir ce qui change, puis laisser l'arène jouer la décision.",

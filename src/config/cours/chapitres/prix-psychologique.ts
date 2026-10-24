@@ -71,6 +71,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
   code: "prix-psychologique",
   parcours: "stmg",
   palier: 1,
+  blocs: [],
   titre: "Le prix psychologique",
   accroche:
     "Le client ne juge pas un prix en euros : il le compare à ce qu'il trouve normal, et refuse de franchir certains seuils. Ce que valent vingt centimes au bon endroit.",

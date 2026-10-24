@@ -80,6 +80,9 @@ export const PREVOIR_LES_VENTES: Chapitre = {
   code: "prevoir-les-ventes",
   parcours: "mco",
   palier: 3,
+  blocs: [
+    "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+  ],
   titre: "Prévoir les ventes",
   accroche:
     "Deux années observées, la troisième à prévoir : la tendance, la saison, la prévision du trimestre fort. Puis l'arène joue l'année, et l'on mesure l'écart.",

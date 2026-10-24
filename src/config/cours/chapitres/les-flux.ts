@@ -61,6 +61,10 @@ export const LES_FLUX: Chapitre = {
   code: "les-flux-de-l-entreprise",
   parcours: "comptabilite-generale",
   palier: 1,
+  blocs: [
+    "STMG Thème 3 · Création de valeur et performance",
+    "STMG Thème 4 · Temps et risque",
+  ],
   titre: "Les flux de l'entreprise",
   accroche:
     "Une entreprise ne vit pas seule : elle reçoit de ses associés et de sa banque, achète à ses fournisseurs, vend à ses clients, paie ses salariés et l'État. Ce qui circule entre eux, ce sont les flux.",

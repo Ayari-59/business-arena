@@ -2,8 +2,17 @@ import { ATELIERS } from "./ateliers";
 import {
   adosseAUnReferentiel,
   blocOfficiel,
+  REFERENTIELS,
   referentielDeCitation,
+  type Referentiel,
 } from "./ateliers/referentiels";
+import {
+  CHAPITRES,
+  PARCOURS as PARCOURS_DU_COURS,
+  type Parcours as ParcoursDuCours,
+} from "./cours/registre";
+import type { Chapitre } from "./cours/types";
+import { FORMATIONS, type Formation } from "./formations";
 
 /**
  * LA COUVERTURE D'UN RÉFÉRENTIEL, LUE DANS LES ATELIERS.
@@ -267,6 +276,83 @@ export function couvertureDuDiplome(codes: readonly string[]): BlocDuDiplome[] {
   return [...parBloc.values()].sort((a, b) => part(b) - part(a));
 }
 
+/** Un chapitre du cours qui fait travailler un bloc : de quoi y mener. */
+export interface ChapitreQuiCouvre {
+  code: string;
+  titre: string;
+  palier: Chapitre["palier"];
+}
+
+/**
+ * Un bloc vu depuis la formation : les séances des ateliers qui le mettent en
+ * jeu, et les chapitres du cours qui le font travailler.
+ */
+export interface BlocDeLaFormation extends BlocDuDiplome {
+  /** L'entrée du texte que le bloc désigne ; null si le texte n'a pas été lu. */
+  officiel: string | null;
+  /** Les chapitres du cours qui le travaillent, dans l'ordre du cours. */
+  chapitres: ChapitreQuiCouvre[];
+}
+
+/** La formation dont relève un référentiel : celle de l'atelier qui porte sa clé. */
+function formationDuReferentiel(code: string): string | null {
+  return ATELIERS.find((a) => a.code === code)?.formations[0] ?? null;
+}
+
+/**
+ * La clé du référentiel d'une formation. Elle est celle d'un atelier, puisque
+ * c'est ainsi que le registre est rangé : n'importe lequel des ateliers
+ * adossés de la formation la donne.
+ */
+function cleDeLaFormation(formation: string): string | undefined {
+  return ATELIERS.find(
+    (a) => a.formations.includes(formation) && adosseAUnReferentiel(a.code),
+  )?.code;
+}
+
+/** Le référentiel lu sur le texte auquel la formation s'adosse ; null s'il n'a pas été lu. */
+export function referentielDeLaFormation(
+  formation: string,
+): Referentiel | null {
+  const cle = cleDeLaFormation(formation);
+  return (cle && REFERENTIELS[cle]) || null;
+}
+
+/**
+ * LES BLOCS QU'UN CHAPITRE FAIT TRAVAILLER À UNE FORMATION : ceux que leur
+ * préfixe rattache à elle, ramenés à l'entrée du texte qu'ils désignent. Un
+ * chapitre de comptabilité cite le BTS CG et le DCG ; chacun ne reçoit que
+ * les siens.
+ */
+export function blocsDuChapitre(
+  chapitre: Pick<Chapitre, "blocs">,
+  formation: string,
+): string[] {
+  const officiels = chapitre.blocs.flatMap((bloc) => {
+    const cite = referentielDeCitation(bloc);
+    if (!cite || formationDuReferentiel(cite.code) !== formation) return [];
+    const officiel = blocOfficiel(bloc, cite.code);
+    return officiel ? [officiel] : [];
+  });
+  return [...new Set(officiels)];
+}
+
+/**
+ * CE QUE LE COURS AJOUTE À L'ADÉQUATION.
+ *
+ * Un chapitre n'est pas une séance : il se fait seul, sur un trimestre de
+ * l'arène, et ne rejoue pas le bloc à chaque tour. Il ne fait donc jamais
+ * d'un bloc le cœur du jeu, que seul le moteur rejoue. Mais deux chapitres
+ * qui le travaillent, chiffres à l'appui, le couvrent ; un seul l'aborde, et
+ * c'est un partiel, comme la séance unique. Le cours relève ainsi un bloc
+ * qu'une seule séance effleurait, sans prétendre à ce que seul le jeu fait.
+ */
+function adequationDuCours(chapitres: number): Adequation | null {
+  if (chapitres >= 2) return "couvert";
+  if (chapitres === 1) return "partiel";
+  return null;
+}
+
 /**
  * LA COUVERTURE D'UNE FORMATION, TOUS SES ATELIERS CONFONDUS.
  *
@@ -289,19 +375,17 @@ export function couvertureDuDiplome(codes: readonly string[]): BlocDuDiplome[] {
  * dit « Thème 3 », et cette précision vaut mieux que le numéro. Dès que deux
  * libellés se rencontrent sur un même bloc, c'est le texte officiel qui
  * tranche, puisque c'est lui qu'on oppose à une inspection.
+ *
+ * LE COURS S'Y AJOUTE. Les chapitres citent leurs blocs comme le tournoi, avec
+ * le préfixe du diplôme, et se rangent sous la même entrée officielle que les
+ * séances. Un bloc que seul le cours travaille ouvre sa propre ligne : la paie
+ * ne fait l'objet d'aucune séance du BTS CG, et deux chapitres la travaillent.
  */
-export function couvertureDeLaFormation(formation: string): BlocDuDiplome[] {
+export function couvertureDeLaFormation(
+  formation: string,
+): BlocDeLaFormation[] {
   const siens = ATELIERS.filter((a) => a.formations.includes(formation));
-  // La clé du référentiel est celle d'un atelier : c'est ainsi que le registre
-  // est rangé. N'importe lequel des ateliers adossés de la formation la donne.
-  const cle = siens.find((a) => adosseAUnReferentiel(a.code))?.code;
-
-  /** La formation dont vient un bloc préfixé, pour un atelier qui en sert plusieurs. */
-  const formationDuBloc = (bloc: string): string | null => {
-    const cite = referentielDeCitation(bloc);
-    if (!cite) return null;
-    return ATELIERS.find((a) => a.code === cite.code)?.formations[0] ?? null;
-  };
+  const cle = cleDeLaFormation(formation);
 
   const parBloc = new Map<
     string,
@@ -319,7 +403,11 @@ export function couvertureDeLaFormation(formation: string): BlocDuDiplome[] {
     const libelleDe = new Map<string, string>();
     for (const seance of atelier.seances) {
       for (const bloc of seance.processus) {
-        if (multiple && formationDuBloc(bloc) !== formation) continue;
+        if (multiple) {
+          const cite = referentielDeCitation(bloc);
+          if (!cite || formationDuReferentiel(cite.code) !== formation)
+            continue;
+        }
         const officiel = cle ? blocOfficiel(bloc, cle) : null;
         const k = officiel ?? bloc;
         parCle.set(k, [...(parCle.get(k) ?? []), seance.numero]);
@@ -343,11 +431,25 @@ export function couvertureDeLaFormation(formation: string): BlocDuDiplome[] {
     }
   }
 
+  // Les chapitres du cours, sous la même clé que les séances : l'entrée
+  // officielle. Un bloc que seul le cours travaille ouvre sa ligne.
+  const chapitresParCle = new Map<string, ChapitreQuiCouvre[]>();
+  for (const chapitre of CHAPITRES) {
+    for (const k of blocsDuChapitre(chapitre, formation)) {
+      chapitresParCle.set(k, [
+        ...(chapitresParCle.get(k) ?? []),
+        { code: chapitre.code, titre: chapitre.titre, palier: chapitre.palier },
+      ]);
+      if (!parBloc.has(k))
+        parBloc.set(k, { libelles: new Set(), officiel: k, presences: [] });
+    }
+  }
+
   const rang: Adequation[] = ["partiel", "couvert", "coeur"];
-  const lignes: BlocDuDiplome[] = [];
+  const lignes: BlocDeLaFormation[] = [];
   for (const [k, vu] of parBloc) {
     // Le libellé : celui de l'atelier tant qu'il est seul, le texte officiel
-    // dès que deux ateliers le nomment différemment.
+    // dès que deux ateliers le nomment différemment, ou qu'aucun ne le nomme.
     const referentiel =
       vu.libelles.size === 1 ? [...vu.libelles][0]! : (vu.officiel ?? k);
     let adequation: Adequation = "partiel";
@@ -364,22 +466,118 @@ export function couvertureDeLaFormation(formation: string): BlocDuDiplome[] {
         adequation = brut.adequation;
       declaree = declaree || brut.declaree;
     }
-    const commentaire = [...vu.libelles]
-      .map((l) =>
-        couvertureDeLAtelier(vu.presences[0]!.code).find(
-          (b) => b.referentiel === l,
-        ),
-      )
-      .find((b) => b?.commentaire)?.commentaire;
+    const chapitres = chapitresParCle.get(k) ?? [];
+    const parLeCours = adequationDuCours(chapitres.length);
+    if (parLeCours && rang.indexOf(parLeCours) > rang.indexOf(adequation))
+      adequation = parLeCours;
+    const premier = vu.presences[0];
+    const commentaire = premier
+      ? [...vu.libelles]
+          .map((l) =>
+            couvertureDeLAtelier(premier.code).find((b) => b.referentiel === l),
+          )
+          .find((b) => b?.commentaire)?.commentaire
+      : undefined;
     lignes.push({
       referentiel,
+      officiel: vu.officiel,
       presences: vu.presences,
+      chapitres,
       adequation,
       declaree,
       commentaire,
     });
   }
-  const part = (b: BlocDuDiplome) =>
-    Math.max(...b.presences.map((p) => p.seances.length / p.seancesEnTout));
-  return lignes.sort((a, b) => part(b) - part(a));
+  // Les séances d'abord, part la plus forte en tête ; ce que seul le cours
+  // travaille vient ensuite, le plus travaillé en premier.
+  const part = (b: BlocDeLaFormation) =>
+    Math.max(0, ...b.presences.map((p) => p.seances.length / p.seancesEnTout));
+  return lignes.sort(
+    (a, b) => part(b) - part(a) || b.chapitres.length - a.chapitres.length,
+  );
+}
+
+/** Une ligne du tableau de couverture : une entrée du texte, et ce qui la travaille. */
+export interface LigneDeCouverture {
+  /** L'entrée telle que le texte l'écrit, ou telle que les ateliers la citent si le texte n'a pas été lu. */
+  bloc: string;
+  /** Le programme dont l'entrée relève, quand le texte en réunit plusieurs. */
+  partie?: string;
+  /** Ce qui la travaille ; null si rien, ni séance ni chapitre. */
+  couverture: BlocDeLaFormation | null;
+}
+
+/**
+ * LE TABLEAU DE COUVERTURE D'UNE FORMATION : SON RÉFÉRENTIEL ENTIER, DANS
+ * L'ORDRE DU TEXTE.
+ *
+ * La couverture ne liste que ce qu'une séance ou un chapitre travaille. Un bloc
+ * que rien ne travaille n'y paraît donc pas, et son absence ne se voit pas : il
+ * faut connaître la liste entière pour remarquer ce qui n'y est pas, ce qui est
+ * exactement le défaut des tableaux écrits à la main. Le tableau part donc du
+ * texte, entrée par entrée, et dit pour chacune ce qui la travaille, ou que
+ * rien ne la travaille. Le DCG compte treize unités, dont le droit et l'anglais
+ * des affaires : un enseignant le sait, et le lire ici dit qu'on le sait aussi.
+ *
+ * Sans texte lu (BTS MHR, BUT GEA), il n'y a pas de liste entière à opposer :
+ * le tableau reprend ce que les ateliers citent, et la page le dit.
+ */
+export function tableauDeCouverture(formation: string): {
+  referentiel: Referentiel | null;
+  lignes: LigneDeCouverture[];
+} {
+  const referentiel = referentielDeLaFormation(formation);
+  const blocs = couvertureDeLaFormation(formation);
+  if (!referentiel)
+    return {
+      referentiel,
+      lignes: blocs.map((b) => ({ bloc: b.referentiel, couverture: b })),
+    };
+  const partieDe = (i: number): string | undefined => {
+    let fin = 0;
+    for (const p of referentiel.parties ?? []) {
+      fin += p.entrees;
+      if (i < fin) return p.titre;
+    }
+    return undefined;
+  };
+  const lignes: LigneDeCouverture[] = referentiel.entrees.map((e, i) => ({
+    bloc: e,
+    partie: partieDe(i),
+    couverture: blocs.find((b) => b.officiel === e) ?? null,
+  }));
+  // Un bloc qui ne désigne aucune entrée : la garde des référentiels le
+  // refuse, mais s'il passait, il resterait visible au lieu de disparaître.
+  for (const b of blocs)
+    if (!b.officiel || !referentiel.entrees.includes(b.officiel))
+      lignes.push({ bloc: b.referentiel, couverture: b });
+  return { referentiel, lignes };
+}
+
+/**
+ * LE COURS QUI SERT UNE FORMATION : le parcours qui la suit, en entier, et les
+ * chapitres des parcours de discipline qui citent l'un de ses blocs. Rangés
+ * dans l'ordre de la carte du cours, puis par palier.
+ */
+export function coursDeLaFormation(
+  formation: string,
+): { parcours: ParcoursDuCours; chapitres: Chapitre[] }[] {
+  return PARCOURS_DU_COURS.map((parcours) => ({
+    parcours,
+    chapitres: CHAPITRES.filter(
+      (c) =>
+        c.parcours === parcours.code &&
+        (parcours.formation === formation ||
+          blocsDuChapitre(c, formation).length > 0),
+    ).sort((a, b) => a.palier - b.palier),
+  })).filter((g) => g.chapitres.length > 0);
+}
+
+/** Les formations qui ont leur page : celles qu'un atelier ou le cours sert. */
+export function formationsAvecUnePage(): Formation[] {
+  return FORMATIONS.filter(
+    (f) =>
+      ATELIERS.some((a) => a.formations.includes(f.code)) ||
+      coursDeLaFormation(f.code).length > 0,
+  );
 }
