@@ -457,6 +457,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Combien de nouveaux clients le budget en plus a-t-il amenés, et que coûte chacun d'eux ? La marge gagnée a-t-elle payé le budget ajouté ? Comparez le coût d'acquisition affiché dans les indicateurs aux deux tours.",
   }),
+  "commissions-des-partenaires": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un tour, puis relevez les ventes de chaque clientèle et la ligne des commissions des canaux partenaires.`,
+    lieux: ["marche-du-tour", "compte-de-resultat", "indicateurs"],
+    chercher:
+      "Quelle part de vos commandes vient de la place de marché, et quelle part de votre marge, une fois la commission payée ? La commission par commande est-elle plus basse ou plus haute que le coût d'acquisition des indicateurs ?",
+  }),
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
