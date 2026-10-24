@@ -405,6 +405,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Dans le tableau des références, calculez la marge de chacune aux deux tours. La référence réduite a-t-elle laissé partir des clients vers les autres, ou la marge totale a-t-elle simplement baissé ?",
     };
   },
+  "equipe-et-planning": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Dans « Ressources humaines », embauchez une personne, puis jouez le tour sans rien changer d'autre.`,
+    lieux: ["compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Les charges de structure ont-elles monté du coût d'un salarié ? Les ventes, elles, ont-elles bougé ? Si l'équipe n'était pas ce qui limitait les ventes, l'embauche n'a fait qu'ajouter une charge.",
+  }),
+  "tableau-de-bord-du-manager": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez les indicateurs de votre tableau de bord : chiffre d'affaires, panier, indicateur du métier, taux de marque, seuil, part du personnel.`,
+    lieux: ["synthese", "indicateurs", "analyse-des-couts"],
+    chercher:
+      "Quel indicateur a bougé le premier, et dans quel sens ? Quelle décision avez-vous prise en le voyant, et l'a-t-elle remis dans le vert au tour suivant ?",
+  }),
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
