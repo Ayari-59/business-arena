@@ -1,0 +1,340 @@
+import type { Cas } from "./cas";
+import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
+import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
+import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
+
+/**
+ * « ET MAINTENANT, JOUEZ-LE » : LE CHAPITRE, REPRIS DANS L'ARÈNE.
+ *
+ * Le chapitre se termine sur une mission : lancer une partie chez la même entreprise, faire
+ * un geste précis sur la feuille de décision, puis aller lire dans les comptes du tour ce que
+ * le chapitre a appris à écrire. La notion quitte l'exercice et devient une conséquence.
+ *
+ * LES ÉCRANS SONT NOMMÉS, ET LEUR NOM EST VÉRIFIÉ. Une mission ne cite que des lieux de ce
+ * registre ; chacun porte les textes qui le désignent à l'écran et le fichier où ils sont
+ * écrits, et un test les y retrouve (`tests/cours/jouez.test.ts`). Un écran renommé fait
+ * rougir le test au lieu d'envoyer l'élève chercher un onglet qui n'existe plus.
+ *
+ * LES NIVEAUX RESTENT OUVERTS. Sans licence, la vitrine s'arrête par défaut au niveau 3 : une
+ * mission y tient, sauf quand la notion n'existe qu'au-delà (plusieurs références), et la page
+ * le dit.
+ *
+ * L'ARÈNE NE FAIT PAS TOUT. Elle ne déprécie rien et ne régularise rien : les deux chapitres
+ * concernés le disent à l'élève et lui font chiffrer ce que l'arène aurait écrit.
+ */
+
+/** Un texte qui désigne le lieu à l'écran, et le fichier où il est écrit. */
+interface Repere {
+  fichier: string;
+  texte: string;
+}
+
+export const LIEUX_DE_L_ARENE = {
+  "compte-de-resultat": {
+    chemin: "Résultats › Finance › Compte de résultat",
+    reperes: [
+      { fichier: "src/app/arena/[gameId]/page.tsx", texte: 'label: "Résultats"' },
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Finance"' },
+      { fichier: "src/components/financial-statements.tsx", texte: 'title="Compte de résultat"' },
+    ],
+  },
+  bilan: {
+    chemin: "Résultats › Finance › Bilan",
+    reperes: [
+      { fichier: "src/app/arena/[gameId]/page.tsx", texte: 'label: "Résultats"' },
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Finance"' },
+      { fichier: "src/components/financial-statements.tsx", texte: 'title="Bilan"' },
+    ],
+  },
+  "frng-bfr": {
+    chemin: "Résultats › Finance › Bilan, la ligne sous les deux colonnes (FRNG − BFR = trésorerie nette)",
+    reperes: [
+      { fichier: "src/components/financial-statements.tsx", texte: 'title="Bilan"' },
+      { fichier: "src/components/financial-statements.tsx", texte: "trésorerie nette {euro(result.functionalBalance.netTreasury)}" },
+    ],
+  },
+  "analyse-des-couts": {
+    chemin: "Résultats › Finance › Analyse des coûts",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Finance"' },
+      { fichier: "src/components/financial-statements.tsx", texte: 'title="Analyse des coûts"' },
+      { fichier: "src/components/financial-statements.tsx", texte: 'label="Seuil de rentabilité"' },
+    ],
+  },
+  "budget-de-tresorerie": {
+    chemin: "Résultats › Finance › Budget de trésorerie",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Finance"' },
+      { fichier: "src/components/financial-statements.tsx", texte: 'title="Budget de trésorerie"' },
+    ],
+  },
+  ratios: {
+    chemin: "Résultats › Finance › Ratios financiers",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Finance"' },
+      { fichier: "src/components/ratio-gauges.tsx", texte: 'titre="Ratios financiers"' },
+    ],
+  },
+  synthese: {
+    chemin: "Résultats › Synthèse",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Synthèse"' },
+      { fichier: "src/components/period-dashboard.tsx", texte: 'label="Trésorerie nette"' },
+    ],
+  },
+  references: {
+    chemin: "Résultats › Marché › Vos références sur le tour écoulé",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Marché"' },
+      { fichier: "src/components/tableau-des-references.tsx", texte: "Vos références sur le tour écoulé" },
+      { fichier: "src/components/tableau-des-references.tsx", texte: 'entete: "Marge/u"' },
+    ],
+  },
+  "plan-face-au-realise": {
+    chemin: "Résultats › Marché › Votre plan face au réalisé",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Marché"' },
+      { fichier: "src/components/period-dashboard.tsx", texte: "Votre plan face au réalisé" },
+    ],
+  },
+  feuille: {
+    chemin: "Décider › Votre feuille de décision",
+    reperes: [{ fichier: "src/components/decision-form.tsx", texte: "Votre feuille de décision" }],
+  },
+} as const satisfies Record<string, { chemin: string; reperes: readonly Repere[] }>;
+
+export type LieuDeLArene = keyof typeof LIEUX_DE_L_ARENE;
+
+/** Le dernier niveau qu'un élève joue sans licence, tel que la vitrine l'ouvre par défaut. */
+export const NIVEAU_SANS_LICENCE = VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres;
+
+export interface MissionDansLArene {
+  niveau: 1 | 2 | 3 | 4 | 5 | 6;
+  /** Le geste à faire dans l'arène. */
+  faire: string;
+  /** Où lire ce que le geste a produit. */
+  lieux: readonly LieuDeLArene[];
+  /** Ce que l'élève y cherche, la question qu'il rapporte au cours. */
+  chercher: string;
+}
+
+/** Les mots de la feuille de décision de l'entreprise, au niveau où elle se joue. */
+function feuilleDe(c: Cas, niveau: number) {
+  const v = scenarioByCode(scenarioCodeForLevel(c.code, niveau)).vocabulary;
+  return { prix: v.priceLabel, volume: v.productionPlanLabel };
+}
+
+/** Le premier niveau où l'entreprise vend plusieurs références, s'il existe. */
+export function niveauDeLaGamme(code: string): 2 | 3 | 4 | 5 | 6 | null {
+  const seule = scenarioCodeForLevel(code, 1);
+  for (const n of [2, 3, 4, 5, 6] as const) if (scenarioCodeForLevel(code, n) !== seule) return n;
+  return null;
+}
+
+const partie = (c: Cas, niveau: number) => `Lancez une partie chez ${c.entreprise}, au niveau ${niveau}.`;
+
+const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
+  "creation-premier-bilan": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un premier tour sans toucher à la feuille de décision proposée.`,
+    lieux: ["bilan"],
+    chercher:
+      "Retrouvez au bilan les capitaux propres, les dettes financières et les disponibilités : lequel vient des apports, lequel de l'emprunt ? Vérifiez que le total de l'actif égale celui du passif.",
+  }),
+  "les-flux-de-l-entreprise": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour.`,
+    lieux: ["compte-de-resultat", "budget-de-tresorerie"],
+    chercher:
+      "Le résultat net du tour est-il égal à l'écart entre la trésorerie d'ouverture et celle de clôture ? Trouvez une ligne du compte de résultat qui ne fait sortir aucun argent, puis une ligne du budget de trésorerie qui ne touche pas le résultat.",
+  }),
+  "charges-produits-encaissements": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour.`,
+    lieux: ["compte-de-resultat", "budget-de-tresorerie", "bilan"],
+    chercher:
+      "Comparez le chiffre d'affaires du compte de résultat aux encaissements clients du budget de trésorerie : pourquoi ne sont-ils pas égaux ? Retrouvez ce qui manque dans les créances clients du bilan.",
+  }),
+  "la-paie": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Dans « Ressources humaines », embauchez une personne, ou portez les salaires à 105 (marché = 100).`,
+    lieux: ["compte-de-resultat", "budget-de-tresorerie"],
+    chercher:
+      "Dans l'arène, la paie est fondue dans les charges de structure, avec le loyer. De combien ont-elles monté par rapport au tour précédent ? Retrouvez la même hausse dans les charges de structure décaissées du budget de trésorerie.",
+  }),
+  "l-emprunt": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours. Au niveau 4, inclus dans ${LES_OFFRES_DE_L_ARENE}, vous décidez vous-même d'emprunter ou de rembourser.`,
+    lieux: ["compte-de-resultat", "budget-de-tresorerie", "bilan"],
+    chercher:
+      "Retrouvez les charges financières au compte de résultat, le remboursement d'emprunt dans le budget de trésorerie, et les dettes financières au bilan, d'un tour à l'autre. Les intérêts sont une charge ; le capital remboursé n'en est pas une : de combien la dette a-t-elle baissé ?",
+  }),
+  immobilisations: (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Retrouvez les dotations aux amortissements au compte de résultat, et les immobilisations nettes au bilan. De combien les immobilisations nettes baissent-elles d'un tour à l'autre ? Est-ce le montant des dotations ?",
+  }),
+  "les-stocks": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Dans « ${volume} », mettez nettement plus que les ventes estimées, puis jouez le tour.`,
+      lieux: ["compte-de-resultat", "bilan", "budget-de-tresorerie"],
+      chercher:
+        "Retrouvez la production stockée au compte de résultat et les stocks de produits finis au bilan. Les invendus ont-ils pesé autant sur le résultat que sur la trésorerie ? Pourquoi ?",
+    };
+  },
+  "la-cloture": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez la partie jusqu'à la clôture de l'exercice.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Au dernier tour, retrouvez l'impôt sur les sociétés et le résultat net, puis les capitaux propres au bilan. De combien ont-ils grandi depuis le premier tour ? Est-ce la somme des résultats nets ?",
+  }),
+  "remises-et-reglements": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Dans « Trésorerie · mobiliser le poste clients », escomptez une partie de vos créances.`,
+    lieux: ["budget-de-tresorerie", "compte-de-resultat", "bilan"],
+    chercher:
+      "Retrouvez l'escompte de créances dans le budget de trésorerie, et son coût dans les charges financières. Combien a coûté l'argent reçu plus tôt ? Les créances clients du bilan ont-elles baissé d'autant ?",
+  }),
+  "depreciations-et-provisions": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "L'arène garde les créances clients et les stocks à leur valeur : elle ne déprécie rien. Supposez qu'un dixième des créances clients ne sera jamais payé : de combien la dépréciation ferait-elle baisser le résultat net du tour, et le bilan ?",
+  }),
+  "regularisations-de-fin-d-exercice": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez la partie jusqu'à la clôture de l'exercice.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "L'arène arrête ses comptes au dernier jour, sans charge constatée d'avance ni charge à payer. Si le dernier tour avait payé d'avance un mois de charges de structure du tour suivant, quelle part retireriez-vous des charges, et où la placeriez-vous au bilan ?",
+  }),
+  "soldes-intermediaires-de-gestion": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Engagez un budget qualité et un budget maintenance, puis jouez le tour.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Le compte de résultat de l'arène descend par étages : marge sur coût variable, excédent brut d'exploitation, résultat d'exploitation, résultat net. Recalculez l'EBE à partir des lignes au-dessus, puis la CAF : le résultat net plus les dotations aux amortissements.",
+  }),
+  "bilan-fonctionnel-et-bfr": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["frng-bfr", "bilan"],
+    chercher:
+      "Sous le bilan, l'arène écrit FRNG − BFR = trésorerie nette. Recalculez le BFR à partir des stocks, des créances clients et des dettes fournisseurs. Quel poste l'a fait bouger d'un tour à l'autre ?",
+  }),
+  "prix-cout-et-marge": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second en changeant le « ${prix} » d'environ 5 %.`,
+      lieux: ["analyse-des-couts"],
+      chercher:
+        "Comparez d'un tour à l'autre la marge sur coût variable par unité et le coût complet unitaire. Lequel a suivi le prix ? Lequel a suivi les quantités vendues ?",
+    };
+  },
+  "seuil-de-rentabilite": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second avec un « ${prix} » plus bas.`,
+      lieux: ["analyse-des-couts"],
+      chercher:
+        "Retrouvez le seuil de rentabilité, la marge de sécurité et l'indice de sécurité. Le seuil a-t-il monté quand le prix a baissé ? Recalculez-le : les charges de structure divisées par la marge sur coût variable par unité.",
+    };
+  },
+  "cout-complet": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Engagez un budget qualité et un budget maintenance plus élevés qu'au tour précédent.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Ces budgets entrent dans les charges de structure de l'analyse des coûts. De combien ont-ils relevé le coût complet unitaire ? Retrouvez-le en divisant les charges de structure par les unités vendues, puis en ajoutant le coût variable unitaire.",
+  }),
+  "cout-par-produit": (c) => {
+    const gamme = niveauDeLaGamme(c.code);
+    if (gamme === null) {
+      return {
+        niveau: 1,
+        faire: `${partie(c, 1)} Dans l'arène, ${c.entreprise} ne vend qu'une seule offre : jouez un tour.`,
+        lieux: ["analyse-des-couts"],
+        chercher:
+          "Avec une seule offre, toutes les charges de structure lui reviennent. Si elles se partageaient entre deux offres selon leurs ventes, laquelle des lignes de l'analyse des coûts changerait ?",
+      };
+    }
+    return {
+      niveau: gamme,
+      faire: `${partie(c, gamme)} À ce niveau, ${c.entreprise} vend plusieurs références : changez le prix d'une seule, puis jouez le tour.`,
+      lieux: ["references", "analyse-des-couts"],
+      chercher:
+        "Le tableau des références donne, pour chacune, la marge par unité et le volume vendu. Calculez la marge sur coût variable de chaque référence : laquelle couvre le plus de charges de structure ? Celle que vous avez touchée a-t-elle gagné ou perdu de la marge ?",
+    };
+  },
+  "budget-de-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant de valider le tour, estimez sur papier la trésorerie de clôture à partir de votre feuille de décision : ce qui entrera, ce qui sortira.`,
+    lieux: ["feuille", "budget-de-tresorerie"],
+    chercher: "Comparez votre estimation au budget de trésorerie du tour, ligne à ligne. Laquelle vous a le plus trompé, et pourquoi ?",
+  }),
+  "analyse-des-ecarts": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Remplissez les ventes estimées de la feuille de décision, puis jouez le tour.`,
+    lieux: ["plan-face-au-realise"],
+    chercher:
+      "Votre plan face au réalisé donne, poste par poste, le prévu, le réalisé et l'écart. Pour l'écart sur le chiffre d'affaires, séparez ce qui vient du prix et ce qui vient des quantités vendues.",
+  }),
+  "tableau-de-bord": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez trois tours.`,
+    lieux: ["synthese", "ratios"],
+    chercher:
+      "Choisissez trois indicateurs, dans la synthèse et les ratios financiers, pour suivre l'entreprise. Notez-les à chaque tour : lequel vous a alerté le premier ?",
+  }),
+  "decider-prix-fabriquer-acheter": (c) => {
+    const { prix, volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour à votre prix, puis un second avec un « ${prix} » plus bas et plus de « ${volume} ».`,
+      lieux: ["analyse-des-couts", "compte-de-resultat"],
+      chercher:
+        "La marge sur coût variable totale a-t-elle grandi ? C'est elle, et non le chiffre d'affaires, qui dit si la baisse de prix valait la peine.",
+    };
+  },
+};
+
+/** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
+export function missionDuChapitre(code: string, c: Cas): MissionDansLArene | null {
+  return MISSIONS[code]?.(c) ?? null;
+}
+
+/** L'adresse qui ouvre la partie : l'entreprise et le niveau déjà choisis. */
+export const adresseDeLaMission = (c: Cas, m: MissionDansLArene) => `/jouer?secteur=${c.code}&niveau=${m.niveau}`;
+
+/** La mission telle que la page la montre : des textes, prêts à passer au navigateur. */
+export interface MissionAffichee {
+  niveau: number;
+  faire: string;
+  chercher: string;
+  /** Les chemins des écrans à ouvrir, dans l'ordre de la lecture. */
+  ou: string[];
+  adresse: string;
+  /** Quand le niveau dépasse ce qu'un élève joue sans licence : ce qui l'ouvre, en une phrase. */
+  reservee: string | null;
+}
+
+export function missionAffichee(code: string, c: Cas): MissionAffichee | null {
+  const m = missionDuChapitre(code, c);
+  if (!m) return null;
+  return {
+    niveau: m.niveau,
+    faire: m.faire,
+    chercher: m.chercher,
+    ou: m.lieux.map((l) => LIEUX_DE_L_ARENE[l].chemin),
+    adresse: adresseDeLaMission(c, m),
+    reservee: m.niveau > NIVEAU_SANS_LICENCE ? `Le niveau ${m.niveau} est inclus dans ${LES_OFFRES_DE_L_ARENE}.` : null,
+  };
+}
