@@ -69,7 +69,8 @@ describe("le niveau de la mission", () => {
       for (const code of jouables(chapitre.entreprises?.codes)) {
         const m = missionDuChapitre(chapitre.code, casDeLEntreprise(code))!;
         if (m.niveau <= NIVEAU_SANS_LICENCE) continue;
-        expect(chapitre.code).toBe("cout-par-produit");
+        // Au-delà, seule une gamme le justifie : la mission se joue au niveau qui l'ouvre.
+        expect(["cout-par-produit", "assortiment"]).toContain(chapitre.code);
         expect(m.niveau).toBe(niveauDeLaGamme(code));
         expect(missionAffichee(chapitre.code, casDeLEntreprise(code))!.reservee).toContain(`niveau ${m.niveau} est inclus`);
       }

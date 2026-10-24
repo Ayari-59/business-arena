@@ -394,6 +394,17 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Au premier tour, les ventes manquées ont-elles grimpé ? Au second, avec de quoi servir, la promotion a-t-elle vendu le volume nécessaire ? Comparez la marge sur coût variable des deux tours.",
     };
   },
+  assortiment: (c) => {
+    // L'assortiment n'existe dans l'arène qu'au niveau où le commerce passe en gamme.
+    const niveau = niveauDeLaGamme(c.code) ?? 1;
+    return {
+      niveau,
+      faire: `${partie(c, niveau)} À ce niveau, ${c.entreprise} vend plusieurs références : jouez un tour sans rien changer, puis un second où vous mettez moins en rayon de la référence qui marge le moins.`,
+      lieux: ["references", "analyse-des-couts"],
+      chercher:
+        "Dans le tableau des références, calculez la marge de chacune aux deux tours. La référence réduite a-t-elle laissé partir des clients vers les autres, ou la marge totale a-t-elle simplement baissé ?",
+    };
+  },
 };
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
