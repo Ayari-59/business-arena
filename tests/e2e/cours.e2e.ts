@@ -4,7 +4,7 @@ import { aller, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CHAPITRES } from "../../src/config/cours/registre";
+import { CHAPITRES, PARCOURS, paliersDuParcours } from "../../src/config/cours/registre";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
 
@@ -41,14 +41,17 @@ async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
 }
 
 describe("/cours : la carte du cours et le chapitre libre", () => {
-  it("propose le chapitre pilote dans chacune des entreprises du cours, aucun palier en préparation, sans déborder sur téléphone", async () => {
+  it("propose le chapitre pilote dans chacune des entreprises du cours, n'annonce en préparation que ce qui vient, sans déborder sur téléphone", async () => {
     const page = await nouvellePage(390, 844);
     await aller(page, "/cours");
     for (const code of ENTREPRISES_DU_COURS) {
       expect(await page.locator(`a[href="${chemin(code)}"]`).count(), code).toBeGreaterThan(0);
     }
-    // Le cours est complet : chaque palier de chaque parcours ouvre au moins un chapitre.
-    expect(await page.getByText("En préparation").count()).toBe(0);
+    // Les parcours achevés ouvrent un chapitre à chaque palier ; seuls les paliers d'un parcours qui se construit annoncent ce qui vient.
+    const aVenir = PARCOURS.filter((p) => p.enPreparation).flatMap((p) =>
+      paliersDuParcours(p.code).filter((pa) => !CHAPITRES.some((c) => c.parcours === p.code && c.palier === pa.palier)),
+    );
+    expect(await page.getByText("En préparation").count()).toBe(aVenir.length);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.context().close();
   }, 60_000);
@@ -328,6 +331,8 @@ describe.each([
   { code: "charges-produits-encaissements", entreprise: "conseil", telephone: true },
   { code: "prix-cout-et-marge", entreprise: "bistrot" },
   { code: "prix-cout-et-marge", entreprise: "transport", telephone: true },
+  { code: "taux-de-marque-et-coefficient", entreprise: "boutique" },
+  { code: "taux-de-marque-et-coefficient", entreprise: "bistrot", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();

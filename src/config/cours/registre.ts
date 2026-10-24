@@ -19,14 +19,20 @@ import { BILAN_FONCTIONNEL } from "./chapitres/bilan-fonctionnel";
 import { LES_FLUX } from "./chapitres/les-flux";
 import { CHARGES_ET_ENCAISSEMENTS } from "./chapitres/charges-et-encaissements";
 import { PRIX_COUT_MARGE } from "./chapitres/prix-cout-marge";
+import { TAUX_DE_MARQUE } from "./chapitres/taux-de-marque";
 import type { Chapitre } from "./types";
 
 /**
- * LE COURS PAR LA SIMULATION : DEUX PARCOURS, QUATRE PALIERS.
+ * LE COURS PAR LA SIMULATION : TROIS PARCOURS, QUATRE PALIERS.
  *
  * Un palier n'est pas un niveau du jeu (les niveaux 1 à 7 de l'arène) : c'est une
  * marche du programme, du lycée au DCG. Un chapitre appartient à un parcours et à
- * un palier ; il se joue dans n'importe laquelle des entreprises du cours.
+ * un palier ; il se joue dans n'importe laquelle des entreprises du cours, ou dans
+ * celles qu'il nomme.
+ *
+ * LE PARCOURS D'UNE FORMATION. Les deux premiers suivent la discipline ; le troisième
+ * suit le BTS MCO, et ne couvre que les paliers où ce BTS a quelque chose à apprendre,
+ * sous les mots de la formation. Tant qu'il se construit, la carte dit ce qui vient.
  *
  * ACCÈS (décision du propriétaire) : le premier chapitre est libre, il sert de
  * démonstration ; la suite du cours est réservée aux établissements sous licence.
@@ -34,7 +40,17 @@ import type { Chapitre } from "./types";
 
 export type CodeParcours = Chapitre["parcours"];
 
-export const PARCOURS: readonly { code: CodeParcours; titre: string; resume: string }[] = [
+export interface Parcours {
+  code: CodeParcours;
+  titre: string;
+  resume: string;
+  /** Le public de chaque palier, quand le parcours suit une formation ; absent : celui des paliers. */
+  publics?: Partial<Record<Chapitre["palier"], string>>;
+  /** Le parcours se construit : certains paliers de sa carte n'ont pas encore de chapitre. */
+  enPreparation?: true;
+}
+
+export const PARCOURS: readonly Parcours[] = [
   {
     code: "comptabilite-generale",
     titre: "Comptabilité générale",
@@ -45,6 +61,14 @@ export const PARCOURS: readonly { code: CodeParcours; titre: string; resume: str
     titre: "Comptabilité de gestion et contrôle de gestion",
     resume: "Des coûts aux décisions : marges, seuil de rentabilité, coûts complets, budgets et écarts, sur le même cas simulé.",
   },
+  {
+    code: "mco",
+    titre: "BTS MCO · Gérer un point de vente",
+    resume:
+      "La gestion opérationnelle d'une unité commerciale, puis l'animation de l'offre et le management de l'équipe : les calculs du magasin, sur les chiffres de l'arène.",
+    publics: { 2: "BTS MCO, 1re année", 3: "BTS MCO", 4: "BTS MCO, 2e année" },
+    enPreparation: true,
+  },
 ];
 
 export const PALIERS: readonly { palier: Chapitre["palier"]; titre: string; public: string }[] = [
@@ -54,8 +78,8 @@ export const PALIERS: readonly { palier: Chapitre["palier"]; titre: string; publ
   { palier: 4, titre: "Analyser et décider", public: "BTS 2e année, BUT, DCG" },
 ];
 
-/** Ce que chaque palier couvre, parcours par parcours : la carte du cours. */
-export const PROGRAMME: Record<CodeParcours, Record<Chapitre["palier"], readonly string[]>> = {
+/** Ce que chaque palier couvre, parcours par parcours : la carte du cours. Un palier absent n'est pas au programme. */
+export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], readonly string[]>>> = {
   "comptabilite-generale": {
     1: ["Les flux de l'entreprise", "Charges et produits, encaissements et décaissements"],
     2: ["La partie double et le journal", "La TVA", "Le premier bilan"],
@@ -68,8 +92,16 @@ export const PROGRAMME: Record<CodeParcours, Record<Chapitre["palier"], readonly
     3: ["Coût complet et centres d'analyse", "Coût par produit"],
     4: ["Budgets", "Analyse des écarts", "Tableau de bord", "Décider : prix, fabriquer ou acheter"],
   },
+  mco: {
+    2: ["Taux de marque, taux de marge, coefficient", "Les indicateurs du point de vente"],
+    3: ["Le stock du point de vente", "Prévoir les ventes", "Le budget du point de vente", "Le seuil de rentabilité du point de vente"],
+    4: ["La promotion qui paie", "L'assortiment : marge et volume", "L'équipe et son planning", "Le tableau de bord du manager"],
+  },
 };
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER];
+/** Les paliers que la carte montre pour un parcours, dans l'ordre. */
+export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
+
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE];
 
 export const chapitreParCode = (code: string) => CHAPITRES.find((c) => c.code === code);

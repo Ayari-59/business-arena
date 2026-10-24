@@ -24,6 +24,9 @@ import { scenarioByCode, scenarioCodeForLevel } from "../../src/config/scenarios
 
 const jouables = (codes?: readonly string[]) => codes ?? ENTREPRISES_DU_COURS;
 
+/** Les fichiers où s'écrivent les titres de la feuille de décision. */
+const FORMULAIRE = ["src/components/decision-form.tsx", "src/config/etapes-des-modules.ts"].map((f) => readFileSync(join(process.cwd(), f), "utf8"));
+
 describe("une mission par chapitre et par entreprise", () => {
   for (const chapitre of CHAPITRES) {
     it(chapitre.code, () => {
@@ -38,11 +41,15 @@ describe("une mission par chapitre et par entreprise", () => {
           expect(texte).not.toMatch(/ [-–—] /);
           expect(texte).toMatch(/[.?!]$/);
         }
-        // Les mots entre guillemets sont ceux de la feuille de décision, au niveau joué.
-        const v = scenarioByCode(scenarioCodeForLevel(code, m!.niveau)).vocabulary;
+        // Les mots entre guillemets sont ceux de la feuille de décision, au niveau joué : le
+        // prix et le volume de l'entreprise, ses fournisseurs, ou un titre écrit dans le formulaire.
+        const def = scenarioByCode(scenarioCodeForLevel(code, m!.niveau));
+        const feuille = [def.vocabulary.priceLabel, def.vocabulary.productionPlanLabel];
+        const fournisseurs = (def.scenario.suppliers ?? []).map((s) => s.name);
         for (const [, mot = ""] of m!.faire.matchAll(/« ([^»]+) »/g)) {
-          if (mot === "Ressources humaines" || mot.startsWith("Trésorerie · ")) continue;
-          expect([v.priceLabel, v.productionPlanLabel], `${chapitre.code} chez ${code}`).toContain(mot);
+          if (feuille.includes(mot)) continue;
+          if (fournisseurs.includes(mot)) continue;
+          expect(FORMULAIRE.some((t) => t.includes(`"${mot}"`) || t.includes(`legend="${mot}"`)), `${chapitre.code} chez ${code} : « ${mot} »`).toBe(true);
         }
         const affichee = missionAffichee(chapitre.code, cas)!;
         expect(affichee.adresse).toBe(`/jouer?secteur=${code}&niveau=${m!.niveau}`);
