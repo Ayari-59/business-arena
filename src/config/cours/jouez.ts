@@ -481,6 +481,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Qui est le leader de votre marché ? Votre part de marché a-t-elle monté ou baissé d'un tour à l'autre, et vos ventes ont-elles suivi le marché ?",
   }),
+  "segmenter-et-cibler": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis relevez les ventes de chaque clientèle et la demande qu'elle vous a adressée.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Quelle clientèle vous rapporte le plus ? Dans laquelle avez-vous laissé le plus de demande sans la servir ? Si vous baissiez votre prix au tour suivant, laquelle réagirait le plus ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
