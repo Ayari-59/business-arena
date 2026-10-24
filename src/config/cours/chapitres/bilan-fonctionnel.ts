@@ -104,6 +104,30 @@ export function bilanFonctionnel(c: Cas) {
   };
 }
 
+/**
+ * LE DÉLAI DES CLIENTS : les ventes de l'année restent les mêmes, seul change le délai que
+ * l'entreprise accorde. Les créances du 31 décembre valent aujourd'hui `delaiActuel` jours de
+ * ventes ; à un autre délai, elles changent dans la même proportion, et le besoin en fonds de
+ * roulement avec elles. Le délai cherché est le plus long qui laisse la trésorerie à zéro ou
+ * au-dessus.
+ */
+export function delaiDesClients(c: Cas) {
+  const b = bilanFonctionnel(c);
+  const delaiActuel = (b.fin.creances / b.ventes) * 360;
+  const creancesA = (jours: number) => (b.fin.creances * jours) / delaiActuel;
+  const bfrA = (jours: number) => b.apres.bfr - b.fin.creances + creancesA(jours);
+  const maximum = (delaiActuel * (b.apres.frng - b.apres.bfr + b.fin.creances)) / b.fin.creances;
+  const attendu = Math.floor(maximum + 1e-9);
+  return {
+    ...b,
+    delaiActuel,
+    creancesA,
+    bfrA,
+    attendu,
+    max: Math.ceil(Math.max(attendu * 1.4, delaiActuel * 2, 30) / 10) * 10,
+  };
+}
+
 /** Le bilan de l'arène, aux deux dates, tel que l'élève le lit. */
 function bilanDeLAnnee(c: Cas): TableauDeDonnees {
   const { debut: d, fin: f } = bilanFonctionnel(c);
@@ -298,6 +322,51 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         return [
           `Le fonds de roulement a bougé de ${signe(b.variationFrng)} : la CAF du chapitre précédent, ${eur(b.caf)}, ${b.investissements !== 0 ? `moins ${eur(b.investissements)} d'investissements, ` : ""}${b.empruntNet < 0 ? `moins ${eur(-b.empruntNet)} d'emprunt remboursé` : `plus ${eur(b.empruntNet)} d'emprunt nouveau`}${b.arrondiDeLImpot !== 0 ? `, à l'arrondi de l'impôt près (${eur(Math.abs(b.arrondiDeLImpot))})` : ""}.`,
           `La trésorerie a bougé de ${signe(b.variationTn)}, exactement ce que l'arène montre dans son tableau de trésorerie. Voilà l'écart entre la CAF et la trésorerie : l'emprunt, les investissements, et le besoin en fonds de roulement, qui a bougé de ${signe(b.variationBfr)}.`,
+        ];
+      },
+    },
+    {
+      id: "delai-clients",
+      type: "curseur",
+      titre: "Le délai des clients",
+      notions: ["bfr", "payment_terms"],
+      question: (c) => {
+        const d = delaiDesClients(c);
+        return `Aujourd'hui, les clients de ${c.entreprise} paient en moyenne à ${Math.round(d.delaiActuel)} jours : les créances valent ce nombre de jours de ventes. Les ventes restant les mêmes, jusqu'à combien de jours ${c.entreprise} peut-elle faire crédit à ses clients sans tomber à découvert ? Placez le curseur sur le délai le plus long, au jour près.`;
+      },
+      grandeur: () => ({ libelle: "Délai accordé aux clients", unite: "jours" }),
+      sens: "plus-grande",
+      cible: (c) => {
+        const d = delaiDesClients(c);
+        return { attendu: d.attendu, max: d.max };
+      },
+      lecture: (c, jours) => {
+        const d = delaiDesClients(c);
+        const bfr = auCentime(d.bfrA(jours));
+        return [
+          { libelle: "Créances clients", montant: auCentime(d.creancesA(jours)) },
+          { libelle: "Besoin en fonds de roulement", montant: bfr },
+          { libelle: "Fonds de roulement", montant: d.apres.frng },
+          { libelle: "Trésorerie nette", montant: auCentime(d.apres.frng - bfr), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const d = delaiDesClients(c);
+        return { produit: () => d.apres.frng, cout: (jours) => d.bfrA(jours), libelles: ["Fonds de roulement", "Besoin en fonds de roulement"] };
+      },
+      zones: ["Trésorerie positive", "Découvert"],
+      rates: () => ({
+        dessous: "Plus long, l'entreprise reste hors du découvert : cherchez le délai le plus long.",
+        dessus: "À ce délai, la trésorerie passe sous zéro : l'entreprise est à découvert.",
+      }),
+      montrer: "Montrer le délai",
+      explication: (c) => {
+        const d = delaiDesClients(c);
+        return [
+          `Chaque jour de crédit de plus immobilise ${eur(auCentime(d.creancesA(1)))} chez les clients. Au-delà de ${d.attendu} jours, le besoin en fonds de roulement dépasse le fonds de roulement, et la banque doit combler l'écart.`,
+          d.attendu >= d.delaiActuel
+            ? `${c.entreprise} a de la marge : elle pourrait accorder ${Math.round(d.attendu - d.delaiActuel)} jours de plus avant le découvert.`
+            : `${c.entreprise} accorde déjà plus que ce que son fonds de roulement finance : c'est pourquoi elle est à découvert.`,
         ];
       },
     },

@@ -319,6 +319,10 @@ describe.each([
         await page.getByRole("button", { name: "Vérifier" }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
+      } else if (etape.type === "curseur") {
+        const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
+        await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
+        await page.getByRole("button", { name: "Valider cette position" }).click();
       }
       const dernier = i === chapitre.etapes.length - 1;
       await page.getByRole("button", { name: dernier ? "Terminer le chapitre" : "Étape suivante" }).click();

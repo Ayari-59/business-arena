@@ -586,36 +586,47 @@ function EtapeDeTri({ etape, cas, chapitre, index, suivi, classe, noter, suite }
 
 /** Le graphique de la simulation : deux droites, leur croisement, et la position du curseur. */
 function GraphiqueDuSeuil({
+  min,
   max,
   produit,
   cout,
   libelles,
+  zones,
   position,
+  axe,
 }: {
+  min: number;
   max: number;
   produit: (q: number) => number;
   cout: (q: number) => number;
   libelles: [string, string];
+  zones: readonly [string, string];
   position: number;
+  axe: string;
 }) {
   const L = 560;
   const H = 260;
   const marge = { g: 8, d: 8, h: 12, b: 26 };
-  const hautMax = Math.max(produit(max), cout(max)) * 1.05;
-  const x = (q: number) => marge.g + (q / max) * (L - marge.g - marge.d);
-  const y = (v: number) => H - marge.b - (v / hautMax) * (H - marge.h - marge.b);
-  const ligne = (f: (q: number) => number) => `M ${x(0)} ${y(f(0))} L ${x(max)} ${y(f(max))}`;
-  const benefice = produit(position) >= cout(position);
+  // L'axe des montants va de zéro (ou du plus bas des deux droites, s'il est négatif) au plus haut.
+  const valeurs = [produit(min), produit(max), cout(min), cout(max)];
+  const hautMax = Math.max(...valeurs, 0) * 1.05 || 1;
+  const basMin = Math.min(...valeurs, 0) * 1.05;
+  const x = (q: number) => marge.g + ((q - min) / (max - min || 1)) * (L - marge.g - marge.d);
+  const y = (v: number) => H - marge.b - ((v - basMin) / (hautMax - basMin)) * (H - marge.h - marge.b);
+  const ligne = (f: (q: number) => number) => `M ${x(min)} ${y(f(min))} L ${x(max)} ${y(f(max))}`;
+  const couvre = produit(position) >= cout(position);
   return (
     <figure className="grid gap-2">
-      <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${libelles[0]} et ${libelles[1]} selon les quantités vendues`}>
-        <line x1={x(0)} y1={y(0)} x2={x(max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />
+      <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${libelles[0]} et ${libelles[1]} selon ${axe}`}>
+        <line x1={x(min)} y1={y(0)} x2={x(max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />
         <path d={ligne(cout)} stroke="#b45309" strokeWidth="2.5" fill="none" />
         <path d={ligne(produit)} stroke="#0e7490" strokeWidth="2.5" fill="none" />
-        <line x1={x(position)} y1={y(0)} x2={x(position)} y2={marge.h} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.6" />
+        <line x1={x(position)} y1={H - marge.b} x2={x(position)} y2={marge.h} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.6" />
         <circle cx={x(position)} cy={y(produit(position))} r="5" fill="#0e7490" />
         <circle cx={x(position)} cy={y(cout(position))} r="5" fill="#b45309" />
-        <text x={x(0)} y={H - 6} fontSize="12" fill="currentColor">0</text>
+        <text x={x(min)} y={H - 6} fontSize="12" fill="currentColor">
+          {min.toLocaleString("fr-FR")}
+        </text>
         <text x={x(max)} y={H - 6} fontSize="12" fill="currentColor" textAnchor="end">
           {max.toLocaleString("fr-FR")}
         </text>
@@ -627,22 +638,33 @@ function GraphiqueDuSeuil({
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="inline-block h-1 w-5" style={{ background: "#b45309" }} /> {libelles[1]}
         </span>
-        <span className="font-semibold">{benefice ? "Zone de bénéfice" : "Zone de perte"}</span>
+        <span className="font-semibold">{couvre ? zones[0] : zones[1]}</span>
       </figcaption>
     </figure>
   );
 }
 
+/** Ce qu'un curseur fait varier quand l'étape ne le dit pas : les ventes du mois, comme au seuil. */
+const VENTES_DU_MOIS = (cas: Cas) => ({ libelle: "Ventes du mois", unite: cas.unites });
+const RATES_DU_SEUIL = {
+  dessous: "À cette position, l'entreprise perd encore de l'argent.",
+  dessus: "Plus bas, l'entreprise ne perd toujours pas d'argent : cherchez la plus petite quantité.",
+};
+
 function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeCurseur>) {
-  const { attendu, max } = etape.cible(cas);
+  const { attendu, max, min = 0 } = etape.cible(cas);
   const droites = etape.droites(cas);
+  const grandeur = (etape.grandeur ?? VENTES_DU_MOIS)(cas);
+  const parDefaut = !etape.grandeur;
+  const rates = etape.rates?.(cas) ?? RATES_DU_SEUIL;
   const fait = suivi?.reussi ?? false;
   const essais = suivi?.essais ?? 0;
-  const [quantite, setQuantite] = useState(() => Math.round(max / 4));
+  const [valeur, setValeur] = useState(() => Math.round(min + (max - min) / 4));
   const [rate, setRate] = useState<string | null>(null);
-  const position = fait ? attendu : quantite;
+  const position = fait ? attendu : valeur;
   const lecture = etape.lecture(cas, position);
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
+  const borne = (n: number) => Math.min(max, Math.max(min, n));
   return (
     <>
       <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas)}</p>
@@ -650,46 +672,65 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
         <label className="grid gap-2">
           <span className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
             <span>
-              Ventes du mois : <strong className="text-lg tabular-nums">{position.toLocaleString("fr-FR")}</strong> {cas.unites}
+              {grandeur.libelle} : <strong className="text-lg tabular-nums">{position.toLocaleString("fr-FR")}</strong> {grandeur.unite}
             </span>
           </span>
           <input
             type="range"
             onWheel={sansMolette}
-            min={0}
+            min={min}
             max={max}
             step={1}
             value={position}
             disabled={fait}
-            aria-label="Ventes du mois"
+            aria-label={grandeur.libelle}
             onChange={(e) => {
-              setQuantite(Number(e.target.value));
+              setValeur(Number(e.target.value));
               setRate(null);
             }}
             className="w-full accent-amber-400"
           />
           {!fait && (
             <span className="flex flex-wrap items-center gap-2 text-sm">
-              <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => setQuantite((q) => Math.max(0, q - 1))} aria-label="Une vente de moins">
+              <button
+                type="button"
+                className={bouton({ variante: "secondaire", taille: "s" })}
+                onClick={() => setValeur((q) => borne(q - 1))}
+                aria-label={parDefaut ? "Une vente de moins" : `${grandeur.libelle} : un de moins`}
+              >
                 −1
               </button>
-              <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => setQuantite((q) => Math.min(max, q + 1))} aria-label="Une vente de plus">
+              <button
+                type="button"
+                className={bouton({ variante: "secondaire", taille: "s" })}
+                onClick={() => setValeur((q) => borne(q + 1))}
+                aria-label={parDefaut ? "Une vente de plus" : `${grandeur.libelle} : un de plus`}
+              >
                 +1
               </button>
               <input
                 className="champ w-28 px-2 py-1 text-right tabular-nums"
                 inputMode="numeric"
-                aria-label="Ventes du mois, au clavier"
-                value={quantite}
+                aria-label={`${grandeur.libelle}, au clavier`}
+                value={valeur}
                 onChange={(e) => {
                   const n = Number(e.target.value.replace(/\D/g, ""));
-                  if (Number.isFinite(n)) setQuantite(Math.min(max, n));
+                  if (Number.isFinite(n)) setValeur(Math.min(max, n));
                 }}
               />
             </span>
           )}
         </label>
-        <GraphiqueDuSeuil max={max} produit={droites.produit} cout={droites.cout} libelles={droites.libelles} position={position} />
+        <GraphiqueDuSeuil
+          min={min}
+          max={max}
+          produit={droites.produit}
+          cout={droites.cout}
+          libelles={droites.libelles}
+          zones={etape.zones ?? ["Zone de bénéfice", "Zone de perte"]}
+          position={position}
+          axe={grandeur.libelle.toLowerCase()}
+        />
         <table className="w-full max-w-md text-sm">
           <tbody>
             {lecture.map((l) => (
@@ -709,16 +750,16 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
             type="button"
             className={bouton({ taille: "m" })}
             onClick={() => {
-              const juste = quantite === attendu;
-              setRate(juste ? null : quantite < attendu ? "À cette position, l'entreprise perd encore de l'argent." : "Plus bas, l'entreprise ne perd toujours pas d'argent : cherchez la plus petite quantité.");
-              noter({ essai: true, ...(juste ? { reussi: true } : { remarques: [`A placé le curseur à ${quantite.toLocaleString("fr-FR")} ${cas.unites}`] }) });
+              const juste = valeur === attendu;
+              setRate(juste ? null : valeur < attendu ? rates.dessous : rates.dessus);
+              noter({ essai: true, ...(juste ? { reussi: true } : { remarques: [`A placé le curseur à ${valeur.toLocaleString("fr-FR")} ${grandeur.unite}`] }) });
             }}
           >
             Valider cette position
           </button>
           {peutMontrer && (
             <button type="button" className={bouton({ variante: "secondaire", taille: "m" })} onClick={() => noter({ aide: true, reussi: true })}>
-              Montrer le seuil
+              {etape.montrer ?? "Montrer le seuil"}
             </button>
           )}
         </div>
