@@ -6,6 +6,7 @@ import {
   AU_DELA_DES_SEANCES,
   couvertureDeLaFormation,
   coursDeLaFormation,
+  referentielDeLaFormation,
 } from "@/config/couverture";
 import { FORMATIONS } from "@/config/formations";
 import { scenariosServant } from "@/config/scenarios/formations-servies";
@@ -103,6 +104,10 @@ const FILIERES = (() => {
       // titre transforme la page en sommaire : on ne sait plus ce qu'il y a
       // derrière, donc on n'ouvre pas. Compté depuis la donnée, jamais écrit.
       blocs: couvertureDeLaFormation(formation.code).length,
+      // SUR COMBIEN. « 5 blocs de référentiel » sous le DCG laissait croire
+      // que le diplôme en comptait cinq ; il a treize unités, et la page du
+      // diplôme les montre toutes. Sans texte lu, il n'y a pas de total.
+      entrees: referentielDeLaFormation(formation.code)?.entrees.length ?? null,
       // Les chapitres du cours qui servent ce diplôme, comptés eux aussi.
       chapitres: coursDeLaFormation(formation.code).reduce(
         (n, g) => n + g.chapitres.length,
@@ -221,7 +226,8 @@ export default async function ParcoursPage() {
                   {f.diplome}
                 </h2>
                 <span className="mt-2 text-sm leading-relaxed text-slate-400">
-                  {f.blocs} blocs de référentiel · {f.volume}
+                  {f.blocs} blocs de référentiel
+                  {f.entrees ? ` sur ${f.entrees}` : ""} · {f.volume}
                   {f.chapitres > 0
                     ? ` · ${f.chapitres} chapitre${f.chapitres > 1 ? "s" : ""} de cours`
                     : ""}

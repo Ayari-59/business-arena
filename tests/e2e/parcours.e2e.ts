@@ -663,6 +663,10 @@ describe("parcours enseignant et élève", () => {
       // liste de noms devant laquelle personne ne sait quoi ouvrir.
       const premier = await tiroirs.first().locator("summary").innerText();
       expect(premier).toMatch(/blocs de référentiel/);
+      // Sur combien : le DCG travaille cinq unités sur treize, et le dit.
+      expect(
+        await onglet.locator('details[data-diplome="DCG"] summary').innerText(),
+      ).toMatch(/\d+ blocs de référentiel sur 13/);
       // LE VOLUME OU LE NOMBRE DE CHEMINS, selon ce que la formation a : les
       // séances ne s'additionnent pas d'un chemin à l'autre, donc une
       // formation qui en propose plusieurs annonce leur compte plutôt qu'un
