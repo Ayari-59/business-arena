@@ -173,7 +173,7 @@ export const HOTELLERIE_KPIS: SectorKpiDef[] = [
  * ordre de grandeur usuel du prêt-à-porter indépendant. L'hypothèse est ici,
  * visible, et non cachée dans un calcul.
  */
-const ARTICLES_PAR_TICKET = 1.6;
+export const ARTICLES_PAR_TICKET = 1.6;
 
 /**
  * Les indicateurs du commerce, pour une gamme comme pour un article unique :

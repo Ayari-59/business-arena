@@ -91,6 +91,13 @@ export const LIEUX_DE_L_ARENE = {
       { fichier: "src/components/tableau-des-references.tsx", texte: 'entete: "Marge/u"' },
     ],
   },
+  indicateurs: {
+    chemin: "Résultats › Marché › Indicateurs du métier",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Marché"' },
+      { fichier: "src/components/period-dashboard.tsx", texte: 'aria-label="Indicateurs du métier"' },
+    ],
+  },
   "plan-face-au-realise": {
     chemin: "Résultats › Marché › Votre plan face au réalisé",
     reperes: [
@@ -314,6 +321,23 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       lieux: ["analyse-des-couts", "budget-de-tresorerie"],
       chercher:
         "Dans l'analyse des coûts, retrouvez le coût d'achat d'une unité à chaque tour, et calculez votre taux de marque avec votre prix de vente. De combien a-t-il monté ? Dans le budget de trésorerie, les paiements fournisseurs sont-ils arrivés plus tôt ?",
+    };
+  },
+  "indicateurs-du-point-de-vente": (c) => {
+    const { prix, volume } = feuilleDe(c, 1);
+    // Le geste qui fait bouger l'indicateur du métier : le rayon, le trafic, ou la salle.
+    const geste =
+      c.code === "boutique"
+        ? `mettez nettement plus dans « ${volume} »`
+        : c.code === "ecommerce"
+          ? "doublez le « Budget marketing »"
+          : `baissez le « ${prix} » d'environ 5 %`;
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second où vous ${geste}.`,
+      lieux: ["indicateurs"],
+      chercher:
+        "Comparez les indicateurs du métier d'un tour à l'autre : lequel a bougé avec votre geste, et de combien ? Recalculez-le à la main à partir des ventes du tour, comme dans le chapitre.",
     };
   },
 };

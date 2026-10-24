@@ -85,6 +85,18 @@ export interface Cas {
    * Le même mois vu par le contrôle de gestion : les ventes du mois, leur prix moyen, les
    * coûts variables par unité, les charges fixes du mois (dont l'usure de l'équipement).
    */
+  /**
+   * Le marché du mois, clientèle par clientèle : la demande que l'arène a adressée à
+   * l'entreprise, ce qu'elle a vendu, ce qu'elle a manqué faute de stock ou de capacité, et
+   * ce que chaque clientèle a rapporté (le premier trimestre, ramené à un mois, à l'unité).
+   * Avec la capacité offerte du mois : ce qu'elle pouvait servir.
+   */
+  marche: {
+    clienteles: { code: string; nom: string; demande: number; vendu: number; manque: number; chiffreDAffaires: number }[];
+    capacite: number;
+    /** Le budget marketing du mois : ce que l'entreprise a payé pour attirer ses clients. */
+    marketing: number;
+  };
   gestion: {
     quantite: number;
     chiffreDAffaires: number;
@@ -382,8 +394,27 @@ export function casDeLEntreprise(code: string): Cas {
   // Le client paie après le fournisseur : le chapitre règle la dette, puis encaisse la créance.
   const dateVente = Math.max(20, dateAchat + delaiFournisseur - delaiClient + 1);
 
+  // En gamme, chaque référence a ses clientèles, sous son propre marché.
+  const nomDe = new Map([...s.market.segments, ...(s.products ?? []).flatMap((p) => p.market?.segments ?? [])].map((g) => [g.code, g.name]));
+  const auMois = (x: number) => Math.round(x / 3);
+  const marche: Cas["marche"] = {
+    clienteles: Object.entries(joueur.market.bySegment)
+      .filter(([, v]) => v.demandForCompany > 0)
+      .map(([seg, v]) => ({
+        code: seg,
+        nom: nomDe.get(seg) ?? seg,
+        demande: auMois(v.demandForCompany),
+        vendu: auMois(v.sold),
+        manque: auMois(v.lost),
+        chiffreDAffaires: auMois(v.revenue),
+      })),
+    capacite: auMois(joueur.production.machineCapacity),
+    marketing: auMois(joueur.incomeStatement.marketingCost),
+  };
+
   const cas: Omit<Cas, "gestion"> & Partial<Pick<Cas, "gestion">> = {
     code,
+    marche,
     entreprise: nomEntreprise(def),
     unite: def.vocabulary.unit,
     unites: def.vocabulary.units,
