@@ -488,6 +488,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Quelle clientèle vous rapporte le plus ? Dans laquelle avez-vous laissé le plus de demande sans la servir ? Si vous baissiez votre prix au tour suivant, laquelle réagirait le plus ?",
   }),
+  "prix-psychologique": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis un second en fixant « ${prix} » juste au-dessus d'un prix rond.`,
+      lieux: ["marche-du-tour"],
+      chercher:
+        "La demande adressée a-t-elle baissé plus que la petite hausse de prix ne le laissait prévoir ? Quelle clientèle a le plus réagi ?",
+    };
+  },
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
