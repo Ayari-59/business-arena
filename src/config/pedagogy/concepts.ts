@@ -604,6 +604,34 @@ export const CONCEPTS: ConceptDef[] = [
     formula: "CAC = budget d'acquisition / nouveaux clients gagnés",
   },
   {
+    code: "churn_rate",
+    name: "Taux d'attrition et de fidélisation",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "La part des clients présents en début de période qui ne sont plus clients à la fin, et son complément, la part qui reste.",
+    intuition:
+      "Un abonné qui part n'enlève pas une vente : il enlève toutes celles des périodes suivantes. Un portefeuille qui gagne 500 clients par trimestre et en perd 20 % ne grossit pas indéfiniment : il s'arrête là où les départs égalent les arrivées, soit 2 500 clients.",
+    method:
+      "Divisez les départs de la période par le portefeuille du début de période, pas par celui de la fin : les nouveaux venus n'ont pas encore eu le temps de partir. Suivez le taux période après période, et cherchez ce qui le fait monter : le prix, la qualité du service, la saison, une salle ou un service saturés.",
+    formula:
+      "Taux d'attrition = départs / clients en début de période ; taux de fidélisation = 1 − taux d'attrition",
+  },
+  {
+    code: "customer_lifetime_value",
+    name: "Valeur vie client",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "La marge totale qu'un client laisse à l'entreprise, de son arrivée à son départ.",
+    intuition:
+      "Un client qui laisse 90 € de marge par trimestre et part, en moyenne, au bout de six trimestres vaut 540 €, pas 90 €. C'est ce chiffre qu'il faut comparer à ce qu'il a coûté à gagner, et c'est lui que l'on perd quand il s'en va.",
+    method:
+      "Calculez la marge par client et par période, puis divisez-la par le taux d'attrition de la période : c'est la marge multipliée par la durée de vie moyenne, qui vaut un sur le taux d'attrition. Comparez ensuite au coût d'acquisition : sous un rapport de trois, la conquête rapporte à peine plus qu'elle ne coûte.",
+    formula:
+      "Valeur vie client = marge par client et par période / taux d'attrition par période",
+  },
+  {
     code: "payment_terms",
     name: "Délais de règlement et poste clients",
     domain: "finance",
@@ -1011,6 +1039,8 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   income_statement: ["revenue", "fixed_costs", "variable_costs"],
   dashboard: ["revenue", "fixed_costs"],
   customer_acquisition_cost: ["demand_market_share", "contribution_margin"],
+  churn_rate: ["demand_market_share"],
+  customer_lifetime_value: ["churn_rate", "contribution_margin"],
   weighted_average_cost: ["stock", "variable_costs"],
   occupancy_revpar: ["capacity", "revenue"],
   payment_terms: ["bfr"],
@@ -1107,6 +1137,8 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   income_statement: 2,
   dashboard: 2,
   customer_acquisition_cost: 3,
+  churn_rate: 3,
+  customer_lifetime_value: 3,
   weighted_average_cost: 3,
   occupancy_revpar: 3,
   payment_terms: 4,

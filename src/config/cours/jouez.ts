@@ -112,6 +112,13 @@ export const LIEUX_DE_L_ARENE = {
       { fichier: "src/components/period-dashboard.tsx", texte: "Votre plan face au réalisé" },
     ],
   },
+  portefeuille: {
+    chemin: "Résultats › Synthèse › Portefeuille d'adhérents",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Synthèse"' },
+      { fichier: "src/components/period-dashboard.tsx", texte: 'data-testid="portefeuille-tour"' },
+    ],
+  },
   feuille: {
     chemin: "Décider › Votre feuille de décision",
     reperes: [{ fichier: "src/components/decision-form.tsx", texte: "Votre feuille de décision" }],
@@ -418,6 +425,12 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["synthese", "indicateurs", "analyse-des-couts"],
     chercher:
       "Quel indicateur a bougé le premier, et dans quel sens ? Quelle décision avez-vous prise en le voyant, et l'a-t-elle remis dans le vert au tour suivant ?",
+  }),
+  "valeur-d-un-client": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez le portefeuille d'adhérents (partis, nouveaux, occupation), puis le taux d'attrition et la valeur vie client.`,
+    lieux: ["portefeuille", "indicateurs"],
+    chercher: `Au tour où l'occupation dépasse ${Math.round((scenarioByCode(c.code).scenario.subscription?.crowdingThreshold ?? 0) * 100)} %, l'attrition monte-t-elle ? De combien la valeur vie client baisse-t-elle alors ? Quelle décision la ferait redescendre : moins d'inscriptions, plus d'encadrement, ou plus de place ?`,
   }),
 };
 
