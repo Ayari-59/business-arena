@@ -90,6 +90,10 @@ export const TAUX_DE_MARQUE: Chapitre = {
   code: "taux-de-marque-et-coefficient",
   parcours: "mco",
   palier: 2,
+  blocs: [
+    "BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale",
+    "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+  ],
   titre: "Taux de marque, taux de marge, coefficient",
   accroche:
     "Ce que le magasin achète, ce qu'il revend, ce qui reste entre les deux, et les trois façons de le dire. Puis le prix de vente qui garde la marge quand le fournisseur change.",

@@ -43,6 +43,10 @@ export const TABLEAU_DE_BORD: Chapitre = {
   code: "tableau-de-bord",
   parcours: "controle-de-gestion",
   palier: 4,
+  blocs: [
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
+  ],
   titre: "Le tableau de bord",
   accroche:
     "Une année de l'arène en six indicateurs : les calculer, les lire, repérer le voyant qui s'allume, et choisir ce qui mérite d'y figurer.",

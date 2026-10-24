@@ -65,6 +65,10 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
   code: "seuil-de-rentabilite",
   parcours: "controle-de-gestion",
   palier: 2,
+  blocs: [
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
+  ],
   titre: "Le seuil de rentabilité",
   accroche:
     "Le même mois de janvier, vu par le contrôleur de gestion : à partir de combien de ventes l'entreprise gagne-t-elle de l'argent ? Vous le calculez, puis vous le trouvez sur la simulation.",

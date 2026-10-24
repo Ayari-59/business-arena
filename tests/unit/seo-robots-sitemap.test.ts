@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import robots, { CHEMINS_PRIVES } from "@/app/robots";
 import sitemap, { PAGES_PUBLIQUES } from "@/app/sitemap";
 import { ATELIERS } from "@/config/ateliers";
+import { formationsAvecUnePage } from "@/config/couverture";
 import { SITE_URL } from "@/config/site";
 
 // Le plan du site lit désormais les concours publiés en base : on la remplace
@@ -89,6 +90,12 @@ describe("sitemap.xml", () => {
       expect(urls).toContain(`${SITE_URL}/animations/${a.code}/dossier`);
       expect(urls).toContain(`${SITE_URL}/animations/${a.code}/formulaires`);
     }
+  });
+
+  it("liste la page de chaque diplôme servi, son tableau de couverture", () => {
+    const diplomes = formationsAvecUnePage();
+    expect(diplomes.length, "aucun diplôme n'a sa page").toBeGreaterThan(5);
+    for (const f of diplomes) expect(urls).toContain(`${SITE_URL}/parcours/${f.code}`);
   });
 
   it("ne liste que des routes qui existent", () => {

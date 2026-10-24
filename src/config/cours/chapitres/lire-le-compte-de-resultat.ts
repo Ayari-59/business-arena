@@ -50,6 +50,9 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
   code: "lire-le-compte-de-resultat",
   parcours: "stmg-gf",
   palier: 1,
+  blocs: [
+    "STMG Thème 3 · Création de valeur et performance",
+  ],
   titre: "Le compte de résultat : ce que l'année a rapporté",
   accroche:
     "Les produits d'un côté, les charges de l'autre, et ce qui reste entre les deux : le résultat. Lire l'année d'une entreprise, et dire ce qu'elle gagne sur cent euros de ventes.",

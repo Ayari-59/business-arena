@@ -112,6 +112,9 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
   code: "tableau-de-bord-du-manager",
   parcours: "mco",
   palier: 4,
+  blocs: [
+    "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+  ],
   titre: "Le tableau de bord du manager",
   accroche:
     "Tous les indicateurs du parcours sur une seule page, rangés par ce qu'ils surveillent. Puis deux trimestres côte à côte, pour trouver le voyant rouge.",

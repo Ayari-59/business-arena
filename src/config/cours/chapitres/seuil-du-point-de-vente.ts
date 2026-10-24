@@ -64,6 +64,9 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
   code: "seuil-du-point-de-vente",
   parcours: "mco",
   palier: 3,
+  blocs: [
+    "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+  ],
   titre: "Le seuil de rentabilité du point de vente",
   accroche:
     "À partir de quel chiffre d'affaires, de quel jour du mois, de combien de clients le point de vente gagne-t-il de l'argent ? Et jusqu'où peut descendre le panier ?",

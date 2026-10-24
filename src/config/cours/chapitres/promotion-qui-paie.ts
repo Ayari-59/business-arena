@@ -61,6 +61,9 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
   code: "promotion-qui-paie",
   parcours: "mco",
   palier: 4,
+  blocs: [
+    "BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale",
+  ],
   titre: "La promotion qui paie",
   accroche:
     "Une remise attire des clients, mais elle se paie sur chaque vente, même celles qui auraient eu lieu sans elle. Combien faut-il vendre en plus ? Et l'arène les a-t-elle vendus ?",

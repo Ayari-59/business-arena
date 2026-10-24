@@ -29,6 +29,10 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
   code: "analyse-des-ecarts",
   parcours: "controle-de-gestion",
   palier: 4,
+  blocs: [
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
+  ],
   titre: "L'analyse des écarts",
   accroche:
     "Le budget prévoyait, l'arène a joué : décomposer l'écart pour savoir s'il vient des quantités, des prix ou des coûts, et ce qu'il coûte au résultat.",

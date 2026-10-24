@@ -105,6 +105,11 @@ export const LA_CLOTURE: Chapitre = {
   code: "la-cloture",
   parcours: "comptabilite-generale",
   palier: 3,
+  blocs: [
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "BTS CG P3 · Gestion des obligations fiscales",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "La clôture",
   accroche:
     "L'année de l'arène arrive en balance : vous passez les travaux d'inventaire, puis vous calculez le résultat, l'impôt et ce qui reste à l'entreprise.",

@@ -83,6 +83,10 @@ export const IMMOBILISATIONS: Chapitre = {
   code: "immobilisations",
   parcours: "comptabilite-generale",
   palier: 3,
+  blocs: [
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "Immobilisations et amortissements",
   accroche:
     "L'équipement de l'entreprise, de son achat à sa revente : ce qu'il coûte chaque année, ce que vaut ce qui en reste, et pourquoi l'amortissement ne sort pas d'argent.",

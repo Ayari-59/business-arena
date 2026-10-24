@@ -25,6 +25,10 @@ export const LA_PAIE: Chapitre = {
   code: "la-paie",
   parcours: "comptabilite-generale",
   palier: 3,
+  blocs: [
+    "BTS CG P4 · Gestion des relations sociales",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "La paie",
   accroche:
     "Le bulletin de paie ligne par ligne : l'acompte, les cotisations organisme par organisme, le prélèvement à la source, et ce que chacun attend le mois suivant.",

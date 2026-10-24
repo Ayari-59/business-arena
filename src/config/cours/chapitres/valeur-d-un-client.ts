@@ -126,6 +126,9 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
   code: "valeur-d-un-client",
   parcours: "ndrc",
   palier: 3,
+  blocs: [
+    "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+  ],
   titre: "La valeur d'un client : attrition et valeur vie",
   accroche:
     "Un abonné ne s'achète pas une fois : il se garde ou il part. Combien rapporte-t-il avant de partir, combien a-t-il coûté à gagner, et que vaut un point de fidélité ?",

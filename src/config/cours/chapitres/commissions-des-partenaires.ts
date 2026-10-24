@@ -94,6 +94,9 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
   code: "commissions-des-partenaires",
   parcours: "ndrc",
   palier: 3,
+  blocs: [
+    "BTS NDRC Bloc 3 · Relation client et animation de réseaux",
+  ],
   titre: "Les commissions des canaux partenaires",
   accroche:
     "Une place de marché amène des commandes sans campagne, et prélève sa part. Ce qu'elle coûte vraiment, comparée au client qu'on va chercher soi-même, et ce qu'elle garde pour elle.",

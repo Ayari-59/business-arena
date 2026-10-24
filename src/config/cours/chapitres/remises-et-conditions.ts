@@ -78,6 +78,9 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
   code: "remises-et-conditions",
   parcours: "ndrc",
   palier: 2,
+  blocs: [
+    "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+  ],
   titre: "Remises et conditions : la rentabilité d'une affaire",
   accroche:
     "Une remise, un escompte, un délai de paiement : chaque concession prend sa part de la marge. Ce que l'affaire rapporte vraiment, et ce qu'il faut obtenir en échange.",

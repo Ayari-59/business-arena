@@ -72,6 +72,13 @@ export interface Parcours {
   publics?: Partial<Record<Chapitre["palier"], string>>;
   /** Le parcours se construit : certains paliers de sa carte n'ont pas encore de chapitre. */
   enPreparation?: true;
+  /**
+   * La formation que le parcours suit (config/formations.ts), quand il en suit une : sa page de
+   * couverture (/parcours/<formation>) le présente en entier, même les chapitres dont le
+   * programme n'a pas encore été confronté au texte et qui ne citent donc aucun bloc. Absent :
+   * un parcours de discipline, qui paraît chez chaque formation par les blocs qu'il cite.
+   */
+  formation?: string;
 }
 
 export const PARCOURS: readonly Parcours[] = [
@@ -87,6 +94,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "mco",
+    formation: "bts-mco",
     titre: "BTS MCO · Gérer un point de vente",
     resume:
       "La gestion opérationnelle d'une unité commerciale, puis l'animation de l'offre et le management de l'équipe : les calculs du magasin, sur les chiffres de l'arène.",
@@ -94,6 +102,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "ndrc",
+    formation: "bts-ndrc",
     titre: "BTS NDRC · Négocier et développer la relation client",
     resume:
       "La négociation, la valeur d'un client et le pilotage de l'activité commerciale : ce qu'une affaire, un client, une campagne ou un canal rapporte, sur les chiffres de l'arène.",
@@ -101,6 +110,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "stmg",
+    formation: "stmg",
     titre: "Bac STMG · Mercatique",
     resume:
       "Le marché, les clients, le prix, la communication et la distribution : les questions du mercaticien, sur les chiffres de l'arène, au niveau du lycée.",
@@ -108,6 +118,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "stmg-gf",
+    formation: "stmg",
     titre: "Bac STMG · Gestion et finance",
     resume:
       "Le compte de résultat, le bilan, la valeur créée, la rentabilité, la trésorerie et le financement : lire les comptes d'une entreprise, sur son année dans l'arène, au niveau du lycée.",

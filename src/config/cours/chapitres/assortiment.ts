@@ -91,6 +91,9 @@ export const ASSORTIMENT: Chapitre = {
   code: "assortiment",
   parcours: "mco",
   palier: 4,
+  blocs: [
+    "BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale",
+  ],
   titre: "L'assortiment : marge et volume",
   accroche:
     "La référence qui fait le plus de chiffre d'affaires n'est pas toujours celle qui rapporte le plus. Marge par référence, familles de l'assortiment, et la question du rayon : laquelle retirer ?",

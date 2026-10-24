@@ -68,6 +68,9 @@ export const COUT_D_ACQUISITION: Chapitre = {
   code: "cout-d-acquisition",
   parcours: "ndrc",
   palier: 3,
+  blocs: [
+    "BTS NDRC Bloc 2 · Relation client à distance et digitalisation",
+  ],
   titre: "Le coût d'acquisition et la rentabilité d'une campagne",
   accroche:
     "Une campagne amène des clients. Combien coûte chacun, que laisse-t-il une fois payé, et jusqu'où vaut-il la peine de dépenser plus ?",

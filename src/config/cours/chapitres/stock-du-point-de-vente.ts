@@ -78,6 +78,9 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
   code: "stock-du-point-de-vente",
   parcours: "mco",
   palier: 3,
+  blocs: [
+    "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+  ],
   titre: "Le stock du point de vente",
   accroche:
     "Ce que le stock immobilise, et à quelle vitesse il tourne. Puis la question du banquier : le fournisseur finance-t-il le stock, ou le magasin paie-t-il ses articles avant de les vendre ?",

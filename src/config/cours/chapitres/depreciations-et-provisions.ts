@@ -49,6 +49,10 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
   code: "depreciations-et-provisions",
   parcours: "comptabilite-generale",
   palier: 4,
+  blocs: [
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "Dépréciations et provisions",
   accroche:
     "Un client qui ne paiera pas tout, un salarié qui conteste son licenciement : au 31 décembre, le comptable compte les pertes probables avant les gains, et l'année suivante dit s'il a bien estimé.",

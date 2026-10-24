@@ -109,6 +109,10 @@ export const COUT_COMPLET: Chapitre = {
   code: "cout-complet",
   parcours: "controle-de-gestion",
   palier: 3,
+  blocs: [
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
+  ],
   titre: "Coût complet et centres d'analyse",
   accroche:
     "Le même mois que le seuil de rentabilité, par l'autre méthode : chaque charge suivie jusqu'au produit, du coût d'achat au coût de revient.",

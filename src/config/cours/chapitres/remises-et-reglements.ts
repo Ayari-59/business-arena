@@ -65,6 +65,10 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
   code: "remises-et-reglements",
   parcours: "comptabilite-generale",
   palier: 3,
+  blocs: [
+    "BTS CG P1 · Contrôle et traitement comptable des opérations commerciales",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "Remises et règlements",
   accroche:
     "Ce que les professionnels négocient sur une facture : la remise qui baisse le prix, l'escompte qui paie la rapidité, et le calcul qui dit s'il vaut la peine.",

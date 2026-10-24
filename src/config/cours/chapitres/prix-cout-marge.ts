@@ -70,6 +70,9 @@ export const PRIX_COUT_MARGE: Chapitre = {
   code: "prix-cout-et-marge",
   parcours: "controle-de-gestion",
   palier: 1,
+  blocs: [
+    "STMG Thème 3 · Création de valeur et performance",
+  ],
   titre: "Prix, coût et marge",
   accroche:
     "Ce qu'une unité vendue rapporte, ce qu'elle coûte, ce qui reste entre les deux : la marge. Et pourquoi une belle marge ne suffit pas toujours à gagner de l'argent.",

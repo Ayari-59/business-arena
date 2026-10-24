@@ -5,6 +5,7 @@ import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import {
   AU_DELA_DES_SEANCES,
   couvertureDeLaFormation,
+  coursDeLaFormation,
 } from "@/config/couverture";
 import { FORMATIONS } from "@/config/formations";
 import { scenariosServant } from "@/config/scenarios/formations-servies";
@@ -15,6 +16,7 @@ import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
 import { EnTeteDePage } from "@/components/en-tete-de-page";
 import { TiroirsDesDiplomes } from "@/components/tiroirs-de-diplomes";
+import { PASTILLE_D_ADEQUATION } from "@/components/adequation";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
 
@@ -101,6 +103,11 @@ const FILIERES = (() => {
       // titre transforme la page en sommaire : on ne sait plus ce qu'il y a
       // derrière, donc on n'ouvre pas. Compté depuis la donnée, jamais écrit.
       blocs: couvertureDeLaFormation(formation.code).length,
+      // Les chapitres du cours qui servent ce diplôme, comptés eux aussi.
+      chapitres: coursDeLaFormation(formation.code).reduce(
+        (n, g) => n + g.chapitres.length,
+        0,
+      ),
       // LES ENTREPRISES QUI SERVENT CE DIPLÔME, lues dans le registre des
       // entreprises (config/scenarios/formations-servies) : celles que ses
       // déroulés font jouer, et celles qui lui conviennent sans déroulé.
@@ -117,18 +124,6 @@ const FILIERES = (() => {
     };
   }).filter((f) => f.ateliers.length > 0);
 })();
-
-const ADEQUATION: Record<string, { label: string; className: string }> = {
-  coeur: {
-    label: "cœur du jeu",
-    className: "border-emerald-400 text-emerald-300",
-  },
-  couvert: { label: "couvert", className: "border-white/10 text-sky-300" },
-  partiel: {
-    label: "partiel",
-    className: "border-slate-400/40 text-slate-400",
-  },
-};
 
 /**
  * PLUS D'EMOJI SUR CETTE PAGE. Quatre diplômes en portaient un — 🎓 🛍️ 🤝 🧮 —
@@ -227,10 +222,26 @@ export default async function ParcoursPage() {
                 </h2>
                 <span className="mt-2 text-sm leading-relaxed text-slate-400">
                   {f.blocs} blocs de référentiel · {f.volume}
+                  {f.chapitres > 0
+                    ? ` · ${f.chapitres} chapitre${f.chapitres > 1 ? "s" : ""} de cours`
+                    : ""}
                   {f.parcours ? " · réglages conseillés" : ""}
                 </span>
               </summary>
               <div className="border-t border-white/10 px-6 pb-6 pt-6 sm:px-8 sm:pb-8">
+                {/*
+                  LA PAGE DU DIPLÔME, EN TÊTE DU TIROIR. Le tiroir résume ; la
+                  page donne le tableau entier, entrée par entrée du texte, y
+                  compris ce que rien ne travaille, et le cours qui le sert.
+                */}
+                <p className="mb-5">
+                  <Link
+                    href={`/parcours/${f.code}`}
+                    className="text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
+                  >
+                    Le tableau de couverture complet, entrée par entrée
+                  </Link>
+                </p>
                 {f.parcours ? (
                   <>
                     <p className="max-w-2xl text-base leading-relaxed text-slate-400">
@@ -288,9 +299,9 @@ export default async function ParcoursPage() {
                         {b.referentiel}
                       </p>
                       <span
-                        className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
+                        className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${PASTILLE_D_ADEQUATION[b.adequation].className}`}
                       >
-                        {ADEQUATION[b.adequation]!.label}
+                        {PASTILLE_D_ADEQUATION[b.adequation].label}
                       </span>
                       {b.commentaire ? (
                         <p className="col-span-2 text-sm leading-relaxed text-slate-300">
@@ -329,7 +340,29 @@ export default async function ParcoursPage() {
                         {b.declaree
                           ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
                           : ""}
+                        {b.presences.length === 0
+                          ? "Aucune séance d'atelier : le cours le travaille seul"
+                          : ""}
                       </p>
+                      {b.chapitres.length > 0 ? (
+                        <p
+                          data-chapitres-du-bloc=""
+                          className="col-span-2 text-sm leading-relaxed text-slate-400"
+                        >
+                          Dans le cours :{" "}
+                          {b.chapitres.map((ch, i) => (
+                            <span key={ch.code}>
+                              {i > 0 ? ", " : ""}
+                              <Link
+                                href={`/cours/${ch.code}`}
+                                className="text-slate-300 underline-offset-4 transition-colors hover:text-amber-300 hover:underline"
+                              >
+                                {ch.titre}
+                              </Link>
+                            </span>
+                          ))}
+                        </p>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

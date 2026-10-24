@@ -92,6 +92,9 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
   code: "indicateurs-du-point-de-vente",
   parcours: "mco",
   palier: 2,
+  blocs: [
+    "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+  ],
   titre: "Les indicateurs du point de vente",
   accroche:
     "Ce que le manager lit chaque soir : le chiffre d'affaires, les clients, le panier moyen, et l'indicateur qui fait son métier. Puis deux façons d'atteindre un objectif.",

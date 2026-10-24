@@ -77,6 +77,10 @@ export const L_EMPRUNT: Chapitre = {
   code: "l-emprunt",
   parcours: "comptabilite-generale",
   palier: 3,
+  blocs: [
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "DCG UE9 · Comptabilité",
+  ],
   titre: "L'emprunt et ses intérêts",
   accroche:
     "Le prêt de l'entreprise, échéance après échéance : ce qui rembourse la dette, ce qui coûte, et pourquoi le coût baisse avec le temps.",
