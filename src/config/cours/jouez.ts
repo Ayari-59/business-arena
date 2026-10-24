@@ -474,6 +474,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       chercher: `Classez vos clientèles par chiffre d'affaires : combien en faut-il pour faire ${SEUILS_ABC.a} % des ventes ? La référence qui laisse la meilleure marge par unité est-elle celle de votre plus gros compte ?`,
     };
   },
+  "marche-et-part-de-marche": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer, puis relevez votre part de marché et celle de vos concurrents.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Qui est le leader de votre marché ? Votre part de marché a-t-elle monté ou baissé d'un tour à l'autre, et vos ventes ont-elles suivi le marché ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
