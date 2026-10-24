@@ -176,7 +176,7 @@ export type Etape =
 
 export interface Chapitre {
   code: string;
-  parcours: "comptabilite-generale" | "controle-de-gestion" | "mco" | "ndrc" | "stmg";
+  parcours: "comptabilite-generale" | "controle-de-gestion" | "mco" | "ndrc" | "stmg" | "stmg-gf";
   palier: 1 | 2 | 3 | 4;
   titre: string;
   accroche: string;

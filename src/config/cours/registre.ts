@@ -42,10 +42,11 @@ import { PRIX_PSYCHOLOGIQUE } from "./chapitres/prix-psychologique";
 import { DEMANDE_ET_PRIX } from "./chapitres/demande-et-prix";
 import { COMMUNICATION } from "./chapitres/communication";
 import { CANAUX_DE_DISTRIBUTION } from "./chapitres/canaux-de-distribution";
+import { LIRE_LE_COMPTE_DE_RESULTAT } from "./chapitres/lire-le-compte-de-resultat";
 import type { Chapitre } from "./types";
 
 /**
- * LE COURS PAR LA SIMULATION : CINQ PARCOURS, QUATRE PALIERS.
+ * LE COURS PAR LA SIMULATION : SIX PARCOURS, QUATRE PALIERS.
  *
  * Un palier n'est pas un niveau du jeu (les niveaux 1 à 7 de l'arène) : c'est une
  * marche du programme, du lycée au DCG. Un chapitre appartient à un parcours et à
@@ -53,7 +54,8 @@ import type { Chapitre } from "./types";
  * celles qu'il nomme.
  *
  * LE PARCOURS D'UNE FORMATION. Les deux premiers suivent la discipline ; les suivants
- * suivent une formation (le BTS MCO, le BTS NDRC, la mercatique du bac STMG), et ne couvrent
+ * suivent une formation (le BTS MCO, le BTS NDRC, la mercatique et la gestion et finance du
+ * bac STMG), et ne couvrent
  * que les paliers où elle a quelque chose à apprendre, sous ses mots. Tant qu'il se construit, la carte dit ce qui vient.
  *
  * ACCÈS (décision du propriétaire) : le premier chapitre est libre, il sert de
@@ -104,6 +106,14 @@ export const PARCOURS: readonly Parcours[] = [
       "Le marché, les clients, le prix, la communication et la distribution : les questions du mercaticien, sur les chiffres de l'arène, au niveau du lycée.",
     publics: { 1: "Terminale STMG, mercatique" },
   },
+  {
+    code: "stmg-gf",
+    titre: "Bac STMG · Gestion et finance",
+    resume:
+      "Le compte de résultat, le bilan, la valeur créée, la rentabilité, la trésorerie et le financement : lire les comptes d'une entreprise, sur son année dans l'arène, au niveau du lycée.",
+    publics: { 1: "Terminale STMG, gestion et finance" },
+    enPreparation: true,
+  },
 ];
 
 export const PALIERS: readonly { palier: Chapitre["palier"]; titre: string; public: string }[] = [
@@ -147,11 +157,21 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Les canaux de distribution",
     ],
   },
+  "stmg-gf": {
+    1: [
+      "Le compte de résultat : ce que l'année a rapporté",
+      "Le bilan : ce que l'entreprise possède et ce qu'elle doit",
+      "La valeur ajoutée et son partage",
+      "La rentabilité",
+      "Fonds de roulement, besoin en fonds de roulement et trésorerie",
+      "Financer l'entreprise : autofinancement ou emprunt",
+    ],
+  },
 };
 
 /** Les paliers que la carte montre pour un parcours, dans l'ordre. */
 export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT];
 
 export const chapitreParCode = (code: string) => CHAPITRES.find((c) => c.code === code);
