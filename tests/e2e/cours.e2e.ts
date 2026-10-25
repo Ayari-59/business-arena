@@ -5,7 +5,7 @@ import { enseignantSousLicence } from "./helpers/licence";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
-import { SITUATIONS } from "../../src/config/cours/situations";
+import { SITUATIONS, motsDuContenu } from "../../src/config/cours/situations";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
@@ -50,6 +50,8 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     for (const code of ENTREPRISES_DU_COURS) {
       expect(await page.locator(`a[href="${chemin(code)}"]`).count(), code).toBeGreaterThan(0);
     }
+    // Les quatre briques et leur enchaînement, avant le catalogue.
+    expect(await page.locator("[data-articulation] [data-brique]").count()).toBe(4);
     // Un tiroir par thème, fermés à l'arrivée : la page est un index, pas une carte à dérouler.
     expect(await page.locator("details[data-theme]").count()).toBe(THEMES.length);
     expect(await page.locator("details[data-theme][open]").count()).toBe(0);
@@ -461,7 +463,7 @@ describe.each([
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
     await aller(libre, `/cours/${chapitreCode}?entreprise=${entreprise}`);
-    expect(await libre.locator("main").innerText()).toContain("réservé aux établissements sous licence");
+    expect(await libre.locator("main").innerText()).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
     await libre.context().close();
 
     const code = entreprise;
@@ -512,7 +514,7 @@ describe.each([
         await page.getByRole("button", { name: "Valider cette position" }).click();
       }
       const dernier = i === chapitre.etapes.length - 1;
-      await page.getByRole("button", { name: dernier ? "Terminer le chapitre" : "Étape suivante" }).click();
+      await page.getByRole("button", { name: dernier ? motsDuContenu(chapitre.code).terminer : "Étape suivante" }).click();
     }
     const notees = chapitre.etapes.filter((e) => e.type !== "lecture").length;
     await expect

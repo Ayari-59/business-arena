@@ -6,6 +6,7 @@ import { ChapitreGuide } from "@/components/cours/chapitre-guide";
 import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { chapitreParCode } from "@/config/cours/registre";
+import { motsDuContenu } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
 import { getSession } from "@/lib/session";
 import { getGuestUserId } from "@/lib/guest";
@@ -69,7 +70,7 @@ export default async function ChapitrePage({
             <p className="surtitre">Le cours par la simulation</p>
             <h1 className="text-3xl font-bold text-slate-50">{chapitre.titre}</h1>
             <p className="text-base text-slate-300">
-              Ce chapitre est réservé aux établissements sous licence : il s&apos;ouvre aux enseignants de
+              {motsDuContenu(chapitre.code).reserve} aux établissements sous licence : le contenu s&apos;ouvre aux enseignants de
               l&apos;établissement, et à leurs élèves par leur classe. Le premier chapitre du cours, lui, est libre.
             </p>
             <p>

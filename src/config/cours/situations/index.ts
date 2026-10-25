@@ -21,3 +21,26 @@ export const SITUATIONS: readonly Situation[] = [
 ];
 
 export const situationParCode = (code: string) => SITUATIONS.find((s) => s.code === code);
+
+/**
+ * LES MOTS DE LA PAGE, SELON CE QU'ELLE OUVRE. Une mise en situation s'ouvre
+ * comme un chapitre, mais elle n'en est pas un : la page ne dit pas « Ce chapitre
+ * est réservé » ni « Terminer le chapitre » à l'élève qui répond à une demande.
+ */
+export function motsDuContenu(code: string) {
+  return situationParCode(code)
+    ? {
+        reserve: "Cette mise en situation est réservée",
+        terminer: "Terminer la mise en situation",
+        termine: "Mise en situation terminée",
+        etapes: "Les étapes de la mise en situation",
+        journal: "Le journal complet de la mise en situation",
+      }
+    : {
+        reserve: "Ce chapitre est réservé",
+        terminer: "Terminer le chapitre",
+        termine: "Chapitre terminé",
+        etapes: "Les étapes du chapitre",
+        journal: "Le journal complet du chapitre",
+      };
+}

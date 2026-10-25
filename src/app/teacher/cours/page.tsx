@@ -10,6 +10,7 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
 import { ENTREPRISES } from "@/app/cours/entreprises";
+import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { creerClasseAction } from "./actions";
 
 export const metadata: Metadata = {
@@ -131,6 +132,7 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
             ))}
           </ul>
         )}
+        <ArticulationDuCours titreId="articulation-enseignant" />
       </div>
     </main>
   );
