@@ -163,7 +163,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Deux semaines pour finir
     { principale: "R4", secondaires: ["R6"] },
   ],
-  // 2. L'équipe qui s'épuise
+  // 18. L'équipe qui s'épuise
   "equipe-qui-s-epuise": [
     // D1 · Les délais explosent
     { principale: "R2", secondaires: ["R8", "R4"] },
@@ -178,7 +178,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R10", secondaires: ["R8"] },
   ],
-  // 3. Le dépôt qui déborde
+  // 13. Le dépôt qui déborde
   "depot-qui-deborde": [
     // D1 · En rupture, et plein à craquer
     { principale: "R2", secondaires: ["R4", "R10"] },
@@ -193,7 +193,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Un chantier de 220 logements
     { principale: "R1", secondaires: ["R6"] },
   ],
-  // 4. Le budget qui ne tient pas
+  // 7. Le budget qui ne tient pas
   "budget-qui-ne-tient-pas": [
     // D1 · Le budget ne tient pas
     { principale: "R2", secondaires: ["R4"] },
@@ -208,7 +208,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R6", secondaires: ["R10"] },
   ],
-  // 5. Le projet qui glisse
+  // 27. Le projet qui glisse
   "projet-qui-glisse": [
     // D1 · Le projet a glissé
     { principale: "R2", secondaires: ["R4"] },
@@ -223,7 +223,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Préparer l'ouverture
     { principale: "R5", secondaires: ["R9"] },
   ],
-  // 6. Le fournisseur qui augmente
+  // 8. Le fournisseur qui augmente
   "fournisseur-qui-augmente": [
     // D1 · Placova augmente de 12 %
     { principale: "R2", secondaires: ["R5"] },
@@ -238,7 +238,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les réserves du trimestre
     { principale: "R10", secondaires: ["R9"] },
   ],
-  // 7. Le poste qui reste vide
+  // 23. Le poste qui reste vide
   "poste-qui-reste-vide": [
     // D1 · Le poste reste vide
     { principale: "R2", secondaires: ["R9"] },
@@ -253,7 +253,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La période d'essai
     { principale: "R9", secondaires: ["R10"] },
   ],
-  // 8. La réclamation qui enfle
+  // 14. La réclamation qui enfle
   "reclamation-qui-enfle": [
     // D1 · Les malaxeurs reviennent
     { principale: "R2", secondaires: ["R10", "R4"] },
@@ -268,7 +268,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le lot corrigé arrive
     { principale: "R1", secondaires: ["R5"] },
   ],
-  // 9. Le quai dangereux
+  // 15. Le quai dangereux
   "quai-dangereux": [
     // D1 · Un chariot frôle un piéton
     { principale: "R2", secondaires: ["R9", "R4"] },
@@ -283,7 +283,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R5", secondaires: ["R10"] },
   ],
-  // 10. La réorganisation qui coince
+  // 28. La réorganisation qui coince
   "reorganisation-qui-coince": [
     // D1 · L'annonce a mal pris
     { principale: "R9", secondaires: ["R1"] },
@@ -298,7 +298,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R10", secondaires: ["R9"] },
   ],
-  // 11. La trésorerie qui fond
+  // 9. La trésorerie qui fond
   "tresorerie-qui-fond": [
     // D1 · Le découvert approche
     { principale: "R2", secondaires: ["R4"] },
@@ -313,7 +313,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le pic de la semaine 12
     { principale: "R6", secondaires: ["R7", "R10"] },
   ],
-  // 12. L'agence qui démarre
+  // 2. L'agence qui démarre
   "agence-qui-demarre": [
     // D1 · La fréquentation ne décolle pas
     { principale: "R1", secondaires: ["R4"] },
@@ -328,7 +328,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R4", secondaires: ["R1"] },
   ],
-  // 13. La panne qui paralyse
+  // 16. La panne qui paralyse
   "panne-qui-paralyse": [
     // D1 · Plus rien ne fonctionne
     { principale: "R5", secondaires: ["R8"] },
@@ -343,7 +343,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Sortir de la crise
     { principale: "R3", secondaires: ["R8"] },
   ],
-  // 14. Le collaborateur qui décroche
+  // 19. Le collaborateur qui décroche
   "collaborateur-qui-decroche": [
     // D1 · Didier décroche
     { principale: "R9", secondaires: ["R1"] },
@@ -358,7 +358,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le rush de fin d'année
     { principale: "R9", secondaires: ["R3"] },
   ],
-  // 15. L'indicateur qui ment
+  // 10. L'indicateur qui ment
   "indicateur-qui-ment": [
     // D1 · Le tableau est vert, les ventes baissent
     { principale: "R10", secondaires: ["R1"] },
@@ -373,7 +373,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le tableau de bord de demain
     { principale: "R10", secondaires: ["R9"] },
   ],
-  // 16. L'appel d'offres
+  // 3. L'appel d'offres
   "appel-d-offres": [
     // D1 · Trois consultations, une équipe
     { principale: "R5", secondaires: ["R8"] },
@@ -388,7 +388,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le premier client s'impatiente
     { principale: "R2", secondaires: ["R4"] },
   ],
-  // 17. Le prix qui ne passe plus
+  // 4. Le prix qui ne passe plus
   "prix-qui-ne-passe-plus": [
     // D1 · La marge fond
     { principale: "R2", secondaires: ["R4"] },
@@ -403,7 +403,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R10", secondaires: ["R4"] },
   ],
-  // 18. L'agenda qui déborde
+  // 20. L'agenda qui déborde
   "agenda-qui-deborde": [
     // D1 · Soixante heures, et toujours en retard
     { principale: "R8", secondaires: ["R4"] },
@@ -418,7 +418,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · L'appel d'offres du groupe scolaire
     { principale: "R9", secondaires: ["R8"] },
   ],
-  // 19. Le préavis de grève
+  // 26. Le préavis de grève
   "preavis-de-greve": [
     // D1 · Le préavis est déposé
     { principale: "R10", secondaires: ["R1"] },
@@ -433,7 +433,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Tenir ce qui a été conclu
     { principale: "R10", secondaires: ["R6"] },
   ],
-  // 20. Le client qui s'en va
+  // 5. Le client qui s'en va
   "client-qui-s-en-va": [
     // D1 · Les artisans s'en vont sans bruit
     { principale: "R10", secondaires: ["R1"] },
@@ -448,7 +448,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Clore le trimestre
     { principale: "R10", secondaires: ["R6"] },
   ],
-  // 21. Les tournées qui débordent
+  // 17. Les tournées qui débordent
   "tournees-qui-debordent": [
     // D1 · Les tournées qui débordent
     { principale: "R2", secondaires: ["R4"] },
@@ -463,7 +463,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R9", secondaires: ["R8"] },
   ],
-  // 22. Le site qui ne vend pas
+  // 6. Le site qui ne vend pas
   "site-qui-ne-vend-pas": [
     // D1 · Beaucoup de visites, peu de commandes
     { principale: "R2", secondaires: ["R4"] },
@@ -478,7 +478,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le comité veut couper
     { principale: "R10", secondaires: [] },
   ],
-  // 23. Le talent qui veut partir
+  // 24. Le talent qui veut partir
   "talent-qui-veut-partir": [
     // D1 · La meilleure est approchée
     { principale: "R1", secondaires: ["R9"] },
@@ -493,7 +493,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Valdane vise Kofi
     { principale: "R9", secondaires: ["R8"] },
   ],
-  // 24. Les compétences qui manquent
+  // 25. Les compétences qui manquent
   "competences-qui-manquent": [
     // D1 · Deux départs, une machine
     { principale: "R6", secondaires: ["R8"] },
@@ -508,7 +508,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Joaquim s'en va
     { principale: "R6", secondaires: ["R8"] },
   ],
-  // 25. La facture qui flambe
+  // 11. La facture qui flambe
   "facture-qui-flambe": [
     // D1 · Le contrat arrive à échéance
     { principale: "R1", secondaires: ["R10"] },
@@ -523,7 +523,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le froid annoncé
     { principale: "R6", secondaires: ["R5"] },
   ],
-  // 26. Le contrôle qui s'annonce
+  // 12. Le contrôle qui s'annonce
   "controle-qui-s-annonce": [
     // D1 · Le contrôle est annoncé
     { principale: "R1", secondaires: ["R5"] },
@@ -538,7 +538,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Après le contrôle
     { principale: "R6", secondaires: ["R8"] },
   ],
-  // 27. La fusion des agences
+  // 29. La fusion des agences
   "fusion-des-agences": [
     // D1 · Deux agences, une seule enseigne
     { principale: "R10", secondaires: ["R1"] },
@@ -553,7 +553,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le concurrent attaque
     { principale: "R2", secondaires: ["R4"] },
   ],
-  // 28. Le nouveau service
+  // 30. Le nouveau service
   "nouveau-service": [
     // D1 · Douze agences au trimestre
     { principale: "R5", secondaires: ["R1"] },
@@ -568,7 +568,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Avant le comité
     { principale: "R10", secondaires: [] },
   ],
-  // 29. L'équipe dispersée
+  // 21. L'équipe dispersée
   "equipe-dispersee": [
     // D1 · La direction veut savoir où ils sont
     { principale: "R10", secondaires: ["R9"] },
@@ -583,7 +583,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Finir le trimestre
     { principale: "R2", secondaires: ["R9"] },
   ],
-  // 30. Les cent premiers jours
+  // 22. Les cent premiers jours
   "cent-premiers-jours": [
     // D1 · Votre premier lundi
     { principale: "R1", secondaires: ["R4"] },
@@ -1078,7 +1078,22 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les repas de fin d'année
     { principale: "R8", secondaires: ["R5"] },
   ],
-  // 63. La cuisine centrale qu'on n'attendait pas
+  // 63. Le diplôme qui compte
+  "diplome-qui-compte": [
+    // D1 · Les postes de cuisine restent vides
+    { principale: "R2", secondaires: ["R1", "R4"] },
+    // D2 · Qui va où ?
+    { principale: "R5", secondaires: ["R6"] },
+    // D3 · La grille de salaires
+    { principale: "R5", secondaires: ["R9", "R4"] },
+    // D4 · Le renfort de juillet
+    { principale: "R5", secondaires: ["R9"] },
+    // D5 · Diplôme ou expérience ?
+    { principale: "R1", secondaires: ["R4"] },
+    // D6 · Pourquoi je gagne moins ?
+    { principale: "R9", secondaires: ["R10"] },
+  ],
+  // 64. La cuisine centrale qu'on n'attendait pas
   "cuisine-centrale": [
     // D1 · Le laboratoire ouvre, les cuisines se ferment
     { principale: "R9", secondaires: ["R2", "R4"] },
@@ -1093,7 +1108,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Ce qu'on confie encore au laboratoire
     { principale: "R4", secondaires: ["R2", "R6"] },
   ],
-  // 64. Le spa qui ne se rentabilise pas seul
+  // 65. Le spa qui ne se rentabilise pas seul
   "spa-a-financer": [
     // D1 · Trois usages pour le même argent
     { principale: "R4", secondaires: ["R2"] },
@@ -1108,7 +1123,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le financement
     { principale: "R4", secondaires: ["R5"] },
   ],
-  // 65. L'enseigne qui frappe à la porte
+  // 66. L'enseigne qui frappe à la porte
   "enseigne-a-la-porte": [
     // D1 · Orméa frappe à la porte
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1123,7 +1138,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La réponse d'Orméa
     { principale: "R5", secondaires: ["R4"] },
   ],
-  // 66. Les appels d'offres en rafale
+  // 67. Les appels d'offres en rafale
   "appels-d-offres-en-rafale": [
     // D1 · Douze appels d'offres en six semaines
     { principale: "R2", secondaires: ["R4", "R5"] },
@@ -1138,7 +1153,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les premiers résultats
     { principale: "R3", secondaires: ["R10"] },
   ],
-  // 67. Le client qui en demande toujours plus
+  // 68. Le client qui en demande toujours plus
   "client-qui-en-demande-plus": [
     // D1 · Quatre petites choses
     { principale: "R2", secondaires: ["R1", "R4"] },
@@ -1153,7 +1168,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La dernière demande
     { principale: "R6", secondaires: ["R9"] },
   ],
-  // 68. Le livrable que le client refuse
+  // 69. Le livrable que le client refuse
   "livrable-refuse": [
     // D1 · Le rapport intermédiaire est refusé
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1168,7 +1183,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le comité de pilotage final
     { principale: "R10", secondaires: ["R4", "R5"] },
   ],
-  // 69. Les jours qu'on ne facture pas
+  // 70. Les jours qu'on ne facture pas
   "jours-non-factures": [
     // D1 · Occupés comme jamais, et la marge baisse
     { principale: "R1", secondaires: ["R2"] },
@@ -1183,7 +1198,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La phase 2 de Kervalan
     { principale: "R3", secondaires: ["R6"] },
   ],
-  // 70. Le forfait vendu sous son coût
+  // 71. Le forfait vendu sous son coût
   "forfait-trop-bas": [
     // D1 · Les forfaits finissent en perte
     { principale: "R2", secondaires: ["R1", "R4"] },
@@ -1198,7 +1213,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La mutuelle veut reconduire
     { principale: "R4", secondaires: ["R10", "R5"] },
   ],
-  // 71. Le travail fait qu'on n'a pas facturé
+  // 72. Le travail fait qu'on n'a pas facturé
   "factures-qui-dorment": [
     // D1 · Le DSO à 96 jours
     { principale: "R2", secondaires: ["R1", "R4"] },
@@ -1213,7 +1228,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Avant la clôture de décembre
     { principale: "R6", secondaires: ["R4"] },
   ],
-  // 72. Le staffing du lundi
+  // 73. Le staffing du lundi
   "staffing-du-lundi": [
     // D1 · Trois associés, deux seniors
     { principale: "R4", secondaires: ["R2", "R6"] },
@@ -1228,7 +1243,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La restitution et le séminaire
     { principale: "R4", secondaires: ["R5", "R9"] },
   ],
-  // 73. Le consultant star
+  // 74. Le consultant star
   "consultant-star": [
     // D1 · Le meilleur consultant de l'équipe
     { principale: "R9", secondaires: ["R4", "R2"] },
@@ -1243,7 +1258,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les comités de fin de trimestre
     { principale: "R9", secondaires: ["R6"] },
   ],
-  // 74. La promotion qu'il faudra refuser
+  // 75. La promotion qu'il faudra refuser
   "promotion-refusee": [
     // D1 · Une place pour trois
     { principale: "R1", secondaires: ["R10"] },
@@ -1258,7 +1273,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La prise de poste
     { principale: "R5", secondaires: ["R8", "R6"] },
   ],
-  // 75. Les consultants qui partent à deux ans
+  // 76. Les consultants qui partent à deux ans
   "departs-a-deux-ans": [
     // D1 · 24 % de départs
     { principale: "R4", secondaires: ["R2"] },
@@ -1273,7 +1288,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Il manque six seniors
     { principale: "R4", secondaires: ["R9"] },
   ],
-  // 76. Embaucher ou louer des freelances
+  // 77. Embaucher ou louer des freelances
   "freelances-ou-embauches": [
     // D1 · Huit consultants de moins que la demande
     { principale: "R2", secondaires: ["R4", "R5"] },
@@ -1288,7 +1303,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le comité de mars
     { principale: "R6", secondaires: ["R10", "R4"] },
   ],
-  // 77. La practice dont le marché s'éteint
+  // 78. La practice dont le marché s'éteint
   "practice-a-reorienter": [
     // D1 · Le marché qui s'éteint
     { principale: "R2", secondaires: ["R4", "R6"] },
@@ -1303,7 +1318,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le plan de décembre à février
     { principale: "R3", secondaires: ["R10", "R4"] },
   ],
-  // 78. L'assistant d'IA qui change le métier
+  // 79. L'assistant d'IA qui change le métier
   "assistant-ia": [
     // D1 · L'assistant est déjà là
     { principale: "R4", secondaires: ["R2", "R1"] },
@@ -1318,7 +1333,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le comité de juin
     { principale: "R6", secondaires: ["R10"] },
   ],
-  // 79. L'associé qui veut vendre ses parts
+  // 80. L'associé qui veut vendre ses parts
   "associe-qui-part": [
     // D1 · Wilfrid veut vendre
     { principale: "R4", secondaires: ["R2", "R5"] },
@@ -1333,7 +1348,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le protocole à signer
     { principale: "R3", secondaires: ["R4"] },
   ],
-  // 80. Rester généraliste ou se spécialiser
+  // 81. Rester généraliste ou se spécialiser
   "generaliste-ou-specialiste": [
     // D1 · Halden ouvre à Nantes
     { principale: "R4", secondaires: ["R2", "R5"] },
@@ -1348,7 +1363,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le GHT veut 15 %
     { principale: "R5", secondaires: ["R4", "R6"] },
   ],
-  // 81. Les lits qui restent vides
+  // 82. Les lits qui restent vides
   "lits-vides": [
     // D1 · Huit lits vides
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1363,7 +1378,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Préparer le printemps
     { principale: "R10", secondaires: ["R6"] },
   ],
-  // 82. Les sorties qui bloquent
+  // 83. Les sorties qui bloquent
   "sorties-qui-bloquent": [
     // D1 · Trente-quatre jours
     { principale: "R4", secondaires: ["R2", "R6"] },
@@ -1378,7 +1393,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les fêtes
     { principale: "R6", secondaires: ["R8"] },
   ],
-  // 83. La famille qui écrit à l'ARS
+  // 84. La famille qui écrit à l'ARS
   "famille-qui-ecrit": [
     // D1 · La lettre de l'ARS
     { principale: "R4", secondaires: ["R2", "R9"] },
@@ -1393,7 +1408,22 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les familles
     { principale: "R9", secondaires: ["R10", "R6"] },
   ],
-  // 84. L'intérim qui flambe
+  // 85. Le répit à créer
+  "repit-a-creer": [
+    // D1 · Une idée chez les familles
+    { principale: "R1", secondaires: ["R2"] },
+    // D2 · Choisir la forme du projet
+    { principale: "R5", secondaires: ["R6"] },
+    // D3 · Réunir les acteurs
+    { principale: "R9", secondaires: ["R1"] },
+    // D4 · Le calendrier d'ouverture
+    { principale: "R6", secondaires: ["R4"] },
+    // D5 · Le modèle économique
+    { principale: "R5", secondaires: ["R10"] },
+    // D6 · Mesurer l'utilité sociale
+    { principale: "R10", secondaires: ["R6"] },
+  ],
+  // 86. L'intérim qui flambe
   "interim-qui-flambe": [
     // D1 · La facture de l'intérim
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1408,7 +1438,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le contrat-cadre de Soralis
     { principale: "R1", secondaires: ["R4", "R3"] },
   ],
-  // 85. La section qui plonge
+  // 87. La section qui plonge
   "section-en-deficit": [
     // D1 · Le conseil veut supprimer deux postes
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1423,7 +1453,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Boucler les propositions
     { principale: "R5", secondaires: ["R2"] },
   ],
-  // 86. L'heure d'aide à domicile
+  // 88. L'heure d'aide à domicile
   "heure-a-domicile": [
     // D1 · Une heure à 26 €, une perte de 240 k€
     { principale: "R2", secondaires: ["R4", "R6"] },
@@ -1438,7 +1468,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Préparer l'été
     { principale: "R6", secondaires: ["R8"] },
   ],
-  // 87. Les chutes de la nuit
+  // 89. Les chutes de la nuit
   "chutes-la-nuit": [
     // D1 · Quarante et une chutes
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1453,7 +1483,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les contentions avant l'hiver
     { principale: "R4", secondaires: ["R10"] },
   ],
-  // 88. Le dossier de soins que personne ne remplit
+  // 90. Le dossier de soins que personne ne remplit
   "dossier-de-soins": [
     // D1 · La tablette de nuit dort dans un tiroir
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1468,7 +1498,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · L'été et ses remplaçants
     { principale: "R6", secondaires: ["R4"] },
   ],
-  // 89. Passer en douze heures
+  // 91. Passer en douze heures
   "postes-de-douze-heures": [
     // D1 · Une équipe coupée en deux
     { principale: "R4", secondaires: ["R1", "R9"] },
@@ -1483,7 +1513,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Ce que vous proposez pour janvier
     { principale: "R10", secondaires: ["R6"] },
   ],
-  // 90. L'absentéisme qui s'installe
+  // 92. L'absentéisme qui s'installe
   "absenteisme-qui-s-installe": [
     // D1 · Seize pour cent
     { principale: "R2", secondaires: ["R1"] },
@@ -1498,7 +1528,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Ce qu'on garde
     { principale: "R3", secondaires: ["R10"] },
   ],
-  // 91. Former ses propres soignants
+  // 93. Former ses propres soignants
   "former-ses-soignants": [
     // D1 · Trente-quatre postes vacants à la rentrée
     { principale: "R2", secondaires: ["R4", "R6"] },
@@ -1513,7 +1543,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le jury de la cohorte pilote
     { principale: "R6", secondaires: ["R4", "R2"] },
   ],
-  // 92. L'équipe de jour et l'équipe de nuit
+  // 94. L'équipe de jour et l'équipe de nuit
   "equipes-jour-et-nuit": [
     // D1 · Deux équipes qui se renvoient la faute
     { principale: "R4", secondaires: ["R9", "R6"] },
@@ -1528,7 +1558,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le roulement du printemps
     { principale: "R6", secondaires: ["R4", "R8"] },
   ],
-  // 93. Reconstruire ou regrouper
+  // 95. Reconstruire ou regrouper
   "reconstruire-ou-regrouper": [
     // D1 · Deux EHPAD à reprendre
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1543,7 +1573,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Ce qu'on dit aux familles
     { principale: "R10", secondaires: ["R9"] },
   ],
-  // 94. L'association qui demande à être reprise
+  // 96. L'association qui demande à être reprise
   "association-a-reprendre": [
     // D1 · L'ARS demande une reprise
     { principale: "R2", secondaires: ["R4", "R5"] },
@@ -1558,7 +1588,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les équipes des Primevères
     { principale: "R9", secondaires: ["R8"] },
   ],
-  // 95. Le virage vers le domicile
+  // 97. Le virage vers le domicile
   "virage-domiciliaire": [
     // D1 · Le schéma gèle les places
     { principale: "R5", secondaires: ["R4", "R6"] },
@@ -1573,7 +1603,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le mandat de négociation du CPOM
     { principale: "R5", secondaires: ["R6", "R4"] },
   ],
-  // 96. Les changements qui mangent la ligne
+  // 98. Les changements qui mangent la ligne
   "changements-de-format": [
     // D1 · Une ligne à 57 %
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1588,7 +1618,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Avant l'été
     { principale: "R6", secondaires: ["R8"] },
   ],
-  // 97. Les palettes qui périment
+  // 99. Les palettes qui périment
   "dlc-qui-tombe": [
     // D1 · La casse à 2,8 %
     { principale: "R2", secondaires: ["R7"] },
@@ -1603,7 +1633,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La règle de l'automne
     { principale: "R9", secondaires: ["R10"] },
   ],
-  // 98. Le lot qu'il faut peut-être rappeler
+  // 100. Le lot qu'il faut peut-être rappeler
   "lot-a-rappeler": [
     // D1 · Présomptif positif
     { principale: "R4", secondaires: ["R1", "R6"] },
@@ -1618,7 +1648,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Que retenir de l'alerte ?
     { principale: "R6", secondaires: ["R10"] },
   ],
-  // 99. Les négociations du 1er mars
+  // 101. Les négociations du 1er mars
   "negociations-annuelles": [
     // D1 · Moins 2 %, ou douze références en moins
     { principale: "R6", secondaires: ["R1"] },
@@ -1633,7 +1663,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Avant le 1er mars
     { principale: "R6", secondaires: ["R5"] },
   ],
-  // 100. La promotion qui remplit les caddies
+  // 102. La promotion qui remplit les caddies
   "promotion-qui-coute": [
     // D1 · Doubler les opérations de l'été ?
     { principale: "R4", secondaires: ["R2", "R5"] },
@@ -1648,7 +1678,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La proposition de Celtis
     { principale: "R6", secondaires: ["R4"] },
   ],
-  // 101. La marque du distributeur
+  // 103. La marque du distributeur
   "appel-d-offres-mdd": [
     // D1 · Opaline lance son appel d'offres
     { principale: "R4", secondaires: ["R2", "R5"] },
@@ -1663,7 +1693,22 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Celtis veut sa MDD
     { principale: "R4", secondaires: ["R2"] },
   ],
-  // 102. Les producteurs qui arrêtent
+  // 104. L'EDI qui s'impose
+  "edi-qui-s-impose": [
+    // D1 · Celtis passe à l'EDI
+    { principale: "R2", secondaires: ["R5", "R6"] },
+    // D2 · Les messages rejetés
+    { principale: "R2", secondaires: ["R6"] },
+    // D3 · Sécuriser les échanges
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · La facture électronique
+    { principale: "R6", secondaires: ["R4"] },
+    // D5 · Le transporteur
+    { principale: "R6", secondaires: ["R2"] },
+    // D6 · Ce que coûte chaque échange
+    { principale: "R10", secondaires: ["R5"] },
+  ],
+  // 105. Les producteurs qui arrêtent
   "producteurs-qui-arretent": [
     // D1 · Le lait qui part
     { principale: "R4", secondaires: ["R1", "R6"] },
@@ -1678,7 +1723,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les terres qui se libèrent
     { principale: "R2", secondaires: ["R1", "R6"] },
   ],
-  // 103. Le pot en plastique qu'il faut remplacer
+  // 106. Le pot en plastique qu'il faut remplacer
   "pot-a-remplacer": [
     // D1 · Le carton pour le salon
     { principale: "R1", secondaires: ["R4", "R2"] },
@@ -1693,7 +1738,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le salon
     { principale: "R10", secondaires: ["R4"] },
   ],
-  // 104. La facture d'énergie de l'usine
+  // 107. La facture d'énergie de l'usine
   "energie-de-l-usine": [
     // D1 · La facture a presque doublé
     { principale: "R1", secondaires: ["R4", "R2"] },
@@ -1708,7 +1753,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La rentrée
     { principale: "R10", secondaires: ["R6", "R4"] },
   ],
-  // 105. La ligne qui s'arrête quand il manque quelqu'un
+  // 108. La ligne qui s'arrête quand il manque quelqu'un
   "polyvalence-des-operateurs": [
     // D1 · Trois personnes pour une ligne
     { principale: "R4", secondaires: ["R6", "R2"] },
@@ -1723,7 +1768,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Préparer l'été sans Yvonnick
     { principale: "R6", secondaires: ["R10"] },
   ],
-  // 106. La maintenance qui court après les pannes
+  // 109. La maintenance qui court après les pannes
   "maintenance-qui-court": [
     // D1 · Dix-neuf heures par mois
     { principale: "R2", secondaires: ["R4", "R1"] },
@@ -1738,7 +1783,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le dispositif de décembre
     { principale: "R4", secondaires: ["R6", "R10"] },
   ],
-  // 107. Le pic des fêtes
+  // 110. Le pic des fêtes
   "pic-des-fetes": [
     // D1 · Le double en décembre
     { principale: "R6", secondaires: ["R4", "R1"] },
@@ -1753,7 +1798,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Les deux semaines de Noël
     { principale: "R4", secondaires: ["R2"] },
   ],
-  // 108. Les desserts qui plaisent à l'export
+  // 111. Les desserts qui plaisent à l'export
   "export-a-ouvrir": [
     // D1 · Six cents supermarchés, cinq ans d'exclusivité
     { principale: "R1", secondaires: ["R5"] },
@@ -1768,7 +1813,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Le contrat
     { principale: "R5", secondaires: ["R4"] },
   ],
-  // 109. La gamme végétale
+  // 112. La gamme végétale
   "gamme-vegetale": [
     // D1 · Le rayon qui monte
     { principale: "R5", secondaires: ["R1", "R4"] },
@@ -1783,7 +1828,7 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · Produire après le test
     { principale: "R6", secondaires: ["R5"] },
   ],
-  // 110. L'offre de rachat
+  // 113. L'offre de rachat
   "offre-de-rachat": [
     // D1 · L'offre de Nordal
     { principale: "R4", secondaires: ["R2", "R5"] },

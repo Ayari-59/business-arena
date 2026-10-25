@@ -199,7 +199,7 @@ export function axe([information, diagnostic, reflexe, calibrage, aval]: readonl
 
 export const EPISODE_PARCOURS: Episode<Trimestre> = {
   code: "sorties-qui-bloquent",
-  numero: 82,
+  numero: 83,
   domaine: "Fluidifier le parcours du patient",
   titre: "Les sorties qui bloquent",
   resume:

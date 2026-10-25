@@ -182,7 +182,7 @@ export function axe([information, diagnostic, reflexe, calibrage, sections]: rea
 
 export const EPISODE_SECTIONS: Episode<Trimestre> = {
   code: "section-en-deficit",
-  numero: 85,
+  numero: 87,
   domaine: "Lire un budget par sections tarifaires",
   titre: "La section qui plonge",
   resume:

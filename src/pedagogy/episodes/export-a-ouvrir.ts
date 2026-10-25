@@ -285,7 +285,7 @@ const NOMS_DES_SCENARIOS: Record<CodeScenario, string> = {
 
 export const EPISODE_EXPORT: Episode<Trimestre> = {
   code: "export-a-ouvrir",
-  numero: 108,
+  numero: 111,
   domaine: "Choisir son entrée sur un marché étranger",
   titre: "Les desserts qui plaisent à l'export",
   resume:

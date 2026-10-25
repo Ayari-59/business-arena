@@ -282,7 +282,12 @@ export const FAMILLES: readonly Famille[] = [
     titre: "Recruter et garder en saison",
     secteur: "hotellerie",
     texte: "Saisonniers, postes vacants, apprentis : des équipes à rebâtir chaque année.",
-    episodes: ["saisonniers-de-juillet", "postes-introuvables", "apprentis-qui-decrochent"],
+    episodes: [
+      "saisonniers-de-juillet",
+      "postes-introuvables",
+      "apprentis-qui-decrochent",
+      "diplome-qui-compte",
+    ],
   },
   {
     code: "hotel-strategie",
@@ -338,7 +343,7 @@ export const FAMILLES: readonly Famille[] = [
     secteur: "sante",
     texte:
       "Lits vides, sorties qui bloquent, familles : le parcours d'un patient, de l'entrée à la sortie.",
-    episodes: ["lits-vides", "sorties-qui-bloquent", "famille-qui-ecrit"],
+    episodes: ["lits-vides", "sorties-qui-bloquent", "famille-qui-ecrit", "repit-a-creer"],
   },
   {
     code: "sante-budget",
@@ -386,7 +391,12 @@ export const FAMILLES: readonly Famille[] = [
     secteur: "agroalimentaire",
     texte:
       "Négociations annuelles, promotions, appels d'offres MDD : des clients concentrés, des règles fixées par la loi.",
-    episodes: ["negociations-annuelles", "promotion-qui-coute", "appel-d-offres-mdd"],
+    episodes: [
+      "negociations-annuelles",
+      "promotion-qui-coute",
+      "appel-d-offres-mdd",
+      "edi-qui-s-impose",
+    ],
   },
   {
     code: "agro-amont",

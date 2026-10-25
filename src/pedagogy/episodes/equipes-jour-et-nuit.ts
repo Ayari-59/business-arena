@@ -201,7 +201,7 @@ export function axe([information, diagnostic, reflexe, calibrage, communs]: read
 
 export const EPISODE_JOUR_NUIT: Episode<Trimestre> = {
   code: "equipes-jour-et-nuit",
-  numero: 92,
+  numero: 94,
   domaine: "Faire travailler deux équipes ensemble",
   titre: "L'équipe de jour et l'équipe de nuit",
   resume:

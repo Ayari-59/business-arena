@@ -308,7 +308,7 @@ const NOMS_REPONSE = {
 
 export const EPISODE_ENSEIGNE: Episode<Trimestre> = {
   code: "enseigne-a-la-porte",
-  numero: 65,
+  numero: 66,
   domaine: "Indépendance ou affiliation",
   titre: "L'enseigne qui frappe à la porte",
   resume:

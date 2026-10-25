@@ -75,6 +75,7 @@ import * as renovationSansFermer from "./renovation-sans-fermer";
 import * as saisonniersDeJuillet from "./saisonniers-de-juillet";
 import * as postesIntrouvables from "./postes-introuvables";
 import * as apprentisQuiDecrochent from "./apprentis-qui-decrochent";
+import * as diplomeQuiCompte from "./diplome-qui-compte";
 import * as cuisineCentrale from "./cuisine-centrale";
 import * as spaAFinancer from "./spa-a-financer";
 import * as enseigneALaPorte from "./enseigne-a-la-porte";
@@ -96,6 +97,7 @@ import * as generalisteOuSpecialiste from "./generaliste-ou-specialiste";
 import * as litsVides from "./lits-vides";
 import * as sortiesQuiBloquent from "./sorties-qui-bloquent";
 import * as familleQuiEcrit from "./famille-qui-ecrit";
+import * as repitACreer from "./repit-a-creer";
 import * as interimQuiFlambe from "./interim-qui-flambe";
 import * as sectionEnDeficit from "./section-en-deficit";
 import * as heureADomicile from "./heure-a-domicile";
@@ -114,6 +116,7 @@ import * as lotARappeler from "./lot-a-rappeler";
 import * as negociationsAnnuelles from "./negociations-annuelles";
 import * as promotionQuiCoute from "./promotion-qui-coute";
 import * as appelDOffresMdd from "./appel-d-offres-mdd";
+import * as ediQuiSImpose from "./edi-qui-s-impose";
 import * as producteursQuiArretent from "./producteurs-qui-arretent";
 import * as potARemplacer from "./pot-a-remplacer";
 import * as energieDeLUsine from "./energie-de-l-usine";
@@ -441,6 +444,11 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     reflexes: [...apprentisQuiDecrochent.REFLEXES],
     prevision: { juste: 0.3, proche: 0.8 },
   },
+  "diplome-qui-compte": {
+    diagnostic: { juste: "rarete", proche: "logement" },
+    reflexes: [...diplomeQuiCompte.REFLEXES],
+    prevision: { juste: 2, proche: 5 },
+  },
   "cuisine-centrale": {
     diagnostic: { juste: "identite", proche: "logistique" },
     reflexes: [...cuisineCentrale.REFLEXES],
@@ -546,6 +554,11 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     reflexes: [...familleQuiEcrit.REFLEXES],
     prevision: { juste: 0.1, proche: 0.3 },
   },
+  "repit-a-creer": {
+    diagnostic: { juste: "besoin", proche: "argent" },
+    reflexes: [...repitACreer.REFLEXES],
+    prevision: { juste: 3, proche: 8 },
+  },
   "interim-qui-flambe": {
     diagnostic: { juste: "symptome", proche: "vacances" },
     reflexes: [...interimQuiFlambe.REFLEXES],
@@ -635,6 +648,11 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "marge", proche: "capacite" },
     reflexes: [...appelDOffresMdd.REFLEXES],
     prevision: { juste: 1, proche: 3 },
+  },
+  "edi-qui-s-impose": {
+    diagnostic: { juste: "ressaisie", proche: "codes" },
+    reflexes: [...ediQuiSImpose.REFLEXES],
+    prevision: { juste: 8, proche: 20 },
   },
   "producteurs-qui-arretent": {
     diagnostic: { juste: "transmission", proche: "tournees" },

@@ -181,7 +181,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
 
 export const EPISODE_FREELANCES: Episode<Trimestre> = {
   code: "freelances-ou-embauches",
-  numero: 76,
+  numero: 77,
   domaine: "Dimensionner une équipe",
   titre: "Embaucher ou louer des freelances",
   resume:

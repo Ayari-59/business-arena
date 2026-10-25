@@ -180,7 +180,7 @@ export function axe([information, diagnostic, reflexe, calibrage, recadrage]: re
 
 export const EPISODE_STAR: Episode<Trimestre> = {
   code: "consultant-star",
-  numero: 73,
+  numero: 74,
   domaine: "Manager un talent difficile",
   titre: "Le consultant star",
   resume:

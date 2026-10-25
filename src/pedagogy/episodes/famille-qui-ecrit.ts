@@ -183,7 +183,7 @@ export function axe([information, diagnostic, reflexe, calibrage, familles]: rea
 
 export const EPISODE_FAMILLES: Episode<Trimestre> = {
   code: "famille-qui-ecrit",
-  numero: 83,
+  numero: 84,
   domaine: "Répondre à une réclamation",
   titre: "La famille qui écrit à l'ARS",
   resume:

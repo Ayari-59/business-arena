@@ -35,6 +35,7 @@ const AUTRES_HASARDS: Readonly<Record<string, number>> = {
   "reseau-a-redessiner": 22,
   "grand-compte-exclusif": 2,
   "saisonniers-de-juillet": 16,
+  "diplome-qui-compte": 6,
   "postes-introuvables": 21,
   "spa-a-financer": 6,
   "enseigne-a-la-porte": 2,

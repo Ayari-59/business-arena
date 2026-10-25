@@ -203,7 +203,7 @@ export function axe([information, diagnostic, reflexe, calibrage, preventif]: re
 
 export const EPISODE_MAINTENANCE: Episode<Trimestre> = {
   code: "maintenance-qui-court",
-  numero: 106,
+  numero: 109,
   domaine: "Passer du curatif au préventif",
   titre: "La maintenance qui court après les pannes",
   resume:

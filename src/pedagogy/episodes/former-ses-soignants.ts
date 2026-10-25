@@ -203,7 +203,7 @@ export function axe([information, diagnostic, reflexe, calibrage, former]: reado
 
 export const EPISODE_VAE: Episode<Trimestre> = {
   code: "former-ses-soignants",
-  numero: 91,
+  numero: 93,
   domaine: "Construire des parcours qualifiants",
   titre: "Former ses propres soignants",
   resume:

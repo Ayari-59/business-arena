@@ -217,7 +217,7 @@ export function axe([information, diagnostic, reflexe, calibrage, causes]: reado
 
 export const EPISODE_INTERIM: Episode<Trimestre> = {
   code: "interim-qui-flambe",
-  numero: 84,
+  numero: 86,
   domaine: "Maîtriser les remplacements",
   titre: "L'intérim qui flambe",
   resume:

@@ -301,7 +301,7 @@ const NOM_FINANCEMENT = ["l'emprunt", "le crédit-bail", "la trésorerie du grou
 
 export const EPISODE_SPA: Episode<Trimestre> = {
   code: "spa-a-financer",
-  numero: 64,
+  numero: 65,
   domaine: "Investir dans un hôtel",
   titre: "Le spa qui ne se rentabilise pas seul",
   resume:
