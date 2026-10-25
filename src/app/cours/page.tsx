@@ -9,6 +9,7 @@ import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import type { Chapitre } from "@/config/cours/types";
+import { SITUATIONS, type Situation } from "@/config/cours/situations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
@@ -255,6 +256,15 @@ export default async function CoursPage({
                   )}
                 </div>
 
+                {programme.situations.length > 0 ? (
+                  <div className="grid gap-2">
+                    <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
+                      Mises en situation
+                    </h4>
+                    <ListeDeSituations situations={programme.situations} imposee={imposee?.code} />
+                  </div>
+                ) : null}
+
                 {programme.episodes.length > 0 ? (
                   <div className="grid gap-2">
                     <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">En situation</h4>
@@ -269,6 +279,7 @@ export default async function CoursPage({
                 const chapitres = theme.chapitres.map((code) => CHAPITRES.find((c) => c.code === code)!);
                 const episodes = episodesDuTheme(theme);
                 const aVenir = enPreparationDuTheme(theme);
+                const situations = SITUATIONS.filter((s) => themeDuChapitre(s.reprend[0]!)?.code === theme.code);
                 return (
                   <details
                     key={theme.code}
@@ -288,6 +299,9 @@ export default async function CoursPage({
                         {chapitres.length > 0
                           ? `${chapitres.length} chapitre${chapitres.length > 1 ? "s" : ""}`
                           : "Pas encore de chapitre"}
+                        {situations.length > 0
+                          ? ` · ${situations.length} mise${situations.length > 1 ? "s" : ""} en situation`
+                          : ""}
                         {episodes.length > 0 ? ` · ${episodes.length} épisode${episodes.length > 1 ? "s" : ""} en situation` : ""}
                       </span>
                     </summary>
@@ -300,6 +314,14 @@ export default async function CoursPage({
                           Ce thème se travaille aujourd&apos;hui en situation, par les épisodes ci-dessous.
                         </p>
                       )}
+                      {situations.length > 0 ? (
+                        <div className="grid gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">
+                            Mises en situation
+                          </p>
+                          <ListeDeSituations situations={situations} imposee={imposee?.code} />
+                        </div>
+                      ) : null}
                       {aVenir.map((v) => (
                         <p key={v.parcours} className="text-sm text-slate-400" data-a-venir="">
                           À venir : {v.nombre} chapitre{v.nombre > 1 ? "s" : ""} du parcours {v.titre}.
@@ -365,6 +387,40 @@ function ListeDeChapitres({ chapitres, imposee }: { chapitres: readonly Chapitre
         </li>
       ))}
     </ol>
+  );
+}
+
+/**
+ * LES MISES EN SITUATION : la question d'un commanditaire, sans cours, sur les
+ * calculs de chapitres déjà vus. La ligne dit lesquels, pour que l'enseignant la
+ * place après eux.
+ */
+function ListeDeSituations({ situations, imposee }: { situations: readonly Situation[]; imposee?: string }) {
+  return (
+    <ul className="grid gap-2.5">
+      {situations.map((s) => (
+        <li key={s.code} data-situation-de-cours={s.code} className="grid gap-x-3 sm:grid-cols-[4.5rem_1fr_auto] sm:items-baseline">
+          <span className="text-xs tabular-nums text-slate-400">Palier {s.palier}</span>
+          <span className="grid min-w-0">
+            <Link
+              href={lienDuChapitre(s, imposee)}
+              className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline"
+            >
+              {s.titre}
+            </Link>
+            <span className="text-xs text-slate-400">
+              {s.commanditaire} demande · reprend{" "}
+              {s.reprend.map((c) => CHAPITRES.find((x) => x.code === c)?.titre ?? c).join(", ")}
+            </span>
+          </span>
+          <span className="whitespace-nowrap text-xs tabular-nums text-slate-400">
+            {dureeEnClair(dureeDuChapitre(s))}
+            {" · "}
+            {s.libre ? <span className="font-semibold text-amber-300">libre</span> : "licence"}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
