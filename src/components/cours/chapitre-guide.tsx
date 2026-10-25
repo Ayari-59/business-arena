@@ -9,6 +9,7 @@ import { PALIERS, PARCOURS, chapitreParCode } from "@/config/cours/registre";
 import { motsDuContenu } from "@/config/cours/situations";
 import type { Cas } from "@/config/cours/cas";
 import type { MissionAffichee } from "@/config/cours/jouez";
+import type { Lien, SuitesDuChapitre } from "@/pedagogy/cours/suites";
 import type {
   Chapitre,
   EtapeChoix,
@@ -911,6 +912,65 @@ function EtMaintenantJouezLe({ mission, cas }: { mission: MissionAffichee; cas: 
   );
 }
 
+/**
+ * ET ENSUITE : LES PASSAGES VERS LES AUTRES BRIQUES. Un chapitre mène aux mises
+ * en situation qui reprennent ses calculs, une mise en situation rappelle les
+ * chapitres où ils s'apprennent, et les deux proposent quelques épisodes du
+ * thème. Tout est calculé par le serveur (pedagogy/cours/suites.ts) ; un bloc
+ * vide ne s'affiche pas.
+ */
+function EtEnsuite({ suites, cas }: { suites: SuitesDuChapitre; cas: Cas }) {
+  const { theme, situations, reprend, episodes, episodesDuTheme } = suites;
+  if (situations.length === 0 && reprend.length === 0 && episodes.length === 0) return null;
+  const lienDeCours = (l: Lien, attribut: string) => (
+    <li key={l.code} {...{ [attribut]: l.code }}>
+      <Link href={`/cours/${l.code}?entreprise=${cas.code}`} className="text-amber-300 underline-offset-4 hover:underline">
+        {l.titre}
+      </Link>
+    </li>
+  );
+  return (
+    <section className="carte grid gap-4 p-4 sm:p-5" aria-labelledby="et-ensuite" data-et-ensuite="">
+      <h3 id="et-ensuite" className="text-xl font-bold text-slate-50">
+        Et ensuite
+      </h3>
+      {reprend.length > 0 && (
+        <div className="grid gap-1" data-reprend="">
+          <p className="text-sm font-semibold text-slate-100">Les chapitres où ces calculs s&apos;apprennent</p>
+          <ul className="grid gap-0.5 text-sm">{reprend.map((l) => lienDeCours(l, "data-chapitre-repris"))}</ul>
+        </div>
+      )}
+      {situations.length > 0 && (
+        <div className="grid gap-1" data-suites-situations="">
+          <p className="text-sm font-semibold text-slate-100">S&apos;entraîner sans guide, dans un cas neuf</p>
+          <ul className="grid gap-0.5 text-sm">{situations.map((l) => lienDeCours(l, "data-suite-situation"))}</ul>
+        </div>
+      )}
+      {episodes.length > 0 && (
+        <div className="grid gap-1" data-suites-episodes="">
+          <p className="text-sm font-semibold text-slate-100">Agir en situation de manager</p>
+          <ul className="grid gap-0.5 text-sm">
+            {episodes.map((l) => (
+              <li key={l.code} data-suite-episode={l.code}>
+                <Link href={`/entreprises/episode/${l.code}`} className="text-amber-300 underline-offset-4 hover:underline">
+                  {l.titre}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {theme && episodesDuTheme > episodes.length && (
+            <p className="text-sm text-slate-400">
+              <Link href={`/cours#theme-${theme.code}`} className="underline underline-offset-4 hover:text-slate-200">
+                Les {episodesDuTheme} épisodes du thème {theme.titre}
+              </Link>
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function FinDuChapitre({
   chapitre,
   cas,
@@ -919,6 +979,7 @@ function FinDuChapitre({
   recommencer,
   classe,
   mission,
+  suites,
 }: {
   chapitre: Chapitre;
   cas: Cas;
@@ -927,6 +988,7 @@ function FinDuChapitre({
   recommencer: () => void;
   classe: boolean;
   mission: MissionAffichee | null;
+  suites: SuitesDuChapitre | null;
 }) {
   const notees = chapitre.etapes.filter((e) => e.type !== "lecture");
   const duPremierCoup = notees.filter((e) => {
@@ -953,6 +1015,7 @@ function FinDuChapitre({
         </ul>
       </section>
       {mission && <EtMaintenantJouezLe mission={mission} cas={cas} />}
+      {suites && <EtEnsuite suites={suites} cas={cas} />}
       <Notions codes={notions} />
       <details className="papier rounded-xl p-4">
         <summary className="cursor-pointer font-semibold">{motsDuContenu(chapitre.code).journal}</summary>
@@ -962,7 +1025,7 @@ function FinDuChapitre({
       </details>
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className={bouton({ taille: "m" })} onClick={recommencer}>
-          Recommencer le chapitre
+          {motsDuContenu(chapitre.code).recommencer}
         </button>
         <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>
           Retour au cours
@@ -995,6 +1058,7 @@ export function ChapitreGuide({
   classe,
   mission = null,
   enClasse = null,
+  suites = null,
 }: {
   code: string;
   cas: Cas;
@@ -1004,6 +1068,8 @@ export function ChapitreGuide({
   mission?: MissionAffichee | null;
   /** La classe de l'élève, s'il en suit une : sa progression remonte à l'enseignant. */
   enClasse?: { classe: string; eleve: string } | null;
+  /** Ce qui vient après : les mises en situation, les chapitres repris, les épisodes du thème. */
+  suites?: SuitesDuChapitre | null;
 }) {
   // Le chapitre dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
   const chapitre = useMemo(() => chapitreDuCas(chapitreParCode(code)!, cas), [code, cas]);
@@ -1096,7 +1162,16 @@ export function ChapitreGuide({
         </span>
       </div>
       {!lu ? null : fini && vue === null ? (
-        <FinDuChapitre chapitre={chapitre} cas={cas} suivi={suivi} entreprises={entreprises} recommencer={recommencer} classe={classe} mission={mission} />
+        <FinDuChapitre
+          chapitre={chapitre}
+          cas={cas}
+          suivi={suivi}
+          entreprises={entreprises}
+          recommencer={recommencer}
+          classe={classe}
+          mission={mission}
+          suites={suites}
+        />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <section className="grid min-w-0 gap-5" aria-live="polite" key={etape.id}>

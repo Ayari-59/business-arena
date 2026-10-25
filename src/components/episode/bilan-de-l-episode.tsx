@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { GRAINES_DU_BILAN, moyenne } from "@/engine/episodes/commun";
 import { CAS, analyser, type Cas, type Enchainement } from "@/pedagogy/episodes/bilan";
@@ -8,6 +9,7 @@ import { bouton } from "@/components/bouton";
 import { niveauParCode } from "@/config/episodes/niveaux";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 import { RetourDeLEpisode } from "./retour-de-l-episode";
+import type { CoursDeLEpisode } from "@/pedagogy/cours/suites";
 
 /**
  * LE BILAN DE L'ÉPISODE.
@@ -211,6 +213,7 @@ export function BilanDeLEpisode({
   precedente,
   onAutreHasard,
   onMemeHasard,
+  cours = null,
 }: {
   ep: Episode;
   partie: PartieJouee;
@@ -220,6 +223,8 @@ export function BilanDeLEpisode({
   precedente: PartieJouee | null;
   onAutreHasard: () => void;
   onMemeHasard: () => void;
+  /** Les chapitres et mises en situation du thème de l'épisode, préparés par la page. */
+  cours?: CoursDeLEpisode | null;
 }) {
   const a = useMemo(() => analyser(ep, partie), [ep, partie]);
   const t = a.trimestre;
@@ -472,6 +477,8 @@ export function BilanDeLEpisode({
 
       <RetourDeLEpisode ep={ep} partie={partie} cle={cle} />
 
+      {cours && <LeCoursDuTheme cours={cours} />}
+
       <p className="max-w-2xl text-sm text-slate-400">
         Dans la version pour les entreprises, ce bilan n&apos;est visible que par la personne qui
         joue. Le responsable formation ne voit que les résultats de la cohorte, à partir de cinq
@@ -490,5 +497,55 @@ export function BilanDeLEpisode({
         </button>
       </div>
     </div>
+  );
+}
+
+/**
+ * LE COURS DU THÈME, SOUS LE BILAN. L'épisode fait juger une situation où le
+ * chiffre ne décide pas seul ; les calculs qu'il suppose s'apprennent dans les
+ * chapitres de son thème, et se vérifient sans guide dans ses mises en
+ * situation. Le bloc n'existe que si le thème a des chapitres.
+ */
+function LeCoursDuTheme({ cours }: { cours: CoursDeLEpisode }) {
+  const pastille =
+    "inline-block rounded-full border border-white/10 bg-slate-900 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300";
+  return (
+    <section aria-labelledby="cours-du-theme" className="carte grid gap-3 p-5" data-cours-du-theme={cours.theme.code}>
+      <h2 id="cours-du-theme" className="text-lg font-bold text-slate-50">
+        Les calculs derrière l&apos;épisode
+      </h2>
+      <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
+        Le thème {cours.theme.titre} s&apos;apprend aussi dans le cours, pas à pas, sur les chiffres d&apos;une
+        entreprise.
+      </p>
+      <ul className="flex flex-wrap gap-2">
+        {cours.chapitres.map((c) => (
+          <li key={c.code} data-chapitre-du-theme={c.code}>
+            <Link href={`/cours/${c.code}`} className={pastille}>
+              {c.titre}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {cours.situations.length > 0 && (
+        <p className="text-sm text-slate-400">
+          Pour s&apos;entraîner sans guide :{" "}
+          {cours.situations.map((s, i) => (
+            <span key={s.code}>
+              {i > 0 ? ", " : ""}
+              <Link href={`/cours/${s.code}`} data-situation-du-theme={s.code} className="text-amber-300 underline underline-offset-4">
+                {s.titre}
+              </Link>
+            </span>
+          ))}
+          .
+        </p>
+      )}
+      <p className="text-sm">
+        <Link href={`/cours#theme-${cours.theme.code}`} className="text-amber-300 underline underline-offset-4">
+          Le thème dans le catalogue du cours
+        </Link>
+      </p>
+    </section>
   );
 }

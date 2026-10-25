@@ -13,6 +13,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve, classeSousLicence } from "@/services/cours.service";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { ENTREPRISES } from "../entreprises";
+import { suitesDuChapitre } from "@/pedagogy/cours/suites";
 
 export async function generateMetadata({ params }: { params: Promise<{ chapitre: string }> }): Promise<Metadata> {
   const { chapitre } = await params;
@@ -100,6 +101,7 @@ export default async function ChapitrePage({
           entreprises={possibles.map(({ code: c, nom }) => ({ code: c, nom }))}
           classe={classe !== undefined}
           mission={missionAffichee(chapitre.code, cas)}
+          suites={suitesDuChapitre(chapitre.code)}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
       </main>

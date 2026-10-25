@@ -10,9 +10,16 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { Chevron } from "@/components/repliable";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
+import { chapitresDeLaNotion, type Lien } from "@/pedagogy/cours/suites";
 
 /** Combien de métiers une fiche nomme avant de dire « et N autres ». */
 const METIERS_MONTRES = 3;
+
+/**
+ * Combien de chapitres une fiche nomme avant de dire « et N autres » : la même
+ * mesure que les métiers, pour que les deux lignes se lisent d'un coup d'œil.
+ */
+const CHAPITRES_MONTRES = METIERS_MONTRES;
 
 /**
  * OÙ CHAQUE NOTION SE RENCONTRE DANS LE JEU.
@@ -156,6 +163,10 @@ export default async function ConceptsPage() {
                           .
                         </p>
                       ) : null}
+                      {/* Où on l'apprend : les chapitres du cours dont une étape
+                          la fait vivre. C'est le passage de l'arène au cours,
+                          puisque l'arène renvoie ici depuis chaque situation. */}
+                      <DansLeCours chapitres={chapitresDeLaNotion(c.code)} />
                     </div>
                   </details>
                 ))}
@@ -184,5 +195,28 @@ export default async function ConceptsPage() {
       </BandeFinale>
       <PiedDePage />
     </>
+  );
+}
+
+/** La ligne « Apprise dans le cours » d'une fiche ; rien quand aucun chapitre ne la fait vivre. */
+function DansLeCours({ chapitres }: { chapitres: readonly Lien[] }) {
+  if (chapitres.length === 0) return null;
+  return (
+    <p data-dans-le-cours="" className="text-sm leading-relaxed text-slate-400">
+      Apprise dans le cours :{" "}
+      {chapitres.slice(0, CHAPITRES_MONTRES).map((ch, i) => (
+        <span key={ch.code}>
+          {i > 0 ? ", " : ""}
+          <Link
+            href={`/cours/${ch.code}`}
+            data-chapitre-de-la-notion={ch.code}
+            className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+          >
+            {ch.titre}
+          </Link>
+        </span>
+      ))}
+      {chapitres.length > CHAPITRES_MONTRES ? ` et ${chapitres.length - CHAPITRES_MONTRES} autres` : ""}.
+    </p>
   );
 }

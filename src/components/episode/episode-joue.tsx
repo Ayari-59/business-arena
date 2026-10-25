@@ -19,6 +19,7 @@ import { LigneDuTableau, TableauDeBord } from "./tableau-de-bord";
 import { hautDesBarres } from "@/components/ardoise-repliee";
 import { VerdictDuMarche, type SensDUnEcart } from "@/components/verdict-du-marche";
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
+import type { CoursDeLEpisode } from "@/pedagogy/cours/suites";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 import { nombre } from "@/config/episodes/format";
 import {
@@ -317,8 +318,11 @@ export function EpisodeJoue({
   code,
   niveaux = NIVEAUX.map((n) => n.code),
   offre = null,
+  cours = null,
 }: {
   code: string;
+  /** Le cours du thème de l'épisode, montré sous le bilan (pedagogy/cours/suites.ts). */
+  cours?: CoursDeLEpisode | null;
   offre?: OffreDesEpisodes | null;
   /**
    * Les niveaux auxquels l'épisode se lance, établis par le serveur
@@ -557,6 +561,7 @@ export function EpisodeJoue({
               partie={partieJouee}
               cle={s.cle}
               precedente={precedente}
+              cours={cours}
               onAutreHasard={() => {
                 setPrecedente(partieJouee);
                 commencer(1 + Math.floor(Math.random() * 9000));

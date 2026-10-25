@@ -4,14 +4,16 @@ import { bouton } from "@/components/bouton";
 import { SubmitButton } from "@/components/submit-button";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
+import { OuvreLeTiroirVise } from "@/components/ouvre-le-tiroir-vise";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME } from "@/config/cours/registre";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import type { Chapitre } from "@/config/cours/types";
-import { SITUATIONS, type Situation } from "@/config/cours/situations";
+import type { Situation } from "@/config/cours/situations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
+import { situationsDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
 import { ENTREPRISES } from "./entreprises";
@@ -146,6 +148,8 @@ export default async function CoursPage({
           </section>
 
           <ArticulationDuCours />
+          {/* `/cours#theme-vente`, depuis la fin d'un chapitre ou le bilan d'un épisode : le tiroir s'ouvre. */}
+          <OuvreLeTiroirVise />
 
           <section aria-labelledby="catalogue" className="grid gap-6">
             <div className="grid gap-2">
@@ -282,7 +286,7 @@ export default async function CoursPage({
                 const chapitres = theme.chapitres.map((code) => CHAPITRES.find((c) => c.code === code)!);
                 const episodes = episodesDuTheme(theme);
                 const aVenir = enPreparationDuTheme(theme);
-                const situations = SITUATIONS.filter((s) => themeDuChapitre(s.reprend[0]!)?.code === theme.code);
+                const situations = situationsDuTheme(theme);
                 return (
                   <details
                     key={theme.code}
