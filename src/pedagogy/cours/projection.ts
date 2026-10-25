@@ -1,6 +1,7 @@
 import type { Cas } from "../../config/cours/cas";
 import type { Chapitre } from "../../config/cours/types";
 import { chapitreDuCas, etatAvant } from "./deroule";
+import { cleDeLaQuestion, dansLOrdreAffiche } from "./ordre-des-options";
 import { duPremierCoup, REMARQUES_PAR_ETAPE, type ProgressionLue } from "./suivi";
 
 /**
@@ -82,7 +83,12 @@ export function projectionDeLEtape(args: {
   let reponses: ReponseProjetee[] | null = null;
   if (etape.type === "choix") {
     // Les options se lisent dans l'état du journal où l'élève les a vues.
-    const options = etape.options(cas, etatAvant(chapitre, cas, index));
+    // Dans l'ordre que l'enseignant voit sur sa propre page : celui de son entreprise.
+    const ecrites = etape.options(cas, etatAvant(chapitre, cas, index));
+    const options = dansLOrdreAffiche(ecrites, cleDeLaQuestion(chapitre.code, etape.id, cas.code));
+    // Une option se reconnaît d'une entreprise à l'autre par sa place dans l'ordre ÉCRIT
+    // (les chiffres changent, pas l'ordre) ; elle se compte à sa place dans l'ordre affiché.
+    const affichee = (ecrite: number) => options.indexOf(ecrites[ecrite]!);
     const compte = options.map(() => new Set<number>());
     lus.forEach(({ p, cas: sonCas, chapitre: sien, place }, k) => {
       const sienne = sien.etapes[place];
@@ -91,13 +97,13 @@ export function projectionDeLEtape(args: {
       for (const r of p.erreurs[id] ?? []) {
         const texte = A_REPONDU.exec(r)?.[1];
         const i = texte === undefined ? -1 : siennes.findIndex((o) => o.texte === texte);
-        if (i >= 0 && i < compte.length) compte[i]!.add(k);
+        if (i >= 0 && i < ecrites.length) compte[affichee(i)]!.add(k);
       }
       // La bonne réponse : celle qu'il a trouvée lui-même, sans la correction.
       const s = suivi(p);
       if (s?.reussi && !s.aide) {
-        const juste = siennes.findIndex((o) => o.juste);
-        if (juste >= 0 && juste < compte.length) compte[juste]!.add(k);
+        const juste = options.findIndex((o) => o.juste);
+        if (juste >= 0) compte[juste]!.add(k);
       }
     });
     reponses = options.map((o, i) => ({ texte: o.texte, juste: o.juste, eleves: compte[i]!.size }));

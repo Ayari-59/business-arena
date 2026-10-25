@@ -49,7 +49,9 @@ describe("une question à choix projetée", () => {
     expect(p.reponses).not.toBeNull();
     const juste = p.reponses!.findIndex((r) => r.juste);
     expect(p.reponses![juste]!.eleves).toBe(2); // Ana et Béa l'ont trouvée ; Cyril l'a reçue.
-    expect(p.reponses![fausse("nova")]!.eleves).toBe(2); // Béa (nova) et Dina (hôtel).
+    // Les réponses viennent dans l'ordre affiché (mélangé) : la fausse se retrouve par son texte.
+    const laFausse = p.reponses!.find((r) => r.texte === optionsDe("nova")[fausse("nova")]!.texte)!;
+    expect(laFausse.eleves).toBe(2); // Béa (nova) et Dina (hôtel).
     expect(p.reponses!.reduce((t, r) => t + r.eleves, 0)).toBe(4);
   });
 
